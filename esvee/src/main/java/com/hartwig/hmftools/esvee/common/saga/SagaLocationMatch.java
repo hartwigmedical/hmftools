@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.esvee.common.saga;
 
-public record SagaMatchByLocation(
+public record SagaLocationMatch(
         SagaVariant variant,
         SagaBreakend breakend,
         int distance

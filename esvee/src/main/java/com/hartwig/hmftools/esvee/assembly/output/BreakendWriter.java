@@ -32,7 +32,7 @@ import com.hartwig.hmftools.esvee.assembly.types.InsertionType;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.PhaseGroup;
-import com.hartwig.hmftools.esvee.common.saga.SagaMatchBySequence;
+import com.hartwig.hmftools.esvee.common.saga.SagaSequenceMatch;
 import com.hartwig.hmftools.esvee.common.WriteType;
 
 public class BreakendWriter
@@ -253,7 +253,7 @@ public class BreakendWriter
 
                 if(mConfig.SagaFastaFile != null)
                 {
-                    SagaMatchBySequence sagaMatch = assemblyAlignment.sagaMatch();
+                    SagaSequenceMatch sagaMatch = assemblyAlignment.sagaMatch();
                     sj.add(sagaMatch == null ? "" : sagaMatch.variant().toString());
                     sj.add(String.valueOf(breakend.isSagaInferred()));
                 }

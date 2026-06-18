@@ -55,7 +55,7 @@ public class SagaSequenceMatcher
     }
 
     @Nullable
-    public SagaMatchBySequence matchBySequence(final byte[] sequence, final List<SagaJunctionInfo> junctions, boolean lowerJunctionOverlap,
+    public SagaSequenceMatch matchBySequence(final byte[] sequence, final List<SagaJunctionInfo> junctions, boolean lowerJunctionOverlap,
             boolean allowReverseStrand)
     {
         MatchArguments args = new MatchArguments(sequence, junctions, lowerJunctionOverlap, allowReverseStrand);
@@ -63,14 +63,14 @@ public class SagaSequenceMatcher
     }
 
     @Nullable
-    private SagaMatchBySequence matchBySequenceImpl(final MatchArguments args)
+    private SagaSequenceMatch matchBySequenceImpl(final MatchArguments args)
     {
         List<BwaMemAlignment> alignments = mAligner.alignSequence(args.query);
         return matchFromAlignments(args, alignments);
     }
 
     @Nullable
-    private SagaMatchBySequence matchFromAlignments(final MatchArguments args, final List<BwaMemAlignment> rawAlignments)
+    private SagaSequenceMatch matchFromAlignments(final MatchArguments args, final List<BwaMemAlignment> rawAlignments)
     {
         List<SagaSequenceMatchCandidate> candidates = rawAlignments.stream()
                 .map(alignment -> wrapAlignment(alignment, args.query().length))
@@ -81,7 +81,7 @@ public class SagaSequenceMatcher
         return candidates.stream()
                 .filter(SagaSequenceMatchCandidate::isAccepted)
                 .findFirst()
-                .map(candidate -> new SagaMatchBySequence(candidate.alignment()))
+                .map(candidate -> new SagaSequenceMatch(candidate.alignment()))
                 .orElse(null);
     }
 

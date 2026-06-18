@@ -24,7 +24,7 @@ import com.hartwig.hmftools.esvee.assembly.AssemblyConfig;
 import com.hartwig.hmftools.esvee.assembly.AssemblyUtils;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyStats;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
-import com.hartwig.hmftools.esvee.common.saga.SagaMatchBySequence;
+import com.hartwig.hmftools.esvee.common.saga.SagaSequenceMatch;
 import com.hartwig.hmftools.esvee.common.WriteType;
 
 public class AssemblyWriter
@@ -184,7 +184,7 @@ public class AssemblyWriter
 
             if(mConfig.SagaFastaFile != null)
             {
-                SagaMatchBySequence match = assembly.sagaMatch();
+                SagaSequenceMatch match = assembly.sagaMatch();
                 sj.add(match == null ? "" : match.variant().toString());
                 sj.add(match == null ? "" : match.cigar().toString());
             }

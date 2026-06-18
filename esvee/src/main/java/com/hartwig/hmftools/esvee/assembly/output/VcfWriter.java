@@ -98,7 +98,7 @@ import com.hartwig.hmftools.esvee.assembly.alignment.Breakend;
 import com.hartwig.hmftools.esvee.assembly.alignment.BreakendSegment;
 import com.hartwig.hmftools.esvee.assembly.alignment.BreakendSupport;
 import com.hartwig.hmftools.esvee.common.FilterType;
-import com.hartwig.hmftools.esvee.common.saga.SagaMatchBySequence;
+import com.hartwig.hmftools.esvee.common.saga.SagaSequenceMatch;
 import com.hartwig.hmftools.esvee.common.WriteType;
 
 import htsjdk.samtools.SAMSequenceDictionary;
@@ -370,7 +370,7 @@ public class VcfWriter implements AutoCloseable
         if(breakend.maxLocalRepeat() > 0)
             builder.attribute(MAX_LOCAL_REPEAT, breakend.maxLocalRepeat());
 
-        SagaMatchBySequence sagaMatch = assemblyAlignment.sagaMatch();
+        SagaSequenceMatch sagaMatch = assemblyAlignment.sagaMatch();
         if(sagaMatch != null)
         {
             builder.attribute(SAGA_VARIANT, sagaMatch.variant().noSpaceString());

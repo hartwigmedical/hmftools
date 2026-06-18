@@ -2,7 +2,7 @@ package com.hartwig.hmftools.esvee.common.saga;
 
 import htsjdk.samtools.Cigar;
 
-public record SagaMatchBySequence(
+public record SagaSequenceMatch(
         SagaAlignment alignment
 )
 {
