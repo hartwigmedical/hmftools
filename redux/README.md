@@ -350,12 +350,20 @@ The recalibration is unique per sample.
 
 R is used to generate the base quality recalibration charts, which is done if the config 'write_bqr_plot' is included. Required packages include `ggplot2`,`tidyr` and `dplyr`.
 
-The empirical base quality is measured in each reference and tumor sample for each {trinucleotide context, alt, sequencer reported base qual, consensus type} combination and an adjustment is calculated. This is performed by sampling a 2M base window from each autosome and counting the number of mismatches per {trinucleotide context, alt, sequencer reported base qual, consensus type}.
+The empirical base quality is measured in each reference and tumor sample for each {trinucleotide context, alt, sequencer reported base qual, consensus type} combination and an adjustment is calculated. This is performed by sampling a 2M base window from each autosome and counting the number of mismatches per {trinucleotide context, alt, sequencer reported base qual, consensus type}. For Ultima, we only consider bases that are max qual, have adjacent max qual bases, and have max `t0` due to tech-specific complications of the quality model.
 
-Fragments with low mapping quality (by default: below 50) are ignored as errors can be plausibly explained as mapping errors rather than base quality errors. Similarly, sites that may harbour a genuine germline or somatic variant rather than errors are excluded from contribution. This is determined as follows:
+Fragments with low mapping quality (by default: below 50) or with high NM density (above 5%) are ignored as errors can be plausibly explained as mapping errors rather than base quality errors. Similarly, sites that may harbour a genuine germline or somatic variant rather than errors are excluded from contribution. This is determined as follows:
 
 * Across `DUAL` fragments (i.e. duplex consensus): exclude site if `altVaf >= 0.01 && (altVaf >= 0.05 || altCount > 2)`
 * Across other fragments (i.e. non-duplex or singleton): exclude site if `altVaf >= 0.075 && (altVaf >= 0.125 || altCount > 3)`
+
+We also conditionally exclude sites with indels in the pileup:
+
+| Highest qual indel | Definition                                 | Cutoff to exclude |
+|--------------------|--------------------------------------------|-------------------|
+| High qual          | Any Illumina indel, or SBX/Ultima qual 30+ | 1 read            |
+| Medium qual        | SBX simplex qual                           | 4% AF             | 
+| Low qual           | Any lower quality SBX/Ultima read          | 10% AF            |
 
 Note that the definition of this recalibrated base quality is slightly different to the sequencer base quality, since it is the probability of making a specific ALT error given a trinucleotide sequence, whereas the sequencer base quality is the probability of making any error at the base in question.   Since the chance of making an error to a specific base is lower than the chance of making it to a random base, the ALT specific base quality will generally be higher even if the sequencer base quality matches the empirical distribution.
 
@@ -365,13 +373,58 @@ These files are written into the same directory as the output file.
 
 A typical example of the chart (for one consensus type) is shown below. Note that each bar represents the amount that will be added to the sequencer Phred score:
 
-![Base Quality Adjustment](docs/COLO829v003T.bqr.png)
+![Base Quality Adjustment](../sage/docs/COLO829v003T.bqr.png)
 
 Base quality recalibration is enabled by default but can be disabled by supplying including the`-bqr_disable` argument.
 
 The base quality recalibration chart is generated with the config `-bqr_write_plot`.
 
+## Ultima specific routines
+Redux determines consensus type from the ppm-seq tags present in Ultima BAMs and supports both legacy and current tag formats.
+Redux also generates an Ultima low-quality homopolymer tag (`UQ`) for use by downstream pipeline tools. Homopolymers are evaluated directly from the read sequence and marked when either the associated `t0` quality is below 20 or the homopolymer quality falls below a length-specific threshold. The `UQ` tag records all read indices belonging to flagged homopolymers. The thresholds are as follows:
 
+| Homopolymer length | Minimum quality |
+|--------------------|-----------------|
+| 1                  | 25              |
+| 2                  | 22              |
+| 3                  | 19              |
+| 4-6                | 16              |
+| 7-8                | 14              |
+| 9+                 | 12              |
+
+## SBX specific routines
+
+### Homopolymer indel normalisation
+Prior to duplicate collapsing, Redux identifies duplex indel disagreement regions using the `YC `tag and determines the associated repeat context. Repeat-associated insertion differences are normalised by trimming excess inserted sequence. The number of duplex discordant bases in the untrimmed repeat is noted, and those low quality bases are evenly distributed to each side of the trimmed repeat. Supplementaries are used where available to infer the reference sequence inside softclipping.
+
+This eliminates the insertion bias in SBX sequencing that comes from synthesising two independent sequencing passes and priorising retaining bases if they are in only one pass.
+### Duplicate collapsing
+Duplicate groups are formed using an SBX-specific collapse strategy that tolerates small differences between read ends while preventing merges between substantially different molecules. In particular, we tolerate a 'wiggle room' in position coordinates of up to 2bp between individual fragments, and 6bp total across the whole duplicate group.
+### Consensus generation
+SBX consensus generation uses the per-base status (concordant duplex, simplex, discordant duplex) encoded in the base qualities. 
+For each position, Redux preferentially derives consensus sequence from concordant duplex evidence where a dominant base exists. When all bases are simplex, simplex evidence is used instead. In either case, positions lacking majority agreement are interpreted as qual 1 reference bases.
+
+Consensus CIGAR elements are generated using the same principle. When read-level disagreement exists, Redux preferentially selects operations supported by high-confidence duplex evidence, then simplex evidence if all reads are simplex at that location, and otherwise falls back to the most reference-like representation (`M` over `D` or `I`).
+### Quality remapping
+Raw SBX qualities encode categorical status rather than conventional phred scores. During consensus generation, Redux remaps these values onto a standardised quality scale:
+
+| Status            | Mapped base quality |
+|-------------------|---------------------|
+| Discordant duplex | 1                   |
+| Simplex           | 27                  |
+| Concordant duplex | 40                  |
+
+In addition, concordant duplex bases near discordant duplex bases are assigned a lower base quality to model their higher empirical erorr rates:
+* Concordant duplex 1bp from a discordant duplex base and = the ref discordant base -> 15 
+* Concordant duplex 1bp from a discordant duplex base and ≠ the ref discordant base -> 20 
+* Concordant duplex 2-3bp from a discordant duplex base -> 25 
+
+Consensus reads are assigned one of the standard Redux consensus types:
+* `NONE`: singleton reads
+* `SINGLE`: non-trivial consensus group, all reads are simplex
+* `DUAL`: non-trivial consensus group, including duplex
+
+For consensus reads containing both simplex and duplex regions, Redux records the first duplex-supported base position in the `YX` tag.
 
 ## Performance and Settings
 
