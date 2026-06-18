@@ -36,7 +36,7 @@ public record SagaAssembly(
 
         for(int i = 0; i < junctionOffsets.size() - 1; i++)
         {
-            if(junctionOffsets.get(i) >= junctionOffsets.get(i + 1))
+            if(!(junctionOffsets.get(i) < junctionOffsets.get(i + 1)))
             {
                 throw new IllegalArgumentException("Junction offsets not in ascending order");
             }
@@ -70,10 +70,6 @@ public record SagaAssembly(
         SagaBreakend breakend2 = SagaBreakend.fromString(parts[2]);
         int junctionOffset1 = Integer.parseInt(parts[3]);
         Integer junctionOffset2 = parts.length >= 5 ? Integer.parseInt(parts[4]) : null;
-        if(junctionOffset2 != null && junctionOffset1 >= junctionOffset2)
-        {
-            throw new IllegalArgumentException("Invalid junction offsets");
-        }
         String insertSequence = sequence.substring(junctionOffset1, junctionOffset2 == null ? junctionOffset1 : junctionOffset2);
         SagaVariant variant = new SagaVariant(id, breakend1, breakend2, insertSequence);
         List<Integer> junctionOffsets = junctionOffset2 == null ? List.of(junctionOffset1) : List.of(junctionOffset1, junctionOffset2);
