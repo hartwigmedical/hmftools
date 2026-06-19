@@ -74,7 +74,11 @@ TFctDNA = 2* adjVAFctDNA / (WA_VCN + 2* adjVAFctDNA - WA_CN * adjVAFctDNA)
 
 The expected noise is set as the depth weighted average empirical error rate from SAGE BQR of all fragments based on the trinucleotide context for variants with high raw base qual (>=30).
 
-A check is made at this stage for variants which are outliers and may unduly contribute to the fit.   Variants with a VAF of more than 8x the average cfDNA VAF for the sample, with allele support of at least 3 and whose allele support makes up more than 15% of reads in the sample are filtered as outliers. This test is performaed iteratively with the threshold raised to 30% after the first round.   These are excluded as outliers and are assumed to be likely germline variants which have leaked into the somatic variants or clonal haematopoiesis. The ctDNA_TF is then recalculated excluding the filtered observation. 
+Where the sample has DUAL fragment variant support as defined by Redux, we repeat these calculations restricted to the dual depth, allelic support, and error rates. In this case we apply additional filters for Ultima specifically:
+- High confidence observation in ctDNA: (RC_QUAL[0]+RC_QUAL[1]+RC_QUAL[3]) / (RC_CNT[0]+RC_CNT[1]+RC_CNT[3]) >= 34
+- Adequate average edge distance: AED[1] >= 0.1 (proportion of read)
+
+A check is made at this stage for variants which are outliers and may unduly contribute to the fit. Variants with a VAF of more than 8x the average cfDNA VAF for the sample, with allele support of at least 3 (2 if there are any DUAL observations) and whose allele support makes up more than 15% of reads in the sample are filtered as outliers. This test is performaed iteratively with the threshold raised to 30% after the first round. These are excluded as outliers and are assumed to be likely germline variants which have leaked into the somatic variants or clonal haematopoiesis. The ctDNA_TF is then recalculated excluding the filtered observation. 
  
 The estimated ctDNA_TF represents the purity if all SNV considered from the tissue biopsy are still present in the ctDNA. However, the % of SNV that are present is frequently observed to be much lower than this, since the tissue biopsy may be taken from a locally dominant subclone (eg. a single metastasis) which has a number of private mutations.  The dominant clone present in the cfDNA may have evolved from an earlier or different subclone in the primary. Hence the raw ctDNA_TF at this stage represents a lower bound for the purity estimate.  
 
@@ -97,7 +101,7 @@ wAD = Σ(i=1->n)[(DPi_cfDNA)2/CNn] / Σ(i=1->n)[DPi_cfDNA/CNi]
 The adjusted VAF is used to recalculate the implied tumor fraction estimate for the sample.  If the conditions for neither model are met, then the VAF is not adjusted.    
 
 #### Other annotations
-- **Tumor Presence P-Value** – Poisson test of whether the observed AD is greater than expected noise.  Since some trinucleotides can have much higher rates than others (particularly C>T), Wisp tests for tumor presence by filtering sites based on the empirically measured error rates in SAGE BQR with raw base qualities higher than 30, for each context at 4 different phred score thresholds: {All sites, >38,>42,>45}.  For each threshold, the observed AD is compared to the weighted average expected error rate for the included sites (note the maximum BQR phred score is limited to 50 per variant context to be able to handle sparse data).   The final p-value is set to the minimum threshold across all the tests.   For duplex sequencing a further test is made to see if the DUAL_STRAND AD > expected noise (set to a fixed 1e-6 for DUPLEX observations). 
+- **Tumor Presence P-Value** – Poisson test of whether the observed AD is greater than expected noise.  Since some trinucleotides can have much higher rates than others (particularly C>T), Wisp tests for tumor presence by filtering sites based on the empirically measured error rates in SAGE BQR with raw base qualities higher than 30, for each context at 4 different phred score thresholds: {All sites, >38,>42,>45}.  For each threshold, the observed AD is compared to the weighted average expected error rate for the included sites (note the maximum BQR phred score is limited to 50 per variant context (70 for DUAL) to be able to handle sparse data). The final p-value is set to the minimum threshold across all the tests.   For duplex sequencing a further test is made to see if the DUAL_STRAND AD > expected noise (set to a fixed 1e-6 for DUPLEX observations). 
 - **LOD** – This is calculated as the observed TF that would return a 99% confidence of tumor presence (ie p-value = 0.01) given the allele fragments. Again, the lowest LOD across different phred thresholds is used. A separate LOD is calculated for DUAL stranded fragments only.
 - **LowTFEstimate** – Estimated using the same formula with the following adjustments: 
    - Recalculate TF based on AD = poisson[sumAD,0.05]  
@@ -224,6 +228,7 @@ TumorDP | Depth at variant site in primary tumor
 TumorAD | Allelic depth support for variant in primary tumor 
 SampleDP | Depth at variant site in cfDNA sample 
 SampleAD | Allelic depth support for variant in cfDNA sample 
+DualFilter | Either PASS or DUAL-specific filter reason
 SampleDualDP | DUPLEX depth at variant site in cfDNA sample 
 SampleDualAD | DUPLEX allelic depth support for variant in cfDNA sample 
 QualPerAD | Average quality per allelic depth support in SAGE (used as filter) 
