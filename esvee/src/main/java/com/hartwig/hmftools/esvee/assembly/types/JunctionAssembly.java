@@ -851,18 +851,13 @@ public class JunctionAssembly
         return mSagaMatch;
     }
 
-    private void setSagaMatch(final SagaMatchBySequence match)
-    {
-        mSagaMatch = match;
-    }
-
     public boolean matchToSaga(final SagaSequenceMatcher sagaMatcher)
     {
         int junctionOffset = mJunction.isForward() ? refBaseLength() : baseLength() - refBaseLength();
         List<SagaJunctionInfo> junctionInfos = List.of(new SagaJunctionInfo(junctionOffset));
         boolean lowerJunctionOverlap = hasLineSequence();
         SagaMatchBySequence match = sagaMatcher.matchBySequence(bases(), junctionInfos, lowerJunctionOverlap, true);
-        setSagaMatch(match);
+        mSagaMatch = match;
         return match != null;
     }
 
