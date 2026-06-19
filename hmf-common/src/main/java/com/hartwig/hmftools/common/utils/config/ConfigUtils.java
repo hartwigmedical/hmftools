@@ -5,6 +5,8 @@ import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_SAMPLE_ID;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 
+import com.hartwig.hmftools.common.logging.HmfLogger;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -26,7 +28,7 @@ public class ConfigUtils
     public static final String LOG_DEBUG_DESC = "Log at DEBUG level";
 
     public static final String LOG_LEVEL = "log_level";
-    public static final String LOG_LEVEL_DESC = "Specify log level: ERROR, WARN, INFO, DEBUG or TRACE";
+    public static final String LOG_LEVEL_DESC = "Specify log level: ERROR, WARN, INFO, DEBUG, DEBUG_2 or TRACE";
 
     public static final String SAMPLE_ID_FILE = "sample_id_file";
     public static final String SAMPLE_ID_FILE_DESC = "Sample ID CSV file with 'SampleId' column";
@@ -54,7 +56,7 @@ public class ConfigUtils
         }
         else if(configBuilder.isRegistered(LOG_LEVEL) && configBuilder.hasValue(LOG_LEVEL))
         {
-            Configurator.setRootLevel(Level.valueOf(configBuilder.getValue(LOG_LEVEL)));
+            Configurator.setRootLevel(HmfLogger.parseLevel(configBuilder.getValue(LOG_LEVEL)));
         }
     }
 

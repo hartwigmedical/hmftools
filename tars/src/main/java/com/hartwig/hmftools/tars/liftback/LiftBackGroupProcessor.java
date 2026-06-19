@@ -401,7 +401,7 @@ public class LiftBackGroupProcessor
         resolved[primaryIdx] = primaryRes.withRevisedCigar(
                 result.mergedStart(), result.mergedCigar(), true,
                 Math.min(primaryRes.updatedMapq(), SUPP_RESCUE_MAPQ_CAP), "rescued-via-supp");
-        TARS_LOGGER.trace("rescue-merged {}: {}:{} {} -> {} (depth {})",
+        TARS_LOGGER.debug2("rescue-merged {}: {}:{} {} -> {} (depth {})",
                 primary.getReadName(), primaryRes.finalChrom(), primaryRes.finalPos(),
                 primaryRes.finalCigar(), result.mergedCigar(), result.chainDepth());
 
@@ -443,7 +443,7 @@ public class LiftBackGroupProcessor
         resolved[primaryIdx] = primaryRes.withRevisedCigar(
                 collapse.newStart(), collapse.newCigar(), collapse.newCigar().indexOf('N') >= 0,
                 primaryRes.updatedMapq(), "terminal-junction-collapsed");
-        TARS_LOGGER.trace("terminal-collapse {}: {} -> {}", primary.getReadName(), primaryRes.finalCigar(), collapse.newCigar());
+        TARS_LOGGER.debug2("terminal-collapse {}: {} -> {}", primary.getReadName(), primaryRes.finalCigar(), collapse.newCigar());
     }
 
     private void applyTailExtension(
@@ -475,7 +475,7 @@ public class LiftBackGroupProcessor
         resolved[primaryIdx] = primaryRes.withRevisedCigar(
                 extension.newStart(), extension.newCigar(), primaryRes.hasNCigar(),
                 primaryRes.updatedMapq(), "tail-extended");
-        TARS_LOGGER.trace("tail-extend {}: {} -> {}", primary.getReadName(), primaryRes.finalCigar(), extension.newCigar());
+        TARS_LOGGER.debug2("tail-extend {}: {} -> {}", primary.getReadName(), primaryRes.finalCigar(), extension.newCigar());
     }
 
     private void applyJunctionCanonicalization(
@@ -505,7 +505,7 @@ public class LiftBackGroupProcessor
         resolved[primaryIdx] = primaryRes.withRevisedCigar(
                 primaryRes.finalPos(), canon.newCigar(), primaryRes.hasNCigar(),
                 primaryRes.updatedMapq(), "junction-canonicalized");
-        TARS_LOGGER.trace("canonicalize {}: {} -> {}", primary.getReadName(), primaryRes.finalCigar(), canon.newCigar());
+        TARS_LOGGER.debug2("canonicalize {}: {} -> {}", primary.getReadName(), primaryRes.finalCigar(), canon.newCigar());
     }
 
     // Dedup key for supplementaries: lifted (chrom, pos, cigar) + lifted strand. Opposite-strand
@@ -575,7 +575,7 @@ public class LiftBackGroupProcessor
         {
             markPrimaryUnmapped(record);
             ++mOverCapUnmapped;
-            TARS_LOGGER.trace("over-cap unmap {}: inputMapq=0, no XA (past bwa XA cap)", record.getReadName());
+            TARS_LOGGER.debug2("over-cap unmap {}: inputMapq=0, no XA (past bwa XA cap)", record.getReadName());
         }
 
         // residual short-anchor primary: bwa scored it below the default -T 30 floor and liftback couldn't
@@ -590,7 +590,7 @@ public class LiftBackGroupProcessor
             {
                 markPrimaryUnmapped(record);
                 mStats.recordLowAsPrimaryUnmapped();
-                TARS_LOGGER.trace("AS-floor unmap {}: AS={} < {}", record.getReadName(), alignmentScore, PRIMARY_AS_UNMAP_THRESHOLD);
+                TARS_LOGGER.debug2("AS-floor unmap {}: AS={} < {}", record.getReadName(), alignmentScore, PRIMARY_AS_UNMAP_THRESHOLD);
             }
         }
 
