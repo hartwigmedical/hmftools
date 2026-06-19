@@ -41,7 +41,7 @@ public class BreakendBuilderSagaTest
     private static final String CHROMOSOME = "chr1";
     private static final int ASSEMBLY_LENGTH = 100;
     private static final int SAGA_REF_CONTEXT = 100;
-    private static final int SAGA_START = 25;
+    private static final int SAGA_START = 50;
 
     private final MockRefGenome mRefGenome;
 
@@ -51,7 +51,7 @@ public class BreakendBuilderSagaTest
     {
         mRefGenome = new MockRefGenome(true);
 
-        // Since the SAGA variant info is used, nothing in the AssemblyAlignment is used in the code under test. This is mostly dummy data.
+        // Since the SAGA variant info is used, nothing in the AssemblyAlignment is used in the code under test. This is mostly fake data.
         mAssemblyAlignment =
                 new AssemblyAlignment(createAssembly(CHROMOSOME, 1000, FORWARD, "A".repeat(ASSEMBLY_LENGTH), ASSEMBLY_LENGTH / 2));
     }
@@ -69,6 +69,11 @@ public class BreakendBuilderSagaTest
         mRefGenome.RefGenomeMap.put(CHROMOSOME, ref);
     }
 
+    private void setUpRefGenomeForDel(int lowerBreakend, int upperBreakend)
+    {
+        setUpRefGenomeForDel(lowerBreakend, upperBreakend, 0);
+    }
+
     private void setUpRefGenomeForIns(int lowerBreakend, final String insertSeq, int homologyLength)
     {
         assertTrue(homologyLength <= insertSeq.length());
@@ -79,6 +84,11 @@ public class BreakendBuilderSagaTest
         String ref = refStart + refHom + refEnd;
         assertFalse(mRefGenome.RefGenomeMap.containsKey(CHROMOSOME));
         mRefGenome.RefGenomeMap.put(CHROMOSOME, ref);
+    }
+
+    private void setUpRefGenomeForIns(int lowerBreakend, final String insertSeq)
+    {
+        setUpRefGenomeForIns(lowerBreakend, insertSeq, 0);
     }
 
     private static SagaAssembly deletionSagaAssembly(int lowerPos, int upperPos)
@@ -136,6 +146,11 @@ public class BreakendBuilderSagaTest
         return sagaAlignment(sagaAssembly, SAGA_START, format("%dM", mAssemblyAlignment.fullSequenceLength()));
     }
 
+    private SagaAlignment sagaAlignment(final SagaAssembly sagaAssembly, final String cigarStr)
+    {
+        return sagaAlignment(sagaAssembly, SAGA_START, cigarStr);
+    }
+
     private List<Breakend> formBreakends(final SagaAlignment sagaAlignment)
     {
         AlignData alignData = AlignData.fromSaga(sagaAlignment);
@@ -152,8 +167,7 @@ public class BreakendBuilderSagaTest
         int lowerPos = 1001;
         int upperPos = 1200;
 
-        // TODO: don't need to specify chromosome here?
-        setUpRefGenomeForDel(lowerPos, upperPos, 0);
+        setUpRefGenomeForDel(lowerPos, upperPos);
 
         SagaAssembly sagaAssembly = deletionSagaAssembly(lowerPos, upperPos);
         SagaAlignment sagaAlignment = sagaAlignment(sagaAssembly);
@@ -174,6 +188,11 @@ public class BreakendBuilderSagaTest
         assertEquals(REVERSE, upper.Orient);
         assertEquals(DEL, upper.svType());
         assertFalse(upper.isSagaInferred());
+
+        BreakendSegment segment = lower.segments().get(0);
+        int[] indelIndices = segment.indelSeqenceIndices();
+        assertEquals(sagaAlignment.queryJunctionOffsets().get(0).intValue(), indelIndices[0]);
+        assertEquals(indelIndices[0], indelIndices[1]);
     }
 
     @Test
@@ -195,17 +214,24 @@ public class BreakendBuilderSagaTest
 
         Breakend lower = breakends.get(0);
         assertEquals(CHROMOSOME, lower.Chromosome);
-        assertEquals(lowerPos + homology / 2, lower.Position);
+        int homologyShift = homology / 2;
+        assertEquals(lowerPos + homologyShift, lower.Position);
         assertEquals(FORWARD, lower.Orient);
         assertEquals(DEL, lower.svType());
         assertFalse(lower.isSagaInferred());
 
         Breakend upper = breakends.get(1);
         assertEquals(CHROMOSOME, upper.Chromosome);
-        assertEquals(upperPos + homology / 2, upper.Position);
+        assertEquals(upperPos + homologyShift, upper.Position);
         assertEquals(REVERSE, upper.Orient);
         assertEquals(DEL, upper.svType());
         assertFalse(upper.isSagaInferred());
+
+        // TODO: is it correct that the indices are not shifted for deletions?
+        BreakendSegment segment = lower.segments().get(0);
+        int[] indelIndices = segment.indelSeqenceIndices();
+        assertEquals(sagaAlignment.queryJunctionOffsets().get(0).intValue(), indelIndices[0]);
+        assertEquals(indelIndices[0], indelIndices[1]);
     }
 
     @Test
@@ -216,9 +242,8 @@ public class BreakendBuilderSagaTest
         int lowerPos = 1001;
         String insertSequence = "ACCGTACCGTGAGAGAGAGA";
         int upperPos = lowerPos + 1;
-        int homology = 0;
 
-        setUpRefGenomeForIns(lowerPos, insertSequence, homology);
+        setUpRefGenomeForIns(lowerPos, insertSequence);
 
         SagaAssembly sagaAssembly = insertionSagaAssembly(lowerPos, insertSequence);
         SagaAlignment sagaAlignment = sagaAlignment(sagaAssembly);
@@ -239,6 +264,11 @@ public class BreakendBuilderSagaTest
         assertEquals(REVERSE, upper.Orient);
         assertEquals(insertSequence, lower.InsertedBases);
         assertEquals(INS, lower.svType());
+
+        BreakendSegment segment = lower.segments().get(0);
+        int[] indelIndices = segment.indelSeqenceIndices();
+        assertEquals(sagaAlignment.queryJunctionOffsets().get(0).intValue(), indelIndices[0]);
+        assertEquals(sagaAlignment.queryJunctionOffsets().get(1).intValue(), indelIndices[1]);
     }
 
     @Test
@@ -266,7 +296,6 @@ public class BreakendBuilderSagaTest
         String expectedInsSeq = insertSequence.substring(homology);
         assertEquals(expectedInsSeq, lower.InsertedBases);
         assertEquals(DUP, lower.svType());
-        ;
 
         Breakend upper = breakends.get(1);
         assertEquals(CHROMOSOME, upper.Chromosome);
@@ -274,54 +303,77 @@ public class BreakendBuilderSagaTest
         assertEquals(FORWARD, upper.Orient);
         assertEquals(expectedInsSeq, lower.InsertedBases);
         assertEquals(DUP, lower.svType());
-    }
 
-    @Test
-    public void testSequenceIndicesWithCigarIndel()
-    {
-        // SAGA INS: chr2:200→201, insertSequence="ACGTACGT" (8 bases).
-        // junctionOffsets in the SAGA sequence are [50, 58].
-        // The assembly has a 2-base insertion relative to SAGA at position 50 (cigar "50M2I58M"),
-        // so the query junction offsets are shifted by +2 vs. a simple 1:1 mapping:
-        //   sagaIndex=50 → queryIndex=52
-        //   sagaIndex=58 → queryIndex=60
-        // The BreakendSegment.indelSeqenceIndices must reflect these query-space positions.
-
-        String insertSequence = "ACGTACGT";
-        SagaAssembly sagaAssembly = insertionSagaAssembly(200, insertSequence);
-        // "50M2I58M": 50+58=108 ref bases (matches SAGA length 108), query length = 50+2+58=110
-        SagaAlignment sagaAlignment = sagaAlignment(sagaAssembly, 0, "50M2I58M");
-
-        List<Breakend> breakends = formBreakends(sagaAlignment);
-        assertEquals(2, breakends.size());
-
-        // Both breakends share the same segment; retrieve it from either.
-        BreakendSegment segment = breakends.get(0).segments().get(0);
-        // SequenceIndex = alignData.sequenceStart() = 0.
-        assertEquals(0, segment.SequenceIndex);
-        // Query junction indices: 52 and 60 (each offset by +2 from the cigar insertion).
+        BreakendSegment segment = lower.segments().get(0);
         int[] indelIndices = segment.indelSeqenceIndices();
-        assertEquals(52, indelIndices[0]);
-        assertEquals(60, indelIndices[1]);
+        assertEquals(sagaAlignment.queryJunctionOffsets().get(0) + homology, indelIndices[0]);
+        assertEquals(sagaAlignment.queryJunctionOffsets().get(1).intValue(), indelIndices[1]);
     }
 
     @Test
-    public void testInferredBreakends()
+    public void testInsertionInferred()
     {
-        // SAGA INS: chr2:200→201, insertSequence="ACGTACGT", junctionOffsets=[50, 58].
-        // Assembly only aligns to SAGA positions [55, 57): both junctions (50 and 58) are outside
-        // this range, so both breakends are inferred from SAGA rather than from the assembly itself.
-        //   startInferredLength = sagaStart(55) - junctionOffset(50) = 5 > 0 → lower inferred
-        //   endInferredLength   = junctionOffset(58) - sagaEnd(57)   = 1 > 0 → upper inferred
+        // 500b INS which is not fully captured in the phased assembly - infer the second breakend.
 
-        String insertSequence = "ACGTACGT";
-        SagaAssembly sagaAssembly = insertionSagaAssembly(200, insertSequence);
-        SagaAlignment sagaAlignment = sagaAlignment(sagaAssembly, 55, "2M");
+        int lowerPos = 1001;
+        String insertSequence = "C".repeat(500);
+        int upperPos = lowerPos + 1;
+
+        setUpRefGenomeForIns(lowerPos, insertSequence);
+
+        SagaAssembly sagaAssembly = insertionSagaAssembly(lowerPos, insertSequence);
+        SagaAlignment sagaAlignment = sagaAlignment(sagaAssembly);
 
         List<Breakend> breakends = formBreakends(sagaAlignment);
         assertEquals(2, breakends.size());
 
-        assertTrue(breakends.get(0).isSagaInferred());
-        assertTrue(breakends.get(1).isSagaInferred());
+        Breakend lower = breakends.get(0);
+        assertEquals(CHROMOSOME, lower.Chromosome);
+        assertEquals(lowerPos, lower.Position);
+        assertEquals(FORWARD, lower.Orient);
+        assertEquals(insertSequence, lower.InsertedBases);
+        assertEquals(INS, lower.svType());
+        assertFalse(lower.isSagaInferred());
+
+        Breakend upper = breakends.get(1);
+        assertEquals(CHROMOSOME, upper.Chromosome);
+        assertEquals(upperPos, upper.Position);
+        assertEquals(REVERSE, upper.Orient);
+        assertEquals(insertSequence, lower.InsertedBases);
+        assertEquals(INS, lower.svType());
+        assertTrue(upper.isSagaInferred());
+
+        BreakendSegment segment = lower.segments().get(0);
+        int[] indelIndices = segment.indelSeqenceIndices();
+        assertEquals(sagaAlignment.queryJunctionOffsets().get(0).intValue(), indelIndices[0]);
+        assertEquals(sagaAlignment.queryJunctionOffsets().get(1).intValue(), indelIndices[1]);
+    }
+
+    @Test
+    public void testInsertionSequenceIndicesIndel()
+    {
+        // 30b INS with an indel when aligning to SAGA.
+
+        //            |--50--|--50--|
+        // Assembly:         |-----100-----|
+        // SAGA:      |-----100-----|-30-|-----100-----|
+        //                            ^
+        //                            2I
+
+        int lowerPos = 1001;
+        String insertSequence = "A".repeat(30);
+
+        setUpRefGenomeForIns(lowerPos, insertSequence);
+
+        SagaAssembly sagaAssembly = insertionSagaAssembly(lowerPos, insertSequence);
+        SagaAlignment sagaAlignment = sagaAlignment(sagaAssembly, "60M2I38M");
+
+        List<Breakend> breakends = formBreakends(sagaAlignment);
+        assertEquals(2, breakends.size());
+
+        BreakendSegment segment = breakends.get(0).segments().get(0);
+        int[] indelIndices = segment.indelSeqenceIndices();
+        assertEquals(sagaAlignment.queryJunctionOffsets().get(0).intValue(), indelIndices[0]);
+        assertEquals(sagaAlignment.queryJunctionOffsets().get(1).intValue(), indelIndices[1]);
     }
 }
