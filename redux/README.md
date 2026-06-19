@@ -350,7 +350,7 @@ The recalibration is unique per sample.
 
 R is used to generate the base quality recalibration charts, which is done if the config 'write_bqr_plot' is included. Required packages include `ggplot2`,`tidyr` and `dplyr`.
 
-The empirical base quality is measured in each reference and tumor sample for each {trinucleotide context, alt, sequencer reported base qual, consensus type} combination and an adjustment is calculated. This is performed by sampling a 2M base window from each autosome and counting the number of mismatches per {trinucleotide context, alt, sequencer reported base qual, consensus type}. For Ultima, we only consider bases that are max qual, have adjacent max qual bases, and have max `t0` due to tech-specific complications of the quality model.
+The empirical base quality is measured in each reference and tumor sample for each {trinucleotide context, alt, sequencer reported base qual, consensus type} combination and an adjustment is calculated. This is performed by sampling a 2M base window from each autosome and counting the number of mismatches per {trinucleotide context, alt, sequencer reported base qual, consensus type}. For Ultima, we only consider bases that are max qual, have adjacent max qual bases, and have max `t0` due to tech-specific complications of the quality model. For reverse strand observations, the trinucleotide context and alt they are assigned to is reverse complemented.
 
 Fragments with low mapping quality (by default: below 50) or with high NM density (above 5%) are ignored as errors can be plausibly explained as mapping errors rather than base quality errors. Similarly, sites that may harbour a genuine germline or somatic variant rather than errors are excluded from contribution. This is determined as follows:
 
