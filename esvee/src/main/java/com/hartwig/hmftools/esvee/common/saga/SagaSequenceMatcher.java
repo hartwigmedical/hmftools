@@ -120,7 +120,9 @@ public class SagaSequenceMatcher
 
         SagaAssembly sagaAssembly = getAssemblyByContigId(alignment.getRefId());
         Cigar cigar = cigarFromStr(alignment.getCigar());
-        return new SagaAlignment(alignment, cigar, queryLength, sagaAssembly);
+        SagaAlignment sagaAlignment = new SagaAlignment(alignment, cigar, queryLength, sagaAssembly);
+        sagaAlignment.validate();
+        return sagaAlignment;
     }
 
     private SagaSequenceMatchCandidate evaluateAlignment(final SagaAlignment alignment, final MatchArguments args)

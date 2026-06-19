@@ -109,7 +109,9 @@ public class SagaSequenceMatcherTest
     private static SagaSequenceMatch expectedMatch(final BwaMemAlignment bwaAlignment, final byte[] query, final SagaAssembly assembly)
     {
         Cigar cigar = cigarFromStr(bwaAlignment.getCigar());
-        return new SagaSequenceMatch(new SagaAlignment(bwaAlignment, cigar, query.length, assembly));
+        SagaAlignment sagaAlignment = new SagaAlignment(bwaAlignment, cigar, query.length, assembly);
+        sagaAlignment.validate();
+        return new SagaSequenceMatch(sagaAlignment);
     }
 
     // ----- Tests: Accepted matches -----
