@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.bam.CigarUtils.rightClipLength;
 
 import java.util.List;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.bam.SamRecordUtils;
 
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
@@ -93,7 +94,8 @@ public record SagaAlignment(
                 .toList();
     }
 
-    private int sagaIndexToQueryIndex(int sagaIndex)
+    @VisibleForTesting
+    public int sagaIndexToQueryIndex(int sagaIndex)
     {
         // Extrapolate outside of the aligned range.
         if(sagaIndex <= sagaStart())
