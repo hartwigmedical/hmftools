@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.refSource;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.secondMateRecord;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.supplementaryRecord;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.threeExonContig;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;

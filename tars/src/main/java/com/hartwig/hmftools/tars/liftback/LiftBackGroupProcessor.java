@@ -62,6 +62,7 @@ public class LiftBackGroupProcessor
     private long mExcludedReads;
 
     public long overCapUnmapped() { return mOverCapUnmapped; }
+
     public long excludedReads() { return mExcludedReads; }
 
     private static final String AS_TAG = "AS";
@@ -263,7 +264,11 @@ public class LiftBackGroupProcessor
         final boolean[] droppedByRescue = decision.DroppedByRescue;
         SAMRecord primary = null;
         for(SAMRecord r : records)
-            if(!r.getSupplementaryAlignmentFlag()) { primary = r; break; }
+            if(!r.getSupplementaryAlignmentFlag())
+            {
+                primary = r;
+                break;
+            }
 
         // Dedup supplementaries that lift to the same (chrom, pos, cigar, strand) -- bwa can emit the
         // same junction across multiple transcript contigs and they collapse after liftback.

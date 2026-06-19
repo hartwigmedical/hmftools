@@ -239,10 +239,15 @@ public class SoftclipTailExtender
                 };
 
         abstract int softclipIndex(List<CigarElement> cigar);
+
         abstract int matchedIndex(List<CigarElement> cigar);
+
         abstract int refBoundary(int alignmentStart, int alignmentEnd);
+
         abstract byte[] fetchRef(RefSequenceSource src, String chr, int boundary, int budget);
+
         abstract int walk(byte[] readBases, byte[] refBases, int softclipLength, int walkLength);
+
         abstract List<ChrBaseRegion> junctionLookup(AnnotatedJunctionIndex idx, String chr, int boundary, int offset);
     }
 }

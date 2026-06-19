@@ -19,7 +19,7 @@ import com.hartwig.hmftools.tars.common.ContigEntry;
 // Pairs adjacent exons of each transcript to derive intron coords; duplicates across transcripts collapse in the Set.
 public final class AnnotatedJunctionLoader
 {
-    private AnnotatedJunctionLoader() {}
+    private AnnotatedJunctionLoader() { }
 
     public static Set<ChrBaseRegion> load(final String ensemblDir, final RefGenomeVersion refGenomeVersion)
     {
@@ -77,7 +77,8 @@ public final class AnnotatedJunctionLoader
         return introns;
     }
 
-    private static void addTranscriptIntrons(final Set<ChrBaseRegion> introns, final String chromosome, final List<ExonData> transcriptExons)
+    private static void addTranscriptIntrons(final Set<ChrBaseRegion> introns, final String chromosome,
+            final List<ExonData> transcriptExons)
     {
         if(transcriptExons.size() < 2)
             return;

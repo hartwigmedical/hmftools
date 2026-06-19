@@ -294,7 +294,7 @@ public class SpliceLiftBack
         int merged = 0;
         int clamp = 0;
         final int[] depth = new int[5];
-        final EnumMap<RescueRejectReason,Integer> rejects = new EnumMap<>(RescueRejectReason.class);
+        final EnumMap<RescueRejectReason, Integer> rejects = new EnumMap<>(RescueRejectReason.class);
         for(final LiftBackWorker worker : workers)
         {
             final RescueStatistics stats = worker.rescueStatistics();

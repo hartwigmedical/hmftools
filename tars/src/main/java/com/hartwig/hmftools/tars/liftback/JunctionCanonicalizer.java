@@ -118,7 +118,7 @@ public class JunctionCanonicalizer
         // smallest |shift| wins ties; try in increasing magnitude, positive before negative.
         for(int mag = 1; mag <= maxShift; ++mag)
         {
-            for(final int d : new int[] {mag, -mag})
+            for(final int d : new int[] { mag, -mag })
             {
                 final int tier = motifTier(
                         donorBlock, donorBlockStart, intronStart, acceptorBlock, acceptorBlockStart, intronEnd, d);
@@ -198,7 +198,7 @@ public class JunctionCanonicalizer
     {
         if(offset < 0 || offset + 1 >= block.length)
             return null;
-        return new byte[] {block[offset], block[offset + 1]};
+        return new byte[] { block[offset], block[offset + 1] };
     }
 
     private static boolean isMatchedOp(final CigarOperator op)

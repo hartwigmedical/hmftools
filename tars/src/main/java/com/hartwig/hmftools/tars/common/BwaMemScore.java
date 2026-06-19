@@ -10,5 +10,5 @@ public final class BwaMemScore
     public static final int GAP_OPEN = -6;
     public static final int GAP_EXTEND = -1;
 
-    private BwaMemScore() {}
+    private BwaMemScore() { }
 }

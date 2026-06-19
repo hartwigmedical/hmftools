@@ -10,7 +10,7 @@ import com.hartwig.hmftools.tars.common.BwaMemScore;
 // maximises cumulative bwa-mem score walking from the near-exon boundary outward.
 public final class BoundaryReclaim
 {
-    private BoundaryReclaim() {}
+    private BoundaryReclaim() { }
 
     // read and ref are aligned index-for-index, ordered from the near-exon boundary outward. Returns the
     // longest prefix in [0, len] reaching the highest cumulative score; 0 if no positive-scoring prefix.

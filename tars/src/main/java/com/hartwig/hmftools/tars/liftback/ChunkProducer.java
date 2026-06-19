@@ -12,7 +12,7 @@ import htsjdk.samtools.SAMRecord;
 // would defeat the per-group cache and orphan mates/supps). Used by ShardedChunkProducer's per-shard readers.
 public class ChunkProducer
 {
-    private ChunkProducer() {}
+    private ChunkProducer() { }
 
     // reference-compared sentinel enqueued (one per worker) to signal end-of-stream.
     public static final List<SAMRecord> END_OF_STREAM = new ArrayList<>();

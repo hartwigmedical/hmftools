@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.tars.fasta;
 
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 

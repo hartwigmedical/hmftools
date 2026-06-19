@@ -540,7 +540,8 @@ public class JunctionRescueResolverTest
     public void testChainDepthCap()
     {
         // cap=2 stops the chain after 2 merges even when more supps are available.
-        final RescueConfig cappedConfig = new RescueConfig(true, 21, 1_000_000, 3, 2, true, 0, 0, RescueConfig.DEFAULT_MIN_PARTIAL_MATCH_RUN);
+        final RescueConfig cappedConfig =
+                new RescueConfig(true, 21, 1_000_000, 3, 2, true, 0, 0, RescueConfig.DEFAULT_MIN_PARTIAL_MATCH_RUN);
 
         final int p = 1000;
         final RescueCandidate cand = candidate(CHR1, true, READ_LEN, p, "30M121S", 60,

@@ -44,7 +44,7 @@ public enum LiftBackCategory
         return switch(this)
         {
             case REF_SINGLE, TX_SINGLE, BOTH_AGREE, BOTH_TX_JUNCTION_REF_SOFTCLIP, BOTH_TX_JUNCTION_REF_MATCH,
-                    BOTH_TX_SOFTCLIP_REF_MATCH, BOTH_MULTI_TX_JUNCTION -> PrimaryBucket.RESOLVED;
+                 BOTH_TX_SOFTCLIP_REF_MATCH, BOTH_MULTI_TX_JUNCTION -> PrimaryBucket.RESOLVED;
             case TX_MULTI, REF_MULTI, BOTH_MULTI, BOTH_AMBIGUOUS -> PrimaryBucket.PROBLEM;
             default -> PrimaryBucket.NON_PRIMARY;
         };

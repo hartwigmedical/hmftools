@@ -18,10 +18,12 @@ import htsjdk.samtools.util.BlockCompressedInputStream;
 // changes, and take that record's pointer. Shard 0 starts after the header; the last runs to EOF.
 public final class BamShardSplitter
 {
-    private BamShardSplitter() {}
+    private BamShardSplitter() { }
 
     // [startVptr, endVptr); endVptr == EOF means "read to end of file".
-    public record ShardRange(long startVptr, long endVptr) {}
+    public record ShardRange(long startVptr, long endVptr)
+    {
+    }
 
     public static final long EOF = Long.MAX_VALUE;
 

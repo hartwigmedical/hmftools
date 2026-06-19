@@ -36,6 +36,7 @@ public class TerminalMicroJunctionCollapser
     }
 
     public long collapsedLeading() { return mCollapsedLeading; }
+
     public long collapsedTrailing() { return mCollapsedTrailing; }
 
     public TerminalCollapseResult tryCollapse(
