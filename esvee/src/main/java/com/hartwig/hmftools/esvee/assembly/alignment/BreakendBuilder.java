@@ -84,13 +84,6 @@ public class BreakendBuilder
         //   - Some cases where homology causes alignment to be misleading, resulting in wrong breakends.
         //   - Recover SGLs to full variants given that one half matches a SAGA variant.
 
-        // Only use SAGA breakends for the simple case of 0 or 1 links. Chained assemblies require more care, not implemented for now.
-        boolean isChained = mAssemblyAlignment.phaseSet() != null && mAssemblyAlignment.phaseSet().assemblyLinks().size() > 1;
-        if(isChained)
-        {
-            return false;
-        }
-
         // Reverse strand match shouldn't occur and isn't handled here.
         if(!sagaAlignment.isForward())
         {

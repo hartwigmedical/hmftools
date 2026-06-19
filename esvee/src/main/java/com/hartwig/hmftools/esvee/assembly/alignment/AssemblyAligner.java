@@ -124,18 +124,12 @@ public class AssemblyAligner extends ThreadTask
             return;
         }
 
-        if(mSagaMatcher != null)
-        {
-            List<SagaJunctionInfo> junctionInfos = assemblyAlignment.linkIndices().stream().map(SagaJunctionInfo::new).toList();
-            // If an assembly is a LINE site, then the extension sequence requirement is lower.
-            // In which case need to lower the requirement for the junction overlap, or else there can be false negative matches.
-            boolean lowerJunctionOverlap = assemblyAlignment.assemblies().stream().anyMatch(JunctionAssembly::hasLineSequence);
-            SagaMatchBySequence sagaMatch = mSagaMatcher.matchBySequence(assemblyAlignment.fullSequence().getBytes(), junctionInfos, lowerJunctionOverlap, false);
-            assemblyAlignment.setSagaMatch(sagaMatch);
-        }
-
+        AlignmentInfo alignmentInfo = null;
         // Try to form breakends from the matched SAGA variant first. Otherwise, create breakends from alignment to ref genome.
-        AlignmentInfo alignmentInfo = processSagaMatchedAssembly(assemblyAlignment);
+        if(tryMatchAssemblyAlignmentToSaga(assemblyAlignment))
+        {
+            alignmentInfo = processSagaMatchedAssembly(assemblyAlignment);
+        }
         if(alignmentInfo == null)
         {
             alignmentInfo = alignAssembly(assemblyAlignment);
@@ -145,6 +139,31 @@ public class AssemblyAligner extends ThreadTask
         alignmentFragments.allocateBreakendSupport();
 
         writeAssemblyData(mWriter, mConfig, assemblyAlignment, alignmentInfo.alignments(), alignmentInfo.requeriedAlignments());
+    }
+
+    private boolean tryMatchAssemblyAlignmentToSaga(AssemblyAlignment assemblyAlignment)
+    {
+        if(mSagaMatcher == null)
+        {
+            return false;
+        }
+
+        // Only use SAGA for the simple case of 0 or 1 links. Chained assemblies require more care, not implemented for now.
+        boolean isChained = assemblyAlignment.phaseSet() != null && assemblyAlignment.phaseSet().assemblyLinks().size() > 1;
+        if(isChained)
+        {
+            return false;
+        }
+
+        List<SagaJunctionInfo> junctionInfos = assemblyAlignment.linkIndices().stream().map(SagaJunctionInfo::new).toList();
+        // If an assembly is a LINE site, then the extension sequence requirement is lower.
+        // In which case need to lower the requirement for the junction overlap, or else there can be false negative matches.
+        boolean lowerJunctionOverlap = assemblyAlignment.assemblies().stream().anyMatch(JunctionAssembly::hasLineSequence);
+        SagaMatchBySequence sagaMatch = mSagaMatcher.matchBySequence(assemblyAlignment.fullSequence()
+                .getBytes(), junctionInfos, lowerJunctionOverlap, false);
+        assemblyAlignment.setSagaMatch(sagaMatch);
+
+        return sagaMatch != null;
     }
 
     private record AlignmentInfo(
