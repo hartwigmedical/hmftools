@@ -181,6 +181,7 @@ public class FindingRecordFactory
                 .sequencingScope(SequencingScope.valueOf(experimentType.name()))
                 .pipelineVersion(orangeRecord.pipelineVersion())
                 .sampleId(orangeRecord.sampleId())
+                .analysisDate(orangeRecord.analysisDate())
                 .samplingDate(orangeRecord.samplingDate())
                 .hasNormalSample(orangeRecord.referenceId() != null)
                 .hasRnaSample(orangeRecord.hasRna())

@@ -1,0 +1,704 @@
+{
+  "version": "",
+  "metaProperties": {
+    "sequencingScope": "WHOLE_GENOME",
+    "pipelineVersion": null,
+    "refGenomeVersion": "V37",
+    "sampleId": "",
+    "analysisDate": "2026-06-19",
+    "samplingDate": "2026-01-01",
+    "hasNormalSample": true,
+    "hasRnaSample": false
+  },
+  "qc": {
+    "isPass": true,
+    "warnings": [],
+    "errors": [],
+    "germlineAberrations": [],
+    "amberMeanDepth": 0,
+    "contamination": 0.0,
+    "totalCopyNumberSegments": 0,
+    "unsupportedCopyNumberSegments": 0,
+    "deletedGenes": 0,
+    "visualisationFile": null
+  },
+  "purityPloidyFit": {
+    "fittedPurityMethod": "NORMAL",
+    "purity": 0.0,
+    "minPurity": 0.0,
+    "maxPurity": 0.0,
+    "ploidy": 0.0,
+    "minPloidy": 0.0,
+    "maxPloidy": 0.0,
+    "purpleInputPlot": {
+      "fileName": "purpleInputPlot.png"
+    },
+    "purpleCircosPlot": {
+      "fileName": "purpleCircosPlot.png"
+    },
+    "purpleClonalityPlot": {
+      "fileName": "purpleClonalityPlot.png"
+    },
+    "purpleCopyNumberPlot": {
+      "fileName": "purpleCopyNumberPlot.png"
+    },
+    "purpleVariantCopyNumberPlot": {
+      "fileName": "purpleVariantCopyNumberPlot.png"
+    },
+    "purplePurityRangePlot": {
+      "fileName": "purplePurityRangePlot.png"
+    },
+    "purpleRainfallPlot": {
+      "fileName": "purpleRainfallPlot.png"
+    }
+  },
+  "somaticSmallVariants": {
+    "status": {
+      "status": "OK",
+      "errors": [],
+      "warnings": []
+    },
+    "findings": [
+      {
+        "driver": {
+          "findingKey": "",
+          "driverSource": "SOMATIC",
+          "reportedStatus": "REPORTED",
+          "driverInterpretation": "HIGH",
+          "driverLikelihood": 0.0
+        },
+        "driverLikelihoodType": null,
+        "transcriptImpact": {
+          "transcript": "",
+          "hgvsCodingImpact": "",
+          "hgvsProteinImpact": "",
+          "affectedCodon": null,
+          "affectedExon": null,
+          "inSpliceRegion": false,
+          "effects": [],
+          "codingEffect": "UNDEFINED",
+          "reported": false
+        },
+        "otherImpact": null,
+        "isCanonical": false,
+        "type": "SNP",
+        "gene": "",
+        "chromosome": "",
+        "position": 0,
+        "ref": "",
+        "alt": "",
+        "worstCodingEffect": "SPLICE",
+        "hotspot": "NON_HOTSPOT",
+        "allelicDepth": {
+          "totalReadCount": 0,
+          "alleleReadCount": 0
+        },
+        "rnaDepth": null,
+        "adjustedCopyNumber": 0.0,
+        "adjustedVAF": 0.0,
+        "minorAlleleCopyNumber": 0.0,
+        "variantCopyNumber": 0.0,
+        "biallelic": false,
+        "biallelicLikelihood": 0.0,
+        "genotypeStatus": "UNKNOWN",
+        "repeatCount": 0,
+        "subclonalLikelihood": 0.0,
+        "somaticLikelihood": null,
+        "localPhaseSets": [],
+        "clinvarPathogenicity": null,
+        "gnomadFrequency": null,
+        "visualisationFile": null
+      }
+    ],
+    "purityThreshold": null
+  },
+  "germlineSmallVariants": {
+    "status": {
+      "status": "OK",
+      "errors": [],
+      "warnings": []
+    },
+    "findings": [
+      {
+        "driver": {
+          "findingKey": "",
+          "driverSource": "SOMATIC",
+          "reportedStatus": "REPORTED",
+          "driverInterpretation": "HIGH",
+          "driverLikelihood": 0.0
+        },
+        "driverLikelihoodType": null,
+        "transcriptImpact": {
+          "transcript": "",
+          "hgvsCodingImpact": "",
+          "hgvsProteinImpact": "",
+          "affectedCodon": null,
+          "affectedExon": null,
+          "inSpliceRegion": false,
+          "effects": [],
+          "codingEffect": "UNDEFINED",
+          "reported": false
+        },
+        "otherImpact": null,
+        "isCanonical": false,
+        "type": "SNP",
+        "gene": "",
+        "chromosome": "",
+        "position": 0,
+        "ref": "",
+        "alt": "",
+        "worstCodingEffect": "SPLICE",
+        "hotspot": "NON_HOTSPOT",
+        "allelicDepth": {
+          "totalReadCount": 0,
+          "alleleReadCount": 0
+        },
+        "rnaDepth": null,
+        "adjustedCopyNumber": 0.0,
+        "adjustedVAF": 0.0,
+        "minorAlleleCopyNumber": 0.0,
+        "variantCopyNumber": 0.0,
+        "biallelic": false,
+        "biallelicLikelihood": 0.0,
+        "genotypeStatus": "UNKNOWN",
+        "repeatCount": 0,
+        "subclonalLikelihood": 0.0,
+        "somaticLikelihood": null,
+        "localPhaseSets": [],
+        "clinvarPathogenicity": null,
+        "gnomadFrequency": null,
+        "visualisationFile": null
+      }
+    ],
+    "purityThreshold": null
+  },
+  "somaticGainDeletions": {
+    "status": {
+      "status": "OK",
+      "errors": [],
+      "warnings": []
+    },
+    "findings": [
+      {
+        "driver": {
+          "findingKey": "",
+          "driverSource": "SOMATIC",
+          "reportedStatus": "REPORTED",
+          "driverInterpretation": "HIGH",
+          "driverLikelihood": 0.0
+        },
+        "gene": "",
+        "chromosome": "1",
+        "chromosomeBand": "p",
+        "transcript": "",
+        "isCanonical": false,
+        "somaticType": "HOM_DEL",
+        "germlineType": null,
+        "geneExtent": "FULL_GENE",
+        "exonRange": null,
+        "tumorMinCopyNumber": 0.0,
+        "tumorMaxCopyNumber": 0.0,
+        "tumorRelativeCopyNumber": 0.0,
+        "tumorMinMinorAlleleCopyNumber": 0.0,
+        "chromosomeArmCopyNumber": 0.0,
+        "germlineMinCopyNumber": null,
+        "tpm": null,
+        "tpmPercentile": null,
+        "tpmFoldChange": null,
+        "visualisationFile": null
+      }
+    ],
+    "purityThreshold": null
+  },
+  "germlineGainDeletions": {
+    "status": {
+      "status": "OK",
+      "errors": [],
+      "warnings": []
+    },
+    "findings": [
+      {
+        "driver": {
+          "findingKey": "",
+          "driverSource": "SOMATIC",
+          "reportedStatus": "REPORTED",
+          "driverInterpretation": "HIGH",
+          "driverLikelihood": 0.0
+        },
+        "gene": "",
+        "chromosome": "1",
+        "chromosomeBand": "p",
+        "transcript": "",
+        "isCanonical": false,
+        "somaticType": "HOM_DEL",
+        "germlineType": null,
+        "geneExtent": "FULL_GENE",
+        "exonRange": null,
+        "tumorMinCopyNumber": 0.0,
+        "tumorMaxCopyNumber": 0.0,
+        "tumorRelativeCopyNumber": 0.0,
+        "tumorMinMinorAlleleCopyNumber": 0.0,
+        "chromosomeArmCopyNumber": 0.0,
+        "germlineMinCopyNumber": null,
+        "tpm": null,
+        "tpmPercentile": null,
+        "tpmFoldChange": null,
+        "visualisationFile": null
+      }
+    ],
+    "purityThreshold": null
+  },
+  "somaticDisruptions": {
+    "status": {
+      "status": "OK",
+      "errors": [],
+      "warnings": []
+    },
+    "findings": [
+      {
+        "driver": {
+          "findingKey": "",
+          "driverSource": "SOMATIC",
+          "reportedStatus": "REPORTED",
+          "driverInterpretation": "HIGH",
+          "driverLikelihood": 0.0
+        },
+        "type": "DISRUPTION",
+        "chromosome": "",
+        "chromosomeBand": "",
+        "gene": "",
+        "transcript": "",
+        "isCanonical": true,
+        "breakendType": "BND",
+        "disruptedCopyNumber": 0.0,
+        "undisruptedCopyNumber": 0.0,
+        "clusterId": null,
+        "breakendUp": {
+          "id": 0,
+          "svId": 0,
+          "geneOrientation": "UPSTREAM",
+          "disruptive": false,
+          "regionType": "DOWNSTREAM",
+          "codingType": "CODING",
+          "nextSpliceExonRank": 0,
+          "orientation": 0,
+          "exonUp": 0,
+          "exonDown": 0,
+          "junctionCopyNumber": 0.0
+        },
+        "breakendDown": {
+          "id": 0,
+          "svId": 0,
+          "geneOrientation": "UPSTREAM",
+          "disruptive": false,
+          "regionType": "DOWNSTREAM",
+          "codingType": "CODING",
+          "nextSpliceExonRank": 0,
+          "orientation": 0,
+          "exonUp": 0,
+          "exonDown": 0,
+          "junctionCopyNumber": 0.0
+        },
+        "visualisationFile": null
+      }
+    ],
+    "purityThreshold": null
+  },
+  "germlineDisruptions": {
+    "status": {
+      "status": "OK",
+      "errors": [],
+      "warnings": []
+    },
+    "findings": [
+      {
+        "driver": {
+          "findingKey": "",
+          "driverSource": "SOMATIC",
+          "reportedStatus": "REPORTED",
+          "driverInterpretation": "HIGH",
+          "driverLikelihood": 0.0
+        },
+        "type": "DISRUPTION",
+        "chromosome": "",
+        "chromosomeBand": "",
+        "gene": "",
+        "transcript": "",
+        "isCanonical": true,
+        "breakendType": "BND",
+        "disruptedCopyNumber": 0.0,
+        "undisruptedCopyNumber": 0.0,
+        "clusterId": null,
+        "breakendUp": {
+          "id": 0,
+          "svId": 0,
+          "geneOrientation": "UPSTREAM",
+          "disruptive": false,
+          "regionType": "DOWNSTREAM",
+          "codingType": "CODING",
+          "nextSpliceExonRank": 0,
+          "orientation": 0,
+          "exonUp": 0,
+          "exonDown": 0,
+          "junctionCopyNumber": 0.0
+        },
+        "breakendDown": {
+          "id": 0,
+          "svId": 0,
+          "geneOrientation": "UPSTREAM",
+          "disruptive": false,
+          "regionType": "DOWNSTREAM",
+          "codingType": "CODING",
+          "nextSpliceExonRank": 0,
+          "orientation": 0,
+          "exonUp": 0,
+          "exonDown": 0,
+          "junctionCopyNumber": 0.0
+        },
+        "visualisationFile": null
+      }
+    ],
+    "purityThreshold": null
+  },
+  "fusions": {
+    "status": {
+      "status": "OK",
+      "errors": [],
+      "warnings": []
+    },
+    "findings": [
+      {
+        "driver": {
+          "findingKey": "",
+          "driverSource": "SOMATIC",
+          "reportedStatus": "REPORTED",
+          "driverInterpretation": "HIGH",
+          "driverLikelihood": 0.0
+        },
+        "geneUp": "",
+        "geneContextUp": "",
+        "geneTranscriptUp": "",
+        "geneDown": "",
+        "geneContextDown": "",
+        "geneTranscriptDown": "",
+        "reportedType": "NONE",
+        "unreportedReasons": [],
+        "phased": "OUT_OF_FRAME",
+        "fusedExonUp": 0,
+        "fusedExonDown": 0,
+        "chainLinks": 0,
+        "chainTerminated": false,
+        "domainsKept": [],
+        "domainsLost": [],
+        "junctionCopyNumber": 0.0,
+        "visualisationFile": null
+      }
+    ],
+    "purityThreshold": null
+  },
+  "viruses": {
+    "status": {
+      "status": "OK",
+      "errors": [],
+      "warnings": []
+    },
+    "findings": [
+      {
+        "driver": {
+          "findingKey": "",
+          "driverSource": "SOMATIC",
+          "reportedStatus": "REPORTED",
+          "driverInterpretation": "HIGH",
+          "driverLikelihood": 0.0
+        },
+        "name": "",
+        "qcStatus": "NO_ABNORMALITIES",
+        "integrations": 0,
+        "oncogenicVirus": null,
+        "percentageCovered": 0.0,
+        "meanCoverage": 0.0,
+        "expectedClonalCoverage": null
+      }
+    ],
+    "purityThreshold": null
+  },
+  "chromosomeArmCopyNumbers": {
+    "status": {
+      "status": "OK",
+      "errors": [],
+      "warnings": []
+    },
+    "findings": [
+      {
+        "driver": {
+          "findingKey": "",
+          "driverSource": "SOMATIC",
+          "reportedStatus": "REPORTED",
+          "driverInterpretation": "HIGH",
+          "driverLikelihood": 0.0
+        },
+        "chromosome": "",
+        "arm": "P",
+        "type": "GAIN",
+        "copyNumber": 0.0,
+        "relativeCopyNumber": 0.0
+      }
+    ],
+    "purityThreshold": null
+  },
+  "hlaAlleles": {
+    "status": {
+      "status": "OK",
+      "errors": [],
+      "warnings": []
+    },
+    "findings": [
+      {
+        "findingKey": "",
+        "geneClass": "MHC_CLASS_I",
+        "geneSymbol": "",
+        "alleleGroup": "",
+        "hlaProtein": "",
+        "qcStatus": [
+          "PASS"
+        ],
+        "germlineCopyNumber": 0,
+        "tumorCopyNumber": 0.0,
+        "refFragments": 0,
+        "tumorFragments": 0,
+        "rnaFragments": 0,
+        "somaticMissense": 0.0,
+        "somaticNonsenseOrFrameshift": 0.0,
+        "somaticSplice": 0.0,
+        "somaticSynonymous": 0.0,
+        "somaticInframeIndel": 0.0
+      }
+    ],
+    "purityThreshold": null
+  },
+  "pharmacoGenotypes": {
+    "status": {
+      "status": "OK",
+      "errors": [],
+      "warnings": []
+    },
+    "findings": [
+      {
+        "findingKey": "",
+        "gene": "",
+        "allele": "",
+        "alleleCount": 0,
+        "function": "",
+        "haplotype": "",
+        "linkedDrugs": "",
+        "urlPrescriptionInfo": ""
+      }
+    ],
+    "purityThreshold": null
+  },
+  "predictedTumorOrigin": {
+    "status": {
+      "status": "OK",
+      "errors": [],
+      "warnings": []
+    },
+    "finding": {
+      "findingKey": "",
+      "mode": "WGS",
+      "predictions": [
+        {
+          "findingKey": "",
+          "cancerType": "",
+          "likelihood": 0.0,
+          "snvPairwiseClassifier": 0.0,
+          "genomicPositionClassifier": 0.0,
+          "featureClassifier": 0.0,
+          "altSjCohortClassifier": 0.0,
+          "expressionPairwiseClassifier": 0.0
+        }
+      ],
+      "visualisationFile": {
+        "fileName": "predictedTumorOrigin.png"
+      }
+    },
+    "purityThreshold": null
+  },
+  "microsatelliteStability": {
+    "status": {
+      "status": "OK",
+      "errors": [],
+      "warnings": []
+    },
+    "finding": {
+      "findingKey": "",
+      "status": "MSI",
+      "indelsPerMb": {
+        "value": 0.0,
+        "threshold": 0.0
+      },
+      "drivingGenes": []
+    },
+    "purityThreshold": null
+  },
+  "tumorMutationalLoad": {
+    "status": {
+      "status": "OK",
+      "errors": [],
+      "warnings": []
+    },
+    "finding": {
+      "findingKey": "",
+      "status": "HIGH",
+      "load": {
+        "value": 0.0,
+        "threshold": 0.0
+      }
+    },
+    "purityThreshold": null
+  },
+  "tumorMutationalBurden": {
+    "status": {
+      "status": "OK",
+      "errors": [],
+      "warnings": []
+    },
+    "finding": {
+      "findingKey": "",
+      "status": "HIGH",
+      "burdenPerMb": {
+        "value": 0.0,
+        "threshold": 0.0
+      },
+      "svBurden": 0
+    },
+    "purityThreshold": null
+  },
+  "homologousRecombination": {
+    "status": {
+      "status": "OK",
+      "errors": [],
+      "warnings": []
+    },
+    "finding": {
+      "predictions": {
+        "PAN_CANCER": {
+          "findingKey": "",
+          "cancerType": "PAN_CANCER",
+          "status": "HR_DEFICIENT",
+          "hrdProbability": {
+            "value": 1.0,
+            "threshold": 0.5
+          },
+          "brca1Probability": 0.0,
+          "brca2Probability": 0.0,
+          "hrdType": "BRACA1_TYPE"
+        }
+      },
+      "drivingGenes": []
+    },
+    "purityThreshold": null
+  },
+  "rnaQc": {
+    "warnings": [],
+    "errors": [],
+    "totalFragments": 0,
+    "duplicateFragments": 0,
+    "splicedFragmentPercent": 0.0,
+    "unsplicedFragmentPercent": 0.0,
+    "altFragmentPercent": 0.0,
+    "chimericFragmentPercent": 0.0
+  },
+  "highExpressionGenes": {
+    "status": {
+      "status": "OK",
+      "errors": [],
+      "warnings": []
+    },
+    "findings": [
+      {
+        "findingKey": "",
+        "gene": "",
+        "tpm": 0.0,
+        "medianTpmCohort": 0.0,
+        "percentileCohort": 0.0,
+        "medianTpmCancer": null,
+        "percentileCancer": null
+      }
+    ],
+    "purityThreshold": null
+  },
+  "lowExpressionGenes": {
+    "status": {
+      "status": "OK",
+      "errors": [],
+      "warnings": []
+    },
+    "findings": [
+      {
+        "findingKey": "",
+        "gene": "",
+        "tpm": 0.0,
+        "medianTpmCohort": 0.0,
+        "percentileCohort": 0.0,
+        "medianTpmCancer": null,
+        "percentileCancer": null
+      }
+    ],
+    "purityThreshold": null
+  },
+  "rnaFusions": {
+    "status": {
+      "status": "OK",
+      "errors": [],
+      "warnings": []
+    },
+    "findings": [
+      {
+        "findingKey": "",
+        "geneUp": null,
+        "geneDown": null,
+        "chromosomeUp": "",
+        "chromosomeDown": "",
+        "positionUp": 0,
+        "positionDown": 0,
+        "junctionTypeUp": "",
+        "junctionTypeDown": "",
+        "knownType": "NONE",
+        "structuralVariantType": "BND",
+        "splitFragments": 0,
+        "realignedFragments": 0,
+        "discordantFragments": 0,
+        "depthUp": 0,
+        "depthDown": 0,
+        "cohortFrequency": 0
+      }
+    ],
+    "purityThreshold": null
+  },
+  "novelSpliceJunctions": {
+    "status": {
+      "status": "OK",
+      "errors": [],
+      "warnings": []
+    },
+    "findings": [
+      {
+        "findingKey": "",
+        "gene": "",
+        "chromosome": "",
+        "junctionStart": 0,
+        "junctionEnd": 0,
+        "type": "UNKNOWN",
+        "exonStart": 0,
+        "exonEnd": 0,
+        "fragmentCount": 0,
+        "depthStart": 0,
+        "depthEnd": 0,
+        "regionStart": "UNKNOWN",
+        "regionEnd": "UNKNOWN",
+        "cohortFrequency": 0
+      }
+    ],
+    "purityThreshold": null
+  }
+}
