@@ -90,6 +90,9 @@ public final class SvVcfTags
     public static final String SAGA_VARIANT = "SAGA";
     public static final String SAGA_VARIANT_DESC = "ID and breakends of the matched SAGA variant";
 
+    public static final String SAGA_INFERRED_BREAKEND = "SAGAINF";
+    public static final String SAGA_INFERRED_BREAKEND_DESC = "Indicates the breakend is inferred from the matched SAGA variant";
+
     // per sample
     public static final String SPLIT_FRAGS = "SF";
     public static final String SPLIT_FRAGS_DESC = "Count of fragments supporting the breakend with a read overlapping the breakend";

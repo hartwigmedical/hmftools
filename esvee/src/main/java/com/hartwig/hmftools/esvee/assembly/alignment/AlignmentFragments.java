@@ -46,7 +46,7 @@ public class AlignmentFragments
         }
     }
 
-    private class FragmentReads
+    private static class FragmentReads
     {
         public final List<SupportRead> PrimaryReads;
         public final List<SupportRead> DuplicateReads; // identical reads from another assembly
@@ -538,7 +538,7 @@ public class AlignmentFragments
         return -1;
     }
 
-    private class ReadBreakendMatch
+    private static class ReadBreakendMatch
     {
         public final boolean IsSplit;
         public final Breakend Breakend;
@@ -600,7 +600,7 @@ public class AlignmentFragments
 
         // next a misaligned junction read - crossing the segment boundary
         int readSeqIndexStart = read.fullAssemblyIndexStart();
-        int readSeqIndexEnd = read.fullAssemblyIndexEnd();
+        int readSeqIndexEnd = read.fullAssemblyIndexEnd();  // inclusive bound
 
         int fullSequenceEndIndex = mAssemblyAlignment.fullSequenceLength() - 1;
 
@@ -611,10 +611,10 @@ public class AlignmentFragments
             {
                 int[] indelSequenceIndices = segment.indelSeqenceIndices();
 
-                if(readSeqIndexStart < indelSequenceIndices[0] && readSeqIndexEnd > indelSequenceIndices[0])
+                if(readSeqIndexStart < indelSequenceIndices[0] && readSeqIndexEnd >= indelSequenceIndices[0])
                     return true;
 
-                if(readSeqIndexStart < indelSequenceIndices[1] && readSeqIndexEnd > indelSequenceIndices[1])
+                if(readSeqIndexStart < indelSequenceIndices[1] && readSeqIndexEnd >= indelSequenceIndices[1])
                     return true;
             }
 

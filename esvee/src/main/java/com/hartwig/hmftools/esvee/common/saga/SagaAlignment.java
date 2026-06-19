@@ -2,8 +2,11 @@ package com.hartwig.hmftools.esvee.common.saga;
 
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.bam.CigarUtils.getReadIndexFromPosition;
 import static com.hartwig.hmftools.common.bam.CigarUtils.leftClipLength;
 import static com.hartwig.hmftools.common.bam.CigarUtils.rightClipLength;
+
+import java.util.List;
 
 import com.hartwig.hmftools.common.bam.SamRecordUtils;
 
@@ -14,7 +17,7 @@ import htsjdk.samtools.Cigar;
 import htsjdk.samtools.SAMFlag;
 
 public record SagaAlignment(
-        BwaMemAlignment alignment,
+        BwaMemAlignment rawAlignment,
         Cigar cigar,
         int queryLength,
         SagaAssembly sagaAssembly
@@ -22,7 +25,7 @@ public record SagaAlignment(
 {
     public boolean isForward()
     {
-        return !SamRecordUtils.isFlagSet(alignment.getSamFlag(), SAMFlag.READ_REVERSE_STRAND);
+        return !SamRecordUtils.isFlagSet(rawAlignment.getSamFlag(), SAMFlag.READ_REVERSE_STRAND);
     }
 
     public int queryStart()
@@ -42,12 +45,12 @@ public record SagaAlignment(
 
     public int sagaStart()
     {
-        return alignment.getRefStart();
+        return rawAlignment.getRefStart();
     }
 
     public int sagaEnd()
     {
-        return alignment.getRefEnd();
+        return rawAlignment.getRefEnd();
     }
 
     public int sagaAlignLength()
@@ -57,12 +60,12 @@ public record SagaAlignment(
 
     public int sagaLength()
     {
-        return sagaAssembly.assemblyLength();
+        return sagaAssembly.length();
     }
 
     public int alignScore()
     {
-        return alignment.getAlignerScore();
+        return rawAlignment.getAlignerScore();
     }
 
     // How many more bases could've been aligned on the left?
@@ -75,6 +78,40 @@ public record SagaAlignment(
     public int rightUnaligned()
     {
         return min(queryLength - queryEnd(), sagaLength() - sagaEnd());
+    }
+
+    public SagaVariant sagaVariant()
+    {
+        return sagaAssembly.variant();
+    }
+
+    public List<Integer> queryJunctionOffsets()
+    {
+        // The indices of the SAGA junctions, mapped into the query sequence range, with extrapolation if required.
+        return sagaAssembly().junctionOffsets().stream()
+                .map(this::sagaIndexToQueryIndex)
+                .toList();
+    }
+
+    private int sagaIndexToQueryIndex(int sagaIndex)
+    {
+        // Extrapolate outside of the aligned range.
+        if(sagaIndex <= sagaStart())
+        {
+            return queryStart() - (sagaStart() - sagaIndex);
+        }
+        if(sagaIndex >= sagaEnd())
+        {
+            return queryEnd() + (sagaIndex - sagaEnd());
+        }
+        // On a D element, use the next index.
+        int result = getReadIndexFromPosition(sagaStart(), cigar.getCigarElements(), sagaIndex, 1, false);
+        if(!(result >= 0 && result <= queryLength))
+        {
+            // Should be impossible because the out of bounds cases were already handled.
+            throw new RuntimeException();
+        }
+        return result;
     }
 
     @NotNull

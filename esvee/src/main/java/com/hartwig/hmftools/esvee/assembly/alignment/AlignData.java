@@ -19,7 +19,6 @@ import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.BWA_GAP_OPEN
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.MULTI_MAPPED_ALT_ALIGNMENT_REGIONS_V37;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.MULTI_MAPPED_ALT_ALIGNMENT_REGIONS_V38;
 import static com.hartwig.hmftools.esvee.assembly.types.RepeatInfo.calcTrimmedBaseLength;
-import static com.hartwig.hmftools.esvee.common.FilterType.MIN_LENGTH;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_VARIANT_LENGTH;
 
 import static htsjdk.samtools.CigarOperator.D;
@@ -39,6 +38,7 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.esvee.assembly.types.RepeatInfo;
+import com.hartwig.hmftools.esvee.common.saga.SagaAlignment;
 
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
 
@@ -46,7 +46,7 @@ import htsjdk.samtools.CigarElement;
 
 public class AlignData
 {
-    private ChrBaseRegion mRefLocation;
+    private final ChrBaseRegion mRefLocation;
     private final int mMapQual;
     private final int mNMatches;
     private final int mScore;
@@ -59,11 +59,11 @@ public class AlignData
     private int mSoftClipLeft;
     private int mSoftClipRight;
 
-    private Orientation mOrientation;
+    private final Orientation mOrientation;
     private final int mAlignedBases;
 
-    private int mRawSequenceStart;
-    private int mRawSequenceEnd;
+    private final int mRawSequenceStart;
+    private final int mRawSequenceEnd;
     private int mSequenceStart;
     private int mSequenceEnd;
     private boolean mDroppedOnRequery;
@@ -109,7 +109,7 @@ public class AlignData
         }
 
         mOrientation = SamRecordUtils.isFlagSet(mFlags, READ_REVERSE_STRAND) ? REVERSE : FORWARD;
-        mAlignedBases = mCigarElements.stream().filter(x -> x.getOperator() == M).mapToInt(x -> x.getLength()).sum();
+        mAlignedBases = mCigarElements.stream().filter(x -> x.getOperator() == M).mapToInt(CigarElement::getLength).sum();
 
         mSequenceStart = sequenceStart;
         mSequenceEnd = max(sequenceEnd - 1, 0);
@@ -354,7 +354,7 @@ public class AlignData
         return mRefLocation.compareTo(other.mRefLocation) < 0;
     }
 
-    public static AlignData from(final BwaMemAlignment alignment, final RefGenomeVersion refGenomeVersion)
+    public static AlignData fromRef(final BwaMemAlignment alignment, final RefGenomeVersion refGenomeVersion)
     {
         int chrIndex = alignment.getRefId();
 
@@ -368,6 +368,15 @@ public class AlignData
                 new ChrBaseRegion(chromosome, alignment.getRefStart() + 1, alignment.getRefEnd()),
                 alignment.getSeqStart(), alignment.getSeqEnd(), alignment.getMapQual(), alignment.getAlignerScore(),
                 alignment.getSamFlag(), alignment.getCigar(), alignment.getNMismatches(), alignment.getXATag(), alignment.getMDTag());
+    }
+
+    public static AlignData fromSaga(final SagaAlignment alignment)
+    {
+        BwaMemAlignment rawAlignment = alignment.rawAlignment();
+        return new AlignData(
+                new ChrBaseRegion(alignment.sagaVariant().id(), alignment.sagaStart() + 1, alignment.sagaEnd()),
+                alignment.queryStart(), alignment.queryEnd(), rawAlignment.getMapQual(), rawAlignment.getAlignerScore(),
+                rawAlignment.getSamFlag(), rawAlignment.getCigar(), rawAlignment.getNMismatches(), rawAlignment.getXATag(), rawAlignment.getMDTag());
     }
 
     public String toString()
