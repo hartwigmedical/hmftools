@@ -72,11 +72,12 @@ Where ε = expected noise in cfDNA
 TFctDNA = 2* adjVAFctDNA / (WA_VCN + 2* adjVAFctDNA - WA_CN * adjVAFctDNA) 
 ```
 
-The expected noise is set as the depth weighted average empirical error rate from SAGE BQR of all fragments based on the trinucleotide context for variants with high raw base qual (>=30).
+The expected noise is set as the depth weighted average empirical error rate from Redux BQR across all eligible variants. For each variant, we compute the average BQR across all high raw quality contexts (30+) for the relevant trinucleotide / alt as well as the reverse complemented context. We then use a weighted average of the original and RC contexts based on the sample-specific read strand bias.
 
 Where the sample has DUAL fragment variant support as defined by Redux, we repeat these calculations restricted to the dual depth, allelic support, and error rates. In this case we apply additional filters for Ultima specifically:
 - High confidence observation in ctDNA: (RC_QUAL[0]+RC_QUAL[1]+RC_QUAL[3]) / (RC_CNT[0]+RC_CNT[1]+RC_CNT[3]) >= 34
 - Adequate average edge distance: AED[1] >= 0.1 (proportion of read)
+- BQR DUAL error rate >= 50
 
 A check is made at this stage for variants which are outliers and may unduly contribute to the fit. Variants with a VAF of more than 8x the average cfDNA VAF for the sample, with allele support of at least 3 (2 if there are any DUAL observations) and whose allele support makes up more than 15% of reads in the sample are filtered as outliers. This test is performaed iteratively with the threshold raised to 30% after the first round. These are excluded as outliers and are assumed to be likely germline variants which have leaked into the somatic variants or clonal haematopoiesis. The ctDNA_TF is then recalculated excluding the filtered observation. 
  
@@ -233,7 +234,9 @@ SampleDualDP | DUPLEX depth at variant site in cfDNA sample
 SampleDualAD | DUPLEX allelic depth support for variant in cfDNA sample 
 QualPerAD | Average quality per allelic depth support in SAGE (used as filter) 
 SeqGCRatio | GC ratio of 120 bases surrounding variant site 
-BQRErrorRate | Empirically measure error rate for variant trinucleotide + alt context from SAGE. 
+BQRErrorRate | Empirically measure error rate for variant trinucleotide + alt context from BQR (non-DUAL consensus type(s))
+DualBqrErrorRate | As above but for DUAL consensus type
+AvgReadDistance | Average distance (as proportion of read length) from edge of read, across alt supporting reads in sample
 
 ### SCNA output 
 Field | Description 
