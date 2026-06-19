@@ -70,4 +70,12 @@ public class SagaResource
     {
         return new IndexedFastaSequenceFile(new File(fastaPath));
     }
+
+    // Package-private constructor for use in tests, to avoid requiring real FASTA files.
+    SagaResource(final String fastaPath, final List<SagaAssembly> assemblies, final SAMSequenceDictionary samDict)
+    {
+        mFastaPath = fastaPath;
+        mAssemblies = assemblies;
+        mSequenceDictionary = samDict;
+    }
 }

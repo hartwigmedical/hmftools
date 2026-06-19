@@ -109,4 +109,9 @@ public class SagaLocationMatcher
                 .thenComparing(SagaLocationMatch::variantId);
         return candidates.min(comparator).orElseThrow();
     }
+
+    Map<String, List<SagaIndexedBreakend>> getBreakends()
+    {
+        return mSearchableBreakends;
+    }
 }
