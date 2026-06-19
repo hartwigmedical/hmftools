@@ -11,7 +11,7 @@ public record SagaSequenceMatchCandidate(
         SagaAlignment alignment,
         List<SagaJunctionMatchInfo> queryJunctionMatches,
         List<SagaJunctionMatchInfo> sagaJunctionMatches,
-        Set<String> filters)
+        Set<SagaSequenceMatchCandidateFilter> filters)
 {
     public SagaAssembly sagaAssembly()
     {

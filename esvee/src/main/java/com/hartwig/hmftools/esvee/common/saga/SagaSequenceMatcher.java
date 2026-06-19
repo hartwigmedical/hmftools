@@ -125,7 +125,7 @@ public class SagaSequenceMatcher
 
     private SagaSequenceMatchCandidate evaluateAlignment(final SagaAlignment alignment, final MatchArguments args)
     {
-        Set<String> filters = new TreeSet<>();
+        Set<SagaSequenceMatchCandidateFilter> filters = new TreeSet<>();
 
         applyAlignmentFilters(alignment, args, filters);
 
@@ -136,26 +136,27 @@ public class SagaSequenceMatcher
         return new SagaSequenceMatchCandidate(alignment, queryJunctionMatches, sagaJunctionMatches, filters);
     }
 
-    private void applyAlignmentFilters(final SagaAlignment alignment, final MatchArguments args, Set<String> filters)
+    private void applyAlignmentFilters(final SagaAlignment alignment, final MatchArguments args,
+            Set<SagaSequenceMatchCandidateFilter> filters)
     {
         // For junction assemblies, the sequence may match to SAGA in reverse if it's part of an INV.
         // For phased assemblies, expect that it matches to the forward strand because ESVEE assemblies are always forward strand.
         if(!args.allowReverseStrand() && !alignment.isForward())
         {
-            filters.add("reverse_strand");
+            filters.add(SagaSequenceMatchCandidateFilter.REVERSE_STRAND);
         }
 
         // Only match if the majority of the sequences align, where possible.
         // I.e. don't allow a small subsequence match where much more sequence was possible to match.
         if(!checkAlignLength(alignment))
         {
-            filters.add("aligned_length");
+            filters.add(SagaSequenceMatchCandidateFilter.ALIGNED_LENGTH);
         }
 
         // Low alignment score means low sequence similarity, so we think this is not a good match.
         if(!checkAlignScore(alignment))
         {
-            filters.add("align_score");
+            filters.add(SagaSequenceMatchCandidateFilter.ALIGN_SCORE);
         }
     }
 
@@ -282,7 +283,7 @@ public class SagaSequenceMatcher
     }
 
     private List<SagaJunctionMatchInfo> filterJunctionMatches(final MatchArguments args,
-            final List<SagaJunctionMatchInfo> junctionMatchInfos, final String prefix, Set<String> filters)
+            final List<SagaJunctionMatchInfo> junctionMatchInfos, boolean isQuery, Set<SagaSequenceMatchCandidateFilter> filters)
     {
         List<SagaJunctionMatchInfo> alignedJunctions = junctionMatchInfos.stream()
                 .filter(j -> checkJunctionOverlap(j, args.lowerJunctionOverlap()))
@@ -292,7 +293,9 @@ public class SagaSequenceMatcher
         // Don't require all the junctions to be covered because we could be matching just one side of the variant (e.g. for junction assembly, or an SGL).
         if(alignedJunctions.isEmpty())
         {
-            filters.add(prefix + "_junction_overlap");
+            filters.add(isQuery
+                    ? SagaSequenceMatchCandidateFilter.QUERY_JUNCTION_OVERLAP
+                    : SagaSequenceMatchCandidateFilter.SAGA_JUNCTION_OVERLAP);
         }
 
         // Ensure there are no large indels near the junctions.
@@ -300,7 +303,9 @@ public class SagaSequenceMatcher
         // Potential FIXME: limit to only the matched junctions.
         if(junctionMatchInfos.stream().anyMatch(SagaJunctionMatchInfo::indelNearby))
         {
-            filters.add(prefix + "_junction_indel");
+            filters.add(isQuery
+                    ? SagaSequenceMatchCandidateFilter.QUERY_JUNCTION_INDEL
+                    : SagaSequenceMatchCandidateFilter.SAGA_JUNCTION_INDEL);
             return emptyList();
         }
         else
@@ -310,7 +315,8 @@ public class SagaSequenceMatcher
     }
 
     private void applyJunctionFilters(final MatchArguments args, final SagaAlignment alignment,
-            List<SagaJunctionMatchInfo> queryJunctionMatches, List<SagaJunctionMatchInfo> sagaJunctionMatches, Set<String> filters)
+            List<SagaJunctionMatchInfo> queryJunctionMatches, List<SagaJunctionMatchInfo> sagaJunctionMatches,
+            Set<SagaSequenceMatchCandidateFilter> filters)
     {
         List<CigarElemWithPos> cigarElements = getCigarElementPositions(alignment.cigar(), alignment.sagaStart());
 
@@ -319,8 +325,8 @@ public class SagaSequenceMatcher
         List<SagaJunctionMatchInfo> sagaJunctionMatchInfos = alignment.sagaAssembly().junctions().stream()
                 .map(j -> evaluateJunctionAlignment(alignment, cigarElements, j, false)).toList();
 
-        queryJunctionMatches.addAll(filterJunctionMatches(args, queryJunctionMatchInfos, "query", filters));
-        sagaJunctionMatches.addAll(filterJunctionMatches(args, sagaJunctionMatchInfos, "saga", filters));
+        queryJunctionMatches.addAll(filterJunctionMatches(args, queryJunctionMatchInfos, true, filters));
+        sagaJunctionMatches.addAll(filterJunctionMatches(args, sagaJunctionMatchInfos, false, filters));
     }
 
     public static BwaMemAligner.Params createAlignerParams(final SagaSequenceMatcherConfig matchConfig)
