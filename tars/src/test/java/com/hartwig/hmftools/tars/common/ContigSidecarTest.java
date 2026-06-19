@@ -3,6 +3,7 @@ package com.hartwig.hmftools.tars.common;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 

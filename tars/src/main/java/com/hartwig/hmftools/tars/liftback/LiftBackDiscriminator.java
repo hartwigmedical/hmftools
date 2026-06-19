@@ -12,7 +12,7 @@ import com.hartwig.hmftools.tars.common.SpliceCommon;
 // so the decision tree reads as one piece.
 public final class LiftBackDiscriminator
 {
-    private LiftBackDiscriminator() {}
+    private LiftBackDiscriminator() { }
 
     // Per-alignment evidence emitted into TSV-A for post-hoc "why this category" analysis.
     public static class Features
@@ -116,7 +116,9 @@ public final class LiftBackDiscriminator
         return features;
     }
 
-    public record Outcome(LiftedAlignment effectivePrimary, String note) {}
+    public record Outcome(LiftedAlignment effectivePrimary, String note)
+    {
+    }
 
     // Mutates Dropped/IsPrimaryChoice and returns the effective primary and a short diagnostic note.
     public static Outcome apply(

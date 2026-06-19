@@ -20,7 +20,7 @@ public final class LiftBackRecordOps
 {
     static final String XA_TAG = "XA";
 
-    private LiftBackRecordOps() {}
+    private LiftBackRecordOps() { }
 
     // Supplementaries whose own lift failed are mirrored onto their primary's lifted coords (keeping
     // the 0x800 flag) rather than marked unmapped -- htsjdk's validator rejects 0x4+0x800.

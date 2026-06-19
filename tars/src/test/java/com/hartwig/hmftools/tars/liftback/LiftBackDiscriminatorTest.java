@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.tars.liftback.LiftBackCategory.REF_MULTI;
 import static com.hartwig.hmftools.tars.liftback.LiftBackCategory.REF_SINGLE;
 import static com.hartwig.hmftools.tars.liftback.LiftBackCategory.TX_MULTI;
 import static com.hartwig.hmftools.tars.liftback.LiftBackCategory.TX_SINGLE;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;

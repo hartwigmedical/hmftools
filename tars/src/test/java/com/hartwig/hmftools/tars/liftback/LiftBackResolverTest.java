@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.createEnsemblGeneDa
 import static com.hartwig.hmftools.common.test.GeneTestUtils.createGeneDataCache;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.TX_CONTIG;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.threeExonContig;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;

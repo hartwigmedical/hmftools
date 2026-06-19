@@ -9,7 +9,7 @@ public final class SpliceMotif
     public static final int TIER_CANONICAL = 2;
     public static final int TIER_ANNOTATED = 3;
 
-    private SpliceMotif() {}
+    private SpliceMotif() { }
 
     public static int classify(final byte[] donorBases, final byte[] acceptorBases)
     {
@@ -40,6 +40,6 @@ public final class SpliceMotif
 
     private static char upper(final byte b)
     {
-        return (char)(b & ~0x20);
+        return (char) (b & ~0x20);
     }
 }

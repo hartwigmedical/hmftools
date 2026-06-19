@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.secondMateReco
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.supplementaryRecord;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.threeExonContig;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.TestGenome;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;

@@ -54,7 +54,7 @@ public final class LiftBackResources
             final IndexedFastaSequenceFile fasta = new IndexedFastaSequenceFile(new File(refGenomeFile));
             return (chromosome, posStart, posEnd) ->
             {
-                synchronized(fasta)
+                synchronized (fasta)
                 {
                     try
                     {

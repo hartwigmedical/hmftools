@@ -45,11 +45,18 @@ public class TailExtensionStatistics
     }
 
     public int recordsEvaluated() { return mRecordsEvaluated; }
+
     public int recordsExtended() { return mRecordsExtended; }
+
     public int basesExtendedLead() { return mBasesExtendedLead; }
+
     public int basesExtendedTrail() { return mBasesExtendedTrail; }
+
     public int skippedNoRef() { return mSkippedNoRef; }
+
     public int skippedForJunctionGuard() { return mSkippedForJunctionGuard; }
+
     public int skippedComplexShape() { return mSkippedComplexShape; }
+
     public int rejectedTooManyMismatches() { return mRejectedTooManyMismatches; }
 }

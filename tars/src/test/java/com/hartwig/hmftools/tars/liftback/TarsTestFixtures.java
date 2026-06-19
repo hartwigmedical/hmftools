@@ -29,7 +29,7 @@ public final class TarsTestFixtures
     public static final String TRANS_NAME = "ENST_TEST";
     public static final String TX_CONTIG = "ens" + GENE_ID + "_" + GENE_NAME + "_" + TRANS_NAME;
 
-    private TarsTestFixtures() {}
+    private TarsTestFixtures() { }
 
     // exon spans on chr1: 100-199, 300-399, 500-549; introns 200-299, 400-499; contig length 250.
     public static ContigEntry threeExonContig()
@@ -123,7 +123,7 @@ public final class TarsTestFixtures
     // asRefSource() to the engine. Out-of-range reads return null per the RefSequenceSource contract.
     public static final class TestGenome
     {
-        private final Map<String,byte[]> mBases = new HashMap<>();
+        private final Map<String, byte[]> mBases = new HashMap<>();
 
         public TestGenome with(final String chromosome, final int length, final char fill)
         {
@@ -160,7 +160,7 @@ public final class TarsTestFixtures
         public RefSequenceSource asRefSource()
         {
             final MockRefGenome ref = new MockRefGenome(true);
-            for(final Map.Entry<String,byte[]> entry : mBases.entrySet())
+            for(final Map.Entry<String, byte[]> entry : mBases.entrySet())
                 ref.RefGenomeMap.put(entry.getKey(), new String(entry.getValue(), StandardCharsets.US_ASCII));
             return (chrom, posStart, posEnd) ->
             {
@@ -218,29 +218,143 @@ public final class TarsTestFixtures
         private int mTranscriptStrand = 0;
         private List<LiftedAlignment> mAlignments = List.of();
 
-        public ResultBuilder category(final LiftBackCategory v) { mCategory = v; return this; }
-        public ResultBuilder comp(final LiftBackResult.Composition v) { mComp = v; return this; }
-        public ResultBuilder role(final LiftBackResult.RecordRole v) { mRole = v; return this; }
-        public ResultBuilder chrom(final String v) { mChrom = v; return this; }
-        public ResultBuilder pos(final int v) { mPos = v; return this; }
-        public ResultBuilder cigar(final String v) { mCigar = v; return this; }
-        public ResultBuilder negativeStrand(final boolean v) { mNegativeStrand = v; return this; }
-        public ResultBuilder hasNCigar(final boolean v) { mHasNCigar = v; return this; }
-        public ResultBuilder inputMapq(final int v) { mInputMapq = v; return this; }
-        public ResultBuilder updatedMapq(final int v) { mUpdatedMapq = v; return this; }
-        public ResultBuilder numXaAlts(final int v) { mNumXaAlts = v; return this; }
-        public ResultBuilder numRefAlts(final int v) { mNumRefAlts = v; return this; }
-        public ResultBuilder numTxAlts(final int v) { mNumTxAlts = v; return this; }
-        public ResultBuilder numLoci(final int v) { mNumLoci = v; return this; }
-        public ResultBuilder numDistinctCigarsAtPrimaryLocus(final int v) { mNumDistinctCigarsAtPrimaryLocus = v; return this; }
-        public ResultBuilder txHasNCigar(final boolean v) { mTxHasNCigar = v; return this; }
-        public ResultBuilder txSoftClipAtBoundary(final boolean v) { mTxSoftClipAtBoundary = v; return this; }
-        public ResultBuilder refSoftClipped(final boolean v) { mRefSoftClipped = v; return this; }
-        public ResultBuilder refFullMatch(final boolean v) { mRefFullMatch = v; return this; }
-        public ResultBuilder geneIds(final String v) { mGeneIds = v; return this; }
-        public ResultBuilder notes(final String v) { mNotes = v; return this; }
-        public ResultBuilder transcriptStrand(final int v) { mTranscriptStrand = v; return this; }
-        public ResultBuilder alignments(final List<LiftedAlignment> v) { mAlignments = v; return this; }
+        public ResultBuilder category(final LiftBackCategory v)
+        {
+            mCategory = v;
+            return this;
+        }
+
+        public ResultBuilder comp(final LiftBackResult.Composition v)
+        {
+            mComp = v;
+            return this;
+        }
+
+        public ResultBuilder role(final LiftBackResult.RecordRole v)
+        {
+            mRole = v;
+            return this;
+        }
+
+        public ResultBuilder chrom(final String v)
+        {
+            mChrom = v;
+            return this;
+        }
+
+        public ResultBuilder pos(final int v)
+        {
+            mPos = v;
+            return this;
+        }
+
+        public ResultBuilder cigar(final String v)
+        {
+            mCigar = v;
+            return this;
+        }
+
+        public ResultBuilder negativeStrand(final boolean v)
+        {
+            mNegativeStrand = v;
+            return this;
+        }
+
+        public ResultBuilder hasNCigar(final boolean v)
+        {
+            mHasNCigar = v;
+            return this;
+        }
+
+        public ResultBuilder inputMapq(final int v)
+        {
+            mInputMapq = v;
+            return this;
+        }
+
+        public ResultBuilder updatedMapq(final int v)
+        {
+            mUpdatedMapq = v;
+            return this;
+        }
+
+        public ResultBuilder numXaAlts(final int v)
+        {
+            mNumXaAlts = v;
+            return this;
+        }
+
+        public ResultBuilder numRefAlts(final int v)
+        {
+            mNumRefAlts = v;
+            return this;
+        }
+
+        public ResultBuilder numTxAlts(final int v)
+        {
+            mNumTxAlts = v;
+            return this;
+        }
+
+        public ResultBuilder numLoci(final int v)
+        {
+            mNumLoci = v;
+            return this;
+        }
+
+        public ResultBuilder numDistinctCigarsAtPrimaryLocus(final int v)
+        {
+            mNumDistinctCigarsAtPrimaryLocus = v;
+            return this;
+        }
+
+        public ResultBuilder txHasNCigar(final boolean v)
+        {
+            mTxHasNCigar = v;
+            return this;
+        }
+
+        public ResultBuilder txSoftClipAtBoundary(final boolean v)
+        {
+            mTxSoftClipAtBoundary = v;
+            return this;
+        }
+
+        public ResultBuilder refSoftClipped(final boolean v)
+        {
+            mRefSoftClipped = v;
+            return this;
+        }
+
+        public ResultBuilder refFullMatch(final boolean v)
+        {
+            mRefFullMatch = v;
+            return this;
+        }
+
+        public ResultBuilder geneIds(final String v)
+        {
+            mGeneIds = v;
+            return this;
+        }
+
+        public ResultBuilder notes(final String v)
+        {
+            mNotes = v;
+            return this;
+        }
+
+        public ResultBuilder transcriptStrand(final int v)
+        {
+            mTranscriptStrand = v;
+            return this;
+        }
+
+        public ResultBuilder alignments(final List<LiftedAlignment> v)
+        {
+            mAlignments = v;
+            return this;
+        }
 
         public LiftBackResult build()
         {

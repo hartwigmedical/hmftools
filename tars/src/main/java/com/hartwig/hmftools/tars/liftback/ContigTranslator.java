@@ -140,10 +140,14 @@ public final class ContigTranslator
     }
 
     // (cigar, contigPos) after the spacer-overhang clamp; contigPos advances when the leading edge is clipped.
-    private record ClampedAlignment(Cigar cigar, int contigPos) {}
+    private record ClampedAlignment(Cigar cigar, int contigPos)
+    {
+    }
 
     // exon span index + genomic position where an alignment begins.
-    private record SpanLocation(int spanIndex, int genomicPos) {}
+    private record SpanLocation(int spanIndex, int genomicPos)
+    {
+    }
 
     // A D straddling an exon boundary lifts as xD nN yD - artifact of tx-FASTA off-by-N at the junction.
     // Absorb small flanking Ds into the N (preserves read and ref span); keep larger ones as real deletions.
@@ -358,5 +362,7 @@ public final class ContigTranslator
             String chromosome,
             int genomicStart,
             Cigar genomicCigar,
-            List<BaseRegion> impliedIntrons) {}
+            List<BaseRegion> impliedIntrons)
+    {
+    }
 }

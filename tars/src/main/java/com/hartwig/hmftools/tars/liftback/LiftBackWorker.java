@@ -73,11 +73,17 @@ public class LiftBackWorker extends Thread
     }
 
     public LiftBackStats liftBackStats() { return mStats; }
+
     public RescueStatistics rescueStatistics() { return mRescueResolver != null ? mRescueResolver.statistics() : null; }
+
     public TailExtensionStatistics tailExtStatistics() { return mSoftclipExtender != null ? mSoftclipExtender.statistics() : null; }
+
     public long collapsedLeading() { return mTerminalCollapser != null ? mTerminalCollapser.collapsedLeading() : 0; }
+
     public long collapsedTrailing() { return mTerminalCollapser != null ? mTerminalCollapser.collapsedTrailing() : 0; }
+
     public long junctionsCanonicalized() { return mJunctionCanonicalizer != null ? mJunctionCanonicalizer.junctionsShifted() : 0; }
+
     public long overCapUnmapped() { return mProcessor.overCapUnmapped(); }
 
     @Override
