@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.esvee.common.saga;
 
-import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
-
 import java.util.List;
 
 public record SagaAssembly(
@@ -62,7 +60,6 @@ public record SagaAssembly(
         String[] parts = label.split("\\|");
         if(!(parts.length == 4 || parts.length == 5))
         {
-            SV_LOGGER.error("Expected 4 or 5 parts but got {}", parts.length);
             throw new IllegalArgumentException("Invalid fasta label: " + label);
         }
         String id = parts[0];
