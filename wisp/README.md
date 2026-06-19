@@ -61,8 +61,8 @@ Using the PASS variants from the cfDNA annotated tissue biopsy purple VCF, apply
 - Is an SNV
 - Not in LOW_CONFIDENCE tier
 - !NEAR_INDEL: ie no germline or somatic indel present in the variant core (as annotated by SAGE)
-- GERMLINE_VAF < 1% OR GERLMINE_ABQ < 30
-- Adequate average edge distance: AED[1] >= 9
+- GERMLINE_VAF < 1% OR GERLMINE_ARCBQ < 30
+- Adequate average edge distance: AED[1] >= 0.06 (proportion of read)
 
 Considering only the remaining unfiltered sites calculate the TFctDNA using the following formula 
 ```
