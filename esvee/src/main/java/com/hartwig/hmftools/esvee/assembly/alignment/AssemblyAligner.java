@@ -127,6 +127,8 @@ public class AssemblyAligner extends ThreadTask
         if(mSagaMatcher != null)
         {
             List<SagaJunctionInfo> junctionInfos = assemblyAlignment.linkIndices().stream().map(SagaJunctionInfo::new).toList();
+            // If an assembly is a LINE site, then the extension sequence requirement is lower.
+            // In which case need to lower the requirement for the junction overlap, or else there can be false negative matches.
             boolean lowerJunctionOverlap = assemblyAlignment.assemblies().stream().anyMatch(JunctionAssembly::hasLineSequence);
             SagaMatchBySequence sagaMatch = mSagaMatcher.matchBySequence(assemblyAlignment.fullSequence().getBytes(), junctionInfos, lowerJunctionOverlap, false);
             assemblyAlignment.setSagaMatch(sagaMatch);

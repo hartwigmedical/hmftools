@@ -860,6 +860,8 @@ public class JunctionAssembly
     {
         int junctionOffset = mJunction.isForward() ? refBaseLength() : baseLength() - refBaseLength();
         List<SagaJunctionInfo> junctionInfos = List.of(new SagaJunctionInfo(junctionOffset));
+        // If the assembly is a LINE site, then the extension sequence requirement is lower.
+        // In which case need to lower the requirement for the junction overlap, or else there can be false negative matches.
         boolean lowerJunctionOverlap = hasLineSequence();
         SagaMatchBySequence match = sagaMatcher.matchBySequence(bases(), junctionInfos, lowerJunctionOverlap, true);
         setSagaMatch(match);
