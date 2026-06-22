@@ -1,4 +1,5 @@
 import argparse
+import os
 import time
 import random
 import matplotlib.pyplot as plt
@@ -404,10 +405,28 @@ def train_main(sample_tsv: str, purple_root: str, epochs: int, batch_size: int, 
     df = pd.read_csv(sample_tsv, sep="\t")
 
     df["circosPngPath"] = purple_root + "/" + df["sampleId"] + ".circos.png"
+    df["purplePurityPath"] = purple_root + "/" + df["sampleId"] + ".purple.purity.tsv"
+
+    missing = []
+    for _, row in df.iterrows():
+
+        circos_png_path = row["circosPngPath"]
+        purple_purity_path = row["purplePurityPath"]
+
+        if not os.path.exists(circos_png_path):
+            LOGGER.error(f"missing file: {circos_png_path}")
+            missing.append(circos_png_path)
+
+        if not os.path.exists(purple_purity_path):
+            LOGGER.error(f"missing file: {purple_purity_path}")
+            missing.append(purple_purity_path)
+
+    if missing:
+        raise FileNotFoundError(f"{len(missing)} input file(s) not found")
 
     # load the purity
     if override_purity or "purity" not in df.columns:
-        df["purity"] = [pd.read_csv(f'{purple_root}/{s}/{s}.purple.purity.tsv', sep='\t')["purity"].iloc[0] for s in df["sampleId"]]
+        df["purity"] = [pd.read_csv(p, sep='\t')["purity"].iloc[0] for p in df["purplePurityPath"]]
 
     df = filter_df(df)
 
