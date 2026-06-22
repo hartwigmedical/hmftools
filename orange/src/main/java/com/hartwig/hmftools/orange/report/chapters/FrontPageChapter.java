@@ -7,10 +7,8 @@ import static com.hartwig.hmftools.orange.report.ReportResources.FRONT_CIRCOS_IM
 import static com.hartwig.hmftools.orange.report.ReportResources.PAGE_MARGIN_BOTTOM;
 import static com.hartwig.hmftools.orange.report.ReportResources.PAGE_MARGIN_TOP;
 
-import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
-import com.hartwig.hmftools.orange.OrangeConfig;
-import com.hartwig.hmftools.orange.report.PlotPathResolver;
 import com.hartwig.hmftools.orange.report.ReportResources;
+import com.hartwig.hmftools.orange.report.pdfdata.FrontPageData;
 import com.hartwig.hmftools.orange.report.tables.FrontPageTables;
 import com.hartwig.hmftools.orange.report.util.Images;
 import com.itextpdf.kernel.geom.PageSize;
@@ -25,29 +23,27 @@ import com.itextpdf.layout.property.HorizontalAlignment;
 import com.itextpdf.layout.property.UnitValue;
 import com.itextpdf.layout.renderer.IRenderer;
 
+import org.jetbrains.annotations.NotNull;
+
 public class FrontPageChapter implements ReportChapter
 {
-    private final OrangeConfig mConfig;
-    private final OrangeRecord mReport;
-    private final PlotPathResolver mPlotPathResolver;
+    private final FrontPageData mData;
     private final ReportResources mReportResources;
 
-    public FrontPageChapter(
-            final OrangeConfig config, final OrangeRecord report, final PlotPathResolver plotPathResolver,
-            final ReportResources reportResources)
+    public FrontPageChapter(final FrontPageData data, final ReportResources reportResources)
     {
-        mConfig = config;
-        mReport = report;
-        mPlotPathResolver = plotPathResolver;
+        mData = data;
         mReportResources = reportResources;
     }
 
+    @NotNull
     @Override
     public String name()
     {
         return "Front Page";
     }
 
+    @NotNull
     @Override
     public PageSize pageSize()
     {
@@ -55,19 +51,20 @@ public class FrontPageChapter implements ReportChapter
     }
 
     @Override
-    public void render(final Document document)
+    public void render(@NotNull final Document document)
     {
-        Table sampleSummaryTable = FrontPageTables.buildSampleSummary(mReport, mConfig, contentWidth(), mReportResources);
+        Table sampleSummaryTable =
+                FrontPageTables.buildSampleSummary(mData.sampleSummary(), mData.qcWarning(), contentWidth(), mReportResources);
         document.add(sampleSummaryTable);
 
-        Table technicalSummaryTable = FrontPageTables.buildTechnicalSummary(mReport, mConfig, contentWidth(), mReportResources);
+        Table technicalSummaryTable = FrontPageTables.buildTechnicalSummary(mData.technicalSummary(), contentWidth(), mReportResources);
         technicalSummaryTable.setMarginBottom(10);
         document.add(technicalSummaryTable);
 
         Table topTable = new Table(UnitValue.createPercentArray(new float[] { 1, 1 })).setWidth(contentWidth() - 5);
 
-        Table driverSummaryTable = FrontPageTables.buildDriverSummary(mReport, contentWidth(), mReportResources);
-        Table genomeWideTable = FrontPageTables.buildGenomeWideFeatures(mReport, contentWidth(), mReportResources);
+        Table driverSummaryTable = FrontPageTables.buildDriverSummary(mData.driverSummary(), contentWidth(), mReportResources);
+        Table genomeWideTable = FrontPageTables.buildGenomeWideFeatures(mData.genomeWideFeatures(), contentWidth(), mReportResources);
 
         topTable.addCell(driverSummaryTable);
         topTable.addCell(genomeWideTable);
@@ -80,10 +77,10 @@ public class FrontPageChapter implements ReportChapter
         LayoutResult result = renderer.layout(new LayoutContext(new LayoutArea(0, new Rectangle(contentWidth(), pageHeight))));
         float currentHeight = result.getOccupiedArea().getBBox().getHeight();
 
-        int remainingHeight = (int)floor(pageHeight - currentHeight - PAGE_MARGIN_TOP - PAGE_MARGIN_BOTTOM) - 50;
+        int remainingHeight = (int) floor(pageHeight - currentHeight - PAGE_MARGIN_TOP - PAGE_MARGIN_BOTTOM) - 50;
         int maxCircosHeight = min(remainingHeight, FRONT_CIRCOS_IMAGE_HEIGHT);
 
-        Image circosImage = Images.build(mPlotPathResolver.resolve(mReport.plots().purpleFinalCircosPlot()));
+        Image circosImage = Images.build(mData.circosPlotPath());
         circosImage.setHorizontalAlignment(HorizontalAlignment.CENTER);
         circosImage.setMaxHeight(maxCircosHeight);
         table.addCell(circosImage);

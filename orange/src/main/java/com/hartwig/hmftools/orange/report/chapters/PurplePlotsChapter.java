@@ -2,41 +2,38 @@ package com.hartwig.hmftools.orange.report.chapters;
 
 import static java.lang.Math.round;
 
-import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
-import com.hartwig.hmftools.orange.algo.QcStatusInterpretation;
-import com.hartwig.hmftools.orange.report.PlotPathResolver;
 import com.hartwig.hmftools.orange.report.ReportResources;
+import com.hartwig.hmftools.orange.report.pdfdata.PurplePlotsData;
 import com.hartwig.hmftools.orange.report.util.Cells;
 import com.hartwig.hmftools.orange.report.util.Images;
 import com.itextpdf.kernel.geom.PageSize;
 import com.itextpdf.layout.Document;
-import com.itextpdf.layout.borders.Border;
 import com.itextpdf.layout.element.Image;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.property.HorizontalAlignment;
 
-import org.apache.logging.log4j.util.Strings;
+import org.jetbrains.annotations.NotNull;
 
 public class PurplePlotsChapter implements ReportChapter
 {
-    private final OrangeRecord mReport;
-    private final PlotPathResolver mPlotPathResolver;
+    private final PurplePlotsData mData;
     private final ReportResources mReportResources;
 
-    public PurplePlotsChapter(final OrangeRecord report, final PlotPathResolver plotPathResolver, final ReportResources reportResources)
+    public PurplePlotsChapter(final PurplePlotsData data, final ReportResources reportResources)
     {
-        mReport = report;
-        mPlotPathResolver = plotPathResolver;
+        mData = data;
         mReportResources = reportResources;
     }
 
+    @NotNull
     @Override
     public String name()
     {
         return "Purity and Ploidy";
     }
 
+    @NotNull
     @Override
     public PageSize pageSize()
     {
@@ -44,22 +41,22 @@ public class PurplePlotsChapter implements ReportChapter
     }
 
     @Override
-    public void render(final Document document)
+    public void render(@NotNull final Document document)
     {
         document.add(new Paragraph(name()).addStyle(mReportResources.chapterTitleStyle()));
 
-        if(QcStatusInterpretation.hasPurpleFail(mReport.purple().fit().qc()))
+        if(mData.hasPurpleFail)
         {
             mReportResources.addQcFailNotice(document);
             return;
         }
 
-        addPurlePlots(document);
+        addPurplePlots(document);
     }
 
     private static final int PLOT_IMAGE_HEIGHT = 225;
 
-    private void addPurlePlots(final Document document)
+    private void addPurplePlots(final Document document)
     {
         Table table = new Table(3);
         Cells cells = new Cells(mReportResources);
@@ -72,24 +69,19 @@ public class PurplePlotsChapter implements ReportChapter
         float squareWidth = round(baseWidth * 0.8);
         float rectangeWidth = round(baseWidth * 1.2);
 
-        addTableImage(table, cells, mReport.plots().purpleInputCircosPlot(), squareWidth);
-        addTableImage(table, cells, mReport.plots().purpleCopyNumberPlot(), squareWidth);
-        addTableImage(table, cells, mReport.plots().purpleClonalityPlot(), rectangeWidth);
-        addTableImage(table, cells, mReport.plots().purplePurityRangePlot(), squareWidth);
-        addTableImage(table, cells, mReport.plots().purpleMinorAlleleMapPlot(), squareWidth);
-        addTableImage(table, cells, mReport.plots().purpleRainfallPlot(), rectangeWidth);
-
-        // table.setBor
-        // .setBorder(Border.NO_BORDER)
+        addTableImage(table, cells, mData.purpleInputCircosPlotPath, squareWidth);
+        addTableImage(table, cells, mData.purpleCopyNumberPlotPath, squareWidth);
+        addTableImage(table, cells, mData.purpleClonalityPlotPath, rectangeWidth);
+        addTableImage(table, cells, mData.purplePurityRangePlotPath, squareWidth);
+        addTableImage(table, cells, mData.purpleMinorAlleleMapPlotPath, squareWidth);
+        addTableImage(table, cells, mData.purpleRainfallPlotPath, rectangeWidth);
 
         document.add(table);
     }
 
-    private void addTableImage(final Table table, final Cells cells, final String plotFilename, final float width)
+    private void addTableImage(final Table table, final Cells cells, final String plotPath, final float width)
     {
-        Image image = Images.build(mPlotPathResolver.resolve(plotFilename));
-        // float imageHeight = round((contentHeight() / 2D) - 2);
-        // image.setMaxHeight(imageHeight);
+        Image image = Images.build(plotPath);
         image.setMaxHeight(PLOT_IMAGE_HEIGHT);
         image.setHorizontalAlignment(HorizontalAlignment.CENTER);
         image.setMaxWidth(width);

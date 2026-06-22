@@ -9,7 +9,6 @@ import java.util.List;
 
 import com.hartwig.hmftools.datamodel.OrangeJson;
 import com.hartwig.hmftools.datamodel.isofox.IsofoxRecord;
-import com.hartwig.hmftools.datamodel.orange.ExperimentType;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.orange.OrangeConfig;
 import com.hartwig.hmftools.orange.report.chapters.CuppaChapter;
@@ -21,6 +20,22 @@ import com.hartwig.hmftools.orange.report.chapters.QualityControlChapter;
 import com.hartwig.hmftools.orange.report.chapters.ReportChapter;
 import com.hartwig.hmftools.orange.report.chapters.RnaFindingsChapter;
 import com.hartwig.hmftools.orange.report.chapters.SomaticFindingsChapter;
+import com.hartwig.hmftools.orange.report.pdfdata.CuppaChapterData;
+import com.hartwig.hmftools.orange.report.pdfdata.CuppaChapterDataFactory;
+import com.hartwig.hmftools.orange.report.pdfdata.FrontPageData;
+import com.hartwig.hmftools.orange.report.pdfdata.FrontPageDataFactory;
+import com.hartwig.hmftools.orange.report.pdfdata.GermlineFindingsData;
+import com.hartwig.hmftools.orange.report.pdfdata.GermlineFindingsDataFactory;
+import com.hartwig.hmftools.orange.report.pdfdata.ImmunologyData;
+import com.hartwig.hmftools.orange.report.pdfdata.ImmunologyDataFactory;
+import com.hartwig.hmftools.orange.report.pdfdata.PurplePlotsData;
+import com.hartwig.hmftools.orange.report.pdfdata.PurplePlotsDataFactory;
+import com.hartwig.hmftools.orange.report.pdfdata.QualityControlData;
+import com.hartwig.hmftools.orange.report.pdfdata.QualityControlDataFactory;
+import com.hartwig.hmftools.orange.report.pdfdata.RnaFindingsData;
+import com.hartwig.hmftools.orange.report.pdfdata.RnaFindingsDataFactory;
+import com.hartwig.hmftools.orange.report.pdfdata.SomaticFindingsData;
+import com.hartwig.hmftools.orange.report.pdfdata.SomaticFindingsDataFactory;
 import com.itextpdf.kernel.events.PdfDocumentEvent;
 import com.itextpdf.kernel.geom.PageSize;
 import com.itextpdf.kernel.pdf.CompressionConstants;
@@ -65,33 +80,42 @@ public class ReportWriter
 
         List<ReportChapter> chapters = new ArrayList<>();
 
-        chapters.add(new FrontPageChapter(mConfig, report, mPlotPathResolver, reportResources));
-        chapters.add(new SomaticFindingsChapter(mConfig, report, mPlotPathResolver, reportResources));
+        FrontPageData frontPageData = FrontPageDataFactory.build(report, mConfig, mPlotPathResolver);
+        chapters.add(new FrontPageChapter(frontPageData, reportResources));
+
+        SomaticFindingsData somaticData = SomaticFindingsDataFactory.build(report, mConfig, mPlotPathResolver);
+        chapters.add(new SomaticFindingsChapter(somaticData, reportResources));
 
         if(!report.tumorOnlyMode())
         {
-            chapters.add(new GermlineFindingsChapter(report, reportResources));
+            GermlineFindingsData germlineData = GermlineFindingsDataFactory.build(report);
+            chapters.add(new GermlineFindingsChapter(germlineData, reportResources));
         }
 
-        chapters.add(new ImmunologyChapter(report, reportResources));
+        ImmunologyData immunologyData = ImmunologyDataFactory.build(report);
+        chapters.add(new ImmunologyChapter(immunologyData, reportResources));
 
         IsofoxRecord isofox = report.isofox();
         if(isofox != null)
         {
-            chapters.add(new RnaFindingsChapter(isofox, report.purple(), reportResources));
+            RnaFindingsData rnaData = RnaFindingsDataFactory.build(isofox);
+            chapters.add(new RnaFindingsChapter(rnaData, reportResources));
         }
 
         if(!report.tumorOnlyMode())
         {
-            chapters.add(new CuppaChapter(report, mPlotPathResolver, reportResources));
+            CuppaChapterData cuppaData = CuppaChapterDataFactory.build(report, mPlotPathResolver);
+            chapters.add(new CuppaChapter(cuppaData, reportResources));
         }
 
         if(report.plots().qSeePlot() != null)
         {
-            chapters.add(new QualityControlChapter(report, mPlotPathResolver, reportResources));
+            QualityControlData qcData = QualityControlDataFactory.build(report, mPlotPathResolver);
+            chapters.add(new QualityControlChapter(qcData, reportResources));
         }
 
-        chapters.add(new PurplePlotsChapter(report, mPlotPathResolver, reportResources));
+        PurplePlotsData purplePlotsData = PurplePlotsDataFactory.build(report, mPlotPathResolver);
+        chapters.add(new PurplePlotsChapter(purplePlotsData, reportResources));
 
         writePdfChapters(report.sampleId(), chapters, reportResources);
     }

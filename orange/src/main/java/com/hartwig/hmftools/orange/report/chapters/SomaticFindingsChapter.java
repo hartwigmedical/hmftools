@@ -2,18 +2,14 @@ package com.hartwig.hmftools.orange.report.chapters;
 
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
-import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
+import com.hartwig.hmftools.datamodel.purple.PurpleTranscriptImpact;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
-import com.hartwig.hmftools.orange.OrangeConfig;
-import com.hartwig.hmftools.orange.algo.QcStatusInterpretation;
-import com.hartwig.hmftools.datamodel.sigs.SignatureAllocation;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
-import com.hartwig.hmftools.orange.report.PlotPathResolver;
 import com.hartwig.hmftools.orange.report.ReportResources;
+import com.hartwig.hmftools.orange.report.pdfdata.SomaticFindingsData;
 import com.hartwig.hmftools.orange.report.tables.ChrArmCopyNumberTable;
 import com.hartwig.hmftools.orange.report.tables.DisruptionTable;
 import com.hartwig.hmftools.orange.report.tables.DnaFusionTable;
@@ -23,7 +19,6 @@ import com.hartwig.hmftools.orange.report.tables.SomaticVariantTable;
 import com.hartwig.hmftools.orange.report.tables.ViralPresenceTable;
 import com.hartwig.hmftools.orange.report.util.Cells;
 import com.hartwig.hmftools.orange.report.util.Images;
-import com.hartwig.hmftools.orange.report.util.Tables;
 import com.itextpdf.kernel.geom.PageSize;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Image;
@@ -32,30 +27,27 @@ import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.property.HorizontalAlignment;
 
 import org.apache.logging.log4j.util.Strings;
+import org.jetbrains.annotations.NotNull;
 
 public class SomaticFindingsChapter implements ReportChapter
 {
-    private final OrangeConfig mConfig;
-    private final OrangeRecord mReport;
-    private final PlotPathResolver mPlotPathResolver;
+    private final SomaticFindingsData mData;
     private final ReportResources mReportResources;
 
-    public SomaticFindingsChapter(
-            final OrangeConfig config, final OrangeRecord report, final PlotPathResolver plotPathResolver,
-            final ReportResources reportResources)
+    public SomaticFindingsChapter(final SomaticFindingsData data, final ReportResources reportResources)
     {
-        mConfig = config;
-        mReport = report;
-        mPlotPathResolver = plotPathResolver;
+        mData = data;
         mReportResources = reportResources;
     }
 
+    @NotNull
     @Override
     public String name()
     {
         return "Somatic Findings";
     }
 
+    @NotNull
     @Override
     public PageSize pageSize()
     {
@@ -63,31 +55,29 @@ public class SomaticFindingsChapter implements ReportChapter
     }
 
     @Override
-    public void render(final Document document)
+    public void render(@NotNull final Document document)
     {
         document.add(new Paragraph(name()).addStyle(mReportResources.chapterTitleStyle()));
 
-        if(QcStatusInterpretation.hasPurpleFail(mReport.purple().fit().qc()))
+        if(mData.hasPurpleFail)
         {
             mReportResources.addQcFailNotice(document);
             return;
         }
 
         addSomaticVariants(document);
-
         addSomaticAmpDels(document);
         addFusions(document);
-
         addBreakendDisruptions(document);
 
-        if(!mReport.tumorOnlyMode())
+        if(!mData.tumorOnlyMode)
         {
             addViralPresence(document);
         }
 
         addChrArmCopyNumbers(document);
 
-        if(!mReport.tumorOnlyMode())
+        if(!mData.tumorOnlyMode)
         {
             addSignatureAllocations(document);
         }
@@ -97,106 +87,94 @@ public class SomaticFindingsChapter implements ReportChapter
 
     private void addSomaticVariants(final Document document)
     {
-        String driverVariantsTitle = "Small Variants";
-
         int variantImpactCount = 0;
 
-        for(PurpleVariant variant : mReport.purple().somaticVariants())
+        for(PurpleVariant variant : mData.somaticVariants)
         {
             if(variant.canonicalImpact().reported())
+            {
                 ++variantImpactCount;
+            }
 
-            variantImpactCount += variant.otherImpacts().stream().filter(x -> x.reported()).mapToInt(x -> 1).sum();
+            variantImpactCount += variant.otherImpacts().stream().filter(PurpleTranscriptImpact::reported).mapToInt(x -> 1).sum();
         }
 
-        String titleDrivers = driverVariantsTitle + " (" + variantImpactCount + ")";
+        String titleDrivers = "Small Variants (" + variantImpactCount + ")";
 
         document.add(SomaticVariantTable.build(
-                titleDrivers, contentWidth(), mReport.purple().somaticVariants(), mReportResources,
-                mReport.tumorOnlyMode(), mConfig != null && mConfig.RnaSampleId != null));
+                titleDrivers, contentWidth(), mData.somaticVariants, mReportResources,
+                mData.tumorOnlyMode, mData.hasRnaSample));
     }
 
     private void addSomaticAmpDels(final Document document)
     {
-        String driverAmpsDelsTitle = "Amplifications and Deletions";
-
-        String titleDrivers = driverAmpsDelsTitle + " (" + mReport.purple().somaticGainsDels().size() + ")";
+        String titleDrivers = "Amplifications and Deletions (" + mData.somaticGainsDels.size() + ")";
 
         document.add(GainDeletionTable.build(
-                titleDrivers, contentWidth(), mReport.purple().somaticGainsDels(), mReportResources, mReport.hasRna()));
+                titleDrivers, contentWidth(), mData.somaticGainsDels, mReportResources, mData.hasRna));
     }
 
     private void addChrArmCopyNumbers(final Document document)
     {
         String title = "Arm Copy Number Abberations";
 
-        document.add(ChrArmCopyNumberTable.build(title, contentWidth(), mReport.purple().armCopyNumberAbberations(), mReportResources));
+        document.add(ChrArmCopyNumberTable.build(title, contentWidth(), mData.armCopyNumberAbberations, mReportResources));
     }
 
     private void addFusions(final Document document)
     {
-        String driverFusionsTitle = "Fusions";
-
-        String titleDrivers = driverFusionsTitle + " (" + mReport.linx().fusions().size() + ")";
-        document.add(DnaFusionTable.build(titleDrivers, contentWidth(), mReport.linx().fusions(), mReportResources));
+        String titleDrivers = "Fusions (" + mData.fusions.size() + ")";
+        document.add(DnaFusionTable.build(titleDrivers, contentWidth(), mData.fusions, mReportResources));
     }
 
     private void addViralPresence(final Document document)
     {
-        VirusInterpreterData virusInterpreter = mReport.virusInterpreter();
+        VirusInterpreterData virusInterpreter = mData.virusInterpreter;
 
         if(virusInterpreter != null)
         {
-            String driverVirusTitle = "Viruses";
-
-            String titleDrivers = driverVirusTitle + " (" + virusInterpreter.reportableViruses().size() + ")";
+            String titleDrivers = "Viruses (" + virusInterpreter.reportableViruses().size() + ")";
             document.add(ViralPresenceTable.build(titleDrivers, contentWidth(), virusInterpreter.reportableViruses(), mReportResources));
         }
     }
 
     private void addBreakendDisruptions(final Document document)
     {
-        String driverGeneDisruptionsTitle = "Disruptions";
+        List<LinxBreakend> somaticBreakends = mData.somaticBreakends;
 
-        List<LinxBreakend> somaticBreakends = mReport.linx().somaticBreakends();
+        Set<Integer> uniqueSvs = somaticBreakends.stream().map(LinxBreakend::svId).collect(Collectors.toSet());
 
-        Set<Integer> uniqueSvs = somaticBreakends.stream().map(x -> x.svId()).collect(Collectors.toSet());
-
-        String titleDriver = driverGeneDisruptionsTitle + " (" + uniqueSvs.size() + ")";
+        String titleDriver = "Disruptions (" + uniqueSvs.size() + ")";
         document.add(DisruptionTable.build(titleDriver, contentWidth(), somaticBreakends, mReportResources));
     }
 
     private void addSignatureAllocations(final Document document)
     {
-        List<SignatureAllocation> sigAllocations = mReport.sigAllocations();
-
-        if(sigAllocations != null)
+        if(mData.sigAllocations != null)
         {
-            String signatureTitle = "Signature Allocations";
-
-            String title = signatureTitle + " (" + sigAllocations.size() + ")";
-            document.add(SignatureAllocationTable.build(title, contentWidth(), sigAllocations, mReportResources));
+            String title = "Signature Allocations (" + mData.sigAllocations.size() + ")";
+            document.add(SignatureAllocationTable.build(title, contentWidth(), mData.sigAllocations, mReportResources));
         }
     }
 
     private void addLinxPlots(final Document document)
     {
-        String title = "Structural Driver Plots (" + mReport.plots().linxDriverPlots().size() + ")";
+        String title = "Structural Driver Plots (" + mData.linxDriverPlotPaths.size() + ")";
 
         document.add(new Paragraph(title).addStyle(mReportResources.tableTitleStyle()));
 
         Table table = new Table(2);
         Cells cells = new Cells(mReportResources);
 
-        for(String plot : mReport.plots().linxDriverPlots())
+        for(String plotPath : mData.linxDriverPlotPaths)
         {
-            Image image = Images.build(mPlotPathResolver.resolve(plot));
+            Image image = Images.build(plotPath);
             image.setMaxWidth(Math.round(contentWidth() / 2D) - 2);
             image.setHorizontalAlignment(HorizontalAlignment.CENTER);
             table.addCell(cells.createImage(image));
         }
 
-        if(mReport.plots().linxDriverPlots().size() % 2 == 1)
+        if(mData.linxDriverPlotPaths.size() % 2 == 1)
         {
             table.addCell(cells.createContent(Strings.EMPTY));
         }

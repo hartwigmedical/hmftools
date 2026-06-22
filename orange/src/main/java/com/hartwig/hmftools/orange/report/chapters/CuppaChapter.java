@@ -3,10 +3,8 @@ package com.hartwig.hmftools.orange.report.chapters;
 import static com.hartwig.hmftools.orange.report.ReportResources.FULL_PAGE_IMAGE_HEIGHT;
 import static com.hartwig.hmftools.orange.report.ReportResources.FULL_PAGE_IMAGE_WIDTH;
 
-import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
-import com.hartwig.hmftools.orange.report.PlotPathResolver;
 import com.hartwig.hmftools.orange.report.ReportResources;
-import com.hartwig.hmftools.orange.algo.QcStatusInterpretation;
+import com.hartwig.hmftools.orange.report.pdfdata.CuppaChapterData;
 import com.hartwig.hmftools.orange.report.util.Images;
 import com.itextpdf.kernel.geom.PageSize;
 import com.itextpdf.layout.Document;
@@ -18,23 +16,23 @@ import org.jetbrains.annotations.NotNull;
 
 public class CuppaChapter implements ReportChapter
 {
-    private final OrangeRecord mReport;
-    private final PlotPathResolver mPlotPathResolver;
+    private final CuppaChapterData mData;
     private final ReportResources mReportResources;
 
-    public CuppaChapter(final OrangeRecord report, final PlotPathResolver plotPathResolver, final ReportResources reportResources)
+    public CuppaChapter(final CuppaChapterData data, final ReportResources reportResources)
     {
-        mReport = report;
-        mPlotPathResolver = plotPathResolver;
+        mData = data;
         mReportResources = reportResources;
     }
 
+    @NotNull
     @Override
     public String name()
     {
         return "Tissue of Origin";
     }
 
+    @NotNull
     @Override
     public PageSize pageSize()
     {
@@ -42,17 +40,17 @@ public class CuppaChapter implements ReportChapter
     }
 
     @Override
-    public void render(final Document document)
+    public void render(@NotNull final Document document)
     {
         document.add(new Paragraph(name()).addStyle(mReportResources.chapterTitleStyle()));
 
-        if(QcStatusInterpretation.hasPurpleFail(mReport.purple().fit().qc()))
+        if(mData.hasPurpleFail)
         {
             mReportResources.addQcFailNotice(document);
             return;
         }
 
-        if(mReport.plots().cuppaSummaryPlot() == null)
+        if(mData.cuppaSummaryPlotPath == null)
         {
             document.add(new Paragraph(ReportResources.NOT_AVAILABLE).addStyle(mReportResources.tableContentStyle()));
             return;
@@ -61,9 +59,9 @@ public class CuppaChapter implements ReportChapter
         addCuppaSummaryPlot(document);
     }
 
-    private void addCuppaSummaryPlot(@NotNull Document document)
+    private void addCuppaSummaryPlot(final Document document)
     {
-        Image cuppaSummaryPlot = Images.build(mPlotPathResolver.resolve(mReport.plots().cuppaSummaryPlot()));
+        Image cuppaSummaryPlot = Images.build(mData.cuppaSummaryPlotPath);
         cuppaSummaryPlot.setMaxWidth(FULL_PAGE_IMAGE_WIDTH);
         cuppaSummaryPlot.setMaxHeight(FULL_PAGE_IMAGE_HEIGHT);
         cuppaSummaryPlot.setHorizontalAlignment(HorizontalAlignment.CENTER);
