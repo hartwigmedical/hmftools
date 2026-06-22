@@ -400,13 +400,13 @@ def append_dropout(model: nn.Module, rate: float) -> None:
             setattr(model, name, new)
 
 
-def train_main(sample_tsv: str, purple_root: str, epochs: int, batch_size: int, dropout_rate: float, hrd_sample_dup: int, test_fraction: float, use_nesterov: bool, starting_model: str) -> None:
+def train_main(sample_tsv: str, purple_root: str, epochs: int, batch_size: int, dropout_rate: float, hrd_sample_dup: int, test_fraction: float, use_nesterov: bool, starting_model: str, override_purity: bool = False) -> None:
     df = pd.read_csv(sample_tsv, sep="\t")
 
     df["circosPngPath"] = purple_root + "/" + df["sampleId"] + ".circos.png"
 
     # load the purity
-    if "purity" not in df.columns:
+    if override_purity or "purity" not in df.columns:
         df["purity"] = [pd.read_csv(f'{purple_root}/{s}/{s}.purple.purity.tsv', sep='\t')["purity"].iloc[0] for s in df["sampleId"]]
 
     df = filter_df(df)
@@ -444,6 +444,7 @@ def main() -> None:
     parser.add_argument('--test_fraction', help='amount of data used for testing', type=float, default=0.2)
     parser.add_argument('--use_nesterov', help='use SGD with nesterov instead of adamW', action='store_true')
     parser.add_argument('--starting_model', help='starting from this model instead of make a new one', default=None)
+    parser.add_argument('--override_purity', help='force load purity from purple TSV files even if column exists in sample TSV', action='store_true')
     args = parser.parse_args()
 
     LOGGER.info(f"using {DEVICE} device")
@@ -451,7 +452,7 @@ def main() -> None:
           f"dropout_rate={args.dropout_rate}, hrd_sample_dup={args.hrd_sample_duplication}, test_fraction={args.test_fraction}, " +
           f"use_nesterov={args.use_nesterov}, starting_model={args.starting_model}")
     train_main(args.sample_tsv, args.purple_root, args.epochs, args.batch_size, args.dropout_rate,
-               args.hrd_sample_duplication, args.test_fraction, args.use_nesterov, args.starting_model)
+               args.hrd_sample_duplication, args.test_fraction, args.use_nesterov, args.starting_model, args.override_purity)
 
 
 if __name__ == "__main__":
