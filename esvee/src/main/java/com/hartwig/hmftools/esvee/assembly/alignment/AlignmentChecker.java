@@ -14,20 +14,23 @@ import java.util.List;
 import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.bam.CigarUtils;
+import com.hartwig.hmftools.common.bwa.BwaMemAligner;
+import com.hartwig.hmftools.common.bwa.BwaMemAlignerConfig;
 import com.hartwig.hmftools.esvee.assembly.AssemblyConfig;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.common.WriteType;
 
-import org.broadinstitute.hellbender.utils.bwa.BwaMemAligner;
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
-import org.broadinstitute.hellbender.utils.bwa.BwaMemIndex;
+import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.Cigar;
 
 public class AlignmentChecker
 {
     private final AssemblyConfig mConfig;
+    @Nullable
     private final BwaMemAligner mDecoyAligner;
+    @Nullable
     private final BwaMemAligner mAligner;
     private final BufferedWriter mWriter;
 
@@ -36,9 +39,9 @@ public class AlignmentChecker
         mConfig = config;
         mWriter = writer;
 
-        mAligner = config.AssemblyMapQualThreshold > 0 ? new BwaMemAligner(new BwaMemIndex(mConfig.RefGenomeImageFile)) : null;
+        mAligner = config.AssemblyMapQualThreshold > 0 ? new BwaMemAligner(new BwaMemAlignerConfig(mConfig.RefGenomeImageFile)) : null;
 
-        mDecoyAligner = config.DecoyGenome != null ? new BwaMemAligner(new BwaMemIndex(mConfig.DecoyGenome)) : null;
+        mDecoyAligner = config.DecoyGenome != null ? new BwaMemAligner(new BwaMemAlignerConfig(mConfig.DecoyGenome)) : null;
     }
 
     public boolean matchesDecoy(final JunctionAssembly assembly)
@@ -47,7 +50,7 @@ public class AlignmentChecker
             return false;
 
         String fullSequence = assembly.formFullSequence();
-        List<BwaMemAlignment> alignmentResults = mDecoyAligner.alignSeqs(List.of(fullSequence.getBytes())).get(0);
+        List<BwaMemAlignment> alignmentResults = mDecoyAligner.alignSequence(fullSequence.getBytes());
 
         if(alignmentResults.isEmpty())
             return false;
@@ -86,7 +89,7 @@ public class AlignmentChecker
 
         // realign the ref base sequence and exclude if the results are too varied
         String refBaseSequence = assembly.formRefBaseSequence();
-        List<BwaMemAlignment> alignmentResults = mAligner.alignSeqs(List.of(refBaseSequence.getBytes())).get(0);
+        List<BwaMemAlignment> alignmentResults = mAligner.alignSequence(refBaseSequence.getBytes());
 
         if(alignmentResults.isEmpty())
             return true;

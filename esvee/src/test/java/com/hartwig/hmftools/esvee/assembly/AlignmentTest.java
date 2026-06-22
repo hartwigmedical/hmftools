@@ -13,19 +13,19 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_3;
-import static com.hartwig.hmftools.esvee.TestUtils.TEST_CONFIG;
-import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.SSX2_GENE_ORIENT;
-import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.SSX2_MAX_MAP_QUAL;
-import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.SSX2_REGIONS_V37;
 import static com.hartwig.hmftools.esvee.TestUtils.DEFAULT_NM;
 import static com.hartwig.hmftools.esvee.TestUtils.READ_ID_GENERATOR;
 import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_200;
 import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_400;
 import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_RANDOM_100;
+import static com.hartwig.hmftools.esvee.TestUtils.TEST_CONFIG;
 import static com.hartwig.hmftools.esvee.TestUtils.createRead;
-import static com.hartwig.hmftools.esvee.assembly.alignment.AlignmentFilters.filterAlignments;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.SSX2_GENE_ORIENT;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.SSX2_MAX_MAP_QUAL;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.SSX2_REGIONS_V37;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyTestUtils.createAlignment;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyTestUtils.createAssembly;
+import static com.hartwig.hmftools.esvee.assembly.alignment.AlignmentFilters.filterAlignments;
 import static com.hartwig.hmftools.esvee.assembly.alignment.AssemblyAligner.hasLongerMinorityExtensions;
 
 import static org.junit.Assert.assertEquals;
@@ -42,7 +42,7 @@ import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.test.MockRefGenome;
-import com.hartwig.hmftools.esvee.MockAligner;
+import com.hartwig.hmftools.esvee.MockBwaMemAligner;
 import com.hartwig.hmftools.esvee.assembly.alignment.AlignData;
 import com.hartwig.hmftools.esvee.assembly.alignment.AlternativeAlignment;
 import com.hartwig.hmftools.esvee.assembly.alignment.AssemblyAligner;
@@ -274,7 +274,6 @@ public class AlignmentTest
         assertEquals(FORWARD, second.Orient);
         // assertEquals(5, second.alternativeAlignments().size());
 
-
         // test outer singles also with alt alignments
         assemblyAlignment = createAssemblyAlignment(
                 CHR_1, 200, FORWARD, CHR_1, 250, REVERSE, "");
@@ -354,7 +353,6 @@ public class AlignmentTest
         Breakend second = assemblyAlignment.breakends().get(1);
         assertEquals(251, second.Position);
         assertEquals(REVERSE, second.Orient);
-
 
         // a DEL with homology
         assemblyAlignment = createAssemblyAlignment(
@@ -543,9 +541,9 @@ public class AlignmentTest
         // 0 = {AlignData@3222} "7:125745443-125746123:1 681M1314S seq(0-681 adj=0-680) score(681) flags(0) mapQual(60 adj=50) aligned(681 adj=621)"
         //1 = {AlignData@3223} "7:126166901-126167444:1 544M seq(0-544 adj=682-1225) score(544) flags(0) mapQual(60 adj=52) aligned(544 adj=506)"
         //2 = {AlignData@3224} "7:143939546-143939814:-1 269M seq(0-269 adj=1231-1499) score(269) flags(16) mapQual(0 adj=0) aligned(269 adj=245)"
-            // 7,+144005351,269M,0;
+        // 7,+144005351,269M,0;
         //3 = {AlignData@3225} "7:143936039-143936532:-1 494M seq(0-494 adj=1501-1994) score(494) flags(16) mapQual(0 adj=0) aligned(494 adj=478)"
-            // 7,+144008633,494M,0;
+        // 7,+144008633,494M,0;
 
         alignment1 = new AlignData(
                 new ChrBaseRegion(CHR_1, 101, 200), 0, 100,
@@ -586,7 +584,7 @@ public class AlignmentTest
         assertEquals(1, alignment4.unselectedAltAlignments().size());
         assertTrue(alignment3.hasLowMapQualShortSvLink());
         assertTrue(alignment4.hasLowMapQualShortSvLink());
-   }
+    }
 
     @Test
     public void testKeepAdjacentLocalShortAdjustedAlignments()
@@ -735,7 +733,6 @@ public class AlignmentTest
         assertEquals(0, lowQualAlignments.size());
         assertEquals(2, validAlignments.size());
 
-
         AlignData specificAlignment = validAlignments.stream().filter(x -> x.refLocation().overlaps(ssx2Region)).findFirst().orElse(null);
         assertNull(specificAlignment);
 
@@ -748,7 +745,7 @@ public class AlignmentTest
     @Test
     public void testAlignmentRequery()
     {
-        MockAligner aligner = new MockAligner();
+        MockBwaMemAligner aligner = new MockBwaMemAligner();
         AssemblyAligner assemblyAligner = new AssemblyAligner(TEST_CONFIG, aligner, null, new AlignmentWriter(TEST_CONFIG), null);
 
         // need to ensure the full assembly sequence length matches the alignments returned
@@ -763,13 +760,13 @@ public class AlignmentTest
                 createBwaAlignment(CHR_2, 200, 299, 0, 100, 199, "100S100M50S",
                         "", "", 60, 0, 100));
 
-        aligner.PendingAlignments.add(initialAlignments);
+        aligner.Alignments.put("", initialAlignments);
 
         List<BwaMemAlignment> requeryAlignments = List.of(
                 createBwaAlignment(CHR_1, 210, 259, 0, 0, 49, "50M",
                         "", "", 60, 0, 50));
 
-        aligner.PendingAlignments.add(requeryAlignments);
+        aligner.Alignments.put("", requeryAlignments);
 
         assemblyAligner.processAssembly(assemblyAlignment);
     }
