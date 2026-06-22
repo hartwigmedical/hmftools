@@ -430,6 +430,7 @@ def train_main(sample_tsv: str, purple_root: str, epochs: int, batch_size: int, 
 
     # load the purity
     if override_purity or "purity" not in df.columns:
+        LOGGER.info("loading purity from .purple.purity.tsv files")
         df["purity"] = [pd.read_csv(p, sep='\t')["purity"].iloc[0] for p in df["purplePurityPath"]]
 
     df = filter_df(df)
