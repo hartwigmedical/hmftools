@@ -28,7 +28,7 @@ import java.util.List;
 import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
-import com.hartwig.hmftools.esvee.common.saga.SagaMatchByLocation;
+import com.hartwig.hmftools.esvee.common.saga.SagaLocationMatch;
 import com.hartwig.hmftools.esvee.prep.types.JunctionData;
 import com.hartwig.hmftools.esvee.prep.types.PrepRead;
 import com.hartwig.hmftools.esvee.prep.types.ReadFilterType;
@@ -215,7 +215,7 @@ public class ResultsWriter
 
                 if(mConfig.SagaFastaFile != null)
                 {
-                    SagaMatchByLocation sagaMatch = junctionData.sagaMatch();
+                    SagaLocationMatch sagaMatch = junctionData.sagaMatch();
                     sj.add(sagaMatch == null ? "" : sagaMatch.variant().toString());
                 }
 

@@ -18,7 +18,7 @@ import java.util.StringJoiner;
 import com.hartwig.hmftools.esvee.assembly.AssemblyConfig;
 import com.hartwig.hmftools.esvee.assembly.alignment.AlignData;
 import com.hartwig.hmftools.esvee.assembly.alignment.AssemblyAlignment;
-import com.hartwig.hmftools.esvee.common.saga.SagaMatchBySequence;
+import com.hartwig.hmftools.esvee.common.saga.SagaSequenceMatch;
 import com.hartwig.hmftools.esvee.common.WriteType;
 
 public class AlignmentWriter
@@ -100,7 +100,7 @@ public class AlignmentWriter
 
             if(mSagaEnabled)
             {
-                SagaMatchBySequence sagaMatch = assemblyAlignment.sagaMatch();
+                SagaSequenceMatch sagaMatch = assemblyAlignment.sagaMatch();
                 sj.add(sagaMatch == null ? "" : sagaMatch.variant().toString());
                 sj.add(sagaMatch == null ? "" : sagaMatch.cigar().toString());
             }

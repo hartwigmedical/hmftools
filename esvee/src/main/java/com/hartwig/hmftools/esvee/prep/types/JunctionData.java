@@ -11,7 +11,7 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.region.Orientation;
-import com.hartwig.hmftools.esvee.common.saga.SagaMatchByLocation;
+import com.hartwig.hmftools.esvee.common.saga.SagaLocationMatch;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -36,7 +36,7 @@ public class JunctionData
     private JunctionData mLinkedIndel;
 
     @Nullable
-    private SagaMatchByLocation mSagaMatch;
+    private SagaLocationMatch mSagaMatch;
 
     public JunctionData(final int position, final Orientation orientation, final PrepRead read)
     {
@@ -198,9 +198,9 @@ public class JunctionData
 
     public boolean hasLinkedIndel() { return mLinkedIndel != null; }
 
-    public SagaMatchByLocation sagaMatch() { return mSagaMatch; }
+    public SagaLocationMatch sagaMatch() { return mSagaMatch; }
 
-    public void setSagaMatch(final SagaMatchByLocation match) { mSagaMatch = match; }
+    public void setSagaMatch(final SagaLocationMatch match) { mSagaMatch = match; }
 
     public String toString()
     {

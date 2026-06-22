@@ -59,6 +59,8 @@ public class Breakend implements Comparable<Breakend>
     private int mThreePrimeRangeEnd;
     private int mMaxLocalRepeat;
 
+    private boolean mSagaInferred;
+
     public Breakend(
             final AssemblyAlignment assembly, final String chromosome, final int position, final Orientation orientation,
             final String insertedBases, final HomologyData homology)
@@ -92,6 +94,8 @@ public class Breakend implements Comparable<Breakend>
         mThreePrimeRangeStart = 0;
         mThreePrimeRangeEnd = 0;
         mMaxLocalRepeat = 0;
+
+        mSagaInferred = false;
     }
 
     public int id() { return mId; }
@@ -291,6 +295,10 @@ public class Breakend implements Comparable<Breakend>
         else
             return Position == position;
     }
+
+    public boolean isSagaInferred() { return mSagaInferred; }
+
+    public void setSagaInferred() { mSagaInferred = true; }
 
     public String toString()
     {

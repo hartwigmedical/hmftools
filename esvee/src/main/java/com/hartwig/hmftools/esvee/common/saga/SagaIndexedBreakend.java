@@ -15,12 +15,12 @@ public record SagaIndexedBreakend(
 {
     public String chromosome()
     {
-        return breakend.position().Chromosome;
+        return breakend.chromosome();
     }
 
     public int position()
     {
-        return breakend.position().Position;
+        return breakend.position();
     }
 
     public Orientation orientation()
