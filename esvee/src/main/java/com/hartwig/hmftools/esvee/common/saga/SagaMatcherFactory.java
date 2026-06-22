@@ -69,7 +69,8 @@ public class SagaMatcherFactory
     private Map<String, List<SagaIndexedBreakend>> sliceBreakends(ChrBaseRegion subregion)
     {
         // Need to find all variants within locationDistanceMax bases, so need to expand the region by that much.
-        subregion = new ChrBaseRegion(subregion.chromosome(),
+        subregion = new ChrBaseRegion(
+                subregion.chromosome(),
                 subregion.start() - mLocationMatcherConfig.locationDistanceMax(),
                 subregion.end() + mLocationMatcherConfig.locationDistanceMax());
 
@@ -88,8 +89,8 @@ public class SagaMatcherFactory
 
     public SagaSequenceMatcher createSequenceMatcher()
     {
-        BwaMemAlignerConfig alignerConfig =
-                SagaSequenceMatcher.createAlignerConfig(mSagaResource.bwaIndexImagePath(), mSequenceMatcherConfig);
+        BwaMemAlignerConfig alignerConfig = SagaSequenceMatcher.createAlignerConfig(
+                mSagaResource.bwaIndexImagePath(), mSequenceMatcherConfig);
         // Must create one aligner per matcher, particularly because I don't think the aligner instance is thread safe.
         BwaMemAligner aligner = new BwaMemAligner(alignerConfig);
         return new SagaSequenceMatcher(mSequenceMatcherConfig, aligner, mAssembliesByContigId);

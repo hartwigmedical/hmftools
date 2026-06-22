@@ -56,19 +56,24 @@ public record BwaMemAlignParams(
 
     public BwaMemAlignParams withMismatchPenalty(int value)
     {
-        return new BwaMemAlignParams(matchReward, value, uncertainBasePenalty, gapOpenPenalty, gapExtendPenalty, clipPenalty,
-                seedLengthMin, seed3MaxOccurrence, memMaxOccurrence, memReseedFactor, chainOverlapFactor, bandWidth, zDropoff, minAlignScore);
+        return new BwaMemAlignParams(
+                matchReward, value, uncertainBasePenalty, gapOpenPenalty, gapExtendPenalty, clipPenalty,
+                seedLengthMin, seed3MaxOccurrence, memMaxOccurrence, memReseedFactor, chainOverlapFactor, bandWidth, zDropoff,
+                minAlignScore);
     }
 
     public BwaMemAlignParams withGapOpenPenalty(int value)
     {
-        return new BwaMemAlignParams(matchReward, mismatchPenalty, uncertainBasePenalty, value, gapExtendPenalty, clipPenalty,
-                seedLengthMin, seed3MaxOccurrence, memMaxOccurrence, memReseedFactor, chainOverlapFactor, bandWidth, zDropoff, minAlignScore);
+        return new BwaMemAlignParams(
+                matchReward, mismatchPenalty, uncertainBasePenalty, value, gapExtendPenalty, clipPenalty,
+                seedLengthMin, seed3MaxOccurrence, memMaxOccurrence, memReseedFactor, chainOverlapFactor, bandWidth, zDropoff,
+                minAlignScore);
     }
 
     public BwaMemAlignParams withMinAlignScore(int value)
     {
-        return new BwaMemAlignParams(matchReward, mismatchPenalty, uncertainBasePenalty, gapOpenPenalty, gapExtendPenalty, clipPenalty,
+        return new BwaMemAlignParams(
+                matchReward, mismatchPenalty, uncertainBasePenalty, gapOpenPenalty, gapExtendPenalty, clipPenalty,
                 seedLengthMin, seed3MaxOccurrence, memMaxOccurrence, memReseedFactor, chainOverlapFactor, bandWidth, zDropoff, value);
     }
 
