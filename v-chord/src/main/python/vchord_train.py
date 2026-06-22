@@ -401,28 +401,32 @@ def append_dropout(model: nn.Module, rate: float) -> None:
             setattr(model, name, new)
 
 
-def train_main(sample_tsv: str, purple_root: str, epochs: int, batch_size: int, dropout_rate: float, hrd_sample_dup: int, test_fraction: float, use_nesterov: bool, starting_model: str, override_purity: bool = False) -> None:
+def train_main(sample_tsv: str, purple_root: str, epochs: int, batch_size: int, dropout_rate: float, hrd_sample_dup: int, test_fraction: float, use_nesterov: bool, starting_model: str, override_purity: bool = False, ignore_missing_samples: bool = False) -> None:
     df = pd.read_csv(sample_tsv, sep="\t")
 
     df["circosPngPath"] = purple_root + "/" + df["sampleId"] + ".circos.png"
     df["purplePurityPath"] = purple_root + "/" + df["sampleId"] + ".purple.purity.tsv"
 
-    missing = []
-    for _, row in df.iterrows():
+    incomplete_indices = []
+    for idx, row in df.iterrows():
 
         circos_png_path = row["circosPngPath"]
         purple_purity_path = row["purplePurityPath"]
 
         if not os.path.exists(circos_png_path):
-            LOGGER.error(f"missing file: {circos_png_path}")
-            missing.append(circos_png_path)
+            LOGGER.warning(f"missing file: {circos_png_path}")
+            incomplete_indices.append(idx)
 
         if not os.path.exists(purple_purity_path):
-            LOGGER.error(f"missing file: {purple_purity_path}")
-            missing.append(purple_purity_path)
+            LOGGER.warning(f"missing file: {purple_purity_path}")
+            incomplete_indices.append(idx)
 
-    if missing:
-        raise FileNotFoundError(f"{len(missing)} input file(s) not found")
+    if incomplete_indices:
+        if ignore_missing_samples:
+            LOGGER.warning(f"ignoring {len(incomplete_indices)} sample(s) with missing files")
+            df = df.drop(index=incomplete_indices)
+        else:
+            raise FileNotFoundError(f"{len(incomplete_indices)} input file(s) not found")
 
     # load the purity
     if override_purity or "purity" not in df.columns:
@@ -464,6 +468,7 @@ def main() -> None:
     parser.add_argument('--use_nesterov', help='use SGD with nesterov instead of adamW', action='store_true')
     parser.add_argument('--starting_model', help='starting from this model instead of make a new one', default=None)
     parser.add_argument('--override_purity', help='force load purity from purple TSV files even if column exists in sample TSV', action='store_true')
+    parser.add_argument('--ignore_missing_samples', help='skip samples with missing circos PNG or purple purity files instead of failing', action='store_true')
     args = parser.parse_args()
 
     LOGGER.info(f"using {DEVICE} device")
@@ -471,7 +476,7 @@ def main() -> None:
           f"dropout_rate={args.dropout_rate}, hrd_sample_dup={args.hrd_sample_duplication}, test_fraction={args.test_fraction}, " +
           f"use_nesterov={args.use_nesterov}, starting_model={args.starting_model}")
     train_main(args.sample_tsv, args.purple_root, args.epochs, args.batch_size, args.dropout_rate,
-               args.hrd_sample_duplication, args.test_fraction, args.use_nesterov, args.starting_model, args.override_purity)
+               args.hrd_sample_duplication, args.test_fraction, args.use_nesterov, args.starting_model, args.override_purity, args.ignore_missing_samples)
 
 
 if __name__ == "__main__":
