@@ -33,26 +33,28 @@ public final class BamShardSplitter
     public static List<ShardRange> computeSplits(final File bam, final SAMFileHeader header, final int shardCount)
             throws IOException
     {
-        final long firstRecordVptr = headerEndVptr(bam, header);
+        long firstRecordVptr = headerEndVptr(bam, header);
         if(shardCount <= 1)
+        {
             return List.of(new ShardRange(firstRecordVptr, EOF));
+        }
 
-        final long compressedLength = bam.length();
-        final List<Long> splits = new ArrayList<>();
+        long compressedLength = bam.length();
+        List<Long> splits = new ArrayList<>();
         splits.add(firstRecordVptr);
 
         long lastBlockOffset = firstRecordVptr >>> 16;
         for(int k = 1; k < shardCount; ++k)
         {
-            final long targetOffset = compressedLength * k / shardCount;
+            long targetOffset = compressedLength * k / shardCount;
             if(targetOffset <= lastBlockOffset)
                 continue; // shards collapsing onto the same block: fewer, larger shards is fine
 
-            final long blockStart = findBlockStart(bam, targetOffset);
+            long blockStart = findBlockStart(bam, targetOffset);
             if(blockStart < 0)
                 break; // no further block boundary: the remaining file is one shard
 
-            final long splitVptr = firstGroupBoundaryVptr(bam, header, blockStart << 16);
+            long splitVptr = firstGroupBoundaryVptr(bam, header, blockStart << 16);
             if(splitVptr > splits.get(splits.size() - 1))
             {
                 splits.add(splitVptr);
@@ -60,10 +62,10 @@ public final class BamShardSplitter
             }
         }
 
-        final List<ShardRange> ranges = new ArrayList<>();
+        List<ShardRange> ranges = new ArrayList<>();
         for(int i = 0; i < splits.size(); ++i)
         {
-            final long end = i + 1 < splits.size() ? splits.get(i + 1) : EOF;
+            long end = i + 1 < splits.size() ? splits.get(i + 1) : EOF;
             ranges.add(new ShardRange(splits.get(i), end));
         }
         return ranges;
@@ -74,14 +76,14 @@ public final class BamShardSplitter
     {
         try(BlockCompressedInputStream stream = new BlockCompressedInputStream(bam))
         {
-            final BinaryCodec codec = new BinaryCodec(stream);
+            BinaryCodec codec = new BinaryCodec(stream);
             codec.readBytes(new byte[4]);             // "BAM\1"
-            final int textLength = codec.readInt();
+            int textLength = codec.readInt();
             codec.readBytes(new byte[textLength]);    // header text
-            final int refCount = codec.readInt();
+            int refCount = codec.readInt();
             for(int i = 0; i < refCount; ++i)
             {
-                final int nameLength = codec.readInt();
+                int nameLength = codec.readInt();
                 codec.readBytes(new byte[nameLength]); // reference name
                 codec.readInt();                      // reference length
             }
@@ -94,16 +96,18 @@ public final class BamShardSplitter
     {
         try(RandomAccessFile raf = new RandomAccessFile(bam, "r"))
         {
-            final long length = raf.length();
-            final byte[] buffer = new byte[SCAN_BUFFER];
+            long length = raf.length();
+            byte[] buffer = new byte[SCAN_BUFFER];
             long offset = targetOffset;
 
             while(offset < length - 18)
             {
                 raf.seek(offset);
-                final int read = raf.read(buffer);
+                int read = raf.read(buffer);
                 if(read <= 0)
+                {
                     return -1;
+                }
 
                 for(int i = 0; i + 18 <= read; ++i)
                 {
@@ -127,7 +131,7 @@ public final class BamShardSplitter
         try(BlockCompressedInputStream stream = new BlockCompressedInputStream(bam))
         {
             stream.seek(blockVptr);
-            final BAMRecordCodec codec = new BAMRecordCodec(header);
+            BAMRecordCodec codec = new BAMRecordCodec(header);
             codec.setInputStream(stream);
 
             String firstName = null;
@@ -136,9 +140,13 @@ public final class BamShardSplitter
             while((record = codec.decode()) != null)
             {
                 if(firstName == null)
+                {
                     firstName = record.getReadName();
+                }
                 else if(!record.getReadName().equals(firstName))
+                {
                     return recordVptr;
+                }
 
                 recordVptr = stream.getFilePointer();
             }

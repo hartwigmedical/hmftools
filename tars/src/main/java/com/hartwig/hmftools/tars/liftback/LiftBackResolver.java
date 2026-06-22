@@ -1,6 +1,10 @@
 package com.hartwig.hmftools.tars.liftback;
 
-import static com.hartwig.hmftools.tars.common.SpliceCommon.ALT_CONTIG_SUFFIX;
+import static com.hartwig.hmftools.tars.common.TarsConstants.ALT_CONTIG_SUFFIX;
+import static com.hartwig.hmftools.tars.common.TarsConstants.ANNOTATED_JUNCTION_MIN_ANCHOR_BP;
+import static com.hartwig.hmftools.tars.common.TarsConstants.ANNOTATED_JUNCTION_MIN_SOFTCLIP_ANCHOR_BP;
+import static com.hartwig.hmftools.tars.common.TarsConstants.RESCUE_MAPQ;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.XA_ATTRIBUTE;
 import static com.hartwig.hmftools.tars.common.TarsConfig.TARS_LOGGER;
 
 import java.util.ArrayList;
@@ -12,8 +16,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.tars.common.BwaMemScore;
 import com.hartwig.hmftools.tars.common.ContigEntry;
+import com.hartwig.hmftools.tars.common.TarsConstants;
 
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
@@ -25,21 +29,9 @@ import htsjdk.samtools.TextCigarCodec;
 // result; UNMAPPED / LIFT_FAILED results carry placeholder fields so the emit step can flag records unmapped.
 public class LiftBackResolver
 {
-    private static final String XA_TAG = "XA";
     private static final String AS_TAG = "AS";
     private static final String XS_TAG = "XS";
     private static final String NM_TAG = "NM";
-
-    // bwa's unique-placement MAPQ, also the value liftback assigns when it resolves a placement.
-    private static final int RESCUE_MAPQ = 60;
-
-    // Set to 1: every tx-contig junction is annotated by construction, so even a 1bp anchor is a real exon
-    // base. A higher floor manufactured false junction diffs by clipping legitimate short anchors.
-    private static final int ANNOTATED_JUNCTION_MIN_ANCHOR_BP = 1;
-
-    // Higher than bare floor because an adjacent softclip indicates bwa over-ran the exon boundary -
-    // the tiny anchor is an over-extension artefact, not the read's real terminus.
-    private static final int ANNOTATED_JUNCTION_MIN_SOFTCLIP_ANCHOR_BP = 3;
 
     // per-alt-contig list of segments sorted by altStart for binary search back to the owning transcript.
     private final Map<String, List<ContigEntry>> mSegmentsByAltContig;
@@ -56,9 +48,13 @@ public class LiftBackResolver
     {
         mSegmentsByAltContig = new HashMap<>();
         for(final ContigEntry entry : entries)
+        {
             mSegmentsByAltContig.computeIfAbsent(entry.contigName(), k -> new ArrayList<>()).add(entry);
+        }
         for(final List<ContigEntry> segments : mSegmentsByAltContig.values())
+        {
             segments.sort(Comparator.comparingInt(ContigEntry::altStart));
+        }
 
         mExonIndex = exonIndex;
     }
@@ -71,16 +67,18 @@ public class LiftBackResolver
     // Returns the segment owning altPos, or null if it falls in an inter-transcript spacer or the contig is unknown.
     ContigEntry findSegment(final String altContig, final int altPos)
     {
-        final List<ContigEntry> segments = mSegmentsByAltContig.get(altContig);
+        List<ContigEntry> segments = mSegmentsByAltContig.get(altContig);
         if(segments == null)
+        {
             return null;
+        }
 
         int lo = 0;
         int hi = segments.size() - 1;
         int candidate = -1;
         while(lo <= hi)
         {
-            final int mid = (lo + hi) >>> 1;
+            int mid = (lo + hi) >>> 1;
             if(segments.get(mid).altStart() <= altPos)
             {
                 candidate = mid;
@@ -98,16 +96,18 @@ public class LiftBackResolver
             return segments.isEmpty() ? null : segments.get(0);
         }
 
-        final ContigEntry segment = segments.get(candidate);
+        ContigEntry segment = segments.get(candidate);
         if(altPos <= segment.altEnd())
+        {
             return segment;
+        }
 
         // altPos in the inter-segment spacer; choose the nearer neighbour and let ContigTranslator clamp the overhang.
         if(candidate + 1 < segments.size())
         {
-            final ContigEntry next = segments.get(candidate + 1);
-            final int leadingOverhang = next.altStart() - altPos;
-            final int trailingOverhang = altPos - segment.altEnd();
+            ContigEntry next = segments.get(candidate + 1);
+            int leadingOverhang = next.altStart() - altPos;
+            int trailingOverhang = altPos - segment.altEnd();
             return leadingOverhang <= trailingOverhang ? next : segment;
         }
 
@@ -117,10 +117,12 @@ public class LiftBackResolver
     // Lift-only entry point for callers that don't need the full LiftBackResult (e.g. SA tag rewriting).
     public LiftedCoords liftCoords(final String contig, final int pos, final String cigarStr)
     {
-        final LiftedAlignment lifted = liftAlignment(
+        LiftedAlignment lifted = liftAlignment(
                 LiftedAlignment.AlignmentSource.SELF, contig, pos, cigarStr, 0, 0, true);
         if(lifted == null)
+        {
             return null;
+        }
         return new LiftedCoords(lifted.LiftedChrom, lifted.LiftedPos, lifted.LiftedCigar);
     }
 
@@ -135,61 +137,69 @@ public class LiftBackResolver
     public LiftBackResult resolve(final SAMRecord record)
     {
         if(record.getReadUnmappedFlag())
+        {
             return unmappedResult(record);
+        }
 
         if(record.getSupplementaryAlignmentFlag())
-            return supplementaryResult(record);
+        {
+            return liftSupplementary(record);
+        }
 
         return resolvePrimary(record);
     }
 
     private LiftBackResult resolvePrimary(final SAMRecord record)
     {
-        final List<LiftedAlignment> xaAlts = parseAndLiftXa(record);
+        List<LiftedAlignment> xaAlts = parseAndLiftXa(record);
         return resolvePrimaryWithAlts(record, xaAlts, xaAlts.size());
     }
 
     private LiftBackResult resolvePrimaryWithAlts(
             final SAMRecord record, final List<LiftedAlignment> alts, final int numXaAltsForReport)
     {
-        final LiftedAlignment self = liftSelf(record);
+        LiftedAlignment self = liftSelf(record);
 
         if(self == null)
+        {
             return unliftableResult(LiftBackResult.RecordRole.PRIMARY, numXaAltsForReport, "primary_translate_failed");
+        }
 
         self.IsPrimaryChoice = true;
 
-        final List<LiftedAlignment> allAlignments = new ArrayList<>(1 + alts.size());
+        List<LiftedAlignment> allAlignments = new ArrayList<>(1 + alts.size());
         allAlignments.add(self);
         allAlignments.addAll(alts);
 
-        final LiftBackDiscriminator.Features features = LiftBackDiscriminator.categorize(allAlignments);
-        final LiftBackDiscriminator.Outcome outcome = LiftBackDiscriminator.apply(allAlignments, features.Category, self);
-        final LiftedAlignment effectivePrimary = outcome.effectivePrimary();
+        LiftBackDiscriminator.Features features = LiftBackDiscriminator.categorize(allAlignments);
+        LiftBackDiscriminator.Outcome outcome = LiftBackDiscriminator.apply(allAlignments, features.Category, self);
+        LiftedAlignment effectivePrimary = outcome.effectivePrimary();
 
-        final List<LiftedAlignment> keptAlignments = allAlignments.stream()
+        List<LiftedAlignment> keptAlignments = allAlignments.stream()
                 .filter(la -> !la.Dropped)
                 .toList();
 
-        final int numLoci = countDistinctLoci(keptAlignments);
-        final int cigarsAtPrimaryLocus = countDistinctCigarsAtLocus(keptAlignments, effectivePrimary);
-        final String geneIds = joinGeneIds(keptAlignments);
+        int numLoci = countDistinctLoci(keptAlignments);
+        int cigarsAtPrimaryLocus = countDistinctCigarsAtLocus(keptAlignments, effectivePrimary);
+        String geneIds = joinGeneIds(keptAlignments);
 
-        final int inputMapq = record.getMappingQuality();
-        final boolean swapped = effectivePrimary != self;
-        final boolean hiddenTie = inputMapq == 0 && hasHiddenTie(record);
-        final boolean inAnnotatedExon = mExonIndex != null
+        int inputMapq = record.getMappingQuality();
+        boolean swapped = effectivePrimary != self;
+        boolean hiddenTie = inputMapq == 0 && hasHiddenTie(record);
+        boolean inAnnotatedExon = mExonIndex != null
                 && mExonIndex.contains(effectivePrimary.LiftedChrom, effectivePrimary.LiftedPos);
-        final boolean hasTxMatch = features.NumTxAlts > 0;
-        final int updatedMapq = decidePrimaryMapq(
+        boolean hasTxMatch = features.NumTxAlts > 0;
+        int updatedMapq = decidePrimaryMapq(
                 inputMapq, numLoci, swapped, hiddenTie, effectivePrimary.fromTxContig(), inAnnotatedExon, hasTxMatch);
 
-        final LiftedAlignment primaryCoords = effectivePrimary;
+        LiftedAlignment primaryCoords = effectivePrimary;
 
         if(swapped)
+        {
             TARS_LOGGER.debug2("discriminator {} {}: primary -> {}:{} {} ({})",
                     features.Category, record.getReadName(), primaryCoords.LiftedChrom, primaryCoords.LiftedPos,
                     primaryCoords.LiftedCigar, outcome.note());
+        }
 
         return new LiftBackResult(
                 features.Category, LiftBackResult.Composition.fromAlignments(keptAlignments),
@@ -206,20 +216,23 @@ public class LiftBackResolver
                 allAlignments);
     }
 
+    // A supplementary is only lifted, never discriminated: lift its own coords (no XA parse, no locus pick).
     // MAPQ=0 on a tx-contig supplementary is the multi-alt-contig tie artefact; rescue to RESCUE_MAPQ.
-    private LiftBackResult supplementaryResult(final SAMRecord record)
+    private LiftBackResult liftSupplementary(final SAMRecord record)
     {
-        final LiftedAlignment lifted = liftSelf(record);
+        LiftedAlignment lifted = liftSelf(record);
 
         if(lifted == null)
+        {
             return unliftableResult(LiftBackResult.RecordRole.SUPPLEMENTARY, 0, "supp_translate_failed");
+        }
 
         lifted.IsPrimaryChoice = true;
 
-        final int inputMapq = record.getMappingQuality();
-        final int outputMapq = (lifted.fromTxContig() && inputMapq == 0) ? RESCUE_MAPQ : inputMapq;
-        final int numRefAlts = lifted.fromTxContig() ? 0 : 1;
-        final int numTxAlts = lifted.fromTxContig() ? 1 : 0;
+        int inputMapq = record.getMappingQuality();
+        int outputMapq = (lifted.fromTxContig() && inputMapq == 0) ? RESCUE_MAPQ : inputMapq;
+        int numRefAlts = lifted.fromTxContig() ? 0 : 1;
+        int numTxAlts = lifted.fromTxContig() ? 1 : 0;
 
         return new LiftBackResult(
                 LiftBackCategory.SUPPLEMENTARY, LiftBackResult.Composition.fromAlignments(List.of(lifted)),
@@ -238,26 +251,28 @@ public class LiftBackResolver
     // Self is excluded from the dedup key set so a Tx XA alt lifting to the same coords as a ref self is preserved (drives BOTH_AGREE).
     private List<LiftedAlignment> parseAndLiftXa(final SAMRecord record)
     {
-        final List<LiftedAlignment> alts = new ArrayList<>();
-        final String xa = record.getStringAttribute(XA_TAG);
+        List<LiftedAlignment> alts = new ArrayList<>();
+        String xa = record.getStringAttribute(XA_ATTRIBUTE);
         if(xa == null || xa.isEmpty())
+        {
             return alts;
+        }
 
-        final Set<String> seenKeys = new HashSet<>();
+        Set<String> seenKeys = new HashSet<>();
 
         for(final String entry : xa.split(";"))
         {
             if(entry.isEmpty())
                 continue;
-            final String[] parts = entry.split(",");
+            String[] parts = entry.split(",");
             if(parts.length < 4)
                 continue;
 
-            final String contig = parts[0];
-            final String cigar = parts[2];
+            String contig = parts[0];
+            String cigar = parts[2];
 
             // bwa XA pos is signed (sign encodes strand). Tolerate malformed entries.
-            final int signedPos;
+            int signedPos;
             int nm;
             try
             {
@@ -276,15 +291,17 @@ public class LiftBackResolver
                 nm = 0;
             }
 
-            final boolean forwardStrand = signedPos >= 0;
-            final int pos = Math.abs(signedPos);
+            boolean forwardStrand = signedPos >= 0;
+            int pos = Math.abs(signedPos);
 
-            final LiftedAlignment lifted = liftAlignment(
+            LiftedAlignment lifted = liftAlignment(
                     LiftedAlignment.AlignmentSource.XA_INPUT, contig, pos, cigar, 0, nm, forwardStrand);
             if(lifted == null)
                 continue;
             if(seenKeys.add(liftedKey(lifted)))
+            {
                 alts.add(lifted);
+            }
         }
 
         return alts;
@@ -300,7 +317,9 @@ public class LiftBackResolver
         {
             // Unknown alt contig must not pass through as ref - that would leak _tx contig names into the BAM.
             if(contig.endsWith(ALT_CONTIG_SUFFIX))
+            {
                 return null;
+            }
 
             return new LiftedAlignment(
                     source, contig, pos, cigarStr,
@@ -310,19 +329,23 @@ public class LiftBackResolver
                     false, forwardStrand);
         }
 
-        final ContigEntry entry = findSegment(contig, pos);
+        ContigEntry entry = findSegment(contig, pos);
         if(entry == null)
+        {
             return null;
+        }
 
-        final Cigar parsedCigar = TextCigarCodec.decode(cigarStr);
-        final ContigTranslator.TranslationResult translated = ContigTranslator.translate(entry, pos, parsedCigar);
+        Cigar parsedCigar = TextCigarCodec.decode(cigarStr);
+        ContigTranslator.TranslationResult translated = ContigTranslator.translate(entry, pos, parsedCigar);
         if(translated == null)
+        {
             return null;
+        }
 
-        final boolean softClipAtBoundary = ContigTranslator.hasSoftClipAtExonBoundary(entry, pos, parsedCigar);
+        boolean softClipAtBoundary = ContigTranslator.hasSoftClipAtExonBoundary(entry, pos, parsedCigar);
 
         // Drop sub-threshold terminal anchors that bwa fabricated by walking past an exon boundary.
-        final ContigTranslator.MicroAnchorResult trimmed = ContigTranslator.trimMicroAnchors(
+        ContigTranslator.MicroAnchorResult trimmed = ContigTranslator.trimMicroAnchors(
                 translated.genomicCigar(), ANNOTATED_JUNCTION_MIN_ANCHOR_BP, ANNOTATED_JUNCTION_MIN_SOFTCLIP_ANCHOR_BP);
 
         return new LiftedAlignment(
@@ -339,17 +362,23 @@ public class LiftBackResolver
     private static int countDistinctLoci(final List<LiftedAlignment> alignments)
     {
         if(alignments.isEmpty())
+        {
             return 0;
+        }
 
         int bestScore = Integer.MIN_VALUE;
         for(final LiftedAlignment la : alignments)
+        {
             bestScore = Math.max(bestScore, reconstructedScore(la));
+        }
 
-        final Set<String> loci = new HashSet<>();
+        Set<String> loci = new HashSet<>();
         for(final LiftedAlignment la : alignments)
         {
             if(reconstructedScore(la) == bestScore)
+            {
                 loci.add(locusKey(la));
+            }
         }
         return loci.size();
     }
@@ -357,15 +386,17 @@ public class LiftBackResolver
     // Reconstruct bwa-mem2 AS from CIGAR + NM (NM = mismatches + indel bases, so mismatches = NM - indelBases).
     static int reconstructedScore(final LiftedAlignment alignment)
     {
-        final Cigar cigar = TextCigarCodec.decode(alignment.OrigCigar);
+        Cigar cigar = TextCigarCodec.decode(alignment.OrigCigar);
         int matched = 0;
         int indelBases = 0;
         int gapOps = 0;
         for(final CigarElement element : cigar.getCigarElements())
         {
-            final CigarOperator op = element.getOperator();
+            CigarOperator op = element.getOperator();
             if(op == CigarOperator.M || op == CigarOperator.EQ || op == CigarOperator.X)
+            {
                 matched += element.getLength();
+            }
             else if(op == CigarOperator.I || op == CigarOperator.D)
             {
                 indelBases += element.getLength();
@@ -374,29 +405,33 @@ public class LiftBackResolver
         }
 
         // XA alts carry no AS tag, so score is reconstructed from the CIGAR to filter out sub-optimal competitors.
-        final int mismatches = Math.max(0, alignment.NumMismatches - indelBases);
-        return (matched - mismatches) * BwaMemScore.MATCH + mismatches * BwaMemScore.MISMATCH
-                + gapOps * BwaMemScore.GAP_OPEN + indelBases * BwaMemScore.GAP_EXTEND;
+        int mismatches = Math.max(0, alignment.NumMismatches - indelBases);
+        return (matched - mismatches) * TarsConstants.MATCH + mismatches * TarsConstants.MISMATCH
+                + gapOps * TarsConstants.GAP_OPEN + indelBases * TarsConstants.GAP_EXTEND;
     }
 
     private static int countDistinctCigarsAtLocus(final List<LiftedAlignment> alignments, final LiftedAlignment primary)
     {
-        final String primaryLocus = locusKey(primary);
-        final Set<String> cigars = new HashSet<>();
+        String primaryLocus = locusKey(primary);
+        Set<String> cigars = new HashSet<>();
         for(final LiftedAlignment la : alignments)
         {
             if(locusKey(la).equals(primaryLocus))
+            {
                 cigars.add(la.LiftedCigar);
+            }
         }
         return cigars.size();
     }
 
     private static String joinGeneIds(final List<LiftedAlignment> alignments)
     {
-        final Set<String> geneIds = new HashSet<>();
+        Set<String> geneIds = new HashSet<>();
         for(final LiftedAlignment la : alignments)
             if(la.GeneId != null)
+            {
                 geneIds.add(la.GeneId);
+            }
         return geneIds.stream().sorted().collect(Collectors.joining("|"));
     }
 
@@ -412,13 +447,13 @@ public class LiftBackResolver
 
     private static int getInt(final SAMRecord record, final String tag)
     {
-        final Integer val = record.getIntegerAttribute(tag);
+        Integer val = record.getIntegerAttribute(tag);
         return val != null ? val : 0;
     }
 
     private static LiftBackResult unmappedResult(final SAMRecord record)
     {
-        final LiftBackResult.RecordRole role = record.isSecondaryOrSupplementary()
+        LiftBackResult.RecordRole role = record.isSecondaryOrSupplementary()
                 ? LiftBackResult.RecordRole.SUPPLEMENTARY
                 : LiftBackResult.RecordRole.PRIMARY;
 
@@ -444,20 +479,26 @@ public class LiftBackResolver
             final boolean primaryFromTxContig, final boolean primaryInAnnotatedExon, final boolean hasTxMatch)
     {
         if(!hasTxMatch)
+        {
             return inputMapq;
+        }
         if(swapped)
+        {
             return RESCUE_MAPQ;
-        final boolean unresolvedHiddenTie = hiddenTie && !primaryFromTxContig && !primaryInAnnotatedExon;
+        }
+        boolean unresolvedHiddenTie = hiddenTie && !primaryFromTxContig && !primaryInAnnotatedExon;
         if(numLoci == 1 && inputMapq == 0 && !unresolvedHiddenTie)
+        {
             return RESCUE_MAPQ;
+        }
         return inputMapq;
     }
 
     // When XS == AS, an equally-scoring alt wasn't emitted by bwa. Flag as a hidden tie to skip MAPQ rescue.
     private static boolean hasHiddenTie(final SAMRecord record)
     {
-        final Integer alignmentScore = record.getIntegerAttribute(AS_TAG);
-        final Integer suboptimalScore = record.getIntegerAttribute(XS_TAG);
+        Integer alignmentScore = record.getIntegerAttribute(AS_TAG);
+        Integer suboptimalScore = record.getIntegerAttribute(XS_TAG);
         return alignmentScore != null && suboptimalScore != null && suboptimalScore.intValue() == alignmentScore.intValue();
     }
 

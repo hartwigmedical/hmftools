@@ -18,7 +18,7 @@ public class ChunkProducerTest
 {
     private static SAMRecord read(final String name)
     {
-        final SAMRecord record = new SAMRecord(new SAMFileHeader());
+        SAMRecord record = new SAMRecord(new SAMFileHeader());
         record.setReadName(name);
         return record;
     }
@@ -26,7 +26,7 @@ public class ChunkProducerTest
     private static List<List<SAMRecord>> chunk(final List<SAMRecord> records, final int targetReads)
             throws InterruptedException
     {
-        final List<List<SAMRecord>> chunks = new ArrayList<>();
+        List<List<SAMRecord>> chunks = new ArrayList<>();
         ChunkProducer.streamChunks(records.iterator(), targetReads, chunks::add, null);
         return chunks;
     }
@@ -35,8 +35,8 @@ public class ChunkProducerTest
     {
         for(int i = 0; i + 1 < chunks.size(); ++i)
         {
-            final String lastName = chunks.get(i).get(chunks.get(i).size() - 1).getReadName();
-            final String nextName = chunks.get(i + 1).get(0).getReadName();
+            String lastName = chunks.get(i).get(chunks.get(i).size() - 1).getReadName();
+            String nextName = chunks.get(i + 1).get(0).getReadName();
             assertTrue("fragment split across chunk boundary: " + lastName, !lastName.equals(nextName));
         }
     }
@@ -46,7 +46,7 @@ public class ChunkProducerTest
     {
         // three records per fragment, target 2 reads: the cut must wait for the name to change rather than
         // firing mid-fragment, so each chunk holds whole fragments.
-        final List<SAMRecord> records = new ArrayList<>();
+        List<SAMRecord> records = new ArrayList<>();
         for(int fragment = 0; fragment < 5; ++fragment)
         {
             records.add(read("frag" + fragment));
@@ -54,21 +54,23 @@ public class ChunkProducerTest
             records.add(read("frag" + fragment));
         }
 
-        final List<List<SAMRecord>> chunks = chunk(records, 2);
+        List<List<SAMRecord>> chunks = chunk(records, 2);
 
         assertWholeFragments(chunks);
 
         int total = 0;
         for(final List<SAMRecord> chunk : chunks)
+        {
             total += chunk.size();
+        }
         assertEquals(15, total);
     }
 
     @Test
     public void emitsSingleChunkUnderTarget() throws InterruptedException
     {
-        final List<SAMRecord> records = List.of(read("a"), read("a"), read("b"));
-        final List<List<SAMRecord>> chunks = chunk(records, 5000);
+        List<SAMRecord> records = List.of(read("a"), read("a"), read("b"));
+        List<List<SAMRecord>> chunks = chunk(records, 5000);
         assertEquals(1, chunks.size());
         assertEquals(3, chunks.get(0).size());
     }
@@ -77,12 +79,14 @@ public class ChunkProducerTest
     public void oversizeFragmentStaysWhole() throws InterruptedException
     {
         // a single fragment larger than the target must not be split -- the boundary check gates the cut.
-        final List<SAMRecord> records = new ArrayList<>();
+        List<SAMRecord> records = new ArrayList<>();
         for(int i = 0; i < 10; ++i)
+        {
             records.add(read("big"));
+        }
         records.add(read("next"));
 
-        final List<List<SAMRecord>> chunks = chunk(records, 3);
+        List<List<SAMRecord>> chunks = chunk(records, 3);
         assertWholeFragments(chunks);
         assertEquals(10, chunks.get(0).size());
     }

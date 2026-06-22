@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.tars.liftback.tailextend;
 
-import com.hartwig.hmftools.tars.common.BwaMemScore;
+import com.hartwig.hmftools.tars.common.TarsConstants;
 
 // Re-evaluates a lifted terminal region (bwa's M-tail anchor + soft-clip) against the contiguous
 // reference, independent of bwa's tx-contig M/S split. bwa scored the alignment over the spliced
@@ -18,13 +18,13 @@ public final class BoundaryReclaim
     // (a tie can only be reached by a match step, so the prefix never ends on a trailing mismatch).
     public static int maxScoringPrefix(final byte[] read, final byte[] ref)
     {
-        final int len = Math.min(read.length, ref.length);
+        int len = Math.min(read.length, ref.length);
         int score = 0;
         int bestScore = 0;
         int bestLength = 0;
         for(int i = 0; i < len; ++i)
         {
-            score += basesEqualIgnoreCase(read[i], ref[i]) ? BwaMemScore.MATCH : BwaMemScore.MISMATCH;
+            score += basesEqualIgnoreCase(read[i], ref[i]) ? TarsConstants.MATCH : TarsConstants.MISMATCH;
             if(score >= bestScore && score > 0)
             {
                 bestScore = score;
@@ -38,14 +38,16 @@ public final class BoundaryReclaim
     // value maxScoringPrefix reaches - use it to compare a contiguous extension against an alternative placement.
     public static int maxPrefixScore(final byte[] read, final byte[] ref)
     {
-        final int len = Math.min(read.length, ref.length);
+        int len = Math.min(read.length, ref.length);
         int score = 0;
         int bestScore = 0;
         for(int i = 0; i < len; ++i)
         {
-            score += basesEqualIgnoreCase(read[i], ref[i]) ? BwaMemScore.MATCH : BwaMemScore.MISMATCH;
+            score += basesEqualIgnoreCase(read[i], ref[i]) ? TarsConstants.MATCH : TarsConstants.MISMATCH;
             if(score > bestScore)
+            {
                 bestScore = score;
+            }
         }
         return bestScore;
     }
@@ -55,25 +57,31 @@ public final class BoundaryReclaim
     public static int score(final byte[] read, final byte[] ref)
     {
         int total = 0;
-        final int len = Math.min(read.length, ref.length);
+        int len = Math.min(read.length, ref.length);
         for(int i = 0; i < len; ++i)
-            total += basesEqualIgnoreCase(read[i], ref[i]) ? BwaMemScore.MATCH : BwaMemScore.MISMATCH;
+        {
+            total += basesEqualIgnoreCase(read[i], ref[i]) ? TarsConstants.MATCH : TarsConstants.MISMATCH;
+        }
         return total;
     }
 
     // Reverses a window so a region whose near-exon boundary sits at its end can be walked boundary-outward.
     public static byte[] reversed(final byte[] bases)
     {
-        final byte[] out = new byte[bases.length];
+        byte[] out = new byte[bases.length];
         for(int i = 0; i < bases.length; ++i)
+        {
             out[i] = bases[bases.length - 1 - i];
+        }
         return out;
     }
 
     static boolean basesEqualIgnoreCase(final byte a, final byte b)
     {
         if(a == b)
+        {
             return true;
+        }
         return (a & ~0x20) == (b & ~0x20);
     }
 }

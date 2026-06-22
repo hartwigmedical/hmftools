@@ -34,13 +34,15 @@ public class ChunkProducer
 
         while(iter.hasNext())
         {
-            final SAMRecord record = iter.next();
-            final String name = record.getReadName();
+            SAMRecord record = iter.next();
+            String name = record.getReadName();
 
             if(currentName != null && !name.equals(currentName) && chunk.size() >= targetReads)
             {
                 if(readsCounter != null)
+                {
                     readsCounter.add(chunk.size());
+                }
                 sink.accept(chunk);
                 chunk = new ArrayList<>(targetReads);
             }
@@ -52,7 +54,9 @@ public class ChunkProducer
         if(!chunk.isEmpty())
         {
             if(readsCounter != null)
+            {
                 readsCounter.add(chunk.size());
+            }
             sink.accept(chunk);
         }
     }

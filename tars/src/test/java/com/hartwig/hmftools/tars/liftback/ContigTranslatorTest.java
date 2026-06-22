@@ -249,7 +249,7 @@ public class ContigTranslatorTest
         assertFalse(ContigTranslator.hasSoftClipAtExonBoundary(threeExonContig(), 71, cigar("30M")));
 
         // single-exon contig has no interior boundaries -> false either side
-        final ContigEntry singleExon = new ContigEntry(
+        ContigEntry singleExon = new ContigEntry(
                 "single", 1, 100, "G", "X", "T", CHR_1, 1, List.of(new BaseRegion(100, 199)));
         assertFalse(ContigTranslator.hasSoftClipAtExonBoundary(singleExon, 1, cigar("50S50M")));
         assertFalse(ContigTranslator.hasSoftClipAtExonBoundary(singleExon, 1, cigar("50M50S")));

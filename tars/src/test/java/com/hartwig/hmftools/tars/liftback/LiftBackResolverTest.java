@@ -40,7 +40,7 @@ public class LiftBackResolverTest
     // which these resolver tests must not carry.
     private static SAMRecord newRecord(final String contig, final int pos, final String cigar)
     {
-        final SAMRecord record = new SAMRecord(new SAMFileHeader());
+        SAMRecord record = new SAMRecord(new SAMFileHeader());
         record.setReadName("read");
         record.setReferenceName(contig);
         record.setAlignmentStart(pos);
@@ -51,7 +51,7 @@ public class LiftBackResolverTest
 
     private static SAMRecord newUnmappedRecord()
     {
-        final SAMRecord record = new SAMRecord(new SAMFileHeader());
+        SAMRecord record = new SAMRecord(new SAMFileHeader());
         record.setReadName("read");
         record.setReadUnmappedFlag(true);
         return record;
@@ -60,8 +60,8 @@ public class LiftBackResolverTest
     @Test
     public void testUnmapped()
     {
-        final LiftBackResolver resolver = new LiftBackResolver(contigMap());
-        final LiftBackResult result = resolver.resolve(newUnmappedRecord());
+        LiftBackResolver resolver = new LiftBackResolver(contigMap());
+        LiftBackResult result = resolver.resolve(newUnmappedRecord());
 
         assertEquals(LiftBackCategory.UNMAPPED, result.category());
         assertTrue(result.liftedAlignments().isEmpty());
@@ -70,10 +70,10 @@ public class LiftBackResolverTest
     @Test
     public void testRefOnlyExonic()
     {
-        final SAMRecord record = newRecord(CHR_1, 1000, "150M");
+        SAMRecord record = newRecord(CHR_1, 1000, "150M");
 
-        final LiftBackResolver resolver = new LiftBackResolver(contigMap());
-        final LiftBackResult result = resolver.resolve(record);
+        LiftBackResolver resolver = new LiftBackResolver(contigMap());
+        LiftBackResult result = resolver.resolve(record);
 
         assertEquals(LiftBackCategory.REF_SINGLE, result.category());
         assertEquals(CHR_1, result.finalChrom());
@@ -86,10 +86,10 @@ public class LiftBackResolverTest
     @Test
     public void testTxPrimaryUniqueWithinExon()
     {
-        final SAMRecord record = newRecord(TX_CONTIG, 1, "50M"); // contig pos 1, 50M -> exon 1 (chr1:100-149)
+        SAMRecord record = newRecord(TX_CONTIG, 1, "50M"); // contig pos 1, 50M -> exon 1 (chr1:100-149)
 
-        final LiftBackResolver resolver = new LiftBackResolver(contigMap());
-        final LiftBackResult result = resolver.resolve(record);
+        LiftBackResolver resolver = new LiftBackResolver(contigMap());
+        LiftBackResult result = resolver.resolve(record);
 
         assertEquals(LiftBackCategory.TX_SINGLE, result.category());
         assertEquals(CHR_1, result.finalChrom());
@@ -101,10 +101,10 @@ public class LiftBackResolverTest
     @Test
     public void testTxPrimaryUniqueJunctionCrosser()
     {
-        final SAMRecord record = newRecord(TX_CONTIG, 51, "100M"); // crosses exon 1 -> exon 2 (intron 200-299)
+        SAMRecord record = newRecord(TX_CONTIG, 51, "100M"); // crosses exon 1 -> exon 2 (intron 200-299)
 
-        final LiftBackResolver resolver = new LiftBackResolver(contigMap());
-        final LiftBackResult result = resolver.resolve(record);
+        LiftBackResolver resolver = new LiftBackResolver(contigMap());
+        LiftBackResult result = resolver.resolve(record);
 
         assertEquals(LiftBackCategory.TX_SINGLE, result.category());
         assertEquals(CHR_1, result.finalChrom());
@@ -117,11 +117,11 @@ public class LiftBackResolverTest
     public void testJunctionTxBetter()
     {
         // Tx junction-crosser primary; ref alt at same lifted locus with soft-clip.
-        final SAMRecord record = newRecord(TX_CONTIG, 51, "100M");
+        SAMRecord record = newRecord(TX_CONTIG, 51, "100M");
         record.setAttribute("XA", CHR_1 + ",+150,50M50S,0;");
 
-        final LiftBackResolver resolver = new LiftBackResolver(contigMap());
-        final LiftBackResult result = resolver.resolve(record);
+        LiftBackResolver resolver = new LiftBackResolver(contigMap());
+        LiftBackResult result = resolver.resolve(record);
 
         assertEquals(LiftBackCategory.BOTH_TX_JUNCTION_REF_SOFTCLIP, result.category());
         assertTrue(result.hasNCigar());
@@ -135,11 +135,11 @@ public class LiftBackResolverTest
     @Test
     public void testRefTxAgree()
     {
-        final SAMRecord record = newRecord(CHR_1, 100, "50M"); // ref primary; Tx alt at contig pos 1 -> same locus+CIGAR
+        SAMRecord record = newRecord(CHR_1, 100, "50M"); // ref primary; Tx alt at contig pos 1 -> same locus+CIGAR
         record.setAttribute("XA", TX_CONTIG + ",+1,50M,0;");
 
-        final LiftBackResolver resolver = new LiftBackResolver(contigMap());
-        final LiftBackResult result = resolver.resolve(record);
+        LiftBackResolver resolver = new LiftBackResolver(contigMap());
+        LiftBackResult result = resolver.resolve(record);
 
         assertEquals(LiftBackCategory.BOTH_AGREE, result.category());
         assertEquals(1, result.numLoci());
@@ -149,11 +149,11 @@ public class LiftBackResolverTest
     public void testIntronRetRefBetter()
     {
         // ref chr1:170 50M (last 20bp in intron); Tx pos 71 30M20S lifts to chr1:170-199 soft-clipped at exon boundary.
-        final SAMRecord record = newRecord(CHR_1, 170, "50M");
+        SAMRecord record = newRecord(CHR_1, 170, "50M");
         record.setAttribute("XA", TX_CONTIG + ",+71,30M20S,0;");
 
-        final LiftBackResolver resolver = new LiftBackResolver(contigMap());
-        final LiftBackResult result = resolver.resolve(record);
+        LiftBackResolver resolver = new LiftBackResolver(contigMap());
+        LiftBackResult result = resolver.resolve(record);
 
         assertEquals(LiftBackCategory.BOTH_TX_SOFTCLIP_REF_MATCH, result.category());
         assertEquals(1, result.numLoci());
@@ -163,11 +163,11 @@ public class LiftBackResolverTest
     public void testTxSoftClipNotAtBoundaryFallsToAmbiguous()
     {
         // ref 50M full match; Tx 25M25S - 25M ends mid-exon (chr1:194), trailing clip NOT at exon boundary -> BOTH_AMBIGUOUS.
-        final SAMRecord record = newRecord(CHR_1, 170, "50M");
+        SAMRecord record = newRecord(CHR_1, 170, "50M");
         record.setAttribute("XA", TX_CONTIG + ",+71,25M25S,0;");
 
-        final LiftBackResolver resolver = new LiftBackResolver(contigMap());
-        final LiftBackResult result = resolver.resolve(record);
+        LiftBackResolver resolver = new LiftBackResolver(contigMap());
+        LiftBackResult result = resolver.resolve(record);
 
         assertEquals(LiftBackCategory.BOTH_AMBIGUOUS, result.category());
         assertEquals(1, result.numLoci());
@@ -176,11 +176,11 @@ public class LiftBackResolverTest
     @Test
     public void testParalogMulti()
     {
-        final SAMRecord record = newRecord(TX_CONTIG, 1, "50M"); // Tx primary + ref alt on different chrom -> two loci
+        SAMRecord record = newRecord(TX_CONTIG, 1, "50M"); // Tx primary + ref alt on different chrom -> two loci
         record.setAttribute("XA", "chr5,+5000,50M,0;");
 
-        final LiftBackResolver resolver = new LiftBackResolver(contigMap());
-        final LiftBackResult result = resolver.resolve(record);
+        LiftBackResolver resolver = new LiftBackResolver(contigMap());
+        LiftBackResult result = resolver.resolve(record);
 
         assertEquals(LiftBackCategory.BOTH_MULTI, result.category());
         assertEquals(2, result.numLoci());
@@ -191,12 +191,12 @@ public class LiftBackResolverTest
     {
         // Tx primary (perfect) + sub-optimal XA alt with 3 mismatches (score 35 < 50). Sub-optimal alt is
         // not a real competitor, so numLoci == 1 and MAPQ=0 is rescued.
-        final SAMRecord record = newRecord(TX_CONTIG, 1, "50M");
+        SAMRecord record = newRecord(TX_CONTIG, 1, "50M");
         record.setMappingQuality(0);
         record.setAttribute("XA", "chr5,+5000,50M,3;");
 
-        final LiftBackResolver resolver = new LiftBackResolver(contigMap());
-        final LiftBackResult result = resolver.resolve(record);
+        LiftBackResolver resolver = new LiftBackResolver(contigMap());
+        LiftBackResult result = resolver.resolve(record);
 
         assertEquals(1, result.numLoci());
         assertEquals(60, result.updatedMapq());
@@ -205,11 +205,11 @@ public class LiftBackResolverTest
     @Test
     public void testRefOnlyMulti()
     {
-        final SAMRecord record = newRecord(CHR_1, 1000, "50M"); // ref primary + ref alt on different chrom, no tx
+        SAMRecord record = newRecord(CHR_1, 1000, "50M"); // ref primary + ref alt on different chrom, no tx
         record.setAttribute("XA", "chr5,+5000,50M,0;");
 
-        final LiftBackResolver resolver = new LiftBackResolver(contigMap());
-        final LiftBackResult result = resolver.resolve(record);
+        LiftBackResolver resolver = new LiftBackResolver(contigMap());
+        LiftBackResult result = resolver.resolve(record);
 
         assertEquals(LiftBackCategory.REF_MULTI, result.category());
         assertEquals(2, result.numLoci());
@@ -218,16 +218,16 @@ public class LiftBackResolverTest
     @Test
     public void testTxPrimaryMulti()
     {
-        final ContigEntry entryB = new ContigEntry(
+        ContigEntry entryB = new ContigEntry(
                 "ensG_OTHER_T", 1, 100, "GO", "OTHER", "TO", "chr5", 1,
                 List.of(new BaseRegion(2000, 2099)));
-        final List<ContigEntry> twoContigs = List.of(threeExonContig(), entryB);
+        List<ContigEntry> twoContigs = List.of(threeExonContig(), entryB);
 
-        final SAMRecord record = newRecord(TX_CONTIG, 1, "50M");
+        SAMRecord record = newRecord(TX_CONTIG, 1, "50M");
         record.setAttribute("XA", "ensG_OTHER_T,+1,50M,0;");
 
-        final LiftBackResolver resolver = new LiftBackResolver(twoContigs);
-        final LiftBackResult result = resolver.resolve(record);
+        LiftBackResolver resolver = new LiftBackResolver(twoContigs);
+        LiftBackResult result = resolver.resolve(record);
 
         assertEquals(LiftBackCategory.TX_MULTI, result.category());
         assertEquals(2, result.numLoci());
@@ -236,11 +236,11 @@ public class LiftBackResolverTest
     @Test
     public void testSupplementary()
     {
-        final SAMRecord record = newRecord(CHR_1, 1000, "60M40H");
+        SAMRecord record = newRecord(CHR_1, 1000, "60M40H");
         record.setSupplementaryAlignmentFlag(true);
 
-        final LiftBackResolver resolver = new LiftBackResolver(contigMap());
-        final LiftBackResult result = resolver.resolve(record);
+        LiftBackResolver resolver = new LiftBackResolver(contigMap());
+        LiftBackResult result = resolver.resolve(record);
 
         assertEquals(LiftBackCategory.SUPPLEMENTARY, result.category());
         assertEquals(LiftBackResult.RecordRole.SUPPLEMENTARY, result.role());
@@ -249,11 +249,11 @@ public class LiftBackResolverTest
     @Test
     public void testSupplementaryOnTxContigGetsLifted()
     {
-        final SAMRecord record = newRecord(TX_CONTIG, 51, "100M");
+        SAMRecord record = newRecord(TX_CONTIG, 51, "100M");
         record.setSupplementaryAlignmentFlag(true);
 
-        final LiftBackResolver resolver = new LiftBackResolver(contigMap());
-        final LiftBackResult result = resolver.resolve(record);
+        LiftBackResolver resolver = new LiftBackResolver(contigMap());
+        LiftBackResult result = resolver.resolve(record);
 
         assertEquals(LiftBackCategory.SUPPLEMENTARY, result.category());
         assertEquals(LiftBackResult.RecordRole.SUPPLEMENTARY, result.role());
@@ -266,11 +266,11 @@ public class LiftBackResolverTest
     @Test
     public void testSupplementaryOnTxContigUnliftablePastEnd()
     {
-        final SAMRecord record = newRecord(TX_CONTIG, 251, "10M"); // pos 251 past altEnd(250)
+        SAMRecord record = newRecord(TX_CONTIG, 251, "10M"); // pos 251 past altEnd(250)
         record.setSupplementaryAlignmentFlag(true);
 
-        final LiftBackResolver resolver = new LiftBackResolver(contigMap());
-        final LiftBackResult result = resolver.resolve(record);
+        LiftBackResolver resolver = new LiftBackResolver(contigMap());
+        LiftBackResult result = resolver.resolve(record);
 
         assertEquals(LiftBackCategory.LIFT_FAILED, result.category());
         assertEquals(LiftBackResult.RecordRole.SUPPLEMENTARY, result.role());
@@ -280,10 +280,10 @@ public class LiftBackResolverTest
     @Test
     public void testPrimaryUnliftablePastEnd()
     {
-        final SAMRecord record = newRecord(TX_CONTIG, 251, "10M");
+        SAMRecord record = newRecord(TX_CONTIG, 251, "10M");
 
-        final LiftBackResolver resolver = new LiftBackResolver(contigMap());
-        final LiftBackResult result = resolver.resolve(record);
+        LiftBackResolver resolver = new LiftBackResolver(contigMap());
+        LiftBackResult result = resolver.resolve(record);
 
         assertEquals(LiftBackCategory.LIFT_FAILED, result.category());
         assertEquals(LiftBackResult.RecordRole.PRIMARY, result.role());
@@ -293,10 +293,10 @@ public class LiftBackResolverTest
     @Test
     public void testPrimaryTrailingOverhangClampedToSoftClip()
     {
-        final SAMRecord record = newRecord(TX_CONTIG, 200, "100M"); // 49bp past altEnd(250) -> trailing 49S
+        SAMRecord record = newRecord(TX_CONTIG, 200, "100M"); // 49bp past altEnd(250) -> trailing 49S
 
-        final LiftBackResolver resolver = new LiftBackResolver(contigMap());
-        final LiftBackResult result = resolver.resolve(record);
+        LiftBackResolver resolver = new LiftBackResolver(contigMap());
+        LiftBackResult result = resolver.resolve(record);
 
         assertEquals(LiftBackCategory.TX_SINGLE, result.category());
         assertTrue(result.finalCigar().endsWith("49S"));
@@ -306,11 +306,11 @@ public class LiftBackResolverTest
     public void testIntronRetRefBetterLeadingSoftClipBoundary()
     {
         // Tx alt contig pos 101 with leading 20S at exon-1/exon-2 boundary; ref chr1:300 full match.
-        final SAMRecord record = newRecord(CHR_1, 300, "30M");
+        SAMRecord record = newRecord(CHR_1, 300, "30M");
         record.setAttribute("XA", TX_CONTIG + ",+101,20S30M,0;");
 
-        final LiftBackResolver resolver = new LiftBackResolver(contigMap());
-        final LiftBackResult result = resolver.resolve(record);
+        LiftBackResolver resolver = new LiftBackResolver(contigMap());
+        LiftBackResult result = resolver.resolve(record);
 
         assertEquals(LiftBackCategory.BOTH_TX_SOFTCLIP_REF_MATCH, result.category());
         assertEquals(1, result.numLoci());
@@ -319,11 +319,11 @@ public class LiftBackResolverTest
     @Test
     public void testXaDedupDropsDuplicateAlts()
     {
-        final SAMRecord record = newRecord(TX_CONTIG, 1, "50M"); // two identical XA entries -> one alt retained
+        SAMRecord record = newRecord(TX_CONTIG, 1, "50M"); // two identical XA entries -> one alt retained
         record.setAttribute("XA", "chr5,+5000,50M,0;chr5,+5000,50M,0;");
 
-        final LiftBackResolver resolver = new LiftBackResolver(contigMap());
-        final LiftBackResult result = resolver.resolve(record);
+        LiftBackResolver resolver = new LiftBackResolver(contigMap());
+        LiftBackResult result = resolver.resolve(record);
 
         assertEquals(2, result.liftedAlignments().size()); // self + one deduped alt
         assertEquals(1, result.numXaAlts());
@@ -334,11 +334,11 @@ public class LiftBackResolverTest
     {
         // Two XA entries lifting to the same (chr1,100,50M): one Tx, one ref. XA dedup is XA-internal only,
         // so the Tx alt is kept (drives BOTH_AGREE); the duplicate ref XA collapses.
-        final SAMRecord record = newRecord(CHR_1, 100, "50M");
+        SAMRecord record = newRecord(CHR_1, 100, "50M");
         record.setAttribute("XA", TX_CONTIG + ",+1,50M,0;" + CHR_1 + ",+100,50M,0;");
 
-        final LiftBackResolver resolver = new LiftBackResolver(contigMap());
-        final LiftBackResult result = resolver.resolve(record);
+        LiftBackResolver resolver = new LiftBackResolver(contigMap());
+        LiftBackResult result = resolver.resolve(record);
 
         assertEquals(2, result.liftedAlignments().size()); // self + Tx alt; ref XA collapsed
         assertEquals(1, result.numXaAlts());
@@ -348,11 +348,11 @@ public class LiftBackResolverTest
     @Test
     public void testXaWithMalformedNmStillLifted()
     {
-        final SAMRecord record = newRecord(TX_CONTIG, 1, "50M"); // garbled NM field must not silently drop the alt
+        SAMRecord record = newRecord(TX_CONTIG, 1, "50M"); // garbled NM field must not silently drop the alt
         record.setAttribute("XA", "chr5,+5000,50M,not_a_number;");
 
-        final LiftBackResolver resolver = new LiftBackResolver(contigMap());
-        final LiftBackResult result = resolver.resolve(record);
+        LiftBackResolver resolver = new LiftBackResolver(contigMap());
+        LiftBackResult result = resolver.resolve(record);
 
         assertEquals(2, result.liftedAlignments().size());
         assertEquals(LiftBackCategory.BOTH_MULTI, result.category());
@@ -362,12 +362,12 @@ public class LiftBackResolverTest
     public void testCrossLocusFavoursTxSwapsToTx()
     {
         // bwa picked paralog chr5:5000 as primary; Tx XA lifts to chr1:150 50M100N50M. Expect swap to Tx, MAPQ rescued.
-        final SAMRecord record = newRecord("chr5", 5000, "100M");
+        SAMRecord record = newRecord("chr5", 5000, "100M");
         record.setAttribute("XA", TX_CONTIG + ",+51,100M,0;");
         record.setMappingQuality(60);
 
-        final LiftBackResolver resolver = new LiftBackResolver(contigMap());
-        final LiftBackResult result = resolver.resolve(record);
+        LiftBackResolver resolver = new LiftBackResolver(contigMap());
+        LiftBackResult result = resolver.resolve(record);
 
         assertEquals(LiftBackCategory.BOTH_MULTI_TX_JUNCTION, result.category());
         assertEquals(CHR_1, result.finalChrom());
@@ -377,13 +377,13 @@ public class LiftBackResolverTest
         assertEquals(60, result.updatedMapq());
         assertTrue(result.notes().contains("swapped_ref_to_tx"));
 
-        final LiftedAlignment originalSelf = result.liftedAlignments().stream()
+        LiftedAlignment originalSelf = result.liftedAlignments().stream()
                 .filter(la -> la.Source == LiftedAlignment.AlignmentSource.SELF)
                 .findFirst().orElseThrow();
         assertFalse(originalSelf.IsPrimaryChoice);
         assertFalse(originalSelf.Dropped);
 
-        final LiftedAlignment winner = result.liftedAlignments().stream()
+        LiftedAlignment winner = result.liftedAlignments().stream()
                 .filter(la -> la.IsPrimaryChoice)
                 .findFirst().orElseThrow();
         assertTrue(winner.fromTxContig());
@@ -394,14 +394,14 @@ public class LiftBackResolverTest
     public void testCrossLocusBothSplicedRemainsMultiLocus()
     {
         // Both Tx primary and ref XA alt have spliced CIGARs at different loci - ambiguous, must NOT swap.
-        final SAMRecord record = newRecord(TX_CONTIG, 51, "100M");
+        SAMRecord record = newRecord(TX_CONTIG, 51, "100M");
         record.setAttribute("XA", "chr5,+5000,50M100N50M,0;");
 
-        final LiftBackResolver resolver = new LiftBackResolver(contigMap());
-        final LiftBackResult result = resolver.resolve(record);
+        LiftBackResolver resolver = new LiftBackResolver(contigMap());
+        LiftBackResult result = resolver.resolve(record);
 
         assertEquals(LiftBackCategory.BOTH_MULTI, result.category());
-        final LiftedAlignment self = result.liftedAlignments().stream()
+        LiftedAlignment self = result.liftedAlignments().stream()
                 .filter(la -> la.Source == LiftedAlignment.AlignmentSource.SELF)
                 .findFirst().orElseThrow();
         assertTrue(self.IsPrimaryChoice);
@@ -411,20 +411,20 @@ public class LiftBackResolverTest
     public void testCrossLocusFavoursTxDropsOtherRefAlts()
     {
         // Tx XA wins (chr1:150 spliced); original self (chr5) kept as informative paralog; chr7 ref alt dropped.
-        final SAMRecord record = newRecord("chr5", 5000, "100M");
+        SAMRecord record = newRecord("chr5", 5000, "100M");
         record.setAttribute("XA", TX_CONTIG + ",+51,100M,0;chr7,+7000,100M,0;");
 
-        final LiftBackResolver resolver = new LiftBackResolver(contigMap());
-        final LiftBackResult result = resolver.resolve(record);
+        LiftBackResolver resolver = new LiftBackResolver(contigMap());
+        LiftBackResult result = resolver.resolve(record);
 
         assertEquals(LiftBackCategory.BOTH_MULTI_TX_JUNCTION, result.category());
 
-        final LiftedAlignment chr7Alt = result.liftedAlignments().stream()
+        LiftedAlignment chr7Alt = result.liftedAlignments().stream()
                 .filter(la -> "chr7".equals(la.LiftedChrom))
                 .findFirst().orElseThrow();
         assertTrue(chr7Alt.Dropped);
 
-        final LiftedAlignment chr5Self = result.liftedAlignments().stream()
+        LiftedAlignment chr5Self = result.liftedAlignments().stream()
                 .filter(la -> "chr5".equals(la.LiftedChrom))
                 .findFirst().orElseThrow();
         assertFalse(chr5Self.Dropped);
@@ -435,11 +435,11 @@ public class LiftBackResolverTest
     public void testJunctionFavoursTxSwapsWhenSelfIsRef()
     {
         // bwa picked ref soft-clipped (50M50S) as primary; Tx XA lifts to the same locus with 50M100N50M. Tx wins and swaps.
-        final SAMRecord record = newRecord(CHR_1, 150, "50M50S");
+        SAMRecord record = newRecord(CHR_1, 150, "50M50S");
         record.setAttribute("XA", TX_CONTIG + ",+51,100M,0;");
 
-        final LiftBackResolver resolver = new LiftBackResolver(contigMap());
-        final LiftBackResult result = resolver.resolve(record);
+        LiftBackResolver resolver = new LiftBackResolver(contigMap());
+        LiftBackResult result = resolver.resolve(record);
 
         assertEquals(LiftBackCategory.BOTH_TX_JUNCTION_REF_SOFTCLIP, result.category());
         assertEquals("50M100N50M", result.finalCigar());
@@ -451,11 +451,11 @@ public class LiftBackResolverTest
     public void testJunctionRefMatchKeepsRefAndDropsTx()
     {
         // Ref full-match 151M through the supposed intron is overwhelming evidence of an unspliced read; keep ref, drop Tx.
-        final SAMRecord record = newRecord(CHR_1, 150, "151M");
+        SAMRecord record = newRecord(CHR_1, 150, "151M");
         record.setAttribute("XA", TX_CONTIG + ",+51,100M,0;");
 
-        final LiftBackResolver resolver = new LiftBackResolver(contigMap());
-        final LiftBackResult result = resolver.resolve(record);
+        LiftBackResolver resolver = new LiftBackResolver(contigMap());
+        LiftBackResult result = resolver.resolve(record);
 
         assertEquals(LiftBackCategory.BOTH_TX_JUNCTION_REF_MATCH, result.category());
         assertEquals(CHR_1, result.finalChrom());
@@ -463,13 +463,13 @@ public class LiftBackResolverTest
         assertEquals("151M", result.finalCigar());
         assertFalse(result.hasNCigar());
 
-        final LiftedAlignment self = result.liftedAlignments().stream()
+        LiftedAlignment self = result.liftedAlignments().stream()
                 .filter(la -> la.Source == LiftedAlignment.AlignmentSource.SELF)
                 .findFirst().orElseThrow();
         assertTrue(self.IsPrimaryChoice);
         assertFalse(self.Dropped);
 
-        final LiftedAlignment txAlt = result.liftedAlignments().stream()
+        LiftedAlignment txAlt = result.liftedAlignments().stream()
                 .filter(LiftedAlignment::fromTxContig)
                 .findFirst().orElseThrow();
         assertTrue(txAlt.Dropped);
@@ -480,11 +480,11 @@ public class LiftBackResolverTest
     public void testJunctionRefMatchSwapsToRefWhenSelfIsTx()
     {
         // Tx primary; ref XA is unspliced full-match. Discriminator swaps to ref and drops Tx alt.
-        final SAMRecord record = newRecord(TX_CONTIG, 51, "100M");
+        SAMRecord record = newRecord(TX_CONTIG, 51, "100M");
         record.setAttribute("XA", CHR_1 + ",+150,151M,0;");
 
-        final LiftBackResolver resolver = new LiftBackResolver(contigMap());
-        final LiftBackResult result = resolver.resolve(record);
+        LiftBackResolver resolver = new LiftBackResolver(contigMap());
+        LiftBackResult result = resolver.resolve(record);
 
         assertEquals(LiftBackCategory.BOTH_TX_JUNCTION_REF_MATCH, result.category());
         assertEquals(CHR_1, result.finalChrom());
@@ -493,13 +493,13 @@ public class LiftBackResolverTest
         assertFalse(result.hasNCigar());
         assertTrue(result.notes().contains("swapped_tx_to_ref"));
 
-        final LiftedAlignment txSelf = result.liftedAlignments().stream()
+        LiftedAlignment txSelf = result.liftedAlignments().stream()
                 .filter(la -> la.Source == LiftedAlignment.AlignmentSource.SELF)
                 .findFirst().orElseThrow();
         assertFalse(txSelf.IsPrimaryChoice);
         assertFalse(txSelf.Dropped); // demoted to informative XA, not dropped
 
-        final LiftedAlignment winner = result.liftedAlignments().stream()
+        LiftedAlignment winner = result.liftedAlignments().stream()
                 .filter(la -> la.IsPrimaryChoice)
                 .findFirst().orElseThrow();
         assertFalse(winner.fromTxContig());
@@ -508,21 +508,21 @@ public class LiftBackResolverTest
     @Test
     public void testStatsEndToEndSmoke()
     {
-        final LiftBackResolver resolver = new LiftBackResolver(contigMap());
-        final LiftBackStats stats = new LiftBackStats();
+        LiftBackResolver resolver = new LiftBackResolver(contigMap());
+        LiftBackStats stats = new LiftBackStats();
 
-        final SAMRecord r1 = newRecord(CHR_1, 1000, "150M"); // REF_SINGLE
+        SAMRecord r1 = newRecord(CHR_1, 1000, "150M"); // REF_SINGLE
         stats.record(r1, resolver.resolve(r1));
 
-        final SAMRecord r2 = newRecord(TX_CONTIG, 51, "100M"); // TX_SINGLE, junction-crosser
+        SAMRecord r2 = newRecord(TX_CONTIG, 51, "100M"); // TX_SINGLE, junction-crosser
         stats.record(r2, resolver.resolve(r2));
 
-        final SAMRecord r3 = newRecord(CHR_1, 100, "50M"); // BOTH_AGREE, MAPQ=0
+        SAMRecord r3 = newRecord(CHR_1, 100, "50M"); // BOTH_AGREE, MAPQ=0
         r3.setAttribute("XA", TX_CONTIG + ",+1,50M,0;");
         r3.setMappingQuality(0);
         stats.record(r3, resolver.resolve(r3));
 
-        final SAMRecord r4 = newUnmappedRecord(); // UNMAPPED
+        SAMRecord r4 = newUnmappedRecord(); // UNMAPPED
         stats.record(r4, resolver.resolve(r4));
 
         assertEquals(4, stats.total());
@@ -536,7 +536,7 @@ public class LiftBackResolverTest
     @Test
     public void testNumLociDedupesIdenticalLiftedXaEntries()
     {
-        final SAMRecord primary = newRecord(TX_CONTIG, 51, "100M"); // lifts to chr1:150 50M100N50M
+        SAMRecord primary = newRecord(TX_CONTIG, 51, "100M"); // lifts to chr1:150 50M100N50M
         // four XA entries all lifting to the same locus -> numLoci still 1
         primary.setAttribute("XA",
                 TX_CONTIG + ",+51,100M,0;"
@@ -544,8 +544,8 @@ public class LiftBackResolverTest
                         + TX_CONTIG + ",+51,100M,0;"
                         + TX_CONTIG + ",+51,100M,0;");
 
-        final LiftBackResolver resolver = new LiftBackResolver(contigMap());
-        final LiftBackResult result = resolver.resolve(primary);
+        LiftBackResolver resolver = new LiftBackResolver(contigMap());
+        LiftBackResult result = resolver.resolve(primary);
 
         assertEquals(CHR_1, result.finalChrom());
         assertEquals(150, result.finalPos());
@@ -556,13 +556,13 @@ public class LiftBackResolverTest
     @Test
     public void testNumLociCountsDistinctLiftedLoci()
     {
-        final SAMRecord primary = newRecord(CHR_1, 1000, "150M");
+        SAMRecord primary = newRecord(CHR_1, 1000, "150M");
         primary.setAttribute("XA",
                 CHR_1 + ",+2000,150M,0;"
                         + CHR_1 + ",+3000,150M,0;");
 
-        final LiftBackResolver resolver = new LiftBackResolver(contigMap());
-        final LiftBackResult result = resolver.resolve(primary);
+        LiftBackResolver resolver = new LiftBackResolver(contigMap());
+        LiftBackResult result = resolver.resolve(primary);
 
         assertEquals(3, result.numLoci());
     }
@@ -570,15 +570,17 @@ public class LiftBackResolverTest
     // Builds an ExonRegionIndex from an in-memory ensembl cache (shared by rescue-path tests).
     private static ExonRegionIndex buildExonIndex(final List<int[]> exons)
     {
-        final EnsemblDataCache cache = createGeneDataCache();
+        EnsemblDataCache cache = createGeneDataCache();
         addGeneData(cache, CHR_1, List.of(createEnsemblGeneData("ENSG_TEST", "TESTG", CHR_1, 1, 1, 100000)));
 
-        final TranscriptData transcript = new TranscriptData(
+        TranscriptData transcript = new TranscriptData(
                 1, "ENST_TEST", "ENSG_TEST", true, (byte) 1, 1, 100000, null, null, "protein_coding", "");
-        final List<ExonData> exonData = new ArrayList<>();
+        List<ExonData> exonData = new ArrayList<>();
         int rank = 1;
         for(final int[] exon : exons)
+        {
             exonData.add(new ExonData(1, exon[0], exon[1], rank++, -1, -1));
+        }
         transcript.setExons(exonData);
         addTransExonData(cache, "ENSG_TEST", List.of(transcript));
 
@@ -589,17 +591,17 @@ public class LiftBackResolverTest
     @Test
     public void testHiddenTieRefOnlyNeverRescuesMapq() throws Exception
     {
-        final SAMRecord record = newRecord(CHR_1, 1500, "150M");
+        SAMRecord record = newRecord(CHR_1, 1500, "150M");
         record.setMappingQuality(0);
         record.setAttribute("AS", 151);
         record.setAttribute("XS", 151);
 
-        final LiftBackResolver noIndex = new LiftBackResolver(contigMap());
+        LiftBackResolver noIndex = new LiftBackResolver(contigMap());
         assertEquals(0, noIndex.resolve(record).updatedMapq());
 
-        final ExonRegionIndex idx = buildExonIndex(List.of(new int[] { 1400, 1700 })); // covers pos 1500
-        final LiftBackResolver withIndex = new LiftBackResolver(contigMap(), idx);
-        final LiftBackResult result = withIndex.resolve(record);
+        ExonRegionIndex idx = buildExonIndex(List.of(new int[] { 1400, 1700 })); // covers pos 1500
+        LiftBackResolver withIndex = new LiftBackResolver(contigMap(), idx);
+        LiftBackResult result = withIndex.resolve(record);
         assertEquals(0, result.updatedMapq());
         assertEquals(LiftBackCategory.REF_SINGLE, result.category());
     }
@@ -608,13 +610,13 @@ public class LiftBackResolverTest
     @Test
     public void testHiddenTieOutsideExonKeepsMapqZero() throws Exception
     {
-        final SAMRecord record = newRecord(CHR_1, 5000, "150M");
+        SAMRecord record = newRecord(CHR_1, 5000, "150M");
         record.setMappingQuality(0);
         record.setAttribute("AS", 151);
         record.setAttribute("XS", 151);
 
-        final ExonRegionIndex idx = buildExonIndex(List.of(new int[] { 1400, 1700 })); // exon at 1400-1700; primary at 5000 is intergenic
-        final LiftBackResolver resolver = new LiftBackResolver(contigMap(), idx);
+        ExonRegionIndex idx = buildExonIndex(List.of(new int[] { 1400, 1700 })); // exon at 1400-1700; primary at 5000 is intergenic
+        LiftBackResolver resolver = new LiftBackResolver(contigMap(), idx);
         assertEquals(0, resolver.resolve(record).updatedMapq());
     }
 

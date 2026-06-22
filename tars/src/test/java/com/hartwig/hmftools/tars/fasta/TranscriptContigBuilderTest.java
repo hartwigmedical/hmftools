@@ -26,13 +26,13 @@ public class TranscriptContigBuilderTest
     @Test
     public void testThreeExonForwardStrandTranscript()
     {
-        final TranscriptData transcript = transcript();
+        TranscriptData transcript = transcript();
         addExon(transcript, 100, 199, 1);
         addExon(transcript, 300, 399, 2);
         addExon(transcript, 500, 549, 3);
 
-        final TranscriptContigBuilder builder = new TranscriptContigBuilder(buildMockRef());
-        final TranscriptContigBuilder.TranscriptContigResult result = builder.build(gene(POS_STRAND), transcript);
+        TranscriptContigBuilder builder = new TranscriptContigBuilder(buildMockRef());
+        TranscriptContigBuilder.TranscriptContigResult result = builder.build(gene(POS_STRAND), transcript);
 
         assertNotNull(result);
         assertEquals(GENE_ID, result.geneId());
@@ -52,13 +52,13 @@ public class TranscriptContigBuilderTest
     public void testNegativeStrandTranscriptStoresExonsInGenomicOrder()
     {
         // Rank-order for a negative-strand transcript is genomic-descending; builder must re-sort to genomic-ascending.
-        final TranscriptData transcript = transcript();
+        TranscriptData transcript = transcript();
         addExon(transcript, 500, 549, 1); // 5' end of mRNA, but genomic-high
         addExon(transcript, 300, 399, 2);
         addExon(transcript, 100, 199, 3);
 
-        final TranscriptContigBuilder builder = new TranscriptContigBuilder(buildMockRef());
-        final TranscriptContigBuilder.TranscriptContigResult result = builder.build(gene(NEG_STRAND), transcript);
+        TranscriptContigBuilder builder = new TranscriptContigBuilder(buildMockRef());
+        TranscriptContigBuilder.TranscriptContigResult result = builder.build(gene(NEG_STRAND), transcript);
 
         assertNotNull(result);
         assertEquals(100, result.exonSpans().get(0).start());
@@ -69,18 +69,18 @@ public class TranscriptContigBuilderTest
     @Test
     public void testEmittedSequenceMatchesExonConcatenation()
     {
-        final TranscriptData transcript = transcript();
+        TranscriptData transcript = transcript();
         addExon(transcript, 100, 199, 1);
         addExon(transcript, 300, 399, 2);
         addExon(transcript, 500, 549, 3);
 
-        final MockRefGenome ref = buildMockRef();
-        final TranscriptContigBuilder builder = new TranscriptContigBuilder(ref);
-        final TranscriptContigBuilder.TranscriptContigResult result = builder.build(gene(POS_STRAND), transcript);
+        MockRefGenome ref = buildMockRef();
+        TranscriptContigBuilder builder = new TranscriptContigBuilder(ref);
+        TranscriptContigBuilder.TranscriptContigResult result = builder.build(gene(POS_STRAND), transcript);
 
         assertNotNull(result);
 
-        final String expected = ref.getBaseString(CHR_1, 100, 199)
+        String expected = ref.getBaseString(CHR_1, 100, 199)
                 + ref.getBaseString(CHR_1, 300, 399)
                 + ref.getBaseString(CHR_1, 500, 549);
         assertEquals(expected, result.sequence());
@@ -89,17 +89,17 @@ public class TranscriptContigBuilderTest
     @Test
     public void testMultipleTranscriptsEachGetTheirOwnContig()
     {
-        final TranscriptData transA = transcript(1, "ENST00000001", true);
+        TranscriptData transA = transcript(1, "ENST00000001", true);
         addExon(transA, 100, 199, 1);
         addExon(transA, 300, 399, 2);
 
-        final TranscriptData transB = transcript(2, "ENST00000002", false);
+        TranscriptData transB = transcript(2, "ENST00000002", false);
         addExon(transB, 100, 199, 1);
         addExon(transB, 500, 549, 2);
 
-        final TranscriptContigBuilder builder = new TranscriptContigBuilder(buildMockRef());
-        final TranscriptContigBuilder.TranscriptContigResult resultA = builder.build(gene(POS_STRAND), transA);
-        final TranscriptContigBuilder.TranscriptContigResult resultB = builder.build(gene(POS_STRAND), transB);
+        TranscriptContigBuilder builder = new TranscriptContigBuilder(buildMockRef());
+        TranscriptContigBuilder.TranscriptContigResult resultA = builder.build(gene(POS_STRAND), transA);
+        TranscriptContigBuilder.TranscriptContigResult resultB = builder.build(gene(POS_STRAND), transB);
 
         assertNotNull(resultA);
         assertNotNull(resultB);
@@ -117,19 +117,19 @@ public class TranscriptContigBuilderTest
     @Test
     public void testTranscriptWithNoExonsReturnsNull()
     {
-        final TranscriptData empty = transcript();
-        final TranscriptContigBuilder builder = new TranscriptContigBuilder(buildMockRef());
+        TranscriptData empty = transcript();
+        TranscriptContigBuilder builder = new TranscriptContigBuilder(buildMockRef());
         assertNull(builder.build(gene(POS_STRAND), empty));
     }
 
     @Test
     public void testSingleExonTranscriptHasNoIntrons()
     {
-        final TranscriptData transcript = transcript();
+        TranscriptData transcript = transcript();
         addExon(transcript, 100, 200, 1);
 
-        final TranscriptContigBuilder builder = new TranscriptContigBuilder(buildMockRef());
-        final TranscriptContigBuilder.TranscriptContigResult result = builder.build(gene(POS_STRAND), transcript);
+        TranscriptContigBuilder builder = new TranscriptContigBuilder(buildMockRef());
+        TranscriptContigBuilder.TranscriptContigResult result = builder.build(gene(POS_STRAND), transcript);
 
         assertNotNull(result);
         assertEquals(1, result.exonSpans().size());
@@ -167,7 +167,9 @@ public class TranscriptContigBuilderTest
         StringBuilder bases = new StringBuilder();
         bases.append('N'); // pad index 0
         for(int i = 1; i <= 1000; ++i)
+        {
             bases.append(alphabet[i % 4]);
+        }
         refGenome.RefGenomeMap.put(CHR_1, bases.toString());
         return refGenome;
     }

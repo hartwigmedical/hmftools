@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 
+import com.hartwig.hmftools.tars.common.TarsConstants;
 import com.hartwig.hmftools.tars.liftback.rescue.JunctionRescueResolver;
 import com.hartwig.hmftools.tars.liftback.rescue.RefSequenceSource;
 import com.hartwig.hmftools.tars.liftback.rescue.RescueStatistics;
@@ -56,14 +57,14 @@ public class LiftBackWorker extends Thread
             throw new RuntimeException("failed to open liftback TSV shard: " + e, e);
         }
 
-        final RefSequenceSource refSource = resources.openRefSource();
+        RefSequenceSource refSource = resources.openRefSource();
 
         mRescueResolver = new JunctionRescueResolver(resources.JunctionIndex, refSource, resources.Rescue);
         mSoftclipExtender = new SoftclipTailExtender(refSource, resources.JunctionIndex, resources.TailExtension);
         mTerminalCollapser = refSource != null
                 ? new TerminalMicroJunctionCollapser(refSource, resources.TerminalAnchor) : null;
         mJunctionCanonicalizer = refSource != null
-                ? new JunctionCanonicalizer(refSource, JunctionCanonicalizer.DEFAULT_MAX_SHIFT) : null;
+                ? new JunctionCanonicalizer(refSource, TarsConstants.DEFAULT_MAX_SHIFT) : null;
 
         mProcessor = new LiftBackGroupProcessor(
                 resources.Resolver, mRescueResolver, mSoftclipExtender, mTerminalCollapser, mJunctionCanonicalizer,
@@ -93,7 +94,7 @@ public class LiftBackWorker extends Thread
         {
             while(true)
             {
-                final List<SAMRecord> chunk = mQueue.take();
+                List<SAMRecord> chunk = mQueue.take();
                 if(chunk == END_OF_STREAM)
                     break;
                 processChunk(chunk);
@@ -129,12 +130,12 @@ public class LiftBackWorker extends Thread
 
     private void processChunk(final List<SAMRecord> chunk)
     {
-        final List<SAMRecord> group = new ArrayList<>();
+        List<SAMRecord> group = new ArrayList<>();
         String currentName = null;
 
         for(final SAMRecord record : chunk)
         {
-            final String name = record.getReadName();
+            String name = record.getReadName();
             if(currentName != null && !name.equals(currentName))
             {
                 processNameGroup(group);
@@ -145,7 +146,9 @@ public class LiftBackWorker extends Thread
         }
 
         if(!group.isEmpty())
+        {
             processNameGroup(group);
+        }
     }
 
     private void processNameGroup(final List<SAMRecord> group)
@@ -162,7 +165,9 @@ public class LiftBackWorker extends Thread
     {
         mShardWriter.addAlignment(record);
         if(mTsvWriter == null)
+        {
             return;
+        }
         try
         {
             mTsvWriter.write(record, result);

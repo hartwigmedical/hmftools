@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.tars.liftback;
 
+import com.hartwig.hmftools.tars.common.TarsConstants;
+
 // One component of a record's alignment set: the record itself or one of its XA alts, post-lift.
 // TransName/GeneId/GeneName are set only for Tx-contig alignments. SoftClipAtBoundary is true only
 // when the leading/trailing S abuts an interior exon boundary (not the contig's outermost edge).
@@ -87,20 +89,20 @@ public class LiftedAlignment
         return LiftedCigar != null && LiftedCigar.indexOf('S') >= 0;
     }
 
-    // True iff every N in the CIGAR is flanked by >= minAnchor M on both sides. Tiny anchors from
-    // tx-contig bleed-over are not real junctions and must not trigger a primary swap.
-    public boolean cigarHasRealNJunction(final int minAnchor)
+    // True iff at least one N is flanked by >= MIN_JUNCTION_ANCHOR M both sides (one strong junction trusts the read).
+    public boolean cigarHasRealNJunction()
     {
         if(LiftedCigar == null)
+        {
             return false;
+        }
 
-        boolean foundAny = false;
         int prevMLength = 0;
         int currentNum = 0;
 
         for(int i = 0; i < LiftedCigar.length(); ++i)
         {
-            final char c = LiftedCigar.charAt(i);
+            char c = LiftedCigar.charAt(i);
             if(c >= '0' && c <= '9')
             {
                 currentNum = currentNum * 10 + (c - '0');
@@ -109,13 +111,11 @@ public class LiftedAlignment
 
             if(c == 'N')
             {
-                if(prevMLength < minAnchor)
-                    return false;
-                // if no M follows or it is below threshold, fail.
-                final int nextM = nextMLength(LiftedCigar, i + 1);
-                if(nextM < minAnchor)
-                    return false;
-                foundAny = true;
+                int nextM = nextMLength(LiftedCigar, i + 1);
+                if(prevMLength >= TarsConstants.MIN_JUNCTION_ANCHOR && nextM >= TarsConstants.MIN_JUNCTION_ANCHOR)
+                {
+                    return true;
+                }
                 prevMLength = 0;
             }
             else if(c == 'M' || c == '=' || c == 'X')
@@ -131,7 +131,7 @@ public class LiftedAlignment
             currentNum = 0;
         }
 
-        return foundAny;
+        return false;
     }
 
     private static int nextMLength(final String cigar, final int startIndex)
@@ -139,7 +139,7 @@ public class LiftedAlignment
         int num = 0;
         for(int i = startIndex; i < cigar.length(); ++i)
         {
-            final char c = cigar.charAt(i);
+            char c = cigar.charAt(i);
             if(c >= '0' && c <= '9')
             {
                 num = num * 10 + (c - '0');

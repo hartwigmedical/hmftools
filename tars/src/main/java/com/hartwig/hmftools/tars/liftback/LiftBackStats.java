@@ -2,6 +2,8 @@ package com.hartwig.hmftools.tars.liftback;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.tars.common.TarsConstants.PRIMARY_AS_UNMAP_THRESHOLD;
+import static com.hartwig.hmftools.tars.common.TarsConstants.SUPP_AS_DROP_THRESHOLD;
 import static com.hartwig.hmftools.tars.common.TarsConfig.TARS_LOGGER;
 
 import java.io.BufferedWriter;
@@ -9,7 +11,7 @@ import java.io.IOException;
 
 import htsjdk.samtools.SAMRecord;
 
-// Run-level counters for SpliceLiftBack: per-category, composition x MAPQ tier, category x MAPQ tier.
+// Run-level counters for TarsApplication: per-category, composition x MAPQ tier, category x MAPQ tier.
 public class LiftBackStats
 {
     private static final double LIFT_FAILED_WARN_FRACTION = 0.01;
@@ -93,27 +95,39 @@ public class LiftBackStats
         mOrphanSuppsDropped += other.mOrphanSuppsDropped;
         mLowAsPrimariesUnmapped += other.mLowAsPrimariesUnmapped;
         for(int i = 0; i < mPerCategory.length; ++i)
+        {
             mPerCategory[i] += other.mPerCategory[i];
+        }
         for(int i = 0; i < mCompositionByTier.length; ++i)
             for(int j = 0; j < N_TIERS; ++j)
+            {
                 mCompositionByTier[i][j] += other.mCompositionByTier[i][j];
+            }
         for(int i = 0; i < mCategoryByTier.length; ++i)
             for(int j = 0; j < N_TIERS; ++j)
+            {
                 mCategoryByTier[i][j] += other.mCategoryByTier[i][j];
+            }
     }
 
     public void logSummary()
     {
         TARS_LOGGER.info("processed {} records", mTotal);
         if(mLowAsSuppsDropped > 0)
+        {
             TARS_LOGGER.info("dropped {} non-rescued supps with source AS < {}",
-                    mLowAsSuppsDropped, LiftBackGroupProcessor.SUPP_AS_DROP_THRESHOLD);
+                    mLowAsSuppsDropped, SUPP_AS_DROP_THRESHOLD);
+        }
         if(mOrphanSuppsDropped > 0)
+        {
             TARS_LOGGER.info("dropped {} supps whose SA entries all failed to lift (orphaned in genomic space)",
                     mOrphanSuppsDropped);
+        }
         if(mLowAsPrimariesUnmapped > 0)
+        {
             TARS_LOGGER.info("unmapped {} primaries with AS < {} not improved by liftback",
-                    mLowAsPrimariesUnmapped, LiftBackGroupProcessor.PRIMARY_AS_UNMAP_THRESHOLD);
+                    mLowAsPrimariesUnmapped, PRIMARY_AS_UNMAP_THRESHOLD);
+        }
 
         TARS_LOGGER.debug("alignment-set composition x MAPQ tier:");
         logTable(mCompositionByTier, LiftBackResult.Composition.values(), MapqTier.values());
@@ -133,7 +147,9 @@ public class LiftBackStats
                 int count = mPerCategory[cat.ordinal()];
                 bucketTotal += count;
                 if(count > 0)
+                {
                     sb.append(cat.name()).append("=").append(count).append(" ");
+                }
             }
             if(bucketTotal == 0)
                 continue;
@@ -215,7 +231,9 @@ public class LiftBackStats
                 int count = table[row.ordinal()][col.ordinal()];
                 rowTotal += count;
                 if(count > 0)
+                {
                     sb.append(col.name()).append("=").append(count).append(" ");
+                }
             }
 
             if(rowTotal == 0)
@@ -229,7 +247,9 @@ public class LiftBackStats
     {
         int mapq = record.getMappingQuality();
         if(mapq == 0)
+        {
             return MapqTier.MAPQ_ZERO;
+        }
         return result.numXaAlts() > 0 ? MapqTier.MAPQ_POS_MULTI : MapqTier.MAPQ_POS_UNIQUE;
     }
 }

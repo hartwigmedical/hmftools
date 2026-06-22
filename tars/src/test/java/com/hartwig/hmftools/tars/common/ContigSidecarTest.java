@@ -23,7 +23,7 @@ public class ContigSidecarTest
     @Test
     public void testRoundTrip() throws IOException
     {
-        final File tempFile = Files.createTempFile("contig_sidecar_", ".tsv").toFile();
+        File tempFile = Files.createTempFile("contig_sidecar_", ".tsv").toFile();
         tempFile.deleteOnExit();
 
         List<ContigEntry> entries = List.of(
@@ -67,15 +67,15 @@ public class ContigSidecarTest
     public void testHeaderOnlySidecarReadsAsEmpty() throws IOException
     {
         // a sidecar with only its header row (no entries) loads as an empty list rather than failing
-        final File tempFile = Files.createTempFile("contig_sidecar_empty_", ".tsv").toFile();
+        File tempFile = Files.createTempFile("contig_sidecar_empty_", ".tsv").toFile();
         tempFile.deleteOnExit();
 
-        final String header = Arrays.stream(ContigSidecar.Column.values())
+        String header = Arrays.stream(ContigSidecar.Column.values())
                 .map(Enum::name)
                 .collect(Collectors.joining(TSV_DELIM));
         Files.writeString(tempFile.toPath(), header + "\n");
 
-        final List<ContigEntry> readBack = ContigSidecar.read(tempFile.getAbsolutePath());
+        List<ContigEntry> readBack = ContigSidecar.read(tempFile.getAbsolutePath());
         assertTrue(readBack.isEmpty());
     }
 }

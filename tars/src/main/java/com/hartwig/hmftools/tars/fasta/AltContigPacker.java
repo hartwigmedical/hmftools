@@ -20,18 +20,20 @@ public final class AltContigPacker
 
     public PackResult pack(final String chromosome, final List<TranscriptContigBuilder.TranscriptContigResult> transcripts)
     {
-        final String altContig = altContigName(chromosome);
-        final StringBuilder sequence = new StringBuilder();
-        final List<ContigEntry> entries = new ArrayList<>();
+        String altContig = altContigName(chromosome);
+        StringBuilder sequence = new StringBuilder();
+        List<ContigEntry> entries = new ArrayList<>();
 
         for(final TranscriptContigBuilder.TranscriptContigResult transcript : transcripts)
         {
             if(sequence.length() > 0)
+            {
                 sequence.append(mSpacer);
+            }
 
-            final int altStart = sequence.length() + 1;
+            int altStart = sequence.length() + 1;
             sequence.append(transcript.sequence());
-            final int altEnd = sequence.length();
+            int altEnd = sequence.length();
 
             entries.add(new ContigEntry(
                     altContig, altStart, altEnd,

@@ -34,7 +34,7 @@ public class LiftBackStatsTest
 
     private static SAMRecord newRecord(final int mapq)
     {
-        final SAMRecord record = new SAMRecord(new SAMFileHeader());
+        SAMRecord record = new SAMRecord(new SAMFileHeader());
         record.setReadName("read");
         record.setMappingQuality(mapq);
         return record;
@@ -78,7 +78,7 @@ public class LiftBackStatsTest
     @Test
     public void testRecordsIncrementCountersByCategory()
     {
-        final LiftBackStats stats = new LiftBackStats();
+        LiftBackStats stats = new LiftBackStats();
         stats.record(newRecord(60), resultWith(LiftBackCategory.REF_SINGLE, 0, List.of(refAlignment())));
         stats.record(newRecord(60), resultWith(LiftBackCategory.REF_SINGLE, 0, List.of(refAlignment())));
         stats.record(newRecord(0), resultWith(LiftBackCategory.UNMAPPED, 0, List.of()));
@@ -107,14 +107,14 @@ public class LiftBackStatsTest
     @Test
     public void testMapqTierDerivation()
     {
-        final LiftBackResult result = resultWith(LiftBackCategory.REF_SINGLE, 0, List.of(refAlignment()));
+        LiftBackResult result = resultWith(LiftBackCategory.REF_SINGLE, 0, List.of(refAlignment()));
 
         assertEquals(LiftBackStats.MapqTier.MAPQ_ZERO,
                 LiftBackStats.deriveMapqTier(newRecord(0), result));
         assertEquals(LiftBackStats.MapqTier.MAPQ_POS_UNIQUE,
                 LiftBackStats.deriveMapqTier(newRecord(60), result));
 
-        final LiftBackResult withAlts = resultWith(LiftBackCategory.REF_SINGLE, 1, List.of(refAlignment()));
+        LiftBackResult withAlts = resultWith(LiftBackCategory.REF_SINGLE, 1, List.of(refAlignment()));
         assertEquals(LiftBackStats.MapqTier.MAPQ_POS_MULTI,
                 LiftBackStats.deriveMapqTier(newRecord(60), withAlts));
     }
@@ -122,13 +122,13 @@ public class LiftBackStatsTest
     @Test
     public void testWriteSummaryEmitsExpectedTsvLayout() throws IOException
     {
-        final LiftBackStats stats = new LiftBackStats();
+        LiftBackStats stats = new LiftBackStats();
         stats.record(newRecord(60), resultWith(LiftBackCategory.REF_SINGLE, 0, List.of(refAlignment())));
         stats.record(newRecord(0), resultWith(LiftBackCategory.UNMAPPED, 0, List.of()));
 
         stats.writeSummary(mSummary.toString());
 
-        final List<String> lines = Files.readAllLines(mSummary);
+        List<String> lines = Files.readAllLines(mSummary);
         // header + at least one composition row + one category row
         assertTrue(lines.size() >= 3);
         assertEquals("Section\tRowKey\tColumnKey\tCount", lines.get(0));
@@ -138,9 +138,13 @@ public class LiftBackStatsTest
         for(final String line : lines)
         {
             if(line.equals("composition_x_mapq\tREF_ONLY\tMAPQ_POS_UNIQUE\t1"))
+            {
                 hasRefOnlyMapqUnique = true;
+            }
             if(line.equals("category_x_mapq\tREF_SINGLE\tMAPQ_POS_UNIQUE\t1"))
+            {
                 hasARefGenome = true;
+            }
         }
         assertTrue(hasRefOnlyMapqUnique);
         assertTrue(hasARefGenome);

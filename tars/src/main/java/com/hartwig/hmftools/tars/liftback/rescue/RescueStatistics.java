@@ -28,7 +28,7 @@ public class RescueStatistics
     public void countMergedChain(final int chainDepth)
     {
         ++mMergedTotal;
-        final int slot = Math.min(chainDepth, mChainDepthCounts.length - 1);
+        int slot = Math.min(chainDepth, mChainDepthCounts.length - 1);
         ++mChainDepthCounts[slot];
     }
 
@@ -60,7 +60,9 @@ public class RescueStatistics
     public int mergedAtChainDepth(final int depth)
     {
         if(depth <= 0 || depth >= mChainDepthCounts.length)
+        {
             return 0;
+        }
         return mChainDepthCounts[depth];
     }
 

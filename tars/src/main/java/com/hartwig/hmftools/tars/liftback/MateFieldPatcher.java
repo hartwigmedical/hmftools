@@ -9,7 +9,9 @@ public class MateFieldPatcher
     public static void patchMateFields(final SAMRecord record, final LiftedMateInfoCache liftedMateInfoCache)
     {
         if(!record.getReadPairedFlag())
+        {
             return;
+        }
 
         LiftedMateInfo partnerInfo = liftedMateInfoCache.getPartnerMateInfo(
                 record.getReadName(), record.getFirstOfPairFlag());
@@ -70,10 +72,10 @@ public class MateFieldPatcher
     // Using 5' ends (not alignment-start) fixes sign for same-start pairs and magnitude when softclips extend an end.
     static int computeInferredInsertSize(final SAMRecord record, final LiftedMateInfo partnerInfo)
     {
-        final int readFivePrime = record.getReadNegativeStrandFlag() ? record.getAlignmentEnd() : record.getAlignmentStart();
-        final int mateFivePrime = partnerInfo.negativeStrand() ? partnerInfo.alignmentEnd() : partnerInfo.alignmentStart();
+        int readFivePrime = record.getReadNegativeStrandFlag() ? record.getAlignmentEnd() : record.getAlignmentStart();
+        int mateFivePrime = partnerInfo.negativeStrand() ? partnerInfo.alignmentEnd() : partnerInfo.alignmentStart();
 
-        final int adjustment = mateFivePrime >= readFivePrime ? 1 : -1;
+        int adjustment = mateFivePrime >= readFivePrime ? 1 : -1;
         return mateFivePrime - readFivePrime + adjustment;
     }
 }

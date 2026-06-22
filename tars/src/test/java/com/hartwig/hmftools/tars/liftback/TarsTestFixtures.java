@@ -46,7 +46,7 @@ public final class TarsTestFixtures
 
     public static SAMRecord primaryRecord(final String readName, final String contig, final int pos, final String cigar)
     {
-        final SAMRecord record = new SAMRecord(new SAMFileHeader());
+        SAMRecord record = new SAMRecord(new SAMFileHeader());
         record.setReadName(readName);
         record.setReferenceName(contig);
         record.setAlignmentStart(pos);
@@ -65,7 +65,7 @@ public final class TarsTestFixtures
 
     public static SAMRecord secondMateRecord(final String readName, final String contig, final int pos, final String cigar)
     {
-        final SAMRecord record = primaryRecord(readName, contig, pos, cigar);
+        SAMRecord record = primaryRecord(readName, contig, pos, cigar);
         record.setFirstOfPairFlag(false);
         record.setSecondOfPairFlag(true);
         return record;
@@ -73,21 +73,21 @@ public final class TarsTestFixtures
 
     public static SAMRecord supplementaryRecord(final String contig, final int pos, final String cigar, final String saTag)
     {
-        final SAMRecord record = supplementaryRecord("readX", contig, pos, cigar);
+        SAMRecord record = supplementaryRecord("readX", contig, pos, cigar);
         record.setAttribute("SA", saTag);
         return record;
     }
 
     public static SAMRecord supplementaryRecord(final String readName, final String contig, final int pos, final String cigar)
     {
-        final SAMRecord record = primaryRecord(readName, contig, pos, cigar);
+        SAMRecord record = primaryRecord(readName, contig, pos, cigar);
         record.setSupplementaryAlignmentFlag(true);
         return record;
     }
 
     public static SAMRecord unpairedRecord(final String readName)
     {
-        final SAMRecord record = new SAMRecord(new SAMFileHeader());
+        SAMRecord record = new SAMRecord(new SAMFileHeader());
         record.setReadName(readName);
         record.setReadPairedFlag(false);
         return record;
@@ -96,18 +96,18 @@ public final class TarsTestFixtures
     // RefSequenceSource over an in-memory chromosome (1-based, inclusive); empty out-of-range -> null per contract.
     public static RefSequenceSource refSource(final String chromosome, final String bases)
     {
-        final MockRefGenome ref = new MockRefGenome(true);
+        MockRefGenome ref = new MockRefGenome(true);
         ref.RefGenomeMap.put(chromosome, bases);
         return (chrom, posStart, posEnd) ->
         {
-            final byte[] result = ref.getBases(chrom, posStart, posEnd);
+            byte[] result = ref.getBases(chrom, posStart, posEnd);
             return result.length == 0 ? null : result;
         };
     }
 
     public static byte[] repeatedBase(final int length, final char base)
     {
-        final byte[] out = new byte[length];
+        byte[] out = new byte[length];
         Arrays.fill(out, (byte) base);
         return out;
     }
@@ -127,7 +127,7 @@ public final class TarsTestFixtures
 
         public TestGenome with(final String chromosome, final int length, final char fill)
         {
-            final byte[] seq = new byte[length];
+            byte[] seq = new byte[length];
             Arrays.fill(seq, (byte) fill);
             mBases.put(chromosome, seq);
             return this;
@@ -142,29 +142,35 @@ public final class TarsTestFixtures
         // overwrite bases at a 1-based start (e.g. to match a read for NM=0, or seed a splice motif).
         public TestGenome set(final String chromosome, final int oneBasedStart, final String sequence)
         {
-            final byte[] seq = mBases.get(chromosome);
+            byte[] seq = mBases.get(chromosome);
             for(int i = 0; i < sequence.length(); ++i)
+            {
                 seq[oneBasedStart - 1 + i] = (byte) sequence.charAt(i);
+            }
             return this;
         }
 
         // overwrite a run of one base at a 1-based start (e.g. a divergent exon/intron stretch).
         public TestGenome set(final String chromosome, final int oneBasedStart, final int count, final char base)
         {
-            final byte[] seq = mBases.get(chromosome);
+            byte[] seq = mBases.get(chromosome);
             for(int i = 0; i < count; ++i)
+            {
                 seq[oneBasedStart - 1 + i] = (byte) base;
+            }
             return this;
         }
 
         public RefSequenceSource asRefSource()
         {
-            final MockRefGenome ref = new MockRefGenome(true);
+            MockRefGenome ref = new MockRefGenome(true);
             for(final Map.Entry<String, byte[]> entry : mBases.entrySet())
+            {
                 ref.RefGenomeMap.put(entry.getKey(), new String(entry.getValue(), StandardCharsets.US_ASCII));
+            }
             return (chrom, posStart, posEnd) ->
             {
-                final byte[] result = ref.getBases(chrom, posStart, posEnd);
+                byte[] result = ref.getBases(chrom, posStart, posEnd);
                 return result.length == 0 ? null : result;
             };
         }

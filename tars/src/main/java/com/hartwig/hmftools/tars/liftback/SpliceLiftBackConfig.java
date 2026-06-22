@@ -5,16 +5,21 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_G
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.parseThreads;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.BAM_EXTENSION;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_EXTENSION;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkCreateOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.tars.common.TarsConstants.FILE_ID;
 
 import com.hartwig.hmftools.common.bamops.BamToolName;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.tars.common.TarsConstants;
 import com.hartwig.hmftools.tars.liftback.rescue.RescueConfig;
 import com.hartwig.hmftools.tars.liftback.tailextend.TailExtensionConfig;
 
@@ -24,7 +29,7 @@ public class SpliceLiftBackConfig
     public static final String INPUT_BAM_DESC = "Input BAM aligned against ref + transcript-contig FASTA";
 
     public static final String CONTIG_SIDECAR = "contig_sidecar";
-    public static final String CONTIG_SIDECAR_DESC = "Contig sidecar TSV from SpliceFastaBuilder. Required.";
+    public static final String CONTIG_SIDECAR_DESC = "Contig sidecar TSV from SpliceFastaBuilder";
 
     // junction rescue (primary + supp merge across junctions) and softclip tail-extension both run always; the
     // following expose their thresholds for tuning the FP/yield tradeoff.
@@ -49,11 +54,12 @@ public class SpliceLiftBackConfig
     public static final String WRITE_LIFTBACK_TSV_DESC =
             "Write per-record liftback debug TSVs (records + alignments). Off by default -- whole-sample TSVs are huge";
 
-    public static final String DEFAULT_OUTPUT_PREFIX = "splice_lifted";
-    public static final String TSV_A_SUFFIX = ".liftback.records.tsv";
-    public static final String TSV_B_SUFFIX = ".liftback.alignments.tsv";
-    public static final String SUMMARY_SUFFIX = ".liftback.summary.tsv";
+    // output file-type tokens, e.g. <sample>.tars.summary.tsv
+    public static final String SUMMARY_FILE_TYPE = "summary";
+    public static final String RECORDS_FILE_TYPE = "records";
+    public static final String ALIGNMENTS_FILE_TYPE = "alignments";
 
+    public final String SampleId;
     public final String InputBam;
     public final String RefGenomeFile;
     public final RefGenomeVersion RefGenVersion;
@@ -69,6 +75,7 @@ public class SpliceLiftBackConfig
 
     public SpliceLiftBackConfig(final ConfigBuilder configBuilder)
     {
+        SampleId = configBuilder.getValue(SAMPLE);
         InputBam = configBuilder.getValue(INPUT_BAM);
         RefGenomeFile = configBuilder.getValue(REF_GENOME);
         RefGenVersion = RefGenomeVersion.from(configBuilder);
@@ -96,70 +103,91 @@ public class SpliceLiftBackConfig
         Threads = parseThreads(configBuilder);
 
         if(OutputDir == null)
+        {
             throw new IllegalArgumentException("missing required config: output_dir");
+        }
 
         if(!checkCreateOutputDir(OutputDir))
+        {
             throw new IllegalStateException("failed to create output directory: " + OutputDir);
+        }
     }
 
-    public String formUnsortedBam()
+    // common stem for every output: <dir><sample>.tars[.<outputId>], mirroring Redux. Also namespaces the
+    // per-worker shard intermediates so concurrent or repeated runs into one output dir do not clobber each other.
+    public String filePrefix()
     {
-        return OutputDir + prefix() + ".unsorted" + BAM_EXTENSION;
+        String prefix = OutputDir + SampleId + "." + FILE_ID;
+        if(OutputId != null)
+        {
+            prefix += "." + OutputId;
+        }
+        return prefix;
     }
 
-    // the run's output prefix, also used to namespace the per-worker shard intermediates so concurrent or
-    // repeated runs into one output dir do not clobber each other's shards.
-    public String prefix()
+    // <sample>.tars.<fileType>[.<outputId>].tsv
+    public String formFilename(final String fileType)
     {
-        return OutputId != null ? OutputId : DEFAULT_OUTPUT_PREFIX;
+        String filename = OutputDir + SampleId + "." + FILE_ID + "." + fileType;
+        if(OutputId != null)
+        {
+            filename += "." + OutputId;
+        }
+        return filename + TSV_EXTENSION;
     }
 
-    public String formOutputBam()
+    // <sample>.tars[.<outputId>][.<stage>].bam
+    public String formBamFilename(final String stage)
     {
-        return OutputDir + prefix() + BAM_EXTENSION;
+        String filename = OutputDir + SampleId + "." + FILE_ID;
+        if(OutputId != null)
+        {
+            filename += "." + OutputId;
+        }
+        if(stage != null)
+        {
+            filename += "." + stage;
+        }
+        return filename + BAM_EXTENSION;
     }
 
-    public String formTsvAFile()
-    {
-        return OutputDir + prefix() + TSV_A_SUFFIX;
-    }
+    public String formUnsortedBam() { return formBamFilename("unsorted"); }
 
-    public String formTsvBFile()
-    {
-        return OutputDir + prefix() + TSV_B_SUFFIX;
-    }
+    public String formOutputBam() { return formBamFilename(null); }
 
-    public String formSummaryFile()
-    {
-        return OutputDir + prefix() + SUMMARY_SUFFIX;
-    }
+    public String formTsvAFile() { return formFilename(RECORDS_FILE_TYPE); }
+
+    public String formTsvBFile() { return formFilename(ALIGNMENTS_FILE_TYPE); }
+
+    public String formSummaryFile() { return formFilename(SUMMARY_FILE_TYPE); }
 
     public static void addConfig(final ConfigBuilder configBuilder)
     {
+        configBuilder.addConfigItem(SAMPLE, true, SAMPLE_DESC);
         configBuilder.addPath(INPUT_BAM, true, INPUT_BAM_DESC);
         addRefGenomeConfig(configBuilder, true);
         configBuilder.addPath(CONTIG_SIDECAR, true, CONTIG_SIDECAR_DESC);
         configBuilder.addInteger(RESCUE_MIN_ANCHOR_OVERHANG,
-                "Junction rescue: min anchor overhang each side of a merged junction", RescueConfig.DEFAULT_MIN_ANCHOR_OVERHANG);
-        configBuilder.addInteger(RESCUE_MIN_INTRON, "Junction rescue: min intron length", RescueConfig.DEFAULT_MIN_INTRON_LENGTH);
-        configBuilder.addInteger(RESCUE_MAX_INTRON, "Junction rescue: max intron length", RescueConfig.DEFAULT_MAX_INTRON_LENGTH);
-        configBuilder.addInteger(RESCUE_MAX_CHAIN_DEPTH, "Junction rescue: max supp chain depth", RescueConfig.DEFAULT_MAX_CHAIN_DEPTH);
+                "Junction rescue: min anchor overhang each side of a merged junction", TarsConstants.DEFAULT_MIN_ANCHOR_OVERHANG);
+        configBuilder.addInteger(RESCUE_MIN_INTRON, "Junction rescue: min intron length", TarsConstants.DEFAULT_MIN_INTRON_LENGTH);
+        configBuilder.addInteger(RESCUE_MAX_INTRON, "Junction rescue: max intron length", TarsConstants.DEFAULT_MAX_INTRON_LENGTH);
+        configBuilder.addInteger(RESCUE_MAX_CHAIN_DEPTH, "Junction rescue: max supp chain depth", TarsConstants.DEFAULT_MAX_CHAIN_DEPTH);
         configBuilder.addInteger(RESCUE_SOFTCLIP_TOLERANCE,
                 "Junction rescue: primary/supp overlap tolerance when snapping to an annotated junction",
-                RescueConfig.DEFAULT_SOFTCLIP_TOLERANCE);
+                TarsConstants.DEFAULT_SOFTCLIP_TOLERANCE);
         configBuilder.addInteger(RESCUE_MAX_BOUNDARY_SHIFT,
                 "Junction rescue: max over-extended bases trimmed when probing an annotated boundary",
-                RescueConfig.DEFAULT_MAX_BOUNDARY_SHIFT);
+                TarsConstants.DEFAULT_MAX_BOUNDARY_SHIFT);
         configBuilder.addInteger(RESCUE_MIN_PARTIAL_MATCH_RUN,
                 "Junction rescue: min exon-proximal matched run for partial ref-verify rescue",
-                RescueConfig.DEFAULT_MIN_PARTIAL_MATCH_RUN);
+                TarsConstants.DEFAULT_MIN_PARTIAL_MATCH_RUN);
         configBuilder.addInteger(TAIL_MIN_SOFTCLIP,
-                "Tail extension: min terminal softclip length to consider", TailExtensionConfig.DEFAULT_MIN_SOFTCLIP_LENGTH);
+                "Tail extension: min terminal softclip length to consider", TarsConstants.DEFAULT_MIN_SOFTCLIP_LENGTH);
         configBuilder.addInteger(TAIL_MIN_EXTENSION,
-                "Tail extension: min ref-matching bases to convert to M", TailExtensionConfig.DEFAULT_MIN_EXTENSION);
+                "Tail extension: min ref-matching bases to convert to M", TarsConstants.DEFAULT_MIN_EXTENSION);
         configBuilder.addInteger(TAIL_MAX_EXTENSION,
                 "Tail extension: max bases walked into a softclip (caps consuming real junctions)",
-                TailExtensionConfig.DEFAULT_MAX_EXTENSION);
+                TarsConstants.DEFAULT_MAX_EXTENSION);
         configBuilder.addPath(RNA_UNMAP_REGIONS, false, RNA_UNMAP_REGIONS_DESC);
         configBuilder.addFlag(WRITE_LIFTBACK_TSV, WRITE_LIFTBACK_TSV_DESC);
         BamToolName.addConfig(configBuilder);

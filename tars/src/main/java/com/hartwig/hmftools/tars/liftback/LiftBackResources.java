@@ -48,17 +48,19 @@ public final class LiftBackResources
     public static RefSequenceSource openRefSource(final String refGenomeFile)
     {
         if(refGenomeFile == null)
+        {
             return null;
+        }
         try
         {
-            final IndexedFastaSequenceFile fasta = new IndexedFastaSequenceFile(new File(refGenomeFile));
+            IndexedFastaSequenceFile fasta = new IndexedFastaSequenceFile(new File(refGenomeFile));
             return (chromosome, posStart, posEnd) ->
             {
                 synchronized (fasta)
                 {
                     try
                     {
-                        final ReferenceSequence seq = fasta.getSubsequenceAt(chromosome, posStart, posEnd);
+                        ReferenceSequence seq = fasta.getSubsequenceAt(chromosome, posStart, posEnd);
                         return seq != null ? seq.getBases() : null;
                     }
                     catch(Exception e)

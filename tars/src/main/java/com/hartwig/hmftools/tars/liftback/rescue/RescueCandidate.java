@@ -18,7 +18,9 @@ public record RescueCandidate(
     public RescueCandidate
     {
         if(mateHintIntrons == null)
+        {
             mateHintIntrons = Collections.emptyList();
+        }
     }
 
     public RescueCandidate(

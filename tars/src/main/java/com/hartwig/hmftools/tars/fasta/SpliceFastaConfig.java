@@ -33,10 +33,14 @@ public class SpliceFastaConfig
         OutputId = configBuilder.getValue(OUTPUT_ID);
 
         if(OutputDir == null)
+        {
             throw new IllegalArgumentException("missing required config: output_dir");
+        }
 
         if(!checkCreateOutputDir(OutputDir))
+        {
             throw new IllegalStateException("failed to create output directory: " + OutputDir);
+        }
     }
 
     public String formFilename(final String fileId)

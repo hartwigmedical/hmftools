@@ -24,7 +24,9 @@ public class TranscriptContigBuilder
     public TranscriptContigResult build(final GeneData gene, final TranscriptData transcript)
     {
         if(transcript.exons() == null || transcript.exons().isEmpty())
+        {
             return null;
+        }
 
         // exons are stored by transcription rank; re-sort by genomic start for forward-strand orientation
         List<ExonData> ordered = new ArrayList<>(transcript.exons());

@@ -44,9 +44,11 @@ public class SoftclipTailExtender
                 || cigar == null || readBases == null || readBases.length == 0)
             return TailExtensionResult.unchanged();
 
-        final List<CigarElement> elements = CigarUtils.cigarElementsFromStr(cigar);
+        List<CigarElement> elements = CigarUtils.cigarElementsFromStr(cigar);
         if(elements.isEmpty())
+        {
             return TailExtensionResult.unchanged();
+        }
         if(CigarUtils.hasHardClip(elements))
         {
             mStatistics.countSkippedComplexShape();
@@ -55,17 +57,19 @@ public class SoftclipTailExtender
 
         mStatistics.countEvaluated();
 
-        final List<CigarElement> working = new ArrayList<>(elements);
-        final int alignmentEnd = alignmentStart + CigarUtils.cigarAlignedLength(working) - 1;
+        List<CigarElement> working = new ArrayList<>(elements);
+        int alignmentEnd = alignmentStart + CigarUtils.cigarAlignedLength(working) - 1;
 
-        final int trailExtended = tryExtendSide(Side.TRAILING, chromosome, alignmentStart, alignmentEnd, readBases, working);
-        final int leadExtended = tryExtendSide(Side.LEADING, chromosome, alignmentStart, alignmentEnd, readBases, working);
+        int trailExtended = tryExtendSide(Side.TRAILING, chromosome, alignmentStart, alignmentEnd, readBases, working);
+        int leadExtended = tryExtendSide(Side.LEADING, chromosome, alignmentStart, alignmentEnd, readBases, working);
 
         if(trailExtended == 0 && leadExtended == 0)
+        {
             return TailExtensionResult.unchanged();
+        }
 
         mStatistics.countExtended(leadExtended, trailExtended);
-        final int newStart = alignmentStart - leadExtended;
+        int newStart = alignmentStart - leadExtended;
         return new TailExtensionResult(true, newStart, CigarUtils.cigarElementsToStr(working),
                 leadExtended, trailExtended);
     }
@@ -75,14 +79,18 @@ public class SoftclipTailExtender
             final byte[] readBases, final List<CigarElement> working)
     {
         if(working.size() < 2)
+        {
             return 0;
+        }
 
-        final int softclipIndex = side.softclipIndex(working);
-        final int matchedIndex = side.matchedIndex(working);
+        int softclipIndex = side.softclipIndex(working);
+        int matchedIndex = side.matchedIndex(working);
 
-        final CigarElement softclip = working.get(softclipIndex);
+        CigarElement softclip = working.get(softclipIndex);
         if(softclip.getOperator() != CigarOperator.S || softclip.getLength() < mConfig.MinSoftclipLength)
+        {
             return 0;
+        }
 
         if(!isMatchedOp(working.get(matchedIndex).getOperator()))
         {
@@ -90,23 +98,27 @@ public class SoftclipTailExtender
             return 0;
         }
 
-        final int boundary = side.refBoundary(alignmentStart, alignmentEnd);
+        int boundary = side.refBoundary(alignmentStart, alignmentEnd);
 
         int extendBudget = Math.min(softclip.getLength(), mConfig.MaxExtension);
         if(side == Side.LEADING && alignmentStart - extendBudget < 1)
+        {
             extendBudget = alignmentStart - 1;
+        }
         if(extendBudget < mConfig.MinExtension)
+        {
             return 0;
+        }
 
-        final byte[] refBases = side.fetchRef(mRefSource, chromosome, boundary, extendBudget);
+        byte[] refBases = side.fetchRef(mRefSource, chromosome, boundary, extendBudget);
         if(refBases == null || refBases.length < mConfig.MinExtension)
         {
             mStatistics.countSkippedNoRef();
             return 0;
         }
 
-        final int walkLength = Math.min(refBases.length, extendBudget);
-        final int bestLength = side.walk(readBases, refBases, softclip.getLength(), walkLength);
+        int walkLength = Math.min(refBases.length, extendBudget);
+        int bestLength = side.walk(readBases, refBases, softclip.getLength(), walkLength);
 
         // Junction guard applied after the walk: if the read matches the full window (intron retention),
         // extension is correct. Only defer when the walk stalls short, meaning the read diverges at the
@@ -120,7 +132,9 @@ public class SoftclipTailExtender
         if(bestLength < mConfig.MinExtension)
         {
             if(bestLength == 0)
+            {
                 mStatistics.countRejectedTooManyMismatches();
+            }
             return 0;
         }
 
@@ -131,11 +145,15 @@ public class SoftclipTailExtender
     private boolean nearAnnotatedJunction(final Side side, final String chromosome, final int boundary)
     {
         if(mJunctionGuard == null)
+        {
             return false;
+        }
         for(int offset = 1; offset <= mConfig.MaxExtension; ++offset)
         {
             if(!side.junctionLookup(mJunctionGuard, chromosome, boundary, offset).isEmpty())
+            {
                 return true;
+            }
         }
         return false;
     }
@@ -149,10 +167,10 @@ public class SoftclipTailExtender
             final List<CigarElement> working, final int softclipIndex,
             final int matchedIndex, final int extend)
     {
-        final CigarElement softclip = working.get(softclipIndex);
-        final CigarElement matched = working.get(matchedIndex);
+        CigarElement softclip = working.get(softclipIndex);
+        CigarElement matched = working.get(matchedIndex);
 
-        final CigarElement grownMatch = new CigarElement(matched.getLength() + extend, matched.getOperator());
+        CigarElement grownMatch = new CigarElement(matched.getLength() + extend, matched.getOperator());
         working.set(matchedIndex, grownMatch);
 
         if(softclip.getLength() - extend == 0)
@@ -189,9 +207,9 @@ public class SoftclipTailExtender
                     int walk(final byte[] readBases, final byte[] refBases, final int softclipLength, final int walkLength)
                     {
                         // leading softclip's M boundary is at its inner end, so reverse to walk boundary-outward
-                        final byte[] readWin = BoundaryReclaim.reversed(
+                        byte[] readWin = BoundaryReclaim.reversed(
                                 Arrays.copyOfRange(readBases, softclipLength - walkLength, softclipLength));
-                        final byte[] refWin = BoundaryReclaim.reversed(
+                        byte[] refWin = BoundaryReclaim.reversed(
                                 Arrays.copyOfRange(refBases, refBases.length - walkLength, refBases.length));
                         return BoundaryReclaim.maxScoringPrefix(readWin, refWin);
                     }
@@ -224,9 +242,9 @@ public class SoftclipTailExtender
                     int walk(final byte[] readBases, final byte[] refBases, final int softclipLength, final int walkLength)
                     {
                         // trailing softclip's M boundary is at its start, already boundary-outward
-                        final int readStart = readBases.length - softclipLength;
-                        final byte[] readWin = Arrays.copyOfRange(readBases, readStart, readStart + walkLength);
-                        final byte[] refWin = Arrays.copyOfRange(refBases, 0, walkLength);
+                        int readStart = readBases.length - softclipLength;
+                        byte[] readWin = Arrays.copyOfRange(readBases, readStart, readStart + walkLength);
+                        byte[] refWin = Arrays.copyOfRange(refBases, 0, walkLength);
                         return BoundaryReclaim.maxScoringPrefix(readWin, refWin);
                     }
 

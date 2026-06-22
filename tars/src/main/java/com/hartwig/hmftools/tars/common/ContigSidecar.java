@@ -44,7 +44,9 @@ public final class ContigSidecar
         }))
         {
             for(ContigEntry entry : entries)
+            {
                 writer.writeRow(entry);
+            }
         }
 
         TARS_LOGGER.info("wrote {} contig entries to {}", entries.size(), filename);
@@ -58,11 +60,11 @@ public final class ContigSidecar
         try(DelimFileReader reader = new DelimFileReader(filename))
         {
             // Strand was added after the initial release; older sidecars lack it. Default to 0 (suppresses XS:A emission) rather than failing.
-            final boolean hasStrand = reader.getColumnNames().contains(Column.Strand.name());
+            boolean hasStrand = reader.getColumnNames().contains(Column.Strand.name());
 
             for(DelimFileReader.Row row : reader)
             {
-                final int strand;
+                int strand;
                 if(hasStrand)
                 {
                     strand = Integer.parseInt(row.get(Column.Strand));

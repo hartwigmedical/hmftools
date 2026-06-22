@@ -5,6 +5,7 @@ import java.util.List;
 import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.tars.liftback.rescue.RefSequenceSource;
 import com.hartwig.hmftools.tars.liftback.rescue.SpliceMotif;
+import com.hartwig.hmftools.tars.liftback.rescue.Tier;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
@@ -22,10 +23,6 @@ import htsjdk.samtools.CigarOperator;
 // Gated on a reference being available; junctions already on a canonical motif are skipped cheaply.
 public class JunctionCanonicalizer
 {
-    // max bp an intron is slid to reach a canonical motif. Bounds the search to the size of a tx-contig
-    // boundary deletion (SPLICE_FLANKING_DELETION_MAX_BP), the only place the lifted junction drifts.
-    public static final int DEFAULT_MAX_SHIFT = 5;
-
     private final RefSequenceSource mRefSource;
     private final int mMaxShift;
     private long mJunctionsShifted;
@@ -42,11 +39,15 @@ public class JunctionCanonicalizer
             final String chromosome, final int alignmentStart, final String cigar, final byte[] readBases)
     {
         if(mRefSource == null || chromosome == null || cigar == null || readBases == null || readBases.length == 0)
+        {
             return JunctionCanonicalizationResult.unchanged();
+        }
 
-        final List<CigarElement> elements = CigarUtils.cigarElementsFromStr(cigar);
+        List<CigarElement> elements = CigarUtils.cigarElementsFromStr(cigar);
         if(elements.size() < 3)
+        {
             return JunctionCanonicalizationResult.unchanged();
+        }
 
         int shifted = 0;
 
@@ -61,11 +62,15 @@ public class JunctionCanonicalizer
                 continue;
 
             if(trySlideJunction(chromosome, alignmentStart, elements, j, readBases))
+            {
                 ++shifted;
+            }
         }
 
         if(shifted == 0)
+        {
             return JunctionCanonicalizationResult.unchanged();
+        }
 
         mJunctionsShifted += shifted;
         return new JunctionCanonicalizationResult(true, CigarUtils.cigarElementsToStr(elements));
@@ -83,46 +88,56 @@ public class JunctionCanonicalizer
         int readIndex = 0;
         for(int i = 0; i < j; ++i)
         {
-            final CigarElement e = elements.get(i);
+            CigarElement e = elements.get(i);
             if(e.getOperator().consumesReferenceBases())
+            {
                 genomePos += e.getLength();
+            }
             if(e.getOperator().consumesReadBases())
+            {
                 readIndex += e.getLength();
+            }
         }
 
-        final int intronLength = elements.get(j).getLength();
-        final int intronStart = genomePos;                 // first intronic base (1-based)
-        final int intronEnd = genomePos + intronLength - 1; // last intronic base
-        final int rightReadStart = readIndex;              // read index of right flank's first base
+        int intronLength = elements.get(j).getLength();
+        int intronStart = genomePos;                 // first intronic base (1-based)
+        int intronEnd = genomePos + intronLength - 1; // last intronic base
+        int rightReadStart = readIndex;              // read index of right flank's first base
 
-        final int leftLen = elements.get(j - 1).getLength();
-        final int rightLen = elements.get(j + 1).getLength();
-        final int maxShift = Math.min(mMaxShift, Math.min(leftLen - 1, rightLen - 1));
+        int leftLen = elements.get(j - 1).getLength();
+        int rightLen = elements.get(j + 1).getLength();
+        int maxShift = Math.min(mMaxShift, Math.min(leftLen - 1, rightLen - 1));
         if(maxShift < 1)
+        {
             return false;
+        }
 
         // ref windows wide enough to read the donor/acceptor motif and the moved bases at any shift.
-        final int donorBlockStart = intronStart - mMaxShift;
-        final byte[] donorBlock = mRefSource.getBases(chromosome, donorBlockStart, intronStart + mMaxShift + 1);
-        final int acceptorBlockStart = intronEnd - mMaxShift - 1;
-        final byte[] acceptorBlock = mRefSource.getBases(chromosome, acceptorBlockStart, intronEnd + mMaxShift);
+        int donorBlockStart = intronStart - mMaxShift;
+        byte[] donorBlock = mRefSource.getBases(chromosome, donorBlockStart, intronStart + mMaxShift + 1);
+        int acceptorBlockStart = intronEnd - mMaxShift - 1;
+        byte[] acceptorBlock = mRefSource.getBases(chromosome, acceptorBlockStart, intronEnd + mMaxShift);
         if(donorBlock == null || acceptorBlock == null)
+        {
             return false;
+        }
 
-        final int currentTier = motifTier(donorBlock, donorBlockStart, intronStart, acceptorBlock, acceptorBlockStart, intronEnd, 0);
-        if(currentTier >= SpliceMotif.TIER_CANONICAL)
+        Tier currentTier = motifTier(donorBlock, donorBlockStart, intronStart, acceptorBlock, acceptorBlockStart, intronEnd, 0);
+        if(currentTier.compareTo(Tier.CANONICAL) >= 0)
+        {
             return false;
+        }
 
         int bestShift = 0;
-        int bestTier = currentTier;
+        Tier bestTier = currentTier;
         // smallest |shift| wins ties; try in increasing magnitude, positive before negative.
         for(int mag = 1; mag <= maxShift; ++mag)
         {
             for(final int d : new int[] { mag, -mag })
             {
-                final int tier = motifTier(
+                Tier tier = motifTier(
                         donorBlock, donorBlockStart, intronStart, acceptorBlock, acceptorBlockStart, intronEnd, d);
-                if(tier <= bestTier)
+                if(tier.compareTo(bestTier) <= 0)
                     continue;
                 if(!movedBasesMatch(d, intronStart, intronEnd, rightReadStart, readBases, donorBlock, donorBlockStart,
                         acceptorBlock, acceptorBlockStart))
@@ -135,7 +150,9 @@ public class JunctionCanonicalizer
         }
 
         if(bestShift == 0)
+        {
             return false;
+        }
 
         // apply: +d grows the left flank and shrinks the right; -d the reverse. Intron length unchanged.
         elements.set(j - 1, new CigarElement(leftLen + bestShift, elements.get(j - 1).getOperator()));
@@ -145,12 +162,12 @@ public class JunctionCanonicalizer
 
     // splice-motif tier of the intron when shifted by d: donor at [intronStart+d, +1], acceptor at
     // [intronEnd+d-1, intronEnd+d].
-    private static int motifTier(
+    private static Tier motifTier(
             final byte[] donorBlock, final int donorBlockStart, final int intronStart,
             final byte[] acceptorBlock, final int acceptorBlockStart, final int intronEnd, final int d)
     {
-        final byte[] donor = twoBases(donorBlock, intronStart + d - donorBlockStart);
-        final byte[] acceptor = twoBases(acceptorBlock, intronEnd + d - 1 - acceptorBlockStart);
+        byte[] donor = twoBases(donorBlock, intronStart + d - donorBlockStart);
+        byte[] acceptor = twoBases(acceptorBlock, intronEnd + d - 1 - acceptorBlockStart);
         return SpliceMotif.classify(donor, acceptor);
     }
 
@@ -166,30 +183,42 @@ public class JunctionCanonicalizer
         {
             for(int k = 0; k < d; ++k)
             {
-                final int readIdx = rightReadStart + k;
+                int readIdx = rightReadStart + k;
                 if(readIdx >= readBases.length)
+                {
                     return false;
-                final int refIdx = intronStart + k - donorBlockStart;
+                }
+                int refIdx = intronStart + k - donorBlockStart;
                 if(refIdx < 0 || refIdx >= donorBlock.length)
+                {
                     return false;
+                }
                 if(!basesEqualIgnoreCase(readBases[readIdx], donorBlock[refIdx]))
+                {
                     return false;
+                }
             }
             return true;
         }
 
-        final int shift = -d;
+        int shift = -d;
         for(int k = 0; k < shift; ++k)
         {
-            final int readIdx = rightReadStart - shift + k;
+            int readIdx = rightReadStart - shift + k;
             if(readIdx < 0)
+            {
                 return false;
-            final int genome = intronEnd + d + 1 + k; // = intronEnd - shift + 1 + k
-            final int refIdx = genome - acceptorBlockStart;
+            }
+            int genome = intronEnd + d + 1 + k; // = intronEnd - shift + 1 + k
+            int refIdx = genome - acceptorBlockStart;
             if(refIdx < 0 || refIdx >= acceptorBlock.length)
+            {
                 return false;
+            }
             if(!basesEqualIgnoreCase(readBases[readIdx], acceptorBlock[refIdx]))
+            {
                 return false;
+            }
         }
         return true;
     }
@@ -197,7 +226,9 @@ public class JunctionCanonicalizer
     private static byte[] twoBases(final byte[] block, final int offset)
     {
         if(offset < 0 || offset + 1 >= block.length)
+        {
             return null;
+        }
         return new byte[] { block[offset], block[offset + 1] };
     }
 
@@ -209,7 +240,9 @@ public class JunctionCanonicalizer
     private static boolean basesEqualIgnoreCase(final byte a, final byte b)
     {
         if(a == b)
+        {
             return true;
+        }
         return (a & ~0x20) == (b & ~0x20);
     }
 }
