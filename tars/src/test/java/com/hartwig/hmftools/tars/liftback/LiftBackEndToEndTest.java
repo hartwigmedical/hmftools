@@ -18,7 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import com.hartwig.hmftools.tars.common.SpliceCommon;
+import com.hartwig.hmftools.tars.common.TarsConstants;
 import com.hartwig.hmftools.tars.liftback.rescue.AnnotatedJunctionIndex;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.tars.liftback.rescue.JunctionRescueResolver;
@@ -32,7 +32,7 @@ import org.junit.Test;
 
 import htsjdk.samtools.SAMRecord;
 
-// End-to-end tests of how SpliceLiftBack reacts to a bwa-mem2 read aligned against a transcript contig.
+// End-to-end tests of how TarsApplication reacts to a bwa-mem2 read aligned against a transcript contig.
 // Runs the FULL per-group pipeline: resolve -> junction-rescue -> terminal-collapse -> tail-extend ->
 // canonicalize -> mate-patch -> NH/unmap policy. (Per-component behaviour is unit-tested in
 // LiftBackResolverTest / SpliceLiftBackApplyTest / the rescue + tailextend suites.)
@@ -70,24 +70,24 @@ public class LiftBackEndToEndTest
     // ---- full-pipeline runner (mirrors LiftBackWorker's engine wiring) ----
     private static List<SAMRecord> runLiftBack(final TestGenome genome, final List<SAMRecord> reads)
     {
-        final RefSequenceSource ref = genome.asRefSource();
-        final AnnotatedJunctionIndex junctionIndex = new AnnotatedJunctionIndex(annotatedIntrons());
+        RefSequenceSource ref = genome.asRefSource();
+        AnnotatedJunctionIndex junctionIndex = new AnnotatedJunctionIndex(annotatedIntrons());
 
-        final LiftBackResolver resolver = new LiftBackResolver(List.of(threeExonContig()));
-        final JunctionRescueResolver rescue =
+        LiftBackResolver resolver = new LiftBackResolver(List.of(threeExonContig()));
+        JunctionRescueResolver rescue =
                 new JunctionRescueResolver(junctionIndex, ref, RescueConfig.enabledDefaults());
-        final SoftclipTailExtender extender =
+        SoftclipTailExtender extender =
                 new SoftclipTailExtender(ref, junctionIndex, TailExtensionConfig.enabledDefaults());
-        final TerminalMicroJunctionCollapser collapser =
-                new TerminalMicroJunctionCollapser(ref, SpliceCommon.MIN_JUNCTION_ANCHOR);
-        final JunctionCanonicalizer canonicalizer =
-                new JunctionCanonicalizer(ref, JunctionCanonicalizer.DEFAULT_MAX_SHIFT);
+        TerminalMicroJunctionCollapser collapser =
+                new TerminalMicroJunctionCollapser(ref, TarsConstants.MIN_JUNCTION_ANCHOR);
+        JunctionCanonicalizer canonicalizer =
+                new JunctionCanonicalizer(ref, TarsConstants.DEFAULT_MAX_SHIFT);
 
-        final LiftBackStats stats = new LiftBackStats();
-        final LiftBackGroupProcessor processor = new LiftBackGroupProcessor(
+        LiftBackStats stats = new LiftBackStats();
+        LiftBackGroupProcessor processor = new LiftBackGroupProcessor(
                 resolver, rescue, extender, collapser, canonicalizer, ref, null, stats);
 
-        final List<SAMRecord> emitted = new ArrayList<>();
+        List<SAMRecord> emitted = new ArrayList<>();
         processor.processNameGroup(reads, new LiftedMateInfoCache(), (record, result) -> emitted.add(record));
         return emitted;
     }
@@ -98,8 +98,8 @@ public class LiftBackEndToEndTest
     public void exonSpanningReadLiftsToJunctionCigar()
     {
         // R2 starts at tx 197 so its leading exon2 anchor is 4M (above the trimMicroAnchors threshold of 3).
-        final SAMRecord r1 = primaryRecord("read1", TX_CONTIG, 51, "100M");
-        final SAMRecord r2 = secondMateRecord("read1", TX_CONTIG, 197, "50M");
+        SAMRecord r1 = primaryRecord("read1", TX_CONTIG, 51, "100M");
+        SAMRecord r2 = secondMateRecord("read1", TX_CONTIG, 197, "50M");
 
         runLiftBack(scenarioGenome(2000), List.of(r1, r2));
 
@@ -118,8 +118,8 @@ public class LiftBackEndToEndTest
     public void unliftableReadIsMarkedUnmapped()
     {
         // starts past the contig end (tx 251 with contig len 250) -> translation fails -> emitted unmapped.
-        final SAMRecord r1 = primaryRecord("read2", TX_CONTIG, 251, "50M");
-        final SAMRecord r2 = secondMateRecord("read2", CHR_1, 600, "50M");
+        SAMRecord r1 = primaryRecord("read2", TX_CONTIG, 251, "50M");
+        SAMRecord r2 = secondMateRecord("read2", CHR_1, 600, "50M");
 
         runLiftBack(scenarioGenome(2000), List.of(r1, r2));
 
@@ -137,16 +137,16 @@ public class LiftBackEndToEndTest
     public void supplementarySaTagRewrittenToGenomicCoords()
     {
         // a split read: primary on exon1, supplementary on exon2, each pointing at the other via SA on the tx contig.
-        final SAMRecord r1 = primaryRecord("read4", TX_CONTIG, 51, "100M");
+        SAMRecord r1 = primaryRecord("read4", TX_CONTIG, 51, "100M");
         r1.setAttribute("SA", TX_CONTIG + ",197,+,50M,60,0;");
-        final SAMRecord r1Supp = supplementaryRecord("read4", TX_CONTIG, 197, "50M");
+        SAMRecord r1Supp = supplementaryRecord("read4", TX_CONTIG, 197, "50M");
         r1Supp.setAttribute("SA", TX_CONTIG + ",51,+,100M,60,0;");
-        final SAMRecord r2 = secondMateRecord("read4", CHR_1, 600, "50M");
+        SAMRecord r2 = secondMateRecord("read4", CHR_1, 600, "50M");
 
         runLiftBack(scenarioGenome(2000), List.of(r1, r1Supp, r2));
 
         // SA must be lifted to chr1 and carry no _tx contig name.
-        final String r1Sa = r1.getStringAttribute("SA");
+        String r1Sa = r1.getStringAttribute("SA");
         assertTrue("SA should be lifted to chr1: " + r1Sa, r1Sa != null && r1Sa.startsWith(CHR_1 + ","));
         assertTrue("SA should not reference a _tx contig: " + r1Sa, !r1Sa.contains(TX_CONTIG));
 
@@ -165,9 +165,9 @@ public class LiftBackEndToEndTest
         // A read with a trailing soft-clip whose clipped bases continue contiguously in the genome (intron
         // retention, no junction). The tail-extender should walk the 10S into the reference -> 60M, with the
         // "tail-extended" note set. Genome is all 'A' away from the intron motifs, so all-'A' read bases match.
-        final TestGenome genome = scenarioGenome(2000);
-        final SAMRecord r1 = withBases(primaryRecord("read6", CHR_1, 1000, "50M10S"), "A".repeat(60));
-        final SAMRecord r2 = withBases(secondMateRecord("read6", CHR_1, 1500, "50M"), "A".repeat(50));
+        TestGenome genome = scenarioGenome(2000);
+        SAMRecord r1 = withBases(primaryRecord("read6", CHR_1, 1000, "50M10S"), "A".repeat(60));
+        SAMRecord r2 = withBases(secondMateRecord("read6", CHR_1, 1500, "50M"), "A".repeat(50));
 
         runLiftBack(genome, List.of(r1, r2));
 
@@ -181,12 +181,12 @@ public class LiftBackEndToEndTest
         // flanking the annotated intron 200-299. Rescue should merge them into one 50M100N50M primary and
         // drop the supp. The default genome already carries the canonical GT..AG at the intron boundaries,
         // so ref-verify passes.
-        final TestGenome genome = scenarioGenome(2000);
-        final SAMRecord primary = withBases(primaryRecord("read7", CHR_1, 150, "50M50S"), "A".repeat(100));
-        final SAMRecord supp = withBases(supplementaryRecord("read7", CHR_1, 300, "50S50M"), "A".repeat(100));
-        final SAMRecord mate = withBases(secondMateRecord("read7", CHR_1, 800, "50M"), "A".repeat(50));
+        TestGenome genome = scenarioGenome(2000);
+        SAMRecord primary = withBases(primaryRecord("read7", CHR_1, 150, "50M50S"), "A".repeat(100));
+        SAMRecord supp = withBases(supplementaryRecord("read7", CHR_1, 300, "50S50M"), "A".repeat(100));
+        SAMRecord mate = withBases(secondMateRecord("read7", CHR_1, 800, "50M"), "A".repeat(50));
 
-        final List<SAMRecord> emitted = runLiftBack(genome, List.of(primary, supp, mate));
+        List<SAMRecord> emitted = runLiftBack(genome, List.of(primary, supp, mate));
 
         assertEquals("50M100N50M", primary.getCigarString());
         // the merged supplementary is dropped: only primary/1 + mate/2 remain.
@@ -199,13 +199,13 @@ public class LiftBackEndToEndTest
         // A spliced read whose junction sits 2bp off a GT-AG motif. Canonicalization slides the intron +2 to
         // land on the motif: 10M10N10M -> 12M10N8M. Anchors are >= MIN_JUNCTION_ANCHOR so the terminal
         // collapser leaves the junction for canonicalization to handle (5M anchors would be collapsed first).
-        final TestGenome genome = scenarioGenome(2000)
+        TestGenome genome = scenarioGenome(2000)
                 .set(CHR_1, 1, "CCCCCCCCCC")  // left exon, matches read[0..9]
                 .set(CHR_1, 11, "CC")         // donor at shift 0 (non-canonical) + the +2 moved bases
                 .set(CHR_1, 13, "GT")         // donor at shift +2 (canonical)
                 .set(CHR_1, 21, "AG");        // acceptor at shift +2 (canonical)
-        final SAMRecord r1 = withBases(primaryRecord("read8", CHR_1, 1, "10M10N10M"), "C".repeat(20));
-        final SAMRecord r2 = withBases(secondMateRecord("read8", CHR_1, 500, "50M"), "A".repeat(50));
+        SAMRecord r1 = withBases(primaryRecord("read8", CHR_1, 1, "10M10N10M"), "C".repeat(20));
+        SAMRecord r2 = withBases(secondMateRecord("read8", CHR_1, 500, "50M"), "A".repeat(50));
 
         runLiftBack(genome, List.of(r1, r2));
 
@@ -215,8 +215,8 @@ public class LiftBackEndToEndTest
     @Test
     public void nativeGenomicReadPassesThroughUnchanged()
     {
-        final SAMRecord r1 = primaryRecord("read3", CHR_1, 1000, "100M");
-        final SAMRecord r2 = secondMateRecord("read3", CHR_1, 1100, "50M");
+        SAMRecord r1 = primaryRecord("read3", CHR_1, 1000, "100M");
+        SAMRecord r2 = secondMateRecord("read3", CHR_1, 1100, "50M");
 
         runLiftBack(scenarioGenome(2000), List.of(r1, r2));
 

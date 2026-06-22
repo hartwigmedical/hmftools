@@ -18,16 +18,22 @@ public class LiftedMateInfoCache
     {
         ReadPairLiftedMateInfo pairInfo = mLiftedMateInfoByReadName.computeIfAbsent(readName, k -> new ReadPairLiftedMateInfo());
         if(firstOfPair)
+        {
             pairInfo.FirstInPair = info;
+        }
         else
+        {
             pairInfo.SecondInPair = info;
+        }
     }
 
     public LiftedMateInfo getPartnerMateInfo(final String readName, final boolean firstOfPair)
     {
         ReadPairLiftedMateInfo pairInfo = mLiftedMateInfoByReadName.get(readName);
         if(pairInfo == null)
+        {
             return null;
+        }
         return firstOfPair ? pairInfo.SecondInPair : pairInfo.FirstInPair;
     }
 
@@ -36,7 +42,9 @@ public class LiftedMateInfoCache
     {
         ReadPairLiftedMateInfo pairInfo = mLiftedMateInfoByReadName.get(readName);
         if(pairInfo == null)
+        {
             return null;
+        }
         return firstOfPair ? pairInfo.FirstInPair : pairInfo.SecondInPair;
     }
 

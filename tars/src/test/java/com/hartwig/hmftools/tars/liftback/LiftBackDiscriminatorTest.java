@@ -34,7 +34,7 @@ public class LiftBackDiscriminatorTest
     private static final String CHR1 = "chr1";
     private static final String CHR2 = "chr2";
 
-    // anchors comfortably above SpliceCommon.MIN_JUNCTION_ANCHOR so the N counts as a real junction.
+    // anchors comfortably above TarsConstants.MIN_JUNCTION_ANCHOR so the N counts as a real junction.
     private static final String TX_JUNCTION_CIGAR = "50M100N50M";
     private static final String FULL_MATCH_CIGAR = "100M";
     private static final String SOFTCLIP_CIGAR = "50M51S";
@@ -58,9 +58,11 @@ public class LiftBackDiscriminatorTest
 
     private static List<LiftedAlignment> set(final LiftedAlignment... alignments)
     {
-        final List<LiftedAlignment> list = new ArrayList<>();
+        List<LiftedAlignment> list = new ArrayList<>();
         for(final LiftedAlignment alignment : alignments)
+        {
             list.add(alignment);
+        }
         return list;
     }
 
@@ -150,12 +152,12 @@ public class LiftBackDiscriminatorTest
     {
         // bwa picked the ref placement; tx wins, so the primary swaps to the tx alt. self stays as an alt
         // (preserves its locus) but loses IsPrimaryChoice; any other ref alt is dropped.
-        final LiftedAlignment self = ref(CHR1, 100, SOFTCLIP_CIGAR);
+        LiftedAlignment self = ref(CHR1, 100, SOFTCLIP_CIGAR);
         self.IsPrimaryChoice = true;
-        final LiftedAlignment txWinner = tx(CHR1, 100, TX_JUNCTION_CIGAR, false, 0);
-        final LiftedAlignment otherRef = ref(CHR2, 200, FULL_MATCH_CIGAR);
+        LiftedAlignment txWinner = tx(CHR1, 100, TX_JUNCTION_CIGAR, false, 0);
+        LiftedAlignment otherRef = ref(CHR2, 200, FULL_MATCH_CIGAR);
 
-        final LiftBackDiscriminator.Outcome outcome =
+        LiftBackDiscriminator.Outcome outcome =
                 LiftBackDiscriminator.apply(set(self, txWinner, otherRef), BOTH_TX_JUNCTION_REF_SOFTCLIP, self);
 
         assertSame(txWinner, outcome.effectivePrimary());
@@ -170,11 +172,11 @@ public class LiftBackDiscriminatorTest
     public void testTxJunctionRefSoftclipTxSelfDropsRef()
     {
         // self is already the tx placement; keep it and drop the ref alt.
-        final LiftedAlignment self = tx(CHR1, 100, TX_JUNCTION_CIGAR, false, 0);
+        LiftedAlignment self = tx(CHR1, 100, TX_JUNCTION_CIGAR, false, 0);
         self.IsPrimaryChoice = true;
-        final LiftedAlignment refAlt = ref(CHR1, 100, SOFTCLIP_CIGAR);
+        LiftedAlignment refAlt = ref(CHR1, 100, SOFTCLIP_CIGAR);
 
-        final LiftBackDiscriminator.Outcome outcome =
+        LiftBackDiscriminator.Outcome outcome =
                 LiftBackDiscriminator.apply(set(self, refAlt), BOTH_TX_JUNCTION_REF_SOFTCLIP, self);
 
         assertSame(self, outcome.effectivePrimary());
@@ -186,12 +188,12 @@ public class LiftBackDiscriminatorTest
     public void testTxSwapPrefersFewestMismatchJunctionAlt()
     {
         // two tx junction alts at the locus: the winner is the N-junction alt with the fewest mismatches.
-        final LiftedAlignment self = ref(CHR1, 100, SOFTCLIP_CIGAR);
+        LiftedAlignment self = ref(CHR1, 100, SOFTCLIP_CIGAR);
         self.IsPrimaryChoice = true;
-        final LiftedAlignment txMany = tx(CHR1, 100, "50M100N50M", false, 5);
-        final LiftedAlignment txFew = tx(CHR1, 100, "60M100N40M", false, 2);
+        LiftedAlignment txMany = tx(CHR1, 100, "50M100N50M", false, 5);
+        LiftedAlignment txFew = tx(CHR1, 100, "60M100N40M", false, 2);
 
-        final LiftBackDiscriminator.Outcome outcome =
+        LiftBackDiscriminator.Outcome outcome =
                 LiftBackDiscriminator.apply(set(self, txMany, txFew), BOTH_TX_JUNCTION_REF_SOFTCLIP, self);
 
         assertSame(txFew, outcome.effectivePrimary());
@@ -203,11 +205,11 @@ public class LiftBackDiscriminatorTest
     public void testTxJunctionRefMatchRefSelfDropsTx()
     {
         // ref matched through the intron; self is ref, so keep it and drop the tx alt.
-        final LiftedAlignment self = ref(CHR1, 100, FULL_MATCH_CIGAR);
+        LiftedAlignment self = ref(CHR1, 100, FULL_MATCH_CIGAR);
         self.IsPrimaryChoice = true;
-        final LiftedAlignment txAlt = tx(CHR1, 100, TX_JUNCTION_CIGAR, false, 0);
+        LiftedAlignment txAlt = tx(CHR1, 100, TX_JUNCTION_CIGAR, false, 0);
 
-        final LiftBackDiscriminator.Outcome outcome =
+        LiftBackDiscriminator.Outcome outcome =
                 LiftBackDiscriminator.apply(set(self, txAlt), BOTH_TX_JUNCTION_REF_MATCH, self);
 
         assertSame(self, outcome.effectivePrimary());
@@ -219,11 +221,11 @@ public class LiftBackDiscriminatorTest
     public void testTxJunctionRefMatchTxSelfSwapsToRef()
     {
         // self is the tx placement but ref wins: swap the primary to the ref alt.
-        final LiftedAlignment self = tx(CHR1, 100, TX_JUNCTION_CIGAR, false, 0);
+        LiftedAlignment self = tx(CHR1, 100, TX_JUNCTION_CIGAR, false, 0);
         self.IsPrimaryChoice = true;
-        final LiftedAlignment refWinner = ref(CHR1, 100, FULL_MATCH_CIGAR);
+        LiftedAlignment refWinner = ref(CHR1, 100, FULL_MATCH_CIGAR);
 
-        final LiftBackDiscriminator.Outcome outcome =
+        LiftBackDiscriminator.Outcome outcome =
                 LiftBackDiscriminator.apply(set(self, refWinner), BOTH_TX_JUNCTION_REF_MATCH, self);
 
         assertSame(refWinner, outcome.effectivePrimary());
@@ -237,11 +239,11 @@ public class LiftBackDiscriminatorTest
     @Test
     public void testTxSoftclipRefMatchRefSelfDropsTx()
     {
-        final LiftedAlignment self = ref(CHR1, 100, FULL_MATCH_CIGAR);
+        LiftedAlignment self = ref(CHR1, 100, FULL_MATCH_CIGAR);
         self.IsPrimaryChoice = true;
-        final LiftedAlignment txAlt = tx(CHR1, 100, "50M50S", true, 0);
+        LiftedAlignment txAlt = tx(CHR1, 100, "50M50S", true, 0);
 
-        final LiftBackDiscriminator.Outcome outcome =
+        LiftBackDiscriminator.Outcome outcome =
                 LiftBackDiscriminator.apply(set(self, txAlt), BOTH_TX_SOFTCLIP_REF_MATCH, self);
 
         assertSame(self, outcome.effectivePrimary());
@@ -254,11 +256,11 @@ public class LiftBackDiscriminatorTest
     {
         // self is the softclipped tx placement; a clean ref full-match sits at the same locus (intron
         // retention). Ref wins: swap primary to the ref alt, demote self.
-        final LiftedAlignment self = tx(CHR1, 100, "50M50S", true, 0);
+        LiftedAlignment self = tx(CHR1, 100, "50M50S", true, 0);
         self.IsPrimaryChoice = true;
-        final LiftedAlignment refAlt = ref(CHR1, 100, FULL_MATCH_CIGAR);
+        LiftedAlignment refAlt = ref(CHR1, 100, FULL_MATCH_CIGAR);
 
-        final LiftBackDiscriminator.Outcome outcome =
+        LiftBackDiscriminator.Outcome outcome =
                 LiftBackDiscriminator.apply(set(self, refAlt), BOTH_TX_SOFTCLIP_REF_MATCH, self);
 
         assertSame(refAlt, outcome.effectivePrimary());
@@ -274,11 +276,11 @@ public class LiftBackDiscriminatorTest
         for(final LiftBackCategory category : new LiftBackCategory[] {
                 REF_SINGLE, TX_SINGLE, BOTH_AGREE, BOTH_AMBIGUOUS, REF_MULTI, TX_MULTI, BOTH_MULTI })
         {
-            final LiftedAlignment self = ref(CHR1, 100, FULL_MATCH_CIGAR);
+            LiftedAlignment self = ref(CHR1, 100, FULL_MATCH_CIGAR);
             self.IsPrimaryChoice = true;
-            final LiftedAlignment txAlt = tx(CHR1, 100, TX_JUNCTION_CIGAR, false, 0);
+            LiftedAlignment txAlt = tx(CHR1, 100, TX_JUNCTION_CIGAR, false, 0);
 
-            final LiftBackDiscriminator.Outcome outcome =
+            LiftBackDiscriminator.Outcome outcome =
                     LiftBackDiscriminator.apply(set(self, txAlt), category, self);
 
             assertSame("category " + category, self, outcome.effectivePrimary());

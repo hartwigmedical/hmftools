@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.tars.liftback;
 
-import static com.hartwig.hmftools.tars.liftback.SaTagRewriter.SA_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.XA_ATTRIBUTE;
 
 import java.util.stream.Collectors;
 
@@ -12,14 +13,12 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.TextCigarCodec;
 import htsjdk.samtools.util.SequenceUtil;
 
-// Pure per-record mutation primitives shared by the standalone SpliceLiftBack main and the REDUX
+// Pure per-record mutation primitives shared by the standalone TarsApplication main and the REDUX
 // LiftBackGroupProcessor. No group/orchestration state -- each method maps a resolved LiftBackResult onto
-// a single SAMRecord (or derives the mate-cache view of it). Extracted from SpliceLiftBack so the
+// a single SAMRecord (or derives the mate-cache view of it). Extracted from TarsApplication so the
 // concurrent REDUX path and the standalone path share one implementation.
 public final class LiftBackRecordOps
 {
-    static final String XA_TAG = "XA";
-
     private LiftBackRecordOps() { }
 
     // Supplementaries whose own lift failed are mirrored onto their primary's lifted coords (keeping
@@ -34,15 +33,17 @@ public final class LiftBackRecordOps
 
             case LIFT_FAILED:
                 if(record.isSecondaryOrSupplementary() && mirrorOwnPrimaryOntoFailedSupp(record, liftedMateInfoCache))
+                {
                     return;
+                }
 
                 record.setReadUnmappedFlag(true);
                 record.setReferenceName(SAMRecord.NO_ALIGNMENT_REFERENCE_NAME);
                 record.setAlignmentStart(SAMRecord.NO_ALIGNMENT_START);
                 record.setCigarString(SAMRecord.NO_ALIGNMENT_CIGAR);
                 record.setMappingQuality(0);
-                record.setAttribute(XA_TAG, null);
-                record.setAttribute(SA_ATTRIBUTE, null);
+                record.setAttribute(XA_ATTRIBUTE, null);
+                record.setAttribute(SUPPLEMENTARY_ATTRIBUTE, null);
                 return;
 
             default:
@@ -52,7 +53,7 @@ public final class LiftBackRecordOps
                 record.setCigar(liftedCigar);
                 record.setReadNegativeStrandFlag(result.negativeStrand());
                 record.setMappingQuality(result.updatedMapq());
-                record.setAttribute(XA_TAG, buildLiftedXa(result));
+                record.setAttribute(XA_ATTRIBUTE, buildLiftedXa(result));
                 // XS:A:+/- on spliced records: downstream RNA tools (Isofox) rely on
                 // transcript strand for stranded junction interpretation. bwa-mem2 emits XS:i: as
                 // the sub-optimal alignment score on the same tag name -- clear first so the SAM
@@ -62,7 +63,9 @@ public final class LiftBackRecordOps
                 // they ship without XS rather than risk a wrong call.
                 record.setAttribute("XS", null);
                 if(result.hasNCigar() && result.transcriptStrand() != 0)
+                {
                     record.setAttribute("XS", result.transcriptStrand() > 0 ? Character.valueOf('+') : Character.valueOf('-'));
+                }
         }
     }
 
@@ -70,17 +73,21 @@ public final class LiftBackRecordOps
             final SAMRecord record, final LiftedMateInfoCache liftedMateInfoCache)
     {
         if(!record.getReadPairedFlag())
+        {
             return false;
+        }
 
-        final LiftedMateInfo ownPrimary = liftedMateInfoCache.getOwnPrimary(record.getReadName(), record.getFirstOfPairFlag());
+        LiftedMateInfo ownPrimary = liftedMateInfoCache.getOwnPrimary(record.getReadName(), record.getFirstOfPairFlag());
         if(ownPrimary == null || ownPrimary.unmapped())
+        {
             return false;
+        }
 
         record.setReferenceName(ownPrimary.chromosome());
         record.setAlignmentStart(ownPrimary.alignmentStart());
         record.setCigarString(ownPrimary.liftedCigar());
         record.setMappingQuality(0);
-        record.setAttribute(XA_TAG, null);
+        record.setAttribute(XA_ATTRIBUTE, null);
         // SA stays -- rewriteSaTag translates tx-contig entries downstream and FragmentCoords requires it on supps
         return true;
     }
@@ -88,10 +95,12 @@ public final class LiftBackRecordOps
     public static LiftedMateInfo toLiftedMateInfo(final SAMRecord record, final LiftBackResult result)
     {
         if(willBeUnmapped(result))
+        {
             return LiftedMateInfo.UNMAPPED;
+        }
 
-        final Cigar liftedCigar = TextCigarCodec.decode(result.finalCigar());
-        final int alignmentEnd = result.finalPos() + liftedCigar.getReferenceLength() - 1;
+        Cigar liftedCigar = TextCigarCodec.decode(result.finalCigar());
+        int alignmentEnd = result.finalPos() + liftedCigar.getReferenceLength() - 1;
         return LiftedMateInfo.mapped(result.finalChrom(), result.finalPos(), alignmentEnd, result.finalCigar(), result.negativeStrand());
     }
 
@@ -105,8 +114,8 @@ public final class LiftBackRecordOps
         record.setAlignmentStart(SAMRecord.NO_ALIGNMENT_START);
         record.setCigarString(SAMRecord.NO_ALIGNMENT_CIGAR);
         record.setMappingQuality(0);
-        record.setAttribute(SA_ATTRIBUTE, null);
-        record.setAttribute(XA_TAG, null);
+        record.setAttribute(SUPPLEMENTARY_ATTRIBUTE, null);
+        record.setAttribute(XA_ATTRIBUTE, null);
         record.setAttribute("NH", null);
         record.setAttribute("MC", null);
         if(record.getReadPairedFlag())
@@ -122,7 +131,9 @@ public final class LiftBackRecordOps
     public static boolean willBeUnmapped(final LiftBackResult result)
     {
         if(result.category() == LiftBackCategory.UNMAPPED || result.category() == LiftBackCategory.LIFT_FAILED)
+        {
             return true;
+        }
         return exceedsMappingCap(result);
     }
 
@@ -155,7 +166,7 @@ public final class LiftBackRecordOps
             return;
         }
 
-        final int editDistance = computeEditDistance(record, refSource);
+        int editDistance = computeEditDistance(record, refSource);
         record.setAttribute("NM", editDistance >= 0 ? Integer.valueOf(editDistance) : null);
     }
 
@@ -165,18 +176,20 @@ public final class LiftBackRecordOps
     // NM unset rather than write a wrong value.
     private static int computeEditDistance(final SAMRecord record, final RefSequenceSource refSource)
     {
-        final byte[] readBases = record.getReadBases();
+        byte[] readBases = record.getReadBases();
         if(readBases == null || readBases.length == 0)
+        {
             return -1;
+        }
 
-        final String chromosome = record.getReferenceName();
+        String chromosome = record.getReferenceName();
         int refPos = record.getAlignmentStart();
         int readIndex = 0;
         int editDistance = 0;
 
         for(final CigarElement element : record.getCigar().getCigarElements())
         {
-            final int length = element.getLength();
+            int length = element.getLength();
             switch(element.getOperator())
             {
                 case M:
@@ -184,11 +197,15 @@ public final class LiftBackRecordOps
                 case X:
                     final byte[] refBases = refSource.getBases(chromosome, refPos, refPos + length - 1);
                     if(refBases == null || refBases.length < length)
+                    {
                         return -1;
+                    }
                     for(int i = 0; i < length; ++i)
                     {
                         if(!SequenceUtil.basesEqual(readBases[readIndex + i], refBases[i]))
+                        {
                             ++editDistance;
+                        }
                     }
                     refPos += length;
                     readIndex += length;
@@ -229,11 +246,11 @@ public final class LiftBackRecordOps
         // entries re-report the locus bwa already placed the read at and carry no alternative-position
         // info. Anything non-overlapping (other locus, other chromosome, a different exon up the same gene)
         // is a genuine alternative mapping and is kept.
-        final LiftedAlignment primary = result.liftedAlignments().stream()
+        LiftedAlignment primary = result.liftedAlignments().stream()
                 .filter(la -> la.IsPrimaryChoice)
                 .findFirst().orElse(null);
 
-        final String xa = result.liftedAlignments().stream()
+        String xa = result.liftedAlignments().stream()
                 .filter(la -> !la.IsPrimaryChoice && !la.Dropped)
                 .filter(la -> !overlapsPrimary(la, primary))
                 .map(LiftBackRecordOps::formatXaEntry)
@@ -244,12 +261,14 @@ public final class LiftBackRecordOps
     private static boolean overlapsPrimary(final LiftedAlignment alt, final LiftedAlignment primary)
     {
         if(primary == null || !alt.LiftedChrom.equals(primary.LiftedChrom))
+        {
             return false;
+        }
 
-        final int altStart = alt.LiftedPos;
-        final int altEnd = altStart + TextCigarCodec.decode(alt.LiftedCigar).getReferenceLength() - 1;
-        final int primStart = primary.LiftedPos;
-        final int primEnd = primStart + TextCigarCodec.decode(primary.LiftedCigar).getReferenceLength() - 1;
+        int altStart = alt.LiftedPos;
+        int altEnd = altStart + TextCigarCodec.decode(alt.LiftedCigar).getReferenceLength() - 1;
+        int primStart = primary.LiftedPos;
+        int primEnd = primStart + TextCigarCodec.decode(primary.LiftedCigar).getReferenceLength() - 1;
         return altStart <= primEnd && altEnd >= primStart;
     }
 

@@ -4,8 +4,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import com.hartwig.hmftools.tars.common.SpliceCommon;
-
 // Pure decision step on a record's full lifted alignment set (self + lifted XA alts).
 // categorize() classifies the set; apply() mutates Dropped/IsPrimaryChoice for categories that need
 // a swap (e.g. intronless paralog vs. spliced parent gene). No I/O - separate from LiftBackResolver
@@ -29,7 +27,7 @@ public final class LiftBackDiscriminator
 
     public static Features categorize(final List<LiftedAlignment> alignments)
     {
-        final Features features = new Features();
+        Features features = new Features();
 
         if(alignments.isEmpty())
         {
@@ -37,8 +35,8 @@ public final class LiftBackDiscriminator
             return features;
         }
 
-        final Set<String> loci = new HashSet<>();
-        final Set<String> distinctCigars = new HashSet<>();
+        Set<String> loci = new HashSet<>();
+        Set<String> distinctCigars = new HashSet<>();
         boolean anyHasN = false;
 
         for(final LiftedAlignment alignment : alignments)
@@ -46,30 +44,42 @@ public final class LiftBackDiscriminator
             loci.add(locusKey(alignment));
             distinctCigars.add(alignment.LiftedCigar);
             if(alignment.cigarHasN())
+            {
                 anyHasN = true;
+            }
 
             if(alignment.fromTxContig())
             {
                 ++features.NumTxAlts;
-                if(alignment.cigarHasRealNJunction(SpliceCommon.MIN_JUNCTION_ANCHOR))
+                if(alignment.cigarHasRealNJunction())
+                {
                     features.TxHasNCigar = true;
+                }
                 if(alignment.SoftClipAtBoundary)
+                {
                     features.TxSoftClipAtBoundary = true;
+                }
             }
             else
             {
                 ++features.NumRefAlts;
                 if(alignment.cigarHasSoftClip())
+                {
                     features.RefSoftClipped = true;
+                }
                 else
+                {
                     features.RefFullMatch = true;
-                if(alignment.cigarHasRealNJunction(SpliceCommon.MIN_JUNCTION_ANCHOR))
+                }
+                if(alignment.cigarHasRealNJunction())
+                {
                     features.RefHasNCigar = true;
+                }
             }
         }
 
-        final boolean hasRef = features.NumRefAlts > 0;
-        final boolean hasTx = features.NumTxAlts > 0;
+        boolean hasRef = features.NumRefAlts > 0;
+        boolean hasTx = features.NumTxAlts > 0;
 
         if(loci.size() >= 2)
         {
@@ -77,14 +87,22 @@ public final class LiftBackDiscriminator
             {
                 // tx has annotated junction, ref alts map intronlessly at other loci - typically paralogs/pseudogenes.
                 if(features.TxHasNCigar && !features.RefHasNCigar)
+                {
                     features.Category = LiftBackCategory.BOTH_MULTI_TX_JUNCTION;
+                }
                 else
+                {
                     features.Category = LiftBackCategory.BOTH_MULTI;
+                }
             }
             else if(hasTx)
+            {
                 features.Category = LiftBackCategory.TX_MULTI;
+            }
             else
+            {
                 features.Category = LiftBackCategory.REF_MULTI;
+            }
             return features;
         }
 
@@ -101,17 +119,27 @@ public final class LiftBackDiscriminator
 
         // single locus, both ref and tx - run discriminator
         if(distinctCigars.size() == 1 && !anyHasN)
+        {
             features.Category = LiftBackCategory.BOTH_AGREE;
+        }
         else if(features.TxHasNCigar && features.RefSoftClipped)
+        {
             features.Category = LiftBackCategory.BOTH_TX_JUNCTION_REF_SOFTCLIP;
+        }
         else if(features.TxHasNCigar && features.RefFullMatch && !features.RefSoftClipped)
+        {
             // ref full-match across the supposed intron is strong evidence the read is unspliced
             // (pre-mRNA / retained intron / DNA contamination) - the tx N-CIGAR is the artifact.
             features.Category = LiftBackCategory.BOTH_TX_JUNCTION_REF_MATCH;
+        }
         else if(features.TxSoftClipAtBoundary && features.RefFullMatch)
+        {
             features.Category = LiftBackCategory.BOTH_TX_SOFTCLIP_REF_MATCH;
+        }
         else
+        {
             features.Category = LiftBackCategory.BOTH_AMBIGUOUS;
+        }
 
         return features;
     }
@@ -139,7 +167,9 @@ public final class LiftBackDiscriminator
         {
             for(final LiftedAlignment la : alignments)
                 if(la.fromTxContig())
+                {
                     la.Dropped = true;
+                }
             return new Outcome(self, "");
         }
 
@@ -153,14 +183,18 @@ public final class LiftBackDiscriminator
             }
         }
         if(winner == null)
+        {
             return new Outcome(self, "");
+        }
 
         self.IsPrimaryChoice = false;
         winner.IsPrimaryChoice = true;
         for(final LiftedAlignment la : alignments)
         {
             if(la.fromTxContig() && la != self)
+            {
                 la.Dropped = true;
+            }
         }
         return new Outcome(winner, "swapped_tx_to_ref");
     }
@@ -172,7 +206,9 @@ public final class LiftBackDiscriminator
         {
             for(final LiftedAlignment la : alignments)
                 if(!la.fromTxContig())
+                {
                     la.Dropped = true;
+                }
             return new Outcome(self, "");
         }
 
@@ -183,7 +219,9 @@ public final class LiftBackDiscriminator
             if(la.fromTxContig() && la.cigarHasN())
             {
                 if(winner == null || la.NumMismatches < winner.NumMismatches)
+                {
                     winner = la;
+                }
             }
         }
         if(winner == null)
@@ -198,14 +236,18 @@ public final class LiftBackDiscriminator
             }
         }
         if(winner == null)
+        {
             return new Outcome(self, "");
+        }
 
         self.IsPrimaryChoice = false;
         winner.IsPrimaryChoice = true;
         for(final LiftedAlignment la : alignments)
         {
             if(!la.fromTxContig() && la != self)
+            {
                 la.Dropped = true;
+            }
         }
         return new Outcome(winner, "swapped_ref_to_tx");
     }

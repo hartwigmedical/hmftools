@@ -1,12 +1,12 @@
 package com.hartwig.hmftools.tars.liftback.tailextend;
 
+import static com.hartwig.hmftools.tars.common.TarsConstants.DEFAULT_MAX_EXTENSION;
+import static com.hartwig.hmftools.tars.common.TarsConstants.DEFAULT_MIN_EXTENSION;
+import static com.hartwig.hmftools.tars.common.TarsConstants.DEFAULT_MIN_SOFTCLIP_LENGTH;
+
 // Config for SoftclipTailExtender. MaxExtension caps the walk to avoid consuming real unannotated junctions.
 public class TailExtensionConfig
 {
-    public static final int DEFAULT_MIN_SOFTCLIP_LENGTH = 3;
-    public static final int DEFAULT_MIN_EXTENSION = 3;
-    public static final int DEFAULT_MAX_EXTENSION = 30;
-
     public final boolean Enabled;
     public final int MinSoftclipLength;
     public final int MinExtension;

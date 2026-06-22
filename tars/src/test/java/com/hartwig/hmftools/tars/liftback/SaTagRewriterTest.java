@@ -21,22 +21,22 @@ public class SaTagRewriterTest
     @Test
     public void testRewriteSaTag()
     {
-        final LiftBackResolver resolver = newResolver();
+        LiftBackResolver resolver = newResolver();
 
         // null or empty input -> null
         assertNull(SaTagRewriter.rewriteSaTag(null, resolver));
         assertNull(SaTagRewriter.rewriteSaTag("", resolver));
 
         // ref-contig entry passes through unchanged
-        final String refEntry = CHR_1 + ",1000,+,50M,60,2;";
+        String refEntry = CHR_1 + ",1000,+,50M,60,2;";
         assertEquals(refEntry, SaTagRewriter.rewriteSaTag(refEntry, resolver));
 
         // tx-contig entry lifted to genomic coordinates
         assertEquals(CHR_1 + ",100,+,50M,60,2;", SaTagRewriter.rewriteSaTag(TX_CONTIG + ",1,+,50M,60,2;", resolver));
 
-        // malformed entries skipped, valid one survives
-        assertEquals(refEntry, SaTagRewriter.rewriteSaTag(
-                "junk;" + CHR_1 + ",notanumber,+,50M,60,0;" + refEntry, resolver));
+        // a malformed entry drops the whole tag (parsing is delegated to hmf-common's SupplementaryReadData,
+        // which rejects the tag rather than skipping bad entries; bwa never emits malformed SA in practice)
+        assertNull(SaTagRewriter.rewriteSaTag("junk;" + refEntry, resolver));
 
         // duplicate lifted entries deduped
         assertEquals(refEntry, SaTagRewriter.rewriteSaTag(refEntry + refEntry, resolver));

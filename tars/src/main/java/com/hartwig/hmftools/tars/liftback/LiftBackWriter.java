@@ -40,7 +40,7 @@ public class LiftBackWriter implements AutoCloseable
     }
 
     // writeHeaders=false produces a data-only shard: each worker writes one, and the driver concatenates the
-    // shards under a single header line (see SpliceLiftBack.concatenateTsvShards).
+    // shards under a single header line (see TarsApplication.concatenateTsvShards).
     public LiftBackWriter(final String tsvAPath, final String tsvBPath, final boolean writeHeaders) throws IOException
     {
         mTsvAWriter = createBufferedWriter(tsvAPath);
@@ -54,17 +54,21 @@ public class LiftBackWriter implements AutoCloseable
 
     public void write(final SAMRecord record, final LiftBackResult result) throws IOException
     {
-        final String readName = record.getReadName();
-        final String mateNum = mateNumColumn(record);
+        String readName = record.getReadName();
+        String mateNum = mateNumColumn(record);
         writeTsvARow(readName, mateNum, result);
         for(final LiftedAlignment la : result.liftedAlignments())
+        {
             writeTsvBRow(readName, mateNum, result.role(), la);
+        }
     }
 
     private static String mateNumColumn(final SAMRecord record)
     {
         if(!record.getReadPairedFlag())
+        {
             return "0";
+        }
         return record.getFirstOfPairFlag() ? "1" : "2";
     }
 

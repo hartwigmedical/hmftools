@@ -3,8 +3,8 @@ package com.hartwig.hmftools.tars.liftback;
 import static com.hartwig.hmftools.common.bamops.BamToolName.fromPath;
 import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.runThreadTasks;
-import static com.hartwig.hmftools.tars.common.SpliceCommon.ALT_CONTIG_SUFFIX;
-import static com.hartwig.hmftools.tars.common.TarsConfig.APP_NAME;
+import static com.hartwig.hmftools.tars.common.TarsConstants.ALT_CONTIG_SUFFIX;
+import static com.hartwig.hmftools.tars.common.TarsConstants.APP_NAME;
 import static com.hartwig.hmftools.tars.common.TarsConfig.TARS_LOGGER;
 
 import java.io.BufferedReader;
@@ -29,7 +29,7 @@ import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
 import com.hartwig.hmftools.tars.common.ContigEntry;
 import com.hartwig.hmftools.tars.common.ContigSidecar;
-import com.hartwig.hmftools.tars.common.SpliceCommon;
+import com.hartwig.hmftools.tars.common.TarsConstants;
 import com.hartwig.hmftools.tars.liftback.rescue.AnnotatedJunctionIndex;
 import com.hartwig.hmftools.tars.liftback.rescue.AnnotatedJunctionLoader;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
@@ -49,7 +49,7 @@ import htsjdk.samtools.SamReaderFactory;
 // and cuts whole-fragment chunks at name boundaries, N LiftBackWorkers lift + emit each chunk to its own
 // BAM + (headerless) TSV shard. No input sort, no index, no fragment cache; only the lifted OUTPUT is
 // sorted + indexed. The per-record transform lives in LiftBackGroupProcessor (one per worker, no shared state).
-public class SpliceLiftBack
+public class TarsApplication
 {
     private final SpliceLiftBackConfig mConfig;
 
@@ -62,39 +62,45 @@ public class SpliceLiftBack
     // upper bound on parallel input-reader shards; a few parse threads outpace the workers, more just block.
     private static final int READER_SHARD_CAP = 8;
 
-    public SpliceLiftBack(final ConfigBuilder configBuilder)
+    public TarsApplication(final ConfigBuilder configBuilder)
     {
         mConfig = new SpliceLiftBackConfig(configBuilder);
     }
 
     public void run()
     {
-        final long startTimeMs = System.currentTimeMillis();
+        long startTimeMs = System.currentTimeMillis();
 
-        final List<ContigEntry> contigEntries = ContigSidecar.read(mConfig.ContigSidecarFile);
+        List<ContigEntry> contigEntries = ContigSidecar.read(mConfig.ContigSidecarFile);
         TARS_LOGGER.info("loaded {} contig entries", contigEntries.size());
 
-        final LiftBackResources resources = buildResources(contigEntries);
-        final SAMFileHeader outputHeader = buildOutputHeader();
+        LiftBackResources resources = buildResources(contigEntries);
+        SAMFileHeader outputHeader = buildOutputHeader();
 
-        final List<String> shardBams = Lists.newArrayList();
-        final List<String> tsvAShards = Lists.newArrayList();
-        final List<String> tsvBShards = Lists.newArrayList();
+        List<String> shardBams = Lists.newArrayList();
+        List<String> tsvAShards = Lists.newArrayList();
+        List<String> tsvBShards = Lists.newArrayList();
 
-        final List<LiftBackWorker> workers = runChunkStream(resources, outputHeader, shardBams, tsvAShards, tsvBShards);
+        List<LiftBackWorker> workers = runChunkStream(resources, outputHeader, shardBams, tsvAShards, tsvBShards);
         if(workers == null)
+        {
             throw new RuntimeException("liftback chunk stream failed");
+        }
 
         mergeWorkerStats(workers);
 
         TARS_LOGGER.info("liftback processing complete, mins({}); concatenating + sorting shards", runTimeMinsStr(startTimeMs));
 
-        final String unsortedBam = mConfig.formUnsortedBam();
+        String unsortedBam = mConfig.formUnsortedBam();
         if(!concatenateShards(shardBams, unsortedBam))
+        {
             throw new RuntimeException("failed to concatenate liftback BAM shards");
+        }
 
         if(!sortAndIndex(unsortedBam, mConfig.formOutputBam()))
+        {
             throw new RuntimeException("failed to sort + index lifted BAM");
+        }
 
         if(mConfig.WriteLiftbackTsv)
         {
@@ -104,7 +110,7 @@ public class SpliceLiftBack
 
         cleanupIntermediates(unsortedBam, shardBams, tsvAShards, tsvBShards);
 
-        TARS_LOGGER.info("SpliceLiftBack complete, mins({})", runTimeMinsStr(startTimeMs));
+        TARS_LOGGER.info("TarsApplication complete, mins({})", runTimeMinsStr(startTimeMs));
     }
 
     // One producer streams bwa's name-grouped BAM, cutting whole-fragment chunks; N workers lift + emit each
@@ -113,36 +119,36 @@ public class SpliceLiftBack
             final LiftBackResources resources, final SAMFileHeader outputHeader,
             final List<String> shardBams, final List<String> tsvAShards, final List<String> tsvBShards)
     {
-        final int workerCount = Math.max(mConfig.Threads, 1);
-        final BlockingQueue<List<SAMRecord>> chunkQueue =
+        int workerCount = Math.max(mConfig.Threads, 1);
+        BlockingQueue<List<SAMRecord>> chunkQueue =
                 new ArrayBlockingQueue<>(Math.max(workerCount * CHUNK_QUEUE_DEPTH_PER_THREAD, 2));
 
         // a single-thread BGZF parse starves the workers, so the input is read by several shard threads that
         // each parse their own byte range (split on read-name-group boundaries). A handful saturates the queue;
         // beyond that the bounded queue just blocks them, so the count is capped well below the worker pool.
-        final int shardCount = Math.max(1, Math.min(workerCount, READER_SHARD_CAP));
-        final ShardedChunkProducer producer = new ShardedChunkProducer(
+        int shardCount = Math.max(1, Math.min(workerCount, READER_SHARD_CAP));
+        ShardedChunkProducer producer = new ShardedChunkProducer(
                 mConfig.InputBam, mConfig.RefGenomeFile, chunkQueue, workerCount, CHUNK_TARGET_READS, shardCount);
 
-        final List<LiftBackWorker> workers = Lists.newArrayList();
-        final List<Thread> threadTasks = Lists.newArrayList();
+        List<LiftBackWorker> workers = Lists.newArrayList();
+        List<Thread> threadTasks = Lists.newArrayList();
         threadTasks.add(producer);
 
         for(int i = 0; i < workerCount; ++i)
         {
-            final String shardBam = formShardBamPath(i);
+            String shardBam = formShardBamPath(i);
             shardBams.add(shardBam);
 
             // null shard paths disable the worker's TSV writer; debug TSVs are opt-in (whole-sample is huge).
-            final String tsvAShard = mConfig.WriteLiftbackTsv ? formTsvShardPath(i, "records") : null;
-            final String tsvBShard = mConfig.WriteLiftbackTsv ? formTsvShardPath(i, "alignments") : null;
+            String tsvAShard = mConfig.WriteLiftbackTsv ? formTsvShardPath(i, "records") : null;
+            String tsvBShard = mConfig.WriteLiftbackTsv ? formTsvShardPath(i, "alignments") : null;
             if(mConfig.WriteLiftbackTsv)
             {
                 tsvAShards.add(tsvAShard);
                 tsvBShards.add(tsvBShard);
             }
 
-            final LiftBackWorker worker = new LiftBackWorker(chunkQueue, resources, outputHeader, shardBam, tsvAShard, tsvBShard);
+            LiftBackWorker worker = new LiftBackWorker(chunkQueue, resources, outputHeader, shardBam, tsvAShard, tsvBShard);
             workers.add(worker);
             threadTasks.add(worker);
         }
@@ -154,17 +160,17 @@ public class SpliceLiftBack
     {
         // exon + junction annotation are derived from the sidecar's exonSpans (all rows, including annotation-only
         // ones for transcripts without a contig), so liftback needs no ensembl cache.
-        final ExonRegionIndex exonIndex = ExonRegionIndex.fromContigEntries(contigEntries);
+        ExonRegionIndex exonIndex = ExonRegionIndex.fromContigEntries(contigEntries);
         TARS_LOGGER.info("built annotated-exon index from sidecar");
 
         // annotation-only rows have no contig to lift against, so the resolver sees only real contig entries.
-        final List<ContigEntry> liftEntries = contigEntries.stream()
+        List<ContigEntry> liftEntries = contigEntries.stream()
                 .filter(entry -> !entry.isAnnotationOnly()).collect(Collectors.toList());
-        final LiftBackResolver resolver = new LiftBackResolver(liftEntries, exonIndex);
+        LiftBackResolver resolver = new LiftBackResolver(liftEntries, exonIndex);
         validateBamAgainstSidecar(resolver.contigNames());
 
-        final Set<ChrBaseRegion> annotated = AnnotatedJunctionLoader.fromContigEntries(contigEntries);
-        final AnnotatedJunctionIndex junctionIndex = new AnnotatedJunctionIndex(annotated);
+        Set<ChrBaseRegion> annotated = AnnotatedJunctionLoader.fromContigEntries(contigEntries);
+        AnnotatedJunctionIndex junctionIndex = new AnnotatedJunctionIndex(annotated);
         TARS_LOGGER.info("built {} annotated junctions from sidecar", annotated.size());
 
         ExcludedRegions excludedRegions = null;
@@ -176,7 +182,7 @@ public class SpliceLiftBack
 
         return new LiftBackResources(
                 resolver, junctionIndex, mConfig.RefGenomeFile,
-                mConfig.Rescue, mConfig.TailExtension, SpliceCommon.MIN_JUNCTION_ANCHOR,
+                mConfig.Rescue, mConfig.TailExtension, TarsConstants.MIN_JUNCTION_ANCHOR,
                 excludedRegions);
     }
 
@@ -184,16 +190,18 @@ public class SpliceLiftBack
     // from the sidecar fell through as ref pass-through and leaked _tx names into mate fields.
     private void validateBamAgainstSidecar(final Set<String> sidecarContigs)
     {
-        final Set<String> missing = new TreeSet<>();
+        Set<String> missing = new TreeSet<>();
         try(SamReader reader = SamReaderFactory.makeDefault()
                 .referenceSequence(new File(mConfig.RefGenomeFile))
                 .open(new File(mConfig.InputBam)))
         {
             for(final SAMSequenceRecord sq : reader.getFileHeader().getSequenceDictionary().getSequences())
             {
-                final String name = sq.getSequenceName();
+                String name = sq.getSequenceName();
                 if(name.endsWith(ALT_CONTIG_SUFFIX) && !sidecarContigs.contains(name))
+                {
                     missing.add(name);
+                }
             }
         }
         catch(IOException e)
@@ -218,18 +226,22 @@ public class SpliceLiftBack
                 .referenceSequence(new File(mConfig.RefGenomeFile))
                 .open(new File(mConfig.InputBam)))
         {
-            final SAMFileHeader header = reader.getFileHeader().clone();
+            SAMFileHeader header = reader.getFileHeader().clone();
             header.setSortOrder(SAMFileHeader.SortOrder.unsorted);
 
-            final SAMSequenceDictionary dict = header.getSequenceDictionary();
-            final List<SAMSequenceRecord> kept = new ArrayList<>();
+            SAMSequenceDictionary dict = header.getSequenceDictionary();
+            List<SAMSequenceRecord> kept = new ArrayList<>();
             int dropped = 0;
             for(final SAMSequenceRecord seq : dict.getSequences())
             {
                 if(seq.getSequenceName().endsWith(ALT_CONTIG_SUFFIX))
+                {
                     ++dropped;
+                }
                 else
+                {
                     kept.add(seq);
+                }
             }
             header.setSequenceDictionary(new SAMSequenceDictionary(kept));
             TARS_LOGGER.info("dropped {} alt contig @SQ entries from output header", dropped);
@@ -243,9 +255,11 @@ public class SpliceLiftBack
 
     private void mergeWorkerStats(final List<LiftBackWorker> workers)
     {
-        final LiftBackStats combined = new LiftBackStats();
+        LiftBackStats combined = new LiftBackStats();
         for(final LiftBackWorker worker : workers)
+        {
             combined.merge(worker.liftBackStats());
+        }
         combined.logSummary();
 
         try
@@ -268,7 +282,9 @@ public class SpliceLiftBack
             collapsedTrailing += worker.collapsedTrailing();
         }
         if(collapsedLeading > 0 || collapsedTrailing > 0)
+        {
             TARS_LOGGER.info("terminal micro-junction collapse: leading={} trailing={}", collapsedLeading, collapsedTrailing);
+        }
 
         long junctionsCanonicalized = 0;
         long overCapUnmapped = 0;
@@ -279,13 +295,19 @@ public class SpliceLiftBack
         }
         TARS_LOGGER.info("junction-canonicalize summary: shifted={}", junctionsCanonicalized);
         if(overCapUnmapped > 0)
+        {
             TARS_LOGGER.info("over-cap unmap: {} primaries unmapped (MAPQ 0 + no XA, maps past the bwa XA cap)", overCapUnmapped);
+        }
 
         long excludedReads = 0;
         for(final LiftBackWorker worker : workers)
+        {
             excludedReads += worker.excludedReads();
+        }
         if(excludedReads > 0)
+        {
             TARS_LOGGER.info("excluded-region reads (primary unmapped / supp dropped, post-lift): {}", excludedReads);
+        }
     }
 
     private static void logRescueStats(final List<LiftBackWorker> workers)
@@ -293,27 +315,33 @@ public class SpliceLiftBack
         int candidates = 0;
         int merged = 0;
         int clamp = 0;
-        final int[] depth = new int[5];
-        final EnumMap<RescueRejectReason, Integer> rejects = new EnumMap<>(RescueRejectReason.class);
+        int[] depth = new int[5];
+        EnumMap<RescueRejectReason, Integer> rejects = new EnumMap<>(RescueRejectReason.class);
         for(final LiftBackWorker worker : workers)
         {
-            final RescueStatistics stats = worker.rescueStatistics();
+            RescueStatistics stats = worker.rescueStatistics();
             if(stats == null)
                 continue;
             candidates += stats.candidatesEvaluated();
             merged += stats.mergedTotal();
             clamp += stats.suppClampApplied();
             for(int d = 1; d <= 4; ++d)
+            {
                 depth[d] += stats.mergedAtChainDepth(d);
+            }
             for(final RescueRejectReason reason : RescueRejectReason.values())
+            {
                 rejects.merge(reason, stats.rejectCount(reason), Integer::sum);
+            }
         }
         TARS_LOGGER.info("rescue-via-supp summary: candidates={} merged={} suppClamped={} (depth1={} depth2={} depth3={} depth4={})",
                 candidates, merged, clamp, depth[1], depth[2], depth[3], depth[4]);
         for(final RescueRejectReason reason : RescueRejectReason.values())
         {
             if(rejects.getOrDefault(reason, 0) > 0)
+            {
                 TARS_LOGGER.debug("rescue-via-supp reject {}: {}", reason, rejects.get(reason));
+            }
         }
     }
 
@@ -325,7 +353,7 @@ public class SpliceLiftBack
         int basesTrail = 0;
         for(final LiftBackWorker worker : workers)
         {
-            final TailExtensionStatistics stats = worker.tailExtStatistics();
+            TailExtensionStatistics stats = worker.tailExtStatistics();
             if(stats == null)
                 continue;
             evaluated += stats.recordsEvaluated();
@@ -339,7 +367,7 @@ public class SpliceLiftBack
 
     private boolean concatenateShards(final List<String> shardBams, final String unsortedBam)
     {
-        final BamToolName toolName = fromPath(mConfig.BamToolPath);
+        BamToolName toolName = fromPath(mConfig.BamToolPath);
         TARS_LOGGER.info("concatenating {} liftback shards via {}", shardBams.size(), toolName);
         // samtools cat is a plain BGZF block concat and rejects -@, so pass threads=1.
         return BamOperations.concatenateBams(toolName, mConfig.BamToolPath, unsortedBam, shardBams, 1);
@@ -353,17 +381,21 @@ public class SpliceLiftBack
             return false;
         }
 
-        final BamToolName toolName = fromPath(mConfig.BamToolPath);
+        BamToolName toolName = fromPath(mConfig.BamToolPath);
         TARS_LOGGER.info("sorting BAM via {}: {}", toolName, sortedBam);
 
         if(!BamOperations.sortBam(toolName, mConfig.BamToolPath, unsortedBam, sortedBam, mConfig.Threads))
+        {
             return false;
+        }
 
         // sambamba sort indexes inline; only samtools needs the explicit index pass.
         if(toolName == BamToolName.SAMTOOLS)
         {
             if(!BamOperations.indexBam(toolName, mConfig.BamToolPath, sortedBam, mConfig.Threads))
+            {
                 return false;
+            }
         }
 
         return true;
@@ -397,12 +429,12 @@ public class SpliceLiftBack
 
     private String formShardBamPath(final int index)
     {
-        return mConfig.OutputDir + mConfig.prefix() + ".shard_" + index + ".bam";
+        return mConfig.filePrefix() + ".shard_" + index + ".bam";
     }
 
     private String formTsvShardPath(final int index, final String kind)
     {
-        return mConfig.OutputDir + mConfig.prefix() + "." + kind + ".shard_" + index + ".tsv";
+        return mConfig.filePrefix() + "." + kind + ".shard_" + index + ".tsv";
     }
 
     private void cleanupIntermediates(
@@ -410,9 +442,9 @@ public class SpliceLiftBack
             final List<String> tsvAShards, final List<String> tsvBShards)
     {
         deleteQuietly(unsortedBam);
-        shardBams.forEach(SpliceLiftBack::deleteQuietly);
-        tsvAShards.forEach(SpliceLiftBack::deleteQuietly);
-        tsvBShards.forEach(SpliceLiftBack::deleteQuietly);
+        shardBams.forEach(TarsApplication::deleteQuietly);
+        tsvAShards.forEach(TarsApplication::deleteQuietly);
+        tsvBShards.forEach(TarsApplication::deleteQuietly);
     }
 
     private static void deleteQuietly(final String path)
@@ -429,10 +461,10 @@ public class SpliceLiftBack
 
     public static void main(final String[] args)
     {
-        final ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
         SpliceLiftBackConfig.addConfig(configBuilder);
         configBuilder.checkAndParseCommandLine(args);
 
-        new SpliceLiftBack(configBuilder).run();
+        new TarsApplication(configBuilder).run();
     }
 }

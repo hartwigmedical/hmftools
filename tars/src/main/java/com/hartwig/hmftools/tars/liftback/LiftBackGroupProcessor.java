@@ -3,8 +3,11 @@ package com.hartwig.hmftools.tars.liftback;
 import static com.hartwig.hmftools.tars.liftback.LiftBackRecordOps.markPrimaryUnmapped;
 import static com.hartwig.hmftools.tars.liftback.LiftBackRecordOps.refreshNmDropMd;
 import static com.hartwig.hmftools.tars.liftback.MateFieldPatcher.patchMateFields;
-import static com.hartwig.hmftools.tars.liftback.SaTagRewriter.SA_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.tars.liftback.SaTagRewriter.rewriteSaTag;
+import static com.hartwig.hmftools.tars.common.TarsConstants.PRIMARY_AS_UNMAP_THRESHOLD;
+import static com.hartwig.hmftools.tars.common.TarsConstants.SUPP_AS_DROP_THRESHOLD;
+import static com.hartwig.hmftools.tars.common.TarsConstants.SUPP_RESCUE_MAPQ_CAP;
 import static com.hartwig.hmftools.tars.common.TarsConfig.TARS_LOGGER;
 
 import java.util.ArrayList;
@@ -30,9 +33,9 @@ import htsjdk.samtools.TextCigarCodec;
 // Stateless-per-group transform engine: resolves one contiguous read-name group to genomic coordinates,
 // runs the optional rescue / terminal-collapse / tail-extend passes, patches mate fields against a
 // provided LiftedMateInfoCache, and emits each kept record to an EmitSink. The cache is supplied by the
-// caller so the standalone SpliceLiftBack can pass its whole-sample pass-1 cache while the REDUX worker
+// caller so the standalone TarsApplication can pass its whole-sample pass-1 cache while the REDUX worker
 // passes a fresh per-group cache (a complete name-sorted group is self-sufficient -- see
-// [[project_redux_migration_scoping]]). Extracted verbatim from SpliceLiftBack so both paths share one
+// [[project_redux_migration_scoping]]). Extracted verbatim from TarsApplication so both paths share one
 // implementation.
 public class LiftBackGroupProcessor
 {
@@ -67,22 +70,6 @@ public class LiftBackGroupProcessor
 
     private static final String AS_TAG = "AS";
 
-    // bwa-mem2's default -T (minimum alignment score) is 30. The RNA splice run uses -T 19 deliberately
-    // to surface short-anchor supplementary records that JunctionRescueResolver can merge across annotated
-    // junctions. Supps in the [19, 30) AS band that survive the rescue pass are residual noise -- drop
-    // them from the output BAM after rescue + tail-extend have had their chance.
-    static final int SUPP_AS_DROP_THRESHOLD = 30;
-
-    // Same bwa -T 19 rationale for primaries: a primary whose AS is still below the default floor of 30
-    // AFTER liftback (and which rescue/tail-extend/collapse did not improve) is a residual short-anchor
-    // alignment. AS is never recomputed in liftback, so post-processed primaries keep a stale-low AS and
-    // must be exempt. Such primaries are unmapped (not dropped) to keep the pair + SA references intact.
-    static final int PRIMARY_AS_UNMAP_THRESHOLD = 30;
-
-    // BWA emits MAPQ=60 for a clean unique alignment. Rescued primaries are constructed by us, not
-    // directly emitted by BWA, so we cap at 55 to signal a primary+supp merge. Capping never goes UP.
-    private static final int SUPP_RESCUE_MAPQ_CAP = 55;
-
     // sink for emitted records: the standalone writes a BAM + TSV, the REDUX worker writes the shared BAM.
     public interface EmitSink
     {
@@ -110,27 +97,33 @@ public class LiftBackGroupProcessor
     public void processNameGroup(
             final List<SAMRecord> group, final LiftedMateInfoCache liftedMateInfoCache, final EmitSink sink)
     {
-        final List<SAMRecord> firstOfPair = new ArrayList<>();
-        final List<SAMRecord> secondOfPair = new ArrayList<>();
+        List<SAMRecord> firstOfPair = new ArrayList<>();
+        List<SAMRecord> secondOfPair = new ArrayList<>();
         for(final SAMRecord record : group)
         {
             if(!record.getReadPairedFlag() || record.getFirstOfPairFlag())
+            {
                 firstOfPair.add(record);
+            }
             else
+            {
                 secondOfPair.add(record);
+            }
         }
 
         // Two passes per pair so mate /2 can use mate /1's rescued junctions as a hint, and a
         // re-decide of mate /1 picks up mate /2's hints when mate /1 wasn't initially rescued.
-        final MateDecision m1 = decideMateGroup(firstOfPair, Collections.emptyList());
+        MateDecision m1 = decideMateGroup(firstOfPair, Collections.emptyList());
         refreshMateInfoCache(firstOfPair, m1, liftedMateInfoCache);
-        final MateDecision m2 = decideMateGroup(secondOfPair, m1.IntroducedIntrons);
+        MateDecision m2 = decideMateGroup(secondOfPair, m1.IntroducedIntrons);
         refreshMateInfoCache(secondOfPair, m2, liftedMateInfoCache);
-        final MateDecision m1Final = (m1.IntroducedIntrons.isEmpty() && !m2.IntroducedIntrons.isEmpty())
+        MateDecision m1Final = (m1.IntroducedIntrons.isEmpty() && !m2.IntroducedIntrons.isEmpty())
                 ? decideMateGroup(firstOfPair, m2.IntroducedIntrons)
                 : m1;
         if(m1Final != m1)
+        {
             refreshMateInfoCache(firstOfPair, m1Final, liftedMateInfoCache);
+        }
 
         writeMateGroup(firstOfPair, m1Final, liftedMateInfoCache, sink);
         writeMateGroup(secondOfPair, m2, liftedMateInfoCache, sink);
@@ -142,7 +135,9 @@ public class LiftBackGroupProcessor
             final List<SAMRecord> mateRecords, final MateDecision decision, final LiftedMateInfoCache cache)
     {
         if(mateRecords.isEmpty() || decision.PrimaryResult == null)
+        {
             return;
+        }
         SAMRecord primary = null;
         for(final SAMRecord r : mateRecords)
         {
@@ -153,8 +148,10 @@ public class LiftBackGroupProcessor
             }
         }
         if(primary == null)
+        {
             return;
-        final LiftedMateInfo refreshed = LiftBackRecordOps.toLiftedMateInfo(primary, decision.PrimaryResult);
+        }
+        LiftedMateInfo refreshed = LiftBackRecordOps.toLiftedMateInfo(primary, decision.PrimaryResult);
         cache.recordPrimaryAlignment(primary.getReadName(), primary.getFirstOfPairFlag(), refreshed);
     }
 
@@ -162,12 +159,12 @@ public class LiftBackGroupProcessor
     // per-record drop flags + introns introduced by rescue (for mate hinting). Does not emit.
     private static final class MateDecision
     {
-        final LiftBackResult[] Resolved;
-        final boolean[] DroppedByRescue;
-        final LiftBackResult PrimaryResult;
-        final List<ChrBaseRegion> IntroducedIntrons;
-        final int PrimaryIndex;
-        final boolean PrimaryPostProcessed;
+        LiftBackResult[] Resolved;
+        boolean[] DroppedByRescue;
+        LiftBackResult PrimaryResult;
+        List<ChrBaseRegion> IntroducedIntrons;
+        int PrimaryIndex;
+        boolean PrimaryPostProcessed;
 
         MateDecision(final LiftBackResult[] resolved, final boolean[] droppedByRescue,
                 final LiftBackResult primaryResult, final List<ChrBaseRegion> introducedIntrons,
@@ -190,7 +187,9 @@ public class LiftBackGroupProcessor
     private MateDecision decideMateGroup(final List<SAMRecord> records, final List<ChrBaseRegion> mateHintIntrons)
     {
         if(records.isEmpty())
+        {
             return MateDecision.empty();
+        }
 
         SAMRecord primary = null;
         for(final SAMRecord record : records)
@@ -198,22 +197,25 @@ public class LiftBackGroupProcessor
             if(record.getSupplementaryAlignmentFlag())
                 continue;
             if(primary == null)
+            {
                 primary = record;
+            }
         }
 
-        final LiftBackResult primaryResult = primary != null ? mResolver.resolve(primary) : null;
+        // a valid BAM always has a primary in the mate group, so resolve it directly.
+        LiftBackResult primaryResult = mResolver.resolve(primary);
 
-        final LiftBackResult[] resolved = new LiftBackResult[records.size()];
+        LiftBackResult[] resolved = new LiftBackResult[records.size()];
         for(int i = 0; i < records.size(); i++)
         {
-            final SAMRecord record = records.get(i);
+            SAMRecord record = records.get(i);
             resolved[i] = (record == primary && primaryResult != null) ? primaryResult : mResolver.resolve(record);
         }
 
-        final int primaryIdx = primary != null ? indexOfPrimary(records, primary) : -1;
+        int primaryIdx = primary != null ? indexOfPrimary(records, primary) : -1;
 
-        final List<ChrBaseRegion> introduced = new ArrayList<>();
-        final boolean[] droppedByRescue = applyJunctionRescue(records, resolved, primary, mateHintIntrons, introduced);
+        List<ChrBaseRegion> introduced = new ArrayList<>();
+        boolean[] droppedByRescue = applyJunctionRescue(records, resolved, primary, mateHintIntrons, introduced);
 
         // Collapse a spurious tx-contig terminal micro-junction before tail extension, so the extender
         // sees the corrected (contiguous) cigar rather than the fabricated junction.
@@ -238,7 +240,7 @@ public class LiftBackGroupProcessor
         // rescue / collapse / tail-extend each replace resolved[primaryIdx] with a new result object when
         // they improve the primary. A changed reference means liftback post-processed it, so its stale bwa
         // AS must not be used to AS-filter it (see PRIMARY_AS_UNMAP_THRESHOLD).
-        final boolean primaryPostProcessed = primaryIdx >= 0 && resolved[primaryIdx] != primaryResult;
+        boolean primaryPostProcessed = primaryIdx >= 0 && resolved[primaryIdx] != primaryResult;
 
         return new MateDecision(resolved, droppedByRescue,
                 primaryIdx >= 0 ? resolved[primaryIdx] : primaryResult,
@@ -249,7 +251,9 @@ public class LiftBackGroupProcessor
     {
         for(int i = 0; i < records.size(); ++i)
             if(records.get(i) == primary)
+            {
                 return i;
+            }
         return -1;
     }
 
@@ -258,10 +262,12 @@ public class LiftBackGroupProcessor
             final LiftedMateInfoCache liftedMateInfoCache, final EmitSink sink)
     {
         if(records.isEmpty())
+        {
             return;
+        }
 
-        final LiftBackResult[] resolved = decision.Resolved;
-        final boolean[] droppedByRescue = decision.DroppedByRescue;
+        LiftBackResult[] resolved = decision.Resolved;
+        boolean[] droppedByRescue = decision.DroppedByRescue;
         SAMRecord primary = null;
         for(SAMRecord r : records)
             if(!r.getSupplementaryAlignmentFlag())
@@ -272,18 +278,20 @@ public class LiftBackGroupProcessor
 
         // Dedup supplementaries that lift to the same (chrom, pos, cigar, strand) -- bwa can emit the
         // same junction across multiple transcript contigs and they collapse after liftback.
-        final Set<String> emittedSuppKeys = new HashSet<>();
-        final boolean[] willEmit = new boolean[records.size()];
+        Set<String> emittedSuppKeys = new HashSet<>();
+        boolean[] willEmit = new boolean[records.size()];
         for(int i = 0; i < records.size(); i++)
         {
-            final SAMRecord record = records.get(i);
-            final LiftBackResult result = resolved[i];
+            SAMRecord record = records.get(i);
+            LiftBackResult result = resolved[i];
             boolean drop = droppedByRescue != null && droppedByRescue[i];
             if(!drop && record != primary && record.getSupplementaryAlignmentFlag())
             {
-                final String key = dedupKey(result, record);
+                String key = dedupKey(result, record);
                 if(!emittedSuppKeys.add(key))
+                {
                     drop = true;
+                }
             }
             // Drop supps the rescue pass left behind that exist only because bwa-mem2 was run with -T 19
             // below its default of 30 (see SUPP_AS_DROP_THRESHOLD). Only applies when rescue ran, because
@@ -291,7 +299,7 @@ public class LiftBackGroupProcessor
             if(!drop && mJunctionRescueResolver != null && record.getSupplementaryAlignmentFlag()
                     && !record.getReadUnmappedFlag())
             {
-                final Integer alignmentScore = record.getIntegerAttribute(AS_TAG);
+                Integer alignmentScore = record.getIntegerAttribute(AS_TAG);
                 if(alignmentScore != null && alignmentScore < SUPP_AS_DROP_THRESHOLD)
                 {
                     drop = true;
@@ -309,13 +317,13 @@ public class LiftBackGroupProcessor
         }
 
         // SA entries of dropped supps removed from the primary's SA so it never references a missing supp.
-        final Set<String> droppedSuppSaKeys = new HashSet<>();
+        Set<String> droppedSuppSaKeys = new HashSet<>();
         for(int i = 0; i < records.size(); i++)
         {
             if(willEmit[i])
                 continue;
-            final SAMRecord record = records.get(i);
-            final LiftBackResult result = resolved[i];
+            SAMRecord record = records.get(i);
+            LiftBackResult result = resolved[i];
             if(record == primary || !record.getSupplementaryAlignmentFlag() || result == null
                     || result.finalChrom() == null || result.finalCigar() == null
                     || result.finalCigar().equals(SAMRecord.NO_ALIGNMENT_CIGAR))
@@ -327,18 +335,18 @@ public class LiftBackGroupProcessor
         // chrom:pos-keyed locus count. Counting emitted records would inflate NH by tx-contig
         // representation multiplicity (one junction repeated across many transcript contigs all lifting
         // to the same locus).
-        final int nh = decision.PrimaryResult != null ? Math.max(decision.PrimaryResult.numLoci(), 1) : 1;
+        int nh = decision.PrimaryResult != null ? Math.max(decision.PrimaryResult.numLoci(), 1) : 1;
 
         for(int i = 0; i < records.size(); i++)
         {
-            final SAMRecord record = records.get(i);
-            final LiftBackResult result = resolved[i];
+            SAMRecord record = records.get(i);
+            LiftBackResult result = resolved[i];
             if(!willEmit[i])
             {
                 mStats.record(record, result);
                 continue;
             }
-            final boolean primaryPostProcessed = i == decision.PrimaryIndex && decision.PrimaryPostProcessed;
+            boolean primaryPostProcessed = i == decision.PrimaryIndex && decision.PrimaryPostProcessed;
             applyAndWriteRecord(record, result, nh, primaryPostProcessed, droppedSuppSaKeys, liftedMateInfoCache, sink);
         }
     }
@@ -352,32 +360,40 @@ public class LiftBackGroupProcessor
             final List<ChrBaseRegion> mateHintIntrons, final List<ChrBaseRegion> introducedIntronsOut)
     {
         if(mJunctionRescueResolver == null || primary == null || primary.getReadUnmappedFlag())
+        {
             return null;
+        }
 
         int primaryIdx = -1;
-        final List<Integer> suppIndices = new ArrayList<>();
+        List<Integer> suppIndices = new ArrayList<>();
         for(int i = 0; i < records.size(); i++)
         {
-            final SAMRecord r = records.get(i);
+            SAMRecord r = records.get(i);
             if(r == primary)
+            {
                 primaryIdx = i;
+            }
             else if(r.getSupplementaryAlignmentFlag() && !r.getReadUnmappedFlag())
+            {
                 suppIndices.add(i);
+            }
         }
         if(primaryIdx < 0)
+        {
             return null;
+        }
 
-        final LiftBackResult primaryRes = resolved[primaryIdx];
+        LiftBackResult primaryRes = resolved[primaryIdx];
         if(primaryRes == null || primaryRes.finalCigar() == null
                 || primaryRes.finalCigar().equals(SAMRecord.NO_ALIGNMENT_CIGAR))
             return null;
 
-        final List<RescueSupplementary> suppDtos = new ArrayList<>(suppIndices.size());
+        List<RescueSupplementary> suppDtos = new ArrayList<>(suppIndices.size());
         for(int i = 0; i < suppIndices.size(); i++)
         {
-            final int idx = suppIndices.get(i);
-            final SAMRecord supp = records.get(idx);
-            final LiftBackResult suppRes = resolved[idx];
+            int idx = suppIndices.get(i);
+            SAMRecord supp = records.get(idx);
+            LiftBackResult suppRes = resolved[idx];
             if(suppRes == null || suppRes.finalCigar() == null
                     || suppRes.finalCigar().equals(SAMRecord.NO_ALIGNMENT_CIGAR))
                 continue;
@@ -386,14 +402,16 @@ public class LiftBackGroupProcessor
                     suppRes.finalPos(), suppRes.finalCigar(), supp.getMappingQuality()));
         }
 
-        final RescueCandidate candidate = new RescueCandidate(
+        RescueCandidate candidate = new RescueCandidate(
                 primaryRes.finalChrom(), !primary.getReadNegativeStrandFlag(), primary.getReadLength(),
                 primaryRes.finalPos(), primaryRes.finalCigar(), primary.getMappingQuality(), suppDtos,
                 primary.getReadBases(), mateHintIntrons);
 
-        final RescueResult result = mJunctionRescueResolver.resolve(candidate);
+        RescueResult result = mJunctionRescueResolver.resolve(candidate);
         if(!result.merged())
+        {
             return null;
+        }
 
         // rewrite the primary's LiftBackResult with the merged (now-spliced) cigar + start; the start may
         // shift for a left-extend, and MAPQ caps at SUPP_RESCUE_MAPQ_CAP to mark it a constructed alignment.
@@ -406,11 +424,15 @@ public class LiftBackGroupProcessor
                 primaryRes.finalCigar(), result.mergedCigar(), result.chainDepth());
 
         if(introducedIntronsOut != null)
+        {
             introducedIntronsOut.addAll(result.introducedIntrons());
+        }
 
-        final boolean[] dropped = new boolean[records.size()];
+        boolean[] dropped = new boolean[records.size()];
         for(Integer dtoIdx : result.droppedSupplementaryIndices())
+        {
             dropped[suppIndices.get(dtoIdx)] = true;
+        }
         return dropped;
     }
 
@@ -421,24 +443,32 @@ public class LiftBackGroupProcessor
             final boolean[] droppedByRescue)
     {
         if(mTerminalJunctionCollapser == null || primary == null || primary.getReadUnmappedFlag())
+        {
             return;
+        }
 
-        final int primaryIdx = indexOfPrimary(records, primary);
+        int primaryIdx = indexOfPrimary(records, primary);
         if(primaryIdx < 0 || (droppedByRescue != null && droppedByRescue[primaryIdx]))
+        {
             return;
+        }
 
-        final LiftBackResult primaryRes = resolved[primaryIdx];
+        LiftBackResult primaryRes = resolved[primaryIdx];
         if(primaryRes == null || primaryRes.finalCigar() == null
                 || primaryRes.finalCigar().equals(SAMRecord.NO_ALIGNMENT_CIGAR))
             return;
         if(!primaryRes.hasNCigar())
+        {
             return;
+        }
 
-        final TerminalCollapseResult collapse = mTerminalJunctionCollapser.tryCollapse(
+        TerminalCollapseResult collapse = mTerminalJunctionCollapser.tryCollapse(
                 primaryRes.finalChrom(), primaryRes.finalPos(), primaryRes.finalCigar(), primary.getReadBases());
 
         if(!collapse.collapsed())
+        {
             return;
+        }
 
         resolved[primaryIdx] = primaryRes.withRevisedCigar(
                 collapse.newStart(), collapse.newCigar(), collapse.newCigar().indexOf('N') >= 0,
@@ -451,26 +481,34 @@ public class LiftBackGroupProcessor
             final boolean[] droppedByRescue)
     {
         if(mSoftclipTailExtender == null || primary == null || primary.getReadUnmappedFlag())
+        {
             return;
+        }
 
-        final int primaryIdx = indexOfPrimary(records, primary);
+        int primaryIdx = indexOfPrimary(records, primary);
         if(primaryIdx < 0)
+        {
             return;
+        }
 
         if(droppedByRescue != null && droppedByRescue[primaryIdx])
+        {
             return;
+        }
 
-        final LiftBackResult primaryRes = resolved[primaryIdx];
+        LiftBackResult primaryRes = resolved[primaryIdx];
         if(primaryRes == null || primaryRes.finalCigar() == null
                 || primaryRes.finalCigar().equals(SAMRecord.NO_ALIGNMENT_CIGAR))
             return;
 
-        final TailExtensionResult extension = mSoftclipTailExtender.tryExtend(
+        TailExtensionResult extension = mSoftclipTailExtender.tryExtend(
                 primaryRes.finalChrom(), primaryRes.finalPos(), primaryRes.finalCigar(),
                 primary.getReadBases());
 
         if(!extension.extended())
+        {
             return;
+        }
 
         resolved[primaryIdx] = primaryRes.withRevisedCigar(
                 extension.newStart(), extension.newCigar(), primaryRes.hasNCigar(),
@@ -483,24 +521,32 @@ public class LiftBackGroupProcessor
             final boolean[] droppedByRescue)
     {
         if(mJunctionCanonicalizer == null || primary == null || primary.getReadUnmappedFlag())
+        {
             return;
+        }
 
-        final int primaryIdx = indexOfPrimary(records, primary);
+        int primaryIdx = indexOfPrimary(records, primary);
         if(primaryIdx < 0 || (droppedByRescue != null && droppedByRescue[primaryIdx]))
+        {
             return;
+        }
 
-        final LiftBackResult primaryRes = resolved[primaryIdx];
+        LiftBackResult primaryRes = resolved[primaryIdx];
         if(primaryRes == null || primaryRes.finalCigar() == null
                 || primaryRes.finalCigar().equals(SAMRecord.NO_ALIGNMENT_CIGAR))
             return;
         if(!primaryRes.hasNCigar())
+        {
             return;
+        }
 
-        final JunctionCanonicalizationResult canon = mJunctionCanonicalizer.tryCanonicalize(
+        JunctionCanonicalizationResult canon = mJunctionCanonicalizer.tryCanonicalize(
                 primaryRes.finalChrom(), primaryRes.finalPos(), primaryRes.finalCigar(), primary.getReadBases());
 
         if(!canon.changed())
+        {
             return;
+        }
 
         resolved[primaryIdx] = primaryRes.withRevisedCigar(
                 primaryRes.finalPos(), canon.newCigar(), primaryRes.hasNCigar(),
@@ -520,11 +566,15 @@ public class LiftBackGroupProcessor
     private boolean liftsIntoExcludedRegion(final LiftBackResult result)
     {
         if(mExcludedRegions == null || result == null)
+        {
             return false;
-        final String cigar = result.finalCigar();
+        }
+        String cigar = result.finalCigar();
         if(result.finalChrom() == null || cigar == null || cigar.equals(SAMRecord.NO_ALIGNMENT_CIGAR))
+        {
             return false;
-        final int end = result.finalPos() + TextCigarCodec.decode(cigar).getReferenceLength() - 1;
+        }
+        int end = result.finalPos() + TextCigarCodec.decode(cigar).getReferenceLength() - 1;
         return mExcludedRegions.excludes(result.finalChrom(), result.finalPos(), end);
     }
 
@@ -547,9 +597,11 @@ public class LiftBackGroupProcessor
         // A primary flipped to UNMAPPED post-lift (e.g. excluded region) still carries its mapped coords -
         // applyResultToRecord's UNMAPPED case is a no-op for input-unmapped reads, so unmap it explicitly.
         if(result.category() == LiftBackCategory.UNMAPPED && !record.getReadUnmappedFlag())
+        {
             markPrimaryUnmapped(record);
+        }
 
-        final String rewrittenSa = rewriteSaTag(record.getStringAttribute(SA_ATTRIBUTE), mResolver, droppedSuppSaKeys);
+        String rewrittenSa = rewriteSaTag(record.getStringAttribute(SUPPLEMENTARY_ATTRIBUTE), mResolver, droppedSuppSaKeys);
 
         // A record that stays supplementary must carry an SA tag -- REDUX dedup (FragmentCoords.fromRead)
         // reads the primary's coords from it. If every SA entry failed to lift the supplementary is orphaned
@@ -560,11 +612,13 @@ public class LiftBackGroupProcessor
             return;
         }
 
-        record.setAttribute(SA_ATTRIBUTE, rewrittenSa);
+        record.setAttribute(SUPPLEMENTARY_ATTRIBUTE, rewrittenSa);
         patchMateFields(record, liftedMateInfoCache);
 
         if(result.category() != LiftBackCategory.UNMAPPED)
+        {
             record.setAttribute("NH", nh);
+        }
 
         // Over bwa's XA reporting cap: a primary that bwa emitted MAPQ 0 with no XA maps to too many loci to
         // place (the alt list was suppressed, not truncated). Unmap it. Keyed on the input state because the
@@ -585,7 +639,7 @@ public class LiftBackGroupProcessor
                 && !record.getReadUnmappedFlag()
                 && !record.getSupplementaryAlignmentFlag())
         {
-            final Integer alignmentScore = record.getIntegerAttribute(AS_TAG);
+            Integer alignmentScore = record.getIntegerAttribute(AS_TAG);
             if(alignmentScore != null && alignmentScore < PRIMARY_AS_UNMAP_THRESHOLD)
             {
                 markPrimaryUnmapped(record);

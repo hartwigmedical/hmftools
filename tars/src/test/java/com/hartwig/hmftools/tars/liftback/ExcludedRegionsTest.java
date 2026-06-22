@@ -19,7 +19,7 @@ public class ExcludedRegionsTest
 
     private static ExcludedRegions regions(final int start, final int end)
     {
-        final Map<String, List<ChrBaseRegion>> map = new HashMap<>();
+        Map<String, List<ChrBaseRegion>> map = new HashMap<>();
         map.put(CHR, new ArrayList<>(List.of(new ChrBaseRegion(CHR, start, end))));
         return new ExcludedRegions(map);
     }

@@ -37,7 +37,7 @@ public class LiftBackWriterTest
     @Test
     public void testHeadersAndRowsForRefOnlyResult() throws IOException
     {
-        final LiftBackResult result = TarsTestFixtures.resultBuilder()
+        LiftBackResult result = TarsTestFixtures.resultBuilder()
                 .alignments(List.of(TarsTestFixtures.selfAlignment("1", 1000, "50M")))
                 .build();
 
@@ -46,8 +46,8 @@ public class LiftBackWriterTest
             writer.write(TarsTestFixtures.primaryRecord("read1", "1", 1000, "50M"), result);
         }
 
-        final List<String> aLines = Files.readAllLines(mTsvA);
-        final List<String> bLines = Files.readAllLines(mTsvB);
+        List<String> aLines = Files.readAllLines(mTsvA);
+        List<String> bLines = Files.readAllLines(mTsvB);
 
         assertEquals(2, aLines.size());
         assertEquals(LiftBackWriter.TSV_A_HEADER_LINE, aLines.get(0));
@@ -61,21 +61,21 @@ public class LiftBackWriterTest
     @Test
     public void testTsvBHasOneRowPerLiftedAlignment() throws IOException
     {
-        final LiftedAlignment self = new LiftedAlignment(
+        LiftedAlignment self = new LiftedAlignment(
                 LiftedAlignment.AlignmentSource.SELF, "txContig", 1, "50M",
                 "1", 100, "50M",
                 100, 0,
                 "ENST_X", "ENSG_X", "GENEX",
                 false, true);
 
-        final LiftedAlignment xa = new LiftedAlignment(
+        LiftedAlignment xa = new LiftedAlignment(
                 LiftedAlignment.AlignmentSource.XA_INPUT, "1", 5000, "50M",
                 "1", 5000, "50M",
                 0, 1,
                 null, null, null,
                 false, true);
 
-        final LiftBackResult result = TarsTestFixtures.resultBuilder()
+        LiftBackResult result = TarsTestFixtures.resultBuilder()
                 .category(LiftBackCategory.BOTH_MULTI)
                 .comp(LiftBackResult.Composition.REF_AND_TX)
                 .pos(100)
@@ -86,14 +86,14 @@ public class LiftBackWriterTest
                 .alignments(List.of(self, xa))
                 .build();
 
-        final SAMRecord mate = TarsTestFixtures.secondMateRecord("1", 100, "50M");
+        SAMRecord mate = TarsTestFixtures.secondMateRecord("1", 100, "50M");
         mate.setReadName("read2");
         try(LiftBackWriter writer = new LiftBackWriter(mTsvA.toString(), mTsvB.toString()))
         {
             writer.write(mate, result);
         }
 
-        final List<String> bLines = Files.readAllLines(mTsvB);
+        List<String> bLines = Files.readAllLines(mTsvB);
         assertEquals(3, bLines.size()); // header + 2 alignment rows
         assertTrue(bLines.get(1).startsWith("read2\t2\tPRIMARY\tSELF\t"));
         assertTrue(bLines.get(2).startsWith("read2\t2\tPRIMARY\tXA_INPUT\t"));
@@ -114,8 +114,8 @@ public class LiftBackWriterTest
             writer.write(TarsTestFixtures.primaryRecord("read1", "1", 1000, "50M"), refOnlyResult());
         }
 
-        final List<String> aLines = Files.readAllLines(mTsvA);
-        final List<String> bLines = Files.readAllLines(mTsvB);
+        List<String> aLines = Files.readAllLines(mTsvA);
+        List<String> bLines = Files.readAllLines(mTsvB);
 
         assertEquals(1, aLines.size());
         assertTrue(aLines.get(0).startsWith("read1\t1\tPRIMARY\t"));
@@ -138,18 +138,18 @@ public class LiftBackWriterTest
     @Test
     public void concatJoinsShardsUnderSingleHeader() throws IOException
     {
-        final Path shard0 = Files.createTempFile("shard0_", ".tsv");
-        final Path shard1 = Files.createTempFile("shard1_", ".tsv");
-        final Path out = Files.createTempFile("concat_", ".tsv");
+        Path shard0 = Files.createTempFile("shard0_", ".tsv");
+        Path shard1 = Files.createTempFile("shard1_", ".tsv");
+        Path out = Files.createTempFile("concat_", ".tsv");
         try
         {
             Files.write(shard0, List.of("rowA", "rowB"));
             Files.write(shard1, List.of("rowC"));
 
-            SpliceLiftBack.concatenateTsvShards(
+            TarsApplication.concatenateTsvShards(
                     List.of(shard0.toString(), shard1.toString()), LiftBackWriter.TSV_A_HEADER_LINE, out.toString());
 
-            final List<String> lines = Files.readAllLines(out);
+            List<String> lines = Files.readAllLines(out);
             assertEquals(List.of(LiftBackWriter.TSV_A_HEADER_LINE, "rowA", "rowB", "rowC"), lines);
         }
         finally
@@ -164,7 +164,7 @@ public class LiftBackWriterTest
     public void testEmptyAlignmentSetStillEmitsTsvARow() throws IOException
     {
         // UNMAPPED: TSV-A row written, TSV-B has header only
-        final LiftBackResult result = TarsTestFixtures.resultBuilder()
+        LiftBackResult result = TarsTestFixtures.resultBuilder()
                 .category(LiftBackCategory.UNMAPPED)
                 .comp(LiftBackResult.Composition.NONE)
                 .chrom("*").pos(0).cigar("*")
@@ -179,8 +179,8 @@ public class LiftBackWriterTest
             writer.write(TarsTestFixtures.unpairedRecord("read3"), result);
         }
 
-        final List<String> aLines = Files.readAllLines(mTsvA);
-        final List<String> bLines = Files.readAllLines(mTsvB);
+        List<String> aLines = Files.readAllLines(mTsvA);
+        List<String> bLines = Files.readAllLines(mTsvB);
 
         assertEquals(2, aLines.size());
         assertTrue(aLines.get(1).startsWith("read3\t0\tPRIMARY\tNON_PRIMARY\tNONE\tUNMAPPED\t"));

@@ -26,7 +26,7 @@ public class SpliceLiftBackApplyTest
     // which these apply-to-record tests must not carry.
     private static SAMRecord newRecord(final String contig, final int pos, final String cigar)
     {
-        final SAMRecord record = new SAMRecord(new SAMFileHeader());
+        SAMRecord record = new SAMRecord(new SAMFileHeader());
         record.setReadName("read");
         record.setReferenceName(contig);
         record.setAlignmentStart(pos);
@@ -38,8 +38,8 @@ public class SpliceLiftBackApplyTest
     @Test
     public void testTxPrimaryRewrittenToGenomicCoords()
     {
-        final SAMRecord record = newRecord(TX_CONTIG, 51, "100M");
-        final LiftBackResolver resolver = new LiftBackResolver(List.of(threeExonContig()));
+        SAMRecord record = newRecord(TX_CONTIG, 51, "100M");
+        LiftBackResolver resolver = new LiftBackResolver(List.of(threeExonContig()));
 
         LiftBackRecordOps.applyResultToRecord(record, resolver.resolve(record), new LiftedMateInfoCache());
 
@@ -51,8 +51,8 @@ public class SpliceLiftBackApplyTest
     public void testUnliftableRecordMarkedUnmappedAndStripped()
     {
         // pos 251 is entirely past altEnd (250) - no overhang clamp can save it -> translate fails
-        final SAMRecord record = newRecord(TX_CONTIG, 251, "10M");
-        final LiftBackResolver resolver = new LiftBackResolver(List.of(threeExonContig()));
+        SAMRecord record = newRecord(TX_CONTIG, 251, "10M");
+        LiftBackResolver resolver = new LiftBackResolver(List.of(threeExonContig()));
 
         LiftBackRecordOps.applyResultToRecord(record, resolver.resolve(record), new LiftedMateInfoCache());
 
@@ -67,9 +67,9 @@ public class SpliceLiftBackApplyTest
     @Test
     public void testXaTagRewrittenWithLiftedCoords()
     {
-        final SAMRecord record = newRecord(CHR_1, 1000, "50M");
+        SAMRecord record = newRecord(CHR_1, 1000, "50M");
         record.setAttribute(XA_TAG, TX_CONTIG + ",+1,50M,0;");
-        final LiftBackResolver resolver = new LiftBackResolver(List.of(threeExonContig()));
+        LiftBackResolver resolver = new LiftBackResolver(List.of(threeExonContig()));
 
         LiftBackRecordOps.applyResultToRecord(record, resolver.resolve(record), new LiftedMateInfoCache());
 
@@ -81,10 +81,10 @@ public class SpliceLiftBackApplyTest
     @Test
     public void testUnmappedRecordLeftUntouched()
     {
-        final SAMRecord record = new SAMRecord(new SAMFileHeader());
+        SAMRecord record = new SAMRecord(new SAMFileHeader());
         record.setReadName("read");
         record.setReadUnmappedFlag(true);
-        final LiftBackResolver resolver = new LiftBackResolver(List.of(threeExonContig()));
+        LiftBackResolver resolver = new LiftBackResolver(List.of(threeExonContig()));
 
         LiftBackRecordOps.applyResultToRecord(record, resolver.resolve(record), new LiftedMateInfoCache());
 
@@ -95,7 +95,7 @@ public class SpliceLiftBackApplyTest
     @Test
     public void testWillBeUnmapped()
     {
-        final LiftBackResolver resolver = new LiftBackResolver(List.of(threeExonContig()));
+        LiftBackResolver resolver = new LiftBackResolver(List.of(threeExonContig()));
 
         // an unliftable read is always unmapped
         assertTrue(LiftBackRecordOps.willBeUnmapped(resolver.resolve(unmappedRecord())));
@@ -104,18 +104,18 @@ public class SpliceLiftBackApplyTest
         assertFalse(LiftBackRecordOps.willBeUnmapped(resolver.resolve(newRecord(TX_CONTIG, 51, "100M"))));
 
         // over the XA cap on a GENOMIC primary: MAPQ 0 with no XA -> unmapped (75+ distinct genomic loci)
-        final SAMRecord overCap = newRecord(CHR_1, 1000, "100M");
+        SAMRecord overCap = newRecord(CHR_1, 1000, "100M");
         overCap.setMappingQuality(0);
         assertTrue(LiftBackRecordOps.willBeUnmapped(resolver.resolve(overCap)));
 
         // a TX-CONTIG primary with MAPQ 0 + no XA hit 75+ transcript contigs of one gene -> one genomic locus,
         // so the REF_ONLY-gated over-cap rule does NOT unmap it; it lifts and is kept.
-        final SAMRecord txOverCap = newRecord(TX_CONTIG, 51, "100M");
+        SAMRecord txOverCap = newRecord(TX_CONTIG, 51, "100M");
         txOverCap.setMappingQuality(0);
         assertFalse(LiftBackRecordOps.willBeUnmapped(resolver.resolve(txOverCap)));
 
         // MAPQ 0 but XA present = ordinary few-way multimapper -> kept
-        final SAMRecord multimapper = newRecord(TX_CONTIG, 51, "100M");
+        SAMRecord multimapper = newRecord(TX_CONTIG, 51, "100M");
         multimapper.setMappingQuality(0);
         multimapper.setAttribute("XA", CHR_1 + ",+5000,100M,0;");
         assertFalse(LiftBackRecordOps.willBeUnmapped(resolver.resolve(multimapper)));
@@ -124,7 +124,7 @@ public class SpliceLiftBackApplyTest
     @Test
     public void testMarkPrimaryUnmappedClearsAllStaleTags()
     {
-        final SAMRecord record = newRecord(CHR_1, 1000, "50M");
+        SAMRecord record = newRecord(CHR_1, 1000, "50M");
         record.setReadPairedFlag(true);
         record.setFirstOfPairFlag(true);
         record.setProperPairFlag(true);
@@ -154,8 +154,8 @@ public class SpliceLiftBackApplyTest
         // tx 200 is the last base of exon2: a 1bp exon2 anchor. With ANNOTATED_JUNCTION_MIN_ANCHOR_BP=1
         // the translated junction (1M...N...M) is kept, not rolled into a softclip. This is the resolve+apply
         // layer, before the engine's collapser runs - guards the floor independently of collapse.
-        final SAMRecord record = newRecord(TX_CONTIG, 200, "50M");
-        final LiftBackResolver resolver = new LiftBackResolver(List.of(threeExonContig()));
+        SAMRecord record = newRecord(TX_CONTIG, 200, "50M");
+        LiftBackResolver resolver = new LiftBackResolver(List.of(threeExonContig()));
 
         LiftBackRecordOps.applyResultToRecord(record, resolver.resolve(record), new LiftedMateInfoCache());
 
@@ -166,9 +166,9 @@ public class SpliceLiftBackApplyTest
     public void testTxPrimaryDropsRefXaAltAtSameLocus()
     {
         // tx primary with a softclipped ref XA at the same locus; the discriminator favours tx and drops the ref alt.
-        final SAMRecord record = newRecord(TX_CONTIG, 51, "100M");
+        SAMRecord record = newRecord(TX_CONTIG, 51, "100M");
         record.setAttribute(XA_TAG, CHR_1 + ",+150,50M50S,0;");
-        final LiftBackResolver resolver = new LiftBackResolver(List.of(threeExonContig()));
+        LiftBackResolver resolver = new LiftBackResolver(List.of(threeExonContig()));
 
         LiftBackRecordOps.applyResultToRecord(record, resolver.resolve(record), new LiftedMateInfoCache());
 
@@ -180,8 +180,8 @@ public class SpliceLiftBackApplyTest
     public void testSplicedTxRecordGetsXsAStrand()
     {
         // spliced tx records must carry XS:A:+/- for strand-aware junction interpretation (e.g. Isofox).
-        final SAMRecord record = newRecord(TX_CONTIG, 51, "100M");
-        final LiftBackResolver resolver = new LiftBackResolver(List.of(threeExonContig()));
+        SAMRecord record = newRecord(TX_CONTIG, 51, "100M");
+        LiftBackResolver resolver = new LiftBackResolver(List.of(threeExonContig()));
 
         LiftBackRecordOps.applyResultToRecord(record, resolver.resolve(record), new LiftedMateInfoCache());
 
@@ -193,8 +193,8 @@ public class SpliceLiftBackApplyTest
     public void testNonSplicedRecordHasNoXsA()
     {
         // a non-spliced genomic record must NOT get XS:A.
-        final SAMRecord record = newRecord(CHR_1, 1000, "100M");
-        final LiftBackResolver resolver = new LiftBackResolver(List.of(threeExonContig()));
+        SAMRecord record = newRecord(CHR_1, 1000, "100M");
+        LiftBackResolver resolver = new LiftBackResolver(List.of(threeExonContig()));
 
         LiftBackRecordOps.applyResultToRecord(record, resolver.resolve(record), new LiftedMateInfoCache());
 
@@ -204,7 +204,7 @@ public class SpliceLiftBackApplyTest
 
     private static SAMRecord unmappedRecord()
     {
-        final SAMRecord record = new SAMRecord(new SAMFileHeader());
+        SAMRecord record = new SAMRecord(new SAMFileHeader());
         record.setReadName("u");
         record.setReadUnmappedFlag(true);
         return record;

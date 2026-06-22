@@ -25,15 +25,17 @@ public class ExonRegionIndexTest
     // transcript carries the given exon spans. fromCache merges the spans, so overlapping/abutting spans coalesce.
     private static ExonRegionIndex indexFor(final String chromosome, final List<int[]> exonSpans)
     {
-        final EnsemblDataCache cache = createGeneDataCache();
+        EnsemblDataCache cache = createGeneDataCache();
         addGeneData(cache, chromosome, List.of(createEnsemblGeneData("ENSG_TEST", "TESTG", chromosome, 1, 1, 100_000)));
 
-        final TranscriptData transcript = new TranscriptData(
+        TranscriptData transcript = new TranscriptData(
                 1, "ENST_TEST", "ENSG_TEST", true, (byte) 1, 1, 100_000, null, null, "protein_coding", "");
-        final List<ExonData> exons = new ArrayList<>();
+        List<ExonData> exons = new ArrayList<>();
         int rank = 1;
         for(final int[] span : exonSpans)
+        {
             exons.add(new ExonData(1, span[0], span[1], rank++, -1, -1));
+        }
         transcript.setExons(exons);
         addTransExonData(cache, "ENSG_TEST", List.of(transcript));
 
@@ -43,7 +45,7 @@ public class ExonRegionIndexTest
     @Test
     public void testContains()
     {
-        final ExonRegionIndex idx = indexFor("1", List.of(new int[] { 100, 200 }, new int[] { 300, 400 }));
+        ExonRegionIndex idx = indexFor("1", List.of(new int[] { 100, 200 }, new int[] { 300, 400 }));
 
         // hits include interval boundaries
         assertTrue(idx.contains("chr1", 100));
@@ -61,7 +63,7 @@ public class ExonRegionIndexTest
     @Test
     public void testContainsAcrossOverlappingAndAbuttingIntervals()
     {
-        final ExonRegionIndex idx = indexFor("1", List.of(
+        ExonRegionIndex idx = indexFor("1", List.of(
                 new int[] { 100, 200 },
                 new int[] { 150, 300 },
                 new int[] { 301, 400 },
@@ -80,7 +82,7 @@ public class ExonRegionIndexTest
     {
         // ensembl stores bare "1"; the index keys it in the run's ref-genome form (V38 -> chr1) so lookups by
         // lifted genomic contig match directly. The bare form does not match.
-        final ExonRegionIndex idx = indexFor("1", List.of(new int[] { 100, 200 }));
+        ExonRegionIndex idx = indexFor("1", List.of(new int[] { 100, 200 }));
         assertTrue(idx.contains("chr1", 150));
         assertFalse(idx.contains("1", 150));
     }

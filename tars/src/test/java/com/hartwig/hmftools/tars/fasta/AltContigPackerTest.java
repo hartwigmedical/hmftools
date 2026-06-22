@@ -26,8 +26,8 @@ public class AltContigPackerTest
     @Test
     public void testEmptyInputProducesEmptyResult()
     {
-        final AltContigPacker packer = new AltContigPacker(SPACER);
-        final AltContigPacker.PackResult result = packer.pack(CHR_1, List.of());
+        AltContigPacker packer = new AltContigPacker(SPACER);
+        AltContigPacker.PackResult result = packer.pack(CHR_1, List.of());
 
         assertEquals("1_tx", result.altContig());
         assertEquals("", result.sequence());
@@ -38,14 +38,14 @@ public class AltContigPackerTest
     @Test
     public void testSingleTranscriptHasNoSpacer()
     {
-        final AltContigPacker packer = new AltContigPacker(SPACER);
-        final AltContigPacker.PackResult result = packer.pack(
+        AltContigPacker packer = new AltContigPacker(SPACER);
+        AltContigPacker.PackResult result = packer.pack(
                 CHR_1, List.of(txResult("T1", "ACGTACGT", List.of(new BaseRegion(100, 107)))));
 
         assertEquals("ACGTACGT", result.sequence());
         assertEquals(1, result.entries().size());
 
-        final ContigEntry entry = result.entries().get(0);
+        ContigEntry entry = result.entries().get(0);
         assertEquals("1_tx", entry.contigName());
         assertEquals(1, entry.altStart());
         assertEquals(8, entry.altEnd());
@@ -55,19 +55,19 @@ public class AltContigPackerTest
     @Test
     public void testTwoTranscriptsAreSeparatedBySpacer()
     {
-        final AltContigPacker packer = new AltContigPacker(SPACER);
-        final AltContigPacker.PackResult result = packer.pack(CHR_1, List.of(
+        AltContigPacker packer = new AltContigPacker(SPACER);
+        AltContigPacker.PackResult result = packer.pack(CHR_1, List.of(
                 txResult("T1", "AAAA", List.of(new BaseRegion(100, 103))),
                 txResult("T2", "CCC", List.of(new BaseRegion(200, 202)))));
 
         assertEquals("AAAA" + "NNNNN" + "CCC", result.sequence());
         assertEquals(2, result.entries().size());
 
-        final ContigEntry first = result.entries().get(0);
+        ContigEntry first = result.entries().get(0);
         assertEquals(1, first.altStart());
         assertEquals(4, first.altEnd());
 
-        final ContigEntry second = result.entries().get(1);
+        ContigEntry second = result.entries().get(1);
         assertEquals(10, second.altStart());
         assertEquals(12, second.altEnd());
     }
@@ -75,8 +75,8 @@ public class AltContigPackerTest
     @Test
     public void testThreeTranscriptsHaveContiguousNonOverlappingRanges()
     {
-        final AltContigPacker packer = new AltContigPacker(SPACER);
-        final AltContigPacker.PackResult result = packer.pack(CHR_1, List.of(
+        AltContigPacker packer = new AltContigPacker(SPACER);
+        AltContigPacker.PackResult result = packer.pack(CHR_1, List.of(
                 txResult("T1", "AAAAAA", List.of(new BaseRegion(100, 105))),
                 txResult("T2", "CCC", List.of(new BaseRegion(200, 202))),
                 txResult("T3", "GGGGGGGG", List.of(new BaseRegion(300, 307)))));
@@ -84,8 +84,8 @@ public class AltContigPackerTest
         assertEquals(6 + 5 + 3 + 5 + 8, result.sequence().length());
         for(int i = 0; i < result.entries().size() - 1; ++i)
         {
-            final ContigEntry a = result.entries().get(i);
-            final ContigEntry b = result.entries().get(i + 1);
+            ContigEntry a = result.entries().get(i);
+            ContigEntry b = result.entries().get(i + 1);
             assertEquals(a.altEnd() + SPACER + 1, b.altStart());
         }
     }
@@ -93,11 +93,11 @@ public class AltContigPackerTest
     @Test
     public void testEntryMetadataIsCarriedThrough()
     {
-        final AltContigPacker packer = new AltContigPacker(SPACER);
-        final AltContigPacker.PackResult result = packer.pack(
+        AltContigPacker packer = new AltContigPacker(SPACER);
+        AltContigPacker.PackResult result = packer.pack(
                 CHR_1, List.of(txResult("T1", "ACGT", List.of(new BaseRegion(100, 103)))));
 
-        final ContigEntry entry = result.entries().get(0);
+        ContigEntry entry = result.entries().get(0);
         assertEquals("G_T1", entry.geneId());
         assertEquals("GENE_T1", entry.geneName());
         assertEquals(CHR_1, entry.chromosome());

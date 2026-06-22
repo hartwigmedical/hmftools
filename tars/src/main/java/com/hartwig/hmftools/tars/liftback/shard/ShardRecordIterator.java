@@ -50,7 +50,9 @@ public class ShardRecordIterator implements Iterator<SAMRecord>, Closeable
     private SAMRecord readNext()
     {
         if(mEndVptr != BamShardSplitter.EOF && mStream.getFilePointer() >= mEndVptr)
+        {
             return null;
+        }
 
         return mCodec.decode(); // null at EOF
     }
@@ -65,9 +67,11 @@ public class ShardRecordIterator implements Iterator<SAMRecord>, Closeable
     public SAMRecord next()
     {
         if(mNext == null)
+        {
             throw new NoSuchElementException();
+        }
 
-        final SAMRecord record = mNext;
+        SAMRecord record = mNext;
         mNext = readNext();
         return record;
     }

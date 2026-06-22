@@ -1,26 +1,17 @@
 package com.hartwig.hmftools.tars.liftback.rescue;
 
+import static com.hartwig.hmftools.tars.common.TarsConstants.DEFAULT_MAX_BOUNDARY_SHIFT;
+import static com.hartwig.hmftools.tars.common.TarsConstants.DEFAULT_MAX_CHAIN_DEPTH;
+import static com.hartwig.hmftools.tars.common.TarsConstants.DEFAULT_MAX_INTRON_LENGTH;
+import static com.hartwig.hmftools.tars.common.TarsConstants.DEFAULT_MIN_ANCHOR_OVERHANG;
+import static com.hartwig.hmftools.tars.common.TarsConstants.DEFAULT_MIN_INTRON_LENGTH;
+import static com.hartwig.hmftools.tars.common.TarsConstants.DEFAULT_MIN_PARTIAL_MATCH_RUN;
+import static com.hartwig.hmftools.tars.common.TarsConstants.DEFAULT_SOFTCLIP_TOLERANCE;
+
 // Config for JunctionRescueResolver. Defaults for the annotated-junction policy:
 // min anchor overhang 3, min intron 21, max intron 1_000_000.
 public class RescueConfig
 {
-    public static final int DEFAULT_MIN_INTRON_LENGTH = 21;
-    public static final int DEFAULT_MAX_INTRON_LENGTH = 1_000_000;
-    public static final int DEFAULT_MIN_ANCHOR_OVERHANG = 3;
-    public static final int DEFAULT_MAX_CHAIN_DEPTH = 4;
-    // Overlap tolerance between primary and supp matched regions. BWA primary/supp often disagree
-    // by 1-5 bases on junction placement; snapping to an annotated junction within this window recovers
-    // the real splice. Snapping to the annotated junction is preferred; ties resolve via trust-primary.
-    public static final int DEFAULT_SOFTCLIP_TOLERANCE = 5;
-    // How many over-extended matched bases to trim when probing for an annotated donor/acceptor
-    // (no-supp ref-verify path). BWA frequently extends past the true exon boundary into the intron;
-    // measured over-extension caps at ~8 bases.
-    public static final int DEFAULT_MAX_BOUNDARY_SHIFT = 8;
-    // Minimum exon-proximal matched run for partial ref-verify rescue (softclip with an outer
-    // unmatched tail). Partial matches need a longer anchor than full-match clips because the
-    // unexplained residual raises false-positive risk; 11 makes coincidental matches implausible.
-    public static final int DEFAULT_MIN_PARTIAL_MATCH_RUN = 11;
-
     public final boolean Enabled;
     public final int MinIntronLength;
     public final int MaxIntronLength;

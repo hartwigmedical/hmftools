@@ -2,9 +2,9 @@ package com.hartwig.hmftools.tars.fasta;
 
 import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.tars.common.SpliceCommon.CONTIG_MAPPINGS_FILE_ID;
-import static com.hartwig.hmftools.tars.common.SpliceCommon.TRANSCRIPT_CONTIGS_FILE_ID;
-import static com.hartwig.hmftools.tars.common.TarsConfig.APP_NAME;
+import static com.hartwig.hmftools.tars.common.TarsConstants.CONTIG_MAPPINGS_FILE_ID;
+import static com.hartwig.hmftools.tars.common.TarsConstants.TRANSCRIPT_CONTIGS_FILE_ID;
+import static com.hartwig.hmftools.tars.common.TarsConstants.APP_NAME;
 import static com.hartwig.hmftools.tars.common.TarsConfig.TARS_LOGGER;
 
 import java.io.BufferedWriter;
@@ -72,8 +72,8 @@ public class SpliceFastaBuilder
         {
             for(Map.Entry<String, List<GeneData>> chrEntry : chrGeneMap.entrySet())
             {
-                final String chromosome = chrEntry.getKey();
-                final List<TranscriptContigBuilder.TranscriptContigResult> chromosomeTranscripts = new ArrayList<>();
+                String chromosome = chrEntry.getKey();
+                List<TranscriptContigBuilder.TranscriptContigResult> chromosomeTranscripts = new ArrayList<>();
 
                 for(GeneData gene : chrEntry.getValue())
                 {
@@ -81,7 +81,9 @@ public class SpliceFastaBuilder
 
                     List<TranscriptData> transcripts = mEnsemblDataCache.getTranscripts(gene.GeneId);
                     if(transcripts == null || transcripts.isEmpty())
+                    {
                         throw new IllegalStateException("ensembl cache returned no transcripts for gene " + gene.GeneId);
+                    }
 
                     for(TranscriptData transcript : transcripts)
                     {
@@ -110,7 +112,9 @@ public class SpliceFastaBuilder
                     }
 
                     if(genesProcessed % 1000 == 0)
+                    {
                         TARS_LOGGER.debug("processed {} genes", genesProcessed);
+                    }
                 }
 
                 if(chromosomeTranscripts.isEmpty())
@@ -147,12 +151,14 @@ public class SpliceFastaBuilder
 
     private static List<BaseRegion> exonSpansOf(final TranscriptData transcript)
     {
-        final List<ExonData> ordered = new ArrayList<>(transcript.exons());
+        List<ExonData> ordered = new ArrayList<>(transcript.exons());
         ordered.sort(Comparator.comparingInt(exon -> exon.Start));
 
-        final List<BaseRegion> spans = new ArrayList<>(ordered.size());
+        List<BaseRegion> spans = new ArrayList<>(ordered.size());
         for(final ExonData exon : ordered)
+        {
             spans.add(new BaseRegion(exon.Start, exon.End));
+        }
         return spans;
     }
 
@@ -162,7 +168,9 @@ public class SpliceFastaBuilder
         {
             char c = sequence.charAt(i);
             if(c != 'N' && c != 'n')
+            {
                 return false;
+            }
         }
         return true;
     }

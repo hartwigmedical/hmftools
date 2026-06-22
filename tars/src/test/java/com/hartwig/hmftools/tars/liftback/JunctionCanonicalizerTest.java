@@ -6,6 +6,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.hartwig.hmftools.tars.common.TarsConstants;
 import com.hartwig.hmftools.tars.liftback.TarsTestFixtures.TestGenome;
 
 import org.junit.Test;
@@ -16,7 +17,7 @@ public class JunctionCanonicalizerTest
 
     private static JunctionCanonicalizer canonicalizer(final TestGenome genome)
     {
-        return new JunctionCanonicalizer(genome.asRefSource(), JunctionCanonicalizer.DEFAULT_MAX_SHIFT);
+        return new JunctionCanonicalizer(genome.asRefSource(), TarsConstants.DEFAULT_MAX_SHIFT);
     }
 
     // Shared fixture: read 5M10N5M starting at pos 1. The donor/acceptor at the bwa placement (shift 0)
@@ -41,8 +42,8 @@ public class JunctionCanonicalizerTest
     @Test
     public void slidesNonCanonicalJunctionToCanonical()
     {
-        final JunctionCanonicalizer canonicalizer = canonicalizer(slidableGenome());
-        final JunctionCanonicalizationResult result = canonicalizer.tryCanonicalize(CHR1, 1, "5M10N5M", slidableRead());
+        JunctionCanonicalizer canonicalizer = canonicalizer(slidableGenome());
+        JunctionCanonicalizationResult result = canonicalizer.tryCanonicalize(CHR1, 1, "5M10N5M", slidableRead());
 
         assertTrue(result.changed());
         assertEquals(1, canonicalizer.junctionsShifted());
@@ -53,10 +54,10 @@ public class JunctionCanonicalizerTest
     public void leavesCanonicalJunctionUntouched()
     {
         // donor already GT at shift 0 (pos6), acceptor already AG (pos14): no slide attempted.
-        final TestGenome genome = new TestGenome().with(CHR1, 25, 'T')
+        TestGenome genome = new TestGenome().with(CHR1, 25, 'T')
                 .set(CHR1, 1, "CCCCC").set(CHR1, 6, "GT").set(CHR1, 14, "AG");
 
-        final JunctionCanonicalizationResult result = canonicalizer(genome)
+        JunctionCanonicalizationResult result = canonicalizer(genome)
                 .tryCanonicalize(CHR1, 1, "5M10N5M", bases("CCCCCTTCCC"));
 
         assertFalse(result.changed());
@@ -67,7 +68,7 @@ public class JunctionCanonicalizerTest
     {
         // motif would become canonical at +2, but the read bases that must cross the intron (read[5,6])
         // do not match the donor-side ref (pos6,pos7 = AA), so the slide is unsafe and rejected.
-        final JunctionCanonicalizationResult result = canonicalizer(slidableGenome())
+        JunctionCanonicalizationResult result = canonicalizer(slidableGenome())
                 .tryCanonicalize(CHR1, 1, "5M10N5M", bases("CCCCCGGCCC"));   // read[5,6] = GG != ref AA
 
         assertFalse(result.changed());
@@ -76,7 +77,7 @@ public class JunctionCanonicalizerTest
     @Test
     public void noRefSourceLeavesCigarUnchanged()
     {
-        final JunctionCanonicalizer canon = new JunctionCanonicalizer(null, JunctionCanonicalizer.DEFAULT_MAX_SHIFT);
+        JunctionCanonicalizer canon = new JunctionCanonicalizer(null, TarsConstants.DEFAULT_MAX_SHIFT);
         assertFalse(canon.tryCanonicalize(CHR1, 1, "5M10N5M", slidableRead()).changed());
     }
 }

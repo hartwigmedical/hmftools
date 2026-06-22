@@ -32,10 +32,12 @@ public final class ExonRegionIndex
 
     public boolean contains(final String chromosome, final int pos)
     {
-        final int[] starts = mExonStarts.get(chromosome);
-        final int[] ends = mExonEnds.get(chromosome);
+        int[] starts = mExonStarts.get(chromosome);
+        int[] ends = mExonEnds.get(chromosome);
         if(starts == null)
+        {
             return false;
+        }
 
         // Binary search for the largest start <= pos; merged intervals guarantee only one candidate.
         int lo = 0;
@@ -43,7 +45,7 @@ public final class ExonRegionIndex
         int idx = -1;
         while(lo <= hi)
         {
-            final int mid = (lo + hi) >>> 1;
+            int mid = (lo + hi) >>> 1;
             if(starts[mid] <= pos)
             {
                 idx = mid;
@@ -59,7 +61,7 @@ public final class ExonRegionIndex
 
     public static ExonRegionIndex load(final String ensemblDir, final RefGenomeVersion refGenomeVersion)
     {
-        final EnsemblDataCache ensemblDataCache = new EnsemblDataCache(ensemblDir, refGenomeVersion);
+        EnsemblDataCache ensemblDataCache = new EnsemblDataCache(ensemblDir, refGenomeVersion);
         ensemblDataCache.setRequiredData(true, false, false, false);
         ensemblDataCache.load(false);
         return fromCache(ensemblDataCache, refGenomeVersion);
@@ -72,33 +74,37 @@ public final class ExonRegionIndex
     // sidecar chromosome, the exact form the lift emits.
     public static ExonRegionIndex fromContigEntries(final List<ContigEntry> entries)
     {
-        final Map<String, List<int[]>> spansByChromosome = new HashMap<>();
+        Map<String, List<int[]>> spansByChromosome = new HashMap<>();
         for(final ContigEntry entry : entries)
         {
-            final List<int[]> spans = spansByChromosome.computeIfAbsent(entry.chromosome(), k -> new ArrayList<>());
+            List<int[]> spans = spansByChromosome.computeIfAbsent(entry.chromosome(), k -> new ArrayList<>());
             for(final BaseRegion exon : entry.exonSpans())
+            {
                 spans.add(new int[] { exon.start(), exon.end() });
+            }
         }
         return fromSpans(spansByChromosome);
     }
 
     public static ExonRegionIndex fromCache(final EnsemblDataCache ensemblDataCache, final RefGenomeVersion refGenomeVersion)
     {
-        final Map<String, List<int[]>> spansByChromosome = new HashMap<>();
+        Map<String, List<int[]>> spansByChromosome = new HashMap<>();
         for(final List<GeneData> genes : ensemblDataCache.getChrGeneDataMap().values())
         {
             for(final GeneData gene : genes)
             {
-                final List<TranscriptData> transcripts = ensemblDataCache.getTranscripts(gene.GeneId);
+                List<TranscriptData> transcripts = ensemblDataCache.getTranscripts(gene.GeneId);
                 if(transcripts == null)
                     continue;
 
-                final String chromosome = refGenomeVersion.versionedChromosome(gene.Chromosome);
-                final List<int[]> spans = spansByChromosome.computeIfAbsent(chromosome, k -> new ArrayList<>());
+                String chromosome = refGenomeVersion.versionedChromosome(gene.Chromosome);
+                List<int[]> spans = spansByChromosome.computeIfAbsent(chromosome, k -> new ArrayList<>());
                 for(final TranscriptData transcript : transcripts)
                 {
                     for(final ExonData exon : transcript.exons())
+                    {
                         spans.add(new int[] { exon.Start, exon.End });
+                    }
                 }
             }
         }
@@ -107,13 +113,13 @@ public final class ExonRegionIndex
 
     private static ExonRegionIndex fromSpans(final Map<String, List<int[]>> spansByChromosome)
     {
-        final Map<String, int[]> starts = new HashMap<>();
-        final Map<String, int[]> ends = new HashMap<>();
+        Map<String, int[]> starts = new HashMap<>();
+        Map<String, int[]> ends = new HashMap<>();
         for(final Map.Entry<String, List<int[]>> entry : spansByChromosome.entrySet())
         {
-            final List<int[]> merged = mergeIntervals(entry.getValue());
-            final int[] mergedStarts = new int[merged.size()];
-            final int[] mergedEnds = new int[merged.size()];
+            List<int[]> merged = mergeIntervals(entry.getValue());
+            int[] mergedStarts = new int[merged.size()];
+            int[] mergedEnds = new int[merged.size()];
             for(int i = 0; i < merged.size(); ++i)
             {
                 mergedStarts[i] = merged.get(i)[0];
@@ -129,16 +135,20 @@ public final class ExonRegionIndex
     private static List<int[]> mergeIntervals(final List<int[]> intervals)
     {
         if(intervals.isEmpty())
+        {
             return intervals;
+        }
 
         Collections.sort(intervals, (a, b) -> Integer.compare(a[0], b[0]));
-        final List<int[]> merged = new ArrayList<>();
+        List<int[]> merged = new ArrayList<>();
         int[] current = new int[] { intervals.get(0)[0], intervals.get(0)[1] };
         for(int i = 1; i < intervals.size(); ++i)
         {
-            final int[] next = intervals.get(i);
+            int[] next = intervals.get(i);
             if(next[0] <= current[1] + 1)
+            {
                 current[1] = Math.max(current[1], next[1]);
+            }
             else
             {
                 merged.add(current);

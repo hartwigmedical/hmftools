@@ -70,7 +70,9 @@ public record LiftBackResult(
     private static String appendNote(final String existing, final String note)
     {
         if(existing == null || existing.isEmpty())
+        {
             return note;
+        }
         return existing + ";" + note;
     }
 
@@ -91,22 +93,32 @@ public record LiftBackResult(
         public static Composition fromAlignments(final List<LiftedAlignment> alignments)
         {
             if(alignments.isEmpty())
+            {
                 return NONE;
+            }
 
             boolean hasRef = false;
             boolean hasTx = false;
             for(final LiftedAlignment alignment : alignments)
             {
                 if(alignment.fromTxContig())
+                {
                     hasTx = true;
+                }
                 else
+                {
                     hasRef = true;
+                }
             }
 
             if(hasRef && hasTx)
+            {
                 return REF_AND_TX;
+            }
             if(hasTx)
+            {
                 return TX_ONLY;
+            }
             return REF_ONLY;
         }
     }

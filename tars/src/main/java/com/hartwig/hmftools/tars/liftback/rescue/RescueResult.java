@@ -18,7 +18,9 @@ public record RescueResult(
     public static RescueResult noMerge(final RescueRejectReason reason)
     {
         if(reason == RescueRejectReason.NO_TERMINAL_SOFTCLIP)
+        {
             return NO_MERGE_NO_OP;
+        }
         return new RescueResult(false, null, -1, Collections.emptyList(), Collections.emptyList(), 0, reason);
     }
 }
