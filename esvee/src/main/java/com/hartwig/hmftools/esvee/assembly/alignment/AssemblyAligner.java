@@ -36,7 +36,7 @@ import com.hartwig.hmftools.esvee.assembly.types.SupportType;
 import com.hartwig.hmftools.esvee.assembly.types.ThreadTask;
 import com.hartwig.hmftools.esvee.common.saga.SagaAlignment;
 import com.hartwig.hmftools.esvee.common.saga.SagaJunctionInfo;
-import com.hartwig.hmftools.esvee.common.saga.SagaMatchBySequence;
+import com.hartwig.hmftools.esvee.common.saga.SagaSequenceMatch;
 import com.hartwig.hmftools.esvee.common.saga.SagaSequenceMatcher;
 import com.hartwig.hmftools.esvee.common.saga.SagaMatcherFactory;
 
@@ -159,7 +159,7 @@ public class AssemblyAligner extends ThreadTask
         // If an assembly is a LINE site, then the extension sequence requirement is lower.
         // In which case need to lower the requirement for the junction overlap, or else there can be false negative matches.
         boolean lowerJunctionOverlap = assemblyAlignment.assemblies().stream().anyMatch(JunctionAssembly::hasLineSequence);
-        SagaMatchBySequence sagaMatch = mSagaMatcher.matchBySequence(assemblyAlignment.fullSequence()
+        SagaSequenceMatch sagaMatch = mSagaMatcher.matchBySequence(assemblyAlignment.fullSequence()
                 .getBytes(), junctionInfos, lowerJunctionOverlap, false);
         assemblyAlignment.setSagaMatch(sagaMatch);
 
@@ -176,7 +176,7 @@ public class AssemblyAligner extends ThreadTask
     @Nullable
     private AlignmentInfo processSagaMatchedAssembly(final AssemblyAlignment assemblyAlignment)
     {
-        SagaMatchBySequence sagaMatch = assemblyAlignment.sagaMatch();
+        SagaSequenceMatch sagaMatch = assemblyAlignment.sagaMatch();
         if(sagaMatch == null)
         {
             return null;

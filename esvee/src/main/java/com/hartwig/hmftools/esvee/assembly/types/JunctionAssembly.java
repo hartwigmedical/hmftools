@@ -33,7 +33,7 @@ import com.hartwig.hmftools.esvee.assembly.RefBaseSeqBuilder;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.common.IndelCoords;
 import com.hartwig.hmftools.esvee.common.saga.SagaJunctionInfo;
-import com.hartwig.hmftools.esvee.common.saga.SagaMatchBySequence;
+import com.hartwig.hmftools.esvee.common.saga.SagaSequenceMatch;
 import com.hartwig.hmftools.esvee.common.saga.SagaSequenceMatcher;
 
 import org.jetbrains.annotations.Nullable;
@@ -75,7 +75,7 @@ public class JunctionAssembly
     private String mAssemblyAlignmentInfo;
 
     @Nullable
-    private SagaMatchBySequence mSagaMatch;
+    private SagaSequenceMatch mSagaMatch;
 
     // info only
     private final String mInitialReadId;
@@ -846,12 +846,12 @@ public class JunctionAssembly
     }
 
     @Nullable
-    public SagaMatchBySequence sagaMatch()
+    public SagaSequenceMatch sagaMatch()
     {
         return mSagaMatch;
     }
 
-    private void setSagaMatch(final SagaMatchBySequence match)
+    private void setSagaMatch(final SagaSequenceMatch match)
     {
         mSagaMatch = match;
     }
@@ -863,7 +863,7 @@ public class JunctionAssembly
         // If the assembly is a LINE site, then the extension sequence requirement is lower.
         // In which case need to lower the requirement for the junction overlap, or else there can be false negative matches.
         boolean lowerJunctionOverlap = hasLineSequence();
-        SagaMatchBySequence match = sagaMatcher.matchBySequence(bases(), junctionInfos, lowerJunctionOverlap, true);
+        SagaSequenceMatch match = sagaMatcher.matchBySequence(bases(), junctionInfos, lowerJunctionOverlap, true);
         setSagaMatch(match);
         return match != null;
     }

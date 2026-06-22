@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.esvee.common.saga;
 
-import static java.lang.Math.max;
-import static java.lang.Math.min;
 import static java.util.Objects.requireNonNull;
 import static java.util.function.UnaryOperator.identity;
 
@@ -80,8 +78,8 @@ public class SagaMatcherFactory
             return Map.of();
         }
 
-        int startIndex = max(SagaIndexedBreakend.binarySearch(chrBreakends, subregion.start()).left - 1, 0);
-        int endIndex = min(SagaIndexedBreakend.binarySearch(chrBreakends, subregion.end()).right + 1, chrBreakends.size());
+        int startIndex = SagaIndexedBreakend.binarySearch(chrBreakends, subregion.start()).left;
+        int endIndex = SagaIndexedBreakend.binarySearch(chrBreakends, subregion.end()).right;
 
         chrBreakends = chrBreakends.subList(startIndex, endIndex);
         return Map.of(subregion.chromosome(), chrBreakends);

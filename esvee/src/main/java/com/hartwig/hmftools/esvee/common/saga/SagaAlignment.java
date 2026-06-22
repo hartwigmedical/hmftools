@@ -2,6 +2,8 @@ package com.hartwig.hmftools.esvee.common.saga;
 
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.bam.CigarUtils.cigarAlignedLength;
+import static com.hartwig.hmftools.common.bam.CigarUtils.cigarBaseLength;
 import static com.hartwig.hmftools.common.bam.CigarUtils.getReadIndexFromPosition;
 import static com.hartwig.hmftools.common.bam.CigarUtils.leftClipLength;
 import static com.hartwig.hmftools.common.bam.CigarUtils.rightClipLength;
@@ -23,6 +25,26 @@ public record SagaAlignment(
         SagaAssembly sagaAssembly
 )
 {
+    public void validate()
+    {
+        if(!(queryStart() >= 0 && queryEnd() <= queryLength))
+        {
+            throw new IllegalArgumentException();
+        }
+        if(!(sagaStart() >= 0 && sagaEnd() <= sagaLength()))
+        {
+            throw new IllegalArgumentException();
+        }
+        if(!(cigarBaseLength(cigar) == queryLength))
+        {
+            throw new IllegalArgumentException();
+        }
+        if(!(cigarAlignedLength(cigar) <= sagaLength()))
+        {
+            throw new IllegalArgumentException();
+        }
+    }
+
     public boolean isForward()
     {
         return !SamRecordUtils.isFlagSet(rawAlignment.getSamFlag(), SAMFlag.READ_REVERSE_STRAND);
@@ -93,7 +115,7 @@ public record SagaAlignment(
                 .toList();
     }
 
-    private int sagaIndexToQueryIndex(int sagaIndex)
+    int sagaIndexToQueryIndex(int sagaIndex)
     {
         // Extrapolate outside of the aligned range.
         if(sagaIndex <= sagaStart())

@@ -51,7 +51,7 @@ import com.hartwig.hmftools.common.utils.StartEndPair;
 import com.hartwig.hmftools.esvee.common.IndelCoords;
 import com.hartwig.hmftools.esvee.common.ReadIdTrimmer;
 import com.hartwig.hmftools.esvee.common.saga.SagaLocationMatcher;
-import com.hartwig.hmftools.esvee.common.saga.SagaMatchByLocation;
+import com.hartwig.hmftools.esvee.common.saga.SagaLocationMatch;
 import com.hartwig.hmftools.esvee.prep.types.DiscordantStats;
 import com.hartwig.hmftools.esvee.prep.types.JunctionData;
 import com.hartwig.hmftools.esvee.prep.types.PrepRead;
@@ -883,7 +883,7 @@ public class JunctionTracker
     {
         for(JunctionData junction : mJunctions)
         {
-            SagaMatchByLocation match = mSagaMatcher.match(mRegion.chromosome(), junction.Position, junction.Orient);
+            SagaLocationMatch match = mSagaMatcher.match(mRegion.chromosome(), junction.Position, junction.Orient);
             junction.setSagaMatch(match);
         }
     }
