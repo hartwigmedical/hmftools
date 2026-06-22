@@ -3,12 +3,12 @@ package com.hartwig.hmftools.lilac.fragment;
 import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_MIN_DEPTH_FILTER;
 import static com.hartwig.hmftools.lilac.LilacUtils.namesMatch;
 import static com.hartwig.hmftools.lilac.ReferenceData.GENE_EXON_BOUNDARIES;
-import static com.hartwig.hmftools.lilac.app.LilacAppTest.buildGeneCache;
 import static com.hartwig.hmftools.lilac.fragment.FragmentUtils.expandIndices;
 import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_A;
 import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_B;
 import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_C;
 import static com.hartwig.hmftools.lilac.misc.LilacTestUtils.createReadRecord;
+import static com.hartwig.hmftools.lilac.util.GeneCacheSetup.buildGeneCache;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -32,12 +32,19 @@ import com.hartwig.hmftools.lilac.read.Read;
 import com.hartwig.hmftools.lilac.seq.SequenceCount;
 import com.hartwig.hmftools.lilac.util.ThrowOnUnstubbed;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import htsjdk.samtools.SAMRecord;
 
 public class NucleotideTest
 {
+    @Before
+    public void setUp()
+    {
+        buildGeneCache();
+    }
+
     @Test
     public void testCreateNucleotidesFromAminoAcid()
     {
@@ -49,8 +56,6 @@ public class NucleotideTest
     @Test
     public void testGeneEnrichment()
     {
-        buildGeneCache();
-
         NucleotideGeneEnrichment enricher = NucleotideGeneEnrichment.create(GENE_EXON_BOUNDARIES);
 
         List<Integer> indices = Lists.newArrayList();

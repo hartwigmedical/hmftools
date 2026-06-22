@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.lilac.coverage;
 
 import static com.hartwig.hmftools.lilac.ReferenceData.GENE_CACHE;
+import static com.hartwig.hmftools.lilac.util.GeneCacheSetup.buildGeneCache;
 
 import static junit.framework.TestCase.assertEquals;
 
@@ -10,10 +11,17 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 
+import org.junit.Before;
 import org.junit.Test;
 
 public class CoverageTest
 {
+    @Before
+    public void setUp()
+    {
+        buildGeneCache();
+    }
+
     @Test
     public void testAlleleCoverageExpansion()
     {
