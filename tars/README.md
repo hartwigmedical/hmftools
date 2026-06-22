@@ -12,7 +12,7 @@ The lifted BAM feeds into REDUX for normal (splice-agnostic) dedup, then ISOFOX.
 * [The RNA flow](#the-rna-flow)
 * [Commands](#commands)
   + [Building transcript contigs](#building-transcript-contigs-splicefastabuilder)
-  + [Running liftback](#running-liftback-spliceliftback)
+  + [Running tars](#running-tars-tarsapplication)
   + [Output](#output)
 * [Flags](#flags)
 * [How a read gets lifted](#how-a-read-gets-lifted)
@@ -33,7 +33,7 @@ The lifted BAM feeds into REDUX for normal (splice-agnostic) dedup, then ISOFOX.
   ensembl  ->  SpliceFastaBuilder  ->  genome.fasta + *_tx contigs  ->  bwa-mem2 index
   (offline, once per release)          + sidecar TSV
 
-  RNA fastq  ->  bwa-mem2 align (name-grouped, no sort)  ->  SpliceLiftBack  ->  genomic RNA BAM (sorted) ->  REDUX  ->  ISOFOX
+  RNA fastq  ->  bwa-mem2 align (name-grouped, no sort)  ->  TarsApplication  ->  genomic RNA BAM (sorted) ->  REDUX  ->  ISOFOX
 ```
 
 1. **`SpliceFastaBuilder`** (offline, once per ensembl release) builds the transcript-contig FASTA and a sidecar TSV
@@ -41,8 +41,8 @@ The lifted BAM feeds into REDUX for normal (splice-agnostic) dedup, then ISOFOX.
 2. Concatenate the transcript contigs onto the genome FASTA and re-index with `bwa-mem2`.
 3. Align RNA reads with `bwa-mem2` against the combined FASTA. bwa's default output is **name-grouped** (each
    fragment's mates and supplementaries are contiguous, in FASTQ order). Feed it to liftback directly, no sort needed.
-4. **`SpliceLiftBack`** consumes that name-grouped BAM in a single pass (no input sort, no index, no fragment cache),
-   lifts each fragment to genomic coordinates, and writes a coord-sorted and indexed genomic BAM.
+4. **`TarsApplication`** (`java -jar tars.jar`) consumes that name-grouped BAM in a single pass (no input sort, no
+   index, no fragment cache), lifts each fragment to genomic coordinates, and writes a coord-sorted and indexed genomic BAM.
 5. Feed the lifted BAM into REDUX for normal dedup.
 
 ## Commands
@@ -60,25 +60,27 @@ java -cp tars.jar com.hartwig.hmftools.tars.fasta.SpliceFastaBuilder
 Outputs `ref_genome_v38_rna_contigs.fasta` and `ref_genome_v38_rna_contigs.rna_contigs_mappings.tsv`. Concatenate the
 FASTA onto the genome FASTA and `bwa-mem2 index` the result before aligning.
 
-### Running liftback (SpliceLiftBack)
+### Running tars (TarsApplication)
 
 ```
-java -cp tars.jar com.hartwig.hmftools.tars.liftback.SpliceLiftBack
-    -input_bam SAMPLE_ID.bwa_tx.namegrouped.bam
+java -jar tars.jar
+    -sample ACTN01020030T
+    -input_bam ACTN01020030T.bwa_tx.namegrouped.bam
     -ref_genome /path_to_fasta/genome_plus_tx.fasta
     -ref_genome_version V38
     -contig_sidecar /path_to/ref_genome_v38_rna_contigs.rna_contigs_mappings.tsv
     -rna_unmap_regions /ref_data/rna/38/rna_excluded_regions.38.tsv
     -bamtool /path_to_samtools/
     -output_dir /path_to_output/
-    -output_id SAMPLE_ID
     -threads 24
 ```
 
 ### Output
 
-`<output_id>.bam` (+ `.bai`), coord-sorted and ready for REDUX. The summary always writes to `*.liftback.summary.tsv`;
-the per-record `*.liftback.records.tsv` / `*.liftback.alignments.tsv` are written only with `-write_liftback_tsv`.
+Named `<sample>.tars[.<output_id>][.<stage>].ext`, mirroring Redux. The BAM `ACTN01020030T.tars.bam` (+ `.bai`) is
+coord-sorted and ready for REDUX, and the summary always writes to `ACTN01020030T.tars.summary.tsv`. The per-record
+`*.tars.records.tsv` / `*.tars.alignments.tsv` are written only with `-write_liftback_tsv`. With `-output_id chr1_slice`
+the token is inserted into every name: `ACTN01020030T.tars.chr1_slice.bam`, `ACTN01020030T.tars.summary.chr1_slice.tsv`.
 
 ## Flags
 
@@ -86,6 +88,7 @@ the per-record `*.liftback.records.tsv` / `*.liftback.alignments.tsv` are writte
 
 | Flag               | Description                                                                  |
 |--------------------|------------------------------------------------------------------------------|
+| sample             | Sample ID; the stem of every output file (`<sample>.tars.*`)                  |
 | input_bam          | bwa-mem2 output against the combined FASTA, **name-grouped** (not coord-sorted)|
 | ref_genome         | The same combined genome + transcript FASTA used at alignment                 |
 | ref_genome_version | `V37` or `V38`                                                                |
@@ -97,7 +100,7 @@ the per-record `*.liftback.records.tsv` / `*.liftback.alignments.tsv` are writte
 
 | Flag               | Default | Description                                                              |
 |--------------------|---------|--------------------------------------------------------------------------|
-| output_id          | (none)  | Output filename prefix; also namespaces per-worker shard intermediates   |
+| output_id          | (none)  | Optional token inserted into every output name (e.g. a region slice)      |
 | rna_unmap_regions  | (none)  | Curated regions (rRNA / 7SL / multi-map); a read lifting into one is unmapped|
 | write_liftback_tsv | off     | Emit per-record debug TSVs; off by default (whole-sample TSVs run to 100s of GB)|
 | threads            | 1       | Lift-worker count; the lift phase scales with this (the final sort tail does not). Run many (prod uses 24)|
