@@ -4,7 +4,7 @@ import org.jetbrains.annotations.Nullable;
 
 public record BwaMemAlignerConfig(
         String indexPath,
-        BwaMemAlignParams align,
+        BwaMemAlignParams alignParams,
         boolean allAlignments,
         int threads,
         @Nullable Integer batchSize

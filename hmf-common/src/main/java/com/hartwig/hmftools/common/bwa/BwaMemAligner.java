@@ -39,7 +39,7 @@ public class BwaMemAligner implements IBwaMemAligner
         LOGGER.trace("Creating BWA-MEM aligner");
         BwaMemIndex index = new BwaMemIndex(config.indexPath());
         mAligner = new org.broadinstitute.hellbender.utils.bwa.BwaMemAligner(index);
-        applyOptions(mAligner, mConfig.align(), mConfig.allAlignments(), mConfig.threads());
+        applyOptions(mAligner, mConfig.alignParams(), mConfig.allAlignments(), mConfig.threads());
         logOptions(mAligner);
     }
 
