@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.bwa.BwaMemAligner;
+import com.hartwig.hmftools.common.bwa.BwaMemAlignerConfig;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 import htsjdk.samtools.SAMSequenceRecord;
@@ -87,9 +88,10 @@ public class SagaMatcherFactory
 
     public SagaSequenceMatcher createSequenceMatcher()
     {
+        BwaMemAlignerConfig alignerConfig =
+                SagaSequenceMatcher.createAlignerConfig(mSagaResource.bwaIndexImagePath(), mSequenceMatcherConfig);
         // Must create one aligner per matcher, particularly because I don't think the aligner instance is thread safe.
-        BwaMemAligner aligner =
-                new BwaMemAligner(mSagaResource.bwaIndexImagePath(), SagaSequenceMatcher.createAlignerParams(mSequenceMatcherConfig));
+        BwaMemAligner aligner = new BwaMemAligner(alignerConfig);
         return new SagaSequenceMatcher(mSequenceMatcherConfig, aligner, mAssembliesByContigId);
     }
 }

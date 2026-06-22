@@ -17,8 +17,8 @@ import org.jetbrains.annotations.Nullable;
 
 public class BwaMemAligner implements IBwaMemAligner
 {
+    private final BwaMemAlignerConfig mConfig;
     private final org.broadinstitute.hellbender.utils.bwa.BwaMemAligner mAligner;
-    private final Params mParams;
 
     private static final Logger LOGGER = LogManager.getLogger(BwaMemAligner.class);
 
@@ -33,53 +33,14 @@ public class BwaMemAligner implements IBwaMemAligner
         loadAlignerLibrary(path);
     }
 
-    public record Params(
-            BwaMemAlignParams align,
-            boolean allAlignments,
-            int minAlignScore,
-            int threads,
-            @Nullable Integer batchSize
-    )
+    public BwaMemAligner(final BwaMemAlignerConfig config)
     {
-        public Params
-        {
-            if(minAlignScore < 0)
-            {
-                throw new IllegalArgumentException("Invalid minAlignScore: " + minAlignScore);
-            }
-            if(threads < 1)
-            {
-                throw new IllegalArgumentException("Invalid threads: " + threads);
-            }
-            if(batchSize != null && batchSize < 1)
-            {
-                throw new IllegalArgumentException("Invalid batchSize: " + batchSize);
-            }
-        }
-
-        public static Params basicDefaults(int threads)
-        {
-            return new Params(BwaMemAlignParams.DEFAULT, false, 0, threads, null);
-        }
-
-        public static Params basicDefaults()
-        {
-            return basicDefaults(1);
-        }
-    }
-
-    public BwaMemAligner(final BwaMemIndex index, final Params params)
-    {
-        mParams = params;
+        mConfig = config;
         LOGGER.trace("Creating BWA-MEM aligner");
+        BwaMemIndex index = new BwaMemIndex(config.indexPath());
         mAligner = new org.broadinstitute.hellbender.utils.bwa.BwaMemAligner(index);
-        applyOptions(mAligner, mParams.align(), mParams.allAlignments(), mParams.minAlignScore, mParams.threads);
+        applyOptions(mAligner, mConfig.align(), mConfig.allAlignments(), mConfig.threads());
         logOptions(mAligner);
-    }
-
-    public BwaMemAligner(final String indexPath, final Params params)
-    {
-        this(new BwaMemIndex(indexPath), params);
     }
 
     public List<List<BwaMemAlignment>> alignSequences(List<byte[]> sequences)
@@ -89,7 +50,7 @@ public class BwaMemAligner implements IBwaMemAligner
 
     private static void applyOptions(
             final org.broadinstitute.hellbender.utils.bwa.BwaMemAligner aligner, final BwaMemAlignParams alignParams,
-            boolean allAlignments, int minAlignScore, int threads)
+            boolean allAlignments, int threads)
     {
         aligner.setMatchScoreOption(alignParams.matchReward());
         aligner.setMismatchPenaltyOption(alignParams.mismatchPenalty());
@@ -120,7 +81,7 @@ public class BwaMemAligner implements IBwaMemAligner
         {
             aligner.setFlagOption(aligner.getFlagOption() & ~MEM_F_ALL);
         }
-        aligner.setOutputScoreThresholdOption(minAlignScore);
+        aligner.setOutputScoreThresholdOption(alignParams.minAlignScore());
 
         aligner.setNThreadsOption(threads);
     }
@@ -184,7 +145,7 @@ public class BwaMemAligner implements IBwaMemAligner
 
     private List<List<BwaMemAlignment>> runBatchedAlignment(List<byte[]> queries)
     {
-        int batchSize = mParams.batchSize() == null ? queries.size() : mParams.batchSize();
+        int batchSize = mConfig.batchSize() == null ? queries.size() : mConfig.batchSize();
         while(true)
         {
             try
