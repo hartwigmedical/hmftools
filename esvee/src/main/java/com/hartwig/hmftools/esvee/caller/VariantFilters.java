@@ -26,7 +26,6 @@ import static com.hartwig.hmftools.esvee.caller.FilterConstants.INV_SHORT_FRAGME
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.INV_SHORT_FRAGMENT_LENGTH;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.INV_SHORT_FRAGMENT_MIN_AF;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.INV_SHORT_LENGTH;
-import static com.hartwig.hmftools.esvee.caller.FilterConstants.INV_SHORT_MAX_HOMOLOGY_HIGHER;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.INV_SHORT_MAX_HOMOLOGY_LOWER;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.INV_SHORT_MIN_AF_HIGHER;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.INV_SHORT_MIN_AF_LOWER;
@@ -63,6 +62,7 @@ import static com.hartwig.hmftools.esvee.common.FilterType.SHORT_FRAG_LENGTH;
 import static com.hartwig.hmftools.esvee.common.FilterType.INV_SHORT_LOW_VAF_HOM;
 import static com.hartwig.hmftools.esvee.common.FilterType.STRAND_BIAS;
 import static com.hartwig.hmftools.esvee.common.FilterType.UNPAIRED_THREE_PRIME_RANGE;
+import static com.hartwig.hmftools.esvee.common.SvConstants.INV_SHORT_MAX_HOMOLOGY_HIGHER;
 import static com.hartwig.hmftools.esvee.common.SvConstants.hasPairedReads;
 
 import java.util.List;

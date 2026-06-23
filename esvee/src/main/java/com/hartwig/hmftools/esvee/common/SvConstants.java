@@ -46,7 +46,7 @@ public final class SvConstants
 
     // qual calcs and filters
     public static final double QUAL_CALC_FRAG_SUPPORT_FACTOR = 5;
-
+    public static final int INV_SHORT_MAX_HOMOLOGY_HIGHER = 6;
     public static final int MIN_ANCHOR_LENGTH = 50;
 
     // LINE elements

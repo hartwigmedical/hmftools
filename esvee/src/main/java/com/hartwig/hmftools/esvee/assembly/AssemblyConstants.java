@@ -51,6 +51,11 @@ public final class AssemblyConstants
     public static final int WEAK_ASSEMBLY_UNPAIRED_MAX_READS = 3;
     public static final double WEAK_ASSEMBLY_UNPAIRED_READ_FACTOR = 5;
     public static final double WEAK_ASSEMBLY_UNPAIRED_LONG_EXT_FACTOR = 2.5;
+    public static final double WEAK_ASSEMBLY_UNPAIRED_LONG_EXT_FACTOR_LOWER = 2;
+    public static final int WEAK_ASSEMBLY_LONG_LENGTH = 100_000;
+    public static final double WEAK_ASSEMBLY_DISC_RATE = 0.02;
+    public static final int WEAK_ASSEMBLY_MIN_INS_LENGTH = 16;
+    public static final int WEAK_ASSEMBLY_MIN_REF_REPEAT = 7;
 
     public static final double DEFAULT_DISC_RATE_INCREMENT = 0.01;
     public static final int DISC_RATE_JUNC_INCREMENT = 1;

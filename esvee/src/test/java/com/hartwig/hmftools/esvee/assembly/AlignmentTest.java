@@ -23,10 +23,14 @@ import static com.hartwig.hmftools.esvee.TestUtils.createRead;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.SSX2_GENE_ORIENT;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.SSX2_MAX_MAP_QUAL;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.SSX2_REGIONS_V37;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.WEAK_ASSEMBLY_DISC_RATE;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.WEAK_ASSEMBLY_MIN_INS_LENGTH;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.WEAK_ASSEMBLY_MIN_REF_REPEAT;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyTestUtils.createAlignment;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyTestUtils.createAssembly;
 import static com.hartwig.hmftools.esvee.assembly.alignment.AlignmentFilters.filterAlignments;
 import static com.hartwig.hmftools.esvee.assembly.alignment.AssemblyAligner.hasLongerMinorityExtensions;
+import static com.hartwig.hmftools.esvee.assembly.alignment.AssemblyAligner.hasSuspectExtension;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -39,6 +43,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.codon.Nucleotides;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.test.MockRefGenome;
@@ -49,6 +54,7 @@ import com.hartwig.hmftools.esvee.assembly.alignment.AssemblyAligner;
 import com.hartwig.hmftools.esvee.assembly.alignment.AssemblyAlignment;
 import com.hartwig.hmftools.esvee.assembly.alignment.Breakend;
 import com.hartwig.hmftools.esvee.assembly.alignment.BreakendBuilder;
+import com.hartwig.hmftools.esvee.assembly.alignment.HomologyData;
 import com.hartwig.hmftools.esvee.assembly.output.AlignmentWriter;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
@@ -772,7 +778,7 @@ public class AlignmentTest
     }
 
     @Test
-    public void testBreakendFilters()
+    public void testLongerMinorityExtensions()
     {
         List<SupportRead> reads = Lists.newArrayList();
 
@@ -783,7 +789,7 @@ public class AlignmentTest
         reads.add(new SupportRead(read, SupportType.JUNCTION, 10, 0, 10));
         reads.add(new SupportRead(read, SupportType.JUNCTION, 24, 0, 10));
 
-        assertFalse(hasLongerMinorityExtensions(reads, REVERSE)); // ratio too low
+        assertFalse(hasLongerMinorityExtensions(reads, REVERSE, false)); // ratio too low
 
         reads.clear();
 
@@ -792,18 +798,64 @@ public class AlignmentTest
         reads.add(new SupportRead(read, SupportType.JUNCTION, 10, 0, 10));
         reads.add(new SupportRead(read, SupportType.JUNCTION, 35, 0, 10));
 
-        assertTrue(hasLongerMinorityExtensions(reads, REVERSE));
+        assertTrue(hasLongerMinorityExtensions(reads, REVERSE, false));
 
         reads.add(new SupportRead(read, SupportType.JUNCTION, 35, 0, 10));
 
-        assertFalse(hasLongerMinorityExtensions(reads, REVERSE)); // too many longer extending reads
+        assertFalse(hasLongerMinorityExtensions(reads, REVERSE, false)); // too many longer extending reads
 
         for(int i = 0; i < 20; ++i)
         {
             reads.add(new SupportRead(read, SupportType.JUNCTION, 10, 0, 10));
         }
 
-        assertTrue(hasLongerMinorityExtensions(reads, REVERSE));
+        assertTrue(hasLongerMinorityExtensions(reads, REVERSE, false));
+
+        assertTrue(hasLongerMinorityExtensions(reads, REVERSE, true));
+    }
+
+    @Test
+    public void testSuspectExtensions()
+    {
+        String refBases1 = REF_BASES_400.substring(100, 150) + "AT".repeat(WEAK_ASSEMBLY_MIN_REF_REPEAT);
+        String extBases1 = REF_BASES_400.substring(300, 350);
+        String assemblyBases1 = refBases1 + extBases1;
+        JunctionAssembly assembly = createAssembly(CHR_1, 200, FORWARD, assemblyBases1, refBases1.length() - 1);
+
+        AssemblyAlignment assemblyAlignment = new AssemblyAlignment(assembly);
+
+        int positionStart = 10;
+        int positionEnd = 100;
+        String insertedBases = "A".repeat(WEAK_ASSEMBLY_MIN_INS_LENGTH);
+
+        HomologyData homologyData = new HomologyData("", 0, 0, 5, 2);
+
+        Breakend breakendStart = new Breakend(assemblyAlignment, CHR_1, positionStart, FORWARD, insertedBases, homologyData);
+        Breakend breakendEnd = new Breakend(assemblyAlignment, CHR_2, positionEnd, FORWARD, insertedBases, homologyData);
+        breakendStart.setOtherBreakend(breakendEnd);
+        breakendEnd.setOtherBreakend(breakendStart);
+
+        assemblyAlignment.addBreakend(breakendStart);
+        assemblyAlignment.addBreakend(breakendEnd);
+
+        // condition 1 - homology and discordant rate
+        AssemblyConfig.SampleDiscordantRate = WEAK_ASSEMBLY_DISC_RATE + 0.01;
+        assertTrue(hasSuspectExtension(assemblyAlignment));
+
+        // condition 2 - insert length
+        AssemblyConfig.SampleDiscordantRate = 0;
+        assertTrue(hasSuspectExtension(assemblyAlignment));
+
+        // condition 3 - ref repeat
+        breakendStart = new Breakend(assemblyAlignment, CHR_1, positionStart, FORWARD, "", homologyData);
+        breakendEnd = new Breakend(assemblyAlignment, CHR_2, positionEnd, FORWARD, "", homologyData);
+        breakendStart.setOtherBreakend(breakendEnd);
+        breakendEnd.setOtherBreakend(breakendStart);
+
+        assemblyAlignment.breakends().clear();
+        assemblyAlignment.addBreakend(breakendStart);
+        assemblyAlignment.addBreakend(breakendEnd);
+        assertTrue(hasSuspectExtension(assemblyAlignment));
     }
 
     private BwaMemAlignment createBwaAlignment(
@@ -811,7 +863,8 @@ public class AlignmentTest
             final String mdTag, final String xaTag,
             int mapQual, int nMismatches, int alignerScore)
     {
-        return new BwaMemAlignment(flags, 0, refPosStart - 1, refPosEnd, seqStart, seqEnd, mapQual, nMismatches, alignerScore,
+        int chrRefId = HumanChromosome.chromosomeRank(chromosome) - 1;
+        return new BwaMemAlignment(flags, chrRefId, refPosStart - 1, refPosEnd, seqStart, seqEnd, mapQual, nMismatches, alignerScore,
                 0, cigar, mdTag, xaTag, 0, 0, 0);
     }
 

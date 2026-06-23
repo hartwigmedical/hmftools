@@ -82,7 +82,6 @@ public class FilterConstants
     public static final double INV_SHORT_MIN_AF_LOWER = 0.1;
     public static final double INV_SHORT_MIN_AF_HIGHER = 0.2;
     public static final int INV_SHORT_MAX_HOMOLOGY_LOWER = 3;
-    public static final int INV_SHORT_MAX_HOMOLOGY_HIGHER = 6;
     public static final int INV_SHORT_RATE_LOWER = 200;
     public static final int INV_SHORT_RATE_HIGHER = 400;
 

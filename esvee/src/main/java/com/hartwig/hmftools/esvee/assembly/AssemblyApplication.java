@@ -180,7 +180,6 @@ public class AssemblyApplication
 
     private boolean loadJunctionFiles()
     {
-        // TODO? match these to SAGA
         if(!mConfig.SpecificJunctions.isEmpty())
         {
             for(Junction junction : mConfig.SpecificJunctions)
@@ -211,23 +210,21 @@ public class AssemblyApplication
         int minHotspotFrags = MIN_HOTSPOT_JUNCTION_SUPPORT;
         int minDiscordantFrags = DISCORDANT_GROUP_MIN_FRAGMENTS_SHORT;
 
-        double discordantRate = discordantStats.discordantRate();
+        AssemblyConfig.SampleDiscordantRate = discordantStats.discordantRate();
 
-        if(discordantRate >= mConfig.DiscordantRateIncrement)
+        if(AssemblyConfig.SampleDiscordantRate >= mConfig.DiscordantRateIncrement)
         {
-            minJunctionFrags += (int)floor(discordantRate / mConfig.DiscordantRateIncrement) * DISC_RATE_JUNC_INCREMENT;
-            minHotspotFrags += (int)floor(discordantRate / mConfig.DiscordantRateIncrement) * DISC_RATE_JUNC_INCREMENT;
-            minDiscordantFrags += (int)floor(discordantRate / mConfig.DiscordantRateIncrement) * DISC_RATE_DISC_ONLY_INCREMENT;
+            int discordantRateFactor = (int)floor(AssemblyConfig.SampleDiscordantRate / mConfig.DiscordantRateIncrement);
+            minJunctionFrags += discordantRateFactor * DISC_RATE_JUNC_INCREMENT;
+            minHotspotFrags += discordantRateFactor * DISC_RATE_JUNC_INCREMENT;
+            minDiscordantFrags += discordantRateFactor * DISC_RATE_DISC_ONLY_INCREMENT;
 
             SV_LOGGER.info("raised min fragments(hotspot={} junction={} disc-only={}) for discordantRate({})",
-                    minHotspotFrags, minJunctionFrags, minDiscordantFrags, format("%.3f", discordantRate));
+                    minHotspotFrags, minJunctionFrags, minDiscordantFrags, format("%.3f", AssemblyConfig.SampleDiscordantRate));
         }
 
         mChrJunctionsMap.putAll(Junction.loadJunctions(
                 mConfig.JunctionFile, mConfig.SpecificChrRegions, minJunctionFrags, minHotspotFrags, minDiscordantFrags));
-
-        // if(AssemblyConfig.DevDebug && !validateJunctionMap(mChrJunctionsMap))
-        //    System.exit(1);
 
         return true;
     }
