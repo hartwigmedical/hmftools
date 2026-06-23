@@ -42,6 +42,8 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.MATE_ID;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.MATE_ID_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.MAX_LOCAL_REPEAT;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.MAX_LOCAL_REPEAT_DESC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.PROX_JUNC_READ_RATIO;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.PROX_JUNC_READ_RATIO_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SAGA_INFERRED_BREAKEND;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SAGA_INFERRED_BREAKEND_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SAGA_VARIANT;
@@ -97,6 +99,7 @@ import com.hartwig.hmftools.esvee.assembly.alignment.AssemblyAlignment;
 import com.hartwig.hmftools.esvee.assembly.alignment.Breakend;
 import com.hartwig.hmftools.esvee.assembly.alignment.BreakendSegment;
 import com.hartwig.hmftools.esvee.assembly.alignment.BreakendSupport;
+import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.common.FilterType;
 import com.hartwig.hmftools.esvee.common.saga.SagaSequenceMatch;
 import com.hartwig.hmftools.esvee.common.WriteType;
@@ -217,6 +220,7 @@ public class VcfWriter implements AutoCloseable
         metaData.add(new VCFInfoHeaderLine(UNIQUE_FRAG_POSITIONS, 1, VCFHeaderLineType.Integer, UNIQUE_FRAG_POSITIONS_DESC));
         metaData.add(new VCFInfoHeaderLine(THREE_PRIME_RANGE, 2, VCFHeaderLineType.Integer, THREE_PRIME_RANGE_DESC));
         metaData.add(new VCFInfoHeaderLine(MAX_LOCAL_REPEAT, 1, VCFHeaderLineType.Integer, MAX_LOCAL_REPEAT_DESC));
+        metaData.add(new VCFInfoHeaderLine(PROX_JUNC_READ_RATIO, 1, VCFHeaderLineType.Float, PROX_JUNC_READ_RATIO_DESC));
         metaData.add(new VCFInfoHeaderLine(SAGA_VARIANT, 1, VCFHeaderLineType.String, SAGA_VARIANT_DESC));
         metaData.add(new VCFInfoHeaderLine(SAGA_INFERRED_BREAKEND, 1, VCFHeaderLineType.Flag, SAGA_INFERRED_BREAKEND_DESC));
 
@@ -369,6 +373,19 @@ public class VcfWriter implements AutoCloseable
 
         if(breakend.maxLocalRepeat() > 0)
             builder.attribute(MAX_LOCAL_REPEAT, breakend.maxLocalRepeat());
+
+        double minProximateJuncRatio = -1;
+
+        for(JunctionAssembly assembly : assemblyAlignment.assemblies())
+        {
+            if(assembly.junction().softClipBased())
+            {
+                if(minProximateJuncRatio < 0 || assembly.stats().ProximateJuncReadRatio < minProximateJuncRatio)
+                    minProximateJuncRatio = assembly.stats().ProximateJuncReadRatio;
+            }
+        }
+
+        builder.attribute(PROX_JUNC_READ_RATIO, minProximateJuncRatio);
 
         SagaSequenceMatch sagaMatch = assemblyAlignment.sagaMatch();
         if(sagaMatch != null)

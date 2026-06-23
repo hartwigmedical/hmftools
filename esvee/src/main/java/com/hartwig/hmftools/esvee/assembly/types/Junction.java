@@ -94,6 +94,7 @@ public class Junction implements Comparable<Junction>
 
     public void setIndelStatus(boolean isIndel) { mIndelBased = isIndel; }
     public boolean indelBased() { return mIndelBased; }
+    public boolean softClipBased() { return !indelBased() && !DiscordantOnly; }
 
     public void setIndelCoords(final IndelCoords indelCoords) { mIndelCoords = indelCoords; }
     public IndelCoords indelCoords() { return mIndelCoords; }

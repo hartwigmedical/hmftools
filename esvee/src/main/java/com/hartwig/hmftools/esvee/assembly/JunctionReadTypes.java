@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_SOFT_CLIP_LENGTH_LOWER;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_SOFT_CLIP_SECONDARY_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_SOFT_CLIP_SECONDARY_LENGTH_LOWER;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.JUNCTION_PROXIMATE_READ_DISTANCE;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.readJunctionExtensionLength;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.recordSoftClipsAtJunction;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LINE_MIN_EXTENSION_LENGTH;
@@ -222,4 +223,44 @@ public class JunctionReadTypes
 
     @VisibleForTesting
     public List<ReadJunctionInfo> candidateJunctionReads() { return mCandidateJunctionReads; }
+
+    public static double calcProximateJunctionReadRatio(final Junction junction, final List<Read> rawReads)
+    {
+        if(!junction.softClipBased())
+            return 0;
+
+        // determine the ratio of extension reads vs any soft-clipped read within range - for use as a downstream filter
+        int juncPosition = junction.Position;
+
+        int proximateCount = 0;
+        int exactExtensionCount = 0;
+
+        for(Read read : rawReads)
+        {
+            if(junction.isForward())
+            {
+                if(read.isRightClipped() && read.unclippedEnd() > juncPosition
+                && abs(read.alignmentEnd() - juncPosition) <= JUNCTION_PROXIMATE_READ_DISTANCE)
+                {
+                    ++proximateCount;
+
+                    if(read.alignmentEnd() == juncPosition && read.unclippedEnd() - juncPosition >= ASSEMBLY_MIN_SOFT_CLIP_LENGTH)
+                        ++exactExtensionCount;
+                }
+            }
+            else
+            {
+                if(read.isLeftClipped() && read.unclippedStart() < juncPosition
+                && abs(read.alignmentStart() - proximateCount) <= JUNCTION_PROXIMATE_READ_DISTANCE)
+                {
+                    ++proximateCount;
+
+                    if(read.alignmentStart() == juncPosition && juncPosition - read.unclippedStart() >= ASSEMBLY_MIN_SOFT_CLIP_LENGTH)
+                        ++exactExtensionCount;
+                }
+            }
+        }
+
+        return proximateCount > 0 ? exactExtensionCount / (double)proximateCount : 0;
+    }
 }

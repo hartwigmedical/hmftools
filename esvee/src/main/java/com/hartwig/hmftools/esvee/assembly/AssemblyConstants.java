@@ -47,6 +47,7 @@ public final class AssemblyConstants
     public static final double ASSEMBLY_INDEL_UNLINKED_ASSEMBLY_INDEL_PERC = 0.33;
     public static final int ASSEMBLY_DEDUP_JITTER_MAX_DIST = 20;
     public static final int ASSEMBLY_DEDUP_HIGH_SUPPORT_RATIO = 50;
+    public static final int JUNCTION_PROXIMATE_READ_DISTANCE = 25;
 
     public static final int WEAK_ASSEMBLY_UNPAIRED_MAX_READS = 3;
     public static final double WEAK_ASSEMBLY_UNPAIRED_READ_FACTOR = 5;

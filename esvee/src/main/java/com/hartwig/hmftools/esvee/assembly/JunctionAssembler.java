@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_SPL
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.PRIMARY_ASSEMBLY_SPLIT_MIN_READ_SUPPORT_PERC;
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.findIndelExtensionReads;
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.setIndelStatus;
+import static com.hartwig.hmftools.esvee.assembly.JunctionReadTypes.calcProximateJunctionReadRatio;
 import static com.hartwig.hmftools.esvee.assembly.LineUtils.isLineWithLocalAlignedInsert;
 import static com.hartwig.hmftools.esvee.assembly.SeqTechUtils.findSbxPossibleDuplicates;
 import static com.hartwig.hmftools.esvee.assembly.SeqTechUtils.passSbxDistinctPrimePositionsFilter;
@@ -235,6 +236,8 @@ public class JunctionAssembler
                     return Collections.emptyList();
                 }
             }
+
+            assembly.stats().ProximateJuncReadRatio = calcProximateJunctionReadRatio(mJunction, rawReads); // used for downstream filtering
         }
 
         return assemblies;

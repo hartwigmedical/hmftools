@@ -3,6 +3,7 @@ package com.hartwig.hmftools.esvee.assembly.types;
 import static java.lang.Math.max;
 import static java.lang.Math.round;
 import static java.lang.String.format;
+import static java.lang.String.valueOf;
 
 import static com.hartwig.hmftools.esvee.assembly.types.SupportType.INDEL;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_VARIANT_LENGTH;
@@ -25,6 +26,8 @@ public class AssemblyStats
     public int JuncMateUnmappedRemote;
     public int JuncMateUnmappedRefSide;
     public int IndelReads;
+
+    public double ProximateJuncReadRatio;
 
     // read qualities
     public int IndelLengthTotal;
@@ -54,6 +57,7 @@ public class AssemblyStats
         JuncMateUnmappedRemote = 0;
         JuncMateUnmappedRefSide = 0;
         IndelReads = 0;
+        ProximateJuncReadRatio = 0;
 
         IndelLengthTotal = 0;
         BaseQualTotal = 0;
@@ -162,15 +166,15 @@ public class AssemblyStats
 
     public void addReadTypeCounts(final StringJoiner sj)
     {
-        sj.add(String.valueOf(JuncSupps));
-        sj.add(String.valueOf(IndelReads));
+        sj.add(valueOf(JuncSupps));
+        sj.add(valueOf(IndelReads));
 
-        sj.add(String.valueOf(JuncMateConcordant));
-        sj.add(String.valueOf(JuncMateRefSide));
-        sj.add(String.valueOf(JuncMateDiscordantRemote));
-        sj.add(String.valueOf(JuncMateDiscordantRefSide));
-        sj.add(String.valueOf(JuncMateUnmappedRemote));
-        sj.add(String.valueOf(JuncMateUnmappedRefSide));
+        sj.add(valueOf(JuncMateConcordant));
+        sj.add(valueOf(JuncMateRefSide));
+        sj.add(valueOf(JuncMateDiscordantRemote));
+        sj.add(valueOf(JuncMateDiscordantRefSide));
+        sj.add(valueOf(JuncMateUnmappedRemote));
+        sj.add(valueOf(JuncMateUnmappedRefSide));
     }
 
     public static void addReadStatsHeader(final StringJoiner sj)
@@ -181,6 +185,7 @@ public class AssemblyStats
         sj.add("RefBaseMismatches");
         sj.add("BaseTrimCount");
         sj.add("NonExtSupportReads");
+        sj.add("ProxJuncReadRatio");
 
         sj.add("AvgIndelLength");
         sj.add("AvgBaseQual");
@@ -189,19 +194,18 @@ public class AssemblyStats
 
     public void addReadStats(final StringJoiner sj)
     {
-        sj.add(String.valueOf(SoftClipMatchTotal));
-        sj.add(String.valueOf(SoftClipMismatchTotal));
-        sj.add(String.valueOf(SoftClipSecondMaxLength));
-        sj.add(String.valueOf(RefBaseMismatchTotal));
-        sj.add(String.valueOf(BaseTrimTotal));
-        sj.add(String.valueOf(NonExtensionSupportReads));
+        sj.add(valueOf(SoftClipMatchTotal));
+        sj.add(valueOf(SoftClipMismatchTotal));
+        sj.add(valueOf(SoftClipSecondMaxLength));
+        sj.add(valueOf(RefBaseMismatchTotal));
+        sj.add(valueOf(BaseTrimTotal));
+        sj.add(valueOf(NonExtensionSupportReads));
+        sj.add(format("%.2f", ProximateJuncReadRatio));
 
         sj.add(statString(IndelLengthTotal, ReadCount));
         sj.add(statString(BaseQualTotal, ReadCount));
         sj.add(statString(MapQualTotal, ReadCount));
     }
-
-    public double avgMapQual() { return ReadCount > 0 ? MapQualTotal / (double)ReadCount : 0; }
 
     private static String statString(int count, double readCount)
     {
