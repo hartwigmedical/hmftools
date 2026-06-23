@@ -17,7 +17,7 @@ import java.util.TreeSet;
 
 import com.hartwig.hmftools.common.bam.SamRecordUtils;
 import com.hartwig.hmftools.common.bwa.BwaMemAlignParams;
-import com.hartwig.hmftools.common.bwa.BwaMemAligner;
+import com.hartwig.hmftools.common.bwa.BwaMemAlignerConfig;
 import com.hartwig.hmftools.common.bwa.IBwaMemAligner;
 import com.hartwig.hmftools.common.utils.IntPair;
 
@@ -331,18 +331,24 @@ public class SagaSequenceMatcher
         sagaJunctionMatches.addAll(filterJunctionMatches(args, sagaJunctionMatchInfos, false, filters));
     }
 
-    public static BwaMemAligner.Params createAlignerParams(final SagaSequenceMatcherConfig matchConfig)
+    public static BwaMemAlignerConfig createAlignerConfig(final String indexImagePath, final SagaSequenceMatcherConfig matchConfig)
     {
         // single-threaded in since Esvee makes these calls within threads already, and don't batch since phased assemblies are aligned
         // one at a time, also in a threaded context
-        return new BwaMemAligner.Params(
-                // Note: default params may be too strict. If a case where BWA drops an alignment of a valid match, should relax these.
-                BwaMemAlignParams.DEFAULT,
+        return new BwaMemAlignerConfig(
+                indexImagePath,
+                createAlignParams(matchConfig),
                 true,
-                matchConfig.alignScoreMin(),
                 1,
                 null
         );
+    }
+
+    private static BwaMemAlignParams createAlignParams(final SagaSequenceMatcherConfig matchConfig)
+    {
+        // Note: default params may be too strict. If a case where BWA drops an alignment of a valid match, should relax these.
+        return BwaMemAlignParams.DEFAULT
+                .withMinAlignScore(matchConfig.alignScoreMin());
     }
 
     private SagaAssembly getAssemblyByContigId(int contigId)

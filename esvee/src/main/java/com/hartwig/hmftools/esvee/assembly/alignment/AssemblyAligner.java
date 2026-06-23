@@ -26,6 +26,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.bwa.IBwaMemAligner;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.perf.TaskQueue;
 import com.hartwig.hmftools.esvee.assembly.AssemblyConfig;
@@ -46,7 +47,7 @@ import org.jetbrains.annotations.Nullable;
 public class AssemblyAligner extends ThreadTask
 {
     private final AssemblyConfig mConfig;
-    private final Aligner mAligner;
+    private final IBwaMemAligner mAligner;
     private final AlignmentWriter mWriter;
 
     private final TaskQueue<AssemblyAlignment> mAssemblyAlignments;
@@ -57,7 +58,7 @@ public class AssemblyAligner extends ThreadTask
     private final SagaSequenceMatcher mSagaMatcher;
 
     public AssemblyAligner(
-            final AssemblyConfig config, final Aligner aligner, @Nullable final SagaMatcherFactory sagaMatcherFactory,
+            final AssemblyConfig config, final IBwaMemAligner aligner, @Nullable final SagaMatcherFactory sagaMatcherFactory,
             final AlignmentWriter writer, final TaskQueue<AssemblyAlignment> assemblyAlignments)
     {
         super("AssemblerAlignment");

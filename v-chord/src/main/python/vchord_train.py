@@ -1,9 +1,13 @@
+import argparse
+import os
 import time
+import random
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import torch
 import torch.utils.data as data_utils
+from sklearn.model_selection import train_test_split
 from torch import nn
 from torchvision.io import read_image
 from torchvision.transforms import v2 # use v2 as it claims to be faster
@@ -12,6 +16,17 @@ from common import LOGGER, DEVICE
 
 IMAGE_SIZE = 512
 NUM_CANCER_TYPES = 5
+RANDOM_SEED = 42
+
+# Set seeds for reproducibility
+torch.manual_seed(RANDOM_SEED)
+torch.cuda.manual_seed_all(RANDOM_SEED)
+np.random.seed(RANDOM_SEED)
+random.seed(RANDOM_SEED)
+
+# For full determinism (may impact performance)
+torch.backends.cudnn.deterministic = True
+torch.backends.cudnn.benchmark = False
 
 # select clinical.sampleId, clinical.primaryTumorLocation, chord.BRCA1, chord.BRCA2, chord.hrd, chord.hrStatus, chord.hrdType, chord.remarksHrStatus, chord.remarksHrdType from clinical, chord where clinical.sampleId = chord.sampleId and (clinical.primaryTumorLocation = 'Breast' or clinical.primaryTumorLocation = 'Ovary' or clinical.primaryTumorLocation = 'Fallopian tube' or clinical.primaryTumorLocation = "Prostate" or clinical.primaryTumorLocation = "Pancreas");
 
@@ -175,10 +190,9 @@ class EpochStats:
 # return (train_dataloader, test_dataloader)
 def create_dataloader(df: pd.DataFrame, image_size: int, batch_size: int, augment: bool, hrd_sample_dup: int, test_fraction: float) -> tuple[data_utils.DataLoader, data_utils.DataLoader]:
     # Using Skicit-learn to split data into training and testing sets
-    from sklearn.model_selection import train_test_split
 
     # Split the data into training and testing sets
-    train_df, test_df = train_test_split(df, test_size=test_fraction, random_state=None)
+    train_df, test_df = train_test_split(df, test_size=test_fraction, random_state=RANDOM_SEED)
 
     # write out the train and test set
     train_df[["sampleId"]].to_csv("train_set.tsv.gz", sep="\t", index=False)
@@ -387,14 +401,37 @@ def append_dropout(model: nn.Module, rate: float) -> None:
             setattr(model, name, new)
 
 
-def train_main(sample_tsv: str, purple_root: str, epochs: int, batch_size: int, dropout_rate: float, hrd_sample_dup: int, test_fraction: float, use_nesterov: bool, starting_model: str) -> None:
+def train_main(sample_tsv: str, purple_root: str, epochs: int, batch_size: int, dropout_rate: float, hrd_sample_dup: int, test_fraction: float, use_nesterov: bool, starting_model: str, override_purity: bool = False, ignore_missing_samples: bool = False) -> None:
     df = pd.read_csv(sample_tsv, sep="\t")
 
     df["circosPngPath"] = purple_root + "/" + df["sampleId"] + ".circos.png"
+    df["purplePurityPath"] = purple_root + "/" + df["sampleId"] + ".purple.purity.tsv"
+
+    incomplete_indices = []
+    for idx, row in df.iterrows():
+
+        circos_png_path = row["circosPngPath"]
+        purple_purity_path = row["purplePurityPath"]
+
+        if not os.path.exists(circos_png_path):
+            LOGGER.warning(f"missing file: {circos_png_path}")
+            incomplete_indices.append(idx)
+
+        if not os.path.exists(purple_purity_path):
+            LOGGER.warning(f"missing file: {purple_purity_path}")
+            incomplete_indices.append(idx)
+
+    if incomplete_indices:
+        if ignore_missing_samples:
+            LOGGER.warning(f"ignoring {len(incomplete_indices)} sample(s) with missing files")
+            df = df.drop(index=incomplete_indices)
+        else:
+            raise FileNotFoundError(f"{len(incomplete_indices)} input file(s) not found")
 
     # load the purity
-    if "purity" not in df.columns:
-        df["purity"] = [pd.read_csv(f'{purple_root}/{s}/{s}.purple.purity.tsv', sep='\t')["purity"].iloc[0] for s in df["sampleId"]]
+    if override_purity or "purity" not in df.columns:
+        LOGGER.info("loading purity from .purple.purity.tsv files")
+        df["purity"] = [pd.read_csv(p, sep='\t')["purity"].iloc[0] for p in df["purplePurityPath"]]
 
     df = filter_df(df)
 
@@ -421,7 +458,6 @@ def train_main(sample_tsv: str, purple_root: str, epochs: int, batch_size: int, 
 
 
 def main() -> None:
-    import argparse
     parser = argparse.ArgumentParser(description="train hrd predictor")
     parser.add_argument('--sample_tsv', help='input tsv file', required=True)
     parser.add_argument('--purple_root', help='path to purple plots', required=True)
@@ -432,6 +468,8 @@ def main() -> None:
     parser.add_argument('--test_fraction', help='amount of data used for testing', type=float, default=0.2)
     parser.add_argument('--use_nesterov', help='use SGD with nesterov instead of adamW', action='store_true')
     parser.add_argument('--starting_model', help='starting from this model instead of make a new one', default=None)
+    parser.add_argument('--override_purity', help='force load purity from purple TSV files even if column exists in sample TSV', action='store_true')
+    parser.add_argument('--ignore_missing_samples', help='skip samples with missing circos PNG or purple purity files instead of failing', action='store_true')
     args = parser.parse_args()
 
     LOGGER.info(f"using {DEVICE} device")
@@ -439,7 +477,7 @@ def main() -> None:
           f"dropout_rate={args.dropout_rate}, hrd_sample_dup={args.hrd_sample_duplication}, test_fraction={args.test_fraction}, " +
           f"use_nesterov={args.use_nesterov}, starting_model={args.starting_model}")
     train_main(args.sample_tsv, args.purple_root, args.epochs, args.batch_size, args.dropout_rate,
-               args.hrd_sample_duplication, args.test_fraction, args.use_nesterov, args.starting_model)
+               args.hrd_sample_duplication, args.test_fraction, args.use_nesterov, args.starting_model, args.override_purity, args.ignore_missing_samples)
 
 
 if __name__ == "__main__":
