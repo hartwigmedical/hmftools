@@ -51,6 +51,10 @@ public class Junction implements Comparable<Junction>
 
     private final String mSagaMatchId;
 
+    public static final String INDEL_TYPE = "I";
+    public static final String HOTSPOT_TYPE = "H";
+    public static final String DISCORDANT_TYPE = "D";
+
     public Junction(final String chromosome, final int position, final Orientation orientation)
     {
         this(chromosome, position, orientation, false, false, false, null);
@@ -106,7 +110,7 @@ public class Junction implements Comparable<Junction>
     {
         if(DiscordantOnly || mIndelBased || Hotspot)
         {
-            return format("%s:%d:%d %s",Chromosome, Position, Orient.asByte(), mDetails);
+            return format("%s:%d:%d %s", Chromosome, Position, Orient.asByte(), mDetails);
         }
 
         return format("%s:%d:%d", Chromosome, Position, Orient.asByte());
@@ -294,13 +298,13 @@ public class Junction implements Comparable<Junction>
 
         if(values.length >= 4)
         {
-            if(values[3].equals("D"))
+            if(values[3].equals(DISCORDANT_TYPE))
                 discordantOnly = true;
-            else if(values[3].equals("I"))
+            else if(values[3].equals(INDEL_TYPE))
                 indelBased = true;
         }
 
-        if(values.length >= 5 && values[4].equals("H"))
+        if(values.length >= 5 && values[4].equals(HOTSPOT_TYPE))
         {
             hotspot = true;
         }
