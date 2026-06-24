@@ -48,6 +48,8 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.SAGA_INFERRED_BREAKEND;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SAGA_INFERRED_BREAKEND_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SAGA_VARIANT;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SAGA_VARIANT_DESC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SUPP_REMOTE_REGION_RATIO;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SUPP_REMOTE_REGION_RATIO_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_ID;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_ID_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.THREE_PRIME_RANGE;
@@ -221,6 +223,7 @@ public class VcfWriter implements AutoCloseable
         metaData.add(new VCFInfoHeaderLine(THREE_PRIME_RANGE, 2, VCFHeaderLineType.Integer, THREE_PRIME_RANGE_DESC));
         metaData.add(new VCFInfoHeaderLine(MAX_LOCAL_REPEAT, 1, VCFHeaderLineType.Integer, MAX_LOCAL_REPEAT_DESC));
         metaData.add(new VCFInfoHeaderLine(PROX_JUNC_READ_RATIO, 1, VCFHeaderLineType.Float, PROX_JUNC_READ_RATIO_DESC));
+        metaData.add(new VCFInfoHeaderLine(SUPP_REMOTE_REGION_RATIO, 1, VCFHeaderLineType.Float, SUPP_REMOTE_REGION_RATIO_DESC));
         metaData.add(new VCFInfoHeaderLine(SAGA_VARIANT, 1, VCFHeaderLineType.String, SAGA_VARIANT_DESC));
         metaData.add(new VCFInfoHeaderLine(SAGA_INFERRED_BREAKEND, 1, VCFHeaderLineType.Flag, SAGA_INFERRED_BREAKEND_DESC));
 
@@ -375,6 +378,7 @@ public class VcfWriter implements AutoCloseable
             builder.attribute(MAX_LOCAL_REPEAT, breakend.maxLocalRepeat());
 
         double minProximateJuncRatio = -1;
+        double minSuppRemoteRegionRatio = -1;
 
         for(JunctionAssembly assembly : assemblyAlignment.assemblies())
         {
@@ -382,10 +386,18 @@ public class VcfWriter implements AutoCloseable
             {
                 if(minProximateJuncRatio < 0 || assembly.stats().ProximateJuncReadRatio < minProximateJuncRatio)
                     minProximateJuncRatio = assembly.stats().ProximateJuncReadRatio;
+
+                double suppRemoteRegionRatio = assembly.stats().suppRemoteRegionRatio();
+                if(minSuppRemoteRegionRatio < 0 || suppRemoteRegionRatio < minSuppRemoteRegionRatio)
+                    minSuppRemoteRegionRatio = suppRemoteRegionRatio;
             }
         }
 
-        builder.attribute(PROX_JUNC_READ_RATIO, minProximateJuncRatio);
+        if(minProximateJuncRatio >= 0)
+            builder.attribute(PROX_JUNC_READ_RATIO, minProximateJuncRatio);
+
+        if(minSuppRemoteRegionRatio >= 0)
+            builder.attribute(SUPP_REMOTE_REGION_RATIO, minSuppRemoteRegionRatio);
 
         SagaSequenceMatch sagaMatch = assemblyAlignment.sagaMatch();
         if(sagaMatch != null)

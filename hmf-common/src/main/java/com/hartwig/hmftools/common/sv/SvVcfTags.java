@@ -90,6 +90,9 @@ public final class SvVcfTags
     public static final String PROX_JUNC_READ_RATIO = "PJRR";
     public static final String PROX_JUNC_READ_RATIO_DESC = "Proximate junction read ratio";
 
+    public static final String SUPP_REMOTE_REGION_RATIO = "SRRR";
+    public static final String SUPP_REMOTE_REGION_RATIO_DESC = "Supplementary remote region ratio";
+
     public static final String SAGA_VARIANT = "SAGA";
     public static final String SAGA_VARIANT_DESC = "ID and breakends of the matched SAGA variant";
 

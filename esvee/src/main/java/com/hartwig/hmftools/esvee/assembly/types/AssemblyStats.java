@@ -5,11 +5,14 @@ import static java.lang.Math.round;
 import static java.lang.String.format;
 import static java.lang.String.valueOf;
 
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportType.INDEL;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_VARIANT_LENGTH;
 
+import java.util.Map;
 import java.util.StringJoiner;
 
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.assembly.read.ReadUtils;
 
@@ -46,6 +49,8 @@ public class AssemblyStats
 
     public int ReadCount;
 
+    public final Map<String,Integer> RemoteSuppRegionFrequency;
+
     public AssemblyStats()
     {
         ReadCount = 0;
@@ -71,6 +76,7 @@ public class AssemblyStats
         NonExtensionSupportReads = 0;
         CandidateSupportCount = 0;
         UnmappedReadCount = 0;
+        RemoteSuppRegionFrequency = Maps.newHashMap();
     }
 
     public void addRead(final SupportRead supportRead, final Junction junction, @Nullable final Read read)
@@ -123,19 +129,7 @@ public class AssemblyStats
                     }
                 }
             }
-        }
 
-        MapQualTotal += supportRead.mapQual();
-        BaseTrimTotal += supportRead.trimCount();
-
-        if(read != null)
-        {
-            BaseQualTotal += ReadUtils.avgBaseQuality(read);
-            IndelLengthTotal += read.cigarElements().stream().filter(x -> x.getOperator().isIndel()).mapToInt(x -> x.getLength()).sum();
-        }
-
-        if(supportRead.type().isSplitSupport())
-        {
             SoftClipMatchTotal += supportRead.extensionBaseMatches();
             SoftClipMismatchTotal += supportRead.extensionBaseMismatches();
             RefBaseMismatchTotal += max(supportRead.referenceMismatches(), 0);
@@ -149,7 +143,60 @@ public class AssemblyStats
             {
                 SoftClipSecondMaxLength = supportRead.extensionBaseMatches();
             }
+
+            // track frequency of remote supplementary locations
+            if(junction.softClipBased())
+                trackSuppRemoteRegions(supportRead, junction);
         }
+
+        MapQualTotal += supportRead.mapQual();
+        BaseTrimTotal += supportRead.trimCount();
+
+        if(read != null)
+        {
+            BaseQualTotal += ReadUtils.avgBaseQuality(read);
+            IndelLengthTotal += read.cigarElements().stream().filter(x -> x.getOperator().isIndel()).mapToInt(x -> x.getLength()).sum();
+        }
+    }
+
+    private void trackSuppRemoteRegions(final SupportRead read, final Junction junction)
+    {
+        if(read.supplementaryData() == null || read.supplementaryData().MapQuality < 30)
+            return;
+
+        if(read.junctionExtensionLength(junction.Orient) < ASSEMBLY_MIN_SOFT_CLIP_LENGTH)
+            return;
+
+        // must soft-clip at the junction
+        if(junction.isForward() && read.alignmentEnd() != junction.Position)
+            return;
+        else if(junction.isReverse() && read.alignmentStart() != junction.Position)
+            return;
+
+        String remoteLocationStr = format("%s_%d",
+                read.supplementaryData().Chromosome, round(read.supplementaryData().Position / 1000.0));
+
+        RemoteSuppRegionFrequency.merge(remoteLocationStr, 1, Integer::sum);
+    }
+
+    public double suppRemoteRegionRatio()
+    {
+        if(RemoteSuppRegionFrequency.isEmpty())
+            return 0;
+
+        if(RemoteSuppRegionFrequency.size() == 1)
+            return 1.0;
+
+        int total = 0;
+        int maxRegion = 0;
+
+        for(Integer count : RemoteSuppRegionFrequency.values())
+        {
+            total += count;
+            maxRegion = max(maxRegion, count);
+        }
+
+        return total > 0 ? maxRegion / (double)total : 0;
     }
 
     public static void addReadTypeHeader(final StringJoiner sj)
@@ -186,6 +233,7 @@ public class AssemblyStats
         sj.add("BaseTrimCount");
         sj.add("NonExtSupportReads");
         sj.add("ProxJuncReadRatio");
+        sj.add("SuppRemoteLocationRatio");
 
         sj.add("AvgIndelLength");
         sj.add("AvgBaseQual");
@@ -201,6 +249,7 @@ public class AssemblyStats
         sj.add(valueOf(BaseTrimTotal));
         sj.add(valueOf(NonExtensionSupportReads));
         sj.add(format("%.2f", ProximateJuncReadRatio));
+        sj.add(format("%.2f", suppRemoteRegionRatio()));
 
         sj.add(statString(IndelLengthTotal, ReadCount));
         sj.add(statString(BaseQualTotal, ReadCount));

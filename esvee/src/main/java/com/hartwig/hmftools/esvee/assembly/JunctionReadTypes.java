@@ -251,7 +251,7 @@ public class JunctionReadTypes
             else
             {
                 if(read.isLeftClipped() && read.unclippedStart() < juncPosition
-                && abs(read.alignmentStart() - proximateCount) <= JUNCTION_PROXIMATE_READ_DISTANCE)
+                && abs(read.alignmentStart() - juncPosition) <= JUNCTION_PROXIMATE_READ_DISTANCE)
                 {
                     ++proximateCount;
 
