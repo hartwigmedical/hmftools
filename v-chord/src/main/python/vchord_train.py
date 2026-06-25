@@ -392,15 +392,6 @@ def test(dataloader: data_utils.DataLoader, model: nn.Module, loss_fn: nn.Module
     epoch_stats.log("Test ", epoch)
 
 
-def append_dropout(model: nn.Module, rate: float) -> None:
-    for name, module in model.named_children():
-        if len(list(module.children())) > 0:
-            append_dropout(module, rate)
-        if isinstance(module, nn.ReLU):
-            new = nn.Sequential(module, nn.Dropout2d(p=rate))
-            setattr(model, name, new)
-
-
 def train_main(sample_tsv: str, purple_root: str, epochs: int, batch_size: int, dropout_rate: float, hrd_sample_dup: int, test_fraction: float, use_nesterov: bool, starting_model: str, override_purity: bool = False, ignore_missing_samples: bool = False) -> None:
     df = pd.read_csv(sample_tsv, sep="\t")
 
