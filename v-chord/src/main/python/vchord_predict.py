@@ -107,7 +107,7 @@ def log_prediction_summary(df: pd.DataFrame) -> None:
 
 
 def predict_main(sample_tsv: str, purple_root: str, model_path: str, output_tsv: str,
-                 batch_size: int, train_set_tsv: str = None) -> None:
+                 batch_size: int, train_set_tsv: str = None, override_purity: bool = False) -> None:
     """
     Run predictions on samples using trained model
 
@@ -118,11 +118,23 @@ def predict_main(sample_tsv: str, purple_root: str, model_path: str, output_tsv:
         output_tsv: Path for output TSV with predictions
         batch_size: Batch size for prediction
         train_set_tsv: Optional path to train_set.tsv.gz to mark training samples
+        override_purity: Force load purity from purple TSV files even if column exists in sample TSV
     """
     # Load samples
     LOGGER.info(f"Loading samples from {sample_tsv}")
     df = pd.read_csv(sample_tsv, sep='\t')
     LOGGER.info(f"Loaded {len(df)} samples")
+
+    df["purplePurityPath"] = purple_root + "/" + df["sampleId"] + ".purple.purity.tsv"
+
+    if override_purity or "purity" not in df.columns:
+        missing_purity = [p for p in df["purplePurityPath"] if not os.path.exists(p)]
+        for p in missing_purity:
+            LOGGER.warning(f"missing file: {p}")
+        if missing_purity:
+            raise FileNotFoundError(f"{len(missing_purity)} purple purity file(s) not found")
+        LOGGER.info("loading purity from .purple.purity.tsv files")
+        df["purity"] = [pd.read_csv(p, sep='\t')["purity"].iloc[0] for p in df["purplePurityPath"]]
 
     # Load model
     model = load_model(model_path)
@@ -162,11 +174,12 @@ def main() -> None:
     parser.add_argument('--output_tsv', help='Output TSV file with predictions', required=True)
     parser.add_argument('--batch_size', help='Batch size for prediction', type=int, default=32)
     parser.add_argument('--train_set_tsv', help='Optional path to train_set.tsv.gz to mark training samples', default=None)
+    parser.add_argument('--override_purity', help='force load purity from purple TSV files even if column exists in sample TSV', action='store_true')
     args = parser.parse_args()
 
     LOGGER.info(f"Using {DEVICE} device")
     predict_main(args.sample_tsv, args.purple_root, args.model_path, args.output_tsv,
-                 args.batch_size, args.train_set_tsv)
+                 args.batch_size, args.train_set_tsv, args.override_purity)
 
 
 if __name__ == "__main__":
