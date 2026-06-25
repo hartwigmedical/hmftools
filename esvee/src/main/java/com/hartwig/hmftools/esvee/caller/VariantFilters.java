@@ -315,7 +315,7 @@ public class VariantFilters
                 return true;
         }
 
-        if(breakend.ConfidenceInterval.length() >= INV_SHORT_MAX_HOMOLOGY_HIGHER)
+        if(breakend.InexactHomology.length() >= INV_SHORT_MAX_HOMOLOGY_HIGHER)
             return true;
 
         double proximateJuncRatio = breakend.Context.getAttributeAsDouble(PROX_JUNC_READ_RATIO, -1);
