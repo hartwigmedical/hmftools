@@ -11,9 +11,12 @@ import static com.hartwig.hmftools.tars.common.TarsConstants.SUPP_RESCUE_MAPQ_CA
 import static com.hartwig.hmftools.tars.common.TarsConfig.TARS_LOGGER;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
@@ -21,14 +24,14 @@ import com.hartwig.hmftools.tars.liftback.rescue.JunctionRescueResolver;
 import com.hartwig.hmftools.tars.liftback.rescue.RefSequenceSource;
 import com.hartwig.hmftools.tars.liftback.rescue.RescueCandidate;
 import com.hartwig.hmftools.tars.liftback.rescue.RescueResult;
+import com.hartwig.hmftools.tars.liftback.rescue.RescueStatistics;
 import com.hartwig.hmftools.tars.liftback.rescue.RescueSupplementary;
-import com.hartwig.hmftools.tars.liftback.tailextend.SoftclipTailExtender;
-import com.hartwig.hmftools.tars.liftback.tailextend.TailExtensionResult;
-import com.hartwig.hmftools.tars.liftback.tailextend.TerminalCollapseResult;
-import com.hartwig.hmftools.tars.liftback.tailextend.TerminalMicroJunctionCollapser;
+import com.hartwig.hmftools.tars.liftback.tailextend.TailExtensionStatistics;
+import com.hartwig.hmftools.tars.liftback.tailextend.TerminalReconciler;
 
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.TextCigarCodec;
+import htsjdk.samtools.util.SequenceUtil;
 
 // Stateless-per-group transform engine: resolves one contiguous read-name group to genomic coordinates,
 // runs the optional rescue / terminal-collapse / tail-extend passes, patches mate fields against a
@@ -44,9 +47,8 @@ public class LiftBackGroupProcessor
     // optional rescue resolver: merges primary + supp across annotated junctions. Null when disabled.
     private final JunctionRescueResolver mJunctionRescueResolver;
 
-    // null when extend-softclip-tails / terminal-collapse are disabled.
-    private final SoftclipTailExtender mSoftclipTailExtender;
-    private final TerminalMicroJunctionCollapser mTerminalJunctionCollapser;
+    // null when extend-softclip-tails / terminal-collapse are disabled. Holds both terminal passes.
+    private final TerminalReconciler mTerminalReconciler;
     private final JunctionCanonicalizer mJunctionCanonicalizer;
 
     // genomic reference for the post-lift NM recompute. Null when no ref is loaded (rescue + extend both
@@ -78,14 +80,13 @@ public class LiftBackGroupProcessor
 
     public LiftBackGroupProcessor(
             final LiftBackResolver resolver, final JunctionRescueResolver junctionRescueResolver,
-            final SoftclipTailExtender softclipTailExtender, final TerminalMicroJunctionCollapser terminalJunctionCollapser,
+            final TerminalReconciler terminalReconciler,
             final JunctionCanonicalizer junctionCanonicalizer, final RefSequenceSource refSource,
             final ExcludedRegions excludedRegions, final LiftBackStats stats)
     {
         mResolver = resolver;
         mJunctionRescueResolver = junctionRescueResolver;
-        mSoftclipTailExtender = softclipTailExtender;
-        mTerminalJunctionCollapser = terminalJunctionCollapser;
+        mTerminalReconciler = terminalReconciler;
         mJunctionCanonicalizer = junctionCanonicalizer;
         mRefSource = refSource;
         mExcludedRegions = excludedRegions;
@@ -113,16 +114,27 @@ public class LiftBackGroupProcessor
 
         // Two passes per pair so mate /2 can use mate /1's rescued junctions as a hint, and a
         // re-decide of mate /1 picks up mate /2's hints when mate /1 wasn't initially rescued.
+        PassCounterSnapshot beforeM1 = snapshotPassCounters();
         MateDecision m1 = decideMateGroup(firstOfPair, Collections.emptyList());
+        PassCounterSnapshot afterM1 = snapshotPassCounters();
         refreshMateInfoCache(firstOfPair, m1, liftedMateInfoCache);
         MateDecision m2 = decideMateGroup(secondOfPair, m1.IntroducedIntrons);
         refreshMateInfoCache(secondOfPair, m2, liftedMateInfoCache);
-        MateDecision m1Final = (m1.IntroducedIntrons.isEmpty() && !m2.IntroducedIntrons.isEmpty())
-                ? decideMateGroup(firstOfPair, m2.IntroducedIntrons)
-                : m1;
-        if(m1Final != m1)
+
+        MateDecision m1Final;
+        if(m1.IntroducedIntrons.isEmpty() && !m2.IntroducedIntrons.isEmpty())
         {
+            // The provisional m1 decision is discarded and re-made with mate /2's introns. Roll back the engine
+            // pass-effect counters it bumped (collapse / tail-extend / canonicalize / rescue / excluded reads) so
+            // the discarded pass is not double-counted; the re-decision below re-counts. Per-record stats are
+            // unaffected (recorded once in writeMateGroup on the chosen decision); the emitted BAM is unaffected.
+            rewindProvisionalCounters(beforeM1, afterM1);
+            m1Final = decideMateGroup(firstOfPair, m2.IntroducedIntrons);
             refreshMateInfoCache(firstOfPair, m1Final, liftedMateInfoCache);
+        }
+        else
+        {
+            m1Final = m1;
         }
 
         writeMateGroup(firstOfPair, m1Final, liftedMateInfoCache, sink);
@@ -153,6 +165,75 @@ public class LiftBackGroupProcessor
         }
         LiftedMateInfo refreshed = LiftBackRecordOps.toLiftedMateInfo(primary, decision.PrimaryResult);
         cache.recordPrimaryAlignment(primary.getReadName(), primary.getFirstOfPairFlag(), refreshed);
+    }
+
+    // Snapshot of the pass-effect counters mutated by one decideMateGroup pass, so a discarded provisional mate
+    // decision can be rolled back rather than double-counted in the summary (see processNameGroup).
+    private static final class PassCounterSnapshot
+    {
+        final int[] Tail;
+        final int[] Rescue;
+        final long CollapseLeading;
+        final long CollapseTrailing;
+        final long Canonicalized;
+        final long ExcludedReads;
+
+        PassCounterSnapshot(
+                final int[] tail, final int[] rescue, final long collapseLeading, final long collapseTrailing,
+                final long canonicalized, final long excludedReads)
+        {
+            Tail = tail;
+            Rescue = rescue;
+            CollapseLeading = collapseLeading;
+            CollapseTrailing = collapseTrailing;
+            Canonicalized = canonicalized;
+            ExcludedReads = excludedReads;
+        }
+    }
+
+    private PassCounterSnapshot snapshotPassCounters()
+    {
+        return new PassCounterSnapshot(
+                mTerminalReconciler != null ? mTerminalReconciler.statistics().snapshot() : null,
+                mJunctionRescueResolver != null ? mJunctionRescueResolver.statistics().snapshot() : null,
+                mTerminalReconciler != null ? mTerminalReconciler.collapsedLeading() : 0,
+                mTerminalReconciler != null ? mTerminalReconciler.collapsedTrailing() : 0,
+                mJunctionCanonicalizer != null ? mJunctionCanonicalizer.junctionsShifted() : 0,
+                mExcludedReads);
+    }
+
+    // Subtract the (after - before) delta a discarded provisional pass contributed, leaving only the kept counts.
+    private void rewindProvisionalCounters(final PassCounterSnapshot before, final PassCounterSnapshot after)
+    {
+        if(mTerminalReconciler != null)
+        {
+            TailExtensionStatistics tail = mTerminalReconciler.statistics();
+            int[] current = tail.snapshot();
+            for(int i = 0; i < current.length; ++i)
+            {
+                current[i] -= after.Tail[i] - before.Tail[i];
+            }
+            tail.restore(current);
+            mTerminalReconciler.restoreCollapseCounters(
+                    mTerminalReconciler.collapsedLeading() - (after.CollapseLeading - before.CollapseLeading),
+                    mTerminalReconciler.collapsedTrailing() - (after.CollapseTrailing - before.CollapseTrailing));
+        }
+        if(mJunctionRescueResolver != null)
+        {
+            RescueStatistics rescue = mJunctionRescueResolver.statistics();
+            int[] current = rescue.snapshot();
+            for(int i = 0; i < current.length; ++i)
+            {
+                current[i] -= after.Rescue[i] - before.Rescue[i];
+            }
+            rescue.restore(current);
+        }
+        if(mJunctionCanonicalizer != null)
+        {
+            mJunctionCanonicalizer.restoreJunctionsShifted(
+                    mJunctionCanonicalizer.junctionsShifted() - (after.Canonicalized - before.Canonicalized));
+        }
+        mExcludedReads -= after.ExcludedReads - before.ExcludedReads;
     }
 
     // Per-mate decision: resolves every record, runs the rescue resolver, returns the lifted results +
@@ -202,14 +283,16 @@ public class LiftBackGroupProcessor
             }
         }
 
-        // a valid BAM always has a primary in the mate group, so resolve it directly.
-        LiftBackResult primaryResult = mResolver.resolve(primary);
+        // a valid BAM always has a primary in the mate group, so resolve it directly. Candidate cigars are
+        // reconciled (collapse + tail-extend) before the discriminator runs - see reconcileAlignmentsToGenome.
+        LiftBackResult primaryResult = mResolver.resolve(primary, this::reconcileAlignmentsToGenome);
 
         LiftBackResult[] resolved = new LiftBackResult[records.size()];
         for(int i = 0; i < records.size(); i++)
         {
             SAMRecord record = records.get(i);
-            resolved[i] = (record == primary && primaryResult != null) ? primaryResult : mResolver.resolve(record);
+            resolved[i] = (record == primary && primaryResult != null)
+                    ? primaryResult : mResolver.resolve(record, this::reconcileAlignmentsToGenome);
         }
 
         int primaryIdx = primary != null ? indexOfPrimary(records, primary) : -1;
@@ -217,15 +300,16 @@ public class LiftBackGroupProcessor
         List<ChrBaseRegion> introduced = new ArrayList<>();
         boolean[] droppedByRescue = applyJunctionRescue(records, resolved, primary, mateHintIntrons, introduced);
 
-        // Collapse a spurious tx-contig terminal micro-junction before tail extension, so the extender
-        // sees the corrected (contiguous) cigar rather than the fabricated junction.
-        applyTerminalJunctionCollapse(records, resolved, primary, droppedByRescue);
-
-        applyTailExtension(records, resolved, primary, droppedByRescue);
-
-        // Last lifted-cigar pass: slide any interior junction left a few bp onto a canonical splice motif
-        // (fixes a tx-contig boundary deletion that lifted the intron off the true GT-AG site).
-        applyJunctionCanonicalization(records, resolved, primary, droppedByRescue);
+        // Finalize the chosen primary: reconcile its lifted cigar (terminal collapse + tail-extend), then
+        // canonicalize. Not a redundant repeat of the per-candidate reconciliation in reconcileAlignmentsToGenome -
+        // it does real work in two cases:
+        //  1. rescue merged a primary+supp into a fresh M N M cigar that never existed at candidate time, so it
+        //     can carry its own fabricated terminal micro-junction or reclaimable softclip; and
+        //  2. the discriminator swapped to a cross-chromosome alt, which reconcileAlignmentsToGenome collapsed but
+        //     did NOT tail-extend (tail-extend is scoped to self + co-located alts) - this is its first tail-extend.
+        // Case 2 is why that scoping is output-safe: whatever primary wins is fully reconciled here regardless.
+        // A primary already fully reconciled at candidate time skips every pass via the N-present / S-present guards.
+        reconcileChosenPrimary(records, resolved, primary, droppedByRescue);
 
         // post-lift exclusion: if the final primary placement lands in an excluded (rRNA / contamination) region,
         // unmap it REDUX-style - flip the result to UNMAPPED so the mate is coordinated via the cache (willBeUnmapped)
@@ -436,13 +520,145 @@ public class LiftBackGroupProcessor
         return dropped;
     }
 
-    // Runs after applyJunctionRescue so rescue's lookups see bwa's original cigar; the extender then
-    // cleans up tail-trim residual the rescue couldn't merge. Skipped on rescue-merged primaries.
-    private void applyTerminalJunctionCollapse(
+    // Reconciles candidate cigars against the genome before the discriminator: collapse a fabricated terminal
+    // micro-junction (sub-trust anchor across an N), then walk a reclaimable terminal softclip into contiguous
+    // genome. This turns the discriminator's RefSoftClipped / RefFullMatch / TxHasNCigar inputs from raw-bwa
+    // guesses into measured facts. Read bases are taken in each candidate's own orientation; self and same-strand
+    // alts use the record bases as-is, opposite-strand alts use the reverse complement.
+    //
+    // Collapse runs on every candidate: it can shift a start by a whole intron, merging a fabricated far
+    // placement back onto self's locus (turns a spurious multimapper into a single-locus rescue). Tail-extend
+    // is restricted to co-located alts (NOT self): it shifts a start by at most a read's tail, so it never merges
+    // loci, and it only feeds the single-locus RefSoftClipped/RefFullMatch contest - running it on far-locus
+    // cross-locus alts is wasted ref-genome work (the dominant cost on multimapper-heavy samples). Self is left
+    // collapse-only so its terminal softclip survives for junction rescue (a primary+supp merge needs the clip)
+    // and for reconcileChosenPrimary's post-rescue tail-extend - i.e. self's tail-extend runs after rescue, as
+    // it did before this pass was hoisted ahead of the discriminator.
+    private void reconcileAlignmentsToGenome(final List<LiftedAlignment> alignments, final SAMRecord record)
+    {
+        if(mTerminalReconciler == null || alignments.isEmpty())
+        {
+            return;
+        }
+
+        byte[] forwardBases = record.getReadBases();
+        if(forwardBases == null || forwardBases.length == 0)
+        {
+            return;
+        }
+
+        LiftedAlignment self = alignments.get(0);
+        boolean recordForward = !record.getReadNegativeStrandFlag();
+
+        // Fast path for the dominant single-candidate read: reconcile self directly and skip the per-placement
+        // dedup map. Self is collapse-only (allowTailExtend false) - its softclip is left for rescue and the
+        // post-rescue tail-extend in reconcileChosenPrimary. Self uses the record's own orientation (forward bases).
+        if(alignments.size() == 1)
+        {
+            if(self.LiftedCigar != null)
+            {
+                ReconciledPlacement placement = reconcileCigarToGenome(self, forwardBases, false);
+                if(placement.Pos != self.LiftedPos || !placement.Cigar.equals(self.LiftedCigar))
+                {
+                    alignments.set(0, self.withLiftedCigar(placement.Pos, placement.Cigar));
+                }
+            }
+            return;
+        }
+
+        byte[] reverseBases = null;
+
+        // Many candidates lift to an identical genomic placement (e.g. the packed isoform contigs of one gene all
+        // collapsing to one locus). The collapse / tail-extend ref-genome lookups are deterministic in
+        // (chrom, pos, cigar, strand) -- allowTailExtend is just chrom == self's chrom, so it is constant per key --
+        // so each distinct placement is reconciled once and the result reused for every duplicate.
+        Map<String, ReconciledPlacement> placementsByKey = new HashMap<>();
+
+        for(int i = 0; i < alignments.size(); ++i)
+        {
+            LiftedAlignment alignment = alignments.get(i);
+            if(alignment.LiftedCigar == null)
+            {
+                continue;
+            }
+
+            String key = alignment.LiftedChrom + ':' + alignment.LiftedPos + ':' + alignment.LiftedCigar
+                    + (alignment.ForwardStrand ? '+' : '-');
+            ReconciledPlacement placement = placementsByKey.get(key);
+            if(placement == null)
+            {
+                boolean allowTailExtend = alignment != self && coLocated(alignment, self);
+
+                byte[] bases;
+                if(alignment.ForwardStrand == recordForward)
+                {
+                    bases = forwardBases;
+                }
+                else
+                {
+                    if(reverseBases == null)
+                    {
+                        reverseBases = Arrays.copyOf(forwardBases, forwardBases.length);
+                        SequenceUtil.reverseComplement(reverseBases);
+                    }
+                    bases = reverseBases;
+                }
+
+                placement = reconcileCigarToGenome(alignment, bases, allowTailExtend);
+                placementsByKey.put(key, placement);
+            }
+
+            if(placement.Pos != alignment.LiftedPos || !placement.Cigar.equals(alignment.LiftedCigar))
+            {
+                alignments.set(i, alignment.withLiftedCigar(placement.Pos, placement.Cigar));
+            }
+        }
+    }
+
+    // Collapse a fabricated terminal micro-junction, then walk a reclaimable terminal softclip into contiguous
+    // genome. Reads only (chrom, pos, cigar, bases, allowTailExtend), so the result is cacheable per placement.
+    private ReconciledPlacement reconcileCigarToGenome(
+            final LiftedAlignment alignment, final byte[] bases, final boolean allowTailExtend)
+    {
+        TerminalReconciler.ReconcileResult result =
+                mTerminalReconciler.reconcile(alignment.LiftedChrom, alignment.LiftedPos, alignment.LiftedCigar, bases, allowTailExtend);
+        return new ReconciledPlacement(result.pos(), result.cigar());
+    }
+
+    // Cached collapse/tail-extend output for one lifted placement (see reconcileAlignmentsToGenome).
+    private static final class ReconciledPlacement
+    {
+        final int Pos;
+        final String Cigar;
+
+        ReconciledPlacement(final int pos, final String cigar)
+        {
+            Pos = pos;
+            Cigar = cigar;
+        }
+    }
+
+    // Same chromosome as self: tail-extend reaches any alt that could share self's locus after a short walk,
+    // while still skipping the cross-chromosome alts of a multimapper (the bulk of the wasted ref
+    // lookups). A pos window proved too tight - it dropped same-chrom contest alts and lost their rescues.
+    private static boolean coLocated(final LiftedAlignment alignment, final LiftedAlignment self)
+    {
+        return alignment.LiftedChrom.equals(self.LiftedChrom);
+    }
+
+    // Finalize the chosen primary in one pass: terminal micro-junction collapse, then softclip tail-extend, then
+    // junction canonicalize, each operating on the running result. Runs on whatever primary the discriminator or
+    // rescue chose (see the call site for why it is not rescue-specific). A clean primary skips each pass via the
+    // N-present / S-present guards, so it costs only the lookup. Same sequence/gating as the three former passes.
+    private void reconcileChosenPrimary(
             final List<SAMRecord> records, final LiftBackResult[] resolved, final SAMRecord primary,
             final boolean[] droppedByRescue)
     {
-        if(mTerminalJunctionCollapser == null || primary == null || primary.getReadUnmappedFlag())
+        if(mTerminalReconciler == null && mJunctionCanonicalizer == null)
+        {
+            return;
+        }
+        if(primary == null || primary.getReadUnmappedFlag())
         {
             return;
         }
@@ -457,101 +673,51 @@ public class LiftBackGroupProcessor
         if(primaryRes == null || primaryRes.finalCigar() == null
                 || primaryRes.finalCigar().equals(SAMRecord.NO_ALIGNMENT_CIGAR))
             return;
-        if(!primaryRes.hasNCigar())
+
+        // The discriminator may have swapped the primary to an opposite-strand alt. tryCollapse / tryExtend walk
+        // the read bases against the genome in the placement's orientation, so reverse-complement them when the
+        // resolved strand differs from the record's own (matches the per-candidate handling in reconcileAlignmentsToGenome).
+        byte[] readBases = primary.getReadBases();
+        if(readBases != null && primaryRes.negativeStrand() != primary.getReadNegativeStrandFlag())
         {
-            return;
+            readBases = Arrays.copyOf(readBases, readBases.length);
+            SequenceUtil.reverseComplement(readBases);
         }
 
-        TerminalCollapseResult collapse = mTerminalJunctionCollapser.tryCollapse(
-                primaryRes.finalChrom(), primaryRes.finalPos(), primaryRes.finalCigar(), primary.getReadBases());
-
-        if(!collapse.collapsed())
+        // 1 + 2. reconcile the chosen primary: terminal micro-junction collapse, then softclip tail-extend, via
+        // the single TerminalReconciler.reconcile() entry point (one definition shared with the per-candidate
+        // pass, so the two cannot drift). This is the chosen primary's tail-extend, deferred from candidate time
+        // so rescue saw the original softclip (see reconcileAlignmentsToGenome). A clean primary is unchanged.
+        if(mTerminalReconciler != null)
         {
-            return;
+            TerminalReconciler.ReconcileResult reconciled = mTerminalReconciler.reconcile(
+                    primaryRes.finalChrom(), primaryRes.finalPos(), primaryRes.finalCigar(), readBases, true);
+            if(reconciled.pos() != primaryRes.finalPos() || !reconciled.cigar().equals(primaryRes.finalCigar()))
+            {
+                TARS_LOGGER.debug2("reconcile-primary {}: {} -> {}",
+                        primary.getReadName(), primaryRes.finalCigar(), reconciled.cigar());
+                primaryRes = primaryRes.withRevisedCigar(
+                        reconciled.pos(), reconciled.cigar(), reconciled.cigar().indexOf('N') >= 0,
+                        primaryRes.updatedMapq(), "reconciled");
+                resolved[primaryIdx] = primaryRes;
+            }
         }
 
-        resolved[primaryIdx] = primaryRes.withRevisedCigar(
-                collapse.newStart(), collapse.newCigar(), collapse.newCigar().indexOf('N') >= 0,
-                primaryRes.updatedMapq(), "terminal-junction-collapsed");
-        TARS_LOGGER.debug2("terminal-collapse {}: {} -> {}", primary.getReadName(), primaryRes.finalCigar(), collapse.newCigar());
-    }
-
-    private void applyTailExtension(
-            final List<SAMRecord> records, final LiftBackResult[] resolved, final SAMRecord primary,
-            final boolean[] droppedByRescue)
-    {
-        if(mSoftclipTailExtender == null || primary == null || primary.getReadUnmappedFlag())
+        // 3. slide an interior junction onto a canonical splice motif (N-cigars only)
+        if(mJunctionCanonicalizer != null && primaryRes.hasNCigar())
         {
-            return;
+            JunctionCanonicalizationResult canon = mJunctionCanonicalizer.tryCanonicalize(
+                    primaryRes.finalChrom(), primaryRes.finalPos(), primaryRes.finalCigar(), readBases);
+            if(canon.changed())
+            {
+                TARS_LOGGER.debug2("canonicalize {}: {} -> {}",
+                        primary.getReadName(), primaryRes.finalCigar(), canon.newCigar());
+                primaryRes = primaryRes.withRevisedCigar(
+                        primaryRes.finalPos(), canon.newCigar(), primaryRes.hasNCigar(),
+                        primaryRes.updatedMapq(), "junction-canonicalized");
+                resolved[primaryIdx] = primaryRes;
+            }
         }
-
-        int primaryIdx = indexOfPrimary(records, primary);
-        if(primaryIdx < 0)
-        {
-            return;
-        }
-
-        if(droppedByRescue != null && droppedByRescue[primaryIdx])
-        {
-            return;
-        }
-
-        LiftBackResult primaryRes = resolved[primaryIdx];
-        if(primaryRes == null || primaryRes.finalCigar() == null
-                || primaryRes.finalCigar().equals(SAMRecord.NO_ALIGNMENT_CIGAR))
-            return;
-
-        TailExtensionResult extension = mSoftclipTailExtender.tryExtend(
-                primaryRes.finalChrom(), primaryRes.finalPos(), primaryRes.finalCigar(),
-                primary.getReadBases());
-
-        if(!extension.extended())
-        {
-            return;
-        }
-
-        resolved[primaryIdx] = primaryRes.withRevisedCigar(
-                extension.newStart(), extension.newCigar(), primaryRes.hasNCigar(),
-                primaryRes.updatedMapq(), "tail-extended");
-        TARS_LOGGER.debug2("tail-extend {}: {} -> {}", primary.getReadName(), primaryRes.finalCigar(), extension.newCigar());
-    }
-
-    private void applyJunctionCanonicalization(
-            final List<SAMRecord> records, final LiftBackResult[] resolved, final SAMRecord primary,
-            final boolean[] droppedByRescue)
-    {
-        if(mJunctionCanonicalizer == null || primary == null || primary.getReadUnmappedFlag())
-        {
-            return;
-        }
-
-        int primaryIdx = indexOfPrimary(records, primary);
-        if(primaryIdx < 0 || (droppedByRescue != null && droppedByRescue[primaryIdx]))
-        {
-            return;
-        }
-
-        LiftBackResult primaryRes = resolved[primaryIdx];
-        if(primaryRes == null || primaryRes.finalCigar() == null
-                || primaryRes.finalCigar().equals(SAMRecord.NO_ALIGNMENT_CIGAR))
-            return;
-        if(!primaryRes.hasNCigar())
-        {
-            return;
-        }
-
-        JunctionCanonicalizationResult canon = mJunctionCanonicalizer.tryCanonicalize(
-                primaryRes.finalChrom(), primaryRes.finalPos(), primaryRes.finalCigar(), primary.getReadBases());
-
-        if(!canon.changed())
-        {
-            return;
-        }
-
-        resolved[primaryIdx] = primaryRes.withRevisedCigar(
-                primaryRes.finalPos(), canon.newCigar(), primaryRes.hasNCigar(),
-                primaryRes.updatedMapq(), "junction-canonicalized");
-        TARS_LOGGER.debug2("canonicalize {}: {} -> {}", primary.getReadName(), primaryRes.finalCigar(), canon.newCigar());
     }
 
     // Dedup key for supplementaries: lifted (chrom, pos, cigar) + lifted strand. Opposite-strand
@@ -596,7 +762,7 @@ public class LiftBackGroupProcessor
 
         // A primary flipped to UNMAPPED post-lift (e.g. excluded region) still carries its mapped coords -
         // applyResultToRecord's UNMAPPED case is a no-op for input-unmapped reads, so unmap it explicitly.
-        if(result.category() == LiftBackCategory.UNMAPPED && !record.getReadUnmappedFlag())
+        if(result.recordState() == RecordState.UNMAPPED && !record.getReadUnmappedFlag())
         {
             markPrimaryUnmapped(record);
         }
@@ -615,7 +781,7 @@ public class LiftBackGroupProcessor
         record.setAttribute(SUPPLEMENTARY_ATTRIBUTE, rewrittenSa);
         patchMateFields(record, liftedMateInfoCache);
 
-        if(result.category() != LiftBackCategory.UNMAPPED)
+        if(result.recordState() != RecordState.UNMAPPED)
         {
             record.setAttribute("NH", nh);
         }

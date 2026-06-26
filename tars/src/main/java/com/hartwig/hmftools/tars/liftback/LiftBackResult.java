@@ -3,9 +3,13 @@ package com.hartwig.hmftools.tars.liftback;
 import java.util.List;
 
 // Per-record decision result. Drives the BAM record rewrite and one TSV-A row.
-// liftedAlignments holds the full alignment set (self + lifted XA alts) for TSV-B.
+// recordState says whether the record reached the discriminator; for RESOLVED records outcome/decidingFeature
+// carry the ref-vs-tx decision and its reason. liftedAlignments holds the full alignment set (self + lifted
+// XA alts) for TSV-B.
 public record LiftBackResult(
-        LiftBackCategory category,
+        RecordState recordState,
+        DecidingFeature decidingFeature,
+        boolean swapped,
         Composition comp,
         RecordRole role,
         String finalChrom,
@@ -31,13 +35,20 @@ public record LiftBackResult(
         int transcriptStrand,
         List<LiftedAlignment> liftedAlignments)
 {
+    // Outcome is derived from the deciding feature rather than stored alongside it; non-decision records
+    // (null feature: unmapped / lift-failed / supplementary) are UNRESOLVED.
+    public Outcome outcome()
+    {
+        return decidingFeature != null ? decidingFeature.outcome() : Outcome.UNRESOLVED;
+    }
+
     // Copy with a post-lift cigar pass applied: position, cigar, N-flag, MAPQ and an appended note change;
     // every other field is preserved. Shared by the rescue / collapse / tail-extend / canonicalize passes.
     public LiftBackResult withRevisedCigar(
             final int newPos, final String newCigar, final boolean newHasNCigar, final int newUpdatedMapq, final String note)
     {
         return new LiftBackResult(
-                category, comp, role,
+                recordState, decidingFeature, swapped, comp, role,
                 finalChrom, newPos, newCigar,
                 negativeStrand, newHasNCigar,
                 inputMapq, newUpdatedMapq,
@@ -56,7 +67,7 @@ public record LiftBackResult(
     public static LiftBackResult unmapped(final RecordRole role, final String note)
     {
         return new LiftBackResult(
-                LiftBackCategory.UNMAPPED, Composition.NONE, role,
+                RecordState.UNMAPPED, null, false, Composition.NONE, role,
                 "*", 0, "*",
                 false, false, 0, 0,
                 0, 0, 0,

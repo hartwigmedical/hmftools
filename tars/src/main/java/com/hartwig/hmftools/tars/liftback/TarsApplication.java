@@ -260,6 +260,10 @@ public class TarsApplication
         {
             combined.merge(worker.liftBackStats());
         }
+
+        // Aggregate per-pass effectiveness so the always-written summary carries it (no opt-in TSV needed).
+        combined.setPassEffects(aggregatePassEffects(workers));
+
         combined.logSummary();
 
         try
@@ -276,38 +280,64 @@ public class TarsApplication
 
         long collapsedLeading = 0;
         long collapsedTrailing = 0;
+        long junctionsCanonicalized = 0;
+        long overCapUnmapped = 0;
+        long excludedReads = 0;
         for(final LiftBackWorker worker : workers)
         {
             collapsedLeading += worker.collapsedLeading();
             collapsedTrailing += worker.collapsedTrailing();
+            junctionsCanonicalized += worker.junctionsCanonicalized();
+            overCapUnmapped += worker.overCapUnmapped();
+            excludedReads += worker.excludedReads();
         }
         if(collapsedLeading > 0 || collapsedTrailing > 0)
         {
             TARS_LOGGER.info("terminal micro-junction collapse: leading={} trailing={}", collapsedLeading, collapsedTrailing);
-        }
-
-        long junctionsCanonicalized = 0;
-        long overCapUnmapped = 0;
-        for(final LiftBackWorker worker : workers)
-        {
-            junctionsCanonicalized += worker.junctionsCanonicalized();
-            overCapUnmapped += worker.overCapUnmapped();
         }
         TARS_LOGGER.info("junction-canonicalize summary: shifted={}", junctionsCanonicalized);
         if(overCapUnmapped > 0)
         {
             TARS_LOGGER.info("over-cap unmap: {} primaries unmapped (MAPQ 0 + no XA, maps past the bwa XA cap)", overCapUnmapped);
         }
-
-        long excludedReads = 0;
-        for(final LiftBackWorker worker : workers)
-        {
-            excludedReads += worker.excludedReads();
-        }
         if(excludedReads > 0)
         {
             TARS_LOGGER.info("excluded-region reads (primary unmapped / supp dropped, post-lift): {}", excludedReads);
         }
+    }
+
+    private static LiftBackStats.PassEffects aggregatePassEffects(final List<LiftBackWorker> workers)
+    {
+        int rescueCandidates = 0, rescueMerged = 0, suppClamped = 0;
+        int tailEvaluated = 0, tailExtended = 0, tailBasesLead = 0, tailBasesTrail = 0;
+        long collapseLeading = 0, collapseTrailing = 0, canonicalized = 0, overCapUnmapped = 0, excludedReads = 0;
+        for(final LiftBackWorker worker : workers)
+        {
+            RescueStatistics rescue = worker.rescueStatistics();
+            if(rescue != null)
+            {
+                rescueCandidates += rescue.candidatesEvaluated();
+                rescueMerged += rescue.mergedTotal();
+                suppClamped += rescue.suppClampApplied();
+            }
+            TailExtensionStatistics tail = worker.tailExtStatistics();
+            if(tail != null)
+            {
+                tailEvaluated += tail.recordsEvaluated();
+                tailExtended += tail.recordsExtended();
+                tailBasesLead += tail.basesExtendedLead();
+                tailBasesTrail += tail.basesExtendedTrail();
+            }
+            collapseLeading += worker.collapsedLeading();
+            collapseTrailing += worker.collapsedTrailing();
+            canonicalized += worker.junctionsCanonicalized();
+            overCapUnmapped += worker.overCapUnmapped();
+            excludedReads += worker.excludedReads();
+        }
+        return new LiftBackStats.PassEffects(
+                rescueCandidates, rescueMerged, suppClamped,
+                tailEvaluated, tailExtended, tailBasesLead, tailBasesTrail,
+                collapseLeading, collapseTrailing, canonicalized, overCapUnmapped, excludedReads);
     }
 
     private static void logRescueStats(final List<LiftBackWorker> workers)

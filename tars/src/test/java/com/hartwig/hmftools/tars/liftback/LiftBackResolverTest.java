@@ -63,7 +63,7 @@ public class LiftBackResolverTest
         LiftBackResolver resolver = new LiftBackResolver(contigMap());
         LiftBackResult result = resolver.resolve(newUnmappedRecord());
 
-        assertEquals(LiftBackCategory.UNMAPPED, result.category());
+        assertEquals(RecordState.UNMAPPED, result.recordState());
         assertTrue(result.liftedAlignments().isEmpty());
     }
 
@@ -75,7 +75,7 @@ public class LiftBackResolverTest
         LiftBackResolver resolver = new LiftBackResolver(contigMap());
         LiftBackResult result = resolver.resolve(record);
 
-        assertEquals(LiftBackCategory.REF_SINGLE, result.category());
+        assertEquals(DecidingFeature.SOLE_REF, result.decidingFeature());
         assertEquals(CHR_1, result.finalChrom());
         assertEquals(1000, result.finalPos());
         assertEquals("150M", result.finalCigar());
@@ -91,7 +91,7 @@ public class LiftBackResolverTest
         LiftBackResolver resolver = new LiftBackResolver(contigMap());
         LiftBackResult result = resolver.resolve(record);
 
-        assertEquals(LiftBackCategory.TX_SINGLE, result.category());
+        assertEquals(DecidingFeature.SOLE_TX, result.decidingFeature());
         assertEquals(CHR_1, result.finalChrom());
         assertEquals(100, result.finalPos());
         assertEquals("50M", result.finalCigar());
@@ -106,7 +106,7 @@ public class LiftBackResolverTest
         LiftBackResolver resolver = new LiftBackResolver(contigMap());
         LiftBackResult result = resolver.resolve(record);
 
-        assertEquals(LiftBackCategory.TX_SINGLE, result.category());
+        assertEquals(DecidingFeature.SOLE_TX, result.decidingFeature());
         assertEquals(CHR_1, result.finalChrom());
         assertEquals(150, result.finalPos());
         assertEquals("50M100N50M", result.finalCigar());
@@ -123,7 +123,7 @@ public class LiftBackResolverTest
         LiftBackResolver resolver = new LiftBackResolver(contigMap());
         LiftBackResult result = resolver.resolve(record);
 
-        assertEquals(LiftBackCategory.BOTH_TX_JUNCTION_REF_SOFTCLIP, result.category());
+        assertEquals(DecidingFeature.JUNCTION, result.decidingFeature());
         assertTrue(result.hasNCigar());
         assertEquals(1, result.numLoci());
         // tx wins, so ref alt is dropped from the emitted set; only tx CIGAR remains at the locus.
@@ -141,7 +141,7 @@ public class LiftBackResolverTest
         LiftBackResolver resolver = new LiftBackResolver(contigMap());
         LiftBackResult result = resolver.resolve(record);
 
-        assertEquals(LiftBackCategory.BOTH_AGREE, result.category());
+        assertEquals(DecidingFeature.CONCORDANT, result.decidingFeature());
         assertEquals(1, result.numLoci());
     }
 
@@ -155,7 +155,7 @@ public class LiftBackResolverTest
         LiftBackResolver resolver = new LiftBackResolver(contigMap());
         LiftBackResult result = resolver.resolve(record);
 
-        assertEquals(LiftBackCategory.BOTH_TX_SOFTCLIP_REF_MATCH, result.category());
+        assertEquals(DecidingFeature.REF_READS_THROUGH, result.decidingFeature());
         assertEquals(1, result.numLoci());
     }
 
@@ -169,12 +169,12 @@ public class LiftBackResolverTest
         LiftBackResolver resolver = new LiftBackResolver(contigMap());
         LiftBackResult result = resolver.resolve(record);
 
-        assertEquals(LiftBackCategory.BOTH_AMBIGUOUS, result.category());
+        assertEquals(DecidingFeature.AMBIGUOUS, result.decidingFeature());
         assertEquals(1, result.numLoci());
     }
 
     @Test
-    public void testParalogMulti()
+    public void testMultiLocusTwoLoci()
     {
         SAMRecord record = newRecord(TX_CONTIG, 1, "50M"); // Tx primary + ref alt on different chrom -> two loci
         record.setAttribute("XA", "chr5,+5000,50M,0;");
@@ -182,7 +182,7 @@ public class LiftBackResolverTest
         LiftBackResolver resolver = new LiftBackResolver(contigMap());
         LiftBackResult result = resolver.resolve(record);
 
-        assertEquals(LiftBackCategory.BOTH_MULTI, result.category());
+        assertEquals(DecidingFeature.MULTIMAPPER, result.decidingFeature());
         assertEquals(2, result.numLoci());
     }
 
@@ -211,7 +211,7 @@ public class LiftBackResolverTest
         LiftBackResolver resolver = new LiftBackResolver(contigMap());
         LiftBackResult result = resolver.resolve(record);
 
-        assertEquals(LiftBackCategory.REF_MULTI, result.category());
+        assertEquals(DecidingFeature.SOLE_REF, result.decidingFeature());
         assertEquals(2, result.numLoci());
     }
 
@@ -229,7 +229,7 @@ public class LiftBackResolverTest
         LiftBackResolver resolver = new LiftBackResolver(twoContigs);
         LiftBackResult result = resolver.resolve(record);
 
-        assertEquals(LiftBackCategory.TX_MULTI, result.category());
+        assertEquals(DecidingFeature.SOLE_TX, result.decidingFeature());
         assertEquals(2, result.numLoci());
     }
 
@@ -242,7 +242,7 @@ public class LiftBackResolverTest
         LiftBackResolver resolver = new LiftBackResolver(contigMap());
         LiftBackResult result = resolver.resolve(record);
 
-        assertEquals(LiftBackCategory.SUPPLEMENTARY, result.category());
+        assertEquals(RecordState.SUPPLEMENTARY, result.recordState());
         assertEquals(LiftBackResult.RecordRole.SUPPLEMENTARY, result.role());
     }
 
@@ -255,7 +255,7 @@ public class LiftBackResolverTest
         LiftBackResolver resolver = new LiftBackResolver(contigMap());
         LiftBackResult result = resolver.resolve(record);
 
-        assertEquals(LiftBackCategory.SUPPLEMENTARY, result.category());
+        assertEquals(RecordState.SUPPLEMENTARY, result.recordState());
         assertEquals(LiftBackResult.RecordRole.SUPPLEMENTARY, result.role());
         assertEquals(CHR_1, result.finalChrom());
         assertEquals(150, result.finalPos());
@@ -272,7 +272,7 @@ public class LiftBackResolverTest
         LiftBackResolver resolver = new LiftBackResolver(contigMap());
         LiftBackResult result = resolver.resolve(record);
 
-        assertEquals(LiftBackCategory.LIFT_FAILED, result.category());
+        assertEquals(RecordState.LIFT_FAILED, result.recordState());
         assertEquals(LiftBackResult.RecordRole.SUPPLEMENTARY, result.role());
         assertTrue(result.liftedAlignments().isEmpty());
     }
@@ -285,7 +285,7 @@ public class LiftBackResolverTest
         LiftBackResolver resolver = new LiftBackResolver(contigMap());
         LiftBackResult result = resolver.resolve(record);
 
-        assertEquals(LiftBackCategory.LIFT_FAILED, result.category());
+        assertEquals(RecordState.LIFT_FAILED, result.recordState());
         assertEquals(LiftBackResult.RecordRole.PRIMARY, result.role());
         assertTrue(result.notes().contains("primary_translate_failed"));
     }
@@ -298,7 +298,7 @@ public class LiftBackResolverTest
         LiftBackResolver resolver = new LiftBackResolver(contigMap());
         LiftBackResult result = resolver.resolve(record);
 
-        assertEquals(LiftBackCategory.TX_SINGLE, result.category());
+        assertEquals(DecidingFeature.SOLE_TX, result.decidingFeature());
         assertTrue(result.finalCigar().endsWith("49S"));
     }
 
@@ -312,7 +312,7 @@ public class LiftBackResolverTest
         LiftBackResolver resolver = new LiftBackResolver(contigMap());
         LiftBackResult result = resolver.resolve(record);
 
-        assertEquals(LiftBackCategory.BOTH_TX_SOFTCLIP_REF_MATCH, result.category());
+        assertEquals(DecidingFeature.REF_READS_THROUGH, result.decidingFeature());
         assertEquals(1, result.numLoci());
     }
 
@@ -342,7 +342,7 @@ public class LiftBackResolverTest
 
         assertEquals(2, result.liftedAlignments().size()); // self + Tx alt; ref XA collapsed
         assertEquals(1, result.numXaAlts());
-        assertEquals(LiftBackCategory.BOTH_AGREE, result.category());
+        assertEquals(DecidingFeature.CONCORDANT, result.decidingFeature());
     }
 
     @Test
@@ -355,13 +355,13 @@ public class LiftBackResolverTest
         LiftBackResult result = resolver.resolve(record);
 
         assertEquals(2, result.liftedAlignments().size());
-        assertEquals(LiftBackCategory.BOTH_MULTI, result.category());
+        assertEquals(DecidingFeature.MULTIMAPPER, result.decidingFeature());
     }
 
     @Test
     public void testCrossLocusFavoursTxSwapsToTx()
     {
-        // bwa picked paralog chr5:5000 as primary; Tx XA lifts to chr1:150 50M100N50M. Expect swap to Tx, MAPQ rescued.
+        // bwa picked contiguous chr5:5000 as primary; Tx XA lifts to chr1:150 50M100N50M. Expect swap to Tx, MAPQ rescued.
         SAMRecord record = newRecord("chr5", 5000, "100M");
         record.setAttribute("XA", TX_CONTIG + ",+51,100M,0;");
         record.setMappingQuality(60);
@@ -369,7 +369,7 @@ public class LiftBackResolverTest
         LiftBackResolver resolver = new LiftBackResolver(contigMap());
         LiftBackResult result = resolver.resolve(record);
 
-        assertEquals(LiftBackCategory.BOTH_MULTI_TX_JUNCTION, result.category());
+        assertEquals(DecidingFeature.JUNCTION_OVER_CONTIGUOUS, result.decidingFeature());
         assertEquals(CHR_1, result.finalChrom());
         assertEquals(150, result.finalPos());
         assertEquals("50M100N50M", result.finalCigar());
@@ -400,7 +400,7 @@ public class LiftBackResolverTest
         LiftBackResolver resolver = new LiftBackResolver(contigMap());
         LiftBackResult result = resolver.resolve(record);
 
-        assertEquals(LiftBackCategory.BOTH_MULTI, result.category());
+        assertEquals(DecidingFeature.MULTIMAPPER, result.decidingFeature());
         LiftedAlignment self = result.liftedAlignments().stream()
                 .filter(la -> la.Source == LiftedAlignment.AlignmentSource.SELF)
                 .findFirst().orElseThrow();
@@ -410,14 +410,14 @@ public class LiftBackResolverTest
     @Test
     public void testCrossLocusFavoursTxDropsOtherRefAlts()
     {
-        // Tx XA wins (chr1:150 spliced); original self (chr5) kept as informative paralog; chr7 ref alt dropped.
+        // Tx XA wins (chr1:150 spliced); original self (chr5) kept as an informative alt; chr7 ref alt dropped.
         SAMRecord record = newRecord("chr5", 5000, "100M");
         record.setAttribute("XA", TX_CONTIG + ",+51,100M,0;chr7,+7000,100M,0;");
 
         LiftBackResolver resolver = new LiftBackResolver(contigMap());
         LiftBackResult result = resolver.resolve(record);
 
-        assertEquals(LiftBackCategory.BOTH_MULTI_TX_JUNCTION, result.category());
+        assertEquals(DecidingFeature.JUNCTION_OVER_CONTIGUOUS, result.decidingFeature());
 
         LiftedAlignment chr7Alt = result.liftedAlignments().stream()
                 .filter(la -> "chr7".equals(la.LiftedChrom))
@@ -441,7 +441,7 @@ public class LiftBackResolverTest
         LiftBackResolver resolver = new LiftBackResolver(contigMap());
         LiftBackResult result = resolver.resolve(record);
 
-        assertEquals(LiftBackCategory.BOTH_TX_JUNCTION_REF_SOFTCLIP, result.category());
+        assertEquals(DecidingFeature.JUNCTION, result.decidingFeature());
         assertEquals("50M100N50M", result.finalCigar());
         assertTrue(result.hasNCigar());
         assertTrue(result.notes().contains("swapped_ref_to_tx"));
@@ -457,7 +457,7 @@ public class LiftBackResolverTest
         LiftBackResolver resolver = new LiftBackResolver(contigMap());
         LiftBackResult result = resolver.resolve(record);
 
-        assertEquals(LiftBackCategory.BOTH_TX_JUNCTION_REF_MATCH, result.category());
+        assertEquals(DecidingFeature.REF_READS_THROUGH, result.decidingFeature());
         assertEquals(CHR_1, result.finalChrom());
         assertEquals(150, result.finalPos());
         assertEquals("151M", result.finalCigar());
@@ -486,7 +486,7 @@ public class LiftBackResolverTest
         LiftBackResolver resolver = new LiftBackResolver(contigMap());
         LiftBackResult result = resolver.resolve(record);
 
-        assertEquals(LiftBackCategory.BOTH_TX_JUNCTION_REF_MATCH, result.category());
+        assertEquals(DecidingFeature.REF_READS_THROUGH, result.decidingFeature());
         assertEquals(CHR_1, result.finalChrom());
         assertEquals(150, result.finalPos());
         assertEquals("151M", result.finalCigar());
@@ -526,10 +526,10 @@ public class LiftBackResolverTest
         stats.record(r4, resolver.resolve(r4));
 
         assertEquals(4, stats.total());
-        assertEquals(1, stats.categoryCount(LiftBackCategory.REF_SINGLE));
-        assertEquals(1, stats.categoryCount(LiftBackCategory.TX_SINGLE));
-        assertEquals(1, stats.categoryCount(LiftBackCategory.BOTH_AGREE));
-        assertEquals(1, stats.categoryCount(LiftBackCategory.UNMAPPED));
+        assertEquals(1, stats.featureCount(DecidingFeature.SOLE_REF));
+        assertEquals(1, stats.featureCount(DecidingFeature.SOLE_TX));
+        assertEquals(1, stats.featureCount(DecidingFeature.CONCORDANT));
+        assertEquals(1, stats.stateCount(RecordState.UNMAPPED));
     }
 
     // numLoci must reflect the deduped genomic-locus count, not the XA entry count (NH is derived from it).
@@ -603,7 +603,7 @@ public class LiftBackResolverTest
         LiftBackResolver withIndex = new LiftBackResolver(contigMap(), idx);
         LiftBackResult result = withIndex.resolve(record);
         assertEquals(0, result.updatedMapq());
-        assertEquals(LiftBackCategory.REF_SINGLE, result.category());
+        assertEquals(DecidingFeature.SOLE_REF, result.decidingFeature());
     }
 
     // Hidden tie with primary outside any annotated exon: rescue stays blocked.

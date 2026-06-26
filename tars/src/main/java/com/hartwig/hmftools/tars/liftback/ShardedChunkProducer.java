@@ -164,7 +164,7 @@ public class ShardedChunkProducer extends Thread
             long rate = intervalSecs > 0 ? (long) ((reads - lastReads) / intervalSecs) : 0;
 
             TARS_LOGGER.info("liftback {} {}% | {} reads | {}/s",
-                    bar((int) percent), String.format("%.2f", percent), formatCount(reads), formatCount(rate));
+                    bar((int) percent), String.format("%.2f", percent), formatCount(reads), formatRate(rate));
 
             lastReads = reads;
             lastNanos = nowNanos;
@@ -182,6 +182,16 @@ public class ShardedChunkProducer extends Thread
         }
         sb.append(']');
         return sb.toString();
+    }
+
+    // Rate stays in thousands (e.g. 1939K/s) rather than collapsing to whole M/s, which hides the actual throughput.
+    private static String formatRate(final long value)
+    {
+        if(value >= 1_000)
+        {
+            return String.format("%dK", value / 1_000);
+        }
+        return String.valueOf(value);
     }
 
     private static String formatCount(final long value)

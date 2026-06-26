@@ -2,6 +2,7 @@ package com.hartwig.hmftools.tars.liftback;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.XA_ATTRIBUTE;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 
 import java.util.stream.Collectors;
 
@@ -26,7 +27,7 @@ public final class LiftBackRecordOps
     public static void applyResultToRecord(
             final SAMRecord record, final LiftBackResult result, final LiftedMateInfoCache liftedMateInfoCache)
     {
-        switch(result.category())
+        switch(result.recordState())
         {
             case UNMAPPED:
                 return;
@@ -130,7 +131,7 @@ public final class LiftBackRecordOps
     // the record itself).
     public static boolean willBeUnmapped(final LiftBackResult result)
     {
-        if(result.category() == LiftBackCategory.UNMAPPED || result.category() == LiftBackCategory.LIFT_FAILED)
+        if(result.recordState() == RecordState.UNMAPPED || result.recordState() == RecordState.LIFT_FAILED)
         {
             return true;
         }
@@ -269,7 +270,7 @@ public final class LiftBackRecordOps
         int altEnd = altStart + TextCigarCodec.decode(alt.LiftedCigar).getReferenceLength() - 1;
         int primStart = primary.LiftedPos;
         int primEnd = primStart + TextCigarCodec.decode(primary.LiftedCigar).getReferenceLength() - 1;
-        return altStart <= primEnd && altEnd >= primStart;
+        return positionsOverlap(altStart, altEnd, primStart, primEnd);
     }
 
     private static String formatXaEntry(final LiftedAlignment la)

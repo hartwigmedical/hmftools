@@ -35,6 +35,10 @@ public class JunctionCanonicalizer
 
     public long junctionsShifted() { return mJunctionsShifted; }
 
+    // Restore the counter to roll back a discarded provisional mate decision without double-counting
+    // (see LiftBackGroupProcessor.processNameGroup).
+    public void restoreJunctionsShifted(final long junctionsShifted) { mJunctionsShifted = junctionsShifted; }
+
     public JunctionCanonicalizationResult tryCanonicalize(
             final String chromosome, final int alignmentStart, final String cigar, final byte[] readBases)
     {

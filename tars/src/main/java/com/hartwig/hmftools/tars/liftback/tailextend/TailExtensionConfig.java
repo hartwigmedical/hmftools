@@ -4,7 +4,7 @@ import static com.hartwig.hmftools.tars.common.TarsConstants.DEFAULT_MAX_EXTENSI
 import static com.hartwig.hmftools.tars.common.TarsConstants.DEFAULT_MIN_EXTENSION;
 import static com.hartwig.hmftools.tars.common.TarsConstants.DEFAULT_MIN_SOFTCLIP_LENGTH;
 
-// Config for SoftclipTailExtender. MaxExtension caps the walk to avoid consuming real unannotated junctions.
+// Config for the tail-extension pass in TerminalReconciler. MaxExtension caps the walk to avoid consuming real unannotated junctions.
 public class TailExtensionConfig
 {
     public final boolean Enabled;

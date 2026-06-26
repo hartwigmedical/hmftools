@@ -70,4 +70,39 @@ public class RescueStatistics
     {
         return mRejections.getOrDefault(reason, 0);
     }
+
+    // Snapshot / restore all counters so a discarded provisional mate decision can be rolled back without
+    // double-counting (see LiftBackGroupProcessor.processNameGroup).
+    public int[] snapshot()
+    {
+        RescueRejectReason[] reasons = RescueRejectReason.values();
+        int[] snapshot = new int[3 + mChainDepthCounts.length + reasons.length];
+        snapshot[0] = mCandidatesEvaluated;
+        snapshot[1] = mMergedTotal;
+        snapshot[2] = mSuppClampApplied;
+        System.arraycopy(mChainDepthCounts, 0, snapshot, 3, mChainDepthCounts.length);
+        for(int i = 0; i < reasons.length; ++i)
+        {
+            snapshot[3 + mChainDepthCounts.length + i] = mRejections.getOrDefault(reasons[i], 0);
+        }
+        return snapshot;
+    }
+
+    public void restore(final int[] snapshot)
+    {
+        mCandidatesEvaluated = snapshot[0];
+        mMergedTotal = snapshot[1];
+        mSuppClampApplied = snapshot[2];
+        System.arraycopy(snapshot, 3, mChainDepthCounts, 0, mChainDepthCounts.length);
+        RescueRejectReason[] reasons = RescueRejectReason.values();
+        mRejections.clear();
+        for(int i = 0; i < reasons.length; ++i)
+        {
+            int count = snapshot[3 + mChainDepthCounts.length + i];
+            if(count != 0)
+            {
+                mRejections.put(reasons[i], count);
+            }
+        }
+    }
 }

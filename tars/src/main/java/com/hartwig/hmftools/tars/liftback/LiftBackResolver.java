@@ -134,7 +134,25 @@ public class LiftBackResolver
                 getInt(record, AS_TAG), getInt(record, NM_TAG), !record.getReadNegativeStrandFlag());
     }
 
+    // Per-call hook to normalize each candidate's lifted cigar (collapse + tail-extend) before the
+    // discriminator runs, so ref-vs-tx is decided on tested facts. Supplied by the per-worker group
+    // processor which owns the (thread-unsafe) engines; null on the lift-only / no-ref paths.
+    @FunctionalInterface
+    public interface AlignmentNormalizer
+    {
+        void normalize(List<LiftedAlignment> alignments, SAMRecord record);
+    }
+
+    // No-reconcile convenience for non-discriminating callers only: supplementaries and unmapped records (which
+    // skip the discriminator entirely), the lift-only paths, and tests. A primary resolved through here would be
+    // discriminated on raw bwa cigars, so the production primary path always uses the two-arg form with the
+    // per-worker reconciler (see LiftBackGroupProcessor.decideMateGroup).
     public LiftBackResult resolve(final SAMRecord record)
+    {
+        return resolve(record, null);
+    }
+
+    public LiftBackResult resolve(final SAMRecord record, final AlignmentNormalizer normalizer)
     {
         if(record.getReadUnmappedFlag())
         {
@@ -146,17 +164,18 @@ public class LiftBackResolver
             return liftSupplementary(record);
         }
 
-        return resolvePrimary(record);
+        return resolvePrimary(record, normalizer);
     }
 
-    private LiftBackResult resolvePrimary(final SAMRecord record)
+    private LiftBackResult resolvePrimary(final SAMRecord record, final AlignmentNormalizer normalizer)
     {
         List<LiftedAlignment> xaAlts = parseAndLiftXa(record);
-        return resolvePrimaryWithAlts(record, xaAlts, xaAlts.size());
+        return resolvePrimaryWithAlts(record, xaAlts, xaAlts.size(), normalizer);
     }
 
     private LiftBackResult resolvePrimaryWithAlts(
-            final SAMRecord record, final List<LiftedAlignment> alts, final int numXaAltsForReport)
+            final SAMRecord record, final List<LiftedAlignment> alts, final int numXaAltsForReport,
+            final AlignmentNormalizer normalizer)
     {
         LiftedAlignment self = liftSelf(record);
 
@@ -165,14 +184,25 @@ public class LiftBackResolver
             return unliftableResult(LiftBackResult.RecordRole.PRIMARY, numXaAltsForReport, "primary_translate_failed");
         }
 
-        self.IsPrimaryChoice = true;
-
         List<LiftedAlignment> allAlignments = new ArrayList<>(1 + alts.size());
         allAlignments.add(self);
         allAlignments.addAll(alts);
 
+        // Normalize each candidate's cigar (collapse fabricated micro-junctions, reclaim terminal softclips)
+        // before discriminating, so RefSoftClipped / RefFullMatch / TxHasNCigar are measured, not assumed.
+        if(normalizer != null)
+        {
+            normalizer.normalize(allAlignments, record);
+        }
+
+        // normalize() can replace self (index 0) with a reconciled copy, so re-fetch it before marking the
+        // primary choice. Marking the pre-normalize object would leave IsPrimaryChoice on an orphan no longer
+        // in the list, and the discriminator's self-identity checks (apply / drop-vs-swap) would misfire.
+        self = allAlignments.get(0);
+        self.IsPrimaryChoice = true;
+
         LiftBackDiscriminator.Features features = LiftBackDiscriminator.categorize(allAlignments);
-        LiftBackDiscriminator.Outcome outcome = LiftBackDiscriminator.apply(allAlignments, features.Category, self);
+        LiftBackDiscriminator.ApplyResult outcome = LiftBackDiscriminator.apply(allAlignments, features.Feature, self);
         LiftedAlignment effectivePrimary = outcome.effectivePrimary();
 
         List<LiftedAlignment> keptAlignments = allAlignments.stream()
@@ -197,12 +227,13 @@ public class LiftBackResolver
         if(swapped)
         {
             TARS_LOGGER.debug2("discriminator {} {}: primary -> {}:{} {} ({})",
-                    features.Category, record.getReadName(), primaryCoords.LiftedChrom, primaryCoords.LiftedPos,
+                    features.Feature, record.getReadName(), primaryCoords.LiftedChrom, primaryCoords.LiftedPos,
                     primaryCoords.LiftedCigar, outcome.note());
         }
 
         return new LiftBackResult(
-                features.Category, LiftBackResult.Composition.fromAlignments(keptAlignments),
+                RecordState.RESOLVED, features.Feature, swapped,
+                LiftBackResult.Composition.fromAlignments(keptAlignments),
                 LiftBackResult.RecordRole.PRIMARY,
                 primaryCoords.LiftedChrom, primaryCoords.LiftedPos, primaryCoords.LiftedCigar,
                 !primaryCoords.ForwardStrand,
@@ -235,7 +266,8 @@ public class LiftBackResolver
         int numTxAlts = lifted.fromTxContig() ? 1 : 0;
 
         return new LiftBackResult(
-                LiftBackCategory.SUPPLEMENTARY, LiftBackResult.Composition.fromAlignments(List.of(lifted)),
+                RecordState.SUPPLEMENTARY, null, false,
+                LiftBackResult.Composition.fromAlignments(List.of(lifted)),
                 LiftBackResult.RecordRole.SUPPLEMENTARY,
                 lifted.LiftedChrom, lifted.LiftedPos, lifted.LiftedCigar,
                 !lifted.ForwardStrand,
@@ -458,7 +490,7 @@ public class LiftBackResolver
                 : LiftBackResult.RecordRole.PRIMARY;
 
         return new LiftBackResult(
-                LiftBackCategory.UNMAPPED, LiftBackResult.Composition.NONE,
+                RecordState.UNMAPPED, null, false, LiftBackResult.Composition.NONE,
                 role,
                 "*", 0, "*",
                 false,
@@ -505,7 +537,7 @@ public class LiftBackResolver
     private static LiftBackResult unliftableResult(final LiftBackResult.RecordRole role, final int numXaAlts, final String note)
     {
         return new LiftBackResult(
-                LiftBackCategory.LIFT_FAILED, LiftBackResult.Composition.NONE,
+                RecordState.LIFT_FAILED, null, false, LiftBackResult.Composition.NONE,
                 role,
                 "*", 0, "*",
                 false,

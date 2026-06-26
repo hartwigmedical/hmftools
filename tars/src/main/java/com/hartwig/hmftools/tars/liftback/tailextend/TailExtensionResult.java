@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.tars.liftback.tailextend;
 
-// Result of SoftclipTailExtender.tryExtend. newStart shifts only on a leading extension.
+// Result of TerminalReconciler.tryExtend. newStart shifts only on a leading extension.
 public record TailExtensionResult(
         boolean extended, int newStart, String newCigar, int basesExtendedLead, int basesExtendedTrail)
 {
