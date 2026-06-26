@@ -40,11 +40,12 @@ public class LiftBackStatsTest
         return record;
     }
 
-    private static LiftBackResult resultWith(final LiftBackCategory category, final int numXaAlts,
-            final List<LiftedAlignment> alignments)
+    private static LiftBackResult resultWith(final RecordState state,
+            final DecidingFeature feature, final int numXaAlts, final List<LiftedAlignment> alignments)
     {
         return TarsTestFixtures.resultBuilder()
-                .category(category)
+                .recordState(state)
+                .decidingFeature(feature)
                 .comp(LiftBackResult.Composition.NONE)
                 .pos(0).cigar("*")
                 .inputMapq(0).updatedMapq(0)
@@ -79,13 +80,13 @@ public class LiftBackStatsTest
     public void testRecordsIncrementCountersByCategory()
     {
         LiftBackStats stats = new LiftBackStats();
-        stats.record(newRecord(60), resultWith(LiftBackCategory.REF_SINGLE, 0, List.of(refAlignment())));
-        stats.record(newRecord(60), resultWith(LiftBackCategory.REF_SINGLE, 0, List.of(refAlignment())));
-        stats.record(newRecord(0), resultWith(LiftBackCategory.UNMAPPED, 0, List.of()));
+        stats.record(newRecord(60), resultWith(RecordState.RESOLVED, DecidingFeature.SOLE_REF,0, List.of(refAlignment())));
+        stats.record(newRecord(60), resultWith(RecordState.RESOLVED, DecidingFeature.SOLE_REF,0, List.of(refAlignment())));
+        stats.record(newRecord(0), resultWith(RecordState.UNMAPPED, null,0, List.of()));
 
         assertEquals(3, stats.total());
-        assertEquals(2, stats.categoryCount(LiftBackCategory.REF_SINGLE));
-        assertEquals(1, stats.categoryCount(LiftBackCategory.UNMAPPED));
+        assertEquals(2, stats.featureCount(DecidingFeature.SOLE_REF));
+        assertEquals(1, stats.stateCount(RecordState.UNMAPPED));
     }
 
     @Test
@@ -107,14 +108,14 @@ public class LiftBackStatsTest
     @Test
     public void testMapqTierDerivation()
     {
-        LiftBackResult result = resultWith(LiftBackCategory.REF_SINGLE, 0, List.of(refAlignment()));
+        LiftBackResult result = resultWith(RecordState.RESOLVED, DecidingFeature.SOLE_REF,0, List.of(refAlignment()));
 
         assertEquals(LiftBackStats.MapqTier.MAPQ_ZERO,
                 LiftBackStats.deriveMapqTier(newRecord(0), result));
         assertEquals(LiftBackStats.MapqTier.MAPQ_POS_UNIQUE,
                 LiftBackStats.deriveMapqTier(newRecord(60), result));
 
-        LiftBackResult withAlts = resultWith(LiftBackCategory.REF_SINGLE, 1, List.of(refAlignment()));
+        LiftBackResult withAlts = resultWith(RecordState.RESOLVED, DecidingFeature.SOLE_REF,1, List.of(refAlignment()));
         assertEquals(LiftBackStats.MapqTier.MAPQ_POS_MULTI,
                 LiftBackStats.deriveMapqTier(newRecord(60), withAlts));
     }
@@ -123,8 +124,8 @@ public class LiftBackStatsTest
     public void testWriteSummaryEmitsExpectedTsvLayout() throws IOException
     {
         LiftBackStats stats = new LiftBackStats();
-        stats.record(newRecord(60), resultWith(LiftBackCategory.REF_SINGLE, 0, List.of(refAlignment())));
-        stats.record(newRecord(0), resultWith(LiftBackCategory.UNMAPPED, 0, List.of()));
+        stats.record(newRecord(60), resultWith(RecordState.RESOLVED, DecidingFeature.SOLE_REF,0, List.of(refAlignment())));
+        stats.record(newRecord(0), resultWith(RecordState.UNMAPPED, null,0, List.of()));
 
         stats.writeSummary(mSummary.toString());
 
@@ -141,7 +142,7 @@ public class LiftBackStatsTest
             {
                 hasRefOnlyMapqUnique = true;
             }
-            if(line.equals("category_x_mapq\tREF_SINGLE\tMAPQ_POS_UNIQUE\t1"))
+            if(line.equals("feature_x_mapq\tSOLE_REF\tMAPQ_POS_UNIQUE\t1"))
             {
                 hasARefGenome = true;
             }

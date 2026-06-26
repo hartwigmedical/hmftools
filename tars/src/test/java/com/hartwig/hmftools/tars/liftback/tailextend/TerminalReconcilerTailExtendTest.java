@@ -12,12 +12,13 @@ import java.util.HashSet;
 import java.util.Set;
 
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.tars.common.TarsConstants;
 import com.hartwig.hmftools.tars.liftback.TarsTestFixtures.TestGenome;
 import com.hartwig.hmftools.tars.liftback.rescue.AnnotatedJunctionIndex;
 
 import org.junit.Test;
 
-public class SoftclipTailExtenderTest
+public class TerminalReconcilerTailExtendTest
 {
     private static final String CHR1 = "chr1";
 
@@ -26,15 +27,16 @@ public class SoftclipTailExtenderTest
         return new TestGenome().with(CHR1, 200, 'A');
     }
 
-    private static SoftclipTailExtender extender(final TestGenome genome, final Set<ChrBaseRegion> introns)
+    private static TerminalReconciler extender(final TestGenome genome, final Set<ChrBaseRegion> introns)
     {
-        return new SoftclipTailExtender(
+        return new TerminalReconciler(
                 genome.asRefSource(),
+                TarsConstants.MIN_JUNCTION_ANCHOR,
                 introns == null ? null : new AnnotatedJunctionIndex(introns),
                 TailExtensionConfig.enabledDefaults());
     }
 
-    private static SoftclipTailExtender extender(final TestGenome genome)
+    private static TerminalReconciler extender(final TestGenome genome)
     {
         return extender(genome, null);
     }
@@ -44,7 +46,7 @@ public class SoftclipTailExtenderTest
     {
         TestGenome genome = genome().set(CHR1, 131, 10, 'C');
 
-        SoftclipTailExtender ext = extender(genome);
+        TerminalReconciler ext = extender(genome);
         TailExtensionResult res = ext.tryExtend(CHR1, 101, "30M10S", bases("A".repeat(30) + "C".repeat(10)));
 
         assertTrue(res.extended());
@@ -178,7 +180,7 @@ public class SoftclipTailExtenderTest
         Set<ChrBaseRegion> introns = new HashSet<>(Collections.singletonList(
                 new ChrBaseRegion(CHR1, 131, 200)));
 
-        SoftclipTailExtender ext = extender(genome, introns);
+        TerminalReconciler ext = extender(genome, introns);
         TailExtensionResult res = ext.tryExtend(CHR1, 101, "30M10S", bases("A".repeat(30) + "C".repeat(10)));
 
         assertFalse(res.extended());
@@ -193,7 +195,7 @@ public class SoftclipTailExtenderTest
         Set<ChrBaseRegion> introns = new HashSet<>(Collections.singletonList(
                 new ChrBaseRegion(CHR1, 131, 200)));
 
-        SoftclipTailExtender ext = extender(genome, introns);
+        TerminalReconciler ext = extender(genome, introns);
         TailExtensionResult res = ext.tryExtend(CHR1, 101, "30M10S", bases("A".repeat(30) + "C".repeat(10)));
 
         assertTrue(res.extended());
@@ -209,7 +211,7 @@ public class SoftclipTailExtenderTest
         Set<ChrBaseRegion> introns = new HashSet<>(Collections.singletonList(
                 new ChrBaseRegion(CHR1, 21, 110)));
 
-        SoftclipTailExtender ext = extender(genome, introns);
+        TerminalReconciler ext = extender(genome, introns);
         TailExtensionResult res = ext.tryExtend(CHR1, 111, "10S30M", bases("T".repeat(10) + "A".repeat(30)));
 
         assertFalse(res.extended());
@@ -224,7 +226,7 @@ public class SoftclipTailExtenderTest
         Set<ChrBaseRegion> introns = new HashSet<>(Collections.singletonList(
                 new ChrBaseRegion(CHR1, 21, 110)));
 
-        SoftclipTailExtender ext = extender(genome, introns);
+        TerminalReconciler ext = extender(genome, introns);
         TailExtensionResult res = ext.tryExtend(CHR1, 111, "10S30M", bases("T".repeat(10) + "A".repeat(30)));
 
         assertTrue(res.extended());
@@ -244,22 +246,23 @@ public class SoftclipTailExtenderTest
                 .tryExtend(CHR1, 101, "30M2S", bases("A".repeat(30) + "CC")).extended());
 
         // hard clip -> skipped as complex shape
-        SoftclipTailExtender hardClip = extender(genome());
+        TerminalReconciler hardClip = extender(genome());
         assertFalse(hardClip.tryExtend(CHR1, 101, "10H30M5S", repeatedBase(35, 'A')).extended());
         assertEquals(1, hardClip.statistics().skippedComplexShape());
 
         // op adjacent to the trailing S is I, not M -> refuse as complex shape
-        SoftclipTailExtender indelAdjacent = extender(genome().set(CHR1, 131, 10, 'C'));
+        TerminalReconciler indelAdjacent = extender(genome().set(CHR1, 131, 10, 'C'));
         assertFalse(indelAdjacent.tryExtend(CHR1, 101, "30M5I3S", bases("A".repeat(35) + "CCC")).extended());
         assertTrue(indelAdjacent.statistics().skippedComplexShape() >= 1);
 
         // disabled config -> no-op even with a clean match
-        SoftclipTailExtender disabled = new SoftclipTailExtender(
-                genome().set(CHR1, 131, 10, 'C').asRefSource(), null, TailExtensionConfig.defaults());
+        TerminalReconciler disabled = new TerminalReconciler(
+                genome().set(CHR1, 131, 10, 'C').asRefSource(), TarsConstants.MIN_JUNCTION_ANCHOR,
+                null, TailExtensionConfig.defaults());
         assertFalse(disabled.tryExtend(CHR1, 101, "30M10S", bases("A".repeat(30) + "C".repeat(10))).extended());
 
         // null chromosome / cigar / read bases -> no-op
-        SoftclipTailExtender nullInputs = extender(new TestGenome());
+        TerminalReconciler nullInputs = extender(new TestGenome());
         assertFalse(nullInputs.tryExtend(null, 101, "30M5S", repeatedBase(35, 'A')).extended());
         assertFalse(nullInputs.tryExtend(CHR1, 101, null, repeatedBase(35, 'A')).extended());
         assertFalse(nullInputs.tryExtend(CHR1, 101, "30M5S", null).extended());

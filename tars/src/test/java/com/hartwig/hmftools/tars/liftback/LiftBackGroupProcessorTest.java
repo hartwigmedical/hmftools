@@ -53,7 +53,7 @@ public class LiftBackGroupProcessorTest
     {
         LiftBackResolver resolver = new LiftBackResolver(List.of(threeExonContig()));
         LiftBackGroupProcessor processor = new LiftBackGroupProcessor(
-                resolver, rescueResolver, null, null, null, refSource, null, stats);
+                resolver, rescueResolver, null, null, refSource, null, stats);
 
         List<SAMRecord> emitted = new ArrayList<>();
         processor.processNameGroup(group, new LiftedMateInfoCache(), (record, result) -> emitted.add(record));
@@ -65,7 +65,7 @@ public class LiftBackGroupProcessorTest
     {
         LiftBackResolver resolver = new LiftBackResolver(List.of(threeExonContig()));
         LiftBackGroupProcessor processor = new LiftBackGroupProcessor(
-                resolver, null, null, null, null, null, excluded, stats);
+                resolver, null, null, null, null, excluded, stats);
 
         List<SAMRecord> emitted = new ArrayList<>();
         processor.processNameGroup(group, new LiftedMateInfoCache(), (record, result) -> emitted.add(record));

@@ -24,9 +24,8 @@ import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.tars.liftback.rescue.JunctionRescueResolver;
 import com.hartwig.hmftools.tars.liftback.rescue.RefSequenceSource;
 import com.hartwig.hmftools.tars.liftback.rescue.RescueConfig;
-import com.hartwig.hmftools.tars.liftback.tailextend.SoftclipTailExtender;
 import com.hartwig.hmftools.tars.liftback.tailextend.TailExtensionConfig;
-import com.hartwig.hmftools.tars.liftback.tailextend.TerminalMicroJunctionCollapser;
+import com.hartwig.hmftools.tars.liftback.tailextend.TerminalReconciler;
 
 import org.junit.Test;
 
@@ -76,16 +75,14 @@ public class LiftBackEndToEndTest
         LiftBackResolver resolver = new LiftBackResolver(List.of(threeExonContig()));
         JunctionRescueResolver rescue =
                 new JunctionRescueResolver(junctionIndex, ref, RescueConfig.enabledDefaults());
-        SoftclipTailExtender extender =
-                new SoftclipTailExtender(ref, junctionIndex, TailExtensionConfig.enabledDefaults());
-        TerminalMicroJunctionCollapser collapser =
-                new TerminalMicroJunctionCollapser(ref, TarsConstants.MIN_JUNCTION_ANCHOR);
+        TerminalReconciler reconciler = new TerminalReconciler(
+                ref, TarsConstants.MIN_JUNCTION_ANCHOR, junctionIndex, TailExtensionConfig.enabledDefaults());
         JunctionCanonicalizer canonicalizer =
                 new JunctionCanonicalizer(ref, TarsConstants.DEFAULT_MAX_SHIFT);
 
         LiftBackStats stats = new LiftBackStats();
         LiftBackGroupProcessor processor = new LiftBackGroupProcessor(
-                resolver, rescue, extender, collapser, canonicalizer, ref, null, stats);
+                resolver, rescue, reconciler, canonicalizer, ref, null, stats);
 
         List<SAMRecord> emitted = new ArrayList<>();
         processor.processNameGroup(reads, new LiftedMateInfoCache(), (record, result) -> emitted.add(record));

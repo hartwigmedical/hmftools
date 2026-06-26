@@ -14,7 +14,7 @@ public class LiftBackWriter implements AutoCloseable
     private final BufferedWriter mTsvBWriter;
 
     private static final String[] TSV_A_HEADERS = {
-            "ReadName", "MateNum", "RecordRole", "PrimaryBucket", "Composition", "DecisionCategory",
+            "ReadName", "MateNum", "RecordRole", "RecordState", "Composition", "Outcome", "DecidingFeature", "Swapped",
             "InputMapq", "UpdatedMapq",
             "NumXaAlts", "NumRefAlts", "NumTxAlts", "NumLoci", "NumDistinctCigarsAtPrimaryLocus",
             "TxHasNCigar", "TxSoftClipAtBoundary", "RefSoftClipped", "RefFullMatch",
@@ -78,9 +78,11 @@ public class LiftBackWriter implements AutoCloseable
                 readName,
                 mateNum,
                 result.role().name(),
-                result.category().primaryBucket().name(),
+                result.recordState().name(),
                 result.comp().name(),
-                result.category().name(),
+                result.outcome().name(),
+                result.decidingFeature() != null ? result.decidingFeature().name() : "",
+                String.valueOf(result.swapped()),
                 String.valueOf(result.inputMapq()),
                 String.valueOf(result.updatedMapq()),
                 String.valueOf(result.numXaAlts()),

@@ -51,7 +51,7 @@ public class LiftBackWriterTest
 
         assertEquals(2, aLines.size());
         assertEquals(LiftBackWriter.TSV_A_HEADER_LINE, aLines.get(0));
-        assertEquals("read1\t1\tPRIMARY\tRESOLVED\tREF_ONLY\tREF_SINGLE\t60\t60\t0\t1\t0\t1\t1\tfalse\tfalse\tfalse\ttrue\t1\t1000\t50M\tfalse\t\t", aLines.get(1));
+        assertEquals("read1\t1\tPRIMARY\tRESOLVED\tREF_ONLY\tREF\tSOLE_REF\tfalse\t60\t60\t0\t1\t0\t1\t1\tfalse\tfalse\tfalse\ttrue\t1\t1000\t50M\tfalse\t\t", aLines.get(1));
 
         assertEquals(2, bLines.size());
         assertEquals(LiftBackWriter.TSV_B_HEADER_LINE, bLines.get(0));
@@ -76,7 +76,8 @@ public class LiftBackWriterTest
                 false, true);
 
         LiftBackResult result = TarsTestFixtures.resultBuilder()
-                .category(LiftBackCategory.BOTH_MULTI)
+                .recordState(RecordState.RESOLVED)
+                .decidingFeature(DecidingFeature.MULTIMAPPER)
                 .comp(LiftBackResult.Composition.REF_AND_TX)
                 .pos(100)
                 .inputMapq(0).updatedMapq(0)
@@ -165,7 +166,8 @@ public class LiftBackWriterTest
     {
         // UNMAPPED: TSV-A row written, TSV-B has header only
         LiftBackResult result = TarsTestFixtures.resultBuilder()
-                .category(LiftBackCategory.UNMAPPED)
+                .recordState(RecordState.UNMAPPED)
+                .decidingFeature(null)
                 .comp(LiftBackResult.Composition.NONE)
                 .chrom("*").pos(0).cigar("*")
                 .inputMapq(0).updatedMapq(0)
@@ -183,7 +185,7 @@ public class LiftBackWriterTest
         List<String> bLines = Files.readAllLines(mTsvB);
 
         assertEquals(2, aLines.size());
-        assertTrue(aLines.get(1).startsWith("read3\t0\tPRIMARY\tNON_PRIMARY\tNONE\tUNMAPPED\t"));
+        assertTrue(aLines.get(1).startsWith("read3\t0\tPRIMARY\tUNMAPPED\tNONE\tUNRESOLVED\t\tfalse\t"));
         assertEquals(1, bLines.size());
     }
 }

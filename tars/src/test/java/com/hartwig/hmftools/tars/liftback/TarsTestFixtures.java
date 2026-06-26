@@ -200,7 +200,9 @@ public final class TarsTestFixtures
     // ref-only primary). Tests override only the fields the scenario cares about.
     public static final class ResultBuilder
     {
-        private LiftBackCategory mCategory = LiftBackCategory.REF_SINGLE;
+        private RecordState mRecordState = RecordState.RESOLVED;
+        private DecidingFeature mDecidingFeature = DecidingFeature.SOLE_REF;
+        private boolean mSwapped = false;
         private LiftBackResult.Composition mComp = LiftBackResult.Composition.REF_ONLY;
         private LiftBackResult.RecordRole mRole = LiftBackResult.RecordRole.PRIMARY;
         private String mChrom = GENOMIC_CHR;
@@ -224,9 +226,21 @@ public final class TarsTestFixtures
         private int mTranscriptStrand = 0;
         private List<LiftedAlignment> mAlignments = List.of();
 
-        public ResultBuilder category(final LiftBackCategory v)
+        public ResultBuilder recordState(final RecordState v)
         {
-            mCategory = v;
+            mRecordState = v;
+            return this;
+        }
+
+        public ResultBuilder decidingFeature(final DecidingFeature v)
+        {
+            mDecidingFeature = v;
+            return this;
+        }
+
+        public ResultBuilder swapped(final boolean v)
+        {
+            mSwapped = v;
             return this;
         }
 
@@ -365,7 +379,7 @@ public final class TarsTestFixtures
         public LiftBackResult build()
         {
             return new LiftBackResult(
-                    mCategory, mComp, mRole, mChrom, mPos, mCigar, mNegativeStrand, mHasNCigar,
+                    mRecordState, mDecidingFeature, mSwapped, mComp, mRole, mChrom, mPos, mCigar, mNegativeStrand, mHasNCigar,
                     mInputMapq, mUpdatedMapq, mNumXaAlts, mNumRefAlts, mNumTxAlts, mNumLoci,
                     mNumDistinctCigarsAtPrimaryLocus, mTxHasNCigar, mTxSoftClipAtBoundary, mRefSoftClipped,
                     mRefFullMatch, mGeneIds, mNotes, mTranscriptStrand, mAlignments);

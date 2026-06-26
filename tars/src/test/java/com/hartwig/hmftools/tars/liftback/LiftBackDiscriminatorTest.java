@@ -1,16 +1,13 @@
 package com.hartwig.hmftools.tars.liftback;
 
-import static com.hartwig.hmftools.tars.liftback.LiftBackCategory.BOTH_AGREE;
-import static com.hartwig.hmftools.tars.liftback.LiftBackCategory.BOTH_AMBIGUOUS;
-import static com.hartwig.hmftools.tars.liftback.LiftBackCategory.BOTH_MULTI;
-import static com.hartwig.hmftools.tars.liftback.LiftBackCategory.BOTH_MULTI_TX_JUNCTION;
-import static com.hartwig.hmftools.tars.liftback.LiftBackCategory.BOTH_TX_JUNCTION_REF_MATCH;
-import static com.hartwig.hmftools.tars.liftback.LiftBackCategory.BOTH_TX_JUNCTION_REF_SOFTCLIP;
-import static com.hartwig.hmftools.tars.liftback.LiftBackCategory.BOTH_TX_SOFTCLIP_REF_MATCH;
-import static com.hartwig.hmftools.tars.liftback.LiftBackCategory.REF_MULTI;
-import static com.hartwig.hmftools.tars.liftback.LiftBackCategory.REF_SINGLE;
-import static com.hartwig.hmftools.tars.liftback.LiftBackCategory.TX_MULTI;
-import static com.hartwig.hmftools.tars.liftback.LiftBackCategory.TX_SINGLE;
+import static com.hartwig.hmftools.tars.liftback.DecidingFeature.AMBIGUOUS;
+import static com.hartwig.hmftools.tars.liftback.DecidingFeature.CONCORDANT;
+import static com.hartwig.hmftools.tars.liftback.DecidingFeature.JUNCTION;
+import static com.hartwig.hmftools.tars.liftback.DecidingFeature.JUNCTION_OVER_CONTIGUOUS;
+import static com.hartwig.hmftools.tars.liftback.DecidingFeature.MULTIMAPPER;
+import static com.hartwig.hmftools.tars.liftback.DecidingFeature.REF_READS_THROUGH;
+import static com.hartwig.hmftools.tars.liftback.DecidingFeature.SOLE_REF;
+import static com.hartwig.hmftools.tars.liftback.DecidingFeature.SOLE_TX;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -20,14 +17,12 @@ import static org.junit.Assert.assertTrue;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.hartwig.hmftools.tars.common.SpliceCommon;
-
 import org.junit.Test;
 
-// Direct unit coverage of the ref-vs-tx discriminator: categorize() assigns one LiftBackCategory to a
-// record's lifted alignment set, and apply() executes the swap/drop that category implies. These are the
+// Direct unit coverage of the ref-vs-tx discriminator: categorize() resolves a record's lifted alignment set
+// to an Outcome + DecidingFeature, and apply() executes the swap/drop that feature implies. These are the
 // central manipulations that decide whether a tx-contig (spliced) placement wins over bwa's ref placement.
-// Each test feeds a hand-built alignment set so the category and its consequence are asserted in isolation,
+// Each test feeds a hand-built alignment set so the decision and its consequence are asserted in isolation,
 // rather than through the full LiftBackResolver.resolve path.
 public class LiftBackDiscriminatorTest
 {
@@ -66,81 +61,88 @@ public class LiftBackDiscriminatorTest
         return list;
     }
 
-    private static LiftBackCategory categoryOf(final List<LiftedAlignment> alignments)
+    private static DecidingFeature featureOf(final List<LiftedAlignment> alignments)
     {
-        return LiftBackDiscriminator.categorize(alignments).Category;
+        return LiftBackDiscriminator.categorize(alignments).Feature;
     }
 
-    // The full ref-vs-tx category matrix: one assert per discriminator branch. Each assert carries a message
-    // naming the branch so a failure pinpoints which category misclassified.
+    // The full ref-vs-tx decision matrix: one assert per discriminator branch. Each assert carries a message
+    // naming the branch so a failure pinpoints which decision misclassified.
     @Test
     public void testCategorize()
     {
         // ---- one locus, single source ----
 
-        // only a ref alignment present -> REF_SINGLE.
-        assertEquals("single ref alignment", REF_SINGLE,
-                categoryOf(set(ref(CHR1, 100, FULL_MATCH_CIGAR))));
+        // only a ref alignment present -> REF, SOLE_REF.
+        assertEquals("single ref alignment", SOLE_REF,
+                featureOf(set(ref(CHR1, 100, FULL_MATCH_CIGAR))));
 
-        // only a tx (spliced) alignment present -> TX_SINGLE.
-        assertEquals("single tx alignment", TX_SINGLE,
-                categoryOf(set(tx(CHR1, 100, TX_JUNCTION_CIGAR, false, 0))));
+        // only a tx (spliced) alignment present -> TX, SOLE_TX.
+        assertEquals("single tx alignment", SOLE_TX,
+                featureOf(set(tx(CHR1, 100, TX_JUNCTION_CIGAR, false, 0))));
 
         // ---- one locus, ref and tx both present (the discriminator) ----
 
-        // identical cigar, no N: the two views agree, no contest -> BOTH_AGREE.
-        assertEquals("ref and tx agree on the same gapless cigar", BOTH_AGREE,
-                categoryOf(set(
+        // identical cigar, no N: the two views agree, no contest -> CONCORDANT.
+        assertEquals("ref and tx agree on the same gapless cigar", CONCORDANT,
+                featureOf(set(
                         ref(CHR1, 100, FULL_MATCH_CIGAR),
                         tx(CHR1, 100, FULL_MATCH_CIGAR, false, 0))));
 
-        // tx spliced across a real junction, ref ran off the exon edge into a softclip: tx wins.
-        assertEquals("tx junction beats a ref softclip", BOTH_TX_JUNCTION_REF_SOFTCLIP,
-                categoryOf(set(
+        // tx spliced across a real junction, ref ran off the exon edge into a softclip: tx wins (JUNCTION).
+        assertEquals("tx junction beats a ref softclip", JUNCTION,
+                featureOf(set(
                         ref(CHR1, 100, SOFTCLIP_CIGAR),
                         tx(CHR1, 100, TX_JUNCTION_CIGAR, false, 0))));
 
         // ref matched cleanly through the supposed intron (no softclip): read is unspliced, ref wins.
-        assertEquals("clean ref match through the intron beats the tx junction", BOTH_TX_JUNCTION_REF_MATCH,
-                categoryOf(set(
-                        ref(CHR1, 100, FULL_MATCH_CIGAR),
-                        tx(CHR1, 100, TX_JUNCTION_CIGAR, false, 0))));
+        // REF_READS_THROUGH merges the old TX_JUNCTION_REF_MATCH / TX_SOFTCLIP_REF_MATCH; the underlying
+        // flags keep the two scenarios distinguishable, so assert them too.
+        LiftBackDiscriminator.Features refMatch = LiftBackDiscriminator.categorize(set(
+                ref(CHR1, 100, FULL_MATCH_CIGAR),
+                tx(CHR1, 100, TX_JUNCTION_CIGAR, false, 0)));
+        assertEquals("clean ref match through the intron beats the tx junction", REF_READS_THROUGH, refMatch.Feature);
+        assertTrue(refMatch.TxHasNCigar);
+        assertTrue(refMatch.RefFullMatch);
+        assertFalse(refMatch.RefSoftClipped);
 
         // tx softclipped at the exon boundary (no N junction), ref full match: ref wins (intron retention).
-        assertEquals("ref full match beats a tx that only softclips at the boundary", BOTH_TX_SOFTCLIP_REF_MATCH,
-                categoryOf(set(
-                        ref(CHR1, 100, FULL_MATCH_CIGAR),
-                        tx(CHR1, 100, "50M50S", true, 0))));
+        LiftBackDiscriminator.Features txSoftclip = LiftBackDiscriminator.categorize(set(
+                ref(CHR1, 100, FULL_MATCH_CIGAR),
+                tx(CHR1, 100, "50M50S", true, 0)));
+        assertEquals("ref full match beats a tx that only softclips at the boundary", REF_READS_THROUGH, txSoftclip.Feature);
+        assertTrue(txSoftclip.TxSoftClipAtBoundary);
+        assertFalse(txSoftclip.TxHasNCigar);
 
-        // tx contiguous (no junction, no boundary clip), ref softclipped: no discriminator rule applies.
-        assertEquals("no rule fires when tx is contiguous and ref is softclipped", BOTH_AMBIGUOUS,
-                categoryOf(set(
+        // tx contiguous (no junction, no boundary clip), ref softclipped: no rule applies -> AMBIGUOUS.
+        assertEquals("no rule fires when tx is contiguous and ref is softclipped", AMBIGUOUS,
+                featureOf(set(
                         ref(CHR1, 100, SOFTCLIP_CIGAR),
                         tx(CHR1, 100, FULL_MATCH_CIGAR, false, 0))));
 
         // ---- two or more loci ----
 
-        // multiple loci, all ref, zero tx alts -> REF_MULTI.
-        assertEquals("multi-locus, ref only", REF_MULTI,
-                categoryOf(set(
+        // multiple loci, all ref, zero tx alts -> SOLE_REF.
+        assertEquals("multi-locus, ref only", SOLE_REF,
+                featureOf(set(
                         ref(CHR1, 100, FULL_MATCH_CIGAR),
                         ref(CHR2, 200, FULL_MATCH_CIGAR))));
 
-        // multiple loci, all tx, zero ref alts -> TX_MULTI.
-        assertEquals("multi-locus, tx only", TX_MULTI,
-                categoryOf(set(
+        // multiple loci, all tx, zero ref alts -> SOLE_TX.
+        assertEquals("multi-locus, tx only", SOLE_TX,
+                featureOf(set(
                         tx(CHR1, 100, TX_JUNCTION_CIGAR, false, 0),
                         tx(CHR2, 200, TX_JUNCTION_CIGAR, false, 0))));
 
-        // distinct loci, ref and tx; tx has an annotated junction, ref alt is intronless (paralog): tx faithful.
-        assertEquals("multi-locus with a tx junction against an intronless ref paralog", BOTH_MULTI_TX_JUNCTION,
-                categoryOf(set(
+        // distinct loci, ref and tx; tx has an annotated junction, ref alt is intronless (intronless ref alt): tx faithful.
+        assertEquals("multi-locus with a tx junction against an intronless ref alt", JUNCTION_OVER_CONTIGUOUS,
+                featureOf(set(
                         tx(CHR1, 100, TX_JUNCTION_CIGAR, false, 0),
                         ref(CHR2, 200, FULL_MATCH_CIGAR))));
 
         // distinct loci, neither side has a junction: genuine multi-mapper.
-        assertEquals("multi-locus with no junction on either side", BOTH_MULTI,
-                categoryOf(set(
+        assertEquals("multi-locus with no junction on either side", MULTIMAPPER,
+                featureOf(set(
                         tx(CHR1, 100, FULL_MATCH_CIGAR, false, 0),
                         ref(CHR2, 200, FULL_MATCH_CIGAR))));
     }
@@ -157,8 +159,8 @@ public class LiftBackDiscriminatorTest
         LiftedAlignment txWinner = tx(CHR1, 100, TX_JUNCTION_CIGAR, false, 0);
         LiftedAlignment otherRef = ref(CHR2, 200, FULL_MATCH_CIGAR);
 
-        LiftBackDiscriminator.Outcome outcome =
-                LiftBackDiscriminator.apply(set(self, txWinner, otherRef), BOTH_TX_JUNCTION_REF_SOFTCLIP, self);
+        LiftBackDiscriminator.ApplyResult outcome =
+                LiftBackDiscriminator.apply(set(self, txWinner, otherRef), JUNCTION, self);
 
         assertSame(txWinner, outcome.effectivePrimary());
         assertEquals("swapped_ref_to_tx", outcome.note());
@@ -176,8 +178,8 @@ public class LiftBackDiscriminatorTest
         self.IsPrimaryChoice = true;
         LiftedAlignment refAlt = ref(CHR1, 100, SOFTCLIP_CIGAR);
 
-        LiftBackDiscriminator.Outcome outcome =
-                LiftBackDiscriminator.apply(set(self, refAlt), BOTH_TX_JUNCTION_REF_SOFTCLIP, self);
+        LiftBackDiscriminator.ApplyResult outcome =
+                LiftBackDiscriminator.apply(set(self, refAlt), JUNCTION, self);
 
         assertSame(self, outcome.effectivePrimary());
         assertEquals("", outcome.note());
@@ -193,8 +195,8 @@ public class LiftBackDiscriminatorTest
         LiftedAlignment txMany = tx(CHR1, 100, "50M100N50M", false, 5);
         LiftedAlignment txFew = tx(CHR1, 100, "60M100N40M", false, 2);
 
-        LiftBackDiscriminator.Outcome outcome =
-                LiftBackDiscriminator.apply(set(self, txMany, txFew), BOTH_TX_JUNCTION_REF_SOFTCLIP, self);
+        LiftBackDiscriminator.ApplyResult outcome =
+                LiftBackDiscriminator.apply(set(self, txMany, txFew), JUNCTION, self);
 
         assertSame(txFew, outcome.effectivePrimary());
     }
@@ -209,8 +211,8 @@ public class LiftBackDiscriminatorTest
         self.IsPrimaryChoice = true;
         LiftedAlignment txAlt = tx(CHR1, 100, TX_JUNCTION_CIGAR, false, 0);
 
-        LiftBackDiscriminator.Outcome outcome =
-                LiftBackDiscriminator.apply(set(self, txAlt), BOTH_TX_JUNCTION_REF_MATCH, self);
+        LiftBackDiscriminator.ApplyResult outcome =
+                LiftBackDiscriminator.apply(set(self, txAlt), REF_READS_THROUGH, self);
 
         assertSame(self, outcome.effectivePrimary());
         assertEquals("", outcome.note());
@@ -225,8 +227,8 @@ public class LiftBackDiscriminatorTest
         self.IsPrimaryChoice = true;
         LiftedAlignment refWinner = ref(CHR1, 100, FULL_MATCH_CIGAR);
 
-        LiftBackDiscriminator.Outcome outcome =
-                LiftBackDiscriminator.apply(set(self, refWinner), BOTH_TX_JUNCTION_REF_MATCH, self);
+        LiftBackDiscriminator.ApplyResult outcome =
+                LiftBackDiscriminator.apply(set(self, refWinner), REF_READS_THROUGH, self);
 
         assertSame(refWinner, outcome.effectivePrimary());
         assertEquals("swapped_tx_to_ref", outcome.note());
@@ -234,7 +236,7 @@ public class LiftBackDiscriminatorTest
         assertFalse(self.IsPrimaryChoice);
     }
 
-    // ---- apply(): tx-softclip-ref-match ----
+    // ---- apply(): tx-softclip-ref-match (also REF_READS_THROUGH) ----
 
     @Test
     public void testTxSoftclipRefMatchRefSelfDropsTx()
@@ -243,8 +245,8 @@ public class LiftBackDiscriminatorTest
         self.IsPrimaryChoice = true;
         LiftedAlignment txAlt = tx(CHR1, 100, "50M50S", true, 0);
 
-        LiftBackDiscriminator.Outcome outcome =
-                LiftBackDiscriminator.apply(set(self, txAlt), BOTH_TX_SOFTCLIP_REF_MATCH, self);
+        LiftBackDiscriminator.ApplyResult outcome =
+                LiftBackDiscriminator.apply(set(self, txAlt), REF_READS_THROUGH, self);
 
         assertSame(self, outcome.effectivePrimary());
         assertEquals("", outcome.note());
@@ -260,33 +262,33 @@ public class LiftBackDiscriminatorTest
         self.IsPrimaryChoice = true;
         LiftedAlignment refAlt = ref(CHR1, 100, FULL_MATCH_CIGAR);
 
-        LiftBackDiscriminator.Outcome outcome =
-                LiftBackDiscriminator.apply(set(self, refAlt), BOTH_TX_SOFTCLIP_REF_MATCH, self);
+        LiftBackDiscriminator.ApplyResult outcome =
+                LiftBackDiscriminator.apply(set(self, refAlt), REF_READS_THROUGH, self);
 
         assertSame(refAlt, outcome.effectivePrimary());
         assertEquals("swapped_tx_to_ref", outcome.note());
         assertFalse(refAlt.Dropped);
     }
 
-    // ---- apply(): categories with no swap ----
+    // ---- apply(): features with no swap ----
 
     @Test
-    public void testNonSwappingCategoriesLeaveSelfAndDropNothing()
+    public void testNonSwappingFeaturesLeaveSelfAndDropNothing()
     {
-        for(final LiftBackCategory category : new LiftBackCategory[] {
-                REF_SINGLE, TX_SINGLE, BOTH_AGREE, BOTH_AMBIGUOUS, REF_MULTI, TX_MULTI, BOTH_MULTI })
+        for(final DecidingFeature feature : new DecidingFeature[] {
+                SOLE_REF, SOLE_TX, CONCORDANT, AMBIGUOUS, MULTIMAPPER })
         {
             LiftedAlignment self = ref(CHR1, 100, FULL_MATCH_CIGAR);
             self.IsPrimaryChoice = true;
             LiftedAlignment txAlt = tx(CHR1, 100, TX_JUNCTION_CIGAR, false, 0);
 
-            LiftBackDiscriminator.Outcome outcome =
-                    LiftBackDiscriminator.apply(set(self, txAlt), category, self);
+            LiftBackDiscriminator.ApplyResult outcome =
+                    LiftBackDiscriminator.apply(set(self, txAlt), feature, self);
 
-            assertSame("category " + category, self, outcome.effectivePrimary());
-            assertEquals("category " + category, "", outcome.note());
-            assertFalse("category " + category, self.Dropped);
-            assertFalse("category " + category, txAlt.Dropped);
+            assertSame("feature " + feature, self, outcome.effectivePrimary());
+            assertEquals("feature " + feature, "", outcome.note());
+            assertFalse("feature " + feature, self.Dropped);
+            assertFalse("feature " + feature, txAlt.Dropped);
         }
     }
 }

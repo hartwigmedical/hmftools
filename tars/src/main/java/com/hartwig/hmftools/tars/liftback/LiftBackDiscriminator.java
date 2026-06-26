@@ -5,17 +5,17 @@ import java.util.List;
 import java.util.Set;
 
 // Pure decision step on a record's full lifted alignment set (self + lifted XA alts).
-// categorize() classifies the set; apply() mutates Dropped/IsPrimaryChoice for categories that need
-// a swap (e.g. intronless paralog vs. spliced parent gene). No I/O - separate from LiftBackResolver
-// so the decision tree reads as one piece.
+// categorize() resolves the set to an Outcome (which source wins) plus a DecidingFeature (why); apply()
+// mutates Dropped/IsPrimaryChoice for the features that need a swap (e.g. intronless ref alt vs. spliced
+// parent gene). No I/O - separate from LiftBackResolver so the decision tree reads as one piece.
 public final class LiftBackDiscriminator
 {
     private LiftBackDiscriminator() { }
 
-    // Per-alignment evidence emitted into TSV-A for post-hoc "why this category" analysis.
+    // Per-alignment evidence emitted into TSV-A for post-hoc "why this outcome" analysis.
     public static class Features
     {
-        public LiftBackCategory Category;
+        public DecidingFeature Feature;
         public int NumRefAlts;
         public int NumTxAlts;
         public boolean TxHasNCigar;
@@ -31,7 +31,8 @@ public final class LiftBackDiscriminator
 
         if(alignments.isEmpty())
         {
-            features.Category = LiftBackCategory.LIFT_FAILED;
+            // Defensive: the primary path always supplies self, so this is unreachable in practice.
+            features.Feature = null;
             return features;
         }
 
@@ -85,83 +86,93 @@ public final class LiftBackDiscriminator
         {
             if(hasRef && hasTx)
             {
-                // tx has annotated junction, ref alts map intronlessly at other loci - typically paralogs/pseudogenes.
+                // tx has an annotated junction; ref alts map intronlessly at other loci - usually an intronless
+                // gene copy, though the rule does not verify that.
                 if(features.TxHasNCigar && !features.RefHasNCigar)
                 {
-                    features.Category = LiftBackCategory.BOTH_MULTI_TX_JUNCTION;
+                    assign(features, DecidingFeature.JUNCTION_OVER_CONTIGUOUS);
                 }
                 else
                 {
-                    features.Category = LiftBackCategory.BOTH_MULTI;
+                    assign(features, DecidingFeature.MULTIMAPPER);
                 }
             }
             else if(hasTx)
             {
-                features.Category = LiftBackCategory.TX_MULTI;
+                assign(features, DecidingFeature.SOLE_TX);
             }
             else
             {
-                features.Category = LiftBackCategory.REF_MULTI;
+                assign(features, DecidingFeature.SOLE_REF);
             }
             return features;
         }
 
         if(hasRef && !hasTx)
         {
-            features.Category = LiftBackCategory.REF_SINGLE;
+            assign(features, DecidingFeature.SOLE_REF);
             return features;
         }
         if(hasTx && !hasRef)
         {
-            features.Category = LiftBackCategory.TX_SINGLE;
+            assign(features, DecidingFeature.SOLE_TX);
             return features;
         }
 
         // single locus, both ref and tx - run discriminator
         if(distinctCigars.size() == 1 && !anyHasN)
         {
-            features.Category = LiftBackCategory.BOTH_AGREE;
+            assign(features, DecidingFeature.CONCORDANT);
         }
         else if(features.TxHasNCigar && features.RefSoftClipped)
         {
-            features.Category = LiftBackCategory.BOTH_TX_JUNCTION_REF_SOFTCLIP;
+            assign(features, DecidingFeature.JUNCTION);
         }
         else if(features.TxHasNCigar && features.RefFullMatch && !features.RefSoftClipped)
         {
             // ref full-match across the supposed intron is strong evidence the read is unspliced
             // (pre-mRNA / retained intron / DNA contamination) - the tx N-CIGAR is the artifact.
-            features.Category = LiftBackCategory.BOTH_TX_JUNCTION_REF_MATCH;
+            assign(features, DecidingFeature.REF_READS_THROUGH);
         }
         else if(features.TxSoftClipAtBoundary && features.RefFullMatch)
         {
-            features.Category = LiftBackCategory.BOTH_TX_SOFTCLIP_REF_MATCH;
+            assign(features, DecidingFeature.REF_READS_THROUGH);
         }
         else
         {
-            features.Category = LiftBackCategory.BOTH_AMBIGUOUS;
+            assign(features, DecidingFeature.AMBIGUOUS);
         }
 
         return features;
     }
 
-    public record Outcome(LiftedAlignment effectivePrimary, String note)
+    private static void assign(final Features features, final DecidingFeature feature)
+    {
+        features.Feature = feature;
+    }
+
+    public record ApplyResult(LiftedAlignment effectivePrimary, String note)
     {
     }
 
     // Mutates Dropped/IsPrimaryChoice and returns the effective primary and a short diagnostic note.
-    public static Outcome apply(
-            final List<LiftedAlignment> alignments, final LiftBackCategory category, final LiftedAlignment self)
+    public static ApplyResult apply(
+            final List<LiftedAlignment> alignments, final DecidingFeature feature, final LiftedAlignment self)
     {
-        return switch(category)
+        if(feature == null)
         {
-            case BOTH_TX_JUNCTION_REF_SOFTCLIP, BOTH_MULTI_TX_JUNCTION -> promoteTxOverRef(alignments, self);
-            case BOTH_TX_JUNCTION_REF_MATCH, BOTH_TX_SOFTCLIP_REF_MATCH -> promoteRefOverTx(alignments, self);
-            default -> new Outcome(self, "");
+            return new ApplyResult(self, "");
+        }
+        return switch(feature)
+        {
+            case JUNCTION, JUNCTION_OVER_CONTIGUOUS -> promoteTxOverRef(alignments, self);
+            case REF_READS_THROUGH -> promoteRefOverTx(alignments, self);
+            default -> new ApplyResult(self, "");
         };
     }
 
     // Ref-favouring: if self is ref, drop tx alts. If self is tx, swap to the best ref alt.
-    private static Outcome promoteRefOverTx(final List<LiftedAlignment> alignments, final LiftedAlignment self)
+    private static ApplyResult promoteRefOverTx(final List<LiftedAlignment> alignments, final LiftedAlignment self)
     {
         if(!self.fromTxContig())
         {
@@ -170,7 +181,7 @@ public final class LiftBackDiscriminator
                 {
                     la.Dropped = true;
                 }
-            return new Outcome(self, "");
+            return new ApplyResult(self, "");
         }
 
         LiftedAlignment winner = null;
@@ -184,7 +195,7 @@ public final class LiftBackDiscriminator
         }
         if(winner == null)
         {
-            return new Outcome(self, "");
+            return new ApplyResult(self, "");
         }
 
         self.IsPrimaryChoice = false;
@@ -196,11 +207,12 @@ public final class LiftBackDiscriminator
                 la.Dropped = true;
             }
         }
-        return new Outcome(winner, "swapped_tx_to_ref");
+        return new ApplyResult(winner, "swapped_tx_to_ref");
     }
 
-    // Tx-favouring: if self is tx, drop ref alts. If self is ref, swap to the best tx alt (self demoted to XA to preserve the paralog locus).
-    private static Outcome promoteTxOverRef(final List<LiftedAlignment> alignments, final LiftedAlignment self)
+    // Tx-favouring: if self is tx, drop ref alts. If self is ref, swap to the best tx alt (self demoted to XA
+    // to preserve the contiguous locus).
+    private static ApplyResult promoteTxOverRef(final List<LiftedAlignment> alignments, final LiftedAlignment self)
     {
         if(self.fromTxContig())
         {
@@ -209,7 +221,7 @@ public final class LiftBackDiscriminator
                 {
                     la.Dropped = true;
                 }
-            return new Outcome(self, "");
+            return new ApplyResult(self, "");
         }
 
         // Prefer the N-junction tx alt with fewest mismatches; fall back to any tx alt.
@@ -237,7 +249,7 @@ public final class LiftBackDiscriminator
         }
         if(winner == null)
         {
-            return new Outcome(self, "");
+            return new ApplyResult(self, "");
         }
 
         self.IsPrimaryChoice = false;
@@ -249,7 +261,7 @@ public final class LiftBackDiscriminator
                 la.Dropped = true;
             }
         }
-        return new Outcome(winner, "swapped_ref_to_tx");
+        return new ApplyResult(winner, "swapped_ref_to_tx");
     }
 
     private static String locusKey(final LiftedAlignment la)

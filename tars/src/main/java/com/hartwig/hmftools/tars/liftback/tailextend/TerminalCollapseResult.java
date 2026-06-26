@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.tars.liftback.tailextend;
 
-// Result of TerminalMicroJunctionCollapser.tryCollapse. newStart shifts only on a leading collapse.
+// Result of TerminalReconciler.tryCollapse. newStart shifts only on a leading collapse.
 public record TerminalCollapseResult(boolean collapsed, int newStart, String newCigar)
 {
     public static TerminalCollapseResult unchanged()

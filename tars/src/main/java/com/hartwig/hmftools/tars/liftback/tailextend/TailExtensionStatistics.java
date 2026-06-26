@@ -59,4 +59,25 @@ public class TailExtensionStatistics
     public int skippedComplexShape() { return mSkippedComplexShape; }
 
     public int rejectedTooManyMismatches() { return mRejectedTooManyMismatches; }
+
+    // Snapshot / restore the counters so a discarded provisional mate decision can be rolled back without
+    // double-counting (see LiftBackGroupProcessor.processNameGroup).
+    public int[] snapshot()
+    {
+        return new int[] {
+                mRecordsEvaluated, mRecordsExtended, mBasesExtendedLead, mBasesExtendedTrail,
+                mSkippedNoRef, mSkippedForJunctionGuard, mSkippedComplexShape, mRejectedTooManyMismatches };
+    }
+
+    public void restore(final int[] snapshot)
+    {
+        mRecordsEvaluated = snapshot[0];
+        mRecordsExtended = snapshot[1];
+        mBasesExtendedLead = snapshot[2];
+        mBasesExtendedTrail = snapshot[3];
+        mSkippedNoRef = snapshot[4];
+        mSkippedForJunctionGuard = snapshot[5];
+        mSkippedComplexShape = snapshot[6];
+        mRejectedTooManyMismatches = snapshot[7];
+    }
 }

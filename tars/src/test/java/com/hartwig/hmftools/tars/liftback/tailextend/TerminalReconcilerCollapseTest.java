@@ -11,13 +11,14 @@ import com.hartwig.hmftools.tars.liftback.TarsTestFixtures.TestGenome;
 
 import org.junit.Test;
 
-public class TerminalMicroJunctionCollapserTest
+public class TerminalReconcilerCollapseTest
 {
     private static final String CHR1 = "chr1";
 
-    private static TerminalMicroJunctionCollapser collapser(final TestGenome genome)
+    private static TerminalReconciler collapser(final TestGenome genome)
     {
-        return new TerminalMicroJunctionCollapser(genome.asRefSource(), TarsConstants.MIN_JUNCTION_ANCHOR);
+        return new TerminalReconciler(
+                genome.asRefSource(), TarsConstants.MIN_JUNCTION_ANCHOR, null, TailExtensionConfig.defaults());
     }
 
     @Test

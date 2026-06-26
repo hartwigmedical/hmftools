@@ -13,9 +13,8 @@ import com.hartwig.hmftools.tars.common.TarsConstants;
 import com.hartwig.hmftools.tars.liftback.rescue.JunctionRescueResolver;
 import com.hartwig.hmftools.tars.liftback.rescue.RefSequenceSource;
 import com.hartwig.hmftools.tars.liftback.rescue.RescueStatistics;
-import com.hartwig.hmftools.tars.liftback.tailextend.SoftclipTailExtender;
 import com.hartwig.hmftools.tars.liftback.tailextend.TailExtensionStatistics;
-import com.hartwig.hmftools.tars.liftback.tailextend.TerminalMicroJunctionCollapser;
+import com.hartwig.hmftools.tars.liftback.tailextend.TerminalReconciler;
 
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileWriter;
@@ -34,8 +33,7 @@ public class LiftBackWorker extends Thread
     private final LiftBackWriter mTsvWriter; // nullable: headerless per-worker TSV shard, only when enabled
 
     private final JunctionRescueResolver mRescueResolver;
-    private final SoftclipTailExtender mSoftclipExtender;
-    private final TerminalMicroJunctionCollapser mTerminalCollapser;
+    private final TerminalReconciler mTerminalReconciler;
     private final JunctionCanonicalizer mJunctionCanonicalizer;
 
     private final ExcludedRegions mExcludedRegions; // nullable: passed to the processor for post-lift exclusion
@@ -60,14 +58,13 @@ public class LiftBackWorker extends Thread
         RefSequenceSource refSource = resources.openRefSource();
 
         mRescueResolver = new JunctionRescueResolver(resources.JunctionIndex, refSource, resources.Rescue);
-        mSoftclipExtender = new SoftclipTailExtender(refSource, resources.JunctionIndex, resources.TailExtension);
-        mTerminalCollapser = refSource != null
-                ? new TerminalMicroJunctionCollapser(refSource, resources.TerminalAnchor) : null;
+        mTerminalReconciler = new TerminalReconciler(
+                refSource, resources.TerminalAnchor, resources.JunctionIndex, resources.TailExtension);
         mJunctionCanonicalizer = refSource != null
                 ? new JunctionCanonicalizer(refSource, TarsConstants.DEFAULT_MAX_SHIFT) : null;
 
         mProcessor = new LiftBackGroupProcessor(
-                resources.Resolver, mRescueResolver, mSoftclipExtender, mTerminalCollapser, mJunctionCanonicalizer,
+                resources.Resolver, mRescueResolver, mTerminalReconciler, mJunctionCanonicalizer,
                 refSource, mExcludedRegions, mStats);
 
         mShardWriter = new SAMFileWriterFactory().makeBAMWriter(header, false, new File(shardBam));
@@ -77,11 +74,11 @@ public class LiftBackWorker extends Thread
 
     public RescueStatistics rescueStatistics() { return mRescueResolver != null ? mRescueResolver.statistics() : null; }
 
-    public TailExtensionStatistics tailExtStatistics() { return mSoftclipExtender != null ? mSoftclipExtender.statistics() : null; }
+    public TailExtensionStatistics tailExtStatistics() { return mTerminalReconciler != null ? mTerminalReconciler.statistics() : null; }
 
-    public long collapsedLeading() { return mTerminalCollapser != null ? mTerminalCollapser.collapsedLeading() : 0; }
+    public long collapsedLeading() { return mTerminalReconciler != null ? mTerminalReconciler.collapsedLeading() : 0; }
 
-    public long collapsedTrailing() { return mTerminalCollapser != null ? mTerminalCollapser.collapsedTrailing() : 0; }
+    public long collapsedTrailing() { return mTerminalReconciler != null ? mTerminalReconciler.collapsedTrailing() : 0; }
 
     public long junctionsCanonicalized() { return mJunctionCanonicalizer != null ? mJunctionCanonicalizer.junctionsShifted() : 0; }
 

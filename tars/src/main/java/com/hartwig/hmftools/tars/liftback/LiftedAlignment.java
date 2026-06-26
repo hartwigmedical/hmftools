@@ -74,6 +74,19 @@ public class LiftedAlignment
         TranscriptStrand = transcriptStrand;
     }
 
+    // Copy with a normalized lifted placement (collapse / tail-extend output). The boundary-softclip flag
+    // only survives if the new cigar still carries a softclip; a fully reclaimed tail is no longer clipped.
+    public LiftedAlignment withLiftedCigar(final int liftedPos, final String liftedCigar)
+    {
+        boolean stillSoftClipped = liftedCigar.indexOf('S') >= 0;
+        return new LiftedAlignment(
+                Source, OrigContig, OrigPos, OrigCigar,
+                LiftedChrom, liftedPos, liftedCigar,
+                AlignmentScore, NumMismatches,
+                TransName, GeneId, GeneName,
+                SoftClipAtBoundary && stillSoftClipped, ForwardStrand, TranscriptStrand);
+    }
+
     public boolean fromTxContig()
     {
         return TransName != null;
