@@ -457,21 +457,21 @@ public class AssemblyAligner extends ThreadTask
             return false;
         }
 
-        if(assembly.stats().SoftClipSecondMaxLength < ASSEMBLY_MIN_SOFT_CLIP_LENGTH) // only 1 read above the min length
-            return true;
-
         boolean hasSuspectExtension = hasSuspectExtension(assemblyAlignment);
 
         boolean testMinorityExtensions = false;
 
         if(isIllumina())
         {
+            if(assembly.stats().SoftClipSecondMaxLength < ASSEMBLY_MIN_SOFT_CLIP_LENGTH) // only 1 read above the min length
+                return true;
+
             if(!hasSuspectExtension)
                 return false;
         }
         else
         {
-            testMinorityExtensions = hasSuspectExtension;
+            testMinorityExtensions = true;
         }
 
         if(testMinorityExtensions)
@@ -503,10 +503,29 @@ public class AssemblyAligner extends ThreadTask
         // OR is adjacent to a ref repeat of 7+ bp)
         for(JunctionAssembly assembly : assemblyAlignment.assemblies())
         {
-            List<RepeatInfo> refRepeats = RepeatInfo.findRepeats(assembly.formRefBaseSequence().getBytes(), WEAK_ASSEMBLY_MIN_REF_REPEAT);
+            String refBases = assembly.formRefBaseSequence();
+            String adjacentRefBases;
+            int minRefLength = WEAK_ASSEMBLY_MIN_REF_REPEAT * 3; // so will only allow repeats of 3mers or less
 
-            if(!refRepeats.isEmpty())
-                return true;
+            if(refBases.length() <= minRefLength)
+            {
+                adjacentRefBases = refBases;
+            }
+            else if(assembly.isForwardJunction())
+            {
+                adjacentRefBases = refBases.substring(refBases.length() - minRefLength);
+            }
+            else
+            {
+                adjacentRefBases = refBases.substring(0, minRefLength);
+            }
+
+            List<RepeatInfo> refRepeats = RepeatInfo.findRepeats(adjacentRefBases.getBytes(), WEAK_ASSEMBLY_MIN_REF_REPEAT);
+
+            if(assembly.isForwardJunction())
+                return refRepeats.stream().anyMatch(x -> x.lastIndex() >= adjacentRefBases.length() - x.repeatLength());
+            else
+                return refRepeats.stream().anyMatch(x -> x.Index == 0);
         }
 
         return false;
