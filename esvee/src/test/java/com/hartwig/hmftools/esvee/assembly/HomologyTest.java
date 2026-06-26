@@ -60,7 +60,7 @@ public class HomologyTest
     }
 
     @Test
-    public void testIndelHomology()
+    public void testIndelHomologyExact()
     {
         String basesStart = "AACCGG";
         String basesEnd = basesStart;
@@ -86,6 +86,20 @@ public class HomologyTest
         assertEquals("A", homology.Homology);
         assertEquals(-1, homology.ExactStart);
         assertEquals(0, homology.ExactEnd);
+    }
+
+    @Test
+    public void testIndelHomologyInexact()
+    {
+        String basesStart = "AACCGTTT";
+        String basesEnd = "AACCTTTT";
+
+        HomologyData homology = HomologyData.determineIndelHomology(basesStart, basesEnd, basesStart.length());
+        assertEquals("AACCGTTT", homology.Homology);
+        assertEquals(-2, homology.ExactStart);
+        assertEquals(2, homology.ExactEnd);
+        assertEquals(-4, homology.InexactStart);
+        assertEquals(4, homology.InexactEnd);
     }
 
     @Test

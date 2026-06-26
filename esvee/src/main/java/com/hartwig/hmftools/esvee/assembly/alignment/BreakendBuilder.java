@@ -291,6 +291,8 @@ public class BreakendBuilder
     private IndelBreakendData calcIndelBreakendsWithHomology(final String chromosome, final IndelCoords indelCoords, int assemblyIndelStart,
             int assemblyIndelEnd)
     {
+        // TODO: use exact or inexact homology?
+
         int lowerPosition = indelCoords.PosStart;
         int upperPosition = indelCoords.PosEnd;
 
@@ -316,7 +318,7 @@ public class BreakendBuilder
                 if(!homology.Homology.isEmpty())
                 {
                     // convert an INS to a DUP and reassess homology
-                    int totalInexactHomology = homology.InexactEnd - homology.InexactStart;
+                    int totalInexactHomology = homology.ExactEnd - homology.ExactStart;
 
                     assemblyIndelStart += totalInexactHomology;
                     lowerPosition += 1;
