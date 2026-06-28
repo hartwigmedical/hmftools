@@ -172,7 +172,7 @@ public class SagaSequenceMatcher
         // Checking this way instead of just looking at the alignment lengths, because for a single-sided assembly there may not be enough
         // bases to align through to 80% of the other side, even though this is a legit match.
         // It's better to look at how many bases could've been aligned on either side of the aligned subsequence and see if this is too many.
-        int unaligned = alignment.leftUnaligned() + alignment.rightUnaligned();
+        int unaligned = alignment.startUnaligned() + alignment.endUnaligned();
         int maxUnaligned = calcMaxUnalignedBases(alignment.queryLength(), alignment.sagaLength());
         return unaligned <= maxUnaligned;
     }
@@ -224,8 +224,9 @@ public class SagaSequenceMatcher
 
     private record CigarElemWithPos(
             CigarElement element,
-            int readStart,
-            int readEnd,    // Exclusive
+            // Query positions are in the original query sequence (significant for reverse strand matches).
+            int queryStart,
+            int queryEnd,    // Exclusive
             int refStart,
             int refEnd      // Exclusive
     )
@@ -236,27 +237,29 @@ public class SagaSequenceMatcher
         }
     }
 
-    private static List<CigarElemWithPos> getCigarElementPositions(final Cigar cigar, int refStart)
+    private static List<CigarElemWithPos> getCigarElementPositions(final Cigar cigar, int refStart, boolean isForward, int queryLength)
     {
         List<CigarElemWithPos> result = new ArrayList<>();
-        int readIndex = 0;
+        int queryIndex = 0;
         int refIndex = refStart;
         for(CigarElement element : cigar.getCigarElements())
         {
             CigarOperator operator = element.getOperator();
-            int nextReadIndex = readIndex;
+            int nextQueryIndex = queryIndex;
             if(operator.consumesReadBases() || operator.isClipping())
             {
-                nextReadIndex += element.getLength();
+                nextQueryIndex += element.getLength();
             }
             int nextRefIndex = refIndex;
             if(operator.consumesReferenceBases())
             {
                 nextRefIndex += element.getLength();
             }
-            result.add(new CigarElemWithPos(element, readIndex, nextReadIndex, refIndex, nextRefIndex));
+            int queryStart = isForward ? queryIndex : queryLength - nextQueryIndex;
+            int queryEnd = isForward ? nextQueryIndex : queryLength - queryIndex;
+            result.add(new CigarElemWithPos(element, queryStart, queryEnd, refIndex, nextRefIndex));
 
-            readIndex = nextReadIndex;
+            queryIndex = nextQueryIndex;
             refIndex = nextRefIndex;
         }
         return result;
@@ -267,7 +270,7 @@ public class SagaSequenceMatcher
         return cigarElements.stream()
                 .filter(e -> e.operator().isIndel() && !ignoreIndel(e.element()))
                 .anyMatch(e -> isJunctionNearIndel(
-                        junctionInfo.assemblyOffset(), isQuery ? e.readStart() : e.refStart(), isQuery ? e.readEnd() : e.refEnd()));
+                        junctionInfo.assemblyOffset(), isQuery ? e.queryStart() : e.refStart(), isQuery ? e.queryEnd() : e.refEnd()));
     }
 
     private boolean ignoreIndel(final CigarElement element)
@@ -320,7 +323,8 @@ public class SagaSequenceMatcher
             List<SagaJunctionMatchInfo> queryJunctionMatches, List<SagaJunctionMatchInfo> sagaJunctionMatches,
             Set<SagaSequenceMatchCandidateFilter> filters)
     {
-        List<CigarElemWithPos> cigarElements = getCigarElementPositions(alignment.cigar(), alignment.sagaStart());
+        List<CigarElemWithPos> cigarElements = getCigarElementPositions(
+                alignment.cigar(), alignment.sagaStart(), alignment.isForward(), alignment.queryLength());
 
         List<SagaJunctionMatchInfo> queryJunctionMatchInfos = args.junctions().stream()
                 .map(j -> evaluateJunctionAlignment(alignment, cigarElements, j, true)).toList();
