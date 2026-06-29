@@ -41,7 +41,6 @@ public class SpliceLiftBackConfig
     public static final String RESCUE_MAX_BOUNDARY_SHIFT = "rescue_max_boundary_shift";
     public static final String RESCUE_MIN_PARTIAL_MATCH_RUN = "rescue_min_partial_match_run";
 
-    public static final String TAIL_MIN_SOFTCLIP = "tail_min_softclip";
     public static final String TAIL_MIN_EXTENSION = "tail_min_extension";
     public static final String TAIL_MAX_EXTENSION = "tail_max_extension";
 
@@ -92,7 +91,6 @@ public class SpliceLiftBackConfig
                 configBuilder.getInteger(RESCUE_MIN_PARTIAL_MATCH_RUN));
         TailExtension = new TailExtensionConfig(
                 true,
-                configBuilder.getInteger(TAIL_MIN_SOFTCLIP),
                 configBuilder.getInteger(TAIL_MIN_EXTENSION),
                 configBuilder.getInteger(TAIL_MAX_EXTENSION));
         RnaUnmapRegionsFile = configBuilder.getValue(RNA_UNMAP_REGIONS);
@@ -181,10 +179,9 @@ public class SpliceLiftBackConfig
         configBuilder.addInteger(RESCUE_MIN_PARTIAL_MATCH_RUN,
                 "Junction rescue: min exon-proximal matched run for partial ref-verify rescue",
                 TarsConstants.DEFAULT_MIN_PARTIAL_MATCH_RUN);
-        configBuilder.addInteger(TAIL_MIN_SOFTCLIP,
-                "Tail extension: min terminal softclip length to consider", TarsConstants.DEFAULT_MIN_SOFTCLIP_LENGTH);
         configBuilder.addInteger(TAIL_MIN_EXTENSION,
-                "Tail extension: min ref-matching bases to convert to M", TarsConstants.DEFAULT_MIN_EXTENSION);
+                "Tail extension: min softclip length considered and min ref-matching bases converted to M",
+                TarsConstants.DEFAULT_MIN_EXTENSION);
         configBuilder.addInteger(TAIL_MAX_EXTENSION,
                 "Tail extension: max bases walked into a softclip (caps consuming real junctions)",
                 TarsConstants.DEFAULT_MAX_EXTENSION);

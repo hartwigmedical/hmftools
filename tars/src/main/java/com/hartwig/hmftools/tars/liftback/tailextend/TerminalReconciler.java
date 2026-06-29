@@ -351,7 +351,7 @@ public class TerminalReconciler
         int matchedIndex = side.matchedIndex(working);
 
         CigarElement softclip = working.get(softclipIndex);
-        if(softclip.getOperator() != CigarOperator.S || softclip.getLength() < mConfig.MinSoftclipLength)
+        if(softclip.getOperator() != CigarOperator.S || softclip.getLength() < mConfig.MinExtension)
         {
             return 0;
         }

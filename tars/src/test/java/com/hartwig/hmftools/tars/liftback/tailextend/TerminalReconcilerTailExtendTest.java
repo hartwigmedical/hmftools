@@ -241,7 +241,7 @@ public class TerminalReconcilerTailExtendTest
         // no softclip -> unchanged
         assertFalse(extender(genome()).tryExtend(CHR1, 101, "30M", repeatedBase(30, 'A')).extended());
 
-        // 2S < MinSoftclipLength=3 -> unchanged
+        // 2S < MinExtension=3 -> unchanged (a 2 bp clip can never reclaim 3 bp)
         assertFalse(extender(genome().set(CHR1, 131, 2, 'C'))
                 .tryExtend(CHR1, 101, "30M2S", bases("A".repeat(30) + "CC")).extended());
 

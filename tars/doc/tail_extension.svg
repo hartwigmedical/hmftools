@@ -1,10 +1,10 @@
-<svg viewBox="0 0 880 380" xmlns="http://www.w3.org/2000/svg" font-family="Arial, Helvetica, sans-serif">
-<title>Step 2: tail extension</title>
-<desc>A terminal softclip whose bases match the genome contiguously, with no intron (intron retention), is walked back into the aligned block: 131M 20S becomes 151M. If only part of the clip matches, the rest stays clipped (139M 12S). CIGAR only, MAPQ unchanged.</desc>
+<svg viewBox="0 0 880 300" xmlns="http://www.w3.org/2000/svg" font-family="Arial, Helvetica, sans-serif">
+<title>Step 2: reclaim a trimmed tail</title>
+<desc>A terminal softclip is walked into the contiguous genome and re-scored. The best-scoring prefix (at least tail_min_extension, up to tail_max_extension) is turned from softclip (S) into matched (M): 131M 20S becomes 151M when the whole clip matches, or 139M 12S when only 8 bp match. CIGAR only, MAPQ unchanged. A walk that stalls where an annotated intron begins is left for rescue.</desc>
 <defs>
 <marker id="arrE" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#9B9893"/></marker>
 </defs>
-<rect x="0" y="0" width="880" height="380" fill="#FFFFFF"/>
+<rect x="0" y="0" width="880" height="300" fill="#FFFFFF"/>
 
 <!-- legend -->
 <g transform="translate(160,0)">
@@ -18,37 +18,30 @@
 </g>
 
 <!-- BEFORE -->
-<text x="60" y="36" font-size="14" font-weight="600" fill="#0C447C">before &#183; terminal softclip</text>
-<rect x="60" y="50" width="393" height="20" rx="3" fill="#2F7DC6"/>
-<text x="256" y="64" font-size="11" text-anchor="middle" fill="#FFFFFF">131M</text>
-<rect x="453" y="50" width="60" height="20" rx="3" fill="#EFB94B"/>
-<text x="483" y="64" font-size="11" text-anchor="middle" fill="#6B4E04">20S</text>
-<rect x="560" y="48" width="62" height="20" rx="10" fill="#ECECEA"/>
-<text x="591" y="62" font-size="11" text-anchor="middle" fill="#5C5953">MAPQ 60</text>
-<text x="60" y="90" font-size="10" fill="#6B6862">the 20 clipped bases continue into the genome with no intron &#8211; a retained-intron tail, not a junction</text>
+<text x="60" y="34" font-size="14" font-weight="600" fill="#0C447C">before  &#183;  terminal softclip</text>
+<rect x="60" y="46" width="393" height="20" rx="3" fill="#2F7DC6"/>
+<text x="256" y="60" font-size="11" text-anchor="middle" fill="#FFFFFF">131M</text>
+<rect x="453" y="46" width="60" height="20" rx="3" fill="#EFB94B"/>
+<text x="483" y="60" font-size="11" text-anchor="middle" fill="#6B4E04">20S</text>
+<text x="60" y="84" font-size="10.5" fill="#6B6862">the softclip is at least 3 bp (tail_min_softclip), so it is re-checked against the genome</text>
 
 <!-- REFERENCE GENOME -->
-<text x="60" y="124" font-size="11" font-weight="600" fill="#6B6862">reference genome &#183; chr16 (contiguous, no intron)</text>
-<rect x="60" y="132" width="453" height="14" rx="2" fill="#E6F1FB" stroke="#4A90C4"/>
-<rect x="453" y="132" width="60" height="14" rx="2" fill="#EAF6EE" stroke="#1F8A4C"/>
-<text x="270" y="142" font-size="9.5" text-anchor="middle" fill="#0C447C">exon</text>
-<text x="483" y="142" font-size="8.5" text-anchor="middle" fill="#1F8A4C">matches</text>
-<line x1="453" y1="128" x2="453" y2="166" stroke="#D89B14" stroke-width="1" stroke-dasharray="3,3"/>
-<text x="453" y="178" font-size="9.5" text-anchor="middle" fill="#D89B14">old clip boundary</text>
+<text x="60" y="112" font-size="11" font-weight="600" fill="#6B6862">reference genome  &#183;  chr16</text>
+<rect x="60" y="120" width="393" height="14" rx="2" fill="#E6F1FB" stroke="#4A90C4"/>
+<rect x="453" y="120" width="60" height="14" rx="2" fill="#EAF6EE" stroke="#1F8A4C"/>
+<text x="256" y="130" font-size="9.5" text-anchor="middle" fill="#0C447C">exon</text>
+<text x="483" y="130" font-size="8.5" text-anchor="middle" fill="#1F8A4C">clip matches</text>
+
+<!-- decision -->
+<text x="60" y="162" font-size="11" fill="#6B6862">walk the clip into the contiguous genome: <tspan fill="#1F8A4C">the best-scoring prefix (3 to 30 bp) becomes M</tspan></text>
 
 <!-- arrow -->
-<line x1="100" y1="190" x2="100" y2="220" stroke="#9B9893" stroke-width="1.4" marker-end="url(#arrE)"/>
-<text x="114" y="209" font-size="11" fill="#6B6862">walk the clip into contiguous genome (extension lands in [3 .. 30] bp)</text>
+<line x1="100" y1="176" x2="100" y2="202" stroke="#9B9893" stroke-width="1.4" marker-end="url(#arrE)"/>
 
 <!-- AFTER -->
-<text x="60" y="248" font-size="14" font-weight="600" fill="#0C447C">after &#183; reclaimed</text>
-<rect x="60" y="262" width="453" height="20" rx="3" fill="#2F7DC6"/>
-<rect x="453" y="262" width="60" height="20" rx="3" fill="#3F9A5E"/>
-<text x="286" y="276" font-size="11" text-anchor="middle" fill="#FFFFFF">151M</text>
-<rect x="560" y="260" width="62" height="20" rx="10" fill="#ECECEA"/>
-<text x="591" y="274" font-size="11" text-anchor="middle" fill="#5C5953">MAPQ 60</text>
-<text x="60" y="302" font-size="10" fill="#6B6862">softclip folded into the aligned block; MAPQ unchanged (CIGAR-only pass)</text>
-<text x="60" y="320" font-size="10" fill="#6B6862">partial case: if only 8 bp match, the rest stays clipped &#8594; <tspan font-family="Courier New, monospace" fill="#333333">139M 12S</tspan>. A walk that stalls at an annotated intron is left for rescue.</text>
-
-<text x="360" y="352" font-size="15" font-weight="600" text-anchor="middle" fill="#111111">Step 2 &#183; tail extension (intron retention)</text>
+<text x="60" y="228" font-size="14" font-weight="600" fill="#0C447C">after  &#183;  read's CIGAR updated to 151M</text>
+<rect x="60" y="240" width="393" height="20" rx="3" fill="#2F7DC6"/>
+<rect x="453" y="240" width="60" height="20" rx="3" fill="#3F9A5E"/>
+<text x="286" y="254" font-size="11" text-anchor="middle" fill="#FFFFFF">151M</text>
+<text x="60" y="280" font-size="9.5" fill="#9B9893">CIGAR only; MAPQ unchanged. Partial match -> the rest stays clipped (e.g. 139M 12S).</text>
 </svg>
