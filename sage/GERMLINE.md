@@ -2,8 +2,6 @@
 
 SAGE can be configured to detect germline variants by switching the tumor and germline samples, and adjusting filtering parameters, panel definition and hotspot inputs.  
 
-If a 'coverage_bed' file is provided, then calculate and write coverage statistics per gene in the PANEL file. This can be used to estimate the likelihood of missing a genuine germline variant.
-
 The following sections describe how SAGE can be configured to detect pathogenic germline variants. 
 
 ## Panel
@@ -34,13 +32,11 @@ To run SAGE in germline mode we use the following parameters:
 -ref_sample_count 0
 -panel_only
 -germline
--panel_bed /opt/resources/sage/37/ActionableCodingPanel.37.bed.gz
--coverage_bed /opt/resources/sage/37/CoverageCodingPanel.37.bed.gz 
 -high_confidence_bed /opt/resources/giab_high_conf/37/HighConfidence.37.bed.gz 
 -hotspots /opt/resources/sage/37/KnownHotspots.germline.37.vcf.gz 
 -ref_genome_version 37 
+-driver_gene_panel /ref_data/DriverGenePanel.37.tsv \
 -ref_genome /opt/resources/reference_genome/37/Homo_sapiens.GRCh37.GATK.illumina.fasta
--ensembl_data_dir /path_to_ensmebl_cache/ \
 -jitter_param_dir /path/to/TUMOR_SAMPLE.jitter_params.tsv
 -out /data/output/TUMOR_SAMPLE.sage.germline.vcf.gz 
 ``` 
