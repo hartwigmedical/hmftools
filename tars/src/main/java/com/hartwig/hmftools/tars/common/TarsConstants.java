@@ -74,8 +74,8 @@ public final class TarsConstants
     // unexplained residual raises false-positive risk; 11 makes coincidental matches implausible.
     public static final int DEFAULT_MIN_PARTIAL_MATCH_RUN = 11;
 
-    // Tail-extension defaults. MaxExtension caps the walk to avoid consuming real unannotated junctions.
-    public static final int DEFAULT_MIN_SOFTCLIP_LENGTH = 3;
+    // Tail-extension defaults. MinExtension is both the min softclip length considered and the min bases reclaimed.
+    // MaxExtension caps the walk to avoid consuming real unannotated junctions.
     public static final int DEFAULT_MIN_EXTENSION = 3;
     public static final int DEFAULT_MAX_EXTENSION = 30;
 

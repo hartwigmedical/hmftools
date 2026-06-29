@@ -1,45 +1,41 @@
 # TARS
 
-**TARS** (Transcript Alignment for RNA Splicing) produces splice-aware RNA alignments using `bwa-mem2`. RNA reads
-are aligned against the genome FASTA with annotated multi-exon transcript contigs (`*_tx`) appended. Liftback then
-rewrites those transcript-contig alignments back to genomic coordinates, so the output is an ordinary genomic RNA BAM:
-no `*_tx` in the header or on records, XA/SA/mate fields genomic, and spliced reads carried as `N` CIGAR ops.
+**TARS** (Transcript Alignment for RNA Splicing) makes `bwa-mem2` splice-aware for RNA reads. TARS aligns the reads against the genome with the
+transcriptome added using `bwa-mem2`, then rewrites the result back to genome coordinates. The output is an ordinary genomic RNA
+BAM (no transcript contigs, spliced reads carried as `N` gaps) ready for REDUX and ISOFOX.
 
 ## Contents
 
-* [The RNA flow](#the-rna-flow)
-* [Commands](#commands)
-  + [Building transcript contigs](#building-transcript-contigs-splicefastabuilder)
-  + [Running tars](#running-tars-tarsapplication)
-  + [Output](#output)
-* [Flags](#flags)
-* [How a read gets lifted](#how-a-read-gets-lifted)
-  + [Step 0: translate the transcript CIGAR to genome](#step-0-translate-the-transcript-cigar-to-genome)
-  + [Step 1: terminal micro-junction collapse](#step-1-terminal-micro-junction-collapse)
-  + [Step 2: tail extension](#step-2-tail-extension)
-  + [Step 3: ref vs tx discriminator](#step-3-ref-vs-tx-discriminator)
-  + [Step 4: rescue via supplementary](#step-4-rescue-via-supplementary)
-  + [Step 5: canonicalize](#step-5-canonicalize)
-* [Modifications done to each record](#modifications-done-to-each-record)
-* [Edge cases](#edge-cases)
-* [Constants reference](#constants-reference)
-* [Tests](#tests)
+* [What TARS does](#what-tars-does)
+* [How to Run TARS](#how-to-run-tars)
+* [What a read goes through](#what-a-read-goes-through)
+* [What TARS changes on a read](#what-tars-changes-on-a-read)
+* [In-depth technical implementation](#in-depth-technical-implementation)
 
-## The RNA flow
+## What TARS does
 
-![TARS RNA flow](doc/tars.png)
+A normal genome aligner like `bwa-mem2` matches a read against one continuous stretch of genome. It has no idea where
+introns are, so a read that jumps over one gets cut short or placed in the wrong spot.
 
-1. **`SpliceFastaBuilder`** (offline, once per ensembl release) builds the transcript-contig FASTA and a sidecar TSV
-   mapping packed transcript intervals to gene/transcript/exon spans.
-2. Concatenate the transcript contigs onto the genome FASTA and re-index with `bwa-mem2`.
-3. Align RNA reads with `bwa-mem2` against the combined FASTA. bwa's default output is **name-grouped** (each
-   fragment's mates and supplementaries are contiguous, in FASTQ order). Feed it to liftback directly, no sort needed.
-4. **`TarsApplication`** consumes that name-grouped BAM in a single pass, lifts each fragment to genomic coordinates, and writes a coord-sorted and indexed genomic BAM.
-5. Feed the lifted BAM into REDUX for dedup, then ISOFOX.
+TARS fixes this without changing the aligner:
 
-## Commands
+1. **`SpliceFastaBuilder`** (run once per Ensembl release) concatenates each multi-exon transcript's exon sequences into
+   a transcript contig (`*_tx`, introns removed); these contigs are the transcriptome. It also writes a sidecar TSV
+   mapping each contig's intervals back to their genomic exon spans.
+2. Append the transcriptome to the genome FASTA and index with `bwa-mem2`.
+3. Align the RNA reads with `bwa-mem2` as usual. A read that jumps an intron now has a continuous place to land.
+4. **`TarsApplication`** lifts each read back to its real genome position, marks the skipped intron as a gap (`N`), fixes
+   things up (tags, mate info, confidence), and writes a sorted, indexed BAM.
+5. Feed the new splice-aware records BAM file into REDUX (dedup), then ISOFOX.
 
-### Building transcript contigs (SpliceFastaBuilder)
+![TARS pipeline](doc/tars.png)
+
+## How to Run TARS
+
+<details>
+<summary><strong>Commands, output files and flags</strong></summary>
+
+### Build the transcript reference (SpliceFastaBuilder)
 
 ```
 java -cp tars.jar com.hartwig.hmftools.tars.fasta.SpliceFastaBuilder
@@ -52,7 +48,7 @@ java -cp tars.jar com.hartwig.hmftools.tars.fasta.SpliceFastaBuilder
 Outputs `ref_genome_v38_rna_contigs.fasta` and `ref_genome_v38_rna_contigs.rna_contigs_mappings.tsv`. Concatenate the
 FASTA onto the genome FASTA and `bwa-mem2 index` the result before aligning.
 
-### Running tars (TarsApplication)
+### Run TARS (TarsApplication)
 
 ```
 java -jar tars.jar
@@ -67,29 +63,17 @@ java -jar tars.jar
     -threads 24
 ```
 
-### Output
+### Output files
 
-Named `<sample>.tars[.<output_id>][.<stage>].ext`. The BAM `ACTN01020030T.tars.bam` (+ `.bai`) is
-coord-sorted and ready for REDUX, and the summary always writes to `ACTN01020030T.tars.summary.tsv`.
+Named `<sample>.tars[.<output_id>][.<stage>].ext`. You get two things:
 
-The summary is a long-format `Section / RowKey / ColumnKey / Count` TSV that on its own answers "what did liftback do",
-so the per-record TSVs are rarely needed. Sections:
+* `ACTN01020030T.tars.bam` (+ `.bai`) - the lifted, coord-sorted genomic BAM, ready for REDUX.
+* `ACTN01020030T.tars.summary.tsv` - a counts summary of what liftback did.
 
-| Section             | What it carries                                                                          |
-|---------------------|-----------------------------------------------------------------------------------------|
-| `outcome`           | resolved primaries by `Outcome` (`REF` / `TX` / `UNRESOLVED`)                            |
-| `feature_x_mapq`    | `DecidingFeature` x MAPQ tier                                                            |
-| `feature_x_outcome` | swap vs drop per `DecidingFeature` (how often a contest moved the primary)               |
-| `composition_x_mapq`| pre-drop alignment-set composition (ref-only / tx-only / both) x MAPQ tier               |
-| `record_state`      | `RESOLVED` / `UNMAPPED` / `LIFT_FAILED` / `SUPPLEMENTARY` counts                         |
-| `reads`             | `total`, `spliced_output` (N-cigar), `mapq_zero_in`, `mapq_rescued`                      |
-| `pass_effect`       | per-pass work: rescue merged, tail-extend, collapse, canonicalize, over-cap unmap, excluded, low-AS drops |
+With `-output_id chr1_slice` the token is inserted into every name: `ACTN01020030T.tars.chr1_slice.bam`. The per-record
+debug TSVs are written only with `-write_liftback_tsv` (a ~100GB file; only for per-read detail the summary can't give).
 
-The per-record `*.tars.records.tsv` / `*.tars.alignments.tsv` are written only with `-write_liftback_tsv` (a ~100GB
-file - reach for it only when you need per-read detail the summary can't give). With `-output_id chr1_slice`
-the token is inserted into every name: `ACTN01020030T.tars.chr1_slice.bam`, `ACTN01020030T.tars.summary.chr1_slice.tsv`.
-
-## Flags
+### Flags
 
 **Required**
 
@@ -124,107 +108,212 @@ the token is inserted into every name: `ACTN01020030T.tars.chr1_slice.bam`, `ACT
 | rescue_softclip_tolerance   | 5         | Primary/supp overlap tolerance when snapping to a junction       |
 | rescue_max_boundary_shift   | 8         | Max over-extended bases trimmed when probing a boundary          |
 | rescue_min_partial_match_run| 11        | Min exon-proximal matched run for a partial ref-verify rescue    |
-| tail_min_softclip           | 3         | Min terminal softclip length to consider                         |
-| tail_min_extension          | 3         | Min ref-matching bases converted to M                            |
+| tail_min_extension          | 3         | Min softclip length considered, and min ref-matching bases converted to M |
 | tail_max_extension          | 30        | Max bases walked into a softclip                                 |
 
-Note: no `ensembl_data_dir` - liftback reads exon/junction annotation from the sidecar (only `SpliceFastaBuilder` needs ensembl).
+Note: no `ensembl_data_dir` - liftback reads exon/junction annotation from the sidecar (only `SpliceFastaBuilder` needs
+ensembl). What each threshold trades off if you change it is in
+[tuning thresholds and their effect](#in-depth-technical-implementation) below.
 
-## How a read gets lifted
+</details>
+
+## What a read goes through
 
 Liftback translates each tx-contig alignment to genomic coordinates, reconciles every candidate cigar so the ref-vs-tx
-choice is made on tested facts, picks the primary, then refines that primary. Execution order (each pass feeds the next):
+choice is made, picks the primary, then refines that primary. Execution order (each pass feeds the next):
 
 ```
 translate every candidate (self + lifted XA alts)                         [Step 0]
   -> reconcile each candidate: collapse, then tail-extend                 [Steps 1 + 2]
   -> discriminate ref vs tx on the reconciled cigars                      [Step 3]
   -> rescue via supplementary: merge the primary with a supp              [Step 4]
-  -> re-reconcile the merged primary: collapse, then tail-extend          [Steps 1 + 2, run again]
   -> canonicalize: slide the junction onto a splice motif                 [Step 5]
 ```
 
-The numbered sections below follow this execution order. The spine is translate -> decide -> rescue; reconcile is the
-connective pass that keeps it honest, not a fourth floating phase. Collapse and tail-extend (Steps 1-2) are the two
-phases of one component, `TerminalReconciler`: a single `reconcile()` call runs collapse then tail-extend. It runs twice
-- once per candidate before the discriminator (collapse on every candidate, tail-extend on the co-located alts, so
-`RefSoftClipped` / `RefFullMatch` / `TxHasNCigar` are measured, not guessed), and once on the chosen primary after
-rescue (where the primary's own tail-extend happens). The discriminator therefore always sees reconciled cigars. The
-rule across the pipeline: every step that produces or changes a placement leaves its cigar reconciled, so canonicalize
-(Step 5) is the final cigar polish on the winner only. The CIGAR examples below use a 5000 bp intron for illustration.
-real intron lengths vary.
+### Step 0: translate to the genome
 
-### Step 0: translate the transcript CIGAR to genome
+`ContigTranslator` rewrites al transcript-contig alignments (including XA alts) to the reference genome for comparision 
 
-`ContigTranslator` walks the transcript-contig CIGAR through the transcript's exons and inserts an `N` at each exon
-boundary the read crosses. This is the core splice transform: a read aligned flat against a `*_tx` contig becomes a
-spliced genomic read.
+- A read that crosses an exon boundary becomes splice aware
+- A read contained within one exon crosses no boundary and lifts unchanged
 
-```
-151M @ chr8_ENST.._tx translated to 90M5000N61M @ chr8
-```
+![translate the read to the genome](doc/translate.svg)
 
-A read that sits entirely inside one exon crosses no boundary, so it lifts with its CIGAR unchanged (plain `M`, no `N`).
+### Step 1: re-check short junctions
 
-note: if the matched bases next to a new `N` are below the anchor floor AND adjacent to an existing softclip, they
-become a softclip instead of `xN yM` (softclip-adjacent floor 3 bp, bare-anchor floor 1 bp). A flush terminal anchor
-(no adjacent softclip) is not folded here - it is left for the Step 1 collapse pass, which scores it against the genome.
+A junction is only trusted with at least `MIN_JUNCTION_ANCHOR` (8 bp) matched. Any junction with a shorter anchor is
+re-scored against the reference genome. The higher score wins:
 
-![Step 0: translate the transcript CIGAR to genome](doc/translate.svg)
+- if the contiguous extension scores at least as well, the junction is dropped and the matching bases become `M`
+- only the best-scoring prefix is reclaimed, so a mismatched tail stays softclipped (e.g. last 2 of 5 mismatch give `149M 2S`, not `151M`)
+- if the split scores strictly better, the junction is kept
 
-### Step 1: terminal micro-junction collapse
+![re-check short junctions](doc/terminal_micro_junction_collapse.svg)
 
-`TerminalReconciler` removes a fabricated tiny terminal anchor (< 8 bp) sitting across an intron when the
-contiguous genome explains the tail at least as well as bwa's split. This is the collapse phase of the reconcile pass
-(`tryCollapse`), run first; it fires on every candidate before the discriminator, and again on the merged primary after
-rescue.
+### Step 2: re-check softclips within threshold
 
-```
-  in:   146M 2000N 5M         (5 bp terminal anchor across a "junction")
-  contiguous genome matches straight through:
-  ->    151M                  (the anchor was not a real junction)
-```
+A softclip of at least `tail_min_extension` is walked into the contiguous genome (no gap) and re-scored.
+The best-scoring prefix, up to `tail_max_extension`, is turned from softclip (`S`) into matched (`M`):
 
-The decision is a head-to-head bwa-mem score: anchor-on-the-far-exon vs the whole terminal window extended
-contiguously. The score-maximising prefix is reclaimed into the near exon as `M`, the rest stays softclipped. A real
-short junction (anchor scores strictly higher on the far exon than the contiguous walk) is kept.
+- the best prefix must be at least `tail_min_extension`, otherwise the tail is left clipped
+- only the matching prefix is converted; any mismatched remainder stays softclipped (e.g. `131M 20S` becomes `139M 12S`)
+- if the walk stalls right where an annotated intron begins, the tail is left for rescue (Step 4) instead
 
-![terminal micro-junction collapse](doc/terminal_micro_junction_collapse.svg)
+![re-check softclips within threshold](doc/tail_extension.svg)
 
-### Step 2: tail extension
+### Step 3: decide which alignment to keep
 
-The tail-extend phase of the same `TerminalReconciler` pass (`tryExtend`). At candidate time it runs only on the
-co-located alternative alignments (to measure the ref-vs-tx contest); the chosen primary's own tail-extend runs after
-rescue, so a primary+supp merge still sees the original terminal softclip. Walk a terminal softclip into contiguous
-genome with no `N` (intron retention). Softclip must be >= 3 bp, extension lands in [3 .. 30] bp.
+A read can match the genome, the transcriptome, or both. When more than one alignment is present, TARS makes a decision
+on which one to keep. On a confident placement it updates the record's CIGAR, pos & tags; otherwise the read is left untouched.
 
-```
-  in:   131M 20S              (terminal clip that actually matches the genome)
-  ->    151M                  (fully reclaimed)   or   139M 12S  (partial, 12 bp residual stays clipped)
-```
+The three most common decisions:
 
-Skipped when an annotated intron starts inside the window and the walk stalls short: that range belongs to rescue.
+**Transcript only, the core splice**
 
-![tail extension](doc/tail_extension.svg)
+The read matched only the transcriptome, so bwa scored it MAPQ 0 (it could not tell the copies apart). The copies all
+point to one genomic spot, so TARS places it there with the intron as an `N` gap, drops the duplicates, and marks it confident.
 
-### Step 3: ref vs tx discriminator
+![transcript only, the core splice](doc/core_splice_tx_only.svg)
+
+**Both copies agree**
+
+The read matched the genome and the transcriptome at the same place with the same shape (no intron). TARS keeps the
+genome placement and drops the duplicate transcriptome alignment.
+
+![both copies agree](doc/concordant.svg)
+
+**Transcript crosses a junction, genome lies flat**
+
+The transcriptome alignment carries an `N` junction; a genomic alignment at another locus is contiguous (no `N`). bwa
+often makes the contiguous one the primary to keep the read near its mate (proper-pair rescue), even though the spliced
+placement is correct. TARS keeps the junction-spanning placement: it drops the contiguous alt, or swaps to the spliced
+placement when bwa had made the contiguous one primary.
+
+![transcript crosses a junction, genome lies flat](doc/swap_junction_over_contiguous.svg)
+
+The remaining cases:
+
+- **Genome only** - matched only the genome; nothing to decide, placement untouched.
+- **Several spots, no winner** - matches multiple places with no clean splice signal; left multi-mapped (MAPQ 0).
+- **No rule fits** - one spot with both copies but a shape no rule covers; bwa's choice is kept.
+- **Genome reads through a transcript gap (rare)** - the transcript opens a tiny gap, but the genome reads straight
+  through; the genome placement wins.
+
+### Step 4: merge supplementary record to primary
+
+bwa-mem2 is run with a low alignment-score floor (`-T 19`) to keep short-anchor supplementary alignments at junction
+sites (annotated or novel). TARS merges such a supplementary back into its primary across the intron, giving one spliced 
+primary with an `N` gap, and drops the supplementary. The merge requires:
+
+- the primary and supplementary cover complementary halves of the read
+- the implied intron is within [`rescue_min_intron`, `rescue_max_intron`]
+- at least `rescue_min_anchor_overhang` matched each side of the junction
+- the junction snaps to a nearby annotated junction or splice motif when one exists; otherwise it merges at bwa's split
+  point, so novel junctions are merged too
+
+The merged primary's MAPQ is capped at `SUPP_RESCUE_MAPQ_CAP` (55), marking a constructed alignment.
+
+![merge supplementary record to primary](doc/rescue_via_supplementary.svg)
+
+### Step 5: slide the junction onto a splice motif
+
+A junction can sit a base or two off the splice motif. TARS slides the intron up to 5 bp onto the best motif, taking the
+smallest shift where every moved base still matches.
+
+![slide the junction onto a splice motif](doc/canonicalize.svg)
+
+## What TARS changes on a read
+
+For each read, TARS rewrites these fields.
+
+**RNAME / POS / strand / CIGAR**
+
+- set to the resolved genomic placement, the output of the six steps above, with an `N` gap per intron
+- cleared to `*` / `0` / `*` when the read is unmapped
+
+**MAPQ**
+
+- raised to 60 when the read clearly belongs at one spot: the discriminator picked a transcript placement; or a single
+  best-scoring locus bwa scored 0 (`numLoci == 1`, `inputMapq == 0`) with no hidden tie; or a transcript supplementary
+  bwa scored 0
+- capped at 55 after a primary+supp merge (marks a stitched alignment)
+- left at bwa's value when there is no transcript evidence, or on a hidden tie (`XS == AS`, no transcript, outside any exon)
+- set to 0 when the read is unmapped
+- never touched by the cleanup passes (collapse, tail-extend, canonicalize)
+
+**XA**
+
+- rebuilt from scratch, format `chrom,±pos,CIGAR,NM;`
+- an alt is kept only if it is not the chosen placement, not dropped, and does not overlap the read's own span
+- cleared when the read is unmapped
+
+**SA**
+
+- each entry lifted to genome coords; its NM and MAPQ carried over unchanged
+- an entry dropped if it fails to lift, belongs to a dropped split piece, or duplicates one already kept
+- a split piece whose entries all fail to lift is dropped
+
+**MC and mate fields**
+
+- `MC` = the mate's lifted CIGAR
+- mate RNAME / POS / strand = the mate's lifted placement
+- `TLEN` = the signed 5'-to-5' distance
+- an unmapped mate is parked on this read's own coordinates
+
+**NM / MD**
+
+- `NM` recomputed against the genome over the `M` blocks only
+- `MD` always dropped, never rebuilt
+
+**NH**
+
+- `NH = max(numLoci, 1)`, counting distinct genomic loci among the best-scoring alignments only
+- one junction shared by many transcripts counts once
+
+**XS:A**
+
+- set to `+` / `-` only when the lifted CIGAR has an `N` and the transcript strand is known
+- bwa's `XS:i:` (a different value on the same tag name) is cleared first
+- Isofox reads it for stranded junctions
+
+**Unmapped or dropped** when the read cannot be trusted at any one place:
+
+- its lift failed (a position outside every transcript)
+- it is past bwa's locus cap (`-h 75`: MAPQ 0 with no XA)
+- it scores below the floor (`AS < 30`)
+- it lifts into a curated rRNA / contamination region
+- a split piece whose own lift failed is moved onto its primary's coordinates instead of being unmapped
+
+## In-depth technical implementation
+
+Everything below is the detailed mechanics.
+
+<details>
+<summary><strong>Choosing ref vs transcript: the discriminator</strong></summary>
 
 bwa-mem2 aligns each read to a ref contig, a transcript (`tx`) contig, or both, and picks one as primary. The
-discriminator decides whether to keep that primary or swap to a better candidate.
+discriminator decides what to do with that primary. Every read lands in one of four **record actions** (by frequency):
 
-It runs on **reconciled** candidates: every alignment (the bwa primary plus each lifted XA alt) is first put through
-Steps 1-2 (see [How a read gets lifted](#how-a-read-gets-lifted)), leaving one of three tested shapes - a contiguous
-full match, a trusted `N` junction, or an unreclaimable residual softclip. Its `RefSoftClipped` / `RefFullMatch` /
-`TxHasNCigar` inputs are therefore measured facts, not raw-bwa guesses: a ref softclip the genome explains contiguously
-is reclaimed first, so it no longer masquerades as evidence for a tx junction.
+- **Kept as-is** - bwa's primary is already right; nothing moves.
+- **Losing alt dropped** - a ref and a tx alignment disagree; the loser is deleted from the read's alts.
+- **Primary swapped** - bwa had made the loser its primary; the winner is moved into the record's main fields.
+- **Left multimapped** - no rule resolves it; bwa's primary and its alts are kept untouched.
 
-Most reads (~95%) are no-contest and bwa's primary is kept as-is. The rest have either a ref and a tx alignment to
-choose between (~2.3% contested) or several loci to weigh (~2.7% multi-locus); almost always the discriminator just
-drops the losing alt, and an actual swap (moving a different placement into the primary fields) is rare (~0.1% of
-primaries). An `N` counts as a real splice only with >= 8 matched (`M`) bases each side (`MIN_JUNCTION_ANCHOR`) - one
-strong junction trusts the whole read.
+It runs on **reconciled** candidates: every alignment (the bwa primary plus each lifted XA alt) is first put through the
+collapse and tail-extend passes, leaving one of three tested shapes - a contiguous full match, a trusted `N` junction,
+or an unreclaimable residual softclip. Its `RefSoftClipped` / `RefFullMatch` / `TxHasNCigar` inputs are therefore
+measured facts, not raw-bwa guesses: a ref softclip the genome explains contiguously is reclaimed first, so it no longer
+masquerades as evidence for a tx junction. An `N` counts as a real splice only with >= 8 matched (`M`) bases each side
+(`MIN_JUNCTION_ANCHOR`) - one strong junction trusts the whole read.
 
-The full decision tree - each branch is walked through in the subsections that follow:
+The plain-language walkthrough of the common cases is in [Step 3](#step-3-decide-which-alignment-to-keep); the formal
+rule for every case is the decision tree below, whose `DecidingFeature` leaves (`SOLE_REF`, `JUNCTION`, ...) name each case.
+
+
+#### The decision tree
+
+Each leaf is an `(Outcome, DecidingFeature)` pair; the record action (kept / dropped / swapped / multimapped) follows
+from the Outcome.
 ```
 loci >= 2 ?
 |
@@ -250,220 +339,20 @@ loci >= 2 ?
 Both single-locus REF-wins scenarios - the tx alignment carrying an `N` junction, and the tx alignment only softclipping
 at the boundary - resolve to `(REF, REF_READS_THROUGH)`; the `TxHasNCigar` / `TxSoftClipAtBoundary` flags distinguish them.
 
-#### No-swap cases (~95% of primaries)
+#### Swap vs drop
 
-- `SOLE_REF`, outcome `REF` (~72.5%) - ref only, no tx match (one locus or multimapped): no change. Ref alts are
-  already genomic, so they pass through with original coords and MAPQ; the discriminator does nothing. The only edits
-  are liftback field hygiene: MD dropped, NM recomputed, NH added.
-
-<details><summary>examples</summary>
-
-`SOLE_REF` at a locus with no `*_tx` contig, so a tx hit is impossible:
-```
-bwa    chr3  181712551  MAPQ 60  151M   NM:0  MD:151  AS:151
-tars   chr3  181712551  MAPQ 60  151M   NM:0  NH:1    AS:151     (placement untouched; MD dropped, NH added)
-```
-`SOLE_REF` at another single genomic locus:
-```
-bwa    chr7  55018929   MAPQ 60  151M   NM:0  MD:151  AS:151
-tars   chr7  55018929   MAPQ 60  151M   NM:0  NH:1    AS:151
-```
-`SOLE_REF` (multimapped, so XS 146 near AS 151 caps MAPQ 48):
-```
-bwa    chr6  25999903   MAPQ 48  151M   NM:0  MD:151  AS:151  XS:146
-       XA: chr19,-38631278,151M,1; chr2,+232423677,151M,2; chrX,+135406772,151M,3; chr17,-67326991,151M,5
-tars   chr6  25999903   MAPQ 48  151M   NM:0  NH:1    AS:151          (ref alts lift to identical coords, MD dropped)
-       XA: chr19,-38631278,151M,1; chr2,+232423677,151M,2; chrX,+135406772,151M,3; chr17,-67326991,151M,5
-```
-The alts all score lower (NM 1/2/3/5), so `NH:1`: NH counts only best-score genomic loci, not every XA entry.
-</details>
-
-- `SOLE_TX` (~12.8%) - tx only, one locus (the core splice case). A small subset map to several tx loci instead and
-  stay multimappers (see Multi-locus and ambiguous below).
-
-<details><summary>example</summary>
-
-`SOLE_TX` at an exon-exon junction. bwa aligns the read flat against four packed transcript contigs (hence MAPQ 0, all
-XA NM:0); liftback translates the match across the 200 bp annotated intron, sees the four copies collapse to a single
-genomic locus, drops the redundant alts, and rescues MAPQ 0 -> 60:
-```
-bwa    chr19_tx  429610  MAPQ 0   151M          NM:0  AS:151  XS:151
-       XA: chr19_tx,+436053,151M,0; chr19_tx,+432802,151M,0; chr19_tx,+444517,151M,0
-tars   chr19     1010775  MAPQ 60  121M200N30M   NM:0  NH:1
-```
-</details>
-
-- `CONCORDANT` (~9.7%) - ref and tx, same CIGAR, no N.
-
-<details><summary>example</summary>
-
-`CONCORDANT` at an exon interior. bwa keeps both a ref placement and one same-locus tx alt, identical `151M`
-with no junction either side. The discriminator keeps the ref placement and drops the redundant tx alt; MAPQ 40 is
-carried straight from bwa (it saw two equal-score hits, not a MAPQ-0 read, so no rescue bump):
-```
-bwa    chr19  1009433  MAPQ 40  151M   NM:0  MD:151  AS:151  XS:151
-       XA: chr19_tx,-426990,151M,0
-tars   chr19  1009433  MAPQ 40  151M   NM:0  NH:1                       (duplicate tx alt dropped, MD dropped)
-```
-</details>
-
-#### Contested: ref vs tx (~2.3% of primaries)
-
-In the contested cases the read has both a ref alignment and a tx alignment (at one locus, or at more
-than one locus). The discriminator decides which is real. Usually bwa's primary is already the correct one, so it just
-drops the losing alt and, when the read was a multimapper at MAPQ 0, rescues MAPQ to 60. Only in the minority where bwa
-made the losing placement primary does it swap: the winner moves into the record's main fields. The displaced placement
-is kept in the read's `XA` tag (`XA:Z:chrom,pos,CIGAR,NM;...`) only on a swap; on a drop it is removed.
-
-**tx wins**: the read aligns across a junction on the tx contig; tx becomes (or stays) the primary.
-
-- `JUNCTION` (~0.6%): tx spans the junction; the ref alignment softclips at the boundary instead
-  of crossing it.
-
-<details><summary>example</summary>
-
-bwa's primary is the tx alignment at MAPQ 0; a softclipped ref alignment sits in its `XA`. tars keeps
-the tx placement, drops the ref alt, and rescues MAPQ 0 -> 60:
-```
-bwa    chr1_tx  287432   MAPQ 0   151M                  (lifts to chr1:1049917 121M195N30M, NM3)
-       XA: chr1,1049917,115M36S,0                       (ref alignment, softclipped at base 115)
-       XA: chr1_tx,303234,151M,0                        (another tx contig, same lifted locus)
-tars   chr1     1049917  MAPQ 60  121M195N30M   NH:1    (ref alt dropped; no XA)
-```
-The 30 bases past the clip match the next exon, not the intron:
-```
-read[122..151]           CCTCGGGGCAGGACGGCTCTGGGCCCTTCG
-chr1:1050233 (next exon) CCTCGGGGCAGGACGGCTCTGGGCCCTTCC   (29/30; the 195 bp intron opens GT)
-```
-Two more, same shape across different intron sizes (bwa primary on a tx contig spans the junction; the softclipped
-ref alt is dropped):
-```
-chr7:87193998   bwa 105M581N46M    ref alt 106M45S    tars 105M581N46M
-chr1:226361973  bwa 111M1015N40M   ref alt 113M38S    tars 111M1015N40M
-```
-</details>
-
-![junction: tx spans, ref softclips](doc/junction_tx_spans_ref_clips.svg)
-
-- `JUNCTION_OVER_CONTIGUOUS` (~1.7%): the tx alignment spans a junction; the ref alignments are contiguous (no junction)
-  at one or more other loci.
-
-<details><summary>example</summary>
-
-bwa's primary is a contiguous ref alignment on chr2; the tx alignment on chr9 spans a junction. tars
-swaps to the tx placement and keeps the displaced chr2 ref in `XA` (the chr5 ref alt is dropped):
-```
-bwa    chr2     128518864  MAPQ 60  151M              NM:0   (contiguous, no junction)
-       XA: chr5,62776950,151M,6                              (another contiguous ref alignment)
-       XA: chr9_tx,7038437,151M   ->  chr9:86266119 73M5815N78M
-tars   chr9     86266119   MAPQ 60  73M5815N78M  NH:1   XA: chr2,+128518864,151M,0
-```
-</details>
-
-**ref wins**: the genome explains the read contiguously with no gap; ref becomes (or stays) the primary and the tx alt
-is dropped.
-
-- `REF_READS_THROUGH` (<0.01%): the tx alignment carries an N junction, but the ref reads contiguously through
-  the same span with no gap. The rarest category. By construction this is a single locus, so the tx far anchor is short
-  (a long anchor across a real intron could not also match the genome contiguously). A full-length contiguous match over
-  a short, possibly chance, anchor is the more parsimonious read, so ref is kept whenever it matches at least as cleanly.
-  The rule is purely shape-based (`RefFullMatch` beats `TxHasN`); it does not compare mismatch counts, so the rare read
-  whose short tx junction has fewer mismatches than the contiguous ref is still given to ref.
-
-<details><summary>example</summary>
-
-The tx alignment carries an 8 bp far anchor across a 54 bp gap; the ref reads through as a contiguous
-151M. Both explain the read with zero mismatches, so tars keeps the contiguous ref and drops the tx alt:
-```
-bwa    chr8_tx  14092324  MAPQ 7   151M   ->  chr8:126557042 143M54N8M
-       XA: chr8,126557042,151M,0                      (ref alignment, contiguous 151M, no gap)
-tars   chr8     126557042 MAPQ 60  151M   NH:1        (tx alt dropped)
-```
-Why both fit: the read's last 8 bases match the genome at both the contiguous spot and the spliced exon, so the far
-anchor fits either equally well. Nothing breaks the tie, so the no-gap read wins:
-```
-read [144..151]                       GCGGCGGC
-chr8:126557185 (contiguous, ref)      GCGGCGGC
-chr8:126557239 (after the 54 bp gap)  GCGGCGGC
-```
-</details>
-
-- `REF_READS_THROUGH` (<0.01%): the tx alignment only keeps a tiny anchor past the boundary and never spans a
-  real junction, while the ref reads through contiguously.
-
-<details><summary>example</summary>
-
-The tx alignment lifts to a fabricated 2 bp anchor across the intron; the ref reads through as a
-contiguous 151M. tars keeps the ref placement and drops the tx alt:
-```
-bwa    chr2_tx  33945708  MAPQ 0   151M   ->  chr2:224557708 149M5337N2M
-       XA: chr2,224557708,151M,0                      (ref alignment, contiguous 151M)
-tars   chr2     224557708 MAPQ 60  151M   NH:1        (tx alt dropped)
-```
-</details>
-
-![ref reads through: ref wins over a tx gap](doc/ref_reads_through.svg)
-
-Side note: how often a contest is an actual swap vs just dropping the losing alt (whole sample, derived from the
-distribution table below as drop = records - swaps):
+Swap is rare - every contested category is drop-dominated (whole sample; drop = records - swaps):
 
 * `JUNCTION`: 2,779,734 drop / 20,456 swap
 * `JUNCTION_OVER_CONTIGUOUS`: 7,393,896 drop / 434,900 swap
 * `REF_READS_THROUGH`: 17,572 drop / 12,258 swap
 
-All are drop-dominated - the discriminator usually just removes the losing alt - though `REF_READS_THROUGH` (the rarest)
-swaps nearly as often as it drops.
+`REF_READS_THROUGH` (the rarest) swaps nearly as often as it drops; the others almost always just drop.
 
-#### Multi-locus and ambiguous (~2.7% of primaries, kept as-is)
-
-The rest are reads the discriminator does not resolve with a ref-vs-tx rule: it keeps bwa's primary and its alts, and no
-alignment is swapped. The standard MAPQ-rescue still runs, so a read with a single best-score locus is lifted to MAPQ 60
-(NH 1), while a genuine multi-best-locus read keeps MAPQ 0 (NH > 1).
-
-- `SOLE_TX` (part of the ~12.8% SOLE_TX above): the read has several tx placements at different loci and no ref to
-  compare, so nothing picks a winner and it stays a multimapper.
-
-<details><summary>example</summary>
-
-Two tx placements ~150 bp apart, equal score, no ref alignment.
-```
-bwa    chr8_tx 53573  50S101M  MAPQ 0   ->  chr8:474935    (mate places at chr8:474786)
-tars   chr8:474935 50S101M / chr8:474786 101M50S   MAPQ 0  NH:2    (both kept, no winner)
-```
 </details>
 
-- `MULTIMAPPER` (~2.4%): multiple loci carrying both a ref and a tx alignment, with no clean splice signal to favour tx.
-  bwa's primary is kept; when one locus is clearly best-scoring it resolves there, otherwise it stays a multimapper.
-
-<details><summary>example</summary>
-
-Read at chr11 (ref 151M, NM 2) with a tx alt on chr14 and several lower-scoring ref alts at other loci. chr11 is the
-single best score, so the read resolves there and the rest stay in XA:
-```
-bwa    chr11  67226439  MAPQ 60  151M  NM:2     (best score among the alts)
-       XA: chr14,97933211,151M,6; chr4,2522738,134M1D17M,7; chr6,167947330,138M13S,4; chr17,17198158,138M13S,5
-tars   chr11  67226439  MAPQ 60  151M  NH:1     (best locus kept; lower-score alts retained in XA)
-```
-</details>
-
-- `AMBIGUOUS` (~0.3%): a single locus with both a ref and a tx alignment whose CIGARs fit no rule (not identical,
-  no real junction, no boundary softclip). bwa's primary is kept unchanged.
-
-<details><summary>example</summary>
-
-Here the ref reads through as 151M; the tx alt softclips (126M25S) but not at an annotated boundary, so it is
-neither `CONCORDANT` nor a softclip/junction case. bwa's primary (the ref) is kept:
-```
-bwa    chr2  224556295  MAPQ 60  151M  (ref)    +    chr2_tx 126M25S  (softclip, not at a boundary)
-tars   chr2  224556295  MAPQ 60  151M  NH:1     (bwa primary kept)
-```
-</details>
-
-#### Performance
-
-TODO: add a table of what testing showed - how the discriminator performs across the 1000-sample cohort.
-
-#### Worked examples (full BAM records)
+<details>
+<summary><strong>Worked BAM records (before / after)</strong></summary>
 
 Real records from a production run (sample ACTN01020030T), shown before liftback (bwa-mem2 against the combined
 genome + transcript-contig FASTA) and after. Each `raw` block is the SAM record trimmed to the columns that carry the
@@ -527,45 +416,6 @@ before  163   chr1   155188564   54    151M   NM:3 AS:136 XS:109  XA:chr1_tx,+28
 after   163   chr1   155188564   54    151M   NM:3 AS:136 NH:1
 ```
 </details>
-
-![core splice (tx-only)](doc/core_splice_tx_only.svg)
-
-![swap: spliced placement beats a contiguous one](doc/swap_junction_over_contiguous.svg)
-
-### Step 4: rescue via supplementary
-
-Runs by default. bwa runs at a low score floor (`-T 19`), which surfaces short-anchor supplementary alignments. Rescue
-merges a primary's terminal softclip with such a supplementary across a junction into one `M N M` primary and drops the
-supplementary. A merge happens only when all of:
-
-- the softclip and the supplementary are complementary (the supp covers the clipped tail)
-- the implied intron length is within [21 .. 1,000,000]
-- both sides of the junction keep an anchor overhang >= 3 bp
-- the primary and supp coverage overlap
-- at most 2 supplementaries are merged into one read (one per side, e.g. a middle exon clipped both ends)
-- the junction snaps to an annotated junction within 5 bp, or to a splice motif (snap point picked by motif tier)
-
-The merged primary's MAPQ is capped at 55.
-
-![rescue via supplementary](doc/rescue_via_supplementary.svg)
-
-### Step 5: canonicalize
-
-`JunctionCanonicalizer` slides an intron up to 5 bp onto a higher splice-motif tier
-(NONE < SEMI_CANONICAL < CANONICAL < ANNOTATED), choosing the smallest shift that strictly improves the tier with every
-moved base still matching. CIGAR only: the intron position moves but the alignment start never does.
-
-Once rescue picks the primary, `reconcileChosenPrimary` finalizes it in one step: it re-reconciles the chosen cigar
-(collapse then tail-extend, Steps 1-2 again) and then canonicalizes. A primary already fully reconciled at candidate
-time skips the work via the N-present / S-present guards, so this is winner-only polish, not a redundant third pass.
-
-![canonicalize](doc/canonicalize.svg)
-
-### Worked examples (full BAM records)
-
-Real records from sample ACTN01020030T. Each pass operates on the **translated** CIGAR (the output of Step 0), so the
-collapse and canonicalize examples show that intermediate as well as the before/after - they are otherwise invisible in
-a plain bwa-vs-tars comparison. The intermediate line is from a `-log_level DEBUG_2` run.
 
 **Rescue via supplementary - MAPQ 60 -> 55 (capped)**
 
@@ -643,7 +493,7 @@ after   83    chr22     45931269   60    101M18554N50M  NM:0 AS:141 NH:1   XS:A:
 ```
 </details>
 
-#### MAPQ summary
+**MAPQ summary**
 
 | scenario                          | MAPQ before | MAPQ after | why                                         |
 |-----------------------------------|-------------|------------|---------------------------------------------|
@@ -656,85 +506,116 @@ after   83    chr22     45931269   60    101M18554N50M  NM:0 AS:141 NH:1   XS:A:
 In short: 60 means liftback is asserting a rescue, 55 means a constructed merge, 0 means unmapped or genuinely
 ambiguous, and any other value is bwa's own MAPQ carried through.
 
-## Modifications done to each record
-
-On a successful lift (`LiftBackRecordOps` / `MateFieldPatcher`):
-
-1. Reference name, alignment start, CIGAR, strand and MAPQ are set to the resolved genomic placement.
-2. XA rebuilt from scratch: every candidate (bwa primary + its bwa XA alts) is lifted to genomic coordinates, then the
-   non-primary, non-dropped alts that don't overlap the primary's own span are written back as `chrom,±pos,CIGAR,NM`
-   (bwa's XA format - it has no MAPQ field). SA rewritten to genomic; MC set to the mate's lifted CIGAR.
-3. `XS:A:+/-` written only when the lifted CIGAR has an `N` **and** the transcript strand is known.
-4. MD always dropped (never rebuilt); NM recomputed against the genomic reference.
-5. `NH = max(numLoci, 1)`, counting distinct genomic loci among best-scoring alignments only, so one junction across
-   many transcript contigs does not inflate it.
-6. Mate fields patched: signed 5'-to-5' TLEN, mate coords, unmapped-mate parking.
-
-**MAPQ** is carried from bwa and never raised by collapse / tail-extend / canonicalize. Liftback raises it to 60 only
-when the read has a tx match (no tx evidence -> bwa's MAPQ is left alone) AND either the discriminator swapped to tx, or
-the read resolved to a single genomic locus with input MAPQ 0 and no unresolved hidden tie. A primary+supp rescue merge
-caps it at 55.
-
-## Edge cases
-
-These are the rare exits and refinements. On the whole-sample run the unmap/lift-fail exits below total 22,899
-records, **0.004%** of all, but each prevents a specific class of wrong placement.
+</details>
 
 <details>
-<summary>Over-XA-cap unmap (too many genomic loci)</summary>
+<summary><strong>Thresholds and constants</strong></summary>
 
-bwa is run with `-h 75` (XA cap). A read mapping to more loci than the cap is emitted at MAPQ 0 with **no** XA (the alt
-list is suppressed, not truncated). The over-cap rule unmaps such a primary: too many genomic places to trust.
+All live in `TarsConstants`; the rescue and tail values are also tunable via the [flags](#flags) above. Each entry gives
+the default, what it gates, and the effect of changing it. Raising a floor is the conservative direction; lowering it is
+aggressive (more changes, more coincidental-match risk).
+
+Junction rescue (primary + supp merge):
+
+- `rescue_min_intron` / `DEFAULT_MIN_INTRON_LENGTH` (21): shortest intron a merge may bridge. Higher rejects more short
+  gaps as introns (won't call a deletion a splice); lower merges small gaps, risking false junctions.
+- `rescue_max_intron` / `DEFAULT_MAX_INTRON_LENGTH` (1,000,000): longest intron a merge may bridge. Higher allows merges
+  across larger gaps (risk: joining unrelated loci); lower drops genuine long-intron splices.
+- `rescue_min_anchor_overhang` / `DEFAULT_MIN_ANCHOR_OVERHANG` (3): matched bases kept each side of a merged junction.
+  Higher = fewer chance merges but loses short-overhang splices; lower lets 1-2 bp anchors merge (~1 in 16 by chance).
+- `rescue_max_chain_depth` / `DEFAULT_MAX_CHAIN_DEPTH` (2): max supps merged into one read (one per side). Higher chains
+  3+ supps (recovers many-exon reads, more mis-merge risk); 1 leaves a fully-clipped middle exon unmerged.
+- `rescue_softclip_tolerance` (5): primary/supp overlap tolerated when snapping to a junction. Higher tolerates bigger
+  overlap (risk: double-covered bases); lower rejects the common 1-5 bp boundary disagreement and cuts yield.
+- `rescue_max_boundary_shift` (8): over-extended bases trimmed when probing a boundary. Higher searches further back for
+  an annotated junction (risk: a wrong nearby boundary); lower probes only bwa's exact boundary.
+- `rescue_min_partial_match_run` (11): min exon-proximal matched run for a partial ref-verify rescue. Higher is safer;
+  lower rescues short anchors with long unexplained tails (more false junctions).
+
+Tail extension:
+
+- `tail_min_extension` / `DEFAULT_MIN_EXTENSION` (3): min softclip length considered and min bases reclaimed. Higher
+  ignores short clips and short matches; lower reclaims 1-2 bp (often coincidental).
+- `tail_max_extension` / `DEFAULT_MAX_EXTENSION` (30): max bases walked into a softclip. Higher reclaims longer tails
+  (risk: walking across a real unannotated splice); lower leaves long matching tails partly clipped.
+
+Junctions and splice motifs (constants):
+
+- `MIN_JUNCTION_ANCHOR` (8): an `N` is trusted as a real junction only with >= 8 matched bases each side. Higher trusts
+  fewer junctions; lower lets coincidental short anchors count as splices.
+- `SPLICE_FLANKING_DELETION_MAX_BP` (5): a `D <= 5` straddling an exon boundary is absorbed into the `N`. Higher folds
+  bigger boundary deletions into the intron; lower keeps them as an explicit `D`.
+- `DEFAULT_MAX_SHIFT` (5): max bp an intron slides to reach a higher splice-motif tier (canonicalize). Higher repositions
+  junctions further onto a canonical motif (risk: a coincidental motif); lower leaves more junctions off-motif.
+
+Confidence and noise floors (constants):
+
+- `RESCUE_MAPQ` (60): MAPQ given on a swap or a rescued unique placement. The BAM unique-mapper convention; past 60 is
+  out of spec, lower makes downstream MAPQ filters discount correctly-rescued reads.
+- `SUPP_RESCUE_MAPQ_CAP` (55): ceiling on a primary+supp merge, flagging a constructed alignment. Higher toward 60 makes
+  merges look bwa-native; lower discounts real rescued splices more.
+- `PRIMARY_AS_UNMAP_THRESHOLD` (30): a primary still below this AS after liftback is unmapped. Higher unmaps more
+  borderline reads; lower (toward 19) keeps the short-anchor noise bwa's `-T 19` surfaced.
+- `SUPP_AS_DROP_THRESHOLD` (30): a supplementary still below this AS is dropped. Same trade as the primary floor.
+
+Upstream bwa-mem2 flags (not tars config, but liftback depends on them):
+
+- `-T 19` (score floor): set below bwa's default 30 so bwa emits the short-anchor supps rescue merges. Raising it to 30
+  starves rescue; tars re-imposes the 30 floor after rescue via the AS floors above.
+- `-h 75` (XA cap): a read over the cap is emitted MAPQ 0 with no XA; tars unmaps such a genomic primary
+  (`exceedsMappingCap`). Higher keeps more high-multiplicity reads as listed multimappers; lower unmaps more.
+
+Scoring: bwa-mem affine scores used to re-score lifted boundaries are `MATCH / MISMATCH = +1 / -4` and
+`GAP_OPEN / GAP_EXTEND = -6 / -1` (soft-clips not penalised). `NH = max(numLoci, 1)` counts distinct genomic loci, not
+emitted records.
+
+</details>
+
+<details>
+<summary><strong>Edge cases</strong></summary>
+
+These are the rare exits and refinements. On the whole-sample run the unmap/lift-fail exits below total 22,899
+records, a tiny fraction, but each prevents a specific class of wrong placement.
+
+**Over-XA-cap unmap (too many genomic loci).** bwa is run with `-h 75` (XA cap). A read mapping to more loci than the cap
+is emitted at MAPQ 0 with **no** XA (the alt list is suppressed, not truncated). The over-cap rule unmaps such a primary:
+too many genomic places to trust.
 
 ```
 condition = (inputMapq == 0 AND numXaAlts == 0 AND comp == REF_ONLY)
 ```
 
-The `REF_ONLY` gate is load-bearing. A tx-contig primary can hit 75+ transcript contigs that all lift to **one**
-genomic locus, so its suppressed XA must not be read as too many genomic places. Only a genomic
-(REF_ONLY) primary is unmapped; TX_ONLY / REF_AND_TX lift normally. Keyed on the input state, not the post-lift MAPQ:
-with no XA the resolver would otherwise see a single locus and rescue MAPQ to 60.
-</details>
+The `REF_ONLY` gate is load-bearing. A tx-contig primary can hit 75+ transcript contigs that all lift to **one** genomic
+locus, so its suppressed XA must not be read as too many genomic places. Only a genomic (REF_ONLY) primary is unmapped;
+TX_ONLY / REF_AND_TX lift normally. Keyed on the input state, not the post-lift MAPQ: with no XA the resolver would
+otherwise see a single locus and rescue MAPQ to 60.
 
-<details>
-<summary>Excluded-region contamination (-rna_unmap_regions)</summary>
-
-Curated rRNA / 7SL / acrocentric / multi-map contamination zones. A read lifting into one is contamination: the primary
-is **unmapped** (kept, not dropped), a supplementary is **dropped**.
-
-Checked **post-lift** on genomic coordinates, not pre-lift. A tx-contig read's input coords are `chrN_tx` and cannot be
-tested against the genomic region list, and some excluded zones (acrocentric p-arms) are themselves in the
+**Excluded-region contamination (-rna_unmap_regions).** Curated rRNA / 7SL / acrocentric / multi-map contamination
+zones. A read lifting into one is contamination: the primary is **unmapped** (kept, not dropped), a supplementary is
+**dropped**. Checked **post-lift** on genomic coordinates, not pre-lift. A tx-contig read's input coords are `chrN_tx`
+and cannot be tested against the genomic region list, and some excluded zones (acrocentric p-arms) are themselves in the
 transcriptome, so contamination reaches them via tx contigs and is only visible once lifted. The primary is unmapped by
 flipping its result to UNMAPPED (so the mate is coordinated via the cache); dropped supps have their SA entry removed
 from the primary's SA tag.
-</details>
 
-<details>
-<summary>AS floor unmap / drop (residual short-anchor noise)</summary>
-
-bwa runs at `-T 19` to surface short-anchor supps for rescue. After liftback, records still below the default `-T 30`
-AS floor that were not rescued/extended/collapsed are residual noise.
+**AS floor unmap / drop (residual short-anchor noise).** bwa runs at `-T 19` to surface short-anchor supps for rescue.
+After liftback, records still below the default `-T 30` AS floor that were not rescued/extended/collapsed are residual
+noise.
 
 * `PRIMARY_AS_UNMAP_THRESHOLD = 30`: a primary still below 30 is **unmapped** (not dropped, to keep the pair + SA
 intact). Gated on rescue running; AS is never recomputed, so post-processed primaries keep a stale-low AS and are exempt.
 * `SUPP_AS_DROP_THRESHOLD = 30`: a supplementary in the [19, 30) AS band that survived rescue + tail-extend is **dropped**.
-</details>
 
-<details>
-<summary>Flanking-deletion absorption in translation</summary>
-
-A small `D` straddling an exon boundary is usually a tx-FASTA off-by-N artefact. `ContigTranslator` folds a
-`D <= SPLICE_FLANKING_DELETION_MAX_BP (5)` into the intron `N`; a larger `D` (6+ bp) is preserved after the `N`. Bound
-is inclusive.
+**Flanking-deletion absorption in translation.** A small `D` straddling an exon boundary is usually a tx-FASTA off-by-N
+artefact. `ContigTranslator` folds a `D <= SPLICE_FLANKING_DELETION_MAX_BP (5)` into the intron `N`; a larger `D` (6+ bp)
+is preserved after the `N`. Bound is inclusive.
 
 ```
 90M 3D 61M  with the 3D straddling a boundary  ->  90M 5000N 61M    (3D absorbed)
 90M 8D 61M                                     ->  90M 5000N 8D 61M (8D preserved)
 ```
-</details>
 
-<details>
-<summary>LIFT_FAILED and anchor floors</summary>
+**LIFT_FAILED and anchor floors.**
 
 * A position outside any transcript span (inter-transcript spacer, or past the contig end) -> LIFT_FAILED: read marked
 unmapped, ref/start/CIGAR/MAPQ cleared, XA and SA stripped.
@@ -744,54 +625,9 @@ existing softclip: bare-anchor floor 1 bp, softclip-adjacent floor 3 bp. A flush
 anchor, no softclip) is left for the Step 1 collapse pass, which scores it against the genome. (Both are distinct
 from `MIN_JUNCTION_ANCHOR` = 8, the discriminator/collapse trust floor.)
 * Read overhang past the first/last exon span is clamped to a leading/trailing softclip.
+
+**Hidden-tie MAPQ block.** The single-locus MAPQ-0-to-60 rescue does **not** fire when there is an unresolved hidden
+tie: `XS == AS` on a ref-only primary outside any annotated exon. That signals a genuine ambiguous placement, so the
+MAPQ stays at 0.
+
 </details>
-
-<details>
-<summary>Hidden-tie MAPQ block</summary>
-
-The single-locus MAPQ-0-to-60 rescue does **not** fire when there is an unresolved hidden tie: `XS == AS` on a ref-only
-primary outside any annotated exon. That signals a genuine ambiguous placement, so the MAPQ stays at 0.
-</details>
-
-## Constants reference
-
-The important ones (all in `TarsConstants`; the rescue/tail values are also tunable via the [flags](#flags) above):
-
-| Constant                        | Value     | What it gates                                                      |
-|---------------------------------|-----------|-------------------------------------------------------------------|
-| `MIN_JUNCTION_ANCHOR`           | 8         | an `N` is trusted only with >= 8 matched bases on each side        |
-| `SPLICE_FLANKING_DELETION_MAX_BP`| 5        | a `D <= 5` across an exon boundary is absorbed into the `N`        |
-| `RESCUE_MAPQ`                   | 60        | MAPQ assigned on a discriminator swap or a rescued unique placement |
-| `SUPP_RESCUE_MAPQ_CAP`          | 55        | ceiling on a primary+supp rescue merge (flags a constructed alignment) |
-| `PRIMARY_AS_UNMAP_THRESHOLD`    | 30        | primary still below this AS after liftback is unmapped             |
-| `SUPP_AS_DROP_THRESHOLD`        | 30        | supplementary still below this AS is dropped                       |
-| `DEFAULT_MIN_INTRON_LENGTH`     | 21        | shortest intron a primary+supp rescue may bridge                  |
-| `DEFAULT_MAX_INTRON_LENGTH`     | 1,000,000 | longest intron a rescue may bridge                                |
-| `DEFAULT_MIN_ANCHOR_OVERHANG`   | 3         | matched bases needed each side of a merged junction               |
-| `DEFAULT_MAX_CHAIN_DEPTH`       | 2         | max supplementaries merged into one read (one per side)           |
-| `DEFAULT_MAX_EXTENSION`         | 30        | max bases a terminal softclip is walked into contiguous genome     |
-| `DEFAULT_MAX_SHIFT`             | 5         | max bp an intron slides to reach a higher splice-motif tier        |
-
-bwa-mem affine scoring used to re-score lifted boundaries: `MATCH / MISMATCH = +1 / -4`, `GAP_OPEN / GAP_EXTEND = -6 / -1`
-(soft-clips not penalised). `NH = max(numLoci, 1)` (counts distinct genomic loci, not emitted records).
-
-## Tests
-
-End-to-end behaviour is pinned by `LiftBackEndToEndTest` (full per-group engine):
-
-| Scenario                                       | What it pins                                                  |
-|------------------------------------------------|--------------------------------------------------------------|
-| exonSpanningReadLiftsToJunctionCigar           | tx read spanning two exons -> `M N M`, mate fields patched   |
-| unliftableReadIsMarkedUnmapped                 | position past the contig end -> unmapped, mate flagged       |
-| supplementarySaTagRewrittenToGenomicCoords     | split read; supp + SA lifted to genomic coords               |
-| terminalSoftclipExtendedIntoContiguousGenome   | intron-retention tail walked into the genome (tail-extend)   |
-| splitReadRescuedAcrossAnnotatedJunction        | primary softclip + short-anchor supp merged into one `M N M` |
-| offMotifJunctionSlidToCanonical                | junction slid 2 bp onto a GT-AG motif (canonicalize)         |
-| nativeGenomicReadPassesThroughUnchanged        | a read already on the genome is left untouched               |
-
-Component layers below the engine: `LiftBackResolverTest` (categorize + resolved result), `SpliceLiftBackApplyTest`
-(record mutation: CIGAR / XA / XS / NH / unmap), `LiftBackDiscriminatorTest` (full outcome/feature matrix + swap/drop),
-`JunctionRescueResolverTest` (rescue merges), and the `TerminalReconciler` suites `TerminalReconcilerCollapseTest` /
-`TerminalReconcilerTailExtendTest` (the collapse and tail-extend phases of the reconcile pass).
-</content>
-</invoke>

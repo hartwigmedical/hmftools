@@ -52,7 +52,7 @@
 
 <!-- base evidence -->
 <rect x="60" y="222" width="602" height="74" rx="4" fill="#FAFAF8" stroke="#E0DED9"/>
-<text x="74" y="240" font-size="10" fill="#6B6862">the read's last 8 bases match the genome in both places &#8211; nothing distinguishes them:</text>
+<text x="74" y="240" font-size="10" fill="#6B6862">the read's last 8 bases match the genome in both places - nothing distinguishes them:</text>
 <text x="80"  y="260" font-size="12.5" fill="#6B6862" font-family="Courier New, monospace">read[144..151]</text>
 <text x="320" y="260" font-size="12.5" fill="#333333" font-family="Courier New, monospace">GCGGCGGC</text>
 <text x="80"  y="277" font-size="12.5" fill="#6B6862" font-family="Courier New, monospace">chr8:126,557,185  (contiguous)</text>

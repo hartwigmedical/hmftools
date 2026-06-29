@@ -1,6 +1,6 @@
 <svg viewBox="0 0 880 400" xmlns="http://www.w3.org/2000/svg" font-family="Arial, Helvetica, sans-serif">
 <title>Core splice (tx-only), MAPQ 0 to 60</title>
-<desc>A read aligns flat as 151M against three packed isoform transcript contigs, all tied at MAPQ 0. Translation lifts it across a 7,762 bp intron to a single spliced genomic locus chr22:45,923,222 as 114M 7762N 37M; the redundant copies collapse to one locus and MAPQ is rescued from 0 to 60 (NH 1).</desc>
+<desc>A read aligns to the transcriptome as 151M (three packed copies), all tied at MAPQ 0. Translation lifts it across a 7,762 bp intron to a single spliced genomic locus chr22:45,923,222 as 114M 7762N 37M; the redundant copies collapse to one locus and MAPQ is rescued from 0 to 60 (NH 1).</desc>
 <defs>
 <marker id="arrC" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#9B9893"/></marker>
 </defs>
@@ -18,7 +18,7 @@
 </g>
 
 <!-- BEFORE: 3 tied isoform contigs -->
-<text x="60" y="36" font-size="14" font-weight="600" fill="#0C447C">before &#183; flat on transcript contigs (3 packed isoform copies, all tied)</text>
+<text x="60" y="36" font-size="14" font-weight="600" fill="#0C447C">before &#183; read aligns to the transcriptome (3 packed copies, all tied)</text>
 <rect x="60" y="48" width="438" height="13" rx="2" fill="#2F7DC6"/>
 <text x="279" y="58" font-size="9.5" text-anchor="middle" fill="#FFFFFF">151M  &#183; chr22_tx:8,725,640</text>
 <rect x="60" y="64" width="438" height="13" rx="2" fill="#A9CDEA"/>
@@ -55,8 +55,6 @@
 <text x="523" y="286" font-size="11" text-anchor="middle" fill="#FFFFFF">37M</text>
 <rect x="600" y="270" width="62" height="22" rx="11" fill="#E3F2E8" stroke="#1F8A4C"/>
 <text x="631" y="285" font-size="11" text-anchor="middle" fill="#166534">MAPQ 60</text>
-<text x="60" y="320" font-size="10.5" fill="#6B6862">redundant isoform copies collapse to a single locus, the alts are dropped, and MAPQ is rescued 0 &#8594; 60 (NH 1)</text>
-<text x="60" y="336" font-size="9.5" fill="#9B9893">green MAPQ pill = liftback asserting a rescue (single best genomic locus)</text>
+<text x="60" y="310" font-size="9.5" fill="#9B9893">MAPQ bumped to 60 = liftback asserting a rescue (single best genomic locus)</text>
 
-<text x="360" y="372" font-size="15" font-weight="600" text-anchor="middle" fill="#111111">SOLE_TX &#183; core splice, MAPQ 0 &#8594; 60</text>
 </svg>
