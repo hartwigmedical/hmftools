@@ -214,24 +214,32 @@ public class HomologyData
         // FIXME? handle indels?
         final int matchScore = 1;
         final int mismatchScore = -4;
-        int score = exactMatch * matchScore;
-        int maxScore = score;
+        final int clipScore = -5;
+        int scoreAcc = exactMatch * matchScore;
+        int maxScore = scoreAcc + (exactMatch == overlap ? 0 : clipScore);
         int maxInexactMatch = exactMatch;
         for(int i = exactMatch; i < overlap; ++i)
         {
             if(refBasesStart.charAt(i) == refBasesEnd.charAt(i))
             {
-                score += matchScore;
+                scoreAcc += matchScore;
             }
             else
             {
-                score += mismatchScore;
+                scoreAcc += mismatchScore;
             }
+            int remaining = overlap - i - 1;
+            int score = scoreAcc + (remaining > 0 ? clipScore : 0);
             // Use >= to maximise the homology length for equal scores.
             if(score >= maxScore)
             {
                 maxScore = score;
                 maxInexactMatch = i + 1;
+            }
+            else if(scoreAcc + remaining * matchScore < maxScore)
+            {
+                // Even if all remaining bases match, it's not possible to beat the best score so far, so no need to continue.
+                break;
             }
         }
         int inexactStart = (maxInexactMatch + 1) / 2; // round up if an odd length
