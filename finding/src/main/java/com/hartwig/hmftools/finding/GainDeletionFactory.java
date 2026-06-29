@@ -6,20 +6,22 @@ import java.util.Objects;
 import java.util.Optional;
 
 import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
+import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriverType;
 import com.hartwig.hmftools.datamodel.purple.PurpleGainDeletion;
 import com.hartwig.hmftools.datamodel.purple.PurpleGeneCopyNumber;
+import com.hartwig.hmftools.datamodel.purple.PurpleLikelihoodMethod;
 import com.hartwig.hmftools.datamodel.purple.PurpleLossOfHeterozygosity;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 import com.hartwig.hmftools.finding.datamodel.GainDeletion;
 import com.hartwig.hmftools.finding.datamodel.GainDeletionBuilder;
-import com.hartwig.hmftools.finding.datamodel.driver.ReportedStatus;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverFieldsBuilder;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverFindingList;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverFindingListBuilder;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.finding.datamodel.driver.DriverSource;
+import com.hartwig.hmftools.finding.datamodel.driver.ReportedStatus;
 import com.hartwig.hmftools.finding.datamodel.finding.FindingStatus;
 import com.hartwig.hmftools.finding.util.FindingUtil;
 
@@ -209,8 +211,25 @@ final class GainDeletionFactory
         return drivers.stream()
                 .filter(o -> o.gene().equals(gene) && o.transcript().equals(transcript) && o.type().equals(purpleDriverType))
                 .findFirst()
-                .orElseThrow(() -> new IllegalStateException(
-                        "No driver found for " + gene + " transcript " + transcript + " type " + purpleDriverType));
+                .orElseGet(() ->
+                {
+                    if(purpleDriverType == PurpleDriverType.GERMLINE_DELETION)
+                    {
+                        // In the ORANGE algo, logics are added to convert germline disruptions to germline deletions. However, the
+                        // germline deletion is not present in the driver catalog. For this event, PurpleDriver is manually added and the
+                        // driverLikelihood is always set to 0 (LOW)
+                        return ImmutablePurpleDriver.builder()
+                                .gene(gene)
+                                .transcript(transcript)
+                                .type(purpleDriverType)
+                                .driverLikelihood(0)
+                                .likelihoodMethod(PurpleLikelihoodMethod.GERMLINE)
+                                .isCanonical(true)
+                                .build();
+                    }
+                    throw new IllegalStateException(
+                            "No driver found for " + gene + " transcript " + transcript + " type " + purpleDriverType);
+                });
     }
 
     private static GainDeletion toGainDel(PurpleGainDeletion purpleGainDeletion,
