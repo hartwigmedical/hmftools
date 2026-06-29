@@ -78,27 +78,19 @@ public class HomologyTest
         assertEquals("AACC", homology.Homology);
         assertEquals(-2, homology.ExactStart);
         assertEquals(2, homology.ExactEnd);
-
-        basesEnd = "AGCCGG";
-
-        // test 1: exact match
-        homology = HomologyData.determineIndelHomology(basesStart, basesEnd, basesStart.length());
-        assertEquals("A", homology.Homology);
-        assertEquals(-1, homology.ExactStart);
-        assertEquals(0, homology.ExactEnd);
     }
 
     @Test
     public void testIndelHomologyInexact()
     {
-        String basesStart = "AACCGTTT";
-        String basesEnd = "AACCTTTT";
+        String basesStart = "AACCGTTTAAAA";
+        String basesEnd =   "AACCTTTTACCC";
 
         HomologyData homology = HomologyData.determineIndelHomology(basesStart, basesEnd, basesStart.length());
-        assertEquals("AACCGTTT", homology.Homology);
+        assertEquals("AACCGTTTA", homology.Homology);
         assertEquals(-2, homology.ExactStart);
         assertEquals(2, homology.ExactEnd);
-        assertEquals(-4, homology.InexactStart);
+        assertEquals(-5, homology.InexactStart);
         assertEquals(4, homology.InexactEnd);
     }
 

@@ -192,8 +192,7 @@ public class HomologyData
         // first a simple check for full exact homology
         if(refBasesStart.equals(refBasesEnd))
         {
-            int halfOverlap = overlap / 2;
-            int exactStart = (overlap % 2) == 0 ? halfOverlap : halfOverlap + 1; // round up if an odd length
+            int exactStart = (overlap + 1) / 2; // round up if an odd length
             int exactEnd = overlap - exactStart;
             return new HomologyData(refBasesStart, -exactStart, exactEnd, -exactStart, exactEnd);
         }
@@ -206,40 +205,39 @@ public class HomologyData
         }
         if(exactMatch == 0)
             return NO_HOMOLOGY;
-        int exactStart = max(exactMatch / 2, 1); // round up if an odd length
+        int exactStart = (exactMatch + 1) / 2; // round up if an odd length
         int exactEnd = exactMatch - exactStart;
 
         // Continue on to find inexact homology.
-        // Use a simple match/mismatch scoring system. Too many mismatches nearby terminates the homology.
+        // Emulate BWA-MEM scoring, to find the point at which the alignment would clip.
+        // This makes it consistent with the non-indel code which uses split alignments to determine homology.
         // FIXME? handle indels?
         final int matchScore = 1;
         final int mismatchScore = -4;
-        int inexactMatch = exactMatch;
         int score = exactMatch * matchScore;
-        int trailingMismatch = 0;
-        while(inexactMatch < overlap)
+        int maxScore = score;
+        int maxInexactMatch = exactMatch;
+        for(int i = exactMatch; i < overlap; ++i)
         {
-            if(refBasesStart.charAt(inexactMatch) == refBasesEnd.charAt(inexactMatch))
+            if(refBasesStart.charAt(i) == refBasesEnd.charAt(i))
             {
                 score += matchScore;
-                trailingMismatch = 0;
             }
             else
             {
                 score += mismatchScore;
-                if(score < 0)
-                {
-                    break;
-                }
-                trailingMismatch += 1;
             }
-            ++inexactMatch;
+            // Use >= to maximise the homology length for equal scores.
+            if(score >= maxScore)
+            {
+                maxScore = score;
+                maxInexactMatch = i + 1;
+            }
         }
-        inexactMatch -= trailingMismatch;
-        int inexactStart = max(inexactMatch / 2, 1); // round up if an odd length
-        int inexactEnd = inexactMatch - inexactStart;
+        int inexactStart = (maxInexactMatch + 1) / 2; // round up if an odd length
+        int inexactEnd = maxInexactMatch - inexactStart;
 
-        String homologyBases = refBasesStart.substring(0, inexactMatch);
+        String homologyBases = refBasesStart.substring(0, maxInexactMatch);
 
         return new HomologyData(homologyBases, -exactStart, exactEnd, -inexactStart, inexactEnd);
     }
