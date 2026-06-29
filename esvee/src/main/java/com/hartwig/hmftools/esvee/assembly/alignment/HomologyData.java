@@ -4,6 +4,10 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.INDEL_HOMOLOGY_CLIP_SCORE;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.INDEL_HOMOLOGY_MATCH_SCORE;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.INDEL_HOMOLOGY_MISMATCH_SCORE;
+
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 
@@ -212,31 +216,28 @@ public class HomologyData
         // Emulate BWA-MEM scoring, to find the point at which the alignment would clip.
         // This makes it consistent with the non-indel code which uses split alignments to determine homology.
         // FIXME? handle indels?
-        final int matchScore = 1;
-        final int mismatchScore = -4;
-        final int clipScore = -5;
-        int scoreAcc = exactMatch * matchScore;
-        int maxScore = scoreAcc + (exactMatch == overlap ? 0 : clipScore);
+        int scoreAcc = exactMatch * INDEL_HOMOLOGY_MATCH_SCORE;
+        int maxScore = scoreAcc + (exactMatch == overlap ? 0 : INDEL_HOMOLOGY_CLIP_SCORE);
         int maxInexactMatch = exactMatch;
         for(int i = exactMatch; i < overlap; ++i)
         {
             if(refBasesStart.charAt(i) == refBasesEnd.charAt(i))
             {
-                scoreAcc += matchScore;
+                scoreAcc += INDEL_HOMOLOGY_MATCH_SCORE;
             }
             else
             {
-                scoreAcc += mismatchScore;
+                scoreAcc += INDEL_HOMOLOGY_MISMATCH_SCORE;
             }
             int remaining = overlap - i - 1;
-            int score = scoreAcc + (remaining > 0 ? clipScore : 0);
+            int score = scoreAcc + (remaining > 0 ? INDEL_HOMOLOGY_CLIP_SCORE : 0);
             // Use >= to maximise the homology length for equal scores.
             if(score >= maxScore)
             {
                 maxScore = score;
                 maxInexactMatch = i + 1;
             }
-            else if(scoreAcc + remaining * matchScore < maxScore)
+            else if(scoreAcc + remaining * INDEL_HOMOLOGY_MATCH_SCORE < maxScore)
             {
                 // Even if all remaining bases match, it's not possible to beat the best score so far, so no need to continue.
                 break;
