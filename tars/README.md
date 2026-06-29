@@ -10,6 +10,7 @@ BAM (no transcript contigs, spliced reads carried as `N` gaps) ready for REDUX a
 * [How to Run TARS](#how-to-run-tars)
 * [What a read goes through](#what-a-read-goes-through)
 * [What TARS changes on a read](#what-tars-changes-on-a-read)
+* [Thresholds and constants](#thresholds-and-constants)
 * [In-depth technical implementation](#in-depth-technical-implementation)
 
 ## What TARS does
@@ -113,7 +114,7 @@ debug TSVs are written only with `-write_liftback_tsv` (a ~100GB file; only for 
 
 Note: no `ensembl_data_dir` - liftback reads exon/junction annotation from the sidecar (only `SpliceFastaBuilder` needs
 ensembl). What each threshold trades off if you change it is in
-[tuning thresholds and their effect](#in-depth-technical-implementation) below.
+[Thresholds and constants](#thresholds-and-constants) below.
 
 </details>
 
@@ -233,13 +234,21 @@ For each read, TARS rewrites these fields.
 
 **MAPQ**
 
-- raised to 60 when the read clearly belongs at one spot: the discriminator picked a transcript placement; or a single
-  best-scoring locus bwa scored 0 (`numLoci == 1`, `inputMapq == 0`) with no hidden tie; or a transcript supplementary
-  bwa scored 0
-- capped at 55 after a primary+supp merge (marks a stitched alignment)
-- left at bwa's value when there is no transcript evidence, or on a hidden tie (`XS == AS`, no transcript, outside any exon)
-- set to 0 when the read is unmapped
-- never touched by the cleanup passes (collapse, tail-extend, canonicalize)
+```
+input MAPQ (from bwa)
+|
++-- unmapped / lift-failed / over-cap / AS below floor ......... 0   (PRIMARY_AS_UNMAP_THRESHOLD / SUPP_AS_DROP_THRESHOLD 30)
++-- primary + supplementary rescue merge .............. min(bwa, 55)   (SUPP_RESCUE_MAPQ_CAP)
++-- transcript supplementary that bwa scored 0 ............... 60   (RESCUE_MAPQ)
++-- primary with a transcript match:
+|     discriminator swapped onto a transcript placement ..... 60
+|     single best-score locus, bwa 0, no hidden tie ......... 60
+|     otherwise .............................. carry bwa's value
++-- primary with no transcript match ......... carry bwa's value
+```
+
+- a hidden tie is `XS == AS` on a ref-only primary outside any annotated exon
+- collapse, tail-extend and canonicalize never change MAPQ
 
 **XA**
 
@@ -283,6 +292,49 @@ For each read, TARS rewrites these fields.
 - it scores below the floor (`AS < 30`)
 - it lifts into a curated rRNA / contamination region
 - a split piece whose own lift failed is moved onto its primary's coordinates instead of being unmapped
+
+## Thresholds and constants
+
+The rescue and tail values are tunable via the [flags](#flags) above; the rest are compile-time constants. Each row gives
+its default and what changing it does.
+
+**Junction rescue** (primary + supplementary merge)
+
+| Setting | Default | Effect of changing |
+|---|---|---|
+| `rescue_min_intron` | 21 | Increasing rejects short gaps as introns; lowering merges small gaps as splices |
+| `rescue_max_intron` | 1,000,000 | Increasing lets a merge span larger gaps; lowering drops long-intron splices |
+| `rescue_min_anchor_overhang` | 3 | Increasing needs longer matched flanks each side; lowering lets 1-2 bp anchors merge |
+| `rescue_max_chain_depth` | 2 | Increasing chains 3+ supps into a read; lowering leaves a clipped middle exon unmerged |
+| `rescue_softclip_tolerance` | 5 | Increasing tolerates more primary/supp overlap; lowering rejects 1-5 bp disagreement |
+| `rescue_max_boundary_shift` | 8 | Increasing searches further from bwa's boundary for a junction; lowering uses bwa's only |
+| `rescue_min_partial_match_run` | 11 | Increasing needs a longer anchor for a partial rescue; lowering rescues short anchors |
+
+**Tail extension**
+
+| Setting | Default | Effect of changing |
+|---|---|---|
+| `tail_min_extension` | 3 | Increasing ignores shorter clips and matches; lowering reclaims 1-2 bp (often coincidental) |
+| `tail_max_extension` | 30 | Increasing reclaims longer tails (may cross a real splice); lowering leaves tails clipped |
+
+**Junctions and splice motifs** (constants)
+
+| Setting | Default | Effect of changing |
+|---|---|---|
+| `MIN_JUNCTION_ANCHOR` | 8 | Increasing trusts fewer junctions (needs longer flanks); lowering lets coincidental anchors count |
+| `SPLICE_FLANKING_DELETION_MAX_BP` | 5 | Increasing folds bigger boundary deletions into the intron; lowering keeps them as `D` |
+| `DEFAULT_MAX_SHIFT` | 5 | Increasing lets the intron slide further onto a motif; lowering leaves more junctions off-motif |
+
+**Upstream bwa-mem2 flags** (not tars config, but liftback depends on them)
+
+| Setting | Default | Effect of changing |
+|---|---|---|
+| `-T` | 19 | Set below bwa's default 30 to surface short-anchor supps for rescue; raising to 30 starves rescue |
+| `-h` | 75 | bwa XA cap; raising keeps more high-multiplicity reads listed, lowering unmaps more |
+
+Scoring: bwa-mem affine scores used to re-score lifted boundaries are `MATCH / MISMATCH = +1 / -4` and
+`GAP_OPEN / GAP_EXTEND = -6 / -1` (soft-clips not penalised). `NH = max(numLoci, 1)` counts distinct genomic loci, not
+emitted records.
 
 ## In-depth technical implementation
 
@@ -505,69 +557,6 @@ after   83    chr22     45931269   60    101M18554N50M  NM:0 AS:141 NH:1   XS:A:
 
 In short: 60 means liftback is asserting a rescue, 55 means a constructed merge, 0 means unmapped or genuinely
 ambiguous, and any other value is bwa's own MAPQ carried through.
-
-</details>
-
-<details>
-<summary><strong>Thresholds and constants</strong></summary>
-
-All live in `TarsConstants`; the rescue and tail values are also tunable via the [flags](#flags) above. Each entry gives
-the default, what it gates, and the effect of changing it. Raising a floor is the conservative direction; lowering it is
-aggressive (more changes, more coincidental-match risk).
-
-Junction rescue (primary + supp merge):
-
-- `rescue_min_intron` / `DEFAULT_MIN_INTRON_LENGTH` (21): shortest intron a merge may bridge. Higher rejects more short
-  gaps as introns (won't call a deletion a splice); lower merges small gaps, risking false junctions.
-- `rescue_max_intron` / `DEFAULT_MAX_INTRON_LENGTH` (1,000,000): longest intron a merge may bridge. Higher allows merges
-  across larger gaps (risk: joining unrelated loci); lower drops genuine long-intron splices.
-- `rescue_min_anchor_overhang` / `DEFAULT_MIN_ANCHOR_OVERHANG` (3): matched bases kept each side of a merged junction.
-  Higher = fewer chance merges but loses short-overhang splices; lower lets 1-2 bp anchors merge (~1 in 16 by chance).
-- `rescue_max_chain_depth` / `DEFAULT_MAX_CHAIN_DEPTH` (2): max supps merged into one read (one per side). Higher chains
-  3+ supps (recovers many-exon reads, more mis-merge risk); 1 leaves a fully-clipped middle exon unmerged.
-- `rescue_softclip_tolerance` (5): primary/supp overlap tolerated when snapping to a junction. Higher tolerates bigger
-  overlap (risk: double-covered bases); lower rejects the common 1-5 bp boundary disagreement and cuts yield.
-- `rescue_max_boundary_shift` (8): over-extended bases trimmed when probing a boundary. Higher searches further back for
-  an annotated junction (risk: a wrong nearby boundary); lower probes only bwa's exact boundary.
-- `rescue_min_partial_match_run` (11): min exon-proximal matched run for a partial ref-verify rescue. Higher is safer;
-  lower rescues short anchors with long unexplained tails (more false junctions).
-
-Tail extension:
-
-- `tail_min_extension` / `DEFAULT_MIN_EXTENSION` (3): min softclip length considered and min bases reclaimed. Higher
-  ignores short clips and short matches; lower reclaims 1-2 bp (often coincidental).
-- `tail_max_extension` / `DEFAULT_MAX_EXTENSION` (30): max bases walked into a softclip. Higher reclaims longer tails
-  (risk: walking across a real unannotated splice); lower leaves long matching tails partly clipped.
-
-Junctions and splice motifs (constants):
-
-- `MIN_JUNCTION_ANCHOR` (8): an `N` is trusted as a real junction only with >= 8 matched bases each side. Higher trusts
-  fewer junctions; lower lets coincidental short anchors count as splices.
-- `SPLICE_FLANKING_DELETION_MAX_BP` (5): a `D <= 5` straddling an exon boundary is absorbed into the `N`. Higher folds
-  bigger boundary deletions into the intron; lower keeps them as an explicit `D`.
-- `DEFAULT_MAX_SHIFT` (5): max bp an intron slides to reach a higher splice-motif tier (canonicalize). Higher repositions
-  junctions further onto a canonical motif (risk: a coincidental motif); lower leaves more junctions off-motif.
-
-Confidence and noise floors (constants):
-
-- `RESCUE_MAPQ` (60): MAPQ given on a swap or a rescued unique placement. The BAM unique-mapper convention; past 60 is
-  out of spec, lower makes downstream MAPQ filters discount correctly-rescued reads.
-- `SUPP_RESCUE_MAPQ_CAP` (55): ceiling on a primary+supp merge, flagging a constructed alignment. Higher toward 60 makes
-  merges look bwa-native; lower discounts real rescued splices more.
-- `PRIMARY_AS_UNMAP_THRESHOLD` (30): a primary still below this AS after liftback is unmapped. Higher unmaps more
-  borderline reads; lower (toward 19) keeps the short-anchor noise bwa's `-T 19` surfaced.
-- `SUPP_AS_DROP_THRESHOLD` (30): a supplementary still below this AS is dropped. Same trade as the primary floor.
-
-Upstream bwa-mem2 flags (not tars config, but liftback depends on them):
-
-- `-T 19` (score floor): set below bwa's default 30 so bwa emits the short-anchor supps rescue merges. Raising it to 30
-  starves rescue; tars re-imposes the 30 floor after rescue via the AS floors above.
-- `-h 75` (XA cap): a read over the cap is emitted MAPQ 0 with no XA; tars unmaps such a genomic primary
-  (`exceedsMappingCap`). Higher keeps more high-multiplicity reads as listed multimappers; lower unmaps more.
-
-Scoring: bwa-mem affine scores used to re-score lifted boundaries are `MATCH / MISMATCH = +1 / -4` and
-`GAP_OPEN / GAP_EXTEND = -6 / -1` (soft-clips not penalised). `NH = max(numLoci, 1)` counts distinct genomic loci, not
-emitted records.
 
 </details>
 
