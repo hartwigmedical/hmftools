@@ -9,8 +9,11 @@ on:
     paths:
       # These must match the ignored paths in the real build workflow.
       - "**/*.md"
+      - "**/*.pdf"
       - "**/*.png"
       - "**/*.jpg"
+      - "**/*.gif"
+      - "**/*.svg"
       - "*/docs/*.html"
 
 jobs:
