@@ -227,16 +227,18 @@ below examples:
 
 ### PON Annotation and Filtering
 
-Pave can annotate with PON values if the config 'pon_file' is used. The PON file must be a TSV with the following fields:
+Pave can annotate with PON values if the config 'pon_file' is used. The PON file must be a TSV with the following fields (including `MultiPonStatus` for SBX or Ultima sequencing)
 
 ```
-Chromosome      Position        Ref     Alt     SamplesCount    MaxSampleReads  TotalReads
-1       10003   A       T       10      30      191
-1       10006   C       A       16      11      86
-1       10007   T       G       40      16      234
+Chromosome      Position        Ref     Alt     SamplesCount    MaxSampleReads  TotalReads   MultiPonStatus
+1       10003   A       T       10      30      191      BASE
+1       10006   C       A       16      11      86       MULTI
+1       10007   T       G       40      16      234      ARTEFACT
 ```
 
 Pave will then add VCF tags 'PON_COUNT' from SamplesCount and 'PON_MAX' from MaxSampleReads for any matched variant.
+
+For SBX and Ultima sequencing, `MultiPonStatus` determines whether the variant exists in the Illumina PON (`BASE`), the tech-specific PON (`ARTEFACT`) or both (`MULTI`). These technologies commonly produce low AF indel artefacts in long repeats, and we do not want to inadvertently filter high VAF somatic variants in these contexts. Therefore, for indels in long repeats (7+ repeat counts) with `MultiPonStatus = ARTEFACT`, we do not apply PON filtering if the variant satisfies `PON_MAX < min(60 * (sampleAF - 0.1), 18)` (if Ultima) or `PON_MAX < min(40 * (sampleAF - 0.1), 8)` (if SBX)
 
 If the config 'pon_filters' is used, then Pave will additionally add the filter 'PON' to variants which exceed both the specified
 SamplesCount and MaxSampleReads values.

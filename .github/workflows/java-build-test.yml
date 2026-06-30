@@ -6,6 +6,12 @@ on:
   pull_request:
     branches: [ "master" ]
     types: ["opened", "reopened", "synchronize"]
+    paths-ignore:
+      # Don't run on documentation changes, since the code is not affected.
+      - "**/*.md"
+      - "**/*.png"
+      - "**/*.jpg"
+      - "*/docs/*.html"
 
 jobs:
   build:

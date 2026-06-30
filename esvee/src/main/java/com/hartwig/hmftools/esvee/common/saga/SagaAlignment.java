@@ -52,12 +52,12 @@ public record SagaAlignment(
 
     public int queryStart()
     {
-        return leftClipLength(cigar);
+        return isForward() ? leftClipLength(cigar) : rightClipLength(cigar);
     }
 
     public int queryEnd()
     {
-        return queryLength - rightClipLength(cigar);
+        return queryLength - (isForward() ? rightClipLength(cigar) : leftClipLength(cigar));
     }
 
     public int queryAlignLength()
@@ -90,14 +90,14 @@ public record SagaAlignment(
         return rawAlignment.getAlignerScore();
     }
 
-    // How many more bases could've been aligned on the left?
-    public int leftUnaligned()
+    // How many more bases could've been aligned at the start of the sequences?
+    public int startUnaligned()
     {
         return min(queryStart(), sagaStart());
     }
 
-    // How many more bases could've been aligned on the right?
-    public int rightUnaligned()
+    // How many more bases could've been aligned at the end of the sequences?
+    public int endUnaligned()
     {
         return min(queryLength - queryEnd(), sagaLength() - sagaEnd());
     }

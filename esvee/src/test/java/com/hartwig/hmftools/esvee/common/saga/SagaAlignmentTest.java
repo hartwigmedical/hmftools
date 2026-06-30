@@ -44,67 +44,67 @@ public class SagaAlignmentTest
     }
 
     @Test
-    public void testLeftUnalignedQueryStartLimits()
+    public void testStartUnalignedQueryStartLimits()
     {
         // queryStart=5 (5S clip), sagaStart=10 → min(5, 10) = 5
         SagaAlignment a = alignment(25, 10, 25, "5S15M5S", 60);
-        assertEquals(5, a.leftUnaligned());
+        assertEquals(5, a.startUnaligned());
     }
 
     @Test
-    public void testLeftUnalignedSagaStartLimits()
+    public void testStartUnalignedSagaStartLimits()
     {
         // queryStart=10 (10S clip), sagaStart=3 → min(10, 3) = 3
         SagaAlignment a = alignment(25, 3, 15, "10S12M3S", 60);
-        assertEquals(3, a.leftUnaligned());
+        assertEquals(3, a.startUnaligned());
     }
 
     @Test
-    public void testLeftUnalignedBothEqual()
+    public void testStartUnalignedBothEqual()
     {
         // queryStart=5, sagaStart=5 → min(5, 5) = 5
         SagaAlignment a = alignment(20, 5, 15, "5S10M5S", 60);
-        assertEquals(5, a.leftUnaligned());
+        assertEquals(5, a.startUnaligned());
     }
 
     @Test
-    public void testLeftUnalignedNoClipNoSagaOffset()
+    public void testStartUnalignedNoClipNoSagaOffset()
     {
         // queryStart=0 (no clip), sagaStart=0 → min(0, 0) = 0
         SagaAlignment a = alignment(10, 0, 10, "10M", 20);
-        assertEquals(0, a.leftUnaligned());
+        assertEquals(0, a.startUnaligned());
     }
 
     @Test
-    public void testRightUnalignedQuerySideLimits()
+    public void testEndUnalignedQuerySideLimits()
     {
         // rightClip=5, sagaLength - sagaEnd = 60-25=35 → min(5, 35) = 5
         SagaAlignment a = alignment(25, 10, 20, "5S10M5S", 60);
-        assertEquals(5, a.rightUnaligned());
+        assertEquals(5, a.endUnaligned());
     }
 
     @Test
-    public void testRightUnalignedSagaSideLimits()
+    public void testEndUnalignedSagaSideLimits()
     {
         // rightClip=10, sagaLength - sagaEnd = 20-15=5 → min(10, 5) = 5
         SagaAlignment a = alignment(25, 5, 15, "5S10M10S", 20);
-        assertEquals(5, a.rightUnaligned());
+        assertEquals(5, a.endUnaligned());
     }
 
     @Test
-    public void testRightUnalignedBothEqual()
+    public void testEndUnalignedBothEqual()
     {
         // rightClip=5, sagaLength - sagaEnd = 25-20=5 → min(5, 5) = 5
         SagaAlignment a = alignment(20, 10, 20, "5S10M5S", 25);
-        assertEquals(5, a.rightUnaligned());
+        assertEquals(5, a.endUnaligned());
     }
 
     @Test
-    public void testRightUnalignedNoClipNoSagaRemaining()
+    public void testEndUnalignedNoClipNoSagaRemaining()
     {
         // rightClip=0, sagaLength - sagaEnd = 10-10=0 → min(0, 0) = 0
         SagaAlignment a = alignment(10, 0, 10, "10M", 10);
-        assertEquals(0, a.rightUnaligned());
+        assertEquals(0, a.endUnaligned());
     }
 
     @Test
