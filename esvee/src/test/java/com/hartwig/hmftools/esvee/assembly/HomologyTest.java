@@ -18,7 +18,6 @@ import static com.hartwig.hmftools.esvee.assembly.AssemblyTestUtils.createAssemb
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 
 import java.util.List;
 
@@ -60,7 +59,7 @@ public class HomologyTest
     }
 
     @Test
-    public void testIndelHomology()
+    public void testIndelHomologyExact()
     {
         String basesStart = "AACCGG";
         String basesEnd = basesStart;
@@ -78,14 +77,20 @@ public class HomologyTest
         assertEquals("AACC", homology.Homology);
         assertEquals(-2, homology.ExactStart);
         assertEquals(2, homology.ExactEnd);
+    }
 
-        basesEnd = "AGCCGG";
+    @Test
+    public void testIndelHomologyInexact()
+    {
+        String basesStart = "AACCGTTTAAAA";
+        String basesEnd =   "AACCTTTTACCC";
 
-        // test 1: exact match
-        homology = HomologyData.determineIndelHomology(basesStart, basesEnd, basesStart.length());
-        assertEquals("A", homology.Homology);
-        assertEquals(-1, homology.ExactStart);
-        assertEquals(0, homology.ExactEnd);
+        HomologyData homology = HomologyData.determineIndelHomology(basesStart, basesEnd, basesStart.length());
+        assertEquals("AACCGTTTA", homology.Homology);
+        assertEquals(-2, homology.ExactStart);
+        assertEquals(2, homology.ExactEnd);
+        assertEquals(-5, homology.InexactStart);
+        assertEquals(4, homology.InexactEnd);
     }
 
     @Test
@@ -547,7 +552,7 @@ public class HomologyTest
 
         // converts to a partial DUP since full section is not inserted
         basesWithHomology =
-                "GGGCTGATGCAAAAACCCCCGGGGGTTTTTAAAAACCCCCTTGGGTTTTTAAAAACCCCCGGGGGTTTTTAAAAACCCCCGGGGGTTTTTGGTTGATCGT";
+                "GGGCTGATGCAAAAACCCCCGGGGGTTTTTAAAAACCCCCTTTTGTTTTTAAAAACCCCCGGGGGTTTTTAAAAACCCCCGGGGGTTTTTGGTTGATCGT";
         //       0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789
         //                 10        20        30        40        50        60        70        80        90
 
