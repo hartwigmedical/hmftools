@@ -156,7 +156,7 @@ public class DriverDataTest extends ComparableItemTest<DriverData, DriverCompare
         ComparConfig config = new ComparConfig();
         DriverComparer driverComparer = new DriverComparer(config);
 
-        driverComparer.registerThresholds(config.Thresholds);
+        driverComparer.registerThresholds(config.FieldConfig);
 
         List<ComparableItem> refItems = Lists.newArrayList();
         List<ComparableItem> newItems = Lists.newArrayList();
@@ -181,7 +181,7 @@ public class DriverDataTest extends ComparableItemTest<DriverData, DriverCompare
                 null, "4", false));
 
         List<Mismatch> mismatches = Lists.newArrayList();
-        CommonUtils.compareItems(mismatches, MatchLevel.REPORTABLE, config.Thresholds, includeMatches, refItems, newItems);
+        CommonUtils.compareItems(mismatches, MatchLevel.REPORTABLE, config.FieldConfig, includeMatches, refItems, newItems);
         return mismatches;
     }
 

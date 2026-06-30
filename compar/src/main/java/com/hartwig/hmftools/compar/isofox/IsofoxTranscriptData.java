@@ -13,7 +13,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.rna.TranscriptExpression;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.common.CategoryType;
-import com.hartwig.hmftools.compar.common.DiffThresholds;
+import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 
@@ -62,7 +62,7 @@ public record IsofoxTranscriptData(TranscriptExpression TranscriptExpression) im
 
     @Override
     public Mismatch findMismatch(
-            final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds, final boolean includeMatches)
+            final ComparableItem other, final MatchLevel matchLevel, final FieldConfig fieldConfig, final boolean includeMatches)
     {
         final TranscriptExpression ref = TranscriptExpression;
         final TranscriptExpression otherData = ((IsofoxTranscriptData) other).TranscriptExpression;
@@ -70,7 +70,7 @@ public record IsofoxTranscriptData(TranscriptExpression TranscriptExpression) im
         final List<String> diffs = Lists.newArrayList();
 
         checkDiff(diffs, FLD_GENE_NAME, ref.geneName(), otherData.geneName());
-        checkDiff(diffs, FLD_ADJ_TPM, ref.tpm(), otherData.tpm(), category(), thresholds);
+        checkDiff(diffs, FLD_ADJ_TPM, ref.tpm(), otherData.tpm(), category(), fieldConfig);
 
         return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches);
     }

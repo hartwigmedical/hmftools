@@ -10,7 +10,7 @@ import java.util.List;
 import javax.imageio.ImageIO;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.hartwig.hmftools.compar.common.DiffThresholds;
+import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.MismatchType;
@@ -59,7 +59,7 @@ public abstract class ComparableImage implements ComparableItem
     public List<String> displayValues() { return List.of(); }
 
     @Override
-    public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds,
+    public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final FieldConfig fieldConfig,
             final boolean includeMatches)
     {
         final ComparableImage otherImageData = (ComparableImage) other;
@@ -87,7 +87,7 @@ public abstract class ComparableImage implements ComparableItem
         int absDiff = countDifferingPixels(Image, otherImage);
         double relDiff = (double) absDiff / totalPixels;
         ThresholdData threshold =
-                thresholds.isFieldRegistered(category(), Name) ? thresholds.getThreshold(category(), Name) : DEFAULT_IMAGE_THRESHOLD;
+                fieldConfig.isFieldRegistered(category(), Name) ? fieldConfig.getThreshold(category(), Name) : DEFAULT_IMAGE_THRESHOLD;
 
         if(hasDiff(absDiff, relDiff, threshold))
         {

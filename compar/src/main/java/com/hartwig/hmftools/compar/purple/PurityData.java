@@ -14,7 +14,7 @@ import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.common.DiffThresholds;
+import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 
@@ -89,28 +89,28 @@ public class PurityData implements ComparableItem
 
     @Override
     public Mismatch findMismatch(
-            final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds, final boolean includeMatches)
+            final ComparableItem other, final MatchLevel matchLevel, final FieldConfig fieldConfig, final boolean includeMatches)
     {
         final PurityData otherPurity = (PurityData) other;
 
         final List<String> diffs = Lists.newArrayList();
 
-        checkDiff(diffs, FLD_PURITY, Purity.bestFit().purity(), otherPurity.Purity.bestFit().purity(), category(), thresholds);
-        checkDiff(diffs, FLD_PLOIDY, Purity.bestFit().ploidy(), otherPurity.Purity.bestFit().ploidy(), category(), thresholds);
+        checkDiff(diffs, FLD_PURITY, Purity.bestFit().purity(), otherPurity.Purity.bestFit().purity(), category(), fieldConfig);
+        checkDiff(diffs, FLD_PLOIDY, Purity.bestFit().ploidy(), otherPurity.Purity.bestFit().ploidy(), category(), fieldConfig);
 
-        checkDiff(diffs, FLD_CONTAMINATION, Purity.qc().contamination(), otherPurity.Purity.qc().contamination(), category(), thresholds);
+        checkDiff(diffs, FLD_CONTAMINATION, Purity.qc().contamination(), otherPurity.Purity.qc().contamination(), category(), fieldConfig);
 
-        checkDiff(diffs, FLD_TMB, Purity.tumorMutationalBurdenPerMb(), otherPurity.Purity.tumorMutationalBurdenPerMb(), category(), thresholds);
-        checkDiff(diffs, FLD_MS_INDELS, Purity.microsatelliteIndelsPerMb(), otherPurity.Purity.microsatelliteIndelsPerMb(), category(), thresholds);
-        checkDiff(diffs, FLD_TML, Purity.tumorMutationalLoad(), otherPurity.Purity.tumorMutationalLoad(), category(), thresholds);
+        checkDiff(diffs, FLD_TMB, Purity.tumorMutationalBurdenPerMb(), otherPurity.Purity.tumorMutationalBurdenPerMb(), category(), fieldConfig);
+        checkDiff(diffs, FLD_MS_INDELS, Purity.microsatelliteIndelsPerMb(), otherPurity.Purity.microsatelliteIndelsPerMb(), category(), fieldConfig);
+        checkDiff(diffs, FLD_TML, Purity.tumorMutationalLoad(), otherPurity.Purity.tumorMutationalLoad(), category(), fieldConfig);
 
-        checkDiff(diffs, FLD_CN_SEGS, Purity.qc().copyNumberSegments(), otherPurity.Purity.qc().copyNumberSegments(), category(), thresholds);
+        checkDiff(diffs, FLD_CN_SEGS, Purity.qc().copyNumberSegments(), otherPurity.Purity.qc().copyNumberSegments(), category(), fieldConfig);
 
         checkDiff(
                 diffs, FLD_UNS_CN_SEGS,
-                Purity.qc().unsupportedCopyNumberSegments(), otherPurity.Purity.qc().unsupportedCopyNumberSegments(), category(), thresholds);
+                Purity.qc().unsupportedCopyNumberSegments(), otherPurity.Purity.qc().unsupportedCopyNumberSegments(), category(), fieldConfig);
 
-        checkDiff(diffs, FLD_SV_TMB, Purity.svTumorMutationalBurden(), otherPurity.Purity.svTumorMutationalBurden(), category(), thresholds);
+        checkDiff(diffs, FLD_SV_TMB, Purity.svTumorMutationalBurden(), otherPurity.Purity.svTumorMutationalBurden(), category(), fieldConfig);
 
         checkDiff(diffs, FLD_QC_STATUS, qcStatus(Purity.qc().status()), qcStatus(otherPurity.Purity.qc().status()));
 
@@ -132,7 +132,7 @@ public class PurityData implements ComparableItem
                 diffs, FLD_TML_STATUS,
                 Purity.tumorMutationalLoadStatus().toString(), otherPurity.Purity.tumorMutationalLoadStatus().toString());
 
-        checkDiff(diffs, FLD_TINC_LEVEL, Purity.qc().tincLevel(), otherPurity.Purity.qc().tincLevel(), category(), thresholds);
+        checkDiff(diffs, FLD_TINC_LEVEL, Purity.qc().tincLevel(), otherPurity.Purity.qc().tincLevel(), category(), fieldConfig);
 
         return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches);
     }

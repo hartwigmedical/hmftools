@@ -3,7 +3,7 @@ package com.hartwig.hmftools.compar.common;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
-import static com.hartwig.hmftools.compar.common.DiffThresholds.DEFAULT_DECIMAL_THRESHOLD;
+import static com.hartwig.hmftools.compar.common.FieldConfig.DEFAULT_DECIMAL_THRESHOLD;
 
 import java.util.List;
 import java.util.Set;
@@ -15,14 +15,14 @@ public final class DiffFunctions
     public static final String FILTER_DIFF = "filter";
 
     public static boolean checkDiff(final List<String> diffs, final String name, long value1, long value2, final CategoryType category,
-            final DiffThresholds thresholds)
+            final FieldConfig fieldConfig)
     {
-        if(!thresholds.isFieldRegistered(category, name))
+        if(!fieldConfig.isFieldRegistered(category, name))
         {
             return checkDiff(diffs, name, value1, value2);
         }
 
-        if(thresholds.hasDifference(category, name, value1, value2))
+        if(fieldConfig.hasDifference(category, name, value1, value2))
         {
             diffs.add(format("%s(%d/%d)", name, value1, value2));
             return true;
@@ -32,10 +32,10 @@ public final class DiffFunctions
     }
 
     public static boolean checkDiff(final List<String> diffs, final String name, double value1, double value2, final CategoryType category,
-            final DiffThresholds thresholds)
+            final FieldConfig fieldConfig)
     {
-        if((!thresholds.isFieldRegistered(category, name) && DEFAULT_DECIMAL_THRESHOLD.hasDiff(value1, value2))
-                || thresholds.hasDifference(category, name, value1, value2))
+        if((!fieldConfig.isFieldRegistered(category, name) && DEFAULT_DECIMAL_THRESHOLD.hasDiff(value1, value2))
+                || fieldConfig.hasDifference(category, name, value1, value2))
         {
             diffs.add(format("%s(%.3f/%.3f)", name, value1, value2));
             return true;

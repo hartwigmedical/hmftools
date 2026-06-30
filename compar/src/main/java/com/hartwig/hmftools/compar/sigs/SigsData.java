@@ -14,7 +14,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.sigs.SignatureAllocation;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.common.CategoryType;
-import com.hartwig.hmftools.compar.common.DiffThresholds;
+import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 
@@ -58,14 +58,14 @@ public record SigsData(SignatureAllocation SignatureAllocation) implements Compa
 
 
     @Override
-    public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds,
+    public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final FieldConfig fieldConfig,
             final boolean includeMatches)
     {
         final SignatureAllocation otherData = ((SigsData) other).SignatureAllocation;
 
         final List<String> diffs = Lists.newArrayList();
 
-        checkDiff(diffs, FLD_PERCENT, SignatureAllocation.percent(), otherData.percent(), category(), thresholds);
+        checkDiff(diffs, FLD_PERCENT, SignatureAllocation.percent(), otherData.percent(), category(), fieldConfig);
 
         return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches);
     }

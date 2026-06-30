@@ -13,7 +13,7 @@ import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.rna.RnaFusion;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.common.CategoryType;
-import com.hartwig.hmftools.compar.common.DiffThresholds;
+import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 
@@ -98,7 +98,7 @@ public record RnaFusionData(RnaFusion RnaFusion, BasePosition ComparisonPosition
 
     @Override
     public Mismatch findMismatch(
-            final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds, final boolean includeMatches)
+            final ComparableItem other, final MatchLevel matchLevel, final FieldConfig fieldConfig, final boolean includeMatches)
     {
         final RnaFusion ref = RnaFusion;
         final RnaFusion otherData = ((RnaFusionData) other).RnaFusion;
@@ -108,7 +108,7 @@ public record RnaFusionData(RnaFusion RnaFusion, BasePosition ComparisonPosition
         checkDiff(diffs, FLD_KNOWN_TYPE, ref.knownType().toString(), otherData.knownType().toString());
         checkDiff(diffs, FLD_JUNC_TYPE_UP, ref.junctionTypeUp(), otherData.junctionTypeUp());
         checkDiff(diffs, FLD_JUNC_TYPE_DOWN, ref.junctionTypeDown(), otherData.junctionTypeDown());
-        checkDiff(diffs, FLD_SPLIT_FRAGS, ref.splitFragments(), otherData.splitFragments(), category(), thresholds);
+        checkDiff(diffs, FLD_SPLIT_FRAGS, ref.splitFragments(), otherData.splitFragments(), category(), fieldConfig);
 
         return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches);
     }

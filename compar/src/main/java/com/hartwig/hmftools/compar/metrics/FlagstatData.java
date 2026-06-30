@@ -2,7 +2,6 @@ package com.hartwig.hmftools.compar.metrics;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.compar.common.CategoryType.TUMOR_FLAGSTAT;
 import static com.hartwig.hmftools.compar.common.CommonUtils.createMismatchFromDiffs;
 import static com.hartwig.hmftools.compar.common.DiffFunctions.checkDiff;
 import static com.hartwig.hmftools.compar.metrics.MetricsCommon.FLD_MAPPED_PROPORTION;
@@ -13,7 +12,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.metrics.BamFlagStats;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.common.CategoryType;
-import com.hartwig.hmftools.compar.common.DiffThresholds;
+import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 
@@ -59,13 +58,13 @@ public class FlagstatData implements ComparableItem
 
     @Override
     public Mismatch findMismatch(
-            final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds, final boolean includeMatches)
+            final ComparableItem other, final MatchLevel matchLevel, final FieldConfig fieldConfig, final boolean includeMatches)
     {
         final FlagstatData otherData = (FlagstatData) other;
 
         final List<String> diffs = Lists.newArrayList();
 
-        checkDiff(diffs, FLD_MAPPED_PROPORTION, mFlagstat.mappedProportion(), otherData.mFlagstat.mappedProportion(), category(), thresholds);
+        checkDiff(diffs, FLD_MAPPED_PROPORTION, mFlagstat.mappedProportion(), otherData.mFlagstat.mappedProportion(), category(), fieldConfig);
 
         return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches);
     }

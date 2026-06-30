@@ -14,25 +14,21 @@ import static com.hartwig.hmftools.compar.linx.FusionData.FLD_JUNCTION_COPY_NUMB
 import static com.hartwig.hmftools.compar.linx.FusionData.FLD_LIKELIHOOD;
 import static com.hartwig.hmftools.compar.linx.FusionData.FLD_PHASED;
 import static com.hartwig.hmftools.compar.linx.FusionData.FLD_REPORTED_TYPE;
-import static com.hartwig.hmftools.compar.linx.FusionData.FLD_TRANSCRIPT_DOWN;
-import static com.hartwig.hmftools.compar.linx.FusionData.FLD_TRANSCRIPT_UP;
 
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxFusion;
-import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.sv.StructuralVariantData;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.common.DiffThresholds;
+import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.Mismatch;
@@ -56,9 +52,9 @@ public class FusionComparer implements ItemComparer
     public CategoryType category() { return FUSION; }
 
     @Override
-    public void registerThresholds(final DiffThresholds thresholds)
+    public void registerThresholds(final FieldConfig fieldConfig)
     {
-        thresholds.addFieldThreshold(category(), FLD_JUNCTION_COPY_NUMBER, 0.5, 0.2);
+        fieldConfig.addFieldThreshold(category(), FLD_JUNCTION_COPY_NUMBER, 0.5, 0.2);
     }
 
     @Override

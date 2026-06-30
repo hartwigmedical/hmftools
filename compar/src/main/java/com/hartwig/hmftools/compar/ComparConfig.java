@@ -25,8 +25,6 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutput
 import static com.hartwig.hmftools.common.perf.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.compar.common.CategoryType.ALL_CATEGORIES;
-import static com.hartwig.hmftools.compar.common.CategoryType.DRIVER;
-import static com.hartwig.hmftools.compar.common.CategoryType.GENE_COPY_NUMBER;
 import static com.hartwig.hmftools.compar.common.CategoryType.LINX_CATEGORIES;
 import static com.hartwig.hmftools.compar.common.CategoryType.PANEL_CATEGORIES;
 import static com.hartwig.hmftools.compar.common.CategoryType.PURPLE_CATEGORIES;
@@ -58,7 +56,7 @@ import com.hartwig.hmftools.common.driver.panel.DriverGeneFile;
 import com.hartwig.hmftools.common.genome.refgenome.GenomeLiftoverCache;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.compar.common.CategoryType;
-import com.hartwig.hmftools.compar.common.DiffThresholds;
+import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.SourceData;
@@ -85,7 +83,7 @@ public class ComparConfig
     public final Set<String> AlternateTranscriptDriverGenes;
     public final boolean RestrictToDrivers;
 
-    public final DiffThresholds Thresholds;
+    public final FieldConfig FieldConfig;
 
     public final String OutputDir;
     public final String OutputId;
@@ -199,7 +197,7 @@ public class ComparConfig
 
         loadSampleIds(configBuilder);
 
-        Thresholds = new DiffThresholds();
+        FieldConfig = new FieldConfig();
 
         DriverGenes = Sets.newHashSet();
         AlternateTranscriptDriverGenes = Sets.newHashSet();
@@ -472,7 +470,7 @@ public class ComparConfig
         Threads = 0;
         WriteTypes = WriteType.DEFAULT_WRITE_TYPES;
 
-        Thresholds = new DiffThresholds();
+        FieldConfig = new FieldConfig();
         DriverGenes = Sets.newHashSet();
         IgnoreGenes = Collections.emptySet();
         AlternateTranscriptDriverGenes = Sets.newHashSet();

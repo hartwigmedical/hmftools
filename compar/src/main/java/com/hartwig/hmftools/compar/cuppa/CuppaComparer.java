@@ -17,7 +17,7 @@ import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.common.DiffThresholds;
+import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.Mismatch;
@@ -37,9 +37,9 @@ public class CuppaComparer implements ItemComparer
     public CategoryType category() { return CUPPA; }
 
     @Override
-    public void registerThresholds(final DiffThresholds thresholds)
+    public void registerThresholds(final FieldConfig fieldConfig)
     {
-        thresholds.addFieldThreshold(category(), FLD_PROBABILITY, 0.1, 0);
+        fieldConfig.addFieldThreshold(category(), FLD_PROBABILITY, 0.1, 0);
     }
 
     @Override

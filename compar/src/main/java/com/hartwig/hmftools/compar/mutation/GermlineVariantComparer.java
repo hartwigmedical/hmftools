@@ -17,7 +17,7 @@ import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.common.DiffThresholds;
+import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.Mismatch;
@@ -47,9 +47,9 @@ public class GermlineVariantComparer implements ItemComparer
     }
 
     @Override
-    public void registerThresholds(final DiffThresholds thresholds)
+    public void registerThresholds(final FieldConfig fieldConfig)
     {
-        VariantCommon.registerThresholds(category(), thresholds);
+        VariantCommon.registerThresholds(category(), fieldConfig);
     }
 
     @Override

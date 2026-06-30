@@ -30,7 +30,7 @@ import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.common.DiffThresholds;
+import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.Mismatch;
@@ -50,18 +50,18 @@ public class PurityComparer implements ItemComparer
     public CategoryType category() { return PURITY; }
 
     @Override
-    public void registerThresholds(final DiffThresholds thresholds)
+    public void registerThresholds(final FieldConfig fieldConfig)
     {
-        thresholds.addFieldThreshold(category(), FLD_PURITY, 0.04, 0);
-        thresholds.addFieldThreshold(category(), FLD_PLOIDY, 0.1, 0);
-        thresholds.addFieldThreshold(category(), FLD_CONTAMINATION, 0.005, 0);
-        thresholds.addFieldThreshold(category(), FLD_TMB, 0.1, 0.05);
-        thresholds.addFieldThreshold(category(), FLD_MS_INDELS, 0.1, 0.05);
-        thresholds.addFieldThreshold(category(), FLD_TML, 1, 0.05);
-        thresholds.addFieldThreshold(category(), FLD_CN_SEGS, 5, 0.2);
-        thresholds.addFieldThreshold(category(), FLD_UNS_CN_SEGS, 5, 0.2);
-        thresholds.addFieldThreshold(category(), FLD_SV_TMB, 5, 0.05);
-        thresholds.addFieldThreshold(category(), FLD_TINC_LEVEL, 0.1, 0);
+        fieldConfig.addFieldThreshold(category(), FLD_PURITY, 0.04, 0);
+        fieldConfig.addFieldThreshold(category(), FLD_PLOIDY, 0.1, 0);
+        fieldConfig.addFieldThreshold(category(), FLD_CONTAMINATION, 0.005, 0);
+        fieldConfig.addFieldThreshold(category(), FLD_TMB, 0.1, 0.05);
+        fieldConfig.addFieldThreshold(category(), FLD_MS_INDELS, 0.1, 0.05);
+        fieldConfig.addFieldThreshold(category(), FLD_TML, 1, 0.05);
+        fieldConfig.addFieldThreshold(category(), FLD_CN_SEGS, 5, 0.2);
+        fieldConfig.addFieldThreshold(category(), FLD_UNS_CN_SEGS, 5, 0.2);
+        fieldConfig.addFieldThreshold(category(), FLD_SV_TMB, 5, 0.05);
+        fieldConfig.addFieldThreshold(category(), FLD_TINC_LEVEL, 0.1, 0);
     }
 
     @Override

@@ -22,7 +22,7 @@ public class CommonUtilsTest
     @Test
     public void emptyComparison()
     {
-        DiffThresholds diffThresholds = new DiffThresholds();
+        FieldConfig fieldConfig = new FieldConfig();
 
         List<Mismatch> mismatches = new ArrayList<>();
         List<ComparableItem> refItems = new ArrayList<>();
@@ -30,7 +30,7 @@ public class CommonUtilsTest
         MatchLevel matchLevel = MatchLevel.DETAILED;
         boolean includeMatches = false;
 
-        CommonUtils.compareItems(mismatches, matchLevel, diffThresholds, includeMatches, refItems, newItems);
+        CommonUtils.compareItems(mismatches, matchLevel, fieldConfig, includeMatches, refItems, newItems);
 
         assertTrue(mismatches.isEmpty());
     }

@@ -16,7 +16,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.GermlineAmpDel;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.common.DiffThresholds;
+import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 
@@ -75,7 +75,7 @@ public class GermlineAmpDelData implements ComparableItem
 
     @Override
     public Mismatch findMismatch(
-            final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds, final boolean includeMatches)
+            final ComparableItem other, final MatchLevel matchLevel, final FieldConfig fieldConfig, final boolean includeMatches)
     {
         final GermlineAmpDelData otherDeletion = (GermlineAmpDelData) other;
 
@@ -84,8 +84,8 @@ public class GermlineAmpDelData implements ComparableItem
         checkDiff(diffs, FLD_REPORTED, AmpDelData.Reported == REPORTED, otherDeletion.AmpDelData.Reported == REPORTED);
         checkDiff(diffs, FLD_GERMLINE_STATUS, AmpDelData.NormalStatus.toString(), otherDeletion.AmpDelData.NormalStatus.toString());
         checkDiff(diffs, FLD_TUMOR_STATUS, AmpDelData.TumorStatus.toString(), otherDeletion.AmpDelData.TumorStatus.toString());
-        checkDiff(diffs, FLD_GERMLINE_CN, AmpDelData.GermlineCopyNumber, otherDeletion.AmpDelData.GermlineCopyNumber, category(), thresholds);
-        checkDiff(diffs, FLD_TUMOR_CN, AmpDelData.TumorCopyNumber, otherDeletion.AmpDelData.TumorCopyNumber, category(), thresholds);
+        checkDiff(diffs, FLD_GERMLINE_CN, AmpDelData.GermlineCopyNumber, otherDeletion.AmpDelData.GermlineCopyNumber, category(), fieldConfig);
+        checkDiff(diffs, FLD_TUMOR_CN, AmpDelData.TumorCopyNumber, otherDeletion.AmpDelData.TumorCopyNumber, category(), fieldConfig);
         checkDiff(diffs, FLD_CHROMOSOME, mComparisonChromosome, otherDeletion.mComparisonChromosome);
         checkDiff(diffs, FLD_CHROMOSOME_BAND, AmpDelData.ChromosomeBand, otherDeletion.AmpDelData.ChromosomeBand);
 

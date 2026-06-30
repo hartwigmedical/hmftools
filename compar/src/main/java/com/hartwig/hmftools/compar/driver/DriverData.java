@@ -10,16 +10,13 @@ import static com.hartwig.hmftools.compar.common.DiffFunctions.checkDiff;
 
 import java.util.List;
 
-import javax.annotation.Nullable;
-
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.driver.DriverCatalog;
-import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.PurplePurity;
 import com.hartwig.hmftools.common.purple.ReportedStatus;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.common.DiffThresholds;
+import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 
@@ -110,7 +107,7 @@ public class DriverData implements ComparableItem
 
     @Override
     public Mismatch findMismatch(
-            final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds, final boolean includeMatches)
+            final ComparableItem other, final MatchLevel matchLevel, final FieldConfig fieldConfig, final boolean includeMatches)
     {
         final DriverData otherDriver = (DriverData)other;
 
@@ -120,9 +117,9 @@ public class DriverData implements ComparableItem
                 diffs, FLD_LIKE_METHOD,
                 DriverCatalog.likelihoodMethod().toString(), otherDriver.DriverCatalog.likelihoodMethod().toString());
 
-        checkDiff(diffs, FLD_LIKELIHOOD, DriverCatalog.driverLikelihood(), otherDriver.DriverCatalog.driverLikelihood(), category(), thresholds);
-        checkDiff(diffs, FLD_MIN_COPY_NUMBER, DriverCatalog.minCopyNumber(), otherDriver.DriverCatalog.minCopyNumber(), category(), thresholds);
-        checkDiff(diffs, FLD_MAX_COPY_NUMBER, DriverCatalog.maxCopyNumber(), otherDriver.DriverCatalog.maxCopyNumber(), category(), thresholds);
+        checkDiff(diffs, FLD_LIKELIHOOD, DriverCatalog.driverLikelihood(), otherDriver.DriverCatalog.driverLikelihood(), category(), fieldConfig);
+        checkDiff(diffs, FLD_MIN_COPY_NUMBER, DriverCatalog.minCopyNumber(), otherDriver.DriverCatalog.minCopyNumber(), category(), fieldConfig);
+        checkDiff(diffs, FLD_MAX_COPY_NUMBER, DriverCatalog.maxCopyNumber(), otherDriver.DriverCatalog.maxCopyNumber(), category(), fieldConfig);
         checkDiff(diffs, FLD_CHROMOSOME, mComparisonChromosome, otherDriver.mComparisonChromosome);
         checkDiff(diffs, FLD_CHROMOSOME_BAND, DriverCatalog.chromosomeBand(), otherDriver.DriverCatalog.chromosomeBand());
 

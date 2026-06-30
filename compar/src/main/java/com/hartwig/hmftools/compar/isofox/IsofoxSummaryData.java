@@ -14,7 +14,7 @@ import com.hartwig.hmftools.common.rna.RnaQcFilter;
 import com.hartwig.hmftools.common.rna.RnaStatistics;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.common.CategoryType;
-import com.hartwig.hmftools.compar.common.DiffThresholds;
+import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 
@@ -82,7 +82,7 @@ public record IsofoxSummaryData(RnaStatistics RnaStatistics) implements Comparab
 
     @Override
     public Mismatch findMismatch(
-            final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds, final boolean includeMatches)
+            final ComparableItem other, final MatchLevel matchLevel, final FieldConfig fieldConfig, final boolean includeMatches)
     {
         final RnaStatistics ref = RnaStatistics;
         final RnaStatistics otherData = ((IsofoxSummaryData) other).RnaStatistics;
@@ -90,20 +90,20 @@ public record IsofoxSummaryData(RnaStatistics RnaStatistics) implements Comparab
         final List<String> diffs = Lists.newArrayList();
 
         checkDiff(diffs, FLD_QC_STATUS, qcStatus(ref.qcStatus()), qcStatus(otherData.qcStatus()));
-        checkDiff(diffs, FLD_TOTAL_FRAGS, ref.totalFragments(), otherData.totalFragments(), category(), thresholds);
-        checkDiff(diffs, FLD_DUPLICATE_FRAGS, ref.duplicateFragments(), otherData.duplicateFragments(), category(), thresholds);
-        checkDiff(diffs, FLD_SPLICED_FRAG_PERC, ref.splicedFragmentPerc(), otherData.splicedFragmentPerc(), category(), thresholds);
-        checkDiff(diffs, FLD_UNSPLICED_FRAG_PERC, ref.unsplicedFragmentPerc(), otherData.unsplicedFragmentPerc(), category(), thresholds);
-        checkDiff(diffs, FLD_ALT_FRAG_PERC, ref.altFragmentPerc(), otherData.altFragmentPerc(), category(), thresholds);
-        checkDiff(diffs, FLD_CHIMERIC_FRAG_PERC, ref.chimericFragmentPerc(), otherData.chimericFragmentPerc(), category(), thresholds);
-        checkDiff(diffs, FLD_SPLICED_GENE_COUNT, ref.splicedGeneCount(), otherData.splicedGeneCount(), category(), thresholds);
+        checkDiff(diffs, FLD_TOTAL_FRAGS, ref.totalFragments(), otherData.totalFragments(), category(), fieldConfig);
+        checkDiff(diffs, FLD_DUPLICATE_FRAGS, ref.duplicateFragments(), otherData.duplicateFragments(), category(), fieldConfig);
+        checkDiff(diffs, FLD_SPLICED_FRAG_PERC, ref.splicedFragmentPerc(), otherData.splicedFragmentPerc(), category(), fieldConfig);
+        checkDiff(diffs, FLD_UNSPLICED_FRAG_PERC, ref.unsplicedFragmentPerc(), otherData.unsplicedFragmentPerc(), category(), fieldConfig);
+        checkDiff(diffs, FLD_ALT_FRAG_PERC, ref.altFragmentPerc(), otherData.altFragmentPerc(), category(), fieldConfig);
+        checkDiff(diffs, FLD_CHIMERIC_FRAG_PERC, ref.chimericFragmentPerc(), otherData.chimericFragmentPerc(), category(), fieldConfig);
+        checkDiff(diffs, FLD_SPLICED_GENE_COUNT, ref.splicedGeneCount(), otherData.splicedGeneCount(), category(), fieldConfig);
         checkDiff(diffs, FLD_READ_LENGTH, ref.readLength(), otherData.readLength());
-        checkDiff(diffs, FLD_FRAG_LENGTH_5TH, ref.fragmentLength5thPercent(), otherData.fragmentLength5thPercent(), category(), thresholds);
-        checkDiff(diffs, FLD_FRAG_LENGTH_50TH, ref.fragmentLength50thPercent(), otherData.fragmentLength50thPercent(), category(), thresholds);
-        checkDiff(diffs, FLD_FRAG_LENGTH_95TH, ref.fragmentLength95thPercent(), otherData.fragmentLength95thPercent(), category(), thresholds);
-        checkDiff(diffs, FLD_ENRICHED_GENE_PERC, ref.enrichedGenePercent(), otherData.enrichedGenePercent(), category(), thresholds);
-        checkDiff(diffs, FLD_MEDIAN_GC_RATIO, ref.medianGCRatio(), otherData.medianGCRatio(), category(), thresholds);
-        checkDiff(diffs, FLD_FORWARD_STRAND_PERC, ref.forwardStrandPercent(), otherData.forwardStrandPercent(), category(), thresholds);
+        checkDiff(diffs, FLD_FRAG_LENGTH_5TH, ref.fragmentLength5thPercent(), otherData.fragmentLength5thPercent(), category(), fieldConfig);
+        checkDiff(diffs, FLD_FRAG_LENGTH_50TH, ref.fragmentLength50thPercent(), otherData.fragmentLength50thPercent(), category(), fieldConfig);
+        checkDiff(diffs, FLD_FRAG_LENGTH_95TH, ref.fragmentLength95thPercent(), otherData.fragmentLength95thPercent(), category(), fieldConfig);
+        checkDiff(diffs, FLD_ENRICHED_GENE_PERC, ref.enrichedGenePercent(), otherData.enrichedGenePercent(), category(), fieldConfig);
+        checkDiff(diffs, FLD_MEDIAN_GC_RATIO, ref.medianGCRatio(), otherData.medianGCRatio(), category(), fieldConfig);
+        checkDiff(diffs, FLD_FORWARD_STRAND_PERC, ref.forwardStrandPercent(), otherData.forwardStrandPercent(), category(), fieldConfig);
 
         return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches);
     }

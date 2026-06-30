@@ -24,7 +24,7 @@ import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.common.DiffThresholds;
+import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.Mismatch;
@@ -49,21 +49,21 @@ public class LilacComparer implements ItemComparer
     public CategoryType category() { return LILAC; }
 
     @Override
-    public void registerThresholds(final DiffThresholds thresholds)
+    public void registerThresholds(final FieldConfig fieldConfig)
     {
-        thresholds.addFieldThreshold(category(), LilacAllele.FLD_REF_TOTAL, FRAG_DIFF_ABS, FRAG_DIFF_PERC);
-        thresholds.addFieldThreshold(category(), LilacAllele.FLD_TUMOR_TOTAL, FRAG_DIFF_ABS, FRAG_DIFF_PERC);
-        thresholds.addFieldThreshold(category(), FLD_TOTAL_FRAGS, FRAG_DIFF_ABS, FRAG_DIFF_PERC);
-        thresholds.addFieldThreshold(category(), FLD_FIT_FRAGS, FRAG_DIFF_ABS, FRAG_DIFF_PERC);
-        thresholds.addFieldThreshold(category(), FLD_DISC_ALIGN_FRAGS, FRAG_DIFF_ABS, FRAG_DIFF_PERC);
-        thresholds.addFieldThreshold(category(), FLD_DISC_INDELS, FRAG_DIFF_ABS, FRAG_DIFF_PERC);
+        fieldConfig.addFieldThreshold(category(), LilacAllele.FLD_REF_TOTAL, FRAG_DIFF_ABS, FRAG_DIFF_PERC);
+        fieldConfig.addFieldThreshold(category(), LilacAllele.FLD_TUMOR_TOTAL, FRAG_DIFF_ABS, FRAG_DIFF_PERC);
+        fieldConfig.addFieldThreshold(category(), FLD_TOTAL_FRAGS, FRAG_DIFF_ABS, FRAG_DIFF_PERC);
+        fieldConfig.addFieldThreshold(category(), FLD_FIT_FRAGS, FRAG_DIFF_ABS, FRAG_DIFF_PERC);
+        fieldConfig.addFieldThreshold(category(), FLD_DISC_ALIGN_FRAGS, FRAG_DIFF_ABS, FRAG_DIFF_PERC);
+        fieldConfig.addFieldThreshold(category(), FLD_DISC_INDELS, FRAG_DIFF_ABS, FRAG_DIFF_PERC);
 
-        thresholds.addFieldThreshold(category(), FLD_MISSENSE, VARIANT_DIFF_ABS, VARIANT_DIFF_PERC);
-        thresholds.addFieldThreshold(category(), FLD_NFS, VARIANT_DIFF_ABS, VARIANT_DIFF_PERC);
-        thresholds.addFieldThreshold(category(), FLD_SPLICE, VARIANT_DIFF_ABS, VARIANT_DIFF_PERC);
-        thresholds.addFieldThreshold(category(), LilacAllele.FLD_INDEL, VARIANT_DIFF_ABS, VARIANT_DIFF_PERC);
-        thresholds.addFieldThreshold(category(), LilacAllele.FLD_SYNON, VARIANT_DIFF_ABS, VARIANT_DIFF_PERC);
-        thresholds.addFieldThreshold(category(), LilacAllele.FLD_TUMOR_CN, 0.5, 0.15);
+        fieldConfig.addFieldThreshold(category(), FLD_MISSENSE, VARIANT_DIFF_ABS, VARIANT_DIFF_PERC);
+        fieldConfig.addFieldThreshold(category(), FLD_NFS, VARIANT_DIFF_ABS, VARIANT_DIFF_PERC);
+        fieldConfig.addFieldThreshold(category(), FLD_SPLICE, VARIANT_DIFF_ABS, VARIANT_DIFF_PERC);
+        fieldConfig.addFieldThreshold(category(), LilacAllele.FLD_INDEL, VARIANT_DIFF_ABS, VARIANT_DIFF_PERC);
+        fieldConfig.addFieldThreshold(category(), LilacAllele.FLD_SYNON, VARIANT_DIFF_ABS, VARIANT_DIFF_PERC);
+        fieldConfig.addFieldThreshold(category(), LilacAllele.FLD_TUMOR_CN, 0.5, 0.15);
     }
 
     @Override

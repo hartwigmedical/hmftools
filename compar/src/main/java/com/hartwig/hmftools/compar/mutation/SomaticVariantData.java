@@ -52,7 +52,7 @@ import com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.common.DiffThresholds;
+import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.SourceType;
@@ -215,25 +215,25 @@ public class SomaticVariantData implements ComparableItem
     public int comparisonPosition() { return mComparisonPosition; }
 
     @Override
-    public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds,
+    public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final FieldConfig fieldConfig,
             final boolean includeMatches)
     {
         final SomaticVariantData otherVar = (SomaticVariantData) other;
-        final List<String> diffs = findDiffs(otherVar, thresholds);
+        final List<String> diffs = findDiffs(otherVar, fieldConfig);
         return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches);
     }
 
-    private List<String> findDiffs(final SomaticVariantData otherVar, final DiffThresholds thresholds)
+    private List<String> findDiffs(final SomaticVariantData otherVar, final FieldConfig fieldConfig)
     {
         final List<String> diffs = Lists.newArrayList();
 
         if(Qual != NO_QUAL_PRESENT && otherVar.Qual != NO_QUAL_PRESENT)
-            checkDiff(diffs, FLD_QUAL, Qual, otherVar.Qual, category(), thresholds);
+            checkDiff(diffs, FLD_QUAL, Qual, otherVar.Qual, category(), fieldConfig);
 
         checkDiff(diffs, FLD_REPORTED, Reported, otherVar.Reported);
         checkDiff(diffs, FLD_TIER, Tier.toString(), otherVar.Tier.toString());
-        checkDiff(diffs, FLD_TUMOR_SUPPORTING_READ_COUNT, TumorSupportingReadCount, otherVar.TumorSupportingReadCount, category(), thresholds);
-        checkDiff(diffs, FLD_TUMOR_TOTAL_READ_COUNT, TumorTotalReadCount, otherVar.TumorTotalReadCount, category(), thresholds);
+        checkDiff(diffs, FLD_TUMOR_SUPPORTING_READ_COUNT, TumorSupportingReadCount, otherVar.TumorSupportingReadCount, category(), fieldConfig);
+        checkDiff(diffs, FLD_TUMOR_TOTAL_READ_COUNT, TumorTotalReadCount, otherVar.TumorTotalReadCount, category(), fieldConfig);
 
         if(canComparePaveFields(otherVar))
         {
@@ -249,11 +249,11 @@ public class SomaticVariantData implements ComparableItem
         {
             checkDiff(diffs, FLD_HOTSPOT, HotspotStatus.toString(), otherVar.HotspotStatus.toString());
             checkDiff(diffs, FLD_BIALLELIC, Biallelic, otherVar.Biallelic);
-            checkDiff(diffs, FLD_BIALLELIC_PROB, BiallelicProbability, otherVar.BiallelicProbability, category(), thresholds);
+            checkDiff(diffs, FLD_BIALLELIC_PROB, BiallelicProbability, otherVar.BiallelicProbability, category(), fieldConfig);
             checkDiff(diffs, FLD_OTHER_REPORTED, OtherReportedEffects, otherVar.OtherReportedEffects);
-            checkDiff(diffs, FLD_SUBCLONAL_LIKELIHOOD, SubclonalLikelihood, otherVar.SubclonalLikelihood, category(), thresholds);
-            checkDiff(diffs, FLD_VARIANT_COPY_NUMBER, VariantCopyNumber, otherVar.VariantCopyNumber, category(), thresholds);
-            checkDiff(diffs, FLD_PURITY_ADJUSTED_VAF, PurityAdjustedVaf, otherVar.PurityAdjustedVaf, category(), thresholds);
+            checkDiff(diffs, FLD_SUBCLONAL_LIKELIHOOD, SubclonalLikelihood, otherVar.SubclonalLikelihood, category(), fieldConfig);
+            checkDiff(diffs, FLD_VARIANT_COPY_NUMBER, VariantCopyNumber, otherVar.VariantCopyNumber, category(), fieldConfig);
+            checkDiff(diffs, FLD_PURITY_ADJUSTED_VAF, PurityAdjustedVaf, otherVar.PurityAdjustedVaf, category(), fieldConfig);
         }
 
         checkDiff(diffs, FLD_LPS, HasLPS, otherVar.HasLPS);

@@ -20,7 +20,7 @@ import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.common.DiffThresholds;
+import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.Mismatch;
@@ -40,10 +40,10 @@ public class GermlineAmpDelComparer implements ItemComparer
     public CategoryType category() { return GERMLINE_AMP_DEL; }
 
     @Override
-    public void registerThresholds(final DiffThresholds thresholds)
+    public void registerThresholds(final FieldConfig fieldConfig)
     {
-        thresholds.addFieldThreshold(category(), FLD_GERMLINE_CN, 0.2, 0.1);
-        thresholds.addFieldThreshold(category(), FLD_TUMOR_CN, 0.2, 0.1);
+        fieldConfig.addFieldThreshold(category(), FLD_GERMLINE_CN, 0.2, 0.1);
+        fieldConfig.addFieldThreshold(category(), FLD_TUMOR_CN, 0.2, 0.1);
     }
 
     @Override

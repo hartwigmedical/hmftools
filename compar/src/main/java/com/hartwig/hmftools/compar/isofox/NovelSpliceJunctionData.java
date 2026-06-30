@@ -16,7 +16,7 @@ import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.rna.NovelSpliceJunction;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.common.CategoryType;
-import com.hartwig.hmftools.compar.common.DiffThresholds;
+import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 
@@ -95,7 +95,7 @@ public record NovelSpliceJunctionData(NovelSpliceJunction NovelSpliceJunction, B
     }
 
     @Override
-    public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds,
+    public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final FieldConfig fieldConfig,
             final boolean includeMatches)
     {
         final NovelSpliceJunction ref = NovelSpliceJunction;
@@ -104,7 +104,7 @@ public record NovelSpliceJunctionData(NovelSpliceJunction NovelSpliceJunction, B
         final List<String> diffs = Lists.newArrayList();
 
         checkDiff(diffs, FLD_ALT_SJ_TYPE, ref.type().toString(), otherData.type().toString());
-        checkDiff(diffs, FLD_FRAG_COUNT, ref.fragmentCount(), otherData.fragmentCount(), category(), thresholds);
+        checkDiff(diffs, FLD_FRAG_COUNT, ref.fragmentCount(), otherData.fragmentCount(), category(), fieldConfig);
         checkDiff(diffs, FLD_REGION_START, ref.regionStart().toString(), otherData.regionStart().toString());
         checkDiff(diffs, FLD_REGION_END, ref.regionEnd().toString(), otherData.regionEnd().toString());
 

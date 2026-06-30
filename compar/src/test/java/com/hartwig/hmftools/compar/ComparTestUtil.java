@@ -11,7 +11,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.compar.common.DiffThresholds;
+import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.MismatchType;
@@ -30,13 +30,13 @@ public class ComparTestUtil
     }
 
     public static void assertSingleFieldMismatch(final String field, final ComparableItem refVictim, final ComparableItem newVictim,
-            final MatchLevel matchLevel, final DiffThresholds diffThresholds, final MismatchType expectedMismatchType)
+            final MatchLevel matchLevel, final FieldConfig fieldConfig, final MismatchType expectedMismatchType)
     {
         String testMessage = "Test mismatch in field '" + field + "' at match level '" + matchLevel + "'";
         assertTrue(testMessage, refVictim.matches(newVictim));
         assertTrue(testMessage, newVictim.matches(refVictim));
 
-        Mismatch detailedMismatch = refVictim.findMismatch(newVictim, matchLevel, diffThresholds, false);
+        Mismatch detailedMismatch = refVictim.findMismatch(newVictim, matchLevel, fieldConfig, false);
 
         assertEquals(testMessage, expectedMismatchType, detailedMismatch.Type);
         assertEquals(testMessage, refVictim, detailedMismatch.OldItem);
@@ -46,7 +46,7 @@ public class ComparTestUtil
     }
 
     public static void assertValueDifferencesAsExpected(final ComparableItem refVictim, final ComparableItem newVictim,
-            final MatchLevel matchLevel, final DiffThresholds diffThresholds, final Set<String> expectedFieldNames,
+            final MatchLevel matchLevel, final FieldConfig fieldConfig, final Set<String> expectedFieldNames,
             final boolean expectIndexMatch)
     {
         if(expectIndexMatch)
@@ -58,7 +58,7 @@ public class ComparTestUtil
             assertFalse("Test ref.matches(new) is False", refVictim.matches(newVictim));
         }
 
-        Mismatch mismatch = refVictim.findMismatch(newVictim, matchLevel, diffThresholds, false);
+        Mismatch mismatch = refVictim.findMismatch(newVictim, matchLevel, fieldConfig, false);
 
         assertEquals(MismatchType.VALUE, mismatch.Type);
         assertEquals(refVictim, mismatch.OldItem);

@@ -21,7 +21,7 @@ import java.util.function.Consumer;
 import com.hartwig.hmftools.common.hla.LilacAllele;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItemTest;
-import com.hartwig.hmftools.compar.common.DiffThresholds;
+import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.MismatchType;
 
@@ -100,12 +100,12 @@ public class LilacDataTest extends ComparableItemTest<LilacData, LilacComparer, 
 
     private void assertFullyDifferentAsExpected(final Set<String> expectedFieldNames, final MatchLevel matchLevel)
     {
-        DiffThresholds diffThresholds = createDefaultThresholds();
+        FieldConfig fieldConfig = createDefaultThresholds();
 
         LilacData refVictim = builder.create();
         LilacData newVictim = builder.createWithAlternateDefaults();
         boolean expectIndexMatch = nameToAlternateIndexInitializer.isEmpty();
-        assertValueDifferencesAsExpected(refVictim, newVictim, matchLevel, diffThresholds, expectedFieldNames, expectIndexMatch);
+        assertValueDifferencesAsExpected(refVictim, newVictim, matchLevel, fieldConfig, expectedFieldNames, expectIndexMatch);
     }
 
     @Test
@@ -124,7 +124,7 @@ public class LilacDataTest extends ComparableItemTest<LilacData, LilacComparer, 
         );
         Set<String> detailedOnlyFields = Set.of("A*01:01:RefTotal", "A*01:01:SomaticSynonymous", "A*01:01:TumorTotal");
 
-        DiffThresholds diffThresholds = createDefaultThresholds();
+        FieldConfig fieldConfig = createDefaultThresholds();
         for(Map.Entry<String, Consumer<TestLilacAlleleBuilder>> entry : fieldToAlternateAlleleValueInitializer.entrySet())
         {
             String field = entry.getKey();
@@ -139,14 +139,14 @@ public class LilacDataTest extends ComparableItemTest<LilacData, LilacComparer, 
                 )
             );
 
-            assertSingleFieldMismatch(field, refVictim, newVictim, MatchLevel.DETAILED, diffThresholds, MismatchType.VALUE);
+            assertSingleFieldMismatch(field, refVictim, newVictim, MatchLevel.DETAILED, fieldConfig, MismatchType.VALUE);
             if(detailedOnlyFields.contains(field))
             {
-                assertNull("", refVictim.findMismatch(newVictim, MatchLevel.REPORTABLE, diffThresholds, false));
+                assertNull("", refVictim.findMismatch(newVictim, MatchLevel.REPORTABLE, fieldConfig, false));
             }
             else
             {
-                assertSingleFieldMismatch(field, refVictim, newVictim, MatchLevel.REPORTABLE, diffThresholds, MismatchType.VALUE);
+                assertSingleFieldMismatch(field, refVictim, newVictim, MatchLevel.REPORTABLE, fieldConfig, MismatchType.VALUE);
             }
         }
     }

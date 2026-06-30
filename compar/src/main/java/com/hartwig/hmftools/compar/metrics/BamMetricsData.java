@@ -12,7 +12,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.metrics.BamMetricSummary;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.common.CategoryType;
-import com.hartwig.hmftools.compar.common.DiffThresholds;
+import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 
@@ -61,18 +61,18 @@ public class BamMetricsData implements ComparableItem
 
     @Override
     public Mismatch findMismatch(
-            final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds, final boolean includeMatches)
+            final ComparableItem other, final MatchLevel matchLevel, final FieldConfig fieldConfig, final boolean includeMatches)
     {
         final BamMetricsData otherData = (BamMetricsData) other;
 
         final List<String> diffs = Lists.newArrayList();
 
-        checkDiff(diffs, FLD_DUPLICATE_PERCENTAGE, mMetrics.duplicatePercent(), otherData.mMetrics.duplicatePercent(), category(), thresholds);
+        checkDiff(diffs, FLD_DUPLICATE_PERCENTAGE, mMetrics.duplicatePercent(), otherData.mMetrics.duplicatePercent(), category(), fieldConfig);
 
         for(Integer coverage : mComparisonPercentages)
         {
             String coverageStr = format("Percentage%dX", coverage);
-            checkDiff(diffs, coverageStr, mMetrics.coveragePercent(coverage), otherData.mMetrics.coveragePercent(coverage), category(), thresholds);
+            checkDiff(diffs, coverageStr, mMetrics.coveragePercent(coverage), otherData.mMetrics.coveragePercent(coverage), category(), fieldConfig);
         }
 
         return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches);

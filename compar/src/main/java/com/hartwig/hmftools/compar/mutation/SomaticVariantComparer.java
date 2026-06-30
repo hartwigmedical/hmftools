@@ -34,7 +34,7 @@ import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.common.DiffThresholds;
+import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.common.InvalidDataItem;
 import com.hartwig.hmftools.compar.ItemComparer;
@@ -167,7 +167,7 @@ public class SomaticVariantComparer implements ItemComparer
 
                     if(includeMismatchWithVariant(oldVariant, matchLevel) || includeMismatchWithVariant(matchedVariant, matchLevel))
                     {
-                        Mismatch mismatch = oldVariant.findMismatch(matchedVariant, matchLevel, mConfig.Thresholds, mConfig.IncludeMatches);
+                        Mismatch mismatch = oldVariant.findMismatch(matchedVariant, matchLevel, mConfig.FieldConfig, mConfig.IncludeMatches);
 
                         if(mismatch != null)
                             mismatches.add(mismatch);
@@ -191,7 +191,7 @@ public class SomaticVariantComparer implements ItemComparer
 
                 if(unfilteredVariant != null)
                 {
-                    mismatches.add(unfilteredVariant.findMismatch(newVariant, matchLevel, mConfig.Thresholds, mConfig.IncludeMatches));
+                    mismatches.add(unfilteredVariant.findMismatch(newVariant, matchLevel, mConfig.FieldConfig, mConfig.IncludeMatches));
                 }
                 else
                 {
@@ -263,9 +263,9 @@ public class SomaticVariantComparer implements ItemComparer
     }
 
     @Override
-    public void registerThresholds(final DiffThresholds thresholds)
+    public void registerThresholds(final FieldConfig fieldConfig)
     {
-        VariantCommon.registerThresholds(category(), thresholds);
+        VariantCommon.registerThresholds(category(), fieldConfig);
     }
 
     @Override

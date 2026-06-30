@@ -12,7 +12,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.vchord.VChordPrediction;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.common.CategoryType;
-import com.hartwig.hmftools.compar.common.DiffThresholds;
+import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 
@@ -57,17 +57,17 @@ public record VChordData(VChordPrediction VChord) implements ComparableItem
 
     @Override
     public Mismatch findMismatch(
-            final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds, final boolean includeMatches)
+            final ComparableItem other, final MatchLevel matchLevel, final FieldConfig fieldConfig, final boolean includeMatches)
     {
         final VChordData otherData = (VChordData) other;
 
         final List<String> diffs = Lists.newArrayList();
 
-        checkDiff(diffs, FLD_BREAST, VChord.breastCancerHrdScore(), otherData.VChord.breastCancerHrdScore(), category(), thresholds);
-        checkDiff(diffs, FLD_OVARIAN, VChord.ovarianCancerHrdScore(), otherData.VChord.ovarianCancerHrdScore(), category(), thresholds);
-        checkDiff(diffs, FLD_PANCREATIC, VChord.pancreaticCancerScore(), otherData.VChord.pancreaticCancerScore(), category(), thresholds);
-        checkDiff(diffs, FLD_PROSTATE, VChord.prostateCancerScore(), otherData.VChord.prostateCancerScore(), category(), thresholds);
-        checkDiff(diffs, FLD_OTHER, VChord.otherCancerScore(), otherData.VChord.otherCancerScore(), category(), thresholds);
+        checkDiff(diffs, FLD_BREAST, VChord.breastCancerHrdScore(), otherData.VChord.breastCancerHrdScore(), category(), fieldConfig);
+        checkDiff(diffs, FLD_OVARIAN, VChord.ovarianCancerHrdScore(), otherData.VChord.ovarianCancerHrdScore(), category(), fieldConfig);
+        checkDiff(diffs, FLD_PANCREATIC, VChord.pancreaticCancerScore(), otherData.VChord.pancreaticCancerScore(), category(), fieldConfig);
+        checkDiff(diffs, FLD_PROSTATE, VChord.prostateCancerScore(), otherData.VChord.prostateCancerScore(), category(), fieldConfig);
+        checkDiff(diffs, FLD_OTHER, VChord.otherCancerScore(), otherData.VChord.otherCancerScore(), category(), fieldConfig);
 
         return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches);
     }

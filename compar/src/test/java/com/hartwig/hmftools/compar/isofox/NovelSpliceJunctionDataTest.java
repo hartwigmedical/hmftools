@@ -20,7 +20,7 @@ import java.util.Map;
 
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItemTest;
-import com.hartwig.hmftools.compar.common.DiffThresholds;
+import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.MismatchType;
@@ -82,14 +82,14 @@ public class NovelSpliceJunctionDataTest
     {
         NovelSpliceJunctionData victim = TestNovelSpliceJunctionDataBuilder.BUILDER.create(b -> b.comparisonPositionStart = 5000);
         NovelSpliceJunctionData liftoverVictim = TestNovelSpliceJunctionDataBuilder.BUILDER.create(b -> b.junctionStart = 5000);
-        DiffThresholds diffThresholds = createDefaultThresholds();
+        FieldConfig fieldConfig = createDefaultThresholds();
 
         assertTrue(victim.matches(liftoverVictim));
         assertTrue(liftoverVictim.matches(victim));
-        assertNull(victim.findMismatch(liftoverVictim, MatchLevel.DETAILED, diffThresholds, false));
+        assertNull(victim.findMismatch(liftoverVictim, MatchLevel.DETAILED, fieldConfig, false));
 
         Mismatch expectedMatch = new Mismatch(victim, liftoverVictim, MismatchType.FULL_MATCH, Collections.emptyList());
-        assertEquals(expectedMatch, victim.findMismatch(liftoverVictim, MatchLevel.DETAILED, diffThresholds, true));
+        assertEquals(expectedMatch, victim.findMismatch(liftoverVictim, MatchLevel.DETAILED, fieldConfig, true));
     }
 
     @Test
@@ -97,14 +97,14 @@ public class NovelSpliceJunctionDataTest
     {
         NovelSpliceJunctionData victim = TestNovelSpliceJunctionDataBuilder.BUILDER.create(b -> b.comparisonPositionEnd = 6000);
         NovelSpliceJunctionData liftoverVictim = TestNovelSpliceJunctionDataBuilder.BUILDER.create(b -> b.junctionEnd = 6000);
-        DiffThresholds diffThresholds = createDefaultThresholds();
+        FieldConfig fieldConfig = createDefaultThresholds();
 
         assertTrue(victim.matches(liftoverVictim));
         assertTrue(liftoverVictim.matches(victim));
-        assertNull(victim.findMismatch(liftoverVictim, MatchLevel.DETAILED, diffThresholds, false));
+        assertNull(victim.findMismatch(liftoverVictim, MatchLevel.DETAILED, fieldConfig, false));
 
         Mismatch expectedMatch = new Mismatch(victim, liftoverVictim, MismatchType.FULL_MATCH, Collections.emptyList());
-        assertEquals(expectedMatch, victim.findMismatch(liftoverVictim, MatchLevel.DETAILED, diffThresholds, true));
+        assertEquals(expectedMatch, victim.findMismatch(liftoverVictim, MatchLevel.DETAILED, fieldConfig, true));
     }
 
     @Test

@@ -29,7 +29,7 @@ import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.variant.SmallVariant;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.common.DiffThresholds;
+import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 
@@ -100,12 +100,12 @@ public class GermlineVariantData implements ComparableItem
     }
 
     @Override
-    public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds,
+    public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final FieldConfig fieldConfig,
             final boolean includeMatches)
     {
         final GermlineVariantData otherVar = (GermlineVariantData) other;
 
-        final List<String> diffs = findVariantDiffs(Variant, otherVar.Variant, thresholds);
+        final List<String> diffs = findVariantDiffs(Variant, otherVar.Variant, fieldConfig);
 
         checkFilterDiffs(Filters, otherVar.Filters, diffs);
 
@@ -113,7 +113,7 @@ public class GermlineVariantData implements ComparableItem
     }
 
     private List<String> findVariantDiffs(
-            final SmallVariant var, final SmallVariant otherVar, final DiffThresholds thresholds)
+            final SmallVariant var, final SmallVariant otherVar, final FieldConfig fieldConfig)
     {
         final List<String> diffs = Lists.newArrayList();
 
@@ -128,11 +128,11 @@ public class GermlineVariantData implements ComparableItem
         checkDiff(diffs, FLD_HGVS_PROTEIN, var.canonicalHgvsProteinImpact(), otherVar.canonicalHgvsProteinImpact());
         checkDiff(diffs, FLD_OTHER_REPORTED, var.otherReportedEffects(), otherVar.otherReportedEffects());
 
-        checkDiff(diffs, FLD_QUAL, (int) var.qual(), (int) otherVar.qual(), category(), thresholds);
-        checkDiff(diffs, FLD_VARIANT_COPY_NUMBER, var.variantCopyNumber(), otherVar.variantCopyNumber(), category(), thresholds);
-        checkDiff(diffs, FLD_PURITY_ADJUSTED_VAF, var.adjustedVAF(), otherVar.adjustedVAF(), category(), thresholds);
-        checkDiff(diffs, FLD_TUMOR_SUPPORTING_READ_COUNT, var.allelicDepth().AlleleReadCount, otherVar.allelicDepth().AlleleReadCount, category(), thresholds);
-        checkDiff(diffs, FLD_TUMOR_TOTAL_READ_COUNT, var.allelicDepth().TotalReadCount, otherVar.allelicDepth().TotalReadCount, category(), thresholds);
+        checkDiff(diffs, FLD_QUAL, (int) var.qual(), (int) otherVar.qual(), category(), fieldConfig);
+        checkDiff(diffs, FLD_VARIANT_COPY_NUMBER, var.variantCopyNumber(), otherVar.variantCopyNumber(), category(), fieldConfig);
+        checkDiff(diffs, FLD_PURITY_ADJUSTED_VAF, var.adjustedVAF(), otherVar.adjustedVAF(), category(), fieldConfig);
+        checkDiff(diffs, FLD_TUMOR_SUPPORTING_READ_COUNT, var.allelicDepth().AlleleReadCount, otherVar.allelicDepth().AlleleReadCount, category(), fieldConfig);
+        checkDiff(diffs, FLD_TUMOR_TOTAL_READ_COUNT, var.allelicDepth().TotalReadCount, otherVar.allelicDepth().TotalReadCount, category(), fieldConfig);
         return diffs;
     }
 

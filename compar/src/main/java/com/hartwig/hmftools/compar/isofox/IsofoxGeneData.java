@@ -15,7 +15,7 @@ import com.hartwig.hmftools.common.purple.ReportedStatus;
 import com.hartwig.hmftools.common.rna.GeneExpression;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.common.CategoryType;
-import com.hartwig.hmftools.compar.common.DiffThresholds;
+import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 
@@ -64,7 +64,7 @@ public record IsofoxGeneData(GeneExpression GeneExpression) implements Comparabl
     }
 
     @Override
-    public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds,
+    public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final FieldConfig fieldConfig,
             final boolean includeMatches)
     {
         final GeneExpression ref = GeneExpression;
@@ -72,9 +72,9 @@ public record IsofoxGeneData(GeneExpression GeneExpression) implements Comparabl
 
         final List<String> diffs = Lists.newArrayList();
 
-        checkDiff(diffs, FLD_SPLICED_FRAGS, ref.splicedFragments(), otherData.splicedFragments(), category(), thresholds);
-        checkDiff(diffs, FLD_UNSPLICED_FRAGS, ref.unsplicedFragments(), otherData.unsplicedFragments(), category(), thresholds);
-        checkDiff(diffs, FLD_ADJ_TPM, ref.tpm(), otherData.tpm(), category(), thresholds);
+        checkDiff(diffs, FLD_SPLICED_FRAGS, ref.splicedFragments(), otherData.splicedFragments(), category(), fieldConfig);
+        checkDiff(diffs, FLD_UNSPLICED_FRAGS, ref.unsplicedFragments(), otherData.unsplicedFragments(), category(), fieldConfig);
+        checkDiff(diffs, FLD_ADJ_TPM, ref.tpm(), otherData.tpm(), category(), fieldConfig);
 
         return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches);
     }

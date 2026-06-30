@@ -3,7 +3,6 @@ package com.hartwig.hmftools.compar.linx;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.sv.StructuralVariantData.convertSvData;
-import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.compar.common.CategoryType.DISRUPTION;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
@@ -33,7 +32,7 @@ import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.common.DiffThresholds;
+import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.MatchLevel;
@@ -64,7 +63,7 @@ public class DisruptionComparer implements ItemComparer
     public CategoryType category() { return DISRUPTION; }
 
     @Override
-    public void registerThresholds(final DiffThresholds thresholds) {}
+    public void registerThresholds(final FieldConfig fieldConfig) {}
 
     @Override
     public boolean processSample(final String sampleId, final List<Mismatch> mismatches)

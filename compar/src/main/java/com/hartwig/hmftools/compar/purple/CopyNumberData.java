@@ -13,7 +13,7 @@ import com.hartwig.hmftools.common.purple.CopyNumberMethod;
 import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.common.DiffThresholds;
+import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 
@@ -79,14 +79,14 @@ public record CopyNumberData(
 
     @Override
     public Mismatch findMismatch(
-            final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds, final boolean includeMatches)
+            final ComparableItem other, final MatchLevel matchLevel, final FieldConfig fieldConfig, final boolean includeMatches)
     {
         final CopyNumberData otherCn = (CopyNumberData) other;
 
         final List<String> diffs = Lists.newArrayList();
 
-        checkDiff(diffs, FLD_COPY_NUMBER, copyNumber, otherCn.copyNumber, category(), thresholds);
-        checkDiff(diffs, FLD_MAJOR_ALLELE_CN, majorAlleleCopyNumber, otherCn.majorAlleleCopyNumber, category(), thresholds);
+        checkDiff(diffs, FLD_COPY_NUMBER, copyNumber, otherCn.copyNumber, category(), fieldConfig);
+        checkDiff(diffs, FLD_MAJOR_ALLELE_CN, majorAlleleCopyNumber, otherCn.majorAlleleCopyNumber, category(), fieldConfig);
         checkDiff(diffs, FLD_METHOD, method.toString(), otherCn.method.toString());
 
         return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches);

@@ -25,90 +25,90 @@ public class DiffFunctionsTest
     @Test
     public void checkDiffIntWithAbsoluteThreshold()
     {
-        DiffThresholds diffThresholds = new DiffThresholds();
+        FieldConfig fieldConfig = new FieldConfig();
 
-        diffThresholds.addFieldThreshold(CATEGORY, FIELD, 10, -1);
+        fieldConfig.addFieldThreshold(CATEGORY, FIELD, 10, -1);
 
-        assertNoDiff(0, 0, diffThresholds);
-        assertNoDiff(100, 97, diffThresholds);
-        assertNoDiff(-10, -4, diffThresholds);
+        assertNoDiff(0, 0, fieldConfig);
+        assertNoDiff(100, 97, fieldConfig);
+        assertNoDiff(-10, -4, fieldConfig);
 
-        assertDiff(-10, 10, diffThresholds);
-        assertDiff(10, -10, diffThresholds);
-        assertDiff(1, 100, diffThresholds);
-        assertDiff(100, 1, diffThresholds);
+        assertDiff(-10, 10, fieldConfig);
+        assertDiff(10, -10, fieldConfig);
+        assertDiff(1, 100, fieldConfig);
+        assertDiff(100, 1, fieldConfig);
 
-        assertNoDiff(0, 10, diffThresholds);
-        assertNoDiff(10, 0, diffThresholds);
-        assertDiff(0, 11, diffThresholds);
-        assertDiff(11, 0, diffThresholds);
+        assertNoDiff(0, 10, fieldConfig);
+        assertNoDiff(10, 0, fieldConfig);
+        assertDiff(0, 11, fieldConfig);
+        assertDiff(11, 0, fieldConfig);
 
-        assertNoDiff(90, 100, diffThresholds);
-        assertNoDiff(100, 90, diffThresholds);
-        assertDiff(89, 100, diffThresholds);
-        assertDiff(100, 89, diffThresholds);
+        assertNoDiff(90, 100, fieldConfig);
+        assertNoDiff(100, 90, fieldConfig);
+        assertDiff(89, 100, fieldConfig);
+        assertDiff(100, 89, fieldConfig);
 
-        assertNoDiff(-200, -190, diffThresholds);
-        assertNoDiff(-190, -200, diffThresholds);
-        assertDiff(-200, -189, diffThresholds);
-        assertDiff(-189, -200, diffThresholds);
+        assertNoDiff(-200, -190, fieldConfig);
+        assertNoDiff(-190, -200, fieldConfig);
+        assertDiff(-200, -189, fieldConfig);
+        assertDiff(-189, -200, fieldConfig);
 
-        assertNoDiff(-5, 4, diffThresholds);
-        assertNoDiff(4, -5, diffThresholds);
-        assertDiff(-5, 6, diffThresholds);
-        assertDiff(6, -5, diffThresholds);
+        assertNoDiff(-5, 4, fieldConfig);
+        assertNoDiff(4, -5, fieldConfig);
+        assertDiff(-5, 6, fieldConfig);
+        assertDiff(6, -5, fieldConfig);
     }
 
     @Test
     public void checkDiffIntWithRelativeThreshold()
     {
-        DiffThresholds diffThresholds = new DiffThresholds();
+        FieldConfig fieldConfig = new FieldConfig();
 
-        diffThresholds.addFieldThreshold(CATEGORY, FIELD, -1, 0.2);
+        fieldConfig.addFieldThreshold(CATEGORY, FIELD, -1, 0.2);
 
-        assertNoDiff(0, 0, diffThresholds);
-        assertNoDiff(100, 97, diffThresholds);
-        assertNoDiff(-10, -9, diffThresholds);
+        assertNoDiff(0, 0, fieldConfig);
+        assertNoDiff(100, 97, fieldConfig);
+        assertNoDiff(-10, -9, fieldConfig);
 
-        assertDiff(-1, 1, diffThresholds);
-        assertDiff(1, -1, diffThresholds);
+        assertDiff(-1, 1, fieldConfig);
+        assertDiff(1, -1, fieldConfig);
 
-        assertDiff(0, 1, diffThresholds);
-        assertDiff(1, 0, diffThresholds);
-        assertDiff(0, -1, diffThresholds);
-        assertDiff(-1, 0, diffThresholds);
+        assertDiff(0, 1, fieldConfig);
+        assertDiff(1, 0, fieldConfig);
+        assertDiff(0, -1, fieldConfig);
+        assertDiff(-1, 0, fieldConfig);
 
-        assertNoDiff(81, 100, diffThresholds);
-        assertNoDiff(100, 81, diffThresholds);
-        assertDiff(79, 100, diffThresholds);
-        assertDiff(100, 79, diffThresholds);
+        assertNoDiff(81, 100, fieldConfig);
+        assertNoDiff(100, 81, fieldConfig);
+        assertDiff(79, 100, fieldConfig);
+        assertDiff(100, 79, fieldConfig);
 
-        assertNoDiff(-1000, -810, diffThresholds);
-        assertNoDiff(-810, -1000, diffThresholds);
-        assertDiff(-1000, -790, diffThresholds);
-        assertDiff(-790, -1000, diffThresholds);
+        assertNoDiff(-1000, -810, fieldConfig);
+        assertNoDiff(-810, -1000, fieldConfig);
+        assertDiff(-1000, -790, fieldConfig);
+        assertDiff(-790, -1000, fieldConfig);
     }
 
     @Test
     public void checkDiffIntWithEmptyThreshold()
     {
-        DiffThresholds diffThresholds = new DiffThresholds();
+        FieldConfig fieldConfig = new FieldConfig();
 
-        assertNoDiff(0, 0, diffThresholds);
-        assertNoDiff(100, 100, diffThresholds);
-        assertNoDiff(-10, -10, diffThresholds);
+        assertNoDiff(0, 0, fieldConfig);
+        assertNoDiff(100, 100, fieldConfig);
+        assertNoDiff(-10, -10, fieldConfig);
 
-        assertDiff(0, 1, diffThresholds);
-        assertDiff(1, 0, diffThresholds);
+        assertDiff(0, 1, fieldConfig);
+        assertDiff(1, 0, fieldConfig);
 
-        assertDiff(99, 100, diffThresholds);
-        assertDiff(100, 99, diffThresholds);
+        assertDiff(99, 100, fieldConfig);
+        assertDiff(100, 99, fieldConfig);
 
-        assertDiff(-100, -99, diffThresholds);
-        assertDiff(-99, -100, diffThresholds);
+        assertDiff(-100, -99, fieldConfig);
+        assertDiff(-99, -100, fieldConfig);
 
-        assertDiff(-10, 10, diffThresholds);
-        assertDiff(10, -10, diffThresholds);
+        assertDiff(-10, 10, fieldConfig);
+        assertDiff(10, -10, fieldConfig);
     }
 
     @Test
@@ -134,68 +134,68 @@ public class DiffFunctionsTest
     @Test
     public void checkDiffDoubleWithEmptyThreshold()
     {
-        DiffThresholds diffThresholds = new DiffThresholds();
+        FieldConfig fieldConfig = new FieldConfig();
 
-        assertNoDiff(0., 0., diffThresholds);
-        assertNoDiff(100., 100., diffThresholds);
-        assertNoDiff(-10., -10., diffThresholds);
+        assertNoDiff(0., 0., fieldConfig);
+        assertNoDiff(100., 100., fieldConfig);
+        assertNoDiff(-10., -10., fieldConfig);
 
-        assertDiff(0., 1.1, diffThresholds);
-        assertDiff(1.1, 0., diffThresholds);
-        assertNoDiff(0., 0.9, diffThresholds);
-        assertNoDiff(0.9, 0., diffThresholds);
+        assertDiff(0., 1.1, fieldConfig);
+        assertDiff(1.1, 0., fieldConfig);
+        assertNoDiff(0., 0.9, fieldConfig);
+        assertNoDiff(0.9, 0., fieldConfig);
 
-        assertDiff(-0., -1.1, diffThresholds);
-        assertDiff(-1.1, -0., diffThresholds);
-        assertNoDiff(-0., -0.9, diffThresholds);
-        assertNoDiff(-0.9, -0., diffThresholds);
+        assertDiff(-0., -1.1, fieldConfig);
+        assertDiff(-1.1, -0., fieldConfig);
+        assertNoDiff(-0., -0.9, fieldConfig);
+        assertNoDiff(-0.9, -0., fieldConfig);
 
-        assertDiff(89., 100., diffThresholds);
-        assertDiff(100., 89., diffThresholds);
-        assertNoDiff(91., 100., diffThresholds);
-        assertNoDiff(100., 91., diffThresholds);
+        assertDiff(89., 100., fieldConfig);
+        assertDiff(100., 89., fieldConfig);
+        assertNoDiff(91., 100., fieldConfig);
+        assertNoDiff(100., 91., fieldConfig);
 
-        assertDiff(-100., -89., diffThresholds);
-        assertDiff(-89., -100., diffThresholds);
-        assertNoDiff(-100., -91., diffThresholds);
-        assertNoDiff(-91., -100., diffThresholds);
+        assertDiff(-100., -89., fieldConfig);
+        assertDiff(-89., -100., fieldConfig);
+        assertNoDiff(-100., -91., fieldConfig);
+        assertNoDiff(-91., -100., fieldConfig);
 
-        assertDiff(-10., 10., diffThresholds);
-        assertDiff(10., -10., diffThresholds);
+        assertDiff(-10., 10., fieldConfig);
+        assertDiff(10., -10., fieldConfig);
     }
 
     @Test
     public void checkDiffDoubleWithThreshold()
     {
-        DiffThresholds diffThresholds = new DiffThresholds();
-        diffThresholds.addFieldThreshold(CATEGORY, FIELD, 20, -1);
+        FieldConfig fieldConfig = new FieldConfig();
+        fieldConfig.addFieldThreshold(CATEGORY, FIELD, 20, -1);
 
-        assertNoDiff(0., 0., diffThresholds);
-        assertNoDiff(100., 100., diffThresholds);
-        assertNoDiff(-10., -10., diffThresholds);
+        assertNoDiff(0., 0., fieldConfig);
+        assertNoDiff(100., 100., fieldConfig);
+        assertNoDiff(-10., -10., fieldConfig);
 
-        assertDiff(0., 20.5, diffThresholds);
-        assertDiff(20.5, 0., diffThresholds);
-        assertNoDiff(0., 19.5, diffThresholds);
-        assertNoDiff(19.5, 0., diffThresholds);
+        assertDiff(0., 20.5, fieldConfig);
+        assertDiff(20.5, 0., fieldConfig);
+        assertNoDiff(0., 19.5, fieldConfig);
+        assertNoDiff(19.5, 0., fieldConfig);
 
-        assertDiff(-0., -20.5, diffThresholds);
-        assertDiff(-20.5, -0., diffThresholds);
-        assertNoDiff(-0., -19.5, diffThresholds);
-        assertNoDiff(-19.5, -0., diffThresholds);
+        assertDiff(-0., -20.5, fieldConfig);
+        assertDiff(-20.5, -0., fieldConfig);
+        assertNoDiff(-0., -19.5, fieldConfig);
+        assertNoDiff(-19.5, -0., fieldConfig);
 
-        assertDiff(79., 100., diffThresholds);
-        assertDiff(100., 79., diffThresholds);
-        assertNoDiff(81., 100., diffThresholds);
-        assertNoDiff(100., 81., diffThresholds);
+        assertDiff(79., 100., fieldConfig);
+        assertDiff(100., 79., fieldConfig);
+        assertNoDiff(81., 100., fieldConfig);
+        assertNoDiff(100., 81., fieldConfig);
 
-        assertDiff(-100., -79., diffThresholds);
-        assertDiff(-79., -100., diffThresholds);
-        assertNoDiff(-100., -81., diffThresholds);
-        assertNoDiff(-81., -100., diffThresholds);
+        assertDiff(-100., -79., fieldConfig);
+        assertDiff(-79., -100., fieldConfig);
+        assertNoDiff(-100., -81., fieldConfig);
+        assertNoDiff(-81., -100., fieldConfig);
 
-        assertDiff(-10., 10.5, diffThresholds);
-        assertDiff(10.5, -10., diffThresholds);
+        assertDiff(-10., 10.5, fieldConfig);
+        assertDiff(10.5, -10., fieldConfig);
     }
 
     @Test
@@ -241,17 +241,17 @@ public class DiffFunctionsTest
         assertDiff(Set.of("hi", "world"), Set.of("hello", "world"));
     }
 
-    private static void assertNoDiff(final double refValue, final double newValue, final DiffThresholds diffThresholds)
+    private static void assertNoDiff(final double refValue, final double newValue, final FieldConfig fieldConfig)
     {
         List<String> diffs = new ArrayList<>();
-        assertFalse(checkDiff(diffs, FIELD, refValue, newValue, CATEGORY, diffThresholds));
+        assertFalse(checkDiff(diffs, FIELD, refValue, newValue, CATEGORY, fieldConfig));
         assertTrue(diffs.isEmpty());
     }
 
-    private static void assertNoDiff(final int refValue, final int newValue, final DiffThresholds diffThresholds)
+    private static void assertNoDiff(final int refValue, final int newValue, final FieldConfig fieldConfig)
     {
         List<String> diffs = new ArrayList<>();
-        assertFalse(checkDiff(diffs, FIELD, refValue, newValue, CATEGORY, diffThresholds));
+        assertFalse(checkDiff(diffs, FIELD, refValue, newValue, CATEGORY, fieldConfig));
         assertTrue(diffs.isEmpty());
     }
 
@@ -283,18 +283,18 @@ public class DiffFunctionsTest
         assertTrue(diffs.isEmpty());
     }
 
-    private static void assertDiff(final double refValue, final double newValue, final DiffThresholds diffThresholds)
+    private static void assertDiff(final double refValue, final double newValue, final FieldConfig fieldConfig)
     {
         List<String> diffs = new ArrayList<>();
-        assertTrue(checkDiff(diffs, FIELD, refValue, newValue, CATEGORY, diffThresholds));
+        assertTrue(checkDiff(diffs, FIELD, refValue, newValue, CATEGORY, fieldConfig));
         assertEquals(1, diffs.size());
         assertEquals(FIELD, extractFieldNameFromDifference(diffs.get(0)));
     }
 
-    private static void assertDiff(final int refValue, final int newValue, final DiffThresholds diffThresholds)
+    private static void assertDiff(final int refValue, final int newValue, final FieldConfig fieldConfig)
     {
         List<String> diffs = new ArrayList<>();
-        assertTrue(checkDiff(diffs, FIELD, refValue, newValue, CATEGORY, diffThresholds));
+        assertTrue(checkDiff(diffs, FIELD, refValue, newValue, CATEGORY, fieldConfig));
         assertEquals(1, diffs.size());
         assertEquals(FIELD, extractFieldNameFromDifference(diffs.get(0)));
     }

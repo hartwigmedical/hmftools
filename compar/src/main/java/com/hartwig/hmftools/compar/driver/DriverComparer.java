@@ -16,15 +16,12 @@ import static com.hartwig.hmftools.compar.driver.DriverData.FLD_MIN_COPY_NUMBER;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.driver.DriverCatalog;
 import com.hartwig.hmftools.common.driver.DriverCatalogFile;
 import com.hartwig.hmftools.common.driver.ImmutableDriverCatalog;
@@ -37,7 +34,7 @@ import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.common.DiffThresholds;
+import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.ItemComparer;
@@ -66,11 +63,11 @@ public class DriverComparer implements ItemComparer
     public CategoryType category() { return DRIVER; }
 
     @Override
-    public void registerThresholds(final DiffThresholds thresholds)
+    public void registerThresholds(final FieldConfig fieldConfig)
     {
-        thresholds.addFieldThreshold(category(), FLD_LIKELIHOOD, 0.1, 0);
-        thresholds.addFieldThreshold(category(), FLD_MIN_COPY_NUMBER, 0.3, 0.15);
-        thresholds.addFieldThreshold(category(), FLD_MAX_COPY_NUMBER, 0.3, 0.15);
+        fieldConfig.addFieldThreshold(category(), FLD_LIKELIHOOD, 0.1, 0);
+        fieldConfig.addFieldThreshold(category(), FLD_MIN_COPY_NUMBER, 0.3, 0.15);
+        fieldConfig.addFieldThreshold(category(), FLD_MAX_COPY_NUMBER, 0.3, 0.15);
     }
 
     @Override

@@ -3,7 +3,7 @@ package com.hartwig.hmftools.compar;
 import java.util.List;
 
 import com.hartwig.hmftools.compar.common.CategoryType;
-import com.hartwig.hmftools.compar.common.DiffThresholds;
+import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.SourceType;
@@ -21,7 +21,7 @@ public interface ItemComparer
 
     List<String> comparedFieldNames();
 
-    default void registerThresholds(final DiffThresholds thresholds) {}
+    default void registerThresholds(final FieldConfig fieldConfig) {}
 
     default boolean hasReportable() { return true; }
 

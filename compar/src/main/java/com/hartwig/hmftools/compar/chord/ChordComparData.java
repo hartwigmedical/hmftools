@@ -12,7 +12,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.chord.ChordData;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.common.DiffThresholds;
+import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 
@@ -60,16 +60,16 @@ public class ChordComparData implements ComparableItem
     }
 
     @Override
-    public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds,
+    public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final FieldConfig fieldConfig,
             final boolean includeMatches)
     {
         final ChordComparData otherData = (ChordComparData)other;
 
         final List<String> diffs = Lists.newArrayList();
 
-        checkDiff(diffs, FLD_BRCA1, Chord.BRCA1Value(), otherData.Chord.BRCA1Value(), category(), thresholds);
-        checkDiff(diffs, FLD_BRCA2, Chord.BRCA2Value(), otherData.Chord.BRCA2Value(), category(), thresholds);
-        checkDiff(diffs, FLD_SCORE, Chord.hrdValue(), otherData.Chord.hrdValue(), category(), thresholds);
+        checkDiff(diffs, FLD_BRCA1, Chord.BRCA1Value(), otherData.Chord.BRCA1Value(), category(), fieldConfig);
+        checkDiff(diffs, FLD_BRCA2, Chord.BRCA2Value(), otherData.Chord.BRCA2Value(), category(), fieldConfig);
+        checkDiff(diffs, FLD_SCORE, Chord.hrdValue(), otherData.Chord.hrdValue(), category(), fieldConfig);
         checkDiff(diffs, FLD_TYPE, Chord.hrdType(), otherData.Chord.hrdType());
         checkDiff(diffs, FLD_STATUS, Chord.hrStatus().toString(), otherData.Chord.hrStatus().toString());
 

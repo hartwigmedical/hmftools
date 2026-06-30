@@ -91,7 +91,7 @@ public class CommonUtils
                 continue;
             }
 
-            comparer.registerThresholds(config.Thresholds);
+            comparer.registerThresholds(config.FieldConfig);
             comparers.add(comparer);
         }
 
@@ -254,7 +254,7 @@ public class CommonUtils
         {
             // previously support comparisons for N sources but now can only be 2 as controlled by config
             CommonUtils.compareItems(
-                    mismatches, matchLevel, config.Thresholds, config.IncludeMatches,
+                    mismatches, matchLevel, config.FieldConfig, config.IncludeMatches,
                     sourceItems.get(SourceType.OLD), sourceItems.get(SourceType.NEW));
 
             return true;
@@ -279,7 +279,7 @@ public class CommonUtils
     }
 
     public static void compareItems(
-            final List<Mismatch> mismatches, final MatchLevel matchLevel, final DiffThresholds thresholds, final boolean includeMatches,
+            final List<Mismatch> mismatches, final MatchLevel matchLevel, final FieldConfig fieldConfig, final boolean includeMatches,
             final List<ComparableItem> items1, final List<ComparableItem> items2)
     {
         int index1 = 0;
@@ -305,7 +305,7 @@ public class CommonUtils
 
                     if(matchLevel != REPORTABLE || eitherReportable)
                     {
-                        Mismatch mismatch = item1.findMismatch(item2, matchLevel, thresholds, includeMatches);
+                        Mismatch mismatch = item1.findMismatch(item2, matchLevel, fieldConfig, includeMatches);
 
                         if(mismatch != null)
                         {

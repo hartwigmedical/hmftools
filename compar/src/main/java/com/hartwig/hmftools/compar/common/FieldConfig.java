@@ -6,7 +6,7 @@ import java.util.Map;
 
 import com.google.common.collect.Maps;
 
-public class DiffThresholds
+public class FieldConfig
 {
     private final Map<CategoryType, Map<String, ThresholdData>> mFieldThresholds;
 
@@ -15,7 +15,7 @@ public class DiffThresholds
     public static final ThresholdData DEFAULT_DECIMAL_THRESHOLD = new ThresholdData(
             ThresholdType.ABSOLUTE_AND_PERCENT, 1, DEFAULT_DIFF_PERC);
 
-    public DiffThresholds()
+    public FieldConfig()
     {
         mFieldThresholds = Maps.newHashMap();
     }

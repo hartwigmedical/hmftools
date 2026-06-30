@@ -18,7 +18,7 @@ import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.common.DiffThresholds;
+import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.Mismatch;
@@ -38,10 +38,10 @@ public class CopyNumberComparer implements ItemComparer
     public CategoryType category() { return COPY_NUMBER; }
 
     @Override
-    public void registerThresholds(final DiffThresholds thresholds)
+    public void registerThresholds(final FieldConfig fieldConfig)
     {
-        thresholds.addFieldThreshold(category(), FLD_COPY_NUMBER, 0.5, 0.15);
-        thresholds.addFieldThreshold(category(), FLD_MAJOR_ALLELE_CN, 0.5, 0.15);
+        fieldConfig.addFieldThreshold(category(), FLD_COPY_NUMBER, 0.5, 0.15);
+        fieldConfig.addFieldThreshold(category(), FLD_MAJOR_ALLELE_CN, 0.5, 0.15);
     }
 
     @Override
