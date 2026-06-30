@@ -22,9 +22,9 @@ import org.jetbrains.annotations.Nullable;
 public class ConversionUtil
 {
     public static FindingRecord orangeRecordToFindingRecord(OrangeRecord orangeRecord, @Nullable Path clinicalTranscriptsTsv,
-            @Nullable Path driverGeneTsv, @Nullable Gender gender) throws IOException
+            @Nullable Path clinicalRelevantGeneCopyNumbersTsv, @Nullable Path driverGeneTsv, @Nullable Gender gender) throws IOException
     {
-        return convert(FindingRecordFactory.fromOrangeRecord(orangeRecord, clinicalTranscriptsTsv, driverGeneTsv, gender));
+        return convert(FindingRecordFactory.fromOrangeRecord(orangeRecord, clinicalTranscriptsTsv, clinicalRelevantGeneCopyNumbersTsv, driverGeneTsv, gender));
     }
 
     private static FindingRecord convert(FindingRecord findingRecord)

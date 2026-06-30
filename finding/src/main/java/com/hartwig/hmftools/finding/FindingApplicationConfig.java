@@ -5,18 +5,21 @@ import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOpt
 import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
+import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.Nullable;
 
 public class FindingApplicationConfig
 {
     public final String OrangeJsonPath;
     public final @Nullable String ClinicalTranscriptsPath;
+    public final @NotNull String ClinicalRelevantGeneCopyNumbersPath;
     public final String DriverGenePath;
     public final String FindingJsonPath;
     public final @Nullable Gender gender;
 
     private static final String ORANGE_JSON_PATH_ARG = "orange_json";
     private static final String CLINICAL_TRANSCRIPT_PATH_ARG = "clinical_transcript";
+    private static final String CLINICAL_RELEVANT_GENE_COPY_NUMBER_PATH_ARG = "clinical_relevant_gene_copy_number";
     private static final String DRIVER_GENE_PATH_ARG = "driver_gene";
     private static final String GENDER_ARG = "gender";
     private static final String FINDING_JSON_PATH_ARG = "finding_json";
@@ -25,6 +28,7 @@ public class FindingApplicationConfig
     {
         this(configBuilder.getValue(ORANGE_JSON_PATH_ARG),
                 configBuilder.getValue(CLINICAL_TRANSCRIPT_PATH_ARG),
+                configBuilder.getValue(CLINICAL_RELEVANT_GENE_COPY_NUMBER_PATH_ARG),
                 configBuilder.getValue(DRIVER_GENE_PATH_ARG),
                 configBuilder.hasValue(GENDER_ARG) ? Gender.valueOf(configBuilder.getValue(GENDER_ARG)) : null,
                 configBuilder.getValue(FINDING_JSON_PATH_ARG));
@@ -33,12 +37,14 @@ public class FindingApplicationConfig
     public FindingApplicationConfig(
             final String orangeJsonPath,
             final @Nullable String clinicalTranscriptsPath,
+            final @NotNull String clinicalRelevantGeneCopyNumbersPath,
             final String driverGenePath,
             final @Nullable Gender gender,
             final String findingJsonPath)
     {
         this.OrangeJsonPath = orangeJsonPath;
         this.ClinicalTranscriptsPath = clinicalTranscriptsPath;
+        this.ClinicalRelevantGeneCopyNumbersPath = clinicalRelevantGeneCopyNumbersPath;
         this.DriverGenePath = driverGenePath;
         this.FindingJsonPath = findingJsonPath;
         this.gender = gender;
@@ -48,6 +54,7 @@ public class FindingApplicationConfig
     {
         configBuilder.addPath(ORANGE_JSON_PATH_ARG, true, "Path to Orange JSON file");
         configBuilder.addPath(CLINICAL_TRANSCRIPT_PATH_ARG, false, "Path to clinical transcripts file");
+        configBuilder.addPath(CLINICAL_RELEVANT_GENE_COPY_NUMBER_PATH_ARG, true, "Path to the clinical relevant gene copy number file");
         configBuilder.addPath(DRIVER_GENE_PATH_ARG, true, "Path to driver gene file");
         configBuilder.addConfigItem(GENDER_ARG, false, "MALE or FEMALE");
         configBuilder.addConfigItem(FINDING_JSON_PATH_ARG, true, "Path to output finding JSON file");
