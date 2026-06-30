@@ -201,7 +201,7 @@ public class HomologyData
             return new HomologyData(refBasesStart, -exactStart, exactEnd, -exactStart, exactEnd);
         }
 
-        // Find exact homology.
+        // find exact homology
         int exactMatch = 0;
         while(exactMatch < overlap && refBasesStart.charAt(exactMatch) == refBasesEnd.charAt(exactMatch))
         {
@@ -212,10 +212,10 @@ public class HomologyData
         int exactStart = (exactMatch + 1) / 2; // round up if an odd length
         int exactEnd = exactMatch - exactStart;
 
-        // Continue on to find inexact homology.
-        // Emulate BWA-MEM scoring, to find the point at which the alignment would clip.
-        // This makes it consistent with the non-indel code which uses split alignments to determine homology.
-        // FIXME? handle indels?
+        // continue on to find inexact homology
+        // emulate BWA-MEM scoring, to find the point at which the alignment would clip
+        // this makes it consistent with the non-indel code which uses split alignments to determine homology
+        // note indels are not handled (could handle them in the future if desired)
         int scoreAcc = exactMatch * INDEL_HOMOLOGY_MATCH_SCORE;
         int maxScore = scoreAcc + (exactMatch == overlap ? 0 : INDEL_HOMOLOGY_CLIP_SCORE);
         int maxInexactMatch = exactMatch;
@@ -231,7 +231,7 @@ public class HomologyData
             }
             int remaining = overlap - i - 1;
             int score = scoreAcc + (remaining > 0 ? INDEL_HOMOLOGY_CLIP_SCORE : 0);
-            // Use >= to maximise the homology length for equal scores.
+            // use >= to maximise the homology length for equal scores
             if(score >= maxScore)
             {
                 maxScore = score;
@@ -239,7 +239,7 @@ public class HomologyData
             }
             else if(scoreAcc + remaining * INDEL_HOMOLOGY_MATCH_SCORE < maxScore)
             {
-                // Even if all remaining bases match, it's not possible to beat the best score so far, so no need to continue.
+                // even if all remaining bases match, it's not possible to beat the best score so far, so no need to continue
                 break;
             }
         }
