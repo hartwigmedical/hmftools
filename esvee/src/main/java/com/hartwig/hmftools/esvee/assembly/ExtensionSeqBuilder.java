@@ -207,8 +207,23 @@ public class ExtensionSeqBuilder
 
         if(sufficientQualMatches(readParseState))
         {
-            // add as support
-            mReads.add(readParseState);
+            // add as support - replace if it was already a candidate extension read (ie checked previously)
+            boolean replaced = false;
+
+            for(int i = 0; i < mReads.size(); ++i)
+            {
+                ReadParseState existingRead = mReads.get(i);
+
+                if(existingRead.read() == read)
+                {
+                    mReads.set(i, readParseState);
+                    replaced = true;
+                    break;
+                }
+            }
+
+            if(!replaced)
+                mReads.add(readParseState);
         }
 
         return readParseState;
@@ -363,18 +378,12 @@ public class ExtensionSeqBuilder
             maxValidExtensionLength = max(read.overlapBaseCount(), maxValidExtensionLength);
         }
 
-        juncThresholdState.ExtensionLengthValid |= hasExtensionLengthRead && maxValidExtensionLength > 0;
+        // this overrides previous state set prior to establishing the extension sequence
+        juncThresholdState.ExtensionLengthValid = hasExtensionLengthRead && maxValidExtensionLength > 0;
 
         juncThresholdState.SecondExtensionLengthValid |= validExtensionReadCount >= 2;
 
         juncThresholdState.MinReadsValid |= validExtensionReadCount >= juncThresholdState.MinRequiredReads;
-
-        /*
-        if(maxValidExtensionLength == 0 || !hasMinLengthSoftClipRead || validExtensionReadCount < juncThresholdState.MinRequiredReads)
-        {
-            mIsValid = false;
-        }
-        */
     }
 
     private void checkRepeatInRefBases()
