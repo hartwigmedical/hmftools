@@ -169,4 +169,8 @@ public final class AssemblyConstants
 
     public static final int PMS2_MAX_MAP_QUAL = 10;
 
+    public static final int INDEL_HOMOLOGY_MATCH_SCORE = 1;
+    public static final int INDEL_HOMOLOGY_MISMATCH_SCORE = -4;
+    public static final int INDEL_HOMOLOGY_CLIP_SCORE = -5;
+
 }
