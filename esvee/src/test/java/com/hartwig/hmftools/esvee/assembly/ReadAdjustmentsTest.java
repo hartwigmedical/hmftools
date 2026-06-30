@@ -431,4 +431,23 @@ public class ReadAdjustmentsTest
         assertFalse(read.hasLineTailStart());
         assertFalse(read.hasLineTailEnd());
     }
+
+    @Test
+    public void testLowQualLineTailRead()
+    {
+        // uncertain qual bases can still rule out a LINE sequence
+
+        //                     012345678901234567890
+        String lineSequence = "AAAACAAAACAAAACAAAAC";
+        String nonLineSequence = "GCTGCTGTCGTGTCC";
+        String softClipBases = nonLineSequence + lineSequence;
+        String readBases = softClipBases + REF_BASES_RANDOM_100;
+
+        byte[] defaultQuals = buildDefaultBaseQuals(readBases.length());
+        defaultQuals[4] = 1;
+        defaultQuals[9] = 1;
+        defaultQuals[14] = 1;
+
+        assertFalse(hasLineTail(readBases.getBytes(), softClipBases.length() - 1, true, LINE_BASE_A, defaultQuals));
+    }
 }
