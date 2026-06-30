@@ -20,13 +20,14 @@ public class DiffFunctionsTest
 {
 
     public static final String FIELD = "Field";
+    private static final CategoryType CATEGORY = CategoryType.CDR3_LOCUS_SUMMARY;
 
     @Test
     public void checkDiffIntWithAbsoluteThreshold()
     {
         DiffThresholds diffThresholds = new DiffThresholds();
 
-        diffThresholds.addFieldThreshold(FIELD, 10, -1);
+        diffThresholds.addFieldThreshold(CATEGORY, FIELD, 10, -1);
 
         assertNoDiff(0, 0, diffThresholds);
         assertNoDiff(100, 97, diffThresholds);
@@ -63,7 +64,7 @@ public class DiffFunctionsTest
     {
         DiffThresholds diffThresholds = new DiffThresholds();
 
-        diffThresholds.addFieldThreshold(FIELD, -1, 0.2);
+        diffThresholds.addFieldThreshold(CATEGORY, FIELD, -1, 0.2);
 
         assertNoDiff(0, 0, diffThresholds);
         assertNoDiff(100, 97, diffThresholds);
@@ -167,7 +168,7 @@ public class DiffFunctionsTest
     public void checkDiffDoubleWithThreshold()
     {
         DiffThresholds diffThresholds = new DiffThresholds();
-        diffThresholds.addFieldThreshold(FIELD, 20, -1);
+        diffThresholds.addFieldThreshold(CATEGORY, FIELD, 20, -1);
 
         assertNoDiff(0., 0., diffThresholds);
         assertNoDiff(100., 100., diffThresholds);
@@ -243,14 +244,14 @@ public class DiffFunctionsTest
     private static void assertNoDiff(final double refValue, final double newValue, final DiffThresholds diffThresholds)
     {
         List<String> diffs = new ArrayList<>();
-        assertFalse(checkDiff(diffs, FIELD, refValue, newValue, diffThresholds));
+        assertFalse(checkDiff(diffs, FIELD, refValue, newValue, CATEGORY, diffThresholds));
         assertTrue(diffs.isEmpty());
     }
 
     private static void assertNoDiff(final int refValue, final int newValue, final DiffThresholds diffThresholds)
     {
         List<String> diffs = new ArrayList<>();
-        assertFalse(checkDiff(diffs, FIELD, refValue, newValue, diffThresholds));
+        assertFalse(checkDiff(diffs, FIELD, refValue, newValue, CATEGORY, diffThresholds));
         assertTrue(diffs.isEmpty());
     }
 
@@ -285,7 +286,7 @@ public class DiffFunctionsTest
     private static void assertDiff(final double refValue, final double newValue, final DiffThresholds diffThresholds)
     {
         List<String> diffs = new ArrayList<>();
-        assertTrue(checkDiff(diffs, FIELD, refValue, newValue, diffThresholds));
+        assertTrue(checkDiff(diffs, FIELD, refValue, newValue, CATEGORY, diffThresholds));
         assertEquals(1, diffs.size());
         assertEquals(FIELD, extractFieldNameFromDifference(diffs.get(0)));
     }
@@ -293,7 +294,7 @@ public class DiffFunctionsTest
     private static void assertDiff(final int refValue, final int newValue, final DiffThresholds diffThresholds)
     {
         List<String> diffs = new ArrayList<>();
-        assertTrue(checkDiff(diffs, FIELD, refValue, newValue, diffThresholds));
+        assertTrue(checkDiff(diffs, FIELD, refValue, newValue, CATEGORY, diffThresholds));
         assertEquals(1, diffs.size());
         assertEquals(FIELD, extractFieldNameFromDifference(diffs.get(0)));
     }

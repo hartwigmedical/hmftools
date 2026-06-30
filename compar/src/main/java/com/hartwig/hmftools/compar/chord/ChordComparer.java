@@ -44,9 +44,9 @@ public class ChordComparer implements ItemComparer
     @Override
     public void registerThresholds(final DiffThresholds thresholds)
     {
-        thresholds.addFieldThreshold(FLD_BRCA1, 0.1, 0);
-        thresholds.addFieldThreshold(FLD_BRCA2, 0.1, 0);
-        thresholds.addFieldThreshold(FLD_SCORE, 0.1, 0);
+        thresholds.addFieldThreshold(category(), FLD_BRCA1, 0.1, 0);
+        thresholds.addFieldThreshold(category(), FLD_BRCA2, 0.1, 0);
+        thresholds.addFieldThreshold(category(), FLD_SCORE, 0.1, 0);
     }
 
     @Override

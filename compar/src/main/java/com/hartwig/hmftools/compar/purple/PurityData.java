@@ -95,22 +95,22 @@ public class PurityData implements ComparableItem
 
         final List<String> diffs = Lists.newArrayList();
 
-        checkDiff(diffs, FLD_PURITY, Purity.bestFit().purity(), otherPurity.Purity.bestFit().purity(), thresholds);
-        checkDiff(diffs, FLD_PLOIDY, Purity.bestFit().ploidy(), otherPurity.Purity.bestFit().ploidy(), thresholds);
+        checkDiff(diffs, FLD_PURITY, Purity.bestFit().purity(), otherPurity.Purity.bestFit().purity(), category(), thresholds);
+        checkDiff(diffs, FLD_PLOIDY, Purity.bestFit().ploidy(), otherPurity.Purity.bestFit().ploidy(), category(), thresholds);
 
-        checkDiff(diffs, FLD_CONTAMINATION, Purity.qc().contamination(), otherPurity.Purity.qc().contamination(), thresholds);
+        checkDiff(diffs, FLD_CONTAMINATION, Purity.qc().contamination(), otherPurity.Purity.qc().contamination(), category(), thresholds);
 
-        checkDiff(diffs, FLD_TMB, Purity.tumorMutationalBurdenPerMb(), otherPurity.Purity.tumorMutationalBurdenPerMb(), thresholds);
-        checkDiff(diffs, FLD_MS_INDELS, Purity.microsatelliteIndelsPerMb(), otherPurity.Purity.microsatelliteIndelsPerMb(), thresholds);
-        checkDiff(diffs, FLD_TML, Purity.tumorMutationalLoad(), otherPurity.Purity.tumorMutationalLoad(), thresholds);
+        checkDiff(diffs, FLD_TMB, Purity.tumorMutationalBurdenPerMb(), otherPurity.Purity.tumorMutationalBurdenPerMb(), category(), thresholds);
+        checkDiff(diffs, FLD_MS_INDELS, Purity.microsatelliteIndelsPerMb(), otherPurity.Purity.microsatelliteIndelsPerMb(), category(), thresholds);
+        checkDiff(diffs, FLD_TML, Purity.tumorMutationalLoad(), otherPurity.Purity.tumorMutationalLoad(), category(), thresholds);
 
-        checkDiff(diffs, FLD_CN_SEGS, Purity.qc().copyNumberSegments(), otherPurity.Purity.qc().copyNumberSegments(), thresholds);
+        checkDiff(diffs, FLD_CN_SEGS, Purity.qc().copyNumberSegments(), otherPurity.Purity.qc().copyNumberSegments(), category(), thresholds);
 
         checkDiff(
                 diffs, FLD_UNS_CN_SEGS,
-                Purity.qc().unsupportedCopyNumberSegments(), otherPurity.Purity.qc().unsupportedCopyNumberSegments(),thresholds);
+                Purity.qc().unsupportedCopyNumberSegments(), otherPurity.Purity.qc().unsupportedCopyNumberSegments(), category(), thresholds);
 
-        checkDiff(diffs, FLD_SV_TMB, Purity.svTumorMutationalBurden(), otherPurity.Purity.svTumorMutationalBurden(), thresholds);
+        checkDiff(diffs, FLD_SV_TMB, Purity.svTumorMutationalBurden(), otherPurity.Purity.svTumorMutationalBurden(), category(), thresholds);
 
         checkDiff(diffs, FLD_QC_STATUS, qcStatus(Purity.qc().status()), qcStatus(otherPurity.Purity.qc().status()));
 
@@ -132,7 +132,7 @@ public class PurityData implements ComparableItem
                 diffs, FLD_TML_STATUS,
                 Purity.tumorMutationalLoadStatus().toString(), otherPurity.Purity.tumorMutationalLoadStatus().toString());
 
-        checkDiff(diffs, FLD_TINC_LEVEL, Purity.qc().tincLevel(), otherPurity.Purity.qc().tincLevel(), thresholds);
+        checkDiff(diffs, FLD_TINC_LEVEL, Purity.qc().tincLevel(), otherPurity.Purity.qc().tincLevel(), category(), thresholds);
 
         return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches);
     }

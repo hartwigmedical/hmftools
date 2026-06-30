@@ -72,9 +72,9 @@ public record IsofoxGeneData(GeneExpression GeneExpression) implements Comparabl
 
         final List<String> diffs = Lists.newArrayList();
 
-        checkDiff(diffs, FLD_SPLICED_FRAGS, ref.splicedFragments(), otherData.splicedFragments(), thresholds);
-        checkDiff(diffs, FLD_UNSPLICED_FRAGS, ref.unsplicedFragments(), otherData.unsplicedFragments(), thresholds);
-        checkDiff(diffs, FLD_ADJ_TPM, ref.tpm(), otherData.tpm(), thresholds);
+        checkDiff(diffs, FLD_SPLICED_FRAGS, ref.splicedFragments(), otherData.splicedFragments(), category(), thresholds);
+        checkDiff(diffs, FLD_UNSPLICED_FRAGS, ref.unsplicedFragments(), otherData.unsplicedFragments(), category(), thresholds);
+        checkDiff(diffs, FLD_ADJ_TPM, ref.tpm(), otherData.tpm(), category(), thresholds);
 
         return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches);
     }

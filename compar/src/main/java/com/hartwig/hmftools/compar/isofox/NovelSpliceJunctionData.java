@@ -104,7 +104,7 @@ public record NovelSpliceJunctionData(NovelSpliceJunction NovelSpliceJunction, B
         final List<String> diffs = Lists.newArrayList();
 
         checkDiff(diffs, FLD_ALT_SJ_TYPE, ref.type().toString(), otherData.type().toString());
-        checkDiff(diffs, FLD_FRAG_COUNT, ref.fragmentCount(), otherData.fragmentCount(), thresholds);
+        checkDiff(diffs, FLD_FRAG_COUNT, ref.fragmentCount(), otherData.fragmentCount(), category(), thresholds);
         checkDiff(diffs, FLD_REGION_START, ref.regionStart().toString(), otherData.regionStart().toString());
         checkDiff(diffs, FLD_REGION_END, ref.regionEnd().toString(), otherData.regionEnd().toString());
 

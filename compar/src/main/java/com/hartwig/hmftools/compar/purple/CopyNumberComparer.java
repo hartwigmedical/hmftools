@@ -40,8 +40,8 @@ public class CopyNumberComparer implements ItemComparer
     @Override
     public void registerThresholds(final DiffThresholds thresholds)
     {
-        thresholds.addFieldThreshold(FLD_COPY_NUMBER, 0.5, 0.15);
-        thresholds.addFieldThreshold(FLD_MAJOR_ALLELE_CN, 0.5, 0.15);
+        thresholds.addFieldThreshold(category(), FLD_COPY_NUMBER, 0.5, 0.15);
+        thresholds.addFieldThreshold(category(), FLD_MAJOR_ALLELE_CN, 0.5, 0.15);
     }
 
     @Override

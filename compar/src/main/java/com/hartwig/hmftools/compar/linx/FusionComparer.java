@@ -58,7 +58,7 @@ public class FusionComparer implements ItemComparer
     @Override
     public void registerThresholds(final DiffThresholds thresholds)
     {
-        thresholds.addFieldThreshold(FLD_JUNCTION_COPY_NUMBER, 0.5, 0.2);
+        thresholds.addFieldThreshold(category(), FLD_JUNCTION_COPY_NUMBER, 0.5, 0.2);
     }
 
     @Override

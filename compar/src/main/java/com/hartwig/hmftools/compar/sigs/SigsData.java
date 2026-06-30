@@ -65,7 +65,7 @@ public record SigsData(SignatureAllocation SignatureAllocation) implements Compa
 
         final List<String> diffs = Lists.newArrayList();
 
-        checkDiff(diffs, FLD_PERCENT, SignatureAllocation.percent(), otherData.percent(), thresholds);
+        checkDiff(diffs, FLD_PERCENT, SignatureAllocation.percent(), otherData.percent(), category(), thresholds);
 
         return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches);
     }

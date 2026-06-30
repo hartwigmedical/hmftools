@@ -52,16 +52,16 @@ public class PurityComparer implements ItemComparer
     @Override
     public void registerThresholds(final DiffThresholds thresholds)
     {
-        thresholds.addFieldThreshold(FLD_PURITY, 0.04, 0);
-        thresholds.addFieldThreshold(FLD_PLOIDY, 0.1, 0);
-        thresholds.addFieldThreshold(FLD_CONTAMINATION, 0.005, 0);
-        thresholds.addFieldThreshold(FLD_TMB, 0.1, 0.05);
-        thresholds.addFieldThreshold(FLD_MS_INDELS, 0.1, 0.05);
-        thresholds.addFieldThreshold(FLD_TML, 1, 0.05);
-        thresholds.addFieldThreshold(FLD_CN_SEGS, 5, 0.2);
-        thresholds.addFieldThreshold(FLD_UNS_CN_SEGS, 5, 0.2);
-        thresholds.addFieldThreshold(FLD_SV_TMB, 5, 0.05);
-        thresholds.addFieldThreshold(FLD_TINC_LEVEL, 0.1, 0);
+        thresholds.addFieldThreshold(category(), FLD_PURITY, 0.04, 0);
+        thresholds.addFieldThreshold(category(), FLD_PLOIDY, 0.1, 0);
+        thresholds.addFieldThreshold(category(), FLD_CONTAMINATION, 0.005, 0);
+        thresholds.addFieldThreshold(category(), FLD_TMB, 0.1, 0.05);
+        thresholds.addFieldThreshold(category(), FLD_MS_INDELS, 0.1, 0.05);
+        thresholds.addFieldThreshold(category(), FLD_TML, 1, 0.05);
+        thresholds.addFieldThreshold(category(), FLD_CN_SEGS, 5, 0.2);
+        thresholds.addFieldThreshold(category(), FLD_UNS_CN_SEGS, 5, 0.2);
+        thresholds.addFieldThreshold(category(), FLD_SV_TMB, 5, 0.05);
+        thresholds.addFieldThreshold(category(), FLD_TINC_LEVEL, 0.1, 0);
     }
 
     @Override

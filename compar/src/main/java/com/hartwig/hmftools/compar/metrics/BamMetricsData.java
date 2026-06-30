@@ -67,12 +67,12 @@ public class BamMetricsData implements ComparableItem
 
         final List<String> diffs = Lists.newArrayList();
 
-        checkDiff(diffs, FLD_DUPLICATE_PERCENTAGE, mMetrics.duplicatePercent(), otherData.mMetrics.duplicatePercent(), thresholds);
+        checkDiff(diffs, FLD_DUPLICATE_PERCENTAGE, mMetrics.duplicatePercent(), otherData.mMetrics.duplicatePercent(), category(), thresholds);
 
         for(Integer coverage : mComparisonPercentages)
         {
             String coverageStr = format("Percentage%dX", coverage);
-            checkDiff(diffs, coverageStr, mMetrics.coveragePercent(coverage), otherData.mMetrics.coveragePercent(coverage), thresholds);
+            checkDiff(diffs, coverageStr, mMetrics.coveragePercent(coverage), otherData.mMetrics.coveragePercent(coverage), category(), thresholds);
         }
 
         return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches);

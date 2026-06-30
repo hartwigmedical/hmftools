@@ -65,7 +65,7 @@ public class FlagstatData implements ComparableItem
 
         final List<String> diffs = Lists.newArrayList();
 
-        checkDiff(diffs, FLD_MAPPED_PROPORTION, mFlagstat.mappedProportion(), otherData.mFlagstat.mappedProportion(), thresholds);
+        checkDiff(diffs, FLD_MAPPED_PROPORTION, mFlagstat.mappedProportion(), otherData.mFlagstat.mappedProportion(), category(), thresholds);
 
         return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches);
     }

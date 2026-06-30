@@ -57,11 +57,11 @@ public class BamMetricsComparer implements ItemComparer
     @Override
     public void registerThresholds(final DiffThresholds thresholds)
     {
-        thresholds.addFieldThreshold(FLD_DUPLICATE_PERCENTAGE, DUPLICATE_PERCENTAGE_ABS_THRESHOLD, DUPLICATE_PERCENTAGE_PCT_THRESHOLD);
+        thresholds.addFieldThreshold(category(), FLD_DUPLICATE_PERCENTAGE, DUPLICATE_PERCENTAGE_ABS_THRESHOLD, DUPLICATE_PERCENTAGE_PCT_THRESHOLD);
 
         for(Integer coverage : mComparisonPercentages)
         {
-            thresholds.addFieldThreshold(coverageString(coverage), 0.03, 0);
+            thresholds.addFieldThreshold(category(), coverageString(coverage), 0.03, 0);
         }
     }
 

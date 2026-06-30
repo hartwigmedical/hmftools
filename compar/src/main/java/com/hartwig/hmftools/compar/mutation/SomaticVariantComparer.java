@@ -265,7 +265,7 @@ public class SomaticVariantComparer implements ItemComparer
     @Override
     public void registerThresholds(final DiffThresholds thresholds)
     {
-        VariantCommon.registerThresholds(thresholds);
+        VariantCommon.registerThresholds(category(), thresholds);
     }
 
     @Override

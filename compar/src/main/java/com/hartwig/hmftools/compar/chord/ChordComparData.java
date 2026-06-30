@@ -67,9 +67,9 @@ public class ChordComparData implements ComparableItem
 
         final List<String> diffs = Lists.newArrayList();
 
-        checkDiff(diffs, FLD_BRCA1, Chord.BRCA1Value(), otherData.Chord.BRCA1Value(), thresholds);
-        checkDiff(diffs, FLD_BRCA2, Chord.BRCA2Value(), otherData.Chord.BRCA2Value(), thresholds);
-        checkDiff(diffs, FLD_SCORE, Chord.hrdValue(), otherData.Chord.hrdValue(), thresholds);
+        checkDiff(diffs, FLD_BRCA1, Chord.BRCA1Value(), otherData.Chord.BRCA1Value(), category(), thresholds);
+        checkDiff(diffs, FLD_BRCA2, Chord.BRCA2Value(), otherData.Chord.BRCA2Value(), category(), thresholds);
+        checkDiff(diffs, FLD_SCORE, Chord.hrdValue(), otherData.Chord.hrdValue(), category(), thresholds);
         checkDiff(diffs, FLD_TYPE, Chord.hrdType(), otherData.Chord.hrdType());
         checkDiff(diffs, FLD_STATUS, Chord.hrStatus().toString(), otherData.Chord.hrStatus().toString());
 

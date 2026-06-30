@@ -14,12 +14,15 @@ public final class DiffFunctions
 {
     public static final String FILTER_DIFF = "filter";
 
-    public static boolean checkDiff(final List<String> diffs, final String name, long value1, long value2, final DiffThresholds thresholds)
+    public static boolean checkDiff(final List<String> diffs, final String name, long value1, long value2, final CategoryType category,
+            final DiffThresholds thresholds)
     {
-        if(!thresholds.isFieldRegistered(name))
+        if(!thresholds.isFieldRegistered(category, name))
+        {
             return checkDiff(diffs, name, value1, value2);
+        }
 
-        if(thresholds.hasDifference(name, value1, value2))
+        if(thresholds.hasDifference(category, name, value1, value2))
         {
             diffs.add(format("%s(%d/%d)", name, value1, value2));
             return true;
@@ -28,10 +31,11 @@ public final class DiffFunctions
         return false;
     }
 
-    public static boolean checkDiff(final List<String> diffs, final String name, double value1, double value2, final DiffThresholds thresholds)
+    public static boolean checkDiff(final List<String> diffs, final String name, double value1, double value2, final CategoryType category,
+            final DiffThresholds thresholds)
     {
-        if((!thresholds.isFieldRegistered(name) && DEFAULT_DECIMAL_THRESHOLD.hasDiff(value1, value2))
-        || thresholds.hasDifference(name, value1, value2))
+        if((!thresholds.isFieldRegistered(category, name) && DEFAULT_DECIMAL_THRESHOLD.hasDiff(value1, value2))
+                || thresholds.hasDifference(category, name, value1, value2))
         {
             diffs.add(format("%s(%.3f/%.3f)", name, value1, value2));
             return true;
