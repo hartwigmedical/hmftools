@@ -113,7 +113,8 @@ public class AssemblyConfig
     public final int AssemblyMapQualThreshold;
     public final boolean DiscordantOnlyDisabled;
     public final double DiscordantRateIncrement;
-    public static double SampleDiscordantRate;
+
+    public static double SampleDiscordantRate = 0;
 
     // debug options
     public final SpecificRegions SpecificChrRegions;
@@ -335,7 +336,6 @@ public class AssemblyConfig
 
         DiscordantOnlyDisabled = configBuilder.hasFlag(DISC_ONLY_DISABLED);
         DiscordantRateIncrement = configBuilder.getDecimal(DISC_RATE_INCREMENT);
-        SampleDiscordantRate = 0; // set from Prep's discordant stats
 
         PerfLogTime = configBuilder.getDecimal(PERF_LOG_TIME);
         PerfDebug = configBuilder.hasFlag(PERF_DEBUG) || PerfLogTime > 0;

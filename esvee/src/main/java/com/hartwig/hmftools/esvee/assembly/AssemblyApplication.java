@@ -77,6 +77,7 @@ public class AssemblyApplication
     private final AssemblyConfig mConfig;
     private final ResultsWriter mResultsWriter;
 
+    private DiscordantStats mDiscordantStats;
     private final Map<String,List<Junction>> mChrJunctionsMap;
     private final Map<String,List<JunctionGroup>> mJunctionGroupMap;
 
@@ -96,6 +97,7 @@ public class AssemblyApplication
     {
         mConfig = new AssemblyConfig(configBuilder, asSubRoutine);
 
+        mDiscordantStats = null;
         mChrJunctionsMap = Maps.newHashMap();
         mJunctionGroupMap = new TreeMap<>();
         mBamReaders = Lists.newArrayList();
@@ -115,6 +117,7 @@ public class AssemblyApplication
                 mConfig.OutputDir, mConfig.OutputId != null ? format(" outputId(%s)", mConfig.OutputId) : "");
 
         loadFragmentLengthBounds();
+        loadDiscordantData();
 
         if(!loadJunctionFiles())
         {
@@ -178,6 +181,14 @@ public class AssemblyApplication
         SV_LOGGER.info("Esvee assembly complete, mins({})", runTimeMinsStr(startTimeMs));
     }
 
+    private void loadDiscordantData()
+    {
+        String discStatsFilename = formDiscordantStatsFilename(mConfig.PrepDir, mConfig.sampleId(), mConfig.OutputId);
+        mDiscordantStats = loadDiscordantStats(discStatsFilename);
+
+        AssemblyConfig.SampleDiscordantRate = mDiscordantStats.discordantRate();
+    }
+
     private boolean loadJunctionFiles()
     {
         if(!mConfig.SpecificJunctions.isEmpty())
@@ -203,14 +214,9 @@ public class AssemblyApplication
             System.exit(1);
         }
 
-        String discStatsFilename = formDiscordantStatsFilename(mConfig.PrepDir, mConfig.sampleId(), mConfig.OutputId);
-        DiscordantStats discordantStats = loadDiscordantStats(discStatsFilename);
-
         int minJunctionFrags = MIN_JUNCTION_SUPPORT;
         int minHotspotFrags = MIN_HOTSPOT_JUNCTION_SUPPORT;
         int minDiscordantFrags = DISCORDANT_GROUP_MIN_FRAGMENTS_SHORT;
-
-        AssemblyConfig.SampleDiscordantRate = discordantStats.discordantRate();
 
         if(AssemblyConfig.SampleDiscordantRate >= mConfig.DiscordantRateIncrement)
         {
