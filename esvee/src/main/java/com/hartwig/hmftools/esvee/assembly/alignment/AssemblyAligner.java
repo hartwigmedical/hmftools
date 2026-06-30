@@ -459,8 +459,6 @@ public class AssemblyAligner extends ThreadTask
 
         boolean hasSuspectExtension = hasSuspectExtension(assemblyAlignment);
 
-        boolean testMinorityExtensions = false;
-
         if(isIllumina())
         {
             if(assembly.stats().SoftClipSecondMaxLength < ASSEMBLY_MIN_SOFT_CLIP_LENGTH) // only 1 read above the min length
@@ -469,18 +467,9 @@ public class AssemblyAligner extends ThreadTask
             if(!hasSuspectExtension)
                 return false;
         }
-        else
-        {
-            testMinorityExtensions = true;
-        }
 
-        if(testMinorityExtensions)
-        {
-            // see if there is a minority of longer reads being
-            return hasLongerMinorityExtensions(assembly.support(), assembly.junction().Orient, hasSuspectExtension);
-        }
-
-        return false;
+        // see if there is a minority of longer reads being
+        return hasLongerMinorityExtensions(assembly.support(), assembly.junction().Orient, hasSuspectExtension);
     }
 
     @VisibleForTesting
