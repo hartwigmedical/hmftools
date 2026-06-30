@@ -26,6 +26,7 @@ import java.util.Set;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
@@ -38,11 +39,13 @@ public class JunctionAssembler
 {
     private Junction mJunction;
     private final SagaSequenceMatcher mSagaMatcher;
+    private final RefGenomeInterface mRefGenome;
     private final List<Read> mNonJunctionReads;
 
-    public JunctionAssembler(final Junction junction, @Nullable final SagaSequenceMatcher sagaMatcher)
+    public JunctionAssembler(final Junction junction, final RefGenomeInterface refGenome, @Nullable final SagaSequenceMatcher sagaMatcher)
     {
         mJunction = junction;
+        mRefGenome = refGenome;
         mSagaMatcher = sagaMatcher;
         mNonJunctionReads = Lists.newArrayList();
     }
@@ -94,7 +97,7 @@ public class JunctionAssembler
         }
         else
         {
-            JunctionReadTypes juncReadTypes = new JunctionReadTypes(mJunction, rawReads);
+            JunctionReadTypes juncReadTypes = new JunctionReadTypes(mJunction, rawReads, mRefGenome);
             junctionReads.addAll(juncReadTypes.junctionReads());
 
             juncReadTypes.establishExtensionReads(extensionReads, juncThresholdState);
@@ -397,6 +400,6 @@ public class JunctionAssembler
     @VisibleForTesting
     public JunctionAssembler(final Junction junction)
     {
-        this(junction, null);
+        this(junction, null, null);
     }
 }

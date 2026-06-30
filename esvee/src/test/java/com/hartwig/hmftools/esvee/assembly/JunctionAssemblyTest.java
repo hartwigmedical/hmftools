@@ -123,6 +123,9 @@ public class JunctionAssemblyTest
         read4.bamRecord().setAttribute(NUM_MUTATONS_ATTRIBUTE, 2);
         read4.bamRecord().setAttribute(MISMATCHES_AND_DELETIONS_ATTRIBUTE, "22A1C1A3");
 
+        MockRefGenome refGenome = new MockRefGenome(false);
+        refGenome.RefGenomeMap.put(CHR_1, REF_BASES_200);
+
         // an indel read inferring a soft-clip
         Read read5 = createRead(READ_ID_GENERATOR.nextId(), 10, readBases, "40M10I20M");
         calcIndelInferredUnclippedPositions(read5);
@@ -135,10 +138,12 @@ public class JunctionAssemblyTest
                 READ_ID_GENERATOR.nextId(), 10, longerReadBases, makeCigarString(longerReadBases, 0, 25));
 
         // a read without soft-clipping or SNVs
-        Read read7 = createRead(READ_ID_GENERATOR.nextId(), 10, readBases, makeCigarString(readBases, 0, 0));
+        String readRefBases = REF_BASES_200.substring(10, 35);
+        Read read7 = createRead(READ_ID_GENERATOR.nextId(), 10, readRefBases, makeCigarString(readRefBases, 0, 0));
+        read7.bamRecord().setAttribute(NUM_MUTATONS_ATTRIBUTE, 2); // assume has SNVs elsewhere in the read
 
         JunctionReadTypes junctionReadTypes = new JunctionReadTypes(
-                junction, List.of(read1, read2, read3, read4, read5, read6a, read6b, read7));
+                junction, List.of(read1, read2, read3, read4, read5, read6a, read6b, read7), refGenome);
 
         assertEquals(3, junctionReadTypes.nonJunctionReads().size());
         List<ReadJunctionInfo> candidateReads = junctionReadTypes.candidateJunctionReads();
@@ -184,7 +189,7 @@ public class JunctionAssemblyTest
         read7 = createRead(READ_ID_GENERATOR.nextId(), 30, readBases, makeCigarString(readBases, 0, 0));
 
         junctionReadTypes = new JunctionReadTypes(
-                junction, List.of(read1, read2, read3, read4, read5, read6a, read6b, read7));
+                junction, List.of(read1, read2, read3, read4, read5, read6a, read6b, read7), refGenome);
 
         assertEquals(3, junctionReadTypes.nonJunctionReads().size());
         candidateReads = junctionReadTypes.candidateJunctionReads();

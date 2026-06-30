@@ -2,7 +2,6 @@ package com.hartwig.hmftools.esvee.assembly;
 
 import static java.lang.Math.abs;
 
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.MISMATCHES_AND_DELETIONS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MAX_JUNC_POS_DIFF;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_EXTENSION_READ_HIGH_QUAL_MATCH;
@@ -11,18 +10,19 @@ import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_SOFT_CLIP_SECONDARY_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_SOFT_CLIP_SECONDARY_LENGTH_LOWER;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.JUNCTION_PROXIMATE_READ_DISTANCE;
+import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.readIndexFromPosition;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.readJunctionExtensionLength;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.recordSoftClipsAtJunction;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LINE_MIN_EXTENSION_LENGTH;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LINE_MIN_SOFT_CLIP_SECONDARY_LENGTH;
+import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_VARIANT_LENGTH;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.esvee.assembly.alignment.MdTag;
-import com.hartwig.hmftools.esvee.assembly.alignment.MdTagElement;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
 
@@ -31,10 +31,12 @@ public class JunctionReadTypes
     private final Junction mJunction;
     private final List<ReadJunctionInfo> mCandidateJunctionReads;
     private final List<Read> mNonJunctionReads;
+    private final RefGenomeInterface mRefGenome;
 
-    public JunctionReadTypes(final Junction junction, final List<Read> rawReads)
+    public JunctionReadTypes(final Junction junction, final List<Read> rawReads, final RefGenomeInterface refGenome)
     {
         mJunction = junction;
+        mRefGenome = refGenome;
 
         mCandidateJunctionReads = Lists.newArrayList();
         mNonJunctionReads = Lists.newArrayList();
@@ -175,7 +177,7 @@ public class JunctionReadTypes
     }
 
     @VisibleForTesting
-    public static boolean readMismatchesPastJunction(final Read read, final Junction junction)
+    public boolean readMismatchesPastJunction(final Read read, final Junction junction)
     {
         int outerAlignmentPos = junction.isForward() ? read.alignmentEnd() : read.alignmentStart();
 
@@ -189,33 +191,51 @@ public class JunctionReadTypes
         if(numOfEvents == null || (int)numOfEvents < ASSEMBLY_MIN_EXTENSION_READ_HIGH_QUAL_MATCH)
             return false;
 
-        Object md = read.bamRecord().getAttribute(MISMATCHES_AND_DELETIONS_ATTRIBUTE);
+        int posStart, posEnd;
 
-        if(md == null)
+        if(junction.isForward())
+        {
+            if(read.alignmentEnd() <= junction.Position)
+                return false;
+
+            posStart = junction.Position + 1;
+            posEnd = read.alignmentEnd();
+        }
+        else
+        {
+            if(read.alignmentStart() >= junction.Position)
+                return false;
+
+            posStart = read.alignmentStart();
+            posEnd = junction.Position - 1;
+        }
+
+        int refLength = posEnd - posStart + 1;
+
+        if(refLength < ASSEMBLY_MIN_EXTENSION_READ_HIGH_QUAL_MATCH)
+            return false; // insufficient for junction support anyway
+
+        if(refLength > MIN_VARIANT_LENGTH / 2)
+            return false; // should have been soft-clipped
+
+        byte[] refBases = mRefGenome.getBases(read.chromosome(), posStart, posEnd);
+
+        if(refBases == null || refBases.length < refLength)
             return false;
 
-        MdTag mdTag = new MdTag((String)md);
+        int readIndexStart = readIndexFromPosition(read, posStart);
+        int mismatches = 0;
 
-        int remainingBases = extensionLength;
-
-        int elementCount = mdTag.elements().size();
-        int elementIndex = junction.isForward() ? elementCount - 1 : 0;
-        int mismatchCount = 0;
-
-        while(elementIndex >= 0 && elementIndex < elementCount && remainingBases > 0)
+        for(int i = 0; i < refLength; ++i)
         {
-            MdTagElement element = mdTag.elements().get(elementIndex);
+            if(readIndexStart + i >= read.basesLength() || i >= refBases.length)
+                return false;
 
-            if(!element.isMatch())
-            {
-                mismatchCount += element.Length;
+            if(read.getBases()[readIndexStart + i] != refBases[i])
+                ++mismatches;
 
-                if(mismatchCount >= ASSEMBLY_MIN_EXTENSION_READ_HIGH_QUAL_MATCH)
-                    return true;
-            }
-
-            remainingBases -= element.Length;
-            elementIndex += junction.isForward() ? -1 : 1;
+            if(mismatches >= ASSEMBLY_MIN_EXTENSION_READ_HIGH_QUAL_MATCH)
+                return true;
         }
 
         return false;
