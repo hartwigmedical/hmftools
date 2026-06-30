@@ -56,6 +56,7 @@ public final class AssemblyConstants
     public static final double WEAK_ASSEMBLY_DISC_RATE = 0.02;
     public static final int WEAK_ASSEMBLY_MIN_INS_LENGTH = 16;
     public static final int WEAK_ASSEMBLY_MIN_REF_REPEAT = 7;
+    public static final int WEAK_ASSEMBLY_MAX_REF_REPEAT_LENGTH = 4;
 
     public static final double DEFAULT_DISC_RATE_INCREMENT = 0.01;
     public static final int DISC_RATE_JUNC_INCREMENT = 1;

@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ALIGNMENT_RE
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_UNLINKED_WEAK_ASSEMBLY_EXTENSION_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.WEAK_ASSEMBLY_DISC_RATE;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.WEAK_ASSEMBLY_MAX_REF_REPEAT_LENGTH;
 import static com.hartwig.hmftools.esvee.common.SvConstants.WEAK_ASSEMBLY_LONG_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.WEAK_ASSEMBLY_MIN_INS_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.WEAK_ASSEMBLY_MIN_REF_REPEAT;
@@ -494,7 +495,7 @@ public class AssemblyAligner extends ThreadTask
         {
             String refBases = assembly.formRefBaseSequence();
             String adjacentRefBases;
-            int minRefLength = WEAK_ASSEMBLY_MIN_REF_REPEAT * 3; // so will only allow repeats of 3mers or less
+            int minRefLength = WEAK_ASSEMBLY_MIN_REF_REPEAT * WEAK_ASSEMBLY_MAX_REF_REPEAT_LENGTH;
 
             if(refBases.length() <= minRefLength)
             {
