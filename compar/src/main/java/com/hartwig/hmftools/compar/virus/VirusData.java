@@ -74,8 +74,8 @@ public class VirusData implements ComparableItem
         final List<String> diffs = Lists.newArrayList();
 
         checkDiff(diffs, FLD_REPORTED, Virus.reported(), otherData.Virus.reported());
-        checkDiff(diffs, FLD_INTEGRATIONS, Virus.integrations(), otherData.Virus.integrations(), thresholds);
-        checkDiff(diffs, FLD_MEAN_COVERAGE, Virus.meanCoverage(), otherData.Virus.meanCoverage(), thresholds);
+        checkDiff(diffs, FLD_INTEGRATIONS, Virus.integrations(), otherData.Virus.integrations(), category(), thresholds);
+        checkDiff(diffs, FLD_MEAN_COVERAGE, Virus.meanCoverage(), otherData.Virus.meanCoverage(), category(), thresholds);
         checkDiff(diffs, FLD_DRIVER_LIKELIHOOD, String.valueOf(Virus.virusDriverLikelihoodType()), String.valueOf(otherData.Virus.virusDriverLikelihoodType()));
 
         return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches);

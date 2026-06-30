@@ -64,7 +64,7 @@ public class Cdr3LocusSummaryData implements ComparableItem
         final Cdr3LocusSummary other = ((Cdr3LocusSummaryData) comparableItem).Cdr3LocusSummary;
 
         final List<String> diffs = new ArrayList<>();
-        checkDiff(diffs, PASS_SEQUENCES_FIELD, Cdr3LocusSummary.passSequences(), other.passSequences(), thresholds);
+        checkDiff(diffs, PASS_SEQUENCES_FIELD, Cdr3LocusSummary.passSequences(), other.passSequences(), category(), thresholds);
 
         return createMismatchFromDiffs(this, comparableItem, diffs, matchLevel, includeMatches);
     }

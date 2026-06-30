@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.compar.common;
 
-import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
-import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
+import static java.util.Collections.emptyMap;
 
 import java.util.Map;
 
@@ -9,9 +8,7 @@ import com.google.common.collect.Maps;
 
 public class DiffThresholds
 {
-    private final Map<String, ThresholdData> mFieldThresholds;
-
-    private static final String THRESHOLD_ITEM_DELIM = ":";
+    private final Map<CategoryType, Map<String, ThresholdData>> mFieldThresholds;
 
     public static final double DEFAULT_DIFF_PERC = 0.1;
 
@@ -23,13 +20,19 @@ public class DiffThresholds
         mFieldThresholds = Maps.newHashMap();
     }
 
-    public boolean isFieldRegistered(final String field) { return mFieldThresholds.containsKey(field); }
-
-    public ThresholdData getThreshold(final String field) { return mFieldThresholds.get(field); }
-
-    public boolean hasDifference(final String field, double value1, double value2)
+    public boolean isFieldRegistered(final CategoryType category, final String field)
     {
-        ThresholdData thresholdData = mFieldThresholds.get(field);
+        return mFieldThresholds.containsKey(category) && mFieldThresholds.get(category).containsKey(field);
+    }
+
+    public ThresholdData getThreshold(final CategoryType category, final String field)
+    {
+        return mFieldThresholds.getOrDefault(category, emptyMap()).get(field);
+    }
+
+    public boolean hasDifference(final CategoryType category, final String field, double value1, double value2)
+    {
+        ThresholdData thresholdData = getThreshold(category, field);
 
         if(thresholdData == null)
             return false;
@@ -37,34 +40,15 @@ public class DiffThresholds
         return thresholdData.hasDiff(value1, value2);
     }
 
-    public void addFieldThreshold(final String field, double absoluteDiff, double percentDiff)
+    public void addFieldThreshold(final CategoryType category, final String field, double absoluteDiff, double percentDiff)
     {
-        if(mFieldThresholds.containsKey(field)) // keep any config overrides
+        if(isFieldRegistered(category, field)) // keep any config overrides
             return;
 
         ThresholdType type = absoluteDiff > 0 && percentDiff > 0 ? ThresholdType.ABSOLUTE_AND_PERCENT :
                 (absoluteDiff > 0 ? ThresholdType.ABSOLUTE : ThresholdType.PERCENT);
 
-        mFieldThresholds.put(field, new ThresholdData(type, absoluteDiff, percentDiff));
-    }
-
-    public void loadConfig(final String configStr)
-    {
-        if(configStr == null || configStr.isEmpty())
-            return;
-
-        // in the form: Field:AbsDiff:PercDiff and separated by ;
-        String[] fieldEntries = configStr.split(ITEM_DELIM);
-
-        for(String fieldEntry : fieldEntries)
-        {
-            String[] thresholdItems = fieldEntry.split(THRESHOLD_ITEM_DELIM, 3);
-            String field = thresholdItems[0];
-            double absDiff = Double.parseDouble(thresholdItems[1]);
-            double percDiff = Double.parseDouble(thresholdItems[2]);
-            addFieldThreshold(field, absDiff, percDiff);
-
-            CMP_LOGGER.info("added threshold: field({}) absoluteDiff({}) percentDiff({})", field, absDiff, percDiff);
-        }
+        mFieldThresholds.putIfAbsent(category, Maps.newHashMap());
+        mFieldThresholds.get(category).put(field, new ThresholdData(type, absoluteDiff, percentDiff));
     }
 }

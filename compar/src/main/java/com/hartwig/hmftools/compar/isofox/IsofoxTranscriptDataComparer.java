@@ -45,7 +45,7 @@ public record IsofoxTranscriptDataComparer(ComparConfig mConfig) implements Item
     @Override
     public void registerThresholds(final DiffThresholds thresholds)
     {
-        thresholds.addFieldThreshold(FLD_ADJ_TPM, -1, 0.05);
+        thresholds.addFieldThreshold(category(), FLD_ADJ_TPM, -1, 0.05);
     }
 
     @Override

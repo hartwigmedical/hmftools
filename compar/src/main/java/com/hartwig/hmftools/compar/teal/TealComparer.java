@@ -37,7 +37,7 @@ public class TealComparer implements ItemComparer
     @Override
     public void registerThresholds(final DiffThresholds thresholds)
     {
-        thresholds.addFieldThreshold(FLD_TELOMERE_LENGTH, Double.NaN, 0.05);
+        thresholds.addFieldThreshold(category(), FLD_TELOMERE_LENGTH, Double.NaN, 0.05);
     }
 
     @Override

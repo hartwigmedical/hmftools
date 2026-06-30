@@ -84,8 +84,8 @@ public class GermlineAmpDelData implements ComparableItem
         checkDiff(diffs, FLD_REPORTED, AmpDelData.Reported == REPORTED, otherDeletion.AmpDelData.Reported == REPORTED);
         checkDiff(diffs, FLD_GERMLINE_STATUS, AmpDelData.NormalStatus.toString(), otherDeletion.AmpDelData.NormalStatus.toString());
         checkDiff(diffs, FLD_TUMOR_STATUS, AmpDelData.TumorStatus.toString(), otherDeletion.AmpDelData.TumorStatus.toString());
-        checkDiff(diffs, FLD_GERMLINE_CN, AmpDelData.GermlineCopyNumber, otherDeletion.AmpDelData.GermlineCopyNumber, thresholds);
-        checkDiff(diffs, FLD_TUMOR_CN, AmpDelData.TumorCopyNumber, otherDeletion.AmpDelData.TumorCopyNumber, thresholds);
+        checkDiff(diffs, FLD_GERMLINE_CN, AmpDelData.GermlineCopyNumber, otherDeletion.AmpDelData.GermlineCopyNumber, category(), thresholds);
+        checkDiff(diffs, FLD_TUMOR_CN, AmpDelData.TumorCopyNumber, otherDeletion.AmpDelData.TumorCopyNumber, category(), thresholds);
         checkDiff(diffs, FLD_CHROMOSOME, mComparisonChromosome, otherDeletion.mComparisonChromosome);
         checkDiff(diffs, FLD_CHROMOSOME_BAND, AmpDelData.ChromosomeBand, otherDeletion.AmpDelData.ChromosomeBand);
 

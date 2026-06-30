@@ -48,7 +48,7 @@ public record RnaFusionComparer(ComparConfig mConfig) implements ItemComparer
     @Override
     public void registerThresholds(final DiffThresholds thresholds)
     {
-        thresholds.addFieldThreshold(FLD_SPLIT_FRAGS, 5, 0.05);
+        thresholds.addFieldThreshold(category(), FLD_SPLIT_FRAGS, 5, 0.05);
     }
 
     @Override

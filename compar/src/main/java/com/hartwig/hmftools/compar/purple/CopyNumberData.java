@@ -85,8 +85,8 @@ public record CopyNumberData(
 
         final List<String> diffs = Lists.newArrayList();
 
-        checkDiff(diffs, FLD_COPY_NUMBER, copyNumber, otherCn.copyNumber, thresholds);
-        checkDiff(diffs, FLD_MAJOR_ALLELE_CN, majorAlleleCopyNumber, otherCn.majorAlleleCopyNumber, thresholds);
+        checkDiff(diffs, FLD_COPY_NUMBER, copyNumber, otherCn.copyNumber, category(), thresholds);
+        checkDiff(diffs, FLD_MAJOR_ALLELE_CN, majorAlleleCopyNumber, otherCn.majorAlleleCopyNumber, category(), thresholds);
         checkDiff(diffs, FLD_METHOD, method.toString(), otherCn.method.toString());
 
         return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches);

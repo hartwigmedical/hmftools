@@ -228,12 +228,12 @@ public class SomaticVariantData implements ComparableItem
         final List<String> diffs = Lists.newArrayList();
 
         if(Qual != NO_QUAL_PRESENT && otherVar.Qual != NO_QUAL_PRESENT)
-            checkDiff(diffs, FLD_QUAL, Qual, otherVar.Qual, thresholds);
+            checkDiff(diffs, FLD_QUAL, Qual, otherVar.Qual, category(), thresholds);
 
         checkDiff(diffs, FLD_REPORTED, Reported, otherVar.Reported);
         checkDiff(diffs, FLD_TIER, Tier.toString(), otherVar.Tier.toString());
-        checkDiff(diffs, FLD_TUMOR_SUPPORTING_READ_COUNT, TumorSupportingReadCount, otherVar.TumorSupportingReadCount, thresholds);
-        checkDiff(diffs, FLD_TUMOR_TOTAL_READ_COUNT, TumorTotalReadCount, otherVar.TumorTotalReadCount, thresholds);
+        checkDiff(diffs, FLD_TUMOR_SUPPORTING_READ_COUNT, TumorSupportingReadCount, otherVar.TumorSupportingReadCount, category(), thresholds);
+        checkDiff(diffs, FLD_TUMOR_TOTAL_READ_COUNT, TumorTotalReadCount, otherVar.TumorTotalReadCount, category(), thresholds);
 
         if(canComparePaveFields(otherVar))
         {
@@ -249,11 +249,11 @@ public class SomaticVariantData implements ComparableItem
         {
             checkDiff(diffs, FLD_HOTSPOT, HotspotStatus.toString(), otherVar.HotspotStatus.toString());
             checkDiff(diffs, FLD_BIALLELIC, Biallelic, otherVar.Biallelic);
-            checkDiff(diffs, FLD_BIALLELIC_PROB, BiallelicProbability, otherVar.BiallelicProbability, thresholds);
+            checkDiff(diffs, FLD_BIALLELIC_PROB, BiallelicProbability, otherVar.BiallelicProbability, category(), thresholds);
             checkDiff(diffs, FLD_OTHER_REPORTED, OtherReportedEffects, otherVar.OtherReportedEffects);
-            checkDiff(diffs, FLD_SUBCLONAL_LIKELIHOOD, SubclonalLikelihood, otherVar.SubclonalLikelihood, thresholds);
-            checkDiff(diffs, FLD_VARIANT_COPY_NUMBER, VariantCopyNumber, otherVar.VariantCopyNumber, thresholds);
-            checkDiff(diffs, FLD_PURITY_ADJUSTED_VAF, PurityAdjustedVaf, otherVar.PurityAdjustedVaf, thresholds);
+            checkDiff(diffs, FLD_SUBCLONAL_LIKELIHOOD, SubclonalLikelihood, otherVar.SubclonalLikelihood, category(), thresholds);
+            checkDiff(diffs, FLD_VARIANT_COPY_NUMBER, VariantCopyNumber, otherVar.VariantCopyNumber, category(), thresholds);
+            checkDiff(diffs, FLD_PURITY_ADJUSTED_VAF, PurityAdjustedVaf, otherVar.PurityAdjustedVaf, category(), thresholds);
         }
 
         checkDiff(diffs, FLD_LPS, HasLPS, otherVar.HasLPS);

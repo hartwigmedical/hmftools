@@ -41,11 +41,11 @@ public class VChordComparer implements ItemComparer
     @Override
     public void registerThresholds(final DiffThresholds thresholds)
     {
-        thresholds.addFieldThreshold(FLD_BREAST, 0.1, 0);
-        thresholds.addFieldThreshold(FLD_OVARIAN, 0.1, 0);
-        thresholds.addFieldThreshold(FLD_PANCREATIC, 0.1, 0);
-        thresholds.addFieldThreshold(FLD_PROSTATE, 0.1, 0);
-        thresholds.addFieldThreshold(FLD_OTHER, 0.1, 0);
+        thresholds.addFieldThreshold(category(), FLD_BREAST, 0.1, 0);
+        thresholds.addFieldThreshold(category(), FLD_OVARIAN, 0.1, 0);
+        thresholds.addFieldThreshold(category(), FLD_PANCREATIC, 0.1, 0);
+        thresholds.addFieldThreshold(category(), FLD_PROSTATE, 0.1, 0);
+        thresholds.addFieldThreshold(category(), FLD_OTHER, 0.1, 0);
     }
 
     @Override

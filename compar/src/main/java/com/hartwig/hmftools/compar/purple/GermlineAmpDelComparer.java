@@ -42,8 +42,8 @@ public class GermlineAmpDelComparer implements ItemComparer
     @Override
     public void registerThresholds(final DiffThresholds thresholds)
     {
-        thresholds.addFieldThreshold(FLD_GERMLINE_CN, 0.2, 0.1);
-        thresholds.addFieldThreshold(FLD_TUMOR_CN, 0.2, 0.1);
+        thresholds.addFieldThreshold(category(), FLD_GERMLINE_CN, 0.2, 0.1);
+        thresholds.addFieldThreshold(category(), FLD_TUMOR_CN, 0.2, 0.1);
     }
 
     @Override

@@ -108,7 +108,7 @@ public record RnaFusionData(RnaFusion RnaFusion, BasePosition ComparisonPosition
         checkDiff(diffs, FLD_KNOWN_TYPE, ref.knownType().toString(), otherData.knownType().toString());
         checkDiff(diffs, FLD_JUNC_TYPE_UP, ref.junctionTypeUp(), otherData.junctionTypeUp());
         checkDiff(diffs, FLD_JUNC_TYPE_DOWN, ref.junctionTypeDown(), otherData.junctionTypeDown());
-        checkDiff(diffs, FLD_SPLIT_FRAGS, ref.splitFragments(), otherData.splitFragments(), thresholds);
+        checkDiff(diffs, FLD_SPLIT_FRAGS, ref.splitFragments(), otherData.splitFragments(), category(), thresholds);
 
         return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches);
     }

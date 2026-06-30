@@ -112,7 +112,7 @@ public class GermlineVariantData implements ComparableItem
         return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches);
     }
 
-    private static List<String> findVariantDiffs(
+    private List<String> findVariantDiffs(
             final SmallVariant var, final SmallVariant otherVar, final DiffThresholds thresholds)
     {
         final List<String> diffs = Lists.newArrayList();
@@ -128,11 +128,11 @@ public class GermlineVariantData implements ComparableItem
         checkDiff(diffs, FLD_HGVS_PROTEIN, var.canonicalHgvsProteinImpact(), otherVar.canonicalHgvsProteinImpact());
         checkDiff(diffs, FLD_OTHER_REPORTED, var.otherReportedEffects(), otherVar.otherReportedEffects());
 
-        checkDiff(diffs, FLD_QUAL, (int) var.qual(), (int) otherVar.qual(), thresholds);
-        checkDiff(diffs, FLD_VARIANT_COPY_NUMBER, var.variantCopyNumber(), otherVar.variantCopyNumber(), thresholds);
-        checkDiff(diffs, FLD_PURITY_ADJUSTED_VAF, var.adjustedVAF(), otherVar.adjustedVAF(), thresholds);
-        checkDiff(diffs, FLD_TUMOR_SUPPORTING_READ_COUNT, var.allelicDepth().AlleleReadCount, otherVar.allelicDepth().AlleleReadCount, thresholds);
-        checkDiff(diffs, FLD_TUMOR_TOTAL_READ_COUNT, var.allelicDepth().TotalReadCount, otherVar.allelicDepth().TotalReadCount, thresholds);
+        checkDiff(diffs, FLD_QUAL, (int) var.qual(), (int) otherVar.qual(), category(), thresholds);
+        checkDiff(diffs, FLD_VARIANT_COPY_NUMBER, var.variantCopyNumber(), otherVar.variantCopyNumber(), category(), thresholds);
+        checkDiff(diffs, FLD_PURITY_ADJUSTED_VAF, var.adjustedVAF(), otherVar.adjustedVAF(), category(), thresholds);
+        checkDiff(diffs, FLD_TUMOR_SUPPORTING_READ_COUNT, var.allelicDepth().AlleleReadCount, otherVar.allelicDepth().AlleleReadCount, category(), thresholds);
+        checkDiff(diffs, FLD_TUMOR_TOTAL_READ_COUNT, var.allelicDepth().TotalReadCount, otherVar.allelicDepth().TotalReadCount, category(), thresholds);
         return diffs;
     }
 

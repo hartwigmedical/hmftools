@@ -48,7 +48,7 @@ public class FlagstatComparer implements ItemComparer
     @Override
     public void registerThresholds(final DiffThresholds thresholds)
     {
-        thresholds.addFieldThreshold(FLD_MAPPED_PROPORTION, MAPPED_PROPORTION_ABS_THRESHOLD, MAPPED_PROPORTION_PCT_THRESHOLD);
+        thresholds.addFieldThreshold(category(), FLD_MAPPED_PROPORTION, MAPPED_PROPORTION_ABS_THRESHOLD, MAPPED_PROPORTION_PCT_THRESHOLD);
     }
 
     @Override

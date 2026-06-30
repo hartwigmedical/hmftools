@@ -35,7 +35,7 @@ public class Cdr3LocusSummaryComparer implements ItemComparer
     @Override
     public void registerThresholds(final DiffThresholds thresholds)
     {
-        thresholds.addFieldThreshold(PASS_SEQUENCES_FIELD, Double.NaN, 0.05);
+        thresholds.addFieldThreshold(category(), PASS_SEQUENCES_FIELD, Double.NaN, 0.05);
     }
 
     @Override

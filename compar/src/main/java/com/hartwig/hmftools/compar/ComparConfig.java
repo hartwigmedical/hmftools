@@ -200,7 +200,6 @@ public class ComparConfig
         loadSampleIds(configBuilder);
 
         Thresholds = new DiffThresholds();
-        Thresholds.loadConfig(configBuilder.getValue(THRESHOLDS, ""));
 
         DriverGenes = Sets.newHashSet();
         AlternateTranscriptDriverGenes = Sets.newHashSet();

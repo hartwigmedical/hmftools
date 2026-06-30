@@ -120,9 +120,9 @@ public class DriverData implements ComparableItem
                 diffs, FLD_LIKE_METHOD,
                 DriverCatalog.likelihoodMethod().toString(), otherDriver.DriverCatalog.likelihoodMethod().toString());
 
-        checkDiff(diffs, FLD_LIKELIHOOD, DriverCatalog.driverLikelihood(), otherDriver.DriverCatalog.driverLikelihood(), thresholds);
-        checkDiff(diffs, FLD_MIN_COPY_NUMBER, DriverCatalog.minCopyNumber(), otherDriver.DriverCatalog.minCopyNumber(), thresholds);
-        checkDiff(diffs, FLD_MAX_COPY_NUMBER, DriverCatalog.maxCopyNumber(), otherDriver.DriverCatalog.maxCopyNumber(), thresholds);
+        checkDiff(diffs, FLD_LIKELIHOOD, DriverCatalog.driverLikelihood(), otherDriver.DriverCatalog.driverLikelihood(), category(), thresholds);
+        checkDiff(diffs, FLD_MIN_COPY_NUMBER, DriverCatalog.minCopyNumber(), otherDriver.DriverCatalog.minCopyNumber(), category(), thresholds);
+        checkDiff(diffs, FLD_MAX_COPY_NUMBER, DriverCatalog.maxCopyNumber(), otherDriver.DriverCatalog.maxCopyNumber(), category(), thresholds);
         checkDiff(diffs, FLD_CHROMOSOME, mComparisonChromosome, otherDriver.mComparisonChromosome);
         checkDiff(diffs, FLD_CHROMOSOME_BAND, DriverCatalog.chromosomeBand(), otherDriver.DriverCatalog.chromosomeBand());
 

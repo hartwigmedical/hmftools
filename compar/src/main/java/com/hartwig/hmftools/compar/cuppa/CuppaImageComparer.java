@@ -35,7 +35,7 @@ public class CuppaImageComparer implements ItemComparer
     @Override
     public void registerThresholds(final DiffThresholds thresholds)
     {
-        thresholds.addFieldThreshold(FLD_VIS_IMAGE, Double.NaN, 0);
+        thresholds.addFieldThreshold(category(), FLD_VIS_IMAGE, Double.NaN, 0);
     }
 
     @Override

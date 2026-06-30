@@ -66,7 +66,7 @@ public class CuppaData implements ComparableItem
         final List<String> diffs = Lists.newArrayList();
 
         checkDiff(diffs, FLD_TOP_CANCER_TYPE, PredictionEntry.CancerType, otherCuppaData.PredictionEntry.CancerType);
-        checkDiff(diffs, FLD_PROBABILITY, PredictionEntry.DataValue, otherCuppaData.PredictionEntry.DataValue, thresholds);
+        checkDiff(diffs, FLD_PROBABILITY, PredictionEntry.DataValue, otherCuppaData.PredictionEntry.DataValue, category(), thresholds);
 
         return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches);
     }

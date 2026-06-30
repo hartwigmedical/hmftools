@@ -68,9 +68,9 @@ public class DriverComparer implements ItemComparer
     @Override
     public void registerThresholds(final DiffThresholds thresholds)
     {
-        thresholds.addFieldThreshold(FLD_LIKELIHOOD, 0.1, 0);
-        thresholds.addFieldThreshold(FLD_MIN_COPY_NUMBER, 0.3, 0.15);
-        thresholds.addFieldThreshold(FLD_MAX_COPY_NUMBER, 0.3, 0.15);
+        thresholds.addFieldThreshold(category(), FLD_LIKELIHOOD, 0.1, 0);
+        thresholds.addFieldThreshold(category(), FLD_MIN_COPY_NUMBER, 0.3, 0.15);
+        thresholds.addFieldThreshold(category(), FLD_MAX_COPY_NUMBER, 0.3, 0.15);
     }
 
     @Override

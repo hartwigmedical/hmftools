@@ -70,7 +70,7 @@ public record IsofoxTranscriptData(TranscriptExpression TranscriptExpression) im
         final List<String> diffs = Lists.newArrayList();
 
         checkDiff(diffs, FLD_GENE_NAME, ref.geneName(), otherData.geneName());
-        checkDiff(diffs, FLD_ADJ_TPM, ref.tpm(), otherData.tpm(), thresholds);
+        checkDiff(diffs, FLD_ADJ_TPM, ref.tpm(), otherData.tpm(), category(), thresholds);
 
         return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches);
     }

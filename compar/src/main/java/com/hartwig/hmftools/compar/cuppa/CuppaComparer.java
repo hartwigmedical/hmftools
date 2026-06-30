@@ -39,7 +39,7 @@ public class CuppaComparer implements ItemComparer
     @Override
     public void registerThresholds(final DiffThresholds thresholds)
     {
-        thresholds.addFieldThreshold(FLD_PROBABILITY, 0.1, 0);
+        thresholds.addFieldThreshold(category(), FLD_PROBABILITY, 0.1, 0);
     }
 
     @Override

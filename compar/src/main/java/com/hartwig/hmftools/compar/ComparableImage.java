@@ -86,7 +86,8 @@ public abstract class ComparableImage implements ComparableItem
         int totalPixels = Image.getWidth() * Image.getHeight();
         int absDiff = countDifferingPixels(Image, otherImage);
         double relDiff = (double) absDiff / totalPixels;
-        ThresholdData threshold = thresholds.isFieldRegistered(Name) ? thresholds.getThreshold(Name) : DEFAULT_IMAGE_THRESHOLD;
+        ThresholdData threshold =
+                thresholds.isFieldRegistered(category(), Name) ? thresholds.getThreshold(category(), Name) : DEFAULT_IMAGE_THRESHOLD;
 
         if(hasDiff(absDiff, relDiff, threshold))
         {

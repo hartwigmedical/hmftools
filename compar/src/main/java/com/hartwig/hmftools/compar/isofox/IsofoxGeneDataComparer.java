@@ -49,9 +49,9 @@ public record IsofoxGeneDataComparer(ComparConfig mConfig) implements ItemCompar
     @Override
     public void registerThresholds(final DiffThresholds thresholds)
     {
-        thresholds.addFieldThreshold(FLD_SPLICED_FRAGS, 10, 0.05);
-        thresholds.addFieldThreshold(FLD_UNSPLICED_FRAGS, 10, 0.05);
-        thresholds.addFieldThreshold(FLD_ADJ_TPM, -1, 0.05);
+        thresholds.addFieldThreshold(category(), FLD_SPLICED_FRAGS, 10, 0.05);
+        thresholds.addFieldThreshold(category(), FLD_UNSPLICED_FRAGS, 10, 0.05);
+        thresholds.addFieldThreshold(category(), FLD_ADJ_TPM, -1, 0.05);
     }
 
     @Override

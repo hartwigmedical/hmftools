@@ -48,7 +48,7 @@ public record NovelSpliceJunctionComparer(ComparConfig mConfig) implements ItemC
     @Override
     public void registerThresholds(final DiffThresholds thresholds)
     {
-        thresholds.addFieldThreshold(FLD_FRAG_COUNT, 5, 0.05);
+        thresholds.addFieldThreshold(category(), FLD_FRAG_COUNT, 5, 0.05);
     }
 
     @Override

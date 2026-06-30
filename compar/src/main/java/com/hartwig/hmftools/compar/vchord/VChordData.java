@@ -63,11 +63,11 @@ public record VChordData(VChordPrediction VChord) implements ComparableItem
 
         final List<String> diffs = Lists.newArrayList();
 
-        checkDiff(diffs, FLD_BREAST, VChord.breastCancerHrdScore(), otherData.VChord.breastCancerHrdScore(), thresholds);
-        checkDiff(diffs, FLD_OVARIAN, VChord.ovarianCancerHrdScore(), otherData.VChord.ovarianCancerHrdScore(), thresholds);
-        checkDiff(diffs, FLD_PANCREATIC, VChord.pancreaticCancerScore(), otherData.VChord.pancreaticCancerScore(), thresholds);
-        checkDiff(diffs, FLD_PROSTATE, VChord.prostateCancerScore(), otherData.VChord.prostateCancerScore(), thresholds);
-        checkDiff(diffs, FLD_OTHER, VChord.otherCancerScore(), otherData.VChord.otherCancerScore(), thresholds);
+        checkDiff(diffs, FLD_BREAST, VChord.breastCancerHrdScore(), otherData.VChord.breastCancerHrdScore(), category(), thresholds);
+        checkDiff(diffs, FLD_OVARIAN, VChord.ovarianCancerHrdScore(), otherData.VChord.ovarianCancerHrdScore(), category(), thresholds);
+        checkDiff(diffs, FLD_PANCREATIC, VChord.pancreaticCancerScore(), otherData.VChord.pancreaticCancerScore(), category(), thresholds);
+        checkDiff(diffs, FLD_PROSTATE, VChord.prostateCancerScore(), otherData.VChord.prostateCancerScore(), category(), thresholds);
+        checkDiff(diffs, FLD_OTHER, VChord.otherCancerScore(), otherData.VChord.otherCancerScore(), category(), thresholds);
 
         return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches);
     }

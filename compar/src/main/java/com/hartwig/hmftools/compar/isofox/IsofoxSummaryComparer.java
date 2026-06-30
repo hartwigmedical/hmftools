@@ -61,19 +61,19 @@ public record IsofoxSummaryComparer(ComparConfig mConfig) implements ItemCompare
     @Override
     public void registerThresholds(final DiffThresholds thresholds)
     {
-        thresholds.addFieldThreshold(FLD_TOTAL_FRAGS, 10, 0.01);
-        thresholds.addFieldThreshold(FLD_DUPLICATE_FRAGS, 10, 0.01);
-        thresholds.addFieldThreshold(FLD_SPLICED_FRAG_PERC, 0.01, 0.05);
-        thresholds.addFieldThreshold(FLD_UNSPLICED_FRAG_PERC, 0.01, 0.05);
-        thresholds.addFieldThreshold(FLD_ALT_FRAG_PERC, 0.01, 0.05);
-        thresholds.addFieldThreshold(FLD_CHIMERIC_FRAG_PERC, 0.01, 0.05);
-        thresholds.addFieldThreshold(FLD_SPLICED_GENE_COUNT, 10, 0.01);
-        thresholds.addFieldThreshold(FLD_FRAG_LENGTH_5TH, -1, 0.05);
-        thresholds.addFieldThreshold(FLD_FRAG_LENGTH_50TH, -1, 0.05);
-        thresholds.addFieldThreshold(FLD_FRAG_LENGTH_95TH, -1, 0.05);
-        thresholds.addFieldThreshold(FLD_ENRICHED_GENE_PERC, 0.01, -1);
-        thresholds.addFieldThreshold(FLD_MEDIAN_GC_RATIO, 0.01, -1);
-        thresholds.addFieldThreshold(FLD_FORWARD_STRAND_PERC, 0.01, -1);
+        thresholds.addFieldThreshold(category(), FLD_TOTAL_FRAGS, 10, 0.01);
+        thresholds.addFieldThreshold(category(), FLD_DUPLICATE_FRAGS, 10, 0.01);
+        thresholds.addFieldThreshold(category(), FLD_SPLICED_FRAG_PERC, 0.01, 0.05);
+        thresholds.addFieldThreshold(category(), FLD_UNSPLICED_FRAG_PERC, 0.01, 0.05);
+        thresholds.addFieldThreshold(category(), FLD_ALT_FRAG_PERC, 0.01, 0.05);
+        thresholds.addFieldThreshold(category(), FLD_CHIMERIC_FRAG_PERC, 0.01, 0.05);
+        thresholds.addFieldThreshold(category(), FLD_SPLICED_GENE_COUNT, 10, 0.01);
+        thresholds.addFieldThreshold(category(), FLD_FRAG_LENGTH_5TH, -1, 0.05);
+        thresholds.addFieldThreshold(category(), FLD_FRAG_LENGTH_50TH, -1, 0.05);
+        thresholds.addFieldThreshold(category(), FLD_FRAG_LENGTH_95TH, -1, 0.05);
+        thresholds.addFieldThreshold(category(), FLD_ENRICHED_GENE_PERC, 0.01, -1);
+        thresholds.addFieldThreshold(category(), FLD_MEDIAN_GC_RATIO, 0.01, -1);
+        thresholds.addFieldThreshold(category(), FLD_FORWARD_STRAND_PERC, 0.01, -1);
     }
 
     @Override
