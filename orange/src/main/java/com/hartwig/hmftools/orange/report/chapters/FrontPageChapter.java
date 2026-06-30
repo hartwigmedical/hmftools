@@ -1,90 +1,76 @@
 package com.hartwig.hmftools.orange.report.chapters;
 
-import static java.lang.Math.floor;
-import static java.lang.Math.min;
+import static net.sf.dynamicreports.report.builder.DynamicReports.cmp;
+import static net.sf.dynamicreports.report.builder.DynamicReports.report;
+import static net.sf.dynamicreports.report.builder.DynamicReports.stl;
 
-import static com.hartwig.hmftools.orange.report.ReportResources.FRONT_CIRCOS_IMAGE_HEIGHT;
-import static com.hartwig.hmftools.orange.report.ReportResources.PAGE_MARGIN_BOTTOM;
-import static com.hartwig.hmftools.orange.report.ReportResources.PAGE_MARGIN_TOP;
-
+import com.hartwig.hmftools.orange.report.OrangeColors;
+import com.hartwig.hmftools.orange.report.OrangeStyles;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.pdfdata.FrontPageData;
 import com.hartwig.hmftools.orange.report.tables.FrontPageTables;
-import com.hartwig.hmftools.orange.report.util.Images;
-import com.itextpdf.kernel.geom.PageSize;
-import com.itextpdf.kernel.geom.Rectangle;
-import com.itextpdf.layout.Document;
-import com.itextpdf.layout.element.Image;
-import com.itextpdf.layout.element.Table;
-import com.itextpdf.layout.layout.LayoutArea;
-import com.itextpdf.layout.layout.LayoutContext;
-import com.itextpdf.layout.layout.LayoutResult;
-import com.itextpdf.layout.property.HorizontalAlignment;
-import com.itextpdf.layout.property.UnitValue;
-import com.itextpdf.layout.renderer.IRenderer;
 
-import org.jetbrains.annotations.NotNull;
+import net.sf.dynamicreports.jasper.builder.JasperReportBuilder;
+import net.sf.dynamicreports.report.builder.component.HorizontalListBuilder;
+import net.sf.dynamicreports.report.builder.component.VerticalListBuilder;
+import net.sf.dynamicreports.report.constant.HorizontalImageAlignment;
+import net.sf.dynamicreports.report.constant.PageOrientation;
+import net.sf.dynamicreports.report.constant.PageType;
+import net.sf.jasperreports.engine.JREmptyDataSource;
 
 public class FrontPageChapter implements ReportChapter
 {
     private final FrontPageData mData;
-    private final ReportResources mReportResources;
 
-    public FrontPageChapter(final FrontPageData data, final ReportResources reportResources)
+    public FrontPageChapter(final FrontPageData data, final Object unused)
     {
         mData = data;
-        mReportResources = reportResources;
     }
 
-    @NotNull
     @Override
     public String name()
     {
         return "Front Page";
     }
 
-    @NotNull
     @Override
-    public PageSize pageSize()
+    public boolean isLandscape()
     {
-        return PageSize.A4;
+        return false;
     }
 
     @Override
-    public void render(@NotNull final Document document)
+    public JasperReportBuilder buildReport()
     {
-        Table sampleSummaryTable =
-                FrontPageTables.buildSampleSummary(mData.sampleSummary(), mData.qcWarning(), contentWidth(), mReportResources);
-        document.add(sampleSummaryTable);
+        JasperReportBuilder report = report().setPageFormat(PageType.A4, PageOrientation.PORTRAIT);
 
-        Table technicalSummaryTable = FrontPageTables.buildTechnicalSummary(mData.technicalSummary(), contentWidth(), mReportResources);
-        technicalSummaryTable.setMarginBottom(10);
-        document.add(technicalSummaryTable);
+        JasperReportBuilder sampleTable = FrontPageTables.buildSampleSummary(mData.sampleSummary(), mData.qcWarning());
+        JasperReportBuilder pipelineTable = FrontPageTables.buildTechnicalSummary(mData.technicalSummary());
 
-        Table topTable = new Table(UnitValue.createPercentArray(new float[] { 1, 1 })).setWidth(contentWidth() - 5);
+        int rows = Math.max(mData.driverSummary().size(), mData.genomeWideFeatures().size());
+        VerticalListBuilder leftBox = FrontPageTables.buildDriverSummaryBox(mData.driverSummary(), rows);
+        VerticalListBuilder rightBox = FrontPageTables.buildGenomeWideFeaturesBox(mData.genomeWideFeatures(), rows);
+        HorizontalListBuilder tablePair = cmp.horizontalList(leftBox, rightBox);
 
-        Table driverSummaryTable = FrontPageTables.buildDriverSummary(mData.driverSummary(), contentWidth(), mReportResources);
-        Table genomeWideTable = FrontPageTables.buildGenomeWideFeatures(mData.genomeWideFeatures(), contentWidth(), mReportResources);
+        VerticalListBuilder tablesContainer = cmp.verticalList(tablePair);
+        tablesContainer.setStyle(OrangeStyles.BORDERED_BOX_STYLE);
 
-        topTable.addCell(driverSummaryTable);
-        topTable.addCell(genomeWideTable);
+        var circosImage = cmp.image(mData.circosPlotPath())
+                .setHeight(ReportResources.FRONT_CIRCOS_IMAGE_HEIGHT)
+                .setHorizontalImageAlignment(HorizontalImageAlignment.CENTER);
+        circosImage.setStyle(OrangeStyles.BORDERED_BOX_STYLE);
 
-        Table table = new Table(UnitValue.createPercentArray(new float[] { 1 })).setWidth(contentWidth()).setPadding(0);
-        table.addCell(topTable);
+        VerticalListBuilder componentStack = cmp.verticalList(
+                cmp.subreport(sampleTable),
+                cmp.line().setPen(stl.penThin().setLineColor(OrangeColors.PALETTE_LIGHT_GREY)),
+                cmp.verticalGap(10),
+                cmp.subreport(pipelineTable),
+                cmp.line().setPen(stl.penThin().setLineColor(OrangeColors.PALETTE_LIGHT_GREY)),
+                cmp.verticalGap(10),
+                tablesContainer,
+                circosImage
+        );
 
-        float pageHeight = contentHeight();
-        IRenderer renderer = table.createRendererSubTree().setParent(document.getRenderer());
-        LayoutResult result = renderer.layout(new LayoutContext(new LayoutArea(0, new Rectangle(contentWidth(), pageHeight))));
-        float currentHeight = result.getOccupiedArea().getBBox().getHeight();
-
-        int remainingHeight = (int) floor(pageHeight - currentHeight - PAGE_MARGIN_TOP - PAGE_MARGIN_BOTTOM) - 50;
-        int maxCircosHeight = min(remainingHeight, FRONT_CIRCOS_IMAGE_HEIGHT);
-
-        Image circosImage = Images.build(mData.circosPlotPath());
-        circosImage.setHorizontalAlignment(HorizontalAlignment.CENTER);
-        circosImage.setMaxHeight(maxCircosHeight);
-        table.addCell(circosImage);
-
-        document.add(table);
+        return report.title(componentStack);
     }
 }

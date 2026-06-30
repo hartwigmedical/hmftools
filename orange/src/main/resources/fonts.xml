@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<fontFamilies>
+    <fontFamily name="Nimbus Sans">
+        <normal>fonts/nimbus-sans/NimbusSansL-Regular.ttf</normal>
+        <bold>fonts/nimbus-sans/NimbusSansL-Bold.ttf</bold>
+        <pdfEncoding>Identity-H</pdfEncoding>
+        <pdfEmbedded>true</pdfEmbedded>
+    </fontFamily>
+</fontFamilies>

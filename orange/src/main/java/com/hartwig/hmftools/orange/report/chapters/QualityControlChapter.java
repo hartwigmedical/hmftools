@@ -1,70 +1,64 @@
 package com.hartwig.hmftools.orange.report.chapters;
 
-import static com.hartwig.hmftools.orange.report.ReportResources.FULL_PAGE_IMAGE_HEIGHT;
-import static com.hartwig.hmftools.orange.report.ReportResources.FULL_PAGE_IMAGE_WIDTH;
+import static net.sf.dynamicreports.report.builder.DynamicReports.cmp;
+import static net.sf.dynamicreports.report.builder.DynamicReports.report;
 
+import com.hartwig.hmftools.orange.report.OrangeFonts;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.pdfdata.QualityControlData;
-import com.hartwig.hmftools.orange.report.util.Images;
-import com.itextpdf.kernel.geom.PageSize;
-import com.itextpdf.layout.Document;
-import com.itextpdf.layout.element.Image;
-import com.itextpdf.layout.element.Paragraph;
-import com.itextpdf.layout.property.HorizontalAlignment;
 
-import org.jetbrains.annotations.NotNull;
+import net.sf.dynamicreports.jasper.builder.JasperReportBuilder;
+import net.sf.dynamicreports.report.builder.component.VerticalListBuilder;
+import net.sf.dynamicreports.report.constant.HorizontalImageAlignment;
+import net.sf.dynamicreports.report.constant.PageOrientation;
+import net.sf.dynamicreports.report.constant.PageType;
 
 public class QualityControlChapter implements ReportChapter
 {
     private final QualityControlData mData;
-    private final ReportResources mReportResources;
 
-    public QualityControlChapter(final QualityControlData data, final ReportResources reportResources)
+    public QualityControlChapter(final QualityControlData data, final Object unused)
     {
         mData = data;
-        mReportResources = reportResources;
     }
 
-    @NotNull
     @Override
     public String name()
     {
         return "Quality Control";
     }
 
-    @NotNull
     @Override
-    public PageSize pageSize()
+    public boolean isLandscape()
     {
-        return PageSize.A4.rotate();
+        return true;
     }
 
     @Override
-    public void render(@NotNull final Document document)
+    public JasperReportBuilder buildReport()
     {
-        document.add(new Paragraph(name()).addStyle(mReportResources.chapterTitleStyle()));
+        JasperReportBuilder report = report().setPageFormat(PageType.A4, PageOrientation.LANDSCAPE);
+        VerticalListBuilder content = cmp.verticalList();
+        content.add(cmp.text(name()).setStyle(OrangeFonts.CHAPTER_TITLE_STYLE));
 
         if(mData.hasPurpleFail)
         {
-            mReportResources.addQcFailNotice(document);
-            return;
+            content.add(cmp.text(ReportResources.NOT_AVAILABLE).setStyle(OrangeFonts.TABLE_CONTENT_STYLE));
+            return report.summary(content);
         }
 
         if(mData.qSeePlotPath == null)
         {
-            document.add(new Paragraph("Plot not available").addStyle(mReportResources.tableContentStyle()));
-            return;
+            content.add(cmp.text("Plot not available").setStyle(OrangeFonts.TABLE_CONTENT_STYLE));
+            return report.summary(content);
         }
 
-        addQSeePdf(document);
-    }
+        content.add(
+                cmp.image(mData.qSeePlotPath)
+                        .setFixedHeight(ReportResources.FULL_PAGE_IMAGE_HEIGHT)
+                        .setHorizontalImageAlignment(HorizontalImageAlignment.CENTER)
+        );
 
-    private void addQSeePdf(final Document document)
-    {
-        Image qSeePdf = Images.build(mData.qSeePlotPath);
-        qSeePdf.setMaxWidth(FULL_PAGE_IMAGE_WIDTH);
-        qSeePdf.setMaxHeight(FULL_PAGE_IMAGE_HEIGHT);
-        qSeePdf.setHorizontalAlignment(HorizontalAlignment.CENTER);
-        document.add(qSeePdf);
+        return report.summary(content);
     }
 }

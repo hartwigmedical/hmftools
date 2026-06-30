@@ -32,7 +32,7 @@ public class ReportWriterTest
     }
 
     @Test
-    public void canGenerateTestReportFromMinimalTestData() throws IOException
+    public void canGenerateTestReportFromMinimalTestData() throws Exception
     {
         OrangeRecord report = TestOrangeReportFactory.createMinimalTestReport();
 
@@ -42,7 +42,7 @@ public class ReportWriterTest
     }
 
     @Test
-    public void canGenerateTestReportFromProperTestData() throws IOException
+    public void canGenerateTestReportFromProperTestData() throws Exception
     {
         OrangeRecord report = TestOrangeReportFactory.createProperTestReport();
 

@@ -1,88 +1,92 @@
 package com.hartwig.hmftools.orange.report.tables;
 
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatPercentileField;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatTpmField;
 
+import static net.sf.dynamicreports.report.builder.DynamicReports.cmp;
+import static net.sf.dynamicreports.report.builder.DynamicReports.col;
+import static net.sf.dynamicreports.report.builder.DynamicReports.report;
+import static net.sf.dynamicreports.report.builder.DynamicReports.type;
+
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.Lists;
 import com.google.common.primitives.Doubles;
 import com.hartwig.hmftools.datamodel.isofox.GeneExpression;
+import com.hartwig.hmftools.orange.report.OrangeFonts;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.interpretation.Expressions;
-import com.hartwig.hmftools.orange.report.util.Cells;
-import com.hartwig.hmftools.orange.report.util.Tables;
-import com.itextpdf.layout.element.Cell;
-import com.itextpdf.layout.element.Table;
 
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatTpmField;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_GENE;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_TPM;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.addEntry;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.cellArray;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.intToFloatArray;
-
-import org.apache.logging.log4j.util.Strings;
+import net.sf.dynamicreports.jasper.builder.JasperReportBuilder;
+import net.sf.jasperreports.engine.JREmptyDataSource;
+import net.sf.jasperreports.engine.data.JRMapCollectionDataSource;
 
 public final class ExpressionTable
 {
-   private static String COL_PERCENTILE = "Percentile";
-    private static String COL_FOLD_CHANGE = "Fold Change";
-
-    public static Table build(
-            final String title, float width, final List<GeneExpression> expressions, boolean sortAscending, final ReportResources reportResources)
+    public static JasperReportBuilder build(final String title, final List<GeneExpression> expressions,
+            final boolean sortAscending, final ReportResources reportResources)
     {
         if(expressions.isEmpty())
         {
-            return new Tables(reportResources).createEmpty(title, width);
+            return report()
+                    .title(cmp.text(title).setStyle(OrangeFonts.TABLE_TITLE_STYLE),
+                            cmp.text(ReportResources.NONE).setStyle(OrangeFonts.TABLE_CONTENT_STYLE))
+                    .setDataSource(new JREmptyDataSource());
         }
 
-        Cells cells = new Cells(reportResources);
-
-        List<Integer> widths = Lists.newArrayList();
-        List<Cell> cellEntries = Lists.newArrayList();
-
-        addEntry(cells, widths, cellEntries, 1, COL_GENE);
-        addEntry(cells, widths, cellEntries, 1, COL_TPM);
-        addEntry(cells, widths, cellEntries, 1, COL_PERCENTILE);
-        addEntry(cells, widths, cellEntries, 1, COL_FOLD_CHANGE);
-        addEntry(cells, widths, cellEntries, 3, Strings.EMPTY);
-
-        Table table = Tables.createContent(width, intToFloatArray(widths), cellArray(cellEntries));
-        
+        List<Map<String, ?>> rows = new ArrayList<>();
         for(GeneExpression expression : sort(expressions, sortAscending))
         {
-            table.addCell(cells.createContent(expression.gene()));
-            table.addCell(cells.createContent(formatTpmField(expression.tpm())));
-
+            String percentile;
+            String foldChange;
             if(expression.percentileCancer() != null && expression.medianTpmCancer() != null)
             {
-                table.addCell(cells.createContent(formatPercentileField(expression.percentileCancer())));
-                table.addCell(cells.createContent(Expressions.formatFoldChangeCancer(expression)));
+                percentile = formatPercentileField(expression.percentileCancer());
+                foldChange = Expressions.formatFoldChangeCancer(expression);
             }
             else
             {
-                table.addCell(cells.createContent(formatPercentileField(expression.percentileCohort())));
-                table.addCell(cells.createContent(Expressions.formatFoldChange(expression)));
+                percentile = formatPercentileField(expression.percentileCohort());
+                foldChange = Expressions.formatFoldChange(expression);
             }
 
-            table.addCell(cells.createContent(Strings.EMPTY));
+            Map<String, Object> row = new HashMap<>();
+            row.put("gene", expression.gene());
+            row.put("tpm", formatTpmField(expression.tpm()));
+            row.put("percentile", percentile);
+            row.put("foldchange", foldChange);
+            row.put("empty", "");
+            rows.add(row);
         }
 
-        return new Tables(reportResources).createWrapping(table, title);
+        return report()
+                .setColumnTitleStyle(OrangeFonts.TABLE_HEADER_STYLE_UNPADDED)
+                .setColumnStyle(OrangeFonts.TABLE_CONTENT_STYLE_UNPADDED)
+                .title(cmp.text(title).setStyle(OrangeFonts.TABLE_TITLE_STYLE_WITH_GAP))
+                .columns(
+                        col.column("GENE", "gene", type.stringType()).setWidth(10),
+                        col.column("TPM", "tpm", type.stringType()).setWidth(10),
+                        col.column("PERCENTILE", "percentile", type.stringType()).setWidth(10),
+                        col.column("FOLD CHANGE", "foldchange", type.stringType()).setWidth(10),
+                        col.column("", "empty", type.stringType()).setWidth(30)
+                )
+                .setDataSource(new JRMapCollectionDataSource(rows));
     }
 
-    private static List<GeneExpression> sort(final List<GeneExpression> expressions, boolean sortDescending)
+    private static List<GeneExpression> sort(final List<GeneExpression> expressions, final boolean sortAscending)
     {
-        return expressions.stream().sorted((expression1, expression2) ->
+        return expressions.stream().sorted((e1, e2) ->
         {
-            if(sortDescending)
+            if(sortAscending)
             {
-                return Doubles.compare(expression1.percentileCohort(), expression2.percentileCohort());
+                return Doubles.compare(e1.percentileCohort(), e2.percentileCohort());
             }
             else
             {
-                return Doubles.compare(expression2.percentileCohort(), expression1.percentileCohort());
+                return Doubles.compare(e2.percentileCohort(), e1.percentileCohort());
             }
         }).collect(Collectors.toList());
     }

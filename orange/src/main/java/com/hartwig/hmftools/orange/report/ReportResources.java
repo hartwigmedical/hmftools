@@ -1,22 +1,8 @@
 package com.hartwig.hmftools.orange.report;
 
-import java.io.IOException;
-import java.util.List;
-
 import com.hartwig.hmftools.orange.OrangeApplication;
-import com.hartwig.hmftools.orange.algo.QcStatusInterpretation;
-import com.itextpdf.io.font.FontProgram;
-import com.itextpdf.io.font.FontProgramFactory;
-import com.itextpdf.io.font.PdfEncodings;
-import com.itextpdf.kernel.colors.DeviceRgb;
-import com.itextpdf.kernel.font.PdfFont;
-import com.itextpdf.kernel.font.PdfFontFactory;
-import com.itextpdf.layout.Document;
-import com.itextpdf.layout.Style;
-import com.itextpdf.layout.element.Cell;
-import com.itextpdf.layout.element.Paragraph;
 
-public class ReportResources
+public final class ReportResources
 {
     static final String METADATA_TITLE = "HMF ORANGE Report v" + OrangeApplication.VERSION;
     static final String METADATA_AUTHOR = "Hartwig Pipeline";
@@ -24,150 +10,9 @@ public class ReportResources
     public static final String NOT_AVAILABLE = "NA";
     public static final String NONE = "NONE";
 
-    public static final float PAGE_MARGIN_TOP = 100; // Top margin also excludes the chapter title, which is rendered in the header
-    public static final float PAGE_MARGIN_LEFT = 30;
-    public static final float PAGE_MARGIN_RIGHT = 30;
-    public static final float PAGE_MARGIN_BOTTOM = 40;
-
-    public static final int HEADER_ORANGE_HEIGHT = 60;
-    public static final int FOOTER_HEIGHT = 20;
-
     public static final int FRONT_CIRCOS_IMAGE_HEIGHT = 400;
-    public static final int FULL_PAGE_IMAGE_WIDTH = 750; // was 740
-    public static final int FULL_PAGE_IMAGE_HEIGHT = 430; // was 420
+    public static final int FULL_PAGE_IMAGE_WIDTH = 750;
+    public static final int FULL_PAGE_IMAGE_HEIGHT = 430;
 
-    public static final DeviceRgb PALETTE_WHITE = new DeviceRgb(255, 255, 255);
-    public static final DeviceRgb PALETTE_BLACK = new DeviceRgb(0, 0, 0);
-
-    public static final DeviceRgb PALETTE_DARK_GREY = new DeviceRgb(39, 47, 50);
-    public static final DeviceRgb PALETTE_MID_GREY = new DeviceRgb(101, 106, 108);
-    public static final DeviceRgb PALETTE_LIGHT_GREY = new DeviceRgb(211, 211, 211);
-    public static final DeviceRgb PALETTE_GAINSBORO_GREY = new DeviceRgb(220, 220, 220);
-    private static final int GREY_FACTOR = 240;
-    public static final DeviceRgb PALETTE_SMOKE_GREY = new DeviceRgb(GREY_FACTOR, GREY_FACTOR, GREY_FACTOR);
-    public static final DeviceRgb PALETTE_BLUE = new DeviceRgb(38, 90, 166);
-
-    public static final DeviceRgb PALETTE_ORANGE = new DeviceRgb(242, 139, 31);
-    public static final DeviceRgb PALETTE_ORANGE_1 = new DeviceRgb(255, 165, 0);
-    public static final DeviceRgb PALETTE_ORANGE_2 = new DeviceRgb(235, 155, 0);
-    public static final DeviceRgb PALETTE_ORANGE_3 = new DeviceRgb(215, 145, 0);
-    public static final DeviceRgb PALETTE_ORANGE_4 = new DeviceRgb(195, 135, 0);
-    public static final DeviceRgb PALETTE_ORANGE_5 = new DeviceRgb(175, 125, 0);
-    public static final DeviceRgb PALETTE_ORANGE_6 = new DeviceRgb(155, 115, 0);
-
-    private static final String FONT_REGULAR_PATH = "fonts/nimbus-sans/NimbusSansL-Regular.ttf";
-    private static final String FONT_BOLD_PATH = "fonts/nimbus-sans/NimbusSansL-Bold.ttf";
-
-    private final PdfFont mFontRegular;
-    private final PdfFont mFontBold;
-
-    private ReportResources(final PdfFont fontRegular, final PdfFont fontBold)
-    {
-        mFontRegular = fontRegular;
-        mFontBold = fontBold;
-    }
-
-    public static ReportResources create()
-    {
-        return new ReportResources(
-                createFontFromProgram(loadFontProgram(FONT_REGULAR_PATH)),
-                createFontFromProgram(loadFontProgram(FONT_BOLD_PATH)));
-    }
-
-    public void addQcFailNotice(final Document document)
-    {
-        document.add(new Paragraph(ReportResources.NOT_AVAILABLE).addStyle(tableContentStyle()));
-    }
-
-    public PdfFont fontBold()
-    {
-        return mFontBold;
-    }
-
-    public Style chapterTitleStyle()
-    {
-        return new Style().setFont(mFontBold).setFontSize(10).setFontColor(ReportResources.PALETTE_ORANGE);
-    }
-
-    public Style tableTitleStyle()
-    {
-        return new Style().setFont(mFontBold).setFontSize(8).setFontColor(ReportResources.PALETTE_ORANGE);
-    }
-
-    public Style tableHeaderStyle()
-    {
-        return new Style().setFont(mFontRegular).setFontSize(7).setFontColor(ReportResources.PALETTE_MID_GREY);
-    }
-
-    public Style tableContentStyle()
-    {
-        return new Style().setFont(mFontRegular).setFontSize(7).setFontColor(ReportResources.PALETTE_DARK_GREY);
-    }
-
-    public Style keyStyle()
-    {
-        return new Style().setFont(mFontRegular).setFontSize(7).setFontColor(ReportResources.PALETTE_MID_GREY);
-    }
-    public Style valueStyle()
-    {
-        return new Style().setFont(mFontRegular).setFontSize(7).setFontColor(ReportResources.PALETTE_MID_GREY);
-    }
-    public Style subTextStyle()
-    {
-        return new Style().setFont(mFontRegular).setFontSize(6).setFontColor(ReportResources.PALETTE_BLACK);
-    }
-    public Style pageNumberStyle()
-    {
-        return new Style().setFont(mFontBold).setFontSize(7).setFontColor(ReportResources.PALETTE_ORANGE);
-    }
-
-    public Style disclaimerStyle()
-    {
-        return new Style().setFont(mFontRegular).setFontSize(6).setFontColor(ReportResources.PALETTE_MID_GREY);
-    }
-
-    public Style qcWarningStyle()
-    {
-        return new Style().setFont(mFontBold).setFontSize(7).setFontColor(ReportResources.PALETTE_DARK_GREY);
-    }
-    public Style sidePanelLabelStyle()
-    {
-        return new Style().setFont(mFontBold).setFontSize(7).setFontColor(ReportResources.PALETTE_WHITE);
-    }
-    public Style sidePanelValueStyle()
-    {
-        return new Style().setFont(mFontBold).setFontSize(10).setFontColor(ReportResources.PALETTE_WHITE);
-    }
-    public Style urlStyle()
-    {
-        return new Style().setFont(mFontRegular).setFontSize(7).setFontColor(ReportResources.PALETTE_BLUE);
-    }
-
-    public Style candidateDriverBackground()
-    {
-        return new Style().setBackgroundColor(ReportResources.PALETTE_SMOKE_GREY);
-    }
-
-    public void shadeCandidateCells(final List<Cell> cells)
-    {
-        cells.forEach(x -> x.addStyle(candidateDriverBackground()));
-    }
-
-    private static PdfFont createFontFromProgram(final FontProgram program)
-    {
-        return PdfFontFactory.createFont(program, PdfEncodings.IDENTITY_H);
-    }
-
-    private static FontProgram loadFontProgram(final String resourcePath)
-    {
-        try
-        {
-            return FontProgramFactory.createFont(resourcePath);
-        }
-        catch(IOException exception)
-        {
-            // Should never happen, fonts are loaded from code
-            throw new IllegalStateException(exception);
-        }
-    }
+    private ReportResources() {}
 }

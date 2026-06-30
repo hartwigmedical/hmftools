@@ -1,16 +1,9 @@
 package com.hartwig.hmftools.orange.report;
 
-import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
-
-import static net.sf.dynamicreports.report.builder.DynamicReports.concatenatedReport;
-
-import java.io.ByteArrayOutputStream;
-import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.hartwig.hmftools.datamodel.OrangeJson;
 import com.hartwig.hmftools.datamodel.isofox.IsofoxRecord;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.orange.OrangeConfig;
@@ -40,97 +33,61 @@ import com.hartwig.hmftools.orange.report.pdfdata.RnaFindingsDataFactory;
 import com.hartwig.hmftools.orange.report.pdfdata.SomaticFindingsData;
 import com.hartwig.hmftools.orange.report.pdfdata.SomaticFindingsDataFactory;
 
-import net.sf.dynamicreports.jasper.builder.JasperConcatenatedReportBuilder;
 import net.sf.dynamicreports.jasper.builder.JasperReportBuilder;
 import net.sf.dynamicreports.report.builder.DynamicReports;
+import net.sf.dynamicreports.report.builder.component.VerticalListBuilder;
+import net.sf.jasperreports.engine.JREmptyDataSource;
 
-import org.jetbrains.annotations.Nullable;
-
-public class ReportWriter
+public class OrangeReport
 {
-    private final boolean mWriteToDisk;
-
-    @Nullable
     private final OrangeConfig mConfig;
-    private final String mOutputDir;
-    private final String mOutputId;
-
     private final PlotPathResolver mPlotPathResolver;
 
-    public ReportWriter(boolean writeToDisk, @Nullable final OrangeConfig config, final PlotPathResolver plotPathResolver)
+    public OrangeReport(final OrangeConfig config, final PlotPathResolver plotPathResolver)
     {
-        mWriteToDisk = writeToDisk;
         mConfig = config;
-        mOutputDir = config != null ? config.OutputDir : null;
-        mOutputId = config != null ? config.OutputId : null;
         mPlotPathResolver = plotPathResolver;
     }
 
-    public void write(final OrangeRecord report) throws Exception
+    public void writeReport(final OrangeRecord orangeData, OutputStream output)
     {
-        writePdf(report);
-        writeJson(report);
-    }
-
-    private void writePdf(final OrangeRecord report) throws Exception
-    {
-        OutputStream outputStream;
-        if(mWriteToDisk)
-        {
-            String outputFilename = formOutputFile(report.sampleId(), "pdf");
-            LOGGER.info("writing PDF report to {}", outputFilename);
-            outputStream = new FileOutputStream(outputFilename);
-        }
-        else
-        {
-            LOGGER.info("generating in-memory PDF report");
-            outputStream = new ByteArrayOutputStream();
-        }
-
-        new OrangeReport(mConfig, mPlotPathResolver).writeReport(report, outputStream);
-    }
-
-    private void writePdcf(final OrangeRecord report) throws Exception
-    {
-        String displaySampleId = mConfig != null ? mConfig.DisplaySampleId : report.sampleId();
-        List<ReportChapter> chapters = buildChapters(report);
+        String displaySampleId = mConfig != null ? mConfig.DisplaySampleId : orangeData.sampleId();
+        List<ReportChapter> chapters = buildChapters(orangeData);
 
         List<JasperReportBuilder> chapterReports = new ArrayList<>();
         for(ReportChapter chapter : chapters)
         {
             JasperReportBuilder chapterReport = chapter.buildReport();
-            OrangeTemplateFactory.applyHeaderLayout(chapterReport, displaySampleId);
+            //            OrangeTemplateFactory.applyHeaderLayout(chapterReport, displaySampleId);
             chapterReports.add(chapterReport);
         }
-
-        int totalPages = 0;
-        for(JasperReportBuilder chapterReport : chapterReports)
+        VerticalListBuilder combinedContent = DynamicReports.cmp.verticalList();
+        for(int i = 0; i < chapters.size(); i++)
         {
-            totalPages += chapterReport.toJasperPrint().getPages().size();
+            if(i > 0)
+            {
+                combinedContent.add(DynamicReports.cmp.pageBreak());
+            }
+            combinedContent.add(DynamicReports.cmp.subreport(chapters.get(i).buildReport()));
         }
-
-        JasperConcatenatedReportBuilder concatenated = concatenatedReport().continuousPageNumbering();
-
-        for(JasperReportBuilder chapterReport : chapterReports)
+        try
         {
-            OrangeTemplateFactory.applyFooter(chapterReport, totalPages);
-            concatenated.concatenate(chapterReport);
-        }
+            DynamicReports.report()
+                    // Define global Page Header & Footer here so they repeat on ALL chapter pages
+                    .pageHeader(OrangeTemplateFactory.header(displaySampleId))
+                    .pageFooter(OrangeTemplateFactory.footer())
+                    .setSummaryWithPageHeaderAndFooter(true)
+                    // Add the combined chapters into the summary band
+                    .summary(combinedContent)
 
-        OutputStream outputStream;
-        if(mWriteToDisk)
-        {
-            String outputFilename = formOutputFile(report.sampleId(), "pdf");
-            LOGGER.info("writing PDF report to {}", outputFilename);
-            outputStream = new FileOutputStream(outputFilename);
+                    // Master report needs at least a dummy 1-row data source to trigger rendering
+                    .setDataSource(new JREmptyDataSource())
+                    .toPdf(output);
         }
-        else
+        catch(Exception e)
         {
-            LOGGER.info("generating in-memory PDF report");
-            outputStream = new ByteArrayOutputStream();
+            throw new RuntimeException(e);
         }
-
-        concatenated.toPdf(DynamicReports.export.pdfExporter(outputStream).setCompressed(true));
     }
 
     private List<ReportChapter> buildChapters(final OrangeRecord report)
@@ -177,30 +134,4 @@ public class ReportWriter
         return chapters;
     }
 
-    private String formOutputFile(final String sampleId, final String fileId)
-    {
-        String filename = mOutputDir + sampleId + ".orange.";
-
-        if(mOutputId != null)
-        {
-            filename += mOutputId + ".";
-        }
-
-        return filename + fileId;
-    }
-
-    private void writeJson(final OrangeRecord report) throws Exception
-    {
-        if(mWriteToDisk && mOutputDir != null)
-        {
-            String outputFilename = formOutputFile(report.sampleId(), "json");
-            LOGGER.info("writing JSON report to {} ", outputFilename);
-
-            OrangeJson.getInstance().write(report, outputFilename);
-        }
-        else
-        {
-            LOGGER.info("generating in-memory JSON report");
-        }
-    }
 }

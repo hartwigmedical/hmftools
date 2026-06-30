@@ -1,107 +1,99 @@
 package com.hartwig.hmftools.orange.report.tables;
 
-import static java.lang.Math.min;
 import static java.lang.Math.round;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_COHOR_FREQ;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_GENE;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_JUNCTIONS;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_JUNC_END;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_JUNC_START;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_LOCATION;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_SUPPORT;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_TYPE;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.addEntry;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.cellArray;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatSupportField;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.intToFloatArray;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.zeroPrefixed;
 
+import static net.sf.dynamicreports.report.builder.DynamicReports.cmp;
+import static net.sf.dynamicreports.report.builder.DynamicReports.col;
+import static net.sf.dynamicreports.report.builder.DynamicReports.report;
+import static net.sf.dynamicreports.report.builder.DynamicReports.type;
+
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.datamodel.isofox.AltSpliceJunctionType;
 import com.hartwig.hmftools.datamodel.isofox.NovelSpliceJunction;
-import com.hartwig.hmftools.datamodel.linx.LinxFusion;
+import com.hartwig.hmftools.orange.report.OrangeFonts;
 import com.hartwig.hmftools.orange.report.ReportResources;
-import com.hartwig.hmftools.orange.report.util.Cells;
-import com.hartwig.hmftools.orange.report.util.Tables;
-import com.itextpdf.layout.element.Cell;
-import com.itextpdf.layout.element.Table;
+
+import net.sf.dynamicreports.jasper.builder.JasperReportBuilder;
+import net.sf.jasperreports.engine.JREmptyDataSource;
+import net.sf.jasperreports.engine.data.JRMapCollectionDataSource;
 
 public final class NovelSpliceJunctionTable
 {
-    public static Table build(
-            final String title, float width, final List<NovelSpliceJunction> junctions, final ReportResources reportResources)
+    public static JasperReportBuilder build(final String title, final List<NovelSpliceJunction> junctions,
+            final ReportResources reportResources)
     {
         if(junctions.isEmpty())
         {
-            return new Tables(reportResources).createEmpty(title, width);
+            return report()
+                    .title(cmp.text(title).setStyle(OrangeFonts.TABLE_TITLE_STYLE),
+                            cmp.text(ReportResources.NONE).setStyle(OrangeFonts.TABLE_CONTENT_STYLE))
+                    .setDataSource(new JREmptyDataSource());
         }
 
-        Cells cells = new Cells(reportResources);
-
-        List<Integer> widths = Lists.newArrayList();
-        List<Cell> cellEntries = Lists.newArrayList();
-
-        addEntry(cells, widths, cellEntries, 1, COL_GENE);
-        addEntry(cells, widths, cellEntries, 3, COL_JUNCTIONS);
-        addEntry(cells, widths, cellEntries, 2, COL_TYPE);
-        addEntry(cells, widths, cellEntries, 1, COL_JUNC_START);
-        addEntry(cells, widths, cellEntries, 1, COL_JUNC_END);
-        addEntry(cells, widths, cellEntries, 1, COL_SUPPORT);
-        addEntry(cells, widths, cellEntries, 1, COL_COHOR_FREQ);
-
-        Table table = Tables.createContent(width, intToFloatArray(widths), cellArray(cellEntries));
-
+        List<Map<String, ?>> rows = new ArrayList<>();
         for(NovelSpliceJunction junction : sort(junctions))
         {
-            table.addCell(cells.createContent(junction.gene()));
-            table.addCell(cells.createContent(junctionsDisplay(junction)));
-            table.addCell(cells.createContent(junction.type().toString()));
-            table.addCell(cells.createContent(String.valueOf(junction.regionStart())));
-            table.addCell(cells.createContent(String.valueOf(junction.regionEnd())));
-
             int fragments = junction.fragmentCount();
-            int averageDepth = (int)round((junction.depthStart() + junction.depthEnd()) * 0.5);
-            table.addCell(cells.createContent(formatSupportField(fragments, averageDepth)));
+            int averageDepth = (int) round((junction.depthStart() + junction.depthEnd()) * 0.5);
 
-            table.addCell(cells.createContent(String.valueOf(junction.cohortFrequency())));
+            Map<String, Object> row = new HashMap<>();
+            row.put("gene", junction.gene());
+            row.put("junctions", junctionsDisplay(junction));
+            row.put("type", junction.type().toString());
+            row.put("juncstart", String.valueOf(junction.regionStart()));
+            row.put("juncend", String.valueOf(junction.regionEnd()));
+            row.put("support", formatSupportField(fragments, averageDepth));
+            row.put("cohortfreq", String.valueOf(junction.cohortFrequency()));
+            rows.add(row);
         }
 
-        return new Tables(reportResources).createWrapping(table, title);
+        return report()
+                .setColumnTitleStyle(OrangeFonts.TABLE_HEADER_STYLE_UNPADDED)
+                .setColumnStyle(OrangeFonts.TABLE_CONTENT_STYLE_UNPADDED)
+                .title(cmp.text(title).setStyle(OrangeFonts.TABLE_TITLE_STYLE_WITH_GAP))
+                .columns(
+                        col.column("GENE", "gene", type.stringType()).setWidth(10),
+                        col.column("JUNCTIONS", "junctions", type.stringType()).setWidth(30),
+                        col.column("TYPE", "type", type.stringType()).setWidth(20),
+                        col.column("JUNC START", "juncstart", type.stringType()).setWidth(10),
+                        col.column("JUNC END", "juncend", type.stringType()).setWidth(10),
+                        col.column("SUPPORT", "support", type.stringType()).setWidth(10),
+                        col.column("COHORT FREQ", "cohortfreq", type.stringType()).setWidth(10)
+                )
+                .setDataSource(new JRMapCollectionDataSource(rows));
     }
 
     private static String junctionsDisplay(final NovelSpliceJunction junction)
     {
         boolean dupType = junction.type() == AltSpliceJunctionType.CIRCULAR;
-
         int positionStart = dupType ? junction.junctionEnd() : junction.junctionStart();
         int positionEnd = dupType ? junction.junctionStart() : junction.junctionEnd();
         int exonStart = dupType ? junction.exonEnd() : junction.exonStart();
         int exonEnd = dupType ? junction.exonStart() : junction.exonEnd();
-
         return format("Exon %d (%s:%d) - Exon %d (%s:%d)",
                 exonStart, junction.chromosome(), positionStart, exonEnd, junction.chromosome(), positionEnd);
     }
 
     private static List<NovelSpliceJunction> sort(final List<NovelSpliceJunction> junctions)
     {
-        return junctions.stream().sorted((junction1, junction2) ->
+        return junctions.stream().sorted((j1, j2) ->
         {
-            String locationUp1 = zeroPrefixed(junction1.chromosome());
-            String locationUp2 = zeroPrefixed(junction2.chromosome());
-
-            if(locationUp1.equals(locationUp2))
+            String loc1 = zeroPrefixed(j1.chromosome());
+            String loc2 = zeroPrefixed(j2.chromosome());
+            if(loc1.equals(loc2))
             {
-                return Integer.compare(junction1.junctionStart(), junction2.junctionStart());
+                return Integer.compare(j1.junctionStart(), j2.junctionStart());
             }
-            else
-            {
-                return locationUp1.compareTo(locationUp2);
-            }
+            return loc1.compareTo(loc2);
         }).collect(Collectors.toList());
     }
 }

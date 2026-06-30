@@ -1,85 +1,64 @@
 package com.hartwig.hmftools.orange.report.tables;
 
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatPercentage;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.addEntry;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.cellArray;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.intToFloatArray;
 
+import static net.sf.dynamicreports.report.builder.DynamicReports.cmp;
+import static net.sf.dynamicreports.report.builder.DynamicReports.col;
+import static net.sf.dynamicreports.report.builder.DynamicReports.report;
+import static net.sf.dynamicreports.report.builder.DynamicReports.type;
+
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.StringJoiner;
 
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.datamodel.isofox.RnaQCStatus;
 import com.hartwig.hmftools.datamodel.isofox.RnaStatistics;
+import com.hartwig.hmftools.orange.report.OrangeFonts;
 import com.hartwig.hmftools.orange.report.ReportResources;
-import com.hartwig.hmftools.orange.report.util.Cells;
-import com.hartwig.hmftools.orange.report.util.Tables;
-import com.itextpdf.layout.element.Cell;
-import com.itextpdf.layout.element.Table;
+
+import net.sf.dynamicreports.jasper.builder.JasperReportBuilder;
+import net.sf.jasperreports.engine.data.JRMapCollectionDataSource;
 
 public final class RnaStatisticsTable
 {
-    private static String COL_QC = "QC";
-    private static String COL_TOTAL_FRAGS = "Total Fragments";
-    private static String COL_DUP_RATE = "Duplicate Rate";
-    private static String COL_SPLICED_RATE = "Spliced Rate";
-    private static String COL_UNSPLICED_RATE = "Unspliced Rate";
-    private static String COL_ALT_RATE = "Alt-sliced Rate";
-    private static String COL_CHIMERIC_RATE = "Chimeric Rate";
-
-    public static Table build(
-            final String title, float width, final RnaStatistics rnaStatistics, final ReportResources reportResources)
+    public static JasperReportBuilder build(final String title, final RnaStatistics rnaStatistics,
+            final ReportResources reportResources)
     {
-        Cells cells = new Cells(reportResources);
-
-        List<Integer> widths = Lists.newArrayList();
-        List<Cell> cellEntries = Lists.newArrayList();
-
-        addEntry(cells, widths, cellEntries, 1, COL_QC);
-        addEntry(cells, widths, cellEntries, 1, COL_TOTAL_FRAGS);
-        addEntry(cells, widths, cellEntries, 1, COL_DUP_RATE);
-        addEntry(cells, widths, cellEntries, 1, COL_SPLICED_RATE);
-        addEntry(cells, widths, cellEntries, 1, COL_UNSPLICED_RATE);
-        addEntry(cells, widths, cellEntries, 1, COL_ALT_RATE);
-        addEntry(cells, widths, cellEntries, 1, COL_CHIMERIC_RATE);
-
-        Table table = Tables.createContent(width, intToFloatArray(widths), cellArray(cellEntries));
-
         StringJoiner qcSj = new StringJoiner(", ");
         for(RnaQCStatus status : rnaStatistics.qcStatus())
         {
             qcSj.add(status.name());
         }
 
-        table.addCell(cells.createContent(qcSj.toString()));
-        table.addCell(cells.createContent(String.valueOf(rnaStatistics.totalFragments())));
-
         double duplicateRate = rnaStatistics.duplicateFragments() / (double) rnaStatistics.totalFragments();
-        table.addCell(cells.createContent(formatPercentage(duplicateRate)));
 
-        table.addCell(cells.createContent(formatPercentage(rnaStatistics.splicedFragmentPerc())));
-        table.addCell(cells.createContent(formatPercentage(rnaStatistics.unsplicedFragmentPerc())));
-        table.addCell(cells.createContent(formatPercentage(rnaStatistics.altFragmentPerc())));
-        table.addCell(cells.createContent(formatPercentage(rnaStatistics.chimericFragmentPerc())));
+        Map<String, Object> row = new HashMap<>();
+        row.put("qc", qcSj.toString());
+        row.put("totalfrags", String.valueOf(rnaStatistics.totalFragments()));
+        row.put("duprate", formatPercentage(duplicateRate));
+        row.put("splicedrate", formatPercentage(rnaStatistics.splicedFragmentPerc()));
+        row.put("unsplicedrate", formatPercentage(rnaStatistics.unsplicedFragmentPerc()));
+        row.put("altrate", formatPercentage(rnaStatistics.altFragmentPerc()));
+        row.put("chimericrate", formatPercentage(rnaStatistics.chimericFragmentPerc()));
 
-        return new Tables(reportResources).createWrapping(table, title);
+        List<Map<String, ?>> rows = new ArrayList<>();
+        rows.add(row);
+
+        return report()
+                .setColumnTitleStyle(OrangeFonts.TABLE_HEADER_STYLE_UNPADDED)
+                .setColumnStyle(OrangeFonts.TABLE_CONTENT_STYLE_UNPADDED)
+                .title(cmp.text(title).setStyle(OrangeFonts.TABLE_TITLE_STYLE_WITH_GAP))
+                .columns(
+                        col.column("QC", "qc", type.stringType()).setWidth(10),
+                        col.column("TOTAL FRAGMENTS", "totalfrags", type.stringType()).setWidth(10),
+                        col.column("DUPLICATE RATE", "duprate", type.stringType()).setWidth(10),
+                        col.column("SPLICED RATE", "splicedrate", type.stringType()).setWidth(10),
+                        col.column("UNSPLICED RATE", "unsplicedrate", type.stringType()).setWidth(10),
+                        col.column("ALT-SLICED RATE", "altrate", type.stringType()).setWidth(10),
+                        col.column("CHIMERIC RATE", "chimericrate", type.stringType()).setWidth(10)
+                )
+                .setDataSource(new JRMapCollectionDataSource(rows));
     }
-
-    /*
-    private void addQCWarningInCaseOfFail(Table table, Cells cells)
-    {
-        boolean isRnaFail = !mIsofoxRecord.summary().qcStatus().contains(RnaQCStatus.PASS);
-        boolean isDnaFailNoTumor = PurpleQCInterpretation.isFailNoTumor(mPurpleRecord.fit().qc());
-
-        if(isRnaFail || isDnaFailNoTumor)
-        {
-            String warning = isRnaFail ?
-                    "The RNA QC status of this sample is not a pass. All presented RNA data should be interpreted with caution"
-                    : "The DNA QC status of this sample is fail (no tumor). "
-                            + "In addition to DNA findings, all RNA findings should be interpreted with caution";
-
-            table.addCell(cells.createSpanningWarning(table, warning));
-        }
-    }
-    */
 }

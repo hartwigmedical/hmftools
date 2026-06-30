@@ -35,16 +35,16 @@ public class ClusterFactory
     }
 
     public ListMultimap<Chromosome, Cluster> cluster(
-            final List<StructuralVariant> variants, Map<Chromosome,List<PCFPosition>> pcfPositions,
-            final Map<Chromosome,List<CobaltRatio>> ratios)
+            final List<StructuralVariant> variants, Map<Chromosome, List<PCFPosition>> pcfPositions,
+            final Map<Chromosome, List<CobaltRatio>> ratios)
     {
         final Multimap<Chromosome, SvPosition> positions = Multimaps.fromPositions(SVSegmentFactory.create(variants));
         return buildClusters(positions, pcfPositions, ratios);
     }
 
     private ListMultimap<Chromosome, Cluster> buildClusters(
-            final Multimap<Chromosome,SvPosition> variantPositions, final Map<Chromosome,List<PCFPosition>> chrPcfPositions,
-            final Map<Chromosome,List<CobaltRatio>> ratios)
+            final Multimap<Chromosome, SvPosition> variantPositions, final Map<Chromosome, List<PCFPosition>> chrPcfPositions,
+            final Map<Chromosome, List<CobaltRatio>> ratios)
     {
         ListMultimap<Chromosome, Cluster> chrClusters = ArrayListMultimap.create();
 
@@ -83,7 +83,9 @@ public class ClusterFactory
             GenomePosition position = allPositions.get(i);
 
             if(position.position() == 1)
+            {
                 continue;
+            }
 
             // move cobalt ratios to just before the current segment position
             while(cobaltIndex < cobaltRatios.size() - 1 && cobaltRatios.get(cobaltIndex).position() < position.position())
@@ -94,7 +96,7 @@ public class ClusterFactory
             boolean canSegment = true;
             boolean extendPosition = true;
 
-            PCFPosition pcfPosition = position instanceof PCFPosition ? (PCFPosition)position : null;
+            PCFPosition pcfPosition = position instanceof PCFPosition ? (PCFPosition) position : null;
 
             // find the first cobalt ratio earlier than this position
             int earliestCnChangePosition = findFirstValidCobaltRatio(position.position(), cobaltIndex, cobaltRatios);
@@ -103,10 +105,10 @@ public class ClusterFactory
             {
                 if(earliestCnChangePosition > segment.end())
                 {
-                    if(pcfPosition != null && pcfPosition.Source == PCFSource.TUMOR_BAF && !PurpleConfig.OldAmberPcfSegmentation)
+                    if(pcfPosition != null && pcfPosition.Source == PCFSource.TUMOR_BAF)
                     {
                         // cannot be the final segment
-                        boolean useAmberSegment = lastPositionWasAmberPcfEnd && pcfPosition.isSegmentStart()&& i < allPositions.size() - 2;
+                        boolean useAmberSegment = lastPositionWasAmberPcfEnd && pcfPosition.isSegmentStart() && i < allPositions.size() - 2;
 
                         if(!useAmberSegment)
                         {
@@ -149,7 +151,9 @@ public class ClusterFactory
                 segment.PcfPositions.add(pcfPosition);
 
                 if(pcfPosition.Source == PCFSource.TUMOR_BAF && pcfPosition.isSegmentEnd())
+                {
                     lastPositionWasAmberPcfEnd = true;
+                }
             }
         }
 
@@ -157,7 +161,7 @@ public class ClusterFactory
     }
 
     @VisibleForTesting
-    int     findFirstValidCobaltRatio(int position, int index, final List<CobaltRatio> ratios)
+    int findFirstValidCobaltRatio(int position, int index, final List<CobaltRatio> ratios)
     {
         // returns the first valid ratio earlier than the specific position, starting at the specified index and working backwards
         int min = mWindow.start(position) - mWindowSize + 1;

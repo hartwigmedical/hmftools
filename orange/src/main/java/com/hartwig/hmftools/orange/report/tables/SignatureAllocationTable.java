@@ -2,79 +2,94 @@ package com.hartwig.hmftools.orange.report.tables;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatPercentage;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.addEntry;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.cellArray;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.intToFloatArray;
+import static net.sf.dynamicreports.report.builder.DynamicReports.cmp;
+import static net.sf.dynamicreports.report.builder.DynamicReports.col;
+import static net.sf.dynamicreports.report.builder.DynamicReports.report;
+import static net.sf.dynamicreports.report.builder.DynamicReports.type;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.datamodel.sigs.SignatureAllocation;
+import com.hartwig.hmftools.orange.report.OrangeFonts;
 import com.hartwig.hmftools.orange.report.ReportResources;
-import com.hartwig.hmftools.orange.report.util.Cells;
-import com.hartwig.hmftools.orange.report.util.Tables;
-import com.itextpdf.layout.element.Cell;
-import com.itextpdf.layout.element.Table;
 
-import org.apache.logging.log4j.util.Strings;
+import net.sf.dynamicreports.jasper.builder.JasperReportBuilder;
+import net.sf.jasperreports.engine.JREmptyDataSource;
+import net.sf.jasperreports.engine.data.JRMapCollectionDataSource;
+
+import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 
 public final class SignatureAllocationTable
 {
     static final String MISALLOC_SIGNATURE = "MISALLOC";
 
-    public static Table build(
-            final String title, float width, final List<SignatureAllocation> signatureAllocations, final ReportResources reportResources)
+    public static JasperReportBuilder build(
+            final String title, final List<SignatureAllocation> signatureAllocations, final ReportResources reportResources)
     {
         if(signatureAllocations.isEmpty())
         {
-            return new Tables(reportResources).createEmpty(title, width);
+            return report()
+                    .title(cmp.text(title).setStyle(OrangeFonts.TABLE_TITLE_STYLE),
+                            cmp.text(ReportResources.NONE).setStyle(OrangeFonts.TABLE_CONTENT_STYLE))
+                    .setDataSource(new JREmptyDataSource());
         }
 
-        Cells cells = new Cells(reportResources);
-
-        List<Integer> widths = Lists.newArrayList();
-        List<Cell> cellEntries = Lists.newArrayList();
-
-        addEntry(cells, widths, cellEntries, 1, "Signature");
-        addEntry(cells, widths, cellEntries, 2, "Etiology");
-        addEntry(cells, widths, cellEntries, 1, "Allocation");
-        addEntry(cells, widths, cellEntries, 1, "Percent");
-        addEntry(cells, widths, cellEntries, 4, Strings.EMPTY); // to space things out
-
-        Table table = Tables.createContent(width, intToFloatArray(widths), cellArray(cellEntries));
-
-        for(SignatureAllocation signatureAllocation : sort(signatureAllocations))
+        List<Map<String, Object>> rows = new ArrayList<>();
+        for(SignatureAllocation sig : sort(signatureAllocations))
         {
-            if(signatureAllocation.percent() < 0.01)
+            if(sig.percent() < 0.01)
+            {
                 continue;
-
-            table.addCell(cells.createContent(signatureAllocation.signature()));
-            table.addCell(cells.createContent(signatureAllocation.etiology()));
-            table.addCell(cells.createContent(format("%.0f", signatureAllocation.allocation())));
-            table.addCell(cells.createContent(formatPercentage(signatureAllocation.percent())));
-            table.addCell(cells.createContent(Strings.EMPTY));
+            }
+            Map<String, Object> row = new LinkedHashMap<>();
+            row.put("signature", sig.signature());
+            row.put("etiology", sig.etiology());
+            row.put("allocation", format("%.0f", sig.allocation()));
+            row.put("percent", TableCommon.formatPercentage(sig.percent()));
+            row.put("empty", "");
+            rows.add(row);
         }
 
-        return new Tables(reportResources).createWrapping(table, title);
+        if(rows.isEmpty())
+        {
+            return report()
+                    .title(cmp.text(title).setStyle(OrangeFonts.TABLE_TITLE_STYLE),
+                            cmp.text(ReportResources.NONE).setStyle(OrangeFonts.TABLE_CONTENT_STYLE))
+                    .setDataSource(new JREmptyDataSource());
+        }
+
+        return report()
+                .setColumnTitleStyle(OrangeFonts.TABLE_HEADER_STYLE_UNPADDED)
+                .setColumnStyle(OrangeFonts.TABLE_CONTENT_STYLE_UNPADDED)
+                .title(cmp.text(title).setStyle(OrangeFonts.TABLE_TITLE_STYLE_WITH_GAP))
+                .columns(
+                        col.column("SIGNATURE", "signature", type.stringType()).setWidth(10),
+                        col.column("ETIOLOGY", "etiology", type.stringType()).setWidth(20),
+                        col.column("ALLOCATION", "allocation", type.stringType()).setWidth(10),
+                        col.column("PERCENT", "percent", type.stringType()).setWidth(10),
+                        col.column("", "empty", type.stringType()).setWidth(40)
+                )
+                .setDataSource(new JRMapCollectionDataSource((java.util.Collection<java.util.Map<String, ?>>) (java.util.Collection<?>) rows));
     }
 
     @VisibleForTesting
     static List<SignatureAllocation> sort(final List<SignatureAllocation> signatureAllocations)
     {
-        return signatureAllocations.stream().sorted((allocation1, allocation2) ->
+        return signatureAllocations.stream().sorted((a1, a2) ->
         {
-            String sig1 = allocation1.signature().toLowerCase();
-            String sig2 = allocation2.signature().toLowerCase();
+            String sig1 = a1.signature().toLowerCase();
+            String sig2 = a2.signature().toLowerCase();
 
             if(sig1.equalsIgnoreCase(MISALLOC_SIGNATURE))
             {
                 return 1;
             }
-            else if(sig2.equalsIgnoreCase(MISALLOC_SIGNATURE))
+            if(sig2.equalsIgnoreCase(MISALLOC_SIGNATURE))
             {
                 return -1;
             }
@@ -85,7 +100,7 @@ public final class SignatureAllocationTable
                 return sig1.compareTo(sig2);
             }
 
-            return Double.compare(allocation2.allocation(), allocation1.allocation());
+            return Double.compare(a2.allocation(), a1.allocation());
         }).collect(Collectors.toList());
     }
 }

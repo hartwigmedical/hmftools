@@ -1,90 +1,84 @@
 package com.hartwig.hmftools.orange.report.chapters;
 
-import static java.lang.Math.round;
+import static net.sf.dynamicreports.report.builder.DynamicReports.cmp;
+import static net.sf.dynamicreports.report.builder.DynamicReports.report;
 
+import com.hartwig.hmftools.orange.report.OrangeFonts;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.pdfdata.PurplePlotsData;
-import com.hartwig.hmftools.orange.report.util.Cells;
-import com.hartwig.hmftools.orange.report.util.Images;
-import com.itextpdf.kernel.geom.PageSize;
-import com.itextpdf.layout.Document;
-import com.itextpdf.layout.element.Image;
-import com.itextpdf.layout.element.Paragraph;
-import com.itextpdf.layout.element.Table;
-import com.itextpdf.layout.property.HorizontalAlignment;
 
-import org.jetbrains.annotations.NotNull;
+import net.sf.dynamicreports.jasper.builder.JasperReportBuilder;
+import net.sf.dynamicreports.report.builder.component.HorizontalListBuilder;
+import net.sf.dynamicreports.report.builder.component.VerticalListBuilder;
+import net.sf.dynamicreports.report.constant.HorizontalImageAlignment;
+import net.sf.dynamicreports.report.constant.PageOrientation;
+import net.sf.dynamicreports.report.constant.PageType;
 
 public class PurplePlotsChapter implements ReportChapter
 {
-    private final PurplePlotsData mData;
-    private final ReportResources mReportResources;
+    private static final int PLOT_IMAGE_HEIGHT = 225;
 
-    public PurplePlotsChapter(final PurplePlotsData data, final ReportResources reportResources)
+    private final PurplePlotsData mData;
+
+    public PurplePlotsChapter(final PurplePlotsData data, final Object unused)
     {
         mData = data;
-        mReportResources = reportResources;
     }
 
-    @NotNull
     @Override
     public String name()
     {
         return "Purity and Ploidy";
     }
 
-    @NotNull
     @Override
-    public PageSize pageSize()
+    public boolean isLandscape()
     {
-        return PageSize.A4.rotate();
+        return true;
     }
 
     @Override
-    public void render(@NotNull final Document document)
+    public JasperReportBuilder buildReport()
     {
-        document.add(new Paragraph(name()).addStyle(mReportResources.chapterTitleStyle()));
+        JasperReportBuilder report = report().setPageFormat(PageType.A4, PageOrientation.LANDSCAPE);
+        VerticalListBuilder content = cmp.verticalList();
+        content.add(cmp.text(name()).setStyle(OrangeFonts.CHAPTER_TITLE_STYLE));
 
         if(mData.hasPurpleFail)
         {
-            mReportResources.addQcFailNotice(document);
-            return;
+            content.add(cmp.text(ReportResources.NOT_AVAILABLE).setStyle(OrangeFonts.TABLE_CONTENT_STYLE));
+            return report.summary(content);
         }
 
-        addPurplePlots(document);
-    }
+        // row 1: input circos | CN PDF | somatic clonality
+        HorizontalListBuilder row1 = cmp.horizontalList(
+                cmp.image(mData.purpleInputCircosPlotPath)
+                        .setFixedHeight(PLOT_IMAGE_HEIGHT)
+                        .setHorizontalImageAlignment(HorizontalImageAlignment.CENTER),
+                cmp.image(mData.purpleCopyNumberPlotPath)
+                        .setFixedHeight(PLOT_IMAGE_HEIGHT)
+                        .setHorizontalImageAlignment(HorizontalImageAlignment.CENTER),
+                cmp.image(mData.purpleClonalityPlotPath)
+                        .setFixedHeight(PLOT_IMAGE_HEIGHT)
+                        .setHorizontalImageAlignment(HorizontalImageAlignment.CENTER)
+        );
 
-    private static final int PLOT_IMAGE_HEIGHT = 225;
+        // row 2: ploidy/purity range | minor allele PDF | somatic rainfall
+        HorizontalListBuilder row2 = cmp.horizontalList(
+                cmp.image(mData.purplePurityRangePlotPath)
+                        .setFixedHeight(PLOT_IMAGE_HEIGHT)
+                        .setHorizontalImageAlignment(HorizontalImageAlignment.CENTER),
+                cmp.image(mData.purpleMinorAlleleMapPlotPath)
+                        .setFixedHeight(PLOT_IMAGE_HEIGHT)
+                        .setHorizontalImageAlignment(HorizontalImageAlignment.CENTER),
+                cmp.image(mData.purpleRainfallPlotPath)
+                        .setFixedHeight(PLOT_IMAGE_HEIGHT)
+                        .setHorizontalImageAlignment(HorizontalImageAlignment.CENTER)
+        );
 
-    private void addPurplePlots(final Document document)
-    {
-        Table table = new Table(3);
-        Cells cells = new Cells(mReportResources);
+        content.add(row1);
+        content.add(row2);
 
-        // layout:
-        // row 1: input circos              CN PDF                  somatic clonality
-        // row 2: ploidy/purity range       minor allele PDF        somatic rainfall
-
-        float baseWidth = round((contentWidth() / 3D) - 2);
-        float squareWidth = round(baseWidth * 0.8);
-        float rectangeWidth = round(baseWidth * 1.2);
-
-        addTableImage(table, cells, mData.purpleInputCircosPlotPath, squareWidth);
-        addTableImage(table, cells, mData.purpleCopyNumberPlotPath, squareWidth);
-        addTableImage(table, cells, mData.purpleClonalityPlotPath, rectangeWidth);
-        addTableImage(table, cells, mData.purplePurityRangePlotPath, squareWidth);
-        addTableImage(table, cells, mData.purpleMinorAlleleMapPlotPath, squareWidth);
-        addTableImage(table, cells, mData.purpleRainfallPlotPath, rectangeWidth);
-
-        document.add(table);
-    }
-
-    private void addTableImage(final Table table, final Cells cells, final String plotPath, final float width)
-    {
-        Image image = Images.build(plotPath);
-        image.setMaxHeight(PLOT_IMAGE_HEIGHT);
-        image.setHorizontalAlignment(HorizontalAlignment.CENTER);
-        image.setMaxWidth(width);
-        table.addCell(cells.createImage(image));
+        return report.summary(content);
     }
 }

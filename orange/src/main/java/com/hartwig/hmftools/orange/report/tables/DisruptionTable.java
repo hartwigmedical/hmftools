@@ -2,103 +2,85 @@ package com.hartwig.hmftools.orange.report.tables;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.orange.algo.OrangeConstants.isCandidateLikelihood;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_POSITION;
+import static net.sf.dynamicreports.report.builder.DynamicReports.cmp;
+import static net.sf.dynamicreports.report.builder.DynamicReports.col;
+import static net.sf.dynamicreports.report.builder.DynamicReports.report;
+import static net.sf.dynamicreports.report.builder.DynamicReports.type;
+
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatSingleDigitDecimal;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_DRIVER;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_GENE;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_JCN;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_TYPE;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_ZYGOSITY;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.VALUE_HET;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.VALUE_HOM;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.addEntry;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.cellArray;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.intToFloatArray;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.zeroPrefixed;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxGeneOrientation;
+import com.hartwig.hmftools.orange.report.OrangeFonts;
 import com.hartwig.hmftools.orange.report.ReportResources;
-import com.hartwig.hmftools.orange.report.util.Cells;
-import com.hartwig.hmftools.orange.report.util.Tables;
-import com.itextpdf.layout.element.Cell;
-import com.itextpdf.layout.element.Table;
+
+import net.sf.dynamicreports.jasper.builder.JasperReportBuilder;
+import net.sf.jasperreports.engine.JREmptyDataSource;
+import net.sf.jasperreports.engine.data.JRMapCollectionDataSource;
 
 import org.jetbrains.annotations.Nullable;
 
 public final class DisruptionTable
 {
-    private static final String COL_CONTEXT = "Context";
-    private static final String COL_UNDISRUPTED_CN = "Undisrupted CN";
-
-    public static Table build(
-            final String title, float width, final List<LinxBreakend> breakends, final ReportResources reportResources)
+    public static JasperReportBuilder build(
+            final String title, final List<LinxBreakend> breakends, final ReportResources reportResources)
     {
         if(breakends.isEmpty())
         {
-            return new Tables(reportResources).createEmpty(title, width);
+            return report()
+                    .title(cmp.text(title).setStyle(OrangeFonts.TABLE_TITLE_STYLE),
+                            cmp.text(ReportResources.NONE).setStyle(OrangeFonts.TABLE_CONTENT_STYLE))
+                    .setDataSource(new JREmptyDataSource());
         }
 
-        Cells cells = new Cells(reportResources);
+        List<LinxBreakend> sorted = sort(breakends);
+        List<Map<String, ?>> rows = new ArrayList<>();
 
-        List<Integer> widths = Lists.newArrayList();
-        List<Cell> cellEntries = Lists.newArrayList();
-
-        addEntry(cells, widths, cellEntries, 1, COL_GENE);
-        addEntry(cells, widths, cellEntries, 3, COL_POSITION);
-        addEntry(cells, widths, cellEntries, 1, COL_ZYGOSITY);
-        addEntry(cells, widths, cellEntries, 2, COL_CONTEXT);
-        addEntry(cells, widths, cellEntries, 1, COL_TYPE);
-        addEntry(cells, widths, cellEntries, 1, COL_JCN);
-        addEntry(cells, widths, cellEntries, 2, COL_UNDISRUPTED_CN);
-        addEntry(cells, widths, cellEntries, 1, COL_DRIVER);
-
-        Table table = Tables.createContent(width, intToFloatArray(widths), cellArray(cellEntries));
-
-        List<LinxBreakend> sortedBreakends = sort(breakends);
-
-        for(int i = 0; i < sortedBreakends.size(); ++i)
+        for(int i = 0; i < sorted.size(); i++)
         {
-            LinxBreakend breakend = sortedBreakends.get(i);
-
-            LinxBreakend otherBreakend = null;
-
-            if(i + 1 < sortedBreakends.size() && sortedBreakends.get(i + 1).svId() == breakend.svId())
+            LinxBreakend breakend = sorted.get(i);
+            LinxBreakend other = null;
+            if(i + 1 < sorted.size() && sorted.get(i + 1).svId() == breakend.svId())
             {
-                otherBreakend = sortedBreakends.get(i + 1);
+                other = sorted.get(i + 1);
+                i++;
             }
 
-            List<Cell> rowCells = Lists.newArrayList();
-
-            rowCells.add(cells.createContent(breakend.gene()));
-            rowCells.add(cells.createContent(locationDisplay(breakend, otherBreakend)));
-            rowCells.add(cells.createContent(breakend.undisruptedCopyNumber() < 0.5 ? VALUE_HOM : VALUE_HET));
-            rowCells.add(cells.createContent(contextDisplay(breakend, otherBreakend)));
-            rowCells.add(cells.createContent(breakend.type().toString()));
-            rowCells.add(cells.createContent(formatSingleDigitDecimal(breakend.junctionCopyNumber())));
-            rowCells.add(cells.createContent(formatSingleDigitDecimal(breakend.undisruptedCopyNumber())));
-
-            DriverInterpretation interpretation = DriverInterpretation.interpret(breakend.driverLikelihood());
-            rowCells.add(cells.createContent(interpretation.toString()));
-
-            if(isCandidateLikelihood(breakend.driverLikelihood()))
-            {
-                reportResources.shadeCandidateCells(rowCells);
-            }
-
-            rowCells.forEach(x -> table.addCell(x));
-
-            if(otherBreakend != null)
-                ++i;
+            Map<String, Object> row = new LinkedHashMap<>();
+            row.put("gene", breakend.gene());
+            row.put("position", locationDisplay(breakend, other));
+            row.put("zygosity", breakend.undisruptedCopyNumber() < 0.5 ? "HOM" : "HET");
+            row.put("context", contextDisplay(breakend, other));
+            row.put("type", breakend.type().toString());
+            row.put("jcn", formatSingleDigitDecimal(breakend.junctionCopyNumber()));
+            row.put("undisruptedcn", formatSingleDigitDecimal(breakend.undisruptedCopyNumber()));
+            row.put("driver", DriverInterpretation.interpret(breakend.driverLikelihood()).toString());
+            rows.add(row);
         }
 
-        return new Tables(reportResources).createWrapping(table, title);
+        return report()
+                .setColumnTitleStyle(OrangeFonts.TABLE_HEADER_STYLE_UNPADDED)
+                .setColumnStyle(OrangeFonts.TABLE_CONTENT_STYLE_UNPADDED)
+                .title(cmp.text(title).setStyle(OrangeFonts.TABLE_TITLE_STYLE_WITH_GAP))
+                .columns(
+                        col.column("GENE", "gene", type.stringType()).setWidth(10),
+                        col.column("POSITION", "position", type.stringType()).setWidth(30),
+                        col.column("ZYGOSITY", "zygosity", type.stringType()).setWidth(10),
+                        col.column("CONTEXT", "context", type.stringType()).setWidth(20),
+                        col.column("TYPE", "type", type.stringType()).setWidth(10),
+                        col.column("JCN", "jcn", type.stringType()).setWidth(10),
+                        col.column("UNDISRUPTED CN", "undisruptedcn", type.stringType()).setWidth(20),
+                        col.column("DRIVER", "driver", type.stringType()).setWidth(10)
+                )
+                .setDataSource(new JRMapCollectionDataSource(rows));
     }
 
     private static String locationDisplay(final LinxBreakend breakend)
@@ -109,16 +91,18 @@ public final class DisruptionTable
     private static String locationDisplay(final LinxBreakend lower, @Nullable final LinxBreakend upper)
     {
         if(upper == null)
+        {
             return locationDisplay(lower);
-
+        }
         return format("%s - %s", locationDisplay(lower), locationDisplay(upper));
     }
 
     private static String contextDisplay(final LinxBreakend lower, @Nullable final LinxBreakend upper)
     {
         if(upper == null)
+        {
             return contextStr(lower, true);
-
+        }
         return format("%s - %s", contextStr(lower, false), contextStr(upper, false));
     }
 
@@ -129,11 +113,11 @@ public final class DisruptionTable
         {
             if(breakend.exonUp() == breakend.exonDown())
             {
-                exonRange = String.format("Exon %d", breakend.exonUp());
+                exonRange = format("Exon %d", breakend.exonUp());
             }
             else if(breakend.exonDown() - breakend.exonUp() == 1)
             {
-                exonRange = String.format("Intron %d", breakend.exonUp());
+                exonRange = format("Intron %d", breakend.exonUp());
             }
         }
         else if(breakend.exonUp() == 0 && (breakend.exonDown() == 1 || breakend.exonDown() == 2))
@@ -148,36 +132,35 @@ public final class DisruptionTable
     {
         switch(orientation)
         {
-            case UPSTREAM: return "Upstream";
-            case DOWNSTREAM: return "Downstream";
+            case UPSTREAM:
+                return "Upstream";
+            case DOWNSTREAM:
+                return "Downstream";
         }
-
         return null;
     }
 
     private static List<LinxBreakend> sort(final List<LinxBreakend> breakends)
     {
-        return breakends.stream().sorted((breakend1, breakend2) ->
+        return breakends.stream().sorted((b1, b2) ->
         {
-            if(breakend1.svId() == breakend2.svId())
-                return Integer.compare(breakend1.id(), breakend2.id());
-
-            String location1 = zeroPrefixed(breakend1.chromosome()) + breakend1.chromosomeBand();
-            String location2 = zeroPrefixed(breakend2.chromosome()) + breakend2.chromosomeBand();
-
-            int locationCompare = location1.compareTo(location2);
-            if(locationCompare != 0)
+            if(b1.svId() == b2.svId())
             {
-                return locationCompare;
+                return Integer.compare(b1.id(), b2.id());
             }
-
-            int geneCompare = breakend1.gene().compareTo(breakend2.gene());
-            if(geneCompare != 0)
+            String loc1 = zeroPrefixed(b1.chromosome()) + b1.chromosomeBand();
+            String loc2 = zeroPrefixed(b2.chromosome()) + b2.chromosomeBand();
+            int lc = loc1.compareTo(loc2);
+            if(lc != 0)
             {
-                return geneCompare;
+                return lc;
             }
-
-            return breakend1.exonUp() - breakend2.exonUp();
+            int gc = b1.gene().compareTo(b2.gene());
+            if(gc != 0)
+            {
+                return gc;
+            }
+            return b1.exonUp() - b2.exonUp();
         }).collect(Collectors.toList());
     }
 }

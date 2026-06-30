@@ -2,92 +2,81 @@ package com.hartwig.hmftools.orange.report.tables;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_JUNCTIONS;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_RNA_FRAGS;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_TYPE;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatSingleDigitDecimal;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_DRIVER;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_FUSION;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_JCN;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_RNA;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.addEntry;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.cellArray;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.floatArray;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatSupportField;
+import static net.sf.dynamicreports.report.builder.DynamicReports.cmp;
+import static net.sf.dynamicreports.report.builder.DynamicReports.col;
+import static net.sf.dynamicreports.report.builder.DynamicReports.report;
+import static net.sf.dynamicreports.report.builder.DynamicReports.type;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.datamodel.linx.FusionPhasedType;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
-import com.hartwig.hmftools.datamodel.common.AllelicDepth;
+import com.hartwig.hmftools.orange.report.OrangeFonts;
 import com.hartwig.hmftools.orange.report.ReportResources;
-import com.hartwig.hmftools.orange.report.util.Cells;
-import com.hartwig.hmftools.orange.report.util.Tables;
-import com.itextpdf.layout.element.Cell;
-import com.itextpdf.layout.element.Table;
 
-import com.google.common.collect.Lists;
+import net.sf.dynamicreports.jasper.builder.JasperReportBuilder;
+import net.sf.jasperreports.engine.JREmptyDataSource;
+import net.sf.jasperreports.engine.data.JRMapCollectionDataSource;
 
 public final class DnaFusionTable
 {
-    private static final String COL_PHASING = "Phasing";
-
-    public static Table build(
-            final String title, float width, final List<LinxFusion> fusions, final ReportResources reportResources)
+    public static JasperReportBuilder build(
+            final String title, final List<LinxFusion> fusions, final ReportResources reportResources)
     {
         if(fusions.isEmpty())
         {
-            return new Tables(reportResources).createEmpty(title, width);
+            return report()
+                    .title(cmp.text(title).setStyle(OrangeFonts.TABLE_TITLE_STYLE),
+                            cmp.text(ReportResources.NONE).setStyle(OrangeFonts.TABLE_CONTENT_STYLE))
+                    .setDataSource(new JREmptyDataSource());
         }
 
-        Cells cells = new Cells(reportResources);
+        boolean hasRna = fusions.stream().anyMatch(f -> f.rnaSupport() != null);
 
-        List<Float> widths = Lists.newArrayList();
-        List<Cell> cellEntries = Lists.newArrayList();
-
-        boolean hasRna = fusions.stream().anyMatch(x -> x.rnaSupport() != null);
-
-        addEntry(cells, widths, cellEntries, 2, COL_FUSION);
-        addEntry(cells, widths, cellEntries, 5, COL_JUNCTIONS);
-        addEntry(cells, widths, cellEntries, 1, COL_JCN);
-        addEntry(cells, widths, cellEntries, 1, COL_PHASING);
-        addEntry(cells, widths, cellEntries, 3, COL_TYPE);
-
-        if(hasRna)
-            addEntry(cells, widths, cellEntries, 1, COL_RNA_FRAGS);
-
-        addEntry(cells, widths, cellEntries, 1, COL_DRIVER);
-
-        Table table = Tables.createContent(width, floatArray(widths), cellArray(cellEntries));
-
-        for(LinxFusion fusion : sortLinxFusions(fusions))
+        List<Map<String, ?>> rows = new ArrayList<>();
+        for(LinxFusion fusion : sort(fusions))
         {
-            List<Cell> rowCells = Lists.newArrayList();
-
-            rowCells.add(cells.createContent(fusionDisplay(fusion)));
-            rowCells.add(cells.createContent(transcriptJunctions(fusion)));
-            rowCells.add(cells.createContent(formatSingleDigitDecimal(fusion.junctionCopyNumber())));
-            rowCells.add(cells.createContent(display(fusion.phased())));
-            rowCells.add(cells.createContent(fusion.reportedType().toString()));
-
+            Map<String, Object> row = new LinkedHashMap<>();
+            row.put("fusion", fusionDisplay(fusion));
+            row.put("junctions", transcriptJunctions(fusion));
+            row.put("jcn", TableCommon.formatSingleDigitDecimal(fusion.junctionCopyNumber()));
+            row.put("phasing", display(fusion.phased()));
+            row.put("type", fusion.reportedType().toString());
             if(hasRna)
             {
-                rowCells.add(cells.createContent(String.valueOf(fusion.rnaSupport().alleleReadCount())));
+                row.put("rnafrags", fusion.rnaSupport() != null
+                        ? String.valueOf(fusion.rnaSupport().alleleReadCount())
+                        : ReportResources.NOT_AVAILABLE);
             }
-
-            rowCells.add(cells.createContent(fusion.driverInterpretation().toString()));
-
-            if(fusion.driverInterpretation() == DriverInterpretation.LOW)
-            {
-                reportResources.shadeCandidateCells(rowCells);
-            }
-
-            rowCells.forEach(x -> table.addCell(x));
+            row.put("driver", fusion.driverInterpretation().toString());
+            rows.add(row);
         }
 
-        return new Tables(reportResources).createWrapping(table, title);
+        JasperReportBuilder table = report()
+                .setColumnTitleStyle(OrangeFonts.TABLE_HEADER_STYLE_UNPADDED)
+                .setColumnStyle(OrangeFonts.TABLE_CONTENT_STYLE_UNPADDED)
+                .title(cmp.text(title).setStyle(OrangeFonts.TABLE_TITLE_STYLE_WITH_GAP))
+                .columns(
+                        col.column("FUSION", "fusion", type.stringType()).setWidth(20),
+                        col.column("JUNCTIONS", "junctions", type.stringType()).setWidth(50),
+                        col.column("JCN", "jcn", type.stringType()).setWidth(10),
+                        col.column("PHASING", "phasing", type.stringType()).setWidth(10),
+                        col.column("TYPE", "type", type.stringType()).setWidth(30)
+                );
+
+        if(hasRna)
+        {
+            table.addColumn(col.column("RNA FRAGS", "rnafrags", type.stringType()).setWidth(10));
+        }
+
+        table.addColumn(col.column("DRIVER", "driver", type.stringType()).setWidth(10));
+        table.setDataSource(new JRMapCollectionDataSource(rows));
+        return table;
     }
 
     private static String fusionDisplay(final LinxFusion fusion)
@@ -101,9 +90,9 @@ public final class DnaFusionTable
                 fusion.contextUp(), fusion.transcriptUp(), fusion.contextDown(), fusion.transcriptDown());
     }
 
-    private static String display(FusionPhasedType fusionPhasedType)
+    private static String display(final FusionPhasedType type)
     {
-        switch(fusionPhasedType)
+        switch(type)
         {
             case INFRAME:
                 return "Inframe";
@@ -112,43 +101,22 @@ public final class DnaFusionTable
             case OUT_OF_FRAME:
                 return "Out of frame";
         }
-        throw new IllegalStateException();
+        throw new IllegalStateException("Unknown FusionPhasedType: " + type);
     }
 
-    /*
-    private static String rnaSupportField(final AllelicDepth rnaSupport)
+    private static List<LinxFusion> sort(final List<LinxFusion> fusions)
     {
-        if(rnaSupport == null)
-            return ReportResources.NOT_AVAILABLE;
-        else
-            return formatSupportField(rnaSupport.alleleReadCount(), rnaSupport.totalReadCount());
-    }
-    */
-
-    private static List<LinxFusion> sortLinxFusions(final List<LinxFusion> fusions)
-    {
-        return fusions.stream().sorted((fusion1, fusion2) ->
+        return fusions.stream().sorted((f1, f2) ->
         {
-            if(fusion1.driverInterpretation() == fusion2.driverInterpretation())
+            if(f1.driverInterpretation() == f2.driverInterpretation())
             {
-                if(fusion1.geneUp().equals(fusion2.geneUp()))
+                if(f1.geneUp().equals(f2.geneUp()))
                 {
-                    return fusion1.geneDown().compareTo(fusion2.geneDown());
+                    return f1.geneDown().compareTo(f2.geneDown());
                 }
-                else
-                {
-                    return fusion1.geneUp().compareTo(fusion2.geneUp());
-                }
+                return f1.geneUp().compareTo(f2.geneUp());
             }
-            else
-            {
-                return fusion1.driverInterpretation() == DriverInterpretation.HIGH ? -1 : 1;
-            }
+            return f1.driverInterpretation() == DriverInterpretation.HIGH ? -1 : 1;
         }).collect(Collectors.toList());
-    }
-
-    private static <T> List<T> max5(final List<T> elements)
-    {
-        return elements.subList(0, Math.min(5, elements.size()));
     }
 }

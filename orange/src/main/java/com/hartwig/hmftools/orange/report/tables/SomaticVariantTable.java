@@ -2,194 +2,169 @@ package com.hartwig.hmftools.orange.report.tables;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.orange.algo.OrangeConstants.isCandidateLikelihood;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_COPIES;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_GENE;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_HGVS;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_POSITION;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.VALUE_NO;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.VALUE_YES;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.floatArray;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatPercentageField;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatSingleDigitDecimal;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatTwoDigitDecimal;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_AF;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_BIALLELIC;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_CL;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_DRIVER;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_HOTSPOT;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_MACN;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_SL;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_VCN;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_CN;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_DP;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_RNA;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.addEntry;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.cellArray;
+import static net.sf.dynamicreports.report.builder.DynamicReports.cmp;
+import static net.sf.dynamicreports.report.builder.DynamicReports.col;
+import static net.sf.dynamicreports.report.builder.DynamicReports.report;
+import static net.sf.dynamicreports.report.builder.DynamicReports.type;
 
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatPercentageField;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatTwoDigitDecimal;
+
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.datamodel.common.AllelicDepth;
 import com.hartwig.hmftools.datamodel.purple.PurpleTranscriptImpact;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
+import com.hartwig.hmftools.orange.report.OrangeFonts;
 import com.hartwig.hmftools.orange.report.ReportResources;
-import com.hartwig.hmftools.orange.report.util.Cells;
-import com.hartwig.hmftools.orange.report.util.Tables;
-import com.itextpdf.layout.element.Cell;
-import com.itextpdf.layout.element.Table;
+
+import net.sf.dynamicreports.jasper.builder.JasperReportBuilder;
+import net.sf.dynamicreports.report.builder.column.TextColumnBuilder;
+import net.sf.jasperreports.engine.JREmptyDataSource;
+import net.sf.jasperreports.engine.data.JRMapCollectionDataSource;
 
 public final class SomaticVariantTable
 {
-    public static Table build(
-            final String title, float width, final List<PurpleVariant> variants, final ReportResources reportResources,
+    public static JasperReportBuilder build(
+            final String title, final List<PurpleVariant> variants, final ReportResources reportResources,
             boolean tumorOnly, boolean hasRna)
     {
         if(variants.isEmpty())
         {
-            return new Tables(reportResources).createEmpty(title, width);
+            return report()
+                    .title(cmp.text(title).setStyle(OrangeFonts.TABLE_TITLE_STYLE),
+                            cmp.text(ReportResources.NONE).setStyle(OrangeFonts.TABLE_CONTENT_STYLE))
+                    .setDataSource(new JREmptyDataSource());
         }
 
-        Cells cells = new Cells(reportResources);
-
-        List<Float> widths = Lists.newArrayList();
-        List<Cell> cellEntries = Lists.newArrayList();
-
-        addEntry(cells, widths, cellEntries, 1.5, COL_GENE);
-        addEntry(cells, widths, cellEntries, 2, COL_POSITION);
-        addEntry(cells, widths, cellEntries, 3, COL_HGVS);
-        addEntry(cells, widths, cellEntries, 1, COL_AF);
-        addEntry(cells, widths, cellEntries, 1, COL_DP);
-        addEntry(cells, widths, cellEntries, 1, COL_COPIES);
-        // addEntry(cells, widths, cellEntries, 1, COL_MACN);
-        addEntry(cells, widths, cellEntries, 1.25, COL_HOTSPOT);
-        addEntry(cells, widths, cellEntries, 1, COL_BIALLELIC);
-        addEntry(cells, widths, cellEntries, 1.25, COL_CL);
-
-        if(tumorOnly)
-        {
-            addEntry(cells, widths, cellEntries, 1.25, COL_SL);
-        }
-
-        if(hasRna)
-        {
-            addEntry(cells, widths, cellEntries, 1, COL_RNA);
-        }
-
-        addEntry(cells, widths, cellEntries, 1, COL_DRIVER);
-
-        Table table = Tables.createContent(width, floatArray(widths), cellArray(cellEntries));
-
+        List<Map<String, Object>> rows = new ArrayList<>();
         for(PurpleVariant variant : sort(variants))
         {
-            List<PurpleTranscriptImpact> transcriptImpacts = Lists.newArrayList(variant.canonicalImpact());
-            transcriptImpacts.addAll(variant.otherImpacts());
+            List<PurpleTranscriptImpact> impacts = new ArrayList<>();
+            impacts.add(variant.canonicalImpact());
+            impacts.addAll(variant.otherImpacts());
 
-            for(PurpleTranscriptImpact transcriptImpact : transcriptImpacts)
+            for(PurpleTranscriptImpact impact : impacts)
             {
-                List<Cell> rowCells = Lists.newArrayList();
-
-                rowCells.add(cells.createContent(variant.gene()));
-                rowCells.add(cells.createContent(locationDisplay(variant)));
-                rowCells.add(cells.createContent(hgvsDisplay(transcriptImpact)));
-                rowCells.add(cells.createContent(formatTwoDigitDecimal(variant.tumorDepth().alleleFrequency())));
-                rowCells.add(cells.createContent(String.valueOf(variant.tumorDepth().totalReadCount())));
-                rowCells.add(cells.createContent(copyNumberDisplay(variant)));
-                // rowCells.add(cells.createContent(formatSingleDigitDecimal(variant.minorAlleleCopyNumber())));
-                rowCells.add(cells.createContent(hotspotDisplay(variant)));
-                rowCells.add(cells.createContent(formatPercentageField(variant.biallelicProbability())));
-
-                rowCells.add(cells.createContent(clonalLikelihood(variant)));
-
+                Map<String, Object> row = new LinkedHashMap<>();
+                row.put("gene", variant.gene());
+                row.put("position", locationDisplay(variant));
+                row.put("hgvs", hgvsDisplay(impact));
+                row.put("af", formatTwoDigitDecimal(variant.tumorDepth().alleleFrequency()));
+                row.put("depth", String.valueOf(variant.tumorDepth().totalReadCount()));
+                row.put("copies", copyNumberDisplay(variant));
+                row.put("hotspot", hotspotDisplay(variant));
+                row.put("biallelic", formatPercentageField(variant.biallelicProbability()));
+                row.put("clonal", clonalLikelihood(variant));
                 if(tumorOnly)
-                    rowCells.add(cells.createContent(variant.somaticLikelihood().toString()));
-
-                if(hasRna)
-                    rowCells.add(cells.createContent(rnaDisplay(variant)));
-
-                rowCells.add(cells.createContent(formatPercentageField(variant.driverLikelihood())));
-
-                if(isCandidateLikelihood(variant.driverLikelihood()))
                 {
-                    reportResources.shadeCandidateCells(rowCells);
+                    row.put("somatic", variant.somaticLikelihood().toString());
                 }
-
-                rowCells.forEach(x -> table.addCell(x));
+                if(hasRna)
+                {
+                    row.put("rna", rnaDisplay(variant));
+                }
+                row.put("driver", formatPercentageField(variant.driverLikelihood()));
+                rows.add(row);
             }
         }
 
-        return new Tables(reportResources).createWrapping(table, title);
+        List<TextColumnBuilder<String>> columns = new ArrayList<>();
+        columns.add(col.column("GENE", "gene", type.stringType()).setWidth(15));
+        columns.add(col.column("POSITION", "position", type.stringType()).setWidth(20));
+        columns.add(col.column("HGVS", "hgvs", type.stringType()).setWidth(30));
+        columns.add(col.column("AF", "af", type.stringType()).setWidth(10));
+        columns.add(col.column("DEPTH", "depth", type.stringType()).setWidth(10));
+        columns.add(col.column("COPIES", "copies", type.stringType()).setWidth(10));
+        columns.add(col.column("HOTSPOT", "hotspot", type.stringType()).setWidth(12));
+        columns.add(col.column("BIALL", "biallelic", type.stringType()).setWidth(10));
+        columns.add(col.column("CLONAL", "clonal", type.stringType()).setWidth(12));
+        if(tumorOnly)
+        {
+            columns.add(col.column("SOMATIC", "somatic", type.stringType()).setWidth(12));
+        }
+        if(hasRna)
+        {
+            columns.add(col.column("RNA", "rna", type.stringType()).setWidth(10));
+        }
+        columns.add(col.column("DRIVER", "driver", type.stringType()).setWidth(10));
+
+        JasperReportBuilder table = report()
+                .setColumnTitleStyle(OrangeFonts.TABLE_HEADER_STYLE_UNPADDED)
+                .setColumnStyle(OrangeFonts.TABLE_CONTENT_STYLE_UNPADDED)
+                .title(cmp.text(title).setStyle(OrangeFonts.TABLE_TITLE_STYLE_WITH_GAP));
+
+        for(TextColumnBuilder<String> col : columns)
+        {
+            table.addColumn(col);
+        }
+
+        return table.setDataSource(new JRMapCollectionDataSource((java.util.Collection<java.util.Map<String, ?>>) (java.util.Collection<?>) rows));
     }
 
-    protected static List<PurpleVariant> sort(final List<PurpleVariant> variants)
+    static List<PurpleVariant> sort(final List<PurpleVariant> variants)
     {
-        return variants.stream().sorted((variant1, variant2) ->
+        return variants.stream().sorted((v1, v2) ->
         {
-            int driverCompare = Double.compare(variant2.driverLikelihood(), variant1.driverLikelihood());
-            if(driverCompare != 0)
+            int dc = Double.compare(v2.driverLikelihood(), v1.driverLikelihood());
+            if(dc != 0)
             {
-                return driverCompare;
+                return dc;
             }
-
-            int geneCompare = variant1.gene().compareTo(variant2.gene());
-            if(geneCompare != 0)
-            {
-                return geneCompare;
-            }
-
-            return 0;
+            return v1.gene().compareTo(v2.gene());
         }).collect(Collectors.toList());
     }
 
-    protected static String locationDisplay(final PurpleVariant variant)
+    static String locationDisplay(final PurpleVariant variant)
     {
         boolean phased = variant.localPhaseSets() != null && !variant.localPhaseSets().isEmpty();
-        String locationStr = format("%s:%d", variant.chromosome(), variant.position());
-        return phased ? format("%s *", locationStr) : locationStr;
+        String loc = format("%s:%d", variant.chromosome(), variant.position());
+        return phased ? loc + " *" : loc;
     }
 
-    protected static String hgvsDisplay(final PurpleTranscriptImpact transcriptImpact)
+    static String hgvsDisplay(final PurpleTranscriptImpact impact)
     {
-        if(transcriptImpact.hgvsProteinImpact().isEmpty())
-            return transcriptImpact.hgvsCodingImpact();
-
-        return format("%s [%s]", transcriptImpact.hgvsCodingImpact(), transcriptImpact.hgvsProteinImpact());
+        if(impact.hgvsProteinImpact().isEmpty())
+        {
+            return impact.hgvsCodingImpact();
+        }
+        return format("%s [%s]", impact.hgvsCodingImpact(), impact.hgvsProteinImpact());
     }
 
-    protected static String copyNumberDisplay(final PurpleVariant variant)
+    static String copyNumberDisplay(final PurpleVariant variant)
     {
         return format("%.1f of %.1f", variant.variantCopyNumber(), variant.adjustedCopyNumber());
     }
 
-    protected static String clonalLikelihood(final PurpleVariant variant)
-    {
-        return formatPercentageField(1 - variant.subclonalLikelihood());
-    }
-
-    protected static String hotspotDisplay(final PurpleVariant variant)
+    static String hotspotDisplay(final PurpleVariant variant)
     {
         switch(variant.hotspot())
         {
             case HOTSPOT:
-                return VALUE_YES;
+                return "Yes";
             case NEAR_HOTSPOT:
                 return "Near";
             default:
-                return VALUE_NO;
+                return "No";
         }
     }
 
-    protected static String rnaDisplay(final PurpleVariant variant)
+    static String clonalLikelihood(final PurpleVariant variant)
+    {
+        return formatPercentageField(1 - variant.subclonalLikelihood());
+    }
+
+    static String rnaDisplay(final PurpleVariant variant)
     {
         AllelicDepth rnaDepth = variant.rnaDepth();
-
         if(rnaDepth == null)
         {
             return ReportResources.NOT_AVAILABLE;
         }
-
         return format("%d/%d", rnaDepth.alleleReadCount(), rnaDepth.totalReadCount());
     }
 }
-
