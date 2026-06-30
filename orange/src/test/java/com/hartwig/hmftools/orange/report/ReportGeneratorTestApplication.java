@@ -47,7 +47,7 @@ public class ReportGeneratorTestApplication
 {
     private static final Logger LOGGER = LogManager.getLogger(ReportGeneratorTestApplication.class);
 
-    private static final String REPORT_BASE_DIR = System.getProperty("user.home") + File.separator + "hmf" + File.separator + "tmp";
+    private static final String REPORT_BASE_DIR = System.getProperty("user.home") + File.separator + "hmf" + File.separator + "tmp" + File.separator;
 
     private static final boolean USE_MOCK_DATA_FOR_REPORT = false;
     private static final boolean REMOVE_UNREPORTED_VARIANTS = false;
@@ -64,6 +64,8 @@ public class ReportGeneratorTestApplication
         OrangeConfig config = buildConfig();
 
         ReportWriter writer = ReportWriterFactory.createToDiskWriter(config);
+
+        new File(REPORT_BASE_DIR).mkdirs();
 
         if(!new File(REPORT_BASE_DIR).isDirectory())
         {
@@ -126,8 +128,8 @@ public class ReportGeneratorTestApplication
     {
         return new OrangeConfig(
                 ExperimentType.WHOLE_GENOME, TUMOR_SAMPLE_ID, TUMOR_ONLY ? null : REFERENCE_SAMPLE_ID, null,
-                RefGenomeVersion.V37, Collections.emptySet(), LocalDate.now(),
-                null, MELANOMA_DOID, PIPELINE_VERSION_FILE, PURPLE_DATA_DIRECTORY, PURPLE_PLOT_DIRECTORY, LINX_SOMATIC_DATA_DIRECTORY,
+                RefGenomeVersion.V37, Collections.emptySet(), null, LocalDate.now(),
+                REPORT_BASE_DIR, MELANOMA_DOID, PIPELINE_VERSION_FILE, PURPLE_DATA_DIRECTORY, PURPLE_PLOT_DIRECTORY, LINX_SOMATIC_DATA_DIRECTORY,
                 LINX_GERMLINE_DATA_DIRECTORY, LINX_PLOT_DIRECTORY, LILAC_DIR, CHORD_DIR, CUPPA_DIR, PEACH_DIR, SIGS_DIR,
                 VIRUS_DIR, ISOFOX_DIR, true);
     }

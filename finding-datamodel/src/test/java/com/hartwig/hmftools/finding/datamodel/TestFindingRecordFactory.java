@@ -72,6 +72,7 @@ public class TestFindingRecordFactory
     {
         return MetaPropertiesBuilder.builder()
                 .sampleId("")
+                .analysisDate(LocalDate.now())
                 .samplingDate(LocalDate.of(2026, 1, 1))
                 .sequencingScope(SequencingScope.WHOLE_GENOME)
                 .refGenomeVersion(RefGenomeVersion.V37)

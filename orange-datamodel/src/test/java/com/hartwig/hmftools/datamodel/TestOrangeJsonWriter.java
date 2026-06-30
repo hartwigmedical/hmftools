@@ -93,6 +93,7 @@ public class TestOrangeJsonWriter
                 .sampleId("TEST")
                 .referenceId("REFERENCE")
                 .samplingDate(LocalDate.of(2022, 1, 20))
+                .analysisDate(LocalDate.of(2026, 6, 19))
                 .experimentType(ExperimentType.WHOLE_GENOME)
                 .refGenomeVersion(OrangeRefGenomeVersion.V37)
                 .purple(createPurpleRecord())

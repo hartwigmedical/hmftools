@@ -2,6 +2,7 @@
   "sampleId": "TEST",
   "experimentType": "WHOLE_GENOME",
   "samplingDate": "2022-01-20",
+  "analysisDate": "2022-01-20",
   "refGenomeVersion": "V37",
   "purple": {
     "fit": {

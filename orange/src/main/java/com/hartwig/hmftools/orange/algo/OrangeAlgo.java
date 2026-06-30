@@ -129,6 +129,7 @@ public class OrangeAlgo
                 .sampleId(config.TumorId)
                 .referenceId(config.ReferenceId)
                 .samplingDate(config.SamplingDate)
+                .analysisDate(config.AnalysisDate)
                 .experimentType(config.RunType)
                 .configuredPrimaryTumor(primaryTumorDoids)
                 .refGenomeVersion(config.orangeRefGenomeVersion())

@@ -91,6 +91,7 @@ public class OrangeConfig
     public final Set<String> PrimaryTumorDoids;
     public final String PrimaryTumorLocation;
     public final LocalDate SamplingDate;
+    public final LocalDate AnalysisDate;
 
     public final String OutputDir;
     public final String OutputId;
@@ -123,6 +124,7 @@ public class OrangeConfig
     private static final String PRIMARY_TUMOR_DOIDS = "primary_tumor_doids";
     private static final String PRIMARY_TUMOR_LOCATION = "primary_tumor_location";
     private static final String SAMPLING_DATE = "sampling_date";
+    private static final String ANALYSIS_DATE = "analysis_date";
     private static final String DISPLAY_SAMPLE_ID = "display_sample";
     private static final String PANEL_NAME = "panel_name";
 
@@ -252,16 +254,8 @@ public class OrangeConfig
             LOGGER.debug("disclaimer will be included in footer");
         }
 
-        if(configBuilder.hasValue(SAMPLING_DATE))
-        {
-            SamplingDate = interpretSamplingDateParam(configBuilder.getValue(SAMPLING_DATE));
-        }
-        else
-        {
-            LOGGER.debug("defaulting sampling data to current date");
-            SamplingDate = LocalDate.now();
-        }
-
+        SamplingDate = interpretDateParam(configBuilder, SAMPLING_DATE, null);
+        AnalysisDate = interpretDateParam(configBuilder, ANALYSIS_DATE, LocalDate.now());
         RunType = determineExperimentType(configBuilder.getValue(EXPERIMENT_TYPE));
         LOGGER.info("experiment type has been resolved to '{}'", RunType);
     }
@@ -281,6 +275,7 @@ public class OrangeConfig
                 false, "A semicolon-separated list of DOIDs representing the primary tumor of patient");
 
         configBuilder.addConfigItem(SAMPLING_DATE, false, "Optional, if provided represents the sampling date in YYMMDD format");
+        configBuilder.addConfigItem(ANALYSIS_DATE, false, "Optional, if provided represents the analysis date in YYMMDD format");
 
         addRefGenomeVersion(configBuilder);
         SequencingType.registerConfig(configBuilder);
@@ -328,22 +323,27 @@ public class OrangeConfig
         return RefGenVersion.is37() ? OrangeRefGenomeVersion.V37 : OrangeRefGenomeVersion.V38;
     }
 
-    private static LocalDate interpretSamplingDateParam(final String samplingDateString)
+    @VisibleForTesting
+    static LocalDate interpretDateParam(final ConfigBuilder configBuilder, final String argName, final LocalDate defaultValue)
     {
-        String format = "yyMMdd";
+        if(!configBuilder.hasValue(argName))
+        {
+            return defaultValue;
+        }
 
-        LocalDate samplingDate;
+        String format = "yyMMdd";
+        String dateString = configBuilder.getValue(argName);
         try
         {
-            samplingDate = LocalDate.parse(samplingDateString, DateTimeFormatter.ofPattern(format, Locale.ENGLISH));
-            LOGGER.debug("Configured sampling date to {}", samplingDate);
+            LocalDate date = LocalDate.parse(dateString, DateTimeFormatter.ofPattern(format, Locale.ENGLISH));
+            LOGGER.debug("Configured {} to {}", argName, date);
+            return date;
         }
         catch(DateTimeParseException exception)
         {
-            samplingDate = LocalDate.now();
-            LOGGER.warn("Could not parse configured sampling date '{}'. Expected format is '{}'", samplingDateString, format);
+            LOGGER.warn("Could not parse configured {} '{}'. Expected format is '{}'", argName, dateString, format);
+            return defaultValue;
         }
-        return samplingDate;
     }
 
     private static ExperimentType determineExperimentType(final String experimentTypeString)
@@ -379,7 +379,7 @@ public class OrangeConfig
     @VisibleForTesting
     public OrangeConfig(
             final ExperimentType runType, final String tumorId, final String referenceId, final String rnaSampleId,
-            final RefGenomeVersion refGenVersion, final Set<String> primaryTumorDoids, final LocalDate samplingDate, final String outputDir,
+            final RefGenomeVersion refGenVersion, final Set<String> primaryTumorDoids, final LocalDate samplingDate, final LocalDate analysisDate, final String outputDir,
             final String doidJsonFile, final String pipelineVersionFile, final String purpleDataDirectory, final String purplePlotDirectory,
             final String linxSomaticDataDirectory, final String linxGermlineDataDirectory, final String linxPlotDirectory,
             final String lilacDir, final String chordDir, final String cuppaDir, final String peachDir, final String sigsDir,
@@ -393,6 +393,7 @@ public class OrangeConfig
         SeqType = SequencingType.ILLUMINA;
         PrimaryTumorDoids = primaryTumorDoids;
         SamplingDate = samplingDate;
+        AnalysisDate = analysisDate;
         OutputDir = outputDir;
         OutputId = null;
         DoidJsonFile = doidJsonFile;
