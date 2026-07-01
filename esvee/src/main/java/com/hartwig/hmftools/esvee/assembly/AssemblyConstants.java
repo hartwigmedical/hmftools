@@ -88,6 +88,7 @@ public final class AssemblyConstants
     public static final int READ_MISMATCH_LOW_REPEAT_COUNT = REPEAT_MIN_COUNT;
     public static int READ_MISMATCH_MEDIUM_REPEAT_COUNT = 11;
     public static int READ_MISMATCH_LONG_REPEAT_COUNT = 16;
+    public static int READ_MISMATCH_MAX_REPEAT_DIFF = 5;
 
     public static final int DEFAULT_ASSEMBLY_MAP_QUAL_THRESHOLD = 10;
 

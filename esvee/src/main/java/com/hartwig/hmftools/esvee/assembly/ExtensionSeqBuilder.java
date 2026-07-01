@@ -16,7 +16,7 @@ import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.basesMatch;
 import static com.hartwig.hmftools.esvee.assembly.LineUtils.findConsensusLineExtension;
 import static com.hartwig.hmftools.esvee.assembly.LineUtils.hasLineTail;
 import static com.hartwig.hmftools.esvee.assembly.SequenceBuilder.NEXT_BASE_CHECK_COUNT;
-import static com.hartwig.hmftools.esvee.assembly.SequenceBuilder.getRepeatCount;
+import static com.hartwig.hmftools.esvee.assembly.SequenceBuilder.getReadRepeatCount;
 import static com.hartwig.hmftools.esvee.assembly.SequenceCompare.permittedRepeatCount;
 import static com.hartwig.hmftools.esvee.assembly.SequenceDiffType.BASE;
 import static com.hartwig.hmftools.esvee.assembly.SequenceDiffType.DELETE;
@@ -267,18 +267,17 @@ public class ExtensionSeqBuilder
             if(consensusRepeat != null)
             {
                 int prevExtBaseLength = abs(consensusRepeat.Index - extensionIndex); // was +1 but seems incorrect
-                // previousRepeatLength = abs(consensusRepeat.Index - extensionIndex) + 1;
 
                 int repeatBaseLength = consensusRepeat.repeatLength();
-                int previousExtRepeatCount = prevExtBaseLength / repeatBaseLength;
+                int prevRepeatCount = prevExtBaseLength / repeatBaseLength;
                 int repeatExtRemainder = prevExtBaseLength % repeatBaseLength;
 
                 int readRepeatCount = 0;
 
-                if(previousExtRepeatCount > 0 && repeatExtRemainder == 0)
+                if(prevRepeatCount > 0 && repeatExtRemainder == 0)
                 {
                     // get further repeat counts in the read from this point, assuming has matched until this point
-                    readRepeatCount = getRepeatCount(read, consensusRepeat.Bases, previousExtRepeatCount, mBuildForwards);
+                    readRepeatCount = getReadRepeatCount(read, consensusRepeat.Bases, prevRepeatCount, mBuildForwards, false);
                 }
 
                 int permittedRepeatDiff = permittedRepeatCount(consensusRepeat.Count);
