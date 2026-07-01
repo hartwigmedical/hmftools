@@ -1,32 +1,34 @@
-import logging
-import sys
+import argparse
+import os
 import time
+import random
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import torch
 import torch.utils.data as data_utils
+from sklearn.model_selection import train_test_split
 from torch import nn
 from torchvision.io import read_image
 from torchvision.transforms import v2 # use v2 as it claims to be faster
 import vchord_model
-
-logger = logging.getLogger(__name__)
-
-logging.basicConfig(stream=sys.stdout,
-                    format='%(asctime)s %(levelname)5s - %(message)s',
-                    datefmt='%Y-%m-%d %H:%M:%S',
-                    level=logging.DEBUG)
-
-logger.setLevel(logging.DEBUG)
+from common import LOGGER, DEVICE
 
 IMAGE_SIZE = 512
 NUM_CANCER_TYPES = 5
+RANDOM_SEED = 42
+
+# Set seeds for reproducibility
+torch.manual_seed(RANDOM_SEED)
+torch.cuda.manual_seed_all(RANDOM_SEED)
+np.random.seed(RANDOM_SEED)
+random.seed(RANDOM_SEED)
+
+# For full determinism (may impact performance)
+torch.backends.cudnn.deterministic = True
+torch.backends.cudnn.benchmark = False
 
 # select clinical.sampleId, clinical.primaryTumorLocation, chord.BRCA1, chord.BRCA2, chord.hrd, chord.hrStatus, chord.hrdType, chord.remarksHrStatus, chord.remarksHrdType from clinical, chord where clinical.sampleId = chord.sampleId and (clinical.primaryTumorLocation = 'Breast' or clinical.primaryTumorLocation = 'Ovary' or clinical.primaryTumorLocation = 'Fallopian tube' or clinical.primaryTumorLocation = "Prostate" or clinical.primaryTumorLocation = "Pancreas");
-
-# Get cpu or gpu device for training.
-device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
 
 
 def filter_df(df: pd.DataFrame) -> pd.DataFrame:
@@ -88,12 +90,12 @@ class HrdDataset(data_utils.Dataset):
 
         transform = make_transform(image_size)
 
-        logger.info(f"start loading images, augment={augment}")
+        LOGGER.info(f"start loading images, augment={augment}")
         # load all the images into an array
         for idx, row in df.iterrows():
 
             if idx % 50 == 0:
-                logger.debug(f"[{idx+1}/{len(df)}] Loading: {row['circosPngPath']}")
+                LOGGER.debug(f"[{idx + 1}/{len(df)}] Loading: {row['circosPngPath']}")
 
             self.image_tensors.append(image_to_tensor(row["circosPngPath"], image_size, transform))
             self.type_tensors.append(cancer_type_to_tensor(row["primaryTumorLocation"], row["purity"]))
@@ -106,7 +108,7 @@ class HrdDataset(data_utils.Dataset):
 
         elapsed_sec = int(time.time() - start)
         minute, second = divmod(elapsed_sec, 60)
-        logger.info(f"loading dataset of size {len(self)}, hrd={num_hrd}, took {minute:.0f}m {second:.0f}s")
+        LOGGER.info(f"loading dataset of size {len(self)}, hrd={num_hrd}, took {minute:.0f}m {second:.0f}s")
 
     def __len__(self) -> int:
         return len(self.image_tensors)
@@ -119,7 +121,7 @@ class HrdDataset(data_utils.Dataset):
             # otherwise the CPU would struggle with the load and become the bottleneck
             # However if we are not doing transform then we keep it in GPU and move whole batch to GPU
             # in the train / test functions
-            image_tensor = image_tensor.to(device)
+            image_tensor = image_tensor.to(DEVICE)
             image_tensor = self.transform(image_tensor)
         type_tensor = self.type_tensors[idx]
         target_tensor = self.targets[idx]
@@ -177,7 +179,7 @@ class EpochStats:
         self.true_neg += ((1 - pred) * (1 - target)).sum().item()
 
     def log(self, name: str, epoch: int) -> None:
-        logger.info(f"[{name} {epoch:>4d}]    loss: {self.loss:>8.5f}    "
+        LOGGER.info(f"[{name} {epoch:>4d}]    loss: {self.loss:>8.5f}    "
                     f"acc:{self.accuracy * 100:>6.2f}% [{self.correct:>4d}/{self.count:>4d}]    "
                     f"TP:{self.true_pos_rate * 100:>6.2f}% [{self.true_pos:>4d}/{self.num_pos:>4d}]    "
                     f"TN:{self.true_neg_rate * 100:>6.2f}% [{self.true_neg:>4d}/{self.num_neg:>4d}]")
@@ -188,16 +190,15 @@ class EpochStats:
 # return (train_dataloader, test_dataloader)
 def create_dataloader(df: pd.DataFrame, image_size: int, batch_size: int, augment: bool, hrd_sample_dup: int, test_fraction: float) -> tuple[data_utils.DataLoader, data_utils.DataLoader]:
     # Using Skicit-learn to split data into training and testing sets
-    from sklearn.model_selection import train_test_split
 
     # Split the data into training and testing sets
-    train_df, test_df = train_test_split(df, test_size=test_fraction, random_state=None)
+    train_df, test_df = train_test_split(df, test_size=test_fraction, random_state=RANDOM_SEED)
 
     # write out the train and test set
     train_df[["sampleId"]].to_csv("train_set.tsv.gz", sep="\t", index=False)
     test_df[["sampleId"]].to_csv("test_set.tsv.gz", sep="\t", index=False)
 
-    logger.info(f"train size: {len(train_df)}, test size: {len(test_df)}, batch size: {batch_size}, augment: {augment}")
+    LOGGER.info(f"train size: {len(train_df)}, test size: {len(test_df)}, batch size: {batch_size}, augment: {augment}")
 
     # Create data loaders.
     train_dataset = HrdDataset(train_df, image_size, augment=augment, hrd_sample_dup=hrd_sample_dup)
@@ -254,15 +255,15 @@ def train_model(model: nn.Module, train_dataloader: data_utils.DataLoader, test_
     train_stats_list = []
     test_stats_list = []
 
-    logger.info(f"start training, num epochs={num_epochs}")
+    LOGGER.info(f"start training, num epochs={num_epochs}")
 
     # print the optimizer params
     optimizer_params = {k:v for (k,v) in optimizer.param_groups[0].items() if isinstance(v, (int, float))}
-    logger.info(f"optimizer={optimizer.__class__.__name__}, params={optimizer_params}")
+    LOGGER.info(f"optimizer={optimizer.__class__.__name__}, params={optimizer_params}")
 
     # print the lr scheduler params
     try:
-        logger.info(f"lr scheduler={scheduler.__class__.__name__}, states={scheduler.state_dict()}")
+        LOGGER.info(f"lr scheduler={scheduler.__class__.__name__}, states={scheduler.state_dict()}")
     except NameError:
         pass
 
@@ -279,7 +280,7 @@ def train_model(model: nn.Module, train_dataloader: data_utils.DataLoader, test_
         should_log = epoch % 100 == 0
 
         # if should_log:
-        logger.info(f"-----------------------------------------"
+        LOGGER.info(f"-----------------------------------------"
                     f" Epoch {epoch:>4d}  [lr={optimizer.param_groups[0]['lr']:.6f}] "
                     f"-----------------------------------------")
 
@@ -293,7 +294,7 @@ def train_model(model: nn.Module, train_dataloader: data_utils.DataLoader, test_
 
     elapsed_min = (time.time() - start) / 60
     hours, minutes = divmod(elapsed_min, 60)
-    logger.info(f"training complete! time taken: {hours:.0f}h {minutes:.0f}m")
+    LOGGER.info(f"training complete! time taken: {hours:.0f}h {minutes:.0f}m")
 
     # create a df for the epoch data
     epoch_df = pd.DataFrame()
@@ -342,9 +343,9 @@ def train_model(model: nn.Module, train_dataloader: data_utils.DataLoader, test_
 def train(dataloader: data_utils.DataLoader, model: nn.Module, loss_fn: nn.Module, optimizer: torch.optim.Optimizer, epoch_stats: EpochStats, epoch: int, should_log: bool) -> None:
     model.train()
     for batch, (x1, x2, y) in enumerate(dataloader):
-        x1 = x1.to(device)
-        x2 = x2.to(device)
-        y = y.to(device)
+        x1 = x1.to(DEVICE)
+        x2 = x2.to(DEVICE)
+        y = y.to(DEVICE)
         # Compute prediction error
         pred = model(x1, x2)
 
@@ -377,9 +378,9 @@ def test(dataloader: data_utils.DataLoader, model: nn.Module, loss_fn: nn.Module
 
     with torch.no_grad():
         for x1, x2, y in dataloader:
-            x1 = x1.to(device)
-            x2 = x2.to(device)
-            y = y.to(device)
+            x1 = x1.to(DEVICE)
+            x2 = x2.to(DEVICE)
+            y = y.to(DEVICE)
             pred = model(x1, x2)
 
             epoch_stats.update_loss(loss_fn(pred, y).item(), y.size(dim=0))
@@ -400,24 +401,47 @@ def append_dropout(model: nn.Module, rate: float) -> None:
             setattr(model, name, new)
 
 
-def train_main(sample_tsv: str, purple_root: str, epochs: int, batch_size: int, dropout_rate: float, hrd_sample_dup: int, test_fraction: float, use_nesterov: bool, starting_model: str) -> None:
+def train_main(sample_tsv: str, purple_root: str, epochs: int, batch_size: int, dropout_rate: float, hrd_sample_dup: int, test_fraction: float, use_nesterov: bool, starting_model: str, override_purity: bool = False, ignore_missing_samples: bool = False) -> None:
     df = pd.read_csv(sample_tsv, sep="\t")
 
     df["circosPngPath"] = purple_root + "/" + df["sampleId"] + ".circos.png"
+    df["purplePurityPath"] = purple_root + "/" + df["sampleId"] + ".purple.purity.tsv"
+
+    incomplete_indices = []
+    for idx, row in df.iterrows():
+
+        circos_png_path = row["circosPngPath"]
+        purple_purity_path = row["purplePurityPath"]
+
+        if not os.path.exists(circos_png_path):
+            LOGGER.warning(f"missing file: {circos_png_path}")
+            incomplete_indices.append(idx)
+
+        if not os.path.exists(purple_purity_path):
+            LOGGER.warning(f"missing file: {purple_purity_path}")
+            incomplete_indices.append(idx)
+
+    if incomplete_indices:
+        if ignore_missing_samples:
+            LOGGER.warning(f"ignoring {len(incomplete_indices)} sample(s) with missing files")
+            df = df.drop(index=incomplete_indices)
+        else:
+            raise FileNotFoundError(f"{len(incomplete_indices)} input file(s) not found")
 
     # load the purity
-    if "purity" not in df.columns:
-        df["purity"] = [pd.read_csv(f'{purple_root}/{s}/{s}.purple.purity.tsv', sep='\t')["purity"].iloc[0] for s in df["sampleId"]]
+    if override_purity or "purity" not in df.columns:
+        LOGGER.info("loading purity from .purple.purity.tsv files")
+        df["purity"] = [pd.read_csv(p, sep='\t')["purity"].iloc[0] for p in df["purplePurityPath"]]
 
     df = filter_df(df)
 
     if starting_model:
-        logger.info(f"starting model: {starting_model}")
+        LOGGER.info(f"starting model: {starting_model}")
         model = torch.jit.load(starting_model, map_location=torch.device('cpu'))
     else:
         model = vchord_model.HrdModel(dropout_rate, NUM_CANCER_TYPES)
 
-    model = model.to(device)
+    model = model.to(DEVICE)
 
     train_dataloader, test_dataloader = create_dataloader(df, image_size=IMAGE_SIZE, batch_size=batch_size, augment=True,
                                                         hrd_sample_dup=hrd_sample_dup, test_fraction=test_fraction)
@@ -434,7 +458,6 @@ def train_main(sample_tsv: str, purple_root: str, epochs: int, batch_size: int, 
 
 
 def main() -> None:
-    import argparse
     parser = argparse.ArgumentParser(description="train hrd predictor")
     parser.add_argument('--sample_tsv', help='input tsv file', required=True)
     parser.add_argument('--purple_root', help='path to purple plots', required=True)
@@ -445,14 +468,16 @@ def main() -> None:
     parser.add_argument('--test_fraction', help='amount of data used for testing', type=float, default=0.2)
     parser.add_argument('--use_nesterov', help='use SGD with nesterov instead of adamW', action='store_true')
     parser.add_argument('--starting_model', help='starting from this model instead of make a new one', default=None)
+    parser.add_argument('--override_purity', help='force load purity from purple TSV files even if column exists in sample TSV', action='store_true')
+    parser.add_argument('--ignore_missing_samples', help='skip samples with missing circos PNG or purple purity files instead of failing', action='store_true')
     args = parser.parse_args()
 
-    logger.info(f"using {device} device")
-    logger.info(f"training cnn hrd, epochs={args.epochs}, batch_size={args.batch_size}, " +
+    LOGGER.info(f"using {DEVICE} device")
+    LOGGER.info(f"training cnn hrd, epochs={args.epochs}, batch_size={args.batch_size}, " +
           f"dropout_rate={args.dropout_rate}, hrd_sample_dup={args.hrd_sample_duplication}, test_fraction={args.test_fraction}, " +
           f"use_nesterov={args.use_nesterov}, starting_model={args.starting_model}")
     train_main(args.sample_tsv, args.purple_root, args.epochs, args.batch_size, args.dropout_rate,
-               args.hrd_sample_duplication, args.test_fraction, args.use_nesterov, args.starting_model)
+               args.hrd_sample_duplication, args.test_fraction, args.use_nesterov, args.starting_model, args.override_purity, args.ignore_missing_samples)
 
 
 if __name__ == "__main__":

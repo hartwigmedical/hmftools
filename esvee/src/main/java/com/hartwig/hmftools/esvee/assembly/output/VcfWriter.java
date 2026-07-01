@@ -42,6 +42,8 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.MATE_ID;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.MATE_ID_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.MAX_LOCAL_REPEAT;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.MAX_LOCAL_REPEAT_DESC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SAGA_INFERRED_BREAKEND;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SAGA_INFERRED_BREAKEND_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SAGA_VARIANT;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SAGA_VARIANT_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_ID;
@@ -96,7 +98,7 @@ import com.hartwig.hmftools.esvee.assembly.alignment.Breakend;
 import com.hartwig.hmftools.esvee.assembly.alignment.BreakendSegment;
 import com.hartwig.hmftools.esvee.assembly.alignment.BreakendSupport;
 import com.hartwig.hmftools.esvee.common.FilterType;
-import com.hartwig.hmftools.esvee.common.saga.SagaMatchBySequence;
+import com.hartwig.hmftools.esvee.common.saga.SagaSequenceMatch;
 import com.hartwig.hmftools.esvee.common.WriteType;
 
 import htsjdk.samtools.SAMSequenceDictionary;
@@ -216,6 +218,7 @@ public class VcfWriter implements AutoCloseable
         metaData.add(new VCFInfoHeaderLine(THREE_PRIME_RANGE, 2, VCFHeaderLineType.Integer, THREE_PRIME_RANGE_DESC));
         metaData.add(new VCFInfoHeaderLine(MAX_LOCAL_REPEAT, 1, VCFHeaderLineType.Integer, MAX_LOCAL_REPEAT_DESC));
         metaData.add(new VCFInfoHeaderLine(SAGA_VARIANT, 1, VCFHeaderLineType.String, SAGA_VARIANT_DESC));
+        metaData.add(new VCFInfoHeaderLine(SAGA_INFERRED_BREAKEND, 1, VCFHeaderLineType.Flag, SAGA_INFERRED_BREAKEND_DESC));
 
         for(FilterType filter : FilterType.values())
         {
@@ -367,10 +370,14 @@ public class VcfWriter implements AutoCloseable
         if(breakend.maxLocalRepeat() > 0)
             builder.attribute(MAX_LOCAL_REPEAT, breakend.maxLocalRepeat());
 
-        SagaMatchBySequence sagaMatch = assemblyAlignment.sagaMatch();
+        SagaSequenceMatch sagaMatch = assemblyAlignment.sagaMatch();
         if(sagaMatch != null)
         {
             builder.attribute(SAGA_VARIANT, sagaMatch.variant().noSpaceString());
+        }
+        if(breakend.isSagaInferred())
+        {
+            builder.attribute(SAGA_INFERRED_BREAKEND, true);
         }
 
         VariantContext variantContext = builder.make();

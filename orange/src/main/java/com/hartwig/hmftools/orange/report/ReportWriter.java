@@ -67,7 +67,7 @@ public class ReportWriter
                 chapters.add(new GermlineFindingsChapter(report, reportResources));
             }
 
-            // chapters.add(new ImmunologyChapter(report, reportResources));
+            chapters.add(new ImmunologyChapter(report, reportResources));
 
             IsofoxRecord isofox = report.isofox();
             if(isofox != null)

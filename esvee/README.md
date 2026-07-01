@@ -3,6 +3,9 @@
 ## Overview
 
 Esvee is a structural variant caller optimised for short read sequencing that identifies somatic and germline somatic rearrangements.
+Esvee supports Illumina, SBX Axelios and Ultima sequencing data.
+
+For SBX and Ultima, Esvee includes platform-specific assembly and filtering logic alongside general changes to handle unpaired reads. Discordant junctions are not supported for these technologies.
 
 Esvee is run in 4 steps
 - BAM Filtering & Prep
@@ -25,18 +28,44 @@ java -jar esvee.jar
   -reference_bam /sample_data/REF_SAMPLE_ID.bam
   -ref_genome /path_to_ref_genome_fasta/
   -ref_genome_version 38
-  -write_types 'PREP_STANDARD;ASSEMBLY_STANDARD' 
   -known_hotspot_file /ref_data/known_fusions.38.bedpe
   -pon_sgl_file /ref_data/sgl_pon.38.bed.gz
   -pon_sv_file /ref_data/sv_pon.38.bedpe.gz
-  -target_regions_bed /ref_data/CoverageCodingPanel.38.bed
-  -artefact_pon_sgl_file /ref_data/sgl_artefact_pon.38.bed.gz
-  -artefact_pon_sv_file /ref_data/sgl_artefact_pon.38.bed.gz
   -repeat_mask_file /ref_data/repeat_mask_data.38.fa.gz
   -bamtool /tools/sambamba/sambamba 
   -output_dir /sample_data/output/ 
   -threads 16
 ```
+
+### Mandatory Arguments
+
+Argument | Description 
+---|---
+tumor | Tumor IDs separated by ','
+tumor_bam | BAM file paths separated by ','
+reference | Reference IDs separated by ','
+reference_bam | Reference BAM file paths separated by ','
+ref_genome | Reference genome fasta file
+ref_genome_version | 37 (default) or 38
+bamtool | Sambamba or Samtools, required to sort and index the output Prep BAMs
+output_dir | Output directory
+threads | Thread count
+
+### Optional Arguments
+
+Argument | Description 
+---|---
+known_hotspot_file | BED file with known fusion pair coordinates, require only 1 fragment for junctions
+sequencing_type | Illumina (default), SBX, Ultima
+write_types | Defaults: PREP_JUNCTION, PREP_BAM, FRAGMENT_LENGTH_DIST, DISCORDANT_STATS, JUNC_ASSEMBLY, BREAKEND, VCF<br>Debug: PREP_READ, ASSEMBLY_READ, PHASED_ASSEMBLY, ALIGNMENT
+
+### Targeted Panel Arguments
+
+Argument | Description 
+---|---
+target_regions_bed | Targeted regions BED file, will only pass variants within this range
+artefact_pon_sgl_file | Additional PON file for SGLs formed from common panel artefacts
+artefact_pon_sv_file | As above for SVs
 
 
 ## STEP 1: BAM Filtering & Prep
@@ -58,25 +87,6 @@ java -cp esvee.jar com.hartwig.hmftools.esvee.prep.PrepApplication
   -threads 16
 ```
 
-#### Mandatory Arguments
-
-Argument | Description 
----|---
-sample | Sample IDs separated by ','
-bam_file | BAM file paths separated by ','
-ref_genome | Reference genome fasta file
-ref_genome_version | 37 (default) or 38
-bamtool | Sambamba or Samtools, required to sort and index the output BAMs
-output_dir | Output directory
-threads | Thread count
-
-#### Optional Arguments
-
-Argument | Description 
----|---
-known_fusion_bed | BED file with known fusion pair coordinates, require only 1 fragment for junctions
-bam_stringency | SAM validation strategy: STRICT, SILENT, LENIENT
-
 ## STEP 2: Assembly & Alignment
 
 ### Command
@@ -90,7 +100,6 @@ java -cp esvee.jar com.hartwig.hmftools.esvee.assembly.AssemblyApplication
   -junction_file /sample_data/output/TUMOR_SAMPLE_ID.esvee.prep.junction.tsv
   -ref_genome /path_to_ref_genome_fasta/
   -ref_genome_version 38
-  -write_types 'JUNC_ASSEMBLY;PHASED_ASSEMBLY;ALIGNMENTS;BREAKEND;VCF'
   -output_dir /sample_data/output/ 
   -threads 16
 ```
@@ -106,7 +115,6 @@ reference_bam | Path to Prep reference BAM file
 junction_file | Path to Prep junction TSV file, assumes named as 'TUMOR_SAMPLE_ID.esvee.prep.junction.tsv'
 ref_genome | Reference genome fasta file
 ref_genome_version | 37 (default) or 38
-write_types | Minimum required is VCF for latter steps
 output_dir | Output directory
 threads | Thread count
 
@@ -222,11 +230,12 @@ SV Length | For INV, DEL, DUP and INS, the SV length is defined as the position 
 ### Key thresholds and tolerances
 Much of the logic depends in Esvee depends on assembling reads into contiguous sequence, first locally and then merging assemblies and remote regions within phase groups. The algorithms use the following tolerances throughout Esvee:
 - **Minimum length**: We require 32 bases to call a variant. At the Esvee-Prep and local breakend assembly stage we also require a soft clip of at least 32 bases to retain a junction (an exception is made for regions with high discordant fragment support or LINE insertion sites) 
-- **Low Quality SNV errors**: Low quality mismatches (rawBQ<26) are ignored and deemed to always match an existing assembly 
+- **Low Quality errors**: Low quality mismatches are ignored and deemed to always match an existing assembly. These include bases with quals <= 26 (SBX/Illumina) or bases inside the `UQ` tag annotated by Redux (Ultima)
+- **Medium Quality Regions**: In SBX, simplex tails of reads are considered medium quality. They receive a lower mismatch penalty than high quality mismatches. We prioritise high qual over medium qual bases when forming an assembly, but will use medium if no high qual bases are available
 - **Minimum assembly overlap**: We require 50 bases of overlap to merge and extend assemblies (with an exact matching 20 base seed) OR 20 bases to merge and extend reference bases
-- **Mismatch tolerance**: When comparing reads and assemblies we allow 0 high quality mismatches for sequences of < 15 bases, 1 high quality mismatches for sequences of 15 to 100 bases, and then 1 additional high mismatches for each additional 200 bases of sequence overlap more than 100 bases. Note that a 1 or 2 base indel counts as 1 mismatch. A difference in unit count in a microsatellite repeat (1 count diff for repeats <= 10, 2 count diff for repeats 11-15, 3 count diff for repeats 16+) also count as 1 mismatch. When extending reference bases we always allow up to 2 mismatches
+- **Mismatch tolerance**: When comparing reads and assemblies we allow 0 pts of mismatches for sequences of <= 5 bases, 0.3 pts for sequences of 6 to 15 bases, 1 pt for sequences 16-49, 2 pts for 50-99 and 3 pts for 100+. Precise mismatch penalty scores vary depending on the type of error and the sequencing type - a high qual SNV mismatch is worth 1 point, a 1bp novel indel is worth 1 point, while plausible jitter relative to a MSI repeat does not incur a penalty. If a read exceeds a 1/3 mismatch rate over a 32+ base sequence it is considered mismatch irrespective of qual 
 
-Esvee also employees concepts of a modified alignment scores and MAPQs to try to represent absolute versus relative likelihood of mismatch.  THese are defined as follows:
+Esvee also employs concepts of a modified alignment scores and MAPQs to try to represent absolute versus relative likelihood of mismatch.  These are defined as follows:
 
 #### Adjust alignment score (AdjAS) 
 Modified length of an alignment after allowing for inexact homology, repeats and mismatches. Defined as: 
@@ -243,17 +252,23 @@ modMAPQ = MAPQ * min [1, adjAS/max(100,alignLength)]^2
 ### STEP 1: BAM Filtering & Prep 
 This step generates a set of maximally filtered SV BAM files and an initial set of candidate SV junctions from input tumor/normal BAM files. The SV BAM files includes all candidate split and discordant reads that are proximate to candidate junctions that may provide support to that junction. 
 
-Ignoring reads with 50%+ low qual bases (<26), are duplicate (or where the primary is a duplicate), secondary or contain soft clipping with more than 16 consecutive bases of PolyG/C), Prep parses through the BAMS end to end to identify breakend sites with CREDIBLE soft clipping: 
-- At least 1 read with AdjAlignmentScore > 40 and abs(Insert size - M length) > 5 bases (ie test for short fragments with adapter) AND a soft clip length of >32 with >=75% of soft clip bases with qual > 25. We also tolerate AS < 40 if AS >= 35 and AS – XS >= 15.
-- Soft clip length of <32 is allowed where the soft clip meet the polyA LINE criteria (ie 16 of first 18 soft clip bases must be A/T). 
-- The read must also not be a simple repeat expansion. ie the first 9 bases of soft clip and the last 9 bases of aligned read are not matching 1,2 or 3 nucleotide repeats. 
+First, Prep completely ignores reads satisfying any of these conditions. They will not be used for the remainder of the routine:
+- reads with 50%+ low qual bases (except those with a poly-A or T tail)
+- reads that are duplicates (or where the primary is a duplicate)
+- secondary reads or those or containing soft clipping with more than 16 consecutive bases of PolyG/C)
+- supplementary reads with low map qual (<10) and trimmed align length < 40
+
+After doing this, Prep parses through the remaining reads to identify breakend sites with CREDIBLE soft clipping: 
+- At least 1 read with AdjAlignmentScore > 40 and abs(Insert size - M length) > 5 bases (ie test for short fragments with adapter) AND a soft clip length of >32 with <25% of soft clip bases low qual. We also tolerate AS < 40 if AS >= 35 and AS – XS >= 15.
+- Soft clip length of <32 is allowed where the soft clip meet the poly-A LINE criteria (ie 16 of first 18 soft clip bases must be A/T, and said softclip must not be bordering a corresponding A/T homopolymer repeat in the ref sequence). 
+- The read must also not be a simple repeat expansion. ie the first 9 bases of soft clip and the last 9 bases of aligned read are not matching 1, 2 or 3 nucleotide repeats. 
 - At least 1 additional read which have soft clipping of any length at the same base OR within 50 bases with <=1 high quality mismatch between the soft clip locations (not required for HOTSPOT regions)
   
 Sites with aligned INDELs of >= 32 bases are also treated as candidate sites. 
 
 Additionally, to ensure we capture SV with long (inexact) homology we also identify sites where there are >=5 reads within a 500 base region with insert size outside the max(1000,99.75%) insert size (or >=3 reads if insert size is more than twice that length) with their mates also starting within a 1000 base region of each other. The sites must also be on the same chromosome within +/1MB with a DEL or DUP orientation or create a link between a known hotspot region.  At least one read must have MAPQ>=40 and adjAS>75. The range can be further extended to the inner side of the fragment up to the 99.75% fragment size if more reads can be found in that region with long insert sizes and mates within 1kb of each other. If such a candidate region is found and the reads do not support a site of credible soft clipping, then create a breakend regardless on the innermost base of the reads supporting the potential breakend. 
 
-Sites with an AF below 0.5% (1% for discordant) are filtered.
+Sites with an AF below 0.5% (1% for discordant, 2% for SBX/Ultima) are filtered.
 
 For each site we also obtain the following reads and their mates:
 - All reads with soft clipping that matches the orientation and position of the variant (+/-50 bases) 
@@ -273,9 +288,11 @@ Esvee also counts discordant fragments genome wide in various buckets and writes
 The candidate breakends generated by Esvee prep are organised into breakend groups, covering a set of breakends within 1kb of each other. All reads from the Esvee-Prep BAMs are retrieved for each breakend group.  
 
 Each read has the following adjustments made to it prior to assembly: 
-- **Drop low qual reads** - any reads with >50% of low qual bases (<26) are dropped altogether 
-- **PolyG trimming** – any continuous stretch of 4 or more Gs (Cs on reverse-strand reads) are trimmed from the read. These bases and quals are entirely truncated from the read. 
-- **Quality trimming** – Trim low quality 3' softclip tails such that any 3' base tail taken from the trimmed read has at least 65% of bases at qual 26+. To maximise LINE insertion sensitivity, the first 18 bases of the SC are NOT trimmed regardless of QUAL IF at least 16 of them are either A or T AND the bases are not an extension of an aligned PolyA/T sequence of at least 8 bases in the reference. 
+- **Drop low qual reads (Illumina)** - any reads with >50% of low qual bases are dropped altogether 
+- **PolyG trimming (Illumina)** – any continuous stretch of 4 or more Gs (Cs on reverse-strand reads) are trimmed from the read. These bases and quals are entirely truncated from the read.
+- **Adapter trimming (Illumina)** – Bases on the 3' side of a read extending beyond the mate 5' position are trimmed
+- **Quality trimming** – Trim low quality 3' softclip tails such that any 3' base tail taken from the trimmed read has at least 65% of bases not low qual. To maximise LINE insertion sensitivity, the first 18 bases of the SC are NOT trimmed regardless of QUAL IF at least 16 of them are either A or T AND the bases are not an extension of an aligned PolyA/T sequence of at least 8 bases in the reference.
+  - For SBX, we instead trim fully uncertain / qual 1 bases on either side of the read. The LINE protection is not applied
 - **Indel to soft-clips** – any INDEL of length >= 3 and < minBases [32] allows a read to set indel-inferred unclipped start and end read positions, to allow these reads to offer support for split junctions.
 
 Discordant fragments with unmapped mates are ignored in subsequent steps if unmapped trimmed read length < 50 or if MAPQ = 0.  
@@ -284,18 +301,20 @@ Breakend supporting reads identified by Prep are used to build initial breakend 
 
 In the first step the ‘extension’ sequence is built from the breakend outwards. For a sequence built from softclipping, we use the consensus of soft-clipped bases from reads with clipping at the correct orientation and position. For a sequence built from an indel, we use the consensus of reads containing the relevant indel cigar element at the same position.
 
-These initial assemblies are filtered unless at least 1 read has a soft clip > 32 bases and at least one other read has a soft clip >= 16 bases OR the sequence contains a PolyA/PolyT LINE sequence of 16 bases and a 2nd read with supporting soft clip > = 8 bases with an insertion site orientation. These two key anchoring reads also must have different 5' fragment coordinates. However, note that candidate junctions with LINE source insertion orientations are filtered as they may be promiscuous causing issues downstream. These are always assembled from the LINE insertion site end.
+These initial assemblies are filtered unless at least 1 read has a soft clip >= 32 bases and at least one other read has a soft clip >= 16 bases OR the junction is considered to be a LINE junction. The latter occurs when over half the considered read sequences contain a PolyA/PolyT LINE sequence of 16 bases. In this case we only require a soft clip >= 16 bases and a 2nd read with supporting soft clip > = 8 bases.
+
+In any case, these two key anchoring reads also must have different 5' fragment coordinates (in SBX, we also apply logic to drop likely duplicate reads and filter junctions with slight variation in coordinates). However, note that candidate junctions with LINE source insertion orientations are filtered as they may be promiscuous causing issues downstream. These are always assembled from the LINE insertion site end.
 
 Each of the remaining candidate overlapping supporting reads is now tested against these unique breakend-extension assemblies. These reads will contribute to initial junction support counts, but not be used to form the initial extension sequence. For softclip junctions this includes indel containing reads, reads with a softclip of the correct orientation within 2bp, and reads with SNVs past the junction location rather than clipping. For indel junctions this includes reads with clipping past the junction, or any indel causing the read's indel-inferred unclipped start/end to cross the junction.
 
 At this stage, if enough reads differ from the consensus with high qual mismatches exceeding the mismatch tolerance the extension can be potentially split into two junctions (specifically, if each junction has at least max(20% of total, 5) supporting reads).
 
-To allow calling of variants with long homology which may not have soft clipping, if no assembly can be created with sufficiently long soft clip, but there exists a remote region with more than 3 discordant fragments supporting the link then an assembly is made using only the fragments associated with that specific remote region. Only reads that support the specific remote location are allowed to form the assembly  The breakend is arbitrarily initially placed 32 bases from the innermost base of the assembly. Only reads with MAPQ>20 are considered in the assembly construction. 
+To allow calling of variants with long homology which may not have soft clipping, if no assembly can be created with sufficiently long soft clip, but there exists a remote region with more than 3 discordant fragments supporting the link then an assembly is made using only the fragments associated with that specific remote region (Illumina only). Only reads that support the specific remote location are allowed to form the assembly. The breakend is arbitrarily initially placed 32 bases from the innermost base of the assembly. Only reads with MAPQ>20 are considered in the assembly construction.
 
-All remaining breakend assemblies are then extended into the reference base direction from their supporting reads. Only junction split reads with 10+ soft-clipped bases and at least 2 (4 if junction flanks an adjacent ref microsatellite) high quality soft clipped bases matching the consensus, can be used to build the initial assembly ref base sequence. 
+All remaining breakend assemblies are then extended into the reference base direction from their supporting reads. Only junction split reads with 10+ soft-clipped bases and at least 2 (4 if junction flanks an adjacent ref microsatellite) high quality soft clipped bases matching the consensus, can be used to build the initial assembly ref base sequence. We will not extend this past the point where 90% of eligible extension reads are clipped
 
 #### Assembly deduplication 
-Duplicate assemblies may exist at either the same breakend or within +/-50 bases with the same orientation. Assemblies are deduped (the assembly with the higher initial read support is retained) if they satisfy an assembly comparison within mismatch tolerances (see 'Key thresholds and tolerances'). We will prioritise keeping split over discordant junctions, and prioritise keeping junctions with germline support where possible.
+Duplicate assemblies may exist at either the same breakend or within +/-100 bases with the same orientation. Assemblies are deduped (the assembly with the higher initial read support is retained) if they satisfy an assembly comparison within mismatch tolerances (see 'Key thresholds and tolerances'). We will prioritise keeping split over discordant junctions, and prioritise keeping junctions with germline support where possible.
 
 #### Local assembly filtering 
 Any local breakend which fully aligns to a decoy or ALT (excluding HLA ALTs) sequence (top alignment with <=3 mismatches and AS/length > 0.9) in the hg38 genome are filtered at this stage and not processed further.  
@@ -334,13 +353,13 @@ Since short DEL & DUP are the most common variant types, Esvee first tries to me
 Each unlinked breakend is next checked if it can be resolved by local alignment. The same merge criteria is applied, but instead of aligning between 2 local assemblies, Esvee instead aligns the breakend assembly to the local reference genome within +/- 500 bases. If an alignment is made and the variant length > minLength a new breakend is created at the alignment location. If an alignment is made and the variant length < minLength, the candidate breakend is filtered.
 
 #### 3. Assemble distal junctions 
-Within a phase group, Esvee next attempts to merge any pair of unlinked distal breakend assemblies OR individual breakends with discordant and unmapped mates, that may form a paired junction assembly and are directly linked by same fragment support. Before attempting this match, the extension sequences are extended with reads from remote and unmapped regions as follows:
+Within a phase group, Esvee next attempts to merge any pair of unlinked distal breakend assemblies OR individual breakends with discordant and unmapped mates, that may form a paired junction assembly and are directly linked by same fragment support. Before attempting this match, for Illumina BAMs the extension sequences are extended with reads from remote and unmapped regions as follows:
 * Check for reads that have a 20bp exact match to the existing sequence, and a 50bp match with usual mismatch tolerances from 'Key thresholds and tolerances'. We allow down to a 30bp total match length if the sequence is non-repetitive
 * If one or more matching reads exist, perform an internal assembly consensus between them and eliminate reads failing usual mismatch tolerances
 * Use the remaining reads to extend the extension sequence
 * If extension was performed, attempt this process again (as reads that didn't match the existing extension sequence may match now)
 
-After doing this, the breakend pairs are merged based on matching the sequence assembly. When this occurs, the assembly is also maximally extended on both ends from the junction outwards, including in the reference sequence with local junction mates if the the required overlap is found. After all distal mergers are made, remaining candidate breakends are tested to see if they can be merged into and extend the existing merged assemblies.
+After doing this, the breakend pairs are merged based on matching the sequence assembly. When this occurs, the assembly is also maximally extended on both ends from the junction outwards, including in the reference sequence with local junction mates (Illumina only) if the required overlap is found. After all distal mergers are made, remaining candidate breakends are tested to see if they can be merged into and extend the existing merged assemblies.
 
 Breakends which are merged into already formed junctions are marked as ‘SECONDARY’. Secondary links are not attempted for junctions already established as local indels unless they have a LINE tail. Also, assemblies are branched into multiple assemblies if there is at least 5 reads and 20% maximum support supporting an alternative alignment. This may occur in the case of foldback inversions.
 
@@ -399,15 +418,22 @@ Other | No alignment (convert to insert sequence)
 
 For each alignment with modMAPQ<10 and either (XATag!=NULL OR alignment is in DUX4 region) regardless of whether the alignment was inferred or was converted to an insert sequence, then all the alternatives are recorded in the INSALN field for any adjacent breakends or the ALTALN field if an alignment.  
  
-Note that 2 special exceptions are made for clinically relevant fusions in low mappability: 
+Note that 3 special exceptions are made for clinically relevant fusions in low mappability: 
 - **SSX2**: SS18 Exon 10 to SSX2 Exon 6 mutations are common pathogenic fusions in Synovial Sarcomas, but may be confused with the homolog SSX2B.  Therefore, for any alignment which falls in the range of intron 5 of SSX2 (hg19: X:52,729,628-52,731,680; hg38 chrX: 52,700,578-52,702,630) and SSX2B (hg19: X: 52,784,877-52,786,929; hg38 chrX:52,755,800-52,757,852) with a downstream genic orientation with MAPQ < 20 and the assembly has a breakend mapped to another chromosome is assumed to have the SSX2 alignment. 
-- **DUX4**: DUX4 is a special case as it has known clinically relevant fusions but many identical copies in the reference genome. DUX4 regions are defined as {GL000228.1:20000-125000, 4:190930000-191030000, 10:135420000-135520000} on hg19 and {chr4:190060000-190190000, chr10:133660000-133770000} in hg38. If there are 2 or more consecutive modMAPQ<3 alignments, then the INSALN is merged for those cases.
+- **DUX4**: DUX4 is a special case as it has known clinically relevant fusions but many identical copies in the reference genome. DUX4 regions are defined as {GL000228.1:20000-125000, 4:190930000-191030000, 10:135420000-135520000} on hg19 and {chr4:190060000-190190000 (PMS2), chr10:133660000-133770000 (PMS2CL)} in hg38. If there are 2 or more consecutive modMAPQ<3 alignments, then the INSALN is merged for those cases.
+- **PMS2**: PMS2 also has alignment issues due to the existence of the PSM2CL pseudogene. Relevant regions are defined as {7:6002870-6058756 (PMS2), 7:6759759-6803493 (PMS2CL)} on hg19 and {chr7:5960925-6019106, chr7:6725305-6761392} in hg38. For each alignment entirely contained with the PMS2 gene with MapQ < 10, OR entirely contained within PMS2CL with MapQ < 10 AND at least one alt alignment is entirely contained within PMS2 with MapQ < 10, we select the alt alignment corresponding to the identified PMS2 alignment, with a modified MapQ of 10
 
 A final filtering pass is done to eliminate spurious alignments resulting from likely single read extensions. If all the following conditions are satisfied we drop all breakends corresponding to the phased assembly:
-- Phased assembly consists of only a initial assembly, without links
+
+**Common requirements:**
+- Phased assembly consists of only a initial assembly, without links (including LOCAL_INDEL)
 - Assembly is softclip based and does not contain a poly-A/T LINE tail
-- The alignment of this phased assembly does not resolve as a short del or dup (<=1kb)
-- The longest extension read is >=50bp, but the second longest is <32bp
+- The longest extension read is >=50bp
+
+For Illumina, we filter alignments satisfying the above and with the second longest extension read <32bp. For other techs:
+- We filter the alignment if we can identify two buckets of split reads - long extensions and short extensions
+- Each read in the long extension bucket must have an extension at least 2.5x longer than any read in the short extension bucket
+- The maximum cardinality of the long extension bucket scales between 1 and 3 reads depending on the number of total supporting reads
  
 #### Homology annotation and precise breakend alignment 
 
@@ -433,37 +459,49 @@ For each breakend, Esvee queries the full BAM files and annotates the fragments 
 ### STEP 4: Filtering 
 The following filters are applied to the variant with a context of ‘any sample’ (ie PASS if any sample meets the criteria) or ‘all samples’ (pass if the criteria is met across all samples for the variant: 
 
-Filter Name | Samples | Definition | Junction | LINE Site | Single | Hotspot
----|---|---|---|---|---|---
-minQual | Any | QUAL  | 30 (WGS) / 60 (PANEL) |  30 (WGS) / 60 (PANEL) <sup>1</sup> |  30 (WGS) / 60 (PANEL)  | 30 
-minSupport  | Any   | VF | 4 | 4<sup>1</sup>  | 6 | 2 
-minAF | Any | min(AF[BE1],AF[BE2]) | 0.001 | 0.001 | 0.05  | 0.001 
-invShortLowVafHom<sup>5 | Any | min(AF[BE1],AF[BE2])  | 3<=IHOMLEN<6:  min(0.1,200 * shortINVRate); IHOMLEN>=6 min(0.2,400 * shortINVRate) <sup>5</sup> | NA | NA  | NA 
-invShortFragLowVaf<sup>7 | Any | min(AF[BE1],AF[BE2])  | min(0.05, 50 * shortFragmentINVRate) | NA | NA | NA
-delShortLowVaf<sup>8 | Any | min(AF[BE1],AF[BE2])  | 0.05 | NA | NA | NA 
-minLength<sup>2</sup>  | All | EndPos-StartPos+InsSeqLength | 32 | NA | NA | 32
-shortFrags | All | Lengthmedian - NumSD * LengthstdDev/sqrt(VF)<sup>3</sup>   | 3 | NA | NA | 3 
-minAnchorLength | All | AlignLength – repeatLength – Homology | 50 | NA | 50<sup>4</sup>  | 50 
-sbArtefact<sup>6</sup> | All | SB | NA | 1.0 | 1.0 | NA
-invShortIsolated | All (targeted panel only) | Candidate inversion distance to nearest non-artefact breakend<sup>9</sup> | 100 | NA | NA | NA
+Filter Name | Samples | Definition                                               | Junction                                                                                        | LINE Site                          | Single                | Hotspot          | Technologies
+---|---------|----------------------------------------------------------|-------------------------------------------------------------------------------------------------|------------------------------------|-----------------------|------------------|---
+minQual | Any     | QUAL                                                     | 30 (WGS) / 60 (PANEL)                                                                           | 30 (WGS) / 60 (PANEL) <sup>1</sup> | 30 (WGS) / 60 (PANEL) | 30               | All
+minSupport  | Any     | VF                                                       | 4                                                                                               | 4<sup>1</sup>                      | 6                     | 2                | All 
+minAF | Any     | min(AF[BE1],AF[BE2])                                     | 0.001                                                                                           | 0.001                              | 0.05                  | 0.001            | All
+invShortLowVafHom<sup>2 | Any     | min(AF[BE1],AF[BE2])                                     | 3<=IHOMLEN<6:  min(0.1,200 * shortINVRate); IHOMLEN>=6 min(0.2,400 * shortINVRate) <sup>2</sup> | NA                                 | NA                    | NA               | All
+invShortFragLowVaf<sup>3 | Any     | min(AF[BE1],AF[BE2])                                     | min(0.05, 50 * shortFragmentINVRate)                                                            | NA                                 | NA                    | NA               | All
+delShortLowVaf<sup>4 | Any     | min(AF[BE1],AF[BE2])                                     | 0.05                                                                                            | NA                                 | NA                    | NA               | All
+minLength<sup>5</sup>  | All     | EndPos-StartPos+InsSeqLength                             | 32                                                                                              | NA                                 | NA                    | 32               | All
+shortFrags | All     | Lengthmedian - NumSD * LengthstdDev/sqrt(VF)<sup>6</sup> | 3                                                                                               | NA                                 | NA                    | 3                | Illumina
+minAnchorLength | All     | AlignLength – repeatLength – Homology                    | 50                                                                                              | NA                                 | 50<sup>7</sup>        | 50               | All
+sbArtefact<sup>8</sup> | All     | SB                                                       | NA                                                                                              | 1.0                                | 1.0                   | NA               | All
+offTarget<sup>9</sup> | All     | Chr/Pos                                                  | 1000bp                                                                                          | 1000bp                             | 1000b                 | 1000bp           | All
+unpairedPositionRange<sup>10</sup> | NA      | min(TPR)                                                 | min(10 + SF, 50)                                                                                | min(10 + SF, 50)                   | min(10 + SF, 50)      | min(10 + SF, 50) | SBX, Ultima
+sbxStrandBias<sup>11</sup> | Any     | SB                                                       | Filter if 0 or 1                                                                                | Filter if 0 or 1                   | Filter if 0 or 1      | Filter if 0 or 1 | SBX, Ultima
+sbxArtefact<sup>12</sup> | Any     | Various                                                  | 50                                                                                              | 50                                 | 50                    | NA               | SBX
+lineSource<sup>13</sup> | Any     | Chr/Pos, ASMINFO                                         | 50                                                                                              | 50                                 | 50                    | 50               | All
 
 <sup>1. For pairs of SGL breakends which resemble a likely LINE insertion site (see above) the SUM(Qual) is used for both breakends. </sup>
 
-<sup>2. Same chromosome junctions only. </sup>
+<sup>2. Only applied to variants with type=INV and LEN<3kb. ShortINVRate = proportion of fragments genome wide that support a short INV < 5kb </sup>
 
-<sup>3. implies the sampled average fragment length should be within 3 standard deviations of the sample median length (note the cutoff is also capped at 0.6*SD below median length).  Standard deviation is estimated as Lengthmedian-length16th percentile </sup>
+<sup>3. Only applied to variants with type=INV and LEN<300bp. ShortINVRate = proportion of fragments genome wide that support a short INV < 1kb </sup><sup>8. Only applied to variants with type=DEL, IHOMLEN>=10, AVGLEN+LEN >= 1.5*99.75th percentile of fragment lengths, and LEN<3kb </sup>
 
-<sup>4. For SGL BE, the inserted sequence length must also meet these requirements </sup>
+<sup>4. Only applied to variants with type=DEL, IHOMLEN>=10, AVGLEN+LEN >= 1.5*99.75th percentile of fragment lengths, and LEN<3kb </sup>
 
-<sup>5. Only applied to variants with type=INV and LEN<3kb. ShortINVRate = proportion of fragments genome wide that support a short INV < 5kb </sup>
+<sup>5. Same chromosome junctions only. </sup>
 
-<sup>6. Only for fully + strand variants with ins sequence containing contains GCCGTATCATTAAAAA or GTAGATCTCGGTGGTC OR fully - strand variants with ins sequence containing TTTTTAATGATACGGC or GACCACCGAGATCTAC </sup>
+<sup>6. implies the sampled average fragment length should be within 3 standard deviations of the sample median length (note the cutoff is also capped at 0.6*SD below median length).  Standard deviation is estimated as Lengthmedian-length16th percentile </sup>
 
-<sup>7. Only applied to variants with type=INV and LEN<300bp. ShortINVRate = proportion of fragments genome wide that support a short INV < 1kb </sup>
+<sup>7. For SGL BE, the inserted sequence length must also meet these requirements </sup>
 
-<sup>8. Only applied to variants with type=DEL, IHOMLEN>=10, AVGLEN+LEN >= 1.5*99.75th percentile of fragment lengths, and LEN<3kb </sup>
+<sup>8. Only for fully + strand variants with ins sequence containing contains GCCGTATCATTAAAAA or GTAGATCTCGGTGGTC OR fully - strand variants with ins sequence containing TTTTTAATGATACGGC or GACCACCGAGATCTAC </sup>
 
-<sup>9. Candidate inversions are inversions <100bp that are unchained or have unique fragment positions (UFP) < 4. Eligible non-artefact breakends face and are within 100bp of the candidate inversion's breakend, and are not filtered by PON or any inversion-specific filters </sup>
+<sup>9. Variants with neither breakend within 1kb of an on-target region in targeted panel mode are filtered </sup>
+
+<sup>10. Filter only applied if SB = 0 or 1. Threshold changed to min(10 + 5 * SF, 50) if only 1 junction in ASMINFO field </sup>
+
+<sup>11. Filter only applied for BND, INV and SGL variants. for non-BNDs we also require SF > 10 to filter </sup>
+
+<sup>12. A probabilistic heuristic. It is initially defined as QUAL * min(ASMLEN/600, 1) and adjusted based on site characteristics (number of junctions in ASMINFO, insert size, variant length, IHOMLEN). It is not applied to long DELs, DUPs or INVs. </sup>
+
+<sup>13. A variant containing a breakend assigned as LINE but aligned over 50bp away from any initial ASMINFO junction is considered a source site and filtered </sup>
 
 Note that for pairs of breakends at LINE insertion sites, if one has a PASS filter we should always PASS the other side.   
 

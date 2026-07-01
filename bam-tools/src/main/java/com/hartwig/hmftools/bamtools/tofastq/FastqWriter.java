@@ -32,7 +32,6 @@ public class FastqWriter
     @Nullable private BufferedWriter mWriterUnpaired;
 
     public String getFastqR1() { return mFastqR1; }
-
     public String getFastqR2() { return mFastqR2; }
 
     @Nullable

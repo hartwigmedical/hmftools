@@ -14,6 +14,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.bwa.IBwaMemAligner;
 import com.hartwig.hmftools.common.perf.PerformanceCounter;
 import com.hartwig.hmftools.esvee.assembly.AssemblyConfig;
 import com.hartwig.hmftools.esvee.assembly.output.AlignmentWriter;
@@ -29,12 +30,12 @@ public class Alignment
 {
     private final AssemblyConfig mConfig;
 
-    private final Aligner mAligner;
+    private final IBwaMemAligner mAligner;
     @Nullable
     private final SagaMatcherFactory mSagaMatcherFactory;
     private final AlignmentWriter mWriter;
 
-    public Alignment(final AssemblyConfig config, final Aligner aligner, @Nullable final SagaMatcherFactory sagaMatcherFactory)
+    public Alignment(final AssemblyConfig config, final IBwaMemAligner aligner, @Nullable final SagaMatcherFactory sagaMatcherFactory)
     {
         mConfig = config;
         mAligner = aligner;

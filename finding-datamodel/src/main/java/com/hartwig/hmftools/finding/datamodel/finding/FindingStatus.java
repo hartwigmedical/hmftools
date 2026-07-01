@@ -21,6 +21,7 @@ public record FindingStatus(@NotNull FindingStatus.Status status, @NotNull Sorte
     {
         NORMAL_REQUIRED,
         WGS_REQUIRED,
+        RNA_REQUIRED,
         DELETED_GENES,
         HIGH_COPY_NUMBER_NOISE,
         GENDER_MISMATCH,
@@ -31,7 +32,8 @@ public record FindingStatus(@NotNull FindingStatus.Status status, @NotNull Sorte
         // No predicted tumor origins that meet likelihood threshold
         NO_REPORTABLE_VALUE,
         TUMOR_SAMPLE_QUALITY_CONTROL,
-        NORMAL_SAMPLE_QUALITY_CONTROL
+        NORMAL_SAMPLE_QUALITY_CONTROL,
+        RNA_SAMPLE_QUALITY_CONTROL
     }
 
     public boolean isOK()

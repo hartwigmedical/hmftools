@@ -1,4 +1,4 @@
-# Somatic Alterations in Genome (SAGE)
+# Sage (Somatic Alterations in Genome)
 
 Sage is a precise and highly sensitive somatic SNV, MNV and small INDEL caller. It has dynamically scaling sensitivity based on the depth of the provided tumor and germline BAMs, but performs best if both BAMs have at least 30x typical depth.
 
@@ -12,19 +12,18 @@ Key features include:
   - Native MNV handling 
   - Joint calling, including allowing both multiple tumor and reference samples to be analysed concurrently
   - Support for diverse calling scenarios including somatic tumor-reference, somatic tumor only, germline, etc.
-  - An internal [alt specific base quality recalibration](#1-alt-specific-base-quality-recalibration) method
+  - Use of the [alt specific base quality recalibration](#1-alt-specific-base-quality-recalibration) provided by Redux
   - Detection of tumor in normal contamination (TINC) levels to allow recovery of somatic variants with contaminated germline evidence
+  - Native support for SBX Axelios and Ultima sequencing data with bespoke routines to handle unique characteristics. For more details see  [here](https://github.com/hartwigmedical/hmftools/blob/master/sage/SEQ_TECH.md)
 
 ## Append mode
 
 Sage also supports the ability append additional reference samples to an existing Sage VCF file. A typical use case would be to analyse previously called variants in RNA or other additional longitudinal samples for monitoring without having to rerun all samples through Sage.
 
-In append mode Sage only performs the [alt specific base quality recalibration](#1-alt-specific-base-quality-recalibration) and [reference counts and quality](#5-reference-counts-and-quality) steps.
+In append mode Sage only performs the  [reference counts and quality](#5-reference-counts-and-quality) steps.
 The supplied Sage VCF is used to determine the candidate variants and no changes are made to tumor counts, filters, phasing, de-duplication or realignment.
 
 All resource files for this tool and the WiGiTs pipeline are available for download via the [HMF Resource page](../pipeline/README_RESOURCES.md).
-
-R is used to generate the base quality recalibration charts, which is done if the config 'write_bqr_plot' is included. Required packages include `ggplot2`,`tidyr` and `dplyr`. 
 
 # Usage
 
@@ -39,8 +38,6 @@ ref_genome | Path to reference genome fasta file
 ref_genome_version | One of `37` or `38`
 hotspots | Path to hotspots vcf
 driver_gene_panel | Path to driver gene panel
-high_confidence_bed | Path to high confidence bed
-ensembl_data_dir | Path to Ensembl data cache
 
 The cardinality of `tumor` must match `tumor_bam`. At least one tumor must be supplied.
 
@@ -50,53 +47,30 @@ Argument | Default           | Description
 reference | NA                | Comma separated names of the reference sample
 reference_bam | NA                | Comma separated paths to indexed reference BAM file
 germline | NA | Flag is required to run in germline mode, impacts variant filtering
+sequencing_type | Illumina | Otherwise SBX, Ultima
 run_tinc | False | Run tumor in normal detection and variant recovery (only valid if using exactly 1 reference sample)
 ref_sample_count | 1                 | Controls the set of ref samples used for tumor-reference soft-filtering. Zero means none will be used.)
-resource_dir | None              | Path to all resource files, in which case specify the file names only for ref_genome, hotspots, panel_bed and high_confidence_bed  
-panel_bed | Path to panel bed (if driver_gene_panel not specified)
+resource_dir | None              | Path to all resource files, in which case specify the file names only for ref_genome, hotspots, and high_confidence_bed  
 threads | 2                 | Number of threads to use
 max_read_depth | 1000              | Maximum number of reads to look for evidence of any `HIGH_CONFIDENCE` or `LOW_CONFIDENCE` variant. Reads in excess of this are ignored.  
 max_read_depth_panel | 100,000           | Maximum number of reads to look for evidence of any `HOTSPOT` or `PANEL` variant. Reads in excess of this are ignored.  
-min_map_quality | 10                | Min mapping quality to apply to non-hotspot variants
-min_avg_base_qual | 25                | Min average base quality soft filter. Hotspots default is 18 (config: min_avg_base_qual_hotspot).
-validation_stringency | STRICT            | SAM validation strategy: STRICT, SILENT, LENIENT
 include_mt | NA                | By default the mitochondrial DNA is not read but will be if this config is included
-no_fragment_sync | False             | Where R1 and R2 in a fragment overlap, consider both observations' base and qual as separate pieces of evidence
 high_depth_mode  | False             | To be used in targeted sequencing - places additional conditions on read-supporting variants to increase precision
 read_length | Inferred from BAM | Max read length, affects memory usage slightly and some filtering
-jitter_param_dir | BAM path | Path to jitter files (jitter_params.tsv and ms_table.tsv.gz) from Redux
 skip_msi_jitter | NA                | Use default MSI jitter params instead of sample-specific values from Redux files
-read_context_flank_size | 10                | Number of flanking bases on each side of read core
 
 The cardinality of `reference` must match `reference_bam`.
-
-## Optional Base Quality Recalibration Arguments
-
-The following arguments control the [alt specific base quality recalibration](#1-alt-specific-base-quality-recalibration) logic.
-
-Argument | Default  | Description 
----|----------|---
-bqr_disable | false    | Disable base quality recalibration
-bqr_load | false    | Reload previously generated BQR files to avoid re-running this stage, or if running on a sliced BAM
-bqr_write_plot | false    | Generate base-quality recalibration plots (requires R)
-bqr_sample_size | 2,000,000 | Sample size of each autosome
-bqr_min_map_qual | 50       | Min mapping quality of bam record
-bqr_write_positions | false    | Write positional data as contributes to BQR
-bqr_write_reads | false    | Write detailed read data as contributes to BQR
-bqr_full_bam | false    | Run BQR over full BAM
-bqr_use_panel | false    | Run BQR over panel only
-bqr_exclude_known | false    | In append mode, exclude known variants
 
 ## Optional Quality Arguments
 
 The following arguments are used to calculate the [modified tumor quality score](#modified-tumor-quality-score)
 
 Argument | Default | Description 
----|---------|---
-base_qual_fixed_penalty | 12      | Fixed penalty to apply to base quality
-fixed_qual_penalty | 0       | Fixed penalty to apply to map quality
-improper_pair_qual_penalty | 15      | Penalty to apply to map qual when SAM record does not have the ProperPair flag
-read_events_qual_penalty | 7       | Penalty to apply to map qual for additional events in read, and per 12 bases of soft clipping
+---|------|---
+base_qual_fixed_penalty | 12   | Fixed penalty to apply to base quality
+fixed_qual_penalty | 0    | Fixed penalty to apply to map quality
+improper_pair_qual_penalty | 15   | Penalty to apply to map qual when SAM record does not have the ProperPair flag
+read_events_qual_penalty | 1057 | Penalty to apply to map qual for additional events in read, and per 12 bases of soft clipping. Penalty is divided by read length
 
 ## Debug and logging Arguments
 
@@ -140,18 +114,6 @@ ref_genome | Path to reference genome fasta file
 
 The cardinality of `reference` must match `reference_bam` and must not already exist in the input VCF.
 
-## Optional Arguments
-Argument | Default | Description 
----|---|---
-threads | 2 | Number of threads to use
-specifc_chr | NA | Limit sage to comma separated list of chromosomes
-max_read_depth | 1000 | Maximum number of reads to look for evidence of any `HIGH_CONFIDENCE` or `LOW_CONFIDENCE` variant. Reads in excess of this are ignored.  
-max_read_depth_panel | 100,000 | Maximum number of reads to look for evidence of any `HOTSPOT` or `PANEL` variant. Reads in excess of this are ignored.  
-min_map_quality | 10 | Min mapping quality to apply to non-hotspot variants
-require_gene | false | Restrict processing to variants with gene annotations
-
-The optional [base quality recalibration](#optional-base-quality-recalibration-arguments) and [quality](#optional-quality-arguments) arguments also apply.  
-
 ## Example Usage
 
 Minimum set of arguments:
@@ -178,9 +140,9 @@ vis_pass_only | Generate output for all passing variants
 vis_max_support_reads | Max reads per type to display (-1 to show all)
 vis_output_dir | Output directory for HTML files, defaults to 'vis' if not specified
 
-A guide to the visualisations is shown below. A link to the HTML file for this variant is available [here.](https://raw.githack.com/hartwigmedical/hmftools/master/sage/docs/COLO829v003T.sage.chr7_152079940_G_T.html)
+A guide to the visualisations is shown below. A link to the HTML file for this variant is available [here.](https://raw.githack.com/hartwigmedical/hmftools/master/sage/docs/COLO829v004T.sage.BRAF_chr7_140753336_A_T_missense.html)
 
-![image](docs/COLO829v003T.annotated_sage_vis.png)
+![image](docs/COLO829v004T.sage.BRAF_chr7_140753336_A_T_missense.png)
 
 
 
@@ -207,7 +169,7 @@ Additionally, Sage can be run in a germline mode by setting the germline sample 
 
 ## Variant qual conventions
 
-In pre-4.0 versions of Sage, variant tumor quality (`QUAL`) was a sum of per-read final qualities, which were a function of both base and mapping quality. The `minTumorQual` filter was a simple comparison between this tumor quality and a per-tier threshold. In Sage 4.0+, variant quality is now split into two:
+Variant quality is decomposed into two metrics:
 - Base quality, which is a probabilistic measure based on DP, AD and per-read base qual. This is recorded in `TQP`, and the phred score of this (capped at 200) is placed in the `QUAL` field. As before, Sage has per-tier thresholds for this, below which a variant will be marked as `minTumorQual`
 - Map quality, which is a heuristic aggregated from all reads contributing to DP. This is recorded in `MQF` and is not encoded in the `QUAL` field. It can cause a variant to be `minMQF` filtered based on separate per-tier thresholds.
 
@@ -219,13 +181,13 @@ Both sets of per-tier thresholds are specified in the 'Soft Filters' section of 
  Sage uses the read context to search for evidence supporting the variant and calculate the allelic depth and frequency.
  
  The core read context is a distinct set of bases surrounding a variant after accounting for any microhomology in the read and any repeats in the read. A 'repeat' in this context, is defined as having 1-5 bases repeated at least 3 times. 
- The core is a minimum of 4 bases long. For a SNV/MNV in a non-repeat sequence this will just be the alternate base(s) with 2 bases either side. If either outer base is inside a repeat, we extend the core to fully cover the repeat plus one padding base, eg 'TAAAAAC'. If the padding base is itself part of a long (6+ count) repeat, we extend again in the same way.
+ The core is a minimum of 4 bases long. For a SNV/MNV in a non-repeat sequence this will just be the alternate base(s) with 2 bases either side. If either outer base is inside a repeat, we extend the core to fully cover the repeat plus one padding base, eg 'TAAAAAC'. If the padding base is itself part of a long (6+ count) repeat, we extend again in the same way. Ultima cores are further extended to fully cover homopolymers - for more details see [here](https://github.com/hartwigmedical/hmftools/blob/master/sage/SEQ_TECH.md).
  
  A DEL always includes the 2 bases on either side of the deleted sequence. If the delete is part of a microhomology or repeat sequence, this will also be included in the core read context.
  
  An INSERT always includes the 2 base on either side of the inserted sequence as well as the inserted bases themselves. As with a DEL, the core read context will be extended to include any repeats and/or microhomology.
 
-The complete read context is the core read context flanked on either side by an additional 10 bases. Notably, reads can have high quality errors in flank bases and still count towards AD, but not for core bases.
+The complete read context is the core read context flanked on either side by an additional 10 bases. The Ultima-specific core extension routine can cause this to not be possible for Ultima samples in append mode - thus, we tolerate a minimum flank length of 1 base in this case. Notably, reads can have high quality errors in flank bases and still count towards AD, but not for core bases.
  
 The following example illustrate how we construct and use a read context for a simple T > A SNV.  
 
@@ -246,7 +208,7 @@ In the following table we match the read context against BAM reads in numerous w
 - A `CORE` match has error(s) within flank bases.
 - A 'simple alt' match agrees only on the variant base(s), and has error(s) elsewhere in the core
 
-'Simple alt' matches do not contribute to AD. All others do, but `CORE` matches do not contribute to the `QUAL` score.
+'Simple alt' matches do not contribute to AD. `CORE` support does, unless it reaches `max(25% of AD, 3)` reads in which case it is discarded from AF and AD. `CORE` matches never contribute to the `QUAL` score.
 
 <pre>
 Reference:                ...ACCATGGATACCATCATAACATACGA...
@@ -301,44 +263,16 @@ A similar principle applies to any repeat sequences. Spanning them in the read c
 # Algorithm
 
 There are 9 key steps in the Sage algorithm described in detail below:
-  1. [Alt Specific Base Quality Recalibration](#1-alt-specific-base-quality-recalibration)
-  2. [Candidate Variants](#2-candidate-variants)
-  3. [Tumor Counts and Quality](#3-tumor-counts-and-quality)
-  4. [Jitter Determinations](#4-jitter-determinations)
-  5. [Reference Counts and Quality](#5-reference-counts-and-quality)
-  6. [Soft Filter](#6-soft-filters)
-  7. [Phasing](#7-phasing)
-  8. [De-duplication](#8-de-duplication)
-  9. [TINC Analysis](#9-tinc-analysis)
+  1. [Candidate Variants](#1-candidate-variants)
+  2. [Tumor Counts and Quality](#2-tumor-counts-and-quality)
+  3. [Jitter Determinations](#3-jitter-determinations)
+  4. [Reference Counts and Quality](#4-reference-counts-and-quality)
+  5. [Soft Filter](#5-soft-filters)
+  6. [Phasing](#6-phasing)
+  7. [De-duplication](#7-de-duplication)
+  8. [TINC Analysis](#8-tinc-analysis)
 
-## 1. Alt Specific Base Quality Recalibration
-
-Sage includes a base quality recalibration method to adjust sequencer reported base qualities to empirically observed values since we observe that qualities for certain base contexts and alts can be systematically over or under estimated which can cause either false positives or poor sensitivity respectively.
-This idea is inspired by the GATK BQSR tool, but instead of using a covariate model we create a direct lookup table for base quality adjustments. 
-The recalibration is unique per sample.
-
-The empirical base quality is measured in each reference and tumor sample for each {trinucleotide context, alt, sequencer reported base qual, consensus type} combination and an adjustment is calculated. This is performed by sampling a 2M base window from each autosome and counting the number of mismatches per {trinucleotide context, alt, sequencer reported base qual}.
-
-Fragments with low mapping quality (by default: below 50) are ignored as errors can be plausibly explained as mapping errors rather than base quality errors. Similarly, sites that may harbour a genuine germline or somatic variant rather than errors are excluded from contribution. This is determined as follows:
-
-* Across `DUAL` fragments (i.e. duplex consensus): exclude site if `altVaf >= 0.01 && (altVaf >= 0.05 || altCount > 2)`
-* Across other fragments (i.e. non-duplex or singleton): exclude site if `altVaf >= 0.075 && (altVaf >= 0.125 || altCount > 3)`
-
-Note that the definition of this recalibrated base quality is slightly different to the sequencer base quality, since it is the probability of making a specific ALT error given a trinucleotide sequence, whereas the sequencer base quality is the probability of making any error at the base in question.   Since the chance of making an error to a specific base is lower than the chance of making it to a random base, the ALT specific base quality will generally be higher even if the sequencer base quality matches the empirical distribution.
-
-For all SNV and MNV calls the base quality is adjusted to the empirically observed value before determining the quality. 
-Sage produces both a file output and QC chart which show the magnitude of the base quality adjustment applied for each {trinucleotide context, alt, sequencer reported base qual, consensus type} combination.
-These files are written into the same directory as the output file.
-
-A typical example of the chart (for one consensus type) is shown below. Note that each bar represents the amount that will be added to the sequencer Phred score: 
-
-![Base Quality Adjustment](docs/COLO829v003T.bqr.png)
-
-Base quality recalibration is enabled by default but can be disabled by supplying including the`-bqr_disable` argument.
-
-The base quality recalibration chart is generated with the config `-bqr_write_plot`.
- 
-## 2. Candidate Variants
+## 1. Candidate Variants
 
 In this first pass of the tumor BAM(s), Sage looks for candidate variants using reads with adjusted MAPQ >=1 (penalising the mapping quality for NM and softclips in accordance with `read_events_qual_penalty`)
 Valid candidates must include a complete read context, with full-length flanks.
@@ -351,12 +285,20 @@ Longer insertions or duplications may be aligned by BWA as a soft clipping inste
 
 For each candidate, Sage tallies the ref/alt support and total quality and selects the most frequently found read context of each variant. As each variant can potentially have multiple read contexts due to sequencing errors or sub-clonal populations, Sage also allows additional read contexts as candidates IF there are at least max(25% max support,3) reads with FULL support for that read context.  Multiple read contexts may be possible for example where a germline HET SNV overlaps read context with a germline HOM SNV or when a somatic subclonal SNV overlaps read context with a somatic clonal SNV. 
 
-A candidate will be dropped at this stage if it is only identified on one fragment. Candidate inserts with any 'N' base in the alt sequence are also dropped.
+A candidate will be dropped at this stage if it meets any of the following conditions:
+- Evidence is only identified on one fragment
+- The candidate is an insert with any 'N' base in the alt sequence
+- No read contains the variant with sufficient quality. The exact definition of this depends on the sequencing technology and variant type:
+  - Illumina, indels not associated with 15+ count repeat: the whole read core contains high quality bases (26+)
+  - Illumina, SNVs/MNvs: all variant base(s) are high quality bases (26+)
+  - SBX: the whole read core contains high quality bases (30+)
+  - Ultima, variants not associated with 8+ length homopolymer: the whole read core contains no base in the Redux-defined `UQ` tag
+  - Ultima, variants associated with a 19bp+ homopolymer: univerally dropped (due to 20bp sequencing cap)
 
 ### Multiple Tumors
 If multiple tumors are supplied, the final set of candidates is the superset of all individual tumor candidates that satisfy the hard filter criteria. 
 
-## 3. Tumor Counts and Quality
+## 2. Tumor Counts and Quality
 
 The aim of the stage it to collect evidence of each candidate variant's read context in the tumor. 
 
@@ -370,12 +312,13 @@ A match can be (in descending order of quality):
   - Simple alt (tracked under `SAC`) - Read context matches read on the variant base(s), and has error(s) elsewhere in the core
 
 Other relevant details are:
-- Errors are tolerated in flanks so long as raw base qual at mismatch base < 20
+- Errors are tolerated in flanks so long as raw base qual at mismatch base < 20 (10 for SBX, no tolerance for Ultima)
 - If more than 3 such flank errors exist, we downgrade the match standard to `CORE`
-- One low quality core error is tolerated per 8 bases of core length, after stripping repeats out of the core
+- One low quality core error is tolerated per 8 bases of core length, after stripping repeats out of the core (with same qual threshold as defined above)
 - The 'essential' core bases include the variant base(s) (for an SNV/MNV) or the bases collectively spanning all the repeats in the core, with 1 base padding (for an indel)
+  - Non-indels with an insert in the core CIGAR have their whole core defined as essential bases for SBX
 - Some core bases are not allowed to have an error:
-  - For an SNV/MNV, these are again the variant base(s)
+  - For an SNV/MNV, these are the essential bases
   - For an indel, these are the first bases that differ between ref and alt, the last base of homology and first non-homologous base, looking both left->right and right->left through the read
 
 By default, if the positive and negative stranded reads of a fragment overlap, a consensus of the overlap is taken, and the 2 reads in the fragment converted into a single consensus read. For each base, if the R1 and R2 observations agree, set the consensus base qual to the high base qual from either read. If there is disagreement, the nucleotide with the highest base qual is chosen and the quality is set to the difference in base quals. However, if `-no_sync_fragments=True` then each read is processed individually in this instance.
@@ -386,11 +329,13 @@ If the variant is not found and instead matches the ref genome at that location 
 
 Any read which spans 'essential' read core bases increments the `TOTAL` tally.  
 
+Uncertain bases (qual 1) are not allowed in essential core bases in SBX except for indels of length 3+ (novel, or unit change in the case of an MSI indel). If we come across a read with such uncertain bases in a variant where we do not tolerate them, the read is ignored by the evidence assessment routines and assigned proportional weighting to AD and DP downstream.
+
 ### Microsatellite Indel Base Quality
 
 Sage takes parameter files from Redux (of the form `SAMPLE.jitter_params.tsv` and `SAMPLE.ms_table.tsv.gz` for all tumor and reference samples) to set an appropriate base quality for microsatellite indels. Specifically, a 6-parameter model provides for an asymmetric laplace distribution to model all permutations of (repeat count, repeat unit, consensus type). We then use the repeat, ref and alt bases to determine a modelled error rate for the error in question. This is backed out into a phred score, and acts as a cap for per-read base qual contribution for that variant. For example, if a 8xT>9xT expansion is modelled with a 0.01 error rate, the per-read base qual would be capped at `-10 * log10(0.01)` = 20.
 
-This approach is only applied for repeats of length 4 or more, and indels of no more than 5 repeat units. Additionally, we fall back to typical 'default jitter' parameterisation if the rate of sample-specific jitter is very high (for example, in a MSI sample)
+This approach is only applied for repeats of length 4 or more, and indels of no more than 5 repeat units. Additionally, we fall back to typical 'default jitter' parameterisation in an MSI sample. The predicted MSI status of a sample is determined by Redux (`SAMPLE_NAME.redux.msi_prediction.tsv`) and this file is assumed to be in the same directory at the BAM.
 
 ### Modified Tumor Quality Score
 
@@ -400,7 +345,7 @@ There are a number of constraints to penalise the quality:
   1. as the variant approaches the edge of a read,
   2. if the read encompasses more than one variant, or
   3. the read is softclipped, or
-  4. if the ProperPair flag (0x02) is not set 
+  4. if the ProperPair flag (0x02) is not set (for Illumina)
 
 To do this we first calculate a modified base quality as follows:
 
@@ -412,15 +357,18 @@ baseQuality (Indel) = average BASEQ over core read context
 modifiedBaseQuality = baseQuality - `baseQualityFixedPenalty (12)` -  edgeDistancePenalty
 </pre>
 
-If the variant is a microsatellite indel, then `baseQuality` is capped by the phred score associated with the modelled error rate, as described above. Additionally, `baseQualityFixedPenalty` is not applied. 
+Notable exceptions:
+- If the variant is a microsatellite indel, then `baseQuality` is capped by the phred score associated with the modelled error rate, as described above. Additionally, `baseQualityFixedPenalty` is not applied.
+- In SBX, min base qual across the core is used for baseQuality for variants with an indel in the core (including SNVs)
+- In Ultima, baseQuality is set to the minimum quality computed from each Ultima-specific variant quality model present in the local realignment of the variant, capped by the recalibrated quality in the BQR file. For more details see  [here](https://github.com/hartwigmedical/hmftools/blob/master/sage/SEQ_TECH.md)
 
 We also modify the map quality taking into account the number of events, soft clipping and improper pair annotation:
 
 <pre>
 readEvents = NM tag from BAM record adjusted so that INDELs and (candidate) MNVs count as only 1 event
-distanceFromReferencePenalty =  (readEvents - 1) * `map_qual_read_events_penalty (7)`^ 
-softClipPenalty =  if(hasSoftClip,(max(1,soft clip bases /12),0)  * `map_qual_read_events_penalty (7)`^    
-improperPairPenalty = `mapQualityImproperPairPenalty (15)`  if proper pair flag not set else 0  
+distanceFromReferencePenalty =  (readEvents - 1) * `map_qual_read_events_penalty (1057)`^ / readLength 
+softClipPenalty =  if(hasSoftClip,(max(1,soft clip bases /12),0)  * `map_qual_read_events_penalty (1057)`^  / readLength  
+improperPairPenalty = `mapQualityImproperPairPenalty (15)`  if paired flag set and proper pair flag not set, else 0  
 modifiedMapQuality^ = MAPQ - `mapQualityFixedPenalty (0)`  - improperPairPenalty - distanceFromReferencePenalty - softClipPenalty 
 </pre>
 
@@ -444,24 +392,24 @@ hard_min_tumor_raw_alt_support | 2             | `AD[1]`
 jitter p-score | 0.05 | see description of jitter p-score below
 filtered_max_germline_alt_support | 3 (or 10 if running TINC)             | Germline `AD[1]`
 
-Note that hotspots are never hard-filtered. Note also that the hard min tumor qual filter applies to a sum of RC_CNT elements, and not to the QUAL value written to the VCF. Occasionally variants slightly below hard_min_tumor_qual will be recovered, if there is evidence of reads with jitter that do not match the read context but on balance probably support the variant.
+Note that all hotspots, and germline filtered variants in panel regions, are never hard-filtered. Note also that the hard min tumor qual filter applies to a sum of RC_CNT elements, and not to the QUAL value written to the VCF. Occasionally variants slightly below hard_min_tumor_qual will be recovered, if there is evidence of reads with jitter that do not match the read context but on balance probably support the variant.
 
 Variants failing any of the first 4 filters are excluded from this point onwards and have no further processing applied to them. The filtered_max_germline_alt_support is applied at the final step of the algorithm, solely to reduce file size, and is not applied in the absence of a provided reference sample. The filtered_max_germline_alt_support does not apply to germline variants in the same local phase set as passing somatic variants.
 
-## 4. Jitter determinations
+## 3. Jitter determinations
 After aggregating read support counts, as well as `LENGTHENED` and `SHORTENED` jitter counts in the previous step, we now determine if the variant should be discarded as likely jitter noise from an alternative allele.
 
 Specifically:
-- If `LENGTHENED` > `FULL`, we consider the modelled error rate of seeing the repeat count associated with `FULL` from a true repeat count associated with `LENGTHENED`. If the 'actual' jitter rate is less than 2x (1.5x for hotspots) the modelled error rate, or the p-score of the 'actual' jitter rate is too high, we mark the variant to be filtered:
+- If `LENGTHENED` > `FULL`, we consider the modelled error rate of seeing the repeat count associated with `FULL` from a true repeat count associated with `LENGTHENED`. If the 'actual' jitter rate is less than 2x (1.5x for hotspots with a jitter rate >= 3%) the modelled error rate, or the p-score of the 'actual' jitter rate is too high, we mark the variant to be filtered:
   - If the p-score > 0.05, the variant will be hard filtered (or soft filtered if a hotspot)
-  - Otherwise if the variant is > 0.00025 (or the actual jitter rate is <2x the modelled error rate, 1.5x for hotspots) we mark the variant for later soft filtering
+  - Otherwise if the variant is > 0.00025 (or the actual jitter rate is <2x the modelled error rate, 1.5x for hotspots with a jitter rate >= 3%) we mark the variant for later soft filtering
 - We apply the same process as above, but for `SHORTENED` instead of `LENGTHENED`
 - If min(`LENGTHENED`, `SHORTENED`) > `FULL`, we also consider the possibility that the `FULL` reads came in part from both the `LENGTHENED` and `SHORTENED` allele. Thus, we combine the `LENGTHENED` and `SHORTENED` counts, take the mean of their modelled error rates, and apply the same tests as above
 
 Notes:
 * All error rates used in the above calculations are floored at 1e-4, including an error rate for any repeat count < 4
 * We floor the modelled error rate at 0.04 for PANEL/HOTSPOT variants with a trinucleotide repeat in the core that aren’t themselves a non-trinucleotide indel. This is to model the predisposition towards trinucleotide indels in coding regions (since they do not cause a frameshift)
-## 5. Reference Counts and Quality
+## 4. Reference Counts and Quality
 
 Evidence of each candidate variant is collected in all of the supplied reference bams in the same manner as step 3.
 
@@ -469,7 +417,7 @@ The only exception is that for inserts of >10 bases, we run a supplementary matc
 
 RNA bams are valid reference sources.
 
-## 6. Soft Filters
+## 5. Soft Filters
 
 Given evidence of the variants in the tumor and reference we apply somatic filters. 
 The key principles behind the filters are ensuring sufficient support for the variant (minimum VAF and score) in the tumor sample and validating that the variant is highly unlikely to be present in the reference sample.
@@ -481,40 +429,44 @@ A hotspot panel of 10,000 specific variants are set to the highest sensitivity (
 
 The specific filters and default settings for each tier are:
 
-Filter  | Hotspot             | Panel               | High Confidence     | Low Confidence      | Field
----|---------------------|---------------------|---------------------|---------------------|---
-min_tumor_qual<sup>1</sup>| 20<sup>2</sup>      | 50                  | 80                  | 140                 |Phred score of `TQP`, i.e. `QUAL`
-min_mqf<sup>3</sup>| -6                  | -6                  | 0                   | 0                   |`MQF`
-min_tumor_vaf<sup>4</sup>| 1.0%                | 2.0%                | 2.5%                | 2.5%                |`AF`
-min_germline_depth| 0                   | 0                   | 10                  | 10                  | Reference `RC_CNT[5]`
-min_germline_depth_allosome| 0                   | 0                   | 6                   | 6                   | Reference `RC_CNT[5]`
-max_germline_vaf<sup>5</sup>| 10%                 | 4%                  | 4%                  | 4%                  | Reference `RC_CNT[0+1+2+3]` / `RC_CNT[5]`
-max_germline_rel_raw_base_qual| 25%                 | 4%                  | 4%                  | 4%                  | Reference `RABQ[1]` / Tumor `RABQ[1]` 
-max_map_qual_ref_alt_difference| 15                  | 15                  | 15                  | 15                  | Derived from `AMQ`
-maxEdgeDistance<sup>6</sup> | 0.001               | 0.001               | 0.001               | 0.001               | Derived from `MED` and `AD`
-fragmentStrandBias| 0.0                 | 0.0005              | 0.0005              | 0.0005              | SBLikelihood<sup>7</sup>
-readStrandBias| 0.0                 | 0.0005              | 0.0005              | 0.0005              | RSBLikelihood<sup>7</sup>
-minAvgBaseQual<sup>8</sup>| 18                  | 25                  | 25                  | 25                  |`RABQ`
-minFragmentCoords<sup>8</sup>| AD>4: 3<br/>AD>2: 2 | AD>4: 3<br/>AD>2: 2 | AD>4: 3<br/>AD>2: 2 | AD>4: 3<br/>AD>2: 2 | Num distinct start/end fragment coordinates
-minStrongSupport| 2                   | 3                   | 3                   | 3                   | `RC_CNT[0+1+3]`
-maxRealignedPercentage | 70%                 | 70%                 | 70%                 | 70%                 | `RC_CNT[3]` / `RC_CNT[0+1+2+3]`
-jitter | 0.00025 | 0.00025 | 0.00025 | 0.00025 | p-score of `FULL`, `SHORTENED` and `LENGTHENED` (see Jitter determinations section for more details)
+Filter  | Hotspot                  | Panel                      | High Confidence     | Low Confidence      | Field
+---|--------------------------|----------------------------|---------------------|---------------------|---
+minTumorQual<sup>1</sup>| 20<sup>2</sup>           | 50                         | 80                  | 140                 |Phred score of `TQP`, i.e. `QUAL`
+minMQF<sup>3</sup>| -6                       | -6                         | 0                   | 0                   |`MQF`
+minTumorVaf<sup>4</sup>| 1.0%                     | 2.0%                       | 2.5%                | 2.5%                |`AF`
+minGermlineDepth| 0                        | 0                          | 10                  | 10                  | Reference `RC_CNT[5]`
+minGermlineDepth (allosome) | 0                        | 0                          | 6                   | 6                   | Reference `RC_CNT[5]`
+maxGermlineVAF<sup>5</sup>| median(5%, 10%, tumorAF) | median(5%, 10%, tumorAF/2) | 5%                  | 5%                  | Reference `RC_CNT[0+1+2+3]` / `RC_CNT[5]`
+maxGermlineRelQual<sup>6<sup>| 50%                      | 12%                        | 12%                 | 12%                 | Reference `ASBQ[1]` / Tumor `ASBQ[1]`, depth normalised 
+mapQualRefAltDiff| 15                       | 15                         | 15                  | 15                  | Derived from `ARMQ`
+maxEdgeDistance<sup>7</sup> | 0.001                    | 0.001                      | 0.001               | 0.001               | Derived from `MED` and `AD`
+fragmentStrandBias| 0.0                      | 0.0005                     | 0.0005              | 0.0005              | SBLikelihood<sup>8</sup>
+readStrandBias| 0.0                      | 0.0005                     | 0.0005              | 0.0005              | RSBLikelihood<sup>8</sup>
+minAvgBaseQual<sup>9</sup> <sup>10</sup>| 18                       | 25                         | 25                  | 25                  |`ASBQ`
+minFragmentCoords<sup>9</sup>| AD>4: 3<br/>AD>2: 2      | AD>4: 3<br/>AD>2: 2        | AD>4: 3<br/>AD>2: 2 | AD>4: 3<br/>AD>2: 2 | Num distinct start/end fragment coordinates
+minStrongSupport| 2                        | 3                          | 3                   | 3                   | `RC_CNT[0+1+3]` (restricted to a high qual subset)
+maxRealignedPercentage | 70%                      | 70%                        | 70%                 | 70%                 | `RC_CNT[3]` / `RC_CNT[0+1+2+3]`
+jitter | 0.00025                  | 0.00025                    | 0.00025             | 0.00025             | p-score of `FULL`, `SHORTENED` and `LENGTHENED` (see Jitter determinations section for more details)
 
-1. The `TQP` is a p-score representing the chance of randomly observing the number of qual-supporting reads we did, at the quality we did. It uses the binomial distribution with n=`DP`, k=`RC_CNT[0+1+2+3]`, and p=phred of `AMBQ`, floored at 15 and boosted for novel indels in HOTSPOT/PANEL regions
+1. The `TQP` is a p-score representing the chance of randomly observing the number of qual-supporting reads we did, at the quality we did. It uses the binomial distribution with n=`DP`, k=`RC_CNT[0+1+3]`, and p=phred of `AFBQ`, floored at 15 and boosted for some types of novel indels. SBX simplex reads are included in this calculation only indirectly, see [here](https://github.com/hartwigmedical/hmftools/blob/master/sage/SEQ_TECH.md) for more details
 
 2. Even if tumor qual score cutoff is not met, hotspots are also called so long as tumor vaf >= 0.08 and  allelic depth in tumor supporting the ALT >= 8 reads and tumorRawBQ1 > 150.  This allows calling of pathogenic hotspots even in known poor mappability regions, eg. HIST2H3C K28M.
 
-3. `MQF` is an overall site-wide map qual factor, evaluated as: `AMMQ - 25 - 2*max(AMQ[ALL]-AMQ[ALT], 0) - phred(pscore(readStrandBias)) - phred(pscore(AED)) - repeatPenalty`, where `repeatPenalty` is 3 per repeat count if the core contains a non-homopolymer repeat of at least 15 bases.
+3. `MQF` is an overall site-wide map qual factor, evaluated as: `AFMQ - 25 - 2*max(ARMQ[ALL]-ARMQ[ALT], 0) - min(phred(pscore(readStrandBias)), 50) - min(phred(pscore(AED)), 10) - repeatPenalty`, where `repeatPenalty` is 3 per repeat count if the core contains a non-homopolymer repeat of at least 15 bases. Some minor adjustments are made to this formula for specific sequencing types and variants
 
-4. Even if tumor VAF threshold is not met, we can still call a variant if p-score likelihood < 10<sup>-14</sup> (10<sup>-9</sup> in hotspots), considering the ref and alt average recalibrated base qual. This is a Binomial test with n=`DP`, k=`RC_CNT[0+1+3]` and p=phred score of `ABQ` across whole depth, with `k` scaled down if alt reads have a lower average qual than ref read, and p is boosted for novel indels in HOTSPOT/PANEL regions
+4. Even if tumor VAF threshold is not met, we can still call a variant if p-score likelihood < 10<sup>-14</sup> (10<sup>-9</sup> in hotspots), considering the ref and alt average recalibrated base qual. This is a Binomial test with n=`DP`, k=`RC_CNT[0+1+3]` and p=phred score of `ARCBQ` across whole depth, with `k` scaled down if alt reads have a lower average qual than ref read, and p is boosted for novel indels in HOTSPOT/PANEL regions
    
-5. special filter (max_germline_alt_support) is applied for MNV and INS of > 10 bases such that it is filtered if 1% or more of the reads in the germline contains evidence of the variant. For PANEL variants with `RC_REPC < 10` we also increase this threshold to 5%, and if only 1 germline read with < 25 BQ, we tolerate up to min(10%, tumorAF/3) as well.
+5. special filter (max_germline_alt_support) is applied for MNV and INS of > 10 bases such that it is filtered if 1% or more of the reads in the germline contains evidence of the variant. For panel indels and indels in long MSI repeats (7+) these are conditionally relaxed for SBX and Ultima sequencing
 
-6. If `MED` > 33% of read length (20% for `HOTSPOT`/`PANEL`) or variant is 10+ base insert, we never filter. Otherwise, p-score is calculated as `MED[alt]/MED[all] ^ AD`
+6. Filter only applied if a probabilistic test determines that the observed germline AF is plausible given the tumor AF and germline DP
 
-7. Likelihood =  `binomial(min(SB,1-SB)*AD,AD,0.5,TRUE)`  If 0.15<SB<0.85 or if ref is sufficiently biased, we never filter.
+7. If `MED` > 33% of read length (20% for `HOTSPOT`/`PANEL`) or variant is 10+ base insert, we never filter. Otherwise, p-score is calculated as `MED[alt]/MED[all] ^ AD`
 
-8. Not applied for indels using the modelled microsatellite error rate
+8. Likelihood =  `binomial(min(RSB,1-RSB)*AD,AD,0.5,TRUE)`  If 0.15<RSB<0.85 or if ref is sufficiently biased, we never filter
+
+9. Not applied for indels using the modelled microsatellite error rate
+
+10. Not applied for Ultima. Instead two other filters are applied (`minAvgTpQual` and `minAvgT0Qual`) if implied error rates from the Ultima qual model are significantly higher than expected for supporting reads of the variant in qusetion
 
 If multiple tumors are supplied, a variant remains unfiltered if it is unfiltered for any single tumor. The germline criteria are only evaluated against the primary reference, ie, the first in the supplied reference list. If no reference bams supplied, the germline criteria are not evaluated.
 
@@ -533,7 +485,7 @@ For targeted sequencing, the `high_depth_mode` flag should be provided. This all
 * Reads that have discordant or unmapped mates are ignored
 * Reads with raw base qual < 30 do not provide variant support
 
-## 7. Phasing
+## 6. Phasing
 
 ### Local Phase Set
 
@@ -555,9 +507,9 @@ Note also that to increase performance for complex regions with high numbers of 
 ```
  readCountThreshold = max(log10(localSetCount) - 2),1)
 ```
-Sets with less than the read count threshold are dropped before merging and collapsing. 
+Sets with less than the read count threshold are dropped before merging and collapsing. This threshold is reduced by 1 for SBX and Ultima due to longer read lengths creating more distinct phase sets.
 
-## 8. De-duplication
+## 7. De-duplication
 
 De-duplication removes any duplicate candidate variants, which may represent the same underlying mutation in different ways.  Sage removes the following 4 types of deduplication in the following order on PASS variants only:
 - **dedupMNV** - DEDUP any overlapping MNV in the same phase set. MNV may have 2 or 3 bases.  First any MNV which has 2 changed bases and overlaps with an MNV with 3 changed bases is filtered. If both have 2 changed bases then the least compact MNV is filtered.  If both have the same number of bases and changed bases then the lowest qual MNV is filtered.
@@ -565,18 +517,20 @@ De-duplication removes any duplicate candidate variants, which may represent the
 - **dedupMNVSNV** - Any remaining passing SNVs that are phased with and contribute to a passing somatic MNV are filtered as DEDUP.
 - **dedupINDEL** - Consider a list of variants with at least some phase set overlap, and containing at least one INDEL. Rank all INDELs with a heuristic, and starting from the strongest supported INDEL, check if the variant's full read context can be made by injecting the variant into the reference sequence (potentially including other variants). If so, throw away all unused variants in the list with either `MED` < 33% of read length (20% for `PANEL`/`HOTSPOT`) or whose POS and core end live between the INDEL's full RC.
 
+DedupINDEL operates on PASSing indels as well as germline filtered ones. In the latter case, any germline filters from the INDEL will also be imposed on variants that are deduplicated by it
+
 After deduplication any uninformative or duplicate phase sets are further removed.   
 
 If there are any cases where the exact same variant is still duplicated (ie. same chromosome, position, ref, alt) but with different read core contexts, then the lower quality variant is hard filtered with the LPS information merged.
 
-## 9. TINC Analysis
+## 8. TINC Analysis
 If the `-run_tinc` config is provided, Sage will measure the level of tumor in normal contamination in the sample, and use this to conditionally recover likely somatic variants that were filtered due to germline evidence. The routine works as follows:
 
 ### Finding fitting variants
 Gather a list of high quality passing and filtered variants due to germline evidence to use for TINC fitting. The variants must satisfy these conditions:
    * Not an indel
    * Must be PASS or only filtered due to germline evidence
-   * If there is germline evidence, the germline average base qual (ABQ) must be >= 30
+   * If there is germline evidence, the germline average base qual (ARCBQ) must be >= 30
    * Must have MQF >= 25
    * Must not have `NEARBY_INDEL` annotation
    * Must not have any associated gnomAD entry or would be PON filtered with our tiered PON filtering rules in Pave
@@ -607,15 +561,15 @@ The outputs below are found in the VCF::
  `MQF`                  | Mapping quality factor
  `AF`                     | Allelic Frequency (=AD\[1\] / DP)                                                                       
  `QUAL`                   | Variant Quality (phred score of TQP, i.e. `-10*log10(TQP)`, capped at 200)                                          
- `AMQ[0,1]`               | Average (raw) Mapping Quality (all, alt)    
- `AMMQ`               | Average modified mapping quality                                                                
- `AMBQ`               | Average modified base quality
- `ABQ[0,1]`               | Average recalibrated base quality (all, alt)
- `RABQ` | Raw average base quality
+ `ARMQ[0,1]`               | Average (raw) Mapping Quality (all, alt)    
+ `AFMQ`               | Average modified mapping quality                                                                
+ `AFBQ`               | Average modified base quality
+ `ARCBQ[0,1]`               | Average recalibrated base quality (all, alt)
+ `ASBQ` | Raw average base quality
  `MED`                    | Max read edge distance for alt-supporting reads 
  `AED`                    | Average read edge distance (all, alt)
  `RSB[0,1]`               | Proportion of alt-supporting reads on the forward strand (non-alt, alt)                                         
- `SB[0,1]`                | Proportion of alt-supporting fragments with F1R2 orientation (non-alt, alt)                                          
+ `RSB[0,1]`                | Proportion of alt-supporting fragments with F1R2 orientation (non-alt, alt)                                          
  `SAC`                | Simple alt count (not considered to be AD)
 `RC_INFO` | Read context info: `RCAlignmentStart`-`RCVariantIndex`-`LeftFlank`-`Core`-`RightFlank`-`RCCigar`
 `RC_REPC` | Longest repeat count identified in read core
@@ -644,12 +598,9 @@ Variant calling Improvements
 - **Filtering of supplementary reads** - This is necessary to remove artefacts, but may lead to reduced sensitivity particularly for long deletions which may be mapped with a supplementary read 
 - **Event penalty** - We currently have an event penalty which reduces MAPQ by 7 for every ‘event’ in a read. This means we have reduced sensitivity for highly clustered variants and no sensitivity where there are more than 6 events in a 150 base window. The penalty on soft clips also decreases sensitivity near genuine SVs.
 - **Complex events in key cancer genes** - Any messy read profile is likely to be something interesting if it falls within a well known cancer gene.  We should make sure not to miss any of these
-- **BQR based on read position** - some library preparations have strong positional biases. Adjusting for this would reduce FP.
-- **BQR at long palindromic sequences** - some library preparations frequently have errors in palindromic regions. Adjusting for this would reduce FP.
 - **Low MAPQ** - Sage penalises low MAPQ reads harshly. No truth set is available in these regions, so it is unclear whether this behaviour is the correct decision.
 - **SNV base qual downstream of long homopolymer with insert** - If a sample has a germline extension of a long homopolymer, a somatic SNV immediately downstream of the homopolymer that extends it will have different QUAL characteristics for forward and reverse stranded reads, due to the left-alignment convention for indels. Specifically, the negative strand should use a different base for variant qual.
 - **Better MNV handling** - we don't consider that multiple high quality SNVs in a row may imply multiple adjacent sequencing or upstream errors in our QUAL model, and so have scope to be more sensitive here
-- **Adding strand context to BQR** - Recalibration accuracy could be improved if we aggregated BQR evidence on reverse strand reads into reverse complemented trinucleotide/ref/alt contexts
 - **Improve readEvents calculation for synced fragments** - we normally transform a read's raw NM by applying only 1 edit count per INDEL element and ignoring the edit count for the variant itself, when applying event penalty. However, doing this with synced fragments (which use the first read's NM attribute but a 'superset' CIGAR) can result in unexpected behaviour. We may also want to calculate a more representative NM rather than just using the first's value.
 - **Looking in correct direction for homopolymer in synced fragment** - we suppress calling specific known NovaSeqX artefacts by looking for long homopolymers upstream of a candidate variant. For synced fragments, we will sometimes look the wrong way and so assign the wrong base qual to that read. Most relevant for targeted panel sequencing on NovaSeqX
 - **Handling germline multi-base inserts in NovaSeqX artefact suppression logic** - suppressing artefacts phased with homopolymer inserts of 3 or more bases is not currently supported by the algorithm, and there is a known issue with handling 2 base inserts, causing some artefacts associated with these to PASS as well

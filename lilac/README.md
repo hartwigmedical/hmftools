@@ -48,19 +48,6 @@ present in the reference genome
 
 ## Usage
 
-### Versions
-
-The latest Lilac jar version can be downloaded here: [1.7](https://github.com/hartwigmedical/hmftools/releases/tag/lilac-v1.7.1)
-
-Older versions:
-- [1.6](https://github.com/hartwigmedical/hmftools/releases/tag/lilac-v1.6)
-- [1.5](https://github.com/hartwigmedical/hmftools/releases/tag/lilac-v1.5.2)
-- [1.4](https://github.com/hartwigmedical/hmftools/releases/tag/lilac-v1.4.2)
-- [1.3](https://github.com/hartwigmedical/hmftools/releases/tag/lilac-v1.3)
-- [1.2](https://github.com/hartwigmedical/hmftools/releases/tag/lilac-v1.2)
-- [1.1](https://github.com/hartwigmedical/hmftools/releases/tag/lilac-v1.1)
-- [1.0](https://github.com/hartwigmedical/hmftools/releases/tag/lilac-v1.0)
-
 ### Sample inputs
 
 Lilac performs HLA typing from **BAM** files aligned to GRCh37 or GRCh38 (no alt) ref genomes. 
@@ -162,12 +149,13 @@ Notes:
 
 #### Optional input paths
 
-| Argument            | Description                                                          |
-|:--------------------|:---------------------------------------------------------------------|
-| `-tumor_bam`        | Sample tumor BAM                                                     |
-| `-rna_bam`          | Sample RNA BAM if available                                          |
-| `-gene_copy_number` | Sample gene copy number file from PURPLE                             |
-| `-somatic_vcf`      | Sample somatic variant VCF file, for annotation of HLA gene variants |
+| Argument              | Description                                                                                                                       |
+|:----------------------|:----------------------------------------------------------------------------------------------------------------------------------|
+| sequencing_type       | Illumina (default), SBX, Ultima                                                                                                   |
+| `-tumor_bam`          | Sample tumor BAM                                                                                                                  |
+| `-rna_bam`            | Sample RNA BAM if available                                                                                                       |
+| `-gene_copy_number`   | Sample gene copy number file from PURPLE                                                                                          |
+| `-somatic_vcf`        | Sample somatic variant VCF file, for annotation of HLA gene variants                                                              |
 
 #### Optional parameters
 

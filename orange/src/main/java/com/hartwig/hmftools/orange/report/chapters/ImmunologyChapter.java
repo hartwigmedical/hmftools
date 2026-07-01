@@ -30,14 +30,12 @@ public class ImmunologyChapter implements ReportChapter
         mReportResources = reportResources;
     }
 
-    @NotNull
     @Override
     public String name()
     {
         return "Immunology";
     }
 
-    @NotNull
     @Override
     public PDRectangle pageSize()
     {
@@ -57,10 +55,12 @@ public class ImmunologyChapter implements ReportChapter
 
         addHLAData(document);
 
+        /*
         if(mReport.experimentType() == ExperimentType.WHOLE_GENOME)
         {
             addImmuneEscapeData(document);
         }
+        */
     }
 
     private void addHLAData(final DocumentContext document) throws IOException
@@ -68,9 +68,7 @@ public class ImmunologyChapter implements ReportChapter
         LilacRecord lilacData = mReport.lilac();
 
         if(lilacData == null)
-        {
             return;
-        }
 
         String title = "HLA Class I Alleles";
 
@@ -87,10 +85,12 @@ public class ImmunologyChapter implements ReportChapter
         }
     }
 
+    /*
     private void addImmuneEscapeData(final DocumentContext document) throws IOException
     {
         String title = "Genetic Immune Escape";
         boolean isTumorFail = QcStatusInterpretation.hasPurpleFail(mReport.purple().fit().qc());
         document.addTable(ImmuneEscapeTable.build(document, title, contentWidth(), mReport.immuneEscape(), mReportResources, isTumorFail));
     }
+    */
 }

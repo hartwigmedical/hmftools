@@ -53,6 +53,15 @@ public class TestFindingRecordFactory
                         .build())))
                 .viruses(TestFindingFactory.buildDriverFindingsList(FindingStatus.Status.OK, List.of(TestFindingFactory.virusBuilder(true, DriverInterpretation.HIGH)
                         .build())))
+                .rnaQc(TestFindingFactory.rnaQcBuilder().build())
+                .highExpressionGenes(TestFindingFactory.buildFindingsList(FindingStatus.Status.OK, List.of(TestFindingFactory.rnaGeneExpressionBuilder()
+                        .build())))
+                .lowExpressionGenes(TestFindingFactory.buildFindingsList(FindingStatus.Status.OK, List.of(TestFindingFactory.rnaGeneExpressionBuilder()
+                        .build())))
+                .rnaFusions(TestFindingFactory.buildFindingsList(FindingStatus.Status.OK, List.of(TestFindingFactory.rnaFusionBuilder()
+                        .build())))
+                .novelSpliceJunctions(TestFindingFactory.buildFindingsList(FindingStatus.Status.OK, List.of(TestFindingFactory.novelSpliceJunctionBuilder()
+                        .build())))
                 .hlaAlleles(TestFindingFactory.buildFindingsList(FindingStatus.Status.OK, List.of(TestFindingFactory.hlaAlleleBuilder()
                         .build())))
                 .pharmacoGenotypes(TestFindingFactory.buildFindingsList(FindingStatus.Status.OK, List.of(TestFindingFactory.pharmacoGenotypeBuilder()
@@ -65,6 +74,8 @@ public class TestFindingRecordFactory
                 .sampleId("")
                 .samplingDate(LocalDate.of(2026, 1, 1))
                 .sequencingScope(SequencingScope.WHOLE_GENOME)
-                .refGenomeVersion(RefGenomeVersion.V37);
+                .refGenomeVersion(RefGenomeVersion.V37)
+                .hasNormalSample(true)
+                .hasRnaSample(false);
     }
 }

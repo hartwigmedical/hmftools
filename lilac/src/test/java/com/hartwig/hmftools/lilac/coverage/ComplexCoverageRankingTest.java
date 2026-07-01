@@ -2,6 +2,7 @@ package com.hartwig.hmftools.lilac.coverage;
 
 import static com.hartwig.hmftools.lilac.coverage.ComplexCoverageRanking.solutionComplexity;
 import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_A;
+import static com.hartwig.hmftools.lilac.util.GeneCacheSetup.buildGeneCache;
 
 import static org.junit.Assert.assertEquals;
 
@@ -19,10 +20,17 @@ import com.hartwig.hmftools.lilac.seq.HlaExonSequences;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.junit.Before;
 import org.junit.Test;
 
 public class ComplexCoverageRankingTest
 {
+    @Before
+    public void setUp()
+    {
+        buildGeneCache();
+    }
+
     @Test
     public void testHomozygousCounts()
     {

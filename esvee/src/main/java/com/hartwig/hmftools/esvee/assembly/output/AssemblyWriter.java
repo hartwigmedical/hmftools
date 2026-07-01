@@ -13,6 +13,8 @@ import static com.hartwig.hmftools.esvee.assembly.output.AssemblyWriterUtils.add
 import static com.hartwig.hmftools.esvee.assembly.output.AssemblyWriterUtils.addSupportHeader;
 import static com.hartwig.hmftools.esvee.assembly.output.AssemblyWriterUtils.refSideSoftClipsStr;
 import static com.hartwig.hmftools.esvee.assembly.output.AssemblyWriterUtils.repeatsInfoStr;
+import static com.hartwig.hmftools.esvee.common.FileCommon.FLD_SAGA_CIGAR;
+import static com.hartwig.hmftools.esvee.common.FileCommon.FLD_SAGA_MATCH;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -22,7 +24,7 @@ import com.hartwig.hmftools.esvee.assembly.AssemblyConfig;
 import com.hartwig.hmftools.esvee.assembly.AssemblyUtils;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyStats;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
-import com.hartwig.hmftools.esvee.common.saga.SagaMatchBySequence;
+import com.hartwig.hmftools.esvee.common.saga.SagaSequenceMatch;
 import com.hartwig.hmftools.esvee.common.WriteType;
 
 public class AssemblyWriter
@@ -53,7 +55,6 @@ public class AssemblyWriter
 
             sj.add("Id");
             sj.add("Chromosome").add("JuncPosition").add("JuncOrientation").add("JuncType");
-            sj.add("JuncRawDiscPosition");
 
             sj.add("ExtBaseLength").add("RefBasePosition").add("RefBaseLength").add("RefBaseCigar");
 
@@ -71,6 +72,7 @@ public class AssemblyWriter
             sj.add("UnmappedCandidates");
 
             sj.add("AssemblyInfo");
+            sj.add("RawDiscPosition");
 
             // extra detailed fields
             if(mConfig.AssemblyDetailedTsv)
@@ -92,8 +94,8 @@ public class AssemblyWriter
 
             if(mConfig.SagaFastaFile != null)
             {
-                sj.add("SagaMatch");
-                sj.add("SagaMatchCigar");
+                sj.add(FLD_SAGA_MATCH);
+                sj.add(FLD_SAGA_CIGAR);
             }
 
             writer.write(sj.toString());
@@ -126,9 +128,6 @@ public class AssemblyWriter
                     (assembly.junction().indelBased() ? "INDEL" : "SPLIT");
             sj.add(juncType);
 
-            int rawDiscordantPosition = assembly.junction().rawDiscordantPosition();
-            sj.add(rawDiscordantPosition > 0 ? String.valueOf(rawDiscordantPosition) : "");
-
             sj.add(String.valueOf(assembly.extensionLength()));
             sj.add(String.valueOf(assembly.refBasePosition()));
             sj.add(String.valueOf(assembly.refBaseLength()));
@@ -160,6 +159,8 @@ public class AssemblyWriter
             sj.add(String.valueOf(assembly.stats().UnmappedReadCount));
 
             sj.add(assembly.assemblyAlignmentInfo());
+            int rawDiscordantPosition = assembly.junction().rawDiscordantPosition();
+            sj.add(rawDiscordantPosition > 0 ? String.valueOf(rawDiscordantPosition) : "");
 
             if(mConfig.AssemblyDetailedTsv)
             {
@@ -183,7 +184,7 @@ public class AssemblyWriter
 
             if(mConfig.SagaFastaFile != null)
             {
-                SagaMatchBySequence match = assembly.sagaMatch();
+                SagaSequenceMatch match = assembly.sagaMatch();
                 sj.add(match == null ? "" : match.variant().toString());
                 sj.add(match == null ? "" : match.cigar().toString());
             }

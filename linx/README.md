@@ -136,13 +136,15 @@ Field | Description
 ---|---
 Id | Id of breakend annotation
 SvId | Id of break junction
+vcfId | matching ID for SV in VCF
+coords | chr:pos:orientation of SV
 IsStart | Annotation relates to the start breakend of the break junction (1 = true,0 = false)
 Gene | Gene annotated
 TranscriptId | Ensembl stable transcript id of annotation
 Canonical | Transcript is the canonical transcript of the gene. Linx annotates 1 record for each canonical transcript overlapping the breakend + a record for any non-canonical transcript that is annotated as part of a fusion
 geneOrientation | Orientation which breakend points relative to the gene taking into account both gene strand and breakend orientation.  
 Disruptive | Breakend is part of a break junction which disrupts the exonic sequence of the transcript
-ReportedDisruption | Breakend is disruptive and gene is flagged as reportable for disruption
+ReportedStatus | Breakend is disruptive and gene is flagged as reportable for disruption
 UndisruptedCopyNumber | Number of remaining wildtype alleles of the gene that are not disrupted by the breakend.  If <0.5 then disruption is considered Homozygous
 RegionType | Location of the breakend relative to the transcript.  One of 'UPSTREAM' (within 100kb upstream of the 1st base of the transcript), 'INTRONIC' or 'EXONIC'
 CodingContext | Location of the next spiced transcript base relative to the coding context of the transcript.  One of  'CODING', 'NON_CODING','UTR_5P','UTR_3P' or 'ENHANCER' (IG enhancer rearrangements only)
@@ -205,6 +207,10 @@ Field | Description
 ---|---
 FivePrimeBreakendId | Id of the 5' breakend in the fusion
 ThreePrimeBreakendId | Id of the 3' breakend in the fusion
+FivePrimeVcfId | matching ID for SV in VCF
+ThreePrimeVcfId | matching ID for SV in VCF
+FivePrimeCoords | chr:pos:orientation of SV breakend
+ThreePrimeCoords | chr:pos:orientation of SV breakend
 Name | Name of the fusion in the form 5'GENE_3'GENE
 Reported | True if the fusion meets all reportable fusion criteria for Linx
 ReportedType | If one or both of the genes matches  a promiscuous gene or known rearrangement in the HMF fusion knowledgebase, then the type of reportable gene pair:  f 'KNOWN_PAIR', 'PROMISCUOUS_5', 'PROMISCUOUS_3', 'PROMISCUOUS_BOTH', 'EXON_DEL_DUP', 'IG_PROMISCUOUS', 'IG_KNOWN_PAIR', KNOWN_PAIR_UNMAPPABLE_3' or 'NONE' (if no match is found)
@@ -731,9 +737,8 @@ Notes:
 (4) 5’ partner 5’UTR or non-coding to coding region of 3’ partner can technically make a fusion, but would need to find 1st alternative start codon also in-frame. These are called as out of frame and only reported for known fusions
 (5) Coding Intronic to non-coding allowed only when transcript starts on 1st base of the next downstream exon - in this case we fuse to the first base of the gene which is allowed.
 
-##### Special rules for IG rearrangements
-In the special case of IG enhancer rearrangements, the rearrangement normally occurs either between the ‘D’ and ‘J’ region (due to RAG mediation D-J recombination failure – common in IGH-BCL2 fusions) or in the switch region just upstream of the constant regions (due to failure of isoform switching mechanisms – common in IGH-MYC rearrangements). In the former case, the Eµ enhancer is the likely driver of elevated expression whereas in the latter the driver is likely the alpha 1,2 & 3 regulatory region enhancer [ref: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6199666/]. To predict a relevant rearrangement, Linx only requires that the breakend in IG is oriented downstream towards the enhancer regions and is is prior to the 1st coding base of the 3’ gene partner.   There is no requirement for consecutive splice acceptor and donors.
-
+##### Special rules for Enhancer rearrangements
+In the special case of enhancer rearrangements, the orientation and coordinate range for the breakend can be specificed directly. There is no requirement for consecutive splice acceptor and donors. For example for IGH rearrangement normally occurs either between the ‘D’ and ‘J’ region (due to RAG mediation D-J recombination failure – common in IGH-BCL2 fusions) or in the switch region just upstream of the constant regions (due to failure of isoform switching mechanisms – common in IGH-MYC rearrangements). In the former case, the Eµ enhancer is the likely driver of elevated expression whereas in the latter the driver is likely the alpha 1,2 & 3 regulatory region enhancer [ref: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6199666/]. To predict a relevant rearrangement, Linx only requires that the breakend in IG is oriented downstream towards the enhancer regions and is is prior to the 1st coding base of the 3’ gene partner.  
 
 ##### Special rules for single breakends which align to a site which forms a pathogenic fusion
 The post processing steps of GRIDSS annotate the best alignments for the insert sequence of single breakends which cannot be uniquely mapped. If any single breakend has an alignment which would create fusion matching a known fusion or a known IG rearrangement in our knowledge base then that fusion is called as if the single breakend was a translocation to that alignment. 
@@ -759,21 +764,21 @@ Each candidate chained splice acceptor and splice donor fusion pair may have mul
 
 If multiple chains link the same 2 genes then they are prioritised again according to the above logic and then by junction copy number.
 
-For IG enhancer rearrangements, the canonical transcript is reported for all 3' gene partners.
+For enhancer rearrangements, the canonical transcript is reported for all 3' gene partners.
 
 ##### Reportable fusions
 In addition to predicting fusions, Linx also tries to identify likely viable pathogenic fusions and marks as reportable. To maximise precision whilst ensuring high impact fusions are always likely to be reported, the criteria vary by fusion type with more relaxed criteria for known pathogenic pairs due to high prior likelihood. High impact promiscuous fusion partners which may be clinically relevant (including NTRK1-3, BRAF, RET, ROS1, ALK) also have more relaxed criteria
 
 The criteria are summarised in the below table. 
 
-Criteria | KNOWN PAIR | IG KNOWN PAIR | EXON DEL DUP | HIGH IMPACT PROMISCUOUS | PROMISCUOUS OTHER
+Criteria | KNOWN PAIR | ENHANCER KNOWN PAIR | EXON DEL DUP | HIGH IMPACT PROMISCUOUS | PROMISCUOUS OTHER
 ---|---|---|---|---|---
 Knowledge-base match | GENE PAIR | GENE PAIR | Breakends within EXON RANGE | INTERGENIC ONLY | INTERGENIC ONLY
 ‘Nonsense Mediated Decay’ biotype allowed for 3’ partner | FALSE | FALSE | FALSE | FALSE | FALSE
 Maximum chain links | 4 | 4 | 4 | 4 | 4
 Maximum upstream distance for 3’ partner | 100kb | 100kb | NA | 100kb | 10kb
 Phasing | INFRAME or SKIPPED EXONS* | NA  | INFRAME or SKIPPED EXONS**,# | INFRAME or SKIPPED EXONS | INFRAME##
-Allow early chain termination or disruption by intermediate splice acceptor or donor | TRUE | TRUE | TRUE | FALSE | FALSE
+Allow early chain termination or disruption by intermediate splice acceptor or donor | TRUE | TRUE | TRUE | TRUE | FALSE
 
 '* 5’UTR to coding regions are also allowed for KNOWN_PAIR fusions (>1Mb length)
 '** The breakend and the fused exon must both be in the specified ranges on both 5’ and 3’ side
@@ -782,7 +787,7 @@ Allow early chain termination or disruption by intermediate splice acceptor or d
 
 Additionally, Linx checks that the protein domains retained in the 3’ partner may form a viable protein. Specifically The following domains must be preserved intact in the 3’ partner if they exist: Ets domain; Protein kinase domain; Epidermal growth factor-like domain; Ankyrin repeat-containing domain, Basic-leucine zipper domain,High mobility group box domain. The Raf-like Ras-binding domain must be disrupted if it exists (mainly affects BRAF). 
 
-Finally linx sets a likelihood for each reported fusion. KNOWN_PAIR, IG_KNOWN_PAIR and EXON_DEL_DUP are set to HIGH likelihood. PROMISCUOUS fusions are set to HIGH likelihood only if the fused exon matches the known exon range, or else LOW otherwise.
+Finally linx sets a likelihood for each reported fusion. KNOWN_PAIR, ENHANCER_KNOWN_PAIR and EXON_DEL_DUP are set to HIGH likelihood. PROMISCUOUS fusions are set to HIGH likelihood only if the fused exon matches the known exon range, or else LOW otherwise.
 
 
 #### Amplification, deletion and disruption drivers

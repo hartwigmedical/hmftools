@@ -1,9 +1,7 @@
 package com.hartwig.hmftools.esvee.prep;
 
-import static java.lang.Math.min;
-
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_EXTENSION;
-import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_VARIANT_LENGTH;
+import static com.hartwig.hmftools.esvee.common.SvConstants.MAX_JUNC_POSITION_DIFF;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_VARIANT_LENGTH_LOWER;
 
 import com.hartwig.hmftools.common.sv.EsveeDiscordantStats;
@@ -23,7 +21,6 @@ public final class PrepConstants
     public static final String FLD_HOTSPOT_JUNCTION = "Hotspot";
     public static final String FLD_EXTRA_INFO = "ExtraInfo"; // deprecated
     public static final String FLD_REMOTE_FRAGS = "RemoteFrags"; // currently only used for discordant junctions
-    public static final String FLD_SAGA_MATCH = "SagaMatch";
 
     // region processing
     public static final int DEFAULT_CHR_PARTITION_SIZE = 1_000_000;
@@ -41,7 +38,7 @@ public final class PrepConstants
     public static final int MIN_LINE_SOFT_CLIP_LENGTH = LineElements.LINE_POLY_AT_TEST_LEN;
     public static final double MIN_SOFT_CLIP_HIGH_QUAL_PERC = 0.75;
     public static final int MAX_SOFT_CLIP_LOW_QUAL_COUNT = 5;
-    public static final int MIN_INSERT_LENGTH_SUPPORT = 10;
+    public static final int MIN_INDEL_ANCHOR_LENGTH = 10;
     public static final int SUPP_SHORT_ALIGNMENT_MIN_MAP_QUAL = 10;
 
     public static final int REPEAT_BREAK_CHECK_LENGTH = 9;
@@ -49,11 +46,11 @@ public final class PrepConstants
     public static final int REPEAT_BREAK_MIN_SC_LENGTH = 50;
 
     // supporting reads
-    public static final int MIN_SUPPORTING_READ_DISTANCE = 50;
+    public static final int MIN_SUPPORTING_READ_DISTANCE = MAX_JUNC_POSITION_DIFF;
     public static final int UNPAIRED_READ_JUNCTION_DISTANCE = 5;
     public static final int MAX_SUPPORT_FRAGMENT_DISTANCE = 1000;
     public static final int MAX_HIGH_QUAL_BASE_MISMATCHES = 1;
-    public static final double MIN_EXACT_BASE_PERC = 0.25;
+    public static final double MIN_EXACT_BASE_PERC = 0.75;
 
     // depth tracking and filter
     public static final int DEPTH_WINDOW_SIZE = 200;

@@ -424,7 +424,6 @@ public class SpecificAlignmentsTest
         mateRead.setMateRead(juncRead4b);
         juncRead4b.setMateRead(mateRead);
 
-
         // an assembly 5 junction read with its mate in the final segment
         Read juncRead5 = createRead(
                 READ_ID_GENERATOR.nextId(), CHR_3, 50, juncBases, negJuncReadCigar, CHR_1, 300, true);

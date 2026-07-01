@@ -43,7 +43,7 @@ public class FragmentCache
 
     public FragmentStats stats() { return mStats; }
 
-    public List<SAMRecord> handleIncompleteFragments(final Collection<Fragment> fragments)
+    public synchronized List<SAMRecord> handleIncompleteFragments(final Collection<Fragment> fragments)
     {
         // locks are required around the fragment map when adding or removing elements, and around the fragments themselves when adding
         // or extracting reads
@@ -87,6 +87,8 @@ public class FragmentCache
 
                 if(existingFragment.requiredMateCigarFix())
                     ++mStats.MateCigarFixed;
+
+                mStats.PrimariesUnmapped += fragment.unmappedPrimaryCount();
             }
         }
 

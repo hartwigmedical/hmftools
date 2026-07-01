@@ -3,28 +3,23 @@ package com.hartwig.hmftools.esvee.common.saga;
 import static java.lang.Math.abs;
 import static java.lang.Math.ceil;
 import static java.lang.Math.min;
+import static java.util.Collections.emptyList;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.cigarFromStr;
-import static com.hartwig.hmftools.common.bam.CigarUtils.leftClipLength;
-import static com.hartwig.hmftools.common.bam.CigarUtils.rightClipLength;
-import static com.hartwig.hmftools.esvee.common.SvConstants.SAGA_ALIGN_JUNCTION_INDEL_DISTANCE;
-import static com.hartwig.hmftools.esvee.common.SvConstants.SAGA_ALIGN_JUNCTION_INDEL_MAX_LENGTH;
-import static com.hartwig.hmftools.esvee.common.SvConstants.SAGA_ALIGN_JUNCTION_OVERLAP_MIN;
-import static com.hartwig.hmftools.esvee.common.SvConstants.SAGA_ALIGN_LENGTH_MIN_RATIO;
-import static com.hartwig.hmftools.esvee.common.SvConstants.SAGA_ALIGN_SCORE_MIN_BASELINE;
-import static com.hartwig.hmftools.esvee.common.SvConstants.SAGA_ALIGN_SCORE_MIN_RATIO;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Stream;
+import java.util.Set;
+import java.util.TreeSet;
 
 import com.hartwig.hmftools.common.bam.SamRecordUtils;
 import com.hartwig.hmftools.common.bwa.BwaMemAlignParams;
-import com.hartwig.hmftools.common.bwa.BwaMemAligner;
+import com.hartwig.hmftools.common.bwa.BwaMemAlignerConfig;
 import com.hartwig.hmftools.common.bwa.IBwaMemAligner;
+import com.hartwig.hmftools.common.utils.IntPair;
 
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
 import org.jetbrains.annotations.Nullable;
@@ -37,98 +32,85 @@ import htsjdk.samtools.SAMFlag;
 // Matches assemblies to SAGA variants by base sequence similarity.
 public class SagaSequenceMatcher
 {
-    private final Config mConfig;
+    private final SagaSequenceMatcherConfig mConfig;
     private final IBwaMemAligner mAligner;
     private final Map<Integer, SagaAssembly> mAssembliesByContigId;
 
     // Do not instantiate directly - use SagaMatcherFactory.
-    public SagaSequenceMatcher(final Config config, final IBwaMemAligner aligner, final Map<Integer, SagaAssembly> assembliesByContigId)
+    public SagaSequenceMatcher(final SagaSequenceMatcherConfig config, final IBwaMemAligner aligner,
+            final Map<Integer, SagaAssembly> assembliesByContigId)
     {
         mConfig = config;
         mAligner = aligner;
         mAssembliesByContigId = assembliesByContigId;
     }
 
-    public record Config(
-            double alignLengthRatioMin,
-            int alignScoreMin,
-            double alignScoreRatioMin,
-            int junctionOverlapMin
+    private record MatchArguments(
+            byte[] query,
+            List<SagaJunctionInfo> junctions,
+            boolean lowerJunctionOverlap,
+            boolean allowReverseStrand
     )
     {
-        static Config DEFAULT = new Config(
-                SAGA_ALIGN_LENGTH_MIN_RATIO,
-                SAGA_ALIGN_SCORE_MIN_BASELINE,
-                SAGA_ALIGN_SCORE_MIN_RATIO,
-                SAGA_ALIGN_JUNCTION_OVERLAP_MIN
-        );
-    }
-
-    // junctionOffsets are the indices just after the junction in sequence.
-    // E.g.
-    // sequence = RRRJJJRRR
-    // junctionOffset[0] = 3
-    // junctionOffset[1] = 6
-    @Nullable
-    public SagaMatchBySequence matchBySequence(final byte[] sequence, List<Integer> junctionOffsets)
-    {
-        List<BwaMemAlignment> alignments = mAligner.alignSequence(sequence);
-        return matchFromAlignments(sequence, alignments, junctionOffsets);
     }
 
     @Nullable
-    public SagaMatchBySequence matchBySequence(final String sequence, List<Integer> junctionOffsets)
+    public SagaSequenceMatch matchBySequence(final byte[] sequence, final List<SagaJunctionInfo> junctions, boolean lowerJunctionOverlap,
+            boolean allowReverseStrand)
     {
-        return matchBySequence(sequence.getBytes(), junctionOffsets);
+        MatchArguments args = new MatchArguments(sequence, junctions, lowerJunctionOverlap, allowReverseStrand);
+        return matchBySequenceImpl(args);
     }
 
     @Nullable
-    private SagaMatchBySequence matchFromAlignments(final byte[] sequence, List<BwaMemAlignment> alignments,
-            List<Integer> junctionOffsets)
+    private SagaSequenceMatch matchBySequenceImpl(final MatchArguments args)
     {
-        Stream<AlignmentCandidate> candidates = alignments.stream()
-                .map(alignment -> evaluateAlignmentCandidate(sequence, alignment, junctionOffsets))
+        List<BwaMemAlignment> alignments = mAligner.alignSequence(args.query);
+        return matchFromAlignments(args, alignments);
+    }
+
+    @Nullable
+    private SagaSequenceMatch matchFromAlignments(final MatchArguments args, final List<BwaMemAlignment> rawAlignments)
+    {
+        List<SagaSequenceMatchCandidate> candidates = rawAlignments.stream()
+                .map(alignment -> wrapAlignment(alignment, args.query().length))
                 .filter(Objects::nonNull)
-                .sorted(new AlignmentCandidateComparator(sequence.length));
-        return candidates.findFirst()
-                .map(candidate -> new SagaMatchBySequence(candidate.variant(), candidate.cigar(), candidate.alignScore()))
+                .map(alignment -> evaluateAlignment(alignment, args))
+                .sorted(new MatchCandidateComparator(args))
+                .toList();
+        return candidates.stream()
+                .filter(SagaSequenceMatchCandidate::isAccepted)
+                .findFirst()
+                .map(candidate -> new SagaSequenceMatch(candidate.alignment()))
                 .orElse(null);
     }
 
-    private record AlignmentCandidate(
-            SagaAssembly assembly,
-            Cigar cigar,
-            int alignScore,
-            List<List<Integer>> esveeJunctionOverlaps,
-            List<List<Integer>> sagaJunctionOverlaps)
-    {
-        public SagaVariant variant()
-        {
-            return assembly.variant();
-        }
-    }
-
-    private record AlignmentCandidateComparator(int sequenceLength) implements Comparator<AlignmentCandidate>
+    private record MatchCandidateComparator(MatchArguments args) implements Comparator<SagaSequenceMatchCandidate>
     {
         @Override
-        public int compare(final AlignmentCandidate o1, final AlignmentCandidate o2)
+        public int compare(final SagaSequenceMatchCandidate o1, final SagaSequenceMatchCandidate o2)
         {
+            if(o1.isAccepted() != o2.isAccepted())
+            {
+                return o1.isAccepted() ? -1 : 1;
+            }
+
             // Higher alignment score is better.
-            int res = Integer.compare(-o1.alignScore, -o2.alignScore);
+            int res = Integer.compare(-o1.alignScore(), -o2.alignScore());
             if(res != 0)
             {
                 return res;
             }
 
             // Then prefer the variant whose length is closer to the ESVEE assembly length (rarely occurs but can help tie-break different alleles).
-            int distance1 = abs(o1.assembly().assemblyLength() - sequenceLength);
-            int distance2 = abs(o2.assembly().assemblyLength() - sequenceLength);
+            int distance1 = abs(o1.sagaAssembly().length() - args.query().length);
+            int distance2 = abs(o2.sagaAssembly().length() - args.query().length);
             return Integer.compare(distance1, distance2);
         }
     }
 
-    private AlignmentCandidate evaluateAlignmentCandidate(
-            final byte[] sequence, final BwaMemAlignment alignment, final List<Integer> seqJunctionOffsets)
+    @Nullable
+    private SagaAlignment wrapAlignment(final BwaMemAlignment alignment, int queryLength)
     {
         if(alignment.getRefId() < 0 || SamRecordUtils.isFlagSet(alignment.getSamFlag(), SAMFlag.READ_UNMAPPED))
         {
@@ -136,111 +118,115 @@ public class SagaSequenceMatcher
             return null;
         }
 
-        boolean isForward = !SamRecordUtils.isFlagSet(alignment.getSamFlag(), SAMFlag.READ_REVERSE_STRAND);
-
-        // ESVEE assemblies are implied as forward strand and so are SAGA assemblies, so there should never be a reverse strand match.
-        if(!isForward)
-        {
-            return null;
-        }
-
         SagaAssembly sagaAssembly = getAssemblyByContigId(alignment.getRefId());
-
         Cigar cigar = cigarFromStr(alignment.getCigar());
-        int leftClip = leftClipLength(cigar);
-        int rightClip = rightClipLength(cigar);
+        SagaAlignment sagaAlignment = new SagaAlignment(alignment, cigar, queryLength, sagaAssembly);
+        sagaAlignment.validate();
+        return sagaAlignment;
+    }
 
-        int sagaAlignLength = alignment.getRefEnd() - alignment.getRefStart();
-        int seqAlignLength = sequence.length - (leftClip + rightClip);
+    private SagaSequenceMatchCandidate evaluateAlignment(final SagaAlignment alignment, final MatchArguments args)
+    {
+        Set<SagaSequenceMatchCandidateFilter> filters = new TreeSet<>();
+
+        applyAlignmentFilters(alignment, args, filters);
+
+        List<SagaJunctionMatchInfo> queryJunctionMatches = new ArrayList<>();
+        List<SagaJunctionMatchInfo> sagaJunctionMatches = new ArrayList<>();
+        applyJunctionFilters(args, alignment, queryJunctionMatches, sagaJunctionMatches, filters);
+
+        return new SagaSequenceMatchCandidate(alignment, queryJunctionMatches, sagaJunctionMatches, filters);
+    }
+
+    private void applyAlignmentFilters(final SagaAlignment alignment, final MatchArguments args,
+            Set<SagaSequenceMatchCandidateFilter> filters)
+    {
+        // For junction assemblies, the sequence may match to SAGA in reverse if it's part of an INV.
+        // For phased assemblies, expect that it matches to the forward strand because ESVEE assemblies are always forward strand.
+        if(!args.allowReverseStrand() && !alignment.isForward())
+        {
+            filters.add(SagaSequenceMatchCandidateFilter.REVERSE_STRAND);
+        }
 
         // Only match if the majority of the sequences align, where possible.
         // I.e. don't allow a small subsequence match where much more sequence was possible to match.
-        if(!isAlignLengthOk(seqAlignLength, sagaAlignLength, sequence.length, sagaAssembly.assemblyLength()))
+        if(!checkAlignLength(alignment))
         {
-            return null;
+            filters.add(SagaSequenceMatchCandidateFilter.ALIGNED_LENGTH);
         }
 
-        int minAlignScore = calcMinAlignScore(sagaAlignLength, seqAlignLength);
         // Low alignment score means low sequence similarity, so we think this is not a good match.
-        if(alignment.getAlignerScore() < minAlignScore)
+        if(!checkAlignScore(alignment))
         {
-            return null;
+            filters.add(SagaSequenceMatchCandidateFilter.ALIGN_SCORE);
         }
-
-        int startClip = isForward ? leftClip : rightClip;
-        int endClip = isForward ? rightClip : leftClip;
-        int seqStart = startClip;
-        int seqEnd = sequence.length - endClip;
-
-        // The novel sequence created by the variant junction needs to be included in the alignment.
-        // Otherwise, we could align onto the surrounding ref bases which could be similar, but the variant is different.
-        List<List<Integer>> seqJunctionOverlaps =
-                seqJunctionOffsets.stream().map(offset -> calcJunctionOverlap(seqStart, seqEnd, offset)).toList();
-        if(!isJunctionOverlapOk(seqJunctionOverlaps))
-        {
-            return null;
-        }
-
-        List<List<Integer>> sagaJunctionOverlaps = sagaAssembly.junctionOffsets()
-                .stream()
-                .map(offset -> calcJunctionOverlap(alignment.getRefStart(), alignment.getRefEnd(), offset))
-                .toList();
-        if(!isJunctionOverlapOk(sagaJunctionOverlaps))
-        {
-            return null;
-        }
-
-        // Ensure there are no large indels near the junction.
-        // This would mean the junction sequence is different, despite the rest of the sequence aligning.
-        // Potential FIXME: limit to only the matched junctions.
-        if(!checkIndelsNotNearJunctions(cigar, alignment.getRefStart(), seqJunctionOffsets, sagaAssembly.junctionOffsets()))
-        {
-            return null;
-        }
-
-        return new AlignmentCandidate(sagaAssembly, cigar, alignment.getAlignerScore(), seqJunctionOverlaps, sagaJunctionOverlaps);
     }
 
-    private boolean isAlignLengthOk(int seqAlignLength, int sagaAlignLength, int seqAssemblyLength, int sagaAssemblyLength)
+    private int calcMaxUnalignedBases(int assemblyLength1, int assemblyLength2)
     {
-        int minAlignLength = calcMinAlignLength(seqAssemblyLength, sagaAssemblyLength);
-        return min(seqAlignLength, sagaAlignLength) >= minAlignLength;
+        return (int) ceil(min(assemblyLength1, assemblyLength2) * (1 - mConfig.alignLengthRatioMin()));
     }
 
-    private int calcMinAlignLength(int assemblyLength1, int assemblyLength2)
+    private boolean checkAlignLength(final SagaAlignment alignment)
     {
-        return (int) ceil(min(assemblyLength1, assemblyLength2) * mConfig.alignLengthRatioMin);
+        // Checking this way instead of just looking at the alignment lengths, because for a single-sided assembly there may not be enough
+        // bases to align through to 80% of the other side, even though this is a legit match.
+        // It's better to look at how many bases could've been aligned on either side of the aligned subsequence and see if this is too many.
+        int unaligned = alignment.startUnaligned() + alignment.endUnaligned();
+        int maxUnaligned = calcMaxUnalignedBases(alignment.queryLength(), alignment.sagaLength());
+        return unaligned <= maxUnaligned;
     }
 
     private int calcMinAlignScore(int alignLength1, int alignLength2)
     {
-        return (int) ceil(min(alignLength1, alignLength2) * mConfig.alignScoreRatioMin);
+        return (int) ceil(min(alignLength1, alignLength2) * mConfig.alignScoreRatioMin());
     }
 
-    private static List<Integer> calcJunctionOverlap(int alignStart, int alignEnd, int junctionOffset)
+    private boolean checkAlignScore(final SagaAlignment alignment)
+    {
+        int minAlignScore = calcMinAlignScore(alignment.queryAlignLength(), alignment.sagaAlignLength());
+        return alignment.alignScore() >= minAlignScore;
+    }
+
+    private SagaJunctionMatchInfo evaluateJunctionAlignment(final SagaAlignment alignment, final List<CigarElemWithPos> cigarElements,
+            final SagaJunctionInfo junctionInfo, boolean isQuery)
+    {
+        int alignStart = isQuery ? alignment.queryStart() : alignment.sagaStart();
+        int alignEnd = isQuery ? alignment.queryEnd() : alignment.sagaEnd();
+        IntPair junctionOverlap = calcJunctionOverlap(alignStart, alignEnd, junctionInfo.assemblyOffset());
+        boolean indelNearby = junctionHasIndelNearby(junctionInfo, cigarElements, isQuery);
+        return new SagaJunctionMatchInfo(junctionInfo, junctionOverlap.left, junctionOverlap.right, indelNearby);
+    }
+
+    private static IntPair calcJunctionOverlap(int alignStart, int alignEnd, int junctionOffset)
     {
         // Example to help maths.
         // 012 345 678
         // RRR JJJ RRR
         // junctionOffsets[0] = 3
         // junctionOffsets[1] = 6
-        return List.of(junctionOffset - alignStart, alignEnd - junctionOffset);
+        return new IntPair(junctionOffset - alignStart, alignEnd - junctionOffset);
     }
 
-    private boolean isJunctionOverlapOk(final List<List<Integer>> overlaps)
+    private boolean checkJunctionOverlap(final SagaJunctionMatchInfo junctionMatchInfo, boolean lowerJunctionOverlap)
     {
         // Require the alignment to cover the junction +/- some tolerance bases.
-        // At least one junction must be covered in this manner. We don't require all the junctions to be covered because we could be
-        // matching just one side of the variant (e.g. for junction assembly, or an SGL).
-        int minOverlap = mConfig.junctionOverlapMin;
-        return overlaps.stream()
-                .anyMatch(junctionOverlaps -> junctionOverlaps.stream().allMatch(overlap -> overlap >= minOverlap));
+        // Otherwise, we could align onto the surrounding ref bases which could be similar, but the variant is different.
+        int minOverlap = calcJunctionOverlapMin(lowerJunctionOverlap);
+        return junctionMatchInfo.alignOverlapLeft() >= minOverlap && junctionMatchInfo.alignOverlapRight() >= minOverlap;
     }
 
-    private record ElementWithPositions(
+    private int calcJunctionOverlapMin(boolean lowerJunctionOverlap)
+    {
+        // For LINE assemblies, the extension is allowed to be shorter.
+        return lowerJunctionOverlap ? mConfig.junctionOverlapMinLower() : mConfig.junctionOverlapMin();
+    }
+
+    private record CigarElemWithPos(
             CigarElement element,
-            int readStart,
-            int readEnd,    // Exclusive
+            // Query positions are in the original query sequence (significant for reverse strand matches).
+            int queryStart,
+            int queryEnd,    // Exclusive
             int refStart,
             int refEnd      // Exclusive
     )
@@ -251,72 +237,122 @@ public class SagaSequenceMatcher
         }
     }
 
-    private static List<ElementWithPositions> getElementPositions(final Cigar cigar, int refStart)
+    private static List<CigarElemWithPos> getCigarElementPositions(final Cigar cigar, int refStart, boolean isForward, int queryLength)
     {
-        List<ElementWithPositions> result = new ArrayList<>();
-        int readIndex = 0;
+        List<CigarElemWithPos> result = new ArrayList<>();
+        int queryIndex = 0;
         int refIndex = refStart;
         for(CigarElement element : cigar.getCigarElements())
         {
             CigarOperator operator = element.getOperator();
-            int nextReadIndex = readIndex;
+            int nextQueryIndex = queryIndex;
             if(operator.consumesReadBases() || operator.isClipping())
             {
-                nextReadIndex += element.getLength();
+                nextQueryIndex += element.getLength();
             }
             int nextRefIndex = refIndex;
             if(operator.consumesReferenceBases())
             {
                 nextRefIndex += element.getLength();
             }
-            result.add(new ElementWithPositions(element, readIndex, nextReadIndex, refIndex, nextRefIndex));
+            int queryStart = isForward ? queryIndex : queryLength - nextQueryIndex;
+            int queryEnd = isForward ? nextQueryIndex : queryLength - queryIndex;
+            result.add(new CigarElemWithPos(element, queryStart, queryEnd, refIndex, nextRefIndex));
 
-            readIndex = nextReadIndex;
+            queryIndex = nextQueryIndex;
             refIndex = nextRefIndex;
         }
         return result;
     }
 
-    private static boolean checkIndelsNotNearJunctions(
-            final Cigar cigar, int sagaStart, final List<Integer> seqJunctionOffsets, final List<Integer> sagaJunctionOffsets)
+    private boolean junctionHasIndelNearby(final SagaJunctionInfo junctionInfo, final List<CigarElemWithPos> cigarElements, boolean isQuery)
     {
-        return getElementPositions(cigar, sagaStart).stream()
-                .filter(e -> e.operator().isIndel())
-                .allMatch(element -> checkIndelOnJunctions(element.element(), element.readStart(), element.readEnd(), seqJunctionOffsets)
-                        && checkIndelOnJunctions(element.element(), element.refStart(), element.refEnd(), sagaJunctionOffsets));
+        return cigarElements.stream()
+                .filter(e -> e.operator().isIndel() && !ignoreIndel(e.element()))
+                .anyMatch(e -> isJunctionNearIndel(
+                        junctionInfo.assemblyOffset(), isQuery ? e.queryStart() : e.refStart(), isQuery ? e.queryEnd() : e.refEnd()));
     }
 
-    private static boolean checkIndelOnJunctions(final CigarElement element, int start, int end, final List<Integer> junctions)
+    private boolean ignoreIndel(final CigarElement element)
     {
-        if(element.getLength() <= SAGA_ALIGN_JUNCTION_INDEL_MAX_LENGTH)
-        {
-            // Allow very small indels.
-            return true;
-        }
-        // Ensure there are no large indels near the junctions.
-        return junctions.stream().noneMatch(j -> isJunctionNearIndel(j, start, end));
+        // Allow very small indels.
+        return element.getLength() <= mConfig.junctionIndelLengthMax();
     }
 
-    private static boolean isJunctionNearIndel(int junctionOffset, int indelStart, int indelEnd)
+    private boolean isJunctionNearIndel(int junctionOffset, int indelStart, int indelEnd)
     {
         boolean insideIndel = junctionOffset >= indelStart && junctionOffset < indelEnd;
-        boolean nearIndelStart = abs(junctionOffset - indelStart) < SAGA_ALIGN_JUNCTION_INDEL_DISTANCE;
-        boolean nearIndelEnd = abs(junctionOffset - indelEnd) < SAGA_ALIGN_JUNCTION_INDEL_DISTANCE;
+        boolean nearIndelStart = abs(junctionOffset - indelStart) < mConfig.junctionIndelDistance();
+        boolean nearIndelEnd = abs(junctionOffset - indelEnd) < mConfig.junctionIndelDistance();
         return insideIndel || nearIndelStart || nearIndelEnd;
     }
 
-    public static BwaMemAligner.Params createAlignerParams(final Config matchConfig)
+    private List<SagaJunctionMatchInfo> filterJunctionMatches(final MatchArguments args,
+            final List<SagaJunctionMatchInfo> junctionMatchInfos, boolean isQuery, Set<SagaSequenceMatchCandidateFilter> filters)
+    {
+        List<SagaJunctionMatchInfo> alignedJunctions = junctionMatchInfos.stream()
+                .filter(j -> checkJunctionOverlap(j, args.lowerJunctionOverlap()))
+                .toList();
+
+        // Require at least 1 junction to be covered by the alignment.
+        // Don't require all the junctions to be covered because we could be matching just one side of the variant (e.g. for junction assembly, or an SGL).
+        if(alignedJunctions.isEmpty())
+        {
+            filters.add(isQuery
+                    ? SagaSequenceMatchCandidateFilter.QUERY_JUNCTION_OVERLAP
+                    : SagaSequenceMatchCandidateFilter.SAGA_JUNCTION_OVERLAP);
+        }
+
+        // Ensure there are no large indels near the junctions.
+        // This would mean the junction sequence is different, despite the rest of the sequence aligning.
+        // Potential FIXME: limit to only the matched junctions.
+        if(junctionMatchInfos.stream().anyMatch(SagaJunctionMatchInfo::indelNearby))
+        {
+            filters.add(isQuery
+                    ? SagaSequenceMatchCandidateFilter.QUERY_JUNCTION_INDEL
+                    : SagaSequenceMatchCandidateFilter.SAGA_JUNCTION_INDEL);
+            return emptyList();
+        }
+        else
+        {
+            return alignedJunctions;
+        }
+    }
+
+    private void applyJunctionFilters(final MatchArguments args, final SagaAlignment alignment,
+            List<SagaJunctionMatchInfo> queryJunctionMatches, List<SagaJunctionMatchInfo> sagaJunctionMatches,
+            Set<SagaSequenceMatchCandidateFilter> filters)
+    {
+        List<CigarElemWithPos> cigarElements = getCigarElementPositions(
+                alignment.cigar(), alignment.sagaStart(), alignment.isForward(), alignment.queryLength());
+
+        List<SagaJunctionMatchInfo> queryJunctionMatchInfos = args.junctions().stream()
+                .map(j -> evaluateJunctionAlignment(alignment, cigarElements, j, true)).toList();
+        List<SagaJunctionMatchInfo> sagaJunctionMatchInfos = alignment.sagaAssembly().junctions().stream()
+                .map(j -> evaluateJunctionAlignment(alignment, cigarElements, j, false)).toList();
+
+        queryJunctionMatches.addAll(filterJunctionMatches(args, queryJunctionMatchInfos, true, filters));
+        sagaJunctionMatches.addAll(filterJunctionMatches(args, sagaJunctionMatchInfos, false, filters));
+    }
+
+    public static BwaMemAlignerConfig createAlignerConfig(final String indexImagePath, final SagaSequenceMatcherConfig matchConfig)
     {
         // single-threaded in since Esvee makes these calls within threads already, and don't batch since phased assemblies are aligned
         // one at a time, also in a threaded context
-        return new BwaMemAligner.Params(
-                // Note: default params may be too strict. If a case where BWA drops an alignment of a valid match, should relax these.
-                BwaMemAlignParams.DEFAULT,
+        return new BwaMemAlignerConfig(
+                indexImagePath,
+                createAlignParams(matchConfig),
                 true,
-                matchConfig.alignScoreMin(),
                 1,
                 null
         );
+    }
+
+    private static BwaMemAlignParams createAlignParams(final SagaSequenceMatcherConfig matchConfig)
+    {
+        // Note: default params may be too strict. If a case where BWA drops an alignment of a valid match, should relax these.
+        return BwaMemAlignParams.DEFAULT
+                .withMinAlignScore(matchConfig.alignScoreMin());
     }
 
     private SagaAssembly getAssemblyByContigId(int contigId)

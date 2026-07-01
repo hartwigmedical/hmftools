@@ -1,0 +1,25 @@
+# Quick no-op action to run in place of the real build and test workflow, for commits which only touch documentation.
+
+name: Java build and unit test
+
+on:
+  pull_request:
+    branches: [ "master" ]
+    types: ["opened", "reopened", "synchronize"]
+    paths:
+      # These must match the ignored paths in the real build workflow.
+      - "**/*.md"
+      - "**/*.pdf"
+      - "**/*.png"
+      - "**/*.jpg"
+      - "**/*.gif"
+      - "**/*.svg"
+      - "*/docs/*.html"
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - run: "echo 'No code changes - nothing to do'"

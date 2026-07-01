@@ -156,7 +156,9 @@ ignore_dup_diffs   | Ignore difference in duplicate flag
 ignore_alterations | Ignore consensus reads and internal unmappings                 
 ignore_consensus_reads | Ignore consensus reads                                         
 ignore_supp_reads  | Ignore supplementary reads
-ignore_supp_attribute | Ignore differences in supplementary attribute values           
+ignore_supp_attribute | Ignore differences in supplementary attribute values
+ignore_sec_reads | Ignore differences in secondary reads
+coords_only | Only check for coordinate differences in reads
 partition_size     | Default 10M bases, splits chromosomes to analyse in partitions
 max_cached_reads_per_thread | Maximum number of cached reads per thread, automatically calculated if not set
 specific_regions   | As above
@@ -230,8 +232,11 @@ specific_regions | List of regions to analyse. Format 'chr:posStart-posEnd; etc'
 bamtool | As above
 write_incompletes | Write information about incomplete or invalid fragments to TSV file
 drop_incompletes | Drop unmatched pair reads from output BAM
-
-
+skip_unmapped | Skip checking and writing fully unmapped reads
+bqsr_reverse | Revert to original from BQSR quals if present
+convert_hard_clips | Convert hard-clipped to soft-clipped supplementaries
+min_align_score | Unmap primaries and drop supplementarties with low alignment score (default 30)
+sort_thread_mem | Limit per-thread memory, integer value in GB
 
 ## AltContigRemapper
 

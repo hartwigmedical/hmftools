@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.DISC_RATE_DI
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.DISC_RATE_JUNC_INCREMENT;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.MAX_OBSERVED_CONCORDANT_FRAG_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.setAssemblyOutcome;
+import static com.hartwig.hmftools.esvee.assembly.alignment.AlignerUtils.createAligner;
 import static com.hartwig.hmftools.esvee.assembly.alignment.Alignment.skipUnlinkedJunctionAssembly;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.DECOY;
 import static com.hartwig.hmftools.esvee.assembly.types.JunctionGroup.buildJunctionGroups;
@@ -34,17 +35,18 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.bwa.BwaMemAligner;
 import com.hartwig.hmftools.common.perf.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.esvee.assembly.alignment.Alignment;
 import com.hartwig.hmftools.esvee.assembly.alignment.AssemblyAlignment;
 import com.hartwig.hmftools.esvee.assembly.alignment.Breakend;
-import com.hartwig.hmftools.esvee.assembly.alignment.BwaAligner;
 import com.hartwig.hmftools.esvee.assembly.output.AssemblyReadWriter;
 import com.hartwig.hmftools.esvee.assembly.output.AssemblyWriter;
 import com.hartwig.hmftools.esvee.assembly.output.BreakendWriter;
@@ -64,6 +66,7 @@ import com.hartwig.hmftools.esvee.assembly.vis.AssemblyVisualiser;
 import com.hartwig.hmftools.esvee.common.FragmentLengthBounds;
 import com.hartwig.hmftools.esvee.common.saga.SagaMatcherFactory;
 import com.hartwig.hmftools.esvee.common.WriteType;
+import com.hartwig.hmftools.esvee.common.saga.SagaSequenceMatcher;
 import com.hartwig.hmftools.esvee.prep.FragmentSizeDistribution;
 import com.hartwig.hmftools.esvee.prep.types.DiscordantStats;
 
@@ -94,7 +97,7 @@ public class AssemblyApplication
         mConfig = new AssemblyConfig(configBuilder, asSubRoutine);
 
         mChrJunctionsMap = Maps.newHashMap();
-        mJunctionGroupMap = Maps.newHashMap();
+        mJunctionGroupMap = new TreeMap<>();
         mBamReaders = Lists.newArrayList();
 
         mResultsWriter = new ResultsWriter(mConfig);
@@ -360,7 +363,8 @@ public class AssemblyApplication
 
     private void runAlignment(final List<AssemblyAlignment> assemblyAlignments)
     {
-        Alignment alignment = new Alignment(mConfig, new BwaAligner(mConfig.RefGenomeImageFile), mSagaMatcherFactory);
+        BwaMemAligner aligner = createAligner(mConfig.RefGenomeImageFile);
+        Alignment alignment = new Alignment(mConfig, aligner, mSagaMatcherFactory);
         alignment.run(assemblyAlignments, mPerfCounters);
         alignment.close();
     }
@@ -385,6 +389,19 @@ public class AssemblyApplication
                     }
 
                     allAssemblies.add(assembly);
+                }
+            }
+        }
+
+        if(mSagaMatcherFactory != null)
+        {
+            // Apply SAGA matching to assemblies which were created during phasing and so didn't get matched yet.
+            SagaSequenceMatcher sagaMatcher = mSagaMatcherFactory.createSequenceMatcher();
+            for(PhaseGroup phaseGroup : phaseGroups)
+            {
+                for(JunctionAssembly assembly : phaseGroup.derivedAssemblies())
+                {
+                    assembly.matchToSaga(sagaMatcher);
                 }
             }
         }

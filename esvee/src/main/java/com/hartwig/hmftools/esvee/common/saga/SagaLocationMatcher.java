@@ -40,7 +40,7 @@ public class SagaLocationMatcher
     }
 
     @Nullable
-    public SagaMatchByLocation match(final String chromosome, int position, final Orientation orientation)
+    public SagaLocationMatch match(final String chromosome, int position, final Orientation orientation)
     {
         Map<String, List<SagaIndexedBreakend>> breakends = mSearchableBreakends;
         List<SagaIndexedBreakend> chrBreakends = breakends.get(chromosome);
@@ -48,7 +48,7 @@ public class SagaLocationMatcher
     }
 
     @Nullable
-    private SagaMatchByLocation matchOnChromosome(@Nullable final List<SagaIndexedBreakend> chrBreakends, int position,
+    private SagaLocationMatch matchOnChromosome(@Nullable final List<SagaIndexedBreakend> chrBreakends, int position,
             final Orientation orientation)
     {
         if(chrBreakends == null || chrBreakends.isEmpty())
@@ -72,41 +72,46 @@ public class SagaLocationMatcher
     }
 
     @Nullable
-    private SagaMatchByLocation chooseFromInexactMatchCandidates(final List<SagaIndexedBreakend> candidateBreakends, int position,
+    private SagaLocationMatch chooseFromInexactMatchCandidates(final List<SagaIndexedBreakend> candidateBreakends, int position,
             final Orientation orientation)
     {
         // Consider the nearby breakends, compute their distances, and filter out the breakends too far away.
-        List<SagaMatchByLocation> allCandidates = candidateBreakends.stream()
-                .map(breakend -> new SagaMatchByLocation(breakend.variant(), breakend.breakend(), abs(breakend.position() - position)))
+        List<SagaLocationMatch> allCandidates = candidateBreakends.stream()
+                .map(breakend -> new SagaLocationMatch(breakend.variant(), breakend.breakend(), abs(breakend.position() - position)))
                 .filter(match -> match.distance() <= mConfig.locationDistanceMax)
                 .toList();
         // Select only the breakend(s) with the lowest distance. This may be 1 breakend or multiple.
-        int minDistance = allCandidates.stream().mapToInt(SagaMatchByLocation::distance).min().orElse(mConfig.locationDistanceMax + 1);
+        int minDistance = allCandidates.stream().mapToInt(SagaLocationMatch::distance).min().orElse(mConfig.locationDistanceMax + 1);
         if(minDistance > mConfig.locationDistanceMax)
         {
             return null;
         }
-        Stream<SagaMatchByLocation> equidistantCandidates = allCandidates.stream().filter(match -> match.distance() == minDistance);
+        Stream<SagaLocationMatch> equidistantCandidates = allCandidates.stream().filter(match -> match.distance() == minDistance);
         // Select the match based on tie-break conditions.
         return chooseFromEquidistantCandidates(equidistantCandidates, orientation);
     }
 
-    private static SagaMatchByLocation chooseFromExactMatchCandidates(final List<SagaIndexedBreakend> candidateBreakends,
+    private static SagaLocationMatch chooseFromExactMatchCandidates(final List<SagaIndexedBreakend> candidateBreakends,
             final Orientation orientation)
     {
-        Stream<SagaMatchByLocation> candidates = candidateBreakends.stream()
-                .map(breakend -> new SagaMatchByLocation(breakend.variant(), breakend.breakend(), 0));
+        Stream<SagaLocationMatch> candidates = candidateBreakends.stream()
+                .map(breakend -> new SagaLocationMatch(breakend.variant(), breakend.breakend(), 0));
         return chooseFromEquidistantCandidates(candidates, orientation);
     }
 
-    private static SagaMatchByLocation chooseFromEquidistantCandidates(final Stream<SagaMatchByLocation> candidates,
+    private static SagaLocationMatch chooseFromEquidistantCandidates(final Stream<SagaLocationMatch> candidates,
             final Orientation orientation)
     {
         // If there are multiple candidates with the same lowest distance, choose the breakend with the same orientation.
         // Then finally order by variant ID to deterministically resolve further ties.
-        Comparator<SagaMatchByLocation> comparator = Comparator
-                .comparing((SagaMatchByLocation match) -> match.breakend().orientation() != orientation)
-                .thenComparing(SagaMatchByLocation::variantId);
+        Comparator<SagaLocationMatch> comparator = Comparator
+                .comparing((SagaLocationMatch match) -> match.breakend().orientation() != orientation)
+                .thenComparing(SagaLocationMatch::variantId);
         return candidates.min(comparator).orElseThrow();
+    }
+
+    Map<String, List<SagaIndexedBreakend>> getBreakends()
+    {
+        return mSearchableBreakends;
     }
 }

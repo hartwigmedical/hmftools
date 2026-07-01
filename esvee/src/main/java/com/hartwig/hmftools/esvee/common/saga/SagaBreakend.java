@@ -8,7 +8,7 @@ import com.hartwig.hmftools.common.region.BasePosition;
 import org.jetbrains.annotations.NotNull;
 
 public record SagaBreakend(
-        BasePosition position,
+        BasePosition basePosition,
         Orientation orientation
 )
 {
@@ -25,10 +25,20 @@ public record SagaBreakend(
         return new SagaBreakend(new BasePosition(chromosome, position), orientation);
     }
 
+    public String chromosome()
+    {
+        return basePosition.Chromosome;
+    }
+
+    public int position()
+    {
+        return basePosition.Position;
+    }
+
     @Override
     @NotNull
     public String toString()
     {
-        return format("%s:%s", position, orientation);
+        return format("%s:%s", basePosition, orientation);
     }
 }

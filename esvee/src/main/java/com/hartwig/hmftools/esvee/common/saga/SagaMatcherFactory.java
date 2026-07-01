@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.esvee.common.saga;
 
-import static java.lang.Math.max;
-import static java.lang.Math.min;
 import static java.util.Objects.requireNonNull;
 import static java.util.function.UnaryOperator.identity;
 
@@ -10,6 +8,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.bwa.BwaMemAligner;
+import com.hartwig.hmftools.common.bwa.BwaMemAlignerConfig;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 import htsjdk.samtools.SAMSequenceRecord;
@@ -22,11 +21,11 @@ public class SagaMatcherFactory
     private final SagaLocationMatcher.Config mLocationMatcherConfig;
     private final Map<String, List<SagaIndexedBreakend>> mSearchableBreakends;
 
-    private final SagaSequenceMatcher.Config mSequenceMatcherConfig;
+    private final SagaSequenceMatcherConfig mSequenceMatcherConfig;
     private final Map<Integer, SagaAssembly> mAssembliesByContigId;
 
     public SagaMatcherFactory(final SagaResource sagaResource, final SagaLocationMatcher.Config locationMatcherConfig,
-            final SagaSequenceMatcher.Config sequenceMatcherConfig)
+            final SagaSequenceMatcherConfig sequenceMatcherConfig)
     {
         mSagaResource = sagaResource;
 
@@ -58,7 +57,7 @@ public class SagaMatcherFactory
 
     public SagaMatcherFactory(final SagaResource sagaResource)
     {
-        this(sagaResource, SagaLocationMatcher.Config.DEFAULT, SagaSequenceMatcher.Config.DEFAULT);
+        this(sagaResource, SagaLocationMatcher.Config.DEFAULT, SagaSequenceMatcherConfig.DEFAULT);
     }
 
     // Creates a SagaLocationMatcher instance for matching variants within the specified region only.
@@ -70,7 +69,8 @@ public class SagaMatcherFactory
     private Map<String, List<SagaIndexedBreakend>> sliceBreakends(ChrBaseRegion subregion)
     {
         // Need to find all variants within locationDistanceMax bases, so need to expand the region by that much.
-        subregion = new ChrBaseRegion(subregion.chromosome(),
+        subregion = new ChrBaseRegion(
+                subregion.chromosome(),
                 subregion.start() - mLocationMatcherConfig.locationDistanceMax(),
                 subregion.end() + mLocationMatcherConfig.locationDistanceMax());
 
@@ -80,8 +80,8 @@ public class SagaMatcherFactory
             return Map.of();
         }
 
-        int startIndex = max(SagaIndexedBreakend.binarySearch(chrBreakends, subregion.start()).left - 1, 0);
-        int endIndex = min(SagaIndexedBreakend.binarySearch(chrBreakends, subregion.end()).right + 1, chrBreakends.size());
+        int startIndex = SagaIndexedBreakend.binarySearch(chrBreakends, subregion.start()).left;
+        int endIndex = SagaIndexedBreakend.binarySearch(chrBreakends, subregion.end()).right;
 
         chrBreakends = chrBreakends.subList(startIndex, endIndex);
         return Map.of(subregion.chromosome(), chrBreakends);
@@ -89,9 +89,10 @@ public class SagaMatcherFactory
 
     public SagaSequenceMatcher createSequenceMatcher()
     {
+        BwaMemAlignerConfig alignerConfig = SagaSequenceMatcher.createAlignerConfig(
+                mSagaResource.bwaIndexImagePath(), mSequenceMatcherConfig);
         // Must create one aligner per matcher, particularly because I don't think the aligner instance is thread safe.
-        BwaMemAligner aligner =
-                new BwaMemAligner(mSagaResource.bwaIndexImagePath(), SagaSequenceMatcher.createAlignerParams(mSequenceMatcherConfig));
+        BwaMemAligner aligner = new BwaMemAligner(alignerConfig);
         return new SagaSequenceMatcher(mSequenceMatcherConfig, aligner, mAssembliesByContigId);
     }
 }

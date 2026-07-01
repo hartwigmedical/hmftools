@@ -1,0 +1,8 @@
+*	@hartwigmedical/hartwig-aus-dev
+*.md	@hartwigmedical/hartwig-aus-docs
+*.pdf	@hartwigmedical/hartwig-aus-docs
+*.jpg	@hartwigmedical/hartwig-aus-docs
+*.png	@hartwigmedical/hartwig-aus-docs
+*.gif	@hartwigmedical/hartwig-aus-docs
+*.svg	@hartwigmedical/hartwig-aus-docs
+**/docs/*.html	@hartwigmedical/hartwig-aus-docs

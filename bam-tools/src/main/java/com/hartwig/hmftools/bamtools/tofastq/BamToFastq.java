@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.StringJoiner;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -55,7 +56,7 @@ public class BamToFastq
         // partition all chromosomes
         List<ChrBaseRegion> partitions = createPartitions();
 
-        final RemoteReadHandler remoteReadHandler = new RemoteReadHandler(mConfig);
+        RemoteReadHandler remoteReadHandler = new RemoteReadHandler(mConfig);
 
         int numDigits = Integer.toString(mConfig.Threads - 1).length();
         final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("thread-%0" + numDigits + "d").build();
@@ -65,7 +66,7 @@ public class BamToFastq
 
         BT_LOGGER.debug("splitting {} partitions across {} threads", partitions.size(), mConfig.Threads);
 
-        final List<CompletableFuture<Void>> futures = new ArrayList<>();
+        List<CompletableFuture<Void>> futures = new ArrayList<>();
 
         addCacheUnmappedReadFutures(futures, remoteReadHandler, executorService);
 
@@ -162,12 +163,11 @@ public class BamToFastq
         }
     }
 
-    // since each thread write to their own set of FASTQ files, we might need to merge them together
-    private void mergeThreadFastqFiles(Collection<FastqWriterCache> fastqWriterCaches, ExecutorService executorService)
+    private void mergeThreadFastqFiles(
+            final Collection<FastqWriterCache> fastqWriterCaches, ExecutorService executorService)
             throws ExecutionException, InterruptedException
     {
-        // gather all the tasks
-        final List<Runnable> tasks = new ArrayList<>();
+        List<Runnable> tasks = new ArrayList<>();
 
         switch(mConfig.SplitMode)
         {
@@ -188,19 +188,24 @@ public class BamToFastq
                 tasks.add(() -> mergeFastqs(fastqWriters.stream().map(FastqWriter::getFastqUnpaired), unpairedFastq, true));
                 break;
             }
+
             case READ_GROUP:
             {
-                BT_LOGGER.info("start merging fastqs by read groups");
+                BT_LOGGER.info("merging fastqs by read groups");
+
                 for(SAMReadGroupRecord readGroup : ToFastqUtils.getReadGroups(mConfig))
                 {
-                    // we need to store all the read group details in the file name, but use slash-t instead of tab
-                    // this is what BWA -R flag expects
-                    String filePrefix = mConfig.OutputDir + readGroup.getSAMString().replace("\t", "\\t");
+                    // include read group ID and all attribute values
+                    StringJoiner sj = new StringJoiner("_");
+                    sj.add(readGroup.getReadGroupId());
+                    readGroup.getAttributes().stream().forEach(x -> sj.add(x.getValue()));
+
+                    String filePrefix = mConfig.OutputDir + sj;
                     String r1Fastq = formFilename(filePrefix, R1);
                     String r2Fastq = formFilename(filePrefix, R2);
                     String unpairedFastq = formFilename(filePrefix, UNPAIRED);
 
-                    BT_LOGGER.info("RG({}) R1 fastq({}) R2 fastq({})", readGroup.getId(), r1Fastq, r2Fastq);
+                    BT_LOGGER.debug("RG({}) R1 fastq({}) R2 fastq({})", readGroup.getId(), r1Fastq, r2Fastq);
 
                     // gather all the fastq writers
                     List<FastqWriter> fastqWriters = fastqWriterCaches.stream().map(o -> o.getReadGroupFastqWriter(readGroup.getId()))

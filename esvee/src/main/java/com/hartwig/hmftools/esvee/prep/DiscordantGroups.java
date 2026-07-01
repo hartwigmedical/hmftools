@@ -3,6 +3,7 @@ package com.hartwig.hmftools.esvee.prep;
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
 
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.isDiscordantFragment;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_MAP_QUALITY;
@@ -304,12 +305,16 @@ public class DiscordantGroups
 
     public boolean isDiscordantGroup(final ReadGroup readGroup)
     {
-        PrepRead firstRead = readGroup.reads().stream().filter(x -> !x.isSupplementaryAlignment()).findFirst().orElse(null);
+        for(PrepRead read : readGroup.reads())
+        {
+            if(!read.isSupplementaryAlignment())
+            {
+                // any primary can be used to determline status
+                return isDiscordantFragment(read.record(), mMinDiscordantFragmentLength, null);
+            }
+        }
 
-        if(firstRead == null)
-            return false;
-
-        return isDiscordantFragment(firstRead.record(), mMinDiscordantFragmentLength, null);
+        return false;
     }
 
     public boolean isRelevantDiscordantGroup(final ReadGroup readGroup)

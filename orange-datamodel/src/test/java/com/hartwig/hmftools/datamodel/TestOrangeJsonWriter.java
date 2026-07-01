@@ -104,7 +104,7 @@ public class TestOrangeJsonWriter
                         .brca1Value(0)
                         .brca2Value(0)
                         .hrdValue(0)
-                        .hrdType("")
+                        .hrdType("none")
                         .hrStatus(ChordStatus.HR_PROFICIENT)
                         .build())
                 .addPeach(ImmutablePeachGenotype.builder()

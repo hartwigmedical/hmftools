@@ -173,7 +173,6 @@ public class PrepRead
 
     public void addFilter(final ReadFilterType filterType) { mFilters |= filterType.flag(); }
     public boolean hasFilter(final ReadFilterType filterType) { return (mFilters & filterType.flag()) != 0; }
-    public void removefilter(final ReadFilterType filterType) { mFilters &= ~filterType.flag(); }
     public boolean unfiltered() { return mFilters == 0; }
     public int filters() { return mFilters; }
 

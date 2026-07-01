@@ -1,0 +1,35 @@
+name: Java build and unit test
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+    types: ["opened", "reopened", "synchronize"]
+    paths-ignore:
+      # Don't run on documentation changes, since the code is not affected.
+      - "**/*.md"
+      - "**/*.pdf"
+      - "**/*.png"
+      - "**/*.jpg"
+      - "**/*.gif"
+      - "**/*.svg"
+      - "*/docs/*.html"
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      # Version 7.0.0 pinned
+    - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+    - name: Set up JDK 17
+      # Version 5.3.0 pinned
+      uses: actions/setup-java@ad2b38190b15e4d6bdf0c97fb4fca8412226d287
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: maven
+    - name: Build with Maven
+      run: mvn -B package --file pom.xml

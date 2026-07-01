@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_SPLIT_MIN_READ_SUPPORT;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.PHASED_ASSEMBLY_MIN_TI;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.PROXIMATE_REF_SIDE_SOFT_CLIPS;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.REF_SIDE_INITIAL_MIN_SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.REF_SIDE_MIN_SOFT_CLIP_LENGTH;
 
 import java.util.Collections;
@@ -83,7 +84,7 @@ public class RefSideSoftClip
             refSideSoftClipLength = read.rightClipLength();
         }
 
-        if(refSideSoftClipLength < ASSEMBLY_MAX_JUNC_POS_DIFF)
+        if(refSideSoftClipLength < REF_SIDE_INITIAL_MIN_SOFT_CLIP_LENGTH)
             return false;
 
         int softClipPosition = refSideSoftClipPosition;

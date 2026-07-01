@@ -8,6 +8,8 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.XS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.belowMinQual;
+import static com.hartwig.hmftools.esvee.common.SvConstants.MAX_JUNC_POSITION_DIFF;
+import static com.hartwig.hmftools.esvee.common.SvConstants.MAX_JUNC_SC_VS_INDEL_POSITION_DIFF;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MAX_HIGH_QUAL_BASE_MISMATCHES;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_ALIGNMENT_SCORE_DIFF;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_CALC_ALIGNMENT_LOWER_SCORE;
@@ -203,16 +205,15 @@ public final class JunctionUtils
             }
 
             // any soft-clipping on the correct side if close to the junction
-            if(junctionDistance <= filterConfig.MinSupportingReadDistance)
-            {
-                if(junctionData.isForward() && read.isRightClipped())
-                    return true;
+            // must be clipped on the correct side
+            if(junctionData.isForward() && !read.isRightClipped())
+                return false;
+            else if(junctionData.isReverse() && !read.isLeftClipped())
+                return false;
 
-                if(junctionData.isReverse() && read.isLeftClipped())
-                    return true;
-            }
+            int maxPermittedDistance = junctionData.internalIndel() ? MAX_JUNC_SC_VS_INDEL_POSITION_DIFF : MAX_JUNC_POSITION_DIFF;
 
-            return false;
+            return junctionDistance <= maxPermittedDistance;
         }
 
         // otherwise can be distant if discordant and with an orientation cross the junction
@@ -279,7 +280,7 @@ public final class JunctionUtils
             if(readEnd == junctionData.Position) // an exact match is checked no further in prep
                 return true;
 
-            if(abs(readEnd - junctionData.Position) > filterConfig.MinSupportingReadDistance) // aligned too far from the junction
+            if(abs(readEnd - junctionData.Position) > MAX_JUNC_POSITION_DIFF) // aligned too far from the junction
                 return false;
 
             // read and soft-clipped position must straddle the junction
@@ -309,7 +310,7 @@ public final class JunctionUtils
             if(readStart == junctionData.Position)
                 return true;
 
-            if(abs(readStart - junctionData.Position) > filterConfig.MinSupportingReadDistance)
+            if(abs(readStart - junctionData.Position) > MAX_JUNC_POSITION_DIFF)
                 return false;
 
             if(!(readEnd > junctionData.Position && read.UnclippedStart < junctionData.Position))
@@ -371,7 +372,7 @@ public final class JunctionUtils
         }
 
         double baseMatchPerc = baseMatches / (double)basesCompared;
-        return baseMatchPerc > MIN_EXACT_BASE_PERC;
+        return baseMatchPerc >= MIN_EXACT_BASE_PERC;
     }
 
     public static boolean hasWellAnchoredRead(final JunctionData junctionData, final ReadFilterConfig filterConfig)

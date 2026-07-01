@@ -5,8 +5,8 @@ import static java.lang.Math.max;
 import static com.hartwig.hmftools.bamtools.checker.CheckConfig.LOG_READ_COUNT;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
 import static com.hartwig.hmftools.common.bam.BamSlicer.createIntervals;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.ALIGNMENT_SCORE_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.BQSR_ORIGINAL_QUALS;
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.getAlignmentEndFromCigar;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.readToString;
 import static com.hartwig.hmftools.common.genome.chromosome.Chromosome.isAltRegionContig;
 
@@ -26,7 +26,6 @@ import htsjdk.samtools.QueryInterval;
 import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordIterator;
-import htsjdk.samtools.SAMTag;
 import htsjdk.samtools.SamReader;
 
 public class PartitionChecker
@@ -155,6 +154,16 @@ public class PartitionChecker
             BT_LOGGER.info("region({}) processed reads({}) cached fragments({})", mRegion, mReadCount, mFragmentMap.size());
         }
 
+        if(read.getSupplementaryAlignmentFlag())
+        {
+            Integer alignmentScore = read.getIntegerAttribute(ALIGNMENT_SCORE_ATTRIBUTE);
+            if(alignmentScore != null && alignmentScore < CheckConfig.Params.MinAlignmentScore)
+            {
+                ++mStats.SuppsDropped;
+                return;
+            }
+        }
+
         if(mConfig.ReverseBqsr)
             reverseBqsrQuals(read);
 
@@ -219,7 +228,7 @@ public class PartitionChecker
             fragment.addRead(read);
         }
 
-        if(mConfig.ConvertHardClips && !read.getSupplementaryAlignmentFlag())
+        if(CheckConfig.Params.ConvertHardClips && !read.getSupplementaryAlignmentFlag())
             fragment.cachePrimaryBaseInfo(read);
 
         List<SAMRecord> completeReads = fragment.extractCompleteReads();
@@ -240,6 +249,8 @@ public class PartitionChecker
 
                 if(fragment.requiredMateCigarFix())
                     ++mCurrentStats.MateCigarFixed;
+
+                mCurrentStats.PrimariesUnmapped += fragment.unmappedPrimaryCount();
             }
         }
     }

@@ -36,6 +36,7 @@ public class AssemblyStats
     public int RefBaseMismatchTotal;
     public int SoftClipSecondMaxLength;
     public int MaxExtBaseMatchCount;
+    public int NonExtensionSupportReads;
 
     public int CandidateSupportCount;
     public int UnmappedReadCount;
@@ -63,6 +64,7 @@ public class AssemblyStats
         RefBaseMismatchTotal = 0;
         SoftClipSecondMaxLength = 0;
         MaxExtBaseMatchCount = 0;
+        NonExtensionSupportReads = 0;
         CandidateSupportCount = 0;
         UnmappedReadCount = 0;
     }
@@ -178,6 +180,7 @@ public class AssemblyStats
         sj.add("SoftClip2ndMaxLength");
         sj.add("RefBaseMismatches");
         sj.add("BaseTrimCount");
+        sj.add("NonExtSupportReads");
 
         sj.add("AvgIndelLength");
         sj.add("AvgBaseQual");
@@ -191,6 +194,7 @@ public class AssemblyStats
         sj.add(String.valueOf(SoftClipSecondMaxLength));
         sj.add(String.valueOf(RefBaseMismatchTotal));
         sj.add(String.valueOf(BaseTrimTotal));
+        sj.add(String.valueOf(NonExtensionSupportReads));
 
         sj.add(statString(IndelLengthTotal, ReadCount));
         sj.add(statString(BaseQualTotal, ReadCount));

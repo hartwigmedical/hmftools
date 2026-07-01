@@ -12,7 +12,6 @@ import static htsjdk.samtools.CigarOperator.I;
 import static htsjdk.samtools.CigarOperator.M;
 import static htsjdk.samtools.CigarOperator.S;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -249,6 +248,12 @@ public final class CigarUtils
     public static int getReadIndexFromPosition(
             final int alignmentStart, final List<CigarElement> cigarElements, int position, boolean lastIfGapped, boolean inferFromSoftClip)
     {
+        return getReadIndexFromPosition(alignmentStart, cigarElements, position, lastIfGapped ? -1 : 0, inferFromSoftClip);
+    }
+
+    public static int getReadIndexFromPosition(
+            final int alignmentStart, final List<CigarElement> cigarElements, int position, int gapMode, boolean inferFromSoftClip)
+    {
         if(position < alignmentStart && !inferFromSoftClip)
             return INVALID_READ_INDEX;
 
@@ -270,9 +275,9 @@ public final class CigarUtils
                 }
                 else
                 {
-                    if(lastIfGapped)
+                    if(gapMode < 0)
                         --index;
-                    else
+                    else if(gapMode == 0)
                         return INVALID_READ_INDEX;
                 }
 

@@ -1,30 +1,35 @@
 # Redux
 
-The purpose of REDUX (**RE**calibrate **DE**duplicate **U**nmap e**X**tract) is to abstract any platform, library prep and aligner specific
-artefacts from the BAM. A key aim of REDUX is to make it simple to adapt to different sequencing technologies or library preparation
+The purpose of Redux (**RE**calibrate **DE**duplicate **U**nmap e**X**tract) is to abstract any platform, library prep and aligner specific
+artefacts from the BAM. A key aim of Redux is to make it simple to adapt to different sequencing technologies or library preparation
 techniques.
 
-REDUX currently performs 3 key tasks:
+Redux performs these key tasks:
 
-| Feature                         | Functionality                                                                                                                                                                                                                                                                                                                                                                                                                                               | Why?                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-|---------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Unmapping                       | Unmap reads that are aligned to a set of predefined problematic regions AND are either discordant, have long soft clipping or are in a region of extreme high depth. The reads are retained in the BAM and can be used by downstream tools. Supplementary reads that qualify for unmapping are deleted.<br/><br/>Overall, the problematic regions make up ~0.3% of the genome and lead to the ~3-6% of all reads being unmapped depending on genome version | There are 2 types of reads we want to unmap: <br/><br/> 1. Regions with recurrent very high depth – these are generally unmappable regions that have high discordant fragments.  Unmapping reduces false positive variant calling downstream and can drastically reduce runtime and memory usage.  ~98% of unmapped reads fall into this category  <br/> 2. Very long repeats – reads with long homopolymers or dinucleotide repeats may align randomly to arbitrary microsatellite locations based on idosyncratic sequencing errors.  Unmapping improves duplicate marking and detection of LINE insertions (which have a characteristic polyA insert which often is misaligned by BWA). |
+| Feature                        | Functionality                                                                                                                                                                                                                                                                                                                                                                                                                                               | Why?                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+|--------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Unmapping                      | Unmap reads that are aligned to a set of predefined problematic regions AND are either discordant, have long soft clipping or are in a region of extreme high depth. The reads are retained in the BAM and can be used by downstream tools. Supplementary reads that qualify for unmapping are deleted.<br/><br/>Overall, the problematic regions make up ~0.3% of the genome and lead to the ~3-6% of all reads being unmapped depending on genome version | There are 2 types of reads we want to unmap: <br/><br/> 1. Regions with recurrent very high depth – these are generally unmappable regions that have high discordant fragments.  Unmapping reduces false positive variant calling downstream and can drastically reduce runtime and memory usage.  ~98% of unmapped reads fall into this category  <br/> 2. Very long repeats – reads with long homopolymers or dinucleotide repeats may align randomly to arbitrary microsatellite locations based on idosyncratic sequencing errors.  Unmapping improves duplicate marking and detection of LINE insertions (which have a characteristic polyA insert which often is misaligned by BWA). |
 | Duplicate marking and consensus | Mark duplicates based off fragment start and end positions and UMI (if available). Supplementary reads are also deduplicated. <br/><br/> For any fragments found to be duplicates a single consensus fragment is formed and a consensus base and qual is calculated.                                                                                                                                                                                        | Amplification during library preparation or on-sequencer can cause duplicates of fragments. By marking duplicates, we avoid potential multiple counting of evidence from a single source fragment which reduces FP variant calling. <br/><br/> Forming a consensus read for every duplicated fragment ensures we choose the most likely base at each location and a representative base quality.                                                                                                                                                                                                                                                                                           |
-| Microsatellite jitter rates     | The rate of microsatellite errors is measured genome wide per {consensusType, repeatContext, repeatLength} and fit to a model.                                                                                                                                                                                                                                                                                                                              | Microsatellite jitter or stutter is a common error caused by PCR amplification and on-sequencer errors.  Some sequencing technologies have specific problems with homopolymers. The rate may be highly sample specific as it depends on the amount of and quality of the amplification process. The sample and context specific rate measured in REDUX is used to inform and improve variant calling in downstream tools                                                                                                                                                                                                                                                                   |
+| Microsatellite jitter rates    | The rate of microsatellite errors is measured genome wide per {consensusType, repeatContext, repeatLength} and fit to a model.                                                                                                                                                                                                                                                                                                                              | Microsatellite jitter or stutter is a common error caused by PCR amplification and on-sequencer errors.  Some sequencing technologies have specific problems with homopolymers. The rate may be highly sample specific as it depends on the amount of and quality of the amplification process. The sample and context specific rate measured in Redux is used to inform and improve variant calling in downstream tools                                                                                                                                                                                                                                                                   |
+| MSI prediction            | Uses indel jitter rates to estimate a rate of MS indels per MB                                                                                                                                                                                                                                                                                                                                                                                              |
 
-### Notes on REDUX compatibility
 
-REDUX conforms fully to SAM specifications. We have validated REDUX on DRAGEN and BWA-MEM / BWA-MEM2. REDUX may also be run on BAMs with any
-prior duplicate marking and strip previous consensus results. Please note that REDUX does require the mate CIGAR attribute to be set for all
-paired reads. If this is not set for some reason, this can be rectified using tools such as Picard FixMateInformation routine.
+### Notes on Redux compatibility
 
-Whilst REDUX does unmap reads and delete supplementaries, no primary read information is removed or lost when REDUX is run, and hence the
+Redux conforms fully to SAM specifications. We have validated Redux on DRAGEN and BWA-MEM / BWA-MEM2. Redux may also be run on BAMs with any
+prior duplicate marking and strip previous consensus results. Please note that Redux does require the mate CIGAR attribute to be set for all
+paired reads. If this is not set for some reason, this can be rectified using the BamTools BamChecker routine in WiGiTs.
+
+Whilst Redux does unmap reads and delete supplementaries, no primary read information is removed or lost when Redux is run, and hence the
 original FASTQ is fully recoverable. If you wish a BAM to be converted to FASTQ, note that consensus reads must be deleted prior to
-conversion. This functionality is included by default in our BAM2FASTQ tool
+conversion. This functionality is included by default in the BamTools BamToFastq routine.
 
-### Performance
+## Roche SBX Alexios and Ultima BAMs
 
-On a 100x BAM on a 32 core machine REDUX completes in < 1 hour with a maximum memory usage of <10Gb.
+Redux supports BAMs (or CRAMs) from SBX and Ultima. These do not produce recoverable BAMs since some read attributes are overwritten.
+
+Set 'sequencing_type' as described below for these platforms. Details of algorithms specific to these technologies will be provided.
+
 
 ## Commands
 
@@ -36,7 +41,7 @@ java -jar redux.jar
     -ref_genome_version V37
     -unmap_regions /ref_data/unmap_regions.37.tsv
     -ref_genome_msi_file /ref_data/msi_jitter_sites.37.tsv.gz 
-    -write_stats 
+    -form_consensus 
     -bamtool /path_to_samtools/ 
     -output_dir /path_to_output/
     -log_level DEBUG 
@@ -45,25 +50,34 @@ java -jar redux.jar
 
 ## Arguments
 
-| Argument            | Required                  | Description                                                                             |
-|---------------------|---------------------------|-----------------------------------------------------------------------------------------|
-| sample              | Required                  | Sample ID                                                                               |
-| input_bam           | Required                  | Path to BAM file(s)                                                                     |
-| output_bam          | Optional                  | Output BAM file, otherwise will write SAMPLE_ID.redux.bam                               |
-| ref_genome          | Required                  | Path to reference genome files as used in alignment                                     |
-| ref_genome_version  | Required                  | V37 or V38                                                                              |
-| form_consensus      | Optional                  | Form a consensus read from duplicates                                                   |
-| unmap_regions       | Optional                  | Regions of high depth, repeats or otherwise problematic for mapping                     |
-| unmap_mt            | Optional                  | Unmap reads mapping to mitochondrial DNA                                                |
-| bamtool             | Required                  | Used for BAM sorting, concatenation and indexing                                        |
-| threads             | Optional                  | Number of threads, default = 1                                                          |
-| output_dir          | Optional                  | If not specified will write output same directory as input BAM                          |
-| output_id           | Optional                  | Additional file suffix                                                                  |
-| read_output         | Optional, default = NONE  | Write detailed read info to CSV, types are: ALL, DUPLICATE, NONE                        |
-| write_stats         | Optional                  | Writes a duplicate frequency TSV file                                                   |
-| write_reads         | Optional                  | Write a detailed reads file (only recommended for a sliced BAM)                         |
-| ref_genome_msi_file | Optional                  | Path to file of microsatellite sites used for sample-specific jitter, required for Sage |
-| jitter_msi_only     | Optional, default = false | Only runs to model sample-specific microsatellite jitter                                |
+| Argument           | Description                                                                             |
+|--------------------|-----------------------------------------------------------------------------------------|
+| sample             | Sample ID                                                                               |
+| input_bam          | Path to BAM file(s)                                                                     |
+| output_bam         | Output BAM file, otherwise will write SAMPLE_ID.redux.bam                               |
+| ref_genome         | Path to reference genome files as used in alignment                                     |
+| ref_genome_version | V37 or V38                                                                              |
+| sequencing_type    | ILLUMINA (default), SBX or ULTIMA                                                       |
+| form_consensus     | Form a consensus read from duplicates                                                   |
+| unmap_regions      | TSV file specifying regions of high depth, repeats or otherwise problematic for mapping |
+| bamtool            | Used for BAM sorting, concatenation and indexing                                        |
+| threads            | Number of threads, default = 1                                                          |
+| output_dir         | If not specified will write output same directory as input BAM                          |
+| jitter_bqr_dir     | Path to sample MSI jitter files and BQR files                                           |
+
+| ref_genome_msi_file | (Optional) Path to file of microsatellite sites used for sample-specific jitter, required for Sage |
+| msi_model_coefficients | (Optional)MSI model cooefficients file                                                             |
+| msi_model_error_rates  | (Optional) MSI model error rates file                                                              |
+| bqr_use_all_regions | Base qual recalibration by default uses 2M-base regions from each chromosome. Add this flag in targeted panel model to use entire BAM | 
+
+### Optional arguments
+
+| Argument            | Description                                                                     |
+|---------------------|---------------------------------------------------------------------------------|
+| bqr_jitter_msi_only | Only generate BQR and MSI model output, requires an existing Redux BAM as input 
+| drop_duplicates     | Drop duplicate reads from output BAM  <br/>jitter_bqr_dir                       | BAM path | Path to Redux MSI jitter files and BQR files
+| skip_bqr            | Disable base quality recalibration                                              |
+
 
 ### UMI Command
 
@@ -87,12 +101,17 @@ java -jar redux.jar
 
 ### UMI Arguments
 
-| Argument            | Description                                                        |
-|---------------------|--------------------------------------------------------------------|
-| umi_enabled         | Extract UMI from Read ID and use in duplicate group identification |
-| umi_duplex          | Collapse duplex UMI groups                                         |
-| umi_duplex_delim    | Duplex UMI character, default = '_'                                |
-| umi_base_diff_stats | Write UMI statistics files                                         |
+| Argument            | Description                                                                                                                |
+|---------------------|----------------------------------------------------------------------------------------------------------------------------|
+| umi_enabled         | Extract UMI from Read ID and use in duplicate group identification                                                         |
+| umi_duplex          | Collapse duplex UMI groups                                                                                                 |
+| umi_duplex_delim    | Duplex UMI character, default = '_'                                                                                        |
+| umi_base_diff_stats | Write UMI statistics files                                                                                                 |
+| umi_type            | values: SINGLE, TWIST_DUPLEX, TSO500_DUPLEX, MSK, KAPPA |
+
+Setting 'umi_type' for known UMI technologies is a convenience and will map as follows:
+- TWIST_DUPLEX: umi_enabled, umi_duplex, umi_duplex_delim='_'
+- TSO500_DUPLEX umi_enabled, umi_duplex, umi_duplex_delim='+'
 
 ## Algorithm
 
@@ -188,10 +207,10 @@ qual base is chosen as per above.
 
 The ‘UT’ tag is added to the BAM to mark the consensus group status of the read:
 
-| Value               | Description                    |
-|---------------------|--------------------------------|
+| Value      | Description                    |
+|------------|--------------------------------|
 | NONE  | Read is not part of any consensus group       |
-| DUAL           | Read is formed from a consensus of reads from both original DNA strands (i.e. at least one read of each fregment orientation). Only applicable if DUPLEX UMIs are used.     |
+| DUAL  | Read is formed from a consensus of reads from both original DNA strands (i.e. at least one read of each fregment orientation). Only applicable if DUPLEX UMIs are used.     |
 | SINGLE | Read is formed from a consensus group, but does not meet the requirements of DUAL (i.e. constituent reads are only from a single fragment orientation and/or DUPLEX UMIs are not used) |
 
 The ‘CR’ tag is used to record the number of reads contributing to each consensus read. It is a series of 3 numbers and can be interpreted as follows:
@@ -216,6 +235,7 @@ must satisfy the following conditions:
 * At least 5 aligned (i.e. inside M cigar element) flanking the microsatellite repeat on both sites
 * Each base associated with the microsatellite repeat is part of a M, I or D Cigar element
 * Any inserted bases should be multiples of the microsatellite repeat unit
+* No bases inside the repeat (plus 1 flanking base) should be a minimum quality base (qual 1) or a simplex base (SBX only)
 
 For each read, identify the insertion or deletion at the start of the microsatellite repeat which extends or contracts the repeat count, and
 this becomes the repeat unit count. Then for each microsatellite site, the number of reads with repeat unit counts from ref_count-10 to
@@ -268,23 +288,167 @@ Then for each repeat unit, we do the following:
       length=6. `scaleFitSkew` is set based on an aggregate count of delete and insert jitter counts, unless at least one of these sums <
       50, in which case it defaults to 1.0
 
+### MSI prediction
+
+Redux estimates microsatellite indels per MB using an ensemble of polynomial regressions ("MSI model") trained on jitter rates ("error rates")
+for a range of A/T repeat lengths (length range varies depending on sequencing technology). MSI model output is written to 
+`SAMPLE_ID.msi_prediction.tsv` and used by Sage (jitter handling) and Purple (microsatellite indels per MB estimation for targeted panels).
+
+#### Training vs prediction
+
+The MSI model is trained on Hartwig WGS samples with purities < 50% using denoised error rates (normalised to a baseline). For targeted panel cohorts,
+cohort-specific normalisation factors must be trained since error rate noise varies by cohort. Error rate normalisation allows a single set
+of coefficients (trained using WGS samples) to be used for all cohorts. Other sequencing technologies are trained separately using their own WGS cohorts, with a purity cutoff of 85%.
+
+<img src="src/main/resources/msi_model.png" width="500">
+
+#### 1. Calculate error rate
+
+For a given microsatellite repeat length (`numUnits`), the number of observed reads (`readCount`) with a given indel length (`jitter`) may be:
+
+```
+   jitter  ..., -3, -2,  -1,   0,   1, 2, 3, ...
+readCount  ...,  6, 11, 3e3, 7e7, 352, 5, 0, ...
+```
+
+The error rate for a given `numUnits` is calculated as below:
+
+```
+weightedErrorCounts = sum(readCounts * abs(jitter)) # By definition, 0 jitter counts are not counted as errors 
+errorRate = weightedErrorCounts / sum(readCounts)
+```
+
+For Illumina samples, the assessed repeat types are A/T homopolymers of length 11-20. For SBX we use A/T of length 11-15, and for Ultima we use AC/AG repeats of length 11-15.
+
+#### 2. Denoise error rates
+
+During training, the noise threshold (90th percentile of error rates, 80th percentile for Ultima) is calculated per `numUnits`:
+
+`noiseThreshold = percentile(errorRates, 90)`
+
+Error rates are then normalised as below:
+
+`denoisedErrorRate = errorRate - noiseThreshold`
+
+#### 3. Train and predict
+
+During training, a polynomial regression is fitted per `numUnits` with the form:
+
+`y = 0 + ax + bx^3  # where x = denoisedErrorRate, y = known msIndelsPerMb`
+
+When predicting, the output is clamped to non-negative values:
+
+`y = max(0, y)`
+
+The final predicted `msIndelsPerMb` is the mean across all polynomial regressions (i.e. one per `numUnits`). Any with less than 500 read counts are omitted due to sparsity.
+
+### Alt Specific Base Quality Recalibration
+
+Redux includes a base quality recalibration method to adjust sequencer reported base qualities to empirically observed values since we observe that qualities for certain base contexts and alts can be systematically over or under estimated which can cause either false positives or poor sensitivity respectively.
+This idea is inspired by the GATK BQSR tool, but instead of using a covariate model we create a direct lookup table for base quality adjustments.
+The recalibration is unique per sample.
+
+R is used to generate the base quality recalibration charts, which is done if the config 'write_bqr_plot' is included. Required packages include `ggplot2`,`tidyr` and `dplyr`.
+
+The empirical base quality is measured in each reference and tumor sample for each {trinucleotide context, alt, sequencer reported base qual, consensus type} combination and an adjustment is calculated. This is performed by sampling a 2M base window from each autosome and counting the number of mismatches per {trinucleotide context, alt, sequencer reported base qual, consensus type}. For Ultima, we only consider bases that are max qual, have adjacent max qual bases, and have max `t0` due to tech-specific complications of the quality model. For reverse strand observations, the trinucleotide context and alt they are assigned to is reverse complemented.
+
+Fragments with low mapping quality (by default: below 50) or with high NM density (above 5%) are ignored as errors can be plausibly explained as mapping errors rather than base quality errors. Similarly, sites that may harbour a genuine germline or somatic variant rather than errors are excluded from contribution. This is determined as follows:
+
+* Across `DUAL` fragments (i.e. duplex consensus): exclude site if `altVaf >= 0.01 && (altVaf >= 0.05 || altCount > 2)`
+* Across other fragments (i.e. non-duplex or singleton): exclude site if `altVaf >= 0.075 && (altVaf >= 0.125 || altCount > 3)`
+
+We also conditionally exclude sites with indels in the pileup:
+
+| Highest qual indel | Definition                                 | Cutoff to exclude |
+|--------------------|--------------------------------------------|-------------------|
+| High qual          | Any Illumina indel, or SBX/Ultima qual 30+ | 1 read            |
+| Medium qual        | SBX simplex qual                           | 4% AF             | 
+| Low qual           | Any lower quality SBX/Ultima read          | 10% AF            |
+
+Note that the definition of this recalibrated base quality is slightly different to the sequencer base quality, since it is the probability of making a specific ALT error given a trinucleotide sequence, whereas the sequencer base quality is the probability of making any error at the base in question.   Since the chance of making an error to a specific base is lower than the chance of making it to a random base, the ALT specific base quality will generally be higher even if the sequencer base quality matches the empirical distribution.
+
+For all SNV and MNV calls the base quality is adjusted to the empirically observed value before determining the quality.
+Sage produces both a file output and QC chart which show the magnitude of the base quality adjustment applied for each {trinucleotide context, alt, sequencer reported base qual, consensus type} combination.
+These files are written into the same directory as the output file.
+
+A typical example of the chart (for one consensus type) is shown below. Note that each bar represents the amount that will be added to the sequencer Phred score:
+
+![Base Quality Adjustment](../sage/docs/COLO829v003T.bqr.png)
+
+Base quality recalibration is enabled by default but can be disabled by supplying including the`-bqr_disable` argument.
+
+The base quality recalibration chart is generated with the config `-bqr_write_plot`.
+
+## Ultima specific routines
+Redux determines consensus type from the ppm-seq tags present in Ultima BAMs and supports both legacy and current tag formats.
+Redux also generates an Ultima low-quality homopolymer tag (`UQ`) for use by downstream pipeline tools. Homopolymers are evaluated directly from the read sequence and marked when either the associated `t0` quality is below 20 or the homopolymer quality falls below a length-specific threshold. The `UQ` tag records all read indices belonging to flagged homopolymers. The thresholds are as follows:
+
+| Homopolymer length | Minimum quality |
+|--------------------|-----------------|
+| 1                  | 25              |
+| 2                  | 22              |
+| 3                  | 19              |
+| 4-6                | 16              |
+| 7-8                | 14              |
+| 9+                 | 12              |
+
+## SBX specific routines
+
+### Homopolymer indel normalisation
+Prior to duplicate collapsing, Redux identifies duplex indel disagreement regions using the `YC `tag and determines the associated repeat context. Repeat-associated insertion differences are normalised by trimming excess inserted sequence. The number of duplex discordant bases in the untrimmed repeat is noted, and those low quality bases are evenly distributed to each side of the trimmed repeat. Supplementaries are used where available to infer the reference sequence inside softclipping.
+
+This eliminates the insertion bias in SBX sequencing that comes from synthesising two independent sequencing passes and priorising retaining bases if they are in only one pass.
+### Duplicate collapsing
+Duplicate groups are formed using an SBX-specific collapse strategy that tolerates small differences between read ends while preventing merges between substantially different molecules. In particular, we tolerate a 'wiggle room' in position coordinates of up to 2bp between individual fragments, and 6bp total across the whole duplicate group.
+### Consensus generation
+SBX consensus generation uses the per-base status (concordant duplex, simplex, discordant duplex) encoded in the base qualities. 
+For each position, Redux preferentially derives consensus sequence from concordant duplex evidence where a dominant base exists. When all bases are simplex, simplex evidence is used instead. In either case, positions lacking majority agreement are interpreted as qual 1 reference bases.
+
+Consensus CIGAR elements are generated using the same principle. When read-level disagreement exists, Redux preferentially selects operations supported by high-confidence duplex evidence, then simplex evidence if all reads are simplex at that location, and otherwise falls back to the most reference-like representation (`M` over `D` or `I`).
+### Quality remapping
+Raw SBX qualities encode categorical status rather than conventional phred scores. During consensus generation, Redux remaps these values onto a standardised quality scale:
+
+| Status            | Mapped base quality |
+|-------------------|---------------------|
+| Discordant duplex | 1                   |
+| Simplex           | 27                  |
+| Concordant duplex | 40                  |
+
+In addition, concordant duplex bases near discordant duplex bases are assigned a lower base quality to model their higher empirical erorr rates:
+* Concordant duplex 1bp from a discordant duplex base and = the ref discordant base -> 15 
+* Concordant duplex 1bp from a discordant duplex base and ≠ the ref discordant base -> 20 
+* Concordant duplex 2-3bp from a discordant duplex base -> 25 
+
+Consensus reads are assigned one of the standard Redux consensus types:
+* `NONE`: singleton reads
+* `SINGLE`: non-trivial consensus group, all reads are simplex
+* `DUAL`: non-trivial consensus group, including duplex
+
+For consensus reads containing both simplex and duplex regions, Redux records the first duplex-supported base position in the `YX` tag.
+
 ## Performance and Settings
 
-When run wth multiple threads, a BAM will be written per thread and then merged and index at the end.
+When run with multiple threads, a BAM will be written per thread and then merged and index at the end.
 Recommended settings for a standard 100x tumor BAM is 16-24 CPUs and 48GB RAM.
 Runtime on COLO829T with these settings is approximately 100mins.
 
 ## Output Files
 
-| File Name                         | Details                                                       | Required config to write                                |
-|-----------------------------------|---------------------------------------------------------------| ------------------------------------------------------- |
-| SAMPLE_ID.duplicate_freq.tsv      | Frequency distribution of duplicate groups                    | `-write_stats`                                          |
-| SAMPLE_ID.reads.tsv               | Detailed read information                                     | `-write_reads`                                          |
-| SAMPLE_ID.umi_coord_freq.tsv      | Frequency distribution of UMI duplicate groups                | `-write_stats` and UMIs enabled                         |
-| SAMPLE_ID.umi_edit_distance.tsv   | Analysis of UMI differences and potential UMI base mismatches | `-write_stats`, `-umi_base_diff_stats` and UMIs enabled |
-| SAMPLE_ID.umi_nucleotide_freq.tsv | Frequency distribution for nucleotides in UMIs                | `-write_stats`, `-umi_base_diff_stats` and UMIs enabled |
-| SAMPLE_ID.ms_table.tsv.gz         | Aggregating counts of reads across microsatellites by consensus type / repeat unit / ref repeat count / read repeat count, discarding potential alt sites | n/a |
-| SAMPLE_ID.jitter_params.tsv       | 6-parameter model parameterisation for each consensus type and repeat unit                                                                                 | n/a |
+| File Name                          | Details                                                                                                                                                   |
+|------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------|
+| SAMPLE_ID.redux.duplicate_freq.tsv | Frequency distribution of duplicate groups                                                                                                                |
+| SAMPLE_ID.redux.bqr.tsv            | Base quality recalibration counts for use in Sage                                                                                                         |
+| SAMPLE_ID.redux.ms_table.tsv.gz    | Aggregating counts of reads across microsatellites by consensus type / repeat unit / ref repeat count / read repeat count, discarding potential alt sites |
+| SAMPLE_ID.redux.jitter_params.tsv  | 6-parameter model parameterisation for each consensus type and repeat unit                                                                                |
+| SAMPLE_ID.redux.msi_prediction.tsv | MS indels per MB estimation                                                                                                                               |
+
+If -umi_base_diff_stats config is specified, the following detailed UMI-related output is written:
+
+| File Name                          | Details                                                        |
+|------------------------------------|----------------------------------------------------------------|
+| SAMPLE_ID.umi_coord_freq.tsv       | Frequency distribution of UMI duplicate groups                 |
+| SAMPLE_ID.umi_edit_distance.tsv    | Analysis of UMI differences and potential UMI base mismatches  |    
+| SAMPLE_ID.umi_nucleotide_freq.tsv  | Frequency distribution for nucleotides in UMIs                | 
 
 ### Duplicate Frequency
 
@@ -372,7 +536,7 @@ clinical cancer interest have some overlap:  FOXP1 (driver - intronic only), COL
 
 **UMI matching**
 
-- **Fixed UMI sets** - (eg TWIST) we don’t explicitly model, but doing so could lead to improvements.
+- **Fixed UMI sets** - (eg TWIST) aren't explicitly modelled, but doing so could lead to improvements
 - **Indel UMI errors** - will cause alignments to be different and we will fail to mark as duplicates
 - **UMI Base qual** - Not currently used, but could add value. Used in fgbio.
 - **G>T errors on 1st base on UMIs** – We have observed this frequently in TWIST data, but don’t know why.
@@ -388,10 +552,10 @@ clinical cancer interest have some overlap:  FOXP1 (driver - intronic only), COL
 
 **Problematic regions definitions**
 
-- REDUX should trinucleotide repeats of at least 30 length and all dinucleotide / single base repeats of of 20-30 bases to the problematic
+- Redux should trinucleotide repeats of at least 30 length and all dinucleotide / single base repeats of of 20-30 bases to the problematic
   regions file.
-- REDUX should increase minimum 10 bases outside of problematic region to 20.
-- REDUX should unmap any read with discordant mate if 'repeat trimmed length' < 30 bases
+- Redux should increase minimum 10 bases outside of problematic region to 20.
+- Redux should unmap any read with discordant mate if 'repeat trimmed length' < 30 bases
 
 **Microsatellite jitter modelling**
 
@@ -401,4 +565,8 @@ clinical cancer interest have some overlap:  FOXP1 (driver - intronic only), COL
 - The empirical 4bp repeat / 5bp jitter data tends to be sparse and difficult to fit. To address this, we clump all 3bp/4bp/5bp
   microsatellite data together and fit as one microsatellite category
 
-## Version History and Download Links
+**Base Quality Recalibration**
+
+- **BQR based on read position** - some library preparations have strong positional biases. Adjusting for this would reduce FP.
+- **BQR at long palindromic sequences** - some library preparations frequently have errors in palindromic regions. Adjusting for this would reduce FP.
+- **Adding strand context to BQR** - Recalibration accuracy could be improved if we aggregated BQR evidence on reverse strand reads into reverse complemented trinucleotide/ref/alt contexts

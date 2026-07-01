@@ -11,7 +11,7 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.region.Orientation;
-import com.hartwig.hmftools.esvee.common.saga.SagaMatchByLocation;
+import com.hartwig.hmftools.esvee.common.saga.SagaLocationMatch;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -36,7 +36,7 @@ public class JunctionData
     private JunctionData mLinkedIndel;
 
     @Nullable
-    private SagaMatchByLocation mSagaMatch;
+    private SagaLocationMatch mSagaMatch;
 
     public JunctionData(final int position, final Orientation orientation, final PrepRead read)
     {
@@ -94,31 +94,24 @@ public class JunctionData
     }
 
     public List<ReadGroup> junctionGroups() { return mJunctionGroups != null ? mJunctionGroups : Collections.emptyList(); }
-
     public List<ReadGroup> supportingGroups() { return mSupportingGroups != null ? mSupportingGroups : Collections.emptyList(); }
-
     public List<ReadGroup> exactSupportGroups() { return mExactSupportGroups != null ? mExactSupportGroups : Collections.emptyList(); }
 
     public Map<ReadType, List<PrepRead>> readTypeReads() { return mReadTypeReads; }
 
     public int junctionFragmentCount() { return mJunctionGroups != null ? mJunctionGroups.size() : 0; }
-
     public int supportingFragmentCount() { return mSupportingGroups != null ? mSupportingGroups.size() : 0; }
-
     public int exactSupportFragmentCount() { return mExactSupportGroups != null ? mExactSupportGroups.size() : 0; }
 
     public List<RemoteJunction> remoteJunctions() { return mRemoteJunctions != null ? mRemoteJunctions : Collections.emptyList(); }
 
     public boolean hotspot() { return mHotspot; }
-
     public void markHotspot() { mHotspot = true; }
 
     public boolean internalIndel() { return mInternalIndel; }
-
     public void markInternalIndel() { mInternalIndel = true; }
 
     public boolean discordantGroup() { return mDiscordantGroup; }
-
     public void markDiscordantGroup() { mDiscordantGroup = true; }
 
     public int depth() { return mDepth; }
@@ -205,9 +198,9 @@ public class JunctionData
 
     public boolean hasLinkedIndel() { return mLinkedIndel != null; }
 
-    public SagaMatchByLocation sagaMatch() { return mSagaMatch; }
+    public SagaLocationMatch sagaMatch() { return mSagaMatch; }
 
-    public void setSagaMatch(final SagaMatchByLocation match) { mSagaMatch = match; }
+    public void setSagaMatch(final SagaLocationMatch match) { mSagaMatch = match; }
 
     public String toString()
     {

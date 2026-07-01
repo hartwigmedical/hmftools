@@ -32,7 +32,9 @@ import com.hartwig.hmftools.esvee.assembly.ReadParseState;
 import com.hartwig.hmftools.esvee.assembly.RefBaseSeqBuilder;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.common.IndelCoords;
-import com.hartwig.hmftools.esvee.common.saga.SagaMatchBySequence;
+import com.hartwig.hmftools.esvee.common.saga.SagaJunctionInfo;
+import com.hartwig.hmftools.esvee.common.saga.SagaSequenceMatch;
+import com.hartwig.hmftools.esvee.common.saga.SagaSequenceMatcher;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -73,7 +75,7 @@ public class JunctionAssembly
     private String mAssemblyAlignmentInfo;
 
     @Nullable
-    private SagaMatchBySequence mSagaMatch;
+    private SagaSequenceMatch mSagaMatch;
 
     // info only
     private final String mInitialReadId;
@@ -87,6 +89,8 @@ public class JunctionAssembly
             final Junction junction, final byte[] bases, final byte[] baseQualities, final List<SupportRead> assemblySupport,
             final List<RepeatInfo> repeatInfo)
     {
+        mAssemblyId = -1;
+
         mJunction = junction;
 
         // set initial bounds from the assembly support
@@ -294,7 +298,7 @@ public class JunctionAssembly
         if(readInfo != null)
         {
             readInfo.read().setExtensionMismatches(readInfo.mismatches());
-            support.setMismatchInfo(readInfo.mismatchInfo());
+            support.setExtensionMatchInfo(readInfo);
         }
 
         mSupport.add(support);
@@ -677,6 +681,8 @@ public class JunctionAssembly
             final JunctionAssembly initialAssembly, final RefSideSoftClip refSideSoftClip, int refBaseLength,
             final List<SupportRead> initialSupport)
     {
+        mAssemblyId = -1;
+
         // build a junction assembly from an initial junction where the ref bases are truncated due to branching (likely short TI)
         mJunction = initialAssembly.junction();
 
@@ -735,6 +741,7 @@ public class JunctionAssembly
         mMergedAssemblies = 0;
         mMismatchReadCount = 0;
         mPhaseGroup = null;
+        mSagaMatch = null;
 
         mStats = new AssemblyStats();
 
@@ -839,19 +846,33 @@ public class JunctionAssembly
     }
 
     @Nullable
-    public SagaMatchBySequence sagaMatch()
+    public SagaSequenceMatch sagaMatch()
     {
         return mSagaMatch;
     }
 
-    public void setSagaMatch(final SagaMatchBySequence match)
+    private void setSagaMatch(final SagaSequenceMatch match)
     {
         mSagaMatch = match;
+    }
+
+    public boolean matchToSaga(final SagaSequenceMatcher sagaMatcher)
+    {
+        int junctionOffset = mJunction.isForward() ? refBaseLength() : baseLength() - refBaseLength();
+        List<SagaJunctionInfo> junctionInfos = List.of(new SagaJunctionInfo(junctionOffset));
+        // If the assembly is a LINE site, then the extension sequence requirement is lower.
+        // In which case need to lower the requirement for the junction overlap, or else there can be false negative matches.
+        boolean lowerJunctionOverlap = hasLineSequence();
+        SagaSequenceMatch match = sagaMatcher.matchBySequence(bases(), junctionInfos, lowerJunctionOverlap, true);
+        setSagaMatch(match);
+        return match != null;
     }
 
     @VisibleForTesting
     public JunctionAssembly(final Junction junction, final byte[] bases, final byte[] quals, final int junctionIndex)
     {
+        mAssemblyId = -1;
+
         mJunction = junction;
         mInitialReadId = null;
 

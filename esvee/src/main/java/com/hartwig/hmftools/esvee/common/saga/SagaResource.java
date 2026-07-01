@@ -45,7 +45,8 @@ public class SagaResource
         {
             samDict = fasta.getSequenceDictionary();
             samDict.getSequences().stream()
-                    .map(seq -> SagaAssembly.fromFastaLabel(seq.getSequenceName(), seq.getSequenceLength()))
+                    .map(seq ->
+                            SagaAssembly.fromFastaRecord(seq.getSequenceName(), fasta.getSequence(seq.getSequenceName()).getBaseString()))
                     .forEach(assemblies::add);
         }
         catch(IOException e)
@@ -68,5 +69,13 @@ public class SagaResource
     private static IndexedFastaSequenceFile loadFasta(final String fastaPath) throws IOException
     {
         return new IndexedFastaSequenceFile(new File(fastaPath));
+    }
+
+    // Package-private constructor for use in tests, to avoid requiring real FASTA files.
+    SagaResource(final String fastaPath, final List<SagaAssembly> assemblies, final SAMSequenceDictionary samDict)
+    {
+        mFastaPath = fastaPath;
+        mAssemblies = assemblies;
+        mSequenceDictionary = samDict;
     }
 }

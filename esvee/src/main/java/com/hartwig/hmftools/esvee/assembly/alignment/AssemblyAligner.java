@@ -26,6 +26,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.bwa.IBwaMemAligner;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.perf.TaskQueue;
 import com.hartwig.hmftools.esvee.assembly.AssemblyConfig;
@@ -34,7 +35,9 @@ import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
 import com.hartwig.hmftools.esvee.assembly.types.SupportType;
 import com.hartwig.hmftools.esvee.assembly.types.ThreadTask;
-import com.hartwig.hmftools.esvee.common.saga.SagaMatchBySequence;
+import com.hartwig.hmftools.esvee.common.saga.SagaAlignment;
+import com.hartwig.hmftools.esvee.common.saga.SagaJunctionInfo;
+import com.hartwig.hmftools.esvee.common.saga.SagaSequenceMatch;
 import com.hartwig.hmftools.esvee.common.saga.SagaSequenceMatcher;
 import com.hartwig.hmftools.esvee.common.saga.SagaMatcherFactory;
 
@@ -44,7 +47,7 @@ import org.jetbrains.annotations.Nullable;
 public class AssemblyAligner extends ThreadTask
 {
     private final AssemblyConfig mConfig;
-    private final Aligner mAligner;
+    private final IBwaMemAligner mAligner;
     private final AlignmentWriter mWriter;
 
     private final TaskQueue<AssemblyAlignment> mAssemblyAlignments;
@@ -55,7 +58,7 @@ public class AssemblyAligner extends ThreadTask
     private final SagaSequenceMatcher mSagaMatcher;
 
     public AssemblyAligner(
-            final AssemblyConfig config, final Aligner aligner, @Nullable final SagaMatcherFactory sagaMatcherFactory,
+            final AssemblyConfig config, final IBwaMemAligner aligner, @Nullable final SagaMatcherFactory sagaMatcherFactory,
             final AlignmentWriter writer, final TaskQueue<AssemblyAlignment> assemblyAlignments)
     {
         super("AssemblerAlignment");
@@ -122,16 +125,86 @@ public class AssemblyAligner extends ThreadTask
             return;
         }
 
-        if(mSagaMatcher != null)
+        AlignmentInfo alignmentInfo = null;
+        // Try to form breakends from the matched SAGA variant first. Otherwise, create breakends from alignment to ref genome.
+        if(tryMatchAssemblyAlignmentToSaga(assemblyAlignment))
         {
-            SagaMatchBySequence sagaMatch = mSagaMatcher.matchBySequence(assemblyAlignment.fullSequence(), assemblyAlignment.linkIndices());
-            assemblyAlignment.setSagaMatch(sagaMatch);
+            alignmentInfo = processSagaMatchedAssembly(assemblyAlignment);
+        }
+        if(alignmentInfo == null)
+        {
+            alignmentInfo = alignAssembly(assemblyAlignment);
         }
 
+        AlignmentFragments alignmentFragments = new AlignmentFragments(assemblyAlignment, mConfig.combinedSampleIds());
+        alignmentFragments.allocateBreakendSupport();
+
+        writeAssemblyData(mWriter, mConfig, assemblyAlignment, alignmentInfo.alignments(), alignmentInfo.requeriedAlignments());
+    }
+
+    private boolean tryMatchAssemblyAlignmentToSaga(AssemblyAlignment assemblyAlignment)
+    {
+        if(mSagaMatcher == null)
+        {
+            return false;
+        }
+
+        // Only use SAGA for the simple case of 0 or 1 links. Chained assemblies require more care, not implemented for now.
+        boolean isChained = assemblyAlignment.phaseSet() != null && assemblyAlignment.phaseSet().assemblyLinks().size() > 1;
+        if(isChained)
+        {
+            return false;
+        }
+
+        List<SagaJunctionInfo> junctionInfos = assemblyAlignment.linkIndices().stream().map(SagaJunctionInfo::new).toList();
+        // If an assembly is a LINE site, then the extension sequence requirement is lower.
+        // In which case need to lower the requirement for the junction overlap, or else there can be false negative matches.
+        boolean lowerJunctionOverlap = assemblyAlignment.assemblies().stream().anyMatch(JunctionAssembly::hasLineSequence);
+        SagaSequenceMatch sagaMatch = mSagaMatcher.matchBySequence(assemblyAlignment.fullSequence()
+                .getBytes(), junctionInfos, lowerJunctionOverlap, false);
+        assemblyAlignment.setSagaMatch(sagaMatch);
+
+        return sagaMatch != null;
+    }
+
+    private record AlignmentInfo(
+            List<AlignData> alignments,
+            List<AlignData> requeriedAlignments
+    )
+    {
+    }
+
+    @Nullable
+    private AlignmentInfo processSagaMatchedAssembly(final AssemblyAlignment assemblyAlignment)
+    {
+        SagaSequenceMatch sagaMatch = assemblyAlignment.sagaMatch();
+        if(sagaMatch == null)
+        {
+            return null;
+        }
+
+        // FIXME? validate that the saga match is nearby to the assembly.
+
+        SagaAlignment sagaAlignment = sagaMatch.alignment();
+        AlignData alignData = AlignData.fromSaga(sagaAlignment);
+        alignData.setFullSequenceData(assemblyAlignment.fullSequence(), assemblyAlignment.fullSequenceLength());
+
+        BreakendBuilder breakendBuilder = new BreakendBuilder(mConfig.RefGenome, assemblyAlignment);
+        boolean success = breakendBuilder.formBreakendsFromSaga(sagaAlignment, alignData);
+        if(!success)
+        {
+            return null;
+        }
+
+        return new AlignmentInfo(List.of(alignData), Collections.emptyList());
+    }
+
+    private AlignmentInfo alignAssembly(final AssemblyAlignment assemblyAlignment)
+    {
         List<BwaMemAlignment> bwaAlignments = mAligner.alignSequence(assemblyAlignment.fullSequence().getBytes());
 
         List<AlignData> alignments = bwaAlignments.stream()
-                .map(x -> AlignData.from(x, mConfig.RefGenVersion))
+                .map(x -> AlignData.fromRef(x, mConfig.RefGenVersion))
                 .filter(x -> x != null).collect(Collectors.toList());
 
         // set the orientation-adjusted sequence coordinates - done here since used in requery logic
@@ -144,12 +217,19 @@ public class AssemblyAligner extends ThreadTask
 
         alignments = requerySupplementaryAlignments(assemblyAlignment, alignments, requeriedAlignments);
 
-        processAlignmentResults(assemblyAlignment, alignments);
+        if(!alignments.isEmpty())
+        {
+            BreakendBuilder breakendBuilder = new BreakendBuilder(mConfig.RefGenome, assemblyAlignment);
+            breakendBuilder.formBreakends(alignments);
 
-        AlignmentFragments alignmentFragments = new AlignmentFragments(assemblyAlignment, mConfig.combinedSampleIds());
-        alignmentFragments.allocateBreakendSupport();
+            // final filters on assembly and alignment results
+            if(isWeakSingleReadExtensionAssembly(assemblyAlignment))
+            {
+                assemblyAlignment.breakends().clear();
+            }
+        }
 
-        writeAssemblyData(mWriter, mConfig, assemblyAlignment, alignments, requeriedAlignments);
+        return new AlignmentInfo(alignments, requeriedAlignments);
     }
 
     private List<AlignData> requerySoftClipAlignments(final AssemblyAlignment assemblyAlignment, final List<AlignData> alignments)
@@ -198,7 +278,7 @@ public class AssemblyAligner extends ThreadTask
         List<BwaMemAlignment> requeryBwaAlignments = mAligner.alignSequence(softClipBases.getBytes());
 
         List<AlignData> newAlignments = requeryBwaAlignments.stream()
-                .map(x -> AlignData.from(x, mConfig.RefGenVersion))
+                .map(x -> AlignData.fromRef(x, mConfig.RefGenVersion))
                 .filter(x -> x != null).collect(Collectors.toList());
 
         if(newAlignments.isEmpty())
@@ -296,7 +376,7 @@ public class AssemblyAligner extends ThreadTask
         List<BwaMemAlignment> requeryBwaAlignments = mAligner.alignSequence(alignmentSequence.getBytes());
 
         List<AlignData> requeryAlignments = requeryBwaAlignments.stream()
-                .map(x -> AlignData.from(x, mConfig.RefGenVersion))
+                .map(x -> AlignData.fromRef(x, mConfig.RefGenVersion))
                 .filter(x -> x != null).collect(Collectors.toList());
 
         List<AlignData> convertedAlignments = Lists.newArrayList();
@@ -333,21 +413,6 @@ public class AssemblyAligner extends ThreadTask
         }
 
         return convertedAlignments;
-    }
-
-    private void processAlignmentResults(final AssemblyAlignment assemblyAlignment, final List<AlignData> alignments)
-    {
-        if(alignments.isEmpty())
-            return;
-
-        BreakendBuilder breakendBuilder = new BreakendBuilder(mConfig.RefGenome, assemblyAlignment);
-        breakendBuilder.formBreakends(alignments);
-
-        // final filters on assembly and alignment results
-        if(isWeakSingleReadExtensionAssembly(assemblyAlignment))
-        {
-            assemblyAlignment.breakends().clear();
-        }
     }
 
     private static boolean isWeakSingleReadExtensionAssembly(final AssemblyAlignment assemblyAlignment)
@@ -405,7 +470,7 @@ public class AssemblyAligner extends ThreadTask
             if(read.type() != SupportType.JUNCTION)
                 continue;
 
-            int extensionLength = read.extensionLength(assemblyOrientation);
+            int extensionLength = read.junctionExtensionLength(assemblyOrientation);
 
             extensionLengths.add(extensionLength);
         }
@@ -419,7 +484,7 @@ public class AssemblyAligner extends ThreadTask
             int secondLongestLength = extensionLengths.get(1);
 
             List<SupportRead> topReads = reads.stream()
-                    .filter(x -> x.type() == SupportType.JUNCTION && x.extensionLength(assemblyOrientation) >= secondLongestLength)
+                    .filter(x -> x.type() == SupportType.JUNCTION && x.junctionExtensionLength(assemblyOrientation) >= secondLongestLength)
                     .collect(Collectors.toList());
 
             SupportRead read1 = topReads.get(0);

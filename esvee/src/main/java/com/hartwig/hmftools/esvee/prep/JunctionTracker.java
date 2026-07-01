@@ -25,10 +25,11 @@ import static com.hartwig.hmftools.esvee.prep.PrepConstants.DEPTH_MIN_CHECK;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.DEPTH_MIN_SUPPORT_RATIO;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.DEPTH_MIN_SUPPORT_RATIO_DISCORDANT;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_HOTSPOT_JUNCTION_SUPPORT;
+import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_INDEL_ANCHOR_LENGTH;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_LINE_SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.NON_ILLUMINA_X_DEPTH_MIN_SUPPORT_RATIO;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.UNPAIRED_READ_JUNCTION_DISTANCE;
-import static com.hartwig.hmftools.esvee.prep.types.DiscordantStats.isDiscordantUnpairedReadGroup;
+import static com.hartwig.hmftools.esvee.prep.types.DiscordantStats.hasPrimaryWithSupplementary;
 import static com.hartwig.hmftools.esvee.prep.types.ReadFilterType.INSERT_MAP_OVERLAP;
 import static com.hartwig.hmftools.esvee.prep.types.ReadFilterType.SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.esvee.prep.types.ReadType.NO_SUPPORT;
@@ -50,7 +51,7 @@ import com.hartwig.hmftools.common.utils.StartEndPair;
 import com.hartwig.hmftools.esvee.common.IndelCoords;
 import com.hartwig.hmftools.esvee.common.ReadIdTrimmer;
 import com.hartwig.hmftools.esvee.common.saga.SagaLocationMatcher;
-import com.hartwig.hmftools.esvee.common.saga.SagaMatchByLocation;
+import com.hartwig.hmftools.esvee.common.saga.SagaLocationMatch;
 import com.hartwig.hmftools.esvee.prep.types.DiscordantStats;
 import com.hartwig.hmftools.esvee.prep.types.JunctionData;
 import com.hartwig.hmftools.esvee.prep.types.PrepRead;
@@ -61,6 +62,9 @@ import com.hartwig.hmftools.esvee.prep.types.ReadGroupStatus;
 import com.hartwig.hmftools.esvee.prep.types.ReadType;
 
 import org.jetbrains.annotations.Nullable;
+
+import htsjdk.samtools.CigarElement;
+import htsjdk.samtools.CigarOperator;
 
 public class JunctionTracker
 {
@@ -349,8 +353,8 @@ public class JunctionTracker
                     mCandidateDiscordantGroups.add(readGroup);
             }
 
-            if(isDiscordantGroup || isDiscordantUnpairedReadGroup(readGroup))
-                mDiscordantStats.processReadGroup(readGroup);
+            if(isDiscordantGroup || hasPrimaryWithSupplementary(readGroup))
+                mDiscordantStats.processReadGroup(readGroup, isDiscordantGroup);
         }
 
         perfCounterStop(PerfCounters.JunctionSupport);
@@ -433,6 +437,21 @@ public class JunctionTracker
     {
         if(indelCoords.Length < mFilterConfig.MinIndelLength)
             return;
+
+        // ensure that sufficient bases exist on both sides to anchor the indel
+        List<CigarElement> cigarElements = read.cigar().getCigarElements();
+        int lastIndex = cigarElements.size() - 1;
+
+        for(int i = 0; i < cigarElements.size(); ++i)
+        {
+            CigarElement element = cigarElements.get(i);
+
+            if(i <= 1 && element.getOperator() == CigarOperator.M && element.getLength() < MIN_INDEL_ANCHOR_LENGTH)
+                return;
+
+            if(i >= lastIndex - 1 && element.getOperator() == CigarOperator.M && element.getLength() < MIN_INDEL_ANCHOR_LENGTH)
+                return;
+        }
 
         // a bit inefficient to search twice, but there won't be too many of these long indel reads
         JunctionData junctionStart = getOrCreateJunction(read, indelCoords.PosStart, FORWARD);
@@ -864,7 +883,7 @@ public class JunctionTracker
     {
         for(JunctionData junction : mJunctions)
         {
-            SagaMatchByLocation match = mSagaMatcher.match(mRegion.chromosome(), junction.Position, junction.Orient);
+            SagaLocationMatch match = mSagaMatcher.match(mRegion.chromosome(), junction.Position, junction.Orient);
             junction.setSagaMatch(match);
         }
     }
