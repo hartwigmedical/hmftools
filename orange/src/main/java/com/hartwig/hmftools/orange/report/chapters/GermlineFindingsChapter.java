@@ -67,13 +67,13 @@ public class GermlineFindingsChapter implements ReportChapter
         if(mReport.referenceId() != null)
         {
             addGermlineVariants(document);
-            document.addSpacing(10);
+            addSpaceBetweenSubsections(document);
             addGermlineAmpDels(document);
-            document.addSpacing(10);
+            addSpaceBetweenSubsections(document);
             addGermlineBreakends(document);
-            document.addSpacing(10);
+            addSpaceBetweenSubsections(document);
             addGermlineCNAberrations(document);
-            document.addSpacing(10);
+            addSpaceBetweenSubsections(document);
             addPharmacogenetics(document);
         }
         else

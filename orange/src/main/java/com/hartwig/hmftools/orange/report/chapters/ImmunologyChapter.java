@@ -46,7 +46,7 @@ public class ImmunologyChapter implements ReportChapter
     public void render(@NotNull final DocumentContext document) throws IOException
     {
         document.addParagraph(name(), mReportResources.chapterTitleStyle());
-
+        addSpaceBetweenSubsections(document);
         if(QcStatusInterpretation.hasPurpleFail(mReport.purple().fit().qc()))
         {
             document.addQcFailNotice(mReportResources);
@@ -68,7 +68,9 @@ public class ImmunologyChapter implements ReportChapter
         LilacRecord lilacData = mReport.lilac();
 
         if(lilacData == null)
+        {
             return;
+        }
 
         String title = "HLA Class I Alleles";
 
@@ -78,6 +80,7 @@ public class ImmunologyChapter implements ReportChapter
 
         if(mReport.experimentType() == ExperimentType.WHOLE_GENOME)
         {
+            addSpaceBetweenSubsections(document);
             title = "HLA Class II Alleles";
             List<LilacAllele> classIIAlleles =
                     lilacData.alleles().stream().filter(x -> !x.geneClass().equals(MHC_CLASS_I)).collect(Collectors.toList());

@@ -21,5 +21,10 @@ public interface ReportChapter
         return pageSize().getWidth() - (5 + ReportResources.PAGE_MARGIN_LEFT + ReportResources.PAGE_MARGIN_RIGHT);
     }
 
+    default void addSpaceBetweenSubsections(final @NotNull DocumentContext document) throws IOException
+    {
+        document.addSpacing(15);
+    }
+
     void render(@NotNull DocumentContext document) throws IOException;
 }

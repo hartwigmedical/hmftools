@@ -70,27 +70,27 @@ public class SomaticFindingsChapter implements ReportChapter
         }
 
         addSomaticVariants(document);
-        document.addSpacing(10);
+        addSpaceBetweenSubsections(document);
         addSomaticAmpDels(document);
-        document.addSpacing(10);
+        addSpaceBetweenSubsections(document);
         addFusions(document);
-        document.addSpacing(10);
+        addSpaceBetweenSubsections(document);
         addBreakendDisruptions(document);
-        document.addSpacing(10);
+        addSpaceBetweenSubsections(document);
 
         if(!mReport.tumorOnlyMode())
         {
             addViralPresence(document);
-            document.addSpacing(10);
+            addSpaceBetweenSubsections(document);
         }
 
         addChrArmCopyNumbers(document);
-        document.addSpacing(10);
+        addSpaceBetweenSubsections(document);
 
         if(!mReport.tumorOnlyMode())
         {
             addSignatureAllocations(document);
-            document.addSpacing(10);
+            addSpaceBetweenSubsections(document);
         }
 
         addLinxPlots(document);
