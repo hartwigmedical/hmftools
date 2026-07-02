@@ -1,50 +1,51 @@
 package com.hartwig.hmftools.orange.report.tables;
 
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.createStandardTable;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.toPercentages;
+
+import java.io.IOException;
+
 import com.hartwig.hmftools.datamodel.immuno.ImmuneEscapeRecord;
+import com.hartwig.hmftools.orange.report.DocumentContext;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.util.Cells;
-import com.hartwig.hmftools.orange.report.util.Tables;
-import com.itextpdf.layout.element.Cell;
-import com.itextpdf.layout.element.Table;
+
+import be.quodlibet.boxable.BaseTable;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public final class ImmuneEscapeTable
 {
-    public static Table build(
-            final String title, float width, final ImmuneEscapeRecord immuneEscape, final ReportResources reportResources, boolean isTumorFail)
+    public static BaseTable build(final DocumentContext docCtx,
+            final String title, float width, final ImmuneEscapeRecord immuneEscape,
+            final ReportResources reportResources, boolean isTumorFail) throws IOException
     {
+        float[] colWidths = { 2, 1, 3 };
+        String[] headerTexts = { "Escape Mechanism", "Detected?", Strings.EMPTY };
+
+        BaseTable table = createStandardTable(docCtx, title, width, colWidths, headerTexts, reportResources);
+        float[] pcts = toPercentages(colWidths);
         Cells cells = new Cells(reportResources);
-        Table table = Tables.createContent(width,
-                new float[] { 2, 1, 3 },
-                new Cell[] { cells.createHeader("Escape Mechanism"), cells.createHeader("Detected?"), cells.createHeader(Strings.EMPTY) });
 
-        table.addCell(cells.createContent("HLA-1 loss-of-function"));
-        table.addCell(cells.createContent(toYesNoUnavailable(immuneEscape.hasHlaEscape(), isTumorFail)));
-        table.addCell(cells.createContent(Strings.EMPTY));
+        addEscapeRow(table, cells, pcts, "HLA-1 loss-of-function", immuneEscape.hasHlaEscape(), isTumorFail);
+        addEscapeRow(table, cells, pcts, "Antigen presentation pathway inactivation", immuneEscape.hasAntigenPresentationPathwayEscape(), isTumorFail);
+        addEscapeRow(table, cells, pcts, "IFN gamma pathway inactivation", immuneEscape.hasIFNGammaPathwayEscape(), isTumorFail);
+        addEscapeRow(table, cells, pcts, "(Potential) PD-L1 overexpression", immuneEscape.hasPDL1OverexpressionEscape(), isTumorFail);
+        addEscapeRow(table, cells, pcts, "CD58 inactivation", immuneEscape.hasCD58InactivationEscape(), isTumorFail);
+        addEscapeRow(table, cells, pcts, "Epigenetics driven immune escape via SETDB1", immuneEscape.hasEpigeneticSETDB1Escape(), isTumorFail);
 
-        table.addCell(cells.createContent("Antigen presentation pathway inactivation"));
-        table.addCell(cells.createContent(toYesNoUnavailable(immuneEscape.hasAntigenPresentationPathwayEscape(), isTumorFail)));
-        table.addCell(cells.createContent(Strings.EMPTY));
+        return table;
+    }
 
-        table.addCell(cells.createContent("IFN gamma pathway inactivation"));
-        table.addCell(cells.createContent(toYesNoUnavailable(immuneEscape.hasIFNGammaPathwayEscape(), isTumorFail)));
-        table.addCell(cells.createContent(Strings.EMPTY));
-
-        table.addCell(cells.createContent("(Potential) PD-L1 overexpression"));
-        table.addCell(cells.createContent(toYesNoUnavailable(immuneEscape.hasPDL1OverexpressionEscape(), isTumorFail)));
-        table.addCell(cells.createContent(Strings.EMPTY));
-
-        table.addCell(cells.createContent("CD58 inactivation"));
-        table.addCell(cells.createContent(toYesNoUnavailable(immuneEscape.hasCD58InactivationEscape(), isTumorFail)));
-        table.addCell(cells.createContent(Strings.EMPTY));
-
-        table.addCell(cells.createContent("Epigenetics driven immune escape via SETDB1"));
-        table.addCell(cells.createContent(toYesNoUnavailable(immuneEscape.hasEpigeneticSETDB1Escape(), isTumorFail)));
-        table.addCell(cells.createContent(Strings.EMPTY));
-
-        return new Tables(reportResources).createWrapping(table, title);
+    private static void addEscapeRow(final BaseTable table, final Cells cells, final float[] pcts,
+            final String mechanism, boolean detected, boolean isTumorFail)
+    {
+        java.util.List<String> rowValues = new java.util.ArrayList<>();
+        rowValues.add(mechanism);
+        rowValues.add(toYesNoUnavailable(detected, isTumorFail));
+        rowValues.add(Strings.EMPTY);
+        cells.addRow(table, pcts, rowValues);
     }
 
     @NotNull

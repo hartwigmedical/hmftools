@@ -63,7 +63,7 @@ public class PurpleRegressionTest
         tumor = "COLO829v003T";
         reference = "COLO829v003R";
         File inputs = new File("/Users/timlavers/work/scratch/" + tumor + ".inputs.zip");
-        Unzipper.unzipInto(inputs, InputDir);
+        com.hartwig.hmftools.common.test.Unzipper.unzipInto(inputs, InputDir);
         int numberOfRuns = 10;
         Stopwatch stopwatch = Stopwatch.createUnstarted();
         for(int i = 0; i < numberOfRuns; i++)
@@ -81,10 +81,10 @@ public class PurpleRegressionTest
         tumor = "COLO829v003T";
         reference = "COLO829v003R";
         File inputs = new File("/Users/timlavers/work/scratch/" + tumor + ".inputs.zip");
-        Unzipper.unzipInto(inputs, InputDir);
+        com.hartwig.hmftools.common.test.Unzipper.unzipInto(inputs, InputDir);
         runPurple();
         File configuredOutputs = new File("/Users/timlavers/work/batches/2025/12/19/3/COLO829v003.v2_3.purple.results.zip");
-        Unzipper.unzipInto(configuredOutputs, ConfiguredResultsDir);
+        com.hartwig.hmftools.common.test.Unzipper.unzipInto(configuredOutputs, ConfiguredResultsDir);
         checkResults();
     }
 
@@ -94,10 +94,10 @@ public class PurpleRegressionTest
         tumor = "H00000469";
         reference = "H00000469-ref";
         File inputs = new File("/Users/timlavers/work/scratch/" + tumor + ".inputs.zip");
-        Unzipper.unzipInto(inputs, InputDir);
+        com.hartwig.hmftools.common.test.Unzipper.unzipInto(inputs, InputDir);
         runPurple();
         File configuredOutputs = new File("/Users/timlavers/work/scratch/" + tumor + ".outputs.zip");
-        Unzipper.unzipInto(configuredOutputs, ConfiguredResultsDir);
+        com.hartwig.hmftools.common.test.Unzipper.unzipInto(configuredOutputs, ConfiguredResultsDir);
         checkResults();
     }
 

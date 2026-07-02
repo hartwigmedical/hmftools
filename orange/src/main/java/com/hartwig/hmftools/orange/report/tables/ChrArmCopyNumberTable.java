@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.orange.report.tables;
 
-import static com.hartwig.hmftools.orange.algo.OrangeConstants.isCandidateLikelihood;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_DRIVER;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatSingleDigitDecimal;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_CHR;
@@ -8,7 +7,10 @@ import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_CN;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_REL_CN;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_TYPE;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.addEntry;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.cellArray;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.stringArray;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.createStandardTable;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.createEmptyTable;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.toPercentages;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.intToFloatArray;
 
 import java.util.List;
@@ -18,43 +20,50 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.datamodel.purple.PurpleChrArmCopyNumber;
-import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.util.Cells;
-import com.hartwig.hmftools.orange.report.util.Tables;
-import com.itextpdf.layout.element.Cell;
-import com.itextpdf.layout.element.Table;
+
+import be.quodlibet.boxable.Cell;
+import be.quodlibet.boxable.BaseTable;
+
+import org.apache.pdfbox.pdmodel.PDPage;
+
+import com.hartwig.hmftools.orange.report.DocumentContext;
+
+import java.io.IOException;
 
 import org.apache.logging.log4j.util.Strings;
 
 public final class ChrArmCopyNumberTable
 {
-    public static Table build(
+    public static BaseTable build(final DocumentContext docCtx,
             final String title, float width, final List<PurpleChrArmCopyNumber> chrArmCopyNumbers, final ReportResources reportResources)
+            throws IOException
     {
         if(chrArmCopyNumbers.isEmpty())
         {
-            return new Tables(reportResources).createEmpty(title, width);
+            return createEmptyTable(docCtx, title, width, reportResources);
         }
 
         Cells cells = new Cells(reportResources);
 
         List<Integer> widths = Lists.newArrayList();
-        List<Cell> cellEntries = Lists.newArrayList();
+        List<String> headers = Lists.newArrayList();
 
-        addEntry(cells, widths, cellEntries, 1, COL_CHR);
-        addEntry(cells, widths, cellEntries, 1, "Arm");
-        addEntry(cells, widths, cellEntries, 1, COL_TYPE);
-        addEntry(cells, widths, cellEntries, 1, COL_CN);
-        addEntry(cells, widths, cellEntries, 1, COL_REL_CN);
-        addEntry(cells, widths, cellEntries, 1, COL_DRIVER);
-        addEntry(cells, widths, cellEntries, 3, Strings.EMPTY); // to space things out
+        addEntry(widths, headers, 1, COL_CHR);
+        addEntry(widths, headers, 1, "Arm");
+        addEntry(widths, headers, 1, COL_TYPE);
+        addEntry(widths, headers, 1, COL_CN);
+        addEntry(widths, headers, 1, COL_REL_CN);
+        addEntry(widths, headers, 1, COL_DRIVER);
+        addEntry(widths, headers, 3, Strings.EMPTY); // to space things out
 
-        Table table = Tables.createContent(width, intToFloatArray(widths), cellArray(cellEntries));
+        BaseTable table = createStandardTable(docCtx, title, width, intToFloatArray(widths), stringArray(headers), reportResources);
+        float[] pcts = toPercentages(intToFloatArray(widths));
 
         for(PurpleChrArmCopyNumber chrArmCopyNumber : sort(chrArmCopyNumbers))
         {
-            List<Cell> rowCells = Lists.newArrayList();
+            List<String> rowCells = Lists.newArrayList();
 
             rowCells.add(cells.createContent(chrArmCopyNumber.chromosome()));
             rowCells.add(cells.createContent(chrArmCopyNumber.arm()));
@@ -64,15 +73,15 @@ public final class ChrArmCopyNumberTable
             rowCells.add(cells.createContent(chrArmCopyNumber.driverInterpretation().toString()));
             rowCells.add(cells.createContent(Strings.EMPTY));
 
+            List<Cell<PDPage>> createdCells = cells.addRow(table, pcts, rowCells);
+
             if(chrArmCopyNumber.driverInterpretation() == DriverInterpretation.LOW)
             {
-                reportResources.shadeCandidateCells(rowCells);
+                reportResources.shadeCandidateCells(createdCells);
             }
-
-            rowCells.forEach(x -> table.addCell(x));
         }
 
-        return new Tables(reportResources).createWrapping(table, title);
+        return table;
     }
 
     private static List<PurpleChrArmCopyNumber> sort(final List<PurpleChrArmCopyNumber> arms)
@@ -91,11 +100,12 @@ public final class ChrArmCopyNumberTable
             int chr2 = HumanChromosome.chromosomeRank(arm2.chromosome());
 
             if(chr1 != chr2)
+            {
                 return Integer.compare(chr1, chr2);
+            }
 
             return arm1.arm().compareTo(arm2.arm());
 
         }).collect(Collectors.toList());
     }
-
 }

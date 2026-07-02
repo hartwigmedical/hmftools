@@ -1,9 +1,11 @@
 package com.hartwig.hmftools.orange.report.chapters;
 
-import com.hartwig.hmftools.orange.report.ReportResources;
-import com.itextpdf.kernel.geom.PageSize;
-import com.itextpdf.layout.Document;
+import java.io.IOException;
 
+import com.hartwig.hmftools.orange.report.DocumentContext;
+import com.hartwig.hmftools.orange.report.ReportResources;
+
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.jetbrains.annotations.NotNull;
 
 public interface ReportChapter
@@ -12,18 +14,17 @@ public interface ReportChapter
     String name();
 
     @NotNull
-    PageSize pageSize();
+    PDRectangle pageSize();
 
     default float contentWidth()
     {
         return pageSize().getWidth() - (5 + ReportResources.PAGE_MARGIN_LEFT + ReportResources.PAGE_MARGIN_RIGHT);
     }
 
-    default float contentHeight()
+    default void addSpaceBetweenSubsections(final @NotNull DocumentContext document) throws IOException
     {
-        return pageSize().getHeight() - (5 + ReportResources.PAGE_MARGIN_LEFT + ReportResources.PAGE_MARGIN_RIGHT);
+        document.addSpacing(15);
     }
 
-    void render(@NotNull Document document);
-
+    void render(@NotNull DocumentContext document) throws IOException;
 }
