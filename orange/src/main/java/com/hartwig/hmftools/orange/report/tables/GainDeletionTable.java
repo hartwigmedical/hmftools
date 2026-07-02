@@ -19,7 +19,10 @@ import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_REL_CN;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_TPM;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_TYPE;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.addEntry;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.cellArray;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.stringArray;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.createStandardTable;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.createEmptyTable;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.toPercentages;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.intToFloatArray;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.zeroPrefixed;
 
@@ -32,9 +35,15 @@ import com.hartwig.hmftools.datamodel.purple.PurpleGainDeletion;
 import com.hartwig.hmftools.datamodel.purple.PurpleGermlineStatus;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.util.Cells;
-import com.hartwig.hmftools.orange.report.util.Tables;
-import com.itextpdf.layout.element.Cell;
-import com.itextpdf.layout.element.Table;
+
+import be.quodlibet.boxable.Cell;
+import be.quodlibet.boxable.BaseTable;
+
+import org.apache.pdfbox.pdmodel.PDPage;
+
+import com.hartwig.hmftools.orange.report.DocumentContext;
+
+import java.io.IOException;
 
 import org.apache.logging.log4j.util.Strings;
 
@@ -44,45 +53,46 @@ public final class GainDeletionTable
     private static String COL_MAX_CN = "Max CN";
     private static String COL_ARM_CN = "Arm CN";
 
-    public static Table build(
+    public static BaseTable build(final DocumentContext docCtx,
             final String title, float width, final List<PurpleGainDeletion> gainsDels, final ReportResources reportResources,
-            boolean hasRna)
+            boolean hasRna) throws IOException
     {
         if(gainsDels.isEmpty())
         {
-            return new Tables(reportResources).createEmpty(title, width);
+            return createEmptyTable(docCtx, title, width, reportResources);
         }
 
         Cells cells = new Cells(reportResources);
 
         List<Integer> widths = Lists.newArrayList();
-        List<Cell> cellEntries = Lists.newArrayList();
+        List<String> headers = Lists.newArrayList();
 
-        addEntry(cells, widths, cellEntries, 1, COL_LOCATION);
-        addEntry(cells, widths, cellEntries, 1, COL_GENE);
-        addEntry(cells, widths, cellEntries, 1, COL_TYPE);
-        addEntry(cells, widths, cellEntries, 1, COL_RANGE); // if known
-        addEntry(cells, widths, cellEntries, 1, COL_MIN_CN);
-        addEntry(cells, widths, cellEntries, 1, COL_MAX_CN);
-        addEntry(cells, widths, cellEntries, 1, COL_REL_CN);
-        addEntry(cells, widths, cellEntries, 1, COL_ARM_CN);
+        addEntry(widths, headers, 1, COL_LOCATION);
+        addEntry(widths, headers, 1, COL_GENE);
+        addEntry(widths, headers, 1, COL_TYPE);
+        addEntry(widths, headers, 1, COL_RANGE); // if known
+        addEntry(widths, headers, 1, COL_MIN_CN);
+        addEntry(widths, headers, 1, COL_MAX_CN);
+        addEntry(widths, headers, 1, COL_REL_CN);
+        addEntry(widths, headers, 1, COL_ARM_CN);
 
         boolean anyEventsHaveRna = hasRna && gainsDels.stream().anyMatch(x -> x.tpm() != null);
 
         if(anyEventsHaveRna)
         {
-            addEntry(cells, widths, cellEntries, 1, COL_TPM);
-            addEntry(cells, widths, cellEntries, 1, "Percentile");
-            addEntry(cells, widths, cellEntries, 1, "Fold Change");
+            addEntry(widths, headers, 1, COL_TPM);
+            addEntry(widths, headers, 1, "Percentile");
+            addEntry(widths, headers, 1, "Fold Change");
         }
 
-        addEntry(cells, widths, cellEntries, 1, COL_DRIVER);
+        addEntry(widths, headers, 1, COL_DRIVER);
 
-        Table table = Tables.createContent(width, intToFloatArray(widths), cellArray(cellEntries));
+        BaseTable table = createStandardTable(docCtx, title, width, intToFloatArray(widths), stringArray(headers), reportResources);
+        float[] pcts = toPercentages(intToFloatArray(widths));
 
         for(PurpleGainDeletion gainDel : sort(gainsDels))
         {
-            List<Cell> rowCells = Lists.newArrayList();
+            List<String> rowCells = Lists.newArrayList();
 
             rowCells.add(cells.createContent(gainDel.chromosome() + gainDel.chromosomeBand()));
             rowCells.add(cells.createContent(geneDisplay(gainDel)));
@@ -111,15 +121,16 @@ public final class GainDeletionTable
 
             rowCells.add(cells.createContent(gainDel.driver().driverInterpretation().toString()));
 
+            List<Cell<PDPage>> createdCells = cells.addRow(table, pcts, rowCells);
+
             if(gainDel.driver().driverInterpretation() == DriverInterpretation.LOW)
             {
-                reportResources.shadeCandidateCells(rowCells);
+                reportResources.shadeCandidateCells(createdCells);
             }
 
-            rowCells.forEach(x -> table.addCell(x));
         }
 
-        return new Tables(reportResources).createWrapping(table, title);
+        return table;
     }
 
     private static List<PurpleGainDeletion> sort(final List<PurpleGainDeletion> gainsAndDels)
@@ -132,7 +143,9 @@ public final class GainDeletionTable
             int likelihoodCompare = Double.compare(-likelihood1, -likelihood2);
 
             if(likelihoodCompare != 0)
+            {
                 return likelihoodCompare;
+            }
 
             String location1 = zeroPrefixed(gainDel1.chromosome() + gainDel1.chromosomeBand());
             String location2 = zeroPrefixed(gainDel2.chromosome() + gainDel2.chromosomeBand());
@@ -151,7 +164,9 @@ public final class GainDeletionTable
     private static String rangeDisplay(final PurpleGainDeletion gainDel)
     {
         if(gainDel.exonStart() == null && gainDel.exonEnd() == null)
+        {
             return gainDel.geneRange();
+        }
 
         return format("Exon %d - Exon %d", gainDel.exonStart(), gainDel.exonEnd());
     }

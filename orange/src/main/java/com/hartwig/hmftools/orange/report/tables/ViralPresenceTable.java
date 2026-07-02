@@ -3,11 +3,13 @@ package com.hartwig.hmftools.orange.report.tables;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_DRIVER;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_TYPE;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.addEntry;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.cellArray;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.stringArray;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.createStandardTable;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.createEmptyTable;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.toPercentages;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.floatArray;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatPercentage;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatSingleDigitDecimal;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.intToFloatArray;
 
 import java.util.List;
 
@@ -16,9 +18,15 @@ import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterEntry;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.util.Cells;
-import com.hartwig.hmftools.orange.report.util.Tables;
-import com.itextpdf.layout.element.Cell;
-import com.itextpdf.layout.element.Table;
+
+import be.quodlibet.boxable.Cell;
+import be.quodlibet.boxable.BaseTable;
+
+import org.apache.pdfbox.pdmodel.PDPage;
+
+import com.hartwig.hmftools.orange.report.DocumentContext;
+
+import java.io.IOException;
 
 import org.apache.logging.log4j.util.Strings;
 
@@ -31,34 +39,35 @@ public final class ViralPresenceTable
     private static final String COL_CLONAL_COV = "Exp Clonal Cov";
     private static final String COL_VIRUS = "Virus";
 
-
-    public static Table build(
+    public static BaseTable build(final DocumentContext docCtx,
             final String title, float width, final List<VirusInterpreterEntry> viruses, final ReportResources reportResources)
+            throws IOException
     {
         if(viruses.isEmpty())
         {
-            return new Tables(reportResources).createEmpty(title, width);
+            return createEmptyTable(docCtx, title, width, reportResources);
         }
 
         Cells cells = new Cells(reportResources);
 
         List<Float> widths = Lists.newArrayList();
-        List<Cell> cellEntries = Lists.newArrayList();
+        List<String> headers = Lists.newArrayList();
 
-        addEntry(cells, widths, cellEntries, 2.5, COL_VIRUS);
-        addEntry(cells, widths, cellEntries, 2.5, COL_QC);
-        addEntry(cells, widths, cellEntries, 1, COL_TYPE);
-        addEntry(cells, widths, cellEntries, 2, COL_INTEGRATIONS);
-        addEntry(cells, widths, cellEntries, 1.5, COL_PERC_COV);
-        addEntry(cells, widths, cellEntries, 1.5, COL_MEAN_COV);
-        addEntry(cells, widths, cellEntries, 2, COL_CLONAL_COV);
-        addEntry(cells, widths, cellEntries, 1, COL_DRIVER);
+        addEntry(widths, headers, 2.5, COL_VIRUS);
+        addEntry(widths, headers, 2.5, COL_QC);
+        addEntry(widths, headers, 1, COL_TYPE);
+        addEntry(widths, headers, 2, COL_INTEGRATIONS);
+        addEntry(widths, headers, 1.5, COL_PERC_COV);
+        addEntry(widths, headers, 1.5, COL_MEAN_COV);
+        addEntry(widths, headers, 2, COL_CLONAL_COV);
+        addEntry(widths, headers, 1, COL_DRIVER);
 
-        Table table = Tables.createContent(width, floatArray(widths), cellArray(cellEntries));
+        BaseTable table = createStandardTable(docCtx, title, width, floatArray(widths), stringArray(headers), reportResources);
+        float[] pcts = toPercentages(floatArray(widths));
 
         for(VirusInterpreterEntry virus : viruses)
         {
-            List<Cell> rowCells = Lists.newArrayList();
+            List<String> rowCells = Lists.newArrayList();
 
             rowCells.add(cells.createContent(virus.name()));
             rowCells.add(cells.createContent(virus.qcStatus().toString()));
@@ -69,15 +78,15 @@ public final class ViralPresenceTable
             rowCells.add(cells.createContent(expectedClonalCoverageField(virus)));
             rowCells.add(cells.createContent(virus.driverInterpretation().toString()));
 
+            List<Cell<PDPage>> createdCells = cells.addRow(table, pcts, rowCells);
+
             if(virus.driverInterpretation() == DriverInterpretation.LOW)
             {
-                reportResources.shadeCandidateCells(rowCells);
+                reportResources.shadeCandidateCells(createdCells);
             }
-
-            rowCells.forEach(x -> table.addCell(x));
         }
 
-        return new Tables(reportResources).createWrapping(table, title);
+        return table;
     }
 
     private static String expectedClonalCoverageField(final VirusInterpreterEntry virus)

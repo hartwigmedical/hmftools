@@ -119,7 +119,7 @@ public class OrangeConfig
     private static final String DOID_SEPARATOR = ";";
 
     // General params needed for every analysis
-    private static final String EXPERIMENT_TYPE = "experiment_type";
+    public static final String EXPERIMENT_TYPE = "experiment_type";
     private static final String PRIMARY_TUMOR_DOIDS = "primary_tumor_doids";
     private static final String PRIMARY_TUMOR_LOCATION = "primary_tumor_location";
     private static final String SAMPLING_DATE = "sampling_date";
@@ -169,7 +169,9 @@ public class OrangeConfig
             String testPipelineVersionFile = format("%s/orange_pipeline.version.txt", pipelineSampleRootDir);
 
             if(Files.exists(Paths.get(testPipelineVersionFile)))
+            {
                 pipelineVersionFile = testPipelineVersionFile;
+            }
         }
 
         PipelineVersionFile = pipelineVersionFile;
@@ -177,9 +179,13 @@ public class OrangeConfig
         String outputDir;
 
         if(pipelineSampleRootDir != null && !configBuilder.hasValue(OUTPUT_DIR))
+        {
             outputDir = pipelineSampleRootDir + "orange/";
+        }
         else
+        {
             outputDir = parseOutputDir(configBuilder);
+        }
 
         OutputDir = outputDir;
         checkCreateOutputDir(OutputDir);
@@ -196,8 +202,10 @@ public class OrangeConfig
         PurpleDataDirectory = pathResolver.resolveMandatoryToolDirectory(PURPLE_DIR_CFG, defaultToolDirectories.purpleDir());
         PurplePlotDirectory = pathResolver.resolveMandatoryToolPlotsDirectory(PURPLE_PLOT_DIR_CFG, defaultToolDirectories.purpleDir());
         LinxSomaticDataDirectory = pathResolver.resolveMandatoryToolDirectory(LINX_DIR_CFG, defaultToolDirectories.linxSomaticDir());
-        LinxPlotDirectory = optionalPath(pathResolver.resolveOptionalToolPlotsDirectory(LINX_PLOT_DIR_CFG, defaultToolDirectories.linxSomaticDir()));
-        SagePlotDirectory = optionalPath(pathResolver.resolveOptionalToolPlotsDirectory(SAGE_PLOT_DIR_CFG, defaultToolDirectories.linxSomaticDir()));
+        LinxPlotDirectory =
+                optionalPath(pathResolver.resolveOptionalToolPlotsDirectory(LINX_PLOT_DIR_CFG, defaultToolDirectories.linxSomaticDir()));
+        SagePlotDirectory =
+                optionalPath(pathResolver.resolveOptionalToolPlotsDirectory(SAGE_PLOT_DIR_CFG, defaultToolDirectories.linxSomaticDir()));
 
         QSeeDirectory = pathResolver.resolveOptionalToolDirectory(QSEE_DIR_CFG, defaultToolDirectories.qseeDir());
 
@@ -233,7 +241,9 @@ public class OrangeConfig
             isofoxDir = pathResolver.resolveOptionalToolDirectory(ISOFOX_DIR_CFG, defaultToolDirectories.isofoxDir());
 
             if(isofoxDir != null && !Files.exists(Paths.get(isofoxDir)))
+            {
                 isofoxDir = null;
+            }
         }
 
         IsofoxDir = isofoxDir;
@@ -266,8 +276,15 @@ public class OrangeConfig
         LOGGER.info("experiment type has been resolved to '{}'", RunType);
     }
 
-    public boolean hasReference() { return ReferenceId != null; }
-    public boolean hasRNA() { return RnaSampleId != null || IsofoxDir != null; }
+    public boolean hasReference()
+    {
+        return ReferenceId != null;
+    }
+
+    public boolean hasRNA()
+    {
+        return RnaSampleId != null || IsofoxDir != null;
+    }
 
     public static void registerConfig(final ConfigBuilder configBuilder)
     {

@@ -117,7 +117,7 @@
         <kotlin.version>2.1.0</kotlin.version>
         <kotlin.coroutines.version>1.10.0</kotlin.coroutines.version>
         <selenium.version>3.14.0</selenium.version>
-        <itext.version>7.1.5</itext.version>
+        <boxable.version>1.8.2</boxable.version>
         <tablesaw.version>0.43.1</tablesaw.version>
         <jcommander.version>1.81</jcommander.version>
         <record.builder.version>51</record.builder.version>
@@ -352,19 +352,9 @@
                 <version>${selenium.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.itextpdf</groupId>
-                <artifactId>kernel</artifactId>
-                <version>${itext.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.itextpdf</groupId>
-                <artifactId>layout</artifactId>
-                <version>${itext.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.itextpdf</groupId>
-                <artifactId>io</artifactId>
-                <version>${itext.version}</version>
+                <groupId>com.github.dhorions</groupId>
+                <artifactId>boxable</artifactId>
+                <version>${boxable.version}</version>
             </dependency>
             <dependency>
                 <groupId>tech.tablesaw</groupId>

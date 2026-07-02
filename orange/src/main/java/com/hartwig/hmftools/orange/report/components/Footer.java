@@ -1,90 +1,75 @@
 package com.hartwig.hmftools.orange.report.components;
 
-import static com.hartwig.hmftools.orange.report.ReportResources.FOOTER_HEIGHT;
-
+import java.io.IOException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.orange.report.ReportResources;
-import com.itextpdf.kernel.geom.Rectangle;
-import com.itextpdf.kernel.pdf.PdfDocument;
-import com.itextpdf.kernel.pdf.PdfPage;
-import com.itextpdf.kernel.pdf.canvas.PdfCanvas;
-import com.itextpdf.kernel.pdf.xobject.PdfFormXObject;
-import com.itextpdf.layout.Canvas;
-import com.itextpdf.layout.element.Paragraph;
-import com.itextpdf.layout.element.Text;
-import com.itextpdf.layout.property.TextAlignment;
+
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
 
 public class Footer
 {
-    private final List<FooterTemplate> mFooterTemplates;
+    private final List<Integer> mPageNumbers;
     private final ReportResources mReportResources;
     private final boolean mAddDisclaimer;
 
     public Footer(final ReportResources reportResources, boolean addDisclaimer)
     {
-        mFooterTemplates = Lists.newArrayList();
+        mPageNumbers = Lists.newArrayList();
         mReportResources = reportResources;
         mAddDisclaimer = addDisclaimer;
     }
 
-    public void renderFooter(final PdfPage page)
+    /**
+     * Record that a page was created (to be numbered later).
+     */
+    public void renderFooter(final PDPage page, final PDDocument document)
     {
-        PdfCanvas canvas = new PdfCanvas(page.getLastContentStream(), page.getResources(), page.getDocument());
-
-        int pageNumber = page.getDocument().getPageNumber(page);
-        PdfFormXObject pageNumberTemplate = new PdfFormXObject(new Rectangle(0, 0, 465, FOOTER_HEIGHT));
-        canvas.addXObject(pageNumberTemplate, 58, 20);
-        mFooterTemplates.add(new FooterTemplate(pageNumber, pageNumberTemplate, mAddDisclaimer));
-
-        canvas.release();
+        int pageNumber = document.getPages().indexOf(page) + 1;
+        mPageNumbers.add(pageNumber);
     }
 
-    public void writeFooters(final PdfDocument document)
+    /**
+     * Write page numbers on all pages (second pass, once total count is known).
+     */
+    public void writeFooters(final PDDocument document)
     {
         int totalPageCount = document.getNumberOfPages();
-        for(FooterTemplate tpl : mFooterTemplates)
+        for(int i = 0; i < totalPageCount; i++)
         {
-            tpl.renderFooter(totalPageCount, document, mReportResources);
-        }
-    }
-
-    private static class FooterTemplate
-    {
-        private final int pageNumber;
-        private final PdfFormXObject template;
-        private final boolean addDisclaimer;
-
-        FooterTemplate(int pageNumber, final PdfFormXObject template, boolean addDisclaimer)
-        {
-            this.pageNumber = pageNumber;
-            this.template = template;
-            this.addDisclaimer = addDisclaimer;
-        }
-
-        void renderFooter(int totalPageCount, final PdfDocument document, final ReportResources reportResources)
-        {
+            PDPage page = document.getPage(i);
+            int pageNumber = i + 1;
             String displayString = pageNumber + "/" + totalPageCount;
 
-            Canvas canvas = new Canvas(template, document);
-            Paragraph pageNumberParagraph = new Paragraph().add(displayString).addStyle(reportResources.pageNumberStyle());
-            canvas.showTextAligned(pageNumberParagraph, 0, 0, TextAlignment.LEFT);
-
-            if(addDisclaimer)
+            try(PDPageContentStream cs = new PDPageContentStream(document, page, PDPageContentStream.AppendMode.APPEND, true, true))
             {
-                List<Text> disclaimerParts = List.of(
-                        new Text("This report is for '"),
-                        new Text("Research Use Only (RUO)").setFont(reportResources.fontBold()),
-                        new Text("' and is "),
-                        new Text("not").setUnderline(),
-                        new Text(" suitable for diagnostic or clinical applications. "),
-                        new Text("No rights").setUnderline(),
-                        new Text(" can be derived from the contents of this report.")
-                );
-                Paragraph disclaimerParagraph = new Paragraph().setMaxWidth(430).addStyle(reportResources.disclaimerStyle());
-                disclaimerParagraph.addAll(disclaimerParts);
-                canvas.showTextAligned(disclaimerParagraph, 40, 0, TextAlignment.LEFT);
+                ReportResources.TextStyle pageNumStyle = mReportResources.pageNumberStyle();
+                cs.beginText();
+                cs.setFont(pageNumStyle.font(), pageNumStyle.fontSize());
+                cs.setNonStrokingColor(pageNumStyle.color());
+                cs.newLineAtOffset(58, 20);
+                cs.showText(displayString);
+                cs.endText();
+
+                if(mAddDisclaimer)
+                {
+                    ReportResources.TextStyle disclaimerStyle = mReportResources.disclaimerStyle();
+                    String disclaimer = "This report is for 'Research Use Only (RUO)' and is not suitable "
+                            + "for diagnostic or clinical applications. No rights can be derived from the contents of this report.";
+                    cs.beginText();
+                    cs.setFont(disclaimerStyle.font(), disclaimerStyle.fontSize());
+                    cs.setNonStrokingColor(disclaimerStyle.color());
+                    cs.newLineAtOffset(98, 20);
+                    cs.showText(disclaimer);
+                    cs.endText();
+                }
+            }
+            catch(IOException e)
+            {
+                throw new RuntimeException("Failed to write footer", e);
             }
         }
     }

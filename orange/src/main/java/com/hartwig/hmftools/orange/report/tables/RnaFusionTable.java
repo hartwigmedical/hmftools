@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.orange.report.tables;
 
-import static java.lang.Math.min;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_COHOR_FREQ;
@@ -11,7 +10,10 @@ import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_SUPPORT;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_SV_TYPE;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_TYPE;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.addEntry;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.cellArray;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.stringArray;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.createStandardTable;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.createEmptyTable;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.toPercentages;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatSupportField;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.intToFloatArray;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.zeroPrefixed;
@@ -23,55 +25,60 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.datamodel.isofox.RnaFusion;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.util.Cells;
-import com.hartwig.hmftools.orange.report.util.Tables;
-import com.itextpdf.layout.element.Cell;
-import com.itextpdf.layout.element.Table;
+
+import be.quodlibet.boxable.BaseTable;
+
+import com.hartwig.hmftools.orange.report.DocumentContext;
+
+import java.io.IOException;
 
 public final class RnaFusionTable
 {
-    private static final String COL_OTHER_FRAGS = "Non-Split Support";
-
-    public static Table build(final String title, float width, final List<RnaFusion> fusions, final ReportResources reportResources)
+    public static BaseTable build(final DocumentContext docCtx, final String title, float width, final List<RnaFusion> fusions,
+            final ReportResources reportResources) throws IOException
     {
         if(fusions.isEmpty())
         {
-            return new Tables(reportResources).createEmpty(title, width);
+            return createEmptyTable(docCtx, title, width, reportResources);
         }
 
         Cells cells = new Cells(reportResources);
 
         List<Integer> widths = Lists.newArrayList();
-        List<Cell> cellEntries = Lists.newArrayList();
+        List<String> headers = Lists.newArrayList();
 
-        addEntry(cells, widths, cellEntries, 2, COL_FUSION);
-        addEntry(cells, widths, cellEntries, 2, COL_TYPE);
-        addEntry(cells, widths, cellEntries, 1, COL_SV_TYPE);
-        addEntry(cells, widths, cellEntries, 1, COL_JUNC_START);
-        addEntry(cells, widths, cellEntries, 1, COL_JUNC_END);
-        addEntry(cells, widths, cellEntries, 1, COL_SUPPORT);
-        // addEntry(cells, widths, cellEntries, 1, COL_OTHER_FRAGS);
-        addEntry(cells, widths, cellEntries, 1, COL_COHOR_FREQ);
+        addEntry(widths, headers, 2, COL_FUSION);
+        addEntry(widths, headers, 2, COL_TYPE);
+        addEntry(widths, headers, 1, COL_SV_TYPE);
+        addEntry(widths, headers, 1, COL_JUNC_START);
+        addEntry(widths, headers, 1, COL_JUNC_END);
+        addEntry(widths, headers, 1, COL_SUPPORT);
+        // addEntry(widths, headers, 1, COL_OTHER_FRAGS);
+        addEntry(widths, headers, 1, COL_COHOR_FREQ);
 
-        Table table = Tables.createContent(width, intToFloatArray(widths), cellArray(cellEntries));
+        BaseTable table = createStandardTable(docCtx, title, width, intToFloatArray(widths), stringArray(headers), reportResources);
+        float[] pcts = toPercentages(intToFloatArray(widths));
 
         for(RnaFusion fusion : sort(fusions))
         {
-            table.addCell(cells.createContent(fusion.display()));
+            List<String> rowValues = Lists.newArrayList();
+            rowValues.add(fusion.display());
 
-            table.addCell(cells.createContent(fusion.knownType().toString()));
-            table.addCell(cells.createContent(fusion.svType().toString()));
-            table.addCell(cells.createContent(fusion.junctionTypeStart()));
-            table.addCell(cells.createContent(fusion.junctionTypeEnd()));
+            rowValues.add(fusion.knownType().toString());
+            rowValues.add(fusion.svType().toString());
+            rowValues.add(fusion.junctionTypeStart());
+            rowValues.add(fusion.junctionTypeEnd());
 
             int splitFragments = fusion.splitFragments();
-            int averageDepth = (int)round((fusion.depthStart() + fusion.depthEnd()) * 0.5);
-            table.addCell(cells.createContent(formatSupportField(splitFragments, averageDepth)));
+            int averageDepth = (int) round((fusion.depthStart() + fusion.depthEnd()) * 0.5);
+            rowValues.add(formatSupportField(splitFragments, averageDepth));
 
-            // table.addCell(cells.createContent(String.valueOf(fusion.realignedFrags() + fusion.discordantFrags())));
-            table.addCell(cells.createContent(String.valueOf(fusion.cohortFrequency())));
+            // rowValues.add(String.valueOf(fusion.realignedFrags() + fusion.discordantFrags()));
+            rowValues.add(String.valueOf(fusion.cohortFrequency()));
+            cells.addRow(table, pcts, rowValues);
         }
 
-        return new Tables(reportResources).createWrapping(table, title);
+        return table;
     }
 
     private static List<RnaFusion> sort(final List<RnaFusion> fusions)
