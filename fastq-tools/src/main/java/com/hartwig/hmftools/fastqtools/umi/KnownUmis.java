@@ -1,7 +1,10 @@
 package com.hartwig.hmftools.fastqtools.umi;
 
+import static java.lang.Math.max;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_BASES;
+import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_N_BASE;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadDelimitedIdFile;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
 import static com.hartwig.hmftools.fastqtools.FastqCommon.FQ_LOGGER;
@@ -25,6 +28,8 @@ public class KnownUmis
     private final List<String> mKnownUmisReversed;
     private long mKnownUmiMatchCount;
 
+    private final String UNMATCHED_UMI = "X";
+
     public KnownUmis(final UmiConfig config)
     {
         mConfig = config;
@@ -46,18 +51,44 @@ public class KnownUmis
     {
         // find the longest matching UMI
 
-        String umiBases1 = findKnownUmiMatch(r1ReadBuffer[READ_ITEM_BASES], false);
-        String umiBases2 = findKnownUmiMatch(r2ReadBuffer[READ_ITEM_BASES], true);
+        String umiBases1 = findKnownUmiMatch(r1ReadBuffer[READ_ITEM_BASES]);
+        String umiBases2 = findKnownUmiMatch(r2ReadBuffer[READ_ITEM_BASES]);
 
         // make UMIs of the form 4+5, where integers are the length of the UMIs
         int umiLength1 = umiBases1.length();
         int umiLength2 = umiBases2.length();
 
         if(umiLength1 > 0 && umiLength2 > 0)
+        {
             ++mKnownUmiMatchCount;
+        }
+        else
+        {
+            if(umiBases1.isEmpty())
+            {
+                umiBases1 = UNMATCHED_UMI;
+                umiLength1 = 0;
+            }
+
+            if(umiBases2.isEmpty())
+            {
+                umiBases2 = UNMATCHED_UMI;
+                umiLength2 = 0;
+            }
+        }
 
         // append UMIs to read Id and remove from bases and quals
-        String duplexUmiId = umiLength1 + mConfig.UmiDelim + umiLength2;
+        String duplexUmiId;
+
+        if(mConfig.KnownUmiUseNumeric)
+        {
+            duplexUmiId = umiLength1 + mConfig.UmiDelim + umiLength2;
+        }
+        else
+        {
+            duplexUmiId = umiBases1 + mConfig.UmiDelim + umiBases2;
+        }
+
         String newReadId = readId1 + READ_ID_DELIM + duplexUmiId;
         r1ReadBuffer[READ_ITEM_ID] = READ_ID_START + newReadId + r1ReadBuffer[READ_ITEM_ID].substring(delimIndex);
         r2ReadBuffer[READ_ITEM_ID] = READ_ID_START + newReadId + r2ReadBuffer[READ_ITEM_ID].substring(delimIndex);
@@ -68,7 +99,7 @@ public class KnownUmis
         r2ReadBuffer[READ_ITEM_QUALS] = r2ReadBuffer[READ_ITEM_QUALS].substring(umiLength2);
     }
 
-    private String findKnownUmiMatch(final String readBases, boolean requiresReverse)
+    private String findKnownUmiMatch(final String readBases)
     {
         for(int i = 0; i < mKnownUmis.size(); ++i)
         {
@@ -84,7 +115,12 @@ public class KnownUmis
                 return umiReversed;
         }
 
-        if(mConfig.KnownUmiBaseDiff == 0)
+        int knownUmiBaseDiff = mConfig.KnownUmiBaseDiff;
+
+        if(readBases.charAt(0) == DNA_N_BASE)
+            knownUmiBaseDiff = max(knownUmiBaseDiff, 1);
+
+        if(knownUmiBaseDiff == 0)
             return "";
 
         // check for a 1-base mismatch
@@ -93,12 +129,12 @@ public class KnownUmis
             String umi = mKnownUmis.get(i);
             String readUmi = readBases.substring(0, umi.length());
 
-            if(!exceedsUmiDiff(readUmi, umi, mConfig.KnownUmiBaseDiff))
+            if(!exceedsUmiDiff(readUmi, umi, knownUmiBaseDiff))
                 return umi;
 
             String umiReversed = mKnownUmisReversed.get(i);
 
-            if(!exceedsUmiDiff(readUmi, umiReversed, mConfig.KnownUmiBaseDiff))
+            if(!exceedsUmiDiff(readUmi, umiReversed, knownUmiBaseDiff))
                 return umiReversed;
         }
 

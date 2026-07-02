@@ -212,7 +212,7 @@ public class FastqUmiExtracter
         {
             mUmiExtractor.adjustWithAdapter(readId1, readId2, delimIndex, r1ReadBuffer,  r2ReadBuffer);
         }
-        else if(!mKnownUmis.enabled())
+        else if(mKnownUmis.enabled())
         {
             mKnownUmis.adjustWithKnownUmi(readId1, delimIndex, r1ReadBuffer, r2ReadBuffer);
         }

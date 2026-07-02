@@ -33,7 +33,7 @@ public class UmiConfig
 
     protected static final String FASTQ_FILES_DELIM = ";";
 
-    private static final int DEFAULT_KNOWN_UMI_BASE_DIFF = 1;
+    private static final int DEFAULT_KNOWN_UMI_BASE_DIFF = 0;
 
     public UmiConfig(final ConfigBuilder configBuilder)
     {
