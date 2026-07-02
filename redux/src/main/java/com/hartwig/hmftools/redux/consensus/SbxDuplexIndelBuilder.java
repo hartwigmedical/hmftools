@@ -37,7 +37,6 @@ public class SbxDuplexIndelBuilder
     private List<CigarElement> mAdjustedCigarElements;
     private int mSuppDataIndexStart;
     private int mSuppDataIndexEnd;
-    private boolean mSuppDataInLeftSoftClip;
 
     public SbxDuplexIndelBuilder(final SAMRecord record, final List<Integer> duplexIndelIndices)
     {
@@ -309,8 +308,6 @@ public class SbxDuplexIndelBuilder
             return false;
 
         // test for a repeat match
-        boolean matched = true;
-
         for(int i = 0; i < repeatLength; ++i)
         {
             if(!readBaseInfo.Valid || !isAlignedOrInsert(readBaseInfo.CigarOp) || repeatBases[i] != readBaseInfo.Base)
@@ -334,13 +331,11 @@ public class SbxDuplexIndelBuilder
 
         if(leftSoftClipLength > rightSoftClipLength)
         {
-            mSuppDataInLeftSoftClip = true;
             mSuppDataIndexStart = 0;
             mSuppDataIndexEnd = mSuppDataIndexStart + leftSoftClipLength - 1;
         }
         else
         {
-            mSuppDataInLeftSoftClip = false;
             mSuppDataIndexEnd = mReadLength - 1;
             mSuppDataIndexStart = mSuppDataIndexEnd - rightSoftClipLength + 1;
         }

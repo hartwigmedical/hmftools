@@ -102,10 +102,10 @@ public class SbxDuplexReadTest
                 TEST_READ_ID, CHR_1, alignmentStart, readStr, cigar, false, false, null);
 
         byte[] baseQuals = buildBaseQuals(readStr.length(), RAW_DUPLEX_QUAL);
-        baseQuals[3] = 0;
+        baseQuals[3] = RAW_DUPLEX_MISMATCH_QUAL;
         read.setBaseQualities(baseQuals);
 
-        String ycTagStr = "0-3Z2-0";
+        String ycTagStr = "+3Z2+";
 
         read.setAttribute(SBX_YC_TAG, ycTagStr);
         read.setAttribute(NUM_MUTATONS_ATTRIBUTE, 1);
@@ -131,7 +131,7 @@ public class SbxDuplexReadTest
         baseQuals[3] = 0;
         read.setBaseQualities(baseQuals);
 
-        ycTagStr = "0-3Z3-0";
+        ycTagStr = "+3Z3+0";
 
         read.setAttribute(SBX_YC_TAG, ycTagStr);
         read.setAttribute(NUM_MUTATONS_ATTRIBUTE, 1);
@@ -158,7 +158,7 @@ public class SbxDuplexReadTest
         baseQuals[5] = 0;
         read.setBaseQualities(baseQuals);
 
-        ycTagStr = "0-5Z3-0";
+        ycTagStr = "+5Z3+0";
 
         read.setAttribute(SBX_YC_TAG, ycTagStr);
         read.setAttribute(NUM_MUTATONS_ATTRIBUTE, 2);
@@ -185,7 +185,7 @@ public class SbxDuplexReadTest
         baseQuals[6] = 0;
         read.setBaseQualities(baseQuals);
 
-        ycTagStr = "0-5ZZ3-0";
+        ycTagStr = "+5ZZ3+0";
 
         read.setAttribute(SBX_YC_TAG, ycTagStr);
         read.setAttribute(NUM_MUTATONS_ATTRIBUTE, 2);
@@ -208,11 +208,11 @@ public class SbxDuplexReadTest
                 TEST_READ_ID, CHR_1, alignmentStart, readStr, cigar, false, false, null);
 
         baseQuals = buildBaseQuals(readStr.length(), RAW_DUPLEX_QUAL);
-        baseQuals[5] = 0;
-        baseQuals[6] = 0;
+        baseQuals[5] = RAW_DUPLEX_MISMATCH_QUAL;
+        baseQuals[6] = RAW_DUPLEX_MISMATCH_QUAL;
         read.setBaseQualities(baseQuals);
 
-        ycTagStr = "0-6ZZ3-0";
+        ycTagStr = "0+6ZZ3+0";
 
         read.setAttribute(SBX_YC_TAG, ycTagStr);
         read.setAttribute(NUM_MUTATONS_ATTRIBUTE, 3);
@@ -235,11 +235,11 @@ public class SbxDuplexReadTest
                 TEST_READ_ID, CHR_1, alignmentStart, readStr, cigar, false, false, null);
 
         baseQuals = buildBaseQuals(readStr.length(), RAW_DUPLEX_QUAL);
-        baseQuals[6] = 0;
-        baseQuals[7] = 0;
+        baseQuals[6] = RAW_DUPLEX_MISMATCH_QUAL;
+        baseQuals[7] = RAW_DUPLEX_MISMATCH_QUAL;
         read.setBaseQualities(baseQuals);
 
-        ycTagStr = "0-7ZZ3-0";
+        ycTagStr = "0+7ZZ3+0";
 
         read.setAttribute(SBX_YC_TAG, ycTagStr);
         read.setAttribute(NUM_MUTATONS_ATTRIBUTE, 4);
@@ -268,11 +268,11 @@ public class SbxDuplexReadTest
                 TEST_READ_ID, CHR_1, alignmentStart, readStr, cigar, false, false, null);
 
         byte[] baseQuals = buildBaseQuals(readStr.length(), RAW_DUPLEX_QUAL);
-        baseQuals[7] = 0;
-        baseQuals[8] = 0;
+        baseQuals[7] = RAW_DUPLEX_MISMATCH_QUAL;
+        baseQuals[8] = RAW_DUPLEX_MISMATCH_QUAL;
         read.setBaseQualities(baseQuals);
 
-        String ycTagStr = "0-7ZZ3-0";
+        String ycTagStr = "+7ZZ3+";
 
         read.setAttribute(SBX_YC_TAG, ycTagStr);
         read.setAttribute(NUM_MUTATONS_ATTRIBUTE, 4);
@@ -298,10 +298,10 @@ public class SbxDuplexReadTest
                 TEST_READ_ID, CHR_1, alignmentStart, readStr, cigar, false, false, null);
 
         baseQuals = buildBaseQuals(readStr.length(), RAW_DUPLEX_QUAL);
-        baseQuals[8] = 0;
+        baseQuals[8] = RAW_DUPLEX_MISMATCH_QUAL;
         read.setBaseQualities(baseQuals);
 
-        ycTagStr = "0-8Z3-0";
+        ycTagStr = "0+8Z3+";
 
         read.setAttribute(SBX_YC_TAG, ycTagStr);
         read.setAttribute(NUM_MUTATONS_ATTRIBUTE, 2);
@@ -326,11 +326,11 @@ public class SbxDuplexReadTest
                 TEST_READ_ID, CHR_1, alignmentStart, readStr, cigar, false, false, null);
 
         baseQuals = buildBaseQuals(readStr.length(), RAW_DUPLEX_QUAL);
-        baseQuals[4] = 0;
-        baseQuals[9] = 0;
+        baseQuals[4] = RAW_DUPLEX_MISMATCH_QUAL;
+        baseQuals[9] = RAW_DUPLEX_MISMATCH_QUAL;
         read.setBaseQualities(baseQuals);
 
-        ycTagStr = "0-4Z4Z3-0";
+        ycTagStr = "0+4Z4Z3+";
 
         read.setAttribute(SBX_YC_TAG, ycTagStr);
         read.setAttribute(NUM_MUTATONS_ATTRIBUTE, 2);
@@ -364,12 +364,12 @@ public class SbxDuplexReadTest
 
         for(int i = 7; i <= 19; ++i)
         {
-            baseQuals[i] = 0;
+            baseQuals[i] = RAW_DUPLEX_MISMATCH_QUAL;
         }
 
         read.setBaseQualities(baseQuals);
 
-        String ycTagStr = "0-7" + "Z".repeat(13) + "4-0";
+        String ycTagStr = "0+7" + "Z".repeat(13) + "4+";
 
         read.setAttribute(SBX_YC_TAG, ycTagStr);
 
@@ -397,12 +397,12 @@ public class SbxDuplexReadTest
 
         for(int i = 4; i <= 7; ++i)
         {
-            baseQuals[i] = 0;
+            baseQuals[i] = RAW_DUPLEX_MISMATCH_QUAL;
         }
 
         read.setBaseQualities(baseQuals);
 
-        ycTagStr = "0-8" + "Z".repeat(3) + "4-0";
+        ycTagStr = "0+8" + "Z".repeat(3) + "4+";
 
         read.setAttribute(SBX_YC_TAG, ycTagStr);
 
@@ -428,12 +428,12 @@ public class SbxDuplexReadTest
 
         for(int i = 10; i <= 19; ++i)
         {
-            baseQuals[i] = 0;
+            baseQuals[i] = RAW_DUPLEX_MISMATCH_QUAL;
         }
 
         read.setBaseQualities(baseQuals);
 
-        ycTagStr = "0-10" + "Z".repeat(10) + "4-0";
+        ycTagStr = "0+10" + "Z".repeat(10) + "4+";
 
         read.setAttribute(SBX_YC_TAG, ycTagStr);
 
@@ -459,12 +459,12 @@ public class SbxDuplexReadTest
 
         for(int i = 4; i <= 10; ++i)
         {
-            baseQuals[i] = 0;
+            baseQuals[i] = RAW_DUPLEX_MISMATCH_QUAL;
         }
 
         read.setBaseQualities(baseQuals);
 
-        ycTagStr = "0-4" + "Z".repeat(7) + "4-0";
+        ycTagStr = "0+4" + "Z".repeat(7) + "4+";
 
         read.setAttribute(SBX_YC_TAG, ycTagStr);
 
@@ -489,18 +489,18 @@ public class SbxDuplexReadTest
                 TEST_READ_ID, CHR_1, alignmentStart, readStr, cigar, false, false, null);
 
         byte[] baseQuals = buildBaseQuals(readStr.length(), RAW_DUPLEX_QUAL);
-        baseQuals[4] = 0;
-        baseQuals[5] = 0;
-        baseQuals[6] = 0;
+        baseQuals[4] = RAW_DUPLEX_MISMATCH_QUAL;
+        baseQuals[5] = RAW_DUPLEX_MISMATCH_QUAL;
+        baseQuals[6] = RAW_DUPLEX_MISMATCH_QUAL;
 
-        baseQuals[11] = 0;
-        baseQuals[12] = 0;
+        baseQuals[11] = RAW_DUPLEX_MISMATCH_QUAL;
+        baseQuals[12] = RAW_DUPLEX_MISMATCH_QUAL;
 
-        baseQuals[17] = 0;
+        baseQuals[17] = RAW_DUPLEX_MISMATCH_QUAL;
 
         read.setBaseQualities(baseQuals);
 
-        String ycTagStr = "0-4ZZZ4ZZ4Z4-0";
+        String ycTagStr = "0+4ZZZ4ZZ4Z4+";
 
         read.setAttribute(SBX_YC_TAG, ycTagStr);
         read.setAttribute(NUM_MUTATONS_ATTRIBUTE, 6);
@@ -527,19 +527,19 @@ public class SbxDuplexReadTest
                 TEST_READ_ID, CHR_1, alignmentStart, readStr, cigar, false, false, null);
 
         baseQuals = buildBaseQuals(readStr.length(), RAW_DUPLEX_QUAL);
-        baseQuals[10] = 0;
-        baseQuals[12] = 0;
-        baseQuals[13] = 0;
+        baseQuals[10] = RAW_DUPLEX_MISMATCH_QUAL;
+        baseQuals[12] = RAW_DUPLEX_MISMATCH_QUAL;
+        baseQuals[13] = RAW_DUPLEX_MISMATCH_QUAL;
 
-        baseQuals[17] = 0;
-        baseQuals[18] = 0;
-        baseQuals[19] = 0;
-        baseQuals[20] = 0;
-        baseQuals[21] = 0;
+        baseQuals[17] = RAW_DUPLEX_MISMATCH_QUAL;
+        baseQuals[18] = RAW_DUPLEX_MISMATCH_QUAL;
+        baseQuals[19] = RAW_DUPLEX_MISMATCH_QUAL;
+        baseQuals[20] = RAW_DUPLEX_MISMATCH_QUAL;
+        baseQuals[21] = RAW_DUPLEX_MISMATCH_QUAL;
 
         read.setBaseQualities(baseQuals);
 
-        ycTagStr = "0-10Z1ZZ3ZZZZZ4-0";
+        ycTagStr = "0+10Z1ZZ3ZZZZZ4+";
 
         read.setAttribute(SBX_YC_TAG, ycTagStr);
         read.setAttribute(NUM_MUTATONS_ATTRIBUTE, 8);
@@ -579,7 +579,7 @@ public class SbxDuplexReadTest
         String readStr = "A".repeat(5) + "CT".repeat(2) + "A".repeat(5);
         String cigar = "5M2I7M";
         String qualStr = NON_ZERO_QUAL.repeat(7) + MISMATCH_QUAL.repeat(2) + NON_ZERO_QUAL.repeat(5);
-        String ycTagStr = "0-7ZZ5-0";
+        String ycTagStr = "0+7ZZ5+";
 
         SAMRecord read = createSamRecordUnpaired(
                 TEST_READ_ID, CHR_1, alignmentStart, readStr, cigar, false, false, null);
@@ -610,7 +610,7 @@ public class SbxDuplexReadTest
 
         String cigar = "5M2I7M";
         String qualStr = NON_ZERO_QUAL.repeat(5) + MISMATCH_QUAL.repeat(2) + NON_ZERO_QUAL.repeat(7);
-        String ycTagStr = "0-7ZZ5-0";
+        String ycTagStr = "0+7ZZ5+";
 
         SAMRecord read = createSamRecordUnpaired(
                 TEST_READ_ID, CHR_1, alignmentStart, readStr, cigar, true, false, null);
@@ -633,7 +633,7 @@ public class SbxDuplexReadTest
 
         cigar = "5M2I8M";
         qualStr = NON_ZERO_QUAL.repeat(5) + MISMATCH_QUAL.repeat(2) + NON_ZERO_QUAL.repeat(8);
-        ycTagStr = "0-8ZZ5-0";
+        ycTagStr = "0+8ZZ5+";
 
         read = createSamRecordUnpaired(
                 TEST_READ_ID, CHR_1, alignmentStart, readStr, cigar, true, false, null);
@@ -669,7 +669,7 @@ public class SbxDuplexReadTest
 
         SupplementaryReadData suppData = new SupplementaryReadData(CHR_2, suppPosStart, SUPP_POS_STRAND, suppCigar, DEFAULT_MAP_QUAL, 0);
 
-        String ycTagStr = "20-10Z13-0";
+        String ycTagStr = "20+10Z13+";
 
         SAMRecord read = createSamRecordUnpaired(
                 TEST_READ_ID, CHR_1, alignmentStart, readBases, cigar, false, false, suppData);
@@ -690,7 +690,7 @@ public class SbxDuplexReadTest
 
         suppData = new SupplementaryReadData(CHR_2, suppPosStart, SUPP_POS_STRAND, suppCigar, DEFAULT_MAP_QUAL, 0);
 
-        ycTagStr = "0-10Z120-0";
+        ycTagStr = "0+10Z120+";
 
         read = createSamRecordUnpaired(
                 TEST_READ_ID, CHR_1, alignmentStart, readBases, cigar, false, false, suppData);
@@ -717,7 +717,7 @@ public class SbxDuplexReadTest
         read = createSamRecordUnpaired(
                 TEST_READ_ID, CHR_1, alignmentStart, readBases, cigar, false, false, suppData);
 
-        ycTagStr = "0-24Z10-0";
+        ycTagStr = "0+24Z10+";
         read.setAttribute(SBX_YC_TAG, ycTagStr);
         read.getBaseQualities()[24] = RAW_DUPLEX_MISMATCH_QUAL;
 
@@ -734,7 +734,7 @@ public class SbxDuplexReadTest
 
         suppData = new SupplementaryReadData(CHR_2, suppPosStart, SUPP_POS_STRAND, suppCigar, DEFAULT_MAP_QUAL, 0);
 
-        ycTagStr = "0-10Z30-0";
+        ycTagStr = "+10Z30+";
 
         read = createSamRecordUnpaired(
                 TEST_READ_ID, CHR_1, alignmentStart, readBases, cigar, false, false, suppData);

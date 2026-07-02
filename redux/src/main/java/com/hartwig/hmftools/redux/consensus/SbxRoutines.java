@@ -248,6 +248,7 @@ public final class SbxRoutines
                         isStrippedIndelBase = true;
                         break;
                     }
+
                     if(duplexIndel.isLowQualBase(effectReadIndex))
                     {
                         isLowQualBase = true;
