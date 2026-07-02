@@ -371,8 +371,8 @@ public class BreakendBuilder
             else
             {
                 // Adjust the breakends to be middle-aligned. Doesn't change the nature of the variant, however.
-                lowerPosition += abs(homology.ExactStart);
-                upperPosition += abs(homology.ExactStart);
+                lowerPosition += abs(homology.InexactStart);
+                upperPosition += abs(homology.InexactStart);
             }
         }
 

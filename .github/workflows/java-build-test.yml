@@ -9,8 +9,11 @@ on:
     paths-ignore:
       # Don't run on documentation changes, since the code is not affected.
       - "**/*.md"
+      - "**/*.pdf"
       - "**/*.png"
       - "**/*.jpg"
+      - "**/*.gif"
+      - "**/*.svg"
       - "*/docs/*.html"
 
 jobs:
