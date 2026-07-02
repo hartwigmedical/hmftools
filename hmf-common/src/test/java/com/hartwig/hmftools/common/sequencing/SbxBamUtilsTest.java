@@ -19,7 +19,7 @@ public class SbxBamUtilsTest
         String ycTagStr = "0+100+0";
         List<Integer> duplexIndelIndices = getDuplexIndelIndices(ycTagStr);
 
-        assertNull(duplexIndelIndices);
+        assertTrue(duplexIndelIndices.isEmpty());
 
         ycTagStr = "10+100I100+0";
         duplexIndelIndices = getDuplexIndelIndices(ycTagStr);

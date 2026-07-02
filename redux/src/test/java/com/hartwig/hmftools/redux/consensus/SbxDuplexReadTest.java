@@ -72,18 +72,18 @@ public class SbxDuplexReadTest
 
         assertNull(SbxBamUtils.isHomopolymerLowBaseQualAtStart(read));
 
-        read.getBaseQualities()[8] = 0;
+        read.getBaseQualities()[8] = SBX_DUPLEX_MISMATCH_QUAL;
         assertTrue(SbxBamUtils.isHomopolymerLowBaseQualAtStart(read));
 
         read.getBaseQualities()[8] = RAW_DUPLEX_QUAL;
-        read.getBaseQualities()[11] = 0;
-        read.getBaseQualities()[12] = 0;
+        read.getBaseQualities()[11] = SBX_DUPLEX_MISMATCH_QUAL;
+        read.getBaseQualities()[12] = SBX_DUPLEX_MISMATCH_QUAL;
         assertFalse(SbxBamUtils.isHomopolymerLowBaseQualAtStart(read));
 
         // unclear on a single base
         read.getBaseQualities()[11] = RAW_DUPLEX_QUAL;
         read.getBaseQualities()[12] = RAW_DUPLEX_QUAL;
-        read.getBaseQualities()[15] = 0;
+        read.getBaseQualities()[15] = SBX_DUPLEX_MISMATCH_QUAL;
         assertNull(SbxBamUtils.isHomopolymerLowBaseQualAtStart(read));
     }
 

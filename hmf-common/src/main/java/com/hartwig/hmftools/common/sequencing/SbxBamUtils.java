@@ -50,11 +50,6 @@ public class SbxBamUtils
         return baseIndex != null ? baseIndex : -1;
     }
 
-    public static boolean inDuplexRegion(final SAMRecord record, int baseIndex)
-    {
-        return inDuplexRegion(!record.getReadNegativeStrandFlag(), extractDuplexBaseIndex(record), baseIndex);
-    }
-
     public static boolean inDuplexRegion(final boolean posOrientationRead, int duplexBaseIndex, int baseIndex)
     {
         if(duplexBaseIndex < 0)
@@ -71,8 +66,11 @@ public class SbxBamUtils
         List<Integer> duplexIndels = null;
 
         int lastDelim = ycTagStr.lastIndexOf(SBX_YC_TAG_DELIM_LIT);
-        if(lastDelim > 0)
-            ycTagStr = ycTagStr.substring(0, lastDelim);
+
+        if(lastDelim <= 0)
+            return null;
+
+        ycTagStr = ycTagStr.substring(0, lastDelim);
 
         int simplexHeadLength = 0;
         String duplexRegion = "";
@@ -82,7 +80,7 @@ public class SbxBamUtils
             String[] ycTagComponents = ycTagStr.split(SBX_YC_TAG_DELIM);
 
             if(ycTagComponents.length < 2)
-                return Collections.emptyList();
+                return null;
 
             simplexHeadLength = Integer.parseInt(ycTagComponents[0]);
             duplexRegion = ycTagComponents[1];
@@ -134,7 +132,7 @@ public class SbxBamUtils
             ++readIndex;
         }
 
-        return duplexIndels;
+        return duplexIndels != null ? duplexIndels : Collections.emptyList();
     }
 
     @Nullable
@@ -178,9 +176,9 @@ public class SbxBamUtils
 
                     if(hpStartQual != previousQual)
                     {
-                        if(hpStartQual <= SBX_DUPLEX_MISMATCH_QUAL)
+                        if(hpStartQual <= RAW_DUPLEX_MISMATCH_QUAL)
                             return Boolean.TRUE;
-                        else if(previousQual <= SBX_DUPLEX_MISMATCH_QUAL)
+                        else if(previousQual <= RAW_DUPLEX_MISMATCH_QUAL)
                             return Boolean.FALSE;
                     }
                 }
