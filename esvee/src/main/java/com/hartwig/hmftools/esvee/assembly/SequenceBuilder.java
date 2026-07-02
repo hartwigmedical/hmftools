@@ -55,6 +55,8 @@ import javax.annotation.Nullable;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.region.Orientation;
+import com.hartwig.hmftools.esvee.assembly.phase.ExtensionCandidate;
+import com.hartwig.hmftools.esvee.assembly.phase.ExtensionType;
 import com.hartwig.hmftools.esvee.assembly.types.RepeatInfo;
 
 public class SequenceBuilder
@@ -82,11 +84,12 @@ public class SequenceBuilder
     public SequenceBuilder(final List<ReadParseState> reads, boolean buildForwards, int initialBaseLength, boolean disableMismatchPenalty)
     {
         mBuildForwards = buildForwards;
-        mReads = reads;
+        mReads = Lists.newArrayList(reads);
+
+        Collections.sort(mReads, new ReadComparator());
 
         List<Integer> readExtensionLengths = Lists.newArrayListWithCapacity(reads.size());
-        reads.forEach(x -> readExtensionLengths.add(x.overlapBaseCount()));
-        Collections.sort(readExtensionLengths, Comparator.reverseOrder());
+        mReads.forEach(x -> readExtensionLengths.add(x.overlapBaseCount()));
 
         if(readExtensionLengths.size() >= 2)
             mMismatchPenaltyMaxReadLength = readExtensionLengths.get(1);
@@ -103,6 +106,21 @@ public class SequenceBuilder
         buildSequence();
         trimFinalSequence();
         findNonMismatchRepeats();
+    }
+
+    private static class ReadComparator implements Comparator<ReadParseState>
+    {
+        @Override
+        public int compare(final ReadParseState first, final ReadParseState second)
+        {
+            int firstOverlap = first.overlapBaseCount();
+            int secondOverlap = second.overlapBaseCount();
+
+            if(firstOverlap != secondOverlap)
+                return firstOverlap > secondOverlap ? -1 : 1;
+
+            return first.read().id().compareTo(second.read().id());
+        }
     }
 
     public byte[] bases() { return mBases; }

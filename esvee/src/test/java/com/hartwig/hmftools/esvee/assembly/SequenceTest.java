@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.buildDefaultBaseQuals;
 import static com.hartwig.hmftools.esvee.TestUtils.READ_ID_GENERATOR;
+import static com.hartwig.hmftools.esvee.TestUtils.cloneRead;
 import static com.hartwig.hmftools.esvee.TestUtils.createRead;
 import static com.hartwig.hmftools.esvee.TestUtils.makeCigarString;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyTestUtils.setIlluminaSequencing;
@@ -135,7 +136,7 @@ public class SequenceTest
         String readExtBases3 = readExtBases1.substring(0, 4) + readExtBases1.substring(5, 10) + "A" + readExtBases1.substring(10);
         String readBases3 = refBuffer + readExtBases3;
 
-        // with a 2 inserts then a del
+        // with 2 inserts then a del
         String readExtBases4 = readExtBases1.substring(0, 3) + "A" + readExtBases1.substring(3, 6) + "A"
                 + readExtBases1.substring(6, 10) + readExtBases1.substring(11);
         String readBases4 = refBuffer + readExtBases4;
@@ -165,9 +166,9 @@ public class SequenceTest
         assertTrue(seqBuilder.repeats().isEmpty());
 
         ReadParseState readState3 = readParseStates.get(2);
-        assertEquals(2, readState3.mismatches().size());
-        assertEquals(SequenceDiffType.DELETE, readState3.mismatches().get(0).Type);
-        assertEquals(SequenceDiffType.INSERT, readState3.mismatches().get(1).Type);
+        assertEquals(3, readState3.mismatches().size());
+        assertEquals(SequenceDiffType.DELETE, readState3.mismatches().get(1).Type);
+        assertEquals(SequenceDiffType.INSERT, readState3.mismatches().get(2).Type);
 
         ReadParseState readState4 = readParseStates.get(3);
         assertEquals(3, readState4.mismatches().size());
@@ -184,16 +185,18 @@ public class SequenceTest
         String readBases1 = refBuffer + readExtBases1;
         String readBases2 = readBases1;
 
-        // a low-qual 2-base insert, should not be treated as a loq-qual SNV mismatch
-        String readExtBases3 = readExtBases1.substring(0, 6) + "AT" + readExtBases1.substring(6);
+        // a low-qual 2-base insert, should not be treated as a low-qual SNV mismatch
+        String readExtBases3 = readExtBases1.substring(0, 6) + "AT" + readExtBases1.substring(6, 9);
         String readBases3 = refBuffer + readExtBases3;
 
         String cigar = makeCigarString(readBases1, 0, 0);
 
         Read read1 = createRead(READ_ID_GENERATOR.nextId(), 100, readBases1, cigar);
         Read read2 = createRead(READ_ID_GENERATOR.nextId(), 100, readBases2, cigar);
+
         Read read3 = createRead(READ_ID_GENERATOR.nextId(), 100, readBases3, makeCigarString(readBases3, 0, 0));
-        read3.getBaseQuality()[refBuffer.length() + 6] = 10; // only one of the indel bases needs to be low-qual
+        read3.getBaseQuality()[11] = 10;
+        read3.getBaseQuality()[14] = 10; // only one of the indel bases needs to be low-qual
 
         boolean buildForwards = true;
 
@@ -213,22 +216,23 @@ public class SequenceTest
 
         ReadParseState readState3 = readParseStates.get(2);
         assertEquals(1, readState3.mismatches().size());
-        assertEquals(SequenceDiffType.INSERT, readState3.mismatches().get(0).Type);
-        assertEquals(2, readState3.mismatches().get(0).IndelLength);
-        assertEquals(0, readState3.mismatches().get(0).MismatchPenalty, 0.1);
+        SequenceDiffInfo seqDiffInfo = readState3.mismatches().get(0);
+        assertEquals(SequenceDiffType.INSERT, seqDiffInfo.Type);
+        assertEquals(2, seqDiffInfo.IndelLength);
+        assertEquals(0, seqDiffInfo.MismatchPenalty, 0.1);
 
         // test again moving the other direction
         readBases1 = readExtBases1 + refBuffer;
         readBases2 = readBases1;
 
-        // a low-qual 2-base insert, should not be treated as a loq-qual SNV mismatch
-        readExtBases3 = readExtBases1.substring(0, 6) + "AT" + readExtBases1.substring(6);
+        // a low-qual 2-base insert, should not be treated as a low-qual SNV mismatch
+        readExtBases3 = readExtBases1.substring(3, 6) + "AT" + readExtBases1.substring(6);
         readBases3 = readExtBases3 + refBuffer;
 
         read1 = createRead(READ_ID_GENERATOR.nextId(), 100, readBases1, cigar);
         read2 = createRead(READ_ID_GENERATOR.nextId(), 100, readBases2, cigar);
         read3 = createRead(READ_ID_GENERATOR.nextId(), 100, readBases3, makeCigarString(readBases3, 0, 0));
-        read3.getBaseQuality()[7] = 10; // only one of the indel bases needs to be low-qual
+        read3.getBaseQuality()[4] = 10;
 
         buildForwards = false;
 
@@ -237,7 +241,6 @@ public class SequenceTest
                 new ReadParseState(buildForwards, read2, readExtBases1.length() - 1),
                 new ReadParseState(buildForwards, read3, readExtBases3.length() - 1));
 
-        // maxReadLength = readParseStates.stream().mapToInt(x -> x.read().basesLength()).max().orElse(0);
         consensusBaseLength = readExtBases1.length() + 1;
 
         seqBuilder = new SequenceBuilder(readParseStates, buildForwards, consensusBaseLength, false);
@@ -248,9 +251,10 @@ public class SequenceTest
 
         readState3 = readParseStates.get(2);
         assertEquals(1, readState3.mismatches().size());
-        assertEquals(SequenceDiffType.INSERT, readState3.mismatches().get(0).Type);
-        assertEquals(2, readState3.mismatches().get(0).IndelLength);
-        assertEquals(0, readState3.mismatches().get(0).MismatchPenalty, 0.1);
+        seqDiffInfo = readState3.mismatches().get(0);
+        assertEquals(SequenceDiffType.INSERT, seqDiffInfo.Type);
+        assertEquals(2, seqDiffInfo.IndelLength);
+        assertEquals(0, seqDiffInfo.MismatchPenalty, 0.1);
     }
 
     @Test

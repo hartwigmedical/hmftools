@@ -60,7 +60,6 @@ public class ExtensionSeqBuilder
         mBuildForwards = mJunction.isForward();
         mReads = Lists.newArrayListWithCapacity(reads.size());
 
-
         int maxExtension = 0;
         boolean hasLineReads = false;
 
