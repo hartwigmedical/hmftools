@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.common.sequencing;
 
+import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -10,9 +11,9 @@ import htsjdk.samtools.SAMRecord;
 
 public class SbxBamUtils
 {
-    public static final byte RAW_DUPLEX_QUAL = 93;
-    public static final byte RAW_SIMPLEX_QUAL = 18;
-    public static final byte RAW_DUPLEX_MISMATCH_QUAL = 0;
+    public static final byte RAW_DUPLEX_QUAL = 39;
+    public static final byte RAW_SIMPLEX_QUAL = 22;
+    public static final byte RAW_DUPLEX_MISMATCH_QUAL = 5;
 
     // values assigned by Redux, used in BQR and all downstream tools
     public static final byte SBX_SIMPLEX_QUAL = 27;
@@ -28,6 +29,8 @@ public class SbxBamUtils
 
     public static final String SBX_YC_TAG = "YC";
     public static final String SBX_DUPLEX_READ_INDEX_TAG = "YX";
+    private static final String SBX_YC_TAG_DELIM = "\\+";
+    private static final String SBX_YC_TAG_DELIM_LIT = "+";
 
     public static final int SBX_MAX_DUPLICATE_DISTANCE = 2;
 
@@ -47,11 +50,6 @@ public class SbxBamUtils
         return baseIndex != null ? baseIndex : -1;
     }
 
-    public static boolean inDuplexRegion(final SAMRecord record, int baseIndex)
-    {
-        return inDuplexRegion(!record.getReadNegativeStrandFlag(), extractDuplexBaseIndex(record), baseIndex);
-    }
-
     public static boolean inDuplexRegion(final boolean posOrientationRead, int duplexBaseIndex, int baseIndex)
     {
         if(duplexBaseIndex < 0)
@@ -63,15 +61,36 @@ public class SbxBamUtils
             return baseIndex <= duplexBaseIndex;
     }
 
-    public static List<Integer> getDuplexIndelIndices(final String ycTagStr)
+    public static List<Integer> getDuplexIndelIndices(String ycTagStr)
     {
         List<Integer> duplexIndels = null;
-        String[] ycTagComponents = ycTagStr.split("-");
 
-        int simplexHeadLength = Integer.parseInt(ycTagComponents[0]);
+        int lastDelim = ycTagStr.lastIndexOf(SBX_YC_TAG_DELIM_LIT);
+
+        if(lastDelim <= 0)
+            return null;
+
+        ycTagStr = ycTagStr.substring(0, lastDelim);
+
+        int simplexHeadLength = 0;
+        String duplexRegion = "";
+
+        if(!ycTagStr.startsWith(SBX_YC_TAG_DELIM_LIT))
+        {
+            String[] ycTagComponents = ycTagStr.split(SBX_YC_TAG_DELIM);
+
+            if(ycTagComponents.length < 2)
+                return null;
+
+            simplexHeadLength = Integer.parseInt(ycTagComponents[0]);
+            duplexRegion = ycTagComponents[1];
+        }
+        else
+        {
+            duplexRegion = ycTagStr.substring(1);
+        }
+
         int readIndex = simplexHeadLength;
-
-        String duplexRegion = ycTagComponents[1];
 
         for(int i = 0; i < duplexRegion.length();)
         {
@@ -113,7 +132,7 @@ public class SbxBamUtils
             ++readIndex;
         }
 
-        return duplexIndels;
+        return duplexIndels != null ? duplexIndels : Collections.emptyList();
     }
 
     @Nullable
@@ -157,9 +176,9 @@ public class SbxBamUtils
 
                     if(hpStartQual != previousQual)
                     {
-                        if(hpStartQual <= SBX_DUPLEX_MISMATCH_QUAL)
+                        if(hpStartQual <= RAW_DUPLEX_MISMATCH_QUAL)
                             return Boolean.TRUE;
-                        else if(previousQual <= SBX_DUPLEX_MISMATCH_QUAL)
+                        else if(previousQual <= RAW_DUPLEX_MISMATCH_QUAL)
                             return Boolean.FALSE;
                     }
                 }

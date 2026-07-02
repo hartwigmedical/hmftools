@@ -11,14 +11,14 @@ import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.calcTrimmedRefBa
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.readQualFromJunction;
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.convertedIndelCrossesJunction;
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.findInsertedBases;
-import static com.hartwig.hmftools.esvee.common.CommonUtils.aboveMinQual;
-import static com.hartwig.hmftools.esvee.common.CommonUtils.belowMinQual;
-import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_LENGTH;
-import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_VARIANT_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.UNSET;
 import static com.hartwig.hmftools.esvee.assembly.types.RepeatInfo.findRepeats;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportType.INDEL;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportType.JUNCTION;
+import static com.hartwig.hmftools.esvee.common.CommonUtils.aboveMinQual;
+import static com.hartwig.hmftools.esvee.common.CommonUtils.belowMinQual;
+import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_LENGTH;
+import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_VARIANT_LENGTH;
 
 import java.util.List;
 import java.util.Set;
@@ -166,12 +166,12 @@ public class JunctionAssembly
     public int mergedAssemblyCount() { return mMergedAssemblies; }
     public void addMergedAssembly() { ++mMergedAssemblies; }
 
-    public int junctionIndex() { return mJunctionIndex; };
-    public void setJunctionIndex(int index) { mJunctionIndex = index; };
+    public int junctionIndex() { return mJunctionIndex; }
+    public void setJunctionIndex(int index) { mJunctionIndex = index; }
 
     // eg 21 bases, junction index at 10 (so 0-9 = 10 before, 11-20 = 10 after), note: doesn't count the junction base
-    public int lowerDistanceFromJunction() { return mJunctionIndex; };
-    public int upperDistanceFromJunction() { return mBases.length - mJunctionIndex - 1; };
+    public int lowerDistanceFromJunction() { return mJunctionIndex; }
+    public int upperDistanceFromJunction() { return mBases.length - mJunctionIndex - 1; }
 
     public int refBaseLength() { return (mJunction.isForward() ? lowerDistanceFromJunction() : upperDistanceFromJunction()) + 1; }
 
@@ -851,20 +851,13 @@ public class JunctionAssembly
         return mSagaMatch;
     }
 
-    private void setSagaMatch(final SagaSequenceMatch match)
-    {
-        mSagaMatch = match;
-    }
-
     public boolean matchToSaga(final SagaSequenceMatcher sagaMatcher)
     {
         int junctionOffset = mJunction.isForward() ? refBaseLength() : baseLength() - refBaseLength();
         List<SagaJunctionInfo> junctionInfos = List.of(new SagaJunctionInfo(junctionOffset));
-        // If the assembly is a LINE site, then the extension sequence requirement is lower.
-        // In which case need to lower the requirement for the junction overlap, or else there can be false negative matches.
         boolean lowerJunctionOverlap = hasLineSequence();
         SagaSequenceMatch match = sagaMatcher.matchBySequence(bases(), junctionInfos, lowerJunctionOverlap, true);
-        setSagaMatch(match);
+        mSagaMatch = match;
         return match != null;
     }
 
