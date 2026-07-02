@@ -539,12 +539,12 @@ public class SequenceBuilder
         {
             int lastIndex = mBuildForwards ? mCurrentIndex - 1 : mCurrentIndex + 1;
 
-            // any new repeat cannot overlap with a previous repeat
+            // skip searching for new repeats if one was just found and applied
             if(!mRepeats.isEmpty())
             {
                 RepeatInfo lastRepeat = mRepeats.get(mRepeats.size() - 1);
 
-                if(mBuildForwards && lastRepeat.lastIndex() >= lastIndex || !mBuildForwards && lastRepeat.Index <= lastIndex)
+                if(mBuildForwards && lastRepeat.indexEnd() >= lastIndex || !mBuildForwards && lastRepeat.indexStart() <= lastIndex)
                 {
                     return;
                 }
