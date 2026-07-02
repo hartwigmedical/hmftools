@@ -75,7 +75,7 @@ public final class SbxRoutines
     protected static final byte DUPLEX_NO_CONSENSUS_QUAL = 3;
     protected static final byte SIMPLEX_NO_CONSENSUS_QUAL = 2;
 
-    public static boolean SBX_HOMOPOLYMER_5_PRIME_LOW_BASE_QUAL = true; // currently unused but keep for now
+    public static boolean SBX_HOMOPOLYMER_5_PRIME_LOW_BASE_QUAL = true; // default but will be checked in BAM sampling
 
     // for read cache
     public static final int SBX_READ_CACHE_GROUP_SIZE = 1000; // does not have to exceed the maximum possible read length
@@ -143,7 +143,10 @@ public final class SbxRoutines
         List<Integer> duplexIndelIndices = getDuplexIndelIndices(ycTagStr);
 
         if(duplexIndelIndices == null)
-            return;
+        {
+            RD_LOGGER.error("invalid SBX ycTag({}) in read: {}", ycTagStr, readToString(record));
+            System.exit(1);
+        }
 
         // not expecting to see hard-clips but remove any if present
         if(leftHardClipLength(record) > 0 || rightHardClipLength(record) > 0)
@@ -248,6 +251,7 @@ public final class SbxRoutines
                         isStrippedIndelBase = true;
                         break;
                     }
+
                     if(duplexIndel.isLowQualBase(effectReadIndex))
                     {
                         isLowQualBase = true;
