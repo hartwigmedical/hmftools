@@ -1012,17 +1012,8 @@ public class SequenceBuilder
         if(seqDiffInfo.Type == MATCH)
             return 0;
 
-        if(seqDiffInfo.QualType == LOW)
-        {
-            // significant differences in repeat count trigger a penalty even if low base quals
-            if(consensusRepeat != null && seqDiffInfo.Type == REPEAT
-            && seqDiffInfo.RepeatCount < consensusRepeat.Count - READ_MISMATCH_MAX_REPEAT_DIFF)
-            {
-                return (consensusRepeat.Count - seqDiffInfo.RepeatCount) * (1.0 / READ_MISMATCH_MAX_REPEAT_DIFF);
-            }
-
+        if(seqDiffInfo.QualType == LOW && seqDiffInfo.Type != REPEAT)
             return 0;
-        }
 
         if(seqDiffInfo.Type == BASE)
         {
@@ -1040,6 +1031,18 @@ public class SequenceBuilder
 
         int repeatCount = consensusRepeat.Count;
         int repeatCountDiff = abs(seqDiffInfo.RepeatCount - consensusRepeat.Count);
+
+        if(seqDiffInfo.QualType == LOW)
+        {
+            // significant differences in repeat count trigger a penalty even if low base quals
+            if(repeatCount >= READ_MISMATCH_LONG_REPEAT_COUNT
+            && seqDiffInfo.RepeatCount < consensusRepeat.Count - READ_MISMATCH_MAX_REPEAT_DIFF)
+            {
+                return (consensusRepeat.Count - seqDiffInfo.RepeatCount) * (1.0 / READ_MISMATCH_MAX_REPEAT_DIFF);
+            }
+
+            return 0;
+        }
 
         int penaltyCount;
         if(repeatCount < READ_MISMATCH_MEDIUM_REPEAT_COUNT)
