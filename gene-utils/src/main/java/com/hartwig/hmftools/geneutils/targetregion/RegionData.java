@@ -124,7 +124,7 @@ public class RegionData extends ChrBaseRegion
             if(region.start() > newRegion.end())
                 break;
 
-            if(newRegion.matches(region))
+            if(region.containsRegion(newRegion))
                 return;
 
             if(newRegion.start() < region.start())
