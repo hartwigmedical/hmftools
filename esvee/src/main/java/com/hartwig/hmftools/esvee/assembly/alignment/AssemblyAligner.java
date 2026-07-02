@@ -198,6 +198,10 @@ public class AssemblyAligner extends ThreadTask
         AlignData alignData = AlignData.fromSaga(sagaAlignment);
         alignData.setFullSequenceData(assemblyAlignment.fullSequence(), assemblyAlignment.fullSequenceLength());
 
+        // derive the modified map qual from the SAGA alignment, as done for BWA alignments in AlignmentFilters.
+        // this is a single alignment so there is no neighbouring-alignment overlap (inexact homology) to account for.
+        alignData.setAdjustedAlignment(assemblyAlignment.fullSequence(), 0, 0);
+
         BreakendBuilder breakendBuilder = new BreakendBuilder(mConfig.RefGenome, assemblyAlignment);
         boolean success = breakendBuilder.formBreakendsFromSaga(sagaAlignment, alignData);
         if(!success)
