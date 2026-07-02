@@ -7,4 +7,17 @@ public final class FastqCommon
 {
     public static final Logger FQ_LOGGER = LogManager.getLogger(FastqCommon.class);
     public static final String APP_NAME = "FastqTools";
+
+    public static final int READ_ITEM_ID = 0;
+    public static final int READ_ITEM_BASES = 1;
+    public static final int READ_ITEM_SPARE = 2;
+    public static final int READ_ITEM_QUALS = 3;
+    public static final int READ_LINE_COUNT = 4;
+
+    public static final char READ_ID_START = '@';
+    public static final char READ_ID_BREAK = ' ';
+    public static final char READ_ID_DELIM = ':';
+
+    public static final String FASTQ_SUFFIX_STANDARD = "fastq";
+    public static final String FASTQ_SUFFIX_SHORT = "fq";
 }
