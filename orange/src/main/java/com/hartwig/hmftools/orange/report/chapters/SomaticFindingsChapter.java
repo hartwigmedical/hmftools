@@ -1,17 +1,19 @@
 package com.hartwig.hmftools.orange.report.chapters;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
+import com.hartwig.hmftools.datamodel.purple.PurpleTranscriptImpact;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 import com.hartwig.hmftools.orange.OrangeConfig;
 import com.hartwig.hmftools.orange.algo.QcStatusInterpretation;
 import com.hartwig.hmftools.datamodel.sigs.SignatureAllocation;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
+import com.hartwig.hmftools.orange.report.DocumentContext;
 import com.hartwig.hmftools.orange.report.PlotPathResolver;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.tables.ChrArmCopyNumberTable;
@@ -21,17 +23,9 @@ import com.hartwig.hmftools.orange.report.tables.GainDeletionTable;
 import com.hartwig.hmftools.orange.report.tables.SignatureAllocationTable;
 import com.hartwig.hmftools.orange.report.tables.SomaticVariantTable;
 import com.hartwig.hmftools.orange.report.tables.ViralPresenceTable;
-import com.hartwig.hmftools.orange.report.util.Cells;
-import com.hartwig.hmftools.orange.report.util.Images;
-import com.hartwig.hmftools.orange.report.util.Tables;
-import com.itextpdf.kernel.geom.PageSize;
-import com.itextpdf.layout.Document;
-import com.itextpdf.layout.element.Image;
-import com.itextpdf.layout.element.Paragraph;
-import com.itextpdf.layout.element.Table;
-import com.itextpdf.layout.property.HorizontalAlignment;
 
-import org.apache.logging.log4j.util.Strings;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.jetbrains.annotations.NotNull;
 
 public class SomaticFindingsChapter implements ReportChapter
 {
@@ -50,52 +44,59 @@ public class SomaticFindingsChapter implements ReportChapter
         mReportResources = reportResources;
     }
 
+    @NotNull
     @Override
     public String name()
     {
         return "Somatic Findings";
     }
 
+    @NotNull
     @Override
-    public PageSize pageSize()
+    public PDRectangle pageSize()
     {
-        return PageSize.A4;
+        return PDRectangle.A4;
     }
 
     @Override
-    public void render(final Document document)
+    public void render(@NotNull final DocumentContext document) throws IOException
     {
-        document.add(new Paragraph(name()).addStyle(mReportResources.chapterTitleStyle()));
+        document.addParagraph(name(), mReportResources.chapterTitleStyle());
 
         if(QcStatusInterpretation.hasPurpleFail(mReport.purple().fit().qc()))
         {
-            mReportResources.addQcFailNotice(document);
+            document.addQcFailNotice(mReportResources);
             return;
         }
 
         addSomaticVariants(document);
-
+        addSpaceBetweenSubsections(document);
         addSomaticAmpDels(document);
+        addSpaceBetweenSubsections(document);
         addFusions(document);
-
+        addSpaceBetweenSubsections(document);
         addBreakendDisruptions(document);
+        addSpaceBetweenSubsections(document);
 
         if(!mReport.tumorOnlyMode())
         {
             addViralPresence(document);
+            addSpaceBetweenSubsections(document);
         }
 
         addChrArmCopyNumbers(document);
+        addSpaceBetweenSubsections(document);
 
         if(!mReport.tumorOnlyMode())
         {
             addSignatureAllocations(document);
+            addSpaceBetweenSubsections(document);
         }
 
         addLinxPlots(document);
     }
 
-    private void addSomaticVariants(final Document document)
+    private void addSomaticVariants(final DocumentContext document) throws IOException
     {
         String driverVariantsTitle = "Small Variants";
 
@@ -104,103 +105,110 @@ public class SomaticFindingsChapter implements ReportChapter
         for(PurpleVariant variant : mReport.purple().somaticVariants())
         {
             if(variant.canonicalImpact().reported())
+            {
                 ++variantImpactCount;
+            }
 
-            variantImpactCount += variant.otherImpacts().stream().filter(x -> x.reported()).mapToInt(x -> 1).sum();
+            variantImpactCount += variant.otherImpacts().stream().filter(PurpleTranscriptImpact::reported).mapToInt(x -> 1).sum();
         }
 
         String titleDrivers = driverVariantsTitle + " (" + variantImpactCount + ")";
 
-        document.add(SomaticVariantTable.build(
-                titleDrivers, contentWidth(), mReport.purple().somaticVariants(), mReportResources,
+        document.addTable(SomaticVariantTable.build(
+                document, titleDrivers, contentWidth(), mReport.purple().somaticVariants(), mReportResources,
                 mReport.tumorOnlyMode(), mConfig != null && mConfig.RnaSampleId != null));
     }
 
-    private void addSomaticAmpDels(final Document document)
+    private void addSomaticAmpDels(final DocumentContext document) throws IOException
     {
         String driverAmpsDelsTitle = "Amplifications and Deletions";
-
         String titleDrivers = driverAmpsDelsTitle + " (" + mReport.purple().somaticGainsDels().size() + ")";
 
-        document.add(GainDeletionTable.build(
-                titleDrivers, contentWidth(), mReport.purple().somaticGainsDels(), mReportResources, mReport.hasRna()));
+        document.addTable(GainDeletionTable.build(
+                document, titleDrivers, contentWidth(), mReport.purple().somaticGainsDels(), mReportResources, mReport.hasRna()));
     }
 
-    private void addChrArmCopyNumbers(final Document document)
+    private void addChrArmCopyNumbers(final DocumentContext document) throws IOException
     {
-        String title = "Arm Copy Number Abberations";
-
-        document.add(ChrArmCopyNumberTable.build(title, contentWidth(), mReport.purple().armCopyNumberAbberations(), mReportResources));
+        String title = "Arm Copy Number Aberrations";
+        document.addTable(ChrArmCopyNumberTable.build(document, title, contentWidth(), mReport.purple()
+                .armCopyNumberAbberations(), mReportResources));
     }
 
-    private void addFusions(final Document document)
+    private void addFusions(final DocumentContext document) throws IOException
     {
         String driverFusionsTitle = "Fusions";
-
         String titleDrivers = driverFusionsTitle + " (" + mReport.linx().fusions().size() + ")";
-        document.add(DnaFusionTable.build(titleDrivers, contentWidth(), mReport.linx().fusions(), mReportResources));
+        document.addTable(DnaFusionTable.build(document, titleDrivers, contentWidth(), mReport.linx().fusions(), mReportResources));
     }
 
-    private void addViralPresence(final Document document)
+    private void addViralPresence(final DocumentContext document) throws IOException
     {
         VirusInterpreterData virusInterpreter = mReport.virusInterpreter();
 
         if(virusInterpreter != null)
         {
             String driverVirusTitle = "Viruses";
-
             String titleDrivers = driverVirusTitle + " (" + virusInterpreter.reportableViruses().size() + ")";
-            document.add(ViralPresenceTable.build(titleDrivers, contentWidth(), virusInterpreter.reportableViruses(), mReportResources));
+            document.addTable(ViralPresenceTable.build(document, titleDrivers, contentWidth(), virusInterpreter.reportableViruses(), mReportResources));
         }
     }
 
-    private void addBreakendDisruptions(final Document document)
+    private void addBreakendDisruptions(final DocumentContext document) throws IOException
     {
         String driverGeneDisruptionsTitle = "Disruptions";
 
         List<LinxBreakend> somaticBreakends = mReport.linx().somaticBreakends();
-
-        Set<Integer> uniqueSvs = somaticBreakends.stream().map(x -> x.svId()).collect(Collectors.toSet());
+        Set<Integer> uniqueSvs = somaticBreakends.stream().map(LinxBreakend::svId).collect(Collectors.toSet());
 
         String titleDriver = driverGeneDisruptionsTitle + " (" + uniqueSvs.size() + ")";
-        document.add(DisruptionTable.build(titleDriver, contentWidth(), somaticBreakends, mReportResources));
+        document.addTable(DisruptionTable.build(document, titleDriver, contentWidth(), somaticBreakends, mReportResources));
     }
 
-    private void addSignatureAllocations(final Document document)
+    private void addSignatureAllocations(final DocumentContext document) throws IOException
     {
         List<SignatureAllocation> sigAllocations = mReport.sigAllocations();
 
         if(sigAllocations != null)
         {
             String signatureTitle = "Signature Allocations";
-
             String title = signatureTitle + " (" + sigAllocations.size() + ")";
-            document.add(SignatureAllocationTable.build(title, contentWidth(), sigAllocations, mReportResources));
+            document.addTable(SignatureAllocationTable.build(document, title, contentWidth(), sigAllocations, mReportResources));
         }
     }
 
-    private void addLinxPlots(final Document document)
+    private void addLinxPlots(final DocumentContext document) throws IOException
     {
         String title = "Structural Driver Plots (" + mReport.plots().linxDriverPlots().size() + ")";
+        document.addParagraph(title, mReportResources.tableTitleStyle());
 
-        document.add(new Paragraph(title).addStyle(mReportResources.tableTitleStyle()));
+        // 2-column grid layout
+        float colWidth = contentWidth() / 2f;
+        float maxPlotHeight = Math.round(contentWidth() / 2f) - 2;
+        float marginLeft = document.marginLeft();
 
-        Table table = new Table(2);
-        Cells cells = new Cells(mReportResources);
-
-        for(String plot : mReport.plots().linxDriverPlots())
+        java.util.List<String> plots = mReport.plots().linxDriverPlots();
+        for(int i = 0; i < plots.size(); i += 2)
         {
-            Image image = Images.build(mPlotPathResolver.resolve(plot));
-            image.setMaxWidth(Math.round(contentWidth() / 2D) - 2);
-            image.setHorizontalAlignment(HorizontalAlignment.CENTER);
-            table.addCell(cells.createImage(image));
-        }
+            float rowY = document.cursorY();
 
-        if(mReport.plots().linxDriverPlots().size() % 2 == 1)
-        {
-            table.addCell(cells.createContent(Strings.EMPTY));
-        }
+            // Check if we need a new page
+            if(rowY - maxPlotHeight < document.contentEndY())
+            {
+                document.newPage();
+                rowY = document.cursorY();
+            }
 
-        document.add(table);
+            // Left image
+            document.addImageAt(mPlotPathResolver.resolve(plots.get(i)), marginLeft, rowY, colWidth, maxPlotHeight);
+
+            // Right image (if exists)
+            if(i + 1 < plots.size())
+            {
+                document.addImageAt(mPlotPathResolver.resolve(plots.get(i + 1)), marginLeft + colWidth, rowY, colWidth, maxPlotHeight);
+            }
+
+            document.setCursorY(rowY - maxPlotHeight - 5);
+        }
     }
 }

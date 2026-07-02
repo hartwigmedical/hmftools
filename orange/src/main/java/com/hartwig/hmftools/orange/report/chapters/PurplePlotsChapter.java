@@ -1,25 +1,21 @@
 package com.hartwig.hmftools.orange.report.chapters;
 
-import static java.lang.Math.round;
+import java.io.IOException;
 
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.orange.algo.QcStatusInterpretation;
+import com.hartwig.hmftools.orange.report.DocumentContext;
 import com.hartwig.hmftools.orange.report.PlotPathResolver;
 import com.hartwig.hmftools.orange.report.ReportResources;
-import com.hartwig.hmftools.orange.report.util.Cells;
-import com.hartwig.hmftools.orange.report.util.Images;
-import com.itextpdf.kernel.geom.PageSize;
-import com.itextpdf.layout.Document;
-import com.itextpdf.layout.borders.Border;
-import com.itextpdf.layout.element.Image;
-import com.itextpdf.layout.element.Paragraph;
-import com.itextpdf.layout.element.Table;
-import com.itextpdf.layout.property.HorizontalAlignment;
 
-import org.apache.logging.log4j.util.Strings;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.jetbrains.annotations.NotNull;
 
 public class PurplePlotsChapter implements ReportChapter
 {
+    private static final PDRectangle A4_LANDSCAPE = new PDRectangle(PDRectangle.A4.getHeight(), PDRectangle.A4.getWidth());
+    private static final int PLOT_IMAGE_HEIGHT = 225;
+
     private final OrangeRecord mReport;
     private final PlotPathResolver mPlotPathResolver;
     private final ReportResources mReportResources;
@@ -31,68 +27,60 @@ public class PurplePlotsChapter implements ReportChapter
         mReportResources = reportResources;
     }
 
+    @NotNull
     @Override
     public String name()
     {
         return "Purity and Ploidy";
     }
 
+    @NotNull
     @Override
-    public PageSize pageSize()
+    public PDRectangle pageSize()
     {
-        return PageSize.A4.rotate();
+        return A4_LANDSCAPE;
     }
 
     @Override
-    public void render(final Document document)
+    public void render(@NotNull final DocumentContext document) throws IOException
     {
-        document.add(new Paragraph(name()).addStyle(mReportResources.chapterTitleStyle()));
+        document.addParagraph(name(), mReportResources.chapterTitleStyle());
 
         if(QcStatusInterpretation.hasPurpleFail(mReport.purple().fit().qc()))
         {
-            mReportResources.addQcFailNotice(document);
+            document.addQcFailNotice(mReportResources);
             return;
         }
 
-        addPurlePlots(document);
+        addPurplePlots(document);
     }
 
-    private static final int PLOT_IMAGE_HEIGHT = 225;
-
-    private void addPurlePlots(final Document document)
+    private void addPurplePlots(final DocumentContext document) throws IOException
     {
-        Table table = new Table(3);
-        Cells cells = new Cells(mReportResources);
+        // layout: 3 columns x 2 rows on a single landscape page
+        // row 1: input circos              CN plot                 somatic clonality
+        // row 2: ploidy/purity range       minor allele plot       somatic rainfall
 
-        // layout:
-        // row 1: input circos              CN PDF                  somatic clonality
-        // row 2: ploidy/purity range       minor allele PDF        somatic rainfall
+        float colWidth = contentWidth() / 3f;
+        float marginLeft = document.marginLeft();
 
-        float baseWidth = round((contentWidth() / 3D) - 2);
-        float squareWidth = round(baseWidth * 0.8);
-        float rectangeWidth = round(baseWidth * 1.2);
+        // Row 1
+        float rowY = document.cursorY();
+        addPlotAt(document, mReport.plots().purpleInputCircosPlot(), marginLeft, rowY, colWidth);
+        addPlotAt(document, mReport.plots().purpleCopyNumberPlot(), marginLeft + colWidth, rowY, colWidth);
+        addPlotAt(document, mReport.plots().purpleClonalityPlot(), marginLeft + 2 * colWidth, rowY, colWidth);
 
-        addTableImage(table, cells, mReport.plots().purpleInputCircosPlot(), squareWidth);
-        addTableImage(table, cells, mReport.plots().purpleCopyNumberPlot(), squareWidth);
-        addTableImage(table, cells, mReport.plots().purpleClonalityPlot(), rectangeWidth);
-        addTableImage(table, cells, mReport.plots().purplePurityRangePlot(), squareWidth);
-        addTableImage(table, cells, mReport.plots().purpleMinorAlleleMapPlot(), squareWidth);
-        addTableImage(table, cells, mReport.plots().purpleRainfallPlot(), rectangeWidth);
+        // Row 2
+        rowY -= PLOT_IMAGE_HEIGHT + 5;
+        addPlotAt(document, mReport.plots().purplePurityRangePlot(), marginLeft, rowY, colWidth);
+        addPlotAt(document, mReport.plots().purpleMinorAlleleMapPlot(), marginLeft + colWidth, rowY, colWidth);
+        addPlotAt(document, mReport.plots().purpleRainfallPlot(), marginLeft + 2 * colWidth, rowY, colWidth);
 
-        // table.setBor
-        // .setBorder(Border.NO_BORDER)
-
-        document.add(table);
+        document.setCursorY(rowY - PLOT_IMAGE_HEIGHT - 5);
     }
 
-    private void addTableImage(final Table table, final Cells cells, final String plotFilename, final float width)
+    private void addPlotAt(final DocumentContext document, final String plotFilename, float x, float y, float width) throws IOException
     {
-        Image image = Images.build(mPlotPathResolver.resolve(plotFilename));
-        // float imageHeight = round((contentHeight() / 2D) - 2);
-        // image.setMaxHeight(imageHeight);
-        image.setMaxHeight(PLOT_IMAGE_HEIGHT);
-        image.setHorizontalAlignment(HorizontalAlignment.CENTER);
-        image.setMaxWidth(width);
-        table.addCell(cells.createImage(image));
+        document.addImageAt(mPlotPathResolver.resolve(plotFilename), x, y, width, PLOT_IMAGE_HEIGHT);
     }
 }

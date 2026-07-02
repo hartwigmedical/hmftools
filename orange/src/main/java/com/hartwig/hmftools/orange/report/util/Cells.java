@@ -1,18 +1,25 @@
 package com.hartwig.hmftools.orange.report.util;
 
 import com.hartwig.hmftools.orange.report.ReportResources;
-import com.itextpdf.kernel.pdf.action.PdfAction;
-import com.itextpdf.layout.borders.Border;
-import com.itextpdf.layout.borders.SolidBorder;
-import com.itextpdf.layout.element.Cell;
-import com.itextpdf.layout.element.IBlockElement;
-import com.itextpdf.layout.element.Image;
-import com.itextpdf.layout.element.Paragraph;
-import com.itextpdf.layout.element.Table;
-import com.itextpdf.layout.property.VerticalAlignment;
+
+import org.apache.pdfbox.pdmodel.PDPage;
+
+import be.quodlibet.boxable.BaseTable;
+import be.quodlibet.boxable.Cell;
+import be.quodlibet.boxable.Row;
+import be.quodlibet.boxable.VerticalAlignment;
+import be.quodlibet.boxable.line.LineStyle;
 
 public class Cells
 {
+    // Compact padding to match iText's tight row spacing
+    private static final float CELL_PADDING_TOP = 2f;
+    private static final float CELL_PADDING_BOTTOM = 2f;
+    private static final float CELL_PADDING_LEFT = 2f;
+    private static final float CELL_PADDING_RIGHT = 2f;
+
+    public static final float COMPACT_ROW_HEIGHT = 15f;
+
     private final ReportResources mReportResources;
 
     public Cells(final ReportResources reportResources)
@@ -20,95 +27,166 @@ public class Cells
         mReportResources = reportResources;
     }
 
-    public Cell createHeader(final String text)
+    private static void setCompactPadding(final Cell<PDPage> cell)
     {
-        Cell cell = new Cell(1, 1);
-        cell.setHeight(23); // Set fixed height to create consistent spacing between table title and header
-        cell.setBorder(Border.NO_BORDER);
-        cell.setVerticalAlignment(VerticalAlignment.BOTTOM);
-        cell.addStyle(mReportResources.tableHeaderStyle());
-        cell.add(new Paragraph(text.toUpperCase()));
+        cell.setTopPadding(CELL_PADDING_TOP);
+        cell.setBottomPadding(CELL_PADDING_BOTTOM);
+        cell.setLeftPadding(CELL_PADDING_LEFT);
+        cell.setRightPadding(CELL_PADDING_RIGHT);
+    }
+
+    public void applyHeaderStyle(final Cell<PDPage> cell)
+    {
+        ReportResources.TextStyle style = mReportResources.tableHeaderStyle();
+        cell.setFont(style.font());
+        cell.setFontSize(style.fontSize());
+        cell.setTextColor(style.color());
+        cell.setTopBorderStyle(null);
+        cell.setBottomBorderStyle(null);
+        cell.setLeftBorderStyle(null);
+        cell.setRightBorderStyle(null);
+        cell.setValign(VerticalAlignment.BOTTOM);
+        setCompactPadding(cell);
+    }
+
+    public void applyContentStyle(final Cell<PDPage> cell)
+    {
+        ReportResources.TextStyle style = mReportResources.tableContentStyle();
+        cell.setFont(style.font());
+        cell.setFontSize(style.fontSize());
+        cell.setTextColor(style.color());
+        cell.setTopBorderStyle(null);
+        cell.setLeftBorderStyle(null);
+        cell.setRightBorderStyle(null);
+        cell.setBottomBorderStyle(new LineStyle(ReportResources.PALETTE_MID_GREY, 0.25f));
+        setCompactPadding(cell);
+    }
+
+    public void applyKeyStyle(final Cell<PDPage> cell)
+    {
+        ReportResources.TextStyle style = mReportResources.keyStyle();
+        cell.setFont(style.font());
+        cell.setFontSize(style.fontSize());
+        cell.setTextColor(style.color());
+        cell.setTopBorderStyle(null);
+        cell.setBottomBorderStyle(null);
+        cell.setLeftBorderStyle(null);
+        cell.setRightBorderStyle(null);
+        setCompactPadding(cell);
+    }
+
+    public void applyValueStyle(final Cell<PDPage> cell)
+    {
+        ReportResources.TextStyle style = mReportResources.valueStyle();
+        cell.setFont(style.font());
+        cell.setFontSize(style.fontSize());
+        cell.setTextColor(style.color());
+        cell.setTopBorderStyle(null);
+        cell.setBottomBorderStyle(null);
+        cell.setLeftBorderStyle(null);
+        cell.setRightBorderStyle(null);
+        setCompactPadding(cell);
+    }
+
+    public void applyUrlStyle(final Cell<PDPage> cell)
+    {
+        ReportResources.TextStyle style = mReportResources.urlStyle();
+        cell.setFont(style.font());
+        cell.setFontSize(style.fontSize());
+        cell.setTextColor(style.color());
+        cell.setTopBorderStyle(null);
+        cell.setLeftBorderStyle(null);
+        cell.setRightBorderStyle(null);
+        cell.setBottomBorderStyle(new LineStyle(ReportResources.PALETTE_MID_GREY, 0.25f));
+        setCompactPadding(cell);
+    }
+
+    public void applyWarningStyle(final Cell<PDPage> cell)
+    {
+        ReportResources.TextStyle style = mReportResources.qcWarningStyle();
+        cell.setFont(style.font());
+        cell.setFontSize(style.fontSize());
+        cell.setTextColor(style.color());
+        cell.setTopBorderStyle(null);
+        cell.setBottomBorderStyle(null);
+        cell.setLeftBorderStyle(null);
+        cell.setRightBorderStyle(null);
+        setCompactPadding(cell);
+    }
+
+    public void applyTitleStyle(final Cell<PDPage> cell)
+    {
+        ReportResources.TextStyle style = mReportResources.tableTitleStyle();
+        cell.setFont(style.font());
+        cell.setFontSize(style.fontSize());
+        cell.setTextColor(style.color());
+        cell.setTopBorderStyle(null);
+        cell.setBottomBorderStyle(null);
+        cell.setLeftBorderStyle(null);
+        cell.setRightBorderStyle(null);
+        setCompactPadding(cell);
+    }
+
+    // ----- Convenience methods for adding styled cells to rows -----
+    public Cell<PDPage> addHeaderCell(final Row<PDPage> row, float widthPct, final String text)
+    {
+        Cell<PDPage> cell = row.createCell(widthPct, text.toUpperCase());
+        applyHeaderStyle(cell);
         return cell;
     }
 
-    public Cell createSpanningEntry(final Table table, final String text)
+    public Cell<PDPage> addContentCell(final Row<PDPage> row, float widthPct, final String text)
     {
-        Cell cell = new Cell(1, table.getNumberOfColumns());
-        cell.add(new Paragraph(text));
-        cell.setBorder(Border.NO_BORDER);
-        cell.setBorderBottom(new SolidBorder(ReportResources.PALETTE_MID_GREY, 0.25F));
-        cell.addStyle(mReportResources.tableContentStyle());
+        Cell<PDPage> cell = row.createCell(widthPct, text);
+        applyContentStyle(cell);
         return cell;
     }
 
-    public Cell createSpanningWarning(final Table table, final String text)
+    public Cell<PDPage> addKeyCell(final Row<PDPage> row, float widthPct, final String text)
     {
-        Cell cell = new Cell(1, table.getNumberOfColumns());
-        cell.add(new Paragraph(text));
-        cell.setBorder(Border.NO_BORDER);
-        cell.addStyle(mReportResources.qcWarningStyle());
+        Cell<PDPage> cell = row.createCell(widthPct, text);
+        applyKeyStyle(cell);
         return cell;
     }
 
-    public Cell createUrl(final String text, final String url)
+    public Cell<PDPage> addValueCell(final Row<PDPage> row, float widthPct, final String text)
     {
-        Cell cell = createBorderlessBase();
-        cell.setBorderBottom(new SolidBorder(ReportResources.PALETTE_MID_GREY, 0.25F));
-        cell.addStyle(mReportResources.urlStyle());
-        cell.add(new Paragraph(text));
-        cell.setAction(PdfAction.createURI(url));
+        Cell<PDPage> cell = row.createCell(widthPct, text);
+        applyValueStyle(cell);
         return cell;
     }
 
-    public Cell createContent(final String text)
+    public Cell<PDPage> addUrlCell(final Row<PDPage> row, float widthPct, final String text, final String url)
     {
-        return createContent(new Paragraph(text));
-    }
-
-    public Cell createContent(final IBlockElement element)
-    {
-        Cell cell = createBorderlessBase();
-        cell.setBorderBottom(new SolidBorder(ReportResources.PALETTE_MID_GREY, 0.25F));
-        cell.addStyle(mReportResources.tableContentStyle());
-        cell.add(element);
+        Cell<PDPage> cell = row.createCell(widthPct, text);
+        applyUrlStyle(cell);
+        // Note: Boxable doesn't natively support hyperlinks on cells.
+        // The URL text is displayed; actual link annotation would need custom handling.
         return cell;
     }
 
-    public Cell createImage(final Image image)
+    public Cell<PDPage> addWarningCell(final Row<PDPage> row, final String text)
     {
-        Cell cell = createBorderlessBase();
-        // cell.setBorderBottom(new SolidBorder(ReportResources.PALETTE_MID_GREY, 0.25F));
-        cell.setBorder(Border.NO_BORDER);
-        cell.addStyle(mReportResources.tableContentStyle());
-        cell.add(image);
+        Cell<PDPage> cell = row.createCell(100, text);
+        applyWarningStyle(cell);
         return cell;
     }
 
-    public Cell createKey(final String text)
+    public java.util.List<Cell<PDPage>> addRow(
+            final BaseTable table, final float[] pcts, final java.util.List<String> values)
     {
-        Cell cell = createBorderlessBase();
-        cell.addStyle(mReportResources.keyStyle());
-        cell.add(new Paragraph(text));
-        return cell;
+        Row<PDPage> row = table.createRow(COMPACT_ROW_HEIGHT);
+        java.util.List<Cell<PDPage>> createdCells = new java.util.ArrayList<>();
+        for(int i = 0; i < values.size(); i++)
+        {
+            float p = i < pcts.length ? pcts[i] : pcts[pcts.length - 1];
+            createdCells.add(addContentCell(row, p, values.get(i)));
+        }
+        return createdCells;
     }
 
-    public Cell createValue(final String text)
+    public String createContent(final String text)
     {
-        return createValue(new Paragraph(text));
-    }
-
-    public Cell createValue(final IBlockElement element)
-    {
-        Cell cell = createBorderlessBase();
-        cell.addStyle(mReportResources.valueStyle());
-        cell.add(element);
-        return cell;
-    }
-
-    private static Cell createBorderlessBase()
-    {
-        Cell cell = new Cell();
-        cell.setBorder(Border.NO_BORDER);
-        return cell;
+        return text;
     }
 }
