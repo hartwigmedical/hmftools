@@ -1,23 +1,23 @@
-package com.hartwig.hmftools.tars.liftback.rescue;
+package com.hartwig.hmftools.tars.liftback.supplementary;
 
 import java.util.EnumMap;
 import java.util.Map;
 
-// Per-decision counters for the rescue resolver. Aggregated across the run and emitted into the
+// Per-decision counters for the supplementary resolver. Aggregated across the run and emitted into the
 // liftback summary so we can see which gate is rejecting most candidates and how many chain
 // merges happened.
-public class RescueStatistics
+public class SupplementaryStatistics
 {
     private int mCandidatesEvaluated;
     private int mMergedTotal;
     private int mSuppClampApplied;
     private final int[] mChainDepthCounts;  // index = depth (1 = single merge, 2 = chain of two, ...)
-    private final Map<RescueRejectReason, Integer> mRejections;
+    private final Map<SupplementaryRejectReason, Integer> mRejections;
 
-    public RescueStatistics(final int maxChainDepth)
+    public SupplementaryStatistics(final int maxChainDepth)
     {
         mChainDepthCounts = new int[Math.max(maxChainDepth, 1) + 1];
-        mRejections = new EnumMap<>(RescueRejectReason.class);
+        mRejections = new EnumMap<>(SupplementaryRejectReason.class);
     }
 
     public void countCandidate()
@@ -32,7 +32,7 @@ public class RescueStatistics
         ++mChainDepthCounts[slot];
     }
 
-    public void countReject(final RescueRejectReason reason)
+    public void countReject(final SupplementaryRejectReason reason)
     {
         mRejections.merge(reason, 1, Integer::sum);
     }
@@ -66,7 +66,7 @@ public class RescueStatistics
         return mChainDepthCounts[depth];
     }
 
-    public int rejectCount(final RescueRejectReason reason)
+    public int rejectCount(final SupplementaryRejectReason reason)
     {
         return mRejections.getOrDefault(reason, 0);
     }
@@ -75,7 +75,7 @@ public class RescueStatistics
     // double-counting (see LiftBackGroupProcessor.processNameGroup).
     public int[] snapshot()
     {
-        RescueRejectReason[] reasons = RescueRejectReason.values();
+        SupplementaryRejectReason[] reasons = SupplementaryRejectReason.values();
         int[] snapshot = new int[3 + mChainDepthCounts.length + reasons.length];
         snapshot[0] = mCandidatesEvaluated;
         snapshot[1] = mMergedTotal;
@@ -94,7 +94,7 @@ public class RescueStatistics
         mMergedTotal = snapshot[1];
         mSuppClampApplied = snapshot[2];
         System.arraycopy(snapshot, 3, mChainDepthCounts, 0, mChainDepthCounts.length);
-        RescueRejectReason[] reasons = RescueRejectReason.values();
+        SupplementaryRejectReason[] reasons = SupplementaryRejectReason.values();
         mRejections.clear();
         for(int i = 0; i < reasons.length; ++i)
         {

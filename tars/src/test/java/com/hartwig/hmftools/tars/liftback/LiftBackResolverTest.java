@@ -587,9 +587,10 @@ public class LiftBackResolverTest
         return ExonRegionIndex.fromCache(cache, V38);
     }
 
-    // Hidden tie (XS==AS) on a ref-only primary: rescue is gated on a tx match, so exon evidence cannot bump MAPQ.
+    // Hidden tie (XS==AS) on a ref-only primary landing outside any indexed exon: no vouching evidence, so the
+    // unresolved hidden tie holds MAPQ at 0 (the equal-scoring alt bwa did not emit may be real).
     @Test
-    public void testHiddenTieRefOnlyNeverRescuesMapq() throws Exception
+    public void testHiddenTieRefOnlyOutsideIndexedExonHoldsAtZero() throws Exception
     {
         SAMRecord record = newRecord(CHR_1, 1500, "150M");
         record.setMappingQuality(0);
@@ -599,7 +600,7 @@ public class LiftBackResolverTest
         LiftBackResolver noIndex = new LiftBackResolver(contigMap());
         assertEquals(0, noIndex.resolve(record).updatedMapq());
 
-        ExonRegionIndex idx = buildExonIndex(List.of(new int[] { 1400, 1700 })); // covers pos 1500
+        ExonRegionIndex idx = buildExonIndex(List.of(new int[] { 1400, 1700 }));
         LiftBackResolver withIndex = new LiftBackResolver(contigMap(), idx);
         LiftBackResult result = withIndex.resolve(record);
         assertEquals(0, result.updatedMapq());
@@ -621,59 +622,52 @@ public class LiftBackResolverTest
     }
 
     // Direct unit tests for the extracted MAPQ policy; independent of LiftBackDiscriminator / SAMRecord plumbing.
-    // decidePrimaryMapq positional args: (inputMapq, numLoci, swapped, hiddenTie, primaryFromTxContig, primaryInAnnotatedExon, hasTxMatch).
-    @Test
-    public void testMapqPolicy_swappedAlwaysRescues()
-    {
-        assertEquals(60, LiftBackResolver.decidePrimaryMapq(0, 1, true, true, false, false, true)); // swap is decisive even with hidden tie
-    }
-
+    // decidePrimaryMapq positional args: (inputMapq, numLoci, hiddenTie, primaryFromTxContig, primaryInAnnotatedExon).
     @Test
     public void testMapqPolicy_singleLocusZeroRescues()
     {
-        assertEquals(60, LiftBackResolver.decidePrimaryMapq(0, 1, false, false, false, false, true));
+        assertEquals(60, LiftBackResolver.decidePrimaryMapq(0, 1, false, false, false)); // single locus, MAPQ0, no hidden tie -> 60
     }
 
     @Test
     public void testMapqPolicy_hiddenTieRefPrimaryNoExonHoldsAtZero()
     {
-        assertEquals(0, LiftBackResolver.decidePrimaryMapq(0, 1, false, true, false, false, true)); // unresolved hidden tie
+        assertEquals(0, LiftBackResolver.decidePrimaryMapq(0, 1, true, false, false)); // unresolved hidden tie holds at 0
     }
 
     @Test
     public void testMapqPolicy_hiddenTieTxPrimaryRescues()
     {
-        assertEquals(60, LiftBackResolver.decidePrimaryMapq(0, 1, false, true, true, false, true)); // tx provenance overrides hidden tie
+        assertEquals(60, LiftBackResolver.decidePrimaryMapq(0, 1, true, true, false)); // tx provenance overrides hidden tie
     }
 
     @Test
     public void testMapqPolicy_hiddenTieInAnnotatedExonRescues()
     {
-        assertEquals(60, LiftBackResolver.decidePrimaryMapq(0, 1, false, true, false, true, true)); // exon evidence overrides hidden tie
+        assertEquals(60, LiftBackResolver.decidePrimaryMapq(0, 1, true, false, true)); // annotated exon overrides hidden tie
     }
 
     @Test
     public void testMapqPolicy_inputSixtyPassesAsRescued()
     {
-        assertEquals(60, LiftBackResolver.decidePrimaryMapq(60, 1, false, false, false, false, true)); // input 60 passes through unchanged
+        assertEquals(60, LiftBackResolver.decidePrimaryMapq(60, 1, false, false, false)); // input 60 passes through unchanged
     }
 
     @Test
     public void testMapqPolicy_gradedMapqPassesThrough()
     {
-        assertEquals(37, LiftBackResolver.decidePrimaryMapq(37, 1, false, false, false, false, true)); // graded signal; leave alone
+        assertEquals(37, LiftBackResolver.decidePrimaryMapq(37, 1, false, false, false)); // graded signal; leave alone
     }
 
     @Test
-    public void testMapqPolicy_multiLocusZeroStaysZero()
+    public void testMapqPolicy_multiLocusNeverBumps()
     {
-        assertEquals(0, LiftBackResolver.decidePrimaryMapq(0, 2, false, false, false, false, true)); // real alt exists; honest 0 stands
+        assertEquals(0, LiftBackResolver.decidePrimaryMapq(0, 2, false, false, false)); // multi-locus never bumped
     }
 
     @Test
-    public void testMapqPolicy_noTxMatchNeverBumps()
+    public void testMapqPolicy_refOnlySingleLocusBumps()
     {
-        assertEquals(0, LiftBackResolver.decidePrimaryMapq(0, 1, false, false, false, false, false)); // no tx -> MAPQ-0 is honest
-        assertEquals(0, LiftBackResolver.decidePrimaryMapq(0, 1, true, false, false, false, false)); // swap can't rescue without tx match
+        assertEquals(60, LiftBackResolver.decidePrimaryMapq(0, 1, false, false, false)); // single-locus ref-only MAPQ0 now bumps
     }
 }

@@ -1,0 +1,75 @@
+<svg viewBox="0 0 880 276" xmlns="http://www.w3.org/2000/svg" role="img">
+<title>Step 1: one splice junction, kept or collapsed</title>
+<desc>Short overhangs (12 bp or fewer) next to a soft clip, decided by the overhang score (bar = 5). Bar widths are proportional to base count; introns (N) are drawn as fixed gaps. Kept: chr5:181,241,515, 125M 534N 11M 15S, the 11M overhang matches its far exon (AS +11) so the junction is kept. Collapsed: the exp8 field read 25535, 100M 83N 3M 48S, has a 3 bp anchor scoring 3, so the junction is dropped to 100M 51S. Collapsed by SNV: a 7 bp anchor with one mismatch scores 6 minus 4 equals 2, below the bar, so a genuine junction is collapsed to 100M 51S even though its CIGAR M is longer. Score counts matches, not M length. M + S totals 151.</desc>
+<style>
+svg { font-family: Arial, Helvetica, sans-serif; }
+svg {
+  --tx:#2F7DC6; --tx-dark:#0C447C; --warn-dark:#6B4E04; --drop:#C0392B;
+  --sub:#6B6862; --label:#5C5953; --border2:#C7C5BF; --bg:#FFFFFF;
+}
+.title   { font-size:13px; font-weight:700; fill:var(--tx-dark); }
+.colhead { font-size:10px; font-weight:700; fill:#9B9893; letter-spacing:0.4px; }
+.cond    { font-size:11px; font-weight:700; }
+.condsub { font-size:11px; fill:var(--sub); }
+.oncig   { font-size:10px; fill:#FFFFFF; text-anchor:middle; }
+.oncigsm { font-size:9px; text-anchor:middle; }
+.nlbl    { font-size:9.5px; fill:var(--tx-dark); text-anchor:middle; }
+.lbl     { font-size:9.5px; fill:var(--label); }
+.m       { fill:var(--tx); }
+.snv     { fill:var(--drop); }
+.nline   { stroke:var(--tx); stroke-width:2; fill:none; }
+.rule    { stroke:#E4E2DD; stroke-width:1; }
+.divide  { stroke:var(--border2); stroke-width:1; }
+</style>
+<defs>
+  <pattern id="softclip" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+    <rect width="5" height="5" fill="#FBEFD0"/>
+    <line x1="0" y1="0" x2="0" y2="5" stroke="#EFB94B" stroke-width="1.6"/>
+  </pattern>
+</defs>
+<rect x="0" y="0" width="880" height="276" fill="var(--bg)"/>
+
+<text class="title" x="40" y="26">1 splice junction</text>
+
+<text class="colhead" x="40" y="48">BEFORE</text>
+<text class="colhead" x="470" y="48">AFTER</text>
+<line class="divide" x1="40" y1="54" x2="820" y2="54"/>
+<line class="divide" x1="452" y1="54" x2="452" y2="240"/>
+
+<!-- kept: 11 bp overhang matches far exon -->
+<text x="40" y="76"><tspan class="cond" fill="var(--tx-dark)">kept</tspan><tspan class="condsub">  &#183;  11 bp overhang matches its far exon (AS +11)</tspan></text>
+<rect class="m" x="40" y="86" width="250" height="16" rx="2"/><text class="oncig" x="165" y="98">125M</text>
+<line class="nline" x1="290" y1="94" x2="326" y2="94"/><rect x="292" y="87" width="32" height="13" fill="var(--bg)"/><text class="nlbl" x="308" y="98">534N</text>
+<rect class="m" x="326" y="86" width="22" height="16" rx="2"/><text class="oncigsm" x="337" y="98" fill="#FFFFFF">11M</text>
+<rect x="348" y="86" width="30" height="16" rx="2" fill="url(#softclip)"/><text class="oncigsm" x="363" y="98" fill="var(--warn-dark)">15S</text>
+<rect class="m" x="470" y="86" width="250" height="16" rx="2"/><text class="oncig" x="595" y="98">125M</text>
+<line class="nline" x1="720" y1="94" x2="756" y2="94"/><rect x="722" y="87" width="32" height="13" fill="var(--bg)"/><text class="nlbl" x="738" y="98">534N</text>
+<rect class="m" x="756" y="86" width="22" height="16" rx="2"/><text class="oncigsm" x="767" y="98" fill="#FFFFFF">11M</text>
+<rect x="778" y="86" width="30" height="16" rx="2" fill="url(#softclip)"/><text class="oncigsm" x="793" y="98" fill="var(--warn-dark)">15S</text>
+<line class="rule" x1="40" y1="118" x2="820" y2="118"/>
+
+<!-- collapsed: short anchor (real exp8 read) -->
+<text x="40" y="140"><tspan class="cond" fill="var(--drop)">collapsed</tspan><tspan class="condsub">  &#183;  exp8 read 25535, 3 bp anchor, score +3</tspan></text>
+<rect class="m" x="40" y="150" width="200" height="16" rx="2"/><text class="oncig" x="140" y="162">100M</text>
+<line class="nline" x1="240" y1="158" x2="276" y2="158"/><rect x="242" y="151" width="28" height="13" fill="var(--bg)"/><text class="nlbl" x="256" y="162">83N</text>
+<rect class="m" x="276" y="150" width="14" height="16" rx="2"/><text class="oncigsm" x="283" y="162" fill="#FFFFFF">3M</text>
+<rect x="290" y="150" width="96" height="16" rx="2" fill="url(#softclip)"/><text class="oncigsm" x="338" y="162" fill="var(--warn-dark)">48S</text>
+<rect class="m" x="470" y="150" width="200" height="16" rx="2"/><text class="oncig" x="570" y="162">100M</text>
+<rect x="670" y="150" width="102" height="16" rx="2" fill="url(#softclip)"/><text class="oncigsm" x="721" y="162" fill="var(--warn-dark)">51S</text>
+<line class="rule" x1="40" y1="182" x2="820" y2="182"/>
+
+<!-- collapsed: longer anchor knocked below the bar by one SNV -->
+<text x="40" y="204"><tspan class="cond" fill="var(--drop)">collapsed</tspan><tspan class="condsub">  &#183;  7 bp anchor, score +2 with 1 SNV</tspan></text>
+<rect class="m" x="40" y="214" width="200" height="16" rx="2"/><text class="oncig" x="140" y="226">100M</text>
+<line class="nline" x1="240" y1="222" x2="276" y2="222"/><rect x="242" y="215" width="28" height="13" fill="var(--bg)"/><text class="nlbl" x="256" y="226">83N</text>
+<rect class="m" x="276" y="214" width="18" height="16" rx="2"/><rect class="snv" x="285" y="214" width="4" height="16"/><text class="oncigsm" x="285" y="226" fill="#FFFFFF">7M</text>
+<rect x="294" y="214" width="88" height="16" rx="2" fill="url(#softclip)"/><text class="oncigsm" x="338" y="226" fill="var(--warn-dark)">44S</text>
+<rect class="m" x="470" y="214" width="200" height="16" rx="2"/><text class="oncig" x="570" y="226">100M</text>
+<rect x="670" y="214" width="102" height="16" rx="2" fill="url(#softclip)"/><text class="oncigsm" x="721" y="226" fill="var(--warn-dark)">51S</text>
+
+<!-- legend -->
+<rect class="m" x="40" y="254" width="18" height="10" rx="2"/><text class="lbl" x="62" y="263">matched (M)</text>
+<rect class="snv" x="152" y="254" width="18" height="10" rx="2"/><text class="lbl" x="174" y="263">mismatch (SNV)</text>
+<rect x="290" y="254" width="18" height="10" rx="2" fill="url(#softclip)"/><text class="lbl" x="312" y="263">soft clip (S)</text>
+<line class="nline" x1="398" y1="259" x2="416" y2="259"/><text class="lbl" x="420" y="263">junction (N)</text>
+</svg>

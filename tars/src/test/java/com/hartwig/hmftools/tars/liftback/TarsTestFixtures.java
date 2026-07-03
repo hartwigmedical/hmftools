@@ -13,7 +13,7 @@ import java.util.Map;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.tars.common.ContigEntry;
-import com.hartwig.hmftools.tars.liftback.rescue.RefSequenceSource;
+import com.hartwig.hmftools.tars.liftback.supplementary.RefSequenceSource;
 
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMRecord;
@@ -118,8 +118,8 @@ public final class TarsTestFixtures
         return sequence.getBytes(StandardCharsets.US_ASCII);
     }
 
-    // Mutable in-memory genome for the ref-dependent passes (tail-extend / collapse / canonicalize / rescue
-    // ref-verify). Allocate a chromosome with with(), overwrite bases at 1-based coords with set(), then hand
+    // Mutable in-memory genome for the ref-dependent passes (tail-extend / collapse / canonicalize / supplementary
+    // resolve ref-verify). Allocate a chromosome with with(), overwrite bases at 1-based coords with set(), then hand
     // asRefSource() to the engine. Out-of-range reads return null per the RefSequenceSource contract.
     public static final class TestGenome
     {

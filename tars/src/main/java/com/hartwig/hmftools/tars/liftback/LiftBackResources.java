@@ -4,38 +4,32 @@ import static com.hartwig.hmftools.tars.common.TarsConfig.TARS_LOGGER;
 
 import java.io.File;
 
-import com.hartwig.hmftools.tars.liftback.rescue.AnnotatedJunctionIndex;
-import com.hartwig.hmftools.tars.liftback.rescue.RefSequenceSource;
-import com.hartwig.hmftools.tars.liftback.rescue.RescueConfig;
-import com.hartwig.hmftools.tars.liftback.tailextend.TailExtensionConfig;
+import com.hartwig.hmftools.tars.liftback.supplementary.AnnotatedJunctionIndex;
+import com.hartwig.hmftools.tars.liftback.supplementary.RefSequenceSource;
+import com.hartwig.hmftools.tars.liftback.supplementary.SupplementaryConfig;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 import htsjdk.samtools.reference.ReferenceSequence;
 
 // Shared read-only inputs handed to every LiftBackWorker: the sidecar resolver and junction index hold no
 // mutable state, so all workers share one instance. Each worker builds its own engines + ref-source handle
-// from this (RefSequenceSource and the rescue/tail-extend stats are not thread-safe).
+// from this (RefSequenceSource and the supplementary-resolve/tail-extend stats are not thread-safe).
 public final class LiftBackResources
 {
     public final LiftBackResolver Resolver;
     public final AnnotatedJunctionIndex JunctionIndex; // nullable
     public final String RefGenomeFile;
-    public final RescueConfig Rescue;
-    public final TailExtensionConfig TailExtension;
-    public final int TerminalAnchor;
+    public final SupplementaryConfig Supplementary;
     public final ExcludedRegions ExcludedRegions; // nullable: drop fragments here before lifting
 
     public LiftBackResources(
             final LiftBackResolver resolver, final AnnotatedJunctionIndex junctionIndex, final String refGenomeFile,
-            final RescueConfig rescue, final TailExtensionConfig tailExtension, final int terminalAnchor,
-            final ExcludedRegions excludedRegions)
+            final SupplementaryConfig supplementary, final ExcludedRegions excludedRegions)
     {
         Resolver = resolver;
         JunctionIndex = junctionIndex;
         RefGenomeFile = refGenomeFile;
-        Rescue = rescue;
-        TailExtension = tailExtension;
-        TerminalAnchor = terminalAnchor;
+        Supplementary = supplementary;
         ExcludedRegions = excludedRegions;
     }
 

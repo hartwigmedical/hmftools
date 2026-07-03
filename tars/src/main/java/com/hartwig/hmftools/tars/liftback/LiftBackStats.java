@@ -47,12 +47,12 @@ public class LiftBackStats
     // Per-pass effectiveness, aggregated across workers by the caller and folded into the summary so the
     // always-written summary answers "what did liftback do" without the opt-in ~100GB per-record TSV.
     public record PassEffects(
-            int rescueCandidates, int rescueMerged, int suppClamped,
-            int tailEvaluated, int tailExtended, int tailBasesLead, int tailBasesTrail,
+            int suppCandidates, int suppMerged, int suppClamped,
             long collapseLeading, long collapseTrailing,
-            long junctionsCanonicalized, long overCapUnmapped, long excludedReads)
+            long reclaimRecords, long reclaimBasesLead, long reclaimBasesTrail, long altsDropped,
+            long overCapUnmapped, long excludedReads)
     {
-        public static final PassEffects EMPTY = new PassEffects(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+        public static final PassEffects EMPTY = new PassEffects(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
     }
 
     public void setPassEffects(final PassEffects passEffects)
@@ -193,7 +193,7 @@ public class LiftBackStats
         TARS_LOGGER.info("spliced output reads: {}; MAPQ-0 in: {}, rescued: {}", mSplicedOutput, mMapqZeroIn, mMapqRescued);
         if(mLowAsSuppsDropped > 0)
         {
-            TARS_LOGGER.info("dropped {} non-rescued supps with source AS < {}",
+            TARS_LOGGER.info("dropped {} non-resolved supps with source AS < {}",
                     mLowAsSuppsDropped, SUPP_AS_DROP_THRESHOLD);
         }
         if(mOrphanSuppsDropped > 0)
@@ -303,16 +303,15 @@ public class LiftBackStats
             writeRow(writer, "reads", "mapq_rescued", "COUNT", mMapqRescued);
 
             // per-pass effectiveness - what each refinement pass actually did.
-            writeRow(writer, "pass_effect", "rescue", "candidates", mPassEffects.rescueCandidates());
-            writeRow(writer, "pass_effect", "rescue", "merged", mPassEffects.rescueMerged());
-            writeRow(writer, "pass_effect", "rescue", "supp_clamped", mPassEffects.suppClamped());
-            writeRow(writer, "pass_effect", "tail_extend", "evaluated", mPassEffects.tailEvaluated());
-            writeRow(writer, "pass_effect", "tail_extend", "extended", mPassEffects.tailExtended());
-            writeRow(writer, "pass_effect", "tail_extend", "bases_lead", mPassEffects.tailBasesLead());
-            writeRow(writer, "pass_effect", "tail_extend", "bases_trail", mPassEffects.tailBasesTrail());
-            writeRow(writer, "pass_effect", "collapse", "leading", mPassEffects.collapseLeading());
-            writeRow(writer, "pass_effect", "collapse", "trailing", mPassEffects.collapseTrailing());
-            writeRow(writer, "pass_effect", "canonicalize", "shifted", mPassEffects.junctionsCanonicalized());
+            writeRow(writer, "pass_effect", "supp_resolve", "candidates", mPassEffects.suppCandidates());
+            writeRow(writer, "pass_effect", "supp_resolve", "merged", mPassEffects.suppMerged());
+            writeRow(writer, "pass_effect", "supp_resolve", "supp_clamped", mPassEffects.suppClamped());
+            writeRow(writer, "pass_effect", "overhang_collapse", "leading", mPassEffects.collapseLeading());
+            writeRow(writer, "pass_effect", "overhang_collapse", "trailing", mPassEffects.collapseTrailing());
+            writeRow(writer, "pass_effect", "overhang_reclaim", "records", mPassEffects.reclaimRecords());
+            writeRow(writer, "pass_effect", "overhang_reclaim", "bases_lead", mPassEffects.reclaimBasesLead());
+            writeRow(writer, "pass_effect", "overhang_reclaim", "bases_trail", mPassEffects.reclaimBasesTrail());
+            writeRow(writer, "pass_effect", "overhang_alt", "dropped", mPassEffects.altsDropped());
             writeRow(writer, "pass_effect", "over_cap_unmap", "primaries", mPassEffects.overCapUnmapped());
             writeRow(writer, "pass_effect", "excluded_region", "reads", mPassEffects.excludedReads());
             writeRow(writer, "pass_effect", "low_as", "supps_dropped", mLowAsSuppsDropped);

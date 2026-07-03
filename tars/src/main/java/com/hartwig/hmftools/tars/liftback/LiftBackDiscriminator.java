@@ -42,6 +42,13 @@ public final class LiftBackDiscriminator
 
         for(final LiftedAlignment alignment : alignments)
         {
+            // an alt the overhang gate collapsed to a contiguous alignment is marked Dropped before the
+            // discriminator runs; it is a fabricated placement, so it must not count toward the features.
+            if(alignment.Dropped)
+            {
+                continue;
+            }
+
             loci.add(locusKey(alignment));
             distinctCigars.add(alignment.LiftedCigar);
             if(alignment.cigarHasN())

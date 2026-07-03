@@ -18,39 +18,37 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import com.hartwig.hmftools.tars.common.TarsConstants;
-import com.hartwig.hmftools.tars.liftback.rescue.AnnotatedJunctionIndex;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.tars.liftback.rescue.JunctionRescueResolver;
-import com.hartwig.hmftools.tars.liftback.rescue.RefSequenceSource;
-import com.hartwig.hmftools.tars.liftback.rescue.RescueConfig;
-import com.hartwig.hmftools.tars.liftback.tailextend.TailExtensionConfig;
-import com.hartwig.hmftools.tars.liftback.tailextend.TerminalReconciler;
+import com.hartwig.hmftools.tars.liftback.overhang.OverhangGate;
+import com.hartwig.hmftools.tars.liftback.supplementary.AnnotatedJunctionIndex;
+import com.hartwig.hmftools.tars.liftback.supplementary.SupplementaryResolver;
+import com.hartwig.hmftools.tars.liftback.supplementary.RefSequenceSource;
+import com.hartwig.hmftools.tars.liftback.supplementary.SupplementaryConfig;
 
 import org.junit.Test;
 
 import htsjdk.samtools.SAMRecord;
 
 // End-to-end tests of how TarsApplication reacts to a bwa-mem2 read aligned against a transcript contig.
-// Runs the FULL per-group pipeline: resolve -> junction-rescue -> terminal-collapse -> tail-extend ->
-// canonicalize -> mate-patch -> NH/unmap policy. (Per-component behaviour is unit-tested in
-// LiftBackResolverTest / SpliceLiftBackApplyTest / the rescue + tailextend suites.)
+// Runs the FULL per-group pipeline: resolve -> overhang-gate peel -> supplementary-resolve -> post-resolve peel +
+// reclaim -> mate-patch -> NH/unmap policy. (Per-component behaviour is unit-tested in
+// LiftBackResolverTest / SpliceLiftBackApplyTest / the supplementary + overhang suites.)
 //
 // Shares the standard three-exon contig, record builders and TestGenome with TarsTestFixtures (exons
 // 100-199, 300-399, 500-549; introns 200-299, 400-499; contig length 250). REF-FREE passes (translation,
-// SA/mate rewrite, NH, unmap-on-lift-failure) work with the default genome; REF-DEPENDENT passes (rescue
-// ref-verify, tail-extend, collapse, canonicalize) only fire when the genome bases match the read / carry a
+// SA/mate rewrite, NH, unmap-on-lift-failure) work with the default genome; REF-DEPENDENT passes (supplementary
+// resolve ref-verify, tail-extend, collapse, canonicalize) only fire when the genome bases match the read / carry a
 // splice motif -- set those explicitly via TestGenome.set() in the scenario.
 public class LiftBackEndToEndTest
 {
-    // genomic introns implied by the exon layout, registered as annotated so rescue / tail-extend recognise them.
+    // genomic introns implied by the exon layout, registered as annotated so supplementary resolve / tail-extend recognise them.
     private static Set<ChrBaseRegion> annotatedIntrons()
     {
         return Set.of(new ChrBaseRegion(CHR_1, 200, 299), new ChrBaseRegion(CHR_1, 400, 499));
     }
 
     // chr1 of all 'A' with canonical GT..AG seeded at the two intron boundaries, so the canonicalization /
-    // rescue ref-verify passes have a motif to land on. Scenarios that need matching exon bases add them via set().
+    // supplementary-resolve ref-verify passes have a motif to land on. Scenarios that need matching exon bases add them via set().
     private static TestGenome scenarioGenome(final int chr1Length)
     {
         return new TestGenome().with(CHR_1, chr1Length, 'A')
@@ -73,16 +71,13 @@ public class LiftBackEndToEndTest
         AnnotatedJunctionIndex junctionIndex = new AnnotatedJunctionIndex(annotatedIntrons());
 
         LiftBackResolver resolver = new LiftBackResolver(List.of(threeExonContig()));
-        JunctionRescueResolver rescue =
-                new JunctionRescueResolver(junctionIndex, ref, RescueConfig.enabledDefaults());
-        TerminalReconciler reconciler = new TerminalReconciler(
-                ref, TarsConstants.MIN_JUNCTION_ANCHOR, junctionIndex, TailExtensionConfig.enabledDefaults());
-        JunctionCanonicalizer canonicalizer =
-                new JunctionCanonicalizer(ref, TarsConstants.DEFAULT_MAX_SHIFT);
+        SupplementaryResolver supplementary =
+                new SupplementaryResolver(junctionIndex, ref, SupplementaryConfig.enabledDefaults());
+        OverhangGate overhangGate = new OverhangGate(ref);
 
         LiftBackStats stats = new LiftBackStats();
         LiftBackGroupProcessor processor = new LiftBackGroupProcessor(
-                resolver, rescue, reconciler, canonicalizer, ref, null, stats);
+                resolver, supplementary, overhangGate, ref, null, stats);
 
         List<SAMRecord> emitted = new ArrayList<>();
         processor.processNameGroup(reads, new LiftedMateInfoCache(), (record, result) -> emitted.add(record));
@@ -157,25 +152,43 @@ public class LiftBackEndToEndTest
     }
 
     @Test
-    public void terminalSoftclipExtendedIntoContiguousGenome()
+    public void genomicTerminalSoftclipNotReclaimed()
     {
-        // A read with a trailing soft-clip whose clipped bases continue contiguously in the genome (intron
-        // retention, no junction). The tail-extender should walk the 10S into the reference -> 60M, with the
-        // "tail-extended" note set. Genome is all 'A' away from the intron motifs, so all-'A' read bases match.
+        // A GENOMIC (non-tx) read with a trailing soft-clip whose clipped bases continue contiguously in the
+        // genome. The standalone reclaim is tx-match-only, so a genomic over-clip is left as bwa placed it: the
+        // 10S is NOT walked into 60M. Genome is all 'A', so the clip bases would match - the scope guard is what
+        // holds it back.
         TestGenome genome = scenarioGenome(2000);
         SAMRecord r1 = withBases(primaryRecord("read6", CHR_1, 1000, "50M10S"), "A".repeat(60));
         SAMRecord r2 = withBases(secondMateRecord("read6", CHR_1, 1500, "50M"), "A".repeat(50));
 
         runLiftBack(genome, List.of(r1, r2));
 
-        assertEquals("60M", r1.getCigarString());
+        assertEquals("50M10S", r1.getCigarString());
     }
 
     @Test
-    public void splitReadRescuedAcrossAnnotatedJunction()
+    public void txMatchTerminalSoftclipReclaimed()
+    {
+        // A tx-contig read (exon1, lifts to chr1:100) with a trailing soft-clip whose clipped bases continue
+        // contiguously in the genome. Because the chosen primary is a tx-match, the post-resolve reclaim walks the
+        // 10S into the reference -> 50M. Genome is all 'A' away from the intron motifs, so all-'A' bases match.
+        TestGenome genome = scenarioGenome(2000);
+        SAMRecord r1 = withBases(primaryRecord("read6b", TX_CONTIG, 1, "40M10S"), "A".repeat(50));
+        SAMRecord r2 = withBases(secondMateRecord("read6b", CHR_1, 1500, "50M"), "A".repeat(50));
+
+        runLiftBack(genome, List.of(r1, r2));
+
+        assertEquals("50M", r1.getCigarString());
+        assertEquals(CHR_1, r1.getReferenceName());
+        assertEquals(100, r1.getAlignmentStart());
+    }
+
+    @Test
+    public void splitReadResolvedAcrossAnnotatedJunction()
     {
         // bwa split the read into a primary (50M50S, exon1 side) and a supplementary (50S50M, exon2 side)
-        // flanking the annotated intron 200-299. Rescue should merge them into one 50M100N50M primary and
+        // flanking the annotated intron 200-299. Supplementary resolve should merge them into one 50M100N50M primary and
         // drop the supp. The default genome already carries the canonical GT..AG at the intron boundaries,
         // so ref-verify passes.
         TestGenome genome = scenarioGenome(2000);
@@ -188,25 +201,6 @@ public class LiftBackEndToEndTest
         assertEquals("50M100N50M", primary.getCigarString());
         // the merged supplementary is dropped: only primary/1 + mate/2 remain.
         assertEquals(2, emitted.size());
-    }
-
-    @Test
-    public void offMotifJunctionSlidToCanonical()
-    {
-        // A spliced read whose junction sits 2bp off a GT-AG motif. Canonicalization slides the intron +2 to
-        // land on the motif: 10M10N10M -> 12M10N8M. Anchors are >= MIN_JUNCTION_ANCHOR so the terminal
-        // collapser leaves the junction for canonicalization to handle (5M anchors would be collapsed first).
-        TestGenome genome = scenarioGenome(2000)
-                .set(CHR_1, 1, "CCCCCCCCCC")  // left exon, matches read[0..9]
-                .set(CHR_1, 11, "CC")         // donor at shift 0 (non-canonical) + the +2 moved bases
-                .set(CHR_1, 13, "GT")         // donor at shift +2 (canonical)
-                .set(CHR_1, 21, "AG");        // acceptor at shift +2 (canonical)
-        SAMRecord r1 = withBases(primaryRecord("read8", CHR_1, 1, "10M10N10M"), "C".repeat(20));
-        SAMRecord r2 = withBases(secondMateRecord("read8", CHR_1, 500, "50M"), "A".repeat(50));
-
-        runLiftBack(genome, List.of(r1, r2));
-
-        assertEquals("12M10N8M", r1.getCigarString());
     }
 
     @Test

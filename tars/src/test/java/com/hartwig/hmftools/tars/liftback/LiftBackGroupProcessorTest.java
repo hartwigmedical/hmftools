@@ -20,9 +20,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import com.hartwig.hmftools.tars.liftback.rescue.JunctionRescueResolver;
-import com.hartwig.hmftools.tars.liftback.rescue.RefSequenceSource;
-import com.hartwig.hmftools.tars.liftback.rescue.RescueConfig;
+import com.hartwig.hmftools.tars.liftback.supplementary.SupplementaryResolver;
+import com.hartwig.hmftools.tars.liftback.supplementary.RefSequenceSource;
+import com.hartwig.hmftools.tars.liftback.supplementary.SupplementaryConfig;
 
 import org.junit.Test;
 
@@ -40,20 +40,20 @@ public class LiftBackGroupProcessorTest
     }
 
     private static List<SAMRecord> process(
-            final List<SAMRecord> group, final LiftBackStats stats, final JunctionRescueResolver rescueResolver)
+            final List<SAMRecord> group, final LiftBackStats stats, final SupplementaryResolver supplementaryResolver)
     {
-        return process(group, stats, rescueResolver, null);
+        return process(group, stats, supplementaryResolver, null);
     }
 
     // Single harness for all LiftBackGroupProcessor scenarios: the only thing tests vary is which ctor arg is
     // non-default, so a ctor change touches one call site.
     private static List<SAMRecord> process(
-            final List<SAMRecord> group, final LiftBackStats stats, final JunctionRescueResolver rescueResolver,
+            final List<SAMRecord> group, final LiftBackStats stats, final SupplementaryResolver supplementaryResolver,
             final RefSequenceSource refSource)
     {
         LiftBackResolver resolver = new LiftBackResolver(List.of(threeExonContig()));
         LiftBackGroupProcessor processor = new LiftBackGroupProcessor(
-                resolver, rescueResolver, null, null, refSource, null, stats);
+                resolver, supplementaryResolver, null, refSource, null, stats);
 
         List<SAMRecord> emitted = new ArrayList<>();
         processor.processNameGroup(group, new LiftedMateInfoCache(), (record, result) -> emitted.add(record));
@@ -65,7 +65,7 @@ public class LiftBackGroupProcessorTest
     {
         LiftBackResolver resolver = new LiftBackResolver(List.of(threeExonContig()));
         LiftBackGroupProcessor processor = new LiftBackGroupProcessor(
-                resolver, null, null, null, null, excluded, stats);
+                resolver, null, null, null, excluded, stats);
 
         List<SAMRecord> emitted = new ArrayList<>();
         processor.processNameGroup(group, new LiftedMateInfoCache(), (record, result) -> emitted.add(record));
@@ -139,7 +139,7 @@ public class LiftBackGroupProcessorTest
     public void overCapGenomicPrimaryMapq0NoXaUnmapped()
     {
         // a GENOMIC primary emitted MAPQ 0 with no XA maps past the XA cap (75+ distinct genomic loci), so it
-        // is unmapped even though, with no XA, the resolver sees a single locus and would otherwise rescue to 60.
+        // is unmapped even though, with no XA, the resolver sees a single locus and would otherwise bump to 60.
         SAMRecord primary = primaryRecord(CHR_1, 100, "50M");
         primary.setMappingQuality(0);
 
@@ -219,11 +219,11 @@ public class LiftBackGroupProcessorTest
         assertEquals(1, emitted.stream().filter(SAMRecord::getSupplementaryAlignmentFlag).count());
     }
 
-    // rescue resolver with no annotated junctions: present (so the AS-unmap gate is active) but a no-op,
-    // so a primary with no rescuable supps stays un-improved.
-    private static JunctionRescueResolver noopRescue()
+    // supplementary resolver with no annotated junctions: present (so the AS-unmap gate is active) but a no-op,
+    // so a primary with no resolvable supps stays un-improved.
+    private static SupplementaryResolver noopSupplementary()
     {
-        return new JunctionRescueResolver(Collections.emptySet(), RescueConfig.defaults());
+        return new SupplementaryResolver(Collections.emptySet(), SupplementaryConfig.defaults());
     }
 
     @Test
@@ -265,12 +265,12 @@ public class LiftBackGroupProcessorTest
     @Test
     public void lowAsPrimaryUnmappedWhenLiftbackDidNotImprove()
     {
-        // primary lifts but bwa scored it below the -T 30 floor and rescue (no junctions) can't improve it.
+        // primary lifts but bwa scored it below the -T 30 floor and supplementary resolve (no junctions) can't improve it.
         SAMRecord primary = primaryRecord(TX_CONTIG, 100, "50M");
         primary.setAttribute("AS", 20);
 
         LiftBackStats stats = new LiftBackStats();
-        List<SAMRecord> emitted = process(List.of(primary), stats, noopRescue());
+        List<SAMRecord> emitted = process(List.of(primary), stats, noopSupplementary());
 
         assertEquals(1, emitted.size());
         assertTrue(emitted.get(0).getReadUnmappedFlag());
@@ -284,7 +284,7 @@ public class LiftBackGroupProcessorTest
         primary.setAttribute("AS", 60);
 
         LiftBackStats stats = new LiftBackStats();
-        List<SAMRecord> emitted = process(List.of(primary), stats, noopRescue());
+        List<SAMRecord> emitted = process(List.of(primary), stats, noopSupplementary());
 
         assertEquals(1, emitted.size());
         assertFalse(emitted.get(0).getReadUnmappedFlag());
@@ -292,9 +292,9 @@ public class LiftBackGroupProcessorTest
     }
 
     @Test
-    public void lowAsPrimaryKeptWhenRescueDisabled()
+    public void lowAsPrimaryKeptWhenSupplementaryResolveDisabled()
     {
-        // without a rescue resolver the AS-unmap gate is inactive, so a low-AS primary is left as-is.
+        // without a supplementary resolver the AS-unmap gate is inactive, so a low-AS primary is left as-is.
         SAMRecord primary = primaryRecord(TX_CONTIG, 100, "50M");
         primary.setAttribute("AS", 20);
 

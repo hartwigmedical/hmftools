@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.tars.liftback.rescue;
+package com.hartwig.hmftools.tars.liftback.supplementary;
 
 // Splice-motif tier of a candidate junction, ordered weakest to strongest. Declaration order is meaningful:
 // callers rank candidates with compareTo (a stronger motif outranks a weaker one).

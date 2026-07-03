@@ -1,7 +1,7 @@
-package com.hartwig.hmftools.tars.liftback.rescue;
+package com.hartwig.hmftools.tars.liftback.supplementary;
 
-// Drives per-decision counters in RescueStatistics.
-public enum RescueRejectReason
+// Drives per-decision counters in SupplementaryStatistics.
+public enum SupplementaryRejectReason
 {
     NO_TERMINAL_SOFTCLIP,         // primary cigar has no leading or trailing S to extend across
     NO_MATCHING_SUPP,             // no supplementary had a complementary cigar shape
