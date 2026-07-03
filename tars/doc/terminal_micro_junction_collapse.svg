@@ -1,0 +1,95 @@
+<svg viewBox="0 0 880 298" xmlns="http://www.w3.org/2000/svg" role="img">
+<title>Step 1: re-check short junctions</title>
+<desc>A translated read has a 5 bp matched anchor across a 2,000 bp junction. 5 bp is below the 8 bp trust floor (MIN_JUNCTION_ANCHOR), so the junction is re-checked against the reference genome. The genome reads straight through with no gap, so the junction is dropped and the 5 bases become M: 146M 2000N 5M becomes 151M. Had the 5 bases only matched across the intron, the junction would be kept.</desc>
+<style>
+svg { font-family: Arial, Helvetica, sans-serif; }
+svg {
+  /* transcript / matched */
+  --tx:#2F7DC6; --tx-dark:#0C447C; --tx-deep:#1C4F7C; --tx-soft:#A9CDEA;
+  --exon:#E6F1FB; --exon-line:#4A90C4;
+  /* kept / genomic-good */
+  --keep:#1F8A4C; --keep-dark:#166534; --keep-mid:#3F9A5E; --keep-soft:#E3F2E8; --keep-soft2:#EAF6EE;
+  /* softclip / caution */
+  --warn:#EFB94B; --warn-line:#D89B14; --warn-dark:#6B4E04; --warn-dark2:#7A4F01; --warn-soft:#FBEFD0;
+  /* boundary / dropped */
+  --drop:#C0392B; --drop-soft:#FBE3E0;
+  /* supplementary */
+  --supp:#B07CC6;
+  /* neutrals */
+  --ink:#333333; --ink2:#111111; --sub:#6B6862; --label:#5C5953; --muted:#9B9893;
+  --line:#B8B5AE; --border:#E4E2DD; --border2:#C7C5BF; --border3:#E0DED9;
+  --panel:#FCFCFB; --panel2:#FAFAF8; --panel3:#EFEFEC; --panel4:#ECECEA; --bg:#FFFFFF;
+}
+/* text roles */
+.title   { font-size:14px; font-weight:600; fill:var(--tx-dark); }
+.sub     { font-size:11px; font-weight:600; fill:var(--sub); }
+.lbl     { font-size:9.5px; fill:var(--label); }
+.note    { font-size:9.5px; fill:var(--muted); }
+.coord   { font-size:10px;  fill:var(--sub); }
+.exonlbl { font-size:9.5px; fill:var(--tx-dark); text-anchor:middle; }
+.oncig   { font-size:11px; fill:#FFFFFF; text-anchor:middle; }   /* cigar on a filled bar */
+/* alignment-track shapes */
+.bg      { fill:var(--bg); }
+.m       { fill:var(--tx); }                                     /* matched (M) bar */
+.exon    { fill:var(--exon); stroke:var(--exon-line); }
+.intron  { stroke:var(--tx); stroke-width:2; fill:none; }        /* spliced-read N */
+.gline   { stroke:var(--line); stroke-width:1.6; }               /* genome intron span */
+.keepbar { fill:var(--keep); }
+.tick    { stroke:var(--sub); stroke-width:1.3; }
+.bnd     { stroke:var(--drop); stroke-width:1.6; stroke-dasharray:3,2; }  /* boundary line */
+/* panels / flow */
+.panel   { fill:var(--panel); stroke:var(--border); }
+.arrline { stroke:var(--muted); stroke-width:1.4; }
+</style>
+<defs>
+  <marker id="arr" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto">
+    <path d="M0,0 L6,3 L0,6 Z" fill="#9B9893"/>
+  </marker>
+  <marker id="arrSupp" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto">
+    <path d="M0,0 L6,3 L0,6 Z" fill="#B07CC6"/>
+  </marker>
+  <pattern id="softclip" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+    <rect width="5" height="5" fill="#FBEFD0"/>
+    <line x1="0" y1="0" x2="0" y2="5" stroke="#EFB94B" stroke-width="1.6"/>
+  </pattern>
+</defs>
+<rect x="0" y="0" width="880" height="298" fill="var(--bg)"/>
+
+<!-- legend -->
+<g transform="translate(160,0)">
+<rect x="556" y="18" width="162" height="74" rx="4" fill="var(--panel)" stroke="var(--border)"/>
+<rect x="566" y="30" width="20" height="11" rx="2" fill="var(--tx)"/>
+<text x="592" y="39" font-size="10" fill="var(--label)">matched (M)</text>
+<rect x="566" y="46" width="20" height="11" rx="2" fill="var(--drop-soft)" stroke="var(--drop)"/>
+<text x="592" y="55" font-size="10" fill="var(--label)">anchor below 8 bp</text>
+<line x1="566" y1="71" x2="586" y2="71" stroke="var(--tx)" stroke-width="2" stroke-dasharray="4,3"/>
+<text x="592" y="74" font-size="10" fill="var(--label)">junction (re-checked)</text>
+</g>
+
+<!-- BEFORE -->
+<text x="60" y="34" font-size="14" font-weight="600" fill="var(--tx-dark)">before  &#183;  translated read, 5 bp anchor across a 2,000 bp junction</text>
+<rect x="60" y="46" width="438" height="20" rx="3" fill="var(--tx)"/>
+<text x="279" y="60" font-size="11" text-anchor="middle" fill="var(--bg)">146M</text>
+<line x1="498" y1="56" x2="558" y2="56" stroke="var(--tx)" stroke-width="2" stroke-dasharray="4,3"/>
+<text x="528" y="42" font-size="10" text-anchor="middle" fill="var(--tx-dark)">2000N</text>
+<rect x="558" y="46" width="16" height="20" rx="3" fill="var(--drop-soft)" stroke="var(--drop)"/>
+<text x="566" y="60" font-size="8" text-anchor="middle" fill="var(--drop)">5M</text>
+<text x="60" y="84" font-size="10.5" fill="var(--drop)">the 5 bp anchor is below the 8 bp floor (MIN_JUNCTION_ANCHOR), so the junction is re-checked</text>
+
+<!-- REFERENCE GENOME -->
+<text x="60" y="112" font-size="11" font-weight="600" fill="var(--sub)">reference genome  &#183;  chr22</text>
+<rect x="60" y="120" width="454" height="14" rx="2" fill="var(--exon)" stroke="var(--exon-line)"/>
+<text x="287" y="130" font-size="9.5" text-anchor="middle" fill="var(--tx-dark)">one continuous exon, no gap</text>
+
+<!-- decision -->
+<text x="60" y="162" font-size="11" fill="var(--sub)">re-check the short anchor against the genome: <tspan fill="var(--keep)">reads straight through = drop the junction</tspan></text>
+
+<!-- arrow -->
+<line x1="100" y1="176" x2="100" y2="202" stroke="var(--muted)" stroke-width="1.4" marker-end="url(#arr)"/>
+
+<!-- AFTER -->
+<text x="60" y="228" font-size="14" font-weight="600" fill="var(--tx-dark)">after  &#183;  read's CIGAR updated to 151M</text>
+<rect x="60" y="240" width="454" height="20" rx="3" fill="var(--tx)"/>
+<text x="287" y="254" font-size="11" text-anchor="middle" fill="var(--bg)">151M</text>
+<text x="60" y="280" font-size="9.5" fill="var(--muted)">CIGAR only; MAPQ is set later</text>
+</svg>

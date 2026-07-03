@@ -105,9 +105,10 @@ public class BamWriterNoSync extends BamWriter
         {
             mSortedBamWriter.flush();
 
-            RD_LOGGER.debug("sorted-writer records written({} writes={} avg={} max={}) maxCache({}) to BAM({})",
+            RD_LOGGER.debug("sorted-writer records written({} writes={} avg={} max={}) maxCache({} at {}) to BAM({})",
                     mSortedBamWriter.written(), mSortedBamWriter.writeCount(), mSortedBamWriter.avgWriteCount(),
-                    mSortedBamWriter.maxWrite(), mSortedBamWriter.maxCache(), filenamePart(mFilename));
+                    mSortedBamWriter.maxWrite(), mSortedBamWriter.maxCache(), mSortedBamWriter.maxCacheLocation(),
+                    filenamePart(mFilename));
         }
         else if(mBamWriter != null)
         {

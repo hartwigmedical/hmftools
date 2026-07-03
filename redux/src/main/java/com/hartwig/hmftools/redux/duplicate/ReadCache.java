@@ -55,6 +55,8 @@ public class ReadCache
     public static final int DEFAULT_POP_DISTANCE_CHECK = 100; // how often in base terms to check for popping read groups
     public static final int DEFAULT_LOG_READ_COUNT_THRESHOLD = 100000; // based on observed cache sizes for deep panels
     public static final int DEFAULT_DYNAMIC_READ_COUNT_THRESHOLD = 100_000; // level at which steps are taken to reduce the cache size
+    // log a single fragment-coord group reaching this many reads (extreme-expression locus)
+    public static final int LARGE_FRAG_GROUP_LOG_SIZE = 1000;
 
     public ReadCache(
             int groupSize, int maxSoftClipLength, boolean useFragmentOrientation, final DuplicatesConfig duplicatesConfig,
@@ -465,6 +467,12 @@ public class ReadCache
             }
 
             reads.add(read);
+
+            if(reads.size() == LARGE_FRAG_GROUP_LOG_SIZE)
+            {
+                RD_LOGGER.debug("large frag-coord group({} reads) at {}:{} cigar({})",
+                        reads.size(), Chromosome, read.getAlignmentStart(), read.getCigarString());
+            }
         }
 
         public int readCount() { return FragCoordsMap.values().stream().mapToInt(x -> x.size()).sum(); }

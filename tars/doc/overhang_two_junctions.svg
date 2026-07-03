@@ -1,0 +1,77 @@
+<svg viewBox="0 0 880 276" xmlns="http://www.w3.org/2000/svg" role="img">
+<title>Step 1: more than one splice junction, kept or collapsed</title>
+<desc>Three real 151 bp two-junction reads, decided at a terminal junction. Bar widths are proportional to base count (large exons capped); introns (N) are drawn as fixed gaps. Kept: chr5:181,237,713, 7M 379N 141M 827N 3M, the trailing 3M matches its far exon (AS +3) so the junction is kept. Kept: chr1:1,049,783, 13M 107N 135M 195N 3M, the trailing 3M mismatches its far exon (CCG vs CCT, AS negative) but reads even worse contiguously (GTC), so the junction is kept. Collapsed: chr1:226,062,810, 2M 2923N 75M 5541N 74M, the leading 2M mismatches its far exon (AG vs GG) but reads through contiguously (AG), so the 2923N collapses and the 2M folds into the 75M giving 77M 5541N 74M. M plus S totals 151 in every case.</desc>
+<style>
+svg { font-family: Arial, Helvetica, sans-serif; }
+svg {
+  --tx:#2F7DC6; --tx-dark:#0C447C; --warn-dark:#6B4E04; --drop:#C0392B;
+  --sub:#6B6862; --label:#5C5953; --border2:#C7C5BF; --bg:#FFFFFF;
+}
+.title   { font-size:13px; font-weight:700; fill:var(--tx-dark); }
+.colhead { font-size:10px; font-weight:700; fill:#9B9893; letter-spacing:0.4px; }
+.cond    { font-size:11px; font-weight:700; }
+.condsub { font-size:11px; fill:var(--sub); }
+.oncig   { font-size:10px; fill:#FFFFFF; text-anchor:middle; }
+.oncigsm { font-size:9px; text-anchor:middle; }
+.nlbl    { font-size:9.5px; fill:var(--tx-dark); text-anchor:middle; }
+.lbl     { font-size:9.5px; fill:var(--label); }
+.m       { fill:var(--tx); }
+.snv     { fill:var(--drop); }
+.nline   { stroke:var(--tx); stroke-width:2; fill:none; }
+.rule    { stroke:#E4E2DD; stroke-width:1; }
+.divide  { stroke:var(--border2); stroke-width:1; }
+</style>
+<defs></defs>
+<rect x="0" y="0" width="880" height="276" fill="var(--bg)"/>
+
+<text class="title" x="40" y="26">&gt; 1 splice junctions</text>
+
+<text class="colhead" x="40" y="48">BEFORE</text>
+<text class="colhead" x="470" y="48">AFTER</text>
+<line class="divide" x1="40" y1="54" x2="820" y2="54"/>
+<line class="divide" x1="452" y1="54" x2="452" y2="240"/>
+
+<!-- kept: trailing 3M matches far exon -->
+<text x="40" y="76"><tspan class="cond" fill="var(--tx-dark)">kept</tspan><tspan class="condsub">  &#183;  3 bp overhang matches its far exon (AS +3)</tspan></text>
+<rect class="m" x="40" y="86" width="14" height="16" rx="2"/><text class="oncigsm" x="47" y="98" fill="#FFFFFF">7M</text>
+<line class="nline" x1="54" y1="94" x2="88" y2="94"/><rect x="57" y="87" width="28" height="13" fill="var(--bg)"/><text class="nlbl" x="71" y="98">379N</text>
+<rect class="m" x="88" y="86" width="240" height="16" rx="2"/><text class="oncig" x="208" y="98">141M</text>
+<line class="nline" x1="328" y1="94" x2="362" y2="94"/><rect x="331" y="87" width="28" height="13" fill="var(--bg)"/><text class="nlbl" x="345" y="98">827N</text>
+<rect class="m" x="362" y="86" width="14" height="16" rx="2"/><text class="oncigsm" x="369" y="98" fill="#FFFFFF">3M</text>
+<rect class="m" x="470" y="86" width="14" height="16" rx="2"/><text class="oncigsm" x="477" y="98" fill="#FFFFFF">7M</text>
+<line class="nline" x1="484" y1="94" x2="518" y2="94"/><rect x="487" y="87" width="28" height="13" fill="var(--bg)"/><text class="nlbl" x="501" y="98">379N</text>
+<rect class="m" x="518" y="86" width="240" height="16" rx="2"/><text class="oncig" x="638" y="98">141M</text>
+<line class="nline" x1="758" y1="94" x2="792" y2="94"/><rect x="761" y="87" width="28" height="13" fill="var(--bg)"/><text class="nlbl" x="775" y="98">827N</text>
+<rect class="m" x="792" y="86" width="14" height="16" rx="2"/><text class="oncigsm" x="799" y="98" fill="#FFFFFF">3M</text>
+<line class="rule" x1="40" y1="118" x2="820" y2="118"/>
+
+<!-- kept: 3M mismatches far exon (1 SNV) but reference reads worse -->
+<text x="40" y="140"><tspan class="cond" fill="var(--tx-dark)">kept</tspan><tspan class="condsub">  &#183;  3 bp overhang mismatches far exon (CCG vs CCT) but reads worse contiguously</tspan></text>
+<rect class="m" x="40" y="150" width="22" height="16" rx="2"/><text class="oncigsm" x="51" y="162" fill="#FFFFFF">13M</text>
+<line class="nline" x1="62" y1="158" x2="96" y2="158"/><rect x="65" y="151" width="28" height="13" fill="var(--bg)"/><text class="nlbl" x="79" y="162">107N</text>
+<rect class="m" x="96" y="150" width="230" height="16" rx="2"/><text class="oncig" x="211" y="162">135M</text>
+<line class="nline" x1="326" y1="158" x2="360" y2="158"/><rect x="329" y="151" width="28" height="13" fill="var(--bg)"/><text class="nlbl" x="343" y="162">195N</text>
+<rect class="m" x="360" y="150" width="14" height="16" rx="2"/><rect class="snv" x="369" y="150" width="5" height="16"/><text class="oncigsm" x="367" y="162" fill="#FFFFFF">3M</text>
+<rect class="m" x="470" y="150" width="22" height="16" rx="2"/><text class="oncigsm" x="481" y="162" fill="#FFFFFF">13M</text>
+<line class="nline" x1="492" y1="158" x2="526" y2="158"/><rect x="495" y="151" width="28" height="13" fill="var(--bg)"/><text class="nlbl" x="509" y="162">107N</text>
+<rect class="m" x="526" y="150" width="230" height="16" rx="2"/><text class="oncig" x="641" y="162">135M</text>
+<line class="nline" x1="756" y1="158" x2="790" y2="158"/><rect x="759" y="151" width="28" height="13" fill="var(--bg)"/><text class="nlbl" x="773" y="162">195N</text>
+<rect class="m" x="790" y="150" width="14" height="16" rx="2"/><rect class="snv" x="799" y="150" width="5" height="16"/><text class="oncigsm" x="797" y="162" fill="#FFFFFF">3M</text>
+<line class="rule" x1="40" y1="182" x2="820" y2="182"/>
+
+<!-- collapsed: leading 2M mismatches far exon, reads through contiguously -->
+<text x="40" y="204"><tspan class="cond" fill="var(--drop)">collapsed</tspan><tspan class="condsub">  &#183;  2 bp leading overhang mismatches far exon (AG vs GG), reads through</tspan></text>
+<rect class="m" x="40" y="214" width="14" height="16" rx="2"/><rect class="snv" x="40" y="214" width="7" height="16"/><text class="oncigsm" x="47" y="226" fill="#FFFFFF">2M</text>
+<line class="nline" x1="54" y1="222" x2="88" y2="222"/><rect x="55" y="215" width="32" height="13" fill="var(--bg)"/><text class="nlbl" x="71" y="226">2923N</text>
+<rect class="m" x="88" y="214" width="128" height="16" rx="2"/><text class="oncig" x="152" y="226">75M</text>
+<line class="nline" x1="216" y1="222" x2="250" y2="222"/><rect x="217" y="215" width="32" height="13" fill="var(--bg)"/><text class="nlbl" x="233" y="226">5541N</text>
+<rect class="m" x="250" y="214" width="126" height="16" rx="2"/><text class="oncig" x="313" y="226">74M</text>
+<rect class="m" x="470" y="214" width="131" height="16" rx="2"/><text class="oncig" x="535" y="226">77M</text>
+<line class="nline" x1="601" y1="222" x2="635" y2="222"/><rect x="602" y="215" width="32" height="13" fill="var(--bg)"/><text class="nlbl" x="618" y="226">5541N</text>
+<rect class="m" x="635" y="214" width="126" height="16" rx="2"/><text class="oncig" x="698" y="226">74M</text>
+
+<!-- legend -->
+<rect class="m" x="40" y="254" width="18" height="10" rx="2"/><text class="lbl" x="62" y="263">matched (M)</text>
+<rect class="snv" x="152" y="254" width="18" height="10" rx="2"/><text class="lbl" x="174" y="263">mismatch (SNV)</text>
+<line class="nline" x1="290" y1="259" x2="308" y2="259"/><text class="lbl" x="312" y="263">junction (N)</text>
+</svg>

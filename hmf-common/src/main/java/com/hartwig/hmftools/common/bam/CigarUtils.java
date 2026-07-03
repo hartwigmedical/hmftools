@@ -7,10 +7,12 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.INVALID_READ_INDEX;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CIGAR;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_POSITION;
 
+import static htsjdk.samtools.CigarOperator.EQ;
 import static htsjdk.samtools.CigarOperator.H;
 import static htsjdk.samtools.CigarOperator.I;
 import static htsjdk.samtools.CigarOperator.M;
 import static htsjdk.samtools.CigarOperator.S;
+import static htsjdk.samtools.CigarOperator.X;
 
 import java.util.Collections;
 import java.util.List;
@@ -76,6 +78,34 @@ public final class CigarUtils
         return cigar.getCigarElements().stream().filter(x -> x.getOperator().consumesReferenceBases()).mapToInt(x -> x.getLength()).sum();
     }
 
+    public static int cigarBaseLength(final List<CigarElement> elements)
+    {
+        return elements.stream().filter(x -> x.getOperator().consumesReadBases()).mapToInt(CigarElement::getLength).sum();
+    }
+
+    public static int cigarAlignedLength(final List<CigarElement> elements)
+    {
+        return elements.stream().filter(x -> x.getOperator().consumesReferenceBases()).mapToInt(CigarElement::getLength).sum();
+    }
+
+    // total M/=/X bases (aligned bases excluding indels and skips); matches STAR's overhang definition
+    public static int matchedBases(final List<CigarElement> elements)
+    {
+        int total = 0;
+        for(CigarElement element : elements)
+        {
+            CigarOperator operator = element.getOperator();
+            if(operator == M || operator == EQ || operator == X)
+                total += element.getLength();
+        }
+        return total;
+    }
+
+    public static boolean hasHardClip(final List<CigarElement> elements)
+    {
+        return elements.stream().anyMatch(x -> x.getOperator() == H);
+    }
+
     public static int calcCigarAlignedLength(final String cigarStr)
     {
         // a string-parsing version of the method above
@@ -139,6 +169,12 @@ public final class CigarUtils
     {
         CigarElement lastElement = cigar.getLastCigarElement();
         return (lastElement != null && lastElement.getOperator() == S) ? lastElement.getLength() : 0;
+    }
+
+    public static int rightSoftClipLength(final List<CigarElement> elements)
+    {
+        CigarElement lastElement = elements.get(elements.size() - 1);
+        return lastElement.getOperator() == S ? lastElement.getLength() : 0;
     }
 
     public static int leftHardClipLength(final Cigar cigar)
