@@ -549,10 +549,9 @@ significantly higher than the fitted VAF peak, then Purple sets the purity to 2x
 
 #### Somatic Purity - Tumor Only
 
-In Tumor-only, Purple will use somatic mode if initial fit if the candidate solutions are highly diploid (>= 0.97) OR the sample is chimer OR all the following are true:
-- highly diploid (1.8 <= ploidy <= 2.2) AND
-- purity >= 0.92 AND
-- proportion of [% of BAF sites >0.57] < 0.008 or there exists a region with [BAF > 70% and % of BAF sites > 0.003 and # of BAF sites >= 5]
+In Tumor-only, Purple will use somatic mode if the sample has significant contamination detected (>4%) or:
+- proportion of [% of BAF sites >0.57] < 0.008 and there does not exist a region with [BAF > 70% and % of BAF sites > 0.003 and # of BAF sites >= 5], AND
+- diploid high purity (1.8 <= ploidy <= 2.2 AND purity >= 0.92) OR highly diploid (>= 0.97)
 
 It then checks for the number of SNV and INDEL (with repeat count <=4) that are
 subjected to VAF >= 0.05 AND (tier = Hotspot OR ((tier = PANEL and not NONE or synonymous) and VAF <= 0.35)) in the sample.
