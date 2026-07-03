@@ -3,7 +3,7 @@ package com.hartwig.hmftools.tars.liftback;
 import static com.hartwig.hmftools.tars.common.TarsConstants.ALT_CONTIG_SUFFIX;
 import static com.hartwig.hmftools.tars.common.TarsConstants.ANNOTATED_JUNCTION_MIN_ANCHOR_BP;
 import static com.hartwig.hmftools.tars.common.TarsConstants.ANNOTATED_JUNCTION_MIN_SOFTCLIP_ANCHOR_BP;
-import static com.hartwig.hmftools.tars.common.TarsConstants.RESCUE_MAPQ;
+import static com.hartwig.hmftools.tars.common.TarsConstants.CONFIDENT_MAPQ;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.XA_ATTRIBUTE;
 import static com.hartwig.hmftools.tars.common.TarsConfig.TARS_LOGGER;
 
@@ -218,9 +218,8 @@ public class LiftBackResolver
         boolean hiddenTie = inputMapq == 0 && hasHiddenTie(record);
         boolean inAnnotatedExon = mExonIndex != null
                 && mExonIndex.contains(effectivePrimary.LiftedChrom, effectivePrimary.LiftedPos);
-        boolean hasTxMatch = features.NumTxAlts > 0;
         int updatedMapq = decidePrimaryMapq(
-                inputMapq, numLoci, swapped, hiddenTie, effectivePrimary.fromTxContig(), inAnnotatedExon, hasTxMatch);
+                inputMapq, numLoci, hiddenTie, effectivePrimary.fromTxContig(), inAnnotatedExon);
 
         LiftedAlignment primaryCoords = effectivePrimary;
 
@@ -248,7 +247,7 @@ public class LiftBackResolver
     }
 
     // A supplementary is only lifted, never discriminated: lift its own coords (no XA parse, no locus pick).
-    // MAPQ=0 on a tx-contig supplementary is the multi-alt-contig tie artefact; rescue to RESCUE_MAPQ.
+    // MAPQ=0 on a tx-contig supplementary is the multi-alt-contig tie artefact; bump to CONFIDENT_MAPQ.
     private LiftBackResult liftSupplementary(final SAMRecord record)
     {
         LiftedAlignment lifted = liftSelf(record);
@@ -261,7 +260,7 @@ public class LiftBackResolver
         lifted.IsPrimaryChoice = true;
 
         int inputMapq = record.getMappingQuality();
-        int outputMapq = (lifted.fromTxContig() && inputMapq == 0) ? RESCUE_MAPQ : inputMapq;
+        int outputMapq = (lifted.fromTxContig() && inputMapq == 0) ? CONFIDENT_MAPQ : inputMapq;
         int numRefAlts = lifted.fromTxContig() ? 0 : 1;
         int numTxAlts = lifted.fromTxContig() ? 1 : 0;
 
@@ -390,7 +389,7 @@ public class LiftBackResolver
     }
 
     // Counts distinct loci among only the best-scoring alignments (sub-optimal alts excluded from the multimap count).
-    // Sub-optimal XA alts aren't real placement competitors -- counting them inflated numLoci and blocked MAPQ rescue.
+    // Sub-optimal XA alts aren't real placement competitors -- counting them inflated numLoci and blocked the MAPQ bump.
     private static int countDistinctLoci(final List<LiftedAlignment> alignments)
     {
         if(alignments.isEmpty())
@@ -503,30 +502,31 @@ public class LiftBackResolver
                 List.of());
     }
 
-    // Rescue to RESCUE_MAPQ if: swapped by discriminator; or MAPQ=0 + single locus + no unresolved hidden tie.
-    // Hidden tie (XS==AS, ref-only primary, not in annotated exon) blocks rescue - the unseen alt may be real.
-    // Gated on hasTxMatch: without a tx alignment, MAPQ-0 is not a tx-artefact and is left alone.
+    // Bump a MAPQ-0 primary to 60 only when it lifts to a single locus with no competing alt. Multi-locus reads
+    // (including a discriminator swap to an alt at another locus) are never promoted. A hidden tie (XS==AS, an
+    // equal-scoring alt bwa did not emit) is a latent second locus and blocks the bump unless tx provenance or an
+    // annotated exon vouches for the placement.
     static int decidePrimaryMapq(
-            final int inputMapq, final int numLoci, final boolean swapped, final boolean hiddenTie,
-            final boolean primaryFromTxContig, final boolean primaryInAnnotatedExon, final boolean hasTxMatch)
+            final int inputMapq, final int numLoci, final boolean hiddenTie,
+            final boolean primaryFromTxContig, final boolean primaryInAnnotatedExon)
     {
-        if(!hasTxMatch)
+        if(inputMapq != 0)
         {
             return inputMapq;
         }
-        if(swapped)
+        if(numLoci != 1)
         {
-            return RESCUE_MAPQ;
+            return inputMapq;
         }
         boolean unresolvedHiddenTie = hiddenTie && !primaryFromTxContig && !primaryInAnnotatedExon;
-        if(numLoci == 1 && inputMapq == 0 && !unresolvedHiddenTie)
+        if(unresolvedHiddenTie)
         {
-            return RESCUE_MAPQ;
+            return inputMapq;
         }
-        return inputMapq;
+        return CONFIDENT_MAPQ;
     }
 
-    // When XS == AS, an equally-scoring alt wasn't emitted by bwa. Flag as a hidden tie to skip MAPQ rescue.
+    // When XS == AS, an equally-scoring alt wasn't emitted by bwa. Flag as a hidden tie to skip the MAPQ bump.
     private static boolean hasHiddenTie(final SAMRecord record)
     {
         Integer alignmentScore = record.getIntegerAttribute(AS_TAG);

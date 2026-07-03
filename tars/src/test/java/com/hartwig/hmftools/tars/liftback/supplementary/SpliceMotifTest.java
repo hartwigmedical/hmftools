@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.tars.liftback.rescue;
+package com.hartwig.hmftools.tars.liftback.supplementary;
 
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.bases;
 

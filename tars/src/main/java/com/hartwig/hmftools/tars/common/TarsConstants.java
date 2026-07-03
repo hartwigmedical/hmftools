@@ -25,8 +25,8 @@ public final class TarsConstants
     // Minimum M flank (bp) for an N to count as a trusted splice junction. A flank below this carries too
     // little evidence to assert a junction (~1/4^8 chance a coincidental anchor matches), so an N with a
     // sub-threshold flank is treated as fabricated/untrustworthy: the discriminator won't swap the primary
-    // onto it, and the rescue-fold / terminal-collapse passes re-evaluate the terminal anchor against the
-    // genome rather than trusting bwa's placement. One threshold, used everywhere a junction anchor is judged.
+    // onto it (LiftedAlignment.cigarHasRealNJunction). The overhang gate scores terminal anchors against the
+    // genome instead of applying this length threshold.
     public static final int MIN_JUNCTION_ANCHOR = 8;
     public static final int ANNOTATED_JUNCTION_MIN_ANCHOR_BP = 1;
     public static final int ANNOTATED_JUNCTION_MIN_SOFTCLIP_ANCHOR_BP = 3;
@@ -40,44 +40,39 @@ public final class TarsConstants
     public static final int GAP_OPEN = -6;
     public static final int GAP_EXTEND = -1;
 
+    // Overhang gate: keep a terminal splice-junction anchor only if its own affine alignment score (matches +1,
+    // mismatches -4) at the far exon exceeds this. Equals the bwa soft-clip penalty, so a junction is kept only
+    // when aligning the anchor scores better than clipping it (a clean 6bp anchor survives, a 5bp anchor does not).
+    public static final int MIN_OVERHANG_SCORE = 5;
+
+    // Overhang gate length trust: an overhang longer than this is trusted outright and never scored/collapsed - a long
+    // anchor is a real junction even with a couple of mismatches (SNVs). Only short overhangs (<= this) run the score
+    // check above. Applies to the terminal-anchor collapse in both the single-junction and multi-junction cases.
+    public static final int MIN_OVERHANG_LENGTH = 12;
+
     // MAPQ / AS thresholds.
-    public static final int RESCUE_MAPQ = 60;
-    public static final int SUPP_RESCUE_MAPQ_CAP = 55;
+    // Confident placement MAPQ: bumped onto a single-locus MAPQ-0 primary (decidePrimaryMapq) and onto a
+    // supplementary-resolve merge whose components were all MAPQ 0 (the merge is the placement evidence).
+    public static final int CONFIDENT_MAPQ = 60;
     public static final int PRIMARY_AS_UNMAP_THRESHOLD = 30;
     public static final int SUPP_AS_DROP_THRESHOLD = 30;
 
-    // Junction canonicalize: max bp an intron is slid to reach a canonical motif. Bounds the search to the
-    // size of a tx-contig boundary deletion (SPLICE_FLANKING_DELETION_MAX_BP), the only place it drifts.
-    public static final int DEFAULT_MAX_SHIFT = 5;
-
-    // Junction rescue defaults. Annotated-junction policy: min anchor overhang 3, min intron 21, max intron 1_000_000.
+    // Supplementary-resolve defaults. Annotated-junction policy: min intron 21, max intron 1_000_000.
     public static final int DEFAULT_MIN_INTRON_LENGTH = 21;
     public static final int DEFAULT_MAX_INTRON_LENGTH = 1_000_000;
-    public static final int DEFAULT_MIN_ANCHOR_OVERHANG = 3;
 
     // max supplementaries merged into one read: 1 (typical) or 2 (a middle exon clipped both ends). Deeper chains
     // are vanishingly rare (depth 3-4 was 72 reads in a whole sample), so 2 covers essentially all real cases.
-    public static final int DEFAULT_MAX_CHAIN_DEPTH = 2;
+    public static final int DEFAULT_MAX_SUPP_MERGES = 2;
 
-    // Overlap tolerance between primary and supp matched regions. BWA primary/supp often disagree
-    // by 1-5 bases on junction placement; snapping to an annotated junction within this window recovers
-    // the real splice. Snapping to the annotated junction is preferred; ties resolve via trust-primary.
+    // Overlap tolerance (bp) between primary and supp matched regions in a supplementary-resolve merge. BWA primary/supp often
+    // disagree by 1-5 bases on junction placement; the snap resolves within this window. Compile-time only (not a flag).
     public static final int DEFAULT_SOFTCLIP_TOLERANCE = 5;
 
     // How many over-extended matched bases to trim when probing for an annotated donor/acceptor
     // (no-supp ref-verify path). BWA frequently extends past the true exon boundary into the intron;
     // measured over-extension caps at ~8 bases.
     public static final int DEFAULT_MAX_BOUNDARY_SHIFT = 8;
-
-    // Minimum exon-proximal matched run for partial ref-verify rescue (softclip with an outer
-    // unmatched tail). Partial matches need a longer anchor than full-match clips because the
-    // unexplained residual raises false-positive risk; 11 makes coincidental matches implausible.
-    public static final int DEFAULT_MIN_PARTIAL_MATCH_RUN = 11;
-
-    // Tail-extension defaults. MinExtension is both the min softclip length considered and the min bases reclaimed.
-    // MaxExtension caps the walk to avoid consuming real unannotated junctions.
-    public static final int DEFAULT_MIN_EXTENSION = 3;
-    public static final int DEFAULT_MAX_EXTENSION = 30;
 
     private TarsConstants() { }
 }

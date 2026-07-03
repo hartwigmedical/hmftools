@@ -30,7 +30,7 @@ public record LiftBackResult(
         boolean refFullMatch,
         String geneIds,
         String notes,
-        // +1/−1 for tx-contig-derived primaries; 0 for ref-only or rescue/tail-extend origins.
+        // +1/−1 for tx-contig-derived primaries; 0 for ref-only or supplementary-resolve/tail-extend origins.
         // Used by the writer to set XS:A:+/- on spliced records.
         int transcriptStrand,
         List<LiftedAlignment> liftedAlignments)
@@ -43,7 +43,7 @@ public record LiftBackResult(
     }
 
     // Copy with a post-lift cigar pass applied: position, cigar, N-flag, MAPQ and an appended note change;
-    // every other field is preserved. Shared by the rescue / collapse / tail-extend / canonicalize passes.
+    // every other field is preserved. Shared by the supplementary-resolve / collapse / tail-extend / canonicalize passes.
     public LiftBackResult withRevisedCigar(
             final int newPos, final String newCigar, final boolean newHasNCigar, final int newUpdatedMapq, final String note)
     {

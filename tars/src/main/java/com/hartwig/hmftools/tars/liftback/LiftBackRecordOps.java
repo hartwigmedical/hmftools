@@ -6,7 +6,7 @@ import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.tars.liftback.rescue.RefSequenceSource;
+import com.hartwig.hmftools.tars.liftback.supplementary.RefSequenceSource;
 
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
@@ -60,7 +60,7 @@ public final class LiftBackRecordOps
                 // the sub-optimal alignment score on the same tag name -- clear first so the SAM
                 // tag-type bookkeeping isn't ambiguous. Only set XS:A when the lifted cigar has
                 // an N AND we know the transcript strand (i.e. the primary came off a tx contig).
-                // Ref-only N-cigars from rescue/tail-extend don't have a strand threaded yet --
+                // Ref-only N-cigars from supplementary-resolve/tail-extend don't have a strand threaded yet --
                 // they ship without XS rather than risk a wrong call.
                 record.setAttribute("XS", null);
                 if(result.hasNCigar() && result.transcriptStrand() != 0)
@@ -152,10 +152,10 @@ public final class LiftBackRecordOps
         return result.inputMapq() == 0 && result.numXaAlts() == 0 && result.comp() == LiftBackResult.Composition.REF_ONLY;
     }
 
-    // The tx-contig MD/NM are stale once the read is lifted and (for rescue/extend/collapse/canon) recut.
+    // The tx-contig MD/NM are stale once the read is lifted and (for supplementary-resolve/extend/collapse/canon) recut.
     // MD is cigar-coupled and is dropped, not rebuilt: reconstructing it across a spliced read would need
     // reference spanning the whole intron. NM only needs the aligned M blocks (N/S/H contribute nothing),
-    // so it is recomputed cheaply against the genomic reference. With no ref source (rescue + extend both
+    // so it is recomputed cheaply against the genomic reference. With no ref source (supplementary resolve + extend both
     // off) or on an unmapped record, NM is cleared as before.
     public static void refreshNmDropMd(final SAMRecord record, final RefSequenceSource refSource)
     {

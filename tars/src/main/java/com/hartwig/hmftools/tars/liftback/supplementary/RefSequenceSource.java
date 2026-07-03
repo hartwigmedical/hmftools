@@ -1,6 +1,6 @@
-package com.hartwig.hmftools.tars.liftback.rescue;
+package com.hartwig.hmftools.tars.liftback.supplementary;
 
-// Reference-sequence interface for the rescue ref-verify path; decouples production FASTA from tests.
+// Reference-sequence interface for the supplementary-resolve ref-verify path; decouples production FASTA from tests.
 // Coordinates are 1-based inclusive. Returns null for unknown chromosomes or out-of-range queries.
 @FunctionalInterface
 public interface RefSequenceSource

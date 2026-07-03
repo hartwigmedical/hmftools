@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.tars.liftback.tailextend;
+package com.hartwig.hmftools.tars.liftback.overhang;
 
 import com.hartwig.hmftools.tars.common.TarsConstants;
 

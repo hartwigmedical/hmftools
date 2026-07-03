@@ -30,12 +30,12 @@ import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
 import com.hartwig.hmftools.tars.common.ContigEntry;
 import com.hartwig.hmftools.tars.common.ContigSidecar;
 import com.hartwig.hmftools.tars.common.TarsConstants;
-import com.hartwig.hmftools.tars.liftback.rescue.AnnotatedJunctionIndex;
-import com.hartwig.hmftools.tars.liftback.rescue.AnnotatedJunctionLoader;
+import com.hartwig.hmftools.tars.liftback.supplementary.AnnotatedJunctionIndex;
+import com.hartwig.hmftools.tars.liftback.supplementary.AnnotatedJunctionLoader;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.tars.liftback.rescue.RescueRejectReason;
-import com.hartwig.hmftools.tars.liftback.rescue.RescueStatistics;
-import com.hartwig.hmftools.tars.liftback.tailextend.TailExtensionStatistics;
+import com.hartwig.hmftools.tars.liftback.supplementary.SupplementaryRejectReason;
+import com.hartwig.hmftools.tars.liftback.supplementary.SupplementaryStatistics;
+import com.hartwig.hmftools.tars.liftback.overhang.OverhangGateStatistics;
 
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMRecord;
@@ -182,8 +182,7 @@ public class TarsApplication
 
         return new LiftBackResources(
                 resolver, junctionIndex, mConfig.RefGenomeFile,
-                mConfig.Rescue, mConfig.TailExtension, TarsConstants.MIN_JUNCTION_ANCHOR,
-                excludedRegions);
+                mConfig.Supplementary, excludedRegions);
     }
 
     // fails fast on a BAM/sidecar mismatch -- root cause of a prior silent failure where alt contigs missing
@@ -275,27 +274,28 @@ public class TarsApplication
             TARS_LOGGER.warn("failed to write liftback summary: {}", e.toString());
         }
 
-        logRescueStats(workers);
-        logTailExtensionStats(workers);
+        logSupplementaryStats(workers);
+        logOverhangStats(workers);
 
         long collapsedLeading = 0;
         long collapsedTrailing = 0;
-        long junctionsCanonicalized = 0;
         long overCapUnmapped = 0;
         long excludedReads = 0;
         for(final LiftBackWorker worker : workers)
         {
-            collapsedLeading += worker.collapsedLeading();
-            collapsedTrailing += worker.collapsedTrailing();
-            junctionsCanonicalized += worker.junctionsCanonicalized();
+            OverhangGateStatistics overhang = worker.overhangStatistics();
+            if(overhang != null)
+            {
+                collapsedLeading += overhang.collapsedLeading();
+                collapsedTrailing += overhang.collapsedTrailing();
+            }
             overCapUnmapped += worker.overCapUnmapped();
             excludedReads += worker.excludedReads();
         }
         if(collapsedLeading > 0 || collapsedTrailing > 0)
         {
-            TARS_LOGGER.info("terminal micro-junction collapse: leading={} trailing={}", collapsedLeading, collapsedTrailing);
+            TARS_LOGGER.info("overhang-gate collapse: leading={} trailing={}", collapsedLeading, collapsedTrailing);
         }
-        TARS_LOGGER.info("junction-canonicalize summary: shifted={}", junctionsCanonicalized);
         if(overCapUnmapped > 0)
         {
             TARS_LOGGER.info("over-cap unmap: {} primaries unmapped (MAPQ 0 + no XA, maps past the bwa XA cap)", overCapUnmapped);
@@ -308,48 +308,49 @@ public class TarsApplication
 
     private static LiftBackStats.PassEffects aggregatePassEffects(final List<LiftBackWorker> workers)
     {
-        int rescueCandidates = 0, rescueMerged = 0, suppClamped = 0;
-        int tailEvaluated = 0, tailExtended = 0, tailBasesLead = 0, tailBasesTrail = 0;
-        long collapseLeading = 0, collapseTrailing = 0, canonicalized = 0, overCapUnmapped = 0, excludedReads = 0;
+        int suppCandidates = 0, suppMerged = 0, suppClamped = 0;
+        long collapseLeading = 0, collapseTrailing = 0;
+        long reclaimRecords = 0, reclaimBasesLead = 0, reclaimBasesTrail = 0, altsDropped = 0;
+        long overCapUnmapped = 0, excludedReads = 0;
         for(final LiftBackWorker worker : workers)
         {
-            RescueStatistics rescue = worker.rescueStatistics();
-            if(rescue != null)
+            SupplementaryStatistics supplementary = worker.supplementaryStatistics();
+            if(supplementary != null)
             {
-                rescueCandidates += rescue.candidatesEvaluated();
-                rescueMerged += rescue.mergedTotal();
-                suppClamped += rescue.suppClampApplied();
+                suppCandidates += supplementary.candidatesEvaluated();
+                suppMerged += supplementary.mergedTotal();
+                suppClamped += supplementary.suppClampApplied();
             }
-            TailExtensionStatistics tail = worker.tailExtStatistics();
-            if(tail != null)
+            OverhangGateStatistics overhang = worker.overhangStatistics();
+            if(overhang != null)
             {
-                tailEvaluated += tail.recordsEvaluated();
-                tailExtended += tail.recordsExtended();
-                tailBasesLead += tail.basesExtendedLead();
-                tailBasesTrail += tail.basesExtendedTrail();
+                collapseLeading += overhang.collapsedLeading();
+                collapseTrailing += overhang.collapsedTrailing();
+                reclaimRecords += overhang.recordsReclaimed();
+                reclaimBasesLead += overhang.basesReclaimedLead();
+                reclaimBasesTrail += overhang.basesReclaimedTrail();
+                altsDropped += overhang.altsDropped();
             }
-            collapseLeading += worker.collapsedLeading();
-            collapseTrailing += worker.collapsedTrailing();
-            canonicalized += worker.junctionsCanonicalized();
             overCapUnmapped += worker.overCapUnmapped();
             excludedReads += worker.excludedReads();
         }
         return new LiftBackStats.PassEffects(
-                rescueCandidates, rescueMerged, suppClamped,
-                tailEvaluated, tailExtended, tailBasesLead, tailBasesTrail,
-                collapseLeading, collapseTrailing, canonicalized, overCapUnmapped, excludedReads);
+                suppCandidates, suppMerged, suppClamped,
+                collapseLeading, collapseTrailing,
+                reclaimRecords, reclaimBasesLead, reclaimBasesTrail, altsDropped,
+                overCapUnmapped, excludedReads);
     }
 
-    private static void logRescueStats(final List<LiftBackWorker> workers)
+    private static void logSupplementaryStats(final List<LiftBackWorker> workers)
     {
         int candidates = 0;
         int merged = 0;
         int clamp = 0;
         int[] depth = new int[5];
-        EnumMap<RescueRejectReason, Integer> rejects = new EnumMap<>(RescueRejectReason.class);
+        EnumMap<SupplementaryRejectReason, Integer> rejects = new EnumMap<>(SupplementaryRejectReason.class);
         for(final LiftBackWorker worker : workers)
         {
-            RescueStatistics stats = worker.rescueStatistics();
+            SupplementaryStatistics stats = worker.supplementaryStatistics();
             if(stats == null)
                 continue;
             candidates += stats.candidatesEvaluated();
@@ -359,40 +360,40 @@ public class TarsApplication
             {
                 depth[d] += stats.mergedAtChainDepth(d);
             }
-            for(final RescueRejectReason reason : RescueRejectReason.values())
+            for(final SupplementaryRejectReason reason : SupplementaryRejectReason.values())
             {
                 rejects.merge(reason, stats.rejectCount(reason), Integer::sum);
             }
         }
-        TARS_LOGGER.info("rescue-via-supp summary: candidates={} merged={} suppClamped={} (depth1={} depth2={} depth3={} depth4={})",
+        TARS_LOGGER.info("supplementary-resolve summary: candidates={} merged={} suppClamped={} (depth1={} depth2={} depth3={} depth4={})",
                 candidates, merged, clamp, depth[1], depth[2], depth[3], depth[4]);
-        for(final RescueRejectReason reason : RescueRejectReason.values())
+        for(final SupplementaryRejectReason reason : SupplementaryRejectReason.values())
         {
             if(rejects.getOrDefault(reason, 0) > 0)
             {
-                TARS_LOGGER.debug("rescue-via-supp reject {}: {}", reason, rejects.get(reason));
+                TARS_LOGGER.debug("supplementary-resolve reject {}: {}", reason, rejects.get(reason));
             }
         }
     }
 
-    private static void logTailExtensionStats(final List<LiftBackWorker> workers)
+    private static void logOverhangStats(final List<LiftBackWorker> workers)
     {
-        int evaluated = 0;
-        int extended = 0;
-        int basesLead = 0;
-        int basesTrail = 0;
+        long reclaimed = 0;
+        long basesLead = 0;
+        long basesTrail = 0;
+        long altsDropped = 0;
         for(final LiftBackWorker worker : workers)
         {
-            TailExtensionStatistics stats = worker.tailExtStatistics();
+            OverhangGateStatistics stats = worker.overhangStatistics();
             if(stats == null)
                 continue;
-            evaluated += stats.recordsEvaluated();
-            extended += stats.recordsExtended();
-            basesLead += stats.basesExtendedLead();
-            basesTrail += stats.basesExtendedTrail();
+            reclaimed += stats.recordsReclaimed();
+            basesLead += stats.basesReclaimedLead();
+            basesTrail += stats.basesReclaimedTrail();
+            altsDropped += stats.altsDropped();
         }
-        TARS_LOGGER.info("extend-softclip-tails summary: evaluated={} extended={} basesLead={} basesTrail={}",
-                evaluated, extended, basesLead, basesTrail);
+        TARS_LOGGER.info("overhang-gate reclaim summary: records={} basesLead={} basesTrail={}; altsDropped={}",
+                reclaimed, basesLead, basesTrail, altsDropped);
     }
 
     private boolean concatenateShards(final List<String> shardBams, final String unsortedBam)

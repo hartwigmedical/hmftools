@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.tars.liftback.rescue;
+package com.hartwig.hmftools.tars.liftback.supplementary;
 
 // Classifies donor/acceptor 2-base flanks: GT-AG canonical (~99%), GC-AG/AT-AC semi-canonical.
 // Strand is unknown at scan time so reverse-complement motifs (CT-AC, CT-GC, GT-AT) are accepted.

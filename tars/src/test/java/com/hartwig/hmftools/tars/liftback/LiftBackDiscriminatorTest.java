@@ -147,6 +147,19 @@ public class LiftBackDiscriminatorTest
                         ref(CHR2, 200, FULL_MATCH_CIGAR))));
     }
 
+    @Test
+    public void testCategorizeSkipsGateDroppedAlt()
+    {
+        // an XA alt the overhang gate collapsed to a contiguous alignment is marked Dropped before the
+        // discriminator runs; categorize must ignore it. A ref self plus a dropped tx alt at another locus
+        // resolves to SOLE_REF (one counted locus), not a multi-locus tx-vs-ref contest.
+        LiftedAlignment self = ref(CHR1, 100, FULL_MATCH_CIGAR);
+        LiftedAlignment droppedTx = tx(CHR2, 200, TX_JUNCTION_CIGAR, false, 0);
+        droppedTx.Dropped = true;
+
+        assertEquals(SOLE_REF, featureOf(set(self, droppedTx)));
+    }
+
     // ---- apply(): tx-favouring swap (promoteTxOverRef) ----
 
     @Test

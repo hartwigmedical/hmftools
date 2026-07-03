@@ -9,12 +9,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 
-import com.hartwig.hmftools.tars.common.TarsConstants;
-import com.hartwig.hmftools.tars.liftback.rescue.JunctionRescueResolver;
-import com.hartwig.hmftools.tars.liftback.rescue.RefSequenceSource;
-import com.hartwig.hmftools.tars.liftback.rescue.RescueStatistics;
-import com.hartwig.hmftools.tars.liftback.tailextend.TailExtensionStatistics;
-import com.hartwig.hmftools.tars.liftback.tailextend.TerminalReconciler;
+import com.hartwig.hmftools.tars.liftback.overhang.OverhangGate;
+import com.hartwig.hmftools.tars.liftback.overhang.OverhangGateStatistics;
+import com.hartwig.hmftools.tars.liftback.supplementary.SupplementaryResolver;
+import com.hartwig.hmftools.tars.liftback.supplementary.RefSequenceSource;
+import com.hartwig.hmftools.tars.liftback.supplementary.SupplementaryStatistics;
 
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileWriter;
@@ -32,9 +31,8 @@ public class LiftBackWorker extends Thread
     private final SAMFileWriter mShardWriter;
     private final LiftBackWriter mTsvWriter; // nullable: headerless per-worker TSV shard, only when enabled
 
-    private final JunctionRescueResolver mRescueResolver;
-    private final TerminalReconciler mTerminalReconciler;
-    private final JunctionCanonicalizer mJunctionCanonicalizer;
+    private final SupplementaryResolver mSupplementaryResolver;
+    private final OverhangGate mOverhangGate;
 
     private final ExcludedRegions mExcludedRegions; // nullable: passed to the processor for post-lift exclusion
 
@@ -57,14 +55,11 @@ public class LiftBackWorker extends Thread
 
         RefSequenceSource refSource = resources.openRefSource();
 
-        mRescueResolver = new JunctionRescueResolver(resources.JunctionIndex, refSource, resources.Rescue);
-        mTerminalReconciler = new TerminalReconciler(
-                refSource, resources.TerminalAnchor, resources.JunctionIndex, resources.TailExtension);
-        mJunctionCanonicalizer = refSource != null
-                ? new JunctionCanonicalizer(refSource, TarsConstants.DEFAULT_MAX_SHIFT) : null;
+        mSupplementaryResolver = new SupplementaryResolver(resources.JunctionIndex, refSource, resources.Supplementary);
+        mOverhangGate = new OverhangGate(refSource);
 
         mProcessor = new LiftBackGroupProcessor(
-                resources.Resolver, mRescueResolver, mTerminalReconciler, mJunctionCanonicalizer,
+                resources.Resolver, mSupplementaryResolver, mOverhangGate,
                 refSource, mExcludedRegions, mStats);
 
         mShardWriter = new SAMFileWriterFactory().makeBAMWriter(header, false, new File(shardBam));
@@ -72,15 +67,12 @@ public class LiftBackWorker extends Thread
 
     public LiftBackStats liftBackStats() { return mStats; }
 
-    public RescueStatistics rescueStatistics() { return mRescueResolver != null ? mRescueResolver.statistics() : null; }
+    public SupplementaryStatistics supplementaryStatistics()
+    {
+        return mSupplementaryResolver != null ? mSupplementaryResolver.statistics() : null;
+    }
 
-    public TailExtensionStatistics tailExtStatistics() { return mTerminalReconciler != null ? mTerminalReconciler.statistics() : null; }
-
-    public long collapsedLeading() { return mTerminalReconciler != null ? mTerminalReconciler.collapsedLeading() : 0; }
-
-    public long collapsedTrailing() { return mTerminalReconciler != null ? mTerminalReconciler.collapsedTrailing() : 0; }
-
-    public long junctionsCanonicalized() { return mJunctionCanonicalizer != null ? mJunctionCanonicalizer.junctionsShifted() : 0; }
+    public OverhangGateStatistics overhangStatistics() { return mOverhangGate != null ? mOverhangGate.statistics() : null; }
 
     public long overCapUnmapped() { return mProcessor.overCapUnmapped(); }
 
