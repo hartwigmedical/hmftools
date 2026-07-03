@@ -44,7 +44,6 @@ public class FastaProbeQsCalc
     private final Config mConfig;
     private final ProbeQualityModel mProbeQualityModel;
 
-    private static final String APP_NAME = "FastaProbeQsCalc";
     private static final String OUTPUT_FILE_NAME = "probe_quality.tsv";
 
     private static final Logger LOGGER = LogManager.getLogger(FastaProbeQsCalc.class);
@@ -209,7 +208,7 @@ public class FastaProbeQsCalc
 
     public static void main(@NotNull final String[] args)
     {
-        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
+        ConfigBuilder configBuilder = new ConfigBuilder();
 
         Config.registerConfig(configBuilder);
 
