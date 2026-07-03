@@ -3,7 +3,6 @@ package com.hartwig.hmftools.fastqtools.umi;
 import static java.lang.Math.max;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_BASES;
 import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_N_BASE;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadDelimitedIdFile;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
@@ -23,7 +22,10 @@ import com.hartwig.hmftools.common.codon.Nucleotides;
 
 public class KnownUmis
 {
-    private final UmiConfig mConfig;
+    private final String mUmiDelim;
+    private final int mKnownUmiBaseDiff;
+    private final boolean mKnownUmiUseNumeric;
+
     private final List<String> mKnownUmis;
     private final List<String> mKnownUmisReversed;
     private long mKnownUmiMatchCount;
@@ -32,15 +34,22 @@ public class KnownUmis
 
     public KnownUmis(final UmiConfig config)
     {
-        mConfig = config;
+        this(config.KnownUmiFile, config.UmiDelim, config.KnownUmiBaseDiff, config.KnownUmiUseNumeric);
+    }
+
+    public KnownUmis(final String knownUmiFile, final String umiDelim, final int knownUmiBaseDiff, final boolean knownUmiUseNumeric)
+    {
+        mUmiDelim = umiDelim;
+        mKnownUmiBaseDiff = knownUmiBaseDiff;
+        mKnownUmiUseNumeric = knownUmiUseNumeric;
 
         mKnownUmis = Lists.newArrayList();
         mKnownUmisReversed = Lists.newArrayList();
         mKnownUmiMatchCount = 0;
 
-        if(mConfig.KnownUmiFile != null)
+        if(knownUmiFile != null)
         {
-            loadKnownUmis(mConfig.KnownUmiFile);
+            loadKnownUmis(knownUmiFile);
         }
     }
 
@@ -80,13 +89,13 @@ public class KnownUmis
         // append UMIs to read Id and remove from bases and quals
         String duplexUmiId;
 
-        if(mConfig.KnownUmiUseNumeric)
+        if(mKnownUmiUseNumeric)
         {
-            duplexUmiId = umiLength1 + mConfig.UmiDelim + umiLength2;
+            duplexUmiId = umiLength1 + mUmiDelim + umiLength2;
         }
         else
         {
-            duplexUmiId = umiBases1 + mConfig.UmiDelim + umiBases2;
+            duplexUmiId = umiBases1 + mUmiDelim + umiBases2;
         }
 
         String newReadId = readId1 + READ_ID_DELIM + duplexUmiId;
@@ -115,7 +124,7 @@ public class KnownUmis
                 return umiReversed;
         }
 
-        int knownUmiBaseDiff = mConfig.KnownUmiBaseDiff;
+        int knownUmiBaseDiff = mKnownUmiBaseDiff;
 
         if(readBases.charAt(0) == DNA_N_BASE)
             knownUmiBaseDiff = max(knownUmiBaseDiff, 1);

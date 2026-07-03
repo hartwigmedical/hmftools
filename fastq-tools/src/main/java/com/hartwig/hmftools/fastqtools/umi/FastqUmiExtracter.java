@@ -1,30 +1,42 @@
 package com.hartwig.hmftools.fastqtools.umi;
 
-import static java.lang.Math.max;
+import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedReader;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createGzipBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.filenamePart;
 import static com.hartwig.hmftools.fastqtools.FastqCommon.APP_NAME;
+import static com.hartwig.hmftools.fastqtools.FastqCommon.FASTQ_ZIP_EXTENSION;
 import static com.hartwig.hmftools.fastqtools.FastqCommon.FQ_LOGGER;
-import static com.hartwig.hmftools.fastqtools.FastqCommon.FASTQ_SUFFIX_SHORT;
-import static com.hartwig.hmftools.fastqtools.FastqCommon.FASTQ_SUFFIX_STANDARD;
-import static com.hartwig.hmftools.fastqtools.FastqCommon.READ_ID_BREAK;
-import static com.hartwig.hmftools.fastqtools.FastqCommon.READ_ID_DELIM;
-import static com.hartwig.hmftools.fastqtools.FastqCommon.READ_ID_START;
-import static com.hartwig.hmftools.fastqtools.FastqCommon.READ_ITEM_BASES;
-import static com.hartwig.hmftools.fastqtools.FastqCommon.READ_ITEM_ID;
 import static com.hartwig.hmftools.fastqtools.FastqCommon.READ_ITEM_QUALS;
 import static com.hartwig.hmftools.fastqtools.FastqCommon.READ_LINE_COUNT;
 import static com.hartwig.hmftools.fastqtools.umi.UmiConfig.FASTQ_FILES_DELIM;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.stream.Collectors;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
@@ -41,14 +53,12 @@ public class FastqUmiExtracter
 
     private long mReadCount;
     private final UmiExtractor mUmiExtractor;
-    private final KnownUmis mKnownUmis;
 
     public FastqUmiExtracter(final ConfigBuilder configBuilder)
     {
         mConfig = new UmiConfig(configBuilder);
 
         mUmiExtractor = new UmiExtractor(mConfig);
-        mKnownUmis = new KnownUmis(mConfig);
 
         mReadCount = 0;
     }
@@ -86,21 +96,24 @@ public class FastqUmiExtracter
 
         long startTimeMs = System.currentTimeMillis();
 
-        processFiles(fastqFiles[0], fastqFiles[1]);
+        try
+        {
+            processFiles(fastqFiles[0], fastqFiles[1]);
+        }
+        catch(Exception e)
+        {
+            FQ_LOGGER.error("file processing failed: {}", e.toString());
+            e.printStackTrace();
+        }
 
-        mKnownUmis.logResults(mReadCount);
+        mUmiExtractor.logResults(mReadCount);
 
         FQ_LOGGER.info("extraction complete, totalReads({}), mins({})", mReadCount, runTimeMinsStr(startTimeMs));
     }
 
     private BufferedWriter createOutputWriter(final String inputFile)
     {
-        String fastqFile = inputFile.substring(inputFile.lastIndexOf(File.separator) + 1);
-
-        int extensionIndex = fastqFile.contains(FASTQ_SUFFIX_STANDARD) ?
-                fastqFile.lastIndexOf("." + FASTQ_SUFFIX_STANDARD) : fastqFile.lastIndexOf("." + FASTQ_SUFFIX_SHORT);
-
-        String outputFile = mConfig.OutputDir + fastqFile.substring(0, extensionIndex) + '.' + mConfig.OutputId + fastqFile.substring(extensionIndex);
+        String outputFile = mConfig.outputFastqFilename(inputFile);
 
         try
         {
@@ -114,7 +127,206 @@ public class FastqUmiExtracter
         }
     }
 
-    private void processFiles(final String r1File, final String r2File)
+    private static BufferedReader openReader(final String fastqFile) throws Exception
+    {
+        InputStream fis = Files.newInputStream(Paths.get(fastqFile));
+        BufferedInputStream bis = new BufferedInputStream(fis);
+        GZIPInputStream gzis = new GZIPInputStream(bis);
+        InputStreamReader isr = new InputStreamReader(gzis, StandardCharsets.UTF_8);
+        return new BufferedReader(isr);
+    }
+
+    private void processFiles(final String inputFileR1, final String inputFileR2) throws Exception
+    {
+        ExecutorService executor = Executors.newFixedThreadPool(mConfig.Threads);
+        List<Future<Void>> futures = new ArrayList<>();
+
+        String outputFileR1 = mConfig.outputFastqFilename(inputFileR1);
+        String outputFileR2 = mConfig.outputFastqFilename(inputFileR2);
+        String outputPrefixR1 = outputFileR1.substring(0, outputFileR1.lastIndexOf(FASTQ_ZIP_EXTENSION));
+        String outputPrefixR2 = outputFileR2.substring(0, outputFileR2.lastIndexOf(FASTQ_ZIP_EXTENSION));
+
+        int linesPerChunk = mConfig.ReadsPerChunk * READ_LINE_COUNT;
+
+        BufferedReader readerR1 = openReader(inputFileR1);
+        BufferedReader readerR2 = openReader(inputFileR2);
+
+        String[] r1Lines = new String[linesPerChunk];
+        String[] r2Lines = new String[linesPerChunk];
+
+        String line;
+        int chunkIndex = 0;
+        int lineIndex = 0;
+
+        while((line = readerR1.readLine()) != null)
+        {
+            r1Lines[lineIndex] = line;
+            r2Lines[lineIndex] = readerR2.readLine(); // assumes equal lines
+            ++lineIndex;
+            ++mReadCount;
+
+            // accumulate all lines for a single read
+            if(lineIndex == linesPerChunk)
+            {
+                int currentIndex = chunkIndex++;
+
+                Path outputTempFileR1 = Paths.get(format("%s_%04d.gz", outputPrefixR1, currentIndex));
+                Path outputTempFileR2 = Paths.get(format("%s_%04d.gz", outputPrefixR2, currentIndex));
+
+                String[] r1LinesCp = r1Lines;
+                String[] r2LinesCp = r2Lines;
+
+                Future<Void> task = executor.submit(() ->
+                {
+                    processReadGroupLines(r1LinesCp, r2LinesCp);
+                    compressTextLines(r1LinesCp, outputTempFileR1);
+                    compressTextLines(r2LinesCp, outputTempFileR2);
+                    return null;
+                });
+
+                futures.add(task);
+
+                // reset batch array for the next file chunk
+                lineIndex = 0;
+
+                // clear previous data since buffers are passed to threads
+                r1Lines = new String[linesPerChunk];
+                r2Lines = new String[linesPerChunk];
+            }
+        }
+
+        // handle remaining reads (less than chunk size
+        if(lineIndex > 0)
+        {
+            Path outputTempFileR1 = Paths.get(format("%s_%04d.gz", outputPrefixR1, chunkIndex));
+            Path outputTempFileR2 = Paths.get(format("%s_%04d.gz", outputPrefixR2, chunkIndex));
+
+            String[] r1LinesCp = r1Lines;
+            String[] r2LinesCp = r2Lines;
+
+            Future<Void> task = executor.submit(() ->
+            {
+                processReadGroupLines(r1LinesCp, r2LinesCp);
+                compressTextLines(r1LinesCp, outputTempFileR1);
+                compressTextLines(r2LinesCp, outputTempFileR2);
+                return null;
+            });
+
+            futures.add(task);
+        }
+
+        for(Future<Void> future : futures)
+        {
+            future.get();
+        }
+
+        executor.shutdown();
+
+        FQ_LOGGER.info("read group processing complete");
+
+        if(mConfig.Threads > 1)
+        {
+            FQ_LOGGER.info("merging {} temporary files", mConfig.Threads);
+        }
+
+        mergeGzipBlocks(outputPrefixR1, outputFileR1);
+        mergeGzipBlocks(outputPrefixR2, outputFileR2);
+    }
+
+    private void processReadGroupLines(final String[] r1Lines, final String[] r2Lines)
+    {
+        String[] r1ReadBuffer = new String[READ_ITEM_QUALS+1];
+        String[] r2ReadBuffer = new String[READ_ITEM_QUALS+1];
+
+        for(int i = 0; i < r1Lines.length; i += READ_LINE_COUNT)
+        {
+            for(int j = 0; j < READ_LINE_COUNT; ++j)
+            {
+                if(r1Lines[i + j] == null)
+                    return;
+
+                r1ReadBuffer[j] = r1Lines[i + j];
+                r2ReadBuffer[j] = r2Lines[i + j];
+            }
+
+            mUmiExtractor.processReadBases(r1ReadBuffer, r2ReadBuffer);
+
+            // copy back
+            for(int j = 0; j < READ_LINE_COUNT; ++j)
+            {
+                r1Lines[i + j] = r1ReadBuffer[j];
+                r2Lines[i + j] = r2ReadBuffer[j];
+            }
+        }
+    }
+
+    private static void compressTextLines(final String[] lines, final Path outputPath) throws IOException
+    {
+        OutputStream fos = Files.newOutputStream(outputPath);
+        BufferedOutputStream bos = new BufferedOutputStream(fos);
+        GZIPOutputStream gzos = new GZIPOutputStream(bos);
+
+        BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(gzos, StandardCharsets.UTF_8));
+
+        for(String line : lines)
+        {
+            if(line == null)
+                break;
+
+            writer.write(line);
+            writer.newLine();
+        }
+
+        writer.flush();
+        gzos.finish();
+    }
+
+    private static final String ZIPPED_EXTENSION = ".gz";
+
+    private void mergeGzipBlocks(final String pathPrefix, final String combinedOutputFile) throws IOException
+    {
+        String filePrefix = filenamePart(pathPrefix) + "_";
+
+        // scan the directory for target parts and sort them numerically by sequence ID
+        List<Path> interimFiles = Files.list(Paths.get(mConfig.OutputDir))
+                .filter(p -> p.getFileName().toString().startsWith(filePrefix) && p.toString().endsWith(ZIPPED_EXTENSION))
+                .collect(Collectors.toList());
+
+        Collections.sort(interimFiles);
+
+        if(interimFiles.isEmpty())
+        {
+            throw new FileNotFoundException("No split chunks found matching the pattern: " + pathPrefix + "_*.gz");
+        }
+
+        // merge raw compressed byte segments together sequentially
+        OutputStream destStream = Files.newOutputStream(Paths.get(combinedOutputFile));
+        BufferedOutputStream bos = new BufferedOutputStream(destStream);
+
+        byte[] buffer = new byte[8192];
+
+        for(Path part : interimFiles)
+        {
+            InputStream sourceStream = Files.newInputStream(part);
+            BufferedInputStream bis = new BufferedInputStream(sourceStream);
+
+            int bytesRead;
+
+            while((bytesRead = bis.read(buffer)) != -1)
+            {
+                bos.write(buffer, 0, bytesRead);
+            }
+        }
+
+        bos.flush();
+
+        // clean-up interim files
+        for(Path interimFile : interimFiles)
+        {
+            Files.delete(interimFile);
+        }
+    }
+    private void processFilesOld(final String r1File, final String r2File)
     {
         try
         {
@@ -142,7 +354,7 @@ public class FastqUmiExtracter
 
                 if(readLineCount == READ_LINE_COUNT)
                 {
-                    if(!processReadBases(r1ReadBuffer, r2ReadBuffer))
+                    if(!processReadBasesOld(r1ReadBuffer, r2ReadBuffer))
                     {
                         FQ_LOGGER.error("invalid entries at line({})", lineCount);
 
@@ -179,47 +391,9 @@ public class FastqUmiExtracter
         }
     }
 
-    private boolean processReadBases(final String[] r1ReadBuffer, final String[] r2ReadBuffer)
+    private boolean processReadBasesOld(final String[] r1ReadBuffer, final String[] r2ReadBuffer)
     {
-        /* expected format:
-        @A00121:853:H5JNNMMABC:1:1101:1443:1047 1:N:0:GGCACAACCT+CAGGAGTCTA
-        GNGAGATGGAGAATTTTCTGGAGATGTCTGAGGAATTTTTTCCTCAGTCTTAAGAGTA etc
-        +
-        F#FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF:FFFFFFFFFFFFFFFFFFFFFF etc
-        */
-
-        // data validation
-        if(r1ReadBuffer[READ_ITEM_ID].charAt(0) != READ_ID_START || r2ReadBuffer[READ_ITEM_ID].charAt(0) != READ_ID_START)
-            return false;
-        
-        int minReadLength = max(mUmiExtractor.adapterUmiLength(), mConfig.UmiLength);
-
-        if(r1ReadBuffer[READ_ITEM_BASES].length() <= minReadLength || r1ReadBuffer[READ_ITEM_QUALS].length() <= minReadLength)
-            return false;
-
-        int delimIndex = r1ReadBuffer[READ_ITEM_ID].indexOf(READ_ID_BREAK);
-
-        if(delimIndex < 1 || r2ReadBuffer[READ_ITEM_ID].charAt(delimIndex) != READ_ID_BREAK)
-            return false;
-
-        String readId1 = r1ReadBuffer[READ_ITEM_ID].substring(1, delimIndex);
-        String readId2 = r2ReadBuffer[READ_ITEM_ID].substring(1, delimIndex);
-
-        if(!readId1.equals(readId2))
-            return false;
-
-        if(mConfig.AdapterLength > 0)
-        {
-            mUmiExtractor.adjustWithAdapter(readId1, readId2, delimIndex, r1ReadBuffer,  r2ReadBuffer);
-        }
-        else if(mKnownUmis.enabled())
-        {
-            mKnownUmis.adjustWithKnownUmi(readId1, delimIndex, r1ReadBuffer, r2ReadBuffer);
-        }
-        else
-        {
-            mUmiExtractor.adjustWithFixedUmi(readId1, delimIndex, r1ReadBuffer, r2ReadBuffer);
-        }
+        mUmiExtractor.processReadBases(r1ReadBuffer, r2ReadBuffer);
 
         try
         {

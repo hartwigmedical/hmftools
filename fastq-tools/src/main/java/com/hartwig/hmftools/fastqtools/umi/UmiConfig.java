@@ -1,8 +1,15 @@
 package com.hartwig.hmftools.fastqtools.umi;
 
+import static com.hartwig.hmftools.common.perf.TaskExecutor.addThreadOptions;
+import static com.hartwig.hmftools.common.perf.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.fastqtools.FastqCommon.FASTQ_SUFFIX_SHORT;
+import static com.hartwig.hmftools.fastqtools.FastqCommon.FASTQ_SUFFIX_STANDARD;
+import static com.hartwig.hmftools.fastqtools.FastqCommon.FASTQ_ZIP_EXTENSION;
+
+import java.io.File;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
@@ -12,6 +19,9 @@ public class UmiConfig
     public final String FastqFiles;
     public final String OutputDir;
     public final String OutputId;
+    public final int Threads;
+    public final int ReadsPerChunk;
+
     public final int UmiLength;
     public final String UmiDelim;
     public final int AdapterLength;
@@ -26,6 +36,7 @@ public class UmiConfig
     private static final String UMI_DELIM = "umi_delim";
     private static final String ADAPTER_LENGTH = "adapter_length";
     private static final String ADAPTER_SEQUENCE = "adapter_seq";
+    private static final String CHUNK_SIZE = "chunk_size";
 
     private static final String KNOWN_UMI_FILE = "known_umi_file";
     private static final String KNOWN_UMI_BASE_DIFF = "known_umi_base_diff";
@@ -34,12 +45,16 @@ public class UmiConfig
     protected static final String FASTQ_FILES_DELIM = ";";
 
     private static final int DEFAULT_KNOWN_UMI_BASE_DIFF = 0;
+    private static final int READ_GROUPS_PER_CHUNK_SIZE_IN_BYTES = 100_000;
 
     public UmiConfig(final ConfigBuilder configBuilder)
     {
         FastqFiles = configBuilder.getValue(FASTQ_FILES);
         OutputDir = parseOutputDir(configBuilder);
         OutputId = configBuilder.getValue(OUTPUT_ID, "umi");
+
+        Threads = parseThreads(configBuilder);
+        ReadsPerChunk = configBuilder.getInteger(CHUNK_SIZE);
 
         UmiLength = configBuilder.getInteger(UMI_LENGTH);
 
@@ -51,6 +66,16 @@ public class UmiConfig
         KnownUmiUseNumeric = configBuilder.hasFlag(KNOWN_UMI_USE_NUMERIC);
 
         UmiDelim = configBuilder.getValue(UMI_DELIM);
+   }
+
+   public String outputFastqFilename(final String fastqFilename)
+   {
+       String fastqFile = fastqFilename.substring(fastqFilename.lastIndexOf(File.separator) + 1);
+
+       int extensionIndex = fastqFile.contains(FASTQ_SUFFIX_STANDARD) ?
+               fastqFile.lastIndexOf("." + FASTQ_SUFFIX_STANDARD) : fastqFile.lastIndexOf("." + FASTQ_SUFFIX_SHORT);
+
+       return OutputDir + fastqFile.substring(0, extensionIndex) + '.' + OutputId + FASTQ_ZIP_EXTENSION;
    }
 
     public static void registerConfig(final ConfigBuilder configBuilder)
@@ -66,7 +91,9 @@ public class UmiConfig
 
         configBuilder.addInteger(ADAPTER_LENGTH, "Adapter length", 0);
 
+        configBuilder.addInteger(CHUNK_SIZE,"Reads per size", READ_GROUPS_PER_CHUNK_SIZE_IN_BYTES);
         addOutputOptions(configBuilder);
+        addThreadOptions(configBuilder);
         ConfigUtils.addLoggingOptions(configBuilder);
     }
 }

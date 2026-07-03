@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.fastqtools.umi;
 
+import static java.lang.Math.max;
+
+import static com.hartwig.hmftools.fastqtools.FastqCommon.READ_ID_BREAK;
 import static com.hartwig.hmftools.fastqtools.FastqCommon.READ_ID_DELIM;
 import static com.hartwig.hmftools.fastqtools.FastqCommon.READ_ID_START;
 import static com.hartwig.hmftools.fastqtools.FastqCommon.READ_ITEM_BASES;
@@ -17,8 +20,11 @@ public final class UmiExtractor
     private final String mAdapterSequence;
     public final String mAdapterSequenceReversed;
 
+    private final KnownUmis mKnownUmis;
+
     public UmiExtractor(
-            final int umiLength, final String umiDelim, final int adapterLength, final String adapterSequence)
+            final int umiLength, final String umiDelim, final int adapterLength, final String adapterSequence,
+            final String knownUmiFile, final int knownUmiBaseDiff, final boolean knownUmiUseNumeric)
     {
         mUmiLength = umiLength;
         mUmiDelim = umiDelim;
@@ -35,17 +41,62 @@ public final class UmiExtractor
             mAdapterUmiLength = mAdapterLength > 0 ? mUmiLength + mAdapterLength : mUmiLength;
             mAdapterSequenceReversed = null;
         }
+
+        mKnownUmis = new KnownUmis(knownUmiFile, umiDelim, knownUmiBaseDiff, knownUmiUseNumeric);
     }
 
     public UmiExtractor(final UmiConfig config)
     {
-        this(config.UmiLength, config.UmiDelim, config.AdapterLength, config.AdapterSequence);
+        this(config.UmiLength, config.UmiDelim, config.AdapterLength, config.AdapterSequence,
+                config.KnownUmiFile, config.KnownUmiBaseDiff, config.KnownUmiUseNumeric);
     }
 
-    public int adapterUmiLength() { return mAdapterUmiLength; }
+    public boolean processReadBases(final String[] r1ReadBuffer, final String[] r2ReadBuffer)
+    {
+        /* expected format:
+        @A00121:853:H5JNNMMABC:1:1101:1443:1047 1:N:0:GGCACAACCT+CAGGAGTCTA
+        GNGAGATGGAGAATTTTCTGGAGATGTCTGAGGAATTTTTTCCTCAGTCTTAAGAGTA etc
+        +
+        F#FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF:FFFFFFFFFFFFFFFFFFFFFF etc
+        */
 
-    public void adjustWithFixedUmi(
-            final String readId1, final int delimIndex, final String[] r1ReadBuffer, final String[] r2ReadBuffer)
+        // data validation
+        if(r1ReadBuffer[READ_ITEM_ID].charAt(0) != READ_ID_START || r2ReadBuffer[READ_ITEM_ID].charAt(0) != READ_ID_START)
+            return false;
+
+        int minReadLength = max(mAdapterLength, mUmiLength);
+
+        if(r1ReadBuffer[READ_ITEM_BASES].length() <= minReadLength || r1ReadBuffer[READ_ITEM_QUALS].length() <= minReadLength)
+            return false;
+
+        int delimIndex = r1ReadBuffer[READ_ITEM_ID].indexOf(READ_ID_BREAK);
+
+        if(delimIndex < 1 || r2ReadBuffer[READ_ITEM_ID].charAt(delimIndex) != READ_ID_BREAK)
+            return false;
+
+        String readId1 = r1ReadBuffer[READ_ITEM_ID].substring(1, delimIndex);
+        String readId2 = r2ReadBuffer[READ_ITEM_ID].substring(1, delimIndex);
+
+        if(!readId1.equals(readId2))
+            return false;
+
+        if(mAdapterLength > 0)
+        {
+            adjustWithAdapter(readId1, readId2, delimIndex, r1ReadBuffer,  r2ReadBuffer);
+        }
+        else if(mKnownUmis.enabled())
+        {
+            mKnownUmis.adjustWithKnownUmi(readId1, delimIndex, r1ReadBuffer, r2ReadBuffer);
+        }
+        else
+        {
+            adjustWithFixedUmi(readId1, delimIndex, r1ReadBuffer, r2ReadBuffer);
+        }
+
+        return true;
+    }
+
+    public void adjustWithFixedUmi(final String readId1, final int delimIndex, final String[] r1ReadBuffer, final String[] r2ReadBuffer)
     {
         String umiBases1 = r1ReadBuffer[READ_ITEM_BASES].substring(0, mUmiLength);
         String umiBases2 = r2ReadBuffer[READ_ITEM_BASES].substring(0, mUmiLength);
@@ -62,9 +113,8 @@ public final class UmiExtractor
         r2ReadBuffer[READ_ITEM_QUALS] = r2ReadBuffer[READ_ITEM_QUALS].substring(mUmiLength);
     }
 
-    protected void adjustWithAdapter(
-            final String readId1, final String readId2, final int delimIndex,
-            final String[] r1ReadBuffer, final String[] r2ReadBuffer)
+    private void adjustWithAdapter(
+            final String readId1, final String readId2, final int delimIndex, final String[] r1ReadBuffer, final String[] r2ReadBuffer)
     {
         String adapterUmiBases1 = r1ReadBuffer[READ_ITEM_BASES].substring(0, mAdapterUmiLength);
 
@@ -103,5 +153,10 @@ public final class UmiExtractor
                 r2ReadBuffer[READ_ITEM_QUALS] = r2ReadBuffer[READ_ITEM_QUALS].substring(0, trimIndex);
             }
         }
+    }
+
+    public void logResults(final long readCount)
+    {
+        mKnownUmis.logResults(readCount);
     }
 }

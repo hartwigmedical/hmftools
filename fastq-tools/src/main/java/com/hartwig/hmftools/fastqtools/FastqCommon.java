@@ -19,5 +19,6 @@ public final class FastqCommon
     public static final char READ_ID_DELIM = ':';
 
     public static final String FASTQ_SUFFIX_STANDARD = "fastq";
+    public static final String FASTQ_ZIP_EXTENSION = ".fastq.gz";
     public static final String FASTQ_SUFFIX_SHORT = "fq";
 }
