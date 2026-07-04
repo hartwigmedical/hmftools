@@ -51,7 +51,7 @@ public class FastqUmiExtracter
 
     private static final int LINE_LOG_COUNT = 1000000;
 
-    private long mReadCount;
+    private long mLineCount;
     private final UmiExtractor mUmiExtractor;
 
     public FastqUmiExtracter(final ConfigBuilder configBuilder)
@@ -60,7 +60,7 @@ public class FastqUmiExtracter
 
         mUmiExtractor = new UmiExtractor(mConfig);
 
-        mReadCount = 0;
+        mLineCount = 0;
     }
 
     public void run()
@@ -106,9 +106,10 @@ public class FastqUmiExtracter
             e.printStackTrace();
         }
 
-        mUmiExtractor.logResults(mReadCount);
+        long readCount = mLineCount / 4;
+        mUmiExtractor.logResults(readCount);
 
-        FQ_LOGGER.info("extraction complete, totalReads({}), mins({})", mReadCount, runTimeMinsStr(startTimeMs));
+        FQ_LOGGER.info("extraction complete, totalReads({}), mins({})", readCount, runTimeMinsStr(startTimeMs));
     }
 
     private BufferedWriter createOutputWriter(final String inputFile)
@@ -158,20 +159,28 @@ public class FastqUmiExtracter
         int chunkIndex = 0;
         int lineIndex = 0;
 
+        int nextLogCount = LINE_LOG_COUNT;
+
         while((line = readerR1.readLine()) != null)
         {
             r1Lines[lineIndex] = line;
             r2Lines[lineIndex] = readerR2.readLine(); // assumes equal lines
             ++lineIndex;
-            ++mReadCount;
+            ++mLineCount;
+
+            if(mLineCount >= nextLogCount)
+            {
+                nextLogCount += LINE_LOG_COUNT;
+                FQ_LOGGER.debug("processed {} lines", mLineCount);
+            }
 
             // accumulate all lines for a single read
             if(lineIndex == linesPerChunk)
             {
                 int currentIndex = chunkIndex++;
 
-                Path outputTempFileR1 = Paths.get(format("%s_%04d.gz", outputPrefixR1, currentIndex));
-                Path outputTempFileR2 = Paths.get(format("%s_%04d.gz", outputPrefixR2, currentIndex));
+                Path outputTempFileR1 = formTemporaryFilename(outputPrefixR1, currentIndex);
+                Path outputTempFileR2 = formTemporaryFilename(outputPrefixR2, currentIndex);
 
                 String[] r1LinesCp = r1Lines;
                 String[] r2LinesCp = r2Lines;
@@ -198,8 +207,8 @@ public class FastqUmiExtracter
         // handle remaining reads (less than chunk size
         if(lineIndex > 0)
         {
-            Path outputTempFileR1 = Paths.get(format("%s_%04d.gz", outputPrefixR1, chunkIndex));
-            Path outputTempFileR2 = Paths.get(format("%s_%04d.gz", outputPrefixR2, chunkIndex));
+            Path outputTempFileR1 = formTemporaryFilename(outputPrefixR1, chunkIndex);
+            Path outputTempFileR2 = formTemporaryFilename(outputPrefixR2, chunkIndex);
 
             String[] r1LinesCp = r1Lines;
             String[] r2LinesCp = r2Lines;
@@ -231,6 +240,11 @@ public class FastqUmiExtracter
 
         mergeGzipBlocks(outputPrefixR1, outputFileR1);
         mergeGzipBlocks(outputPrefixR2, outputFileR2);
+    }
+
+    private static Path formTemporaryFilename(final String outputPrefix, int fileIndex)
+    {
+        return Paths.get(format("%s_%05d.gz", outputPrefix, fileIndex));
     }
 
     private void processReadGroupLines(final String[] r1Lines, final String[] r2Lines)
@@ -369,7 +383,7 @@ public class FastqUmiExtracter
 
                     readLineCount = 0;
 
-                    ++mReadCount;
+                    ++mLineCount;
                 }
 
                 ++lineCount;
