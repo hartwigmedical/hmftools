@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.tars.liftback;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -162,9 +163,21 @@ public final class LiftBackDiscriminator
     {
     }
 
-    // Mutates Dropped/IsPrimaryChoice and returns the effective primary and a short diagnostic note.
+    // Deterministic overload: respects bwa's order (no randomization). Used where the caller has no read seed.
     public static ApplyResult apply(
             final List<LiftedAlignment> alignments, final DecidingFeature feature, final LiftedAlignment self)
+    {
+        return apply(alignments, feature, self, 0, true);
+    }
+
+    // Mutates Dropped/IsPrimaryChoice and returns the effective primary and a short diagnostic note.
+    // When bwa expressed no priority (bwaHasPriority false, ie MAPQ 0) the not-confident outcomes pick a
+    // placement pseudo-randomly from seed (a per-read hash): a random locus among tied multi-mappers, or a
+    // random tx-vs-ref call at an ambiguous single locus. When bwa did rank the alignments (bwaHasPriority
+    // true) its order is left untouched.
+    public static ApplyResult apply(
+            final List<LiftedAlignment> alignments, final DecidingFeature feature, final LiftedAlignment self,
+            final int seed, final boolean bwaHasPriority)
     {
         if(feature == null)
         {
@@ -174,8 +187,95 @@ public final class LiftBackDiscriminator
         {
             case JUNCTION, JUNCTION_OVER_CONTIGUOUS -> promoteTxOverRef(alignments, self);
             case REF_READS_THROUGH -> promoteRefOverTx(alignments, self);
+            case AMBIGUOUS -> bwaHasPriority ? new ApplyResult(self, "") : randomTxVsRef(alignments, self, seed);
+            case MULTIMAPPER, SOLE_TX, SOLE_REF -> bwaHasPriority ? new ApplyResult(self, "") : randomLocus(alignments, self, seed);
             default -> new ApplyResult(self, "");
         };
+    }
+
+    // Pick a random locus among tied multi-mappers as primary; every non-dropped placement stays (rides in
+    // XA), nothing is dropped. Single-locus sets have nothing to pick, so self is kept. Deterministic in seed.
+    private static ApplyResult randomLocus(final List<LiftedAlignment> alignments, final LiftedAlignment self, final int seed)
+    {
+        List<String> loci = new ArrayList<>();
+        for(final LiftedAlignment la : alignments)
+        {
+            if(la.Dropped)
+            {
+                continue;
+            }
+            String key = locusKey(la);
+            if(!loci.contains(key))
+            {
+                loci.add(key);
+            }
+        }
+        if(loci.size() < 2)
+        {
+            return new ApplyResult(self, "");
+        }
+
+        String pickedLocus = loci.get(Math.floorMod(seed, loci.size()));
+        if(pickedLocus.equals(locusKey(self)))
+        {
+            return new ApplyResult(self, "");
+        }
+
+        LiftedAlignment winner = null;
+        for(final LiftedAlignment la : alignments)
+        {
+            if(!la.Dropped && locusKey(la).equals(pickedLocus))
+            {
+                winner = la;
+                break;
+            }
+        }
+        if(winner == null)
+        {
+            return new ApplyResult(self, "");
+        }
+
+        self.IsPrimaryChoice = false;
+        winner.IsPrimaryChoice = true;
+        return new ApplyResult(winner, "random_locus");
+    }
+
+    // Single locus with both a tx and a ref placement and no shape rule to separate them: pick tx or ref
+    // pseudo-randomly. The loser is a different cigar at the same locus, so it is kept in XA (not dropped).
+    private static ApplyResult randomTxVsRef(final List<LiftedAlignment> alignments, final LiftedAlignment self, final int seed)
+    {
+        LiftedAlignment tx = bestOfSource(alignments, true);
+        LiftedAlignment ref = bestOfSource(alignments, false);
+        if(tx == null || ref == null)
+        {
+            return new ApplyResult(self, "");
+        }
+
+        boolean pickTx = (seed & 1) == 0;
+        LiftedAlignment winner = pickTx ? tx : ref;
+        for(final LiftedAlignment la : alignments)
+        {
+            la.IsPrimaryChoice = la == winner;
+        }
+        return new ApplyResult(winner, pickTx ? "random_tx" : "random_ref");
+    }
+
+    // Fewest-mismatch non-dropped alignment from the tx side (fromTx true) or ref side (fromTx false).
+    private static LiftedAlignment bestOfSource(final List<LiftedAlignment> alignments, final boolean fromTx)
+    {
+        LiftedAlignment best = null;
+        for(final LiftedAlignment la : alignments)
+        {
+            if(la.Dropped || la.fromTxContig() != fromTx)
+            {
+                continue;
+            }
+            if(best == null || la.NumMismatches < best.NumMismatches)
+            {
+                best = la;
+            }
+        }
+        return best;
     }
 
     // Ref-favouring: if self is ref, drop tx alts. If self is tx, swap to the best ref alt.

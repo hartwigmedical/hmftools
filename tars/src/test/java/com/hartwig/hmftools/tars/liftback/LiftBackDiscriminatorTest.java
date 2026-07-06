@@ -304,4 +304,87 @@ public class LiftBackDiscriminatorTest
             assertFalse("feature " + feature, txAlt.Dropped);
         }
     }
+
+    // ---- apply(): random placement when bwa gave no priority (MAPQ 0) ----
+
+    // AMBIGUOUS single locus (tx contiguous, ref softclipped - no shape rule fires).
+    private static List<LiftedAlignment> ambiguousSet()
+    {
+        LiftedAlignment self = ref(CHR1, 100, "50M51S");
+        self.IsPrimaryChoice = true;
+        LiftedAlignment txAlt = tx(CHR1, 100, "100M", false, 0);
+        return set(self, txAlt);
+    }
+
+    // MULTIMAPPER: a ref locus and a contiguous tx locus, no junction to break the tie.
+    private static List<LiftedAlignment> multimapperSet()
+    {
+        LiftedAlignment self = ref(CHR1, 100, "151M");
+        self.IsPrimaryChoice = true;
+        LiftedAlignment altB = tx(CHR2, 200, "151M", false, 0);
+        return set(self, altB);
+    }
+
+    @Test
+    public void testAmbiguousKeepsBwaOrderWhenBwaHasPriority()
+    {
+        List<LiftedAlignment> alignments = ambiguousSet();
+        LiftedAlignment self = alignments.get(0);
+        LiftBackDiscriminator.ApplyResult outcome = LiftBackDiscriminator.apply(alignments, AMBIGUOUS, self, 0, true);
+        assertSame("bwa ranked the placements, so its primary is untouched", self, outcome.effectivePrimary());
+        assertEquals("", outcome.note());
+    }
+
+    @Test
+    public void testAmbiguousRandomEvenSeedPicksTxAndKeepsLoserInXa()
+    {
+        List<LiftedAlignment> alignments = ambiguousSet();
+        LiftedAlignment self = alignments.get(0);   // ref, 50M51S
+        LiftedAlignment txAlt = alignments.get(1);  // tx, 100M
+        LiftBackDiscriminator.ApplyResult outcome = LiftBackDiscriminator.apply(alignments, AMBIGUOUS, self, 0, false);
+        assertSame("even seed -> tx wins", txAlt, outcome.effectivePrimary());
+        assertEquals("random_tx", outcome.note());
+        assertTrue(txAlt.IsPrimaryChoice);
+        assertFalse(self.IsPrimaryChoice);
+        assertFalse("ambiguous loser is a different cigar, kept in XA not dropped", self.Dropped);
+        assertFalse(txAlt.Dropped);
+    }
+
+    @Test
+    public void testAmbiguousRandomOddSeedPicksRefDeterministically()
+    {
+        LiftBackDiscriminator.ApplyResult first =
+                LiftBackDiscriminator.apply(ambiguousSet(), AMBIGUOUS, ambiguousSet().get(0), 1, false);
+        assertEquals("odd seed -> ref wins", "random_ref", first.note());
+
+        List<LiftedAlignment> repeat = ambiguousSet();
+        LiftBackDiscriminator.ApplyResult second = LiftBackDiscriminator.apply(repeat, AMBIGUOUS, repeat.get(0), 1, false);
+        assertEquals("same seed reproduces the pick", "random_ref", second.note());
+        assertSame(repeat.get(0), second.effectivePrimary());
+    }
+
+    @Test
+    public void testMultimapperKeepsBwaOrderWhenBwaHasPriority()
+    {
+        List<LiftedAlignment> alignments = multimapperSet();
+        LiftedAlignment self = alignments.get(0);
+        LiftBackDiscriminator.ApplyResult outcome = LiftBackDiscriminator.apply(alignments, MULTIMAPPER, self, 1, true);
+        assertSame(self, outcome.effectivePrimary());
+        assertEquals("", outcome.note());
+    }
+
+    @Test
+    public void testMultimapperRandomPicksAltLocusAndKeepsAll()
+    {
+        List<LiftedAlignment> alignments = multimapperSet();
+        LiftedAlignment self = alignments.get(0);   // locus chr1:100
+        LiftedAlignment altB = alignments.get(1);   // locus chr2:200
+        LiftBackDiscriminator.ApplyResult outcome = LiftBackDiscriminator.apply(alignments, MULTIMAPPER, self, 1, false);
+        assertSame("seed 1 -> second locus", altB, outcome.effectivePrimary());
+        assertEquals("random_locus", outcome.note());
+        assertTrue(altB.IsPrimaryChoice);
+        assertFalse(self.IsPrimaryChoice);
+        assertFalse("multimapper placements all ride in XA, none dropped", self.Dropped);
+        assertFalse(altB.Dropped);
+    }
 }

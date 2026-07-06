@@ -234,99 +234,77 @@ public class LiftBackStats
         }
     }
 
+    // Flat, greppable one-metric-per-line summary: Metric, Value, Pct, Basis. Pct is Value as a percentage
+    // of the named Basis metric so each rate is self-documenting (grep the metric, read the number and what
+    // it is a fraction of). The 2D cross-tabs (composition/feature x MAPQ tier) stay in the DEBUG log only.
     public void writeSummary(final String path) throws IOException
     {
+        long resolved = mPerState[RecordState.RESOLVED.ordinal()];
+        long liftFailed = mPerState[RecordState.LIFT_FAILED.ordinal()];
+        long swaps = 0;
+        for(int i = 0; i < N_FEATURES; ++i)
+        {
+            swaps += mSwapByFeature[i];
+        }
+
         try(BufferedWriter writer = createBufferedWriter(path))
         {
-            writer.write(String.join(TSV_DELIM, "Section", "RowKey", "ColumnKey", "Count"));
+            writer.write(String.join(TSV_DELIM, "Metric", "Value", "Pct", "Basis"));
             writer.newLine();
 
-            for(LiftBackResult.Composition comp : LiftBackResult.Composition.values())
-            {
-                for(MapqTier tier : MapqTier.values())
-                {
-                    int count = mCompositionByTier[comp.ordinal()][tier.ordinal()];
-                    if(count == 0)
-                        continue;
-                    writer.write(String.join(TSV_DELIM,
-                            "composition_x_mapq", comp.name(), tier.name(), String.valueOf(count)));
-                    writer.newLine();
-                }
-            }
+            // records read, the primaries the discriminator placed (the denominator for the splits below), and
+            // the lift-failure count - a non-zero rate here flags a sidecar/FASTA mismatch.
+            writeMetric(writer, "records_total", mTotal);
+            writeMetric(writer, "primaries_resolved", resolved, "records_total", mTotal);
+            writeMetric(writer, "lift_failed", liftFailed, "records_total", mTotal);
 
-            for(DecidingFeature feature : DecidingFeature.values())
-            {
-                for(MapqTier tier : MapqTier.values())
-                {
-                    int count = mFeatureByTier[feature.ordinal()][tier.ordinal()];
-                    if(count == 0)
-                        continue;
-                    writer.write(String.join(TSV_DELIM,
-                            "feature_x_mapq", feature.name(), tier.name(), String.valueOf(count)));
-                    writer.newLine();
-                }
-            }
-
-            for(RecordState state : RecordState.values())
-            {
-                int count = mPerState[state.ordinal()];
-                if(count == 0)
-                    continue;
-                writer.write(String.join(TSV_DELIM, "record_state", state.name(), "COUNT", String.valueOf(count)));
-                writer.newLine();
-            }
-
-            for(DecidingFeature feature : DecidingFeature.values())
-            {
-                int swaps = mSwapByFeature[feature.ordinal()];
-                if(swaps == 0)
-                    continue;
-                writer.write(String.join(TSV_DELIM, "feature_x_outcome", feature.name(), "SWAP", String.valueOf(swaps)));
-                writer.newLine();
-                writer.write(String.join(TSV_DELIM,
-                        "feature_x_outcome", feature.name(), "DROP", String.valueOf(mPerFeature[feature.ordinal()] - swaps)));
-                writer.newLine();
-            }
-
+            // discriminator outcome and the feature that decided it, over resolved primaries.
             for(Outcome outcome : Outcome.values())
             {
-                int count = outcomeCount(outcome);
-                if(count == 0)
-                    continue;
-                writeRow(writer, "outcome", outcome.name(), "COUNT", count);
+                writeMetric(writer, "outcome_" + outcome.name().toLowerCase(), outcomeCount(outcome), "primaries_resolved", resolved);
             }
+            for(DecidingFeature feature : DecidingFeature.values())
+            {
+                writeMetric(writer, "feature_" + feature.name().toLowerCase(), mPerFeature[feature.ordinal()], "primaries_resolved", resolved);
+            }
+            writeMetric(writer, "primary_swapped", swaps, "primaries_resolved", resolved);
 
-            // headline per-read numbers: how much got placed, spliced, and MAPQ-rescued.
-            writeRow(writer, "reads", "total", "COUNT", mTotal);
-            writeRow(writer, "reads", "spliced_output", "COUNT", mSplicedOutput);
-            writeRow(writer, "reads", "mapq_zero_in", "COUNT", mMapqZeroIn);
-            writeRow(writer, "reads", "mapq_rescued", "COUNT", mMapqRescued);
+            // MAPQ rescue and splicing.
+            writeMetric(writer, "mapq_zero_in", mMapqZeroIn, "primaries_resolved", resolved);
+            writeMetric(writer, "mapq_rescued", mMapqRescued, "mapq_zero_in", mMapqZeroIn);
+            writeMetric(writer, "spliced_output", mSplicedOutput, "primaries_resolved", resolved);
 
-            // per-pass effectiveness - what each refinement pass actually did.
-            writeRow(writer, "pass_effect", "supp_resolve", "candidates", mPassEffects.suppCandidates());
-            writeRow(writer, "pass_effect", "supp_resolve", "merged", mPassEffects.suppMerged());
-            writeRow(writer, "pass_effect", "supp_resolve", "supp_clamped", mPassEffects.suppClamped());
-            writeRow(writer, "pass_effect", "overhang_collapse", "leading", mPassEffects.collapseLeading());
-            writeRow(writer, "pass_effect", "overhang_collapse", "trailing", mPassEffects.collapseTrailing());
-            writeRow(writer, "pass_effect", "overhang_reclaim", "records", mPassEffects.reclaimRecords());
-            writeRow(writer, "pass_effect", "overhang_reclaim", "bases_lead", mPassEffects.reclaimBasesLead());
-            writeRow(writer, "pass_effect", "overhang_reclaim", "bases_trail", mPassEffects.reclaimBasesTrail());
-            writeRow(writer, "pass_effect", "overhang_alt", "dropped", mPassEffects.altsDropped());
-            writeRow(writer, "pass_effect", "over_cap_unmap", "primaries", mPassEffects.overCapUnmapped());
-            writeRow(writer, "pass_effect", "excluded_region", "reads", mPassEffects.excludedReads());
-            writeRow(writer, "pass_effect", "low_as", "supps_dropped", mLowAsSuppsDropped);
-            writeRow(writer, "pass_effect", "orphan_supp", "dropped", mOrphanSuppsDropped);
-            writeRow(writer, "pass_effect", "low_as", "primaries_unmapped", mLowAsPrimariesUnmapped);
+            // refinement passes: what each edit actually changed (leading/trailing merged into one figure).
+            writeMetric(writer, "supp_merged", mPassEffects.suppMerged());
+            writeMetric(writer, "supp_clamped", mPassEffects.suppClamped());
+            writeMetric(writer, "overhang_reclaim_records", mPassEffects.reclaimRecords());
+            writeMetric(writer, "overhang_reclaim_bases", mPassEffects.reclaimBasesLead() + mPassEffects.reclaimBasesTrail());
+            writeMetric(writer, "overhang_collapse", mPassEffects.collapseLeading() + mPassEffects.collapseTrailing());
+            writeMetric(writer, "overhang_alt_dropped", mPassEffects.altsDropped());
+
+            // records removed from output.
+            writeMetric(writer, "excluded_region_reads", mPassEffects.excludedReads());
+            writeMetric(writer, "supp_dropped_low_as", mLowAsSuppsDropped);
+            writeMetric(writer, "supp_dropped_orphan", mOrphanSuppsDropped);
+            writeMetric(writer, "primary_unmapped_low_as", mLowAsPrimariesUnmapped);
+            writeMetric(writer, "primary_unmapped_over_cap", mPassEffects.overCapUnmapped());
         }
 
         TARS_LOGGER.info("wrote summary to {}", path);
     }
 
-    private static void writeRow(
-            final BufferedWriter writer, final String section, final String rowKey, final String columnKey, final long count)
+    private static void writeMetric(final BufferedWriter writer, final String metric, final long value) throws IOException
+    {
+        writer.write(String.join(TSV_DELIM, metric, String.valueOf(value), "", ""));
+        writer.newLine();
+    }
+
+    private static void writeMetric(
+            final BufferedWriter writer, final String metric, final long value, final String basis, final long basisValue)
             throws IOException
     {
-        writer.write(String.join(TSV_DELIM, section, rowKey, columnKey, String.valueOf(count)));
+        String pct = basisValue > 0 ? String.format("%.2f", 100.0 * value / basisValue) : "";
+        writer.write(String.join(TSV_DELIM, metric, String.valueOf(value), pct, basis));
         writer.newLine();
     }
 
