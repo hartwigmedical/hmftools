@@ -130,24 +130,14 @@ public class LiftBackStatsTest
         stats.writeSummary(mSummary.toString());
 
         List<String> lines = Files.readAllLines(mSummary);
-        // header + at least one composition row + one category row
-        assertTrue(lines.size() >= 3);
-        assertEquals("Section\tRowKey\tColumnKey\tCount", lines.get(0));
+        assertEquals("Metric\tValue\tPct\tBasis", lines.get(0));
 
-        boolean hasRefOnlyMapqUnique = false;
-        boolean hasARefGenome = false;
-        for(final String line : lines)
-        {
-            if(line.equals("composition_x_mapq\tREF_ONLY\tMAPQ_POS_UNIQUE\t1"))
-            {
-                hasRefOnlyMapqUnique = true;
-            }
-            if(line.equals("feature_x_mapq\tSOLE_REF\tMAPQ_POS_UNIQUE\t1"))
-            {
-                hasARefGenome = true;
-            }
-        }
-        assertTrue(hasRefOnlyMapqUnique);
-        assertTrue(hasARefGenome);
+        // flat one-metric-per-line rows; Pct is Value over the named Basis metric (blank when there is none).
+        assertTrue(lines.contains("records_total\t2\t\t"));
+        assertTrue(lines.contains("primaries_resolved\t1\t50.00\trecords_total"));
+        assertTrue(lines.contains("lift_failed\t0\t0.00\trecords_total"));
+        assertTrue(lines.contains("outcome_ref\t1\t100.00\tprimaries_resolved"));
+        assertTrue(lines.contains("feature_sole_ref\t1\t100.00\tprimaries_resolved"));
+        assertTrue(lines.contains("mapq_zero_in\t1\t100.00\tprimaries_resolved"));
     }
 }

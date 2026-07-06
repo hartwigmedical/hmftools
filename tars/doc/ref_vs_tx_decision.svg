@@ -1,0 +1,81 @@
+<svg viewBox="0 0 880 322" xmlns="http://www.w3.org/2000/svg" role="img">
+<title>Step 2: transcript vs genome - which placement wins</title>
+<desc>When a read has both a transcript (spliced, N-cigar) and a genomic alignment, TARS keeps the transcript's junction unless the genome matches cleanly straight through it. Three real cases: genome contiguous at another locus (chr9:86,266,119 73M 5815N 78M tx beats chr2:128,518,864 151M) - transcript wins; genome soft-clips at the boundary (chr1:1,049,917 121M 195N 30M tx beats 115M 36S ref) - transcript wins; genome reads straight through with no gap (chr8:126,557,042 151M ref beats 143M 54N 8M tx) - genome wins, the N was the artifact.</desc>
+<style>
+svg { font-family: Arial, Helvetica, sans-serif; }
+svg {
+  --tx:#2F7DC6; --tx-dark:#0C447C; --keep:#1F8A4C; --warn:#EFB94B; --warn-dark:#6B4E04;
+  --sub:#6B6862; --label:#5C5953; --muted:#9B9893; --gone:#D9D7D2; --gone-ink:#8A8781;
+  --border2:#C7C5BF; --bg:#FFFFFF;
+}
+.title  { font-size:13.5px; font-weight:700; fill:var(--tx-dark); }
+.rulet  { font-size:10.5px; fill:var(--sub); }
+.lead   { font-size:11px; font-weight:700; fill:var(--label); }
+.coord  { font-family:"Courier New",monospace; font-size:8.5px; fill:var(--sub); }
+.coordg { font-family:"Courier New",monospace; font-size:8.5px; fill:var(--gone-ink); }
+.oncig  { font-size:9.5px; fill:#FFFFFF; text-anchor:middle; }
+.oncigg { font-size:9.5px; fill:var(--gone-ink); text-anchor:middle; }
+.nlbl   { font-size:8.5px; fill:var(--tx-dark); text-anchor:middle; }
+.nlblg  { font-size:8.5px; fill:var(--gone-ink); text-anchor:middle; }
+.slbl   { font-size:9px; fill:var(--warn-dark); text-anchor:middle; }
+.note   { font-size:8.5px; fill:var(--muted); }
+.lbl    { font-size:9.5px; fill:var(--label); }
+.win    { font-size:10px; font-weight:700; fill:#FFFFFF; text-anchor:middle; }
+.m      { fill:var(--tx); }
+.keep   { fill:var(--keep); }
+.s      { fill:var(--warn); }
+.gone   { fill:var(--gone); }
+.nline  { stroke:var(--tx); stroke-width:2; fill:none; }
+.nlineg { stroke:var(--gone-ink); stroke-width:2; fill:none; }
+.divide { stroke:var(--border2); stroke-width:1; }
+</style>
+<rect x="0" y="0" width="880" height="322" fill="var(--bg)"/>
+
+<text class="title" x="40" y="26">transcript vs genome: does the read splice here?</text>
+<text class="rulet" x="40" y="46">the transcript's N junction wins unless the genome matches cleanly straight through it - then the N is the artifact</text>
+
+<!-- ROW 1: genome contiguous at another locus -> transcript wins -->
+<text class="lead" x="40" y="72">genome maps contiguously at another locus</text>
+<text class="coord" x="40" y="93">tx  chr9:86,266,119</text>
+<rect class="m" x="180" y="82" width="161" height="15" rx="2"/><text class="oncig" x="260" y="93">73M</text>
+<line class="nline" x1="341" y1="89" x2="375" y2="89"/><rect x="343" y="83" width="30" height="12" fill="var(--bg)"/><text class="nlbl" x="358" y="93">5815N</text>
+<rect class="m" x="375" y="82" width="172" height="15" rx="2"/><text class="oncig" x="461" y="93">78M</text>
+<text class="coordg" x="40" y="115">ref chr2:128,518,864</text>
+<rect class="gone" x="180" y="104" width="332" height="15" rx="2"/><text class="oncigg" x="346" y="115">151M</text>
+<text class="note" x="520" y="115">kept in XA</text>
+<rect x="700" y="91" width="124" height="20" rx="10" fill="var(--tx)"/><text class="win" x="762" y="105">transcript wins</text>
+
+<line class="divide" x1="40" y1="132" x2="840" y2="132"/>
+
+<!-- ROW 2: genome soft-clips at the boundary -> transcript wins -->
+<text class="lead" x="40" y="158">genome soft-clips at the boundary, cannot cross the intron</text>
+<text class="coord" x="40" y="179">tx  chr1:1,049,917</text>
+<rect class="m" x="180" y="168" width="255" height="15" rx="2"/><text class="oncig" x="307" y="179">121M</text>
+<line class="nline" x1="435" y1="175" x2="469" y2="175"/><rect x="437" y="169" width="30" height="12" fill="var(--bg)"/><text class="nlbl" x="452" y="179">195N</text>
+<rect class="m" x="469" y="168" width="66" height="15" rx="2"/><text class="oncig" x="502" y="179">30M</text>
+<text class="coordg" x="40" y="201">ref chr1:1,049,917</text>
+<rect class="gone" x="180" y="190" width="243" height="15" rx="2"/><text class="oncigg" x="301" y="201">115M</text>
+<rect class="s" x="423" y="190" width="76" height="15" rx="2"/><text class="slbl" x="461" y="201">36S</text>
+<text class="note" x="520" y="201">dropped</text>
+<rect x="700" y="177" width="124" height="20" rx="10" fill="var(--tx)"/><text class="win" x="762" y="191">transcript wins</text>
+
+<line class="divide" x1="40" y1="216" x2="840" y2="216"/>
+
+<!-- ROW 3: genome reads straight through -> genome wins -->
+<text class="lead" x="40" y="242">genome matches straight through, no gap</text>
+<text class="coordg" x="40" y="263">tx  chr8:126,557,042</text>
+<rect class="gone" x="180" y="252" width="300" height="15" rx="2"/><text class="oncigg" x="330" y="263">143M</text>
+<line class="nlineg" x1="480" y1="259" x2="514" y2="259"/><rect x="482" y="253" width="30" height="12" fill="var(--bg)"/><text class="nlblg" x="497" y="263">54N</text>
+<rect class="gone" x="514" y="252" width="18" height="15" rx="2"/><text class="oncigg" x="523" y="263">8M</text>
+<text class="note" x="540" y="263">dropped</text>
+<text class="coord" x="40" y="285">ref chr8:126,557,042</text>
+<rect class="keep" x="180" y="274" width="332" height="15" rx="2"/><text class="oncig" x="346" y="285">151M</text>
+<rect x="700" y="263" width="124" height="20" rx="10" fill="var(--keep)"/><text class="win" x="762" y="277">genome wins</text>
+
+<!-- legend -->
+<rect class="m" x="40" y="304" width="16" height="9" rx="2"/><text class="lbl" x="60" y="312">transcript (M)</text>
+<rect class="keep" x="168" y="304" width="16" height="9" rx="2"/><text class="lbl" x="188" y="312">genome kept</text>
+<rect class="s" x="280" y="304" width="16" height="9" rx="2"/><text class="lbl" x="300" y="312">softclip (S)</text>
+<line class="nline" x1="384" y1="308" x2="402" y2="308"/><text class="lbl" x="406" y="312">intron / gap (N)</text>
+<rect class="gone" x="516" y="304" width="16" height="9" rx="2"/><text class="lbl" x="536" y="312">dropped</text>
+</svg>

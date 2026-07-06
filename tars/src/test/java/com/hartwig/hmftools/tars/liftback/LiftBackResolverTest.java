@@ -187,10 +187,11 @@ public class LiftBackResolverTest
     }
 
     @Test
-    public void testSubOptimalAltDoesNotBlockMapqRescue()
+    public void testDistinctLocusAltBlocksMapqRescue()
     {
-        // Tx primary (perfect) + sub-optimal XA alt with 3 mismatches (score 35 < 50). Sub-optimal alt is
-        // not a real competitor, so numLoci == 1 and MAPQ=0 is rescued.
+        // Tx primary (perfect) + a lower-scoring XA alt (3 mismatches) at a distinct locus. bwa left the read
+        // MAPQ 0; two distinct genomic loci means it stays a multimapper - TARS does not override bwa's call with a
+        // weaker reconstructed score - so numLoci == 2 and MAPQ is held at 0.
         SAMRecord record = newRecord(TX_CONTIG, 1, "50M");
         record.setMappingQuality(0);
         record.setAttribute("XA", "chr5,+5000,50M,3;");
@@ -198,8 +199,8 @@ public class LiftBackResolverTest
         LiftBackResolver resolver = new LiftBackResolver(contigMap());
         LiftBackResult result = resolver.resolve(record);
 
-        assertEquals(1, result.numLoci());
-        assertEquals(60, result.updatedMapq());
+        assertEquals(2, result.numLoci());
+        assertEquals(0, result.updatedMapq());
     }
 
     @Test
@@ -669,5 +670,18 @@ public class LiftBackResolverTest
     public void testMapqPolicy_refOnlySingleLocusBumps()
     {
         assertEquals(60, LiftBackResolver.decidePrimaryMapq(0, 1, false, false, false)); // single-locus ref-only MAPQ0 now bumps
+    }
+
+    @Test
+    public void testMapqPolicy_ambiguousNeverBumps()
+    {
+        // a coin-flipped tx-vs-ref call at one locus stays MAPQ 0, even though single-locus MAPQ0 would otherwise bump
+        assertEquals(0, LiftBackResolver.decidePrimaryMapq(0, 1, false, false, false, DecidingFeature.AMBIGUOUS));
+    }
+
+    @Test
+    public void testMapqPolicy_nonAmbiguousSingleLocusStillBumps()
+    {
+        assertEquals(60, LiftBackResolver.decidePrimaryMapq(0, 1, false, false, false, DecidingFeature.SOLE_REF));
     }
 }

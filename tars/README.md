@@ -97,7 +97,7 @@ Optional:
 | Flag               | Default | Description                                                              |
 |--------------------|---------|--------------------------------------------------------------------------|
 | output_id          | (none)  | id inserted into every output files |
-| rna_unmap_regions  | (none)  | `TODO: link file` |
+| rna_unmap_regions  | (none)  | Curated excluded regions (rRNA / 7SL / multi-map zones) whose reads are removed from the lifted output; see [rna_excluded_regions.38.tsv](https://source.cloud.google.com/hmf-pipeline-development/common-resources-public/+/master:rna/38/rna_excluded_regions.38.tsv) |
 | write_liftback_tsv | off     | Per-record debug TSVs; off by default (creates a `~100GB` file)            |
 | threads            | 1       | Worker threads; reads process in parallel per read-group |
 | log_level          | INFO    | `DEBUG` & `DEBUG2` are other levels |
@@ -144,20 +144,17 @@ Every read's transcriptome alignment is translated to genomic coordinates, with 
 A short overhang (`<= 12M`) next to a splice junction at a read end is re-scored using bwa-mem2 style scoring against the
 reference genome. There are 3 cases:
 
-1. With a soft clip: keep the junction if the overhang scores > 5; otherwise drop the `N` junction and walk the soft clip
-   onto the reference genome, leaving a contiguous alignment.
+**1a.** With a soft clip: keep the junction if the overhang scores > 5; otherwise drop the `N` junction and walk the soft
+clip onto the reference genome, leaving a contiguous alignment.
 
 ![1 splice junction](doc/overhang_one_junction.svg)
 
-2. With >1 splice junctions: keep the junction if the short overhang aligns positively (AS > 0), otherwise collapse it
-   only when the intronic reference AS > short overhang AS.
+**1b.** With >1 splice junctions: keep the junction if the short overhang aligns positively (AS > 0), otherwise collapse
+it only when the intronic reference AS > short overhang AS.
 
 ![more than 1 splice junction](doc/overhang_two_junctions.svg)
 
-3. With no soft clip and a single junction: not checked, no intervention. 2 sub-cases:
-
-    - unique mapping to the transcriptome: `MAPQ` bumped to 60.
-    - multi-mapping to transcriptome and/or intronic overlap: `MAPQ` below 60, all valid alternate alignments kept.
+**1c.** With no soft clip and a single junction: not checked, no intervention.
 
 ### Step 2: Decide which alignments to keep for a read
 
@@ -166,38 +163,39 @@ on which one to keep. On a confident placement it updates the record's CIGAR, po
 
 Majority of reads fall into these 3 categories that need no arbitration:
 
-- Aligns to the reference genome only: read matches the genome and TARS passes it through untouched.
+- Aligns to the reference genome only: read matches the genome and TARS passes it through untouched, unless it is
+  MAPQ 0 with no XA (over bwa's `-h` cap, mapping to too many loci), which is unmapped.
 
 - Aligns to a single transcriptome locus:
 
     - read matches multiple transcripts in the transcriptome, but with essentially the same CIGAR and one genomic spot.
     - TARS updates the relevant tags and places it back to genomic coordinates with `N` gaps / splice junctions.
     - includes the case where a ref alignment is present but at the same genomic locus and CIGAR.
+    - unique mapping to the transcriptome, so `MAPQ` is bumped to 60.
 
-- Multi-mapper: read aligns to several places with no clean winner. TARS leaves it multi-mapped (`MAPQ 0`) with modified
-  genomic alignments.
+- Multi-mapper: read aligns to several places with no clean winner. TARS leaves it multi-mapped with modified genomic
+  alignments; multi-mapping to the transcriptome and/or intronic overlap keeps `MAPQ` below 60 (0 when fully tied), with
+  all valid alternate alignments kept.
 
-#### The interesting decisions (multi-locus) `WIP`
+    - When bwa left the loci tied (`MAPQ 0`), the primary is picked at random among them, seeded by the read name, instead
+      of always keeping bwa's, so tied reads do not all pile onto one locus. If bwa ranked the loci, its order stands.
+    - A read that lifts to a single locus but has `XS == AS` carries an equal-scoring placement bwa did not report, so it
+      is kept at `MAPQ 0` rather than bumped, unless a transcript match or an annotated exon confirms the placement.
 
-The real ref-vs-tx work is when a transcript alignment crosses a junction while a genomic alignment lies flat, and TARS
-has to pick the junction-spanning placement over the contiguous one.
+#### The contested ref-vs-tx decisions
 
-**Transcript crosses a junction, genome lies flat** `WIP`
+The real work is when a read has both a transcript (spliced, with an `N`) and a genomic alignment that disagree. The
+transcript's junction wins unless the genome matches cleanly straight through it, in which case the `N` is the artifact:
 
-The transcriptome alignment carries an `N` junction; a genomic alignment at another locus is contiguous (no `N`). bwa
-often makes the contiguous one the primary to keep the read near its mate (proper-pair rescue), even though the spliced
-placement is correct. TARS keeps the junction-spanning placement: it drops the contiguous alt, or swaps to the spliced
-placement when bwa had made the contiguous one primary.
+- the genome is contiguous at another locus, or soft-clips at the boundary: it cannot cross the junction the transcript
+  spans, so TARS keeps the spliced placement (swapping to it, or dropping the ref alt).
+- the genome reads straight through the gap as a full match: the read did not splice here (unspliced pre-mRNA, retained
+  intron, or DNA contamination), so TARS keeps the genomic placement and drops the transcript's `N`.
 
-![transcript crosses a junction, genome lies flat](doc/swap_junction_over_contiguous.svg)
+![transcript vs genome ref-vs-tx decision](doc/ref_vs_tx_decision.svg)
 
-**Transcript spans a junction, genome only soft-clips** `WIP`
-
-At a single locus with both copies, the transcript spans a real junction (an `N` with matched flanks each side) while
-the genomic alignment cannot cross the intron and soft-clips at the boundary. The transcript is the faithful placement,
-so TARS keeps it and drops the ref alt.
-
-![transcript spans a junction, genome soft-clips](doc/junction_tx_spans_ref_clips.svg)
+When no rule fires and bwa gave the placements no priority (`MAPQ 0`), the call is a coin-flip: TARS picks tx or ref at
+random, seeded by the read name so runs stay reproducible, keeps the losing cigar in `XA`, and holds `MAPQ` at 0.
 
 ### Step 3: Resolve supplementary records into splice junctions
 

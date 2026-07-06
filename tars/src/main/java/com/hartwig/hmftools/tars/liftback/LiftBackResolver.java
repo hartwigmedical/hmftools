@@ -20,8 +20,6 @@ import com.hartwig.hmftools.tars.common.ContigEntry;
 import com.hartwig.hmftools.tars.common.TarsConstants;
 
 import htsjdk.samtools.Cigar;
-import htsjdk.samtools.CigarElement;
-import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.TextCigarCodec;
 
@@ -202,7 +200,10 @@ public class LiftBackResolver
         self.IsPrimaryChoice = true;
 
         LiftBackDiscriminator.Features features = LiftBackDiscriminator.categorize(allAlignments);
-        LiftBackDiscriminator.ApplyResult outcome = LiftBackDiscriminator.apply(allAlignments, features.Feature, self);
+        int inputMapq = record.getMappingQuality();
+        int seed = readSeed(record.getReadName());
+        LiftBackDiscriminator.ApplyResult outcome = LiftBackDiscriminator.apply(
+                allAlignments, features.Feature, self, seed, inputMapq != 0);
         LiftedAlignment effectivePrimary = outcome.effectivePrimary();
 
         List<LiftedAlignment> keptAlignments = allAlignments.stream()
@@ -213,13 +214,12 @@ public class LiftBackResolver
         int cigarsAtPrimaryLocus = countDistinctCigarsAtLocus(keptAlignments, effectivePrimary);
         String geneIds = joinGeneIds(keptAlignments);
 
-        int inputMapq = record.getMappingQuality();
         boolean swapped = effectivePrimary != self;
         boolean hiddenTie = inputMapq == 0 && hasHiddenTie(record);
         boolean inAnnotatedExon = mExonIndex != null
                 && mExonIndex.contains(effectivePrimary.LiftedChrom, effectivePrimary.LiftedPos);
         int updatedMapq = decidePrimaryMapq(
-                inputMapq, numLoci, hiddenTie, effectivePrimary.fromTxContig(), inAnnotatedExon);
+                inputMapq, numLoci, hiddenTie, effectivePrimary.fromTxContig(), inAnnotatedExon, features.Feature);
 
         LiftedAlignment primaryCoords = effectivePrimary;
 
@@ -388,57 +388,18 @@ public class LiftBackResolver
                 softClipAtBoundary, forwardStrand, entry.strand());
     }
 
-    // Counts distinct loci among only the best-scoring alignments (sub-optimal alts excluded from the multimap count).
-    // Sub-optimal XA alts aren't real placement competitors -- counting them inflated numLoci and blocked the MAPQ bump.
+    // Counts distinct genomic loci among the kept alignments. Every distinct locus counts, including a lower-scoring
+    // alt: if bwa left the read MAPQ 0 and it lifts to more than one locus it stays a multimapper (no MAPQ bump),
+    // rather than TARS overriding bwa's call with a weaker reconstructed genomic score. Alts collapsing to a single
+    // locus (e.g. the same junction across multiple transcript contigs) still count as one, so those are bumped.
     private static int countDistinctLoci(final List<LiftedAlignment> alignments)
     {
-        if(alignments.isEmpty())
-        {
-            return 0;
-        }
-
-        int bestScore = Integer.MIN_VALUE;
-        for(final LiftedAlignment la : alignments)
-        {
-            bestScore = Math.max(bestScore, reconstructedScore(la));
-        }
-
         Set<String> loci = new HashSet<>();
         for(final LiftedAlignment la : alignments)
         {
-            if(reconstructedScore(la) == bestScore)
-            {
-                loci.add(locusKey(la));
-            }
+            loci.add(locusKey(la));
         }
         return loci.size();
-    }
-
-    // Reconstruct bwa-mem2 AS from CIGAR + NM (NM = mismatches + indel bases, so mismatches = NM - indelBases).
-    static int reconstructedScore(final LiftedAlignment alignment)
-    {
-        Cigar cigar = TextCigarCodec.decode(alignment.OrigCigar);
-        int matched = 0;
-        int indelBases = 0;
-        int gapOps = 0;
-        for(final CigarElement element : cigar.getCigarElements())
-        {
-            CigarOperator op = element.getOperator();
-            if(op == CigarOperator.M || op == CigarOperator.EQ || op == CigarOperator.X)
-            {
-                matched += element.getLength();
-            }
-            else if(op == CigarOperator.I || op == CigarOperator.D)
-            {
-                indelBases += element.getLength();
-                ++gapOps;
-            }
-        }
-
-        // XA alts carry no AS tag, so score is reconstructed from the CIGAR to filter out sub-optimal competitors.
-        int mismatches = Math.max(0, alignment.NumMismatches - indelBases);
-        return (matched - mismatches) * TarsConstants.MATCH + mismatches * TarsConstants.MISMATCH
-                + gapOps * TarsConstants.GAP_OPEN + indelBases * TarsConstants.GAP_EXTEND;
     }
 
     private static int countDistinctCigarsAtLocus(final List<LiftedAlignment> alignments, final LiftedAlignment primary)
@@ -510,7 +471,19 @@ public class LiftBackResolver
             final int inputMapq, final int numLoci, final boolean hiddenTie,
             final boolean primaryFromTxContig, final boolean primaryInAnnotatedExon)
     {
+        return decidePrimaryMapq(inputMapq, numLoci, hiddenTie, primaryFromTxContig, primaryInAnnotatedExon, null);
+    }
+
+    static int decidePrimaryMapq(
+            final int inputMapq, final int numLoci, final boolean hiddenTie,
+            final boolean primaryFromTxContig, final boolean primaryInAnnotatedExon, final DecidingFeature feature)
+    {
         if(inputMapq != 0)
+        {
+            return inputMapq;
+        }
+        // an ambiguous single-locus call is a coin-flip between tx and ref, so it must never be promoted to confident.
+        if(feature == DecidingFeature.AMBIGUOUS)
         {
             return inputMapq;
         }
@@ -524,6 +497,14 @@ public class LiftBackResolver
             return inputMapq;
         }
         return CONFIDENT_MAPQ;
+    }
+
+    // Per-read deterministic seed for the not-confident random placement picks. Both mates share a read name,
+    // so a pair is placed together, and the value is stable across runs, keeping the output reproducible.
+    static int readSeed(final String readName)
+    {
+        int hash = readName.hashCode();
+        return hash ^ (hash >>> 16);
     }
 
     // When XS == AS, an equally-scoring alt wasn't emitted by bwa. Flag as a hidden tie to skip the MAPQ bump.

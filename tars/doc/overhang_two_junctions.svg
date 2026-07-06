@@ -46,7 +46,7 @@ svg {
 <line class="rule" x1="40" y1="118" x2="820" y2="118"/>
 
 <!-- kept: 3M mismatches far exon (1 SNV) but reference reads worse -->
-<text x="40" y="140"><tspan class="cond" fill="var(--tx-dark)">kept</tspan><tspan class="condsub">  &#183;  3 bp overhang mismatches far exon (CCG vs CCT) but reads worse contiguously</tspan></text>
+<text x="40" y="140"><tspan class="cond" fill="var(--tx-dark)">kept</tspan><tspan class="condsub">  &#183;  3 bp overhang mismatches far exon, reads worse contiguously</tspan></text>
 <rect class="m" x="40" y="150" width="22" height="16" rx="2"/><text class="oncigsm" x="51" y="162" fill="#FFFFFF">13M</text>
 <line class="nline" x1="62" y1="158" x2="96" y2="158"/><rect x="65" y="151" width="28" height="13" fill="var(--bg)"/><text class="nlbl" x="79" y="162">107N</text>
 <rect class="m" x="96" y="150" width="230" height="16" rx="2"/><text class="oncig" x="211" y="162">135M</text>
@@ -60,7 +60,7 @@ svg {
 <line class="rule" x1="40" y1="182" x2="820" y2="182"/>
 
 <!-- collapsed: leading 2M mismatches far exon, reads through contiguously -->
-<text x="40" y="204"><tspan class="cond" fill="var(--drop)">collapsed</tspan><tspan class="condsub">  &#183;  2 bp leading overhang mismatches far exon (AG vs GG), reads through</tspan></text>
+<text x="40" y="204"><tspan class="cond" fill="var(--drop)">collapsed</tspan><tspan class="condsub">  &#183;  2 bp leading overhang mismatches far exon, reads through</tspan></text>
 <rect class="m" x="40" y="214" width="14" height="16" rx="2"/><rect class="snv" x="40" y="214" width="7" height="16"/><text class="oncigsm" x="47" y="226" fill="#FFFFFF">2M</text>
 <line class="nline" x1="54" y1="222" x2="88" y2="222"/><rect x="55" y="215" width="32" height="13" fill="var(--bg)"/><text class="nlbl" x="71" y="226">2923N</text>
 <rect class="m" x="88" y="214" width="128" height="16" rx="2"/><text class="oncig" x="152" y="226">75M</text>
