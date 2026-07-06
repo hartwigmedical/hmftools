@@ -32,10 +32,14 @@ import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.CommonUtils;
-import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.SourceType;
+import com.hartwig.hmftools.compar.common.field.DoubleField;
+import com.hartwig.hmftools.compar.common.field.Field;
+import com.hartwig.hmftools.compar.common.field.IntField;
+import com.hartwig.hmftools.compar.common.field.LongField;
+import com.hartwig.hmftools.compar.common.field.StringField;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public record IsofoxSummaryComparer(ComparConfig mConfig) implements ItemComparer
@@ -59,25 +63,29 @@ public record IsofoxSummaryComparer(ComparConfig mConfig) implements ItemCompare
     }
 
     @Override
-    public void registerThresholds(final FieldConfig fieldConfig)
+    public List<Field> fields()
     {
-        fieldConfig.addFieldThreshold(category(), FLD_TOTAL_FRAGS, 10, 0.01);
-        fieldConfig.addFieldThreshold(category(), FLD_DUPLICATE_FRAGS, 10, 0.01);
-        fieldConfig.addFieldThreshold(category(), FLD_SPLICED_FRAG_PERC, 0.01, 0.05);
-        fieldConfig.addFieldThreshold(category(), FLD_UNSPLICED_FRAG_PERC, 0.01, 0.05);
-        fieldConfig.addFieldThreshold(category(), FLD_ALT_FRAG_PERC, 0.01, 0.05);
-        fieldConfig.addFieldThreshold(category(), FLD_CHIMERIC_FRAG_PERC, 0.01, 0.05);
-        fieldConfig.addFieldThreshold(category(), FLD_SPLICED_GENE_COUNT, 10, 0.01);
-        fieldConfig.addFieldThreshold(category(), FLD_FRAG_LENGTH_5TH, -1, 0.05);
-        fieldConfig.addFieldThreshold(category(), FLD_FRAG_LENGTH_50TH, -1, 0.05);
-        fieldConfig.addFieldThreshold(category(), FLD_FRAG_LENGTH_95TH, -1, 0.05);
-        fieldConfig.addFieldThreshold(category(), FLD_ENRICHED_GENE_PERC, 0.01, -1);
-        fieldConfig.addFieldThreshold(category(), FLD_MEDIAN_GC_RATIO, 0.01, -1);
-        fieldConfig.addFieldThreshold(category(), FLD_FORWARD_STRAND_PERC, 0.01, -1);
+        return List.of(
+                new StringField(FLD_QC_STATUS, i -> IsofoxSummaryData.qcStatus(((IsofoxSummaryData) i).RnaStatistics().qcStatus()), true),
+                new LongField(FLD_TOTAL_FRAGS, i -> ((IsofoxSummaryData) i).RnaStatistics().totalFragments(), true, 10., 0.01),
+                new LongField(FLD_DUPLICATE_FRAGS, i -> ((IsofoxSummaryData) i).RnaStatistics().duplicateFragments(), true, 10., 0.01),
+                new DoubleField(FLD_SPLICED_FRAG_PERC, i -> ((IsofoxSummaryData) i).RnaStatistics().splicedFragmentPerc(), true, 0.01, 0.05, "%.2f"),
+                new DoubleField(FLD_UNSPLICED_FRAG_PERC, i -> ((IsofoxSummaryData) i).RnaStatistics().unsplicedFragmentPerc(), true, 0.01, 0.05, "%.2f"),
+                new DoubleField(FLD_ALT_FRAG_PERC, i -> ((IsofoxSummaryData) i).RnaStatistics().altFragmentPerc(), true, 0.01, 0.05, "%.2f"),
+                new DoubleField(FLD_CHIMERIC_FRAG_PERC, i -> ((IsofoxSummaryData) i).RnaStatistics().chimericFragmentPerc(), true, 0.01, 0.05, "%.2f"),
+                new IntField(FLD_SPLICED_GENE_COUNT, i -> ((IsofoxSummaryData) i).RnaStatistics().splicedGeneCount(), true, 10., 0.01),
+                new IntField(FLD_READ_LENGTH, i -> ((IsofoxSummaryData) i).RnaStatistics().readLength(), true, null, null),
+                new DoubleField(FLD_FRAG_LENGTH_5TH, i -> ((IsofoxSummaryData) i).RnaStatistics().fragmentLength5thPercent(), true, null, 0.05, "%.1f"),
+                new DoubleField(FLD_FRAG_LENGTH_50TH, i -> ((IsofoxSummaryData) i).RnaStatistics().fragmentLength50thPercent(), true, null, 0.05, "%.1f"),
+                new DoubleField(FLD_FRAG_LENGTH_95TH, i -> ((IsofoxSummaryData) i).RnaStatistics().fragmentLength95thPercent(), true, null, 0.05, "%.1f"),
+                new DoubleField(FLD_ENRICHED_GENE_PERC, i -> ((IsofoxSummaryData) i).RnaStatistics().enrichedGenePercent(), true, 0.01, null, "%.2f"),
+                new DoubleField(FLD_MEDIAN_GC_RATIO, i -> ((IsofoxSummaryData) i).RnaStatistics().medianGCRatio(), true, 0.01, null, "%.2f"),
+                new DoubleField(FLD_FORWARD_STRAND_PERC, i -> ((IsofoxSummaryData) i).RnaStatistics().forwardStrandPercent(), true, 0.01, null, "%.2f")
+        );
     }
 
     @Override
-    public List<String> comparedFieldNames()
+    public List<String> displayFieldNames()
     {
         return List.of(
                 FLD_QC_STATUS, FLD_TOTAL_FRAGS, FLD_DUPLICATE_FRAGS, FLD_SPLICED_FRAG_PERC, FLD_UNSPLICED_FRAG_PERC, FLD_ALT_FRAG_PERC,

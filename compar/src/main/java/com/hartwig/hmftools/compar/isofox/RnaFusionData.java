@@ -1,21 +1,10 @@
 package com.hartwig.hmftools.compar.isofox;
 
-import static java.lang.String.format;
-
-import static com.hartwig.hmftools.compar.common.CommonUtils.createMismatchFromDiffs;
-import static com.hartwig.hmftools.compar.common.DiffFunctions.checkDiff;
-
-import java.util.List;
-
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.rna.RnaFusion;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.common.CategoryType;
-import com.hartwig.hmftools.compar.common.FieldConfig;
-import com.hartwig.hmftools.compar.common.MatchLevel;
-import com.hartwig.hmftools.compar.common.Mismatch;
 
 public record RnaFusionData(RnaFusion RnaFusion, BasePosition ComparisonPositionUp, BasePosition ComparisonPositionDown)
         implements ComparableItem
@@ -50,27 +39,9 @@ public record RnaFusionData(RnaFusion RnaFusion, BasePosition ComparisonPosition
     }
 
     @Override
-    public List<String> displayValues()
-    {
-        List<String> values = Lists.newArrayList();
-        values.add(format("%s", RnaFusion.knownType()));
-        values.add(format("%s", RnaFusion.junctionTypeUp()));
-        values.add(format("%s", RnaFusion.junctionTypeDown()));
-        values.add(format("%d", RnaFusion.splitFragments()));
-
-        return values;
-    }
-
-    @Override
     public boolean reportable()
     {
         return RnaFusion.knownType() != KnownFusionType.NONE;
-    }
-
-    @Override
-    public boolean isPass()
-    {
-        return true;
     }
 
     @Override
@@ -94,22 +65,5 @@ public record RnaFusionData(RnaFusion RnaFusion, BasePosition ComparisonPosition
             return false;
         }
         return otherData.RnaFusion.positionDown() == ComparisonPositionDown.Position;
-    }
-
-    @Override
-    public Mismatch findMismatch(
-            final ComparableItem other, final MatchLevel matchLevel, final FieldConfig fieldConfig, final boolean includeMatches)
-    {
-        final RnaFusion ref = RnaFusion;
-        final RnaFusion otherData = ((RnaFusionData) other).RnaFusion;
-
-        final List<String> diffs = Lists.newArrayList();
-
-        checkDiff(diffs, FLD_KNOWN_TYPE, ref.knownType().toString(), otherData.knownType().toString());
-        checkDiff(diffs, FLD_JUNC_TYPE_UP, ref.junctionTypeUp(), otherData.junctionTypeUp());
-        checkDiff(diffs, FLD_JUNC_TYPE_DOWN, ref.junctionTypeDown(), otherData.junctionTypeDown());
-        checkDiff(diffs, FLD_SPLIT_FRAGS, ref.splitFragments(), otherData.splitFragments(), category(), fieldConfig);
-
-        return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches);
     }
 }

@@ -18,10 +18,12 @@ import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.CommonUtils;
-import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.SourceType;
+import com.hartwig.hmftools.compar.common.field.DoubleField;
+import com.hartwig.hmftools.compar.common.field.Field;
+import com.hartwig.hmftools.compar.common.field.IntField;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.jetbrains.annotations.NotNull;
@@ -47,15 +49,17 @@ public record IsofoxGeneDataComparer(ComparConfig mConfig) implements ItemCompar
     }
 
     @Override
-    public void registerThresholds(final FieldConfig fieldConfig)
+    public List<Field> fields()
     {
-        fieldConfig.addFieldThreshold(category(), FLD_SPLICED_FRAGS, 10, 0.05);
-        fieldConfig.addFieldThreshold(category(), FLD_UNSPLICED_FRAGS, 10, 0.05);
-        fieldConfig.addFieldThreshold(category(), FLD_ADJ_TPM, -1, 0.05);
+        return List.of(
+                new IntField(FLD_SPLICED_FRAGS, i -> ((IsofoxGeneData) i).GeneExpression().splicedFragments(), true, 10., 0.05),
+                new IntField(FLD_UNSPLICED_FRAGS, i -> ((IsofoxGeneData) i).GeneExpression().unsplicedFragments(), true, 10., 0.05),
+                new DoubleField(FLD_ADJ_TPM, i -> ((IsofoxGeneData) i).GeneExpression().tpm(), true, null, 0.05, "%.2f")
+        );
     }
 
     @Override
-    public List<String> comparedFieldNames()
+    public List<String> displayFieldNames()
     {
         return List.of(FLD_SPLICED_FRAGS, FLD_UNSPLICED_FRAGS, FLD_ADJ_TPM);
     }

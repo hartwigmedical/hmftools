@@ -1,8 +1,5 @@
 package com.hartwig.hmftools.compar.common;
 
-import java.util.Collections;
-import java.util.List;
-
 import com.hartwig.hmftools.compar.ComparableItem;
 
 public class InvalidDataItem implements ComparableItem
@@ -16,9 +13,6 @@ public class InvalidDataItem implements ComparableItem
 
     @Override
     public String key() { return ""; }
-
-    @Override
-    public List<String> displayValues() { return Collections.emptyList(); }
 
     @Override
     public boolean matches(final ComparableItem other) { return false; }

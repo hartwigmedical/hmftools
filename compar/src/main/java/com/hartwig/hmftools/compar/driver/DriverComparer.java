@@ -3,7 +3,9 @@ package com.hartwig.hmftools.compar.driver;
 import static com.hartwig.hmftools.common.driver.DriverType.DRIVERS_LINX_GERMLINE;
 import static com.hartwig.hmftools.common.driver.DriverType.DRIVERS_LINX_SOMATIC;
 import static com.hartwig.hmftools.common.driver.DriverType.DRIVERS_PURPLE_SOMATIC_COPY_NUMBER;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.compar.common.CategoryType.DRIVER;
+import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_CHROMOSOME_BAND;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.CommonUtils.determineComparisonChromosome;
 import static com.hartwig.hmftools.compar.common.SourceType.NEW;
@@ -34,12 +36,14 @@ import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.SourceData;
 import com.hartwig.hmftools.compar.common.SourceType;
+import com.hartwig.hmftools.compar.common.field.DoubleField;
+import com.hartwig.hmftools.compar.common.field.Field;
+import com.hartwig.hmftools.compar.common.field.StringField;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class DriverComparer implements ItemComparer
@@ -63,11 +67,16 @@ public class DriverComparer implements ItemComparer
     public CategoryType category() { return DRIVER; }
 
     @Override
-    public void registerThresholds(final FieldConfig fieldConfig)
+    public List<Field> fields()
     {
-        fieldConfig.addFieldThreshold(category(), FLD_LIKELIHOOD, 0.1, 0);
-        fieldConfig.addFieldThreshold(category(), FLD_MIN_COPY_NUMBER, 0.3, 0.15);
-        fieldConfig.addFieldThreshold(category(), FLD_MAX_COPY_NUMBER, 0.3, 0.15);
+        return List.of(
+                new StringField(FLD_LIKE_METHOD, i -> ((DriverData) i).DriverCatalog.likelihoodMethod().toString(), true),
+                new DoubleField(FLD_LIKELIHOOD, i -> ((DriverData) i).DriverCatalog.driverLikelihood(), true, 0.1, null, "%.2f"),
+                new DoubleField(FLD_MIN_COPY_NUMBER, i -> ((DriverData) i).DriverCatalog.minCopyNumber(), true, 0.3, 0.15, "%.2f"),
+                new DoubleField(FLD_MAX_COPY_NUMBER, i -> ((DriverData) i).DriverCatalog.maxCopyNumber(), true, 0.3, 0.15, "%.2f"),
+                new StringField(FLD_CHROMOSOME, i -> ((DriverData) i).mComparisonChromosome, true),
+                new StringField(FLD_CHROMOSOME_BAND, i -> ((DriverData) i).DriverCatalog.chromosomeBand(), true)
+        );
     }
 
     @Override
@@ -155,7 +164,7 @@ public class DriverComparer implements ItemComparer
     }
 
     @Override
-    public List<String> comparedFieldNames()
+    public List<String> displayFieldNames()
     {
         return Lists.newArrayList(FLD_LIKE_METHOD, FLD_LIKELIHOOD, FLD_MIN_COPY_NUMBER, FLD_MAX_COPY_NUMBER);
     }

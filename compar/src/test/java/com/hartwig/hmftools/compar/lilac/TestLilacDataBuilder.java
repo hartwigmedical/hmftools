@@ -20,12 +20,12 @@ public class TestLilacDataBuilder
     public int discardedAlignmentFragments = 30;
     public String hlaYAllele = "NONE";
     public List<LilacAllele> alleles = List.of(
-            TestLilacAlleleBuilder.BUILDER.create(b -> b.allele = "A*01:01"),
-            TestLilacAlleleBuilder.BUILDER.create(b -> b.allele = "A*01:01"),
-            TestLilacAlleleBuilder.BUILDER.createWithAlternateDefaults(b -> b.allele = "B*01:01"),
-            TestLilacAlleleBuilder.BUILDER.createWithAlternateDefaults(b -> b.allele = "B*01:02"),
-            TestLilacAlleleBuilder.BUILDER.create(b -> b.allele = "C*02:01"),
-            TestLilacAlleleBuilder.BUILDER.createWithAlternateDefaults(b -> b.allele = "C*03:04")
+            TestLilacAlleleDataBuilder.BUILDER.create(b -> b.allele = "A*01:01").Allele,
+            TestLilacAlleleDataBuilder.BUILDER.create(b -> b.allele = "A*01:01").Allele,
+            TestLilacAlleleDataBuilder.BUILDER.createWithAlternateDefaults(b -> b.allele = "B*01:01").Allele,
+            TestLilacAlleleDataBuilder.BUILDER.createWithAlternateDefaults(b -> b.allele = "B*01:02").Allele,
+            TestLilacAlleleDataBuilder.BUILDER.create(b -> b.allele = "C*02:01").Allele,
+            TestLilacAlleleDataBuilder.BUILDER.createWithAlternateDefaults(b -> b.allele = "C*03:04").Allele
     );
 
     private static final Consumer<TestLilacDataBuilder> ALTERNATE_INITIALIZER = b ->
@@ -38,12 +38,12 @@ public class TestLilacDataBuilder
         b.discardedAlignmentFragments = 50;
         b.hlaYAllele = "Y*02:01";
         b.alleles = List.of(
-                TestLilacAlleleBuilder.BUILDER.createWithAlternateDefaults(c -> c.allele = "A*01:01"),
-                TestLilacAlleleBuilder.BUILDER.createWithAlternateDefaults(c -> c.allele = "A*01:01"),
-                TestLilacAlleleBuilder.BUILDER.create(c -> c.allele = "B*01:01"),
-                TestLilacAlleleBuilder.BUILDER.create(c -> c.allele = "B*01:02"),
-                TestLilacAlleleBuilder.BUILDER.createWithAlternateDefaults(c -> c.allele = "C*02:01"),
-                TestLilacAlleleBuilder.BUILDER.create(c -> c.allele = "C*04:05")
+                TestLilacAlleleDataBuilder.BUILDER.createWithAlternateDefaults(c -> c.allele = "A*01:01").Allele,
+                TestLilacAlleleDataBuilder.BUILDER.createWithAlternateDefaults(c -> c.allele = "A*01:01").Allele,
+                TestLilacAlleleDataBuilder.BUILDER.create(c -> c.allele = "B*01:01").Allele,
+                TestLilacAlleleDataBuilder.BUILDER.create(c -> c.allele = "B*01:02").Allele,
+                TestLilacAlleleDataBuilder.BUILDER.createWithAlternateDefaults(c -> c.allele = "C*02:01").Allele,
+                TestLilacAlleleDataBuilder.BUILDER.create(c -> c.allele = "C*04:05").Allele
         );
     };
 

@@ -2,7 +2,7 @@ package com.hartwig.hmftools.compar.mutation;
 
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_QUAL;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
-import static com.hartwig.hmftools.compar.common.DiffFunctions.FILTER_DIFF;
+import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_FILTER;
 import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_CANON_EFFECT;
 import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_CODING_EFFECT;
 import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_GENE;
@@ -67,7 +67,7 @@ public class GermlineVariantDataTest extends ComparableItemTest<GermlineVariantD
                 alternateValueSource.Variant.allelicDepth().AlleleReadCount);
         fieldToAlternateValueInitializer.put(FLD_TUMOR_TOTAL_READ_COUNT, b -> b.tumorTotalReadCount =
                 alternateValueSource.Variant.allelicDepth().TotalReadCount);
-        fieldToAlternateValueInitializer.put(FILTER_DIFF, b -> b.filters = alternateValueSource.Filters);
+        fieldToAlternateValueInitializer.put(FLD_FILTER, b -> b.filters = alternateValueSource.Filters);
 
         nameToAlternateIndexInitializer = Map.of(
                 "Chromosome", b ->

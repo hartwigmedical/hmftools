@@ -30,11 +30,15 @@ import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.SourceType;
+import com.hartwig.hmftools.compar.common.field.DoubleField;
+import com.hartwig.hmftools.compar.common.field.Field;
+import com.hartwig.hmftools.compar.common.field.IntField;
+import com.hartwig.hmftools.compar.common.field.StringField;
+import com.hartwig.hmftools.compar.common.field.StringListField;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class PurityComparer implements ItemComparer
@@ -50,18 +54,27 @@ public class PurityComparer implements ItemComparer
     public CategoryType category() { return PURITY; }
 
     @Override
-    public void registerThresholds(final FieldConfig fieldConfig)
+    public List<Field> fields()
     {
-        fieldConfig.addFieldThreshold(category(), FLD_PURITY, 0.04, 0);
-        fieldConfig.addFieldThreshold(category(), FLD_PLOIDY, 0.1, 0);
-        fieldConfig.addFieldThreshold(category(), FLD_CONTAMINATION, 0.005, 0);
-        fieldConfig.addFieldThreshold(category(), FLD_TMB, 0.1, 0.05);
-        fieldConfig.addFieldThreshold(category(), FLD_MS_INDELS, 0.1, 0.05);
-        fieldConfig.addFieldThreshold(category(), FLD_TML, 1, 0.05);
-        fieldConfig.addFieldThreshold(category(), FLD_CN_SEGS, 5, 0.2);
-        fieldConfig.addFieldThreshold(category(), FLD_UNS_CN_SEGS, 5, 0.2);
-        fieldConfig.addFieldThreshold(category(), FLD_SV_TMB, 5, 0.05);
-        fieldConfig.addFieldThreshold(category(), FLD_TINC_LEVEL, 0.1, 0);
+        return List.of(
+                new DoubleField(FLD_PURITY, i -> ((PurityData) i).Purity.bestFit().purity(), true, 0.04, null, "%.2f"),
+                new DoubleField(FLD_PLOIDY, i -> ((PurityData) i).Purity.bestFit().ploidy(), true, 0.1, null, "%.2f"),
+                new DoubleField(FLD_CONTAMINATION, i -> ((PurityData) i).Purity.qc().contamination(), true, 0.005, null, "%.4f"),
+                new DoubleField(FLD_TMB, i -> ((PurityData) i).Purity.tumorMutationalBurdenPerMb(), true, 0.1, 0.05, "%.2f"),
+                new DoubleField(FLD_MS_INDELS, i -> ((PurityData) i).Purity.microsatelliteIndelsPerMb(), true, 0.1, 0.05, "%.4f"),
+                new IntField(FLD_TML, i -> ((PurityData) i).Purity.tumorMutationalLoad(), true, 1., 0.05),
+                new IntField(FLD_CN_SEGS, i -> ((PurityData) i).Purity.qc().copyNumberSegments(), true, 5., 0.2),
+                new IntField(FLD_UNS_CN_SEGS, i -> ((PurityData) i).Purity.qc().unsupportedCopyNumberSegments(), true, 5., 0.2),
+                new IntField(FLD_SV_TMB, i -> ((PurityData) i).Purity.svTumorMutationalBurden(), true, 5., 0.05),
+                new StringListField(FLD_QC_STATUS, i -> qcStatus(((PurityData) i)), true),
+                new StringField(FLD_GENDER, i -> ((PurityData) i).Purity.gender().toString(), true),
+                new StringListField(FLD_GERM_ABS, i -> germlineAberrations(((PurityData) i)), true),
+                new StringField(FLD_FIT_METHOD, i -> ((PurityData) i).Purity.method().toString(), true),
+                new StringField(FLD_MS_STATUS, i -> ((PurityData) i).Purity.microsatelliteStatus().toString(), true),
+                new StringField(FLD_TMB_STATUS, i -> ((PurityData) i).Purity.tumorMutationalBurdenStatus().toString(), true),
+                new StringField(FLD_TML_STATUS, i -> ((PurityData) i).Purity.tumorMutationalLoadStatus().toString(), true),
+                new DoubleField(FLD_TINC_LEVEL, i -> ((PurityData) i).Purity.qc().tincLevel(), true, 0.1, null, "%.2f")
+        );
     }
 
     @Override
@@ -71,7 +84,7 @@ public class PurityComparer implements ItemComparer
     }
 
     @Override
-    public List<String> comparedFieldNames()
+    public List<String> displayFieldNames()
     {
         return Lists.newArrayList(
                 FLD_PURITY, FLD_PLOIDY, FLD_CONTAMINATION, FLD_TMB, FLD_TML, FLD_MS_INDELS, FLD_SV_TMB, FLD_CN_SEGS ,FLD_UNS_CN_SEGS,
@@ -106,5 +119,21 @@ public class PurityComparer implements ItemComparer
         }
 
         return comparableItems;
+    }
+
+    static List<String> germlineAberrations(final PurityData purityData)
+    {
+        return purityData.Purity.qc().germlineAberrations().stream()
+                .map(a -> a.toString())
+                .sorted()
+                .toList();
+    }
+
+    static List<String> qcStatus(final PurityData purityData)
+    {
+        return purityData.Purity.qc().status().stream()
+                .map(s -> s.toString())
+                .sorted()
+                .toList();
     }
 }

@@ -9,7 +9,6 @@ import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.CurationType.EXPECTED;
 import static com.hartwig.hmftools.compar.common.CurationType.INVALID;
 import static com.hartwig.hmftools.compar.common.CurationType.NONE;
-import static com.hartwig.hmftools.compar.common.DiffFunctions.diffsStr;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -29,6 +28,7 @@ import com.hartwig.hmftools.compar.common.CurationType;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.KnownMismatch;
 import com.hartwig.hmftools.compar.common.MismatchType;
+import com.hartwig.hmftools.compar.common.field.Field;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -102,21 +102,20 @@ public class MismatchFile
         return sj.toString();
     }
 
-    public static String toTsv(final Mismatch mismatch, boolean writeFieldValues, final List<String> comparedFieldsNames)
+    public static String toTsv(final Mismatch mismatch, boolean writeFieldValues, final List<Field> displayFields)
     {
         StringJoiner sj = new StringJoiner(TSV_DELIM);
 
         sj.add(commonTsv(!writeFieldValues, mismatch));
 
-        sj.add(diffsStr(mismatch.DiffValues));
+        sj.add(String.join(ITEM_DELIM, mismatch.DiffValues));
 
         if(writeFieldValues)
         {
-            List<String> oldFieldValues = mismatch.OldItem != null ? mismatch.OldItem.displayValues() : null;
-            List<String> newFieldValues = mismatch.NewItem != null ? mismatch.NewItem.displayValues() : null;
-            int fieldCount = oldFieldValues != null ? oldFieldValues.size() : newFieldValues.size();
+            List<String> oldFieldValues = mismatch.OldItem != null ? getItemDisplayValues(mismatch.OldItem, displayFields) : null;
+            List<String> newFieldValues = mismatch.NewItem != null ? getItemDisplayValues(mismatch.NewItem, displayFields) : null;
 
-            for(int i = 0; i < fieldCount; ++i)
+            for(int i = 0; i < displayFields.size(); ++i)
             {
                 if(oldFieldValues != null)
                     sj.add(oldFieldValues.get(i));
@@ -131,25 +130,25 @@ public class MismatchFile
         }
         else
         {
-            sj.add(itemValues(mismatch.OldItem, comparedFieldsNames));
-            sj.add(itemValues(mismatch.NewItem, comparedFieldsNames));
+            sj.add(itemValues(mismatch.OldItem, displayFields));
+            sj.add(itemValues(mismatch.NewItem, displayFields));
         }
 
         return sj.toString();
     }
 
-    private static String itemValues(final ComparableItem item, final List<String> comparedFieldsNames)
+    private static String itemValues(final ComparableItem item, final List<Field> displayFields)
     {
         if(item == null)
             return "";
 
         StringJoiner displaySj = new StringJoiner(ITEM_DELIM);
 
-        List<String> itemDisplayValues = item.displayValues();
+        List<String> itemDisplayValues = getItemDisplayValues(item, displayFields);
 
         for(int i = 0; i < itemDisplayValues.size(); ++i)
         {
-            displaySj.add(format("%s=%s", comparedFieldsNames.get(i), itemDisplayValues.get(i)));
+            displaySj.add(format("%s=%s", displayFields.get(i).name(), itemDisplayValues.get(i)));
         }
 
         for(String extraInfo : item.extraInfoValues())
@@ -259,5 +258,13 @@ public class MismatchFile
 
     }
 
-
+    private static List<String> getItemDisplayValues(final ComparableItem item, final List<Field> displayFields)
+    {
+        List<String> values = Lists.newArrayList();
+        for (Field field : displayFields)
+        {
+            values.add(field.displayValue(item));
+        }
+        return values;
+    }
 }

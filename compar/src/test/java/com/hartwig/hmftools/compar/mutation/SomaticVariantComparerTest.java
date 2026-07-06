@@ -11,7 +11,6 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.compar.ComparConfig;
-import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.MismatchType;
@@ -26,8 +25,7 @@ public class SomaticVariantComparerTest
         ComparConfig config = new ComparConfig();
         SomaticVariantComparer victim = new SomaticVariantComparer(config);
 
-        FieldConfig fieldConfig = new FieldConfig();
-        victim.registerThresholds(fieldConfig);
+        config.FieldConfig.registerFields(victim);
 
         String sampleId = "TEST";
         List<Mismatch> mismatches = new ArrayList<>();
@@ -45,8 +43,7 @@ public class SomaticVariantComparerTest
         ComparConfig config = new ComparConfig();
         SomaticVariantComparer victim = new SomaticVariantComparer(config);
 
-        FieldConfig fieldConfig = new FieldConfig();
-        victim.registerThresholds(fieldConfig);
+        config.FieldConfig.registerFields(victim);
 
         String sampleId = "TEST";
         List<Mismatch> mismatches = new ArrayList<>();
@@ -100,8 +97,7 @@ public class SomaticVariantComparerTest
         ComparConfig config = new ComparConfig();
         SomaticVariantComparer victim = new SomaticVariantComparer(config);
 
-        FieldConfig fieldConfig = new FieldConfig();
-        victim.registerThresholds(fieldConfig);
+        config.FieldConfig.registerFields(victim);
 
         String sampleId = "TEST";
         List<Mismatch> mismatches = new ArrayList<>();
@@ -151,8 +147,7 @@ public class SomaticVariantComparerTest
         ComparConfig config = new ComparConfig();
         SomaticVariantComparer victim = new SomaticVariantComparer(config);
 
-        FieldConfig fieldConfig = new FieldConfig();
-        victim.registerThresholds(fieldConfig);
+        config.FieldConfig.registerFields(victim);
 
         String sampleId = "TEST";
         List<Mismatch> mismatches = new ArrayList<>();
@@ -182,8 +177,7 @@ public class SomaticVariantComparerTest
         ComparConfig config = new ComparConfig();
         SomaticVariantComparer victim = new SomaticVariantComparer(config);
 
-        FieldConfig fieldConfig = new FieldConfig();
-        victim.registerThresholds(fieldConfig);
+        config.FieldConfig.registerFields(victim);
 
         String sampleId = "TEST";
         List<Mismatch> mismatches = new ArrayList<>();
@@ -200,8 +194,7 @@ public class SomaticVariantComparerTest
         ComparConfig config = new ComparConfig();
         SomaticVariantComparer victim = new SomaticVariantComparer(config);
 
-        FieldConfig fieldConfig = new FieldConfig();
-        victim.registerThresholds(fieldConfig);
+        config.FieldConfig.registerFields(victim);
 
         String sampleId = "TEST";
         List<Mismatch> mismatches = new ArrayList<>();
@@ -222,8 +215,7 @@ public class SomaticVariantComparerTest
         ComparConfig config = new ComparConfig();
         SomaticVariantComparer victim = new SomaticVariantComparer(config);
 
-        FieldConfig fieldConfig = new FieldConfig();
-        victim.registerThresholds(fieldConfig);
+        config.FieldConfig.registerFields(victim);
 
         String sampleId = "TEST";
         List<Mismatch> mismatches = new ArrayList<>();

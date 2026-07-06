@@ -14,10 +14,11 @@ import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.CommonUtils;
-import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.SourceType;
+import com.hartwig.hmftools.compar.common.field.Field;
+import com.hartwig.hmftools.compar.common.field.IntField;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class Cdr3LocusSummaryComparer implements ItemComparer
@@ -32,10 +33,11 @@ public class Cdr3LocusSummaryComparer implements ItemComparer
     @Override
     public CategoryType category() { return CDR3_LOCUS_SUMMARY; }
 
-    @Override
-    public void registerThresholds(final FieldConfig fieldConfig)
+    public List<Field> fields()
     {
-        fieldConfig.addFieldThreshold(category(), PASS_SEQUENCES_FIELD, Double.NaN, 0.05);
+        return List.of(
+                new IntField(PASS_SEQUENCES_FIELD, i -> ((Cdr3LocusSummaryData) i).Cdr3LocusSummary.passSequences(), true, null, 0.05)
+        );
     }
 
     @Override
@@ -45,9 +47,9 @@ public class Cdr3LocusSummaryComparer implements ItemComparer
     }
 
     @Override
-    public List<String> comparedFieldNames()
+    public List<String> displayFieldNames()
     {
-        return Cdr3LocusSummaryData.comparedFieldNames();
+        return List.of(PASS_SEQUENCES_FIELD);
     }
 
     @Override

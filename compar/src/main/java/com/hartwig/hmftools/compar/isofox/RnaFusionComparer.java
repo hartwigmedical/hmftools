@@ -19,10 +19,12 @@ import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.CommonUtils;
-import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.SourceType;
+import com.hartwig.hmftools.compar.common.field.Field;
+import com.hartwig.hmftools.compar.common.field.IntField;
+import com.hartwig.hmftools.compar.common.field.StringField;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public record RnaFusionComparer(ComparConfig mConfig) implements ItemComparer
@@ -46,13 +48,18 @@ public record RnaFusionComparer(ComparConfig mConfig) implements ItemComparer
     }
 
     @Override
-    public void registerThresholds(final FieldConfig fieldConfig)
+    public List<Field> fields()
     {
-        fieldConfig.addFieldThreshold(category(), FLD_SPLIT_FRAGS, 5, 0.05);
+        return List.of(
+                new StringField(FLD_KNOWN_TYPE, i -> ((RnaFusionData) i).RnaFusion().knownType().toString(), true),
+                new StringField(FLD_JUNC_TYPE_UP, i -> ((RnaFusionData) i).RnaFusion().junctionTypeUp(), true),
+                new StringField(FLD_JUNC_TYPE_DOWN, i -> ((RnaFusionData) i).RnaFusion().junctionTypeDown(), true),
+                new IntField(FLD_SPLIT_FRAGS, i -> ((RnaFusionData) i).RnaFusion().splitFragments(), true, 5., 0.05)
+        );
     }
 
     @Override
-    public List<String> comparedFieldNames()
+    public List<String> displayFieldNames()
     {
         return List.of(FLD_KNOWN_TYPE, FLD_JUNC_TYPE_UP, FLD_JUNC_TYPE_DOWN, FLD_SPLIT_FRAGS);
     }

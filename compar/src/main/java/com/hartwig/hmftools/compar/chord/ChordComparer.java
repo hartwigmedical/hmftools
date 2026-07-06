@@ -20,11 +20,13 @@ import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.SourceType;
+import com.hartwig.hmftools.compar.common.field.DoubleField;
+import com.hartwig.hmftools.compar.common.field.Field;
+import com.hartwig.hmftools.compar.common.field.StringField;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class ChordComparer implements ItemComparer
@@ -41,12 +43,15 @@ public class ChordComparer implements ItemComparer
     @Override
     public CategoryType category() { return CHORD; }
 
-    @Override
-    public void registerThresholds(final FieldConfig fieldConfig)
+    public List<Field> fields()
     {
-        fieldConfig.addFieldThreshold(category(), FLD_BRCA1, 0.1, 0);
-        fieldConfig.addFieldThreshold(category(), FLD_BRCA2, 0.1, 0);
-        fieldConfig.addFieldThreshold(category(), FLD_SCORE, 0.1, 0);
+        return List.of(
+                new DoubleField(FLD_BRCA1, i -> ((ChordComparData) i).Chord.BRCA1Value(), true, 0.1, null, "%.2f"),
+                new DoubleField(FLD_BRCA2, i -> ((ChordComparData) i).Chord.BRCA2Value(), true, 0.1, null, "%.2f"),
+                new DoubleField(FLD_SCORE, i -> ((ChordComparData) i).Chord.hrdValue(), true, 0.1, null, "%.2f"),
+                new StringField(FLD_TYPE, i -> ((ChordComparData) i).Chord.hrdType(), true),
+                new StringField(FLD_STATUS, i -> ((ChordComparData) i).Chord.hrStatus().toString(), true)
+        );
     }
 
     @Override
@@ -56,7 +61,7 @@ public class ChordComparer implements ItemComparer
     }
 
     @Override
-    public List<String> comparedFieldNames()
+    public List<String> displayFieldNames()
     {
         return Lists.newArrayList(FLD_BRCA1, FLD_BRCA2, FLD_SCORE, FLD_STATUS, FLD_TYPE);
     }

@@ -10,7 +10,6 @@ import static com.hartwig.hmftools.compar.linx.FusionData.FLD_DOMAINS_KEPT;
 import static com.hartwig.hmftools.compar.linx.FusionData.FLD_DOMAINS_LOST;
 import static com.hartwig.hmftools.compar.linx.FusionData.FLD_EXON_DOWN;
 import static com.hartwig.hmftools.compar.linx.FusionData.FLD_EXON_UP;
-import static com.hartwig.hmftools.compar.linx.FusionData.FLD_JUNCTION_COPY_NUMBER;
 import static com.hartwig.hmftools.compar.linx.FusionData.FLD_LIKELIHOOD;
 import static com.hartwig.hmftools.compar.linx.FusionData.FLD_PHASED;
 import static com.hartwig.hmftools.compar.linx.FusionData.FLD_REPORTED_TYPE;
@@ -28,11 +27,13 @@ import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.SourceType;
+import com.hartwig.hmftools.compar.common.field.Field;
+import com.hartwig.hmftools.compar.common.field.IntField;
+import com.hartwig.hmftools.compar.common.field.StringField;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class FusionComparer implements ItemComparer
@@ -52,9 +53,20 @@ public class FusionComparer implements ItemComparer
     public CategoryType category() { return FUSION; }
 
     @Override
-    public void registerThresholds(final FieldConfig fieldConfig)
+    public List<Field> fields()
     {
-        fieldConfig.addFieldThreshold(category(), FLD_JUNCTION_COPY_NUMBER, 0.5, 0.2);
+        return List.of(
+                new StringField(FLD_REPORTED, i -> String.valueOf(((FusionData) i).Fusion.reported()), true),
+                new StringField(FLD_REPORTED_TYPE, i -> ((FusionData) i).Fusion.reportedType(), true),
+                new StringField(FLD_PHASED, i -> ((FusionData) i).Fusion.phased().toString(), true),
+                new StringField(FLD_LIKELIHOOD, i -> ((FusionData) i).Fusion.likelihood().toString(), true),
+                new IntField(FLD_EXON_UP, i -> ((FusionData) i).Fusion.fusedExonUp(), true, null, null),
+                new IntField(FLD_EXON_DOWN, i -> ((FusionData) i).Fusion.fusedExonDown(), true, null, null),
+                new IntField(FLD_CHAIN_LINKS, i -> ((FusionData) i).Fusion.chainLinks(), true, null, null),
+                new StringField(FLD_CHAIN_TERM, i -> String.valueOf(((FusionData) i).Fusion.chainTerminated()), true),
+                new StringField(FLD_DOMAINS_KEPT, i -> ((FusionData) i).Fusion.domainsKept(), true),
+                new StringField(FLD_DOMAINS_LOST, i -> ((FusionData) i).Fusion.domainsLost(), true)
+        );
     }
 
     @Override
@@ -64,7 +76,7 @@ public class FusionComparer implements ItemComparer
     }
 
     @Override
-    public List<String> comparedFieldNames()
+    public List<String> displayFieldNames()
     {
         return Lists.newArrayList(
                 FLD_REPORTED, FLD_REPORTED_TYPE, FLD_PHASED, FLD_LIKELIHOOD, FLD_EXON_UP,

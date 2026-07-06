@@ -18,11 +18,13 @@ import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.SourceType;
+import com.hartwig.hmftools.compar.common.field.DoubleField;
+import com.hartwig.hmftools.compar.common.field.Field;
+import com.hartwig.hmftools.compar.common.field.StringField;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class CopyNumberComparer implements ItemComparer
@@ -38,10 +40,13 @@ public class CopyNumberComparer implements ItemComparer
     public CategoryType category() { return COPY_NUMBER; }
 
     @Override
-    public void registerThresholds(final FieldConfig fieldConfig)
+    public List<Field> fields()
     {
-        fieldConfig.addFieldThreshold(category(), FLD_COPY_NUMBER, 0.5, 0.15);
-        fieldConfig.addFieldThreshold(category(), FLD_MAJOR_ALLELE_CN, 0.5, 0.15);
+        return List.of(
+                new DoubleField(FLD_COPY_NUMBER, i -> ((CopyNumberData) i).copyNumber(), true, 0.5, 0.15, "%.2f"),
+                new DoubleField(FLD_MAJOR_ALLELE_CN, i -> ((CopyNumberData) i).majorAlleleCopyNumber(), true, 0.5, 0.15, "%.2f"),
+                new StringField(FLD_METHOD, i -> ((CopyNumberData) i).method().toString(), true)
+        );
     }
 
     @Override
@@ -54,7 +59,7 @@ public class CopyNumberComparer implements ItemComparer
     }
 
     @Override
-    public List<String> comparedFieldNames()
+    public List<String> displayFieldNames()
     {
         return Lists.newArrayList(FLD_COPY_NUMBER, FLD_MAJOR_ALLELE_CN, FLD_METHOD);
     }

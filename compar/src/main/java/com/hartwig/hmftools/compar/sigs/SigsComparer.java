@@ -13,10 +13,11 @@ import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.CommonUtils;
-import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.SourceType;
+import com.hartwig.hmftools.compar.common.field.DoubleField;
+import com.hartwig.hmftools.compar.common.field.Field;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public record SigsComparer(ComparConfig mConfig) implements ItemComparer
@@ -40,13 +41,15 @@ public record SigsComparer(ComparConfig mConfig) implements ItemComparer
     }
 
     @Override
-    public void registerThresholds(final FieldConfig fieldConfig)
+    public List<Field> fields()
     {
-        fieldConfig.addFieldThreshold(category(), FLD_PERCENT, 0.05, -1);
+        return List.of(
+                new DoubleField(FLD_PERCENT, i -> ((SigsData) i).SignatureAllocation().percent(), true, 0.05, null, "%.4f")
+        );
     }
 
     @Override
-    public List<String> comparedFieldNames()
+    public List<String> displayFieldNames()
     {
         return List.of(FLD_PERCENT);
     }

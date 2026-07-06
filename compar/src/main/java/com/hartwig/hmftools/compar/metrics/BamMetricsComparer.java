@@ -19,10 +19,11 @@ import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.CommonUtils;
-import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.SourceType;
+import com.hartwig.hmftools.compar.common.field.DoubleField;
+import com.hartwig.hmftools.compar.common.field.Field;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class BamMetricsComparer implements ItemComparer
@@ -54,21 +55,23 @@ public class BamMetricsComparer implements ItemComparer
         return CommonUtils.processSample(this, mConfig, sampleId, mismatches);
     }
 
-    @Override
-    public void registerThresholds(final FieldConfig fieldConfig)
-    {
-        fieldConfig.addFieldThreshold(category(), FLD_DUPLICATE_PERCENTAGE, DUPLICATE_PERCENTAGE_ABS_THRESHOLD, DUPLICATE_PERCENTAGE_PCT_THRESHOLD);
-
-        for(Integer coverage : mComparisonPercentages)
-        {
-            fieldConfig.addFieldThreshold(category(), coverageString(coverage), 0.03, 0);
-        }
-    }
-
     protected static String coverageString(final int coverage) { return format("Percentage%dX", coverage); }
 
     @Override
-    public List<String> comparedFieldNames()
+    public List<Field> fields()
+    {
+        List<Field> fields = Lists.newArrayList();
+        fields.add(new DoubleField(FLD_DUPLICATE_PERCENTAGE, i -> ((BamMetricsData) i).metrics().duplicatePercent(), true, DUPLICATE_PERCENTAGE_ABS_THRESHOLD, DUPLICATE_PERCENTAGE_PCT_THRESHOLD, "%.2f"));
+        for(Integer coverage : mComparisonPercentages)
+        {
+            final String coverageStr = coverageString(coverage);
+            fields.add(new DoubleField(coverageStr, i -> ((BamMetricsData) i).metrics().coveragePercent(coverage), true, 0.03, null, "%.2f"));
+        }
+        return fields;
+    }
+
+    @Override
+    public List<String> displayFieldNames()
     {
         List<String> fieldNames = Lists.newArrayList(FLD_DUPLICATE_PERCENTAGE);
         for(Integer coverage : mComparisonPercentages)
@@ -93,7 +96,7 @@ public class BamMetricsComparer implements ItemComparer
         try
         {
             BamMetricSummary metrics = loadBamMetricsSummary(sampleId, fileSources.TumorBamMetrics);
-            comparableItems.add(new BamMetricsData(mCategory, metrics, mComparisonPercentages));
+            comparableItems.add(new BamMetricsData(mCategory, metrics));
         }
         catch(IOException e)
         {

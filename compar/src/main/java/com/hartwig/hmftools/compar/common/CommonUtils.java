@@ -37,6 +37,7 @@ import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.chord.ChordComparer;
 import com.hartwig.hmftools.compar.cider.Cdr3LocusSummaryComparer;
 import com.hartwig.hmftools.compar.cider.CiderVdjComparer;
+import com.hartwig.hmftools.compar.common.field.Field;
 import com.hartwig.hmftools.compar.cuppa.CuppaComparer;
 import com.hartwig.hmftools.compar.cuppa.CuppaImageComparer;
 import com.hartwig.hmftools.compar.driver.DriverComparer;
@@ -45,6 +46,7 @@ import com.hartwig.hmftools.compar.isofox.IsofoxSummaryComparer;
 import com.hartwig.hmftools.compar.isofox.IsofoxTranscriptDataComparer;
 import com.hartwig.hmftools.compar.isofox.NovelSpliceJunctionComparer;
 import com.hartwig.hmftools.compar.isofox.RnaFusionComparer;
+import com.hartwig.hmftools.compar.lilac.LilacAlleleComparer;
 import com.hartwig.hmftools.compar.lilac.LilacComparer;
 import com.hartwig.hmftools.compar.linx.DisruptionComparer;
 import com.hartwig.hmftools.compar.linx.FusionComparer;
@@ -69,6 +71,7 @@ public class CommonUtils
     public static final String FLD_REPORTED = "Reported";
     public static final String FLD_QUAL = "Qual";
     public static final String FLD_CHROMOSOME_BAND = "ChromosomeBand";
+    public static final String FLD_FILTER = "filter";
 
     public static List<ItemComparer> buildComparers(final ComparConfig config)
     {
@@ -91,7 +94,7 @@ public class CommonUtils
                 continue;
             }
 
-            comparer.registerThresholds(config.FieldConfig);
+            config.FieldConfig.registerFields(comparer);
             comparers.add(comparer);
         }
 
@@ -160,6 +163,9 @@ public class CommonUtils
 
             case LILAC:
                 return new LilacComparer(config);
+
+            case LILAC_ALLELE:
+                return new LilacAlleleComparer(config);
 
             case GERMLINE_SV:
                 return new GermlineSvComparer(config);
@@ -339,6 +345,19 @@ public class CommonUtils
 
         items2.stream().filter(x -> matchLevel != REPORTABLE || x.reportable())
                 .forEach(x -> mismatches.add(new Mismatch(null, x, NEW_ONLY, emptyDiffs)));
+    }
+
+    public static List<String> findDiffs(final ComparableItem oldItem, final ComparableItem newItem, List<Field> fields)
+    {
+        final List<String> diffs = Lists.newArrayList();
+        for(Field field : fields)
+        {
+            if(field.isCompared())
+            {
+                diffs.addAll(field.determineDiffs(oldItem, newItem));
+            }
+        }
+        return diffs;
     }
 
     public static BasePosition determineComparisonGenomePosition(

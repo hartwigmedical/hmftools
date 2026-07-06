@@ -52,6 +52,6 @@ public class TestBamMetricsDataBuilder
                 .cappedCoveragePercent(-1)
                 .build();
 
-        return new BamMetricsData(TUMOR_BAM_METRICS, bamMetricSummary, TUMOR_COVERAGE_PERCENTAGES);
+        return new BamMetricsData(TUMOR_BAM_METRICS, bamMetricSummary);
     }
 }

@@ -20,10 +20,11 @@ import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.CommonUtils;
-import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.SourceType;
+import com.hartwig.hmftools.compar.common.field.DoubleField;
+import com.hartwig.hmftools.compar.common.field.Field;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class VChordComparer implements ItemComparer
@@ -39,13 +40,15 @@ public class VChordComparer implements ItemComparer
     public CategoryType category() { return V_CHORD; }
 
     @Override
-    public void registerThresholds(final FieldConfig fieldConfig)
+    public List<Field> fields()
     {
-        fieldConfig.addFieldThreshold(category(), FLD_BREAST, 0.1, 0);
-        fieldConfig.addFieldThreshold(category(), FLD_OVARIAN, 0.1, 0);
-        fieldConfig.addFieldThreshold(category(), FLD_PANCREATIC, 0.1, 0);
-        fieldConfig.addFieldThreshold(category(), FLD_PROSTATE, 0.1, 0);
-        fieldConfig.addFieldThreshold(category(), FLD_OTHER, 0.1, 0);
+        return List.of(
+                new DoubleField(FLD_BREAST, i -> ((VChordData) i).VChord().breastCancerHrdScore(), true, 0.1, null, "%.2f"),
+                new DoubleField(FLD_OVARIAN, i -> ((VChordData) i).VChord().ovarianCancerHrdScore(), true, 0.1, null, "%.2f"),
+                new DoubleField(FLD_PANCREATIC, i -> ((VChordData) i).VChord().pancreaticCancerScore(), true, 0.1, null, "%.2f"),
+                new DoubleField(FLD_PROSTATE, i -> ((VChordData) i).VChord().prostateCancerScore(), true, 0.1, null, "%.2f"),
+                new DoubleField(FLD_OTHER, i -> ((VChordData) i).VChord().otherCancerScore(), true, 0.1, null, "%.2f")
+        );
     }
 
     @Override
@@ -55,7 +58,7 @@ public class VChordComparer implements ItemComparer
     }
 
     @Override
-    public List<String> comparedFieldNames()
+    public List<String> displayFieldNames()
     {
         return Lists.newArrayList(FLD_BREAST, FLD_OVARIAN, FLD_PANCREATIC, FLD_PROSTATE, FLD_OTHER);
     }

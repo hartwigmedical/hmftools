@@ -17,10 +17,14 @@ import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.CommonUtils;
-import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.SourceType;
+import com.hartwig.hmftools.compar.common.field.BooleanField;
+import com.hartwig.hmftools.compar.common.field.DoubleField;
+import com.hartwig.hmftools.compar.common.field.Field;
+import com.hartwig.hmftools.compar.common.field.IntField;
+import com.hartwig.hmftools.compar.common.field.StringField;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class VirusComparer implements ItemComparer
@@ -39,10 +43,14 @@ public class VirusComparer implements ItemComparer
     }
 
     @Override
-    public void registerThresholds(final FieldConfig fieldConfig)
+    public List<Field> fields()
     {
-        fieldConfig.addFieldThreshold(category(), FLD_MEAN_COVERAGE, 0, 0.15);
-        fieldConfig.addFieldThreshold(category(), FLD_INTEGRATIONS, 0, 0.20);
+        return List.of(
+                new BooleanField(FLD_REPORTED, i -> ((VirusData) i).Virus.reported(), true),
+                new IntField(FLD_INTEGRATIONS, i -> ((VirusData) i).Virus.integrations(), true, null, 0.20),
+                new DoubleField(FLD_MEAN_COVERAGE, i -> ((VirusData) i).Virus.meanCoverage(), true, null, 0.15, "%.2f"),
+                new StringField(FLD_DRIVER_LIKELIHOOD, i -> String.valueOf(((VirusData) i).Virus.virusDriverLikelihoodType()), true)
+        );
     }
 
     @Override
@@ -52,7 +60,7 @@ public class VirusComparer implements ItemComparer
     }
 
     @Override
-    public List<String> comparedFieldNames()
+    public List<String> displayFieldNames()
     {
         return Lists.newArrayList(FLD_REPORTED, FLD_INTEGRATIONS, FLD_MEAN_COVERAGE, FLD_DRIVER_LIKELIHOOD);
     }

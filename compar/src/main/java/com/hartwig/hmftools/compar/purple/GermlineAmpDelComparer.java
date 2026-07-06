@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.compar.purple;
 
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.compar.common.CategoryType.GERMLINE_AMP_DEL;
+import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_CHROMOSOME_BAND;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.CommonUtils.determineComparisonChromosome;
@@ -20,11 +22,14 @@ import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.SourceType;
+import com.hartwig.hmftools.compar.common.field.BooleanField;
+import com.hartwig.hmftools.compar.common.field.DoubleField;
+import com.hartwig.hmftools.compar.common.field.Field;
+import com.hartwig.hmftools.compar.common.field.StringField;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class GermlineAmpDelComparer implements ItemComparer
@@ -40,10 +45,17 @@ public class GermlineAmpDelComparer implements ItemComparer
     public CategoryType category() { return GERMLINE_AMP_DEL; }
 
     @Override
-    public void registerThresholds(final FieldConfig fieldConfig)
+    public List<Field> fields()
     {
-        fieldConfig.addFieldThreshold(category(), FLD_GERMLINE_CN, 0.2, 0.1);
-        fieldConfig.addFieldThreshold(category(), FLD_TUMOR_CN, 0.2, 0.1);
+        return List.of(
+                new BooleanField(FLD_REPORTED, ComparableItem::reportable, true),
+                new StringField(FLD_GERMLINE_STATUS, i -> ((GermlineAmpDelData) i).AmpDelData.NormalStatus.toString(), true),
+                new StringField(FLD_TUMOR_STATUS, i -> ((GermlineAmpDelData) i).AmpDelData.TumorStatus.toString(), true),
+                new DoubleField(FLD_GERMLINE_CN, i -> ((GermlineAmpDelData) i).AmpDelData.GermlineCopyNumber, true, 0.2, 0.1, "%.2f"),
+                new DoubleField(FLD_TUMOR_CN, i -> ((GermlineAmpDelData) i).AmpDelData.TumorCopyNumber, true, 0.2, 0.1, "%.2f"),
+                new StringField(FLD_CHROMOSOME, i -> ((GermlineAmpDelData) i).mComparisonChromosome, true),
+                new StringField(FLD_CHROMOSOME_BAND, i -> ((GermlineAmpDelData) i).AmpDelData.ChromosomeBand, true)
+        );
     }
 
     @Override
@@ -53,7 +65,7 @@ public class GermlineAmpDelComparer implements ItemComparer
     }
 
     @Override
-    public List<String> comparedFieldNames()
+    public List<String> displayFieldNames()
     {
         return Lists.newArrayList(
                 FLD_REPORTED, FLD_GERMLINE_STATUS, FLD_TUMOR_STATUS, FLD_GERMLINE_CN, FLD_TUMOR_CN);

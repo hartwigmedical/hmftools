@@ -16,10 +16,11 @@ import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.CommonUtils;
-import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.SourceType;
+import com.hartwig.hmftools.compar.common.field.DoubleField;
+import com.hartwig.hmftools.compar.common.field.Field;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class TealComparer implements ItemComparer
@@ -35,9 +36,11 @@ public class TealComparer implements ItemComparer
     public CategoryType category() { return TELOMERE_LENGTH; }
 
     @Override
-    public void registerThresholds(final FieldConfig fieldConfig)
+    public List<Field> fields()
     {
-        fieldConfig.addFieldThreshold(category(), FLD_TELOMERE_LENGTH, Double.NaN, 0.05);
+        return List.of(
+                new DoubleField(FLD_TELOMERE_LENGTH, i -> ((TealData) i).TelomereLength.finalTelomereLength(), true, null, 0.05, "%.2f")
+        );
     }
 
     @Override
@@ -47,7 +50,7 @@ public class TealComparer implements ItemComparer
     }
 
     @Override
-    public List<String> comparedFieldNames()
+    public List<String> displayFieldNames()
     {
         return TealData.comparedFieldNames();
     }

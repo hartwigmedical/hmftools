@@ -3,18 +3,12 @@ package com.hartwig.hmftools.compar.teal;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.compar.common.CategoryType.TELOMERE_LENGTH;
-import static com.hartwig.hmftools.compar.common.CommonUtils.createMismatchFromDiffs;
-import static com.hartwig.hmftools.compar.common.DiffFunctions.checkDiff;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import com.hartwig.hmftools.common.teal.TelomereLength;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.common.CategoryType;
-import com.hartwig.hmftools.compar.common.FieldConfig;
-import com.hartwig.hmftools.compar.common.MatchLevel;
-import com.hartwig.hmftools.compar.common.Mismatch;
 
 public class TealData implements ComparableItem
 {
@@ -43,30 +37,11 @@ public class TealData implements ComparableItem
     }
 
     @Override
-    public List<String> displayValues()
-    {
-        return List.of(format("%.2f", TelomereLength.finalTelomereLength()));
-    }
-
-    @Override
     public boolean matches(final ComparableItem other)
     {
         final TelomereLength otherTelomereLength = ((TealData) other).TelomereLength;
 
         return TelomereLength.type().equals(otherTelomereLength.type());
-    }
-
-    @Override
-    public Mismatch findMismatch(
-            final ComparableItem other, final MatchLevel matchLevel, final FieldConfig fieldConfig, final boolean includeMatches)
-    {
-        final TelomereLength otherTelomereLength = ((TealData) other).TelomereLength;
-
-        final List<String> diffs = new ArrayList<>();
-
-        checkDiff(diffs, FLD_TELOMERE_LENGTH, TelomereLength.finalTelomereLength(), otherTelomereLength.finalTelomereLength(), category(), fieldConfig);
-
-        return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches);
     }
 
     public String toString()

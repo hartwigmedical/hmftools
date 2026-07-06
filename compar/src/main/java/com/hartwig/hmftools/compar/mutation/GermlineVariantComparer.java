@@ -3,7 +3,22 @@ package com.hartwig.hmftools.compar.mutation;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS_FILTER;
 import static com.hartwig.hmftools.compar.common.CategoryType.GERMLINE_VARIANT;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
+import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_QUAL;
+import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
 import static com.hartwig.hmftools.compar.common.CommonUtils.determineComparisonGenomePosition;
+import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_FILTER;
+import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_CANON_EFFECT;
+import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_CODING_EFFECT;
+import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_GENE;
+import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_HGVS_CODING;
+import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_HGVS_PROTEIN;
+import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_HOTSPOT;
+import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_OTHER_REPORTED;
+import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_PURITY_ADJUSTED_VAF;
+import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_TIER;
+import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_TUMOR_SUPPORTING_READ_COUNT;
+import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_TUMOR_TOTAL_READ_COUNT;
+import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_VARIANT_COPY_NUMBER;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.GERMLINEVARIANT;
 
 import java.util.List;
@@ -17,11 +32,16 @@ import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.SourceType;
+import com.hartwig.hmftools.compar.common.field.BooleanField;
+import com.hartwig.hmftools.compar.common.field.DoubleField;
+import com.hartwig.hmftools.compar.common.field.Field;
+import com.hartwig.hmftools.compar.common.field.IntField;
+import com.hartwig.hmftools.compar.common.field.StringField;
+import com.hartwig.hmftools.compar.common.field.StringListField;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.patientdb.dao.GermlineVariantDAO;
 
@@ -47,13 +67,31 @@ public class GermlineVariantComparer implements ItemComparer
     }
 
     @Override
-    public void registerThresholds(final FieldConfig fieldConfig)
+    public List<Field> fields()
     {
-        VariantCommon.registerThresholds(category(), fieldConfig);
+        return List.of(
+                new BooleanField(FLD_REPORTED, i -> ((GermlineVariantData) i).Variant.reported(), true),
+                new StringField(FLD_HOTSPOT, i -> ((GermlineVariantData) i).Variant.hotspot().toString(), true),
+                new StringField(FLD_TIER, i -> ((GermlineVariantData) i).Variant.tier().toString(), true),
+                new StringField(FLD_GENE, i -> ((GermlineVariantData) i).Variant.gene(), true),
+                new StringField(FLD_CANON_EFFECT, i -> ((GermlineVariantData) i).Variant.canonicalEffect(), true),
+                new StringField(FLD_CODING_EFFECT, i -> ((GermlineVariantData) i).Variant.canonicalCodingEffect().toString(), true),
+                new StringField(FLD_HGVS_CODING, i -> ((GermlineVariantData) i).Variant.canonicalHgvsCodingImpact(), true),
+                new StringField(FLD_HGVS_PROTEIN, i -> ((GermlineVariantData) i).Variant.canonicalHgvsProteinImpact(), true),
+                new StringField(FLD_OTHER_REPORTED, i -> ((GermlineVariantData) i).Variant.otherReportedEffects(), true),
+                new IntField(FLD_QUAL, i -> (int) ((GermlineVariantData) i).Variant.qual(), true, 50.0, 0.2),
+                new DoubleField(FLD_VARIANT_COPY_NUMBER, i -> ((GermlineVariantData) i).Variant.variantCopyNumber(), true, 0.3, 0.3, "%.2f"),
+                new DoubleField(FLD_PURITY_ADJUSTED_VAF, i -> ((GermlineVariantData) i).Variant.adjustedVAF(), true, 0.2, null, "%.2f"),
+                new IntField(FLD_TUMOR_SUPPORTING_READ_COUNT,
+                        i -> ((GermlineVariantData) i).Variant.allelicDepth().AlleleReadCount, true, 1.0, 0.2),
+                new IntField(FLD_TUMOR_TOTAL_READ_COUNT,
+                        i -> ((GermlineVariantData) i).Variant.allelicDepth().TotalReadCount, true, 1.0, 0.2),
+                new StringListField(FLD_FILTER, i -> ((GermlineVariantData) i).Filters.stream().sorted().toList(), true)
+        );
     }
 
     @Override
-    public List<String> comparedFieldNames()
+    public List<String> displayFieldNames()
     {
         return VariantCommon.comparedFieldNames();
     }

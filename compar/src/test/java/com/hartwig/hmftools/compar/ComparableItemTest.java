@@ -141,12 +141,6 @@ public abstract class ComparableItemTest<I extends ComparableItem, C extends Ite
     }
 
     @Test
-    public void amountOfDisplayValuesMatches()
-    {
-        assertEquals(comparer.comparedFieldNames().size(), builder.create().displayValues().size());
-    }
-
-    @Test
     public void hasKeyIfItShould()
     {
         assertEquals(nameToAlternateIndexInitializer.isEmpty(), builder.create().key().isEmpty());
@@ -223,7 +217,7 @@ public abstract class ComparableItemTest<I extends ComparableItem, C extends Ite
     protected FieldConfig createDefaultThresholds()
     {
         FieldConfig fieldConfig = new FieldConfig();
-        comparer.registerThresholds(fieldConfig);
+        fieldConfig.registerFields(comparer);
         return fieldConfig;
     }
 

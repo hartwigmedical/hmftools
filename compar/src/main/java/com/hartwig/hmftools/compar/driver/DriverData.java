@@ -2,11 +2,7 @@ package com.hartwig.hmftools.compar.driver;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.compar.common.CategoryType.DRIVER;
-import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_CHROMOSOME_BAND;
-import static com.hartwig.hmftools.compar.common.CommonUtils.createMismatchFromDiffs;
-import static com.hartwig.hmftools.compar.common.DiffFunctions.checkDiff;
 
 import java.util.List;
 
@@ -16,9 +12,6 @@ import com.hartwig.hmftools.common.purple.PurplePurity;
 import com.hartwig.hmftools.common.purple.ReportedStatus;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.common.FieldConfig;
-import com.hartwig.hmftools.compar.common.MatchLevel;
-import com.hartwig.hmftools.compar.common.Mismatch;
 
 public class DriverData implements ComparableItem
 {
@@ -57,17 +50,6 @@ public class DriverData implements ComparableItem
     }
 
     @Override
-    public List<String> displayValues()
-    {
-        List<String> values = Lists.newArrayList();
-        values.add(format("%s", DriverCatalog.likelihoodMethod()));
-        values.add(format("%.2f", DriverCatalog.driverLikelihood()));
-        values.add(format("%.2f", DriverCatalog.minCopyNumber()));
-        values.add(format("%.2f", DriverCatalog.maxCopyNumber()));
-        return values;
-    }
-
-    @Override
     public List<String> extraInfoValues()
     {
         List<String> values = Lists.newArrayList();
@@ -103,26 +85,5 @@ public class DriverData implements ComparableItem
         }
 
         return true;
-    }
-
-    @Override
-    public Mismatch findMismatch(
-            final ComparableItem other, final MatchLevel matchLevel, final FieldConfig fieldConfig, final boolean includeMatches)
-    {
-        final DriverData otherDriver = (DriverData)other;
-
-        final List<String> diffs = Lists.newArrayList();
-
-        checkDiff(
-                diffs, FLD_LIKE_METHOD,
-                DriverCatalog.likelihoodMethod().toString(), otherDriver.DriverCatalog.likelihoodMethod().toString());
-
-        checkDiff(diffs, FLD_LIKELIHOOD, DriverCatalog.driverLikelihood(), otherDriver.DriverCatalog.driverLikelihood(), category(), fieldConfig);
-        checkDiff(diffs, FLD_MIN_COPY_NUMBER, DriverCatalog.minCopyNumber(), otherDriver.DriverCatalog.minCopyNumber(), category(), fieldConfig);
-        checkDiff(diffs, FLD_MAX_COPY_NUMBER, DriverCatalog.maxCopyNumber(), otherDriver.DriverCatalog.maxCopyNumber(), category(), fieldConfig);
-        checkDiff(diffs, FLD_CHROMOSOME, mComparisonChromosome, otherDriver.mComparisonChromosome);
-        checkDiff(diffs, FLD_CHROMOSOME_BAND, DriverCatalog.chromosomeBand(), otherDriver.DriverCatalog.chromosomeBand());
-
-        return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches);
     }
 }

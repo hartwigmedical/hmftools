@@ -1,54 +1,42 @@
 package com.hartwig.hmftools.compar.common;
 
-import static java.util.Collections.emptyMap;
-
+import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.compar.ItemComparer;
+import com.hartwig.hmftools.compar.common.field.Field;
 
 public class FieldConfig
 {
-    private final Map<CategoryType, Map<String, ThresholdData>> mFieldThresholds;
-
-    public static final double DEFAULT_DIFF_PERC = 0.1;
-
-    public static final ThresholdData DEFAULT_DECIMAL_THRESHOLD = new ThresholdData(
-            ThresholdType.ABSOLUTE_AND_PERCENT, 1, DEFAULT_DIFF_PERC);
+    private final Map<CategoryType, Map<String, Field>> fieldSettings;
 
     public FieldConfig()
     {
-        mFieldThresholds = Maps.newHashMap();
+        fieldSettings = Maps.newHashMap();
     }
 
-    public boolean isFieldRegistered(final CategoryType category, final String field)
+    public void registerFields(final ItemComparer comparer)
     {
-        return mFieldThresholds.containsKey(category) && mFieldThresholds.get(category).containsKey(field);
+        for(Field field : comparer.fields())
+        {
+            registerField(comparer.category(), field);
+        }
     }
 
-    public ThresholdData getThreshold(final CategoryType category, final String field)
+    public void registerField(final CategoryType category, final Field field)
     {
-        return mFieldThresholds.getOrDefault(category, emptyMap()).get(field);
+        fieldSettings.putIfAbsent(category, Maps.newHashMap());
+        fieldSettings.get(category).put(field.name(), field);
     }
 
-    public boolean hasDifference(final CategoryType category, final String field, double value1, double value2)
+    public List<Field> getFields(final CategoryType category)
     {
-        ThresholdData thresholdData = getThreshold(category, field);
-
-        if(thresholdData == null)
-            return false;
-
-        return thresholdData.hasDiff(value1, value2);
+        return fieldSettings.get(category).values().stream().toList();
     }
 
-    public void addFieldThreshold(final CategoryType category, final String field, double absoluteDiff, double percentDiff)
+    public List<Field> getFields(final CategoryType category, final List<String> fieldNames)
     {
-        if(isFieldRegistered(category, field)) // keep any config overrides
-            return;
-
-        ThresholdType type = absoluteDiff > 0 && percentDiff > 0 ? ThresholdType.ABSOLUTE_AND_PERCENT :
-                (absoluteDiff > 0 ? ThresholdType.ABSOLUTE : ThresholdType.PERCENT);
-
-        mFieldThresholds.putIfAbsent(category, Maps.newHashMap());
-        mFieldThresholds.get(category).put(field, new ThresholdData(type, absoluteDiff, percentDiff));
+        return fieldNames.stream().map(n -> fieldSettings.get(category).get(n)).toList();
     }
 }

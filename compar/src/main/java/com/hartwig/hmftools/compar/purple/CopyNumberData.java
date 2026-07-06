@@ -3,19 +3,11 @@ package com.hartwig.hmftools.compar.purple;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.compar.common.CategoryType.COPY_NUMBER;
-import static com.hartwig.hmftools.compar.common.CommonUtils.createMismatchFromDiffs;
-import static com.hartwig.hmftools.compar.common.DiffFunctions.checkDiff;
 
-import java.util.List;
-
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.CopyNumberMethod;
 import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.common.FieldConfig;
-import com.hartwig.hmftools.compar.common.MatchLevel;
-import com.hartwig.hmftools.compar.common.Mismatch;
 
 public record CopyNumberData(
         String chromosome,
@@ -52,16 +44,6 @@ public record CopyNumberData(
     }
 
     @Override
-    public List<String> displayValues()
-    {
-        List<String> values = Lists.newArrayList();
-        values.add(format("%.2f", copyNumber));
-        values.add(format("%.2f", majorAlleleCopyNumber));
-        values.add(format("%s", method));
-        return values;
-    }
-
-    @Override
     public boolean reportable() {
         return false;
     }
@@ -75,20 +57,5 @@ public record CopyNumberData(
             return false;
 
         return comparisonPositionStart.Position == otherCn.positionStart && comparisonPositionEnd.Position == otherCn.positionEnd;
-    }
-
-    @Override
-    public Mismatch findMismatch(
-            final ComparableItem other, final MatchLevel matchLevel, final FieldConfig fieldConfig, final boolean includeMatches)
-    {
-        final CopyNumberData otherCn = (CopyNumberData) other;
-
-        final List<String> diffs = Lists.newArrayList();
-
-        checkDiff(diffs, FLD_COPY_NUMBER, copyNumber, otherCn.copyNumber, category(), fieldConfig);
-        checkDiff(diffs, FLD_MAJOR_ALLELE_CN, majorAlleleCopyNumber, otherCn.majorAlleleCopyNumber, category(), fieldConfig);
-        checkDiff(diffs, FLD_METHOD, method.toString(), otherCn.method.toString());
-
-        return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches);
     }
 }

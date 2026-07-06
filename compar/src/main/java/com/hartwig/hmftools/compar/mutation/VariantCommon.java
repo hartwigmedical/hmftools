@@ -26,17 +26,6 @@ public final class VariantCommon
     static final String FLD_TUMOR_SUPPORTING_READ_COUNT = "TumorSupportingReadCount";
     static final String FLD_TUMOR_TOTAL_READ_COUNT = "TumorTotalReadCount";
 
-    public static void registerThresholds(final CategoryType category, final FieldConfig fieldConfig)
-    {
-        fieldConfig.addFieldThreshold(category, FLD_QUAL, 50, 0.2);
-        fieldConfig.addFieldThreshold(category, FLD_SUBCLONAL_LIKELIHOOD, 0.6, 0);
-        fieldConfig.addFieldThreshold(category, FLD_BIALLELIC_PROB, 0.3, 0);
-        fieldConfig.addFieldThreshold(category, FLD_VARIANT_COPY_NUMBER, 0.3, 0.3);
-        fieldConfig.addFieldThreshold(category, FLD_PURITY_ADJUSTED_VAF, 0.2, 0);
-        fieldConfig.addFieldThreshold(category, FLD_TUMOR_SUPPORTING_READ_COUNT, 1, 0.2);
-        fieldConfig.addFieldThreshold(category, FLD_TUMOR_TOTAL_READ_COUNT, 1, 0.2);
-    }
-
     static List<String> comparedFieldNames()
     {
         return Lists.newArrayList(

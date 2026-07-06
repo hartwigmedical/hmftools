@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.compar;
 
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import static junit.framework.TestCase.assertEquals;
@@ -38,6 +39,7 @@ public class ComparTestUtil
 
         Mismatch detailedMismatch = refVictim.findMismatch(newVictim, matchLevel, fieldConfig, false);
 
+        assertNotNull(testMessage, detailedMismatch);
         assertEquals(testMessage, expectedMismatchType, detailedMismatch.Type);
         assertEquals(testMessage, refVictim, detailedMismatch.OldItem);
         assertEquals(testMessage, newVictim, detailedMismatch.NewItem);

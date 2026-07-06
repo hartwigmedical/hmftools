@@ -23,6 +23,7 @@ public enum CategoryType
     CUPPA,
     CUPPA_IMAGE,
     LILAC,
+    LILAC_ALLELE,
     CHORD,
     PEACH,
     VIRUS,

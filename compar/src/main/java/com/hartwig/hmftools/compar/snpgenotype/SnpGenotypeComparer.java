@@ -21,6 +21,8 @@ import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.SourceType;
+import com.hartwig.hmftools.compar.common.field.Field;
+import com.hartwig.hmftools.compar.common.field.StringField;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import htsjdk.tribble.CloseableTribbleIterator;
@@ -50,9 +52,19 @@ public class SnpGenotypeComparer implements ItemComparer
     }
 
     @Override
-    public List<String> comparedFieldNames()
+    public List<String> displayFieldNames()
     {
         return Lists.newArrayList(FLD_ALT, FLD_GENOTYPE, FLD_VCF_SAMPLE_ID);
+    }
+
+    @Override
+    public List<Field> fields()
+    {
+        return List.of(
+                new StringField(FLD_ALT, i -> ((SnpGenotypeData) i).Alt, true),
+                new StringField(FLD_GENOTYPE, i -> ((SnpGenotypeData) i).Genotype, true),
+                new StringField(FLD_VCF_SAMPLE_ID, i -> ((SnpGenotypeData) i).VcfSampleId, true)
+        );
     }
 
     @Override

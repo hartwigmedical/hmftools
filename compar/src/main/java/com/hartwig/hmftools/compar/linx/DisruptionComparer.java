@@ -7,7 +7,7 @@ import static com.hartwig.hmftools.compar.common.CategoryType.DISRUPTION;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
 import static com.hartwig.hmftools.compar.common.CommonUtils.determineComparisonGenomePosition;
-import static com.hartwig.hmftools.compar.linx.DisruptionData.FLD_BREAKEND_INFO;
+import static com.hartwig.hmftools.compar.linx.DisruptionData.FLD_BREAKEND;
 
 import java.io.IOException;
 import java.util.List;
@@ -32,12 +32,14 @@ import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.SourceType;
+import com.hartwig.hmftools.compar.common.field.BooleanField;
+import com.hartwig.hmftools.compar.common.field.BreakendsField;
+import com.hartwig.hmftools.compar.common.field.Field;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import htsjdk.tribble.TribbleException;
@@ -63,7 +65,13 @@ public class DisruptionComparer implements ItemComparer
     public CategoryType category() { return DISRUPTION; }
 
     @Override
-    public void registerThresholds(final FieldConfig fieldConfig) {}
+    public List<Field> fields()
+    {
+        return List.of(
+                new BreakendsField(FLD_BREAKEND, i -> ((DisruptionData) i).Breakends, true),
+                new BooleanField(FLD_REPORTED, ComparableItem::reportable, false)
+        );
+    }
 
     @Override
     public boolean processSample(final String sampleId, final List<Mismatch> mismatches)
@@ -72,9 +80,9 @@ public class DisruptionComparer implements ItemComparer
     }
 
     @Override
-    public List<String> comparedFieldNames()
+    public List<String> displayFieldNames()
     {
-        return Lists.newArrayList(FLD_REPORTED, FLD_BREAKEND_INFO);
+        return Lists.newArrayList(FLD_REPORTED, FLD_BREAKEND);
     }
 
     @Override

@@ -17,11 +17,13 @@ import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.SourceType;
+import com.hartwig.hmftools.compar.common.field.DoubleField;
+import com.hartwig.hmftools.compar.common.field.Field;
+import com.hartwig.hmftools.compar.common.field.StringField;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class CuppaComparer implements ItemComparer
@@ -37,9 +39,12 @@ public class CuppaComparer implements ItemComparer
     public CategoryType category() { return CUPPA; }
 
     @Override
-    public void registerThresholds(final FieldConfig fieldConfig)
+    public List<Field> fields()
     {
-        fieldConfig.addFieldThreshold(category(), FLD_PROBABILITY, 0.1, 0);
+        return List.of(
+                new StringField(FLD_TOP_CANCER_TYPE, i -> ((CuppaData) i).PredictionEntry.CancerType, true),
+                new DoubleField(FLD_PROBABILITY, i -> ((CuppaData) i).PredictionEntry.DataValue, true, 0.1, null, "%.3f")
+        );
     }
 
     @Override
@@ -49,7 +54,7 @@ public class CuppaComparer implements ItemComparer
     }
 
     @Override
-    public List<String> comparedFieldNames()
+    public List<String> displayFieldNames()
     {
         return Lists.newArrayList(FLD_TOP_CANCER_TYPE, FLD_PROBABILITY);
     }

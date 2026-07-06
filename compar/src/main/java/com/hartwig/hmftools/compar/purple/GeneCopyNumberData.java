@@ -3,18 +3,10 @@ package com.hartwig.hmftools.compar.purple;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.compar.common.CategoryType.GENE_COPY_NUMBER;
-import static com.hartwig.hmftools.compar.common.CommonUtils.createMismatchFromDiffs;
-import static com.hartwig.hmftools.compar.common.DiffFunctions.checkDiff;
 
-import java.util.List;
-
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.common.FieldConfig;
-import com.hartwig.hmftools.compar.common.MatchLevel;
-import com.hartwig.hmftools.compar.common.Mismatch;
 
 public class GeneCopyNumberData implements ComparableItem
 {
@@ -41,17 +33,6 @@ public class GeneCopyNumberData implements ComparableItem
     }
 
     @Override
-    public List<String> displayValues()
-    {
-        List<String> values = Lists.newArrayList();
-        values.add(format("%.2f", CopyNumber.minCopyNumber()));
-        values.add(format("%.2f", CopyNumber.maxCopyNumber()));
-        values.add(format("%d", CopyNumber.MinRegionStart));
-        values.add(format("%d", CopyNumber.MinRegionEnd));
-        return values;
-    }
-
-    @Override
     public boolean reportable() {
         return false;
     }
@@ -65,19 +46,5 @@ public class GeneCopyNumberData implements ComparableItem
         final GeneCopyNumberData otherCn = (GeneCopyNumberData)other;
 
         return CopyNumber.geneName().equals(otherCn.CopyNumber.geneName());
-    }
-
-    @Override
-    public Mismatch findMismatch(
-            final ComparableItem other, final MatchLevel matchLevel, final FieldConfig fieldConfig, final boolean includeMatches)
-    {
-        final GeneCopyNumberData otherCn = (GeneCopyNumberData) other;
-
-        final List<String> diffs = Lists.newArrayList();
-
-        checkDiff(diffs, FLD_MIN_COPY_NUMBER, CopyNumber.minCopyNumber(), otherCn.CopyNumber.minCopyNumber(), category(), fieldConfig);
-        checkDiff(diffs, FLD_MAX_COPY_NUMBER, CopyNumber.maxCopyNumber(), otherCn.CopyNumber.maxCopyNumber(), category(), fieldConfig);
-
-        return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches);
     }
 }

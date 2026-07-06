@@ -1,17 +1,14 @@
 package com.hartwig.hmftools.compar.lilac;
 
-import static com.hartwig.hmftools.common.hla.LilacAllele.FLD_MISSENSE;
-import static com.hartwig.hmftools.common.hla.LilacAllele.FLD_NFS;
-import static com.hartwig.hmftools.common.hla.LilacAllele.FLD_SPLICE;
 import static com.hartwig.hmftools.common.hla.LilacQcData.FLD_DISC_ALIGN_FRAGS;
 import static com.hartwig.hmftools.common.hla.LilacQcData.FLD_DISC_INDELS;
 import static com.hartwig.hmftools.common.hla.LilacQcData.FLD_FIT_FRAGS;
+import static com.hartwig.hmftools.common.hla.LilacQcData.FLD_HLA_Y;
 import static com.hartwig.hmftools.common.hla.LilacQcData.FLD_QC_STATUS;
 import static com.hartwig.hmftools.common.hla.LilacQcData.FLD_TOTAL_FRAGS;
 import static com.hartwig.hmftools.compar.common.CategoryType.LILAC;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.lilac.LilacData.FLD_ALLELES;
-import static com.hartwig.hmftools.compar.lilac.LilacData.FLD_VARIANTS;
 
 import java.io.IOException;
 import java.util.List;
@@ -24,11 +21,14 @@ import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.SourceType;
+import com.hartwig.hmftools.compar.common.field.Field;
+import com.hartwig.hmftools.compar.common.field.IntField;
+import com.hartwig.hmftools.compar.common.field.StringField;
+import com.hartwig.hmftools.compar.common.field.StringListField;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class LilacComparer implements ItemComparer
@@ -37,8 +37,6 @@ public class LilacComparer implements ItemComparer
 
     private static final double FRAG_DIFF_PERC = 0.01;
     private static final double FRAG_DIFF_ABS = 10;
-    private static final double VARIANT_DIFF_PERC = 0.1;
-    private static final double VARIANT_DIFF_ABS = 0.4;
 
     public LilacComparer(final ComparConfig config)
     {
@@ -49,21 +47,18 @@ public class LilacComparer implements ItemComparer
     public CategoryType category() { return LILAC; }
 
     @Override
-    public void registerThresholds(final FieldConfig fieldConfig)
+    public List<Field> fields()
     {
-        fieldConfig.addFieldThreshold(category(), LilacAllele.FLD_REF_TOTAL, FRAG_DIFF_ABS, FRAG_DIFF_PERC);
-        fieldConfig.addFieldThreshold(category(), LilacAllele.FLD_TUMOR_TOTAL, FRAG_DIFF_ABS, FRAG_DIFF_PERC);
-        fieldConfig.addFieldThreshold(category(), FLD_TOTAL_FRAGS, FRAG_DIFF_ABS, FRAG_DIFF_PERC);
-        fieldConfig.addFieldThreshold(category(), FLD_FIT_FRAGS, FRAG_DIFF_ABS, FRAG_DIFF_PERC);
-        fieldConfig.addFieldThreshold(category(), FLD_DISC_ALIGN_FRAGS, FRAG_DIFF_ABS, FRAG_DIFF_PERC);
-        fieldConfig.addFieldThreshold(category(), FLD_DISC_INDELS, FRAG_DIFF_ABS, FRAG_DIFF_PERC);
-
-        fieldConfig.addFieldThreshold(category(), FLD_MISSENSE, VARIANT_DIFF_ABS, VARIANT_DIFF_PERC);
-        fieldConfig.addFieldThreshold(category(), FLD_NFS, VARIANT_DIFF_ABS, VARIANT_DIFF_PERC);
-        fieldConfig.addFieldThreshold(category(), FLD_SPLICE, VARIANT_DIFF_ABS, VARIANT_DIFF_PERC);
-        fieldConfig.addFieldThreshold(category(), LilacAllele.FLD_INDEL, VARIANT_DIFF_ABS, VARIANT_DIFF_PERC);
-        fieldConfig.addFieldThreshold(category(), LilacAllele.FLD_SYNON, VARIANT_DIFF_ABS, VARIANT_DIFF_PERC);
-        fieldConfig.addFieldThreshold(category(), LilacAllele.FLD_TUMOR_CN, 0.5, 0.15);
+        return List.of(
+                new StringField(FLD_QC_STATUS, i -> ((LilacData) i).QcData.status(), true),
+                new IntField(FLD_TOTAL_FRAGS, i -> ((LilacData) i).QcData.totalFragments(), true, FRAG_DIFF_ABS, FRAG_DIFF_PERC),
+                new IntField(FLD_FIT_FRAGS, i -> ((LilacData) i).QcData.fittedFragments(), true, FRAG_DIFF_ABS, FRAG_DIFF_PERC),
+                new IntField(FLD_DISC_ALIGN_FRAGS, i -> ((LilacData) i).QcData.discardedAlignmentFragments(), true, FRAG_DIFF_ABS, FRAG_DIFF_PERC),
+                new IntField(FLD_DISC_INDELS, i -> ((LilacData) i).QcData.discardedIndels(), true, FRAG_DIFF_ABS, FRAG_DIFF_PERC),
+                new StringField(FLD_HLA_Y, i -> ((LilacData) i).QcData.hlaYAllele(), true),
+                new StringListField(FLD_ALLELES, i -> ((LilacData) i).Alleles.stream()
+                        .map(LilacAllele::allele).sorted().toList(), true)
+        );
     }
 
     @Override
@@ -73,9 +68,9 @@ public class LilacComparer implements ItemComparer
     }
 
     @Override
-    public List<String> comparedFieldNames()
+    public List<String> displayFieldNames()
     {
-        return Lists.newArrayList(FLD_QC_STATUS, FLD_ALLELES, FLD_VARIANTS);
+        return Lists.newArrayList(FLD_QC_STATUS, FLD_ALLELES);
     }
 
     @Override

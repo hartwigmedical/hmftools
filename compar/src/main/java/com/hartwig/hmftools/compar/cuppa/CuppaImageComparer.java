@@ -2,23 +2,21 @@ package com.hartwig.hmftools.compar.cuppa;
 
 import static com.hartwig.hmftools.compar.common.CategoryType.CUPPA_IMAGE;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.cuppa.CuppaPredictions;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.ItemComparer;
+import com.hartwig.hmftools.compar.ImageComparer;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.CommonUtils;
-import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.SourceType;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
-public class CuppaImageComparer implements ItemComparer
+public class CuppaImageComparer extends ImageComparer
 {
     public static final String FLD_VIS_IMAGE = "cuppa_vis_image";
 
@@ -26,17 +24,12 @@ public class CuppaImageComparer implements ItemComparer
 
     public CuppaImageComparer(final ComparConfig config)
     {
+        super(null, 0.);
         mConfig = config;
     }
 
     @Override
     public CategoryType category() { return CUPPA_IMAGE; }
-
-    @Override
-    public void registerThresholds(final FieldConfig fieldConfig)
-    {
-        fieldConfig.addFieldThreshold(category(), FLD_VIS_IMAGE, Double.NaN, 0);
-    }
 
     @Override
     public boolean processSample(final String sampleId, final List<Mismatch> mismatches)
@@ -54,16 +47,20 @@ public class CuppaImageComparer implements ItemComparer
     @Override
     public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final FileSources fileSources)
     {
-        final List<ComparableItem> comparableItems = new ArrayList<>();
-
         String plotPath = CuppaPredictions.generateVisPlotFilename(fileSources.Cuppa, sampleId);
-        comparableItems.add(new CuppaImageData(FLD_VIS_IMAGE, plotPath));
-
-        return comparableItems;
+        CuppaImageData imageData = new CuppaImageData(FLD_VIS_IMAGE, plotPath);
+        if(imageData.Image != null)
+        {
+            return List.of(imageData);
+        }
+        else
+        {
+            return null;
+        }
     }
 
     @Override
-    public List<String> comparedFieldNames()
+    public List<String> displayFieldNames()
     {
         return Lists.newArrayList(FLD_VIS_IMAGE);
     }

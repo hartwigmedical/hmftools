@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.compar;
 
+import static com.hartwig.hmftools.compar.common.CommonUtils.createMismatchFromDiffs;
+import static com.hartwig.hmftools.compar.common.CommonUtils.findDiffs;
+
 import java.util.Collections;
 import java.util.List;
 
@@ -14,12 +17,14 @@ public interface ComparableItem
 
     boolean matches(final ComparableItem other);
 
-    Mismatch findMismatch(
-            final ComparableItem other, final MatchLevel matchLevel, final FieldConfig fieldConfig, final boolean includeMatches);
+    default Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final FieldConfig fieldConfig,
+            final boolean includeMatches)
+    {
+        final List<String> diffs = findDiffs(this, other, fieldConfig.getFields(category()));
+        return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches);
+    }
 
     String key();
-
-    List<String> displayValues();
 
     // values for display only
     default List<String> extraInfoValues() { return Collections.emptyList(); }

@@ -23,6 +23,9 @@ import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.SourceType;
+import com.hartwig.hmftools.compar.common.field.Field;
+import com.hartwig.hmftools.compar.common.field.IntField;
+import com.hartwig.hmftools.compar.common.field.StringField;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class PeachComparer implements ItemComparer
@@ -47,9 +50,20 @@ public class PeachComparer implements ItemComparer
     }
 
     @Override
-    public List<String> comparedFieldNames()
+    public List<String> displayFieldNames()
     {
         return Lists.newArrayList(FLD_ALLELE_COUNT, FLD_FUNCTION, FLD_DRUGS, FLD_PRESCRIPTION_URLS);
+    }
+
+    @Override
+    public List<Field> fields()
+    {
+        return List.of(
+                new IntField(FLD_ALLELE_COUNT, i -> ((PeachData) i).Genotype.alleleCount(), true, null, null),
+                new StringField(FLD_FUNCTION, i -> ((PeachData) i).Genotype.function(), true),
+                new StringField(FLD_DRUGS, i -> ((PeachData) i).Genotype.linkedDrugs(), true),
+                new StringField(FLD_PRESCRIPTION_URLS, i -> ((PeachData) i).Genotype.urlPrescriptionInfo(), true)
+        );
     }
 
     @Override

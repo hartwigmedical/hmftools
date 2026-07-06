@@ -1,29 +1,13 @@
 package com.hartwig.hmftools.compar.lilac;
 
-import static java.lang.String.format;
-
-import static com.hartwig.hmftools.common.hla.LilacQcData.FLD_DISC_ALIGN_FRAGS;
-import static com.hartwig.hmftools.common.hla.LilacQcData.FLD_DISC_INDELS;
-import static com.hartwig.hmftools.common.hla.LilacQcData.FLD_HLA_Y;
-import static com.hartwig.hmftools.common.hla.LilacQcData.FLD_QC_STATUS;
-import static com.hartwig.hmftools.common.hla.LilacQcData.FLD_TOTAL_FRAGS;
-import static com.hartwig.hmftools.common.hla.LilacQcData.FLD_FIT_FRAGS;
 import static com.hartwig.hmftools.compar.common.CategoryType.LILAC;
-import static com.hartwig.hmftools.compar.common.CommonUtils.createMismatchFromDiffs;
-import static com.hartwig.hmftools.compar.common.DiffFunctions.checkDiff;
 
 import java.util.List;
-import java.util.StringJoiner;
-import java.util.stream.Collectors;
 
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.hla.LilacAllele;
 import com.hartwig.hmftools.common.hla.LilacQcData;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.common.FieldConfig;
-import com.hartwig.hmftools.compar.common.MatchLevel;
-import com.hartwig.hmftools.compar.common.Mismatch;
 
 public class LilacData implements ComparableItem
 {
@@ -31,10 +15,7 @@ public class LilacData implements ComparableItem
     public final List<LilacAllele> Alleles;
 
     protected static final String FLD_ALLELES = "Alleles";
-    protected static final String FLD_VARIANTS = "SomaticVariants";
-
-    private static final String ALLELE_DELIM = ":";
-
+    
     public LilacData(final LilacQcData qcData, final List<LilacAllele> alleles)
     {
         QcData = qcData;
@@ -51,20 +32,6 @@ public class LilacData implements ComparableItem
     }
 
     @Override
-    public List<String> displayValues()
-    {
-        List<String> values = Lists.newArrayList();
-        values.add(format("%s", QcData.status()));
-
-        StringJoiner alleles = new StringJoiner(ALLELE_DELIM);
-        Alleles.forEach(x -> alleles.add(x.allele()));
-        values.add(format("%s", alleles));
-
-        values.add(format("%d", somaticVariantCount()));
-        return values;
-    }
-
-    @Override
     public boolean matches(final ComparableItem other)
     {
         final LilacData otherData = (LilacData)other;
@@ -73,74 +40,5 @@ public class LilacData implements ComparableItem
             return false;
 
         return true;
-    }
-
-    protected int somaticVariantCount()
-    {
-        return (int)Alleles.stream().mapToDouble(x -> x.somaticVariantCount()).sum();
-    }
-
-    @Override
-    public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final FieldConfig fieldConfig,
-            final boolean includeMatches)
-    {
-        final LilacData otherData = (LilacData)other;
-
-        final List<String> diffs = Lists.newArrayList();
-
-        checkDiff(diffs, FLD_QC_STATUS, QcData.status(), otherData.QcData.status());
-        checkDiff(diffs, FLD_TOTAL_FRAGS, QcData.totalFragments(), otherData.QcData.totalFragments(), category(), fieldConfig);
-        checkDiff(diffs, FLD_FIT_FRAGS, QcData.fittedFragments(), otherData.QcData.fittedFragments(), category(), fieldConfig);
-        checkDiff(diffs, FLD_DISC_ALIGN_FRAGS, QcData.discardedAlignmentFragments(), otherData.QcData.discardedAlignmentFragments(), category(), fieldConfig);
-        checkDiff(diffs, FLD_DISC_INDELS, QcData.discardedIndels(), otherData.QcData.discardedIndels(), category(), fieldConfig);
-        checkDiff(diffs, FLD_HLA_Y, QcData.hlaYAllele(), otherData.QcData.hlaYAllele());
-
-        List<LilacAllele> origDiffs = Alleles.stream().filter(x -> !hasAllele(x, otherData.Alleles)).collect(Collectors.toList());
-        List<LilacAllele> newDiffs = otherData.Alleles.stream().filter(x -> !hasAllele(x, Alleles)).collect(Collectors.toList());
-
-        if(!origDiffs.isEmpty() || !newDiffs.isEmpty())
-        {
-            StringJoiner origDiffsSj = new StringJoiner(ALLELE_DELIM);
-            origDiffs.forEach(x -> origDiffsSj.add(x.allele()));
-            StringJoiner newDiffsSj = new StringJoiner(ALLELE_DELIM);
-            newDiffs.forEach(x -> newDiffsSj.add(x.allele()));
-
-            diffs.add(String.format("%s(%s/%s)", FLD_ALLELES, origDiffsSj, newDiffsSj));
-        }
-
-        // matches alleles in order when an allele is homozygous
-        List<LilacAllele> otherAllelesToMatch = Lists.newArrayList(otherData.Alleles);
-        for(LilacAllele allele : Alleles)
-        {
-            LilacAllele matchingOtherAllele =
-                    otherAllelesToMatch.stream().filter(x -> x.allele().equals(allele.allele())).findFirst().orElse(null);
-            if(matchingOtherAllele != null)
-            {
-                List<String> temporaryDiffs = Lists.newArrayList();
-                checkDiff(temporaryDiffs, LilacAllele.FLD_MISSENSE, allele.somaticMissense(), matchingOtherAllele.somaticMissense(), category(), fieldConfig);
-                checkDiff(temporaryDiffs, LilacAllele.FLD_NFS, allele.somaticNonsenseOrFrameshift(),
-                        matchingOtherAllele.somaticNonsenseOrFrameshift(), category(), fieldConfig);
-                checkDiff(temporaryDiffs, LilacAllele.FLD_SPLICE, allele.somaticSplice(), matchingOtherAllele.somaticSplice(), category(), fieldConfig);
-                checkDiff(temporaryDiffs, LilacAllele.FLD_INDEL, allele.somaticInframeIndel(), matchingOtherAllele.somaticInframeIndel(), category(), fieldConfig);
-                checkDiff(temporaryDiffs, LilacAllele.FLD_TUMOR_CN, allele.tumorCopyNumber(), matchingOtherAllele.tumorCopyNumber(), category(), fieldConfig);
-                if(matchLevel == MatchLevel.DETAILED)
-                {
-                    checkDiff(temporaryDiffs, LilacAllele.FLD_REF_TOTAL, allele.refFragments(), matchingOtherAllele.refFragments(), category(), fieldConfig);
-                    checkDiff(temporaryDiffs, LilacAllele.FLD_TUMOR_TOTAL, allele.tumorFragments(), matchingOtherAllele.tumorFragments(), category(), fieldConfig);
-                    checkDiff(temporaryDiffs, LilacAllele.FLD_SYNON, allele.somaticSynonymous(), matchingOtherAllele.somaticSynonymous(), category(), fieldConfig);
-
-                }
-
-                temporaryDiffs.stream().map(d -> allele.allele() + ALLELE_DELIM + d).forEach(d -> diffs.add(d));
-                otherAllelesToMatch.remove(matchingOtherAllele);
-            }
-        }
-
-        return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches);
-    }
-
-    private static boolean hasAllele(final LilacAllele allele, final List<LilacAllele> alleles)
-    {
-        return alleles.stream().anyMatch(x -> x.allele().equals(allele.allele()));
     }
 }

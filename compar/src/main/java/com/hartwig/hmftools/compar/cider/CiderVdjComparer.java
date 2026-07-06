@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.compar.cider;
 
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
+import static com.hartwig.hmftools.compar.cider.CiderVdjData.FILTER_FIELD;
+import static com.hartwig.hmftools.compar.cider.CiderVdjData.LOCUS_FIELD;
 import static com.hartwig.hmftools.compar.common.CategoryType.CDR3_SEQUENCE;
 
 import java.io.UncheckedIOException;
@@ -16,6 +18,8 @@ import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.SourceType;
+import com.hartwig.hmftools.compar.common.field.Field;
+import com.hartwig.hmftools.compar.common.field.StringField;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class CiderVdjComparer implements ItemComparer
@@ -28,7 +32,18 @@ public class CiderVdjComparer implements ItemComparer
     }
 
     @Override
-    public CategoryType category() { return CDR3_SEQUENCE; }
+    public CategoryType category() {
+        return CDR3_SEQUENCE;
+    }
+
+    @Override
+    public List<Field> fields()
+    {
+        return List.of(
+                new StringField(FILTER_FIELD, i -> ((CiderVdjData) i).mCdr3Sequence.filter(), true),
+                new StringField(LOCUS_FIELD, i -> ((CiderVdjData) i).mCdr3Sequence.locus(), true)
+        );
+    }
 
     @Override
     public boolean processSample(final String sampleId, final List<Mismatch> mismatches)
@@ -37,9 +52,9 @@ public class CiderVdjComparer implements ItemComparer
     }
 
     @Override
-    public List<String> comparedFieldNames()
+    public List<String> displayFieldNames()
     {
-        return CiderVdjData.comparedFieldNames();
+        return List.of(FILTER_FIELD, CiderVdjData.LOCUS_FIELD);
     }
 
     @Override

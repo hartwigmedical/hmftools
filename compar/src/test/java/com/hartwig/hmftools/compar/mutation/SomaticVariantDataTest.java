@@ -4,7 +4,7 @@ import static com.hartwig.hmftools.compar.ComparTestUtil.assertDifferencesAreFor
 import static com.hartwig.hmftools.compar.ComparTestUtil.union;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_QUAL;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
-import static com.hartwig.hmftools.compar.common.DiffFunctions.FILTER_DIFF;
+import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_FILTER;
 import static com.hartwig.hmftools.compar.mutation.SomaticVariantData.FLD_BIALLELIC;
 import static com.hartwig.hmftools.compar.mutation.SomaticVariantData.FLD_BIALLELIC_PROB;
 import static com.hartwig.hmftools.compar.mutation.SomaticVariantData.FLD_LPS;
@@ -48,7 +48,7 @@ public class SomaticVariantDataTest extends ComparableItemTest<SomaticVariantDat
     private static final Set<String> PAVE_ONLY_FIELDS =
             Set.of(FLD_GENE, FLD_CANON_EFFECT, FLD_CODING_EFFECT, FLD_HGVS_CODING, FLD_HGVS_PROTEIN);
     private static final Set<String> SAGE_ONLY_FIELDS =
-            Set.of(FLD_QUAL, FLD_REPORTED, FLD_TIER, FLD_TUMOR_SUPPORTING_READ_COUNT, FLD_TUMOR_TOTAL_READ_COUNT, FLD_LPS, FILTER_DIFF);
+            Set.of(FLD_QUAL, FLD_REPORTED, FLD_TIER, FLD_TUMOR_SUPPORTING_READ_COUNT, FLD_TUMOR_TOTAL_READ_COUNT, FLD_LPS, FLD_FILTER);
     private static final Set<String> FIELDS_UP_TO_PAVE = union(SAGE_ONLY_FIELDS, PAVE_ONLY_FIELDS);
 
     @Before
@@ -81,7 +81,7 @@ public class SomaticVariantDataTest extends ComparableItemTest<SomaticVariantDat
         fieldToAlternateValueInitializer.put(FLD_VARIANT_COPY_NUMBER, b -> b.variantCopyNumber = alternateValueSource.VariantCopyNumber);
         fieldToAlternateValueInitializer.put(FLD_PURITY_ADJUSTED_VAF, b -> b.purityAdjustedVaf = alternateValueSource.PurityAdjustedVaf);
         fieldToAlternateValueInitializer.put(FLD_LPS, b -> b.hasLPS = alternateValueSource.HasLPS);
-        fieldToAlternateValueInitializer.put(FILTER_DIFF, b -> b.filters = alternateValueSource.Filters);
+        fieldToAlternateValueInitializer.put(FLD_FILTER, b -> b.filters = alternateValueSource.Filters);
 
         nameToAlternateIndexInitializer = Map.of(
                 "Chromosome", b ->
@@ -175,7 +175,7 @@ public class SomaticVariantDataTest extends ComparableItemTest<SomaticVariantDat
             b.comparisonPosition = passVictim.mComparisonPosition;
             b.isFromUnfilteredVcf = true;
             b.hasPurpleAnnotation = false;
-            b.filters = Set.of("PASS");
+            b.filters = Set.of("TumorQual");
         });
 
         FieldConfig fieldConfig = createDefaultThresholds();
@@ -186,7 +186,7 @@ public class SomaticVariantDataTest extends ComparableItemTest<SomaticVariantDat
         assertEquals(MismatchType.OLD_ONLY, mismatch.Type);
         assertEquals(passVictim, mismatch.OldItem);
         assertEquals(filteredVictim, mismatch.NewItem);
-        assertDifferencesAreForFields(union(SAGE_ONLY_FIELDS, Set.of(FILTER_DIFF)), mismatch.DiffValues);
+        assertDifferencesAreForFields(union(SAGE_ONLY_FIELDS, Set.of(FLD_FILTER)), mismatch.DiffValues);
 
         assertTrue(filteredVictim.matches(passVictim));
         Mismatch oppositeMismatch = filteredVictim.findMismatch(passVictim, MatchLevel.DETAILED, fieldConfig, false);
@@ -194,7 +194,7 @@ public class SomaticVariantDataTest extends ComparableItemTest<SomaticVariantDat
         assertEquals(MismatchType.NEW_ONLY, oppositeMismatch.Type);
         assertEquals(filteredVictim, oppositeMismatch.OldItem);
         assertEquals(passVictim, oppositeMismatch.NewItem);
-        assertDifferencesAreForFields(union(SAGE_ONLY_FIELDS, Set.of(FILTER_DIFF)), mismatch.DiffValues);
+        assertDifferencesAreForFields(union(SAGE_ONLY_FIELDS, Set.of(FLD_FILTER)), mismatch.DiffValues);
     }
 
     @Test
