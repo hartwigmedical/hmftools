@@ -3,7 +3,6 @@ package com.hartwig.hmftools.compar.common.field;
 import static java.lang.String.format;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -49,6 +48,15 @@ public class BreakendsField implements Field
     @Override
     public boolean hasDiff(final ComparableItem oldItem, final ComparableItem newItem)
     {
+        return !determineDiffs(oldItem, newItem).isEmpty();
+    }
+
+    @Override
+    public List<String> determineDiffs(ComparableItem oldItem, ComparableItem newItem)
+    {
+        final List<String> diffs = Lists.newArrayList();
+
+        // compare each breakend and record differences
         List<BreakendData> oldBreakends = new ArrayList<>(extractValue.apply(oldItem));
         List<BreakendData> newBreakends = new ArrayList<>(extractValue.apply(newItem));
 
@@ -59,89 +67,43 @@ public class BreakendsField implements Field
 
             BreakendData newBreakendData = findMatchingBreakend(oldBreakendData, newBreakends);
 
-            if(newBreakendData == null)
+            if(newBreakendData != null)
             {
-                return true;
-            }
+                LinxBreakend oldBreakend = oldBreakendData.Breakend;
+                LinxBreakend newBreakend = newBreakendData.Breakend;
 
-            LinxBreakend breakend = oldBreakendData.Breakend;
-            LinxBreakend otherBreakend = newBreakendData.Breakend;
-
-            if(breakend.regionType() != otherBreakend.regionType()
-                    || breakend.codingType() != otherBreakend.codingType()
-                    || breakend.nextSpliceExonRank() != otherBreakend.nextSpliceExonRank()
-                    || breakend.reportedStatus() != otherBreakend.reportedStatus())
-            {
-                return true;
-            }
-
-            oldBreakends.remove(index);
-            newBreakends.remove(newBreakendData);
-        }
-
-        return !newBreakends.isEmpty();
-    }
-
-    @Override
-    public List<String> determineDiffs(ComparableItem oldItem, ComparableItem newItem)
-    {
-        if(hasDiff(oldItem, newItem))
-        {
-            final List<String> diffs = Lists.newArrayList();
-
-            // compare each breakend and record differences
-            List<BreakendData> oldBreakends = new ArrayList<>(extractValue.apply(oldItem));
-            List<BreakendData> newBreakends = new ArrayList<>(extractValue.apply(newItem));
-
-            int index = 0;
-            while(index < oldBreakends.size())
-            {
-                BreakendData oldBreakendData = oldBreakends.get(index);
-
-                BreakendData newBreakendData = findMatchingBreakend(oldBreakendData, newBreakends);
-
-                if(newBreakendData != null)
+                if(oldBreakend.regionType() != newBreakend.regionType()
+                        || oldBreakend.codingType() != newBreakend.codingType()
+                        || oldBreakend.nextSpliceExonRank() != newBreakend.nextSpliceExonRank())
                 {
-                    LinxBreakend oldBreakend = oldBreakendData.Breakend;
-                    LinxBreakend newBreakend = newBreakendData.Breakend;
-
-                    if(oldBreakend.regionType() != newBreakend.regionType()
-                            || oldBreakend.codingType() != newBreakend.codingType()
-                            || oldBreakend.nextSpliceExonRank() != newBreakend.nextSpliceExonRank())
-                    {
-                        diffs.add(format("%s(%s transcript %s/%s)",
-                                name(), oldBreakendData.svInfoStr(), oldBreakendData.transcriptStr(), newBreakendData.transcriptStr()));
-                    }
-
-                    if(oldBreakend.reportedStatus() != newBreakend.reportedStatus())
-                    {
-                        diffs.add(format("%s(%s reported %s/%s)",
-                                name(), oldBreakendData.svInfoStr(), oldBreakend.reportedStatus(), newBreakend.reportedStatus()));
-                    }
-
-                    oldBreakends.remove(index);
-                    newBreakends.remove(newBreakendData);
+                    diffs.add(format("%s(%s transcript %s/%s)",
+                            name(), oldBreakendData.svInfoStr(), oldBreakendData.transcriptStr(), newBreakendData.transcriptStr()));
                 }
-                else
+
+                if(oldBreakend.reportedStatus() != newBreakend.reportedStatus())
                 {
-                    // record an unmatched breakend or SV
-                    diffs.add(format("%s(unmatched SV %s/)", name(), oldBreakendData.svInfoStr()));
-
-                    ++index;
+                    diffs.add(format("%s(%s reported %s/%s)",
+                            name(), oldBreakendData.svInfoStr(), oldBreakend.reportedStatus(), newBreakend.reportedStatus()));
                 }
-            }
 
-            for(BreakendData otherBreakendData : newBreakends)
-            {
-                // record an unmatched breakend or SV on the other side
-                diffs.add(format("%s(unmatched SV /%s)", name(), otherBreakendData.svInfoStr()));
+                oldBreakends.remove(index);
+                newBreakends.remove(newBreakendData);
             }
-            return diffs;
+            else
+            {
+                // record an unmatched breakend or SV
+                diffs.add(format("%s(unmatched SV %s/)", name(), oldBreakendData.svInfoStr()));
+
+                ++index;
+            }
         }
-        else
+
+        for(BreakendData otherBreakendData : newBreakends)
         {
-            return Collections.emptyList();
+            // record an unmatched breakend or SV on the other side
+            diffs.add(format("%s(unmatched SV /%s)", name(), otherBreakendData.svInfoStr()));
         }
+        return diffs;
     }
 
     private BreakendData findMatchingBreakend(final BreakendData breakend, final List<BreakendData> otherBreakends)

@@ -61,32 +61,31 @@ public class ImageField implements Field
     @Override
     public boolean hasDiff(final ComparableItem oldItem, final ComparableItem newItem)
     {
+        return !determineDiffs(oldItem, newItem).isEmpty();
+    }
+
+    @Override
+    public List<String> determineDiffs(ComparableItem oldItem, ComparableItem newItem)
+    {
         BufferedImage oldImage = extractValue.apply(oldItem);
         BufferedImage newImage = extractValue.apply(newItem);
 
         int absDiff = countDifferingPixels(oldImage, newImage);
         if(absDiff == 0)
         {
-            return false;
+            return Collections.emptyList();
         }
 
-        double relDiff = (double) absDiff / max(countTotalPixels(oldImage), countTotalPixels(newImage));
+        int totalPixels = max(countTotalPixels(oldImage), countTotalPixels(newImage));
+        double relDiff = (double) absDiff / totalPixels;
 
         boolean satisfiesAbsDiff = absoluteThreshold == null || absDiff > absoluteThreshold;
         boolean satisfiesRelDiff = percentThreshold == null || relDiff > percentThreshold;
 
-        return satisfiesAbsDiff && satisfiesRelDiff;
-    }
+        boolean hasDiff = satisfiesAbsDiff && satisfiesRelDiff;
 
-    public List<String> determineDiffs(ComparableItem oldItem, ComparableItem newItem)
-    {
-        if(hasDiff(oldItem, newItem))
+        if(hasDiff)
         {
-            BufferedImage oldImage = extractValue.apply(oldItem);
-            BufferedImage newImage = extractValue.apply(newItem);
-            int absDiff = countDifferingPixels(oldImage, newImage);
-            int totalPixels = max(countTotalPixels(oldImage), countTotalPixels(newImage));
-            double relDiff = (double) absDiff / totalPixels;
             return List.of(format("%s(%.3f=%d/%d)", name(), relDiff, absDiff, totalPixels));
         }
         else
