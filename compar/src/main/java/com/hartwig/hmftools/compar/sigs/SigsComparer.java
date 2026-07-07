@@ -14,6 +14,7 @@ import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.common.FileSources;
+import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.SourceType;
 import com.hartwig.hmftools.compar.common.field.DoubleField;
@@ -41,7 +42,7 @@ public record SigsComparer(ComparConfig mConfig) implements ItemComparer
     }
 
     @Override
-    public List<Field> fields()
+    public List<Field> fields(MatchLevel matchLevel)
     {
         return List.of(
                 new DoubleField(FLD_PERCENT, i -> ((SigsData) i).SignatureAllocation().percent(), true, 0.05, null, "%.4f")

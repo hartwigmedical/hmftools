@@ -37,6 +37,7 @@ import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.common.FileSources;
+import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.SourceData;
@@ -67,7 +68,7 @@ public class DriverComparer implements ItemComparer
     public CategoryType category() { return DRIVER; }
 
     @Override
-    public List<Field> fields()
+    public List<Field> fields(MatchLevel matchLevel)
     {
         return List.of(
                 new StringField(FLD_LIKE_METHOD, i -> ((DriverData) i).DriverCatalog.likelihoodMethod().toString(), true),

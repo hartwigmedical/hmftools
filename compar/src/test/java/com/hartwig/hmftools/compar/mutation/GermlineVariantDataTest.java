@@ -101,16 +101,17 @@ public class GermlineVariantDataTest extends ComparableItemTest<GermlineVariantD
             b.chromosome = "8";
             b.position = 10000;
         });
-        FieldConfig fieldConfig = createDefaultThresholds();
+        FieldConfig detailedFieldConfig = createDefaultThresholds(MatchLevel.DETAILED);
+        FieldConfig reportableFieldConfig = createDefaultThresholds(MatchLevel.REPORTABLE);
 
         assertTrue(victim.matches(liftoverVictim));
         assertTrue(liftoverVictim.matches(victim));
-        assertNull(victim.findMismatch(liftoverVictim, MatchLevel.DETAILED, fieldConfig, false));
-        assertNull(victim.findMismatch(liftoverVictim, MatchLevel.REPORTABLE, fieldConfig, false));
+        assertNull(victim.findMismatch(liftoverVictim, MatchLevel.DETAILED, detailedFieldConfig, false));
+        assertNull(victim.findMismatch(liftoverVictim, MatchLevel.REPORTABLE, reportableFieldConfig, false));
 
         Mismatch expectedMatch = new Mismatch(victim, liftoverVictim, MismatchType.FULL_MATCH, Collections.emptyList());
-        assertEquals(expectedMatch, victim.findMismatch(liftoverVictim, MatchLevel.DETAILED, fieldConfig, true));
-        assertEquals(expectedMatch, victim.findMismatch(liftoverVictim, MatchLevel.REPORTABLE, fieldConfig, true));
+        assertEquals(expectedMatch, victim.findMismatch(liftoverVictim, MatchLevel.DETAILED, detailedFieldConfig, true));
+        assertEquals(expectedMatch, victim.findMismatch(liftoverVictim, MatchLevel.REPORTABLE, reportableFieldConfig, true));
     }
 
     @Test

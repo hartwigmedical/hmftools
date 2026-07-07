@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.compar.ComparableImage.FLD_PIXELS;
 import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.field.Field;
 import com.hartwig.hmftools.compar.common.field.ImageField;
 import com.hartwig.hmftools.compar.common.field.StringField;
@@ -22,7 +23,7 @@ public abstract class ImageComparer implements ItemComparer
     }
 
     @Override
-    public List<Field> fields()
+    public List<Field> fields(MatchLevel matchLevel)
     {
         return buildFields(mPixelAbsoluteThreshold, mPixelPercentThreshold);
     }

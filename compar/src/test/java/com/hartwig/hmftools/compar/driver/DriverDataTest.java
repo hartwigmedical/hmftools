@@ -156,7 +156,7 @@ public class DriverDataTest extends ComparableItemTest<DriverData, DriverCompare
         ComparConfig config = new ComparConfig();
         DriverComparer driverComparer = new DriverComparer(config);
 
-        config.FieldConfig.registerFields(driverComparer);
+        config.FieldConfig.registerFields(driverComparer, MatchLevel.DETAILED);
 
         List<ComparableItem> refItems = Lists.newArrayList();
         List<ComparableItem> newItems = Lists.newArrayList();

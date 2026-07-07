@@ -86,14 +86,15 @@ public class CopyNumberDataTest extends ComparableItemTest<CopyNumberData, CopyN
             b.positionStart = 15000;
             b.positionEnd = 25000;
         });
-        FieldConfig fieldConfig = createDefaultThresholds();
+        MatchLevel matchLevel = MatchLevel.DETAILED;
+        FieldConfig fieldConfig = createDefaultThresholds(matchLevel);
 
         assertTrue(victim.matches(liftoverVictim));
         assertTrue(liftoverVictim.matches(victim));
-        assertNull(victim.findMismatch(liftoverVictim, MatchLevel.DETAILED, fieldConfig, false));
+        assertNull(victim.findMismatch(liftoverVictim, matchLevel, fieldConfig, false));
 
         Mismatch expectedMatch = new Mismatch(victim, liftoverVictim, MismatchType.FULL_MATCH, Collections.emptyList());
-        assertEquals(expectedMatch, victim.findMismatch(liftoverVictim, MatchLevel.DETAILED, fieldConfig, true));
+        assertEquals(expectedMatch, victim.findMismatch(liftoverVictim, matchLevel, fieldConfig, true));
     }
 
     @Test

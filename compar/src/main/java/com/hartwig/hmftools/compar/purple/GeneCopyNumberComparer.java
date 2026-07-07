@@ -21,6 +21,7 @@ import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.ItemComparer;
+import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.SourceType;
 import com.hartwig.hmftools.compar.common.field.DoubleField;
@@ -40,7 +41,7 @@ public class GeneCopyNumberComparer implements ItemComparer
     public CategoryType category() { return GENE_COPY_NUMBER; }
 
     @Override
-    public List<Field> fields()
+    public List<Field> fields(MatchLevel matchLevel)
     {
         return List.of(
                 new DoubleField(FLD_MIN_COPY_NUMBER, i -> ((GeneCopyNumberData) i).CopyNumber.minCopyNumber(), true, 0.5, 0.15, "%.2f"),

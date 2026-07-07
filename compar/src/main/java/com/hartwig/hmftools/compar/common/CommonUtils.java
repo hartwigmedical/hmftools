@@ -94,7 +94,7 @@ public class CommonUtils
                 continue;
             }
 
-            config.FieldConfig.registerFields(comparer);
+            config.FieldConfig.registerFields(comparer, matchLevel);
             comparers.add(comparer);
         }
 

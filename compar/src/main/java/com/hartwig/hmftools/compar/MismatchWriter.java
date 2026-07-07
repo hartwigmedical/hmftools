@@ -23,6 +23,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.KnownMismatch;
 import com.hartwig.hmftools.compar.common.CurationInfo;
+import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.WriteType;
 import com.hartwig.hmftools.compar.common.field.Field;
@@ -239,9 +240,10 @@ public class MismatchWriter
         }
     }
 
-    private static List<Field> determineDisplayFields(final ItemComparer comparer)
+    private List<Field> determineDisplayFields(final ItemComparer comparer)
     {
-        Map<String, Field> fieldNameToField = comparer.fields().stream().collect(Collectors.toMap(Field::name, f -> f));
+        MatchLevel matchLevel = mConfig.Categories.get(comparer.category());
+        Map<String, Field> fieldNameToField = comparer.fields(matchLevel).stream().collect(Collectors.toMap(Field::name, f -> f));
 
         return comparer.displayFieldNames().stream().map(fieldNameToField::get).collect(Collectors.toList());
     }

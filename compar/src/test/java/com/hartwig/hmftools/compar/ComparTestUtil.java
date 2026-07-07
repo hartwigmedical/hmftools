@@ -47,28 +47,6 @@ public class ComparTestUtil
         assertEquals(testMessage, field, extractFieldNameFromDifference(detailedMismatch.DiffValues.get(0)));
     }
 
-    public static void assertValueDifferencesAsExpected(final ComparableItem refVictim, final ComparableItem newVictim,
-            final MatchLevel matchLevel, final FieldConfig fieldConfig, final Set<String> expectedFieldNames,
-            final boolean expectIndexMatch)
-    {
-        if(expectIndexMatch)
-        {
-            assertTrue("Test ref.matches(new) is True", refVictim.matches(newVictim));
-        }
-        else
-        {
-            assertFalse("Test ref.matches(new) is False", refVictim.matches(newVictim));
-        }
-
-        Mismatch mismatch = refVictim.findMismatch(newVictim, matchLevel, fieldConfig, false);
-
-        assertEquals(MismatchType.VALUE, mismatch.Type);
-        assertEquals(refVictim, mismatch.OldItem);
-        assertEquals(newVictim, mismatch.NewItem);
-
-        assertDifferencesAreForFields(expectedFieldNames, mismatch.DiffValues);
-    }
-
     public static String extractFieldNameFromDifference(final String difference)
     {
         return difference.split("\\(")[0];

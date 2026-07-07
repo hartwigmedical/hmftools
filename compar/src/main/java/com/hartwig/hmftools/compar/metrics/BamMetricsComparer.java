@@ -20,6 +20,7 @@ import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.common.FileSources;
+import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.SourceType;
 import com.hartwig.hmftools.compar.common.field.DoubleField;
@@ -58,7 +59,7 @@ public class BamMetricsComparer implements ItemComparer
     protected static String coverageString(final int coverage) { return format("Percentage%dX", coverage); }
 
     @Override
-    public List<Field> fields()
+    public List<Field> fields(MatchLevel matchLevel)
     {
         List<Field> fields = Lists.newArrayList();
         fields.add(new DoubleField(FLD_DUPLICATE_PERCENTAGE, i -> ((BamMetricsData) i).metrics().duplicatePercent(), true, DUPLICATE_PERCENTAGE_ABS_THRESHOLD, DUPLICATE_PERCENTAGE_PCT_THRESHOLD, "%.2f"));

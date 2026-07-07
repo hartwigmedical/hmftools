@@ -16,9 +16,9 @@ public class FieldConfig
         fieldSettings = Maps.newHashMap();
     }
 
-    public void registerFields(final ItemComparer comparer)
+    public void registerFields(final ItemComparer comparer, final MatchLevel matchLevel)
     {
-        for(Field field : comparer.fields())
+        for(Field field : comparer.fields(matchLevel))
         {
             registerField(comparer.category(), field);
         }

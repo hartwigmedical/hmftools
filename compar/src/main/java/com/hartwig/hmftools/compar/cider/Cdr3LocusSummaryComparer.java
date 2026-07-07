@@ -15,6 +15,7 @@ import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.common.FileSources;
+import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.SourceType;
 import com.hartwig.hmftools.compar.common.field.Field;
@@ -33,7 +34,8 @@ public class Cdr3LocusSummaryComparer implements ItemComparer
     @Override
     public CategoryType category() { return CDR3_LOCUS_SUMMARY; }
 
-    public List<Field> fields()
+    @Override
+    public List<Field> fields(MatchLevel matchLevel)
     {
         return List.of(
                 new IntField(PASS_SEQUENCES_FIELD, i -> ((Cdr3LocusSummaryData) i).Cdr3LocusSummary.passSequences(), true, null, 0.05)

@@ -121,16 +121,17 @@ public class SomaticVariantDataTest extends ComparableItemTest<SomaticVariantDat
             b.chromosome = "8";
             b.position = 10000;
         });
-        FieldConfig fieldConfig = createDefaultThresholds();
+        FieldConfig detailedFieldConfig = createDefaultThresholds(MatchLevel.DETAILED);
+        FieldConfig reportableFieldConfig = createDefaultThresholds(MatchLevel.REPORTABLE);
 
         assertTrue(victim.matches(liftoverVictim));
         assertTrue(liftoverVictim.matches(victim));
-        assertNull(victim.findMismatch(liftoverVictim, MatchLevel.DETAILED, fieldConfig, false));
-        assertNull(victim.findMismatch(liftoverVictim, MatchLevel.REPORTABLE, fieldConfig, false));
+        assertNull(victim.findMismatch(liftoverVictim, MatchLevel.DETAILED, detailedFieldConfig, false));
+        assertNull(victim.findMismatch(liftoverVictim, MatchLevel.REPORTABLE, reportableFieldConfig, false));
 
         Mismatch expectedMatch = new Mismatch(victim, liftoverVictim, MismatchType.FULL_MATCH, Collections.emptyList());
-        assertEquals(expectedMatch, victim.findMismatch(liftoverVictim, MatchLevel.DETAILED, fieldConfig, true));
-        assertEquals(expectedMatch, victim.findMismatch(liftoverVictim, MatchLevel.REPORTABLE, fieldConfig, true));
+        assertEquals(expectedMatch, victim.findMismatch(liftoverVictim, MatchLevel.DETAILED, detailedFieldConfig, true));
+        assertEquals(expectedMatch, victim.findMismatch(liftoverVictim, MatchLevel.REPORTABLE, reportableFieldConfig, true));
     }
 
     @Test
@@ -149,10 +150,11 @@ public class SomaticVariantDataTest extends ComparableItemTest<SomaticVariantDat
             b.hasPurpleAnnotation = false;
         });
 
-        FieldConfig fieldConfig = createDefaultThresholds();
-
         assertTrue(refVictim.matches(newVictim));
-        Mismatch mismatch = refVictim.findMismatch(newVictim, MatchLevel.DETAILED, fieldConfig, false);
+
+        MatchLevel matchLevel = MatchLevel.DETAILED;
+        FieldConfig fieldConfig = createDefaultThresholds(matchLevel);
+        Mismatch mismatch = refVictim.findMismatch(newVictim, matchLevel, fieldConfig, false);
 
         assertEquals(MismatchType.VALUE, mismatch.Type);
         assertEquals(refVictim, mismatch.OldItem);
@@ -178,10 +180,11 @@ public class SomaticVariantDataTest extends ComparableItemTest<SomaticVariantDat
             b.filters = Set.of("TumorQual");
         });
 
-        FieldConfig fieldConfig = createDefaultThresholds();
-
         assertTrue(passVictim.matches(filteredVictim));
-        Mismatch mismatch = passVictim.findMismatch(filteredVictim, MatchLevel.DETAILED, fieldConfig, false);
+
+        MatchLevel matchLevel = MatchLevel.DETAILED;
+        FieldConfig fieldConfig = createDefaultThresholds(matchLevel);
+        Mismatch mismatch = passVictim.findMismatch(filteredVictim, matchLevel, fieldConfig, false);
 
         assertEquals(MismatchType.OLD_ONLY, mismatch.Type);
         assertEquals(passVictim, mismatch.OldItem);
@@ -189,7 +192,7 @@ public class SomaticVariantDataTest extends ComparableItemTest<SomaticVariantDat
         assertDifferencesAreForFields(union(SAGE_ONLY_FIELDS, Set.of(FLD_FILTER)), mismatch.DiffValues);
 
         assertTrue(filteredVictim.matches(passVictim));
-        Mismatch oppositeMismatch = filteredVictim.findMismatch(passVictim, MatchLevel.DETAILED, fieldConfig, false);
+        Mismatch oppositeMismatch = filteredVictim.findMismatch(passVictim, matchLevel, fieldConfig, false);
 
         assertEquals(MismatchType.NEW_ONLY, oppositeMismatch.Type);
         assertEquals(filteredVictim, oppositeMismatch.OldItem);

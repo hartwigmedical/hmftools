@@ -55,24 +55,4 @@ public class LilacAlleleData implements ComparableItem
 
         return true;
     }
-
-    @Override
-    public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final FieldConfig fieldConfig,
-            final boolean includeMatches)
-    {
-        final LilacAlleleData otherData = (LilacAlleleData)other;
-
-        final List<String> diffs = Lists.newArrayList();
-
-        List<String> alwaysCompareFields = List.of(FLD_MISSENSE, FLD_NFS, FLD_SPLICE, FLD_INDEL, FLD_TUMOR_CN);
-        diffs.addAll(findDiffs(this, otherData, fieldConfig.getFields(category(), alwaysCompareFields)));
-
-        if(matchLevel == MatchLevel.DETAILED)
-        {
-            List<String> detailedOnlyFields = List.of(FLD_REF_TOTAL, FLD_TUMOR_TOTAL, FLD_SYNON);
-            diffs.addAll(findDiffs(this, otherData, fieldConfig.getFields(category(), detailedOnlyFields)));
-        }
-
-        return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches);
-    }
 }

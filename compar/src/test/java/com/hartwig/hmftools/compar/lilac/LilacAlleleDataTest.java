@@ -70,9 +70,11 @@ public class LilacAlleleDataTest extends ComparableItemTest<LilacAlleleData, Lil
                 String field = entry.getKey();
                 LilacAlleleData refVictim = builder.create();
                 LilacAlleleData newVictim = builder.create(entry.getValue());
-                FieldConfig fieldConfig = createDefaultThresholds();
 
-                assertSingleFieldMismatch(field, refVictim, newVictim, MatchLevel.REPORTABLE, fieldConfig, MismatchType.VALUE);
+                MatchLevel matchLevel = MatchLevel.REPORTABLE;
+                FieldConfig fieldConfig = createDefaultThresholds(matchLevel);
+
+                assertSingleFieldMismatch(field, refVictim, newVictim, matchLevel, fieldConfig, MismatchType.VALUE);
             }
         }
     }

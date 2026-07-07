@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.FileSources;
+import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.SourceType;
 import com.hartwig.hmftools.compar.common.field.Field;
@@ -19,7 +20,7 @@ public interface ItemComparer
 
     List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final FileSources fileSources);
 
-    List<Field> fields();
+    List<Field> fields(MatchLevel matchLevel);
 
     List<String> displayFieldNames();
 

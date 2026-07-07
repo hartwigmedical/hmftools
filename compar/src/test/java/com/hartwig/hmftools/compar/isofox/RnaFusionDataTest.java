@@ -85,14 +85,16 @@ public class RnaFusionDataTest extends ComparableItemTest<RnaFusionData, RnaFusi
     {
         RnaFusionData victim = TestRnaFusionDataBuilder.BUILDER.create(b -> b.comparisonPositionUp = 5000);
         RnaFusionData liftoverVictim = TestRnaFusionDataBuilder.BUILDER.create(b -> b.positionUp = 5000);
-        FieldConfig fieldConfig = createDefaultThresholds();
+
+        MatchLevel matchLevel = MatchLevel.DETAILED;
+        FieldConfig fieldConfig = createDefaultThresholds(matchLevel);
 
         assertTrue(victim.matches(liftoverVictim));
         assertTrue(liftoverVictim.matches(victim));
-        assertNull(victim.findMismatch(liftoverVictim, MatchLevel.DETAILED, fieldConfig, false));
+        assertNull(victim.findMismatch(liftoverVictim, matchLevel, fieldConfig, false));
 
         Mismatch expectedMatch = new Mismatch(victim, liftoverVictim, MismatchType.FULL_MATCH, Collections.emptyList());
-        assertEquals(expectedMatch, victim.findMismatch(liftoverVictim, MatchLevel.DETAILED, fieldConfig, true));
+        assertEquals(expectedMatch, victim.findMismatch(liftoverVictim, matchLevel, fieldConfig, true));
     }
 
     @Test
@@ -100,14 +102,16 @@ public class RnaFusionDataTest extends ComparableItemTest<RnaFusionData, RnaFusi
     {
         RnaFusionData victim = TestRnaFusionDataBuilder.BUILDER.create(b -> b.comparisonPositionDown = 6000);
         RnaFusionData liftoverVictim = TestRnaFusionDataBuilder.BUILDER.create(b -> b.positionDown = 6000);
-        FieldConfig fieldConfig = createDefaultThresholds();
+
+        MatchLevel matchLevel = MatchLevel.DETAILED;
+        FieldConfig fieldConfig = createDefaultThresholds(matchLevel);
 
         assertTrue(victim.matches(liftoverVictim));
         assertTrue(liftoverVictim.matches(victim));
-        assertNull(victim.findMismatch(liftoverVictim, MatchLevel.DETAILED, fieldConfig, false));
+        assertNull(victim.findMismatch(liftoverVictim, matchLevel, fieldConfig, false));
 
         Mismatch expectedMatch = new Mismatch(victim, liftoverVictim, MismatchType.FULL_MATCH, Collections.emptyList());
-        assertEquals(expectedMatch, victim.findMismatch(liftoverVictim, MatchLevel.DETAILED, fieldConfig, true));
+        assertEquals(expectedMatch, victim.findMismatch(liftoverVictim, matchLevel, fieldConfig, true));
     }
 
     @Test
