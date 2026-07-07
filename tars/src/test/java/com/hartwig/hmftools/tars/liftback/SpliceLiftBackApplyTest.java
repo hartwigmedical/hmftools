@@ -202,6 +202,51 @@ public class SpliceLiftBackApplyTest
         assertNull(record.getAttribute("XS"));
     }
 
+    @Test
+    public void testStrandSwapReverseComplementsSeqAndQuals()
+    {
+        // bwa placed the read contiguously on the REVERSE strand (chr1:5000 100M); an XA tx alt crosses a junction on
+        // the forward strand. The discriminator promotes the spliced tx placement (JUNCTION_OVER_CONTIGUOUS), flipping
+        // the strand reverse->forward. SEQ/quals are stored in the reverse orientation, so applyResultToRecord must
+        // reverse-complement the bases and reverse the quals to keep SEQ on the genomic forward strand; otherwise the
+        // record is emitted mis-oriented and its recomputed NM inflates to ~read length.
+        SAMRecord record = newRecord(CHR_1, 5000, "100M");
+        record.setReadNegativeStrandFlag(true);
+        record.setReadBases(("A".repeat(99) + "C").getBytes());
+        byte[] quals = new byte[100];
+        for(int i = 0; i < 100; ++i)
+            quals[i] = (byte) (i % 40);
+        record.setBaseQualities(quals.clone());
+        record.setAttribute(XA_TAG, TX_CONTIG + ",+51,100M,0;");
+
+        LiftBackResolver resolver = new LiftBackResolver(List.of(threeExonContig()));
+        LiftBackResult result = resolver.resolve(record);
+        assertFalse("precondition: swap flips strand to forward", result.negativeStrand());
+
+        LiftBackRecordOps.applyResultToRecord(record, result, new LiftedMateInfoCache());
+
+        assertFalse(record.getReadNegativeStrandFlag());
+        assertLifted(record, CHR_1, 150, "50M100N50M");
+        assertEquals("G" + "T".repeat(99), record.getReadString());
+        byte[] outQuals = record.getBaseQualities();
+        assertEquals(quals[99], outQuals[0]);
+        assertEquals(quals[0], outQuals[99]);
+    }
+
+    @Test
+    public void testSameStrandLiftLeavesSeqUntouched()
+    {
+        // no strand change (forward tx primary lifts forward) -> SEQ must be left exactly as-is.
+        SAMRecord record = newRecord(TX_CONTIG, 51, "100M");
+        record.setReadBases(("A".repeat(99) + "C").getBytes());
+        LiftBackResolver resolver = new LiftBackResolver(List.of(threeExonContig()));
+
+        LiftBackRecordOps.applyResultToRecord(record, resolver.resolve(record), new LiftedMateInfoCache());
+
+        assertFalse(record.getReadNegativeStrandFlag());
+        assertEquals("A".repeat(99) + "C", record.getReadString());
+    }
+
     private static SAMRecord unmappedRecord()
     {
         SAMRecord record = new SAMRecord(new SAMFileHeader());

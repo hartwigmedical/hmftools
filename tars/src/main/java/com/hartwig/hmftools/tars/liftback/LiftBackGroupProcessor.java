@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRI
 import static com.hartwig.hmftools.tars.liftback.SaTagRewriter.rewriteSaTag;
 import static com.hartwig.hmftools.tars.common.TarsConstants.PRIMARY_AS_UNMAP_THRESHOLD;
 import static com.hartwig.hmftools.tars.common.TarsConstants.CONFIDENT_MAPQ;
+import static com.hartwig.hmftools.tars.common.TarsConstants.MAX_CONFIDENT_NM_FRACTION;
 import static com.hartwig.hmftools.tars.common.TarsConstants.SUPP_AS_DROP_THRESHOLD;
 import static com.hartwig.hmftools.tars.common.TarsConfig.TARS_LOGGER;
 
@@ -161,7 +162,8 @@ public class LiftBackGroupProcessor
             return;
         }
         LiftedMateInfo refreshed = LiftBackRecordOps.toLiftedMateInfo(primary, decision.PrimaryResult);
-        cache.recordPrimaryAlignment(primary.getReadName(), primary.getFirstOfPairFlag(), refreshed);
+        boolean firstOfPair = !primary.getReadPairedFlag() || primary.getFirstOfPairFlag();
+        cache.recordPrimaryAlignment(primary.getReadName(), firstOfPair, refreshed);
     }
 
     // Snapshot of the pass-effect counters mutated by one decideMateGroup pass, so a discarded provisional mate
@@ -336,6 +338,11 @@ public class LiftBackGroupProcessor
                 break;
             }
 
+        // A supplementary whose primary ends up unmapped (e.g. the primary lifted into an excluded region) is
+        // orphaned: there is no emitted primary for its SA to reference, so REDUX FragmentCoords would read a
+        // dangling primary locus off it. Drop the whole group's supps in that case.
+        boolean primaryUnmapped = decision.PrimaryResult == null || LiftBackRecordOps.willBeUnmapped(decision.PrimaryResult);
+
         // Dedup supplementaries that lift to the same (chrom, pos, cigar, strand) -- bwa can emit the
         // same junction across multiple transcript contigs and they collapse after liftback.
         Set<String> emittedSuppKeys = new HashSet<>();
@@ -345,6 +352,11 @@ public class LiftBackGroupProcessor
             SAMRecord record = records.get(i);
             LiftBackResult result = resolved[i];
             boolean drop = droppedBySupplementary != null && droppedBySupplementary[i];
+            if(!drop && record.getSupplementaryAlignmentFlag() && primaryUnmapped)
+            {
+                drop = true;
+                mStats.recordOrphanSuppDropped();
+            }
             if(!drop && record != primary && record.getSupplementaryAlignmentFlag())
             {
                 String key = dedupKey(result, record);
@@ -832,6 +844,27 @@ public class LiftBackGroupProcessor
         }
 
         refreshNmDropMd(record, mRefSource);
+
+        // A placement TARS made confident on its own (bumped a bwa MAPQ-0 read, or swapped to a different locus) but
+        // whose recomputed genomic NM is a large fraction of the read length is not a trustworthy unique placement
+        // (e.g. a large-D lift artifact heavily mismatching the genome) -- revert it to MAPQ 0 rather than assert
+        // confidence. bwa's own kept confident calls (input MAPQ > 0, not swapped) are never touched.
+        if((result.inputMapq() == 0 || result.swapped())
+                && !record.getReadUnmappedFlag() && !record.getSupplementaryAlignmentFlag()
+                && record.getMappingQuality() >= CONFIDENT_MAPQ)
+        {
+            Integer editDistance = record.getIntegerAttribute("NM");
+            byte[] readBases = record.getReadBases();
+            if(editDistance != null && readBases != null && readBases.length > 0
+                    && editDistance > MAX_CONFIDENT_NM_FRACTION * readBases.length)
+            {
+                record.setMappingQuality(0);
+                mStats.recordLowIdentityDemoted();
+                TARS_LOGGER.debug2("low-identity demote {}: NM={} over {}% of {}bp",
+                        record.getReadName(), editDistance, (int) (MAX_CONFIDENT_NM_FRACTION * 100), readBases.length);
+            }
+        }
+
         sink.emit(record, result);
     }
 }

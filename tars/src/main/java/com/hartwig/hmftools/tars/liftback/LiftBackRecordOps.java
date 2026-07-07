@@ -49,6 +49,36 @@ public final class LiftBackRecordOps
 
             default:
                 final Cigar liftedCigar = TextCigarCodec.decode(result.finalCigar());
+
+                // A discriminator swap can move the primary onto an opposite-strand placement (bwa's contiguous
+                // alignment sits on one strand while the winning spliced tx placement is on the other). SEQ and base
+                // qualities are stored in the input record's orientation; when the resolved strand flips, reverse-
+                // complement the bases and reverse the qualities so SEQ stays on the genomic forward strand and
+                // matches the lifted position/cigar. Without this the read is emitted mis-oriented and the recomputed
+                // NM (refreshNmDropMd) is measured against the wrong-strand bases -- inflating it to ~read length.
+                if(result.negativeStrand() != record.getReadNegativeStrandFlag())
+                {
+                    byte[] bases = record.getReadBases();
+                    if(bases != null && bases.length > 0)
+                    {
+                        byte[] flipped = bases.clone();
+                        SequenceUtil.reverseComplement(flipped);
+                        record.setReadBases(flipped);
+                    }
+                    byte[] quals = record.getBaseQualities();
+                    if(quals != null && quals.length > 0)
+                    {
+                        byte[] reversed = quals.clone();
+                        for(int i = 0, j = reversed.length - 1; i < j; ++i, --j)
+                        {
+                            byte tmp = reversed[i];
+                            reversed[i] = reversed[j];
+                            reversed[j] = tmp;
+                        }
+                        record.setBaseQualities(reversed);
+                    }
+                }
+
                 record.setReferenceName(result.finalChrom());
                 record.setAlignmentStart(result.finalPos());
                 record.setCigar(liftedCigar);
@@ -255,6 +285,7 @@ public final class LiftBackRecordOps
                 .filter(la -> !la.IsPrimaryChoice && !la.Dropped)
                 .filter(la -> !overlapsPrimary(la, primary))
                 .map(LiftBackRecordOps::formatXaEntry)
+                .distinct()  // a SELF and a tx-contig alt can lift to identical coords; list each locus once
                 .collect(Collectors.joining());
         return xa.isEmpty() ? null : xa;
     }

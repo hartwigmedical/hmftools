@@ -210,7 +210,7 @@ public class LiftBackResolver
                 .filter(la -> !la.Dropped)
                 .toList();
 
-        int numLoci = countDistinctLoci(keptAlignments);
+        int numLoci = countDistinctLoci(keptAlignments, effectivePrimary);
         int cigarsAtPrimaryLocus = countDistinctCigarsAtLocus(keptAlignments, effectivePrimary);
         String geneIds = joinGeneIds(keptAlignments);
 
@@ -388,18 +388,64 @@ public class LiftBackResolver
                 softClipAtBoundary, forwardStrand, entry.strand());
     }
 
-    // Counts distinct genomic loci among the kept alignments. Every distinct locus counts, including a lower-scoring
-    // alt: if bwa left the read MAPQ 0 and it lifts to more than one locus it stays a multimapper (no MAPQ bump),
-    // rather than TARS overriding bwa's call with a weaker reconstructed genomic score. Alts collapsing to a single
-    // locus (e.g. the same junction across multiple transcript contigs) still count as one, so those are bumped.
-    private static int countDistinctLoci(final List<LiftedAlignment> alignments)
+    // Counts distinct genomic loci among the kept alignments, using the SAME same-locus test as buildLiftedXa
+    // (overlapsPrimary) so NH and the emitted XA always agree. The primary is one locus; an alt whose genomic span
+    // OVERLAPS the primary's is the same locus and collapses -- a 5'/3'-softclipped isoform copy begins at a
+    // downstream exon of the same placement, lifting to a different start but a span nested inside the primary's, so
+    // keying on exact start would over-count it and wrongly withhold the MAPQ bump. Alts that do NOT overlap the
+    // primary are genuinely distinct placements (repeats/paralogs, other chromosomes); they are interval-merged
+    // among themselves so a cluster of overlapping repeat copies at one other locus counts once, but a tandem-repeat
+    // array offset beyond the primary is NOT chained back into the primary (that would falsely bump a repeat
+    // multimapper). numLoci therefore equals 1 exactly when every alt overlaps the primary -- i.e. when buildLiftedXa
+    // emits no XA -- so a bumped MAPQ-60 / NH-1 read never carries a stale XA.
+    private static int countDistinctLoci(final List<LiftedAlignment> alignments, final LiftedAlignment primary)
     {
-        Set<String> loci = new HashSet<>();
+        int primaryEnd = spanEnd(primary);
+
+        Map<String, List<int[]>> distinctSpans = new HashMap<>();
+        distinctSpans.computeIfAbsent(primary.LiftedChrom, k -> new ArrayList<>())
+                .add(new int[] { primary.LiftedPos, primaryEnd });
+
         for(final LiftedAlignment la : alignments)
         {
-            loci.add(locusKey(la));
+            if(la == primary)
+            {
+                continue;
+            }
+            int end = spanEnd(la);
+            boolean overlapsPrimary = la.LiftedChrom.equals(primary.LiftedChrom)
+                    && la.LiftedPos <= primaryEnd && primary.LiftedPos <= end;
+            if(overlapsPrimary)
+            {
+                continue;
+            }
+            distinctSpans.computeIfAbsent(la.LiftedChrom, k -> new ArrayList<>()).add(new int[] { la.LiftedPos, end });
         }
-        return loci.size();
+
+        int loci = 0;
+        for(final List<int[]> spans : distinctSpans.values())
+        {
+            spans.sort(Comparator.comparingInt(s -> s[0]));
+            int clusterEnd = -1;
+            for(final int[] span : spans)
+            {
+                if(span[0] > clusterEnd)
+                {
+                    ++loci;
+                    clusterEnd = span[1];
+                }
+                else
+                {
+                    clusterEnd = Math.max(clusterEnd, span[1]);
+                }
+            }
+        }
+        return loci;
+    }
+
+    private static int spanEnd(final LiftedAlignment la)
+    {
+        return la.LiftedPos + TextCigarCodec.decode(la.LiftedCigar).getReferenceLength() - 1;
     }
 
     private static int countDistinctCigarsAtLocus(final List<LiftedAlignment> alignments, final LiftedAlignment primary)

@@ -93,6 +93,27 @@ public final class TarsTestFixtures
         return record;
     }
 
+    // mapped single-end (Ultima) primary: like primaryRecord but with no pairing flags set at all.
+    public static SAMRecord unpairedPrimaryRecord(final String contig, final int pos, final String cigar)
+    {
+        SAMRecord record = new SAMRecord(new SAMFileHeader());
+        record.setReadName("readX");
+        record.setReferenceName(contig);
+        record.setAlignmentStart(pos);
+        record.setCigarString(cigar);
+        record.setMappingQuality(60);
+        record.setReadPairedFlag(false);
+        return record;
+    }
+
+    public static SAMRecord unpairedSupplementaryRecord(final String contig, final int pos, final String cigar, final String saTag)
+    {
+        SAMRecord record = unpairedPrimaryRecord(contig, pos, cigar);
+        record.setSupplementaryAlignmentFlag(true);
+        record.setAttribute("SA", saTag);
+        return record;
+    }
+
     // RefSequenceSource over an in-memory chromosome (1-based, inclusive); empty out-of-range -> null per contract.
     public static RefSequenceSource refSource(final String chromosome, final String bases)
     {

@@ -204,6 +204,42 @@ public class LiftBackResolverTest
     }
 
     @Test
+    public void testNestedSpanAltCountsAsSingleLocusAndBumpsMapq()
+    {
+        // Regression: a 5'-softclipped isoform alt begins at a downstream exon of the SAME placement. It lifts to a
+        // different start (chr1:300) but a span (300-349) nested inside the junction-crossing primary's (chr1:150-349),
+        // so it is the same genomic locus, not a second one. A MAPQ-0 read here is therefore a single-locus placement
+        // and must bump to 60 -- keying loci on exact start (the old behaviour) miscounted this as two loci and held it at 0.
+        SAMRecord record = newRecord(TX_CONTIG, 51, "100M"); // -> chr1:150 50M100N50M, genomic span 150-349
+        record.setMappingQuality(0);
+        record.setAttribute("XA", TX_CONTIG + ",+101,50S50M,0;"); // -> chr1:300 50S50M, span 300-349 (nested)
+
+        LiftBackResolver resolver = new LiftBackResolver(contigMap());
+        LiftBackResult result = resolver.resolve(record);
+
+        assertEquals(1, result.numLoci());
+        assertEquals(60, result.updatedMapq());
+    }
+
+    @Test
+    public void testChainedOverlapAltNotMergedThroughPrimary()
+    {
+        // A tandem-repeat-style read: primary chr1:1000-1099; alt B chr1:1080-1179 overlaps the primary; alt C
+        // chr1:1160-1259 overlaps B but NOT the primary. C is a genuinely distinct locus, so numLoci must be 2 and a
+        // MAPQ-0 read stays 0. Locus identity is anchored on the PRIMARY's span - C must not be chained back into the
+        // primary via B (a naive interval-merge over all alignments would wrongly collapse to one locus and bump to 60).
+        SAMRecord record = newRecord(CHR_1, 1000, "100M");
+        record.setMappingQuality(0);
+        record.setAttribute("XA", CHR_1 + ",+1080,100M,0;" + CHR_1 + ",+1160,100M,0;");
+
+        LiftBackResolver resolver = new LiftBackResolver(contigMap());
+        LiftBackResult result = resolver.resolve(record);
+
+        assertEquals(2, result.numLoci());
+        assertEquals(0, result.updatedMapq());
+    }
+
+    @Test
     public void testRefOnlyMulti()
     {
         SAMRecord record = newRecord(CHR_1, 1000, "50M"); // ref primary + ref alt on different chrom, no tx
