@@ -57,6 +57,11 @@ public final class TarsConstants
     public static final int PRIMARY_AS_UNMAP_THRESHOLD = 30;
     public static final int SUPP_AS_DROP_THRESHOLD = 30;
 
+    // A primary that TARS made confident (bwa MAPQ 0 -> 60 via bump / swap / merge) but whose recomputed genomic NM
+    // exceeds this fraction of the read length is not a trustworthy unique placement (heavy genomic mismatch, e.g. a
+    // large-D lift artifact); its MAPQ is reverted to 0. bwa's own confident calls (input MAPQ > 0) are never demoted.
+    public static final double MAX_CONFIDENT_NM_FRACTION = 0.25;
+
     // Supplementary-resolve defaults. Annotated-junction policy: min intron 21, max intron 1_000_000.
     public static final int DEFAULT_MIN_INTRON_LENGTH = 21;
     public static final int DEFAULT_MAX_INTRON_LENGTH = 1_000_000;

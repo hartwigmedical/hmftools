@@ -97,7 +97,7 @@ public class LiftBackWorker extends Thread
         }
         catch(Exception e)
         {
-            TARS_LOGGER.error("liftback worker failed: {}", e.toString());
+            TARS_LOGGER.error("liftback worker failed: {}", e.toString(), e);
             System.exit(1);
         }
         finally

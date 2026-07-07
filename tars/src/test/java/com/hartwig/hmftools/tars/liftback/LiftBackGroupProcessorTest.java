@@ -9,6 +9,8 @@ import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.refSource;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.secondMateRecord;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.supplementaryRecord;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.threeExonContig;
+import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.unpairedPrimaryRecord;
+import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.unpairedSupplementaryRecord;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -202,6 +204,40 @@ public class LiftBackGroupProcessorTest
         assertEquals(300, out1.getMateAlignmentStart());
         assertEquals(CHR_1, out2.getMateReferenceName());
         assertEquals(100, out2.getMateAlignmentStart());
+    }
+
+    @Test
+    public void singleEndPrimaryLiftedWithoutMatePatching()
+    {
+        // Ultima single-end: an unpaired primary must lift with no mate patching and without the
+        // getFirstOfPairFlag() throw the per-group mate-cache refresh used to hit on unpaired input.
+        SAMRecord primary = unpairedPrimaryRecord(TX_CONTIG, 1, "50M");
+
+        List<SAMRecord> emitted = process(List.of(primary), new LiftBackStats());
+
+        assertEquals(1, emitted.size());
+        SAMRecord out = emitted.get(0);
+        assertFalse(out.getReadPairedFlag());
+        assertFalse(out.getReadUnmappedFlag());
+        assertEquals(CHR_1, out.getReferenceName());
+        assertEquals(100, out.getAlignmentStart());
+        assertEquals(SAMRecord.NO_ALIGNMENT_REFERENCE_NAME, out.getMateReferenceName());
+        assertEquals(0, out.getInferredInsertSize());
+    }
+
+    @Test
+    public void singleEndPrimaryWithSupplementaryLifted()
+    {
+        // unpaired primary + its supplementary both lift and emit; exercises the mate-cache refresh with a
+        // supp present in the group, which is where the unpaired getFirstOfPairFlag() call sat.
+        SAMRecord primary = unpairedPrimaryRecord(TX_CONTIG, 100, "50M");
+        SAMRecord supp = unpairedSupplementaryRecord(TX_CONTIG, 110, "30M", TX_CONTIG + ",100,+,50M,0,0;");
+
+        List<SAMRecord> emitted = process(List.of(primary, supp), new LiftBackStats());
+
+        assertEquals(2, emitted.size());
+        assertTrue(emitted.stream().noneMatch(SAMRecord::getReadPairedFlag));
+        assertEquals(1, emitted.stream().filter(SAMRecord::getSupplementaryAlignmentFlag).count());
     }
 
     @Test
