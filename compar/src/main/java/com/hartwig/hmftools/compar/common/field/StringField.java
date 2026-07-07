@@ -30,6 +30,12 @@ public class StringField implements Field
     }
 
     @Override
+    public String type()
+    {
+        return "string";
+    }
+
+    @Override
     public String displayValue(final ComparableItem item)
     {
         return extractValue.apply(item);

@@ -47,7 +47,7 @@ import com.hartwig.hmftools.compar.isofox.IsofoxTranscriptDataComparer;
 import com.hartwig.hmftools.compar.isofox.NovelSpliceJunctionComparer;
 import com.hartwig.hmftools.compar.isofox.RnaFusionComparer;
 import com.hartwig.hmftools.compar.lilac.LilacAlleleComparer;
-import com.hartwig.hmftools.compar.lilac.LilacComparer;
+import com.hartwig.hmftools.compar.lilac.LilacQcComparer;
 import com.hartwig.hmftools.compar.linx.DisruptionComparer;
 import com.hartwig.hmftools.compar.linx.FusionComparer;
 import com.hartwig.hmftools.compar.linx.GermlineSvComparer;
@@ -161,8 +161,8 @@ public class CommonUtils
             case CHORD:
                 return new ChordComparer(config);
 
-            case LILAC:
-                return new LilacComparer(config);
+            case LILAC_QC:
+                return new LilacQcComparer(config);
 
             case LILAC_ALLELE:
                 return new LilacAlleleComparer(config);

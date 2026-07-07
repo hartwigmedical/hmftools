@@ -53,6 +53,12 @@ public class ImageField implements Field
     }
 
     @Override
+    public String type()
+    {
+        return "image";
+    }
+
+    @Override
     public String displayValue(final ComparableItem item)
     {
         return "";

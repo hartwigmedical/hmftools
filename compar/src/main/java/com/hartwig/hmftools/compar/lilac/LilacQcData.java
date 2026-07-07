@@ -1,29 +1,28 @@
 package com.hartwig.hmftools.compar.lilac;
 
-import static com.hartwig.hmftools.compar.common.CategoryType.LILAC;
+import static com.hartwig.hmftools.compar.common.CategoryType.LILAC_QC;
 
 import java.util.List;
 
 import com.hartwig.hmftools.common.hla.LilacAllele;
-import com.hartwig.hmftools.common.hla.LilacQcData;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.ComparableItem;
 
-public class LilacData implements ComparableItem
+public class LilacQcData implements ComparableItem
 {
-    public final LilacQcData QcData;
+    public final com.hartwig.hmftools.common.hla.LilacQcData QcData;
     public final List<LilacAllele> Alleles;
 
     protected static final String FLD_ALLELES = "Alleles";
     
-    public LilacData(final LilacQcData qcData, final List<LilacAllele> alleles)
+    public LilacQcData(final com.hartwig.hmftools.common.hla.LilacQcData qcData, final List<LilacAllele> alleles)
     {
         QcData = qcData;
         Alleles = alleles;
     }
 
     @Override
-    public CategoryType category() { return LILAC; }
+    public CategoryType category() { return LILAC_QC; }
 
     @Override
     public String key()
@@ -34,7 +33,7 @@ public class LilacData implements ComparableItem
     @Override
     public boolean matches(final ComparableItem other)
     {
-        final LilacData otherData = (LilacData)other;
+        final LilacQcData otherData = (LilacQcData)other;
 
         if(!QcData.genes().equals(otherData.QcData.genes()))
             return false;

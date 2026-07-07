@@ -53,6 +53,12 @@ public class DoubleField implements Field
     }
 
     @Override
+    public String type()
+    {
+        return "double";
+    }
+
+    @Override
     public String displayValue(final ComparableItem item)
     {
         return format(formatString,  extractValue.apply(item));

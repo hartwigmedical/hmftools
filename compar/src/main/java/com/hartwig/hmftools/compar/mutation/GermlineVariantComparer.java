@@ -93,7 +93,7 @@ public class GermlineVariantComparer implements ItemComparer
     @Override
     public List<String> displayFieldNames()
     {
-        return VariantCommon.comparedFieldNames();
+        return VariantCommon.sharedDisplayFieldNames();
     }
 
     @Override

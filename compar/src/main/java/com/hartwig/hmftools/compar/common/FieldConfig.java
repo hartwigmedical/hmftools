@@ -32,7 +32,7 @@ public class FieldConfig
 
     public List<Field> getFields(final CategoryType category)
     {
-        return fieldSettings.get(category).values().stream().toList();
+        return fieldSettings.getOrDefault(category, Maps.newHashMap()).values().stream().toList();
     }
 
     public List<Field> getFields(final CategoryType category, final List<String> fieldNames)

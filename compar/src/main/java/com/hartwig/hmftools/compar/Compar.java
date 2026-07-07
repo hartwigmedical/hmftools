@@ -5,6 +5,7 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -12,6 +13,7 @@ import java.util.concurrent.Callable;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.perf.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.compar.common.FieldConfigFile;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -83,6 +85,17 @@ public class Compar
         }
 
         mWriter.close();
+
+        CMP_LOGGER.info("write field config file");
+        try
+        {
+            FieldConfigFile.write(FieldConfigFile.generateFileName(mConfig.OutputDir), mConfig.FieldConfig, mConfig.Categories.keySet());
+        }
+        catch(IOException e)
+        {
+            CMP_LOGGER.error("Could not write field config file", e);
+            System.exit(1);
+        }
 
         if(mConfig.multiSample())
         {

@@ -50,6 +50,12 @@ public class LongField implements Field
     }
 
     @Override
+    public String type()
+    {
+        return "long";
+    }
+
+    @Override
     public String displayValue(final ComparableItem item)
     {
         return extractValue.apply(item).toString();

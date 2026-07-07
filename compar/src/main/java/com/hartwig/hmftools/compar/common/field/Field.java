@@ -25,6 +25,8 @@ public interface Field
         return null;
     }
 
+    String type();
+
     String displayValue(ComparableItem item);
 
     boolean hasDiff(ComparableItem oldItem, ComparableItem newItem);

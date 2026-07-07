@@ -38,6 +38,12 @@ public class BreakendsField implements Field
     }
 
     @Override
+    public String type()
+    {
+        return "breakend";
+    }
+
+    @Override
     public String displayValue(final ComparableItem item)
     {
         return extractValue.apply(item).stream()

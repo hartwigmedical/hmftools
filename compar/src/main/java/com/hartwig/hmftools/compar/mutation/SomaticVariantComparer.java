@@ -328,7 +328,7 @@ public class SomaticVariantComparer implements ItemComparer
     @Override
     public List<String> displayFieldNames()
     {
-        List<String> fieldNames = VariantCommon.comparedFieldNames();
+        List<String> fieldNames = VariantCommon.sharedDisplayFieldNames();
         fieldNames.add(FLD_BIALLELIC);
         fieldNames.add(FLD_BIALLELIC_PROB);
         fieldNames.add(FLD_SUBCLONAL_LIKELIHOOD);

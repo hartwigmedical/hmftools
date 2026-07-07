@@ -34,6 +34,12 @@ public class FieldTest
         }
 
         @Override
+        public String type()
+        {
+            return "minimal";
+        }
+
+        @Override
         public String displayValue(final ComparableItem item)
         {
             return ((TestFieldItem<String>) item).Value;

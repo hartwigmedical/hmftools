@@ -30,6 +30,12 @@ public class BooleanField implements Field
     }
 
     @Override
+    public String type()
+    {
+        return "boolean";
+    }
+
+    @Override
     public String displayValue(final ComparableItem item)
     {
         return extractValue.apply(item).toString().toUpperCase();

@@ -6,7 +6,7 @@ import static com.hartwig.hmftools.common.hla.LilacQcData.FLD_FIT_FRAGS;
 import static com.hartwig.hmftools.common.hla.LilacQcData.FLD_HLA_Y;
 import static com.hartwig.hmftools.common.hla.LilacQcData.FLD_QC_STATUS;
 import static com.hartwig.hmftools.common.hla.LilacQcData.FLD_TOTAL_FRAGS;
-import static com.hartwig.hmftools.compar.lilac.LilacData.FLD_ALLELES;
+import static com.hartwig.hmftools.compar.lilac.LilacQcData.FLD_ALLELES;
 
 import java.util.Collections;
 import java.util.List;
@@ -18,16 +18,16 @@ import com.hartwig.hmftools.compar.ComparableItemTest;
 
 import org.junit.Before;
 
-public class LilacDataTest extends ComparableItemTest<LilacData, LilacComparer, TestLilacDataBuilder>
+public class LilacQcDataTest extends ComparableItemTest<LilacQcData, LilacQcComparer, TestLilacQcDataBuilder>
 {
     @Before
     public void setUp()
     {
-        comparer = new LilacComparer(new ComparConfig());
-        builder = TestLilacDataBuilder.BUILDER;
+        comparer = new LilacQcComparer(new ComparConfig());
+        builder = TestLilacQcDataBuilder.BUILDER;
 
         List<LilacAllele> alleleSource = builder.create().Alleles;
-        LilacData alternateValueSource = builder.createWithAlternateDefaults();
+        LilacQcData alternateValueSource = builder.createWithAlternateDefaults();
 
         // Does not include every field because field comparisons within alleles don't work well in generic tests
         fieldToAlternateValueInitializer = Map.of(

@@ -7,10 +7,9 @@ import java.util.function.Consumer;
 
 import com.hartwig.hmftools.common.hla.ImmutableLilacQcData;
 import com.hartwig.hmftools.common.hla.LilacAllele;
-import com.hartwig.hmftools.common.hla.LilacQcData;
 import com.hartwig.hmftools.compar.TestComparableItemBuilder;
 
-public class TestLilacDataBuilder
+public class TestLilacQcDataBuilder
 {
     public String genes = MHC_CLASS_I;
     public String qcStatus = "PASS";
@@ -28,7 +27,7 @@ public class TestLilacDataBuilder
             TestLilacAlleleDataBuilder.BUILDER.createWithAlternateDefaults(b -> b.allele = "C*03:04").Allele
     );
 
-    private static final Consumer<TestLilacDataBuilder> ALTERNATE_INITIALIZER = b ->
+    private static final Consumer<TestLilacQcDataBuilder> ALTERNATE_INITIALIZER = b ->
     {
         b.genes = "HLA_DPB1";
         b.qcStatus = "WARN_LOW_COVERAGE";
@@ -47,12 +46,12 @@ public class TestLilacDataBuilder
         );
     };
 
-    public static final TestComparableItemBuilder<TestLilacDataBuilder, LilacData> BUILDER =
-            new TestComparableItemBuilder<>(TestLilacDataBuilder::new, TestLilacDataBuilder::build, ALTERNATE_INITIALIZER);
+    public static final TestComparableItemBuilder<TestLilacQcDataBuilder, LilacQcData> BUILDER =
+            new TestComparableItemBuilder<>(TestLilacQcDataBuilder::new, TestLilacQcDataBuilder::build, ALTERNATE_INITIALIZER);
 
-    private LilacData build()
+    private LilacQcData build()
     {
-        LilacQcData qcData = ImmutableLilacQcData.builder()
+        com.hartwig.hmftools.common.hla.LilacQcData qcData = ImmutableLilacQcData.builder()
                 .genes(genes)
                 .status(qcStatus)
                 .totalFragments(totalFragments)
@@ -61,6 +60,6 @@ public class TestLilacDataBuilder
                 .discardedAlignmentFragments(discardedAlignmentFragments)
                 .hlaYAllele(hlaYAllele)
                 .build();
-        return new LilacData(qcData, alleles);
+        return new LilacQcData(qcData, alleles);
     }
 }

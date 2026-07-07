@@ -50,6 +50,12 @@ public class IntField implements Field
     }
 
     @Override
+    public String type()
+    {
+        return "int";
+    }
+
+    @Override
     public String displayValue(final ComparableItem item)
     {
         return extractValue.apply(item).toString();

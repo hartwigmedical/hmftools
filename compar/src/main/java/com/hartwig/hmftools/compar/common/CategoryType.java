@@ -22,7 +22,7 @@ public enum CategoryType
     GERMLINE_SV,
     CUPPA,
     CUPPA_IMAGE,
-    LILAC,
+    LILAC_QC,
     LILAC_ALLELE,
     CHORD,
     PEACH,

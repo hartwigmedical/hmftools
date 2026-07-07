@@ -31,6 +31,12 @@ public class StringListField implements Field
     }
 
     @Override
+    public String type()
+    {
+        return "stringList";
+    }
+
+    @Override
     public String displayValue(final ComparableItem item)
     {
         return String.join(DISPLAY_VALUE_DELIMITER, extractValue.apply(item));
