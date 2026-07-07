@@ -52,20 +52,6 @@ public abstract class ComparableImage implements ComparableItem
     @Override
     public String key() { return getBasename(); }
 
-    @Override
-    public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final FieldConfig fieldConfig,
-            final boolean includeMatches)
-    {
-        List<String> diffs = findDiffs(this, other, fieldConfig.getFields(category(), List.of(FLD_DIMENSIONS)));
-
-        if(diffs.isEmpty())
-        {
-            diffs = findDiffs(this, other, fieldConfig.getFields(category(), List.of(FLD_PIXELS)));
-        }
-
-        return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches);
-    }
-
     public String dimensionString()
     {
         return String.format("%dx%d", Image.getWidth(), Image.getHeight());

@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.compar.common.field;
 
 import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import java.awt.image.BufferedImage;
@@ -82,7 +83,7 @@ public class ImageField implements Field
             return Collections.emptyList();
         }
 
-        int totalPixels = max(countTotalPixels(oldImage), countTotalPixels(newImage));
+        int totalPixels = countSpanningPixels(oldImage, newImage);
         double relDiff = (double) absDiff / totalPixels;
 
         boolean satisfiesAbsDiff = absoluteThreshold == null || absDiff > absoluteThreshold;
@@ -100,25 +101,33 @@ public class ImageField implements Field
         }
     }
 
-    private static int countTotalPixels(BufferedImage image)
+    private static int countSpanningPixels(BufferedImage oldImage, BufferedImage newImage)
     {
-        return image.getWidth() * image.getHeight();
+        return max(oldImage.getHeight(), newImage.getHeight()) * max(oldImage.getWidth(), newImage.getWidth());
     }
 
-    private static int countDifferingPixels(BufferedImage image1, BufferedImage image2)
+    private static int countDifferingPixels(BufferedImage oldImage, BufferedImage newImage)
     {
         int diffCount = 0;
 
-        for(int y = 0; y < image1.getHeight(); y++)
+        int minHeight = min(oldImage.getHeight(), newImage.getHeight());
+        int maxHeight = max(oldImage.getHeight(), newImage.getHeight());
+        int minWidth = min(oldImage.getWidth(), newImage.getWidth());
+        int maxWidth = max(oldImage.getWidth(), newImage.getWidth());
+
+        for(int y = 0; y < minHeight; y++)
         {
-            for(int x = 0; x < image1.getWidth(); x++)
+            for(int x = 0; x < minWidth; x++)
             {
-                if(image1.getRGB(x, y) != image2.getRGB(x, y))
+                if(oldImage.getRGB(x, y) != newImage.getRGB(x, y))
                 {
                     diffCount++;
                 }
             }
         }
+
+        // count pixels in one image but not the other as differences
+        diffCount += maxHeight * maxWidth - minHeight * minWidth;
 
         return diffCount;
     }
