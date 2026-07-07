@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.compar.common.CommonUtils.buildComparers;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
 
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.FieldConfigFile;
@@ -17,7 +18,25 @@ public class DefaultFieldConfigTestApplication
 {
     private static final Logger LOGGER = LogManager.getLogger(DefaultFieldConfigTestApplication.class);
 
-    private static final String OUTPUT_DIR = "target/field_config";
+    // resolved from this class's own compiled location (compar/target/test-classes) rather than the JVM's working
+    // directory, which varies depending on how the application is launched (IDE, Maven, module vs project root)
+    private static final String OUTPUT_DIR = new File(moduleTargetDir(), "field_config").getPath();
+
+    private static File moduleTargetDir()
+    {
+        try
+        {
+            File codeSourceLocation =
+                    new File(DefaultFieldConfigTestApplication.class.getProtectionDomain().getCodeSource().getLocation().toURI());
+
+            // codeSourceLocation is compar/target/test-classes (or the test jar); its parent is compar/target
+            return codeSourceLocation.getParentFile();
+        }
+        catch(URISyntaxException e)
+        {
+            throw new RuntimeException(e);
+        }
+    }
 
     public static void main(final String[] args) throws IOException
     {
