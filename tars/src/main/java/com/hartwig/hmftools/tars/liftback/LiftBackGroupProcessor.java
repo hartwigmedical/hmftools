@@ -409,6 +409,11 @@ public class LiftBackGroupProcessor
         // to the same locus).
         int nh = decision.PrimaryResult != null ? Math.max(decision.PrimaryResult.numLoci(), 1) : 1;
 
+        // When the discriminator moved the primary off bwa's placement (a ref->tx swap or a random-locus pick), each
+        // surviving supplementary's own bwa SA still references bwa's PRE-move primary locus, which was never emitted.
+        // Rebuild those supp SAs to reference the emitted primary so REDUX FragmentCoords reads the right primary coords.
+        boolean primarySwapped = !primaryUnmapped && decision.PrimaryResult != null && decision.PrimaryResult.swapped();
+
         for(int i = 0; i < records.size(); i++)
         {
             SAMRecord record = records.get(i);
@@ -419,8 +424,44 @@ public class LiftBackGroupProcessor
                 continue;
             }
             boolean primaryPostProcessed = i == decision.PrimaryIndex && decision.PrimaryPostProcessed;
-            applyAndWriteRecord(record, result, nh, primaryPostProcessed, droppedSuppSaKeys, liftedMateInfoCache, sink);
+            String rebuiltSuppSa = (primarySwapped && record != primary && record.getSupplementaryAlignmentFlag())
+                    ? buildSwappedSuppSa(records, resolved, willEmit, decision.PrimaryResult, i) : null;
+            applyAndWriteRecord(record, result, nh, primaryPostProcessed, droppedSuppSaKeys, liftedMateInfoCache, sink, rebuiltSuppSa);
         }
+    }
+
+    // SA for a supplementary whose primary was moved: the emitted primary entry followed by any sibling emitted supps.
+    private static String buildSwappedSuppSa(
+            final List<SAMRecord> records, final LiftBackResult[] resolved, final boolean[] willEmit,
+            final LiftBackResult primaryResult, final int suppIndex)
+    {
+        if(primaryResult.finalChrom() == null || primaryResult.finalCigar() == null)
+        {
+            return null;
+        }
+        StringBuilder sb = new StringBuilder(saEntry(primaryResult));
+        for(int i = 0; i < records.size(); ++i)
+        {
+            if(i == suppIndex || !willEmit[i] || !records.get(i).getSupplementaryAlignmentFlag())
+            {
+                continue;
+            }
+            LiftBackResult res = resolved[i];
+            if(res == null || res.finalChrom() == null || res.finalCigar() == null
+                    || res.finalCigar().equals(SAMRecord.NO_ALIGNMENT_CIGAR))
+            {
+                continue;
+            }
+            sb.append(saEntry(res));
+        }
+        return sb.length() > 0 ? sb.toString() : null;
+    }
+
+    // one SA entry (chrom,pos,strand,cigar,mapq,NM;) for a lifted alignment; NM is left 0 (informational -- REDUX keys on coords).
+    private static String saEntry(final LiftBackResult result)
+    {
+        return result.finalChrom() + ',' + result.finalPos() + ',' + (result.negativeStrand() ? '-' : '+')
+                + ',' + result.finalCigar() + ',' + result.updatedMapq() + ",0;";
     }
 
     // builds a SupplementaryCandidate from the post-lift primary + its supplementary records and applies the
@@ -783,7 +824,8 @@ public class LiftBackGroupProcessor
 
     private void applyAndWriteRecord(
             final SAMRecord record, final LiftBackResult result, final int nh, final boolean primaryPostProcessed,
-            final Set<String> droppedSuppSaKeys, final LiftedMateInfoCache liftedMateInfoCache, final EmitSink sink)
+            final Set<String> droppedSuppSaKeys, final LiftedMateInfoCache liftedMateInfoCache, final EmitSink sink,
+            final String rebuiltSuppSa)
     {
         mStats.record(record, result);
 
@@ -796,7 +838,11 @@ public class LiftBackGroupProcessor
             markPrimaryUnmapped(record);
         }
 
-        String rewrittenSa = rewriteSaTag(record.getStringAttribute(SUPPLEMENTARY_ATTRIBUTE), mResolver, droppedSuppSaKeys);
+        // rebuiltSuppSa is set only for a supplementary whose primary the discriminator moved: use the primary-referencing
+        // SA rebuilt from the emitted group. Otherwise translate this record's own bwa SA to genomic coords as usual.
+        String rewrittenSa = rebuiltSuppSa != null
+                ? rebuiltSuppSa
+                : rewriteSaTag(record.getStringAttribute(SUPPLEMENTARY_ATTRIBUTE), mResolver, droppedSuppSaKeys);
 
         // A record that stays supplementary must carry an SA tag -- REDUX dedup (FragmentCoords.fromRead)
         // reads the primary's coords from it. If every SA entry failed to lift the supplementary is orphaned

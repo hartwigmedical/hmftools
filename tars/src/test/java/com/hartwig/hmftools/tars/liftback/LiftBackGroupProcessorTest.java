@@ -241,6 +241,26 @@ public class LiftBackGroupProcessorTest
     }
 
     @Test
+    public void swappedPrimarySuppSaReferencesEmittedPrimary()
+    {
+        // chimeric read: bwa's contiguous primary (chr1:5000) is swapped to a spliced tx placement (chr1:150
+        // 50M100N50M); the supplementary's bwa SA still points at chr1:5000 (bwa's pre-swap primary, never emitted).
+        // After the swap the supp SA must be rebuilt to reference the EMITTED primary so REDUX reads the right coords.
+        SAMRecord primary = unpairedPrimaryRecord(CHR_1, 5000, "100M");
+        primary.setAttribute("XA", TX_CONTIG + ",+51,100M,0;");
+        SAMRecord supp = unpairedSupplementaryRecord(CHR_1, 8000, "40M60H", CHR_1 + ",5000,+,100M,60,0;");
+
+        List<SAMRecord> emitted = process(List.of(primary, supp), new LiftBackStats());
+
+        assertEquals(2, emitted.size());
+        SAMRecord emittedSupp = emitted.stream().filter(SAMRecord::getSupplementaryAlignmentFlag).findFirst().orElseThrow();
+        String sa = emittedSupp.getStringAttribute(SUPPLEMENTARY_ATTRIBUTE);
+        assertNotNull(sa);
+        assertTrue("supp SA must reference the emitted primary chr1:150, was: " + sa,
+                sa.startsWith(CHR_1 + ",150,+,50M100N50M"));
+    }
+
+    @Test
     public void duplicateSupplementariesCollapsed()
     {
         // two supps lifting to the same (chrom, pos, cigar, strand) collapse to one -- bwa can emit the same
