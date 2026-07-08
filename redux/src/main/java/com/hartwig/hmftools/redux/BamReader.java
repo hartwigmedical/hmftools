@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 
 import java.io.File;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -20,6 +21,7 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordIterator;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.ValidationStringency;
 
 public class BamReader
 {
@@ -29,6 +31,9 @@ public class BamReader
     private final List<BamFileReader> mBamReaders;
     private final List<BamFileReader> mActiveBamReaders;
     private final List<BamFileReader> mFinishedBamReaders;
+
+    private static final int MAX_READ_ERRORS = 100;
+    private static final AtomicInteger READ_ERRORS = new AtomicInteger();
 
     public BamReader(final List<String> inputBams, final String refGenomeFile)
     {
@@ -134,7 +139,9 @@ public class BamReader
         {
             File file = new File(bamFile);
             mFilename = file.getName();
-            mSamReader = SamReaderFactory.makeDefault().referenceSequence(new File(mRefGenomeFile)).open(file);
+            mSamReader = SamReaderFactory.makeDefault()
+                    .validationStringency(ValidationStringency.LENIENT)
+                    .referenceSequence(new File(mRefGenomeFile)).open(file);
 
             mSamIterator = null;
             mCurrentRecord = null;
@@ -161,10 +168,7 @@ public class BamReader
             }
             catch(Exception e)
             {
-                // don't swallow: a null record reads as end-of-region and silently drops the rest
-                RD_LOGGER.error("BAM({}) error opening region({}): {}", mFilename, region, e.toString());
-                e.printStackTrace();
-                System.exit(1);
+                handleReadError(region.toString(), e);
             }
         }
 
@@ -184,12 +188,22 @@ public class BamReader
             }
             catch(Exception e)
             {
-                // don't swallow: would silently truncate the region (see sliceRegion)
-                RD_LOGGER.error("BAM({}) error reading region after position({}): {}",
-                        mFilename, currentPosition(), e.toString());
+                handleReadError("position " + currentPosition(), e);
+            }
+        }
+
+        private void handleReadError(final String context, final Exception e)
+        {
+            mCurrentRecord = null;
+
+            if(READ_ERRORS.incrementAndGet() > MAX_READ_ERRORS)
+            {
+                RD_LOGGER.error("BAM({}) exceeded {} read errors, aborting: {}", mFilename, MAX_READ_ERRORS, e.toString());
                 e.printStackTrace();
                 System.exit(1);
             }
+
+            RD_LOGGER.warn("BAM({}) skipping unreadable read at {}: {}", mFilename, context, e.toString());
         }
 
         public String filename() { return mFilename; }
