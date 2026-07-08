@@ -6,7 +6,6 @@ import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 
 import java.io.File;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -16,6 +15,8 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.bam.BamSlicer;
 
+import htsjdk.samtools.Cigar;
+import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.QueryInterval;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordIterator;
@@ -32,8 +33,6 @@ public class BamReader
     private final List<BamFileReader> mActiveBamReaders;
     private final List<BamFileReader> mFinishedBamReaders;
 
-    private static final int MAX_READ_ERRORS = 100;
-    private static final AtomicInteger READ_ERRORS = new AtomicInteger();
 
     public BamReader(final List<String> inputBams, final String refGenomeFile)
     {
@@ -140,7 +139,7 @@ public class BamReader
             File file = new File(bamFile);
             mFilename = file.getName();
             mSamReader = SamReaderFactory.makeDefault()
-                    .validationStringency(ValidationStringency.LENIENT)
+                    .validationStringency(ValidationStringency.SILENT)
                     .referenceSequence(new File(mRefGenomeFile)).open(file);
 
             mSamIterator = null;
@@ -176,15 +175,22 @@ public class BamReader
         {
             try
             {
-                if(mSamIterator.hasNext())
+                while(mSamIterator.hasNext())
                 {
-                    mCurrentRecord = mSamIterator.next();
+                    SAMRecord record = mSamIterator.next();
+
+                    if(isMalformed(record))
+                    {
+                        logMalformed(record);
+                        continue;
+                    }
+
+                    mCurrentRecord = record;
+                    return;
                 }
-                else
-                {
-                    mCurrentRecord = null;
-                    mSamIterator.close();
-                }
+
+                mCurrentRecord = null;
+                mSamIterator.close();
             }
             catch(Exception e)
             {
@@ -192,17 +198,35 @@ public class BamReader
             }
         }
 
+        private static boolean isMalformed(final SAMRecord record)
+        {
+            if(record.getReadUnmappedFlag())
+                return false;
+
+            Cigar cigar = record.getCigar();
+
+            if(cigar.isEmpty())
+                return false;
+
+            for(CigarElement element : cigar.getCigarElements())
+            {
+                if(element.getLength() == 0)
+                    return true;
+            }
+
+            byte[] bases = record.getReadBases();
+            return bases != null && bases.length > 0 && bases.length != cigar.getReadLength();
+        }
+
+        private void logMalformed(final SAMRecord record)
+        {
+            RD_LOGGER.warn("BAM({}) skipping malformed read({}) cigar({}) seqLength({})",
+                    mFilename, record.getReadName(), record.getCigarString(), record.getReadLength());
+        }
+
         private void handleReadError(final String context, final Exception e)
         {
             mCurrentRecord = null;
-
-            if(READ_ERRORS.incrementAndGet() > MAX_READ_ERRORS)
-            {
-                RD_LOGGER.error("BAM({}) exceeded {} read errors, aborting: {}", mFilename, MAX_READ_ERRORS, e.toString());
-                e.printStackTrace();
-                System.exit(1);
-            }
-
             RD_LOGGER.warn("BAM({}) skipping unreadable read at {}: {}", mFilename, context, e.toString());
         }
 
