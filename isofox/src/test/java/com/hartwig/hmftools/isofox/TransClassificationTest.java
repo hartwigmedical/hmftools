@@ -226,7 +226,7 @@ public class TransClassificationTest
         IsofoxConfig config = createIsofoxConfig();
         config.Functions.clear();
         config.Functions.add(TRANSCRIPT_COUNTS);
-        FragmentAllocator bamReader = new FragmentAllocator(config, ALT_SJ_COHORT_CACHE, new ResultsWriter(config));
+        FragmentAllocator bamReader = new FragmentAllocator(config, null, ALT_SJ_COHORT_CACHE, new ResultsWriter(config));
 
         String transName1 = "TRANS01";
 

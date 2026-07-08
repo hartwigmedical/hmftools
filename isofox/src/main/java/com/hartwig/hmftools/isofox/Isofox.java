@@ -22,6 +22,7 @@ import static com.hartwig.hmftools.isofox.WriteType.FRAG_LENGTH_BY_GENE;
 import static com.hartwig.hmftools.isofox.WriteType.GC_RATIO;
 import static com.hartwig.hmftools.isofox.adjusts.FragmentSizeCalcs.setConfigFragmentLengthData;
 import static com.hartwig.hmftools.isofox.adjusts.GcRatioCounts.writeReadGcRatioCounts;
+import static com.hartwig.hmftools.isofox.expression.TranscriptExpression.applyMultiMappedFanOut;
 import static com.hartwig.hmftools.isofox.expression.TranscriptExpression.calcTpmFactors;
 import static com.hartwig.hmftools.isofox.expression.TranscriptExpression.setCohortDistributionValues;
 import static com.hartwig.hmftools.isofox.expression.TranscriptExpression.setTranscriptsPerMillion;
@@ -283,6 +284,12 @@ public class Isofox
         // calculate a TPM for all transcripts before results are written
         final List<GeneCollectionSummary> geneSummaryData = Lists.newArrayList();
         chrTasks.stream().forEach(x -> geneSummaryData.addAll(x.getGeneCollectionSummaryData()));
+
+        // fold multi-mapped fragments' alternate-locus contributions (whose genes may lie in other chromosomes' gene
+        // collections) into transcript expression before TPM is derived
+        final Map<String,Double> multiMapGeneCounts = Maps.newHashMap();
+        chrTasks.forEach(x -> x.getMultiMapGeneCounts().forEach((geneId, count) -> multiMapGeneCounts.merge(geneId, count, Double::sum)));
+        applyMultiMappedFanOut(geneSummaryData, multiMapGeneCounts);
 
         double[] tpmFactors = calcTpmFactors(geneSummaryData, mConfig.Filters.EnrichedGeneIds);
 

@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.bam.CigarUtils.cigarElementsToStr;
 import static com.hartwig.hmftools.common.bam.CigarUtils.leftSoftClipped;
 import static com.hartwig.hmftools.common.bam.CigarUtils.rightSoftClipped;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.XA_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.generateMappedCoords;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
@@ -43,6 +44,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.bam.ClippedSide;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 
@@ -82,6 +84,7 @@ public class Read
     private String mSupplementaryAlignment;
     private boolean mHasInterGeneSplit;
     private short mMapQuality;
+    private List<ChrBaseRegion> mAltLoci; // alternate genomic mapping loci from the (lifted) XA tag; null if uniquely mapped
 
     private int[] mJunctionPositions; // chimeric junctions
 
@@ -104,7 +107,40 @@ public class Read
 
         read.setSuppAlignment(record.getStringAttribute(SUPPLEMENTARY_ATTRIBUTE));
         read.setMapQuality((short)record.getMappingQuality());
+        read.setAltLoci(parseAltLoci(record.getStringAttribute(XA_ATTRIBUTE)));
         return read;
+    }
+
+    // parse the (lifted, genomic) bwa XA tag 'chr,±pos,CIGAR,NM;...' into the alternate mapping loci for a multi-mapped read
+    private static List<ChrBaseRegion> parseAltLoci(final String xaTag)
+    {
+        if(xaTag == null || xaTag.isEmpty())
+            return null;
+
+        List<ChrBaseRegion> altLoci = Lists.newArrayList();
+
+        for(String entry : xaTag.split(";"))
+        {
+            if(entry.isEmpty())
+                continue;
+
+            String[] fields = entry.split(",");
+
+            if(fields.length < 2)
+                continue;
+
+            try
+            {
+                int position = Math.abs(Integer.parseInt(fields[1])); // XA position is signed, the sign encoding strand
+                altLoci.add(new ChrBaseRegion(fields[0], position, position));
+            }
+            catch(NumberFormatException e)
+            {
+                // tolerate a malformed entry
+            }
+        }
+
+        return altLoci.isEmpty() ? null : altLoci;
     }
 
     public Read(
@@ -237,6 +273,12 @@ public class Read
 
     public void setMapQuality(short mapQuality) { mMapQuality = mapQuality; }
     public short mapQuality() { return mMapQuality; }
+
+    public void setAltLoci(final List<ChrBaseRegion> altLoci) { mAltLoci = altLoci; }
+    public List<ChrBaseRegion> altLoci() { return mAltLoci; }
+
+    // total genomic mapping loci for the read: the primary alignment plus any alternate (XA) loci
+    public int numLoci() { return mAltLoci != null ? 1 + mAltLoci.size() : 1; }
 
     public int baseLength() { return mReadBases.length(); }
 

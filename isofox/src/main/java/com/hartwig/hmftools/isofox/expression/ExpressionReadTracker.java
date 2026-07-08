@@ -1,10 +1,7 @@
 package com.hartwig.hmftools.isofox.expression;
 
-import static java.lang.Math.min;
-
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.isofox.IsofoxConstants.MULTI_MAP_QUALITY_THRESHOLD;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.TRANSCRIPT_COUNTS;
 import static com.hartwig.hmftools.isofox.adjusts.GcRatioCounts.calcGcRatioFromReadRegions;
 import static com.hartwig.hmftools.isofox.common.FragmentType.LOW_MAP_QUAL;
@@ -61,7 +58,7 @@ public class ExpressionReadTracker
     }
 
     public void processUnsplicedGenes(
-            final List<GeneReadData> overlapGenes, final List<Integer> validTranscripts, final List<int[]> commonMappings, int minMapQuality)
+            final List<GeneReadData> overlapGenes, final List<Integer> validTranscripts, final List<int[]> commonMappings, int numLoci)
     {
         if(!mEnabled)
             return;
@@ -71,13 +68,13 @@ public class ExpressionReadTracker
         if(!unsplicedGeneIds.isEmpty())
         {
             CategoryCountsData catCounts = getCategoryCountsData(validTranscripts, unsplicedGeneIds);
-            addGcCounts(catCounts, commonMappings, minMapQuality);
+            addGcCounts(catCounts, commonMappings, numLoci);
         }
     }
 
     public void processUnsplicedGenes(
             final FragmentMatchType comboTransMatchType, final List<GeneReadData> overlapGenes, final List<Integer> validTranscripts,
-            final List<int[]> commonMappings, int minMapQuality)
+            final List<int[]> commonMappings, int numLoci)
     {
         if(!mEnabled)
             return;
@@ -86,10 +83,10 @@ public class ExpressionReadTracker
                 overlapGenes.stream().map(x -> x.Gene.GeneId).collect(Collectors.toList()) : Lists.newArrayList();
 
         CategoryCountsData catCounts = getCategoryCountsData(validTranscripts, unsplicedGeneIds);
-        addGcCounts(catCounts, commonMappings, minMapQuality);
+        addGcCounts(catCounts, commonMappings, numLoci);
     }
 
-    public void processIntronicReads(final List<GeneReadData> genes, final Read read1, final Read read2)
+    public void processIntronicReads(final List<GeneReadData> genes, final Read read1, final Read read2, int numLoci)
     {
         if(!mEnabled)
             return;
@@ -101,7 +98,7 @@ public class ExpressionReadTracker
             CategoryCountsData catCounts = getCategoryCountsData(Lists.newArrayList(), unsplicedGeneIds);
 
             List<int[]> readRegions = deriveCommonRegions(read1.getMappedRegionCoords(), read2.getMappedRegionCoords());
-            addGcCounts(catCounts, readRegions, min(read1.mapQuality(), read2.mapQuality()));
+            addGcCounts(catCounts, readRegions, numLoci);
         }
     }
 
@@ -206,7 +203,7 @@ public class ExpressionReadTracker
         }
     }
 
-    public void addGcCounts(final CategoryCountsData catCounts, final List<int[]> readRegions, int minMapQuality)
+    public void addGcCounts(final CategoryCountsData catCounts, final List<int[]> readRegions, int numLoci)
     {
         int[] gcRatioIndices = { -1, -1 };
         double[] gcRatioCounts = { 0, 0 };
@@ -217,21 +214,12 @@ public class ExpressionReadTracker
             mGcRatioCounts.determineRatioData(gcRatio, gcRatioIndices, gcRatioCounts);
         }
 
-        double fragmentCount = 1;
+        // a multi-mapped fragment (mapping to numLoci genomic loci via its XA alternatives) contributes 1/numLoci here;
+        // the other loci are counted against their own genes via the cross-locus fan-out in FragmentAllocator
+        double fragmentCount = numLoci > 1 ? 1.0 / numLoci : 1;
 
-        if(minMapQuality <= MULTI_MAP_QUALITY_THRESHOLD)
-        {
-            if(minMapQuality == 3)
-                fragmentCount = 0.5;
-            else if(minMapQuality == 2)
-                fragmentCount = 0.33;
-            else if(minMapQuality == 1)
-                fragmentCount = 0.2;
-            else
-                fragmentCount = 0.1;
-
+        if(numLoci > 1)
             mGenes.addCount(LOW_MAP_QUAL, 1);
-        }
 
         addGcCounts(catCounts, gcRatioIndices, gcRatioCounts, fragmentCount);
     }
