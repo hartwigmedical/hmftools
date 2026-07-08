@@ -276,23 +276,20 @@ public class FastqUmiExtracter
 
     private static void compressTextLines(final String[] lines, final Path outputPath) throws IOException
     {
-        OutputStream fos = Files.newOutputStream(outputPath);
-        BufferedOutputStream bos = new BufferedOutputStream(fos);
-        GZIPOutputStream gzos = new GZIPOutputStream(bos);
-
-        BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(gzos, StandardCharsets.UTF_8));
-
-        for(String line : lines)
+        try(OutputStream fos = Files.newOutputStream(outputPath);
+            BufferedOutputStream bos = new BufferedOutputStream(fos);
+            GZIPOutputStream gzos = new GZIPOutputStream(bos);
+            BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(gzos, StandardCharsets.UTF_8)))
         {
-            if(line == null)
-                break;
+            for(String line : lines)
+            {
+                if(line == null)
+                    break;
 
-            writer.write(line);
-            writer.newLine();
+                writer.write(line);
+                writer.newLine();
+            }
         }
-
-        writer.flush();
-        gzos.finish();
     }
 
     private static final String ZIPPED_EXTENSION = ".gz";

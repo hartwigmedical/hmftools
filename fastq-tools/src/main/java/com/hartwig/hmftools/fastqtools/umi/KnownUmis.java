@@ -16,6 +16,7 @@ import static com.hartwig.hmftools.fastqtools.FastqCommon.READ_ITEM_QUALS;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.codon.Nucleotides;
@@ -28,7 +29,7 @@ public class KnownUmis
 
     private final List<String> mKnownUmis;
     private final List<String> mKnownUmisReversed;
-    private long mKnownUmiMatchCount;
+    private final AtomicLong mKnownUmiMatchCount;
 
     private final String UNMATCHED_UMI = "X";
 
@@ -45,7 +46,7 @@ public class KnownUmis
 
         mKnownUmis = Lists.newArrayList();
         mKnownUmisReversed = Lists.newArrayList();
-        mKnownUmiMatchCount = 0;
+        mKnownUmiMatchCount = new AtomicLong();
 
         if(knownUmiFile != null)
         {
@@ -69,7 +70,7 @@ public class KnownUmis
 
         if(umiLength1 > 0 && umiLength2 > 0)
         {
-            ++mKnownUmiMatchCount;
+            mKnownUmiMatchCount.incrementAndGet();
         }
         else
         {
@@ -190,7 +191,8 @@ public class KnownUmis
         if(mKnownUmis.isEmpty() || readCount == 0)
             return;
 
-        double matchedPerc = mKnownUmiMatchCount / (double)readCount;
-        FQ_LOGGER.info("known UMI matched({} {}%)", mKnownUmiMatchCount, format("%.2f", matchedPerc * 100));
+        long matchCount = mKnownUmiMatchCount.get();
+        double matchedPerc = matchCount / (double)readCount;
+        FQ_LOGGER.info("known UMI matched({} {}%)", matchCount, format("%.2f", matchedPerc * 100));
     }
 }
