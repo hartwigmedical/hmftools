@@ -6,9 +6,9 @@ import com.hartwig.hmftools.compar.ComparableItem;
 
 public class BooleanField implements Field
 {
-    public final String name;
-    public final Function<ComparableItem, Boolean> extractValue;
-    public final boolean isCompared;
+    private final String name;
+    private final Function<ComparableItem, Boolean> extractValue;
+    private final boolean isCompared;
 
     public BooleanField(final String name, final Function<ComparableItem, Boolean> extractValue, final boolean isCompared)
     {

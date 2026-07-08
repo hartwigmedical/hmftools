@@ -7,9 +7,9 @@ import com.hartwig.hmftools.compar.ComparableItem;
 
 public class StringListField implements Field
 {
-    public final String name;
-    public final Function<ComparableItem, List<String>> extractValue;
-    public final boolean isCompared;
+    private final String name;
+    private final Function<ComparableItem, List<String>> extractValue;
+    private final boolean isCompared;
 
     public StringListField(final String name, final Function<ComparableItem, List<String>> extractValue, final boolean isCompared)
     {

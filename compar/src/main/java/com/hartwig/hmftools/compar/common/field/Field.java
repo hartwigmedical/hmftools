@@ -31,6 +31,11 @@ public interface Field
 
     boolean hasDiff(ComparableItem oldItem, ComparableItem newItem);
 
+    default boolean hasValue(ComparableItem item)
+    {
+        return true;
+    }
+
     default List<String> determineDiffs(ComparableItem oldItem, ComparableItem newItem)
     {
         if(hasDiff(oldItem, newItem))

@@ -9,11 +9,11 @@ import com.hartwig.hmftools.compar.ComparableItem;
 
 public class IntField implements Field
 {
-    public final String name;
-    public final Function<ComparableItem, Integer> extractValue;
-    public final boolean isCompared;
-    public final Double absoluteThreshold;
-    public final Double percentThreshold;
+    private final String name;
+    private final Function<ComparableItem, Integer> extractValue;
+    private final boolean isCompared;
+    private final Double absoluteThreshold;
+    private final Double percentThreshold;
 
     public IntField(final String name, final Function<ComparableItem, Integer> extractValue, final boolean isCompared,
             final Double absoluteThreshold, final Double percentThreshold)

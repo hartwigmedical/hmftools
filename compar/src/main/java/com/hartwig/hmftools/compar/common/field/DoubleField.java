@@ -10,12 +10,12 @@ import com.hartwig.hmftools.compar.ComparableItem;
 
 public class DoubleField implements Field
 {
-    public final String name;
-    public final Function<ComparableItem, Double> extractValue;
-    public final boolean isCompared;
-    public final Double absoluteThreshold;
-    public final Double percentThreshold;
-    public final String formatString;
+    private final String name;
+    private final Function<ComparableItem, Double> extractValue;
+    private final boolean isCompared;
+    private final Double absoluteThreshold;
+    private final Double percentThreshold;
+    private final String formatString;
 
     public DoubleField(final String name, final Function<ComparableItem, Double> extractValue, final boolean isCompared,
             final Double absoluteThreshold, final Double percentThreshold, final String formatString)

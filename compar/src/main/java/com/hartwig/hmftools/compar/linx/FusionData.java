@@ -4,9 +4,6 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.compar.common.CategoryType.FUSION;
 
-import java.util.List;
-
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.linx.LinxFusion;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.ComparableItem;
@@ -30,6 +27,8 @@ public class FusionData implements ComparableItem
     protected static final String FLD_DOMAINS_KEPT = "DomainsKept";
     protected static final String FLD_DOMAINS_LOST = "DomainsLost";
     protected static final String FLD_JUNCTION_COPY_NUMBER = "JunctionCopyNumber";
+    protected static final String FLD_BREAKEND_UP = "BreakendUp";
+    protected static final String FLD_BREAKEND_DOWN = "BreakendDown";
 
     public FusionData(final LinxFusion fusion, final String geneMappedName, final BreakendData breakendFive, final BreakendData breakendThree)
     {
@@ -46,20 +45,6 @@ public class FusionData implements ComparableItem
     public String key()
     {
         return format("%s_%s", Fusion.name(), Fusion.reportedType());
-    }
-
-    @Override
-    public List<String> extraInfoValues()
-    {
-        List<String> values = Lists.newArrayList();
-
-        if(BreakendFive != null)
-            values.add(format("BreakendUp=%s", BreakendFive.fullStr(true)));
-
-        if(BreakendThree != null)
-            values.add(format("BreakendDown=%s", BreakendThree.fullStr(true)));
-
-        return values;
     }
 
     @Override

@@ -112,18 +112,15 @@ public class MismatchFile
 
         if(writeFieldValues)
         {
-            List<String> oldFieldValues = mismatch.OldItem != null ? getItemDisplayValues(mismatch.OldItem, displayFields) : null;
-            List<String> newFieldValues = mismatch.NewItem != null ? getItemDisplayValues(mismatch.NewItem, displayFields) : null;
-
-            for(int i = 0; i < displayFields.size(); ++i)
+            for(Field field : displayFields)
             {
-                if(oldFieldValues != null)
-                    sj.add(oldFieldValues.get(i));
+                if(mismatch.OldItem != null)
+                    sj.add(field.displayValue(mismatch.OldItem));
                 else
                     sj.add("");
 
-                if(newFieldValues != null)
-                    sj.add(newFieldValues.get(i));
+                if(mismatch.NewItem != null)
+                    sj.add(field.displayValue(mismatch.NewItem));
                 else
                     sj.add("");
             }
@@ -144,16 +141,12 @@ public class MismatchFile
 
         StringJoiner displaySj = new StringJoiner(ITEM_DELIM);
 
-        List<String> itemDisplayValues = getItemDisplayValues(item, displayFields);
-
-        for(int i = 0; i < itemDisplayValues.size(); ++i)
+        for(Field field : displayFields)
         {
-            displaySj.add(format("%s=%s", displayFields.get(i).name(), itemDisplayValues.get(i)));
-        }
-
-        for(String extraInfo : item.extraInfoValues())
-        {
-            displaySj.add(extraInfo);
+            if(field.hasValue(item))
+            {
+                displaySj.add(format("%s=%s", field.name(), field.displayValue(item)));
+            }
         }
 
         return displaySj.toString();
@@ -256,15 +249,5 @@ public class MismatchFile
 
         return sampleMismatches;
 
-    }
-
-    private static List<String> getItemDisplayValues(final ComparableItem item, final List<Field> displayFields)
-    {
-        List<String> values = Lists.newArrayList();
-        for (Field field : displayFields)
-        {
-            values.add(field.displayValue(item));
-        }
-        return values;
     }
 }

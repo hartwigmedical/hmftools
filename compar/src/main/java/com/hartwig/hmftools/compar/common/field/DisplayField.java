@@ -4,17 +4,21 @@ import java.util.function.Function;
 
 import com.hartwig.hmftools.compar.ComparableItem;
 
-public class StringField implements Field
+public class DisplayField implements Field
 {
+    // Only for showing extra info. Cannot be compared.
     private final String name;
     private final Function<ComparableItem, String> extractValue;
-    private final boolean isCompared;
+    private final Function<ComparableItem, Boolean> hasValue;
 
-    public StringField(final String name, final Function<ComparableItem, String> extractValue, final boolean isCompared)
+    public final static String DISPLAY_TYPE = "display";
+
+    public DisplayField(final String name, final Function<ComparableItem, String> extractValue,
+            final Function<ComparableItem, Boolean> hasValue)
     {
         this.name = name;
         this.extractValue = extractValue;
-        this.isCompared = isCompared;
+        this.hasValue = hasValue;
     }
 
     @Override
@@ -26,24 +30,30 @@ public class StringField implements Field
     @Override
     public boolean isCompared()
     {
-        return isCompared;
+        return false;
     }
 
     @Override
     public String type()
     {
-        return "string";
+        return DISPLAY_TYPE;
     }
 
     @Override
     public String displayValue(final ComparableItem item)
     {
-        return extractValue.apply(item);
+        return hasValue(item) ? extractValue.apply(item) : "";
+    }
+
+    @Override
+    public boolean hasValue(final ComparableItem item)
+    {
+        return hasValue.apply(item);
     }
 
     @Override
     public boolean hasDiff(final ComparableItem oldItem, final ComparableItem newItem)
     {
-        return !extractValue.apply(oldItem).equals(extractValue.apply(newItem));
+        return false;
     }
 }

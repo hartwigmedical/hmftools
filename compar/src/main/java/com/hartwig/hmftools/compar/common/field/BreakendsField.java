@@ -14,9 +14,9 @@ import com.hartwig.hmftools.compar.linx.BreakendData;
 
 public class BreakendsField implements Field
 {
-    public final String name;
-    public final Function<ComparableItem, List<BreakendData>> extractValue;
-    public final boolean isCompared;
+    private final String name;
+    private final Function<ComparableItem, List<BreakendData>> extractValue;
+    private final boolean isCompared;
 
     public BreakendsField(final String name, final Function<ComparableItem, List<BreakendData>> extractValue, final boolean isCompared)
     {

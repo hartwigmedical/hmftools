@@ -4,9 +4,6 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.compar.common.CategoryType.DRIVER;
 
-import java.util.List;
-
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.driver.DriverCatalog;
 import com.hartwig.hmftools.common.purple.PurplePurity;
 import com.hartwig.hmftools.common.purple.ReportedStatus;
@@ -17,7 +14,7 @@ public class DriverData implements ComparableItem
 {
     public final DriverCatalog DriverCatalog;
 
-    private final PurplePurity mPurity;
+    public final PurplePurity mPurity;
     public final String mComparisonChromosome;
     private final String mKey;
     private final boolean mCheckTranscript;
@@ -47,15 +44,6 @@ public class DriverData implements ComparableItem
     public String key()
     {
         return mKey;
-    }
-
-    @Override
-    public List<String> extraInfoValues()
-    {
-        List<String> values = Lists.newArrayList();
-        values.add(format("Purity=%.2f", mPurity.Purity));
-        values.add(format("Ploidy=%.2f", mPurity.Ploidy));
-        return values;
     }
 
     @Override

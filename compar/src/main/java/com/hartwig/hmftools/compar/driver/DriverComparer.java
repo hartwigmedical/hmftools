@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.compar.driver;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.common.driver.DriverType.DRIVERS_LINX_GERMLINE;
 import static com.hartwig.hmftools.common.driver.DriverType.DRIVERS_LINX_SOMATIC;
 import static com.hartwig.hmftools.common.driver.DriverType.DRIVERS_PURPLE_SOMATIC_COPY_NUMBER;
@@ -14,6 +16,8 @@ import static com.hartwig.hmftools.compar.driver.DriverData.FLD_LIKELIHOOD;
 import static com.hartwig.hmftools.compar.driver.DriverData.FLD_LIKE_METHOD;
 import static com.hartwig.hmftools.compar.driver.DriverData.FLD_MAX_COPY_NUMBER;
 import static com.hartwig.hmftools.compar.driver.DriverData.FLD_MIN_COPY_NUMBER;
+import static com.hartwig.hmftools.compar.purple.PurityData.FLD_PLOIDY;
+import static com.hartwig.hmftools.compar.purple.PurityData.FLD_PURITY;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -42,6 +46,7 @@ import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.SourceData;
 import com.hartwig.hmftools.compar.common.SourceType;
+import com.hartwig.hmftools.compar.common.field.DisplayField;
 import com.hartwig.hmftools.compar.common.field.DoubleField;
 import com.hartwig.hmftools.compar.common.field.Field;
 import com.hartwig.hmftools.compar.common.field.StringField;
@@ -76,7 +81,9 @@ public class DriverComparer implements ItemComparer
                 new DoubleField(FLD_MIN_COPY_NUMBER, i -> ((DriverData) i).DriverCatalog.minCopyNumber(), true, 0.3, 0.15, "%.2f"),
                 new DoubleField(FLD_MAX_COPY_NUMBER, i -> ((DriverData) i).DriverCatalog.maxCopyNumber(), true, 0.3, 0.15, "%.2f"),
                 new StringField(FLD_CHROMOSOME, i -> ((DriverData) i).mComparisonChromosome, true),
-                new StringField(FLD_CHROMOSOME_BAND, i -> ((DriverData) i).DriverCatalog.chromosomeBand(), true)
+                new StringField(FLD_CHROMOSOME_BAND, i -> ((DriverData) i).DriverCatalog.chromosomeBand(), true),
+                new DisplayField(FLD_PURITY, i -> format("%.2f", ((DriverData) i).mPurity.Purity), i -> true),
+                new DisplayField(FLD_PLOIDY, i -> format("%.2f", ((DriverData) i).mPurity.Ploidy), i -> true)
         );
     }
 

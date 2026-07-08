@@ -10,8 +10,8 @@ public class PurityData implements ComparableItem
 {
     public final PurityContext Purity;
 
-    protected static final String FLD_PURITY = "Purity";
-    protected static final String FLD_PLOIDY = "Ploidy";
+    public static final String FLD_PURITY = "Purity";
+    public static final String FLD_PLOIDY = "Ploidy";
     protected static final String FLD_CONTAMINATION = "Contamination";
     protected static final String FLD_TMB = "TmbPerMb";
     protected static final String FLD_MS_INDELS = "MsIndelsPerMb";

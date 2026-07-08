@@ -3,7 +3,6 @@ package com.hartwig.hmftools.compar;
 import static com.hartwig.hmftools.compar.common.CommonUtils.createMismatchFromDiffs;
 import static com.hartwig.hmftools.compar.common.CommonUtils.findDiffs;
 
-import java.util.Collections;
 import java.util.List;
 
 import com.hartwig.hmftools.compar.common.CategoryType;
@@ -25,9 +24,6 @@ public interface ComparableItem
     }
 
     String key();
-
-    // values for display only
-    default List<String> extraInfoValues() { return Collections.emptyList(); }
 
     default String geneName() { return ""; }
 
