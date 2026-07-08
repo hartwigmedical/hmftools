@@ -162,6 +162,65 @@ public class TranscriptExpression
     private static final int ADJUSTED_TPM = 1;
     private static final double TPM_MILLION = 1000000;
 
+    // fold the fractional fragment counts accumulated at multi-mapped fragments' alternate (XA) loci into transcript
+    // expression before TPM is derived. Each gene's accumulated count is split across its transcripts in proportion to
+    // their fitted allocation (mirroring how low-map-quality fragments are apportioned within a gene collection), or
+    // evenly when the gene has no fitted expression. Alternate loci commonly fall in other collections/chromosomes,
+    // so this cross-collection step runs once after all per-collection fits are complete.
+    public static void applyMultiMappedFanOut(final List<GeneCollectionSummary> geneSummaries, final Map<String,Double> geneCounts)
+    {
+        if(geneCounts.isEmpty())
+            return;
+
+        Map<String,List<TranscriptResult>> geneTranscripts = Maps.newHashMap();
+        Map<String,GeneResult> geneResults = Maps.newHashMap();
+
+        for(GeneCollectionSummary summary : geneSummaries)
+        {
+            for(TranscriptResult transResult : summary.TranscriptResults)
+                geneTranscripts.computeIfAbsent(transResult.Trans.GeneId, k -> Lists.newArrayList()).add(transResult);
+
+            for(GeneResult geneResult : summary.GeneResults)
+                geneResults.put(geneResult.Gene.GeneId, geneResult);
+        }
+
+        double appliedTotal = 0;
+        double droppedTotal = 0;
+
+        for(Map.Entry<String,Double> entry : geneCounts.entrySet())
+        {
+            String geneId = entry.getKey();
+            double fanOutCount = entry.getValue();
+
+            List<TranscriptResult> transResults = geneTranscripts.get(geneId);
+
+            if(transResults == null || transResults.isEmpty())
+            {
+                droppedTotal += fanOutCount; // gene not quantified (eg outside a panel) - its share cannot be attributed
+                continue;
+            }
+
+            double fitTotal = transResults.stream().mapToDouble(TranscriptResult::getFitAllocation).sum();
+
+            for(TranscriptResult transResult : transResults)
+            {
+                double share = fitTotal > 0 ?
+                        fanOutCount * transResult.getFitAllocation() / fitTotal : fanOutCount / transResults.size();
+
+                transResult.addFitAllocation(share);
+            }
+
+            GeneResult geneResult = geneResults.get(geneId);
+            if(geneResult != null)
+                geneResult.addSplicedAlloc(fanOutCount);
+
+            appliedTotal += fanOutCount;
+        }
+
+        ISF_LOGGER.debug(format("multi-map fan-out: applied(%.0f) fragments to %d genes, dropped(%.0f) at unquantified genes",
+                appliedTotal, geneCounts.size(), droppedTotal));
+    }
+
     public static double[] calcTpmFactors(final List<GeneCollectionSummary> geneSummaryData, final List<String> enrichedGeneIds)
     {
         // exclude enriched genes and cap the contribution of any one gene to 1%

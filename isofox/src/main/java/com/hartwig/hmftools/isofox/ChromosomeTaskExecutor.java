@@ -104,7 +104,7 @@ public class ChromosomeTaskExecutor implements Callable<Void>
 
         mExpectedCountsCache = expectedCountsCache;
 
-        mBamFragmentAllocator = new FragmentAllocator(mConfig, altSjCohortCache, resultsWriter);
+        mBamFragmentAllocator = new FragmentAllocator(mConfig, mGeneTransCache, altSjCohortCache, resultsWriter);
         mBamFragmentAllocator.registerKnownFusionPairs(mGeneTransCache);
 
         mGcRatioCounts = mBamFragmentAllocator.getGcRatioCounts();
@@ -127,6 +127,7 @@ public class ChromosomeTaskExecutor implements Callable<Void>
 
     public String chromosome() { return mChromosome; }
     public List<GeneCollectionSummary> getGeneCollectionSummaryData() { return mGeneCollectionSummaryData; }
+    public Map<String,Double> getMultiMapGeneCounts() { return mBamFragmentAllocator.getMultiMapGeneCounts(); }
     public GcRatioCounts getGcRatioCounts() { return mGcRatioCounts; }
 
     public ChimericStats getChimericStats() { return mChromosomeFusions.chimericStats(); }

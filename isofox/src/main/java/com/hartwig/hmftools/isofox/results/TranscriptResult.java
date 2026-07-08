@@ -106,6 +106,7 @@ public class TranscriptResult
     }
 
     public void setFitAllocation(double alloc) { mFitAllocation = alloc; }
+    public void addFitAllocation(double alloc) { mFitAllocation += alloc; }
     public void setPreGcFitAllocation(double alloc) { mRawFitAllocation = alloc; }
     public void setLowMapQualsAllocation(double alloc) { mLowMapQualsAllocation = alloc; }
 

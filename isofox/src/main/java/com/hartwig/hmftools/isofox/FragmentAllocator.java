@@ -56,9 +56,11 @@ import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.ExonData;
+import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.bam.BamSlicer;
 import com.hartwig.hmftools.common.region.BaseRegion;
@@ -118,12 +120,22 @@ public class FragmentAllocator
     private final BufferedWriter mReadDataWriter;
     private long mEnrichedGeneFragments;
 
+    private final EnsemblDataCache mGeneTransCache;
+
+    // fractional fragment counts fanned out to genes at multi-mapped fragments' alternate (XA) loci, keyed by gene id.
+    // accumulated across all gene collections this allocator processes, then folded into transcript expression at run end.
+    private final Map<String,Double> mMultiMapGeneCounts;
+
     private static final int GENE_LOG_COUNT = 5000000;
     private static final int NON_GENIC_BASE_DEPTH_WIDTH = 250000;
 
-    public FragmentAllocator(final IsofoxConfig config, final AltSjCohortCache altSjCohortCache, final ResultsWriter resultsWriter)
+    public FragmentAllocator(
+            final IsofoxConfig config, final EnsemblDataCache geneTransCache, final AltSjCohortCache altSjCohortCache,
+            final ResultsWriter resultsWriter)
     {
         mConfig = config;
+        mGeneTransCache = geneTransCache;
+        mMultiMapGeneCounts = Maps.newHashMap();
 
         mCurrentGenes = null;
         mFragmentReads = new FragmentTracker();
@@ -389,6 +401,16 @@ public class FragmentAllocator
         int minMapQuality = min(read1.mapQuality(), read2.mapQuality());
         boolean isMultiMapped = minMapQuality <= MULTI_MAP_QUALITY_THRESHOLD;
 
+        // number of genomic loci this fragment maps to (primary + alternate XA loci), taken from whichever mate lists the
+        // most alternatives; drives fractional fragment weighting so the loci sum to a single fragment. Each locus carries
+        // 1/numLoci: a locus that falls outside any gene (intergenic, eg a repeat) keeps its share unattributed rather than
+        // inflating a gene, matching how an intergenic primary read contributes nothing.
+        List<ChrBaseRegion> altLoci = read1.altLoci();
+        if(read2.altLoci() != null && (altLoci == null || read2.altLoci().size() > altLoci.size()))
+            altLoci = read2.altLoci();
+
+        int numLoci = altLoci != null ? 1 + altLoci.size() : 1;
+
         boolean isChimeric = mChimericReads.isChimeric(read1, read2, isDuplicate, isMultiMapped);
 
         if(mStatsOnly)
@@ -440,6 +462,9 @@ public class FragmentAllocator
                 return;
         }
 
+        if(numLoci > 1 && mExpressionReadTracker.enabled())
+            fanOutMultiMappedFragment(altLoci, numLoci);
+
         int readPosMin = min(read1.PosStart, read2.PosStart);
         int readPosMax = max(read1.PosEnd, read2.PosEnd);
 
@@ -448,7 +473,7 @@ public class FragmentAllocator
         if(read1.getMappedRegions().isEmpty() && read2.getMappedRegions().isEmpty())
         {
             // fully intronic read in every transcript and gene
-            processIntronicReads(overlapGenes, read1, read2);
+            processIntronicReads(overlapGenes, read1, read2, numLoci);
             return;
         }
 
@@ -564,7 +589,7 @@ public class FragmentAllocator
 
             if(fragmentType == UNSPLICED)
             {
-                mExpressionReadTracker.processUnsplicedGenes(overlapGenes, validTranscripts, commonMappings, minMapQuality);
+                mExpressionReadTracker.processUnsplicedGenes(overlapGenes, validTranscripts, commonMappings, numLoci);
             }
         }
         else
@@ -673,7 +698,7 @@ public class FragmentAllocator
                 mExpressionReadTracker.processValidTranscript(transId, Lists.newArrayList(read1, read2), isUniqueTrans);
             }
 
-            mExpressionReadTracker.processUnsplicedGenes(comboTransMatchType, overlapGenes, validTranscripts, commonMappings, minMapQuality);
+            mExpressionReadTracker.processUnsplicedGenes(comboTransMatchType, overlapGenes, validTranscripts, commonMappings, numLoci);
 
             if(!read1.isSecondaryAlignment() && !read2.isSecondaryAlignment() && supportedGeneIsForward != null)
             {
@@ -834,7 +859,33 @@ public class FragmentAllocator
 
     public List<CategoryCountsData> getTransComboData() { return mExpressionReadTracker.getTransComboData(); }
 
-    private void processIntronicReads(final List<GeneReadData> genes, final Read read1, final Read read2)
+    public Map<String,Double> getMultiMapGeneCounts() { return mMultiMapGeneCounts; }
+
+    // spread a multi-mapped fragment's evidence to the genes at its alternate (XA) loci: each of the numLoci loci carries
+    // 1/numLoci of the fragment (the primary locus is counted via the normal expression path). Alternate loci often fall in
+    // other gene collections, so their contribution is accumulated here and folded into transcript expression at run end.
+    private void fanOutMultiMappedFragment(final List<ChrBaseRegion> altLoci, int numLoci)
+    {
+        if(altLoci == null || mGeneTransCache == null)
+            return;
+
+        double locusWeight = 1.0 / numLoci;
+
+        for(ChrBaseRegion locus : altLoci)
+        {
+            List<GeneData> genes = mGeneTransCache.findGeneByRange(locus.Chromosome, locus.start(), locus.end());
+
+            if(genes.isEmpty())
+                continue;
+
+            double geneWeight = locusWeight / genes.size();
+
+            for(GeneData gene : genes)
+                mMultiMapGeneCounts.merge(gene.GeneId, geneWeight, Double::sum);
+        }
+    }
+
+    private void processIntronicReads(final List<GeneReadData> genes, final Read read1, final Read read2, int numLoci)
     {
         if(read1.containsSplit() || read2.containsSplit())
         {
@@ -846,7 +897,7 @@ public class FragmentAllocator
             return;
         }
 
-        mExpressionReadTracker.processIntronicReads(genes, read1, read2);
+        mExpressionReadTracker.processIntronicReads(genes, read1, read2, numLoci);
 
         mCurrentGenes.addCount(UNSPLICED, 1);
 
