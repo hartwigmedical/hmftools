@@ -30,6 +30,12 @@ public class BooleanField implements Field
     }
 
     @Override
+    public Field withCompared(final boolean compared)
+    {
+        return new BooleanField(name, extractValue, compared);
+    }
+
+    @Override
     public String type()
     {
         return "boolean";

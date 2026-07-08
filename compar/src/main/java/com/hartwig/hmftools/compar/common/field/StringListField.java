@@ -31,6 +31,12 @@ public class StringListField implements Field
     }
 
     @Override
+    public Field withCompared(final boolean compared)
+    {
+        return new StringListField(name, extractValue, compared);
+    }
+
+    @Override
     public String type()
     {
         return "stringList";

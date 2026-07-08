@@ -3,6 +3,7 @@ package com.hartwig.hmftools.compar.common;
 import static com.hartwig.hmftools.common.genome.refgenome.GenomeLiftoverCache.UNMAPPED_POSITION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
+import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.CategoryType.DISRUPTION;
 import static com.hartwig.hmftools.compar.common.CategoryType.FUSION;
 import static com.hartwig.hmftools.compar.common.CategoryType.GERMLINE_BAM_METRICS;
@@ -94,7 +95,6 @@ public class CommonUtils
                 continue;
             }
 
-            config.FieldConfig.registerFields(comparer, matchLevel);
             comparers.add(comparer);
         }
 
@@ -121,7 +121,7 @@ public class CommonUtils
         return comparers;
     }
 
-    private static ItemComparer createComparer(final CategoryType category, final ComparConfig config)
+    public static ItemComparer createComparer(final CategoryType category, final ComparConfig config)
     {
         switch(category)
         {
@@ -226,8 +226,8 @@ public class CommonUtils
         }
     }
 
-    public static boolean processSample(
-            final ItemComparer comparer, final ComparConfig config, final String sampleId, final List<Mismatch> mismatches)
+    public static boolean processSample(final ItemComparer comparer, final ComparConfig config, final String sampleId,
+            final List<Mismatch> mismatches, final FieldConfig fieldConfig)
     {
         final MatchLevel matchLevel = config.Categories.get(comparer.category());
 
@@ -260,7 +260,7 @@ public class CommonUtils
         {
             // previously support comparisons for N sources but now can only be 2 as controlled by config
             CommonUtils.compareItems(
-                    mismatches, matchLevel, config.FieldConfig, config.IncludeMatches,
+                    mismatches, matchLevel, fieldConfig, config.IncludeMatches,
                     sourceItems.get(SourceType.OLD), sourceItems.get(SourceType.NEW));
 
             return true;
@@ -345,6 +345,11 @@ public class CommonUtils
 
         items2.stream().filter(x -> matchLevel != REPORTABLE || x.reportable())
                 .forEach(x -> mismatches.add(new Mismatch(null, x, NEW_ONLY, emptyDiffs)));
+    }
+
+    public static void warnUnsupportedFieldOverride(final Field field, final String settingName)
+    {
+        CMP_LOGGER.warn("field({}) type({}) does not support a {} override", field.name(), field.type(), settingName);
     }
 
     public static List<String> findDiffs(final ComparableItem oldItem, final ComparableItem newItem, List<Field> fields)
@@ -454,5 +459,27 @@ public class CommonUtils
         {
             return item.isPass();
         }
+    }
+
+    public static FieldConfig initialiseFieldConfig(ComparConfig config)
+    {
+        FieldConfig fieldConfig = new FieldConfig();
+        for(CategoryType category : CategoryType.values())
+        {
+            MatchLevel matchLevel = config.Categories.get(category);
+
+            ItemComparer comparer = createComparer(category, config);
+
+            fieldConfig.registerFields(comparer, matchLevel);
+        }
+        if(config.FieldOverrides != null)
+        {
+            for(FieldOverride fieldOverride : config.FieldOverrides)
+            {
+                fieldConfig.applyOverride(fieldOverride);
+            }
+        }
+
+        return fieldConfig;
     }
 }

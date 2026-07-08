@@ -40,6 +40,7 @@ import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
+import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
@@ -88,7 +89,7 @@ public class DriverComparer implements ItemComparer
     }
 
     @Override
-    public boolean processSample(final String sampleId, final List<Mismatch> mismatches)
+    public boolean processSample(final String sampleId, final List<Mismatch> mismatches, final FieldConfig fieldConfig)
     {
         // load data ahead of the standard calls for cross-driver comparisons
         for(SourceData sourceData : mConfig.Sources)
@@ -105,7 +106,7 @@ public class DriverComparer implements ItemComparer
             }
         }
 
-        boolean valid = CommonUtils.processSample(this, mConfig, sampleId, mismatches);
+        boolean valid = CommonUtils.processSample(this, mConfig, sampleId, mismatches, fieldConfig);
 
         mGeneCopyNumbers.clear();
         mPurities.clear();

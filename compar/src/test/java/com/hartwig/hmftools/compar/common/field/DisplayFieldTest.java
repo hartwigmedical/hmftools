@@ -2,6 +2,7 @@ package com.hartwig.hmftools.compar.common.field;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
@@ -62,5 +63,14 @@ public class DisplayFieldTest
     {
         DisplayField field = field();
         assertTrue(field.determineDiffs(new TestFieldItem<>("A"), new TestFieldItem<>("B")).isEmpty());
+    }
+
+    @Test
+    public void withOverridesAreAllUnsupportedAndReturnSameInstance()
+    {
+        DisplayField field = field();
+        assertSame(field, field.withCompared(true));
+        assertSame(field, field.withAbsoluteThreshold(5.0));
+        assertSame(field, field.withPercentThreshold(0.2));
     }
 }

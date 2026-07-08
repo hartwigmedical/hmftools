@@ -2,6 +2,7 @@ package com.hartwig.hmftools.compar.common.field;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
@@ -78,5 +79,26 @@ public class FieldTest
         TestFieldItem<String> newItem = new TestFieldItem<>("B");
 
         assertEquals(List.of("MinimalField(A/B)"), field.determineDiffs(oldItem, newItem));
+    }
+
+    @Test
+    public void defaultWithComparedIsUnsupportedAndReturnsSameInstance()
+    {
+        MinimalField field = new MinimalField(false);
+        assertSame(field, field.withCompared(false));
+    }
+
+    @Test
+    public void defaultWithAbsoluteThresholdIsUnsupportedAndReturnsSameInstance()
+    {
+        MinimalField field = new MinimalField(false);
+        assertSame(field, field.withAbsoluteThreshold(5.0));
+    }
+
+    @Test
+    public void defaultWithPercentThresholdIsUnsupportedAndReturnsSameInstance()
+    {
+        MinimalField field = new MinimalField(false);
+        assertSame(field, field.withPercentThreshold(0.2));
     }
 }

@@ -30,6 +30,12 @@ public class StringField implements Field
     }
 
     @Override
+    public Field withCompared(final boolean compared)
+    {
+        return new StringField(name, extractValue, compared);
+    }
+
+    @Override
     public String type()
     {
         return "string";

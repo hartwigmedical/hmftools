@@ -2,6 +2,7 @@ package com.hartwig.hmftools.compar.common.field;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
@@ -69,5 +70,22 @@ public class StringListFieldTest
     {
         StringListField field = field(true);
         assertTrue(field.determineDiffs(new TestFieldItem<>(List.of("A")), new TestFieldItem<>(List.of("A"))).isEmpty());
+    }
+
+    @Test
+    public void withComparedReturnsNewFieldWithUpdatedIsCompared()
+    {
+        StringListField field = field(true);
+        Field updated = field.withCompared(false);
+        assertFalse(updated.isCompared());
+        assertEquals("A;B", updated.displayValue(new TestFieldItem<>(List.of("A", "B"))));
+    }
+
+    @Test
+    public void withThresholdsAreUnsupportedAndReturnSameInstance()
+    {
+        StringListField field = field(true);
+        assertSame(field, field.withAbsoluteThreshold(5.0));
+        assertSame(field, field.withPercentThreshold(0.2));
     }
 }

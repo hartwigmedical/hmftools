@@ -139,4 +139,37 @@ public class LongFieldTest
         // absolute and percent both exceeded, opposite signs -> diff
         assertTrue(hasDiff(field, -50L, 50L));
     }
+
+    @Test
+    public void withComparedUpdatesIsComparedAndPreservesThresholds()
+    {
+        LongField field = field(10., 0.2);
+        LongField updated = (LongField) field.withCompared(false);
+
+        assertFalse(updated.isCompared());
+        assertEquals(10., updated.absoluteThreshold(), 0.0);
+        assertEquals(0.2, updated.percentThreshold(), 0.0);
+    }
+
+    @Test
+    public void withAbsoluteThresholdUpdatesOnlyAbsoluteThreshold()
+    {
+        LongField field = field(10., 0.2);
+        LongField updated = (LongField) field.withAbsoluteThreshold(5.);
+
+        assertTrue(updated.isCompared());
+        assertEquals(5., updated.absoluteThreshold(), 0.0);
+        assertEquals(0.2, updated.percentThreshold(), 0.0);
+    }
+
+    @Test
+    public void withPercentThresholdUpdatesOnlyPercentThreshold()
+    {
+        LongField field = field(10., 0.2);
+        LongField updated = (LongField) field.withPercentThreshold(0.5);
+
+        assertTrue(updated.isCompared());
+        assertEquals(10., updated.absoluteThreshold(), 0.0);
+        assertEquals(0.5, updated.percentThreshold(), 0.0);
+    }
 }

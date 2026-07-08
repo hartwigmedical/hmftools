@@ -122,4 +122,37 @@ public class ImageFieldTest
         ImageField field = field(null, 0.);
         assertTrue(field.determineDiffs(new TestFieldItem<>(createImage(30)), new TestFieldItem<>(createImage(30))).isEmpty());
     }
+
+    @Test
+    public void withComparedUpdatesIsComparedAndPreservesThresholds()
+    {
+        ImageField field = field(5., 0.2);
+        ImageField updated = (ImageField) field.withCompared(false);
+
+        assertFalse(updated.isCompared());
+        assertEquals(5., updated.absoluteThreshold(), 0.0);
+        assertEquals(0.2, updated.percentThreshold(), 0.0);
+    }
+
+    @Test
+    public void withAbsoluteThresholdUpdatesOnlyAbsoluteThreshold()
+    {
+        ImageField field = field(5., 0.2);
+        ImageField updated = (ImageField) field.withAbsoluteThreshold(10.);
+
+        assertTrue(updated.isCompared());
+        assertEquals(10., updated.absoluteThreshold(), 0.0);
+        assertEquals(0.2, updated.percentThreshold(), 0.0);
+    }
+
+    @Test
+    public void withPercentThresholdUpdatesOnlyPercentThreshold()
+    {
+        ImageField field = field(5., 0.2);
+        ImageField updated = (ImageField) field.withPercentThreshold(0.5);
+
+        assertTrue(updated.isCompared());
+        assertEquals(5., updated.absoluteThreshold(), 0.0);
+        assertEquals(0.5, updated.percentThreshold(), 0.0);
+    }
 }

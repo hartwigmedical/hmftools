@@ -1,12 +1,13 @@
 package com.hartwig.hmftools.compar;
 
-import static com.hartwig.hmftools.compar.common.CommonUtils.buildComparers;
+import static com.hartwig.hmftools.compar.common.CommonUtils.initialiseFieldConfig;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 
 import com.hartwig.hmftools.compar.common.CategoryType;
+import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.FieldConfigFile;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 
@@ -55,14 +56,14 @@ public class DefaultFieldConfigTestApplication
             config.Categories.put(category, matchLevel);
         }
 
-        buildComparers(config);
+        FieldConfig fieldConfig = initialiseFieldConfig(config);
 
         String outputDir = OUTPUT_DIR + "/" + matchLevel.toString().toLowerCase();
         new File(outputDir).mkdirs();
 
         String filename = FieldConfigFile.generateFileName(outputDir);
 
-        FieldConfigFile.write(filename, config.FieldConfig, config.Categories.keySet());
+        FieldConfigFile.write(filename, fieldConfig, config.Categories.keySet());
 
         LOGGER.info("wrote default field config file: {}", filename);
     }

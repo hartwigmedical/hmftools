@@ -50,6 +50,24 @@ public class LongField implements Field
     }
 
     @Override
+    public Field withCompared(final boolean compared)
+    {
+        return new LongField(name, extractValue, compared, absoluteThreshold, percentThreshold);
+    }
+
+    @Override
+    public Field withAbsoluteThreshold(final Double absoluteThreshold)
+    {
+        return new LongField(name, extractValue, isCompared, absoluteThreshold, percentThreshold);
+    }
+
+    @Override
+    public Field withPercentThreshold(final Double percentThreshold)
+    {
+        return new LongField(name, extractValue, isCompared, absoluteThreshold, percentThreshold);
+    }
+
+    @Override
     public String type()
     {
         return "long";

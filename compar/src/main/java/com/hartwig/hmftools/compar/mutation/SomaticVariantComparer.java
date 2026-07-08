@@ -50,6 +50,7 @@ import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
+import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.common.InvalidDataItem;
 import com.hartwig.hmftools.compar.ItemComparer;
@@ -85,7 +86,7 @@ public class SomaticVariantComparer implements ItemComparer
     public CategoryType category() { return SOMATIC_VARIANT; }
 
     @Override
-    public boolean processSample(final String sampleId, final List<Mismatch> mismatches)
+    public boolean processSample(final String sampleId, final List<Mismatch> mismatches, final FieldConfig fieldConfig)
     {
         // use a custom method optimised for large numbers of variants
         MatchLevel matchLevel = mConfig.Categories.get(category());
@@ -93,12 +94,12 @@ public class SomaticVariantComparer implements ItemComparer
         List<SomaticVariantData> oldVariants = loadVariants(sampleId, OLD);
         List<SomaticVariantData> newVariants = loadVariants(sampleId, NEW);
 
-        return identifyMismatches(sampleId, mismatches, oldVariants, newVariants, matchLevel);
+        return identifyMismatches(sampleId, mismatches, oldVariants, newVariants, matchLevel, fieldConfig);
     }
 
     public boolean identifyMismatches(
             final String sampleId, final List<Mismatch> mismatches, final List<SomaticVariantData> oldVariants,
-            final List<SomaticVariantData> newVariants, final MatchLevel matchLevel)
+            final List<SomaticVariantData> newVariants, final MatchLevel matchLevel, final FieldConfig fieldConfig)
     {
         boolean hasOldItems = oldVariants != null;
         boolean hasNewItems = newVariants != null;
@@ -188,7 +189,7 @@ public class SomaticVariantComparer implements ItemComparer
 
                     if(includeMismatchWithVariant(oldVariant, matchLevel) || includeMismatchWithVariant(matchedVariant, matchLevel))
                     {
-                        Mismatch mismatch = oldVariant.findMismatch(matchedVariant, matchLevel, mConfig.FieldConfig, mConfig.IncludeMatches);
+                        Mismatch mismatch = oldVariant.findMismatch(matchedVariant, matchLevel, fieldConfig, mConfig.IncludeMatches);
 
                         if(mismatch != null)
                             mismatches.add(mismatch);
@@ -212,7 +213,7 @@ public class SomaticVariantComparer implements ItemComparer
 
                 if(unfilteredVariant != null)
                 {
-                    mismatches.add(unfilteredVariant.findMismatch(newVariant, matchLevel, mConfig.FieldConfig, mConfig.IncludeMatches));
+                    mismatches.add(unfilteredVariant.findMismatch(newVariant, matchLevel, fieldConfig, mConfig.IncludeMatches));
                 }
                 else
                 {

@@ -2,6 +2,7 @@ package com.hartwig.hmftools.compar.common.field;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
@@ -62,5 +63,22 @@ public class BooleanFieldTest
     {
         BooleanField field = field(true);
         assertTrue(field.determineDiffs(new TestFieldItem<>(true), new TestFieldItem<>(true)).isEmpty());
+    }
+
+    @Test
+    public void withComparedReturnsNewFieldWithUpdatedIsCompared()
+    {
+        BooleanField field = field(true);
+        Field updated = field.withCompared(false);
+        assertFalse(updated.isCompared());
+        assertEquals("TRUE", updated.displayValue(new TestFieldItem<>(true)));
+    }
+
+    @Test
+    public void withThresholdsAreUnsupportedAndReturnSameInstance()
+    {
+        BooleanField field = field(true);
+        assertSame(field, field.withAbsoluteThreshold(5.0));
+        assertSame(field, field.withPercentThreshold(0.2));
     }
 }

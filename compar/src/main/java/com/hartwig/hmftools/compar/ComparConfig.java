@@ -56,7 +56,8 @@ import com.hartwig.hmftools.common.driver.panel.DriverGeneFile;
 import com.hartwig.hmftools.common.genome.refgenome.GenomeLiftoverCache;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.compar.common.CategoryType;
-import com.hartwig.hmftools.compar.common.FieldConfig;
+import com.hartwig.hmftools.compar.common.FieldConfigFile;
+import com.hartwig.hmftools.compar.common.FieldOverride;
 import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.SourceData;
@@ -82,8 +83,7 @@ public class ComparConfig
     public final Set<String> IgnoreGenes;
     public final Set<String> AlternateTranscriptDriverGenes;
     public final boolean RestrictToDrivers;
-
-    public final FieldConfig FieldConfig;
+    public final List<FieldOverride> FieldOverrides;
 
     public final String OutputDir;
     public final String OutputId;
@@ -197,8 +197,6 @@ public class ComparConfig
 
         loadSampleIds(configBuilder);
 
-        FieldConfig = new FieldConfig();
-
         DriverGenes = Sets.newHashSet();
         AlternateTranscriptDriverGenes = Sets.newHashSet();
 
@@ -240,6 +238,21 @@ public class ComparConfig
         }
 
         LiftoverCache = new GenomeLiftoverCache(RequiresLiftover);
+
+        List<FieldOverride> overrideFieldConfig = null;
+        if(configBuilder.hasValue(FIELD_CONFIG_FILE))
+        {
+            try
+            {
+                overrideFieldConfig = FieldConfigFile.read(configBuilder.getValue(FIELD_CONFIG_FILE));
+            }
+            catch(IOException e)
+            {
+                CMP_LOGGER.error("failed to load field config file: {}", e.toString());
+                System.exit(1);
+            }
+        }
+        FieldOverrides = overrideFieldConfig;
     }
 
     public SourceData getSourceData(final SourceType sourceType)
@@ -471,7 +484,6 @@ public class ComparConfig
         Threads = 0;
         WriteTypes = WriteType.DEFAULT_WRITE_TYPES;
 
-        FieldConfig = new FieldConfig();
         DriverGenes = Sets.newHashSet();
         IgnoreGenes = Collections.emptySet();
         AlternateTranscriptDriverGenes = Sets.newHashSet();
@@ -479,5 +491,6 @@ public class ComparConfig
         LiftoverCache = new GenomeLiftoverCache();
         RequiresLiftover = false;
         KnownMismatchFile = null;
+        FieldOverrides = null;
     }
 }

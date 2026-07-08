@@ -27,6 +27,7 @@ import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.ComparableItemTest;
 import com.hartwig.hmftools.compar.common.CommonUtils;
+import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.MismatchType;
@@ -156,7 +157,8 @@ public class DriverDataTest extends ComparableItemTest<DriverData, DriverCompare
         ComparConfig config = new ComparConfig();
         DriverComparer driverComparer = new DriverComparer(config);
 
-        config.FieldConfig.registerFields(driverComparer, MatchLevel.DETAILED);
+        FieldConfig fieldConfig = new FieldConfig();
+        fieldConfig.registerFields(driverComparer, MatchLevel.DETAILED);
 
         List<ComparableItem> refItems = Lists.newArrayList();
         List<ComparableItem> newItems = Lists.newArrayList();
@@ -181,7 +183,7 @@ public class DriverDataTest extends ComparableItemTest<DriverData, DriverCompare
                 null, "4", false));
 
         List<Mismatch> mismatches = Lists.newArrayList();
-        CommonUtils.compareItems(mismatches, MatchLevel.REPORTABLE, config.FieldConfig, includeMatches, refItems, newItems);
+        CommonUtils.compareItems(mismatches, MatchLevel.REPORTABLE, fieldConfig, includeMatches, refItems, newItems);
         return mismatches;
     }
 

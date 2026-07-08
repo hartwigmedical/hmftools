@@ -139,4 +139,37 @@ public class IntFieldTest
         // absolute and percent both exceeded, opposite signs -> diff
         assertTrue(hasDiff(field, -50, 50));
     }
+
+    @Test
+    public void withComparedUpdatesIsComparedAndPreservesThresholds()
+    {
+        IntField field = field(10., 0.2);
+        IntField updated = (IntField) field.withCompared(false);
+
+        assertFalse(updated.isCompared());
+        assertEquals(10., updated.absoluteThreshold(), 0.0);
+        assertEquals(0.2, updated.percentThreshold(), 0.0);
+    }
+
+    @Test
+    public void withAbsoluteThresholdUpdatesOnlyAbsoluteThreshold()
+    {
+        IntField field = field(10., 0.2);
+        IntField updated = (IntField) field.withAbsoluteThreshold(5.);
+
+        assertTrue(updated.isCompared());
+        assertEquals(5., updated.absoluteThreshold(), 0.0);
+        assertEquals(0.2, updated.percentThreshold(), 0.0);
+    }
+
+    @Test
+    public void withPercentThresholdUpdatesOnlyPercentThreshold()
+    {
+        IntField field = field(10., 0.2);
+        IntField updated = (IntField) field.withPercentThreshold(0.5);
+
+        assertTrue(updated.isCompared());
+        assertEquals(10., updated.absoluteThreshold(), 0.0);
+        assertEquals(0.5, updated.percentThreshold(), 0.0);
+    }
 }

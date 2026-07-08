@@ -38,6 +38,12 @@ public class BreakendsField implements Field
     }
 
     @Override
+    public Field withCompared(final boolean compared)
+    {
+        return new BreakendsField(name, extractValue, compared);
+    }
+
+    @Override
     public String type()
     {
         return "breakend";

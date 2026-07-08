@@ -53,6 +53,24 @@ public class DoubleField implements Field
     }
 
     @Override
+    public Field withCompared(final boolean compared)
+    {
+        return new DoubleField(name, extractValue, compared, absoluteThreshold, percentThreshold, formatString);
+    }
+
+    @Override
+    public Field withAbsoluteThreshold(final Double absoluteThreshold)
+    {
+        return new DoubleField(name, extractValue, isCompared, absoluteThreshold, percentThreshold, formatString);
+    }
+
+    @Override
+    public Field withPercentThreshold(final Double percentThreshold)
+    {
+        return new DoubleField(name, extractValue, isCompared, absoluteThreshold, percentThreshold, formatString);
+    }
+
+    @Override
     public String type()
     {
         return "double";

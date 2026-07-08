@@ -50,6 +50,24 @@ public class IntField implements Field
     }
 
     @Override
+    public Field withCompared(final boolean compared)
+    {
+        return new IntField(name, extractValue, compared, absoluteThreshold, percentThreshold);
+    }
+
+    @Override
+    public Field withAbsoluteThreshold(final Double absoluteThreshold)
+    {
+        return new IntField(name, extractValue, isCompared, absoluteThreshold, percentThreshold);
+    }
+
+    @Override
+    public Field withPercentThreshold(final Double percentThreshold)
+    {
+        return new IntField(name, extractValue, isCompared, absoluteThreshold, percentThreshold);
+    }
+
+    @Override
     public String type()
     {
         return "int";

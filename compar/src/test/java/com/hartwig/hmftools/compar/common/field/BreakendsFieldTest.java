@@ -2,6 +2,7 @@ package com.hartwig.hmftools.compar.common.field;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import java.util.HashSet;
@@ -128,5 +129,21 @@ public class BreakendsFieldTest
         String expected = String.format("%s(%s reported %s/%s)",
                 FIELD_NAME, oldBreakend.svInfoStr(), oldBreakend.Breakend.reportedStatus(), newBreakend.Breakend.reportedStatus());
         assertEquals(List.of(expected), diffs);
+    }
+
+    @Test
+    public void withComparedReturnsNewFieldWithUpdatedIsCompared()
+    {
+        BreakendsField field = field(true);
+        Field updated = field.withCompared(false);
+        assertFalse(updated.isCompared());
+    }
+
+    @Test
+    public void withThresholdsAreUnsupportedAndReturnSameInstance()
+    {
+        BreakendsField field = field(true);
+        assertSame(field, field.withAbsoluteThreshold(5.0));
+        assertSame(field, field.withPercentThreshold(0.2));
     }
 }
