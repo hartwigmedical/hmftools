@@ -8,6 +8,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
 import java.util.List;
+import java.util.Set;
 
 import org.junit.Test;
 
@@ -43,5 +44,23 @@ public class SaTagRewriterTest
 
         // all entries fail -> null
         assertNull(SaTagRewriter.rewriteSaTag(TX_CONTIG + ",10000,+,50M,60,0;malformed;", resolver));
+    }
+
+    @Test
+    public void testExcludeKeyRemovesDroppedSuppAcrossClipType()
+    {
+        LiftBackResolver resolver = newResolver();
+
+        // The primary's SA lists a dropped supp soft-clipped (19M247S); the exclude key (built by suppSaKey from the
+        // hard-clipped supp record, normalised H->S) is soft. The entry must be removed, not left dangling.
+        Set<String> exclude = Set.of(CHR_1 + ":1000:-:19M247S");
+        assertNull(SaTagRewriter.rewriteSaTag(CHR_1 + ",1000,-,19M247S,0,0;", resolver, exclude));
+
+        // and when the SA entry itself is hard-clipped, rewriteSaTag normalises H->S before matching the same key.
+        assertNull(SaTagRewriter.rewriteSaTag(CHR_1 + ",1000,-,19M247H,0,0;", resolver, exclude));
+
+        // an entry at a different locus is untouched by the exclude set
+        assertEquals(CHR_1 + ",2000,-,19M247S,0,0;",
+                SaTagRewriter.rewriteSaTag(CHR_1 + ",2000,-,19M247S,0,0;", resolver, exclude));
     }
 }

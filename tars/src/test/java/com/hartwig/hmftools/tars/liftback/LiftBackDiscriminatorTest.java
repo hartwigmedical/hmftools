@@ -387,4 +387,66 @@ public class LiftBackDiscriminatorTest
         assertFalse("multimapper placements all ride in XA, none dropped", self.Dropped);
         assertFalse(altB.Dropped);
     }
+
+    // ---- apply(): recomputed genomic score breaks ties before the RNG ----
+
+    @Test
+    public void testAmbiguousScoreOverridesSeed()
+    {
+        // even seed would pick tx; a higher ref genomic score must win instead (not a true tie).
+        List<LiftedAlignment> alignments = ambiguousSet();
+        LiftedAlignment self = alignments.get(0);   // ref
+        LiftedAlignment txAlt = alignments.get(1);  // tx
+        self.GenomicScore = 90;
+        txAlt.GenomicScore = 50;
+        LiftBackDiscriminator.ApplyResult outcome = LiftBackDiscriminator.apply(alignments, AMBIGUOUS, self, 0, false);
+        assertSame(self, outcome.effectivePrimary());
+        assertEquals("score_ref", outcome.note());
+
+        // and the other direction: odd seed would pick ref, higher tx score wins.
+        List<LiftedAlignment> other = ambiguousSet();
+        other.get(0).GenomicScore = 40;
+        other.get(1).GenomicScore = 88;
+        LiftBackDiscriminator.ApplyResult txWins = LiftBackDiscriminator.apply(other, AMBIGUOUS, other.get(0), 1, false);
+        assertSame(other.get(1), txWins.effectivePrimary());
+        assertEquals("score_tx", txWins.note());
+    }
+
+    @Test
+    public void testAmbiguousEqualScoreFallsBackToSeed()
+    {
+        List<LiftedAlignment> alignments = ambiguousSet();
+        alignments.get(0).GenomicScore = 70;
+        alignments.get(1).GenomicScore = 70;
+        LiftBackDiscriminator.ApplyResult outcome = LiftBackDiscriminator.apply(alignments, AMBIGUOUS, alignments.get(0), 0, false);
+        assertEquals("equal score -> seeded coin, even seed picks tx", "random_tx", outcome.note());
+        assertSame(alignments.get(1), outcome.effectivePrimary());
+    }
+
+    @Test
+    public void testMultimapperScoreOverridesSeed()
+    {
+        // seed 0 would keep self's locus; the higher-scoring alt locus must win instead.
+        List<LiftedAlignment> alignments = multimapperSet();
+        LiftedAlignment self = alignments.get(0);   // chr1:100
+        LiftedAlignment altB = alignments.get(1);   // chr2:200
+        self.GenomicScore = 60;
+        altB.GenomicScore = 130;
+        LiftBackDiscriminator.ApplyResult outcome = LiftBackDiscriminator.apply(alignments, MULTIMAPPER, self, 0, false);
+        assertSame(altB, outcome.effectivePrimary());
+        assertEquals("score_locus", outcome.note());
+    }
+
+    @Test
+    public void testMultimapperEqualLocusScoreFallsBackToSeed()
+    {
+        List<LiftedAlignment> alignments = multimapperSet();
+        LiftedAlignment self = alignments.get(0);
+        LiftedAlignment altB = alignments.get(1);
+        self.GenomicScore = 100;
+        altB.GenomicScore = 100;
+        LiftBackDiscriminator.ApplyResult outcome = LiftBackDiscriminator.apply(alignments, MULTIMAPPER, self, 1, false);
+        assertSame("equal scores -> seeded pick, seed 1 -> alt locus", altB, outcome.effectivePrimary());
+        assertEquals("random_locus", outcome.note());
+    }
 }

@@ -126,8 +126,11 @@ public final class ContigTranslator
                     int intronStart = currentSpan.end() + 1;
                     int intronEnd = nextSpan.start() - 1;
 
-                    outElements.add(new CigarElement(intronEnd - intronStart + 1, CigarOperator.N));
-                    impliedIntrons.add(new BaseRegion(intronStart, intronEnd));
+                    if(intronEnd >= intronStart)
+                    {
+                        outElements.add(new CigarElement(intronEnd - intronStart + 1, CigarOperator.N));
+                        impliedIntrons.add(new BaseRegion(intronStart, intronEnd));
+                    }
 
                     ++currentSpanIndex;
                     currentSpan = nextSpan;
@@ -145,8 +148,41 @@ public final class ContigTranslator
 
         return new TranslationResult(
                 contig.chromosome(), genomicStart,
-                new Cigar(collapseSpliceFlankingDeletions(outElements)),
+                new Cigar(mergeAdjacentSameOp(dropZeroLength(collapseSpliceFlankingDeletions(outElements)))),
                 impliedIntrons);
+    }
+
+    static List<CigarElement> dropZeroLength(final List<CigarElement> elements)
+    {
+        List<CigarElement> result = new ArrayList<>(elements.size());
+
+        for(final CigarElement element : elements)
+        {
+            if(element.getLength() > 0)
+                result.add(element);
+        }
+
+        return result;
+    }
+
+    static List<CigarElement> mergeAdjacentSameOp(final List<CigarElement> elements)
+    {
+        List<CigarElement> merged = new ArrayList<>(elements.size());
+
+        for(final CigarElement element : elements)
+        {
+            if(!merged.isEmpty() && merged.get(merged.size() - 1).getOperator() == element.getOperator())
+            {
+                CigarElement prev = merged.remove(merged.size() - 1);
+                merged.add(new CigarElement(prev.getLength() + element.getLength(), element.getOperator()));
+            }
+            else
+            {
+                merged.add(element);
+            }
+        }
+
+        return merged;
     }
 
     // (cigar, contigPos) after the spacer-overhang clamp; contigPos advances when the leading edge is clipped.

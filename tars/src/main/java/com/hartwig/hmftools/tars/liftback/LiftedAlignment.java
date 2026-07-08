@@ -38,6 +38,11 @@ public class LiftedAlignment
     // primary pick was suboptimal (e.g. processed pseudogene over spliced parent).
     public boolean IsPrimaryChoice = false;
 
+    // bwa-mem-style score of the lifted placement against the genome, recomputed pre-discriminator so tx and ref
+    // candidates compare on one scale (bwa's AlignmentScore is tx-contig-space for a tx candidate, and absent for
+    // XA alts). Integer.MIN_VALUE = not computed; the discriminator then falls back to seeded randomness on ties.
+    public int GenomicScore = Integer.MIN_VALUE;
+
     public LiftedAlignment(
             final AlignmentSource source, final String origContig, final int origPos, final String origCigar,
             final String liftedChrom, final int liftedPos, final String liftedCigar,

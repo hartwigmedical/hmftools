@@ -171,10 +171,12 @@ public final class LiftBackDiscriminator
     }
 
     // Mutates Dropped/IsPrimaryChoice and returns the effective primary and a short diagnostic note.
-    // When bwa expressed no priority (bwaHasPriority false, ie MAPQ 0) the not-confident outcomes pick a
-    // placement pseudo-randomly from seed (a per-read hash): a random locus among tied multi-mappers, or a
-    // random tx-vs-ref call at an ambiguous single locus. When bwa did rank the alignments (bwaHasPriority
-    // true) its order is left untouched.
+    // When bwa expressed no priority (bwaHasPriority false, ie MAPQ 0) the not-confident outcomes first rank the
+    // candidates by their recomputed genomic score (set pre-discriminator) and take the clear winner: the
+    // highest-scoring locus among multi-mappers, or the higher-scoring side of an ambiguous tx-vs-ref call. Only
+    // when the top candidates tie on score - OR the candidates were never scored (e.g. a split read left for
+    // supplementary-resolve) - does it fall back to bwa's seed-based pseudo-random pick. bwaHasPriority true leaves
+    // bwa's order untouched.
     public static ApplyResult apply(
             final List<LiftedAlignment> alignments, final DecidingFeature feature, final LiftedAlignment self,
             final int seed, final boolean bwaHasPriority)
@@ -193,8 +195,10 @@ public final class LiftBackDiscriminator
         };
     }
 
-    // Pick a random locus among tied multi-mappers as primary; every non-dropped placement stays (rides in
-    // XA), nothing is dropped. Single-locus sets have nothing to pick, so self is kept. Deterministic in seed.
+    // Pick the primary locus among multi-mappers: the highest-scoring locus, with the seeded coin only among loci
+    // tied at the top. When no candidate was scored (a split read whose scoring is skipped so supplementary-resolve
+    // can reconstruct it), fall back to bwa's exact behaviour - a seed pick over all loci, first placement there -
+    // so the merge path is untouched. Every non-dropped placement stays (rides in XA); single-locus sets keep self.
     private static ApplyResult randomLocus(final List<LiftedAlignment> alignments, final LiftedAlignment self, final int seed)
     {
         List<String> loci = new ArrayList<>();
@@ -215,19 +219,40 @@ public final class LiftBackDiscriminator
             return new ApplyResult(self, "");
         }
 
-        String pickedLocus = loci.get(Math.floorMod(seed, loci.size()));
+        int topScore = Integer.MIN_VALUE;
+        for(final String locus : loci)
+        {
+            topScore = Math.max(topScore, bestScoreAtLocus(alignments, locus));
+        }
+        boolean scored = topScore != Integer.MIN_VALUE;
+
+        List<String> pickable = new ArrayList<>();
+        for(final String locus : loci)
+        {
+            if(!scored || bestScoreAtLocus(alignments, locus) == topScore)
+            {
+                pickable.add(locus);
+            }
+        }
+
+        boolean tie = pickable.size() > 1;
+        String pickedLocus = pickable.get(Math.floorMod(seed, pickable.size()));
         if(pickedLocus.equals(locusKey(self)))
         {
             return new ApplyResult(self, "");
         }
 
+        // unscored: first placement at the locus (bwa behaviour); scored: the best-scoring placement there.
         LiftedAlignment winner = null;
         for(final LiftedAlignment la : alignments)
         {
-            if(!la.Dropped && locusKey(la).equals(pickedLocus))
+            if(la.Dropped || !locusKey(la).equals(pickedLocus))
+            {
+                continue;
+            }
+            if(winner == null || (scored && outranks(la, winner)))
             {
                 winner = la;
-                break;
             }
         }
         if(winner == null)
@@ -237,11 +262,25 @@ public final class LiftBackDiscriminator
 
         self.IsPrimaryChoice = false;
         winner.IsPrimaryChoice = true;
-        return new ApplyResult(winner, "random_locus");
+        return new ApplyResult(winner, (scored && !tie) ? "score_locus" : "random_locus");
     }
 
-    // Single locus with both a tx and a ref placement and no shape rule to separate them: pick tx or ref
-    // pseudo-randomly. The loser is a different cigar at the same locus, so it is kept in XA (not dropped).
+    private static int bestScoreAtLocus(final List<LiftedAlignment> alignments, final String locus)
+    {
+        int best = Integer.MIN_VALUE;
+        for(final LiftedAlignment la : alignments)
+        {
+            if(!la.Dropped && locusKey(la).equals(locus))
+            {
+                best = Math.max(best, la.GenomicScore);
+            }
+        }
+        return best;
+    }
+
+    // Single locus with both a tx and a ref placement and no shape rule to separate them: keep the higher genomic
+    // score, or a seeded coin when they tie (or were not scored). The loser is a different cigar at the same locus,
+    // kept in XA (not dropped).
     private static ApplyResult randomTxVsRef(final List<LiftedAlignment> alignments, final LiftedAlignment self, final int seed)
     {
         LiftedAlignment tx = bestOfSource(alignments, true);
@@ -251,16 +290,29 @@ public final class LiftBackDiscriminator
             return new ApplyResult(self, "");
         }
 
-        boolean pickTx = (seed & 1) == 0;
-        LiftedAlignment winner = pickTx ? tx : ref;
+        LiftedAlignment winner;
+        String note;
+        if(bothScored(tx, ref) && tx.GenomicScore != ref.GenomicScore)
+        {
+            // a real genomic score separates them, so it is not a true tie: keep the higher-scoring side.
+            winner = tx.GenomicScore > ref.GenomicScore ? tx : ref;
+            note = winner == tx ? "score_tx" : "score_ref";
+        }
+        else
+        {
+            // genuinely tied (or scores unavailable): fall back to the read-seeded coin so ties stay reproducible.
+            boolean pickTx = (seed & 1) == 0;
+            winner = pickTx ? tx : ref;
+            note = pickTx ? "random_tx" : "random_ref";
+        }
         for(final LiftedAlignment la : alignments)
         {
             la.IsPrimaryChoice = la == winner;
         }
-        return new ApplyResult(winner, pickTx ? "random_tx" : "random_ref");
+        return new ApplyResult(winner, note);
     }
 
-    // Fewest-mismatch non-dropped alignment from the tx side (fromTx true) or ref side (fromTx false).
+    // Best non-dropped alignment from the tx side (fromTx true) or ref side (fromTx false).
     private static LiftedAlignment bestOfSource(final List<LiftedAlignment> alignments, final boolean fromTx)
     {
         LiftedAlignment best = null;
@@ -270,12 +322,27 @@ public final class LiftBackDiscriminator
             {
                 continue;
             }
-            if(best == null || la.NumMismatches < best.NumMismatches)
+            if(best == null || outranks(la, best))
             {
                 best = la;
             }
         }
         return best;
+    }
+
+    // Higher recomputed genomic score wins; an equal score (or scores not computed) falls back to fewer mismatches.
+    private static boolean outranks(final LiftedAlignment a, final LiftedAlignment b)
+    {
+        if(a.GenomicScore != b.GenomicScore)
+        {
+            return a.GenomicScore > b.GenomicScore;
+        }
+        return a.NumMismatches < b.NumMismatches;
+    }
+
+    private static boolean bothScored(final LiftedAlignment a, final LiftedAlignment b)
+    {
+        return a.GenomicScore != Integer.MIN_VALUE && b.GenomicScore != Integer.MIN_VALUE;
     }
 
     // Ref-favouring: if self is ref, drop tx alts. If self is tx, swap to the best ref alt.

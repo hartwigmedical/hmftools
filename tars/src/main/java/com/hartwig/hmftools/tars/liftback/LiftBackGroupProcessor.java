@@ -7,7 +7,6 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRI
 import static com.hartwig.hmftools.tars.liftback.SaTagRewriter.rewriteSaTag;
 import static com.hartwig.hmftools.tars.common.TarsConstants.PRIMARY_AS_UNMAP_THRESHOLD;
 import static com.hartwig.hmftools.tars.common.TarsConstants.CONFIDENT_MAPQ;
-import static com.hartwig.hmftools.tars.common.TarsConstants.MAX_CONFIDENT_NM_FRACTION;
 import static com.hartwig.hmftools.tars.common.TarsConstants.SUPP_AS_DROP_THRESHOLD;
 import static com.hartwig.hmftools.tars.common.TarsConfig.TARS_LOGGER;
 
@@ -528,14 +527,16 @@ public class LiftBackGroupProcessor
         }
 
         // rewrite the primary's LiftBackResult with the merged (now-spliced) cigar + start; the start may
-        // shift for a left-extend. Merged MAPQ is the max of the primary and every merged supp; a merged
-        // alignment left at 0 is bumped to 60 (the merge is the placement evidence). mark merged supps for drop.
+        // shift for a left-extend. Merged MAPQ is the max of the primary and every merged supp, then bumped to
+        // 60 only when the primary+supplementary pair maps to a single locus: the merge already requires exactly
+        // one supplementary within reach on that side, so the pair's uniqueness is the primary lifting to one
+        // locus (no competing XA alt). A pair that still maps to more than one locus keeps its bwa MAPQ.
         int mergedMapq = primaryRes.updatedMapq();
         for(Integer dtoIdx : result.droppedSupplementaryIndices())
         {
             mergedMapq = Math.max(mergedMapq, suppDtos.get(dtoIdx).mapq());
         }
-        if(mergedMapq == 0)
+        if(primaryRes.numLoci() == 1)
         {
             mergedMapq = CONFIDENT_MAPQ;
         }
@@ -600,6 +601,12 @@ public class LiftBackGroupProcessor
 
         byte[] reverseBases = null;
 
+        // A read with a supplementary is a split read: supplementary-resolve reconstructs its true spliced alignment
+        // more faithfully than any single lifted half. Scoring the pre-merge halves would let the discriminator prefer
+        // a clean contiguous alt over the short-anchor placement supp-resolve needs, so leave GenomicScore unset here
+        // (the discriminator then keeps its seeded-random tie-break) and let the merge run.
+        boolean recordHasSupplementary = record.getStringAttribute(SUPPLEMENTARY_ATTRIBUTE) != null;
+
         // Many candidates lift to an identical genomic placement (packed isoform contigs of one gene all collapsing
         // to one locus). peel() is deterministic in (chrom, pos, cigar, strand), so each distinct placement is
         // peeled once and the result reused for every duplicate.
@@ -613,26 +620,28 @@ public class LiftBackGroupProcessor
                 continue;
             }
 
+            // read bases in this candidate's orientation (reverse-complemented for an opposite-strand alt); used
+            // both to peel the terminal overhangs and to recompute the genomic score below.
+            byte[] bases;
+            if(alignment.ForwardStrand == recordForward)
+            {
+                bases = forwardBases;
+            }
+            else
+            {
+                if(reverseBases == null)
+                {
+                    reverseBases = Arrays.copyOf(forwardBases, forwardBases.length);
+                    SequenceUtil.reverseComplement(reverseBases);
+                }
+                bases = reverseBases;
+            }
+
             String key = alignment.LiftedChrom + ':' + alignment.LiftedPos + ':' + alignment.LiftedCigar
                     + (alignment.ForwardStrand ? '+' : '-');
             OverhangGate.Result peeled = placementsByKey.get(key);
             if(peeled == null)
             {
-                byte[] bases;
-                if(alignment.ForwardStrand == recordForward)
-                {
-                    bases = forwardBases;
-                }
-                else
-                {
-                    if(reverseBases == null)
-                    {
-                        reverseBases = Arrays.copyOf(forwardBases, forwardBases.length);
-                        SequenceUtil.reverseComplement(reverseBases);
-                    }
-                    bases = reverseBases;
-                }
-
                 peeled = mOverhangGate.peel(alignment.LiftedChrom, alignment.LiftedPos, alignment.LiftedCigar, bases);
                 placementsByKey.put(key, peeled);
             }
@@ -648,7 +657,17 @@ public class LiftBackGroupProcessor
 
             if(peeled.pos() != alignment.LiftedPos || !peeled.cigar().equals(alignment.LiftedCigar))
             {
-                alignments.set(i, alignment.withLiftedCigar(peeled.pos(), peeled.cigar()));
+                alignment = alignment.withLiftedCigar(peeled.pos(), peeled.cigar());
+                alignments.set(i, alignment);
+            }
+
+            // recompute the genomic score on the final placement so Step 2 can rank candidates before any
+            // seeded-random tie-break (bwa's AlignmentScore is not comparable across tx and ref candidates).
+            // Skipped for split reads (see recordHasSupplementary above) so their supplementary-resolve merge stands.
+            if(!recordHasSupplementary)
+            {
+                alignment.GenomicScore = AlignmentScorer.score(
+                        mRefSource, alignment.LiftedChrom, alignment.LiftedPos, alignment.LiftedCigar, bases);
             }
         }
     }
@@ -815,11 +834,13 @@ public class LiftBackGroupProcessor
     }
 
     // SA entry key (chrom:pos:strand:cigar) of a supplementary's lifted placement, matching SaTagRewriter's
-    // entry key so a dropped supp's entry can be removed from the primary's SA tag.
+    // entry key so a dropped supp's entry can be removed from the primary's SA tag. Clips are normalised H->S:
+    // the supp RECORD is hard-clipped (e.g. 19M247H) but the primary's SA tag lists it soft-clipped (19M247S),
+    // so the keys would otherwise never match and the dropped supp's SA entry would dangle.
     private static String suppSaKey(final LiftBackResult result)
     {
         return result.finalChrom() + ":" + result.finalPos()
-                + ":" + (result.negativeStrand() ? '-' : '+') + ":" + result.finalCigar();
+                + ":" + (result.negativeStrand() ? '-' : '+') + ":" + result.finalCigar().replace('H', 'S');
     }
 
     private void applyAndWriteRecord(
@@ -837,6 +858,9 @@ public class LiftBackGroupProcessor
         {
             markPrimaryUnmapped(record);
         }
+
+        if(record.getReadUnmappedFlag())
+            record.setReadNegativeStrandFlag(false);
 
         // rebuiltSuppSa is set only for a supplementary whose primary the discriminator moved: use the primary-referencing
         // SA rebuilt from the emitted group. Otherwise translate this record's own bwa SA to genomic coords as usual.
@@ -890,26 +914,6 @@ public class LiftBackGroupProcessor
         }
 
         refreshNmDropMd(record, mRefSource);
-
-        // A placement TARS made confident on its own (bumped a bwa MAPQ-0 read, or swapped to a different locus) but
-        // whose recomputed genomic NM is a large fraction of the read length is not a trustworthy unique placement
-        // (e.g. a large-D lift artifact heavily mismatching the genome) -- revert it to MAPQ 0 rather than assert
-        // confidence. bwa's own kept confident calls (input MAPQ > 0, not swapped) are never touched.
-        if((result.inputMapq() == 0 || result.swapped())
-                && !record.getReadUnmappedFlag() && !record.getSupplementaryAlignmentFlag()
-                && record.getMappingQuality() >= CONFIDENT_MAPQ)
-        {
-            Integer editDistance = record.getIntegerAttribute("NM");
-            byte[] readBases = record.getReadBases();
-            if(editDistance != null && readBases != null && readBases.length > 0
-                    && editDistance > MAX_CONFIDENT_NM_FRACTION * readBases.length)
-            {
-                record.setMappingQuality(0);
-                mStats.recordLowIdentityDemoted();
-                TARS_LOGGER.debug2("low-identity demote {}: NM={} over {}% of {}bp",
-                        record.getReadName(), editDistance, (int) (MAX_CONFIDENT_NM_FRACTION * 100), readBases.length);
-            }
-        }
 
         sink.emit(record, result);
     }
