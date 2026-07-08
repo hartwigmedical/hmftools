@@ -17,8 +17,10 @@ public class SaTagRewriter
         return rewriteSaTag(saTagValue, resolver, Collections.emptySet());
     }
 
-    // excludeKeys: lifted entry keys (chrom:pos:strand:cigar) of supplementaries dropped from the output (excluded
-    // region / orphan / low-AS). Their SA entries are removed so the primary never references a supp that isn't emitted.
+    // excludeKeys: lifted entry keys (chrom:pos:strand:cigar, clips normalised H->S) of supplementaries dropped from
+    // the output (excluded region / orphan / low-AS). Their SA entries are removed so the primary never references a
+    // supp that isn't emitted. Clips are normalised because the dropped supp RECORD is hard-clipped while its SA-tag
+    // entry here is soft-clipped - see LiftBackGroupProcessor.suppSaKey.
     public static String rewriteSaTag(final String saTagValue, final LiftBackResolver resolver, final Set<String> excludeKeys)
     {
         if(saTagValue == null || saTagValue.isEmpty())
@@ -41,7 +43,8 @@ public class SaTagRewriter
             if(lifted == null)
                 continue;
 
-            String entryKey = lifted.chromosome() + ':' + lifted.position() + ':' + alignment.Strand + ':' + lifted.cigarString();
+            String entryKey = lifted.chromosome() + ':' + lifted.position() + ':' + alignment.Strand + ':'
+                    + lifted.cigarString().replace('H', 'S');
             if(excludeKeys.contains(entryKey))
                 continue;
             if(!seenEntryKeys.add(entryKey))

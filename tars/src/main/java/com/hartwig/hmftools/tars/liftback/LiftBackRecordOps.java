@@ -39,6 +39,7 @@ public final class LiftBackRecordOps
                 }
 
                 record.setReadUnmappedFlag(true);
+                record.setReadNegativeStrandFlag(false);
                 record.setReferenceName(SAMRecord.NO_ALIGNMENT_REFERENCE_NAME);
                 record.setAlignmentStart(SAMRecord.NO_ALIGNMENT_START);
                 record.setCigarString(SAMRecord.NO_ALIGNMENT_CIGAR);
@@ -48,7 +49,8 @@ public final class LiftBackRecordOps
                 return;
 
             default:
-                final Cigar liftedCigar = TextCigarCodec.decode(result.finalCigar());
+                final Cigar liftedCigar = new Cigar(ContigTranslator.mergeAdjacentSameOp(
+                        ContigTranslator.dropZeroLength(TextCigarCodec.decode(result.finalCigar()).getCigarElements())));
 
                 // A discriminator swap can move the primary onto an opposite-strand placement (bwa's contiguous
                 // alignment sits on one strand while the winning spliced tx placement is on the other). SEQ and base
@@ -141,6 +143,7 @@ public final class LiftBackRecordOps
     public static void markPrimaryUnmapped(final SAMRecord record)
     {
         record.setReadUnmappedFlag(true);
+        record.setReadNegativeStrandFlag(false);
         record.setReferenceName(SAMRecord.NO_ALIGNMENT_REFERENCE_NAME);
         record.setAlignmentStart(SAMRecord.NO_ALIGNMENT_START);
         record.setCigarString(SAMRecord.NO_ALIGNMENT_CIGAR);

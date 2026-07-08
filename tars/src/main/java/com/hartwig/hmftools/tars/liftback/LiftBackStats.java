@@ -42,7 +42,6 @@ public class LiftBackStats
     private int mLowAsSuppsDropped = 0;
     private int mOrphanSuppsDropped = 0;
     private int mLowAsPrimariesUnmapped = 0;
-    private int mLowIdentityDemoted = 0;   // MAPQ 60 (tars-made-confident) reverted to 0 for high recomputed genomic NM
     private PassEffects mPassEffects = PassEffects.EMPTY;
 
     // Per-pass effectiveness, aggregated across workers by the caller and folded into the summary so the
@@ -140,16 +139,6 @@ public class LiftBackStats
         return mLowAsPrimariesUnmapped;
     }
 
-    public void recordLowIdentityDemoted()
-    {
-        ++mLowIdentityDemoted;
-    }
-
-    public int lowIdentityDemoted()
-    {
-        return mLowIdentityDemoted;
-    }
-
     // Merge per-worker stats into this instance for a combined end-of-run summary.
     public void merge(final LiftBackStats other)
     {
@@ -160,7 +149,6 @@ public class LiftBackStats
         mLowAsSuppsDropped += other.mLowAsSuppsDropped;
         mOrphanSuppsDropped += other.mOrphanSuppsDropped;
         mLowAsPrimariesUnmapped += other.mLowAsPrimariesUnmapped;
-        mLowIdentityDemoted += other.mLowIdentityDemoted;
         for(int i = 0; i < N_FEATURES; ++i)
         {
             mPerFeature[i] += other.mPerFeature[i];
@@ -217,11 +205,6 @@ public class LiftBackStats
         {
             TARS_LOGGER.info("unmapped {} primaries with AS < {} not improved by liftback",
                     mLowAsPrimariesUnmapped, PRIMARY_AS_UNMAP_THRESHOLD);
-        }
-        if(mLowIdentityDemoted > 0)
-        {
-            TARS_LOGGER.info("demoted {} tars-confident primaries to MAPQ 0 for high recomputed genomic NM",
-                    mLowIdentityDemoted);
         }
 
         TARS_LOGGER.debug("alignment-set composition x MAPQ tier:");
@@ -304,7 +287,6 @@ public class LiftBackStats
             writeMetric(writer, "supp_dropped_low_as", mLowAsSuppsDropped);
             writeMetric(writer, "supp_dropped_orphan", mOrphanSuppsDropped);
             writeMetric(writer, "primary_unmapped_low_as", mLowAsPrimariesUnmapped);
-            writeMetric(writer, "primary_demoted_low_identity", mLowIdentityDemoted);
             writeMetric(writer, "primary_unmapped_over_cap", mPassEffects.overCapUnmapped());
         }
 

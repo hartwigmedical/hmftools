@@ -71,6 +71,36 @@ public class LiftBackScenarioTest
     }
 
     @Test
+    public void splitReadUniquePairBumpsMapqToSixty()
+    {
+        // bwa gave the split halves MAPQ 0; the XA alt overlaps the primary placement, so the primary+supplementary
+        // pair maps to a single locus and the merged spliced primary is promoted to 60.
+        scenario()
+                .read(primary("frag5", CHR_1, 150, "50M50S").mapq(0).xa(CHR_1 + ",+150,50M50S,0").bases("A".repeat(100)))
+                .read(supp("frag5", CHR_1, 300, "50S50M").mapq(0).bases("A".repeat(100)))
+                .read(mate("frag5", CHR_1, 800, "50M").bases("A".repeat(50)))
+                .run()
+                .assertLifted("frag5", PRIMARY, CHR_1, 150, "50M100N50M")
+                .assertSuppCount("frag5", 0)
+                .assertMapq("frag5", PRIMARY, 60);
+    }
+
+    @Test
+    public void splitReadMultiLocusPairKeepsBwaMapq()
+    {
+        // same merge, but the XA alt is a distinct locus (chr1:900), so the pair does not uniquely map: the merged
+        // primary keeps its bwa MAPQ 0 rather than being bumped.
+        scenario()
+                .read(primary("frag6", CHR_1, 150, "50M50S").mapq(0).xa(CHR_1 + ",+900,50M50S,0").bases("A".repeat(100)))
+                .read(supp("frag6", CHR_1, 300, "50S50M").mapq(0).bases("A".repeat(100)))
+                .read(mate("frag6", CHR_1, 800, "50M").bases("A".repeat(50)))
+                .run()
+                .assertLifted("frag6", PRIMARY, CHR_1, 150, "50M100N50M")
+                .assertSuppCount("frag6", 0)
+                .assertMapq("frag6", PRIMARY, 0);
+    }
+
+    @Test
     public void nativeGenomicReadPassesThroughUntouched()
     {
         scenario()

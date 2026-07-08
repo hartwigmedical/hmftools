@@ -17,6 +17,7 @@ import com.hartwig.hmftools.tars.common.ContigEntry;
 import org.junit.Test;
 
 import htsjdk.samtools.Cigar;
+import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.TextCigarCodec;
 
 // All tests use TarsTestFixtures.threeExonContig(), whose packed contig coordinates map to the genome as:
@@ -320,6 +321,33 @@ public class ContigTranslatorTest
         out = ContigTranslator.trimMicroAnchors(cigar("117M89N2M32S"), 1, 3);
         assertEquals("117M34S", out.AdjustedCigar.toString());
         assertEquals(0, out.StartShift);
+    }
+
+    @Test
+    public void testContiguousSpansEmitNoZeroLengthIntron()
+    {
+        // adjacent spans (no gap) imply no intron, so no 0-length N element is emitted
+        ContigEntry contiguous = new ContigEntry(
+                "ensG_X_T", 1, 100, "G", "X", "T", CHR_1, 1,
+                List.of(new BaseRegion(100, 149), new BaseRegion(150, 199)));
+
+        ContigTranslator.TranslationResult result = ContigTranslator.translate(contiguous, 1, cigar("100M"));
+
+        assertNotNull(result);
+        assertEquals(100, result.genomicStart());
+        assertFalse(result.genomicCigar().getCigarElements().stream().anyMatch(x -> x.getLength() == 0));
+        assertEquals("100M", result.genomicCigar().toString());
+        assertTrue(result.impliedIntrons().isEmpty());
+    }
+
+    @Test
+    public void testDropZeroLengthElementsAndMergeFlankingIntrons()
+    {
+        // a 0-length interior element (eg a 0M for a zero-span exon between two introns) is dropped, then the
+        // flanking introns merge into one
+        List<CigarElement> elements = cigar("72M102N0M2538N79M").getCigarElements();
+        Cigar result = new Cigar(ContigTranslator.mergeAdjacentSameOp(ContigTranslator.dropZeroLength(elements)));
+        assertEquals("72M2640N79M", result.toString());
     }
 
     private static Cigar cigar(final String cigarString)

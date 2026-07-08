@@ -158,44 +158,33 @@ it only when the intronic reference AS > short overhang AS.
 
 ### Step 2: Decide which alignments to keep for a read
 
-A read can match the genome, the transcriptome, or both. When more than one alignment is present, TARS makes a decision
-on which one to keep. On a confident placement it updates the record's CIGAR, pos & tags; otherwise the read is left untouched.
+A read arrives with one or more candidate placements - its own alignment plus any `XA` alternates - each a genomic (ref)
+or transcriptome (tx) alignment. TARS picks one as the primary, keeps the rest in `XA`, and sets its `MAPQ`. Every read
+lands in one of four buckets:
 
-Majority of reads fall into these 3 categories that need no arbitration:
+- **Ref only** - kept as bwa placed it. A `MAPQ 0` read with no `XA` has exceeded bwa's `-h` cap (too many loci to
+  report) and is unmapped instead.
 
-- Aligns to the reference genome only: read matches the genome and TARS passes it through untouched, unless it is
-  MAPQ 0 with no XA (over bwa's `-h` cap, mapping to too many loci), which is unmapped.
+- **Single transcriptome locus** - one or more transcript contigs of the same gene lift to a single genomic locus with
+  the same CIGAR. TARS places the read back with `N` gaps and, as a unique placement, raises `MAPQ` to 60.
 
-- Aligns to a single transcriptome locus:
+- **Multi-mapper** - several loci with no single best. Every placement is kept in `XA` and `MAPQ` stays below 60 (`0`
+  when fully tied). The primary is the highest-scoring locus (scoring below); if bwa already ranked the loci its order
+  stands, and a genuine score tie is settled by a read-name seed so tied reads spread across their loci instead of
+  piling onto one. A single-locus read with `XS == AS` hides an equal-scoring placement bwa did not report, so it stays
+  at `MAPQ 0` unless a transcript match or annotated exon confirms it.
 
-    - read matches multiple transcripts in the transcriptome, but with essentially the same CIGAR and one genomic spot.
-    - TARS updates the relevant tags and places it back to genomic coordinates with `N` gaps / splice junctions.
-    - includes the case where a ref alignment is present but at the same genomic locus and CIGAR.
-    - unique mapping to the transcriptome, so `MAPQ` is bumped to 60.
+- **Contested ref vs tx** - a tx alignment (spliced, with an `N`) and a ref alignment disagree. The tx junction wins
+  unless the ref reads cleanly through it:
+    - the ref is contiguous at another locus, or soft-clips at the boundary - it cannot cross the junction, so keep the
+      spliced placement (swap the primary to it, or drop the ref alt)
+    - the ref is a full match straight through the gap - the read did not splice here (unspliced pre-mRNA, retained
+      intron, or DNA contamination), so keep the ref placement and drop the `N`
+    - neither fires and bwa gave no priority (`MAPQ 0`) - the higher-scoring side wins (below), else a read-name-seeded
+      pick; the loser stays in `XA`, `MAPQ` at 0
 
-- Multi-mapper: read aligns to several places with no clean winner. TARS leaves it multi-mapped with modified genomic
-  alignments; multi-mapping to the transcriptome and/or intronic overlap keeps `MAPQ` below 60 (0 when fully tied), with
-  all valid alternate alignments kept.
-
-    - When bwa left the loci tied (`MAPQ 0`), the primary is picked at random among them, seeded by the read name, instead
-      of always keeping bwa's, so tied reads do not all pile onto one locus. If bwa ranked the loci, its order stands.
-    - A read that lifts to a single locus but has `XS == AS` carries an equal-scoring placement bwa did not report, so it
-      is kept at `MAPQ 0` rather than bumped, unless a transcript match or an annotated exon confirms the placement.
-
-#### The contested ref-vs-tx decisions
-
-The real work is when a read has both a transcript (spliced, with an `N`) and a genomic alignment that disagree. The
-transcript's junction wins unless the genome matches cleanly straight through it, in which case the `N` is the artifact:
-
-- the genome is contiguous at another locus, or soft-clips at the boundary: it cannot cross the junction the transcript
-  spans, so TARS keeps the spliced placement (swapping to it, or dropping the ref alt).
-- the genome reads straight through the gap as a full match: the read did not splice here (unspliced pre-mRNA, retained
-  intron, or DNA contamination), so TARS keeps the genomic placement and drops the transcript's `N`.
-
-![transcript vs genome ref-vs-tx decision](doc/ref_vs_tx_decision.svg)
-
-When no rule fires and bwa gave the placements no priority (`MAPQ 0`), the call is a coin-flip: TARS picks tx or ref at
-random, seeded by the read name so runs stay reproducible, keeps the losing cigar in `XA`, and holds `MAPQ` at 0.
+Both seeded picks above are decided first by a recomputed genome-space `bwa-mem` score, and use the read-name seed only
+on an exact tie (equal recomputed scores); reads with a supplementary are left for Step 3.
 
 ### Step 3: Resolve supplementary records into splice junctions
 
@@ -218,6 +207,7 @@ On a successful resolve, it's still ambiguous where the splice junction is. TARS
 When several positions tie at the chosen tier, the pick is pseudo-random but seeded by the read, so an ambiguous
 junction is distributed across its equal options yet stays reproducible run to run.
 
-The merged primary's MAPQ is `max(primary, supplementary)`; if that is 0 it is bumped to 60.
+The merged primary's MAPQ is `max(primary, supplementary)`, bumped to 60 when the primary + supplementary pair maps to a
+single locus (no competing alternative alignment).
 
 ![merge supplementary record to primary](doc/rescue_via_supplementary.svg)
