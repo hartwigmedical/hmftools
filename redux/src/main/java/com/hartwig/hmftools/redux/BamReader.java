@@ -161,9 +161,7 @@ public class BamReader
             }
             catch(Exception e)
             {
-                // never swallow a read error: setting the record to null is indistinguishable from end-of-region,
-                // so the caller silently drops the region (observed as redux emitting a fraction of the input reads
-                // with no error). Fail loud, matching how redux handles read-processing exceptions elsewhere.
+                // don't swallow: a null record reads as end-of-region and silently drops the rest
                 RD_LOGGER.error("BAM({}) error opening region({}): {}", mFilename, region, e.toString());
                 e.printStackTrace();
                 System.exit(1);
@@ -186,8 +184,7 @@ public class BamReader
             }
             catch(Exception e)
             {
-                // never swallow a read error - see sliceRegion. A single unreadable record must not silently
-                // truncate the region; fail loud with the last position read so the offending record can be found.
+                // don't swallow: would silently truncate the region (see sliceRegion)
                 RD_LOGGER.error("BAM({}) error reading region after position({}): {}",
                         mFilename, currentPosition(), e.toString());
                 e.printStackTrace();
