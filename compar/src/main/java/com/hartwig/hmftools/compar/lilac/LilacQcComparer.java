@@ -47,7 +47,7 @@ public class LilacQcComparer implements ItemComparer
     public CategoryType category() { return LILAC_QC; }
 
     @Override
-    public List<Field> fields(MatchLevel matchLevel)
+    public List<Field> fields(final MatchLevel matchLevel)
     {
         return List.of(
                 new StringField(FLD_QC_STATUS, i -> ((LilacQcData) i).QcData.status(), true),

@@ -110,13 +110,13 @@ public class ComparConfig
     public static final String RESTRICT_TO_DRIVERS = "restrict_to_drivers";
     public static final String KNOWN_MISMATCH_FILE = "known_mismatches";
     public static final String IGNORE_GENES = "ignore_genes";
+    public static final String REQUIRES_LIFTOVER = "liftover";
+    public static final String FIELD_CONFIG_FILE = "field_config_file";
 
     public static final String OLD_SOURCE_CFG = OLD.configStr();
     public static final String NEW_SOURCE_CFG = NEW.configStr();
 
     public static final Logger CMP_LOGGER = LogManager.getLogger(ComparConfig.class);
-
-    public static final String REQUIRES_LIFTOVER = "liftover";
 
     public ComparConfig(final ConfigBuilder configBuilder)
     {
@@ -446,6 +446,7 @@ public class ComparConfig
         configBuilder.addFlag(INCLUDE_MATCHES, "Also write matches to output file(s)");
         configBuilder.addFlag(RESTRICT_TO_DRIVERS, "Restrict any comparison involving genes to driver gene panel");
         configBuilder.addFlag(REQUIRES_LIFTOVER, "Lift over ref positions from v37 to v 38");
+        configBuilder.addPath(FIELD_CONFIG_FILE, false, "Config file for overwriting field settings");
 
         addDatabaseCmdLineArgs(configBuilder, false);
         addOutputOptions(configBuilder);

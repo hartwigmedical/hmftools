@@ -49,7 +49,7 @@ public record NovelSpliceJunctionComparer(ComparConfig mConfig) implements ItemC
     }
 
     @Override
-    public List<Field> fields(MatchLevel matchLevel)
+    public List<Field> fields(final MatchLevel matchLevel)
     {
         return List.of(
                 new StringField(FLD_ALT_SJ_TYPE, i -> ((NovelSpliceJunctionData) i).NovelSpliceJunction().type().toString(), true),

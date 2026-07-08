@@ -45,7 +45,7 @@ public class ChordComparer implements ItemComparer
     public CategoryType category() { return CHORD; }
 
     @Override
-    public List<Field> fields(MatchLevel matchLevel)
+    public List<Field> fields(final MatchLevel matchLevel)
     {
         return List.of(
                 new DoubleField(FLD_BRCA1, i -> ((ChordComparData) i).Chord.BRCA1Value(), true, 0.1, null, "%.2f"),

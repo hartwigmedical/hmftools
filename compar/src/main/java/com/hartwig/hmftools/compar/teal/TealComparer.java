@@ -37,7 +37,7 @@ public class TealComparer implements ItemComparer
     public CategoryType category() { return TELOMERE_LENGTH; }
 
     @Override
-    public List<Field> fields(MatchLevel matchLevel)
+    public List<Field> fields(final MatchLevel matchLevel)
     {
         return List.of(
                 new DoubleField(FLD_TELOMERE_LENGTH, i -> ((TealData) i).TelomereLength.finalTelomereLength(), true, null, 0.05, "%.2f")

@@ -41,7 +41,7 @@ public class GeneCopyNumberComparer implements ItemComparer
     public CategoryType category() { return GENE_COPY_NUMBER; }
 
     @Override
-    public List<Field> fields(MatchLevel matchLevel)
+    public List<Field> fields(final MatchLevel matchLevel)
     {
         return List.of(
                 new DoubleField(FLD_MIN_COPY_NUMBER, i -> ((GeneCopyNumberData) i).CopyNumber.minCopyNumber(), true, 0.5, 0.15, "%.2f"),

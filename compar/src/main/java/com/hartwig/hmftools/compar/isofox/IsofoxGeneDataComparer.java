@@ -50,7 +50,7 @@ public record IsofoxGeneDataComparer(ComparConfig mConfig) implements ItemCompar
     }
 
     @Override
-    public List<Field> fields(MatchLevel matchLevel)
+    public List<Field> fields(final MatchLevel matchLevel)
     {
         return List.of(
                 new IntField(FLD_SPLICED_FRAGS, i -> ((IsofoxGeneData) i).GeneExpression().splicedFragments(), true, 10., 0.05),

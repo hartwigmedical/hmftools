@@ -57,7 +57,7 @@ public class PeachComparer implements ItemComparer
     }
 
     @Override
-    public List<Field> fields(MatchLevel matchLevel)
+    public List<Field> fields(final MatchLevel matchLevel)
     {
         return List.of(
                 new IntField(FLD_ALLELE_COUNT, i -> ((PeachData) i).Genotype.alleleCount(), true, null, null),

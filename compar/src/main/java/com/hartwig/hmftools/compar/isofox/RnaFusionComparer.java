@@ -49,7 +49,7 @@ public record RnaFusionComparer(ComparConfig mConfig) implements ItemComparer
     }
 
     @Override
-    public List<Field> fields(MatchLevel matchLevel)
+    public List<Field> fields(final MatchLevel matchLevel)
     {
         return List.of(
                 new StringField(FLD_KNOWN_TYPE, i -> ((RnaFusionData) i).RnaFusion().knownType().toString(), true),

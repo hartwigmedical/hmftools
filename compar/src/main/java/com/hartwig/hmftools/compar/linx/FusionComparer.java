@@ -57,7 +57,7 @@ public class FusionComparer implements ItemComparer
     public CategoryType category() { return FUSION; }
 
     @Override
-    public List<Field> fields(MatchLevel matchLevel)
+    public List<Field> fields(final MatchLevel matchLevel)
     {
         return List.of(
                 new StringField(FLD_REPORTED, i -> String.valueOf(((FusionData) i).Fusion.reported()), true),

@@ -48,7 +48,7 @@ public class FlagstatComparer implements ItemComparer
     }
 
     @Override
-    public List<Field> fields(MatchLevel matchLevel)
+    public List<Field> fields(final MatchLevel matchLevel)
     {
         return List.of(
                 new DoubleField(FLD_MAPPED_PROPORTION, i -> ((FlagstatData) i).flagStats().mappedProportion(), true, MAPPED_PROPORTION_ABS_THRESHOLD, MAPPED_PROPORTION_PCT_THRESHOLD, "%.2f")

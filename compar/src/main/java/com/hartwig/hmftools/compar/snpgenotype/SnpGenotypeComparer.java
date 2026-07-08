@@ -59,7 +59,7 @@ public class SnpGenotypeComparer implements ItemComparer
     }
 
     @Override
-    public List<Field> fields(MatchLevel matchLevel)
+    public List<Field> fields(final MatchLevel matchLevel)
     {
         return List.of(
                 new StringField(FLD_ALT, i -> ((SnpGenotypeData) i).Alt, true),

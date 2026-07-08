@@ -55,7 +55,7 @@ public class PurityComparer implements ItemComparer
     public CategoryType category() { return PURITY; }
 
     @Override
-    public List<Field> fields(MatchLevel matchLevel)
+    public List<Field> fields(final MatchLevel matchLevel)
     {
         return List.of(
                 new DoubleField(FLD_PURITY, i -> ((PurityData) i).Purity.bestFit().purity(), true, 0.04, null, "%.2f"),

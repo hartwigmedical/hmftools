@@ -284,7 +284,7 @@ public class SomaticVariantComparer implements ItemComparer
     }
 
     @Override
-    public List<Field> fields(MatchLevel matchLevel)
+    public List<Field> fields(final MatchLevel matchLevel)
     {
         return List.of(
                 new BooleanField(FLD_REPORTED, i -> ((SomaticVariantData) i).Reported, true),

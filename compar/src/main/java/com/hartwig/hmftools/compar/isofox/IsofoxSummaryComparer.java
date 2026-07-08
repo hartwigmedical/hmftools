@@ -64,7 +64,7 @@ public record IsofoxSummaryComparer(ComparConfig mConfig) implements ItemCompare
     }
 
     @Override
-    public List<Field> fields(MatchLevel matchLevel)
+    public List<Field> fields(final MatchLevel matchLevel)
     {
         return List.of(
                 new StringField(FLD_QC_STATUS, i -> IsofoxSummaryData.qcStatus(((IsofoxSummaryData) i).RnaStatistics().qcStatus()), true),

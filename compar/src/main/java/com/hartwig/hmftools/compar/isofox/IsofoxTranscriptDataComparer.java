@@ -46,7 +46,7 @@ public record IsofoxTranscriptDataComparer(ComparConfig mConfig) implements Item
     }
 
     @Override
-    public List<Field> fields(MatchLevel matchLevel)
+    public List<Field> fields(final MatchLevel matchLevel)
     {
         return List.of(
                 new StringField(FLD_GENE_NAME, i -> ((IsofoxTranscriptData) i).TranscriptExpression().geneName(), true),

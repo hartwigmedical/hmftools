@@ -20,7 +20,7 @@ public interface ItemComparer
 
     List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final FileSources fileSources);
 
-    List<Field> fields(MatchLevel matchLevel);
+    List<Field> fields(final MatchLevel matchLevel);
 
     List<String> displayFieldNames();
 

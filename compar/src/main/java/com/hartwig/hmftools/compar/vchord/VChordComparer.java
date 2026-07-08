@@ -41,7 +41,7 @@ public class VChordComparer implements ItemComparer
     public CategoryType category() { return V_CHORD; }
 
     @Override
-    public List<Field> fields(MatchLevel matchLevel)
+    public List<Field> fields(final MatchLevel matchLevel)
     {
         return List.of(
                 new DoubleField(FLD_BREAST, i -> ((VChordData) i).VChord().breastCancerHrdScore(), true, 0.1, null, "%.2f"),

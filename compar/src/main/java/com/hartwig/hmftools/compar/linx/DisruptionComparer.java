@@ -65,7 +65,7 @@ public class DisruptionComparer implements ItemComparer
     public CategoryType category() { return DISRUPTION; }
 
     @Override
-    public List<Field> fields(MatchLevel matchLevel)
+    public List<Field> fields(final MatchLevel matchLevel)
     {
         return List.of(
                 new BreakendsField(FLD_BREAKEND, i -> ((DisruptionData) i).Breakends, true),

@@ -50,7 +50,7 @@ public class LilacAlleleComparer implements ItemComparer
     public CategoryType category() { return LILAC_ALLELE; }
 
     @Override
-    public List<Field> fields(MatchLevel matchLevel)
+    public List<Field> fields(final MatchLevel matchLevel)
     {
         boolean includeDetailedFields = matchLevel.equals(MatchLevel.DETAILED);
         return List.of(

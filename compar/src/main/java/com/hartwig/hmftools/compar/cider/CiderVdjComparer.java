@@ -38,7 +38,7 @@ public class CiderVdjComparer implements ItemComparer
     }
 
     @Override
-    public List<Field> fields(MatchLevel matchLevel)
+    public List<Field> fields(final MatchLevel matchLevel)
     {
         return List.of(
                 new StringField(FILTER_FIELD, i -> ((CiderVdjData) i).mCdr3Sequence.filter(), true),

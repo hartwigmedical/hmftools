@@ -28,7 +28,7 @@ public class FieldConfigFile
         Files.write(new File(filename).toPath(), toLines(fieldConfig, categories));
     }
 
-    private static List<String> toLines(final FieldConfig fieldConfig, final Set<CategoryType> categories)
+    static List<String> toLines(final FieldConfig fieldConfig, final Set<CategoryType> categories)
     {
         final List<String> lines = Lists.newArrayList();
         lines.add(header());

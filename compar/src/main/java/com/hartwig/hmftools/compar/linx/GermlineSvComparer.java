@@ -45,7 +45,7 @@ public class GermlineSvComparer implements ItemComparer
     public CategoryType category() { return GERMLINE_SV; }
 
     @Override
-    public List<Field> fields(MatchLevel matchLevel)
+    public List<Field> fields(final MatchLevel matchLevel)
     {
         return List.of(
                 new BreakendsField(FLD_BREAKEND, i -> ((DisruptionData) i).Breakends, true),

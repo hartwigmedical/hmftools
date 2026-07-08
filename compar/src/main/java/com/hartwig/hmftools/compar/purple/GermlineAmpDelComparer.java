@@ -46,7 +46,7 @@ public class GermlineAmpDelComparer implements ItemComparer
     public CategoryType category() { return GERMLINE_AMP_DEL; }
 
     @Override
-    public List<Field> fields(MatchLevel matchLevel)
+    public List<Field> fields(final MatchLevel matchLevel)
     {
         return List.of(
                 new BooleanField(FLD_REPORTED, ComparableItem::reportable, true),

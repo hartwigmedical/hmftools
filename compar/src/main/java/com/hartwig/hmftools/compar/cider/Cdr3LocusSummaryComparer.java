@@ -35,7 +35,7 @@ public class Cdr3LocusSummaryComparer implements ItemComparer
     public CategoryType category() { return CDR3_LOCUS_SUMMARY; }
 
     @Override
-    public List<Field> fields(MatchLevel matchLevel)
+    public List<Field> fields(final MatchLevel matchLevel)
     {
         return List.of(
                 new IntField(PASS_SEQUENCES_FIELD, i -> ((Cdr3LocusSummaryData) i).Cdr3LocusSummary.passSequences(), true, null, 0.05)

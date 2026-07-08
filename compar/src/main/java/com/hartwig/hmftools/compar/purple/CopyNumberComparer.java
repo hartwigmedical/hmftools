@@ -41,7 +41,7 @@ public class CopyNumberComparer implements ItemComparer
     public CategoryType category() { return COPY_NUMBER; }
 
     @Override
-    public List<Field> fields(MatchLevel matchLevel)
+    public List<Field> fields(final MatchLevel matchLevel)
     {
         return List.of(
                 new DoubleField(FLD_COPY_NUMBER, i -> ((CopyNumberData) i).copyNumber(), true, 0.5, 0.15, "%.2f"),

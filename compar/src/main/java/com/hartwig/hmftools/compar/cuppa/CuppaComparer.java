@@ -40,7 +40,7 @@ public class CuppaComparer implements ItemComparer
     public CategoryType category() { return CUPPA; }
 
     @Override
-    public List<Field> fields(MatchLevel matchLevel)
+    public List<Field> fields(final MatchLevel matchLevel)
     {
         return List.of(
                 new StringField(FLD_TOP_CANCER_TYPE, i -> ((CuppaData) i).PredictionEntry.CancerType, true),
