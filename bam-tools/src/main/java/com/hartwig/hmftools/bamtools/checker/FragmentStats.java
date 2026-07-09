@@ -12,6 +12,7 @@ public class FragmentStats
     public long MateCigarFixed;
     public long SuppsDropped;
     public long PrimariesUnmapped;
+    public long NonRefContigDropped;
 
     public FragmentStats()
     {
@@ -22,6 +23,7 @@ public class FragmentStats
         MateCigarFixed = 0;
         SuppsDropped = 0;
         PrimariesUnmapped = 0;
+        NonRefContigDropped = 0;
     }
 
     public void reset()
@@ -33,6 +35,7 @@ public class FragmentStats
         MateCigarFixed = 0;
         SuppsDropped = 0;
         PrimariesUnmapped = 0;
+        NonRefContigDropped = 0;
     }
 
     public void merge(final FragmentStats other)
@@ -44,12 +47,13 @@ public class FragmentStats
         MateCigarFixed += other.MateCigarFixed;
         PrimariesUnmapped += other.PrimariesUnmapped;
         SuppsDropped += other.SuppsDropped;
+        NonRefContigDropped += other.NonRefContigDropped;
     }
 
     public String toString()
     {
-        return format("fragments(%d) interPartition(%d) withSupp(%d) maxFrags(%d) mateCigarFixed(%d) primaryUnmapped(%d) suppDropped(%d)",
+        return format("fragments(%d) interPartition(%d) withSupp(%d) maxFrags(%d) mateCigarFixed(%d) primaryUnmapped(%d) suppDropped(%d) nonRefContigDropped(%d)",
                 TotalFragments, InterPartitionFragments, FragmentsWithSupplementaries, MaxFragmentCount, MateCigarFixed,
-                PrimariesUnmapped, SuppsDropped);
+                PrimariesUnmapped, SuppsDropped, NonRefContigDropped);
     }
 }

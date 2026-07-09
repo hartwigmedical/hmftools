@@ -61,9 +61,17 @@ public class BamChecker
                 .referenceSequence(new File(mConfig.RefGenomeFile))
                 .open(new File(mConfig.BamFile)).getFileHeader();
 
-        FragmentCache fragmentCache = new FragmentCache(fileHeader);
+        RefGenomeCompatibility refGenomeCompatibility = null;
+        if(mConfig.FilterNonRefContigs)
+        {
+            refGenomeCompatibility = new RefGenomeCompatibility(mConfig.RefGenomeContigs, fileHeader, mConfig.RefGenomeDictionary);
+            BT_LOGGER.info("filtering BAM output to {} reference contigs", mConfig.RefGenomeContigs.size());
+        }
 
-        List<PartitionThread> partitionThreads = createPartitionThreads(fragmentCache);
+        FragmentCache fragmentCache = new FragmentCache(
+                refGenomeCompatibility != null ? refGenomeCompatibility.outputHeader() : fileHeader);
+
+        List<PartitionThread> partitionThreads = createPartitionThreads(fragmentCache, refGenomeCompatibility);
         List<Thread> allThreads = Lists.newArrayList(partitionThreads);
 
         if(!runThreadTasks(allThreads))
@@ -113,7 +121,7 @@ public class BamChecker
         BT_LOGGER.info("BamChecker complete, mins({})", runTimeMinsStr(startTimeMs));
     }
 
-    private List<PartitionThread> createPartitionThreads(final FragmentCache fragmentCache)
+    private List<PartitionThread> createPartitionThreads(final FragmentCache fragmentCache, final RefGenomeCompatibility refGenomeCompatibility)
     {
         List<PartitionThread> partitionThreads = Lists.newArrayListWithCapacity(mConfig.Threads);
 
@@ -131,7 +139,7 @@ public class BamChecker
 
         for(int i = 0; i < mConfig.Threads; ++i)
         {
-            PartitionThread partitionThread = new PartitionThread(mConfig, fragmentCache, taskQueue, i);
+            PartitionThread partitionThread = new PartitionThread(mConfig, fragmentCache, taskQueue, i, refGenomeCompatibility);
             partitionThreads.add(partitionThread);
         }
 

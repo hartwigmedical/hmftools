@@ -34,6 +34,7 @@ public class PartitionChecker
     private final SamReader mSamReader;
     private final SAMFileWriter mBamWriter;
     private final FragmentCache mFragmentCache;
+    private final RefGenomeCompatibility mRefGenomeCompatibility;
 
     private final BamSlicer mBamSlicer;
     private ChrBaseRegion mRegion;
@@ -48,12 +49,14 @@ public class PartitionChecker
     private final boolean mLogReadIds;
 
     public PartitionChecker(
-            final CheckConfig config, final FragmentCache fragmentCache, final SamReader samReader, final SAMFileWriter bamWriter)
+            final CheckConfig config, final FragmentCache fragmentCache, final SamReader samReader, final SAMFileWriter bamWriter,
+            final RefGenomeCompatibility refGenomeCompatibility)
     {
         mConfig = config;
         mSamReader = samReader;
         mBamWriter = bamWriter;
         mFragmentCache = fragmentCache;
+        mRefGenomeCompatibility = refGenomeCompatibility;
 
         mRegion = null;
 
@@ -140,6 +143,12 @@ public class PartitionChecker
         if(mLogReadIds && mConfig.LogReadIds.contains(read.getReadName()))
         {
             BT_LOGGER.debug("specific read({})", readToString(read));
+        }
+
+        if(mRefGenomeCompatibility != null && !mRefGenomeCompatibility.recordIsCompatible(read))
+        {
+            ++mCurrentStats.NonRefContigDropped;
+            return;
         }
 
         if(!mRegion.containsPosition(read.getAlignmentStart()))
@@ -264,6 +273,15 @@ public class PartitionChecker
 
     private void writeRecord(final SAMRecord read)
     {
+        if(mBamWriter == null)
+            return;
+
+        if(mRefGenomeCompatibility != null && !mRefGenomeCompatibility.prepareForWrite(read))
+        {
+            ++mCurrentStats.NonRefContigDropped;
+            return;
+        }
+
         if(mBamWriter != null)
             mBamWriter.addAlignment(read);
     }

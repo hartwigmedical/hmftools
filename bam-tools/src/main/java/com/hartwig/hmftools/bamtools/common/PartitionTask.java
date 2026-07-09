@@ -14,6 +14,7 @@ import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.region.SpecificRegions;
 
 import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
@@ -32,6 +33,13 @@ public class PartitionTask
     public static List<ChrBaseRegion> splitRegionsIntoPartitions(
             final String bamFile, final String refGenomeFile, final int threads, final SpecificRegions specificRegions, final int partitionSize)
     {
+        return splitRegionsIntoPartitions(bamFile, refGenomeFile, threads, specificRegions, partitionSize, null);
+    }
+
+    public static List<ChrBaseRegion> splitRegionsIntoPartitions(
+            final String bamFile, final String refGenomeFile, final int threads, final SpecificRegions specificRegions, final int partitionSize,
+            final SAMSequenceDictionary partitionDictionary)
+    {
         List<ChrBaseRegion> partitionRegions = Lists.newArrayList();
 
         if(!specificRegions.Regions.isEmpty())
@@ -39,10 +47,12 @@ public class PartitionTask
             // only split by thread count if can be done simply
             if(specificRegions.Regions.size() == 1)
             {
+                ChrBaseRegion specificRegion = specificRegions.Regions.get(0);
+                if(partitionDictionary != null && partitionDictionary.getSequence(specificRegion.Chromosome) == null)
+                    return partitionRegions;
+
                 if(threads > 1)
                 {
-                    ChrBaseRegion specificRegion = specificRegions.Regions.get(0);
-
                     int regionCount = (int)ceil(specificRegion.baseLength() / (double)partitionSize);
 
                     // int intervalLength = (int)ceil(specificRegion.baseLength() / (double)threads);
@@ -64,6 +74,9 @@ public class PartitionTask
             {
                 for(ChrBaseRegion region : specificRegions.Regions)
                 {
+                    if(partitionDictionary != null && partitionDictionary.getSequence(region.Chromosome) == null)
+                        continue;
+
                     int regionCount = (int)ceil(region.baseLength() / (double)partitionSize);
 
                     // int intervalLength = (int)ceil(specificRegion.baseLength() / (double)threads);
@@ -86,8 +99,10 @@ public class PartitionTask
                 .open(new File(bamFile));
 
         SAMFileHeader fileHeader = samReader.getFileHeader().clone();
+        List<SAMSequenceRecord> sequenceRecords = partitionDictionary != null ? partitionDictionary.getSequences()
+                : fileHeader.getSequenceDictionary().getSequences();
 
-        for(final SAMSequenceRecord sequenceRecord : fileHeader.getSequenceDictionary().getSequences())
+        for(final SAMSequenceRecord sequenceRecord : sequenceRecords)
         {
             String chromosome = sequenceRecord.getSequenceName();
 

@@ -21,6 +21,7 @@ import static org.junit.Assert.assertTrue;
 import static htsjdk.samtools.CigarOperator.S;
 
 import java.util.List;
+import java.util.Set;
 
 import com.hartwig.hmftools.common.bam.BamReadLite;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
@@ -29,13 +30,17 @@ import com.hartwig.hmftools.common.test.SamRecordTestUtils;
 
 import org.junit.Test;
 
+import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMSequenceDictionary;
+import htsjdk.samtools.SAMSequenceRecord;
 
 public class BamCheckerTest
 {
     private static final ReadIdGenerator READ_ID_GENERATOR = new ReadIdGenerator();
     private static final String TEST_READ_BASES = "ACGTACGTACGTACGTACGT";
     private static final String TEST_CIGAR = "20M";
+    private static final String VIRAL_CONTIG = "CMV";
 
     public BamCheckerTest()
     {
@@ -498,5 +503,55 @@ public class BamCheckerTest
         assertTrue(read.getCigar().getCigarElements().get(2).getOperator() == S);
 
         assertEquals(primaryReadBases.getBytes().length, read.getReadBases().length);
+    }
+
+    @Test
+    public void testRefGenomeCompatibility()
+    {
+        SAMSequenceDictionary refDictionary = new SAMSequenceDictionary();
+        refDictionary.addSequence(new SAMSequenceRecord(CHR_1, 1_000));
+
+        SAMFileHeader inputHeader = new SAMFileHeader();
+        inputHeader.getSequenceDictionary().addSequence(new SAMSequenceRecord(CHR_1, 1_000));
+        inputHeader.getSequenceDictionary().addSequence(new SAMSequenceRecord(VIRAL_CONTIG, 10_000));
+
+        RefGenomeCompatibility compatibility = new RefGenomeCompatibility(Set.of(CHR_1), inputHeader, refDictionary);
+
+        assertEquals(1, compatibility.outputHeader().getSequenceDictionary().size());
+        assertNotNull(inputHeader.getSequenceDictionary().getSequence(VIRAL_CONTIG));
+
+        SAMRecord compatibleRead = createRecord(inputHeader, CHR_1, CHR_1, null);
+        assertTrue(compatibility.recordIsCompatible(compatibleRead));
+        assertTrue(compatibility.prepareForWrite(compatibleRead));
+        assertEquals(0, compatibleRead.getReferenceIndex().intValue());
+        assertEquals(0, compatibleRead.getMateReferenceIndex().intValue());
+        assertNull(compatibleRead.getHeader().getSequenceDictionary().getSequence(VIRAL_CONTIG));
+
+        assertFalse(compatibility.recordIsCompatible(createRecord(inputHeader, VIRAL_CONTIG, CHR_1, null)));
+        assertFalse(compatibility.recordIsCompatible(createRecord(inputHeader, CHR_1, VIRAL_CONTIG, null)));
+        assertFalse(compatibility.recordIsCompatible(
+                createRecord(inputHeader, CHR_1, CHR_1, new SupplementaryReadData(VIRAL_CONTIG, 100, SUPP_POS_STRAND, TEST_CIGAR, 60))));
+    }
+
+    private static SAMRecord createRecord(
+            final SAMFileHeader header, final String chromosome, final String mateChromosome, final SupplementaryReadData suppAlignment)
+    {
+        SAMRecord record = new SAMRecord(header);
+        record.setReadName(READ_ID_GENERATOR.nextId());
+        record.setReadBases(TEST_READ_BASES.getBytes());
+        record.setBaseQualities(buildBaseQuals(TEST_READ_BASES.length(), 30));
+        record.setReferenceName(chromosome);
+        record.setAlignmentStart(100);
+        record.setCigarString(TEST_CIGAR);
+        record.setMappingQuality(60);
+        record.setReadPairedFlag(true);
+        record.setFirstOfPairFlag(true);
+        record.setMateReferenceName(mateChromosome);
+        record.setMateAlignmentStart(200);
+
+        if(suppAlignment != null)
+            record.setAttribute(SUPPLEMENTARY_ATTRIBUTE, suppAlignment.asSamTag());
+
+        return record;
     }
 }

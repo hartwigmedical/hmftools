@@ -29,11 +29,17 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutput
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.pathFromFile;
 
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.bamops.BamToolName;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.SpecificRegions;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+
+import htsjdk.samtools.SAMSequenceDictionary;
+import htsjdk.samtools.SAMSequenceRecord;
 
 public class CheckConfig
 {
@@ -52,7 +58,10 @@ public class CheckConfig
     public final boolean SkipUnmapped;
     public final boolean ReverseBqsr;
     public final boolean DropIncompleteFragments;
+    public final boolean FilterNonRefContigs;
     public final int SortThreadMemory;
+    public final SAMSequenceDictionary RefGenomeDictionary;
+    public final Set<String> RefGenomeContigs;
 
     public static CheckParams Params = new CheckParams(); // global since used per-fragment
 
@@ -69,6 +78,7 @@ public class CheckConfig
     public static final String CONVERT_HARD_CLIPS = "convert_hard_clips";
     public static final String MIN_ALIGNMENT_SCORE = "min_align_score";
     public static final String SORT_THREAD_MEMORY = "sort_thread_mem";
+    public static final String FILTER_NON_REF_CONTIGS = "filter_non_ref_contigs";
 
 
     public static final String WRITE_INCOMPLETE_FRAGS = "write_incompletes";
@@ -122,6 +132,10 @@ public class CheckConfig
         MaxWriteIncompleteFragments = configBuilder.getInteger(MAX_WRITE_INCOMPLETE_FRAGS);
         WriteIncompleteFragments = configBuilder.hasFlag(WRITE_INCOMPLETE_FRAGS) || MaxWriteIncompleteFragments > 0;
         DropIncompleteFragments = configBuilder.hasFlag(DROP_INCOMPLETE_FRAGS);
+        FilterNonRefContigs = configBuilder.hasFlag(FILTER_NON_REF_CONTIGS);
+        RefGenomeDictionary = FilterNonRefContigs ? loadRefGenomeDictionary(RefGenomeFile) : null;
+        RefGenomeContigs = RefGenomeDictionary != null ? RefGenomeDictionary.getSequences().stream()
+                .map(SAMSequenceRecord::getSequenceName).collect(Collectors.toSet()) : null;
 
         LOG_READ_COUNT = configBuilder.getInteger(CFG_LOG_READ_COUNT);
         SortThreadMemory = configBuilder.getInteger(SORT_THREAD_MEMORY);
@@ -144,6 +158,15 @@ public class CheckConfig
 
     public boolean writeBam() { return BamToolPath != null; }
 
+    private static SAMSequenceDictionary loadRefGenomeDictionary(final String refGenomeFile)
+    {
+        RefGenomeSource refGenomeSource = RefGenomeSource.loadRefGenome(refGenomeFile);
+        if(refGenomeSource == null)
+            throw new IllegalStateException("failed to load reference genome: " + refGenomeFile);
+
+        return refGenomeSource.refGenomeFile().getSequenceDictionary();
+    }
+
     public static void registerConfig(final ConfigBuilder configBuilder)
     {
         configBuilder.addPath(BAM_FILE, true, BAM_FILE_DESC);
@@ -164,6 +187,7 @@ public class CheckConfig
 
         configBuilder.addInteger(CFG_LOG_READ_COUNT, "Log partition processed read count frequency", LOG_READ_COUNT);
         configBuilder.addInteger(SORT_THREAD_MEMORY, "Memory per sort thread (value in GB)", DEFAULT_SORT_THREAD_MEMORY);
+        configBuilder.addFlag(FILTER_NON_REF_CONTIGS, "Filter reads and header contigs not present in the reference genome");
         configBuilder.addInteger(MAX_WRITE_INCOMPLETE_FRAGS, "Max incomplete fragments to write (0 means unlimited)", 0);
         configBuilder.addFlag(PERF_DEBUG, PERF_DEBUG_DESC);
         configBuilder.addFlag(SKIP_UNMAPPED, "Skip full unmapped reads");

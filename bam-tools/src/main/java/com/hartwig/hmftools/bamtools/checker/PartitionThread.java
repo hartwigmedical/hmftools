@@ -28,6 +28,7 @@ public class PartitionThread extends Thread
     private final SAMFileWriter mBamWriter;
     private final SamReader mSamReader;
     private final TaskQueue mPartitions;
+    private final RefGenomeCompatibility mRefGenomeCompatibility;
 
     private final PartitionChecker mPartitionChecker;
     private final String mBamFilename;
@@ -36,9 +37,11 @@ public class PartitionThread extends Thread
     protected static final String SORTED_BAM_ID = "sorted";
 
     public PartitionThread(
-            final CheckConfig config, final FragmentCache fragmentCache, final TaskQueue partitions, final int threadId)
+            final CheckConfig config, final FragmentCache fragmentCache, final TaskQueue partitions, final int threadId,
+            final RefGenomeCompatibility refGenomeCompatibility)
     {
         mPartitions = partitions;
+        mRefGenomeCompatibility = refGenomeCompatibility;
 
         mSamReader = SamReaderFactory.makeDefault()
                 .referenceSequence(new File(config.RefGenomeFile))
@@ -50,7 +53,7 @@ public class PartitionThread extends Thread
             // create a BAM writer per thread
             mBamFilename = config.formFilename(format("%s_%02d", UNSORTED_BAM_ID, threadId), BAM_EXTENSION);
 
-            SAMFileHeader fileHeader = mSamReader.getFileHeader().clone();
+            SAMFileHeader fileHeader = mRefGenomeCompatibility != null ? mRefGenomeCompatibility.outputHeader() : mSamReader.getFileHeader().clone();
             fileHeader.setSortOrder(SAMFileHeader.SortOrder.unsorted);
 
             mBamWriter = new SAMFileWriterFactory().makeBAMWriter(fileHeader, false, new File(mBamFilename));
@@ -61,13 +64,14 @@ public class PartitionThread extends Thread
             mBamFilename = "";
         }
 
-        mPartitionChecker = new PartitionChecker(config, fragmentCache, mSamReader, mBamWriter);
+        mPartitionChecker = new PartitionChecker(config, fragmentCache, mSamReader, mBamWriter, mRefGenomeCompatibility);
     }
 
     public static List<ChrBaseRegion> splitRegionsIntoPartitions(final CheckConfig config)
     {
         return PartitionTask.splitRegionsIntoPartitions(
-                config.BamFile, config.RefGenomeFile, config.Threads, config.SpecificChrRegions, config.PartitionSize);
+                config.BamFile, config.RefGenomeFile, config.Threads, config.SpecificChrRegions, config.PartitionSize,
+                config.FilterNonRefContigs ? config.RefGenomeDictionary : null);
     }
 
     public FragmentStats stats() { return mPartitionChecker.stats(); }
@@ -103,13 +107,18 @@ public class PartitionThread extends Thread
         while(iterator.hasNext())
         {
             SAMRecord record = iterator.next();
+            if(mRefGenomeCompatibility != null && !mRefGenomeCompatibility.prepareForWrite(record))
+                continue;
+
             mBamWriter.addAlignment(record);
         }
     }
 
     public void writeIncompleteReads(final List<SAMRecord> reads)
     {
-        reads.forEach(x -> mBamWriter.addAlignment(x));
+        reads.stream()
+                .filter(x -> mRefGenomeCompatibility == null || mRefGenomeCompatibility.prepareForWrite(x))
+                .forEach(x -> mBamWriter.addAlignment(x));
     }
 
     public void close()
