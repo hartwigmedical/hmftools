@@ -512,8 +512,8 @@ public class BamCheckerTest
         refDictionary.addSequence(new SAMSequenceRecord(CHR_1, 1_000));
 
         SAMFileHeader inputHeader = new SAMFileHeader();
-        inputHeader.getSequenceDictionary().addSequence(new SAMSequenceRecord(CHR_1, 1_000));
         inputHeader.getSequenceDictionary().addSequence(new SAMSequenceRecord(VIRAL_CONTIG, 10_000));
+        inputHeader.getSequenceDictionary().addSequence(new SAMSequenceRecord(CHR_1, 1_000));
 
         RefGenomeCompatibility compatibility = new RefGenomeCompatibility(Set.of(CHR_1), inputHeader, refDictionary);
 
@@ -521,6 +521,9 @@ public class BamCheckerTest
         assertNotNull(inputHeader.getSequenceDictionary().getSequence(VIRAL_CONTIG));
 
         SAMRecord compatibleRead = createRecord(inputHeader, CHR_1, CHR_1, null);
+        assertEquals(1, compatibleRead.getReferenceIndex().intValue());
+        assertEquals(1, compatibleRead.getMateReferenceIndex().intValue());
+
         assertTrue(compatibility.recordIsCompatible(compatibleRead));
         assertTrue(compatibility.prepareForWrite(compatibleRead));
         assertEquals(0, compatibleRead.getReferenceIndex().intValue());

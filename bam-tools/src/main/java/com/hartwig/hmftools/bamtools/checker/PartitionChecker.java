@@ -145,7 +145,7 @@ public class PartitionChecker
             BT_LOGGER.debug("specific read({})", readToString(read));
         }
 
-        if(mRefGenomeCompatibility != null && !mRefGenomeCompatibility.recordIsCompatible(read))
+        if(mRefGenomeCompatibility != null && !mRefGenomeCompatibility.prepareForWrite(read))
         {
             ++mCurrentStats.NonRefContigDropped;
             return;
