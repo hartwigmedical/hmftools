@@ -61,6 +61,9 @@ public final class TarsConstants
     public static final int DEFAULT_MIN_INTRON_LENGTH = 21;
     public static final int DEFAULT_MAX_INTRON_LENGTH = 1_000_000;
 
+    // Step-2 tie-break: a tied locus within this gap of the mate (same chromosome) is preferred. Max transcript span.
+    public static final int MATE_PROXIMITY_MAX_DISTANCE = 1_000_000;
+
     // max supplementaries merged into one read: 1 (typical) or 2 (a middle exon clipped both ends). Deeper chains
     // are vanishingly rare (depth 3-4 was 72 reads in a whole sample), so 2 covers essentially all real cases.
     public static final int DEFAULT_MAX_SUPP_MERGES = 2;

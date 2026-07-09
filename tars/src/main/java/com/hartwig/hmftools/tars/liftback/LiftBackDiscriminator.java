@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.tars.liftback;
 
+import static com.hartwig.hmftools.tars.common.TarsConstants.MATE_PROXIMITY_MAX_DISTANCE;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -170,140 +172,103 @@ public final class LiftBackDiscriminator
         return apply(alignments, feature, self, 0, true);
     }
 
+    // Mate-agnostic overload: single-end reads and callers with no lifted mate.
+    public static ApplyResult apply(
+            final List<LiftedAlignment> alignments, final DecidingFeature feature, final LiftedAlignment self,
+            final int seed, final boolean bwaHasPriority)
+    {
+        return apply(alignments, feature, self, seed, bwaHasPriority, null);
+    }
+
     // Mutates Dropped/IsPrimaryChoice and returns the effective primary and a short diagnostic note.
     // When bwa expressed no priority (bwaHasPriority false, ie MAPQ 0) the not-confident outcomes first rank the
     // candidates by their recomputed genomic score (set pre-discriminator) and take the clear winner: the
     // highest-scoring locus among multi-mappers, or the higher-scoring side of an ambiguous tx-vs-ref call. Only
     // when the top candidates tie on score - OR the candidates were never scored (e.g. a split read left for
-    // supplementary-resolve) - does it fall back to bwa's seed-based pseudo-random pick. bwaHasPriority true leaves
-    // bwa's order untouched.
+    // supplementary-resolve) - does it fall back to the mate-proximity / junction / seed tie-breaks. bwaHasPriority
+    // true leaves bwa's order untouched. mateInfo is the partner mate's lifted primary placement, or null.
     public static ApplyResult apply(
             final List<LiftedAlignment> alignments, final DecidingFeature feature, final LiftedAlignment self,
-            final int seed, final boolean bwaHasPriority)
+            final int seed, final boolean bwaHasPriority, final LiftedMateInfo mateInfo)
     {
-        if(feature == null)
+        if(feature == null || feature == DecidingFeature.CONCORDANT || bwaHasPriority)
         {
             return new ApplyResult(self, "");
         }
-        return switch(feature)
-        {
-            case JUNCTION, JUNCTION_OVER_CONTIGUOUS -> promoteTxOverRef(alignments, self);
-            case REF_READS_THROUGH -> promoteRefOverTx(alignments, self);
-            case AMBIGUOUS -> bwaHasPriority ? new ApplyResult(self, "") : randomTxVsRef(alignments, self, seed);
-            case MULTIMAPPER, SOLE_TX, SOLE_REF -> bwaHasPriority ? new ApplyResult(self, "") : randomLocus(alignments, self, seed);
-            default -> new ApplyResult(self, "");
-        };
+        return pickByScore(alignments, self, seed, mateInfo);
     }
 
-    // Pick the primary locus among multi-mappers: the highest-scoring locus, with the seeded coin only among loci
-    // tied at the top. When no candidate was scored (a split read whose scoring is skipped so supplementary-resolve
-    // can reconstruct it), fall back to bwa's exact behaviour - a seed pick over all loci, first placement there -
-    // so the merge path is untouched. Every non-dropped placement stays (rides in XA); single-locus sets keep self.
-    private static ApplyResult randomLocus(final List<LiftedAlignment> alignments, final LiftedAlignment self, final int seed)
+    // Highest recomputed genome score wins ("score"). Top-score ties are settled in order by: mate proximity ("mate"),
+    // then a spliced placement over a same-locus soft-clip ("junction"), then a read-name seed ("random"). Nothing is
+    // dropped; losers ride in XA. Unscored candidates (a split read left for Step 3) keep bwa's primary.
+    private static ApplyResult pickByScore(
+            final List<LiftedAlignment> alignments, final LiftedAlignment self, final int seed, final LiftedMateInfo mateInfo)
     {
-        List<String> loci = new ArrayList<>();
+        List<LiftedAlignment> candidates = new ArrayList<>();
         for(final LiftedAlignment la : alignments)
         {
-            if(la.Dropped)
+            if(!la.Dropped)
             {
-                continue;
-            }
-            String key = locusKey(la);
-            if(!loci.contains(key))
-            {
-                loci.add(key);
+                candidates.add(la);
             }
         }
-        if(loci.size() < 2)
+        if(candidates.size() < 2)
         {
             return new ApplyResult(self, "");
         }
 
         int topScore = Integer.MIN_VALUE;
-        for(final String locus : loci)
+        for(final LiftedAlignment la : candidates)
         {
-            topScore = Math.max(topScore, bestScoreAtLocus(alignments, locus));
+            topScore = Math.max(topScore, la.GenomicScore);
         }
-        boolean scored = topScore != Integer.MIN_VALUE;
-
-        List<String> pickable = new ArrayList<>();
-        for(final String locus : loci)
+        if(topScore == Integer.MIN_VALUE)
         {
-            if(!scored || bestScoreAtLocus(alignments, locus) == topScore)
+            return new ApplyResult(self, ""); // unscored (split read left for Step 3): keep bwa's placement
+        }
+
+        // Collapse identical placements (same locus + CIGAR from different sources, e.g. a ref self and a tx alt that
+        // lift to the same contiguous alignment) so the tie is over distinct placements, not weighted by source count.
+        List<LiftedAlignment> top = new ArrayList<>();
+        Set<String> topKeys = new HashSet<>();
+        for(final LiftedAlignment la : candidates)
+        {
+            if(la.GenomicScore == topScore && topKeys.add(placementKey(la)))
             {
-                pickable.add(locus);
+                top.add(la);
             }
         }
 
-        boolean tie = pickable.size() > 1;
-        String pickedLocus = pickable.get(Math.floorMod(seed, pickable.size()));
-        if(pickedLocus.equals(locusKey(self)))
-        {
-            return new ApplyResult(self, "");
-        }
-
-        // unscored: first placement at the locus (bwa behaviour); scored: the best-scoring placement there.
-        LiftedAlignment winner = null;
-        for(final LiftedAlignment la : alignments)
-        {
-            if(la.Dropped || !locusKey(la).equals(pickedLocus))
-            {
-                continue;
-            }
-            if(winner == null || (scored && outranks(la, winner)))
-            {
-                winner = la;
-            }
-        }
-        if(winner == null)
-        {
-            return new ApplyResult(self, "");
-        }
-
-        self.IsPrimaryChoice = false;
-        winner.IsPrimaryChoice = true;
-        return new ApplyResult(winner, (scored && !tie) ? "score_locus" : "random_locus");
-    }
-
-    private static int bestScoreAtLocus(final List<LiftedAlignment> alignments, final String locus)
-    {
-        int best = Integer.MIN_VALUE;
-        for(final LiftedAlignment la : alignments)
-        {
-            if(!la.Dropped && locusKey(la).equals(locus))
-            {
-                best = Math.max(best, la.GenomicScore);
-            }
-        }
-        return best;
-    }
-
-    // Single locus with both a tx and a ref placement and no shape rule to separate them: keep the higher genomic
-    // score, or a seeded coin when they tie (or were not scored). The loser is a different cigar at the same locus,
-    // kept in XA (not dropped).
-    private static ApplyResult randomTxVsRef(final List<LiftedAlignment> alignments, final LiftedAlignment self, final int seed)
-    {
-        LiftedAlignment tx = bestOfSource(alignments, true);
-        LiftedAlignment ref = bestOfSource(alignments, false);
-        if(tx == null || ref == null)
-        {
-            return new ApplyResult(self, "");
-        }
-
+        boolean tie = top.size() > 1;
         LiftedAlignment winner;
         String note;
-        if(bothScored(tx, ref) && tx.GenomicScore != ref.GenomicScore)
+        if(!tie)
         {
-            // a real genomic score separates them, so it is not a true tie: keep the higher-scoring side.
-            winner = tx.GenomicScore > ref.GenomicScore ? tx : ref;
-            note = winner == tx ? "score_tx" : "score_ref";
+            winner = top.get(0);
+            note = "score";
         }
         else
         {
-            // genuinely tied (or scores unavailable): fall back to the read-seeded coin so ties stay reproducible.
-            boolean pickTx = (seed & 1) == 0;
-            winner = pickTx ? tx : ref;
-            note = pickTx ? "random_tx" : "random_ref";
+            List<LiftedAlignment> contenders = mateProximalSubset(top, mateInfo);
+            if(contenders.size() == 1)
+            {
+                winner = contenders.get(0);
+                note = "mate";
+            }
+            else
+            {
+                LiftedAlignment junction = preferJunctionOverSoftClip(contenders);
+                if(junction != null)
+                {
+                    winner = junction;
+                    note = "junction";
+                }
+                else
+                {
+                    winner = contenders.get(Math.floorMod(seed, contenders.size()));
+                    note = "random";
+                }
+            }
         }
         for(final LiftedAlignment la : alignments)
         {
@@ -312,134 +277,78 @@ public final class LiftBackDiscriminator
         return new ApplyResult(winner, note);
     }
 
-    // Best non-dropped alignment from the tx side (fromTx true) or ref side (fromTx false).
-    private static LiftedAlignment bestOfSource(final List<LiftedAlignment> alignments, final boolean fromTx)
+    // Tied candidates proximal to the mate; the full set unchanged when the mate is absent or does not discriminate.
+    private static List<LiftedAlignment> mateProximalSubset(final List<LiftedAlignment> top, final LiftedMateInfo mateInfo)
     {
-        LiftedAlignment best = null;
-        for(final LiftedAlignment la : alignments)
+        if(mateInfo == null || mateInfo.unmapped() || mateInfo.chromosome() == null)
         {
-            if(la.Dropped || la.fromTxContig() != fromTx)
+            return top;
+        }
+        List<LiftedAlignment> near = new ArrayList<>();
+        for(final LiftedAlignment la : top)
+        {
+            if(isMateProximal(la, mateInfo))
+            {
+                near.add(la);
+            }
+        }
+        return (near.isEmpty() || near.size() == top.size()) ? top : near;
+    }
+
+    private static boolean isMateProximal(final LiftedAlignment la, final LiftedMateInfo mateInfo)
+    {
+        if(!mateInfo.chromosome().equals(la.LiftedChrom))
+        {
+            return false;
+        }
+        int gap;
+        if(la.LiftedPos > mateInfo.alignmentEnd())
+        {
+            gap = la.LiftedPos - mateInfo.alignmentEnd();
+        }
+        else if(la.LiftedPos < mateInfo.alignmentStart())
+        {
+            gap = mateInfo.alignmentStart() - la.LiftedPos;
+        }
+        else
+        {
+            gap = 0;
+        }
+        return gap <= MATE_PROXIMITY_MAX_DISTANCE;
+    }
+
+    // Tie-break within an equal-top-score set: a spliced placement (a real N junction) beats a clipped placement
+    // (soft-clip, no N) at the same lifted locus. Both describe the same read at the same start; the junction is the
+    // correct RNA interpretation - bwa soft-clipped rather than cross the intron - so it is not left to the coin.
+    private static LiftedAlignment preferJunctionOverSoftClip(final List<LiftedAlignment> top)
+    {
+        for(final LiftedAlignment junction : top)
+        {
+            if(!junction.cigarHasRealNJunction())
             {
                 continue;
             }
-            if(best == null || outranks(la, best))
+            for(final LiftedAlignment clipped : top)
             {
-                best = la;
-            }
-        }
-        return best;
-    }
-
-    // Higher recomputed genomic score wins; an equal score (or scores not computed) falls back to fewer mismatches.
-    private static boolean outranks(final LiftedAlignment a, final LiftedAlignment b)
-    {
-        if(a.GenomicScore != b.GenomicScore)
-        {
-            return a.GenomicScore > b.GenomicScore;
-        }
-        return a.NumMismatches < b.NumMismatches;
-    }
-
-    private static boolean bothScored(final LiftedAlignment a, final LiftedAlignment b)
-    {
-        return a.GenomicScore != Integer.MIN_VALUE && b.GenomicScore != Integer.MIN_VALUE;
-    }
-
-    // Ref-favouring: if self is ref, drop tx alts. If self is tx, swap to the best ref alt.
-    private static ApplyResult promoteRefOverTx(final List<LiftedAlignment> alignments, final LiftedAlignment self)
-    {
-        if(!self.fromTxContig())
-        {
-            for(final LiftedAlignment la : alignments)
-                if(la.fromTxContig())
+                if(clipped != junction
+                        && locusKey(clipped).equals(locusKey(junction))
+                        && clipped.cigarHasSoftClip()
+                        && !clipped.cigarHasRealNJunction())
                 {
-                    la.Dropped = true;
-                }
-            return new ApplyResult(self, "");
-        }
-
-        LiftedAlignment winner = null;
-        for(final LiftedAlignment la : alignments)
-        {
-            if(!la.fromTxContig())
-            {
-                winner = la;
-                break;
-            }
-        }
-        if(winner == null)
-        {
-            return new ApplyResult(self, "");
-        }
-
-        self.IsPrimaryChoice = false;
-        winner.IsPrimaryChoice = true;
-        for(final LiftedAlignment la : alignments)
-        {
-            if(la.fromTxContig() && la != self)
-            {
-                la.Dropped = true;
-            }
-        }
-        return new ApplyResult(winner, "swapped_tx_to_ref");
-    }
-
-    // Tx-favouring: if self is tx, drop ref alts. If self is ref, swap to the best tx alt (self demoted to XA
-    // to preserve the contiguous locus).
-    private static ApplyResult promoteTxOverRef(final List<LiftedAlignment> alignments, final LiftedAlignment self)
-    {
-        if(self.fromTxContig())
-        {
-            for(final LiftedAlignment la : alignments)
-                if(!la.fromTxContig())
-                {
-                    la.Dropped = true;
-                }
-            return new ApplyResult(self, "");
-        }
-
-        // Prefer the N-junction tx alt with fewest mismatches; fall back to any tx alt.
-        LiftedAlignment winner = null;
-        for(final LiftedAlignment la : alignments)
-        {
-            if(la.fromTxContig() && la.cigarHasN())
-            {
-                if(winner == null || la.NumMismatches < winner.NumMismatches)
-                {
-                    winner = la;
+                    return junction;
                 }
             }
         }
-        if(winner == null)
-        {
-            for(final LiftedAlignment la : alignments)
-            {
-                if(la.fromTxContig())
-                {
-                    winner = la;
-                    break;
-                }
-            }
-        }
-        if(winner == null)
-        {
-            return new ApplyResult(self, "");
-        }
-
-        self.IsPrimaryChoice = false;
-        winner.IsPrimaryChoice = true;
-        for(final LiftedAlignment la : alignments)
-        {
-            if(!la.fromTxContig() && la != self)
-            {
-                la.Dropped = true;
-            }
-        }
-        return new ApplyResult(winner, "swapped_ref_to_tx");
+        return null;
     }
 
     private static String locusKey(final LiftedAlignment la)
     {
         return la.LiftedChrom + ":" + la.LiftedPos;
+    }
+
+    private static String placementKey(final LiftedAlignment la)
+    {
+        return locusKey(la) + ":" + la.LiftedCigar;
     }
 }

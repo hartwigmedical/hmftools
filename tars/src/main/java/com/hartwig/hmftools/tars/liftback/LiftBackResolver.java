@@ -147,10 +147,15 @@ public class LiftBackResolver
     // per-worker reconciler (see LiftBackGroupProcessor.decideMateGroup).
     public LiftBackResult resolve(final SAMRecord record)
     {
-        return resolve(record, null);
+        return resolve(record, null, null);
     }
 
     public LiftBackResult resolve(final SAMRecord record, final AlignmentNormalizer normalizer)
+    {
+        return resolve(record, normalizer, null);
+    }
+
+    public LiftBackResult resolve(final SAMRecord record, final AlignmentNormalizer normalizer, final LiftedMateInfo mateInfo)
     {
         if(record.getReadUnmappedFlag())
         {
@@ -162,18 +167,18 @@ public class LiftBackResolver
             return liftSupplementary(record);
         }
 
-        return resolvePrimary(record, normalizer);
+        return resolvePrimary(record, normalizer, mateInfo);
     }
 
-    private LiftBackResult resolvePrimary(final SAMRecord record, final AlignmentNormalizer normalizer)
+    private LiftBackResult resolvePrimary(final SAMRecord record, final AlignmentNormalizer normalizer, final LiftedMateInfo mateInfo)
     {
         List<LiftedAlignment> xaAlts = parseAndLiftXa(record);
-        return resolvePrimaryWithAlts(record, xaAlts, xaAlts.size(), normalizer);
+        return resolvePrimaryWithAlts(record, xaAlts, xaAlts.size(), normalizer, mateInfo);
     }
 
     private LiftBackResult resolvePrimaryWithAlts(
             final SAMRecord record, final List<LiftedAlignment> alts, final int numXaAltsForReport,
-            final AlignmentNormalizer normalizer)
+            final AlignmentNormalizer normalizer, final LiftedMateInfo mateInfo)
     {
         LiftedAlignment self = liftSelf(record);
 
@@ -203,7 +208,7 @@ public class LiftBackResolver
         int inputMapq = record.getMappingQuality();
         int seed = readSeed(record.getReadName());
         LiftBackDiscriminator.ApplyResult outcome = LiftBackDiscriminator.apply(
-                allAlignments, features.Feature, self, seed, inputMapq != 0);
+                allAlignments, features.Feature, self, seed, inputMapq != 0, mateInfo);
         LiftedAlignment effectivePrimary = outcome.effectivePrimary();
 
         List<LiftedAlignment> keptAlignments = allAlignments.stream()
@@ -218,8 +223,9 @@ public class LiftBackResolver
         boolean hiddenTie = inputMapq == 0 && hasHiddenTie(record);
         boolean inAnnotatedExon = mExonIndex != null
                 && mExonIndex.contains(effectivePrimary.LiftedChrom, effectivePrimary.LiftedPos);
+        boolean randomTie = outcome.note().equals("random");
         int updatedMapq = decidePrimaryMapq(
-                inputMapq, numLoci, hiddenTie, effectivePrimary.fromTxContig(), inAnnotatedExon, features.Feature);
+                inputMapq, numLoci, hiddenTie, effectivePrimary.fromTxContig(), inAnnotatedExon, randomTie);
 
         LiftedAlignment primaryCoords = effectivePrimary;
 
@@ -509,27 +515,26 @@ public class LiftBackResolver
                 List.of());
     }
 
-    // Bump a MAPQ-0 primary to 60 only when it lifts to a single locus with no competing alt. Multi-locus reads
-    // (including a discriminator swap to an alt at another locus) are never promoted. A hidden tie (XS==AS, an
+    // Bump a MAPQ-0 primary to 60 only when it lifts to a single locus with no competing alt. Multi-locus reads and
+    // random-tie picks (a coin-flip among distinct placements) are never promoted. A hidden tie (XS==AS, an
     // equal-scoring alt bwa did not emit) is a latent second locus and blocks the bump unless tx provenance or an
     // annotated exon vouches for the placement.
     static int decidePrimaryMapq(
             final int inputMapq, final int numLoci, final boolean hiddenTie,
             final boolean primaryFromTxContig, final boolean primaryInAnnotatedExon)
     {
-        return decidePrimaryMapq(inputMapq, numLoci, hiddenTie, primaryFromTxContig, primaryInAnnotatedExon, null);
+        return decidePrimaryMapq(inputMapq, numLoci, hiddenTie, primaryFromTxContig, primaryInAnnotatedExon, false);
     }
 
     static int decidePrimaryMapq(
             final int inputMapq, final int numLoci, final boolean hiddenTie,
-            final boolean primaryFromTxContig, final boolean primaryInAnnotatedExon, final DecidingFeature feature)
+            final boolean primaryFromTxContig, final boolean primaryInAnnotatedExon, final boolean randomTie)
     {
         if(inputMapq != 0)
         {
             return inputMapq;
         }
-        // an ambiguous single-locus call is a coin-flip between tx and ref, so it must never be promoted to confident.
-        if(feature == DecidingFeature.AMBIGUOUS)
+        if(randomTie)
         {
             return inputMapq;
         }
