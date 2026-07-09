@@ -7,6 +7,8 @@ import static com.hartwig.hmftools.common.region.PartitionUtils.buildPartitions;
 
 import java.io.File;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.bamtools.checker.CheckConfig;
@@ -99,12 +101,16 @@ public class PartitionTask
                 .open(new File(bamFile));
 
         SAMFileHeader fileHeader = samReader.getFileHeader().clone();
-        List<SAMSequenceRecord> sequenceRecords = partitionDictionary != null ? partitionDictionary.getSequences()
-                : fileHeader.getSequenceDictionary().getSequences();
+        List<SAMSequenceRecord> sequenceRecords = fileHeader.getSequenceDictionary().getSequences();
+        Set<String> partitionContigs = partitionDictionary != null ? partitionDictionary.getSequences().stream()
+                .map(SAMSequenceRecord::getSequenceName).collect(Collectors.toSet()) : null;
 
         for(final SAMSequenceRecord sequenceRecord : sequenceRecords)
         {
             String chromosome = sequenceRecord.getSequenceName();
+
+            if(partitionContigs != null && !partitionContigs.contains(chromosome))
+                continue;
 
             if(specificRegions != null && specificRegions.excludeChromosome(chromosome))
                 continue;
