@@ -109,24 +109,29 @@ public class LiftBackGroupProcessor
             }
         }
 
-        // Two passes per pair so mate /2 can use mate /1's resolved junctions as a hint, and a
-        // re-decide of mate /1 picks up mate /2's hints when mate /1 wasn't initially resolved.
+        // Two passes per pair so mate /2 can use mate /1's resolved junctions as a hint and mate /1's lifted locus
+        // for mate-proximity; a re-decide of mate /1 picks up mate /2's hints and locus.
+        String readName = group.get(0).getReadName();
         PassCounterSnapshot beforeM1 = snapshotPassCounters();
-        MateDecision m1 = decideMateGroup(firstOfPair, Collections.emptyList());
+        MateDecision m1 = decideMateGroup(firstOfPair, Collections.emptyList(),
+                liftedMateInfoCache.getPartnerMateInfo(readName, true));
         PassCounterSnapshot afterM1 = snapshotPassCounters();
         refreshMateInfoCache(firstOfPair, m1, liftedMateInfoCache);
-        MateDecision m2 = decideMateGroup(secondOfPair, m1.IntroducedIntrons);
+        MateDecision m2 = decideMateGroup(secondOfPair, m1.IntroducedIntrons,
+                liftedMateInfoCache.getPartnerMateInfo(readName, false));
         refreshMateInfoCache(secondOfPair, m2, liftedMateInfoCache);
 
+        LiftedMateInfo m1Partner = liftedMateInfoCache.getPartnerMateInfo(readName, true);
+        boolean redecideForMate = wasRandomTie(m1.PrimaryResult) && m1Partner != null && !m1Partner.unmapped();
+
         MateDecision m1Final;
-        if(m1.IntroducedIntrons.isEmpty() && !m2.IntroducedIntrons.isEmpty())
+        if((m1.IntroducedIntrons.isEmpty() && !m2.IntroducedIntrons.isEmpty()) || redecideForMate)
         {
-            // The provisional m1 decision is discarded and re-made with mate /2's introns. Roll back the engine
-            // pass-effect counters it bumped (overhang-gate / supplementary resolve / excluded reads) so
-            // the discarded pass is not double-counted; the re-decision below re-counts. Per-record stats are
-            // unaffected (recorded once in writeMateGroup on the chosen decision); the emitted BAM is unaffected.
+            // Discard and re-make m1 with mate /2's introns and lifted locus. Roll back the engine pass-effect
+            // counters the provisional pass bumped so it is not double-counted; the re-decision re-counts. Per-record
+            // stats (recorded in writeMateGroup on the chosen decision) and the emitted BAM are unaffected.
             rewindProvisionalCounters(beforeM1, afterM1);
-            m1Final = decideMateGroup(firstOfPair, m2.IntroducedIntrons);
+            m1Final = decideMateGroup(firstOfPair, m2.IntroducedIntrons, m1Partner);
             refreshMateInfoCache(firstOfPair, m1Final, liftedMateInfoCache);
         }
         else
@@ -244,7 +249,8 @@ public class LiftBackGroupProcessor
         }
     }
 
-    private MateDecision decideMateGroup(final List<SAMRecord> records, final List<ChrBaseRegion> mateHintIntrons)
+    private MateDecision decideMateGroup(
+            final List<SAMRecord> records, final List<ChrBaseRegion> mateHintIntrons, final LiftedMateInfo partnerMate)
     {
         if(records.isEmpty())
         {
@@ -264,7 +270,7 @@ public class LiftBackGroupProcessor
 
         // a valid BAM always has a primary in the mate group, so resolve it directly. Candidate cigars are peeled
         // by the overhang gate before the discriminator runs - see reconcileAlignmentsToGenome.
-        LiftBackResult primaryResult = mResolver.resolve(primary, this::reconcileAlignmentsToGenome);
+        LiftBackResult primaryResult = mResolver.resolve(primary, this::reconcileAlignmentsToGenome, partnerMate);
 
         LiftBackResult[] resolved = new LiftBackResult[records.size()];
         for(int i = 0; i < records.size(); i++)
@@ -306,6 +312,17 @@ public class LiftBackGroupProcessor
         return new MateDecision(resolved, droppedBySupplementary,
                 primaryIdx >= 0 ? resolved[primaryIdx] : primaryResult,
                 introduced, primaryIdx, primaryPostProcessed);
+    }
+
+    // The primary was placed by an unresolved score tie ("random"), so a now-known mate locus may break it.
+    private static boolean wasRandomTie(final LiftBackResult result)
+    {
+        if(result == null || result.notes() == null)
+        {
+            return false;
+        }
+        String notes = result.notes();
+        return notes.equals("random") || notes.startsWith("random;");
     }
 
     private static int indexOfPrimary(final List<SAMRecord> records, final SAMRecord primary)

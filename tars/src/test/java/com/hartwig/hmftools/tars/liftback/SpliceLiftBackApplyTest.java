@@ -205,13 +205,14 @@ public class SpliceLiftBackApplyTest
     @Test
     public void testStrandSwapReverseComplementsSeqAndQuals()
     {
-        // bwa placed the read contiguously on the REVERSE strand (chr1:5000 100M); an XA tx alt crosses a junction on
-        // the forward strand. The discriminator promotes the spliced tx placement (JUNCTION_OVER_CONTIGUOUS), flipping
-        // the strand reverse->forward. SEQ/quals are stored in the reverse orientation, so applyResultToRecord must
+        // bwa placed the read contiguously on the REVERSE strand (chr1:5000 100M) at MAPQ 0; an XA tx alt crosses a
+        // junction on the forward strand and scores higher, so the discriminator swaps to it, flipping the strand
+        // reverse->forward. SEQ/quals are stored in the reverse orientation, so applyResultToRecord must
         // reverse-complement the bases and reverse the quals to keep SEQ on the genomic forward strand; otherwise the
         // record is emitted mis-oriented and its recomputed NM inflates to ~read length.
         SAMRecord record = newRecord(CHR_1, 5000, "100M");
         record.setReadNegativeStrandFlag(true);
+        record.setMappingQuality(0);
         record.setReadBases(("A".repeat(99) + "C").getBytes());
         byte[] quals = new byte[100];
         for(int i = 0; i < 100; ++i)
@@ -220,7 +221,12 @@ public class SpliceLiftBackApplyTest
         record.setAttribute(XA_TAG, TX_CONTIG + ",+51,100M,0;");
 
         LiftBackResolver resolver = new LiftBackResolver(List.of(threeExonContig()));
-        LiftBackResult result = resolver.resolve(record);
+        // score the tx alt (index 1) above the ref self (index 0) so the score-based pick swaps to the spliced placement
+        LiftBackResult result = resolver.resolve(record, (alns, rec) ->
+        {
+            alns.get(0).GenomicScore = 10;
+            alns.get(1).GenomicScore = 100;
+        });
         assertFalse("precondition: swap flips strand to forward", result.negativeStrand());
 
         LiftBackRecordOps.applyResultToRecord(record, result, new LiftedMateInfoCache());

@@ -160,155 +160,10 @@ public class LiftBackDiscriminatorTest
         assertEquals(SOLE_REF, featureOf(set(self, droppedTx)));
     }
 
-    // ---- apply(): tx-favouring swap (promoteTxOverRef) ----
+    // ---- apply(): score-based primary pick (no shape rules) ----
 
-    @Test
-    public void testTxJunctionRefSoftclipSwapsRefSelfToTx()
-    {
-        // bwa picked the ref placement; tx wins, so the primary swaps to the tx alt. self stays as an alt
-        // (preserves its locus) but loses IsPrimaryChoice; any other ref alt is dropped.
-        LiftedAlignment self = ref(CHR1, 100, SOFTCLIP_CIGAR);
-        self.IsPrimaryChoice = true;
-        LiftedAlignment txWinner = tx(CHR1, 100, TX_JUNCTION_CIGAR, false, 0);
-        LiftedAlignment otherRef = ref(CHR2, 200, FULL_MATCH_CIGAR);
-
-        LiftBackDiscriminator.ApplyResult outcome =
-                LiftBackDiscriminator.apply(set(self, txWinner, otherRef), JUNCTION, self);
-
-        assertSame(txWinner, outcome.effectivePrimary());
-        assertEquals("swapped_ref_to_tx", outcome.note());
-        assertTrue(txWinner.IsPrimaryChoice);
-        assertFalse(self.IsPrimaryChoice);
-        assertFalse(self.Dropped);
-        assertTrue(otherRef.Dropped);
-    }
-
-    @Test
-    public void testTxJunctionRefSoftclipTxSelfDropsRef()
-    {
-        // self is already the tx placement; keep it and drop the ref alt.
-        LiftedAlignment self = tx(CHR1, 100, TX_JUNCTION_CIGAR, false, 0);
-        self.IsPrimaryChoice = true;
-        LiftedAlignment refAlt = ref(CHR1, 100, SOFTCLIP_CIGAR);
-
-        LiftBackDiscriminator.ApplyResult outcome =
-                LiftBackDiscriminator.apply(set(self, refAlt), JUNCTION, self);
-
-        assertSame(self, outcome.effectivePrimary());
-        assertEquals("", outcome.note());
-        assertTrue(refAlt.Dropped);
-    }
-
-    @Test
-    public void testTxSwapPrefersFewestMismatchJunctionAlt()
-    {
-        // two tx junction alts at the locus: the winner is the N-junction alt with the fewest mismatches.
-        LiftedAlignment self = ref(CHR1, 100, SOFTCLIP_CIGAR);
-        self.IsPrimaryChoice = true;
-        LiftedAlignment txMany = tx(CHR1, 100, "50M100N50M", false, 5);
-        LiftedAlignment txFew = tx(CHR1, 100, "60M100N40M", false, 2);
-
-        LiftBackDiscriminator.ApplyResult outcome =
-                LiftBackDiscriminator.apply(set(self, txMany, txFew), JUNCTION, self);
-
-        assertSame(txFew, outcome.effectivePrimary());
-    }
-
-    // ---- apply(): ref-favouring swap (promoteRefOverTx) ----
-
-    @Test
-    public void testTxJunctionRefMatchRefSelfDropsTx()
-    {
-        // ref matched through the intron; self is ref, so keep it and drop the tx alt.
-        LiftedAlignment self = ref(CHR1, 100, FULL_MATCH_CIGAR);
-        self.IsPrimaryChoice = true;
-        LiftedAlignment txAlt = tx(CHR1, 100, TX_JUNCTION_CIGAR, false, 0);
-
-        LiftBackDiscriminator.ApplyResult outcome =
-                LiftBackDiscriminator.apply(set(self, txAlt), REF_READS_THROUGH, self);
-
-        assertSame(self, outcome.effectivePrimary());
-        assertEquals("", outcome.note());
-        assertTrue(txAlt.Dropped);
-    }
-
-    @Test
-    public void testTxJunctionRefMatchTxSelfSwapsToRef()
-    {
-        // self is the tx placement but ref wins: swap the primary to the ref alt.
-        LiftedAlignment self = tx(CHR1, 100, TX_JUNCTION_CIGAR, false, 0);
-        self.IsPrimaryChoice = true;
-        LiftedAlignment refWinner = ref(CHR1, 100, FULL_MATCH_CIGAR);
-
-        LiftBackDiscriminator.ApplyResult outcome =
-                LiftBackDiscriminator.apply(set(self, refWinner), REF_READS_THROUGH, self);
-
-        assertSame(refWinner, outcome.effectivePrimary());
-        assertEquals("swapped_tx_to_ref", outcome.note());
-        assertTrue(refWinner.IsPrimaryChoice);
-        assertFalse(self.IsPrimaryChoice);
-    }
-
-    // ---- apply(): tx-softclip-ref-match (also REF_READS_THROUGH) ----
-
-    @Test
-    public void testTxSoftclipRefMatchRefSelfDropsTx()
-    {
-        LiftedAlignment self = ref(CHR1, 100, FULL_MATCH_CIGAR);
-        self.IsPrimaryChoice = true;
-        LiftedAlignment txAlt = tx(CHR1, 100, "50M50S", true, 0);
-
-        LiftBackDiscriminator.ApplyResult outcome =
-                LiftBackDiscriminator.apply(set(self, txAlt), REF_READS_THROUGH, self);
-
-        assertSame(self, outcome.effectivePrimary());
-        assertEquals("", outcome.note());
-        assertTrue(txAlt.Dropped);
-    }
-
-    @Test
-    public void testTxSoftclipRefMatchTxSelfSwapsToRef()
-    {
-        // self is the softclipped tx placement; a clean ref full-match sits at the same locus (intron
-        // retention). Ref wins: swap primary to the ref alt, demote self.
-        LiftedAlignment self = tx(CHR1, 100, "50M50S", true, 0);
-        self.IsPrimaryChoice = true;
-        LiftedAlignment refAlt = ref(CHR1, 100, FULL_MATCH_CIGAR);
-
-        LiftBackDiscriminator.ApplyResult outcome =
-                LiftBackDiscriminator.apply(set(self, refAlt), REF_READS_THROUGH, self);
-
-        assertSame(refAlt, outcome.effectivePrimary());
-        assertEquals("swapped_tx_to_ref", outcome.note());
-        assertFalse(refAlt.Dropped);
-    }
-
-    // ---- apply(): features with no swap ----
-
-    @Test
-    public void testNonSwappingFeaturesLeaveSelfAndDropNothing()
-    {
-        for(final DecidingFeature feature : new DecidingFeature[] {
-                SOLE_REF, SOLE_TX, CONCORDANT, AMBIGUOUS, MULTIMAPPER })
-        {
-            LiftedAlignment self = ref(CHR1, 100, FULL_MATCH_CIGAR);
-            self.IsPrimaryChoice = true;
-            LiftedAlignment txAlt = tx(CHR1, 100, TX_JUNCTION_CIGAR, false, 0);
-
-            LiftBackDiscriminator.ApplyResult outcome =
-                    LiftBackDiscriminator.apply(set(self, txAlt), feature, self);
-
-            assertSame("feature " + feature, self, outcome.effectivePrimary());
-            assertEquals("feature " + feature, "", outcome.note());
-            assertFalse("feature " + feature, self.Dropped);
-            assertFalse("feature " + feature, txAlt.Dropped);
-        }
-    }
-
-    // ---- apply(): random placement when bwa gave no priority (MAPQ 0) ----
-
-    // AMBIGUOUS single locus (tx contiguous, ref softclipped - no shape rule fires).
-    private static List<LiftedAlignment> ambiguousSet()
+    // single locus: a ref (softclipped) and a tx (contiguous) candidate that only score can separate.
+    private static List<LiftedAlignment> contestedSet()
     {
         LiftedAlignment self = ref(CHR1, 100, "50M51S");
         self.IsPrimaryChoice = true;
@@ -316,8 +171,8 @@ public class LiftBackDiscriminatorTest
         return set(self, txAlt);
     }
 
-    // MULTIMAPPER: a ref locus and a contiguous tx locus, no junction to break the tie.
-    private static List<LiftedAlignment> multimapperSet()
+    // two loci: a ref and a tx placement.
+    private static List<LiftedAlignment> multiLocusSet()
     {
         LiftedAlignment self = ref(CHR1, 100, "151M");
         self.IsPrimaryChoice = true;
@@ -326,127 +181,187 @@ public class LiftBackDiscriminatorTest
     }
 
     @Test
-    public void testAmbiguousKeepsBwaOrderWhenBwaHasPriority()
+    public void testBwaPriorityKeepsSelf()
     {
-        List<LiftedAlignment> alignments = ambiguousSet();
-        LiftedAlignment self = alignments.get(0);
-        LiftBackDiscriminator.ApplyResult outcome = LiftBackDiscriminator.apply(alignments, AMBIGUOUS, self, 0, true);
-        assertSame("bwa ranked the placements, so its primary is untouched", self, outcome.effectivePrimary());
+        // MAPQ > 0: bwa ranked the placements, so its primary is kept regardless of score.
+        List<LiftedAlignment> a = contestedSet();
+        a.get(0).GenomicScore = 10;
+        a.get(1).GenomicScore = 99;
+        LiftBackDiscriminator.ApplyResult outcome = LiftBackDiscriminator.apply(a, AMBIGUOUS, a.get(0), 0, true);
+        assertSame(a.get(0), outcome.effectivePrimary());
         assertEquals("", outcome.note());
     }
 
     @Test
-    public void testAmbiguousRandomEvenSeedPicksTxAndKeepsLoserInXa()
+    public void testUnscoredKeepsSelf()
     {
-        List<LiftedAlignment> alignments = ambiguousSet();
-        LiftedAlignment self = alignments.get(0);   // ref, 50M51S
-        LiftedAlignment txAlt = alignments.get(1);  // tx, 100M
-        LiftBackDiscriminator.ApplyResult outcome = LiftBackDiscriminator.apply(alignments, AMBIGUOUS, self, 0, false);
-        assertSame("even seed -> tx wins", txAlt, outcome.effectivePrimary());
-        assertEquals("random_tx", outcome.note());
-        assertTrue(txAlt.IsPrimaryChoice);
-        assertFalse(self.IsPrimaryChoice);
-        assertFalse("ambiguous loser is a different cigar, kept in XA not dropped", self.Dropped);
-        assertFalse(txAlt.Dropped);
-    }
-
-    @Test
-    public void testAmbiguousRandomOddSeedPicksRefDeterministically()
-    {
-        LiftBackDiscriminator.ApplyResult first =
-                LiftBackDiscriminator.apply(ambiguousSet(), AMBIGUOUS, ambiguousSet().get(0), 1, false);
-        assertEquals("odd seed -> ref wins", "random_ref", first.note());
-
-        List<LiftedAlignment> repeat = ambiguousSet();
-        LiftBackDiscriminator.ApplyResult second = LiftBackDiscriminator.apply(repeat, AMBIGUOUS, repeat.get(0), 1, false);
-        assertEquals("same seed reproduces the pick", "random_ref", second.note());
-        assertSame(repeat.get(0), second.effectivePrimary());
-    }
-
-    @Test
-    public void testMultimapperKeepsBwaOrderWhenBwaHasPriority()
-    {
-        List<LiftedAlignment> alignments = multimapperSet();
-        LiftedAlignment self = alignments.get(0);
-        LiftBackDiscriminator.ApplyResult outcome = LiftBackDiscriminator.apply(alignments, MULTIMAPPER, self, 1, true);
-        assertSame(self, outcome.effectivePrimary());
+        // contested but no candidate scored (a split read left for Step 3): keep bwa's primary, drop nothing.
+        List<LiftedAlignment> a = contestedSet();
+        LiftBackDiscriminator.ApplyResult outcome = LiftBackDiscriminator.apply(a, AMBIGUOUS, a.get(0), 0, false);
+        assertSame(a.get(0), outcome.effectivePrimary());
         assertEquals("", outcome.note());
+        assertFalse(a.get(0).Dropped);
+        assertFalse(a.get(1).Dropped);
     }
 
     @Test
-    public void testMultimapperRandomPicksAltLocusAndKeepsAll()
+    public void testDecisiveScoreWinsRegardlessOfSeed()
     {
-        List<LiftedAlignment> alignments = multimapperSet();
-        LiftedAlignment self = alignments.get(0);   // locus chr1:100
-        LiftedAlignment altB = alignments.get(1);   // locus chr2:200
-        LiftBackDiscriminator.ApplyResult outcome = LiftBackDiscriminator.apply(alignments, MULTIMAPPER, self, 1, false);
-        assertSame("seed 1 -> second locus", altB, outcome.effectivePrimary());
-        assertEquals("random_locus", outcome.note());
-        assertTrue(altB.IsPrimaryChoice);
-        assertFalse(self.IsPrimaryChoice);
-        assertFalse("multimapper placements all ride in XA, none dropped", self.Dropped);
-        assertFalse(altB.Dropped);
-    }
+        // higher genome score wins outright; the seed does not matter.
+        List<LiftedAlignment> refWins = contestedSet();
+        refWins.get(0).GenomicScore = 90;
+        refWins.get(1).GenomicScore = 50;
+        LiftBackDiscriminator.ApplyResult r = LiftBackDiscriminator.apply(refWins, AMBIGUOUS, refWins.get(0), 1, false);
+        assertSame(refWins.get(0), r.effectivePrimary());
+        assertEquals("score", r.note());
 
-    // ---- apply(): recomputed genomic score breaks ties before the RNG ----
-
-    @Test
-    public void testAmbiguousScoreOverridesSeed()
-    {
-        // even seed would pick tx; a higher ref genomic score must win instead (not a true tie).
-        List<LiftedAlignment> alignments = ambiguousSet();
-        LiftedAlignment self = alignments.get(0);   // ref
-        LiftedAlignment txAlt = alignments.get(1);  // tx
-        self.GenomicScore = 90;
-        txAlt.GenomicScore = 50;
-        LiftBackDiscriminator.ApplyResult outcome = LiftBackDiscriminator.apply(alignments, AMBIGUOUS, self, 0, false);
-        assertSame(self, outcome.effectivePrimary());
-        assertEquals("score_ref", outcome.note());
-
-        // and the other direction: odd seed would pick ref, higher tx score wins.
-        List<LiftedAlignment> other = ambiguousSet();
-        other.get(0).GenomicScore = 40;
-        other.get(1).GenomicScore = 88;
-        LiftBackDiscriminator.ApplyResult txWins = LiftBackDiscriminator.apply(other, AMBIGUOUS, other.get(0), 1, false);
-        assertSame(other.get(1), txWins.effectivePrimary());
-        assertEquals("score_tx", txWins.note());
+        List<LiftedAlignment> txWins = contestedSet();
+        txWins.get(0).GenomicScore = 40;
+        txWins.get(1).GenomicScore = 88;
+        LiftBackDiscriminator.ApplyResult t = LiftBackDiscriminator.apply(txWins, AMBIGUOUS, txWins.get(0), 0, false);
+        assertSame(txWins.get(1), t.effectivePrimary());
+        assertEquals("score", t.note());
+        assertTrue(txWins.get(1).IsPrimaryChoice);
+        assertFalse(txWins.get(0).IsPrimaryChoice);
+        assertFalse("loser rides in XA, not dropped", txWins.get(0).Dropped);
     }
 
     @Test
-    public void testAmbiguousEqualScoreFallsBackToSeed()
+    public void testScoreTieFallsToSeededRandom()
     {
-        List<LiftedAlignment> alignments = ambiguousSet();
-        alignments.get(0).GenomicScore = 70;
-        alignments.get(1).GenomicScore = 70;
-        LiftBackDiscriminator.ApplyResult outcome = LiftBackDiscriminator.apply(alignments, AMBIGUOUS, alignments.get(0), 0, false);
-        assertEquals("equal score -> seeded coin, even seed picks tx", "random_tx", outcome.note());
-        assertSame(alignments.get(1), outcome.effectivePrimary());
+        // equal scores -> seeded pick, reproducible. contestedSet order is [self, tx]; seed 0 -> self, seed 1 -> tx.
+        List<LiftedAlignment> even = contestedSet();
+        even.get(0).GenomicScore = 70;
+        even.get(1).GenomicScore = 70;
+        LiftBackDiscriminator.ApplyResult e = LiftBackDiscriminator.apply(even, AMBIGUOUS, even.get(0), 0, false);
+        assertSame(even.get(0), e.effectivePrimary());
+        assertEquals("random", e.note());
+
+        List<LiftedAlignment> odd = contestedSet();
+        odd.get(0).GenomicScore = 70;
+        odd.get(1).GenomicScore = 70;
+        LiftBackDiscriminator.ApplyResult o = LiftBackDiscriminator.apply(odd, AMBIGUOUS, odd.get(0), 1, false);
+        assertSame(odd.get(1), o.effectivePrimary());
+        assertEquals("random", o.note());
+        assertFalse("tie loser rides in XA, not dropped", odd.get(0).Dropped);
     }
 
     @Test
-    public void testMultimapperScoreOverridesSeed()
+    public void testScoreTieJunctionBeatsSoftClipAtSameLocus()
     {
-        // seed 0 would keep self's locus; the higher-scoring alt locus must win instead.
-        List<LiftedAlignment> alignments = multimapperSet();
-        LiftedAlignment self = alignments.get(0);   // chr1:100
-        LiftedAlignment altB = alignments.get(1);   // chr2:200
-        self.GenomicScore = 60;
-        altB.GenomicScore = 130;
-        LiftBackDiscriminator.ApplyResult outcome = LiftBackDiscriminator.apply(alignments, MULTIMAPPER, self, 0, false);
-        assertSame(altB, outcome.effectivePrimary());
-        assertEquals("score_locus", outcome.note());
+        // a spliced placement and a soft-clip placement at the same locus, tied on score -> the junction wins
+        // outright (not the coin), regardless of seed. set order is [soft-clip, junction] and seed 0 would pick
+        // the soft-clip if this were a plain random tie, so the junction winning proves the shape rule fired.
+        LiftedAlignment softClip = ref(CHR1, 100, SOFTCLIP_CIGAR);
+        softClip.IsPrimaryChoice = true;
+        LiftedAlignment junction = tx(CHR1, 100, TX_JUNCTION_CIGAR, false, 0);
+        List<LiftedAlignment> a = set(softClip, junction);
+        a.get(0).GenomicScore = 80;
+        a.get(1).GenomicScore = 80;
+        LiftBackDiscriminator.ApplyResult outcome = LiftBackDiscriminator.apply(a, AMBIGUOUS, softClip, 0, false);
+        assertSame(junction, outcome.effectivePrimary());
+        assertEquals("junction", outcome.note());
+        assertTrue(junction.IsPrimaryChoice);
+        assertFalse(softClip.IsPrimaryChoice);
+        assertFalse("soft-clip loser rides in XA, not dropped", softClip.Dropped);
     }
 
     @Test
-    public void testMultimapperEqualLocusScoreFallsBackToSeed()
+    public void testScoreTieJunctionAtDifferentLocusStaysRandom()
     {
-        List<LiftedAlignment> alignments = multimapperSet();
-        LiftedAlignment self = alignments.get(0);
-        LiftedAlignment altB = alignments.get(1);
-        self.GenomicScore = 100;
-        altB.GenomicScore = 100;
-        LiftBackDiscriminator.ApplyResult outcome = LiftBackDiscriminator.apply(alignments, MULTIMAPPER, self, 1, false);
-        assertSame("equal scores -> seeded pick, seed 1 -> alt locus", altB, outcome.effectivePrimary());
-        assertEquals("random_locus", outcome.note());
+        // junction and soft-clip sit at different loci, so the same-locus rule does not fire and the tie is random.
+        LiftedAlignment softClip = ref(CHR1, 100, SOFTCLIP_CIGAR);
+        softClip.IsPrimaryChoice = true;
+        LiftedAlignment junction = tx(CHR2, 200, TX_JUNCTION_CIGAR, false, 0);
+        List<LiftedAlignment> a = set(softClip, junction);
+        a.get(0).GenomicScore = 80;
+        a.get(1).GenomicScore = 80;
+        LiftBackDiscriminator.ApplyResult outcome = LiftBackDiscriminator.apply(a, AMBIGUOUS, softClip, 0, false);
+        assertSame("seed 0 -> first candidate", softClip, outcome.effectivePrimary());
+        assertEquals("random", outcome.note());
+    }
+
+    @Test
+    public void testMultiLocusDecisiveScorePicksBestLocus()
+    {
+        List<LiftedAlignment> a = multiLocusSet();
+        a.get(0).GenomicScore = 60;
+        a.get(1).GenomicScore = 130;
+        LiftBackDiscriminator.ApplyResult outcome = LiftBackDiscriminator.apply(a, MULTIMAPPER, a.get(0), 0, false);
+        assertSame(a.get(1), outcome.effectivePrimary());
+        assertEquals("score", outcome.note());
+        assertFalse("all placements ride in XA", a.get(0).Dropped);
+    }
+
+    @Test
+    public void testMultiLocusScoreTieSeededRandom()
+    {
+        List<LiftedAlignment> a = multiLocusSet();
+        a.get(0).GenomicScore = 100;
+        a.get(1).GenomicScore = 100;
+        LiftBackDiscriminator.ApplyResult outcome = LiftBackDiscriminator.apply(a, MULTIMAPPER, a.get(0), 1, false);
+        assertSame("seed 1 -> second candidate", a.get(1), outcome.effectivePrimary());
+        assertEquals("random", outcome.note());
+    }
+
+    @Test
+    public void testScoreTieCollapsesIdenticalPlacements()
+    {
+        // self and a tx alt lift to the same locus and CIGAR; a third tx alt is a distinct spliced placement. The two
+        // identical placements collapse to one, so the seeded tie is over two distinct placements, not three: seed 1
+        // lands on the spliced placement (it would land on the duplicate 100M without the collapse).
+        LiftedAlignment self = ref(CHR1, 100, "100M");
+        self.IsPrimaryChoice = true;
+        LiftedAlignment txSame = tx(CHR1, 100, "100M", false, 0);
+        LiftedAlignment txSpliced = tx(CHR1, 100, TX_JUNCTION_CIGAR, false, 0);
+        List<LiftedAlignment> a = set(self, txSame, txSpliced);
+        a.get(0).GenomicScore = 100;
+        a.get(1).GenomicScore = 100;
+        a.get(2).GenomicScore = 100;
+        LiftBackDiscriminator.ApplyResult outcome = LiftBackDiscriminator.apply(a, MULTIMAPPER, self, 1, false);
+        assertSame(txSpliced, outcome.effectivePrimary());
+        assertEquals("random", outcome.note());
+    }
+
+    @Test
+    public void testMultiLocusTieMateProximityPicksMateLocus()
+    {
+        // tied loci CHR1:100 and CHR2:200; the mate maps on CHR2 near 200, so that locus wins over the seed.
+        List<LiftedAlignment> a = multiLocusSet();
+        a.get(0).GenomicScore = 100;
+        a.get(1).GenomicScore = 100;
+        LiftedMateInfo mate = LiftedMateInfo.mapped(CHR2, 250, 350, "100M", false);
+        // seed 0 would pick CHR1:100; mate proximity overrides to the CHR2 locus.
+        LiftBackDiscriminator.ApplyResult outcome = LiftBackDiscriminator.apply(a, MULTIMAPPER, a.get(0), 0, false, mate);
+        assertSame(a.get(1), outcome.effectivePrimary());
+        assertEquals("mate", outcome.note());
+        assertTrue(a.get(1).IsPrimaryChoice);
+        assertFalse("tie loser rides in XA, not dropped", a.get(0).Dropped);
+    }
+
+    @Test
+    public void testMultiLocusTieMateOnNeitherChromStaysRandom()
+    {
+        // the mate is on a third chromosome, so proximity does not discriminate and the seed decides.
+        List<LiftedAlignment> a = multiLocusSet();
+        a.get(0).GenomicScore = 100;
+        a.get(1).GenomicScore = 100;
+        LiftedMateInfo mate = LiftedMateInfo.mapped("chr9", 500, 600, "100M", false);
+        LiftBackDiscriminator.ApplyResult outcome = LiftBackDiscriminator.apply(a, MULTIMAPPER, a.get(0), 1, false, mate);
+        assertSame("seed 1 -> second candidate", a.get(1), outcome.effectivePrimary());
+        assertEquals("random", outcome.note());
+    }
+
+    @Test
+    public void testMultiLocusTieMateTooFarStaysRandom()
+    {
+        // mate is on CHR1 but past MATE_PROXIMITY_MAX_DISTANCE from the CHR1 locus, so it is not proximal.
+        List<LiftedAlignment> a = multiLocusSet();
+        a.get(0).GenomicScore = 100;
+        a.get(1).GenomicScore = 100;
+        LiftedMateInfo mate = LiftedMateInfo.mapped(CHR1, 5_000_000, 5_000_100, "100M", false);
+        LiftBackDiscriminator.ApplyResult outcome = LiftBackDiscriminator.apply(a, MULTIMAPPER, a.get(0), 1, false, mate);
+        assertSame("seed 1 -> second candidate", a.get(1), outcome.effectivePrimary());
+        assertEquals("random", outcome.note());
     }
 }

@@ -114,25 +114,6 @@ public class LiftBackResolverTest
     }
 
     @Test
-    public void testJunctionTxBetter()
-    {
-        // Tx junction-crosser primary; ref alt at same lifted locus with soft-clip.
-        SAMRecord record = newRecord(TX_CONTIG, 51, "100M");
-        record.setAttribute("XA", CHR_1 + ",+150,50M50S,0;");
-
-        LiftBackResolver resolver = new LiftBackResolver(contigMap());
-        LiftBackResult result = resolver.resolve(record);
-
-        assertEquals(DecidingFeature.JUNCTION, result.decidingFeature());
-        assertTrue(result.hasNCigar());
-        assertEquals(1, result.numLoci());
-        // tx wins, so ref alt is dropped from the emitted set; only tx CIGAR remains at the locus.
-        assertEquals(1, result.numDistinctCigarsAtPrimaryLocus());
-        assertEquals(2, result.liftedAlignments().size());
-        assertEquals(1, result.liftedAlignments().stream().filter(la -> !la.Dropped).count());
-    }
-
-    @Test
     public void testRefTxAgree()
     {
         SAMRecord record = newRecord(CHR_1, 100, "50M"); // ref primary; Tx alt at contig pos 1 -> same locus+CIGAR
@@ -396,38 +377,6 @@ public class LiftBackResolverTest
     }
 
     @Test
-    public void testCrossLocusFavoursTxSwapsToTx()
-    {
-        // bwa picked contiguous chr5:5000 as primary; Tx XA lifts to chr1:150 50M100N50M. Expect swap to Tx, MAPQ rescued.
-        SAMRecord record = newRecord("chr5", 5000, "100M");
-        record.setAttribute("XA", TX_CONTIG + ",+51,100M,0;");
-        record.setMappingQuality(60);
-
-        LiftBackResolver resolver = new LiftBackResolver(contigMap());
-        LiftBackResult result = resolver.resolve(record);
-
-        assertEquals(DecidingFeature.JUNCTION_OVER_CONTIGUOUS, result.decidingFeature());
-        assertEquals(CHR_1, result.finalChrom());
-        assertEquals(150, result.finalPos());
-        assertEquals("50M100N50M", result.finalCigar());
-        assertTrue(result.hasNCigar());
-        assertEquals(60, result.updatedMapq());
-        assertTrue(result.notes().contains("swapped_ref_to_tx"));
-
-        LiftedAlignment originalSelf = result.liftedAlignments().stream()
-                .filter(la -> la.Source == LiftedAlignment.AlignmentSource.SELF)
-                .findFirst().orElseThrow();
-        assertFalse(originalSelf.IsPrimaryChoice);
-        assertFalse(originalSelf.Dropped);
-
-        LiftedAlignment winner = result.liftedAlignments().stream()
-                .filter(la -> la.IsPrimaryChoice)
-                .findFirst().orElseThrow();
-        assertTrue(winner.fromTxContig());
-        assertEquals("50M100N50M", winner.LiftedCigar);
-    }
-
-    @Test
     public void testCrossLocusBothSplicedRemainsMultiLocus()
     {
         // Both Tx primary and ref XA alt have spliced CIGARs at different loci - ambiguous, must NOT swap.
@@ -442,104 +391,6 @@ public class LiftBackResolverTest
                 .filter(la -> la.Source == LiftedAlignment.AlignmentSource.SELF)
                 .findFirst().orElseThrow();
         assertTrue(self.IsPrimaryChoice);
-    }
-
-    @Test
-    public void testCrossLocusFavoursTxDropsOtherRefAlts()
-    {
-        // Tx XA wins (chr1:150 spliced); original self (chr5) kept as an informative alt; chr7 ref alt dropped.
-        SAMRecord record = newRecord("chr5", 5000, "100M");
-        record.setAttribute("XA", TX_CONTIG + ",+51,100M,0;chr7,+7000,100M,0;");
-
-        LiftBackResolver resolver = new LiftBackResolver(contigMap());
-        LiftBackResult result = resolver.resolve(record);
-
-        assertEquals(DecidingFeature.JUNCTION_OVER_CONTIGUOUS, result.decidingFeature());
-
-        LiftedAlignment chr7Alt = result.liftedAlignments().stream()
-                .filter(la -> "chr7".equals(la.LiftedChrom))
-                .findFirst().orElseThrow();
-        assertTrue(chr7Alt.Dropped);
-
-        LiftedAlignment chr5Self = result.liftedAlignments().stream()
-                .filter(la -> "chr5".equals(la.LiftedChrom))
-                .findFirst().orElseThrow();
-        assertFalse(chr5Self.Dropped);
-        assertFalse(chr5Self.IsPrimaryChoice);
-    }
-
-    @Test
-    public void testJunctionFavoursTxSwapsWhenSelfIsRef()
-    {
-        // bwa picked ref soft-clipped (50M50S) as primary; Tx XA lifts to the same locus with 50M100N50M. Tx wins and swaps.
-        SAMRecord record = newRecord(CHR_1, 150, "50M50S");
-        record.setAttribute("XA", TX_CONTIG + ",+51,100M,0;");
-
-        LiftBackResolver resolver = new LiftBackResolver(contigMap());
-        LiftBackResult result = resolver.resolve(record);
-
-        assertEquals(DecidingFeature.JUNCTION, result.decidingFeature());
-        assertEquals("50M100N50M", result.finalCigar());
-        assertTrue(result.hasNCigar());
-        assertTrue(result.notes().contains("swapped_ref_to_tx"));
-    }
-
-    @Test
-    public void testJunctionRefMatchKeepsRefAndDropsTx()
-    {
-        // Ref full-match 151M through the supposed intron is overwhelming evidence of an unspliced read; keep ref, drop Tx.
-        SAMRecord record = newRecord(CHR_1, 150, "151M");
-        record.setAttribute("XA", TX_CONTIG + ",+51,100M,0;");
-
-        LiftBackResolver resolver = new LiftBackResolver(contigMap());
-        LiftBackResult result = resolver.resolve(record);
-
-        assertEquals(DecidingFeature.REF_READS_THROUGH, result.decidingFeature());
-        assertEquals(CHR_1, result.finalChrom());
-        assertEquals(150, result.finalPos());
-        assertEquals("151M", result.finalCigar());
-        assertFalse(result.hasNCigar());
-
-        LiftedAlignment self = result.liftedAlignments().stream()
-                .filter(la -> la.Source == LiftedAlignment.AlignmentSource.SELF)
-                .findFirst().orElseThrow();
-        assertTrue(self.IsPrimaryChoice);
-        assertFalse(self.Dropped);
-
-        LiftedAlignment txAlt = result.liftedAlignments().stream()
-                .filter(LiftedAlignment::fromTxContig)
-                .findFirst().orElseThrow();
-        assertTrue(txAlt.Dropped);
-        assertFalse(txAlt.IsPrimaryChoice);
-    }
-
-    @Test
-    public void testJunctionRefMatchSwapsToRefWhenSelfIsTx()
-    {
-        // Tx primary; ref XA is unspliced full-match. Discriminator swaps to ref and drops Tx alt.
-        SAMRecord record = newRecord(TX_CONTIG, 51, "100M");
-        record.setAttribute("XA", CHR_1 + ",+150,151M,0;");
-
-        LiftBackResolver resolver = new LiftBackResolver(contigMap());
-        LiftBackResult result = resolver.resolve(record);
-
-        assertEquals(DecidingFeature.REF_READS_THROUGH, result.decidingFeature());
-        assertEquals(CHR_1, result.finalChrom());
-        assertEquals(150, result.finalPos());
-        assertEquals("151M", result.finalCigar());
-        assertFalse(result.hasNCigar());
-        assertTrue(result.notes().contains("swapped_tx_to_ref"));
-
-        LiftedAlignment txSelf = result.liftedAlignments().stream()
-                .filter(la -> la.Source == LiftedAlignment.AlignmentSource.SELF)
-                .findFirst().orElseThrow();
-        assertFalse(txSelf.IsPrimaryChoice);
-        assertFalse(txSelf.Dropped); // demoted to informative XA, not dropped
-
-        LiftedAlignment winner = result.liftedAlignments().stream()
-                .filter(la -> la.IsPrimaryChoice)
-                .findFirst().orElseThrow();
-        assertFalse(winner.fromTxContig());
     }
 
     @Test
@@ -709,15 +560,10 @@ public class LiftBackResolverTest
     }
 
     @Test
-    public void testMapqPolicy_ambiguousNeverBumps()
+    public void testMapqPolicy_randomTieNotBumped()
     {
-        // a coin-flipped tx-vs-ref call at one locus stays MAPQ 0, even though single-locus MAPQ0 would otherwise bump
-        assertEquals(0, LiftBackResolver.decidePrimaryMapq(0, 1, false, false, false, DecidingFeature.AMBIGUOUS));
-    }
-
-    @Test
-    public void testMapqPolicy_nonAmbiguousSingleLocusStillBumps()
-    {
-        assertEquals(60, LiftBackResolver.decidePrimaryMapq(0, 1, false, false, false, DecidingFeature.SOLE_REF));
+        // a random-tie pick is a coin-flip among distinct placements, so it is not a confident unique call
+        assertEquals(0, LiftBackResolver.decidePrimaryMapq(0, 1, false, false, false, true));
+        assertEquals(60, LiftBackResolver.decidePrimaryMapq(0, 1, false, false, false, false));
     }
 }
