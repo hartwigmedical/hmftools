@@ -187,8 +187,8 @@ public class ComparConfig
         {
             if(!loadFileSources(configBuilder))
             {
-                mIsValid = false;
                 CMP_LOGGER.error("missing DB or file source old and new config");
+                mIsValid = false;
             }
         }
 
@@ -217,6 +217,7 @@ public class ComparConfig
             catch(IOException e)
             {
                 CMP_LOGGER.error("failed to load driver gene panel file: {}", e.toString());
+                mIsValid = false;
             }
         }
 
@@ -249,7 +250,7 @@ public class ComparConfig
             catch(IOException e)
             {
                 CMP_LOGGER.error("failed to load field config file: {}", e.toString());
-                System.exit(1);
+                mIsValid = false;
             }
         }
         FieldOverrides = overrideFieldConfig;
@@ -349,6 +350,7 @@ public class ComparConfig
         catch(IOException e)
         {
             CMP_LOGGER.error("failed to load sample IDs: {}", e.toString());
+            mIsValid = false;
         }
     }
 
