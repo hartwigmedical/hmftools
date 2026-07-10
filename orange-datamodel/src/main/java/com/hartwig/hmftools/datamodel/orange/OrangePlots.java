@@ -49,7 +49,6 @@ public interface OrangePlots
     @Nullable
     String cuppaFeaturePlot();
 
-    @Deprecated
     @Nullable
     String cuppaChartPlot();
 }

@@ -260,7 +260,7 @@ public class FindingRecordFactory
                             .findingKey("predictedTumorOrigin")
                             .mode(cuppaMode(cuppa.mode()))
                             .predictions(predictedTumorOrigins)
-                            .visualisationFile(VisualisationFileUtil.createNullable(orangePlots.cuppaSummaryPlot()))
+                            .visualisationFile(VisualisationFileUtil.createNullable(orangePlots.cuppaChartPlot()))
                             .build()
                     )
                     .build();
