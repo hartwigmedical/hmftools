@@ -4,10 +4,10 @@ import static com.hartwig.hmftools.common.driver.DriverCategory.ONCO;
 import static com.hartwig.hmftools.common.driver.LikelihoodMethod.AMP;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_CHROMOSOME_BAND;
-import static com.hartwig.hmftools.compar.driver.DriverData.FLD_LIKELIHOOD;
-import static com.hartwig.hmftools.compar.driver.DriverData.FLD_LIKE_METHOD;
-import static com.hartwig.hmftools.compar.driver.DriverData.FLD_MAX_COPY_NUMBER;
-import static com.hartwig.hmftools.compar.driver.DriverData.FLD_MIN_COPY_NUMBER;
+import static com.hartwig.hmftools.compar.driver.DriverComparer.FLD_LIKELIHOOD;
+import static com.hartwig.hmftools.compar.driver.DriverComparer.FLD_LIKE_METHOD;
+import static com.hartwig.hmftools.compar.driver.DriverComparer.FLD_MAX_COPY_NUMBER;
+import static com.hartwig.hmftools.compar.driver.DriverComparer.FLD_MIN_COPY_NUMBER;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;

@@ -2,7 +2,6 @@ package com.hartwig.hmftools.compar.teal;
 
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.CategoryType.TELOMERE_LENGTH;
-import static com.hartwig.hmftools.compar.teal.TealData.FLD_TELOMERE_LENGTH;
 
 import java.io.UncheckedIOException;
 import java.util.Collections;
@@ -27,6 +26,8 @@ import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class TealComparer implements ItemComparer
 {
+    protected static final String FLD_TELOMERE_LENGTH = "TelomereLength";
+
     private final ComparConfig mConfig;
 
     public TealComparer(final ComparConfig config)
@@ -54,7 +55,7 @@ public class TealComparer implements ItemComparer
     @Override
     public List<String> displayFieldNames()
     {
-        return TealData.comparedFieldNames();
+        return List.of(FLD_TELOMERE_LENGTH);
     }
 
     @Override

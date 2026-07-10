@@ -3,11 +3,6 @@ package com.hartwig.hmftools.compar.chord;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.compar.common.CategoryType.CHORD;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
-import static com.hartwig.hmftools.compar.chord.ChordComparData.FLD_BRCA1;
-import static com.hartwig.hmftools.compar.chord.ChordComparData.FLD_BRCA2;
-import static com.hartwig.hmftools.compar.chord.ChordComparData.FLD_SCORE;
-import static com.hartwig.hmftools.compar.chord.ChordComparData.FLD_STATUS;
-import static com.hartwig.hmftools.compar.chord.ChordComparData.FLD_TYPE;
 import static com.hartwig.hmftools.compar.common.CommonUtils.fileExists;
 
 import java.io.IOException;
@@ -34,6 +29,12 @@ import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 public class ChordComparer implements ItemComparer
 {
     private static final String OLD_CHORD_FILE_EXTENSION = "_chord_prediction.txt";
+
+    protected static final String FLD_BRCA1 = "BRCA1";
+    protected static final String FLD_BRCA2 = "BRCA2";
+    protected static final String FLD_STATUS = "Status";
+    protected static final String FLD_TYPE = "Type";
+    protected static final String FLD_SCORE = "Score";
 
     private final ComparConfig mConfig;
 

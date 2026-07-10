@@ -1,18 +1,15 @@
 package com.hartwig.hmftools.compar.linx;
 
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
-import static com.hartwig.hmftools.compar.linx.FusionData.FLD_CHAIN_LINKS;
-import static com.hartwig.hmftools.compar.linx.FusionData.FLD_CHAIN_TERM;
-import static com.hartwig.hmftools.compar.linx.FusionData.FLD_DOMAINS_KEPT;
-import static com.hartwig.hmftools.compar.linx.FusionData.FLD_DOMAINS_LOST;
-import static com.hartwig.hmftools.compar.linx.FusionData.FLD_EXON_DOWN;
-import static com.hartwig.hmftools.compar.linx.FusionData.FLD_EXON_UP;
-import static com.hartwig.hmftools.compar.linx.FusionData.FLD_JUNCTION_COPY_NUMBER;
-import static com.hartwig.hmftools.compar.linx.FusionData.FLD_LIKELIHOOD;
-import static com.hartwig.hmftools.compar.linx.FusionData.FLD_PHASED;
-import static com.hartwig.hmftools.compar.linx.FusionData.FLD_REPORTED_TYPE;
-import static com.hartwig.hmftools.compar.linx.FusionData.FLD_TRANSCRIPT_DOWN;
-import static com.hartwig.hmftools.compar.linx.FusionData.FLD_TRANSCRIPT_UP;
+import static com.hartwig.hmftools.compar.linx.FusionComparer.FLD_CHAIN_LINKS;
+import static com.hartwig.hmftools.compar.linx.FusionComparer.FLD_CHAIN_TERM;
+import static com.hartwig.hmftools.compar.linx.FusionComparer.FLD_DOMAINS_KEPT;
+import static com.hartwig.hmftools.compar.linx.FusionComparer.FLD_DOMAINS_LOST;
+import static com.hartwig.hmftools.compar.linx.FusionComparer.FLD_EXON_DOWN;
+import static com.hartwig.hmftools.compar.linx.FusionComparer.FLD_EXON_UP;
+import static com.hartwig.hmftools.compar.linx.FusionComparer.FLD_LIKELIHOOD;
+import static com.hartwig.hmftools.compar.linx.FusionComparer.FLD_PHASED;
+import static com.hartwig.hmftools.compar.linx.FusionComparer.FLD_REPORTED_TYPE;
 
 import java.util.Collections;
 import java.util.HashMap;

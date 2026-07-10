@@ -10,10 +10,6 @@ public class VirusData implements ComparableItem
 {
     public final AnnotatedVirus Virus;
 
-    protected static final String FLD_INTEGRATIONS = "Integrations";
-    protected static final String FLD_MEAN_COVERAGE = "MeanCoverage";
-    protected static final String FLD_DRIVER_LIKELIHOOD = "DriverLikelihood";
-
     VirusData(final AnnotatedVirus virus)
     {
         Virus = virus;

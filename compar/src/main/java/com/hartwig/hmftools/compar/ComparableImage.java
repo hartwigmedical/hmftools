@@ -22,9 +22,6 @@ public abstract class ComparableImage implements ComparableItem
     public final String Path;
     public final BufferedImage Image;
 
-    public static final String FLD_DIMENSIONS = "Dimensions";
-    public static final String FLD_PIXELS = "Pixels";
-
     public ComparableImage(String name, String path)
     {
         Name = name;

@@ -4,17 +4,6 @@ import static com.hartwig.hmftools.compar.common.CategoryType.FUSION;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.linx.DisruptionComparer.buildBreakendData;
-import static com.hartwig.hmftools.compar.linx.FusionData.FLD_BREAKEND_DOWN;
-import static com.hartwig.hmftools.compar.linx.FusionData.FLD_BREAKEND_UP;
-import static com.hartwig.hmftools.compar.linx.FusionData.FLD_CHAIN_LINKS;
-import static com.hartwig.hmftools.compar.linx.FusionData.FLD_CHAIN_TERM;
-import static com.hartwig.hmftools.compar.linx.FusionData.FLD_DOMAINS_KEPT;
-import static com.hartwig.hmftools.compar.linx.FusionData.FLD_DOMAINS_LOST;
-import static com.hartwig.hmftools.compar.linx.FusionData.FLD_EXON_DOWN;
-import static com.hartwig.hmftools.compar.linx.FusionData.FLD_EXON_UP;
-import static com.hartwig.hmftools.compar.linx.FusionData.FLD_LIKELIHOOD;
-import static com.hartwig.hmftools.compar.linx.FusionData.FLD_PHASED;
-import static com.hartwig.hmftools.compar.linx.FusionData.FLD_REPORTED_TYPE;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -43,6 +32,18 @@ import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class FusionComparer implements ItemComparer
 {
+    protected static final String FLD_REPORTED_TYPE = "ReportedType";
+    protected static final String FLD_PHASED = "Phased";
+    protected static final String FLD_LIKELIHOOD = "Likelihood";
+    protected static final String FLD_EXON_UP = "FusedExonUp";
+    protected static final String FLD_EXON_DOWN = "FusedExonDown";
+    protected static final String FLD_CHAIN_LINKS = "ChainLinks";
+    protected static final String FLD_CHAIN_TERM = "ChainTerminated";
+    protected static final String FLD_DOMAINS_KEPT = "DomainsKept";
+    protected static final String FLD_DOMAINS_LOST = "DomainsLost";
+    protected static final String FLD_BREAKEND_UP = "BreakendUp";
+    protected static final String FLD_BREAKEND_DOWN = "BreakendDown";
+
     private final ComparConfig mConfig;
     private DisruptionComparer mDisruptionComparer;
 

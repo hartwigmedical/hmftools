@@ -3,10 +3,10 @@ package com.hartwig.hmftools.compar.purple;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_CHROMOSOME_BAND;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
-import static com.hartwig.hmftools.compar.purple.GermlineAmpDelData.FLD_GERMLINE_CN;
-import static com.hartwig.hmftools.compar.purple.GermlineAmpDelData.FLD_GERMLINE_STATUS;
-import static com.hartwig.hmftools.compar.purple.GermlineAmpDelData.FLD_TUMOR_CN;
-import static com.hartwig.hmftools.compar.purple.GermlineAmpDelData.FLD_TUMOR_STATUS;
+import static com.hartwig.hmftools.compar.purple.GermlineAmpDelComparer.FLD_GERMLINE_CN;
+import static com.hartwig.hmftools.compar.purple.GermlineAmpDelComparer.FLD_GERMLINE_STATUS;
+import static com.hartwig.hmftools.compar.purple.GermlineAmpDelComparer.FLD_TUMOR_CN;
+import static com.hartwig.hmftools.compar.purple.GermlineAmpDelComparer.FLD_TUMOR_STATUS;
 
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;

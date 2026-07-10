@@ -4,18 +4,13 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.compar.common.CategoryType.CDR3_LOCUS_SUMMARY;
 
-import static org.apache.commons.lang3.StringUtils.capitalize;
-
 import com.hartwig.hmftools.common.cider.Cdr3LocusSummary;
-import com.hartwig.hmftools.common.cider.Cdr3LocusSummaryFile;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.common.CategoryType;
 
 public class Cdr3LocusSummaryData implements ComparableItem
 {
     public final Cdr3LocusSummary Cdr3LocusSummary;
-
-    protected static final String PASS_SEQUENCES_FIELD = capitalize(Cdr3LocusSummaryFile.Column.passSequences.name());
 
     public Cdr3LocusSummaryData(final Cdr3LocusSummary cdr3LocusSummary)
     {

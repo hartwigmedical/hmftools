@@ -4,8 +4,6 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.compar.common.CategoryType.TELOMERE_LENGTH;
 
-import java.util.List;
-
 import com.hartwig.hmftools.common.teal.TelomereLength;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.common.CategoryType;
@@ -13,9 +11,6 @@ import com.hartwig.hmftools.compar.common.CategoryType;
 public class TealData implements ComparableItem
 {
     public final TelomereLength TelomereLength;
-
-    protected static final String FLD_TYPE = "Type";
-    protected static final String FLD_TELOMERE_LENGTH = "TelomereLength";
 
     public TealData(final TelomereLength telomereLength)
     {
@@ -29,11 +24,6 @@ public class TealData implements ComparableItem
     public String key()
     {
         return String.format("type(%s)", TelomereLength.type());
-    }
-
-    public static List<String> comparedFieldNames()
-    {
-        return List.of(FLD_TELOMERE_LENGTH);
     }
 
     @Override

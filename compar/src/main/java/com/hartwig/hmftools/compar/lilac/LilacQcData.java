@@ -13,8 +13,6 @@ public class LilacQcData implements ComparableItem
     public final com.hartwig.hmftools.common.hla.LilacQcData QcData;
     public final List<LilacAllele> Alleles;
 
-    protected static final String FLD_ALLELES = "Alleles";
-    
     public LilacQcData(final com.hartwig.hmftools.common.hla.LilacQcData qcData, final List<LilacAllele> alleles)
     {
         QcData = qcData;

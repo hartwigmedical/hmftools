@@ -4,19 +4,13 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.compar.common.CategoryType.CDR3_SEQUENCE;
 
-import static org.apache.commons.lang3.StringUtils.capitalize;
-
 import com.hartwig.hmftools.common.cider.Cdr3Sequence;
-import com.hartwig.hmftools.common.cider.Cdr3SequenceFile;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.common.CategoryType;
 
 public class CiderVdjData implements ComparableItem
 {
     public final Cdr3Sequence mCdr3Sequence;
-
-    public static final String FILTER_FIELD = capitalize(Cdr3SequenceFile.Column.filter.name());
-    public static final String LOCUS_FIELD = capitalize(Cdr3SequenceFile.Column.locus.name());
 
     public CiderVdjData(final Cdr3Sequence mCdr3Sequence)
     {

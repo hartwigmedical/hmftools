@@ -6,7 +6,7 @@ import static com.hartwig.hmftools.compar.common.CategoryType.GERMLINE_SV;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.CommonUtils.determineComparisonGenomePosition;
-import static com.hartwig.hmftools.compar.linx.DisruptionData.FLD_BREAKEND;
+import static com.hartwig.hmftools.compar.linx.DisruptionComparer.FLD_BREAKEND;
 
 import java.io.IOException;
 import java.util.List;

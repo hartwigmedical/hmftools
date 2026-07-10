@@ -1,10 +1,6 @@
 package com.hartwig.hmftools.compar.isofox;
 
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
-import static com.hartwig.hmftools.compar.isofox.RnaFusionData.FLD_JUNC_TYPE_DOWN;
-import static com.hartwig.hmftools.compar.isofox.RnaFusionData.FLD_JUNC_TYPE_UP;
-import static com.hartwig.hmftools.compar.isofox.RnaFusionData.FLD_KNOWN_TYPE;
-import static com.hartwig.hmftools.compar.isofox.RnaFusionData.FLD_SPLIT_FRAGS;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -31,6 +27,11 @@ import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public record RnaFusionComparer(ComparConfig mConfig) implements ItemComparer
 {
+    public static final String FLD_KNOWN_TYPE = "KnownFusionType";
+    public static final String FLD_SPLIT_FRAGS = "SplitFrags";
+    public static final String FLD_JUNC_TYPE_UP = "JuncTypeUp";
+    public static final String FLD_JUNC_TYPE_DOWN = "JuncTypeDown";
+
     @Override
     public CategoryType category()
     {

@@ -12,11 +12,6 @@ public class GeneCopyNumberData implements ComparableItem
 {
     public final GeneCopyNumber CopyNumber;
 
-    protected static final String FLD_MIN_COPY_NUMBER = "MinCopyNumber";
-    protected static final String FLD_MAX_COPY_NUMBER = "MaxCopyNumber";
-    protected static final String FLD_MIN_REGION_START = "MinRegionStart";
-    protected static final String FLD_MIN_REGION_END = "MinRegionEnd";
-
     public GeneCopyNumberData(final GeneCopyNumber copyNumber)
     {
         CopyNumber = copyNumber;

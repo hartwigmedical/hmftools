@@ -14,11 +14,6 @@ public class GermlineAmpDelData implements ComparableItem
     public final GermlineAmpDel AmpDelData;
     public final String mComparisonChromosome;
 
-    protected static final String FLD_GERMLINE_STATUS = "GermlineStatus";
-    protected static final String FLD_TUMOR_STATUS = "TumorStatus";
-    protected static final String FLD_GERMLINE_CN = "GermlineCopyNumber";
-    protected static final String FLD_TUMOR_CN = "TumorCopyNumber";
-
     public GermlineAmpDelData(final GermlineAmpDel germlineAmpDel, final String comparisonChromosome)
     {
         AmpDelData = germlineAmpDel;

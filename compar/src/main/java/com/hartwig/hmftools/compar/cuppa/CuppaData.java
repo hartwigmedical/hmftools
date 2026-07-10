@@ -12,9 +12,6 @@ public class CuppaData implements ComparableItem
 {
     public final CuppaPredictionEntry PredictionEntry;
 
-    protected static final String FLD_TOP_CANCER_TYPE = "top_cancer_type";
-    protected static final String FLD_PROBABILITY = "probability";
-
     public CuppaData(final CuppaPredictionEntry predictionEntry)
     {
         PredictionEntry = predictionEntry;

@@ -10,12 +10,6 @@ public class ChordComparData implements ComparableItem
 {
     public final ChordData Chord;
 
-    protected static final String FLD_BRCA1 = "BRCA1";
-    protected static final String FLD_BRCA2 = "BRCA2";
-    protected static final String FLD_STATUS = "Status";
-    protected static final String FLD_TYPE = "Type";
-    protected static final String FLD_SCORE = "Score";
-
     public ChordComparData(final ChordData chord)
     {
         Chord = chord;

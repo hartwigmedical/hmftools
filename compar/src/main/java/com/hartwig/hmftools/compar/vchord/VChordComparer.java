@@ -2,11 +2,6 @@ package com.hartwig.hmftools.compar.vchord;
 
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.CategoryType.V_CHORD;
-import static com.hartwig.hmftools.compar.vchord.VChordData.FLD_BREAST;
-import static com.hartwig.hmftools.compar.vchord.VChordData.FLD_OTHER;
-import static com.hartwig.hmftools.compar.vchord.VChordData.FLD_OVARIAN;
-import static com.hartwig.hmftools.compar.vchord.VChordData.FLD_PANCREATIC;
-import static com.hartwig.hmftools.compar.vchord.VChordData.FLD_PROSTATE;
 
 import java.io.UncheckedIOException;
 import java.util.Collections;
@@ -31,6 +26,12 @@ import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class VChordComparer implements ItemComparer
 {
+    protected static final String FLD_BREAST = "BreastCancerHrdScore";
+    protected static final String FLD_OVARIAN = "OvarianCancerHrdScore";
+    protected static final String FLD_PANCREATIC = "PancreaticCancerScore";
+    protected static final String FLD_PROSTATE = "ProstateCancerScore";
+    protected static final String FLD_OTHER = "OtherCancerScore";
+
     private final ComparConfig mConfig;
 
     public VChordComparer(final ComparConfig config)

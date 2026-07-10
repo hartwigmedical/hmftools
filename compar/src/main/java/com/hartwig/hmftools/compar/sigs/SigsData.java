@@ -1,17 +1,11 @@
 package com.hartwig.hmftools.compar.sigs;
 
-import static com.hartwig.hmftools.common.sigs.SignatureAllocationFile.PERCENT_FLD;
-
-import static org.apache.commons.lang3.StringUtils.capitalize;
-
 import com.hartwig.hmftools.common.sigs.SignatureAllocation;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.common.CategoryType;
 
 public record SigsData(SignatureAllocation SignatureAllocation) implements ComparableItem
 {
-    public static String FLD_PERCENT = capitalize(PERCENT_FLD);
-
     @Override
     public CategoryType category()
     {

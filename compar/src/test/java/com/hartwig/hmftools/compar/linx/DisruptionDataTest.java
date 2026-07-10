@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.compar.linx;
 
-import static com.hartwig.hmftools.compar.linx.DisruptionData.FLD_BREAKEND;
+import static com.hartwig.hmftools.compar.linx.DisruptionComparer.FLD_BREAKEND;
 
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;

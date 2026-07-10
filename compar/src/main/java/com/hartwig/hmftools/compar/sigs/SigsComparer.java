@@ -1,7 +1,10 @@
 package com.hartwig.hmftools.compar.sigs;
 
+import static com.hartwig.hmftools.common.sigs.SignatureAllocationFile.PERCENT_FLD;
+
+import static org.apache.commons.lang3.StringUtils.capitalize;
+
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
-import static com.hartwig.hmftools.compar.sigs.SigsData.FLD_PERCENT;
 
 import java.io.IOException;
 import java.util.List;
@@ -24,6 +27,8 @@ import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public record SigsComparer(ComparConfig mConfig) implements ItemComparer
 {
+    static final String FLD_PERCENT = capitalize(PERCENT_FLD);
+
     @Override
     public CategoryType category()
     {

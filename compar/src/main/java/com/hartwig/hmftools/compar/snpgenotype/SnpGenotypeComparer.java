@@ -5,8 +5,6 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDir
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.CategoryType.SNP_GENOTYPE;
 import static com.hartwig.hmftools.compar.common.CommonUtils.determineComparisonGenomePosition;
-import static com.hartwig.hmftools.compar.snpgenotype.SnpGenotypeData.FLD_GENOTYPE;
-import static com.hartwig.hmftools.compar.snpgenotype.SnpGenotypeData.FLD_VCF_SAMPLE_ID;
 
 import java.util.List;
 
@@ -35,6 +33,9 @@ public class SnpGenotypeComparer implements ItemComparer
     private final ComparConfig mConfig;
 
     private static final String FILE_NAME = "snp_genotype_output.vcf";
+
+    protected static final String FLD_GENOTYPE = "Genotype";
+    protected static final String FLD_VCF_SAMPLE_ID = "VcfSampleId";
 
     public SnpGenotypeComparer(final ComparConfig config)
     {

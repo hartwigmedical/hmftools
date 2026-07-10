@@ -1,9 +1,9 @@
 package com.hartwig.hmftools.compar.cider;
 
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
-import static com.hartwig.hmftools.compar.cider.CiderVdjData.FILTER_FIELD;
-import static com.hartwig.hmftools.compar.cider.CiderVdjData.LOCUS_FIELD;
 import static com.hartwig.hmftools.compar.common.CategoryType.CDR3_SEQUENCE;
+
+import static org.apache.commons.lang3.StringUtils.capitalize;
 
 import java.io.UncheckedIOException;
 import java.util.List;
@@ -26,6 +26,9 @@ import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class CiderVdjComparer implements ItemComparer
 {
+    protected static final String FLD_FILTER = capitalize(Cdr3SequenceFile.Column.filter.name());
+    protected static final String FLD_LOCUS = capitalize(Cdr3SequenceFile.Column.locus.name());
+
     private final ComparConfig mConfig;
 
     public CiderVdjComparer(final ComparConfig config)
@@ -42,8 +45,8 @@ public class CiderVdjComparer implements ItemComparer
     public List<Field> fields(final MatchLevel matchLevel)
     {
         return List.of(
-                new StringField(FILTER_FIELD, i -> ((CiderVdjData) i).mCdr3Sequence.filter(), true),
-                new StringField(LOCUS_FIELD, i -> ((CiderVdjData) i).mCdr3Sequence.locus(), true)
+                new StringField(FLD_FILTER, i -> ((CiderVdjData) i).mCdr3Sequence.filter(), true),
+                new StringField(FLD_LOCUS, i -> ((CiderVdjData) i).mCdr3Sequence.locus(), true)
         );
     }
 
@@ -56,7 +59,7 @@ public class CiderVdjComparer implements ItemComparer
     @Override
     public List<String> displayFieldNames()
     {
-        return List.of(FILTER_FIELD, CiderVdjData.LOCUS_FIELD);
+        return List.of(FLD_FILTER, FLD_LOCUS);
     }
 
     @Override

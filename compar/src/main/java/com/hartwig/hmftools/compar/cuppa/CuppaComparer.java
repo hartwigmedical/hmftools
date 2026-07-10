@@ -3,8 +3,6 @@ package com.hartwig.hmftools.compar.cuppa;
 import static com.hartwig.hmftools.common.cuppa.DataType.PROB;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.CategoryType.CUPPA;
-import static com.hartwig.hmftools.compar.cuppa.CuppaData.FLD_PROBABILITY;
-import static com.hartwig.hmftools.compar.cuppa.CuppaData.FLD_TOP_CANCER_TYPE;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -30,6 +28,9 @@ import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class CuppaComparer implements ItemComparer
 {
+    protected static final String FLD_TOP_CANCER_TYPE = "top_cancer_type";
+    protected static final String FLD_PROBABILITY = "probability";
+
     private final ComparConfig mConfig;
 
     public CuppaComparer(final ComparConfig config)

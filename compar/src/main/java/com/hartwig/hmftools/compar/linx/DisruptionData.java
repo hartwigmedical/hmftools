@@ -12,8 +12,6 @@ public class DisruptionData implements ComparableItem
     public final List<BreakendData> Breakends;
     private final CategoryType mSubCategory;
 
-    protected static final String FLD_BREAKEND = "Breakend";
-
     public DisruptionData(final CategoryType category, final String geneName, final List<BreakendData> breakends)
     {
         mSubCategory = category;

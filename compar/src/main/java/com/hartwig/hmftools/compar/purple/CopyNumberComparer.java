@@ -3,9 +3,6 @@ package com.hartwig.hmftools.compar.purple;
 import static com.hartwig.hmftools.compar.common.CategoryType.COPY_NUMBER;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.CommonUtils.determineComparisonGenomePosition;
-import static com.hartwig.hmftools.compar.purple.CopyNumberData.FLD_COPY_NUMBER;
-import static com.hartwig.hmftools.compar.purple.CopyNumberData.FLD_MAJOR_ALLELE_CN;
-import static com.hartwig.hmftools.compar.purple.CopyNumberData.FLD_METHOD;
 
 import java.io.IOException;
 import java.util.List;
@@ -31,6 +28,10 @@ import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class CopyNumberComparer implements ItemComparer
 {
+    protected static final String FLD_COPY_NUMBER = "CopyNumber";
+    protected static final String FLD_MAJOR_ALLELE_CN = "MajorAlleleCopyNumber";
+    protected static final String FLD_METHOD = "Method";
+
     private final ComparConfig mConfig;
 
     public CopyNumberComparer(final ComparConfig config)

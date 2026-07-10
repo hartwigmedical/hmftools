@@ -3,9 +3,6 @@ package com.hartwig.hmftools.compar.virus;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.CategoryType.VIRUS;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
-import static com.hartwig.hmftools.compar.virus.VirusData.FLD_DRIVER_LIKELIHOOD;
-import static com.hartwig.hmftools.compar.virus.VirusData.FLD_INTEGRATIONS;
-import static com.hartwig.hmftools.compar.virus.VirusData.FLD_MEAN_COVERAGE;
 
 import java.io.IOException;
 import java.util.List;
@@ -31,6 +28,10 @@ import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class VirusComparer implements ItemComparer
 {
+    protected static final String FLD_INTEGRATIONS = "Integrations";
+    protected static final String FLD_MEAN_COVERAGE = "MeanCoverage";
+    protected static final String FLD_DRIVER_LIKELIHOOD = "DriverLikelihood";
+
     private final ComparConfig mConfig;
 
     public VirusComparer(final ComparConfig config)

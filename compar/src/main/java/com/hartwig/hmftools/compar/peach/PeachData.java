@@ -10,11 +10,6 @@ public class PeachData implements ComparableItem
 {
     public final PeachGenotype Genotype;
 
-    protected static final String FLD_ALLELE_COUNT = "AlleleCount";
-    protected static final String FLD_FUNCTION = "Function";
-    protected static final String FLD_DRUGS = "Drugs";
-    protected static final String FLD_PRESCRIPTION_URLS = "PrescriptionUrls";
-
     public PeachData(final PeachGenotype genotype)
     {
         Genotype = genotype;

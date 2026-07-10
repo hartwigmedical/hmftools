@@ -6,7 +6,7 @@ import static com.hartwig.hmftools.common.hla.LilacQcData.FLD_FIT_FRAGS;
 import static com.hartwig.hmftools.common.hla.LilacQcData.FLD_HLA_Y;
 import static com.hartwig.hmftools.common.hla.LilacQcData.FLD_QC_STATUS;
 import static com.hartwig.hmftools.common.hla.LilacQcData.FLD_TOTAL_FRAGS;
-import static com.hartwig.hmftools.compar.lilac.LilacQcData.FLD_ALLELES;
+import static com.hartwig.hmftools.compar.lilac.LilacQcComparer.FLD_ALLELES;
 
 import java.util.Collections;
 import java.util.List;

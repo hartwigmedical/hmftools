@@ -20,10 +20,6 @@ public record CopyNumberData(
         BasePosition comparisonPositionEnd
 ) implements ComparableItem
 {
-    static final String FLD_COPY_NUMBER = "CopyNumber";
-    static final String FLD_MAJOR_ALLELE_CN = "MajorAlleleCopyNumber";
-    static final String FLD_METHOD = "Method";
-
     public CategoryType category() {
         return COPY_NUMBER;
     }

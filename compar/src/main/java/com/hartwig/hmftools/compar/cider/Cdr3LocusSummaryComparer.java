@@ -1,8 +1,9 @@
 package com.hartwig.hmftools.compar.cider;
 
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
-import static com.hartwig.hmftools.compar.cider.Cdr3LocusSummaryData.PASS_SEQUENCES_FIELD;
 import static com.hartwig.hmftools.compar.common.CategoryType.CDR3_LOCUS_SUMMARY;
+
+import static org.apache.commons.lang3.StringUtils.capitalize;
 
 import java.io.UncheckedIOException;
 import java.util.List;
@@ -25,6 +26,8 @@ import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class Cdr3LocusSummaryComparer implements ItemComparer
 {
+    protected static final String FLD_PASS_SEQUENCES = capitalize(Cdr3LocusSummaryFile.Column.passSequences.name());
+
     private final ComparConfig mConfig;
 
     public Cdr3LocusSummaryComparer(final ComparConfig config)
@@ -39,7 +42,7 @@ public class Cdr3LocusSummaryComparer implements ItemComparer
     public List<Field> fields(final MatchLevel matchLevel)
     {
         return List.of(
-                new IntField(PASS_SEQUENCES_FIELD, i -> ((Cdr3LocusSummaryData) i).Cdr3LocusSummary.passSequences(), true, null, 0.05)
+                new IntField(FLD_PASS_SEQUENCES, i -> ((Cdr3LocusSummaryData) i).Cdr3LocusSummary.passSequences(), true, null, 0.05)
         );
     }
 
@@ -52,7 +55,7 @@ public class Cdr3LocusSummaryComparer implements ItemComparer
     @Override
     public List<String> displayFieldNames()
     {
-        return List.of(PASS_SEQUENCES_FIELD);
+        return List.of(FLD_PASS_SEQUENCES);
     }
 
     @Override

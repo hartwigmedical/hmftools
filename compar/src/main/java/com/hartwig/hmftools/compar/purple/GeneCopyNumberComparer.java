@@ -2,10 +2,6 @@ package com.hartwig.hmftools.compar.purple;
 
 import static com.hartwig.hmftools.compar.common.CategoryType.GENE_COPY_NUMBER;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
-import static com.hartwig.hmftools.compar.purple.GeneCopyNumberData.FLD_MAX_COPY_NUMBER;
-import static com.hartwig.hmftools.compar.purple.GeneCopyNumberData.FLD_MIN_COPY_NUMBER;
-import static com.hartwig.hmftools.compar.purple.GeneCopyNumberData.FLD_MIN_REGION_END;
-import static com.hartwig.hmftools.compar.purple.GeneCopyNumberData.FLD_MIN_REGION_START;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -31,6 +27,11 @@ import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class GeneCopyNumberComparer implements ItemComparer
 {
+    protected static final String FLD_MIN_COPY_NUMBER = "MinCopyNumber";
+    protected static final String FLD_MAX_COPY_NUMBER = "MaxCopyNumber";
+    protected static final String FLD_MIN_REGION_START = "MinRegionStart";
+    protected static final String FLD_MIN_REGION_END = "MinRegionEnd";
+
     private final ComparConfig mConfig;
 
     public GeneCopyNumberComparer(final ComparConfig config)

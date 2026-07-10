@@ -1,8 +1,5 @@
 package com.hartwig.hmftools.compar;
 
-import static com.hartwig.hmftools.compar.ComparableImage.FLD_DIMENSIONS;
-import static com.hartwig.hmftools.compar.ComparableImage.FLD_PIXELS;
-
 import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -13,6 +10,9 @@ import com.hartwig.hmftools.compar.common.field.StringField;
 
 public abstract class ImageComparer implements ItemComparer
 {
+    public static final String FLD_DIMENSIONS = "Dimensions";
+    public static final String FLD_PIXELS = "Pixels";
+
     private final Double mPixelAbsoluteThreshold;
     private final Double mPixelPercentThreshold;
 

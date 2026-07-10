@@ -19,11 +19,6 @@ public class DriverData implements ComparableItem
     private final String mKey;
     private final boolean mCheckTranscript;
 
-    protected static final String FLD_LIKELIHOOD = "Likelihood";
-    protected static final String FLD_LIKE_METHOD = "LikelihoodMethod";
-    protected static final String FLD_MIN_COPY_NUMBER = "MinCopyNumber";
-    protected static final String FLD_MAX_COPY_NUMBER = "MaxCopyNumber";
-
     public DriverData(
             final DriverCatalog driverCatalog, final PurplePurity purity, final String comparisonChromosome, boolean checkTranscript)
     {

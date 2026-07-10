@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.compar.purple;
 
-import static com.hartwig.hmftools.compar.purple.CopyNumberData.FLD_COPY_NUMBER;
-import static com.hartwig.hmftools.compar.purple.CopyNumberData.FLD_MAJOR_ALLELE_CN;
-import static com.hartwig.hmftools.compar.purple.CopyNumberData.FLD_METHOD;
+import static com.hartwig.hmftools.compar.purple.CopyNumberComparer.FLD_COPY_NUMBER;
+import static com.hartwig.hmftools.compar.purple.CopyNumberComparer.FLD_MAJOR_ALLELE_CN;
+import static com.hartwig.hmftools.compar.purple.CopyNumberComparer.FLD_METHOD;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;

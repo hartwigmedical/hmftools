@@ -16,9 +16,6 @@ public class SnpGenotypeData implements ComparableItem
     public final String VcfSampleId;
     public final BasePosition mComparisonPosition;
 
-    protected static final String FLD_GENOTYPE = "Genotype";
-    protected static final String FLD_VCF_SAMPLE_ID = "VcfSampleId";
-
     public SnpGenotypeData(final String chromosome, final int position, final String ref, final String alt, final String genotype,
             final String vcfSampleId, final BasePosition comparisonPosition)
     {

@@ -9,11 +9,6 @@ import com.hartwig.hmftools.compar.common.CategoryType;
 public record RnaFusionData(RnaFusion RnaFusion, BasePosition ComparisonPositionUp, BasePosition ComparisonPositionDown)
         implements ComparableItem
 {
-    public static final String FLD_KNOWN_TYPE = "KnownFusionType";
-    public static final String FLD_SPLIT_FRAGS = "SplitFrags";
-    public static final String FLD_JUNC_TYPE_UP = "JuncTypeUp";
-    public static final String FLD_JUNC_TYPE_DOWN = "JuncTypeDown";
-
     @Override
     public CategoryType category()
     {

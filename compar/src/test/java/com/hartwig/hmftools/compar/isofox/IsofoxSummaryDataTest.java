@@ -1,19 +1,19 @@
 package com.hartwig.hmftools.compar.isofox;
 
-import static com.hartwig.hmftools.compar.isofox.IsofoxSummaryData.FLD_ALT_FRAG_PERC;
-import static com.hartwig.hmftools.compar.isofox.IsofoxSummaryData.FLD_CHIMERIC_FRAG_PERC;
-import static com.hartwig.hmftools.compar.isofox.IsofoxSummaryData.FLD_DUPLICATE_FRAGS;
-import static com.hartwig.hmftools.compar.isofox.IsofoxSummaryData.FLD_ENRICHED_GENE_PERC;
-import static com.hartwig.hmftools.compar.isofox.IsofoxSummaryData.FLD_FORWARD_STRAND_PERC;
-import static com.hartwig.hmftools.compar.isofox.IsofoxSummaryData.FLD_FRAG_LENGTH_50TH;
-import static com.hartwig.hmftools.compar.isofox.IsofoxSummaryData.FLD_FRAG_LENGTH_5TH;
-import static com.hartwig.hmftools.compar.isofox.IsofoxSummaryData.FLD_FRAG_LENGTH_95TH;
-import static com.hartwig.hmftools.compar.isofox.IsofoxSummaryData.FLD_MEDIAN_GC_RATIO;
-import static com.hartwig.hmftools.compar.isofox.IsofoxSummaryData.FLD_QC_STATUS;
-import static com.hartwig.hmftools.compar.isofox.IsofoxSummaryData.FLD_READ_LENGTH;
-import static com.hartwig.hmftools.compar.isofox.IsofoxSummaryData.FLD_SPLICED_FRAG_PERC;
-import static com.hartwig.hmftools.compar.isofox.IsofoxSummaryData.FLD_TOTAL_FRAGS;
-import static com.hartwig.hmftools.compar.isofox.IsofoxSummaryData.FLD_UNSPLICED_FRAG_PERC;
+import static com.hartwig.hmftools.compar.isofox.IsofoxSummaryComparer.FLD_ALT_FRAG_PERC;
+import static com.hartwig.hmftools.compar.isofox.IsofoxSummaryComparer.FLD_CHIMERIC_FRAG_PERC;
+import static com.hartwig.hmftools.compar.isofox.IsofoxSummaryComparer.FLD_DUPLICATE_FRAGS;
+import static com.hartwig.hmftools.compar.isofox.IsofoxSummaryComparer.FLD_ENRICHED_GENE_PERC;
+import static com.hartwig.hmftools.compar.isofox.IsofoxSummaryComparer.FLD_FORWARD_STRAND_PERC;
+import static com.hartwig.hmftools.compar.isofox.IsofoxSummaryComparer.FLD_FRAG_LENGTH_50TH;
+import static com.hartwig.hmftools.compar.isofox.IsofoxSummaryComparer.FLD_FRAG_LENGTH_5TH;
+import static com.hartwig.hmftools.compar.isofox.IsofoxSummaryComparer.FLD_FRAG_LENGTH_95TH;
+import static com.hartwig.hmftools.compar.isofox.IsofoxSummaryComparer.FLD_MEDIAN_GC_RATIO;
+import static com.hartwig.hmftools.compar.isofox.IsofoxSummaryComparer.FLD_QC_STATUS;
+import static com.hartwig.hmftools.compar.isofox.IsofoxSummaryComparer.FLD_READ_LENGTH;
+import static com.hartwig.hmftools.compar.isofox.IsofoxSummaryComparer.FLD_SPLICED_FRAG_PERC;
+import static com.hartwig.hmftools.compar.isofox.IsofoxSummaryComparer.FLD_TOTAL_FRAGS;
+import static com.hartwig.hmftools.compar.isofox.IsofoxSummaryComparer.FLD_UNSPLICED_FRAG_PERC;
 
 import java.util.Collections;
 import java.util.Map;

@@ -1,23 +1,9 @@
 package com.hartwig.hmftools.compar.isofox;
 
+import static com.hartwig.hmftools.common.rna.RnaStatisticFile.Column;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_EXTENSION;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_EXTENSION;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
-import static com.hartwig.hmftools.compar.isofox.IsofoxSummaryData.FLD_ALT_FRAG_PERC;
-import static com.hartwig.hmftools.compar.isofox.IsofoxSummaryData.FLD_CHIMERIC_FRAG_PERC;
-import static com.hartwig.hmftools.compar.isofox.IsofoxSummaryData.FLD_DUPLICATE_FRAGS;
-import static com.hartwig.hmftools.compar.isofox.IsofoxSummaryData.FLD_ENRICHED_GENE_PERC;
-import static com.hartwig.hmftools.compar.isofox.IsofoxSummaryData.FLD_FORWARD_STRAND_PERC;
-import static com.hartwig.hmftools.compar.isofox.IsofoxSummaryData.FLD_FRAG_LENGTH_50TH;
-import static com.hartwig.hmftools.compar.isofox.IsofoxSummaryData.FLD_FRAG_LENGTH_5TH;
-import static com.hartwig.hmftools.compar.isofox.IsofoxSummaryData.FLD_FRAG_LENGTH_95TH;
-import static com.hartwig.hmftools.compar.isofox.IsofoxSummaryData.FLD_MEDIAN_GC_RATIO;
-import static com.hartwig.hmftools.compar.isofox.IsofoxSummaryData.FLD_QC_STATUS;
-import static com.hartwig.hmftools.compar.isofox.IsofoxSummaryData.FLD_READ_LENGTH;
-import static com.hartwig.hmftools.compar.isofox.IsofoxSummaryData.FLD_SPLICED_FRAG_PERC;
-import static com.hartwig.hmftools.compar.isofox.IsofoxSummaryData.FLD_SPLICED_GENE_COUNT;
-import static com.hartwig.hmftools.compar.isofox.IsofoxSummaryData.FLD_TOTAL_FRAGS;
-import static com.hartwig.hmftools.compar.isofox.IsofoxSummaryData.FLD_UNSPLICED_FRAG_PERC;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -46,6 +32,22 @@ import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public record IsofoxSummaryComparer(ComparConfig mConfig) implements ItemComparer
 {
+    static final String FLD_QC_STATUS = Column.QcStatus.toString();
+    static final String FLD_TOTAL_FRAGS = Column.TotalFragments.toString();
+    static final String FLD_DUPLICATE_FRAGS = Column.DuplicateFragments.toString();
+    static final String FLD_SPLICED_FRAG_PERC = Column.SplicedFragmentPerc.toString();
+    static final String FLD_UNSPLICED_FRAG_PERC = Column.UnsplicedFragmentPerc.toString();
+    static final String FLD_ALT_FRAG_PERC = Column.AltFragmentPerc.toString();
+    static final String FLD_CHIMERIC_FRAG_PERC = Column.ChimericFragmentPerc.toString();
+    static final String FLD_SPLICED_GENE_COUNT = Column.SplicedGeneCount.toString();
+    static final String FLD_READ_LENGTH = Column.ReadLength.toString();
+    static final String FLD_FRAG_LENGTH_5TH = Column.FragLength5th.toString();
+    static final String FLD_FRAG_LENGTH_50TH = Column.FragLength50th.toString();
+    static final String FLD_FRAG_LENGTH_95TH = Column.FragLength95th.toString();
+    static final String FLD_ENRICHED_GENE_PERC = Column.EnrichedGenePercent.toString();
+    static final String FLD_MEDIAN_GC_RATIO = Column.MedianGCRatio.toString();
+    static final String FLD_FORWARD_STRAND_PERC = Column.ForwardStrandPercent.toString();
+
     @Override
     public CategoryType category()
     {

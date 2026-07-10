@@ -3,10 +3,6 @@ package com.hartwig.hmftools.compar.peach;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.CategoryType.PEACH;
 import static com.hartwig.hmftools.compar.common.CommonUtils.fileExists;
-import static com.hartwig.hmftools.compar.peach.PeachData.FLD_ALLELE_COUNT;
-import static com.hartwig.hmftools.compar.peach.PeachData.FLD_DRUGS;
-import static com.hartwig.hmftools.compar.peach.PeachData.FLD_FUNCTION;
-import static com.hartwig.hmftools.compar.peach.PeachData.FLD_PRESCRIPTION_URLS;
 
 import java.io.IOException;
 import java.util.List;
@@ -32,6 +28,11 @@ import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class PeachComparer implements ItemComparer
 {
+    protected static final String FLD_ALLELE_COUNT = "AlleleCount";
+    protected static final String FLD_FUNCTION = "Function";
+    protected static final String FLD_DRUGS = "Drugs";
+    protected static final String FLD_PRESCRIPTION_URLS = "PrescriptionUrls";
+
     private final ComparConfig mConfig;
 
     public PeachComparer(final ComparConfig config)

@@ -1,10 +1,10 @@
 package com.hartwig.hmftools.compar.vchord;
 
-import static com.hartwig.hmftools.compar.vchord.VChordData.FLD_BREAST;
-import static com.hartwig.hmftools.compar.vchord.VChordData.FLD_OTHER;
-import static com.hartwig.hmftools.compar.vchord.VChordData.FLD_OVARIAN;
-import static com.hartwig.hmftools.compar.vchord.VChordData.FLD_PANCREATIC;
-import static com.hartwig.hmftools.compar.vchord.VChordData.FLD_PROSTATE;
+import static com.hartwig.hmftools.compar.vchord.VChordComparer.FLD_BREAST;
+import static com.hartwig.hmftools.compar.vchord.VChordComparer.FLD_OTHER;
+import static com.hartwig.hmftools.compar.vchord.VChordComparer.FLD_OVARIAN;
+import static com.hartwig.hmftools.compar.vchord.VChordComparer.FLD_PANCREATIC;
+import static com.hartwig.hmftools.compar.vchord.VChordComparer.FLD_PROSTATE;
 
 import java.util.Collections;
 import java.util.Map;

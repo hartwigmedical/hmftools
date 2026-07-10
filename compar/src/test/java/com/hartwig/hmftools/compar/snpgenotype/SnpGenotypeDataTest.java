@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.compar.snpgenotype;
 
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_ALT;
-import static com.hartwig.hmftools.compar.snpgenotype.SnpGenotypeData.FLD_GENOTYPE;
-import static com.hartwig.hmftools.compar.snpgenotype.SnpGenotypeData.FLD_VCF_SAMPLE_ID;
+import static com.hartwig.hmftools.compar.snpgenotype.SnpGenotypeComparer.FLD_GENOTYPE;
+import static com.hartwig.hmftools.compar.snpgenotype.SnpGenotypeComparer.FLD_VCF_SAMPLE_ID;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;

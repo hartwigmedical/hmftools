@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.compar.purple;
 
-import static com.hartwig.hmftools.compar.purple.GeneCopyNumberData.FLD_MAX_COPY_NUMBER;
-import static com.hartwig.hmftools.compar.purple.GeneCopyNumberData.FLD_MIN_COPY_NUMBER;
+import static com.hartwig.hmftools.compar.purple.GeneCopyNumberComparer.FLD_MAX_COPY_NUMBER;
+import static com.hartwig.hmftools.compar.purple.GeneCopyNumberComparer.FLD_MIN_COPY_NUMBER;
 
 import java.util.Collections;
 import java.util.Map;

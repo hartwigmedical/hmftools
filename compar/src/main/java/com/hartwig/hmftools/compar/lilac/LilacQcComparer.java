@@ -8,7 +8,6 @@ import static com.hartwig.hmftools.common.hla.LilacQcData.FLD_QC_STATUS;
 import static com.hartwig.hmftools.common.hla.LilacQcData.FLD_TOTAL_FRAGS;
 import static com.hartwig.hmftools.compar.common.CategoryType.LILAC_QC;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
-import static com.hartwig.hmftools.compar.lilac.LilacQcData.FLD_ALLELES;
 
 import java.io.IOException;
 import java.util.List;
@@ -34,6 +33,8 @@ import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class LilacQcComparer implements ItemComparer
 {
+    protected static final String FLD_ALLELES = "Alleles";
+
     private final ComparConfig mConfig;
 
     private static final double FRAG_DIFF_PERC = 0.01;

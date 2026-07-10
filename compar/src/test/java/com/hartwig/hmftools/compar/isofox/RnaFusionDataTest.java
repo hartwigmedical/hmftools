@@ -1,9 +1,9 @@
 package com.hartwig.hmftools.compar.isofox;
 
-import static com.hartwig.hmftools.compar.isofox.RnaFusionData.FLD_JUNC_TYPE_DOWN;
-import static com.hartwig.hmftools.compar.isofox.RnaFusionData.FLD_JUNC_TYPE_UP;
-import static com.hartwig.hmftools.compar.isofox.RnaFusionData.FLD_KNOWN_TYPE;
-import static com.hartwig.hmftools.compar.isofox.RnaFusionData.FLD_SPLIT_FRAGS;
+import static com.hartwig.hmftools.compar.isofox.RnaFusionComparer.FLD_JUNC_TYPE_DOWN;
+import static com.hartwig.hmftools.compar.isofox.RnaFusionComparer.FLD_JUNC_TYPE_UP;
+import static com.hartwig.hmftools.compar.isofox.RnaFusionComparer.FLD_KNOWN_TYPE;
+import static com.hartwig.hmftools.compar.isofox.RnaFusionComparer.FLD_SPLIT_FRAGS;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;

@@ -7,7 +7,6 @@ import static com.hartwig.hmftools.compar.common.CategoryType.DISRUPTION;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
 import static com.hartwig.hmftools.compar.common.CommonUtils.determineComparisonGenomePosition;
-import static com.hartwig.hmftools.compar.linx.DisruptionData.FLD_BREAKEND;
 
 import java.io.IOException;
 import java.util.List;
@@ -47,6 +46,8 @@ import htsjdk.tribble.TribbleException;
 
 public class DisruptionComparer implements ItemComparer
 {
+    protected static final String FLD_BREAKEND = "Breakend";
+
     private final ComparConfig mConfig;
 
     private final Map<SourceType,List<LinxBreakend>> mBreakends;

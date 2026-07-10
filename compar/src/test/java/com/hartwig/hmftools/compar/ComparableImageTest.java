@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.compar;
 
+import static com.hartwig.hmftools.compar.ImageComparer.FLD_DIMENSIONS;
+import static com.hartwig.hmftools.compar.ImageComparer.FLD_PIXELS;
+
 import static org.junit.Assert.assertEquals;
 
 import java.awt.Color;
@@ -67,7 +70,7 @@ public class ComparableImageTest
 
         assertEquals(MismatchType.VALUE, mismatch.Type);
 
-        String expectedDiffString = String.format("%s(%dx%d/%dx%d)", ComparableImage.FLD_DIMENSIONS, 1, 1, 2, 2);
+        String expectedDiffString = String.format("%s(%dx%d/%dx%d)", FLD_DIMENSIONS, 1, 1, 2, 2);
         assertEquals(expectedDiffString, mismatch.DiffValues.get(0));
     }
 
@@ -92,7 +95,7 @@ public class ComparableImageTest
 
         assertEquals(MismatchType.VALUE, mismatch.Type);
 
-        String expectedDiffString = String.format("%s(%.3f=%d/%d)", ComparableImage.FLD_PIXELS, 1.0,
+        String expectedDiffString = String.format("%s(%.3f=%d/%d)", FLD_PIXELS, 1.0,
                 TEST_IMAGE_WIDTH * TEST_IMAGE_HEIGHT, TEST_IMAGE_WIDTH * TEST_IMAGE_HEIGHT);
         assertEquals(expectedDiffString, mismatch.DiffValues.get(0));
     }
@@ -108,7 +111,7 @@ public class ComparableImageTest
         assertEquals(MismatchType.VALUE, mismatch.Type);
 
         String expectedDiffString =
-                String.format("%s(%.3f=%d/%d)", ComparableImage.FLD_PIXELS, 0.5, 50, TEST_IMAGE_WIDTH * TEST_IMAGE_HEIGHT);
+                String.format("%s(%.3f=%d/%d)", FLD_PIXELS, 0.5, 50, TEST_IMAGE_WIDTH * TEST_IMAGE_HEIGHT);
         assertEquals(expectedDiffString, mismatch.DiffValues.get(0));
     }
 

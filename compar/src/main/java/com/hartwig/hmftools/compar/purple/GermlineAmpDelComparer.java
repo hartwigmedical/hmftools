@@ -6,10 +6,6 @@ import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_CHROMOSOME_BAND
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.CommonUtils.determineComparisonChromosome;
-import static com.hartwig.hmftools.compar.purple.GermlineAmpDelData.FLD_GERMLINE_CN;
-import static com.hartwig.hmftools.compar.purple.GermlineAmpDelData.FLD_GERMLINE_STATUS;
-import static com.hartwig.hmftools.compar.purple.GermlineAmpDelData.FLD_TUMOR_CN;
-import static com.hartwig.hmftools.compar.purple.GermlineAmpDelData.FLD_TUMOR_STATUS;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -36,6 +32,11 @@ import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class GermlineAmpDelComparer implements ItemComparer
 {
+    protected static final String FLD_GERMLINE_STATUS = "GermlineStatus";
+    protected static final String FLD_TUMOR_STATUS = "TumorStatus";
+    protected static final String FLD_GERMLINE_CN = "GermlineCopyNumber";
+    protected static final String FLD_TUMOR_CN = "TumorCopyNumber";
+
     private final ComparConfig mConfig;
 
     public GermlineAmpDelComparer(final ComparConfig config)
