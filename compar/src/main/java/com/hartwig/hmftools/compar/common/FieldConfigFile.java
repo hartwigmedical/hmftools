@@ -23,9 +23,9 @@ public class FieldConfigFile
     private static final String COL_CATEGORY = "category";
     private static final String COL_FIELD = "field";
     private static final String COL_FIELD_TYPE = "fieldType";
-    private static final String COL_COMPARED = "compared";
-    private static final String COL_ABSOLUTE_THRESHOLD = "absoluteThreshold";
-    private static final String COL_PERCENT_THRESHOLD = "percentThreshold";
+    public static final String COL_COMPARED = "compared";
+    public static final String COL_ABSOLUTE_THRESHOLD = "absoluteThreshold";
+    public static final String COL_PERCENT_THRESHOLD = "percentThreshold";
 
     public static String generateFileName(final String basePath)
     {

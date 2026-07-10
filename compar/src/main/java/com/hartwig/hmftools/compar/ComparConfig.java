@@ -84,6 +84,7 @@ public class ComparConfig
     public final Set<String> AlternateTranscriptDriverGenes;
     public final boolean RestrictToDrivers;
     public final List<FieldOverride> FieldOverrides;
+    public final boolean StrictFieldConfig;
 
     public final String OutputDir;
     public final String OutputId;
@@ -112,6 +113,7 @@ public class ComparConfig
     public static final String IGNORE_GENES = "ignore_genes";
     public static final String REQUIRES_LIFTOVER = "liftover";
     public static final String FIELD_CONFIG_FILE = "field_config_file";
+    public static final String STRICT_FIELD_CONFIG = "strict_field_config";
 
     public static final String OLD_SOURCE_CFG = OLD.configStr();
     public static final String NEW_SOURCE_CFG = NEW.configStr();
@@ -239,6 +241,7 @@ public class ComparConfig
         }
 
         LiftoverCache = new GenomeLiftoverCache(RequiresLiftover);
+        StrictFieldConfig = configBuilder.hasFlag(STRICT_FIELD_CONFIG);
 
         List<FieldOverride> overrideFieldConfig = null;
         if(configBuilder.hasValue(FIELD_CONFIG_FILE))
@@ -252,6 +255,11 @@ public class ComparConfig
                 CMP_LOGGER.error("failed to load field config file: {}", e.toString());
                 mIsValid = false;
             }
+        }
+        else if(StrictFieldConfig)
+        {
+            CMP_LOGGER.error("a field config file is required when the {} argument is used", STRICT_FIELD_CONFIG);
+            mIsValid = false;
         }
         FieldOverrides = overrideFieldConfig;
     }
@@ -462,6 +470,7 @@ public class ComparConfig
         configBuilder.addFlag(RESTRICT_TO_DRIVERS, "Restrict any comparison involving genes to driver gene panel");
         configBuilder.addFlag(REQUIRES_LIFTOVER, "Lift over ref positions from v37 to v 38");
         configBuilder.addPath(FIELD_CONFIG_FILE, false, "Config file for overwriting field settings");
+        configBuilder.addFlag(STRICT_FIELD_CONFIG, "Require a complete field config file to be provided");
 
         addDatabaseCmdLineArgs(configBuilder, false);
         addOutputOptions(configBuilder);
@@ -494,5 +503,6 @@ public class ComparConfig
         RequiresLiftover = false;
         KnownMismatchFile = null;
         FieldOverrides = null;
+        StrictFieldConfig = false;
     }
 }

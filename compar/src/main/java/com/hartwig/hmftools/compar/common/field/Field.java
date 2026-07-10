@@ -4,9 +4,9 @@ import static java.lang.String.format;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.common.CommonUtils;
 
 public interface Field
 {
@@ -28,20 +28,32 @@ public interface Field
 
     default Field withCompared(final boolean compared)
     {
-        CommonUtils.warnUnsupportedFieldOverride(this, "compared");
-        return this;
+        if(compared == isCompared())
+        {
+            return this;
+        }
+
+        throw new UnsupportedFieldOverrideException(this, "compared");
     }
 
     default Field withAbsoluteThreshold(final Double absoluteThreshold)
     {
-        CommonUtils.warnUnsupportedFieldOverride(this, "absolute threshold");
-        return this;
+        if(Objects.equals(absoluteThreshold, absoluteThreshold()))
+        {
+            return this;
+        }
+
+        throw new UnsupportedFieldOverrideException(this, "absolute threshold");
     }
 
     default Field withPercentThreshold(final Double percentThreshold)
     {
-        CommonUtils.warnUnsupportedFieldOverride(this, "percent threshold");
-        return this;
+        if(Objects.equals(percentThreshold, percentThreshold()))
+        {
+            return this;
+        }
+
+        throw new UnsupportedFieldOverrideException(this, "percent threshold");
     }
 
     String type();

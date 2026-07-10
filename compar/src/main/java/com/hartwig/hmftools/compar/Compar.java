@@ -50,6 +50,11 @@ public class Compar
         }
 
         FieldConfig fieldConfig = initialiseFieldConfig(mConfig);
+        fieldConfig.logProblems();
+        if(fieldConfig.hasErrors())
+        {
+            System.exit(1);
+        }
 
         if(!mWriter.initialiseOutputFiles())
         {

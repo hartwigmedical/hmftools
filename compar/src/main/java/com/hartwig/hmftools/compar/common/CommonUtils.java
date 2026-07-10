@@ -347,11 +347,6 @@ public class CommonUtils
                 .forEach(x -> mismatches.add(new Mismatch(null, x, NEW_ONLY, emptyDiffs)));
     }
 
-    public static void warnUnsupportedFieldOverride(final Field field, final String settingName)
-    {
-        CMP_LOGGER.warn("field({}) type({}) does not support a {} override", field.name(), field.type(), settingName);
-    }
-
     public static List<String> findDiffs(final ComparableItem oldItem, final ComparableItem newItem, List<Field> fields)
     {
         final List<String> diffs = Lists.newArrayList();
@@ -472,12 +467,10 @@ public class CommonUtils
 
             fieldConfig.registerFields(comparer, matchLevel);
         }
+
         if(config.FieldOverrides != null)
         {
-            for(FieldOverride fieldOverride : config.FieldOverrides)
-            {
-                fieldConfig.applyOverride(fieldOverride);
-            }
+            fieldConfig.applyOverrides(config.FieldOverrides, config.StrictFieldConfig);
         }
 
         return fieldConfig;

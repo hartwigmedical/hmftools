@@ -2,7 +2,7 @@ package com.hartwig.hmftools.compar.common.field;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
@@ -82,23 +82,23 @@ public class FieldTest
     }
 
     @Test
-    public void defaultWithComparedIsUnsupportedAndReturnsSameInstance()
+    public void defaultWithComparedIsUnsupportedAndThrows()
     {
         MinimalField field = new MinimalField(false);
-        assertSame(field, field.withCompared(false));
+        assertThrows(UnsupportedFieldOverrideException.class, () -> field.withCompared(false));
     }
 
     @Test
-    public void defaultWithAbsoluteThresholdIsUnsupportedAndReturnsSameInstance()
+    public void defaultWithAbsoluteThresholdIsUnsupportedAndThrows()
     {
         MinimalField field = new MinimalField(false);
-        assertSame(field, field.withAbsoluteThreshold(5.0));
+        assertThrows(UnsupportedFieldOverrideException.class, () -> field.withAbsoluteThreshold(5.0));
     }
 
     @Test
-    public void defaultWithPercentThresholdIsUnsupportedAndReturnsSameInstance()
+    public void defaultWithPercentThresholdIsUnsupportedAndThrows()
     {
         MinimalField field = new MinimalField(false);
-        assertSame(field, field.withPercentThreshold(0.2));
+        assertThrows(UnsupportedFieldOverrideException.class, () -> field.withPercentThreshold(0.2));
     }
 }

@@ -2,7 +2,7 @@ package com.hartwig.hmftools.compar.common.field;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 import java.util.HashSet;
@@ -140,10 +140,10 @@ public class BreakendsFieldTest
     }
 
     @Test
-    public void withThresholdsAreUnsupportedAndReturnSameInstance()
+    public void withThresholdsAreUnsupportedAndThrow()
     {
         BreakendsField field = field(true);
-        assertSame(field, field.withAbsoluteThreshold(5.0));
-        assertSame(field, field.withPercentThreshold(0.2));
+        assertThrows(UnsupportedFieldOverrideException.class, () -> field.withAbsoluteThreshold(5.0));
+        assertThrows(UnsupportedFieldOverrideException.class, () -> field.withPercentThreshold(0.2));
     }
 }
