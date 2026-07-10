@@ -66,14 +66,20 @@ public class FusionComparer implements ItemComparer
                 new StringField(FLD_REPORTED_TYPE, i -> ((FusionData) i).Fusion.reportedType(), true),
                 new StringField(FLD_PHASED, i -> ((FusionData) i).Fusion.phased().toString(), true),
                 new StringField(FLD_LIKELIHOOD, i -> ((FusionData) i).Fusion.likelihood().toString(), true),
-                new IntField(FLD_EXON_UP, i -> ((FusionData) i).Fusion.fusedExonUp(), true, null, null),
-                new IntField(FLD_EXON_DOWN, i -> ((FusionData) i).Fusion.fusedExonDown(), true, null, null),
-                new IntField(FLD_CHAIN_LINKS, i -> ((FusionData) i).Fusion.chainLinks(), true, null, null),
-                new StringField(FLD_CHAIN_TERM, i -> String.valueOf(((FusionData) i).Fusion.chainTerminated()), true),
+                new IntField(FLD_EXON_UP, i -> ((FusionData) i).Fusion.fusedExonUp(), true,
+                        null, null),
+                new IntField(FLD_EXON_DOWN, i -> ((FusionData) i).Fusion.fusedExonDown(), true,
+                        null, null),
+                new IntField(FLD_CHAIN_LINKS, i -> ((FusionData) i).Fusion.chainLinks(), true,
+                        null, null),
+                new StringField(FLD_CHAIN_TERM, i -> String.valueOf(((FusionData) i).Fusion.chainTerminated()),
+                        true),
                 new StringField(FLD_DOMAINS_KEPT, i -> ((FusionData) i).Fusion.domainsKept(), true),
                 new StringField(FLD_DOMAINS_LOST, i -> ((FusionData) i).Fusion.domainsLost(), true),
-                new DisplayField(FLD_BREAKEND_UP, i -> ((FusionData) i).BreakendFive.fullStr(true), i -> ((FusionData) i).BreakendFive != null),
-                new DisplayField(FLD_BREAKEND_DOWN, i -> ((FusionData) i).BreakendThree.fullStr(true), i -> ((FusionData) i).BreakendThree != null)
+                new DisplayField(FLD_BREAKEND_UP, i -> ((FusionData) i).BreakendFive.fullStr(true),
+                        i -> ((FusionData) i).BreakendFive != null),
+                new DisplayField(FLD_BREAKEND_DOWN, i -> ((FusionData) i).BreakendThree.fullStr(true),
+                        i -> ((FusionData) i).BreakendThree != null)
         );
     }
 

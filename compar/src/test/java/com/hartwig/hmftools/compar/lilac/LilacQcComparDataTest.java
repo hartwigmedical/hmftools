@@ -18,7 +18,7 @@ import com.hartwig.hmftools.compar.ComparableItemTest;
 
 import org.junit.Before;
 
-public class LilacQcDataTest extends ComparableItemTest<LilacQcData, LilacQcComparer, TestLilacQcDataBuilder>
+public class LilacQcComparDataTest extends ComparableItemTest<LilacQcComparData, LilacQcComparer, TestLilacQcDataBuilder>
 {
     @Before
     public void setUp()
@@ -27,7 +27,7 @@ public class LilacQcDataTest extends ComparableItemTest<LilacQcData, LilacQcComp
         builder = TestLilacQcDataBuilder.BUILDER;
 
         List<LilacAllele> alleleSource = builder.create().Alleles;
-        LilacQcData alternateValueSource = builder.createWithAlternateDefaults();
+        LilacQcComparData alternateValueSource = builder.createWithAlternateDefaults();
 
         // Does not include every field because field comparisons within alleles don't work well in generic tests
         fieldToAlternateValueInitializer = Map.of(

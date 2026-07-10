@@ -55,14 +55,22 @@ public class LilacAlleleComparer implements ItemComparer
     {
         boolean includeDetailedFields = matchLevel.equals(MatchLevel.DETAILED);
         return List.of(
-                new DoubleField(FLD_MISSENSE, i -> ((LilacAlleleData) i).Allele.somaticMissense(), true, VARIANT_DIFF_ABS, VARIANT_DIFF_PERC, "%.2f"),
-                new DoubleField(FLD_NFS, i -> ((LilacAlleleData) i).Allele.somaticNonsenseOrFrameshift(), true, VARIANT_DIFF_ABS, VARIANT_DIFF_PERC, "%.2f"),
-                new DoubleField(FLD_SPLICE, i -> ((LilacAlleleData) i).Allele.somaticSplice(), true, VARIANT_DIFF_ABS, VARIANT_DIFF_PERC, "%.2f"),
-                new DoubleField(FLD_INDEL, i -> ((LilacAlleleData) i).Allele.somaticInframeIndel(), true, VARIANT_DIFF_ABS, VARIANT_DIFF_PERC, "%.2f"),
-                new DoubleField(FLD_TUMOR_CN, i -> ((LilacAlleleData) i).Allele.tumorCopyNumber(), true, 0.5, 0.15, "%.2f"),
-                new IntField(FLD_REF_TOTAL, i -> ((LilacAlleleData) i).Allele.refFragments(), includeDetailedFields, FRAG_DIFF_ABS, FRAG_DIFF_PERC),
-                new IntField(FLD_TUMOR_TOTAL, i -> ((LilacAlleleData) i).Allele.tumorFragments(), includeDetailedFields, FRAG_DIFF_ABS, FRAG_DIFF_PERC),
-                new DoubleField(FLD_SYNON, i -> ((LilacAlleleData) i).Allele.somaticSynonymous(), includeDetailedFields, VARIANT_DIFF_ABS, VARIANT_DIFF_PERC, "%.2f")
+                new DoubleField(FLD_MISSENSE, i -> ((LilacAlleleData) i).Allele.somaticMissense(), true,
+                        VARIANT_DIFF_ABS, VARIANT_DIFF_PERC, "%.2f"),
+                new DoubleField(FLD_NFS, i -> ((LilacAlleleData) i).Allele.somaticNonsenseOrFrameshift(), true,
+                        VARIANT_DIFF_ABS, VARIANT_DIFF_PERC, "%.2f"),
+                new DoubleField(FLD_SPLICE, i -> ((LilacAlleleData) i).Allele.somaticSplice(), true,
+                        VARIANT_DIFF_ABS, VARIANT_DIFF_PERC, "%.2f"),
+                new DoubleField(FLD_INDEL, i -> ((LilacAlleleData) i).Allele.somaticInframeIndel(), true,
+                        VARIANT_DIFF_ABS, VARIANT_DIFF_PERC, "%.2f"),
+                new DoubleField(FLD_TUMOR_CN, i -> ((LilacAlleleData) i).Allele.tumorCopyNumber(), true,
+                        0.5, 0.15, "%.2f"),
+                new IntField(FLD_REF_TOTAL, i -> ((LilacAlleleData) i).Allele.refFragments(), includeDetailedFields,
+                        FRAG_DIFF_ABS, FRAG_DIFF_PERC),
+                new IntField(FLD_TUMOR_TOTAL, i -> ((LilacAlleleData) i).Allele.tumorFragments(), includeDetailedFields,
+                        FRAG_DIFF_ABS, FRAG_DIFF_PERC),
+                new DoubleField(FLD_SYNON, i -> ((LilacAlleleData) i).Allele.somaticSynonymous(), includeDetailedFields,
+                        VARIANT_DIFF_ABS, VARIANT_DIFF_PERC, "%.2f")
         );
     }
 

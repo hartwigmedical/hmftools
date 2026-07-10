@@ -297,16 +297,24 @@ public class SomaticVariantComparer implements ItemComparer
                 new StringField(FLD_HGVS_CODING, i -> ((SomaticVariantData) i).CanonicalHgvsCodingImpact, true),
                 new StringField(FLD_HGVS_PROTEIN, i -> ((SomaticVariantData) i).CanonicalHgvsProteinImpact, true),
                 new StringField(FLD_OTHER_REPORTED, i -> ((SomaticVariantData) i).OtherReportedEffects, true),
-                new IntField(FLD_QUAL, i -> ((SomaticVariantData) i).Qual, true, 50.0, 0.2),
-                new DoubleField(FLD_VARIANT_COPY_NUMBER, i -> ((SomaticVariantData) i).VariantCopyNumber, true, 0.3, 0.3, "%.2f"),
-                new DoubleField(FLD_PURITY_ADJUSTED_VAF, i -> ((SomaticVariantData) i).PurityAdjustedVaf, true, 0.2, null, "%.2f"),
-                new IntField(FLD_TUMOR_SUPPORTING_READ_COUNT, i -> ((SomaticVariantData) i).TumorSupportingReadCount, true, 1.0, 0.2),
-                new IntField(FLD_TUMOR_TOTAL_READ_COUNT, i -> ((SomaticVariantData) i).TumorTotalReadCount, true, 1.0, 0.2),
+                new IntField(FLD_QUAL, i -> ((SomaticVariantData) i).Qual,
+                        true, 50.0, 0.2),
+                new DoubleField(FLD_VARIANT_COPY_NUMBER, i -> ((SomaticVariantData) i).VariantCopyNumber,
+                        true, 0.3, 0.3, "%.2f"),
+                new DoubleField(FLD_PURITY_ADJUSTED_VAF, i -> ((SomaticVariantData) i).PurityAdjustedVaf,
+                        true, 0.2, null, "%.2f"),
+                new IntField(FLD_TUMOR_SUPPORTING_READ_COUNT, i -> ((SomaticVariantData) i).TumorSupportingReadCount,
+                        true, 1.0, 0.2),
+                new IntField(FLD_TUMOR_TOTAL_READ_COUNT, i -> ((SomaticVariantData) i).TumorTotalReadCount,
+                        true, 1.0, 0.2),
                 new BooleanField(FLD_BIALLELIC, i -> ((SomaticVariantData) i).Biallelic, true),
-                new DoubleField(FLD_BIALLELIC_PROB, i -> ((SomaticVariantData) i).BiallelicProbability, true, 0.3, null, "%.2f"),
-                new DoubleField(FLD_SUBCLONAL_LIKELIHOOD, i -> ((SomaticVariantData) i).SubclonalLikelihood, true, 0.6, null, "%.2f"),
+                new DoubleField(FLD_BIALLELIC_PROB, i -> ((SomaticVariantData) i).BiallelicProbability,
+                        true, 0.3, null, "%.2f"),
+                new DoubleField(FLD_SUBCLONAL_LIKELIHOOD, i -> ((SomaticVariantData) i).SubclonalLikelihood,
+                        true, 0.6, null, "%.2f"),
                 new BooleanField(FLD_LPS, i -> ((SomaticVariantData) i).HasLPS, true),
-                new StringListField(FLD_FILTER, i -> deriveFilters(((SomaticVariantData) i)).stream().sorted().toList(), true)
+                new StringListField(FLD_FILTER, i -> deriveFilters(((SomaticVariantData) i)).stream().sorted().toList(),
+                        true)
         );
     }
 

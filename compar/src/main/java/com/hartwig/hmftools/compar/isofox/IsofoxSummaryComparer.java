@@ -9,8 +9,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.rna.RnaQcFilter;
 import com.hartwig.hmftools.common.rna.RnaStatisticFile;
 import com.hartwig.hmftools.common.rna.RnaStatistics;
 import com.hartwig.hmftools.compar.ComparConfig;
@@ -70,21 +72,36 @@ public record IsofoxSummaryComparer(ComparConfig mConfig) implements ItemCompare
     public List<Field> fields(final MatchLevel matchLevel)
     {
         return List.of(
-                new StringField(FLD_QC_STATUS, i -> IsofoxSummaryData.qcStatus(((IsofoxSummaryData) i).RnaStatistics().qcStatus()), true),
-                new LongField(FLD_TOTAL_FRAGS, i -> ((IsofoxSummaryData) i).RnaStatistics().totalFragments(), true, 10., 0.01),
-                new LongField(FLD_DUPLICATE_FRAGS, i -> ((IsofoxSummaryData) i).RnaStatistics().duplicateFragments(), true, 10., 0.01),
-                new DoubleField(FLD_SPLICED_FRAG_PERC, i -> ((IsofoxSummaryData) i).RnaStatistics().splicedFragmentPerc(), true, 0.01, 0.05, "%.2f"),
-                new DoubleField(FLD_UNSPLICED_FRAG_PERC, i -> ((IsofoxSummaryData) i).RnaStatistics().unsplicedFragmentPerc(), true, 0.01, 0.05, "%.2f"),
-                new DoubleField(FLD_ALT_FRAG_PERC, i -> ((IsofoxSummaryData) i).RnaStatistics().altFragmentPerc(), true, 0.01, 0.05, "%.2f"),
-                new DoubleField(FLD_CHIMERIC_FRAG_PERC, i -> ((IsofoxSummaryData) i).RnaStatistics().chimericFragmentPerc(), true, 0.01, 0.05, "%.2f"),
-                new IntField(FLD_SPLICED_GENE_COUNT, i -> ((IsofoxSummaryData) i).RnaStatistics().splicedGeneCount(), true, 10., 0.01),
-                new IntField(FLD_READ_LENGTH, i -> ((IsofoxSummaryData) i).RnaStatistics().readLength(), true, null, null),
-                new DoubleField(FLD_FRAG_LENGTH_5TH, i -> ((IsofoxSummaryData) i).RnaStatistics().fragmentLength5thPercent(), true, null, 0.05, "%.1f"),
-                new DoubleField(FLD_FRAG_LENGTH_50TH, i -> ((IsofoxSummaryData) i).RnaStatistics().fragmentLength50thPercent(), true, null, 0.05, "%.1f"),
-                new DoubleField(FLD_FRAG_LENGTH_95TH, i -> ((IsofoxSummaryData) i).RnaStatistics().fragmentLength95thPercent(), true, null, 0.05, "%.1f"),
-                new DoubleField(FLD_ENRICHED_GENE_PERC, i -> ((IsofoxSummaryData) i).RnaStatistics().enrichedGenePercent(), true, 0.01, null, "%.2f"),
-                new DoubleField(FLD_MEDIAN_GC_RATIO, i -> ((IsofoxSummaryData) i).RnaStatistics().medianGCRatio(), true, 0.01, null, "%.2f"),
-                new DoubleField(FLD_FORWARD_STRAND_PERC, i -> ((IsofoxSummaryData) i).RnaStatistics().forwardStrandPercent(), true, 0.01, null, "%.2f")
+                new StringField(FLD_QC_STATUS, i -> qcStatus(((IsofoxSummaryData) i).RnaStatistics().qcStatus()),
+                        true),
+                new LongField(FLD_TOTAL_FRAGS, i -> ((IsofoxSummaryData) i).RnaStatistics().totalFragments(),
+                        true, 10., 0.01),
+                new LongField(FLD_DUPLICATE_FRAGS, i -> ((IsofoxSummaryData) i).RnaStatistics().duplicateFragments(),
+                        true, 10., 0.01),
+                new DoubleField(FLD_SPLICED_FRAG_PERC, i -> ((IsofoxSummaryData) i).RnaStatistics().splicedFragmentPerc(),
+                        true, 0.01, 0.05, "%.2f"),
+                new DoubleField(FLD_UNSPLICED_FRAG_PERC, i -> ((IsofoxSummaryData) i).RnaStatistics().unsplicedFragmentPerc(),
+                        true, 0.01, 0.05, "%.2f"),
+                new DoubleField(FLD_ALT_FRAG_PERC, i -> ((IsofoxSummaryData) i).RnaStatistics().altFragmentPerc(),
+                        true, 0.01, 0.05, "%.2f"),
+                new DoubleField(FLD_CHIMERIC_FRAG_PERC, i -> ((IsofoxSummaryData) i).RnaStatistics().chimericFragmentPerc(),
+                        true, 0.01, 0.05, "%.2f"),
+                new IntField(FLD_SPLICED_GENE_COUNT, i -> ((IsofoxSummaryData) i).RnaStatistics().splicedGeneCount(),
+                        true, 10., 0.01),
+                new IntField(FLD_READ_LENGTH, i -> ((IsofoxSummaryData) i).RnaStatistics().readLength(),
+                        true, null, null),
+                new DoubleField(FLD_FRAG_LENGTH_5TH, i -> ((IsofoxSummaryData) i).RnaStatistics().fragmentLength5thPercent(),
+                        true, null, 0.05, "%.1f"),
+                new DoubleField(FLD_FRAG_LENGTH_50TH, i -> ((IsofoxSummaryData) i).RnaStatistics().fragmentLength50thPercent(),
+                        true, null, 0.05, "%.1f"),
+                new DoubleField(FLD_FRAG_LENGTH_95TH, i -> ((IsofoxSummaryData) i).RnaStatistics().fragmentLength95thPercent(),
+                        true, null, 0.05, "%.1f"),
+                new DoubleField(FLD_ENRICHED_GENE_PERC, i -> ((IsofoxSummaryData) i).RnaStatistics().enrichedGenePercent(),
+                        true, 0.01, null, "%.2f"),
+                new DoubleField(FLD_MEDIAN_GC_RATIO, i -> ((IsofoxSummaryData) i).RnaStatistics().medianGCRatio(),
+                        true, 0.01, null, "%.2f"),
+                new DoubleField(FLD_FORWARD_STRAND_PERC, i -> ((IsofoxSummaryData) i).RnaStatistics().forwardStrandPercent(),
+                        true, 0.01, null, "%.2f")
         );
     }
 
@@ -123,6 +140,13 @@ public record IsofoxSummaryComparer(ComparConfig mConfig) implements ItemCompare
         }
 
         return comparableItems;
+    }
+
+    private static String qcStatus(final List<RnaQcFilter> status)
+    {
+        StringJoiner sj = new StringJoiner(";");
+        status.forEach(x -> sj.add(x.toString()));
+        return sj.toString();
     }
 
     private static String determineFileName(final String sampleId, final FileSources fileSources)

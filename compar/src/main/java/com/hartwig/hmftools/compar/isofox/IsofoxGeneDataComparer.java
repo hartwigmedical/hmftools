@@ -54,9 +54,12 @@ public record IsofoxGeneDataComparer(ComparConfig mConfig) implements ItemCompar
     public List<Field> fields(final MatchLevel matchLevel)
     {
         return List.of(
-                new IntField(FLD_SPLICED_FRAGS, i -> ((IsofoxGeneData) i).GeneExpression().splicedFragments(), true, 10., 0.05),
-                new IntField(FLD_UNSPLICED_FRAGS, i -> ((IsofoxGeneData) i).GeneExpression().unsplicedFragments(), true, 10., 0.05),
-                new DoubleField(FLD_ADJ_TPM, i -> ((IsofoxGeneData) i).GeneExpression().tpm(), true, null, 0.05, "%.2f")
+                new IntField(FLD_SPLICED_FRAGS, i -> ((IsofoxGeneData) i).GeneExpression().splicedFragments(),
+                        true, 10., 0.05),
+                new IntField(FLD_UNSPLICED_FRAGS, i -> ((IsofoxGeneData) i).GeneExpression().unsplicedFragments(),
+                        true, 10., 0.05),
+                new DoubleField(FLD_ADJ_TPM, i -> ((IsofoxGeneData) i).GeneExpression().tpm(), true,
+                        null, 0.05, "%.2f")
         );
     }
 

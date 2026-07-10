@@ -11,7 +11,7 @@ import java.util.function.Function;
 
 import com.hartwig.hmftools.compar.ComparableItem;
 
-public class ImageField implements Field
+public class PixelField implements Field
 {
     private final String name;
     private final Function<ComparableItem, BufferedImage> extractValue;
@@ -19,7 +19,7 @@ public class ImageField implements Field
     private final Double absoluteThreshold;
     private final Double percentThreshold;
 
-    public ImageField(final String name, final Function<ComparableItem, BufferedImage> extractValue, final boolean isCompared,
+    public PixelField(final String name, final Function<ComparableItem, BufferedImage> extractValue, final boolean isCompared,
             final Double absoluteThreshold, final Double percentThreshold)
     {
         this.name = name;
@@ -56,25 +56,25 @@ public class ImageField implements Field
     @Override
     public Field withCompared(final boolean compared)
     {
-        return new ImageField(name, extractValue, compared, absoluteThreshold, percentThreshold);
+        return new PixelField(name, extractValue, compared, absoluteThreshold, percentThreshold);
     }
 
     @Override
     public Field withAbsoluteThreshold(final Double absoluteThreshold)
     {
-        return new ImageField(name, extractValue, isCompared, absoluteThreshold, percentThreshold);
+        return new PixelField(name, extractValue, isCompared, absoluteThreshold, percentThreshold);
     }
 
     @Override
     public Field withPercentThreshold(final Double percentThreshold)
     {
-        return new ImageField(name, extractValue, isCompared, absoluteThreshold, percentThreshold);
+        return new PixelField(name, extractValue, isCompared, absoluteThreshold, percentThreshold);
     }
 
     @Override
     public String type()
     {
-        return "image";
+        return "pixel";
     }
 
     @Override

@@ -53,10 +53,14 @@ public record NovelSpliceJunctionComparer(ComparConfig mConfig) implements ItemC
     public List<Field> fields(final MatchLevel matchLevel)
     {
         return List.of(
-                new StringField(FLD_ALT_SJ_TYPE, i -> ((NovelSpliceJunctionData) i).NovelSpliceJunction().type().toString(), true),
-                new IntField(FLD_FRAG_COUNT, i -> ((NovelSpliceJunctionData) i).NovelSpliceJunction().fragmentCount(), true, 5., 0.05),
-                new StringField(FLD_REGION_START, i -> ((NovelSpliceJunctionData) i).NovelSpliceJunction().regionStart().toString(), true),
-                new StringField(FLD_REGION_END, i -> ((NovelSpliceJunctionData) i).NovelSpliceJunction().regionEnd().toString(), true)
+                new StringField(FLD_ALT_SJ_TYPE, i -> ((NovelSpliceJunctionData) i).NovelSpliceJunction().type().toString(),
+                        true),
+                new IntField(FLD_FRAG_COUNT, i -> ((NovelSpliceJunctionData) i).NovelSpliceJunction().fragmentCount(),
+                        true, 5., 0.05),
+                new StringField(FLD_REGION_START, i -> ((NovelSpliceJunctionData) i).NovelSpliceJunction().regionStart().toString(),
+                        true),
+                new StringField(FLD_REGION_END, i -> ((NovelSpliceJunctionData) i).NovelSpliceJunction().regionEnd().toString(),
+                        true)
         );
     }
 

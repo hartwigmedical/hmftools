@@ -78,10 +78,14 @@ public class DriverComparer implements ItemComparer
     public List<Field> fields(final MatchLevel matchLevel)
     {
         return List.of(
-                new StringField(FLD_LIKE_METHOD, i -> ((DriverData) i).DriverCatalog.likelihoodMethod().toString(), true),
-                new DoubleField(FLD_LIKELIHOOD, i -> ((DriverData) i).DriverCatalog.driverLikelihood(), true, 0.1, null, "%.2f"),
-                new DoubleField(FLD_MIN_COPY_NUMBER, i -> ((DriverData) i).DriverCatalog.minCopyNumber(), true, 0.3, 0.15, "%.2f"),
-                new DoubleField(FLD_MAX_COPY_NUMBER, i -> ((DriverData) i).DriverCatalog.maxCopyNumber(), true, 0.3, 0.15, "%.2f"),
+                new StringField(FLD_LIKE_METHOD, i -> ((DriverData) i).DriverCatalog.likelihoodMethod().toString(),
+                        true),
+                new DoubleField(FLD_LIKELIHOOD, i -> ((DriverData) i).DriverCatalog.driverLikelihood(), true,
+                        0.1, null, "%.2f"),
+                new DoubleField(FLD_MIN_COPY_NUMBER, i -> ((DriverData) i).DriverCatalog.minCopyNumber(), true,
+                        0.3, 0.15, "%.2f"),
+                new DoubleField(FLD_MAX_COPY_NUMBER, i -> ((DriverData) i).DriverCatalog.maxCopyNumber(), true,
+                        0.3, 0.15, "%.2f"),
                 new StringField(FLD_CHROMOSOME, i -> ((DriverData) i).mComparisonChromosome, true),
                 new StringField(FLD_CHROMOSOME_BAND, i -> ((DriverData) i).DriverCatalog.chromosomeBand(), true),
                 new DisplayField(FLD_PURITY, i -> format("%.2f", ((DriverData) i).mPurity.Purity), i -> true),

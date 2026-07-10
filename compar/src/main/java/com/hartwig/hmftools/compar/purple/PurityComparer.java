@@ -60,23 +60,35 @@ public class PurityComparer implements ItemComparer
     public List<Field> fields(final MatchLevel matchLevel)
     {
         return List.of(
-                new DoubleField(FLD_PURITY, i -> ((PurityData) i).Purity.bestFit().purity(), true, 0.04, null, "%.2f"),
-                new DoubleField(FLD_PLOIDY, i -> ((PurityData) i).Purity.bestFit().ploidy(), true, 0.1, null, "%.2f"),
-                new DoubleField(FLD_CONTAMINATION, i -> ((PurityData) i).Purity.qc().contamination(), true, 0.005, null, "%.4f"),
-                new DoubleField(FLD_TMB, i -> ((PurityData) i).Purity.tumorMutationalBurdenPerMb(), true, 0.1, 0.05, "%.2f"),
-                new DoubleField(FLD_MS_INDELS, i -> ((PurityData) i).Purity.microsatelliteIndelsPerMb(), true, 0.1, 0.05, "%.4f"),
-                new IntField(FLD_TML, i -> ((PurityData) i).Purity.tumorMutationalLoad(), true, 1., 0.05),
-                new IntField(FLD_CN_SEGS, i -> ((PurityData) i).Purity.qc().copyNumberSegments(), true, 5., 0.2),
-                new IntField(FLD_UNS_CN_SEGS, i -> ((PurityData) i).Purity.qc().unsupportedCopyNumberSegments(), true, 5., 0.2),
-                new IntField(FLD_SV_TMB, i -> ((PurityData) i).Purity.svTumorMutationalBurden(), true, 5., 0.05),
+                new DoubleField(FLD_PURITY, i -> ((PurityData) i).Purity.bestFit().purity(),
+                        true, 0.04, null, "%.2f"),
+                new DoubleField(FLD_PLOIDY, i -> ((PurityData) i).Purity.bestFit().ploidy(),
+                        true, 0.1, null, "%.2f"),
+                new DoubleField(FLD_CONTAMINATION, i -> ((PurityData) i).Purity.qc().contamination(),
+                        true, 0.005, null, "%.4f"),
+                new DoubleField(FLD_TMB, i -> ((PurityData) i).Purity.tumorMutationalBurdenPerMb(),
+                        true, 0.1, 0.05, "%.2f"),
+                new DoubleField(FLD_MS_INDELS, i -> ((PurityData) i).Purity.microsatelliteIndelsPerMb(),
+                        true, 0.1, 0.05, "%.4f"),
+                new IntField(FLD_TML, i -> ((PurityData) i).Purity.tumorMutationalLoad(),
+                        true, 1., 0.05),
+                new IntField(FLD_CN_SEGS, i -> ((PurityData) i).Purity.qc().copyNumberSegments(),
+                        true, 5., 0.2),
+                new IntField(FLD_UNS_CN_SEGS, i -> ((PurityData) i).Purity.qc().unsupportedCopyNumberSegments(),
+                        true, 5., 0.2),
+                new IntField(FLD_SV_TMB, i -> ((PurityData) i).Purity.svTumorMutationalBurden(),
+                        true, 5., 0.05),
                 new StringListField(FLD_QC_STATUS, i -> qcStatus(((PurityData) i)), true),
                 new StringField(FLD_GENDER, i -> ((PurityData) i).Purity.gender().toString(), true),
                 new StringListField(FLD_GERM_ABS, i -> germlineAberrations(((PurityData) i)), true),
                 new StringField(FLD_FIT_METHOD, i -> ((PurityData) i).Purity.method().toString(), true),
                 new StringField(FLD_MS_STATUS, i -> ((PurityData) i).Purity.microsatelliteStatus().toString(), true),
-                new StringField(FLD_TMB_STATUS, i -> ((PurityData) i).Purity.tumorMutationalBurdenStatus().toString(), true),
-                new StringField(FLD_TML_STATUS, i -> ((PurityData) i).Purity.tumorMutationalLoadStatus().toString(), true),
-                new DoubleField(FLD_TINC_LEVEL, i -> ((PurityData) i).Purity.qc().tincLevel(), true, 0.1, null, "%.2f")
+                new StringField(FLD_TMB_STATUS, i -> ((PurityData) i).Purity.tumorMutationalBurdenStatus().toString(),
+                        true),
+                new StringField(FLD_TML_STATUS, i -> ((PurityData) i).Purity.tumorMutationalLoadStatus().toString(),
+                        true),
+                new DoubleField(FLD_TINC_LEVEL, i -> ((PurityData) i).Purity.qc().tincLevel(),
+                        true, 0.1, null, "%.2f")
         );
     }
 

@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.hla.LilacAllele;
+import com.hartwig.hmftools.common.hla.LilacQcData;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
@@ -52,14 +53,17 @@ public class LilacQcComparer implements ItemComparer
     public List<Field> fields(final MatchLevel matchLevel)
     {
         return List.of(
-                new StringField(FLD_QC_STATUS, i -> ((LilacQcData) i).QcData.status(), true),
-                new IntField(FLD_TOTAL_FRAGS, i -> ((LilacQcData) i).QcData.totalFragments(), true, FRAG_DIFF_ABS, FRAG_DIFF_PERC),
-                new IntField(FLD_FIT_FRAGS, i -> ((LilacQcData) i).QcData.fittedFragments(), true, FRAG_DIFF_ABS, FRAG_DIFF_PERC),
-                new IntField(FLD_DISC_ALIGN_FRAGS, i -> ((LilacQcData) i).QcData.discardedAlignmentFragments(), true, FRAG_DIFF_ABS, FRAG_DIFF_PERC),
-                new IntField(FLD_DISC_INDELS, i -> ((LilacQcData) i).QcData.discardedIndels(), true, FRAG_DIFF_ABS, FRAG_DIFF_PERC),
-                new StringField(FLD_HLA_Y, i -> ((LilacQcData) i).QcData.hlaYAllele(), true),
-                new StringListField(FLD_ALLELES, i -> ((LilacQcData) i).Alleles.stream()
-                        .map(LilacAllele::allele).sorted().toList(), true)
+                new StringField(FLD_QC_STATUS, i -> ((LilacQcComparData) i).QcData.status(), true),
+                new IntField(FLD_TOTAL_FRAGS, i -> ((LilacQcComparData) i).QcData.totalFragments(), true,
+                        FRAG_DIFF_ABS, FRAG_DIFF_PERC),
+                new IntField(FLD_FIT_FRAGS, i -> ((LilacQcComparData) i).QcData.fittedFragments(), true,
+                        FRAG_DIFF_ABS, FRAG_DIFF_PERC),
+                new IntField(FLD_DISC_ALIGN_FRAGS, i -> ((LilacQcComparData) i).QcData.discardedAlignmentFragments(),
+                        true, FRAG_DIFF_ABS, FRAG_DIFF_PERC),
+                new IntField(FLD_DISC_INDELS, i -> ((LilacQcComparData) i).QcData.discardedIndels(), true,
+                        FRAG_DIFF_ABS, FRAG_DIFF_PERC),
+                new StringField(FLD_HLA_Y, i -> ((LilacQcComparData) i).QcData.hlaYAllele(), true),
+                new StringListField(FLD_ALLELES, i -> alleles((LilacQcComparData) i), true)
         );
     }
 
@@ -90,13 +94,15 @@ public class LilacQcComparer implements ItemComparer
         try
         {
             // add an item for each gene class
-            List<com.hartwig.hmftools.common.hla.LilacQcData> qcDataList = com.hartwig.hmftools.common.hla.LilacQcData.read(com.hartwig.hmftools.common.hla.LilacQcData.generateFilename(fileSources.Lilac, sampleId));
+            List<LilacQcData> qcDataList = LilacQcData.read(LilacQcData.generateFilename(fileSources.Lilac, sampleId));
             List<LilacAllele> alleles = LilacAllele.read(LilacAllele.generateFilename(fileSources.Lilac, sampleId));
 
-            for(com.hartwig.hmftools.common.hla.LilacQcData qcData : qcDataList)
+            for(LilacQcData qcData : qcDataList)
             {
-                List<LilacAllele> geneAlleles = alleles.stream().filter(x -> x.genes().equals(qcData.genes())).collect(Collectors.toList());
-                comparableItems.add(new LilacQcData(qcData, geneAlleles));
+                List<LilacAllele> geneAlleles = alleles.stream()
+                        .filter(x -> x.genes().equals(qcData.genes()))
+                        .collect(Collectors.toList());
+                comparableItems.add(new LilacQcComparData(qcData, geneAlleles));
             }
         }
         catch(IOException e)
@@ -106,5 +112,10 @@ public class LilacQcComparer implements ItemComparer
         }
 
         return comparableItems;
+    }
+
+    private static List<String> alleles(final LilacQcComparData data)
+    {
+        return data.Alleles.stream().map(LilacAllele::allele).sorted().toList();
     }
 }

@@ -57,7 +57,8 @@ public record RnaFusionComparer(ComparConfig mConfig) implements ItemComparer
                 new StringField(FLD_KNOWN_TYPE, i -> ((RnaFusionData) i).RnaFusion().knownType().toString(), true),
                 new StringField(FLD_JUNC_TYPE_UP, i -> ((RnaFusionData) i).RnaFusion().junctionTypeUp(), true),
                 new StringField(FLD_JUNC_TYPE_DOWN, i -> ((RnaFusionData) i).RnaFusion().junctionTypeDown(), true),
-                new IntField(FLD_SPLIT_FRAGS, i -> ((RnaFusionData) i).RnaFusion().splitFragments(), true, 5., 0.05)
+                new IntField(FLD_SPLIT_FRAGS, i -> ((RnaFusionData) i).RnaFusion().splitFragments(), true,
+                        5., 0.05)
         );
     }
 

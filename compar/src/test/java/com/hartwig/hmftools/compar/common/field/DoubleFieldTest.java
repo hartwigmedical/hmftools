@@ -13,7 +13,8 @@ public class DoubleFieldTest
 
     private static DoubleField field(final Double absoluteThreshold, final Double percentThreshold)
     {
-        return new DoubleField(FIELD_NAME, i -> ((TestFieldItem<Double>) i).Value, true, absoluteThreshold, percentThreshold, "%.1f");
+        return new DoubleField(FIELD_NAME, i -> ((TestFieldItem<Double>) i).Value, true, absoluteThreshold,
+                percentThreshold, "%.1f");
     }
 
     private static boolean hasDiff(final DoubleField field, final double oldValue, final double newValue)

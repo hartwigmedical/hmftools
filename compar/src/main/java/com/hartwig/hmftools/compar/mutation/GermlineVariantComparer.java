@@ -81,13 +81,18 @@ public class GermlineVariantComparer implements ItemComparer
                 new StringField(FLD_HGVS_CODING, i -> ((GermlineVariantData) i).Variant.canonicalHgvsCodingImpact(), true),
                 new StringField(FLD_HGVS_PROTEIN, i -> ((GermlineVariantData) i).Variant.canonicalHgvsProteinImpact(), true),
                 new StringField(FLD_OTHER_REPORTED, i -> ((GermlineVariantData) i).Variant.otherReportedEffects(), true),
-                new IntField(FLD_QUAL, i -> (int) ((GermlineVariantData) i).Variant.qual(), true, 50.0, 0.2),
-                new DoubleField(FLD_VARIANT_COPY_NUMBER, i -> ((GermlineVariantData) i).Variant.variantCopyNumber(), true, 0.3, 0.3, "%.2f"),
-                new DoubleField(FLD_PURITY_ADJUSTED_VAF, i -> ((GermlineVariantData) i).Variant.adjustedVAF(), true, 0.2, null, "%.2f"),
+                new IntField(FLD_QUAL, i -> (int) ((GermlineVariantData) i).Variant.qual(), true,
+                        50.0, 0.2),
+                new DoubleField(FLD_VARIANT_COPY_NUMBER, i -> ((GermlineVariantData) i).Variant.variantCopyNumber(),
+                        true, 0.3, 0.3, "%.2f"),
+                new DoubleField(FLD_PURITY_ADJUSTED_VAF, i -> ((GermlineVariantData) i).Variant.adjustedVAF(),
+                        true, 0.2, null, "%.2f"),
                 new IntField(FLD_TUMOR_SUPPORTING_READ_COUNT,
-                        i -> ((GermlineVariantData) i).Variant.allelicDepth().AlleleReadCount, true, 1.0, 0.2),
+                        i -> ((GermlineVariantData) i).Variant.allelicDepth().AlleleReadCount, true,
+                        1.0, 0.2),
                 new IntField(FLD_TUMOR_TOTAL_READ_COUNT,
-                        i -> ((GermlineVariantData) i).Variant.allelicDepth().TotalReadCount, true, 1.0, 0.2),
+                        i -> ((GermlineVariantData) i).Variant.allelicDepth().TotalReadCount, true,
+                        1.0, 0.2),
                 new StringListField(FLD_FILTER, i -> ((GermlineVariantData) i).Filters.stream().sorted().toList(), true)
         );
     }

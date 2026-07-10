@@ -44,15 +44,21 @@ public class ChordComparer implements ItemComparer
     }
 
     @Override
-    public CategoryType category() { return CHORD; }
+    public CategoryType category()
+    {
+        return CHORD;
+    }
 
     @Override
     public List<Field> fields(final MatchLevel matchLevel)
     {
         return List.of(
-                new DoubleField(FLD_BRCA1, i -> ((ChordComparData) i).Chord.BRCA1Value(), true, 0.1, null, "%.2f"),
-                new DoubleField(FLD_BRCA2, i -> ((ChordComparData) i).Chord.BRCA2Value(), true, 0.1, null, "%.2f"),
-                new DoubleField(FLD_SCORE, i -> ((ChordComparData) i).Chord.hrdValue(), true, 0.1, null, "%.2f"),
+                new DoubleField(FLD_BRCA1, i -> ((ChordComparData) i).Chord.BRCA1Value(), true,
+                        0.1, null, "%.2f"),
+                new DoubleField(FLD_BRCA2, i -> ((ChordComparData) i).Chord.BRCA2Value(), true,
+                        0.1, null, "%.2f"),
+                new DoubleField(FLD_SCORE, i -> ((ChordComparData) i).Chord.hrdValue(), true,
+                        0.1, null, "%.2f"),
                 new StringField(FLD_TYPE, i -> ((ChordComparData) i).Chord.hrdType(), true),
                 new StringField(FLD_STATUS, i -> ((ChordComparData) i).Chord.hrStatus().toString(), true)
         );

@@ -46,8 +46,10 @@ public class GeneCopyNumberComparer implements ItemComparer
     public List<Field> fields(final MatchLevel matchLevel)
     {
         return List.of(
-                new DoubleField(FLD_MIN_COPY_NUMBER, i -> ((GeneCopyNumberData) i).CopyNumber.minCopyNumber(), true, 0.5, 0.15, "%.2f"),
-                new DoubleField(FLD_MAX_COPY_NUMBER, i -> ((GeneCopyNumberData) i).CopyNumber.maxCopyNumber(), true, 0.5, 0.15, "%.2f")
+                new DoubleField(FLD_MIN_COPY_NUMBER, i -> ((GeneCopyNumberData) i).CopyNumber.minCopyNumber(),
+                        true, 0.5, 0.15, "%.2f"),
+                new DoubleField(FLD_MAX_COPY_NUMBER, i -> ((GeneCopyNumberData) i).CopyNumber.maxCopyNumber(),
+                        true, 0.5, 0.15, "%.2f")
         );
     }
 

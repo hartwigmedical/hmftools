@@ -13,7 +13,8 @@ public class LongFieldTest
 
     private static LongField field(final Double absoluteThreshold, final Double percentThreshold)
     {
-        return new LongField(FIELD_NAME, i -> ((TestFieldItem<Long>) i).Value, true, absoluteThreshold, percentThreshold);
+        return new LongField(FIELD_NAME, i -> ((TestFieldItem<Long>) i).Value, true,
+                absoluteThreshold, percentThreshold);
     }
 
     private static boolean hasDiff(final LongField field, final long oldValue, final long newValue)

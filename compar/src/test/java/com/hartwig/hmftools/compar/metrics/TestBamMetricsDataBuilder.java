@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.compar.metrics;
 
 import static com.hartwig.hmftools.compar.common.CategoryType.TUMOR_BAM_METRICS;
-import static com.hartwig.hmftools.compar.metrics.BamMetricsComparer.TUMOR_COVERAGE_PERCENTAGES;
 
 import java.util.List;
 import java.util.function.Consumer;

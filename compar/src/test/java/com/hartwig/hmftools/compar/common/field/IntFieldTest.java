@@ -13,7 +13,8 @@ public class IntFieldTest
 
     private static IntField field(final Double absoluteThreshold, final Double percentThreshold)
     {
-        return new IntField(FIELD_NAME, i -> ((TestFieldItem<Integer>) i).Value, true, absoluteThreshold, percentThreshold);
+        return new IntField(FIELD_NAME, i -> ((TestFieldItem<Integer>) i).Value, true,
+                absoluteThreshold, percentThreshold);
     }
 
     private static boolean hasDiff(final IntField field, final int oldValue, final int newValue)

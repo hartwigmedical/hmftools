@@ -50,9 +50,12 @@ public class VirusComparer implements ItemComparer
     {
         return List.of(
                 new BooleanField(FLD_REPORTED, i -> ((VirusData) i).Virus.reported(), true),
-                new IntField(FLD_INTEGRATIONS, i -> ((VirusData) i).Virus.integrations(), true, null, 0.20),
-                new DoubleField(FLD_MEAN_COVERAGE, i -> ((VirusData) i).Virus.meanCoverage(), true, null, 0.15, "%.2f"),
-                new StringField(FLD_DRIVER_LIKELIHOOD, i -> String.valueOf(((VirusData) i).Virus.virusDriverLikelihoodType()), true)
+                new IntField(FLD_INTEGRATIONS, i -> ((VirusData) i).Virus.integrations(),
+                        true, null, 0.20),
+                new DoubleField(FLD_MEAN_COVERAGE, i -> ((VirusData) i).Virus.meanCoverage(),
+                        true, null, 0.15, "%.2f"),
+                new StringField(FLD_DRIVER_LIKELIHOOD, i -> String.valueOf(((VirusData) i).Virus.virusDriverLikelihoodType()),
+                        true)
         );
     }
 

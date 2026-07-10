@@ -51,7 +51,8 @@ public record SigsComparer(ComparConfig mConfig) implements ItemComparer
     public List<Field> fields(final MatchLevel matchLevel)
     {
         return List.of(
-                new DoubleField(FLD_PERCENT, i -> ((SigsData) i).SignatureAllocation().percent(), true, 0.05, null, "%.4f")
+                new DoubleField(FLD_PERCENT, i -> ((SigsData) i).SignatureAllocation().percent(),
+                        true, 0.05, null, "%.4f")
         );
     }
 

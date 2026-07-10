@@ -50,8 +50,10 @@ public record IsofoxTranscriptDataComparer(ComparConfig mConfig) implements Item
     public List<Field> fields(final MatchLevel matchLevel)
     {
         return List.of(
-                new StringField(FLD_GENE_NAME, i -> ((IsofoxTranscriptData) i).TranscriptExpression().geneName(), true),
-                new DoubleField(FLD_ADJ_TPM, i -> ((IsofoxTranscriptData) i).TranscriptExpression().tpm(), true, null, 0.05, "%.2f")
+                new StringField(FLD_GENE_NAME, i -> ((IsofoxTranscriptData) i).TranscriptExpression().geneName(),
+                        true),
+                new DoubleField(FLD_ADJ_TPM, i -> ((IsofoxTranscriptData) i).TranscriptExpression().tpm(), true,
+                        null, 0.05, "%.2f")
         );
     }
 

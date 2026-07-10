@@ -89,8 +89,9 @@ public class FieldConfigFileTest
         double percentThreshold = 0.25;
 
         FieldConfig fieldConfig = new FieldConfig();
-        fieldConfig.registerField(PURITY,
-                new DoubleField("DoubleField", i -> 0d, false, absoluteThreshold, percentThreshold, "%.1f"));
+        DoubleField doubleField = new DoubleField("DoubleField", i -> 0d, false, absoluteThreshold,
+                percentThreshold, "%.1f");
+        fieldConfig.registerField(PURITY, doubleField);
 
         List<String> lines = toLines(fieldConfig, Set.of(PURITY));
 
@@ -102,7 +103,9 @@ public class FieldConfigFileTest
     public void toLinesUsesNoneForNullThresholds()
     {
         FieldConfig fieldConfig = new FieldConfig();
-        fieldConfig.registerField(PURITY, new DoubleField("DoubleField", i -> 0d, true, null, null, "%.1f"));
+        DoubleField doubleField = new DoubleField("DoubleField", i -> 0d, true, null,
+                null, "%.1f");
+        fieldConfig.registerField(PURITY, doubleField);
 
         List<String> lines = toLines(fieldConfig, Set.of(PURITY));
 
@@ -164,7 +167,8 @@ public class FieldConfigFileTest
     public void readRoundTripsFileWrittenByWrite() throws IOException
     {
         FieldConfig fieldConfig = new FieldConfig();
-        fieldConfig.registerField(PURITY, new DoubleField("DoubleField", i -> 0d, false, 5.0, 0.25, "%.1f"));
+        fieldConfig.registerField(PURITY, new DoubleField("DoubleField", i -> 0d, false, 5.0,
+                0.25, "%.1f"));
 
         File file = File.createTempFile("field_config", ".tsv");
         file.deleteOnExit();

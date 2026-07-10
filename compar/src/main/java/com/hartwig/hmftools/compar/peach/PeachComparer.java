@@ -62,7 +62,8 @@ public class PeachComparer implements ItemComparer
     public List<Field> fields(final MatchLevel matchLevel)
     {
         return List.of(
-                new IntField(FLD_ALLELE_COUNT, i -> ((PeachData) i).Genotype.alleleCount(), true, null, null),
+                new IntField(FLD_ALLELE_COUNT, i -> ((PeachData) i).Genotype.alleleCount(), true,
+                        null, null),
                 new StringField(FLD_FUNCTION, i -> ((PeachData) i).Genotype.function(), true),
                 new StringField(FLD_DRUGS, i -> ((PeachData) i).Genotype.linkedDrugs(), true),
                 new StringField(FLD_PRESCRIPTION_URLS, i -> ((PeachData) i).Genotype.urlPrescriptionInfo(), true)

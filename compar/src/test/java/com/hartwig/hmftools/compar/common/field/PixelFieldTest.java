@@ -10,16 +10,17 @@ import java.util.List;
 
 import org.junit.Test;
 
-public class ImageFieldTest
+public class PixelFieldTest
 {
     private static final String FIELD_NAME = "ImageField";
     private static final int IMAGE_WIDTH = 10;
     private static final int IMAGE_HEIGHT = 10;
     private static final int TOTAL_PIXELS = IMAGE_WIDTH * IMAGE_HEIGHT;
 
-    private static ImageField field(final Double absoluteThreshold, final Double percentThreshold)
+    private static PixelField field(final Double absoluteThreshold, final Double percentThreshold)
     {
-        return new ImageField(FIELD_NAME, i -> ((TestFieldItem<BufferedImage>) i).Value, true, absoluteThreshold, percentThreshold);
+        return new PixelField(FIELD_NAME, i -> ((TestFieldItem<BufferedImage>) i).Value, true,
+                absoluteThreshold, percentThreshold);
     }
 
     // creates a white image with the first differingPixelCount pixels set to black
@@ -41,7 +42,7 @@ public class ImageFieldTest
         return image;
     }
 
-    private static boolean hasDiff(final ImageField field, final int oldDifferingPixels, final int newDifferingPixels)
+    private static boolean hasDiff(final PixelField field, final int oldDifferingPixels, final int newDifferingPixels)
     {
         return field.hasDiff(new TestFieldItem<>(createImage(oldDifferingPixels)), new TestFieldItem<>(createImage(newDifferingPixels)));
     }
@@ -49,7 +50,7 @@ public class ImageFieldTest
     @Test
     public void nameIsComparedAndThresholdsReflectConstructorArgs()
     {
-        ImageField field = field(5., 0.2);
+        PixelField field = field(5., 0.2);
         assertEquals(FIELD_NAME, field.name());
         assertTrue(field.isCompared());
         assertEquals(5., field.absoluteThreshold(), 0.0);
@@ -59,14 +60,14 @@ public class ImageFieldTest
     @Test
     public void displayValueIsAlwaysEmpty()
     {
-        ImageField field = field(0., null);
+        PixelField field = field(0., null);
         assertEquals("", field.displayValue(new TestFieldItem<>(createImage(50))));
     }
 
     @Test
     public void hasDiffIsFalseForIdenticalImages()
     {
-        ImageField field = field(0., null);
+        PixelField field = field(0., null);
         assertFalse(hasDiff(field, 0, 0));
         assertFalse(hasDiff(field, 30, 30));
     }
@@ -74,7 +75,7 @@ public class ImageFieldTest
     @Test
     public void withoutThresholdsIdenticalImagesDoNotDiffButAnyDifferenceDoes()
     {
-        ImageField field = field(null, null);
+        PixelField field = field(null, null);
         assertFalse(hasDiff(field, 0, 0));
         assertTrue(hasDiff(field, 0, 1));
     }
@@ -82,7 +83,7 @@ public class ImageFieldTest
     @Test
     public void absoluteThresholdOnlyRequiresDifferingPixelCountToExceedThreshold()
     {
-        ImageField field = field(5., null);
+        PixelField field = field(5., null);
         assertFalse(hasDiff(field, 0, 5));
         assertTrue(hasDiff(field, 0, 6));
     }
@@ -90,7 +91,7 @@ public class ImageFieldTest
     @Test
     public void percentThresholdOnlyRequiresProportionToExceedThreshold()
     {
-        ImageField field = field(null, 0.2);
+        PixelField field = field(null, 0.2);
         assertFalse(hasDiff(field, 0, 20));
         assertTrue(hasDiff(field, 0, 21));
     }
@@ -99,35 +100,38 @@ public class ImageFieldTest
     public void bothThresholdsRequireBothToBeExceeded()
     {
         // absolute threshold lower than percent threshold's pixel-count equivalent (50): allows isolating "absolute exceeded only"
-        ImageField absDominant = field(20., 0.5);
+        PixelField absDominant = field(20., 0.5);
         assertFalse(hasDiff(absDominant, 0, 25)); // 25 > 20 (abs) but 25% not > 50% (percent) -> no diff
         assertTrue(hasDiff(absDominant, 0, 60)); // 60 > 20 (abs) and 60% > 50% (percent) -> diff
 
         // percent threshold's pixel-count equivalent (20) lower than absolute threshold (60): allows isolating "percent exceeded only"
-        ImageField percentDominant = field(60., 0.2);
+        PixelField percentDominant = field(60., 0.2);
         assertFalse(hasDiff(percentDominant, 0, 25)); // 25% > 20% (percent) but 25 not > 60 (abs) -> no diff
     }
 
     @Test
     public void determineDiffsFormatsProportionAndPixelCounts()
     {
-        ImageField field = field(null, 0.);
-        List<String> diffs = field.determineDiffs(new TestFieldItem<>(createImage(0)), new TestFieldItem<>(createImage(50)));
+        PixelField field = field(null, 0.);
+        TestFieldItem<BufferedImage> oldItem = new TestFieldItem<>(createImage(0));
+        TestFieldItem<BufferedImage> newItem = new TestFieldItem<>(createImage(50));
+        List<String> diffs = field.determineDiffs(oldItem, newItem);
         assertEquals(List.of(String.format("%s(%.3f=%d/%d)", FIELD_NAME, 0.5, 50, TOTAL_PIXELS)), diffs);
     }
 
     @Test
     public void determineDiffsIsEmptyWhenNoDiff()
     {
-        ImageField field = field(null, 0.);
-        assertTrue(field.determineDiffs(new TestFieldItem<>(createImage(30)), new TestFieldItem<>(createImage(30))).isEmpty());
+        PixelField field = field(null, 0.);
+        TestFieldItem<BufferedImage> item = new TestFieldItem<>(createImage(30));
+        assertTrue(field.determineDiffs(item, item).isEmpty());
     }
 
     @Test
     public void withComparedUpdatesIsComparedAndPreservesThresholds()
     {
-        ImageField field = field(5., 0.2);
-        ImageField updated = (ImageField) field.withCompared(false);
+        PixelField field = field(5., 0.2);
+        PixelField updated = (PixelField) field.withCompared(false);
 
         assertFalse(updated.isCompared());
         assertEquals(5., updated.absoluteThreshold(), 0.0);
@@ -137,8 +141,8 @@ public class ImageFieldTest
     @Test
     public void withAbsoluteThresholdUpdatesOnlyAbsoluteThreshold()
     {
-        ImageField field = field(5., 0.2);
-        ImageField updated = (ImageField) field.withAbsoluteThreshold(10.);
+        PixelField field = field(5., 0.2);
+        PixelField updated = (PixelField) field.withAbsoluteThreshold(10.);
 
         assertTrue(updated.isCompared());
         assertEquals(10., updated.absoluteThreshold(), 0.0);
@@ -148,8 +152,8 @@ public class ImageFieldTest
     @Test
     public void withPercentThresholdUpdatesOnlyPercentThreshold()
     {
-        ImageField field = field(5., 0.2);
-        ImageField updated = (ImageField) field.withPercentThreshold(0.5);
+        PixelField field = field(5., 0.2);
+        PixelField updated = (PixelField) field.withPercentThreshold(0.5);
 
         assertTrue(updated.isCompared());
         assertEquals(5., updated.absoluteThreshold(), 0.0);

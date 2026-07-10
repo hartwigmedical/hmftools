@@ -46,11 +46,16 @@ public class VChordComparer implements ItemComparer
     public List<Field> fields(final MatchLevel matchLevel)
     {
         return List.of(
-                new DoubleField(FLD_BREAST, i -> ((VChordData) i).VChord().breastCancerHrdScore(), true, 0.1, null, "%.2f"),
-                new DoubleField(FLD_OVARIAN, i -> ((VChordData) i).VChord().ovarianCancerHrdScore(), true, 0.1, null, "%.2f"),
-                new DoubleField(FLD_PANCREATIC, i -> ((VChordData) i).VChord().pancreaticCancerScore(), true, 0.1, null, "%.2f"),
-                new DoubleField(FLD_PROSTATE, i -> ((VChordData) i).VChord().prostateCancerScore(), true, 0.1, null, "%.2f"),
-                new DoubleField(FLD_OTHER, i -> ((VChordData) i).VChord().otherCancerScore(), true, 0.1, null, "%.2f")
+                new DoubleField(FLD_BREAST, i -> ((VChordData) i).VChord().breastCancerHrdScore(),
+                        true, 0.1, null, "%.2f"),
+                new DoubleField(FLD_OVARIAN, i -> ((VChordData) i).VChord().ovarianCancerHrdScore(),
+                        true, 0.1, null, "%.2f"),
+                new DoubleField(FLD_PANCREATIC, i -> ((VChordData) i).VChord().pancreaticCancerScore(),
+                        true, 0.1, null, "%.2f"),
+                new DoubleField(FLD_PROSTATE, i -> ((VChordData) i).VChord().prostateCancerScore(),
+                        true, 0.1, null, "%.2f"),
+                new DoubleField(FLD_OTHER, i -> ((VChordData) i).VChord().otherCancerScore(),
+                        true, 0.1, null, "%.2f")
         );
     }
 

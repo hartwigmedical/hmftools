@@ -46,7 +46,8 @@ public class CuppaComparer implements ItemComparer
     {
         return List.of(
                 new StringField(FLD_TOP_CANCER_TYPE, i -> ((CuppaData) i).PredictionEntry.CancerType, true),
-                new DoubleField(FLD_PROBABILITY, i -> ((CuppaData) i).PredictionEntry.DataValue, true, 0.1, null, "%.3f")
+                new DoubleField(FLD_PROBABILITY, i -> ((CuppaData) i).PredictionEntry.DataValue, true,
+                        0.1, null, "%.3f")
         );
     }
 

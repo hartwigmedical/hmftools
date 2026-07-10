@@ -46,10 +46,10 @@ public class TestLilacQcDataBuilder
         );
     };
 
-    public static final TestComparableItemBuilder<TestLilacQcDataBuilder, LilacQcData> BUILDER =
+    public static final TestComparableItemBuilder<TestLilacQcDataBuilder, LilacQcComparData> BUILDER =
             new TestComparableItemBuilder<>(TestLilacQcDataBuilder::new, TestLilacQcDataBuilder::build, ALTERNATE_INITIALIZER);
 
-    private LilacQcData build()
+    private LilacQcComparData build()
     {
         com.hartwig.hmftools.common.hla.LilacQcData qcData = ImmutableLilacQcData.builder()
                 .genes(genes)
@@ -60,6 +60,6 @@ public class TestLilacQcDataBuilder
                 .discardedAlignmentFragments(discardedAlignmentFragments)
                 .hlaYAllele(hlaYAllele)
                 .build();
-        return new LilacQcData(qcData, alleles);
+        return new LilacQcComparData(qcData, alleles);
     }
 }
