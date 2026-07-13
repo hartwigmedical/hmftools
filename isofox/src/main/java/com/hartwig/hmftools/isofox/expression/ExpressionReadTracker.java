@@ -214,8 +214,6 @@ public class ExpressionReadTracker
             mGcRatioCounts.determineRatioData(gcRatio, gcRatioIndices, gcRatioCounts);
         }
 
-        // a multi-mapped fragment (mapping to numLoci genomic loci via its XA alternatives) contributes 1/numLoci here;
-        // the other loci are counted against their own genes via the cross-locus fan-out in FragmentAllocator
         double fragmentCount = numLoci > 1 ? 1.0 / numLoci : 1;
 
         if(numLoci > 1)

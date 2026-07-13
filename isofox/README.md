@@ -24,7 +24,7 @@ In addition, any junction which maps in the Poly-G region of LINC00486 is filter
 ### A note on alignment and multi-mapping
 Reads are aligned with bwa-mem2 against a transcriptome-augmented reference and lifted back to genomic coordinates by tars, then duplicate-marked by redux. Chimeric and supplementary alignments are retained in the BAM.
 
-A multi-mapped read is emitted as a single primary alignment that carries its alternate genomic loci in the bwa `XA` tag; there are no separate secondary records. bwa map qualities range from 0 to 60, with a confident single-locus read at 60 and multi-mapped reads at 0 to 3. For transcript abundance, Isofox spreads a multi-mapped fragment as 1/N across the N loci listed in its XA tag: the primary locus is counted through the normal expression path and each alternate locus is attributed 1/N to the gene it falls in, with any locus outside a gene keeping its share unattributed. Reads with alternate XA loci (multi-mapped) are excluded from novel splice junction and chimeric analysis.
+A multi-mapped read is emitted as a single primary alignment that carries its alternate genomic loci in the bwa `XA` tag; there are no separate secondary records. bwa map qualities range from 0 to 60, with a confident single-locus read at 60. For transcript abundance, Isofox spreads a multi-mapped fragment as 1/N across the N loci listed in its XA tag: the primary locus is counted through the normal expression path and each alternate locus is attributed 1/N to the gene it falls in, with any locus outside a gene keeping its share unattributed. Reads with alternate XA loci (multi-mapped) are excluded from novel splice junction and chimeric analysis.
 
 ## Configuration
 The functions of Isofox are controlled by the 'functions' argument:
