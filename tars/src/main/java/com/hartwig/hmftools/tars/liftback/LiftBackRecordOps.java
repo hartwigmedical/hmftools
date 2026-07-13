@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 
 import java.util.stream.Collectors;
 
+import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.tars.liftback.supplementary.RefSequenceSource;
 
 import htsjdk.samtools.Cigar;
@@ -132,8 +133,7 @@ public final class LiftBackRecordOps
             return LiftedMateInfo.UNMAPPED;
         }
 
-        Cigar liftedCigar = TextCigarCodec.decode(result.finalCigar());
-        int alignmentEnd = result.finalPos() + liftedCigar.getReferenceLength() - 1;
+        int alignmentEnd = result.finalPos() + CigarUtils.calcCigarAlignedLength(result.finalCigar()) - 1;
         return LiftedMateInfo.mapped(result.finalChrom(), result.finalPos(), alignmentEnd, result.finalCigar(), result.negativeStrand());
     }
 
@@ -229,6 +229,13 @@ public final class LiftBackRecordOps
                 case M:
                 case EQ:
                 case X:
+                    // Guard against a cigar whose read span exceeds the record's SEQ length (e.g. a failed-supp
+                    // mirror that took its primary's full-length cigar onto a hard-clipped, shorter SEQ). Leave NM
+                    // unset rather than index past the read bases.
+                    if(readIndex + length > readBases.length)
+                    {
+                        return -1;
+                    }
                     final byte[] refBases = refSource.getBases(chromosome, refPos, refPos + length - 1);
                     if(refBases == null || refBases.length < length)
                     {
@@ -301,9 +308,9 @@ public final class LiftBackRecordOps
         }
 
         int altStart = alt.LiftedPos;
-        int altEnd = altStart + TextCigarCodec.decode(alt.LiftedCigar).getReferenceLength() - 1;
+        int altEnd = altStart + CigarUtils.calcCigarAlignedLength(alt.LiftedCigar) - 1;
         int primStart = primary.LiftedPos;
-        int primEnd = primStart + TextCigarCodec.decode(primary.LiftedCigar).getReferenceLength() - 1;
+        int primEnd = primStart + CigarUtils.calcCigarAlignedLength(primary.LiftedCigar) - 1;
         return positionsOverlap(altStart, altEnd, primStart, primEnd);
     }
 

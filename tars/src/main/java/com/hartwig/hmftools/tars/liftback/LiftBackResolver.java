@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.tars.common.ContigEntry;
 import com.hartwig.hmftools.tars.common.TarsConstants;
 
@@ -211,13 +212,32 @@ public class LiftBackResolver
                 allAlignments, features.Feature, self, seed, inputMapq != 0, mateInfo);
         LiftedAlignment effectivePrimary = outcome.effectivePrimary();
 
-        List<LiftedAlignment> keptAlignments = allAlignments.stream()
-                .filter(la -> !la.Dropped)
-                .toList();
+        List<LiftedAlignment> keptAlignments = new ArrayList<>(allAlignments.size());
+        for(final LiftedAlignment la : allAlignments)
+        {
+            if(!la.Dropped)
+            {
+                keptAlignments.add(la);
+            }
+        }
 
-        int numLoci = countDistinctLoci(keptAlignments, effectivePrimary);
-        int cigarsAtPrimaryLocus = countDistinctCigarsAtLocus(keptAlignments, effectivePrimary);
-        String geneIds = joinGeneIds(keptAlignments);
+        int numLoci;
+        int cigarsAtPrimaryLocus;
+        String geneIds;
+        if(keptAlignments.size() == 1)
+        {
+            // Dominant single-candidate read: the three aggregate scans all collapse to constants (self is the
+            // only kept alignment and is the effective primary), so skip the per-read HashMap + two HashSets.
+            numLoci = 1;
+            cigarsAtPrimaryLocus = 1;
+            geneIds = keptAlignments.get(0).GeneId != null ? keptAlignments.get(0).GeneId : "";
+        }
+        else
+        {
+            numLoci = countDistinctLoci(keptAlignments, effectivePrimary);
+            cigarsAtPrimaryLocus = countDistinctCigarsAtLocus(keptAlignments, effectivePrimary);
+            geneIds = joinGeneIds(keptAlignments);
+        }
 
         boolean swapped = effectivePrimary != self;
         boolean hiddenTie = inputMapq == 0 && hasHiddenTie(record);
@@ -449,9 +469,40 @@ public class LiftBackResolver
         return loci;
     }
 
+    // Post-reclaim NH recompute. resolvePrimaryWithAlts bakes numLoci in before reconcileChosenPrimary's
+    // reclaimTxMatchAlts can grow a tx-match alt's span onto the primary, collapsing a formerly-distinct alt.
+    // Recounting from the final alignment list (primary found via IsPrimaryChoice, exactly as buildLiftedXa does)
+    // keeps NH consistent with the emitted XA. Returns 1 for a lone/unmarked primary.
+    public static int countDistinctLoci(final List<LiftedAlignment> alignments)
+    {
+        LiftedAlignment primary = null;
+        for(final LiftedAlignment la : alignments)
+        {
+            if(la.IsPrimaryChoice)
+            {
+                primary = la;
+                break;
+            }
+        }
+        if(primary == null)
+        {
+            return 1;
+        }
+
+        List<LiftedAlignment> kept = new ArrayList<>(alignments.size());
+        for(final LiftedAlignment la : alignments)
+        {
+            if(!la.Dropped)
+            {
+                kept.add(la);
+            }
+        }
+        return Math.max(countDistinctLoci(kept, primary), 1);
+    }
+
     private static int spanEnd(final LiftedAlignment la)
     {
-        return la.LiftedPos + TextCigarCodec.decode(la.LiftedCigar).getReferenceLength() - 1;
+        return la.LiftedPos + CigarUtils.calcCigarAlignedLength(la.LiftedCigar) - 1;
     }
 
     private static int countDistinctCigarsAtLocus(final List<LiftedAlignment> alignments, final LiftedAlignment primary)
@@ -481,7 +532,7 @@ public class LiftBackResolver
 
     private static String liftedKey(final LiftedAlignment la)
     {
-        return la.LiftedChrom + ":" + la.LiftedPos + ":" + la.LiftedCigar;
+        return la.LiftedChrom + ":" + la.LiftedPos + ":" + la.LiftedCigar + ":" + (la.ForwardStrand ? '+' : '-');
     }
 
     private static String locusKey(final LiftedAlignment la)
