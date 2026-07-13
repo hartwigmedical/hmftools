@@ -21,6 +21,7 @@ import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.SourceType;
+import com.hartwig.hmftools.compar.common.field.DisplayField;
 import com.hartwig.hmftools.compar.common.field.DoubleField;
 import com.hartwig.hmftools.compar.common.field.Field;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
@@ -49,7 +50,9 @@ public class GeneCopyNumberComparer implements ItemComparer
                 new DoubleField(FLD_MIN_COPY_NUMBER, i -> ((GeneCopyNumberData) i).CopyNumber.minCopyNumber(),
                         true, 0.5, 0.15, "%.2f"),
                 new DoubleField(FLD_MAX_COPY_NUMBER, i -> ((GeneCopyNumberData) i).CopyNumber.maxCopyNumber(),
-                        true, 0.5, 0.15, "%.2f")
+                        true, 0.5, 0.15, "%.2f"),
+                new DisplayField(FLD_MIN_REGION_START, i -> String.valueOf(((GeneCopyNumberData) i).CopyNumber.MinRegionStart), i -> true),
+                new DisplayField(FLD_MIN_REGION_END, i -> String.valueOf(((GeneCopyNumberData) i).CopyNumber.MinRegionEnd), i -> true)
         );
     }
 
