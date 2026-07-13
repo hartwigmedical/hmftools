@@ -19,7 +19,7 @@ public class IsofoxConstants
 
     public static final double GC_RATIO_BUCKET = 0.01;
 
-    public static final short DEFAULT_SINGLE_MAP_QUALITY = 60; // bwa confident single-locus map quality (tars)
+    public static final short DEFAULT_SINGLE_MAP_QUALITY = 60;
     public static short SINGLE_MAP_QUALITY = DEFAULT_SINGLE_MAP_QUALITY;
 
     public static final int ENRICHED_GENE_BUFFER = 1000;

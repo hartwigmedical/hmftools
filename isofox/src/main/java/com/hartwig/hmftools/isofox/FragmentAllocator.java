@@ -121,8 +121,6 @@ public class FragmentAllocator
 
     private final EnsemblDataCache mGeneTransCache;
 
-    // fractional fragment counts fanned out to genes at multi-mapped fragments' alternate (XA) loci, keyed by gene id.
-    // accumulated across all gene collections this allocator processes, then folded into transcript expression at run end.
     private final Map<String,Double> mMultiMapGeneCounts;
 
     private static final int GENE_LOG_COUNT = 5000000;
@@ -399,10 +397,6 @@ public class FragmentAllocator
         boolean isDuplicate = read1.isDuplicate() || read2.isDuplicate();
         boolean isMultiMapped = read1.isMultiMapped() || read2.isMultiMapped();
 
-        // number of genomic loci this fragment maps to (primary + alternate XA loci), taken from whichever mate lists the
-        // most alternatives; drives fractional fragment weighting so the loci sum to a single fragment. Each locus carries
-        // 1/numLoci: a locus that falls outside any gene (intergenic, eg a repeat) keeps its share unattributed rather than
-        // inflating a gene, matching how an intergenic primary read contributes nothing.
         List<ChrBaseRegion> altLoci = read1.altLoci();
         if(read2.altLoci() != null && (altLoci == null || read2.altLoci().size() > altLoci.size()))
             altLoci = read2.altLoci();
@@ -858,10 +852,7 @@ public class FragmentAllocator
     public List<CategoryCountsData> getTransComboData() { return mExpressionReadTracker.getTransComboData(); }
 
     public Map<String,Double> getMultiMapGeneCounts() { return mMultiMapGeneCounts; }
-
-    // spread a multi-mapped fragment's evidence to the genes at its alternate (XA) loci: each of the numLoci loci carries
-    // 1/numLoci of the fragment (the primary locus is counted via the normal expression path). Alternate loci often fall in
-    // other gene collections, so their contribution is accumulated here and folded into transcript expression at run end.
+    
     private void fanOutMultiMappedFragment(final List<ChrBaseRegion> altLoci, int numLoci)
     {
         if(altLoci == null || mGeneTransCache == null)

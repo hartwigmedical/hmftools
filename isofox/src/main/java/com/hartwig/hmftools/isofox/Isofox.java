@@ -285,8 +285,6 @@ public class Isofox
         final List<GeneCollectionSummary> geneSummaryData = Lists.newArrayList();
         chrTasks.stream().forEach(x -> geneSummaryData.addAll(x.getGeneCollectionSummaryData()));
 
-        // fold multi-mapped fragments' alternate-locus contributions (whose genes may lie in other chromosomes' gene
-        // collections) into transcript expression before TPM is derived
         final Map<String,Double> multiMapGeneCounts = Maps.newHashMap();
         chrTasks.forEach(x -> x.getMultiMapGeneCounts().forEach((geneId, count) -> multiMapGeneCounts.merge(geneId, count, Double::sum)));
         applyMultiMappedFanOut(geneSummaryData, multiMapGeneCounts);

@@ -162,11 +162,6 @@ public class TranscriptExpression
     private static final int ADJUSTED_TPM = 1;
     private static final double TPM_MILLION = 1000000;
 
-    // fold the fractional fragment counts accumulated at multi-mapped fragments' alternate (XA) loci into transcript
-    // expression before TPM is derived. Each gene's accumulated count is split across its transcripts in proportion to
-    // their fitted allocation (mirroring how low-map-quality fragments are apportioned within a gene collection), or
-    // evenly when the gene has no fitted expression. Alternate loci commonly fall in other collections/chromosomes,
-    // so this cross-collection step runs once after all per-collection fits are complete.
     public static void applyMultiMappedFanOut(final List<GeneCollectionSummary> geneSummaries, final Map<String,Double> geneCounts)
     {
         if(geneCounts.isEmpty())
@@ -196,7 +191,7 @@ public class TranscriptExpression
 
             if(transResults == null || transResults.isEmpty())
             {
-                droppedTotal += fanOutCount; // gene not quantified (eg outside a panel) - its share cannot be attributed
+                droppedTotal += fanOutCount;
                 continue;
             }
 

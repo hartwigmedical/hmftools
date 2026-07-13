@@ -83,7 +83,7 @@ public class Read
     private String mSupplementaryAlignment;
     private boolean mHasInterGeneSplit;
     private short mMapQuality;
-    private List<ChrBaseRegion> mAltLoci; // alternate genomic mapping loci from the (lifted) XA tag; null if uniquely mapped
+    private List<ChrBaseRegion> mAltLoci; // alternate genomic mapping loci from XA tag; null if uniquely mapped
 
     private int[] mJunctionPositions; // chimeric junctions
 
@@ -110,7 +110,6 @@ public class Read
         return read;
     }
 
-    // parse the (lifted, genomic) bwa XA tag 'chr,±pos,CIGAR,NM;...' into the alternate mapping loci for a multi-mapped read
     private static List<ChrBaseRegion> parseAltLoci(final String xaTag)
     {
         if(xaTag == null || xaTag.isEmpty())
@@ -130,12 +129,11 @@ public class Read
 
             try
             {
-                int position = Math.abs(Integer.parseInt(fields[1])); // XA position is signed, the sign encoding strand
+                int position = Math.abs(Integer.parseInt(fields[1]));
                 altLoci.add(new ChrBaseRegion(fields[0], position, position));
             }
             catch(NumberFormatException e)
             {
-                // tolerate a malformed entry
             }
         }
 
@@ -276,7 +274,6 @@ public class Read
     public void setAltLoci(final List<ChrBaseRegion> altLoci) { mAltLoci = altLoci; }
     public List<ChrBaseRegion> altLoci() { return mAltLoci; }
 
-    // total genomic mapping loci for the read: the primary alignment plus any alternate (XA) loci
     public int numLoci() { return mAltLoci != null ? 1 + mAltLoci.size() : 1; }
 
     public int baseLength() { return mReadBases.length(); }
