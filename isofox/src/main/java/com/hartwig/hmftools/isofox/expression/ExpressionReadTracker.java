@@ -4,7 +4,7 @@ import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.TRANSCRIPT_COUNTS;
 import static com.hartwig.hmftools.isofox.adjusts.GcRatioCounts.calcGcRatioFromReadRegions;
-import static com.hartwig.hmftools.isofox.common.FragmentType.LOW_MAP_QUAL;
+import static com.hartwig.hmftools.isofox.common.FragmentType.MULTI_MAPPED;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.validExonMatch;
 import static com.hartwig.hmftools.isofox.common.CommonUtils.deriveCommonRegions;
 import static com.hartwig.hmftools.isofox.common.TransMatchType.SPLICE_JUNCTION;
@@ -217,7 +217,7 @@ public class ExpressionReadTracker
         double fragmentCount = numLoci > 1 ? 1.0 / numLoci : 1;
 
         if(numLoci > 1)
-            mGenes.addCount(LOW_MAP_QUAL, 1);
+            mGenes.addCount(MULTI_MAPPED, 1);
 
         addGcCounts(catCounts, gcRatioIndices, gcRatioCounts, fragmentCount);
     }

@@ -29,7 +29,7 @@ import static com.hartwig.hmftools.isofox.common.FragmentType.ALT;
 import static com.hartwig.hmftools.isofox.common.FragmentType.CHIMERIC;
 import static com.hartwig.hmftools.isofox.common.FragmentType.DUPLICATE;
 import static com.hartwig.hmftools.isofox.common.FragmentType.FORWARD_STRAND;
-import static com.hartwig.hmftools.isofox.common.FragmentType.LOW_MAP_QUAL;
+import static com.hartwig.hmftools.isofox.common.FragmentType.MULTI_MAPPED;
 import static com.hartwig.hmftools.isofox.common.FragmentType.REVERSE_STRAND;
 import static com.hartwig.hmftools.isofox.common.FragmentType.TOTAL;
 import static com.hartwig.hmftools.isofox.common.FragmentType.TRANS_SUPPORTING;
@@ -305,7 +305,7 @@ public class ResultsWriter
             sj.add(String.valueOf(fragmentCounts.typeCount(UNSPLICED)));
             sj.add(String.valueOf(fragmentCounts.typeCount(ALT)));
             sj.add(String.valueOf(fragmentCounts.typeCount(CHIMERIC)));
-            sj.add(String.valueOf(fragmentCounts.typeCount(LOW_MAP_QUAL)));
+            sj.add(String.valueOf(fragmentCounts.typeCount(MULTI_MAPPED)));
             sj.add(String.valueOf(fragmentCounts.typeCount(FORWARD_STRAND)));
             sj.add(String.valueOf(fragmentCounts.typeCount(REVERSE_STRAND)));
 
