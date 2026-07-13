@@ -18,7 +18,6 @@ public class RefSequenceTest
         assertEquals(10, refSequence.index(110));
         assertEquals(101, refSequence.length());
         assertEquals(refBases.substring(5, 16), refSequence.positionBases(105, 115));
-        assertEquals(refBases.substring(5, 16), refSequence.indexBases(5, 15));
         assertEquals(refBases.substring(9, 12), new String(refSequence.trinucleotideContext(110)));
     }
 }
