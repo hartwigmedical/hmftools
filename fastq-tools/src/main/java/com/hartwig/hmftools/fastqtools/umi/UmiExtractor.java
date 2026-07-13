@@ -42,7 +42,7 @@ public final class UmiExtractor
             mAdapterSequenceReversed = null;
         }
 
-        mKnownUmis = new KnownUmis(knownUmiFile, umiDelim, knownUmiBaseDiff, knownUmiUseNumeric);
+        mKnownUmis = new KnownUmis(knownUmiFile, umiLength, umiDelim, knownUmiBaseDiff, knownUmiUseNumeric);
     }
 
     public UmiExtractor(final UmiConfig config)

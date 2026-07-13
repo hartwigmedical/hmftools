@@ -24,6 +24,7 @@ import com.hartwig.hmftools.common.codon.Nucleotides;
 public class KnownUmis
 {
     private final String mUmiDelim;
+    private final int mUmiLength;
     private final int mKnownUmiBaseDiff;
     private final boolean mKnownUmiUseNumeric;
 
@@ -35,11 +36,13 @@ public class KnownUmis
 
     public KnownUmis(final UmiConfig config)
     {
-        this(config.KnownUmiFile, config.UmiDelim, config.KnownUmiBaseDiff, config.KnownUmiUseNumeric);
+        this(config.KnownUmiFile, config.UmiLength, config.UmiDelim, config.KnownUmiBaseDiff, config.KnownUmiUseNumeric);
     }
 
-    public KnownUmis(final String knownUmiFile, final String umiDelim, final int knownUmiBaseDiff, final boolean knownUmiUseNumeric)
+    public KnownUmis(
+            final String knownUmiFile, final int umiLength, final String umiDelim, final int knownUmiBaseDiff, final boolean knownUmiUseNumeric)
     {
+        mUmiLength = umiLength;
         mUmiDelim = umiDelim;
         mKnownUmiBaseDiff = knownUmiBaseDiff;
         mKnownUmiUseNumeric = knownUmiUseNumeric;
@@ -59,12 +62,9 @@ public class KnownUmis
     public void adjustWithKnownUmi(
             final String readId1, final int delimIndex, final String[] r1ReadBuffer, final String[] r2ReadBuffer)
     {
-        // find the longest matching UMI
-
         String umiBases1 = findKnownUmiMatch(r1ReadBuffer[READ_ITEM_BASES]);
         String umiBases2 = findKnownUmiMatch(r2ReadBuffer[READ_ITEM_BASES]);
 
-        // make UMIs of the form 4+5, where integers are the length of the UMIs
         int umiLength1 = umiBases1.length();
         int umiLength2 = umiBases2.length();
 
@@ -76,14 +76,31 @@ public class KnownUmis
         {
             if(umiBases1.isEmpty())
             {
-                umiBases1 = UNMATCHED_UMI;
-                umiLength1 = 0;
+                // if no known UMI was matched, still extract a fixed number of bases if configured to do so
+                if(mUmiLength > 0)
+                {
+                    umiBases1 = r1ReadBuffer[READ_ITEM_BASES].substring(0, mUmiLength);
+                    umiLength1 = mUmiLength;
+                }
+                else
+                {
+                    umiBases1 = UNMATCHED_UMI;
+                    umiLength1 = 0;
+                }
             }
 
             if(umiBases2.isEmpty())
             {
-                umiBases2 = UNMATCHED_UMI;
-                umiLength2 = 0;
+                if(mUmiLength > 0)
+                {
+                    umiBases2 = r2ReadBuffer[READ_ITEM_BASES].substring(0, mUmiLength);
+                    umiLength2 = mUmiLength;
+                }
+                else
+                {
+                    umiBases2 = UNMATCHED_UMI;
+                    umiLength2 = 0;
+                }
             }
         }
 
@@ -92,6 +109,7 @@ public class KnownUmis
 
         if(mKnownUmiUseNumeric)
         {
+            // make UMIs of the form 4+5, where integers are the length of the UMIs
             duplexUmiId = umiLength1 + mUmiDelim + umiLength2;
         }
         else
@@ -103,10 +121,17 @@ public class KnownUmis
         r1ReadBuffer[READ_ITEM_ID] = READ_ID_START + newReadId + r1ReadBuffer[READ_ITEM_ID].substring(delimIndex);
         r2ReadBuffer[READ_ITEM_ID] = READ_ID_START + newReadId + r2ReadBuffer[READ_ITEM_ID].substring(delimIndex);
 
-        r1ReadBuffer[READ_ITEM_BASES] = r1ReadBuffer[READ_ITEM_BASES].substring(umiLength1);
-        r2ReadBuffer[READ_ITEM_BASES] = r2ReadBuffer[READ_ITEM_BASES].substring(umiLength2);
-        r1ReadBuffer[READ_ITEM_QUALS] = r1ReadBuffer[READ_ITEM_QUALS].substring(umiLength1);
-        r2ReadBuffer[READ_ITEM_QUALS] = r2ReadBuffer[READ_ITEM_QUALS].substring(umiLength2);
+        if(umiLength1 > 0)
+        {
+            r1ReadBuffer[READ_ITEM_BASES] = r1ReadBuffer[READ_ITEM_BASES].substring(umiLength1);
+            r1ReadBuffer[READ_ITEM_QUALS] = r1ReadBuffer[READ_ITEM_QUALS].substring(umiLength1);
+        }
+
+        if(umiLength2 > 0)
+        {
+            r2ReadBuffer[READ_ITEM_BASES] = r2ReadBuffer[READ_ITEM_BASES].substring(umiLength2);
+            r2ReadBuffer[READ_ITEM_QUALS] = r2ReadBuffer[READ_ITEM_QUALS].substring(umiLength2);
+        }
     }
 
     private String findKnownUmiMatch(final String readBases)
