@@ -15,11 +15,13 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.MismatchType;
+import com.hartwig.hmftools.compar.common.field.Field;
 
 import org.junit.Test;
 
@@ -156,6 +158,18 @@ public abstract class ComparableItemTest<I extends ComparableItem, C extends Ite
     }
 
     @Test
+    public void displayFieldNamesAreValidInDetailedMode()
+    {
+        assertDisplayFieldNamesAreValid(MatchLevel.DETAILED);
+    }
+
+    @Test
+    public void displayFieldNamesAreValidInReportableMode()
+    {
+        assertDisplayFieldNamesAreValid(MatchLevel.REPORTABLE);
+    }
+
+    @Test
     public void hasKeyIfItShould()
     {
         assertEquals(nameToAlternateIndexInitializer.isEmpty(), builder.create().key().isEmpty());
@@ -216,6 +230,18 @@ public abstract class ComparableItemTest<I extends ComparableItem, C extends Ite
 
         Mismatch expectedMatch = new Mismatch(victim, victim, MismatchType.FULL_MATCH, Collections.emptyList());
         assertEquals(expectedMatch, victim.findMismatch(victim, matchLevel, fieldConfig, true));
+    }
+
+    private void assertDisplayFieldNamesAreValid(final MatchLevel matchLevel)
+    {
+        Set<String> fieldNames = comparer.fields(matchLevel).stream().map(Field::name).collect(Collectors.toSet());
+
+        for(String displayFieldName : comparer.displayFieldNames())
+        {
+            assertTrue(
+                    "displayFieldNames() contains \"" + displayFieldName + "\" which is not returned by fields(" + matchLevel + ")",
+                    fieldNames.contains(displayFieldName));
+        }
     }
 
     private void assertSingleFieldMismatchesAreRecognized(final MatchLevel matchLevel)
