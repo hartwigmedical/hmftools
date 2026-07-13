@@ -107,7 +107,9 @@ public class DriverComparer implements ItemComparer
             }
             else
             {
-                loadData(sourceSampleId, sourceData.Files, sourceData.Type);
+                String sourceReferenceId = mConfig.sourceReferenceId(sourceData.Type, sampleId);
+                FileSources sampleFileSources = FileSources.sampleInstance(sourceData.Files, sourceSampleId, sourceReferenceId);
+                loadData(sourceSampleId, sampleFileSources, sourceData.Type);
             }
         }
 
