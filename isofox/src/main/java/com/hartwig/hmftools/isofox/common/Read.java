@@ -18,7 +18,6 @@ import static com.hartwig.hmftools.common.region.BaseRegion.positionsWithin;
 import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
 import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
-import static com.hartwig.hmftools.isofox.IsofoxConstants.MULTI_MAP_QUALITY_THRESHOLD;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_BOUNDARY;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_INTRON;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.INTRON;
@@ -282,7 +281,7 @@ public class Read
 
     public int baseLength() { return mReadBases.length(); }
 
-    public boolean isMultiMapped() { return mMapQuality <= MULTI_MAP_QUALITY_THRESHOLD; }
+    public boolean isMultiMapped() { return numLoci() > 1; }
 
     public int fragmentInsertSize() { return mFragmentInsertSize; }
 

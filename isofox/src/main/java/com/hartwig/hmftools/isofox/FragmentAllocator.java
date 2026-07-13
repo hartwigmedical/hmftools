@@ -15,7 +15,6 @@ import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
-import static com.hartwig.hmftools.isofox.IsofoxConstants.MULTI_MAP_QUALITY_THRESHOLD;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.SINGLE_MAP_QUALITY;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.ALT_SPLICE_JUNCTIONS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.STATISTICS;
@@ -398,8 +397,7 @@ public class FragmentAllocator
         read2.trimAdapterSoftClipBases(read1);
 
         boolean isDuplicate = read1.isDuplicate() || read2.isDuplicate();
-        int minMapQuality = min(read1.mapQuality(), read2.mapQuality());
-        boolean isMultiMapped = minMapQuality <= MULTI_MAP_QUALITY_THRESHOLD;
+        boolean isMultiMapped = read1.isMultiMapped() || read2.isMultiMapped();
 
         // number of genomic loci this fragment maps to (primary + alternate XA loci), taken from whichever mate lists the
         // most alternatives; drives fractional fragment weighting so the loci sum to a single fragment. Each locus carries
