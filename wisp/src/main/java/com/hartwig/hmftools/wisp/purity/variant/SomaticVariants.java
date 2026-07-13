@@ -422,9 +422,9 @@ public class SomaticVariants
                     sampleFragData.addDualFilterReason(AVG_EDGE_DIST);
             }
 
-            if(variant.Type == VariantType.SNP)
+            if(variant.Type == VariantType.SNP && !mConfig.SkipBqr && mBqrAdjustment.hasDualEntries())
             {
-                if(!mConfig.SkipBqr && !mBqrAdjustment.hasErrorRate(variant.TriNucContext, variant.Alt, ConsensusType.DUAL))
+                if(!mBqrAdjustment.hasErrorRate(variant.TriNucContext, variant.Alt, ConsensusType.DUAL))
                 {
                     CT_LOGGER.error("variant({}) missing dual BQR data", variant);
                     System.exit(1);

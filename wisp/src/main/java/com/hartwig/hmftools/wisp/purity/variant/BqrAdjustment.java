@@ -31,11 +31,13 @@ public class BqrAdjustment
     private final PurityConfig mConfig;
 
     private final Map<ConsensusType,List<BqrContextData>> mBqrContextData;
+    private boolean mHasDualEntries;
 
     public BqrAdjustment(final PurityConfig config)
     {
         mConfig = config;
         mBqrContextData = Maps.newHashMap();
+        mHasDualEntries = false;
     }
 
     private static final byte NO_KEY_VALUE = 1;
@@ -52,6 +54,8 @@ public class BqrAdjustment
         return qualThreshold <= 0 ?
                 bqrContextData : bqrContextData.stream().filter(x -> x.calculatedQual() >= qualThreshold).collect(Collectors.toList());
     }
+
+    public boolean hasDualEntries() { return mHasDualEntries; }
 
     public boolean hasErrorRate(final String triNucContext, final String alt, final ConsensusType consensusType)
     {
@@ -140,6 +144,8 @@ public class BqrAdjustment
         for(BqrRecord bqrRecord : allCounts)
         {
             BqrKey key = bqrRecord.Key;
+
+            mHasDualEntries |= bqrRecord.Key.ReadType == DUAL;
 
             if(bqrRecord.Key.Quality < mConfig.BqrQualThreshold)
                 continue;
