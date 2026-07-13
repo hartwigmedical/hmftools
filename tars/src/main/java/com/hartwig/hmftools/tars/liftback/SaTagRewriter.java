@@ -43,8 +43,7 @@ public class SaTagRewriter
             if(lifted == null)
                 continue;
 
-            String entryKey = lifted.chromosome() + ':' + lifted.position() + ':' + alignment.Strand + ':'
-                    + lifted.cigarString().replace('H', 'S');
+            String entryKey = liftedEntryKey(lifted, alignment.Strand);
             if(excludeKeys.contains(entryKey))
                 continue;
             if(!seenEntryKeys.add(entryKey))
@@ -57,5 +56,14 @@ public class SaTagRewriter
         }
 
         return rewritten.length() == 0 ? null : rewritten.toString();
+    }
+
+    // Lifted SA-entry key (chrom:pos:strand:cigar, clips normalised H->S). Shared by rewriteSaTag and the
+    // dropped-supp exclude set (LiftBackGroupProcessor) so both keys are built from the SAME lifted coords and
+    // can never drift apart - a dropped supp's own lift path (micro-anchor trimmed) would otherwise produce a
+    // different cigar/pos than lifting its SA entry here, leaving the primary's SA referencing a missing supp.
+    static String liftedEntryKey(final LiftedCoords lifted, final char strand)
+    {
+        return lifted.chromosome() + ':' + lifted.position() + ':' + strand + ':' + lifted.cigarString().replace('H', 'S');
     }
 }

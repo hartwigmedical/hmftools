@@ -341,4 +341,25 @@ public class LiftBackGroupProcessorTest
         assertFalse(emitted.get(0).getReadUnmappedFlag());
         assertEquals(0, stats.lowAsPrimariesUnmapped());
     }
+
+    @Test
+    public void lowAsPrimaryUnmapDropsItsSupplementary()
+    {
+        // The AS-floor unmap now happens during decide, so the supp-orphan gate observes the unmapped primary and
+        // drops the supplementary. Previously it fired only at emit, leaving decision.PrimaryResult mapped, so the
+        // supp survived with an SA referencing a primary emitted as unmapped (a dangling locus for REDUX
+        // FragmentCoords). The supp's SA lifts cleanly, so without the fix it would emit -> two records, not one.
+        SAMRecord primary = primaryRecord(TX_CONTIG, 100, "50M");
+        primary.setAttribute("AS", 20);
+        SAMRecord supp = supplementaryRecord(TX_CONTIG, 110, "30M", TX_CONTIG + ",100,+,50M,0,0;");
+
+        LiftBackStats stats = new LiftBackStats();
+        List<SAMRecord> emitted = process(List.of(primary, supp), stats, noopSupplementary());
+
+        assertEquals(1, emitted.size());
+        assertTrue(emitted.get(0).getReadUnmappedFlag());
+        assertFalse(emitted.get(0).getSupplementaryAlignmentFlag());
+        assertEquals(1, stats.lowAsPrimariesUnmapped());
+        assertEquals(1, stats.orphanSuppsDropped());
+    }
 }

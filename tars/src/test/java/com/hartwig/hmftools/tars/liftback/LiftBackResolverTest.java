@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.threeExonConti
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
@@ -565,5 +566,50 @@ public class LiftBackResolverTest
         // a random-tie pick is a coin-flip among distinct placements, so it is not a confident unique call
         assertEquals(0, LiftBackResolver.decidePrimaryMapq(0, 1, false, false, false, true));
         assertEquals(60, LiftBackResolver.decidePrimaryMapq(0, 1, false, false, false, false));
+    }
+
+    private static LiftedAlignment liftedAt(final String chrom, final int pos, final String cigar)
+    {
+        return new LiftedAlignment(
+                LiftedAlignment.AlignmentSource.XA_INPUT, chrom, pos, cigar, chrom, pos, cigar,
+                0, 0, null, null, null, false, true);
+    }
+
+    @Test
+    public void countDistinctLociFromListRecountsPostReclaim()
+    {
+        // The public overload backs the emit-time NH recompute: it finds the primary via IsPrimaryChoice (as
+        // buildLiftedXa does), drops Dropped alts, and collapses alts overlapping the primary - so NH stays
+        // consistent with the XA after reconcileChosenPrimary's alt reclaim mutates the shared list.
+        LiftedAlignment primary = liftedAt(CHR_1, 1000, "100M");   // span 1000-1099
+        primary.IsPrimaryChoice = true;
+        LiftedAlignment overlapping = liftedAt(CHR_1, 1050, "100M");   // 1050-1149 overlaps the primary
+        LiftedAlignment distant = liftedAt(CHR_1, 5000, "100M");   // a genuinely distinct locus
+        LiftedAlignment droppedDistant = liftedAt(CHR_1, 8000, "100M");
+        droppedDistant.Dropped = true;
+
+        assertEquals(1, LiftBackResolver.countDistinctLoci(List.of(primary)));
+        assertEquals(1, LiftBackResolver.countDistinctLoci(List.of(primary, overlapping)));
+        assertEquals(2, LiftBackResolver.countDistinctLoci(List.of(primary, distant)));
+        assertEquals(1, LiftBackResolver.countDistinctLoci(List.of(primary, droppedDistant)));
+        // no primary marked (e.g. an unmapped result's empty list) -> 1
+        assertEquals(1, LiftBackResolver.countDistinctLoci(List.of(liftedAt(CHR_1, 1000, "100M"))));
+    }
+
+    @Test
+    public void oppositeStrandXaAltsNotCollapsed()
+    {
+        // Two XA alts at the same genomic locus and cigar but opposite strands are distinct placements. The lifted
+        // dedup key includes strand, so both survive into the XA output; previously they collapsed to one, silently
+        // dropping a strand-distinct placement.
+        SAMRecord record = newRecord(CHR_1, 1000, "50M");
+        record.setAttribute("XA", "chr5,+5000,50M,0;chr5,-5000,50M,0;");
+
+        LiftBackResolver resolver = new LiftBackResolver(contigMap());
+        LiftBackResult result = resolver.resolve(record);
+
+        String xa = LiftBackRecordOps.buildLiftedXa(result);
+        assertNotNull(xa);
+        assertTrue("both strands kept: " + xa, xa.contains("chr5,+5000") && xa.contains("chr5,-5000"));
     }
 }

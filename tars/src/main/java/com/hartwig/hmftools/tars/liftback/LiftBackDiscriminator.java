@@ -165,13 +165,6 @@ public final class LiftBackDiscriminator
     {
     }
 
-    // Deterministic overload: respects bwa's order (no randomization). Used where the caller has no read seed.
-    public static ApplyResult apply(
-            final List<LiftedAlignment> alignments, final DecidingFeature feature, final LiftedAlignment self)
-    {
-        return apply(alignments, feature, self, 0, true);
-    }
-
     // Mate-agnostic overload: single-end reads and callers with no lifted mate.
     public static ApplyResult apply(
             final List<LiftedAlignment> alignments, final DecidingFeature feature, final LiftedAlignment self,

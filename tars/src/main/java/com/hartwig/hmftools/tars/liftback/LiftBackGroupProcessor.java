@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.tars.liftback.overhang.OverhangGate;
 import com.hartwig.hmftools.tars.liftback.overhang.OverhangGateStatistics;
@@ -30,7 +31,6 @@ import com.hartwig.hmftools.tars.liftback.supplementary.SupplementaryStatistics;
 import com.hartwig.hmftools.tars.liftback.supplementary.SupplementaryRecord;
 
 import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.TextCigarCodec;
 import htsjdk.samtools.util.SequenceUtil;
 
 // Stateless-per-group transform engine: resolves one contiguous read-name group to genomic coordinates,
@@ -229,23 +229,21 @@ public class LiftBackGroupProcessor
         LiftBackResult PrimaryResult;
         List<ChrBaseRegion> IntroducedIntrons;
         int PrimaryIndex;
-        boolean PrimaryPostProcessed;
 
         MateDecision(final LiftBackResult[] resolved, final boolean[] droppedBySupplementary,
                 final LiftBackResult primaryResult, final List<ChrBaseRegion> introducedIntrons,
-                final int primaryIndex, final boolean primaryPostProcessed)
+                final int primaryIndex)
         {
             Resolved = resolved;
             DroppedBySupplementary = droppedBySupplementary;
             PrimaryResult = primaryResult;
             IntroducedIntrons = introducedIntrons != null ? introducedIntrons : Collections.emptyList();
             PrimaryIndex = primaryIndex;
-            PrimaryPostProcessed = primaryPostProcessed;
         }
 
         static MateDecision empty()
         {
-            return new MateDecision(new LiftBackResult[0], null, null, Collections.emptyList(), -1, false);
+            return new MateDecision(new LiftBackResult[0], null, null, Collections.emptyList(), -1);
         }
     }
 
@@ -303,15 +301,34 @@ public class LiftBackGroupProcessor
             resolved[primaryIdx] = LiftBackResult.unmapped(LiftBackResult.RecordRole.PRIMARY, "excluded_region_unmapped");
             ++mExcludedReads;
         }
-
-        // supplementary resolve / the overhang gate each replace resolved[primaryIdx] with a new result object when
-        // they improve the primary. A changed reference means liftback post-processed it, so its stale bwa
-        // AS must not be used to AS-filter it (see PRIMARY_AS_UNMAP_THRESHOLD).
-        boolean primaryPostProcessed = primaryIdx >= 0 && resolved[primaryIdx] != primaryResult;
+        else if(primaryIdx >= 0 && primary != null && !primary.getReadUnmappedFlag())
+        {
+            // Unmap the chosen primary HERE (during decide, like the excluded-region case above) rather than at emit,
+            // so the mate cache and the supp-orphan gate both observe the unmap. Two mutually-exclusive triggers:
+            //  - over bwa's XA reporting cap: bwa emitted it MAPQ 0 with no XA, i.e. too many loci to place.
+            //  - residual short anchor: bwa scored it below the -T 30 default and liftback could not improve it. Only
+            //    when supplementary resolve did not post-process the primary, so its stale bwa AS is still valid.
+            // A changed result object means the overhang gate / supplementary resolve improved the primary.
+            // The diagnostic counters stay at emit (keyed on the note), because writeMateGroup runs once on the final
+            // decision - a discarded provisional m1 pass never reaches it, so there is no double count to roll back.
+            boolean primaryPostProcessed = resolved[primaryIdx] != primaryResult;
+            if(LiftBackRecordOps.exceedsMappingCap(resolved[primaryIdx]))
+            {
+                resolved[primaryIdx] = LiftBackResult.unmapped(LiftBackResult.RecordRole.PRIMARY, "over_cap_unmapped");
+            }
+            else if(mSupplementaryResolver != null && !primaryPostProcessed)
+            {
+                Integer alignmentScore = primary.getIntegerAttribute(AS_TAG);
+                if(alignmentScore != null && alignmentScore < PRIMARY_AS_UNMAP_THRESHOLD)
+                {
+                    resolved[primaryIdx] = LiftBackResult.unmapped(LiftBackResult.RecordRole.PRIMARY, "low_as_unmapped");
+                }
+            }
+        }
 
         return new MateDecision(resolved, droppedBySupplementary,
                 primaryIdx >= 0 ? resolved[primaryIdx] : primaryResult,
-                introduced, primaryIdx, primaryPostProcessed);
+                introduced, primaryIdx);
     }
 
     // The primary was placed by an unresolved score tie ("random"), so a now-known mate locus may break it.
@@ -405,25 +422,33 @@ public class LiftBackGroupProcessor
         }
 
         // SA entries of dropped supps removed from the primary's SA so it never references a missing supp.
+        // The key is built the SAME way rewriteSaTag keys the primary's SA entry for this supp: lift the supp's
+        // own bwa placement (its record still holds tx-contig coords here, before applyResultToRecord). Keying off
+        // the supp's post-liftback result instead uses a micro-anchor-trimmed cigar that never matches the SA
+        // entry, so the dropped supp's entry would dangle on the primary.
         Set<String> droppedSuppSaKeys = new HashSet<>();
         for(int i = 0; i < records.size(); i++)
         {
             if(willEmit[i])
                 continue;
             SAMRecord record = records.get(i);
-            LiftBackResult result = resolved[i];
-            if(record == primary || !record.getSupplementaryAlignmentFlag() || result == null
-                    || result.finalChrom() == null || result.finalCigar() == null
-                    || result.finalCigar().equals(SAMRecord.NO_ALIGNMENT_CIGAR))
+            if(record == primary || !record.getSupplementaryAlignmentFlag())
                 continue;
-            droppedSuppSaKeys.add(suppSaKey(result));
+            LiftedCoords lifted = mResolver.liftCoords(
+                    record.getReferenceName(), record.getAlignmentStart(), record.getCigarString());
+            if(lifted == null)
+                continue;
+            droppedSuppSaKeys.add(SaTagRewriter.liftedEntryKey(lifted, record.getReadNegativeStrandFlag() ? '-' : '+'));
         }
 
-        // NH = the number of distinct genomic loci the read lifts back to, taken from the resolver's
-        // chrom:pos-keyed locus count. Counting emitted records would inflate NH by tx-contig
-        // representation multiplicity (one junction repeated across many transcript contigs all lifting
-        // to the same locus).
-        int nh = decision.PrimaryResult != null ? Math.max(decision.PrimaryResult.numLoci(), 1) : 1;
+        // NH = the number of distinct genomic loci the read lifts back to, from the resolver's chrom:pos-keyed
+        // locus count. Recomputed here (not read off the result) because reconcileChosenPrimary's alt-softclip
+        // reclaim runs after resolve baked numLoci in and can collapse a formerly-distinct alt onto the primary;
+        // recounting the final list keeps NH consistent with the XA buildLiftedXa emits from the same list.
+        // Counting emitted records instead would inflate NH by tx-contig multiplicity (one junction repeated
+        // across many transcript contigs all lifting to the same locus).
+        int nh = decision.PrimaryResult != null
+                ? LiftBackResolver.countDistinctLoci(decision.PrimaryResult.liftedAlignments()) : 1;
 
         // When the discriminator moved the primary off bwa's placement (a ref->tx swap or a random-locus pick), each
         // surviving supplementary's own bwa SA still references bwa's PRE-move primary locus, which was never emitted.
@@ -439,10 +464,9 @@ public class LiftBackGroupProcessor
                 mStats.record(record, result);
                 continue;
             }
-            boolean primaryPostProcessed = i == decision.PrimaryIndex && decision.PrimaryPostProcessed;
             String rebuiltSuppSa = (primarySwapped && record != primary && record.getSupplementaryAlignmentFlag())
                     ? buildSwappedSuppSa(records, resolved, willEmit, decision.PrimaryResult, i) : null;
-            applyAndWriteRecord(record, result, nh, primaryPostProcessed, droppedSuppSaKeys, liftedMateInfoCache, sink, rebuiltSuppSa);
+            applyAndWriteRecord(record, result, nh, droppedSuppSaKeys, liftedMateInfoCache, sink, rebuiltSuppSa);
         }
     }
 
@@ -846,22 +870,12 @@ public class LiftBackGroupProcessor
         {
             return false;
         }
-        int end = result.finalPos() + TextCigarCodec.decode(cigar).getReferenceLength() - 1;
+        int end = result.finalPos() + CigarUtils.calcCigarAlignedLength(cigar) - 1;
         return mExcludedRegions.excludes(result.finalChrom(), result.finalPos(), end);
     }
 
-    // SA entry key (chrom:pos:strand:cigar) of a supplementary's lifted placement, matching SaTagRewriter's
-    // entry key so a dropped supp's entry can be removed from the primary's SA tag. Clips are normalised H->S:
-    // the supp RECORD is hard-clipped (e.g. 19M247H) but the primary's SA tag lists it soft-clipped (19M247S),
-    // so the keys would otherwise never match and the dropped supp's SA entry would dangle.
-    private static String suppSaKey(final LiftBackResult result)
-    {
-        return result.finalChrom() + ":" + result.finalPos()
-                + ":" + (result.negativeStrand() ? '-' : '+') + ":" + result.finalCigar().replace('H', 'S');
-    }
-
     private void applyAndWriteRecord(
-            final SAMRecord record, final LiftBackResult result, final int nh, final boolean primaryPostProcessed,
+            final SAMRecord record, final LiftBackResult result, final int nh,
             final Set<String> droppedSuppSaKeys, final LiftedMateInfoCache liftedMateInfoCache, final EmitSink sink,
             final String rebuiltSuppSa)
     {
@@ -869,8 +883,8 @@ public class LiftBackGroupProcessor
 
         LiftBackRecordOps.applyResultToRecord(record, result, liftedMateInfoCache);
 
-        // A primary flipped to UNMAPPED post-lift (e.g. excluded region) still carries its mapped coords -
-        // applyResultToRecord's UNMAPPED case is a no-op for input-unmapped reads, so unmap it explicitly.
+        // A primary flipped to UNMAPPED during decide (excluded region / over-cap / low-AS) still carries its mapped
+        // coords - applyResultToRecord's UNMAPPED case is a no-op for input-unmapped reads, so unmap it explicitly.
         if(result.recordState() == RecordState.UNMAPPED && !record.getReadUnmappedFlag())
         {
             markPrimaryUnmapped(record);
@@ -902,31 +916,23 @@ public class LiftBackGroupProcessor
             record.setAttribute("NH", nh);
         }
 
-        // Over bwa's XA reporting cap: a primary that bwa emitted MAPQ 0 with no XA maps to too many loci to
-        // place (the alt list was suppressed, not truncated). Unmap it. Keyed on the input state because the
-        // missing XA makes the resolver see a single locus, which would otherwise bump MAPQ to 60.
-        if(LiftBackRecordOps.exceedsMappingCap(result)
-                && !record.getReadUnmappedFlag()
-                && !record.getSupplementaryAlignmentFlag())
+        // Diagnostic counters for the primary-unmap reasons decided in decideMateGroup (the record itself is
+        // unmapped by the UNMAPPED-result handling above). Counted here, not in decide, because writeMateGroup runs
+        // once on the final decision - a discarded provisional m1 pass never reaches emit, so there is no double
+        // count. Over-cap: bwa emitted MAPQ 0 with no XA (too many loci). Low-AS: a residual short anchor bwa
+        // scored below the -T 30 floor that liftback could not improve.
+        if(result.recordState() == RecordState.UNMAPPED && !record.getSupplementaryAlignmentFlag())
         {
-            markPrimaryUnmapped(record);
-            ++mOverCapUnmapped;
-            TARS_LOGGER.debug2("over-cap unmap {}: inputMapq=0, no XA (past bwa XA cap)", record.getReadName());
-        }
-
-        // residual short-anchor primary: bwa scored it below the default -T 30 floor and liftback couldn't
-        // improve it (not resolved / extended / collapsed). Unmap it so the noise alignment doesn't pollute
-        // the locus. Gated on supplementary resolve running, matching the supp drop's -T 19 rationale.
-        if(mSupplementaryResolver != null && !primaryPostProcessed
-                && !record.getReadUnmappedFlag()
-                && !record.getSupplementaryAlignmentFlag())
-        {
-            Integer alignmentScore = record.getIntegerAttribute(AS_TAG);
-            if(alignmentScore != null && alignmentScore < PRIMARY_AS_UNMAP_THRESHOLD)
+            if("over_cap_unmapped".equals(result.notes()))
             {
-                markPrimaryUnmapped(record);
+                ++mOverCapUnmapped;
+                TARS_LOGGER.debug2("over-cap unmap {}: inputMapq=0, no XA (past bwa XA cap)", record.getReadName());
+            }
+            else if("low_as_unmapped".equals(result.notes()))
+            {
                 mStats.recordLowAsPrimaryUnmapped();
-                TARS_LOGGER.debug2("AS-floor unmap {}: AS={} < {}", record.getReadName(), alignmentScore, PRIMARY_AS_UNMAP_THRESHOLD);
+                TARS_LOGGER.debug2("AS-floor unmap {}: AS={} < {}",
+                        record.getReadName(), record.getIntegerAttribute(AS_TAG), PRIMARY_AS_UNMAP_THRESHOLD);
             }
         }
 
