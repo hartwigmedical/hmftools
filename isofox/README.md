@@ -11,7 +11,7 @@ For transcript abundance, Isofox uses a similar methodology to several previous 
 * Avoids overfitting of 'retained intron' transcripts which may simply be intronic reads 
 * Individual or combinations of splice junctions which are unique to a transcript will be weighed strongly. Does not overfit variability of coverage within exons
 
-The input for Isofox is mapped paired end reads (we use STAR for our aligner).
+The input for Isofox is mapped paired end reads. We align with bwa-mem2 against a transcriptome-augmented reference and lift the alignments back to genomic coordinates with tars, then mark duplicates with redux; Isofox takes the resulting post-tars, post-redux BAM.
 
 
 ### A note on duplicates, highly expressed genes, raw and adjusted TPM
@@ -22,19 +22,9 @@ We find that 6 genes in particular (RN7SL2, RN7SL1, RN7SL3, RN7SL4P, RN7SL5P & R
 In addition, any junction which maps in the Poly-G region of LINC00486 is filtered from all analyses (v38: chr2:32,916,190-32,916,630; v37: 2:33,141,260-33,141,700) as they are likely the result of Poly-G sequencer artefacts.
 
 ### A note on alignment and multi-mapping
-We use STAR as our aligner. ISOFOX expects BAM output with chimeric reads in the BAM itself, so it is essential when using STAR to set the outSAMtype to 'BAM Unsorted' and the chimOutType to 'WithinBAM'
+Reads are aligned with bwa-mem2 against a transcriptome-augmented reference and lifted back to genomic coordinates by tars, then duplicate-marked by redux. Chimeric and supplementary alignments are retained in the BAM.
 
-The full list of non default parameters we use internally is:
-
-```
---outSAMtype BAM Unsorted --outSAMunmapped Within --outBAMcompression 0 --outSAMattributes All --outFilterMultimapNmax 10 
---outFilterMismatchNmax 3 limitOutSJcollapsed 3000000 -chimSegmentMin 10 --chimOutType WithinBAM SoftClip 
---chimJunctionOverhangMin 10 --chimSegmentReadGapMax 3 --chimScoreMin 1 --chimScoreDropMax 30 --chimScoreJunctionNonGTAG 0 
---chimScoreSeparation 1 --outFilterScoreMinOverLread 0.33 --outFilterMatchNminOverLread 0.33 --outFilterMatchNmin 35 
---alignSplicedMateMapLminOverLmate 0.33 --alignSplicedMateMapLmin 35 --alignSJstitchMismatchNmax 5 -1 5 5
-```
-
-STAR allows setting of the `—outFilterMultimapNmax` parameter to specify the maximum number of multimaps to allow for an alignment, and we use the default value (10).   STAR will mark one of the multi-mappable reads as primary and the remainder as secondary reads. By default, STAR sets MAPQ for mappable reads to 255, whereas multi-mappable reads will have qual scores of 3 or less. For transcript abundance only, Isofox counts both primary and secondary reads at all locations, but reduces the weight of the reads to reflect the multi-mapping  (MAPQ 3 = 50%,  MAPQ 2 = 33%, MAPQ 1 = 20%, MAPQ 0 => 10%).    Reads with MAPQ of <10 are excluded from novel splice junction and chimeric analysis
+A multi-mapped read is emitted as a single primary alignment that carries its alternate genomic loci in the bwa `XA` tag; there are no separate secondary records. bwa map qualities range from 0 to 60, with a confident single-locus read at 60 and multi-mapped reads at 0 to 3. For transcript abundance, Isofox spreads a multi-mapped fragment as 1/N across the N loci listed in its XA tag: the primary locus is counted through the normal expression path and each alternate locus is attributed 1/N to the gene it falls in, with any locus outside a gene keeping its share unattributed. Reads with alternate XA loci (multi-mapped) are excluded from novel splice junction and chimeric analysis.
 
 ## Configuration
 The functions of Isofox are controlled by the 'functions' argument:
@@ -236,7 +226,7 @@ Each fragment is assigned to a 'category' based on the set of transcripts that i
 
 Any fragment which does not contain a splice junction, is wholly contained within the bounds of a gene, and with fragment size <= maximum insert size distribution is also allowed to map to an ‘UNSPLICED’ transcript of that gene.
 
-Note that reads which are partially exonic, but marginally overhang an exon boundary or are soft clipped at or beyond an exon boundary have special treatment. This is particularly relevant for reads that have an overhang of 1 or 2 bases which will not be mapped by STAR with default parameters. If the overhanging section can be uniquely mapped either to the reference or to the other side of only a single known spliced junction, then the fragment is deemed to be supporting that splice junction or in the case of supporting just the reference is deemed to be supporting the UNSPLICED transcript.  If multiple mappings are possible or the fragment length < unclipped read length (indicating likely adapter sequence) it is truncated at the exon boundary.  If no mapping is possible then the fragment is treated as not supporting any known transcript.
+Note that reads which are partially exonic, but marginally overhang an exon boundary or are soft clipped at or beyond an exon boundary have special treatment. This is particularly relevant for reads that have an overhang of 1 or 2 bases which may not be mapped across the exon boundary by the aligner. If the overhanging section can be uniquely mapped either to the reference or to the other side of only a single known spliced junction, then the fragment is deemed to be supporting that splice junction or in the case of supporting just the reference is deemed to be supporting the UNSPLICED transcript.  If multiple mappings are possible or the fragment length < unclipped read length (indicating likely adapter sequence) it is truncated at the exon boundary.  If no mapping is possible then the fragment is treated as not supporting any known transcript.
 
 ### 5. Fit abundance estimate per transcript
 
