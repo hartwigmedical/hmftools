@@ -17,11 +17,9 @@ import static com.hartwig.hmftools.dnds.DndsCommon.APP_NAME;
 import static com.hartwig.hmftools.dnds.DndsCommon.DN_LOGGER;
 import static com.hartwig.hmftools.dnds.SampleMutationalLoad.cohortSampleMutationalLoadFilename;
 import static com.hartwig.hmftools.dnds.SampleMutationalLoad.initialiseWriter;
-import static com.hartwig.hmftools.dnds.SampleMutationalLoad.loadCohortSampleMutationalLoads;
 
 import java.io.BufferedWriter;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
@@ -62,35 +60,21 @@ public class DndsDataBuilder
         DN_LOGGER.info("DNDS sample data building for {} samples", mSampleIds.size());
 
         mVariantsWriter = SomaticVariant.initialiseWriter(SomaticVariant.cohortDndsVariantsFilename(mOutputDir));
+        mMutLoadWriter = initialiseWriter(cohortSampleMutationalLoadFilename(mOutputDir));
 
-        // check for existing sample data
-        String cohortSampleMutLoadFilename = cohortSampleMutationalLoadFilename(mOutputDir);
-
-        Map<String, SampleMutationalLoad> sampleMutationalLoadMap = loadCohortSampleMutationalLoads(cohortSampleMutLoadFilename, false);
-
-        List<String> missingSampleIds = mSampleIds.stream().filter(x -> !sampleMutationalLoadMap.containsKey(x)).collect(Collectors.toList());
-
-        if(missingSampleIds.isEmpty())
-        {
-            DN_LOGGER.info("all {} samples have mutational load data", mSampleIds.size());
-            return;
-        }
-
-        mMutLoadWriter = initialiseWriter(cohortSampleMutLoadFilename);
-
-        DN_LOGGER.info("retrieving mutation load and variant data for {} samples", missingSampleIds.size());
+        DN_LOGGER.info("retrieving mutation load and variant data for {} samples", mSampleIds.size());
 
         List<SampleTask> sampleTasks = Lists.newArrayList();
 
         if(mThreads > 1)
         {
-            for(int i = 0; i < min(missingSampleIds.size(), mThreads); ++i)
+            for(int i = 0; i < min(mSampleIds.size(), mThreads); ++i)
             {
                 sampleTasks.add(new SampleTask(i));
             }
 
             int taskIndex = 0;
-            for(String sampleId : missingSampleIds)
+            for(String sampleId : mSampleIds)
             {
                 if(taskIndex >= sampleTasks.size())
                     taskIndex = 0;
@@ -108,7 +92,7 @@ public class DndsDataBuilder
         else
         {
             SampleTask sampleTask = new SampleTask(0);
-            sampleTask.addSamples(missingSampleIds);
+            sampleTask.addSamples(mSampleIds);
             sampleTasks.add(sampleTask);
             sampleTask.call();
         }

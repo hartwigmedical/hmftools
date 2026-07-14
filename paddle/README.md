@@ -46,24 +46,23 @@ java -cp paddle.jar com.hartwig.hmftools.dnds.builder.DndsDataBuilder \
     -db_user ${user} -db_pass ${pass} -db_url ${url}
 ```
 
-This produces a `dnds_cohort_mut_load.tsv` file, one line per sample, with the following columns:
+This produces a `dnds_cohort_mut_load.tsv` file with the mutational load counts per sample:
 
 ```tsv
 SampleId  SnvBiallelic  SnvNonBiallelic  IndelBiallelic  IndelNonBiallelic
 SAMPLE_1          8363	          31285             104                612
-SAMPLE_2          1022	           5052              23                 10
 ```
 
-And for each sample, a `<SampleId>.dnds_variants.tsv` file, one line per variant:
+And a `dnds_cohort_variants.tsv.gz` with containing variant data for all samples:
 
 ```tsv
-Chromosome   Position  Ref  Alt  Gene  Biallelic  Hotspot  WorstCodingEffect  CanonicalCodingEffect  RepeatCount
-      chr7  140753336    A    T  BRAF      false     true           MISSENSE               MISSENSE            0
+SampleId  Chromosome   Position  Ref  Alt  Gene  Biallelic  Hotspot  WorstCodingEffect  CanonicalCodingEffect  RepeatCount
+SAMPLE_1        chr7  140753336    A    T  BRAF      false     true           MISSENSE               MISSENSE            0
 ```
 
 ## Run dNdScv
 
-    The next step is to run dNdScv on the data collected by step 2. This requires a modified version of the [original dndscv tool](https://github.com/im3sanger/dndscv).
+The next step is to run dNdScv on the data collected by step 2. This requires a modified version of the [original dndscv tool](https://github.com/im3sanger/dndscv).
 In addition, this step requires a custom HmfRefCDS.RData. Both the modified tool as well as the HMF ref data are kept in Hartwig's internal GCP environment.
 
 To actually run the modified version of dndscv, use the dnds.R script provided alongside the paddle jar,
