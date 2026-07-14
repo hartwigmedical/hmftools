@@ -127,7 +127,7 @@ public class ChromosomeTaskExecutor implements Callable<Void>
 
     public String chromosome() { return mChromosome; }
     public List<GeneCollectionSummary> getGeneCollectionSummaryData() { return mGeneCollectionSummaryData; }
-    public Map<String,Double> getMultiMapGeneCounts() { return mBamFragmentAllocator.getMultiMapGeneCounts(); }
+    public Map<String,double[]> getMultiMapGeneCounts() { return mBamFragmentAllocator.getMultiMapGeneCounts(); }
     public GcRatioCounts getGcRatioCounts() { return mGcRatioCounts; }
 
     public ChimericStats getChimericStats() { return mChromosomeFusions.chimericStats(); }

@@ -53,6 +53,7 @@ import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMFlag;
 import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.TextCigarCodec;
 
 public class Read
 {
@@ -83,7 +84,7 @@ public class Read
     private String mSupplementaryAlignment;
     private boolean mHasInterGeneSplit;
     private short mMapQuality;
-    private List<ChrBaseRegion> mAltLoci; // alternate genomic mapping loci from XA tag; null if uniquely mapped
+    private List<AltAlignment> mAltLoci; // alternate genomic mapping loci from XA tag; null if uniquely mapped
 
     private int[] mJunctionPositions; // chimeric junctions
 
@@ -110,13 +111,28 @@ public class Read
         return read;
     }
 
-    private static List<ChrBaseRegion> parseAltLoci(final String xaTag)
+    // An alternate mapping locus from the XA tag: its genomic span and whether that alignment is itself spliced.
+    // The span and splice status drive exon-aware, category-correct multi-map fan-out downstream.
+    public static class AltAlignment
+    {
+        public final ChrBaseRegion Region;
+        public final boolean Spliced;
+
+        public AltAlignment(final ChrBaseRegion region, final boolean spliced)
+        {
+            Region = region;
+            Spliced = spliced;
+        }
+    }
+
+    private static List<AltAlignment> parseAltLoci(final String xaTag)
     {
         if(xaTag == null || xaTag.isEmpty())
             return null;
 
-        List<ChrBaseRegion> altLoci = Lists.newArrayList();
+        List<AltAlignment> altLoci = Lists.newArrayList();
 
+        // XA entry format: chr,(+/-)pos,CIGAR,NM
         for(String entry : xaTag.split(";"))
         {
             if(entry.isEmpty())
@@ -130,7 +146,21 @@ public class Read
             try
             {
                 int position = Math.abs(Integer.parseInt(fields[1]));
-                altLoci.add(new ChrBaseRegion(fields[0], position, position));
+
+                // the alt CIGAR (field 3) gives the reference span and splice status; fall back to a single base
+                // when it is absent so the locus is still gene-matched, just not exon-precise
+                int refLength = 1;
+                boolean spliced = false;
+                String cigarStr = fields.length > 2 ? fields[2] : null;
+
+                if(cigarStr != null && !cigarStr.isEmpty())
+                {
+                    refLength = max(TextCigarCodec.decode(cigarStr).getReferenceLength(), 1);
+                    spliced = cigarStr.indexOf('N') >= 0;
+                }
+
+                ChrBaseRegion region = new ChrBaseRegion(fields[0], position, position + refLength - 1);
+                altLoci.add(new AltAlignment(region, spliced));
             }
             catch(NumberFormatException e)
             {
@@ -271,8 +301,8 @@ public class Read
     public void setMapQuality(short mapQuality) { mMapQuality = mapQuality; }
     public short mapQuality() { return mMapQuality; }
 
-    public void setAltLoci(final List<ChrBaseRegion> altLoci) { mAltLoci = altLoci; }
-    public List<ChrBaseRegion> altLoci() { return mAltLoci; }
+    public void setAltLoci(final List<AltAlignment> altLoci) { mAltLoci = altLoci; }
+    public List<AltAlignment> altLoci() { return mAltLoci; }
 
     public int numLoci() { return mAltLoci != null ? 1 + mAltLoci.size() : 1; }
 

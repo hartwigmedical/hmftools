@@ -4,9 +4,10 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.XA_ATTRIBUTE;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.createSamRecord;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
-import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.isofox.common.Read;
 
 import org.junit.Test;
@@ -45,13 +46,29 @@ public class MultiMapReadTest
         assertEquals(3, read.numLoci());
         assertEquals(2, read.altLoci().size());
 
-        ChrBaseRegion firstAlt = read.altLoci().get(0);
-        assertEquals("2", firstAlt.Chromosome);
-        assertEquals(5000, firstAlt.start());
+        Read.AltAlignment firstAlt = read.altLoci().get(0);
+        assertEquals("2", firstAlt.Region.Chromosome);
+        assertEquals(5000, firstAlt.Region.start());
+        assertEquals(5019, firstAlt.Region.end()); // 20M spans 20 reference bases
+        assertFalse(firstAlt.Spliced);
 
-        ChrBaseRegion secondAlt = read.altLoci().get(1);
-        assertEquals("3", secondAlt.Chromosome);
-        assertEquals(8000, secondAlt.start());
+        Read.AltAlignment secondAlt = read.altLoci().get(1);
+        assertEquals("3", secondAlt.Region.Chromosome);
+        assertEquals(8000, secondAlt.Region.start());
+    }
+
+    @Test
+    public void testSplicedAltSpanFromCigar()
+    {
+        // an alt whose CIGAR has an N gap is flagged spliced and its reference span includes the skipped intron
+        Read read = Read.from(createRead("5,+7000,10M100N10M,0;"));
+
+        assertEquals(2, read.numLoci());
+
+        Read.AltAlignment alt = read.altLoci().get(0);
+        assertTrue(alt.Spliced);
+        assertEquals(7000, alt.Region.start());
+        assertEquals(7119, alt.Region.end()); // 10 + 100 + 10 = 120 reference bases
     }
 
     @Test
@@ -62,7 +79,7 @@ public class MultiMapReadTest
 
         assertEquals(3, read.numLoci());
         assertEquals(2, read.altLoci().size());
-        assertEquals("4", read.altLoci().get(1).Chromosome);
-        assertEquals(9000, read.altLoci().get(1).start());
+        assertEquals("4", read.altLoci().get(1).Region.Chromosome);
+        assertEquals(9000, read.altLoci().get(1).Region.start());
     }
 }
