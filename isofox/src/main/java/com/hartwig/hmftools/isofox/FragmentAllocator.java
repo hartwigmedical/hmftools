@@ -403,11 +403,9 @@ public class FragmentAllocator
         boolean isDuplicate = read1.isDuplicate() || read2.isDuplicate();
         boolean isMultiMapped = read1.isMultiMapped() || read2.isMultiMapped();
 
-        List<Read.AltAlignment> altLoci = read1.altLoci();
-        if(read2.altLoci() != null && (altLoci == null || read2.altLoci().size() > altLoci.size()))
-            altLoci = read2.altLoci();
-
-        int numLoci = altLoci != null ? 1 + altLoci.size() : 1;
+        // a uniquely-placed mate pins the fragment, so use the lower of the two mates' locus counts
+        int numLoci = min(read1.numLoci(), read2.numLoci());
+        List<Read.AltAlignment> altLoci = read1.numLoci() <= read2.numLoci() ? read1.altLoci() : read2.altLoci();
 
         boolean isChimeric = mChimericReads.isChimeric(read1, read2, isDuplicate, isMultiMapped);
 
@@ -461,7 +459,7 @@ public class FragmentAllocator
         }
 
         if(numLoci > 1 && mExpressionReadTracker.enabled())
-            fanOutMultiMappedFragment(altLoci, numLoci);
+            numLoci = fanOutMultiMappedFragment(altLoci, numLoci);
 
         int readPosMin = min(read1.PosStart, read2.PosStart);
         int readPosMax = max(read1.PosEnd, read2.PosEnd);
@@ -859,16 +857,18 @@ public class FragmentAllocator
 
     public Map<String,double[]> getMultiMapGeneCounts() { return mMultiMapGeneCounts; }
 
-    // Distribute a multi-mapped fragment's per-locus share (1/numLoci) across the genes each XA alt locus supports.
-    // Only exonic overlaps are credited: an alt falling in an intron (the bulk of a large gene's span) does not
-    // support a transcript, so crediting it - as the previous full-gene-span match did - let big intronic genes
-    // harvest unrelated genome-wide multimappers. The share is booked spliced/unspliced per the alt's own CIGAR.
-    private void fanOutMultiMappedFragment(final List<Read.AltAlignment> altLoci, int numLoci)
+    // an alt inside a gene's intron supports no transcript, so crediting it (as the old full-gene-span match did)
+    // lets big intronic genes harvest unrelated multimappers; only exonic overlaps are credited. Mass is
+    // renormalised over the loci that clear the gate (primary + exon-supported alts) so an off-exon alt's share
+    // shifts to the survivors rather than being dropped; the returned count is the denominator the caller then
+    // weights the primary locus by.
+    private int fanOutMultiMappedFragment(final List<Read.AltAlignment> altLoci, int numLoci)
     {
         if(altLoci == null || mGeneTransCache == null)
-            return;
+            return numLoci;
 
-        double locusWeight = 1.0 / numLoci;
+        List<List<GeneData>> altExonicGenes = Lists.newArrayList();
+        int exonicAltCount = 0;
 
         for(Read.AltAlignment locus : altLoci)
         {
@@ -879,11 +879,24 @@ public class FragmentAllocator
                     .filter(gene -> altOverlapsExon(gene, locus.Region))
                     .collect(Collectors.toList());
 
+            altExonicGenes.add(exonicGenes);
+
+            if(!exonicGenes.isEmpty())
+                ++exonicAltCount;
+        }
+
+        int effectiveLoci = 1 + exonicAltCount;
+        double locusWeight = 1.0 / effectiveLoci;
+
+        for(int i = 0; i < altLoci.size(); ++i)
+        {
+            List<GeneData> exonicGenes = altExonicGenes.get(i);
+
             if(exonicGenes.isEmpty())
                 continue;
 
             double geneWeight = locusWeight / exonicGenes.size();
-            int index = locus.Spliced ? MULTI_MAP_SPLICED : MULTI_MAP_UNSPLICED;
+            int index = altLoci.get(i).Spliced ? MULTI_MAP_SPLICED : MULTI_MAP_UNSPLICED;
 
             for(GeneData gene : exonicGenes)
             {
@@ -891,6 +904,8 @@ public class FragmentAllocator
                 counts[index] += geneWeight;
             }
         }
+
+        return effectiveLoci;
     }
 
     private boolean altOverlapsExon(final GeneData gene, final ChrBaseRegion altRegion)
@@ -1136,6 +1151,7 @@ public class FragmentAllocator
 
         mValidReadStartRegion[SE_END] = mCurrentGenes.regionBounds()[SE_END];
 
+        mExpressionReadTracker.setGeneData(mCurrentGenes);
         mAltSpliceJunctionFinder.setGeneData(mCurrentGenes);
         mRetainedIntronFinder.setGeneData(mCurrentGenes);
         mChimericReads.initialise(mCurrentGenes);
