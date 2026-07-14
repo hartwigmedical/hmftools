@@ -4,44 +4,62 @@ Uses dNdS values to calculate expected driver and passenger mutation rates.
 
 There are 4 steps required to generate dNdS values
 1. [Define the cohort to run on](#define-the-cohort-to-run-on)
-2. [Gather variants of cohort](#collecting-exonic-variants-for-all-samples-in-the-cohort)
+2. [Gather variants of cohort](#gather-exonic-variants-for-all-samples-in-the-cohort)
 3. [Run dNdScv](#run-dndscv)
 4. [Generate driver catalog values](#generate-driver-catalog-values)
 
 ## Define the cohort to run on 
 
-First step is to create the cohort to run dNdS on. The cohort should not contain more than one sample for any specific patient.
-To update the driver catalog values used by Hartwig, the cohort needs to be defined as the Highest Purity Cohort which is the 
-best sample for every patient that passes QC. Any smaller cohort could be picked for more specific analyses. 
+The first step is to select a set of samples to run dNdS on. The cohort should contain one sample per patient, with the selected sample 
+being the one with the highest purity that passes QC.
  
-The output from this step should be a tab delimited file as follows:
+The sample IDs of the cohort are listed in a TSV file, one sample per line:
 
-```
-sampleId	purity
-SAMPLE090001T	0.48
-SAMPLE090002T	0.82
-SAMPLE090003T	0.55
-SAMPLE090004T	0.42
+```tsv
+SampleId
+SAMPLE_1
+SAMPLE_2
 ```
 
-## Collecting exonic variants for all samples in the cohort
+## Gather exonic variants for all samples in the cohort
 
-Second step is to download the exonic somatic variants for each of the samples in the cohort and summarise these variants to get the mutational load for each sample.
+The second step is to:
+- Gather the exonic somatic variants for each of the samples in the cohort
+- Summarise these variants to get the mutational load for each sample
 
-This is done by running the PaddleExonicVariantsApplicationKt application:
+This is done by running `DndsDataBuilder`, providing a directory containing `<SampleId>.purple.somatic.vcf.gz` files:
 
-```
+```bash
 java -cp paddle.jar com.hartwig.hmftools.dnds.builder.DndsDataBuilder \
-    -output_dir /path/to/output_dir \
-    -cohort_tsv /path/to/cohort_tsv_generated_by_step1.tsv \
+    -sample_id_file sample_ids.txt \
+    -output_dir output/ \
+    -purple_dir purple/ \
+    -threads 8
+```
+
+or from the Hartwig SQL database:
+
+```bash
+java -cp paddle.jar com.hartwig.hmftools.dnds.builder.DndsDataBuilder \
+    -sample_id_file sample_ids.txt \
+    -output_dir output/ \
     -db_user ${user} -db_pass ${pass} -db_url ${url}
-```  
+```
 
-This step assumes all samples are present in an HMF patient database that the application can connect to with the credentials provided.
+This produces a `dnds_cohort_mut_load.tsv` file, one line per sample, with the following columns:
 
-The outputs are:
- - mutationalLoad.tsv: One line per sample describing various mutational loads
- - somatics: A directory containing one file per sample holding all somatic mutations in exonic domain
+```tsv
+SampleId  SnvBiallelic  SnvNonBiallelic  IndelBiallelic  IndelNonBiallelic
+SAMPLE_1          8363	          31285             104                612
+SAMPLE_2          1022	           5052              23                 10
+```
+
+And for each sample, a `<SampleId>.dnds_variants.tsv` file, one line per variant:
+
+```tsv
+Chromosome   Position  Ref  Alt  Gene  Biallelic  Hotspot  WorstCodingEffect  CanonicalCodingEffect  RepeatCount
+      chr7  140753336    A    T  BRAF      false     true           MISSENSE               MISSENSE            0
+```
 
 ## Run dNdScv
 
