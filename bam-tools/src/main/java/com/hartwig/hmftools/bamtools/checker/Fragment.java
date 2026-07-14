@@ -391,8 +391,7 @@ public class Fragment
             mappedRead.setInferredInsertSize(0);
             mappedRead.setMateUnmappedFlag(true);
             mappedRead.setMateAlignmentStart(mappedRead.getAlignmentStart());
-            mappedRead.setMateReferenceIndex(NO_CHROMOSOME_INDEX);
-            mappedRead.setMateReferenceName(NO_CHROMOSOME_NAME);
+            mappedRead.setMateReferenceIndex(mappedRead.getReferenceIndex());
             mappedRead.setAttribute(MATE_CIGAR_ATTRIBUTE, null);
         }
 
@@ -403,7 +402,6 @@ public class Fragment
             unmappedRead.setReadUnmappedFlag(true);
             unmappedRead.setMappingQuality(0);
             unmappedRead.setReferenceIndex(mappedRead.getReferenceIndex());
-            unmappedRead.setReferenceName(mappedRead.getReferenceName());
             unmappedRead.setAlignmentStart(mappedRead.getAlignmentStart());
             unmappedRead.setCigarString(NO_CIGAR);
         }

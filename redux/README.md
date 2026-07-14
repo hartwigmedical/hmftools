@@ -75,8 +75,9 @@ java -jar redux.jar
 | Argument            | Description                                                                     |
 |---------------------|---------------------------------------------------------------------------------|
 | bqr_jitter_msi_only | Only generate BQR and MSI model output, requires an existing Redux BAM as input 
-| drop_duplicates     | Drop duplicate reads from output BAM  <br/>jitter_bqr_dir                       | BAM path | Path to Redux MSI jitter files and BQR files
+| drop_duplicates     | Drop duplicate reads from output BAM  <br/>jitter_bqr_dir                       |
 | skip_bqr            | Disable base quality recalibration                                              |
+| bam_validation | BAM reading stringency: SILENT (default), LENIENT, STRICT |
 
 
 ### UMI Command
