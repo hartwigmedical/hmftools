@@ -122,7 +122,7 @@ public class LiftBackWorker extends Thread
         List<SAMRecord> group = new ArrayList<>();
         String currentName = null;
 
-        for(final SAMRecord record : chunk)
+        for(SAMRecord record : chunk)
         {
             String name = record.getReadName();
             if(currentName != null && !name.equals(currentName))

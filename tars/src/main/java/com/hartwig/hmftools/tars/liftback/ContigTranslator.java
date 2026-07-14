@@ -100,7 +100,7 @@ public final class ContigTranslator
         List<CigarElement> outElements = new ArrayList<>();
         List<BaseRegion> impliedIntrons = new ArrayList<>();
 
-        for(final CigarElement element : cigar.getCigarElements())
+        for(CigarElement element : cigar.getCigarElements())
         {
             CigarOperator op = element.getOperator();
             int remaining = element.getLength();
@@ -156,7 +156,7 @@ public final class ContigTranslator
     {
         List<CigarElement> result = new ArrayList<>(elements.size());
 
-        for(final CigarElement element : elements)
+        for(CigarElement element : elements)
         {
             if(element.getLength() > 0)
                 result.add(element);
@@ -169,7 +169,7 @@ public final class ContigTranslator
     {
         List<CigarElement> merged = new ArrayList<>(elements.size());
 
-        for(final CigarElement element : elements)
+        for(CigarElement element : elements)
         {
             if(!merged.isEmpty() && merged.get(merged.size() - 1).getOperator() == element.getOperator())
             {
@@ -406,18 +406,18 @@ public final class ContigTranslator
     {
         List<CigarElement> elements = cigar.getCigarElements();
         int existingLeadingSoftClip = 0;
-        int idx = 0;
-        while(idx < elements.size() && elements.get(idx).getOperator() == CigarOperator.S)
+        int clipIndex = 0;
+        while(clipIndex < elements.size() && elements.get(clipIndex).getOperator() == CigarOperator.S)
         {
-            existingLeadingSoftClip += elements.get(idx).getLength();
-            ++idx;
+            existingLeadingSoftClip += elements.get(clipIndex).getLength();
+            ++clipIndex;
         }
-        if(idx >= elements.size())
+        if(clipIndex >= elements.size())
         {
             return null;
         }
 
-        CigarElement first = elements.get(idx);
+        CigarElement first = elements.get(clipIndex);
         if(first.getOperator() != CigarOperator.M || first.getLength() <= overhang)
         {
             return null;
@@ -426,7 +426,7 @@ public final class ContigTranslator
         List<CigarElement> out = new ArrayList<>(elements.size());
         out.add(new CigarElement(existingLeadingSoftClip + overhang, CigarOperator.S));
         out.add(new CigarElement(first.getLength() - overhang, CigarOperator.M));
-        for(int i = idx + 1; i < elements.size(); ++i)
+        for(int i = clipIndex + 1; i < elements.size(); ++i)
         {
             out.add(elements.get(i));
         }

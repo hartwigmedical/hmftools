@@ -58,7 +58,7 @@ public class ShardedChunkProducer extends Thread
 
             // kept open until all shards finish so the monitor can read their offsets.
             List<ShardRecordIterator> iterators = new ArrayList<>();
-            for(final BamShardSplitter.ShardRange range : ranges)
+            for(BamShardSplitter.ShardRange range : ranges)
             {
                 iterators.add(new ShardRecordIterator(bam, header, range));
             }
@@ -72,14 +72,14 @@ public class ShardedChunkProducer extends Thread
             monitor.start();
 
             List<Thread> shardThreads = new ArrayList<>();
-            for(final ShardRecordIterator iter : iterators)
+            for(ShardRecordIterator iter : iterators)
             {
                 Thread shard = new Thread(() -> readShard(iter, readsCounter, failed), "tars-shard");
                 shard.start();
                 shardThreads.add(shard);
             }
 
-            for(final Thread shard : shardThreads)
+            for(Thread shard : shardThreads)
             {
                 shard.join();
             }
@@ -152,7 +152,7 @@ public class ShardedChunkProducer extends Thread
             }
 
             long consumed = 0;
-            for(final ShardRecordIterator iter : iterators)
+            for(ShardRecordIterator iter : iterators)
             {
                 consumed += iter.consumedBytes();
             }
@@ -213,7 +213,7 @@ public class ShardedChunkProducer extends Thread
 
     private static void closeQuietly(final List<ShardRecordIterator> iterators)
     {
-        for(final ShardRecordIterator iter : iterators)
+        for(ShardRecordIterator iter : iterators)
         {
             try
             {

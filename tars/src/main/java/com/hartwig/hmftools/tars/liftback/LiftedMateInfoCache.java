@@ -16,7 +16,7 @@ public class LiftedMateInfoCache
 
     public void recordPrimaryAlignment(final String readName, final boolean firstOfPair, final LiftedMateInfo info)
     {
-        ReadPairLiftedMateInfo pairInfo = mLiftedMateInfoByReadName.computeIfAbsent(readName, k -> new ReadPairLiftedMateInfo());
+        ReadPairLiftedMateInfo pairInfo = mLiftedMateInfoByReadName.computeIfAbsent(readName, key -> new ReadPairLiftedMateInfo());
         if(firstOfPair)
         {
             pairInfo.FirstInPair = info;

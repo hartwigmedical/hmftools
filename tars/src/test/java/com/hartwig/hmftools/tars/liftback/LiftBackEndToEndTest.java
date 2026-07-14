@@ -84,8 +84,6 @@ public class LiftBackEndToEndTest
         return emitted;
     }
 
-    // ============================ scenarios ============================
-
     @Test
     public void exonSpanningReadLiftsToJunctionCigar()
     {

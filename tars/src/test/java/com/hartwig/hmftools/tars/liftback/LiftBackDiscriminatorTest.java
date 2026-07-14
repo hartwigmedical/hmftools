@@ -54,7 +54,7 @@ public class LiftBackDiscriminatorTest
     private static List<LiftedAlignment> set(final LiftedAlignment... alignments)
     {
         List<LiftedAlignment> list = new ArrayList<>();
-        for(final LiftedAlignment alignment : alignments)
+        for(LiftedAlignment alignment : alignments)
         {
             list.add(alignment);
         }
@@ -184,11 +184,11 @@ public class LiftBackDiscriminatorTest
     public void testBwaPriorityKeepsSelf()
     {
         // MAPQ > 0: bwa ranked the placements, so its primary is kept regardless of score.
-        List<LiftedAlignment> a = contestedSet();
-        a.get(0).GenomicScore = 10;
-        a.get(1).GenomicScore = 99;
-        LiftBackDiscriminator.ApplyResult outcome = LiftBackDiscriminator.apply(a, AMBIGUOUS, a.get(0), 0, true);
-        assertSame(a.get(0), outcome.effectivePrimary());
+        List<LiftedAlignment> alignments = contestedSet();
+        alignments.get(0).GenomicScore = 10;
+        alignments.get(1).GenomicScore = 99;
+        LiftBackDiscriminator.ApplyResult outcome = LiftBackDiscriminator.apply(alignments, AMBIGUOUS, alignments.get(0), 0, true);
+        assertSame(alignments.get(0), outcome.effectivePrimary());
         assertEquals("", outcome.note());
     }
 
@@ -196,12 +196,12 @@ public class LiftBackDiscriminatorTest
     public void testUnscoredKeepsSelf()
     {
         // contested but no candidate scored (a split read left for Step 3): keep bwa's primary, drop nothing.
-        List<LiftedAlignment> a = contestedSet();
-        LiftBackDiscriminator.ApplyResult outcome = LiftBackDiscriminator.apply(a, AMBIGUOUS, a.get(0), 0, false);
-        assertSame(a.get(0), outcome.effectivePrimary());
+        List<LiftedAlignment> alignments = contestedSet();
+        LiftBackDiscriminator.ApplyResult outcome = LiftBackDiscriminator.apply(alignments, AMBIGUOUS, alignments.get(0), 0, false);
+        assertSame(alignments.get(0), outcome.effectivePrimary());
         assertEquals("", outcome.note());
-        assertFalse(a.get(0).Dropped);
-        assertFalse(a.get(1).Dropped);
+        assertFalse(alignments.get(0).Dropped);
+        assertFalse(alignments.get(1).Dropped);
     }
 
     @Test
@@ -211,16 +211,16 @@ public class LiftBackDiscriminatorTest
         List<LiftedAlignment> refWins = contestedSet();
         refWins.get(0).GenomicScore = 90;
         refWins.get(1).GenomicScore = 50;
-        LiftBackDiscriminator.ApplyResult r = LiftBackDiscriminator.apply(refWins, AMBIGUOUS, refWins.get(0), 1, false);
-        assertSame(refWins.get(0), r.effectivePrimary());
-        assertEquals("score", r.note());
+        LiftBackDiscriminator.ApplyResult refResult = LiftBackDiscriminator.apply(refWins, AMBIGUOUS, refWins.get(0), 1, false);
+        assertSame(refWins.get(0), refResult.effectivePrimary());
+        assertEquals("score", refResult.note());
 
         List<LiftedAlignment> txWins = contestedSet();
         txWins.get(0).GenomicScore = 40;
         txWins.get(1).GenomicScore = 88;
-        LiftBackDiscriminator.ApplyResult t = LiftBackDiscriminator.apply(txWins, AMBIGUOUS, txWins.get(0), 0, false);
-        assertSame(txWins.get(1), t.effectivePrimary());
-        assertEquals("score", t.note());
+        LiftBackDiscriminator.ApplyResult txResult = LiftBackDiscriminator.apply(txWins, AMBIGUOUS, txWins.get(0), 0, false);
+        assertSame(txWins.get(1), txResult.effectivePrimary());
+        assertEquals("score", txResult.note());
         assertTrue(txWins.get(1).IsPrimaryChoice);
         assertFalse(txWins.get(0).IsPrimaryChoice);
         assertFalse("loser rides in XA, not dropped", txWins.get(0).Dropped);
@@ -233,16 +233,16 @@ public class LiftBackDiscriminatorTest
         List<LiftedAlignment> even = contestedSet();
         even.get(0).GenomicScore = 70;
         even.get(1).GenomicScore = 70;
-        LiftBackDiscriminator.ApplyResult e = LiftBackDiscriminator.apply(even, AMBIGUOUS, even.get(0), 0, false);
-        assertSame(even.get(0), e.effectivePrimary());
-        assertEquals("random", e.note());
+        LiftBackDiscriminator.ApplyResult evenResult = LiftBackDiscriminator.apply(even, AMBIGUOUS, even.get(0), 0, false);
+        assertSame(even.get(0), evenResult.effectivePrimary());
+        assertEquals("random", evenResult.note());
 
         List<LiftedAlignment> odd = contestedSet();
         odd.get(0).GenomicScore = 70;
         odd.get(1).GenomicScore = 70;
-        LiftBackDiscriminator.ApplyResult o = LiftBackDiscriminator.apply(odd, AMBIGUOUS, odd.get(0), 1, false);
-        assertSame(odd.get(1), o.effectivePrimary());
-        assertEquals("random", o.note());
+        LiftBackDiscriminator.ApplyResult oddResult = LiftBackDiscriminator.apply(odd, AMBIGUOUS, odd.get(0), 1, false);
+        assertSame(odd.get(1), oddResult.effectivePrimary());
+        assertEquals("random", oddResult.note());
         assertFalse("tie loser rides in XA, not dropped", odd.get(0).Dropped);
     }
 
@@ -255,10 +255,10 @@ public class LiftBackDiscriminatorTest
         LiftedAlignment softClip = ref(CHR1, 100, SOFTCLIP_CIGAR);
         softClip.IsPrimaryChoice = true;
         LiftedAlignment junction = tx(CHR1, 100, TX_JUNCTION_CIGAR, false, 0);
-        List<LiftedAlignment> a = set(softClip, junction);
-        a.get(0).GenomicScore = 80;
-        a.get(1).GenomicScore = 80;
-        LiftBackDiscriminator.ApplyResult outcome = LiftBackDiscriminator.apply(a, AMBIGUOUS, softClip, 0, false);
+        List<LiftedAlignment> alignments = set(softClip, junction);
+        alignments.get(0).GenomicScore = 80;
+        alignments.get(1).GenomicScore = 80;
+        LiftBackDiscriminator.ApplyResult outcome = LiftBackDiscriminator.apply(alignments, AMBIGUOUS, softClip, 0, false);
         assertSame(junction, outcome.effectivePrimary());
         assertEquals("junction", outcome.note());
         assertTrue(junction.IsPrimaryChoice);
@@ -273,10 +273,10 @@ public class LiftBackDiscriminatorTest
         LiftedAlignment softClip = ref(CHR1, 100, SOFTCLIP_CIGAR);
         softClip.IsPrimaryChoice = true;
         LiftedAlignment junction = tx(CHR2, 200, TX_JUNCTION_CIGAR, false, 0);
-        List<LiftedAlignment> a = set(softClip, junction);
-        a.get(0).GenomicScore = 80;
-        a.get(1).GenomicScore = 80;
-        LiftBackDiscriminator.ApplyResult outcome = LiftBackDiscriminator.apply(a, AMBIGUOUS, softClip, 0, false);
+        List<LiftedAlignment> alignments = set(softClip, junction);
+        alignments.get(0).GenomicScore = 80;
+        alignments.get(1).GenomicScore = 80;
+        LiftBackDiscriminator.ApplyResult outcome = LiftBackDiscriminator.apply(alignments, AMBIGUOUS, softClip, 0, false);
         assertSame("seed 0 -> first candidate", softClip, outcome.effectivePrimary());
         assertEquals("random", outcome.note());
     }
@@ -284,23 +284,23 @@ public class LiftBackDiscriminatorTest
     @Test
     public void testMultiLocusDecisiveScorePicksBestLocus()
     {
-        List<LiftedAlignment> a = multiLocusSet();
-        a.get(0).GenomicScore = 60;
-        a.get(1).GenomicScore = 130;
-        LiftBackDiscriminator.ApplyResult outcome = LiftBackDiscriminator.apply(a, MULTIMAPPER, a.get(0), 0, false);
-        assertSame(a.get(1), outcome.effectivePrimary());
+        List<LiftedAlignment> alignments = multiLocusSet();
+        alignments.get(0).GenomicScore = 60;
+        alignments.get(1).GenomicScore = 130;
+        LiftBackDiscriminator.ApplyResult outcome = LiftBackDiscriminator.apply(alignments, MULTIMAPPER, alignments.get(0), 0, false);
+        assertSame(alignments.get(1), outcome.effectivePrimary());
         assertEquals("score", outcome.note());
-        assertFalse("all placements ride in XA", a.get(0).Dropped);
+        assertFalse("all placements ride in XA", alignments.get(0).Dropped);
     }
 
     @Test
     public void testMultiLocusScoreTieSeededRandom()
     {
-        List<LiftedAlignment> a = multiLocusSet();
-        a.get(0).GenomicScore = 100;
-        a.get(1).GenomicScore = 100;
-        LiftBackDiscriminator.ApplyResult outcome = LiftBackDiscriminator.apply(a, MULTIMAPPER, a.get(0), 1, false);
-        assertSame("seed 1 -> second candidate", a.get(1), outcome.effectivePrimary());
+        List<LiftedAlignment> alignments = multiLocusSet();
+        alignments.get(0).GenomicScore = 100;
+        alignments.get(1).GenomicScore = 100;
+        LiftBackDiscriminator.ApplyResult outcome = LiftBackDiscriminator.apply(alignments, MULTIMAPPER, alignments.get(0), 1, false);
+        assertSame("seed 1 -> second candidate", alignments.get(1), outcome.effectivePrimary());
         assertEquals("random", outcome.note());
     }
 
@@ -314,11 +314,11 @@ public class LiftBackDiscriminatorTest
         self.IsPrimaryChoice = true;
         LiftedAlignment txSame = tx(CHR1, 100, "100M", false, 0);
         LiftedAlignment txSpliced = tx(CHR1, 100, TX_JUNCTION_CIGAR, false, 0);
-        List<LiftedAlignment> a = set(self, txSame, txSpliced);
-        a.get(0).GenomicScore = 100;
-        a.get(1).GenomicScore = 100;
-        a.get(2).GenomicScore = 100;
-        LiftBackDiscriminator.ApplyResult outcome = LiftBackDiscriminator.apply(a, MULTIMAPPER, self, 1, false);
+        List<LiftedAlignment> alignments = set(self, txSame, txSpliced);
+        alignments.get(0).GenomicScore = 100;
+        alignments.get(1).GenomicScore = 100;
+        alignments.get(2).GenomicScore = 100;
+        LiftBackDiscriminator.ApplyResult outcome = LiftBackDiscriminator.apply(alignments, MULTIMAPPER, self, 1, false);
         assertSame(txSpliced, outcome.effectivePrimary());
         assertEquals("random", outcome.note());
     }
@@ -327,28 +327,28 @@ public class LiftBackDiscriminatorTest
     public void testMultiLocusTieMateProximityPicksMateLocus()
     {
         // tied loci CHR1:100 and CHR2:200; the mate maps on CHR2 near 200, so that locus wins over the seed.
-        List<LiftedAlignment> a = multiLocusSet();
-        a.get(0).GenomicScore = 100;
-        a.get(1).GenomicScore = 100;
+        List<LiftedAlignment> alignments = multiLocusSet();
+        alignments.get(0).GenomicScore = 100;
+        alignments.get(1).GenomicScore = 100;
         LiftedMateInfo mate = LiftedMateInfo.mapped(CHR2, 250, 350, "100M", false);
         // seed 0 would pick CHR1:100; mate proximity overrides to the CHR2 locus.
-        LiftBackDiscriminator.ApplyResult outcome = LiftBackDiscriminator.apply(a, MULTIMAPPER, a.get(0), 0, false, mate);
-        assertSame(a.get(1), outcome.effectivePrimary());
+        LiftBackDiscriminator.ApplyResult outcome = LiftBackDiscriminator.apply(alignments, MULTIMAPPER, alignments.get(0), 0, false, mate);
+        assertSame(alignments.get(1), outcome.effectivePrimary());
         assertEquals("mate", outcome.note());
-        assertTrue(a.get(1).IsPrimaryChoice);
-        assertFalse("tie loser rides in XA, not dropped", a.get(0).Dropped);
+        assertTrue(alignments.get(1).IsPrimaryChoice);
+        assertFalse("tie loser rides in XA, not dropped", alignments.get(0).Dropped);
     }
 
     @Test
     public void testMultiLocusTieMateOnNeitherChromStaysRandom()
     {
         // the mate is on a third chromosome, so proximity does not discriminate and the seed decides.
-        List<LiftedAlignment> a = multiLocusSet();
-        a.get(0).GenomicScore = 100;
-        a.get(1).GenomicScore = 100;
+        List<LiftedAlignment> alignments = multiLocusSet();
+        alignments.get(0).GenomicScore = 100;
+        alignments.get(1).GenomicScore = 100;
         LiftedMateInfo mate = LiftedMateInfo.mapped("chr9", 500, 600, "100M", false);
-        LiftBackDiscriminator.ApplyResult outcome = LiftBackDiscriminator.apply(a, MULTIMAPPER, a.get(0), 1, false, mate);
-        assertSame("seed 1 -> second candidate", a.get(1), outcome.effectivePrimary());
+        LiftBackDiscriminator.ApplyResult outcome = LiftBackDiscriminator.apply(alignments, MULTIMAPPER, alignments.get(0), 1, false, mate);
+        assertSame("seed 1 -> second candidate", alignments.get(1), outcome.effectivePrimary());
         assertEquals("random", outcome.note());
     }
 
@@ -356,12 +356,12 @@ public class LiftBackDiscriminatorTest
     public void testMultiLocusTieMateTooFarStaysRandom()
     {
         // mate is on CHR1 but past MATE_PROXIMITY_MAX_DISTANCE from the CHR1 locus, so it is not proximal.
-        List<LiftedAlignment> a = multiLocusSet();
-        a.get(0).GenomicScore = 100;
-        a.get(1).GenomicScore = 100;
+        List<LiftedAlignment> alignments = multiLocusSet();
+        alignments.get(0).GenomicScore = 100;
+        alignments.get(1).GenomicScore = 100;
         LiftedMateInfo mate = LiftedMateInfo.mapped(CHR1, 5_000_000, 5_000_100, "100M", false);
-        LiftBackDiscriminator.ApplyResult outcome = LiftBackDiscriminator.apply(a, MULTIMAPPER, a.get(0), 1, false, mate);
-        assertSame("seed 1 -> second candidate", a.get(1), outcome.effectivePrimary());
+        LiftBackDiscriminator.ApplyResult outcome = LiftBackDiscriminator.apply(alignments, MULTIMAPPER, alignments.get(0), 1, false, mate);
+        assertSame("seed 1 -> second candidate", alignments.get(1), outcome.effectivePrimary());
         assertEquals("random", outcome.note());
     }
 }

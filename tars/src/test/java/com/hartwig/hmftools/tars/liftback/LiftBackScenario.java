@@ -129,7 +129,7 @@ public final class LiftBackScenario
                 resolver, supplementary, overhangGate, ref, null, new LiftBackStats());
 
         List<SAMRecord> emitted = new ArrayList<>();
-        for(final List<SAMRecord> group : groupByReadName())
+        for(List<SAMRecord> group : groupByReadName())
         {
             processor.processNameGroup(group, new LiftedMateInfoCache(), (record, result) -> emitted.add(record));
         }
@@ -141,7 +141,7 @@ public final class LiftBackScenario
     {
         List<List<SAMRecord>> groups = new ArrayList<>();
         List<String> order = new ArrayList<>();
-        for(final ReadSpec spec : mReads)
+        for(ReadSpec spec : mReads)
         {
             int index = order.indexOf(spec.ReadName);
             if(index < 0)
@@ -230,7 +230,7 @@ public final class LiftBackScenario
 
         public SAMRecord record(final String readName, final ReadRole role)
         {
-            for(final SAMRecord record : mEmitted)
+            for(SAMRecord record : mEmitted)
             {
                 if(!record.getReadName().equals(readName))
                 {
@@ -301,7 +301,7 @@ public final class LiftBackScenario
         public Result assertSuppCount(final String readName, final int expected)
         {
             int count = 0;
-            for(final SAMRecord record : mEmitted)
+            for(SAMRecord record : mEmitted)
             {
                 if(record.getReadName().equals(readName) && record.getSupplementaryAlignmentFlag())
                 {

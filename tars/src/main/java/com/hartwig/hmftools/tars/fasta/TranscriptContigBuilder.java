@@ -30,7 +30,7 @@ public class TranscriptContigBuilder
 
         // exons are stored by transcription rank; re-sort by genomic start for forward-strand orientation
         List<ExonData> ordered = new ArrayList<>(transcript.exons());
-        ordered.sort(Comparator.comparingInt(e -> e.Start));
+        ordered.sort(Comparator.comparingInt(exon -> exon.Start));
 
         List<BaseRegion> spans = new ArrayList<>(ordered.size());
         StringBuilder sequence = new StringBuilder();

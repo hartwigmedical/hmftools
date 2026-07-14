@@ -389,7 +389,7 @@ public class LiftBackResolverTest
 
         assertEquals(DecidingFeature.MULTIMAPPER, result.decidingFeature());
         LiftedAlignment self = result.liftedAlignments().stream()
-                .filter(la -> la.Source == LiftedAlignment.AlignmentSource.SELF)
+                .filter(alignment -> alignment.Source == LiftedAlignment.AlignmentSource.SELF)
                 .findFirst().orElseThrow();
         assertTrue(self.IsPrimaryChoice);
     }
@@ -466,7 +466,7 @@ public class LiftBackResolverTest
                 1, "ENST_TEST", "ENSG_TEST", true, (byte) 1, 1, 100000, null, null, "protein_coding", "");
         List<ExonData> exonData = new ArrayList<>();
         int rank = 1;
-        for(final int[] exon : exons)
+        for(int[] exon : exons)
         {
             exonData.add(new ExonData(1, exon[0], exon[1], rank++, -1, -1));
         }
@@ -489,8 +489,8 @@ public class LiftBackResolverTest
         LiftBackResolver noIndex = new LiftBackResolver(contigMap());
         assertEquals(0, noIndex.resolve(record).updatedMapq());
 
-        ExonRegionIndex idx = buildExonIndex(List.of(new int[] { 1400, 1700 }));
-        LiftBackResolver withIndex = new LiftBackResolver(contigMap(), idx);
+        ExonRegionIndex exonIndex = buildExonIndex(List.of(new int[] { 1400, 1700 }));
+        LiftBackResolver withIndex = new LiftBackResolver(contigMap(), exonIndex);
         LiftBackResult result = withIndex.resolve(record);
         assertEquals(0, result.updatedMapq());
         assertEquals(DecidingFeature.SOLE_REF, result.decidingFeature());
@@ -505,8 +505,8 @@ public class LiftBackResolverTest
         record.setAttribute("AS", 151);
         record.setAttribute("XS", 151);
 
-        ExonRegionIndex idx = buildExonIndex(List.of(new int[] { 1400, 1700 })); // exon at 1400-1700; primary at 5000 is intergenic
-        LiftBackResolver resolver = new LiftBackResolver(contigMap(), idx);
+        ExonRegionIndex exonIndex = buildExonIndex(List.of(new int[] { 1400, 1700 })); // exon at 1400-1700; primary at 5000 is intergenic
+        LiftBackResolver resolver = new LiftBackResolver(contigMap(), exonIndex);
         assertEquals(0, resolver.resolve(record).updatedMapq());
     }
 

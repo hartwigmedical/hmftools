@@ -51,7 +51,9 @@ public class LiftBackWriterTest
 
         assertEquals(2, aLines.size());
         assertEquals(LiftBackWriter.TSV_A_HEADER_LINE, aLines.get(0));
-        assertEquals("read1\t1\tPRIMARY\tRESOLVED\tREF_ONLY\tREF\tSOLE_REF\tfalse\t60\t60\t0\t1\t0\t1\t1\tfalse\tfalse\tfalse\ttrue\t1\t1000\t50M\tfalse\t\t", aLines.get(1));
+        String expectedRow = "read1\t1\tPRIMARY\tRESOLVED\tREF_ONLY\tREF\tSOLE_REF\tfalse\t60\t60\t0\t1\t0\t1\t1"
+                + "\tfalse\tfalse\tfalse\ttrue\t1\t1000\t50M\tfalse\t\t";
+        assertEquals(expectedRow, aLines.get(1));
 
         assertEquals(2, bLines.size());
         assertEquals(LiftBackWriter.TSV_B_HEADER_LINE, bLines.get(0));

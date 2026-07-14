@@ -40,23 +40,23 @@ public final class ExonRegionIndex
         }
 
         // Binary search for the largest start <= pos; merged intervals guarantee only one candidate.
-        int lo = 0;
-        int hi = starts.length - 1;
-        int idx = -1;
-        while(lo <= hi)
+        int low = 0;
+        int high = starts.length - 1;
+        int matchIndex = -1;
+        while(low <= high)
         {
-            int mid = (lo + hi) >>> 1;
+            int mid = (low + high) >>> 1;
             if(starts[mid] <= pos)
             {
-                idx = mid;
-                lo = mid + 1;
+                matchIndex = mid;
+                low = mid + 1;
             }
             else
             {
-                hi = mid - 1;
+                high = mid - 1;
             }
         }
-        return idx >= 0 && pos <= ends[idx];
+        return matchIndex >= 0 && pos <= ends[matchIndex];
     }
 
     public static ExonRegionIndex load(final String ensemblDir, final RefGenomeVersion refGenomeVersion)
@@ -75,10 +75,10 @@ public final class ExonRegionIndex
     public static ExonRegionIndex fromContigEntries(final List<ContigEntry> entries)
     {
         Map<String, List<int[]>> spansByChromosome = new HashMap<>();
-        for(final ContigEntry entry : entries)
+        for(ContigEntry entry : entries)
         {
             List<int[]> spans = spansByChromosome.computeIfAbsent(entry.chromosome(), k -> new ArrayList<>());
-            for(final BaseRegion exon : entry.exonSpans())
+            for(BaseRegion exon : entry.exonSpans())
             {
                 spans.add(new int[] { exon.start(), exon.end() });
             }
@@ -89,9 +89,9 @@ public final class ExonRegionIndex
     public static ExonRegionIndex fromCache(final EnsemblDataCache ensemblDataCache, final RefGenomeVersion refGenomeVersion)
     {
         Map<String, List<int[]>> spansByChromosome = new HashMap<>();
-        for(final List<GeneData> genes : ensemblDataCache.getChrGeneDataMap().values())
+        for(List<GeneData> genes : ensemblDataCache.getChrGeneDataMap().values())
         {
-            for(final GeneData gene : genes)
+            for(GeneData gene : genes)
             {
                 List<TranscriptData> transcripts = ensemblDataCache.getTranscripts(gene.GeneId);
                 if(transcripts == null)
@@ -99,9 +99,9 @@ public final class ExonRegionIndex
 
                 String chromosome = refGenomeVersion.versionedChromosome(gene.Chromosome);
                 List<int[]> spans = spansByChromosome.computeIfAbsent(chromosome, k -> new ArrayList<>());
-                for(final TranscriptData transcript : transcripts)
+                for(TranscriptData transcript : transcripts)
                 {
-                    for(final ExonData exon : transcript.exons())
+                    for(ExonData exon : transcript.exons())
                     {
                         spans.add(new int[] { exon.Start, exon.End });
                     }
@@ -115,7 +115,7 @@ public final class ExonRegionIndex
     {
         Map<String, int[]> starts = new HashMap<>();
         Map<String, int[]> ends = new HashMap<>();
-        for(final Map.Entry<String, List<int[]>> entry : spansByChromosome.entrySet())
+        for(Map.Entry<String, List<int[]>> entry : spansByChromosome.entrySet())
         {
             List<int[]> merged = mergeIntervals(entry.getValue());
             int[] mergedStarts = new int[merged.size()];

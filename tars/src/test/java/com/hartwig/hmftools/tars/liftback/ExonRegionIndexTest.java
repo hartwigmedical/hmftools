@@ -32,7 +32,7 @@ public class ExonRegionIndexTest
                 1, "ENST_TEST", "ENSG_TEST", true, (byte) 1, 1, 100_000, null, null, "protein_coding", "");
         List<ExonData> exons = new ArrayList<>();
         int rank = 1;
-        for(final int[] span : exonSpans)
+        for(int[] span : exonSpans)
         {
             exons.add(new ExonData(1, span[0], span[1], rank++, -1, -1));
         }
@@ -45,36 +45,36 @@ public class ExonRegionIndexTest
     @Test
     public void testContains()
     {
-        ExonRegionIndex idx = indexFor("1", List.of(new int[] { 100, 200 }, new int[] { 300, 400 }));
+        ExonRegionIndex exonIndex = indexFor("1", List.of(new int[] { 100, 200 }, new int[] { 300, 400 }));
 
         // hits include interval boundaries
-        assertTrue(idx.contains("chr1", 100));
-        assertTrue(idx.contains("chr1", 150));
-        assertTrue(idx.contains("chr1", 200));
-        assertTrue(idx.contains("chr1", 300));
-        assertTrue(idx.contains("chr1", 400));
+        assertTrue(exonIndex.contains("chr1", 100));
+        assertTrue(exonIndex.contains("chr1", 150));
+        assertTrue(exonIndex.contains("chr1", 200));
+        assertTrue(exonIndex.contains("chr1", 300));
+        assertTrue(exonIndex.contains("chr1", 400));
 
         // intronic / intergenic positions miss
-        assertFalse(idx.contains("chr1", 50));
-        assertFalse(idx.contains("chr1", 250));
-        assertFalse(idx.contains("chr1", 500));
+        assertFalse(exonIndex.contains("chr1", 50));
+        assertFalse(exonIndex.contains("chr1", 250));
+        assertFalse(exonIndex.contains("chr1", 500));
     }
 
     @Test
     public void testContainsAcrossOverlappingAndAbuttingIntervals()
     {
-        ExonRegionIndex idx = indexFor("1", List.of(
+        ExonRegionIndex exonIndex = indexFor("1", List.of(
                 new int[] { 100, 200 },
                 new int[] { 150, 300 },
                 new int[] { 301, 400 },
                 new int[] { 600, 700 }));
 
-        assertTrue(idx.contains("chr1", 250));
-        assertTrue(idx.contains("chr1", 301));
-        assertTrue(idx.contains("chr1", 400));
-        assertFalse(idx.contains("chr1", 401));
-        assertFalse(idx.contains("chr1", 599));
-        assertTrue(idx.contains("chr1", 700));
+        assertTrue(exonIndex.contains("chr1", 250));
+        assertTrue(exonIndex.contains("chr1", 301));
+        assertTrue(exonIndex.contains("chr1", 400));
+        assertFalse(exonIndex.contains("chr1", 401));
+        assertFalse(exonIndex.contains("chr1", 599));
+        assertTrue(exonIndex.contains("chr1", 700));
     }
 
     @Test
@@ -82,8 +82,8 @@ public class ExonRegionIndexTest
     {
         // ensembl stores bare "1"; the index keys it in the run's ref-genome form (V38 -> chr1) so lookups by
         // lifted genomic contig match directly. The bare form does not match.
-        ExonRegionIndex idx = indexFor("1", List.of(new int[] { 100, 200 }));
-        assertTrue(idx.contains("chr1", 150));
-        assertFalse(idx.contains("1", 150));
+        ExonRegionIndex exonIndex = indexFor("1", List.of(new int[] { 100, 200 }));
+        assertTrue(exonIndex.contains("chr1", 150));
+        assertFalse(exonIndex.contains("1", 150));
     }
 }

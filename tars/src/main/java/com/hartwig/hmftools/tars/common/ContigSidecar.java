@@ -59,7 +59,8 @@ public final class ContigSidecar
 
         try(DelimFileReader reader = new DelimFileReader(filename))
         {
-            // Strand was added after the initial release; older sidecars lack it. Default to 0 (suppresses XS:A emission) rather than failing.
+            // Strand was added after the initial release; older sidecars lack it. Default to 0
+            // (suppresses XS:A emission) rather than failing.
             boolean hasStrand = reader.getColumnNames().contains(Column.Strand.name());
 
             for(DelimFileReader.Row row : reader)

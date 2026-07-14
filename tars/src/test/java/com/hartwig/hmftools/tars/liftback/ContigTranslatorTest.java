@@ -195,7 +195,8 @@ public class ContigTranslatorTest
     @Test
     public void testDeletionCrossingJunctionCollapsedIntoSplice()
     {
-        // tx-FASTA off-by-N artefact: 5D (at SPLICE_FLANKING_DELETION_MAX_BP = 5) straddling an exon boundary is absorbed into the splice N.
+        // tx-FASTA off-by-N artefact: 5D (at SPLICE_FLANKING_DELETION_MAX_BP = 5) straddling an exon
+        // boundary is absorbed into the splice N.
         ContigTranslator.TranslationResult result = ContigTranslator.translate(threeExonContig(), 91, cigar("10M5D5M"));
 
         assertNotNull(result);

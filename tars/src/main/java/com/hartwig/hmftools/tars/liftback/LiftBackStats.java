@@ -2,9 +2,9 @@ package com.hartwig.hmftools.tars.liftback;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.tars.common.TarsConfig.TARS_LOGGER;
 import static com.hartwig.hmftools.tars.common.TarsConstants.PRIMARY_AS_UNMAP_THRESHOLD;
 import static com.hartwig.hmftools.tars.common.TarsConstants.SUPP_AS_DROP_THRESHOLD;
-import static com.hartwig.hmftools.tars.common.TarsConfig.TARS_LOGGER;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -265,7 +265,9 @@ public class LiftBackStats
             }
             for(DecidingFeature feature : DecidingFeature.values())
             {
-                writeMetric(writer, "feature_" + feature.name().toLowerCase(), mPerFeature[feature.ordinal()], "primaries_resolved", resolved);
+                writeMetric(
+                        writer, "feature_" + feature.name().toLowerCase(), mPerFeature[feature.ordinal()],
+                        "primaries_resolved", resolved);
             }
             writeMetric(writer, "primary_swapped", swaps, "primaries_resolved", resolved);
 

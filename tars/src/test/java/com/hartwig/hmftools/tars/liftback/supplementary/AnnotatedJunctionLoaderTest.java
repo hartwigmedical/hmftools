@@ -110,7 +110,7 @@ public class AnnotatedJunctionLoaderTest
     @Test
     public void testReverseStrandRankOrder()
     {
-        // negative-strand transcripts have exons ranked high->low genome pos; intron coords must still be lo..hi.
+        // negative-strand transcripts have exons ranked high->low genome pos; intron coords must still be low..high.
         EnsemblDataCache cache = createGeneDataCache();
         addGeneData(cache, "4", List.of(gene("ENSG_NEG", "4")));
         addTransExonData(cache, "ENSG_NEG", List.of(transcript("ENSG_NEG", 1, NEG_STRAND, new int[] { 1000, 2000 })));

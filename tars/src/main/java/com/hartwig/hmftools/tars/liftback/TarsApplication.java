@@ -3,9 +3,9 @@ package com.hartwig.hmftools.tars.liftback;
 import static com.hartwig.hmftools.common.bamops.BamToolName.fromPath;
 import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.runThreadTasks;
+import static com.hartwig.hmftools.tars.common.TarsConfig.TARS_LOGGER;
 import static com.hartwig.hmftools.tars.common.TarsConstants.ALT_CONTIG_SUFFIX;
 import static com.hartwig.hmftools.tars.common.TarsConstants.APP_NAME;
-import static com.hartwig.hmftools.tars.common.TarsConfig.TARS_LOGGER;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -25,17 +25,17 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.bamops.BamOperations;
 import com.hartwig.hmftools.common.bamops.BamToolName;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
 import com.hartwig.hmftools.tars.common.ContigEntry;
 import com.hartwig.hmftools.tars.common.ContigSidecar;
 import com.hartwig.hmftools.tars.common.TarsConstants;
+import com.hartwig.hmftools.tars.liftback.overhang.OverhangGateStatistics;
 import com.hartwig.hmftools.tars.liftback.supplementary.AnnotatedJunctionIndex;
 import com.hartwig.hmftools.tars.liftback.supplementary.AnnotatedJunctionLoader;
-import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.tars.liftback.supplementary.SupplementaryRejectReason;
 import com.hartwig.hmftools.tars.liftback.supplementary.SupplementaryStatistics;
-import com.hartwig.hmftools.tars.liftback.overhang.OverhangGateStatistics;
 
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMRecord;
@@ -194,9 +194,9 @@ public class TarsApplication
                 .referenceSequence(new File(mConfig.RefGenomeFile))
                 .open(new File(mConfig.InputBam)))
         {
-            for(final SAMSequenceRecord sq : reader.getFileHeader().getSequenceDictionary().getSequences())
+            for(SAMSequenceRecord sequenceRecord : reader.getFileHeader().getSequenceDictionary().getSequences())
             {
-                String name = sq.getSequenceName();
+                String name = sequenceRecord.getSequenceName();
                 if(name.endsWith(ALT_CONTIG_SUFFIX) && !sidecarContigs.contains(name))
                 {
                     missing.add(name);
@@ -228,18 +228,18 @@ public class TarsApplication
             SAMFileHeader header = reader.getFileHeader().clone();
             header.setSortOrder(SAMFileHeader.SortOrder.unsorted);
 
-            SAMSequenceDictionary dict = header.getSequenceDictionary();
+            SAMSequenceDictionary sequenceDictionary = header.getSequenceDictionary();
             List<SAMSequenceRecord> kept = new ArrayList<>();
             int dropped = 0;
-            for(final SAMSequenceRecord seq : dict.getSequences())
+            for(SAMSequenceRecord sequenceRecord : sequenceDictionary.getSequences())
             {
-                if(seq.getSequenceName().endsWith(ALT_CONTIG_SUFFIX))
+                if(sequenceRecord.getSequenceName().endsWith(ALT_CONTIG_SUFFIX))
                 {
                     ++dropped;
                 }
                 else
                 {
-                    kept.add(seq);
+                    kept.add(sequenceRecord);
                 }
             }
             header.setSequenceDictionary(new SAMSequenceDictionary(kept));
@@ -255,7 +255,7 @@ public class TarsApplication
     private void mergeWorkerStats(final List<LiftBackWorker> workers)
     {
         LiftBackStats combined = new LiftBackStats();
-        for(final LiftBackWorker worker : workers)
+        for(LiftBackWorker worker : workers)
         {
             combined.merge(worker.liftBackStats());
         }
@@ -281,7 +281,7 @@ public class TarsApplication
         long collapsedTrailing = 0;
         long overCapUnmapped = 0;
         long excludedReads = 0;
-        for(final LiftBackWorker worker : workers)
+        for(LiftBackWorker worker : workers)
         {
             OverhangGateStatistics overhang = worker.overhangStatistics();
             if(overhang != null)
@@ -312,7 +312,7 @@ public class TarsApplication
         long collapseLeading = 0, collapseTrailing = 0;
         long reclaimRecords = 0, reclaimBasesLead = 0, reclaimBasesTrail = 0, altsDropped = 0;
         long overCapUnmapped = 0, excludedReads = 0;
-        for(final LiftBackWorker worker : workers)
+        for(LiftBackWorker worker : workers)
         {
             SupplementaryStatistics supplementary = worker.supplementaryStatistics();
             if(supplementary != null)
@@ -348,7 +348,7 @@ public class TarsApplication
         int clamp = 0;
         int[] depth = new int[5];
         EnumMap<SupplementaryRejectReason, Integer> rejects = new EnumMap<>(SupplementaryRejectReason.class);
-        for(final LiftBackWorker worker : workers)
+        for(LiftBackWorker worker : workers)
         {
             SupplementaryStatistics stats = worker.supplementaryStatistics();
             if(stats == null)
@@ -360,14 +360,14 @@ public class TarsApplication
             {
                 depth[d] += stats.mergedAtChainDepth(d);
             }
-            for(final SupplementaryRejectReason reason : SupplementaryRejectReason.values())
+            for(SupplementaryRejectReason reason : SupplementaryRejectReason.values())
             {
                 rejects.merge(reason, stats.rejectCount(reason), Integer::sum);
             }
         }
         TARS_LOGGER.info("supplementary-resolve summary: candidates={} merged={} suppClamped={} (depth1={} depth2={} depth3={} depth4={})",
                 candidates, merged, clamp, depth[1], depth[2], depth[3], depth[4]);
-        for(final SupplementaryRejectReason reason : SupplementaryRejectReason.values())
+        for(SupplementaryRejectReason reason : SupplementaryRejectReason.values())
         {
             if(rejects.getOrDefault(reason, 0) > 0)
             {
@@ -382,7 +382,7 @@ public class TarsApplication
         long basesLead = 0;
         long basesTrail = 0;
         long altsDropped = 0;
-        for(final LiftBackWorker worker : workers)
+        for(LiftBackWorker worker : workers)
         {
             OverhangGateStatistics stats = worker.overhangStatistics();
             if(stats == null)
@@ -439,7 +439,7 @@ public class TarsApplication
         {
             writer.write(headerLine);
             writer.newLine();
-            for(final String shard : shards)
+            for(String shard : shards)
             {
                 try(BufferedReader reader = Files.newBufferedReader(Paths.get(shard)))
                 {

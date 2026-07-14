@@ -17,11 +17,11 @@ import htsjdk.samtools.CigarOperator;
 // reclaims genuine ref-matching bases bwa soft-clipped at read tails.
 //
 //  peel() - iterative terminal collapse. For each end (trailing then leading) it walks the terminal shape
-//     "<...>M nN yM [eS]" (or its mirror) inward. It engages a terminal junction only when the trigger applies:
+//     "<...>M nN (anchor)M [(softclip)S]" (or its mirror) inward. It engages a terminal junction only when the trigger applies:
 //     an adjacent soft-clip (short overhang with a clip) OR the alignment carries more than one junction (bwa's
 //     multi-splice route may not weigh the intronic alternative). A single clean junction with no clip is left
-//     untouched. The anchor y is scored at its far-exon placement; the junction is kept iff that score exceeds
-//     MIN_OVERHANG_SCORE (aligning the anchor beats clipping it), otherwise the N is dropped, the y+e window is
+//     untouched. The anchor is scored at its far-exon placement; the junction is kept iff that score exceeds
+//     MIN_OVERHANG_SCORE (aligning the anchor beats clipping it), otherwise the N is dropped, the anchor+softclip window is
 //     read through the intron contiguously reclaiming its best-scoring prefix to M, and the exposed inner junction
 //     becomes terminal and is re-gated. peel() reports dropped=true when it collapses a junction-bearing alignment
 //     to a purely contiguous one (no N remains): the caller drops such an XA alt from the tag, but never self.
@@ -57,8 +57,6 @@ public class OverhangGate
     {
     }
 
-    // ============================ iterative terminal collapse ============================
-
     public Result peel(final String chromosome, final int alignmentStart, final String cigar, final byte[] readBases)
     {
         if(mRefSource == null || chromosome == null || cigar == null || readBases == null || readBases.length == 0)
@@ -69,7 +67,7 @@ public class OverhangGate
         int pos = alignmentStart;
         String working = cigar;
 
-        // Trailing then leading; both ends peel inward, each collapse exposing the next inner junction.
+        // Trailing then leading; each end is collapsed from the outside in, each collapse exposing the next inner junction.
         while(working.indexOf('N') >= 0)
         {
             CollapseResult collapse = tryCollapseTrailing(chromosome, pos, working, readBases);
@@ -112,7 +110,7 @@ public class OverhangGate
 
         // shape: "<...>M nN yM [eS]"
         boolean hasSoftclip = elements.get(last).getOperator() == CigarOperator.S;
-        int e = hasSoftclip ? elements.get(last).getLength() : 0;
+        int softclipLength = hasSoftclip ? elements.get(last).getLength() : 0;
         int anchorIndex = hasSoftclip ? last - 1 : last;
         int intronIndex = anchorIndex - 1;
         int nearIndex = intronIndex - 1;
@@ -137,19 +135,19 @@ public class OverhangGate
         }
 
         // trigger: engage only with an adjacent soft-clip or more than one junction (Case 1 / Case 2).
-        if(e == 0 && countIntrons(elements) <= 1)
+        if(softclipLength == 0 && countIntrons(elements) <= 1)
         {
             return CollapseResult.unchanged();
         }
 
-        int y = anchor.getLength();
+        int anchorLength = anchor.getLength();
         // a long overhang is trusted outright (a real junction even with a couple of mismatches); only short overhangs
         // are scored. See TarsConstants.MIN_OVERHANG_LENGTH.
-        if(y > MIN_OVERHANG_LENGTH)
+        if(anchorLength > MIN_OVERHANG_LENGTH)
         {
             return CollapseResult.unchanged();
         }
-        int window = y + e;
+        int window = anchorLength + softclipLength;
         int intronLen = elements.get(intronIndex).getLength();
         // genomic end of the near exon, just before the intron
         int nearEnd = alignmentStart + CigarUtils.cigarAlignedLength(elements.subList(0, intronIndex)) - 1;
@@ -161,10 +159,11 @@ public class OverhangGate
 
         // Score the overhang at its far exon (the junction placement). A null far ref (off contig) can't be scored,
         // so it never keeps the junction. Case 1 (soft clip) vs Case 2 (multiple junctions) differ in keepJunction.
-        byte[] anchorRead = Arrays.copyOfRange(readBases, readBases.length - window, readBases.length - window + y);
-        byte[] farRef = mRefSource.getBases(chromosome, nearEnd + intronLen + 1, nearEnd + intronLen + y);
-        int overhangScore = (farRef != null && farRef.length == y) ? BoundaryReclaim.score(anchorRead, farRef) : Integer.MIN_VALUE;
-        if(keepJunction(overhangScore, anchorRead, ref, e))
+        byte[] anchorRead = Arrays.copyOfRange(readBases, readBases.length - window, readBases.length - window + anchorLength);
+        byte[] farRef = mRefSource.getBases(chromosome, nearEnd + intronLen + 1, nearEnd + intronLen + anchorLength);
+        int overhangScore = (farRef != null && farRef.length == anchorLength)
+                ? BoundaryReclaim.score(anchorRead, farRef) : Integer.MIN_VALUE;
+        if(keepJunction(overhangScore, anchorRead, ref, softclipLength))
         {
             return CollapseResult.unchanged();
         }
@@ -193,7 +192,7 @@ public class OverhangGate
 
         // shape: "[eS] yM nN <...>M"
         boolean hasSoftclip = elements.get(0).getOperator() == CigarOperator.S;
-        int e = hasSoftclip ? elements.get(0).getLength() : 0;
+        int softclipLength = hasSoftclip ? elements.get(0).getLength() : 0;
         int anchorIndex = hasSoftclip ? 1 : 0;
         int intronIndex = anchorIndex + 1;
         int nearIndex = intronIndex + 1;
@@ -218,22 +217,22 @@ public class OverhangGate
         }
 
         // trigger: engage only with an adjacent soft-clip or more than one junction (Case 1 / Case 2).
-        if(e == 0 && countIntrons(elements) <= 1)
+        if(softclipLength == 0 && countIntrons(elements) <= 1)
         {
             return CollapseResult.unchanged();
         }
 
-        int y = anchor.getLength();
+        int anchorLength = anchor.getLength();
         // a long overhang is trusted outright (a real junction even with a couple of mismatches); only short overhangs
         // are scored. See TarsConstants.MIN_OVERHANG_LENGTH.
-        if(y > MIN_OVERHANG_LENGTH)
+        if(anchorLength > MIN_OVERHANG_LENGTH)
         {
             return CollapseResult.unchanged();
         }
-        int window = y + e;
+        int window = anchorLength + softclipLength;
         int intron = elements.get(intronIndex).getLength();
         // leading softclip consumes no reference, so nearStart skips only anchor + intron.
-        int nearStart = alignmentStart + y + intron;
+        int nearStart = alignmentStart + anchorLength + intron;
         byte[] ref = mRefSource.getBases(chromosome, nearStart - window, nearStart - 1);
         if(ref == null || ref.length != window)
         {
@@ -245,13 +244,14 @@ public class OverhangGate
         byte[] readWindow = BoundaryReclaim.reversed(Arrays.copyOfRange(readBases, 0, window));
         byte[] nearRef = BoundaryReclaim.reversed(ref);
 
-        // Score the overhang at its far exon (the junction placement); the leading anchor sits at [alignmentStart, +y).
+        // Score the overhang at its far exon (the junction placement); the leading anchor sits at [alignmentStart, +anchorLength).
         // Score is order-independent, so no reversal needed. Case 1 (soft clip) vs Case 2 (multiple junctions) differ
         // in keepJunction.
-        byte[] anchorRead = Arrays.copyOfRange(readBases, e, e + y);
-        byte[] farRef = mRefSource.getBases(chromosome, alignmentStart, alignmentStart + y - 1);
-        int overhangScore = (farRef != null && farRef.length == y) ? BoundaryReclaim.score(anchorRead, farRef) : Integer.MIN_VALUE;
-        if(keepJunction(overhangScore, anchorRead, ref, e))
+        byte[] anchorRead = Arrays.copyOfRange(readBases, softclipLength, softclipLength + anchorLength);
+        byte[] farRef = mRefSource.getBases(chromosome, alignmentStart, alignmentStart + anchorLength - 1);
+        int overhangScore = (farRef != null && farRef.length == anchorLength)
+                ? BoundaryReclaim.score(anchorRead, farRef) : Integer.MIN_VALUE;
+        if(keepJunction(overhangScore, anchorRead, ref, softclipLength))
         {
             return CollapseResult.unchanged();
         }
@@ -271,14 +271,14 @@ public class OverhangGate
         return new CollapseResult(true, nearStart - reclaimed, CigarUtils.cigarElementsToStr(merged));
     }
 
-    // Decide whether to keep a short overhang's junction, by case. Case 1 (adjacent soft clip, e > 0): keep the junction
-    // if the overhang's far-exon score beats the clip penalty (MIN_OVERHANG_SCORE), else collapse. Case 2 (more than one
-    // junction, no soft clip, e == 0): keep the junction if the overhang aligns positively (score > 0); only when it does
-    // not (score <= 0) is the intronic reference checked - the junction is collapsed only if reading the overhang
+    // Decide whether to keep a short overhang's junction, by case. Case 1 (adjacent soft clip, softclipLength > 0): keep
+    // the junction if the overhang's far-exon score beats the clip penalty (MIN_OVERHANG_SCORE), else collapse. Case 2 (more
+    // than one junction, no soft clip, softclipLength == 0): keep the junction if the overhang aligns positively (score > 0);
+    // only when it does not (score <= 0) is the intronic reference checked - the junction is collapsed only if reading the overhang
     // contiguously on the reference scores strictly higher than the junction (far exon) placement, otherwise it is kept.
-    private static boolean keepJunction(final int overhangScore, final byte[] anchorRead, final byte[] windowRef, final int e)
+    private static boolean keepJunction(final int overhangScore, final byte[] anchorRead, final byte[] windowRef, final int softclipLength)
     {
-        if(e > 0)
+        if(softclipLength > 0)
         {
             return overhangScore > MIN_OVERHANG_SCORE;
         }
@@ -299,8 +299,6 @@ public class OverhangGate
             return new CollapseResult(false, 0, null);
         }
     }
-
-    // ============================ standalone terminal softclip reclaim ============================
 
     public Result reclaimTerminalSoftClip(
             final String chromosome, final int alignmentStart, final String cigar, final byte[] readBases)
@@ -413,7 +411,7 @@ public class OverhangGate
     private static int countIntrons(final List<CigarElement> elements)
     {
         int count = 0;
-        for(final CigarElement element : elements)
+        for(CigarElement element : elements)
         {
             if(element.getOperator() == CigarOperator.N)
             {
@@ -447,11 +445,11 @@ public class OverhangGate
                     int walk(final byte[] readBases, final byte[] refBases, final int softclipLength, final int walkLength)
                     {
                         // leading softclip's M boundary is at its inner end, so reverse to walk boundary-outward
-                        byte[] readWin = BoundaryReclaim.reversed(
+                        byte[] readWindow = BoundaryReclaim.reversed(
                                 Arrays.copyOfRange(readBases, softclipLength - walkLength, softclipLength));
-                        byte[] refWin = BoundaryReclaim.reversed(
+                        byte[] refWindow = BoundaryReclaim.reversed(
                                 Arrays.copyOfRange(refBases, refBases.length - walkLength, refBases.length));
-                        return BoundaryReclaim.maxScoringPrefix(readWin, refWin);
+                        return BoundaryReclaim.maxScoringPrefix(readWindow, refWindow);
                     }
                 },
         TRAILING
@@ -476,9 +474,9 @@ public class OverhangGate
                     {
                         // trailing softclip's M boundary is at its start, already boundary-outward
                         int readStart = readBases.length - softclipLength;
-                        byte[] readWin = Arrays.copyOfRange(readBases, readStart, readStart + walkLength);
-                        byte[] refWin = Arrays.copyOfRange(refBases, 0, walkLength);
-                        return BoundaryReclaim.maxScoringPrefix(readWin, refWin);
+                        byte[] readWindow = Arrays.copyOfRange(readBases, readStart, readStart + walkLength);
+                        byte[] refWindow = Arrays.copyOfRange(refBases, 0, walkLength);
+                        return BoundaryReclaim.maxScoringPrefix(readWindow, refWindow);
                     }
                 };
 

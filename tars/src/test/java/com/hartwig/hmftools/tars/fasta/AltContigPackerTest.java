@@ -84,9 +84,9 @@ public class AltContigPackerTest
         assertEquals(6 + 5 + 3 + 5 + 8, result.sequence().length());
         for(int i = 0; i < result.entries().size() - 1; ++i)
         {
-            ContigEntry a = result.entries().get(i);
-            ContigEntry b = result.entries().get(i + 1);
-            assertEquals(a.altEnd() + SPACER + 1, b.altStart());
+            ContigEntry current = result.entries().get(i);
+            ContigEntry next = result.entries().get(i + 1);
+            assertEquals(current.altEnd() + SPACER + 1, next.altStart());
         }
     }
 
