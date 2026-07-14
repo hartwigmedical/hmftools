@@ -20,12 +20,12 @@ public class FieldConfigFile
 {
     static final String NONE_SETTING = "none";
 
-    private static final String COL_CATEGORY = "category";
-    private static final String COL_FIELD = "field";
-    private static final String COL_FIELD_TYPE = "fieldType";
-    public static final String COL_COMPARED = "compared";
-    public static final String COL_ABSOLUTE_THRESHOLD = "absoluteThreshold";
-    public static final String COL_PERCENT_THRESHOLD = "percentThreshold";
+    private static final String COL_CATEGORY = "Category";
+    private static final String COL_FIELD = "Field";
+    private static final String COL_FIELD_TYPE = "FieldType";
+    public static final String COL_COMPARED = "Compared";
+    public static final String COL_ABSOLUTE_THRESHOLD = "AbsoluteThreshold";
+    public static final String COL_PERCENT_THRESHOLD = "PercentThreshold";
 
     public static String generateFileName(final String basePath)
     {

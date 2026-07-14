@@ -23,7 +23,7 @@ import org.junit.Test;
 
 public class FieldConfigFileTest
 {
-    private static final String HEADER = "category\tfield\tfieldType\tcompared\tabsoluteThreshold\tpercentThreshold";
+    private static final String HEADER = "Category\tField\tFieldType\tCompared\tAbsoluteThreshold\tPercentThreshold";
 
     @Test
     public void generateFileNameAppendsFileNameWithDirSeparator()
