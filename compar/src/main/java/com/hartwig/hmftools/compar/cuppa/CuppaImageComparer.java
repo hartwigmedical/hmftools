@@ -65,6 +65,6 @@ public class CuppaImageComparer extends ImageComparer
     @Override
     public List<String> displayFieldNames()
     {
-        return Lists.newArrayList(FLD_VIS_IMAGE);
+        return Lists.newArrayList();
     }
 }
