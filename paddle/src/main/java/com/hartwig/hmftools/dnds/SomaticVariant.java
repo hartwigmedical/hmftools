@@ -27,12 +27,13 @@ public class SomaticVariant
     public final boolean Hotspot;
     public final CodingEffect WorstCodingEffect;
     public final CodingEffect CanonicalCodingEffect;
+    public final boolean CanonicalSpliceRegion;
     public final int RepeatCount;
 
         public SomaticVariant(
             final String chromosome, final int position, final String ref, final String alt, final String gene,
             final boolean biallelic, final boolean hotspot, final CodingEffect worstCodingEffect, final CodingEffect canonicalCodingEffect,
-            final int repeatCount)
+            final boolean canonicalSpliceRegion, final int repeatCount)
     {
         Chromosome = chromosome;
         Position = position;
@@ -43,6 +44,7 @@ public class SomaticVariant
         Hotspot = hotspot;
         WorstCodingEffect = worstCodingEffect;
         CanonicalCodingEffect = canonicalCodingEffect;
+        CanonicalSpliceRegion = canonicalSpliceRegion;
         RepeatCount = repeatCount;
     }
 
@@ -61,7 +63,7 @@ public class SomaticVariant
 
             String header = String.join(TSV_DELIM,
                     "SampleId", "Chromosome", "Position", "Ref", "Alt",
-                    "Gene", "Biallelic", "Hotspot", "WorstCodingEffect", "CanonicalCodingEffect", "RepeatCount");
+                    "Gene", "Biallelic", "Hotspot", "WorstCodingEffect", "CanonicalCodingEffect", "CanonicalSpliceRegion", "RepeatCount");
 
             writer.write(header);
             writer.newLine();
@@ -85,7 +87,7 @@ public class SomaticVariant
                 sj.add(variant.Chromosome).add(String.valueOf(variant.Position)).add(variant.Ref).add(variant.Alt);
                 sj.add(variant.Gene).add(String.valueOf(variant.Biallelic)).add(String.valueOf(variant.Hotspot));
                 sj.add(String.valueOf(variant.WorstCodingEffect)).add(String.valueOf(variant.CanonicalCodingEffect));
-                sj.add(String.valueOf(variant.RepeatCount));
+                sj.add(String.valueOf(variant.CanonicalSpliceRegion)).add(String.valueOf(variant.RepeatCount));
                 writer.write(sj.toString());
                 writer.newLine();
             }
@@ -118,6 +120,7 @@ public class SomaticVariant
             int hotspotIndex = fieldsIndexMap.get("Hotspot");
             int wceIndex = fieldsIndexMap.get("WorstCodingEffect");
             int ceIndex = fieldsIndexMap.get("CanonicalCodingEffect");
+            int spliceRegionIndex = fieldsIndexMap.get("CanonicalSpliceRegion");
             int rcIndex = fieldsIndexMap.get("RepeatCount");
             Integer dndsImpactIndex = fieldsIndexMap.get("DndsImpact");
 
@@ -128,7 +131,7 @@ public class SomaticVariant
                 SomaticVariant variant = new SomaticVariant(
                         values[chrIndex], Integer.parseInt(values[posIndex]), values[refIndex], values[altIndex], values[geneIndex],
                         Boolean.parseBoolean(values[biIndex]), Boolean.parseBoolean(values[hotspotIndex]), CodingEffect.valueOf(values[wceIndex]),
-                        CodingEffect.valueOf(values[ceIndex]), Integer.parseInt(values[rcIndex]));
+                        CodingEffect.valueOf(values[ceIndex]), Boolean.parseBoolean(values[spliceRegionIndex]), Integer.parseInt(values[rcIndex]));
 
                 variants.add(variant);
             }

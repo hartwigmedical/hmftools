@@ -18,12 +18,13 @@ import com.hartwig.hmftools.common.variant.HotspotType;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
+import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import com.hartwig.hmftools.dnds.SampleMutationalLoad;
 import com.hartwig.hmftools.dnds.SomaticVariant;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.jooq.Record;
-import org.jooq.Record10;
+import org.jooq.Record11;
 import org.jooq.Record3;
 import org.jooq.Result;
 
@@ -116,10 +117,10 @@ public class SampleDataLoader
     {
         List<SomaticVariant> variants = Lists.newArrayList();
 
-        Result<Record10<String,Integer,String,String,String,Byte,String,String,String,Integer>> result = mDbAccess.context()
+        Result<Record11<String,Integer,String,String,String,Byte,String,String,String,Byte,Integer>> result = mDbAccess.context()
                 .select(SOMATICVARIANT.CHROMOSOME, SOMATICVARIANT.POSITION, SOMATICVARIANT.REF, SOMATICVARIANT.ALT, SOMATICVARIANT.GENE,
                         SOMATICVARIANT.BIALLELIC, SOMATICVARIANT.HOTSPOT, SOMATICVARIANT.WORSTCODINGEFFECT,
-                        SOMATICVARIANT.CANONICALCODINGEFFECT, SOMATICVARIANT.REPEATCOUNT)
+                        SOMATICVARIANT.CANONICALCODINGEFFECT, SOMATICVARIANT.SPLICEREGION, SOMATICVARIANT.REPEATCOUNT)
                 .from(SOMATICVARIANT)
                 .where(SOMATICVARIANT.SAMPLEID.eq(sample))
                 .and(SOMATICVARIANT.FILTER.eq(PASS_FILTER))
@@ -144,6 +145,7 @@ public class SampleDataLoader
                     record.getValue(SOMATICVARIANT.CANONICALCODINGEFFECT).isEmpty()
                             ? CodingEffect.UNDEFINED
                             : CodingEffect.valueOf(record.getValue(SOMATICVARIANT.CANONICALCODINGEFFECT)),
+                    byteToBoolean(record.getValue(SOMATICVARIANT.SPLICEREGION)),
                     record.getValue(SOMATICVARIANT.REPEATCOUNT));
 
             variants.add(variant);
@@ -204,6 +206,12 @@ public class SampleDataLoader
                 if(gene.isEmpty())
                     continue;
 
+                VariantImpact impact = decorator.variantImpact();
+                CodingEffect codingEffect = impact.CanonicalCodingEffect;
+                boolean hasNoCodingEffect = codingEffect == CodingEffect.NONE || codingEffect == CodingEffect.UNDEFINED;
+                if(hasNoCodingEffect && !impact.CanonicalSpliceRegion)
+                    continue;
+
                 int repeatCount = decorator.repeatCount();
                 if(repeatCount > maxRepeatCount)
                     continue;
@@ -216,8 +224,9 @@ public class SampleDataLoader
                         gene,
                         isBiallelic,
                         decorator.isHotspot(),
-                        decorator.variantImpact().WorstCodingEffect,
-                        decorator.canonicalCodingEffect(),
+                        impact.WorstCodingEffect,
+                        codingEffect,
+                        impact.CanonicalSpliceRegion,
                         repeatCount
                 );
 

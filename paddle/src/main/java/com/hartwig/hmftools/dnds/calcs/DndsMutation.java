@@ -111,6 +111,7 @@ public class DndsMutation
             int hotspotIndex = fieldsIndexMap.get("Hotspot");
             int wceIndex = fieldsIndexMap.get("WorstCodingEffect");
             int ceIndex = fieldsIndexMap.get("CanonicalCodingEffect");
+            int spliceRegionIndex = fieldsIndexMap.get("CanonicalSpliceRegion");
             int rcIndex = fieldsIndexMap.get("RepeatCount");
             int dndsImpactIndex = fieldsIndexMap.get("DndsImpact");
 
@@ -121,7 +122,7 @@ public class DndsMutation
                 SomaticVariant variant = new SomaticVariant(
                         values[chrIndex], Integer.parseInt(values[posIndex]), values[refIndex], values[altIndex], values[geneIndex],
                         Boolean.parseBoolean(values[biIndex]), Boolean.parseBoolean(values[hotspotIndex]), CodingEffect.valueOf(values[wceIndex]),
-                        CodingEffect.valueOf(values[ceIndex]), Integer.parseInt(values[rcIndex]));
+                        CodingEffect.valueOf(values[ceIndex]), Boolean.parseBoolean(values[spliceRegionIndex]), Integer.parseInt(values[rcIndex]));
 
                 mutations.add(new DndsMutation(variant, values[dndsImpactIndex]));
             }
