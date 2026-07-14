@@ -160,12 +160,11 @@ public class DndsDataBuilder
 
         private void processSample(final String sampleId)
         {
-            List<SomaticVariant> variants = mSampleDataLoader.loadVariants(sampleId);
-            DN_LOGGER.debug("sample({}) loaded {} variants", sampleId, variants.size());
+            SampleDataLoader.SampleData sampleData = mSampleDataLoader.loadSampleData(sampleId);
+            DN_LOGGER.debug("sample({}) loaded {} variants", sampleId, sampleData.Variants.size());
 
-            SampleMutationalLoad sampleMutationalLoad = mSampleDataLoader.calcSampleMutationalLoad(sampleId);
-            SampleMutationalLoad.writeSampleMutationalLoad(mMutLoadWriter, sampleId, sampleMutationalLoad);
-            SomaticVariant.writeVariants(mSomaticsDir, sampleId, variants);
+            SampleMutationalLoad.writeSampleMutationalLoad(mMutLoadWriter, sampleId, sampleData.MutationalLoad);
+            SomaticVariant.writeVariants(mSomaticsDir, sampleId, sampleData.Variants);
         }
     }
 

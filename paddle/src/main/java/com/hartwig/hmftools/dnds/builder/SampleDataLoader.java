@@ -8,14 +8,21 @@ import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SOMATIC
 
 import static org.jooq.impl.DSL.count;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.PurityContext;
+import com.hartwig.hmftools.common.purple.PurityContextFile;
+import com.hartwig.hmftools.common.purple.PurpleCommon;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.HotspotType;
+import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.variant.VariantType;
+import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.dnds.SampleMutationalLoad;
 import com.hartwig.hmftools.dnds.SomaticVariant;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
@@ -24,6 +31,9 @@ import org.jooq.Record;
 import org.jooq.Record10;
 import org.jooq.Record3;
 import org.jooq.Result;
+
+import htsjdk.tribble.CloseableTribbleIterator;
+import htsjdk.variant.variantcontext.VariantContext;
 
 public class SampleDataLoader
 {
@@ -36,29 +46,32 @@ public class SampleDataLoader
         mPurpleDir = purpleDir;
     }
 
-    public List<SomaticVariant> loadVariants(final String sampleId)
+    public static class SampleData
     {
-        if(mDbAccess != null)
+        public final List<SomaticVariant> Variants;
+        public final SampleMutationalLoad MutationalLoad;
+
+        public SampleData(final List<SomaticVariant> variants, final SampleMutationalLoad mutationalLoad)
         {
-            return readDndsVariants(sampleId, MAX_REPEAT_COUNT);
-        }
-        else
-        {
-            DN_LOGGER.error("currently unsupported");
-            return Collections.emptyList();
+            Variants = variants;
+            MutationalLoad = mutationalLoad;
         }
     }
 
-    public SampleMutationalLoad calcSampleMutationalLoad(final String sampleId)
+    public SampleData loadSampleData(final String sampleId)
     {
         if(mDbAccess != null)
         {
-            return readSampleMutationalLoad(sampleId);
+            return new SampleData(readDndsVariants(sampleId, MAX_REPEAT_COUNT), readSampleMutationalLoad(sampleId));
+        }
+        else if(mPurpleDir != null)
+        {
+            return readSampleDataFromVcf(sampleId, MAX_REPEAT_COUNT);
         }
         else
         {
-            DN_LOGGER.error("currently unsupported");
-            return null;
+            DN_LOGGER.error("sample({}) neither database nor purple directory configured", sampleId);
+            return new SampleData(Collections.emptyList(), null);
         }
     }
 
@@ -114,7 +127,7 @@ public class SampleDataLoader
             purity = purityContext.bestFit().purity();
         }
 
-        return new SampleMutationalLoad(purity, indelBiallelic, indelNonBiallelic, snvBiallelic, snvNonBiallelic);
+        return new SampleMutationalLoad(purity, snvBiallelic, snvNonBiallelic, indelBiallelic, indelNonBiallelic);
     }
 
     private List<SomaticVariant> readDndsVariants(final String sample, int maxRepeatCount)
@@ -157,5 +170,93 @@ public class SampleDataLoader
         return variants;
     }
 
+    private SampleData readSampleDataFromVcf(final String sample, final int maxRepeatCount)
+    {
+        String vcfFile = PurpleCommon.purpleSomaticVcfFile(mPurpleDir, sample);
+        VcfFileReader vcfFileReader = new VcfFileReader(vcfFile);
 
+        if(!vcfFileReader.fileValid())
+        {
+            DN_LOGGER.error("sample({}) purple vcf file({}) not found", sample, vcfFile);
+            System.exit(1);
+        }
+
+        int snvBiallelic = 0;
+        int snvNonBiallelic = 0;
+        int indelBiallelic = 0;
+        int indelNonBiallelic = 0;
+
+        List<SomaticVariant> variants = Lists.newArrayList();
+
+        try(vcfFileReader; CloseableTribbleIterator<VariantContext> iterator = vcfFileReader.iterator())
+        {
+            for(VariantContext context : iterator)
+            {
+                VariantContextDecorator decorator = new VariantContextDecorator(context);
+
+                if(!decorator.isPass())
+                    continue;
+
+                VariantType type = decorator.type();
+                if(type != VariantType.SNP && type != VariantType.INDEL)
+                    continue;
+
+                boolean isBiallelic = decorator.biallelic();
+
+                if(type == VariantType.SNP)
+                {
+                    if(isBiallelic)
+                        ++snvBiallelic;
+                    else
+                        ++snvNonBiallelic;
+                }
+                else
+                {
+                    if(isBiallelic)
+                        ++indelBiallelic;
+                    else
+                        ++indelNonBiallelic;
+                }
+
+                String gene = decorator.gene();
+                if(gene.isEmpty())
+                    continue;
+
+                int repeatCount = decorator.repeatCount();
+                if(repeatCount > maxRepeatCount)
+                    continue;
+
+                SomaticVariant variant = new SomaticVariant(
+                        decorator.chromosome(),
+                        decorator.position(),
+                        decorator.ref(),
+                        decorator.alt(),
+                        gene,
+                        isBiallelic,
+                        decorator.isHotspot(),
+                        decorator.variantImpact().WorstCodingEffect,
+                        decorator.canonicalCodingEffect(),
+                        repeatCount
+                );
+
+                variants.add(variant);
+            }
+        }
+
+        double purity = 0;
+        try
+        {
+            PurityContext purityContext = PurityContextFile.read(mPurpleDir, sample);
+            purity = purityContext.bestFit().purity();
+        }
+        catch(IOException e)
+        {
+            DN_LOGGER.error("sample({}) purple purity file not found", sample);
+            System.exit(1);
+        }
+
+        SampleMutationalLoad mutationalLoad = new SampleMutationalLoad(purity, snvBiallelic, snvNonBiallelic, indelBiallelic, indelNonBiallelic);
+
+        return new SampleData(variants, mutationalLoad);
+    }
 }
