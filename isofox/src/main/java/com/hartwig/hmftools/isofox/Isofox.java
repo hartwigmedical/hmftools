@@ -285,8 +285,9 @@ public class Isofox
         final List<GeneCollectionSummary> geneSummaryData = Lists.newArrayList();
         chrTasks.stream().forEach(x -> geneSummaryData.addAll(x.getGeneCollectionSummaryData()));
 
-        final Map<String,Double> multiMapGeneCounts = Maps.newHashMap();
-        chrTasks.forEach(x -> x.getMultiMapGeneCounts().forEach((geneId, count) -> multiMapGeneCounts.merge(geneId, count, Double::sum)));
+        final Map<String,double[]> multiMapGeneCounts = Maps.newHashMap();
+        chrTasks.forEach(x -> x.getMultiMapGeneCounts().forEach((geneId, counts) ->
+                multiMapGeneCounts.merge(geneId, counts, (a, b) -> new double[] { a[0] + b[0], a[1] + b[1] })));
         applyMultiMappedFanOut(geneSummaryData, multiMapGeneCounts);
 
         double[] tpmFactors = calcTpmFactors(geneSummaryData, mConfig.Filters.EnrichedGeneIds);

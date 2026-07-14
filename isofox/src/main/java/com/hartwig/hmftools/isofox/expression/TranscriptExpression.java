@@ -11,6 +11,8 @@ import static com.hartwig.hmftools.common.sigs.SigUtils.calcResiduals;
 import static com.hartwig.hmftools.common.sigs.SigUtils.calculateFittedCounts;
 import static com.hartwig.hmftools.common.utils.VectorUtils.sumVector;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.isofox.FragmentAllocator.MULTI_MAP_SPLICED;
+import static com.hartwig.hmftools.isofox.FragmentAllocator.MULTI_MAP_UNSPLICED;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.HIGH_EXPRESSION_FOLD_CHANGE_HIGH;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.HIGH_EXPRESSION_FOLD_CHANGE_LOW;
@@ -162,7 +164,7 @@ public class TranscriptExpression
     private static final int ADJUSTED_TPM = 1;
     private static final double TPM_MILLION = 1000000;
 
-    public static void applyMultiMappedFanOut(final List<GeneCollectionSummary> geneSummaries, final Map<String,Double> geneCounts)
+    public static void applyMultiMappedFanOut(final List<GeneCollectionSummary> geneSummaries, final Map<String,double[]> geneCounts)
     {
         if(geneCounts.isEmpty())
             return;
@@ -182,10 +184,12 @@ public class TranscriptExpression
         double appliedTotal = 0;
         double droppedTotal = 0;
 
-        for(Map.Entry<String,Double> entry : geneCounts.entrySet())
+        for(Map.Entry<String,double[]> entry : geneCounts.entrySet())
         {
             String geneId = entry.getKey();
-            double fanOutCount = entry.getValue();
+            double splicedCount = entry.getValue()[MULTI_MAP_SPLICED];
+            double unsplicedCount = entry.getValue()[MULTI_MAP_UNSPLICED];
+            double fanOutCount = splicedCount + unsplicedCount;
 
             List<TranscriptResult> transResults = geneTranscripts.get(geneId);
 
@@ -207,7 +211,10 @@ public class TranscriptExpression
 
             GeneResult geneResult = geneResults.get(geneId);
             if(geneResult != null)
-                geneResult.addSplicedAlloc(fanOutCount);
+            {
+                geneResult.addSplicedAlloc(splicedCount);
+                geneResult.addUnsplicedAlloc(unsplicedCount);
+            }
 
             appliedTotal += fanOutCount;
         }

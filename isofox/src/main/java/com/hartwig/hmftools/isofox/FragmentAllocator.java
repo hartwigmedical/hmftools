@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.SINGLE_MAP_QUALITY;
@@ -121,7 +122,12 @@ public class FragmentAllocator
 
     private final EnsemblDataCache mGeneTransCache;
 
-    private final Map<String,Double> mMultiMapGeneCounts;
+    // multi-map fan-out fragment shares accrued per gene, split as [spliced, unspliced] so they are booked into the
+    // correct gene-level allocation downstream rather than all counted as spliced
+    private final Map<String,double[]> mMultiMapGeneCounts;
+
+    public static final int MULTI_MAP_SPLICED = 0;
+    public static final int MULTI_MAP_UNSPLICED = 1;
 
     private static final int GENE_LOG_COUNT = 5000000;
     private static final int NON_GENIC_BASE_DEPTH_WIDTH = 250000;
@@ -397,7 +403,7 @@ public class FragmentAllocator
         boolean isDuplicate = read1.isDuplicate() || read2.isDuplicate();
         boolean isMultiMapped = read1.isMultiMapped() || read2.isMultiMapped();
 
-        List<ChrBaseRegion> altLoci = read1.altLoci();
+        List<Read.AltAlignment> altLoci = read1.altLoci();
         if(read2.altLoci() != null && (altLoci == null || read2.altLoci().size() > altLoci.size()))
             altLoci = read2.altLoci();
 
@@ -851,27 +857,59 @@ public class FragmentAllocator
 
     public List<CategoryCountsData> getTransComboData() { return mExpressionReadTracker.getTransComboData(); }
 
-    public Map<String,Double> getMultiMapGeneCounts() { return mMultiMapGeneCounts; }
-    
-    private void fanOutMultiMappedFragment(final List<ChrBaseRegion> altLoci, int numLoci)
+    public Map<String,double[]> getMultiMapGeneCounts() { return mMultiMapGeneCounts; }
+
+    // Distribute a multi-mapped fragment's per-locus share (1/numLoci) across the genes each XA alt locus supports.
+    // Only exonic overlaps are credited: an alt falling in an intron (the bulk of a large gene's span) does not
+    // support a transcript, so crediting it - as the previous full-gene-span match did - let big intronic genes
+    // harvest unrelated genome-wide multimappers. The share is booked spliced/unspliced per the alt's own CIGAR.
+    private void fanOutMultiMappedFragment(final List<Read.AltAlignment> altLoci, int numLoci)
     {
         if(altLoci == null || mGeneTransCache == null)
             return;
 
         double locusWeight = 1.0 / numLoci;
 
-        for(ChrBaseRegion locus : altLoci)
+        for(Read.AltAlignment locus : altLoci)
         {
-            List<GeneData> genes = mGeneTransCache.findGeneByRange(locus.Chromosome, locus.start(), locus.end());
+            List<GeneData> spanGenes = mGeneTransCache.findGeneByRange(
+                    locus.Region.Chromosome, locus.Region.start(), locus.Region.end());
 
-            if(genes.isEmpty())
+            List<GeneData> exonicGenes = spanGenes.stream()
+                    .filter(gene -> altOverlapsExon(gene, locus.Region))
+                    .collect(Collectors.toList());
+
+            if(exonicGenes.isEmpty())
                 continue;
 
-            double geneWeight = locusWeight / genes.size();
+            double geneWeight = locusWeight / exonicGenes.size();
+            int index = locus.Spliced ? MULTI_MAP_SPLICED : MULTI_MAP_UNSPLICED;
 
-            for(GeneData gene : genes)
-                mMultiMapGeneCounts.merge(gene.GeneId, geneWeight, Double::sum);
+            for(GeneData gene : exonicGenes)
+            {
+                double[] counts = mMultiMapGeneCounts.computeIfAbsent(gene.GeneId, k -> new double[2]);
+                counts[index] += geneWeight;
+            }
         }
+    }
+
+    private boolean altOverlapsExon(final GeneData gene, final ChrBaseRegion altRegion)
+    {
+        List<TranscriptData> transcripts = mGeneTransCache.getTranscripts(gene.GeneId);
+
+        if(transcripts == null)
+            return false;
+
+        for(TranscriptData transData : transcripts)
+        {
+            for(ExonData exon : transData.exons())
+            {
+                if(positionsOverlap(exon.Start, exon.End, altRegion.start(), altRegion.end()))
+                    return true;
+            }
+        }
+
+        return false;
     }
 
     private void processIntronicReads(final List<GeneReadData> genes, final Read read1, final Read read2, int numLoci)

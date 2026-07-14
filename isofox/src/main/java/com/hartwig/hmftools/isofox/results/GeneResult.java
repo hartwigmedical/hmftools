@@ -72,6 +72,7 @@ public class GeneResult
     }
 
     public void addSplicedAlloc(double splicedAlloc) { mSplicedAlloc += splicedAlloc; }
+    public void addUnsplicedAlloc(double unsplicedAlloc) { mUnsplicedAlloc += unsplicedAlloc; }
 
     public void setTPM(double raw, double adjusted)
     {
