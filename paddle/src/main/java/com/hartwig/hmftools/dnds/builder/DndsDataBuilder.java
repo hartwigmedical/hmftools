@@ -142,6 +142,10 @@ public class DndsDataBuilder
         private void processSample(final String sampleId)
         {
             SampleDataLoader.SampleData sampleData = mSampleDataLoader.loadSampleData(sampleId);
+
+            if(sampleData == null)
+                return;
+
             DN_LOGGER.debug("sample({}) loaded {} variants", sampleId, sampleData.Variants.size());
 
             SampleMutationalLoad.writeSampleMutationalLoad(mMutLoadWriter, sampleId, sampleData.MutationalLoad);

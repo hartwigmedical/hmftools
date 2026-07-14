@@ -161,8 +161,8 @@ public class SampleDataLoader
 
         if(!vcfFileReader.fileValid())
         {
-            DN_LOGGER.error("sample({}) purple vcf file({}) not found", sample, vcfFile);
-            System.exit(1);
+            DN_LOGGER.warn("sample({}) purple vcf file({}) not found, skipping", sample, vcfFile);
+            return null;
         }
 
         int snvBiallelic = 0;
