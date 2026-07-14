@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.bamtools.checker;
 
-import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
@@ -73,6 +72,7 @@ public class PartitionThread extends Thread
     public FragmentStats stats() { return mPartitionChecker.stats(); }
     public String bamFilename() { return mBamFilename; }
 
+    @Override
     public void run()
     {
         while(true)

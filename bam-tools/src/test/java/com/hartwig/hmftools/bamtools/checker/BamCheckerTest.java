@@ -311,9 +311,9 @@ public class BamCheckerTest
         SamRecordTestUtils.flipFirstInPair(supp2);
 
         Fragment fragment = new Fragment(read1);
-        fragment.addRead(read2);
         fragment.addRead(supp1);
         fragment.addRead(supp2);
+        fragment.addRead(read2);
         List<SAMRecord> reads = fragment.extractCompleteReads();
 
         assertEquals(0, fragment.expectedSupplementaryCount());

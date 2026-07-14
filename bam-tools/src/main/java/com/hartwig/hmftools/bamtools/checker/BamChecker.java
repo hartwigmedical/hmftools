@@ -127,7 +127,7 @@ public class BamChecker
         Queue<ChrBaseRegion> partitionQueue = new ConcurrentLinkedQueue<>();
         partitionQueue.addAll(partitionRegions);
 
-        TaskQueue taskQueue = new TaskQueue(partitionQueue, "partitions", 0); // log on completed partitions
+        TaskQueue taskQueue = new TaskQueue(partitionQueue, "partitions", 100); // log on completed partitions
 
         for(int i = 0; i < mConfig.Threads; ++i)
         {

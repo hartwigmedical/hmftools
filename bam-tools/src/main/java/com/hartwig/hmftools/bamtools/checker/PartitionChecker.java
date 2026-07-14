@@ -228,9 +228,6 @@ public class PartitionChecker
             fragment.addRead(read);
         }
 
-        if(CheckConfig.Params.ConvertHardClips && !read.getSupplementaryAlignmentFlag())
-            fragment.cachePrimaryBaseInfo(read);
-
         List<SAMRecord> completeReads = fragment.extractCompleteReads();
 
         if(!completeReads.isEmpty())

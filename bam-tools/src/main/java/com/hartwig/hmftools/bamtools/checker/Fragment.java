@@ -2,6 +2,7 @@ package com.hartwig.hmftools.bamtools.checker;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.ALIGNMENT_SCORE_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CHROMOSOME_INDEX;
@@ -9,6 +10,7 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CHROMOSOME_NAME;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CIGAR;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.READ_GROUP_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.readToString;
 import static com.hartwig.hmftools.common.bam.SupplementaryReadData.ALIGNMENTS_DELIM;
 
 import static htsjdk.samtools.CigarOperator.H;
@@ -123,7 +125,6 @@ public class Fragment
             {
                 mFirstUnmapped = shouldUnmapRead(read);
                 mFirstPrimaryCigar = !mFirstUnmapped ? read.getCigarString() : NO_CIGAR;
-
             }
             else
             {
@@ -135,6 +136,9 @@ public class Fragment
                 purgeSupplementaryReads();
 
             checkSupplementaryData(read);
+
+            if(CheckConfig.Params.ConvertHardClips)
+                cachePrimaryBaseInfo(read);
         }
 
         mReads.add(read);
@@ -152,6 +156,15 @@ public class Fragment
     {
         if(!CheckConfig.Params.ValidContigs.contains(read.getReferenceName()))
             return true;
+
+        if(read.getSupplementaryAlignmentFlag())
+        {
+            // primary must also be a valid contig
+            List<SupplementaryReadData> suppDataList = SupplementaryReadData.extractAlignments(read);
+
+            if(suppDataList != null && !CheckConfig.Params.ValidContigs.contains(suppDataList.get(0).Chromosome))
+                return true;
+        }
 
         Integer asScore = read.getIntegerAttribute(ALIGNMENT_SCORE_ATTRIBUTE);
         return asScore != null && asScore.intValue() < CheckConfig.Params.MinAlignmentScore;
@@ -307,7 +320,7 @@ public class Fragment
         }
     }
 
-    public void cachePrimaryBaseInfo(final SAMRecord read)
+    private void cachePrimaryBaseInfo(final SAMRecord read)
     {
         if(read.getSupplementaryAlignmentFlag() || !read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE))
             return;
@@ -451,6 +464,12 @@ public class Fragment
     @VisibleForTesting
     public static void convertHardClips(final SAMRecord read, final byte[] readBases, final byte[] baseQuals, final boolean negOrientation)
     {
+        if(readBases == null || baseQuals == null)
+        {
+            BT_LOGGER.warn("read({}) missing primary base and qual info for hard-clip conversion", readToString(read));
+            return;
+        }
+
         List<CigarElement> cigarElements = read.getCigar().getCigarElements();
         List<CigarElement> newCigarElements = Lists.newArrayListWithExpectedSize(cigarElements.size());
 
