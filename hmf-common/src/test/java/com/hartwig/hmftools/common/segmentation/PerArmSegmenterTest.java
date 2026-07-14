@@ -47,23 +47,6 @@ public class PerArmSegmenterTest
     }
 
     @Test
-    public void uniformPenaltyThresholdTest() throws Exception
-    {
-        int threshold = 100;
-        loadCutoffSensitiveData(threshold - 15);
-        PAS segmenter = new PAS(ratios, locator, GAMMA_100, threshold);
-        Map<ChrArm, ChromosomeArmSegments<PositionDepth>> armToSegments = segmenter.getSegmentation(executor);
-        ChromosomeArmSegments<PositionDepth> segments = armToSegments.get(new ChrArm(_2, P));
-        Assert.assertEquals(3, segments.Segments.size());
-
-        loadCutoffSensitiveData(threshold - 14);
-        segmenter = new PAS(ratios, locator, GAMMA_100, threshold - 14);
-        armToSegments = segmenter.getSegmentation(executor);
-        segments = armToSegments.get(new ChrArm(_2, P));
-        Assert.assertEquals(4, segments.Segments.size());
-    }
-
-    @Test
     public void segmentationIsDeterministicTest() throws Exception
     {
         ratios.clear();
@@ -82,7 +65,7 @@ public class PerArmSegmenterTest
             }
         }
 
-        PAS segmenter = new PAS(ratios, locator, GAMMA_100, 100_000);
+        PAS segmenter = new PAS(ratios, locator, GAMMA_100);
         Map<ChrArm, ChromosomeArmSegments<PositionDepth>> result0 = segmenter.getSegmentation(executor);
 
         // The key set iteration order previously affected the adjusted gamma and hence
@@ -94,7 +77,7 @@ public class PerArmSegmenterTest
             Collections.shuffle(toShuffle);
             ListMultimap<Chromosome, PositionDepth> copied = Multimaps.newListMultimap(new LinkedHashMap<>(), ArrayList::new);
             toShuffle.forEach(chromosome -> copied.putAll(chromosome, ratios.get(chromosome)));
-            segmenter = new PAS(copied, locator, GAMMA_100, 100_000);
+            segmenter = new PAS(copied, locator, GAMMA_100);
             Map<ChrArm, ChromosomeArmSegments<PositionDepth>> result = segmenter.getSegmentation(executor);
 
             Assert.assertEquals(result0.keySet(), result.keySet());
@@ -115,36 +98,6 @@ public class PerArmSegmenterTest
         }
     }
 
-    private void loadCutoffSensitiveData(final int numberOfRatiosInChr1)
-    {
-        ratios.clear();
-
-        loadChr1Data(numberOfRatiosInChr1);
-        ratios.put(_2, ratio(_2, 1, 0.5));
-        ratios.put(_2, ratio(_2, 1001, 0.48));
-        ratios.put(_2, ratio(_2, 2001, 0.52));
-        ratios.put(_2, ratio(_2, 3001, 0.51));
-        ratios.put(_2, ratio(_2, 4001, 0.49));
-        ratios.put(_2, ratio(_2, 5001, 0.50));
-        ratios.put(_2, ratio(_2, 6001, 10.0));
-        ratios.put(_2, ratio(_2, 10001, 10.0));
-        ratios.put(_2, ratio(_2, 11001, 10.0));
-        ratios.put(_2, ratio(_2, 12001, 10.7));
-        ratios.put(_2, ratio(_2, 13001, 10.7));
-        ratios.put(_2, ratio(_2, 14001, 0.01));
-        ratios.put(_2, ratio(_2, 15001, 0.02));
-        ratios.put(_2, ratio(_2, 16001, 0.01));
-        ratios.put(_2, ratio(_2, 17001, 0.02));
-    }
-
-    private void loadChr1Data(final int ratioCount)
-    {
-        for(int i = 1; i < ratioCount; i++)
-        {
-            ratios.put(_1, ratio(_1, 1000 * i + 1, 0.5));
-        }
-    }
-
     private PositionDepth ratio(HumanChromosome chromosome, int start, double value)
     {
         return new PositionDepth(start, chromosome.shortName(), value);
@@ -158,9 +111,9 @@ record PositionDepth(int position, String chromosome, double depth) implements G
 class PAS extends PerArmSegmenter<PositionDepth>
 {
     protected PAS(final ListMultimap<Chromosome, PositionDepth> ratios,
-            final ChrArmLocator chrArmLocator, final double gamma, final int threshold)
+            final ChrArmLocator chrArmLocator, final double gamma)
     {
-        super(ratios, chrArmLocator, gamma, threshold);
+        super(ratios, chrArmLocator, gamma);
     }
 
     @Override
