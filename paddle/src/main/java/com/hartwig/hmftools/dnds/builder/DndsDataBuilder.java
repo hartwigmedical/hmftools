@@ -15,13 +15,11 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBuffer
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.dnds.DndsCommon.APP_NAME;
 import static com.hartwig.hmftools.dnds.DndsCommon.DN_LOGGER;
-import static com.hartwig.hmftools.dnds.DndsCommon.SOMATIC_CACHE_DIR;
 import static com.hartwig.hmftools.dnds.SampleMutationalLoad.cohortSampleMutationalLoadFilename;
 import static com.hartwig.hmftools.dnds.SampleMutationalLoad.initialiseWriter;
 import static com.hartwig.hmftools.dnds.SampleMutationalLoad.loadCohortSampleMutationalLoads;
 
 import java.io.BufferedWriter;
-import java.io.File;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -44,7 +42,7 @@ public class DndsDataBuilder
     private final SampleDataLoader mSampleDataLoader;
 
     private BufferedWriter mMutLoadWriter;
-    private final String mSomaticsDir;
+    private BufferedWriter mVariantsWriter;
 
     public DndsDataBuilder(final ConfigBuilder configBuilder)
     {
@@ -52,8 +50,8 @@ public class DndsDataBuilder
         mPurpleDir = configBuilder.getValue(PURPLE_DIR_CFG);
         mThreads = parseThreads(configBuilder);
         mOutputDir = parseOutputDir(configBuilder);
-        mSomaticsDir = mOutputDir + SOMATIC_CACHE_DIR + File.separator;
         mMutLoadWriter = null;
+        mVariantsWriter = null;
 
         mDbAccess = DatabaseAccess.createDatabaseAccess(configBuilder);
         mSampleDataLoader = new SampleDataLoader(mPurpleDir, mDbAccess);
@@ -63,9 +61,7 @@ public class DndsDataBuilder
     {
         DN_LOGGER.info("DNDS sample data building for {} samples", mSampleIds.size());
 
-        // load exonic somatics either from file or the DB
-        String somaticsDir = mOutputDir + SOMATIC_CACHE_DIR + File.separator;
-        new File(somaticsDir).mkdirs();
+        mVariantsWriter = SomaticVariant.initialiseWriter(SomaticVariant.cohortDndsVariantsFilename(mOutputDir));
 
         // check for existing sample data
         String cohortSampleMutLoadFilename = cohortSampleMutationalLoadFilename(mOutputDir);
@@ -118,6 +114,7 @@ public class DndsDataBuilder
         }
 
         closeBufferedWriter(mMutLoadWriter);
+        closeBufferedWriter(mVariantsWriter);
 
         DN_LOGGER.info("DNDS sample data building complete");
     }
@@ -164,7 +161,7 @@ public class DndsDataBuilder
             DN_LOGGER.debug("sample({}) loaded {} variants", sampleId, sampleData.Variants.size());
 
             SampleMutationalLoad.writeSampleMutationalLoad(mMutLoadWriter, sampleId, sampleData.MutationalLoad);
-            SomaticVariant.writeVariants(mSomaticsDir, sampleId, sampleData.Variants);
+            SomaticVariant.writeVariants(mVariantsWriter, sampleId, sampleData.Variants);
         }
     }
 

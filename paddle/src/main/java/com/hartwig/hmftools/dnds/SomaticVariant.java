@@ -46,32 +46,42 @@ public class SomaticVariant
         RepeatCount = repeatCount;
     }
 
-    public static final String SAMPLE_VARIANTS_FILE = ".dnds_variants.tsv";
-    public static final String COHORT_VARIANTS_FILE = "cohort_dnds_variants.tsv";
-
-    public static String sampleDndsVariantsFilename(final String sourceDir, final String sampleId)
-    {
-        return sourceDir + sampleId + SAMPLE_VARIANTS_FILE;
-    }
+    public static final String COHORT_VARIANTS_FILE = "dnds_cohort_variants.tsv.gz";
 
     public static String cohortDndsVariantsFilename(final String sourceDir)
     {
         return sourceDir + COHORT_VARIANTS_FILE;
     }
 
-    public static void writeVariants(final String outputDir, final String sampleId, final List<SomaticVariant> variants)
+    public static BufferedWriter initialiseWriter(final String filename)
     {
         try
         {
-            String filename = sampleDndsVariantsFilename(outputDir, sampleId);
             BufferedWriter writer = createBufferedWriter(filename);
 
-            writer.write("Chromosome\tPosition\tRef\tAlt\tGene\tBiallelic\tHotspot\tWorstCodingEffect\tCanonicalCodingEffect\tRepeatCount");
-            writer.newLine();
+            String header = String.join(TSV_DELIM,
+                    "SampleId", "Chromosome", "Position", "Ref", "Alt",
+                    "Gene", "Biallelic", "Hotspot", "WorstCodingEffect", "CanonicalCodingEffect", "RepeatCount");
 
+            writer.write(header);
+            writer.newLine();
+            return writer;
+        }
+        catch (IOException e)
+        {
+            DN_LOGGER.error("failed to create variants writer:", e);
+            return null;
+        }
+    }
+
+    public synchronized static void writeVariants(final BufferedWriter writer, final String sampleId, final List<SomaticVariant> variants)
+    {
+        try
+        {
             for(SomaticVariant variant : variants)
             {
                 StringJoiner sj = new StringJoiner(TSV_DELIM);
+                sj.add(sampleId);
                 sj.add(variant.Chromosome).add(String.valueOf(variant.Position)).add(variant.Ref).add(variant.Alt);
                 sj.add(variant.Gene).add(String.valueOf(variant.Biallelic)).add(String.valueOf(variant.Hotspot));
                 sj.add(String.valueOf(variant.WorstCodingEffect)).add(String.valueOf(variant.CanonicalCodingEffect));
@@ -79,12 +89,11 @@ public class SomaticVariant
                 writer.write(sj.toString());
                 writer.newLine();
             }
-
-            writer.close();
         }
         catch (IOException e)
         {
-            DN_LOGGER.error("failed to write sample variants: {}", e.toString());
+            DN_LOGGER.error("failed to write variants for sample {}", sampleId, e);
+            System.exit(1);
         }
     }
 
