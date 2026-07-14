@@ -15,7 +15,7 @@ import java.nio.file.Files;
 import java.util.List;
 import java.util.Set;
 
-import com.hartwig.hmftools.compar.common.field.DisplayField;
+import com.hartwig.hmftools.compar.common.field.DisplayOnlyField;
 import com.hartwig.hmftools.compar.common.field.DoubleField;
 import com.hartwig.hmftools.compar.common.field.StringField;
 
@@ -60,7 +60,7 @@ public class FieldConfigFileTest
     {
         FieldConfig fieldConfig = new FieldConfig();
         fieldConfig.registerField(PURITY, new StringField("PurityField", i -> "", true));
-        fieldConfig.registerField(PURITY, new DisplayField("DisplayOnly", i -> "", i -> true));
+        fieldConfig.registerField(PURITY, new DisplayOnlyField("DisplayOnly", i -> "", i -> true));
 
         List<String> lines = toLines(fieldConfig, Set.of(PURITY));
 

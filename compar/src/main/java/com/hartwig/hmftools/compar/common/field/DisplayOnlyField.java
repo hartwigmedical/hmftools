@@ -4,7 +4,7 @@ import java.util.function.Function;
 
 import com.hartwig.hmftools.compar.ComparableItem;
 
-public class DisplayField implements Field
+public class DisplayOnlyField implements Field
 {
     // Only for showing extra info. Cannot be compared.
     private final String name;
@@ -13,7 +13,7 @@ public class DisplayField implements Field
 
     public final static String DISPLAY_TYPE = "display";
 
-    public DisplayField(final String name, final Function<ComparableItem, String> extractValue,
+    public DisplayOnlyField(final String name, final Function<ComparableItem, String> extractValue,
             final Function<ComparableItem, Boolean> hasValue)
     {
         this.name = name;

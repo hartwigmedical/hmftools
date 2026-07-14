@@ -29,7 +29,7 @@ import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.SourceType;
 import com.hartwig.hmftools.compar.common.field.BreakendsField;
-import com.hartwig.hmftools.compar.common.field.DisplayField;
+import com.hartwig.hmftools.compar.common.field.DisplayOnlyField;
 import com.hartwig.hmftools.compar.common.field.Field;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
@@ -50,7 +50,7 @@ public class GermlineSvComparer implements ItemComparer
     {
         return List.of(
                 new BreakendsField(FLD_BREAKEND, i -> ((DisruptionData) i).Breakends, true),
-                new DisplayField(FLD_REPORTED, i -> String.valueOf(i.reportable()), i -> true)
+                new DisplayOnlyField(FLD_REPORTED, i -> String.valueOf(i.reportable()), i -> true)
         );
     }
 

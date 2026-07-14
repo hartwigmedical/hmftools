@@ -11,7 +11,7 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 
 import com.hartwig.hmftools.compar.common.field.BooleanField;
-import com.hartwig.hmftools.compar.common.field.DisplayField;
+import com.hartwig.hmftools.compar.common.field.DisplayOnlyField;
 import com.hartwig.hmftools.compar.common.field.DoubleField;
 import com.hartwig.hmftools.compar.common.field.Field;
 
@@ -217,7 +217,7 @@ public class FieldConfigTest
         FieldConfig fieldConfig = new FieldConfig();
         fieldConfig.registerField(PURITY, new BooleanField("OverriddenField", i -> true, true));
         fieldConfig.registerField(PURITY, new BooleanField("MissingField", i -> true, true));
-        fieldConfig.registerField(PURITY, new DisplayField("DisplayOnlyField", i -> "", i -> true));
+        fieldConfig.registerField(PURITY, new DisplayOnlyField("DisplayOnlyField", i -> "", i -> true));
 
         FieldOverride override = new FieldOverride(PURITY.toString(), "OverriddenField", "false", "none",
                 "none");

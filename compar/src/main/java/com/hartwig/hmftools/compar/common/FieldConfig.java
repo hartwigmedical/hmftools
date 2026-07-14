@@ -5,7 +5,7 @@ import static com.hartwig.hmftools.compar.common.FieldConfigFile.COL_ABSOLUTE_TH
 import static com.hartwig.hmftools.compar.common.FieldConfigFile.COL_COMPARED;
 import static com.hartwig.hmftools.compar.common.FieldConfigFile.COL_PERCENT_THRESHOLD;
 import static com.hartwig.hmftools.compar.common.FieldConfigFile.NONE_SETTING;
-import static com.hartwig.hmftools.compar.common.field.DisplayField.DISPLAY_TYPE;
+import static com.hartwig.hmftools.compar.common.field.DisplayOnlyField.DISPLAY_TYPE;
 
 import java.util.List;
 import java.util.Map;

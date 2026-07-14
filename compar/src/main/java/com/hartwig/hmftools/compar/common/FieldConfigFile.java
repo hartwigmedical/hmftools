@@ -3,7 +3,7 @@ package com.hartwig.hmftools.compar.common;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
-import static com.hartwig.hmftools.compar.common.field.DisplayField.DISPLAY_TYPE;
+import static com.hartwig.hmftools.compar.common.field.DisplayOnlyField.DISPLAY_TYPE;
 
 import java.io.File;
 import java.io.IOException;

@@ -24,7 +24,7 @@ import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.SourceType;
-import com.hartwig.hmftools.compar.common.field.DisplayField;
+import com.hartwig.hmftools.compar.common.field.DisplayOnlyField;
 import com.hartwig.hmftools.compar.common.field.Field;
 import com.hartwig.hmftools.compar.common.field.IntField;
 import com.hartwig.hmftools.compar.common.field.StringField;
@@ -76,9 +76,9 @@ public class FusionComparer implements ItemComparer
                         true),
                 new StringField(FLD_DOMAINS_KEPT, i -> ((FusionData) i).Fusion.domainsKept(), true),
                 new StringField(FLD_DOMAINS_LOST, i -> ((FusionData) i).Fusion.domainsLost(), true),
-                new DisplayField(FLD_BREAKEND_UP, i -> ((FusionData) i).BreakendFive.fullStr(true),
+                new DisplayOnlyField(FLD_BREAKEND_UP, i -> ((FusionData) i).BreakendFive.fullStr(true),
                         i -> ((FusionData) i).BreakendFive != null),
-                new DisplayField(FLD_BREAKEND_DOWN, i -> ((FusionData) i).BreakendThree.fullStr(true),
+                new DisplayOnlyField(FLD_BREAKEND_DOWN, i -> ((FusionData) i).BreakendThree.fullStr(true),
                         i -> ((FusionData) i).BreakendThree != null)
         );
     }
