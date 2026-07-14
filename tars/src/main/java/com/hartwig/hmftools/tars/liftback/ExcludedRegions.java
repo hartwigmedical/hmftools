@@ -30,7 +30,7 @@ public class ExcludedRegions
     ExcludedRegions(final Map<String, List<ChrBaseRegion>> regionsByChr)
     {
         mRegionsByChr = regionsByChr;
-        for(final List<ChrBaseRegion> regions : mRegionsByChr.values())
+        for(List<ChrBaseRegion> regions : mRegionsByChr.values())
         {
             regions.sort(Comparator.comparingInt(ChrBaseRegion::start));
         }
@@ -89,20 +89,20 @@ public class ExcludedRegions
         }
 
         // rightmost region whose start <= posEnd; non-overlapping regions, so it's the only candidate.
-        int lo = 0;
-        int hi = regions.size() - 1;
+        int low = 0;
+        int high = regions.size() - 1;
         int candidate = -1;
-        while(lo <= hi)
+        while(low <= high)
         {
-            int mid = (lo + hi) >>> 1;
+            int mid = (low + high) >>> 1;
             if(regions.get(mid).start() <= posEnd)
             {
                 candidate = mid;
-                lo = mid + 1;
+                low = mid + 1;
             }
             else
             {
-                hi = mid - 1;
+                high = mid - 1;
             }
         }
 

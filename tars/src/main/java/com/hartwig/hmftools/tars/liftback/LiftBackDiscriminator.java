@@ -43,7 +43,7 @@ public final class LiftBackDiscriminator
         Set<String> distinctCigars = new HashSet<>();
         boolean anyHasN = false;
 
-        for(final LiftedAlignment alignment : alignments)
+        for(LiftedAlignment alignment : alignments)
         {
             // an alt the overhang gate collapsed to a contiguous alignment is marked Dropped before the
             // discriminator runs; it is a fabricated placement, so it must not count toward the features.
@@ -198,11 +198,11 @@ public final class LiftBackDiscriminator
             final List<LiftedAlignment> alignments, final LiftedAlignment self, final int seed, final LiftedMateInfo mateInfo)
     {
         List<LiftedAlignment> candidates = new ArrayList<>();
-        for(final LiftedAlignment la : alignments)
+        for(LiftedAlignment alignment : alignments)
         {
-            if(!la.Dropped)
+            if(!alignment.Dropped)
             {
-                candidates.add(la);
+                candidates.add(alignment);
             }
         }
         if(candidates.size() < 2)
@@ -211,9 +211,9 @@ public final class LiftBackDiscriminator
         }
 
         int topScore = Integer.MIN_VALUE;
-        for(final LiftedAlignment la : candidates)
+        for(LiftedAlignment alignment : candidates)
         {
-            topScore = Math.max(topScore, la.GenomicScore);
+            topScore = Math.max(topScore, alignment.GenomicScore);
         }
         if(topScore == Integer.MIN_VALUE)
         {
@@ -224,11 +224,11 @@ public final class LiftBackDiscriminator
         // lift to the same contiguous alignment) so the tie is over distinct placements, not weighted by source count.
         List<LiftedAlignment> top = new ArrayList<>();
         Set<String> topKeys = new HashSet<>();
-        for(final LiftedAlignment la : candidates)
+        for(LiftedAlignment alignment : candidates)
         {
-            if(la.GenomicScore == topScore && topKeys.add(placementKey(la)))
+            if(alignment.GenomicScore == topScore && topKeys.add(placementKey(alignment)))
             {
-                top.add(la);
+                top.add(alignment);
             }
         }
 
@@ -263,9 +263,9 @@ public final class LiftBackDiscriminator
                 }
             }
         }
-        for(final LiftedAlignment la : alignments)
+        for(LiftedAlignment alignment : alignments)
         {
-            la.IsPrimaryChoice = la == winner;
+            alignment.IsPrimaryChoice = alignment == winner;
         }
         return new ApplyResult(winner, note);
     }
@@ -278,30 +278,30 @@ public final class LiftBackDiscriminator
             return top;
         }
         List<LiftedAlignment> near = new ArrayList<>();
-        for(final LiftedAlignment la : top)
+        for(LiftedAlignment alignment : top)
         {
-            if(isMateProximal(la, mateInfo))
+            if(isMateProximal(alignment, mateInfo))
             {
-                near.add(la);
+                near.add(alignment);
             }
         }
         return (near.isEmpty() || near.size() == top.size()) ? top : near;
     }
 
-    private static boolean isMateProximal(final LiftedAlignment la, final LiftedMateInfo mateInfo)
+    private static boolean isMateProximal(final LiftedAlignment alignment, final LiftedMateInfo mateInfo)
     {
-        if(!mateInfo.chromosome().equals(la.LiftedChrom))
+        if(!mateInfo.chromosome().equals(alignment.LiftedChrom))
         {
             return false;
         }
         int gap;
-        if(la.LiftedPos > mateInfo.alignmentEnd())
+        if(alignment.LiftedPos > mateInfo.alignmentEnd())
         {
-            gap = la.LiftedPos - mateInfo.alignmentEnd();
+            gap = alignment.LiftedPos - mateInfo.alignmentEnd();
         }
-        else if(la.LiftedPos < mateInfo.alignmentStart())
+        else if(alignment.LiftedPos < mateInfo.alignmentStart())
         {
-            gap = mateInfo.alignmentStart() - la.LiftedPos;
+            gap = mateInfo.alignmentStart() - alignment.LiftedPos;
         }
         else
         {
@@ -315,13 +315,13 @@ public final class LiftBackDiscriminator
     // correct RNA interpretation - bwa soft-clipped rather than cross the intron - so it is not left to the coin.
     private static LiftedAlignment preferJunctionOverSoftClip(final List<LiftedAlignment> top)
     {
-        for(final LiftedAlignment junction : top)
+        for(LiftedAlignment junction : top)
         {
             if(!junction.cigarHasRealNJunction())
             {
                 continue;
             }
-            for(final LiftedAlignment clipped : top)
+            for(LiftedAlignment clipped : top)
             {
                 if(clipped != junction
                         && locusKey(clipped).equals(locusKey(junction))
@@ -335,13 +335,13 @@ public final class LiftBackDiscriminator
         return null;
     }
 
-    private static String locusKey(final LiftedAlignment la)
+    private static String locusKey(final LiftedAlignment alignment)
     {
-        return la.LiftedChrom + ":" + la.LiftedPos;
+        return alignment.LiftedChrom + ":" + alignment.LiftedPos;
     }
 
-    private static String placementKey(final LiftedAlignment la)
+    private static String placementKey(final LiftedAlignment alignment)
     {
-        return locusKey(la) + ":" + la.LiftedCigar;
+        return locusKey(alignment) + ":" + alignment.LiftedCigar;
     }
 }

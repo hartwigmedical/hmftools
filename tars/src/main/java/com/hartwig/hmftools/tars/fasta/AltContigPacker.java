@@ -24,7 +24,7 @@ public final class AltContigPacker
         StringBuilder sequence = new StringBuilder();
         List<ContigEntry> entries = new ArrayList<>();
 
-        for(final TranscriptContigBuilder.TranscriptContigResult transcript : transcripts)
+        for(TranscriptContigBuilder.TranscriptContigResult transcript : transcripts)
         {
             if(sequence.length() > 0)
             {

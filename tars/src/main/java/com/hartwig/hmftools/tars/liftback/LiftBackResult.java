@@ -30,7 +30,7 @@ public record LiftBackResult(
         boolean refFullMatch,
         String geneIds,
         String notes,
-        // +1/−1 for tx-contig-derived primaries; 0 for ref-only or supplementary-resolve/tail-extend origins.
+        // +1/-1 for tx-contig-derived primaries; 0 for ref-only or supplementary-resolve/tail-extend origins.
         // Used by the writer to set XS:A:+/- on spliced records.
         int transcriptStrand,
         List<LiftedAlignment> liftedAlignments)
@@ -110,7 +110,7 @@ public record LiftBackResult(
 
             boolean hasRef = false;
             boolean hasTx = false;
-            for(final LiftedAlignment alignment : alignments)
+            for(LiftedAlignment alignment : alignments)
             {
                 if(alignment.fromTxContig())
                 {

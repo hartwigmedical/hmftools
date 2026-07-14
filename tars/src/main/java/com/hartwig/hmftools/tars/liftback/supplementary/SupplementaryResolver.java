@@ -420,8 +420,8 @@ public class SupplementaryResolver
         int mismatches = 0;
         for(int k = 1; k <= run; ++k)
         {
-            int idx = proximalAtEnd ? (len - k) : (k - 1);
-            if(!basesEqualIgnoreCase(softclipBases[idx], refBases[idx]))
+            int index = proximalAtEnd ? (len - k) : (k - 1);
+            if(!basesEqualIgnoreCase(softclipBases[index], refBases[index]))
             {
                 ++mismatches;
             }
@@ -660,12 +660,12 @@ public class SupplementaryResolver
             }
             // midpoint of the ambiguous read range [down.LeadingS, upMatchedRead], rounded down.
             chosenL = (upMatchedRead + down.LeadingS) / 2;
-            int upLossFb = upMatchedRead - chosenL;
-            int downLossFb = chosenL - down.LeadingS;
-            if(up.TrailingM < upLossFb || down.LeadingM < downLossFb)
+            int upLossFallback = upMatchedRead - chosenL;
+            int downLossFallback = chosenL - down.LeadingS;
+            if(up.TrailingM < upLossFallback || down.LeadingM < downLossFallback)
                 return MergeOutcome.reject(SupplementaryRejectReason.SHORT_ANCHOR);
             chosenIntron = new ChrBaseRegion(
-                    candidate.chromosome(), up.RefEnd - upLossFb + 1, down.Start + downLossFb - 1);
+                    candidate.chromosome(), up.RefEnd - upLossFallback + 1, down.Start + downLossFallback - 1);
         }
 
         int upLoss = upMatchedRead - chosenL;
@@ -1062,9 +1062,9 @@ public class SupplementaryResolver
         int L;
         ChrBaseRegion Intron;
 
-        SnapPick(final int l, final ChrBaseRegion intron)
+        SnapPick(final int snapPoint, final ChrBaseRegion intron)
         {
-            L = l;
+            L = snapPoint;
             Intron = intron;
         }
 

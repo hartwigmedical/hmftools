@@ -57,9 +57,9 @@ public class LiftBackWriter implements AutoCloseable
         String readName = record.getReadName();
         String mateNum = mateNumColumn(record);
         writeTsvARow(readName, mateNum, result);
-        for(final LiftedAlignment la : result.liftedAlignments())
+        for(LiftedAlignment alignment : result.liftedAlignments())
         {
-            writeTsvBRow(readName, mateNum, result.role(), la);
+            writeTsvBRow(readName, mateNum, result.role(), alignment);
         }
     }
 
@@ -104,25 +104,25 @@ public class LiftBackWriter implements AutoCloseable
     }
 
     private void writeTsvBRow(
-            final String readName, final String mateNum, final LiftBackResult.RecordRole role, final LiftedAlignment la)
+            final String readName, final String mateNum, final LiftBackResult.RecordRole role, final LiftedAlignment alignment)
             throws IOException
     {
         mTsvBWriter.write(String.join(TSV_DELIM,
                 readName,
                 mateNum,
                 role.name(),
-                la.Source.name(),
-                la.OrigContig,
-                String.valueOf(la.OrigPos),
-                la.OrigCigar,
-                la.LiftedChrom,
-                String.valueOf(la.LiftedPos),
-                la.LiftedCigar,
-                String.valueOf(la.AlignmentScore),
-                String.valueOf(la.NumMismatches),
-                nullToEmpty(la.TransName),
-                nullToEmpty(la.GeneId),
-                nullToEmpty(la.GeneName)));
+                alignment.Source.name(),
+                alignment.OrigContig,
+                String.valueOf(alignment.OrigPos),
+                alignment.OrigCigar,
+                alignment.LiftedChrom,
+                String.valueOf(alignment.LiftedPos),
+                alignment.LiftedCigar,
+                String.valueOf(alignment.AlignmentScore),
+                String.valueOf(alignment.NumMismatches),
+                nullToEmpty(alignment.TransName),
+                nullToEmpty(alignment.GeneId),
+                nullToEmpty(alignment.GeneName)));
         mTsvBWriter.newLine();
     }
 

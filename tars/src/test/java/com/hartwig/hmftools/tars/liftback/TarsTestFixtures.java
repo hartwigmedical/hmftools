@@ -185,7 +185,7 @@ public final class TarsTestFixtures
         public RefSequenceSource asRefSource()
         {
             MockRefGenome ref = new MockRefGenome(true);
-            for(final Map.Entry<String, byte[]> entry : mBases.entrySet())
+            for(Map.Entry<String, byte[]> entry : mBases.entrySet())
             {
                 ref.RefGenomeMap.put(entry.getKey(), new String(entry.getValue(), StandardCharsets.US_ASCII));
             }
@@ -247,153 +247,153 @@ public final class TarsTestFixtures
         private int mTranscriptStrand = 0;
         private List<LiftedAlignment> mAlignments = List.of();
 
-        public ResultBuilder recordState(final RecordState v)
+        public ResultBuilder recordState(final RecordState value)
         {
-            mRecordState = v;
+            mRecordState = value;
             return this;
         }
 
-        public ResultBuilder decidingFeature(final DecidingFeature v)
+        public ResultBuilder decidingFeature(final DecidingFeature value)
         {
-            mDecidingFeature = v;
+            mDecidingFeature = value;
             return this;
         }
 
-        public ResultBuilder swapped(final boolean v)
+        public ResultBuilder swapped(final boolean value)
         {
-            mSwapped = v;
+            mSwapped = value;
             return this;
         }
 
-        public ResultBuilder comp(final LiftBackResult.Composition v)
+        public ResultBuilder comp(final LiftBackResult.Composition value)
         {
-            mComp = v;
+            mComp = value;
             return this;
         }
 
-        public ResultBuilder role(final LiftBackResult.RecordRole v)
+        public ResultBuilder role(final LiftBackResult.RecordRole value)
         {
-            mRole = v;
+            mRole = value;
             return this;
         }
 
-        public ResultBuilder chrom(final String v)
+        public ResultBuilder chrom(final String value)
         {
-            mChrom = v;
+            mChrom = value;
             return this;
         }
 
-        public ResultBuilder pos(final int v)
+        public ResultBuilder pos(final int value)
         {
-            mPos = v;
+            mPos = value;
             return this;
         }
 
-        public ResultBuilder cigar(final String v)
+        public ResultBuilder cigar(final String value)
         {
-            mCigar = v;
+            mCigar = value;
             return this;
         }
 
-        public ResultBuilder negativeStrand(final boolean v)
+        public ResultBuilder negativeStrand(final boolean value)
         {
-            mNegativeStrand = v;
+            mNegativeStrand = value;
             return this;
         }
 
-        public ResultBuilder hasNCigar(final boolean v)
+        public ResultBuilder hasNCigar(final boolean value)
         {
-            mHasNCigar = v;
+            mHasNCigar = value;
             return this;
         }
 
-        public ResultBuilder inputMapq(final int v)
+        public ResultBuilder inputMapq(final int value)
         {
-            mInputMapq = v;
+            mInputMapq = value;
             return this;
         }
 
-        public ResultBuilder updatedMapq(final int v)
+        public ResultBuilder updatedMapq(final int value)
         {
-            mUpdatedMapq = v;
+            mUpdatedMapq = value;
             return this;
         }
 
-        public ResultBuilder numXaAlts(final int v)
+        public ResultBuilder numXaAlts(final int value)
         {
-            mNumXaAlts = v;
+            mNumXaAlts = value;
             return this;
         }
 
-        public ResultBuilder numRefAlts(final int v)
+        public ResultBuilder numRefAlts(final int value)
         {
-            mNumRefAlts = v;
+            mNumRefAlts = value;
             return this;
         }
 
-        public ResultBuilder numTxAlts(final int v)
+        public ResultBuilder numTxAlts(final int value)
         {
-            mNumTxAlts = v;
+            mNumTxAlts = value;
             return this;
         }
 
-        public ResultBuilder numLoci(final int v)
+        public ResultBuilder numLoci(final int value)
         {
-            mNumLoci = v;
+            mNumLoci = value;
             return this;
         }
 
-        public ResultBuilder numDistinctCigarsAtPrimaryLocus(final int v)
+        public ResultBuilder numDistinctCigarsAtPrimaryLocus(final int value)
         {
-            mNumDistinctCigarsAtPrimaryLocus = v;
+            mNumDistinctCigarsAtPrimaryLocus = value;
             return this;
         }
 
-        public ResultBuilder txHasNCigar(final boolean v)
+        public ResultBuilder txHasNCigar(final boolean value)
         {
-            mTxHasNCigar = v;
+            mTxHasNCigar = value;
             return this;
         }
 
-        public ResultBuilder txSoftClipAtBoundary(final boolean v)
+        public ResultBuilder txSoftClipAtBoundary(final boolean value)
         {
-            mTxSoftClipAtBoundary = v;
+            mTxSoftClipAtBoundary = value;
             return this;
         }
 
-        public ResultBuilder refSoftClipped(final boolean v)
+        public ResultBuilder refSoftClipped(final boolean value)
         {
-            mRefSoftClipped = v;
+            mRefSoftClipped = value;
             return this;
         }
 
-        public ResultBuilder refFullMatch(final boolean v)
+        public ResultBuilder refFullMatch(final boolean value)
         {
-            mRefFullMatch = v;
+            mRefFullMatch = value;
             return this;
         }
 
-        public ResultBuilder geneIds(final String v)
+        public ResultBuilder geneIds(final String value)
         {
-            mGeneIds = v;
+            mGeneIds = value;
             return this;
         }
 
-        public ResultBuilder notes(final String v)
+        public ResultBuilder notes(final String value)
         {
-            mNotes = v;
+            mNotes = value;
             return this;
         }
 
-        public ResultBuilder transcriptStrand(final int v)
+        public ResultBuilder transcriptStrand(final int value)
         {
-            mTranscriptStrand = v;
+            mTranscriptStrand = value;
             return this;
         }
 
-        public ResultBuilder alignments(final List<LiftedAlignment> v)
+        public ResultBuilder alignments(final List<LiftedAlignment> value)
         {
-            mAlignments = v;
+            mAlignments = value;
             return this;
         }
 

@@ -1,14 +1,14 @@
 package com.hartwig.hmftools.tars.liftback;
 
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
+import static com.hartwig.hmftools.tars.common.TarsConfig.TARS_LOGGER;
+import static com.hartwig.hmftools.tars.common.TarsConstants.CONFIDENT_MAPQ;
+import static com.hartwig.hmftools.tars.common.TarsConstants.PRIMARY_AS_UNMAP_THRESHOLD;
+import static com.hartwig.hmftools.tars.common.TarsConstants.SUPP_AS_DROP_THRESHOLD;
 import static com.hartwig.hmftools.tars.liftback.LiftBackRecordOps.markPrimaryUnmapped;
 import static com.hartwig.hmftools.tars.liftback.LiftBackRecordOps.refreshNmDropMd;
 import static com.hartwig.hmftools.tars.liftback.MateFieldPatcher.patchMateFields;
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.tars.liftback.SaTagRewriter.rewriteSaTag;
-import static com.hartwig.hmftools.tars.common.TarsConstants.PRIMARY_AS_UNMAP_THRESHOLD;
-import static com.hartwig.hmftools.tars.common.TarsConstants.CONFIDENT_MAPQ;
-import static com.hartwig.hmftools.tars.common.TarsConstants.SUPP_AS_DROP_THRESHOLD;
-import static com.hartwig.hmftools.tars.common.TarsConfig.TARS_LOGGER;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -23,12 +23,12 @@ import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.tars.liftback.overhang.OverhangGate;
 import com.hartwig.hmftools.tars.liftback.overhang.OverhangGateStatistics;
-import com.hartwig.hmftools.tars.liftback.supplementary.SupplementaryResolver;
 import com.hartwig.hmftools.tars.liftback.supplementary.RefSequenceSource;
 import com.hartwig.hmftools.tars.liftback.supplementary.SupplementaryCandidate;
+import com.hartwig.hmftools.tars.liftback.supplementary.SupplementaryRecord;
+import com.hartwig.hmftools.tars.liftback.supplementary.SupplementaryResolver;
 import com.hartwig.hmftools.tars.liftback.supplementary.SupplementaryResult;
 import com.hartwig.hmftools.tars.liftback.supplementary.SupplementaryStatistics;
-import com.hartwig.hmftools.tars.liftback.supplementary.SupplementaryRecord;
 
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.util.SequenceUtil;
@@ -74,7 +74,7 @@ public class LiftBackGroupProcessor
     // sink for emitted records: the standalone writes a BAM + TSV, the REDUX worker writes the shared BAM.
     public interface EmitSink
     {
-        void emit(SAMRecord record, LiftBackResult result);
+        void emit(final SAMRecord record, final LiftBackResult result);
     }
 
     public LiftBackGroupProcessor(
@@ -97,7 +97,7 @@ public class LiftBackGroupProcessor
     {
         List<SAMRecord> firstOfPair = new ArrayList<>();
         List<SAMRecord> secondOfPair = new ArrayList<>();
-        for(final SAMRecord record : group)
+        for(SAMRecord record : group)
         {
             if(!record.getReadPairedFlag() || record.getFirstOfPairFlag())
             {
@@ -153,11 +153,11 @@ public class LiftBackGroupProcessor
             return;
         }
         SAMRecord primary = null;
-        for(final SAMRecord r : mateRecords)
+        for(SAMRecord record : mateRecords)
         {
-            if(!r.getSupplementaryAlignmentFlag())
+            if(!record.getSupplementaryAlignmentFlag())
             {
-                primary = r;
+                primary = record;
                 break;
             }
         }
@@ -256,7 +256,7 @@ public class LiftBackGroupProcessor
         }
 
         SAMRecord primary = null;
-        for(final SAMRecord record : records)
+        for(SAMRecord record : records)
         {
             if(record.getSupplementaryAlignmentFlag())
                 continue;
@@ -364,10 +364,10 @@ public class LiftBackGroupProcessor
         LiftBackResult[] resolved = decision.Resolved;
         boolean[] droppedBySupplementary = decision.DroppedBySupplementary;
         SAMRecord primary = null;
-        for(SAMRecord r : records)
-            if(!r.getSupplementaryAlignmentFlag())
+        for(SAMRecord record : records)
+            if(!record.getSupplementaryAlignmentFlag())
             {
-                primary = r;
+                primary = record;
                 break;
             }
 
@@ -486,13 +486,13 @@ public class LiftBackGroupProcessor
             {
                 continue;
             }
-            LiftBackResult res = resolved[i];
-            if(res == null || res.finalChrom() == null || res.finalCigar() == null
-                    || res.finalCigar().equals(SAMRecord.NO_ALIGNMENT_CIGAR))
+            LiftBackResult suppResult = resolved[i];
+            if(suppResult == null || suppResult.finalChrom() == null || suppResult.finalCigar() == null
+                    || suppResult.finalCigar().equals(SAMRecord.NO_ALIGNMENT_CIGAR))
             {
                 continue;
             }
-            sb.append(saEntry(res));
+            sb.append(saEntry(suppResult));
         }
         return sb.length() > 0 ? sb.toString() : null;
     }
@@ -522,12 +522,12 @@ public class LiftBackGroupProcessor
         List<Integer> suppIndices = new ArrayList<>();
         for(int i = 0; i < records.size(); i++)
         {
-            SAMRecord r = records.get(i);
-            if(r == primary)
+            SAMRecord record = records.get(i);
+            if(record == primary)
             {
                 primaryIdx = i;
             }
-            else if(r.getSupplementaryAlignmentFlag() && !r.getReadUnmappedFlag())
+            else if(record.getSupplementaryAlignmentFlag() && !record.getReadUnmappedFlag())
             {
                 suppIndices.add(i);
             }
@@ -545,9 +545,9 @@ public class LiftBackGroupProcessor
         List<SupplementaryRecord> suppDtos = new ArrayList<>(suppIndices.size());
         for(int i = 0; i < suppIndices.size(); i++)
         {
-            int idx = suppIndices.get(i);
-            SAMRecord supp = records.get(idx);
-            LiftBackResult suppRes = resolved[idx];
+            int suppRecordIndex = suppIndices.get(i);
+            SAMRecord supp = records.get(suppRecordIndex);
+            LiftBackResult suppRes = resolved[suppRecordIndex];
             if(suppRes == null || suppRes.finalCigar() == null
                     || suppRes.finalCigar().equals(SAMRecord.NO_ALIGNMENT_CIGAR))
                 continue;
@@ -717,7 +717,7 @@ public class LiftBackGroupProcessor
     // reclaim so a genomic/ref over-clip is left as bwa placed it.
     private static boolean isTxMatchPrimary(final LiftBackResult primaryRes)
     {
-        for(final LiftedAlignment alignment : primaryRes.liftedAlignments())
+        for(LiftedAlignment alignment : primaryRes.liftedAlignments())
         {
             if(alignment.IsPrimaryChoice)
             {

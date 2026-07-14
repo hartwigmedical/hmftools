@@ -69,16 +69,16 @@ public class SupplementaryResolverTest
         SupplementaryRecord supp = supp(0, CHR1, true, suppStart, suppCigar, 60);
         SupplementaryCandidate cand = candidate(CHR1, true, READ_LEN, primStart, primCigar, 255, supp);
 
-        SupplementaryResult res = enabledResolver(annotated(annotatedIntron)).resolve(cand);
+        SupplementaryResult result = enabledResolver(annotated(annotatedIntron)).resolve(cand);
 
-        assertTrue(res.merged());
-        assertEquals("94M79N57M", res.mergedCigar());
-        assertEquals(primStart, res.mergedStart());
-        assertEquals(1, res.droppedSupplementaryIndices().size());
-        assertEquals(Integer.valueOf(0), res.droppedSupplementaryIndices().get(0));
-        assertEquals(1, res.introducedIntrons().size());
-        assertEquals(annotatedIntron, res.introducedIntrons().get(0));
-        assertEquals(1, res.chainDepth());
+        assertTrue(result.merged());
+        assertEquals("94M79N57M", result.mergedCigar());
+        assertEquals(primStart, result.mergedStart());
+        assertEquals(1, result.droppedSupplementaryIndices().size());
+        assertEquals(Integer.valueOf(0), result.droppedSupplementaryIndices().get(0));
+        assertEquals(1, result.introducedIntrons().size());
+        assertEquals(annotatedIntron, result.introducedIntrons().get(0));
+        assertEquals(1, result.chainDepth());
     }
 
     @Test
@@ -96,12 +96,12 @@ public class SupplementaryResolverTest
         SupplementaryRecord supp = supp(0, CHR1, true, suppStart, suppCigar, 60);
         SupplementaryCandidate cand = candidate(CHR1, true, READ_LEN, primStart, primCigar, 255, supp);
 
-        SupplementaryResult res = enabledResolver(annotated(annotatedIntron)).resolve(cand);
+        SupplementaryResult result = enabledResolver(annotated(annotatedIntron)).resolve(cand);
 
-        assertTrue(res.merged());
-        assertEquals("100M156N51M", res.mergedCigar());
-        assertEquals(primStart, res.mergedStart());
-        assertEquals(annotatedIntron, res.introducedIntrons().get(0));
+        assertTrue(result.merged());
+        assertEquals("100M156N51M", result.mergedCigar());
+        assertEquals(primStart, result.mergedStart());
+        assertEquals(annotatedIntron, result.introducedIntrons().get(0));
     }
 
     @Test
@@ -117,11 +117,11 @@ public class SupplementaryResolverTest
         SupplementaryRecord supp = supp(0, CHR1, true, suppStart, suppCigar, 60);
         SupplementaryCandidate cand = candidate(CHR1, true, READ_LEN, primStart, primCigar, 255, supp);
 
-        SupplementaryResult res = enabledResolver(annotated(intron)).resolve(cand);
+        SupplementaryResult result = enabledResolver(annotated(intron)).resolve(cand);
 
-        assertTrue(res.merged());
-        assertEquals("57M116N94M", res.mergedCigar());
-        assertEquals(suppStart, res.mergedStart());
+        assertTrue(result.merged());
+        assertEquals("57M116N94M", result.mergedCigar());
+        assertEquals(suppStart, result.mergedStart());
     }
 
     @Test
@@ -143,15 +143,15 @@ public class SupplementaryResolverTest
                 supp(0, CHR1, true, suppMidStart, suppMidCigar, 60),
                 supp(1, CHR1, true, suppLastStart, suppLastCigar, 60));
 
-        SupplementaryResult res = enabledResolver(set).resolve(cand);
+        SupplementaryResult result = enabledResolver(set).resolve(cand);
 
-        assertTrue(res.merged());
-        assertEquals("50M950N60M940N41M", res.mergedCigar());
-        assertEquals(primStart, res.mergedStart());
-        assertEquals(2, res.chainDepth());
-        assertEquals(2, res.droppedSupplementaryIndices().size());
-        assertTrue(res.droppedSupplementaryIndices().contains(0));
-        assertTrue(res.droppedSupplementaryIndices().contains(1));
+        assertTrue(result.merged());
+        assertEquals("50M950N60M940N41M", result.mergedCigar());
+        assertEquals(primStart, result.mergedStart());
+        assertEquals(2, result.chainDepth());
+        assertEquals(2, result.droppedSupplementaryIndices().size());
+        assertTrue(result.droppedSupplementaryIndices().contains(0));
+        assertTrue(result.droppedSupplementaryIndices().contains(1));
     }
 
     @Test
@@ -168,10 +168,10 @@ public class SupplementaryResolverTest
         SupplementaryCandidate cand = candidate(CHR1, true, READ_LEN, primStart, primCigar, 255,
                 supp(0, CHR1, true, suppStart, suppCigar, 60));
 
-        SupplementaryResult res = enabledResolver(set).resolve(cand);
+        SupplementaryResult result = enabledResolver(set).resolve(cand);
 
-        assertTrue(res.merged());
-        assertEquals("50M200N40M210N61M", res.mergedCigar());
+        assertTrue(result.merged());
+        assertEquals("50M200N40M210N61M", result.mergedCigar());
     }
 
     @Test
@@ -180,9 +180,9 @@ public class SupplementaryResolverTest
         SupplementaryCandidate cand = candidate(CHR1, true, READ_LEN, 1000, "94M57S", 60,
                 supp(0, CHR1, true, 1175, "90S61M", 60));
 
-        SupplementaryResult res = disabledResolver().resolve(cand);
+        SupplementaryResult result = disabledResolver().resolve(cand);
 
-        assertFalse(res.merged());
+        assertFalse(result.merged());
     }
 
     @Test
@@ -191,10 +191,10 @@ public class SupplementaryResolverTest
         SupplementaryCandidate cand = candidate(CHR1, true, READ_LEN, 1000, "151M", 60,
                 supp(0, CHR1, true, 2000, "90S61M", 60));
 
-        SupplementaryResult res = enabledResolver(annotated()).resolve(cand);
+        SupplementaryResult result = enabledResolver(annotated()).resolve(cand);
 
-        assertFalse(res.merged());
-        assertEquals(SupplementaryRejectReason.NO_TERMINAL_SOFTCLIP, res.rejectReason());
+        assertFalse(result.merged());
+        assertEquals(SupplementaryRejectReason.NO_TERMINAL_SOFTCLIP, result.rejectReason());
     }
 
     @Test
@@ -204,10 +204,10 @@ public class SupplementaryResolverTest
         SupplementaryCandidate cand = candidate(CHR1, true, READ_LEN, 1001, "94M57S", 60,
                 supp(0, CHR2, true, 1500, "90S61M", 60));
 
-        SupplementaryResult res = enabledResolver(annotated(annotatedIntron)).resolve(cand);
+        SupplementaryResult result = enabledResolver(annotated(annotatedIntron)).resolve(cand);
 
-        assertFalse(res.merged());
-        assertEquals(SupplementaryRejectReason.DIFFERENT_CHROMOSOME, res.rejectReason());
+        assertFalse(result.merged());
+        assertEquals(SupplementaryRejectReason.DIFFERENT_CHROMOSOME, result.rejectReason());
     }
 
     @Test
@@ -217,10 +217,10 @@ public class SupplementaryResolverTest
         SupplementaryCandidate cand = candidate(CHR1, true, READ_LEN, 1001, "94M57S", 60,
                 supp(0, CHR1, false, 1500, "90S61M", 60));
 
-        SupplementaryResult res = enabledResolver(annotated(annotatedIntron)).resolve(cand);
+        SupplementaryResult result = enabledResolver(annotated(annotatedIntron)).resolve(cand);
 
-        assertFalse(res.merged());
-        assertEquals(SupplementaryRejectReason.OPPOSITE_STRAND, res.rejectReason());
+        assertFalse(result.merged());
+        assertEquals(SupplementaryRejectReason.OPPOSITE_STRAND, result.rejectReason());
     }
 
     @Test
@@ -230,10 +230,10 @@ public class SupplementaryResolverTest
         SupplementaryCandidate cand = candidate(CHR1, true, READ_LEN, 1000, "94M57S", 60,
                 supp(0, CHR1, true, 1100, "94S57M", 60));
 
-        SupplementaryResult res = enabledResolver(annotated()).resolve(cand);
+        SupplementaryResult result = enabledResolver(annotated()).resolve(cand);
 
-        assertFalse(res.merged());
-        assertEquals(SupplementaryRejectReason.INTRON_TOO_SHORT, res.rejectReason());
+        assertFalse(result.merged());
+        assertEquals(SupplementaryRejectReason.INTRON_TOO_SHORT, result.rejectReason());
     }
 
     @Test
@@ -242,10 +242,10 @@ public class SupplementaryResolverTest
         SupplementaryCandidate cand = candidate(CHR1, true, READ_LEN, 1000, "94M57S", 60,
                 supp(0, CHR1, true, 2_001_095, "94S57M", 60));
 
-        SupplementaryResult res = enabledResolver(annotated()).resolve(cand);
+        SupplementaryResult result = enabledResolver(annotated()).resolve(cand);
 
-        assertFalse(res.merged());
-        assertEquals(SupplementaryRejectReason.INTRON_TOO_LONG, res.rejectReason());
+        assertFalse(result.merged());
+        assertEquals(SupplementaryRejectReason.INTRON_TOO_LONG, result.rejectReason());
     }
 
     @Test
@@ -256,10 +256,10 @@ public class SupplementaryResolverTest
         SupplementaryCandidate cand = candidate(CHR1, true, READ_LEN, 1000, "2M149S", 60,
                 supp(0, CHR1, true, 1100, "2S149M", 60));
 
-        SupplementaryResult res = enabledResolver(annotated(intron)).resolve(cand);
+        SupplementaryResult result = enabledResolver(annotated(intron)).resolve(cand);
 
-        assertTrue(res.merged());
-        assertEquals("2M98N149M", res.mergedCigar());
+        assertTrue(result.merged());
+        assertEquals("2M98N149M", result.mergedCigar());
     }
 
     @Test
@@ -270,10 +270,10 @@ public class SupplementaryResolverTest
         SupplementaryCandidate cand = candidate(CHR1, true, 50, 1000, "49M1S", 60,
                 supp(0, CHR1, true, 1100, "49S1M", 60));
 
-        SupplementaryResult res = enabledResolver(annotated(intron)).resolve(cand);
+        SupplementaryResult result = enabledResolver(annotated(intron)).resolve(cand);
 
-        assertTrue(res.merged());
-        assertEquals("49M51N1M", res.mergedCigar());
+        assertTrue(result.merged());
+        assertEquals("49M51N1M", result.mergedCigar());
     }
 
     @Test
@@ -283,10 +283,10 @@ public class SupplementaryResolverTest
         SupplementaryCandidate cand = candidate(CHR1, true, READ_LEN, 1000, "94M57S", 60,
                 supp(0, CHR1, true, 1200, "94S57M", 60));
 
-        SupplementaryResult res = new SupplementaryResolver(Collections.emptySet(), strict).resolve(cand);
+        SupplementaryResult result = new SupplementaryResolver(Collections.emptySet(), strict).resolve(cand);
 
-        assertFalse(res.merged());
-        assertEquals(SupplementaryRejectReason.NOVEL_JUNCTION, res.rejectReason());
+        assertFalse(result.merged());
+        assertEquals(SupplementaryRejectReason.NOVEL_JUNCTION, result.rejectReason());
     }
 
     @Test
@@ -296,10 +296,10 @@ public class SupplementaryResolverTest
         SupplementaryCandidate cand = candidate(CHR1, true, READ_LEN, 1000, "94M57S", 60,
                 supp(0, CHR1, true, 1200, "94S57M", 60));
 
-        SupplementaryResult res = new SupplementaryResolver(Collections.emptySet(), perm).resolve(cand);
+        SupplementaryResult result = new SupplementaryResolver(Collections.emptySet(), perm).resolve(cand);
 
-        assertTrue(res.merged());
-        assertEquals("94M106N57M", res.mergedCigar());
+        assertTrue(result.merged());
+        assertEquals("94M106N57M", result.mergedCigar());
     }
 
     @Test
@@ -308,10 +308,10 @@ public class SupplementaryResolverTest
         SupplementaryCandidate cand = candidate(CHR1, true, READ_LEN, 1000, "10H94M57S", 60,
                 supp(0, CHR1, true, 1200, "90S61M", 60));
 
-        SupplementaryResult res = enabledResolver(annotated()).resolve(cand);
+        SupplementaryResult result = enabledResolver(annotated()).resolve(cand);
 
-        assertFalse(res.merged());
-        assertEquals(SupplementaryRejectReason.COMPLEX_CIGAR_SHAPE, res.rejectReason());
+        assertFalse(result.merged());
+        assertEquals(SupplementaryRejectReason.COMPLEX_CIGAR_SHAPE, result.rejectReason());
     }
 
     @Test
@@ -321,10 +321,10 @@ public class SupplementaryResolverTest
         SupplementaryCandidate cand = candidate(CHR1, true, READ_LEN, 1001, "94M57S", 60,
                 supp(0, CHR1, true, 1200, "5H90S61M", 60));
 
-        SupplementaryResult res = enabledResolver(annotated(intron)).resolve(cand);
+        SupplementaryResult result = enabledResolver(annotated(intron)).resolve(cand);
 
-        assertFalse(res.merged());
-        assertEquals(SupplementaryRejectReason.COMPLEX_CIGAR_SHAPE, res.rejectReason());
+        assertFalse(result.merged());
+        assertEquals(SupplementaryRejectReason.COMPLEX_CIGAR_SHAPE, result.rejectReason());
     }
 
     @Test
@@ -334,10 +334,10 @@ public class SupplementaryResolverTest
         SupplementaryCandidate cand = candidate(CHR1, true, READ_LEN, 1000, "90M4I57S", 60,
                 supp(0, CHR1, true, 1200, "94S57M", 60));
 
-        SupplementaryResult res = enabledResolver(annotated(intron)).resolve(cand);
+        SupplementaryResult result = enabledResolver(annotated(intron)).resolve(cand);
 
-        assertFalse(res.merged());
-        assertEquals(SupplementaryRejectReason.COMPLEX_CIGAR_SHAPE, res.rejectReason());
+        assertFalse(result.merged());
+        assertEquals(SupplementaryRejectReason.COMPLEX_CIGAR_SHAPE, result.rejectReason());
     }
 
     @Test
@@ -348,10 +348,10 @@ public class SupplementaryResolverTest
         SupplementaryCandidate cand = candidate(CHR1, true, READ_LEN, 1001, "94M57S", 60,
                 supp(0, CHR1, true, 1500, "80S71M", 60));
 
-        SupplementaryResult res = enabledResolver(annotated(intron)).resolve(cand);
+        SupplementaryResult result = enabledResolver(annotated(intron)).resolve(cand);
 
-        assertFalse(res.merged());
-        assertEquals(SupplementaryRejectReason.READ_COVERAGE_OVERLAP, res.rejectReason());
+        assertFalse(result.merged());
+        assertEquals(SupplementaryRejectReason.READ_COVERAGE_OVERLAP, result.rejectReason());
     }
 
     @Test
@@ -361,10 +361,10 @@ public class SupplementaryResolverTest
         SupplementaryCandidate cand = candidate(CHR1, true, READ_LEN, 1001, "94M57S", 60,
                 supp(0, CHR1, true, 1500, "110S41M", 60));
 
-        SupplementaryResult res = enabledResolver(annotated(intron)).resolve(cand);
+        SupplementaryResult result = enabledResolver(annotated(intron)).resolve(cand);
 
-        assertFalse(res.merged());
-        assertEquals(SupplementaryRejectReason.READ_COVERAGE_GAP, res.rejectReason());
+        assertFalse(result.merged());
+        assertEquals(SupplementaryRejectReason.READ_COVERAGE_GAP, result.rejectReason());
     }
 
     @Test
@@ -374,10 +374,10 @@ public class SupplementaryResolverTest
         SupplementaryCandidate cand = candidate(CHR1, true, READ_LEN, 1001, "94M57S", 60,
                 supp(0, CHR1, true, 1080, "94S57M", 60));
 
-        SupplementaryResult res = enabledResolver(annotated()).resolve(cand);
+        SupplementaryResult result = enabledResolver(annotated()).resolve(cand);
 
-        assertFalse(res.merged());
-        assertEquals(SupplementaryRejectReason.READ_COVERAGE_OVERLAP, res.rejectReason());
+        assertFalse(result.merged());
+        assertEquals(SupplementaryRejectReason.READ_COVERAGE_OVERLAP, result.rejectReason());
     }
 
     @Test
@@ -385,10 +385,10 @@ public class SupplementaryResolverTest
     {
         SupplementaryCandidate cand = candidate(CHR1, true, READ_LEN, 1000, "94M57S", 60);
 
-        SupplementaryResult res = enabledResolver(annotated()).resolve(cand);
+        SupplementaryResult result = enabledResolver(annotated()).resolve(cand);
 
-        assertFalse(res.merged());
-        assertEquals(SupplementaryRejectReason.NO_MATCHING_SUPP, res.rejectReason());
+        assertFalse(result.merged());
+        assertEquals(SupplementaryRejectReason.NO_MATCHING_SUPP, result.rejectReason());
     }
 
     @Test
@@ -397,38 +397,38 @@ public class SupplementaryResolverTest
         SupplementaryCandidate cand = candidate(CHR1, true, READ_LEN, 1000, "94M57S", 60,
                 supp(0, CHR1, true, 1200, "61M90S", 60));
 
-        SupplementaryResult res = enabledResolver(annotated()).resolve(cand);
+        SupplementaryResult result = enabledResolver(annotated()).resolve(cand);
 
-        assertFalse(res.merged());
-        assertEquals(SupplementaryRejectReason.NO_MATCHING_SUPP, res.rejectReason());
+        assertFalse(result.merged());
+        assertEquals(SupplementaryRejectReason.NO_MATCHING_SUPP, result.rejectReason());
     }
 
     @Test
     public void testPrimaryBothSidesClippedRightExtendAccepted()
     {
-        // Middle-anchored primary: supp past primaryRefEnd disambiguates direction → right-extend fires.
+        // Middle-anchored primary: supp past primaryRefEnd disambiguates direction -> right-extend fires.
         SupplementaryCandidate cand = candidate(CHR1, true, READ_LEN, 1001, "5S90M56S", 60,
                 supp(0, CHR1, true, 1500, "95S56M", 60));
 
-        SupplementaryResult res = enabledResolver(annotated()).resolve(cand);
+        SupplementaryResult result = enabledResolver(annotated()).resolve(cand);
 
-        assertTrue(res.merged());
-        assertEquals("5S90M409N56M", res.mergedCigar());
-        assertEquals(1001, res.mergedStart());
+        assertTrue(result.merged());
+        assertEquals("5S90M409N56M", result.mergedCigar());
+        assertEquals(1001, result.mergedStart());
     }
 
     @Test
     public void testPrimaryBothSidesClippedLeftExtendAccepted()
     {
-        // Mirror on the left: supp ends before primaryStart → left-extend fires.
+        // Mirror on the left: supp ends before primaryStart -> left-extend fires.
         SupplementaryCandidate cand = candidate(CHR1, true, READ_LEN, 1001, "5S90M56S", 60,
                 supp(0, CHR1, true, 500, "5M146S", 60));
 
-        SupplementaryResult res = enabledResolver(annotated()).resolve(cand);
+        SupplementaryResult result = enabledResolver(annotated()).resolve(cand);
 
-        assertTrue(res.merged());
-        assertEquals("5M496N90M56S", res.mergedCigar());
-        assertEquals(500, res.mergedStart());
+        assertTrue(result.merged());
+        assertEquals("5M496N90M56S", result.mergedCigar());
+        assertEquals(500, result.mergedStart());
     }
 
     @Test
@@ -440,12 +440,12 @@ public class SupplementaryResolverTest
         SupplementaryCandidate cand = new SupplementaryCandidate(CHR1, true, READ_LEN, 1001, "5S90M56S", 60,
                 Arrays.asList(right, left));
 
-        SupplementaryResult res = enabledResolver(annotated()).resolve(cand);
+        SupplementaryResult result = enabledResolver(annotated()).resolve(cand);
 
-        assertTrue(res.merged());
-        assertEquals("5M496N90M409N56M", res.mergedCigar());
-        assertEquals(500, res.mergedStart());
-        assertEquals(2, res.chainDepth());
+        assertTrue(result.merged());
+        assertEquals("5M496N90M409N56M", result.mergedCigar());
+        assertEquals(500, result.mergedStart());
+        assertEquals(2, result.chainDepth());
     }
 
     @Test
@@ -457,10 +457,10 @@ public class SupplementaryResolverTest
                 supp(0, CHR1, true, 1500, "94S57M", 60),
                 supp(1, CHR1, true, 1500, "94S57M", 60));
 
-        SupplementaryResult res = enabledResolver(annotated(intron)).resolve(cand);
+        SupplementaryResult result = enabledResolver(annotated(intron)).resolve(cand);
 
-        assertFalse(res.merged());
-        assertEquals(SupplementaryRejectReason.MULTIPLE_SUPPS_IN_REACH, res.rejectReason());
+        assertFalse(result.merged());
+        assertEquals(SupplementaryRejectReason.MULTIPLE_SUPPS_IN_REACH, result.rejectReason());
     }
 
     @Test
@@ -471,9 +471,9 @@ public class SupplementaryResolverTest
         SupplementaryCandidate cand = candidate(CHR1, true, READ_LEN, 31448368, "94M57S", 0,
                 supp(0, CHR1, true, 31448541, "94S57M", 60));
 
-        SupplementaryResult res = enabledResolver(annotated(intron)).resolve(cand);
+        SupplementaryResult result = enabledResolver(annotated(intron)).resolve(cand);
 
-        assertTrue(res.merged());
+        assertTrue(result.merged());
     }
 
     @Test
@@ -486,10 +486,10 @@ public class SupplementaryResolverTest
                 supp(0, CHR1, true, 1500, "94S57M", 60),
                 supp(1, CHR1, true, 1800, "94S57M", 60));
 
-        SupplementaryResult res = enabledResolver(annotated(intron1, intron2)).resolve(cand);
+        SupplementaryResult result = enabledResolver(annotated(intron1, intron2)).resolve(cand);
 
-        assertFalse(res.merged());
-        assertEquals(SupplementaryRejectReason.MULTIPLE_SUPPS_IN_REACH, res.rejectReason());
+        assertFalse(result.merged());
+        assertEquals(SupplementaryRejectReason.MULTIPLE_SUPPS_IN_REACH, result.rejectReason());
     }
 
     @Test
@@ -499,9 +499,9 @@ public class SupplementaryResolverTest
         SupplementaryCandidate cand = candidate(CHR1, true, READ_LEN, 1001, "94M57S", 60,
                 supp(0, CHR1, true, 1500, "94S57M", 0));
 
-        SupplementaryResult res = enabledResolver(annotated(intron)).resolve(cand);
+        SupplementaryResult result = enabledResolver(annotated(intron)).resolve(cand);
 
-        assertTrue(res.merged());
+        assertTrue(result.merged());
     }
 
     @Test
@@ -511,8 +511,8 @@ public class SupplementaryResolverTest
         SupplementaryConfig cappedConfig =
                 new SupplementaryConfig(true, 21, 1_000_000, 2, true, 0, 0);
 
-        int p = 1000;
-        SupplementaryCandidate cand = candidate(CHR1, true, READ_LEN, p, "30M121S", 60,
+        int primaryStart = 1000;
+        SupplementaryCandidate cand = candidate(CHR1, true, READ_LEN, primaryStart, "30M121S", 60,
                 supp(0, CHR1, true, 2000, "30S30M91S", 60),
                 supp(1, CHR1, true, 3000, "60S30M61S", 60),
                 supp(2, CHR1, true, 4000, "90S30M31S", 60),
@@ -524,11 +524,11 @@ public class SupplementaryResolverTest
                 new ChrBaseRegion(CHR1, 3030, 3999),
                 new ChrBaseRegion(CHR1, 4030, 4999));
 
-        SupplementaryResult res = new SupplementaryResolver(set, cappedConfig).resolve(cand);
+        SupplementaryResult result = new SupplementaryResolver(set, cappedConfig).resolve(cand);
 
-        assertTrue(res.merged());
-        assertEquals(2, res.chainDepth());
-        assertEquals(2, res.droppedSupplementaryIndices().size());
+        assertTrue(result.merged());
+        assertEquals(2, result.chainDepth());
+        assertEquals(2, result.droppedSupplementaryIndices().size());
     }
 
     @Test
@@ -538,10 +538,10 @@ public class SupplementaryResolverTest
         SupplementaryCandidate cand = candidate(CHR1, true, 50, 1001, "30M20S", 60,
                 supp(0, CHR1, true, 1131, "30S20M", 60));
 
-        SupplementaryResult res = enabledResolver(annotated(intron)).resolve(cand);
+        SupplementaryResult result = enabledResolver(annotated(intron)).resolve(cand);
 
-        assertTrue(res.merged());
-        assertEquals("30M100N20M", res.mergedCigar());
+        assertTrue(result.merged());
+        assertEquals("30M100N20M", result.mergedCigar());
     }
 
     @Test
@@ -576,9 +576,9 @@ public class SupplementaryResolverTest
         SupplementaryCandidate cand = candidate(CHR1, true, READ_LEN, 1000, "94M57S", 60,
                 supp(0, CHR1, false, 1500, "94S57M", 60));
 
-        SupplementaryResult res = resolver.resolve(cand);
+        SupplementaryResult result = resolver.resolve(cand);
 
-        assertFalse(res.merged());
+        assertFalse(result.merged());
         assertEquals(1, resolver.statistics().candidatesEvaluated());
         assertEquals(0, resolver.statistics().mergedTotal());
         assertEquals(1, resolver.statistics().rejectCount(SupplementaryRejectReason.OPPOSITE_STRAND));
@@ -592,11 +592,11 @@ public class SupplementaryResolverTest
         SupplementaryCandidate cand = candidate(CHR1, true, READ_LEN, 31448368, "94M57S", 60,
                 supp(0, CHR1, true, 31448540, "94S57M", 60));
 
-        SupplementaryResult res = enabledResolver(annotated(annotatedIntron)).resolve(cand);
+        SupplementaryResult result = enabledResolver(annotated(annotatedIntron)).resolve(cand);
 
-        assertTrue(res.merged());
-        assertEquals("94M78N57M", res.mergedCigar());
-        assertEquals(31448368, res.mergedStart());
+        assertTrue(result.merged());
+        assertEquals("94M78N57M", result.mergedCigar());
+        assertEquals(31448368, result.mergedStart());
     }
 
     @Test
@@ -609,11 +609,11 @@ public class SupplementaryResolverTest
         SupplementaryCandidate cand = candidate(chr5, true, READ_LEN, 34938856, "59S92M", 60,
                 supp(0, chr5, true, 34937631, "61M90S", 60));
 
-        SupplementaryResult res = enabledResolver(annotated(annotatedIntron)).resolve(cand);
+        SupplementaryResult result = enabledResolver(annotated(annotatedIntron)).resolve(cand);
 
-        assertTrue(res.merged());
-        assertEquals("61M1166N90M", res.mergedCigar());
-        assertEquals(34937631, res.mergedStart());
+        assertTrue(result.merged());
+        assertEquals("61M1166N90M", result.mergedCigar());
+        assertEquals(34937631, result.mergedStart());
     }
 
     @Test
@@ -624,12 +624,12 @@ public class SupplementaryResolverTest
         SupplementaryCandidate cand = candidate(CHR1, true, 151, 1001, "94M57S", 60,
                 supp(0, CHR1, true, 1500, "90S61M", 60));
 
-        SupplementaryResult res = enabledResolver(annotated(annotated)).resolve(cand);
+        SupplementaryResult result = enabledResolver(annotated(annotated)).resolve(cand);
 
-        assertTrue(res.merged());
-        assertEquals("94M409N57M", res.mergedCigar());
-        assertEquals(1001, res.mergedStart());
-        assertEquals(annotated, res.introducedIntrons().get(0));
+        assertTrue(result.merged());
+        assertEquals("94M409N57M", result.mergedCigar());
+        assertEquals(1001, result.mergedStart());
+        assertEquals(annotated, result.introducedIntrons().get(0));
     }
 
     @Test
@@ -640,10 +640,10 @@ public class SupplementaryResolverTest
         SupplementaryCandidate cand = candidate(CHR1, true, 151, 1000, "94M57S", 60,
                 supp(0, CHR1, true, 1498, "92S59M", 60));
 
-        SupplementaryResult res = enabledResolver(annotated(annotated)).resolve(cand);
+        SupplementaryResult result = enabledResolver(annotated(annotated)).resolve(cand);
 
-        assertTrue(res.merged());
-        assertEquals("92M406N59M", res.mergedCigar());
+        assertTrue(result.merged());
+        assertEquals("92M406N59M", result.mergedCigar());
     }
 
     @Test
@@ -656,11 +656,11 @@ public class SupplementaryResolverTest
         SupplementaryCandidate cand = candidate(CHR1, true, 151, 1001, "94M57S", 60,
                 supp(0, CHR1, true, 1498, "92S59M", 60));
 
-        SupplementaryResult res = enabledResolver(annotated(trustPrimary, trustSupp)).resolve(cand);
+        SupplementaryResult result = enabledResolver(annotated(trustPrimary, trustSupp)).resolve(cand);
 
-        assertTrue(res.merged());
-        assertEquals("94M405N57M", res.mergedCigar());
-        assertEquals(trustPrimary, res.introducedIntrons().get(0));
+        assertTrue(result.merged());
+        assertEquals("94M405N57M", result.mergedCigar());
+        assertEquals(trustPrimary, result.introducedIntrons().get(0));
     }
 
     @Test
@@ -670,10 +670,10 @@ public class SupplementaryResolverTest
         SupplementaryCandidate cand = candidate(CHR1, true, 151, 1001, "94M57S", 60,
                 supp(0, CHR1, true, 1500, "88S63M", 60));
 
-        SupplementaryResult res = enabledResolver(annotated(annotated)).resolve(cand);
+        SupplementaryResult result = enabledResolver(annotated(annotated)).resolve(cand);
 
-        assertFalse(res.merged());
-        assertEquals(SupplementaryRejectReason.READ_COVERAGE_OVERLAP, res.rejectReason());
+        assertFalse(result.merged());
+        assertEquals(SupplementaryRejectReason.READ_COVERAGE_OVERLAP, result.rejectReason());
     }
 
     @Test
@@ -683,10 +683,10 @@ public class SupplementaryResolverTest
         SupplementaryCandidate cand = candidate(CHR1, true, 151, 1001, "94M57S", 60,
                 supp(0, CHR1, true, 1500, "92S59M", 60));
 
-        SupplementaryResult res = new SupplementaryResolver(Collections.emptySet(), strict).resolve(cand);
+        SupplementaryResult result = new SupplementaryResolver(Collections.emptySet(), strict).resolve(cand);
 
-        assertFalse(res.merged());
-        assertEquals(SupplementaryRejectReason.NOVEL_JUNCTION, res.rejectReason());
+        assertFalse(result.merged());
+        assertEquals(SupplementaryRejectReason.NOVEL_JUNCTION, result.rejectReason());
     }
 
     @Test
@@ -697,10 +697,10 @@ public class SupplementaryResolverTest
         SupplementaryCandidate cand = candidate(CHR1, true, 151, 1001, "94M57S", 60,
                 supp(0, CHR1, true, 1500, "92S59M", 60));
 
-        SupplementaryResult res = enabledResolver(annotated()).resolve(cand);
+        SupplementaryResult result = enabledResolver(annotated()).resolve(cand);
 
-        assertTrue(res.merged());
-        assertEquals("93M407N58M", res.mergedCigar());
+        assertTrue(result.merged());
+        assertEquals("93M407N58M", result.mergedCigar());
     }
 
     @Test
@@ -710,10 +710,10 @@ public class SupplementaryResolverTest
         SupplementaryCandidate cand = candidate(CHR1, true, 151, 1001, "94M57S", 60,
                 supp(0, CHR1, true, 1500, "92S59M", 60));
 
-        SupplementaryResult res = new SupplementaryResolver(Collections.emptySet(), perm).resolve(cand);
+        SupplementaryResult result = new SupplementaryResolver(Collections.emptySet(), perm).resolve(cand);
 
-        assertTrue(res.merged());
-        assertEquals("93M407N58M", res.mergedCigar());
+        assertTrue(result.merged());
+        assertEquals("93M407N58M", result.mergedCigar());
     }
 
     @Test
@@ -728,12 +728,12 @@ public class SupplementaryResolverTest
                 supp(0, CHR1, true, 2000, "50S60M41S", 60),
                 supp(1, CHR1, true, 3000, "110S41M", 60));
 
-        SupplementaryResult res = enabledResolver(set).resolve(cand);
+        SupplementaryResult result = enabledResolver(set).resolve(cand);
 
-        assertTrue(res.merged());
-        assertEquals(2, res.introducedIntrons().size());
-        assertEquals(new ChrBaseRegion(CHR1, 1050, 1999), res.introducedIntrons().get(0));
-        assertEquals(new ChrBaseRegion(CHR1, 2060, 2999), res.introducedIntrons().get(1));
+        assertTrue(result.merged());
+        assertEquals(2, result.introducedIntrons().size());
+        assertEquals(new ChrBaseRegion(CHR1, 1050, 1999), result.introducedIntrons().get(0));
+        assertEquals(new ChrBaseRegion(CHR1, 2060, 2999), result.introducedIntrons().get(1));
     }
 
     // Resolver wired to a base-level genome, for the motif-scan and ref-verify passes.
@@ -764,12 +764,12 @@ public class SupplementaryResolverTest
         SupplementaryCandidate cand = candidate(CHR1, true, 151, 1001, "94M57S", 60,
                 supp(0, CHR1, true, 1500, "94S57M", 60));
 
-        SupplementaryResult res = resolverWithRef(
+        SupplementaryResult result = resolverWithRef(
                 Collections.emptySet(), refWithCanonicalIntron(2000, 1095, 1499)).resolve(cand);
 
-        assertTrue(res.merged());
-        assertEquals("94M405N57M", res.mergedCigar());
-        assertEquals(new ChrBaseRegion(CHR1, 1095, 1499), res.introducedIntrons().get(0));
+        assertTrue(result.merged());
+        assertEquals("94M405N57M", result.mergedCigar());
+        assertEquals(new ChrBaseRegion(CHR1, 1095, 1499), result.introducedIntrons().get(0));
     }
 
     @Test
@@ -783,11 +783,11 @@ public class SupplementaryResolverTest
         SupplementaryCandidate cand = candidate(CHR1, true, 151, 1001, "94M57S", 60,
                 supp(0, CHR1, true, 1498, "92S59M", 60));
 
-        SupplementaryResult res = resolverWithRef(annotated(annotated), genome).resolve(cand);
+        SupplementaryResult result = resolverWithRef(annotated(annotated), genome).resolve(cand);
 
-        assertTrue(res.merged());
-        assertEquals("94M405N57M", res.mergedCigar());
-        assertEquals(annotated, res.introducedIntrons().get(0));
+        assertTrue(result.merged());
+        assertEquals("94M405N57M", result.mergedCigar());
+        assertEquals(annotated, result.introducedIntrons().get(0));
     }
 
     @Test
@@ -801,11 +801,11 @@ public class SupplementaryResolverTest
         SupplementaryCandidate cand = candidate(CHR1, true, 151, 1001, "94M57S", 60,
                 supp(0, CHR1, true, 1498, "92S59M", 60));
 
-        SupplementaryResult res = resolverWithRef(Collections.emptySet(), genome).resolve(cand);
+        SupplementaryResult result = resolverWithRef(Collections.emptySet(), genome).resolve(cand);
 
-        assertTrue(res.merged());
-        assertEquals("92M405N59M", res.mergedCigar());
-        assertEquals(new ChrBaseRegion(CHR1, 1093, 1497), res.introducedIntrons().get(0));
+        assertTrue(result.merged());
+        assertEquals("92M405N59M", result.mergedCigar());
+        assertEquals(new ChrBaseRegion(CHR1, 1093, 1497), result.introducedIntrons().get(0));
     }
 
     @Test
@@ -818,10 +818,10 @@ public class SupplementaryResolverTest
         SupplementaryCandidate cand = candidate(CHR1, true, 151, 1001, "94M57S", 60,
                 supp(0, CHR1, true, 1500, "94S57M", 60));
 
-        SupplementaryResult res = resolverWithRef(Collections.emptySet(), genome).resolve(cand);
+        SupplementaryResult result = resolverWithRef(Collections.emptySet(), genome).resolve(cand);
 
-        assertTrue(res.merged());
-        assertEquals("94M405N57M", res.mergedCigar());
+        assertTrue(result.merged());
+        assertEquals("94M405N57M", result.mergedCigar());
     }
 
     @Test
@@ -832,10 +832,10 @@ public class SupplementaryResolverTest
         SupplementaryCandidate cand = candidate(CHR1, true, 151, 1001, "94M57S", 60,
                 supp(0, CHR1, true, 1500, "94S57M", 60));
 
-        SupplementaryResult res = resolverWithRef(Collections.emptySet(), genome).resolve(cand);
+        SupplementaryResult result = resolverWithRef(Collections.emptySet(), genome).resolve(cand);
 
-        assertTrue(res.merged());
-        assertEquals("94M405N57M", res.mergedCigar());
+        assertTrue(result.merged());
+        assertEquals("94M405N57M", result.mergedCigar());
     }
 
     @Test
@@ -848,10 +848,10 @@ public class SupplementaryResolverTest
         SupplementaryCandidate cand = candidate(CHR1, true, 151, 1500, "57S94M", 60,
                 supp(0, CHR1, true, 1001, "57M94S", 60));
 
-        SupplementaryResult res = resolverWithRef(Collections.emptySet(), genome).resolve(cand);
+        SupplementaryResult result = resolverWithRef(Collections.emptySet(), genome).resolve(cand);
 
-        assertTrue(res.merged());
-        assertEquals("57M442N94M", res.mergedCigar());
+        assertTrue(result.merged());
+        assertEquals("57M442N94M", result.mergedCigar());
     }
 
     @Test
@@ -863,11 +863,11 @@ public class SupplementaryResolverTest
 
         SupplementaryCandidate cand = refVerifyCandidate(101, "30M5S", 35, readBases);
 
-        SupplementaryResult res = resolverWithRef(annotated(new ChrBaseRegion(CHR1, 131, 200)), genome).resolve(cand);
+        SupplementaryResult result = resolverWithRef(annotated(new ChrBaseRegion(CHR1, 131, 200)), genome).resolve(cand);
 
-        assertTrue(res.merged());
-        assertEquals("30M70N5M", res.mergedCigar());
-        assertEquals(101, res.mergedStart());
+        assertTrue(result.merged());
+        assertEquals("30M70N5M", result.mergedCigar());
+        assertEquals(101, result.mergedStart());
     }
 
     @Test
@@ -881,11 +881,11 @@ public class SupplementaryResolverTest
 
         SupplementaryCandidate cand = refVerifyCandidate(101, "31M4S", 35, readBases);
 
-        SupplementaryResult res = resolverWithRef(annotated(new ChrBaseRegion(CHR1, 131, 200)), genome).resolve(cand);
+        SupplementaryResult result = resolverWithRef(annotated(new ChrBaseRegion(CHR1, 131, 200)), genome).resolve(cand);
 
-        assertTrue(res.merged());
-        assertEquals("30M70N5M", res.mergedCigar());
-        assertEquals(101, res.mergedStart());
+        assertTrue(result.merged());
+        assertEquals("30M70N5M", result.mergedCigar());
+        assertEquals(101, result.mergedStart());
     }
 
     @Test
@@ -897,11 +897,11 @@ public class SupplementaryResolverTest
 
         SupplementaryCandidate cand = refVerifyCandidate(101, "5S30M5S", 40, readBases);
 
-        SupplementaryResult res = resolverWithRef(annotated(new ChrBaseRegion(CHR1, 131, 200)), genome).resolve(cand);
+        SupplementaryResult result = resolverWithRef(annotated(new ChrBaseRegion(CHR1, 131, 200)), genome).resolve(cand);
 
-        assertTrue(res.merged());
-        assertEquals("5S30M70N5M", res.mergedCigar());
-        assertEquals(101, res.mergedStart());
+        assertTrue(result.merged());
+        assertEquals("5S30M70N5M", result.mergedCigar());
+        assertEquals(101, result.mergedStart());
     }
 
     @Test
@@ -913,10 +913,10 @@ public class SupplementaryResolverTest
 
         SupplementaryCandidate cand = refVerifyCandidate(101, "30M5S", 35, readBases);
 
-        SupplementaryResult res = resolverWithRef(annotated(new ChrBaseRegion(CHR1, 131, 200)), genome).resolve(cand);
+        SupplementaryResult result = resolverWithRef(annotated(new ChrBaseRegion(CHR1, 131, 200)), genome).resolve(cand);
 
-        assertFalse(res.merged());
-        assertEquals(SupplementaryRejectReason.REF_VERIFY_MISMATCH_TOO_HIGH, res.rejectReason());
+        assertFalse(result.merged());
+        assertEquals(SupplementaryRejectReason.REF_VERIFY_MISMATCH_TOO_HIGH, result.rejectReason());
     }
 
     @Test
@@ -931,10 +931,10 @@ public class SupplementaryResolverTest
 
         SupplementaryCandidate cand = refVerifyCandidate(101, "20M20S", 40, readBases);
 
-        SupplementaryResult res = resolverWithRef(annotated(new ChrBaseRegion(CHR1, 121, 200)), genome).resolve(cand);
+        SupplementaryResult result = resolverWithRef(annotated(new ChrBaseRegion(CHR1, 121, 200)), genome).resolve(cand);
 
-        assertTrue(res.merged());
-        assertEquals("20M80N18M2S", res.mergedCigar());
+        assertTrue(result.merged());
+        assertEquals("20M80N18M2S", result.mergedCigar());
     }
 
     @Test
@@ -946,11 +946,11 @@ public class SupplementaryResolverTest
 
         SupplementaryCandidate cand = refVerifyCandidate(201, "5S30M", 35, readBases);
 
-        SupplementaryResult res = resolverWithRef(annotated(new ChrBaseRegion(CHR1, 131, 200)), genome).resolve(cand);
+        SupplementaryResult result = resolverWithRef(annotated(new ChrBaseRegion(CHR1, 131, 200)), genome).resolve(cand);
 
-        assertTrue(res.merged());
-        assertEquals("5M70N30M", res.mergedCigar());
-        assertEquals(126, res.mergedStart());
+        assertTrue(result.merged());
+        assertEquals("5M70N30M", result.mergedCigar());
+        assertEquals(126, result.mergedStart());
     }
 
     @Test
@@ -960,10 +960,10 @@ public class SupplementaryResolverTest
         TestGenome genome = new TestGenome().with(CHR1, 300, 'A');
         SupplementaryCandidate cand = refVerifyCandidate(101, "30M5S", 35, repeatedBase(35, 'A'));
 
-        SupplementaryResult res = resolverWithRef(Collections.emptySet(), genome).resolve(cand);
+        SupplementaryResult result = resolverWithRef(Collections.emptySet(), genome).resolve(cand);
 
-        assertFalse(res.merged());
-        assertEquals(SupplementaryRejectReason.REF_VERIFY_NO_CANDIDATE_EXON, res.rejectReason());
+        assertFalse(result.merged());
+        assertEquals(SupplementaryRejectReason.REF_VERIFY_NO_CANDIDATE_EXON, result.rejectReason());
     }
 
     @Test
@@ -976,11 +976,11 @@ public class SupplementaryResolverTest
 
         SupplementaryCandidate cand = refVerifyCandidate(101, "30M5S", 35, readBases);
 
-        SupplementaryResult res = resolverWithRef(
+        SupplementaryResult result = resolverWithRef(
                 annotated(new ChrBaseRegion(CHR1, 131, 200), new ChrBaseRegion(CHR1, 131, 500)), genome).resolve(cand);
 
-        assertFalse(res.merged());
-        assertEquals(SupplementaryRejectReason.REF_VERIFY_AMBIGUOUS, res.rejectReason());
+        assertFalse(result.merged());
+        assertEquals(SupplementaryRejectReason.REF_VERIFY_AMBIGUOUS, result.rejectReason());
     }
 
     @Test
@@ -989,43 +989,43 @@ public class SupplementaryResolverTest
         // No RefSequenceSource - ref-verify skips silently.
         SupplementaryCandidate cand = candidate(CHR1, true, 35, 101, "30M5S", 60);
 
-        SupplementaryResult res = enabledResolver(annotated()).resolve(cand);
+        SupplementaryResult result = enabledResolver(annotated()).resolve(cand);
 
-        assertFalse(res.merged());
-        assertEquals(SupplementaryRejectReason.NO_MATCHING_SUPP, res.rejectReason());
+        assertFalse(result.merged());
+        assertEquals(SupplementaryRejectReason.NO_MATCHING_SUPP, result.rejectReason());
     }
 
     @Test
     public void testRefVerifyPartialMatchTrailingKeepsOuterClip()
     {
         // 15 proximal bases match the exon; outer 4 are adapter residual - only proximal bases convert
-        // to M, outer stay clipped: 30M19S → 30M70N15M4S.
+        // to M, outer stay clipped: 30M19S -> 30M70N15M4S.
         TestGenome genome = new TestGenome().with(CHR1, 300, 'A').set(CHR1, 201, 15, 'C');   // downstream exon: 15 bases
         byte[] readBases = bases("A".repeat(30) + "C".repeat(15) + "T".repeat(4));   // overhang + adapter residual
 
         SupplementaryCandidate cand = refVerifyCandidate(101, "30M19S", 49, readBases);
 
-        SupplementaryResult res = resolverWithRef(annotated(new ChrBaseRegion(CHR1, 131, 200)), genome).resolve(cand);
+        SupplementaryResult result = resolverWithRef(annotated(new ChrBaseRegion(CHR1, 131, 200)), genome).resolve(cand);
 
-        assertTrue(res.merged());
-        assertEquals("30M70N15M4S", res.mergedCigar());
-        assertEquals(101, res.mergedStart());
+        assertTrue(result.merged());
+        assertEquals("30M70N15M4S", result.mergedCigar());
+        assertEquals(101, result.mergedStart());
     }
 
     @Test
     public void testRefVerifyPartialMatchLeadingKeepsOuterClip()
     {
-        // Mirror on leading side: outer 4 are adapter, proximal 15 are real overhang → 4S15M70N30M.
+        // Mirror on leading side: outer 4 are adapter, proximal 15 are real overhang -> 4S15M70N30M.
         TestGenome genome = new TestGenome().with(CHR1, 300, 'A').set(CHR1, 116, 15, 'C');   // upstream exon: 15 bases
         byte[] readBases = bases("T".repeat(4) + "C".repeat(15) + "A".repeat(30));   // adapter + overhang
 
         SupplementaryCandidate cand = refVerifyCandidate(201, "19S30M", 49, readBases);
 
-        SupplementaryResult res = resolverWithRef(annotated(new ChrBaseRegion(CHR1, 131, 200)), genome).resolve(cand);
+        SupplementaryResult result = resolverWithRef(annotated(new ChrBaseRegion(CHR1, 131, 200)), genome).resolve(cand);
 
-        assertTrue(res.merged());
-        assertEquals("4S15M70N30M", res.mergedCigar());
-        assertEquals(116, res.mergedStart());
+        assertTrue(result.merged());
+        assertEquals("4S15M70N30M", result.mergedCigar());
+        assertEquals(116, result.mergedStart());
     }
 
     @Test
@@ -1038,17 +1038,17 @@ public class SupplementaryResolverTest
 
         SupplementaryCandidate cand = refVerifyCandidate(101, "30M19S", 49, readBases);
 
-        SupplementaryResult res = resolverWithRef(annotated(new ChrBaseRegion(CHR1, 131, 200)), genome).resolve(cand);
+        SupplementaryResult result = resolverWithRef(annotated(new ChrBaseRegion(CHR1, 131, 200)), genome).resolve(cand);
 
-        assertTrue(res.merged());
-        assertEquals("30M70N8M11S", res.mergedCigar());
-        assertEquals(101, res.mergedStart());
+        assertTrue(result.merged());
+        assertEquals("30M70N8M11S", result.mergedCigar());
+        assertEquals(101, result.mergedStart());
     }
 
     @Test
     public void testRefVerifySnapsBackSevenBaseOverExtension()
     {
-        // bwa over-extended 7 bases into the intron (37M3S); boundary snap (MaxBoundaryShift≥8)
+        // bwa over-extended 7 bases into the intron (37M3S); boundary snap (MaxBoundaryShift>=8)
         // trims back to find annotated intron 131 and re-verifies the 10-base tail.
         TestGenome genome = new TestGenome().with(CHR1, 300, 'A')
                 .set(CHR1, 131, 7, 'C')     // bwa's 7 over-extended bases
@@ -1057,11 +1057,11 @@ public class SupplementaryResolverTest
 
         SupplementaryCandidate cand = refVerifyCandidate(101, "37M3S", 40, readBases);
 
-        SupplementaryResult res = resolverWithRef(annotated(new ChrBaseRegion(CHR1, 131, 200)), genome).resolve(cand);
+        SupplementaryResult result = resolverWithRef(annotated(new ChrBaseRegion(CHR1, 131, 200)), genome).resolve(cand);
 
-        assertTrue(res.merged());
-        assertEquals("30M70N10M", res.mergedCigar());
-        assertEquals(101, res.mergedStart());
+        assertTrue(result.merged());
+        assertEquals("30M70N10M", result.mergedCigar());
+        assertEquals(101, result.mergedStart());
     }
 
     @Test
@@ -1096,10 +1096,10 @@ public class SupplementaryResolverTest
                 Arrays.asList(supp(0, CHR1, true, 1498, "92S59M", 60)),
                 null, Arrays.asList(hint));
 
-        SupplementaryResult res = enabledResolver(annotated(annotatedJunc)).resolve(cand);
+        SupplementaryResult result = enabledResolver(annotated(annotatedJunc)).resolve(cand);
 
-        assertTrue(res.merged());
-        assertEquals(1095, res.introducedIntrons().get(0).start());
+        assertTrue(result.merged());
+        assertEquals(1095, result.introducedIntrons().get(0).start());
     }
 
     @Test
@@ -1112,10 +1112,10 @@ public class SupplementaryResolverTest
                 Arrays.asList(supp(0, CHR1, true, 1498, "92S59M", 60)),
                 null, Arrays.asList(hint));
 
-        SupplementaryResult res = enabledResolver(annotated()).resolve(cand);
+        SupplementaryResult result = enabledResolver(annotated()).resolve(cand);
 
-        assertTrue(res.merged());
-        assertEquals(1094, res.introducedIntrons().get(0).start());
+        assertTrue(result.merged());
+        assertEquals(1094, result.introducedIntrons().get(0).start());
     }
 
     @Test
@@ -1125,9 +1125,9 @@ public class SupplementaryResolverTest
         SupplementaryCandidate cand = candidate(CHR1, true, READ_LEN, 1001, "94M57S", 60,
                 supp(0, CHR1, true, 1500, "94S57M", 60));
 
-        SupplementaryResult res = enabledResolver(annotated(intron)).resolve(cand);
+        SupplementaryResult result = enabledResolver(annotated(intron)).resolve(cand);
 
-        assertTrue(res.merged());
-        assertNull(res.rejectReason());
+        assertTrue(result.merged());
+        assertNull(result.rejectReason());
     }
 }

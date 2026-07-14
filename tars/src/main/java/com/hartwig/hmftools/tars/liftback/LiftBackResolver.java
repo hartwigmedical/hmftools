@@ -1,11 +1,11 @@
 package com.hartwig.hmftools.tars.liftback;
 
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.XA_ATTRIBUTE;
+import static com.hartwig.hmftools.tars.common.TarsConfig.TARS_LOGGER;
 import static com.hartwig.hmftools.tars.common.TarsConstants.ALT_CONTIG_SUFFIX;
 import static com.hartwig.hmftools.tars.common.TarsConstants.ANNOTATED_JUNCTION_MIN_ANCHOR_BP;
 import static com.hartwig.hmftools.tars.common.TarsConstants.ANNOTATED_JUNCTION_MIN_SOFTCLIP_ANCHOR_BP;
 import static com.hartwig.hmftools.tars.common.TarsConstants.CONFIDENT_MAPQ;
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.XA_ATTRIBUTE;
-import static com.hartwig.hmftools.tars.common.TarsConfig.TARS_LOGGER;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -46,11 +46,11 @@ public class LiftBackResolver
     public LiftBackResolver(final List<ContigEntry> entries, final ExonRegionIndex exonIndex)
     {
         mSegmentsByAltContig = new HashMap<>();
-        for(final ContigEntry entry : entries)
+        for(ContigEntry entry : entries)
         {
             mSegmentsByAltContig.computeIfAbsent(entry.contigName(), k -> new ArrayList<>()).add(entry);
         }
-        for(final List<ContigEntry> segments : mSegmentsByAltContig.values())
+        for(List<ContigEntry> segments : mSegmentsByAltContig.values())
         {
             segments.sort(Comparator.comparingInt(ContigEntry::altStart));
         }
@@ -72,20 +72,20 @@ public class LiftBackResolver
             return null;
         }
 
-        int lo = 0;
-        int hi = segments.size() - 1;
+        int low = 0;
+        int high = segments.size() - 1;
         int candidate = -1;
-        while(lo <= hi)
+        while(low <= high)
         {
-            int mid = (lo + hi) >>> 1;
+            int mid = (low + high) >>> 1;
             if(segments.get(mid).altStart() <= altPos)
             {
                 candidate = mid;
-                lo = mid + 1;
+                low = mid + 1;
             }
             else
             {
-                hi = mid - 1;
+                high = mid - 1;
             }
         }
 
@@ -139,7 +139,7 @@ public class LiftBackResolver
     @FunctionalInterface
     public interface AlignmentNormalizer
     {
-        void normalize(List<LiftedAlignment> alignments, SAMRecord record);
+        void normalize(final List<LiftedAlignment> alignments, final SAMRecord record);
     }
 
     // No-reconcile convenience for non-discriminating callers only: supplementaries and unmapped records (which
@@ -213,11 +213,11 @@ public class LiftBackResolver
         LiftedAlignment effectivePrimary = outcome.effectivePrimary();
 
         List<LiftedAlignment> keptAlignments = new ArrayList<>(allAlignments.size());
-        for(final LiftedAlignment la : allAlignments)
+        for(LiftedAlignment alignment : allAlignments)
         {
-            if(!la.Dropped)
+            if(!alignment.Dropped)
             {
-                keptAlignments.add(la);
+                keptAlignments.add(alignment);
             }
         }
 
@@ -317,7 +317,7 @@ public class LiftBackResolver
 
         Set<String> seenKeys = new HashSet<>();
 
-        for(final String entry : xa.split(";"))
+        for(String entry : xa.split(";"))
         {
             if(entry.isEmpty())
                 continue;
@@ -432,28 +432,28 @@ public class LiftBackResolver
         distinctSpans.computeIfAbsent(primary.LiftedChrom, k -> new ArrayList<>())
                 .add(new int[] { primary.LiftedPos, primaryEnd });
 
-        for(final LiftedAlignment la : alignments)
+        for(LiftedAlignment alignment : alignments)
         {
-            if(la == primary)
+            if(alignment == primary)
             {
                 continue;
             }
-            int end = spanEnd(la);
-            boolean overlapsPrimary = la.LiftedChrom.equals(primary.LiftedChrom)
-                    && la.LiftedPos <= primaryEnd && primary.LiftedPos <= end;
+            int end = spanEnd(alignment);
+            boolean overlapsPrimary = alignment.LiftedChrom.equals(primary.LiftedChrom)
+                    && alignment.LiftedPos <= primaryEnd && primary.LiftedPos <= end;
             if(overlapsPrimary)
             {
                 continue;
             }
-            distinctSpans.computeIfAbsent(la.LiftedChrom, k -> new ArrayList<>()).add(new int[] { la.LiftedPos, end });
+            distinctSpans.computeIfAbsent(alignment.LiftedChrom, k -> new ArrayList<>()).add(new int[] { alignment.LiftedPos, end });
         }
 
         int loci = 0;
-        for(final List<int[]> spans : distinctSpans.values())
+        for(List<int[]> spans : distinctSpans.values())
         {
             spans.sort(Comparator.comparingInt(s -> s[0]));
             int clusterEnd = -1;
-            for(final int[] span : spans)
+            for(int[] span : spans)
             {
                 if(span[0] > clusterEnd)
                 {
@@ -476,11 +476,11 @@ public class LiftBackResolver
     public static int countDistinctLoci(final List<LiftedAlignment> alignments)
     {
         LiftedAlignment primary = null;
-        for(final LiftedAlignment la : alignments)
+        for(LiftedAlignment alignment : alignments)
         {
-            if(la.IsPrimaryChoice)
+            if(alignment.IsPrimaryChoice)
             {
-                primary = la;
+                primary = alignment;
                 break;
             }
         }
@@ -490,30 +490,30 @@ public class LiftBackResolver
         }
 
         List<LiftedAlignment> kept = new ArrayList<>(alignments.size());
-        for(final LiftedAlignment la : alignments)
+        for(LiftedAlignment alignment : alignments)
         {
-            if(!la.Dropped)
+            if(!alignment.Dropped)
             {
-                kept.add(la);
+                kept.add(alignment);
             }
         }
         return Math.max(countDistinctLoci(kept, primary), 1);
     }
 
-    private static int spanEnd(final LiftedAlignment la)
+    private static int spanEnd(final LiftedAlignment alignment)
     {
-        return la.LiftedPos + CigarUtils.calcCigarAlignedLength(la.LiftedCigar) - 1;
+        return alignment.LiftedPos + CigarUtils.calcCigarAlignedLength(alignment.LiftedCigar) - 1;
     }
 
     private static int countDistinctCigarsAtLocus(final List<LiftedAlignment> alignments, final LiftedAlignment primary)
     {
         String primaryLocus = locusKey(primary);
         Set<String> cigars = new HashSet<>();
-        for(final LiftedAlignment la : alignments)
+        for(LiftedAlignment alignment : alignments)
         {
-            if(locusKey(la).equals(primaryLocus))
+            if(locusKey(alignment).equals(primaryLocus))
             {
-                cigars.add(la.LiftedCigar);
+                cigars.add(alignment.LiftedCigar);
             }
         }
         return cigars.size();
@@ -522,28 +522,29 @@ public class LiftBackResolver
     private static String joinGeneIds(final List<LiftedAlignment> alignments)
     {
         Set<String> geneIds = new HashSet<>();
-        for(final LiftedAlignment la : alignments)
-            if(la.GeneId != null)
+        for(LiftedAlignment alignment : alignments)
+            if(alignment.GeneId != null)
             {
-                geneIds.add(la.GeneId);
+                geneIds.add(alignment.GeneId);
             }
         return geneIds.stream().sorted().collect(Collectors.joining("|"));
     }
 
-    private static String liftedKey(final LiftedAlignment la)
+    private static String liftedKey(final LiftedAlignment alignment)
     {
-        return la.LiftedChrom + ":" + la.LiftedPos + ":" + la.LiftedCigar + ":" + (la.ForwardStrand ? '+' : '-');
+        return alignment.LiftedChrom + ":" + alignment.LiftedPos + ":" + alignment.LiftedCigar
+                + ":" + (alignment.ForwardStrand ? '+' : '-');
     }
 
-    private static String locusKey(final LiftedAlignment la)
+    private static String locusKey(final LiftedAlignment alignment)
     {
-        return la.LiftedChrom + ":" + la.LiftedPos;
+        return alignment.LiftedChrom + ":" + alignment.LiftedPos;
     }
 
     private static int getInt(final SAMRecord record, final String tag)
     {
-        Integer val = record.getIntegerAttribute(tag);
-        return val != null ? val : 0;
+        Integer value = record.getIntegerAttribute(tag);
+        return value != null ? value : 0;
     }
 
     private static LiftBackResult unmappedResult(final SAMRecord record)

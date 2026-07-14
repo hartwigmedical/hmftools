@@ -8,8 +8,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.region.BasePosition;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 // Three views of an annotated-junction set: exact membership, by-intron-start, and by-intron-end.
 // All three are built from the same Set<ChrBaseRegion> in one pass.

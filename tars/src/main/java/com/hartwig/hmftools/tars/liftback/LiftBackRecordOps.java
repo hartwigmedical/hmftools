@@ -50,7 +50,7 @@ public final class LiftBackRecordOps
                 return;
 
             default:
-                final Cigar liftedCigar = new Cigar(ContigTranslator.mergeAdjacentSameOp(
+                Cigar liftedCigar = new Cigar(ContigTranslator.mergeAdjacentSameOp(
                         ContigTranslator.dropZeroLength(TextCigarCodec.decode(result.finalCigar()).getCigarElements())));
 
                 // A discriminator swap can move the primary onto an opposite-strand placement (bwa's contiguous
@@ -74,9 +74,9 @@ public final class LiftBackRecordOps
                         byte[] reversed = quals.clone();
                         for(int i = 0, j = reversed.length - 1; i < j; ++i, --j)
                         {
-                            byte tmp = reversed[i];
+                            byte swapValue = reversed[i];
                             reversed[i] = reversed[j];
-                            reversed[j] = tmp;
+                            reversed[j] = swapValue;
                         }
                         record.setBaseQualities(reversed);
                     }
@@ -221,7 +221,7 @@ public final class LiftBackRecordOps
         int readIndex = 0;
         int editDistance = 0;
 
-        for(final CigarElement element : record.getCigar().getCigarElements())
+        for(CigarElement element : record.getCigar().getCigarElements())
         {
             int length = element.getLength();
             switch(element.getOperator())
@@ -236,7 +236,7 @@ public final class LiftBackRecordOps
                     {
                         return -1;
                     }
-                    final byte[] refBases = refSource.getBases(chromosome, refPos, refPos + length - 1);
+                    byte[] refBases = refSource.getBases(chromosome, refPos, refPos + length - 1);
                     if(refBases == null || refBases.length < length)
                     {
                         return -1;
@@ -288,12 +288,12 @@ public final class LiftBackRecordOps
         // info. Anything non-overlapping (other locus, other chromosome, a different exon up the same gene)
         // is a genuine alternative mapping and is kept.
         LiftedAlignment primary = result.liftedAlignments().stream()
-                .filter(la -> la.IsPrimaryChoice)
+                .filter(alignment -> alignment.IsPrimaryChoice)
                 .findFirst().orElse(null);
 
         String xa = result.liftedAlignments().stream()
-                .filter(la -> !la.IsPrimaryChoice && !la.Dropped)
-                .filter(la -> !overlapsPrimary(la, primary))
+                .filter(alignment -> !alignment.IsPrimaryChoice && !alignment.Dropped)
+                .filter(alignment -> !overlapsPrimary(alignment, primary))
                 .map(LiftBackRecordOps::formatXaEntry)
                 .distinct()  // a SELF and a tx-contig alt can lift to identical coords; list each locus once
                 .collect(Collectors.joining());
@@ -314,9 +314,9 @@ public final class LiftBackRecordOps
         return positionsOverlap(altStart, altEnd, primStart, primEnd);
     }
 
-    private static String formatXaEntry(final LiftedAlignment la)
+    private static String formatXaEntry(final LiftedAlignment alignment)
     {
-        return la.LiftedChrom + ',' + (la.ForwardStrand ? '+' : '-') + la.LiftedPos + ','
-                + la.LiftedCigar + ',' + la.NumMismatches + ';';
+        return alignment.LiftedChrom + ',' + (alignment.ForwardStrand ? '+' : '-') + alignment.LiftedPos + ','
+                + alignment.LiftedCigar + ',' + alignment.NumMismatches + ';';
     }
 }

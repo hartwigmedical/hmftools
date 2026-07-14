@@ -6,13 +6,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import com.hartwig.hmftools.common.region.BaseRegion;
-import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.region.BaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.tars.common.ContigEntry;
 
 // Derives annotated splice junctions from the ensembl data cache into a Set<ChrBaseRegion> for O(1) lookup.
@@ -34,7 +34,7 @@ public final class AnnotatedJunctionLoader
     public static Set<ChrBaseRegion> fromContigEntries(final List<ContigEntry> entries)
     {
         Set<ChrBaseRegion> introns = new HashSet<>();
-        for(final ContigEntry entry : entries)
+        for(ContigEntry entry : entries)
         {
             addSpanIntrons(introns, entry.chromosome(), entry.exonSpans());
         }
@@ -65,16 +65,16 @@ public final class AnnotatedJunctionLoader
     public static Set<ChrBaseRegion> deriveIntrons(final EnsemblDataCache ensemblDataCache, final RefGenomeVersion refGenomeVersion)
     {
         Set<ChrBaseRegion> introns = new HashSet<>();
-        for(final List<GeneData> genes : ensemblDataCache.getChrGeneDataMap().values())
+        for(List<GeneData> genes : ensemblDataCache.getChrGeneDataMap().values())
         {
-            for(final GeneData gene : genes)
+            for(GeneData gene : genes)
             {
                 List<TranscriptData> transcripts = ensemblDataCache.getTranscripts(gene.GeneId);
                 if(transcripts == null)
                     continue;
 
                 String chromosome = refGenomeVersion.versionedChromosome(gene.Chromosome);
-                for(final TranscriptData transcript : transcripts)
+                for(TranscriptData transcript : transcripts)
                 {
                     addTranscriptIntrons(introns, chromosome, transcript.exons());
                 }

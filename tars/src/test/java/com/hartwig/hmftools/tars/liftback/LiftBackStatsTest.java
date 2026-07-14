@@ -80,9 +80,9 @@ public class LiftBackStatsTest
     public void testRecordsIncrementCountersByCategory()
     {
         LiftBackStats stats = new LiftBackStats();
-        stats.record(newRecord(60), resultWith(RecordState.RESOLVED, DecidingFeature.SOLE_REF,0, List.of(refAlignment())));
-        stats.record(newRecord(60), resultWith(RecordState.RESOLVED, DecidingFeature.SOLE_REF,0, List.of(refAlignment())));
-        stats.record(newRecord(0), resultWith(RecordState.UNMAPPED, null,0, List.of()));
+        stats.record(newRecord(60), resultWith(RecordState.RESOLVED, DecidingFeature.SOLE_REF, 0, List.of(refAlignment())));
+        stats.record(newRecord(60), resultWith(RecordState.RESOLVED, DecidingFeature.SOLE_REF, 0, List.of(refAlignment())));
+        stats.record(newRecord(0), resultWith(RecordState.UNMAPPED, null, 0, List.of()));
 
         assertEquals(3, stats.total());
         assertEquals(2, stats.featureCount(DecidingFeature.SOLE_REF));
@@ -108,14 +108,14 @@ public class LiftBackStatsTest
     @Test
     public void testMapqTierDerivation()
     {
-        LiftBackResult result = resultWith(RecordState.RESOLVED, DecidingFeature.SOLE_REF,0, List.of(refAlignment()));
+        LiftBackResult result = resultWith(RecordState.RESOLVED, DecidingFeature.SOLE_REF, 0, List.of(refAlignment()));
 
         assertEquals(LiftBackStats.MapqTier.MAPQ_ZERO,
                 LiftBackStats.deriveMapqTier(newRecord(0), result));
         assertEquals(LiftBackStats.MapqTier.MAPQ_POS_UNIQUE,
                 LiftBackStats.deriveMapqTier(newRecord(60), result));
 
-        LiftBackResult withAlts = resultWith(RecordState.RESOLVED, DecidingFeature.SOLE_REF,1, List.of(refAlignment()));
+        LiftBackResult withAlts = resultWith(RecordState.RESOLVED, DecidingFeature.SOLE_REF, 1, List.of(refAlignment()));
         assertEquals(LiftBackStats.MapqTier.MAPQ_POS_MULTI,
                 LiftBackStats.deriveMapqTier(newRecord(60), withAlts));
     }
@@ -124,8 +124,8 @@ public class LiftBackStatsTest
     public void testWriteSummaryEmitsExpectedTsvLayout() throws IOException
     {
         LiftBackStats stats = new LiftBackStats();
-        stats.record(newRecord(60), resultWith(RecordState.RESOLVED, DecidingFeature.SOLE_REF,0, List.of(refAlignment())));
-        stats.record(newRecord(0), resultWith(RecordState.UNMAPPED, null,0, List.of()));
+        stats.record(newRecord(60), resultWith(RecordState.RESOLVED, DecidingFeature.SOLE_REF, 0, List.of(refAlignment())));
+        stats.record(newRecord(0), resultWith(RecordState.UNMAPPED, null, 0, List.of()));
 
         stats.writeSummary(mSummary.toString());
 

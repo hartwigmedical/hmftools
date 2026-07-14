@@ -31,7 +31,7 @@ public final class AlignmentScorer
         int queryPos = 0;
         int refPos = alignmentStart;
 
-        for(final CigarElement element : cigar.getCigarElements())
+        for(CigarElement element : cigar.getCigarElements())
         {
             int length = element.getLength();
             switch(element.getOperator())

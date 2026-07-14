@@ -59,7 +59,7 @@ public class ChunkProducerTest
         assertWholeFragments(chunks);
 
         int total = 0;
-        for(final List<SAMRecord> chunk : chunks)
+        for(List<SAMRecord> chunk : chunks)
         {
             total += chunk.size();
         }

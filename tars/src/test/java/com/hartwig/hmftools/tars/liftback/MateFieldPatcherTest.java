@@ -57,7 +57,7 @@ public class MateFieldPatcherTest
         assertEquals(400, r1.getMateAlignmentStart());
         assertTrue(r1.getMateNegativeStrandFlag());
         assertFalse(r1.getMateUnmappedFlag());
-        // leftmost R1 at 100, rightmost end R2 at 499 → span = 400, positive on R1
+        // leftmost R1 at 100, rightmost end R2 at 499 -> span = 400, positive on R1
         assertEquals(400, r1.getInferredInsertSize());
         // MC must reflect the partner's lifted CIGAR
         assertEquals("50M", r1.getStringAttribute(MATE_CIGAR_ATTRIBUTE));
@@ -101,7 +101,7 @@ public class MateFieldPatcherTest
         SAMRecord r2 = pairedMappedRecord("read1", false, "1", 400, "50M", true);
         MateFieldPatcher.patchMateFields(r2, cache);
 
-        // span = 449 - 100 + 1 = 350; R2 rightmost → negative TLEN
+        // span = 449 - 100 + 1 = 350; R2 rightmost -> negative TLEN
         assertEquals(-350, r2.getInferredInsertSize());
     }
 
@@ -242,7 +242,7 @@ public class MateFieldPatcherTest
         SAMRecord r2 = pairedMappedRecord("read1", false, "1", 100, "117M34S", false);
         MateFieldPatcher.patchMateFields(r2, cache);
 
-        // forward 5'=100, reverse 5'=211 → 211 - 100 + 1 = 112, positive on forward read
+        // forward 5'=100, reverse 5'=211 -> 211 - 100 + 1 = 112, positive on forward read
         assertEquals(112, r2.getInferredInsertSize());
     }
 }

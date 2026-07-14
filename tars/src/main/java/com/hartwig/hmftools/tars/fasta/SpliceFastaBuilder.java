@@ -137,7 +137,9 @@ public class SpliceFastaBuilder
 
         ContigSidecar.write(mappingsFile, contigEntries);
 
-        TARS_LOGGER.info("next: cat <ref.fasta> {} > ref_genome_<ver>_rna_contigs.fasta && bwa-mem2 index ref_genome_<ver>_rna_contigs.fasta",
+        TARS_LOGGER.info(
+                "next: cat <ref.fasta> {} > ref_genome_<ver>_rna_contigs.fasta"
+                        + " && bwa-mem2 index ref_genome_<ver>_rna_contigs.fasta",
                 fastaFile);
 
         TARS_LOGGER.info("SpliceFastaBuilder complete, mins({})", runTimeMinsStr(startTimeMs));
@@ -155,7 +157,7 @@ public class SpliceFastaBuilder
         ordered.sort(Comparator.comparingInt(exon -> exon.Start));
 
         List<BaseRegion> spans = new ArrayList<>(ordered.size());
-        for(final ExonData exon : ordered)
+        for(ExonData exon : ordered)
         {
             spans.add(new BaseRegion(exon.Start, exon.End));
         }
