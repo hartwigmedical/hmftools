@@ -2,6 +2,7 @@ package com.hartwig.hmftools.compar.cuppa;
 
 import static com.hartwig.hmftools.compar.common.CategoryType.CUPPA_IMAGE;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -48,16 +49,17 @@ public class CuppaImageComparer extends ImageComparer
     @Override
     public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final FileSources fileSources)
     {
+        final List<ComparableItem> comparableItems = new ArrayList<>();
         String plotPath = CuppaPredictions.generateVisPlotFilename(fileSources.Cuppa, sampleId);
         CuppaImageData imageData = new CuppaImageData(FLD_VIS_IMAGE, plotPath);
-        if(imageData.Image != null)
-        {
-            return List.of(imageData);
-        }
-        else
+
+        if(imageData.Image == null)
         {
             return null;
         }
+
+        comparableItems.add(imageData);
+        return comparableItems;
     }
 
     @Override
