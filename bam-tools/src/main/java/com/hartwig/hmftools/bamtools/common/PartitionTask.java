@@ -9,7 +9,6 @@ import java.io.File;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.bamtools.checker.CheckConfig;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.region.SpecificRegions;
 
@@ -30,7 +29,8 @@ public class PartitionTask
     }
 
     public static List<ChrBaseRegion> splitRegionsIntoPartitions(
-            final String bamFile, final String refGenomeFile, final int threads, final SpecificRegions specificRegions, final int partitionSize)
+            final String refGenomeFile, final int threads, final int partitionSize, final String bamFile,
+            final SpecificRegions specificRegions)
     {
         List<ChrBaseRegion> partitionRegions = Lists.newArrayList();
 
@@ -87,7 +87,7 @@ public class PartitionTask
 
         SAMFileHeader fileHeader = samReader.getFileHeader().clone();
 
-        for(final SAMSequenceRecord sequenceRecord : fileHeader.getSequenceDictionary().getSequences())
+        for(SAMSequenceRecord sequenceRecord : fileHeader.getSequenceDictionary().getSequences())
         {
             String chromosome = sequenceRecord.getSequenceName();
 

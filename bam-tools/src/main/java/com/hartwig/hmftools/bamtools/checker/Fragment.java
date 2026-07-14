@@ -112,19 +112,22 @@ public class Fragment
             if((mFirstUnmapped && read.getFirstOfPairFlag()) || (mSecondUnmapped && !read.getFirstOfPairFlag()))
                 return;
 
+            if(isInvalidRead(read))
+                return;
+
             ++mReceivedSupplementaryCount;
         }
         else
         {
             if(read.getFirstOfPairFlag())
             {
-                mFirstUnmapped = belowMinAlignmentScore(read);
+                mFirstUnmapped = shouldUnmapRead(read);
                 mFirstPrimaryCigar = !mFirstUnmapped ? read.getCigarString() : NO_CIGAR;
 
             }
             else
             {
-                mSecondUnmapped = belowMinAlignmentScore(read);
+                mSecondUnmapped = shouldUnmapRead(read);
                 mSecondPrimaryCigar = !mSecondUnmapped ? read.getCigarString() : NO_CIGAR;
             }
 
@@ -137,8 +140,19 @@ public class Fragment
         mReads.add(read);
     }
 
-    private boolean belowMinAlignmentScore(final SAMRecord read)
+    private boolean shouldUnmapRead(final SAMRecord read)
     {
+        if(read.getReadUnmappedFlag())
+            return false;
+
+        return isInvalidRead(read);
+    }
+
+    private boolean isInvalidRead(final SAMRecord read)
+    {
+        if(!CheckConfig.Params.ValidContigs.contains(read.getReferenceName()))
+            return true;
+
         Integer asScore = read.getIntegerAttribute(ALIGNMENT_SCORE_ATTRIBUTE);
         return asScore != null && asScore.intValue() < CheckConfig.Params.MinAlignmentScore;
     }
@@ -162,6 +176,9 @@ public class Fragment
 
         for(SupplementaryReadData suppData : suppDataList)
         {
+            if(!CheckConfig.Params.ValidContigs.contains(suppData.Chromosome))
+                continue;
+
             Cigar suppCigar = CigarUtils.cigarFromStr(suppData.Cigar);
             int alignedBases = suppCigar.getCigarElements().stream()
                     .filter(x -> x.getOperator() == M).mapToInt(x -> x.getLength()).sum();

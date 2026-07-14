@@ -32,7 +32,7 @@ public class BamTester
         BT_LOGGER.info("running BAM tester");
 
         List<ChrBaseRegion> partitionRegions = PartitionTask.splitRegionsIntoPartitions(
-                mConfig.BamFile, mConfig.RefGenomeFile, mConfig.Threads, mConfig.SpecificChrRegions, mConfig.PartitionSize);
+                mConfig.RefGenomeFile, mConfig.Threads, mConfig.PartitionSize, mConfig.BamFile, mConfig.SpecificChrRegions);
 
         List<PartitionTester> partitionTesters = Lists.newArrayList();
         List<Thread> threadTasks = Lists.newArrayList();

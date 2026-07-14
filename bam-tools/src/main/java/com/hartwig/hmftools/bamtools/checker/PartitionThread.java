@@ -67,7 +67,7 @@ public class PartitionThread extends Thread
     public static List<ChrBaseRegion> splitRegionsIntoPartitions(final CheckConfig config)
     {
         return PartitionTask.splitRegionsIntoPartitions(
-                config.BamFile, config.RefGenomeFile, config.Threads, config.SpecificChrRegions, config.PartitionSize);
+                config.RefGenomeFile, config.Threads, config.PartitionSize, config.BamFile, config.SpecificChrRegions);
     }
 
     public FragmentStats stats() { return mPartitionChecker.stats(); }

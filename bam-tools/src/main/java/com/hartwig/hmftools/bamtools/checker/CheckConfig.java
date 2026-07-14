@@ -31,9 +31,12 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.pathFromFil
 import java.util.List;
 
 import com.hartwig.hmftools.common.bamops.BamToolName;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.SpecificRegions;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+
+import htsjdk.samtools.SAMSequenceRecord;
 
 public class CheckConfig
 {
@@ -70,7 +73,6 @@ public class CheckConfig
     public static final String MIN_ALIGNMENT_SCORE = "min_align_score";
     public static final String SORT_THREAD_MEMORY = "sort_thread_mem";
 
-
     public static final String WRITE_INCOMPLETE_FRAGS = "write_incompletes";
     public static final String MAX_WRITE_INCOMPLETE_FRAGS = "max_write_incompletes";
     public static final String DROP_INCOMPLETE_FRAGS = "drop_incompletes";
@@ -105,6 +107,13 @@ public class CheckConfig
 
         Params.MinAlignmentScore = configBuilder.getInteger(MIN_ALIGNMENT_SCORE);
         Params.ConvertHardClips = configBuilder.hasFlag(CONVERT_HARD_CLIPS);
+
+        RefGenomeSource refGenome = RefGenomeSource.loadRefGenome(RefGenomeFile);
+
+        for(SAMSequenceRecord sequenceRecord : refGenome.refGenomeFile().getSequenceDictionary().getSequences())
+        {
+            Params.ValidContigs.add(sequenceRecord.getSequenceName());
+        }
 
         SpecificChrRegions = new SpecificRegions();
         loadSpecificRegionsConfig(configBuilder, SpecificChrRegions.Chromosomes, SpecificChrRegions.Regions);

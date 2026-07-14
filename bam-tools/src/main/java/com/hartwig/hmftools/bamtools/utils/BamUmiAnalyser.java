@@ -50,7 +50,7 @@ public class BamUmiAnalyser
         BufferedWriter writer = initialiseWriter();
 
         List<ChrBaseRegion> partitionRegions = PartitionTask.splitRegionsIntoPartitions(
-                mConfig.RawBamFile, mConfig.RefGenomeFile, mConfig.Threads, mConfig.SpecificChrRegions, mConfig.PartitionSize);
+                mConfig.RefGenomeFile, mConfig.Threads, mConfig.PartitionSize, mConfig.RawBamFile, mConfig.SpecificChrRegions);
 
         List<PartitionUmiAnalyser> partitionUmiAnalysers = Lists.newArrayList();
         List<Thread> threadTasks = Lists.newArrayList();

@@ -10,6 +10,8 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRI
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.XS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SupplementaryReadData.SUPP_POS_STRAND;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_3;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.buildBaseQuals;
 
 import static org.junit.Assert.assertEquals;
@@ -40,6 +42,7 @@ public class BamCheckerTest
     public BamCheckerTest()
     {
         CheckConfig.Params.MinAlignmentScore = 10;
+        CheckConfig.Params.ValidContigs.add(CHR_1);
     }
 
     @Test
@@ -222,6 +225,8 @@ public class BamCheckerTest
         assertTrue(read2.getMateUnmappedFlag());
 
         // test again with the supp arriving first
+        read1.setReadUnmappedFlag(false);
+
         fragment = new Fragment(supp1);
         fragment.addRead(read2);
         fragment.addRead(read1);
@@ -283,7 +288,89 @@ public class BamCheckerTest
         assertNull(read2.getAttribute(SUPPLEMENTARY_ATTRIBUTE));
     }
 
-        @Test
+    @Test
+    public void testInvalidContigs()
+    {
+        // R2 and R1's supp are in invalid contigs - only chr1 is valid
+        SAMRecord read1 = SamRecordTestUtils.createSamRecord(
+                READ_ID_GENERATOR.nextId(), CHR_1, 100, TEST_READ_BASES, TEST_CIGAR, CHR_1, 300,
+                false, false, new SupplementaryReadData(CHR_3, 200, SUPP_POS_STRAND, TEST_CIGAR, 60));
+
+        SAMRecord read2 = SamRecordTestUtils.createSamRecord(
+                read1.getReadName(), CHR_2, 300, TEST_READ_BASES, TEST_CIGAR, CHR_1, 100,
+                true, false, new SupplementaryReadData(CHR_1, 400, SUPP_POS_STRAND, TEST_CIGAR, 60));
+        SamRecordTestUtils.flipFirstInPair(read2);
+
+        SAMRecord supp1 = SamRecordTestUtils.createSamRecord(
+                read1.getReadName(), CHR_3, 200, TEST_READ_BASES, TEST_CIGAR, CHR_1, 300,
+                false, true, new SupplementaryReadData(CHR_1, 100, SUPP_POS_STRAND, TEST_CIGAR, 60));
+
+        SAMRecord supp2 = SamRecordTestUtils.createSamRecord(
+                read1.getReadName(), CHR_1, 400, TEST_READ_BASES, TEST_CIGAR, CHR_1, 100,
+                true, true, new SupplementaryReadData(CHR_2, 300, SUPP_POS_STRAND, TEST_CIGAR, 60));
+        SamRecordTestUtils.flipFirstInPair(supp2);
+
+        Fragment fragment = new Fragment(read1);
+        fragment.addRead(read2);
+        fragment.addRead(supp1);
+        fragment.addRead(supp2);
+        List<SAMRecord> reads = fragment.extractCompleteReads();
+
+        assertEquals(0, fragment.expectedSupplementaryCount());
+        assertEquals(0, fragment.receivedSupplementaryCount());
+        assertEquals(2, reads.size());
+
+        assertTrue(reads.contains(read1));
+        assertTrue(reads.contains(read2));
+
+        assertTrue(read2.getReadUnmappedFlag());
+        assertTrue(read1.getMateUnmappedFlag());
+
+        assertFalse(reads.contains(supp1));
+        assertFalse(reads.contains(supp2));
+
+        // repeat where both R1 and R2 are in invalid contigs
+        read1 = SamRecordTestUtils.createSamRecord(
+                READ_ID_GENERATOR.nextId(), CHR_2, 100, TEST_READ_BASES, TEST_CIGAR, CHR_2, 300,
+                false, false, new SupplementaryReadData(CHR_1, 200, SUPP_POS_STRAND, TEST_CIGAR, 60));
+
+        read2 = SamRecordTestUtils.createSamRecord(
+                read1.getReadName(), CHR_2, 300, TEST_READ_BASES, TEST_CIGAR, CHR_2, 100,
+                true, false, new SupplementaryReadData(CHR_1, 400, SUPP_POS_STRAND, TEST_CIGAR, 60));
+        SamRecordTestUtils.flipFirstInPair(read2);
+
+        supp1 = SamRecordTestUtils.createSamRecord(
+                read1.getReadName(), CHR_1, 200, TEST_READ_BASES, TEST_CIGAR, CHR_1, 300,
+                false, true, new SupplementaryReadData(CHR_2, 100, SUPP_POS_STRAND, TEST_CIGAR, 60));
+
+        supp2 = SamRecordTestUtils.createSamRecord(
+                read1.getReadName(), CHR_1, 400, TEST_READ_BASES, TEST_CIGAR, CHR_1, 100,
+                true, true, new SupplementaryReadData(CHR_2, 300, SUPP_POS_STRAND, TEST_CIGAR, 60));
+        SamRecordTestUtils.flipFirstInPair(supp2);
+
+        fragment = new Fragment(read1);
+        fragment.addRead(read2);
+        fragment.addRead(supp1);
+        fragment.addRead(supp2);
+        reads = fragment.extractCompleteReads();
+
+        assertEquals(0, fragment.expectedSupplementaryCount());
+        assertEquals(0, fragment.receivedSupplementaryCount());
+        assertEquals(2, reads.size());
+
+        assertTrue(reads.contains(read1));
+        assertTrue(reads.contains(read2));
+
+        assertTrue(read1.getReadUnmappedFlag());
+        assertTrue(read1.getMateUnmappedFlag());
+        assertTrue(read2.getReadUnmappedFlag());
+        assertTrue(read2.getMateUnmappedFlag());
+
+        assertFalse(reads.contains(supp1));
+        assertFalse(reads.contains(supp2));
+    }
+
+    @Test
     public void testFragmentCache()
     {
         SAMRecord read1 = SamRecordTestUtils.createSamRecord(
