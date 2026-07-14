@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.compar.common.CurationType.NONE;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -242,9 +243,23 @@ public class MismatchWriter
 
     private List<Field> determineDisplayFields(final ItemComparer comparer)
     {
-        MatchLevel matchLevel = mConfig.Categories.get(comparer.category());
+        CategoryType category = comparer.category();
+        MatchLevel matchLevel = mConfig.Categories.get(category);
         Map<String, Field> fieldNameToField = comparer.fields(matchLevel).stream().collect(Collectors.toMap(Field::name, f -> f));
 
-        return comparer.displayFieldNames().stream().map(fieldNameToField::get).collect(Collectors.toList());
+        List<Field> list = new ArrayList<>();
+        for(String fieldName : comparer.displayFieldNames())
+        {
+            if(fieldNameToField.containsKey(fieldName))
+            {
+                Field field = fieldNameToField.get(fieldName);
+                list.add(field);
+            }
+            else
+            {
+                throw new IllegalArgumentException("Missing field %s for category %s".formatted(fieldName, category));
+            }
+        }
+        return list;
     }
 }
