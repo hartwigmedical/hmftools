@@ -8,15 +8,10 @@ import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SOMATIC
 
 import static org.jooq.impl.DSL.count;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.purple.PurityContext;
-import com.hartwig.hmftools.common.purple.PurityContextFile;
 import com.hartwig.hmftools.common.purple.PurpleCommon;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.HotspotType;
@@ -114,20 +109,7 @@ public class SampleDataLoader
             }
         }
 
-        PurityContext purityContext = mDbAccess.readPurityContext(sample);
-
-        double purity = 0;
-
-        if(purityContext == null)
-        {
-            DN_LOGGER.warn("sample({}) missing purity info", sample);
-        }
-        else
-        {
-            purity = purityContext.bestFit().purity();
-        }
-
-        return new SampleMutationalLoad(purity, snvBiallelic, snvNonBiallelic, indelBiallelic, indelNonBiallelic);
+        return new SampleMutationalLoad(snvBiallelic, snvNonBiallelic, indelBiallelic, indelNonBiallelic);
     }
 
     private List<SomaticVariant> readDndsVariants(final String sample, int maxRepeatCount)
@@ -243,19 +225,7 @@ public class SampleDataLoader
             }
         }
 
-        double purity = 0;
-        try
-        {
-            PurityContext purityContext = PurityContextFile.read(mPurpleDir, sample);
-            purity = purityContext.bestFit().purity();
-        }
-        catch(IOException e)
-        {
-            DN_LOGGER.error("sample({}) purple purity file not found", sample);
-            System.exit(1);
-        }
-
-        SampleMutationalLoad mutationalLoad = new SampleMutationalLoad(purity, snvBiallelic, snvNonBiallelic, indelBiallelic, indelNonBiallelic);
+        SampleMutationalLoad mutationalLoad = new SampleMutationalLoad(snvBiallelic, snvNonBiallelic, indelBiallelic, indelNonBiallelic);
 
         return new SampleData(variants, mutationalLoad);
     }
