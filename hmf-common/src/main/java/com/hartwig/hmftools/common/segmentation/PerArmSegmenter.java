@@ -49,7 +49,7 @@ public abstract class PerArmSegmenter<T extends GenomePosition>
                 }
             });
         });
-        ArmToRatios.keySet().forEach(chrArm -> mDataByArm.put(chrArm, buildSegmentationData(ArmToRatios.get(chrArm))));
+        ArmToRatios.keySet().stream().sorted().forEach(chrArm -> mDataByArm.put(chrArm, buildSegmentationData(ArmToRatios.get(chrArm))));
         int totalCount = mDataByArm.values().stream().mapToInt(DataForSegmentation::count).sum();
         int position = 0;
         if(totalCount < uniformPenaltyThreshold)
