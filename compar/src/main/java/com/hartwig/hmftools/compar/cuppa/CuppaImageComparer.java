@@ -20,7 +20,7 @@ import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class CuppaImageComparer extends ImageComparer
 {
-    public static final String FLD_VIS_IMAGE = "cuppa_vis_image";
+    public static final String IMAGE_NAME = "cuppa_vis_image";
 
     private final ComparConfig mConfig;
 
@@ -51,7 +51,7 @@ public class CuppaImageComparer extends ImageComparer
     {
         final List<ComparableItem> comparableItems = new ArrayList<>();
         String plotPath = CuppaPredictions.generateVisPlotFilename(fileSources.Cuppa, sampleId);
-        CuppaImageData imageData = new CuppaImageData(FLD_VIS_IMAGE, plotPath);
+        CuppaImageData imageData = new CuppaImageData(IMAGE_NAME, plotPath);
 
         if(imageData.Image == null)
         {
