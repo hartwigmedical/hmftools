@@ -52,9 +52,16 @@ public class BreakendsField implements Field
     @Override
     public String displayValue(final ComparableItem item)
     {
-        return extractValue.apply(item).stream()
-                .map(d -> d.fullStr(true))
-                .collect(Collectors.joining(DISPLAY_VALUE_DELIMITER));
+        if(item.isValid())
+        {
+            return extractValue.apply(item).stream()
+                    .map(d -> d.fullStr(true))
+                    .collect(Collectors.joining(DISPLAY_VALUE_DELIMITER));
+        }
+        else
+        {
+            return "";
+        }
     }
 
     @Override

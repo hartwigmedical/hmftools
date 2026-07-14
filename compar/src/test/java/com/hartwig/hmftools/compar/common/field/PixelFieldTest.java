@@ -8,6 +8,9 @@ import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.util.List;
 
+import com.hartwig.hmftools.compar.common.CategoryType;
+import com.hartwig.hmftools.compar.common.InvalidDataItem;
+
 import org.junit.Test;
 
 public class PixelFieldTest
@@ -62,6 +65,13 @@ public class PixelFieldTest
     {
         PixelField field = field(0., null);
         assertEquals("", field.displayValue(new TestFieldItem<>(createImage(50))));
+    }
+
+    @Test
+    public void displayValueIsEmptyForInvalidItem()
+    {
+        PixelField field = field(0., null);
+        assertEquals("", field.displayValue(new InvalidDataItem(CategoryType.PURITY)));
     }
 
     @Test

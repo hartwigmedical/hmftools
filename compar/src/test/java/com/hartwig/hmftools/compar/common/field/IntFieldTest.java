@@ -5,6 +5,9 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import com.hartwig.hmftools.compar.common.CategoryType;
+import com.hartwig.hmftools.compar.common.InvalidDataItem;
+
 import org.junit.Test;
 
 public class IntFieldTest
@@ -46,6 +49,13 @@ public class IntFieldTest
         IntField field = field(null, null);
         assertEquals("5", field.displayValue(new TestFieldItem<>(5)));
         assertEquals("-3", field.displayValue(new TestFieldItem<>(-3)));
+    }
+
+    @Test
+    public void displayValueIsEmptyForInvalidItem()
+    {
+        IntField field = field(null, null);
+        assertEquals("", field.displayValue(new InvalidDataItem(CategoryType.PURITY)));
     }
 
     @Test

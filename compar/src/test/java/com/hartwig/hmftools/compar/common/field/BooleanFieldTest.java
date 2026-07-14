@@ -7,6 +7,9 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
+import com.hartwig.hmftools.compar.common.CategoryType;
+import com.hartwig.hmftools.compar.common.InvalidDataItem;
+
 import org.junit.Test;
 
 public class BooleanFieldTest
@@ -32,6 +35,13 @@ public class BooleanFieldTest
         BooleanField field = field(true);
         assertEquals("TRUE", field.displayValue(new TestFieldItem<>(true)));
         assertEquals("FALSE", field.displayValue(new TestFieldItem<>(false)));
+    }
+
+    @Test
+    public void displayValueIsEmptyForInvalidItem()
+    {
+        BooleanField field = field(true);
+        assertEquals("", field.displayValue(new InvalidDataItem(CategoryType.PURITY)));
     }
 
     @Test

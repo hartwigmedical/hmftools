@@ -44,7 +44,7 @@ public class StringField implements Field
     @Override
     public String displayValue(final ComparableItem item)
     {
-        return extractValue.apply(item);
+        return item.isValid() ? extractValue.apply(item) : "";
     }
 
     @Override

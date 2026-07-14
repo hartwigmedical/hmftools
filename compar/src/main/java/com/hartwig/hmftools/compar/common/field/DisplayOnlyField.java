@@ -42,7 +42,7 @@ public class DisplayOnlyField implements Field
     @Override
     public String displayValue(final ComparableItem item)
     {
-        return hasValue(item) ? extractValue.apply(item) : "";
+        return item.isValid() && hasValue(item) ? extractValue.apply(item) : "";
     }
 
     @Override

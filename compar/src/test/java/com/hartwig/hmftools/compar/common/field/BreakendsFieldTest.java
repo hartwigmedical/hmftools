@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.Set;
 
 import com.hartwig.hmftools.common.gene.TranscriptRegionType;
+import com.hartwig.hmftools.compar.common.CategoryType;
+import com.hartwig.hmftools.compar.common.InvalidDataItem;
 import com.hartwig.hmftools.compar.linx.BreakendData;
 import com.hartwig.hmftools.compar.linx.TestBreakendDataBuilder;
 
@@ -40,6 +42,12 @@ public class BreakendsFieldTest
 
         String expected = breakend1.fullStr(true) + Field.DISPLAY_VALUE_DELIMITER + breakend2.fullStr(true);
         assertEquals(expected, field(true).displayValue(new TestFieldItem<>(List.of(breakend1, breakend2))));
+    }
+
+    @Test
+    public void displayValueIsEmptyForInvalidItem()
+    {
+        assertEquals("", field(true).displayValue(new InvalidDataItem(CategoryType.PURITY)));
     }
 
     @Test

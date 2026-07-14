@@ -5,6 +5,9 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import com.hartwig.hmftools.compar.common.CategoryType;
+import com.hartwig.hmftools.compar.common.InvalidDataItem;
+
 import org.junit.Test;
 
 public class DoubleFieldTest
@@ -46,6 +49,13 @@ public class DoubleFieldTest
         DoubleField field = field(null, null);
         assertEquals("5.0", field.displayValue(new TestFieldItem<>(5.0)));
         assertEquals("-3.1", field.displayValue(new TestFieldItem<>(-3.14)));
+    }
+
+    @Test
+    public void displayValueIsEmptyForInvalidItem()
+    {
+        DoubleField field = field(null, null);
+        assertEquals("", field.displayValue(new InvalidDataItem(CategoryType.PURITY)));
     }
 
     @Test

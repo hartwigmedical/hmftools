@@ -79,7 +79,7 @@ public class DoubleField implements Field
     @Override
     public String displayValue(final ComparableItem item)
     {
-        return format(formatString,  extractValue.apply(item));
+        return item.isValid() ? format(formatString,  extractValue.apply(item)) : "";
     }
 
     @Override

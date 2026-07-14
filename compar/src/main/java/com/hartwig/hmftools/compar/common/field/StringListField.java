@@ -45,7 +45,7 @@ public class StringListField implements Field
     @Override
     public String displayValue(final ComparableItem item)
     {
-        return String.join(DISPLAY_VALUE_DELIMITER, extractValue.apply(item));
+        return item.isValid() ? String.join(DISPLAY_VALUE_DELIMITER, extractValue.apply(item)) : "";
     }
 
     @Override

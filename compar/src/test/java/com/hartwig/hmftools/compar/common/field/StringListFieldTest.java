@@ -7,6 +7,9 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
+import com.hartwig.hmftools.compar.common.CategoryType;
+import com.hartwig.hmftools.compar.common.InvalidDataItem;
+
 import org.junit.Test;
 
 public class StringListFieldTest
@@ -32,6 +35,13 @@ public class StringListFieldTest
         StringListField field = field(true);
         assertEquals("A;B;C", field.displayValue(new TestFieldItem<>(List.of("A", "B", "C"))));
         assertEquals("", field.displayValue(new TestFieldItem<>(List.of())));
+    }
+
+    @Test
+    public void displayValueIsEmptyForInvalidItem()
+    {
+        StringListField field = field(true);
+        assertEquals("", field.displayValue(new InvalidDataItem(CategoryType.PURITY)));
     }
 
     @Test

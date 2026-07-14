@@ -7,6 +7,9 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
+import com.hartwig.hmftools.compar.common.CategoryType;
+import com.hartwig.hmftools.compar.common.InvalidDataItem;
+
 import org.junit.Test;
 
 public class StringFieldTest
@@ -32,6 +35,13 @@ public class StringFieldTest
         StringField field = field(true);
         assertEquals("hello", field.displayValue(new TestFieldItem<>("hello")));
         assertEquals("", field.displayValue(new TestFieldItem<>("")));
+    }
+
+    @Test
+    public void displayValueIsEmptyForInvalidItem()
+    {
+        StringField field = field(true);
+        assertEquals("", field.displayValue(new InvalidDataItem(CategoryType.PURITY)));
     }
 
     @Test

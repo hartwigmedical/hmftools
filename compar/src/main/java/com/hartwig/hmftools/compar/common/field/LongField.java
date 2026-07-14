@@ -76,7 +76,7 @@ public class LongField implements Field
     @Override
     public String displayValue(final ComparableItem item)
     {
-        return extractValue.apply(item).toString();
+        return item.isValid() ? extractValue.apply(item).toString() : "";
     }
 
     @Override

@@ -23,4 +23,10 @@ public class InvalidDataItem implements ComparableItem
     {
         return null;
     }
+
+    @Override
+    public boolean isValid()
+    {
+        return false;
+    }
 }

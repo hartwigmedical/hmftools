@@ -36,4 +36,9 @@ public interface ComparableItem
     {
         return true;
     }
+
+    default boolean isValid()
+    {
+        return true;
+    }
 }
