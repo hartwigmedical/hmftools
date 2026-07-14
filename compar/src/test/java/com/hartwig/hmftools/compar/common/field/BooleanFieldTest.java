@@ -30,11 +30,11 @@ public class BooleanFieldTest
     }
 
     @Test
-    public void displayValueIsUpperCase()
+    public void displayValueIsLowerCase()
     {
         BooleanField field = field(true);
-        assertEquals("TRUE", field.displayValue(new TestFieldItem<>(true)));
-        assertEquals("FALSE", field.displayValue(new TestFieldItem<>(false)));
+        assertEquals("true", field.displayValue(new TestFieldItem<>(true)));
+        assertEquals("false", field.displayValue(new TestFieldItem<>(false)));
     }
 
     @Test
@@ -65,7 +65,7 @@ public class BooleanFieldTest
     {
         BooleanField field = field(true);
         List<String> diffs = field.determineDiffs(new TestFieldItem<>(true), new TestFieldItem<>(false));
-        assertEquals(List.of("BoolField(TRUE/FALSE)"), diffs);
+        assertEquals(List.of("BoolField(true/false)"), diffs);
     }
 
     @Test
@@ -81,7 +81,7 @@ public class BooleanFieldTest
         BooleanField field = field(true);
         Field updated = field.withCompared(false);
         assertFalse(updated.isCompared());
-        assertEquals("TRUE", updated.displayValue(new TestFieldItem<>(true)));
+        assertEquals("true", updated.displayValue(new TestFieldItem<>(true)));
     }
 
     @Test

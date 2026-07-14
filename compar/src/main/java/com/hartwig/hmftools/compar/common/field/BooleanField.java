@@ -44,7 +44,7 @@ public class BooleanField implements Field
     @Override
     public String displayValue(final ComparableItem item)
     {
-        return item.isValid() ? extractValue.apply(item).toString().toUpperCase() : "";
+        return item.isValid() ? extractValue.apply(item).toString() : "";
     }
 
     @Override
