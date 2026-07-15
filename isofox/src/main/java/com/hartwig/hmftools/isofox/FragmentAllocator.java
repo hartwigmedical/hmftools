@@ -122,8 +122,7 @@ public class FragmentAllocator
 
     private final EnsemblDataCache mGeneTransCache;
 
-    // multi-map fan-out fragment shares accrued per gene, split as [spliced, unspliced] so they are booked into the
-    // correct gene-level allocation downstream rather than all counted as spliced
+    // per-gene multi-map fan-out shares, [spliced, unspliced]
     private final Map<String,double[]> mMultiMapGeneCounts;
 
     public static final int MULTI_MAP_SPLICED = 0;
@@ -857,11 +856,6 @@ public class FragmentAllocator
 
     public Map<String,double[]> getMultiMapGeneCounts() { return mMultiMapGeneCounts; }
 
-    // an alt inside a gene's intron supports no transcript, so crediting it (as the old full-gene-span match did)
-    // lets big intronic genes harvest unrelated multimappers; only exonic overlaps are credited. Mass is
-    // renormalised over the loci that clear the gate (primary + exon-supported alts) so an off-exon alt's share
-    // shifts to the survivors rather than being dropped; the returned count is the denominator the caller then
-    // weights the primary locus by.
     private int fanOutMultiMappedFragment(final List<Read.AltAlignment> altLoci, int numLoci)
     {
         if(altLoci == null || mGeneTransCache == null)
@@ -893,7 +887,7 @@ public class FragmentAllocator
             List<GeneData> exonicGenes = altExonicGenes.get(i);
 
             if(exonicGenes.isEmpty())
-                continue;
+                continue; // alt overlaps no exon - not credited to any gene
 
             double geneWeight = locusWeight / exonicGenes.size();
             int index = altLoci.get(i).Spliced ? MULTI_MAP_SPLICED : MULTI_MAP_UNSPLICED;

@@ -33,19 +33,18 @@ import com.hartwig.hmftools.isofox.results.ResultsWriter;
 
 import org.junit.Test;
 
-// exercises the multi-map fan-out numerics (exon gate, mass renormalisation, spliced bucketing, divergent-mate
-// pinning) end-to-end through processReadRecords; MultiMapReadTest separately covers XA-string parsing
+// fan-out numerics (exon gate, renormalisation, spliced bucketing, mate pinning) via processReadRecords
 public class MultiMapFanOutTest
 {
     private static final double EPSILON = 1e-6;
 
-    // GENE4 exon1 on chr2 (1000-1100); an alt landing here is exon-supported
+    // GENE4 exon1 on chr2 (1000-1100)
     private static final ChrBaseRegion GENE4_EXON = new ChrBaseRegion(CHR_2, 1000, 1099);
 
-    // GENE3 exon1 on chr1 (20000-20100); another exon-supported locus
+    // GENE3 exon1 on chr1 (20000-20100)
     private static final ChrBaseRegion GENE3_EXON = new ChrBaseRegion(CHR_1, 20000, 20099);
 
-    // between GENE2 exon1 (10000-10100) and exon2 (10200-10300); overlaps the gene span but no exon
+    // GENE2 intron, between exon1 (10000-10100) and exon2 (10200-10300)
     private static final ChrBaseRegion GENE2_INTRON = new ChrBaseRegion(CHR_1, 10120, 10180);
 
     private static FragmentAllocator createAllocator(final EnsemblDataCache geneTransCache)
@@ -56,7 +55,7 @@ public class MultiMapFanOutTest
         return new FragmentAllocator(config, geneTransCache, ALT_SJ_COHORT_CACHE, new ResultsWriter(config));
     }
 
-    // a concordant, non-chimeric pair mapped inside GENE1 on chr1; the caller then attaches XA alt loci
+    // concordant non-chimeric pair inside GENE1 on chr1
     private static Read[] createGene1Pair()
     {
         Read read1 = createReadRecord(1, CHR_1, 1000, 1099, generateRandomBases(100), createCigar(0, 100, 0));
@@ -92,8 +91,7 @@ public class MultiMapFanOutTest
 
         Map<String,double[]> counts = allocator.getMultiMapGeneCounts();
 
-        // the intronic alt supports no transcript so it is not credited and does not inflate the locus count;
-        // the fragment renormalises over the surviving loci (primary + GENE4) so GENE4 gets 1/2, not 1/3
+        // intronic alt not credited; renormalises over primary + GENE4, so GENE4 = 1/2 not 1/3
         assertFalse(counts.containsKey(GENE_ID_2));
         assertTrue(counts.containsKey(GENE_ID_4));
         assertEquals(0.5, counts.get(GENE_ID_4)[MULTI_MAP_UNSPLICED], EPSILON);
