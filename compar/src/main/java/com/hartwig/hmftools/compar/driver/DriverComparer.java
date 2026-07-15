@@ -12,6 +12,10 @@ import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.CommonUtils.determineComparisonChromosome;
 import static com.hartwig.hmftools.compar.common.SourceType.NEW;
 import static com.hartwig.hmftools.compar.common.SourceType.OLD;
+import static com.hartwig.hmftools.compar.driver.DriverData.FLD_LIKELIHOOD;
+import static com.hartwig.hmftools.compar.driver.DriverData.FLD_LIKE_METHOD;
+import static com.hartwig.hmftools.compar.driver.DriverData.FLD_MAX_COPY_NUMBER;
+import static com.hartwig.hmftools.compar.driver.DriverData.FLD_MIN_COPY_NUMBER;
 import static com.hartwig.hmftools.compar.purple.PurityComparer.FLD_PLOIDY;
 import static com.hartwig.hmftools.compar.purple.PurityComparer.FLD_PURITY;
 
@@ -51,11 +55,6 @@ import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class DriverComparer implements ItemComparer
 {
-    protected static final String FLD_LIKELIHOOD = "Likelihood";
-    protected static final String FLD_LIKE_METHOD = "LikelihoodMethod";
-    protected static final String FLD_MIN_COPY_NUMBER = "MinCopyNumber";
-    protected static final String FLD_MAX_COPY_NUMBER = "MaxCopyNumber";
-
     private final ComparConfig mConfig;
 
     private final Map<SourceType,List<DriverCatalog>> mDrivers;
@@ -196,7 +195,7 @@ public class DriverComparer implements ItemComparer
 
         for(DriverCatalog driverCatalog : drivers)
         {
-            items.add(createDriverData(driverCatalog, mPurities.get(sourceType)));
+            items.add(createDriverData(driverCatalog, mPurities.get(sourceType), true));
         }
 
         // create non-reportable CN driver events if present in the other source
@@ -225,7 +224,7 @@ public class DriverComparer implements ItemComparer
             builder.driverLikelihood(0);
             builder.reportedStatus(ReportedStatus.NOT_REPORTED);
 
-            items.add(createDriverData(builder.build(), mPurities.get(sourceType)));
+            items.add(createDriverData(builder.build(), mPurities.get(sourceType), false));
         }
 
         return items;
@@ -243,10 +242,10 @@ public class DriverComparer implements ItemComparer
         return createDriverItems(fileSources.Source);
     }
 
-    private DriverData createDriverData(final DriverCatalog driver, final PurplePurity purity)
+    private DriverData createDriverData(final DriverCatalog driver, final PurplePurity purity, final boolean isPass)
     {
         boolean checkTranscript = mConfig.AlternateTranscriptDriverGenes.contains(driver.gene());
         String comparisonChromosome = determineComparisonChromosome(driver.chromosome(), mConfig.RequiresLiftover);
-        return new DriverData(driver, purity, comparisonChromosome, checkTranscript);
+        return new DriverData(driver, purity, comparisonChromosome, checkTranscript, isPass);
     }
 }
