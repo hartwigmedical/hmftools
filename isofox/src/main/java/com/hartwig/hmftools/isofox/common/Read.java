@@ -111,8 +111,7 @@ public class Read
         return read;
     }
 
-    // An alternate mapping locus from the XA tag: its genomic span and whether that alignment is itself spliced.
-    // The span and splice status drive exon-aware, category-correct multi-map fan-out downstream.
+    // an alternate mapping locus from the XA tag: its genomic span and whether that alignment is spliced
     public static class AltAlignment
     {
         public final ChrBaseRegion Region;
@@ -147,8 +146,7 @@ public class Read
             {
                 int position = Math.abs(Integer.parseInt(fields[1]));
 
-                // the alt CIGAR (field 3) gives the reference span and splice status; fall back to a single base
-                // when it is absent so the locus is still gene-matched, just not exon-precise
+                // alt CIGAR gives the ref span and splice status; fall back to a single base when absent
                 int refLength = 1;
                 boolean spliced = false;
                 String cigarStr = fields.length > 2 ? fields[2] : null;
