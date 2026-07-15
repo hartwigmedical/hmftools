@@ -96,15 +96,14 @@ public class DriverData implements ComparableItem
     public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final FieldConfig fieldConfig,
             final boolean includeMatches)
     {
-        final DriverData otherData = (DriverData) other;
         final List<String> diffs = Lists.newArrayList();
         List<String> alwaysCompareFields = List.of(
                 FLD_LIKE_METHOD, FLD_MIN_COPY_NUMBER, FLD_MAX_COPY_NUMBER, FLD_CHROMOSOME, FLD_CHROMOSOME_BAND);
-        diffs.addAll(findDiffs(this, otherData, fieldConfig.getFields(category(), alwaysCompareFields)));
+        diffs.addAll(findDiffs(this, other, fieldConfig.getFields(category(), alwaysCompareFields)));
 
-        if(isPass() && otherData.isPass())
+        if(isPass() && other.isPass())
         {
-            diffs.addAll(findDiffs(this, otherData, fieldConfig.getFields(category(), List.of(FLD_LIKELIHOOD))));
+            diffs.addAll(findDiffs(this, other, fieldConfig.getFields(category(), List.of(FLD_LIKELIHOOD))));
         }
         return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches);
     }

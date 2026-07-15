@@ -398,11 +398,6 @@ public class CommonUtils
             final ComparableItem refItem, final ComparableItem newItem, final List<String> diffs,
             final MatchLevel matchLevel, final boolean includeMatches)
     {
-        if(diffs.isEmpty() && !includeMatches)
-        {
-            return null;
-        }
-
         boolean refCountsAsCalled = countsAsCalled(refItem, matchLevel);
         boolean newCountsAsCalled = countsAsCalled(newItem, matchLevel);
         if(!refCountsAsCalled && !newCountsAsCalled)
