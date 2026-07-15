@@ -64,12 +64,12 @@ public class BamMetricsComparer implements ItemComparer
     {
         List<Field> fields = Lists.newArrayList();
         fields.add(new DoubleField(FLD_DUPLICATE_PERCENTAGE, i -> ((BamMetricsData) i).metrics().duplicatePercent(),
-                true, DUPLICATE_PERCENTAGE_ABS_THRESHOLD, DUPLICATE_PERCENTAGE_PCT_THRESHOLD, "%.2f"));
+                true, DUPLICATE_PERCENTAGE_ABS_THRESHOLD, DUPLICATE_PERCENTAGE_PCT_THRESHOLD, "%.3f"));
         for(Integer coverage : mComparisonPercentages)
         {
             final String coverageStr = coverageString(coverage);
             fields.add(new DoubleField(coverageStr, i -> ((BamMetricsData) i).metrics().coveragePercent(coverage),
-                    true, 0.03, null, "%.2f"));
+                    true, 0.03, null, "%.3f"));
         }
         return fields;
     }

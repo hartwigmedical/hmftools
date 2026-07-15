@@ -69,7 +69,7 @@ public class PurityComparer implements ItemComparer
                 new DoubleField(FLD_TMB, i -> ((PurityData) i).Purity.tumorMutationalBurdenPerMb(),
                         true, 0.1, 0.05, "%.2f"),
                 new DoubleField(FLD_MS_INDELS, i -> ((PurityData) i).Purity.microsatelliteIndelsPerMb(),
-                        true, 0.1, 0.05, "%.4f"),
+                        true, 0.1, 0.05, "%.2f"),
                 new IntField(FLD_TML, i -> ((PurityData) i).Purity.tumorMutationalLoad(),
                         true, 1., 0.05),
                 new IntField(FLD_CN_SEGS, i -> ((PurityData) i).Purity.qc().copyNumberSegments(),
@@ -88,7 +88,7 @@ public class PurityComparer implements ItemComparer
                 new StringField(FLD_TML_STATUS, i -> ((PurityData) i).Purity.tumorMutationalLoadStatus().toString(),
                         true),
                 new DoubleField(FLD_TINC_LEVEL, i -> ((PurityData) i).Purity.qc().tincLevel(),
-                        true, 0.1, null, "%.2f")
+                        true, 0.1, null, "%.3f")
         );
     }
 
