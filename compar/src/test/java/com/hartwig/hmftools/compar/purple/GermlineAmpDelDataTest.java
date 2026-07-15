@@ -27,13 +27,13 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class GermlineAmpDelDataTest
-        extends ComparableItemTest<GermlineAmpDelData, GermlineAmpDelComparer, TestGermlineDeletionDataBuilder>
+        extends ComparableItemTest<GermlineAmpDelData, GermlineAmpDelComparer, TestGermlineAmpDelDataBuilder>
 {
     @Before
     public void setUp()
     {
         comparer = new GermlineAmpDelComparer(new ComparConfig());
-        builder = TestGermlineDeletionDataBuilder.BUILDER;
+        builder = TestGermlineAmpDelDataBuilder.BUILDER;
         GermlineAmpDelData alternateValueSource = builder.createWithAlternateDefaults();
 
         fieldToAlternateValueInitializer = Map.of(
@@ -52,8 +52,8 @@ public class GermlineAmpDelDataTest
     @Test
     public void fullyMatchesSelfWithLiftover()
     {
-        GermlineAmpDelData victim = TestGermlineDeletionDataBuilder.BUILDER.create(b -> b.comparisonChromosome = "8");
-        GermlineAmpDelData liftoverVictim = TestGermlineDeletionDataBuilder.BUILDER.create(b -> b.comparisonChromosome = "8");
+        GermlineAmpDelData victim = TestGermlineAmpDelDataBuilder.BUILDER.create(b -> b.comparisonChromosome = "8");
+        GermlineAmpDelData liftoverVictim = TestGermlineAmpDelDataBuilder.BUILDER.create(b -> b.comparisonChromosome = "8");
         FieldConfig detailedFieldConfig = createDefaultThresholds(MatchLevel.DETAILED);
         FieldConfig reportableFieldConfig = createDefaultThresholds(MatchLevel.REPORTABLE);
 

@@ -24,7 +24,6 @@ import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.SourceType;
-import com.hartwig.hmftools.compar.common.field.BooleanField;
 import com.hartwig.hmftools.compar.common.field.DoubleField;
 import com.hartwig.hmftools.compar.common.field.Field;
 import com.hartwig.hmftools.compar.common.field.StringField;
@@ -51,7 +50,7 @@ public class GermlineAmpDelComparer implements ItemComparer
     public List<Field> fields(final MatchLevel matchLevel)
     {
         return List.of(
-                new BooleanField(FLD_REPORTED, ComparableItem::reportable, true),
+                new StringField(FLD_REPORTED, i -> ((GermlineAmpDelData) i).AmpDelData.Reported.toString(), true),
                 new StringField(FLD_GERMLINE_STATUS, i -> ((GermlineAmpDelData) i).AmpDelData.NormalStatus.toString(),
                         true),
                 new StringField(FLD_TUMOR_STATUS, i -> ((GermlineAmpDelData) i).AmpDelData.TumorStatus.toString(),
