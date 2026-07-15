@@ -1,0 +1,87 @@
+<svg viewBox="0 0 880 400" xmlns="http://www.w3.org/2000/svg">
+<!--
+  tars/doc base template. Copy this file, keep the <style> and <defs> as-is,
+  replace the body (everything after <rect class="bg"/>) with your diagram.
+
+  Rules:
+    - Colours: never hardcode hex. Use a semantic class (.m .exon .keep .warn ...)
+      or, for one-off shapes, fill="var(--token)". Palette lives here only.
+    - Layout: viewBox 0 0 880 H. Left content margin x=60. Legend top-right.
+      Track = subhead label above, bars below. Coordinate ticks under a track.
+    - Text: use .title/.sub/.lbl/.note/.coord roles, not raw font-size+fill.
+    - Arrows: marker-end="url(#arr)" (grey) or url(#arrSupp) (supplementary).
+    - Softclip bases: fill="url(#softclip)".
+  Set the viewBox height to fit; delete unused legend rows and the demo body.
+-->
+<style>
+svg { font-family: Arial, Helvetica, sans-serif; }
+svg {
+  /* transcript / matched */
+  --tx:#2F7DC6; --tx-dark:#0C447C; --tx-deep:#1C4F7C; --tx-soft:#A9CDEA;
+  --exon:#E6F1FB; --exon-line:#4A90C4;
+  /* kept / genomic-good */
+  --keep:#1F8A4C; --keep-dark:#166534; --keep-mid:#3F9A5E; --keep-soft:#E3F2E8; --keep-soft2:#EAF6EE;
+  /* softclip / caution */
+  --warn:#EFB94B; --warn-line:#D89B14; --warn-dark:#6B4E04; --warn-dark2:#7A4F01; --warn-soft:#FBEFD0;
+  /* boundary / dropped */
+  --drop:#C0392B; --drop-soft:#FBE3E0;
+  /* supplementary */
+  --supp:#B07CC6;
+  /* neutrals */
+  --ink:#333333; --ink2:#111111; --sub:#6B6862; --label:#5C5953; --muted:#9B9893;
+  --line:#B8B5AE; --border:#E4E2DD; --border2:#C7C5BF; --border3:#E0DED9;
+  --panel:#FCFCFB; --panel2:#FAFAF8; --panel3:#EFEFEC; --panel4:#ECECEA; --bg:#FFFFFF;
+}
+/* text roles */
+.title   { font-size:14px; font-weight:600; fill:var(--tx-dark); }
+.sub     { font-size:11px; font-weight:600; fill:var(--sub); }
+.lbl     { font-size:9.5px; fill:var(--label); }
+.note    { font-size:9.5px; fill:var(--muted); }
+.coord   { font-size:10px;  fill:var(--sub); }
+.exonlbl { font-size:9.5px; fill:var(--tx-dark); text-anchor:middle; }
+.oncig   { font-size:11px; fill:#FFFFFF; text-anchor:middle; }   /* cigar on a filled bar */
+/* alignment-track shapes */
+.bg      { fill:var(--bg); }
+.m       { fill:var(--tx); }                                     /* matched (M) bar */
+.exon    { fill:var(--exon); stroke:var(--exon-line); }
+.intron  { stroke:var(--tx); stroke-width:2; fill:none; }        /* spliced-read N */
+.gline   { stroke:var(--line); stroke-width:1.6; }               /* genome intron span */
+.keepbar { fill:var(--keep); }
+.tick    { stroke:var(--sub); stroke-width:1.3; }
+.bnd     { stroke:var(--drop); stroke-width:1.6; stroke-dasharray:3,2; }  /* boundary line */
+/* panels / flow */
+.panel   { fill:var(--panel); stroke:var(--border); }
+.arrline { stroke:var(--muted); stroke-width:1.4; }
+</style>
+<defs>
+  <marker id="arr" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto">
+    <path d="M0,0 L6,3 L0,6 Z" fill="#9B9893"/>
+  </marker>
+  <marker id="arrSupp" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto">
+    <path d="M0,0 L6,3 L0,6 Z" fill="#B07CC6"/>
+  </marker>
+  <pattern id="softclip" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+    <rect width="5" height="5" fill="#FBEFD0"/>
+    <line x1="0" y1="0" x2="0" y2="5" stroke="#EFB94B" stroke-width="1.6"/>
+  </pattern>
+</defs>
+<rect class="bg" x="0" y="0" width="880" height="400"/>
+
+<!-- ============ reusable legend (delete rows you don't use) ============ -->
+<g transform="translate(716,18)">
+  <rect class="panel" x="0" y="0" width="148" height="86" rx="4"/>
+  <rect class="m"    x="10" y="12" width="20" height="11" rx="2"/>
+  <text class="lbl"  x="36" y="21">matched (M)</text>
+  <rect class="exon" x="10" y="28" width="20" height="11" rx="2"/>
+  <text class="lbl"  x="36" y="37">exon (genome)</text>
+  <rect x="10" y="44" width="20" height="11" rx="2" fill="url(#softclip)"/>
+  <text class="lbl"  x="36" y="53">softclip (S)</text>
+  <line class="intron" x1="10" y1="66" x2="30" y2="66"/>
+  <text class="lbl"  x="36" y="69">intron (N)</text>
+  <rect class="keepbar" x="10" y="76" width="20" height="7" rx="2"/>
+  <text class="lbl"  x="36" y="83">kept</text>
+</g>
+
+<!-- ============ diagram body goes here ============ -->
+<text class="title" x="60" y="40">replace me with the diagram</text>
+</svg>

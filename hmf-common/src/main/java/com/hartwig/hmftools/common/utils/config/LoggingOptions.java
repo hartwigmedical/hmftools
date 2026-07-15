@@ -2,6 +2,8 @@ package com.hartwig.hmftools.common.utils.config;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.apache.logging.log4j.Level;
 
+import com.hartwig.hmftools.common.logging.HmfLogger;
+
 import com.beust.jcommander.IStringConverter;
 import com.beust.jcommander.Parameter;
 
@@ -19,7 +21,7 @@ public class LoggingOptions
         @Override
         public Level convert(String value)
         {
-            return Level.valueOf(value);
+            return HmfLogger.parseLevel(value);
         }
     }
 
@@ -27,7 +29,7 @@ public class LoggingOptions
     public boolean LogDebug;
 
     @Parameter(names = "-" + ConfigUtils.LOG_LEVEL,
-               description = "Specify log level (values: [OFF, FATAL, ERROR, WARN, INFO, DEBUG, TRACE, ALL])",
+               description = "Specify log level (values: [OFF, FATAL, ERROR, WARN, INFO, DEBUG, DEBUG_2, TRACE, ALL])",
                converter = Log4jLevelTypeConverter.class)
     public org.apache.logging.log4j.Level LogLevel = null;
 

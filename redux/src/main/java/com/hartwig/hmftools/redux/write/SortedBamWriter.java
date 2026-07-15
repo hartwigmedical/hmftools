@@ -39,6 +39,9 @@ public class SortedBamWriter
     private long mReadCount;
     private long mReadsWritten;
     private int mMaxCached;
+    private String mMaxCachedChromosome;
+    private int mMaxCachedPosition;
+    private String mMaxCachedCigar;
     private int mMaxWrite;
 
     private boolean mPerfDebug;
@@ -111,6 +114,9 @@ public class SortedBamWriter
         mWriteCount = 0;
         mReadCount = 0;
         mMaxCached = 0;
+        mMaxCachedChromosome = "";
+        mMaxCachedPosition = 0;
+        mMaxCachedCigar = "";
         mMaxWrite = 0;
         mPerfDebug = false;
     }
@@ -151,7 +157,14 @@ public class SortedBamWriter
     public void addRecord(final SAMRecord read)
     {
         mRecords.add(new ReadOrAlignmentStart(mReadCount++, read));
-        mMaxCached = max(mMaxCached, mRecords.size());
+
+        if(mRecords.size() > mMaxCached)
+        {
+            mMaxCached = mRecords.size();
+            mMaxCachedChromosome = read.getReferenceName();
+            mMaxCachedPosition = read.getAlignmentStart();
+            mMaxCachedCigar = read.getCigarString();
+        }
 
         if(mMinCachedPosition == 0)
             mMinCachedPosition = read.getAlignmentStart();
@@ -215,6 +228,7 @@ public class SortedBamWriter
     public long writeCount() { return mWriteCount; }
     public int cached() { return mRecords.size(); }
     public int maxCache() { return mMaxCached; }
+    public String maxCacheLocation() { return format("%s:%d cigar(%s)", mMaxCachedChromosome, mMaxCachedPosition, mMaxCachedCigar); }
     public int maxWrite() { return mMaxWrite; }
 
     public int avgWriteCount() { return mWriteCount > 0 ? (int)(mReadsWritten / (double)mWriteCount) : 0; }
