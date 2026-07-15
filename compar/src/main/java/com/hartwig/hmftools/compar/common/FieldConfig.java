@@ -26,7 +26,8 @@ public class FieldConfig
 
     public FieldConfig()
     {
-        fieldSettings = Maps.newHashMap();
+        // use linked hash map to preserve field registration order in diffs
+        fieldSettings = Maps.newLinkedHashMap();
         mWarnings = Lists.newArrayList();
         mErrorMessages = Lists.newArrayList();
     }
@@ -41,13 +42,13 @@ public class FieldConfig
 
     public void registerField(final CategoryType category, final Field field)
     {
-        fieldSettings.putIfAbsent(category, Maps.newHashMap());
+        fieldSettings.putIfAbsent(category, Maps.newLinkedHashMap());
         fieldSettings.get(category).put(field.name(), field);
     }
 
     public List<Field> getFields(final CategoryType category)
     {
-        return fieldSettings.getOrDefault(category, Maps.newHashMap()).values().stream().toList();
+        return fieldSettings.getOrDefault(category, Maps.newLinkedHashMap()).values().stream().toList();
     }
 
     public List<Field> getFields(final CategoryType category, final List<String> fieldNames)
