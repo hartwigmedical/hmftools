@@ -104,7 +104,7 @@ public class LilacAlleleComparer implements ItemComparer
             for(LilacAllele allele : LilacAllele.read(LilacAllele.generateFilename(fileSources.Lilac, sampleId)))
             {
                 String alleleString = String.format("%s:%s", allele.genes(), allele.allele());
-                int index = alleleToSeen.getOrDefault(alleleString, 0);
+                int index = alleleToSeen.getOrDefault(alleleString, 1);
                 comparableItems.add(new LilacAlleleData(allele, index));
 
                 alleleToSeen.put(alleleString, index + 1);
