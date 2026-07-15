@@ -15,23 +15,18 @@ import java.util.List;
 public class Segmenter
 {
     private final double[] y;
-    final Segmentation leastCostSegmentation;
-    public final double segmentPenalty;
+    final Segmentation LeastCostSegmentation;
+    public final double SegmentPenalty;
 
     public Segmenter(double[] y)
     {
-        this(y, 50.0, false);
+        this(y, 50.0);
     }
 
-    public Segmenter(double[] y, double gamma, boolean normalise)
-    {
-        this(y, new GammaPenaltyCalculator(gamma, normalise));
-    }
-
-    public Segmenter(double[] y, PenaltyCalculator penaltyCalculator)
+    public Segmenter(double[] y, double segmentPenalty)
     {
         this.y = y;
-        segmentPenalty = penaltyCalculator.getPenalty(y);
+        SegmentPenalty = segmentPenalty;
 
         // Here we calculate leastCost(s,e) for each e in [0, ..., y.size - 1]
         // and s in [0, ..., e]. For any such pair, the least cost is:
@@ -80,12 +75,12 @@ public class Segmenter
             lastSegmentEndpoint = leastCostSegmentEndpoints[lastSegmentEndpoint];
         }
         Collections.reverse(segmentEndpoints);
-        leastCostSegmentation = segmentEndpoints.isEmpty() ? new Segmentation(singletonList(y)) : segmentBy(segmentEndpoints);
+        LeastCostSegmentation = segmentEndpoints.isEmpty() ? new Segmentation(singletonList(y)) : segmentBy(segmentEndpoints);
     }
 
     public PiecewiseConstantFit pcf()
     {
-        return leastCostSegmentation.pcf();
+        return LeastCostSegmentation.pcf();
     }
 
     Segmentation segmentBy(List<Integer> segmentEndpointIndices)

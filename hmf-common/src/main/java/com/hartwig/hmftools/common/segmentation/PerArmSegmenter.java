@@ -14,9 +14,7 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
-import com.hartwig.hmftools.common.segmentation.copynumber.FixedPenalty;
-import com.hartwig.hmftools.common.segmentation.copynumber.GammaPenaltyCalculator;
-import com.hartwig.hmftools.common.segmentation.copynumber.PenaltyCalculator;
+import com.hartwig.hmftools.common.segmentation.copynumber.Gamma;
 import com.hartwig.hmftools.common.segmentation.copynumber.PiecewiseConstantFit;
 import com.hartwig.hmftools.common.segmentation.copynumber.Segmenter;
 
@@ -29,14 +27,9 @@ public abstract class PerArmSegmenter<T extends GenomePosition>
     private static final Logger SG_LOGGER = LogManager.getLogger(PerArmSegmenter.class);
     private final ListMultimap<ChrArm, T> ArmToRatios = ArrayListMultimap.create();
     private final Map<ChrArm, DataForSegmentation> mDataByArm = new HashMap<>();
-    private final PenaltyCalculator mPenaltyCalculator;
+    private final double SegmentationPenalty;
 
     protected PerArmSegmenter(ListMultimap<Chromosome, T> ratios, ChrArmLocator chrArmLocator, double gamma)
-    {
-        this(ratios, chrArmLocator, gamma, 100_000);
-    }
-
-    protected PerArmSegmenter(ListMultimap<Chromosome, T> ratios, ChrArmLocator chrArmLocator, double gamma, int uniformPenaltyThreshold)
     {
         ratios.keySet().forEach(chromosome ->
         {
@@ -49,31 +42,23 @@ public abstract class PerArmSegmenter<T extends GenomePosition>
                 }
             });
         });
-        ArmToRatios.keySet().forEach(chrArm -> mDataByArm.put(chrArm, buildSegmentationData(ArmToRatios.get(chrArm))));
+        ArmToRatios.keySet().stream().sorted().forEach(chrArm -> mDataByArm.put(chrArm, buildSegmentationData(ArmToRatios.get(chrArm))));
         int totalCount = mDataByArm.values().stream().mapToInt(DataForSegmentation::count).sum();
         int position = 0;
-        if(totalCount < uniformPenaltyThreshold)
+
+        double[] allRatios = new double[totalCount];
+        for(ChrArm chrArm : mDataByArm.keySet())
         {
-            double[] allRatios = new double[totalCount];
-            for(ChrArm chrArm : mDataByArm.keySet())
-            {
-                DataForSegmentation data = mDataByArm.get(chrArm);
-                System.arraycopy(data.valuesForSegmentation(), 0, allRatios, position, data.count());
-                position += data.count();
-            }
-
-            SG_LOGGER.debug("using uniform segmentation penalty, number of ratios({})", allRatios.length);
-
-            GammaPenaltyCalculator oneOffCalculation = new GammaPenaltyCalculator(gamma, true);
-            final double penalty = oneOffCalculation.getPenalty(allRatios);
-            mPenaltyCalculator = new FixedPenalty(penalty);
-
-            SG_LOGGER.debug("uniform segmentation penalty({})", format("%.3f", penalty));
+            DataForSegmentation data = mDataByArm.get(chrArm);
+            System.arraycopy(data.valuesForSegmentation(), 0, allRatios, position, data.count());
+            position += data.count();
         }
-        else
-        {
-            mPenaltyCalculator = new GammaPenaltyCalculator(gamma, true);
-        }
+
+        SG_LOGGER.debug("using uniform segmentation penalty, number of ratios({})", allRatios.length);
+
+        SegmentationPenalty = new Gamma(allRatios, gamma, true).getSegmentPenalty();
+
+        SG_LOGGER.debug("uniform segmentation penalty({})", format("%.3f", SegmentationPenalty));
     }
 
     public Map<ChrArm, ChromosomeArmSegments<T>> getSegmentation(ExecutorService executor) throws Exception
@@ -111,7 +96,7 @@ public abstract class PerArmSegmenter<T extends GenomePosition>
         {
             return null;
         }
-        Segmenter segmenter = new Segmenter(dataForArm.valuesForSegmentation(), mPenaltyCalculator);
+        Segmenter segmenter = new Segmenter(dataForArm.valuesForSegmentation(), SegmentationPenalty);
         PiecewiseConstantFit fit = segmenter.pcf();
         ChromosomeArmSegments<T> segments;
         if(isWindowed())

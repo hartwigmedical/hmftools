@@ -679,18 +679,14 @@ public class ProcessBamTest
 
         String segmentsFile = PCFFile.generateRatioFilename(outputDir.getAbsolutePath(), sample);
 
-        Map<Chromosome,List<PCFPosition>> pcfData = PCFFile.readPositions(1000, PCFSource.TUMOR_BAF, segmentsFile);
-        assertEquals(2, pcfData.keySet().size());
+        Map<Chromosome, List<PCFPosition>> pcfData = PCFFile.readPositions(1000, PCFSource.TUMOR_BAF, segmentsFile);
+        assertEquals(2, pcfData.size());
         List<PCFPosition> chr1Positions = pcfData.get(_1).stream().toList();
-        // The R program that does segmentation puts a spurious 1-window segment
-        // at the start of each chromosome.
-        assertEquals(6, chr1Positions.size());
+        assertEquals(4, chr1Positions.size());
         assertEquals(1, chr1Positions.get(0).Position);
-        assertEquals(1001, chr1Positions.get(1).Position);
-        assertEquals(2001, chr1Positions.get(2).Position);
-        assertEquals(41001, chr1Positions.get(3).Position);
-        assertEquals(71001, chr1Positions.get(4).Position);
-        assertEquals(101001, chr1Positions.get(5).Position);
+        assertEquals(41001, chr1Positions.get(1).Position);
+        assertEquals(71001, chr1Positions.get(2).Position);
+        assertEquals(101001, chr1Positions.get(3).Position);
     }
 
     @Test
