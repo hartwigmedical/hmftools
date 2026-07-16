@@ -1,10 +1,13 @@
 package com.hartwig.hmftools.compar;
 
+import static com.hartwig.hmftools.compar.common.CommonUtils.buildComparers;
 import static com.hartwig.hmftools.compar.common.CommonUtils.initialiseFieldConfig;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.FieldConfig;
@@ -21,7 +24,7 @@ public class DefaultFieldConfigTestApplication
 
     // resolved from this class's own compiled location (compar/target/test-classes) rather than the JVM's working
     // directory, which varies depending on how the application is launched (IDE, Maven, module vs project root)
-    private static final String OUTPUT_DIR = new File(moduleTargetDir(), "field_config").getPath();
+    private static final String OUTPUT_DIR = new File(moduleTargetDir(), "default_field_config").getPath();
 
     private static File moduleTargetDir()
     {
@@ -63,7 +66,10 @@ public class DefaultFieldConfigTestApplication
 
         String filename = FieldConfigFile.generateFileName(outputDir);
 
-        FieldConfigFile.write(filename, fieldConfig, config.Categories.keySet());
+        Set<CategoryType> categories = buildComparers(config).stream()
+                .map(c -> c.category())
+                .collect(Collectors.toSet());
+        FieldConfigFile.write(filename, fieldConfig, categories);
 
         LOGGER.info("wrote default field config file: {}", filename);
     }
