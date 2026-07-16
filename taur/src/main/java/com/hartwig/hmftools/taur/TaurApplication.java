@@ -3,7 +3,6 @@ package com.hartwig.hmftools.taur;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedReader;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createGzipBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.filenamePart;
@@ -337,94 +336,6 @@ public class TaurApplication
         for(Path interimFile : interimFiles)
         {
             Files.delete(interimFile);
-        }
-    }
-    private void processFilesOld(final String r1File, final String r2File)
-    {
-        try
-        {
-            mWriterR1 = createOutputWriter(r1File);
-            mWriterR2 = createOutputWriter(r2File);
-
-            BufferedReader r1Reader = createBufferedReader(r1File);
-            BufferedReader r2Reader = createBufferedReader(r2File);
-
-            int lineCount = 0;
-
-            int readLineCount = 0;
-            String[] r1ReadBuffer = new String[READ_ITEM_QUALS+1];
-            String[] r2ReadBuffer = new String[READ_ITEM_QUALS+1];
-
-            while(true)
-            {
-                r1ReadBuffer[readLineCount] = r1Reader.readLine();
-                r2ReadBuffer[readLineCount] = r2Reader.readLine();
-
-                if(r1ReadBuffer[readLineCount] == null || r2ReadBuffer[readLineCount] == null)
-                    break;
-
-                ++readLineCount;
-
-                if(readLineCount == READ_LINE_COUNT)
-                {
-                    if(!processReadBasesOld(r1ReadBuffer, r2ReadBuffer))
-                    {
-                        TR_LOGGER.error("invalid entries at line({})", lineCount);
-
-                        for(int i = 0; i < r1ReadBuffer.length; ++i)
-                        {
-                            TR_LOGGER.error("R1 item {}: {}", i, r1ReadBuffer[i]);
-                            TR_LOGGER.error("R2 item {}: {}", i, r2ReadBuffer[i]);
-                        }
-
-                        System.exit(1);
-                    }
-
-                    readLineCount = 0;
-
-                    ++mLineCount;
-                }
-
-                ++lineCount;
-
-                if(lineCount > 0 && (lineCount % LINE_LOG_COUNT) == 0)
-                {
-                    TR_LOGGER.info("processed {} lines", lineCount);
-                }
-            }
-
-            mWriterR1.close();
-            mWriterR2.close();
-        }
-        catch(IOException e)
-        {
-            TR_LOGGER.error("error reading fastq({}): {}", mConfig.FastqFiles, e.toString());
-            e.printStackTrace();
-            System.exit(1);
-        }
-    }
-
-    private boolean processReadBasesOld(final String[] r1ReadBuffer, final String[] r2ReadBuffer)
-    {
-        mUmiExtractor.processReadBases(r1ReadBuffer, r2ReadBuffer);
-
-        try
-        {
-            for(int i = 0; i < r1ReadBuffer.length; ++i)
-            {
-                mWriterR1.write(r1ReadBuffer[i]);
-                mWriterR1.newLine();
-
-                mWriterR2.write(r2ReadBuffer[i]);
-                mWriterR2.newLine();
-            }
-
-            return true;
-        }
-        catch(IOException e)
-        {
-            TR_LOGGER.error("failed to write output file: {}", e.toString());
-            return false;
         }
     }
 

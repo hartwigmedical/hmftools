@@ -52,7 +52,7 @@
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <mainClass>com.hartwig.hmftools.taur.utils.FastqAnalyser</mainClass>
+                            <mainClass>com.hartwig.hmftools.taur.TaurApplication</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
