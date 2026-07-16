@@ -82,7 +82,7 @@ public class ReduxConfig
     // global for convenience
     public static SequencingType SEQUENCING_TYPE = ILLUMINA;
 
-    public final ValidationStringency BamStringency;
+    public static ValidationStringency BamStringency = ValidationStringency.SILENT;
 
     public final DuplicatesConfig DuplicateConfig;
 
