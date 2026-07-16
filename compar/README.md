@@ -36,27 +36,29 @@ The key configuration values to set are:
 
 ** set of tools are: linx, linx_germline, purple, chord, cuppa, isofox, lilac, peach, virus (i.e. virus-interpreter), sigs, snp_genotype, tumor_flagstat, germline_flagstat, tumor_bam_metrics and germline_bam_metrics.
 
-The available categories are: PURITY, DRIVER, SOMATIC_VARIANT, GERMLINE_VARIANT, GERMLINE_AMP_DEL, GERMLINE_SV, FUSION, DISRUPTION, CUPPA,
-CHORD, LILAC, PEACH, VIRUS, TUMOR_FLAGSTAT, GERMLINE_FLAGSTAT, TUMOR_BAM_METRICS, GERMLINE_BAM_METRICS, SNP_GENOTYPE, COPY_NUMBER, GENE_COPY_NUMBER,
-CDR3_SEQUENCE, CDR3_LOCUS_SUMMARY, TELOMERE_LENGTH, V_CHORD, SIGS, ISOFOX_SUMMARY, ISOFOX_GENE_DATA, ISOFOX_TRANSCRIPT_DATA, NOVEL_SPLICE_JUNCTION, RNA_FUSION.
+The available categories are: PURITY, DRIVER, SOMATIC_VARIANT, GERMLINE_VARIANT, GERMLINE_AMP_DEL, GERMLINE_SV, FUSION, DISRUPTION, CUPPA, CUPPA_IMAGE,
+CHORD, LILAC_QC, LILAC_ALLELE, PEACH, VIRUS, TUMOR_FLAGSTAT, GERMLINE_FLAGSTAT, TUMOR_BAM_METRICS, GERMLINE_BAM_METRICS, SNP_GENOTYPE, COPY_NUMBER, GENE_COPY_NUMBER,
+CDR3_SEQUENCE, CDR3_LOCUS_SUMMARY, TELOMERE_LENGTH, V_CHORD, SIGS, RNA_SUMMARY, RNA_GENE_DATA, RNA_TRANSCRIPT_DATA, NOVEL_SPLICE_JUNCTION, RNA_FUSION.
 
 The category PANEL is equivalent to PURITY, DRIVER, SOMATIC_VARIANT, FUSION, DISRUPTION, TUMOR_FLAGSTAT, TUMOR_BAM_METRICS and SNP_GENOTYPE, V_CHORD.
 
 
 ### Optional configuration
 
-| Argument                                                | Description                                                                                                                                  |
-|---------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------|
-| germline_sample                                         | Germline sample ID. Defaults to tumor sample ID with "-ref" appended                                                                         |
-| output_id                                               | Outfile file suffix                                                                                                                          |
-| driver_gene_panel                                       | Used to check alternate transcript changes and to limit analysis of somatics and gene copy number comparisons                                |
-| restrict_to_drivers                                     | Limit analysis to genes within the panel                                                                                                     |
-| write_detailed                                          | Write a file per compared category                                                                                                           |
-| somatic_unfiltered_vcf_old & somatic_unfiltered_vcf_new | VCF of unfiltered somatic variants (i.e. SAGE) for detecting filtering reason                                                                |
-| liftover                                                | Apply liftover to relevant fields for pipeline run comparison across reference genome versions (V37/V38)                                     |
-| include_matches                                         | Also include matching entries in output file(s)                                                                                              |
-| pipeline_format_old & pipeline_format_new               | Format for default tool directory derivation from sample directory. Default: OA_V2_3. Options: OA_V2_0, OA_V2_2, OA_V2_3, PIP5_V6_0, DB_V6_0 |
-| pipeline_format_file_old & pipeline_format_file_new     | Config file for default tool directory derivation from sample directory.                                                                     |
+| Argument                                                | Description                                                                                                                                     |
+|---------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------|
+| germline_sample                                         | Germline sample ID. Defaults to tumor sample ID with "-ref" appended                                                                            |
+| output_id                                               | Outfile file suffix                                                                                                                             |
+| driver_gene_panel                                       | Used to check alternate transcript changes and to limit analysis of somatics and gene copy number comparisons                                   |
+| restrict_to_drivers                                     | Limit analysis to genes within the panel                                                                                                        |
+| write_detailed                                          | Write a file per compared category                                                                                                              |
+| somatic_unfiltered_vcf_old & somatic_unfiltered_vcf_new | VCF of unfiltered somatic variants (i.e. SAGE) for detecting filtering reason                                                                   |
+| liftover                                                | Apply liftover to relevant fields for pipeline run comparison across reference genome versions (V37/V38)                                        |
+| include_matches                                         | Also include matching entries in output file(s)                                                                                                 |
+| pipeline_format_old & pipeline_format_new               | Format for default tool directory derivation from sample directory. Default: OA_V2_3. Options: OA_V2_0, OA_V2_2, OA_V2_3, PIP5_V6_0, DB_V6_0    |
+| pipeline_format_file_old & pipeline_format_file_new     | Config file for default tool directory derivation from sample directory.                                                                        |
+| field_config_file                                       | Field config file (see [Field Config Files](#field-config-files)) used to override the default per-field `Compared`/threshold settings          |
+| strict_field_config                                     | Requires `field_config_file` to explicitly set every compared field for every category being run; Compar exits with an error if any are missing |
 
 
 ### Sample ID Mappings
@@ -79,21 +81,21 @@ output in a subdirectory as per the standard HMF pipeline.
 
 Specify one or more tool directories to override the pipeline default paths.
 
-| Category                                                                                     | Config Path Id    |
-|----------------------------------------------------------------------------------------------|-------------------|
-| PURITY, SOMATIC_VARIANT, GERMLINE_VARIANT, GERMLINE_AMP_DEL                                  | purple_dir        |
-| FUSION, DISRUPTION                                                                           | linx_dir          |
-| GERMLINE_SV                                                                                  | linx_germline_dir |
-| CUPPA                                                                                        | cuppa_dir         |
-| CHORD                                                                                        | chord_dir         |
-| LILAC                                                                                        | lilac_dir         |
-| PEACH                                                                                        | peach_dir         |
-| VIRUS                                                                                        | virus_dir         |
-| CIDER                                                                                        | cider_dir         |
-| TEAL                                                                                         | teal_dir          |
-| V_CHORD                                                                                      | v_chord_dir       |
-| SIGS                                                                                         | sigs_dir          |
-| ISOFOX_SUMMARY, ISOFOX_GENE_DATA, ISOFOX_TRANSCRIPT_DATA, NOVEL_SPLICE_JUNCTION, RNA_FUSION  | isofox_dir        |
+| Category                                                                           | Config Path Id    |
+|------------------------------------------------------------------------------------|-------------------|
+| PURITY, SOMATIC_VARIANT, GERMLINE_VARIANT, GERMLINE_AMP_DEL                        | purple_dir        |
+| FUSION, DISRUPTION                                                                 | linx_dir          |
+| GERMLINE_SV                                                                        | linx_germline_dir |
+| CUPPA                                                                              | cuppa_dir         |
+| CHORD                                                                              | chord_dir         |
+| LILAC_QC, LILAC_ALLELE                                                             | lilac_dir         |
+| PEACH                                                                              | peach_dir         |
+| VIRUS                                                                              | virus_dir         |
+| CIDER                                                                              | cider_dir         |
+| TEAL                                                                               | teal_dir          |
+| V_CHORD                                                                            | v_chord_dir       |
+| SIGS                                                                               | sigs_dir          |
+| RNA_SUMMARY, RNA_GENE_DATA, RNA_TRANSCRIPT_DATA, NOVEL_SPLICE_JUNCTION, RNA_FUSION | isofox_dir        |
 
 Wildcards '*' can be used in place of sampleIds, in which case Compar will replace the wildcard with the sampleId for each path.
 Similarly, '$' can be used in place of germline sample IDs.
@@ -133,207 +135,237 @@ db_source_new="mysql://localhost/test;user1;pass1"
 ## Data Categories, Fields and Thresholds
 Each data type that is compared is described below. 
 Differences in field values are considered one of the following ways
-- an exact match, eg a string value or type
+- an exact match, eg a string, boolean, string list or breakend value
 - absolute difference vs a threshold 
 - percentage difference vs a threshold
 - absolute and percentage differences vs 2 thresholds, requiring both to be exceeded
- 
+
+### Field Config Files
+The `Compared` setting and default thresholds for every field are defined per category in code, and are exported for reference to:
+- [field.config.compar.tsv](src/main/resources/field_config/reportable/field.config.compar.tsv) for the default `-match_level REPORTABLE`
+- [field.config.compar.tsv](src/main/resources/field_config/detailed/field.config.compar.tsv) for `-match_level DETAILED`, which also includes the extra categories and fields that are only compared in detailed mode
+
+Each file lists one row per field, for every category that is run at that match level:
+
+| Column            | Description                                                                                      |
+|-------------------|--------------------------------------------------------------------------------------------------|
+| Category          | The CategoryType the field belongs to                                                            |
+| Field             | Field name, as it appears in mismatch output                                                     |
+| FieldType         | string, stringList, boolean, int, long, double, breakend or pixel                                |
+| Compared          | Whether the field is included in diff comparisons (some are context-only, or DETAILED mode only) |
+| AbsoluteThreshold | Absolute difference threshold, or 'none'                                                         |
+| PercentThreshold  | Percentage difference threshold, or 'none'                                                       |
+
+These defaults can be overridden with `-field_config_file`, pointing to a TSV file in the same format containing only the rows to be overridden.
+If `-strict_field_config` is also set, every compared field for every category being run must have an entry in the file, and Compar will exit
+with an error if any are missing.
+
+Every Compar run also writes out the field config it actually used (i.e. after applying any overrides) to `field.config.compar.tsv` in the
+output directory. This is a record of exactly what was compared for that run, and can itself be used as a `-field_config_file` input to repeat
+the comparison later with the same settings.
 
 ### Purity
 Data key: SampleId
 
 | Field                         | Match Type & Thresholds |
 |-------------------------------|-------------------------|
-| qcStatus                      | Exact                   |
-| gender                        | Exact                   |
-| germlineAberration            | Exact                   |
-| fitMethod                     | Exact                   |
-| msStatus                      | Exact                   |
-| tmbStatus                     | Exact                   |
-| tmlStatus                     | Exact                   |
-| purity                        | Threshold  [0.04]       |
-| ploidy                        | Threshold  [0.1]        |
-| contamination                 | Threshold  [0.005]      |
-| tmbPerMb                      | Threshold  [0.1, 5%]    |
-| msIndelsPerMb                 | Threshold  [0.1, 5%]    |
-| tml                           | Threshold  [1, 5%]      |
-| copyNumberSegments            | Threshold  [5, 20%]     |
-| unsupportedCopyNumberSegments | Threshold  [5, 20%]     |
-| svTmb                         | Threshold  [5, 5%]      |
+| QcStatus                      | Exact                   |
+| Gender                        | Exact                   |
+| GermlineAberrations           | Exact                   |
+| FitMethod                     | Exact                   |
+| MsStatus                      | Exact                   |
+| TmbStatus                     | Exact                   |
+| TmlStatus                     | Exact                   |
+| Purity                        | Threshold [0.04]        |
+| Ploidy                        | Threshold [0.1]         |
+| Contamination                 | Threshold [0.005]       |
+| TmbPerMb                      | Threshold [0.1, 5%]     |
+| MsIndelsPerMb                 | Threshold [0.1, 5%]     |
+| Tml                           | Threshold [1, 5%]       |
+| CopyNumberSegments            | Threshold [5, 20%]      |
+| UnsupportedCopyNumberSegments | Threshold [5, 20%]      |
+| SvTmb                         | Threshold [5, 5%]       |
+| TincLevel                     | Threshold [0.1]         |
 
 ### Somatic Variant
 Data key: SampleId, Chromosome, Position, Ref, Alt and VariantType (SNP/MNP/INDEL/UNDEFINED)
 
-| Field                      | Match Type & Thresholds |
-|----------------------------|-------------------------|
-| reported                   | Exact                   |
-| filter                     | Exact                   |
-| gene                       | Exact                   |
-| canonicalEffect            | Exact                   |
-| canonicalCodingEffect      | Exact                   |
-| canonicalHgvsCodingImpact  | Exact                   |
-| canonicalHgvsProteinImpact | Exact                   |
-| otherTranscriptEffects     | Exact                   |
-| tier                       | Exact                   |
-| hotspot                    | Exact                   |
-| biallelic                  | Exact                   |
-| qual                       | Threshold [50, 20%]     |
-| subclonalLikelihood        | Threshold [0.6]         |
-| hasLPS                     | Exact                   |
-| variantCopyNumber          | Threshold [0.3, 30%]    |
-| tumorSupportingReadCount   | Threshold [1, 20%]      |
-| tumorTotalReadCount        | Threshold [1, 20%]      |
-| purityAdjustedVaf          | Threshold [0.2]         |
+| Field                    | Match Type & Thresholds |
+|--------------------------|-------------------------|
+| Reported                 | Exact                   |
+| filter                   | Exact                   |
+| Gene                     | Exact                   |
+| CanonicalEffect          | Exact                   |
+| CanonicalCodingEffect    | Exact                   |
+| CanonicalHgvsCoding      | Exact                   |
+| CanonicalHgvsProtein     | Exact                   |
+| OtherReportedEffects     | Exact                   |
+| Tier                     | Exact                   |
+| Hotspot                  | Exact                   |
+| Biallelic                | Exact                   |
+| BiallelicProb            | Threshold [0.3]         |
+| Qual                     | Threshold [50, 20%]     |
+| SubclonalLikelihood      | Threshold [0.6]         |
+| HasLPS                   | Exact                   |
+| VariantCopyNumber        | Threshold [0.3, 30%]    |
+| TumorSupportingReadCount | Threshold [1, 20%]      |
+| TumorTotalReadCount      | Threshold [1, 20%]      |
+| PurityAdjustedVaf        | Threshold [0.2]         |
 
 ### Germline Variant
 Data key: SampleId, Chromosome, Position, Ref, Alt and VariantType (SNP/MNP/INDEL/UNDEFINED)
 
-| Field                      | Match Type & Thresholds |
-|----------------------------|-------------------------|
-| reported                   | Exact                   |
-| filter                     | Exact                   |
-| gene                       | Exact                   |
-| canonicalEffect            | Exact                   |
-| canonicalCodingEffect      | Exact                   |
-| canonicalHgvsCodingImpact  | Exact                   |
-| canonicalHgvsProteinImpact | Exact                   |
-| otherTranscriptEffects     | Exact                   |
-| tier                       | Exact                   |
-| hotspot                    | Exact                   |
-| biallelic                  | Exact                   |
-| qual                       | Threshold [20, 20%]     |
-| variantCopyNumber (tumor)  | Threshold [0.3, 15%]    |
-| tumorSupportingReadCount   | Threshold [1, 20%]      |
-| tumorTotalReadCount        | Threshold [1, 20%]      |
-| purityAdjustedVaf          | Threshold [0.2]         |
+| Field                    | Match Type & Thresholds |
+|--------------------------|-------------------------|
+| Reported                 | Exact                   |
+| filter                   | Exact                   |
+| Gene                     | Exact                   |
+| CanonicalEffect          | Exact                   |
+| CanonicalCodingEffect    | Exact                   |
+| CanonicalHgvsCoding      | Exact                   |
+| CanonicalHgvsProtein     | Exact                   |
+| OtherReportedEffects     | Exact                   |
+| Tier                     | Exact                   |
+| Hotspot                  | Exact                   |
+| Qual                     | Threshold [50, 20%]     |
+| VariantCopyNumber        | Threshold [0.3, 30%]    |
+| TumorSupportingReadCount | Threshold [1, 20%]      |
+| TumorTotalReadCount      | Threshold [1, 20%]      |
+| PurityAdjustedVaf        | Threshold [0.2]         |
 
 ### Germline Amp-Del
 Data key: SampleId, Gene
 
 | Field              | Match Type & Thresholds |
 |--------------------|-------------------------|
-| reported           | Exact                   |
-| germlineStatus     | Exact                   |
-| tumorStatus        | Exact                   |
-| germlineCopyNumber | Threshold [0.2, 10%]    |
-| tumorCopyNumber    | Threshold [0.2, 10%]    |
-| chromosome         | Exact                   |
-| chromosomeBand     | Exact                   |
+| Reported           | Exact                   |
+| GermlineStatus     | Exact                   |
+| TumorStatus        | Exact                   |
+| GermlineCopyNumber | Threshold [0.2, 10%]    |
+| TumorCopyNumber    | Threshold [0.2, 10%]    |
+| Chromosome         | Exact                   |
+| ChromosomeBand     | Exact                   |
 
 ### Drivers (Linx and Purple)
 Data key: SampleId, GeneId, TranscriptId, Driver-type
 
 | Field            | Match Type & Thresholds |
 |------------------|-------------------------|
-| likelihoodMethod | Exact                   |
-| driverLikelihood | Threshold [0.1]         |
-| minCopyNumber    | Threshold [0.3, 15%]    |
-| maxCopyNumber    | Threshold [0.3, 15%]    |
-| chromosome       | Exact                   |
-| chromosomeBand   | Exact                   |
+| LikelihoodMethod | Exact                   |
+| Likelihood       | Threshold [0.1]         |
+| MinCopyNumber    | Threshold [0.3, 15%]    |
+| MaxCopyNumber    | Threshold [0.3, 15%]    |
+| Chromosome       | Exact                   |
+| ChromosomeBand   | Exact                   |
 
 ### Fusions
 Data key: SampleId, Fusion name
 
-| Field               | Match Type & Thresholds |
-|---------------------|-------------------------|
-| reported            | Exact                   |
-| reportedType        | Exact                   |
-| phased              | Exact                   |
-| likelihood          | Exact                   |
-| fusedExonUp         | Exact                   |
-| fusedTranscriptUp   | Exact                   |
-| fusedExonDown       | Exact                   |
-| fusedTranscriptDown | Exact                   |
-| chainLinks          | Exact                   |
-| chainTerminated     | Exact                   |
-| domainsKept         | Exact                   |
-| domainsLost         | Exact                   |
-| junctionCopyNumber  | Threshold [0.5, 20%]    |
+| Field           | Match Type & Thresholds |
+|-----------------|-------------------------|
+| Reported        | Exact                   |
+| ReportedType    | Exact                   |
+| Phased          | Exact                   |
+| Likelihood      | Exact                   |
+| FusedExonUp     | Exact                   |
+| FusedExonDown   | Exact                   |
+| ChainLinks      | Exact                   |
+| ChainTerminated | Exact                   |
+| DomainsKept     | Exact                   |
+| DomainsLost     | Exact                   |
 
 ### Disruptions
 Data key: SampleId, Gene
 
-Per breakend key: SV coordinates (chromosome, position, orientation), TranscriptId (if not canonical)
+| Field    | Match Type & Thresholds |
+|----------|-------------------------|
+| Breakend | Exact - see below       |
 
-| Field              | Match Type & Thresholds |
-|--------------------|-------------------------|
-| reported           | Exact                   |
-| regionType         | Exact                   |
-| codingType         | Exact                   |
-| nextSpliceExonRank | Exact                   |
+A diff is raised per gene if, for any matched breakend the reported status, region type, coding type, or next splice exon rank differs between the two runs,
+or a breakend/SV present in one run has no match in the other.
 
 ### Germline SV
 Data key: SampleId, Gene
 
-Per breakend key: SV coordinates (chromosome, position, orientation), TranscriptId (if not canonical)
+| Field    | Match Type & Thresholds |
+|----------|-------------------------|
+| Breakend | Exact - see below       |
 
-| Field              | Match Type & Thresholds |
-|--------------------|-------------------------|
-| reported           | Exact                   |
-| regionType         | Exact                   |
-| codingType         | Exact                   |
-| nextSpliceExonRank | Exact                   |
+Compared the same way as [Disruptions](#disruptions) above.
 
 ### Cuppa
 Data key: SampleId, ClassifierName, DataType
 
-| Field         | Match Type & Thresholds |
-|---------------|-------------------------|
-| topCancerType | Exact                   |
-| probability   | Threshold [0.1]         |
+| Field           | Match Type & Thresholds |
+|-----------------|-------------------------|
+| top_cancer_type | Exact                   |
+| probability     | Threshold [0.1]         |
+
+### Cuppa Image
+Data key: SampleId, Dimensions
+
+| Field      | Match Type & Thresholds                                                    |
+|------------|----------------------------------------------------------------------------|
+| Dimensions | Exact                                                                      |
+| Pixels     | Threshold [0%] - percentage of differing pixels between the two chart PNGs |
 
 ### Chord
 Data key: SampleId
 
-| Field    | Match Type & Thresholds |
-|----------|-------------------------|
-| BRCA1    | Threshold [0.1]         |
-| BRCA2    | Threshold [0.1]         |
-| status   | Exact                   |
-| type     | Exact                   |
-| hrdScore | Threshold [0.1]         |
+| Field  | Match Type & Thresholds |
+|--------|-------------------------|
+| BRCA1  | Threshold [0.1]         |
+| BRCA2  | Threshold [0.1]         |
+| Status | Exact                   |
+| Type   | Exact                   |
+| Score  | Threshold [0.1]         |
 
-### Lilac
+### Lilac QC
 Data key: SampleId
 
-| Field                       | Match Type & Thresholds                                  |
-|-----------------------------|----------------------------------------------------------|
-| status                      | Exact                                                    |
-| alleles                     | Exact - checks all 6 alleles match                       |
-| somaticMissense             | Threshold [0.4, 10%] - checks per allele                 |
-| somaticNonsenseOrFrameshift | Threshold [0.4, 10%] - checks per allele                 |
-| somaticSplice               | Threshold [0.4, 10%] - checks per allele                 |
-| somaticInframeIndel         | Threshold [0.4, 10%] - checks per allele                 |
-| somaticSynonymous           | Threshold [0.4, 10%] - checks per allele (DETAILED only) |
-| refTotalFragments           | Threshold [10, 1%] - checks per allele (DETAILED only)   |
-| tumorTotalFragments         | Threshold [10, 1%] - checks per allele (DETAILED only)   |
-| tumorCopyNumber             | Threshold [0.5, 15%] - checks per allele                 |
-| totalFragments              | Threshold [10, 1%]                                       |
-| fittedFragments             | Threshold [10, 1%]                                       |
-| discardedAlignmentFragments | Threshold [10, 1%]                                       |
-| discardedIndels             | Threshold [10, 1%]                                       |
-| hlaYAllele                  | Exact                                                    |
+| Field                       | Match Type & Thresholds            |
+|-----------------------------|------------------------------------|
+| Status                      | Exact                              |
+| Alleles                     | Exact - checks all 6 alleles match |
+| TotalFragments              | Threshold [10, 1%]                 |
+| FittedFragments             | Threshold [10, 1%]                 |
+| DiscardedAlignmentFragments | Threshold [10, 1%]                 |
+| DiscardedIndels             | Threshold [10, 1%]                 |
+| HlaYAllele                  | Exact                              |
+
+### Lilac Allele
+Data key: SampleId, Gene, Allele, occurrence index (starts at 1, to distinguish an allele called more than once for the same gene)
+
+| Field                       | Match Type & Thresholds              |
+|-----------------------------|--------------------------------------|
+| SomaticMissense             | Threshold [0.4, 10%]                 |
+| SomaticNonsenseOrFrameshift | Threshold [0.4, 10%]                 |
+| SomaticSplice               | Threshold [0.4, 10%]                 |
+| SomaticInframeIndel         | Threshold [0.4, 10%]                 |
+| SomaticSynonymous           | Threshold [0.4, 10%] (DETAILED only) |
+| RefTotal                    | Threshold [10, 1%] (DETAILED only)   |
+| TumorTotal                  | Threshold [10, 1%] (DETAILED only)   |
+| TumorCopyNumber             | Threshold [0.5, 15%]                 |
 
 ### Peach
 Data key: SampleId, Gene, HaplotypeName
 
 | Field            | Match Type & Thresholds |
 |------------------|-------------------------|
-| alleleCount      | Exact                   |
-| function         | Exact                   |
-| drugs            | Exact                   | 
-| prescriptionUrls | Exact                   | 
+| AlleleCount      | Exact                   |
+| Function         | Exact                   |
+| Drugs            | Exact                   |
+| PrescriptionUrls | Exact                   |
 
 ### Virus
 Data key: SampleId, Name
 
 | Field            | Match Type & Thresholds |
 |------------------|-------------------------|
-| reported         | Exact                   |
-| integrations     | Threshold [20%]         |
-| meanCoverage     | Threshold [15%]         |
-| driverLikelihood | Exact                   |
+| Reported         | Exact                   |
+| Integrations     | Threshold [20%]         |
+| MeanCoverage     | Threshold [15%]         |
+| DriverLikelihood | Exact                   |
 
 ### Flagstat
 For both tumor and germline sample
@@ -342,33 +374,34 @@ Data key: SampleId
 
 | Field            | Match Type & Thresholds |
 |------------------|-------------------------|
-| mappedProportion | Threshold [0.01]        |
+| MappedProportion | Threshold [0.01]        |
 
 ### Tumor BAM Metrics
 Data key: SampleId
 
 | Field               | Match Type & Thresholds |
 |---------------------|-------------------------|
-| duplicatePercentage | Threshold [0.05]        |
-| percentage30X       | Threshold [0.03]        |
-| percentage60X       | Threshold [0.03]        |
+| DuplicatePercentage | Threshold [0.05]        |
+| Percentage30X       | Threshold [0.03]        |
+| Percentage60X       | Threshold [0.03]        |
 
 ### Germline BAM Metrics
 Data key: SampleId
 
 | Field               | Match Type & Thresholds |
 |---------------------|-------------------------|
-| duplicatePercentage | Threshold [0.05]        |
-| percentage10X       | Threshold [0.03]        |
-| percentage20X       | Threshold [0.03]        |
+| DuplicatePercentage | Threshold [0.05]        |
+| Percentage10X       | Threshold [0.03]        |
+| Percentage20X       | Threshold [0.03]        |
 
 ### SNP Genotype
 Data key: SampleId, Chromosome, Position, Ref
 
-| Field    | Match Type & Thresholds |
-|----------|-------------------------|
-| alt      | Exact                   |
-| genotype | Exact                   |
+| Field       | Match Type & Thresholds |
+|-------------|-------------------------|
+| Alt         | Exact                   |
+| Genotype    | Exact                   |
+| VcfSampleId | Exact                   |
 
 ### CDR3 Sequence (Cider)
 Data key: SampleId, Cdr3AA, Cdr3Seq
@@ -383,25 +416,25 @@ Data key: SampleId, Locus
 
 | Field         | Match Type & Thresholds |
 |---------------|-------------------------|
-| passSequences | Threshold [5%]          | 
+| PassSequences | Threshold [5%]          |
 
 ### Telomere Lengths
 Data key: SampleId, Type (tumor or ref)
 
 | Field          | Match Type & Thresholds |
 |----------------|-------------------------|
-| telomereLength | Threshold [5%]          | 
+| TelomereLength | Threshold [5%]          |
 
 ### vChord
 Data key: SampleId
 
 | Field                 | Match Type & Thresholds |
 |-----------------------|-------------------------|
-| breastCancerHrdScore  | Threshold [0.1]         | 
-| ovarianCancerHrdScore | Threshold [0.1]         | 
-| pancreaticCancerScore | Threshold [0.1]         | 
-| prostateCancerScore   | Threshold [0.1]         | 
-| otherCancerScore      | Threshold [0.1]         | 
+| BreastCancerHrdScore  | Threshold [0.1]         |
+| OvarianCancerHrdScore | Threshold [0.1]         |
+| PancreaticCancerScore | Threshold [0.1]         |
+| ProstateCancerScore   | Threshold [0.1]         |
+| OtherCancerScore      | Threshold [0.1]         |
 
 ### Sigs
 Only runs in DETAILED mode.
@@ -410,9 +443,9 @@ Data key: SampleId, Signature
 
 | Field   | Match Type & Thresholds |
 |---------|-------------------------|
-| percent | Threshold [0.05]        |
+| Percent | Threshold [0.05]        |
 
-### Isofox Summary
+### RNA Summary
 Only runs in DETAILED mode.
 
 Data key: SampleId
@@ -435,7 +468,7 @@ Data key: SampleId
 | MedianGCRatio         | Threshold [0.01]        |
 | ForwardStrandPercent  | Threshold [0.01]        |
 
-### Isofox Gene Data
+### RNA Gene Data
 Only runs in DETAILED mode.
 
 Data key: SampleId, GeneName
@@ -446,7 +479,7 @@ Data key: SampleId, GeneName
 | UnsplicedFragments | Threshold [10, 5%]      |
 | AdjTPM             | Threshold [5%]          |
 
-### Isofox Transcript Data
+### RNA Transcript Data
 Only runs in DETAILED mode.
 
 Data key: SampleId, TranscriptName
@@ -479,19 +512,17 @@ Data key: SampleId, FusionName, ChromosomeUp, PositionUp, ChromosomeDown, Positi
 | JuncTypeUp      | Exact                   |
 | JuncTypeDown    | Exact                   |
 | SplitFrags      | Threshold [5, 5%]       |
-| RealignedFrags  | Threshold [5, 5%]       |
-| DiscordantFrags | Threshold [5, 5%]       |
 
 ### Copy Number
 Only runs in DETAILED mode.
 
 Data key: SampleId, Chromosome, StartPosition, EndPosition
 
-| Field                | Match Type & Thresholds |
-|----------------------|-------------------------|
-| copyNumber           | Threshold [0.5, 15%]    |
-| majorAlleleCopyNumer | Threshold [0.5, 15%]    |
-| method               | Exact                   |
+| Field                 | Match Type & Thresholds |
+|-----------------------|-------------------------|
+| CopyNumber            | Threshold [0.5, 15%]    |
+| MajorAlleleCopyNumber | Threshold [0.5, 15%]    |
+| Method                | Exact                   |
 
 ### Gene Copy Number
 Only runs in DETAILED mode.
@@ -500,6 +531,5 @@ Data key: SampleId, Gene
 
 | Field         | Match Type & Thresholds |
 |---------------|-------------------------|
-| minCopyNumber | Threshold [0.5, 15%]    |
-| maxCopyNumer  | Threshold [0.5, 15%]    |
-
+| MinCopyNumber | Threshold [0.5, 15%]    |
+| MaxCopyNumber | Threshold [0.5, 15%]    |
