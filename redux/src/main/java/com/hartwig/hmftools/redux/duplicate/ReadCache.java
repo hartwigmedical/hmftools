@@ -51,7 +51,7 @@ public class ReadCache
     private int mCheckLogCacheReadCount;
 
     public static final int DEFAULT_GROUP_SIZE = 200; // larger than the maximum soft-clip length for 151-base reads
-    public static final int DEFAULT_MAX_SOFT_CLIP = 130; // based on Illumina and a conservative min alignment of 30 bases plus a buffer
+    public static final int DEFAULT_MAX_SOFT_CLIP = 135; // based on Illumina and a conservative min alignment of 19 bases plus a buffer
     public static final int DEFAULT_POP_DISTANCE_CHECK = 100; // how often in base terms to check for popping read groups
     public static final int DEFAULT_LOG_READ_COUNT_THRESHOLD = 100000; // based on observed cache sizes for deep panels
     public static final int DEFAULT_DYNAMIC_READ_COUNT_THRESHOLD = 100_000; // level at which steps are taken to reduce the cache size
