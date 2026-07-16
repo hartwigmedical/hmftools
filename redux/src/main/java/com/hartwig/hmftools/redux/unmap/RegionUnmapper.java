@@ -255,7 +255,9 @@ public class RegionUnmapper extends Thread
         for(String bamFilename : config.BamFiles)
         {
             SamReader samReader = SamReaderFactory.makeDefault()
-                    .referenceSequence(new File(config.RefGenomeFile)).open(new File(bamFilename));
+                    .referenceSequence(new File(config.RefGenomeFile))
+                    .validationStringency(config.BamStringency)
+                    .open(new File(bamFilename));
 
             SAMRecordIterator iterator = samReader.queryUnmapped();
 
