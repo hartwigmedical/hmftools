@@ -39,5 +39,11 @@ public class SbxBamUtilsTest
 
         assertEquals(1, duplexIndelIndices.size());
         assertTrue(duplexIndelIndices.contains(41));
+
+        ycTagStr = "390++"; // empty duplex region and omitted tail, not invalid
+
+        duplexIndelIndices = getDuplexIndelIndices(ycTagStr);
+
+        assertTrue(duplexIndelIndices.isEmpty());
     }
 }
