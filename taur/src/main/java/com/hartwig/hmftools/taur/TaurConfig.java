@@ -1,20 +1,20 @@
-package com.hartwig.hmftools.fastqtools.umi;
+package com.hartwig.hmftools.taur;
 
 import static com.hartwig.hmftools.common.perf.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
-import static com.hartwig.hmftools.fastqtools.FastqCommon.FASTQ_SUFFIX_SHORT;
-import static com.hartwig.hmftools.fastqtools.FastqCommon.FASTQ_SUFFIX_STANDARD;
-import static com.hartwig.hmftools.fastqtools.FastqCommon.FASTQ_ZIP_EXTENSION;
+import static com.hartwig.hmftools.taur.FastaCommon.FASTQ_SUFFIX_SHORT;
+import static com.hartwig.hmftools.taur.FastaCommon.FASTQ_SUFFIX_STANDARD;
+import static com.hartwig.hmftools.taur.FastaCommon.FASTQ_ZIP_EXTENSION;
 
 import java.io.File;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 
-public class UmiConfig
+public class TaurConfig
 {
     public final String FastqFiles;
     public final String OutputDir;
@@ -47,7 +47,7 @@ public class UmiConfig
     private static final int DEFAULT_KNOWN_UMI_BASE_DIFF = 0;
     private static final int READ_GROUPS_PER_CHUNK_SIZE_IN_BYTES = 100_000;
 
-    public UmiConfig(final ConfigBuilder configBuilder)
+    public TaurConfig(final ConfigBuilder configBuilder)
     {
         FastqFiles = configBuilder.getValue(FASTQ_FILES);
         OutputDir = parseOutputDir(configBuilder);

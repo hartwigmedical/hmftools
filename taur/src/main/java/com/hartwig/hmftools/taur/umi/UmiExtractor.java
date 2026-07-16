@@ -1,15 +1,16 @@
-package com.hartwig.hmftools.fastqtools.umi;
+package com.hartwig.hmftools.taur.umi;
 
 import static java.lang.Math.max;
 
-import static com.hartwig.hmftools.fastqtools.FastqCommon.READ_ID_BREAK;
-import static com.hartwig.hmftools.fastqtools.FastqCommon.READ_ID_DELIM;
-import static com.hartwig.hmftools.fastqtools.FastqCommon.READ_ID_START;
-import static com.hartwig.hmftools.fastqtools.FastqCommon.READ_ITEM_BASES;
-import static com.hartwig.hmftools.fastqtools.FastqCommon.READ_ITEM_ID;
-import static com.hartwig.hmftools.fastqtools.FastqCommon.READ_ITEM_QUALS;
+import static com.hartwig.hmftools.taur.FastaCommon.READ_ID_BREAK;
+import static com.hartwig.hmftools.taur.FastaCommon.READ_ID_DELIM;
+import static com.hartwig.hmftools.taur.FastaCommon.READ_ID_START;
+import static com.hartwig.hmftools.taur.FastaCommon.READ_ITEM_BASES;
+import static com.hartwig.hmftools.taur.FastaCommon.READ_ITEM_ID;
+import static com.hartwig.hmftools.taur.FastaCommon.READ_ITEM_QUALS;
 
 import com.hartwig.hmftools.common.codon.Nucleotides;
+import com.hartwig.hmftools.taur.TaurConfig;
 
 public final class UmiExtractor
 {
@@ -45,7 +46,7 @@ public final class UmiExtractor
         mKnownUmis = new KnownUmis(knownUmiFile, umiLength, umiDelim, knownUmiBaseDiff, knownUmiUseNumeric);
     }
 
-    public UmiExtractor(final UmiConfig config)
+    public UmiExtractor(final TaurConfig config)
     {
         this(config.UmiLength, config.UmiDelim, config.AdapterLength, config.AdapterSequence,
                 config.KnownUmiFile, config.KnownUmiBaseDiff, config.KnownUmiUseNumeric);

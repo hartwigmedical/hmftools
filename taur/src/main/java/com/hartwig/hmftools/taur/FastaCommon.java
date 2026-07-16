@@ -1,12 +1,11 @@
-package com.hartwig.hmftools.fastqtools;
+package com.hartwig.hmftools.taur;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public final class FastqCommon
+public final class FastaCommon
 {
-    public static final Logger FQ_LOGGER = LogManager.getLogger(FastqCommon.class);
-    public static final String APP_NAME = "FastqTools";
+    public static final Logger TR_LOGGER = LogManager.getLogger(FastaCommon.class);
 
     public static final int READ_ITEM_ID = 0;
     public static final int READ_ITEM_BASES = 1;

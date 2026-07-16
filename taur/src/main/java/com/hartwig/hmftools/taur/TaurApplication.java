@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.fastqtools.umi;
+package com.hartwig.hmftools.taur;
 
 import static java.lang.String.format;
 
@@ -7,12 +7,11 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBuffe
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createGzipBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.filenamePart;
-import static com.hartwig.hmftools.fastqtools.FastqCommon.APP_NAME;
-import static com.hartwig.hmftools.fastqtools.FastqCommon.FASTQ_ZIP_EXTENSION;
-import static com.hartwig.hmftools.fastqtools.FastqCommon.FQ_LOGGER;
-import static com.hartwig.hmftools.fastqtools.FastqCommon.READ_ITEM_QUALS;
-import static com.hartwig.hmftools.fastqtools.FastqCommon.READ_LINE_COUNT;
-import static com.hartwig.hmftools.fastqtools.umi.UmiConfig.FASTQ_FILES_DELIM;
+import static com.hartwig.hmftools.taur.FastaCommon.FASTQ_ZIP_EXTENSION;
+import static com.hartwig.hmftools.taur.FastaCommon.TR_LOGGER;
+import static com.hartwig.hmftools.taur.FastaCommon.READ_ITEM_QUALS;
+import static com.hartwig.hmftools.taur.FastaCommon.READ_LINE_COUNT;
+import static com.hartwig.hmftools.taur.TaurConfig.FASTQ_FILES_DELIM;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -39,24 +38,27 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.taur.umi.UmiExtractor;
 
 import org.jetbrains.annotations.NotNull;
 
-public class FastqUmiExtracter
+public class TaurApplication
 {
-    private final UmiConfig mConfig;
+    private final TaurConfig mConfig;
 
     private BufferedWriter mWriterR1;
     private BufferedWriter mWriterR2;
+
+    public static final String APP_NAME = "Taur";
 
     private static final int LINE_LOG_COUNT = 1000000;
 
     private long mLineCount;
     private final UmiExtractor mUmiExtractor;
 
-    public FastqUmiExtracter(final ConfigBuilder configBuilder)
+    public TaurApplication(final ConfigBuilder configBuilder)
     {
-        mConfig = new UmiConfig(configBuilder);
+        mConfig = new TaurConfig(configBuilder);
 
         mUmiExtractor = new UmiExtractor(mConfig);
 
@@ -82,17 +84,17 @@ public class FastqUmiExtracter
 
         if(fastqFiles.length != 2)
         {
-            FQ_LOGGER.info("invalid fastq file config: {}", mConfig.FastqFiles);
+            TR_LOGGER.info("invalid fastq file config: {}", mConfig.FastqFiles);
             System.exit(1);
         }
 
         if(!Files.exists(Paths.get(fastqFiles[0])) || !Files.exists(Paths.get(fastqFiles[1])))
         {
-            FQ_LOGGER.info("fastq files do not exist: {}", mConfig.FastqFiles);
+            TR_LOGGER.info("fastq files do not exist: {}", mConfig.FastqFiles);
             System.exit(1);
         }
 
-        FQ_LOGGER.info("starting Fastq UMI extractions with files: {}", mConfig.FastqFiles);
+        TR_LOGGER.info("starting Taur UMI extractions with files: {}", mConfig.FastqFiles);
 
         long startTimeMs = System.currentTimeMillis();
 
@@ -102,14 +104,14 @@ public class FastqUmiExtracter
         }
         catch(Exception e)
         {
-            FQ_LOGGER.error("file processing failed: {}", e.toString());
+            TR_LOGGER.error("file processing failed: {}", e.toString());
             e.printStackTrace();
         }
 
         long readCount = mLineCount / 4;
         mUmiExtractor.logResults(readCount);
 
-        FQ_LOGGER.info("extraction complete, totalReads({}), mins({})", readCount, runTimeMinsStr(startTimeMs));
+        TR_LOGGER.info("Taur complete, totalReads({}), mins({})", readCount, runTimeMinsStr(startTimeMs));
     }
 
     private BufferedWriter createOutputWriter(final String inputFile)
@@ -122,7 +124,7 @@ public class FastqUmiExtracter
         }
         catch(IOException e)
         {
-            FQ_LOGGER.error("error creating fastq output file({}): {}", outputFile, e.toString());
+            TR_LOGGER.error("error creating fastq output file({}): {}", outputFile, e.toString());
             System.exit(1);
             return null;
         }
@@ -171,7 +173,7 @@ public class FastqUmiExtracter
             if(mLineCount >= nextLogCount)
             {
                 nextLogCount += LINE_LOG_COUNT;
-                FQ_LOGGER.debug("processed {} lines", mLineCount);
+                TR_LOGGER.debug("processed {} lines", mLineCount);
             }
 
             // accumulate all lines for a single read
@@ -231,11 +233,11 @@ public class FastqUmiExtracter
 
         executor.shutdown();
 
-        FQ_LOGGER.info("read group processing complete");
+        TR_LOGGER.info("read group processing complete");
 
         if(mConfig.Threads > 1)
         {
-            FQ_LOGGER.info("merging {} temporary files", mConfig.Threads);
+            TR_LOGGER.info("merging {} temporary files", mConfig.Threads);
         }
 
         mergeGzipBlocks(outputPrefixR1, outputFileR1);
@@ -367,12 +369,12 @@ public class FastqUmiExtracter
                 {
                     if(!processReadBasesOld(r1ReadBuffer, r2ReadBuffer))
                     {
-                        FQ_LOGGER.error("invalid entries at line({})", lineCount);
+                        TR_LOGGER.error("invalid entries at line({})", lineCount);
 
                         for(int i = 0; i < r1ReadBuffer.length; ++i)
                         {
-                            FQ_LOGGER.error("R1 item {}: {}", i, r1ReadBuffer[i]);
-                            FQ_LOGGER.error("R2 item {}: {}", i, r2ReadBuffer[i]);
+                            TR_LOGGER.error("R1 item {}: {}", i, r1ReadBuffer[i]);
+                            TR_LOGGER.error("R2 item {}: {}", i, r2ReadBuffer[i]);
                         }
 
                         System.exit(1);
@@ -387,7 +389,7 @@ public class FastqUmiExtracter
 
                 if(lineCount > 0 && (lineCount % LINE_LOG_COUNT) == 0)
                 {
-                    FQ_LOGGER.info("processed {} lines", lineCount);
+                    TR_LOGGER.info("processed {} lines", lineCount);
                 }
             }
 
@@ -396,7 +398,7 @@ public class FastqUmiExtracter
         }
         catch(IOException e)
         {
-            FQ_LOGGER.error("error reading fastq({}): {}", mConfig.FastqFiles, e.toString());
+            TR_LOGGER.error("error reading fastq({}): {}", mConfig.FastqFiles, e.toString());
             e.printStackTrace();
             System.exit(1);
         }
@@ -421,7 +423,7 @@ public class FastqUmiExtracter
         }
         catch(IOException e)
         {
-            FQ_LOGGER.error("failed to write output file: {}", e.toString());
+            TR_LOGGER.error("failed to write output file: {}", e.toString());
             return false;
         }
     }
@@ -430,11 +432,11 @@ public class FastqUmiExtracter
     {
         ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
 
-        UmiConfig.registerConfig(configBuilder);
+        TaurConfig.registerConfig(configBuilder);
 
         configBuilder.checkAndParseCommandLine(args);
 
-        FastqUmiExtracter fastqUmiExtracter = new FastqUmiExtracter(configBuilder);
-        fastqUmiExtracter.run();
+        TaurApplication taurApplication = new TaurApplication(configBuilder);
+        taurApplication.run();
     }
 }

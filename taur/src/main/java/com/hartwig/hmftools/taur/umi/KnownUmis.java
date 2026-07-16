@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.fastqtools.umi;
+package com.hartwig.hmftools.taur.umi;
 
 import static java.lang.Math.max;
 import static java.lang.String.format;
@@ -6,12 +6,12 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_N_BASE;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadDelimitedIdFile;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
-import static com.hartwig.hmftools.fastqtools.FastqCommon.FQ_LOGGER;
-import static com.hartwig.hmftools.fastqtools.FastqCommon.READ_ID_DELIM;
-import static com.hartwig.hmftools.fastqtools.FastqCommon.READ_ID_START;
-import static com.hartwig.hmftools.fastqtools.FastqCommon.READ_ITEM_BASES;
-import static com.hartwig.hmftools.fastqtools.FastqCommon.READ_ITEM_ID;
-import static com.hartwig.hmftools.fastqtools.FastqCommon.READ_ITEM_QUALS;
+import static com.hartwig.hmftools.taur.FastaCommon.TR_LOGGER;
+import static com.hartwig.hmftools.taur.FastaCommon.READ_ID_DELIM;
+import static com.hartwig.hmftools.taur.FastaCommon.READ_ID_START;
+import static com.hartwig.hmftools.taur.FastaCommon.READ_ITEM_BASES;
+import static com.hartwig.hmftools.taur.FastaCommon.READ_ITEM_ID;
+import static com.hartwig.hmftools.taur.FastaCommon.READ_ITEM_QUALS;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -20,6 +20,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.codon.Nucleotides;
+import com.hartwig.hmftools.taur.TaurConfig;
 
 public class KnownUmis
 {
@@ -34,7 +35,7 @@ public class KnownUmis
 
     private final String UNMATCHED_UMI = "X";
 
-    public KnownUmis(final UmiConfig config)
+    public KnownUmis(final TaurConfig config)
     {
         this(config.KnownUmiFile, config.UmiLength, config.UmiDelim, config.KnownUmiBaseDiff, config.KnownUmiUseNumeric);
     }
@@ -207,7 +208,7 @@ public class KnownUmis
 
         if(!knownUmis.isEmpty())
         {
-            FQ_LOGGER.info("loaded {} known UMIs from {}", mKnownUmis.size(), knownUmiFile);
+            TR_LOGGER.info("loaded {} known UMIs from {}", mKnownUmis.size(), knownUmiFile);
         }
     }
 
@@ -218,6 +219,6 @@ public class KnownUmis
 
         long matchCount = mKnownUmiMatchCount.get();
         double matchedPerc = matchCount / (double)readCount;
-        FQ_LOGGER.info("known UMI matched({} {}%)", matchCount, format("%.2f", matchedPerc * 100));
+        TR_LOGGER.info("known UMI matched({} {}%)", matchCount, format("%.2f", matchedPerc * 100));
     }
 }

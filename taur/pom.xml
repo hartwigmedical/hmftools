@@ -8,10 +8,10 @@
         <version>local-SNAPSHOT</version>
     </parent>
 
-    <artifactId>fastq-tools</artifactId>
+    <artifactId>taur</artifactId>
     <packaging>jar</packaging>
-    <version>${fastq-tools.version}</version>
-    <name>HMF Tools - FASTQ tools</name>
+    <version>${taur.version}</version>
+    <name>TAUR - FASTQ adjustment routines</name>
 
     <dependencies>
         <dependency>
@@ -52,7 +52,7 @@
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <mainClass>com.hartwig.hmftools.fastqtools.FastqAnalyser</mainClass>
+                            <mainClass>com.hartwig.hmftools.taur.utils.FastqAnalyser</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
