@@ -29,11 +29,11 @@ public class DiscordantJunctionBuilder
     private Junction mNewJunction;
     private final List<Read> mNonJunctionReads;
 
-    public DiscordantJunctionBuilder(final Junction junction)
+    public DiscordantJunctionBuilder(final Junction junction, final List<Read> nonJunctionReads)
     {
         mJunction = junction;
         mNewJunction = null;
-        mNonJunctionReads = Lists.newArrayList();
+        mNonJunctionReads = nonJunctionReads;
     }
 
     public boolean hasNewJunction() { return mNewJunction != null; }

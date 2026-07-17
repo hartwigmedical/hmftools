@@ -83,7 +83,7 @@ public class JunctionAssembler
         else if(mJunction.DiscordantOnly)
         {
             // look for a common soft-clip position, otherwise take the min variant length back from the inner most read as the junction
-            DiscordantJunctionBuilder discordantJunctionBuilder = new DiscordantJunctionBuilder(mJunction);
+            DiscordantJunctionBuilder discordantJunctionBuilder = new DiscordantJunctionBuilder(mJunction, mNonJunctionReads);
             discordantJunctionBuilder.assessDiscordantJunction(rawReads, extensionReads, junctionReads);
 
             if(extensionReads.isEmpty())
