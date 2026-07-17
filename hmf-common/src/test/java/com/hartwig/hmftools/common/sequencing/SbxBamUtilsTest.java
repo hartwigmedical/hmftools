@@ -16,18 +16,18 @@ public class SbxBamUtilsTest
     public void
     testGetDuplexIndelsNoDuplexIndels()
     {
-        String ycTagStr = "0+100+0";
+        String ycTagStr = "+100+"; // no leading simplex count or trailing tail, both meaning zero
         List<Integer> duplexIndelIndices = getDuplexIndelIndices(ycTagStr);
 
         assertTrue(duplexIndelIndices.isEmpty());
 
-        ycTagStr = "10+100I100+0";
+        ycTagStr = "10+100I100+"; // no trailing tail, meaning zero
         duplexIndelIndices = getDuplexIndelIndices(ycTagStr);
 
         assertEquals(1, duplexIndelIndices.size());
         assertTrue(duplexIndelIndices.contains(110));
 
-        ycTagStr = "+100I100+0"; // no leading simplex count, meaning zero
+        ycTagStr = "+100I100+"; // no leading simplex count or trailing tail, both meaning zero
         duplexIndelIndices = getDuplexIndelIndices(ycTagStr);
 
         assertEquals(1, duplexIndelIndices.size());
@@ -41,6 +41,12 @@ public class SbxBamUtilsTest
         assertTrue(duplexIndelIndices.contains(41));
 
         ycTagStr = "390++"; // empty duplex region and omitted tail, not invalid
+
+        duplexIndelIndices = getDuplexIndelIndices(ycTagStr);
+
+        assertTrue(duplexIndelIndices.isEmpty());
+
+        ycTagStr = "++"; // no leading simplex count, empty duplex region, and omitted tail
 
         duplexIndelIndices = getDuplexIndelIndices(ycTagStr);
 
