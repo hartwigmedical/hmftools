@@ -1,15 +1,24 @@
 package com.hartwig.hmftools.tars.liftback;
 
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.addGeneData;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.addTransExonData;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.createEnsemblGeneData;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.createGeneDataCache;
 
 import static org.junit.Assert.assertEquals;
 
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
+import com.hartwig.hmftools.common.gene.ExonData;
+import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.tars.common.ContigEntry;
@@ -37,6 +46,28 @@ public final class TarsTestFixtures
         return new ContigEntry(
                 TX_CONTIG, 1, 250, GENE_ID, GENE_NAME, TRANS_NAME, GENOMIC_CHR, 1,
                 List.of(new BaseRegion(100, 199), new BaseRegion(300, 399), new BaseRegion(500, 549)));
+    }
+
+    // builds an ExonRegionIndex from a single gene on the given ensembl chromosome (bare, e.g. "1") whose one
+    // transcript carries the exon spans; fromCache merges the spans and keys them in V38 form (chr1). Shared by the
+    // resolver and exon-index suites.
+    public static ExonRegionIndex exonRegionIndex(final String chromosome, final List<int[]> exonSpans)
+    {
+        EnsemblDataCache cache = createGeneDataCache();
+        addGeneData(cache, chromosome, List.of(createEnsemblGeneData(GENE_ID, GENE_NAME, chromosome, 1, 1, 100_000)));
+
+        TranscriptData transcript = new TranscriptData(
+                1, TRANS_NAME, GENE_ID, true, (byte) 1, 1, 100_000, null, null, "protein_coding", "");
+        List<ExonData> exons = new ArrayList<>();
+        int rank = 1;
+        for(int[] span : exonSpans)
+        {
+            exons.add(new ExonData(1, span[0], span[1], rank++, -1, -1));
+        }
+        transcript.setExons(exons);
+        addTransExonData(cache, GENE_ID, List.of(transcript));
+
+        return ExonRegionIndex.fromCache(cache, V38);
     }
 
     public static SAMRecord primaryRecord(final String contig, final int pos, final String cigar)

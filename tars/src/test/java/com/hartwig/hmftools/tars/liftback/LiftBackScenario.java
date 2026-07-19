@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.supplementaryR
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -295,6 +296,44 @@ public final class LiftBackScenario
             SAMRecord record = record(readName, role);
             assertNotNull("no emitted record for " + readName + "/" + role, record);
             assertEquals(readName + "/" + role + " should be unmapped", true, record.getReadUnmappedFlag());
+            return this;
+        }
+
+        // mate reference-name + start cross-pointer (set by MateFieldPatcher against the mate's lifted primary).
+        public Result assertMate(final String readName, final ReadRole role, final String mateChrom, final int matePos)
+        {
+            SAMRecord record = record(readName, role);
+            assertNotNull("no emitted record for " + readName + "/" + role, record);
+            assertEquals(readName + "/" + role + " mate chrom", mateChrom, record.getMateReferenceName());
+            assertEquals(readName + "/" + role + " mate pos", matePos, record.getMateAlignmentStart());
+            return this;
+        }
+
+        public Result assertMateUnmapped(final String readName, final ReadRole role)
+        {
+            SAMRecord record = record(readName, role);
+            assertNotNull("no emitted record for " + readName + "/" + role, record);
+            assertEquals(readName + "/" + role + " mate should be unmapped", true, record.getMateUnmappedFlag());
+            return this;
+        }
+
+        public Result assertProperPair(final String readName, final ReadRole role, final boolean expected)
+        {
+            SAMRecord record = record(readName, role);
+            assertNotNull("no emitted record for " + readName + "/" + role, record);
+            assertEquals(readName + "/" + role + " proper-pair", expected, record.getProperPairFlag());
+            return this;
+        }
+
+        // SA tag lifted to genomic space: present, starts at the given chromosome, and carries no _tx contig name.
+        public Result assertSaGenomic(final String readName, final ReadRole role, final String chrom)
+        {
+            SAMRecord record = record(readName, role);
+            assertNotNull("no emitted record for " + readName + "/" + role, record);
+            String sa = record.getStringAttribute("SA");
+            assertNotNull(readName + "/" + role + " SA should be present", sa);
+            assertTrue(readName + "/" + role + " SA should start at " + chrom + ": " + sa, sa.startsWith(chrom + ","));
+            assertTrue(readName + "/" + role + " SA should not reference a _tx contig: " + sa, !sa.contains("_tx"));
             return this;
         }
 

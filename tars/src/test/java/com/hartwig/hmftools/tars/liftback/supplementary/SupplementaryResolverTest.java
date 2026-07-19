@@ -152,6 +152,11 @@ public class SupplementaryResolverTest
         assertEquals(2, result.droppedSupplementaryIndices().size());
         assertTrue(result.droppedSupplementaryIndices().contains(0));
         assertTrue(result.droppedSupplementaryIndices().contains(1));
+
+        // introduced introns are recorded in chain order (first exon boundary first).
+        assertEquals(2, result.introducedIntrons().size());
+        assertEquals(new ChrBaseRegion(CHR1, 1050, 1999), result.introducedIntrons().get(0));
+        assertEquals(new ChrBaseRegion(CHR1, 2060, 2999), result.introducedIntrons().get(1));
     }
 
     @Test
@@ -701,39 +706,6 @@ public class SupplementaryResolverTest
 
         assertTrue(result.merged());
         assertEquals("93M407N58M", result.mergedCigar());
-    }
-
-    @Test
-    public void testNoAnnotatedSnapWithAnnotatedOnlyFalseFallsBackToMidpoint()
-    {
-        SupplementaryConfig perm = new SupplementaryConfig(true, 21, 1_000_000, 4, false, 5, 0);
-        SupplementaryCandidate cand = candidate(CHR1, true, 151, 1001, "94M57S", 60,
-                supp(0, CHR1, true, 1500, "92S59M", 60));
-
-        SupplementaryResult result = new SupplementaryResolver(Collections.emptySet(), perm).resolve(cand);
-
-        assertTrue(result.merged());
-        assertEquals("93M407N58M", result.mergedCigar());
-    }
-
-    @Test
-    public void testMergedIntronListReflectsChainOrder()
-    {
-        int primStart = 1000;
-        Set<ChrBaseRegion> set = annotated(
-                new ChrBaseRegion(CHR1, 1050, 1999),
-                new ChrBaseRegion(CHR1, 2060, 2999));
-
-        SupplementaryCandidate cand = candidate(CHR1, true, READ_LEN, primStart, "50M101S", 60,
-                supp(0, CHR1, true, 2000, "50S60M41S", 60),
-                supp(1, CHR1, true, 3000, "110S41M", 60));
-
-        SupplementaryResult result = enabledResolver(set).resolve(cand);
-
-        assertTrue(result.merged());
-        assertEquals(2, result.introducedIntrons().size());
-        assertEquals(new ChrBaseRegion(CHR1, 1050, 1999), result.introducedIntrons().get(0));
-        assertEquals(new ChrBaseRegion(CHR1, 2060, 2999), result.introducedIntrons().get(1));
     }
 
     // Resolver wired to a base-level genome, for the motif-scan and ref-verify passes.

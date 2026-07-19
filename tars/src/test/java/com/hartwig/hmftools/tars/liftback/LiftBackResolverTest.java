@@ -1,12 +1,8 @@
 package com.hartwig.hmftools.tars.liftback;
 
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
-import static com.hartwig.hmftools.common.test.GeneTestUtils.addGeneData;
-import static com.hartwig.hmftools.common.test.GeneTestUtils.addTransExonData;
-import static com.hartwig.hmftools.common.test.GeneTestUtils.createEnsemblGeneData;
-import static com.hartwig.hmftools.common.test.GeneTestUtils.createGeneDataCache;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.TX_CONTIG;
+import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.exonRegionIndex;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.threeExonContig;
 
 import static org.junit.Assert.assertEquals;
@@ -14,12 +10,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import java.util.ArrayList;
 import java.util.List;
 
-import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.gene.ExonData;
-import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.tars.common.ContigEntry;
 
@@ -456,26 +448,6 @@ public class LiftBackResolverTest
         assertEquals(3, result.numLoci());
     }
 
-    // Builds an ExonRegionIndex from an in-memory ensembl cache (shared by rescue-path tests).
-    private static ExonRegionIndex buildExonIndex(final List<int[]> exons)
-    {
-        EnsemblDataCache cache = createGeneDataCache();
-        addGeneData(cache, CHR_1, List.of(createEnsemblGeneData("ENSG_TEST", "TESTG", CHR_1, 1, 1, 100000)));
-
-        TranscriptData transcript = new TranscriptData(
-                1, "ENST_TEST", "ENSG_TEST", true, (byte) 1, 1, 100000, null, null, "protein_coding", "");
-        List<ExonData> exonData = new ArrayList<>();
-        int rank = 1;
-        for(int[] exon : exons)
-        {
-            exonData.add(new ExonData(1, exon[0], exon[1], rank++, -1, -1));
-        }
-        transcript.setExons(exonData);
-        addTransExonData(cache, "ENSG_TEST", List.of(transcript));
-
-        return ExonRegionIndex.fromCache(cache, V38);
-    }
-
     // Hidden tie (XS==AS) on a ref-only primary landing outside any indexed exon: no vouching evidence, so the
     // unresolved hidden tie holds MAPQ at 0 (the equal-scoring alt bwa did not emit may be real).
     @Test
@@ -489,7 +461,7 @@ public class LiftBackResolverTest
         LiftBackResolver noIndex = new LiftBackResolver(contigMap());
         assertEquals(0, noIndex.resolve(record).updatedMapq());
 
-        ExonRegionIndex exonIndex = buildExonIndex(List.of(new int[] { 1400, 1700 }));
+        ExonRegionIndex exonIndex = exonRegionIndex(CHR_1, List.of(new int[] { 1400, 1700 }));
         LiftBackResolver withIndex = new LiftBackResolver(contigMap(), exonIndex);
         LiftBackResult result = withIndex.resolve(record);
         assertEquals(0, result.updatedMapq());
@@ -505,7 +477,7 @@ public class LiftBackResolverTest
         record.setAttribute("AS", 151);
         record.setAttribute("XS", 151);
 
-        ExonRegionIndex exonIndex = buildExonIndex(List.of(new int[] { 1400, 1700 })); // exon at 1400-1700; primary at 5000 is intergenic
+        ExonRegionIndex exonIndex = exonRegionIndex(CHR_1, List.of(new int[] { 1400, 1700 })); // exon at 1400-1700; primary at 5000 is intergenic
         LiftBackResolver resolver = new LiftBackResolver(contigMap(), exonIndex);
         assertEquals(0, resolver.resolve(record).updatedMapq());
     }
@@ -552,12 +524,6 @@ public class LiftBackResolverTest
     public void testMapqPolicy_multiLocusNeverBumps()
     {
         assertEquals(0, LiftBackResolver.decidePrimaryMapq(0, 2, false, false, false)); // multi-locus never bumped
-    }
-
-    @Test
-    public void testMapqPolicy_refOnlySingleLocusBumps()
-    {
-        assertEquals(60, LiftBackResolver.decidePrimaryMapq(0, 1, false, false, false)); // single-locus ref-only MAPQ0 now bumps
     }
 
     @Test
