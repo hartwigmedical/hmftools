@@ -38,7 +38,7 @@ public class SpliceLiftBackConfig
     public static final String RNA_UNMAP_REGIONS = "rna_unmap_regions";
     public static final String RNA_UNMAP_REGIONS_DESC =
             "Curated excluded regions (Chromosome/PosStart/PosEnd), e.g. RNA rRNA / 7SL / multi-map zones; "
-                    + "a fragment with a primary in any region is dropped before lifting";
+                    + "a read lifting into any region is excluded post-lift (primary unmapped, supplementaries dropped)";
 
     public static final String WRITE_LIFTBACK_TSV = "write_liftback_tsv";
     public static final String WRITE_LIFTBACK_TSV_DESC =
