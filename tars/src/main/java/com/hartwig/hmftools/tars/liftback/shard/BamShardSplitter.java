@@ -55,6 +55,10 @@ public final class BamShardSplitter
                 break; // no further block boundary: the remaining file is one shard
 
             long splitVptr = firstGroupBoundaryVptr(bam, header, blockStart << 16);
+            if(splitVptr == EOF)
+                break; // no group boundary before EOF (e.g. a small input where the probe hit the BGZF end marker):
+                       // the remaining file is one shard. EOF must never become a shard start (would seek to Long.MAX_VALUE).
+
             if(splitVptr > splits.get(splits.size() - 1))
             {
                 splits.add(splitVptr);
