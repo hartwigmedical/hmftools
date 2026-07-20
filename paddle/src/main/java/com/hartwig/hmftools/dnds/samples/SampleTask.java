@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.dnds.builder;
+package com.hartwig.hmftools.dnds.samples;
 
 import static com.hartwig.hmftools.dnds.DndsCommon.DN_LOGGER;
 

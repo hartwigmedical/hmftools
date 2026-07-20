@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.dnds.builder;
+package com.hartwig.hmftools.dnds.samples;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;

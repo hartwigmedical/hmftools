@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.dnds.builder;
+package com.hartwig.hmftools.dnds.samples;
 
 import static java.lang.Math.min;
 
@@ -32,7 +32,7 @@ import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.dnds.SomaticVariant;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
-public class DndsDataBuilder
+public class CohortDataBuilder
 {
     private final List<String> mSampleIds;
     private final String mPurpleDir;
@@ -45,7 +45,7 @@ public class DndsDataBuilder
     private BufferedWriter mVariantsWriter;
     private final AtomicInteger mProcessedCount = new AtomicInteger();
 
-    public DndsDataBuilder(final ConfigBuilder configBuilder)
+    public CohortDataBuilder(final ConfigBuilder configBuilder)
     {
         mSampleIds = loadSampleIdsFile(configBuilder);
         mPurpleDir = configBuilder.getValue(PURPLE_DIR_CFG);
@@ -119,8 +119,8 @@ public class DndsDataBuilder
 
         configBuilder.checkAndParseCommandLine(args);
 
-        DndsDataBuilder dndsDataBuilder = new DndsDataBuilder(configBuilder);
-        dndsDataBuilder.run();
+        CohortDataBuilder cohortDataBuilder = new CohortDataBuilder(configBuilder);
+        cohortDataBuilder.run();
     }
 
     private static void registerConfig(final ConfigBuilder configBuilder)

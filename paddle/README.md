@@ -30,7 +30,7 @@ The second step is to:
 This is done by running `DndsDataBuilder`, providing a directory containing `<SampleId>.purple.somatic.vcf.gz` files:
 
 ```bash
-java -cp paddle.jar com.hartwig.hmftools.dnds.builder.DndsDataBuilder \
+java -cp paddle.jar com.hartwig.hmftools.dnds.samples.CohortDataBuilder \
     -sample_id_file sample_ids.txt \
     -output_dir output/ \
     -purple_dir purple/ \
@@ -41,7 +41,7 @@ java -cp paddle.jar com.hartwig.hmftools.dnds.builder.DndsDataBuilder \
 or from the Hartwig SQL database:
 
 ```bash
-java -cp paddle.jar com.hartwig.hmftools.dnds.builder.DndsDataBuilder \
+java -cp paddle.jar com.hartwig.hmftools.dnds.samples.CohortDataBuilder \
     -sample_id_file sample_ids.txt \
     -output_dir output/ \
     -db_user ${user} -db_pass ${pass} -db_url ${url} \

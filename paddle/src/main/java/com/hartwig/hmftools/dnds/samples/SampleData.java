@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.dnds.builder;
+package com.hartwig.hmftools.dnds.samples;
 
 import com.hartwig.hmftools.dnds.SampleMutationalLoad;
 import com.hartwig.hmftools.dnds.SomaticVariant;
