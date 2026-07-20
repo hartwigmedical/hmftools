@@ -27,7 +27,6 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.perf.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.dnds.SampleMutationalLoad;
 import com.hartwig.hmftools.dnds.SomaticVariant;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
@@ -68,9 +67,12 @@ public class DndsDataBuilder
 
         if(mThreads > 1)
         {
-            for(int i = 0; i < min(mSampleIds.size(), mThreads); ++i)
+            for(int taskId = 0; taskId < min(mSampleIds.size(), mThreads); ++taskId)
             {
-                sampleTasks.add(new SampleTask(i));
+                SampleTask sampleTask = new SampleTask(taskId, mSampleIds.size(), mThreads, mProcessedCount,
+                        mSampleDataLoader, mMutLoadWriter, mVariantsWriter);
+
+                sampleTasks.add(sampleTask);
             }
 
             int taskIndex = 0;
@@ -91,7 +93,9 @@ public class DndsDataBuilder
         }
         else
         {
-            SampleTask sampleTask = new SampleTask(0);
+            SampleTask sampleTask = new SampleTask(0, mSampleIds.size(), mThreads, mProcessedCount,
+                    mSampleDataLoader, mMutLoadWriter, mVariantsWriter);
+
             sampleTask.addSamples(mSampleIds);
             sampleTasks.add(sampleTask);
             sampleTask.call();
@@ -101,56 +105,6 @@ public class DndsDataBuilder
         closeBufferedWriter(mVariantsWriter);
 
         DN_LOGGER.info("DNDS sample data building complete");
-    }
-
-    private class SampleTask implements Callable<Void>
-    {
-        private final int mTaskId;
-        private final List<String> mSampleIds;
-
-        public SampleTask(int taskId)
-        {
-            mTaskId = taskId;
-            mSampleIds = Lists.newArrayList();
-        }
-
-        public void addSample(final String sampleId) { mSampleIds.add(sampleId); }
-        public void addSamples(final List<String> sampleIds) { mSampleIds.addAll(sampleIds); }
-
-        @Override
-        public Void call()
-        {
-            for (String sampleId : mSampleIds) {
-                processSample(sampleId);
-
-                int totalSamples = DndsDataBuilder.this.mSampleIds.size();
-                int processed = mProcessedCount.incrementAndGet();
-
-                if (totalSamples < 10 || (processed % 10) == 0) {
-                    DN_LOGGER.info("processed {} of {} samples", processed, totalSamples);
-                }
-            }
-
-            if(mThreads > 1)
-            {
-                DN_LOGGER.debug("{}: task complete for {} samples", mTaskId, mSampleIds.size());
-            }
-
-            return null;
-        }
-
-        private void processSample(final String sampleId)
-        {
-            SampleData sampleData = mSampleDataLoader.loadSampleData(sampleId);
-
-            if(sampleData == null)
-                return;
-
-            DN_LOGGER.debug("sample({}) loaded {} variants", sampleId, sampleData.Variants.size());
-
-            SampleMutationalLoad.writeSampleMutationalLoad(mMutLoadWriter, sampleId, sampleData.MutationalLoad);
-            SomaticVariant.writeVariants(mVariantsWriter, sampleId, sampleData.Variants);
-        }
     }
 
     public static void main(final String... args)
