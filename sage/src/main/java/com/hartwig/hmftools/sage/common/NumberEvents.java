@@ -5,17 +5,19 @@ import static java.lang.Math.max;
 import static com.hartwig.hmftools.common.bam.CigarUtils.leftSoftClipLength;
 import static com.hartwig.hmftools.common.bam.CigarUtils.rightSoftClipLength;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.calculateNmTag;
 import static com.hartwig.hmftools.sage.SageConstants.SC_READ_EVENTS_FACTOR;
+
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.util.SequenceUtil;
 
 public final class NumberEvents
 {
-    public static int calcAdjustedNumMutations(final SAMRecord record, final RefSequence refSequence)
+    public static int calcAdjustedNumMutations(final SAMRecord record, final RefGenomeInterface refGenome)
     {
-        int nm = getOrCalcNm(record, refSequence);
+        int nm = getOrCalcNm(record, refGenome);
 
         int additionalIndels = 0;
 
@@ -33,15 +35,14 @@ public final class NumberEvents
         return nm - additionalIndels;
     }
 
-    private static int getOrCalcNm(final SAMRecord record, final RefSequence refSequence)
+    private static int getOrCalcNm(final SAMRecord record, final RefGenomeInterface refGenome)
     {
         Object nm = record.getAttribute(NUM_MUTATONS_ATTRIBUTE);
 
         if(nm != null && nm instanceof Integer)
             return (int)nm;
 
-        int offset = refSequence.Start - 1;
-        return SequenceUtil.calculateSamNmTag(record, refSequence.Bases, offset);
+        return calculateNmTag(record, refGenome);
     }
 
     public static double calcSoftClipAdjustment(final SAMRecord record)
