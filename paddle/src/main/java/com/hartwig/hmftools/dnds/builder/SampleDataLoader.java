@@ -10,9 +10,15 @@ import static org.jooq.impl.DSL.count;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.purple.PurpleCommon;
+import com.hartwig.hmftools.common.region.BedFileReader;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.HotspotType;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
@@ -35,22 +41,24 @@ public class SampleDataLoader
 {
     private final DatabaseAccess mDbAccess;
     private final String mPurpleDir;
+    private final Map<String, List<ChrBaseRegion>> mTargetRegionsByChromosome;
 
-    public SampleDataLoader(final String purpleDir, final DatabaseAccess dbAccess)
+    public SampleDataLoader(final String purpleDir, final DatabaseAccess dbAccess, final String targetRegionsBedFile)
     {
         mDbAccess = dbAccess;
         mPurpleDir = purpleDir;
+        mTargetRegionsByChromosome = loadTargetRegionsByChromosome(targetRegionsBedFile);
     }
 
     public SampleData loadSampleData(final String sampleId)
     {
         if(mDbAccess != null)
         {
-            return new SampleData(readDndsVariants(sampleId, MAX_REPEAT_COUNT), readSampleMutationalLoad(sampleId));
+            return new SampleData(processVariantsFromDatabase(sampleId, MAX_REPEAT_COUNT), readMutationalLoadFromDatabase(sampleId));
         }
         else if(mPurpleDir != null)
         {
-            return readSampleDataFromVcf(sampleId, MAX_REPEAT_COUNT);
+            return processVariantsFromVcf(sampleId, MAX_REPEAT_COUNT);
         }
         else
         {
@@ -59,7 +67,68 @@ public class SampleDataLoader
         }
     }
 
-    private SampleMutationalLoad readSampleMutationalLoad(final String sample)
+    private static Map<String, List<ChrBaseRegion>> loadTargetRegionsByChromosome(final String bedFile)
+    {
+        DN_LOGGER.info("loading bed file: {}", bedFile);
+
+        List<ChrBaseRegion> targetRegions;
+
+        try
+        {
+            targetRegions = BedFileReader.loadBedFile(bedFile);
+        }
+        catch(Exception e)
+        {
+            DN_LOGGER.error("failed to load bed file({}): {}", bedFile, e.toString());
+            System.exit(1);
+            return null;
+        }
+
+        Map<String, List<ChrBaseRegion>> regionsByChromosome = Maps.newHashMap();
+
+        for(ChrBaseRegion region : targetRegions)
+        {
+            regionsByChromosome.computeIfAbsent(region.Chromosome, k -> Lists.newArrayList()).add(region);
+        }
+
+        return regionsByChromosome;
+    }
+
+    @VisibleForTesting
+    static boolean inTargetRegions(final Map<String, List<ChrBaseRegion>> targetRegionsByChromosome, final String chromosome, final int position)
+    {
+        // Use binary search to speed up VCF slicing - target regions are sorted by chromosome then start position
+
+        // normalise since target regions are keyed without a 'chr' prefix (see BedLine.toRegion), whereas VCF contigs
+        // may or may not carry one depending on ref genome version (see RefGenomeVersion.versionedChromosome)
+        if(!HumanChromosome.contains(chromosome))
+            return false;
+
+        List<ChrBaseRegion> regions = targetRegionsByChromosome.get(HumanChromosome.fromString(chromosome).toString());
+
+        if(regions == null)
+            return false;
+
+        int lowerIndex = 0;
+        int upperIndex = regions.size() - 1;
+
+        while(lowerIndex <= upperIndex)
+        {
+            int midIndex = (lowerIndex + upperIndex) / 2;
+            ChrBaseRegion region = regions.get(midIndex);
+
+            if(position < region.start())
+                upperIndex = midIndex - 1;
+            else if(position > region.end())
+                lowerIndex = midIndex + 1;
+            else
+                return true;
+        }
+
+        return false;
+    }
+
+    private SampleMutationalLoad readMutationalLoadFromDatabase(final String sample)
     {
         Result<Record3<Byte, String, Integer>> result = mDbAccess.context()
                 .select(SOMATICVARIANT.BIALLELIC, SOMATICVARIANT.TYPE, count())
@@ -101,7 +170,7 @@ public class SampleDataLoader
         return new SampleMutationalLoad(snvBiallelic, snvNonBiallelic, indelBiallelic, indelNonBiallelic);
     }
 
-    private List<SomaticVariant> readDndsVariants(final String sample, int maxRepeatCount)
+    private List<SomaticVariant> processVariantsFromDatabase(final String sample, int maxRepeatCount)
     {
         List<SomaticVariant> variants = Lists.newArrayList();
 
@@ -119,9 +188,15 @@ public class SampleDataLoader
 
         for(Record record : result)
         {
+            String chromosome = record.getValue(SOMATICVARIANT.CHROMOSOME);
+            int position = record.getValue(SOMATICVARIANT.POSITION);
+
+            if(!inTargetRegions(mTargetRegionsByChromosome, chromosome, position))
+                continue;
+
             SomaticVariant variant = new SomaticVariant(
-                    record.getValue(SOMATICVARIANT.CHROMOSOME),
-                    record.getValue(SOMATICVARIANT.POSITION),
+                    chromosome,
+                    position,
                     record.getValue(SOMATICVARIANT.REF),
                     record.getValue(SOMATICVARIANT.ALT),
                     record.getValue(SOMATICVARIANT.GENE),
@@ -142,7 +217,7 @@ public class SampleDataLoader
         return variants;
     }
 
-    private SampleData readSampleDataFromVcf(final String sample, final int maxRepeatCount)
+    private SampleData processVariantsFromVcf(final String sample, final int maxRepeatCount)
     {
         String vcfFile = PurpleCommon.purpleSomaticVcfFile(mPurpleDir, sample);
         VcfFileReader vcfFileReader = new VcfFileReader(vcfFile);
@@ -190,30 +265,24 @@ public class SampleDataLoader
                         ++indelNonBiallelic;
                 }
 
-                String gene = decorator.gene();
-                if(gene.isEmpty())
+                int repeatCount = decorator.repeatCount();
+                if(decorator.repeatCount() > maxRepeatCount)
+                    continue;
+
+                if(!inTargetRegions(mTargetRegionsByChromosome, decorator.chromosome(), decorator.position()))
                     continue;
 
                 VariantImpact impact = decorator.variantImpact();
-                CodingEffect codingEffect = impact.CanonicalCodingEffect;
-                boolean hasNoCodingEffect = codingEffect == CodingEffect.NONE || codingEffect == CodingEffect.UNDEFINED;
-                if(hasNoCodingEffect && !impact.CanonicalSpliceRegion)
-                    continue;
-
-                int repeatCount = decorator.repeatCount();
-                if(repeatCount > maxRepeatCount)
-                    continue;
-
                 SomaticVariant variant = new SomaticVariant(
                         decorator.chromosome(),
                         decorator.position(),
                         decorator.ref(),
                         decorator.alt(),
-                        gene,
+                        decorator.gene(),
                         isBiallelic,
                         decorator.isHotspot(),
                         impact.WorstCodingEffect,
-                        codingEffect,
+                        impact.CanonicalCodingEffect,
                         impact.CanonicalSpliceRegion,
                         repeatCount
                 );

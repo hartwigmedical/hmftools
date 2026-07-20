@@ -6,6 +6,8 @@ import static com.hartwig.hmftools.common.perf.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.TARGET_REGIONS_BED;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.TARGET_REGIONS_BED_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FILE;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FILE_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
@@ -47,13 +49,16 @@ public class DndsDataBuilder
     {
         mSampleIds = loadSampleIdsFile(configBuilder);
         mPurpleDir = configBuilder.getValue(PURPLE_DIR_CFG);
-        mThreads = parseThreads(configBuilder);
         mOutputDir = parseOutputDir(configBuilder);
+        mThreads = parseThreads(configBuilder);
+
+        mDbAccess = DatabaseAccess.createDatabaseAccess(configBuilder);
+
+        mSampleDataLoader = new SampleDataLoader(mPurpleDir, mDbAccess, configBuilder.getValue(TARGET_REGIONS_BED));
+
         mMutLoadWriter = null;
         mVariantsWriter = null;
 
-        mDbAccess = DatabaseAccess.createDatabaseAccess(configBuilder);
-        mSampleDataLoader = new SampleDataLoader(mPurpleDir, mDbAccess);
     }
 
     public void run()
@@ -61,7 +66,7 @@ public class DndsDataBuilder
         mVariantsWriter = SomaticVariant.initialiseWriter(SomaticVariant.cohortDndsVariantsFilename(mOutputDir));
         mMutLoadWriter = initialiseWriter(cohortSampleMutationalLoadFilename(mOutputDir));
 
-        DN_LOGGER.info("retrieving mutation load and variant data for {} samples", mSampleIds.size());
+        DN_LOGGER.info("retrieving variants and mutation load for {} samples", mSampleIds.size());
 
         List<SampleTask> sampleTasks = Lists.newArrayList();
 
@@ -122,6 +127,7 @@ public class DndsDataBuilder
     {
         configBuilder.addPath(SAMPLE_ID_FILE, true, SAMPLE_ID_FILE_DESC);
         configBuilder.addPath(PURPLE_DIR_CFG, false, PURPLE_DIR_DESC);
+        configBuilder.addPath(TARGET_REGIONS_BED, true, TARGET_REGIONS_BED_DESC);
         DatabaseAccess.addDatabaseCmdLineArgs(configBuilder, false);
         addOutputDir(configBuilder);
         addLoggingOptions(configBuilder);

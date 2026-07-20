@@ -34,6 +34,7 @@ java -cp paddle.jar com.hartwig.hmftools.dnds.builder.DndsDataBuilder \
     -sample_id_file sample_ids.txt \
     -output_dir output/ \
     -purple_dir purple/ \
+    -target_regions_bed exon_coords.bed \
     -threads 8
 ```
 
@@ -43,7 +44,10 @@ or from the Hartwig SQL database:
 java -cp paddle.jar com.hartwig.hmftools.dnds.builder.DndsDataBuilder \
     -sample_id_file sample_ids.txt \
     -output_dir output/ \
-    -db_user ${user} -db_pass ${pass} -db_url ${url}
+    -db_user ${user} -db_pass ${pass} -db_url ${url} \
+    -target_regions_bed exon_coords.bed \
+    -threads 8
+    
 ```
 
 This produces a `dnds_cohort_mut_load.tsv` file with the mutational load counts per sample:

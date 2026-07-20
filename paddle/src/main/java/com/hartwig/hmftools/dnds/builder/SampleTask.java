@@ -44,10 +44,16 @@ public class SampleTask implements Callable<Void>
     {
         for(String sampleId : mSampleIds)
         {
-            processSample(sampleId);
+            SampleData sampleData = mSampleDataLoader.loadSampleData(sampleId);
+            if(sampleData == null)
+                continue;
+
+            DN_LOGGER.debug("sample({}) loaded {} variants", sampleId, sampleData.Variants.size());
+
+            SampleMutationalLoad.writeSampleMutationalLoad(mMutLoadWriter, sampleId, sampleData.MutationalLoad);
+            SomaticVariant.writeVariants(mVariantsWriter, sampleId, sampleData.Variants);
 
             int processed = mProcessedCount.incrementAndGet();
-
             if(mTotalSampleCount < 10 || (processed % 10) == 0)
             {
                 DN_LOGGER.info("processed {} of {} samples", processed, mTotalSampleCount);
@@ -60,18 +66,5 @@ public class SampleTask implements Callable<Void>
         }
 
         return null;
-    }
-
-    private void processSample(final String sampleId)
-    {
-        SampleData sampleData = mSampleDataLoader.loadSampleData(sampleId);
-
-        if(sampleData == null)
-            return;
-
-        DN_LOGGER.debug("sample({}) loaded {} variants", sampleId, sampleData.Variants.size());
-
-        SampleMutationalLoad.writeSampleMutationalLoad(mMutLoadWriter, sampleId, sampleData.MutationalLoad);
-        SomaticVariant.writeVariants(mVariantsWriter, sampleId, sampleData.Variants);
     }
 }
