@@ -21,6 +21,7 @@ import static com.hartwig.hmftools.dnds.SampleMutationalLoad.initialiseWriter;
 import java.io.BufferedWriter;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -41,6 +42,7 @@ public class DndsDataBuilder
 
     private BufferedWriter mMutLoadWriter;
     private BufferedWriter mVariantsWriter;
+    private final AtomicInteger mProcessedCount = new AtomicInteger();
 
     public DndsDataBuilder(final ConfigBuilder configBuilder)
     {
@@ -57,8 +59,6 @@ public class DndsDataBuilder
 
     public void run()
     {
-        DN_LOGGER.info("DNDS sample data building for {} samples", mSampleIds.size());
-
         mVariantsWriter = SomaticVariant.initialiseWriter(SomaticVariant.cohortDndsVariantsFilename(mOutputDir));
         mMutLoadWriter = initialiseWriter(cohortSampleMutationalLoadFilename(mOutputDir));
 
@@ -120,20 +120,20 @@ public class DndsDataBuilder
         @Override
         public Void call()
         {
-            for(int i = 0; i < mSampleIds.size(); ++i)
-            {
-                String sampleId = mSampleIds.get(i);
-
+            for (String sampleId : mSampleIds) {
                 processSample(sampleId);
-                if(i > 0 && (i % 10) == 0)
-                {
-                    DN_LOGGER.info("{}: processed {} samples", mTaskId, i);
+
+                int totalSamples = DndsDataBuilder.this.mSampleIds.size();
+                int processed = mProcessedCount.incrementAndGet();
+
+                if (totalSamples < 10 || (processed % 10) == 0) {
+                    DN_LOGGER.info("processed {} of {} samples", processed, totalSamples);
                 }
             }
 
             if(mThreads > 1)
             {
-                DN_LOGGER.info("{}: tasks complete for {} samples", mTaskId, mSampleIds.size());
+                DN_LOGGER.debug("{}: task complete for {} samples", mTaskId, mSampleIds.size());
             }
 
             return null;
