@@ -2,13 +2,29 @@
 
 Uses dNdS values to calculate expected driver and passenger mutation rates.
 
-There are 4 steps required to generate dNdS values
-1. [Define the cohort to run on](#define-the-cohort-to-run-on)
-2. [Gather variants of cohort](#gather-exonic-variants-for-all-samples-in-the-cohort)
-3. [Run dNdScv](#run-dndscv)
-4. [Generate driver catalog values](#generate-driver-catalog-values)
+There are 5 steps required to generate dNdS values
+1. [Build dNdScv reference resources](#build-dndscv-reference-resources)
+2. [Define the cohort to run on](#define-the-cohort-to-run-on)
+3. [Gather variants of cohort](#gather-exonic-variants-for-all-samples-in-the-cohort)
+4. [Run dNdScv](#run-dndscv)
+5. [Generate driver catalog values](#generate-driver-catalog-values)
 
-## Define the cohort to run on 
+## Build dNdScv reference resources
+
+Before doing anything else, build the reference resources dNdScv needs (RefCDS RData, exon coords BED, covariates matrix, known cancer gene list) by running `build_dndscv_resources.R`:
+
+```bash
+Rscript build_dndscv_resources.R \
+    --ensembl_data_dir /path/to/ensembl_data/ \
+    --driver_gene_panel /path/to/DriverGenePanel.38.tsv \
+    --genome_fasta /path/to/GRCh38_masked_exclusions_alts_hlas.fasta \
+    --dndscv_package_dir /path/to/dndscv/ \
+    --output_dir /path/to/output/
+```
+
+This produces, among others, `exon_coords.GRCh38.bed`, used as `-target_regions_bed` in step 3 below.
+
+## Define the cohort to run on
 
 The first step is to select a set of samples to run dNdS on. The cohort should contain one sample per patient, with the selected sample 
 being the one with the highest purity that passes QC.
@@ -27,7 +43,7 @@ The second step is to:
 - Gather the exonic somatic variants for each of the samples in the cohort
 - Summarise these variants to get the mutational load for each sample
 
-This is done by running `DndsDataBuilder`, providing a directory containing `<SampleId>.purple.somatic.vcf.gz` files:
+This is done by running `CohortDataBuilder`, providing a directory containing `<SampleId>.purple.somatic.vcf.gz` files:
 
 ```bash
 java -cp paddle.jar com.hartwig.hmftools.dnds.samples.CohortDataBuilder \
