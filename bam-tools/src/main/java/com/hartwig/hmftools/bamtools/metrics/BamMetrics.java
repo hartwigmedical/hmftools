@@ -4,6 +4,7 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.APP_NAME;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
 import static com.hartwig.hmftools.common.region.PartitionUtils.partitionChromosome;
 import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.runThreadTasks;
@@ -137,11 +138,11 @@ public class BamMetrics
 
             SAMRecordIterator iterator = samReader.queryUnmapped();
 
+            boolean expectDuplicates = mConfig.expectDuplicates();
             while(iterator.hasNext())
             {
                 SAMRecord record = iterator.next();
-                boolean passesQC = record.getReadFailsVendorQualityCheckFlag();
-                combinedStats.flagStats().increment(FlagStatType.TOTAL, passesQC);
+                combinedStats.flagStats().processRead(record, record.hasAttribute(CONSENSUS_READ_ATTRIBUTE), expectDuplicates);
             }
         }
 
