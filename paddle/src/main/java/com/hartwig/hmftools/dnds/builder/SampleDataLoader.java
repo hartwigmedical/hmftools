@@ -42,18 +42,6 @@ public class SampleDataLoader
         mPurpleDir = purpleDir;
     }
 
-    public static class SampleData
-    {
-        public final List<SomaticVariant> Variants;
-        public final SampleMutationalLoad MutationalLoad;
-
-        public SampleData(final List<SomaticVariant> variants, final SampleMutationalLoad mutationalLoad)
-        {
-            Variants = variants;
-            MutationalLoad = mutationalLoad;
-        }
-    }
-
     public SampleData loadSampleData(final String sampleId)
     {
         if(mDbAccess != null)

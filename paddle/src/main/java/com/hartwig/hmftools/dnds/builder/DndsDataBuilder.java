@@ -141,7 +141,7 @@ public class DndsDataBuilder
 
         private void processSample(final String sampleId)
         {
-            SampleDataLoader.SampleData sampleData = mSampleDataLoader.loadSampleData(sampleId);
+            SampleData sampleData = mSampleDataLoader.loadSampleData(sampleId);
 
             if(sampleData == null)
                 return;
