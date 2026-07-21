@@ -46,7 +46,7 @@ import htsjdk.tribble.TribbleException;
 
 public class DisruptionComparer implements ItemComparer
 {
-    protected static final String FLD_BREAKEND = "Breakend";
+    protected static final String FLD_BREAKEND_INFO = "BreakendInfo";
 
     private final ComparConfig mConfig;
 
@@ -70,7 +70,7 @@ public class DisruptionComparer implements ItemComparer
     public List<Field> fields(final MatchLevel matchLevel)
     {
         return List.of(
-                new BreakendsField(FLD_BREAKEND, i -> ((DisruptionData) i).Breakends, true),
+                new BreakendsField(FLD_BREAKEND_INFO, i -> ((DisruptionData) i).Breakends, true),
                 new DisplayOnlyField(FLD_REPORTED, i -> String.valueOf(i.reportable()), i -> true)
         );
     }
@@ -84,7 +84,7 @@ public class DisruptionComparer implements ItemComparer
     @Override
     public List<String> displayFieldNames()
     {
-        return Lists.newArrayList(FLD_REPORTED, FLD_BREAKEND);
+        return Lists.newArrayList(FLD_REPORTED, FLD_BREAKEND_INFO);
     }
 
     @Override
