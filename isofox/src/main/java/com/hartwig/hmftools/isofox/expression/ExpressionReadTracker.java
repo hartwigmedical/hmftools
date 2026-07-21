@@ -58,7 +58,8 @@ public class ExpressionReadTracker
     }
 
     public void processUnsplicedGenes(
-            final List<GeneReadData> overlapGenes, final List<Integer> validTranscripts, final List<int[]> commonMappings, int numLoci)
+            final List<GeneReadData> overlapGenes, final List<Integer> validTranscripts, final List<int[]> commonMappings,
+            double fragmentCount, boolean multiMapped)
     {
         if(!mEnabled)
             return;
@@ -68,13 +69,13 @@ public class ExpressionReadTracker
         if(!unsplicedGeneIds.isEmpty())
         {
             CategoryCountsData catCounts = getCategoryCountsData(validTranscripts, unsplicedGeneIds);
-            addGcCounts(catCounts, commonMappings, numLoci);
+            addGcCounts(catCounts, commonMappings, fragmentCount, multiMapped);
         }
     }
 
     public void processUnsplicedGenes(
             final FragmentMatchType comboTransMatchType, final List<GeneReadData> overlapGenes, final List<Integer> validTranscripts,
-            final List<int[]> commonMappings, int numLoci)
+            final List<int[]> commonMappings, double fragmentCount, boolean multiMapped)
     {
         if(!mEnabled)
             return;
@@ -83,10 +84,11 @@ public class ExpressionReadTracker
                 overlapGenes.stream().map(x -> x.Gene.GeneId).collect(Collectors.toList()) : Lists.newArrayList();
 
         CategoryCountsData catCounts = getCategoryCountsData(validTranscripts, unsplicedGeneIds);
-        addGcCounts(catCounts, commonMappings, numLoci);
+        addGcCounts(catCounts, commonMappings, fragmentCount, multiMapped);
     }
 
-    public void processIntronicReads(final List<GeneReadData> genes, final Read read1, final Read read2, int numLoci)
+    public void processIntronicReads(
+            final List<GeneReadData> genes, final Read read1, final Read read2, double fragmentCount, boolean multiMapped)
     {
         if(!mEnabled)
             return;
@@ -98,7 +100,7 @@ public class ExpressionReadTracker
             CategoryCountsData catCounts = getCategoryCountsData(Lists.newArrayList(), unsplicedGeneIds);
 
             List<int[]> readRegions = deriveCommonRegions(read1.getMappedRegionCoords(), read2.getMappedRegionCoords());
-            addGcCounts(catCounts, readRegions, numLoci);
+            addGcCounts(catCounts, readRegions, fragmentCount, multiMapped);
         }
     }
 
@@ -203,7 +205,8 @@ public class ExpressionReadTracker
         }
     }
 
-    public void addGcCounts(final CategoryCountsData catCounts, final List<int[]> readRegions, int numLoci)
+    public void addGcCounts(
+            final CategoryCountsData catCounts, final List<int[]> readRegions, double fragmentCount, boolean multiMapped)
     {
         int[] gcRatioIndices = { -1, -1 };
         double[] gcRatioCounts = { 0, 0 };
@@ -214,9 +217,7 @@ public class ExpressionReadTracker
             mGcRatioCounts.determineRatioData(gcRatio, gcRatioIndices, gcRatioCounts);
         }
 
-        double fragmentCount = numLoci > 1 ? 1.0 / numLoci : 1;
-
-        if(numLoci > 1)
+        if(multiMapped)
             mGenes.addCount(MULTI_MAPPED, 1);
 
         addGcCounts(catCounts, gcRatioIndices, gcRatioCounts, fragmentCount);

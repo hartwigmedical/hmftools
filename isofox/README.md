@@ -24,7 +24,7 @@ In addition, any junction which maps in the Poly-G region of LINC00486 is filter
 ### A note on alignment and multi-mapping
 Reads are aligned with bwa-mem2 against a transcriptome-augmented reference and lifted back to genomic coordinates by tars, then duplicate-marked by redux. Chimeric and supplementary alignments are retained in the BAM.
 
-A multi-mapped read is emitted as a single primary alignment that carries its alternate genomic loci in the bwa `XA` tag; there are no separate secondary records. bwa map qualities range from 0 to 60, with a confident single-locus read at 60. For transcript abundance, Isofox spreads a multi-mapped fragment as 1/N across the N loci listed in its XA tag: the primary locus is counted through the normal expression path and each alternate locus is attributed 1/N to the gene it falls in, with any locus outside a gene keeping its share unattributed. Reads with alternate XA loci (multi-mapped) are excluded from novel splice junction and chimeric analysis.
+Isofox supports both bwa-tars and STAR alignments, selected by `-aligner` (`bwa-tars` is the default, or `star`); the flag only affects how multi-mapped fragments are handled, which is the one place the two aligners differ. Under `bwa-tars` a multi-mapped read is a single primary alignment carrying its alternate loci in the bwa `XA` tag (no secondary records; map qualities 0 to 60, with a confident single-locus read at 60), and the fragment is counted once at its primary locus and flagged multi-mapped. Under `star` the alternate mappings are separate secondary records and ambiguity is encoded in the map quality (255 unique, 3 or lower multi-mapped); a multi-mapped fragment is down-weighted by map-quality tier so its mass is shared across the loci it maps to, reproducing pre-tars behaviour. Under either aligner, multi-mapped reads are excluded from novel splice junction and chimeric analysis. The optional `MULTI_MAP_LOCI` write type emits a tsv of each multi-mapped read's primary and XA alternate loci per gene collection for auditing (bwa-tars only).
 
 ## Configuration
 The functions of Isofox are controlled by the 'functions' argument:
@@ -88,7 +88,8 @@ frag_length_min_count | Minimum number of fragments to observe for length distri
 exp_rate_frag_lengths | Discrete buckets for fragment lengths, either with frequency specified or left as zero if to be calculated (ie with -apply_calc_frag_lengths). eg '50-0;75-0;100-0;125-0;150-0;200-0;250-0;300-0;400-0;550-0' 
 read_length | Expected RNA read length (eg 76 or 151), will be computed if not provided
 long_frag_limit | Default 550 bases, fragments longer than this without a splice junction are not considered to support a gene for the purposes of expression
-single_map_qual | Default 255, discard reads with map quality below this unless using the config 'apply_map_qual_adjust'
+single_map_qual | Default 60 for bwa-tars and 255 for star, discard reads with map quality below this unless using the config 'apply_map_qual_adjust'
+aligner | Source aligner: 'star' or 'bwa-tars' (default 'bwa-tars')
 enriched_gene_ids | By default includes: ENSG00000265150;ENSG00000258486;ENSG00000202198;ENSG00000266037;ENSG00000263740;ENSG00000265735
 
 ### Optional output files:

@@ -22,6 +22,10 @@ public class IsofoxConstants
     public static final short DEFAULT_SINGLE_MAP_QUALITY = 60;
     public static short SINGLE_MAP_QUALITY = DEFAULT_SINGLE_MAP_QUALITY;
 
+    public static final short MULTI_MAP_QUALITY_THRESHOLD = 3;
+
+    public static boolean STAR_ALIGNER = false;
+
     public static final int ENRICHED_GENE_BUFFER = 1000;
 
     public static final int MAX_NOVEL_SJ_DISTANCE = 500000; // beyond which a fragment will be considered chimeric

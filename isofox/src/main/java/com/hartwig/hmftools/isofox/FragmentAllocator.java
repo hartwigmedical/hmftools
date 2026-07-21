@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_ID;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_NAME;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POS_END;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POS_START;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_PAIR;
@@ -16,7 +17,9 @@ import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
+import static com.hartwig.hmftools.isofox.IsofoxConstants.MULTI_MAP_QUALITY_THRESHOLD;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.SINGLE_MAP_QUALITY;
+import static com.hartwig.hmftools.isofox.IsofoxConstants.STAR_ALIGNER;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.ALT_SPLICE_JUNCTIONS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.STATISTICS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.TRANSCRIPT_COUNTS;
@@ -56,7 +59,6 @@ import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.ExonData;
@@ -118,15 +120,10 @@ public class FragmentAllocator
     private final boolean mStatsOnly;
 
     private final BufferedWriter mReadDataWriter;
+    private final BufferedWriter mMultiMapLociWriter;
     private long mEnrichedGeneFragments;
 
     private final EnsemblDataCache mGeneTransCache;
-
-    // per-gene multi-map fan-out shares, [spliced, unspliced]
-    private final Map<String,double[]> mMultiMapGeneCounts;
-
-    public static final int MULTI_MAP_SPLICED = 0;
-    public static final int MULTI_MAP_UNSPLICED = 1;
 
     private static final int GENE_LOG_COUNT = 5000000;
     private static final int NON_GENIC_BASE_DEPTH_WIDTH = 250000;
@@ -137,7 +134,6 @@ public class FragmentAllocator
     {
         mConfig = config;
         mGeneTransCache = geneTransCache;
-        mMultiMapGeneCounts = Maps.newHashMap();
 
         mCurrentGenes = null;
         mFragmentReads = new FragmentTracker();
@@ -161,12 +157,13 @@ public class FragmentAllocator
         // reads with supplementary alignment data are only used for chimeric read handling (eg fusions & alt-SJs)
         boolean keepSupplementaries = mRunFusions || mConfig.runFunction(ALT_SPLICE_JUNCTIONS);
 
-        boolean keepSecondaries = mConfig.runFunction(TRANSCRIPT_COUNTS);
-        int minMapQuality = keepSecondaries ? 0 : SINGLE_MAP_QUALITY;
+        boolean keepSecondaries = STAR_ALIGNER && mConfig.runFunction(TRANSCRIPT_COUNTS);
+        int minMapQuality = mConfig.runFunction(TRANSCRIPT_COUNTS) ? 0 : SINGLE_MAP_QUALITY;
 
         mBamSlicer = new BamSlicer(minMapQuality, keepDuplicates, keepSupplementaries, keepSecondaries);
 
         mReadDataWriter = resultsWriter.getReadDataWriter();
+        mMultiMapLociWriter = resultsWriter.getMultiMapLociWriter();
         mBaseDepth = new BaseDepth();
 
         mChimericReads = new ChimericReadTracker(mConfig);
@@ -400,10 +397,11 @@ public class FragmentAllocator
         read2.trimAdapterSoftClipBases(read1);
 
         boolean isDuplicate = read1.isDuplicate() || read2.isDuplicate();
-        boolean isMultiMapped = read1.isMultiMapped() || read2.isMultiMapped();
 
-        // a uniquely-placed mate pins the fragment, so use the lower of the two mates' locus counts
+        int minMapQuality = min(read1.mapQuality(), read2.mapQuality());
         int numLoci = min(read1.numLoci(), read2.numLoci());
+        boolean isMultiMapped = STAR_ALIGNER ? minMapQuality <= MULTI_MAP_QUALITY_THRESHOLD : numLoci > 1;
+        double fragmentCount = STAR_ALIGNER ? starFragmentCount(minMapQuality) : 1;
         List<Read.AltAlignment> altLoci = read1.numLoci() <= read2.numLoci() ? read1.altLoci() : read2.altLoci();
 
         boolean isChimeric = mChimericReads.isChimeric(read1, read2, isDuplicate, isMultiMapped);
@@ -457,8 +455,8 @@ public class FragmentAllocator
                 return;
         }
 
-        if(numLoci > 1 && mExpressionReadTracker.enabled())
-            numLoci = fanOutMultiMappedFragment(altLoci, numLoci);
+        if(numLoci > 1 && altLoci != null && mMultiMapLociWriter != null)
+            recordMultiMapLoci(read1, read2, altLoci);
 
         int readPosMin = min(read1.PosStart, read2.PosStart);
         int readPosMax = max(read1.PosEnd, read2.PosEnd);
@@ -468,7 +466,7 @@ public class FragmentAllocator
         if(read1.getMappedRegions().isEmpty() && read2.getMappedRegions().isEmpty())
         {
             // fully intronic read in every transcript and gene
-            processIntronicReads(overlapGenes, read1, read2, numLoci);
+            processIntronicReads(overlapGenes, read1, read2, fragmentCount, isMultiMapped);
             return;
         }
 
@@ -584,7 +582,7 @@ public class FragmentAllocator
 
             if(fragmentType == UNSPLICED)
             {
-                mExpressionReadTracker.processUnsplicedGenes(overlapGenes, validTranscripts, commonMappings, numLoci);
+                mExpressionReadTracker.processUnsplicedGenes(overlapGenes, validTranscripts, commonMappings, fragmentCount, isMultiMapped);
             }
         }
         else
@@ -693,7 +691,7 @@ public class FragmentAllocator
                 mExpressionReadTracker.processValidTranscript(transId, Lists.newArrayList(read1, read2), isUniqueTrans);
             }
 
-            mExpressionReadTracker.processUnsplicedGenes(comboTransMatchType, overlapGenes, validTranscripts, commonMappings, numLoci);
+            mExpressionReadTracker.processUnsplicedGenes(comboTransMatchType, overlapGenes, validTranscripts, commonMappings, fragmentCount, isMultiMapped);
 
             if(!read1.isSecondaryAlignment() && !read2.isSecondaryAlignment() && supportedGeneIsForward != null)
             {
@@ -854,52 +852,19 @@ public class FragmentAllocator
 
     public List<CategoryCountsData> getTransComboData() { return mExpressionReadTracker.getTransComboData(); }
 
-    public Map<String,double[]> getMultiMapGeneCounts() { return mMultiMapGeneCounts; }
-
-    private int fanOutMultiMappedFragment(final List<Read.AltAlignment> altLoci, int numLoci)
+    static double starFragmentCount(int minMapQuality)
     {
-        if(altLoci == null || mGeneTransCache == null)
-            return numLoci;
+        if(minMapQuality > MULTI_MAP_QUALITY_THRESHOLD)
+            return 1;
 
-        List<List<GeneData>> altExonicGenes = Lists.newArrayList();
-        int exonicAltCount = 0;
-
-        for(Read.AltAlignment locus : altLoci)
-        {
-            List<GeneData> spanGenes = mGeneTransCache.findGeneByRange(
-                    locus.Region.Chromosome, locus.Region.start(), locus.Region.end());
-
-            List<GeneData> exonicGenes = spanGenes.stream()
-                    .filter(gene -> altOverlapsExon(gene, locus.Region))
-                    .collect(Collectors.toList());
-
-            altExonicGenes.add(exonicGenes);
-
-            if(!exonicGenes.isEmpty())
-                ++exonicAltCount;
-        }
-
-        int effectiveLoci = 1 + exonicAltCount;
-        double locusWeight = 1.0 / effectiveLoci;
-
-        for(int i = 0; i < altLoci.size(); ++i)
-        {
-            List<GeneData> exonicGenes = altExonicGenes.get(i);
-
-            if(exonicGenes.isEmpty())
-                continue; // alt overlaps no exon - not credited to any gene
-
-            double geneWeight = locusWeight / exonicGenes.size();
-            int index = altLoci.get(i).Spliced ? MULTI_MAP_SPLICED : MULTI_MAP_UNSPLICED;
-
-            for(GeneData gene : exonicGenes)
-            {
-                double[] counts = mMultiMapGeneCounts.computeIfAbsent(gene.GeneId, k -> new double[2]);
-                counts[index] += geneWeight;
-            }
-        }
-
-        return effectiveLoci;
+        if(minMapQuality == 3)
+            return 0.5;
+        else if(minMapQuality == 2)
+            return 0.33;
+        else if(minMapQuality == 1)
+            return 0.2;
+        else
+            return 0.1;
     }
 
     private boolean altOverlapsExon(final GeneData gene, final ChrBaseRegion altRegion)
@@ -921,7 +886,68 @@ public class FragmentAllocator
         return false;
     }
 
-    private void processIntronicReads(final List<GeneReadData> genes, final Read read1, final Read read2, int numLoci)
+    // record a multi-mapped fragment's primary alignment plus each XA alternate locus (opt-in WriteType.MULTI_MAP_LOCI);
+    // InGeneCollection flags whether the locus falls within the gene collection currently being processed
+    private void recordMultiMapLoci(final Read read1, final Read read2, final List<Read.AltAlignment> altLoci)
+    {
+        int fragStart = min(read1.PosStart, read2.PosStart);
+        int fragEnd = max(read1.PosEnd, read2.PosEnd);
+        boolean primarySpliced = read1.containsSplit() || read2.containsSplit();
+
+        writeMultiMapLocus(
+                mMultiMapLociWriter, mCurrentGenes.id(), read1.Id, "PRIMARY", read1.Chromosome, fragStart, fragEnd,
+                primarySpliced, mCurrentGenes.geneNames(), true);
+
+        int[] bounds = mCurrentGenes.regionBounds();
+
+        for(Read.AltAlignment locus : altLoci)
+        {
+            boolean inGeneCollection = locus.Region.Chromosome.equals(mCurrentGenes.chromosome())
+                    && positionsOverlap(locus.Region.start(), locus.Region.end(), bounds[SE_START], bounds[SE_END]);
+
+            writeMultiMapLocus(
+                    mMultiMapLociWriter, mCurrentGenes.id(), read1.Id, "XA", locus.Region.Chromosome,
+                    locus.Region.start(), locus.Region.end(), locus.Spliced, altExonicGeneNames(locus), inGeneCollection);
+        }
+    }
+
+    private String altExonicGeneNames(final Read.AltAlignment locus)
+    {
+        if(mGeneTransCache == null)
+            return "";
+
+        return mGeneTransCache.findGeneByRange(locus.Region.Chromosome, locus.Region.start(), locus.Region.end()).stream()
+                .filter(gene -> altOverlapsExon(gene, locus.Region))
+                .map(gene -> gene.GeneName)
+                .collect(Collectors.joining(ITEM_DELIM));
+    }
+
+    private synchronized static void writeMultiMapLocus(
+            final BufferedWriter writer, int geneCollectionId, final String readId, final String recordType,
+            final String chromosome, int posStart, int posEnd, boolean spliced, final String genes, boolean inGeneCollection)
+    {
+        try
+        {
+            StringJoiner sj = new StringJoiner(TSV_DELIM);
+            sj.add(String.valueOf(geneCollectionId));
+            sj.add(readId);
+            sj.add(recordType);
+            sj.add(chromosome);
+            sj.add(String.valueOf(posStart));
+            sj.add(String.valueOf(posEnd));
+            sj.add(String.valueOf(spliced));
+            sj.add(genes);
+            sj.add(String.valueOf(inGeneCollection));
+            writer.write(sj.toString());
+            writer.newLine();
+        }
+        catch(IOException e)
+        {
+            ISF_LOGGER.error("failed to write multi-map loci data: {}", e.toString());
+        }
+    }
+
+    private void processIntronicReads(final List<GeneReadData> genes, final Read read1, final Read read2, double fragmentCount, boolean multiMapped)
     {
         if(read1.containsSplit() || read2.containsSplit())
         {
@@ -933,7 +959,7 @@ public class FragmentAllocator
             return;
         }
 
-        mExpressionReadTracker.processIntronicReads(genes, read1, read2, numLoci);
+        mExpressionReadTracker.processIntronicReads(genes, read1, read2, fragmentCount, multiMapped);
 
         mCurrentGenes.addCount(UNSPLICED, 1);
 
@@ -1048,6 +1074,27 @@ public class FragmentAllocator
         catch (IOException e)
         {
             ISF_LOGGER.error("failed to create read data writer: {}", e.toString());
+            return null;
+        }
+    }
+
+    public static BufferedWriter createMultiMapLociWriter(final IsofoxConfig config)
+    {
+        try
+        {
+            BufferedWriter writer = createBufferedWriter(config.formOutputFile("multi_map_loci.tsv"), false);
+
+            StringJoiner sj = new StringJoiner(TSV_DELIM);
+            sj.add("GeneCollectionId").add("ReadId").add("RecordType");
+            sj.add(FLD_CHROMOSOME).add(FLD_POS_START).add(FLD_POS_END);
+            sj.add("Spliced").add("Genes").add("InGeneCollection");
+            writer.write(sj.toString());
+            writer.newLine();
+            return writer;
+        }
+        catch(IOException e)
+        {
+            ISF_LOGGER.error("failed to create multi-map loci writer: {}", e.toString());
             return null;
         }
     }
