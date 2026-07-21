@@ -181,7 +181,7 @@ public class DriverComparer implements ItemComparer
     @Override
     public List<String> displayFieldNames()
     {
-        return Lists.newArrayList(FLD_LIKE_METHOD, FLD_LIKELIHOOD, FLD_MIN_COPY_NUMBER, FLD_MAX_COPY_NUMBER);
+        return Lists.newArrayList(FLD_LIKE_METHOD, FLD_LIKELIHOOD, FLD_MIN_COPY_NUMBER, FLD_MAX_COPY_NUMBER, FLD_PURITY, FLD_PLOIDY);
     }
 
     private List<ComparableItem> createDriverItems(final SourceType sourceType)
