@@ -455,6 +455,9 @@ public class CommonUtils
         FieldConfig fieldConfig = new FieldConfig();
         for(CategoryType category : CategoryType.values())
         {
+            if(!config.Categories.containsKey(category))
+                continue;
+
             MatchLevel matchLevel = config.Categories.get(category);
 
             ItemComparer comparer = createComparer(category, config);
