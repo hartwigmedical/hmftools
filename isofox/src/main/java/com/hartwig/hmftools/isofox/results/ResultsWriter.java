@@ -2,7 +2,6 @@ package com.hartwig.hmftools.isofox.results;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.bam.SupplementaryReadData.fromAlignment;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.isofox.WriteType.CHIMERIC_POSITION_DATA;
 import static com.hartwig.hmftools.isofox.WriteType.CHIMERIC_READ;
