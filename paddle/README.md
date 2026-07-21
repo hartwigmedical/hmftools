@@ -82,15 +82,25 @@ SAMPLE_1        chr7  140753336    A    T  BRAF      false     true           MI
 
 ## Run dNdScv
 
-The next step is to run dNdScv on the data collected by step 2. This requires a modified version of the [original dndscv tool](https://github.com/im3sanger/dndscv).
-In addition, this step requires a custom HmfRefCDS.RData. Both the modified tool as well as the HMF ref data are kept in Hartwig's internal GCP environment.
+The next step is to run dNdScv on the variants gathered in step 2, using the resources built in step 1. This requires the
+[dndscv package](https://github.com/im3sanger/dndscv), run via `run_dndscv.R`:
 
-To actually run the modified version of dndscv, use the dnds.R script provided alongside the paddle jar,
-and pass a working dir that is the directory containing the output of step 2.
+```bash
+Rscript run_dndscv.R \
+    --cohort_mutations dnds_cohort_variants.tsv.gz \
+    --dndscv_resources_dir /path/to/resources/ \
+    --dndscv_package_dir /path/to/dndscv/ \
+    --output_dir /path/to/output/
+```
 
-The relevant outputs of this step are:
- - DndsMutations.tsv
- - HmfRefCDSCv.tsv
+The outputs of this step are `dndscv_output.sel_cv.tsv.gz`, a table of significant genes:
+
+```tsv
+gene_name  n_syn  n_mis  n_non  n_spl  n_ind  wmis_cv  wnon_cv  wspl_cv  ...
+     TP53     82   2792    564    282    601    24.09    72.38    72.38  ...
+```
+
+And `dndscv_output.rds` R object containing the full dndscv output, including the above table as well as other tables.
 
 ## Generate driver catalog values
 
