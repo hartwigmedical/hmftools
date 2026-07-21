@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.isofox.WriteType.CHIMERIC_POSITION_DATA;
 import static com.hartwig.hmftools.isofox.WriteType.CHIMERIC_READ;
 import static com.hartwig.hmftools.isofox.WriteType.FRAG_LENGTH_BY_GENE;
 import static com.hartwig.hmftools.isofox.WriteType.GC_RATIO;
+import static com.hartwig.hmftools.isofox.WriteType.MULTI_MAP_LOCI;
 import static com.hartwig.hmftools.isofox.WriteType.READ;
 import static com.hartwig.hmftools.isofox.WriteType.SPLICE_SITE;
 import static com.hartwig.hmftools.isofox.WriteType.TRANS_COMBO;
@@ -106,6 +107,7 @@ public class ResultsWriter
     private BufferedWriter mSpliceSiteWriter;
     private BufferedWriter mChimericReadWriter;
     private BufferedWriter mChimericPositionDataWriter;
+    private BufferedWriter mMultiMapLociWriter;
 
     public ResultsWriter(final IsofoxConfig config)
     {
@@ -153,6 +155,7 @@ public class ResultsWriter
         closeBufferedWriter(mSpliceSiteWriter);
         closeBufferedWriter(mChimericReadWriter);
         closeBufferedWriter(mChimericPositionDataWriter);
+        closeBufferedWriter(mMultiMapLociWriter);
     }
 
     private void initialiseExternalWriters()
@@ -197,6 +200,9 @@ public class ResultsWriter
 
         if(mConfig.writeType(CHIMERIC_POSITION_DATA))
             initialiseChimericPositionDataWriter();
+
+        if(mConfig.writeType(MULTI_MAP_LOCI))
+            mMultiMapLociWriter = FragmentAllocator.createMultiMapLociWriter(mConfig);
     }
 
     public BufferedWriter getCategoryCountsWriter() { return mCategoryCountsWriter;}
@@ -204,6 +210,7 @@ public class ResultsWriter
     public BufferedWriter getAltSjPassingWriter() { return mAltSjPassingWriter;}
     public BufferedWriter getRetainedIntronWriter() { return mRetainedIntronWriter;}
     public BufferedWriter getReadDataWriter() { return mReadDataWriter; }
+    public BufferedWriter getMultiMapLociWriter() { return mMultiMapLociWriter; }
     public BufferedWriter getSpliceSiteWriter() { return mSpliceSiteWriter; }
     public BufferedWriter getFragmentLengthWriter() { return mGeneFragLengthWriter; }
     public BufferedWriter getReadGcRatioWriter() { return mReadGcRatioWriter; }
