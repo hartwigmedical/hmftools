@@ -6,6 +6,7 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.common.bam.CigarUtils.cigarElementsToStr;
 import static com.hartwig.hmftools.common.bam.CigarUtils.leftSoftClipped;
 import static com.hartwig.hmftools.common.bam.CigarUtils.rightSoftClipped;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.XA_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.generateMappedCoords;
@@ -87,6 +88,7 @@ public class Read
     private boolean mHasInterGeneSplit;
     private short mMapQuality;
     private List<AltAlignment> mAltLoci; // alternate genomic mapping loci from XA tag; null if uniquely mapped
+    private boolean mConsensusRead;
 
     private int[] mJunctionPositions; // chimeric junctions
 
@@ -110,6 +112,10 @@ public class Read
         read.setSuppAlignment(record.getStringAttribute(SUPPLEMENTARY_ATTRIBUTE));
         read.setMapQuality((short)record.getMappingQuality());
         read.setAltLoci(parseAltLoci(record.getStringAttribute(XA_ATTRIBUTE)));
+
+        if(record.hasAttribute(CONSENSUS_READ_ATTRIBUTE))
+            read.markConsensusRead();
+
         return read;
     }
 
@@ -222,6 +228,7 @@ public class Read
         mHasInterGeneSplit = false;
         mMapQuality = 0;
         mJunctionPositions = null;
+        mConsensusRead = false;
     }
 
     public int range() { return PosEnd - PosStart; }
@@ -303,6 +310,9 @@ public class Read
 
     public void setAltLoci(final List<AltAlignment> altLoci) { mAltLoci = altLoci; }
     public List<AltAlignment> altLoci() { return mAltLoci; }
+
+    public boolean isConsensusRead() { return mConsensusRead; }
+    public void markConsensusRead() { mConsensusRead = true; }
 
     public int numLoci() { return mAltLoci != null ? 1 + mAltLoci.size() : 1; }
 
