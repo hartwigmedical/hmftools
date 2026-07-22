@@ -11,11 +11,13 @@ import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createField
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.compareJunctions;
 import static com.hartwig.hmftools.esvee.common.FileCommon.FLD_SAGA_MATCH;
+import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_VARIANT_LENGTH;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_EXACT_SUPPORT_FRAGS;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_EXTRA_INFO;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_HOTSPOT_JUNCTION;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_INDEL_JUNCTION;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_JUNCTION_FRAGS;
+import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_MAX_VALID_SC;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_OTHER_SUPPORT_FRAGS;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_REMOTE_FRAGS;
 
@@ -27,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.region.Orientation;
@@ -43,6 +46,7 @@ public class Junction implements Comparable<Junction>
 
     public final boolean DiscordantOnly;
     public final boolean Hotspot;
+    public final int MaxSoftClipLength;
 
     private boolean mIndelBased;
     public final String mDetails;
@@ -55,22 +59,18 @@ public class Junction implements Comparable<Junction>
     public static final String HOTSPOT_TYPE = "H";
     public static final String DISCORDANT_TYPE = "D";
 
-    public Junction(final String chromosome, final int position, final Orientation orientation)
-    {
-        this(chromosome, position, orientation, false, false, false, null);
-        mRawDiscordantPosition = -1;
-    }
-
     public Junction(
             final String chromosome, final int position, final Orientation orientation, final boolean discordantOnly,
-            final boolean indelBased, final boolean hotspot, @Nullable final String sagaMatchId)
+            final boolean indelBased, final boolean hotspot, final int maxSoftClipLength, @Nullable final String sagaMatchId)
     {
         Chromosome = chromosome;
         Position = position;
         Orient = orientation;
         DiscordantOnly = discordantOnly;
-        mIndelBased = indelBased;
         Hotspot = hotspot;
+        MaxSoftClipLength = maxSoftClipLength;
+
+        mIndelBased = indelBased;
 
         if(DiscordantOnly || mIndelBased || Hotspot)
         {
@@ -189,6 +189,7 @@ public class Junction implements Comparable<Junction>
             Integer extraInfoIndex = fieldsIndexMap.get(FLD_EXTRA_INFO);
             Integer remoteFragsIndex = fieldsIndexMap.get(FLD_REMOTE_FRAGS);
             Integer sagaMatchIndex = fieldsIndexMap.get(FLD_SAGA_MATCH);
+            Integer maxScLengthIndex = fieldsIndexMap.get(FLD_MAX_VALID_SC);
 
             List<Junction> junctionDataList = null;
             String currentChromosome = "";
@@ -218,6 +219,7 @@ public class Junction implements Comparable<Junction>
                 int junctionFrags = juncFragsIndex != null ? Integer.parseInt(values[juncFragsIndex]) : 0;
                 int otherJunctionFrags = otherSupportFragsIndex != null ? Integer.parseInt(values[otherJuncFragsIndex]) : 0;
                 int otherSupportFrags = otherSupportFragsIndex != null ? Integer.parseInt(values[otherSupportFragsIndex]) : 0;
+                int maxSoftClipLength = maxScLengthIndex != null ? Integer.parseInt(values[maxScLengthIndex]) : MIN_VARIANT_LENGTH;
 
                 boolean discordantOnly = junctionFrags == 0 && otherSupportFrags > 0;
                 boolean indel = indelIndex != null && Boolean.parseBoolean(values[indelIndex]);
@@ -263,7 +265,8 @@ public class Junction implements Comparable<Junction>
                     chrJunctionsMap.put(chromosome, junctionDataList);
                 }
 
-                junctionDataList.add(new Junction(chromosome, position, orientation, discordantOnly, indel, hotspot, sagaMatchVariant));
+                junctionDataList.add(new Junction(
+                        chromosome, position, orientation, discordantOnly, indel, hotspot, maxSoftClipLength, sagaMatchVariant));
                 ++junctionCount;
             }
 
@@ -309,7 +312,7 @@ public class Junction implements Comparable<Junction>
             hotspot = true;
         }
 
-        return new Junction(chromosome, position, orientation, discordantOnly, indelBased, hotspot, null);
+        return new Junction(chromosome, position, orientation, discordantOnly, indelBased, hotspot, 0, null);
     }
 
     public static void mergeJunctions(final Map<String,List<Junction>> existingMap, final Map<String,List<Junction>> newMap)
@@ -438,5 +441,13 @@ public class Junction implements Comparable<Junction>
         }
 
         return true;
+    }
+
+    // could also move to test utils so it's clearer this isn't a valid assembly constructor
+    @VisibleForTesting
+    public Junction(final String chromosome, final int position, final Orientation orientation)
+    {
+        this(chromosome, position, orientation, false, false, false, MIN_VARIANT_LENGTH, null);
+        mRawDiscordantPosition = -1;
     }
 }

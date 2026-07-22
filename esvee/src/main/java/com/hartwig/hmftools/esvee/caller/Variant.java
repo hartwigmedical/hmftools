@@ -262,7 +262,7 @@ public class Variant
                 }
 
                 mOriginalJunctions.add(new Junction(
-                        chromosome, position, orientation, discordant, indelBased, false, null));
+                        chromosome, position, orientation, discordant, indelBased, false, 0, null));
             }
         }
 

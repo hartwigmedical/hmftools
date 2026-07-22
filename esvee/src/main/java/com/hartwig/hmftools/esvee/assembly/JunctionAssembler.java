@@ -16,6 +16,7 @@ import static com.hartwig.hmftools.esvee.assembly.SeqTechUtils.findSbxPossibleDu
 import static com.hartwig.hmftools.esvee.assembly.SeqTechUtils.passSbxDistinctPrimePositionsFilter;
 import static com.hartwig.hmftools.esvee.assembly.types.RefSideSoftClip.checkSupportVsRefSideSoftClip;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportType.JUNCTION;
+import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_VARIANT_LENGTH;
 import static com.hartwig.hmftools.esvee.common.SvConstants.isSbx;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_HOTSPOT_JUNCTION_SUPPORT;
 
@@ -228,7 +229,9 @@ public class JunctionAssembler
             // check for a SAGA match by sequence, even if a coord match was previously found
             boolean sagaMatched = mSagaMatcher != null && assembly.matchToSaga(mSagaMatcher);
 
-            if(juncThresholdState.UsesLowerSagaLimits)
+            boolean isValidPrepJunction = mJunction.softClipBased() ? mJunction.MaxSoftClipLength >= MIN_VARIANT_LENGTH : true;
+
+            if(juncThresholdState.UsesLowerSagaLimits || !isValidPrepJunction)
             {
                 if(sagaMatched)
                 {

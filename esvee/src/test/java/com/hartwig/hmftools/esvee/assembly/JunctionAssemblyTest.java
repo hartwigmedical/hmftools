@@ -750,8 +750,11 @@ public class JunctionAssemblyTest
     @Test
     public void testAssemblyNoDedupWithSharedReads()
     {
-        Junction indelJunctionNeg = new Junction(CHR_1, 130, REVERSE, false, true, false, null);
-        Junction indelJunctionPos = new Junction(CHR_1, 131, FORWARD, false, true, false, null);
+        Junction indelJunctionNeg = new Junction(
+                CHR_1, 130, REVERSE, false, true, false, 0, null);
+
+        Junction indelJunctionPos = new Junction(
+                CHR_1, 131, FORWARD, false, true, false, 0, null);
 
         String leftExtBases = REF_BASES_400.substring(200, 240);
         String rightExtBases = REF_BASES_400.substring(260, 300);

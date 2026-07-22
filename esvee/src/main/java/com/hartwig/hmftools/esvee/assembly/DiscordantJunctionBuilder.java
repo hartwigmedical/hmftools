@@ -145,7 +145,7 @@ public class DiscordantJunctionBuilder
 
         mNewJunction = new Junction(
                 mJunction.Chromosome, adjustedJuncPosition, mJunction.Orient, true, false, false,
-                null); // no SAGA-match owing to imprecise junction coords
+                0, null); // no SAGA-match owing to imprecise junction coords
 
         mNewJunction.setRawDiscordantPosition(originalJuncPosition);
 
