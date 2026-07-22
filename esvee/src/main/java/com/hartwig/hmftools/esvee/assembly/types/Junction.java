@@ -312,7 +312,7 @@ public class Junction implements Comparable<Junction>
             hotspot = true;
         }
 
-        return new Junction(chromosome, position, orientation, discordantOnly, indelBased, hotspot, 0, null);
+        return new Junction(chromosome, position, orientation, discordantOnly, indelBased, hotspot, MIN_VARIANT_LENGTH, null);
     }
 
     public static void mergeJunctions(final Map<String,List<Junction>> existingMap, final Map<String,List<Junction>> newMap)
