@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.fastqtools;
+package com.hartwig.hmftools.taur.utils;
 
 import static java.lang.String.format;
 
@@ -6,8 +6,8 @@ import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_BASES;
 import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedReader;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.fastqtools.FastqCommon.APP_NAME;
-import static com.hartwig.hmftools.fastqtools.FastqCommon.FQ_LOGGER;
+import static com.hartwig.hmftools.taur.TaurApplication.APP_NAME;
+import static com.hartwig.hmftools.taur.FastaCommon.TR_LOGGER;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.Map;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.taur.RepeatFrequencies;
 
 public class FastqAnalyser
 {
@@ -55,14 +56,14 @@ public class FastqAnalyser
         if(mOutputFile == null || mFastqFile == null)
             System.exit(1);
 
-        FQ_LOGGER.info("Starting Fastq Analyser with file: {}", mFastqFile);
+        TR_LOGGER.info("Starting Fastq Analyser with file: {}", mFastqFile);
 
 
         long startTimeMs = System.currentTimeMillis();
 
         analyseFastqFile();
 
-        FQ_LOGGER.info("Fastq analysis complete, mins({})", runTimeMinsStr(startTimeMs));
+        TR_LOGGER.info("Fastq analysis complete, mins({})", runTimeMinsStr(startTimeMs));
     }
 
     private void analyseFastqFile()
@@ -95,7 +96,7 @@ public class FastqAnalyser
 
                 if(lineCount > 0 && (lineCount % LINE_LOG_COUNT) == 0)
                 {
-                    FQ_LOGGER.info("processed {} lines", lineCount);
+                    TR_LOGGER.info("processed {} lines", lineCount);
                 }
             }
 
@@ -107,7 +108,7 @@ public class FastqAnalyser
         }
         catch(IOException e)
         {
-            FQ_LOGGER.error("error reading fastq({}): {}", mFastqFile, e.toString());
+            TR_LOGGER.error("error reading fastq({}): {}", mFastqFile, e.toString());
             e.printStackTrace();
             System.exit(1);
         }
@@ -171,7 +172,7 @@ public class FastqAnalyser
         }
         catch (IOException e)
         {
-            FQ_LOGGER.error("failed to create output file: {}", e.toString());
+            TR_LOGGER.error("failed to create output file: {}", e.toString());
         }
     }
 

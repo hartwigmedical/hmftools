@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.fastqtools;
+package com.hartwig.hmftools.taur;
 
 import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_BASES;
 
