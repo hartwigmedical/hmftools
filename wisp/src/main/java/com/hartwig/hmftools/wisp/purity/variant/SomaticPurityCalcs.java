@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.wisp.common.CommonUtils.CT_LOGGER;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.LOD_MAX_ITERATIONS;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.LOD_MIN_PROB_DIFF_PERC;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.LOW_PROBABILITY;
+import static com.hartwig.hmftools.wisp.purity.PurityConstants.MAX_PURITY_TO_CLIP;
 
 import org.apache.commons.math3.distribution.PoissonDistribution;
 
@@ -21,6 +22,14 @@ public final class SomaticPurityCalcs
         double weightedVcn = fragmentTotals.weightedVariantCopyNumber();
         double weightedCn = fragmentTotals.weightedCopyNumber();
         return 2 * noiseAdjSampleVaf / (weightedVcn + 2 * noiseAdjSampleVaf - weightedCn * noiseAdjSampleVaf);
+    }
+
+    public static double cappedPurity(final double purity, final double fallbackPurity)
+    {
+        if(purity < 0 || purity > MAX_PURITY_TO_CLIP)
+            return fallbackPurity;
+
+        return Math.min(purity, 1);
     }
 
     public static double estimatedProbability(final FragmentTotals fragmentTotals, double noiseRate)

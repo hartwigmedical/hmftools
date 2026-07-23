@@ -42,6 +42,7 @@ import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.GERMLINE_AF;
 import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.NEARBY_INDEL;
 import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.REPEAT_COUNT;
 import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.SUBCLONAL;
+import static com.hartwig.hmftools.wisp.purity.variant.SnvFitStatus.UNCERTAIN;
 import static com.hartwig.hmftools.wisp.purity.variant.SomaticPurityResult.INVALID_RESULT;
 import static com.hartwig.hmftools.wisp.purity.variant.UmiTypeCounts.NO_UMI_COUNTS;
 
@@ -331,7 +332,19 @@ public class SomaticVariants
             // check for CHIP variants and remove them from variants used for purity estimates
             List<SomaticVariant> outlierVariants = findOutlierVariants(sampleId, filteredVariants, sampleTotalAD);
 
-            purityResult = mEstimator.calculatePurity(sampleId, filteredVariants, mVariants.size(), outlierVariants);
+            purityResult = mEstimator.calculatePurity(sampleId, filteredVariants, mVariants.size(), outlierVariants, true);
+
+            if(purityResult.status() == UNCERTAIN || !purityResult.mrdDetected())
+            {
+                SomaticPurityResult newPurityResult = mEstimator.calculatePurity(
+                        sampleId, filteredVariants, mVariants.size(), outlierVariants, false);
+                if(newPurityResult.mrdDetected())
+                {
+                    CT_LOGGER.warn("sample({}) recovered MRD detection using high copy number variants, status({})",
+                            sampleId, purityResult.status());
+                    purityResult = newPurityResult;
+                }
+            }
         }
 
         if(mConfig.writeType(WriteType.SOMATIC_DATA))

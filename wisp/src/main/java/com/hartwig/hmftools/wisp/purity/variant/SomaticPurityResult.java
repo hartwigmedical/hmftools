@@ -2,19 +2,14 @@ package com.hartwig.hmftools.wisp.purity.variant;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.wisp.purity.DetectionResult.FALSE;
 import static com.hartwig.hmftools.wisp.purity.DetectionResult.NA;
 import static com.hartwig.hmftools.wisp.purity.DetectionResult.TRUE;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.LOW_PROBABILITY;
-import static com.hartwig.hmftools.wisp.purity.ResultsWriter.formatDetectionResult;
 import static com.hartwig.hmftools.wisp.purity.ResultsWriter.formatProbabilityValue;
 import static com.hartwig.hmftools.wisp.purity.ResultsWriter.formatPurityValue;
-import static com.hartwig.hmftools.wisp.purity.variant.PurityCalcData.CALC_NO_SET;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
@@ -27,34 +22,27 @@ public class SomaticPurityResult
     public final String OutlierVariantInfo;
     public final FragmentTotals FragTotals; // used in purity fit - passes filters and either avg qual > threshold or has no allele fragments
     public final UmiTypeCounts UmiCounts;
-
     public final PurityCalcData PurityCalcs;
+    public final boolean CapMaxTumorCopyNumber;
 
-    private boolean mValid;
+    private SnvFitStatus mStatus;
 
-    public static final SomaticPurityResult INVALID_RESULT = new SomaticPurityResult(false);
+    public static final SomaticPurityResult INVALID_RESULT = new SomaticPurityResult(
+            SnvFitStatus.INVALID, false, 0, "",
+            new FragmentTotals(), UmiTypeCounts.NO_UMI_COUNTS, new PurityCalcData());
 
     public SomaticPurityResult(
-            boolean valid, int totalVariants, final String outlierVariantInfo, final FragmentTotals fragmentTotals,
-            final UmiTypeCounts umiTypeCounts, final PurityCalcData purityCalcData)
+            final SnvFitStatus status, boolean capMaxTumorCopyNumber, int totalVariants, final String outlierVariantInfo,
+            final FragmentTotals fragmentTotals, final UmiTypeCounts umiTypeCounts, final PurityCalcData purityCalcData)
     {
         TotalVariants = totalVariants;
         OutlierVariantInfo = outlierVariantInfo;
         FragTotals = fragmentTotals;
         UmiCounts = umiTypeCounts;
         PurityCalcs = purityCalcData;
+        CapMaxTumorCopyNumber = capMaxTumorCopyNumber;
 
-        mValid = valid;
-    }
-
-    public SomaticPurityResult(final boolean valid)
-    {
-        mValid = valid;
-        TotalVariants = 0;
-        OutlierVariantInfo = "";
-        PurityCalcs = new PurityCalcData();
-        FragTotals = new FragmentTotals();
-        UmiCounts = UmiTypeCounts.NO_UMI_COUNTS;
+        mStatus = status;
     }
 
     private DetectionResult formatDetectionResult()
@@ -65,12 +53,19 @@ public class SomaticPurityResult
         return PurityCalcs.Probability < LOW_PROBABILITY ? TRUE : FALSE;
     }
 
-    public boolean valid() { return mValid; }
+    public SnvFitStatus status() { return mStatus; }
+    public void setStatus(final SnvFitStatus status) { mStatus = status; }
+
+    public boolean mrdDetected()
+    {
+        return PurityCalcs.PurityEstimate > PurityCalcs.LodPurityEstimate || PurityCalcs.DualProbability < LOW_PROBABILITY;
+    }
 
     public static String header()
     {
         StringJoiner sj = new StringJoiner(TSV_DELIM);
         sj.add("SNV_MRD");
+        sj.add("SNVStatus");
         sj.add("TotalVariants");
         sj.add("CalcVariants");
         sj.add("SNVPurity");
@@ -97,6 +92,7 @@ public class SomaticPurityResult
         sj.add("PeakBandwidthLow");
         sj.add("PeakBandwidthHigh");
         sj.add("OutlierVariants");
+        sj.add("CappedTumorCopyNumber");
         sj.add("ErrorRate");
         sj.add("RawBqrErrorRate");
         sj.add("BqrThreshold");
@@ -108,6 +104,7 @@ public class SomaticPurityResult
     {
         StringJoiner sj = new StringJoiner(TSV_DELIM);
         sj.add(formatDetectionResult().toString());
+        sj.add(String.valueOf(mStatus));
         sj.add(format("%d", TotalVariants));
         sj.add(format("%d", FragTotals.variantCount()));
         sj.add(formatPurityValue(PurityCalcs.PurityEstimate));
@@ -137,6 +134,7 @@ public class SomaticPurityResult
         sj.add(format("%.4f", PurityCalcs.Clonality.PeakBandwidthHigh));
 
         sj.add(OutlierVariantInfo);
+        sj.add(Boolean.toString(CapMaxTumorCopyNumber));
 
         sj.add(format("%4.3e", PurityCalcs.ErrorRate));
         sj.add(format("%4.3e", PurityCalcs.RawBqrErrorRate));

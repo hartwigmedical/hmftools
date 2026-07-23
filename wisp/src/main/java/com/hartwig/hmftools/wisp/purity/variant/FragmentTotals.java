@@ -1,26 +1,23 @@
 package com.hartwig.hmftools.wisp.purity.variant;
 
-import static java.lang.Math.pow;
+import static com.hartwig.hmftools.wisp.purity.PurityConstants.MAX_COPY_NUMBER_FOR_FITTING;
+import static java.lang.Math.max;
 
 public class FragmentTotals
 {
     private int mVariantCount;
     private int mTumorFragsTotal;
     private int mSampleFragsTotal;
-    private double mTumorCopyNumberTotal;
 
     private int mTumorDepthTotal;
     private int mSampleDepthTotal;
+    private double mDepthToCopyNumberWeightingTotal;
+    private double mSampleWeightedAfTotal;
 
     private int mSampleOneFragmentCount; // count of variants with 1 observed fragment
     private int mSampleTwoPlusCount;
 
-    private double mSampleAdjustedFragsTotal;
-
-    private double mSampleDepthPerCopyNumberTotal;
-
     private double mSampleWeightedDepthTotal;
-    private double mSampleTumorAdjustedDepthTotal;
 
     private double mVcnSampleDepthTotal;
     private double mCnSampleDepthTotal;
@@ -32,15 +29,13 @@ public class FragmentTotals
         mVariantCount = 0;
         mTumorFragsTotal = 0;
         mSampleFragsTotal = 0;
-        mTumorCopyNumberTotal = 0;
         mTumorDepthTotal = 0;
         mSampleDepthTotal = 0;
+        mDepthToCopyNumberWeightingTotal = 0;
+        mSampleWeightedAfTotal = 0;
         mSampleOneFragmentCount = 0;
         mSampleTwoPlusCount = 0;
-        mSampleAdjustedFragsTotal = 0;
-        mSampleDepthPerCopyNumberTotal = 0;
         mSampleWeightedDepthTotal = 0;
-        mSampleTumorAdjustedDepthTotal = 0;
         mVcnSampleDepthTotal = 0;
         mCnSampleDepthTotal = 0;
 
@@ -48,8 +43,12 @@ public class FragmentTotals
     }
 
     public void addVariantData(
-            double copyNumber, double variantCopyNumber, int tumorAlleleFrags, int sampleAlleleFrags, int tumorDepth, int sampleDepth)
+            double copyNumber, double variantCopyNumber, int tumorAlleleFrags, int sampleAlleleFrags, int tumorDepth, int sampleDepth,
+            boolean capMaxTumorCopyNumber)
     {
+        if(capMaxTumorCopyNumber && copyNumber > MAX_COPY_NUMBER_FOR_FITTING)
+            return;
+
         ++mVariantCount;
         mTumorFragsTotal += tumorAlleleFrags;
         mTumorDepthTotal += tumorDepth;
@@ -62,22 +61,17 @@ public class FragmentTotals
         else if(sampleAlleleFrags == 1)
             ++mSampleOneFragmentCount;
 
-        mTumorCopyNumberTotal += copyNumber;
+        double depthToCopyNumberFactor = sampleDepth / max(copyNumber, 1);  // ratio of actual to expected sample DP (low for off-target variants)
+        mDepthToCopyNumberWeightingTotal += depthToCopyNumberFactor;
 
-        // wVAF = Σ(i=1->n)[ADi /CNi] * Σ(i=1->n)[DPi /CNi]
+        if(sampleDepth > 0)
+            mSampleWeightedAfTotal += (sampleAlleleFrags / (double)sampleDepth) * depthToCopyNumberFactor;
 
-        mSampleAdjustedFragsTotal += sampleAlleleFrags / copyNumber;
-
-        double tumorDpPerCn = tumorDepth / copyNumber;
-
-        mSampleDepthPerCopyNumberTotal += sampleDepth / copyNumber;
-
-        mSampleTumorAdjustedDepthTotal += sampleDepth * tumorDpPerCn; // denominator for weighted average depth (WAD)
-        mSampleWeightedDepthTotal += tumorDpPerCn * pow(sampleDepth, 2); // numerator for WAD
+        mSampleWeightedDepthTotal += sampleDepth * depthToCopyNumberFactor; // numerator for WAD
 
         // for WA_VCN and WA_CN
-        mVcnSampleDepthTotal += variantCopyNumber * sampleDepth;
-        mCnSampleDepthTotal += copyNumber * sampleDepth;
+        mVcnSampleDepthTotal += variantCopyNumber * depthToCopyNumberFactor;
+        mCnSampleDepthTotal += copyNumber * depthToCopyNumberFactor;
     }
 
     public int variantCount() { return mVariantCount; }
@@ -98,14 +92,21 @@ public class FragmentTotals
 
     public double rawSampleVaf() { return mSampleDepthTotal > 0 ? mSampleFragsTotal / (double)mSampleDepthTotal : 0; }
 
-    public double adjSampleVaf() { return mSampleDepthPerCopyNumberTotal > 0 ? mSampleAdjustedFragsTotal / mSampleDepthPerCopyNumberTotal : 0; }
+    public double adjSampleVaf() { return mDepthToCopyNumberWeightingTotal > 0 ? mSampleWeightedAfTotal / mDepthToCopyNumberWeightingTotal : 0; }
 
     public double weightedSampleDepth()
     {
-        return mSampleTumorAdjustedDepthTotal > 0 ? mSampleWeightedDepthTotal / mSampleTumorAdjustedDepthTotal : 0;
+        return mDepthToCopyNumberWeightingTotal > 0 ? mSampleWeightedDepthTotal / mDepthToCopyNumberWeightingTotal : 0;
     }
 
     // for WA_VCN and WA_CN
-    public double weightedVariantCopyNumber() { return mSampleDepthTotal > 0 ? mVcnSampleDepthTotal / mSampleDepthTotal : 0; }
-    public double weightedCopyNumber() { return mSampleDepthTotal > 0 ? mCnSampleDepthTotal / mSampleDepthTotal : 0; }
+    public double weightedVariantCopyNumber()
+    {
+        return mDepthToCopyNumberWeightingTotal > 0 ? mVcnSampleDepthTotal / mDepthToCopyNumberWeightingTotal : 0;
+    }
+
+    public double weightedCopyNumber()
+    {
+        return mDepthToCopyNumberWeightingTotal > 0 ? mCnSampleDepthTotal / mDepthToCopyNumberWeightingTotal : 0;
+    }
 }

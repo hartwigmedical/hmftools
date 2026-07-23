@@ -59,7 +59,6 @@ public class LowCountModel extends ClonalityModel
 
     public static boolean canUseModel(final String sampleId, final FragmentTotals fragmentTotals, final List<SomaticVariant> variants)
     {
-        int oneFragVariantCount = 0;
         int twoPlusFragVariantCount = 0;
 
         for(SomaticVariant variant : variants)
@@ -68,8 +67,6 @@ public class LowCountModel extends ClonalityModel
 
             if(sampleFragData.AlleleCount >= 2)
                 ++twoPlusFragVariantCount;
-            else if(sampleFragData.AlleleCount == 1)
-                ++oneFragVariantCount;
         }
 
         if(twoPlusFragVariantCount < LOW_COUNT_MODEL_MIN_FRAG_VARIANTS)
@@ -87,7 +84,6 @@ public class LowCountModel extends ClonalityModel
     public ClonalityData calculate(final String sampleId, final FragmentTotals fragmentTotals, final PurityCalcData purityCalcData)
     {
         double estimateVaf = fragmentTotals.adjSampleVaf();
-        double rawEstimatedPurity = purityCalcData.RawPurityEstimate;
 
         if(estimateVaf == 0)
             return NO_RESULT;
@@ -117,8 +113,8 @@ public class LowCountModel extends ClonalityModel
 
         List<SimulatedVafCalcs> simulatedVafCalcs = Lists.newArrayList();
 
-        // now test each simuluated dropout rate and VAF
-        for(double dropoutRate = PurityConstants.DROPOUT_RATE_INCREMENT; dropoutRate < 0.95; dropoutRate += PurityConstants.DROPOUT_RATE_INCREMENT)
+        // now test each simulated dropout rate and VAF
+        for(double dropoutRate = 0; dropoutRate < 0.95; dropoutRate += PurityConstants.DROPOUT_RATE_INCREMENT)
         {
             double simulatedVaf = estimateVaf / (1 - dropoutRate);
 
@@ -150,6 +146,9 @@ public class LowCountModel extends ClonalityModel
         // now find the closest ratio to the observed ratio
         double observedRatio = observedFrag2Plus / (double)observedFrag1;
         DropoutVaf dropoutVaf = findVafRatio(observedRatio, simulatedVafCalcs);
+
+        if(dropoutVaf.Dropout == 0)
+            return NO_RESULT;
 
         // LOW_COUNT_PROBABILITY
         double lowFragmentCount = max(calcPoissonNoiseValue(observedFrag2Plus, HIGH_PROBABILITY), 2);
@@ -248,54 +247,4 @@ public class LowCountModel extends ClonalityModel
 
         public String toString() { return format("simVaf(%.4f) doRate(%.2f) ratio(%.3f)", SimulatedVaf, DropoutRate, fragmentRatio()); }
     }
-
-    /*
-    public static BufferedWriter initialiseWriter(final PurityConfig config)
-    {
-        try
-        {
-            String fileName = config.formFilename(CN_PLOT_CALCS);
-
-            BufferedWriter writer = createBufferedWriter(fileName, false);
-
-            if(config.multipleSamples())
-                writer.write("PatientId\t");
-
-            writer.write("SampleId\tVariantCount\tSimulatedVaf\tDropoutRate");
-            writer.write("\tProbTotalFrag1\tProbTotalFrag2Plus\tObsFrag1\tObsFrag2Plus");
-            writer.newLine();
-
-            return writer;
-        }
-        catch(IOException e)
-        {
-            CT_LOGGER.error("failed to initialise variant output file: {}", e.toString());
-            return null;
-        }
-    }
-
-    public synchronized static void writeSimulatedDropoutData(
-            final BufferedWriter writer, final PurityConfig config, final SampleData sample, final String sampleId,
-            int varCount, final SimulatedVafCalcs simVafCalcs, int observedFrag1, int observedFrag2Plus)
-    {
-        if(writer == null)
-            return;
-
-        try
-        {
-            if(config.multipleSamples())
-                writer.write(format("%s\t", sample.PatientId));
-
-            writer.write(format("%s\t%d\t%.4f\t%.2f", sampleId, varCount, simVafCalcs.SimulatedVaf, simVafCalcs.DropoutRate));
-
-            writer.write(format("\t%.6f\t%.6f\t%d\t%d",
-                    simVafCalcs.ProbabilityTotalFrag1, simVafCalcs.ProbabilityTotalFrag2Plus, observedFrag1, observedFrag2Plus));
-            writer.newLine();
-        }
-        catch(IOException e)
-        {
-            CT_LOGGER.error("failed to write dropout calc file: {}", e.toString());
-        }
-    }
-    */
 }
