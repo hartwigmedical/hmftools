@@ -15,11 +15,14 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.bam.BamSlicer;
 
+import htsjdk.samtools.Cigar;
+import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.QueryInterval;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordIterator;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.ValidationStringency;
 
 public class BamReader
 {
@@ -29,6 +32,7 @@ public class BamReader
     private final List<BamFileReader> mBamReaders;
     private final List<BamFileReader> mActiveBamReaders;
     private final List<BamFileReader> mFinishedBamReaders;
+
 
     public BamReader(final List<String> inputBams, final String refGenomeFile)
     {
@@ -134,7 +138,9 @@ public class BamReader
         {
             File file = new File(bamFile);
             mFilename = file.getName();
-            mSamReader = SamReaderFactory.makeDefault().referenceSequence(new File(mRefGenomeFile)).open(file);
+            mSamReader = SamReaderFactory.makeDefault()
+                    .validationStringency(ValidationStringency.SILENT)
+                    .referenceSequence(new File(mRefGenomeFile)).open(file);
 
             mSamIterator = null;
             mCurrentRecord = null;
@@ -161,7 +167,7 @@ public class BamReader
             }
             catch(Exception e)
             {
-                mCurrentRecord = null;
+                handleReadError(region.toString(), e);
             }
         }
 
@@ -169,21 +175,59 @@ public class BamReader
         {
             try
             {
-                if(mSamIterator.hasNext())
+                while(mSamIterator.hasNext())
                 {
-                    mCurrentRecord = mSamIterator.next();
+                    SAMRecord record = mSamIterator.next();
+
+                    if(isMalformed(record))
+                    {
+                        logMalformed(record);
+                        continue;
+                    }
+
+                    mCurrentRecord = record;
+                    return;
                 }
-                else
-                {
-                    mCurrentRecord = null;
-                    mSamIterator.close();
-                }
+
+                mCurrentRecord = null;
+                mSamIterator.close();
             }
             catch(Exception e)
             {
-                mCurrentRecord = null;
-                mSamIterator = null;
+                handleReadError("position " + currentPosition(), e);
             }
+        }
+
+        private static boolean isMalformed(final SAMRecord record)
+        {
+            if(record.getReadUnmappedFlag())
+                return false;
+
+            Cigar cigar = record.getCigar();
+
+            if(cigar.isEmpty())
+                return false;
+
+            for(CigarElement element : cigar.getCigarElements())
+            {
+                if(element.getLength() == 0)
+                    return true;
+            }
+
+            byte[] bases = record.getReadBases();
+            return bases != null && bases.length > 0 && bases.length != cigar.getReadLength();
+        }
+
+        private void logMalformed(final SAMRecord record)
+        {
+            RD_LOGGER.warn("BAM({}) skipping malformed read({}) cigar({}) seqLength({})",
+                    mFilename, record.getReadName(), record.getCigarString(), record.getReadLength());
+        }
+
+        private void handleReadError(final String context, final Exception e)
+        {
+            mCurrentRecord = null;
+            RD_LOGGER.warn("BAM({}) skipping unreadable read at {}: {}", mFilename, context, e.toString());
         }
 
         public String filename() { return mFilename; }
