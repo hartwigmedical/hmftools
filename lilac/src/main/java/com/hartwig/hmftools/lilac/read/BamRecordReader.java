@@ -326,7 +326,8 @@ public class BamRecordReader implements BamReader
                 if(!regionCoversVariant(codingRegion, variant))
                     continue;
 
-                ChrBaseRegion sliceRegion = new ChrBaseRegion(geneCodingRegions.Chromosome, codingRegion.start(), codingRegion.end());
+                LL_LOGGER.debug("Coding region {} of gene {} covers variant {}", codingRegion.toString(), geneName, variant);
+                ChrBaseRegion sliceRegion = determineVariantSpliceRegion(variant, geneCodingRegions.Chromosome, codingRegion);
                 List<Read> regionCodingRecords = findVariantRecords(variant, sliceRegion);
                 List<Read> codingRecords = Lists.newArrayList();
 
@@ -340,6 +341,7 @@ public class BamRecordReader implements BamReader
 
                     codingRecords.add(record);
                 }
+                LL_LOGGER.debug("Matching coding records found: {}", codingRecords.size());
 
                 final List<Fragment> readFragments = codingRecords.stream()
                         .map(x -> mFragmentFactory.createAlignmentFragments(x, geneName, geneCodingRegions.Strand))
@@ -355,6 +357,19 @@ public class BamRecordReader implements BamReader
         }
 
         return Lists.newArrayList();
+    }
+
+    private static ChrBaseRegion determineVariantSpliceRegion(final SomaticVariant variant, final String chromosome,
+            final BaseRegion codingRegion)
+    {
+        if(variant.CanonicalCodingEffect == CodingEffect.SPLICE)
+        {
+            return new ChrBaseRegion(chromosome, codingRegion.start() - SPLICE_VARIANT_BUFFER, codingRegion.end() + SPLICE_VARIANT_BUFFER);
+        }
+        else
+        {
+            return new ChrBaseRegion(chromosome, codingRegion.start(), codingRegion.end());
+        }
     }
 
     private List<Fragment> queryMateFragments(final GeneCodingRegions geneCodingRegions, final Collection<Read> codingRecords)
