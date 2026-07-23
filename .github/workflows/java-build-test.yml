@@ -1,20 +1,18 @@
 name: Java build and unit test
 
+# This workflow always runs and always reports a single "build" check, which is the
+# required status check in branch protection. For PRs that only touch documentation,
+# the expensive Maven build is skipped (the job still succeeds), so the check stays
+# fast without ever producing a duplicate "build" check that could shadow a real
+# failing build. The doc-only detection uses the full PR diff, so a PR containing any
+# code change will always run the build regardless of which files were pushed last.
+
 on:
   push:
     branches: [ "master" ]
   pull_request:
     branches: [ "master" ]
     types: ["opened", "reopened", "synchronize"]
-    paths-ignore:
-      # Don't run on documentation changes, since the code is not affected.
-      - "**/*.md"
-      - "**/*.pdf"
-      - "**/*.png"
-      - "**/*.jpg"
-      - "**/*.gif"
-      - "**/*.svg"
-      - "*/docs/*.html"
 
 jobs:
   build:
@@ -24,7 +22,34 @@ jobs:
     steps:
       # Version 7.0.0 pinned
     - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+
+      # Determine whether the pull request changes any non-documentation file.
+      # Uses predicate-quantifier "every" so a file only counts towards "code" when it
+      # matches every (negated) pattern, i.e. it is not one of the documentation types.
+      # The "code" output is therefore true iff at least one changed file is not docs.
+    - name: Detect non-documentation changes
+      id: changes
+      if: github.event_name == 'pull_request'
+      # v4.0.1 pinned
+      uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d
+      with:
+        predicate-quantifier: 'every'
+        filters: |
+          code:
+            - '!(**/*.md)'
+            - '!(**/*.pdf)'
+            - '!(**/*.png)'
+            - '!(**/*.jpg)'
+            - '!(**/*.gif)'
+            - '!(**/*.svg)'
+            - '!(*/docs/*.html)'
+
+    - name: No code changes - skipping build
+      if: github.event_name == 'pull_request' && steps.changes.outputs.code != 'true'
+      run: echo 'Only documentation changed - nothing to build.'
+
     - name: Set up JDK 17
+      if: github.event_name != 'pull_request' || steps.changes.outputs.code == 'true'
       # Version 5.3.0 pinned
       uses: actions/setup-java@ad2b38190b15e4d6bdf0c97fb4fca8412226d287
       with:
@@ -32,4 +57,5 @@ jobs:
         distribution: 'temurin'
         cache: maven
     - name: Build with Maven
+      if: github.event_name != 'pull_request' || steps.changes.outputs.code == 'true'
       run: mvn -B package --file pom.xml
