@@ -35,6 +35,7 @@ import com.hartwig.hmftools.common.variant.VcfFileReader;
 
 import org.jetbrains.annotations.NotNull;
 
+import htsjdk.variant.variantcontext.GenotypesContext;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextBuilder;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
@@ -110,9 +111,10 @@ public class DepthAnnotator
                     currentChromosome = chromosome;
                 }
 
-                // create new instances of each variant to set depth values against
+                // create new instances of each variant to set depth values against\
+                // note: genotype info is copied to avoid lazy loading and unsafe access in threads
                 VariantContext newVariant = new VariantContextBuilder(variantContext)
-                        .genotypes(variantContext.getGenotypes())
+                        .genotypes(GenotypesContext.copy(variantContext.getGenotypes()))
                         .filters(variantContext.getFilters())
                         .make();
 
