@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_LIN
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.MATCH_SUBSEQUENCE_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.createBaseQualsAboveMinThreshold;
 import static com.hartwig.hmftools.esvee.assembly.phase.AssemblyLinker.findBestSequenceMatch;
+import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_VARIANT_LENGTH;
 
 import java.util.List;
 
@@ -39,7 +40,7 @@ public class LocalSequenceMatcher
 
         int chromosomeEnd = mRefGenome.getChromosomeLength(assembly.junction().Chromosome);
 
-        if(localRegionEnd >= chromosomeEnd)
+        if(localRegionStart < 1 || localRegionEnd >= chromosomeEnd)
             return null;
 
         byte[] refGenomeBases = mRefGenome.getBases(assembly.junction().Chromosome, localRegionStart, localRegionEnd);
@@ -149,7 +150,9 @@ public class LocalSequenceMatcher
             localRefJunctionIndex = assemblyExtBases.length() - 1;
         }
 
-        Junction localRefJunction = new Junction(assembly.junction().Chromosome, localRefJunctionPos, localRefOrientation);
+        Junction localRefJunction = new Junction(
+                assembly.junction().Chromosome, localRefJunctionPos, localRefOrientation,
+                false, false, false, 0, null);
 
         // trim the local ref sequence to 100 bases from the junction - no point in storing and writing 1000 bases
 

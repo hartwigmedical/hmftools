@@ -82,7 +82,6 @@ public class FilterConstants
     public static final double INV_SHORT_MIN_AF_LOWER = 0.1;
     public static final double INV_SHORT_MIN_AF_HIGHER = 0.2;
     public static final int INV_SHORT_MAX_HOMOLOGY_LOWER = 3;
-    public static final int INV_SHORT_MAX_HOMOLOGY_HIGHER = 6;
     public static final int INV_SHORT_RATE_LOWER = 200;
     public static final int INV_SHORT_RATE_HIGHER = 400;
 
@@ -98,6 +97,14 @@ public class FilterConstants
     public static final int INV_ADJACENT_MIN_UPS = 4;
     public static final Set<FilterType> INV_ADJACENT_EXCLUDED_FILTERS = Sets.newHashSet(
             PON, INV_SHORT_FRAG_LOW_VAF, INV_SHORT_LOW_VAF_HOM, INV_SHORT_ISOLATED);
+
+    public static final double MIN_AF_WEAK_JUNCTION_DISC_RATE_MIN = 0.005;
+    public static final double MIN_AF_WEAK_JUNCTION_STRAND_BIAS_MIN = 0.1;
+    public static final double MIN_AF_WEAK_JUNCTION_SUPP_REMOTE_THRESHOLD = 0.5;
+    public static final double MIN_AF_WEAK_JUNCTION_PROX_JUNC_READ_THRESHOLD = 0.1;
+    public static final double MIN_AF_WEAK_JUNCTION_DISC_RATE_FACTOR_LONG = 1.25;
+    public static final double MIN_AF_WEAK_JUNCTION_DISC_RATE_FACTOR_SGL = 1;
+    public static final double MIN_AF_WEAK_JUNCTION_DISC_RATE_FACTOR_OTHER = 0.75;
 
 
     public static final ChrBaseRegion PMS2_V37 = new ChrBaseRegion("7", 6002870, 6058756); // has 10K buffer

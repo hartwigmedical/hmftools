@@ -47,10 +47,16 @@ public final class AssemblyConstants
     public static final double ASSEMBLY_INDEL_UNLINKED_ASSEMBLY_INDEL_PERC = 0.33;
     public static final int ASSEMBLY_DEDUP_JITTER_MAX_DIST = 20;
     public static final int ASSEMBLY_DEDUP_HIGH_SUPPORT_RATIO = 50;
+    public static final int JUNCTION_PROXIMATE_READ_DISTANCE = 25;
 
     public static final int WEAK_ASSEMBLY_UNPAIRED_MAX_READS = 3;
     public static final double WEAK_ASSEMBLY_UNPAIRED_READ_FACTOR = 5;
     public static final double WEAK_ASSEMBLY_UNPAIRED_LONG_EXT_FACTOR = 2.5;
+    public static final double WEAK_ASSEMBLY_UNPAIRED_LONG_EXT_FACTOR_LOWER = 2;
+    public static final double WEAK_ASSEMBLY_DISC_RATE = 0.02;
+    public static final int WEAK_ASSEMBLY_MIN_INS_LENGTH = 16;
+    public static final int WEAK_ASSEMBLY_MIN_REF_REPEAT = 7;
+    public static final int WEAK_ASSEMBLY_MAX_REF_REPEAT_LENGTH = 4;
 
     public static final double DEFAULT_DISC_RATE_INCREMENT = 0.01;
     public static final int DISC_RATE_JUNC_INCREMENT = 1;
@@ -82,6 +88,7 @@ public final class AssemblyConstants
     public static final int READ_MISMATCH_LOW_REPEAT_COUNT = REPEAT_MIN_COUNT;
     public static int READ_MISMATCH_MEDIUM_REPEAT_COUNT = 11;
     public static int READ_MISMATCH_LONG_REPEAT_COUNT = 16;
+    public static int READ_MISMATCH_MAX_REPEAT_DIFF = 5;
 
     public static final int DEFAULT_ASSEMBLY_MAP_QUAL_THRESHOLD = 10;
 

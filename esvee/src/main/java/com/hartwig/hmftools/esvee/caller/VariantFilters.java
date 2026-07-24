@@ -5,13 +5,16 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.sqrt;
 
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.PROX_JUNC_READ_RATIO;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SPLIT_FRAGS;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SUPP_REMOTE_REGION_RATIO;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsDouble;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.types.RepeatInfo.calcTrimmedBaseLength;
@@ -26,12 +29,18 @@ import static com.hartwig.hmftools.esvee.caller.FilterConstants.INV_SHORT_FRAGME
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.INV_SHORT_FRAGMENT_LENGTH;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.INV_SHORT_FRAGMENT_MIN_AF;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.INV_SHORT_LENGTH;
-import static com.hartwig.hmftools.esvee.caller.FilterConstants.INV_SHORT_MAX_HOMOLOGY_HIGHER;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.INV_SHORT_MAX_HOMOLOGY_LOWER;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.INV_SHORT_MIN_AF_HIGHER;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.INV_SHORT_MIN_AF_LOWER;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.INV_SHORT_RATE_HIGHER;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.INV_SHORT_RATE_LOWER;
+import static com.hartwig.hmftools.esvee.caller.FilterConstants.MIN_AF_WEAK_JUNCTION_DISC_RATE_FACTOR_LONG;
+import static com.hartwig.hmftools.esvee.caller.FilterConstants.MIN_AF_WEAK_JUNCTION_DISC_RATE_FACTOR_OTHER;
+import static com.hartwig.hmftools.esvee.caller.FilterConstants.MIN_AF_WEAK_JUNCTION_DISC_RATE_FACTOR_SGL;
+import static com.hartwig.hmftools.esvee.caller.FilterConstants.MIN_AF_WEAK_JUNCTION_DISC_RATE_MIN;
+import static com.hartwig.hmftools.esvee.caller.FilterConstants.MIN_AF_WEAK_JUNCTION_PROX_JUNC_READ_THRESHOLD;
+import static com.hartwig.hmftools.esvee.caller.FilterConstants.MIN_AF_WEAK_JUNCTION_STRAND_BIAS_MIN;
+import static com.hartwig.hmftools.esvee.caller.FilterConstants.MIN_AF_WEAK_JUNCTION_SUPP_REMOTE_THRESHOLD;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.MIN_AVG_FRAG_FACTOR;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.MIN_AVG_FRAG_STD_DEV_FACTOR;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.MIN_TRIMMED_ANCHOR_LENGTH;
@@ -48,6 +57,7 @@ import static com.hartwig.hmftools.esvee.caller.SeqTechUtils.isSbxZeroLengthInve
 import static com.hartwig.hmftools.esvee.common.FilterType.DUPLICATE;
 import static com.hartwig.hmftools.esvee.common.FilterType.INV_SHORT_ISOLATED;
 import static com.hartwig.hmftools.esvee.common.FilterType.LINE_SOURCE;
+import static com.hartwig.hmftools.esvee.common.FilterType.WEAK_JUNC_MIN_AF;
 import static com.hartwig.hmftools.esvee.common.FilterType.MIN_ANCHOR_LENGTH;
 import static com.hartwig.hmftools.esvee.common.FilterType.MIN_LENGTH;
 import static com.hartwig.hmftools.esvee.common.FilterType.MIN_QUALITY;
@@ -63,12 +73,16 @@ import static com.hartwig.hmftools.esvee.common.FilterType.SHORT_FRAG_LENGTH;
 import static com.hartwig.hmftools.esvee.common.FilterType.INV_SHORT_LOW_VAF_HOM;
 import static com.hartwig.hmftools.esvee.common.FilterType.STRAND_BIAS;
 import static com.hartwig.hmftools.esvee.common.FilterType.UNPAIRED_THREE_PRIME_RANGE;
+import static com.hartwig.hmftools.esvee.common.SvConstants.INV_SHORT_MAX_HOMOLOGY_HIGHER;
+import static com.hartwig.hmftools.esvee.common.SvConstants.WEAK_ASSEMBLY_LONG_LENGTH;
 import static com.hartwig.hmftools.esvee.common.SvConstants.hasPairedReads;
 
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.common.sv.SvVcfTags;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.types.RepeatInfo;
@@ -111,6 +125,9 @@ public class VariantFilters
 
         if(belowMinAf(var))
             var.addFilter(MIN_AF);
+
+        if(belowWeakJunctionMinAf(var))
+            var.addFilter(WEAK_JUNC_MIN_AF);
 
         if(belowMinSupport(var))
             var.addFilter(MIN_SUPPORT);
@@ -231,6 +248,85 @@ public class VariantFilters
         }
 
         return !anySamplesAboveAfThreshold(var, afThreshold);
+    }
+
+    private boolean belowWeakJunctionMinAf(final Variant var)
+    {
+        double discordantRate = mDiscordantStats.discordantRate();
+
+        if(discordantRate < MIN_AF_WEAK_JUNCTION_DISC_RATE_MIN)
+            return false;
+
+        if(!applyWeakJunctionMinAfFilter(var))
+            return false;
+
+        // adjust the standard min AF as follows:
+        // - Remote incomplete variants (BNDs or events >100kb length, with only 1 initial junction from prep): 0.001 + (discRate - 0.005) * 1.25
+        // - SGLs: 0.05 + (discRate - 0.005) * 1
+        // - Other variants: 0.001 + (discRate - 0.005) * 0.75
+
+        double afThreshold = var.isSgl() && !var.isLineSite() ? mFilterConstants.MinAfSgl : mFilterConstants.MinAfJunction;
+        double discRateThreshold = MIN_AF_WEAK_JUNCTION_DISC_RATE_MIN;
+
+        if(discordantRate > discRateThreshold)
+        {
+            if(var.type() == StructuralVariantType.SGL)
+            {
+                afThreshold += (discordantRate - discRateThreshold) * MIN_AF_WEAK_JUNCTION_DISC_RATE_FACTOR_SGL;
+            }
+            else if((var.type() == BND || var.svLength() >= WEAK_ASSEMBLY_LONG_LENGTH) && var.originalJunctions().size() == 1)
+            {
+                afThreshold += (discordantRate - discRateThreshold) * MIN_AF_WEAK_JUNCTION_DISC_RATE_FACTOR_LONG;
+            }
+            else
+            {
+                afThreshold += (discordantRate - discRateThreshold) * MIN_AF_WEAK_JUNCTION_DISC_RATE_FACTOR_OTHER;
+            }
+        }
+
+        return !anySamplesAboveAfThreshold(var, afThreshold);
+    }
+
+    @VisibleForTesting
+    public static boolean applyWeakJunctionMinAfFilter(final Variant var)
+    {
+        // this additional AF filter is conditionally applied if:
+        // - not hotspot or indel-based
+        // - SB > 0.9 or SB < 0.1, and variant is SGL or INV, OR
+        // - IHOMLEN >= 6, OR
+        // - majority_supp_ratio <= 0.5, OR
+        // - local_ratio_near_same < 0.1, OR
+
+        if(var.isSagaMatched() || var.isHotspot())
+            return false;
+
+        boolean hasSplitJunctions = var.originalJunctions().stream().anyMatch(x -> x.softClipBased());
+
+        if(!hasSplitJunctions)
+            return false;
+
+        Breakend breakend = var.breakendStart();
+
+        if(var.type() == StructuralVariantType.SGL || var.type() == INV)
+        {
+            double strandBias = breakend.strandBias();
+
+            if(strandBias < MIN_AF_WEAK_JUNCTION_STRAND_BIAS_MIN || strandBias > (1 - MIN_AF_WEAK_JUNCTION_STRAND_BIAS_MIN))
+                return true;
+        }
+
+        if(breakend.InexactHomology.length() >= INV_SHORT_MAX_HOMOLOGY_HIGHER)
+            return true;
+
+        double proximateJuncRatio = breakend.Context.getAttributeAsDouble(PROX_JUNC_READ_RATIO, -1);
+        if(proximateJuncRatio >= 0 && proximateJuncRatio <= MIN_AF_WEAK_JUNCTION_PROX_JUNC_READ_THRESHOLD)
+            return true;
+
+        double suppRemoteRegionRatio = breakend.Context.getAttributeAsDouble(SUPP_REMOTE_REGION_RATIO, -1);
+        if(suppRemoteRegionRatio >= 0 && suppRemoteRegionRatio <= MIN_AF_WEAK_JUNCTION_SUPP_REMOTE_THRESHOLD)
+            return true;
+
+        return false;
     }
 
     private static boolean anySamplesAboveAfThreshold(final Variant var, final double afThreshold)

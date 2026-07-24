@@ -28,6 +28,7 @@ public enum FilterType
     SBX_ARTEFACT("sbxArtefact", "SBX artefact", false),
     SBX_INV_ZERO_MOTIF("sbxInvZeroMotif", "SBX artefact, zero-length INV with known motif", false),
     OFF_TARGET("offTarget", "Outside target panel", false),
+    WEAK_JUNC_MIN_AF("weakJuncMinAF", "Low allele fraction at weak junction", false),
     PON("PON", "Found in panel of normals", true);
 
     private final String mVcfTag;

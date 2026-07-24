@@ -46,8 +46,9 @@ public final class SvConstants
 
     // qual calcs and filters
     public static final double QUAL_CALC_FRAG_SUPPORT_FACTOR = 5;
-
+    public static final int INV_SHORT_MAX_HOMOLOGY_HIGHER = 6;
     public static final int MIN_ANCHOR_LENGTH = 50;
+    public static final int WEAK_ASSEMBLY_LONG_LENGTH = 100_000;
 
     // LINE elements
     public static final int LINE_MIN_EXTENSION_LENGTH = LINE_POLY_AT_REQ;
