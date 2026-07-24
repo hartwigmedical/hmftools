@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.compar.cuppa;
 
-import static com.hartwig.hmftools.compar.cuppa.CuppaData.FLD_PROBABILITY;
-import static com.hartwig.hmftools.compar.cuppa.CuppaData.FLD_TOP_CANCER_TYPE;
+import static com.hartwig.hmftools.compar.cuppa.CuppaComparer.FLD_PROBABILITY;
+import static com.hartwig.hmftools.compar.cuppa.CuppaComparer.FLD_TOP_CANCER_TYPE;
 
 import java.util.Collections;
 import java.util.Map;

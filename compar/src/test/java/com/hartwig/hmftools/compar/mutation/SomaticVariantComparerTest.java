@@ -1,3 +1,4 @@
+
 package com.hartwig.hmftools.compar.mutation;
 
 import static org.junit.Assert.assertFalse;
@@ -10,7 +11,7 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.compar.ComparConfig;
-import com.hartwig.hmftools.compar.common.DiffThresholds;
+import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.MismatchType;
@@ -25,16 +26,16 @@ public class SomaticVariantComparerTest
         ComparConfig config = new ComparConfig();
         SomaticVariantComparer victim = new SomaticVariantComparer(config);
 
-        DiffThresholds diffThresholds = new DiffThresholds();
-        victim.registerThresholds(diffThresholds);
+        MatchLevel matchLevel = MatchLevel.DETAILED;
+        FieldConfig fieldConfig = new FieldConfig();
+        fieldConfig.registerFields(victim, matchLevel);
 
         String sampleId = "TEST";
         List<Mismatch> mismatches = new ArrayList<>();
         List<SomaticVariantData> refVariants = new ArrayList<>();
         List<SomaticVariantData> newVariants = new ArrayList<>();
-        MatchLevel matchLevel = MatchLevel.DETAILED;
 
-        assertTrue(victim.identifyMismatches(sampleId, mismatches, refVariants, newVariants, matchLevel));
+        assertTrue(victim.identifyMismatches(sampleId, mismatches, refVariants, newVariants, matchLevel, fieldConfig));
         assertTrue(mismatches.isEmpty());
     }
 
@@ -44,14 +45,14 @@ public class SomaticVariantComparerTest
         ComparConfig config = new ComparConfig();
         SomaticVariantComparer victim = new SomaticVariantComparer(config);
 
-        DiffThresholds diffThresholds = new DiffThresholds();
-        victim.registerThresholds(diffThresholds);
+        MatchLevel matchLevel = MatchLevel.DETAILED;
+        FieldConfig fieldConfig = new FieldConfig();
+        fieldConfig.registerFields(victim, matchLevel);
 
         String sampleId = "TEST";
         List<Mismatch> mismatches = new ArrayList<>();
         List<SomaticVariantData> refVariants = new ArrayList<>();
         List<SomaticVariantData> newVariants = new ArrayList<>();
-        MatchLevel matchLevel = MatchLevel.DETAILED;
 
         // match
         refVariants.add(TestSomaticVariantDataBuilder.BUILDER.create());
@@ -86,7 +87,7 @@ public class SomaticVariantComparerTest
         //new only
         newVariants.add(TestSomaticVariantDataBuilder.BUILDER.create(b -> b.type = VariantType.INDEL));
 
-        assertTrue(victim.identifyMismatches(sampleId, mismatches, refVariants, newVariants, matchLevel));
+        assertTrue(victim.identifyMismatches(sampleId, mismatches, refVariants, newVariants, matchLevel, fieldConfig));
         assertEquals(1, mismatches.stream().filter(x -> x.Type == MismatchType.OLD_ONLY).count());
         assertEquals(1, mismatches.stream().filter(x -> x.Type == MismatchType.NEW_ONLY).count());
         assertEquals(1, mismatches.stream().filter(x -> x.Type == MismatchType.VALUE).count());
@@ -99,14 +100,14 @@ public class SomaticVariantComparerTest
         ComparConfig config = new ComparConfig();
         SomaticVariantComparer victim = new SomaticVariantComparer(config);
 
-        DiffThresholds diffThresholds = new DiffThresholds();
-        victim.registerThresholds(diffThresholds);
+        MatchLevel matchLevel = MatchLevel.REPORTABLE;
+        FieldConfig fieldConfig = new FieldConfig();
+        fieldConfig.registerFields(victim, matchLevel);
 
         String sampleId = "TEST";
         List<Mismatch> mismatches = new ArrayList<>();
         List<SomaticVariantData> refVariants = new ArrayList<>();
         List<SomaticVariantData> newVariants = new ArrayList<>();
-        MatchLevel matchLevel = MatchLevel.REPORTABLE;
 
         // match
         refVariants.add(TestSomaticVariantDataBuilder.BUILDER.create());
@@ -137,7 +138,7 @@ public class SomaticVariantComparerTest
         }));
         newVariants.add(TestSomaticVariantDataBuilder.BUILDER.create(b -> b.type = VariantType.INDEL));
 
-        assertTrue(victim.identifyMismatches(sampleId, mismatches, refVariants, newVariants, matchLevel));
+        assertTrue(victim.identifyMismatches(sampleId, mismatches, refVariants, newVariants, matchLevel, fieldConfig));
         assertEquals(1, mismatches.stream().filter(x -> x.Type == MismatchType.OLD_ONLY).count());
         assertEquals(1, mismatches.stream().filter(x -> x.Type == MismatchType.NEW_ONLY).count());
         assertEquals(1, mismatches.stream().filter(x -> x.Type == MismatchType.VALUE).count());
@@ -150,14 +151,14 @@ public class SomaticVariantComparerTest
         ComparConfig config = new ComparConfig();
         SomaticVariantComparer victim = new SomaticVariantComparer(config);
 
-        DiffThresholds diffThresholds = new DiffThresholds();
-        victim.registerThresholds(diffThresholds);
+        MatchLevel matchLevel = MatchLevel.DETAILED;
+        FieldConfig fieldConfig = new FieldConfig();
+        fieldConfig.registerFields(victim, matchLevel);
 
         String sampleId = "TEST";
         List<Mismatch> mismatches = new ArrayList<>();
         List<SomaticVariantData> refVariants = new ArrayList<>();
         List<SomaticVariantData> newVariants = new ArrayList<>();
-        MatchLevel matchLevel = MatchLevel.DETAILED;
 
         // match
         refVariants.add(TestSomaticVariantDataBuilder.BUILDER.create());
@@ -169,7 +170,7 @@ public class SomaticVariantComparerTest
         //new only
         newVariants.add(TestSomaticVariantDataBuilder.BUILDER.create(b -> b.chromosome = "13"));
 
-        assertTrue(victim.identifyMismatches(sampleId, mismatches, refVariants, newVariants, matchLevel));
+        assertTrue(victim.identifyMismatches(sampleId, mismatches, refVariants, newVariants, matchLevel, fieldConfig));
         assertEquals(1, mismatches.stream().filter(x -> x.Type == MismatchType.OLD_ONLY).count());
         assertEquals(1, mismatches.stream().filter(x -> x.Type == MismatchType.NEW_ONLY).count());
         assertEquals(2, mismatches.size());
@@ -181,14 +182,14 @@ public class SomaticVariantComparerTest
         ComparConfig config = new ComparConfig();
         SomaticVariantComparer victim = new SomaticVariantComparer(config);
 
-        DiffThresholds diffThresholds = new DiffThresholds();
-        victim.registerThresholds(diffThresholds);
+        MatchLevel matchLevel = MatchLevel.DETAILED;
+        FieldConfig fieldConfig = new FieldConfig();
+        fieldConfig.registerFields(victim, matchLevel);
 
         String sampleId = "TEST";
         List<Mismatch> mismatches = new ArrayList<>();
-        MatchLevel matchLevel = MatchLevel.DETAILED;
 
-        assertFalse(victim.identifyMismatches(sampleId, mismatches, null, null, matchLevel));
+        assertFalse(victim.identifyMismatches(sampleId, mismatches, null, null, matchLevel, fieldConfig));
         assertEquals(1, mismatches.stream().filter(x -> x.Type == MismatchType.INVALID_BOTH).count());
         assertEquals(1, mismatches.size());
     }
@@ -199,18 +200,18 @@ public class SomaticVariantComparerTest
         ComparConfig config = new ComparConfig();
         SomaticVariantComparer victim = new SomaticVariantComparer(config);
 
-        DiffThresholds diffThresholds = new DiffThresholds();
-        victim.registerThresholds(diffThresholds);
+        MatchLevel matchLevel = MatchLevel.DETAILED;
+        FieldConfig fieldConfig = new FieldConfig();
+        fieldConfig.registerFields(victim, matchLevel);
 
         String sampleId = "TEST";
         List<Mismatch> mismatches = new ArrayList<>();
         List<SomaticVariantData> newVariants = new ArrayList<>();
-        MatchLevel matchLevel = MatchLevel.DETAILED;
 
         newVariants.add(TestSomaticVariantDataBuilder.BUILDER.create());
         newVariants.add(TestSomaticVariantDataBuilder.BUILDER.createWithAlternateDefaults());
 
-        assertFalse(victim.identifyMismatches(sampleId, mismatches, null, newVariants, matchLevel));
+        assertFalse(victim.identifyMismatches(sampleId, mismatches, null, newVariants, matchLevel, fieldConfig));
         assertEquals(1, mismatches.stream().filter(x -> x.Type == MismatchType.INVALID_OLD).count());
         assertEquals(1, mismatches.size());
     }
@@ -221,18 +222,18 @@ public class SomaticVariantComparerTest
         ComparConfig config = new ComparConfig();
         SomaticVariantComparer victim = new SomaticVariantComparer(config);
 
-        DiffThresholds diffThresholds = new DiffThresholds();
-        victim.registerThresholds(diffThresholds);
+        MatchLevel matchLevel = MatchLevel.DETAILED;
+        FieldConfig fieldConfig = new FieldConfig();
+        fieldConfig.registerFields(victim, matchLevel);
 
         String sampleId = "TEST";
         List<Mismatch> mismatches = new ArrayList<>();
         List<SomaticVariantData> refVariants = new ArrayList<>();
-        MatchLevel matchLevel = MatchLevel.DETAILED;
 
         refVariants.add(TestSomaticVariantDataBuilder.BUILDER.create());
         refVariants.add(TestSomaticVariantDataBuilder.BUILDER.createWithAlternateDefaults());
 
-        assertFalse(victim.identifyMismatches(sampleId, mismatches, refVariants, null, matchLevel));
+        assertFalse(victim.identifyMismatches(sampleId, mismatches, refVariants, null, matchLevel, fieldConfig));
         assertEquals(1, mismatches.stream().filter(x -> x.Type == MismatchType.INVALID_NEW).count());
         assertEquals(1, mismatches.size());
     }

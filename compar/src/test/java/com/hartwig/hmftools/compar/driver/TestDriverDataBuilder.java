@@ -20,10 +20,10 @@ public class TestDriverDataBuilder
     public double likelihood = 0.6;
     public double minCopyNumber = 0.1;
     public double maxCopyNumber = 0.1;
-    public String chromosome = "chr9";
     public String chromosomeBand = "9p21";
     public String comparisonChromosome = "chr9";
     public boolean checkTranscript = true;
+    public boolean isPass = true;
 
     private static final Consumer<TestDriverDataBuilder> ALTERNATE_INITIALIZER = b ->
     {
@@ -35,10 +35,10 @@ public class TestDriverDataBuilder
         b.likelihood = 0.9;
         b.minCopyNumber = 0.6;
         b.maxCopyNumber = 0.9;
-        b.chromosome = "chr7";
         b.chromosomeBand = "7q34";
         b.comparisonChromosome = "chr7";
         b.checkTranscript = false;
+        b.isPass = true;
     };
 
     public static final TestComparableItemBuilder<TestDriverDataBuilder, DriverData> BUILDER =
@@ -47,7 +47,6 @@ public class TestDriverDataBuilder
     private DriverData build()
     {
         final DriverCatalog driverCatalog = ImmutableDriverCatalog.builder()
-                .chromosome(chromosome)
                 .chromosomeBand(chromosomeBand)
                 .gene(gene)
                 .transcript(transcript)
@@ -59,6 +58,7 @@ public class TestDriverDataBuilder
                 .minCopyNumber(minCopyNumber)
                 .maxCopyNumber(maxCopyNumber)
                 .category(DriverCategory.ONCO)
+                .chromosome("")
                 .missense(-1)
                 .nonsense(-1)
                 .splice(-1)
@@ -66,6 +66,6 @@ public class TestDriverDataBuilder
                 .frameshift(-1)
                 .biallelic(true)
                 .build();
-        return new DriverData(driverCatalog, null, comparisonChromosome, checkTranscript);
+        return new DriverData(driverCatalog, null, comparisonChromosome, checkTranscript, isPass);
     }
 }

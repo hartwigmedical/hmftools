@@ -16,10 +16,13 @@ import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.CommonUtils;
-import com.hartwig.hmftools.compar.common.DiffThresholds;
+import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.FileSources;
+import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.SourceType;
+import com.hartwig.hmftools.compar.common.field.DoubleField;
+import com.hartwig.hmftools.compar.common.field.Field;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class FlagstatComparer implements ItemComparer
@@ -40,19 +43,22 @@ public class FlagstatComparer implements ItemComparer
     }
 
     @Override
-    public boolean processSample(final String sampleId, final List<Mismatch> mismatches)
+    public boolean processSample(final String sampleId, final List<Mismatch> mismatches, final FieldConfig fieldConfig)
     {
-        return CommonUtils.processSample(this, mConfig, sampleId, mismatches);
+        return CommonUtils.processSample(this, mConfig, sampleId, mismatches, fieldConfig);
     }
 
     @Override
-    public void registerThresholds(final DiffThresholds thresholds)
+    public List<Field> fields(final MatchLevel matchLevel)
     {
-        thresholds.addFieldThreshold(FLD_MAPPED_PROPORTION, MAPPED_PROPORTION_ABS_THRESHOLD, MAPPED_PROPORTION_PCT_THRESHOLD);
+        return List.of(
+                new DoubleField(FLD_MAPPED_PROPORTION, i -> ((FlagstatData) i).flagStats().mappedProportion(),
+                        true, MAPPED_PROPORTION_ABS_THRESHOLD, MAPPED_PROPORTION_PCT_THRESHOLD, "%.2f")
+        );
     }
 
     @Override
-    public List<String> comparedFieldNames()
+    public List<String> displayFieldNames()
     {
         return Lists.newArrayList(FLD_MAPPED_PROPORTION);
     }

@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.compar.purple;
 
-import static com.hartwig.hmftools.compar.purple.CopyNumberData.FLD_COPY_NUMBER;
-import static com.hartwig.hmftools.compar.purple.CopyNumberData.FLD_MAJOR_ALLELE_CN;
-import static com.hartwig.hmftools.compar.purple.CopyNumberData.FLD_METHOD;
+import static com.hartwig.hmftools.compar.purple.CopyNumberComparer.FLD_COPY_NUMBER;
+import static com.hartwig.hmftools.compar.purple.CopyNumberComparer.FLD_MAJOR_ALLELE_CN;
+import static com.hartwig.hmftools.compar.purple.CopyNumberComparer.FLD_METHOD;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -15,7 +15,7 @@ import java.util.Map;
 
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItemTest;
-import com.hartwig.hmftools.compar.common.DiffThresholds;
+import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.MismatchType;
@@ -86,14 +86,15 @@ public class CopyNumberDataTest extends ComparableItemTest<CopyNumberData, CopyN
             b.positionStart = 15000;
             b.positionEnd = 25000;
         });
-        DiffThresholds diffThresholds = createDefaultThresholds();
+        MatchLevel matchLevel = MatchLevel.DETAILED;
+        FieldConfig fieldConfig = createDefaultThresholds(matchLevel);
 
         assertTrue(victim.matches(liftoverVictim));
         assertTrue(liftoverVictim.matches(victim));
-        assertNull(victim.findMismatch(liftoverVictim, MatchLevel.DETAILED, diffThresholds, false));
+        assertNull(victim.findMismatch(liftoverVictim, matchLevel, fieldConfig, false));
 
         Mismatch expectedMatch = new Mismatch(victim, liftoverVictim, MismatchType.FULL_MATCH, Collections.emptyList());
-        assertEquals(expectedMatch, victim.findMismatch(liftoverVictim, MatchLevel.DETAILED, diffThresholds, true));
+        assertEquals(expectedMatch, victim.findMismatch(liftoverVictim, matchLevel, fieldConfig, true));
     }
 
     @Test

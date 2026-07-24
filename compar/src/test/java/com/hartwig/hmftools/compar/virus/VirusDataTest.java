@@ -1,9 +1,9 @@
 package com.hartwig.hmftools.compar.virus;
 
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
-import static com.hartwig.hmftools.compar.virus.VirusData.FLD_DRIVER_LIKELIHOOD;
-import static com.hartwig.hmftools.compar.virus.VirusData.FLD_INTEGRATIONS;
-import static com.hartwig.hmftools.compar.virus.VirusData.FLD_MEAN_COVERAGE;
+import static com.hartwig.hmftools.compar.virus.VirusComparer.FLD_DRIVER_LIKELIHOOD;
+import static com.hartwig.hmftools.compar.virus.VirusComparer.FLD_INTEGRATIONS;
+import static com.hartwig.hmftools.compar.virus.VirusComparer.FLD_MEAN_COVERAGE;
 
 import java.util.Collections;
 import java.util.Map;

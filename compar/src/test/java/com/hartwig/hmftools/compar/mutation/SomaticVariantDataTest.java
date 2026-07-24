@@ -4,7 +4,7 @@ import static com.hartwig.hmftools.compar.ComparTestUtil.assertDifferencesAreFor
 import static com.hartwig.hmftools.compar.ComparTestUtil.union;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_QUAL;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
-import static com.hartwig.hmftools.compar.common.DiffFunctions.FILTER_DIFF;
+import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_FILTER;
 import static com.hartwig.hmftools.compar.mutation.SomaticVariantData.FLD_BIALLELIC;
 import static com.hartwig.hmftools.compar.mutation.SomaticVariantData.FLD_BIALLELIC_PROB;
 import static com.hartwig.hmftools.compar.mutation.SomaticVariantData.FLD_LPS;
@@ -35,7 +35,7 @@ import java.util.Set;
 
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItemTest;
-import com.hartwig.hmftools.compar.common.DiffThresholds;
+import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.MismatchType;
@@ -48,7 +48,7 @@ public class SomaticVariantDataTest extends ComparableItemTest<SomaticVariantDat
     private static final Set<String> PAVE_ONLY_FIELDS =
             Set.of(FLD_GENE, FLD_CANON_EFFECT, FLD_CODING_EFFECT, FLD_HGVS_CODING, FLD_HGVS_PROTEIN);
     private static final Set<String> SAGE_ONLY_FIELDS =
-            Set.of(FLD_QUAL, FLD_REPORTED, FLD_TIER, FLD_TUMOR_SUPPORTING_READ_COUNT, FLD_TUMOR_TOTAL_READ_COUNT, FLD_LPS, FILTER_DIFF);
+            Set.of(FLD_QUAL, FLD_REPORTED, FLD_TIER, FLD_TUMOR_SUPPORTING_READ_COUNT, FLD_TUMOR_TOTAL_READ_COUNT, FLD_LPS, FLD_FILTER);
     private static final Set<String> FIELDS_UP_TO_PAVE = union(SAGE_ONLY_FIELDS, PAVE_ONLY_FIELDS);
 
     @Before
@@ -81,7 +81,7 @@ public class SomaticVariantDataTest extends ComparableItemTest<SomaticVariantDat
         fieldToAlternateValueInitializer.put(FLD_VARIANT_COPY_NUMBER, b -> b.variantCopyNumber = alternateValueSource.VariantCopyNumber);
         fieldToAlternateValueInitializer.put(FLD_PURITY_ADJUSTED_VAF, b -> b.purityAdjustedVaf = alternateValueSource.PurityAdjustedVaf);
         fieldToAlternateValueInitializer.put(FLD_LPS, b -> b.hasLPS = alternateValueSource.HasLPS);
-        fieldToAlternateValueInitializer.put(FILTER_DIFF, b -> b.filters = alternateValueSource.Filters);
+        fieldToAlternateValueInitializer.put(FLD_FILTER, b -> b.filters = alternateValueSource.Filters);
 
         nameToAlternateIndexInitializer = Map.of(
                 "Chromosome", b ->
@@ -121,16 +121,17 @@ public class SomaticVariantDataTest extends ComparableItemTest<SomaticVariantDat
             b.chromosome = "8";
             b.position = 10000;
         });
-        DiffThresholds diffThresholds = createDefaultThresholds();
+        FieldConfig detailedFieldConfig = createDefaultThresholds(MatchLevel.DETAILED);
+        FieldConfig reportableFieldConfig = createDefaultThresholds(MatchLevel.REPORTABLE);
 
         assertTrue(victim.matches(liftoverVictim));
         assertTrue(liftoverVictim.matches(victim));
-        assertNull(victim.findMismatch(liftoverVictim, MatchLevel.DETAILED, diffThresholds, false));
-        assertNull(victim.findMismatch(liftoverVictim, MatchLevel.REPORTABLE, diffThresholds, false));
+        assertNull(victim.findMismatch(liftoverVictim, MatchLevel.DETAILED, detailedFieldConfig, false));
+        assertNull(victim.findMismatch(liftoverVictim, MatchLevel.REPORTABLE, reportableFieldConfig, false));
 
         Mismatch expectedMatch = new Mismatch(victim, liftoverVictim, MismatchType.FULL_MATCH, Collections.emptyList());
-        assertEquals(expectedMatch, victim.findMismatch(liftoverVictim, MatchLevel.DETAILED, diffThresholds, true));
-        assertEquals(expectedMatch, victim.findMismatch(liftoverVictim, MatchLevel.REPORTABLE, diffThresholds, true));
+        assertEquals(expectedMatch, victim.findMismatch(liftoverVictim, MatchLevel.DETAILED, detailedFieldConfig, true));
+        assertEquals(expectedMatch, victim.findMismatch(liftoverVictim, MatchLevel.REPORTABLE, reportableFieldConfig, true));
     }
 
     @Test
@@ -149,10 +150,11 @@ public class SomaticVariantDataTest extends ComparableItemTest<SomaticVariantDat
             b.hasPurpleAnnotation = false;
         });
 
-        DiffThresholds diffThresholds = createDefaultThresholds();
-
         assertTrue(refVictim.matches(newVictim));
-        Mismatch mismatch = refVictim.findMismatch(newVictim, MatchLevel.DETAILED, diffThresholds, false);
+
+        MatchLevel matchLevel = MatchLevel.DETAILED;
+        FieldConfig fieldConfig = createDefaultThresholds(matchLevel);
+        Mismatch mismatch = refVictim.findMismatch(newVictim, matchLevel, fieldConfig, false);
 
         assertEquals(MismatchType.VALUE, mismatch.Type);
         assertEquals(refVictim, mismatch.OldItem);
@@ -175,26 +177,27 @@ public class SomaticVariantDataTest extends ComparableItemTest<SomaticVariantDat
             b.comparisonPosition = passVictim.mComparisonPosition;
             b.isFromUnfilteredVcf = true;
             b.hasPurpleAnnotation = false;
-            b.filters = Set.of("PASS");
+            b.filters = Set.of("TumorQual");
         });
 
-        DiffThresholds diffThresholds = createDefaultThresholds();
-
         assertTrue(passVictim.matches(filteredVictim));
-        Mismatch mismatch = passVictim.findMismatch(filteredVictim, MatchLevel.DETAILED, diffThresholds, false);
+
+        MatchLevel matchLevel = MatchLevel.DETAILED;
+        FieldConfig fieldConfig = createDefaultThresholds(matchLevel);
+        Mismatch mismatch = passVictim.findMismatch(filteredVictim, matchLevel, fieldConfig, false);
 
         assertEquals(MismatchType.OLD_ONLY, mismatch.Type);
         assertEquals(passVictim, mismatch.OldItem);
         assertEquals(filteredVictim, mismatch.NewItem);
-        assertDifferencesAreForFields(union(SAGE_ONLY_FIELDS, Set.of(FILTER_DIFF)), mismatch.DiffValues);
+        assertDifferencesAreForFields(union(SAGE_ONLY_FIELDS, Set.of(FLD_FILTER)), mismatch.DiffValues);
 
         assertTrue(filteredVictim.matches(passVictim));
-        Mismatch oppositeMismatch = filteredVictim.findMismatch(passVictim, MatchLevel.DETAILED, diffThresholds, false);
+        Mismatch oppositeMismatch = filteredVictim.findMismatch(passVictim, matchLevel, fieldConfig, false);
 
         assertEquals(MismatchType.NEW_ONLY, oppositeMismatch.Type);
         assertEquals(filteredVictim, oppositeMismatch.OldItem);
         assertEquals(passVictim, oppositeMismatch.NewItem);
-        assertDifferencesAreForFields(union(SAGE_ONLY_FIELDS, Set.of(FILTER_DIFF)), mismatch.DiffValues);
+        assertDifferencesAreForFields(union(SAGE_ONLY_FIELDS, Set.of(FLD_FILTER)), mismatch.DiffValues);
     }
 
     @Test

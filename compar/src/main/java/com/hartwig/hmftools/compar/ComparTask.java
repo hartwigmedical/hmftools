@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.InvalidDataItem;
 import com.hartwig.hmftools.compar.common.Mismatch;
 
@@ -16,15 +17,17 @@ public class ComparTask implements Callable<Void>
 {
     private final int mTaskId;
     private final ComparConfig mConfig;
+    private final FieldConfig mFieldConfig;
     private final List<String> mSampleIds;
     private final List<ItemComparer> mComparers;
 
     private final MismatchWriter mWriter;
 
-    public ComparTask(int taskId, final ComparConfig config, final MismatchWriter writer)
+    public ComparTask(int taskId, final ComparConfig config, final FieldConfig fieldConfig, final MismatchWriter writer)
     {
         mTaskId = taskId;
         mConfig = config;
+        mFieldConfig = fieldConfig;
         mWriter = writer;
 
         mSampleIds = Lists.newArrayList();
@@ -66,7 +69,7 @@ public class ComparTask implements Callable<Void>
 
             try
             {
-                boolean status = comparer.processSample(sampleId, mismatches);
+                boolean status = comparer.processSample(sampleId, mismatches, mFieldConfig);
 
                 if(!status)
                     ++failedTypes;

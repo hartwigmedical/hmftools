@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.compar.sigs;
 
-import static com.hartwig.hmftools.compar.sigs.SigsData.FLD_PERCENT;
+import static com.hartwig.hmftools.compar.sigs.SigsComparer.FLD_PERCENT;
 
 import java.util.Collections;
 import java.util.Map;

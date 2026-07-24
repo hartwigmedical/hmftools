@@ -2,11 +2,6 @@ package com.hartwig.hmftools.compar.vchord;
 
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.CategoryType.V_CHORD;
-import static com.hartwig.hmftools.compar.vchord.VChordData.FLD_BREAST;
-import static com.hartwig.hmftools.compar.vchord.VChordData.FLD_OTHER;
-import static com.hartwig.hmftools.compar.vchord.VChordData.FLD_OVARIAN;
-import static com.hartwig.hmftools.compar.vchord.VChordData.FLD_PANCREATIC;
-import static com.hartwig.hmftools.compar.vchord.VChordData.FLD_PROSTATE;
 
 import java.io.UncheckedIOException;
 import java.util.Collections;
@@ -20,14 +15,23 @@ import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.CommonUtils;
-import com.hartwig.hmftools.compar.common.DiffThresholds;
+import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.FileSources;
+import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.SourceType;
+import com.hartwig.hmftools.compar.common.field.DoubleField;
+import com.hartwig.hmftools.compar.common.field.Field;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class VChordComparer implements ItemComparer
 {
+    protected static final String FLD_BREAST = "BreastCancerHrdScore";
+    protected static final String FLD_OVARIAN = "OvarianCancerHrdScore";
+    protected static final String FLD_PANCREATIC = "PancreaticCancerScore";
+    protected static final String FLD_PROSTATE = "ProstateCancerScore";
+    protected static final String FLD_OTHER = "OtherCancerScore";
+
     private final ComparConfig mConfig;
 
     public VChordComparer(final ComparConfig config)
@@ -39,23 +43,30 @@ public class VChordComparer implements ItemComparer
     public CategoryType category() { return V_CHORD; }
 
     @Override
-    public void registerThresholds(final DiffThresholds thresholds)
+    public List<Field> fields(final MatchLevel matchLevel)
     {
-        thresholds.addFieldThreshold(FLD_BREAST, 0.1, 0);
-        thresholds.addFieldThreshold(FLD_OVARIAN, 0.1, 0);
-        thresholds.addFieldThreshold(FLD_PANCREATIC, 0.1, 0);
-        thresholds.addFieldThreshold(FLD_PROSTATE, 0.1, 0);
-        thresholds.addFieldThreshold(FLD_OTHER, 0.1, 0);
+        return List.of(
+                new DoubleField(FLD_BREAST, i -> ((VChordData) i).VChord().breastCancerHrdScore(),
+                        true, 0.1, null, "%.2f"),
+                new DoubleField(FLD_OVARIAN, i -> ((VChordData) i).VChord().ovarianCancerHrdScore(),
+                        true, 0.1, null, "%.2f"),
+                new DoubleField(FLD_PANCREATIC, i -> ((VChordData) i).VChord().pancreaticCancerScore(),
+                        true, 0.1, null, "%.2f"),
+                new DoubleField(FLD_PROSTATE, i -> ((VChordData) i).VChord().prostateCancerScore(),
+                        true, 0.1, null, "%.2f"),
+                new DoubleField(FLD_OTHER, i -> ((VChordData) i).VChord().otherCancerScore(),
+                        true, 0.1, null, "%.2f")
+        );
     }
 
     @Override
-    public boolean processSample(final String sampleId, final List<Mismatch> mismatches)
+    public boolean processSample(final String sampleId, final List<Mismatch> mismatches, final FieldConfig fieldConfig)
     {
-        return CommonUtils.processSample(this, mConfig, sampleId, mismatches);
+        return CommonUtils.processSample(this, mConfig, sampleId, mismatches, fieldConfig);
     }
 
     @Override
-    public List<String> comparedFieldNames()
+    public List<String> displayFieldNames()
     {
         return Lists.newArrayList(FLD_BREAST, FLD_OVARIAN, FLD_PANCREATIC, FLD_PROSTATE, FLD_OTHER);
     }

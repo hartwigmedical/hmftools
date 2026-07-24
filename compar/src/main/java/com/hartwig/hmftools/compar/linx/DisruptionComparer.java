@@ -3,12 +3,10 @@ package com.hartwig.hmftools.compar.linx;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.sv.StructuralVariantData.convertSvData;
-import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.compar.common.CategoryType.DISRUPTION;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
 import static com.hartwig.hmftools.compar.common.CommonUtils.determineComparisonGenomePosition;
-import static com.hartwig.hmftools.compar.linx.DisruptionData.FLD_BREAKEND_INFO;
 
 import java.io.IOException;
 import java.util.List;
@@ -33,18 +31,23 @@ import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.common.DiffThresholds;
+import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.SourceType;
+import com.hartwig.hmftools.compar.common.field.BreakendsField;
+import com.hartwig.hmftools.compar.common.field.DisplayOnlyField;
+import com.hartwig.hmftools.compar.common.field.Field;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import htsjdk.tribble.TribbleException;
 
 public class DisruptionComparer implements ItemComparer
 {
+    protected static final String FLD_BREAKEND_INFO = "BreakendInfo";
+
     private final ComparConfig mConfig;
 
     private final Map<SourceType,List<LinxBreakend>> mBreakends;
@@ -64,16 +67,22 @@ public class DisruptionComparer implements ItemComparer
     public CategoryType category() { return DISRUPTION; }
 
     @Override
-    public void registerThresholds(final DiffThresholds thresholds) {}
-
-    @Override
-    public boolean processSample(final String sampleId, final List<Mismatch> mismatches)
+    public List<Field> fields(final MatchLevel matchLevel)
     {
-        return CommonUtils.processSample(this, mConfig, sampleId, mismatches);
+        return List.of(
+                new BreakendsField(FLD_BREAKEND_INFO, i -> ((DisruptionData) i).Breakends, true),
+                new DisplayOnlyField(FLD_REPORTED, i -> String.valueOf(i.reportable()), i -> true)
+        );
     }
 
     @Override
-    public List<String> comparedFieldNames()
+    public boolean processSample(final String sampleId, final List<Mismatch> mismatches, final FieldConfig fieldConfig)
+    {
+        return CommonUtils.processSample(this, mConfig, sampleId, mismatches, fieldConfig);
+    }
+
+    @Override
+    public List<String> displayFieldNames()
     {
         return Lists.newArrayList(FLD_REPORTED, FLD_BREAKEND_INFO);
     }

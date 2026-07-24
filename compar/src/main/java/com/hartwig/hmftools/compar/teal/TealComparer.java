@@ -2,7 +2,6 @@ package com.hartwig.hmftools.compar.teal;
 
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.CategoryType.TELOMERE_LENGTH;
-import static com.hartwig.hmftools.compar.teal.TealData.FLD_TELOMERE_LENGTH;
 
 import java.io.UncheckedIOException;
 import java.util.Collections;
@@ -16,14 +15,19 @@ import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.CommonUtils;
-import com.hartwig.hmftools.compar.common.DiffThresholds;
+import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.FileSources;
+import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.SourceType;
+import com.hartwig.hmftools.compar.common.field.DoubleField;
+import com.hartwig.hmftools.compar.common.field.Field;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class TealComparer implements ItemComparer
 {
+    protected static final String FLD_TELOMERE_LENGTH = "TelomereLength";
+
     private final ComparConfig mConfig;
 
     public TealComparer(final ComparConfig config)
@@ -35,21 +39,24 @@ public class TealComparer implements ItemComparer
     public CategoryType category() { return TELOMERE_LENGTH; }
 
     @Override
-    public void registerThresholds(final DiffThresholds thresholds)
+    public List<Field> fields(final MatchLevel matchLevel)
     {
-        thresholds.addFieldThreshold(FLD_TELOMERE_LENGTH, Double.NaN, 0.05);
+        return List.of(
+                new DoubleField(FLD_TELOMERE_LENGTH, i -> ((TealData) i).TelomereLength.finalTelomereLength(),
+                        true, null, 0.05, "%.2f")
+        );
     }
 
     @Override
-    public boolean processSample(final String sampleId, final List<Mismatch> mismatches)
+    public boolean processSample(final String sampleId, final List<Mismatch> mismatches, final FieldConfig fieldConfig)
     {
-        return CommonUtils.processSample(this, mConfig, sampleId, mismatches);
+        return CommonUtils.processSample(this, mConfig, sampleId, mismatches, fieldConfig);
     }
 
     @Override
-    public List<String> comparedFieldNames()
+    public List<String> displayFieldNames()
     {
-        return TealData.comparedFieldNames();
+        return List.of(FLD_TELOMERE_LENGTH);
     }
 
     @Override

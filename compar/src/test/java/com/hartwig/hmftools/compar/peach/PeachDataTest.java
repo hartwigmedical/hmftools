@@ -1,9 +1,9 @@
 package com.hartwig.hmftools.compar.peach;
 
-import static com.hartwig.hmftools.compar.peach.PeachData.FLD_ALLELE_COUNT;
-import static com.hartwig.hmftools.compar.peach.PeachData.FLD_DRUGS;
-import static com.hartwig.hmftools.compar.peach.PeachData.FLD_FUNCTION;
-import static com.hartwig.hmftools.compar.peach.PeachData.FLD_PRESCRIPTION_URLS;
+import static com.hartwig.hmftools.compar.peach.PeachComparer.FLD_ALLELE_COUNT;
+import static com.hartwig.hmftools.compar.peach.PeachComparer.FLD_DRUGS;
+import static com.hartwig.hmftools.compar.peach.PeachComparer.FLD_FUNCTION;
+import static com.hartwig.hmftools.compar.peach.PeachComparer.FLD_PRESCRIPTION_URLS;
 
 import java.util.Collections;
 import java.util.Map;

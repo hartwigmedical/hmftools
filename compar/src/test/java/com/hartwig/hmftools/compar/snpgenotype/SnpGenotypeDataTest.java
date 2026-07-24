@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.compar.snpgenotype;
 
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_ALT;
-import static com.hartwig.hmftools.compar.snpgenotype.SnpGenotypeData.FLD_GENOTYPE;
-import static com.hartwig.hmftools.compar.snpgenotype.SnpGenotypeData.FLD_VCF_SAMPLE_ID;
+import static com.hartwig.hmftools.compar.snpgenotype.SnpGenotypeComparer.FLD_GENOTYPE;
+import static com.hartwig.hmftools.compar.snpgenotype.SnpGenotypeComparer.FLD_VCF_SAMPLE_ID;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -15,7 +15,7 @@ import java.util.Map;
 
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItemTest;
-import com.hartwig.hmftools.compar.common.DiffThresholds;
+import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.MismatchType;
@@ -67,16 +67,17 @@ public class SnpGenotypeDataTest extends ComparableItemTest<SnpGenotypeData, Snp
             b.chromosome = "11";
             b.position = 30000;
         });
-        DiffThresholds diffThresholds = createDefaultThresholds();
+        FieldConfig detailedFieldConfig = createDefaultThresholds(MatchLevel.DETAILED);
+        FieldConfig reportableFieldConfig = createDefaultThresholds(MatchLevel.REPORTABLE);
 
         assertTrue(victim.matches(liftoverVictim));
         assertTrue(liftoverVictim.matches(victim));
-        assertNull(victim.findMismatch(liftoverVictim, MatchLevel.DETAILED, diffThresholds, false));
-        assertNull(victim.findMismatch(liftoverVictim, MatchLevel.REPORTABLE, diffThresholds, false));
+        assertNull(victim.findMismatch(liftoverVictim, MatchLevel.DETAILED, detailedFieldConfig, false));
+        assertNull(victim.findMismatch(liftoverVictim, MatchLevel.REPORTABLE, reportableFieldConfig, false));
 
         Mismatch expectedMatch = new Mismatch(victim, liftoverVictim, MismatchType.FULL_MATCH, Collections.emptyList());
-        assertEquals(expectedMatch, victim.findMismatch(liftoverVictim, MatchLevel.DETAILED, diffThresholds, true));
-        assertEquals(expectedMatch, victim.findMismatch(liftoverVictim, MatchLevel.REPORTABLE, diffThresholds, true));
+        assertEquals(expectedMatch, victim.findMismatch(liftoverVictim, MatchLevel.DETAILED, detailedFieldConfig, true));
+        assertEquals(expectedMatch, victim.findMismatch(liftoverVictim, MatchLevel.REPORTABLE, reportableFieldConfig, true));
     }
 
     @Test

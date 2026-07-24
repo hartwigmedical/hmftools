@@ -4,43 +4,46 @@ import static com.hartwig.hmftools.compar.common.CategoryType.FUSION;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.linx.DisruptionComparer.buildBreakendData;
-import static com.hartwig.hmftools.compar.linx.FusionData.FLD_CHAIN_LINKS;
-import static com.hartwig.hmftools.compar.linx.FusionData.FLD_CHAIN_TERM;
-import static com.hartwig.hmftools.compar.linx.FusionData.FLD_DOMAINS_KEPT;
-import static com.hartwig.hmftools.compar.linx.FusionData.FLD_DOMAINS_LOST;
-import static com.hartwig.hmftools.compar.linx.FusionData.FLD_EXON_DOWN;
-import static com.hartwig.hmftools.compar.linx.FusionData.FLD_EXON_UP;
-import static com.hartwig.hmftools.compar.linx.FusionData.FLD_JUNCTION_COPY_NUMBER;
-import static com.hartwig.hmftools.compar.linx.FusionData.FLD_LIKELIHOOD;
-import static com.hartwig.hmftools.compar.linx.FusionData.FLD_PHASED;
-import static com.hartwig.hmftools.compar.linx.FusionData.FLD_REPORTED_TYPE;
-import static com.hartwig.hmftools.compar.linx.FusionData.FLD_TRANSCRIPT_DOWN;
-import static com.hartwig.hmftools.compar.linx.FusionData.FLD_TRANSCRIPT_UP;
 
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxFusion;
-import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.sv.StructuralVariantData;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.common.DiffThresholds;
+import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.ItemComparer;
+import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.SourceType;
+import com.hartwig.hmftools.compar.common.field.DisplayOnlyField;
+import com.hartwig.hmftools.compar.common.field.Field;
+import com.hartwig.hmftools.compar.common.field.IntField;
+import com.hartwig.hmftools.compar.common.field.StringField;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class FusionComparer implements ItemComparer
 {
+    protected static final String FLD_REPORTED_TYPE = "ReportedType";
+    protected static final String FLD_PHASED = "Phased";
+    protected static final String FLD_LIKELIHOOD = "Likelihood";
+    protected static final String FLD_EXON_UP = "FusedExonUp";
+    protected static final String FLD_EXON_DOWN = "FusedExonDown";
+    protected static final String FLD_CHAIN_LINKS = "ChainLinks";
+    protected static final String FLD_CHAIN_TERM = "ChainTerminated";
+    protected static final String FLD_DOMAINS_KEPT = "DomainsKept";
+    protected static final String FLD_DOMAINS_LOST = "DomainsLost";
+    protected static final String FLD_BREAKEND_UP = "BreakendUp";
+    protected static final String FLD_BREAKEND_DOWN = "BreakendDown";
+
     private final ComparConfig mConfig;
     private DisruptionComparer mDisruptionComparer;
 
@@ -56,23 +59,42 @@ public class FusionComparer implements ItemComparer
     public CategoryType category() { return FUSION; }
 
     @Override
-    public void registerThresholds(final DiffThresholds thresholds)
+    public List<Field> fields(final MatchLevel matchLevel)
     {
-        thresholds.addFieldThreshold(FLD_JUNCTION_COPY_NUMBER, 0.5, 0.2);
+        return List.of(
+                new StringField(FLD_REPORTED, i -> String.valueOf(((FusionData) i).Fusion.reported()), true),
+                new StringField(FLD_REPORTED_TYPE, i -> ((FusionData) i).Fusion.reportedType(), true),
+                new StringField(FLD_PHASED, i -> ((FusionData) i).Fusion.phased().toString(), true),
+                new StringField(FLD_LIKELIHOOD, i -> ((FusionData) i).Fusion.likelihood().toString(), true),
+                new IntField(FLD_EXON_UP, i -> ((FusionData) i).Fusion.fusedExonUp(), true,
+                        null, null),
+                new IntField(FLD_EXON_DOWN, i -> ((FusionData) i).Fusion.fusedExonDown(), true,
+                        null, null),
+                new IntField(FLD_CHAIN_LINKS, i -> ((FusionData) i).Fusion.chainLinks(), true,
+                        null, null),
+                new StringField(FLD_CHAIN_TERM, i -> String.valueOf(((FusionData) i).Fusion.chainTerminated()),
+                        true),
+                new StringField(FLD_DOMAINS_KEPT, i -> ((FusionData) i).Fusion.domainsKept(), true),
+                new StringField(FLD_DOMAINS_LOST, i -> ((FusionData) i).Fusion.domainsLost(), true),
+                new DisplayOnlyField(FLD_BREAKEND_UP, i -> ((FusionData) i).BreakendFive.fullStr(true),
+                        i -> ((FusionData) i).BreakendFive != null),
+                new DisplayOnlyField(FLD_BREAKEND_DOWN, i -> ((FusionData) i).BreakendThree.fullStr(true),
+                        i -> ((FusionData) i).BreakendThree != null)
+        );
     }
 
     @Override
-    public boolean processSample(final String sampleId, final List<Mismatch> mismatches)
+    public boolean processSample(final String sampleId, final List<Mismatch> mismatches, final FieldConfig fieldConfig)
     {
-        return CommonUtils.processSample(this, mConfig, sampleId, mismatches);
+        return CommonUtils.processSample(this, mConfig, sampleId, mismatches, fieldConfig);
     }
 
     @Override
-    public List<String> comparedFieldNames()
+    public List<String> displayFieldNames()
     {
         return Lists.newArrayList(
                 FLD_REPORTED, FLD_REPORTED_TYPE, FLD_PHASED, FLD_LIKELIHOOD, FLD_EXON_UP,
-                FLD_EXON_DOWN, FLD_CHAIN_LINKS, FLD_CHAIN_TERM, FLD_DOMAINS_KEPT, FLD_DOMAINS_LOST);
+                FLD_EXON_DOWN, FLD_CHAIN_LINKS, FLD_CHAIN_TERM, FLD_DOMAINS_KEPT, FLD_DOMAINS_LOST, FLD_BREAKEND_UP, FLD_BREAKEND_DOWN);
 
         // excluded unless matching breakends can be loaded: FLD_TRANSCRIPT_UP, FLD_TRANSCRIPT_DOWN, FLD_JUNCTION_COPY_NUMBER
     }

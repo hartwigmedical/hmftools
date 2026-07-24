@@ -1,9 +1,9 @@
 package com.hartwig.hmftools.compar.isofox;
 
-import static com.hartwig.hmftools.compar.isofox.RnaFusionData.FLD_JUNC_TYPE_DOWN;
-import static com.hartwig.hmftools.compar.isofox.RnaFusionData.FLD_JUNC_TYPE_UP;
-import static com.hartwig.hmftools.compar.isofox.RnaFusionData.FLD_KNOWN_TYPE;
-import static com.hartwig.hmftools.compar.isofox.RnaFusionData.FLD_SPLIT_FRAGS;
+import static com.hartwig.hmftools.compar.isofox.RnaFusionComparer.FLD_JUNC_TYPE_DOWN;
+import static com.hartwig.hmftools.compar.isofox.RnaFusionComparer.FLD_JUNC_TYPE_UP;
+import static com.hartwig.hmftools.compar.isofox.RnaFusionComparer.FLD_KNOWN_TYPE;
+import static com.hartwig.hmftools.compar.isofox.RnaFusionComparer.FLD_SPLIT_FRAGS;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -16,7 +16,7 @@ import java.util.Map;
 
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItemTest;
-import com.hartwig.hmftools.compar.common.DiffThresholds;
+import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.MismatchType;
@@ -85,14 +85,16 @@ public class RnaFusionDataTest extends ComparableItemTest<RnaFusionData, RnaFusi
     {
         RnaFusionData victim = TestRnaFusionDataBuilder.BUILDER.create(b -> b.comparisonPositionUp = 5000);
         RnaFusionData liftoverVictim = TestRnaFusionDataBuilder.BUILDER.create(b -> b.positionUp = 5000);
-        DiffThresholds diffThresholds = createDefaultThresholds();
+
+        MatchLevel matchLevel = MatchLevel.DETAILED;
+        FieldConfig fieldConfig = createDefaultThresholds(matchLevel);
 
         assertTrue(victim.matches(liftoverVictim));
         assertTrue(liftoverVictim.matches(victim));
-        assertNull(victim.findMismatch(liftoverVictim, MatchLevel.DETAILED, diffThresholds, false));
+        assertNull(victim.findMismatch(liftoverVictim, matchLevel, fieldConfig, false));
 
         Mismatch expectedMatch = new Mismatch(victim, liftoverVictim, MismatchType.FULL_MATCH, Collections.emptyList());
-        assertEquals(expectedMatch, victim.findMismatch(liftoverVictim, MatchLevel.DETAILED, diffThresholds, true));
+        assertEquals(expectedMatch, victim.findMismatch(liftoverVictim, matchLevel, fieldConfig, true));
     }
 
     @Test
@@ -100,14 +102,16 @@ public class RnaFusionDataTest extends ComparableItemTest<RnaFusionData, RnaFusi
     {
         RnaFusionData victim = TestRnaFusionDataBuilder.BUILDER.create(b -> b.comparisonPositionDown = 6000);
         RnaFusionData liftoverVictim = TestRnaFusionDataBuilder.BUILDER.create(b -> b.positionDown = 6000);
-        DiffThresholds diffThresholds = createDefaultThresholds();
+
+        MatchLevel matchLevel = MatchLevel.DETAILED;
+        FieldConfig fieldConfig = createDefaultThresholds(matchLevel);
 
         assertTrue(victim.matches(liftoverVictim));
         assertTrue(liftoverVictim.matches(victim));
-        assertNull(victim.findMismatch(liftoverVictim, MatchLevel.DETAILED, diffThresholds, false));
+        assertNull(victim.findMismatch(liftoverVictim, matchLevel, fieldConfig, false));
 
         Mismatch expectedMatch = new Mismatch(victim, liftoverVictim, MismatchType.FULL_MATCH, Collections.emptyList());
-        assertEquals(expectedMatch, victim.findMismatch(liftoverVictim, MatchLevel.DETAILED, diffThresholds, true));
+        assertEquals(expectedMatch, victim.findMismatch(liftoverVictim, matchLevel, fieldConfig, true));
     }
 
     @Test

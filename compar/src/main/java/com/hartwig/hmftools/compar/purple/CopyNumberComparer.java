@@ -3,9 +3,6 @@ package com.hartwig.hmftools.compar.purple;
 import static com.hartwig.hmftools.compar.common.CategoryType.COPY_NUMBER;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.CommonUtils.determineComparisonGenomePosition;
-import static com.hartwig.hmftools.compar.purple.CopyNumberData.FLD_COPY_NUMBER;
-import static com.hartwig.hmftools.compar.purple.CopyNumberData.FLD_MAJOR_ALLELE_CN;
-import static com.hartwig.hmftools.compar.purple.CopyNumberData.FLD_METHOD;
 
 import java.io.IOException;
 import java.util.List;
@@ -18,15 +15,23 @@ import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.common.DiffThresholds;
+import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.ItemComparer;
+import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.SourceType;
+import com.hartwig.hmftools.compar.common.field.DoubleField;
+import com.hartwig.hmftools.compar.common.field.Field;
+import com.hartwig.hmftools.compar.common.field.StringField;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class CopyNumberComparer implements ItemComparer
 {
+    protected static final String FLD_COPY_NUMBER = "CopyNumber";
+    protected static final String FLD_MAJOR_ALLELE_CN = "MajorAlleleCopyNumber";
+    protected static final String FLD_METHOD = "Method";
+
     private final ComparConfig mConfig;
 
     public CopyNumberComparer(final ComparConfig config)
@@ -38,23 +43,28 @@ public class CopyNumberComparer implements ItemComparer
     public CategoryType category() { return COPY_NUMBER; }
 
     @Override
-    public void registerThresholds(final DiffThresholds thresholds)
+    public List<Field> fields(final MatchLevel matchLevel)
     {
-        thresholds.addFieldThreshold(FLD_COPY_NUMBER, 0.5, 0.15);
-        thresholds.addFieldThreshold(FLD_MAJOR_ALLELE_CN, 0.5, 0.15);
+        return List.of(
+                new DoubleField(FLD_COPY_NUMBER, i -> ((CopyNumberData) i).copyNumber(), true,
+                        0.5, 0.15, "%.2f"),
+                new DoubleField(FLD_MAJOR_ALLELE_CN, i -> ((CopyNumberData) i).majorAlleleCopyNumber(), true,
+                        0.5, 0.15, "%.2f"),
+                new StringField(FLD_METHOD, i -> ((CopyNumberData) i).method().toString(), true)
+        );
     }
 
     @Override
     public boolean hasReportable() { return false; }
 
     @Override
-    public boolean processSample(final String sampleId, final List<Mismatch> mismatches)
+    public boolean processSample(final String sampleId, final List<Mismatch> mismatches, final FieldConfig fieldConfig)
     {
-        return CommonUtils.processSample(this, mConfig, sampleId, mismatches);
+        return CommonUtils.processSample(this, mConfig, sampleId, mismatches, fieldConfig);
     }
 
     @Override
-    public List<String> comparedFieldNames()
+    public List<String> displayFieldNames()
     {
         return Lists.newArrayList(FLD_COPY_NUMBER, FLD_MAJOR_ALLELE_CN, FLD_METHOD);
     }

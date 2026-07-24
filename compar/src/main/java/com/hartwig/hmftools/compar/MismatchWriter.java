@@ -11,10 +11,12 @@ import static com.hartwig.hmftools.compar.common.CurationType.NONE;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
@@ -22,8 +24,10 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.KnownMismatch;
 import com.hartwig.hmftools.compar.common.CurationInfo;
+import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.WriteType;
+import com.hartwig.hmftools.compar.common.field.Field;
 
 public class MismatchWriter
 {
@@ -78,7 +82,7 @@ public class MismatchWriter
 
                     writer.write(MismatchFile.commonHeader(mConfig.multiSample(), false));
 
-                    List<String> compareFields = comparer.comparedFieldNames();
+                    List<String> compareFields = comparer.displayFieldNames();
 
                     for(String field : compareFields)
                     {
@@ -130,6 +134,7 @@ public class MismatchWriter
 
         try
         {
+            List<Field> displayFields = determineDisplayFields(comparer);
             CategoryType category = comparer.category();
 
             BufferedWriter categoryWriter = mCategoryWriters.get(category);
@@ -147,13 +152,13 @@ public class MismatchWriter
                     for(String diff : mismatch.DiffValues)
                     {
                         Mismatch singleMismatch = new Mismatch(mismatch.OldItem, mismatch.NewItem, mismatch.Type, List.of(diff));
-                        writeMismatch(sampleId, singleMismatch, comparer, categoryWriter, matchCurations.get(diff));
+                        writeMismatch(sampleId, singleMismatch, displayFields, categoryWriter, matchCurations.get(diff));
                     }
                 }
                 else
                 {
                     CurationInfo curationInfo = !matchCurations.isEmpty() ? matchCurations.entrySet().iterator().next().getValue() : null;
-                    writeMismatch(sampleId, mismatch, comparer, categoryWriter, curationInfo);
+                    writeMismatch(sampleId, mismatch, displayFields, categoryWriter, curationInfo);
                 }
             }
         }
@@ -164,7 +169,7 @@ public class MismatchWriter
     }
 
     private void writeMismatch(
-            final String sampleId, final Mismatch mismatch, final ItemComparer comparer, final BufferedWriter categoryWriter,
+            final String sampleId, final Mismatch mismatch, final List<Field> displayFields, final BufferedWriter categoryWriter,
             @Nullable final CurationInfo curationInfo) throws IOException
     {
         StringJoiner sj = new StringJoiner(TSV_DELIM);
@@ -181,7 +186,7 @@ public class MismatchWriter
 
         if(mCombinedWriter != null)
         {
-            sj.add(MismatchFile.toTsv(mismatch, false, comparer.comparedFieldNames()));
+            sj.add(MismatchFile.toTsv(mismatch, false, displayFields));
 
             if(mWriteCurations)
             {
@@ -207,7 +212,7 @@ public class MismatchWriter
 
         if(categoryWriter != null)
         {
-            categoryWriter.write(MismatchFile.toTsv(mismatch, true, comparer.comparedFieldNames()));
+            categoryWriter.write(MismatchFile.toTsv(mismatch, true, displayFields));
             categoryWriter.newLine();
         }
     }
@@ -234,5 +239,27 @@ public class MismatchWriter
                 ++index;
             }
         }
+    }
+
+    private List<Field> determineDisplayFields(final ItemComparer comparer)
+    {
+        CategoryType category = comparer.category();
+        MatchLevel matchLevel = mConfig.Categories.get(category);
+        Map<String, Field> fieldNameToField = comparer.fields(matchLevel).stream().collect(Collectors.toMap(Field::name, f -> f));
+
+        List<Field> list = new ArrayList<>();
+        for(String fieldName : comparer.displayFieldNames())
+        {
+            if(fieldNameToField.containsKey(fieldName))
+            {
+                Field field = fieldNameToField.get(fieldName);
+                list.add(field);
+            }
+            else
+            {
+                throw new IllegalArgumentException("Missing field %s for category %s".formatted(fieldName, category));
+            }
+        }
+        return list;
     }
 }

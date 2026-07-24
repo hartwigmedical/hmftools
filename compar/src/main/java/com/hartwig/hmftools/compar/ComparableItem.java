@@ -1,10 +1,12 @@
 package com.hartwig.hmftools.compar;
 
-import java.util.Collections;
+import static com.hartwig.hmftools.compar.common.CommonUtils.createMismatchFromDiffs;
+import static com.hartwig.hmftools.compar.common.CommonUtils.findDiffs;
+
 import java.util.List;
 
 import com.hartwig.hmftools.compar.common.CategoryType;
-import com.hartwig.hmftools.compar.common.DiffThresholds;
+import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 
@@ -14,15 +16,14 @@ public interface ComparableItem
 
     boolean matches(final ComparableItem other);
 
-    Mismatch findMismatch(
-            final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds, final boolean includeMatches);
+    default Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final FieldConfig fieldConfig,
+            final boolean includeMatches)
+    {
+        final List<String> diffs = findDiffs(this, other, fieldConfig.getFields(category()));
+        return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches);
+    }
 
     String key();
-
-    List<String> displayValues();
-
-    // values for display only
-    default List<String> extraInfoValues() { return Collections.emptyList(); }
 
     default String geneName() { return ""; }
 
@@ -32,6 +33,11 @@ public interface ComparableItem
     }
 
     default boolean isPass()
+    {
+        return true;
+    }
+
+    default boolean isValid()
     {
         return true;
     }

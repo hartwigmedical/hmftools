@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.compar.teal;
 
-import static com.hartwig.hmftools.compar.teal.TealData.FLD_TELOMERE_LENGTH;
-import static com.hartwig.hmftools.compar.teal.TealData.FLD_TYPE;
+import static com.hartwig.hmftools.compar.teal.TealComparer.FLD_TELOMERE_LENGTH;
 
 import java.util.Collections;
 import java.util.Map;
@@ -22,7 +21,7 @@ public class TealDataTest extends ComparableItemTest<TealData, TealComparer, Tes
 
         fieldToAlternateValueInitializer =
                 Map.of(FLD_TELOMERE_LENGTH, b -> b.telomereLength = alternateValueSource.TelomereLength.finalTelomereLength());
-        nameToAlternateIndexInitializer = Map.of(FLD_TYPE, b -> b.type = alternateValueSource.TelomereLength.type());
+        nameToAlternateIndexInitializer = Map.of("Type", b -> b.type = alternateValueSource.TelomereLength.type());
         reportabilityFieldToFalseReportabilityInitializer = Collections.emptyMap();
         nameToNonPassInitializer = Collections.emptyMap();
     }

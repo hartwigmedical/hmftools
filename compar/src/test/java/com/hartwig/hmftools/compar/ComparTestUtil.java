@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.compar;
 
-import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import static junit.framework.TestCase.assertEquals;
@@ -11,7 +11,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.compar.common.DiffThresholds;
+import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.MismatchType;
@@ -30,41 +30,20 @@ public class ComparTestUtil
     }
 
     public static void assertSingleFieldMismatch(final String field, final ComparableItem refVictim, final ComparableItem newVictim,
-            final MatchLevel matchLevel, final DiffThresholds diffThresholds, final MismatchType expectedMismatchType)
+            final MatchLevel matchLevel, final FieldConfig fieldConfig, final MismatchType expectedMismatchType)
     {
         String testMessage = "Test mismatch in field '" + field + "' at match level '" + matchLevel + "'";
         assertTrue(testMessage, refVictim.matches(newVictim));
         assertTrue(testMessage, newVictim.matches(refVictim));
 
-        Mismatch detailedMismatch = refVictim.findMismatch(newVictim, matchLevel, diffThresholds, false);
+        Mismatch detailedMismatch = refVictim.findMismatch(newVictim, matchLevel, fieldConfig, false);
 
+        assertNotNull(testMessage, detailedMismatch);
         assertEquals(testMessage, expectedMismatchType, detailedMismatch.Type);
         assertEquals(testMessage, refVictim, detailedMismatch.OldItem);
         assertEquals(testMessage, newVictim, detailedMismatch.NewItem);
         assertEquals(testMessage, 1, detailedMismatch.DiffValues.size());
         assertEquals(testMessage, field, extractFieldNameFromDifference(detailedMismatch.DiffValues.get(0)));
-    }
-
-    public static void assertValueDifferencesAsExpected(final ComparableItem refVictim, final ComparableItem newVictim,
-            final MatchLevel matchLevel, final DiffThresholds diffThresholds, final Set<String> expectedFieldNames,
-            final boolean expectIndexMatch)
-    {
-        if(expectIndexMatch)
-        {
-            assertTrue("Test ref.matches(new) is True", refVictim.matches(newVictim));
-        }
-        else
-        {
-            assertFalse("Test ref.matches(new) is False", refVictim.matches(newVictim));
-        }
-
-        Mismatch mismatch = refVictim.findMismatch(newVictim, matchLevel, diffThresholds, false);
-
-        assertEquals(MismatchType.VALUE, mismatch.Type);
-        assertEquals(refVictim, mismatch.OldItem);
-        assertEquals(newVictim, mismatch.NewItem);
-
-        assertDifferencesAreForFields(expectedFieldNames, mismatch.DiffValues);
     }
 
     public static String extractFieldNameFromDifference(final String difference)

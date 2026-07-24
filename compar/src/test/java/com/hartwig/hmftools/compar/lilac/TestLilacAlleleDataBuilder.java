@@ -9,9 +9,11 @@ import com.hartwig.hmftools.common.hla.ImmutableLilacAllele;
 import com.hartwig.hmftools.common.hla.LilacAllele;
 import com.hartwig.hmftools.compar.TestComparableItemBuilder;
 
-public class TestLilacAlleleBuilder
+public class TestLilacAlleleDataBuilder
 {
+    public String genes = MHC_CLASS_I;
     public String allele = "A*01:01";
+    public int index = 0;
     public double missense = 0;
     public double nonsenseOrFrameshift = 0;
     public double splice = 0;
@@ -21,9 +23,11 @@ public class TestLilacAlleleBuilder
     public int refTotal = 300;
     public int tumorTotal = 700;
 
-    private static final Consumer<TestLilacAlleleBuilder> ALTERNATE_INITIALIZER = b ->
+    private static final Consumer<TestLilacAlleleDataBuilder> ALTERNATE_INITIALIZER = b ->
     {
+        b.genes = "HLA_DPB1";
         b.allele = "A*01:02";
+        b.index = 1;
         b.missense = 1;
         b.nonsenseOrFrameshift = 1;
         b.splice = 1;
@@ -34,12 +38,12 @@ public class TestLilacAlleleBuilder
         b.tumorTotal = 650;
     };
 
-    public static final TestComparableItemBuilder<TestLilacAlleleBuilder, LilacAllele> BUILDER =
-            new TestComparableItemBuilder<>(TestLilacAlleleBuilder::new, TestLilacAlleleBuilder::build, ALTERNATE_INITIALIZER);
+    public static final TestComparableItemBuilder<TestLilacAlleleDataBuilder, LilacAlleleData> BUILDER =
+            new TestComparableItemBuilder<>(TestLilacAlleleDataBuilder::new, TestLilacAlleleDataBuilder::build, ALTERNATE_INITIALIZER);
 
-    public static LilacAllele buildFrom(final LilacAllele lilacAllele, final Consumer<TestLilacAlleleBuilder> initializer)
+    public static LilacAlleleData buildFrom(final LilacAllele lilacAllele, final Consumer<TestLilacAlleleDataBuilder> initializer)
     {
-        Consumer<TestLilacAlleleBuilder> copyInitializer = b -> {
+        Consumer<TestLilacAlleleDataBuilder> copyInitializer = b -> {
             b.allele = lilacAllele.allele();
             b.missense = lilacAllele.somaticMissense();
             b.nonsenseOrFrameshift = lilacAllele.somaticNonsenseOrFrameshift();
@@ -50,14 +54,14 @@ public class TestLilacAlleleBuilder
             b.refTotal = lilacAllele.refFragments();
             b.tumorTotal = lilacAllele.tumorFragments();
         };
-        Consumer<TestLilacAlleleBuilder> combinedInitializer = combine(copyInitializer, initializer);
+        Consumer<TestLilacAlleleDataBuilder> combinedInitializer = combine(copyInitializer, initializer);
         return BUILDER.create(combinedInitializer);
     }
 
-    private LilacAllele build()
+    private LilacAlleleData build()
     {
-        return ImmutableLilacAllele.builder()
-                .genes(MHC_CLASS_I)
+        LilacAllele alleleObject = ImmutableLilacAllele.builder()
+                .genes(genes)
                 .allele(allele)
                 .refFragments(refTotal)
                 .refUnique(-1)
@@ -78,5 +82,6 @@ public class TestLilacAlleleBuilder
                 .somaticSynonymous(synonymous)
                 .somaticInframeIndel(inframeIndel)
                 .build();
+        return new LilacAlleleData(alleleObject, index);
     }
 }

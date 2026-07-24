@@ -3,10 +3,10 @@ package com.hartwig.hmftools.compar.purple;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_CHROMOSOME_BAND;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
-import static com.hartwig.hmftools.compar.purple.GermlineAmpDelData.FLD_GERMLINE_CN;
-import static com.hartwig.hmftools.compar.purple.GermlineAmpDelData.FLD_GERMLINE_STATUS;
-import static com.hartwig.hmftools.compar.purple.GermlineAmpDelData.FLD_TUMOR_CN;
-import static com.hartwig.hmftools.compar.purple.GermlineAmpDelData.FLD_TUMOR_STATUS;
+import static com.hartwig.hmftools.compar.purple.GermlineAmpDelComparer.FLD_GERMLINE_CN;
+import static com.hartwig.hmftools.compar.purple.GermlineAmpDelComparer.FLD_GERMLINE_STATUS;
+import static com.hartwig.hmftools.compar.purple.GermlineAmpDelComparer.FLD_TUMOR_CN;
+import static com.hartwig.hmftools.compar.purple.GermlineAmpDelComparer.FLD_TUMOR_STATUS;
 
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -18,7 +18,7 @@ import java.util.Map;
 
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItemTest;
-import com.hartwig.hmftools.compar.common.DiffThresholds;
+import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.MismatchType;
@@ -27,13 +27,13 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class GermlineAmpDelDataTest
-        extends ComparableItemTest<GermlineAmpDelData, GermlineAmpDelComparer, TestGermlineDeletionDataBuilder>
+        extends ComparableItemTest<GermlineAmpDelData, GermlineAmpDelComparer, TestGermlineAmpDelDataBuilder>
 {
     @Before
     public void setUp()
     {
         comparer = new GermlineAmpDelComparer(new ComparConfig());
-        builder = TestGermlineDeletionDataBuilder.BUILDER;
+        builder = TestGermlineAmpDelDataBuilder.BUILDER;
         GermlineAmpDelData alternateValueSource = builder.createWithAlternateDefaults();
 
         fieldToAlternateValueInitializer = Map.of(
@@ -52,17 +52,18 @@ public class GermlineAmpDelDataTest
     @Test
     public void fullyMatchesSelfWithLiftover()
     {
-        GermlineAmpDelData victim = TestGermlineDeletionDataBuilder.BUILDER.create(b -> b.comparisonChromosome = "8");
-        GermlineAmpDelData liftoverVictim = TestGermlineDeletionDataBuilder.BUILDER.create(b -> b.comparisonChromosome = "8");
-        DiffThresholds diffThresholds = createDefaultThresholds();
+        GermlineAmpDelData victim = TestGermlineAmpDelDataBuilder.BUILDER.create(b -> b.comparisonChromosome = "8");
+        GermlineAmpDelData liftoverVictim = TestGermlineAmpDelDataBuilder.BUILDER.create(b -> b.comparisonChromosome = "8");
+        FieldConfig detailedFieldConfig = createDefaultThresholds(MatchLevel.DETAILED);
+        FieldConfig reportableFieldConfig = createDefaultThresholds(MatchLevel.REPORTABLE);
 
         assertTrue(victim.matches(liftoverVictim));
         assertTrue(liftoverVictim.matches(victim));
-        assertNull(victim.findMismatch(liftoverVictim, MatchLevel.DETAILED, diffThresholds, false));
-        assertNull(victim.findMismatch(liftoverVictim, MatchLevel.REPORTABLE, diffThresholds, false));
+        assertNull(victim.findMismatch(liftoverVictim, MatchLevel.DETAILED, detailedFieldConfig, false));
+        assertNull(victim.findMismatch(liftoverVictim, MatchLevel.REPORTABLE, reportableFieldConfig, false));
 
         Mismatch expectedMatch = new Mismatch(victim, liftoverVictim, MismatchType.FULL_MATCH, Collections.emptyList());
-        assertEquals(expectedMatch, victim.findMismatch(liftoverVictim, MatchLevel.DETAILED, diffThresholds, true));
-        assertEquals(expectedMatch, victim.findMismatch(liftoverVictim, MatchLevel.REPORTABLE, diffThresholds, true));
+        assertEquals(expectedMatch, victim.findMismatch(liftoverVictim, MatchLevel.DETAILED, detailedFieldConfig, true));
+        assertEquals(expectedMatch, victim.findMismatch(liftoverVictim, MatchLevel.REPORTABLE, reportableFieldConfig, true));
     }
 }

@@ -2,7 +2,7 @@ package com.hartwig.hmftools.compar.mutation;
 
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_QUAL;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
-import static com.hartwig.hmftools.compar.common.DiffFunctions.FILTER_DIFF;
+import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_FILTER;
 import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_CANON_EFFECT;
 import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_CODING_EFFECT;
 import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_GENE;
@@ -28,7 +28,7 @@ import java.util.Map;
 
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItemTest;
-import com.hartwig.hmftools.compar.common.DiffThresholds;
+import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.MismatchType;
@@ -67,7 +67,7 @@ public class GermlineVariantDataTest extends ComparableItemTest<GermlineVariantD
                 alternateValueSource.Variant.allelicDepth().AlleleReadCount);
         fieldToAlternateValueInitializer.put(FLD_TUMOR_TOTAL_READ_COUNT, b -> b.tumorTotalReadCount =
                 alternateValueSource.Variant.allelicDepth().TotalReadCount);
-        fieldToAlternateValueInitializer.put(FILTER_DIFF, b -> b.filters = alternateValueSource.Filters);
+        fieldToAlternateValueInitializer.put(FLD_FILTER, b -> b.filters = alternateValueSource.Filters);
 
         nameToAlternateIndexInitializer = Map.of(
                 "Chromosome", b ->
@@ -101,16 +101,17 @@ public class GermlineVariantDataTest extends ComparableItemTest<GermlineVariantD
             b.chromosome = "8";
             b.position = 10000;
         });
-        DiffThresholds diffThresholds = createDefaultThresholds();
+        FieldConfig detailedFieldConfig = createDefaultThresholds(MatchLevel.DETAILED);
+        FieldConfig reportableFieldConfig = createDefaultThresholds(MatchLevel.REPORTABLE);
 
         assertTrue(victim.matches(liftoverVictim));
         assertTrue(liftoverVictim.matches(victim));
-        assertNull(victim.findMismatch(liftoverVictim, MatchLevel.DETAILED, diffThresholds, false));
-        assertNull(victim.findMismatch(liftoverVictim, MatchLevel.REPORTABLE, diffThresholds, false));
+        assertNull(victim.findMismatch(liftoverVictim, MatchLevel.DETAILED, detailedFieldConfig, false));
+        assertNull(victim.findMismatch(liftoverVictim, MatchLevel.REPORTABLE, reportableFieldConfig, false));
 
         Mismatch expectedMatch = new Mismatch(victim, liftoverVictim, MismatchType.FULL_MATCH, Collections.emptyList());
-        assertEquals(expectedMatch, victim.findMismatch(liftoverVictim, MatchLevel.DETAILED, diffThresholds, true));
-        assertEquals(expectedMatch, victim.findMismatch(liftoverVictim, MatchLevel.REPORTABLE, diffThresholds, true));
+        assertEquals(expectedMatch, victim.findMismatch(liftoverVictim, MatchLevel.DETAILED, detailedFieldConfig, true));
+        assertEquals(expectedMatch, victim.findMismatch(liftoverVictim, MatchLevel.REPORTABLE, reportableFieldConfig, true));
     }
 
     @Test

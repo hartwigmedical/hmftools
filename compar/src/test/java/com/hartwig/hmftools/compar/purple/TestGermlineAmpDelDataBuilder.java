@@ -8,7 +8,7 @@ import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.purple.ReportedStatus;
 import com.hartwig.hmftools.compar.TestComparableItemBuilder;
 
-public class TestGermlineDeletionDataBuilder
+public class TestGermlineAmpDelDataBuilder
 {
     public String gene = "BRAF";
     public boolean reported = true;
@@ -19,7 +19,7 @@ public class TestGermlineDeletionDataBuilder
     public String comparisonChromosome = "chr7";
     public String chromosomeBand = "7q34";
 
-    private static final Consumer<TestGermlineDeletionDataBuilder> ALTERNATE_INITIALIZER = b ->
+    private static final Consumer<TestGermlineAmpDelDataBuilder> ALTERNATE_INITIALIZER = b ->
     {
         b.gene = "BRCA2";
         b.reported = false;
@@ -31,10 +31,10 @@ public class TestGermlineDeletionDataBuilder
         b.chromosomeBand = "13q13.1";
     };
 
-    public static final TestComparableItemBuilder<TestGermlineDeletionDataBuilder, GermlineAmpDelData> BUILDER =
+    public static final TestComparableItemBuilder<TestGermlineAmpDelDataBuilder, GermlineAmpDelData> BUILDER =
             new TestComparableItemBuilder<>(
-                    TestGermlineDeletionDataBuilder::new,
-                    TestGermlineDeletionDataBuilder::build,
+                    TestGermlineAmpDelDataBuilder::new,
+                    TestGermlineAmpDelDataBuilder::build,
                     ALTERNATE_INITIALIZER
             );
 

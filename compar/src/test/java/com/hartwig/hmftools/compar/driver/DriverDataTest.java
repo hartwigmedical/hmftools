@@ -27,6 +27,7 @@ import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.ComparableItemTest;
 import com.hartwig.hmftools.compar.common.CommonUtils;
+import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.MismatchType;
@@ -47,10 +48,7 @@ public class DriverDataTest extends ComparableItemTest<DriverData, DriverCompare
                 FLD_LIKELIHOOD, b -> b.likelihood = alternateValueSource.DriverCatalog.driverLikelihood(),
                 FLD_MIN_COPY_NUMBER, b -> b.minCopyNumber = alternateValueSource.DriverCatalog.minCopyNumber(),
                 FLD_MAX_COPY_NUMBER, b -> b.maxCopyNumber = alternateValueSource.DriverCatalog.maxCopyNumber(),
-                FLD_CHROMOSOME, b -> {
-                    b.chromosome = alternateValueSource.DriverCatalog.chromosome();
-                    b.comparisonChromosome = alternateValueSource.mComparisonChromosome;
-                },
+                FLD_CHROMOSOME, b -> b.comparisonChromosome = alternateValueSource.mComparisonChromosome,
                 FLD_CHROMOSOME_BAND, b -> b.chromosomeBand = alternateValueSource.DriverCatalog.chromosomeBand()
         );
         nameToAlternateIndexInitializer = Map.of(
@@ -62,7 +60,7 @@ public class DriverDataTest extends ComparableItemTest<DriverData, DriverCompare
                 }
         );
         reportabilityFieldToFalseReportabilityInitializer = Collections.emptyMap();
-        nameToNonPassInitializer = Collections.emptyMap();
+        nameToNonPassInitializer = Map.of("nonPass", b -> b.isPass = false);
     }
     
     @Test
@@ -156,32 +154,33 @@ public class DriverDataTest extends ComparableItemTest<DriverData, DriverCompare
         ComparConfig config = new ComparConfig();
         DriverComparer driverComparer = new DriverComparer(config);
 
-        driverComparer.registerThresholds(config.Thresholds);
+        FieldConfig fieldConfig = new FieldConfig();
+        fieldConfig.registerFields(driverComparer, MatchLevel.DETAILED);
 
         List<ComparableItem> refItems = Lists.newArrayList();
         List<ComparableItem> newItems = Lists.newArrayList();
 
         refItems.add(
                 new DriverData(createDriverCatalog("AR", DriverType.AMP, 1.0, 6),
-                        null, "1", false));
+                        null, "1", false, true));
 
         newItems.add(
                 new DriverData(createDriverCatalog("TP53", DriverType.DEL, 1.0, 0.2),
-                        null, "2", false));
+                        null, "2", false, true));
 
         refItems.add(new DriverData(createDriverCatalog("KRAS", DriverType.MUTATION, 0.7, 2),
-                null, "3", false));
+                null, "3", false, true));
         newItems.add(new DriverData(createDriverCatalog("KRAS", DriverType.MUTATION, 0.5, 2),
-                null, "3", false));
+                null, "3", false, true));
 
         refItems.add(new DriverData(createDriverCatalog("BRAF", DriverType.HOM_DEL_DISRUPTION, 0.9, 2),
-                null, "4", false));
+                null, "4", false, true));
 
         newItems.add(new DriverData(createDriverCatalog("BRAF", DriverType.HOM_DEL_DISRUPTION, 0.9, 2),
-                null, "4", false));
+                null, "4", false, true));
 
         List<Mismatch> mismatches = Lists.newArrayList();
-        CommonUtils.compareItems(mismatches, MatchLevel.REPORTABLE, config.Thresholds, includeMatches, refItems, newItems);
+        CommonUtils.compareItems(mismatches, MatchLevel.REPORTABLE, fieldConfig, includeMatches, refItems, newItems);
         return mismatches;
     }
 

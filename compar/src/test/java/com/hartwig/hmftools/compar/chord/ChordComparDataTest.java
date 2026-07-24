@@ -1,10 +1,10 @@
 package com.hartwig.hmftools.compar.chord;
 
-import static com.hartwig.hmftools.compar.chord.ChordComparData.FLD_BRCA1;
-import static com.hartwig.hmftools.compar.chord.ChordComparData.FLD_BRCA2;
-import static com.hartwig.hmftools.compar.chord.ChordComparData.FLD_SCORE;
-import static com.hartwig.hmftools.compar.chord.ChordComparData.FLD_STATUS;
-import static com.hartwig.hmftools.compar.chord.ChordComparData.FLD_TYPE;
+import static com.hartwig.hmftools.compar.chord.ChordComparer.FLD_BRCA1;
+import static com.hartwig.hmftools.compar.chord.ChordComparer.FLD_BRCA2;
+import static com.hartwig.hmftools.compar.chord.ChordComparer.FLD_SCORE;
+import static com.hartwig.hmftools.compar.chord.ChordComparer.FLD_STATUS;
+import static com.hartwig.hmftools.compar.chord.ChordComparer.FLD_TYPE;
 
 import java.util.Collections;
 import java.util.Map;

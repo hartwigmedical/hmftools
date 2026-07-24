@@ -3,8 +3,6 @@ package com.hartwig.hmftools.compar.cuppa;
 import static com.hartwig.hmftools.common.cuppa.DataType.PROB;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.CategoryType.CUPPA;
-import static com.hartwig.hmftools.compar.cuppa.CuppaData.FLD_PROBABILITY;
-import static com.hartwig.hmftools.compar.cuppa.CuppaData.FLD_TOP_CANCER_TYPE;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -17,15 +15,22 @@ import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.common.DiffThresholds;
+import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.ItemComparer;
+import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.SourceType;
+import com.hartwig.hmftools.compar.common.field.DoubleField;
+import com.hartwig.hmftools.compar.common.field.Field;
+import com.hartwig.hmftools.compar.common.field.StringField;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class CuppaComparer implements ItemComparer
 {
+    protected static final String FLD_TOP_CANCER_TYPE = "top_cancer_type";
+    protected static final String FLD_PROBABILITY = "probability";
+
     private final ComparConfig mConfig;
 
     public CuppaComparer(final ComparConfig config)
@@ -37,19 +42,23 @@ public class CuppaComparer implements ItemComparer
     public CategoryType category() { return CUPPA; }
 
     @Override
-    public void registerThresholds(final DiffThresholds thresholds)
+    public List<Field> fields(final MatchLevel matchLevel)
     {
-        thresholds.addFieldThreshold(FLD_PROBABILITY, 0.1, 0);
+        return List.of(
+                new StringField(FLD_TOP_CANCER_TYPE, i -> ((CuppaData) i).PredictionEntry.CancerType, true),
+                new DoubleField(FLD_PROBABILITY, i -> ((CuppaData) i).PredictionEntry.DataValue, true,
+                        0.1, null, "%.3f")
+        );
     }
 
     @Override
-    public boolean processSample(final String sampleId, final List<Mismatch> mismatches)
+    public boolean processSample(final String sampleId, final List<Mismatch> mismatches, final FieldConfig fieldConfig)
     {
-        return CommonUtils.processSample(this, mConfig, sampleId, mismatches);
+        return CommonUtils.processSample(this, mConfig, sampleId, mismatches, fieldConfig);
     }
 
     @Override
-    public List<String> comparedFieldNames()
+    public List<String> displayFieldNames()
     {
         return Lists.newArrayList(FLD_TOP_CANCER_TYPE, FLD_PROBABILITY);
     }

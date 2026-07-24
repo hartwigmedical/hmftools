@@ -16,10 +16,14 @@ import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.CommonUtils;
-import com.hartwig.hmftools.compar.common.DiffThresholds;
+import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.FileSources;
+import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.SourceType;
+import com.hartwig.hmftools.compar.common.field.DoubleField;
+import com.hartwig.hmftools.compar.common.field.Field;
+import com.hartwig.hmftools.compar.common.field.StringField;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public record IsofoxTranscriptDataComparer(ComparConfig mConfig) implements ItemComparer
@@ -37,19 +41,24 @@ public record IsofoxTranscriptDataComparer(ComparConfig mConfig) implements Item
     }
 
     @Override
-    public boolean processSample(final String sampleId, final List<Mismatch> mismatches)
+    public boolean processSample(final String sampleId, final List<Mismatch> mismatches, final FieldConfig fieldConfig)
     {
-        return CommonUtils.processSample(this, mConfig, sampleId, mismatches);
+        return CommonUtils.processSample(this, mConfig, sampleId, mismatches, fieldConfig);
     }
 
     @Override
-    public void registerThresholds(final DiffThresholds thresholds)
+    public List<Field> fields(final MatchLevel matchLevel)
     {
-        thresholds.addFieldThreshold(FLD_ADJ_TPM, -1, 0.05);
+        return List.of(
+                new StringField(FLD_GENE_NAME, i -> ((IsofoxTranscriptData) i).TranscriptExpression().geneName(),
+                        true),
+                new DoubleField(FLD_ADJ_TPM, i -> ((IsofoxTranscriptData) i).TranscriptExpression().tpm(), true,
+                        null, 0.05, "%.2f")
+        );
     }
 
     @Override
-    public List<String> comparedFieldNames()
+    public List<String> displayFieldNames()
     {
         return List.of(FLD_GENE_NAME, FLD_ADJ_TPM);
     }

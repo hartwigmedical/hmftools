@@ -37,6 +37,7 @@ import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.chord.ChordComparer;
 import com.hartwig.hmftools.compar.cider.Cdr3LocusSummaryComparer;
 import com.hartwig.hmftools.compar.cider.CiderVdjComparer;
+import com.hartwig.hmftools.compar.common.field.Field;
 import com.hartwig.hmftools.compar.cuppa.CuppaComparer;
 import com.hartwig.hmftools.compar.cuppa.CuppaImageComparer;
 import com.hartwig.hmftools.compar.driver.DriverComparer;
@@ -45,7 +46,8 @@ import com.hartwig.hmftools.compar.isofox.IsofoxSummaryComparer;
 import com.hartwig.hmftools.compar.isofox.IsofoxTranscriptDataComparer;
 import com.hartwig.hmftools.compar.isofox.NovelSpliceJunctionComparer;
 import com.hartwig.hmftools.compar.isofox.RnaFusionComparer;
-import com.hartwig.hmftools.compar.lilac.LilacComparer;
+import com.hartwig.hmftools.compar.lilac.LilacAlleleComparer;
+import com.hartwig.hmftools.compar.lilac.LilacQcComparer;
 import com.hartwig.hmftools.compar.linx.DisruptionComparer;
 import com.hartwig.hmftools.compar.linx.FusionComparer;
 import com.hartwig.hmftools.compar.linx.GermlineSvComparer;
@@ -69,6 +71,7 @@ public class CommonUtils
     public static final String FLD_REPORTED = "Reported";
     public static final String FLD_QUAL = "Qual";
     public static final String FLD_CHROMOSOME_BAND = "ChromosomeBand";
+    public static final String FLD_FILTER = "filter";
 
     public static List<ItemComparer> buildComparers(final ComparConfig config)
     {
@@ -91,7 +94,6 @@ public class CommonUtils
                 continue;
             }
 
-            comparer.registerThresholds(config.Thresholds);
             comparers.add(comparer);
         }
 
@@ -118,7 +120,7 @@ public class CommonUtils
         return comparers;
     }
 
-    private static ItemComparer createComparer(final CategoryType category, final ComparConfig config)
+    public static ItemComparer createComparer(final CategoryType category, final ComparConfig config)
     {
         switch(category)
         {
@@ -158,8 +160,11 @@ public class CommonUtils
             case CHORD:
                 return new ChordComparer(config);
 
-            case LILAC:
-                return new LilacComparer(config);
+            case LILAC_QC:
+                return new LilacQcComparer(config);
+
+            case LILAC_ALLELE:
+                return new LilacAlleleComparer(config);
 
             case GERMLINE_SV:
                 return new GermlineSvComparer(config);
@@ -220,8 +225,8 @@ public class CommonUtils
         }
     }
 
-    public static boolean processSample(
-            final ItemComparer comparer, final ComparConfig config, final String sampleId, final List<Mismatch> mismatches)
+    public static boolean processSample(final ItemComparer comparer, final ComparConfig config, final String sampleId,
+            final List<Mismatch> mismatches, final FieldConfig fieldConfig)
     {
         final MatchLevel matchLevel = config.Categories.get(comparer.category());
 
@@ -254,7 +259,7 @@ public class CommonUtils
         {
             // previously support comparisons for N sources but now can only be 2 as controlled by config
             CommonUtils.compareItems(
-                    mismatches, matchLevel, config.Thresholds, config.IncludeMatches,
+                    mismatches, matchLevel, fieldConfig, config.IncludeMatches,
                     sourceItems.get(SourceType.OLD), sourceItems.get(SourceType.NEW));
 
             return true;
@@ -279,7 +284,7 @@ public class CommonUtils
     }
 
     public static void compareItems(
-            final List<Mismatch> mismatches, final MatchLevel matchLevel, final DiffThresholds thresholds, final boolean includeMatches,
+            final List<Mismatch> mismatches, final MatchLevel matchLevel, final FieldConfig fieldConfig, final boolean includeMatches,
             final List<ComparableItem> items1, final List<ComparableItem> items2)
     {
         int index1 = 0;
@@ -305,7 +310,7 @@ public class CommonUtils
 
                     if(matchLevel != REPORTABLE || eitherReportable)
                     {
-                        Mismatch mismatch = item1.findMismatch(item2, matchLevel, thresholds, includeMatches);
+                        Mismatch mismatch = item1.findMismatch(item2, matchLevel, fieldConfig, includeMatches);
 
                         if(mismatch != null)
                         {
@@ -339,6 +344,19 @@ public class CommonUtils
 
         items2.stream().filter(x -> matchLevel != REPORTABLE || x.reportable())
                 .forEach(x -> mismatches.add(new Mismatch(null, x, NEW_ONLY, emptyDiffs)));
+    }
+
+    public static List<String> findDiffs(final ComparableItem oldItem, final ComparableItem newItem, List<Field> fields)
+    {
+        final List<String> diffs = Lists.newArrayList();
+        for(Field field : fields)
+        {
+            if(field.isCompared())
+            {
+                diffs.addAll(field.determineDiffs(oldItem, newItem));
+            }
+        }
+        return diffs;
     }
 
     public static BasePosition determineComparisonGenomePosition(
@@ -380,11 +398,6 @@ public class CommonUtils
             final ComparableItem refItem, final ComparableItem newItem, final List<String> diffs,
             final MatchLevel matchLevel, final boolean includeMatches)
     {
-        if(diffs.isEmpty() && !includeMatches)
-        {
-            return null;
-        }
-
         boolean refCountsAsCalled = countsAsCalled(refItem, matchLevel);
         boolean newCountsAsCalled = countsAsCalled(newItem, matchLevel);
         if(!refCountsAsCalled && !newCountsAsCalled)
@@ -435,5 +448,28 @@ public class CommonUtils
         {
             return item.isPass();
         }
+    }
+
+    public static FieldConfig initialiseFieldConfig(ComparConfig config)
+    {
+        FieldConfig fieldConfig = new FieldConfig();
+        for(CategoryType category : CategoryType.values())
+        {
+            if(!config.Categories.containsKey(category))
+                continue;
+
+            MatchLevel matchLevel = config.Categories.get(category);
+
+            ItemComparer comparer = createComparer(category, config);
+
+            fieldConfig.registerFields(comparer, matchLevel);
+        }
+
+        if(config.FieldOverrides != null)
+        {
+            fieldConfig.applyOverrides(config.FieldOverrides, config.StrictFieldConfig);
+        }
+
+        return fieldConfig;
     }
 }

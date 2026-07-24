@@ -9,23 +9,24 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.cuppa.CuppaPredictions;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.ItemComparer;
+import com.hartwig.hmftools.compar.ImageComparer;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.CommonUtils;
-import com.hartwig.hmftools.compar.common.DiffThresholds;
+import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.SourceType;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
-public class CuppaImageComparer implements ItemComparer
+public class CuppaImageComparer extends ImageComparer
 {
-    public static final String FLD_VIS_IMAGE = "cuppa_vis_image";
+    public static final String IMAGE_NAME = "cuppa_vis_image";
 
     private final ComparConfig mConfig;
 
     public CuppaImageComparer(final ComparConfig config)
     {
+        super(null, 0.);
         mConfig = config;
     }
 
@@ -33,15 +34,9 @@ public class CuppaImageComparer implements ItemComparer
     public CategoryType category() { return CUPPA_IMAGE; }
 
     @Override
-    public void registerThresholds(final DiffThresholds thresholds)
+    public boolean processSample(final String sampleId, final List<Mismatch> mismatches, final FieldConfig fieldConfig)
     {
-        thresholds.addFieldThreshold(FLD_VIS_IMAGE, Double.NaN, 0);
-    }
-
-    @Override
-    public boolean processSample(final String sampleId, final List<Mismatch> mismatches)
-    {
-        return CommonUtils.processSample(this, mConfig, sampleId, mismatches);
+        return CommonUtils.processSample(this, mConfig, sampleId, mismatches, fieldConfig);
     }
 
     @Override
@@ -55,16 +50,21 @@ public class CuppaImageComparer implements ItemComparer
     public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final FileSources fileSources)
     {
         final List<ComparableItem> comparableItems = new ArrayList<>();
-
         String plotPath = CuppaPredictions.generateVisPlotFilename(fileSources.Cuppa, sampleId);
-        comparableItems.add(new CuppaImageData(FLD_VIS_IMAGE, plotPath));
+        CuppaImageData imageData = new CuppaImageData(IMAGE_NAME, plotPath);
 
+        if(imageData.Image == null)
+        {
+            return null;
+        }
+
+        comparableItems.add(imageData);
         return comparableItems;
     }
 
     @Override
-    public List<String> comparedFieldNames()
+    public List<String> displayFieldNames()
     {
-        return Lists.newArrayList(FLD_VIS_IMAGE);
+        return Lists.newArrayList();
     }
 }

@@ -36,12 +36,7 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.V_CHORD_DIR_
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.V_CHORD_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.convertWildcardSamplePath;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
-import static com.hartwig.hmftools.compar.ComparConfig.NEW_SOURCE_CFG;
-import static com.hartwig.hmftools.compar.ComparConfig.OLD_SOURCE_CFG;
 
-import java.util.List;
-
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.pipeline.PipelineToolDirectories;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 

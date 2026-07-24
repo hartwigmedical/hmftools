@@ -3,6 +3,8 @@ package com.hartwig.hmftools.compar.cider;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.CategoryType.CDR3_SEQUENCE;
 
+import static org.apache.commons.lang3.StringUtils.capitalize;
+
 import java.io.UncheckedIOException;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -13,13 +15,20 @@ import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.CommonUtils;
+import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.FileSources;
+import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.SourceType;
+import com.hartwig.hmftools.compar.common.field.Field;
+import com.hartwig.hmftools.compar.common.field.StringField;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class CiderVdjComparer implements ItemComparer
 {
+    protected static final String FLD_FILTER = capitalize(Cdr3SequenceFile.Column.filter.name());
+    protected static final String FLD_LOCUS = capitalize(Cdr3SequenceFile.Column.locus.name());
+
     private final ComparConfig mConfig;
 
     public CiderVdjComparer(final ComparConfig config)
@@ -28,18 +37,29 @@ public class CiderVdjComparer implements ItemComparer
     }
 
     @Override
-    public CategoryType category() { return CDR3_SEQUENCE; }
-
-    @Override
-    public boolean processSample(final String sampleId, final List<Mismatch> mismatches)
-    {
-        return CommonUtils.processSample(this, mConfig, sampleId, mismatches);
+    public CategoryType category() {
+        return CDR3_SEQUENCE;
     }
 
     @Override
-    public List<String> comparedFieldNames()
+    public List<Field> fields(final MatchLevel matchLevel)
     {
-        return CiderVdjData.comparedFieldNames();
+        return List.of(
+                new StringField(FLD_FILTER, i -> ((CiderVdjData) i).mCdr3Sequence.filter(), true),
+                new StringField(FLD_LOCUS, i -> ((CiderVdjData) i).mCdr3Sequence.locus(), true)
+        );
+    }
+
+    @Override
+    public boolean processSample(final String sampleId, final List<Mismatch> mismatches, final FieldConfig fieldConfig)
+    {
+        return CommonUtils.processSample(this, mConfig, sampleId, mismatches, fieldConfig);
+    }
+
+    @Override
+    public List<String> displayFieldNames()
+    {
+        return List.of(FLD_FILTER, FLD_LOCUS);
     }
 
     @Override

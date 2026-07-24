@@ -1,0 +1,104 @@
+package com.hartwig.hmftools.compar.common.field;
+
+import static java.lang.Math.abs;
+import static java.lang.Math.max;
+import static java.lang.String.format;
+
+import java.util.function.Function;
+
+import com.hartwig.hmftools.compar.ComparableItem;
+
+public class DoubleField implements Field
+{
+    private final String name;
+    private final Function<ComparableItem, Double> extractValue;
+    private final boolean isCompared;
+    private final Double absoluteThreshold;
+    private final Double percentThreshold;
+    private final String formatString;
+
+    public DoubleField(final String name, final Function<ComparableItem, Double> extractValue, final boolean isCompared,
+            final Double absoluteThreshold, final Double percentThreshold, final String formatString)
+    {
+        this.name = name;
+        this.extractValue = extractValue;
+        this.isCompared = isCompared;
+        this.absoluteThreshold = absoluteThreshold;
+        this.percentThreshold = percentThreshold;
+        this.formatString = formatString;
+    }
+
+    @Override
+    public String name()
+    {
+        return name;
+    }
+
+    @Override
+    public boolean isCompared()
+    {
+        return isCompared;
+    }
+
+    @Override
+    public Double absoluteThreshold()
+    {
+        return absoluteThreshold;
+    }
+
+    @Override
+    public Double percentThreshold()
+    {
+        return percentThreshold;
+    }
+
+    @Override
+    public Field withCompared(final boolean compared)
+    {
+        return new DoubleField(name, extractValue, compared, absoluteThreshold, percentThreshold, formatString);
+    }
+
+    @Override
+    public Field withAbsoluteThreshold(final Double absoluteThreshold)
+    {
+        return new DoubleField(name, extractValue, isCompared, absoluteThreshold, percentThreshold, formatString);
+    }
+
+    @Override
+    public Field withPercentThreshold(final Double percentThreshold)
+    {
+        return new DoubleField(name, extractValue, isCompared, absoluteThreshold, percentThreshold, formatString);
+    }
+
+    @Override
+    public String type()
+    {
+        return "double";
+    }
+
+    @Override
+    public String displayValue(final ComparableItem item)
+    {
+        return item.isValid() ? format(formatString,  extractValue.apply(item)) : "";
+    }
+
+    @Override
+    public boolean hasDiff(final ComparableItem oldItem, final ComparableItem newItem)
+    {
+        double oldValue = extractValue.apply(oldItem);
+        double newValue = extractValue.apply(newItem);
+
+        if(oldValue == newValue)
+        {
+            return false;
+        }
+
+        double absDiff = abs(oldValue - newValue);
+        double relDiff = absDiff / max(abs(oldValue), abs(newValue));
+
+        boolean satisfiesAbsDiff = absoluteThreshold == null || absDiff > absoluteThreshold;
+        boolean satisfiesRelDiff = percentThreshold == null || relDiff > percentThreshold;
+
+        return satisfiesAbsDiff && satisfiesRelDiff;
+    }
+}

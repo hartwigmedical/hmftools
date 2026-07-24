@@ -1,37 +1,15 @@
 package com.hartwig.hmftools.compar.mutation;
 
 import static com.hartwig.hmftools.compar.common.CategoryType.GERMLINE_VARIANT;
-import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_QUAL;
-import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
-import static com.hartwig.hmftools.compar.common.CommonUtils.createMismatchFromDiffs;
-import static com.hartwig.hmftools.compar.common.DiffFunctions.checkDiff;
-import static com.hartwig.hmftools.compar.common.DiffFunctions.checkFilterDiffs;
-import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_CANON_EFFECT;
-import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_CODING_EFFECT;
-import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_GENE;
-import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_HGVS_CODING;
-import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_HGVS_PROTEIN;
-import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_HOTSPOT;
-import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_OTHER_REPORTED;
-import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_PURITY_ADJUSTED_VAF;
-import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_TIER;
-import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_TUMOR_SUPPORTING_READ_COUNT;
-import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_TUMOR_TOTAL_READ_COUNT;
-import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_VARIANT_COPY_NUMBER;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.variant.SmallVariant;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.common.DiffThresholds;
-import com.hartwig.hmftools.compar.common.MatchLevel;
-import com.hartwig.hmftools.compar.common.Mismatch;
 
 public class GermlineVariantData implements ComparableItem
 {
@@ -66,14 +44,6 @@ public class GermlineVariantData implements ComparableItem
     }
 
     @Override
-    public List<String> displayValues()
-    {
-        List<String> values = Lists.newArrayList();
-        addDisplayValues(Variant, values);
-        return values;
-    }
-
-    @Override
     public boolean reportable()
     {
         return Variant.reported();
@@ -97,60 +67,5 @@ public class GermlineVariantData implements ComparableItem
             return false;
 
         return true;
-    }
-
-    @Override
-    public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds,
-            final boolean includeMatches)
-    {
-        final GermlineVariantData otherVar = (GermlineVariantData) other;
-
-        final List<String> diffs = findVariantDiffs(Variant, otherVar.Variant, thresholds);
-
-        checkFilterDiffs(Filters, otherVar.Filters, diffs);
-
-        return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches);
-    }
-
-    private static List<String> findVariantDiffs(
-            final SmallVariant var, final SmallVariant otherVar, final DiffThresholds thresholds)
-    {
-        final List<String> diffs = Lists.newArrayList();
-
-        checkDiff(diffs, FLD_REPORTED, var.reported(), otherVar.reported());
-        checkDiff(diffs, FLD_HOTSPOT, var.hotspot().toString(), otherVar.hotspot().toString());
-        checkDiff(diffs, FLD_TIER, var.tier().toString(), otherVar.tier().toString());
-        checkDiff(diffs, FLD_GENE, var.gene(), otherVar.gene());
-        checkDiff(diffs, FLD_CANON_EFFECT, var.canonicalEffect(), otherVar.canonicalEffect());
-        checkDiff(diffs, FLD_CODING_EFFECT, var.canonicalCodingEffect().toString(), otherVar.canonicalCodingEffect()
-                .toString());
-        checkDiff(diffs, FLD_HGVS_CODING, var.canonicalHgvsCodingImpact(), otherVar.canonicalHgvsCodingImpact());
-        checkDiff(diffs, FLD_HGVS_PROTEIN, var.canonicalHgvsProteinImpact(), otherVar.canonicalHgvsProteinImpact());
-        checkDiff(diffs, FLD_OTHER_REPORTED, var.otherReportedEffects(), otherVar.otherReportedEffects());
-
-        checkDiff(diffs, FLD_QUAL, (int) var.qual(), (int) otherVar.qual(), thresholds);
-        checkDiff(diffs, FLD_VARIANT_COPY_NUMBER, var.variantCopyNumber(), otherVar.variantCopyNumber(), thresholds);
-        checkDiff(diffs, FLD_PURITY_ADJUSTED_VAF, var.adjustedVAF(), otherVar.adjustedVAF(), thresholds);
-        checkDiff(diffs, FLD_TUMOR_SUPPORTING_READ_COUNT, var.allelicDepth().AlleleReadCount, otherVar.allelicDepth().AlleleReadCount, thresholds);
-        checkDiff(diffs, FLD_TUMOR_TOTAL_READ_COUNT, var.allelicDepth().TotalReadCount, otherVar.allelicDepth().TotalReadCount, thresholds);
-        return diffs;
-    }
-
-    protected static void addDisplayValues(final SmallVariant variant, final List<String> values)
-    {
-        values.add(String.format("%s", variant.reported()));
-        values.add(String.format("%s", variant.hotspot()));
-        values.add(String.format("%s", variant.tier()));
-        values.add(String.format("%s", variant.gene()));
-        values.add(String.format("%s", variant.canonicalEffect()));
-        values.add(String.format("%s", variant.canonicalCodingEffect()));
-        values.add(String.format("%s", variant.canonicalHgvsCodingImpact()));
-        values.add(String.format("%s", variant.canonicalHgvsProteinImpact()));
-        values.add(String.format("%s", variant.otherReportedEffects()));
-        values.add(String.format("%.0f", variant.qual()));
-        values.add(String.format("%.2f", variant.variantCopyNumber()));
-        values.add(String.format("%.2f", variant.adjustedVAF()));
-        values.add(String.format("%d", variant.allelicDepth().AlleleReadCount));
-        values.add(String.format("%d", variant.allelicDepth().TotalReadCount));
     }
 }

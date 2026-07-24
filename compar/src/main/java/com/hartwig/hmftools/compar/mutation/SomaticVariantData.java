@@ -8,7 +8,6 @@ import static com.hartwig.hmftools.compar.common.CommonUtils.createMismatchFromD
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.variant.CodingEffect.UNDEFINED;
-import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS_FILTER;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_BIALLELIC_FLAG;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.SUBCLONAL_LIKELIHOOD_FLAG;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
@@ -18,9 +17,8 @@ import static com.hartwig.hmftools.compar.common.CategoryType.SOMATIC_VARIANT;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_QUAL;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
 import static com.hartwig.hmftools.compar.common.CommonUtils.determineComparisonGenomePosition;
-import static com.hartwig.hmftools.compar.common.DiffFunctions.FILTER_DIFF;
-import static com.hartwig.hmftools.compar.common.DiffFunctions.checkDiff;
-import static com.hartwig.hmftools.compar.common.DiffFunctions.checkFilterDiffs;
+import static com.hartwig.hmftools.compar.common.CommonUtils.findDiffs;
+import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_FILTER;
 import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_CANON_EFFECT;
 import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_CODING_EFFECT;
 import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_GENE;
@@ -52,7 +50,7 @@ import com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.common.DiffThresholds;
+import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.SourceType;
@@ -153,33 +151,6 @@ public class SomaticVariantData implements ComparableItem
     }
 
     @Override
-    public List<String> displayValues()
-    {
-        List<String> values = Lists.newArrayList();
-        values.add(format("%s", Reported));
-        values.add(format("%s", HotspotStatus));
-        values.add(format("%s", Tier));
-        values.add(format("%s", Gene));
-        values.add(format("%s", CanonicalEffect));
-        values.add(format("%s", CanonicalCodingEffect));
-        values.add(format("%s", CanonicalHgvsCodingImpact));
-        values.add(format("%s", CanonicalHgvsProteinImpact));
-        values.add(format("%s", OtherReportedEffects));
-        values.add(format("%d", Qual));
-        values.add(format("%.2f", VariantCopyNumber));
-        values.add(format("%.2f", PurityAdjustedVaf));
-        values.add(String.format("%d", TumorSupportingReadCount));
-        values.add(String.format("%d", TumorTotalReadCount));
-
-        values.add(format("%s", Biallelic));
-        values.add(format("%.2f", BiallelicProbability));
-        values.add(format("%.2f", SubclonalLikelihood));
-        values.add(format("%s", HasLPS));
-
-        return values;
-    }
-
-    @Override
     public boolean reportable() {
         return !IsFromUnfilteredVcf && Reported;
     }
@@ -215,61 +186,38 @@ public class SomaticVariantData implements ComparableItem
     public int comparisonPosition() { return mComparisonPosition; }
 
     @Override
-    public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds,
+    public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final FieldConfig fieldConfig,
             final boolean includeMatches)
     {
         final SomaticVariantData otherVar = (SomaticVariantData) other;
-        final List<String> diffs = findDiffs(otherVar, thresholds);
-        return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches);
-    }
-
-    private List<String> findDiffs(final SomaticVariantData otherVar, final DiffThresholds thresholds)
-    {
         final List<String> diffs = Lists.newArrayList();
 
         if(Qual != NO_QUAL_PRESENT && otherVar.Qual != NO_QUAL_PRESENT)
-            checkDiff(diffs, FLD_QUAL, Qual, otherVar.Qual, thresholds);
+        {
+            diffs.addAll(findDiffs(this, otherVar, fieldConfig.getFields(category(), List.of(FLD_QUAL))));
+        }
 
-        checkDiff(diffs, FLD_REPORTED, Reported, otherVar.Reported);
-        checkDiff(diffs, FLD_TIER, Tier.toString(), otherVar.Tier.toString());
-        checkDiff(diffs, FLD_TUMOR_SUPPORTING_READ_COUNT, TumorSupportingReadCount, otherVar.TumorSupportingReadCount, thresholds);
-        checkDiff(diffs, FLD_TUMOR_TOTAL_READ_COUNT, TumorTotalReadCount, otherVar.TumorTotalReadCount, thresholds);
+        List<String> alwaysCompareFields = List.of(
+                FLD_REPORTED, FLD_TIER, FLD_TUMOR_SUPPORTING_READ_COUNT, FLD_TUMOR_TOTAL_READ_COUNT, FLD_LPS, FLD_FILTER);
+        diffs.addAll(findDiffs(this, otherVar, fieldConfig.getFields(category(), alwaysCompareFields)));
 
         if(canComparePaveFields(otherVar))
         {
             // assumes Pave annotated - could possibly check VCF for presence of tags
-            checkDiff(diffs, FLD_GENE, Gene, otherVar.Gene);
-            checkDiff(diffs, FLD_CANON_EFFECT, CanonicalEffect, otherVar.CanonicalEffect);
-            checkDiff(diffs, FLD_CODING_EFFECT, CanonicalCodingEffect, otherVar.CanonicalCodingEffect);
-            checkDiff(diffs, FLD_HGVS_CODING, CanonicalHgvsCodingImpact, otherVar.CanonicalHgvsCodingImpact);
-            checkDiff(diffs, FLD_HGVS_PROTEIN, CanonicalHgvsProteinImpact, otherVar.CanonicalHgvsProteinImpact);
+            List<String> paveFields = List.of(FLD_GENE, FLD_CANON_EFFECT, FLD_CODING_EFFECT, FLD_HGVS_CODING, FLD_HGVS_PROTEIN);
+            diffs.addAll(findDiffs(this, otherVar, fieldConfig.getFields(category(), paveFields)));
         }
 
         if(canComparePurpleFields(otherVar))
         {
-            checkDiff(diffs, FLD_HOTSPOT, HotspotStatus.toString(), otherVar.HotspotStatus.toString());
-            checkDiff(diffs, FLD_BIALLELIC, Biallelic, otherVar.Biallelic);
-            checkDiff(diffs, FLD_BIALLELIC_PROB, BiallelicProbability, otherVar.BiallelicProbability, thresholds);
-            checkDiff(diffs, FLD_OTHER_REPORTED, OtherReportedEffects, otherVar.OtherReportedEffects);
-            checkDiff(diffs, FLD_SUBCLONAL_LIKELIHOOD, SubclonalLikelihood, otherVar.SubclonalLikelihood, thresholds);
-            checkDiff(diffs, FLD_VARIANT_COPY_NUMBER, VariantCopyNumber, otherVar.VariantCopyNumber, thresholds);
-            checkDiff(diffs, FLD_PURITY_ADJUSTED_VAF, PurityAdjustedVaf, otherVar.PurityAdjustedVaf, thresholds);
+            List<String> purpleFields = List.of(
+                    FLD_HOTSPOT, FLD_BIALLELIC, FLD_BIALLELIC_PROB, FLD_OTHER_REPORTED, FLD_SUBCLONAL_LIKELIHOOD, FLD_VARIANT_COPY_NUMBER,
+                    FLD_PURITY_ADJUSTED_VAF
+            );
+            diffs.addAll(findDiffs(this, otherVar, fieldConfig.getFields(category(), purpleFields)));
         }
 
-        checkDiff(diffs, FLD_LPS, HasLPS, otherVar.HasLPS);
-
-        // compare filters
-        checkFilterDiffs(Filters, otherVar.Filters, diffs);
-
-        if(Filters.isEmpty() && otherVar.Filters.isEmpty() && !diffs.contains(FILTER_DIFF))
-        {
-            // if ones side is filtered, suggests was filtered downstream of Sage (eg Pave or Purple) so indicate this
-            if(IsFromUnfilteredVcf && !otherVar.IsFromUnfilteredVcf)
-                diffs.add(format("%s(%s/%s)", FILTER_DIFF, "FILTERED", PASS_FILTER));
-            else if(!IsFromUnfilteredVcf && otherVar.IsFromUnfilteredVcf)
-                diffs.add(format("%s(%s/%s)", FILTER_DIFF, PASS_FILTER, "FILTERED"));
-        }
-        return diffs;
+        return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches);
     }
 
     private boolean canComparePaveFields(final SomaticVariantData otherVar)

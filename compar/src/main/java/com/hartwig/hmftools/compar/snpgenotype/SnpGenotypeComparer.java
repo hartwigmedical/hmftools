@@ -5,8 +5,6 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDir
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.CategoryType.SNP_GENOTYPE;
 import static com.hartwig.hmftools.compar.common.CommonUtils.determineComparisonGenomePosition;
-import static com.hartwig.hmftools.compar.snpgenotype.SnpGenotypeData.FLD_GENOTYPE;
-import static com.hartwig.hmftools.compar.snpgenotype.SnpGenotypeData.FLD_VCF_SAMPLE_ID;
 
 import java.util.List;
 
@@ -18,9 +16,13 @@ import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.CommonUtils;
+import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.FileSources;
+import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.SourceType;
+import com.hartwig.hmftools.compar.common.field.Field;
+import com.hartwig.hmftools.compar.common.field.StringField;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import htsjdk.tribble.CloseableTribbleIterator;
@@ -31,6 +33,9 @@ public class SnpGenotypeComparer implements ItemComparer
     private final ComparConfig mConfig;
 
     private static final String FILE_NAME = "snp_genotype_output.vcf";
+
+    protected static final String FLD_GENOTYPE = "Genotype";
+    protected static final String FLD_VCF_SAMPLE_ID = "VcfSampleId";
 
     public SnpGenotypeComparer(final ComparConfig config)
     {
@@ -44,15 +49,25 @@ public class SnpGenotypeComparer implements ItemComparer
     }
 
     @Override
-    public boolean processSample(final String sampleId, final List<Mismatch> mismatches)
+    public boolean processSample(final String sampleId, final List<Mismatch> mismatches, final FieldConfig fieldConfig)
     {
-        return CommonUtils.processSample(this, mConfig, sampleId, mismatches);
+        return CommonUtils.processSample(this, mConfig, sampleId, mismatches, fieldConfig);
     }
 
     @Override
-    public List<String> comparedFieldNames()
+    public List<String> displayFieldNames()
     {
         return Lists.newArrayList(FLD_ALT, FLD_GENOTYPE, FLD_VCF_SAMPLE_ID);
+    }
+
+    @Override
+    public List<Field> fields(final MatchLevel matchLevel)
+    {
+        return List.of(
+                new StringField(FLD_ALT, i -> ((SnpGenotypeData) i).Alt, true),
+                new StringField(FLD_GENOTYPE, i -> ((SnpGenotypeData) i).Genotype, true),
+                new StringField(FLD_VCF_SAMPLE_ID, i -> ((SnpGenotypeData) i).VcfSampleId, true)
+        );
     }
 
     @Override

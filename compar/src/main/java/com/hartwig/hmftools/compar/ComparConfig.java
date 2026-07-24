@@ -25,8 +25,6 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutput
 import static com.hartwig.hmftools.common.perf.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.compar.common.CategoryType.ALL_CATEGORIES;
-import static com.hartwig.hmftools.compar.common.CategoryType.DRIVER;
-import static com.hartwig.hmftools.compar.common.CategoryType.GENE_COPY_NUMBER;
 import static com.hartwig.hmftools.compar.common.CategoryType.LINX_CATEGORIES;
 import static com.hartwig.hmftools.compar.common.CategoryType.PANEL_CATEGORIES;
 import static com.hartwig.hmftools.compar.common.CategoryType.PURPLE_CATEGORIES;
@@ -58,7 +56,8 @@ import com.hartwig.hmftools.common.driver.panel.DriverGeneFile;
 import com.hartwig.hmftools.common.genome.refgenome.GenomeLiftoverCache;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.compar.common.CategoryType;
-import com.hartwig.hmftools.compar.common.DiffThresholds;
+import com.hartwig.hmftools.compar.common.FieldConfigFile;
+import com.hartwig.hmftools.compar.common.FieldOverride;
 import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.SourceData;
@@ -84,8 +83,8 @@ public class ComparConfig
     public final Set<String> IgnoreGenes;
     public final Set<String> AlternateTranscriptDriverGenes;
     public final boolean RestrictToDrivers;
-
-    public final DiffThresholds Thresholds;
+    public final List<FieldOverride> FieldOverrides;
+    public final boolean StrictFieldConfig;
 
     public final String OutputDir;
     public final String OutputId;
@@ -112,13 +111,14 @@ public class ComparConfig
     public static final String RESTRICT_TO_DRIVERS = "restrict_to_drivers";
     public static final String KNOWN_MISMATCH_FILE = "known_mismatches";
     public static final String IGNORE_GENES = "ignore_genes";
+    public static final String REQUIRES_LIFTOVER = "liftover";
+    public static final String FIELD_CONFIG_FILE = "field_config_file";
+    public static final String STRICT_FIELD_CONFIG = "strict_field_config";
 
     public static final String OLD_SOURCE_CFG = OLD.configStr();
     public static final String NEW_SOURCE_CFG = NEW.configStr();
 
     public static final Logger CMP_LOGGER = LogManager.getLogger(ComparConfig.class);
-
-    public static final String REQUIRES_LIFTOVER = "liftover";
 
     public ComparConfig(final ConfigBuilder configBuilder)
     {
@@ -189,8 +189,8 @@ public class ComparConfig
         {
             if(!loadFileSources(configBuilder))
             {
-                mIsValid = false;
                 CMP_LOGGER.error("missing DB or file source old and new config");
+                mIsValid = false;
             }
         }
 
@@ -198,9 +198,6 @@ public class ComparConfig
         SampleToReferenceIds = Maps.newHashMap();
 
         loadSampleIds(configBuilder);
-
-        Thresholds = new DiffThresholds();
-        Thresholds.loadConfig(configBuilder.getValue(THRESHOLDS, ""));
 
         DriverGenes = Sets.newHashSet();
         AlternateTranscriptDriverGenes = Sets.newHashSet();
@@ -222,6 +219,7 @@ public class ComparConfig
             catch(IOException e)
             {
                 CMP_LOGGER.error("failed to load driver gene panel file: {}", e.toString());
+                mIsValid = false;
             }
         }
 
@@ -243,6 +241,27 @@ public class ComparConfig
         }
 
         LiftoverCache = new GenomeLiftoverCache(RequiresLiftover);
+        StrictFieldConfig = configBuilder.hasFlag(STRICT_FIELD_CONFIG);
+
+        List<FieldOverride> overrideFieldConfig = null;
+        if(configBuilder.hasValue(FIELD_CONFIG_FILE))
+        {
+            try
+            {
+                overrideFieldConfig = FieldConfigFile.read(configBuilder.getValue(FIELD_CONFIG_FILE));
+            }
+            catch(IOException e)
+            {
+                CMP_LOGGER.error("failed to load field config file: {}", e.toString());
+                mIsValid = false;
+            }
+        }
+        else if(StrictFieldConfig)
+        {
+            CMP_LOGGER.error("a field config file is required when the {} argument is used", STRICT_FIELD_CONFIG);
+            mIsValid = false;
+        }
+        FieldOverrides = overrideFieldConfig;
     }
 
     public SourceData getSourceData(final SourceType sourceType)
@@ -339,6 +358,7 @@ public class ComparConfig
         catch(IOException e)
         {
             CMP_LOGGER.error("failed to load sample IDs: {}", e.toString());
+            mIsValid = false;
         }
     }
 
@@ -449,6 +469,8 @@ public class ComparConfig
         configBuilder.addFlag(INCLUDE_MATCHES, "Also write matches to output file(s)");
         configBuilder.addFlag(RESTRICT_TO_DRIVERS, "Restrict any comparison involving genes to driver gene panel");
         configBuilder.addFlag(REQUIRES_LIFTOVER, "Lift over ref positions from v37 to v 38");
+        configBuilder.addPath(FIELD_CONFIG_FILE, false, "Config file for overwriting field settings");
+        configBuilder.addFlag(STRICT_FIELD_CONFIG, "Require a complete field config file to be provided");
 
         addDatabaseCmdLineArgs(configBuilder, false);
         addOutputOptions(configBuilder);
@@ -473,7 +495,6 @@ public class ComparConfig
         Threads = 0;
         WriteTypes = WriteType.DEFAULT_WRITE_TYPES;
 
-        Thresholds = new DiffThresholds();
         DriverGenes = Sets.newHashSet();
         IgnoreGenes = Collections.emptySet();
         AlternateTranscriptDriverGenes = Sets.newHashSet();
@@ -481,5 +502,7 @@ public class ComparConfig
         LiftoverCache = new GenomeLiftoverCache();
         RequiresLiftover = false;
         KnownMismatchFile = null;
+        FieldOverrides = null;
+        StrictFieldConfig = false;
     }
 }
