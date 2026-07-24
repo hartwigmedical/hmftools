@@ -114,8 +114,6 @@ public class AssemblyConfig
     public final boolean DiscordantOnlyDisabled;
     public final double DiscordantRateIncrement;
 
-    public static double SampleDiscordantRate = 0;
-
     // debug options
     public final SpecificRegions SpecificChrRegions;
     public final List<Junction> SpecificJunctions;

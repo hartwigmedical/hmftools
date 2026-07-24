@@ -86,6 +86,8 @@ public class AssemblyApplication
     @Nullable
     private final SagaMatcherFactory mSagaMatcherFactory;
 
+    public static double SampleDiscordantRate = 0; // global property for accessibility
+
     private final List<PerformanceCounter> mPerfCounters;
 
     public AssemblyApplication(final ConfigBuilder configBuilder)
@@ -186,7 +188,7 @@ public class AssemblyApplication
         String discStatsFilename = formDiscordantStatsFilename(mConfig.PrepDir, mConfig.sampleId(), mConfig.OutputId);
         mDiscordantStats = loadDiscordantStats(discStatsFilename);
 
-        AssemblyConfig.SampleDiscordantRate = mDiscordantStats.discordantRate();
+        SampleDiscordantRate = mDiscordantStats.discordantRate();
     }
 
     private boolean loadJunctionFiles()
@@ -218,15 +220,15 @@ public class AssemblyApplication
         int minHotspotFrags = MIN_HOTSPOT_JUNCTION_SUPPORT;
         int minDiscordantFrags = DISCORDANT_GROUP_MIN_FRAGMENTS_SHORT;
 
-        if(AssemblyConfig.SampleDiscordantRate >= mConfig.DiscordantRateIncrement)
+        if(SampleDiscordantRate >= mConfig.DiscordantRateIncrement)
         {
-            int discordantRateFactor = (int)floor(AssemblyConfig.SampleDiscordantRate / mConfig.DiscordantRateIncrement);
+            int discordantRateFactor = (int)floor(SampleDiscordantRate / mConfig.DiscordantRateIncrement);
             minJunctionFrags += discordantRateFactor * DISC_RATE_JUNC_INCREMENT;
             minHotspotFrags += discordantRateFactor * DISC_RATE_JUNC_INCREMENT;
             minDiscordantFrags += discordantRateFactor * DISC_RATE_DISC_ONLY_INCREMENT;
 
             SV_LOGGER.info("raised min fragments(hotspot={} junction={} disc-only={}) for discordantRate({})",
-                    minHotspotFrags, minJunctionFrags, minDiscordantFrags, format("%.3f", AssemblyConfig.SampleDiscordantRate));
+                    minHotspotFrags, minJunctionFrags, minDiscordantFrags, format("%.3f", SampleDiscordantRate));
         }
 
         mChrJunctionsMap.putAll(Junction.loadJunctions(

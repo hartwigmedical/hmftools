@@ -839,11 +839,11 @@ public class AlignmentTest
         assemblyAlignment.addBreakend(breakendEnd);
 
         // condition 1 - homology and discordant rate
-        AssemblyConfig.SampleDiscordantRate = WEAK_ASSEMBLY_DISC_RATE + 0.01;
+        AssemblyApplication.SampleDiscordantRate = WEAK_ASSEMBLY_DISC_RATE + 0.01;
         assertTrue(hasSuspectExtension(assemblyAlignment));
 
         // condition 2 - insert length
-        AssemblyConfig.SampleDiscordantRate = 0;
+        AssemblyApplication.SampleDiscordantRate = 0;
         assertTrue(hasSuspectExtension(assemblyAlignment));
 
         // condition 3 - ref repeat

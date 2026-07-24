@@ -37,6 +37,7 @@ import com.hartwig.hmftools.common.bwa.IBwaMemAligner;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.perf.TaskQueue;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
+import com.hartwig.hmftools.esvee.assembly.AssemblyApplication;
 import com.hartwig.hmftools.esvee.assembly.AssemblyConfig;
 import com.hartwig.hmftools.esvee.assembly.output.AlignmentWriter;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
@@ -487,7 +488,7 @@ public class AssemblyAligner extends ThreadTask
             return false;
 
         // has 6+ bases of inexact homology AND the sample has a discordant fragment rate above 2%
-        if(breakend.Homology.length() >= INV_SHORT_MAX_HOMOLOGY_HIGHER && AssemblyConfig.SampleDiscordantRate > WEAK_ASSEMBLY_DISC_RATE)
+        if(breakend.Homology.length() >= INV_SHORT_MAX_HOMOLOGY_HIGHER && AssemblyApplication.SampleDiscordantRate > WEAK_ASSEMBLY_DISC_RATE)
             return true;
 
         // OR has at least 16 bases of insert sequence
