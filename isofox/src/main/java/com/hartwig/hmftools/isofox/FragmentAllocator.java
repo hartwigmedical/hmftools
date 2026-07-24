@@ -731,7 +731,7 @@ public class FragmentAllocator
             }
         }
 
-        if(!read1.isSecondaryAlignment() && !read2.isSecondaryAlignment())
+        if(!read1.isSecondaryAlignment() && !read2.isSecondaryAlignment() && !isConsensusRead)
         {
             mCurrentGenes.addCount(fragmentType, 1);
         }
@@ -1094,7 +1094,7 @@ public class FragmentAllocator
             StringJoiner sj = new StringJoiner(TSV_DELIM);
             sj.add(FLD_GENE_ID).add(FLD_GENE_NAME).add("ReadIndex").add("ReadId");
             sj.add(FLD_CHROMOSOME).add(FLD_POS_START).add(FLD_POS_END).add("Cigar").add("InsertSize").add("MateChr").add("MatePosStart");
-            sj.add("Flags").add("FirstInPair").add("ReadReversed").add("SuppData").add("FragType");
+            sj.add("Flags").add("FirstInPair").add("ReadReversed").add("SuppData").add("Consensus").add("FragType");
             sj.add("TransId").add("TransClass").add("ValidTrans").add("ExonRank").add("ExonStart");
             sj.add("RegionStart").add("RegionEnd").add("RegionClass").add("ScRegionsStart").add("SvRegionsEnd");
             writer.write(sj.toString());
@@ -1154,6 +1154,7 @@ public class FragmentAllocator
             sj.add(String.valueOf(read.isFirstOfPair()));
             sj.add(String.valueOf(read.isReadReversed()));
             sj.add(read.suppAlignmentAsStr());
+            sj.add(String.valueOf(read.isConsensusRead()));
 
             sj.add(geneReadType.toString());
 

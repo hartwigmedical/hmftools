@@ -20,6 +20,8 @@ import static com.hartwig.hmftools.isofox.common.TransMatchType.SPLICE_JUNCTION;
 import static com.hartwig.hmftools.isofox.common.TransMatchType.UNSPLICED;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
@@ -39,6 +41,7 @@ import org.junit.Test;
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
+import htsjdk.samtools.SAMFlag;
 
 public class TransClassificationTest
 {
@@ -168,6 +171,52 @@ public class TransClassificationTest
         read.processOverlappingRegions(Lists.newArrayList(region3));
 
         assertEquals(EXONIC, read.getTranscriptClassification(TRANS_1));
+
+        // short terminal soft clip whose bases stay within the exon is left trans-supporting, not demoted to ALT
+        readBases = REF_BASE_STR_1.substring(0, 18) + "A";
+        read = createReadRecord(1, CHR_1, 300, 317, readBases, createCigar(0, 18, 1));
+        read.setFragmentInsertSize(200);
+        read.processOverlappingRegions(Lists.newArrayList(region3));
+
+        assertEquals(EXONIC, read.getTranscriptClassification(TRANS_1));
+
+        readBases = "AA" + REF_BASE_STR_1.substring(0, 18);
+        read = createReadRecord(1, CHR_1, 102, 119, readBases, createCigar(2, 18, 0));
+        read.setFragmentInsertSize(200);
+        read.processOverlappingRegions(Lists.newArrayList(region1));
+
+        assertEquals(EXONIC, read.getTranscriptClassification(TRANS_1));
+
+        // clip at the realignment window length stays ALT
+        readBases = REF_BASE_STR_1.substring(0, 17) + "AAA";
+        read = createReadRecord(1, CHR_1, 300, 316, readBases, createCigar(0, 17, 3));
+        read.setFragmentInsertSize(200);
+        read.processOverlappingRegions(Lists.newArrayList(region3));
+
+        assertEquals(ALT, read.getTranscriptClassification(TRANS_1));
+    }
+
+    @Test
+    public void testStarChimericFlagNotTrusted()
+    {
+        // STAR clears the proper-pair flag on fragments it calls chimeric, though the reads may be a concordant pair
+        Read read = createReadRecord(1, CHR_1, 100, 119, REF_BASE_STR_1, createCigar(0, 20, 0));
+        read.setFlag(SAMFlag.PROPER_PAIR, false);
+
+        try
+        {
+            // bwa / tars trust the flag, so a cleared proper-pair means chimeric
+            IsofoxConstants.STAR_ALIGNER = false;
+            assertTrue(read.isChimeric());
+
+            // STAR ignores the flag, so the concordant pair is not chimeric
+            IsofoxConstants.STAR_ALIGNER = true;
+            assertFalse(read.isChimeric());
+        }
+        finally
+        {
+            IsofoxConstants.STAR_ALIGNER = false;
+        }
     }
 
     @Test

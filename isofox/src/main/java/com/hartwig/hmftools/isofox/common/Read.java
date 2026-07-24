@@ -374,7 +374,11 @@ public class Read
         if(isTranslocation() || isInversion())
             return true;
 
-        if(!isProperPair() || isSupplementaryAlignment() || mSupplementaryAlignment != null)
+        if(isSupplementaryAlignment() || mSupplementaryAlignment != null)
+            return true;
+
+        // STAR clears the proper-pair flag on its own chimeric calls, so it is not trusted as a chimeric signal
+        if(!STAR_ALIGNER && !isProperPair())
             return true;
 
         return false;
@@ -548,17 +552,29 @@ public class Read
             }
 
             // any read with soft-clipping which cannot be mapped to the next exon, other than for short likely adapter sequence reads,
-            // is classified as alt
+            // is classified as alt, unless the clip is within an exon and a threshold
             if(validTranscriptType(transMatchType) && containsSoftClipping() && !likelyAdaperSoftClipping())
             {
-                if(isLeftClipped() && mSoftClipRegionsMatched[SE_START] == 0)
+                if(isLeftClipped() && mSoftClipRegionsMatched[SE_START] == 0 && !shortClipWithinExon(SE_START, transRegions))
                     transMatchType = ALT;
-                else if(isRightClipped() && mSoftClipRegionsMatched[SE_END] == 0)
+                else if(isRightClipped() && mSoftClipRegionsMatched[SE_END] == 0 && !shortClipWithinExon(SE_END, transRegions))
                     transMatchType = ALT;
             }
 
             mTranscriptClassification.put(transId, transMatchType);
         }
+    }
+
+    private boolean shortClipWithinExon(int se, final List<RegionReadData> transRegions)
+    {
+        int clipLength = se == SE_START ? leftClipLength() : rightClipLength();
+
+        if(clipLength > MAX_SC_WITHIN_EXON_LENGTH)
+            return false;
+
+        return se == SE_START ?
+                getCoordsBoundary(SE_START) - clipLength >= transRegions.stream().mapToInt(RegionReadData::start).min().orElse(0)
+                : getCoordsBoundary(SE_END) + clipLength <= transRegions.stream().mapToInt(RegionReadData::end).max().orElse(0);
     }
 
     public boolean likelyAdaperSoftClipping()
@@ -682,6 +698,7 @@ public class Read
 
     private static final int MIN_SC_BASE_MATCH = 2;
     public static final int MAX_SC_BASE_MATCH = 10;
+    private static final int MAX_SC_WITHIN_EXON_LENGTH = 2; // must stay below the realignment window (REALIGN_MIN_SOFT_CLIP_BASE_LENGTH)
 
     private void checkMissedJunctions(final RegionReadData region)
     {

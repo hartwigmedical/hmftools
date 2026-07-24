@@ -64,7 +64,7 @@ excluded_regions | Drop reads in regions of high multi-mappability
 excluded_gene_id_file | Exclude genes in file, format EnsemblGeneId,GeneName
 enriched_gene_ids | List of EnsemblGeneIds separated by ';', see Enriched Genes information below
 drop_dups | Default is false. By default duplicate fragments will be counted towards transcript expression.
-write_type | Debug only: EXON, SPLICE_JUNC, FRAG_LENGTH, FRAG_LENGTH_BY_GENE, READ, CHIMERIC_READ, CHIMERIC_POSITION_DATA, SPLICE_SITE, TRANS_COMBO;GC_RATIO, separated by ';'
+write_type | Debug only, separated by ';': EXON, SPLICE_JUNC, FRAG_LENGTH, FRAG_LENGTH_BY_GENE, READ, CHIMERIC_READ, CHIMERIC_POSITION_DATA, SPLICE_SITE, TRANS_COMBO, GC_RATIO, MULTI_MAP_LOCI
 
 ### Reference Files
 
@@ -88,8 +88,8 @@ frag_length_min_count | Minimum number of fragments to observe for length distri
 exp_rate_frag_lengths | Discrete buckets for fragment lengths, either with frequency specified or left as zero if to be calculated (ie with -apply_calc_frag_lengths). eg '50-0;75-0;100-0;125-0;150-0;200-0;250-0;300-0;400-0;550-0' 
 read_length | Expected RNA read length (eg 76 or 151), will be computed if not provided
 long_frag_limit | Default 550 bases, fragments longer than this without a splice junction are not considered to support a gene for the purposes of expression
-single_map_qual | Default 60 for bwa-tars and 255 for star, discard reads with map quality below this unless using the config 'apply_map_qual_adjust'
-aligner | Source aligner: 'star' or 'bwa-tars' (default 'bwa-tars')
+single_map_qual | Default 60, or 255 when 'star_aligner' is set. Discard reads with map quality below this.
+star_aligner | Flag, off by default. Off assumes the bwa-tars + REDUX pipeline; set it to apply STAR-aligner settings (raises the default single_map_qual to 255).
 enriched_gene_ids | By default includes: ENSG00000265150;ENSG00000258486;ENSG00000202198;ENSG00000266037;ENSG00000263740;ENSG00000265735
 
 ### Optional output files:
