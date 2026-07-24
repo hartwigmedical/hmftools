@@ -140,8 +140,7 @@ public class BamMetrics
             while(iterator.hasNext())
             {
                 SAMRecord record = iterator.next();
-                boolean passesQC = record.getReadFailsVendorQualityCheckFlag();
-                combinedStats.flagStats().increment(FlagStatType.TOTAL, passesQC);
+                combinedStats.flagStats().processRead(record, false, false); // no consensus for fully-unmapped
             }
         }
 
