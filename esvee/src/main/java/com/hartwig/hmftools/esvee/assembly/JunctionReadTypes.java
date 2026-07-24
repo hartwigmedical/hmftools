@@ -226,9 +226,9 @@ public class JunctionReadTypes
         int readIndexStart = readIndexFromPosition(read, posStart);
         int mismatches = 0;
 
-        for(int i = 0; i < refLength; ++i)
+        for(int i = 0; i < refLength && i < refBases.length; ++i)
         {
-            if(readIndexStart + i >= read.basesLength() || i >= refBases.length)
+            if(readIndexStart + i >= read.basesLength())
                 return false;
 
             if(read.getBases()[readIndexStart + i] != refBases[i])

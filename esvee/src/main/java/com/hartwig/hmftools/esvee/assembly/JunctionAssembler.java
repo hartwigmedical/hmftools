@@ -229,6 +229,7 @@ public class JunctionAssembler
             // check for a SAGA match by sequence, even if a coord match was previously found
             boolean sagaMatched = mSagaMatcher != null && assembly.matchToSaga(mSagaMatcher);
 
+            // now that the assembly has been established, check for short (<32) non-SAGA junctions which would have been dropped by Prep
             boolean isValidPrepJunction = mJunction.softClipBased() ?
                     (mJunction.MaxSoftClipLength >= MIN_VARIANT_LENGTH || assembly.hasLineSequence() || mJunction.Hotspot) : true;
 
