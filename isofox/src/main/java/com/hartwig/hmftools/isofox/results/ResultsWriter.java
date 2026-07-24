@@ -2,12 +2,12 @@ package com.hartwig.hmftools.isofox.results;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.bam.SupplementaryReadData.fromAlignment;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.isofox.WriteType.CHIMERIC_POSITION_DATA;
 import static com.hartwig.hmftools.isofox.WriteType.CHIMERIC_READ;
 import static com.hartwig.hmftools.isofox.WriteType.FRAG_LENGTH_BY_GENE;
 import static com.hartwig.hmftools.isofox.WriteType.GC_RATIO;
+import static com.hartwig.hmftools.isofox.WriteType.MULTI_MAP_LOCI;
 import static com.hartwig.hmftools.isofox.WriteType.READ;
 import static com.hartwig.hmftools.isofox.WriteType.SPLICE_SITE;
 import static com.hartwig.hmftools.isofox.WriteType.TRANS_COMBO;
@@ -29,7 +29,7 @@ import static com.hartwig.hmftools.isofox.common.FragmentType.ALT;
 import static com.hartwig.hmftools.isofox.common.FragmentType.CHIMERIC;
 import static com.hartwig.hmftools.isofox.common.FragmentType.DUPLICATE;
 import static com.hartwig.hmftools.isofox.common.FragmentType.FORWARD_STRAND;
-import static com.hartwig.hmftools.isofox.common.FragmentType.LOW_MAP_QUAL;
+import static com.hartwig.hmftools.isofox.common.FragmentType.MULTI_MAPPED;
 import static com.hartwig.hmftools.isofox.common.FragmentType.REVERSE_STRAND;
 import static com.hartwig.hmftools.isofox.common.FragmentType.TOTAL;
 import static com.hartwig.hmftools.isofox.common.FragmentType.TRANS_SUPPORTING;
@@ -106,6 +106,7 @@ public class ResultsWriter
     private BufferedWriter mSpliceSiteWriter;
     private BufferedWriter mChimericReadWriter;
     private BufferedWriter mChimericPositionDataWriter;
+    private BufferedWriter mMultiMapLociWriter;
 
     public ResultsWriter(final IsofoxConfig config)
     {
@@ -153,6 +154,7 @@ public class ResultsWriter
         closeBufferedWriter(mSpliceSiteWriter);
         closeBufferedWriter(mChimericReadWriter);
         closeBufferedWriter(mChimericPositionDataWriter);
+        closeBufferedWriter(mMultiMapLociWriter);
     }
 
     private void initialiseExternalWriters()
@@ -197,6 +199,9 @@ public class ResultsWriter
 
         if(mConfig.writeType(CHIMERIC_POSITION_DATA))
             initialiseChimericPositionDataWriter();
+
+        if(mConfig.writeType(MULTI_MAP_LOCI))
+            mMultiMapLociWriter = FragmentAllocator.createMultiMapLociWriter(mConfig);
     }
 
     public BufferedWriter getCategoryCountsWriter() { return mCategoryCountsWriter;}
@@ -204,6 +209,7 @@ public class ResultsWriter
     public BufferedWriter getAltSjPassingWriter() { return mAltSjPassingWriter;}
     public BufferedWriter getRetainedIntronWriter() { return mRetainedIntronWriter;}
     public BufferedWriter getReadDataWriter() { return mReadDataWriter; }
+    public BufferedWriter getMultiMapLociWriter() { return mMultiMapLociWriter; }
     public BufferedWriter getSpliceSiteWriter() { return mSpliceSiteWriter; }
     public BufferedWriter getFragmentLengthWriter() { return mGeneFragLengthWriter; }
     public BufferedWriter getReadGcRatioWriter() { return mReadGcRatioWriter; }
@@ -305,7 +311,7 @@ public class ResultsWriter
             sj.add(String.valueOf(fragmentCounts.typeCount(UNSPLICED)));
             sj.add(String.valueOf(fragmentCounts.typeCount(ALT)));
             sj.add(String.valueOf(fragmentCounts.typeCount(CHIMERIC)));
-            sj.add(String.valueOf(fragmentCounts.typeCount(LOW_MAP_QUAL)));
+            sj.add(String.valueOf(fragmentCounts.typeCount(MULTI_MAPPED)));
             sj.add(String.valueOf(fragmentCounts.typeCount(FORWARD_STRAND)));
             sj.add(String.valueOf(fragmentCounts.typeCount(REVERSE_STRAND)));
 

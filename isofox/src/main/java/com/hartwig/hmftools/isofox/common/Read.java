@@ -6,7 +6,9 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.common.bam.CigarUtils.cigarElementsToStr;
 import static com.hartwig.hmftools.common.bam.CigarUtils.leftSoftClipped;
 import static com.hartwig.hmftools.common.bam.CigarUtils.rightSoftClipped;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.XA_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.generateMappedCoords;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
@@ -18,6 +20,7 @@ import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
 import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.MULTI_MAP_QUALITY_THRESHOLD;
+import static com.hartwig.hmftools.isofox.IsofoxConstants.STAR_ALIGNER;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_BOUNDARY;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_INTRON;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.INTRON;
@@ -43,6 +46,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.bam.ClippedSide;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 
@@ -52,6 +56,7 @@ import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMFlag;
 import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.TextCigarCodec;
 
 public class Read
 {
@@ -82,6 +87,8 @@ public class Read
     private String mSupplementaryAlignment;
     private boolean mHasInterGeneSplit;
     private short mMapQuality;
+    private List<AltAlignment> mAltLoci; // alternate genomic mapping loci from XA tag; null if uniquely mapped
+    private boolean mConsensusRead;
 
     private int[] mJunctionPositions; // chimeric junctions
 
@@ -104,7 +111,69 @@ public class Read
 
         read.setSuppAlignment(record.getStringAttribute(SUPPLEMENTARY_ATTRIBUTE));
         read.setMapQuality((short)record.getMappingQuality());
+        read.setAltLoci(parseAltLoci(record.getStringAttribute(XA_ATTRIBUTE)));
+
+        if(record.hasAttribute(CONSENSUS_READ_ATTRIBUTE))
+            read.markConsensusRead();
+
         return read;
+    }
+
+    // an alternate mapping locus from the XA tag: its genomic span and whether that alignment is spliced
+    public static class AltAlignment
+    {
+        public final ChrBaseRegion Region;
+        public final boolean Spliced;
+
+        public AltAlignment(final ChrBaseRegion region, final boolean spliced)
+        {
+            Region = region;
+            Spliced = spliced;
+        }
+    }
+
+    private static List<AltAlignment> parseAltLoci(final String xaTag)
+    {
+        if(xaTag == null || xaTag.isEmpty())
+            return null;
+
+        List<AltAlignment> altLoci = Lists.newArrayList();
+
+        // XA entry format: chr,(+/-)pos,CIGAR,NM
+        for(String entry : xaTag.split(";"))
+        {
+            if(entry.isEmpty())
+                continue;
+
+            String[] fields = entry.split(",");
+
+            if(fields.length < 2)
+                continue;
+
+            try
+            {
+                int position = Math.abs(Integer.parseInt(fields[1]));
+
+                // alt CIGAR gives the ref span and splice status; fall back to a single base when absent
+                int refLength = 1;
+                boolean spliced = false;
+                String cigarStr = fields.length > 2 ? fields[2] : null;
+
+                if(cigarStr != null && !cigarStr.isEmpty())
+                {
+                    refLength = max(TextCigarCodec.decode(cigarStr).getReferenceLength(), 1);
+                    spliced = cigarStr.indexOf('N') >= 0;
+                }
+
+                ChrBaseRegion region = new ChrBaseRegion(fields[0], position, position + refLength - 1);
+                altLoci.add(new AltAlignment(region, spliced));
+            }
+            catch(NumberFormatException e)
+            {
+            }
+        }
+
+        return altLoci.isEmpty() ? null : altLoci;
     }
 
     public Read(
@@ -159,6 +228,7 @@ public class Read
         mHasInterGeneSplit = false;
         mMapQuality = 0;
         mJunctionPositions = null;
+        mConsensusRead = false;
     }
 
     public int range() { return PosEnd - PosStart; }
@@ -238,9 +308,17 @@ public class Read
     public void setMapQuality(short mapQuality) { mMapQuality = mapQuality; }
     public short mapQuality() { return mMapQuality; }
 
+    public void setAltLoci(final List<AltAlignment> altLoci) { mAltLoci = altLoci; }
+    public List<AltAlignment> altLoci() { return mAltLoci; }
+
+    public boolean isConsensusRead() { return mConsensusRead; }
+    public void markConsensusRead() { mConsensusRead = true; }
+
+    public int numLoci() { return mAltLoci != null ? 1 + mAltLoci.size() : 1; }
+
     public int baseLength() { return mReadBases.length(); }
 
-    public boolean isMultiMapped() { return mMapQuality <= MULTI_MAP_QUALITY_THRESHOLD; }
+    public boolean isMultiMapped() { return STAR_ALIGNER ? mMapQuality <= MULTI_MAP_QUALITY_THRESHOLD : numLoci() > 1; }
 
     public int fragmentInsertSize() { return mFragmentInsertSize; }
 
@@ -296,7 +374,11 @@ public class Read
         if(isTranslocation() || isInversion())
             return true;
 
-        if(!isProperPair() || isSupplementaryAlignment() || mSupplementaryAlignment != null)
+        if(isSupplementaryAlignment() || mSupplementaryAlignment != null)
+            return true;
+
+        // STAR clears the proper-pair flag on its own chimeric calls, so it is not trusted as a chimeric signal
+        if(!STAR_ALIGNER && !isProperPair())
             return true;
 
         return false;
@@ -470,17 +552,29 @@ public class Read
             }
 
             // any read with soft-clipping which cannot be mapped to the next exon, other than for short likely adapter sequence reads,
-            // is classified as alt
+            // is classified as alt, unless the clip is within an exon and a threshold
             if(validTranscriptType(transMatchType) && containsSoftClipping() && !likelyAdaperSoftClipping())
             {
-                if(isLeftClipped() && mSoftClipRegionsMatched[SE_START] == 0)
+                if(isLeftClipped() && mSoftClipRegionsMatched[SE_START] == 0 && !shortClipWithinExon(SE_START, transRegions))
                     transMatchType = ALT;
-                else if(isRightClipped() && mSoftClipRegionsMatched[SE_END] == 0)
+                else if(isRightClipped() && mSoftClipRegionsMatched[SE_END] == 0 && !shortClipWithinExon(SE_END, transRegions))
                     transMatchType = ALT;
             }
 
             mTranscriptClassification.put(transId, transMatchType);
         }
+    }
+
+    private boolean shortClipWithinExon(int se, final List<RegionReadData> transRegions)
+    {
+        int clipLength = se == SE_START ? leftClipLength() : rightClipLength();
+
+        if(clipLength > MAX_SC_WITHIN_EXON_LENGTH)
+            return false;
+
+        return se == SE_START ?
+                getCoordsBoundary(SE_START) - clipLength >= transRegions.stream().mapToInt(RegionReadData::start).min().orElse(0)
+                : getCoordsBoundary(SE_END) + clipLength <= transRegions.stream().mapToInt(RegionReadData::end).max().orElse(0);
     }
 
     public boolean likelyAdaperSoftClipping()
@@ -604,6 +698,7 @@ public class Read
 
     private static final int MIN_SC_BASE_MATCH = 2;
     public static final int MAX_SC_BASE_MATCH = 10;
+    private static final int MAX_SC_WITHIN_EXON_LENGTH = 2; // must stay below the realignment window (REALIGN_MIN_SOFT_CLIP_BASE_LENGTH)
 
     private void checkMissedJunctions(final RegionReadData region)
     {
