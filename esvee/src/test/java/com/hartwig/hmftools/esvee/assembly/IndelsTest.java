@@ -17,6 +17,7 @@ import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.calcIndelInferred
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.isWeakIndelBasedUnlinkedAssembly;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportType.INDEL;
 import static com.hartwig.hmftools.esvee.common.IndelCoords.findIndelCoords;
+import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_VARIANT_LENGTH;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -28,6 +29,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.bam.CigarUtils;
+import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
@@ -158,10 +160,16 @@ public class IndelsTest
         // note the indel with 10D does not support the ref but this not currently checked
     }
 
+    protected static Junction createIndelJunction(final String chromosome, final int position, final Orientation orientation)
+    {
+        return new Junction(
+                chromosome, position, orientation, false, true, false, MIN_VARIANT_LENGTH, null);
+    }
+
     @Test
     public void testLongDeleteAssemblies()
     {
-        Junction posJunction = new Junction(CHR_1, 50, FORWARD, false, true, false, null);
+        Junction posJunction = createIndelJunction(CHR_1, 50, FORWARD);
 
         // first a basic assembly with all reads agreeing
         String readBases = REF_BASES_200.substring(11, 51) + REF_BASES_200.substring(100, 140);
@@ -187,7 +195,7 @@ public class IndelsTest
         assertEquals(0, assembly.mismatchReadCount());
 
         // test the other side
-        Junction negJunction = new Junction(CHR_1, 100, REVERSE, false, true, false, null);
+        Junction negJunction = createIndelJunction(CHR_1, 100, REVERSE);
 
         readBases = REF_BASES_200.substring(31, 51) + REF_BASES_200.substring(100, 160);
         read3 = createRead(READ_ID_GENERATOR.nextId(), 100, readBases, "20S60M");
@@ -206,7 +214,7 @@ public class IndelsTest
     public void testJunctionIndelTypeDetermination()
     {
         // a junction is marked as indel in prep but changed to soft-clip based on extension candidate reads
-        Junction posJunction = new Junction(CHR_1, 50, FORWARD, false, true, false, null);
+        Junction posJunction = createIndelJunction(CHR_1, 50, FORWARD);
 
         String readBases = REF_BASES_200.substring(11, 51) + REF_BASES_200.substring(100, 140);
         Read read1 = createRead(READ_ID_GENERATOR.nextId(), 11, readBases, "40M49D40M");
@@ -230,7 +238,7 @@ public class IndelsTest
         assertEquals(0, assembly.mismatchReadCount());
 
         // test indels being more dominant than soft-clips
-        posJunction = new Junction(CHR_1, 50, FORWARD, false, false, false, null);
+        posJunction = createIndelJunction(CHR_1, 50, FORWARD);
 
         readBases = REF_BASES_200.substring(11, 51) + REF_BASES_200.substring(100, 140);
         read1 = createRead(READ_ID_GENERATOR.nextId(), 11, readBases, "40M49D40M");
@@ -306,8 +314,8 @@ public class IndelsTest
     @Test
     public void testIndelAssemblyDedup()
     {
-        Junction indelJunctionPos1 = new Junction(CHR_1, 130, FORWARD, false, true, false, null);
-        Junction indelJunctionNeg1 = new Junction(CHR_1, 131, REVERSE, false, true, false, null);
+        Junction indelJunctionPos1 = createIndelJunction(CHR_1, 130, FORWARD);
+        Junction indelJunctionNeg1 = createIndelJunction(CHR_1, 131, REVERSE);
 
         String leftRefBases = REF_BASES_400.substring(100, 130);
         String rightRefBases = REF_BASES_400.substring(131, 171);
@@ -335,8 +343,8 @@ public class IndelsTest
         indelAssemblyNeg1.setIndelCoords(indelRead.indelCoords());
 
         // create a pair where the pos assemblies don't match and the negatives do
-        Junction indelJunctionPos2 = new Junction(CHR_1, 140, FORWARD, false, true, false, null);
-        Junction indelJunctionNeg2 = new Junction(CHR_1, 141, REVERSE, false, true, false, null);
+        Junction indelJunctionPos2 = createIndelJunction(CHR_1, 140, FORWARD);
+        Junction indelJunctionNeg2 = createIndelJunction(CHR_1, 141, REVERSE);
 
         String insertBases2 = REF_BASES_400.substring(210, 255);
 
