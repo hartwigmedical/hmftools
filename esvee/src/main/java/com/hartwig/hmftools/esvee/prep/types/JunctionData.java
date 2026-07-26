@@ -34,6 +34,7 @@ public class JunctionData
     private int mDepth;
 
     private JunctionData mLinkedIndel;
+    private int mMaxValidSoftClipLength;
 
     @Nullable
     private SagaLocationMatch mSagaMatch;
@@ -60,11 +61,11 @@ public class JunctionData
         mDiscordantGroup = false;
         mDepth = 0;
         mLinkedIndel = null;
+        mMaxValidSoftClipLength = 0;
         mSagaMatch = null;
     }
 
     public boolean isForward() { return Orient.isForward(); }
-
     public boolean isReverse() { return Orient.isReverse(); }
 
     public PrepRead topJunctionRead() { return mTopJunctionRead; }
@@ -110,6 +111,9 @@ public class JunctionData
 
     public boolean internalIndel() { return mInternalIndel; }
     public void markInternalIndel() { mInternalIndel = true; }
+
+    public int maxValidSoftClipLength() { return mMaxValidSoftClipLength; }
+    public void setMaxValidSoftClipLength(int length) { mMaxValidSoftClipLength = length; }
 
     public boolean discordantGroup() { return mDiscordantGroup; }
     public void markDiscordantGroup() { mDiscordantGroup = true; }

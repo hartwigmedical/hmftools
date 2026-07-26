@@ -15,6 +15,7 @@ import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_EXACT_SUPPORT_FR
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_HOTSPOT_JUNCTION;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_INDEL_JUNCTION;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_JUNCTION_FRAGS;
+import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_MAX_VALID_SC;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_OTHER_SUPPORT_FRAGS;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_REMOTE_FRAGS;
 
@@ -132,6 +133,7 @@ public class ResultsWriter
             sj.add("LowMapQualFrags");
             sj.add("InitialReadId");
             sj.add("Depth");
+            sj.add(FLD_MAX_VALID_SC);
 
             if(mConfig.SagaFastaFile != null)
             {
@@ -212,6 +214,7 @@ public class ResultsWriter
 
                 sj.add(junctionData.topJunctionRead() != null ? junctionData.topJunctionRead().id() : "EXISTING");
                 sj.add(String.valueOf(junctionData.depth()));
+                sj.add(String.valueOf(junctionData.maxValidSoftClipLength()));
 
                 if(mConfig.SagaFastaFile != null)
                 {

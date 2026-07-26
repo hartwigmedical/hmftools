@@ -10,13 +10,20 @@ import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ALIGNMENT_REQUERY_SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_UNLINKED_WEAK_ASSEMBLY_EXTENSION_LENGTH;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.WEAK_ASSEMBLY_DISC_RATE;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.WEAK_ASSEMBLY_MAX_REF_REPEAT_LENGTH;
+import static com.hartwig.hmftools.esvee.common.SvConstants.WEAK_ASSEMBLY_LONG_LENGTH;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.WEAK_ASSEMBLY_MIN_INS_LENGTH;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.WEAK_ASSEMBLY_MIN_REF_REPEAT;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.WEAK_ASSEMBLY_UNPAIRED_LONG_EXT_FACTOR;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.WEAK_ASSEMBLY_UNPAIRED_LONG_EXT_FACTOR_LOWER;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.WEAK_ASSEMBLY_UNPAIRED_MAX_READS;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.WEAK_ASSEMBLY_UNPAIRED_READ_FACTOR;
 import static com.hartwig.hmftools.esvee.assembly.SeqTechUtils.SBX_MEDIUM_QUAL_DESYNC_COUNT;
 import static com.hartwig.hmftools.esvee.assembly.SeqTechUtils.SBX_PRIME_POSITION_RANGE_THRESHOLD;
 import static com.hartwig.hmftools.esvee.assembly.alignment.Alignment.writeAssemblyData;
 import static com.hartwig.hmftools.esvee.assembly.alignment.AssemblyAlignment.isLocalIndelAssembly;
+import static com.hartwig.hmftools.esvee.common.SvConstants.INV_SHORT_MAX_HOMOLOGY_HIGHER;
 import static com.hartwig.hmftools.esvee.common.SvConstants.isIllumina;
 
 import java.util.Collections;
@@ -29,9 +36,12 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.bwa.IBwaMemAligner;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.perf.TaskQueue;
+import com.hartwig.hmftools.common.sv.StructuralVariantType;
+import com.hartwig.hmftools.esvee.assembly.AssemblyApplication;
 import com.hartwig.hmftools.esvee.assembly.AssemblyConfig;
 import com.hartwig.hmftools.esvee.assembly.output.AlignmentWriter;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
+import com.hartwig.hmftools.esvee.assembly.types.RepeatInfo;
 import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
 import com.hartwig.hmftools.esvee.assembly.types.SupportType;
 import com.hartwig.hmftools.esvee.assembly.types.ThreadTask;
@@ -453,20 +463,78 @@ public class AssemblyAligner extends ThreadTask
             return false;
         }
 
+        boolean hasSuspectExtension = hasSuspectExtension(assemblyAlignment);
+
         if(isIllumina())
         {
-            return assembly.stats().SoftClipSecondMaxLength < ASSEMBLY_MIN_SOFT_CLIP_LENGTH; // only 1 read above the min length
+            if(assembly.stats().SoftClipSecondMaxLength < ASSEMBLY_MIN_SOFT_CLIP_LENGTH) // only 1 read above the min length
+                return true;
+
+            if(!hasSuspectExtension)
+                return false;
         }
-        else
-        {
-            // see if there is a minority of longer reads being
-            return hasLongerMinorityExtensions(assembly.support(), assembly.junction().Orient);
-        }
+
+        // see if there is a minority of longer reads being
+        return hasLongerMinorityExtensions(assembly.support(), assembly.junction().Orient, hasSuspectExtension);
     }
 
     @VisibleForTesting
-    public static boolean hasLongerMinorityExtensions(final List<SupportRead> reads, final Orientation assemblyOrientation)
+    public static boolean hasSuspectExtension(final AssemblyAlignment assemblyAlignment)
     {
+        Breakend breakend = assemblyAlignment.breakends().get(0);
+
+        // the variant is a BND or has over 100k length
+        if(breakend.svType() != StructuralVariantType.BND && breakend.svLength() < WEAK_ASSEMBLY_LONG_LENGTH)
+            return false;
+
+        // has 6+ bases of inexact homology AND the sample has a discordant fragment rate above 2%
+        if(breakend.Homology.length() >= INV_SHORT_MAX_HOMOLOGY_HIGHER && AssemblyApplication.SampleDiscordantRate > WEAK_ASSEMBLY_DISC_RATE)
+            return true;
+
+        // OR has at least 16 bases of insert sequence
+        if(breakend.InsertedBases.length() >= WEAK_ASSEMBLY_MIN_INS_LENGTH)
+            return true;
+
+        // OR is adjacent to a ref repeat of 7+ bp)
+        for(JunctionAssembly assembly : assemblyAlignment.assemblies())
+        {
+            String refBases = assembly.formRefBaseSequence();
+            String adjacentRefBases;
+            int minRefLength = WEAK_ASSEMBLY_MIN_REF_REPEAT * WEAK_ASSEMBLY_MAX_REF_REPEAT_LENGTH;
+
+            if(refBases.length() <= minRefLength)
+            {
+                adjacentRefBases = refBases;
+            }
+            else if(assembly.isForwardJunction())
+            {
+                adjacentRefBases = refBases.substring(refBases.length() - minRefLength);
+            }
+            else
+            {
+                adjacentRefBases = refBases.substring(0, minRefLength);
+            }
+
+            List<RepeatInfo> refRepeats = RepeatInfo.findRepeats(adjacentRefBases.getBytes(), WEAK_ASSEMBLY_MIN_REF_REPEAT);
+
+            if(assembly.isForwardJunction())
+                return refRepeats.stream().anyMatch(x -> x.lastIndex() >= adjacentRefBases.length() - x.repeatLength());
+            else
+                return refRepeats.stream().anyMatch(x -> x.Index == 0);
+        }
+
+        return false;
+    }
+
+    @VisibleForTesting
+    public static boolean hasLongerMinorityExtensions(
+            final List<SupportRead> reads, final Orientation assemblyOrientation, boolean useIncreasedLimits)
+    {
+        // in these cases:
+        // - add one extra read to maxLongReadCount (still capped at 3)
+        // - lower WEAK_ASSEMBLY_UNPAIRED_LONG_EXT_FACTOR to 2 for all comparisons before the last allowed one (so if maxLongReadCount = 2,
+        //   the first check uses 2, the second uses 2.5)
+
         List<Integer> extensionLengths = Lists.newArrayListWithCapacity(reads.size());
 
         for(SupportRead read : reads)
@@ -501,7 +569,15 @@ public class AssemblyAligner extends ThreadTask
             }
         }
 
-        double maxLongReadCount = min(max(reads.size() / WEAK_ASSEMBLY_UNPAIRED_READ_FACTOR, minLongReadCount), WEAK_ASSEMBLY_UNPAIRED_MAX_READS);
+        double maxLongReadCount = max(reads.size() / WEAK_ASSEMBLY_UNPAIRED_READ_FACTOR, minLongReadCount);
+
+        if(useIncreasedLimits)
+            ++maxLongReadCount;
+
+        maxLongReadCount = min(maxLongReadCount, WEAK_ASSEMBLY_UNPAIRED_MAX_READS);
+
+        double upperFactor = WEAK_ASSEMBLY_UNPAIRED_LONG_EXT_FACTOR;
+        double lowerFactor = useIncreasedLimits ? WEAK_ASSEMBLY_UNPAIRED_LONG_EXT_FACTOR_LOWER : upperFactor;
 
         for(int i = 0; i < extensionLengths.size() - 1; ++i)
         {
@@ -513,7 +589,9 @@ public class AssemblyAligner extends ThreadTask
             if(readCount > maxLongReadCount)
                 return false;
 
-            if(extLength > nextLength * WEAK_ASSEMBLY_UNPAIRED_LONG_EXT_FACTOR)
+            double longExtFactor = readCount == maxLongReadCount ? upperFactor : lowerFactor;
+
+            if(extLength > nextLength * longExtFactor)
                 return true;
         }
 
