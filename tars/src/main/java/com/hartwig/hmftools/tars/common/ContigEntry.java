@@ -16,4 +16,12 @@ public record ContigEntry(
         int strand,
         List<BaseRegion> exonSpans)
 {
+    // an annotation-only entry (contigStart==0, no contig): a transcript skipped from the FASTA whose exons are
+    // still recorded so the liftback exon index has full ensembl coverage
+    public static ContigEntry annotationOnly(
+            final String geneId, final String geneName, final String transName, final String chromosome,
+            final int strand, final List<BaseRegion> exonSpans)
+    {
+        return new ContigEntry("", 0, 0, geneId, geneName, transName, chromosome, strand, exonSpans);
+    }
 }
