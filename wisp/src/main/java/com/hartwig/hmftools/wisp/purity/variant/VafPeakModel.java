@@ -55,16 +55,16 @@ public class VafPeakModel extends ClonalityModel
         if(purityCalcData.RawPurityEstimate < purityCalcData.LodPurityEstimate)
             return false;
 
-        if(fragmentTotals.sampleTwoPlusCount() < SOMATIC_PEAK_MIN_FRAG_VARIANTS)
+        if(fragmentTotals.twoPlusCount() < SOMATIC_PEAK_MIN_FRAG_VARIANTS)
             return false;
 
         if(fragmentTotals.weightedSampleDepth() < SOMATIC_PEAK_MIN_AVG_DEPTH)
             return false;
 
-        if(fragmentTotals.sampleTwoPlusCount() > fragmentTotals.sampleOneFragmentCount() * 3)
+        if(fragmentTotals.weightedTwoPlusCount() > fragmentTotals.weightedOneFragmentCount() * 3)
             return true;
 
-        return purityCalcData.RawPurityEstimate > 0.01 && fragmentTotals.sampleTwoPlusCount() > fragmentTotals.sampleOneFragmentCount();
+        return purityCalcData.RawPurityEstimate > 0.01 && fragmentTotals.weightedTwoPlusCount() > fragmentTotals.weightedOneFragmentCount();
     }
 
     @Override

@@ -14,8 +14,11 @@ public class FragmentTotals
     private double mDepthToCopyNumberWeightingTotal;
     private double mSampleWeightedAfTotal;
 
-    private int mSampleOneFragmentCount; // count of variants with 1 observed fragment
-    private int mSampleTwoPlusCount;
+    private int mOneFragmentCount; // count of variants with 1 observed fragment
+    private int mTwoPlusCount;
+
+    private double mWeightedOneFragmentCount;
+    private double mWeightedTwoPlusCount;
 
     private double mSampleWeightedDepthTotal;
 
@@ -33,8 +36,10 @@ public class FragmentTotals
         mSampleDepthTotal = 0;
         mDepthToCopyNumberWeightingTotal = 0;
         mSampleWeightedAfTotal = 0;
-        mSampleOneFragmentCount = 0;
-        mSampleTwoPlusCount = 0;
+        mOneFragmentCount = 0;
+        mTwoPlusCount = 0;
+        mWeightedOneFragmentCount = 0;
+        mWeightedTwoPlusCount = 0;
         mSampleWeightedDepthTotal = 0;
         mVcnSampleDepthTotal = 0;
         mCnSampleDepthTotal = 0;
@@ -56,13 +61,19 @@ public class FragmentTotals
         mSampleFragsTotal += sampleAlleleFrags;
         mSampleDepthTotal += sampleDepth;
 
-        if(sampleAlleleFrags >= 2)
-            ++mSampleTwoPlusCount;
-        else if(sampleAlleleFrags == 1)
-            ++mSampleOneFragmentCount;
-
         double depthToCopyNumberFactor = sampleDepth / max(copyNumber, 1);  // ratio of actual to expected sample DP (low for off-target variants)
         mDepthToCopyNumberWeightingTotal += depthToCopyNumberFactor;
+
+        if(sampleAlleleFrags >= 2)
+        {
+            ++mTwoPlusCount;
+            mWeightedTwoPlusCount += depthToCopyNumberFactor;
+        }
+        else if(sampleAlleleFrags == 1)
+        {
+            ++mOneFragmentCount;
+            mWeightedOneFragmentCount += depthToCopyNumberFactor;
+        }
 
         if(sampleDepth > 0)
             mSampleWeightedAfTotal += (sampleAlleleFrags / (double)sampleDepth) * depthToCopyNumberFactor;
@@ -77,8 +88,10 @@ public class FragmentTotals
     public int variantCount() { return mVariantCount; }
     public int sampleAdTotal() { return mSampleFragsTotal; }
     public int sampleDepthTotal() { return mSampleDepthTotal; }
-    public int sampleOneFragmentCount() { return mSampleOneFragmentCount; }
-    public int sampleTwoPlusCount() { return mSampleTwoPlusCount; }
+    public int oneFragmentCount() { return mOneFragmentCount; }
+    public int twoPlusCount() { return mTwoPlusCount; }
+    public double weightedOneFragmentCount() { return mWeightedOneFragmentCount; }
+    public double weightedTwoPlusCount() { return mWeightedTwoPlusCount; }
 
     public void setTumorVafOverride(final double vaf) { mTumorVafOverride = vaf; }
 

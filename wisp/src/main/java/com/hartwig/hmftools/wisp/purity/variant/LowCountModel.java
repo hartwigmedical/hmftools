@@ -21,7 +21,7 @@ import com.hartwig.hmftools.wisp.purity.ResultsWriter;
 import com.hartwig.hmftools.wisp.purity.SampleData;
 import com.hartwig.hmftools.wisp.purity.PurityConstants;
 
-import org.apache.commons.math3.distribution.PoissonDistribution;
+import org.apache.commons.math3.distribution.BinomialDistribution;
 
 public class LowCountModel extends ClonalityModel
 {
@@ -90,14 +90,14 @@ public class LowCountModel extends ClonalityModel
 
         List<SomaticVariant> filteredVariants = Lists.newArrayList();
 
-        int observedFrag1 = fragmentTotals.sampleOneFragmentCount();
-        int observedFrag2Plus = fragmentTotals.sampleTwoPlusCount();
+        int observedFrag1 = 0;
+        int observedFrag2Plus = 0;
 
         for(SomaticVariant variant : mVariants)
         {
             GenotypeFragments sampleFragData = variant.findGenotypeData(sampleId);
 
-            if(useVariant(variant, sampleFragData) && sampleFragData.Depth > 0)
+            if(useVariant(variant, sampleFragData) && sampleFragData.Depth > 1)
             {
                 filteredVariants.add(variant);
 
@@ -108,7 +108,7 @@ public class LowCountModel extends ClonalityModel
             }
         }
 
-        if(fragmentTotals.sampleOneFragmentCount() == 0)
+        if(fragmentTotals.oneFragmentCount() == 0)
             return NO_RESULT;
 
         List<SimulatedVafCalcs> simulatedVafCalcs = Lists.newArrayList();
@@ -128,12 +128,10 @@ public class LowCountModel extends ClonalityModel
             {
                 GenotypeFragments sampleFragData = variant.findGenotypeData(sampleId);
 
-                double expectedAD = sampleFragData.Depth * simulatedVaf;
+                BinomialDistribution binomial = new BinomialDistribution(sampleFragData.Depth, simulatedVaf);
 
-                PoissonDistribution poisson = new PoissonDistribution(expectedAD);
-
-                double probFrag1 = poisson.probability(1);
-                double probFrag2Plus = 1 - poisson.cumulativeProbability(1);
+                double probFrag1 = binomial.probability(1);
+                double probFrag2Plus = 1 - binomial.cumulativeProbability(1);
 
                 probTotalFrag1 += probFrag1;
                 probTotalFrag2Plus += probFrag2Plus;

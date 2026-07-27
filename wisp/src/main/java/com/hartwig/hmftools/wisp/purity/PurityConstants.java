@@ -64,7 +64,7 @@ public class PurityConstants
     public static final double SYNTHETIC_TUMOR_VAF = 0.5;
 
     public static final double MAX_COPY_NUMBER_FOR_FITTING = 10;
-    public static final double MAX_PURITY_TO_CLIP = 1.1;
+    public static final double MAX_PURITY_TO_CLIP = 1.25;
     public static final double FRAGMENT_DAMPENING_FACTOR = 0.9;
 
     public static final int OUTLIER_MIN_ALLELE_FRAGS = 4;

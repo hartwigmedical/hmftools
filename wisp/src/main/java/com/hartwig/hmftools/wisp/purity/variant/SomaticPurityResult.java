@@ -114,8 +114,8 @@ public class SomaticPurityResult
         sj.add(formatPurityValue(PurityCalcs.PurityRangeHigh));
         sj.add(String.valueOf(PurityCalcs.Clonality.Method));
 
-        sj.add(format("%d", FragTotals.sampleOneFragmentCount()));
-        sj.add(format("%d", FragTotals.sampleTwoPlusCount()));
+        sj.add(format("%d", FragTotals.oneFragmentCount()));
+        sj.add(format("%d", FragTotals.twoPlusCount()));
         sj.add(format("%d", PurityCalcs.Clonality.VariantCount));
         sj.add(format("%.2f", PurityCalcs.Clonality.DropoutRate));
         sj.add(formatProbabilityValue(PurityCalcs.DualProbability));
