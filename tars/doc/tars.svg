@@ -1,0 +1,109 @@
+<svg viewBox="0 0 880 320" xmlns="http://www.w3.org/2000/svg" role="img">
+<title>How TARS works</title>
+<desc>Pipeline overview: RNA reads are aligned by bwa-mem2 against the genome plus transcript contigs built by SpliceFastaBuilder, TarsApplication lifts the reads back to genome coordinates, and the resulting splice-aware BAM feeds REDUX then ISOFOX.</desc>
+<style>
+svg { font-family: Arial, Helvetica, sans-serif; }
+svg {
+  /* transcript / matched */
+  --tx:#2F7DC6; --tx-dark:#0C447C; --tx-deep:#1C4F7C; --tx-soft:#A9CDEA;
+  --exon:#E6F1FB; --exon-line:#4A90C4;
+  /* kept / genomic-good */
+  --keep:#1F8A4C; --keep-dark:#166534; --keep-mid:#3F9A5E; --keep-soft:#E3F2E8; --keep-soft2:#EAF6EE;
+  /* softclip / caution */
+  --warn:#EFB94B; --warn-line:#D89B14; --warn-dark:#6B4E04; --warn-dark2:#7A4F01; --warn-soft:#FBEFD0;
+  /* boundary / dropped */
+  --drop:#C0392B; --drop-soft:#FBE3E0;
+  /* supplementary */
+  --supp:#B07CC6;
+  /* neutrals */
+  --ink:#333333; --ink2:#111111; --sub:#6B6862; --label:#5C5953; --muted:#9B9893;
+  --line:#B8B5AE; --border:#E4E2DD; --border2:#C7C5BF; --border3:#E0DED9;
+  --panel:#FCFCFB; --panel2:#FAFAF8; --panel3:#EFEFEC; --panel4:#ECECEA; --bg:#FFFFFF;
+}
+/* text roles */
+.title   { font-size:14px; font-weight:600; fill:var(--tx-dark); }
+.sub     { font-size:11px; font-weight:600; fill:var(--sub); }
+.lbl     { font-size:9.5px; fill:var(--label); }
+.note    { font-size:9.5px; fill:var(--muted); }
+.coord   { font-size:10px;  fill:var(--sub); }
+.exonlbl { font-size:9.5px; fill:var(--tx-dark); text-anchor:middle; }
+.oncig   { font-size:11px; fill:#FFFFFF; text-anchor:middle; }   /* cigar on a filled bar */
+/* alignment-track shapes */
+.bg      { fill:var(--bg); }
+.m       { fill:var(--tx); }                                     /* matched (M) bar */
+.exon    { fill:var(--exon); stroke:var(--exon-line); }
+.intron  { stroke:var(--tx); stroke-width:2; fill:none; }        /* spliced-read N */
+.gline   { stroke:var(--line); stroke-width:1.6; }               /* genome intron span */
+.keepbar { fill:var(--keep); }
+.tick    { stroke:var(--sub); stroke-width:1.3; }
+.bnd     { stroke:var(--drop); stroke-width:1.6; stroke-dasharray:3,2; }  /* boundary line */
+/* panels / flow */
+.panel   { fill:var(--panel); stroke:var(--border); }
+.arrline { stroke:var(--muted); stroke-width:1.4; }
+/* flow-diagram roles */
+.node    { fill:var(--panel); stroke:var(--border2); stroke-width:1.2; }
+.nodeadd { fill:var(--exon); stroke:var(--exon-line); stroke-width:1.4; }  /* stage tars adds */
+.nodett  { font-size:12px; font-weight:600; fill:var(--tx-dark); text-anchor:middle; }
+.nodesub { font-size:9px; fill:var(--muted); text-anchor:middle; }
+.group   { fill:none; stroke:var(--muted); stroke-width:1.3; stroke-dasharray:5,4; }
+</style>
+<defs>
+  <marker id="arr" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto">
+    <path d="M0,0 L6,3 L0,6 Z" fill="#9B9893"/>
+  </marker>
+  <marker id="arrSupp" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto">
+    <path d="M0,0 L6,3 L0,6 Z" fill="#B07CC6"/>
+  </marker>
+  <pattern id="softclip" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+    <rect width="5" height="5" fill="#FBEFD0"/>
+    <line x1="0" y1="0" x2="0" y2="5" stroke="#EFB94B" stroke-width="1.6"/>
+  </pattern>
+</defs>
+<rect class="bg" x="0" y="0" width="880" height="320"/>
+
+<text class="title" x="60" y="42" style="font-size:16px">How TARS works</text>
+
+<g transform="translate(0,-28)">
+<!-- dashed group: the stages the tars module owns; borders sit mid-gap, clear of the outside boxes -->
+<rect class="group" x="209" y="100" width="314" height="220" rx="6"/>
+<text class="sub" x="511" y="310" text-anchor="end">TARS</text>
+
+<!-- main flow: RNA reads -> bwa-mem2 -> TarsApplication -> BAM -> REDUX -->
+<rect class="node" x="60"  y="116" width="132" height="64" rx="8"/>
+<text class="nodett"  x="126" y="146">RNA Reads</text>
+<text class="nodesub" x="126" y="162">raw FASTQ files</text>
+
+<rect class="node" x="226" y="116" width="132" height="64" rx="8"/>
+<text class="nodett"  x="292" y="146">bwa-mem2</text>
+<text class="nodesub" x="292" y="162">DNA aligner</text>
+
+<rect class="nodeadd" x="374" y="116" width="132" height="64" rx="8"/>
+<text class="nodett"  x="440" y="146">TarsApplication</text>
+<text class="nodesub" x="440" y="162">move reads to genome coords</text>
+
+<rect class="node" x="540" y="116" width="132" height="64" rx="8"/>
+<text class="nodett"  x="606" y="146">BAM file</text>
+<text class="nodesub" x="606" y="162">splice junctions recovered</text>
+
+<rect class="node" x="688" y="116" width="132" height="64" rx="8"/>
+<text class="nodett"  x="754" y="146">REDUX</text>
+<text class="nodesub" x="754" y="162">unmap; dedup; etc</text>
+<text class="note" x="754" y="200" text-anchor="middle">and then into <tspan fill="var(--tx-dark)" font-weight="600">ISOFOX</tspan></text>
+
+<line class="arrline" x1="192" y1="148" x2="226" y2="148" marker-end="url(#arr)"/>
+<line class="arrline" x1="358" y1="148" x2="374" y2="148" marker-end="url(#arr)"/>
+<line class="arrline" x1="506" y1="148" x2="540" y2="148" marker-end="url(#arr)"/>
+<line class="arrline" x1="672" y1="148" x2="688" y2="148" marker-end="url(#arr)"/>
+
+<!-- SpliceFastaBuilder builds the aligner's reference; run once per ref -->
+<rect class="nodeadd" x="226" y="232" width="132" height="64" rx="8"/>
+<text class="nodett"  x="292" y="262">SpliceFastaBuilder</text>
+<text class="nodesub" x="292" y="278">genome + contigs</text>
+<text class="note" x="358" y="310" text-anchor="end" style="font-size:8px">run once per ref</text>
+<line class="arrline" x1="292" y1="230" x2="292" y2="182" marker-end="url(#arr)"/>
+</g>
+
+<!-- key: tinted boxes are the stages tars adds -->
+<rect x="708" y="272" width="20" height="12" rx="2" fill="var(--exon)" stroke="var(--exon-line)"/>
+<text class="note" x="734" y="282">added by TARS</text>
+</svg>
