@@ -73,7 +73,8 @@ public class ComparConfig
     public final List<String> SampleIds;
     public final Map<String,String> SampleToReferenceIds; // mapping of tumor to reference ID
 
-    public final Map<CategoryType,MatchLevel> Categories;
+    public final Set<CategoryType> Categories;
+    public final MatchLevel MatchingLevel;
 
     public final List<SourceData> Sources;
 
@@ -124,22 +125,22 @@ public class ComparConfig
     {
         mIsValid = true;
 
-        Categories = Maps.newHashMap();
+        Categories = Sets.newHashSet();
 
-        MatchLevel matchLevel = MatchLevel.valueOf(configBuilder.getValue(MATCH_LEVEL));
+        MatchingLevel = MatchLevel.valueOf(configBuilder.getValue(MATCH_LEVEL));
 
         String categoriesStr = configBuilder.getValue(CATEGORIES);
 
-        CMP_LOGGER.info("default match level {}, categories: {}", matchLevel, categoriesStr);
+        CMP_LOGGER.info("default match level {}, categories: {}", MatchingLevel, categoriesStr);
 
         if(categoriesStr.equals(ALL_CATEGORIES))
         {
-            Arrays.stream(CategoryType.values()).forEach(x -> Categories.put(x, matchLevel));
+            Arrays.stream(CategoryType.values()).forEach(x -> Categories.add(x));
         }
         else if(categoriesStr.contains(PANEL_CATEGORIES))
         {
             if(categoriesStr.contains(PANEL_CATEGORIES))
-                CategoryType.panelCategories().forEach(x -> Categories.put(x, matchLevel));
+                CategoryType.panelCategories().forEach(x -> Categories.add(x));
         }
         else
         {
@@ -149,11 +150,11 @@ public class ComparConfig
             for(String catStr : categoryStrings)
             {
                 if(catStr.equals(PURPLE_CATEGORIES))
-                    purpleCategories().forEach(x -> Categories.put(x, matchLevel));
+                    purpleCategories().forEach(x -> Categories.add(x));
                 else if(catStr.equals(LINX_CATEGORIES))
-                    linxCategories().forEach(x -> Categories.put(x, matchLevel));
+                    linxCategories().forEach(x -> Categories.add(x));
                 else
-                    Categories.put(CategoryType.valueOf(catStr), matchLevel);
+                    Categories.add(CategoryType.valueOf(catStr));
             }
         }
 
@@ -488,7 +489,8 @@ public class ComparConfig
         Sources.add(new SourceData(OLD, null, null));
         Sources.add(new SourceData(NEW, null, null));
 
-        Categories = Maps.newHashMap();
+        Categories = Sets.newHashSet();
+        MatchingLevel = REPORTABLE;
         OutputDir = null;
         OutputId = "";
         IncludeMatches = false;

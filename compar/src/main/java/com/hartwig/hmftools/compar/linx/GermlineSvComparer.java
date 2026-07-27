@@ -80,7 +80,7 @@ public class GermlineSvComparer implements ItemComparer
 
         Map<String,List<BreakendData>> geneBreakendMap = Maps.newHashMap();
 
-        MatchLevel matchLevel = mConfig.Categories.getOrDefault(GERMLINE_SV, MatchLevel.REPORTABLE);
+        MatchLevel matchLevel = mConfig.MatchingLevel;
 
         try
         {

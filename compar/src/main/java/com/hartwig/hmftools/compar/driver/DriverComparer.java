@@ -252,7 +252,7 @@ public class DriverComparer implements ItemComparer
     @Override
     public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final FileSources fileSources)
     {
-        Set<CategoryType> categories = mConfig.Categories.keySet();
+        Set<CategoryType> categories = mConfig.Categories;
 
         boolean missingCatalogFile = false;
         if(!mPurpleSomaticDriversLoaded && hasOverlap(categories, CategoryType.purpleSomaticOnlyCategories()))

@@ -244,7 +244,7 @@ public class MismatchWriter
     private List<Field> determineDisplayFields(final ItemComparer comparer)
     {
         CategoryType category = comparer.category();
-        MatchLevel matchLevel = mConfig.Categories.get(category);
+        MatchLevel matchLevel = mConfig.MatchingLevel;
         Map<String, Field> fieldNameToField = comparer.fields(matchLevel).stream().collect(Collectors.toMap(Field::name, f -> f));
 
         List<Field> list = new ArrayList<>();

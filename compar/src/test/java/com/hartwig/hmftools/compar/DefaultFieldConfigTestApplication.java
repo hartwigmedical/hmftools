@@ -56,7 +56,7 @@ public class DefaultFieldConfigTestApplication
 
         for(CategoryType category : CategoryType.values())
         {
-            config.Categories.put(category, matchLevel);
+            config.Categories.add(category);
         }
 
         FieldConfig fieldConfig = initialiseFieldConfig(config);

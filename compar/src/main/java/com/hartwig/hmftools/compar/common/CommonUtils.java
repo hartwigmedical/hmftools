@@ -76,16 +76,16 @@ public class CommonUtils
     public static List<ItemComparer> buildComparers(final ComparConfig config)
     {
         List<ItemComparer> comparers = Lists.newArrayList();
+        MatchLevel matchLevel = config.MatchingLevel;
 
         // load in a predictable order irrespective of config
         for(CategoryType category : CategoryType.values())
         {
-            if(!config.Categories.containsKey(category))
+            if(!config.Categories.contains(category))
             {
                 continue;
             }
 
-            MatchLevel matchLevel = config.Categories.get(category);
 
             ItemComparer comparer = createComparer(category, config);
 
@@ -98,13 +98,13 @@ public class CommonUtils
         }
 
         // link related or dependent comparers - could make this a virtual method too if becomes more common
-        if(config.Categories.containsKey(FUSION))
+        if(config.Categories.contains(FUSION))
         {
             FusionComparer fusionComparer = (FusionComparer)(comparers.stream()
                     .filter(x -> x.category() == FUSION).findFirst().orElse(null));
 
             DisruptionComparer disruptionComparer;
-            if(config.Categories.containsKey(DISRUPTION))
+            if(config.Categories.contains(DISRUPTION))
             {
                 disruptionComparer = (DisruptionComparer)(comparers.stream()
                         .filter(x -> x.category() == DISRUPTION).findFirst().orElse(null));
@@ -225,10 +225,11 @@ public class CommonUtils
         }
     }
 
-    public static boolean processSample(final ItemComparer comparer, final ComparConfig config, final String sampleId,
+    public static boolean processSample(
+            final ItemComparer comparer, final ComparConfig config, final String sampleId,
             final List<Mismatch> mismatches, final FieldConfig fieldConfig)
     {
-        final MatchLevel matchLevel = config.Categories.get(comparer.category());
+        MatchLevel matchLevel = config.MatchingLevel;
 
         Map<SourceType,List<ComparableItem>> sourceItems = Maps.newHashMap();
 
@@ -452,14 +453,11 @@ public class CommonUtils
 
     public static FieldConfig initialiseFieldConfig(ComparConfig config)
     {
+        MatchLevel matchLevel = config.MatchingLevel;
         FieldConfig fieldConfig = new FieldConfig();
-        for(CategoryType category : CategoryType.values())
+
+        for(CategoryType category : config.Categories)
         {
-            if(!config.Categories.containsKey(category))
-                continue;
-
-            MatchLevel matchLevel = config.Categories.get(category);
-
             ItemComparer comparer = createComparer(category, config);
 
             fieldConfig.registerFields(comparer, matchLevel);

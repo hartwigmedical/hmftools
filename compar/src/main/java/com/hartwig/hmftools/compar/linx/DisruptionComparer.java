@@ -143,7 +143,7 @@ public class DisruptionComparer implements ItemComparer
 
         Map<String,List<BreakendData>> geneBreakendMap = Maps.newHashMap();
 
-        MatchLevel matchLevel = mConfig.Categories.getOrDefault(DISRUPTION, MatchLevel.REPORTABLE);
+        MatchLevel matchLevel = mConfig.MatchingLevel;
 
         List<StructuralVariantData> svDataList = mSvDataList.get(sourceType);
         List<LinxBreakend> breakends = mBreakends.get(sourceType);
