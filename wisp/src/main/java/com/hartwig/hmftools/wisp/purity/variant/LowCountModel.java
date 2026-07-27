@@ -83,6 +83,9 @@ public class LowCountModel extends ClonalityModel
     @Override
     public ClonalityData calculate(final String sampleId, final FragmentTotals fragmentTotals, final PurityCalcData purityCalcData)
     {
+        if(fragmentTotals.oneFragmentCount() == 0)
+            return NO_RESULT;
+
         double estimateVaf = fragmentTotals.adjSampleVaf();
 
         if(estimateVaf == 0)
@@ -107,9 +110,6 @@ public class LowCountModel extends ClonalityModel
                     ++observedFrag2Plus;
             }
         }
-
-        if(fragmentTotals.oneFragmentCount() == 0)
-            return NO_RESULT;
 
         List<SimulatedVafCalcs> simulatedVafCalcs = Lists.newArrayList();
 
