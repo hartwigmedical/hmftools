@@ -2,6 +2,7 @@ package com.hartwig.hmftools.orange.report.tables;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_JUNCTIONS;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_RNA_FRAGS;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_TYPE;
@@ -9,11 +10,9 @@ import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatSingle
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_DRIVER;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_FUSION;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_JCN;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_RNA;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.addEntry;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.cellArray;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.floatArray;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatSupportField;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -74,7 +73,7 @@ public final class DnaFusionTable
 
             if(hasRna)
             {
-                rowCells.add(cells.createContent(String.valueOf(fusion.rnaSupport().alleleReadCount())));
+                rowCells.add(cells.createContent(rnaFragmentsField(fusion)));
             }
 
             rowCells.add(cells.createContent(fusion.driverInterpretation().toString()));
@@ -115,15 +114,18 @@ public final class DnaFusionTable
         throw new IllegalStateException();
     }
 
-    /*
-    private static String rnaSupportField(final AllelicDepth rnaSupport)
+    private static String rnaFragmentsField(final LinxFusion fusion)
     {
+        AllelicDepth rnaSupport = fusion.rnaSupport();
         if(rnaSupport == null)
+        {
+            LOGGER.warn("INFRA-3120: LINX fusion {}::{} has no matching RNA support while other fusions do",
+                    fusion.geneUp(), fusion.geneDown());
             return ReportResources.NOT_AVAILABLE;
+        }
         else
-            return formatSupportField(rnaSupport.alleleReadCount(), rnaSupport.totalReadCount());
+            return String.valueOf(rnaSupport.alleleReadCount());
     }
-    */
 
     private static List<LinxFusion> sortLinxFusions(final List<LinxFusion> fusions)
     {
