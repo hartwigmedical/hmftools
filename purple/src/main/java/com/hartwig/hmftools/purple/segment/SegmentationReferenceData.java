@@ -12,7 +12,7 @@ public class SegmentationReferenceData
 
     public SegmentationReferenceData(final ReferenceData referenceData)
     {
-        this.mReferenceData = referenceData;
+        mReferenceData = referenceData;
     }
 
     public Map<Chromosome, GenomePosition> chromosomeLengths()

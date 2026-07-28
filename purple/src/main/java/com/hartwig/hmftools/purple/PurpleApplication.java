@@ -142,7 +142,7 @@ public class PurpleApplication
                 System.exit(1);
             }
 
-            final SampleData sampleData = loadSampleData();
+            SampleData sampleData = loadSampleData();
 
             if(sampleData == null)
             {
@@ -217,12 +217,12 @@ public class PurpleApplication
         String tumorId = mConfig.TumorId;
         SampleDataFiles sampleDataFiles = mConfig.SampleFiles;
 
-        final AmberData amberData = sampleData.Amber;
-        final CobaltData cobaltData = sampleData.Cobalt;
+        AmberData amberData = sampleData.Amber;
+        CobaltData cobaltData = sampleData.Cobalt;
 
-        final Gender amberGender = amberData.PatientGender;
-        final Gender cobaltGender = cobaltData.gender();
-        final Gender gender = mConfig.tumorOnlyMode() ? amberGender : cobaltData.gender();
+        Gender amberGender = amberData.PatientGender;
+        Gender cobaltGender = cobaltData.gender();
+        Gender gender = mConfig.tumorOnlyMode() ? amberGender : cobaltData.gender();
 
         if(cobaltGender.equals(amberGender))
         {
