@@ -33,7 +33,6 @@ public class BamReader
     private final List<BamFileReader> mActiveBamReaders;
     private final List<BamFileReader> mFinishedBamReaders;
 
-
     public BamReader(final List<String> inputBams, final String refGenomeFile)
     {
         mInputBams = inputBams;
@@ -205,6 +204,7 @@ public class BamReader
 
             Cigar cigar = record.getCigar();
 
+            // no CIGAR to be inconsistent with SEQ - treat like an unplaced record and leave it to downstream handling
             if(cigar.isEmpty())
                 return false;
 
@@ -227,6 +227,7 @@ public class BamReader
         private void handleReadError(final String context, final Exception e)
         {
             mCurrentRecord = null;
+            mSamIterator = null;
             RD_LOGGER.warn("BAM({}) skipping unreadable read at {}: {}", mFilename, context, e.toString());
         }
 
