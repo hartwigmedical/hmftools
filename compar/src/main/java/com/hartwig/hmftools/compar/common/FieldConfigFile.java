@@ -3,6 +3,7 @@ package com.hartwig.hmftools.compar.common;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
+import static com.hartwig.hmftools.compar.common.FileCommon.FLD_CATEGORY;
 import static com.hartwig.hmftools.compar.common.field.DisplayOnlyField.DISPLAY_TYPE;
 
 import java.io.File;
@@ -20,12 +21,11 @@ public class FieldConfigFile
 {
     static final String NONE_SETTING = "none";
 
-    private static final String COL_CATEGORY = "Category";
-    private static final String COL_FIELD = "Field";
-    private static final String COL_FIELD_TYPE = "FieldType";
-    public static final String COL_COMPARED = "Compared";
-    public static final String COL_ABSOLUTE_THRESHOLD = "AbsoluteThreshold";
-    public static final String COL_PERCENT_THRESHOLD = "PercentThreshold";
+    private static final String FLD_FIELD = "Field";
+    private static final String FLD_FIELD_TYPE = "FieldType";
+    public static final String FLD_COMPARED = "Compared";
+    public static final String FLD_ABSOLUTE_THRESHOLD = "AbsoluteThreshold";
+    public static final String FLD_PERCENT_THRESHOLD = "PercentThreshold";
 
     public static String generateFileName(final String basePath)
     {
@@ -44,11 +44,11 @@ public class FieldConfigFile
         Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), TSV_DELIM);
         lines.remove(0);
 
-        int categoryIndex = fieldsIndexMap.get(COL_CATEGORY);
-        int fieldIndex = fieldsIndexMap.get(COL_FIELD);
-        int comparedIndex = fieldsIndexMap.get(COL_COMPARED);
-        int absoluteThresholdIndex = fieldsIndexMap.get(COL_ABSOLUTE_THRESHOLD);
-        int percentThresholdIndex = fieldsIndexMap.get(COL_PERCENT_THRESHOLD);
+        int categoryIndex = fieldsIndexMap.get(FLD_CATEGORY);
+        int fieldIndex = fieldsIndexMap.get(FLD_FIELD);
+        int comparedIndex = fieldsIndexMap.get(FLD_COMPARED);
+        int absoluteThresholdIndex = fieldsIndexMap.get(FLD_ABSOLUTE_THRESHOLD);
+        int percentThresholdIndex = fieldsIndexMap.get(FLD_PERCENT_THRESHOLD);
 
         List<FieldOverride> fieldOverrides = Lists.newArrayList();
 
@@ -99,12 +99,12 @@ public class FieldConfigFile
     private static String header()
     {
         return new StringJoiner(TSV_DELIM)
-                .add(COL_CATEGORY)
-                .add(COL_FIELD)
-                .add(COL_FIELD_TYPE)
-                .add(COL_COMPARED)
-                .add(COL_ABSOLUTE_THRESHOLD)
-                .add(COL_PERCENT_THRESHOLD)
+                .add(FLD_CATEGORY)
+                .add(FLD_FIELD)
+                .add(FLD_FIELD_TYPE)
+                .add(FLD_COMPARED)
+                .add(FLD_ABSOLUTE_THRESHOLD)
+                .add(FLD_PERCENT_THRESHOLD)
                 .toString();
     }
 }

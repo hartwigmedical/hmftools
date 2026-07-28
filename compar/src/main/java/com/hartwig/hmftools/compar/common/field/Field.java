@@ -60,14 +60,14 @@ public interface Field
 
     String displayValue(ComparableItem item);
 
-    boolean hasDiff(ComparableItem oldItem, ComparableItem newItem);
+    boolean hasDiff(final ComparableItem oldItem, final ComparableItem newItem);
 
     default boolean hasValue(ComparableItem item)
     {
         return true;
     }
 
-    default List<String> determineDiffs(ComparableItem oldItem, ComparableItem newItem)
+    default List<String> determineDiffs(final ComparableItem oldItem, final ComparableItem newItem)
     {
         if(hasDiff(oldItem, newItem))
         {

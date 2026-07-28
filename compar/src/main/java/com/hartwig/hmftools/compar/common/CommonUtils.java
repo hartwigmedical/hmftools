@@ -340,9 +340,9 @@ public class CommonUtils
                 .forEach(x -> mismatches.add(new Mismatch(null, x, NEW_ONLY, emptyDiffs)));
     }
 
-    public static List<String> findDiffs(final ComparableItem oldItem, final ComparableItem newItem, List<Field> fields)
+    public static List<String> findDiffs(final ComparableItem oldItem, final ComparableItem newItem, final List<Field> fields)
     {
-        final List<String> diffs = Lists.newArrayList();
+        List<String> diffs = Lists.newArrayList();
         for(Field field : fields)
         {
             if(field.isCompared())
@@ -389,10 +389,10 @@ public class CommonUtils
     }
 
     public static Mismatch createMismatchFromDiffs(
-            final ComparableItem refItem, final ComparableItem newItem, final List<String> diffs,
+            final ComparableItem oldItem, final ComparableItem newItem, final List<String> diffs,
             final MatchLevel matchLevel, final boolean includeMatches)
     {
-        boolean refCountsAsCalled = countsAsCalled(refItem, matchLevel);
+        boolean refCountsAsCalled = countsAsCalled(oldItem, matchLevel);
         boolean newCountsAsCalled = countsAsCalled(newItem, matchLevel);
         if(!refCountsAsCalled && !newCountsAsCalled)
         {
@@ -428,7 +428,7 @@ public class CommonUtils
                 // should be impossible due to earlier filters
                 mismatchType = INVALID_ERROR;
             }
-            return new Mismatch(refItem, newItem, mismatchType, diffs);
+            return new Mismatch(oldItem, newItem, mismatchType, diffs);
         }
     }
 

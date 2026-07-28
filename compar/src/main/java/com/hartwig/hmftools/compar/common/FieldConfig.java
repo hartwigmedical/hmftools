@@ -1,9 +1,9 @@
 package com.hartwig.hmftools.compar.common;
 
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
-import static com.hartwig.hmftools.compar.common.FieldConfigFile.COL_ABSOLUTE_THRESHOLD;
-import static com.hartwig.hmftools.compar.common.FieldConfigFile.COL_COMPARED;
-import static com.hartwig.hmftools.compar.common.FieldConfigFile.COL_PERCENT_THRESHOLD;
+import static com.hartwig.hmftools.compar.common.FieldConfigFile.FLD_ABSOLUTE_THRESHOLD;
+import static com.hartwig.hmftools.compar.common.FieldConfigFile.FLD_COMPARED;
+import static com.hartwig.hmftools.compar.common.FieldConfigFile.FLD_PERCENT_THRESHOLD;
 import static com.hartwig.hmftools.compar.common.FieldConfigFile.NONE_SETTING;
 import static com.hartwig.hmftools.compar.common.field.DisplayOnlyField.DISPLAY_TYPE;
 
@@ -20,14 +20,14 @@ import com.hartwig.hmftools.compar.common.field.UnsupportedFieldOverrideExceptio
 
 public class FieldConfig
 {
-    private final Map<CategoryType, Map<String, Field>> fieldSettings;
+    private final Map<CategoryType, Map<String, Field>> mFieldSettings;
     private final List<String> mWarnings;
     private final List<String> mErrorMessages;
 
     public FieldConfig()
     {
         // use linked hash map to preserve field registration order in diffs
-        fieldSettings = Maps.newLinkedHashMap();
+        mFieldSettings = Maps.newLinkedHashMap();
         mWarnings = Lists.newArrayList();
         mErrorMessages = Lists.newArrayList();
     }
@@ -42,18 +42,18 @@ public class FieldConfig
 
     public void registerField(final CategoryType category, final Field field)
     {
-        fieldSettings.putIfAbsent(category, Maps.newLinkedHashMap());
-        fieldSettings.get(category).put(field.name(), field);
+        mFieldSettings.putIfAbsent(category, Maps.newLinkedHashMap());
+        mFieldSettings.get(category).put(field.name(), field);
     }
 
     public List<Field> getFields(final CategoryType category)
     {
-        return fieldSettings.getOrDefault(category, Maps.newLinkedHashMap()).values().stream().toList();
+        return mFieldSettings.getOrDefault(category, Maps.newLinkedHashMap()).values().stream().toList();
     }
 
     public List<Field> getFields(final CategoryType category, final List<String> fieldNames)
     {
-        return fieldNames.stream().map(n -> fieldSettings.get(category).get(n)).toList();
+        return fieldNames.stream().map(n -> mFieldSettings.get(category).get(n)).toList();
     }
 
     public void applyOverrides(final List<FieldOverride> overrides, final boolean strictFieldConfig)
@@ -94,7 +94,7 @@ public class FieldConfig
             return;
         }
 
-        Field field = fieldSettings.getOrDefault(category, Maps.newHashMap()).get(fieldOverride.Field);
+        Field field = mFieldSettings.getOrDefault(category, Maps.newHashMap()).get(fieldOverride.Field);
 
         if(field == null)
         {
@@ -108,7 +108,7 @@ public class FieldConfig
         field = applyAbsoluteThresholdOverride(fieldOverride, field, category, strictFieldConfig);
         field = applyPercentThresholdOverride(fieldOverride, field, category, strictFieldConfig);
 
-        fieldSettings.get(category).put(field.name(), field);
+        mFieldSettings.get(category).put(field.name(), field);
     }
 
     private Field applyComparedOverride(
@@ -132,7 +132,7 @@ public class FieldConfig
         }
         else if(strictFieldConfig)
         {
-            recordMissingOverrideError(field, category, COL_COMPARED);
+            recordMissingOverrideError(field, category, FLD_COMPARED);
         }
 
         return field;
@@ -156,7 +156,7 @@ public class FieldConfig
         }
         else if(strictFieldConfig)
         {
-            recordMissingOverrideError(field, category, COL_ABSOLUTE_THRESHOLD);
+            recordMissingOverrideError(field, category, FLD_ABSOLUTE_THRESHOLD);
         }
 
         return field;
@@ -180,7 +180,7 @@ public class FieldConfig
         }
         else if(strictFieldConfig)
         {
-            recordMissingOverrideError(field, category, COL_PERCENT_THRESHOLD);
+            recordMissingOverrideError(field, category, FLD_PERCENT_THRESHOLD);
         }
 
         return field;
@@ -198,7 +198,7 @@ public class FieldConfig
                 .map(o -> o.Category + ":" + o.Field)
                 .collect(Collectors.toSet());
 
-        for(Map.Entry<CategoryType, Map<String, Field>> entry : fieldSettings.entrySet())
+        for(Map.Entry<CategoryType, Map<String, Field>> entry : mFieldSettings.entrySet())
         {
             CategoryType category = entry.getKey();
 

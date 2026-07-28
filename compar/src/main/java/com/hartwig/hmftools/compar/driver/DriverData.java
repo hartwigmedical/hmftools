@@ -35,7 +35,8 @@ public class DriverData implements ComparableItem
     private final boolean mCheckTranscript;
     private final boolean mIsPass;
 
-    public DriverData(final DriverCatalog driverCatalog, final PurplePurity purity, final String comparisonChromosome,
+    public DriverData(
+            final DriverCatalog driverCatalog, final PurplePurity purity, final String comparisonChromosome,
             boolean checkTranscript, boolean isPass)
     {
         DriverCatalog = driverCatalog;
@@ -93,10 +94,10 @@ public class DriverData implements ComparableItem
         return true;
     }
 
-    public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final FieldConfig fieldConfig,
-            final boolean includeMatches)
+    public Mismatch findMismatch(
+            final ComparableItem other, final MatchLevel matchLevel, final FieldConfig fieldConfig, final boolean includeMatches)
     {
-        final List<String> diffs = Lists.newArrayList();
+        List<String> diffs = Lists.newArrayList();
         List<String> alwaysCompareFields = List.of(
                 FLD_LIKE_METHOD, FLD_MIN_COPY_NUMBER, FLD_MAX_COPY_NUMBER, FLD_CHROMOSOME, FLD_CHROMOSOME_BAND);
         diffs.addAll(findDiffs(this, other, fieldConfig.getFields(category(), alwaysCompareFields)));

@@ -19,7 +19,7 @@ public interface ComparableItem
     default Mismatch findMismatch(
             final ComparableItem other, final MatchLevel matchLevel, final FieldConfig fieldConfig, final boolean includeMatches)
     {
-        final List<String> diffs = findDiffs(this, other, fieldConfig.getFields(category()));
+        List<String> diffs = findDiffs(this, other, fieldConfig.getFields(category()));
         return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches);
     }
 
