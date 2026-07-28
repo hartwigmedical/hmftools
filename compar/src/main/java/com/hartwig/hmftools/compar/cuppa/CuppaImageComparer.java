@@ -15,8 +15,6 @@ import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.common.Mismatch;
-import com.hartwig.hmftools.compar.common.SourceType;
-import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class CuppaImageComparer extends ImageComparer
 {
@@ -37,13 +35,6 @@ public class CuppaImageComparer extends ImageComparer
     public boolean processSample(final String sampleId, final List<Mismatch> mismatches, final FieldConfig fieldConfig)
     {
         return CommonUtils.processSample(this, mConfig, sampleId, mismatches, fieldConfig);
-    }
-
-    @Override
-    public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess, final SourceType sourceType)
-    {
-        // currently unsupported
-        return Lists.newArrayList();
     }
 
     @Override

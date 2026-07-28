@@ -20,11 +20,9 @@ import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
-import com.hartwig.hmftools.compar.common.SourceType;
 import com.hartwig.hmftools.compar.common.field.DoubleField;
 import com.hartwig.hmftools.compar.common.field.Field;
 import com.hartwig.hmftools.compar.common.field.StringField;
-import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class CuppaComparer implements ItemComparer
 {
@@ -61,13 +59,6 @@ public class CuppaComparer implements ItemComparer
     public List<String> displayFieldNames()
     {
         return Lists.newArrayList(FLD_TOP_CANCER_TYPE, FLD_PROBABILITY);
-    }
-
-    @Override
-    public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess, final SourceType sourceType)
-    {
-        // currently unsupported
-        return Lists.newArrayList();
     }
 
     @Override

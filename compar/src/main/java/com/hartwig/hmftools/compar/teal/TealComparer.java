@@ -19,10 +19,8 @@ import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
-import com.hartwig.hmftools.compar.common.SourceType;
 import com.hartwig.hmftools.compar.common.field.DoubleField;
 import com.hartwig.hmftools.compar.common.field.Field;
-import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class TealComparer implements ItemComparer
 {
@@ -59,12 +57,6 @@ public class TealComparer implements ItemComparer
         return List.of(FLD_TELOMERE_LENGTH);
     }
 
-    @Override
-    public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess, final SourceType sourceType)
-    {
-        // currently unsupported
-        return Collections.emptyList();
-    }
 
     @Override
     public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final FileSources fileSources)

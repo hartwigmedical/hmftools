@@ -35,13 +35,10 @@ import static com.hartwig.hmftools.compar.common.FileSources.registerConfig;
 import static com.hartwig.hmftools.compar.common.MatchLevel.REPORTABLE;
 import static com.hartwig.hmftools.compar.common.SourceType.NEW;
 import static com.hartwig.hmftools.compar.common.SourceType.OLD;
-import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.DB_DEFAULT_ARGS;
-import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -63,7 +60,6 @@ import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.SourceData;
 import com.hartwig.hmftools.compar.common.SourceType;
 import com.hartwig.hmftools.compar.common.WriteType;
-import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -181,18 +177,10 @@ public class ComparConfig
 
         RequiresLiftover = configBuilder.hasFlag(REQUIRES_LIFTOVER);
 
-        if(configBuilder.hasValue(formConfigSourceStr(DB_SOURCE, OLD.configStr()))
-        && configBuilder.hasValue(formConfigSourceStr(DB_SOURCE, NEW.configStr())))
+        if(!loadFileSources(configBuilder))
         {
-            loadDatabaseSources(configBuilder);
-        }
-        else
-        {
-            if(!loadFileSources(configBuilder))
-            {
-                CMP_LOGGER.error("missing DB or file source old and new config");
-                mIsValid = false;
-            }
+            CMP_LOGGER.error("missing DB or file source old and new config");
+            mIsValid = false;
         }
 
         SampleIds = Lists.newArrayList();
@@ -396,44 +384,12 @@ public class ComparConfig
         return format("%s_%s", sourceType, sourceName);
     }
 
-    private void loadDatabaseSources(final ConfigBuilder configBuilder)
-    {
-        // form DB1;db_url;db_user;db_pass DB2;db_url;db_user;db_pass etc
-
-        for(SourceType sourceType : SourceType.values())
-        {
-            String dbConfigValue =  configBuilder.getValue(formConfigSourceStr(DB_SOURCE, sourceType.configStr()));
-            String[] dbItems = dbConfigValue.split(CSV_DELIM, -1);
-
-            if(dbItems.length != 3)
-            {
-                CMP_LOGGER.error("invalid DB source config({})", dbConfigValue);
-                mIsValid = false;
-                return;
-            }
-
-            String dbUrl = "jdbc:" + dbItems[0] + DB_DEFAULT_ARGS;
-            String dbUsername = dbItems[1];
-            String dbPass = dbItems[2];
-
-            try
-            {
-                DatabaseAccess dbAccess = new DatabaseAccess(dbUsername, dbPass, dbUrl);
-                Sources.add(new SourceData(sourceType, dbAccess, null));
-            }
-            catch(SQLException e)
-            {
-                mIsValid = false;
-            }
-        }
-    }
-
     private boolean loadFileSources(final ConfigBuilder configBuilder)
     {
         for(SourceType sourceType : SourceType.values())
         {
             FileSources fileSources = fromConfig(sourceType, configBuilder);
-            Sources.add(new SourceData(sourceType, null, fileSources));
+            Sources.add(new SourceData(sourceType, fileSources));
         }
 
         return true;
@@ -473,7 +429,6 @@ public class ComparConfig
         configBuilder.addPath(FIELD_CONFIG_FILE, false, "Config file for overwriting field settings");
         configBuilder.addFlag(STRICT_FIELD_CONFIG, "Require a complete field config file to be provided");
 
-        addDatabaseCmdLineArgs(configBuilder, false);
         addOutputOptions(configBuilder);
         addLoggingOptions(configBuilder);
         addThreadOptions(configBuilder);
@@ -486,8 +441,8 @@ public class ComparConfig
         SampleIds = Lists.newArrayList();
         SampleToReferenceIds = Maps.newHashMap();
         Sources = Lists.newArrayList();
-        Sources.add(new SourceData(OLD, null, null));
-        Sources.add(new SourceData(NEW, null, null));
+        Sources.add(new SourceData(OLD, null));
+        Sources.add(new SourceData(NEW, null));
 
         Categories = Sets.newHashSet();
         MatchingLevel = REPORTABLE;

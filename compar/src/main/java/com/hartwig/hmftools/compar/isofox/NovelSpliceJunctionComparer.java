@@ -23,11 +23,9 @@ import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
-import com.hartwig.hmftools.compar.common.SourceType;
 import com.hartwig.hmftools.compar.common.field.Field;
 import com.hartwig.hmftools.compar.common.field.IntField;
 import com.hartwig.hmftools.compar.common.field.StringField;
-import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public record NovelSpliceJunctionComparer(ComparConfig mConfig) implements ItemComparer
 {
@@ -68,13 +66,6 @@ public record NovelSpliceJunctionComparer(ComparConfig mConfig) implements ItemC
     public List<String> displayFieldNames()
     {
         return List.of(FLD_ALT_SJ_TYPE, FLD_FRAG_COUNT, FLD_REGION_START, FLD_REGION_END);
-    }
-
-    @Override
-    public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess, final SourceType sourceType)
-    {
-        // Not currently supported
-        return Lists.newArrayList();
     }
 
     @Override

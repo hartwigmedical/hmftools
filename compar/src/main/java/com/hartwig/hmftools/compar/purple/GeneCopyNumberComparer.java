@@ -20,11 +20,9 @@ import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
-import com.hartwig.hmftools.compar.common.SourceType;
 import com.hartwig.hmftools.compar.common.field.DisplayOnlyField;
 import com.hartwig.hmftools.compar.common.field.DoubleField;
 import com.hartwig.hmftools.compar.common.field.Field;
-import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class GeneCopyNumberComparer implements ItemComparer
 {
@@ -69,22 +67,6 @@ public class GeneCopyNumberComparer implements ItemComparer
     public List<String> displayFieldNames()
     {
         return Lists.newArrayList(FLD_MIN_COPY_NUMBER, FLD_MAX_COPY_NUMBER, FLD_MIN_REGION_START, FLD_MIN_REGION_END);
-    }
-
-    @Override
-    public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess, final SourceType sourceType)
-    {
-        List<ComparableItem> items = Lists.newArrayList();
-
-        final Set<String> driverGenes = mConfig.DriverGenes;
-
-        if(driverGenes.isEmpty())
-            return items;
-
-        final List<GeneCopyNumber> copyNumbers = dbAccess.readGeneCopynumbers(sampleId, new ArrayList<>(driverGenes));
-
-        copyNumbers.forEach(x -> items.add(new GeneCopyNumberData(x)));
-        return items;
     }
 
     @Override

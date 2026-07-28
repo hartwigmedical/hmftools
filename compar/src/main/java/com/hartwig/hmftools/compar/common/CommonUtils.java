@@ -239,16 +239,9 @@ public class CommonUtils
             String sourceReferenceId = config.sourceReferenceId(source.Type, sampleId);
             List<ComparableItem> items = null;
 
-            if(source.Database != null)
-            {
-                items = comparer.loadFromDb(sourceSampleId, source.Database, source.Type);
-            }
-            else
-            {
-                FileSources fileSources = FileSources.sampleInstance(source.Files, sourceSampleId, sourceReferenceId);
+            FileSources fileSources = FileSources.sampleInstance(source.Files, sourceSampleId, sourceReferenceId);
 
-                items = comparer.loadFromFile(sourceSampleId, sourceReferenceId, fileSources);
-            }
+            items = comparer.loadFromFile(sourceSampleId, sourceReferenceId, fileSources);
 
             if(items != null)
             {

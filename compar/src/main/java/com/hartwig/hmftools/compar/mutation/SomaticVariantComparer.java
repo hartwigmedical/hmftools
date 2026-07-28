@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.compar.mutation;
 
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
-import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS_FILTER;
 import static com.hartwig.hmftools.compar.common.CategoryType.SOMATIC_VARIANT;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_QUAL;
@@ -31,7 +30,6 @@ import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_TIER;
 import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_TUMOR_SUPPORTING_READ_COUNT;
 import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_TUMOR_TOTAL_READ_COUNT;
 import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_VARIANT_COPY_NUMBER;
-import static com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Somaticvariant.SOMATICVARIANT;
 
 import java.util.List;
 import java.util.Map;
@@ -64,10 +62,6 @@ import com.hartwig.hmftools.compar.common.field.Field;
 import com.hartwig.hmftools.compar.common.field.IntField;
 import com.hartwig.hmftools.compar.common.field.StringField;
 import com.hartwig.hmftools.compar.common.field.StringListField;
-import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
-
-import org.jooq.Record;
-import org.jooq.Result;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
@@ -350,43 +344,8 @@ public class SomaticVariantComparer implements ItemComparer
         String sourceSampleId = mConfig.sourceSampleId(sourceType, sampleId);
         SourceData sourceData = mConfig.getSourceData(sourceType);
 
-        if(sourceData.Database != null)
-        {
-            return loadVariants(sourceSampleId, sourceData.Database, sourceType);
-        }
-        else
-        {
-            String sourceReferenceId = mConfig.sourceReferenceId(sourceType, sampleId);
-            return loadVariants(sourceSampleId, FileSources.sampleInstance(sourceData.Files, sourceSampleId, sourceReferenceId));
-        }
-    }
-
-    @Override
-    public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess, final SourceType sourceType)
-    {
-        final List<ComparableItem> items = Lists.newArrayList();
-        loadVariants(sampleId, dbAccess, sourceType).forEach(x -> items.add(x));
-        return items;
-    }
-
-    private List<SomaticVariantData> loadVariants(final String sampleId, final DatabaseAccess dbAccess, final SourceType sourceType)
-    {
-        final List<SomaticVariantData> variants = Lists.newArrayList();
-
-        Result<Record> results = dbAccess.context()
-                .select()
-                .from(SOMATICVARIANT)
-                .where(SOMATICVARIANT.FILTER.eq(PASS_FILTER))
-                .and(SOMATICVARIANT.SAMPLEID.eq(sampleId))
-                .fetch();
-
-        for(Record record : results)
-        {
-            final SomaticVariantData variant = SomaticVariantData.fromRecord(record, sourceType, mConfig);
-            variants.add(variant);
-        }
-
-        return variants;
+        String sourceReferenceId = mConfig.sourceReferenceId(sourceType, sampleId);
+        return loadVariants(sourceSampleId, FileSources.sampleInstance(sourceData.Files, sourceSampleId, sourceReferenceId));
     }
 
     @Override

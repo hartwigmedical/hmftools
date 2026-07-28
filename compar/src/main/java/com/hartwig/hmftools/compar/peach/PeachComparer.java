@@ -20,11 +20,9 @@ import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
-import com.hartwig.hmftools.compar.common.SourceType;
 import com.hartwig.hmftools.compar.common.field.Field;
 import com.hartwig.hmftools.compar.common.field.IntField;
 import com.hartwig.hmftools.compar.common.field.StringField;
-import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class PeachComparer implements ItemComparer
 {
@@ -68,13 +66,6 @@ public class PeachComparer implements ItemComparer
                 new StringField(FLD_DRUGS, i -> ((PeachData) i).Genotype.linkedDrugs(), true),
                 new StringField(FLD_PRESCRIPTION_URLS, i -> ((PeachData) i).Genotype.urlPrescriptionInfo(), true)
         );
-    }
-
-    @Override
-    public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess, final SourceType sourceType)
-    {
-        List<PeachGenotype> genotypes = dbAccess.readPeachGenotypes(sampleId);
-        return genotypes.stream().map(g -> new PeachData(g)).collect(Collectors.toList());
     }
 
     public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final FileSources fileSources)

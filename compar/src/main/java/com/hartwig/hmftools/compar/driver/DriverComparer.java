@@ -53,7 +53,6 @@ import com.hartwig.hmftools.compar.common.field.DisplayOnlyField;
 import com.hartwig.hmftools.compar.common.field.DoubleField;
 import com.hartwig.hmftools.compar.common.field.Field;
 import com.hartwig.hmftools.compar.common.field.StringField;
-import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class DriverComparer implements ItemComparer
 {
@@ -112,16 +111,9 @@ public class DriverComparer implements ItemComparer
         {
             String sourceSampleId = mConfig.sourceSampleId(sourceData.Type, sampleId);
 
-            if(sourceData.Database != null)
-            {
-                loadData(sourceSampleId, sourceData.Database, sourceData.Type);
-            }
-            else
-            {
-                String sourceReferenceId = mConfig.sourceReferenceId(sourceData.Type, sampleId);
-                FileSources sampleFileSources = FileSources.sampleInstance(sourceData.Files, sourceSampleId, sourceReferenceId);
-                loadData(sourceSampleId, sampleFileSources, sourceData.Type);
-            }
+            String sourceReferenceId = mConfig.sourceReferenceId(sourceData.Type, sampleId);
+            FileSources sampleFileSources = FileSources.sampleInstance(sourceData.Files, sourceSampleId, sourceReferenceId);
+            loadData(sourceSampleId, sampleFileSources, sourceData.Type);
         }
 
         boolean valid = CommonUtils.processSample(this, mConfig, sampleId, mismatches, fieldConfig);
@@ -130,11 +122,6 @@ public class DriverComparer implements ItemComparer
         mPurities.clear();
         mDrivers.clear();
         return valid;
-    }
-
-    private void loadData(final String sampleId, final DatabaseAccess dbAccess, final SourceType sourceType)
-    {
-        mDrivers.put(sourceType, Lists.newArrayList(dbAccess.readDriverCatalog(sampleId)));
     }
 
     private void loadData(final String sampleId, final FileSources fileSources, final SourceType sourceType)
@@ -241,12 +228,6 @@ public class DriverComparer implements ItemComparer
         }
 
         return items;
-    }
-
-    @Override
-    public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess, final SourceType sourceType)
-    {
-        return createDriverItems(sourceType);
     }
 
     @Override

@@ -27,11 +27,9 @@ import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
-import com.hartwig.hmftools.compar.common.SourceType;
 import com.hartwig.hmftools.compar.common.field.BreakendsField;
 import com.hartwig.hmftools.compar.common.field.DisplayOnlyField;
 import com.hartwig.hmftools.compar.common.field.Field;
-import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class GermlineSvComparer implements ItemComparer
 {
@@ -64,13 +62,6 @@ public class GermlineSvComparer implements ItemComparer
     public List<String> displayFieldNames()
     {
         return Lists.newArrayList(FLD_REPORTED, FLD_BREAKEND_INFO);
-    }
-
-    @Override
-    public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess, final SourceType sourceType)
-    {
-        // currently unsupported
-        return Lists.newArrayList();
     }
 
     @Override

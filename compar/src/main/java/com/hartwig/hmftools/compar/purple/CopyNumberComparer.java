@@ -24,7 +24,6 @@ import com.hartwig.hmftools.compar.common.SourceType;
 import com.hartwig.hmftools.compar.common.field.DoubleField;
 import com.hartwig.hmftools.compar.common.field.Field;
 import com.hartwig.hmftools.compar.common.field.StringField;
-import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class CopyNumberComparer implements ItemComparer
 {
@@ -67,15 +66,6 @@ public class CopyNumberComparer implements ItemComparer
     public List<String> displayFieldNames()
     {
         return Lists.newArrayList(FLD_COPY_NUMBER, FLD_MAJOR_ALLELE_CN, FLD_METHOD);
-    }
-
-    @Override
-    public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess, final SourceType sourceType)
-    {
-        final List<PurpleCopyNumber> copyNumbers = dbAccess.readCopynumbers(sampleId);
-        List<ComparableItem> items = Lists.newArrayList();
-        copyNumbers.forEach(x -> items.add(createCopyNumberData(x, sourceType)));
-        return items;
     }
 
     @Override

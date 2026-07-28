@@ -31,7 +31,6 @@ The key configuration values to set are:
 | match_level                       | REPORTABLE (default) or DETAILED                                                                                                                     |
 | sample_data_old & sample_data_new | Sample root directory for pipeline output                                                                                                            |
 | TOOL_dir_old & TOOL_dir_new **    | Tool path overrides - each pipeline tool directory eg 'linx_dir_old' - relative path to 'sample_dir' if specified, otherwise absolute path           |
-| db_source_old & db_source_new     | DB connection details for old and new sample data - see format below                                                                                 |
 | output_dir                        | Path for output file                                                                                                                                 |
 
 ** set of tools are: linx, linx_germline, purple, chord, cuppa, isofox, lilac, peach, virus (i.e. virus-interpreter), sigs, snp_genotype, tumor_flagstat, germline_flagstat, tumor_bam_metrics and germline_bam_metrics.
@@ -120,16 +119,6 @@ It's possible to control the assumed pipeline output format for deriving the def
 The `pipeline_format_old` and/or `pipeline_format_new` arguments can be set to an older version of OncoAnalyser (e.g. `OA_V2_0`), our legacy pipeline5 WiGiTS implementation (`PIP5_V6_0`) or the format of the Hartwig Medical Database (`DB_V6_0`).
 Alternatively, this format can be set in a config file such as [this](../hmf-common/src/test/resources/pipeline/completeToolDirectoryConfig.tsv) or [this](../hmf-common/src/test/resources/pipeline/partialToolDirectoryConfig.tsv)
 by using the `pipeline_format_file_old` and/or `pipeline_format_file_new` arguments.
-
-### Database Sourced Data
-Specify 'db_sources' config with a comma-separated list of the follow:
-- DbURL;DbUser;DbPassword
-
-Example:
-```
-db_source_old="mysql://localhost/prod;user1;pass1"
-db_source_new="mysql://localhost/test;user1;pass1"
-```
 
 
 ## Data Categories, Fields and Thresholds

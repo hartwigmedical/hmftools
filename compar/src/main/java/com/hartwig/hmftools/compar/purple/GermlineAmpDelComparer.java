@@ -23,11 +23,9 @@ import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
-import com.hartwig.hmftools.compar.common.SourceType;
 import com.hartwig.hmftools.compar.common.field.DoubleField;
 import com.hartwig.hmftools.compar.common.field.Field;
 import com.hartwig.hmftools.compar.common.field.StringField;
-import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class GermlineAmpDelComparer implements ItemComparer
 {
@@ -76,15 +74,6 @@ public class GermlineAmpDelComparer implements ItemComparer
     {
         return Lists.newArrayList(
                 FLD_REPORTED, FLD_GERMLINE_STATUS, FLD_TUMOR_STATUS, FLD_GERMLINE_CN, FLD_TUMOR_CN);
-    }
-
-    @Override
-    public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess, final SourceType sourceType)
-    {
-        final List<GermlineAmpDel> germlineAmpDels = dbAccess.readGermlineCopyNumbers(sampleId);
-        List<ComparableItem> items = Lists.newArrayList();
-        germlineAmpDels.forEach(x -> items.add(createGermlineAmpDelData(x)));
-        return items;
     }
 
     @Override

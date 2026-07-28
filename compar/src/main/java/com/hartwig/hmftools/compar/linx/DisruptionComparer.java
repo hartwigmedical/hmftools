@@ -40,7 +40,6 @@ import com.hartwig.hmftools.compar.common.SourceType;
 import com.hartwig.hmftools.compar.common.field.BreakendsField;
 import com.hartwig.hmftools.compar.common.field.DisplayOnlyField;
 import com.hartwig.hmftools.compar.common.field.Field;
-import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import htsjdk.tribble.TribbleException;
 
@@ -85,18 +84,6 @@ public class DisruptionComparer implements ItemComparer
     public List<String> displayFieldNames()
     {
         return Lists.newArrayList(FLD_REPORTED, FLD_BREAKEND_INFO);
-    }
-
-    @Override
-    public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess, final SourceType sourceType)
-    {
-        List<StructuralVariantData> svDataList = Lists.newArrayList(dbAccess.readStructuralVariantData(sampleId));
-        List<LinxBreakend> breakends = Lists.newArrayList(dbAccess.readBreakends(sampleId));
-
-        mSvDataList.put(sourceType, svDataList);
-        mBreakends.put(sourceType, breakends);
-
-        return buildBreakends(sourceType);
     }
 
     @Override

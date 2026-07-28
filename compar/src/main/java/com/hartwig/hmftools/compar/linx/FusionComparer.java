@@ -28,7 +28,6 @@ import com.hartwig.hmftools.compar.common.field.DisplayOnlyField;
 import com.hartwig.hmftools.compar.common.field.Field;
 import com.hartwig.hmftools.compar.common.field.IntField;
 import com.hartwig.hmftools.compar.common.field.StringField;
-import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class FusionComparer implements ItemComparer
 {
@@ -97,13 +96,6 @@ public class FusionComparer implements ItemComparer
                 FLD_EXON_DOWN, FLD_CHAIN_LINKS, FLD_CHAIN_TERM, FLD_DOMAINS_KEPT, FLD_DOMAINS_LOST, FLD_BREAKEND_UP, FLD_BREAKEND_DOWN);
 
         // excluded unless matching breakends can be loaded: FLD_TRANSCRIPT_UP, FLD_TRANSCRIPT_DOWN, FLD_JUNCTION_COPY_NUMBER
-    }
-
-    @Override
-    public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess, final SourceType sourceType)
-    {
-        List<LinxFusion> fusions = dbAccess.readFusions(sampleId);
-        return processFusions(fusions, sourceType);
     }
 
     @Override

@@ -19,7 +19,6 @@ import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_TIER;
 import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_TUMOR_SUPPORTING_READ_COUNT;
 import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_TUMOR_TOTAL_READ_COUNT;
 import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_VARIANT_COPY_NUMBER;
-import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.GERMLINEVARIANT;
 
 import java.util.List;
 
@@ -37,18 +36,12 @@ import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
-import com.hartwig.hmftools.compar.common.SourceType;
 import com.hartwig.hmftools.compar.common.field.BooleanField;
 import com.hartwig.hmftools.compar.common.field.DoubleField;
 import com.hartwig.hmftools.compar.common.field.Field;
 import com.hartwig.hmftools.compar.common.field.IntField;
 import com.hartwig.hmftools.compar.common.field.StringField;
 import com.hartwig.hmftools.compar.common.field.StringListField;
-import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
-import com.hartwig.hmftools.patientdb.dao.GermlineVariantDAO;
-
-import org.jooq.Record;
-import org.jooq.Result;
 
 public class GermlineVariantComparer implements ItemComparer
 {
@@ -101,27 +94,6 @@ public class GermlineVariantComparer implements ItemComparer
     public List<String> displayFieldNames()
     {
         return VariantCommon.sharedDisplayFieldNames();
-    }
-
-    @Override
-    public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess, final SourceType sourceType)
-    {
-        Result<Record> result = dbAccess.context().select()
-                .from(GERMLINEVARIANT)
-                .where(GERMLINEVARIANT.FILTER.eq(PASS_FILTER))
-                .and(GERMLINEVARIANT.SAMPLEID.eq(sampleId))
-                .fetch();
-
-        final List<ComparableItem> variants = Lists.newArrayList();
-        for (Record record : result)
-        {
-            SmallVariant variant = GermlineVariantDAO.buildFromRecord(record);
-            BasePosition comparisonPosition = determineComparisonGenomePosition(
-                    variant.chromosome(), variant.position(), sourceType, mConfig.RequiresLiftover, mConfig.LiftoverCache);
-            variants.add(new GermlineVariantData(variant, comparisonPosition));
-        }
-
-        return variants;
     }
 
     @Override

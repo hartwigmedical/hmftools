@@ -31,12 +31,9 @@ import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_TIER;
 import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_TUMOR_SUPPORTING_READ_COUNT;
 import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_TUMOR_TOTAL_READ_COUNT;
 import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_VARIANT_COPY_NUMBER;
-import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SOMATICVARIANT;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.region.BasePosition;
@@ -54,9 +51,6 @@ import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.SourceType;
-import com.hartwig.hmftools.patientdb.database.hmfpatients.Tables;
-
-import org.jooq.Record;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
@@ -276,48 +270,6 @@ public class SomaticVariantData implements ComparableItem
                 comparisonPosition.Chromosome,
                 comparisonPosition.Position
         );
-    }
-
-    public static SomaticVariantData fromRecord(final Record record, final SourceType sourceType, final ComparConfig config)
-    {
-        Set<String> filters = Arrays.stream(record.getValue(SOMATICVARIANT.FILTER).split(";", -1)).collect(Collectors.toSet());
-        String localPhaseSets = record.get(SOMATICVARIANT.LOCALPHASESET);
-        double qual = record.getValue(Tables.SOMATICVARIANT.QUAL);
-
-        var chromosome = record.getValue(SOMATICVARIANT.CHROMOSOME);
-        var position = record.getValue(SOMATICVARIANT.POSITION);
-
-        BasePosition comparisonPosition = determineComparisonGenomePosition(
-                chromosome, position, sourceType, config.RequiresLiftover, config.LiftoverCache);
-
-        return new SomaticVariantData(
-                chromosome,
-                position,
-                record.getValue(Tables.SOMATICVARIANT.REF),
-                record.getValue(Tables.SOMATICVARIANT.ALT),
-                VariantType.valueOf(record.getValue(SOMATICVARIANT.TYPE)),
-                record.getValue(Tables.SOMATICVARIANT.GENE),
-                record.getValue(SOMATICVARIANT.REPORTED).intValue() == 1,
-                HotspotType.valueOf(record.getValue(SOMATICVARIANT.HOTSPOT)),
-                VariantTier.fromString(record.get(SOMATICVARIANT.TIER)),
-                record.getValue(SOMATICVARIANT.BIALLELIC).intValue() == 1,
-                record.getValue(SOMATICVARIANT.BIALLELIC).intValue() == 1 ? 1.0 : 0,
-                record.getValue(SOMATICVARIANT.CANONICALEFFECT),
-                record.getValue(SOMATICVARIANT.CANONICALCODINGEFFECT),
-                record.getValue(SOMATICVARIANT.CANONICALHGVSCODINGIMPACT),
-                record.getValue(SOMATICVARIANT.CANONICALHGVSPROTEINIMPACT),
-                record.getValue(SOMATICVARIANT.OTHERTRANSCRIPTEFFECTS),
-                localPhaseSets != null && !localPhaseSets.isEmpty(),
-                (int)qual, record.getValue(SOMATICVARIANT.SUBCLONALLIKELIHOOD),
-                filters,
-                record.getValue(SOMATICVARIANT.VARIANTCOPYNUMBER),
-                record.getValue(SOMATICVARIANT.ADJUSTEDVAF),
-                record.getValue(SOMATICVARIANT.ALLELEREADCOUNT),
-                record.getValue(SOMATICVARIANT.TOTALREADCOUNT),
-                false,
-                true,
-                comparisonPosition.Chromosome,
-                comparisonPosition.Position);
     }
 
     private static final String SNPEFF_WORST = "SEW";

@@ -24,13 +24,11 @@ import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
-import com.hartwig.hmftools.compar.common.SourceType;
 import com.hartwig.hmftools.compar.common.field.DoubleField;
 import com.hartwig.hmftools.compar.common.field.Field;
 import com.hartwig.hmftools.compar.common.field.IntField;
 import com.hartwig.hmftools.compar.common.field.LongField;
 import com.hartwig.hmftools.compar.common.field.StringField;
-import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public record IsofoxSummaryComparer(ComparConfig mConfig) implements ItemComparer
 {
@@ -113,13 +111,6 @@ public record IsofoxSummaryComparer(ComparConfig mConfig) implements ItemCompare
                 FLD_CHIMERIC_FRAG_PERC, FLD_READ_LENGTH, FLD_FRAG_LENGTH_5TH, FLD_FRAG_LENGTH_50TH, FLD_FRAG_LENGTH_95TH,
                 FLD_ENRICHED_GENE_PERC
         );
-    }
-
-    @Override
-    public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess, final SourceType sourceType)
-    {
-        // Not currently supported
-        return Lists.newArrayList();
     }
 
     @Override

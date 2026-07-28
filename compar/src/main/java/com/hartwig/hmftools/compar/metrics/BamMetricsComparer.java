@@ -23,10 +23,8 @@ import com.hartwig.hmftools.compar.common.FieldConfig;
 import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
-import com.hartwig.hmftools.compar.common.SourceType;
 import com.hartwig.hmftools.compar.common.field.DoubleField;
 import com.hartwig.hmftools.compar.common.field.Field;
-import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class BamMetricsComparer implements ItemComparer
 {
@@ -84,13 +82,6 @@ public class BamMetricsComparer implements ItemComparer
         }
 
         return fieldNames;
-    }
-
-    @Override
-    public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess, final SourceType sourceType)
-    {
-        // currently unsupported
-        return Lists.newArrayList();
     }
 
     @Override
