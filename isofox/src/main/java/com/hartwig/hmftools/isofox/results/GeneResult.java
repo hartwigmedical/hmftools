@@ -32,7 +32,7 @@ public class GeneResult
     private double mRawTpm;
     private double mAdjustedTpm;
     private double mFitResiduals;
-    private double mLowMapQualsAllocation;
+    private double mMultiMappedAllocation;
 
     // cohort values for annotation
     private double mMedianTpmCohort;
@@ -56,7 +56,7 @@ public class GeneResult
         mRawTpm = 0;
         mAdjustedTpm = 0;
         mUnsplicedAlloc = 0;
-        mLowMapQualsAllocation = 0;
+        mMultiMappedAllocation = 0;
 
         mMedianTpmCohort = 0;
         mPercentileTpmCohort = 0;
@@ -91,7 +91,7 @@ public class GeneResult
     public double getSplicedAlloc() { return mSplicedAlloc; }
     public double getUnsplicedAlloc() { return mUnsplicedAlloc; }
 
-    public void setLowMapQualsAllocation(double alloc) { mLowMapQualsAllocation = alloc; }
+    public void setMultiMappedAllocation(double alloc) { mMultiMappedAllocation = alloc; }
 
     public void setCohortValues(double medianTpmCohort, double percentileTpmCohort, double medianTpmCancer, double percentileTpmCancer)
     {
@@ -121,7 +121,7 @@ public class GeneResult
                 .add(FLD_ADJ_TPM)
                 .add("RawTPM")
                 .add("FitResiduals")
-                .add("LowMapQualFrags")
+                .add("MultiMappedFragments")
                 .add(FLD_MEDIAN_TPM_CANCER)
                 .add(FLD_PERC_TPM_CANCER)
                 .add(FLD_MEDIAN_TPM_COHORT)
@@ -145,7 +145,7 @@ public class GeneResult
                 .add(String.format("%6.3e", mAdjustedTpm))
                 .add(String.format("%6.3e", mRawTpm))
                 .add(String.format("%.1f", getFitResiduals()))
-                .add(String.format("%.1f", mLowMapQualsAllocation))
+                .add(String.format("%.1f", mMultiMappedAllocation))
                 .add(String.format("%6.3e", mMedianTpmCancer))
                 .add(String.format("%.3f", mPercentileTpmCancer))
                 .add(String.format("%6.3e", mMedianTpmCohort))

@@ -484,7 +484,7 @@ public class ChromosomeTaskExecutor implements Callable<Void>
         geneCollectionSummary.GeneResults.add(geneResult);
 
         geneCollectionSummary.setFitAllocations();
-        geneCollectionSummary.assignLowMapQualityFragments();
+        geneCollectionSummary.assignMultiMappedFragments();
         geneCollectionSummary.TranscriptResults.forEach(x -> x.setPreGcFitAllocation(x.getFitAllocation()));
     }
 

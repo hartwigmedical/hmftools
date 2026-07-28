@@ -130,7 +130,7 @@ public class ExpressionReadTracker
             gcRatioCounts[1] *= enrichedGeneFragments;
         }
 
-        addGcCounts(catCounts, gcRatioIndices, gcRatioCounts, enrichedGeneFragments);
+        addGcCounts(catCounts, gcRatioIndices, gcRatioCounts, enrichedGeneFragments, false);
 
     }
 
@@ -220,10 +220,11 @@ public class ExpressionReadTracker
         if(multiMapped)
             mGenes.addCount(MULTI_MAPPED, 1);
 
-        addGcCounts(catCounts, gcRatioIndices, gcRatioCounts, fragmentCount);
+        addGcCounts(catCounts, gcRatioIndices, gcRatioCounts, fragmentCount, multiMapped);
     }
 
-    public void addGcCounts(final CategoryCountsData catCounts, final int[] gcRatioIndices, double[] gcRatioCounts, double count)
+    public void addGcCounts(
+            final CategoryCountsData catCounts, final int[] gcRatioIndices, double[] gcRatioCounts, double count, boolean multiMapped)
     {
         if(mGcRatioCounts != null)
         {
@@ -237,13 +238,13 @@ public class ExpressionReadTracker
             }
 
             if(mConfig.applyGcBiasAdjust())
-                catCounts.addGcRatioCounts(count, gcRatioIndices, gcRatioCounts);
+                catCounts.addGcRatioCounts(count, multiMapped, gcRatioIndices, gcRatioCounts);
             else
-                catCounts.addCounts(count);
+                catCounts.addCounts(count, multiMapped);
         }
         else
         {
-            catCounts.addCounts(count);
+            catCounts.addCounts(count, multiMapped);
         }
     }
 

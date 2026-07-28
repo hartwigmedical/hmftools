@@ -279,7 +279,7 @@ public class ResultsWriter
 
             sj.add("GeneSetId").add("GeneCount").add("Chromosome").add("RangeStart").add("RangeEnd");
             sj.add("TotalFragments").add("Duplicates").add("SupportingTrans").add("Unspliced").add("AltSJ").add("Chimeric");
-            sj.add("LowMapQual").add("ForwardStrand").add("ReverseStrand").add("Genes");
+            sj.add("MultiMapped").add("ForwardStrand").add("ReverseStrand").add("Genes");
 
             mGeneCollectionWriter.write(sj.toString());
             mGeneCollectionWriter.newLine();
