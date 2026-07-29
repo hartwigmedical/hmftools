@@ -2,7 +2,12 @@ package com.hartwig.hmftools.wisp.variant;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_EDGE_DISTANCE_PERC;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LIST_SEPARATOR;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_COUNT;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_QUALITY;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_STRAND_BIAS;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNTS;
 
 import java.util.List;
 
@@ -27,6 +32,9 @@ public class GenotypeFragments
 
     private final List<FilterReason> mFilterReasons;
     private final List<FilterReason> mDualFilterReasons;
+
+    public static final List<String> REQUIRED_GENOTYPE_FIELDS = List.of(
+            READ_CONTEXT_COUNT, READ_CONTEXT_QUALITY, UMI_TYPE_COUNTS, READ_STRAND_BIAS, AVG_EDGE_DISTANCE_PERC);
 
     public GenotypeFragments(
             final String sampleName, final int alleleCount, final int depth, final double qualTotal, final UmiTypeCounts umiCounts,
@@ -62,7 +70,7 @@ public class GenotypeFragments
 
     public double averageReadDistance()
     {
-        Object value = GenotypeData.getExtendedAttribute(SageVcfTags.AVG_EDGE_DISTANCE_PERC, null);
+        Object value = GenotypeData.getExtendedAttribute(AVG_EDGE_DISTANCE_PERC, null);
 
         if(value == null)
             return -1;
@@ -73,7 +81,7 @@ public class GenotypeFragments
 
     public double readStrandBias()
     {
-        Object value = GenotypeData.getExtendedAttribute(SageVcfTags.READ_STRAND_BIAS, null);
+        Object value = GenotypeData.getExtendedAttribute(READ_STRAND_BIAS, null);
 
         if(value == null)
             return -1;

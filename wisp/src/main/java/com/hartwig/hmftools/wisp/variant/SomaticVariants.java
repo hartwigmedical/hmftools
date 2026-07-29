@@ -42,6 +42,7 @@ import static com.hartwig.hmftools.wisp.variant.FilterReason.GERMLINE_AF;
 import static com.hartwig.hmftools.wisp.variant.FilterReason.NEARBY_INDEL;
 import static com.hartwig.hmftools.wisp.variant.FilterReason.REPEAT_COUNT;
 import static com.hartwig.hmftools.wisp.variant.FilterReason.SUBCLONAL;
+import static com.hartwig.hmftools.wisp.variant.GenotypeFragments.REQUIRED_GENOTYPE_FIELDS;
 import static com.hartwig.hmftools.wisp.variant.SnvFitStatus.UNCERTAIN;
 import static com.hartwig.hmftools.wisp.variant.SomaticPurityResult.INVALID_RESULT;
 
@@ -49,6 +50,7 @@ import java.io.BufferedWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.bam.ConsensusType;
@@ -139,6 +141,14 @@ public class SomaticVariants
         }
 
         VCFHeader vcfHeader = vcfFileReader.vcfHeader();
+
+        // check header has required fields
+        if(REQUIRED_GENOTYPE_FIELDS.stream().anyMatch(x -> !vcfHeader.hasFormatLine(x)))
+        {
+            String requiredVcfTags = REQUIRED_GENOTYPE_FIELDS.stream().collect(Collectors.joining(";"));
+            CT_LOGGER.error("patient({}) vcf({}) missing required fields({})",
+                    mSample.PatientId, somaticVcf, requiredVcfTags);
+        }
 
         for(String sampleId : targetSampleIds)
         {
