@@ -26,6 +26,7 @@ import static com.hartwig.hmftools.wisp.purity.ResultsWriter.addCommonFields;
 import static com.hartwig.hmftools.wisp.purity.ResultsWriter.addCommonHeaderFields;
 import static com.hartwig.hmftools.wisp.purity.variant.ClonalityData.NO_RESULT;
 import static com.hartwig.hmftools.wisp.purity.variant.ClonalityMethod.VAF_PEAK;
+import static com.hartwig.hmftools.wisp.purity.variant.SomaticPurityCalcs.cappedPurity;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -68,7 +69,31 @@ public class VafPeakModel extends ClonalityModel
     }
 
     @Override
-    public ClonalityData calculate(final String sampleId, final FragmentTotals fragmentTotals, final PurityCalcData purityCalcData)
+    public void calculate(final String sampleId, final FragmentTotals fragmentTotals, final PurityCalcData purityCalcData, double noiseRate)
+    {
+        purityCalcData.Clonality = calcClonalityData(sampleId, fragmentTotals, purityCalcData);
+
+        if(purityCalcData.Clonality == NO_RESULT)
+            return;
+
+        double lowRatio = purityCalcData.PurityEstimate > 0 ? purityCalcData.PurityRangeLow / purityCalcData.PurityEstimate : 1;
+        double highRatio = purityCalcData.PurityEstimate > 0 ? purityCalcData.PurityRangeHigh / purityCalcData.PurityEstimate : 1;
+        double INVALID_PURITY = -1;
+
+        double vafPeak = cappedPurity(purityCalcData.Clonality.Vaf, INVALID_PURITY);
+
+        if(vafPeak != INVALID_PURITY)
+        {
+            purityCalcData.PurityEstimate = vafPeak;
+            purityCalcData.PurityRangeLow = cappedPurity(purityCalcData.Clonality.VafLow, vafPeak);
+            purityCalcData.PurityRangeHigh = cappedPurity(purityCalcData.Clonality.VafHigh, vafPeak);
+        }
+
+        purityCalcData.PurityRangeLow = min(purityCalcData.PurityRangeLow * lowRatio, 1);
+        purityCalcData.PurityRangeHigh = min(purityCalcData.PurityRangeHigh * highRatio, 1);
+    }
+
+    private ClonalityData calcClonalityData(final String sampleId, final FragmentTotals fragmentTotals, final PurityCalcData purityCalcData)
     {
         List<Double> variantImpliedTFs = Lists.newArrayList();
 
@@ -148,11 +173,11 @@ public class VafPeakModel extends ClonalityModel
             peakLow = min(vafRatioPeakHigh.Peak, mainPeak);
         }
 
-        return new ClonalityData(
-                method, mainPeak, peakLow, peakHigh,
-                impliedTfPeak != null ? impliedTfPeak.Count : 0,
-                0,
+        String clonalityInfo = format("Density(band=%.4f low=%.4f high=%.4f)",
                 densityBandwidth, densityBandwidthLow, densityBandwidthHigh);
+
+        return new ClonalityData(
+                method, mainPeak, peakLow, peakHigh, impliedTfPeak != null ? impliedTfPeak.Count : 0, clonalityInfo);
     }
 
     private double calculateDensityBandwidth(

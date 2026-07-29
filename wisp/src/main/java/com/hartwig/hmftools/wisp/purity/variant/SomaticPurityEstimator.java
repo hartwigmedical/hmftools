@@ -20,8 +20,6 @@ import static com.hartwig.hmftools.wisp.purity.PurityConstants.MAX_PURITY_TO_CLI
 import static com.hartwig.hmftools.wisp.purity.ResultsWriter.formatProbabilityValue;
 import static com.hartwig.hmftools.wisp.purity.ResultsWriter.formatPurityValue;
 import static com.hartwig.hmftools.wisp.purity.variant.BqrAdjustment.hasVariantContext;
-import static com.hartwig.hmftools.wisp.purity.variant.ClonalityMethod.convertVafToPurity;
-import static com.hartwig.hmftools.wisp.purity.variant.ClonalityMethod.isRecomputed;
 import static com.hartwig.hmftools.wisp.purity.variant.LowCountModel.filterVariants;
 import static com.hartwig.hmftools.wisp.purity.variant.PurityCalcData.CALC_NO_SET;
 import static com.hartwig.hmftools.wisp.purity.variant.SomaticPurityCalcs.calcLimitOfDetection;
@@ -188,43 +186,7 @@ public class SomaticPurityEstimator
 
         if(model != null)
         {
-            purityCalcData.Clonality = model.calculate(sampleId, fragmentTotals, purityCalcData);
-
-            if(isRecomputed(purityCalcData.Clonality.Method))
-            {
-                double lowRatio = purityCalcData.PurityEstimate > 0 ? purityCalcData.PurityRangeLow / purityCalcData.PurityEstimate : 1;
-                double highRatio = purityCalcData.PurityEstimate > 0 ? purityCalcData.PurityRangeHigh / purityCalcData.PurityEstimate : 1;
-                double INVALID_PURITY = -1;
-
-                if(convertVafToPurity(purityCalcData.Clonality.Method))
-                {
-                    double purityEstimate = cappedPurity(estimatedPurity(
-                            purityCalcData.Clonality.Vaf, noiseRate, fragmentTotals), INVALID_PURITY);
-
-                    if(purityEstimate != INVALID_PURITY)
-                    {
-                        purityCalcData.PurityEstimate = purityEstimate;
-                        purityCalcData.PurityRangeLow = cappedPurity(estimatedPurity(
-                                purityCalcData.Clonality.VafLow, noiseRate, fragmentTotals), purityEstimate);
-
-                        purityCalcData.PurityRangeHigh = cappedPurity(estimatedPurity(
-                                purityCalcData.Clonality.VafHigh, noiseRate, fragmentTotals), purityEstimate);
-                    }
-                }
-                else
-                {
-                    double vafPeak = cappedPurity(purityCalcData.Clonality.Vaf, INVALID_PURITY);
-                    if(vafPeak != INVALID_PURITY)
-                    {
-                        purityCalcData.PurityEstimate = vafPeak;
-                        purityCalcData.PurityRangeLow = cappedPurity(purityCalcData.Clonality.VafLow, vafPeak);
-                        purityCalcData.PurityRangeHigh = cappedPurity(purityCalcData.Clonality.VafHigh, vafPeak);
-                    }
-                }
-
-                purityCalcData.PurityRangeLow = min(purityCalcData.PurityRangeLow * lowRatio, 1);
-                purityCalcData.PurityRangeHigh = min(purityCalcData.PurityRangeHigh * highRatio, 1);
-            }
+            model.calculate(sampleId, fragmentTotals, purityCalcData, noiseRate);
         }
 
         // report final probability as min of Dual and Normal Prob

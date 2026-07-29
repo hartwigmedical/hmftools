@@ -77,7 +77,7 @@ public class SomaticPurityResult
         sj.add("Frag1Variants");
         sj.add("Frag2PlusVariants");
         sj.add("ClonalPeakVariants");
-        sj.add("ClonalDropoutRate");
+        sj.add("ClonalInfo");
         sj.add("DualSNVPValue");
         sj.add("SNVLod");
         sj.add("DualSNVLod");
@@ -88,9 +88,6 @@ public class SomaticPurityResult
         sj.add("WeightedAvgDepth");
         sj.add("WeightedAvgVCN");
         sj.add("WeightedAvgCN");
-        sj.add("PeakBandwidth");
-        sj.add("PeakBandwidthLow");
-        sj.add("PeakBandwidthHigh");
         sj.add("OutlierVariants");
         sj.add("CappedTumorCopyNumber");
         sj.add("ErrorRate");
@@ -117,7 +114,7 @@ public class SomaticPurityResult
         sj.add(format("%d", FragTotals.oneFragmentCount()));
         sj.add(format("%d", FragTotals.twoPlusCount()));
         sj.add(format("%d", PurityCalcs.Clonality.VariantCount));
-        sj.add(format("%.2f", PurityCalcs.Clonality.DropoutRate));
+        sj.add(PurityCalcs.Clonality.ExtraInfo);
         sj.add(formatProbabilityValue(PurityCalcs.DualProbability));
         sj.add(formatPurityValue(PurityCalcs.LodPurityEstimate));
         sj.add(formatPurityValue(PurityCalcs.DualLodPurityEstimate));
@@ -129,9 +126,6 @@ public class SomaticPurityResult
         sj.add(format("%.1f", FragTotals.weightedSampleDepth()));
         sj.add(format("%.1f", FragTotals.weightedVariantCopyNumber()));
         sj.add(format("%.1f", FragTotals.weightedCopyNumber()));
-        sj.add(format("%.4f", PurityCalcs.Clonality.PeakBandwidth));
-        sj.add(format("%.4f", PurityCalcs.Clonality.PeakBandwidthLow));
-        sj.add(format("%.4f", PurityCalcs.Clonality.PeakBandwidthHigh));
 
         sj.add(OutlierVariantInfo);
         sj.add(Boolean.toString(CapMaxTumorCopyNumber));
