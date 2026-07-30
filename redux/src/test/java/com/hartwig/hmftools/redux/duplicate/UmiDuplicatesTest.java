@@ -598,6 +598,39 @@ public class UmiDuplicatesTest
 
         assertNotNull(duplicateGroup);
         assertTrue(duplicateGroup.polyGUnmapped());
+
+        // test 5: do not merge R1 and R2 even if have poly-G tail
+        readName1 = "READ_001:" + umiIdPart1 + DEFAULT_DUPLEX_UMI_DELIM + umiId1Part2;
+        read1.setReadName(readName1);
+        mate1.setReadName(readName1);
+
+        String mateCigar = "1S99M";
+        int matePosition = readPosition + 1;
+        read1 = createSamRecord(readName1, CHR_1, readPosition, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, matePosition,
+                false, false, null, false, mateCigar);
+
+        mate1 = createSamRecord(readName1, CHR_1, matePosition, TEST_READ_BASES, mateCigar, CHR_1, readPosition,
+                false, false, null, false, TEST_READ_CIGAR);
+        flipFirstInPair(mate1);
+
+        // these reads are just included to trigger presence of ummapped reads
+        int readPosition2 = readPosition + 10;
+        read2 = createSamRecord(readName2, CHR_1, readPosition2, TEST_READ_BASES, TEST_READ_CIGAR, NO_CHROMOSOME_NAME, NO_POSITION,
+                false, false, null, false, NO_CIGAR);
+        read2.setMateUnmappedFlag(true);
+
+        mate2 = createSamRecord(readName2, NO_CHROMOSOME_NAME, readPosition2, TEST_READ_BASES, NO_CIGAR, CHR_1, readPosition2,
+                false, false, null, false, TEST_READ_CIGAR);
+        flipFirstInPair(mate2);
+
+        singleFragments = formSingleFragments(List.of(read1, mate1, read2, mate2));
+
+        umiGroups = Lists.newArrayList();
+        polyGUmiMerger.mergeGroups(umiGroups, singleFragments);
+
+        assertEquals(0, umiGroups.size());
+        assertEquals(4, singleFragments.size());
+
     }
 
     private static DuplicateGroup findMatchingGroup(

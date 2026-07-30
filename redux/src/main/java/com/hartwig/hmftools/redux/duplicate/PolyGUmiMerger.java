@@ -286,6 +286,7 @@ public class PolyGUmiMerger
     {
         // require a match on the lower coordinates
         return coords1.PositionLower == coords2.PositionLower
+            && coords1.ReadIsLower == coords2.ReadIsLower
             && coords1.UnmappedSourced == coords2.UnmappedSourced
             && coords1.OrientLower == coords2.OrientLower
             && (coords1.SuppReadInfo != null) == (coords2.SuppReadInfo != null);
@@ -298,8 +299,8 @@ public class PolyGUmiMerger
 
         for(DuplicateGroup duplicateGroup : umiGroups)
         {
-            hasPolyGUmi |= hasUnmappedRead(duplicateGroup.fragCoordinates());
-            hasUnmappedReads |= hasPolyGTail(duplicateGroup.umi());
+            hasUnmappedReads |= hasUnmappedRead(duplicateGroup.fragCoordinates());
+            hasPolyGUmi |= hasPolyGTail(duplicateGroup.umi());
 
             if(hasPolyGUmi && hasUnmappedReads)
                 break;
@@ -307,8 +308,8 @@ public class PolyGUmiMerger
 
         for(ReadInfo readInfo : singleFragments)
         {
-            hasPolyGUmi |= hasUnmappedRead(readInfo.fragCoordinates());
-            hasUnmappedReads |= hasPolyGTail(readInfo.getOrExtractUmi(mUmiConfig));
+            hasUnmappedReads |= hasUnmappedRead(readInfo.fragCoordinates());
+            hasPolyGUmi |= hasPolyGTail(readInfo.getOrExtractUmi(mUmiConfig));
 
             if(hasPolyGUmi && hasUnmappedReads)
                 break;
