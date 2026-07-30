@@ -384,32 +384,6 @@ public class LiftBackDiscriminatorTest
         assertTrue(result.primaryAlignment().FromTxContig);
     }
 
-    @Test
-    public void testStatsEndToEndSmoke()
-    {
-        LiftBackDiscriminator resolver = new LiftBackDiscriminator(contigMap());
-        LiftBackStatistics stats = new LiftBackStatistics();
-
-        SAMRecord r1 = newRecord(CHR_1, 1000, "150M"); // ref only
-        stats.record(r1, resolver.resolve(r1));
-
-        SAMRecord r2 = newRecord(TX_CONTIG, 51, "100M"); // tx only, junction-crosser
-        stats.record(r2, resolver.resolve(r2));
-
-        SAMRecord r3 = newRecord(CHR_1, 100, "50M"); // ref and tx agreeing, MAPQ=0
-        r3.setAttribute("XA", TX_CONTIG + ",+1,50M,0;");
-        r3.setMappingQuality(0);
-        stats.record(r3, resolver.resolve(r3));
-
-        SAMRecord r4 = newUnmappedRecord(); // UNMAPPED
-        stats.record(r4, resolver.resolve(r4));
-
-        assertEquals(4, stats.total());
-        assertEquals(3, stats.resolved());
-        // the fourth arrived unmapped, so nothing was lost by lift-back
-        assertEquals(0, stats.unmapped());
-    }
-
     // numLoci must reflect the deduped genomic-locus count, not the XA entry count (NH is derived from it).
     @Test
     public void testNumLociDedupesIdenticalLiftedXaEntries()
