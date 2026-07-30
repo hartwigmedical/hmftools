@@ -10,6 +10,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
+import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.tars.common.ContigEntry;
 
@@ -17,7 +18,6 @@ import org.junit.Test;
 
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
-import htsjdk.samtools.TextCigarCodec;
 
 // threeExonContig(), used by most tests below, maps packed contig coordinates to the genome as:
 //
@@ -263,6 +263,45 @@ public class ContigTranslatorTest
         assertEquals("72M2640N79M", result.toString());
     }
 
+    // ---- mergeDeletionsIntoSplice: a D straddling an exon boundary folded back into the N ----
+
+    @Test
+    public void testAbsorbsSmallDeletionAfterJunction()
+    {
+        // 5D (<= MAX_MERGED_DELETION_BP) just after the intron N is absorbed into it
+        assertEquals("10M105N5M", mergeDeletions("10M100N5D5M"));
+    }
+
+    @Test
+    public void testAbsorbsSmallDeletionBeforeJunction()
+    {
+        assertEquals("10M105N5M", mergeDeletions("10M5D100N5M"));
+    }
+
+    @Test
+    public void testAbsorbsDeletionsBothSidesOfJunction()
+    {
+        assertEquals("10M105N5M", mergeDeletions("10M3D100N2D5M"));
+    }
+
+    @Test
+    public void testKeepsDeletionAboveThreshold()
+    {
+        // 6D exceeds the threshold: a real deletion, kept beside the N
+        assertEquals("10M100N6D5M", mergeDeletions("10M100N6D5M"));
+    }
+
+    @Test
+    public void testLeavesPlainSpliceUntouched()
+    {
+        assertEquals("50M100N50M", mergeDeletions("50M100N50M"));
+    }
+
+    private static String mergeDeletions(final String cigarString)
+    {
+        return new Cigar(ContigTranslator.mergeDeletionsIntoSplice(cigar(cigarString).getCigarElements())).toString();
+    }
+
     private static ContigEntry threeExonContig()
     {
         return new ContigEntry(
@@ -272,6 +311,6 @@ public class ContigTranslatorTest
 
     private static Cigar cigar(final String cigarString)
     {
-        return TextCigarCodec.decode(cigarString);
+        return CigarUtils.cigarFromStr(cigarString);
     }
 }

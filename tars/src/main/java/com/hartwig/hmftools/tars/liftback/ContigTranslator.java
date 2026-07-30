@@ -3,11 +3,18 @@ package com.hartwig.hmftools.tars.liftback;
 import static com.hartwig.hmftools.common.bam.CigarUtils.leftSoftClipLength;
 import static com.hartwig.hmftools.common.bam.CigarUtils.leftSoftClipped;
 import static com.hartwig.hmftools.common.bam.CigarUtils.rightSoftClipped;
+import static com.hartwig.hmftools.tars.common.TarsConstants.ALT_CONTIG_SUFFIX;
+import static com.hartwig.hmftools.tars.common.TarsConstants.MAX_MERGED_DELETION_BP;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
+import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.tars.common.ContigEntry;
 
@@ -15,9 +22,168 @@ import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
 
-// translates a transcript-contig alignment (pos + cigar) to genome coordinates, re-inserting introns as N gaps.
+// Translates a transcript-contig alignment (pos + cigar) to genome coordinates, re-inserting introns as N gaps.
+// Holds the sidecar's segments per alt contig so a position can be resolved to its owning transcript first;
+// translate() is the coordinate walk on its own and needs no index.
 public final class ContigTranslator
 {
+    // per-alt-contig segments sorted by contigStart for binary search back to the owning transcript.
+    private final Map<String, List<ContigEntry>> mSegmentsByAltContig;
+
+    public ContigTranslator(final List<ContigEntry> entries)
+    {
+        mSegmentsByAltContig = new HashMap<>();
+        for(ContigEntry entry : entries)
+        {
+            mSegmentsByAltContig.computeIfAbsent(entry.contigName(), key -> new ArrayList<>()).add(entry);
+        }
+        for(List<ContigEntry> segments : mSegmentsByAltContig.values())
+        {
+            segments.sort(Comparator.comparingInt(ContigEntry::contigStart));
+        }
+    }
+
+    public Set<String> contigNames()
+    {
+        return mSegmentsByAltContig.keySet();
+    }
+
+    // Lifts one placement to genomic coordinates. Returns null when the contig is an unknown alt contig or the position
+    // falls outside any transcript; ref-genome placements pass through unchanged.
+    public LiftedAlignment liftAlignment(
+            final String contig, final int pos, final String cigarStr, final int nm, final boolean forwardStrand)
+    {
+        if(!mSegmentsByAltContig.containsKey(contig))
+        {
+            // an unknown alt contig must not pass through as ref - that would leak _tx contig names into the BAM.
+            if(contig.endsWith(ALT_CONTIG_SUFFIX))
+            {
+                return null;
+            }
+
+            return new LiftedAlignment(contig, pos, cigarStr, nm, false, false, forwardStrand, 0);
+        }
+
+        ContigEntry entry = findSegment(contig, pos);
+        if(entry == null)
+        {
+            return null;
+        }
+
+        ContigTranslateResult translated = translate(entry, pos, CigarUtils.cigarFromStr(cigarStr));
+        if(translated == null)
+        {
+            return null;
+        }
+
+        String genomicCigar = new Cigar(mergeDeletionsIntoSplice(translated.genomicCigar().getCigarElements())).toString();
+        return new LiftedAlignment(
+                translated.chromosome(), translated.genomicStart(), genomicCigar, nm,
+                true, translated.softClipAtExonBoundary(), forwardStrand, entry.strand());
+    }
+
+    // Lifts each entry of a bwa XA tag ("chrom,<sign>pos,cigar,NM;" repeated, the position sign carrying the strand).
+    // Malformed entries and placements that fail to lift are skipped: XA comes from the aligner, outside our control.
+    public List<LiftedAlignment> liftXaAlignments(final String xaTag)
+    {
+        List<LiftedAlignment> lifted = new ArrayList<>();
+        if(xaTag == null || xaTag.isEmpty())
+        {
+            return lifted;
+        }
+
+        for(String entry : xaTag.split(";"))
+        {
+            if(entry.isEmpty())
+                continue;
+
+            String[] fields = entry.split(",");
+            if(fields.length < 4)
+                continue;
+
+            int signedPosition;
+            try
+            {
+                signedPosition = Integer.parseInt(fields[1]);
+            }
+            catch(NumberFormatException e)
+            {
+                continue;
+            }
+
+            int numMismatches;
+            try
+            {
+                numMismatches = Integer.parseInt(fields[3]);
+            }
+            catch(NumberFormatException e)
+            {
+                numMismatches = 0;
+            }
+
+            LiftedAlignment alignment = liftAlignment(
+                    fields[0], Math.abs(signedPosition), fields[2], numMismatches, signedPosition >= 0);
+            if(alignment != null)
+            {
+                lifted.add(alignment);
+            }
+        }
+
+        return lifted;
+    }
+
+    // Segment owning altPos, or null when the contig is unknown. A spacer or leading-overhang position resolves to the
+    // nearest segment so the overhang clamp below can salvage it.
+    ContigEntry findSegment(final String altContig, final int altPos)
+    {
+        List<ContigEntry> segments = mSegmentsByAltContig.get(altContig);
+        if(segments == null || segments.isEmpty())
+        {
+            return null;
+        }
+
+        int candidate = floorIndexByContigStart(segments, altPos);
+        ContigEntry segment = segments.get(candidate);
+        if(altPos <= segment.contigEnd())
+        {
+            return segment;
+        }
+
+        // altPos in an inter-segment spacer: pick the nearer neighbour to clamp against.
+        if(candidate + 1 < segments.size())
+        {
+            ContigEntry next = segments.get(candidate + 1);
+            int leadingOverhang = next.contigStart() - altPos;
+            int trailingOverhang = altPos - segment.contigEnd();
+            return leadingOverhang <= trailingOverhang ? next : segment;
+        }
+
+        return segment;
+    }
+
+    // index of the last segment with contigStart <= altPos, or 0 when altPos precedes the first, mirroring
+    // BaseRegion.binarySearch (segments are ContigEntry, not BaseRegion, so its overload cannot be applied directly).
+    private static int floorIndexByContigStart(final List<ContigEntry> segments, final int altPos)
+    {
+        int low = 0;
+        int high = segments.size() - 1;
+        int floor = 0;
+        while(low <= high)
+        {
+            int mid = (low + high) >>> 1;
+            if(segments.get(mid).contigStart() <= altPos)
+            {
+                floor = mid;
+                low = mid + 1;
+            }
+            else
+            {
+                high = mid - 1;
+            }
+        }
+        return floor;
+    }
+
     public static ContigTranslateResult translate(final ContigEntry contig, final int contigPos, final Cigar contigCigar)
     {
         List<BaseRegion> spans = contig.exonSpans();
@@ -163,6 +329,47 @@ public final class ContigTranslator
         }
 
         return result;
+    }
+
+    // A D straddling an exon boundary lifts as xD nN yD; folding the small flanking Ds into the N preserves both spans.
+    static List<CigarElement> mergeDeletionsIntoSplice(final List<CigarElement> elements)
+    {
+        if(elements.size() < 3)
+        {
+            return elements;
+        }
+
+        List<CigarElement> result = new ArrayList<>(elements.size());
+        for(int i = 0; i < elements.size(); ++i)
+        {
+            CigarElement element = elements.get(i);
+
+            if(element.getOperator() != CigarOperator.N)
+            {
+                result.add(element);
+                continue;
+            }
+
+            int splicedLength = element.getLength();
+
+            if(!result.isEmpty() && isAbsorbableDeletion(result.get(result.size() - 1)))
+            {
+                splicedLength += result.remove(result.size() - 1).getLength();
+            }
+
+            while(i + 1 < elements.size() && isAbsorbableDeletion(elements.get(i + 1)))
+            {
+                splicedLength += elements.get(++i).getLength();
+            }
+
+            result.add(new CigarElement(splicedLength, CigarOperator.N));
+        }
+        return result;
+    }
+
+    private static boolean isAbsorbableDeletion(final CigarElement element)
+    {
+        return element.getOperator() == CigarOperator.D && element.getLength() <= MAX_MERGED_DELETION_BP;
     }
 
     static List<CigarElement> mergeAdjacentSameOp(final List<CigarElement> elements)

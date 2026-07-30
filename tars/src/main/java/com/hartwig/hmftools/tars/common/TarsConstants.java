@@ -9,8 +9,12 @@ public final class TarsConstants
 
     public static final String APP_NAME = "Tars";
 
-    // suffix appended to a chromosome to name its alt contig, e.g. chr1 -> chr1_tx
+    // alt contig name suffix, e.g. chr1 -> chr1_tx
     public static final String ALT_CONTIG_SUFFIX = "_tx";
+
+    // a deletion this size or smaller either side of a splice N is folded into it (10M100N5D5M -> 10M105N5M) so the
+    // junction stays on the annotated boundary; anything larger is kept as a real deletion
+    public static final int MAX_MERGED_DELETION_BP = 5;
 
     // bwa-mem scoring, used wherever tars re-scores against the genome
     public static final int MATCH = 1;
@@ -23,6 +27,12 @@ public final class TarsConstants
 
     // overhangs longer than this are trusted without scoring
     public static final int MIN_OVERHANG_LENGTH = 12;
+
+    // MAPQ of a placement taken as confident
+    public static final int CONFIDENT_MAPQ = 60;
+
+    // Step 2 tie-break: a tied locus within this gap of the mate (same chromosome) is preferred
+    public static final int MATE_PROXIMITY_MAX_DISTANCE = 1_000_000;
 
     // TODO revisit: OverhangReconciler uses this to suppress genomic scoring for a whole record, which also silences
     // scorable tx-contig candidates; a per-candidate fragment test would remove that use entirely
