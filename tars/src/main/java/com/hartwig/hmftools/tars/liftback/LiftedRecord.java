@@ -127,35 +127,6 @@ public record LiftedRecord(
         return altEntries.isEmpty() ? null : String.join("", altEntries);
     }
 
-    // which contig sources contributed to the alignment set; NONE when nothing lifted.
-    public Composition composition()
-    {
-        boolean hasRef = false;
-        boolean hasTx = false;
-
-        for(LiftedAlignment alignment : liftedAlignments)
-        {
-            if(alignment.FromTxContig)
-            {
-                hasTx = true;
-            }
-            else
-            {
-                hasRef = true;
-            }
-        }
-
-        if(hasRef && hasTx)
-        {
-            return Composition.REF_AND_TX;
-        }
-        if(hasTx)
-        {
-            return Composition.TX_ONLY;
-        }
-        return hasRef ? Composition.REF_ONLY : Composition.NONE;
-    }
-
     private static String appendNote(final String existing, final String note)
     {
         if(existing == null || existing.isEmpty())
@@ -163,13 +134,5 @@ public record LiftedRecord(
             return note;
         }
         return existing + ";" + note;
-    }
-
-    public enum Composition
-    {
-        REF_ONLY,
-        TX_ONLY,
-        REF_AND_TX,
-        NONE
     }
 }
