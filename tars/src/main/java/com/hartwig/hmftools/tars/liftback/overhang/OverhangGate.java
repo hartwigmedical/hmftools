@@ -1,9 +1,11 @@
 package com.hartwig.hmftools.tars.liftback.overhang;
 
 import static com.hartwig.hmftools.common.utils.Arrays.reverseArray;
+import static com.hartwig.hmftools.tars.common.BwaScoring.baseScore;
+import static com.hartwig.hmftools.tars.common.BwaScoring.maxScoringPrefix;
+import static com.hartwig.hmftools.tars.common.BwaScoring.score;
 import static com.hartwig.hmftools.tars.common.TarsConstants.GAP_EXTEND;
 import static com.hartwig.hmftools.tars.common.TarsConstants.GAP_OPEN;
-import static com.hartwig.hmftools.tars.common.TarsConstants.MATCH;
 import static com.hartwig.hmftools.tars.common.TarsConstants.MISMATCH;
 import static com.hartwig.hmftools.tars.common.TarsConstants.MIN_OVERHANG_LENGTH;
 import static com.hartwig.hmftools.tars.common.TarsConstants.MIN_OVERHANG_SCORE;
@@ -16,6 +18,7 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.tars.common.BwaScoring;
 
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
@@ -32,18 +35,9 @@ public class OverhangGate
         mRefGenome = refGenome;
     }
 
-    // Null unless the whole requested window is present. Every pass here treats a partial window as no reference, and
-    // a query overshooting a contig end must not be scored on truncated bases - which is also what the underlying
-    // implementations disagree on (RefGenomeSource lets htsjdk throw past the end, MockRefGenome returns empty).
     private byte[] refBases(final String chromosome, final int posStart, final int posEnd)
     {
-        if(mRefGenome == null || posStart < 1 || posEnd < posStart || posEnd > mRefGenome.getChromosomeLength(chromosome))
-        {
-            return null;
-        }
-
-        byte[] bases = mRefGenome.getBases(chromosome, posStart, posEnd);
-        return bases != null && bases.length == posEnd - posStart + 1 ? bases : null;
+        return BwaScoring.refWindow(mRefGenome, chromosome, posStart, posEnd);
     }
 
     public boolean enabled()
@@ -385,46 +379,6 @@ public class OverhangGate
         return count;
     }
 
-    // one base pair's contribution to a bwa-mem score
-    private static int baseScore(final byte readBase, final byte refBase)
-    {
-        return basesEqual(readBase, refBase) ? MATCH : MISMATCH;
-    }
-
-    // Longest prefix reaching the highest cumulative bwa-mem score (0 if none positive); the >= tie extends past an
-    // internal mismatch.
-    static int maxScoringPrefix(final byte[] read, final byte[] ref)
-    {
-        int length = Math.min(read.length, ref.length);
-        int score = 0;
-        int bestScore = 0;
-        int bestLength = 0;
-        for(int i = 0; i < length; ++i)
-        {
-            score += baseScore(read[i], ref[i]);
-            if(score >= bestScore && score > 0)
-            {
-                bestScore = score;
-                bestLength = i + 1;
-            }
-        }
-        return bestLength;
-    }
-
-    // Straight bwa-mem score of read vs ref over their overlapping length.
-    static int score(final byte[] read, final byte[] ref)
-    {
-        int total = 0;
-        int length = Math.min(read.length, ref.length);
-        for(int i = 0; i < length; ++i)
-        {
-            total += baseScore(read[i], ref[i]);
-        }
-        return total;
-    }
-
-    // bwa-mem-style genomic score of a lifted alignment: match/mismatch over aligned bases, affine gap per I/D, N and
-    // S/H free.
     public int genomicScore(
             final String chromosome, final int alignmentStart, final String cigarStr, final byte[] readBases)
     {
