@@ -34,7 +34,17 @@ public final class TarsConstants
     // Step 2 tie-break: a tied locus within this gap of the mate (same chromosome) is preferred
     public static final int MATE_PROXIMITY_MAX_DISTANCE = 1_000_000;
 
+    // implied-intron bounds for a supplementary merge, the supp_implied_min/max_intron_length defaults
+    public static final int MIN_IMPLIED_INTRON_LENGTH = 21;
+
     // TODO revisit: OverhangReconciler uses this to suppress genomic scoring for a whole record, which also silences
     // scorable tx-contig candidates; a per-candidate fragment test would remove that use entirely
     public static final int MAX_IMPLIED_INTRON_LENGTH = 1_000_000;
+
+    // most supplementaries folded into one primary
+    public static final int MAX_SUPP_MERGES = 2;
+
+    // supplementary merge: primary and supplementary read spans may overlap by this much and still merge; the
+    // overlap is the window the junction position is then chosen within
+    public static final int MAX_SUPP_READ_OVERLAP = 5;
 }
