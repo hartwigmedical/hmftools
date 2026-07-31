@@ -20,12 +20,13 @@ import com.hartwig.hmftools.compar.common.field.FieldCheck;
 import com.hartwig.hmftools.compar.common.field.FieldValue;
 import com.hartwig.hmftools.compar.common.field.IntFieldValue;
 import com.hartwig.hmftools.compar.common.field.StringFieldValue;
+import com.hartwig.hmftools.compar.common.field.ThresholdFieldCheck;
 
 public class PurityData implements ComparableItem
 {
     public final PurityContext Purity;
 
-    private final Map<String,FieldValue> mValues;
+    private final Map<String, FieldValue> mValues;
 
     @Deprecated
     public PurityData(final PurityContext purityContext)
@@ -34,72 +35,43 @@ public class PurityData implements ComparableItem
         Purity = purityContext;
     }
 
-    public PurityData(final PurityContext purityContext, final Map<String,FieldCheck> fieldCheckMap)
+    public PurityData(final PurityContext purityContext, final Map<String, FieldCheck> fieldCheckMap)
     {
         mValues = Maps.newHashMap();
 
-        mValues.put(PurityComparer.PurityFields.Purity.toString(),
-                purity(PurityComparer.PurityFields.Purity, purityContext.bestFit().purity(), fieldCheckMap));
+        addDoubleValue(PurityComparer.PurityFields.Purity, purityContext.bestFit().purity(), fieldCheckMap);
+        addDoubleValue(PurityComparer.PurityFields.Ploidy, purityContext.bestFit().ploidy(), fieldCheckMap);
+        addDoubleValue(PurityComparer.PurityFields.Contamination, purityContext.qc().contamination(), fieldCheckMap);
+        addDoubleValue(PurityComparer.PurityFields.TmbPerMb, purityContext.tumorMutationalBurdenPerMb(), fieldCheckMap);
+        addDoubleValue(PurityComparer.PurityFields.MsIndelsPerMb, purityContext.microsatelliteIndelsPerMb(), fieldCheckMap);
 
-        mValues.put(PurityComparer.PurityFields.Ploidy.toString(),
-                ploidy(PurityComparer.PurityFields.Ploidy, purityContext.bestFit().ploidy(), fieldCheckMap));
+        addIntValue(PurityComparer.PurityFields.Tml, purityContext.tumorMutationalLoad(), fieldCheckMap);
+        addIntValue(PurityComparer.PurityFields.CopyNumberSegments, purityContext.qc().copyNumberSegments(), fieldCheckMap);
+        addIntValue(
+                PurityComparer.PurityFields.UnsupportedCopyNumberSegments, purityContext.qc().unsupportedCopyNumberSegments(),
+                fieldCheckMap);
+        addIntValue(PurityComparer.PurityFields.SvTmb, purityContext.svTumorMutationalBurden(), fieldCheckMap);
 
-        mValues.put(PurityComparer.PurityFields.Contamination.toString(),
-                contamination(PurityComparer.PurityFields.Contamination, purityContext.qc().contamination(), fieldCheckMap));
+        addStringValue(
+                PurityComparer.PurityFields.QcStatus,
+                purityContext.qc().status().stream().map(x -> x.toString()).collect(Collectors.joining(ITEM_DELIM)),
+                fieldCheckMap);
+        addStringValue(PurityComparer.PurityFields.Gender, purityContext.gender().toString(), fieldCheckMap);
+        addStringValue(
+                PurityComparer.PurityFields.GermlineAberrations,
+                purityContext.qc().germlineAberrations().stream().map(x -> x.toString()).collect(Collectors.joining(ITEM_DELIM)),
+                fieldCheckMap);
+        addStringValue(PurityComparer.PurityFields.FitMethod, purityContext.method().toString(), fieldCheckMap);
+        addStringValue(PurityComparer.PurityFields.MsStatus, purityContext.microsatelliteStatus().toString(), fieldCheckMap);
+        addStringValue(PurityComparer.PurityFields.TmbStatus, purityContext.tumorMutationalBurdenStatus().toString(), fieldCheckMap);
+        addStringValue(PurityComparer.PurityFields.TmlStatus, purityContext.tumorMutationalLoadStatus().toString(), fieldCheckMap);
 
-        mValues.put(PurityComparer.PurityFields.TmbPerMb.toString(),
-                tmbPerMb(PurityComparer.PurityFields.TmbPerMb, purityContext.tumorMutationalBurdenPerMb(), fieldCheckMap));
-
-        mValues.put(PurityComparer.PurityFields.MsIndelsPerMb.toString(),
-                msiIndels(PurityComparer.PurityFields.MsIndelsPerMb, purityContext.microsatelliteIndelsPerMb(), fieldCheckMap));
-
-        mValues.put(PurityComparer.PurityFields.Tml.toString(),
-                tml(PurityComparer.PurityFields.Tml, purityContext.tumorMutationalLoad(), fieldCheckMap));
-
-        mValues.put(PurityComparer.PurityFields.CopyNumberSegments.toString(),
-                cnSegments(PurityComparer.PurityFields.CopyNumberSegments, purityContext.qc().copyNumberSegments(), fieldCheckMap));
-
-        mValues.put(PurityComparer.PurityFields.UnsupportedCopyNumberSegments.toString(),
-                unsupportedCnSegs(PurityComparer.PurityFields.UnsupportedCopyNumberSegments,
-                        purityContext.qc().unsupportedCopyNumberSegments(), fieldCheckMap));
-
-        mValues.put(PurityComparer.PurityFields.SvTmb.toString(),
-                svTmb(PurityComparer.PurityFields.SvTmb, purityContext.svTumorMutationalBurden(), fieldCheckMap));
-
-        mValues.put(PurityComparer.PurityFields.QcStatus.toString(),
-                stringField(
-                        PurityComparer.PurityFields.QcStatus,
-                        purityContext.qc().status().stream().map(x -> x.toString()).collect(Collectors.joining(ITEM_DELIM)),
-                        fieldCheckMap));
-
-        mValues.put(PurityComparer.PurityFields.Gender.toString(),
-                stringField(PurityComparer.PurityFields.Gender, purityContext.gender().toString(), fieldCheckMap));
-
-        mValues.put(PurityComparer.PurityFields.GermlineAberrations.toString(),
-                stringField(
-                        PurityComparer.PurityFields.GermlineAberrations,
-                        purityContext.qc().germlineAberrations().stream().map(x -> x.toString()).collect(Collectors.joining(ITEM_DELIM)),
-                        fieldCheckMap));
-
-        mValues.put(PurityComparer.PurityFields.FitMethod.toString(),
-                stringField(PurityComparer.PurityFields.FitMethod, purityContext.method().toString(), fieldCheckMap));
-
-        mValues.put(PurityComparer.PurityFields.MsStatus.toString(),
-                stringField(PurityComparer.PurityFields.MsStatus, purityContext.microsatelliteStatus().toString(), fieldCheckMap));
-
-        mValues.put(PurityComparer.PurityFields.TmbStatus.toString(),
-                stringField(PurityComparer.PurityFields.TmbStatus, purityContext.tumorMutationalBurdenStatus().toString(), fieldCheckMap));
-
-        mValues.put(PurityComparer.PurityFields.TmlStatus.toString(),
-                stringField(PurityComparer.PurityFields.TmlStatus, purityContext.tumorMutationalLoadStatus().toString(), fieldCheckMap));
-
-        mValues.put(PurityComparer.PurityFields.TincLevel.toString(),
-                tincLevel(PurityComparer.PurityFields.TincLevel, purityContext.qc().tincLevel(), fieldCheckMap));
+        addDoubleValue(PurityComparer.PurityFields.TincLevel, purityContext.qc().tincLevel(), fieldCheckMap);
 
         Purity = purityContext;
     }
 
-    public PurityData(final List<TruthsetValue> truthsetValues, final Map<String,FieldCheck> fieldCheckMap)
+    public PurityData(final List<TruthsetValue> truthsetValues, final Map<String, FieldCheck> fieldCheckMap)
     {
         mValues = Maps.newHashMap();
 
@@ -112,39 +84,18 @@ public class PurityData implements ComparableItem
             switch(field)
             {
                 case Purity:
-                    mValues.put(fieldName, purity(field, Double.valueOf(truthsetValue.Value), fieldCheckMap));
-                    break;
-
                 case Ploidy:
-                    mValues.put(fieldName, ploidy(field, Double.valueOf(truthsetValue.Value), fieldCheckMap));
-                    break;
-
                 case Contamination:
-                    mValues.put(fieldName, contamination(field, Double.valueOf(truthsetValue.Value), fieldCheckMap));
-                    break;
-
                 case TmbPerMb:
-                    mValues.put(fieldName, tmbPerMb(field, Double.valueOf(truthsetValue.Value), fieldCheckMap));
-                    break;
-
                 case MsIndelsPerMb:
-                    mValues.put(fieldName, msiIndels(field, Double.valueOf(truthsetValue.Value), fieldCheckMap));
+                    addDoubleValue(field, Double.valueOf(truthsetValue.Value), fieldCheckMap);
                     break;
 
                 case Tml:
-                    mValues.put(fieldName, tml(field, Integer.valueOf(truthsetValue.Value), fieldCheckMap));
-                    break;
-
                 case CopyNumberSegments:
-                    mValues.put(fieldName, cnSegments(field, Integer.valueOf(truthsetValue.Value), fieldCheckMap));
-                    break;
-
                 case UnsupportedCopyNumberSegments:
-                    mValues.put(fieldName, unsupportedCnSegs(field, Integer.valueOf(truthsetValue.Value), fieldCheckMap));
-                    break;
-
                 case SvTmb:
-                    mValues.put(fieldName, svTmb(field, Integer.valueOf(truthsetValue.Value), fieldCheckMap));
+                    addIntValue(field, Integer.valueOf(truthsetValue.Value), fieldCheckMap);
                     break;
 
                 case QcStatus:
@@ -154,7 +105,7 @@ public class PurityData implements ComparableItem
                 case MsStatus:
                 case TmbStatus:
                 case TmlStatus:
-                    mValues.put(fieldName, stringField(field, truthsetValue.Value, fieldCheckMap));
+                    addStringValue(field, truthsetValue.Value, fieldCheckMap);
                     break;
 
                 default:
@@ -166,84 +117,44 @@ public class PurityData implements ComparableItem
     }
 
     @Override
-    public Map<String,FieldValue> fieldValues() { return mValues; }
+    public Map<String, FieldValue> fieldValues() { return mValues; }
 
     @Override
     public List<String> fieldNames()
     {
-        return Arrays.stream(PurityComparer.PurityFields.values()).map(x -> x.toString()).collect(Collectors.toList());
+        return Arrays.stream(PurityComparer.PurityFields.values()).map(x -> x.name()).collect(Collectors.toList());
     }
 
-    private DoubleFieldValue purity(final PurityComparer.PurityFields field, double value, final Map<String,FieldCheck> fieldCheckMap)
+    private void addDoubleValue(final PurityComparer.PurityFields field, final Double value,
+            final Map<String, FieldCheck> fieldCheckMap)
     {
-        return new DoubleFieldValue(
-                field.toString(), value, getOrMakeFieldCheck(fieldCheckMap, field.toString(), 0.04, null),
-                "%.2f");
+        mValues.put(
+                field.name(),
+                new DoubleFieldValue(field.name(), value, determineThresholdFieldCheck(field, fieldCheckMap), field.FormatString));
     }
 
-    private DoubleFieldValue ploidy(final PurityComparer.PurityFields field, double value, final Map<String,FieldCheck> fieldCheckMap)
+    private void addIntValue(final PurityComparer.PurityFields field, final Integer value,
+            final Map<String, FieldCheck> fieldCheckMap)
     {
-        return new DoubleFieldValue(
-                field.toString(), value, getOrMakeFieldCheck(fieldCheckMap, field.toString(), 0.1, null),
-                "%.2f");
+        mValues.put(field.name(), new IntFieldValue(field.name(), value, determineThresholdFieldCheck(field, fieldCheckMap)));
     }
 
-    private DoubleFieldValue contamination(final PurityComparer.PurityFields field, double value, final Map<String,FieldCheck> fieldCheckMap)
+    private void addStringValue(final PurityComparer.PurityFields field, final String value, final Map<String, FieldCheck> fieldCheckMap)
     {
-        return new DoubleFieldValue(
-                field.toString(), value, getOrMakeFieldCheck(fieldCheckMap, field.toString(), 0.005, null),
-                "%.4f");
+        mValues.put(field.name(), new StringFieldValue(field.name(), value, determineFieldCheck(field, fieldCheckMap)));
     }
 
-    private DoubleFieldValue tmbPerMb(final PurityComparer.PurityFields field, double value, final Map<String,FieldCheck> fieldCheckMap)
+    private static ThresholdFieldCheck determineThresholdFieldCheck(final PurityComparer.PurityFields field,
+            final Map<String, FieldCheck> fieldCheckMap)
     {
-        return new DoubleFieldValue(
-                field.toString(), value, getOrMakeFieldCheck(fieldCheckMap, field.toString(), 0.1, 0.05),
-                "%.2f");
+        return getOrMakeFieldCheck(fieldCheckMap, field.name(), field.DefaultAbsoluteThreshold, field.DefaultPercentageThreshold);
     }
 
-    private DoubleFieldValue msiIndels(final PurityComparer.PurityFields field, double value, final Map<String,FieldCheck> fieldCheckMap)
+    private static FieldCheck determineFieldCheck(final PurityComparer.PurityFields field,
+            final Map<String, FieldCheck> fieldCheckMap)
     {
-        return new DoubleFieldValue(
-                field.toString(), value, getOrMakeFieldCheck(fieldCheckMap, field.toString(), 0.1, 0.05),
-                "%.2f");
-    }
-
-    private IntFieldValue tml(final PurityComparer.PurityFields field, int value, final Map<String,FieldCheck> fieldCheckMap)
-    {
-        return new IntFieldValue(
-                field.toString(), value, getOrMakeFieldCheck(fieldCheckMap, field.toString(), 1.0, 0.05));
-    }
-
-    private IntFieldValue cnSegments(final PurityComparer.PurityFields field, int value, final Map<String,FieldCheck> fieldCheckMap)
-    {
-        return new IntFieldValue(
-                field.toString(), value, getOrMakeFieldCheck(fieldCheckMap, field.toString(), 5.0, 0.2));
-    }
-
-    private IntFieldValue unsupportedCnSegs(final PurityComparer.PurityFields field, int value, final Map<String,FieldCheck> fieldCheckMap)
-    {
-        return new IntFieldValue(
-                field.toString(), value, getOrMakeFieldCheck(fieldCheckMap, field.toString(), 5.0, 0.2));
-    }
-
-    private IntFieldValue svTmb(final PurityComparer.PurityFields field, int value, final Map<String,FieldCheck> fieldCheckMap)
-    {
-        return new IntFieldValue(
-                field.toString(), value, getOrMakeFieldCheck(fieldCheckMap, field.toString(), 5.0, 0.05));
-    }
-
-    private StringFieldValue stringField(final PurityComparer.PurityFields field, final String value, final Map<String,FieldCheck> fieldCheckMap)
-    {
-        return new StringFieldValue(
-                field.toString(), value, getOrMakeFieldCheck(fieldCheckMap, field.toString(), null, null));
-    }
-
-    private DoubleFieldValue tincLevel(final PurityComparer.PurityFields field, double value, final Map<String,FieldCheck> fieldCheckMap)
-    {
-        return new DoubleFieldValue(
-                field.toString(), value, getOrMakeFieldCheck(fieldCheckMap, field.toString(), 0.1, null),
-                "%.3f");
+        FieldCheck override = fieldCheckMap.get(field.name());
+        return override != null ? override : new FieldCheck(true);
     }
 
     public CategoryType category() { return PURITY; }

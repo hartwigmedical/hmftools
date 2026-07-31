@@ -23,12 +23,8 @@ import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.TruthsetValue;
-import com.hartwig.hmftools.compar.common.field.DoubleField;
 import com.hartwig.hmftools.compar.common.field.Field;
 import com.hartwig.hmftools.compar.common.field.FieldCheck;
-import com.hartwig.hmftools.compar.common.field.IntField;
-import com.hartwig.hmftools.compar.common.field.StringField;
-import com.hartwig.hmftools.compar.common.field.StringListField;
 
 public class PurityComparer implements ItemComparer
 {
@@ -55,23 +51,38 @@ public class PurityComparer implements ItemComparer
 
     protected enum PurityFields
     {
-        Purity,
-        Ploidy,
-        Contamination,
-        TmbPerMb,
-        MsIndelsPerMb,
-        Tml,
-        CopyNumberSegments,
-        UnsupportedCopyNumberSegments,
-        SvTmb,
-        QcStatus,
-        Gender,
-        GermlineAberrations,
-        FitMethod,
-        MsStatus,
-        TmbStatus,
-        TmlStatus,
-        TincLevel;
+        Purity(true, 0.04, null, "%.2f"),
+        Ploidy(true, 0.1, null, "%.2f"),
+        Contamination(true, 0.005, null, "%.4f"),
+        TmbPerMb(true, 0.1, 0.05, "%.2f"),
+        MsIndelsPerMb(true, 0.1, 0.05, "%.2f"),
+        Tml(true, 1.0, 0.05, null),
+        CopyNumberSegments(true, 5.0, 0.2, null),
+        UnsupportedCopyNumberSegments(true, 5.0, 0.2, null),
+        SvTmb(true, 5.0, 0.05, null),
+        QcStatus(true, null, null, null),
+        Gender(true, null, null, null),
+        GermlineAberrations(true, null, null, null),
+        FitMethod(true, null, null, null),
+        MsStatus(true, null, null, null),
+        TmbStatus(true, null, null, null),
+        TmlStatus(true, null, null, null),
+        TincLevel(true, 0.1, null, "%.3f");
+
+        public final boolean IsCompared;
+        public final Double DefaultAbsoluteThreshold;
+        public final Double DefaultPercentageThreshold;
+        public final String FormatString;
+
+        PurityFields(
+                final boolean isCompared, final Double defaultAbsoluteThreshold, final Double defaultPercentageThreshold,
+                final String formatString)
+        {
+            IsCompared = isCompared;
+            DefaultAbsoluteThreshold = defaultAbsoluteThreshold;
+            DefaultPercentageThreshold = defaultPercentageThreshold;
+            FormatString = formatString;
+        }
     }
 
     private final ComparConfig mConfig;
