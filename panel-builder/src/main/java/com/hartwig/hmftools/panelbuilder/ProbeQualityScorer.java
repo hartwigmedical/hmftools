@@ -4,7 +4,7 @@ import static java.util.Collections.emptyIterator;
 import static java.util.Objects.requireNonNull;
 
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.PROBE_QUALITY_PROFILE_MAX_REF_DIFF;
-import static com.hartwig.hmftools.panelbuilder.SequenceUtils.sequenceIndelSize;
+import static com.hartwig.hmftools.panelbuilder.SequenceUtils.isSequenceSimilarToRef;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -160,7 +160,7 @@ public class ProbeQualityScorer
     {
         // If the sequence is very close to the ref genome, then there's no need to use the probe quality model.
         // We assume a small perturbation of the ref sequence will not produce a large change in quality score.
-        return sequenceIndelSize(sequenceDefinition).orElse(Integer.MAX_VALUE) <= PROBE_QUALITY_PROFILE_MAX_REF_DIFF;
+        return isSequenceSimilarToRef(sequenceDefinition, PROBE_QUALITY_PROFILE_MAX_REF_DIFF);
     }
 
     // Where necessary, set quality scores as computed by the probe quality model.

@@ -73,6 +73,7 @@ public record ProbeGenerationResult(
     {
         // If the probe is entirely determined by a single reference genome region, add the region as rejected.
         // Otherwise, if it's a variant probe, add the full probe so the user has more information to inspect.
+        // TODO(RNA): revisit for multi-region non-variant (spliced) probes - how a rejected spliced probe should be reported to the user.
         if(probe.definition().isSingleRegion())
         {
             return ProbeGenerationResult.rejectTargets(probeTargetRegions(probe));

@@ -1,8 +1,5 @@
 package com.hartwig.hmftools.panelbuilder;
 
-import static com.hartwig.hmftools.panelbuilder.SequenceUtils.isDnaSequenceNormal;
-
-import java.util.ArrayList;
 import java.util.List;
 
 import com.hartwig.hmftools.common.genome.region.Orientation;
@@ -10,105 +7,109 @@ import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 import org.jetbrains.annotations.Nullable;
 
-// Defines the region(s) and base sequence of a probe.
-// This may be:
-//   - A single reference genome region (the case for most probes)
-//       probe = start
-//   - 1 or 2 reference genome regions and a custom insert sequence (the case for variant probes).
-//       probe = start + insert + end
-public record SequenceDefinition(
-        @Nullable ChrBaseRegion startRegion,
-        // If REVERSE then start region is reverse complemented.
-        @Nullable Orientation startOrientation,
-        String insertSequence,
-        @Nullable ChrBaseRegion endRegion,
-        // If REVERSE then end region is reverse complemented.
-        @Nullable Orientation endOrientation
-)
+// Defines the region(s) and base sequence of a probe as an ordered list of segments contiguous in probe-sequence space.
+// A segment is either a reference genome region (optionally reverse complemented) or a literal insert sequence.
+// Common shapes:
+//   - A single reference genome region (most probes).
+//   - 1-2 regions with an optional insert (variant probes).
+//   - Multiple disjoint regions (spliced probes, e.g. RNA across exon junctions).
+public record SequenceDefinition(List<SequenceSegment> segments) implements Comparable<SequenceDefinition>
 {
     public SequenceDefinition
     {
-        // Simple single region.
-        boolean single =
-                startRegion != null && startOrientation == Orientation.FORWARD && insertSequence.isEmpty() && endRegion == null
-                        && endOrientation == null;
-        // SNV/INDEL/SV. start (+ insert) + end
-        boolean genericVariant =
-                startRegion != null && startOrientation != null && endRegion != null && endOrientation != null
-                        // Ensure the regions don't join each other; otherwise that should be constructed as a single region.
-                        && (!insertSequence.isEmpty() || startRegion.end() + 1 != endRegion.start());
-        // SGL SV. start + insert
-        boolean sgl1 =
-                startRegion != null && startOrientation != null && !insertSequence.isEmpty() && endRegion == null && endOrientation == null;
-        // SGL SV. insert + end
-        boolean sgl2 =
-                startRegion == null && startOrientation == null && !insertSequence.isEmpty() && endRegion != null && endOrientation != null;
-        if(!(single || genericVariant || sgl1 || sgl2))
+        segments = List.copyOf(segments);
+
+        if(segments.isEmpty())
         {
-            throw new IllegalArgumentException("Invalid sequence definition");
+            throw new IllegalArgumentException("Sequence definition has no segments");
         }
-        if(startRegion != null && !startRegion.hasValidPositions())
+        if(segments.stream().noneMatch(segment -> segment instanceof RefSegment))
         {
-            throw new IllegalArgumentException("Invalid startRegion");
+            throw new IllegalArgumentException("Sequence definition must contain at least one region");
         }
-        if(endRegion != null && !endRegion.hasValidPositions())
+        for(int i = 1; i < segments.size(); ++i)
         {
-            throw new IllegalArgumentException("Invalid endRegion");
+            SequenceSegment prev = segments.get(i - 1);
+            SequenceSegment next = segments.get(i);
+            // Consecutive inserts should have been a single insert segment.
+            if(prev instanceof InsertSeqSegment && next instanceof InsertSeqSegment)
+            {
+                throw new IllegalArgumentException("Consecutive insert segments should be a single segment");
+            }
+            // Consecutive regions that are directly adjacent in the genome with the same orientation should have been a single region.
+            if(prev instanceof RefSegment prevRegion && next instanceof RefSegment nextRegion && areRefSegmentsAdjacent(prevRegion, nextRegion))
+            {
+                throw new IllegalArgumentException("Adjacent regions with the same orientation should be a single region");
+            }
         }
-        if(!insertSequence.isEmpty() && !isDnaSequenceNormal(insertSequence))
+    }
+
+    // TODO: method on RefSegment instead?
+    private static boolean areRefSegmentsAdjacent(final RefSegment first, final RefSegment second)
+    {
+        if(first.orientation() != second.orientation() || !first.region().chromosome().equals(second.region().chromosome()))
         {
-            throw new IllegalArgumentException("Invalid insertSequence: " + insertSequence);
+            return false;
         }
+        // For FORWARD, the sequence runs low->high, so adjacency means the first region ends just before the second begins.
+        // For REVERSE, the sequence runs high->low, so adjacency means the second region ends just before the first begins.
+        return first.orientation() == Orientation.FORWARD
+                ? first.region().end() + 1 == second.region().start()
+                : second.region().end() + 1 == first.region().start();
     }
 
     public static SequenceDefinition singleRegion(final ChrBaseRegion region)
     {
-        return new SequenceDefinition(region, Orientation.FORWARD, "", null, null);
+        return new SequenceDefinition(List.of(new RefSegment(region, Orientation.FORWARD)));
     }
 
+    // Single genome breakend with a novel insert sequence following it.
     public static SequenceDefinition forwardSgl(final ChrBaseRegion startRegion, final String insertSequence)
     {
-        return new SequenceDefinition(startRegion, Orientation.FORWARD, insertSequence, null, null);
+        return new SequenceDefinition(List.of(new RefSegment(startRegion, Orientation.FORWARD), new InsertSeqSegment(insertSequence)));
     }
 
+    // Novel insert sequence followed by a single genome breakend.
     public static SequenceDefinition reverseSgl(final String insertSequence, final ChrBaseRegion endRegion)
     {
-        return new SequenceDefinition(null, null, insertSequence, endRegion, Orientation.FORWARD);
+        return new SequenceDefinition(List.of(new InsertSeqSegment(insertSequence), new RefSegment(endRegion, Orientation.FORWARD)));
+    }
+
+    // Two genome regions with an optional insert between them (SNV/INDEL/SV probes).
+    public static SequenceDefinition variant(final ChrBaseRegion startRegion, final Orientation startOrientation,
+            final String insertSequence, final ChrBaseRegion endRegion, final Orientation endOrientation)
+    {
+        List<SequenceSegment> segments = insertSequence.isEmpty()
+                ? List.of(new RefSegment(startRegion, startOrientation), new RefSegment(endRegion, endOrientation))
+                : List.of(
+                        new RefSegment(startRegion, startOrientation), new InsertSeqSegment(insertSequence),
+                        new RefSegment(endRegion, endOrientation));
+        return new SequenceDefinition(segments);
     }
 
     public List<ChrBaseRegion> regions()
     {
-        List<ChrBaseRegion> result = new ArrayList<>(2);
-        if(startRegion != null)
-        {
-            result.add(startRegion);
-        }
-        if(endRegion != null)
-        {
-            result.add(endRegion);
-        }
-        return result;
+        return segments.stream()
+                .filter(segment -> segment instanceof RefSegment)
+                .map(segment -> ((RefSegment) segment).region())
+                .toList();
     }
 
     public int baseLength()
     {
-        int length = 0;
-        if(startRegion != null)
-        {
-            length += startRegion.baseLength();
-        }
-        length += insertSequence.length();
-        if(endRegion != null)
-        {
-            length += endRegion.baseLength();
-        }
-        return length;
+        return segments.stream().mapToInt(SequenceSegment::baseLength).sum();
     }
 
-    // Checks if the probe is defined by a single region.
+    // Checks if the probe is defined by a single reference genome region.
     public boolean isSingleRegion()
     {
-        return startRegion != null && insertSequence.isEmpty() && endRegion == null;
+        return segments.size() == 1 && segments.get(0) instanceof RefSegment;
+    }
+
+    // Checks if the probe spans more than one disjoint reference genome region (e.g. SV probe or spliced exons probe).
+    public boolean isMultiRegion()
+    {
+        return regions().size() > 1;
     }
 
     // Gets the single region that the probe is defined by, or throws an exception.
@@ -119,15 +120,28 @@ public record SequenceDefinition(
         {
             throw new IllegalArgumentException("Probe has multiple regions");
         }
-        else
-        {
-            return region;
-        }
+        return region;
     }
 
     @Nullable
     public ChrBaseRegion singleRegionOrNull()
     {
-        return isSingleRegion() ? startRegion : null;
+        return isSingleRegion() ? ((RefSegment) segments.get(0)).region() : null;
+    }
+
+    @Override
+    public int compareTo(final SequenceDefinition other)
+    {
+        // Consistent structural ordering for output and debugging purposes.
+        int common = Math.min(segments.size(), other.segments.size());
+        for(int i = 0; i < common; ++i)
+        {
+            int compare = segments.get(i).compareTo(other.segments.get(i));
+            if(compare != 0)
+            {
+                return compare;
+            }
+        }
+        return Integer.compare(segments.size(), other.segments.size());
     }
 }

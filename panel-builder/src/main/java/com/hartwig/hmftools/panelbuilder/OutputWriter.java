@@ -178,6 +178,9 @@ public class OutputWriter implements AutoCloseable
         // TODO? should there be a probe ID which matches between TSV, BED, and FASTA?
 
         // Sort probes roughly by region to give a more consistent output.
+        // TODO(RNA): switch to sorting by the full SequenceDefinition (Comparator.comparing(Probe::definition)) once multi-region
+        //  probes are emitted. That gives a total order over variant/spliced probes too, but changes DNA output row order, so defer
+        //  until the DNA output format is revised for multi-region probes.
         List<Probe> probesSorted = probes.stream().sorted(Comparator.comparing(
                 probe -> probe.definition().singleRegionOrNull(), Comparator.nullsLast(Comparator.naturalOrder()))).toList();
 
@@ -214,14 +217,17 @@ public class OutputWriter implements AutoCloseable
 
     private static void writePanelProbesTsvRow(final Probe probe, DelimFileWriter.Row row)
     {
-        SequenceDefinition definition = probe.definition();
-        ChrBaseRegion start = definition.startRegion();
-        Orientation startOrientation = definition.startOrientation();
-        ChrBaseRegion end = definition.endRegion();
-        Orientation endOrientation = definition.endOrientation();
+        // Note this throws if the probe is not in the right format.
+        // The panel probes output format represents at most a start and end region. Multi-region (e.g. spliced) probes require a
+        // different output; they are handled separately from the DNA panel output.
+        BasicProbeLayout layout = BasicProbeLayout.from(probe.definition());
+        ChrBaseRegion start = layout.startRegion();
+        Orientation startOrientation = layout.startOrientation();
+        ChrBaseRegion end = layout.endRegion();
+        Orientation endOrientation = layout.endOrientation();
         row.setOrNull(PanelProbesColumns.StartRegion, start == null ? null : start.toString());
         row.setOrNull(PanelProbesColumns.StartRegionOrient, startOrientation == null ? null : startOrientation.asChar());
-        row.setOrNull(PanelProbesColumns.MiddleSequence, definition.insertSequence());
+        row.setOrNull(PanelProbesColumns.MiddleSequence, layout.insertSequence());
         row.setOrNull(PanelProbesColumns.EndRegion, end == null ? null : end.toString());
         row.setOrNull(PanelProbesColumns.EndRegionOrient, endOrientation == null ? null : endOrientation.asChar());
         row.setOrNull(PanelProbesColumns.Sequence, probe.sequence());
@@ -370,14 +376,14 @@ public class OutputWriter implements AutoCloseable
 
     private static void writeCandidateProbesRow(final Probe probe, DelimFileWriter.Row row)
     {
-        SequenceDefinition definition = probe.definition();
-        ChrBaseRegion start = definition.startRegion();
-        Orientation startOrientation = definition.startOrientation();
-        ChrBaseRegion end = definition.endRegion();
-        Orientation endOrientation = definition.endOrientation();
+        BasicProbeLayout layout = BasicProbeLayout.from(probe.definition());
+        ChrBaseRegion start = layout.startRegion();
+        Orientation startOrientation = layout.startOrientation();
+        ChrBaseRegion end = layout.endRegion();
+        Orientation endOrientation = layout.endOrientation();
         row.setOrNull(CandidateProbesColumns.StartRegion, start == null ? null : start.toString());
         row.setOrNull(CandidateProbesColumns.StartRegionOrient, startOrientation == null ? null : startOrientation.asChar());
-        row.setOrNull(CandidateProbesColumns.MiddleSequence, definition.insertSequence());
+        row.setOrNull(CandidateProbesColumns.MiddleSequence, layout.insertSequence());
         row.setOrNull(CandidateProbesColumns.EndRegion, end == null ? null : end.toString());
         row.setOrNull(CandidateProbesColumns.EndRegionOrient, endOrientation == null ? null : endOrientation.asChar());
         row.setOrNull(CandidateProbesColumns.Sequence, probe.sequence());

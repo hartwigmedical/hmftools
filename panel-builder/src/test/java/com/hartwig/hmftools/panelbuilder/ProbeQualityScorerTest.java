@@ -114,7 +114,7 @@ public class ProbeQualityScorerTest
         ChrBaseRegion startRegion = new ChrBaseRegion("1", 1000 * mProbeCounter, 1000 * mProbeCounter);
         ChrBaseRegion endRegion = new ChrBaseRegion("2", 2000 * mProbeCounter, 2000 * mProbeCounter);
         SequenceDefinition definition =
-                new SequenceDefinition(startRegion, Orientation.FORWARD, insertSequence, endRegion, Orientation.FORWARD);
+                SequenceDefinition.variant(startRegion, Orientation.FORWARD, insertSequence, endRegion, Orientation.FORWARD);
         Probe probe = probe(definition, sequence);
         double quality = 0.1 + mProbeCounter / 1e6;
         mInputProbes.add(probe);
