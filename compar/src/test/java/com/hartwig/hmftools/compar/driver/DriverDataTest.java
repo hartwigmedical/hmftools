@@ -27,7 +27,7 @@ import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.ComparableItemTest;
 import com.hartwig.hmftools.compar.common.CommonUtils;
-import com.hartwig.hmftools.compar.common.FieldConfig;
+import com.hartwig.hmftools.compar.common.FieldCheckCache;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.MismatchType;
@@ -154,7 +154,7 @@ public class DriverDataTest extends ComparableItemTest<DriverData, DriverCompare
         ComparConfig config = new ComparConfig();
         DriverComparer driverComparer = new DriverComparer(config);
 
-        FieldConfig fieldConfig = new FieldConfig();
+        FieldCheckCache fieldConfig = new FieldCheckCache();
         fieldConfig.registerFields(driverComparer, MatchLevel.DETAILED);
 
         List<ComparableItem> refItems = Lists.newArrayList();

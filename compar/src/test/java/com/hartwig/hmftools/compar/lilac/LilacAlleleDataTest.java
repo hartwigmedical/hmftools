@@ -17,7 +17,7 @@ import java.util.function.Consumer;
 
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItemTest;
-import com.hartwig.hmftools.compar.common.FieldConfig;
+import com.hartwig.hmftools.compar.common.FieldCheckCache;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.MismatchType;
 
@@ -72,7 +72,7 @@ public class LilacAlleleDataTest extends ComparableItemTest<LilacAlleleData, Lil
                 LilacAlleleData newVictim = builder.create(entry.getValue());
 
                 MatchLevel matchLevel = MatchLevel.REPORTABLE;
-                FieldConfig fieldConfig = createDefaultThresholds(matchLevel);
+                FieldCheckCache fieldConfig = createDefaultThresholds(matchLevel);
 
                 assertSingleFieldMismatch(field, refVictim, newVictim, matchLevel, fieldConfig, MismatchType.VALUE);
             }

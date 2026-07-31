@@ -32,6 +32,7 @@ import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.KnownMismatch;
 import com.hartwig.hmftools.compar.common.MismatchType;
 import com.hartwig.hmftools.compar.common.field.Field;
+import com.hartwig.hmftools.compar.common.field.FieldValue;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -99,7 +100,7 @@ public class MismatchFile
         return sj.toString();
     }
 
-    public static String toTsv(final Mismatch mismatch, boolean writeFieldValues, final List<Field> displayFields)
+    public static String toTsv(final Mismatch mismatch, boolean writeFieldValues, final List<FieldDisplayInfo> fieldDisplayValues)
     {
         StringJoiner sj = new StringJoiner(TSV_DELIM);
 
@@ -109,28 +110,37 @@ public class MismatchFile
 
         if(writeFieldValues)
         {
-            for(Field field : displayFields)
+            for(FieldDisplayInfo fieldInfo : fieldDisplayValues)
             {
-                if(mismatch.OldItem != null)
-                    sj.add(field.displayValue(mismatch.OldItem));
-                else
-                    sj.add("");
-
-                if(mismatch.NewItem != null)
-                    sj.add(field.displayValue(mismatch.NewItem));
-                else
-                    sj.add("");
+                sj.add(fieldInfo.oldValue());
+                sj.add(fieldInfo.newValue());
             }
         }
         else
         {
-            sj.add(itemValues(mismatch.OldItem, displayFields));
-            sj.add(itemValues(mismatch.NewItem, displayFields));
+            sj.add(itemValues(mismatch.OldItem, fieldDisplayValues, true));
+            sj.add(itemValues(mismatch.NewItem, fieldDisplayValues, false));
         }
 
         return sj.toString();
     }
 
+    private static String itemValues(final ComparableItem item, final List<FieldDisplayInfo> fieldDisplayValues, boolean useOld)
+    {
+        if(item == null)
+            return "";
+
+        StringJoiner displaySj = new StringJoiner(ITEM_DELIM);
+
+        for(FieldDisplayInfo fieldInfo : fieldDisplayValues)
+        {
+            displaySj.add(format("%s=%s", fieldInfo.name(), useOld ? fieldInfo.oldValue() : fieldInfo.newValue()));
+        }
+
+        return displaySj.toString();
+    }
+
+    @Deprecated
     private static String itemValues(final ComparableItem item, final List<Field> displayFields)
     {
         if(item == null)

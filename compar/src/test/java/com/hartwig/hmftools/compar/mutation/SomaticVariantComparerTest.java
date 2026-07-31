@@ -11,7 +11,7 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.compar.ComparConfig;
-import com.hartwig.hmftools.compar.common.FieldConfig;
+import com.hartwig.hmftools.compar.common.FieldCheckCache;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.MismatchType;
@@ -27,7 +27,7 @@ public class SomaticVariantComparerTest
         SomaticVariantComparer victim = new SomaticVariantComparer(config);
 
         MatchLevel matchLevel = MatchLevel.DETAILED;
-        FieldConfig fieldConfig = new FieldConfig();
+        FieldCheckCache fieldConfig = new FieldCheckCache();
         fieldConfig.registerFields(victim, matchLevel);
 
         String sampleId = "TEST";
@@ -46,7 +46,7 @@ public class SomaticVariantComparerTest
         SomaticVariantComparer victim = new SomaticVariantComparer(config);
 
         MatchLevel matchLevel = MatchLevel.DETAILED;
-        FieldConfig fieldConfig = new FieldConfig();
+        FieldCheckCache fieldConfig = new FieldCheckCache();
         fieldConfig.registerFields(victim, matchLevel);
 
         String sampleId = "TEST";
@@ -101,7 +101,7 @@ public class SomaticVariantComparerTest
         SomaticVariantComparer victim = new SomaticVariantComparer(config);
 
         MatchLevel matchLevel = MatchLevel.REPORTABLE;
-        FieldConfig fieldConfig = new FieldConfig();
+        FieldCheckCache fieldConfig = new FieldCheckCache();
         fieldConfig.registerFields(victim, matchLevel);
 
         String sampleId = "TEST";
@@ -152,7 +152,7 @@ public class SomaticVariantComparerTest
         SomaticVariantComparer victim = new SomaticVariantComparer(config);
 
         MatchLevel matchLevel = MatchLevel.DETAILED;
-        FieldConfig fieldConfig = new FieldConfig();
+        FieldCheckCache fieldConfig = new FieldCheckCache();
         fieldConfig.registerFields(victim, matchLevel);
 
         String sampleId = "TEST";
@@ -183,7 +183,7 @@ public class SomaticVariantComparerTest
         SomaticVariantComparer victim = new SomaticVariantComparer(config);
 
         MatchLevel matchLevel = MatchLevel.DETAILED;
-        FieldConfig fieldConfig = new FieldConfig();
+        FieldCheckCache fieldConfig = new FieldCheckCache();
         fieldConfig.registerFields(victim, matchLevel);
 
         String sampleId = "TEST";
@@ -201,7 +201,7 @@ public class SomaticVariantComparerTest
         SomaticVariantComparer victim = new SomaticVariantComparer(config);
 
         MatchLevel matchLevel = MatchLevel.DETAILED;
-        FieldConfig fieldConfig = new FieldConfig();
+        FieldCheckCache fieldConfig = new FieldCheckCache();
         fieldConfig.registerFields(victim, matchLevel);
 
         String sampleId = "TEST";
@@ -223,7 +223,7 @@ public class SomaticVariantComparerTest
         SomaticVariantComparer victim = new SomaticVariantComparer(config);
 
         MatchLevel matchLevel = MatchLevel.DETAILED;
-        FieldConfig fieldConfig = new FieldConfig();
+        FieldCheckCache fieldConfig = new FieldCheckCache();
         fieldConfig.registerFields(victim, matchLevel);
 
         String sampleId = "TEST";

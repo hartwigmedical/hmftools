@@ -11,7 +11,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.compar.common.FieldConfig;
+import com.hartwig.hmftools.compar.common.FieldCheckCache;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.MismatchType;
@@ -29,8 +29,9 @@ public class ComparTestUtil
         assertEquals(sortedExpectedFields, sortedObservedFields);
     }
 
-    public static void assertSingleFieldMismatch(final String field, final ComparableItem refVictim, final ComparableItem newVictim,
-            final MatchLevel matchLevel, final FieldConfig fieldConfig, final MismatchType expectedMismatchType)
+    public static void assertSingleFieldMismatch(
+            final String field, final ComparableItem refVictim, final ComparableItem newVictim,
+            final MatchLevel matchLevel, final FieldCheckCache fieldConfig, final MismatchType expectedMismatchType)
     {
         String testMessage = "Test mismatch in field '" + field + "' at match level '" + matchLevel + "'";
         assertTrue(testMessage, refVictim.matches(newVictim));

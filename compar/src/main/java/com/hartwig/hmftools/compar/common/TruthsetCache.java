@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.compar.common;
 
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
@@ -37,9 +38,14 @@ public class TruthsetCache
         mSampleDataMap = Maps.newHashMap();
     }
 
-    public void loadFiles(final List<String> filenames)
+    public void loadFiles(final String truthsetFilesCondigStr)
     {
-        filenames.forEach(x -> loadTruthsetFile(x));
+        String[] truthsetFiles = truthsetFilesCondigStr.split(ITEM_DELIM);
+
+        for(String truthsetFile : truthsetFiles)
+        {
+            loadTruthsetFile(truthsetFile);
+        }
     }
 
     public Map<CategoryType,List<TruthsetValue>> sampleTruthsetEntries(final String sampleId)
@@ -80,7 +86,8 @@ public class TruthsetCache
 
                     if(categoryItemMap == null)
                     {
-                        mSampleDataMap.put(sampleId, Maps.newHashMap());
+                        categoryItemMap = Maps.newHashMap();
+                        mSampleDataMap.put(sampleId, categoryItemMap);
                     }
 
                     CategoryType categoryType = CategoryType.valueOf(values[categoryIndex]);
@@ -106,7 +113,7 @@ public class TruthsetCache
                             String field = svItem[0];
                             String value = svItem[1];
 
-                            truthsetValues.add(new TruthsetValue(field, value, requireAbsent));
+                            truthsetValues.add(new TruthsetValue(itemKey, field, value, requireAbsent));
                         }
                     }
                     else
@@ -121,7 +128,7 @@ public class TruthsetCache
                             int fieldIndex = entry.getValue();
                             String value = values[fieldIndex];
 
-                            truthsetValues.add(new TruthsetValue(fieldName, value, requireAbsent));
+                            truthsetValues.add(new TruthsetValue(itemKey, fieldName, value, requireAbsent));
                         }
                     }
                 }

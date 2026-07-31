@@ -20,8 +20,8 @@ import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.common.FieldConfig;
-import com.hartwig.hmftools.compar.common.FileSources;
+import com.hartwig.hmftools.compar.common.FieldCheckCache;
+import com.hartwig.hmftools.compar.common.PipelineSourcePaths;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
@@ -66,7 +66,7 @@ public class LilacQcComparer implements ItemComparer
     }
 
     @Override
-    public boolean processSample(final String sampleId, final List<Mismatch> mismatches, final FieldConfig fieldConfig)
+    public boolean processSample(final String sampleId, final List<Mismatch> mismatches, final FieldCheckCache fieldConfig)
     {
         return CommonUtils.processSample(this, mConfig, sampleId, mismatches, fieldConfig);
     }
@@ -78,7 +78,7 @@ public class LilacQcComparer implements ItemComparer
     }
 
     @Override
-    public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final FileSources fileSources)
+    public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final PipelineSourcePaths fileSources)
     {
         List<ComparableItem> comparableItems = Lists.newArrayList();
 

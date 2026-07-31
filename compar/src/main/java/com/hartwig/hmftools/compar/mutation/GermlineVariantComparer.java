@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.compar.mutation;
 
-import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS_FILTER;
 import static com.hartwig.hmftools.compar.common.CategoryType.GERMLINE_VARIANT;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_QUAL;
@@ -31,8 +30,8 @@ import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.common.FieldConfig;
-import com.hartwig.hmftools.compar.common.FileSources;
+import com.hartwig.hmftools.compar.common.FieldCheckCache;
+import com.hartwig.hmftools.compar.common.PipelineSourcePaths;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
@@ -56,7 +55,7 @@ public class GermlineVariantComparer implements ItemComparer
     public CategoryType category() { return GERMLINE_VARIANT; }
 
     @Override
-    public boolean processSample(final String sampleId, final List<Mismatch> mismatches, final FieldConfig fieldConfig)
+    public boolean processSample(final String sampleId, final List<Mismatch> mismatches, final FieldCheckCache fieldConfig)
     {
         return CommonUtils.processSample(this, mConfig, sampleId, mismatches, fieldConfig);
     }
@@ -97,7 +96,7 @@ public class GermlineVariantComparer implements ItemComparer
     }
 
     @Override
-    public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final FileSources fileSources)
+    public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final PipelineSourcePaths fileSources)
     {
         final List<ComparableItem> comparableItems = Lists.newArrayList();
 

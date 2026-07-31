@@ -4,7 +4,11 @@ import static com.hartwig.hmftools.compar.common.CategoryType.PURITY;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.PurityContext;
@@ -13,21 +17,25 @@ import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.common.FieldConfig;
-import com.hartwig.hmftools.compar.common.FileSources;
+import com.hartwig.hmftools.compar.common.FieldCheckCache;
+import com.hartwig.hmftools.compar.common.PipelineSourcePaths;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
+import com.hartwig.hmftools.compar.common.TruthsetValue;
 import com.hartwig.hmftools.compar.common.field.DoubleField;
 import com.hartwig.hmftools.compar.common.field.Field;
+import com.hartwig.hmftools.compar.common.field.FieldCheck;
 import com.hartwig.hmftools.compar.common.field.IntField;
 import com.hartwig.hmftools.compar.common.field.StringField;
 import com.hartwig.hmftools.compar.common.field.StringListField;
 
 public class PurityComparer implements ItemComparer
 {
-    public static final String FLD_PURITY = "Purity";
-    public static final String FLD_PLOIDY = "Ploidy";
+    public static final String FLD_PURITY = PurityFields.Purity.toString();
+    public static final String FLD_PLOIDY = PurityFields.Ploidy.toString();
+
+    /*
     protected static final String FLD_CONTAMINATION = "Contamination";
     protected static final String FLD_TMB = "TmbPerMb";
     protected static final String FLD_MS_INDELS = "MsIndelsPerMb";
@@ -43,6 +51,28 @@ public class PurityComparer implements ItemComparer
     protected static final String FLD_TMB_STATUS = "TmbStatus";
     protected static final String FLD_TML_STATUS = "TmlStatus";
     protected static final String FLD_TINC_LEVEL = "TincLevel";
+    */
+
+    protected enum PurityFields
+    {
+        Purity,
+        Ploidy,
+        Contamination,
+        TmbPerMb,
+        MsIndelsPerMb,
+        Tml,
+        CopyNumberSegments,
+        UnsupportedCopyNumberSegments,
+        SvTmb,
+        QcStatus,
+        Gender,
+        GermlineAberrations,
+        FitMethod,
+        MsStatus,
+        TmbStatus,
+        TmlStatus,
+        TincLevel;
+    }
 
     private final ComparConfig mConfig;
 
@@ -57,6 +87,7 @@ public class PurityComparer implements ItemComparer
     @Override
     public List<Field> fields(final MatchLevel matchLevel)
     {
+        /*
         return List.of(
                 new DoubleField(FLD_PURITY, i -> ((PurityData) i).Purity.bestFit().purity(),
                         true, 0.04, null, "%.2f"),
@@ -88,10 +119,13 @@ public class PurityComparer implements ItemComparer
                 new DoubleField(FLD_TINC_LEVEL, i -> ((PurityData) i).Purity.qc().tincLevel(),
                         true, 0.1, null, "%.3f")
         );
+        */
+
+        return Collections.emptyList();
     }
 
     @Override
-    public boolean processSample(final String sampleId, final List<Mismatch> mismatches, final FieldConfig fieldConfig)
+    public boolean processSample(final String sampleId, final List<Mismatch> mismatches, final FieldCheckCache fieldConfig)
     {
         return CommonUtils.processSample(this, mConfig, sampleId, mismatches, fieldConfig);
     }
@@ -99,20 +133,25 @@ public class PurityComparer implements ItemComparer
     @Override
     public List<String> displayFieldNames()
     {
+        return Arrays.stream(PurityFields.values()).map(x -> x.toString()).collect(Collectors.toList());
+        /*
         return Lists.newArrayList(
                 FLD_PURITY, FLD_PLOIDY, FLD_CONTAMINATION, FLD_TMB, FLD_TML, FLD_MS_INDELS, FLD_SV_TMB, FLD_CN_SEGS ,FLD_UNS_CN_SEGS,
                 FLD_QC_STATUS, FLD_GENDER, FLD_GERM_ABS, FLD_FIT_METHOD, FLD_MS_STATUS, FLD_TMB_STATUS, FLD_TML_STATUS, FLD_TINC_LEVEL);
+        */
     }
 
     @Override
-    public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final FileSources fileSources)
+    public List<ComparableItem> loadFromFile(
+            final String sampleId, final String germlineSampleId, final PipelineSourcePaths fileSources,
+            final Map<String,FieldCheck> fieldCheckMap)
     {
         List<ComparableItem> comparableItems = Lists.newArrayList();
 
         try
         {
             PurityContext purityContext = PurityContextFile.read(fileSources.Purple, sampleId);
-            comparableItems.add(new PurityData(purityContext));
+            comparableItems.add(new PurityData(purityContext, fieldCheckMap));
 
         }
         catch(IOException e)
@@ -121,6 +160,13 @@ public class PurityComparer implements ItemComparer
             return null;
         }
 
+        return comparableItems;
+    }
+
+    public List<ComparableItem> loadFromTruthset(final List<TruthsetValue> truthsetValues, final Map<String, FieldCheck> fieldCheckMap)
+    {
+        List<ComparableItem> comparableItems = Lists.newArrayList();
+        comparableItems.add(new PurityData(truthsetValues, fieldCheckMap));
         return comparableItems;
     }
 

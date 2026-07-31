@@ -5,7 +5,6 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_EXTENSIO
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.compar.MismatchFile.loadSampleCurations;
-import static com.hartwig.hmftools.compar.common.CommonUtils.buildComparers;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.CurationType.NONE;
 
@@ -20,6 +19,7 @@ import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.KnownMismatch;
@@ -28,6 +28,7 @@ import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.WriteType;
 import com.hartwig.hmftools.compar.common.field.Field;
+import com.hartwig.hmftools.compar.common.field.FieldValue;
 
 public class MismatchWriter
 {
@@ -70,7 +71,7 @@ public class MismatchWriter
         {
             if(mConfig.WriteTypes.contains(WriteType.TYPE_SPECIFIC))
             {
-                List<ItemComparer> comparers = buildComparers(mConfig);
+                List<ItemComparer> comparers = ComparerUtils.buildComparers(mConfig);
 
                 for(ItemComparer comparer : comparers)
                 {
@@ -134,7 +135,8 @@ public class MismatchWriter
 
         try
         {
-            List<Field> displayFields = determineDisplayFields(comparer);
+            // List<Field> displayFields = determineDisplayFields(comparer);
+            List<FieldDisplayInfo> fieldDisplayValues = extractDisplayData(comparer, mismatches);
             CategoryType category = comparer.category();
 
             BufferedWriter categoryWriter = mCategoryWriters.get(category);
@@ -152,13 +154,13 @@ public class MismatchWriter
                     for(String diff : mismatch.DiffValues)
                     {
                         Mismatch singleMismatch = new Mismatch(mismatch.OldItem, mismatch.NewItem, mismatch.Type, List.of(diff));
-                        writeMismatch(sampleId, singleMismatch, displayFields, categoryWriter, matchCurations.get(diff));
+                        writeMismatch(sampleId, singleMismatch, fieldDisplayValues, categoryWriter, matchCurations.get(diff));
                     }
                 }
                 else
                 {
                     CurationInfo curationInfo = !matchCurations.isEmpty() ? matchCurations.entrySet().iterator().next().getValue() : null;
-                    writeMismatch(sampleId, mismatch, displayFields, categoryWriter, curationInfo);
+                    writeMismatch(sampleId, mismatch, fieldDisplayValues, categoryWriter, curationInfo);
                 }
             }
         }
@@ -168,9 +170,53 @@ public class MismatchWriter
         }
     }
 
+    private List<FieldDisplayInfo> extractDisplayData(final ItemComparer comparer, final List<Mismatch> mismatches)
+    {
+        List<FieldDisplayInfo> fieldDisplayValues = Lists.newArrayList();
+
+        List<Field> oldStyleFields = determineDisplayFields(comparer);
+
+        if(!oldStyleFields.isEmpty())
+        {
+            for(Mismatch mismatch : mismatches)
+            {
+                for(Field field : oldStyleFields)
+                {
+                    String oldValue = mismatch.OldItem != null ? field.displayValue(mismatch.OldItem) : "";
+                    String newValue = mismatch.NewItem != null ? field.displayValue(mismatch.NewItem) : "";
+
+                    fieldDisplayValues.add(new FieldDisplayInfo(field.name(), oldValue, newValue));
+                }
+            }
+        }
+        else
+        {
+            for(Mismatch mismatch : mismatches)
+            {
+                List<String> fieldNames = comparer.displayFieldNames();
+
+                Map<String,FieldValue> oldFieldValues = mismatch.OldItem != null ? mismatch.OldItem.fieldValues() : Collections.emptyMap();
+                Map<String,FieldValue> newFieldValues = mismatch.NewItem != null ? mismatch.NewItem.fieldValues() : Collections.emptyMap();
+
+                for(String fieldName : fieldNames)
+                {
+                    FieldValue oldValue = oldFieldValues.get(fieldName);
+                    FieldValue newValue = newFieldValues.get(fieldName);
+
+                    fieldDisplayValues.add(new FieldDisplayInfo(
+                            fieldName,
+                            oldValue != null ? oldValue.displayValue() : "",
+                            newValue != null ? newValue.displayValue() : ""));
+                }
+            }
+        }
+
+        return fieldDisplayValues;
+    }
+
     private void writeMismatch(
-            final String sampleId, final Mismatch mismatch, final List<Field> displayFields, final BufferedWriter categoryWriter,
-            @Nullable final CurationInfo curationInfo) throws IOException
+            final String sampleId, final Mismatch mismatch, final List<FieldDisplayInfo> fieldDisplayValues,
+            final BufferedWriter categoryWriter, @Nullable final CurationInfo curationInfo) throws IOException
     {
         StringJoiner sj = new StringJoiner(TSV_DELIM);
 
@@ -186,7 +232,7 @@ public class MismatchWriter
 
         if(mCombinedWriter != null)
         {
-            sj.add(MismatchFile.toTsv(mismatch, false, displayFields));
+            sj.add(MismatchFile.toTsv(mismatch, false, fieldDisplayValues));
 
             if(mWriteCurations)
             {
@@ -212,7 +258,7 @@ public class MismatchWriter
 
         if(categoryWriter != null)
         {
-            categoryWriter.write(MismatchFile.toTsv(mismatch, true, displayFields));
+            categoryWriter.write(MismatchFile.toTsv(mismatch, true, fieldDisplayValues));
             categoryWriter.newLine();
         }
     }
@@ -246,6 +292,9 @@ public class MismatchWriter
         CategoryType category = comparer.category();
         MatchLevel matchLevel = mConfig.MatchingLevel;
         Map<String, Field> fieldNameToField = comparer.fields(matchLevel).stream().collect(Collectors.toMap(Field::name, f -> f));
+
+        if(fieldNameToField.isEmpty())
+            return Collections.emptyList();
 
         List<Field> list = new ArrayList<>();
         for(String fieldName : comparer.displayFieldNames())

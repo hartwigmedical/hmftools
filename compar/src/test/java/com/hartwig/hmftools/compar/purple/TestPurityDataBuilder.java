@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.compar.purple;
 
+import java.util.Collections;
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -106,7 +107,8 @@ public class TestPurityDataBuilder
                         .score(score)
                         .polyClonalProportion(-1)
                         .wholeGenomeDuplication(false)
-                        .build()
+                        .build(),
+                Collections.emptyMap()
         );
     }
 }

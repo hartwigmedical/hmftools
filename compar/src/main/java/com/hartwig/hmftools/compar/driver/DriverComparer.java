@@ -42,8 +42,8 @@ import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.common.FieldConfig;
-import com.hartwig.hmftools.compar.common.FileSources;
+import com.hartwig.hmftools.compar.common.FieldCheckCache;
+import com.hartwig.hmftools.compar.common.PipelineSourcePaths;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.ItemComparer;
@@ -104,7 +104,7 @@ public class DriverComparer implements ItemComparer
     }
 
     @Override
-    public boolean processSample(final String sampleId, final List<Mismatch> mismatches, final FieldConfig fieldConfig)
+    public boolean processSample(final String sampleId, final List<Mismatch> mismatches, final FieldCheckCache fieldConfig)
     {
         // load data ahead of the standard calls for cross-driver comparisons
         for(SourceData sourceData : mConfig.Sources)
@@ -112,7 +112,7 @@ public class DriverComparer implements ItemComparer
             String sourceSampleId = mConfig.sourceSampleId(sourceData.Type, sampleId);
 
             String sourceReferenceId = mConfig.sourceReferenceId(sourceData.Type, sampleId);
-            FileSources sampleFileSources = FileSources.sampleInstance(sourceData.Files, sourceSampleId, sourceReferenceId);
+            PipelineSourcePaths sampleFileSources = PipelineSourcePaths.sampleInstance(sourceData.PipelinePaths, sourceSampleId, sourceReferenceId);
             loadData(sourceSampleId, sampleFileSources, sourceData.Type);
         }
 
@@ -124,7 +124,7 @@ public class DriverComparer implements ItemComparer
         return valid;
     }
 
-    private void loadData(final String sampleId, final FileSources fileSources, final SourceType sourceType)
+    private void loadData(final String sampleId, final PipelineSourcePaths fileSources, final SourceType sourceType)
     {
         try
         {
@@ -231,7 +231,7 @@ public class DriverComparer implements ItemComparer
     }
 
     @Override
-    public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final FileSources fileSources)
+    public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final PipelineSourcePaths fileSources)
     {
         Set<CategoryType> categories = mConfig.Categories;
 
@@ -285,22 +285,22 @@ public class DriverComparer implements ItemComparer
         return new DriverData(driver, purity, comparisonChromosome, checkTranscript, isPass);
     }
 
-    private static String generatePurpleSomaticDriverFilename(final String sampleId, final FileSources fileSources)
+    private static String generatePurpleSomaticDriverFilename(final String sampleId, final PipelineSourcePaths fileSources)
     {
         return DriverCatalogFile.generateSomaticFilename(fileSources.Purple, sampleId);
     }
 
-    private static String generateLinxSomaticDriverFilename(final String sampleId, final FileSources fileSources)
+    private static String generateLinxSomaticDriverFilename(final String sampleId, final PipelineSourcePaths fileSources)
     {
         return LinxDriver.generateCatalogFilename(fileSources.Linx, sampleId, true);
     }
 
-    private static String generatePurpleGermlineDriverFilename(final String sampleId, final FileSources fileSources)
+    private static String generatePurpleGermlineDriverFilename(final String sampleId, final PipelineSourcePaths fileSources)
     {
         return DriverCatalogFile.generateGermlineFilename(fileSources.Purple, sampleId);
     }
 
-    private static String generateLinxGermlineDriverFilename(final String sampleId, final FileSources fileSources)
+    private static String generateLinxGermlineDriverFilename(final String sampleId, final PipelineSourcePaths fileSources)
     {
         return LinxDriver.generateCatalogFilename(fileSources.LinxGermline, sampleId, false);
     }

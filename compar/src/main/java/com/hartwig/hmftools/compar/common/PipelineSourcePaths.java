@@ -40,7 +40,7 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDir
 import com.hartwig.hmftools.common.pipeline.PipelineToolDirectories;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
-public class FileSources
+public class PipelineSourcePaths
 {
     public final SourceType Source;
     public final String Linx;
@@ -74,7 +74,7 @@ public class FileSources
     private static final String GERMLINE_BAM_METRICS = "germline_bam_metrics_dir";
     private static final String SNP_GENOTYPE = "snp_genotype_dir";
 
-    public FileSources(
+    public PipelineSourcePaths(
             final SourceType source, final String linx, final String cobalt, final String purple, final String linxGermline, final String cuppa,
             final String lilac, final String chord, final String peach, final String virus, final String somaticVcf,
             final String somaticUnfilteredVcf, final String tumorFlagstat, final String germlineFlagstat, final String tumorBamMetrics,
@@ -105,9 +105,9 @@ public class FileSources
         Isofox = isofox;
     }
 
-    public static FileSources sampleInstance(final FileSources fileSources, final String sampleId, final String referenceId)
+    public static PipelineSourcePaths sampleInstance(final PipelineSourcePaths fileSources, final String sampleId, final String referenceId)
     {
-        return new FileSources(
+        return new PipelineSourcePaths(
                 fileSources.Source,
                 convertWildcardSamplePath(fileSources.Linx, sampleId, referenceId),
                 convertWildcardSamplePath(fileSources.Cobalt, sampleId, referenceId),
@@ -200,7 +200,7 @@ public class FileSources
         return configBuilder.getValue(formSourceConfig(config, sourceType), "");
     }
 
-    public static FileSources fromConfig(final SourceType sourceType, final ConfigBuilder configBuilder)
+    public static PipelineSourcePaths fromConfig(final SourceType sourceType, final ConfigBuilder configBuilder)
     {
         String sampleDir = checkAddDirSeparator(getConfigValue(configBuilder, SAMPLE_DIR, sourceType));
 
@@ -233,7 +233,7 @@ public class FileSources
         String sigsDir = getDirectory(configBuilder, sampleDir, defaultToolDirs.sigsDir(), SIGS_DIR_CFG, sourceType);
         String isofoxDir = getDirectory(configBuilder, sampleDir, defaultToolDirs.isofoxDir(), ISOFOX_DIR_CFG, sourceType);
 
-        return new FileSources(sourceType, linxDir, cobaltDir, purpleDir, linxGermlineDir, cuppaDir, lilacDir, chordDir, peachDir, virusDir,
+        return new PipelineSourcePaths(sourceType, linxDir, cobaltDir, purpleDir, linxGermlineDir, cuppaDir, lilacDir, chordDir, peachDir, virusDir,
                 somaticVcf, somaticUnfilteredVcf, tumorFlagstat, germlineFlagstat, tumorBamMetrics, germlineBamMetrics, snpGenotype,
                 ciderDir, tealDir, vChordDir, sigsDir, isofoxDir);
     }

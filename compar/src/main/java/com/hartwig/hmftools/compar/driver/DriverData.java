@@ -16,7 +16,7 @@ import com.hartwig.hmftools.common.purple.PurplePurity;
 import com.hartwig.hmftools.common.purple.ReportedStatus;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.common.FieldConfig;
+import com.hartwig.hmftools.compar.common.FieldCheckCache;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 
@@ -95,7 +95,7 @@ public class DriverData implements ComparableItem
     }
 
     public Mismatch findMismatch(
-            final ComparableItem other, final MatchLevel matchLevel, final FieldConfig fieldConfig, final boolean includeMatches)
+            final ComparableItem other, final MatchLevel matchLevel, final FieldCheckCache fieldConfig, final boolean includeMatches)
     {
         List<String> diffs = Lists.newArrayList();
         List<String> alwaysCompareFields = List.of(

@@ -48,8 +48,8 @@ import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.common.FieldConfig;
-import com.hartwig.hmftools.compar.common.FileSources;
+import com.hartwig.hmftools.compar.common.FieldCheckCache;
+import com.hartwig.hmftools.compar.common.PipelineSourcePaths;
 import com.hartwig.hmftools.compar.common.InvalidDataItem;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.MatchLevel;
@@ -80,7 +80,7 @@ public class SomaticVariantComparer implements ItemComparer
     public CategoryType category() { return SOMATIC_VARIANT; }
 
     @Override
-    public boolean processSample(final String sampleId, final List<Mismatch> mismatches, final FieldConfig fieldConfig)
+    public boolean processSample(final String sampleId, final List<Mismatch> mismatches, final FieldCheckCache fieldConfig)
     {
         // use a custom method optimised for large numbers of variants
         MatchLevel matchLevel = mConfig.MatchingLevel;
@@ -93,7 +93,7 @@ public class SomaticVariantComparer implements ItemComparer
 
     public boolean identifyMismatches(
             final String sampleId, final List<Mismatch> mismatches, final List<SomaticVariantData> oldVariants,
-            final List<SomaticVariantData> newVariants, final MatchLevel matchLevel, final FieldConfig fieldConfig)
+            final List<SomaticVariantData> newVariants, final MatchLevel matchLevel, final FieldCheckCache fieldConfig)
     {
         boolean hasOldItems = oldVariants != null;
         boolean hasNewItems = newVariants != null;
@@ -345,18 +345,18 @@ public class SomaticVariantComparer implements ItemComparer
         SourceData sourceData = mConfig.getSourceData(sourceType);
 
         String sourceReferenceId = mConfig.sourceReferenceId(sourceType, sampleId);
-        return loadVariants(sourceSampleId, FileSources.sampleInstance(sourceData.Files, sourceSampleId, sourceReferenceId));
+        return loadVariants(sourceSampleId, PipelineSourcePaths.sampleInstance(sourceData.PipelinePaths, sourceSampleId, sourceReferenceId));
     }
 
     @Override
-    public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final FileSources fileSources)
+    public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final PipelineSourcePaths fileSources)
     {
         final List<ComparableItem> items = Lists.newArrayList();
         loadVariants(sampleId, fileSources).forEach(x -> items.add(x));
         return items;
     }
 
-    private List<SomaticVariantData> loadVariants(final String sampleId, final FileSources fileSources)
+    private List<SomaticVariantData> loadVariants(final String sampleId, final PipelineSourcePaths fileSources)
     {
         final List<SomaticVariantData> variants = Lists.newArrayList();
 

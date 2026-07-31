@@ -4,8 +4,7 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
-import static com.hartwig.hmftools.compar.common.CommonUtils.buildComparers;
-import static com.hartwig.hmftools.compar.common.CommonUtils.initialiseFieldConfig;
+import static com.hartwig.hmftools.compar.ComparerUtils.buildComparers;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -18,7 +17,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.perf.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.compar.common.CategoryType;
-import com.hartwig.hmftools.compar.common.FieldConfig;
+import com.hartwig.hmftools.compar.common.FieldCheckCache;
 import com.hartwig.hmftools.compar.common.FieldConfigFile;
 
 import org.jetbrains.annotations.NotNull;
@@ -53,7 +52,21 @@ public class Compar
             CMP_LOGGER.info("running comparison for {} sample(s)", mConfig.SampleIds.size());
         }
 
-        FieldConfig fieldConfig = initialiseFieldConfig(mConfig);
+        // FieldCheckCache fieldConfig = initialiseFieldConfig(mConfig);
+
+        FieldCheckCache fieldConfig = new FieldCheckCache();
+
+        try
+        {
+            fieldConfig.loadOverrides(mConfig.FieldCheckOverridesFile);
+        }
+        catch(IOException e)
+        {
+            CMP_LOGGER.error("failed to load field overrides file({})", mConfig.FieldCheckOverridesFile);
+            e.printStackTrace();
+            System.exit(1);
+        }
+
         fieldConfig.logProblems();
         if(fieldConfig.hasErrors())
         {

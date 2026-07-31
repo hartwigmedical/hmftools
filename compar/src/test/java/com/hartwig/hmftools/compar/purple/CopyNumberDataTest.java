@@ -15,7 +15,7 @@ import java.util.Map;
 
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItemTest;
-import com.hartwig.hmftools.compar.common.FieldConfig;
+import com.hartwig.hmftools.compar.common.FieldCheckCache;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.MismatchType;
@@ -87,7 +87,7 @@ public class CopyNumberDataTest extends ComparableItemTest<CopyNumberData, CopyN
             b.positionEnd = 25000;
         });
         MatchLevel matchLevel = MatchLevel.DETAILED;
-        FieldConfig fieldConfig = createDefaultThresholds(matchLevel);
+        FieldCheckCache fieldConfig = createDefaultThresholds(matchLevel);
 
         assertTrue(victim.matches(liftoverVictim));
         assertTrue(liftoverVictim.matches(victim));

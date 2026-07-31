@@ -34,13 +34,13 @@ public class SigsDataTest extends ComparableItemTest<SigsData, SigsComparer, Tes
     @Test
     public void fullyMatchesSelfInReportableMode()
     {
-        // Override since Isofox output is never compared in reportable mode
+        // Override since signatures output is never compared in reportable mode
     }
 
     @Override
     @Test
     public void singleFieldMismatchesAreRecognizedInReportableMode()
     {
-        // Override since Isofox output is never compared in reportable mode
+        // Override since signatures output is never compared in reportable mode
     }
 }

@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.compar;
 
-import static com.hartwig.hmftools.compar.common.CommonUtils.buildComparers;
 import static com.hartwig.hmftools.compar.common.CommonUtils.initialiseFieldConfig;
 
 import java.io.File;
@@ -10,7 +9,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.compar.common.CategoryType;
-import com.hartwig.hmftools.compar.common.FieldConfig;
+import com.hartwig.hmftools.compar.common.FieldCheckCache;
 import com.hartwig.hmftools.compar.common.FieldConfigFile;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 
@@ -59,14 +58,14 @@ public class DefaultFieldConfigTestApplication
             config.Categories.add(category);
         }
 
-        FieldConfig fieldConfig = initialiseFieldConfig(config);
+        FieldCheckCache fieldConfig = initialiseFieldConfig(config);
 
         String outputDir = OUTPUT_DIR + "/" + matchLevel.toString().toLowerCase();
         new File(outputDir).mkdirs();
 
         String filename = FieldConfigFile.generateFileName(outputDir);
 
-        Set<CategoryType> categories = buildComparers(config).stream()
+        Set<CategoryType> categories = ComparerUtils.buildComparers(config).stream()
                 .map(c -> c.category())
                 .collect(Collectors.toSet());
         FieldConfigFile.write(filename, fieldConfig, categories);

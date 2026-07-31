@@ -10,7 +10,6 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.rna.GeneExpression;
 import com.hartwig.hmftools.common.rna.GeneExpressionFile;
 import com.hartwig.hmftools.compar.ComparConfig;
@@ -18,8 +17,8 @@ import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.CommonUtils;
-import com.hartwig.hmftools.compar.common.FieldConfig;
-import com.hartwig.hmftools.compar.common.FileSources;
+import com.hartwig.hmftools.compar.common.FieldCheckCache;
+import com.hartwig.hmftools.compar.common.PipelineSourcePaths;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.field.DoubleField;
@@ -43,7 +42,7 @@ public record IsofoxGeneDataComparer(ComparConfig mConfig) implements ItemCompar
     }
 
     @Override
-    public boolean processSample(final String sampleId, final List<Mismatch> mismatches, final FieldConfig fieldConfig)
+    public boolean processSample(final String sampleId, final List<Mismatch> mismatches, final FieldCheckCache fieldConfig)
     {
         return CommonUtils.processSample(this, mConfig, sampleId, mismatches, fieldConfig);
     }
@@ -68,7 +67,7 @@ public record IsofoxGeneDataComparer(ComparConfig mConfig) implements ItemCompar
     }
 
     @Override
-    public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final FileSources fileSources)
+    public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final PipelineSourcePaths fileSources)
     {
         final String filename = determineFileName(sampleId, fileSources);
         List<GeneExpression> geneExpressions = GeneExpressionFile.read(filename);
@@ -82,7 +81,7 @@ public record IsofoxGeneDataComparer(ComparConfig mConfig) implements ItemCompar
     }
 
     @NotNull
-    private static String determineFileName(final String sampleId, final FileSources fileSources)
+    private static String determineFileName(final String sampleId, final PipelineSourcePaths fileSources)
     {
         String filename = GeneExpressionFile.generateFilename(fileSources.Isofox, sampleId);
         String oldFilename = filename.replace(".tsv", ".csv");

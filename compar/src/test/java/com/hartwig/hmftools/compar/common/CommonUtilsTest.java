@@ -148,7 +148,7 @@ public class CommonUtilsTest
     @Test
     public void emptyComparison()
     {
-        FieldConfig fieldConfig = new FieldConfig();
+        FieldCheckCache fieldConfig = new FieldCheckCache();
 
         List<Mismatch> mismatches = new ArrayList<>();
         List<ComparableItem> refItems = new ArrayList<>();

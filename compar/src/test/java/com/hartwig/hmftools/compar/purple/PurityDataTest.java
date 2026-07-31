@@ -1,23 +1,5 @@
 package com.hartwig.hmftools.compar.purple;
 
-import static com.hartwig.hmftools.compar.purple.PurityComparer.FLD_CN_SEGS;
-import static com.hartwig.hmftools.compar.purple.PurityComparer.FLD_CONTAMINATION;
-import static com.hartwig.hmftools.compar.purple.PurityComparer.FLD_FIT_METHOD;
-import static com.hartwig.hmftools.compar.purple.PurityComparer.FLD_GENDER;
-import static com.hartwig.hmftools.compar.purple.PurityComparer.FLD_GERM_ABS;
-import static com.hartwig.hmftools.compar.purple.PurityComparer.FLD_MS_INDELS;
-import static com.hartwig.hmftools.compar.purple.PurityComparer.FLD_MS_STATUS;
-import static com.hartwig.hmftools.compar.purple.PurityComparer.FLD_PLOIDY;
-import static com.hartwig.hmftools.compar.purple.PurityComparer.FLD_PURITY;
-import static com.hartwig.hmftools.compar.purple.PurityComparer.FLD_QC_STATUS;
-import static com.hartwig.hmftools.compar.purple.PurityComparer.FLD_SV_TMB;
-import static com.hartwig.hmftools.compar.purple.PurityComparer.FLD_TINC_LEVEL;
-import static com.hartwig.hmftools.compar.purple.PurityComparer.FLD_TMB;
-import static com.hartwig.hmftools.compar.purple.PurityComparer.FLD_TMB_STATUS;
-import static com.hartwig.hmftools.compar.purple.PurityComparer.FLD_TML;
-import static com.hartwig.hmftools.compar.purple.PurityComparer.FLD_TML_STATUS;
-import static com.hartwig.hmftools.compar.purple.PurityComparer.FLD_UNS_CN_SEGS;
-
 import java.util.Collections;
 import java.util.HashMap;
 
@@ -36,25 +18,25 @@ public class PurityDataTest extends ComparableItemTest<PurityData, PurityCompare
         PurityData alternateValueSource = builder.createWithAlternateDefaults();
 
         fieldToAlternateValueInitializer = new HashMap<>();
-        fieldToAlternateValueInitializer.put(FLD_PURITY, b -> b.purity = alternateValueSource.Purity.bestFit().purity());
-        fieldToAlternateValueInitializer.put(FLD_PLOIDY, b -> b.ploidy = alternateValueSource.Purity.bestFit().ploidy());
-        fieldToAlternateValueInitializer.put(FLD_CONTAMINATION, b -> b.contamination = alternateValueSource.Purity.qc().contamination());
-        fieldToAlternateValueInitializer.put(FLD_TMB, b -> b.tmb = alternateValueSource.Purity.tumorMutationalBurdenPerMb());
-        fieldToAlternateValueInitializer.put(FLD_MS_INDELS, b -> b.msIndels = alternateValueSource.Purity.microsatelliteIndelsPerMb());
-        fieldToAlternateValueInitializer.put(FLD_TML, b -> b.tml = alternateValueSource.Purity.tumorMutationalLoad());
-        fieldToAlternateValueInitializer.put(FLD_CN_SEGS, b -> b.copyNumberSegments = alternateValueSource.Purity.qc().copyNumberSegments());
-        fieldToAlternateValueInitializer.put(FLD_UNS_CN_SEGS, b -> b.unsupportedCopyNumberSegments =
+        fieldToAlternateValueInitializer.put(PurityComparer.PurityFields.Purity.toString(), b -> b.purity = alternateValueSource.Purity.bestFit().purity());
+        fieldToAlternateValueInitializer.put(PurityComparer.PurityFields.Ploidy.toString(), b -> b.ploidy = alternateValueSource.Purity.bestFit().ploidy());
+        fieldToAlternateValueInitializer.put(PurityComparer.PurityFields.Contamination.toString(), b -> b.contamination = alternateValueSource.Purity.qc().contamination());
+        fieldToAlternateValueInitializer.put(PurityComparer.PurityFields.TmbPerMb.toString(), b -> b.tmb = alternateValueSource.Purity.tumorMutationalBurdenPerMb());
+        fieldToAlternateValueInitializer.put(PurityComparer.PurityFields.MsIndelsPerMb.toString(), b -> b.msIndels = alternateValueSource.Purity.microsatelliteIndelsPerMb());
+        fieldToAlternateValueInitializer.put(PurityComparer.PurityFields.Tml.toString(), b -> b.tml = alternateValueSource.Purity.tumorMutationalLoad());
+        fieldToAlternateValueInitializer.put(PurityComparer.PurityFields.CopyNumberSegments.toString(), b -> b.copyNumberSegments = alternateValueSource.Purity.qc().copyNumberSegments());
+        fieldToAlternateValueInitializer.put(PurityComparer.PurityFields.UnsupportedCopyNumberSegments.toString(), b -> b.unsupportedCopyNumberSegments =
                 alternateValueSource.Purity.qc().unsupportedCopyNumberSegments());
-        fieldToAlternateValueInitializer.put(FLD_SV_TMB, b -> b.svTmb = alternateValueSource.Purity.svTumorMutationalBurden());
-        fieldToAlternateValueInitializer.put(FLD_QC_STATUS, b -> b.qcStatus = alternateValueSource.Purity.qc().status());
-        fieldToAlternateValueInitializer.put(FLD_GENDER, b -> b.gender = alternateValueSource.Purity.gender());
-        fieldToAlternateValueInitializer.put(FLD_GERM_ABS, b -> b.germlineAberrations = alternateValueSource.Purity.qc()
+        fieldToAlternateValueInitializer.put(PurityComparer.PurityFields.SvTmb.toString(), b -> b.svTmb = alternateValueSource.Purity.svTumorMutationalBurden());
+        fieldToAlternateValueInitializer.put(PurityComparer.PurityFields.QcStatus.toString(), b -> b.qcStatus = alternateValueSource.Purity.qc().status());
+        fieldToAlternateValueInitializer.put(PurityComparer.PurityFields.Gender.toString(), b -> b.gender = alternateValueSource.Purity.gender());
+        fieldToAlternateValueInitializer.put(PurityComparer.PurityFields.GermlineAberrations.toString(), b -> b.germlineAberrations = alternateValueSource.Purity.qc()
                 .germlineAberrations());
-        fieldToAlternateValueInitializer.put(FLD_FIT_METHOD, b -> b.fitMethod = alternateValueSource.Purity.method());
-        fieldToAlternateValueInitializer.put(FLD_MS_STATUS, b -> b.msStatus = alternateValueSource.Purity.microsatelliteStatus());
-        fieldToAlternateValueInitializer.put(FLD_TMB_STATUS, b -> b.tmbStatus = alternateValueSource.Purity.tumorMutationalBurdenStatus());
-        fieldToAlternateValueInitializer.put(FLD_TML_STATUS, b -> b.tmlStatus = alternateValueSource.Purity.tumorMutationalLoadStatus());
-        fieldToAlternateValueInitializer.put(FLD_TINC_LEVEL, b -> b.tincLevel = alternateValueSource.Purity.qc().tincLevel());
+        fieldToAlternateValueInitializer.put(PurityComparer.PurityFields.FitMethod.toString(), b -> b.fitMethod = alternateValueSource.Purity.method());
+        fieldToAlternateValueInitializer.put(PurityComparer.PurityFields.MsStatus.toString(), b -> b.msStatus = alternateValueSource.Purity.microsatelliteStatus());
+        fieldToAlternateValueInitializer.put(PurityComparer.PurityFields.TmbStatus.toString(), b -> b.tmbStatus = alternateValueSource.Purity.tumorMutationalBurdenStatus());
+        fieldToAlternateValueInitializer.put(PurityComparer.PurityFields.TmlStatus.toString(), b -> b.tmlStatus = alternateValueSource.Purity.tumorMutationalLoadStatus());
+        fieldToAlternateValueInitializer.put(PurityComparer.PurityFields.TincLevel.toString(), b -> b.tincLevel = alternateValueSource.Purity.qc().tincLevel());
 
         nameToAlternateIndexInitializer = Collections.emptyMap();
         reportabilityFieldToFalseReportabilityInitializer = Collections.emptyMap();

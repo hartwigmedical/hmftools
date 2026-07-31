@@ -19,7 +19,7 @@ import org.junit.Test;
 
 public class FieldConfigTest
 {
-    private static Field getField(final FieldConfig fieldConfig, final CategoryType category, final String name)
+    private static Field getField(final FieldCheckCache fieldConfig, final CategoryType category, final String name)
     {
         return fieldConfig.getFields(category, List.of(name)).get(0);
     }
@@ -27,7 +27,7 @@ public class FieldConfigTest
     @Test
     public void applyOverrideUpdatesCompared()
     {
-        FieldConfig fieldConfig = new FieldConfig();
+        FieldCheckCache fieldConfig = new FieldCheckCache();
         fieldConfig.registerField(PURITY, new BooleanField("BoolField", i -> true, true));
 
         FieldOverride override = new FieldOverride(PURITY.toString(), "BoolField", "false", "", "");
@@ -39,7 +39,7 @@ public class FieldConfigTest
     @Test
     public void applyOverrideUpdatesThresholds()
     {
-        FieldConfig fieldConfig = new FieldConfig();
+        FieldCheckCache fieldConfig = new FieldCheckCache();
         DoubleField beforeOverride = new DoubleField("DoubleField", i -> 0d, true, 0.1,
                 null, "%.2f");
         fieldConfig.registerField(PURITY, beforeOverride);
@@ -56,7 +56,7 @@ public class FieldConfigTest
     @Test
     public void applyOverrideAcceptsFractionForPercentThreshold()
     {
-        FieldConfig fieldConfig = new FieldConfig();
+        FieldCheckCache fieldConfig = new FieldCheckCache();
         DoubleField beforeOverride = new DoubleField("DoubleField", i -> 0d, true, null,
                 null, "%.2f");
         fieldConfig.registerField(PURITY, beforeOverride);
@@ -70,7 +70,7 @@ public class FieldConfigTest
     @Test
     public void applyOverrideNoneClearsThresholds()
     {
-        FieldConfig fieldConfig = new FieldConfig();
+        FieldCheckCache fieldConfig = new FieldCheckCache();
         DoubleField beforeOverride = new DoubleField("DoubleField", i -> 0d, true, 0.1,
                 0.2, "%.2f");
         fieldConfig.registerField(PURITY, beforeOverride);
@@ -86,7 +86,7 @@ public class FieldConfigTest
     @Test
     public void applyOverrideLeavesUnspecifiedSettingsUnchanged()
     {
-        FieldConfig fieldConfig = new FieldConfig();
+        FieldCheckCache fieldConfig = new FieldCheckCache();
         DoubleField beforeOverride = new DoubleField("DoubleField", i -> 0d, true, 0.1,
                 0.2, "%.2f");
         fieldConfig.registerField(PURITY, beforeOverride);
@@ -102,7 +102,7 @@ public class FieldConfigTest
     @Test
     public void applyOverrideIgnoresUnknownCategory()
     {
-        FieldConfig fieldConfig = new FieldConfig();
+        FieldCheckCache fieldConfig = new FieldCheckCache();
         fieldConfig.registerField(PURITY, new BooleanField("BoolField", i -> true, true));
 
         FieldOverride override = new FieldOverride("NOT_A_CATEGORY", "BoolField", "false", "", "");
@@ -114,7 +114,7 @@ public class FieldConfigTest
     @Test
     public void applyOverrideIgnoresUnknownFieldName()
     {
-        FieldConfig fieldConfig = new FieldConfig();
+        FieldCheckCache fieldConfig = new FieldCheckCache();
         fieldConfig.registerField(PURITY, new BooleanField("BoolField", i -> true, true));
 
         FieldOverride override = new FieldOverride(PURITY.toString(), "NotARealField", "false", "", "");
@@ -126,7 +126,7 @@ public class FieldConfigTest
     @Test
     public void applyOverrideOnUnsupportedSettingIsNoOpForThatSetting()
     {
-        FieldConfig fieldConfig = new FieldConfig();
+        FieldCheckCache fieldConfig = new FieldCheckCache();
         fieldConfig.registerField(PURITY, new BooleanField("BoolField", i -> true, true));
 
         // boolean fields don't support thresholds - should record an error and leave the field otherwise intact
@@ -142,7 +142,7 @@ public class FieldConfigTest
     @Test
     public void applyOverrideOnlyAffectsTargetedCategoryAndField()
     {
-        FieldConfig fieldConfig = new FieldConfig();
+        FieldCheckCache fieldConfig = new FieldCheckCache();
         fieldConfig.registerField(PURITY, new BooleanField("BoolField", i -> true, true));
         fieldConfig.registerField(DRIVER, new BooleanField("BoolField", i -> true, true));
 
@@ -156,7 +156,7 @@ public class FieldConfigTest
     @Test
     public void applyOverridesStrictModeRecordsErrorForMissingColumns()
     {
-        FieldConfig fieldConfig = new FieldConfig();
+        FieldCheckCache fieldConfig = new FieldCheckCache();
         DoubleField beforeOverride = new DoubleField("DoubleField", i -> 0d, true, 0.1,
                 0.2, "%.2f");
         fieldConfig.registerField(PURITY, beforeOverride);
@@ -178,7 +178,7 @@ public class FieldConfigTest
     {
         for(boolean strictFieldConfig : List.of(false, true))
         {
-            FieldConfig fieldConfig = new FieldConfig();
+            FieldCheckCache fieldConfig = new FieldCheckCache();
             DoubleField beforeOverride = new DoubleField("DoubleField", i -> 0d, true, 0.1,
                     0.2, "%.2f");
             fieldConfig.registerField(PURITY, beforeOverride);
@@ -199,7 +199,7 @@ public class FieldConfigTest
     {
         for(boolean strictFieldConfig : List.of(false, true))
         {
-            FieldConfig fieldConfig = new FieldConfig();
+            FieldCheckCache fieldConfig = new FieldCheckCache();
             fieldConfig.registerField(PURITY, new BooleanField("BoolField", i -> true, true));
 
             FieldOverride override = new FieldOverride(PURITY.toString(), "BoolField", "yes", "none",
@@ -214,7 +214,7 @@ public class FieldConfigTest
     @Test
     public void applyOverridesStrictModeFlagsMissingOverride()
     {
-        FieldConfig fieldConfig = new FieldConfig();
+        FieldCheckCache fieldConfig = new FieldCheckCache();
         fieldConfig.registerField(PURITY, new BooleanField("OverriddenField", i -> true, true));
         fieldConfig.registerField(PURITY, new BooleanField("MissingField", i -> true, true));
         fieldConfig.registerField(PURITY, new DisplayOnlyField("DisplayOnlyField", i -> "", i -> true));

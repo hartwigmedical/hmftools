@@ -45,7 +45,7 @@ import com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.common.FieldConfig;
+import com.hartwig.hmftools.compar.common.FieldCheckCache;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.SourceType;
@@ -178,7 +178,7 @@ public class SomaticVariantData implements ComparableItem
     public int comparisonPosition() { return mComparisonPosition; }
 
     @Override
-    public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final FieldConfig fieldConfig,
+    public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final FieldCheckCache fieldConfig,
             final boolean includeMatches)
     {
         final SomaticVariantData otherVar = (SomaticVariantData) other;

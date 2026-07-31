@@ -16,7 +16,7 @@ import java.util.function.Consumer;
 
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItemTest;
-import com.hartwig.hmftools.compar.common.FieldConfig;
+import com.hartwig.hmftools.compar.common.FieldCheckCache;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.MismatchType;
@@ -57,7 +57,7 @@ public class DisruptionDataTest extends ComparableItemTest<DisruptionData, Disru
         DisruptionData newVictim = builder.create(b -> b.breakends = List.of(newBreakend));
 
         MatchLevel matchLevel = MatchLevel.DETAILED;
-        FieldConfig fieldConfig = createDefaultThresholds(matchLevel);
+        FieldCheckCache fieldConfig = createDefaultThresholds(matchLevel);
 
         assertTrue(refVictim.matches(newVictim));
         assertNull(refVictim.findMismatch(newVictim, matchLevel, fieldConfig, false));
@@ -85,7 +85,7 @@ public class DisruptionDataTest extends ComparableItemTest<DisruptionData, Disru
         assertTrue(refVictim.matches(newVictim));
 
         MatchLevel matchLevel = MatchLevel.DETAILED;
-        FieldConfig fieldConfig = createDefaultThresholds(matchLevel);
+        FieldCheckCache fieldConfig = createDefaultThresholds(matchLevel);
         Mismatch mismatch = refVictim.findMismatch(newVictim, matchLevel, fieldConfig, false);
 
         assertEquals(MismatchType.VALUE, mismatch.Type);
@@ -143,7 +143,7 @@ public class DisruptionDataTest extends ComparableItemTest<DisruptionData, Disru
         assertTrue(refVictim.matches(newVictim));
 
         MatchLevel matchLevel = MatchLevel.DETAILED;
-        FieldConfig fieldConfig = createDefaultThresholds(matchLevel);
+        FieldCheckCache fieldConfig = createDefaultThresholds(matchLevel);
         Mismatch mismatch = refVictim.findMismatch(newVictim, matchLevel, fieldConfig, false);
 
         assertEquals(MismatchType.VALUE, mismatch.Type);
@@ -164,7 +164,7 @@ public class DisruptionDataTest extends ComparableItemTest<DisruptionData, Disru
         assertTrue(reportableVictim.matches(nonReportableVictim));
 
         MatchLevel matchLevel = MatchLevel.REPORTABLE;
-        FieldConfig fieldConfig = createDefaultThresholds(matchLevel);
+        FieldCheckCache fieldConfig = createDefaultThresholds(matchLevel);
         Mismatch mismatch = reportableVictim.findMismatch(nonReportableVictim, matchLevel, fieldConfig, false);
 
         assertEquals(MismatchType.OLD_ONLY, mismatch.Type);
@@ -192,7 +192,7 @@ public class DisruptionDataTest extends ComparableItemTest<DisruptionData, Disru
         assertTrue("Test difference in " + field, refVictim.matches(newVictim));
 
         MatchLevel matchLevel = MatchLevel.DETAILED;
-        FieldConfig fieldConfig = createDefaultThresholds(matchLevel);
+        FieldCheckCache fieldConfig = createDefaultThresholds(matchLevel);
         Mismatch mismatch = refVictim.findMismatch(newVictim, matchLevel, fieldConfig, false);
 
         assertEquals("Test difference in " + field, MismatchType.VALUE, mismatch.Type);

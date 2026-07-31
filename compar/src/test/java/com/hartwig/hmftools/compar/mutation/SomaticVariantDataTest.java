@@ -35,7 +35,7 @@ import java.util.Set;
 
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItemTest;
-import com.hartwig.hmftools.compar.common.FieldConfig;
+import com.hartwig.hmftools.compar.common.FieldCheckCache;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.MismatchType;
@@ -121,8 +121,8 @@ public class SomaticVariantDataTest extends ComparableItemTest<SomaticVariantDat
             b.chromosome = "8";
             b.position = 10000;
         });
-        FieldConfig detailedFieldConfig = createDefaultThresholds(MatchLevel.DETAILED);
-        FieldConfig reportableFieldConfig = createDefaultThresholds(MatchLevel.REPORTABLE);
+        FieldCheckCache detailedFieldConfig = createDefaultThresholds(MatchLevel.DETAILED);
+        FieldCheckCache reportableFieldConfig = createDefaultThresholds(MatchLevel.REPORTABLE);
 
         assertTrue(victim.matches(liftoverVictim));
         assertTrue(liftoverVictim.matches(victim));
@@ -153,7 +153,7 @@ public class SomaticVariantDataTest extends ComparableItemTest<SomaticVariantDat
         assertTrue(refVictim.matches(newVictim));
 
         MatchLevel matchLevel = MatchLevel.DETAILED;
-        FieldConfig fieldConfig = createDefaultThresholds(matchLevel);
+        FieldCheckCache fieldConfig = createDefaultThresholds(matchLevel);
         Mismatch mismatch = refVictim.findMismatch(newVictim, matchLevel, fieldConfig, false);
 
         assertEquals(MismatchType.VALUE, mismatch.Type);
@@ -183,7 +183,7 @@ public class SomaticVariantDataTest extends ComparableItemTest<SomaticVariantDat
         assertTrue(passVictim.matches(filteredVictim));
 
         MatchLevel matchLevel = MatchLevel.DETAILED;
-        FieldConfig fieldConfig = createDefaultThresholds(matchLevel);
+        FieldCheckCache fieldConfig = createDefaultThresholds(matchLevel);
         Mismatch mismatch = passVictim.findMismatch(filteredVictim, matchLevel, fieldConfig, false);
 
         assertEquals(MismatchType.OLD_ONLY, mismatch.Type);

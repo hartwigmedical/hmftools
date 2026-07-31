@@ -18,7 +18,7 @@ public class InvalidDataItem implements ComparableItem
     public boolean matches(final ComparableItem other) { return false; }
 
     @Override
-    public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final FieldConfig fieldConfig,
+    public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final FieldCheckCache fieldConfig,
             final boolean includeMatches)
     {
         return null;

@@ -1,12 +1,21 @@
 package com.hartwig.hmftools.compar.common;
 
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.FieldConfigFile.FLD_ABSOLUTE_THRESHOLD;
 import static com.hartwig.hmftools.compar.common.FieldConfigFile.FLD_COMPARED;
+import static com.hartwig.hmftools.compar.common.FieldConfigFile.FLD_FIELD;
+import static com.hartwig.hmftools.compar.common.FieldConfigFile.FLD_FIELD_TYPE;
 import static com.hartwig.hmftools.compar.common.FieldConfigFile.FLD_PERCENT_THRESHOLD;
 import static com.hartwig.hmftools.compar.common.FieldConfigFile.NONE_SETTING;
+import static com.hartwig.hmftools.compar.common.FileCommon.FLD_CATEGORY;
 import static com.hartwig.hmftools.compar.common.field.DisplayOnlyField.DISPLAY_TYPE;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -16,20 +25,105 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.field.Field;
+import com.hartwig.hmftools.compar.common.field.FieldCheck;
+import com.hartwig.hmftools.compar.common.field.ThresholdFieldCheck;
 import com.hartwig.hmftools.compar.common.field.UnsupportedFieldOverrideException;
 
-public class FieldConfig
+public class FieldCheckCache
 {
     private final Map<CategoryType, Map<String, Field>> mFieldSettings;
+
+    private final Map<CategoryType,Map<String,FieldCheck>> mFieldCheckOverrides;
+
     private final List<String> mWarnings;
     private final List<String> mErrorMessages;
 
-    public FieldConfig()
+    public FieldCheckCache()
     {
         // use linked hash map to preserve field registration order in diffs
         mFieldSettings = Maps.newLinkedHashMap();
+        mFieldCheckOverrides = Maps.newHashMap();
         mWarnings = Lists.newArrayList();
         mErrorMessages = Lists.newArrayList();
+    }
+
+    public Map<String,FieldCheck> getCategoryFieldCheckOverrides(final CategoryType category)
+    {
+        return mFieldCheckOverrides.containsKey(category) ? mFieldCheckOverrides.get(category) : Collections.emptyMap();
+    }
+
+    public List<String> warnings() { return mWarnings; }
+    public List<String> errorMessages() { return mErrorMessages; }
+
+    private static final String NOT_ASSESSED_NA = "N/A";
+
+    public void loadOverrides(final String filename) throws IOException
+    {
+        List<String> lines = Files.readAllLines(new File(filename).toPath());
+
+        Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), TSV_DELIM);
+        lines.remove(0);
+
+        int categoryIndex = fieldsIndexMap.get(FLD_CATEGORY);
+        int fieldIndex = fieldsIndexMap.get(FLD_FIELD);
+        int comparedIndex = fieldsIndexMap.get(FLD_COMPARED);
+        int absoluteThresholdIndex = fieldsIndexMap.get(FLD_ABSOLUTE_THRESHOLD);
+        int percentThresholdIndex = fieldsIndexMap.get(FLD_PERCENT_THRESHOLD);
+
+        List<FieldOverride> fieldOverrides = Lists.newArrayList();
+
+        for(String line : lines)
+        {
+            String[] values = line.split(TSV_DELIM, -1);
+
+            try
+            {
+                CategoryType categoryType = CategoryType.valueOf(values[categoryIndex]);
+                String fieldName = values[fieldIndex];
+                boolean isCompared = Boolean.parseBoolean(values[comparedIndex]);
+
+                Double absThreshold = parseThreshold(values[absoluteThresholdIndex]);
+                Double percThreshold = parseThreshold(values[percentThresholdIndex]);
+
+                FieldCheck fieldCheck;
+
+                if(absThreshold != null || percThreshold != null)
+                {
+                    fieldCheck = new ThresholdFieldCheck(isCompared, absThreshold, percThreshold);
+                }
+                else
+                {
+                    fieldCheck = new FieldCheck(isCompared);
+                }
+
+                Map<String,FieldCheck> categoryOverrides = mFieldCheckOverrides.get(categoryType);
+
+                if(categoryOverrides == null)
+                {
+                    categoryOverrides = Maps.newHashMap();
+                    mFieldCheckOverrides.put(categoryType, categoryOverrides);
+                }
+
+                categoryOverrides.put(fieldName, fieldCheck);
+            }
+            catch(Exception e)
+            {
+                CMP_LOGGER.error("invalid field override entry: {}", line);
+                mErrorMessages.add(e.getMessage());
+            }
+        }
+
+        // TODO: handle requirement for 'strict' / comprehensive field overrides
+
+        CMP_LOGGER.info("loaded {} field check overrides from {}", lines.size(), filename);
+    }
+
+    private static Double parseThreshold(final String value)
+    {
+        if(value.isEmpty() || value.equals(NOT_ASSESSED_NA))
+            return null;
+
+        return Double.parseDouble(value);
     }
 
     public void registerFields(final ItemComparer comparer, final MatchLevel matchLevel)
@@ -77,8 +171,13 @@ public class FieldConfig
         mErrorMessages.forEach(CMP_LOGGER::error);
     }
 
-    List<String> warnings() { return mWarnings; }
-    List<String> errorMessages() { return mErrorMessages; }
+    public static ThresholdFieldCheck getOrMakeFieldCheck(
+            final Map<String, FieldCheck> fieldCheckMap, final String field, final Double absThreshold, final Double percThreshold)
+    {
+        FieldCheck override = fieldCheckMap.get(field);
+
+        return override != null ? (ThresholdFieldCheck)override : new ThresholdFieldCheck(true, absThreshold, percThreshold);
+    }
 
     private void applyOverride(final FieldOverride fieldOverride, final boolean strictFieldConfig)
     {

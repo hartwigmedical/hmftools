@@ -28,7 +28,7 @@ import java.util.Map;
 
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItemTest;
-import com.hartwig.hmftools.compar.common.FieldConfig;
+import com.hartwig.hmftools.compar.common.FieldCheckCache;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.MismatchType;
@@ -101,8 +101,8 @@ public class GermlineVariantDataTest extends ComparableItemTest<GermlineVariantD
             b.chromosome = "8";
             b.position = 10000;
         });
-        FieldConfig detailedFieldConfig = createDefaultThresholds(MatchLevel.DETAILED);
-        FieldConfig reportableFieldConfig = createDefaultThresholds(MatchLevel.REPORTABLE);
+        FieldCheckCache detailedFieldConfig = createDefaultThresholds(MatchLevel.DETAILED);
+        FieldCheckCache reportableFieldConfig = createDefaultThresholds(MatchLevel.REPORTABLE);
 
         assertTrue(victim.matches(liftoverVictim));
         assertTrue(liftoverVictim.matches(victim));

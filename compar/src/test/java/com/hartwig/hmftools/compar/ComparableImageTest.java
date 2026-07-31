@@ -10,7 +10,7 @@ import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 
 import com.hartwig.hmftools.compar.common.CategoryType;
-import com.hartwig.hmftools.compar.common.FieldConfig;
+import com.hartwig.hmftools.compar.common.FieldCheckCache;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.MismatchType;
@@ -115,9 +115,9 @@ public class ComparableImageTest
         assertEquals(expectedDiffString, mismatch.DiffValues.get(0));
     }
 
-    private static FieldConfig makeFieldConfig()
+    private static FieldCheckCache makeFieldConfig()
     {
-        FieldConfig fieldConfig = new FieldConfig();
+        FieldCheckCache fieldConfig = new FieldCheckCache();
         for(Field field : ImageComparer.buildFields(null, 0.))
         {
             fieldConfig.registerField(null, field);

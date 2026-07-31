@@ -30,8 +30,8 @@ import static com.hartwig.hmftools.compar.common.CategoryType.PANEL_CATEGORIES;
 import static com.hartwig.hmftools.compar.common.CategoryType.PURPLE_CATEGORIES;
 import static com.hartwig.hmftools.compar.common.CategoryType.purpleCategories;
 import static com.hartwig.hmftools.compar.common.CategoryType.linxCategories;
-import static com.hartwig.hmftools.compar.common.FileSources.fromConfig;
-import static com.hartwig.hmftools.compar.common.FileSources.registerConfig;
+import static com.hartwig.hmftools.compar.common.PipelineSourcePaths.fromConfig;
+import static com.hartwig.hmftools.compar.common.PipelineSourcePaths.registerConfig;
 import static com.hartwig.hmftools.compar.common.MatchLevel.REPORTABLE;
 import static com.hartwig.hmftools.compar.common.SourceType.NEW;
 import static com.hartwig.hmftools.compar.common.SourceType.OLD;
@@ -55,10 +55,11 @@ import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.FieldConfigFile;
 import com.hartwig.hmftools.compar.common.FieldOverride;
-import com.hartwig.hmftools.compar.common.FileSources;
+import com.hartwig.hmftools.compar.common.PipelineSourcePaths;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.SourceData;
 import com.hartwig.hmftools.compar.common.SourceType;
+import com.hartwig.hmftools.compar.common.TruthsetCache;
 import com.hartwig.hmftools.compar.common.WriteType;
 
 import org.apache.logging.log4j.LogManager;
@@ -81,6 +82,7 @@ public class ComparConfig
     public final Set<String> AlternateTranscriptDriverGenes;
     public final boolean RestrictToDrivers;
     public final List<FieldOverride> FieldOverrides;
+    public final String FieldCheckOverridesFile;
     public final boolean StrictFieldConfig;
 
     public final String OutputDir;
@@ -99,7 +101,6 @@ public class ComparConfig
     public static final String CATEGORIES = "categories";
     public static final String MATCH_LEVEL = "match_level";
 
-    public static final String DB_SOURCE = "db_source";
     public static final String THRESHOLDS = "thresholds";
 
     public static final String WRITE_TYPES = "write_types";
@@ -111,6 +112,8 @@ public class ComparConfig
     public static final String REQUIRES_LIFTOVER = "liftover";
     public static final String FIELD_CONFIG_FILE = "field_config_file";
     public static final String STRICT_FIELD_CONFIG = "strict_field_config";
+
+    public static final String TRUTHSET_FILES = "truthset_files";
 
     public static final String OLD_SOURCE_CFG = OLD.configStr();
     public static final String NEW_SOURCE_CFG = NEW.configStr();
@@ -231,6 +234,8 @@ public class ComparConfig
 
         LiftoverCache = new GenomeLiftoverCache(RequiresLiftover);
         StrictFieldConfig = configBuilder.hasFlag(STRICT_FIELD_CONFIG);
+
+        FieldCheckOverridesFile = configBuilder.getValue(FIELD_CONFIG_FILE);
 
         List<FieldOverride> overrideFieldConfig = null;
         if(configBuilder.hasValue(FIELD_CONFIG_FILE))
@@ -388,8 +393,19 @@ public class ComparConfig
     {
         for(SourceType sourceType : SourceType.values())
         {
-            FileSources fileSources = fromConfig(sourceType, configBuilder);
-            Sources.add(new SourceData(sourceType, fileSources));
+            String truthsetConfig = formConfigSourceStr(TRUTHSET_FILES, sourceType.configStr());
+            if(configBuilder.hasValue(truthsetConfig))
+            {
+                TruthsetCache truthsetCache = new TruthsetCache();
+                truthsetCache.loadFiles(configBuilder.getValue(truthsetConfig));
+                Sources.add(new SourceData(sourceType, truthsetCache));
+            }
+            else
+            {
+                PipelineSourcePaths pipelinePaths = fromConfig(sourceType, configBuilder);
+                Sources.add(new SourceData(sourceType, pipelinePaths));
+            }
+
         }
 
         return true;
@@ -413,10 +429,10 @@ public class ComparConfig
         configBuilder.addConfigItem(THRESHOLDS, "In form: Field,AbsoluteDiff,PercentDiff, separated by ';'");
 
         configBuilder.addConfigItem(
-                formConfigSourceStr(DB_SOURCE, OLD_SOURCE_CFG), false, "Database configurations for reference data");
+                formConfigSourceStr(TRUTHSET_FILES, OLD_SOURCE_CFG), false, "Truthset file(s) old");
 
         configBuilder.addConfigItem(
-                formConfigSourceStr(DB_SOURCE, NEW_SOURCE_CFG), false, "Database configurations for new data");
+                formConfigSourceStr(TRUTHSET_FILES, NEW_SOURCE_CFG), false, "Truthset file(s) new");
 
         registerConfig(configBuilder);
 
@@ -441,8 +457,8 @@ public class ComparConfig
         SampleIds = Lists.newArrayList();
         SampleToReferenceIds = Maps.newHashMap();
         Sources = Lists.newArrayList();
-        Sources.add(new SourceData(OLD, null));
-        Sources.add(new SourceData(NEW, null));
+        Sources.add(new SourceData(OLD, new TruthsetCache()));
+        Sources.add(new SourceData(NEW, new TruthsetCache()));
 
         Categories = Sets.newHashSet();
         MatchingLevel = REPORTABLE;
@@ -461,5 +477,6 @@ public class ComparConfig
         KnownMismatchFile = null;
         FieldOverrides = null;
         StrictFieldConfig = false;
+        FieldCheckOverridesFile = null;
     }
 }

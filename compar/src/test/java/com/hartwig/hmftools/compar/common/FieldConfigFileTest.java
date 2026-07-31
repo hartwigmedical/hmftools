@@ -35,7 +35,7 @@ public class FieldConfigFileTest
     @Test
     public void toLinesReturnsOnlyHeaderWhenNoCategoriesRequested()
     {
-        FieldConfig fieldConfig = new FieldConfig();
+        FieldCheckCache fieldConfig = new FieldCheckCache();
         fieldConfig.registerField(PURITY, new StringField("Name", i -> "", true));
 
         List<String> lines = toLines(fieldConfig, Set.of());
@@ -46,7 +46,7 @@ public class FieldConfigFileTest
     @Test
     public void toLinesOnlyIncludesRequestedCategories()
     {
-        FieldConfig fieldConfig = new FieldConfig();
+        FieldCheckCache fieldConfig = new FieldCheckCache();
         fieldConfig.registerField(PURITY, new StringField("PurityField", i -> "", true));
         fieldConfig.registerField(DRIVER, new StringField("DriverField", i -> "", true));
 
@@ -58,7 +58,7 @@ public class FieldConfigFileTest
     @Test
     public void toLinesExcludesDisplayFields()
     {
-        FieldConfig fieldConfig = new FieldConfig();
+        FieldCheckCache fieldConfig = new FieldCheckCache();
         fieldConfig.registerField(PURITY, new StringField("PurityField", i -> "", true));
         fieldConfig.registerField(PURITY, new DisplayOnlyField("DisplayOnly", i -> "", i -> true));
 
@@ -70,7 +70,7 @@ public class FieldConfigFileTest
     @Test
     public void toLinesOrdersFieldsByCategoryTypeEnumOrderRegardlessOfRegistrationOrder()
     {
-        FieldConfig fieldConfig = new FieldConfig();
+        FieldCheckCache fieldConfig = new FieldCheckCache();
         fieldConfig.registerField(DRIVER, new StringField("DriverField", i -> "", true));
         fieldConfig.registerField(PURITY, new StringField("PurityField", i -> "", true));
 
@@ -88,7 +88,7 @@ public class FieldConfigFileTest
         double absoluteThreshold = 5.0;
         double percentThreshold = 0.25;
 
-        FieldConfig fieldConfig = new FieldConfig();
+        FieldCheckCache fieldConfig = new FieldCheckCache();
         DoubleField doubleField = new DoubleField("DoubleField", i -> 0d, false, absoluteThreshold,
                 percentThreshold, "%.1f");
         fieldConfig.registerField(PURITY, doubleField);
@@ -102,7 +102,7 @@ public class FieldConfigFileTest
     @Test
     public void toLinesUsesNoneForNullThresholds()
     {
-        FieldConfig fieldConfig = new FieldConfig();
+        FieldCheckCache fieldConfig = new FieldCheckCache();
         DoubleField doubleField = new DoubleField("DoubleField", i -> 0d, true, null,
                 null, "%.1f");
         fieldConfig.registerField(PURITY, doubleField);
@@ -166,7 +166,7 @@ public class FieldConfigFileTest
     @Test
     public void readRoundTripsFileWrittenByWrite() throws IOException
     {
-        FieldConfig fieldConfig = new FieldConfig();
+        FieldCheckCache fieldConfig = new FieldCheckCache();
         fieldConfig.registerField(PURITY, new DoubleField("DoubleField", i -> 0d, false, 5.0,
                 0.25, "%.1f"));
 

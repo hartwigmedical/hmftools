@@ -16,13 +16,14 @@ import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.compar.common.field.Field;
+import com.hartwig.hmftools.compar.common.field.FieldCheck;
 
 public class FieldConfigFile
 {
     static final String NONE_SETTING = "none";
 
-    private static final String FLD_FIELD = "Field";
-    private static final String FLD_FIELD_TYPE = "FieldType";
+    public static final String FLD_FIELD = "Field";
+    public static final String FLD_FIELD_TYPE = "FieldType";
     public static final String FLD_COMPARED = "Compared";
     public static final String FLD_ABSOLUTE_THRESHOLD = "AbsoluteThreshold";
     public static final String FLD_PERCENT_THRESHOLD = "PercentThreshold";
@@ -32,7 +33,7 @@ public class FieldConfigFile
         return checkAddDirSeparator(basePath) + "field.config.compar.tsv";
     }
 
-    public static void write(final String filename, final FieldConfig fieldConfig, final Set<CategoryType> categories) throws IOException
+    public static void write(final String filename, final FieldCheckCache fieldConfig, final Set<CategoryType> categories) throws IOException
     {
         Files.write(new File(filename).toPath(), toLines(fieldConfig, categories));
     }
@@ -64,7 +65,7 @@ public class FieldConfigFile
         return fieldOverrides;
     }
 
-    static List<String> toLines(final FieldConfig fieldConfig, final Set<CategoryType> categories)
+    static List<String> toLines(final FieldCheckCache fieldConfig, final Set<CategoryType> categories)
     {
         final List<String> lines = Lists.newArrayList();
         lines.add(header());
