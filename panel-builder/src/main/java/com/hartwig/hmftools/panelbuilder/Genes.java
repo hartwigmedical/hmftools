@@ -488,7 +488,8 @@ public class Genes
             mergedExons.stream()
                     .filter(region -> regionOverlapsOrAdjacent(region.Region, exonRegion))
                     .findFirst()
-                    .ifPresentOrElse(merged ->
+                    .ifPresentOrElse(
+                            merged ->
                             {
                                 if(exon.End > merged.Region.end())
                                 {
@@ -528,10 +529,10 @@ public class Genes
 
         return switch(geneRegion.type())
         {
-            case CODING, UTR, PROMOTER ->
-                    new ProbeGenerationSpec.CoverRegion(geneRegion.region(), metadata, GENERAL_PROBE_CRITERIA, GENERAL_PROBE_SELECT);
-            case UP_STREAM, DOWN_STREAM, EXON_FLANK ->
-                    new ProbeGenerationSpec.CoverOneSubregion(geneRegion.region(), metadata, CN_PROBE_CRITERIA, CN_PROBE_SELECT);
+            case CODING, UTR, PROMOTER -> new ProbeGenerationSpec.CoverRegion(
+                    geneRegion.region(), metadata, GENERAL_PROBE_CRITERIA, GENERAL_PROBE_SELECT);
+            case UP_STREAM, DOWN_STREAM, EXON_FLANK -> new ProbeGenerationSpec.CoverOneSubregion(
+                    geneRegion.region(), metadata, CN_PROBE_CRITERIA, CN_PROBE_SELECT);
         };
     }
 

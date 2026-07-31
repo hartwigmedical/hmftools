@@ -119,7 +119,8 @@ public class ProbeQualityModel
             int newBatchSize = batchSize / 10;
             if(newBatchSize >= 1)
             {
-                LOGGER.warn("Aligning sequences with batch size {} failed, trying again with batch size {}",
+                LOGGER.warn(
+                        "Aligning sequences with batch size {} failed, trying again with batch size {}",
                         batchSize, newBatchSize);
                 return runAlignment(probes, newBatchSize);
             }

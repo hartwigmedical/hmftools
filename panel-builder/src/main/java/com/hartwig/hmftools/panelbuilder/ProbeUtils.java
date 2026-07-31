@@ -116,7 +116,8 @@ public class ProbeUtils
                 int intersectionEnd = min(segmentEnd, targetedEnd);
                 if(intersectionStart < intersectionEnd)
                 {
-                    targetedRegions.add(getSubregion(refSegment.region(), refSegment.orientation(),
+                    targetedRegions.add(getSubregion(
+                            refSegment.region(), refSegment.orientation(),
                             intersectionStart - segmentStart, intersectionEnd - segmentStart));
                 }
             }

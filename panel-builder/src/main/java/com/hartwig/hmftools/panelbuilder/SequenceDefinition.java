@@ -37,7 +37,8 @@ public record SequenceDefinition(List<SequenceSegment> segments) implements Comp
                 throw new IllegalArgumentException("Consecutive insert segments should be a single segment");
             }
             // Consecutive regions that are directly adjacent in the genome with the same orientation should have been a single region.
-            if(prev instanceof RefSegment prevRegion && next instanceof RefSegment nextRegion && areRefSegmentsAdjacent(prevRegion, nextRegion))
+            if(prev instanceof RefSegment prevRegion && next instanceof RefSegment nextRegion && areRefSegmentsAdjacent(
+                    prevRegion, nextRegion))
             {
                 throw new IllegalArgumentException("Adjacent regions with the same orientation should be a single region");
             }

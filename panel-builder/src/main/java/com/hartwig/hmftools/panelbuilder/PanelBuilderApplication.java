@@ -59,7 +59,8 @@ public class PanelBuilderApplication
         ProbeQualityProfile probeQualityProfile = ProbeQualityProfile.loadFromResourceFile(mConfig.probeQualityProfileFile());
         loadAlignerLibrary(mConfig.bwaLibPath());
         Supplier<BwaMemAligner> alignerFactory = () -> createBwaMemAligner(mConfig.bwaIndexImageFile(), mConfig.threads());
-        ProbeQualityModel probeQualityModel = new ProbeQualityModel(alignerFactory, PROBE_LENGTH,
+        ProbeQualityModel probeQualityModel = new ProbeQualityModel(
+                alignerFactory, PROBE_LENGTH,
                 probeQualityProfile.matchScoreThreshold(), probeQualityProfile.matchScoreOffset());
 
         mProbeGenerator = ProbeGenerator.construct(mRefGenome, probeQualityProfile, probeQualityModel, this::writeCandidateProbe);
@@ -145,7 +146,8 @@ public class PanelBuilderApplication
             }
             else
             {
-                new CopyNumberBackbone(mConfig.hetSitesFile(), mConfig.cnBackboneResolution(), mRefGenomeVersion, mProbeGenerator, mPanelData)
+                new CopyNumberBackbone(
+                        mConfig.hetSitesFile(), mConfig.cnBackboneResolution(), mRefGenomeVersion, mProbeGenerator, mPanelData)
                         .generateProbes();
                 // Result is stored into mPanelData.
             }
@@ -203,7 +205,8 @@ public class PanelBuilderApplication
         }
         else
         {
-            CustomStructuralVariants.generateProbes(mConfig.customStructuralVariantsFile(), mRefGenome.chromosomeLengths(), mProbeGenerator, mPanelData);
+            CustomStructuralVariants.generateProbes(
+                    mConfig.customStructuralVariantsFile(), mRefGenome.chromosomeLengths(), mProbeGenerator, mPanelData);
             // Result is stored into mPanelData.
         }
     }

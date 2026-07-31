@@ -39,18 +39,21 @@ public class SequenceDefinitionTest
         assertThrows(IllegalArgumentException.class, () -> new SequenceDefinition(List.of(new InsertSeqSegment(INSERT))));
 
         // Consecutive inserts should be a single insert segment.
-        assertThrows(IllegalArgumentException.class, () -> new SequenceDefinition(List.of(
-                new RefSegment(REGION1, Orientation.FORWARD),
-                new InsertSeqSegment("AC"),
-                new InsertSeqSegment("GT"))));
+        assertThrows(
+                IllegalArgumentException.class, () -> new SequenceDefinition(List.of(
+                        new RefSegment(REGION1, Orientation.FORWARD),
+                        new InsertSeqSegment("AC"),
+                        new InsertSeqSegment("GT"))));
 
         // Adjacent regions with the same orientation should be a single region.
-        assertThrows(IllegalArgumentException.class, () -> new SequenceDefinition(List.of(
-                new RefSegment(new ChrBaseRegion("1", 1, 10), Orientation.FORWARD),
-                new RefSegment(new ChrBaseRegion("1", 11, 20), Orientation.FORWARD))));
-        assertThrows(IllegalArgumentException.class, () -> new SequenceDefinition(List.of(
-                new RefSegment(new ChrBaseRegion("1", 11, 20), Orientation.REVERSE),
-                new RefSegment(new ChrBaseRegion("1", 1, 10), Orientation.REVERSE))));
+        assertThrows(
+                IllegalArgumentException.class, () -> new SequenceDefinition(List.of(
+                        new RefSegment(new ChrBaseRegion("1", 1, 10), Orientation.FORWARD),
+                        new RefSegment(new ChrBaseRegion("1", 11, 20), Orientation.FORWARD))));
+        assertThrows(
+                IllegalArgumentException.class, () -> new SequenceDefinition(List.of(
+                        new RefSegment(new ChrBaseRegion("1", 11, 20), Orientation.REVERSE),
+                        new RefSegment(new ChrBaseRegion("1", 1, 10), Orientation.REVERSE))));
     }
 
     @Test

@@ -291,7 +291,8 @@ public class OutputWriter implements AutoCloseable
 
     private static NamedRegion mergeCoveredRegion(final ChrBaseRegion mergedRegion, final NamedRegion r1, final NamedRegion r2)
     {
-        return new NamedRegion(mergedRegion, combineStringUnique(r1.name(), r2.name(), (s1, s2) -> format("%s | %s", r1.name(), r2.name())));
+        return new NamedRegion(
+                mergedRegion, combineStringUnique(r1.name(), r2.name(), (s1, s2) -> format("%s | %s", r1.name(), r2.name())));
     }
 
     public void writeRejectedFeatures(final List<RejectedFeature> rejectedFeatures) throws IOException
@@ -327,7 +328,8 @@ public class OutputWriter implements AutoCloseable
 
     private void writeRejectedFeaturesBedRow(final RejectedFeature rejectedFeature) throws IOException
     {
-        writeBedRow(requireNonNull(rejectedFeature.region()), targetMetadataToBedName(rejectedFeature.metadata()), mRejectedFeaturesBedWriter);
+        writeBedRow(
+                requireNonNull(rejectedFeature.region()), targetMetadataToBedName(rejectedFeature.metadata()), mRejectedFeaturesBedWriter);
     }
 
     public void writeCandidateTargetRegions(final List<TargetRegion> regions) throws IOException

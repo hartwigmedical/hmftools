@@ -194,13 +194,15 @@ public class SomaticSv implements StructuralVariant
     {
         if(mVariant.type() == StructuralVariantType.SGL)
         {
-            return format("%s:%d:%d %s %s",
+            return format(
+                    "%s:%d:%d %s %s",
                     mVariant.startChromosome(), mVariant.startPosition(), mVariant.startOrientation(), mVariant.type(),
                     Optional.ofNullable(gene()).orElse(""));
         }
         else
         {
-            return format("%s:%d:%d - %s:%d:%d %s %s",
+            return format(
+                    "%s:%d:%d - %s:%d:%d %s %s",
                     mVariant.startChromosome(), mVariant.startPosition(), mVariant.startOrientation(),
                     mVariant.endChromosome(), mVariant.endPosition(), mVariant.endOrientation(), mVariant.type(),
                     Optional.ofNullable(gene()).orElse(""));
