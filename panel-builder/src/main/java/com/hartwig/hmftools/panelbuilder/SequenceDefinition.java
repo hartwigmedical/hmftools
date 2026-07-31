@@ -88,6 +88,16 @@ public record SequenceDefinition(List<SequenceSegment> segments) implements Comp
         return new SequenceDefinition(segments);
     }
 
+    // A probe spanning one or more genome regions, all genome-forward (e.g. a spliced RNA probe from a region mapping).
+    // The regions must not be directly adjacent with the same orientation (they should already be merged); see the canonical constructor.
+    public static SequenceDefinition spliced(final List<ChrBaseRegion> regions)
+    {
+        List<SequenceSegment> segments = regions.stream()
+                .map(region -> (SequenceSegment) new RefSegment(region, Orientation.FORWARD))
+                .toList();
+        return new SequenceDefinition(segments);
+    }
+
     public List<ChrBaseRegion> regions()
     {
         return segments.stream()

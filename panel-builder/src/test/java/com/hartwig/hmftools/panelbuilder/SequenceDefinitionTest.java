@@ -118,6 +118,18 @@ public class SequenceDefinitionTest
     }
 
     @Test
+    public void testSplicedFactory()
+    {
+        ChrBaseRegion region3 = new ChrBaseRegion("1", 41, 45);
+        SequenceDefinition actual = SequenceDefinition.spliced(List.of(REGION1, REGION2, region3));
+        assertTrue(actual.isMultiRegion());
+        assertEquals(List.of(REGION1, REGION2, region3), actual.regions());
+        assertEquals(25, actual.baseLength());
+        // Single region collapses to a plain single-region definition.
+        assertTrue(SequenceDefinition.spliced(List.of(REGION1)).isSingleRegion());
+    }
+
+    @Test
     public void testCompareTo()
     {
         SequenceDefinition a = SequenceDefinition.singleRegion(new ChrBaseRegion("1", 1, 10));
