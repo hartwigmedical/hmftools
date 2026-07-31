@@ -9,13 +9,16 @@ import static com.hartwig.hmftools.compar.common.CategoryType.TUMOR_FLAGSTAT;
 import static com.hartwig.hmftools.compar.common.MatchLevel.REPORTABLE;
 
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.compar.chord.ChordComparer;
 import com.hartwig.hmftools.compar.cider.Cdr3LocusSummaryComparer;
 import com.hartwig.hmftools.compar.cider.CiderVdjComparer;
 import com.hartwig.hmftools.compar.common.CategoryType;
+import com.hartwig.hmftools.compar.common.FieldCheckCache;
 import com.hartwig.hmftools.compar.common.MatchLevel;
+import com.hartwig.hmftools.compar.common.field.FieldCheck;
 import com.hartwig.hmftools.compar.cuppa.CuppaComparer;
 import com.hartwig.hmftools.compar.cuppa.CuppaImageComparer;
 import com.hartwig.hmftools.compar.driver.DriverComparer;
@@ -46,7 +49,7 @@ import com.hartwig.hmftools.compar.virus.VirusComparer;
 
 public final class ComparerUtils
 {
-    public static List<ItemComparer> buildComparers(final ComparConfig config)
+    public static List<ItemComparer> buildComparers(final ComparConfig config, final FieldCheckCache fieldCheckCache)
     {
         List<ItemComparer> comparers = Lists.newArrayList();
         MatchLevel matchLevel = config.MatchingLevel;
@@ -59,8 +62,7 @@ public final class ComparerUtils
                 continue;
             }
 
-
-            ItemComparer comparer = createComparer(category, config);
+            ItemComparer comparer = createComparer(category, config, fieldCheckCache);
 
             if(matchLevel == REPORTABLE && !comparer.hasReportable())
             {
@@ -84,7 +86,7 @@ public final class ComparerUtils
             }
             else
             {
-                disruptionComparer = (DisruptionComparer)createComparer(DISRUPTION, config);
+                disruptionComparer = (DisruptionComparer)createComparer(DISRUPTION, config, fieldCheckCache);
             }
 
             fusionComparer.setDisruptionComparer(disruptionComparer);
@@ -93,12 +95,14 @@ public final class ComparerUtils
         return comparers;
     }
 
-    public static ItemComparer createComparer(final CategoryType category, final ComparConfig config)
+    public static ItemComparer createComparer(final CategoryType category, final ComparConfig config, final FieldCheckCache fieldCheckCache)
     {
+        Map<String, FieldCheck> categoryFieldOverrides = fieldCheckCache.getCategoryFieldCheckOverrides(category);
+
         switch(category)
         {
             case PURITY:
-                return new PurityComparer(config);
+                return new PurityComparer(config, categoryFieldOverrides);
 
             case DRIVER:
                 return new DriverComparer(config);

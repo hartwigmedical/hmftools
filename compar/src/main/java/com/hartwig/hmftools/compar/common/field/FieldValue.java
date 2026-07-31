@@ -6,16 +6,15 @@ import java.util.List;
 
 public abstract class FieldValue
 {
-    public final String Name;
-    public final FieldCheck Check;
-    public final String FormatString;
+    public final FieldInfo Field;
 
-    public FieldValue(final String name, final FieldCheck check, final String formatString)
+    public FieldValue(final FieldInfo field)
     {
-        Name = name;
-        Check = check;
-        FormatString = formatString;
+        Field = field;
     }
+
+    public String name() { return Field.name(); }
+    public String formatString() { return Field.formatString(); }
 
     public abstract boolean checkDifference(final FieldValue other);
 
@@ -24,6 +23,6 @@ public abstract class FieldValue
 
     public static void addDiffInfo(final FieldValue oldValue, final FieldValue newValue, final List<String> diffs)
     {
-        diffs.add(format("%s(%s/%s)", oldValue.Name, oldValue.displayValue(), newValue.displayValue()));
+        diffs.add(format("%s(%s/%s)", oldValue.name(), oldValue.displayValue(), newValue.displayValue()));
     }
 }

@@ -22,6 +22,7 @@ import javax.annotation.Nullable;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.compar.common.CategoryType;
+import com.hartwig.hmftools.compar.common.FieldCheckCache;
 import com.hartwig.hmftools.compar.common.KnownMismatch;
 import com.hartwig.hmftools.compar.common.CurationInfo;
 import com.hartwig.hmftools.compar.common.MatchLevel;
@@ -55,7 +56,7 @@ public class MismatchWriter
         mWriteCurationComment = mSampleKnownMismatches.values().stream().anyMatch(x -> x.stream().anyMatch(y -> !y.Curation.Comment.isEmpty()));
     }
 
-    public boolean initialiseOutputFiles()
+    public boolean initialiseOutputFiles(final FieldCheckCache fieldCheckCache)
     {
         String filePrefix = mConfig.OutputDir;
 
@@ -71,7 +72,7 @@ public class MismatchWriter
         {
             if(mConfig.WriteTypes.contains(WriteType.TYPE_SPECIFIC))
             {
-                List<ItemComparer> comparers = ComparerUtils.buildComparers(mConfig);
+                List<ItemComparer> comparers = ComparerUtils.buildComparers(mConfig, fieldCheckCache);
 
                 for(ItemComparer comparer : comparers)
                 {

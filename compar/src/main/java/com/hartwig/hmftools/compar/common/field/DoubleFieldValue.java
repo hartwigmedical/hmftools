@@ -10,9 +10,9 @@ public class DoubleFieldValue extends FieldValue
 {
     public final double Value;
 
-    public DoubleFieldValue(final String name, final double value, final ThresholdFieldCheck check, final String formatString)
+    public DoubleFieldValue(final FieldInfo field, final double value)
     {
-        super(name, check, formatString);
+        super(field);
         Value = value;
     }
 
@@ -24,7 +24,7 @@ public class DoubleFieldValue extends FieldValue
         if(Value == otherDouble.Value)
             return false;
 
-        ThresholdFieldCheck thresholdFieldCheck = (ThresholdFieldCheck)Check;
+        ThresholdFieldCheck thresholdFieldCheck = (ThresholdFieldCheck)Field.fieldCheck();
 
         double absDiff = abs(Value - otherDouble.Value);
         double percDiff = absDiff / max(abs(Value), abs(otherDouble.Value));
@@ -36,8 +36,8 @@ public class DoubleFieldValue extends FieldValue
     }
 
     @Override
-    public String toString() { return format("%s=%s", Name, format(FormatString, Value)); }
+    public String toString() { return format("%s=%s", name(), format(formatString(), Value)); }
 
     @Override
-    public String displayValue() { return format("%s", format(FormatString, Value)); }
+    public String displayValue() { return format("%s", format(formatString(), Value)); }
 }

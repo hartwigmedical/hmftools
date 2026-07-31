@@ -2,6 +2,7 @@ package com.hartwig.hmftools.compar.purple;
 
 import static com.hartwig.hmftools.compar.common.CategoryType.PURITY;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
+import static com.hartwig.hmftools.compar.common.FieldCheckCache.getOrMakeFieldCheck;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -25,71 +26,121 @@ import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.TruthsetValue;
 import com.hartwig.hmftools.compar.common.field.Field;
 import com.hartwig.hmftools.compar.common.field.FieldCheck;
+import com.hartwig.hmftools.compar.common.field.FieldInfo;
 
 public class PurityComparer implements ItemComparer
 {
     public static final String FLD_PURITY = PurityFields.Purity.toString();
     public static final String FLD_PLOIDY = PurityFields.Ploidy.toString();
 
-    /*
-    protected static final String FLD_CONTAMINATION = "Contamination";
-    protected static final String FLD_TMB = "TmbPerMb";
-    protected static final String FLD_MS_INDELS = "MsIndelsPerMb";
-    protected static final String FLD_TML = "Tml";
-    protected static final String FLD_CN_SEGS = "CopyNumberSegments";
-    protected static final String FLD_UNS_CN_SEGS = "UnsupportedCopyNumberSegments";
-    protected static final String FLD_SV_TMB = "SvTmb";
-    protected static final String FLD_QC_STATUS = "QcStatus";
-    protected static final String FLD_GENDER = "Gender";
-    protected static final String FLD_GERM_ABS = "GermlineAberrations";
-    protected static final String FLD_FIT_METHOD = "FitMethod";
-    protected static final String FLD_MS_STATUS = "MsStatus";
-    protected static final String FLD_TMB_STATUS = "TmbStatus";
-    protected static final String FLD_TML_STATUS = "TmlStatus";
-    protected static final String FLD_TINC_LEVEL = "TincLevel";
-    */
+    private static List<FieldInfo> mFields;
 
     protected enum PurityFields
     {
-        Purity(true, 0.04, null, "%.2f"),
-        Ploidy(true, 0.1, null, "%.2f"),
-        Contamination(true, 0.005, null, "%.4f"),
-        TmbPerMb(true, 0.1, 0.05, "%.2f"),
-        MsIndelsPerMb(true, 0.1, 0.05, "%.2f"),
-        Tml(true, 1.0, 0.05, null),
-        CopyNumberSegments(true, 5.0, 0.2, null),
-        UnsupportedCopyNumberSegments(true, 5.0, 0.2, null),
-        SvTmb(true, 5.0, 0.05, null),
-        QcStatus(true, null, null, null),
-        Gender(true, null, null, null),
-        GermlineAberrations(true, null, null, null),
-        FitMethod(true, null, null, null),
-        MsStatus(true, null, null, null),
-        TmbStatus(true, null, null, null),
-        TmlStatus(true, null, null, null),
-        TincLevel(true, 0.1, null, "%.3f");
-
-        public final boolean IsCompared;
-        public final Double DefaultAbsoluteThreshold;
-        public final Double DefaultPercentageThreshold;
-        public final String FormatString;
-
-        PurityFields(
-                final boolean isCompared, final Double defaultAbsoluteThreshold, final Double defaultPercentageThreshold,
-                final String formatString)
-        {
-            IsCompared = isCompared;
-            DefaultAbsoluteThreshold = defaultAbsoluteThreshold;
-            DefaultPercentageThreshold = defaultPercentageThreshold;
-            FormatString = formatString;
-        }
+        Purity,
+        Ploidy,
+        Contamination,
+        TmbPerMb,
+        MsIndelsPerMb,
+        Tml,
+        CopyNumberSegments,
+        UnsupportedCopyNumberSegments,
+        SvTmb,
+        QcStatus,
+        Gender,
+        GermlineAberrations,
+        FitMethod,
+        MsStatus,
+        TmbStatus,
+        TmlStatus,
+        TincLevel;
     }
 
     private final ComparConfig mConfig;
 
-    public PurityComparer(final ComparConfig config)
+    public PurityComparer(final ComparConfig config, final Map<String,FieldCheck> fieldCheckMap)
     {
         mConfig = config;
+
+        mFields = Lists.newArrayList();
+
+        mFields.add(new FieldInfo(
+                PurityFields.Purity.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, PurityFields.Purity.toString(), 0.04, null),
+                "%.2f"));
+
+        mFields.add(new FieldInfo(
+                PurityFields.Ploidy.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, PurityFields.Ploidy.toString(), 0.1, null),
+                "%.2f"));
+
+        mFields.add(new FieldInfo(
+                PurityFields.Contamination.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, PurityFields.Contamination.toString(), 0.005, null),
+                "%.4f"));
+
+        mFields.add(new FieldInfo(
+                PurityFields.TmbPerMb.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, PurityFields.TmbPerMb.toString(), 0.1, 0.05),
+                "%.2f"));
+
+        mFields.add(new FieldInfo(
+                PurityFields.MsIndelsPerMb.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, PurityFields.MsIndelsPerMb.toString(), 0.1, 0.05),
+                "%.2f"));
+
+        mFields.add(new FieldInfo(
+                PurityFields.Tml.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, PurityFields.Tml.toString(), 1.0, 0.05),
+                null));
+
+        mFields.add(new FieldInfo(
+                PurityFields.CopyNumberSegments.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, PurityFields.CopyNumberSegments.toString(), 5.0, 0.2),
+                null));
+
+        mFields.add(new FieldInfo(
+                PurityFields.UnsupportedCopyNumberSegments.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, PurityFields.UnsupportedCopyNumberSegments.toString(), 5.0, 0.2),
+                null));
+
+        mFields.add(new FieldInfo(
+                PurityFields.SvTmb.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, PurityFields.SvTmb.toString(), 5.0, 0.05),
+                null));
+
+        mFields.add(new FieldInfo(
+                PurityFields.QcStatus.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, PurityFields.QcStatus.toString()), null));
+
+        mFields.add(new FieldInfo(
+                PurityFields.Gender.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, PurityFields.Gender.toString()),null));
+
+        mFields.add(new FieldInfo(
+                PurityFields.GermlineAberrations.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, PurityFields.GermlineAberrations.toString()), null));
+
+        mFields.add(new FieldInfo(
+                PurityFields.FitMethod.toString(), getOrMakeFieldCheck(fieldCheckMap, PurityFields.FitMethod.toString()),
+                null));
+
+        mFields.add(new FieldInfo(
+                PurityFields.MsStatus.toString(), getOrMakeFieldCheck(fieldCheckMap, PurityFields.MsStatus.toString()),
+                null));
+
+        mFields.add(new FieldInfo(
+                PurityFields.TmbStatus.toString(), getOrMakeFieldCheck(fieldCheckMap, PurityFields.TmbStatus.toString()),
+                null));
+
+        mFields.add(new FieldInfo(
+                PurityFields.TmlStatus.toString(), getOrMakeFieldCheck(fieldCheckMap, PurityFields.TmlStatus.toString()),
+                null));
+
+        mFields.add(new FieldInfo(
+                PurityFields.TincLevel.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, PurityFields.TincLevel.toString(), 0.1, null),
+                "%.3f"));
     }
 
     @Override
@@ -98,42 +149,11 @@ public class PurityComparer implements ItemComparer
     @Override
     public List<Field> fields(final MatchLevel matchLevel)
     {
-        /*
-        return List.of(
-                new DoubleField(FLD_PURITY, i -> ((PurityData) i).Purity.bestFit().purity(),
-                        true, 0.04, null, "%.2f"),
-                new DoubleField(FLD_PLOIDY, i -> ((PurityData) i).Purity.bestFit().ploidy(),
-                        true, 0.1, null, "%.2f"),
-                new DoubleField(FLD_CONTAMINATION, i -> ((PurityData) i).Purity.qc().contamination(),
-                        true, 0.005, null, "%.4f"),
-                new DoubleField(FLD_TMB, i -> ((PurityData) i).Purity.tumorMutationalBurdenPerMb(),
-                        true, 0.1, 0.05, "%.2f"),
-                new DoubleField(FLD_MS_INDELS, i -> ((PurityData) i).Purity.microsatelliteIndelsPerMb(),
-                        true, 0.1, 0.05, "%.2f"),
-                new IntField(FLD_TML, i -> ((PurityData) i).Purity.tumorMutationalLoad(),
-                        true, 1., 0.05),
-                new IntField(FLD_CN_SEGS, i -> ((PurityData) i).Purity.qc().copyNumberSegments(),
-                        true, 5., 0.2),
-                new IntField(FLD_UNS_CN_SEGS, i -> ((PurityData) i).Purity.qc().unsupportedCopyNumberSegments(),
-                        true, 5., 0.2),
-                new IntField(FLD_SV_TMB, i -> ((PurityData) i).Purity.svTumorMutationalBurden(),
-                        true, 5., 0.05),
-                new StringListField(FLD_QC_STATUS, i -> qcStatus(((PurityData) i)), true),
-                new StringField(FLD_GENDER, i -> ((PurityData) i).Purity.gender().toString(), true),
-                new StringListField(FLD_GERM_ABS, i -> germlineAberrations(((PurityData) i)), true),
-                new StringField(FLD_FIT_METHOD, i -> ((PurityData) i).Purity.method().toString(), true),
-                new StringField(FLD_MS_STATUS, i -> ((PurityData) i).Purity.microsatelliteStatus().toString(), true),
-                new StringField(FLD_TMB_STATUS, i -> ((PurityData) i).Purity.tumorMutationalBurdenStatus().toString(),
-                        true),
-                new StringField(FLD_TML_STATUS, i -> ((PurityData) i).Purity.tumorMutationalLoadStatus().toString(),
-                        true),
-                new DoubleField(FLD_TINC_LEVEL, i -> ((PurityData) i).Purity.qc().tincLevel(),
-                        true, 0.1, null, "%.3f")
-        );
-        */
-
         return Collections.emptyList();
     }
+
+    // TODO: rename to fields and make part of interface
+    public List<FieldInfo> fieldsList() { return mFields; }
 
     @Override
     public boolean processSample(final String sampleId, final List<Mismatch> mismatches, final FieldCheckCache fieldConfig)
@@ -162,7 +182,7 @@ public class PurityComparer implements ItemComparer
         try
         {
             PurityContext purityContext = PurityContextFile.read(fileSources.Purple, sampleId);
-            comparableItems.add(new PurityData(purityContext, fieldCheckMap));
+            comparableItems.add(new PurityData(purityContext, mFields));
 
         }
         catch(IOException e)
@@ -177,7 +197,7 @@ public class PurityComparer implements ItemComparer
     public List<ComparableItem> loadFromTruthset(final List<TruthsetValue> truthsetValues, final Map<String, FieldCheck> fieldCheckMap)
     {
         List<ComparableItem> comparableItems = Lists.newArrayList();
-        comparableItems.add(new PurityData(truthsetValues, fieldCheckMap));
+        comparableItems.add(new PurityData(truthsetValues, mFields));
         return comparableItems;
     }
 

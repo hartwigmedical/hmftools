@@ -28,6 +28,7 @@ import com.hartwig.hmftools.compar.common.field.Field;
 import com.hartwig.hmftools.compar.common.field.FieldCheck;
 import com.hartwig.hmftools.compar.common.field.ThresholdFieldCheck;
 import com.hartwig.hmftools.compar.common.field.UnsupportedFieldOverrideException;
+import com.hartwig.hmftools.compar.purple.PurityComparer;
 
 public class FieldCheckCache
 {
@@ -172,11 +173,16 @@ public class FieldCheckCache
     }
 
     public static ThresholdFieldCheck getOrMakeFieldCheck(
-            final Map<String, FieldCheck> fieldCheckMap, final String field, final Double absThreshold, final Double percThreshold)
+            final Map<String,FieldCheck> fieldCheckMap, final String field, final Double absThreshold, final Double percThreshold)
     {
         FieldCheck override = fieldCheckMap.get(field);
-
         return override != null ? (ThresholdFieldCheck)override : new ThresholdFieldCheck(true, absThreshold, percThreshold);
+    }
+
+    public static FieldCheck getOrMakeFieldCheck(final Map<String,FieldCheck> fieldCheckMap, final String field)
+    {
+        FieldCheck override = fieldCheckMap.get(field);
+        return override != null ? override : new FieldCheck(true);
     }
 
     private void applyOverride(final FieldOverride fieldOverride, final boolean strictFieldConfig)

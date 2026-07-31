@@ -303,7 +303,7 @@ public class CommonUtils
 
         for(CategoryType category : config.Categories)
         {
-            ItemComparer comparer = createComparer(category, config);
+            ItemComparer comparer = createComparer(category, config, fieldConfig);
 
             fieldConfig.registerFields(comparer, matchLevel);
         }

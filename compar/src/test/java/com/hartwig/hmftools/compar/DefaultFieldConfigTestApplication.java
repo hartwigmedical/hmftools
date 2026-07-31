@@ -65,7 +65,7 @@ public class DefaultFieldConfigTestApplication
 
         String filename = FieldConfigFile.generateFileName(outputDir);
 
-        Set<CategoryType> categories = ComparerUtils.buildComparers(config).stream()
+        Set<CategoryType> categories = ComparerUtils.buildComparers(config, fieldConfig).stream()
                 .map(c -> c.category())
                 .collect(Collectors.toSet());
         FieldConfigFile.write(filename, fieldConfig, categories);

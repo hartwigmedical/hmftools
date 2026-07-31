@@ -6,9 +6,9 @@ public class BoolFieldValue extends FieldValue
 {
     public final double Value;
 
-    public BoolFieldValue(final String name, final double value, final FieldCheck check, final String formatString)
+    public BoolFieldValue(final FieldInfo field, final double value)
     {
-        super(name, check, formatString);
+        super(field);
         Value = value;
     }
 
@@ -21,7 +21,7 @@ public class BoolFieldValue extends FieldValue
     }
 
     @Override
-    public String toString() { return format("%s=%s", Name, FormatString); }
+    public String toString() { return format("%s=%s", name(), formatString()); }
 
     @Override
     public String displayValue() { return format("%s", Value); }

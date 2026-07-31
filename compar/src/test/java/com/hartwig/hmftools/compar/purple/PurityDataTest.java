@@ -13,7 +13,7 @@ public class PurityDataTest extends ComparableItemTest<PurityData, PurityCompare
     @Before
     public void setUp()
     {
-        comparer = new PurityComparer(new ComparConfig());
+        comparer = new PurityComparer(new ComparConfig(), Collections.emptyMap());
         builder = TestPurityDataBuilder.BUILDER;
         PurityData alternateValueSource = builder.createWithAlternateDefaults();
 

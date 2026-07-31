@@ -52,13 +52,11 @@ public class Compar
             CMP_LOGGER.info("running comparison for {} sample(s)", mConfig.SampleIds.size());
         }
 
-        // FieldCheckCache fieldConfig = initialiseFieldConfig(mConfig);
-
-        FieldCheckCache fieldConfig = new FieldCheckCache();
+        FieldCheckCache fieldCheckCache = new FieldCheckCache();
 
         try
         {
-            fieldConfig.loadOverrides(mConfig.FieldCheckOverridesFile);
+            fieldCheckCache.loadOverrides(mConfig.FieldCheckOverridesFile);
         }
         catch(IOException e)
         {
@@ -67,13 +65,13 @@ public class Compar
             System.exit(1);
         }
 
-        fieldConfig.logProblems();
-        if(fieldConfig.hasErrors())
+        fieldCheckCache.logProblems();
+        if(fieldCheckCache.hasErrors())
         {
             System.exit(1);
         }
 
-        if(!mWriter.initialiseOutputFiles())
+        if(!mWriter.initialiseOutputFiles(fieldCheckCache))
         {
             System.exit(1);
         }
@@ -86,7 +84,7 @@ public class Compar
 
             for(int i = 0; i < min(mConfig.SampleIds.size(), mConfig.Threads); ++i)
             {
-                sampleTasks.add(new ComparTask(i, mConfig, fieldConfig, mWriter));
+                sampleTasks.add(new ComparTask(i, mConfig, fieldCheckCache, mWriter));
             }
 
             int taskIndex = 0;
@@ -105,7 +103,7 @@ public class Compar
         }
         else
         {
-            ComparTask sampleTask = new ComparTask(0, mConfig, fieldConfig, mWriter);
+            ComparTask sampleTask = new ComparTask(0, mConfig, fieldCheckCache, mWriter);
             sampleTask.getSampleIds().addAll(mConfig.SampleIds);
             sampleTask.call();
         }
@@ -115,10 +113,10 @@ public class Compar
         CMP_LOGGER.info("write field config file");
         try
         {
-            Set<CategoryType> categories = buildComparers(mConfig).stream()
+            Set<CategoryType> categories = buildComparers(mConfig, fieldCheckCache).stream()
                     .map(c -> c.category())
                     .collect(Collectors.toSet());
-            FieldConfigFile.write(FieldConfigFile.generateFileName(mConfig.OutputDir), fieldConfig, categories);
+            FieldConfigFile.write(FieldConfigFile.generateFileName(mConfig.OutputDir), fieldCheckCache, categories);
         }
         catch(IOException e)
         {

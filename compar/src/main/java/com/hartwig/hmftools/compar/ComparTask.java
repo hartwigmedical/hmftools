@@ -23,15 +23,15 @@ public class ComparTask implements Callable<Void>
 
     private final MismatchWriter mWriter;
 
-    public ComparTask(int taskId, final ComparConfig config, final FieldCheckCache fieldConfig, final MismatchWriter writer)
+    public ComparTask(int taskId, final ComparConfig config, final FieldCheckCache fieldCheckCache, final MismatchWriter writer)
     {
         mTaskId = taskId;
         mConfig = config;
-        mFieldConfig = fieldConfig;
+        mFieldConfig = fieldCheckCache;
         mWriter = writer;
 
         mSampleIds = Lists.newArrayList();
-        mComparers = buildComparers(config);
+        mComparers = buildComparers(config, fieldCheckCache);
     }
 
     public List<String> getSampleIds() { return mSampleIds; }

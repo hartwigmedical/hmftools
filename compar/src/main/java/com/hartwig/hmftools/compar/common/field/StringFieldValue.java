@@ -6,9 +6,9 @@ public class StringFieldValue extends FieldValue
 {
     public final String Value;
 
-    public StringFieldValue(final String name, final String value, final FieldCheck check)
+    public StringFieldValue(final FieldInfo field, final String value)
     {
-        super(name, check, "%s");
+        super(field);
         Value = value;
     }
 
@@ -21,7 +21,7 @@ public class StringFieldValue extends FieldValue
     }
 
     @Override
-    public String toString() { return format("%s=%s", Name, Value); }
+    public String toString() { return format("%s=%s", name(), Value); }
 
     @Override
     public String displayValue() { return format("%s", Value); }

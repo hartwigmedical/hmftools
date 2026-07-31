@@ -8,9 +8,9 @@ public class IntFieldValue extends FieldValue
 {
     public final long Value;
 
-    public IntFieldValue(final String name, final long value, final ThresholdFieldCheck check)
+    public IntFieldValue(final FieldInfo field, final long value)
     {
-        super(name, check, "%d");
+        super(field);
         Value = value;
     }
 
@@ -22,7 +22,7 @@ public class IntFieldValue extends FieldValue
         if(Value == otherValue.Value)
             return false;
 
-        ThresholdFieldCheck thresholdFieldCheck = (ThresholdFieldCheck)Check;
+        ThresholdFieldCheck thresholdFieldCheck = (ThresholdFieldCheck)Field.fieldCheck();
 
         double absDiff = abs(Value - otherValue.Value);
         double percDiff = absDiff / max(abs(Value), abs(otherValue.Value));
@@ -34,7 +34,7 @@ public class IntFieldValue extends FieldValue
     }
 
     @Override
-    public String toString() { return format("%s=%d", Name, Value); }
+    public String toString() { return format("%s=%d", name(), Value); }
 
     @Override
     public String displayValue() { return format("%d", Value); }
