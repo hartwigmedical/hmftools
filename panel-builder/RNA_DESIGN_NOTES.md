@@ -29,10 +29,33 @@ decisions made, and open issues to revisit. Not user-facing documentation.
   target
   ranges over coding/noncoding/part-coding exons, UTR gating, transcript resolution). Input file columns: `GeneName`, `Include5UTR`,
   `Include3UTR`, `TransNames`. RNA QS/GC criteria + `GENE_RNA` target type added. Not yet wired to config/app/output.
-- **B4–B6** — not started. B5 wiring (config `-rna_genes`, separate RNA `PanelData`, `PanelBuilderApplication`) and B4 RNA output writers
-  remain.
+- **B4 [DONE]** — RNA output writers, separate from the DNA output. New files, all `rna_` prefixed: `rna_probes.tsv`/`.fasta`/`.bed`,
+  `rna_targets.bed`, `rna_panel.bed`, `rna_rejections.tsv`/`.bed`, `rna_candidate_targets.bed.gz`, `rna_gene_stats.tsv`. The RNA probes TSV
+  lists all segments generically in a `Segments` column (`;`-joined; ref segments as `region:orientation`, insert segments as their bases)
+  since a spliced probe can exceed two regions; probes sorted by full `SequenceDefinition`.
+  **Factored out** the per-panel file set into `ProbeOutputWriter` (probes TSV/FASTA/BED, covered target regions, covered regions, candidate
+  target regions, rejected features, gene stats). `OutputWriter` now composes one DNA instance + one optional RNA instance (`rnaOutput`
+  flag), plus the DNA-only verbose `candidate_probes` and `sample_variant_info`. The DNA/RNA difference is a single boolean: the probes TSV
+  layout (`BasicProbeLayout` start/end, ≤2 regions vs generic region list) and the FASTA id prefix. `GeneStats` was unified into one shared
+  record (was duplicated in `Genes`/`GenesRna`). Probe FASTA ids are now per-panel with separate counters — `dna_{i}` / `rna_{j}` — so ids are
+  unambiguous across panels (this changes the DNA `probes.fasta` label from `probe{i}` to `dna_{i}`; DNA file names are otherwise unchanged).
+  Unit-tested (`OutputWriterRnaTest`).
+- **B5 [DONE]** — wired end-to-end. `-rna_genes` config (`PanelBuilderConfig`); separate RNA `PanelData`; `RnaProbeGenerator.construct`
+  (own `ProbeEvaluator`); `PanelBuilderApplication.generateRnaGeneProbes()` guarded by config, driving `GenesRna.generateProbes` into the RNA
+  panel, then the B4 writers. RNA is a fully separate panel — no overlap interaction with DNA. **No RNA verbose candidate-probe output**: the
+  `candidate_probes` format uses `BasicProbeLayout` (≤2 regions) and can't represent spliced probes, so the RNA generator gets a null
+  candidate callback for now (TODO if needed).
+- **B6 [IN PROGRESS]** — README RNA section + these notes updated. Remaining: synthetic end-to-end panel + IGV check of the RNA bed; log the
+  QS open issue as a tracked task; eventual DNA-file `dna_` rename.
 
-Everything above is additive/behaviour-preserving; all existing DNA tests remain green (164 tests total).
+Everything above is additive/behaviour-preserving; all existing DNA tests remain green (165 tests total, incl. the new RNA output test).
+
+## Decisions (B4/B5)
+
+- **Forward strand only.** RNA probes are emitted genome-forward (matching the DNA FASTA convention); single-strand output of a chosen strand
+  is deferred (see the strandedness open issue).
+- **DNA output files unchanged for now.** RNA output is entirely new `rna_`-prefixed files; the existing DNA file names are left unprefixed to
+  keep DNA output byte-identical during validation. A later change may add a `dna_` prefix.
 
 ## Goal
 

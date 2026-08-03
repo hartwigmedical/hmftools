@@ -123,6 +123,16 @@ public class PanelBuilderConstants
     public static final String GENE_STATS_FILE_NAME = "gene_stats.tsv";
     public static final String SAMPLE_VARIANT_INFO_FILE_NAME = "sample_variant_info.tsv";
 
+    // RNA output naming. Kept separate from the DNA output (multi-region spliced probes don't fit the DNA probe format). The DNA file names
+    // above are intentionally left unprefixed for now to keep existing DNA output byte-identical during validation; they may gain a dna_
+    // prefix later.
+    public static final String RNA_PANEL_PROBES_FILE_STEM = "rna_probes";
+    public static final String RNA_COVERED_TARGET_REGIONS_FILE_NAME = "rna_targets.bed";
+    public static final String RNA_COVERED_REGIONS_FILE_NAME = "rna_panel.bed";
+    public static final String RNA_REJECTED_FEATURES_FILE_STEM = "rna_rejections";
+    public static final String RNA_CANDIDATE_TARGET_REGIONS_FILE_NAME = "rna_candidate_targets.bed.gz";
+    public static final String RNA_GENE_STATS_FILE_NAME = "rna_gene_stats.tsv";
+
     public static final String FASTA_EXTENSION = ".fasta";
 
     static

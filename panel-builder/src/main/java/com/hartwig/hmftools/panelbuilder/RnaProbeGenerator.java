@@ -23,8 +23,11 @@ import java.util.function.Consumer;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.common.mappability.ProbeQualityProfile;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.panelbuilder.probequality.ProbeQualityModel;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -47,6 +50,14 @@ public class RnaProbeGenerator
     {
         mProbeEvaluator = probeEvaluator;
         mCandidateCallback = candidateCallback;
+    }
+
+    public static RnaProbeGenerator construct(final RefGenomeInterface refGenome, final ProbeQualityProfile probeQualityProfile,
+            final ProbeQualityModel probeQualityModel, final @Nullable Consumer<Probe> candidateCallback)
+    {
+        ProbeQualityScorer probeQualityScorer = new ProbeQualityScorer(probeQualityProfile, probeQualityModel);
+        ProbeEvaluator probeEvaluator = new ProbeEvaluator(refGenome, probeQualityScorer);
+        return new RnaProbeGenerator(probeEvaluator, candidateCallback);
     }
 
     // Covers a probe-space target range with the best acceptable probes, applying the exon size rules:

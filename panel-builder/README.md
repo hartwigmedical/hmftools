@@ -10,6 +10,7 @@ Resource files specific to PanelBuilder are [available here](https://console.clo
 ## Supported Features
 
 - Genes (coding, promoter, UTR, flanks)
+- Genes RNA (exon-aware transcript probes)
 - Copy number backbone
 - CDR3
 - Sample variants from WiGiTS analysis
@@ -35,6 +36,7 @@ Resource files specific to PanelBuilder are [available here](https://console.clo
 | ensembl_data_dir      | Path                         | (none)                      | Ensembl cache directory.                                                                                                                 |
 | bwa_lib               | Path                         | Search in current directory | Path to BWA-MEM shared library object.                                                                                                   |
 | genes                 | Path                         | (none)                      | Path to TSV file containing desired gene features. If not specified, gene probes are not produced.                                       |
+| rna_genes             | Path                         | (none)                      | Path to TSV file containing desired RNA gene features. If not specified, RNA gene probes are not produced.  |
 | cn_backbone           | Flag                         | (none)                      | If specified, include copy number backbone probes in the panel.                                                                          |
 | cn_backbone_res_kb    | Integer                      | 1000                        | Approximate spacing between copy number backbone probes, in kb.                                                                          |
 | het_sites             | Path                         | (none)                      | Path to heterozygous SNP sites TSV file for copy number backbone. May be GZIP'd.                                                         |
@@ -161,6 +163,42 @@ Example:
 GeneName	IncludeCoding	IncludeUTR	IncludeExonFlank	IncludeUpstream	IncludeDownstream	IncludePromoter	ExtraTransNames
 ABCB1	TRUE	FALSE	FALSE	FALSE	FALSE	FALSE	
 CDKN2A	TRUE	FALSE	TRUE	TRUE	TRUE	FALSE	ENST00000579755
+```
+
+### Genes RNA
+
+Probes covering the transcribed (exonic) sequence of selected genes, for RNA panels. Coding sequence is always covered; the 5' and 3' UTRs
+are optional per gene. This is separate from the DNA gene feature above and is written to separate output files (see Output).
+
+Probes are placed in an exon-aware manner designed to maximise performance for both known transcripts and novel splices/fusions. This is done by ensuring probes are constrained to be within exon boundaries where possible. 
+
+Probe evaluation criteria:
+
+- `QS>=0.05`
+
+Notes:
+
+- **Transcript selection.** If no transcripts are specified, all transcripts of the gene are used, with their exons merged. Otherwise the
+  listed Ensembl transcripts are used (merged). RefSeq (NM) ids are not yet supported.
+- **Strand.** Probe sequences are output genome-forward, regardless of gene strand.
+
+#### RNA Gene Feature Input File
+
+TSV file with these columns:
+
+| Column      | Type                 | Description                                                                                     |
+|-------------|----------------------|-------------------------------------------------------------------------------------------------|
+| GeneName    | String               | Ensembl gene name.                                                                              |
+| Include5UTR | Boolean              | Produce 5' UTR exon probes?                                                                     |
+| Include3UTR | Boolean              | Produce 3' UTR exon probes?                                                                     |
+| TransNames  | Comma separated list | Ensembl names of the transcripts to cover. If empty, all transcripts of the gene are used.      |
+
+Example:
+
+```text
+GeneName	Include5UTR	Include3UTR	TransNames
+EGFR	FALSE	FALSE	
+TP53	TRUE	TRUE	ENST00000269305
 ```
 
 ### Copy Number Backbone
@@ -404,5 +442,12 @@ Informational/visualisation/debugging outputs:
 | sample_variant_info.tsv  | Additional information used in processing on a per-variant basis. Only produced if sample variants probes were requested. |
 | candidate_targets.bed.gz | All target regions evaluated for suitability.                                                                             |
 | candidate_probes.tsv.gz  | All probes evaluated for suitability. Only produced if `verbose_output` is specified.                                     |
+
+TODO: list out all files here properly when files are split by DNA/RNA
+
+If RNA gene probes are requested, a parallel set of RNA output files is produced with an `rna_` prefix (`rna_probes.tsv`, `rna_probes.fasta`,
+`rna_probes.bed`, `rna_panel.bed`, `rna_targets.bed`, `rna_rejections.tsv`, `rna_rejections.bed`, `rna_candidate_targets.bed.gz`,
+`rna_gene_stats.tsv`). These cover the RNA panel only, kept separate from the DNA output. Because RNA probes may be spliced across exon
+junctions, `rna_probes.tsv` lists the probe segments generically (a `Segments` column) rather than as a start/end pair.
 
 All output files will be prefixed by `output_id` if specified.

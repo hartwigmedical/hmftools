@@ -1,32 +1,28 @@
 package com.hartwig.hmftools.panelbuilder;
 
-import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
-import static com.hartwig.hmftools.common.utils.file.FileDelimiters.BED_EXTENSION;
-import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_EXTENSION;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.CANDIDATE_PROBES_FILE_NAME;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.CANDIDATE_TARGET_REGIONS_FILE_NAME;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.COVERED_REGIONS_FILE_NAME;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.COVERED_TARGET_REGIONS_FILE_NAME;
-import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.FASTA_EXTENSION;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.GENE_STATS_FILE_NAME;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.PANEL_PROBES_FILE_STEM;
-import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.PROBE_LENGTH;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.REJECTED_FEATURES_FILE_STEM;
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.RNA_CANDIDATE_TARGET_REGIONS_FILE_NAME;
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.RNA_COVERED_REGIONS_FILE_NAME;
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.RNA_COVERED_TARGET_REGIONS_FILE_NAME;
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.RNA_GENE_STATS_FILE_NAME;
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.RNA_PANEL_PROBES_FILE_STEM;
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.RNA_REJECTED_FEATURES_FILE_STEM;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_VARIANT_INFO_FILE_NAME;
-import static com.hartwig.hmftools.panelbuilder.RegionUtils.mergeOverlapAndAdjacentRegions;
-import static com.hartwig.hmftools.panelbuilder.Utils.combineStringUnique;
 
-import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.function.Function;
-import java.util.stream.Stream;
 
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
@@ -37,51 +33,19 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 
-// Writes all file output data.
+// Writes all file output data. The per-panel probe output (probes, regions, rejections, gene stats) is delegated to a ProbeOutputWriter, one
+// for the DNA panel and, when requested, one for the RNA panel. The verbose candidate probes and sample variant info are DNA-panel only.
 public class OutputWriter implements AutoCloseable
 {
-    private final DelimFileWriter<Probe> mPanelProbesTsvWriter;
-    private final BufferedWriter mPanelProbesBedWriter;
-    private final BufferedWriter mPanelProbesFastaWriter;
-    private final BufferedWriter mCoveredTargetRegionsBedWriter;
-    private final BufferedWriter mCoveredRegionsBedWriter;
-    private final DelimFileWriter<RejectedFeature> mRejectedFeaturesTsvWriter;
-    private final BufferedWriter mRejectedFeaturesBedWriter;
-    private final BufferedWriter mCandidateTargetRegionsBedWriter;
+    private final ProbeOutputWriter mDnaOutput;
+    // Null when RNA probes are not requested.
+    @Nullable
+    private final ProbeOutputWriter mRnaOutput;
     @Nullable
     private final DelimFileWriter<Probe> mCandidateProbesTsvWriter;
     @Nullable
     private final ArrayList<Probe> mCandidateProbesBuffer;
-    private final DelimFileWriter<Genes.GeneStats> mGeneStatsTsvWriter;
     private final DelimFileWriter<SampleVariants.VariantInfo> mSampleVariantInfoTsvWriter;
-    private int mProbeId = 0;
-
-    private enum PanelProbesColumns
-    {
-        StartRegion,
-        StartRegionOrient,
-        MiddleSequence,
-        EndRegion,
-        EndRegionOrient,
-        Sequence,
-        TargetedStart,
-        TargetedEnd,
-        TargetType,
-        TargetExtra,
-        QualityScore,
-        GCContent
-    }
-
-    private enum RejectedFeaturesColumns
-    {
-        Region,
-        ProbeSequence,
-        ProbeQualityScore,
-        ProbeGCContent,
-        TargetType,
-        TargetExtra,
-        RejectionReason,
-    }
 
     private enum CandidateProbesColumns
     {
@@ -98,12 +62,6 @@ public class OutputWriter implements AutoCloseable
         EvalCriteria
     }
 
-    private enum GeneStatsColumns
-    {
-        GeneName,
-        ProbeCount
-    }
-
     private enum SampleVariantInfoColumns
     {
         Variant,
@@ -115,7 +73,7 @@ public class OutputWriter implements AutoCloseable
 
     private static final Logger LOGGER = LogManager.getLogger(OutputWriter.class);
 
-    public OutputWriter(final String outputDir, @Nullable final String outputId, boolean verboseOutput) throws IOException
+    public OutputWriter(final String outputDir, @Nullable final String outputId, boolean verboseOutput, boolean rnaOutput) throws IOException
     {
         Function<String, String> outputFilePath = fileName ->
         {
@@ -126,37 +84,21 @@ public class OutputWriter implements AutoCloseable
             return Paths.get(outputDir, fileName).toString();
         };
 
-        String panelProbesTsvFile = outputFilePath.apply(PANEL_PROBES_FILE_STEM + TSV_EXTENSION);
-        String panelProbesBedFile = outputFilePath.apply(PANEL_PROBES_FILE_STEM + BED_EXTENSION);
-        String panelProbesFastaFile = outputFilePath.apply(PANEL_PROBES_FILE_STEM + FASTA_EXTENSION);
-        String coveredTargetRegionsBedFile = outputFilePath.apply(COVERED_TARGET_REGIONS_FILE_NAME);
-        String coveredRegionsBedFile = outputFilePath.apply(COVERED_REGIONS_FILE_NAME);
-        String rejectedFeaturesTsvFile = outputFilePath.apply(REJECTED_FEATURES_FILE_STEM + TSV_EXTENSION);
-        String rejectedFeaturesBedFile = outputFilePath.apply(REJECTED_FEATURES_FILE_STEM + BED_EXTENSION);
-        String candidateTargetRegionsBedFile = outputFilePath.apply(CANDIDATE_TARGET_REGIONS_FILE_NAME);
-        String candidateProbesTsvFile = outputFilePath.apply(CANDIDATE_PROBES_FILE_NAME);
-        String geneStatsTsvFile = outputFilePath.apply(GENE_STATS_FILE_NAME);
-        String sampleVariantInfoTsvFile = outputFilePath.apply(SAMPLE_VARIANT_INFO_FILE_NAME);
+        mDnaOutput = new ProbeOutputWriter(
+                outputFilePath, PANEL_PROBES_FILE_STEM, COVERED_TARGET_REGIONS_FILE_NAME, COVERED_REGIONS_FILE_NAME,
+                REJECTED_FEATURES_FILE_STEM, CANDIDATE_TARGET_REGIONS_FILE_NAME, GENE_STATS_FILE_NAME, false);
 
-        mPanelProbesTsvWriter =
-                new DelimFileWriter<>(panelProbesTsvFile, PanelProbesColumns.values(), OutputWriter::writePanelProbesTsvRow);
-        mPanelProbesBedWriter = createBufferedWriter(panelProbesBedFile);
-        mPanelProbesFastaWriter = createBufferedWriter(panelProbesFastaFile);
-
-        mCoveredTargetRegionsBedWriter = createBufferedWriter(coveredTargetRegionsBedFile);
-
-        mCoveredRegionsBedWriter = createBufferedWriter(coveredRegionsBedFile);
-
-        mRejectedFeaturesTsvWriter =
-                new DelimFileWriter<>(rejectedFeaturesTsvFile, RejectedFeaturesColumns.values(), OutputWriter::writeRejectedFeaturesTsvRow);
-        mRejectedFeaturesBedWriter = createBufferedWriter(rejectedFeaturesBedFile);
-
-        mCandidateTargetRegionsBedWriter = createBufferedWriter(candidateTargetRegionsBedFile);
+        mRnaOutput = rnaOutput
+                ? new ProbeOutputWriter(
+                outputFilePath, RNA_PANEL_PROBES_FILE_STEM, RNA_COVERED_TARGET_REGIONS_FILE_NAME, RNA_COVERED_REGIONS_FILE_NAME,
+                RNA_REJECTED_FEATURES_FILE_STEM, RNA_CANDIDATE_TARGET_REGIONS_FILE_NAME, RNA_GENE_STATS_FILE_NAME, true)
+                : null;
 
         if(verboseOutput)
         {
-            mCandidateProbesTsvWriter =
-                    new DelimFileWriter<>(candidateProbesTsvFile, CandidateProbesColumns.values(), OutputWriter::writeCandidateProbesRow);
+            mCandidateProbesTsvWriter = new DelimFileWriter<>(
+                    outputFilePath.apply(CANDIDATE_PROBES_FILE_NAME), CandidateProbesColumns.values(),
+                    OutputWriter::writeCandidateProbesRow);
             mCandidateProbesBuffer = new ArrayList<>(CANDIDATE_PROBES_BUFFER_SIZE);
         }
         else
@@ -165,184 +107,21 @@ public class OutputWriter implements AutoCloseable
             mCandidateProbesBuffer = null;
         }
 
-        mGeneStatsTsvWriter = new DelimFileWriter<>(geneStatsTsvFile, GeneStatsColumns.values(), OutputWriter::writeGeneStatsRow);
-
-        mSampleVariantInfoTsvWriter =
-                new DelimFileWriter<>(sampleVariantInfoTsvFile, SampleVariantInfoColumns.values(), OutputWriter::writeSampleVariantInfoRow);
+        mSampleVariantInfoTsvWriter = new DelimFileWriter<>(
+                outputFilePath.apply(SAMPLE_VARIANT_INFO_FILE_NAME), SampleVariantInfoColumns.values(),
+                OutputWriter::writeSampleVariantInfoRow);
     }
 
-    public void writePanelProbes(final List<Probe> probes) throws IOException
+    public ProbeOutputWriter panelOutput()
     {
-        LOGGER.debug("Writing {} panel probes to file", probes.size());
-
-        // TODO? should there be a probe ID which matches between TSV, BED, and FASTA?
-
-        // Sort probes roughly by region to give a more consistent output.
-        // TODO(RNA): switch to sorting by the full SequenceDefinition (Comparator.comparing(Probe::definition)) once multi-region
-        //  probes are emitted. That gives a total order over variant/spliced probes too, but changes DNA output row order, so defer
-        //  until the DNA output format is revised for multi-region probes.
-        List<Probe> probesSorted = probes.stream().sorted(Comparator.comparing(
-                probe -> probe.definition().singleRegionOrNull(), Comparator.nullsLast(Comparator.naturalOrder()))).toList();
-
-        for(Probe probe : probesSorted)
-        {
-            // A few basic checks that might reveal bugs in the code elsewhere.
-            if(!probe.accepted())
-            {
-                throw new IllegalArgumentException("Should only be writing accepted probes");
-            }
-            if(probe.definition().baseLength() != PROBE_LENGTH || probe.sequence().length() != PROBE_LENGTH)
-            {
-                throw new IllegalArgumentException("Should only be writing probes of length " + PROBE_LENGTH);
-            }
-
-            mPanelProbesTsvWriter.writeRow(probe);
-            writePanelProbesFastaRecord(probe);
-        }
-
-        // Must be sorted for BED files since some tools expect sorted order.
-        List<NamedRegion> bedRegions = probes.stream()
-                .flatMap(probe ->
-                {
-                    String name = probeBedName(probe);
-                    return probe.definition().regions().stream().map(region -> new NamedRegion(region, name));
-                })
-                .sorted()
-                .toList();
-        for(NamedRegion region : bedRegions)
-        {
-            writeBedRow(region, mPanelProbesBedWriter);
-        }
+        return mDnaOutput;
     }
 
-    private static void writePanelProbesTsvRow(final Probe probe, DelimFileWriter.Row row)
+    // Null when RNA probes are not requested.
+    @Nullable
+    public ProbeOutputWriter rnaPanelOutput()
     {
-        // Note this throws if the probe is not in the right format.
-        // The panel probes output format represents at most a start and end region. Multi-region (e.g. spliced) probes require a
-        // different output; they are handled separately from the DNA panel output.
-        BasicProbeLayout layout = BasicProbeLayout.from(probe.definition());
-        ChrBaseRegion start = layout.startRegion();
-        Orientation startOrientation = layout.startOrientation();
-        ChrBaseRegion end = layout.endRegion();
-        Orientation endOrientation = layout.endOrientation();
-        row.setOrNull(PanelProbesColumns.StartRegion, start == null ? null : start.toString());
-        row.setOrNull(PanelProbesColumns.StartRegionOrient, startOrientation == null ? null : startOrientation.asChar());
-        row.setOrNull(PanelProbesColumns.MiddleSequence, layout.insertSequence());
-        row.setOrNull(PanelProbesColumns.EndRegion, end == null ? null : end.toString());
-        row.setOrNull(PanelProbesColumns.EndRegionOrient, endOrientation == null ? null : endOrientation.asChar());
-        row.setOrNull(PanelProbesColumns.Sequence, probe.sequence());
-        row.set(PanelProbesColumns.TargetedStart, probe.targetedRange().startOffset());
-        row.set(PanelProbesColumns.TargetedEnd, probe.targetedRange().endOffset());
-        row.setOrNull(PanelProbesColumns.QualityScore, probe.qualityScore());
-        row.setOrNull(PanelProbesColumns.GCContent, probe.gcContent());
-        row.set(PanelProbesColumns.TargetType, probe.metadata().type().name());
-        row.set(PanelProbesColumns.TargetExtra, probe.metadata().extraInfo());
-    }
-
-    private void writePanelProbesFastaRecord(final Probe probe) throws IOException
-    {
-        String label = probeFastaLabel(probe);
-        String sequence = probe.sequence();
-        if(sequence == null)
-        {
-            // If this happens there's a code bug.
-            throw new IllegalArgumentException("Probe must have sequence data to write FASTA");
-        }
-        mPanelProbesFastaWriter.write(format(">%s\n%s\n", label, sequence));
-    }
-
-    public void writeCoveredTargetRegions(final List<TargetRegion> regions) throws IOException
-    {
-        LOGGER.debug("Writing {} covered target regions to file", regions.size());
-
-        // Must be sorted for BED files since some tools expect sorted order.
-        List<TargetRegion> regionsSorted = regions.stream().sorted(Comparator.comparing(TargetRegion::region)).toList();
-
-        for(TargetRegion region : regionsSorted)
-        {
-            writeTargetRegionBedRow(region, mCoveredTargetRegionsBedWriter);
-        }
-    }
-
-    public void writeCoveredRegions(final List<Probe> probes) throws IOException
-    {
-        List<NamedRegion> regions = createCoveredRegions(probes);
-
-        LOGGER.debug("Writing {} covered regions to file", regions.size());
-
-        // Must be sorted for BED files since some tools expect sorted order.
-        List<NamedRegion> regionsSorted = regions.stream().sorted().toList();
-
-        for(NamedRegion region : regionsSorted)
-        {
-            writeBedRow(region, mCoveredRegionsBedWriter);
-        }
-    }
-
-    private static List<NamedRegion> createCoveredRegions(final List<Probe> probes)
-    {
-        Stream<NamedRegion> regions = probes.stream()
-                .flatMap(probe -> probe.definition()
-                        .regions()
-                        .stream()
-                        .map(region -> new NamedRegion(region, targetMetadataToBedName(probe.metadata()))));
-        return mergeOverlapAndAdjacentRegions(regions, NamedRegion::region, OutputWriter::mergeCoveredRegion);
-    }
-
-    private static NamedRegion mergeCoveredRegion(final ChrBaseRegion mergedRegion, final NamedRegion r1, final NamedRegion r2)
-    {
-        return new NamedRegion(
-                mergedRegion, combineStringUnique(r1.name(), r2.name(), (s1, s2) -> format("%s | %s", r1.name(), r2.name())));
-    }
-
-    public void writeRejectedFeatures(final List<RejectedFeature> rejectedFeatures) throws IOException
-    {
-        LOGGER.debug("Writing {} rejected features to file", rejectedFeatures.size());
-
-        // Must be sorted for BED files since some tools expect sorted order.
-        List<RejectedFeature> rejectedFeaturesSorted = rejectedFeatures.stream()
-                .sorted(Comparator.comparing(RejectedFeature::region, Comparator.nullsLast(Comparator.naturalOrder()))).toList();
-
-        for(RejectedFeature rejectedFeature : rejectedFeaturesSorted)
-        {
-            mRejectedFeaturesTsvWriter.writeRow(rejectedFeature);
-            // TODO: should write the regions from the probe too?
-            if(rejectedFeature.region() != null)
-            {
-                writeRejectedFeaturesBedRow(rejectedFeature);
-            }
-        }
-    }
-
-    private static void writeRejectedFeaturesTsvRow(final RejectedFeature rejectedFeature, DelimFileWriter.Row row)
-    {
-        Probe probe = rejectedFeature.probe();
-        row.setOrNull(RejectedFeaturesColumns.Region, rejectedFeature.region() == null ? null : rejectedFeature.region().toString());
-        row.setOrNull(RejectedFeaturesColumns.ProbeSequence, probe == null ? null : probe.sequence());
-        row.setOrNull(RejectedFeaturesColumns.ProbeQualityScore, probe == null ? null : probe.qualityScore());
-        row.setOrNull(RejectedFeaturesColumns.ProbeGCContent, probe == null ? null : probe.gcContent());
-        row.set(RejectedFeaturesColumns.TargetType, rejectedFeature.metadata().type().name());
-        row.set(RejectedFeaturesColumns.TargetExtra, rejectedFeature.metadata().extraInfo());
-        row.set(RejectedFeaturesColumns.RejectionReason, probe == null ? null : requireNonNull(probe.evaluationResult()).rejectionInfo());
-    }
-
-    private void writeRejectedFeaturesBedRow(final RejectedFeature rejectedFeature) throws IOException
-    {
-        writeBedRow(
-                requireNonNull(rejectedFeature.region()), targetMetadataToBedName(rejectedFeature.metadata()), mRejectedFeaturesBedWriter);
-    }
-
-    public void writeCandidateTargetRegions(final List<TargetRegion> regions) throws IOException
-    {
-        LOGGER.debug("Writing {} candidate target regions to file", regions.size());
-
-        // Must be sorted for BED files since some tools expect sorted order.
-        List<TargetRegion> regionsSorted = regions.stream().sorted(Comparator.comparing(TargetRegion::region)).toList();
-
-        for(TargetRegion region : regionsSorted)
-        {
-            writeTargetRegionBedRow(region, mCandidateTargetRegionsBedWriter);
-        }
+        return mRnaOutput;
     }
 
     public void writeCandidateProbe(final Probe probe)
@@ -396,75 +175,6 @@ public class OutputWriter implements AutoCloseable
         row.set(CandidateProbesColumns.EvalCriteria, requireNonNull(probe.evaluationCriteria()).toString());
     }
 
-    private static void writeTargetRegionBedRow(final TargetRegion region, BufferedWriter writer) throws IOException
-    {
-        writeBedRow(region.region(), targetMetadataToBedName(region.metadata()), writer);
-    }
-
-    private static void writeBedRow(final NamedRegion region, BufferedWriter writer) throws IOException
-    {
-        writeBedRow(region.region(), region.name(), writer);
-    }
-
-    private static void writeBedRow(final ChrBaseRegion region, final String name, BufferedWriter writer) throws IOException
-    {
-        writer.write(formatBedRow(region, name));
-    }
-
-    private static String probeBedName(final Probe probe)
-    {
-        String name = targetMetadataToBedName(probe.metadata());
-
-        Double qualityScore = probe.qualityScore();
-        if(qualityScore != null)
-        {
-            name += format(":QS=%.2f", qualityScore);
-        }
-
-        Double gcContent = probe.gcContent();
-        if(gcContent != null)
-        {
-            name += format(":GC=%.2f", gcContent);
-        }
-
-        return name;
-    }
-
-    private static String targetMetadataToBedName(final TargetMetadata info)
-    {
-        return format("%s:%s", info.type().name(), info.extraInfo());
-    }
-
-    private static String formatBedRow(final ChrBaseRegion region, String name)
-    {
-        return format("%s\t%d\t%d\t%s\n", region.chromosome(), region.start() - 1, region.end(), name);
-    }
-
-    private String probeFastaLabel(final Probe probe)
-    {
-        int id = nextProbeId();
-        TargetMetadata metadata = probe.metadata();
-        return format("probe%d:%s:%s", id, metadata.type().name(), metadata.extraInfo());
-    }
-
-    private int nextProbeId()
-    {
-        int id = mProbeId;
-        ++mProbeId;
-        return id;
-    }
-
-    public void writeGeneStats(final List<Genes.GeneStats> geneStats)
-    {
-        geneStats.forEach(mGeneStatsTsvWriter::writeRow);
-    }
-
-    private static void writeGeneStatsRow(final Genes.GeneStats stats, DelimFileWriter.Row row)
-    {
-        row.set(GeneStatsColumns.GeneName, stats.geneName());
-        row.set(GeneStatsColumns.ProbeCount, stats.probeCount());
-    }
-
     public void writeSampleVariantInfos(final List<SampleVariants.VariantInfo> variantInfos)
     {
         variantInfos.forEach(mSampleVariantInfoTsvWriter::writeRow);
@@ -482,26 +192,17 @@ public class OutputWriter implements AutoCloseable
     {
         LOGGER.debug("Flushing and closing output files");
 
-        mPanelProbesTsvWriter.close();
-        mPanelProbesBedWriter.close();
-        mPanelProbesFastaWriter.close();
-
-        mCoveredRegionsBedWriter.close();
-
-        mCoveredTargetRegionsBedWriter.close();
-
-        mRejectedFeaturesTsvWriter.close();
-        mRejectedFeaturesBedWriter.close();
-
-        mCandidateTargetRegionsBedWriter.close();
+        mDnaOutput.close();
+        if(mRnaOutput != null)
+        {
+            mRnaOutput.close();
+        }
 
         if(mCandidateProbesTsvWriter != null)
         {
             checkFlushCandidateProbes(true);
             mCandidateProbesTsvWriter.close();
         }
-
-        mGeneStatsTsvWriter.close();
 
         mSampleVariantInfoTsvWriter.close();
     }

@@ -84,13 +84,6 @@ public class Genes
     {
     }
 
-    public record GeneStats(
-            String geneName,
-            int probeCount
-    )
-    {
-    }
-
     public static ExtraOutput generateProbes(final String targetGeneFile, final EnsemblDataCache ensemblData,
             final ProbeGenerator probeGenerator, PanelData panelData)
     {

@@ -40,7 +40,10 @@ public class PanelBuilderApplication
     private final RefGenomeInterface mRefGenome;
     private final RefGenomeVersion mRefGenomeVersion;
     private final ProbeGenerator mProbeGenerator;
+    private final RnaProbeGenerator mRnaProbeGenerator;
     private PanelData mPanelData;
+    // RNA probes are kept in a separate panel so RNA and DNA coverage/overlap never interact.
+    private PanelData mRnaPanelData;
     @Nullable
     private OutputWriter mOutputWriter;
 
@@ -64,7 +67,11 @@ public class PanelBuilderApplication
                 probeQualityProfile.matchScoreThreshold(), probeQualityProfile.matchScoreOffset());
 
         mProbeGenerator = ProbeGenerator.construct(mRefGenome, probeQualityProfile, probeQualityModel, this::writeCandidateProbe);
+        // No candidate-probe callback for RNA: the verbose candidate probe output uses the DNA probe format, which can't represent
+        // multi-region (spliced) probes. TODO(RNA): separate multi-region candidate probe output if needed.
+        mRnaProbeGenerator = RnaProbeGenerator.construct(mRefGenome, probeQualityProfile, probeQualityModel, null);
         mPanelData = new PanelData();
+        mRnaPanelData = new PanelData();
     }
 
     public void run() throws IOException
@@ -76,13 +83,17 @@ public class PanelBuilderApplication
         long startTimeMs = System.currentTimeMillis();
 
         checkCreateOutputDir(mConfig.outputDir());
-        mOutputWriter = new OutputWriter(mConfig.outputDir(), mConfig.outputId(), mConfig.verboseOutput());
+        mOutputWriter = new OutputWriter(
+                mConfig.outputDir(), mConfig.outputId(), mConfig.verboseOutput(), mConfig.rnaGenesFile() != null);
 
         LOGGER.info("Generating probes");
         mPanelData = new PanelData();
+        mRnaPanelData = new PanelData();
         // Note the order of generation here determines the priority of probe overlap resolution.
         // Probes generated first will exclude overlapping probes generated afterward.
+        // RNA probes are a separate panel (separate PanelData) and don't interact with the DNA panel overlap resolution.
         Genes.ExtraOutput genesExtraOutput = generateTargetGeneProbes();
+        GenesRna.ExtraOutput rnaGenesExtraOutput = generateRnaGeneProbes();
         generateCustomRegionProbes();
         generateCustomStructuralVariantProbes();
         generateCustomSmallVariantProbes();
@@ -91,14 +102,25 @@ public class PanelBuilderApplication
         SampleVariants.ExtraOutput sampleVariantsExtraOutput = generateSampleVariantProbes();
 
         LOGGER.info("Writing output");
-        mOutputWriter.writePanelProbes(mPanelData.probes());
-        mOutputWriter.writeCoveredTargetRegions(mPanelData.coveredTargetRegions());
-        mOutputWriter.writeCoveredRegions(mPanelData.probes());
-        mOutputWriter.writeCandidateTargetRegions(mPanelData.candidateTargetRegions());
-        mOutputWriter.writeRejectedFeatures(mPanelData.rejectedFeatures());
+        ProbeOutputWriter dnaOutput = mOutputWriter.panelOutput();
+        dnaOutput.writeProbes(mPanelData.probes());
+        dnaOutput.writeCoveredTargetRegions(mPanelData.coveredTargetRegions());
+        dnaOutput.writeCoveredRegions(mPanelData.probes());
+        dnaOutput.writeCandidateTargetRegions(mPanelData.candidateTargetRegions());
+        dnaOutput.writeRejectedFeatures(mPanelData.rejectedFeatures());
         if(genesExtraOutput != null)
         {
-            mOutputWriter.writeGeneStats(genesExtraOutput.geneStats());
+            dnaOutput.writeGeneStats(genesExtraOutput.geneStats());
+        }
+        if(rnaGenesExtraOutput != null)
+        {
+            ProbeOutputWriter rnaOutput = requireNonNull(mOutputWriter.rnaPanelOutput());
+            rnaOutput.writeProbes(mRnaPanelData.probes());
+            rnaOutput.writeCoveredTargetRegions(mRnaPanelData.coveredTargetRegions());
+            rnaOutput.writeCoveredRegions(mRnaPanelData.probes());
+            rnaOutput.writeCandidateTargetRegions(mRnaPanelData.candidateTargetRegions());
+            rnaOutput.writeRejectedFeatures(mRnaPanelData.rejectedFeatures());
+            rnaOutput.writeGeneStats(rnaGenesExtraOutput.geneStats());
         }
         if(sampleVariantsExtraOutput != null)
         {
@@ -133,6 +155,28 @@ public class PanelBuilderApplication
                 // Result is stored into mPanelData.
                 return extraOutput;
             }
+        }
+    }
+
+    @Nullable
+    private GenesRna.ExtraOutput generateRnaGeneProbes()
+    {
+        if(mConfig.rnaGenesFile() == null)
+        {
+            LOGGER.info("Genes RNA not provided; skipping gene RNA probes");
+            return null;
+        }
+        else
+        {
+            if(mConfig.ensemblDir() == null)
+            {
+                throw new UserInputError("Genes RNA requested but Ensembl data directory not provided");
+            }
+            EnsemblDataCache ensemblData = loadEnsemblData();
+            GenesRna.ExtraOutput extraOutput =
+                    GenesRna.generateProbes(mConfig.rnaGenesFile(), ensemblData, mRnaProbeGenerator, mRnaPanelData);
+            // Result is stored into mRnaPanelData.
+            return extraOutput;
         }
     }
 
@@ -249,6 +293,14 @@ public class PanelBuilderApplication
         LOGGER.info("  Probe count: {}", probes.size());
         LOGGER.info("  Probe bases: {}", probeBases);
         LOGGER.info("  Estimated on-target rate: {}%", round(estimatedOnTargetRate));
+
+        List<Probe> rnaProbes = mRnaPanelData.probes();
+        if(!rnaProbes.isEmpty())
+        {
+            long rnaProbeBases = rnaProbes.stream().mapToLong(probe -> probe.definition().baseLength()).sum();
+            LOGGER.info("  RNA probe count: {}", rnaProbes.size());
+            LOGGER.info("  RNA probe bases: {}", rnaProbeBases);
+        }
     }
 
     public static void main(@NotNull final String[] args)

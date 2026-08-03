@@ -59,13 +59,6 @@ public class GenesRna
     {
     }
 
-    public record GeneStats(
-            String geneName,
-            int probeCount
-    )
-    {
-    }
-
     public static ExtraOutput generateProbes(final String rnaGeneFile, final EnsemblDataCache ensemblData,
             final RnaProbeGenerator probeGenerator, PanelData panelData)
     {
