@@ -24,6 +24,11 @@ public class PanelBuilderConstants
     // 0 = maximise overlap. 1 = maximise extension.
     public static final double PROBE_OVERLAP_EXTENSION_BALANCE = 0.5;
 
+    // RNA probe constants.
+    // Extra length beyond a probe within which an exon (or acceptable sub-range) is still covered by a single centred probe rather than
+    // tiled with multiple probes.
+    public static final int RNA_EXON_SINGLE_PROBE_SLACK = REGION_UNCOVERED_MAX;
+
     // Gene probes constants.
     // All the region and gap sizes should be much larger than the probe size to avoid probe overlap.
     // Space between the gene and upstream/downstream region probes.

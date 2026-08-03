@@ -59,6 +59,31 @@ public class RegionMapping
         return mLength;
     }
 
+    // Checks if a probe-space position coincides with a boundary between mapped regions, i.e. the start of the first region (0), the end of
+    // the last region (length), or a junction between two adjacent regions. Used to decide when to pin a tiling edge flush to an exon
+    // boundary (for good splice-junction coverage).
+    public boolean isRegionBoundary(int probeSpacePosition)
+    {
+        if(probeSpacePosition == 0)
+        {
+            return true;
+        }
+        int cumulative = 0;
+        for(ChrBaseRegion region : mRegions)
+        {
+            cumulative += region.baseLength();
+            if(cumulative == probeSpacePosition)
+            {
+                return true;
+            }
+            if(cumulative > probeSpacePosition)
+            {
+                return false;
+            }
+        }
+        return false;
+    }
+
     // Converts a genome position to its probe-space position, or empty if the position is not within any mapped region.
     public OptionalInt toProbeSpacePosition(final String chromosome, int position)
     {

@@ -3,6 +3,7 @@ package com.hartwig.hmftools.panelbuilder;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 import java.util.OptionalInt;
@@ -99,6 +100,22 @@ public class RegionMappingTest
     {
         assertEquals(chromosome, actual.Chromosome);
         assertEquals(position, actual.Position);
+    }
+
+    @Test
+    public void testIsRegionBoundary()
+    {
+        // Boundaries are the first region start (0), each junction between regions, and the last region end (length).
+        assertTrue(MAPPING.isRegionBoundary(0));
+        assertTrue(MAPPING.isRegionBoundary(10));
+        assertTrue(MAPPING.isRegionBoundary(25));
+        assertTrue(MAPPING.isRegionBoundary(30));
+        // Interior positions are not boundaries.
+        assertFalse(MAPPING.isRegionBoundary(5));
+        assertFalse(MAPPING.isRegionBoundary(24));
+        // Out of range.
+        assertFalse(MAPPING.isRegionBoundary(-1));
+        assertFalse(MAPPING.isRegionBoundary(31));
     }
 
     @Test
