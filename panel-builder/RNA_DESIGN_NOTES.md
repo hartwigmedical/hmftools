@@ -403,3 +403,14 @@ Action: prototype (1), compare against hand-checked probes, decide. Track as its
   (`probes()`/`candidateTargetRegions()`/`rejectedFeatures()` return live internal lists) and the
   `ProbeGenerationResult` canonical constructor (factories copy, constructor doesn't). Not worth it for
   read-only sites like `OutputWriter` where no mutation happens. Do as its own commit.
+
+## RNA follow-ups (post end-to-end run)
+
+- **Performance:** the end-to-end run spent several minutes on the RNA probes alone. Investigate — likely the
+  short-region probes now routing to the alignment model (slower per candidate than the profile), amplified by
+  candidate generation enumerating every window across large merged-exon spaces. Profile before optimising.
+- **Segments orientation formatting:** the RNA probes TSV `Segments` column emits orientation as `+` / `-`
+  (`Orientation.asChar`). Change to `1` / `-1`. `TODO` in `ProbeOutputWriter.formatSegment`.
+- **Target extra info:** when all transcripts are included (the default), the probe extra info / metadata should be
+  just the gene name (plus target type), not the full transcript list; only list transcripts when the user specified
+  a specific subset. `TODO` in `GenesRna.createTargetMetadata`.

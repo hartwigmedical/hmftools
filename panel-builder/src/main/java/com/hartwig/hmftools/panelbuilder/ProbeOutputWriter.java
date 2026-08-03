@@ -199,6 +199,7 @@ public class ProbeOutputWriter implements AutoCloseable
     }
 
     // Serializes one probe segment: a ref segment as "chromosome:start-end:orientation", an insert segment as its literal bases.
+    // TODO: emit the orientation as 1 / -1 rather than + / - (asChar).
     private static String formatSegment(final SequenceSegment segment)
     {
         if(segment instanceof RefSegment ref)

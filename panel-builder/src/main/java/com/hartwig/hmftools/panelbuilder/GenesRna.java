@@ -367,6 +367,8 @@ public class GenesRna
 
     private static TargetMetadata createTargetMetadata(final GeneTranscriptData gene, final RnaTarget target)
     {
+        // TODO: only list the transcript names when the user specified a specific subset; when all transcripts are included (the default),
+        //  the extra info should be just the gene name (and target type), not every transcript.
         List<String> transcriptNames = gene.transcripts().stream().map(GenesRna::formatTranscriptName).toList();
         String extraInfo = format("%s:%s:%s", gene.gene().GeneName, join("/", transcriptNames), target.type().name());
         // Store the gene name so per-gene statistics can be recovered later.
