@@ -359,10 +359,20 @@ quality score is distorted (off-target risk overstated).
   near-full-length alignment.
 - **RNA spliced probes** are the same class as SV probes — the issue just triggers more often.
 
-Routing (independent of the above, already implemented in A1/A2): `sequenceIndelSize` returns empty for
-anything with more than two regions (see `BasicProbeLayout`), so `canUseProfile` sends multi-region /
-spliced probes to the alignment model, never the window profile (the profile assumes consecutive
-genome windows). `SequenceDefinition.isMultiRegion()` is available if an explicit check is ever needed.
+Routing to the profile vs the alignment model is decided in `ProbeQualityScorer`:
+
+- `canUseProfile` (`isSequenceSimilarToRef`) sends anything not near-contiguous with the ref to the model:
+  >2 regions, cross-chromosome, or a same-chromosome gap/insert larger than `PROBE_QUALITY_PROFILE_MAX_REF_DIFF`.
+  So a spliced probe across a normal (large) intron already goes to the model.
+- **Short-region guard (generic, not RNA-specific):** the profile scores each constituent region against
+  fixed-length windows and cannot score a region shorter than one window (`ProbeQualityProfile.baseWindowLength()`,
+  40b) — that similarity measure is length-dependent and unvalidated below the window length. So `ProbeQualityScorer`
+  routes any probe with a region shorter than the window to the model (which scores the full-length probe sequence).
+  This is what makes RNA junction-crossing candidates (a few bases in one exon) and short-exon spliced probes safe,
+  and also covers any DNA variant probe with a very short region. Previously this threw
+  `probe length must be >= 40` from `ProbeQualityProfile.computeQualityScore`.
+
+These model-routed spliced probes are exactly the class hit by the `targetScore` distortion above.
 
 Candidate fixes to revisit:
 

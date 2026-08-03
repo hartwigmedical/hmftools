@@ -27,6 +27,8 @@ public class ProbeQualityScorer
     // Use function references rather than exact implementations to allow test mocks.
     private final Function<ChrBaseRegion, OptionalDouble> mComputeQualityProfile;
     private final Function<List<String>, List<Double>> mComputeQualityModel;
+    // Shortest region the profile can score; probes with any shorter region fall back to the model.
+    private final int mProfileMinRegionLength;
     // Aim to batch this many probes together when invoking the probe quality model.
     private final int mModelBatchSize;
     // Buffer at most this many probes total.
@@ -36,10 +38,12 @@ public class ProbeQualityScorer
     private static final int DEFAULT_MAX_BUFFER_SIZE = 50000;
 
     protected ProbeQualityScorer(final Function<ChrBaseRegion, OptionalDouble> computeQualityProfile,
-            final Function<List<String>, List<Double>> computeQualityModel, int modelBatchSize, int maxBufferSize)
+            final Function<List<String>, List<Double>> computeQualityModel, int profileMinRegionLength, int modelBatchSize,
+            int maxBufferSize)
     {
         mComputeQualityProfile = computeQualityProfile;
         mComputeQualityModel = computeQualityModel;
+        mProfileMinRegionLength = profileMinRegionLength;
         if(modelBatchSize < 1 || maxBufferSize < 1 || modelBatchSize > maxBufferSize)
         {
             throw new IllegalArgumentException("Invalid batching configuration");
@@ -53,7 +57,7 @@ public class ProbeQualityScorer
         this(
                 qualityProfile::computeQualityScore,
                 probes -> qualityModel.computeFromSeqString(probes).stream().map(ProbeQualityModel.Result::qualityScore).toList(),
-                DEFAULT_MODEL_BATCH_SIZE, DEFAULT_MAX_BUFFER_SIZE);
+                qualityProfile.baseWindowLength(), DEFAULT_MODEL_BATCH_SIZE, DEFAULT_MAX_BUFFER_SIZE);
     }
 
     public Stream<Probe> computeQualityScores(Stream<Probe> probes)
@@ -134,6 +138,15 @@ public class ProbeQualityScorer
     {
         if(canUseProfile(probe.definition()))
         {
+            // The profile scores each region against fixed-length windows and cannot score a region shorter than one window. That similarity
+            // measure is length-dependent and has no empirical basis below the window length, so any such probe falls back to the model
+            // (which scores the full-length probe sequence). Applies to any probe with a short region, e.g. an RNA probe crossing an exon
+            // junction with only a few bases in one exon, or a variant probe with a very short region.
+            if(probe.definition().regions().stream().anyMatch(region -> region.baseLength() < mProfileMinRegionLength))
+            {
+                return OptionalDouble.empty();
+            }
+
             // Use the worst quality score from the constituent regions. This is most conservative.
             return probe.definition().regions().stream()
                     .map(mComputeQualityProfile)
