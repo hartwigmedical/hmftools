@@ -25,13 +25,11 @@ import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.GENE_UPDOW
 import static com.hartwig.hmftools.panelbuilder.RegionUtils.regionCenteredAt;
 import static com.hartwig.hmftools.panelbuilder.RegionUtils.regionCentre;
 import static com.hartwig.hmftools.panelbuilder.RegionUtils.regionEndingAt;
-import static com.hartwig.hmftools.panelbuilder.RegionUtils.regionOverlapsOrAdjacent;
 import static com.hartwig.hmftools.panelbuilder.RegionUtils.regionStartingAt;
 import static com.hartwig.hmftools.panelbuilder.Utils.findDuplicates;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,15 +38,12 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.file.DelimFileReader;
 
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
@@ -356,7 +351,7 @@ public class Genes
                     regionEndingAt(minTransStart - 1 - GENE_UPDOWNSTREAM_GAP, GENE_UPDOWNSTREAM_REGION)));
         }
 
-        List<MergedExonRegion> mergedExons = mergeExons(transcripts);
+        List<GeneUtils.MergedExonRegion> mergedExons = GeneUtils.mergeExons(transcripts);
 
         if(options.promoter() && !mergedExons.isEmpty())
         {
@@ -370,7 +365,7 @@ public class Genes
         }
 
         int lastExonEnd = 0;
-        for(MergedExonRegion mergedExon : mergedExons)
+        for(GeneUtils.MergedExonRegion mergedExon : mergedExons)
         {
             BaseRegion exonRegion = mergedExon.Region;
             if(options.exonFlank() && lastExonEnd > 0)
@@ -457,68 +452,6 @@ public class Genes
         }
 
         return regions;
-    }
-
-    private static class MergedExonRegion
-    {
-        public BaseRegion Region;
-        public boolean IsCoding = false;
-        public int CodingStart = Integer.MAX_VALUE;
-        public int CodingEnd = Integer.MIN_VALUE;
-        public List<ExonData> Exons = new ArrayList<>();
-    }
-
-    private static List<MergedExonRegion> mergeExons(final List<TranscriptData> transcripts)
-    {
-        List<MergedExonRegion> mergedExons = new ArrayList<>();
-        // Standard region merging algorithm...
-        List<ImmutablePair<TranscriptData, ExonData>> sortedExons = transcripts.stream()
-                .flatMap(trans -> trans.exons().stream().map(exon -> new ImmutablePair<>(trans, exon)))
-                .sorted(Comparator.comparing(pair -> pair.getRight().Start))
-                .toList();
-        for(Pair<TranscriptData, ExonData> pair : sortedExons)
-        {
-            TranscriptData transcript = pair.getLeft();
-            ExonData exon = pair.getRight();
-
-            BaseRegion codingRegion = transcript.nonCoding() ? null : new BaseRegion(transcript.CodingStart, transcript.CodingEnd);
-            BaseRegion exonRegion = new BaseRegion(exon.Start, exon.End);
-            boolean isCoding = codingRegion != null && codingRegion.overlaps(exonRegion);
-
-            mergedExons.stream()
-                    .filter(region -> regionOverlapsOrAdjacent(region.Region, exonRegion))
-                    .findFirst()
-                    .ifPresentOrElse(
-                            merged ->
-                            {
-                                if(exon.End > merged.Region.end())
-                                {
-                                    // Don't mutate in place because we borrowed the object from the exon data.
-                                    merged.Region = new BaseRegion(merged.Region.start(), exon.End);
-                                }
-                                if(isCoding)
-                                {
-                                    merged.IsCoding = true;
-                                    merged.CodingStart = min(merged.CodingStart, codingRegion.start());
-                                    merged.CodingEnd = max(merged.CodingEnd, codingRegion.end());
-                                }
-                                merged.Exons.add(exon);
-                            },
-                            () ->
-                            {
-                                MergedExonRegion merged = new MergedExonRegion();
-                                merged.Region = exonRegion;
-                                merged.IsCoding = isCoding;
-                                if(isCoding)
-                                {
-                                    merged.CodingStart = codingRegion.start();
-                                    merged.CodingEnd = codingRegion.end();
-                                }
-                                merged.Exons.add(exon);
-                                mergedExons.add(merged);
-                            });
-        }
-        return mergedExons;
     }
 
     private static ProbeGenerationSpec createProbeGenerationSpec(final GeneRegion geneRegion)

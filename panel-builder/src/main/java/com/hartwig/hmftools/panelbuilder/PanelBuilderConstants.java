@@ -49,6 +49,11 @@ public class PanelBuilderConstants
     public static final double GENE_GENERAL_GC_TOLERANCE = 1;
     public static final double GENE_CN_QUALITY_MIN = 0.5;
 
+    // Gene RNA probes constants.
+    public static final double GENE_RNA_QUALITY_MIN = 0.05;
+    public static final double GENE_RNA_GC_TARGET = 0.45;
+    public static final double GENE_RNA_GC_TOLERANCE = 1;
+
     // Copy number backbone constants.
     public static final int CN_BACKBONE_RESOLUTION_KB_DEFAULT = 1_000;
     // Region excluded, per side of the centromere.
