@@ -88,10 +88,11 @@ public class GenerateSampleVariantsTestData
                 new Sv(
                         "chr9", 21967000, ORIENT_FWD, "chr9", 21995000, ORIENT_REV, "",
                         Sv.DriverKind.DEL, "CDKN2A", 0.3, 1.0, 1.0, 30),
-                // SV disruption driver (PTEN locus).
+                // SV disruption driver. Breakends inside the large BRCA2 exon 11 (high mappability); PTEN was avoided as its PTENP1
+                // pseudogene makes probes there low quality.
                 new Sv(
-                        "chr10", 87860000, ORIENT_FWD, "chr10", 87900000, ORIENT_REV, "",
-                        Sv.DriverKind.DISRUPTION, "PTEN", 0.3, 1.0, 1.0, 20));
+                        "chr13", 32333000, ORIENT_FWD, "chr13", 32338000, ORIENT_REV, "",
+                        Sv.DriverKind.DISRUPTION, "BRCA2", 0.3, 1.0, 1.0, 20));
 
         List<GermlineSv> germlineSvs = List.of(
                 // Germline SV driver (BRCA1 locus).
