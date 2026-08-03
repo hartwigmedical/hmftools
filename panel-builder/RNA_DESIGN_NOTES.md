@@ -45,8 +45,16 @@ decisions made, and open issues to revisit. Not user-facing documentation.
   panel, then the B4 writers. RNA is a fully separate panel — no overlap interaction with DNA. **No RNA verbose candidate-probe output**: the
   `candidate_probes` format uses `BasicProbeLayout` (≤2 regions) and can't represent spliced probes, so the RNA generator gets a null
   candidate callback for now (TODO if needed).
-- **B6 [IN PROGRESS]** — README RNA section + these notes updated. Remaining: synthetic end-to-end panel + IGV check of the RNA bed; log the
-  QS open issue as a tracked task; eventual DNA-file `dna_` rename.
+- **B6 [DONE]** — README RNA section + these notes updated. End-to-end validated externally as byte-for-byte identical DNA output (the
+  intentional `probes.fasta` id-label change, `probe{i}` -> `dna_{i}`, is the only DNA difference). Follow-up items below are tagged in code
+  with `TODO`/`FIXME` so they are tracked at the point of change:
+    - spliced-probe QS distortion — `FIXME` in `ProbeQualityModel.computeFromAlignments`;
+    - RefSeq/NM transcript resolution — `TODO` in `GenesRna.resolveTranscript`;
+    - Ensembl cache double-load (DNA + RNA) — `TODO` in `PanelBuilderApplication.loadEnsemblData`;
+    - RNA verbose candidate-probe output — `TODO(RNA)` in `PanelBuilderApplication`;
+    - part-coding exon classified as fully coding — `TODO` in `GenesRna.createTargets`;
+    - `PanelData` getters return live internal lists — `TODO` in `PanelData`.
+  Remaining (not code-tagged): eventual DNA-file `dna_` rename.
 
 Everything above is additive/behaviour-preserving; all existing DNA tests remain green (165 tests total, incl. the new RNA output test).
 

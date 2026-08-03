@@ -271,6 +271,7 @@ public class PanelBuilderApplication
         }
     }
 
+    // TODO: this reloads the whole Ensembl cache each call, so requesting both DNA genes and RNA genes loads it twice. Load once and share.
     private EnsemblDataCache loadEnsemblData()
     {
         EnsemblDataCache ensemblData = new EnsemblDataCache(mConfig.ensemblDir(), mRefGenomeVersion);

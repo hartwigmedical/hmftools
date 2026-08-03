@@ -136,6 +136,11 @@ public class ProbeQualityModel
         // Order by best match first.
         alignments.sort(Comparator.comparing(BwaMemAlignment::getAlignerScore, Comparator.reverseOrder()));
         // First alignment which is assumed to be the on-target exact match.
+        // FIXME: this assumes the on-target match is full length. For a sequence that is not contiguous in the reference genome (SV probes,
+        //  RNA spliced probes), BWA's best hit is only a partial (single-fragment) alignment with a lower score, so targetScore is
+        //  understated and the quality score is distorted (off-target risk overstated). Candidate fix: use a theoretical
+        //  targetScore = probeLength * matchScore for non-contiguous sequences. See RNA_DESIGN_NOTES "quality score of non-contiguous
+        //  constructed sequences". Track as its own task.
         int targetScore = alignments.get(0).getAlignerScore();
         List<Integer> offTarget = alignments.stream()
                 // Drop the first alignment which is assumed to be the on-target exact match.

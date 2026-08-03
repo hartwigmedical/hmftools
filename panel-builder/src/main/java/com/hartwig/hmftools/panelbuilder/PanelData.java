@@ -72,6 +72,8 @@ public class PanelData implements PanelBuffer
         }
     }
 
+    // TODO: these getters return the live internal lists by reference, unlike peers which defensively copy. An audit found no live aliasing
+    //  bug, but a caller mutating the returned list would corrupt this instance. Return copies (own commit).
     public List<Probe> probes()
     {
         return mProbes;

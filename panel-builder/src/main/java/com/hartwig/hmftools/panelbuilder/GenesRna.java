@@ -236,6 +236,8 @@ public class GenesRna
 
     // Resolves a single Ensembl transcript by its TransName. RefSeq (NM) resolution is not yet supported (needs additional validation of the
     // non-1:1 Ensembl<->RefSeq mapping), so any non-Ensembl id is reported as not found.
+    // TODO: validate the Ensembl<->RefSeq mapping (RefSeqId may be null or multi-valued) and re-enable NM resolution via a RefSeqId fallback
+    //  with clear not-found / ambiguous errors.
     @Nullable
     static TranscriptData resolveTranscript(final GeneData geneData, final List<TranscriptData> allTranscripts,
             final String transcriptName)
