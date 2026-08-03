@@ -1,0 +1,302 @@
+package com.hartwig.hmftools.tars.liftback;
+
+import static com.hartwig.hmftools.common.bamops.BamToolName.fromPath;
+import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
+import static com.hartwig.hmftools.common.perf.TaskExecutor.runThreadTasks;
+import static com.hartwig.hmftools.tars.common.TarsConstants.ALT_CONTIG_SUFFIX;
+import static com.hartwig.hmftools.tars.common.TarsConstants.APP_NAME;
+import static com.hartwig.hmftools.tars.common.TarsConstants.TARS_LOGGER;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.stream.Collectors;
+
+import com.hartwig.hmftools.common.bamops.BamOperations;
+import com.hartwig.hmftools.common.bamops.BamToolName;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.tars.common.ContigEntry;
+import com.hartwig.hmftools.tars.common.ContigSidecar;
+import com.hartwig.hmftools.tars.liftback.supplementary.AnnotatedJunctionIndex;
+
+import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMSequenceDictionary;
+import htsjdk.samtools.SAMSequenceRecord;
+import htsjdk.samtools.SamReaderFactory;
+
+// Driver for the liftback stage. Consumes bwa's name-grouped BAM directly (mates + supplementaries contiguous), cuts
+// it into whole-fragment chunks and lifts them across N workers, then sorts + indexes the concatenated output.
+public class TarsApplication
+{
+    private final TarsConfig mConfig;
+
+    private static final int CHUNK_TARGET_READS = 5000;
+    private static final int CHUNK_QUEUE_DEPTH_PER_THREAD = 2;
+    private static final int READER_SHARD_CAP = 8;
+    private static final double MAX_UNMAPPED_FRACTION = 0.01;
+
+    public TarsApplication(final ConfigBuilder configBuilder)
+    {
+        mConfig = new TarsConfig(configBuilder);
+    }
+
+    public void run()
+    {
+        long startTimeMs = System.currentTimeMillis();
+
+        List<ContigEntry> contigEntries = ContigSidecar.read(mConfig.ContigSidecarFile);
+        SAMFileHeader inputHeader = readInputHeader();
+
+        LiftBackResources resources = buildResources(contigEntries, inputHeader);
+        SAMFileHeader outputHeader = buildOutputHeader(inputHeader);
+
+        List<String> shardBams = new ArrayList<>();
+        List<LiftBackWorker> workers = runChunkStream(resources, outputHeader, shardBams);
+        if(workers == null)
+        {
+            TARS_LOGGER.error("liftback chunk stream failed");
+            System.exit(1);
+        }
+
+        logUnmappedRate(workers);
+
+        TARS_LOGGER.info("liftback processing complete, mins({}); concatenating + sorting shards", runTimeMinsStr(startTimeMs));
+
+        String unsortedBam = mConfig.formUnsortedBam();
+        if(!concatenateShards(shardBams, unsortedBam))
+        {
+            TARS_LOGGER.error("failed to concatenate liftback BAM shards");
+            System.exit(1);
+        }
+
+        if(!sortAndIndex(unsortedBam, mConfig.formOutputBam()))
+        {
+            TARS_LOGGER.error("failed to sort + index lifted BAM");
+            System.exit(1);
+        }
+
+        cleanupIntermediates(unsortedBam, shardBams);
+
+        TARS_LOGGER.info("TarsApplication complete, mins({})", runTimeMinsStr(startTimeMs));
+    }
+
+    // One producer streams bwa's name-grouped BAM into whole-fragment chunks; N workers lift + emit per-shard.
+    private List<LiftBackWorker> runChunkStream(
+            final LiftBackResources resources, final SAMFileHeader outputHeader, final List<String> shardBams)
+    {
+        int workerCount = Math.max(mConfig.Threads, 1);
+        BlockingQueue<List<SAMRecord>> chunkQueue =
+                new ArrayBlockingQueue<>(Math.max(workerCount * CHUNK_QUEUE_DEPTH_PER_THREAD, 2));
+
+        // a single-thread BGZF parse starves the workers, so several shard threads each parse their own byte range
+        // (split on read-name-group boundaries); a handful saturates the bounded queue, so shard count is capped low.
+        int shardCount = Math.max(1, Math.min(workerCount, READER_SHARD_CAP));
+        ShardedChunkProducer producer = new ShardedChunkProducer(
+                mConfig.InputBam, mConfig.RefGenomeFile, chunkQueue, workerCount, CHUNK_TARGET_READS, shardCount);
+
+        List<LiftBackWorker> workers = new ArrayList<>();
+        List<Thread> threadTasks = new ArrayList<>();
+        threadTasks.add(producer);
+
+        for(int i = 0; i < workerCount; ++i)
+        {
+            String shardBam = formShardBamPath(i);
+            shardBams.add(shardBam);
+
+            LiftBackWorker worker = new LiftBackWorker(chunkQueue, resources, outputHeader, shardBam);
+            workers.add(worker);
+            threadTasks.add(worker);
+        }
+
+        return runThreadTasks(threadTasks) ? workers : null;
+    }
+
+    private LiftBackResources buildResources(final List<ContigEntry> contigEntries, final SAMFileHeader inputHeader)
+    {
+        // exon + junction annotation are derived from the sidecar's exonSpans (all rows, including annotation-only
+        // ones for transcripts without a contig), so liftback needs no ensembl cache.
+        ExonRegionIndex exonIndex = ExonRegionIndex.fromContigEntries(contigEntries);
+        TARS_LOGGER.info("built annotated-exon index from sidecar");
+
+        // annotation-only rows have no contig to lift against, so the discriminator sees only real contig entries.
+        List<ContigEntry> liftEntries = contigEntries.stream()
+                .filter(entry -> entry.contigStart() > 0).collect(Collectors.toList());
+        LiftBackDiscriminator discriminator = new LiftBackDiscriminator(liftEntries, exonIndex);
+        validateBamAgainstSidecar(inputHeader, discriminator.contigTranslator().contigNames());
+
+        AnnotatedJunctionIndex junctionIndex = AnnotatedJunctionIndex.fromContigEntries(contigEntries);
+        TARS_LOGGER.info("built {} annotated junctions from sidecar", junctionIndex.size());
+
+        ExcludedRegions excludedRegions = null;
+        if(mConfig.RnaUnmapRegionsFile != null)
+        {
+            excludedRegions = ExcludedRegions.load(mConfig.RnaUnmapRegionsFile);
+            TARS_LOGGER.info("loaded excluded regions from {}", mConfig.RnaUnmapRegionsFile);
+        }
+
+        return new LiftBackResources(
+                discriminator, junctionIndex, mConfig.RefGenomeFile,
+                mConfig.Supplementary, excludedRegions);
+    }
+
+    // Fails fast on a BAM/sidecar mismatch: an alt contig missing from the sidecar cannot be lifted, and would
+    // otherwise leak its _tx name into the output.
+    private void validateBamAgainstSidecar(final SAMFileHeader inputHeader, final Set<String> sidecarContigs)
+    {
+        Set<String> missing = new TreeSet<>();
+        for(SAMSequenceRecord sequenceRecord : inputHeader.getSequenceDictionary().getSequences())
+        {
+            String name = sequenceRecord.getSequenceName();
+            if(name.endsWith(ALT_CONTIG_SUFFIX) && !sidecarContigs.contains(name))
+            {
+                missing.add(name);
+            }
+        }
+
+        if(missing.isEmpty())
+        {
+            return;
+        }
+
+        TARS_LOGGER.error(
+                "BAM/sidecar mismatch: {} alt contig(s) in BAM @SQ are absent from sidecar {} - first few: {}",
+                missing.size(), mConfig.ContigSidecarFile,
+                missing.stream().limit(5).collect(Collectors.joining(",")));
+        System.exit(1);
+    }
+
+    // input @SQ, read once: both the sidecar check and the output header derive from it.
+    private SAMFileHeader readInputHeader()
+    {
+        return SamReaderFactory.makeDefault()
+                .referenceSequence(new File(mConfig.RefGenomeFile))
+                .open(new File(mConfig.InputBam))
+                .getFileHeader();
+    }
+
+    // strip the _tx alt contigs from @SQ (and mark unsorted) so the lifted BAM carries a pure genomic dictionary.
+    private static SAMFileHeader buildOutputHeader(final SAMFileHeader inputHeader)
+    {
+        SAMFileHeader header = inputHeader.clone();
+        header.setSortOrder(SAMFileHeader.SortOrder.unsorted);
+
+        List<SAMSequenceRecord> kept = new ArrayList<>();
+        int dropped = 0;
+        for(SAMSequenceRecord sequenceRecord : header.getSequenceDictionary().getSequences())
+        {
+            if(sequenceRecord.getSequenceName().endsWith(ALT_CONTIG_SUFFIX))
+            {
+                ++dropped;
+            }
+            else
+            {
+                kept.add(sequenceRecord);
+            }
+        }
+
+        header.setSequenceDictionary(new SAMSequenceDictionary(kept));
+        TARS_LOGGER.info("dropped {} alt contig @SQ entries from output header", dropped);
+        return header;
+    }
+
+    // A wholesale unmapped rate is a systemic failure, not a per-read one: almost always a sidecar built against a
+    // different FASTA than the reads were aligned to. Logged, not fatal, so the BAM already written stays inspectable.
+    private static void logUnmappedRate(final List<LiftBackWorker> workers)
+    {
+        long recordsSeen = 0;
+        long primariesUnmapped = 0;
+        for(LiftBackWorker worker : workers)
+        {
+            recordsSeen += worker.recordsSeen();
+            primariesUnmapped += worker.primariesUnmapped();
+        }
+
+        TARS_LOGGER.info("processed {} records, unmapped {} primaries", recordsSeen, primariesUnmapped);
+
+        if(recordsSeen > 0 && primariesUnmapped / (double) recordsSeen > MAX_UNMAPPED_FRACTION)
+        {
+            TARS_LOGGER.error(
+                    "unmapped rate {} / {} = {}% exceeds {}% - likely sidecar/FASTA mismatch",
+                    primariesUnmapped, recordsSeen,
+                    String.format("%.2f", 100.0 * primariesUnmapped / recordsSeen),
+                    String.format("%.2f", 100.0 * MAX_UNMAPPED_FRACTION));
+        }
+    }
+
+    private boolean concatenateShards(final List<String> shardBams, final String unsortedBam)
+    {
+        BamToolName toolName = fromPath(mConfig.BamToolPath);
+        TARS_LOGGER.info("concatenating {} liftback shards via {}", shardBams.size(), toolName);
+        // samtools cat is a plain BGZF block concat and rejects -@, so pass threads=1.
+        return BamOperations.concatenateBams(toolName, mConfig.BamToolPath, unsortedBam, shardBams, 1);
+    }
+
+    private boolean sortAndIndex(final String unsortedBam, final String sortedBam)
+    {
+        if(mConfig.BamToolPath == null)
+        {
+            TARS_LOGGER.info("no -{} configured; leaving unsorted BAM at {}", BamToolName.BAMTOOL_PATH, unsortedBam);
+            return false;
+        }
+
+        BamToolName toolName = fromPath(mConfig.BamToolPath);
+        TARS_LOGGER.info("sorting BAM via {}: {}", toolName, sortedBam);
+
+        if(!BamOperations.sortBam(toolName, mConfig.BamToolPath, unsortedBam, sortedBam, mConfig.Threads))
+        {
+            return false;
+        }
+
+        // sambamba sort indexes inline; only samtools needs the explicit index pass.
+        if(toolName == BamToolName.SAMTOOLS)
+        {
+            if(!BamOperations.indexBam(toolName, mConfig.BamToolPath, sortedBam, mConfig.Threads))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private String formShardBamPath(final int index)
+    {
+        return mConfig.filePrefix() + ".shard_" + index + ".bam";
+    }
+
+    private void cleanupIntermediates(final String unsortedBam, final List<String> shardBams)
+    {
+        deleteQuietly(unsortedBam);
+        shardBams.forEach(TarsApplication::deleteQuietly);
+    }
+
+    private static void deleteQuietly(final String path)
+    {
+        try
+        {
+            Files.deleteIfExists(Paths.get(path));
+        }
+        catch(IOException e)
+        {
+            TARS_LOGGER.warn("could not delete intermediate {}: {}", path, e.toString());
+        }
+    }
+
+    public static void main(final String[] args)
+    {
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
+        TarsConfig.registerConfig(configBuilder);
+        configBuilder.checkAndParseCommandLine(args);
+
+        TarsApplication application = new TarsApplication(configBuilder);
+        application.run();
+    }
+}

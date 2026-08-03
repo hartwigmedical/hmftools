@@ -31,6 +31,11 @@ public final class TarsConstants
     // MAPQ of a placement taken as confident
     public static final int CONFIDENT_MAPQ = 60;
 
+    // bwa's own default -T floor: a primary still under it after lift-back is unmapped, a supplementary only bwa's
+    // lowered -T 19 kept is dropped
+    public static final int PRIMARY_AS_UNMAP_THRESHOLD = 30;
+    public static final int SUPP_AS_DROP_THRESHOLD = 30;
+
     // Step 2 tie-break: a tied locus within this gap of the mate (same chromosome) is preferred
     public static final int MATE_PROXIMITY_MAX_DISTANCE = 1_000_000;
 
