@@ -493,7 +493,7 @@ public class LiftBackGroupProcessor
 
     // Supplementaries whose own lift failed are mirrored onto their primary's lifted coords (keeping the 0x800 flag)
     // rather than marked unmapped, since htsjdk's validator rejects 0x4+0x800.
-    private static void applyResultToRecord(
+    static void applyResultToRecord(
             final SAMRecord record, final LiftedRecord result, final LiftedMatePair matePair, final boolean unmapDecided)
     {
         if(!result.hasPlacement())
@@ -600,7 +600,7 @@ public class LiftBackGroupProcessor
     // Mark a previously-mapped primary as unmapped, clearing every per-record tag the SAM spec invariant
     // would otherwise leave inconsistent. SA/XA/NH/MC all reference now-stale coords; ProperPair and
     // TLEN are meaningless once one end is unmapped.
-    private static void markPrimaryUnmapped(final SAMRecord record)
+    static void markPrimaryUnmapped(final SAMRecord record)
     {
         record.setReadUnmappedFlag(true);
         record.setReadNegativeStrandFlag(false);
@@ -621,7 +621,7 @@ public class LiftBackGroupProcessor
 
     // Single source of truth for whether a primary's final state ends up unmapped, so the mate patch and the
     // supp-orphan gate agree with what the record itself is about to become.
-    private static boolean willBeUnmapped(final SAMRecord record, final LiftedRecord result)
+    static boolean willBeUnmapped(final SAMRecord record, final LiftedRecord result)
     {
         return !result.hasPlacement() || exceedsMappingCap(record, result);
     }
