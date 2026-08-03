@@ -40,6 +40,11 @@ public class LiftBackDiscriminator
         mExonIndex = exonIndex;
     }
 
+    ContigTranslator contigTranslator()
+    {
+        return mContigTranslator;
+    }
+
     private LiftedAlignment liftSelf(final SAMRecord record)
     {
         return mContigTranslator.liftAlignment(
