@@ -5,7 +5,7 @@ import static java.lang.Math.round;
 import static com.hartwig.hmftools.compar.common.CategoryType.GERMLINE_SV;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.CommonUtils.determineComparisonGenomePosition;
-import static com.hartwig.hmftools.compar.common.FieldCheckCache.getOrMakeFieldCheck;
+import static com.hartwig.hmftools.compar.FieldCheckCache.getOrMakeFieldCheck;
 
 import java.io.IOException;
 import java.util.Arrays;

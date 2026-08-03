@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.compar.metrics;
 
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
-import static com.hartwig.hmftools.compar.common.FieldCheckCache.getOrMakeFieldCheck;
+import static com.hartwig.hmftools.compar.FieldCheckCache.getOrMakeFieldCheck;
 import static com.hartwig.hmftools.compar.metrics.MetricsCommon.MAPPED_PROPORTION_ABS_THRESHOLD;
 import static com.hartwig.hmftools.compar.metrics.MetricsCommon.MAPPED_PROPORTION_PCT_THRESHOLD;
 import static com.hartwig.hmftools.compar.metrics.MetricsCommon.determineFlagStatsFilePath;
@@ -48,17 +48,6 @@ public class FlagstatComparer extends ItemComparer
     {
         return mCategory;
     }
-
-    /*
-    @Override
-    public List<Field> fields(final MatchLevel matchLevel)
-    {
-        return List.of(
-                new DoubleField(FLD_MAPPED_PROPORTION, i -> ((FlagstatData) i).flagStats().mappedProportion(),
-                        true, MAPPED_PROPORTION_ABS_THRESHOLD, MAPPED_PROPORTION_PCT_THRESHOLD, "%.2f")
-        );
-    }
-    */
 
     @Override
     public List<String> displayFieldNames()

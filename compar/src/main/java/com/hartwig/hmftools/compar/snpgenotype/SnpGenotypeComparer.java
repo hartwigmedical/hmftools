@@ -4,7 +4,7 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDir
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.CategoryType.SNP_GENOTYPE;
 import static com.hartwig.hmftools.compar.common.CommonUtils.determineComparisonGenomePosition;
-import static com.hartwig.hmftools.compar.common.FieldCheckCache.getOrMakeFieldCheck;
+import static com.hartwig.hmftools.compar.FieldCheckCache.getOrMakeFieldCheck;
 
 import java.util.Arrays;
 import java.util.List;

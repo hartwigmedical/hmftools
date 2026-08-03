@@ -2,7 +2,7 @@ package com.hartwig.hmftools.compar.lilac;
 
 import static com.hartwig.hmftools.compar.common.CategoryType.LILAC_QC;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
-import static com.hartwig.hmftools.compar.common.FieldCheckCache.getOrMakeFieldCheck;
+import static com.hartwig.hmftools.compar.FieldCheckCache.getOrMakeFieldCheck;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -73,26 +73,6 @@ public class LilacQcComparer extends ItemComparer
 
     @Override
     public CategoryType category() { return LILAC_QC; }
-
-    /*
-    @Override
-    public List<Field> fields(final MatchLevel matchLevel)
-    {
-        return List.of(
-                new StringField(FLD_QC_STATUS, i -> ((LilacQcComparData) i).QcData.status(), true),
-                new IntField(FLD_TOTAL_FRAGS, i -> ((LilacQcComparData) i).QcData.totalFragments(), true,
-                        FRAG_DIFF_ABS, FRAG_DIFF_PERC),
-                new IntField(FLD_FIT_FRAGS, i -> ((LilacQcComparData) i).QcData.fittedFragments(), true,
-                        FRAG_DIFF_ABS, FRAG_DIFF_PERC),
-                new IntField(FLD_DISC_ALIGN_FRAGS, i -> ((LilacQcComparData) i).QcData.discardedAlignmentFragments(),
-                        true, FRAG_DIFF_ABS, FRAG_DIFF_PERC),
-                new IntField(FLD_DISC_INDELS, i -> ((LilacQcComparData) i).QcData.discardedIndels(), true,
-                        FRAG_DIFF_ABS, FRAG_DIFF_PERC),
-                new StringField(FLD_HLA_Y, i -> ((LilacQcComparData) i).QcData.hlaYAllele(), true),
-                new StringListField(FLD_ALLELES, i -> alleles((LilacQcComparData) i), true)
-        );
-    }
-    */
 
     @Override
     public List<String> displayFieldNames()

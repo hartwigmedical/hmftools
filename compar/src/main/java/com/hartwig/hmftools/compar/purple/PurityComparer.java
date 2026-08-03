@@ -2,7 +2,7 @@ package com.hartwig.hmftools.compar.purple;
 
 import static com.hartwig.hmftools.compar.common.CategoryType.PURITY;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
-import static com.hartwig.hmftools.compar.common.FieldCheckCache.getOrMakeFieldCheck;
+import static com.hartwig.hmftools.compar.FieldCheckCache.getOrMakeFieldCheck;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -44,9 +44,6 @@ public class PurityComparer extends ItemComparer
         TmlStatus,
         TincLevel;
     }
-
-    public static final String FLD_PURITY = Fields.Purity.toString();
-    public static final String FLD_PLOIDY = Fields.Ploidy.toString();
 
     public PurityComparer(final ComparConfig config, final Map<String,FieldCheck> fieldCheckMap)
     {

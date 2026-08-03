@@ -3,12 +3,11 @@ package com.hartwig.hmftools.compar;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.compar.common.CategoryType;
-import com.hartwig.hmftools.compar.common.FieldCheckCache;
-import com.hartwig.hmftools.compar.common.FieldConfigFile;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 
 import org.apache.logging.log4j.LogManager;
@@ -63,10 +62,8 @@ public class DefaultFieldConfigTestApplication
 
         String filename = FieldConfigFile.generateFileName(outputDir);
 
-        Set<CategoryType> categories = ComparerUtils.buildComparers(config, fieldConfig).stream()
-                .map(c -> c.category())
-                .collect(Collectors.toSet());
-        FieldConfigFile.write(filename, fieldConfig, categories);
+        List<ItemComparer> comparers = ComparerUtils.buildComparers(config, fieldConfig);
+        FieldConfigFile.write(filename, comparers);
 
         LOGGER.info("wrote default field config file: {}", filename);
     }

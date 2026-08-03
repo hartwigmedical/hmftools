@@ -2,7 +2,7 @@ package com.hartwig.hmftools.compar.teal;
 
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.CategoryType.TELOMERE_LENGTH;
-import static com.hartwig.hmftools.compar.common.FieldCheckCache.getOrMakeFieldCheck;
+import static com.hartwig.hmftools.compar.FieldCheckCache.getOrMakeFieldCheck;
 
 import java.io.UncheckedIOException;
 import java.util.List;
@@ -15,13 +15,7 @@ import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.CategoryType;
-import com.hartwig.hmftools.compar.common.CommonUtils;
-import com.hartwig.hmftools.compar.common.FieldCheckCache;
 import com.hartwig.hmftools.compar.common.PipelineSourcePaths;
-import com.hartwig.hmftools.compar.common.MatchLevel;
-import com.hartwig.hmftools.compar.common.Mismatch;
-import com.hartwig.hmftools.compar.common.field.DoubleField;
-import com.hartwig.hmftools.compar.common.field.Field;
 import com.hartwig.hmftools.compar.common.field.FieldCheck;
 import com.hartwig.hmftools.compar.common.field.FieldInfo;
 
@@ -44,16 +38,6 @@ public class TealComparer extends ItemComparer
 
     @Override
     public CategoryType category() { return TELOMERE_LENGTH; }
-
-    // TODO: remove
-//    @Override
-//    public List<Field> fields(final MatchLevel matchLevel)
-//    {
-//        return List.of(
-//                new DoubleField(FLD_TELOMERE_LENGTH, i -> ((TealData) i).TelomereLength.finalTelomereLength(),
-//                        true, null, 0.05, "%.2f")
-//        );
-//    }
 
     @Override
     public List<String> displayFieldNames()

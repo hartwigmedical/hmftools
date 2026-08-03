@@ -128,13 +128,6 @@ public class SomaticVariantData extends VariantData
         return !IsFromUnfilteredVcf && !otherVar.IsFromUnfilteredVcf;
     }
 
-    /*
-    private boolean canComparePurpleFields(final SomaticVariantData otherVar)
-    {
-        return HasPurpleAnnotation && otherVar.HasPurpleAnnotation;
-    }
-    */
-
     public static SomaticVariantData fromContext(
             final VariantContext context, final String sampleId, final boolean fromUnfilteredFile,
             final SourceType sourceType, final ComparConfig config, final List<FieldInfo> fields)

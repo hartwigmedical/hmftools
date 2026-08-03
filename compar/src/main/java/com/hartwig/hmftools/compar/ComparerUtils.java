@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.compar.common.CategoryType.TUMOR_BAM_METRICS;
 import static com.hartwig.hmftools.compar.common.CategoryType.TUMOR_FLAGSTAT;
 import static com.hartwig.hmftools.compar.common.MatchLevel.REPORTABLE;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -16,7 +17,6 @@ import com.hartwig.hmftools.compar.chord.ChordComparer;
 import com.hartwig.hmftools.compar.cider.Cdr3LocusSummaryComparer;
 import com.hartwig.hmftools.compar.cider.CiderVdjComparer;
 import com.hartwig.hmftools.compar.common.CategoryType;
-import com.hartwig.hmftools.compar.common.FieldCheckCache;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.field.FieldCheck;
 import com.hartwig.hmftools.compar.cuppa.CuppaComparer;
@@ -46,6 +46,8 @@ import com.hartwig.hmftools.compar.snpgenotype.SnpGenotypeComparer;
 import com.hartwig.hmftools.compar.teal.TealComparer;
 import com.hartwig.hmftools.compar.vchord.VChordComparer;
 import com.hartwig.hmftools.compar.virus.VirusComparer;
+
+import org.jetbrains.annotations.Nullable;
 
 public final class ComparerUtils
 {
@@ -95,9 +97,11 @@ public final class ComparerUtils
         return comparers;
     }
 
-    public static ItemComparer createComparer(final CategoryType category, final ComparConfig config, final FieldCheckCache fieldCheckCache)
+    public static ItemComparer createComparer(
+            final CategoryType category, final ComparConfig config, @Nullable final FieldCheckCache fieldCheckCache)
     {
-        Map<String,FieldCheck> categoryFieldOverrides = fieldCheckCache.getCategoryFieldCheckOverrides(category);
+        Map<String,FieldCheck> categoryFieldOverrides =
+                fieldCheckCache != null ? fieldCheckCache.getCategoryFieldCheckOverrides(category) : Collections.emptyMap();
 
         switch(category)
         {

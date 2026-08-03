@@ -6,7 +6,7 @@ import static com.hartwig.hmftools.common.driver.DriverType.DRIVERS_PURPLE_SOMAT
 import static com.hartwig.hmftools.compar.common.CategoryType.DRIVER;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.CommonUtils.determineComparisonChromosome;
-import static com.hartwig.hmftools.compar.common.FieldCheckCache.getOrMakeFieldCheck;
+import static com.hartwig.hmftools.compar.FieldCheckCache.getOrMakeFieldCheck;
 import static com.hartwig.hmftools.compar.common.SourceType.NEW;
 import static com.hartwig.hmftools.compar.common.SourceType.OLD;
 
@@ -41,7 +41,6 @@ import com.hartwig.hmftools.compar.common.SourceData;
 import com.hartwig.hmftools.compar.common.SourceType;
 import com.hartwig.hmftools.compar.common.field.FieldCheck;
 import com.hartwig.hmftools.compar.common.field.FieldInfo;
-import com.hartwig.hmftools.compar.lilac.LilacAlleleComparer;
 
 public class DriverComparer extends ItemComparer
 {
@@ -95,14 +94,8 @@ public class DriverComparer extends ItemComparer
         mFields.add(new FieldInfo(
                 Fields.ChromosomeBand.toString(), getOrMakeFieldCheck(fieldCheckMap, Fields.ChromosomeBand.toString()), null));
 
-        // TODO: read-only
-        mFields.add(new FieldInfo(
-                Fields.Purity.toString(),
-                getOrMakeFieldCheck(fieldCheckMap, Fields.Purity.toString()), "%.2f"));
-
-        mFields.add(new FieldInfo(
-                Fields.Ploidy.toString(),
-                getOrMakeFieldCheck(fieldCheckMap, Fields.Ploidy.toString()), "%.2f"));
+        mFields.add(FieldInfo.displayOnly(Fields.Purity.toString(), "%.2f"));
+        mFields.add(FieldInfo.displayOnly(Fields.Ploidy.toString(), "%.2f"));
 
         mDrivers = Maps.newHashMap();
         mPurities = Maps.newHashMap();

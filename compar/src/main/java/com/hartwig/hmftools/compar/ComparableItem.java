@@ -34,7 +34,10 @@ public abstract class ComparableItem
     public String geneName() { return ""; }
     public boolean reportable() { return true; }
     public boolean isPass() { return true; }
-    public boolean isValid() { return true; }
+    public boolean isValid()
+    {
+        return true;
+    }
 
     public abstract boolean matches(final ComparableItem other);
 
@@ -45,9 +48,6 @@ public abstract class ComparableItem
 
         return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches);
     }
-
-    // TODO: likely temporary
-    public boolean supportTruthsetData() { return false; }
 
     public Map<String,FieldValue> fieldValues() { return mValues; }
 
@@ -75,5 +75,4 @@ public abstract class ComparableItem
     {
         mValues.put(fieldName, new StringFieldValue(findField(fieldName, fields), value));
     }
-
 }

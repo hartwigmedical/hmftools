@@ -23,6 +23,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.GenomeLiftoverCache;
 import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.compar.ComparableItem;
+import com.hartwig.hmftools.compar.FieldCheckCache;
 
 import org.junit.Test;
 

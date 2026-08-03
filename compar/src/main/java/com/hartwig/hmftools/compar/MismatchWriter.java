@@ -10,25 +10,21 @@ import static com.hartwig.hmftools.compar.common.CurationType.NONE;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
-import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.compar.common.CategoryType;
-import com.hartwig.hmftools.compar.common.FieldCheckCache;
+import com.hartwig.hmftools.compar.common.FieldDisplayInfo;
 import com.hartwig.hmftools.compar.common.KnownMismatch;
 import com.hartwig.hmftools.compar.common.CurationInfo;
-import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.WriteType;
-import com.hartwig.hmftools.compar.common.field.Field;
 import com.hartwig.hmftools.compar.common.field.FieldValue;
 
 public class MismatchWriter
@@ -58,15 +54,7 @@ public class MismatchWriter
 
     public boolean initialiseOutputFiles(final FieldCheckCache fieldCheckCache)
     {
-        String filePrefix = mConfig.OutputDir;
-
-        if(mConfig.singleSample())
-            filePrefix += mConfig.SampleIds.get(0) + ".cmp";
-        else
-            filePrefix += "compar_cohort";
-
-        if(mConfig.OutputId != null)
-            filePrefix += "." + mConfig.OutputId;
+        String filePrefix = mConfig.formOutputFilePrefix();
 
         try
         {
@@ -137,7 +125,6 @@ public class MismatchWriter
         try
         {
             // List<Field> displayFields = determineDisplayFields(comparer);
-            List<FieldDisplayInfo> fieldDisplayValues = extractDisplayData(comparer, mismatches);
             CategoryType category = comparer.category();
 
             BufferedWriter categoryWriter = mCategoryWriters.get(category);
@@ -146,6 +133,8 @@ public class MismatchWriter
 
             for(Mismatch mismatch : mismatches)
             {
+                List<FieldDisplayInfo> fieldDisplayValues = extractDisplayData(comparer, mismatch);
+
                 // check or any expected mismatches / curations
                 Map<String,CurationInfo> matchCurations = KnownMismatch.matchCurations(mismatch, knownMismatches);
 
@@ -171,45 +160,24 @@ public class MismatchWriter
         }
     }
 
-    private List<FieldDisplayInfo> extractDisplayData(final ItemComparer comparer, final List<Mismatch> mismatches)
+    private List<FieldDisplayInfo> extractDisplayData(final ItemComparer comparer, final Mismatch mismatch)
     {
         List<FieldDisplayInfo> fieldDisplayValues = Lists.newArrayList();
 
-        List<Field> oldStyleFields = determineDisplayFields(comparer);
+        List<String> fieldNames = comparer.displayFieldNames();
 
-        if(!oldStyleFields.isEmpty())
+        Map<String,FieldValue> oldFieldValues = mismatch.OldItem != null ? mismatch.OldItem.fieldValues() : Collections.emptyMap();
+        Map<String,FieldValue> newFieldValues = mismatch.NewItem != null ? mismatch.NewItem.fieldValues() : Collections.emptyMap();
+
+        for(String fieldName : fieldNames)
         {
-            for(Mismatch mismatch : mismatches)
-            {
-                for(Field field : oldStyleFields)
-                {
-                    String oldValue = mismatch.OldItem != null ? field.displayValue(mismatch.OldItem) : "";
-                    String newValue = mismatch.NewItem != null ? field.displayValue(mismatch.NewItem) : "";
+            FieldValue oldValue = oldFieldValues.get(fieldName);
+            FieldValue newValue = newFieldValues.get(fieldName);
 
-                    fieldDisplayValues.add(new FieldDisplayInfo(field.name(), oldValue, newValue));
-                }
-            }
-        }
-        else
-        {
-            for(Mismatch mismatch : mismatches)
-            {
-                List<String> fieldNames = comparer.displayFieldNames();
-
-                Map<String,FieldValue> oldFieldValues = mismatch.OldItem != null ? mismatch.OldItem.fieldValues() : Collections.emptyMap();
-                Map<String,FieldValue> newFieldValues = mismatch.NewItem != null ? mismatch.NewItem.fieldValues() : Collections.emptyMap();
-
-                for(String fieldName : fieldNames)
-                {
-                    FieldValue oldValue = oldFieldValues.get(fieldName);
-                    FieldValue newValue = newFieldValues.get(fieldName);
-
-                    fieldDisplayValues.add(new FieldDisplayInfo(
-                            fieldName,
-                            oldValue != null ? oldValue.displayValue() : "",
-                            newValue != null ? newValue.displayValue() : ""));
-                }
-            }
+            fieldDisplayValues.add(new FieldDisplayInfo(
+                    fieldName,
+                    oldValue != null ? oldValue.displayValue() : "",
+                    newValue != null ? newValue.displayValue() : ""));
         }
 
         return fieldDisplayValues;
@@ -286,34 +254,5 @@ public class MismatchWriter
                 ++index;
             }
         }
-    }
-
-    @Deprecated
-    private List<Field> determineDisplayFields(final ItemComparer comparer)
-    {
-        CategoryType category = comparer.category();
-        MatchLevel matchLevel = mConfig.MatchingLevel;
-
-        // Map<String, Field> fieldNameToField = comparer.fields(matchLevel).stream().collect(Collectors.toMap(Field::name, f -> f));
-
-        Map<String, Field> fieldNameToField = Collections.emptyMap();
-
-        if(fieldNameToField.isEmpty())
-            return Collections.emptyList();
-
-        List<Field> list = new ArrayList<>();
-        for(String fieldName : comparer.displayFieldNames())
-        {
-            if(fieldNameToField.containsKey(fieldName))
-            {
-                Field field = fieldNameToField.get(fieldName);
-                list.add(field);
-            }
-            else
-            {
-                throw new IllegalArgumentException("Missing field %s for category %s".formatted(fieldName, category));
-            }
-        }
-        return list;
     }
 }

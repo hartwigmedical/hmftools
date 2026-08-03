@@ -1,11 +1,10 @@
 package com.hartwig.hmftools.compar.mutation;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
-import static com.hartwig.hmftools.compar.common.CategoryType.GERMLINE_VARIANT;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_FILTER;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_QUAL;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
-import static com.hartwig.hmftools.compar.common.FieldCheckCache.getOrMakeFieldCheck;
+import static com.hartwig.hmftools.compar.FieldCheckCache.getOrMakeFieldCheck;
 
 import java.util.List;
 import java.util.Map;

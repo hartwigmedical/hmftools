@@ -53,7 +53,6 @@ import com.hartwig.hmftools.common.driver.panel.DriverGeneFile;
 import com.hartwig.hmftools.common.genome.refgenome.GenomeLiftoverCache;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.compar.common.CategoryType;
-import com.hartwig.hmftools.compar.common.FieldConfigFile;
 import com.hartwig.hmftools.compar.common.FieldOverride;
 import com.hartwig.hmftools.compar.common.PipelineSourcePaths;
 import com.hartwig.hmftools.compar.common.MatchLevel;
@@ -81,7 +80,7 @@ public class ComparConfig
     public final Set<String> IgnoreGenes;
     public final Set<String> AlternateTranscriptDriverGenes;
     public final boolean RestrictToDrivers;
-    public final List<FieldOverride> FieldOverrides;
+
     public final String FieldCheckOverridesFile;
     public final boolean StrictFieldConfig;
 
@@ -237,25 +236,11 @@ public class ComparConfig
 
         FieldCheckOverridesFile = configBuilder.getValue(FIELD_CONFIG_FILE);
 
-        List<FieldOverride> overrideFieldConfig = null;
-        if(configBuilder.hasValue(FIELD_CONFIG_FILE))
-        {
-            try
-            {
-                overrideFieldConfig = FieldConfigFile.read(configBuilder.getValue(FIELD_CONFIG_FILE));
-            }
-            catch(IOException e)
-            {
-                CMP_LOGGER.error("failed to load field config file: {}", e.toString());
-                mIsValid = false;
-            }
-        }
-        else if(StrictFieldConfig)
+        if(StrictFieldConfig && !configBuilder.hasValue(FIELD_CONFIG_FILE))
         {
             CMP_LOGGER.error("a field config file is required when the {} argument is used", STRICT_FIELD_CONFIG);
             mIsValid = false;
         }
-        FieldOverrides = overrideFieldConfig;
     }
 
     public SourceData getSourceData(final SourceType sourceType)
@@ -274,6 +259,21 @@ public class ComparConfig
         SourceData sourceData = getSourceData(sourceType);
         String referenceId = SampleToReferenceIds.get(sampleId);
         return sourceData.ReferenceSampleIdMapping.getOrDefault(sampleId, referenceId);
+    }
+
+    public String formOutputFilePrefix()
+    {
+        String filePrefix = OutputDir;
+
+        if(singleSample())
+            filePrefix += SampleIds.get(0) + ".cmp";
+        else
+            filePrefix += "compar_cohort";
+
+        if(OutputId != null)
+            filePrefix += "." + OutputId;
+
+        return filePrefix;
     }
 
     public boolean isValid() { return mIsValid; }
@@ -475,7 +475,6 @@ public class ComparConfig
         LiftoverCache = new GenomeLiftoverCache();
         RequiresLiftover = false;
         KnownMismatchFile = null;
-        FieldOverrides = null;
         StrictFieldConfig = false;
         FieldCheckOverridesFile = null;
     }

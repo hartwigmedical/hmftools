@@ -19,11 +19,9 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.compar.common.FieldCheckCache;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.MismatchType;
-import com.hartwig.hmftools.compar.common.field.Field;
 import com.hartwig.hmftools.compar.common.field.FieldInfo;
 
 import org.junit.Test;
@@ -270,7 +268,6 @@ public abstract class ComparableItemTest<I extends ComparableItem, C extends Ite
     protected FieldCheckCache createDefaultThresholds(MatchLevel matchLevel)
     {
         FieldCheckCache fieldConfig = new FieldCheckCache();
-        // fieldConfig.registerFields(comparer, matchLevel);
         return fieldConfig;
     }
 

@@ -2,7 +2,7 @@ package com.hartwig.hmftools.compar.cider;
 
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.CategoryType.CDR3_SEQUENCE;
-import static com.hartwig.hmftools.compar.common.FieldCheckCache.getOrMakeFieldCheck;
+import static com.hartwig.hmftools.compar.FieldCheckCache.getOrMakeFieldCheck;
 
 import java.io.UncheckedIOException;
 import java.util.Arrays;

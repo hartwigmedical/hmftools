@@ -4,21 +4,16 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
-import static com.hartwig.hmftools.compar.ComparerUtils.buildComparers;
+import static com.hartwig.hmftools.compar.common.WriteType.FIELD_CONFIG;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.Callable;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.perf.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.compar.common.CategoryType;
-import com.hartwig.hmftools.compar.common.FieldCheckCache;
-import com.hartwig.hmftools.compar.common.FieldConfigFile;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -52,22 +47,23 @@ public class Compar
             CMP_LOGGER.info("running comparison for {} sample(s)", mConfig.SampleIds.size());
         }
 
-        FieldCheckCache fieldCheckCache = new FieldCheckCache();
+        FieldCheckCache fieldCheckCache = new FieldCheckCache(mConfig.StrictFieldConfig);
 
         try
         {
             fieldCheckCache.loadOverrides(mConfig.FieldCheckOverridesFile);
+            fieldCheckCache.validateAllComparisonFieldsAreSet(mConfig);
+
+            fieldCheckCache.logProblems();
+            if(fieldCheckCache.hasErrors())
+            {
+                System.exit(1);
+            }
         }
         catch(IOException e)
         {
             CMP_LOGGER.error("failed to load field overrides file({})", mConfig.FieldCheckOverridesFile);
             e.printStackTrace();
-            System.exit(1);
-        }
-
-        fieldCheckCache.logProblems();
-        if(fieldCheckCache.hasErrors())
-        {
             System.exit(1);
         }
 
@@ -110,18 +106,9 @@ public class Compar
 
         mWriter.close();
 
-        CMP_LOGGER.info("write field config file");
-        try
+        if(mConfig.WriteTypes.contains(FIELD_CONFIG))
         {
-            Set<CategoryType> categories = buildComparers(mConfig, fieldCheckCache).stream()
-                    .map(c -> c.category())
-                    .collect(Collectors.toSet());
-            FieldConfigFile.write(FieldConfigFile.generateFileName(mConfig.OutputDir), fieldCheckCache, categories);
-        }
-        catch(IOException e)
-        {
-            CMP_LOGGER.error("Could not write field config file", e);
-            System.exit(1);
+            fieldCheckCache.writeFieldOverridesFile(mConfig);
         }
 
         if(mConfig.multiSample())

@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.compar.common;
 
-import static com.hartwig.hmftools.compar.common.FieldCheckCache.getOrMakeFieldCheck;
+import static com.hartwig.hmftools.compar.FieldCheckCache.getOrMakeFieldCheck;
 
 import java.util.Map;
 

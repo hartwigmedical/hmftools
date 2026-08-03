@@ -28,11 +28,10 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.CurationInfo;
 import com.hartwig.hmftools.compar.common.CurationType;
+import com.hartwig.hmftools.compar.common.FieldDisplayInfo;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.KnownMismatch;
 import com.hartwig.hmftools.compar.common.MismatchType;
-import com.hartwig.hmftools.compar.common.field.Field;
-import com.hartwig.hmftools.compar.common.field.FieldValue;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -135,25 +134,6 @@ public class MismatchFile
         for(FieldDisplayInfo fieldInfo : fieldDisplayValues)
         {
             displaySj.add(format("%s=%s", fieldInfo.name(), useOld ? fieldInfo.oldValue() : fieldInfo.newValue()));
-        }
-
-        return displaySj.toString();
-    }
-
-    @Deprecated
-    private static String itemValues(final ComparableItem item, final List<Field> displayFields)
-    {
-        if(item == null)
-            return "";
-
-        StringJoiner displaySj = new StringJoiner(ITEM_DELIM);
-
-        for(Field field : displayFields)
-        {
-            if(field.hasValue(item))
-            {
-                displaySj.add(format("%s=%s", field.name(), field.displayValue(item)));
-            }
         }
 
         return displaySj.toString();

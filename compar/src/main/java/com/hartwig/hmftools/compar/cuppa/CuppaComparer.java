@@ -3,7 +3,7 @@ package com.hartwig.hmftools.compar.cuppa;
 import static com.hartwig.hmftools.common.cuppa.DataType.PROB;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.CategoryType.CUPPA;
-import static com.hartwig.hmftools.compar.common.FieldCheckCache.getOrMakeFieldCheck;
+import static com.hartwig.hmftools.compar.FieldCheckCache.getOrMakeFieldCheck;
 
 import java.io.IOException;
 import java.util.ArrayList;

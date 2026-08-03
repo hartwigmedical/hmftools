@@ -2,7 +2,7 @@ package com.hartwig.hmftools.compar.vchord;
 
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.CategoryType.V_CHORD;
-import static com.hartwig.hmftools.compar.common.FieldCheckCache.getOrMakeFieldCheck;
+import static com.hartwig.hmftools.compar.FieldCheckCache.getOrMakeFieldCheck;
 
 import java.io.UncheckedIOException;
 import java.util.Arrays;
@@ -27,8 +27,6 @@ public class VChordComparer extends ItemComparer
     {
         BreastCancerHrdScore,
         OvarianCancerHrdScore,
-        // PancreaticCancerScore, // may add later
-        //ProstateCancerScore,
         OtherCancerScore;
     }
 

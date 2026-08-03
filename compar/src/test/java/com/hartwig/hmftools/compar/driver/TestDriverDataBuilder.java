@@ -8,7 +8,13 @@ import com.hartwig.hmftools.common.driver.DriverCategory;
 import com.hartwig.hmftools.common.driver.DriverType;
 import com.hartwig.hmftools.common.driver.ImmutableDriverCatalog;
 import com.hartwig.hmftools.common.driver.LikelihoodMethod;
+import com.hartwig.hmftools.common.purple.FittedPurityMethod;
+import com.hartwig.hmftools.common.purple.Gender;
+import com.hartwig.hmftools.common.purple.MicrosatelliteStatus;
+import com.hartwig.hmftools.common.purple.PurplePurity;
 import com.hartwig.hmftools.common.purple.ReportedStatus;
+import com.hartwig.hmftools.common.purple.RunMode;
+import com.hartwig.hmftools.common.purple.TumorMutationalStatus;
 import com.hartwig.hmftools.compar.TestComparableItemBuilder;
 
 public class TestDriverDataBuilder
@@ -69,7 +75,16 @@ public class TestDriverDataBuilder
                 .build();
 
         return new DriverData(
-                driverCatalog, null, comparisonChromosome, checkTranscript, isPass,
+                driverCatalog, buildPurityData(), comparisonChromosome, checkTranscript, isPass,
                 new DriverComparer(null, Collections.emptyMap()).fieldsList());
+    }
+
+    protected static PurplePurity buildPurityData()
+    {
+        return new PurplePurity(
+                0.5, 1, 1, 1, 2, Gender.FEMALE, FittedPurityMethod.NORMAL, 1,
+                1, 1, 1, 1, 1, 1,
+                0, false, 0, MicrosatelliteStatus.MSS, 0, TumorMutationalStatus.LOW,
+                0, TumorMutationalStatus.LOW, 0, RunMode.TUMOR_GERMLINE, false);
     }
 }

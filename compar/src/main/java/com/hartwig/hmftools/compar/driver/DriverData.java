@@ -13,7 +13,7 @@ import com.hartwig.hmftools.common.purple.PurplePurity;
 import com.hartwig.hmftools.common.purple.ReportedStatus;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.common.FieldCheckCache;
+import com.hartwig.hmftools.compar.FieldCheckCache;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.field.FieldInfo;
@@ -48,6 +48,9 @@ public class DriverData extends ComparableItem
         addDoubleValue(DriverComparer.Fields.MaxCopyNumber.toString(), driverCatalog.maxCopyNumber(), fields);
         addStringValue(DriverComparer.Fields.Chromosome.toString(), mComparisonChromosome, fields);
         addStringValue(DriverComparer.Fields.ChromosomeBand.toString(), driverCatalog.chromosomeBand(), fields);
+
+        addDoubleValue(DriverComparer.Fields.Purity.toString(), purity.Purity, fields);
+        addDoubleValue(DriverComparer.Fields.Ploidy.toString(), purity.Ploidy, fields);
     }
 
     @Override

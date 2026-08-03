@@ -4,7 +4,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.CategoryType.TUMOR_BAM_METRICS;
-import static com.hartwig.hmftools.compar.common.FieldCheckCache.getOrMakeFieldCheck;
+import static com.hartwig.hmftools.compar.FieldCheckCache.getOrMakeFieldCheck;
 import static com.hartwig.hmftools.compar.metrics.MetricsCommon.DUPLICATE_PERCENTAGE_ABS_THRESHOLD;
 import static com.hartwig.hmftools.compar.metrics.MetricsCommon.DUPLICATE_PERCENTAGE_PCT_THRESHOLD;
 import static com.hartwig.hmftools.compar.metrics.MetricsCommon.FLD_DUPLICATE_PERCENTAGE;
@@ -59,10 +59,6 @@ public class BamMetricsComparer extends ItemComparer
                     coverageStr,
                     getOrMakeFieldCheck(fieldCheckMap, coverageStr, 0.03, null),
                     "%.3f"));
-
-            // TODO: remove
-            // fields.add(new DoubleField(coverageStr, i -> ((BamMetricsData) i).metrics().coveragePercent(coverage),
-            //        true, 0.03, null, "%.3f"));
         }
     }
 
@@ -73,23 +69,6 @@ public class BamMetricsComparer extends ItemComparer
     }
 
     protected static String coverageString(final int coverage) { return format("Percentage%dX", coverage); }
-
-    /*
-    @Override
-    public List<Field> fields(final MatchLevel matchLevel)
-    {
-        List<Field> fields = Lists.newArrayList();
-        fields.add(new DoubleField(FLD_DUPLICATE_PERCENTAGE, i -> ((BamMetricsData) i).metrics().duplicatePercent(),
-                true, DUPLICATE_PERCENTAGE_ABS_THRESHOLD, DUPLICATE_PERCENTAGE_PCT_THRESHOLD, "%.3f"));
-        for(Integer coverage : mComparisonPercentages)
-        {
-            final String coverageStr = coverageString(coverage);
-            fields.add(new DoubleField(coverageStr, i -> ((BamMetricsData) i).metrics().coveragePercent(coverage),
-                    true, 0.03, null, "%.3f"));
-        }
-        return fields;
-    }
-    */
 
     @Override
     public List<String> displayFieldNames() { return mFieldNames; }

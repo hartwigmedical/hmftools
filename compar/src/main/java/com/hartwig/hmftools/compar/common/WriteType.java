@@ -10,7 +10,8 @@ public enum WriteType
 {
     GENERIC,
     TYPE_SPECIFIC,
-    SUMMARY;
+    SUMMARY,
+    FIELD_CONFIG;
 
     public static List<WriteType> DEFAULT_WRITE_TYPES = List.of(GENERIC, TYPE_SPECIFIC);
 

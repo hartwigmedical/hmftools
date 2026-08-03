@@ -28,7 +28,6 @@ import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.ItemComparer;
-import com.hartwig.hmftools.compar.common.field.Field;
 import com.hartwig.hmftools.compar.common.field.FieldInfo;
 import com.hartwig.hmftools.compar.common.field.FieldValue;
 
@@ -161,19 +160,6 @@ public class CommonUtils
                 .forEach(x -> mismatches.add(new Mismatch(null, x, NEW_ONLY, emptyDiffs)));
     }
 
-    public static List<String> findDiffs(final ComparableItem oldItem, final ComparableItem newItem, final List<Field> fields)
-    {
-        List<String> diffs = Lists.newArrayList();
-        for(Field field : fields)
-        {
-            if(field.isCompared())
-            {
-                diffs.addAll(field.determineDiffs(oldItem, newItem));
-            }
-        }
-        return diffs;
-    }
-
     public static List<String> findDiffs(final ItemComparer comparer, final ComparableItem oldItem, final ComparableItem newItem)
     {
         List<String> diffs = Lists.newArrayList();
@@ -185,6 +171,9 @@ public class CommonUtils
 
         for(FieldInfo field : fields)
         {
+            if(!field.fieldCheck().IsCompared)
+                continue;
+
             FieldValue oldValue = oldFieldValues.get(field.name());
             FieldValue newValue = newFieldValues.get(field.name());
 

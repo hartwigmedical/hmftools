@@ -110,7 +110,4 @@ public class PurityData extends ComparableItem
         // a single record for each sample
         return true;
     }
-
-    @Override
-    public boolean supportTruthsetData() { return true; }
 }

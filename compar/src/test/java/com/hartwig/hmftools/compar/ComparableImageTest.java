@@ -1,8 +1,5 @@
 package com.hartwig.hmftools.compar;
 
-import static com.hartwig.hmftools.compar.common.ImageComparer.FLD_DIMENSIONS;
-import static com.hartwig.hmftools.compar.common.ImageComparer.FLD_PIXELS;
-
 import static org.junit.Assert.assertEquals;
 
 import java.awt.Color;
@@ -11,14 +8,6 @@ import java.awt.image.BufferedImage;
 
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.ComparableImage;
-import com.hartwig.hmftools.compar.common.FieldCheckCache;
-import com.hartwig.hmftools.compar.common.ImageComparer;
-import com.hartwig.hmftools.compar.common.MatchLevel;
-import com.hartwig.hmftools.compar.common.Mismatch;
-import com.hartwig.hmftools.compar.common.MismatchType;
-import com.hartwig.hmftools.compar.common.field.Field;
-
-import org.junit.Test;
 
 public class ComparableImageTest
 {

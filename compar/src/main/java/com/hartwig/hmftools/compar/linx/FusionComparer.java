@@ -2,7 +2,7 @@ package com.hartwig.hmftools.compar.linx;
 
 import static com.hartwig.hmftools.compar.common.CategoryType.FUSION;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
-import static com.hartwig.hmftools.compar.common.FieldCheckCache.getOrMakeFieldCheck;
+import static com.hartwig.hmftools.compar.FieldCheckCache.getOrMakeFieldCheck;
 import static com.hartwig.hmftools.compar.linx.DisruptionComparer.buildBreakendData;
 
 import java.io.IOException;
@@ -89,6 +89,7 @@ public class FusionComparer extends ItemComparer
                 Fields.DomainsLost.toString(),
                 getOrMakeFieldCheck(fieldCheckMap, Fields.DomainsLost.toString()), null));
 
+        // TODO: display only
         mFields.add(new FieldInfo(
                 Fields.BreakendUp.toString(),
                 getOrMakeFieldCheck(fieldCheckMap, Fields.BreakendUp.toString()), null));
@@ -104,33 +105,6 @@ public class FusionComparer extends ItemComparer
 
     @Override
     public CategoryType category() { return FUSION; }
-
-    /*
-    @Override
-    public List<Field> fields(final MatchLevel matchLevel)
-    {
-        return List.of(
-                new StringField(FLD_REPORTED, i -> String.valueOf(((FusionData) i).Fusion.reported()), true),
-                new StringField(FLD_REPORTED_TYPE, i -> ((FusionData) i).Fusion.reportedType(), true),
-                new StringField(FLD_PHASED, i -> ((FusionData) i).Fusion.phased().toString(), true),
-                new StringField(FLD_LIKELIHOOD, i -> ((FusionData) i).Fusion.likelihood().toString(), true),
-                new IntField(FLD_EXON_UP, i -> ((FusionData) i).Fusion.fusedExonUp(), true,
-                        null, null),
-                new IntField(FLD_EXON_DOWN, i -> ((FusionData) i).Fusion.fusedExonDown(), true,
-                        null, null),
-                new IntField(FLD_CHAIN_LINKS, i -> ((FusionData) i).Fusion.chainLinks(), true,
-                        null, null),
-                new StringField(FLD_CHAIN_TERM, i -> String.valueOf(((FusionData) i).Fusion.chainTerminated()),
-                        true),
-                new StringField(FLD_DOMAINS_KEPT, i -> ((FusionData) i).Fusion.domainsKept(), true),
-                new StringField(FLD_DOMAINS_LOST, i -> ((FusionData) i).Fusion.domainsLost(), true),
-                new DisplayOnlyField(FLD_BREAKEND_UP, i -> ((FusionData) i).BreakendFive.fullStr(true),
-                        i -> ((FusionData) i).BreakendFive != null),
-                new DisplayOnlyField(FLD_BREAKEND_DOWN, i -> ((FusionData) i).BreakendThree.fullStr(true),
-                        i -> ((FusionData) i).BreakendThree != null)
-        );
-    }
-    */
 
     @Override
     public List<String> displayFieldNames()

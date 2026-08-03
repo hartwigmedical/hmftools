@@ -6,7 +6,7 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantData.convertSvData
 import static com.hartwig.hmftools.compar.common.CategoryType.DISRUPTION;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.CommonUtils.determineComparisonGenomePosition;
-import static com.hartwig.hmftools.compar.common.FieldCheckCache.getOrMakeFieldCheck;
+import static com.hartwig.hmftools.compar.FieldCheckCache.getOrMakeFieldCheck;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -72,17 +72,6 @@ public class DisruptionComparer extends ItemComparer
 
     @Override
     public CategoryType category() { return DISRUPTION; }
-
-    /*
-    @Override
-    public List<Field> fields(final MatchLevel matchLevel)
-    {
-        return List.of(
-                new BreakendsField(FLD_BREAKEND_INFO, i -> ((DisruptionData) i).Breakends, true),
-                new DisplayOnlyField(FLD_REPORTED, i -> String.valueOf(i.reportable()), i -> true)
-        );
-    }
-    */
 
     @Override
     public List<String> displayFieldNames()
