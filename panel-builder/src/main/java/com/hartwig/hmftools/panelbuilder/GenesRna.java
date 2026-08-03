@@ -142,7 +142,9 @@ public class GenesRna
     private record GeneTranscriptData(
             GeneData gene,
             List<TranscriptData> transcripts,
-            GeneOptions options
+            GeneOptions options,
+            // Whether the user requested a specific subset of transcripts (rather than the default of all transcripts).
+            boolean specificTranscripts
     )
     {
     }
@@ -199,7 +201,8 @@ public class GenesRna
             LOGGER.error("No transcripts resolved for gene: {}", geneDef.geneName());
             return Optional.empty();
         }
-        return Optional.of(new GeneTranscriptData(geneData, transcripts, geneDef.options()));
+        boolean specificTranscripts = !geneDef.transcriptNames().isEmpty();
+        return Optional.of(new GeneTranscriptData(geneData, transcripts, geneDef.options(), specificTranscripts));
     }
 
     // Resolves the transcripts to use: all of the gene's transcripts if none were specified, otherwise the specified Ensembl transcripts.
@@ -367,12 +370,21 @@ public class GenesRna
 
     private static TargetMetadata createTargetMetadata(final GeneTranscriptData gene, final RnaTarget target)
     {
-        // TODO: only list the transcript names when the user specified a specific subset; when all transcripts are included (the default),
-        //  the extra info should be just the gene name (and target type), not every transcript.
-        List<String> transcriptNames = gene.transcripts().stream().map(GenesRna::formatTranscriptName).toList();
-        String extraInfo = format("%s:%s:%s", gene.gene().GeneName, join("/", transcriptNames), target.type().name());
+        // List the transcripts only when the user requested a specific subset; for the default (all transcripts) the extra info is just the
+        // gene name and target type.
+        String geneName = gene.gene().GeneName;
+        String extraInfo;
+        if(gene.specificTranscripts())
+        {
+            List<String> transcriptNames = gene.transcripts().stream().map(GenesRna::formatTranscriptName).toList();
+            extraInfo = format("%s:%s:%s", geneName, join("/", transcriptNames), target.type().name());
+        }
+        else
+        {
+            extraInfo = format("%s:%s", geneName, target.type().name());
+        }
         // Store the gene name so per-gene statistics can be recovered later.
-        return new TargetMetadata(TARGET_TYPE, extraInfo, gene.gene().GeneName);
+        return new TargetMetadata(TARGET_TYPE, extraInfo, geneName);
     }
 
     private static String formatTranscriptName(final TranscriptData transcript)

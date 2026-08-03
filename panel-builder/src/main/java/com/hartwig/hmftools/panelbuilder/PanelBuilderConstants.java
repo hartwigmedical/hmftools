@@ -131,6 +131,7 @@ public class PanelBuilderConstants
     public static final String RNA_COVERED_REGIONS_FILE_NAME = "rna_panel.bed";
     public static final String RNA_REJECTED_FEATURES_FILE_STEM = "rna_rejections";
     public static final String RNA_CANDIDATE_TARGET_REGIONS_FILE_NAME = "rna_candidate_targets.bed.gz";
+    public static final String RNA_CANDIDATE_PROBES_FILE_NAME = "rna_candidate_probes.tsv.gz";
     public static final String RNA_GENE_STATS_FILE_NAME = "rna_gene_stats.tsv";
 
     public static final String FASTA_EXTENSION = ".fasta";

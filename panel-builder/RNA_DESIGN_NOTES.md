@@ -42,9 +42,9 @@ decisions made, and open issues to revisit. Not user-facing documentation.
   Unit-tested (`OutputWriterRnaTest`).
 - **B5 [DONE]** — wired end-to-end. `-rna_genes` config (`PanelBuilderConfig`); separate RNA `PanelData`; `RnaProbeGenerator.construct`
   (own `ProbeEvaluator`); `PanelBuilderApplication.generateRnaGeneProbes()` guarded by config, driving `GenesRna.generateProbes` into the RNA
-  panel, then the B4 writers. RNA is a fully separate panel — no overlap interaction with DNA. **No RNA verbose candidate-probe output**: the
-  `candidate_probes` format uses `BasicProbeLayout` (≤2 regions) and can't represent spliced probes, so the RNA generator gets a null
-  candidate callback for now (TODO if needed).
+  panel, then the B4 writers. RNA is a fully separate panel — no overlap interaction with DNA. Verbose RNA candidate-probe output
+  (`rna_candidate_probes.tsv.gz`) uses the same segment-based format as `rna_probes.tsv` (the DNA candidate format's `BasicProbeLayout` can't
+  represent spliced probes). The Ensembl cache is loaded once and shared between DNA and RNA generation.
 - **B6 [DONE]** — README RNA section + these notes updated. End-to-end validated externally as byte-for-byte identical DNA output (the
   intentional `probes.fasta` id-label change, `probe{i}` -> `dna_{i}`, is the only DNA difference). Follow-up items below are tagged in code
   with `TODO`/`FIXME` so they are tracked at the point of change:
@@ -409,8 +409,5 @@ Action: prototype (1), compare against hand-checked probes, decide. Track as its
 - **Performance:** the end-to-end run spent several minutes on the RNA probes alone. Investigate — likely the
   short-region probes now routing to the alignment model (slower per candidate than the profile), amplified by
   candidate generation enumerating every window across large merged-exon spaces. Profile before optimising.
-- **Segments orientation formatting:** the RNA probes TSV `Segments` column emits orientation as `+` / `-`
-  (`Orientation.asChar`). Change to `1` / `-1`. `TODO` in `ProbeOutputWriter.formatSegment`.
-- **Target extra info:** when all transcripts are included (the default), the probe extra info / metadata should be
-  just the gene name (plus target type), not the full transcript list; only list transcripts when the user specified
-  a specific subset. `TODO` in `GenesRna.createTargetMetadata`.
+- Done: `Segments` orientation now `1`/`-1`; target extra info is just the gene name unless the user specified a
+  transcript subset; Ensembl loaded once; RNA verbose candidate-probe output.

@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.panelbuilder.Utils.combineStringUnique;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.Function;
@@ -26,10 +27,12 @@ import com.hartwig.hmftools.common.utils.file.DelimFileWriter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.BiConsumer;
+import org.jetbrains.annotations.Nullable;
 
 // Writes the output files for one probe panel (DNA or RNA): probes (TSV/FASTA/BED), covered target regions, covered regions, candidate
-// target regions, rejected features, and gene stats. DNA and RNA share this logic; they differ only in the probes TSV layout (DNA uses the
-// start/end BasicProbeLayout, limited to two regions; RNA lists all regions generically to allow spliced probes) and the FASTA id prefix.
+// target regions, rejected features, gene stats, and (verbose only) candidate probes. DNA and RNA share this logic; they differ only in the
+// probes/candidate-probes TSV layout (DNA uses the start/end BasicProbeLayout, limited to two regions; RNA lists all segments generically to
+// allow spliced probes) and the FASTA id prefix.
 public class ProbeOutputWriter implements AutoCloseable
 {
     private final boolean mRna;
@@ -42,7 +45,14 @@ public class ProbeOutputWriter implements AutoCloseable
     private final BufferedWriter mRejectedFeaturesBedWriter;
     private final BufferedWriter mCandidateTargetRegionsBedWriter;
     private final DelimFileWriter<GeneStats> mGeneStatsTsvWriter;
+    // Verbose output only; null otherwise.
+    @Nullable
+    private final DelimFileWriter<Probe> mCandidateProbesTsvWriter;
+    @Nullable
+    private final ArrayList<Probe> mCandidateProbesBuffer;
     private int mProbeId = 0;
+
+    private static final int CANDIDATE_PROBES_BUFFER_SIZE = 1_000_000;
 
     private enum ProbesColumns
     {
@@ -91,11 +101,37 @@ public class ProbeOutputWriter implements AutoCloseable
         ProbeCount
     }
 
+    private enum CandidateProbesColumns
+    {
+        StartRegion,
+        StartRegionOrient,
+        MiddleSequence,
+        EndRegion,
+        EndRegionOrient,
+        Sequence,
+        TargetType,
+        TargetExtra,
+        QualityScore,
+        GCContent,
+        EvalCriteria
+    }
+
+    private enum RnaCandidateProbesColumns
+    {
+        Segments,
+        Sequence,
+        TargetType,
+        TargetExtra,
+        QualityScore,
+        GCContent,
+        EvalCriteria
+    }
+
     private static final Logger LOGGER = LogManager.getLogger(ProbeOutputWriter.class);
 
     public ProbeOutputWriter(final Function<String, String> outputFilePath, final String probesStem, final String coveredTargetRegionsFile,
             final String coveredRegionsFile, final String rejectedFeaturesStem, final String candidateTargetRegionsFile,
-            final String geneStatsFile, boolean rna) throws IOException
+            final String candidateProbesFile, final String geneStatsFile, boolean verboseOutput, boolean rna) throws IOException
     {
         mRna = rna;
 
@@ -117,6 +153,19 @@ public class ProbeOutputWriter implements AutoCloseable
 
         mGeneStatsTsvWriter =
                 new DelimFileWriter<>(outputFilePath.apply(geneStatsFile), GeneStatsColumns.values(), ProbeOutputWriter::writeGeneStatsRow);
+
+        if(verboseOutput)
+        {
+            Enum<?>[] candidateColumns = rna ? RnaCandidateProbesColumns.values() : CandidateProbesColumns.values();
+            BiConsumer<Probe, DelimFileWriter.Row> candidateRowWriter = rna ? this::writeRnaCandidateProbesRow : this::writeCandidateProbesRow;
+            mCandidateProbesTsvWriter = new DelimFileWriter<>(outputFilePath.apply(candidateProbesFile), candidateColumns, candidateRowWriter);
+            mCandidateProbesBuffer = new ArrayList<>(CANDIDATE_PROBES_BUFFER_SIZE);
+        }
+        else
+        {
+            mCandidateProbesTsvWriter = null;
+            mCandidateProbesBuffer = null;
+        }
     }
 
     public void writeProbes(final List<Probe> probes) throws IOException
@@ -198,13 +247,13 @@ public class ProbeOutputWriter implements AutoCloseable
         row.setOrNull(RnaProbesColumns.GCContent, probe.gcContent());
     }
 
-    // Serializes one probe segment: a ref segment as "chromosome:start-end:orientation", an insert segment as its literal bases.
-    // TODO: emit the orientation as 1 / -1 rather than + / - (asChar).
+    // Serializes one probe segment: a ref segment as "chromosome:start-end:orientation" (orientation 1 / -1), an insert segment as its
+    // literal bases.
     private static String formatSegment(final SequenceSegment segment)
     {
         if(segment instanceof RefSegment ref)
         {
-            return format("%s:%s", ref.region(), ref.orientation().asChar());
+            return format("%s:%d", ref.region(), ref.orientation().asByte());
         }
         else
         {
@@ -321,6 +370,58 @@ public class ProbeOutputWriter implements AutoCloseable
         row.set(GeneStatsColumns.ProbeCount, stats.probeCount());
     }
 
+    // Verbose candidate probe output. No-op unless verbose output was enabled. Buffered for performance.
+    public void writeCandidateProbe(final Probe probe)
+    {
+        if(mCandidateProbesBuffer != null)
+        {
+            mCandidateProbesBuffer.add(probe);
+            checkFlushCandidateProbes(false);
+        }
+    }
+
+    private void checkFlushCandidateProbes(boolean force)
+    {
+        if(mCandidateProbesBuffer != null && (mCandidateProbesBuffer.size() >= CANDIDATE_PROBES_BUFFER_SIZE || force))
+        {
+            LOGGER.debug("Writing {} candidate probes to file", mCandidateProbesBuffer.size());
+            mCandidateProbesBuffer.forEach(requireNonNull(mCandidateProbesTsvWriter)::writeRow);
+            mCandidateProbesBuffer.clear();
+        }
+    }
+
+    private void writeCandidateProbesRow(final Probe probe, DelimFileWriter.Row row)
+    {
+        BasicProbeLayout layout = BasicProbeLayout.from(probe.definition());
+        ChrBaseRegion start = layout.startRegion();
+        Orientation startOrientation = layout.startOrientation();
+        ChrBaseRegion end = layout.endRegion();
+        Orientation endOrientation = layout.endOrientation();
+        row.setOrNull(CandidateProbesColumns.StartRegion, start == null ? null : start.toString());
+        row.setOrNull(CandidateProbesColumns.StartRegionOrient, startOrientation == null ? null : startOrientation.asChar());
+        row.setOrNull(CandidateProbesColumns.MiddleSequence, layout.insertSequence());
+        row.setOrNull(CandidateProbesColumns.EndRegion, end == null ? null : end.toString());
+        row.setOrNull(CandidateProbesColumns.EndRegionOrient, endOrientation == null ? null : endOrientation.asChar());
+        row.setOrNull(CandidateProbesColumns.Sequence, probe.sequence());
+        row.set(CandidateProbesColumns.TargetType, probe.metadata().type().name());
+        row.set(CandidateProbesColumns.TargetExtra, probe.metadata().extraInfo());
+        row.setOrNull(CandidateProbesColumns.QualityScore, probe.qualityScore());
+        row.setOrNull(CandidateProbesColumns.GCContent, probe.gcContent());
+        row.set(CandidateProbesColumns.EvalCriteria, requireNonNull(probe.evaluationCriteria()).toString());
+    }
+
+    private void writeRnaCandidateProbesRow(final Probe probe, DelimFileWriter.Row row)
+    {
+        String segments = probe.definition().segments().stream().map(ProbeOutputWriter::formatSegment).collect(Collectors.joining(";"));
+        row.set(RnaCandidateProbesColumns.Segments, segments);
+        row.setOrNull(RnaCandidateProbesColumns.Sequence, probe.sequence());
+        row.set(RnaCandidateProbesColumns.TargetType, probe.metadata().type().name());
+        row.set(RnaCandidateProbesColumns.TargetExtra, probe.metadata().extraInfo());
+        row.setOrNull(RnaCandidateProbesColumns.QualityScore, probe.qualityScore());
+        row.setOrNull(RnaCandidateProbesColumns.GCContent, probe.gcContent());
+        row.set(RnaCandidateProbesColumns.EvalCriteria, requireNonNull(probe.evaluationCriteria()).toString());
+    }
+
     private static void writeTargetRegionBedRow(final TargetRegion region, BufferedWriter writer) throws IOException
     {
         writeBedRow(region.region(), targetMetadataToBedName(region.metadata()), writer);
@@ -380,5 +481,10 @@ public class ProbeOutputWriter implements AutoCloseable
         mRejectedFeaturesBedWriter.close();
         mCandidateTargetRegionsBedWriter.close();
         mGeneStatsTsvWriter.close();
+        if(mCandidateProbesTsvWriter != null)
+        {
+            checkFlushCandidateProbes(true);
+            mCandidateProbesTsvWriter.close();
+        }
     }
 }

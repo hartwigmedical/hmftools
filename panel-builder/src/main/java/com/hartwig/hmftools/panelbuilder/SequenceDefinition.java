@@ -37,26 +37,11 @@ public record SequenceDefinition(List<SequenceSegment> segments) implements Comp
                 throw new IllegalArgumentException("Consecutive insert segments should be a single segment");
             }
             // Consecutive regions that are directly adjacent in the genome with the same orientation should have been a single region.
-            if(prev instanceof RefSegment prevRegion && next instanceof RefSegment nextRegion && areRefSegmentsAdjacent(
-                    prevRegion, nextRegion))
+            if(prev instanceof RefSegment prevRegion && next instanceof RefSegment nextRegion && prevRegion.isGenomeAdjacentTo(nextRegion))
             {
                 throw new IllegalArgumentException("Adjacent regions with the same orientation should be a single region");
             }
         }
-    }
-
-    // TODO: method on RefSegment instead?
-    private static boolean areRefSegmentsAdjacent(final RefSegment first, final RefSegment second)
-    {
-        if(first.orientation() != second.orientation() || !first.region().chromosome().equals(second.region().chromosome()))
-        {
-            return false;
-        }
-        // For FORWARD, the sequence runs low->high, so adjacency means the first region ends just before the second begins.
-        // For REVERSE, the sequence runs high->low, so adjacency means the second region ends just before the first begins.
-        return first.orientation() == Orientation.FORWARD
-                ? first.region().end() + 1 == second.region().start()
-                : second.region().end() + 1 == first.region().start();
     }
 
     public static SequenceDefinition singleRegion(final ChrBaseRegion region)

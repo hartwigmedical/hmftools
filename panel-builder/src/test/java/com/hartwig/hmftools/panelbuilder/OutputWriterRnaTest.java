@@ -43,8 +43,8 @@ public class OutputWriterRnaTest
         List<String> tsvLines = Files.readAllLines(outputDir.resolve("rna_probes.tsv"));
         assertEquals(2, tsvLines.size());
         String dataRow = tsvLines.get(1);
-        // Each segment is serialized as region:orientation, joined by ';'. Both ref segments are genome-forward.
-        assertTrue(dataRow.contains(region1 + ":+;" + region2 + ":+"));
+        // Each segment is serialized as region:orientation (1/-1), joined by ';'. Both ref segments are genome-forward.
+        assertTrue(dataRow.contains(region1 + ":1;" + region2 + ":1"));
         assertTrue(dataRow.contains("GENE_RNA"));
 
         // Each region of the spliced probe appears as its own BED row.

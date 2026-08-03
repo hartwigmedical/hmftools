@@ -44,6 +44,9 @@ public class PanelBuilderApplication
     private PanelData mPanelData;
     // RNA probes are kept in a separate panel so RNA and DNA coverage/overlap never interact.
     private PanelData mRnaPanelData;
+    // Loaded on first use and shared between DNA and RNA gene probe generation.
+    @Nullable
+    private EnsemblDataCache mEnsemblData;
     @Nullable
     private OutputWriter mOutputWriter;
 
@@ -67,9 +70,7 @@ public class PanelBuilderApplication
                 probeQualityProfile.matchScoreThreshold(), probeQualityProfile.matchScoreOffset());
 
         mProbeGenerator = ProbeGenerator.construct(mRefGenome, probeQualityProfile, probeQualityModel, this::writeCandidateProbe);
-        // No candidate-probe callback for RNA: the verbose candidate probe output uses the DNA probe format, which can't represent
-        // multi-region (spliced) probes. TODO(RNA): separate multi-region candidate probe output if needed.
-        mRnaProbeGenerator = RnaProbeGenerator.construct(mRefGenome, probeQualityProfile, probeQualityModel, null);
+        mRnaProbeGenerator = RnaProbeGenerator.construct(mRefGenome, probeQualityProfile, probeQualityModel, this::writeRnaCandidateProbe);
         mPanelData = new PanelData();
         mRnaPanelData = new PanelData();
     }
@@ -149,7 +150,7 @@ public class PanelBuilderApplication
                 throw new UserInputError("Genes requested but Ensembl data directory not provided");
             }
             {
-                EnsemblDataCache ensemblData = loadEnsemblData();
+                EnsemblDataCache ensemblData = ensemblData();
                 Genes.ExtraOutput extraOutput =
                         Genes.generateProbes(mConfig.genesFile(), ensemblData, mProbeGenerator, mPanelData);
                 // Result is stored into mPanelData.
@@ -172,7 +173,7 @@ public class PanelBuilderApplication
             {
                 throw new UserInputError("Genes RNA requested but Ensembl data directory not provided");
             }
-            EnsemblDataCache ensemblData = loadEnsemblData();
+            EnsemblDataCache ensemblData = ensemblData();
             GenesRna.ExtraOutput extraOutput =
                     GenesRna.generateProbes(mConfig.rnaGenesFile(), ensemblData, mRnaProbeGenerator, mRnaPanelData);
             // Result is stored into mRnaPanelData.
@@ -271,18 +272,27 @@ public class PanelBuilderApplication
         }
     }
 
-    // TODO: this reloads the whole Ensembl cache each call, so requesting both DNA genes and RNA genes loads it twice. Load once and share.
-    private EnsemblDataCache loadEnsemblData()
+    // Loads the Ensembl cache once and shares it between DNA and RNA gene probe generation.
+    private EnsemblDataCache ensemblData()
     {
-        EnsemblDataCache ensemblData = new EnsemblDataCache(mConfig.ensemblDir(), mRefGenomeVersion);
-        ensemblData.setRequiredData(true, false, false, false);
-        ensemblData.load(false);
-        return ensemblData;
+        if(mEnsemblData == null)
+        {
+            EnsemblDataCache ensemblData = new EnsemblDataCache(mConfig.ensemblDir(), mRefGenomeVersion);
+            ensemblData.setRequiredData(true, false, false, false);
+            ensemblData.load(false);
+            mEnsemblData = ensemblData;
+        }
+        return mEnsemblData;
     }
 
     private void writeCandidateProbe(final Probe probe)
     {
         requireNonNull(mOutputWriter).writeCandidateProbe(probe);
+    }
+
+    private void writeRnaCandidateProbe(final Probe probe)
+    {
+        requireNonNull(mOutputWriter).writeRnaCandidateProbe(probe);
     }
 
     private void printPanelStats()

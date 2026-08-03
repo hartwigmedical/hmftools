@@ -246,7 +246,8 @@ public class ProbeUtilsTest
                 new RefSegment(new ChrBaseRegion("2", 50, 54), Orientation.FORWARD)));   // seq [24, 29)
         TargetedRange targetedRange = new TargetedRange(5, 27);
         List<ChrBaseRegion> expected = List.of(
-                // TODO: should collapse subsumed regions into 1?
+                // One region per targeted segment; overlapping/subsumed regions are deliberately not collapsed here (the segments are
+                // distinct parts of the probe). Callers that need merged genome regions merge downstream (e.g. covered target region output).
                 new ChrBaseRegion("1", 105, 109),   // region 1, offsets [5, 10)
                 new ChrBaseRegion("1", 105, 114),   // region 2 reversed, offsets [0, 10)
                 new ChrBaseRegion("2", 50, 52));    // region 3, offsets [0, 3)

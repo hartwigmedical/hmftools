@@ -447,7 +447,8 @@ TODO: list out all files here properly when files are split by DNA/RNA
 
 If RNA gene probes are requested, a parallel set of RNA output files is produced with an `rna_` prefix (`rna_probes.tsv`, `rna_probes.fasta`,
 `rna_probes.bed`, `rna_panel.bed`, `rna_targets.bed`, `rna_rejections.tsv`, `rna_rejections.bed`, `rna_candidate_targets.bed.gz`,
-`rna_gene_stats.tsv`). These cover the RNA panel only, kept separate from the DNA output. Because RNA probes may be spliced across exon
-junctions, `rna_probes.tsv` lists the probe segments generically (a `Segments` column) rather than as a start/end pair.
+`rna_gene_stats.tsv`, and — with `verbose_output` — `rna_candidate_probes.tsv.gz`). These cover the RNA panel only, kept separate from the
+DNA output. Because RNA probes may be spliced across exon junctions, `rna_probes.tsv` (and `rna_candidate_probes.tsv.gz`) list the probe
+segments generically (a `Segments` column, orientation as `1`/`-1`) rather than as a start/end pair.
 
 All output files will be prefixed by `output_id` if specified.

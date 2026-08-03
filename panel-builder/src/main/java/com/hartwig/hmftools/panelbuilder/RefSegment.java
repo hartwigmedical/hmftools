@@ -24,6 +24,21 @@ public record RefSegment(ChrBaseRegion region, Orientation orientation) implemen
         return region.baseLength();
     }
 
+    // Whether this segment is immediately followed in probe-sequence space by the given segment along the genome with the same orientation,
+    // i.e. the two are directly adjacent and could be merged into a single region.
+    public boolean isGenomeAdjacentTo(final RefSegment next)
+    {
+        if(orientation != next.orientation || !region.chromosome().equals(next.region.chromosome()))
+        {
+            return false;
+        }
+        // For FORWARD, the sequence runs low->high, so adjacency means this region ends just before the next begins.
+        // For REVERSE, the sequence runs high->low, so adjacency means the next region ends just before this one begins.
+        return orientation == Orientation.FORWARD
+                ? region.end() + 1 == next.region.start()
+                : next.region.end() + 1 == region.start();
+    }
+
     @Override
     public int typeRank()
     {
