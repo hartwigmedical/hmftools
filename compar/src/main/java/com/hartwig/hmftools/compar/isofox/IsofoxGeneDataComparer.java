@@ -1,13 +1,13 @@
 package com.hartwig.hmftools.compar.isofox;
 
-import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_ADJ_TPM;
-import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_SPLICED_FRAGS;
-import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_UNSPLICED_FRAGS;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
+import static com.hartwig.hmftools.compar.common.FieldCheckCache.getOrMakeFieldCheck;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.rna.GeneExpression;
@@ -16,19 +16,41 @@ import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.CategoryType;
-import com.hartwig.hmftools.compar.common.CommonUtils;
-import com.hartwig.hmftools.compar.common.FieldCheckCache;
 import com.hartwig.hmftools.compar.common.PipelineSourcePaths;
-import com.hartwig.hmftools.compar.common.MatchLevel;
-import com.hartwig.hmftools.compar.common.Mismatch;
-import com.hartwig.hmftools.compar.common.field.DoubleField;
-import com.hartwig.hmftools.compar.common.field.Field;
-import com.hartwig.hmftools.compar.common.field.IntField;
+import com.hartwig.hmftools.compar.common.field.FieldCheck;
+import com.hartwig.hmftools.compar.common.field.FieldInfo;
 
 import org.jetbrains.annotations.NotNull;
 
-public record IsofoxGeneDataComparer(ComparConfig mConfig) implements ItemComparer
+public class IsofoxGeneDataComparer extends ItemComparer
 {
+    protected enum Fields
+    {
+        SplicedFragments,
+        UnsplicedFragments,
+        AdjTPM;
+    }
+
+    public IsofoxGeneDataComparer(final ComparConfig config, final Map<String, FieldCheck> fieldCheckMap)
+    {
+        super(config);
+
+        mFields.add(new FieldInfo(
+                Fields.SplicedFragments.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.SplicedFragments.toString(), 10.0, 0.05),
+                "%.2f"));
+
+        mFields.add(new FieldInfo(
+                Fields.UnsplicedFragments.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.UnsplicedFragments.toString(), 10.0, 0.05),
+                "%.2f"));
+
+        mFields.add(new FieldInfo(
+                Fields.AdjTPM.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.AdjTPM.toString(), null, 0.05),
+                "%.4e3"));
+    }
+
     @Override
     public CategoryType category()
     {
@@ -42,28 +64,9 @@ public record IsofoxGeneDataComparer(ComparConfig mConfig) implements ItemCompar
     }
 
     @Override
-    public boolean processSample(final String sampleId, final List<Mismatch> mismatches, final FieldCheckCache fieldConfig)
-    {
-        return CommonUtils.processSample(this, mConfig, sampleId, mismatches, fieldConfig);
-    }
-
-    @Override
-    public List<Field> fields(final MatchLevel matchLevel)
-    {
-        return List.of(
-                new IntField(FLD_SPLICED_FRAGS, i -> ((IsofoxGeneData) i).GeneExpression().splicedFragments(),
-                        true, 10., 0.05),
-                new IntField(FLD_UNSPLICED_FRAGS, i -> ((IsofoxGeneData) i).GeneExpression().unsplicedFragments(),
-                        true, 10., 0.05),
-                new DoubleField(FLD_ADJ_TPM, i -> ((IsofoxGeneData) i).GeneExpression().tpm(), true,
-                        null, 0.05, "%.2f")
-        );
-    }
-
-    @Override
     public List<String> displayFieldNames()
     {
-        return List.of(FLD_SPLICED_FRAGS, FLD_UNSPLICED_FRAGS, FLD_ADJ_TPM);
+        return Arrays.stream(Fields.values()).map(x -> x.toString()).collect(Collectors.toList());
     }
 
     @Override
@@ -77,7 +80,7 @@ public record IsofoxGeneDataComparer(ComparConfig mConfig) implements ItemCompar
             return null;
         }
 
-        return geneExpressions.stream().<ComparableItem>map(IsofoxGeneData::new).collect(Collectors.toList());
+        return geneExpressions.stream().map(x -> new IsofoxGeneData(x, mFields)).collect(Collectors.toList());
     }
 
     @NotNull

@@ -1,10 +1,12 @@
 package com.hartwig.hmftools.compar.sigs;
 
+import java.util.Collections;
 import java.util.function.Consumer;
 
 import com.hartwig.hmftools.common.sigs.ImmutableSignatureAllocation;
 import com.hartwig.hmftools.common.sigs.SignatureAllocation;
 import com.hartwig.hmftools.compar.TestComparableItemBuilder;
+import com.hartwig.hmftools.compar.virus.VirusComparer;
 
 public class TestSigsDataBuilder
 {
@@ -27,6 +29,6 @@ public class TestSigsDataBuilder
                 .allocation(-1)
                 .percent(percent)
                 .build();
-        return new SigsData(signatureAllocation);
+        return new SigsData(signatureAllocation, new SigsComparer(null, Collections.emptyMap()).fieldsList());
     }
 }

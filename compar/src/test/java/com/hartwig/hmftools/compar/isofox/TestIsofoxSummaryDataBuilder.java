@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.compar.isofox;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -65,6 +66,7 @@ public class TestIsofoxSummaryDataBuilder
                 .medianGCRatio(medianGCRatio)
                 .forwardStrandPercent(forwardStrandPercent)
                 .build();
-        return new IsofoxSummaryData(rnaStatistics);
+
+        return new IsofoxSummaryData(rnaStatistics, new IsofoxSummaryComparer(null, Collections.emptyMap()).fieldsList());
     }
 }

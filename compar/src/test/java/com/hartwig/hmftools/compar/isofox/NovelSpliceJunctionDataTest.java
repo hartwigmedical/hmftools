@@ -2,12 +2,8 @@ package com.hartwig.hmftools.compar.isofox;
 
 import static com.hartwig.hmftools.common.rna.NovelSpliceJunctionFile.FLD_ALT_SJ_POS_END;
 import static com.hartwig.hmftools.common.rna.NovelSpliceJunctionFile.FLD_ALT_SJ_POS_START;
-import static com.hartwig.hmftools.common.rna.NovelSpliceJunctionFile.FLD_ALT_SJ_TYPE;
-import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_FRAG_COUNT;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_NAME;
-import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_REGION_END;
-import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_REGION_START;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -34,30 +30,30 @@ public class NovelSpliceJunctionDataTest
     @Before
     public void setUp()
     {
-        comparer = new NovelSpliceJunctionComparer(new ComparConfig());
+        comparer = new NovelSpliceJunctionComparer(new ComparConfig(), Collections.emptyMap());
         builder = TestNovelSpliceJunctionDataBuilder.BUILDER;
         NovelSpliceJunctionData alternateValueSource = builder.createWithAlternateDefaults();
 
         fieldToAlternateValueInitializer = Map.of(
-                FLD_ALT_SJ_TYPE, b -> b.type = alternateValueSource.NovelSpliceJunction().type(),
-                FLD_FRAG_COUNT, b -> b.fragmentCount = alternateValueSource.NovelSpliceJunction().fragmentCount(),
-                FLD_REGION_START, b -> b.regionStart = alternateValueSource.NovelSpliceJunction().regionStart(),
-                FLD_REGION_END, b -> b.regionEnd = alternateValueSource.NovelSpliceJunction().regionEnd());
+                NovelSpliceJunctionComparer.Fields.Type.toString(), b -> b.type = alternateValueSource.Junction.type(),
+                NovelSpliceJunctionComparer.Fields.FragmentCount.toString(), b -> b.fragmentCount = alternateValueSource.Junction.fragmentCount(),
+                NovelSpliceJunctionComparer.Fields.RegionStart.toString(), b -> b.regionStart = alternateValueSource.Junction.regionStart(),
+                NovelSpliceJunctionComparer.Fields.RegionEnd.toString(), b -> b.regionEnd = alternateValueSource.Junction.regionEnd());
 
         nameToAlternateIndexInitializer = Map.of(
-                FLD_GENE_NAME, b -> b.geneName = alternateValueSource.NovelSpliceJunction().geneName(),
+                FLD_GENE_NAME, b -> b.geneName = alternateValueSource.Junction.geneName(),
                 FLD_CHROMOSOME, b -> {
-                    b.chromosome = alternateValueSource.NovelSpliceJunction().chromosome();
-                    b.comparisonChromosomeStart = alternateValueSource.ComparisonPositionStart().Chromosome;
-                    b.comparisonChromosomeEnd = alternateValueSource.ComparisonPositionEnd().Chromosome;
+                    b.chromosome = alternateValueSource.Junction.chromosome();
+                    b.comparisonChromosomeStart = alternateValueSource.ComparisonPositionStart.Chromosome;
+                    b.comparisonChromosomeEnd = alternateValueSource.ComparisonPositionEnd.Chromosome;
                 },
                 FLD_ALT_SJ_POS_START, b -> {
-                    b.junctionStart = alternateValueSource.NovelSpliceJunction().junctionStart();
-                    b.comparisonPositionStart = alternateValueSource.ComparisonPositionStart().Position;
+                    b.junctionStart = alternateValueSource.Junction.junctionStart();
+                    b.comparisonPositionStart = alternateValueSource.ComparisonPositionStart.Position;
                 },
                 FLD_ALT_SJ_POS_END, b -> {
-                    b.junctionEnd = alternateValueSource.NovelSpliceJunction().junctionEnd();
-                    b.comparisonPositionEnd = alternateValueSource.ComparisonPositionEnd().Position;
+                    b.junctionEnd = alternateValueSource.Junction.junctionEnd();
+                    b.comparisonPositionEnd = alternateValueSource.ComparisonPositionEnd.Position;
                 });
         reportabilityFieldToFalseReportabilityInitializer = Collections.emptyMap();
         nameToNonPassInitializer = Collections.emptyMap();
@@ -88,10 +84,10 @@ public class NovelSpliceJunctionDataTest
 
         assertTrue(victim.matches(liftoverVictim));
         assertTrue(liftoverVictim.matches(victim));
-        assertNull(victim.findMismatch(liftoverVictim, matchLevel, fieldConfig, false));
+        assertNull(victim.findMismatch(comparer, liftoverVictim, matchLevel, false));
 
         Mismatch expectedMatch = new Mismatch(victim, liftoverVictim, MismatchType.FULL_MATCH, Collections.emptyList());
-        assertEquals(expectedMatch, victim.findMismatch(liftoverVictim, matchLevel, fieldConfig, true));
+        assertEquals(expectedMatch, victim.findMismatch(comparer, liftoverVictim, matchLevel, true));
     }
 
     @Test
@@ -105,10 +101,10 @@ public class NovelSpliceJunctionDataTest
 
         assertTrue(victim.matches(liftoverVictim));
         assertTrue(liftoverVictim.matches(victim));
-        assertNull(victim.findMismatch(liftoverVictim, matchLevel, fieldConfig, false));
+        assertNull(victim.findMismatch(comparer, liftoverVictim, matchLevel, false));
 
         Mismatch expectedMatch = new Mismatch(victim, liftoverVictim, MismatchType.FULL_MATCH, Collections.emptyList());
-        assertEquals(expectedMatch, victim.findMismatch(liftoverVictim, matchLevel, fieldConfig, true));
+        assertEquals(expectedMatch, victim.findMismatch(comparer, liftoverVictim, matchLevel, true));
     }
 
     @Test

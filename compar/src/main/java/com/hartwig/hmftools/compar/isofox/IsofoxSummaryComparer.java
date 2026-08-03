@@ -1,15 +1,18 @@
 package com.hartwig.hmftools.compar.isofox;
 
-import static com.hartwig.hmftools.common.rna.RnaStatisticFile.Column;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_EXTENSION;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_EXTENSION;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
+import static com.hartwig.hmftools.compar.common.FieldCheckCache.getOrMakeFieldCheck;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.StringJoiner;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.rna.RnaQcFilter;
@@ -19,34 +22,98 @@ import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.CategoryType;
-import com.hartwig.hmftools.compar.common.CommonUtils;
-import com.hartwig.hmftools.compar.common.FieldCheckCache;
 import com.hartwig.hmftools.compar.common.PipelineSourcePaths;
-import com.hartwig.hmftools.compar.common.MatchLevel;
-import com.hartwig.hmftools.compar.common.Mismatch;
-import com.hartwig.hmftools.compar.common.field.DoubleField;
-import com.hartwig.hmftools.compar.common.field.Field;
-import com.hartwig.hmftools.compar.common.field.IntField;
-import com.hartwig.hmftools.compar.common.field.LongField;
-import com.hartwig.hmftools.compar.common.field.StringField;
+import com.hartwig.hmftools.compar.common.field.FieldCheck;
+import com.hartwig.hmftools.compar.common.field.FieldInfo;
 
-public record IsofoxSummaryComparer(ComparConfig mConfig) implements ItemComparer
+public class IsofoxSummaryComparer extends ItemComparer
 {
-    static final String FLD_QC_STATUS = Column.QcStatus.toString();
-    static final String FLD_TOTAL_FRAGS = Column.TotalFragments.toString();
-    static final String FLD_DUPLICATE_FRAGS = Column.DuplicateFragments.toString();
-    static final String FLD_SPLICED_FRAG_PERC = Column.SplicedFragmentPerc.toString();
-    static final String FLD_UNSPLICED_FRAG_PERC = Column.UnsplicedFragmentPerc.toString();
-    static final String FLD_ALT_FRAG_PERC = Column.AltFragmentPerc.toString();
-    static final String FLD_CHIMERIC_FRAG_PERC = Column.ChimericFragmentPerc.toString();
-    static final String FLD_SPLICED_GENE_COUNT = Column.SplicedGeneCount.toString();
-    static final String FLD_READ_LENGTH = Column.ReadLength.toString();
-    static final String FLD_FRAG_LENGTH_5TH = Column.FragLength5th.toString();
-    static final String FLD_FRAG_LENGTH_50TH = Column.FragLength50th.toString();
-    static final String FLD_FRAG_LENGTH_95TH = Column.FragLength95th.toString();
-    static final String FLD_ENRICHED_GENE_PERC = Column.EnrichedGenePercent.toString();
-    static final String FLD_MEDIAN_GC_RATIO = Column.MedianGCRatio.toString();
-    static final String FLD_FORWARD_STRAND_PERC = Column.ForwardStrandPercent.toString();
+    protected enum Fields
+    {
+        QcStatus,
+        TotalFragments,
+        DuplicateFragments,
+        SplicedFragmentPerc,
+        UnsplicedFragmentPerc,
+        AltFragmentPerc,
+        ChimericFragmentPerc,
+        SplicedGeneCount,
+        // ReadLength  // a property of the sample, not our tools
+        FragLength5th,
+        FragLength50th,
+        FragLength95th,
+        // MedianGCRatio - gone with v2.1 anyway
+        MedianGCRatio,
+        ForwardStrandPercent;
+    }
+
+    public IsofoxSummaryComparer(final ComparConfig config, final Map<String, FieldCheck> fieldCheckMap)
+    {
+        super(config);
+
+        mFields.add(new FieldInfo(
+                Fields.QcStatus.toString(), getOrMakeFieldCheck(fieldCheckMap, Fields.QcStatus.toString()), null));
+
+        mFields.add(new FieldInfo(
+                Fields.TotalFragments.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.TotalFragments.toString(), 10.0, 0.01),
+                null));
+
+        mFields.add(new FieldInfo(
+                Fields.DuplicateFragments.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.DuplicateFragments.toString(), 10.0, 0.01),
+                null));
+
+        mFields.add(new FieldInfo(
+                Fields.SplicedFragmentPerc.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.SplicedFragmentPerc.toString(), 0.05, null),
+                "%.2f"));
+
+        mFields.add(new FieldInfo(
+                Fields.UnsplicedFragmentPerc.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.UnsplicedFragmentPerc.toString(), 0.05, null),
+                "%.2f"));
+
+        mFields.add(new FieldInfo(
+                Fields.AltFragmentPerc.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.AltFragmentPerc.toString(), 0.05, null),
+                "%.2f"));
+
+        mFields.add(new FieldInfo(
+                Fields.ChimericFragmentPerc.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.ChimericFragmentPerc.toString(), 0.05, null),
+                "%.2f"));
+
+        mFields.add(new FieldInfo(
+                Fields.SplicedGeneCount.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.SplicedGeneCount.toString(), 10.0, 0.01),
+                null));
+
+        mFields.add(new FieldInfo(
+                Fields.FragLength5th.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.FragLength5th.toString(), null, 0.05),
+                "%.1f"));
+
+        mFields.add(new FieldInfo(
+                Fields.FragLength50th.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.FragLength50th.toString(), null, 0.05),
+                "%.1f"));
+
+        mFields.add(new FieldInfo(
+                Fields.FragLength95th.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.FragLength95th.toString(), null, 0.05),
+                "%.1f"));
+
+        mFields.add(new FieldInfo(
+                Fields.MedianGCRatio.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.MedianGCRatio.toString(), 0.01, null),
+                "%.2f"));
+
+        mFields.add(new FieldInfo(
+                Fields.ForwardStrandPercent.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.ForwardStrandPercent.toString(), 0.01, null),
+                "%.2f"));
+    }
 
     @Override
     public CategoryType category()
@@ -61,56 +128,9 @@ public record IsofoxSummaryComparer(ComparConfig mConfig) implements ItemCompare
     }
 
     @Override
-    public boolean processSample(final String sampleId, final List<Mismatch> mismatches, final FieldCheckCache fieldConfig)
-    {
-        return CommonUtils.processSample(this, mConfig, sampleId, mismatches, fieldConfig);
-    }
-
-    @Override
-    public List<Field> fields(final MatchLevel matchLevel)
-    {
-        return List.of(
-                new StringField(FLD_QC_STATUS, i -> qcStatus(((IsofoxSummaryData) i).RnaStatistics().qcStatus()),
-                        true),
-                new LongField(FLD_TOTAL_FRAGS, i -> ((IsofoxSummaryData) i).RnaStatistics().totalFragments(),
-                        true, 10., 0.01),
-                new LongField(FLD_DUPLICATE_FRAGS, i -> ((IsofoxSummaryData) i).RnaStatistics().duplicateFragments(),
-                        true, 10., 0.01),
-                new DoubleField(FLD_SPLICED_FRAG_PERC, i -> ((IsofoxSummaryData) i).RnaStatistics().splicedFragmentPerc(),
-                        true, 0.01, 0.05, "%.2f"),
-                new DoubleField(FLD_UNSPLICED_FRAG_PERC, i -> ((IsofoxSummaryData) i).RnaStatistics().unsplicedFragmentPerc(),
-                        true, 0.01, 0.05, "%.2f"),
-                new DoubleField(FLD_ALT_FRAG_PERC, i -> ((IsofoxSummaryData) i).RnaStatistics().altFragmentPerc(),
-                        true, 0.01, 0.05, "%.2f"),
-                new DoubleField(FLD_CHIMERIC_FRAG_PERC, i -> ((IsofoxSummaryData) i).RnaStatistics().chimericFragmentPerc(),
-                        true, 0.01, 0.05, "%.2f"),
-                new IntField(FLD_SPLICED_GENE_COUNT, i -> ((IsofoxSummaryData) i).RnaStatistics().splicedGeneCount(),
-                        true, 10., 0.01),
-                new IntField(FLD_READ_LENGTH, i -> ((IsofoxSummaryData) i).RnaStatistics().readLength(),
-                        true, null, null),
-                new DoubleField(FLD_FRAG_LENGTH_5TH, i -> ((IsofoxSummaryData) i).RnaStatistics().fragmentLength5thPercent(),
-                        true, null, 0.05, "%.1f"),
-                new DoubleField(FLD_FRAG_LENGTH_50TH, i -> ((IsofoxSummaryData) i).RnaStatistics().fragmentLength50thPercent(),
-                        true, null, 0.05, "%.1f"),
-                new DoubleField(FLD_FRAG_LENGTH_95TH, i -> ((IsofoxSummaryData) i).RnaStatistics().fragmentLength95thPercent(),
-                        true, null, 0.05, "%.1f"),
-                new DoubleField(FLD_ENRICHED_GENE_PERC, i -> ((IsofoxSummaryData) i).RnaStatistics().enrichedGenePercent(),
-                        true, 0.01, null, "%.2f"),
-                new DoubleField(FLD_MEDIAN_GC_RATIO, i -> ((IsofoxSummaryData) i).RnaStatistics().medianGCRatio(),
-                        true, 0.01, null, "%.2f"),
-                new DoubleField(FLD_FORWARD_STRAND_PERC, i -> ((IsofoxSummaryData) i).RnaStatistics().forwardStrandPercent(),
-                        true, 0.01, null, "%.2f")
-        );
-    }
-
-    @Override
     public List<String> displayFieldNames()
     {
-        return List.of(
-                FLD_QC_STATUS, FLD_TOTAL_FRAGS, FLD_DUPLICATE_FRAGS, FLD_SPLICED_FRAG_PERC, FLD_UNSPLICED_FRAG_PERC, FLD_ALT_FRAG_PERC,
-                FLD_CHIMERIC_FRAG_PERC, FLD_READ_LENGTH, FLD_FRAG_LENGTH_5TH, FLD_FRAG_LENGTH_50TH, FLD_FRAG_LENGTH_95TH,
-                FLD_ENRICHED_GENE_PERC
-        );
+        return Arrays.stream(IsofoxSummaryComparer.Fields.values()).map(x -> x.toString()).collect(Collectors.toList());
     }
 
     @Override
@@ -122,7 +142,7 @@ public record IsofoxSummaryComparer(ComparConfig mConfig) implements ItemCompare
         {
             List<String> lines = Files.readAllLines(Paths.get(determineFileName(sampleId, fileSources)));
             RnaStatistics rnaStatistics = RnaStatisticFile.fromLines(lines);
-            comparableItems.add(new IsofoxSummaryData(rnaStatistics));
+            comparableItems.add(new IsofoxSummaryData(rnaStatistics, mFields));
         }
         catch(IOException e)
         {
@@ -131,13 +151,6 @@ public record IsofoxSummaryComparer(ComparConfig mConfig) implements ItemCompare
         }
 
         return comparableItems;
-    }
-
-    private static String qcStatus(final List<RnaQcFilter> status)
-    {
-        StringJoiner sj = new StringJoiner(";");
-        status.forEach(x -> sj.add(x.toString()));
-        return sj.toString();
     }
 
     private static String determineFileName(final String sampleId, final PipelineSourcePaths fileSources)

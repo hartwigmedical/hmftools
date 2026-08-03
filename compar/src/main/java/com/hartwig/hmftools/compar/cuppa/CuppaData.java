@@ -4,17 +4,23 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.compar.common.CategoryType.CUPPA;
 
+import java.util.List;
+
 import com.hartwig.hmftools.common.cuppa.CuppaPredictionEntry;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.ComparableItem;
+import com.hartwig.hmftools.compar.common.field.FieldInfo;
 
-public class CuppaData implements ComparableItem
+public class CuppaData extends ComparableItem
 {
     public final CuppaPredictionEntry PredictionEntry;
 
-    public CuppaData(final CuppaPredictionEntry predictionEntry)
+    public CuppaData(final CuppaPredictionEntry predictionEntry, final List<FieldInfo> fields)
     {
         PredictionEntry = predictionEntry;
+
+        addStringValue(CuppaComparer.Fields.TopCancerType.toString(), predictionEntry.CancerType, fields);
+        addDoubleValue(CuppaComparer.Fields.Probability.toString(), predictionEntry.DataValue, fields);
     }
 
     @Override

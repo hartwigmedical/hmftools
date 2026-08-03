@@ -4,17 +4,22 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.compar.common.CategoryType.TELOMERE_LENGTH;
 
+import java.util.List;
+
 import com.hartwig.hmftools.common.teal.TelomereLength;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.common.CategoryType;
+import com.hartwig.hmftools.compar.common.field.FieldInfo;
 
-public class TealData implements ComparableItem
+public class TealData extends ComparableItem
 {
     public final TelomereLength TelomereLength;
 
-    public TealData(final TelomereLength telomereLength)
+    public TealData(final TelomereLength telomereLength, final List<FieldInfo> fields)
     {
         TelomereLength = telomereLength;
+
+        addDoubleValue(TealComparer.Fields.TelomereLength.toString(), telomereLength.finalTelomereLength(), fields);
     }
 
     @Override

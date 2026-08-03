@@ -2,11 +2,8 @@ package com.hartwig.hmftools.compar.driver;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.compar.common.CategoryType.DRIVER;
-import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_CHROMOSOME_BAND;
 import static com.hartwig.hmftools.compar.common.CommonUtils.createMismatchFromDiffs;
-import static com.hartwig.hmftools.compar.common.CommonUtils.findDiffs;
 
 import java.util.List;
 
@@ -19,14 +16,10 @@ import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.common.FieldCheckCache;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
+import com.hartwig.hmftools.compar.common.field.FieldInfo;
 
-public class DriverData implements ComparableItem
+public class DriverData extends ComparableItem
 {
-    protected static final String FLD_LIKELIHOOD = "Likelihood";
-    protected static final String FLD_LIKE_METHOD = "LikelihoodMethod";
-    protected static final String FLD_MIN_COPY_NUMBER = "MinCopyNumber";
-    protected static final String FLD_MAX_COPY_NUMBER = "MaxCopyNumber";
-
     public final DriverCatalog DriverCatalog;
 
     public final PurplePurity mPurity;
@@ -37,7 +30,7 @@ public class DriverData implements ComparableItem
 
     public DriverData(
             final DriverCatalog driverCatalog, final PurplePurity purity, final String comparisonChromosome,
-            boolean checkTranscript, boolean isPass)
+            boolean checkTranscript, boolean isPass, final List<FieldInfo> fields)
     {
         DriverCatalog = driverCatalog;
 
@@ -48,6 +41,13 @@ public class DriverData implements ComparableItem
         String key = format("%s_%s", driverCatalog.driver(), driverCatalog.gene());
         mKey = driverCatalog.isCanonical() ? key : key + "_" + driverCatalog.transcript();
         mIsPass = isPass;
+
+        addStringValue(DriverComparer.Fields.LikelihoodMethod.toString(), driverCatalog.likelihoodMethod().toString(), fields);
+        addDoubleValue(DriverComparer.Fields.Likelihood.toString(), driverCatalog.driverLikelihood(), fields);
+        addDoubleValue(DriverComparer.Fields.MinCopyNumber.toString(), driverCatalog.minCopyNumber(), fields);
+        addDoubleValue(DriverComparer.Fields.MaxCopyNumber.toString(), driverCatalog.maxCopyNumber(), fields);
+        addStringValue(DriverComparer.Fields.Chromosome.toString(), mComparisonChromosome, fields);
+        addStringValue(DriverComparer.Fields.ChromosomeBand.toString(), driverCatalog.chromosomeBand(), fields);
     }
 
     @Override
@@ -98,14 +98,19 @@ public class DriverData implements ComparableItem
             final ComparableItem other, final MatchLevel matchLevel, final FieldCheckCache fieldConfig, final boolean includeMatches)
     {
         List<String> diffs = Lists.newArrayList();
+
+        /* TODO: fix
         List<String> alwaysCompareFields = List.of(
                 FLD_LIKE_METHOD, FLD_MIN_COPY_NUMBER, FLD_MAX_COPY_NUMBER, FLD_CHROMOSOME, FLD_CHROMOSOME_BAND);
+
         diffs.addAll(findDiffs(this, other, fieldConfig.getFields(category(), alwaysCompareFields)));
 
         if(isPass() && other.isPass())
         {
             diffs.addAll(findDiffs(this, other, fieldConfig.getFields(category(), List.of(FLD_LIKELIHOOD))));
         }
+        */
+
         return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches);
     }
 }

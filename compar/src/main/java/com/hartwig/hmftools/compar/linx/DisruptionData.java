@@ -1,22 +1,32 @@
 package com.hartwig.hmftools.compar.linx;
 
+import static com.hartwig.hmftools.compar.common.field.FieldInfo.findField;
+
 import java.util.List;
 
 import com.hartwig.hmftools.common.purple.ReportedStatus;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.ComparableItem;
+import com.hartwig.hmftools.compar.common.field.FieldInfo;
 
-public class DisruptionData implements ComparableItem
+public class DisruptionData extends ComparableItem
 {
     public final String GeneName;
     public final List<BreakendData> Breakends;
     private final CategoryType mSubCategory;
 
-    public DisruptionData(final CategoryType category, final String geneName, final List<BreakendData> breakends)
+    public DisruptionData(
+            final CategoryType category, final String geneName, final List<BreakendData> breakends, final List<FieldInfo> fields)
     {
         mSubCategory = category;
         GeneName = geneName;
         Breakends = breakends;
+
+        addBoolValue(DisruptionComparer.Fields.Reported.toString(), reportable(), fields);
+
+        mValues.put(
+                DisruptionComparer.Fields.BreakendInfo.toString(),
+                new BreakendsFieldValue(findField(DisruptionComparer.Fields.BreakendInfo.toString(), fields), breakends));
     }
 
     @Override

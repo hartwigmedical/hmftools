@@ -2,6 +2,7 @@ package com.hartwig.hmftools.compar.linx;
 
 import static java.util.Collections.emptyList;
 
+import java.util.Collections;
 import java.util.function.Consumer;
 
 import com.hartwig.hmftools.common.linx.FusionLikelihoodType;
@@ -74,6 +75,8 @@ public class TestFusionDataBuilder
                 .skippedExonsDown(-1)
                 .build();
 
-        return new FusionData(fusion, fusionName, null, null);
+        return new FusionData(
+                fusion, fusionName, null, null,
+                new FusionComparer(null, Collections.emptyMap()).fieldsList());
     }
 }

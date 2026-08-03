@@ -1,24 +1,10 @@
 package com.hartwig.hmftools.compar.purple;
 
-import static com.hartwig.hmftools.compar.purple.CopyNumberComparer.FLD_COPY_NUMBER;
-import static com.hartwig.hmftools.compar.purple.CopyNumberComparer.FLD_MAJOR_ALLELE_CN;
-import static com.hartwig.hmftools.compar.purple.CopyNumberComparer.FLD_METHOD;
-
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
-import static junit.framework.TestCase.assertEquals;
-
 import java.util.Collections;
 import java.util.Map;
 
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItemTest;
-import com.hartwig.hmftools.compar.common.FieldCheckCache;
-import com.hartwig.hmftools.compar.common.MatchLevel;
-import com.hartwig.hmftools.compar.common.Mismatch;
-import com.hartwig.hmftools.compar.common.MismatchType;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -28,15 +14,19 @@ public class CopyNumberDataTest extends ComparableItemTest<CopyNumberData, CopyN
     @Before
     public void setUp()
     {
-        comparer = new CopyNumberComparer(new ComparConfig());
+        comparer = new CopyNumberComparer(new ComparConfig(), Collections.emptyMap());
         builder = TestCopyNumberDataBuilder.BUILDER;
         CopyNumberData alternateValueSource = builder.createWithAlternateDefaults();
 
         fieldToAlternateValueInitializer = Map.of(
-                FLD_COPY_NUMBER, b -> b.copyNumber = alternateValueSource.copyNumber(),
-                FLD_MAJOR_ALLELE_CN, b -> b.majorAlleleCopyNumber = alternateValueSource.majorAlleleCopyNumber(),
-                FLD_METHOD, b -> b.method = alternateValueSource.method()
+                CopyNumberComparer.Fields.CopyNumber.toString(), b -> b.copyNumber = alternateValueSource.CopyNumber,
+                CopyNumberComparer.Fields.MajorAlleleCopyNumber.toString(), b -> b.majorAlleleCopyNumber = alternateValueSource.MajorAlleleCopyNumber,
+                CopyNumberComparer.Fields.Method.toString(), b -> b.method = alternateValueSource.Method
         );
+
+        // nameToAlternateIndexInitializer = Collections.emptyMap();
+
+        /* TODO: remove no longer support liftover
         nameToAlternateIndexInitializer = Map.of(
                 "Chromosome", b -> {
                     b.chromosome = alternateValueSource.chromosome();
@@ -52,6 +42,8 @@ public class CopyNumberDataTest extends ComparableItemTest<CopyNumberData, CopyN
                     b.comparisonPositionEnd = alternateValueSource.comparisonPositionEnd().Position;
                 }
         );
+        */
+        nameToAlternateIndexInitializer = Map.of("Chromosome", b -> b.chromosome = alternateValueSource.Chromosome);
         reportabilityFieldToFalseReportabilityInitializer = Collections.emptyMap();
         nameToNonPassInitializer = Collections.emptyMap();
     }
@@ -68,45 +60,5 @@ public class CopyNumberDataTest extends ComparableItemTest<CopyNumberData, CopyN
     public void singleFieldMismatchesAreRecognizedInReportableMode()
     {
         // Override since copy numbers are never compared in reportable mode
-    }
-
-    @Test
-    public void fullyMatchesSelfWithLiftover()
-    {
-        CopyNumberData victim = TestCopyNumberDataBuilder.BUILDER.create(b ->
-        {
-            b.comparisonChromosomeStart = "8";
-            b.comparisonChromosomeEnd = "8";
-            b.comparisonPositionStart = 15000;
-            b.comparisonPositionEnd = 25000;
-        });
-        CopyNumberData liftoverVictim = TestCopyNumberDataBuilder.BUILDER.create(b ->
-        {
-            b.chromosome = "8";
-            b.positionStart = 15000;
-            b.positionEnd = 25000;
-        });
-        MatchLevel matchLevel = MatchLevel.DETAILED;
-        FieldCheckCache fieldConfig = createDefaultThresholds(matchLevel);
-
-        assertTrue(victim.matches(liftoverVictim));
-        assertTrue(liftoverVictim.matches(victim));
-        assertNull(victim.findMismatch(liftoverVictim, matchLevel, fieldConfig, false));
-
-        Mismatch expectedMatch = new Mismatch(victim, liftoverVictim, MismatchType.FULL_MATCH, Collections.emptyList());
-        assertEquals(expectedMatch, victim.findMismatch(liftoverVictim, matchLevel, fieldConfig, true));
-    }
-
-    @Test
-    public void keyNonEmptyForLiftover()
-    {
-        CopyNumberData victim = TestCopyNumberDataBuilder.BUILDER.create(b ->
-        {
-            b.comparisonChromosomeStart = "8";
-            b.comparisonChromosomeEnd = "8";
-            b.comparisonPositionStart = 15000;
-            b.comparisonPositionEnd = 25000;
-        });
-        assertFalse(victim.key().isEmpty());
     }
 }

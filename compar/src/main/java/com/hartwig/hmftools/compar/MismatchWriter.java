@@ -288,11 +288,15 @@ public class MismatchWriter
         }
     }
 
+    @Deprecated
     private List<Field> determineDisplayFields(final ItemComparer comparer)
     {
         CategoryType category = comparer.category();
         MatchLevel matchLevel = mConfig.MatchingLevel;
-        Map<String, Field> fieldNameToField = comparer.fields(matchLevel).stream().collect(Collectors.toMap(Field::name, f -> f));
+
+        // Map<String, Field> fieldNameToField = comparer.fields(matchLevel).stream().collect(Collectors.toMap(Field::name, f -> f));
+
+        Map<String, Field> fieldNameToField = Collections.emptyMap();
 
         if(fieldNameToField.isEmpty())
             return Collections.emptyList();

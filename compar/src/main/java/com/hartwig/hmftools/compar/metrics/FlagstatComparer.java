@@ -1,13 +1,16 @@
 package com.hartwig.hmftools.compar.metrics;
 
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
-import static com.hartwig.hmftools.compar.metrics.MetricsCommon.FLD_MAPPED_PROPORTION;
+import static com.hartwig.hmftools.compar.common.FieldCheckCache.getOrMakeFieldCheck;
 import static com.hartwig.hmftools.compar.metrics.MetricsCommon.MAPPED_PROPORTION_ABS_THRESHOLD;
 import static com.hartwig.hmftools.compar.metrics.MetricsCommon.MAPPED_PROPORTION_PCT_THRESHOLD;
 import static com.hartwig.hmftools.compar.metrics.MetricsCommon.determineFlagStatsFilePath;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.metrics.BamFlagStats;
@@ -15,23 +18,29 @@ import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.CategoryType;
-import com.hartwig.hmftools.compar.common.CommonUtils;
-import com.hartwig.hmftools.compar.common.FieldCheckCache;
 import com.hartwig.hmftools.compar.common.PipelineSourcePaths;
-import com.hartwig.hmftools.compar.common.MatchLevel;
-import com.hartwig.hmftools.compar.common.Mismatch;
-import com.hartwig.hmftools.compar.common.field.DoubleField;
-import com.hartwig.hmftools.compar.common.field.Field;
+import com.hartwig.hmftools.compar.common.field.FieldCheck;
+import com.hartwig.hmftools.compar.common.field.FieldInfo;
 
-public class FlagstatComparer implements ItemComparer
+public class FlagstatComparer extends ItemComparer
 {
     public final CategoryType mCategory;
-    private final ComparConfig mConfig;
 
-    public FlagstatComparer(final CategoryType category, final ComparConfig config)
+    protected enum Fields
     {
+        MappedProportion;
+    }
+
+    public FlagstatComparer(final CategoryType category, final ComparConfig config, final Map<String, FieldCheck> fieldCheckMap)
+    {
+        super(config);
         mCategory = category;
-        mConfig = config;
+
+        mFields.add(new FieldInfo(
+                Fields.MappedProportion.toString(),
+                getOrMakeFieldCheck(
+                        fieldCheckMap, Fields.MappedProportion.toString(), MAPPED_PROPORTION_ABS_THRESHOLD, MAPPED_PROPORTION_PCT_THRESHOLD),
+                "%.2f"));
     }
 
     @Override
@@ -40,12 +49,7 @@ public class FlagstatComparer implements ItemComparer
         return mCategory;
     }
 
-    @Override
-    public boolean processSample(final String sampleId, final List<Mismatch> mismatches, final FieldCheckCache fieldConfig)
-    {
-        return CommonUtils.processSample(this, mConfig, sampleId, mismatches, fieldConfig);
-    }
-
+    /*
     @Override
     public List<Field> fields(final MatchLevel matchLevel)
     {
@@ -54,11 +58,12 @@ public class FlagstatComparer implements ItemComparer
                         true, MAPPED_PROPORTION_ABS_THRESHOLD, MAPPED_PROPORTION_PCT_THRESHOLD, "%.2f")
         );
     }
+    */
 
     @Override
     public List<String> displayFieldNames()
     {
-        return Lists.newArrayList(FLD_MAPPED_PROPORTION);
+        return Arrays.stream(Fields.values()).map(x -> x.toString()).collect(Collectors.toList());
     }
 
     @Override
@@ -68,7 +73,7 @@ public class FlagstatComparer implements ItemComparer
         try
         {
             BamFlagStats flagstat = BamFlagStats.read(determineFlagStatsFilePath(sampleId, fileSources.TumorFlagstat));
-            comparableItems.add(new FlagstatData(mCategory, flagstat));
+            comparableItems.add(new FlagstatData(mCategory, flagstat, mFields));
         }
         catch(IOException e)
         {

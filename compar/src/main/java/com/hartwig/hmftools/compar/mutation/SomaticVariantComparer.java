@@ -1,12 +1,9 @@
 package com.hartwig.hmftools.compar.mutation;
 
-import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
 import static com.hartwig.hmftools.compar.common.CategoryType.SOMATIC_VARIANT;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
-import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_QUAL;
-import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
 import static com.hartwig.hmftools.compar.common.CommonUtils.countsAsCalled;
-import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_FILTER;
+import static com.hartwig.hmftools.compar.common.FieldCheckCache.getOrMakeFieldCheck;
 import static com.hartwig.hmftools.compar.common.MismatchType.INVALID_BOTH;
 import static com.hartwig.hmftools.compar.common.MismatchType.INVALID_NEW;
 import static com.hartwig.hmftools.compar.common.MismatchType.INVALID_OLD;
@@ -18,22 +15,13 @@ import static com.hartwig.hmftools.compar.mutation.SomaticVariantData.FLD_BIALLE
 import static com.hartwig.hmftools.compar.mutation.SomaticVariantData.FLD_BIALLELIC_PROB;
 import static com.hartwig.hmftools.compar.mutation.SomaticVariantData.FLD_LPS;
 import static com.hartwig.hmftools.compar.mutation.SomaticVariantData.FLD_SUBCLONAL_LIKELIHOOD;
-import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_CANON_EFFECT;
-import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_CODING_EFFECT;
-import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_GENE;
-import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_HGVS_CODING;
-import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_HGVS_PROTEIN;
-import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_HOTSPOT;
-import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_OTHER_REPORTED;
-import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_PURITY_ADJUSTED_VAF;
-import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_TIER;
-import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_TUMOR_SUPPORTING_READ_COUNT;
-import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_TUMOR_TOTAL_READ_COUNT;
-import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_VARIANT_COPY_NUMBER;
+import static com.hartwig.hmftools.compar.mutation.VariantData.addComparerFields;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -56,23 +44,38 @@ import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.SourceData;
 import com.hartwig.hmftools.compar.common.SourceType;
-import com.hartwig.hmftools.compar.common.field.BooleanField;
-import com.hartwig.hmftools.compar.common.field.DoubleField;
-import com.hartwig.hmftools.compar.common.field.Field;
-import com.hartwig.hmftools.compar.common.field.IntField;
-import com.hartwig.hmftools.compar.common.field.StringField;
-import com.hartwig.hmftools.compar.common.field.StringListField;
+import com.hartwig.hmftools.compar.common.field.FieldCheck;
+import com.hartwig.hmftools.compar.common.field.FieldInfo;
+import com.hartwig.hmftools.compar.lilac.LilacAlleleComparer;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
-public class SomaticVariantComparer implements ItemComparer
+public class SomaticVariantComparer extends ItemComparer
 {
-    private final ComparConfig mConfig;
     private final Map<SourceType,VcfFileReader> mUnfilteredVcfReaders;
 
-    public SomaticVariantComparer(final ComparConfig config)
+    public SomaticVariantComparer(final ComparConfig config, final Map<String, FieldCheck> fieldCheckMap)
     {
-        mConfig = config;
+        super(config);
+
+        addComparerFields(mFields, fieldCheckMap);
+
+        mFields.add(new FieldInfo(
+                FLD_BIALLELIC, getOrMakeFieldCheck(fieldCheckMap, FLD_BIALLELIC), null));
+
+        mFields.add(new FieldInfo(
+                FLD_BIALLELIC_PROB,
+                getOrMakeFieldCheck(fieldCheckMap, FLD_BIALLELIC_PROB, 0.3, null),
+                "%.2f"));
+
+        mFields.add(new FieldInfo(
+                FLD_LPS, getOrMakeFieldCheck(fieldCheckMap, FLD_LPS), null));
+
+        mFields.add(new FieldInfo(
+                FLD_SUBCLONAL_LIKELIHOOD,
+                getOrMakeFieldCheck(fieldCheckMap, FLD_SUBCLONAL_LIKELIHOOD, 0.6, null),
+                "%.2f"));
+
         mUnfilteredVcfReaders = Maps.newHashMap();
     }
 
@@ -80,7 +83,7 @@ public class SomaticVariantComparer implements ItemComparer
     public CategoryType category() { return SOMATIC_VARIANT; }
 
     @Override
-    public boolean processSample(final String sampleId, final List<Mismatch> mismatches, final FieldCheckCache fieldConfig)
+    public boolean processSample(final String sampleId, final List<Mismatch> mismatches)
     {
         // use a custom method optimised for large numbers of variants
         MatchLevel matchLevel = mConfig.MatchingLevel;
@@ -88,12 +91,12 @@ public class SomaticVariantComparer implements ItemComparer
         List<SomaticVariantData> oldVariants = loadVariants(sampleId, OLD);
         List<SomaticVariantData> newVariants = loadVariants(sampleId, NEW);
 
-        return identifyMismatches(sampleId, mismatches, oldVariants, newVariants, matchLevel, fieldConfig);
+        return identifyMismatches(sampleId, mismatches, oldVariants, newVariants, matchLevel);
     }
 
     public boolean identifyMismatches(
             final String sampleId, final List<Mismatch> mismatches, final List<SomaticVariantData> oldVariants,
-            final List<SomaticVariantData> newVariants, final MatchLevel matchLevel, final FieldCheckCache fieldConfig)
+            final List<SomaticVariantData> newVariants, final MatchLevel matchLevel)
     {
         boolean hasOldItems = oldVariants != null;
         boolean hasNewItems = newVariants != null;
@@ -183,7 +186,7 @@ public class SomaticVariantComparer implements ItemComparer
 
                     if(includeMismatchWithVariant(oldVariant, matchLevel) || includeMismatchWithVariant(matchedVariant, matchLevel))
                     {
-                        Mismatch mismatch = oldVariant.findMismatch(matchedVariant, matchLevel, fieldConfig, mConfig.IncludeMatches);
+                        Mismatch mismatch = oldVariant.findMismatch(this, matchedVariant, matchLevel, mConfig.IncludeMatches);
 
                         if(mismatch != null)
                             mismatches.add(mismatch);
@@ -207,7 +210,7 @@ public class SomaticVariantComparer implements ItemComparer
 
                 if(unfilteredVariant != null)
                 {
-                    mismatches.add(unfilteredVariant.findMismatch(newVariant, matchLevel, fieldConfig, mConfig.IncludeMatches));
+                    mismatches.add(unfilteredVariant.findMismatch(this, newVariant, matchLevel, mConfig.IncludeMatches));
                 }
                 else
                 {
@@ -243,11 +246,11 @@ public class SomaticVariantComparer implements ItemComparer
             return new SomaticVariantData(
                     context.getContig(), context.getStart(), ref, alt, VariantType.type(context),
                     "", false, HotspotType.fromVariant(context), VariantTier.fromContext(context),
-                    false, 0, "", "", "", "",
-                    "", context.hasAttribute(LOCAL_PHASE_SET), (int)context.getPhredScaledQual(),
-                    0, context.getFilters(), 0, 0,
-                    tumorAllelicDepth.AlleleReadCount, tumorAllelicDepth.TotalReadCount, true, false,
-                    testVariant.Chromosome, testVariant.Position);
+                    "", "", "", "",
+                    "", (int)context.getPhredScaledQual(), context.getFilters(), 0, 0,
+                    tumorAllelicDepth.AlleleReadCount, tumorAllelicDepth.TotalReadCount, true,
+                    testVariant.Chromosome, testVariant.Position,
+                    false, 0, false, 0, mFields);
         }
 
         return null;
@@ -278,6 +281,7 @@ public class SomaticVariantComparer implements ItemComparer
         return chrVariantsMap;
     }
 
+    /*
     @Override
     public List<Field> fields(final MatchLevel matchLevel)
     {
@@ -311,6 +315,7 @@ public class SomaticVariantComparer implements ItemComparer
                         true)
         );
     }
+    */
 
     public static Set<String> deriveFilters(SomaticVariantData data)
     {
@@ -331,11 +336,11 @@ public class SomaticVariantComparer implements ItemComparer
     @Override
     public List<String> displayFieldNames()
     {
-        List<String> fieldNames = VariantCommon.sharedDisplayFieldNames();
+        List<String> fieldNames = VariantData.sharedFieldNames();
         fieldNames.add(FLD_BIALLELIC);
         fieldNames.add(FLD_BIALLELIC_PROB);
-        fieldNames.add(FLD_SUBCLONAL_LIKELIHOOD);
         fieldNames.add(FLD_LPS);
+        fieldNames.add(FLD_SUBCLONAL_LIKELIHOOD);
         return fieldNames;
     }
 
@@ -361,8 +366,9 @@ public class SomaticVariantComparer implements ItemComparer
         final List<SomaticVariantData> variants = Lists.newArrayList();
 
         // use the Purple suffix if not specified
-        boolean usePurpleVcf = fileSources.SomaticVcf.isEmpty();
-        String vcfFile = usePurpleVcf ? PurpleCommon.purpleSomaticVcfFile(fileSources.Purple, sampleId) : fileSources.SomaticVcf;
+        // boolean usePurpleVcf = fileSources.SomaticVcf.isEmpty();
+        // String vcfFile = usePurpleVcf ? PurpleCommon.purpleSomaticVcfFile(fileSources.Purple, sampleId) : fileSources.SomaticVcf;
+        String vcfFile = PurpleCommon.purpleSomaticVcfFile(fileSources.Purple, sampleId);
 
         VcfFileReader vcfFileReader = new VcfFileReader(vcfFile);
 
@@ -378,7 +384,7 @@ public class SomaticVariantComparer implements ItemComparer
                 continue;
 
             SomaticVariantData variant = SomaticVariantData.fromContext(
-                    variantContext, sampleId, false, usePurpleVcf, fileSources.Source, mConfig);
+                    variantContext, sampleId, false, fileSources.Source, mConfig, mFields);
 
             if(mConfig.RestrictToDrivers && !mConfig.DriverGenes.contains(variant.Gene))
                 continue;

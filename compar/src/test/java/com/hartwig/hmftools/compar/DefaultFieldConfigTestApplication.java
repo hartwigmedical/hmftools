@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.compar;
 
-import static com.hartwig.hmftools.compar.common.CommonUtils.initialiseFieldConfig;
-
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -58,7 +56,7 @@ public class DefaultFieldConfigTestApplication
             config.Categories.add(category);
         }
 
-        FieldCheckCache fieldConfig = initialiseFieldConfig(config);
+        FieldCheckCache fieldConfig = new FieldCheckCache(); // initialiseFieldConfig(config);
 
         String outputDir = OUTPUT_DIR + "/" + matchLevel.toString().toLowerCase();
         new File(outputDir).mkdirs();

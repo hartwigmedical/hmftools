@@ -6,16 +6,16 @@ import static java.lang.String.format;
 
 public class IntFieldValue extends FieldValue
 {
-    public final long Value;
+    public final int Value;
 
-    public IntFieldValue(final FieldInfo field, final long value)
+    public IntFieldValue(final FieldInfo field, final int value)
     {
         super(field);
         Value = value;
     }
 
     @Override
-    public boolean checkDifference(final FieldValue other)
+    public boolean hasDifference(final FieldValue other)
     {
         IntFieldValue otherValue = (IntFieldValue)other;
 

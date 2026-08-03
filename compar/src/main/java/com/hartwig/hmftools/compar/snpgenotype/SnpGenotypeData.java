@@ -2,11 +2,14 @@ package com.hartwig.hmftools.compar.snpgenotype;
 
 import static com.hartwig.hmftools.compar.common.CategoryType.SNP_GENOTYPE;
 
+import java.util.List;
+
 import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.common.CategoryType;
+import com.hartwig.hmftools.compar.common.field.FieldInfo;
 
-public class SnpGenotypeData implements ComparableItem
+public class SnpGenotypeData extends ComparableItem
 {
     public final String Chromosome;
     public final int Position;
@@ -16,8 +19,9 @@ public class SnpGenotypeData implements ComparableItem
     public final String VcfSampleId;
     public final BasePosition mComparisonPosition;
 
-    public SnpGenotypeData(final String chromosome, final int position, final String ref, final String alt, final String genotype,
-            final String vcfSampleId, final BasePosition comparisonPosition)
+    public SnpGenotypeData(
+            final String chromosome, final int position, final String ref, final String alt, final String genotype,
+            final String vcfSampleId, final BasePosition comparisonPosition, final List<FieldInfo> fields)
     {
         Chromosome = chromosome;
         Position = position;
@@ -26,6 +30,10 @@ public class SnpGenotypeData implements ComparableItem
         Genotype = genotype;
         VcfSampleId = vcfSampleId;
         mComparisonPosition = comparisonPosition;
+        
+        addStringValue(SnpGenotypeComparer.Fields.Alt.toString(), alt, fields);
+        addStringValue(SnpGenotypeComparer.Fields.Genotype.toString(), genotype, fields);
+        addStringValue(SnpGenotypeComparer.Fields.VcfSampleId.toString(), vcfSampleId, fields);
     }
 
     @Override

@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.compar.isofox;
 
+import java.util.Collections;
 import java.util.function.Consumer;
 
 import com.hartwig.hmftools.common.region.BasePosition;
@@ -65,6 +66,10 @@ public class TestNovelSpliceJunctionDataBuilder
                 .cohortFrequency(-1)
                 .build();
 
-        return new NovelSpliceJunctionData(junction, new BasePosition(comparisonChromosomeStart, comparisonPositionStart), new BasePosition(comparisonChromosomeEnd, comparisonPositionEnd));
+        return new NovelSpliceJunctionData(
+                junction,
+                new BasePosition(comparisonChromosomeStart, comparisonPositionStart),
+                new BasePosition(comparisonChromosomeEnd, comparisonPositionEnd),
+                new NovelSpliceJunctionComparer(null, Collections.emptyMap()).fieldsList());
     }
 }

@@ -3,6 +3,7 @@ package com.hartwig.hmftools.compar.lilac;
 import static com.hartwig.hmftools.common.hla.HlaCommon.MHC_CLASS_I;
 import static com.hartwig.hmftools.compar.ComparTestUtil.combine;
 
+import java.util.Collections;
 import java.util.function.Consumer;
 
 import com.hartwig.hmftools.common.hla.ImmutableLilacAllele;
@@ -82,6 +83,7 @@ public class TestLilacAlleleDataBuilder
                 .somaticSynonymous(synonymous)
                 .somaticInframeIndel(inframeIndel)
                 .build();
-        return new LilacAlleleData(alleleObject, index);
+
+        return new LilacAlleleData(alleleObject, index, new LilacAlleleComparer(null, Collections.emptyMap()).fieldsList());
     }
 }

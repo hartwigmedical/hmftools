@@ -4,22 +4,37 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.compar.common.CategoryType.COPY_NUMBER;
 
+import java.util.List;
+
 import com.hartwig.hmftools.common.purple.CopyNumberMethod;
-import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.ComparableItem;
+import com.hartwig.hmftools.compar.common.field.FieldInfo;
 
-public record CopyNumberData(
-        String chromosome,
-        int positionStart,
-        int positionEnd,
-        double copyNumber,
-        double majorAlleleCopyNumber,
-        CopyNumberMethod method,
-        BasePosition comparisonPositionStart,
-        BasePosition comparisonPositionEnd
-) implements ComparableItem
+public class CopyNumberData extends ComparableItem
 {
+    public final String Chromosome;
+    public int PositionStart;
+    public int PositionEnd;
+    public double CopyNumber;
+    public double MajorAlleleCopyNumber;
+    final CopyNumberMethod Method;
+
+    public CopyNumberData(
+            final String chromosome, int positionStart, int positionEnd, double copyNumber, double majorAlleleCopyNumber,
+            final CopyNumberMethod method, final List<FieldInfo> fields)
+    {
+        Chromosome = chromosome;
+        PositionStart = positionStart;
+        PositionEnd = positionEnd;
+        CopyNumber = copyNumber;
+        Method = method;
+
+        addDoubleValue(CopyNumberComparer.Fields.CopyNumber.toString(), copyNumber, fields);
+        addDoubleValue(CopyNumberComparer.Fields.MajorAlleleCopyNumber.toString(), majorAlleleCopyNumber, fields);
+        addStringValue(CopyNumberComparer.Fields.Method.toString(), method.toString(), fields);
+    }
+
     public CategoryType category() {
         return COPY_NUMBER;
     }
@@ -27,16 +42,7 @@ public record CopyNumberData(
     @Override
     public String key()
     {
-        if(comparisonPositionStart.equals(new BasePosition(chromosome, positionStart))
-                && comparisonPositionEnd.equals(new BasePosition(chromosome, positionEnd)))
-        {
-            return format("%s:%d_%d", chromosome, positionStart, positionEnd);
-        }
-        else
-        {
-            return format("%s:%d_%d liftover(%s_%s)", chromosome, positionStart, positionEnd,
-                    comparisonPositionStart, comparisonPositionEnd);
-        }
+        return format("%s:%d_%d", Chromosome, PositionStart, PositionEnd);
     }
 
     @Override
@@ -49,9 +55,6 @@ public record CopyNumberData(
     {
         final CopyNumberData otherCn = (CopyNumberData) other;
 
-        if(!comparisonPositionStart.Chromosome.equals(otherCn.chromosome) || !comparisonPositionEnd.Chromosome.equals(otherCn.chromosome))
-            return false;
-
-        return comparisonPositionStart.Position == otherCn.positionStart && comparisonPositionEnd.Position == otherCn.positionEnd;
+        return Chromosome.equals(otherCn.Chromosome) && PositionStart == otherCn.PositionStart && PositionEnd == otherCn.PositionEnd;
     }
 }

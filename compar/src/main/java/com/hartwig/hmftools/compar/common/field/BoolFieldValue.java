@@ -4,16 +4,16 @@ import static java.lang.String.format;
 
 public class BoolFieldValue extends FieldValue
 {
-    public final double Value;
+    public final boolean Value;
 
-    public BoolFieldValue(final FieldInfo field, final double value)
+    public BoolFieldValue(final FieldInfo field, final boolean value)
     {
         super(field);
         Value = value;
     }
 
     @Override
-    public boolean checkDifference(final FieldValue other)
+    public boolean hasDifference(final FieldValue other)
     {
         BoolFieldValue otherValue = (BoolFieldValue)other;
 
@@ -21,7 +21,7 @@ public class BoolFieldValue extends FieldValue
     }
 
     @Override
-    public String toString() { return format("%s=%s", name(), formatString()); }
+    public String toString() { return format("%s=%s", name(), Value); }
 
     @Override
     public String displayValue() { return format("%s", Value); }

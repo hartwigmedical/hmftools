@@ -127,6 +127,7 @@ public class FieldCheckCache
         return Double.parseDouble(value);
     }
 
+    /* TODO: remove
     public void registerFields(final ItemComparer comparer, final MatchLevel matchLevel)
     {
         for(Field field : comparer.fields(matchLevel))
@@ -134,6 +135,7 @@ public class FieldCheckCache
             registerField(comparer.category(), field);
         }
     }
+    */
 
     public void registerField(final CategoryType category, final Field field)
     {

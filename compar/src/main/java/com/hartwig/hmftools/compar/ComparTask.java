@@ -69,7 +69,7 @@ public class ComparTask implements Callable<Void>
 
             try
             {
-                boolean status = comparer.processSample(sampleId, mismatches, mFieldConfig);
+                boolean status = comparer.processSample(sampleId, mismatches);
 
                 if(!status)
                     ++failedTypes;

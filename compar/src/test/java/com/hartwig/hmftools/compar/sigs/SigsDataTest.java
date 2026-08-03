@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.compar.sigs;
 
-import static com.hartwig.hmftools.compar.sigs.SigsComparer.FLD_PERCENT;
-
 import java.util.Collections;
 import java.util.Map;
 
@@ -16,15 +14,15 @@ public class SigsDataTest extends ComparableItemTest<SigsData, SigsComparer, Tes
     @Before
     public void setUp()
     {
-        comparer = new SigsComparer(new ComparConfig());
+        comparer = new SigsComparer(new ComparConfig(), Collections.emptyMap());
         builder = TestSigsDataBuilder.BUILDER;
         SigsData alternateValueSource = builder.createWithAlternateDefaults();
 
         fieldToAlternateValueInitializer = Map.of(
-                FLD_PERCENT, b -> b.percent = alternateValueSource.SignatureAllocation().percent()
+                SigsComparer.Fields.Percent.toString(), b -> b.percent = alternateValueSource.Allocation.percent()
         );
         nameToAlternateIndexInitializer = Map.of(
-                "Signature", b -> b.signature = alternateValueSource.SignatureAllocation().signature()
+                "Signature", b -> b.signature = alternateValueSource.Allocation.signature()
         );
         reportabilityFieldToFalseReportabilityInitializer = Collections.emptyMap();
         nameToNonPassInitializer = Collections.emptyMap();

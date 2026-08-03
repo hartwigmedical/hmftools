@@ -2,10 +2,13 @@ package com.hartwig.hmftools.compar.virus;
 
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.CategoryType.VIRUS;
-import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
+import static com.hartwig.hmftools.compar.common.FieldCheckCache.getOrMakeFieldCheck;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.virus.AnnotatedVirusFile;
@@ -13,28 +16,40 @@ import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.CategoryType;
-import com.hartwig.hmftools.compar.common.CommonUtils;
-import com.hartwig.hmftools.compar.common.FieldCheckCache;
 import com.hartwig.hmftools.compar.common.PipelineSourcePaths;
-import com.hartwig.hmftools.compar.common.MatchLevel;
-import com.hartwig.hmftools.compar.common.Mismatch;
-import com.hartwig.hmftools.compar.common.field.BooleanField;
-import com.hartwig.hmftools.compar.common.field.DoubleField;
-import com.hartwig.hmftools.compar.common.field.Field;
-import com.hartwig.hmftools.compar.common.field.IntField;
-import com.hartwig.hmftools.compar.common.field.StringField;
+import com.hartwig.hmftools.compar.common.field.FieldCheck;
+import com.hartwig.hmftools.compar.common.field.FieldInfo;
 
-public class VirusComparer implements ItemComparer
+public class VirusComparer extends ItemComparer
 {
-    protected static final String FLD_INTEGRATIONS = "Integrations";
-    protected static final String FLD_MEAN_COVERAGE = "MeanCoverage";
-    protected static final String FLD_DRIVER_LIKELIHOOD = "DriverLikelihood";
-
-    private final ComparConfig mConfig;
-
-    public VirusComparer(final ComparConfig config)
+    protected enum Fields
     {
-        mConfig = config;
+        Reported,
+        Integrations,
+        MeanCoverage,
+        DriverLikelihood;
+    }
+
+    public VirusComparer(final ComparConfig config, final Map<String, FieldCheck> fieldCheckMap)
+    {
+        super(config);
+
+        mFields.add(new FieldInfo(
+                Fields.Reported.toString(), getOrMakeFieldCheck(fieldCheckMap, Fields.Reported.toString()), null));
+
+        mFields.add(new FieldInfo(
+                Fields.Integrations.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.Integrations.toString(), null, 0.2),
+                null));
+
+        mFields.add(new FieldInfo(
+                Fields.MeanCoverage.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.MeanCoverage.toString(), null, 0.15),
+                "%.2f"));
+
+        mFields.add(new FieldInfo(
+                Fields.DriverLikelihood.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.DriverLikelihood.toString()),null));
     }
 
     @Override
@@ -44,29 +59,9 @@ public class VirusComparer implements ItemComparer
     }
 
     @Override
-    public List<Field> fields(final MatchLevel matchLevel)
-    {
-        return List.of(
-                new BooleanField(FLD_REPORTED, i -> ((VirusData) i).Virus.reported(), true),
-                new IntField(FLD_INTEGRATIONS, i -> ((VirusData) i).Virus.integrations(),
-                        true, null, 0.20),
-                new DoubleField(FLD_MEAN_COVERAGE, i -> ((VirusData) i).Virus.meanCoverage(),
-                        true, null, 0.15, "%.2f"),
-                new StringField(FLD_DRIVER_LIKELIHOOD, i -> String.valueOf(((VirusData) i).Virus.virusDriverLikelihoodType()),
-                        true)
-        );
-    }
-
-    @Override
-    public boolean processSample(final String sampleId, final List<Mismatch> mismatches, final FieldCheckCache fieldConfig)
-    {
-        return CommonUtils.processSample(this, mConfig, sampleId, mismatches, fieldConfig);
-    }
-
-    @Override
     public List<String> displayFieldNames()
     {
-        return Lists.newArrayList(FLD_REPORTED, FLD_INTEGRATIONS, FLD_MEAN_COVERAGE, FLD_DRIVER_LIKELIHOOD);
+        return Arrays.stream(Fields.values()).map(x -> x.toString()).collect(Collectors.toList());
     }
 
     @Override
@@ -76,7 +71,7 @@ public class VirusComparer implements ItemComparer
         try
         {
             AnnotatedVirusFile.read(AnnotatedVirusFile.generateFileName(fileSources.Virus, sampleId))
-                    .forEach(v -> comparableItems.add(new VirusData(v)));
+                    .forEach(v -> comparableItems.add(new VirusData(v, mFields)));
         }
         catch(IOException e)
         {

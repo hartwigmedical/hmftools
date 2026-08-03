@@ -1,11 +1,13 @@
 package com.hartwig.hmftools.compar.metrics;
 
+import java.util.Collections;
 import java.util.function.Consumer;
 
 import com.hartwig.hmftools.common.metrics.BamFlagStats;
 import com.hartwig.hmftools.common.metrics.ImmutableBamFlagStats;
 import com.hartwig.hmftools.compar.TestComparableItemBuilder;
 import com.hartwig.hmftools.compar.common.CategoryType;
+import com.hartwig.hmftools.compar.virus.VirusComparer;
 
 public class TestFlagstatDataBuilder
 {
@@ -30,6 +32,9 @@ public class TestFlagstatDataBuilder
                 .singletonProportion(-1)
                 .build();
 
-        return new FlagstatData(CategoryType.TUMOR_FLAGSTAT, bamFlagStats);
+        return new FlagstatData(
+                CategoryType.TUMOR_FLAGSTAT,
+                bamFlagStats,
+                new FlagstatComparer(CategoryType.TUMOR_FLAGSTAT, null, Collections.emptyMap()).fieldsList());
     }
 }

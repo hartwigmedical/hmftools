@@ -2,6 +2,7 @@ package com.hartwig.hmftools.compar.lilac;
 
 import static com.hartwig.hmftools.common.hla.HlaCommon.MHC_CLASS_I;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -60,6 +61,7 @@ public class TestLilacQcDataBuilder
                 .discardedAlignmentFragments(discardedAlignmentFragments)
                 .hlaYAllele(hlaYAllele)
                 .build();
-        return new LilacQcComparData(qcData, alleles);
+
+        return new LilacQcComparData(qcData, alleles, new LilacQcComparer(null, Collections.emptyMap()).fieldsList());
     }
 }

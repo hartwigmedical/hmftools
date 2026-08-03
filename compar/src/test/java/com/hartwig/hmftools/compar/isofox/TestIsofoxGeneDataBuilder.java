@@ -2,6 +2,7 @@ package com.hartwig.hmftools.compar.isofox;
 
 import static com.hartwig.hmftools.common.purple.ReportedStatus.NONE;
 
+import java.util.Collections;
 import java.util.function.Consumer;
 
 import com.hartwig.hmftools.common.rna.GeneExpression;
@@ -39,6 +40,7 @@ public class TestIsofoxGeneDataBuilder
                 .percentileCohort(0.4)
                 .reportedStatus(NONE)
                 .build();
-        return new IsofoxGeneData(geneExpression);
+
+        return new IsofoxGeneData(geneExpression, new IsofoxGeneDataComparer(null, Collections.emptyMap()).fieldsList());
     }
 }

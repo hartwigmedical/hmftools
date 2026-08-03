@@ -29,7 +29,7 @@ public class DisruptionDataTest extends ComparableItemTest<DisruptionData, Disru
     @Before
     public void setUp()
     {
-        comparer = new DisruptionComparer(new ComparConfig());
+        comparer = new DisruptionComparer(new ComparConfig(), Collections.emptyMap());
         builder = TestDisruptionDataBuilder.BUILDER;
 
         DisruptionData alternateValueSource = builder.createWithAlternateDefaults();
@@ -60,7 +60,7 @@ public class DisruptionDataTest extends ComparableItemTest<DisruptionData, Disru
         FieldCheckCache fieldConfig = createDefaultThresholds(matchLevel);
 
         assertTrue(refVictim.matches(newVictim));
-        assertNull(refVictim.findMismatch(newVictim, matchLevel, fieldConfig, false));
+        assertNull(refVictim.findMismatch(comparer, newVictim, matchLevel, false));
     }
 
     @Test
@@ -86,7 +86,7 @@ public class DisruptionDataTest extends ComparableItemTest<DisruptionData, Disru
 
         MatchLevel matchLevel = MatchLevel.DETAILED;
         FieldCheckCache fieldConfig = createDefaultThresholds(matchLevel);
-        Mismatch mismatch = refVictim.findMismatch(newVictim, matchLevel, fieldConfig, false);
+        Mismatch mismatch = refVictim.findMismatch(comparer, newVictim, matchLevel, false);
 
         assertEquals(MismatchType.VALUE, mismatch.Type);
         assertEquals(refVictim, mismatch.OldItem);
@@ -144,12 +144,12 @@ public class DisruptionDataTest extends ComparableItemTest<DisruptionData, Disru
 
         MatchLevel matchLevel = MatchLevel.DETAILED;
         FieldCheckCache fieldConfig = createDefaultThresholds(matchLevel);
-        Mismatch mismatch = refVictim.findMismatch(newVictim, matchLevel, fieldConfig, false);
+        Mismatch mismatch = refVictim.findMismatch(comparer, newVictim, matchLevel, false);
 
         assertEquals(MismatchType.VALUE, mismatch.Type);
         assertEquals(refVictim, mismatch.OldItem);
         assertEquals(newVictim, mismatch.NewItem);
-        assertEquals(List.of("BreakendInfo(:BND chr21:41500000:0 reported REPORTED/NONE)"), mismatch.DiffValues);
+        assertEquals(List.of("Reported(true/false)", "BreakendInfo(:BND chr21:41500000:0 reported REPORTED/NONE)"), mismatch.DiffValues);
     }
 
     @Test
@@ -165,23 +165,23 @@ public class DisruptionDataTest extends ComparableItemTest<DisruptionData, Disru
 
         MatchLevel matchLevel = MatchLevel.REPORTABLE;
         FieldCheckCache fieldConfig = createDefaultThresholds(matchLevel);
-        Mismatch mismatch = reportableVictim.findMismatch(nonReportableVictim, matchLevel, fieldConfig, false);
+        Mismatch mismatch = reportableVictim.findMismatch(comparer, nonReportableVictim, matchLevel, false);
 
         assertEquals(MismatchType.OLD_ONLY, mismatch.Type);
         assertEquals(reportableVictim, mismatch.OldItem);
         assertEquals(nonReportableVictim, mismatch.NewItem);
-        assertEquals(List.of("BreakendInfo(:BND chr21:41500000:0 reported REPORTED/NONE)"), mismatch.DiffValues);
+        assertEquals(List.of("Reported(true/false)", "BreakendInfo(:BND chr21:41500000:0 reported REPORTED/NONE)"), mismatch.DiffValues);
 
-        Mismatch oppositeMismatch = nonReportableVictim.findMismatch(reportableVictim, matchLevel, fieldConfig, false);
+        Mismatch oppositeMismatch = nonReportableVictim.findMismatch(comparer, reportableVictim, matchLevel, false);
 
         assertEquals(MismatchType.NEW_ONLY, oppositeMismatch.Type);
         assertEquals(nonReportableVictim, oppositeMismatch.OldItem);
         assertEquals(reportableVictim, oppositeMismatch.NewItem);
-        assertEquals(List.of("BreakendInfo(:BND chr21:41500000:0 reported NONE/REPORTED)"), oppositeMismatch.DiffValues);
+        assertEquals(List.of("Reported(false/true)", "BreakendInfo(:BND chr21:41500000:0 reported NONE/REPORTED)"), oppositeMismatch.DiffValues);
     }
 
-    private void assertSingleFieldDifferenceInBreakendRecognized(final String field, final Consumer<TestBreakendDataBuilder> altInitializer,
-            final String expectedDiff)
+    private void assertSingleFieldDifferenceInBreakendRecognized(
+            final String field, final Consumer<TestBreakendDataBuilder> altInitializer, final String expectedDiff)
     {
         BreakendData defaultBreakend = TestBreakendDataBuilder.BUILDER.create();
         BreakendData nonDefaultBreakend = TestBreakendDataBuilder.BUILDER.create(altInitializer);
@@ -193,7 +193,7 @@ public class DisruptionDataTest extends ComparableItemTest<DisruptionData, Disru
 
         MatchLevel matchLevel = MatchLevel.DETAILED;
         FieldCheckCache fieldConfig = createDefaultThresholds(matchLevel);
-        Mismatch mismatch = refVictim.findMismatch(newVictim, matchLevel, fieldConfig, false);
+        Mismatch mismatch = refVictim.findMismatch(comparer, newVictim, matchLevel, false);
 
         assertEquals("Test difference in " + field, MismatchType.VALUE, mismatch.Type);
         assertEquals("Test difference in " + field, refVictim, mismatch.OldItem);

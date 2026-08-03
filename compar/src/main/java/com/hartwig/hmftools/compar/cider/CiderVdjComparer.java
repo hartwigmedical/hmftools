@@ -2,11 +2,12 @@ package com.hartwig.hmftools.compar.cider;
 
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.CategoryType.CDR3_SEQUENCE;
-
-import static org.apache.commons.lang3.StringUtils.capitalize;
+import static com.hartwig.hmftools.compar.common.FieldCheckCache.getOrMakeFieldCheck;
 
 import java.io.UncheckedIOException;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.cider.Cdr3SequenceFile;
@@ -14,24 +15,27 @@ import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.CategoryType;
-import com.hartwig.hmftools.compar.common.CommonUtils;
-import com.hartwig.hmftools.compar.common.FieldCheckCache;
 import com.hartwig.hmftools.compar.common.PipelineSourcePaths;
-import com.hartwig.hmftools.compar.common.MatchLevel;
-import com.hartwig.hmftools.compar.common.Mismatch;
-import com.hartwig.hmftools.compar.common.field.Field;
-import com.hartwig.hmftools.compar.common.field.StringField;
+import com.hartwig.hmftools.compar.common.field.FieldCheck;
+import com.hartwig.hmftools.compar.common.field.FieldInfo;
 
-public class CiderVdjComparer implements ItemComparer
+public class CiderVdjComparer extends ItemComparer
 {
-    protected static final String FLD_FILTER = capitalize(Cdr3SequenceFile.Column.filter.name());
-    protected static final String FLD_LOCUS = capitalize(Cdr3SequenceFile.Column.locus.name());
-
-    private final ComparConfig mConfig;
-
-    public CiderVdjComparer(final ComparConfig config)
+    protected enum Fields
     {
-        mConfig = config;
+        Filter,
+        Locus;
+    }
+
+    public CiderVdjComparer(final ComparConfig config, final Map<String, FieldCheck> fieldCheckMap)
+    {
+        super(config);
+
+        mFields.add(new FieldInfo(
+                Fields.Filter.toString(), getOrMakeFieldCheck(fieldCheckMap, Fields.Filter.toString()), null));
+
+        mFields.add(new FieldInfo(
+                Fields.Locus.toString(), getOrMakeFieldCheck(fieldCheckMap, Fields.Locus.toString()), null));
     }
 
     @Override
@@ -40,24 +44,9 @@ public class CiderVdjComparer implements ItemComparer
     }
 
     @Override
-    public List<Field> fields(final MatchLevel matchLevel)
-    {
-        return List.of(
-                new StringField(FLD_FILTER, i -> ((CiderVdjData) i).mCdr3Sequence.filter(), true),
-                new StringField(FLD_LOCUS, i -> ((CiderVdjData) i).mCdr3Sequence.locus(), true)
-        );
-    }
-
-    @Override
-    public boolean processSample(final String sampleId, final List<Mismatch> mismatches, final FieldCheckCache fieldConfig)
-    {
-        return CommonUtils.processSample(this, mConfig, sampleId, mismatches, fieldConfig);
-    }
-
-    @Override
     public List<String> displayFieldNames()
     {
-        return List.of(FLD_FILTER, FLD_LOCUS);
+        return Arrays.stream(Fields.values()).map(x -> x.name()).collect(Collectors.toList());
     }
 
     @Override
@@ -67,7 +56,7 @@ public class CiderVdjComparer implements ItemComparer
         {
             return Cdr3SequenceFile.read(Cdr3SequenceFile.generateFilename(fileSources.Cider, sampleId)).stream()
                     .filter(seq -> seq.filter().equals("PASS") || seq.filter().equals("PARTIAL"))
-                    .map(CiderVdjData::new)
+                    .map(seq -> new CiderVdjData(seq, mFields))
                     .collect(Collectors.toList());
         }
         catch(UncheckedIOException e)

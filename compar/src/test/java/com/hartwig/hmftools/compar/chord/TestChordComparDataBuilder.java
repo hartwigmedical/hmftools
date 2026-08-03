@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.compar.chord;
 
+import java.util.Collections;
 import java.util.function.Consumer;
 
 import com.hartwig.hmftools.common.chord.ChordStatus;
@@ -40,6 +41,7 @@ public class TestChordComparDataBuilder
                 .hrStatus(status)
                 .remarksHrStatus("")
                 .remarksHrdType("")
-                .build());
+                .build(),
+                new ChordComparer(null, Collections.emptyMap()).fieldsList());
     }
 }

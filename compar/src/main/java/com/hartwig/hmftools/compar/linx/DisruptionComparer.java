@@ -5,10 +5,11 @@ import static java.lang.Math.round;
 import static com.hartwig.hmftools.common.sv.StructuralVariantData.convertSvData;
 import static com.hartwig.hmftools.compar.common.CategoryType.DISRUPTION;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
-import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
 import static com.hartwig.hmftools.compar.common.CommonUtils.determineComparisonGenomePosition;
+import static com.hartwig.hmftools.compar.common.FieldCheckCache.getOrMakeFieldCheck;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -28,35 +29,42 @@ import com.hartwig.hmftools.common.sv.StructuralVariantFileLoader;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.variant.filter.AlwaysPassFilter;
 import com.hartwig.hmftools.compar.common.CategoryType;
-import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.common.FieldCheckCache;
 import com.hartwig.hmftools.compar.common.PipelineSourcePaths;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.MatchLevel;
-import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.SourceType;
-import com.hartwig.hmftools.compar.common.field.BreakendsField;
-import com.hartwig.hmftools.compar.common.field.DisplayOnlyField;
-import com.hartwig.hmftools.compar.common.field.Field;
+import com.hartwig.hmftools.compar.common.field.FieldCheck;
+import com.hartwig.hmftools.compar.common.field.FieldInfo;
 
 import htsjdk.tribble.TribbleException;
 
-public class DisruptionComparer implements ItemComparer
+public class DisruptionComparer extends ItemComparer
 {
-    protected static final String FLD_BREAKEND_INFO = "BreakendInfo";
+    protected enum Fields
+    {
+        Reported,
+        BreakendInfo;
+    }
 
-    private final ComparConfig mConfig;
+    protected static final String FLD_BREAKEND_INFO = "BreakendInfo";
 
     private final Map<SourceType,List<LinxBreakend>> mBreakends;
     private final Map<SourceType,List<StructuralVariantData>> mSvDataList;
 
-    public DisruptionComparer(final ComparConfig config)
+    public DisruptionComparer(final ComparConfig config, final Map<String, FieldCheck> fieldCheckMap)
     {
-        mConfig = config;
+        super(config);
+
         mBreakends = Maps.newHashMap();
         mSvDataList = Maps.newHashMap();
+
+        mFields.add(new FieldInfo(
+                Fields.Reported.toString(), getOrMakeFieldCheck(fieldCheckMap, Fields.Reported.toString()), null));
+
+        mFields.add(new FieldInfo(
+                Fields.BreakendInfo.toString(), getOrMakeFieldCheck(fieldCheckMap, Fields.BreakendInfo.toString()), null));
     }
 
     public Map<SourceType,List<LinxBreakend>> breakends() { return mBreakends; }
@@ -65,6 +73,7 @@ public class DisruptionComparer implements ItemComparer
     @Override
     public CategoryType category() { return DISRUPTION; }
 
+    /*
     @Override
     public List<Field> fields(final MatchLevel matchLevel)
     {
@@ -73,17 +82,12 @@ public class DisruptionComparer implements ItemComparer
                 new DisplayOnlyField(FLD_REPORTED, i -> String.valueOf(i.reportable()), i -> true)
         );
     }
-
-    @Override
-    public boolean processSample(final String sampleId, final List<Mismatch> mismatches, final FieldCheckCache fieldConfig)
-    {
-        return CommonUtils.processSample(this, mConfig, sampleId, mismatches, fieldConfig);
-    }
+    */
 
     @Override
     public List<String> displayFieldNames()
     {
-        return Lists.newArrayList(FLD_REPORTED, FLD_BREAKEND_INFO);
+        return Arrays.stream(Fields.values()).map(x -> x.toString()).collect(Collectors.toList());
     }
 
     @Override
@@ -173,7 +177,7 @@ public class DisruptionComparer implements ItemComparer
             String geneName = entry.getKey();
             List<BreakendData> geneBreakends = entry.getValue();
 
-            DisruptionData disruptionData = new DisruptionData(DISRUPTION, geneName, geneBreakends);
+            DisruptionData disruptionData = new DisruptionData(DISRUPTION, geneName, geneBreakends, mFields);
             items.add(disruptionData);
         }
 

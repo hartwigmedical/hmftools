@@ -1,27 +1,19 @@
 package com.hartwig.hmftools.compar.driver;
 
-import static java.lang.String.format;
-
 import static com.hartwig.hmftools.common.driver.DriverType.DRIVERS_LINX_GERMLINE;
 import static com.hartwig.hmftools.common.driver.DriverType.DRIVERS_LINX_SOMATIC;
 import static com.hartwig.hmftools.common.driver.DriverType.DRIVERS_PURPLE_SOMATIC_COPY_NUMBER;
-import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.compar.common.CategoryType.DRIVER;
-import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_CHROMOSOME_BAND;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.CommonUtils.determineComparisonChromosome;
+import static com.hartwig.hmftools.compar.common.FieldCheckCache.getOrMakeFieldCheck;
 import static com.hartwig.hmftools.compar.common.SourceType.NEW;
 import static com.hartwig.hmftools.compar.common.SourceType.OLD;
-import static com.hartwig.hmftools.compar.driver.DriverData.FLD_LIKELIHOOD;
-import static com.hartwig.hmftools.compar.driver.DriverData.FLD_LIKE_METHOD;
-import static com.hartwig.hmftools.compar.driver.DriverData.FLD_MAX_COPY_NUMBER;
-import static com.hartwig.hmftools.compar.driver.DriverData.FLD_MIN_COPY_NUMBER;
-import static com.hartwig.hmftools.compar.purple.PurityComparer.FLD_PLOIDY;
-import static com.hartwig.hmftools.compar.purple.PurityComparer.FLD_PURITY;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -42,22 +34,17 @@ import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.common.FieldCheckCache;
 import com.hartwig.hmftools.compar.common.PipelineSourcePaths;
-import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.SourceData;
 import com.hartwig.hmftools.compar.common.SourceType;
-import com.hartwig.hmftools.compar.common.field.DisplayOnlyField;
-import com.hartwig.hmftools.compar.common.field.DoubleField;
-import com.hartwig.hmftools.compar.common.field.Field;
-import com.hartwig.hmftools.compar.common.field.StringField;
+import com.hartwig.hmftools.compar.common.field.FieldCheck;
+import com.hartwig.hmftools.compar.common.field.FieldInfo;
+import com.hartwig.hmftools.compar.lilac.LilacAlleleComparer;
 
-public class DriverComparer implements ItemComparer
+public class DriverComparer extends ItemComparer
 {
-    private final ComparConfig mConfig;
-
     private final Map<SourceType,List<DriverCatalog>> mDrivers;
     private final Map<SourceType,PurplePurity> mPurities;
     private final Map<SourceType,List<GeneCopyNumber>> mGeneCopyNumbers;
@@ -67,9 +54,55 @@ public class DriverComparer implements ItemComparer
     private boolean mLinxSomaticDriversLoaded;
     private boolean mLinxGermlineDriversLoaded;
 
-    public DriverComparer(final ComparConfig config)
+
+    protected enum Fields
     {
-        mConfig = config;
+        LikelihoodMethod,
+        Likelihood,
+        MinCopyNumber,
+        MaxCopyNumber,
+        Chromosome,
+        ChromosomeBand,
+        Purity,
+        Ploidy;
+    }
+
+    public DriverComparer(final ComparConfig config, final Map<String, FieldCheck> fieldCheckMap)
+    {
+        super(config);
+
+        mFields.add(new FieldInfo(
+                Fields.LikelihoodMethod.toString(), getOrMakeFieldCheck(fieldCheckMap, Fields.LikelihoodMethod.toString()), null));
+
+        mFields.add(new FieldInfo(
+                Fields.Likelihood.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.Likelihood.toString(), 0.1, null),
+                "%.2f"));
+
+        mFields.add(new FieldInfo(
+                Fields.MinCopyNumber.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.MinCopyNumber.toString(), 0.3, 0.15),
+                "%.2f"));
+
+        mFields.add(new FieldInfo(
+                Fields.MaxCopyNumber.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.MaxCopyNumber.toString(), 0.3, 0.15),
+                "%.2f"));
+
+        mFields.add(new FieldInfo(
+                Fields.Chromosome.toString(), getOrMakeFieldCheck(fieldCheckMap, Fields.Chromosome.toString()), null));
+
+        mFields.add(new FieldInfo(
+                Fields.ChromosomeBand.toString(), getOrMakeFieldCheck(fieldCheckMap, Fields.ChromosomeBand.toString()), null));
+
+        // TODO: read-only
+        mFields.add(new FieldInfo(
+                Fields.Purity.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.Purity.toString()), "%.2f"));
+
+        mFields.add(new FieldInfo(
+                Fields.Ploidy.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.Ploidy.toString()), "%.2f"));
 
         mDrivers = Maps.newHashMap();
         mPurities = Maps.newHashMap();
@@ -85,26 +118,7 @@ public class DriverComparer implements ItemComparer
     public CategoryType category() { return DRIVER; }
 
     @Override
-    public List<Field> fields(final MatchLevel matchLevel)
-    {
-        return List.of(
-                new StringField(FLD_LIKE_METHOD, i -> ((DriverData) i).DriverCatalog.likelihoodMethod().toString(),
-                        true),
-                new DoubleField(FLD_LIKELIHOOD, i -> ((DriverData) i).DriverCatalog.driverLikelihood(), true,
-                        0.1, null, "%.2f"),
-                new DoubleField(FLD_MIN_COPY_NUMBER, i -> ((DriverData) i).DriverCatalog.minCopyNumber(), true,
-                        0.3, 0.15, "%.2f"),
-                new DoubleField(FLD_MAX_COPY_NUMBER, i -> ((DriverData) i).DriverCatalog.maxCopyNumber(), true,
-                        0.3, 0.15, "%.2f"),
-                new StringField(FLD_CHROMOSOME, i -> ((DriverData) i).mComparisonChromosome, true),
-                new StringField(FLD_CHROMOSOME_BAND, i -> ((DriverData) i).DriverCatalog.chromosomeBand(), true),
-                new DisplayOnlyField(FLD_PURITY, i -> format("%.2f", ((DriverData) i).mPurity.Purity), i -> true),
-                new DisplayOnlyField(FLD_PLOIDY, i -> format("%.2f", ((DriverData) i).mPurity.Ploidy), i -> true)
-        );
-    }
-
-    @Override
-    public boolean processSample(final String sampleId, final List<Mismatch> mismatches, final FieldCheckCache fieldConfig)
+    public boolean processSample(final String sampleId, final List<Mismatch> mismatches)
     {
         // load data ahead of the standard calls for cross-driver comparisons
         for(SourceData sourceData : mConfig.Sources)
@@ -116,7 +130,7 @@ public class DriverComparer implements ItemComparer
             loadData(sourceSampleId, sampleFileSources, sourceData.Type);
         }
 
-        boolean valid = CommonUtils.processSample(this, mConfig, sampleId, mismatches, fieldConfig);
+        boolean valid = CommonUtils.processSample(this, mConfig, sampleId, mismatches);
 
         mGeneCopyNumbers.clear();
         mPurities.clear();
@@ -181,7 +195,7 @@ public class DriverComparer implements ItemComparer
     @Override
     public List<String> displayFieldNames()
     {
-        return Lists.newArrayList(FLD_LIKE_METHOD, FLD_LIKELIHOOD, FLD_MIN_COPY_NUMBER, FLD_MAX_COPY_NUMBER, FLD_PURITY, FLD_PLOIDY);
+        return Arrays.stream(Fields.values()).map(x -> x.toString()).collect(Collectors.toList());
     }
 
     private List<ComparableItem> createDriverItems(final SourceType sourceType)
@@ -282,7 +296,7 @@ public class DriverComparer implements ItemComparer
     {
         boolean checkTranscript = mConfig.AlternateTranscriptDriverGenes.contains(driver.gene());
         String comparisonChromosome = determineComparisonChromosome(driver.chromosome(), mConfig.RequiresLiftover);
-        return new DriverData(driver, purity, comparisonChromosome, checkTranscript, isPass);
+        return new DriverData(driver, purity, comparisonChromosome, checkTranscript, isPass, mFields);
     }
 
     private static String generatePurpleSomaticDriverFilename(final String sampleId, final PipelineSourcePaths fileSources)

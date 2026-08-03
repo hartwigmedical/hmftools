@@ -13,7 +13,7 @@ public class StringFieldValue extends FieldValue
     }
 
     @Override
-    public boolean checkDifference(final FieldValue other)
+    public boolean hasDifference(final FieldValue other)
     {
         StringFieldValue otherValue = (StringFieldValue)other;
 

@@ -3,18 +3,18 @@ package com.hartwig.hmftools.compar.mutation;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_QUAL;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_FILTER;
-import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_CANON_EFFECT;
-import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_CODING_EFFECT;
-import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_GENE;
-import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_HGVS_CODING;
-import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_HGVS_PROTEIN;
-import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_HOTSPOT;
-import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_OTHER_REPORTED;
-import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_PURITY_ADJUSTED_VAF;
-import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_TIER;
-import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_TUMOR_SUPPORTING_READ_COUNT;
-import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_TUMOR_TOTAL_READ_COUNT;
-import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_VARIANT_COPY_NUMBER;
+import static com.hartwig.hmftools.compar.mutation.VariantData.FLD_CANON_EFFECT;
+import static com.hartwig.hmftools.compar.mutation.VariantData.FLD_CODING_EFFECT;
+import static com.hartwig.hmftools.compar.mutation.VariantData.FLD_GENE;
+import static com.hartwig.hmftools.compar.mutation.VariantData.FLD_HGVS_CODING;
+import static com.hartwig.hmftools.compar.mutation.VariantData.FLD_HGVS_PROTEIN;
+import static com.hartwig.hmftools.compar.mutation.VariantData.FLD_HOTSPOT;
+import static com.hartwig.hmftools.compar.mutation.VariantData.FLD_OTHER_REPORTED;
+import static com.hartwig.hmftools.compar.mutation.VariantData.FLD_PURITY_ADJUSTED_VAF;
+import static com.hartwig.hmftools.compar.mutation.VariantData.FLD_TIER;
+import static com.hartwig.hmftools.compar.mutation.VariantData.FLD_TUMOR_SUPPORTING_READ_COUNT;
+import static com.hartwig.hmftools.compar.mutation.VariantData.FLD_TUMOR_TOTAL_READ_COUNT;
+import static com.hartwig.hmftools.compar.mutation.VariantData.FLD_VARIANT_COPY_NUMBER;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -41,48 +41,48 @@ public class GermlineVariantDataTest extends ComparableItemTest<GermlineVariantD
     @Before
     public void setUp()
     {
-        comparer = new GermlineVariantComparer(new ComparConfig());
+        comparer = new GermlineVariantComparer(new ComparConfig(), Collections.emptyMap());
         builder = TestGermlineVariantDataBuilder.BUILDER;
         GermlineVariantData alternateValueSource = builder.createWithAlternateDefaults();
 
         fieldToAlternateValueInitializer = new HashMap<>();
-        fieldToAlternateValueInitializer.put(FLD_HOTSPOT, b -> b.hotspotStatus = alternateValueSource.Variant.hotspot());
-        fieldToAlternateValueInitializer.put(FLD_TIER, b -> b.tier = alternateValueSource.Variant.tier());
-        fieldToAlternateValueInitializer.put(FLD_GENE, b -> b.gene = alternateValueSource.Variant.gene());
-        fieldToAlternateValueInitializer.put(FLD_CANON_EFFECT, b -> b.canonicalEffect = alternateValueSource.Variant.canonicalEffect());
+        fieldToAlternateValueInitializer.put(FLD_HOTSPOT, b -> b.hotspotStatus = alternateValueSource.HotspotStatus);
+        fieldToAlternateValueInitializer.put(FLD_TIER, b -> b.tier = alternateValueSource.Tier);
+        fieldToAlternateValueInitializer.put(FLD_GENE, b -> b.gene = alternateValueSource.Gene);
+        fieldToAlternateValueInitializer.put(FLD_CANON_EFFECT, b -> b.canonicalEffect = alternateValueSource.CanonicalEffect);
         fieldToAlternateValueInitializer.put(FLD_CODING_EFFECT, b -> b.canonicalCodingEffect =
-                alternateValueSource.Variant.canonicalCodingEffect());
+                alternateValueSource.CanonicalCodingEffect);
         fieldToAlternateValueInitializer.put(FLD_HGVS_CODING, b -> b.canonicalHgvsCodingImpact =
-                alternateValueSource.Variant.canonicalHgvsCodingImpact());
+                alternateValueSource.CanonicalHgvsCodingImpact);
         fieldToAlternateValueInitializer.put(FLD_HGVS_PROTEIN, b -> b.canonicalHgvsProteinImpact =
-                alternateValueSource.Variant.canonicalHgvsProteinImpact());
+                alternateValueSource.CanonicalHgvsProteinImpact);
         fieldToAlternateValueInitializer.put(FLD_OTHER_REPORTED, b -> b.otherReportedEffects =
-                alternateValueSource.Variant.otherReportedEffects());
-        fieldToAlternateValueInitializer.put(FLD_QUAL, b -> b.qual = alternateValueSource.Variant.qual());
+                alternateValueSource.OtherReportedEffects);
+        fieldToAlternateValueInitializer.put(FLD_QUAL, b -> b.qual = alternateValueSource.Qual);
         fieldToAlternateValueInitializer.put(FLD_VARIANT_COPY_NUMBER, b -> b.variantCopyNumber =
-                alternateValueSource.Variant.variantCopyNumber());
+                alternateValueSource.VariantCopyNumber);
         fieldToAlternateValueInitializer.put(FLD_PURITY_ADJUSTED_VAF, b -> b.purityAdjustedVaf =
-                alternateValueSource.Variant.adjustedVAF());
+                alternateValueSource.PurityAdjustedVaf);
         fieldToAlternateValueInitializer.put(FLD_TUMOR_SUPPORTING_READ_COUNT, b -> b.tumorSupportingReadCount =
-                alternateValueSource.Variant.allelicDepth().AlleleReadCount);
+                alternateValueSource.TumorSupportingReadCount);
         fieldToAlternateValueInitializer.put(FLD_TUMOR_TOTAL_READ_COUNT, b -> b.tumorTotalReadCount =
-                alternateValueSource.Variant.allelicDepth().TotalReadCount);
+                alternateValueSource.TumorTotalReadCount);
         fieldToAlternateValueInitializer.put(FLD_FILTER, b -> b.filters = alternateValueSource.Filters);
 
         nameToAlternateIndexInitializer = Map.of(
                 "Chromosome", b ->
                 {
-                    b.chromosome = alternateValueSource.Variant.chromosome();
-                    b.comparisonChromosome = alternateValueSource.mComparisonPosition.Chromosome;
+                    b.chromosome = alternateValueSource.Chromosome;
+                    b.comparisonChromosome = alternateValueSource.mComparisonChromosome;
                 },
                 "Position", b ->
                 {
-                    b.position = alternateValueSource.Variant.position();
-                    b.comparisonPosition = alternateValueSource.mComparisonPosition.Position;
+                    b.position = alternateValueSource.Position;
+                    b.comparisonPosition = alternateValueSource.mComparisonPosition;
                 },
-                "Ref", b -> b.ref = alternateValueSource.Variant.ref(),
-                "Alt", b -> b.alt = alternateValueSource.Variant.alt(),
-                "Type", b -> b.type = alternateValueSource.Variant.type()
+                "Ref", b -> b.ref = alternateValueSource.Ref,
+                "Alt", b -> b.alt = alternateValueSource.Alt,
+                "Type", b -> b.type = alternateValueSource.Type
         );
         reportabilityFieldToFalseReportabilityInitializer = Map.of(FLD_REPORTED, b -> b.reported = false);
         nameToNonPassInitializer = Collections.emptyMap();
@@ -106,12 +106,12 @@ public class GermlineVariantDataTest extends ComparableItemTest<GermlineVariantD
 
         assertTrue(victim.matches(liftoverVictim));
         assertTrue(liftoverVictim.matches(victim));
-        assertNull(victim.findMismatch(liftoverVictim, MatchLevel.DETAILED, detailedFieldConfig, false));
-        assertNull(victim.findMismatch(liftoverVictim, MatchLevel.REPORTABLE, reportableFieldConfig, false));
+        assertNull(victim.findMismatch(comparer, liftoverVictim, MatchLevel.DETAILED, false));
+        assertNull(victim.findMismatch(comparer, liftoverVictim, MatchLevel.REPORTABLE, false));
 
         Mismatch expectedMatch = new Mismatch(victim, liftoverVictim, MismatchType.FULL_MATCH, Collections.emptyList());
-        assertEquals(expectedMatch, victim.findMismatch(liftoverVictim, MatchLevel.DETAILED, detailedFieldConfig, true));
-        assertEquals(expectedMatch, victim.findMismatch(liftoverVictim, MatchLevel.REPORTABLE, reportableFieldConfig, true));
+        assertEquals(expectedMatch, victim.findMismatch(comparer, liftoverVictim, MatchLevel.DETAILED, true));
+        assertEquals(expectedMatch, victim.findMismatch(comparer, liftoverVictim, MatchLevel.REPORTABLE, true));
     }
 
     @Test

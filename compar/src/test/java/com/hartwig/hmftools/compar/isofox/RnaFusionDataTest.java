@@ -1,10 +1,5 @@
 package com.hartwig.hmftools.compar.isofox;
 
-import static com.hartwig.hmftools.compar.isofox.RnaFusionComparer.FLD_JUNC_TYPE_DOWN;
-import static com.hartwig.hmftools.compar.isofox.RnaFusionComparer.FLD_JUNC_TYPE_UP;
-import static com.hartwig.hmftools.compar.isofox.RnaFusionComparer.FLD_KNOWN_TYPE;
-import static com.hartwig.hmftools.compar.isofox.RnaFusionComparer.FLD_SPLIT_FRAGS;
-
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -29,37 +24,37 @@ public class RnaFusionDataTest extends ComparableItemTest<RnaFusionData, RnaFusi
     @Before
     public void setUp()
     {
-        comparer = new RnaFusionComparer(new ComparConfig());
+        comparer = new RnaFusionComparer(new ComparConfig(), Collections.emptyMap());
         builder = TestRnaFusionDataBuilder.BUILDER;
         RnaFusionData alternateValueSource = builder.createWithAlternateDefaults();
 
         fieldToAlternateValueInitializer = Map.of(
-                FLD_KNOWN_TYPE, b -> b.knownType = alternateValueSource.RnaFusion().knownType(),
-                FLD_JUNC_TYPE_UP, b -> b.junctionTypeUp = alternateValueSource.RnaFusion().junctionTypeUp(),
-                FLD_JUNC_TYPE_DOWN, b -> b.junctionTypeDown = alternateValueSource.RnaFusion().junctionTypeDown(),
-                FLD_SPLIT_FRAGS, b -> b.splitFragments = alternateValueSource.RnaFusion().splitFragments()
+                RnaFusionComparer.Fields.KnownFusionType.toString(), b -> b.knownType = alternateValueSource.Fusion.knownType(),
+                RnaFusionComparer.Fields.JuncTypeUp.toString(), b -> b.junctionTypeUp = alternateValueSource.Fusion.junctionTypeUp(),
+                RnaFusionComparer.Fields.JuncTypeDown.toString(), b -> b.junctionTypeDown = alternateValueSource.Fusion.junctionTypeDown(),
+                RnaFusionComparer.Fields.SplitFrags.toString(), b -> b.splitFragments = alternateValueSource.Fusion.splitFragments()
         );
         nameToAlternateIndexInitializer = Map.of(
-                "FusionName", b -> b.name = alternateValueSource.RnaFusion().name(),
+                "FusionName", b -> b.name = alternateValueSource.Fusion.name(),
                 "ChromosomeUp", b ->
                 {
-                    b.chromosomeUp = alternateValueSource.RnaFusion().chromosomeUp();
-                    b.comparisonChromosomeUp = alternateValueSource.ComparisonPositionUp().Chromosome;
+                    b.chromosomeUp = alternateValueSource.Fusion.chromosomeUp();
+                    b.comparisonChromosomeUp = alternateValueSource.ComparisonPositionUp.Chromosome;
                 },
                 "ChromosomeDown", b ->
                 {
-                    b.chromosomeDown = alternateValueSource.RnaFusion().chromosomeDown();
-                    b.comparisonChromosomeDown = alternateValueSource.ComparisonPositionDown().Chromosome;
+                    b.chromosomeDown = alternateValueSource.Fusion.chromosomeDown();
+                    b.comparisonChromosomeDown = alternateValueSource.ComparisonPositionDown.Chromosome;
                 },
                 "PositionUp", b ->
                 {
-                    b.positionUp = alternateValueSource.RnaFusion().positionUp();
-                    b.comparisonPositionUp = alternateValueSource.ComparisonPositionUp().Position;
+                    b.positionUp = alternateValueSource.Fusion.positionUp();
+                    b.comparisonPositionUp = alternateValueSource.ComparisonPositionUp.Position;
                 },
                 "PositionDown", b ->
                 {
-                    b.positionDown = alternateValueSource.RnaFusion().positionDown();
-                    b.comparisonPositionDown = alternateValueSource.ComparisonPositionDown().Position;
+                    b.positionDown = alternateValueSource.Fusion.positionDown();
+                    b.comparisonPositionDown = alternateValueSource.ComparisonPositionDown.Position;
                 }
         );
         reportabilityFieldToFalseReportabilityInitializer = Collections.emptyMap();
@@ -91,10 +86,10 @@ public class RnaFusionDataTest extends ComparableItemTest<RnaFusionData, RnaFusi
 
         assertTrue(victim.matches(liftoverVictim));
         assertTrue(liftoverVictim.matches(victim));
-        assertNull(victim.findMismatch(liftoverVictim, matchLevel, fieldConfig, false));
+        assertNull(victim.findMismatch(comparer, liftoverVictim, matchLevel, false));
 
         Mismatch expectedMatch = new Mismatch(victim, liftoverVictim, MismatchType.FULL_MATCH, Collections.emptyList());
-        assertEquals(expectedMatch, victim.findMismatch(liftoverVictim, matchLevel, fieldConfig, true));
+        assertEquals(expectedMatch, victim.findMismatch(comparer, liftoverVictim, matchLevel, true));
     }
 
     @Test
@@ -108,10 +103,10 @@ public class RnaFusionDataTest extends ComparableItemTest<RnaFusionData, RnaFusi
 
         assertTrue(victim.matches(liftoverVictim));
         assertTrue(liftoverVictim.matches(victim));
-        assertNull(victim.findMismatch(liftoverVictim, matchLevel, fieldConfig, false));
+        assertNull(victim.findMismatch(comparer, liftoverVictim, matchLevel, false));
 
         Mismatch expectedMatch = new Mismatch(victim, liftoverVictim, MismatchType.FULL_MATCH, Collections.emptyList());
-        assertEquals(expectedMatch, victim.findMismatch(liftoverVictim, matchLevel, fieldConfig, true));
+        assertEquals(expectedMatch, victim.findMismatch(comparer, liftoverVictim, matchLevel, true));
     }
 
     @Test

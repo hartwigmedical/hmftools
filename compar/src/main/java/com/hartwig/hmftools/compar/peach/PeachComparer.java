@@ -3,9 +3,13 @@ package com.hartwig.hmftools.compar.peach;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.CategoryType.PEACH;
 import static com.hartwig.hmftools.compar.common.CommonUtils.fileExists;
+import static com.hartwig.hmftools.compar.common.FieldCheckCache.getOrMakeFieldCheck;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.peach.PeachGenotypeFile;
@@ -13,27 +17,37 @@ import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.CategoryType;
-import com.hartwig.hmftools.compar.common.CommonUtils;
-import com.hartwig.hmftools.compar.common.FieldCheckCache;
 import com.hartwig.hmftools.compar.common.PipelineSourcePaths;
-import com.hartwig.hmftools.compar.common.MatchLevel;
-import com.hartwig.hmftools.compar.common.Mismatch;
-import com.hartwig.hmftools.compar.common.field.Field;
-import com.hartwig.hmftools.compar.common.field.IntField;
-import com.hartwig.hmftools.compar.common.field.StringField;
+import com.hartwig.hmftools.compar.common.field.FieldCheck;
+import com.hartwig.hmftools.compar.common.field.FieldInfo;
 
-public class PeachComparer implements ItemComparer
+public class PeachComparer extends ItemComparer
 {
-    protected static final String FLD_ALLELE_COUNT = "AlleleCount";
-    protected static final String FLD_FUNCTION = "Function";
-    protected static final String FLD_DRUGS = "Drugs";
-    protected static final String FLD_PRESCRIPTION_URLS = "PrescriptionUrls";
-
-    private final ComparConfig mConfig;
-
-    public PeachComparer(final ComparConfig config)
+    protected enum Fields
     {
-        mConfig = config;
+        AlleleCount,
+        Function,
+        Drugs,
+        PrescriptionUrls;
+    }
+
+    public PeachComparer(final ComparConfig config, final Map<String, FieldCheck> fieldCheckMap)
+    {
+        super(config);
+
+        mFields.add(new FieldInfo(
+                Fields.AlleleCount.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.AlleleCount.toString(), null, null),
+                null));
+
+        mFields.add(new FieldInfo(
+                Fields.Function.toString(), getOrMakeFieldCheck(fieldCheckMap, Fields.Function.toString()), null));
+
+        mFields.add(new FieldInfo(
+                Fields.Drugs.toString(), getOrMakeFieldCheck(fieldCheckMap, Fields.Drugs.toString()), null));
+
+        mFields.add(new FieldInfo(
+                Fields.PrescriptionUrls.toString(), getOrMakeFieldCheck(fieldCheckMap, Fields.PrescriptionUrls.toString()), null));
     }
 
     @Override
@@ -43,27 +57,9 @@ public class PeachComparer implements ItemComparer
     }
 
     @Override
-    public boolean processSample(final String sampleId, final List<Mismatch> mismatches, final FieldCheckCache fieldConfig)
-    {
-        return CommonUtils.processSample(this, mConfig, sampleId, mismatches, fieldConfig);
-    }
-
-    @Override
     public List<String> displayFieldNames()
     {
-        return Lists.newArrayList(FLD_ALLELE_COUNT, FLD_FUNCTION, FLD_DRUGS, FLD_PRESCRIPTION_URLS);
-    }
-
-    @Override
-    public List<Field> fields(final MatchLevel matchLevel)
-    {
-        return List.of(
-                new IntField(FLD_ALLELE_COUNT, i -> ((PeachData) i).Genotype.alleleCount(), true,
-                        null, null),
-                new StringField(FLD_FUNCTION, i -> ((PeachData) i).Genotype.function(), true),
-                new StringField(FLD_DRUGS, i -> ((PeachData) i).Genotype.linkedDrugs(), true),
-                new StringField(FLD_PRESCRIPTION_URLS, i -> ((PeachData) i).Genotype.urlPrescriptionInfo(), true)
-        );
+        return Arrays.stream(Fields.values()).map(x -> x.toString()).collect(Collectors.toList());
     }
 
     public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final PipelineSourcePaths fileSources)
@@ -73,7 +69,7 @@ public class PeachComparer implements ItemComparer
         String fileName = determineFileName(sampleId, germlineSampleId, fileSources);
         try
         {
-            PeachGenotypeFile.read(fileName).forEach(g -> comparableItems.add(new PeachData(g)));
+            PeachGenotypeFile.read(fileName).forEach(g -> comparableItems.add(new PeachData(g, mFields)));
         }
         catch(IOException e)
         {

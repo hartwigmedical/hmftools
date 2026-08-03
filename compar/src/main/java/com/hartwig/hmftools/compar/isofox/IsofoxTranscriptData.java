@@ -1,11 +1,23 @@
 package com.hartwig.hmftools.compar.isofox;
 
+import java.util.List;
+
 import com.hartwig.hmftools.common.rna.TranscriptExpression;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.common.CategoryType;
+import com.hartwig.hmftools.compar.common.field.FieldInfo;
 
-public record IsofoxTranscriptData(TranscriptExpression TranscriptExpression) implements ComparableItem
+public class IsofoxTranscriptData extends ComparableItem
 {
+    public final TranscriptExpression Expression;
+
+    public IsofoxTranscriptData(final TranscriptExpression expression, final List<FieldInfo> fields)
+    {
+        Expression = expression;
+
+        addDoubleValue(IsofoxTranscriptDataComparer.Fields.AdjTPM.toString(), expression.tpm(), fields);
+    }
+
     @Override
     public CategoryType category()
     {
@@ -15,7 +27,7 @@ public record IsofoxTranscriptData(TranscriptExpression TranscriptExpression) im
     @Override
     public String key()
     {
-        return TranscriptExpression.transcriptName();
+        return Expression.transcriptName();
     }
 
     @Override
@@ -27,7 +39,7 @@ public record IsofoxTranscriptData(TranscriptExpression TranscriptExpression) im
     @Override
     public String geneName()
     {
-        return TranscriptExpression.geneName();
+        return Expression.geneName();
     }
 
     @Override
@@ -35,6 +47,6 @@ public record IsofoxTranscriptData(TranscriptExpression TranscriptExpression) im
     {
         final IsofoxTranscriptData otherData = (IsofoxTranscriptData)other;
 
-        return otherData.TranscriptExpression.transcriptName().equals(TranscriptExpression.transcriptName());
+        return otherData.Expression.transcriptName().equals(Expression.transcriptName());
     }
 }

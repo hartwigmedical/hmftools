@@ -4,17 +4,23 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.compar.common.CategoryType.CDR3_SEQUENCE;
 
+import java.util.List;
+
 import com.hartwig.hmftools.common.cider.Cdr3Sequence;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.common.CategoryType;
+import com.hartwig.hmftools.compar.common.field.FieldInfo;
 
-public class CiderVdjData implements ComparableItem
+public class CiderVdjData extends ComparableItem
 {
     public final Cdr3Sequence mCdr3Sequence;
 
-    public CiderVdjData(final Cdr3Sequence mCdr3Sequence)
+    public CiderVdjData(final Cdr3Sequence cdr3Sequence, final List<FieldInfo> fields)
     {
-        this.mCdr3Sequence = mCdr3Sequence;
+        mCdr3Sequence = cdr3Sequence;
+
+        addStringValue(CiderVdjComparer.Fields.Filter.toString(), cdr3Sequence.filter().toString(), fields);
+        addStringValue(CiderVdjComparer.Fields.Locus.toString(), cdr3Sequence.locus().toString(), fields);
     }
 
     @Override

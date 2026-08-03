@@ -1,8 +1,9 @@
 package com.hartwig.hmftools.compar.common;
 
 import com.hartwig.hmftools.compar.ComparableItem;
+import com.hartwig.hmftools.compar.ItemComparer;
 
-public class InvalidDataItem implements ComparableItem
+public class InvalidDataItem extends ComparableItem
 {
     private final CategoryType mCategory;
 
@@ -18,8 +19,8 @@ public class InvalidDataItem implements ComparableItem
     public boolean matches(final ComparableItem other) { return false; }
 
     @Override
-    public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final FieldCheckCache fieldConfig,
-            final boolean includeMatches)
+    public Mismatch findMismatch(
+            final ItemComparer comparer, final ComparableItem other, final MatchLevel matchLevel, final boolean includeMatches)
     {
         return null;
     }

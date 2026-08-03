@@ -1,20 +1,5 @@
 package com.hartwig.hmftools.compar.isofox;
 
-import static com.hartwig.hmftools.compar.isofox.IsofoxSummaryComparer.FLD_ALT_FRAG_PERC;
-import static com.hartwig.hmftools.compar.isofox.IsofoxSummaryComparer.FLD_CHIMERIC_FRAG_PERC;
-import static com.hartwig.hmftools.compar.isofox.IsofoxSummaryComparer.FLD_DUPLICATE_FRAGS;
-import static com.hartwig.hmftools.compar.isofox.IsofoxSummaryComparer.FLD_ENRICHED_GENE_PERC;
-import static com.hartwig.hmftools.compar.isofox.IsofoxSummaryComparer.FLD_FORWARD_STRAND_PERC;
-import static com.hartwig.hmftools.compar.isofox.IsofoxSummaryComparer.FLD_FRAG_LENGTH_50TH;
-import static com.hartwig.hmftools.compar.isofox.IsofoxSummaryComparer.FLD_FRAG_LENGTH_5TH;
-import static com.hartwig.hmftools.compar.isofox.IsofoxSummaryComparer.FLD_FRAG_LENGTH_95TH;
-import static com.hartwig.hmftools.compar.isofox.IsofoxSummaryComparer.FLD_MEDIAN_GC_RATIO;
-import static com.hartwig.hmftools.compar.isofox.IsofoxSummaryComparer.FLD_QC_STATUS;
-import static com.hartwig.hmftools.compar.isofox.IsofoxSummaryComparer.FLD_READ_LENGTH;
-import static com.hartwig.hmftools.compar.isofox.IsofoxSummaryComparer.FLD_SPLICED_FRAG_PERC;
-import static com.hartwig.hmftools.compar.isofox.IsofoxSummaryComparer.FLD_TOTAL_FRAGS;
-import static com.hartwig.hmftools.compar.isofox.IsofoxSummaryComparer.FLD_UNSPLICED_FRAG_PERC;
-
 import java.util.Collections;
 import java.util.Map;
 
@@ -29,25 +14,23 @@ public class IsofoxSummaryDataTest extends ComparableItemTest<IsofoxSummaryData,
     @Before
     public void setUp()
     {
-        comparer = new IsofoxSummaryComparer(new ComparConfig());
+        comparer = new IsofoxSummaryComparer(new ComparConfig(), Collections.emptyMap());
         builder = TestIsofoxSummaryDataBuilder.BUILDER;
         IsofoxSummaryData alternateValueSource = builder.createWithAlternateDefaults();
 
         fieldToAlternateValueInitializer = Map.ofEntries(
-                Map.entry(FLD_QC_STATUS, b -> b.qcStatus = alternateValueSource.RnaStatistics().qcStatus()),
-                Map.entry(FLD_TOTAL_FRAGS, b -> b.totalFragments = alternateValueSource.RnaStatistics().totalFragments()),
-                Map.entry(FLD_DUPLICATE_FRAGS, b -> b.duplicateFragments = alternateValueSource.RnaStatistics().duplicateFragments()),
-                Map.entry(FLD_SPLICED_FRAG_PERC, b -> b.splicedFragmentPerc = alternateValueSource.RnaStatistics().splicedFragmentPerc()),
-                Map.entry(FLD_UNSPLICED_FRAG_PERC, b -> b.unsplicedFragmentPerc = alternateValueSource.RnaStatistics().unsplicedFragmentPerc()),
-                Map.entry(FLD_ALT_FRAG_PERC, b -> b.altFragmentPerc = alternateValueSource.RnaStatistics().altFragmentPerc()),
-                Map.entry(FLD_CHIMERIC_FRAG_PERC, b -> b.chimericFragmentPerc = alternateValueSource.RnaStatistics().chimericFragmentPerc()),
-                Map.entry(FLD_READ_LENGTH, b -> b.readLength = alternateValueSource.RnaStatistics().readLength()),
-                Map.entry(FLD_FRAG_LENGTH_5TH, b -> b.fragmentLength5thPercent = alternateValueSource.RnaStatistics().fragmentLength5thPercent()),
-                Map.entry(FLD_FRAG_LENGTH_50TH, b -> b.fragmentLength50thPercent = alternateValueSource.RnaStatistics().fragmentLength50thPercent()),
-                Map.entry(FLD_FRAG_LENGTH_95TH, b -> b.fragmentLength95thPercent = alternateValueSource.RnaStatistics().fragmentLength95thPercent()),
-                Map.entry(FLD_ENRICHED_GENE_PERC, b -> b.enrichedGenePercent = alternateValueSource.RnaStatistics().enrichedGenePercent()),
-                Map.entry(FLD_MEDIAN_GC_RATIO, b -> b.medianGCRatio = alternateValueSource.RnaStatistics().medianGCRatio()),
-                Map.entry(FLD_FORWARD_STRAND_PERC, b -> b.forwardStrandPercent = alternateValueSource.RnaStatistics().forwardStrandPercent())
+                Map.entry(IsofoxSummaryComparer.Fields.QcStatus.toString(), b -> b.qcStatus = alternateValueSource.Statistics.qcStatus()),
+                Map.entry(IsofoxSummaryComparer.Fields.TotalFragments.toString(), b -> b.totalFragments = alternateValueSource.Statistics.totalFragments()),
+                Map.entry(IsofoxSummaryComparer.Fields.DuplicateFragments.toString(), b -> b.duplicateFragments = alternateValueSource.Statistics.duplicateFragments()),
+                Map.entry(IsofoxSummaryComparer.Fields.SplicedFragmentPerc.toString(), b -> b.splicedFragmentPerc = alternateValueSource.Statistics.splicedFragmentPerc()),
+                Map.entry(IsofoxSummaryComparer.Fields.UnsplicedFragmentPerc.toString(), b -> b.unsplicedFragmentPerc = alternateValueSource.Statistics.unsplicedFragmentPerc()),
+                Map.entry(IsofoxSummaryComparer.Fields.AltFragmentPerc.toString(), b -> b.altFragmentPerc = alternateValueSource.Statistics.altFragmentPerc()),
+                Map.entry(IsofoxSummaryComparer.Fields.ChimericFragmentPerc.toString(), b -> b.chimericFragmentPerc = alternateValueSource.Statistics.chimericFragmentPerc()),
+                Map.entry(IsofoxSummaryComparer.Fields.FragLength5th.toString(), b -> b.fragmentLength5thPercent = alternateValueSource.Statistics.fragmentLength5thPercent()),
+                Map.entry(IsofoxSummaryComparer.Fields.FragLength50th.toString(), b -> b.fragmentLength50thPercent = alternateValueSource.Statistics.fragmentLength50thPercent()),
+                Map.entry(IsofoxSummaryComparer.Fields.FragLength95th.toString(), b -> b.fragmentLength95thPercent = alternateValueSource.Statistics.fragmentLength95thPercent()),
+                Map.entry(IsofoxSummaryComparer.Fields.MedianGCRatio.toString(), b -> b.medianGCRatio = alternateValueSource.Statistics.medianGCRatio()),
+                Map.entry(IsofoxSummaryComparer.Fields.ForwardStrandPercent.toString(), b -> b.forwardStrandPercent = alternateValueSource.Statistics.forwardStrandPercent())
         );
         nameToAlternateIndexInitializer = Collections.emptyMap();
         reportabilityFieldToFalseReportabilityInitializer = Collections.emptyMap();

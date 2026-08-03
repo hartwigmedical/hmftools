@@ -1,13 +1,16 @@
 package com.hartwig.hmftools.compar.linx;
 
 import static com.hartwig.hmftools.compar.common.CategoryType.FUSION;
-import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
+import static com.hartwig.hmftools.compar.common.FieldCheckCache.getOrMakeFieldCheck;
 import static com.hartwig.hmftools.compar.linx.DisruptionComparer.buildBreakendData;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
@@ -15,40 +18,85 @@ import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxFusion;
 import com.hartwig.hmftools.common.sv.StructuralVariantData;
 import com.hartwig.hmftools.compar.common.CategoryType;
-import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.common.FieldCheckCache;
 import com.hartwig.hmftools.compar.common.PipelineSourcePaths;
 import com.hartwig.hmftools.compar.ItemComparer;
-import com.hartwig.hmftools.compar.common.MatchLevel;
-import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.SourceType;
-import com.hartwig.hmftools.compar.common.field.DisplayOnlyField;
-import com.hartwig.hmftools.compar.common.field.Field;
-import com.hartwig.hmftools.compar.common.field.IntField;
-import com.hartwig.hmftools.compar.common.field.StringField;
+import com.hartwig.hmftools.compar.common.field.FieldCheck;
+import com.hartwig.hmftools.compar.common.field.FieldInfo;
 
-public class FusionComparer implements ItemComparer
+public class FusionComparer extends ItemComparer
 {
-    protected static final String FLD_REPORTED_TYPE = "ReportedType";
-    protected static final String FLD_PHASED = "Phased";
-    protected static final String FLD_LIKELIHOOD = "Likelihood";
-    protected static final String FLD_EXON_UP = "FusedExonUp";
-    protected static final String FLD_EXON_DOWN = "FusedExonDown";
-    protected static final String FLD_CHAIN_LINKS = "ChainLinks";
-    protected static final String FLD_CHAIN_TERM = "ChainTerminated";
-    protected static final String FLD_DOMAINS_KEPT = "DomainsKept";
-    protected static final String FLD_DOMAINS_LOST = "DomainsLost";
-    protected static final String FLD_BREAKEND_UP = "BreakendUp";
-    protected static final String FLD_BREAKEND_DOWN = "BreakendDown";
+    protected enum Fields
+    {
+        Reported,
+        ReportedType,
+        Phased,
+        Likelihood,
+        FusedExonUp,
+        FusedExonDown,
+        ChainLinks,
+        ChainTerminated,
+        DomainsKept,
+        DomainsLost,
+        BreakendUp,
+        BreakendDown;
+    }
 
-    private final ComparConfig mConfig;
     private DisruptionComparer mDisruptionComparer;
 
-    public FusionComparer(final ComparConfig config)
+    public FusionComparer(final ComparConfig config, final Map<String, FieldCheck> fieldCheckMap)
     {
-        mConfig = config;
+        super(config);
+
+        mFields.add(new FieldInfo(
+                Fields.Reported.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.Reported.toString()), null));
+
+        mFields.add(new FieldInfo(
+                Fields.ReportedType.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.ReportedType.toString()), null));
+
+        mFields.add(new FieldInfo(
+                Fields.Phased.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.Phased.toString()), null));
+
+        mFields.add(new FieldInfo(
+                Fields.Likelihood.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.Likelihood.toString()), null));
+
+        mFields.add(new FieldInfo(
+                Fields.FusedExonUp.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.FusedExonUp.toString(), null, null), null));
+
+        mFields.add(new FieldInfo(
+                Fields.FusedExonDown.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.FusedExonDown.toString(), null, null), null));
+
+        mFields.add(new FieldInfo(
+                Fields.ChainLinks.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.ChainLinks.toString(), null, null), null));
+
+        mFields.add(new FieldInfo(
+                Fields.ChainTerminated.toString(), getOrMakeFieldCheck(fieldCheckMap, Fields.ChainTerminated.toString()), null));
+
+        mFields.add(new FieldInfo(
+                Fields.DomainsKept.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.DomainsKept.toString()), null));
+
+        mFields.add(new FieldInfo(
+                Fields.DomainsLost.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.DomainsLost.toString()), null));
+
+        mFields.add(new FieldInfo(
+                Fields.BreakendUp.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.BreakendUp.toString()), null));
+
+        mFields.add(new FieldInfo(
+                Fields.BreakendDown.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.BreakendDown.toString()), null));
+
         mDisruptionComparer = null;
     }
 
@@ -57,6 +105,7 @@ public class FusionComparer implements ItemComparer
     @Override
     public CategoryType category() { return FUSION; }
 
+    /*
     @Override
     public List<Field> fields(final MatchLevel matchLevel)
     {
@@ -81,19 +130,12 @@ public class FusionComparer implements ItemComparer
                         i -> ((FusionData) i).BreakendThree != null)
         );
     }
-
-    @Override
-    public boolean processSample(final String sampleId, final List<Mismatch> mismatches, final FieldCheckCache fieldConfig)
-    {
-        return CommonUtils.processSample(this, mConfig, sampleId, mismatches, fieldConfig);
-    }
+    */
 
     @Override
     public List<String> displayFieldNames()
     {
-        return Lists.newArrayList(
-                FLD_REPORTED, FLD_REPORTED_TYPE, FLD_PHASED, FLD_LIKELIHOOD, FLD_EXON_UP,
-                FLD_EXON_DOWN, FLD_CHAIN_LINKS, FLD_CHAIN_TERM, FLD_DOMAINS_KEPT, FLD_DOMAINS_LOST, FLD_BREAKEND_UP, FLD_BREAKEND_DOWN);
+        return Arrays.stream(Fields.values()).map(x -> x.toString()).collect(Collectors.toList());
 
         // excluded unless matching breakends can be loaded: FLD_TRANSCRIPT_UP, FLD_TRANSCRIPT_DOWN, FLD_JUNCTION_COPY_NUMBER
     }
@@ -134,7 +176,7 @@ public class FusionComparer implements ItemComparer
             BreakendData breakendStart = buildBreakend(fusion.fivePrimeBreakendId(), geneNames[0], breakends, svDataList);
             BreakendData breakendEnd = buildBreakend(fusion.threePrimeBreakendId(), geneNames[1], breakends, svDataList);
 
-            comparableItems.add(new FusionData(fusion, fusion.name(), breakendStart, breakendEnd));
+            comparableItems.add(new FusionData(fusion, fusion.name(), breakendStart, breakendEnd, mFields));
         }
 
         return comparableItems;

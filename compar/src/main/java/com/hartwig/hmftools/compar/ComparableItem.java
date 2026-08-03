@@ -2,62 +2,78 @@ package com.hartwig.hmftools.compar;
 
 import static com.hartwig.hmftools.compar.common.CommonUtils.createMismatchFromDiffs;
 import static com.hartwig.hmftools.compar.common.CommonUtils.findDiffs;
+import static com.hartwig.hmftools.compar.common.field.FieldInfo.findField;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.compar.common.CategoryType;
-import com.hartwig.hmftools.compar.common.FieldCheckCache;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
+import com.hartwig.hmftools.compar.common.field.BoolFieldValue;
+import com.hartwig.hmftools.compar.common.field.DoubleFieldValue;
+import com.hartwig.hmftools.compar.common.field.FieldInfo;
 import com.hartwig.hmftools.compar.common.field.FieldValue;
+import com.hartwig.hmftools.compar.common.field.IntFieldValue;
+import com.hartwig.hmftools.compar.common.field.LongFieldValue;
+import com.hartwig.hmftools.compar.common.field.StringFieldValue;
 
-public interface ComparableItem
+public abstract class ComparableItem
 {
-    CategoryType category();
+    protected final Map<String,FieldValue> mValues;
 
-    boolean matches(final ComparableItem other);
-
-    default Mismatch findMismatch(
-            final ComparableItem other, final MatchLevel matchLevel, final FieldCheckCache fieldConfig, final boolean includeMatches)
+    public ComparableItem()
     {
-        List<String> diffs;
+        mValues = Maps.newHashMap();
+    }
 
-        if(supportTruthsetData())
-        {
-            diffs = findDiffs(this, other);
-        }
-        else
-        {
-            diffs = findDiffs(this, other, fieldConfig.getFields(category()));
-        }
+    public abstract CategoryType category();
+    public abstract String key();
+
+    public String geneName() { return ""; }
+    public boolean reportable() { return true; }
+    public boolean isPass() { return true; }
+    public boolean isValid() { return true; }
+
+    public abstract boolean matches(final ComparableItem other);
+
+    public Mismatch findMismatch(
+            final ItemComparer comparer, final ComparableItem other, final MatchLevel matchLevel, final boolean includeMatches)
+    {
+        List<String> diffs = findDiffs(comparer, this, other);
 
         return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches);
     }
 
-    String key();
-
-    default String geneName() { return ""; }
-
-    default boolean reportable()
-    {
-        return true;
-    }
-
-    default boolean isPass()
-    {
-        return true;
-    }
-
-    default boolean isValid()
-    {
-        return true;
-    }
-
     // TODO: likely temporary
-    default boolean supportTruthsetData() { return false; }
+    public boolean supportTruthsetData() { return false; }
 
-    default Map<String,FieldValue> fieldValues() { return Collections.emptyMap(); }
-    default List<String> fieldNames() { return Collections.emptyList(); }
+    public Map<String,FieldValue> fieldValues() { return mValues; }
+
+    public void addDoubleValue(final String fieldName, final Double value, final List<FieldInfo> fields)
+    {
+        mValues.put(fieldName, new DoubleFieldValue(findField(fieldName, fields), value));
+    }
+
+    public void addIntValue(final String fieldName, final Integer value, final List<FieldInfo> fields)
+    {
+        mValues.put(fieldName, new IntFieldValue(findField(fieldName, fields), value));
+    }
+
+    public void addLongValue(final String fieldName, final Long value, final List<FieldInfo> fields)
+    {
+        mValues.put(fieldName, new LongFieldValue(findField(fieldName, fields), value));
+    }
+
+    public void addBoolValue(final String fieldName, final boolean value, final List<FieldInfo> fields)
+    {
+        mValues.put(fieldName, new BoolFieldValue(findField(fieldName, fields), value));
+    }
+
+    public void addStringValue(final String fieldName, final String value, final List<FieldInfo> fields)
+    {
+        mValues.put(fieldName, new StringFieldValue(findField(fieldName, fields), value));
+    }
+
 }

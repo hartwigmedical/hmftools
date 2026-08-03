@@ -1,13 +1,11 @@
 package com.hartwig.hmftools.compar.sigs;
 
-import static com.hartwig.hmftools.common.sigs.SignatureAllocationFile.PERCENT_FLD;
-
-import static org.apache.commons.lang3.StringUtils.capitalize;
-
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
+import static com.hartwig.hmftools.compar.common.FieldCheckCache.getOrMakeFieldCheck;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.sigs.SignatureAllocationFile;
@@ -15,17 +13,26 @@ import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.CategoryType;
-import com.hartwig.hmftools.compar.common.CommonUtils;
-import com.hartwig.hmftools.compar.common.FieldCheckCache;
 import com.hartwig.hmftools.compar.common.PipelineSourcePaths;
-import com.hartwig.hmftools.compar.common.MatchLevel;
-import com.hartwig.hmftools.compar.common.Mismatch;
-import com.hartwig.hmftools.compar.common.field.DoubleField;
-import com.hartwig.hmftools.compar.common.field.Field;
+import com.hartwig.hmftools.compar.common.field.FieldCheck;
+import com.hartwig.hmftools.compar.common.field.FieldInfo;
 
-public record SigsComparer(ComparConfig mConfig) implements ItemComparer
+public class SigsComparer extends ItemComparer
 {
-    static final String FLD_PERCENT = capitalize(PERCENT_FLD);
+    protected enum Fields
+    {
+        Percent;
+    }
+
+    public SigsComparer(final ComparConfig config, final Map<String, FieldCheck> fieldCheckMap)
+    {
+        super(config);
+
+        mFields.add(new FieldInfo(
+                Fields.Percent.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.Percent.toString(), 0.05, null),
+                "%.4f"));
+    }
 
     @Override
     public CategoryType category()
@@ -40,24 +47,9 @@ public record SigsComparer(ComparConfig mConfig) implements ItemComparer
     }
 
     @Override
-    public boolean processSample(final String sampleId, final List<Mismatch> mismatches, final FieldCheckCache fieldConfig)
-    {
-        return CommonUtils.processSample(this, mConfig, sampleId, mismatches, fieldConfig);
-    }
-
-    @Override
-    public List<Field> fields(final MatchLevel matchLevel)
-    {
-        return List.of(
-                new DoubleField(FLD_PERCENT, i -> ((SigsData) i).SignatureAllocation().percent(),
-                        true, 0.05, null, "%.4f")
-        );
-    }
-
-    @Override
     public List<String> displayFieldNames()
     {
-        return List.of(FLD_PERCENT);
+        return List.of(Fields.Percent.toString());
     }
 
     @Override
@@ -68,7 +60,7 @@ public record SigsComparer(ComparConfig mConfig) implements ItemComparer
         try
         {
             String filename = SignatureAllocationFile.generateFilename(fileSources.Sigs, sampleId);
-            SignatureAllocationFile.read(filename).stream().map(SigsData::new).forEach(comparableItems::add);
+            SignatureAllocationFile.read(filename).stream().map(x -> new SigsData(x, mFields)).forEach(comparableItems::add);
         }
         catch(IOException e)
         {

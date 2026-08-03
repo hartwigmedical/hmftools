@@ -97,7 +97,7 @@ public final class ComparerUtils
 
     public static ItemComparer createComparer(final CategoryType category, final ComparConfig config, final FieldCheckCache fieldCheckCache)
     {
-        Map<String, FieldCheck> categoryFieldOverrides = fieldCheckCache.getCategoryFieldCheckOverrides(category);
+        Map<String,FieldCheck> categoryFieldOverrides = fieldCheckCache.getCategoryFieldCheckOverrides(category);
 
         switch(category)
         {
@@ -105,97 +105,97 @@ public final class ComparerUtils
                 return new PurityComparer(config, categoryFieldOverrides);
 
             case DRIVER:
-                return new DriverComparer(config);
+                return new DriverComparer(config, categoryFieldOverrides);
 
             case COPY_NUMBER:
-                return new CopyNumberComparer(config);
+                return new CopyNumberComparer(config, categoryFieldOverrides);
 
             case GENE_COPY_NUMBER:
-                return new GeneCopyNumberComparer(config);
+                return new GeneCopyNumberComparer(config, categoryFieldOverrides);
 
             case GERMLINE_AMP_DEL:
-                return new GermlineAmpDelComparer(config);
+                return new GermlineAmpDelComparer(config, categoryFieldOverrides);
 
             case FUSION:
-                return new FusionComparer(config);
+                return new FusionComparer(config, categoryFieldOverrides);
 
             case DISRUPTION:
-                return new DisruptionComparer(config);
+                return new DisruptionComparer(config, categoryFieldOverrides);
 
             case SOMATIC_VARIANT:
-                return new SomaticVariantComparer(config);
+                return new SomaticVariantComparer(config, categoryFieldOverrides);
 
             case GERMLINE_VARIANT:
-                return new GermlineVariantComparer(config);
+                return new GermlineVariantComparer(config, categoryFieldOverrides);
 
             case CUPPA:
-                return new CuppaComparer(config);
+                return new CuppaComparer(config, categoryFieldOverrides);
 
             case CUPPA_IMAGE:
-                return new CuppaImageComparer(config);
+                return new CuppaImageComparer(config, categoryFieldOverrides);
 
             case CHORD:
-                return new ChordComparer(config);
+                return new ChordComparer(config, categoryFieldOverrides);
 
             case LILAC_QC:
-                return new LilacQcComparer(config);
+                return new LilacQcComparer(config, categoryFieldOverrides);
 
             case LILAC_ALLELE:
-                return new LilacAlleleComparer(config);
+                return new LilacAlleleComparer(config, categoryFieldOverrides);
 
             case GERMLINE_SV:
-                return new GermlineSvComparer(config);
+                return new GermlineSvComparer(config, categoryFieldOverrides);
 
             case PEACH:
-                return new PeachComparer(config);
+                return new PeachComparer(config, categoryFieldOverrides);
 
             case VIRUS:
-                return new VirusComparer(config);
+                return new VirusComparer(config, categoryFieldOverrides);
 
             case TUMOR_FLAGSTAT:
-                return new FlagstatComparer(TUMOR_FLAGSTAT, config);
+                return new FlagstatComparer(TUMOR_FLAGSTAT, config, categoryFieldOverrides);
 
             case GERMLINE_FLAGSTAT:
-                return new FlagstatComparer(GERMLINE_FLAGSTAT, config);
+                return new FlagstatComparer(GERMLINE_FLAGSTAT, config, categoryFieldOverrides);
 
             case TUMOR_BAM_METRICS:
-                return new BamMetricsComparer(TUMOR_BAM_METRICS, config);
+                return new BamMetricsComparer(TUMOR_BAM_METRICS, config, categoryFieldOverrides);
 
             case GERMLINE_BAM_METRICS:
-                return new BamMetricsComparer(GERMLINE_BAM_METRICS, config);
+                return new BamMetricsComparer(GERMLINE_BAM_METRICS, config, categoryFieldOverrides);
 
             case SNP_GENOTYPE:
-                return new SnpGenotypeComparer(config);
+                return new SnpGenotypeComparer(config, categoryFieldOverrides);
 
             case CDR3_SEQUENCE:
-                return new CiderVdjComparer(config);
+                return new CiderVdjComparer(config, categoryFieldOverrides);
 
             case CDR3_LOCUS_SUMMARY:
-                return new Cdr3LocusSummaryComparer(config);
+                return new Cdr3LocusSummaryComparer(config, categoryFieldOverrides);
 
             case TELOMERE_LENGTH:
-                return new TealComparer(config);
+                return new TealComparer(config, categoryFieldOverrides);
 
             case V_CHORD:
-                return new VChordComparer(config);
+                return new VChordComparer(config, categoryFieldOverrides);
 
             case SIGS:
-                return new SigsComparer(config);
+                return new SigsComparer(config, categoryFieldOverrides);
 
             case RNA_SUMMARY:
-                return new IsofoxSummaryComparer(config);
+                return new IsofoxSummaryComparer(config, categoryFieldOverrides);
 
             case RNA_GENE_DATA:
-                return new IsofoxGeneDataComparer(config);
+                return new IsofoxGeneDataComparer(config, categoryFieldOverrides);
 
             case RNA_TRANSCRIPT_DATA:
-                return new IsofoxTranscriptDataComparer(config);
+                return new IsofoxTranscriptDataComparer(config, categoryFieldOverrides);
 
             case NOVEL_SPLICE_JUNCTION:
-                return new NovelSpliceJunctionComparer(config);
+                return new NovelSpliceJunctionComparer(config, categoryFieldOverrides);
 
             case RNA_FUSION:
-                return new RnaFusionComparer(config);
+                return new RnaFusionComparer(config, categoryFieldOverrides);
 
             default:
                 return null;

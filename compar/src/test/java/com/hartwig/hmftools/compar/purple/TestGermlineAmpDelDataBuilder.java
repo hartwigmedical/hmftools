@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.compar.purple;
 
+import java.util.Collections;
 import java.util.function.Consumer;
 
 import com.hartwig.hmftools.common.purple.GermlineAmpDel;
@@ -16,7 +17,6 @@ public class TestGermlineAmpDelDataBuilder
     public GermlineStatus tumorStatus = GermlineStatus.HOM_DELETION;
     public double germlineCopyNumber = 1;
     public double tumorCopyNumber = 0;
-    public String comparisonChromosome = "chr7";
     public String chromosomeBand = "7q34";
 
     private static final Consumer<TestGermlineAmpDelDataBuilder> ALTERNATE_INITIALIZER = b ->
@@ -27,7 +27,6 @@ public class TestGermlineAmpDelDataBuilder
         b.tumorStatus = GermlineStatus.AMPLIFICATION;
         b.germlineCopyNumber = 2;
         b.tumorCopyNumber = 3;
-        b.comparisonChromosome = "chr13";
         b.chromosomeBand = "13q13.1";
     };
 
@@ -60,7 +59,7 @@ public class TestGermlineAmpDelDataBuilder
                         -1,
                         reported ? ReportedStatus.REPORTED : ReportedStatus.NONE
                 ),
-                comparisonChromosome
+                new GermlineAmpDelComparer(null, Collections.emptyMap()).fieldsList()
         );
     }
 }

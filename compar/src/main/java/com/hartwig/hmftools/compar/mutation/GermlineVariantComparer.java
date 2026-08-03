@@ -6,60 +6,53 @@ import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_QUAL;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
 import static com.hartwig.hmftools.compar.common.CommonUtils.determineComparisonGenomePosition;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_FILTER;
-import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_CANON_EFFECT;
-import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_CODING_EFFECT;
-import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_GENE;
-import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_HGVS_CODING;
-import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_HGVS_PROTEIN;
-import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_HOTSPOT;
-import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_OTHER_REPORTED;
-import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_PURITY_ADJUSTED_VAF;
-import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_TIER;
-import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_TUMOR_SUPPORTING_READ_COUNT;
-import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_TUMOR_TOTAL_READ_COUNT;
-import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_VARIANT_COPY_NUMBER;
+import static com.hartwig.hmftools.compar.common.FieldCheckCache.getOrMakeFieldCheck;
+import static com.hartwig.hmftools.compar.mutation.VariantData.FLD_CANON_EFFECT;
+import static com.hartwig.hmftools.compar.mutation.VariantData.FLD_CODING_EFFECT;
+import static com.hartwig.hmftools.compar.mutation.VariantData.FLD_GENE;
+import static com.hartwig.hmftools.compar.mutation.VariantData.FLD_HGVS_CODING;
+import static com.hartwig.hmftools.compar.mutation.VariantData.FLD_HGVS_PROTEIN;
+import static com.hartwig.hmftools.compar.mutation.VariantData.FLD_HOTSPOT;
+import static com.hartwig.hmftools.compar.mutation.VariantData.FLD_OTHER_REPORTED;
+import static com.hartwig.hmftools.compar.mutation.VariantData.FLD_PURITY_ADJUSTED_VAF;
+import static com.hartwig.hmftools.compar.mutation.VariantData.FLD_TIER;
+import static com.hartwig.hmftools.compar.mutation.VariantData.FLD_TUMOR_SUPPORTING_READ_COUNT;
+import static com.hartwig.hmftools.compar.mutation.VariantData.FLD_TUMOR_TOTAL_READ_COUNT;
+import static com.hartwig.hmftools.compar.mutation.VariantData.FLD_VARIANT_COPY_NUMBER;
+import static com.hartwig.hmftools.compar.mutation.VariantData.addComparerFields;
 
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.PurpleCommon;
 import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.variant.SmallVariant;
 import com.hartwig.hmftools.common.variant.SmallVariantFactory;
+import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.compar.common.CategoryType;
-import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.common.FieldCheckCache;
 import com.hartwig.hmftools.compar.common.PipelineSourcePaths;
 import com.hartwig.hmftools.compar.ItemComparer;
-import com.hartwig.hmftools.compar.common.MatchLevel;
-import com.hartwig.hmftools.compar.common.Mismatch;
-import com.hartwig.hmftools.compar.common.field.BooleanField;
-import com.hartwig.hmftools.compar.common.field.DoubleField;
-import com.hartwig.hmftools.compar.common.field.Field;
-import com.hartwig.hmftools.compar.common.field.IntField;
-import com.hartwig.hmftools.compar.common.field.StringField;
-import com.hartwig.hmftools.compar.common.field.StringListField;
+import com.hartwig.hmftools.compar.common.field.FieldCheck;
+import com.hartwig.hmftools.compar.common.field.FieldInfo;
 
-public class GermlineVariantComparer implements ItemComparer
+import htsjdk.variant.variantcontext.VariantContext;
+
+public class GermlineVariantComparer extends ItemComparer
 {
-    private final ComparConfig mConfig;
-
-    public GermlineVariantComparer(final ComparConfig config)
+    public GermlineVariantComparer(final ComparConfig config, final Map<String,FieldCheck> fieldCheckMap)
     {
-        mConfig = config;
+        super(config);
+
+        addComparerFields(mFields, fieldCheckMap);
     }
 
     @Override
     public CategoryType category() { return GERMLINE_VARIANT; }
 
-    @Override
-    public boolean processSample(final String sampleId, final List<Mismatch> mismatches, final FieldCheckCache fieldConfig)
-    {
-        return CommonUtils.processSample(this, mConfig, sampleId, mismatches, fieldConfig);
-    }
-
+    /*
     @Override
     public List<Field> fields(final MatchLevel matchLevel)
     {
@@ -88,11 +81,12 @@ public class GermlineVariantComparer implements ItemComparer
                 new StringListField(FLD_FILTER, i -> ((GermlineVariantData) i).Filters.stream().sorted().toList(), true)
         );
     }
+    */
 
     @Override
     public List<String> displayFieldNames()
     {
-        return VariantCommon.sharedDisplayFieldNames();
+        return VariantData.sharedFieldNames();
     }
 
     @Override
@@ -102,8 +96,31 @@ public class GermlineVariantComparer implements ItemComparer
 
         String vcfFile = PurpleCommon.purpleGermlineVcfFile(fileSources.Purple, sampleId);
 
+        VcfFileReader vcfFileReader = new VcfFileReader(vcfFile);
+
+        if(!vcfFileReader.fileValid())
+        {
+            CMP_LOGGER.warn("failed to read germline VCF file({})", vcfFile);
+            return null;
+        }
+
         try
         {
+            for(VariantContext variantContext : vcfFileReader.iterator())
+            {
+                if(variantContext.isFiltered())
+                    continue;
+
+                GermlineVariantData variant = GermlineVariantData.fromContext(
+                        variantContext, sampleId, false, fileSources.Source, mConfig, mFields);
+
+                if(mConfig.RestrictToDrivers && !mConfig.DriverGenes.contains(variant.Gene))
+                    continue;
+
+                comparableItems.add(variant);
+            }
+
+            /*
             List<SmallVariant> variants = SmallVariantFactory.loadVariants(sampleId, vcfFile);
             for(SmallVariant variant : variants)
             {
@@ -111,9 +128,14 @@ public class GermlineVariantComparer implements ItemComparer
                 {
                     BasePosition comparisonPosition = determineComparisonGenomePosition(
                             variant.chromosome(), variant.position(), fileSources.Source, mConfig.RequiresLiftover, mConfig.LiftoverCache);
-                    comparableItems.add(new GermlineVariantData(variant, comparisonPosition));
+
+                    GermlineVariantData variant = GermlineVariantData.fromContext(
+                            variantContext, sampleId, false, fileSources.Source, mConfig, mFields);
+
+                    comparableItems.add(new GermlineVariantData(variant, comparisonPosition, mFields));
                 }
             }
+            */
 
             CMP_LOGGER.debug("sample({}) loaded {} {} germline variants", sampleId, fileSources.Source, comparableItems.size());
         }

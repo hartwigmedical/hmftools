@@ -26,7 +26,7 @@ public class TestSomaticVariantDataBuilder
     public String canonicalCodingEffect = "MISSENSE";
     public String canonicalHgvsCodingImpact = "c.1799T>A";
     public String canonicalHgvsProteinImpact = "p.Val600Glu";
-    public String otherReportedEffects = null;
+    public String otherReportedEffects = "";
     public boolean hasLPS = false;
     public int qual = 275;
     public double subclonalLikelihood = 0.;
@@ -36,7 +36,6 @@ public class TestSomaticVariantDataBuilder
     public int tumorTotalReadCount = 116;
     public int tumorSupportingReadCount = 21;
     public boolean isFromUnfilteredVcf = false;
-    public boolean hasPurpleAnnotation = true;
     public String comparisonChromosome = "7";
     public int comparisonPosition = 140453136;
 
@@ -79,9 +78,12 @@ public class TestSomaticVariantDataBuilder
 
     private SomaticVariantData build()
     {
-        return new SomaticVariantData(chromosome, position, ref, alt, type, gene, reported, hotspotStatus, tier, biallelic, biallelicProb,
-                canonicalEffect, canonicalCodingEffect, canonicalHgvsCodingImpact, canonicalHgvsProteinImpact, otherReportedEffects, hasLPS,
-                qual, subclonalLikelihood, filters, variantCopyNumber, purityAdjustedVaf, tumorSupportingReadCount, tumorTotalReadCount,
-                isFromUnfilteredVcf, hasPurpleAnnotation, comparisonChromosome, comparisonPosition);
+        return new SomaticVariantData(
+                chromosome, position, ref, alt, type, gene, reported, hotspotStatus, tier,
+                canonicalEffect, canonicalCodingEffect, canonicalHgvsCodingImpact, canonicalHgvsProteinImpact, otherReportedEffects,
+                qual, filters, variantCopyNumber, purityAdjustedVaf, tumorSupportingReadCount, tumorTotalReadCount,
+                isFromUnfilteredVcf, comparisonChromosome, comparisonPosition,
+                biallelic, biallelicProb, hasLPS, subclonalLikelihood,
+                new SomaticVariantComparer(null, Collections.emptyMap()).fieldsList());
     }
 }

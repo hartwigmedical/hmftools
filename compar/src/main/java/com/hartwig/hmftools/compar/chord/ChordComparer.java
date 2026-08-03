@@ -4,74 +4,71 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDir
 import static com.hartwig.hmftools.compar.common.CategoryType.CHORD;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.CommonUtils.fileExists;
+import static com.hartwig.hmftools.compar.common.FieldCheckCache.getOrMakeFieldCheck;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.chord.ChordData;
 import com.hartwig.hmftools.common.chord.ChordDataFile;
 import com.hartwig.hmftools.compar.common.CategoryType;
-import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.common.FieldCheckCache;
 import com.hartwig.hmftools.compar.common.PipelineSourcePaths;
 import com.hartwig.hmftools.compar.ItemComparer;
-import com.hartwig.hmftools.compar.common.MatchLevel;
-import com.hartwig.hmftools.compar.common.Mismatch;
-import com.hartwig.hmftools.compar.common.field.DoubleField;
-import com.hartwig.hmftools.compar.common.field.Field;
-import com.hartwig.hmftools.compar.common.field.StringField;
+import com.hartwig.hmftools.compar.common.field.FieldCheck;
+import com.hartwig.hmftools.compar.common.field.FieldInfo;
 
-public class ChordComparer implements ItemComparer
+public class ChordComparer extends ItemComparer
 {
     private static final String OLD_CHORD_FILE_EXTENSION = "_chord_prediction.txt";
 
-    protected static final String FLD_BRCA1 = "BRCA1";
-    protected static final String FLD_BRCA2 = "BRCA2";
-    protected static final String FLD_STATUS = "Status";
-    protected static final String FLD_TYPE = "Type";
-    protected static final String FLD_SCORE = "Score";
-
-    private final ComparConfig mConfig;
-
-    public ChordComparer(final ComparConfig config)
+    protected enum Fields
     {
-        mConfig = config;
+        BRCA1,
+        BRCA2,
+        Score,
+        Type,
+        Status;
+    }
+
+    public ChordComparer(final ComparConfig config, final Map<String, FieldCheck> fieldCheckMap)
+    {
+        super(config);
+
+        mFields.add(new FieldInfo(
+                Fields.BRCA1.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.BRCA1.toString(), 0.1, null),
+                "%.2f"));
+
+        mFields.add(new FieldInfo(
+                Fields.BRCA2.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.BRCA2.toString(), 0.1, null),
+                "%.2f"));
+
+        mFields.add(new FieldInfo(
+                Fields.Score.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.Score.toString(), 0.1, null),
+                "%.2f"));
+
+        mFields.add(new FieldInfo(
+                Fields.Type.toString(), getOrMakeFieldCheck(fieldCheckMap, Fields.Type.toString()), null));
+
+        mFields.add(new FieldInfo(
+                Fields.Status.toString(), getOrMakeFieldCheck(fieldCheckMap, Fields.Status.toString()), null));
     }
 
     @Override
-    public CategoryType category()
-    {
-        return CHORD;
-    }
-
-    @Override
-    public List<Field> fields(final MatchLevel matchLevel)
-    {
-        return List.of(
-                new DoubleField(FLD_BRCA1, i -> ((ChordComparData) i).Chord.BRCA1Value(), true,
-                        0.1, null, "%.2f"),
-                new DoubleField(FLD_BRCA2, i -> ((ChordComparData) i).Chord.BRCA2Value(), true,
-                        0.1, null, "%.2f"),
-                new DoubleField(FLD_SCORE, i -> ((ChordComparData) i).Chord.hrdValue(), true,
-                        0.1, null, "%.2f"),
-                new StringField(FLD_TYPE, i -> ((ChordComparData) i).Chord.hrdType(), true),
-                new StringField(FLD_STATUS, i -> ((ChordComparData) i).Chord.hrStatus().toString(), true)
-        );
-    }
-
-    @Override
-    public boolean processSample(final String sampleId, final List<Mismatch> mismatches, final FieldCheckCache fieldConfig)
-    {
-        return CommonUtils.processSample(this, mConfig, sampleId, mismatches, fieldConfig);
-    }
+    public CategoryType category() { return CHORD; }
 
     @Override
     public List<String> displayFieldNames()
     {
-        return Lists.newArrayList(FLD_BRCA1, FLD_BRCA2, FLD_SCORE, FLD_STATUS, FLD_TYPE);
+        return Arrays.stream(Fields.values()).map(x -> x.toString()).collect(Collectors.toList());
     }
 
     @Override
@@ -82,7 +79,7 @@ public class ChordComparer implements ItemComparer
         try
         {
             ChordData chordData = ChordDataFile.read(determineChordFilePath(sampleId, fileSources));
-            comparableItems.add(new ChordComparData(chordData));
+            comparableItems.add(new ChordComparData(chordData, mFields));
         }
         catch(IOException e)
         {

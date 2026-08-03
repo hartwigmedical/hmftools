@@ -6,6 +6,7 @@ import static org.junit.Assert.assertTrue;
 import static junit.framework.TestCase.assertEquals;
 
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -30,14 +31,14 @@ public class ComparTestUtil
     }
 
     public static void assertSingleFieldMismatch(
-            final String field, final ComparableItem refVictim, final ComparableItem newVictim,
-            final MatchLevel matchLevel, final FieldCheckCache fieldConfig, final MismatchType expectedMismatchType)
+            final ItemComparer comparer, final String field, final ComparableItem refVictim, final ComparableItem newVictim,
+            final MatchLevel matchLevel, final MismatchType expectedMismatchType)
     {
         String testMessage = "Test mismatch in field '" + field + "' at match level '" + matchLevel + "'";
         assertTrue(testMessage, refVictim.matches(newVictim));
         assertTrue(testMessage, newVictim.matches(refVictim));
 
-        Mismatch detailedMismatch = refVictim.findMismatch(newVictim, matchLevel, fieldConfig, false);
+        Mismatch detailedMismatch = refVictim.findMismatch(comparer, newVictim, matchLevel, false);
 
         assertNotNull(testMessage, detailedMismatch);
         assertEquals(testMessage, expectedMismatchType, detailedMismatch.Type);

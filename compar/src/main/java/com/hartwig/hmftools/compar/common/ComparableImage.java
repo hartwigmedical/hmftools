@@ -1,26 +1,36 @@
-package com.hartwig.hmftools.compar;
+package com.hartwig.hmftools.compar.common;
 
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
+import static com.hartwig.hmftools.compar.common.ImageComparer.FLD_DIMENSIONS;
+import static com.hartwig.hmftools.compar.common.ImageComparer.FLD_PIXELS;
+import static com.hartwig.hmftools.compar.common.field.FieldInfo.findField;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
 import javax.imageio.ImageIO;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.hartwig.hmftools.compar.ComparableItem;
+import com.hartwig.hmftools.compar.common.field.FieldInfo;
+import com.hartwig.hmftools.compar.common.field.PixelFieldValue;
 
-public abstract class ComparableImage implements ComparableItem
+public abstract class ComparableImage extends ComparableItem
 {
     public final String Name;
     public final String Path;
     public final BufferedImage Image;
 
-    public ComparableImage(String name, String path)
+    public ComparableImage(final String name, final String path, final List<FieldInfo> fields)
     {
         Name = name;
         Path = path;
         Image = loadImage(path);
+
+        addStringValue(FLD_DIMENSIONS, dimensionString(), fields);
+        mValues.put(FLD_PIXELS, new PixelFieldValue(findField(FLD_PIXELS, fields), Image));
     }
 
     @VisibleForTesting

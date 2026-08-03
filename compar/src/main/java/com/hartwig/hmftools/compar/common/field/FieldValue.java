@@ -16,12 +16,17 @@ public abstract class FieldValue
     public String name() { return Field.name(); }
     public String formatString() { return Field.formatString(); }
 
-    public abstract boolean checkDifference(final FieldValue other);
+    public abstract boolean hasDifference(final FieldValue other);
 
     public abstract String toString();
     public abstract String displayValue();
 
-    public static void addDiffInfo(final FieldValue oldValue, final FieldValue newValue, final List<String> diffs)
+    public void addDiffInfo(final FieldValue oldValue, final FieldValue newValue, final List<String> diffs)
+    {
+        addDiffDisplayInfo(oldValue, newValue, diffs);
+    }
+
+    public static void addDiffDisplayInfo(final FieldValue oldValue, final FieldValue newValue, final List<String> diffs)
     {
         diffs.add(format("%s(%s/%s)", oldValue.name(), oldValue.displayValue(), newValue.displayValue()));
     }

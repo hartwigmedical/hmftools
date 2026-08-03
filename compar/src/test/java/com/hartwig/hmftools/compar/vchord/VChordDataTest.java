@@ -1,11 +1,5 @@
 package com.hartwig.hmftools.compar.vchord;
 
-import static com.hartwig.hmftools.compar.vchord.VChordComparer.FLD_BREAST;
-import static com.hartwig.hmftools.compar.vchord.VChordComparer.FLD_OTHER;
-import static com.hartwig.hmftools.compar.vchord.VChordComparer.FLD_OVARIAN;
-import static com.hartwig.hmftools.compar.vchord.VChordComparer.FLD_PANCREATIC;
-import static com.hartwig.hmftools.compar.vchord.VChordComparer.FLD_PROSTATE;
-
 import java.util.Collections;
 import java.util.Map;
 
@@ -19,15 +13,13 @@ public class VChordDataTest extends ComparableItemTest<VChordData, VChordCompare
     @Before
     public void setUp()
     {
-        comparer = new VChordComparer(new ComparConfig());
+        comparer = new VChordComparer(new ComparConfig(), Collections.emptyMap());
         builder = TestVChordDataBuilder.BUILDER;
         VChordData alternateValueSource = builder.createWithAlternateDefaults();
         fieldToAlternateValueInitializer = Map.of(
-                FLD_BREAST, b -> b.breast = alternateValueSource.VChord().breastCancerHrdScore(),
-                FLD_OVARIAN, b -> b.ovarian = alternateValueSource.VChord().ovarianCancerHrdScore(),
-                FLD_PANCREATIC, b -> b.pancreatic = alternateValueSource.VChord().pancreaticCancerScore(),
-                FLD_PROSTATE, b -> b.prostate = alternateValueSource.VChord().prostateCancerScore(),
-                FLD_OTHER, b -> b.other = alternateValueSource.VChord().otherCancerScore()
+                VChordComparer.Fields.BreastCancerHrdScore.toString(), b -> b.breast = alternateValueSource.Prediction.breastCancerHrdScore(),
+                VChordComparer.Fields.OvarianCancerHrdScore.toString(), b -> b.ovarian = alternateValueSource.Prediction.ovarianCancerHrdScore(),
+                VChordComparer.Fields.OtherCancerScore.toString(), b -> b.other = alternateValueSource.Prediction.otherCancerScore()
         );
         nameToAlternateIndexInitializer = Collections.emptyMap();
         reportabilityFieldToFalseReportabilityInitializer = Collections.emptyMap();

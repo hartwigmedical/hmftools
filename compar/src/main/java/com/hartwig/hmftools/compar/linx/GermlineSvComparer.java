@@ -3,14 +3,15 @@ package com.hartwig.hmftools.compar.linx;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.compar.common.CategoryType.GERMLINE_SV;
-import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.CommonUtils.determineComparisonGenomePosition;
-import static com.hartwig.hmftools.compar.linx.DisruptionComparer.FLD_BREAKEND_INFO;
+import static com.hartwig.hmftools.compar.common.FieldCheckCache.getOrMakeFieldCheck;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -19,49 +20,40 @@ import com.hartwig.hmftools.common.linx.LinxGermlineDisruption;
 import com.hartwig.hmftools.common.purple.ReportedStatus;
 import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.compar.common.CategoryType;
-import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.common.FieldCheckCache;
 import com.hartwig.hmftools.compar.common.PipelineSourcePaths;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.MatchLevel;
-import com.hartwig.hmftools.compar.common.Mismatch;
-import com.hartwig.hmftools.compar.common.field.BreakendsField;
-import com.hartwig.hmftools.compar.common.field.DisplayOnlyField;
-import com.hartwig.hmftools.compar.common.field.Field;
+import com.hartwig.hmftools.compar.common.field.FieldCheck;
+import com.hartwig.hmftools.compar.common.field.FieldInfo;
 
-public class GermlineSvComparer implements ItemComparer
+public class GermlineSvComparer extends ItemComparer
 {
-    private final ComparConfig mConfig;
-
-    public GermlineSvComparer(final ComparConfig config)
+    protected enum Fields
     {
-        mConfig = config;
+        Reported,
+        BreakendInfo;
+    }
+
+    public GermlineSvComparer(final ComparConfig config, final Map<String, FieldCheck> fieldCheckMap)
+    {
+        super(config);
+
+        mFields.add(new FieldInfo(
+                Fields.Reported.toString(), getOrMakeFieldCheck(fieldCheckMap, Fields.Reported.toString()), null));
+
+        mFields.add(new FieldInfo(
+                Fields.BreakendInfo.toString(), getOrMakeFieldCheck(fieldCheckMap, Fields.BreakendInfo.toString()), null));
     }
 
     @Override
     public CategoryType category() { return GERMLINE_SV; }
 
     @Override
-    public List<Field> fields(final MatchLevel matchLevel)
-    {
-        return List.of(
-                new BreakendsField(FLD_BREAKEND_INFO, i -> ((DisruptionData) i).Breakends, true),
-                new DisplayOnlyField(FLD_REPORTED, i -> String.valueOf(i.reportable()), i -> true)
-        );
-    }
-
-    @Override
-    public boolean processSample(final String sampleId, final List<Mismatch> mismatches, final FieldCheckCache fieldConfig)
-    {
-        return CommonUtils.processSample(this, mConfig, sampleId, mismatches, fieldConfig);
-    }
-
-    @Override
     public List<String> displayFieldNames()
     {
-        return Lists.newArrayList(FLD_REPORTED, FLD_BREAKEND_INFO);
+        return Arrays.stream(Fields.values()).map(x -> x.toString()).collect(Collectors.toList());
     }
 
     @Override
@@ -133,7 +125,7 @@ public class GermlineSvComparer implements ItemComparer
                 String geneName = entry.getKey();
                 List<BreakendData> geneBreakends = entry.getValue();
 
-                DisruptionData disruptionData = new DisruptionData(GERMLINE_SV, geneName, geneBreakends);
+                DisruptionData disruptionData = new DisruptionData(GERMLINE_SV, geneName, geneBreakends, mFields);
                 items.add(disruptionData);
             }
         }

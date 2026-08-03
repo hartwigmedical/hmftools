@@ -3,7 +3,6 @@ package com.hartwig.hmftools.compar.common;
 import static com.hartwig.hmftools.common.genome.refgenome.GenomeLiftoverCache.UNMAPPED_POSITION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
-import static com.hartwig.hmftools.compar.ComparerUtils.createComparer;
 import static com.hartwig.hmftools.compar.common.MatchLevel.REPORTABLE;
 import static com.hartwig.hmftools.compar.common.MismatchType.FULL_MATCH;
 import static com.hartwig.hmftools.compar.common.MismatchType.INVALID_BOTH;
@@ -30,7 +29,7 @@ import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.field.Field;
-import com.hartwig.hmftools.compar.common.field.FieldCheck;
+import com.hartwig.hmftools.compar.common.field.FieldInfo;
 import com.hartwig.hmftools.compar.common.field.FieldValue;
 
 public class CommonUtils
@@ -42,8 +41,7 @@ public class CommonUtils
 
     // TODO: move elsewhere
     public static boolean processSample(
-            final ItemComparer comparer, final ComparConfig config, final String sampleId,
-            final List<Mismatch> mismatches, final FieldCheckCache fieldCheckCache)
+            final ItemComparer comparer, final ComparConfig config, final String sampleId, final List<Mismatch> mismatches)
     {
         MatchLevel matchLevel = config.MatchingLevel;
 
@@ -55,17 +53,15 @@ public class CommonUtils
             String sourceReferenceId = config.sourceReferenceId(source.Type, sampleId);
             List<ComparableItem> items = null;
 
-            Map<String,FieldCheck> fieldCheckOverrides = fieldCheckCache.getCategoryFieldCheckOverrides(comparer.category());
-
             if(source.PipelinePaths != null)
             {
                 PipelineSourcePaths fileSources = PipelineSourcePaths.sampleInstance(source.PipelinePaths, sourceSampleId, sourceReferenceId);
-                items = comparer.loadFromFile(sourceSampleId, sourceReferenceId, fileSources, fieldCheckOverrides);
+                items = comparer.loadFromFile(sourceSampleId, sourceReferenceId, fileSources);
             }
             else
             {
                 List<TruthsetValue> truthsetValues = source.Truthset.sampleTruthsetEntries(sampleId).get(comparer.category());
-                items = comparer.loadFromTruthset(truthsetValues, fieldCheckOverrides);
+                items = comparer.loadFromTruthset(truthsetValues);
             }
 
             if(items != null)
@@ -78,7 +74,7 @@ public class CommonUtils
         {
             // previously support comparisons for N sources but now can only be 2 as controlled by config
             CommonUtils.compareItems(
-                    mismatches, matchLevel, fieldCheckCache, config.IncludeMatches,
+                    comparer, mismatches, matchLevel, config.IncludeMatches,
                     sourceItems.get(SourceType.OLD), sourceItems.get(SourceType.NEW));
 
             return true;
@@ -103,7 +99,7 @@ public class CommonUtils
     }
 
     public static void compareItems(
-            final List<Mismatch> mismatches, final MatchLevel matchLevel, final FieldCheckCache fieldConfig, final boolean includeMatches,
+            final ItemComparer comparer, final List<Mismatch> mismatches, final MatchLevel matchLevel, final boolean includeMatches,
             final List<ComparableItem> items1, final List<ComparableItem> items2)
     {
         int index1 = 0;
@@ -129,7 +125,7 @@ public class CommonUtils
 
                     if(matchLevel != REPORTABLE || eitherReportable)
                     {
-                        Mismatch mismatch = item1.findMismatch(item2, matchLevel, fieldConfig, includeMatches);
+                        Mismatch mismatch = item1.findMismatch(comparer, item2, matchLevel, includeMatches);
 
                         if(mismatch != null)
                         {
@@ -178,26 +174,26 @@ public class CommonUtils
         return diffs;
     }
 
-    public static List<String> findDiffs(final ComparableItem oldItem, final ComparableItem newItem)
+    public static List<String> findDiffs(final ItemComparer comparer, final ComparableItem oldItem, final ComparableItem newItem)
     {
         List<String> diffs = Lists.newArrayList();
 
         // find and compare fields present in both items
-        List<String> fieldNames = oldItem.fieldNames(); // could pass in comparer and get list from there
+        List<FieldInfo> fields = comparer.fieldsList();
         Map<String,FieldValue> oldFieldValues = oldItem.fieldValues();
         Map<String,FieldValue> newFieldValues = newItem.fieldValues();
 
-        for(String fieldName : fieldNames)
+        for(FieldInfo field : fields)
         {
-            FieldValue oldValue = oldFieldValues.get(fieldName);
-            FieldValue newValue = newFieldValues.get(fieldName);
+            FieldValue oldValue = oldFieldValues.get(field.name());
+            FieldValue newValue = newFieldValues.get(field.name());
 
             if(oldValue == null || newValue == null)
                 continue;
 
-            if(oldValue.checkDifference(newValue))
+            if(oldValue.hasDifference(newValue))
             {
-                FieldValue.addDiffInfo(oldValue, newValue, diffs);
+                oldValue.addDiffInfo(oldValue, newValue, diffs);
             }
         }
 
@@ -293,26 +289,5 @@ public class CommonUtils
         {
             return item.isPass();
         }
-    }
-
-    @Deprecated
-    public static FieldCheckCache initialiseFieldConfig(final ComparConfig config)
-    {
-        MatchLevel matchLevel = config.MatchingLevel;
-        FieldCheckCache fieldConfig = new FieldCheckCache();
-
-        for(CategoryType category : config.Categories)
-        {
-            ItemComparer comparer = createComparer(category, config, fieldConfig);
-
-            fieldConfig.registerFields(comparer, matchLevel);
-        }
-
-        if(config.FieldOverrides != null)
-        {
-            fieldConfig.applyOverrides(config.FieldOverrides, config.StrictFieldConfig);
-        }
-
-        return fieldConfig;
     }
 }

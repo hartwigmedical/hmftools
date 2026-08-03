@@ -4,17 +4,27 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.compar.common.CategoryType.GENE_COPY_NUMBER;
 
+import java.util.List;
+
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.ComparableItem;
+import com.hartwig.hmftools.compar.common.field.FieldInfo;
 
-public class GeneCopyNumberData implements ComparableItem
+public class GeneCopyNumberData extends ComparableItem
 {
     public final GeneCopyNumber CopyNumber;
 
-    public GeneCopyNumberData(final GeneCopyNumber copyNumber)
+    public GeneCopyNumberData(final GeneCopyNumber copyNumber, final List<FieldInfo> fields)
     {
         CopyNumber = copyNumber;
+
+        addDoubleValue(GeneCopyNumberComparer.Fields.MinCopyNumber.toString(), copyNumber.MinCopyNumber, fields);
+        addDoubleValue(GeneCopyNumberComparer.Fields.MaxCopyNumber.toString(), copyNumber.MaxCopyNumber, fields);
+
+        // TODO: display only
+        addIntValue(GeneCopyNumberComparer.Fields.MinRegionStart.toString(), copyNumber.MinRegionStart, fields);
+        addIntValue(GeneCopyNumberComparer.Fields.MinRegionEnd.toString(), copyNumber.MinRegionEnd, fields);
     }
 
     public CategoryType category() {

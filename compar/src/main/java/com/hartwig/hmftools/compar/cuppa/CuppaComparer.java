@@ -3,62 +3,53 @@ package com.hartwig.hmftools.compar.cuppa;
 import static com.hartwig.hmftools.common.cuppa.DataType.PROB;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.CategoryType.CUPPA;
+import static com.hartwig.hmftools.compar.common.FieldCheckCache.getOrMakeFieldCheck;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.cuppa.CuppaPredictionEntry;
 import com.hartwig.hmftools.common.cuppa.CuppaPredictions;
 import com.hartwig.hmftools.compar.common.CategoryType;
-import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.common.FieldCheckCache;
 import com.hartwig.hmftools.compar.common.PipelineSourcePaths;
 import com.hartwig.hmftools.compar.ItemComparer;
-import com.hartwig.hmftools.compar.common.MatchLevel;
-import com.hartwig.hmftools.compar.common.Mismatch;
-import com.hartwig.hmftools.compar.common.field.DoubleField;
-import com.hartwig.hmftools.compar.common.field.Field;
-import com.hartwig.hmftools.compar.common.field.StringField;
+import com.hartwig.hmftools.compar.common.field.FieldCheck;
+import com.hartwig.hmftools.compar.common.field.FieldInfo;
 
-public class CuppaComparer implements ItemComparer
+public class CuppaComparer extends ItemComparer
 {
-    protected static final String FLD_TOP_CANCER_TYPE = "top_cancer_type";
-    protected static final String FLD_PROBABILITY = "probability";
-
-    private final ComparConfig mConfig;
-
-    public CuppaComparer(final ComparConfig config)
+    protected enum Fields
     {
-        mConfig = config;
+        TopCancerType,
+        Probability;
+    }
+
+    public CuppaComparer(final ComparConfig config, final Map<String, FieldCheck> fieldCheckMap)
+    {
+        super(config);
+
+        mFields.add(new FieldInfo(
+                Fields.TopCancerType.toString(), getOrMakeFieldCheck(fieldCheckMap, Fields.TopCancerType.toString()), null));
+
+        mFields.add(new FieldInfo(
+                Fields.Probability.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.Probability.toString(), 0.1, null),
+                "%.3f"));
     }
 
     @Override
     public CategoryType category() { return CUPPA; }
 
     @Override
-    public List<Field> fields(final MatchLevel matchLevel)
-    {
-        return List.of(
-                new StringField(FLD_TOP_CANCER_TYPE, i -> ((CuppaData) i).PredictionEntry.CancerType, true),
-                new DoubleField(FLD_PROBABILITY, i -> ((CuppaData) i).PredictionEntry.DataValue, true,
-                        0.1, null, "%.3f")
-        );
-    }
-
-    @Override
-    public boolean processSample(final String sampleId, final List<Mismatch> mismatches, final FieldCheckCache fieldConfig)
-    {
-        return CommonUtils.processSample(this, mConfig, sampleId, mismatches, fieldConfig);
-    }
-
-    @Override
     public List<String> displayFieldNames()
     {
-        return Lists.newArrayList(FLD_TOP_CANCER_TYPE, FLD_PROBABILITY);
+        return Arrays.stream(Fields.values()).map(x -> x.toString()).collect(Collectors.toList());
     }
 
     @Override
@@ -77,7 +68,7 @@ public class CuppaComparer implements ItemComparer
 
             for(CuppaPredictionEntry predictionEntry : topProbabilities.PredictionEntries)
             {
-                comparableItems.add(new CuppaData(predictionEntry));
+                comparableItems.add(new CuppaData(predictionEntry, mFields));
             }
         }
         catch(IOException e)

@@ -1,52 +1,80 @@
 package com.hartwig.hmftools.compar.lilac;
 
-import static com.hartwig.hmftools.common.hla.LilacQcData.FLD_DISC_ALIGN_FRAGS;
-import static com.hartwig.hmftools.common.hla.LilacQcData.FLD_DISC_INDELS;
-import static com.hartwig.hmftools.common.hla.LilacQcData.FLD_FIT_FRAGS;
-import static com.hartwig.hmftools.common.hla.LilacQcData.FLD_HLA_Y;
-import static com.hartwig.hmftools.common.hla.LilacQcData.FLD_QC_STATUS;
-import static com.hartwig.hmftools.common.hla.LilacQcData.FLD_TOTAL_FRAGS;
 import static com.hartwig.hmftools.compar.common.CategoryType.LILAC_QC;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
+import static com.hartwig.hmftools.compar.common.FieldCheckCache.getOrMakeFieldCheck;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.hla.LilacAllele;
 import com.hartwig.hmftools.common.hla.LilacQcData;
 import com.hartwig.hmftools.compar.common.CategoryType;
-import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.common.FieldCheckCache;
 import com.hartwig.hmftools.compar.common.PipelineSourcePaths;
 import com.hartwig.hmftools.compar.ItemComparer;
-import com.hartwig.hmftools.compar.common.MatchLevel;
-import com.hartwig.hmftools.compar.common.Mismatch;
-import com.hartwig.hmftools.compar.common.field.Field;
-import com.hartwig.hmftools.compar.common.field.IntField;
-import com.hartwig.hmftools.compar.common.field.StringField;
-import com.hartwig.hmftools.compar.common.field.StringListField;
+import com.hartwig.hmftools.compar.common.field.FieldCheck;
+import com.hartwig.hmftools.compar.common.field.FieldInfo;
 
-public class LilacQcComparer implements ItemComparer
+public class LilacQcComparer extends ItemComparer
 {
-    protected static final String FLD_ALLELES = "Alleles";
-
-    private final ComparConfig mConfig;
+    protected enum Fields
+    {
+        Status,
+        TotalFragments,
+        FittedFragments,
+        DiscardedAlignmentFragments,
+        DiscardedIndels,
+        HlaYAllele,
+        Alleles;
+    }
 
     private static final double FRAG_DIFF_PERC = 0.01;
     private static final double FRAG_DIFF_ABS = 10;
 
-    public LilacQcComparer(final ComparConfig config)
+    public LilacQcComparer(final ComparConfig config, final Map<String, FieldCheck> fieldCheckMap)
     {
-        mConfig = config;
+        super(config);
+
+        mFields.add(new FieldInfo(
+                Fields.Status.toString(), getOrMakeFieldCheck(fieldCheckMap, Fields.Status.toString()), null));
+
+        mFields.add(new FieldInfo(
+                Fields.TotalFragments.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.TotalFragments.toString(), FRAG_DIFF_ABS, FRAG_DIFF_PERC),
+                null));
+
+        mFields.add(new FieldInfo(
+                Fields.FittedFragments.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.FittedFragments.toString(), FRAG_DIFF_ABS, FRAG_DIFF_PERC),
+                null));
+
+        mFields.add(new FieldInfo(
+                Fields.DiscardedAlignmentFragments.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.DiscardedAlignmentFragments.toString(), FRAG_DIFF_ABS, FRAG_DIFF_PERC),
+                null));
+
+        mFields.add(new FieldInfo(
+                Fields.DiscardedIndels.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.DiscardedIndels.toString(), FRAG_DIFF_ABS, FRAG_DIFF_PERC),
+                null));
+
+        mFields.add(new FieldInfo(
+                Fields.HlaYAllele.toString(), getOrMakeFieldCheck(fieldCheckMap, Fields.HlaYAllele.toString()), null));
+
+        mFields.add(new FieldInfo(
+                Fields.Alleles.toString(), getOrMakeFieldCheck(fieldCheckMap, Fields.Alleles.toString()), null));
     }
 
     @Override
     public CategoryType category() { return LILAC_QC; }
 
+    /*
     @Override
     public List<Field> fields(final MatchLevel matchLevel)
     {
@@ -64,17 +92,12 @@ public class LilacQcComparer implements ItemComparer
                 new StringListField(FLD_ALLELES, i -> alleles((LilacQcComparData) i), true)
         );
     }
-
-    @Override
-    public boolean processSample(final String sampleId, final List<Mismatch> mismatches, final FieldCheckCache fieldConfig)
-    {
-        return CommonUtils.processSample(this, mConfig, sampleId, mismatches, fieldConfig);
-    }
+    */
 
     @Override
     public List<String> displayFieldNames()
     {
-        return Lists.newArrayList(FLD_QC_STATUS, FLD_ALLELES);
+        return Arrays.stream(Fields.values()).map(x -> x.toString()).collect(Collectors.toList());
     }
 
     @Override
@@ -93,7 +116,7 @@ public class LilacQcComparer implements ItemComparer
                 List<LilacAllele> geneAlleles = alleles.stream()
                         .filter(x -> x.genes().equals(qcData.genes()))
                         .collect(Collectors.toList());
-                comparableItems.add(new LilacQcComparData(qcData, geneAlleles));
+                comparableItems.add(new LilacQcComparData(qcData, geneAlleles, mFields));
             }
         }
         catch(IOException e)
@@ -103,10 +126,5 @@ public class LilacQcComparer implements ItemComparer
         }
 
         return comparableItems;
-    }
-
-    private static List<String> alleles(final LilacQcComparData data)
-    {
-        return data.Alleles.stream().map(LilacAllele::allele).sorted().toList();
     }
 }

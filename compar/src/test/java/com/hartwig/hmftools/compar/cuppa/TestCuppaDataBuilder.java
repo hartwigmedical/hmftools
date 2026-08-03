@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.compar.cuppa;
 
+import java.util.Collections;
 import java.util.function.Consumer;
 
 import com.hartwig.hmftools.common.cuppa.ClassifierGroup;
@@ -38,7 +39,7 @@ public class TestCuppaDataBuilder
                 cancerType,
                 dataValue,
                 0,
-                0
-        ));
+                0),
+                new CuppaComparer(null, Collections.emptyMap()).fieldsList());
     }
 }

@@ -28,7 +28,7 @@ import org.junit.Test;
 
 public class CommonUtilsTest
 {
-    private static class TestComparableItem implements ComparableItem
+    private static class TestComparableItem extends ComparableItem
     {
         private final boolean mReportable;
         private final boolean mIsPass;
@@ -156,7 +156,7 @@ public class CommonUtilsTest
         MatchLevel matchLevel = MatchLevel.DETAILED;
         boolean includeMatches = false;
 
-        CommonUtils.compareItems(mismatches, matchLevel, fieldConfig, includeMatches, refItems, newItems);
+        CommonUtils.compareItems(null, mismatches, matchLevel, includeMatches, refItems, newItems);
 
         assertTrue(mismatches.isEmpty());
     }

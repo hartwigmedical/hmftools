@@ -1,14 +1,14 @@
 package com.hartwig.hmftools.compar.isofox;
 
-import static com.hartwig.hmftools.common.rna.NovelSpliceJunctionFile.FLD_ALT_SJ_TYPE;
-import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_FRAG_COUNT;
-import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_REGION_END;
-import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_REGION_START;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
+import static com.hartwig.hmftools.compar.common.FieldCheckCache.getOrMakeFieldCheck;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.region.BasePosition;
@@ -19,16 +19,41 @@ import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.CommonUtils;
-import com.hartwig.hmftools.compar.common.FieldCheckCache;
 import com.hartwig.hmftools.compar.common.PipelineSourcePaths;
-import com.hartwig.hmftools.compar.common.MatchLevel;
-import com.hartwig.hmftools.compar.common.Mismatch;
-import com.hartwig.hmftools.compar.common.field.Field;
-import com.hartwig.hmftools.compar.common.field.IntField;
-import com.hartwig.hmftools.compar.common.field.StringField;
+import com.hartwig.hmftools.compar.common.field.FieldCheck;
+import com.hartwig.hmftools.compar.common.field.FieldInfo;
 
-public record NovelSpliceJunctionComparer(ComparConfig mConfig) implements ItemComparer
+public class NovelSpliceJunctionComparer extends ItemComparer
 {
+    protected enum Fields
+    {
+        Type,
+        FragmentCount,
+        RegionStart,
+        RegionEnd;
+    }
+
+    public NovelSpliceJunctionComparer(final ComparConfig config, final Map<String,FieldCheck> fieldCheckMap)
+    {
+        super(config);
+
+        mFields.add(new FieldInfo(
+                Fields.Type.toString(), getOrMakeFieldCheck(fieldCheckMap, Fields.Type.toString()), null));
+
+        mFields.add(new FieldInfo(
+                Fields.FragmentCount.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.FragmentCount.toString(), 5.0, 0.05),
+                "%.2f"));
+
+        mFields.add(new FieldInfo(
+                Fields.RegionStart.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.RegionStart.toString()), null));
+
+        mFields.add(new FieldInfo(
+                Fields.RegionEnd.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.RegionEnd.toString()), null));
+    }
+
     @Override
     public CategoryType category()
     {
@@ -42,30 +67,9 @@ public record NovelSpliceJunctionComparer(ComparConfig mConfig) implements ItemC
     }
 
     @Override
-    public boolean processSample(final String sampleId, final List<Mismatch> mismatches, final FieldCheckCache fieldConfig)
-    {
-        return CommonUtils.processSample(this, mConfig, sampleId, mismatches, fieldConfig);
-    }
-
-    @Override
-    public List<Field> fields(final MatchLevel matchLevel)
-    {
-        return List.of(
-                new StringField(FLD_ALT_SJ_TYPE, i -> ((NovelSpliceJunctionData) i).NovelSpliceJunction().type().toString(),
-                        true),
-                new IntField(FLD_FRAG_COUNT, i -> ((NovelSpliceJunctionData) i).NovelSpliceJunction().fragmentCount(),
-                        true, 5., 0.05),
-                new StringField(FLD_REGION_START, i -> ((NovelSpliceJunctionData) i).NovelSpliceJunction().regionStart().toString(),
-                        true),
-                new StringField(FLD_REGION_END, i -> ((NovelSpliceJunctionData) i).NovelSpliceJunction().regionEnd().toString(),
-                        true)
-        );
-    }
-
-    @Override
     public List<String> displayFieldNames()
     {
-        return List.of(FLD_ALT_SJ_TYPE, FLD_FRAG_COUNT, FLD_REGION_START, FLD_REGION_END);
+        return Arrays.stream(Fields.values()).map(x -> x.toString()).collect(Collectors.toList());
     }
 
     @Override
@@ -89,7 +93,7 @@ public record NovelSpliceJunctionComparer(ComparConfig mConfig) implements ItemC
             BasePosition comparisonPositionEnd = CommonUtils.determineComparisonGenomePosition(
                     junction.chromosome(), junction.junctionEnd(), fileSources.Source, mConfig.RequiresLiftover, mConfig.LiftoverCache);
 
-            comparableItems.add(new NovelSpliceJunctionData(junction, comparisonPositionStart, comparisonPositionEnd));
+            comparableItems.add(new NovelSpliceJunctionData(junction, comparisonPositionStart, comparisonPositionEnd, mFields));
         }
 
         return comparableItems;

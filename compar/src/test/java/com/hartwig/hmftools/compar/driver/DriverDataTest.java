@@ -2,12 +2,6 @@ package com.hartwig.hmftools.compar.driver;
 
 import static com.hartwig.hmftools.common.driver.DriverCategory.ONCO;
 import static com.hartwig.hmftools.common.driver.LikelihoodMethod.AMP;
-import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
-import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_CHROMOSOME_BAND;
-import static com.hartwig.hmftools.compar.driver.DriverData.FLD_LIKELIHOOD;
-import static com.hartwig.hmftools.compar.driver.DriverData.FLD_LIKE_METHOD;
-import static com.hartwig.hmftools.compar.driver.DriverData.FLD_MAX_COPY_NUMBER;
-import static com.hartwig.hmftools.compar.driver.DriverData.FLD_MIN_COPY_NUMBER;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -40,16 +34,16 @@ public class DriverDataTest extends ComparableItemTest<DriverData, DriverCompare
     @Before
     public void setUp()
     {
-        comparer = new DriverComparer(new ComparConfig());
+        comparer = new DriverComparer(new ComparConfig(), Collections.emptyMap());
         builder = TestDriverDataBuilder.BUILDER;
         DriverData alternateValueSource = builder.createWithAlternateDefaults();
         fieldToAlternateValueInitializer = Map.of(
-                FLD_LIKE_METHOD, b -> b.likelihoodMethod = alternateValueSource.DriverCatalog.likelihoodMethod(),
-                FLD_LIKELIHOOD, b -> b.likelihood = alternateValueSource.DriverCatalog.driverLikelihood(),
-                FLD_MIN_COPY_NUMBER, b -> b.minCopyNumber = alternateValueSource.DriverCatalog.minCopyNumber(),
-                FLD_MAX_COPY_NUMBER, b -> b.maxCopyNumber = alternateValueSource.DriverCatalog.maxCopyNumber(),
-                FLD_CHROMOSOME, b -> b.comparisonChromosome = alternateValueSource.mComparisonChromosome,
-                FLD_CHROMOSOME_BAND, b -> b.chromosomeBand = alternateValueSource.DriverCatalog.chromosomeBand()
+                DriverComparer.Fields.LikelihoodMethod.toString(), b -> b.likelihoodMethod = alternateValueSource.DriverCatalog.likelihoodMethod(),
+                DriverComparer.Fields.Likelihood.toString(), b -> b.likelihood = alternateValueSource.DriverCatalog.driverLikelihood(),
+                DriverComparer.Fields.MinCopyNumber.toString(), b -> b.minCopyNumber = alternateValueSource.DriverCatalog.minCopyNumber(),
+                DriverComparer.Fields.MaxCopyNumber.toString(), b -> b.maxCopyNumber = alternateValueSource.DriverCatalog.maxCopyNumber(),
+                DriverComparer.Fields.Chromosome.toString(), b -> b.comparisonChromosome = alternateValueSource.mComparisonChromosome,
+                DriverComparer.Fields.ChromosomeBand.toString(), b -> b.chromosomeBand = alternateValueSource.DriverCatalog.chromosomeBand()
         );
         nameToAlternateIndexInitializer = Map.of(
                 "gene", b -> b.gene = alternateValueSource.DriverCatalog.gene(),
@@ -152,35 +146,37 @@ public class DriverDataTest extends ComparableItemTest<DriverData, DriverCompare
     private static List<Mismatch> generateTestMismatches(final boolean includeMatches)
     {
         ComparConfig config = new ComparConfig();
-        DriverComparer driverComparer = new DriverComparer(config);
+        DriverComparer driverComparer = new DriverComparer(config, Collections.emptyMap());
 
         FieldCheckCache fieldConfig = new FieldCheckCache();
-        fieldConfig.registerFields(driverComparer, MatchLevel.DETAILED);
+
+        // TODO: remove
+        // fieldConfig.registerFields(driverComparer, MatchLevel.DETAILED);
 
         List<ComparableItem> refItems = Lists.newArrayList();
         List<ComparableItem> newItems = Lists.newArrayList();
 
         refItems.add(
                 new DriverData(createDriverCatalog("AR", DriverType.AMP, 1.0, 6),
-                        null, "1", false, true));
+                        null, "1", false, true, driverComparer.fieldsList()));
 
         newItems.add(
                 new DriverData(createDriverCatalog("TP53", DriverType.DEL, 1.0, 0.2),
-                        null, "2", false, true));
+                        null, "2", false, true, driverComparer.fieldsList()));
 
         refItems.add(new DriverData(createDriverCatalog("KRAS", DriverType.MUTATION, 0.7, 2),
-                null, "3", false, true));
+                null, "3", false, true, driverComparer.fieldsList()));
         newItems.add(new DriverData(createDriverCatalog("KRAS", DriverType.MUTATION, 0.5, 2),
-                null, "3", false, true));
+                null, "3", false, true, driverComparer.fieldsList()));
 
         refItems.add(new DriverData(createDriverCatalog("BRAF", DriverType.HOM_DEL_DISRUPTION, 0.9, 2),
-                null, "4", false, true));
+                null, "4", false, true, driverComparer.fieldsList()));
 
         newItems.add(new DriverData(createDriverCatalog("BRAF", DriverType.HOM_DEL_DISRUPTION, 0.9, 2),
-                null, "4", false, true));
+                null, "4", false, true, driverComparer.fieldsList()));
 
         List<Mismatch> mismatches = Lists.newArrayList();
-        CommonUtils.compareItems(mismatches, MatchLevel.REPORTABLE, fieldConfig, includeMatches, refItems, newItems);
+        CommonUtils.compareItems(driverComparer, mismatches, MatchLevel.REPORTABLE, includeMatches, refItems, newItems);
         return mismatches;
     }
 

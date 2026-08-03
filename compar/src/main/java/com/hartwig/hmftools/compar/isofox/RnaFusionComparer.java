@@ -1,10 +1,14 @@
 package com.hartwig.hmftools.compar.isofox;
 
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
+import static com.hartwig.hmftools.compar.common.FieldCheckCache.getOrMakeFieldCheck;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.region.BasePosition;
@@ -15,21 +19,38 @@ import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.CommonUtils;
-import com.hartwig.hmftools.compar.common.FieldCheckCache;
 import com.hartwig.hmftools.compar.common.PipelineSourcePaths;
-import com.hartwig.hmftools.compar.common.MatchLevel;
-import com.hartwig.hmftools.compar.common.Mismatch;
-import com.hartwig.hmftools.compar.common.field.Field;
-import com.hartwig.hmftools.compar.common.field.IntField;
-import com.hartwig.hmftools.compar.common.field.StringField;
+import com.hartwig.hmftools.compar.common.field.FieldCheck;
+import com.hartwig.hmftools.compar.common.field.FieldInfo;
 
-public record RnaFusionComparer(ComparConfig mConfig) implements ItemComparer
+public class RnaFusionComparer extends ItemComparer
 {
-    public static final String FLD_KNOWN_TYPE = "KnownFusionType";
-    public static final String FLD_SPLIT_FRAGS = "SplitFrags";
-    public static final String FLD_JUNC_TYPE_UP = "JuncTypeUp";
-    public static final String FLD_JUNC_TYPE_DOWN = "JuncTypeDown";
+    protected enum Fields
+    {
+        KnownFusionType,
+        JuncTypeUp,
+        JuncTypeDown,
+        SplitFrags;
+    }
 
+    public RnaFusionComparer(final ComparConfig config, final Map<String, FieldCheck> fieldCheckMap)
+    {
+        super(config);
+
+        mFields.add(new FieldInfo(
+                Fields.KnownFusionType.toString(), getOrMakeFieldCheck(fieldCheckMap, Fields.KnownFusionType.toString()), null));
+
+        mFields.add(new FieldInfo(
+                Fields.JuncTypeUp.toString(), getOrMakeFieldCheck(fieldCheckMap, Fields.JuncTypeUp.toString()), null));
+
+        mFields.add(new FieldInfo(
+                Fields.JuncTypeDown.toString(), getOrMakeFieldCheck(fieldCheckMap, Fields.JuncTypeDown.toString()), null));
+
+        mFields.add(new FieldInfo(
+                Fields.SplitFrags.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.SplitFrags.toString(), 5.0, 0.05),
+                "%.2f"));
+    }
     @Override
     public CategoryType category()
     {
@@ -43,27 +64,9 @@ public record RnaFusionComparer(ComparConfig mConfig) implements ItemComparer
     }
 
     @Override
-    public boolean processSample(final String sampleId, final List<Mismatch> mismatches, final FieldCheckCache fieldConfig)
-    {
-        return CommonUtils.processSample(this, mConfig, sampleId, mismatches, fieldConfig);
-    }
-
-    @Override
-    public List<Field> fields(final MatchLevel matchLevel)
-    {
-        return List.of(
-                new StringField(FLD_KNOWN_TYPE, i -> ((RnaFusionData) i).RnaFusion().knownType().toString(), true),
-                new StringField(FLD_JUNC_TYPE_UP, i -> ((RnaFusionData) i).RnaFusion().junctionTypeUp(), true),
-                new StringField(FLD_JUNC_TYPE_DOWN, i -> ((RnaFusionData) i).RnaFusion().junctionTypeDown(), true),
-                new IntField(FLD_SPLIT_FRAGS, i -> ((RnaFusionData) i).RnaFusion().splitFragments(), true,
-                        5., 0.05)
-        );
-    }
-
-    @Override
     public List<String> displayFieldNames()
     {
-        return List.of(FLD_KNOWN_TYPE, FLD_JUNC_TYPE_UP, FLD_JUNC_TYPE_DOWN, FLD_SPLIT_FRAGS);
+        return Arrays.stream(Fields.values()).map(x -> x.toString()).collect(Collectors.toList());
     }
 
     @Override
@@ -87,7 +90,7 @@ public record RnaFusionComparer(ComparConfig mConfig) implements ItemComparer
             BasePosition comparisonPositionDown = CommonUtils.determineComparisonGenomePosition(
                     fusion.chromosomeDown(), fusion.positionDown(), fileSources.Source, mConfig.RequiresLiftover, mConfig.LiftoverCache);
 
-            comparableItems.add(new RnaFusionData(fusion, comparisonPositionUp, comparisonPositionDown));
+            comparableItems.add(new RnaFusionData(fusion, comparisonPositionUp, comparisonPositionDown, mFields));
         }
 
         return comparableItems;

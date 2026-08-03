@@ -1,14 +1,34 @@
 package com.hartwig.hmftools.compar.isofox;
 
+import java.util.List;
+
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.rna.RnaFusion;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.common.CategoryType;
+import com.hartwig.hmftools.compar.common.field.FieldInfo;
 
-public record RnaFusionData(RnaFusion RnaFusion, BasePosition ComparisonPositionUp, BasePosition ComparisonPositionDown)
-        implements ComparableItem
+public class RnaFusionData extends ComparableItem
 {
+    public final RnaFusion Fusion;
+    public final BasePosition ComparisonPositionUp;
+    public final BasePosition ComparisonPositionDown;
+
+    public RnaFusionData(
+            final RnaFusion rnaFusion, final BasePosition comparisonPositionUp, final BasePosition comparisonPositionDown,
+            final List<FieldInfo> fields)
+    {
+        Fusion = rnaFusion;
+        ComparisonPositionUp = comparisonPositionUp;
+        ComparisonPositionDown = comparisonPositionDown;
+
+        addStringValue(RnaFusionComparer.Fields.KnownFusionType.toString(), rnaFusion.knownType().toString(), fields);
+        addStringValue(RnaFusionComparer.Fields.JuncTypeUp.toString(), rnaFusion.junctionTypeUp(), fields);
+        addStringValue(RnaFusionComparer.Fields.JuncTypeDown.toString(), rnaFusion.junctionTypeDown(), fields);
+        addIntValue(RnaFusionComparer.Fields.SplitFrags.toString(), rnaFusion.splitFragments(), fields);
+    }
+
     @Override
     public CategoryType category()
     {
@@ -18,14 +38,14 @@ public record RnaFusionData(RnaFusion RnaFusion, BasePosition ComparisonPosition
     @Override
     public String key()
     {
-        String key = String.format("%s %s:%d-%s:%d", RnaFusion.name(), RnaFusion.chromosomeUp(),
-                RnaFusion.positionUp(), RnaFusion.chromosomeDown(), RnaFusion.positionDown());
+        String key = String.format("%s %s:%d-%s:%d", Fusion.name(), Fusion.chromosomeUp(),
+                Fusion.positionUp(), Fusion.chromosomeDown(), Fusion.positionDown());
 
-        boolean upLifted = ComparisonPositionUp.Position != RnaFusion.positionUp()
-                || !ComparisonPositionUp.Chromosome.equals(RnaFusion.chromosomeUp());
+        boolean upLifted = ComparisonPositionUp.Position != Fusion.positionUp()
+                || !ComparisonPositionUp.Chromosome.equals(Fusion.chromosomeUp());
 
-        boolean downLifted = ComparisonPositionDown.Position != RnaFusion.positionDown()
-                || !ComparisonPositionDown.Chromosome.equals(RnaFusion.chromosomeDown());
+        boolean downLifted = ComparisonPositionDown.Position != Fusion.positionDown()
+                || !ComparisonPositionDown.Chromosome.equals(Fusion.chromosomeDown());
 
         if(upLifted || downLifted)
             key += String.format(" liftover(%s-%s)", ComparisonPositionUp, ComparisonPositionDown);
@@ -36,7 +56,7 @@ public record RnaFusionData(RnaFusion RnaFusion, BasePosition ComparisonPosition
     @Override
     public boolean reportable()
     {
-        return RnaFusion.knownType() != KnownFusionType.NONE;
+        return Fusion.knownType() != KnownFusionType.NONE;
     }
 
     @Override
@@ -44,21 +64,21 @@ public record RnaFusionData(RnaFusion RnaFusion, BasePosition ComparisonPosition
     {
         final RnaFusionData otherData = (RnaFusionData)other;
 
-        if(!otherData.RnaFusion.name().equals(RnaFusion.name())){
+        if(!otherData.Fusion.name().equals(Fusion.name())){
             return false;
         }
-        if(!otherData.RnaFusion.chromosomeUp().equals(ComparisonPositionUp.Chromosome))
+        if(!otherData.Fusion.chromosomeUp().equals(ComparisonPositionUp.Chromosome))
         {
             return false;
         }
-        if(!otherData.RnaFusion.chromosomeDown().equals(ComparisonPositionDown.Chromosome))
+        if(!otherData.Fusion.chromosomeDown().equals(ComparisonPositionDown.Chromosome))
         {
             return false;
         }
-        if(otherData.RnaFusion.positionUp() != ComparisonPositionUp.Position)
+        if(otherData.Fusion.positionUp() != ComparisonPositionUp.Position)
         {
             return false;
         }
-        return otherData.RnaFusion.positionDown() == ComparisonPositionDown.Position;
+        return otherData.Fusion.positionDown() == ComparisonPositionDown.Position;
     }
 }

@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.compar.isofox;
 
+import java.util.Collections;
 import java.util.function.Consumer;
 
 import com.hartwig.hmftools.common.rna.ImmutableTranscriptExpression;
@@ -29,6 +30,7 @@ public class TestIsofoxTranscriptDataBuilder
                 .geneName(geneName)
                 .tpm(tpm)
                 .build();
-        return new IsofoxTranscriptData(transcriptExpression);
+        return new IsofoxTranscriptData(
+                transcriptExpression, new IsofoxTranscriptDataComparer(null, Collections.emptyMap()).fieldsList());
     }
 }

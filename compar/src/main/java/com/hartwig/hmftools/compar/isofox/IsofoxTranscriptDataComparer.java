@@ -3,11 +3,15 @@ package com.hartwig.hmftools.compar.isofox;
 import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_ADJ_TPM;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_NAME;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
+import static com.hartwig.hmftools.compar.common.FieldCheckCache.getOrMakeFieldCheck;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.rna.TranscriptExpressionFile;
@@ -22,10 +26,26 @@ import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.field.DoubleField;
 import com.hartwig.hmftools.compar.common.field.Field;
+import com.hartwig.hmftools.compar.common.field.FieldCheck;
+import com.hartwig.hmftools.compar.common.field.FieldInfo;
 import com.hartwig.hmftools.compar.common.field.StringField;
 
-public record IsofoxTranscriptDataComparer(ComparConfig mConfig) implements ItemComparer
+public class IsofoxTranscriptDataComparer extends ItemComparer
 {
+    protected enum Fields
+    {
+        AdjTPM;
+    }
+
+    public IsofoxTranscriptDataComparer(final ComparConfig config, final Map<String,FieldCheck> fieldCheckMap)
+    {
+        super(config);
+
+        mFields.add(new FieldInfo(
+                Fields.AdjTPM.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.AdjTPM.toString(), null, 0.05),
+                "%.4e3"));
+    }
     @Override
     public CategoryType category()
     {
@@ -39,26 +59,9 @@ public record IsofoxTranscriptDataComparer(ComparConfig mConfig) implements Item
     }
 
     @Override
-    public boolean processSample(final String sampleId, final List<Mismatch> mismatches, final FieldCheckCache fieldConfig)
-    {
-        return CommonUtils.processSample(this, mConfig, sampleId, mismatches, fieldConfig);
-    }
-
-    @Override
-    public List<Field> fields(final MatchLevel matchLevel)
-    {
-        return List.of(
-                new StringField(FLD_GENE_NAME, i -> ((IsofoxTranscriptData) i).TranscriptExpression().geneName(),
-                        true),
-                new DoubleField(FLD_ADJ_TPM, i -> ((IsofoxTranscriptData) i).TranscriptExpression().tpm(), true,
-                        null, 0.05, "%.2f")
-        );
-    }
-
-    @Override
     public List<String> displayFieldNames()
     {
-        return List.of(FLD_GENE_NAME, FLD_ADJ_TPM);
+        return Arrays.stream(Fields.values()).map(x -> x.toString()).collect(Collectors.toList());
     }
 
     @Override
@@ -69,7 +72,7 @@ public record IsofoxTranscriptDataComparer(ComparConfig mConfig) implements Item
         try
         {
             String filename = determineFileName(sampleId, fileSources);
-            TranscriptExpressionFile.read(filename).stream().map(IsofoxTranscriptData::new).forEach(comparableItems::add);
+            TranscriptExpressionFile.read(filename).stream().map(x -> new IsofoxTranscriptData(x, mFields)).forEach(comparableItems::add);
         }
         catch(IOException e)
         {

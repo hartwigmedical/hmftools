@@ -2,12 +2,26 @@ package com.hartwig.hmftools.compar.vchord;
 
 import static com.hartwig.hmftools.compar.common.CategoryType.V_CHORD;
 
+import java.util.List;
+
 import com.hartwig.hmftools.common.vchord.VChordPrediction;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.common.CategoryType;
+import com.hartwig.hmftools.compar.common.field.FieldInfo;
 
-public record VChordData(VChordPrediction VChord) implements ComparableItem
+public class VChordData extends ComparableItem
 {
+    public final VChordPrediction Prediction;
+
+    VChordData(final VChordPrediction prediction, final List<FieldInfo> fields)
+    {
+        Prediction = prediction;
+
+        addDoubleValue(VChordComparer.Fields.BreastCancerHrdScore.toString(), prediction.breastCancerHrdScore(), fields);
+        addDoubleValue(VChordComparer.Fields.OvarianCancerHrdScore.toString(), prediction.ovarianCancerHrdScore(), fields);
+        addDoubleValue(VChordComparer.Fields.OtherCancerScore.toString(), prediction.otherCancerScore(), fields);
+    }
+
     @Override
     public CategoryType category()
     {

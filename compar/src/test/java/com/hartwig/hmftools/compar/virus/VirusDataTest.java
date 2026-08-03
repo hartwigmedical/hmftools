@@ -1,9 +1,6 @@
 package com.hartwig.hmftools.compar.virus;
 
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
-import static com.hartwig.hmftools.compar.virus.VirusComparer.FLD_DRIVER_LIKELIHOOD;
-import static com.hartwig.hmftools.compar.virus.VirusComparer.FLD_INTEGRATIONS;
-import static com.hartwig.hmftools.compar.virus.VirusComparer.FLD_MEAN_COVERAGE;
 
 import java.util.Collections;
 import java.util.Map;
@@ -18,14 +15,14 @@ public class VirusDataTest extends ComparableItemTest<VirusData, VirusComparer, 
     @Before
     public void setUp()
     {
-        comparer = new VirusComparer(new ComparConfig());
+        comparer = new VirusComparer(new ComparConfig(), Collections.emptyMap());
         builder = TestVirusDataBuilder.BUILDER;
         VirusData alternateValueSource = builder.createWithAlternateDefaults();
 
         fieldToAlternateValueInitializer = Map.of(
-                FLD_INTEGRATIONS, b -> b.integrations = alternateValueSource.Virus.integrations(),
-                FLD_MEAN_COVERAGE, b -> b.meanCoverage = alternateValueSource.Virus.meanCoverage(),
-                FLD_DRIVER_LIKELIHOOD, b -> b.driverLikelihood = alternateValueSource.Virus.virusDriverLikelihoodType()
+                VirusComparer.Fields.Integrations.toString(), b -> b.integrations = alternateValueSource.Virus.integrations(),
+                VirusComparer.Fields.MeanCoverage.toString(), b -> b.meanCoverage = alternateValueSource.Virus.meanCoverage(),
+                VirusComparer.Fields.DriverLikelihood.toString(), b -> b.driverLikelihood = alternateValueSource.Virus.virusDriverLikelihoodType()
         );
         nameToAlternateIndexInitializer = Map.of("name", b -> b.name = alternateValueSource.Virus.name());
         reportabilityFieldToFalseReportabilityInitializer = Map.of(FLD_REPORTED, b -> b.reported = false);

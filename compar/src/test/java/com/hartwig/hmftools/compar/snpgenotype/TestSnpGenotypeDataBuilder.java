@@ -1,9 +1,11 @@
 package com.hartwig.hmftools.compar.snpgenotype;
 
+import java.util.Collections;
 import java.util.function.Consumer;
 
 import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.compar.TestComparableItemBuilder;
+import com.hartwig.hmftools.compar.virus.VirusComparer;
 
 public class TestSnpGenotypeDataBuilder
 {
@@ -34,6 +36,9 @@ public class TestSnpGenotypeDataBuilder
     private SnpGenotypeData build()
     {
         BasePosition comparisonBasePosition = new BasePosition(comparisonChromosome, comparisonPosition);
-        return new SnpGenotypeData(chromosome, position, ref, alt, genotype, vcfSampleId, comparisonBasePosition);
+
+        return new SnpGenotypeData(
+                chromosome, position, ref, alt, genotype, vcfSampleId, comparisonBasePosition,
+                new SnpGenotypeComparer(null, Collections.emptyMap()).fieldsList());
     }
 }

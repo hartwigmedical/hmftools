@@ -28,7 +28,7 @@ public class SnpGenotypeDataTest extends ComparableItemTest<SnpGenotypeData, Snp
     @Before
     public void setUp()
     {
-        comparer = new SnpGenotypeComparer(new ComparConfig());
+        comparer = new SnpGenotypeComparer(new ComparConfig(), Collections.emptyMap());
         builder = TestSnpGenotypeDataBuilder.BUILDER;
         SnpGenotypeData alternateValueSource = builder.createWithAlternateDefaults();
 
@@ -72,12 +72,12 @@ public class SnpGenotypeDataTest extends ComparableItemTest<SnpGenotypeData, Snp
 
         assertTrue(victim.matches(liftoverVictim));
         assertTrue(liftoverVictim.matches(victim));
-        assertNull(victim.findMismatch(liftoverVictim, MatchLevel.DETAILED, detailedFieldConfig, false));
-        assertNull(victim.findMismatch(liftoverVictim, MatchLevel.REPORTABLE, reportableFieldConfig, false));
+        assertNull(victim.findMismatch(comparer, liftoverVictim, MatchLevel.DETAILED, false));
+        assertNull(victim.findMismatch(comparer, liftoverVictim, MatchLevel.REPORTABLE, false));
 
         Mismatch expectedMatch = new Mismatch(victim, liftoverVictim, MismatchType.FULL_MATCH, Collections.emptyList());
-        assertEquals(expectedMatch, victim.findMismatch(liftoverVictim, MatchLevel.DETAILED, detailedFieldConfig, true));
-        assertEquals(expectedMatch, victim.findMismatch(liftoverVictim, MatchLevel.REPORTABLE, reportableFieldConfig, true));
+        assertEquals(expectedMatch, victim.findMismatch(comparer, liftoverVictim, MatchLevel.DETAILED, true));
+        assertEquals(expectedMatch, victim.findMismatch(comparer, liftoverVictim, MatchLevel.REPORTABLE, true));
     }
 
     @Test

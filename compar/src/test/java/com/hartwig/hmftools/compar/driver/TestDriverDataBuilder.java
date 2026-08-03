@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.compar.driver;
 
+import java.util.Collections;
 import java.util.function.Consumer;
 
 import com.hartwig.hmftools.common.driver.DriverCatalog;
@@ -66,6 +67,9 @@ public class TestDriverDataBuilder
                 .frameshift(-1)
                 .biallelic(true)
                 .build();
-        return new DriverData(driverCatalog, null, comparisonChromosome, checkTranscript, isPass);
+
+        return new DriverData(
+                driverCatalog, null, comparisonChromosome, checkTranscript, isPass,
+                new DriverComparer(null, Collections.emptyMap()).fieldsList());
     }
 }

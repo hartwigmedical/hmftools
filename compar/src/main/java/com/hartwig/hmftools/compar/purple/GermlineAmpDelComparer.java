@@ -1,49 +1,66 @@
 package com.hartwig.hmftools.compar.purple;
 
-import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.compar.common.CategoryType.GERMLINE_AMP_DEL;
-import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_CHROMOSOME_BAND;
-import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
-import static com.hartwig.hmftools.compar.common.CommonUtils.determineComparisonChromosome;
+import static com.hartwig.hmftools.compar.common.FieldCheckCache.getOrMakeFieldCheck;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.GermlineAmpDel;
 import com.hartwig.hmftools.compar.common.CategoryType;
-import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.common.FieldCheckCache;
 import com.hartwig.hmftools.compar.common.PipelineSourcePaths;
 import com.hartwig.hmftools.compar.ItemComparer;
-import com.hartwig.hmftools.compar.common.MatchLevel;
-import com.hartwig.hmftools.compar.common.Mismatch;
-import com.hartwig.hmftools.compar.common.field.DoubleField;
-import com.hartwig.hmftools.compar.common.field.Field;
-import com.hartwig.hmftools.compar.common.field.StringField;
+import com.hartwig.hmftools.compar.common.field.FieldCheck;
+import com.hartwig.hmftools.compar.common.field.FieldInfo;
 
-public class GermlineAmpDelComparer implements ItemComparer
+public class GermlineAmpDelComparer extends ItemComparer
 {
-    protected static final String FLD_GERMLINE_STATUS = "GermlineStatus";
-    protected static final String FLD_TUMOR_STATUS = "TumorStatus";
-    protected static final String FLD_GERMLINE_CN = "GermlineCopyNumber";
-    protected static final String FLD_TUMOR_CN = "TumorCopyNumber";
-
-    private final ComparConfig mConfig;
-
-    public GermlineAmpDelComparer(final ComparConfig config)
+    protected enum Fields
     {
-        mConfig = config;
+        Reported,
+        GermlineStatus,
+        TumorStatus,
+        GermlineCopyNumber,
+        TumorCopyNumber;
+    }
+
+    public GermlineAmpDelComparer(final ComparConfig config, final Map<String, FieldCheck> fieldCheckMap)
+    {
+        super(config);
+
+        mFields.add(new FieldInfo(
+                Fields.Reported.toString(), getOrMakeFieldCheck(fieldCheckMap, Fields.Reported.toString()), null));
+
+        mFields.add(new FieldInfo(
+                Fields.GermlineStatus.toString(), getOrMakeFieldCheck(fieldCheckMap, Fields.GermlineStatus.toString()), null));
+
+        mFields.add(new FieldInfo(
+                Fields.TumorStatus.toString(), getOrMakeFieldCheck(fieldCheckMap, Fields.TumorStatus.toString()), null));
+
+        mFields.add(new FieldInfo(
+                Fields.GermlineCopyNumber.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.GermlineCopyNumber.toString(), 0.2, 0.1),
+                "%.2f"));
+
+        mFields.add(new FieldInfo(
+                Fields.TumorCopyNumber.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.TumorCopyNumber.toString(), 0.2, 0.1),
+                "%.2f"));
     }
 
     @Override
     public CategoryType category() { return GERMLINE_AMP_DEL; }
 
+    /*
     @Override
     public List<Field> fields(final MatchLevel matchLevel)
     {
@@ -62,18 +79,12 @@ public class GermlineAmpDelComparer implements ItemComparer
                 new StringField(FLD_CHROMOSOME_BAND, i -> ((GermlineAmpDelData) i).AmpDelData.ChromosomeBand, true)
         );
     }
-
-    @Override
-    public boolean processSample(final String sampleId, final List<Mismatch> mismatches, final FieldCheckCache fieldConfig)
-    {
-        return CommonUtils.processSample(this, mConfig, sampleId, mismatches, fieldConfig);
-    }
+    */
 
     @Override
     public List<String> displayFieldNames()
     {
-        return Lists.newArrayList(
-                FLD_REPORTED, FLD_GERMLINE_STATUS, FLD_TUMOR_STATUS, FLD_GERMLINE_CN, FLD_TUMOR_CN);
+        return Arrays.stream(Fields.values()).map(x -> x.toString()).collect(Collectors.toList());
     }
 
     @Override
@@ -92,7 +103,7 @@ public class GermlineAmpDelComparer implements ItemComparer
             }
 
             List<GermlineAmpDel> germlineAmpDels = GermlineAmpDel.read(germlineAmpDelFile);
-            germlineAmpDels.forEach(x -> comparableItems.add(createGermlineAmpDelData(x)));
+            germlineAmpDels.forEach(x -> comparableItems.add(new GermlineAmpDelData(x, mFields)));
         }
         catch(IOException e)
         {
@@ -101,11 +112,5 @@ public class GermlineAmpDelComparer implements ItemComparer
         }
 
         return comparableItems;
-    }
-
-    private GermlineAmpDelData createGermlineAmpDelData(final GermlineAmpDel deletion)
-    {
-        String comparisonChromosome = determineComparisonChromosome(deletion.Chromosome, mConfig.RequiresLiftover);
-        return new GermlineAmpDelData(deletion, comparisonChromosome);
     }
 }

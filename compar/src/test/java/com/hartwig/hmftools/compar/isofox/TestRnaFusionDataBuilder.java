@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.compar.isofox;
 
+import java.util.Collections;
 import java.util.function.Consumer;
 
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
@@ -87,6 +88,7 @@ public class TestRnaFusionDataBuilder
 
         return new RnaFusionData(fusion,
                 new BasePosition(comparisonChromosomeUp, comparisonPositionUp),
-                new BasePosition(comparisonChromosomeDown, comparisonPositionDown));
+                new BasePosition(comparisonChromosomeDown, comparisonPositionDown),
+                new RnaFusionComparer(null, Collections.emptyMap()).fieldsList());
     }
 }

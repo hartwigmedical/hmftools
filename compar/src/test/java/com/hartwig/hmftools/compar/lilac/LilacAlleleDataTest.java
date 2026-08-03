@@ -1,12 +1,7 @@
 package com.hartwig.hmftools.compar.lilac;
 
-import static com.hartwig.hmftools.common.hla.LilacAllele.FLD_INDEL;
-import static com.hartwig.hmftools.common.hla.LilacAllele.FLD_MISSENSE;
-import static com.hartwig.hmftools.common.hla.LilacAllele.FLD_NFS;
 import static com.hartwig.hmftools.common.hla.LilacAllele.FLD_REF_TOTAL;
-import static com.hartwig.hmftools.common.hla.LilacAllele.FLD_SPLICE;
 import static com.hartwig.hmftools.common.hla.LilacAllele.FLD_SYNON;
-import static com.hartwig.hmftools.common.hla.LilacAllele.FLD_TUMOR_CN;
 import static com.hartwig.hmftools.common.hla.LilacAllele.FLD_TUMOR_TOTAL;
 import static com.hartwig.hmftools.compar.ComparTestUtil.assertSingleFieldMismatch;
 
@@ -31,20 +26,20 @@ public class LilacAlleleDataTest extends ComparableItemTest<LilacAlleleData, Lil
     @Before
     public void setUp()
     {
-        comparer = new LilacAlleleComparer(new ComparConfig());
+        comparer = new LilacAlleleComparer(new ComparConfig(), Collections.emptyMap());
         builder = TestLilacAlleleDataBuilder.BUILDER;
 
         LilacAlleleData alternateValueSource = builder.createWithAlternateDefaults();
 
         fieldToAlternateValueInitializer = Map.of(
-                FLD_MISSENSE, b -> b.missense = alternateValueSource.Allele.somaticMissense(),
-                FLD_NFS, b -> b.nonsenseOrFrameshift = alternateValueSource.Allele.somaticNonsenseOrFrameshift(),
-                FLD_SPLICE, b -> b.splice = alternateValueSource.Allele.somaticSplice(),
-                FLD_INDEL, b -> b.inframeIndel = alternateValueSource.Allele.somaticInframeIndel(),
-                FLD_TUMOR_CN, b -> b.tumorCopyNumber = alternateValueSource.Allele.tumorCopyNumber(),
-                FLD_REF_TOTAL, b -> b.refTotal = alternateValueSource.Allele.refFragments(),
-                FLD_TUMOR_TOTAL,b -> b.tumorTotal = alternateValueSource.Allele.tumorFragments(),
-                FLD_SYNON, b -> b.synonymous = alternateValueSource.Allele.somaticSynonymous()
+                LilacAlleleComparer.Fields.SomaticMissense.toString(), b -> b.missense = alternateValueSource.Allele.somaticMissense(),
+                LilacAlleleComparer.Fields.SomaticNonsenseOrFrameshift.toString(), b -> b.nonsenseOrFrameshift = alternateValueSource.Allele.somaticNonsenseOrFrameshift(),
+                LilacAlleleComparer.Fields.SomaticSplice.toString(), b -> b.splice = alternateValueSource.Allele.somaticSplice(),
+                LilacAlleleComparer.Fields.SomaticInframeIndel.toString(), b -> b.inframeIndel = alternateValueSource.Allele.somaticInframeIndel(),
+                LilacAlleleComparer.Fields.TumorCopyNumber.toString(), b -> b.tumorCopyNumber = alternateValueSource.Allele.tumorCopyNumber(),
+                LilacAlleleComparer.Fields.RefTotal.toString(), b -> b.refTotal = alternateValueSource.Allele.refFragments(),
+                LilacAlleleComparer.Fields.TumorTotal.toString(),b -> b.tumorTotal = alternateValueSource.Allele.tumorFragments(),
+                LilacAlleleComparer.Fields.SomaticSynonymous.toString(), b -> b.synonymous = alternateValueSource.Allele.somaticSynonymous()
         );
         detailedOnlyFields = Set.of(FLD_REF_TOTAL, FLD_TUMOR_TOTAL, FLD_SYNON);
 
@@ -74,7 +69,7 @@ public class LilacAlleleDataTest extends ComparableItemTest<LilacAlleleData, Lil
                 MatchLevel matchLevel = MatchLevel.REPORTABLE;
                 FieldCheckCache fieldConfig = createDefaultThresholds(matchLevel);
 
-                assertSingleFieldMismatch(field, refVictim, newVictim, matchLevel, fieldConfig, MismatchType.VALUE);
+                assertSingleFieldMismatch(comparer, field, refVictim, newVictim, matchLevel, MismatchType.VALUE);
             }
         }
     }

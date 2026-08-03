@@ -15,7 +15,7 @@ public class Cdr3LocusSummaryDataTest extends ComparableItemTest<Cdr3LocusSummar
     @Before
     public void setUp()
     {
-        comparer = new Cdr3LocusSummaryComparer(new ComparConfig());
+        comparer = new Cdr3LocusSummaryComparer(new ComparConfig(), Collections.emptyMap());
         builder = TestCdr3LocusSummaryDataBuilder.BUILDER;
         Cdr3LocusSummaryData alternateValueSource = builder.createWithAlternateDefaults();
         fieldToAlternateValueInitializer =

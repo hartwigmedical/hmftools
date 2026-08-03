@@ -1,12 +1,15 @@
 package com.hartwig.hmftools.compar.snpgenotype;
 
-import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_ALT;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.CategoryType.SNP_GENOTYPE;
 import static com.hartwig.hmftools.compar.common.CommonUtils.determineComparisonGenomePosition;
+import static com.hartwig.hmftools.compar.common.FieldCheckCache.getOrMakeFieldCheck;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.region.BasePosition;
@@ -15,57 +18,48 @@ import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.CategoryType;
-import com.hartwig.hmftools.compar.common.CommonUtils;
-import com.hartwig.hmftools.compar.common.FieldCheckCache;
 import com.hartwig.hmftools.compar.common.PipelineSourcePaths;
-import com.hartwig.hmftools.compar.common.MatchLevel;
-import com.hartwig.hmftools.compar.common.Mismatch;
-import com.hartwig.hmftools.compar.common.field.Field;
-import com.hartwig.hmftools.compar.common.field.StringField;
+import com.hartwig.hmftools.compar.common.field.FieldCheck;
+import com.hartwig.hmftools.compar.common.field.FieldInfo;
 
 import htsjdk.tribble.CloseableTribbleIterator;
 import htsjdk.variant.variantcontext.VariantContext;
 
-public class SnpGenotypeComparer implements ItemComparer
+public class SnpGenotypeComparer extends ItemComparer
 {
-    private final ComparConfig mConfig;
-
     private static final String FILE_NAME = "snp_genotype_output.vcf";
 
     protected static final String FLD_GENOTYPE = "Genotype";
     protected static final String FLD_VCF_SAMPLE_ID = "VcfSampleId";
 
-    public SnpGenotypeComparer(final ComparConfig config)
+    protected enum Fields
     {
-        mConfig = config;
+        Alt,
+        Genotype,
+        VcfSampleId;
+    }
+
+    public SnpGenotypeComparer(final ComparConfig config, final Map<String, FieldCheck> fieldCheckMap)
+    {
+        super(config);
+
+        mFields.add(new FieldInfo(
+                Fields.Alt.toString(), getOrMakeFieldCheck(fieldCheckMap, Fields.Alt.toString()), null));
+
+        mFields.add(new FieldInfo(
+                Fields.Genotype.toString(), getOrMakeFieldCheck(fieldCheckMap, Fields.Genotype.toString()), null));
+
+        mFields.add(new FieldInfo(
+                Fields.VcfSampleId.toString(), getOrMakeFieldCheck(fieldCheckMap, Fields.VcfSampleId.toString()), null));
     }
 
     @Override
-    public CategoryType category()
-    {
-        return SNP_GENOTYPE;
-    }
-
-    @Override
-    public boolean processSample(final String sampleId, final List<Mismatch> mismatches, final FieldCheckCache fieldConfig)
-    {
-        return CommonUtils.processSample(this, mConfig, sampleId, mismatches, fieldConfig);
-    }
+    public CategoryType category() { return SNP_GENOTYPE; }
 
     @Override
     public List<String> displayFieldNames()
     {
-        return Lists.newArrayList(FLD_ALT, FLD_GENOTYPE, FLD_VCF_SAMPLE_ID);
-    }
-
-    @Override
-    public List<Field> fields(final MatchLevel matchLevel)
-    {
-        return List.of(
-                new StringField(FLD_ALT, i -> ((SnpGenotypeData) i).Alt, true),
-                new StringField(FLD_GENOTYPE, i -> ((SnpGenotypeData) i).Genotype, true),
-                new StringField(FLD_VCF_SAMPLE_ID, i -> ((SnpGenotypeData) i).VcfSampleId, true)
-        );
+        return Arrays.stream(Fields.values()).map(x -> x.toString()).collect(Collectors.toList());
     }
 
     @Override
@@ -102,7 +96,7 @@ public class SnpGenotypeComparer implements ItemComparer
                 BasePosition comparisonPosition = determineComparisonGenomePosition(
                         chromosome, position, fileSources.Source, mConfig.RequiresLiftover, mConfig.LiftoverCache);
 
-                items.add(new SnpGenotypeData(chromosome, position, ref, alt, genotype, vcfSampleId, comparisonPosition));
+                items.add(new SnpGenotypeData(chromosome, position, ref, alt, genotype, vcfSampleId, comparisonPosition, mFields));
             }
         }
         catch(Exception e)
