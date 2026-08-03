@@ -61,7 +61,7 @@ public record PanelBuilderConfig(
     private static final String DESC_CN_BACKBONE_RESOLUTION = "Approximate spacing between copy number backbone probes, in kb";
     private static final String CFG_TARGET_GENES_FILE = "genes";
     private static final String DESC_TARGET_GENES_FILE = "Gene options and transcript TSV file";
-    private static final String CFG_RNA_GENES_FILE = "rna_genes";
+    private static final String CFG_RNA_GENES_FILE = "genes_rna";
     private static final String DESC_RNA_GENES_FILE = "RNA gene options and transcript TSV file";
     private static final String CFG_INCLUDE_CDR3 = "cdr3";
     private static final String DESC_INCLUDE_CDR3 = "Include fixed CDR3 panel probes";
