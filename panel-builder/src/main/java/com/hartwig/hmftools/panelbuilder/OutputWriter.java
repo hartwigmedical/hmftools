@@ -4,16 +4,11 @@ import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.CANDIDATE_
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.CANDIDATE_TARGET_REGIONS_FILE_NAME;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.COVERED_REGIONS_FILE_NAME;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.COVERED_TARGET_REGIONS_FILE_NAME;
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.DNA_OUTPUT_PREFIX;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.GENE_STATS_FILE_NAME;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.PANEL_PROBES_FILE_STEM;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.REJECTED_FEATURES_FILE_STEM;
-import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.RNA_CANDIDATE_PROBES_FILE_NAME;
-import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.RNA_CANDIDATE_TARGET_REGIONS_FILE_NAME;
-import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.RNA_COVERED_REGIONS_FILE_NAME;
-import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.RNA_COVERED_TARGET_REGIONS_FILE_NAME;
-import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.RNA_GENE_STATS_FILE_NAME;
-import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.RNA_PANEL_PROBES_FILE_STEM;
-import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.RNA_REJECTED_FEATURES_FILE_STEM;
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.RNA_OUTPUT_PREFIX;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_VARIANT_INFO_FILE_NAME;
 
 import java.io.IOException;
@@ -58,16 +53,20 @@ public class OutputWriter implements AutoCloseable
             return Paths.get(outputDir, fileName).toString();
         };
 
+        // DNA and RNA produce the same set of per-panel files, distinguished only by file-name prefix.
+        Function<String, String> dnaFilePath = fileName -> outputFilePath.apply(DNA_OUTPUT_PREFIX + fileName);
+        Function<String, String> rnaFilePath = fileName -> outputFilePath.apply(RNA_OUTPUT_PREFIX + fileName);
+
         mDnaOutput = new ProbeOutputWriter(
-                outputFilePath, PANEL_PROBES_FILE_STEM, COVERED_TARGET_REGIONS_FILE_NAME, COVERED_REGIONS_FILE_NAME,
+                dnaFilePath, PANEL_PROBES_FILE_STEM, COVERED_TARGET_REGIONS_FILE_NAME, COVERED_REGIONS_FILE_NAME,
                 REJECTED_FEATURES_FILE_STEM, CANDIDATE_TARGET_REGIONS_FILE_NAME, CANDIDATE_PROBES_FILE_NAME, GENE_STATS_FILE_NAME,
                 verboseOutput, false);
 
         mRnaOutput = rnaOutput
                 ? new ProbeOutputWriter(
-                outputFilePath, RNA_PANEL_PROBES_FILE_STEM, RNA_COVERED_TARGET_REGIONS_FILE_NAME, RNA_COVERED_REGIONS_FILE_NAME,
-                RNA_REJECTED_FEATURES_FILE_STEM, RNA_CANDIDATE_TARGET_REGIONS_FILE_NAME, RNA_CANDIDATE_PROBES_FILE_NAME,
-                RNA_GENE_STATS_FILE_NAME, verboseOutput, true)
+                rnaFilePath, PANEL_PROBES_FILE_STEM, COVERED_TARGET_REGIONS_FILE_NAME, COVERED_REGIONS_FILE_NAME,
+                REJECTED_FEATURES_FILE_STEM, CANDIDATE_TARGET_REGIONS_FILE_NAME, CANDIDATE_PROBES_FILE_NAME, GENE_STATS_FILE_NAME,
+                verboseOutput, true)
                 : null;
 
         mSampleVariantInfoTsvWriter = new DelimFileWriter<>(

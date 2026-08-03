@@ -54,7 +54,7 @@ decisions made, and open issues to revisit. Not user-facing documentation.
     - RNA verbose candidate-probe output — `TODO(RNA)` in `PanelBuilderApplication`;
     - part-coding exon classified as fully coding — `TODO` in `GenesRna.createTargets`;
     - `PanelData` getters return live internal lists — `TODO` in `PanelData`.
-  Remaining (not code-tagged): eventual DNA-file `dna_` rename.
+  (The DNA-file `dna_` rename that was noted here as remaining is now done — see the follow-ups section.)
 
 Everything above is additive/behaviour-preserving; all existing DNA tests remain green (165 tests total, incl. the new RNA output test).
 
@@ -62,8 +62,9 @@ Everything above is additive/behaviour-preserving; all existing DNA tests remain
 
 - **Forward strand only.** RNA probes are emitted genome-forward (matching the DNA FASTA convention); single-strand output of a chosen strand
   is deferred (see the strandedness open issue).
-- **DNA output files unchanged for now.** RNA output is entirely new `rna_`-prefixed files; the existing DNA file names are left unprefixed to
-  keep DNA output byte-identical during validation. A later change may add a `dna_` prefix.
+- **Per-panel file prefixes.** DNA and RNA produce the same set of files, prefixed `dna_` / `rna_` (e.g. `dna_probes.tsv` /
+  `rna_probes.tsv`). Originally the DNA files were left unprefixed to keep DNA output byte-identical during validation; once validated, the
+  `dna_` prefix was applied. `sample_variant_info.tsv` is not a per-panel file and stays unprefixed.
 
 ## Goal
 
@@ -409,5 +410,15 @@ Action: prototype (1), compare against hand-checked probes, decide. Track as its
 - **Performance:** the end-to-end run spent several minutes on the RNA probes alone. Investigate — likely the
   short-region probes now routing to the alignment model (slower per candidate than the profile), amplified by
   candidate generation enumerating every window across large merged-exon spaces. Profile before optimising.
+- **Merge probe generation:** unify the DNA (`ProbeGenerator`) and RNA (`RnaProbeGenerator`) probe-generation code
+  into one parameterised path, mirroring the `ProbeOutputWriter` unification. Per the earlier "Later" note, the
+  DNA/RNA difference collapses to which `RegionMapping` is passed (whole-genome identity for DNA vs exon mapping for
+  RNA) plus the edge-pinning rule; existing DNA tests are the regression gate.
+- **Output file naming [DONE]:** DNA and RNA output files now share one set of base names, prefixed per panel
+  (`dna_` / `rna_`) — e.g. `dna_probes.tsv` / `rna_probes.tsv`. One set of file-name constants in
+  `PanelBuilderConstants` plus a per-panel prefix (`DNA_OUTPUT_PREFIX` / `RNA_OUTPUT_PREFIX`); the duplicated `RNA_*`
+  file-name constants were removed. `sample_variant_info.tsv` is not a per-panel probe file (DNA-sample-variant
+  informational output, no RNA equivalent) and is left unprefixed.
 - Done: `Segments` orientation now `1`/`-1`; target extra info is just the gene name unless the user specified a
   transcript subset; Ensembl loaded once; RNA verbose candidate-probe output.
+- Complete README exon aware tiling algorithm section.

@@ -121,6 +121,8 @@ You should check the output to see which probes/regions were rejected and determ
 
 ## Feature Details & Probe Generation
 
+Features are for DNA probes except where specified.
+
 ### Genes
 
 Probes generated to capture different features of genes. Features can be enabled/disabled on a per-gene basis.
@@ -163,42 +165,6 @@ Example:
 GeneName	IncludeCoding	IncludeUTR	IncludeExonFlank	IncludeUpstream	IncludeDownstream	IncludePromoter	ExtraTransNames
 ABCB1	TRUE	FALSE	FALSE	FALSE	FALSE	FALSE	
 CDKN2A	TRUE	FALSE	TRUE	TRUE	TRUE	FALSE	ENST00000579755
-```
-
-### Genes RNA
-
-Probes covering the transcribed (exonic) sequence of selected genes, for RNA panels. Coding sequence is always covered; the 5' and 3' UTRs
-are optional per gene. This is separate from the DNA gene feature above and is written to separate output files (see Output).
-
-Probes are placed in an exon-aware manner designed to maximise performance for both known transcripts and novel splices/fusions. This is done by ensuring probes are constrained to be within exon boundaries where possible. 
-
-Probe evaluation criteria:
-
-- `QS>=0.05`
-
-Notes:
-
-- **Transcript selection.** If no transcripts are specified, all transcripts of the gene are used, with their exons merged. Otherwise the
-  listed Ensembl transcripts are used (merged). RefSeq (NM) ids are not yet supported.
-- **Strand.** Probe sequences are output genome-forward, regardless of gene strand.
-
-#### RNA Gene Feature Input File
-
-TSV file with these columns:
-
-| Column      | Type                 | Description                                                                                     |
-|-------------|----------------------|-------------------------------------------------------------------------------------------------|
-| GeneName    | String               | Ensembl gene name.                                                                              |
-| Include5UTR | Boolean              | Produce 5' UTR exon probes?                                                                     |
-| Include3UTR | Boolean              | Produce 3' UTR exon probes?                                                                     |
-| TransNames  | Comma separated list | Ensembl names of the transcripts to cover. If empty, all transcripts of the gene are used.      |
-
-Example:
-
-```text
-GeneName	Include5UTR	Include3UTR	TransNames
-EGFR	FALSE	FALSE	
-TP53	TRUE	TRUE	ENST00000269305
 ```
 
 ### Copy Number Backbone
@@ -381,6 +347,43 @@ ChromosomeStart	PositionStart	OrientationStart	ChromosomeEnd	PositionEnd	Orienta
 1	30900000	1	1	30900100	-1	AGGCTGAC	INDEL	NULL
 ```
 
+### Genes RNA
+
+Probes covering the transcribed (exonic) sequence of selected genes, for RNA panels.
+Coding sequence is always covered; the 5' and 3' UTRs are optional per gene.
+This is separate from the DNA gene feature above and is written to separate output files (see "Output" section).
+
+Probes are placed in an exon-aware manner designed to maximise performance for both known transcripts and novel splices/fusions.
+This is done by ensuring probes are constrained to be within exon boundaries where possible. See "Exon-aware Tiling (RNA)" section for more details.
+
+Probe evaluation criteria:
+
+- `QS>=0.05`
+
+Notes:
+
+- **Transcript selection.** If no transcripts are specified, all transcripts of the gene are used, with their exons merged. Otherwise the listed Ensembl transcripts are used (merged).
+- **Strand.** Probe sequences are output genome-forward, regardless of gene strand.
+
+#### RNA Gene Feature Input File
+
+TSV file with these columns:
+
+| Column      | Type                 | Description                                                                                     |
+|-------------|----------------------|-------------------------------------------------------------------------------------------------|
+| GeneName    | String               | Ensembl gene name.                                                                              |
+| Include5UTR | Boolean              | Produce 5' UTR exon probes?                                                                     |
+| Include3UTR | Boolean              | Produce 3' UTR exon probes?                                                                     |
+| TransNames  | Comma separated list | Ensembl names of the transcripts to cover. If empty, all transcripts of the gene are used.      |
+
+Example:
+
+```text
+GeneName	Include5UTR	Include3UTR	TransNames
+EGFR	FALSE	FALSE	
+TP53	TRUE	TRUE	ENST00000269305
+```
+
 ### Whole Region Tiling
 
 This section describes the algorithm used when a large region is to be fully covered with probes.
@@ -401,6 +404,10 @@ This identifies all subregions where overlap with a probe would cause that probe
     - If the probes cover more bases than the subregion size, the "extra" bases are allocated equally between probe overlap and extension outside the subregion.
 4. Subregions of the target region which are not covered by the resulting set of probes (and are not the 10b of allowable uncovered edge) are marked as rejected.
 
+### Exon-aware Tiling (RNA)
+
+TODO
+
 ### Probe Overlap Handling
 
 Probes are generated in this order, with probes generated first having priority over subsequent probes:
@@ -420,35 +427,35 @@ Exceptions:
 - Whole region tiling: The algorithm attempts to avoid overlapping existing probes, although it is not guaranteed.
 - Variant probes: If the variant introduces at least 5b of difference to the reference genome, the probe is always included, no matter the amount of overlap with existing probes.
 
+RNA probes are completely separate from DNA probes.
+
 ## Output
+
+The DNA and RNA panels produce the same set of per-panel files, distinguished by a `dna_` or `rna_` prefix, indicated with `{dna,rna}` below.
 
 Main outputs:
 
-| File           | Description                                                                                                                                                                        |
-|----------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| probes.tsv     | Full information for each probe in the panel.                                                                                                                                      |
-| probes.fasta   | Base sequences of probes in the panel.                                                                                                                                             |
-| rejections.tsv | Full information for each uncovered region or rejected probe.                                                                                                                      |
-| panel.bed      | Probe regions, merged and deduplicated. These are the reference genome regions which the panel covers and are expected to be captured. This is NOT the same as the target regions. |
+| File               | Description                                                                                                                                                                        |
+|--------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| {dna,rna}_probes.tsv     | Full information for each probe in the panel.                                                                                                                                      |
+| {dna,rna}_probes.fasta   | Base sequences of probes in the panel.                                                                                                                                             |
+| {dna,rna}_rejections.tsv | Full information for each uncovered region or rejected probe.                                                                                                                      |
+| {dna,rna}_panel.bed      | Probe regions, merged and deduplicated. These are the reference genome regions which the panel covers and are expected to be captured. This is NOT the same as the target regions. |
 
 Informational/visualisation/debugging outputs:
 
-| File                     | Description                                                                                                               |
-|--------------------------|---------------------------------------------------------------------------------------------------------------------------|
-| probes.bed               | Individual probe regions. Similar to `panel.bed` but regions are not merged.                                              |
-| targets.bed              | Individual regions which the probes are targeting (subset of `probes.bed`).                                               |
-| rejections.bed           | Regions which were rejected. Excludes variant probes.                                                                     |                                                                                                
-| gene_stats.tsv           | Statistics on probes on a per-gene basis. Only produced if gene features were requested.                                  |
-| sample_variant_info.tsv  | Additional information used in processing on a per-variant basis. Only produced if sample variants probes were requested. |
-| candidate_targets.bed.gz | All target regions evaluated for suitability.                                                                             |
-| candidate_probes.tsv.gz  | All probes evaluated for suitability. Only produced if `verbose_output` is specified.                                     |
+| File                         | Description                                                                                                               |
+|------------------------------|---------------------------------------------------------------------------------------------------------------------------|
+| {dna,rna}_probes.bed               | Individual probe regions. Similar to `dna_panel.bed` but regions are not merged.                                          |
+| {dna,rna}_targets.bed              | Individual regions which the probes are targeting (subset of `_probes.bed`).                                           |
+| {dna,rna}_rejections.bed           | Regions which were rejected. Excludes variant probes.                                                                     |
+| {dna,rna}_gene_stats.tsv           | Statistics on probes on a per-gene basis. Only produced if gene features were requested.                                  |
+| {dna,rna}_candidate_targets.bed.gz | All target regions evaluated for suitability.                                                                             |
+| {dna,rna}_candidate_probes.tsv.gz  | All probes evaluated for suitability. Only produced if `verbose_output` is specified.                                     |
+| sample_variant_info.tsv      | Additional information used in processing on a per-variant basis. Only produced if sample variants probes were requested. |
 
-TODO: list out all files here properly when files are split by DNA/RNA
-
-If RNA gene probes are requested, a parallel set of RNA output files is produced with an `rna_` prefix (`rna_probes.tsv`, `rna_probes.fasta`,
-`rna_probes.bed`, `rna_panel.bed`, `rna_targets.bed`, `rna_rejections.tsv`, `rna_rejections.bed`, `rna_candidate_targets.bed.gz`,
-`rna_gene_stats.tsv`, and — with `verbose_output` — `rna_candidate_probes.tsv.gz`). These cover the RNA panel only, kept separate from the
-DNA output. Because RNA probes may be spliced across exon junctions, `rna_probes.tsv` (and `rna_candidate_probes.tsv.gz`) list the probe
-segments generically (a `Segments` column, orientation as `1`/`-1`) rather than as a start/end pair.
+The probe region/sequence columns are different between DNA and RNA due to differing possibilities:
+- DNA: `StartRegion`, `MiddleSequence`, `EndRegion`.
+- RNA: `Segment` - list of regions or sequences.
 
 All output files will be prefixed by `output_id` if specified.
