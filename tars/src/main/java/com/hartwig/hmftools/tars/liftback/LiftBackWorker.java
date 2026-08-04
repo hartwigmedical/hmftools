@@ -37,7 +37,23 @@ public class LiftBackWorker extends Thread
     // counted by the processor, which sees each record's pre-lift state. Read by TarsApplication after the join.
     public int recordsSeen() { return mProcessor.recordsSeen(); }
 
-    public int primariesUnmapped() { return mProcessor.primariesUnmapped(); }
+    public int primariesSeen() { return mProcessor.primariesSeen(); }
+
+    public int primariesLiftFailed() { return mProcessor.primariesLiftFailed(); }
+
+    public int primariesUnmappedExcludedRegion() { return mProcessor.primariesUnmappedExcludedRegion(); }
+
+    public int primariesUnmappedOverCap() { return mProcessor.primariesUnmappedOverCap(); }
+
+    public int primariesUnmappedLowAlignmentScore() { return mProcessor.primariesUnmappedLowAlignmentScore(); }
+
+    public int supplementaryCandidates() { return mProcessor.supplementaryCandidates(); }
+
+    public int primaryRevisions() { return mProcessor.primaryRevisions(); }
+
+    public int supplementaryMerges() { return mProcessor.supplementaryMerges(); }
+
+    public int supplementariesAbsorbed() { return mProcessor.supplementariesAbsorbed(); }
 
     @Override
     public void run()
