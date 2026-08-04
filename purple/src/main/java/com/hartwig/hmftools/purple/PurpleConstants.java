@@ -67,6 +67,16 @@ public class PurpleConstants
     public static double AMBIGUOUS_BAF_THRESHOLD = DEFAULT_AMBIGUOUS_BAF_THRESHOLD;
     public static final double DEFAULT_SIGNIFICANT_ANEUPLOIDY_BAF_THRESHOLD = 0.6;
 
+    // resegmentation
+    public static final double RESEG_TUMOR_RATIO_DIFF_BOUND_MIN = 0;
+    public static final double RESEG_TUMOR_RATIO_DIFF_BOUND_MAX = 3;
+    public static final double RESEG_TUMOR_RATIO_DIFF_STEP = 0.01;
+    public static final int RESEG_TUMOR_RATIO_ROLL_AVG_COUNT = 5;
+    public static final double RESEG_TUMOR_RATIO_TROUGH_RATIO = 1.2;
+    public static final double RESEG_TUMOR_RATIO_TROUGH_DIFF = 5;
+    public static final double RESEG_TUMOR_RATIO_TROUGH_GAP = 0.1;
+    public static final double RESEG_TUMOR_RATIO_RATIO_PENALTY = 0.35;
+
     // somatic fitting
     public static final double SNV_HOTSPOT_VAF_PROBABILITY = 0.01;
     public static final int SNV_HOTSPOT_MAX_SNV_COUNT = 2000;
