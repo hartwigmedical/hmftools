@@ -33,16 +33,4 @@ public abstract class ImageComparer extends ItemComparer
                 getOrMakeFieldCheck(fieldCheckMap, FLD_PIXELS, mPixelAbsoluteThreshold, mPixelPercentThreshold),
                 "%.2f"));
     }
-
-    /*
-    @VisibleForTesting
-    public static List<Field> buildFields(final Double pixelAbsoluteThreshold, final Double pixelPercentThreshold)
-    {
-        return List.of(
-                new StringField(FLD_DIMENSIONS, i -> ((ComparableImage) i).dimensionString(), true),
-                new PixelField(FLD_PIXELS, i -> ((ComparableImage) i).Image, true,
-                        pixelAbsoluteThreshold, pixelPercentThreshold)
-        );
-    }
-    */
 }

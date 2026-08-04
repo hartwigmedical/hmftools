@@ -24,5 +24,5 @@ public class StringFieldValue extends FieldValue
     public String toString() { return format("%s=%s", name(), Value); }
 
     @Override
-    public String displayValue() { return format("%s", Value); }
+    public String displayValue() { return Value; }
 }
