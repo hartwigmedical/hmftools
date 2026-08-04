@@ -40,7 +40,7 @@ public class PanelBuilderApplication
     private final RefGenomeInterface mRefGenome;
     private final RefGenomeVersion mRefGenomeVersion;
     private final ProbeGenerator mProbeGenerator;
-    private final RnaProbeGenerator mRnaProbeGenerator;
+    private final ProbeGenerator mRnaProbeGenerator;
     private PanelData mPanelData;
     // RNA probes are kept in a separate panel so RNA and DNA coverage/overlap never interact.
     private PanelData mRnaPanelData;
@@ -70,7 +70,7 @@ public class PanelBuilderApplication
                 probeQualityProfile.matchScoreThreshold(), probeQualityProfile.matchScoreOffset());
 
         mProbeGenerator = ProbeGenerator.construct(mRefGenome, probeQualityProfile, probeQualityModel, this::writeCandidateProbe);
-        mRnaProbeGenerator = RnaProbeGenerator.construct(mRefGenome, probeQualityProfile, probeQualityModel, this::writeRnaCandidateProbe);
+        mRnaProbeGenerator = ProbeGenerator.construct(mRefGenome, probeQualityProfile, probeQualityModel, this::writeRnaCandidateProbe);
         mPanelData = new PanelData();
         mRnaPanelData = new PanelData();
     }

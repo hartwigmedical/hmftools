@@ -116,6 +116,19 @@ public class ProbeTiling
         return probes;
     }
 
+    // Unified tiling entry point. Tiles a region, pinning an edge flush when it coincides with a mapping boundary (exon boundary for RNA);
+    // an unpinned edge is a normal tiling edge with a small permitted uncovered gap. With neither edge pinned this is the ordinary centred
+    // tiling (identical to the DNA path); pinning is the RNA generalisation for splice-junction coverage.
+    public static List<Integer> calculateProbeTiling(final BaseRegion region, final BaseRegion probeBounds, boolean pinStart, boolean pinEnd)
+    {
+        if(!pinStart && !pinEnd)
+        {
+            return calculateOptimalProbeTiling(region, probeBounds);
+        }
+        // A pinned edge is flush to the boundary, so probes stay contained within the region (no extension past the pinned edge).
+        return calculateContainedTiling(region, pinStart, pinEnd);
+    }
+
     // Tiles probes strictly contained within the region, optionally pinning the outermost probes flush to the region edges.
     // Used for RNA exon tiling: pin an edge that coincides with an exon boundary (so the splice-junction-proximal sequence is covered), and
     // leave an edge unpinned when it abuts a rejected region (a small uncovered gap there is acceptable). Probes never extend outside the
@@ -134,8 +147,9 @@ public class ProbeTiling
             return emptyList();
         }
 
-        // Allow uncovered bases only at unpinned edges.
-        int allowedUncovered = (pinStart ? 0 : REGION_UNCOVERED_MAX) + (pinEnd ? 0 : REGION_UNCOVERED_MAX);
+        // REGION_UNCOVERED_MAX is the total uncovered budget for the whole region, not per edge. A pinned edge must be flush (no uncovered
+        // there), so the budget applies only when at least one edge is unpinned.
+        int allowedUncovered = (pinStart && pinEnd) ? 0 : REGION_UNCOVERED_MAX;
         int probeCount = (int) ceil(max(1, length - allowedUncovered) / (double) PROBE_LENGTH);
         // How much of the region the probes span; the remainder (if any) is the allowed uncovered edge slack.
         int coveredLength = min(probeCount * PROBE_LENGTH, length);

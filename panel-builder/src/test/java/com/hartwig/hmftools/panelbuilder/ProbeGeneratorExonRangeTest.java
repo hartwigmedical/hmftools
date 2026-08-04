@@ -9,6 +9,7 @@ import static org.junit.Assert.assertTrue;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.OptionalInt;
 import java.util.function.IntPredicate;
 
@@ -17,9 +18,11 @@ import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 import org.junit.Test;
 
+// Exon-aware (RNA) tiling via ProbeGenerator.coverExonRange: probe-space tiling over an exon RegionMapping, pinned flush to exon boundaries,
+// spliced probes across junctions.
 // PROBE_LENGTH is 120, REGION_UNCOVERED_MAX is 20, RNA_EXON_SINGLE_PROBE_SLACK is 20, PROBE_SHIFT_MAX is 5.
 // Exon genome coordinates are chosen so that probe-space position s maps to genome position 1001+s within the first exon.
-public class RnaProbeGeneratorTest
+public class ProbeGeneratorExonRangeTest
 {
     private static final TargetMetadata METADATA = new TargetMetadata(TargetMetadata.Type.CUSTOM_REGION, "rna");
     // Quality score alone decides acceptance; GC is always within tolerance.
@@ -67,6 +70,21 @@ public class RnaProbeGeneratorTest
                         new ChrBaseRegion("1", 1101, 1220),
                         new ChrBaseRegion("1", 1221, 1340),
                         new ChrBaseRegion("1", 1341, 1460)),
+                singleRegions(result));
+        assertTrue(result.rejectedFeatures().isEmpty());
+    }
+
+    @Test
+    public void testUnpinnedInteriorRangeUncoveredBudget()
+    {
+        // Interior target range (both edges unpinned), length 145. REGION_UNCOVERED_MAX (20) is the total uncovered budget, so two probes are
+        // needed. With both edges interior (not exon boundaries), the probes are centred and may extend past the target into the surrounding
+        // exon sequence (the same behaviour as DNA tiling). GenesRna only targets whole exons, so this interior-target case is synthetic.
+        RegionMapping mapping = new RegionMapping(List.of(new ChrBaseRegion("1", 1001, 1600)));
+        ProbeGenerationResult result = generate(mapping, 200, 345, start -> true);
+
+        assertEquals(
+                List.of(new ChrBaseRegion("1", 1177, 1296), new ChrBaseRegion("1", 1249, 1368)),
                 singleRegions(result));
         assertTrue(result.rejectedFeatures().isEmpty());
     }
@@ -280,7 +298,7 @@ public class RnaProbeGeneratorTest
     private static ProbeGenerationResult generate(final RegionMapping mapping, int rangeStart, int rangeEnd,
             final IntPredicate acceptableStart)
     {
-        RnaProbeGenerator generator = new RnaProbeGenerator(fakeEvaluator(mapping, acceptableStart), null);
+        ProbeGenerator generator = new ProbeGenerator(Map.of(), fakeEvaluator(mapping, acceptableStart), null);
         ProbeGenerationResult result = generator.coverExonRange(mapping, rangeStart, rangeEnd, METADATA, CRITERIA, STRATEGY);
         assertProbeInvariants(mapping, rangeStart, rangeEnd, result);
         return result;

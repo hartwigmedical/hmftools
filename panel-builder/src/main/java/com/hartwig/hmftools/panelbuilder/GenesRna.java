@@ -34,7 +34,7 @@ import org.jetbrains.annotations.Nullable;
 // Probes covering the transcribed (exonic) sequence of selected genes, for RNA panels.
 // Coding sequence is always covered; the 5' and 3' UTRs are optional per gene. Probes are exon-aware: they only cover exonic bases, tiled
 // within each exon and flush to splice junctions, with short exons padded across the junction into the adjacent exon. This is all driven off
-// a per-gene RegionMapping (the merged exons as a contiguous probe-space) and RnaProbeGenerator.
+// a per-gene RegionMapping (the merged exons as a contiguous probe-space) and ProbeGenerator.coverExonRange.
 public class GenesRna
 {
     private static final TargetMetadata.Type TARGET_TYPE = TargetMetadata.Type.GENE_RNA;
@@ -60,7 +60,7 @@ public class GenesRna
     }
 
     public static ExtraOutput generateProbes(final String rnaGeneFile, final EnsemblDataCache ensemblData,
-            final RnaProbeGenerator probeGenerator, PanelData panelData)
+            final ProbeGenerator probeGenerator, PanelData panelData)
     {
         LOGGER.info("Generating gene RNA probes");
 
@@ -279,7 +279,7 @@ public class GenesRna
     {
     }
 
-    private static ProbeGenerationResult generateProbes(final List<GeneTranscriptData> genes, final RnaProbeGenerator probeGenerator,
+    private static ProbeGenerationResult generateProbes(final List<GeneTranscriptData> genes, final ProbeGenerator probeGenerator,
             PanelData panelData)
     {
         ProbeGenerationResult total = new ProbeGenerationResult();

@@ -422,3 +422,79 @@ Action: prototype (1), compare against hand-checked probes, decide. Track as its
 - Done: `Segments` orientation now `1`/`-1`; target extra info is just the gene name unless the user specified a
   transcript subset; Ensembl loaded once; RNA verbose candidate-probe output.
 - Complete README exon aware tiling algorithm section.
+
+## Merge plan: unify DNA + RNA probe generation
+
+Goal: one probe-generation path parameterised by a `RegionMapping`, deleting the DNA/RNA fork
+(`RnaProbeGenerator`). RNA is DNA generalised: DNA uses an identity mapping (one whole-chromosome
+region); RNA uses the transcript's ordered exons. No mode boolean — the differences are parameters.
+
+**Unifying rules**
+
+- Everything runs in probe-space over a `RegionMapping`. Candidate windows map back to genome via
+  `toGenomeRegions` (a single region for DNA, possibly spliced for RNA).
+- Pinning is derived, not passed: pin a tiling edge iff it coincides with a mapping boundary
+  (`isRegionBoundary`). Identity mapping has no interior boundaries → never pins → today's centred DNA
+  tiling. Exon boundaries pin → flush (good splice-junction coverage).
+- Rejected regions carry no special behaviour: the acceptable-subrange split treats each side as an
+  ordinary region; the only constraint is that tiling cannot overlap the rejection (guaranteed because
+  `probeBounds` = the acceptable subrange). `REGION_UNCOVERED_MAX` is the total uncovered budget per
+  acceptable region, independent of adjacency (the old per-edge doubling in `calculateContainedTiling`
+  was a bug, now fixed).
+- Short-range padding is emergent, not special-cased: an acceptable subrange spanning a junction already
+  contains spliced candidate windows, so the general tiler fits a probe by extending into adjacent mapped
+  space (chromosome for DNA, next exon = spliced for RNA).
+
+**Parameters replacing the fork**
+
+- the `RegionMapping` (identity vs exon) — the core parameter; drives extension.
+- the pin-boundary predicate (`IntPredicate`) — DNA `pos -> false`, RNA `mapping::isRegionBoundary`.
+- eval criteria, select strategy (already parameters).
+
+**Interface (as built)**
+
+Core: `ProbeGenerator.coverMappedRange(RegionMapping mapping, int rangeStart, int rangeEnd, TargetMetadata,
+ProbeEvaluator.Criteria, ProbeSelector.Strategy, IntPredicate pinBoundary)`. Two convenience wrappers capture
+the pin policy so callers never pass the predicate: `coverRegion` (DNA — builds an identity mapping, pins
+nothing; also does the existing genome-space coverage subtraction, then calls the core per uncovered
+subregion) and `coverExonRange` (RNA — pins at exon boundaries). `GenesRna` calls `coverExonRange` per exon.
+The other spec types (`CoverOneSubregion`, `CoverOnePosition`, `SingleProbe`) stay single-region — RNA never
+needs them. Coverage-avoidance stayed in `coverRegion` (genome-space), not a core parameter, since RNA is a
+separate panel with no coverage to subtract.
+
+**Correctness gate**
+
+DNA tiling behaviour was not covered by unit tests originally (`ProbeGeneratorTest` only tests candidate
+generation), so `ProbeGeneratorTilingTest` (8 DNA tiling characterisation cases) was added first, then the
+DNA-space rewrite validated by regenerating a DNA panel and diffing to byte-identical output (confirmed:
+all DNA probe/rejection/panel/fasta output byte-identical; `targets.bed` content-identical, tie-order only).
+Existing DNA and RNA unit tests stayed green throughout.
+
+**Pinning as a parameter, not mapping data.** `RegionMapping` stays pure geometry (`isRegionBoundary`).
+The pin policy is an `IntPredicate pinBoundary` passed to `coverMappedRange`: DNA passes `pos -> false`
+(pin nothing — chromosome ends and target edges are arbitrary), RNA passes `mapping::isRegionBoundary`
+(pin every exon boundary). Pinning is also suppressed for a single-probe (short/mid) range, which cannot
+be flush to both boundaries and is centred (short ranges pad across the junction) — mirroring the old RNA
+short/mid branches, which are otherwise emergent from the shared path.
+
+**Phasing (each independently gated) — ALL DONE.**
+
+- **M1 [DONE].** Unified tiler entry `ProbeTiling.calculateProbeTiling(region, probeBounds, pinStart,
+  pinEnd)` — unpinned delegates to `calculateOptimalProbeTiling`, pinned to the contained-flush placement.
+  Also fixed the per-edge `REGION_UNCOVERED_MAX` bug in `calculateContainedTiling`.
+- **M2 [DONE].** `RegionMapping.wholeChromosome` identity factory.
+- **M3 [DONE].** `ProbeGenerator.coverMappedRange` / `coverAcceptableMappedSubrange` (probe-space port of
+  the DNA `coverUncoveredRegion` / `coverAcceptableSubregion`, pin-aware via the `pinBoundary` predicate).
+  DNA `coverRegion` routes through it via an identity mapping (no pinning). Gated by the new
+  `ProbeGeneratorTilingTest` (8 DNA tiling characterisation cases) + existing DNA tests.
+- **M4 [DONE].** `ProbeGenerator.coverExonRange` convenience wrapper (pins at `isRegionBoundary`). `GenesRna`
+  and the app use `ProbeGenerator` (a second instance with the RNA candidate callback). All 15
+  `RnaProbeGeneratorTest` cases pass through the unified path (one synthetic interior-target characterisation
+  re-baselined — it now extends into surrounding exon like DNA; not reachable via `GenesRna`, which targets
+  whole exons).
+- **M5 [DONE].** `RnaProbeGenerator` deleted; dead DNA `coverUncoveredRegion` / `coverAcceptableSubregion`
+  removed. (`calculateContainedTiling` kept — it is the pinned tiling implementation and is directly tested.)
+
+**Still requires your byte-identical DNA panel run** to confirm the DNA-space rewrite (M3): the 8
+characterisation tests are a partial gate, not exhaustive. Convenience wrappers: `coverRegion` (DNA,
+existing) and `coverExonRange` (RNA, new) capture the pin policy so callers never pass the predicate.

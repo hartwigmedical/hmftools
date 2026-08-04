@@ -54,6 +54,13 @@ public class RegionMapping
         mLength = mRegions.stream().mapToInt(ChrBaseRegion::baseLength).sum();
     }
 
+    // Identity mapping: a whole chromosome as a single region, so probe-space is genome position - 1. Extension along probe-space just
+    // continues along the chromosome - i.e. the DNA case.
+    public static RegionMapping wholeChromosome(final String chromosome, int length)
+    {
+        return new RegionMapping(List.of(new ChrBaseRegion(chromosome, 1, length)));
+    }
+
     public int length()
     {
         return mLength;
