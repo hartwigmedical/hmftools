@@ -58,6 +58,29 @@ public class FieldCheckCache
 
     private static final String NOT_ASSESSED_NA = "N/A";
 
+    public boolean processOverridesFile(final ComparConfig config)
+    {
+        if(config.FieldCheckOverridesFile == null) // not a required config file
+            return true;
+
+        try
+        {
+            loadOverrides(config.FieldCheckOverridesFile);
+        }
+        catch(IOException e)
+        {
+            CMP_LOGGER.error("failed to load field overrides file({})", config.FieldCheckOverridesFile);
+            e.printStackTrace();
+            System.exit(1);
+        }
+
+        validateAllComparisonFieldsAreSet(config);
+
+        logProblems();
+
+        return hasErrors();
+    }
+
     public void loadOverrides(final String filename) throws IOException
     {
         List<String> lines = Files.readAllLines(new File(filename).toPath());
@@ -129,7 +152,7 @@ public class FieldCheckCache
 
     public boolean hasErrors() { return !mErrorMessages.isEmpty(); }
 
-    public void logProblems()
+    private void logProblems()
     {
         mWarnings.forEach(CMP_LOGGER::warn);
         mErrorMessages.forEach(CMP_LOGGER::error);
@@ -148,7 +171,7 @@ public class FieldCheckCache
         return override != null ? override : new FieldCheck(true);
     }
 
-    public void validateAllComparisonFieldsAreSet(final ComparConfig config)
+    private void validateAllComparisonFieldsAreSet(final ComparConfig config)
     {
         if(!mStrictChecks)
             return;

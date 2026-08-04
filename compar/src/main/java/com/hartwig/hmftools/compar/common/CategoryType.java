@@ -41,7 +41,7 @@ public enum CategoryType
     RNA_SUMMARY,
     RNA_GENE_DATA,
     RNA_TRANSCRIPT_DATA,
-    NOVEL_SPLICE_JUNCTION,
+    RNA_NOVEL_SPLICE_JUNCTION,
     RNA_FUSION;
 
     public static final String ALL_CATEGORIES = "ALL";

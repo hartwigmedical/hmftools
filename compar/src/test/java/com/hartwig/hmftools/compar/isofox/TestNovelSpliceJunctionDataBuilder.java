@@ -41,10 +41,10 @@ public class TestNovelSpliceJunctionDataBuilder
         b.comparisonPositionEnd = 4000;
     };
 
-    public static final TestComparableItemBuilder<TestNovelSpliceJunctionDataBuilder, NovelSpliceJunctionData> BUILDER =
+    public static final TestComparableItemBuilder<TestNovelSpliceJunctionDataBuilder, RnaNovelSpliceJunctionData> BUILDER =
             new TestComparableItemBuilder<>(TestNovelSpliceJunctionDataBuilder::new, TestNovelSpliceJunctionDataBuilder::build, ALTERNATE_INITIALIZER);
 
-    private NovelSpliceJunctionData build()
+    private RnaNovelSpliceJunctionData build()
     {
         final NovelSpliceJunction junction = ImmutableNovelSpliceJunction.builder()
                 .geneName(geneName)
@@ -66,10 +66,10 @@ public class TestNovelSpliceJunctionDataBuilder
                 .cohortFrequency(-1)
                 .build();
 
-        return new NovelSpliceJunctionData(
+        return new RnaNovelSpliceJunctionData(
                 junction,
                 new BasePosition(comparisonChromosomeStart, comparisonPositionStart),
                 new BasePosition(comparisonChromosomeEnd, comparisonPositionEnd),
-                new NovelSpliceJunctionComparer(null, Collections.emptyMap()).fieldsList());
+                new RnaNovelSpliceJunctionComparer(null, Collections.emptyMap()).fieldsList());
     }
 }

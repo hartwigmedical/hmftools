@@ -79,14 +79,19 @@ public class BamMetricsComparer extends ItemComparer
         final List<ComparableItem> comparableItems = Lists.newArrayList();
         try
         {
-            BamMetricSummary metrics = loadBamMetricsSummary(sampleId, fileSources.TumorBamMetrics);
+            String sourceFile = isTumor() ? fileSources.TumorBamMetrics : fileSources.GermlineBamMetrics;
+            String sourceSampleId = isTumor() ? sampleId : germlineSampleId;
+            BamMetricSummary metrics = loadBamMetricsSummary(sourceSampleId, sourceFile);
+
             comparableItems.add(new BamMetricsData(mCategory, metrics, mComparisonPercentages, mFields));
         }
         catch(IOException e)
         {
-            CMP_LOGGER.warn("sample({}) failed to load tumor BAM metrics data: {}", sampleId, e.toString());
+            CMP_LOGGER.warn("sample({}) failed to load {}} BAM metrics data: {}", sampleId, isTumor() ? "tumor" : "gerrmline", e.toString());
             return null;
         }
         return comparableItems;
     }
+
+    private boolean isTumor() { return mCategory == CategoryType.TUMOR_BAM_METRICS; }
 }

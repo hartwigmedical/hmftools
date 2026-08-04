@@ -7,15 +7,15 @@ import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.field.FieldInfo;
 
-public class IsofoxTranscriptData extends ComparableItem
+public class RnaTranscriptData extends ComparableItem
 {
     public final TranscriptExpression Expression;
 
-    public IsofoxTranscriptData(final TranscriptExpression expression, final List<FieldInfo> fields)
+    public RnaTranscriptData(final TranscriptExpression expression, final List<FieldInfo> fields)
     {
         Expression = expression;
 
-        addDoubleValue(IsofoxTranscriptDataComparer.Fields.AdjTPM.toString(), expression.tpm(), fields);
+        addDoubleValue(RnaTranscriptDataComparer.Fields.AdjTPM.toString(), expression.tpm(), fields);
     }
 
     @Override
@@ -45,7 +45,7 @@ public class IsofoxTranscriptData extends ComparableItem
     @Override
     public boolean matches(final ComparableItem other)
     {
-        final IsofoxTranscriptData otherData = (IsofoxTranscriptData)other;
+        final RnaTranscriptData otherData = (RnaTranscriptData)other;
 
         return otherData.Expression.transcriptName().equals(Expression.transcriptName());
     }

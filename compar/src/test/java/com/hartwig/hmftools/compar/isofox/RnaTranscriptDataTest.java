@@ -11,17 +11,17 @@ import com.hartwig.hmftools.compar.ComparableItemTest;
 import org.junit.Before;
 import org.junit.Test;
 
-public class IsofoxTranscriptDataTest extends ComparableItemTest<IsofoxTranscriptData, IsofoxTranscriptDataComparer, TestIsofoxTranscriptDataBuilder>
+public class RnaTranscriptDataTest extends ComparableItemTest<RnaTranscriptData, RnaTranscriptDataComparer, TestIsofoxTranscriptDataBuilder>
 {
     @Before
     public void setUp()
     {
-        comparer = new IsofoxTranscriptDataComparer(new ComparConfig(), Collections.emptyMap());
+        comparer = new RnaTranscriptDataComparer(new ComparConfig(), Collections.emptyMap());
         builder = TestIsofoxTranscriptDataBuilder.BUILDER;
-        IsofoxTranscriptData alternateValueSource = builder.createWithAlternateDefaults();
+        RnaTranscriptData alternateValueSource = builder.createWithAlternateDefaults();
 
         fieldToAlternateValueInitializer = Map.of(
-                IsofoxTranscriptDataComparer.Fields.AdjTPM.toString(), b -> b.tpm = alternateValueSource.Expression.tpm()
+                RnaTranscriptDataComparer.Fields.AdjTPM.toString(), b -> b.tpm = alternateValueSource.Expression.tpm()
         );
         nameToAlternateIndexInitializer = Map.of(
                 FLD_TRANS_NAME, b -> b.transcriptName = alternateValueSource.Expression.transcriptName()

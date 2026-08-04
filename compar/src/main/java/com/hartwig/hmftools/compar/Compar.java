@@ -49,21 +49,8 @@ public class Compar
 
         FieldCheckCache fieldCheckCache = new FieldCheckCache(mConfig.StrictFieldConfig);
 
-        try
+        if(!fieldCheckCache.processOverridesFile(mConfig))
         {
-            fieldCheckCache.loadOverrides(mConfig.FieldCheckOverridesFile);
-            fieldCheckCache.validateAllComparisonFieldsAreSet(mConfig);
-
-            fieldCheckCache.logProblems();
-            if(fieldCheckCache.hasErrors())
-            {
-                System.exit(1);
-            }
-        }
-        catch(IOException e)
-        {
-            CMP_LOGGER.error("failed to load field overrides file({})", mConfig.FieldCheckOverridesFile);
-            e.printStackTrace();
             System.exit(1);
         }
 

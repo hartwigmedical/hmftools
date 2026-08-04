@@ -23,7 +23,7 @@ import com.hartwig.hmftools.compar.common.PipelineSourcePaths;
 import com.hartwig.hmftools.compar.common.field.FieldCheck;
 import com.hartwig.hmftools.compar.common.field.FieldInfo;
 
-public class NovelSpliceJunctionComparer extends ItemComparer
+public class RnaNovelSpliceJunctionComparer extends ItemComparer
 {
     protected enum Fields
     {
@@ -33,7 +33,7 @@ public class NovelSpliceJunctionComparer extends ItemComparer
         RegionEnd;
     }
 
-    public NovelSpliceJunctionComparer(final ComparConfig config, final Map<String,FieldCheck> fieldCheckMap)
+    public RnaNovelSpliceJunctionComparer(final ComparConfig config, final Map<String,FieldCheck> fieldCheckMap)
     {
         super(config);
 
@@ -57,7 +57,7 @@ public class NovelSpliceJunctionComparer extends ItemComparer
     @Override
     public CategoryType category()
     {
-        return CategoryType.NOVEL_SPLICE_JUNCTION;
+        return CategoryType.RNA_NOVEL_SPLICE_JUNCTION;
     }
 
     @Override
@@ -93,7 +93,7 @@ public class NovelSpliceJunctionComparer extends ItemComparer
             BasePosition comparisonPositionEnd = CommonUtils.determineComparisonGenomePosition(
                     junction.chromosome(), junction.junctionEnd(), fileSources.Source, mConfig.RequiresLiftover, mConfig.LiftoverCache);
 
-            comparableItems.add(new NovelSpliceJunctionData(junction, comparisonPositionStart, comparisonPositionEnd, mFields));
+            comparableItems.add(new RnaNovelSpliceJunctionData(junction, comparisonPositionStart, comparisonPositionEnd, mFields));
         }
 
         return comparableItems;

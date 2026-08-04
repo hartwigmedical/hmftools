@@ -24,25 +24,6 @@ public class CopyNumberDataTest extends ComparableItemTest<CopyNumberData, CopyN
                 CopyNumberComparer.Fields.Method.toString(), b -> b.method = alternateValueSource.Method
         );
 
-        // nameToAlternateIndexInitializer = Collections.emptyMap();
-
-        /* TODO: remove no longer support liftover
-        nameToAlternateIndexInitializer = Map.of(
-                "Chromosome", b -> {
-                    b.chromosome = alternateValueSource.chromosome();
-                    b.comparisonChromosomeStart = alternateValueSource.comparisonPositionStart().Chromosome;
-                    b.comparisonChromosomeEnd = alternateValueSource.comparisonPositionEnd().Chromosome;
-                },
-                "PositionStart", b -> {
-                    b.positionStart = alternateValueSource.positionStart();
-                    b.comparisonPositionStart = alternateValueSource.comparisonPositionStart().Position;
-                },
-                "PositionEnd", b -> {
-                    b.positionEnd = alternateValueSource.positionEnd();
-                    b.comparisonPositionEnd = alternateValueSource.comparisonPositionEnd().Position;
-                }
-        );
-        */
         nameToAlternateIndexInitializer = Map.of("Chromosome", b -> b.chromosome = alternateValueSource.Chromosome);
         reportabilityFieldToFalseReportabilityInitializer = Collections.emptyMap();
         nameToNonPassInitializer = Collections.emptyMap();

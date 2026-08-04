@@ -24,21 +24,21 @@ import com.hartwig.hmftools.compar.common.MismatchType;
 import org.junit.Before;
 import org.junit.Test;
 
-public class NovelSpliceJunctionDataTest
-        extends ComparableItemTest<NovelSpliceJunctionData, NovelSpliceJunctionComparer, TestNovelSpliceJunctionDataBuilder>
+public class RnaNovelSpliceJunctionDataTest
+        extends ComparableItemTest<RnaNovelSpliceJunctionData, RnaNovelSpliceJunctionComparer, TestNovelSpliceJunctionDataBuilder>
 {
     @Before
     public void setUp()
     {
-        comparer = new NovelSpliceJunctionComparer(new ComparConfig(), Collections.emptyMap());
+        comparer = new RnaNovelSpliceJunctionComparer(new ComparConfig(), Collections.emptyMap());
         builder = TestNovelSpliceJunctionDataBuilder.BUILDER;
-        NovelSpliceJunctionData alternateValueSource = builder.createWithAlternateDefaults();
+        RnaNovelSpliceJunctionData alternateValueSource = builder.createWithAlternateDefaults();
 
         fieldToAlternateValueInitializer = Map.of(
-                NovelSpliceJunctionComparer.Fields.Type.toString(), b -> b.type = alternateValueSource.Junction.type(),
-                NovelSpliceJunctionComparer.Fields.FragmentCount.toString(), b -> b.fragmentCount = alternateValueSource.Junction.fragmentCount(),
-                NovelSpliceJunctionComparer.Fields.RegionStart.toString(), b -> b.regionStart = alternateValueSource.Junction.regionStart(),
-                NovelSpliceJunctionComparer.Fields.RegionEnd.toString(), b -> b.regionEnd = alternateValueSource.Junction.regionEnd());
+                RnaNovelSpliceJunctionComparer.Fields.Type.toString(), b -> b.type = alternateValueSource.Junction.type(),
+                RnaNovelSpliceJunctionComparer.Fields.FragmentCount.toString(), b -> b.fragmentCount = alternateValueSource.Junction.fragmentCount(),
+                RnaNovelSpliceJunctionComparer.Fields.RegionStart.toString(), b -> b.regionStart = alternateValueSource.Junction.regionStart(),
+                RnaNovelSpliceJunctionComparer.Fields.RegionEnd.toString(), b -> b.regionEnd = alternateValueSource.Junction.regionEnd());
 
         nameToAlternateIndexInitializer = Map.of(
                 FLD_GENE_NAME, b -> b.geneName = alternateValueSource.Junction.geneName(),
@@ -76,8 +76,8 @@ public class NovelSpliceJunctionDataTest
     @Test
     public void fullyMatchesSelfWithLiftoverStart()
     {
-        NovelSpliceJunctionData victim = TestNovelSpliceJunctionDataBuilder.BUILDER.create(b -> b.comparisonPositionStart = 5000);
-        NovelSpliceJunctionData liftoverVictim = TestNovelSpliceJunctionDataBuilder.BUILDER.create(b -> b.junctionStart = 5000);
+        RnaNovelSpliceJunctionData victim = TestNovelSpliceJunctionDataBuilder.BUILDER.create(b -> b.comparisonPositionStart = 5000);
+        RnaNovelSpliceJunctionData liftoverVictim = TestNovelSpliceJunctionDataBuilder.BUILDER.create(b -> b.junctionStart = 5000);
 
         MatchLevel matchLevel = MatchLevel.DETAILED;
         FieldCheckCache fieldConfig = createDefaultThresholds(matchLevel);
@@ -93,8 +93,8 @@ public class NovelSpliceJunctionDataTest
     @Test
     public void fullyMatchesSelfWithLiftoverEnd()
     {
-        NovelSpliceJunctionData victim = TestNovelSpliceJunctionDataBuilder.BUILDER.create(b -> b.comparisonPositionEnd = 6000);
-        NovelSpliceJunctionData liftoverVictim = TestNovelSpliceJunctionDataBuilder.BUILDER.create(b -> b.junctionEnd = 6000);
+        RnaNovelSpliceJunctionData victim = TestNovelSpliceJunctionDataBuilder.BUILDER.create(b -> b.comparisonPositionEnd = 6000);
+        RnaNovelSpliceJunctionData liftoverVictim = TestNovelSpliceJunctionDataBuilder.BUILDER.create(b -> b.junctionEnd = 6000);
 
         MatchLevel matchLevel = MatchLevel.DETAILED;
         FieldCheckCache fieldConfig = createDefaultThresholds(matchLevel);
@@ -110,14 +110,14 @@ public class NovelSpliceJunctionDataTest
     @Test
     public void keyNonEmptyForLiftoverStart()
     {
-        NovelSpliceJunctionData victim = TestNovelSpliceJunctionDataBuilder.BUILDER.create(b -> b.comparisonPositionStart = 5000);
+        RnaNovelSpliceJunctionData victim = TestNovelSpliceJunctionDataBuilder.BUILDER.create(b -> b.comparisonPositionStart = 5000);
         assertFalse(victim.key().isEmpty());
     }
 
     @Test
     public void keyNonEmptyForLiftoverEnd()
     {
-        NovelSpliceJunctionData victim = TestNovelSpliceJunctionDataBuilder.BUILDER.create(b -> b.comparisonPositionEnd = 6000);
+        RnaNovelSpliceJunctionData victim = TestNovelSpliceJunctionDataBuilder.BUILDER.create(b -> b.comparisonPositionEnd = 6000);
         assertFalse(victim.key().isEmpty());
     }
 }

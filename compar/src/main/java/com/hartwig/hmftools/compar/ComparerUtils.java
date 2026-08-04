@@ -22,10 +22,10 @@ import com.hartwig.hmftools.compar.common.field.FieldCheck;
 import com.hartwig.hmftools.compar.cuppa.CuppaComparer;
 import com.hartwig.hmftools.compar.cuppa.CuppaImageComparer;
 import com.hartwig.hmftools.compar.driver.DriverComparer;
-import com.hartwig.hmftools.compar.isofox.IsofoxGeneDataComparer;
-import com.hartwig.hmftools.compar.isofox.IsofoxSummaryComparer;
-import com.hartwig.hmftools.compar.isofox.IsofoxTranscriptDataComparer;
-import com.hartwig.hmftools.compar.isofox.NovelSpliceJunctionComparer;
+import com.hartwig.hmftools.compar.isofox.RnaGeneDataComparer;
+import com.hartwig.hmftools.compar.isofox.RnaSummaryComparer;
+import com.hartwig.hmftools.compar.isofox.RnaTranscriptDataComparer;
+import com.hartwig.hmftools.compar.isofox.RnaNovelSpliceJunctionComparer;
 import com.hartwig.hmftools.compar.isofox.RnaFusionComparer;
 import com.hartwig.hmftools.compar.lilac.LilacAlleleComparer;
 import com.hartwig.hmftools.compar.lilac.LilacQcComparer;
@@ -187,16 +187,16 @@ public final class ComparerUtils
                 return new SigsComparer(config, categoryFieldOverrides);
 
             case RNA_SUMMARY:
-                return new IsofoxSummaryComparer(config, categoryFieldOverrides);
+                return new RnaSummaryComparer(config, categoryFieldOverrides);
 
             case RNA_GENE_DATA:
-                return new IsofoxGeneDataComparer(config, categoryFieldOverrides);
+                return new RnaGeneDataComparer(config, categoryFieldOverrides);
 
             case RNA_TRANSCRIPT_DATA:
-                return new IsofoxTranscriptDataComparer(config, categoryFieldOverrides);
+                return new RnaTranscriptDataComparer(config, categoryFieldOverrides);
 
-            case NOVEL_SPLICE_JUNCTION:
-                return new NovelSpliceJunctionComparer(config, categoryFieldOverrides);
+            case RNA_NOVEL_SPLICE_JUNCTION:
+                return new RnaNovelSpliceJunctionComparer(config, categoryFieldOverrides);
 
             case RNA_FUSION:
                 return new RnaFusionComparer(config, categoryFieldOverrides);

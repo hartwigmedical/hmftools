@@ -3,6 +3,7 @@ package com.hartwig.hmftools.compar.linx;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.compar.common.CategoryType.FUSION;
+import static com.hartwig.hmftools.compar.common.field.FieldInfo.findField;
 
 import java.util.List;
 
@@ -40,10 +41,13 @@ public class FusionData extends ComparableItem
         addStringValue(FusionComparer.Fields.DomainsKept.toString(), fusion.domainsKept(), fields);
         addStringValue(FusionComparer.Fields.DomainsLost.toString(), fusion.domainsLost(), fields);
 
-        // TODO: add field values so can build for display only
-        // addStringValue(FusionComparer.Fields.TumorCopyNumber.toString(), fusion.tumorCopyNumber(), fields);
-        // addStringValue(FusionComparer.Fields.TumorCopyNumber.toString(), fusion.tumorCopyNumber(), fields);
+        mValues.put(
+                FusionComparer.Fields.BreakendUp.toString(),
+                new BreakendsFieldValue(findField(FusionComparer.Fields.BreakendUp.toString(), fields), List.of(breakendFive)));
 
+        mValues.put(
+                FusionComparer.Fields.BreakendDown.toString(),
+                new BreakendsFieldValue(findField(FusionComparer.Fields.BreakendDown.toString(), fields), List.of(breakendThree)));
     }
 
     @Override

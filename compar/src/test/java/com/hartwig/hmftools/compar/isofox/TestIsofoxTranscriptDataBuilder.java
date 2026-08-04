@@ -20,17 +20,17 @@ public class TestIsofoxTranscriptDataBuilder
         b.tpm = 0.001;
     };
 
-    public static final TestComparableItemBuilder<TestIsofoxTranscriptDataBuilder, IsofoxTranscriptData> BUILDER =
+    public static final TestComparableItemBuilder<TestIsofoxTranscriptDataBuilder, RnaTranscriptData> BUILDER =
             new TestComparableItemBuilder<>(TestIsofoxTranscriptDataBuilder::new, TestIsofoxTranscriptDataBuilder::build, ALTERNATE_INITIALIZER);
 
-    private IsofoxTranscriptData build()
+    private RnaTranscriptData build()
     {
         final TranscriptExpression transcriptExpression = ImmutableTranscriptExpression.builder()
                 .transcriptName(transcriptName)
                 .geneName(geneName)
                 .tpm(tpm)
                 .build();
-        return new IsofoxTranscriptData(
-                transcriptExpression, new IsofoxTranscriptDataComparer(null, Collections.emptyMap()).fieldsList());
+        return new RnaTranscriptData(
+                transcriptExpression, new RnaTranscriptDataComparer(null, Collections.emptyMap()).fieldsList());
     }
 }

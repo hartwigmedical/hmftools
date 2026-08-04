@@ -24,10 +24,10 @@ public class TestIsofoxGeneDataBuilder
         b.tpm = 0.001;
     };
 
-    public static final TestComparableItemBuilder<TestIsofoxGeneDataBuilder, IsofoxGeneData> BUILDER =
+    public static final TestComparableItemBuilder<TestIsofoxGeneDataBuilder, RnaGeneData> BUILDER =
             new TestComparableItemBuilder<>(TestIsofoxGeneDataBuilder::new, TestIsofoxGeneDataBuilder::build, ALTERNATE_INITIALIZER);
 
-    private IsofoxGeneData build()
+    private RnaGeneData build()
     {
         final GeneExpression geneExpression = ImmutableGeneExpression.builder()
                 .geneName(geneName)
@@ -41,6 +41,6 @@ public class TestIsofoxGeneDataBuilder
                 .reportedStatus(NONE)
                 .build();
 
-        return new IsofoxGeneData(geneExpression, new IsofoxGeneDataComparer(null, Collections.emptyMap()).fieldsList());
+        return new RnaGeneData(geneExpression, new RnaGeneDataComparer(null, Collections.emptyMap()).fieldsList());
     }
 }

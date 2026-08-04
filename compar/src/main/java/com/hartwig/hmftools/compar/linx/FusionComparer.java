@@ -89,14 +89,8 @@ public class FusionComparer extends ItemComparer
                 Fields.DomainsLost.toString(),
                 getOrMakeFieldCheck(fieldCheckMap, Fields.DomainsLost.toString()), null));
 
-        // TODO: display only
-        mFields.add(new FieldInfo(
-                Fields.BreakendUp.toString(),
-                getOrMakeFieldCheck(fieldCheckMap, Fields.BreakendUp.toString()), null));
-
-        mFields.add(new FieldInfo(
-                Fields.BreakendDown.toString(),
-                getOrMakeFieldCheck(fieldCheckMap, Fields.BreakendDown.toString()), null));
+        mFields.add(FieldInfo.displayOnly(Fields.BreakendUp.toString(), null));
+        mFields.add(FieldInfo.displayOnly(Fields.BreakendDown.toString(), null));
 
         mDisruptionComparer = null;
     }

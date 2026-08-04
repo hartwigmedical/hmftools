@@ -46,12 +46,8 @@ public class GeneCopyNumberComparer extends ItemComparer
                 getOrMakeFieldCheck(fieldCheckMap, Fields.MaxCopyNumber.toString(), 0.5, 0.15),
                 "%.2f"));
 
-        // TODO: display only
-        mFields.add(new FieldInfo(
-                Fields.MinRegionStart.toString(), getOrMakeFieldCheck(fieldCheckMap, Fields.MinRegionStart.toString()), null));
-
-        mFields.add(new FieldInfo(
-                Fields.MinRegionEnd.toString(), getOrMakeFieldCheck(fieldCheckMap, Fields.MinRegionEnd.toString()), null));
+        mFields.add(FieldInfo.displayOnly(Fields.MinRegionStart.toString(), null));
+        mFields.add(FieldInfo.displayOnly(Fields.MinRegionEnd.toString(), null));
     }
 
     @Override

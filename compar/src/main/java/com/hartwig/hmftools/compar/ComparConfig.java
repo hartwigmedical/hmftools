@@ -232,11 +232,11 @@ public class ComparConfig
         }
 
         LiftoverCache = new GenomeLiftoverCache(RequiresLiftover);
-        StrictFieldConfig = configBuilder.hasFlag(STRICT_FIELD_CONFIG);
 
+        StrictFieldConfig = configBuilder.hasFlag(STRICT_FIELD_CONFIG);
         FieldCheckOverridesFile = configBuilder.getValue(FIELD_CONFIG_FILE);
 
-        if(StrictFieldConfig && !configBuilder.hasValue(FIELD_CONFIG_FILE))
+        if(StrictFieldConfig && FieldCheckOverridesFile == null)
         {
             CMP_LOGGER.error("a field config file is required when the {} argument is used", STRICT_FIELD_CONFIG);
             mIsValid = false;

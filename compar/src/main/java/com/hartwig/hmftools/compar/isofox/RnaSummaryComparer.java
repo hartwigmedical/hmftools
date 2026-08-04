@@ -24,7 +24,7 @@ import com.hartwig.hmftools.compar.common.PipelineSourcePaths;
 import com.hartwig.hmftools.compar.common.field.FieldCheck;
 import com.hartwig.hmftools.compar.common.field.FieldInfo;
 
-public class IsofoxSummaryComparer extends ItemComparer
+public class RnaSummaryComparer extends ItemComparer
 {
     protected enum Fields
     {
@@ -45,7 +45,7 @@ public class IsofoxSummaryComparer extends ItemComparer
         ForwardStrandPercent;
     }
 
-    public IsofoxSummaryComparer(final ComparConfig config, final Map<String, FieldCheck> fieldCheckMap)
+    public RnaSummaryComparer(final ComparConfig config, final Map<String, FieldCheck> fieldCheckMap)
     {
         super(config);
 
@@ -128,7 +128,7 @@ public class IsofoxSummaryComparer extends ItemComparer
     @Override
     public List<String> displayFieldNames()
     {
-        return Arrays.stream(IsofoxSummaryComparer.Fields.values()).map(x -> x.toString()).collect(Collectors.toList());
+        return Arrays.stream(RnaSummaryComparer.Fields.values()).map(x -> x.toString()).collect(Collectors.toList());
     }
 
     @Override
@@ -140,7 +140,7 @@ public class IsofoxSummaryComparer extends ItemComparer
         {
             List<String> lines = Files.readAllLines(Paths.get(determineFileName(sampleId, fileSources)));
             RnaStatistics rnaStatistics = RnaStatisticFile.fromLines(lines);
-            comparableItems.add(new IsofoxSummaryData(rnaStatistics, mFields));
+            comparableItems.add(new RnaSummaryData(rnaStatistics, mFields));
         }
         catch(IOException e)
         {

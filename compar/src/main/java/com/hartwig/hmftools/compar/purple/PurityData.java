@@ -60,7 +60,6 @@ public class PurityData extends ComparableItem
     {
         for(TruthsetValue truthsetValue : truthsetValues)
         {
-            // TODO: validate prior to creating fields
             String fieldName = truthsetValue.FieldName;
             PurityComparer.Fields field = PurityComparer.Fields.valueOf(fieldName);
 
@@ -71,6 +70,7 @@ public class PurityData extends ComparableItem
                 case Contamination:
                 case TmbPerMb:
                 case MsIndelsPerMb:
+                case TincLevel:
                     addDoubleValue(field.toString(), Double.valueOf(truthsetValue.Value), fields);
                     break;
 

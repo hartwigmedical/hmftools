@@ -8,13 +8,13 @@ import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.field.FieldInfo;
 
-public class NovelSpliceJunctionData extends ComparableItem
+public class RnaNovelSpliceJunctionData extends ComparableItem
 {
     public final NovelSpliceJunction Junction;
     public final BasePosition ComparisonPositionStart;
     public final BasePosition ComparisonPositionEnd;
 
-    public NovelSpliceJunctionData(
+    public RnaNovelSpliceJunctionData(
             final NovelSpliceJunction novelSpliceJunction, final BasePosition comparisonPositionStart,
             final BasePosition comparisonPositionEnd, final List<FieldInfo> fields)
     {
@@ -22,16 +22,16 @@ public class NovelSpliceJunctionData extends ComparableItem
         ComparisonPositionStart = comparisonPositionStart;
         ComparisonPositionEnd = comparisonPositionEnd;
 
-        addStringValue(NovelSpliceJunctionComparer.Fields.Type.toString(), novelSpliceJunction.type().toString(), fields);
-        addIntValue(NovelSpliceJunctionComparer.Fields.FragmentCount.toString(), novelSpliceJunction.fragmentCount(), fields);
-        addStringValue(NovelSpliceJunctionComparer.Fields.RegionStart.toString(), novelSpliceJunction.regionStart().toString(), fields);
-        addStringValue(NovelSpliceJunctionComparer.Fields.RegionEnd.toString(), novelSpliceJunction.regionEnd().toString(), fields);
+        addStringValue(RnaNovelSpliceJunctionComparer.Fields.Type.toString(), novelSpliceJunction.type().toString(), fields);
+        addIntValue(RnaNovelSpliceJunctionComparer.Fields.FragmentCount.toString(), novelSpliceJunction.fragmentCount(), fields);
+        addStringValue(RnaNovelSpliceJunctionComparer.Fields.RegionStart.toString(), novelSpliceJunction.regionStart().toString(), fields);
+        addStringValue(RnaNovelSpliceJunctionComparer.Fields.RegionEnd.toString(), novelSpliceJunction.regionEnd().toString(), fields);
     }
 
     @Override
     public CategoryType category()
     {
-        return CategoryType.NOVEL_SPLICE_JUNCTION;
+        return CategoryType.RNA_NOVEL_SPLICE_JUNCTION;
     }
 
     @Override
@@ -67,7 +67,7 @@ public class NovelSpliceJunctionData extends ComparableItem
     @Override
     public boolean matches(final ComparableItem other)
     {
-        final NovelSpliceJunctionData otherData = (NovelSpliceJunctionData)other;
+        final RnaNovelSpliceJunctionData otherData = (RnaNovelSpliceJunctionData)other;
 
         if(!otherData.Junction.geneName().equals(Junction.geneName())){
             return false;

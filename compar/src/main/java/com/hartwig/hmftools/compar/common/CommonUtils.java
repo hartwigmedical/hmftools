@@ -3,6 +3,7 @@ package com.hartwig.hmftools.compar.common;
 import static com.hartwig.hmftools.common.genome.refgenome.GenomeLiftoverCache.UNMAPPED_POSITION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
+import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.MatchLevel.REPORTABLE;
 import static com.hartwig.hmftools.compar.common.MismatchType.FULL_MATCH;
 import static com.hartwig.hmftools.compar.common.MismatchType.INVALID_BOTH;
@@ -38,7 +39,6 @@ public class CommonUtils
     public static final String FLD_CHROMOSOME_BAND = "ChromosomeBand";
     public static final String FLD_FILTER = "filter";
 
-    // TODO: move elsewhere
     public static boolean processSample(
             final ItemComparer comparer, final ComparConfig config, final String sampleId, final List<Mismatch> mismatches)
     {
@@ -60,7 +60,30 @@ public class CommonUtils
             else
             {
                 List<TruthsetValue> truthsetValues = source.Truthset.sampleTruthsetEntries(sampleId).get(comparer.category());
+
+                if(truthsetValues == null || truthsetValues.isEmpty())
+                    continue;
+
+                // validate truthset fields against the comparer
+                List<FieldInfo> fields = comparer.fieldsList();
+
+                for(TruthsetValue truthsetValue : truthsetValues)
+                {
+                    if(fields.stream().noneMatch(x -> x.name().equals(truthsetValue.FieldName)))
+                    {
+                        CMP_LOGGER.error("category({}) invalid truthset entry({})", comparer.category(), truthsetValue);
+                        return false;
+                    }
+                }
+
                 items = comparer.loadFromTruthset(truthsetValues);
+
+                if(items.size() != truthsetValues.size())
+                {
+                    CMP_LOGGER.error("category({}) failed to map all truthset entries(truthset={} items={})",
+                            comparer.category(), truthsetValues.size(), items.size());
+                    return false;
+                }
             }
 
             if(items != null)

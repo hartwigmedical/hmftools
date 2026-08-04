@@ -8,17 +8,17 @@ import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.field.FieldInfo;
 
-public class IsofoxGeneData extends ComparableItem
+public class RnaGeneData extends ComparableItem
 {
     public final GeneExpression Expression;
 
-    public IsofoxGeneData(final GeneExpression expression, final List<FieldInfo> fields)
+    public RnaGeneData(final GeneExpression expression, final List<FieldInfo> fields)
     {
         Expression = expression;
 
-        addIntValue(IsofoxGeneDataComparer.Fields.SplicedFragments.toString(), expression.splicedFragments(), fields);
-        addIntValue(IsofoxGeneDataComparer.Fields.UnsplicedFragments.toString(), expression.unsplicedFragments(), fields);
-        addDoubleValue(IsofoxGeneDataComparer.Fields.AdjTPM.toString(), expression.tpm(), fields);
+        addIntValue(RnaGeneDataComparer.Fields.SplicedFragments.toString(), expression.splicedFragments(), fields);
+        addIntValue(RnaGeneDataComparer.Fields.UnsplicedFragments.toString(), expression.unsplicedFragments(), fields);
+        addDoubleValue(RnaGeneDataComparer.Fields.AdjTPM.toString(), expression.tpm(), fields);
     }
 
     @Override
@@ -48,7 +48,7 @@ public class IsofoxGeneData extends ComparableItem
     @Override
     public boolean matches(final ComparableItem other)
     {
-        final IsofoxGeneData otherData = (IsofoxGeneData)other;
+        final RnaGeneData otherData = (RnaGeneData)other;
 
         return otherData.Expression.geneName().equals(Expression.geneName());
     }

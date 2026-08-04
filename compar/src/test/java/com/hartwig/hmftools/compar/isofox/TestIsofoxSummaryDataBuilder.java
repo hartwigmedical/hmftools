@@ -44,10 +44,10 @@ public class TestIsofoxSummaryDataBuilder
         b.forwardStrandPercent = 0.5;
     };
 
-    public static final TestComparableItemBuilder<TestIsofoxSummaryDataBuilder, IsofoxSummaryData> BUILDER =
+    public static final TestComparableItemBuilder<TestIsofoxSummaryDataBuilder, RnaSummaryData> BUILDER =
             new TestComparableItemBuilder<>(TestIsofoxSummaryDataBuilder::new, TestIsofoxSummaryDataBuilder::build, ALTERNATE_INITIALIZER);
 
-    private IsofoxSummaryData build()
+    private RnaSummaryData build()
     {
         final RnaStatistics rnaStatistics = ImmutableRnaStatistics.builder()
                 .qcStatus(qcStatus)
@@ -67,6 +67,6 @@ public class TestIsofoxSummaryDataBuilder
                 .forwardStrandPercent(forwardStrandPercent)
                 .build();
 
-        return new IsofoxSummaryData(rnaStatistics, new IsofoxSummaryComparer(null, Collections.emptyMap()).fieldsList());
+        return new RnaSummaryData(rnaStatistics, new RnaSummaryComparer(null, Collections.emptyMap()).fieldsList());
     }
 }

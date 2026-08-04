@@ -167,20 +167,4 @@ public class PurityComparer extends ItemComparer
         comparableItems.add(new PurityData(truthsetValues, mFields));
         return comparableItems;
     }
-
-    static List<String> germlineAberrations(final PurityData purityData)
-    {
-        return purityData.Purity.qc().germlineAberrations().stream()
-                .map(a -> a.toString())
-                .sorted()
-                .toList();
-    }
-
-    static List<String> qcStatus(final PurityData purityData)
-    {
-        return purityData.Purity.qc().status().stream()
-                .map(s -> s.toString())
-                .sorted()
-                .toList();
-    }
 }

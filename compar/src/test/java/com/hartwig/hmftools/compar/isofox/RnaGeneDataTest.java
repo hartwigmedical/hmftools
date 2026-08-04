@@ -11,19 +11,19 @@ import com.hartwig.hmftools.compar.ComparableItemTest;
 import org.junit.Before;
 import org.junit.Test;
 
-public class IsofoxGeneDataTest extends ComparableItemTest<IsofoxGeneData, IsofoxGeneDataComparer, TestIsofoxGeneDataBuilder>
+public class RnaGeneDataTest extends ComparableItemTest<RnaGeneData, RnaGeneDataComparer, TestIsofoxGeneDataBuilder>
 {
     @Before
     public void setUp()
     {
-        comparer = new IsofoxGeneDataComparer(new ComparConfig(), Collections.emptyMap());
+        comparer = new RnaGeneDataComparer(new ComparConfig(), Collections.emptyMap());
         builder = TestIsofoxGeneDataBuilder.BUILDER;
-        IsofoxGeneData alternateValueSource = builder.createWithAlternateDefaults();
+        RnaGeneData alternateValueSource = builder.createWithAlternateDefaults();
 
         fieldToAlternateValueInitializer = Map.of(
-                IsofoxGeneDataComparer.Fields.SplicedFragments.toString(), b -> b.splicedFragments = alternateValueSource.Expression.splicedFragments(),
-                IsofoxGeneDataComparer.Fields.UnsplicedFragments.toString(), b -> b.unsplicedFragments = alternateValueSource.Expression.unsplicedFragments(),
-                IsofoxGeneDataComparer.Fields.AdjTPM.toString(), b -> b.tpm = alternateValueSource.Expression.tpm()
+                RnaGeneDataComparer.Fields.SplicedFragments.toString(), b -> b.splicedFragments = alternateValueSource.Expression.splicedFragments(),
+                RnaGeneDataComparer.Fields.UnsplicedFragments.toString(), b -> b.unsplicedFragments = alternateValueSource.Expression.unsplicedFragments(),
+                RnaGeneDataComparer.Fields.AdjTPM.toString(), b -> b.tpm = alternateValueSource.Expression.tpm()
         );
         nameToAlternateIndexInitializer = Map.of(
                 FLD_GENE_NAME, b -> b.geneName = alternateValueSource.Expression.geneName()

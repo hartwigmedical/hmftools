@@ -4,19 +4,23 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.compar.common.CategoryType.DRIVER;
 import static com.hartwig.hmftools.compar.common.CommonUtils.createMismatchFromDiffs;
+import static com.hartwig.hmftools.compar.common.CommonUtils.findDiffs;
 
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.driver.DriverCatalog;
 import com.hartwig.hmftools.common.purple.PurplePurity;
 import com.hartwig.hmftools.common.purple.ReportedStatus;
+import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.FieldCheckCache;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.field.FieldInfo;
+import com.hartwig.hmftools.compar.common.field.FieldValue;
 
 public class DriverData extends ComparableItem
 {
@@ -98,21 +102,38 @@ public class DriverData extends ComparableItem
     }
 
     public Mismatch findMismatch(
-            final ComparableItem other, final MatchLevel matchLevel, final FieldCheckCache fieldConfig, final boolean includeMatches)
+            final ItemComparer comparer, final ComparableItem other, final MatchLevel matchLevel, final boolean includeMatches)
     {
+        // comparison is custom here so that non-reportable drivers can skip comparisons if synthetically created
         List<String> diffs = Lists.newArrayList();
 
-        /* TODO: fix
-        List<String> alwaysCompareFields = List.of(
-                FLD_LIKE_METHOD, FLD_MIN_COPY_NUMBER, FLD_MAX_COPY_NUMBER, FLD_CHROMOSOME, FLD_CHROMOSOME_BAND);
+        // find and compare fields present in both items
+        List<FieldInfo> fields = comparer.fieldsList();
+        Map<String, FieldValue> oldFieldValues = fieldValues();
+        Map<String,FieldValue> newFieldValues = other.fieldValues();
 
-        diffs.addAll(findDiffs(this, other, fieldConfig.getFields(category(), alwaysCompareFields)));
+        boolean bothPass = isPass() && other.isPass();
 
-        if(isPass() && other.isPass())
+        for(FieldInfo field : fields)
         {
-            diffs.addAll(findDiffs(this, other, fieldConfig.getFields(category(), List.of(FLD_LIKELIHOOD))));
+            if(!field.fieldCheck().IsCompared)
+                continue;
+
+            if(!bothPass && field.name().equals(DriverComparer.Fields.Likelihood.toString()))
+                continue;
+
+            FieldValue oldValue = oldFieldValues.get(field.name());
+            FieldValue newValue = newFieldValues.get(field.name());
+
+            if(oldValue == null || newValue == null)
+                continue;
+
+            if(oldValue.hasDifference(newValue))
+            {
+                oldValue.addDiffInfo(oldValue, newValue, diffs);
+            }
         }
-        */
+
 
         return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches);
     }

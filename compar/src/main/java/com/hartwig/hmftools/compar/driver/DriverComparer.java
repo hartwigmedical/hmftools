@@ -53,7 +53,6 @@ public class DriverComparer extends ItemComparer
     private boolean mLinxSomaticDriversLoaded;
     private boolean mLinxGermlineDriversLoaded;
 
-
     protected enum Fields
     {
         LikelihoodMethod,
