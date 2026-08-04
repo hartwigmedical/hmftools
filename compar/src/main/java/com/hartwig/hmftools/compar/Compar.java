@@ -6,7 +6,6 @@ import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.WriteType.FIELD_CONFIG;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;

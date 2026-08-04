@@ -2,7 +2,6 @@ package com.hartwig.hmftools.compar.mutation;
 
 import static com.hartwig.hmftools.compar.common.CategoryType.GERMLINE_VARIANT;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
-import static com.hartwig.hmftools.compar.FieldCheckCache.getOrMakeFieldCheck;
 import static com.hartwig.hmftools.compar.mutation.VariantData.addComparerFields;
 
 import java.util.List;
@@ -31,37 +30,6 @@ public class GermlineVariantComparer extends ItemComparer
 
     @Override
     public CategoryType category() { return GERMLINE_VARIANT; }
-
-    /*
-    @Override
-    public List<Field> fields(final MatchLevel matchLevel)
-    {
-        return List.of(
-                new BooleanField(FLD_REPORTED, i -> ((GermlineVariantData) i).Variant.reported(), true),
-                new StringField(FLD_HOTSPOT, i -> ((GermlineVariantData) i).Variant.hotspot().toString(), true),
-                new StringField(FLD_TIER, i -> ((GermlineVariantData) i).Variant.tier().toString(), true),
-                new StringField(FLD_GENE, i -> ((GermlineVariantData) i).Variant.gene(), true),
-                new StringField(FLD_CANON_EFFECT, i -> ((GermlineVariantData) i).Variant.canonicalEffect(), true),
-                new StringField(FLD_CODING_EFFECT, i -> ((GermlineVariantData) i).Variant.canonicalCodingEffect().toString(), true),
-                new StringField(FLD_HGVS_CODING, i -> ((GermlineVariantData) i).Variant.canonicalHgvsCodingImpact(), true),
-                new StringField(FLD_HGVS_PROTEIN, i -> ((GermlineVariantData) i).Variant.canonicalHgvsProteinImpact(), true),
-                new StringField(FLD_OTHER_REPORTED, i -> ((GermlineVariantData) i).Variant.otherReportedEffects(), true),
-                new IntField(FLD_QUAL, i -> (int) ((GermlineVariantData) i).Variant.qual(), true,
-                        50.0, 0.2),
-                new DoubleField(FLD_VARIANT_COPY_NUMBER, i -> ((GermlineVariantData) i).Variant.variantCopyNumber(),
-                        true, 0.3, 0.3, "%.2f"),
-                new DoubleField(FLD_PURITY_ADJUSTED_VAF, i -> ((GermlineVariantData) i).Variant.adjustedVAF(),
-                        true, 0.2, null, "%.2f"),
-                new IntField(FLD_TUMOR_SUPPORTING_READ_COUNT,
-                        i -> ((GermlineVariantData) i).Variant.allelicDepth().AlleleReadCount, true,
-                        1.0, 0.2),
-                new IntField(FLD_TUMOR_TOTAL_READ_COUNT,
-                        i -> ((GermlineVariantData) i).Variant.allelicDepth().TotalReadCount, true,
-                        1.0, 0.2),
-                new StringListField(FLD_FILTER, i -> ((GermlineVariantData) i).Filters.stream().sorted().toList(), true)
-        );
-    }
-    */
 
     @Override
     public List<String> displayFieldNames()
@@ -99,23 +67,6 @@ public class GermlineVariantComparer extends ItemComparer
 
                 comparableItems.add(variant);
             }
-
-            /*
-            List<SmallVariant> variants = SmallVariantFactory.loadVariants(sampleId, vcfFile);
-            for(SmallVariant variant : variants)
-            {
-                if(!variant.isFiltered())
-                {
-                    BasePosition comparisonPosition = determineComparisonGenomePosition(
-                            variant.chromosome(), variant.position(), fileSources.Source, mConfig.RequiresLiftover, mConfig.LiftoverCache);
-
-                    GermlineVariantData variant = GermlineVariantData.fromContext(
-                            variantContext, sampleId, false, fileSources.Source, mConfig, mFields);
-
-                    comparableItems.add(new GermlineVariantData(variant, comparisonPosition, mFields));
-                }
-            }
-            */
 
             CMP_LOGGER.debug("sample({}) loaded {} {} germline variants", sampleId, fileSources.Source, comparableItems.size());
         }
