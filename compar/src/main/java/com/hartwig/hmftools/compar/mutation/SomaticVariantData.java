@@ -6,7 +6,6 @@ import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_VARIANT_C
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.variant.CodingEffect.UNDEFINED;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_BIALLELIC_FLAG;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.SUBCLONAL_LIKELIHOOD_FLAG;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
@@ -25,7 +24,6 @@ import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser;
 import com.hartwig.hmftools.compar.ComparConfig;
-import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.common.SourceType;
 import com.hartwig.hmftools.compar.common.field.FieldInfo;
 
@@ -42,7 +40,6 @@ public class SomaticVariantData extends VariantData
     protected static final String FLD_BIALLELIC_PROB = "BiallelicProb";
     protected static final String FLD_LPS = "HasLPS";
     protected static final String FLD_SUBCLONAL_LIKELIHOOD = "SubclonalLikelihood";
-    protected static final double NO_QUAL_PRESENT = -10;
 
     public SomaticVariantData(
             final String chromosome, final int position, final String ref, final String alt, final VariantType type, final String gene,
@@ -70,23 +67,6 @@ public class SomaticVariantData extends VariantData
         addBoolValue(FLD_BIALLELIC, biallelic, fields);
         addBoolValue(FLD_LPS, hasLPS, fields);
         addDoubleValue(FLD_SUBCLONAL_LIKELIHOOD, subclonalLikelihood, fields);
-    }
-
-    @Override
-    public boolean matches(final ComparableItem other)
-    {
-        final SomaticVariantData otherVar = (SomaticVariantData) other;
-
-        if(!mComparisonChromosome.equals(otherVar.Chromosome) || mComparisonPosition != otherVar.Position)
-            return false;
-
-        if(!Ref.equals(otherVar.Ref) || !Alt.equals(otherVar.Alt))
-            return false;
-
-        if(Type != otherVar.Type)
-            return false;
-
-        return true;
     }
 
     public static SomaticVariantData fromContext(

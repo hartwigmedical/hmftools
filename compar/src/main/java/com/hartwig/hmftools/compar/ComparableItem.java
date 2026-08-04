@@ -34,10 +34,6 @@ public abstract class ComparableItem
     public String geneName() { return ""; }
     public boolean reportable() { return true; }
     public boolean isPass() { return true; }
-    public boolean isValid()
-    {
-        return true;
-    }
 
     public abstract boolean matches(final ComparableItem other);
 

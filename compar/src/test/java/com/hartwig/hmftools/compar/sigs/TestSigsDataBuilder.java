@@ -6,7 +6,6 @@ import java.util.function.Consumer;
 import com.hartwig.hmftools.common.sigs.ImmutableSignatureAllocation;
 import com.hartwig.hmftools.common.sigs.SignatureAllocation;
 import com.hartwig.hmftools.compar.TestComparableItemBuilder;
-import com.hartwig.hmftools.compar.virus.VirusComparer;
 
 public class TestSigsDataBuilder
 {

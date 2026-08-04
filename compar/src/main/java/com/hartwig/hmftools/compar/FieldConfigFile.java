@@ -20,7 +20,6 @@ public class FieldConfigFile
     static final String NONE_SETTING = "none";
 
     public static final String FLD_FIELD = "Field";
-    public static final String FLD_FIELD_TYPE = "FieldType";
     public static final String FLD_COMPARED = "Compared";
     public static final String FLD_ABSOLUTE_THRESHOLD = "AbsoluteThreshold";
     public static final String FLD_PERCENT_THRESHOLD = "PercentThreshold";
@@ -68,7 +67,6 @@ public class FieldConfigFile
         return new StringJoiner(TSV_DELIM)
                 .add(category.toString())
                 .add(fieldInfo.name())
-                // .add(fieldInfo.type())
                 .add(String.valueOf(fieldInfo.fieldCheck().IsCompared))
                 .add(absoluteThreshold == null ? NONE_SETTING : String.valueOf(absoluteThreshold))
                 .add(percentThreshold == null ? NONE_SETTING : (percentThreshold * 100) + "%")
@@ -80,7 +78,6 @@ public class FieldConfigFile
         return new StringJoiner(TSV_DELIM)
                 .add(FLD_CATEGORY)
                 .add(FLD_FIELD)
-                // .add(FLD_FIELD_TYPE)
                 .add(FLD_COMPARED)
                 .add(FLD_ABSOLUTE_THRESHOLD)
                 .add(FLD_PERCENT_THRESHOLD)

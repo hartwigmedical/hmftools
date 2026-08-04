@@ -87,7 +87,7 @@ public class BamMetricsComparer extends ItemComparer
         }
         catch(IOException e)
         {
-            CMP_LOGGER.warn("sample({}) failed to load {}} BAM metrics data: {}", sampleId, isTumor() ? "tumor" : "gerrmline", e.toString());
+            CMP_LOGGER.warn("sample({}) failed to load {}} BAM metrics data: {}", sampleId, isTumor() ? "tumor" : "germline", e.toString());
             return null;
         }
         return comparableItems;

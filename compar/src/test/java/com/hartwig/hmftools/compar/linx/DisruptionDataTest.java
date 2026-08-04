@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.compar.linx;
 
-import static com.hartwig.hmftools.compar.linx.DisruptionComparer.FLD_BREAKEND_INFO;
-
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -35,7 +33,8 @@ public class DisruptionDataTest extends ComparableItemTest<DisruptionData, Disru
         DisruptionData alternateValueSource = builder.createWithAlternateDefaults();
 
         // Does not include every field because field comparisons within breakends don't work well in generic tests
-        fieldToAlternateValueInitializer = Map.of(FLD_BREAKEND_INFO, b -> b.breakends = alternateValueSource.Breakends);
+        fieldToAlternateValueInitializer = Map.of(
+                DisruptionComparer.Fields.BreakendInfo.toString(), b -> b.breakends = alternateValueSource.Breakends);
 
         nameToAlternateIndexInitializer = Map.of("GeneName", b -> b.geneName = alternateValueSource.GeneName);
         reportabilityFieldToFalseReportabilityInitializer = Collections.emptyMap();

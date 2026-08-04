@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.compar.mutation;
 
-import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_QUAL;
-import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
-import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_FILTER;
+import static com.hartwig.hmftools.compar.mutation.VariantData.FLD_REPORTED;
+import static com.hartwig.hmftools.compar.mutation.VariantData.FLD_FILTER;
+import static com.hartwig.hmftools.compar.mutation.VariantData.FLD_QUAL;
 import static com.hartwig.hmftools.compar.mutation.VariantData.FLD_CANON_EFFECT;
 import static com.hartwig.hmftools.compar.mutation.VariantData.FLD_CODING_EFFECT;
 import static com.hartwig.hmftools.compar.mutation.VariantData.FLD_GENE;

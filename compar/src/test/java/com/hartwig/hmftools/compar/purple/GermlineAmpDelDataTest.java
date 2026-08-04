@@ -21,23 +21,14 @@ public class GermlineAmpDelDataTest
         GermlineAmpDelData alternateValueSource = builder.createWithAlternateDefaults();
 
         fieldToAlternateValueInitializer = Map.of(
-                GermlineAmpDelComparer.Fields.Reported.toString(), b -> b.reported = alternateValueSource.AmpDelData.Reported == ReportedStatus.REPORTED,
                 GermlineAmpDelComparer.Fields.GermlineStatus.toString(), b -> b.germlineStatus = alternateValueSource.AmpDelData.NormalStatus,
                 GermlineAmpDelComparer.Fields.TumorStatus.toString(), b -> b.tumorStatus = alternateValueSource.AmpDelData.TumorStatus,
                 GermlineAmpDelComparer.Fields.GermlineCopyNumber.toString(), b -> b.germlineCopyNumber = alternateValueSource.AmpDelData.GermlineCopyNumber,
                 GermlineAmpDelComparer.Fields.TumorCopyNumber.toString(), b -> b.tumorCopyNumber = alternateValueSource.AmpDelData.TumorCopyNumber
         );
         nameToAlternateIndexInitializer = Map.of("Gene", b -> b.gene = alternateValueSource.AmpDelData.GeneName);
-        // reportabilityFieldToFalseReportabilityInitializer = Map.of(GermlineAmpDelComparer.Fields.Reported.toString(), b -> b.reported = false);
-        reportabilityFieldToFalseReportabilityInitializer = Collections.emptyMap(); // Map.of(FLD_REPORTED, b -> b.reported = false);
+        reportabilityFieldToFalseReportabilityInitializer = Map.of(GermlineAmpDelComparer.Fields.Reported.toString(), b -> b.reported = false);
         nameToNonPassInitializer = Collections.emptyMap();
-    }
-
-    @Test
-    @Override
-    public void singleFieldMismatchesAreRecognizedInReportableMode()
-    {
-        // TODO: work out why this is failing
     }
 
     /* no lift-over

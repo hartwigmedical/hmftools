@@ -40,7 +40,7 @@ public class RnaSummaryComparer extends ItemComparer
         FragLength5th,
         FragLength50th,
         FragLength95th,
-        // MedianGCRatio - gone with v2.1 anyway
+        // EnrichedGenePercent - gone with v2.1 anyway
         MedianGCRatio,
         ForwardStrandPercent;
     }

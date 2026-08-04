@@ -5,7 +5,6 @@ import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import java.awt.image.BufferedImage;
-import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;

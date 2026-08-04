@@ -4,8 +4,6 @@ import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.CategoryType.CDR3_LOCUS_SUMMARY;
 import static com.hartwig.hmftools.compar.FieldCheckCache.getOrMakeFieldCheck;
 
-import static org.apache.commons.lang3.StringUtils.capitalize;
-
 import java.io.UncheckedIOException;
 import java.util.List;
 import java.util.Map;
@@ -22,8 +20,6 @@ import com.hartwig.hmftools.compar.common.field.FieldInfo;
 
 public class Cdr3LocusSummaryComparer extends ItemComparer
 {
-    protected static final String FLD_PASS_SEQUENCES = capitalize(Cdr3LocusSummaryFile.Column.passSequences.name());
-
     protected enum Fields
     {
         PassSequences;

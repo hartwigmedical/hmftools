@@ -33,11 +33,6 @@ public class LilacQcComparData extends ComparableItem
         addStringValue(LilacQcComparer.Fields.Alleles.toString(), allelesStr, fields);
     }
 
-    private static List<String> alleles(final LilacQcComparData data)
-    {
-        return data.Alleles.stream().map(LilacAllele::allele).sorted().toList();
-    }
-
     @Override
     public CategoryType category() { return LILAC_QC; }
 

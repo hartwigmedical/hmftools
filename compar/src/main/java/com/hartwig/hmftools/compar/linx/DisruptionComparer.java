@@ -48,8 +48,6 @@ public class DisruptionComparer extends ItemComparer
         BreakendInfo;
     }
 
-    protected static final String FLD_BREAKEND_INFO = "BreakendInfo";
-
     private final Map<SourceType,List<LinxBreakend>> mBreakends;
     private final Map<SourceType,List<StructuralVariantData>> mSvDataList;
 

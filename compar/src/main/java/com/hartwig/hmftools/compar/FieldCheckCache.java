@@ -53,9 +53,6 @@ public class FieldCheckCache
         return mFieldCheckOverrides.containsKey(category) ? mFieldCheckOverrides.get(category) : Collections.emptyMap();
     }
 
-    public List<String> warnings() { return mWarnings; }
-    public List<String> errorMessages() { return mErrorMessages; }
-
     private static final String NOT_ASSESSED_NA = "N/A";
 
     public boolean processOverridesFile(final ComparConfig config)
@@ -182,16 +179,16 @@ public class FieldCheckCache
         {
             List<FieldInfo> fields = comparer.fieldsList();
 
-            Map<String,FieldCheck> categoryOverrdes = mFieldCheckOverrides.get(comparer.category());
+            Map<String,FieldCheck> categoryOverrides = mFieldCheckOverrides.get(comparer.category());
 
             for(FieldInfo fieldInfo : fields)
             {
                 if(!fieldInfo.fieldCheck().IsCompared) // ignore display only fields
                     continue;
 
-                if(categoryOverrdes == null || !categoryOverrdes.containsKey(fieldInfo.name()))
+                if(categoryOverrides == null || !categoryOverrides.containsKey(fieldInfo.name()))
                 {
-                    String message = format("category(%s) field(%s) missing from overriedes file", comparer.category(), fieldInfo.name());
+                    String message = format("category(%s) field(%s) missing from overrides file", comparer.category(), fieldInfo.name());
                     recordProblem(message, true);
                 }
             }

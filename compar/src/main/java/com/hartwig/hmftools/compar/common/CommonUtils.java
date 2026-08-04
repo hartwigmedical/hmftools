@@ -34,11 +34,6 @@ import com.hartwig.hmftools.compar.common.field.FieldValue;
 
 public class CommonUtils
 {
-    public static final String FLD_REPORTED = "Reported";
-    public static final String FLD_QUAL = "Qual";
-    public static final String FLD_CHROMOSOME_BAND = "ChromosomeBand";
-    public static final String FLD_FILTER = "filter";
-
     public static boolean processSample(
             final ItemComparer comparer, final ComparConfig config, final String sampleId, final List<Mismatch> mismatches)
     {

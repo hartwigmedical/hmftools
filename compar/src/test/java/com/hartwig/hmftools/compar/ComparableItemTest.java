@@ -38,6 +38,7 @@ public abstract class ComparableItemTest<I extends ComparableItem, C extends Ite
 
     // Map from name of field compared in "findMismatch" to initializer that changes that field from the default value.
     // This is meant for causing "VALUE" differences in testing.
+    // Fields affecting reportability should not be included here, but instead in reportabilityFieldToFalseReportabilityInitializer
     protected Map<String, Consumer<B>> fieldToAlternateValueInitializer;
 
     // Map from name of field or fields used in "matches" method to initializer that changes that field from the default value.

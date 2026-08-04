@@ -53,7 +53,6 @@ import com.hartwig.hmftools.common.driver.panel.DriverGeneFile;
 import com.hartwig.hmftools.common.genome.refgenome.GenomeLiftoverCache;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.compar.common.CategoryType;
-import com.hartwig.hmftools.compar.common.FieldOverride;
 import com.hartwig.hmftools.compar.common.PipelineSourcePaths;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.SourceData;
@@ -181,7 +180,7 @@ public class ComparConfig
 
         if(!loadFileSources(configBuilder))
         {
-            CMP_LOGGER.error("missing DB or file source old and new config");
+            CMP_LOGGER.error("missing file source old and new config");
             mIsValid = false;
         }
 

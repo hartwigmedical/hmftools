@@ -2,9 +2,9 @@ package com.hartwig.hmftools.compar.mutation;
 
 import static com.hartwig.hmftools.compar.ComparTestUtil.assertDifferencesAreForFields;
 import static com.hartwig.hmftools.compar.ComparTestUtil.union;
-import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_QUAL;
-import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
-import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_FILTER;
+import static com.hartwig.hmftools.compar.mutation.VariantData.FLD_REPORTED;
+import static com.hartwig.hmftools.compar.mutation.VariantData.FLD_FILTER;
+import static com.hartwig.hmftools.compar.mutation.VariantData.FLD_QUAL;
 import static com.hartwig.hmftools.compar.mutation.SomaticVariantData.FLD_BIALLELIC;
 import static com.hartwig.hmftools.compar.mutation.SomaticVariantData.FLD_BIALLELIC_PROB;
 import static com.hartwig.hmftools.compar.mutation.SomaticVariantData.FLD_LPS;

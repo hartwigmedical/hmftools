@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.compar.linx;
 
-import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
-
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -33,7 +31,7 @@ public class FusionDataTest extends ComparableItemTest<FusionData, FusionCompare
         fieldToAlternateValueInitializer.put(FusionComparer.Fields.DomainsLost.toString(), b -> b.domainsLost = alternateValueSource.Fusion.domainsLost());
 
         nameToAlternateIndexInitializer = Map.of("FusionName", b -> b.fusionName = alternateValueSource.GeneMappedName);
-        reportabilityFieldToFalseReportabilityInitializer = Map.of(FLD_REPORTED, b -> b.reported = false);
+        reportabilityFieldToFalseReportabilityInitializer = Map.of(FusionComparer.Fields.Reported.toString(), b -> b.reported = false);
         nameToNonPassInitializer = Collections.emptyMap();
     }
 }

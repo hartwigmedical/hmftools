@@ -4,7 +4,6 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.compar.common.CategoryType.DRIVER;
 import static com.hartwig.hmftools.compar.common.CommonUtils.createMismatchFromDiffs;
-import static com.hartwig.hmftools.compar.common.CommonUtils.findDiffs;
 
 import java.util.List;
 import java.util.Map;
@@ -16,7 +15,6 @@ import com.hartwig.hmftools.common.purple.ReportedStatus;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.FieldCheckCache;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.field.FieldInfo;
@@ -26,7 +24,6 @@ public class DriverData extends ComparableItem
 {
     public final DriverCatalog DriverCatalog;
 
-    public final PurplePurity mPurity;
     public final String mComparisonChromosome;
     private final String mKey;
     private final boolean mCheckTranscript;
@@ -38,7 +35,6 @@ public class DriverData extends ComparableItem
     {
         DriverCatalog = driverCatalog;
 
-        mPurity = purity;
         mComparisonChromosome = comparisonChromosome;
         mCheckTranscript = checkTranscript;
 
@@ -50,7 +46,7 @@ public class DriverData extends ComparableItem
         addDoubleValue(DriverComparer.Fields.Likelihood.toString(), driverCatalog.driverLikelihood(), fields);
         addDoubleValue(DriverComparer.Fields.MinCopyNumber.toString(), driverCatalog.minCopyNumber(), fields);
         addDoubleValue(DriverComparer.Fields.MaxCopyNumber.toString(), driverCatalog.maxCopyNumber(), fields);
-        addStringValue(DriverComparer.Fields.Chromosome.toString(), mComparisonChromosome, fields);
+        addStringValue(DriverComparer.Fields.Chromosome.toString(), comparisonChromosome, fields);
         addStringValue(DriverComparer.Fields.ChromosomeBand.toString(), driverCatalog.chromosomeBand(), fields);
 
         addDoubleValue(DriverComparer.Fields.Purity.toString(), purity.Purity, fields);

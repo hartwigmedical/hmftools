@@ -38,9 +38,9 @@ public class TruthsetCache
         mSampleDataMap = Maps.newHashMap();
     }
 
-    public void loadFiles(final String truthsetFilesCondigStr)
+    public void loadFiles(final String truthsetFilesConfigStr)
     {
-        String[] truthsetFiles = truthsetFilesCondigStr.split(ITEM_DELIM);
+        String[] truthsetFiles = truthsetFilesConfigStr.split(ITEM_DELIM);
 
         for(String truthsetFile : truthsetFiles)
         {

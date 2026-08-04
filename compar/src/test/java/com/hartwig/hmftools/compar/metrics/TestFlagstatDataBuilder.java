@@ -7,7 +7,6 @@ import com.hartwig.hmftools.common.metrics.BamFlagStats;
 import com.hartwig.hmftools.common.metrics.ImmutableBamFlagStats;
 import com.hartwig.hmftools.compar.TestComparableItemBuilder;
 import com.hartwig.hmftools.compar.common.CategoryType;
-import com.hartwig.hmftools.compar.virus.VirusComparer;
 
 public class TestFlagstatDataBuilder
 {

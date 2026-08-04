@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.compar.virus;
 
-import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
-
 import java.util.Collections;
 import java.util.Map;
 
@@ -25,7 +23,7 @@ public class VirusDataTest extends ComparableItemTest<VirusData, VirusComparer, 
                 VirusComparer.Fields.DriverLikelihood.toString(), b -> b.driverLikelihood = alternateValueSource.Virus.virusDriverLikelihoodType()
         );
         nameToAlternateIndexInitializer = Map.of("name", b -> b.name = alternateValueSource.Virus.name());
-        reportabilityFieldToFalseReportabilityInitializer = Map.of(FLD_REPORTED, b -> b.reported = false);
+        reportabilityFieldToFalseReportabilityInitializer = Map.of(VirusComparer.Fields.Reported.toString(), b -> b.reported = false);
         nameToNonPassInitializer = Collections.emptyMap();
     }
 }

@@ -17,7 +17,6 @@ public class TestGermlineAmpDelDataBuilder
     public GermlineStatus tumorStatus = GermlineStatus.HOM_DELETION;
     public double germlineCopyNumber = 1;
     public double tumorCopyNumber = 0;
-    public String chromosomeBand = "7q34";
 
     private static final Consumer<TestGermlineAmpDelDataBuilder> ALTERNATE_INITIALIZER = b ->
     {
@@ -27,7 +26,6 @@ public class TestGermlineAmpDelDataBuilder
         b.tumorStatus = GermlineStatus.AMPLIFICATION;
         b.germlineCopyNumber = 2;
         b.tumorCopyNumber = 3;
-        b.chromosomeBand = "13q13.1";
     };
 
     public static final TestComparableItemBuilder<TestGermlineAmpDelDataBuilder, GermlineAmpDelData> BUILDER =
@@ -43,7 +41,7 @@ public class TestGermlineAmpDelDataBuilder
                 new GermlineAmpDel(
                         gene, "",
                         "",
-                        chromosomeBand,
+                        "",
                         -1,
                         -1,
                         -1,

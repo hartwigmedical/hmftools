@@ -2,9 +2,6 @@ package com.hartwig.hmftools.compar.mutation;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS_FILTER;
-import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_FILTER;
-import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_QUAL;
-import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
 import static com.hartwig.hmftools.compar.FieldCheckCache.getOrMakeFieldCheck;
 
 import java.util.List;
@@ -23,7 +20,7 @@ import com.hartwig.hmftools.compar.common.field.FieldInfo;
 
 public class VariantData extends ComparableItem
 {
-    public final CategoryType Catagory;
+    public final CategoryType Category;
 
     public final String Chromosome;
     public final int Position;
@@ -53,6 +50,9 @@ public class VariantData extends ComparableItem
     public final String mComparisonChromosome;
     public final int mComparisonPosition;
 
+    static final String FLD_REPORTED = "Reported";
+    static final String FLD_QUAL = "Qual";
+    static final String FLD_FILTER = "Filter";
     static final String FLD_HOTSPOT = "Hotspot";
     static final String FLD_TIER = "Tier";
     static final String FLD_GENE = "Gene";
@@ -69,7 +69,7 @@ public class VariantData extends ComparableItem
     protected static final double NO_QUAL_PRESENT = -10;
 
     public VariantData(
-            final CategoryType catagory,
+            final CategoryType category,
             final String chromosome, final int position, final String ref, final String alt, final VariantType type, final String gene,
             final boolean reported, final HotspotType hotspotStatus, final VariantTier tier,
             final String canonicalEffect, final String canonicalCodingEffect, final String canonicalHgvsCodingImpact,
@@ -78,7 +78,7 @@ public class VariantData extends ComparableItem
             final int tumorSupportingReadCount, final int tumorTotalReadCount, final boolean isFromUnfilteredVcf,
             final String comparisonChromosome, final int comparisonPosition, final List<FieldInfo> fields)
     {
-        Catagory = catagory;
+        Category = category;
         Chromosome = chromosome;
         Position = position;
         Ref = ref;
@@ -127,7 +127,7 @@ public class VariantData extends ComparableItem
     }
 
     @Override
-    public CategoryType category() { return Catagory; }
+    public CategoryType category() { return Category; }
 
     @Override
     public String key()

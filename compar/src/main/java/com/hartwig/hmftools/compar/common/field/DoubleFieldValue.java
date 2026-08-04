@@ -4,8 +4,6 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.String.format;
 
-import java.util.List;
-
 public class DoubleFieldValue extends FieldValue
 {
     public final double Value;

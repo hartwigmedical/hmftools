@@ -5,7 +5,6 @@ import java.util.function.Consumer;
 
 import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.compar.TestComparableItemBuilder;
-import com.hartwig.hmftools.compar.virus.VirusComparer;
 
 public class TestSnpGenotypeDataBuilder
 {
