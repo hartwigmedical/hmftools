@@ -60,8 +60,24 @@ public class LiftBackGroupProcessor
 
     private int mRecordsSeen;
 
-    // primaries that arrived mapped and end up unmapped after lift-back; a high rate means a sidecar/FASTA mismatch.
-    private int mPrimariesUnmapped;
+    // primaries that arrived mapped, counted alongside those whose lift produced no placement. Deliberate unmapping
+    // (excluded region, XA over-cap, AS floor) is not a lift failure and is excluded; a high rate here means a
+    // sidecar/FASTA mismatch.
+    private int mPrimariesSeen;
+    private int mPrimariesLiftFailed;
+
+    // deliberate unmapping, split by reason - these are normal outcomes, kept apart from lift failures so a rate
+    // question can be answered from the summary rather than by re-running the sample
+    private int mPrimariesUnmappedExcludedRegion;
+    private int mPrimariesUnmappedOverCap;
+    private int mPrimariesUnmappedLowAlignmentScore;
+
+    // Supplementary resolve. A revision is any primary the resolver rewrote, which includes the ref-verify rescue that
+    // builds a junction from the primary's own soft clip with no supplementary at all - so revisions exceed merges.
+    private int mSupplementaryCandidates;
+    private int mPrimaryRevisions;
+    private int mSupplementaryMerges;
+    private int mSupplementariesAbsorbed;
 
     public LiftBackGroupProcessor(
             final LiftBackDiscriminator discriminator, final SupplementaryResolver supplementaryResolver,
@@ -76,7 +92,23 @@ public class LiftBackGroupProcessor
 
     public int recordsSeen() { return mRecordsSeen; }
 
-    public int primariesUnmapped() { return mPrimariesUnmapped; }
+    public int primariesSeen() { return mPrimariesSeen; }
+
+    public int primariesLiftFailed() { return mPrimariesLiftFailed; }
+
+    public int primariesUnmappedExcludedRegion() { return mPrimariesUnmappedExcludedRegion; }
+
+    public int primariesUnmappedOverCap() { return mPrimariesUnmappedOverCap; }
+
+    public int primariesUnmappedLowAlignmentScore() { return mPrimariesUnmappedLowAlignmentScore; }
+
+    public int supplementaryCandidates() { return mSupplementaryCandidates; }
+
+    public int primaryRevisions() { return mPrimaryRevisions; }
+
+    public int supplementaryMerges() { return mSupplementaryMerges; }
+
+    public int supplementariesAbsorbed() { return mSupplementariesAbsorbed; }
 
     // Processes all records sharing one read name as a group so primary + supps resolve together. This lets
     // supplementary resolve see all split-read components and lets read /2 hint read /1's resolved introns.
@@ -206,6 +238,7 @@ public class LiftBackGroupProcessor
         {
             resolved[0] = LiftedRecord.unmapped("excluded_region_unmapped");
             decision.PrimaryUnmapped = true;
+            ++mPrimariesUnmappedExcludedRegion;
         }
         else if(!primary.getReadUnmappedFlag())
         {
@@ -216,6 +249,7 @@ public class LiftBackGroupProcessor
             {
                 resolved[0] = LiftedRecord.unmapped("over_cap_unmapped");
                 decision.PrimaryUnmapped = true;
+                ++mPrimariesUnmappedOverCap;
                 TARS_LOGGER.trace("over-cap unmap {}: inputMapQuality=0, no XA (past bwa XA cap)", primary.getReadName());
             }
             else if(mSupplementaryResolver != null && !primaryPostProcessed)
@@ -225,6 +259,7 @@ public class LiftBackGroupProcessor
                 {
                     resolved[0] = LiftedRecord.unmapped("low_as_unmapped");
                     decision.PrimaryUnmapped = true;
+                    ++mPrimariesUnmappedLowAlignmentScore;
                     TARS_LOGGER.trace(
                             "AS-floor unmap {}: AS={} < {}", primary.getReadName(), alignmentScore, PRIMARY_AS_UNMAP_THRESHOLD);
                 }
@@ -390,10 +425,26 @@ public class LiftBackGroupProcessor
                 primaryRes.finalPos(), primaryRes.finalCigar(), suppDtos,
                 primary.getReadBases(), mateHintIntrons);
 
+        // only a read that actually brought a supplementary is a merge candidate; resolve() runs regardless because
+        // it can also rescue a junction from the primary's own soft clip with no supplementary involved
+        if(!suppDtos.isEmpty())
+        {
+            ++mSupplementaryCandidates;
+        }
+
         SupplementaryResolver.Result result = mSupplementaryResolver.resolve(candidate);
         if(!result.merged())
         {
             return null;
+        }
+
+        ++mPrimaryRevisions;
+
+        int absorbed = result.droppedSupplementaryIndices().size();
+        if(absorbed > 0)
+        {
+            ++mSupplementaryMerges;
+            mSupplementariesAbsorbed += absorbed;
         }
 
         // Rewrite the primary's result with the merged (spliced) cigar + start (start may shift on a left-extend).
@@ -499,10 +550,16 @@ public class LiftBackGroupProcessor
         // only a record that arrived unmapped or was unmapped at decide time goes without.
         boolean writeNumHits = result.hasPlacement() || !unmapDecided && !record.getReadUnmappedFlag();
 
-        // Also pre-mutation, and the single place both unmap routes pass through: a failed lift and a decide-time flip.
-        if(!result.hasPlacement() && !record.isSecondaryOrSupplementary() && !record.getReadUnmappedFlag())
+        // Also pre-mutation. unmapDecided separates the two unplaced routes: a decide-time flip is deliberate policy,
+        // only a lift that produced nothing counts as a failure.
+        if(!record.isSecondaryOrSupplementary() && !record.getReadUnmappedFlag())
         {
-            ++mPrimariesUnmapped;
+            ++mPrimariesSeen;
+
+            if(!result.hasPlacement() && !unmapDecided)
+            {
+                ++mPrimariesLiftFailed;
+            }
         }
 
         applyResultToRecord(record, result, matePair, unmapDecided);

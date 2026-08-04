@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.BAM_EXTENSION;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_EXTENSION;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkCreateOutputDir;
@@ -116,6 +117,8 @@ public class TarsConfig
     public String formUnsortedBam() { return formBamFilename("unsorted"); }
 
     public String formOutputBam() { return formBamFilename(null); }
+
+    public String formSummaryFile() { return filePrefix() + ".summary" + TSV_EXTENSION; }
 
     public static void registerConfig(final ConfigBuilder configBuilder)
     {

@@ -3,10 +3,13 @@ package com.hartwig.hmftools.tars.liftback;
 import static com.hartwig.hmftools.common.bamops.BamToolName.fromPath;
 import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.runThreadTasks;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.tars.common.TarsConstants.ALT_CONTIG_SUFFIX;
 import static com.hartwig.hmftools.tars.common.TarsConstants.APP_NAME;
 import static com.hartwig.hmftools.tars.common.TarsConstants.TARS_LOGGER;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -41,7 +44,7 @@ public class TarsApplication
     private static final int CHUNK_TARGET_READS = 5000;
     private static final int CHUNK_QUEUE_DEPTH_PER_THREAD = 2;
     private static final int READER_SHARD_CAP = 8;
-    private static final double MAX_UNMAPPED_FRACTION = 0.01;
+    private static final double MAX_LIFT_FAILURE_FRACTION = 0.01;
 
     public TarsApplication(final ConfigBuilder configBuilder)
     {
@@ -66,7 +69,9 @@ public class TarsApplication
             System.exit(1);
         }
 
-        logUnmappedRate(workers);
+        RunCounts counts = aggregate(workers);
+        logLiftFailureRate(counts);
+        writeSummary(counts);
 
         TARS_LOGGER.info("liftback processing complete, mins({}); concatenating + sorting shards", runTimeMinsStr(startTimeMs));
 
@@ -207,28 +212,107 @@ public class TarsApplication
         return header;
     }
 
-    // A wholesale unmapped rate is a systemic failure, not a per-read one: almost always a sidecar built against a
-    // different FASTA than the reads were aligned to. Logged, not fatal, so the BAM already written stays inspectable.
-    private static void logUnmappedRate(final List<LiftBackWorker> workers)
+    // Run totals: what came in, and every route by which a mapped primary ends up unmapped. The three deliberate
+    // routes are normal outcomes and are kept apart from LiftFailed, which alone signals a sidecar/FASTA mismatch.
+    private record RunCounts(
+            long RecordsSeen, long PrimariesSeen, long LiftFailed, long ExcludedRegion, long OverCap, long LowAlignmentScore,
+            long SupplementaryCandidates, long PrimaryRevisions, long SupplementaryMerges, long SupplementariesAbsorbed)
     {
-        long recordsSeen = 0;
-        long primariesUnmapped = 0;
+    }
+
+    private static RunCounts aggregate(final List<LiftBackWorker> workers)
+    {
+        long recordsSeen = 0, primariesSeen = 0, liftFailed = 0, excludedRegion = 0, overCap = 0, lowAlignmentScore = 0;
+        long suppCandidates = 0, primaryRevisions = 0, suppMerges = 0, suppAbsorbed = 0;
+
         for(LiftBackWorker worker : workers)
         {
             recordsSeen += worker.recordsSeen();
-            primariesUnmapped += worker.primariesUnmapped();
+            primariesSeen += worker.primariesSeen();
+            liftFailed += worker.primariesLiftFailed();
+            excludedRegion += worker.primariesUnmappedExcludedRegion();
+            overCap += worker.primariesUnmappedOverCap();
+            lowAlignmentScore += worker.primariesUnmappedLowAlignmentScore();
+            suppCandidates += worker.supplementaryCandidates();
+            primaryRevisions += worker.primaryRevisions();
+            suppMerges += worker.supplementaryMerges();
+            suppAbsorbed += worker.supplementariesAbsorbed();
         }
 
-        TARS_LOGGER.info("processed {} records, unmapped {} primaries", recordsSeen, primariesUnmapped);
+        return new RunCounts(
+                recordsSeen, primariesSeen, liftFailed, excludedRegion, overCap, lowAlignmentScore,
+                suppCandidates, primaryRevisions, suppMerges, suppAbsorbed);
+    }
 
-        if(recordsSeen > 0 && primariesUnmapped / (double) recordsSeen > MAX_UNMAPPED_FRACTION)
+    // A wholesale lift failure is systemic, not per-read: almost always a sidecar built against a different FASTA than
+    // the reads were aligned to. Deliberate unmapping is normal and excluded, so this rate reflects only lifts that
+    // produced nothing. Logged, not fatal, so the written BAM stays inspectable.
+    private static void logLiftFailureRate(final RunCounts counts)
+    {
+        TARS_LOGGER.info(
+                "processed {} records, {} mapped primaries, {} failed to lift",
+                counts.RecordsSeen, counts.PrimariesSeen, counts.LiftFailed);
+
+        if(counts.PrimariesSeen > 0 && counts.LiftFailed / (double) counts.PrimariesSeen > MAX_LIFT_FAILURE_FRACTION)
         {
             TARS_LOGGER.error(
-                    "unmapped rate {} / {} = {}% exceeds {}% - likely sidecar/FASTA mismatch",
-                    primariesUnmapped, recordsSeen,
-                    String.format("%.2f", 100.0 * primariesUnmapped / recordsSeen),
-                    String.format("%.2f", 100.0 * MAX_UNMAPPED_FRACTION));
+                    "lift failure rate {} / {} = {}% exceeds {}% - likely sidecar/FASTA mismatch",
+                    counts.LiftFailed, counts.PrimariesSeen,
+                    String.format("%.2f", 100.0 * counts.LiftFailed / counts.PrimariesSeen),
+                    String.format("%.2f", 100.0 * MAX_LIFT_FAILURE_FRACTION));
         }
+    }
+
+    private void writeSummary(final RunCounts counts)
+    {
+        String filename = mConfig.formSummaryFile();
+
+        try(BufferedWriter writer = createBufferedWriter(filename))
+        {
+            writer.write(String.join(TSV_DELIM, "Metric", "Value", "Pct", "Basis"));
+            writer.newLine();
+
+            writeTotal(writer, "records_total", counts.RecordsSeen);
+            writeTotal(writer, "mapped_primaries", counts.PrimariesSeen);
+
+            writeMetric(writer, "lift_failed", counts.LiftFailed, "mapped_primaries", counts.PrimariesSeen);
+            writeMetric(writer, "unmapped_excluded_region", counts.ExcludedRegion, "mapped_primaries", counts.PrimariesSeen);
+            writeMetric(writer, "unmapped_over_cap", counts.OverCap, "mapped_primaries", counts.PrimariesSeen);
+            writeMetric(writer, "unmapped_low_alignment_score", counts.LowAlignmentScore, "mapped_primaries", counts.PrimariesSeen);
+
+            writeMetric(
+                    writer, "supp_merge_candidates", counts.SupplementaryCandidates, "mapped_primaries", counts.PrimariesSeen);
+            writeMetric(writer, "primary_revised", counts.PrimaryRevisions, "mapped_primaries", counts.PrimariesSeen);
+            writeMetric(
+                    writer, "supp_merged", counts.SupplementaryMerges, "supp_merge_candidates", counts.SupplementaryCandidates);
+            writeMetric(
+                    writer, "supps_absorbed", counts.SupplementariesAbsorbed, "supp_merge_candidates",
+                    counts.SupplementaryCandidates);
+
+            TARS_LOGGER.info("wrote summary to {}", filename);
+        }
+        catch(IOException e)
+        {
+            TARS_LOGGER.warn("failed to write summary {}: {}", filename, e.toString());
+        }
+    }
+
+    // a standalone total: no percentage, nothing to express it as a share of
+    private static void writeTotal(final BufferedWriter writer, final String metric, final long value) throws IOException
+    {
+        writer.write(String.join(TSV_DELIM, metric, String.valueOf(value), "", ""));
+        writer.newLine();
+    }
+
+    // Basis is named as well as counted so the percentage can be read without knowing which denominator applies -
+    // the unmap reasons are shares of mapped primaries, the merge outcomes shares of merge candidates.
+    private static void writeMetric(
+            final BufferedWriter writer, final String metric, final long value, final String basisName, final long basis)
+            throws IOException
+    {
+        String pct = basis > 0 ? String.format("%.4f", 100.0 * value / basis) : "";
+        writer.write(String.join(TSV_DELIM, metric, String.valueOf(value), pct, basisName));
+        writer.newLine();
     }
 
     private boolean concatenateShards(final List<String> shardBams, final String unsortedBam)
