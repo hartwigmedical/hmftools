@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.compar.mutation;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS_FILTER;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_FILTER;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_QUAL;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
@@ -175,9 +176,23 @@ public class VariantData extends ComparableItem
         return true;
     }
 
-    // public static final String FILTER_DELIMITER = ";";
-
-    public String filtersStr() { return Filters.stream().collect(Collectors.joining(ITEM_DELIM));}
+    public String filtersStr()
+    {
+        if(!Filters.isEmpty())
+        {
+            return Filters.stream().collect(Collectors.joining(ITEM_DELIM));
+        }
+        /*
+        else if(IsFromUnfilteredVcf)
+        {
+            return "FILTERED";
+        }
+        */
+        else
+        {
+            return PASS_FILTER;
+        }
+    }
 
     public String comparisonChromosome() { return mComparisonChromosome; }
     public int comparisonPosition() { return mComparisonPosition; }
@@ -187,10 +202,10 @@ public class VariantData extends ComparableItem
         return Lists.newArrayList(
                 FLD_REPORTED, FLD_HOTSPOT, FLD_TIER, FLD_GENE, FLD_CANON_EFFECT, FLD_CODING_EFFECT,
                 FLD_HGVS_CODING, FLD_HGVS_PROTEIN, FLD_OTHER_REPORTED, FLD_QUAL, FLD_VARIANT_COPY_NUMBER, FLD_PURITY_ADJUSTED_VAF,
-                FLD_TUMOR_SUPPORTING_READ_COUNT, FLD_TUMOR_TOTAL_READ_COUNT);
+                FLD_TUMOR_SUPPORTING_READ_COUNT, FLD_TUMOR_TOTAL_READ_COUNT, FLD_FILTER);
     }
 
-    static void addComparerFields(final List<FieldInfo> fields, final Map<String, FieldCheck> fieldCheckMap)
+    static void addComparerFields(final List<FieldInfo> fields, final Map<String,FieldCheck> fieldCheckMap)
     {
         fields.add(new FieldInfo(FLD_REPORTED, getOrMakeFieldCheck(fieldCheckMap, FLD_REPORTED), null));
         fields.add(new FieldInfo(FLD_HOTSPOT, getOrMakeFieldCheck(fieldCheckMap, FLD_HOTSPOT), null));
@@ -229,36 +244,4 @@ public class VariantData extends ComparableItem
 
         fields.add(new FieldInfo(FLD_FILTER, getOrMakeFieldCheck(fieldCheckMap, FLD_FILTER), null));
     }
-
-    /*
-    static void addCommonFieldValues(
-            final SmallVariant variant, final Map<String, FieldValue> valuesMap, final List<FieldInfo> fields)
-    {
-        valuesMap.put(FLD_REPORTED, new BoolFieldValue(findField(FLD_REPORTED, fields), variant.reported()));
-        valuesMap.put(FLD_HOTSPOT, new StringFieldValue(findField(FLD_HOTSPOT, fields), variant.hotspot().toString()));
-        valuesMap.put(FLD_TIER, new StringFieldValue(findField(FLD_TIER, fields), variant.tier().toString()));
-
-        valuesMap.put(FLD_GENE, new StringFieldValue(findField(FLD_GENE, fields), variant.gene()));
-        valuesMap.put(FLD_CANON_EFFECT, new StringFieldValue(findField(FLD_CANON_EFFECT, fields), variant.canonicalEffect()));
-        valuesMap.put(FLD_CODING_EFFECT, new StringFieldValue(findField(FLD_CODING_EFFECT, fields), variant.canonicalCodingEffect().toString()));
-        valuesMap.put(FLD_HGVS_CODING, new StringFieldValue(findField(FLD_HGVS_CODING, fields), variant.canonicalHgvsCodingImpact()));
-        valuesMap.put(FLD_HGVS_PROTEIN, new StringFieldValue(findField(FLD_HGVS_PROTEIN, fields), variant.canonicalHgvsProteinImpact()));
-        valuesMap.put(FLD_OTHER_REPORTED, new StringFieldValue(findField(FLD_OTHER_REPORTED, fields), variant.otherReportedEffects()));
-
-        valuesMap.put(FLD_QUAL, new IntFieldValue(findField(FLD_REPORTED, fields), (int)variant.qual()));
-
-        valuesMap.put(FLD_VARIANT_COPY_NUMBER, new DoubleFieldValue(findField(FLD_VARIANT_COPY_NUMBER, fields), variant.variantCopyNumber()));
-        valuesMap.put(FLD_PURITY_ADJUSTED_VAF, new DoubleFieldValue(findField(FLD_PURITY_ADJUSTED_VAF, fields), variant.adjustedVAF()));
-
-        valuesMap.put(
-                FLD_TUMOR_SUPPORTING_READ_COUNT,
-                new IntFieldValue(findField(FLD_TUMOR_SUPPORTING_READ_COUNT, fields), variant.allelicDepth().AlleleReadCount));
-
-        valuesMap.put(
-                FLD_TUMOR_TOTAL_READ_COUNT,
-                new IntFieldValue(findField(FLD_TUMOR_TOTAL_READ_COUNT, fields), variant.allelicDepth().TotalReadCount));
-
-        valuesMap.put(FLD_FILTER, new StringFieldValue(findField(FLD_FILTER, fields), variant.filter()));
-    }
-    */
 }

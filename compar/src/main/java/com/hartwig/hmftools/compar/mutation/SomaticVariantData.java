@@ -89,45 +89,6 @@ public class SomaticVariantData extends VariantData
         return true;
     }
 
-    /*
-    @Override
-    public Mismatch findMismatch(
-            final ComparableItem other, final MatchLevel matchLevel, final boolean includeMatches)
-    {
-        final SomaticVariantData otherVar = (SomaticVariantData) other;
-        final List<String> diffs = Lists.newArrayList();
-
-        if(Qual != NO_QUAL_PRESENT && otherVar.Qual != NO_QUAL_PRESENT)
-        {
-            diffs.addAll(findDiffs(this, otherVar, fieldConfig.getFields(category(), List.of(FLD_QUAL))));
-        }
-
-        List<String> alwaysCompareFields = List.of(
-                FLD_REPORTED, FLD_TIER, FLD_TUMOR_SUPPORTING_READ_COUNT, FLD_TUMOR_TOTAL_READ_COUNT, FLD_LPS, FLD_FILTER);
-        diffs.addAll(findDiffs(this, otherVar, fieldConfig.getFields(category(), alwaysCompareFields)));
-
-        if(canComparePaveFields(otherVar))
-        {
-            // assumes Pave annotated - could possibly check VCF for presence of tags
-            List<String> paveFields = List.of(FLD_GENE, FLD_CANON_EFFECT, FLD_CODING_EFFECT, FLD_HGVS_CODING, FLD_HGVS_PROTEIN);
-            diffs.addAll(findDiffs(this, otherVar, fieldConfig.getFields(category(), paveFields)));
-        }
-
-        List<String> purpleFields = List.of(
-                FLD_HOTSPOT, FLD_BIALLELIC, FLD_BIALLELIC_PROB, FLD_OTHER_REPORTED, FLD_SUBCLONAL_LIKELIHOOD, FLD_VARIANT_COPY_NUMBER,
-                FLD_PURITY_ADJUSTED_VAF
-        );
-        diffs.addAll(findDiffs(this, otherVar, fieldConfig.getFields(category(), purpleFields)));
-
-        return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches);
-    }
-    */
-
-    private boolean canComparePaveFields(final SomaticVariantData otherVar)
-    {
-        return !IsFromUnfilteredVcf && !otherVar.IsFromUnfilteredVcf;
-    }
-
     public static SomaticVariantData fromContext(
             final VariantContext context, final String sampleId, final boolean fromUnfilteredFile,
             final SourceType sourceType, final ComparConfig config, final List<FieldInfo> fields)
@@ -170,10 +131,6 @@ public class SomaticVariantData extends VariantData
                 context.getAttributeAsDouble(SUBCLONAL_LIKELIHOOD_FLAG, 0),
                 fields);
     }
-
-    private static final VariantImpact INVALID_IMPACT = new VariantImpact(
-            "", "", "", UNDEFINED, "", "",
-            false, "", UNDEFINED, 0);
 
     public String toString() { return format("%s gene(%s:%s)", key(), Gene, CanonicalCodingEffect); }
 }

@@ -7,21 +7,21 @@ import com.hartwig.hmftools.common.rna.ImmutableTranscriptExpression;
 import com.hartwig.hmftools.common.rna.TranscriptExpression;
 import com.hartwig.hmftools.compar.TestComparableItemBuilder;
 
-public class TestIsofoxTranscriptDataBuilder
+public class TestRnaTranscriptDataBuilder
 {
     public String transcriptName = "ENST00000304494";
     public String geneName = "CDKN2A";
     public double tpm = 2.0;
 
-    private static final Consumer<TestIsofoxTranscriptDataBuilder> ALTERNATE_INITIALIZER = b ->
+    private static final Consumer<TestRnaTranscriptDataBuilder> ALTERNATE_INITIALIZER = b ->
     {
         b.transcriptName = "ENST00000646891";
         b.geneName = "BRAF";
         b.tpm = 0.001;
     };
 
-    public static final TestComparableItemBuilder<TestIsofoxTranscriptDataBuilder, RnaTranscriptData> BUILDER =
-            new TestComparableItemBuilder<>(TestIsofoxTranscriptDataBuilder::new, TestIsofoxTranscriptDataBuilder::build, ALTERNATE_INITIALIZER);
+    public static final TestComparableItemBuilder<TestRnaTranscriptDataBuilder, RnaTranscriptData> BUILDER =
+            new TestComparableItemBuilder<>(TestRnaTranscriptDataBuilder::new, TestRnaTranscriptDataBuilder::build, ALTERNATE_INITIALIZER);
 
     private RnaTranscriptData build()
     {

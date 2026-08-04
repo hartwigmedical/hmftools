@@ -9,7 +9,7 @@ import com.hartwig.hmftools.common.rna.RnaQcFilter;
 import com.hartwig.hmftools.common.rna.RnaStatistics;
 import com.hartwig.hmftools.compar.TestComparableItemBuilder;
 
-public class TestIsofoxSummaryDataBuilder
+public class TestRnaSummaryDataBuilder
 {
     public List<RnaQcFilter> qcStatus = List.of(RnaQcFilter.PASS);
     public long totalFragments = 1000000;
@@ -26,7 +26,7 @@ public class TestIsofoxSummaryDataBuilder
     public double medianGCRatio = 0.5;
     public double forwardStrandPercent = 0.9;
 
-    private static final Consumer<TestIsofoxSummaryDataBuilder> ALTERNATE_INITIALIZER = b ->
+    private static final Consumer<TestRnaSummaryDataBuilder> ALTERNATE_INITIALIZER = b ->
     {
         b.qcStatus = List.of(RnaQcFilter.FAIL_LOW_COVERAGE);
         b.totalFragments = 2000000;
@@ -44,8 +44,8 @@ public class TestIsofoxSummaryDataBuilder
         b.forwardStrandPercent = 0.5;
     };
 
-    public static final TestComparableItemBuilder<TestIsofoxSummaryDataBuilder, RnaSummaryData> BUILDER =
-            new TestComparableItemBuilder<>(TestIsofoxSummaryDataBuilder::new, TestIsofoxSummaryDataBuilder::build, ALTERNATE_INITIALIZER);
+    public static final TestComparableItemBuilder<TestRnaSummaryDataBuilder, RnaSummaryData> BUILDER =
+            new TestComparableItemBuilder<>(TestRnaSummaryDataBuilder::new, TestRnaSummaryDataBuilder::build, ALTERNATE_INITIALIZER);
 
     private RnaSummaryData build()
     {

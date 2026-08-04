@@ -9,13 +9,13 @@ import com.hartwig.hmftools.compar.ComparableItemTest;
 import org.junit.Before;
 import org.junit.Test;
 
-public class IsofoxSummaryDataTest extends ComparableItemTest<RnaSummaryData, RnaSummaryComparer, TestIsofoxSummaryDataBuilder>
+public class RnaSummaryDataTest extends ComparableItemTest<RnaSummaryData, RnaSummaryComparer, TestRnaSummaryDataBuilder>
 {
     @Before
     public void setUp()
     {
         comparer = new RnaSummaryComparer(new ComparConfig(), Collections.emptyMap());
-        builder = TestIsofoxSummaryDataBuilder.BUILDER;
+        builder = TestRnaSummaryDataBuilder.BUILDER;
         RnaSummaryData alternateValueSource = builder.createWithAlternateDefaults();
 
         fieldToAlternateValueInitializer = Map.ofEntries(

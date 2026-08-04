@@ -11,13 +11,13 @@ import com.hartwig.hmftools.compar.ComparableItemTest;
 import org.junit.Before;
 import org.junit.Test;
 
-public class RnaGeneDataTest extends ComparableItemTest<RnaGeneData, RnaGeneDataComparer, TestIsofoxGeneDataBuilder>
+public class RnaGeneDataTest extends ComparableItemTest<RnaGeneData, RnaGeneDataComparer, TestRnaGeneDataBuilder>
 {
     @Before
     public void setUp()
     {
         comparer = new RnaGeneDataComparer(new ComparConfig(), Collections.emptyMap());
-        builder = TestIsofoxGeneDataBuilder.BUILDER;
+        builder = TestRnaGeneDataBuilder.BUILDER;
         RnaGeneData alternateValueSource = builder.createWithAlternateDefaults();
 
         fieldToAlternateValueInitializer = Map.of(

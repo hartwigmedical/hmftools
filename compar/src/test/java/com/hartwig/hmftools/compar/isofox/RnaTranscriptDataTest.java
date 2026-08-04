@@ -11,13 +11,13 @@ import com.hartwig.hmftools.compar.ComparableItemTest;
 import org.junit.Before;
 import org.junit.Test;
 
-public class RnaTranscriptDataTest extends ComparableItemTest<RnaTranscriptData, RnaTranscriptDataComparer, TestIsofoxTranscriptDataBuilder>
+public class RnaTranscriptDataTest extends ComparableItemTest<RnaTranscriptData, RnaTranscriptDataComparer, TestRnaTranscriptDataBuilder>
 {
     @Before
     public void setUp()
     {
         comparer = new RnaTranscriptDataComparer(new ComparConfig(), Collections.emptyMap());
-        builder = TestIsofoxTranscriptDataBuilder.BUILDER;
+        builder = TestRnaTranscriptDataBuilder.BUILDER;
         RnaTranscriptData alternateValueSource = builder.createWithAlternateDefaults();
 
         fieldToAlternateValueInitializer = Map.of(
