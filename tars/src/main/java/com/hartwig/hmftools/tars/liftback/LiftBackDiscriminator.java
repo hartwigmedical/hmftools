@@ -47,9 +47,41 @@ public class LiftBackDiscriminator
 
     private LiftedAlignment liftSelf(final SAMRecord record)
     {
-        return mContigTranslator.liftAlignment(
+        LiftedAlignment lifted = mContigTranslator.liftAlignment(
                 record.getReferenceName(), record.getAlignmentStart(), record.getCigarString(),
                 getInt(record, NUM_MUTATONS_ATTRIBUTE), !record.getReadNegativeStrandFlag());
+
+        if(lifted == null)
+        {
+            logLiftFailure(record);
+        }
+
+        return lifted;
+    }
+
+    // A lift that produces nothing is rare, so log it per read against the transcript segment owning the position:
+    // the cause reads off the numbers. pos below segStart or readEnd above segEnd is an overhang the clamp could not
+    // absorb, pos above segEnd is an inter-transcript spacer hit, and wholly inside means the walk ran off the last exon.
+    private void logLiftFailure(final SAMRecord record)
+    {
+        String contig = record.getReferenceName();
+        int pos = record.getAlignmentStart();
+        int readEnd = pos + record.getCigar().getReferenceLength() - 1;
+        String role = record.getSupplementaryAlignmentFlag() ? "supp" : "primary";
+        ContigEntry segment = mContigTranslator.findSegment(contig, pos);
+
+        if(segment == null)
+        {
+            TARS_LOGGER.debug(
+                    "lift failed {} {}: {}:{}-{} {} - contig has no segments",
+                    record.getReadName(), role, contig, pos, readEnd, record.getCigarString());
+            return;
+        }
+
+        TARS_LOGGER.debug(
+                "lift failed {} {}: {}:{}-{} {} - segment {} [{}-{}] exons({})",
+                record.getReadName(), role, contig, pos, readEnd, record.getCigarString(),
+                segment.transName(), segment.contigStart(), segment.contigEnd(), segment.exonSpans().size());
     }
 
     // No-reconcile convenience for non-discriminating callers (supplementaries, unmapped, lift-only paths, tests).
