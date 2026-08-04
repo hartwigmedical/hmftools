@@ -3,6 +3,23 @@
 Working design notes for adding RNA panel support to PanelBuilder. Captures the plan,
 decisions made, and open issues to revisit. Not user-facing documentation.
 
+## Outstanding follow-ups
+
+Single source of truth for what remains. Each is tagged in code where practical (search the tag). Detail for several
+is in the sections further down. Everything in the batch/merge records below (A1–B6, M1–M5) is DONE.
+
+| # | Item | Code tag / location | Notes |
+|---|------|---------------------|-------|
+| 1 | RNA generation performance (end-to-end run spends minutes on RNA) | *(untagged)* | Likely short-region probes routing to the alignment model + dense candidate generation over merged exons. Profile first. |
+| 2 | Quality score of non-contiguous (spliced / SV) probes distorted | `FIXME` `ProbeQualityModel.computeFromAlignments` | `targetScore` assumes a full-length on-target match. Pre-existing (affects SV too). See "Open issue — quality score…". |
+| 3 | RefSeq/NM transcript resolution disabled | `TODO` `GenesRna.resolveTranscript` | Validate the non-1:1 Ensembl↔RefSeq mapping, then re-enable. |
+| 4 | Part-coding exon classified as fully coding | `TODO` `GenesRna.createTargets` | A long exon with few coding bases is tiled entirely as coding. Reconsider. |
+| 5 | `PanelData` getters return live internal lists | `TODO` `PanelData` | No live aliasing bug found; defensively copy (also `ProbeGenerationResult` ctor). Own commit. |
+| 6 | Rejected spliced (multi-region) probe reporting | `TODO(RNA)` `ProbeGenerationResult` | Decide how a rejected non-variant multi-region probe is reported. |
+| 7 | `SingleProbe` requires exact `PROBE_LENGTH` | *(untagged)* | Define the can't-fill fallback for a short-exon padded probe. |
+| 8 | RNA strandedness | *(design decision, deferred)* | RNA is single-stranded; currently emit genome-forward only. Decide one strand vs both. |
+| 9 | README "exon aware tiling algorithm" section | *(doc)* | Complete the user-facing description. |
+
 ## Implementation status
 
 - **A1 [DONE]** — `SequenceDefinition` segment-list model + segment types + `BasicProbeLayout` + generalized `probeTargetedRegions` +
@@ -46,17 +63,14 @@ decisions made, and open issues to revisit. Not user-facing documentation.
   (`rna_candidate_probes.tsv.gz`) uses the same segment-based format as `rna_probes.tsv` (the DNA candidate format's `BasicProbeLayout` can't
   represent spliced probes). The Ensembl cache is loaded once and shared between DNA and RNA generation.
 - **B6 [DONE]** — README RNA section + these notes updated. End-to-end validated externally as byte-for-byte identical DNA output (the
-  intentional `probes.fasta` id-label change, `probe{i}` -> `dna_{i}`, is the only DNA difference). Follow-up items below are tagged in code
-  with `TODO`/`FIXME` so they are tracked at the point of change:
-    - spliced-probe QS distortion — `FIXME` in `ProbeQualityModel.computeFromAlignments`;
-    - RefSeq/NM transcript resolution — `TODO` in `GenesRna.resolveTranscript`;
-    - Ensembl cache double-load (DNA + RNA) — `TODO` in `PanelBuilderApplication.loadEnsemblData`;
-    - RNA verbose candidate-probe output — `TODO(RNA)` in `PanelBuilderApplication`;
-    - part-coding exon classified as fully coding — `TODO` in `GenesRna.createTargets`;
-    - `PanelData` getters return live internal lists — `TODO` in `PanelData`.
-  (The DNA-file `dna_` rename that was noted here as remaining is now done — see the follow-ups section.)
+  intentional `probes.fasta` id-label change, `probe{i}` -> `dna_{i}`, is the only DNA difference). Remaining follow-ups are consolidated in
+  the "Outstanding follow-ups" table at the top (tagged in code where practical). Ensembl double-load, RNA verbose candidate-probe output, the
+  `dna_`/`rna_` file rename, `Segments` orientation, and gene-name-only target extra are all now done.
+- **M1–M5 [DONE]** — unified DNA + RNA probe generation into one `ProbeGenerator` path over a `RegionMapping` (identity for DNA, exons for
+  RNA); `RnaProbeGenerator` deleted. See the "Merge plan" section. DNA output validated byte-identical; RNA output changed only at unpinned
+  rejection-split sub-ranges (uncovered-budget fix + DNA-consistent extension → more coverage).
 
-Everything above is additive/behaviour-preserving; all existing DNA tests remain green (165 tests total, incl. the new RNA output test).
+Everything above is additive/behaviour-preserving for DNA; all DNA and RNA unit tests green.
 
 ## Decisions (B4/B5)
 
@@ -386,42 +400,30 @@ Action: prototype (1), compare against hand-checked probes, decide. Track as its
 
 ## Other issues to keep in mind
 
+Background/context (the actionable items are in the "Outstanding follow-ups" table at the top; detail here).
+
 - Determinism: recent work (AUS461, AUS434) fought nondeterminism. RNA iteration/collection must use
   sorted, fixed order (transcript order, exon order).
-- `SingleProbe` requires exact PROBE_LENGTH — the short-exon padded probe must hit it exactly;
-  define behaviour for the can't-fill fallback.
 - Testing without sample data: build fake `TranscriptData` / `ExonData` fixtures + a small synthetic
   ref genome. Validate BED in IGV. No real sample IDs anywhere.
-- `ProbeGenerationResult.rejectProbe` (see `TODO(RNA)`): decide how a rejected multi-region
-  non-variant (spliced) probe should be reported to the user. Currently splits single-region into
-  rejected regions, else reports the whole probe.
+- **Follow-up #6 detail** — `ProbeGenerationResult.rejectProbe` (`TODO(RNA)`): a rejected multi-region non-variant
+  (spliced) probe currently splits single-region into rejected regions, else reports the whole probe.
+- **Follow-up #5 detail** — defensive-copying: an audit found no live aliasing bug, but several classes store/return
+  collections by reference while peers (`SequenceDefinition`, `RegionMapping`, `ProbeGenerationResult` factories)
+  defensively copy. Priority: `PanelData` getters and the `ProbeGenerationResult` canonical constructor. Not worth it
+  for read-only sites like `ProbeOutputWriter`. Own commit.
 
-- RNA probe strandedness, since RNA is single-stranded in cell. Need to output a particular strand, or both strands?
-- Collection defensive-copying (separate future commit, not part of RNA): an audit found no live aliasing
-  bug, but several classes store/return collections by reference while peers (`SequenceDefinition`,
-  `RegionMapping`, `ProbeGenerationResult` factories) defensively copy. Worth fixing in
-  nested/complex code where mutation could realistically occur — priority: `PanelData` getters
-  (`probes()`/`candidateTargetRegions()`/`rejectedFeatures()` return live internal lists) and the
-  `ProbeGenerationResult` canonical constructor (factories copy, constructor doesn't). Not worth it for
-  read-only sites like `OutputWriter` where no mutation happens. Do as its own commit.
+## Done in follow-up work (post initial delivery)
 
-## RNA follow-ups (post end-to-end run)
+- **Output file naming:** DNA and RNA share one set of base names, prefixed per panel (`dna_` / `rna_`). One set of
+  file-name constants in `PanelBuilderConstants` plus `DNA_OUTPUT_PREFIX` / `RNA_OUTPUT_PREFIX`; the duplicated `RNA_*`
+  constants removed. `sample_variant_info.tsv` (not a per-panel file) stays unprefixed.
+- `Segments` orientation emitted as `1`/`-1`; target extra info is the gene name unless a transcript subset was
+  specified; Ensembl cache loaded once and shared; RNA verbose candidate-probe output added.
+- **Merge probe generation:** DNA and RNA unified into one `ProbeGenerator` path (M1–M5); `RnaProbeGenerator` deleted.
 
-- **Performance:** the end-to-end run spent several minutes on the RNA probes alone. Investigate — likely the
-  short-region probes now routing to the alignment model (slower per candidate than the profile), amplified by
-  candidate generation enumerating every window across large merged-exon spaces. Profile before optimising.
-- **Merge probe generation:** unify the DNA (`ProbeGenerator`) and RNA (`RnaProbeGenerator`) probe-generation code
-  into one parameterised path, mirroring the `ProbeOutputWriter` unification. Per the earlier "Later" note, the
-  DNA/RNA difference collapses to which `RegionMapping` is passed (whole-genome identity for DNA vs exon mapping for
-  RNA) plus the edge-pinning rule; existing DNA tests are the regression gate.
-- **Output file naming [DONE]:** DNA and RNA output files now share one set of base names, prefixed per panel
-  (`dna_` / `rna_`) — e.g. `dna_probes.tsv` / `rna_probes.tsv`. One set of file-name constants in
-  `PanelBuilderConstants` plus a per-panel prefix (`DNA_OUTPUT_PREFIX` / `RNA_OUTPUT_PREFIX`); the duplicated `RNA_*`
-  file-name constants were removed. `sample_variant_info.tsv` is not a per-panel probe file (DNA-sample-variant
-  informational output, no RNA equivalent) and is left unprefixed.
-- Done: `Segments` orientation now `1`/`-1`; target extra info is just the gene name unless the user specified a
-  transcript subset; Ensembl loaded once; RNA verbose candidate-probe output.
-- Complete README exon aware tiling algorithm section.
+Still open: see the "Outstanding follow-ups" table at the top (performance, README tiling section, plus the
+code-tagged items).
 
 ## Merge plan: unify DNA + RNA probe generation
 
