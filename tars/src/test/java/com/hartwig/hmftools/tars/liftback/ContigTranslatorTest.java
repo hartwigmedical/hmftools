@@ -157,6 +157,50 @@ public class ContigTranslatorTest
     }
 
     @Test
+    public void testLeadingOverhangAbsorbedAcrossDeletion()
+    {
+        // 11 bases before the contig with only 7M leading: the following 4D contributes the remaining 4 reference
+        // bases, so the clamp still lands on contigStart. Seen on real data as 7M4D144M.
+        ContigTranslateResult result = ContigTranslator.translate(threeExonContig(), -10, cigar("7M4D80M"));
+
+        assertNotNull(result);
+        assertEquals(100, result.genomicStart());
+        assertEquals("7S80M", result.genomicCigar().toString());
+    }
+
+    @Test
+    public void testLeadingOverhangAbsorbedAcrossInsertion()
+    {
+        // 8 bases before the contig, led by 6M1I: the insertion adds read bases but no reference, so 2 more come
+        // from the next M and all three elements fold into the clip. Seen on real data as 6M1I144M.
+        ContigTranslateResult result = ContigTranslator.translate(threeExonContig(), -7, cigar("6M1I80M"));
+
+        assertNotNull(result);
+        assertEquals(100, result.genomicStart());
+        assertEquals("9S78M", result.genomicCigar().toString());
+    }
+
+    @Test
+    public void testTrailingOverhangAbsorbedAcrossDeletion()
+    {
+        // read ends 5 bases past contigEnd(250) with only 4M trailing; the preceding 1D supplies the fifth.
+        // Seen on real data as 147M1D4M.
+        ContigTranslateResult result = ContigTranslator.translate(threeExonContig(), 211, cigar("40M1D4M"));
+
+        assertNotNull(result);
+        assertEquals(510, result.genomicStart());
+        assertEquals("40M4S", result.genomicCigar().toString());
+    }
+
+    @Test
+    public void testLeadingOverhangEndingOnDeletionReturnsNull()
+    {
+        // the overhang is absorbed exactly by 3M, leaving a deletion at the clip boundary. Dropping it would start
+        // the alignment past contigStart, so the lift is declined rather than misplaced.
+        assertNull(ContigTranslator.translate(threeExonContig(), -2, cigar("3M1D80M")));
+    }
+
+    @Test
     public void testReadAtLastBaseOfContig()
     {
         // contig 250 is the final base of exon3 -> chr1 549.

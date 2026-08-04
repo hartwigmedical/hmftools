@@ -433,24 +433,84 @@ public final class ContigTranslator
         return false;
     }
 
-    // converts the first `overhang` M bases to soft-clip, merging any existing leading S; null if not possible
+    // Soft-clips the leading `overhang` reference bases, merging any existing leading S. Walks as many elements as the
+    // overhang spans rather than requiring the first aligned block to cover it on its own: an insertion contributes read
+    // bases but no reference, a deletion the reverse, so a short terminal block followed by an indel still clamps.
+    // Null when the overhang consumes the whole alignment, leaving nothing aligned.
     private static Cigar clampLeadingMToSoftClip(final Cigar cigar, final int overhang)
     {
         List<CigarElement> elements = cigar.getCigarElements();
 
         int existingLeadingSoftClip = leftSoftClipLength(cigar);
-        int alignedIndex = existingLeadingSoftClip > 0 ? 1 : 0;
+        int index = existingLeadingSoftClip > 0 ? 1 : 0;
 
-        CigarElement aligned = alignedIndex < elements.size() ? elements.get(alignedIndex) : null;
-        if(aligned == null || aligned.getOperator() != CigarOperator.M || aligned.getLength() <= overhang)
+        int remainingOverhang = overhang;
+        int clippedReadBases = 0;
+        List<CigarElement> tail = null;
+
+        while(index < elements.size())
+        {
+            CigarElement element = elements.get(index);
+            CigarOperator op = element.getOperator();
+
+            if(!op.consumesReferenceBases())
+            {
+                // an insertion's bases are read-only: they fall inside the clip without shortening the overhang
+                if(op.consumesReadBases())
+                {
+                    clippedReadBases += element.getLength();
+                }
+                ++index;
+                continue;
+            }
+
+            if(element.getLength() <= remainingOverhang)
+            {
+                remainingOverhang -= element.getLength();
+                if(op.consumesReadBases())
+                {
+                    clippedReadBases += element.getLength();
+                }
+                ++index;
+
+                if(remainingOverhang == 0)
+                {
+                    tail = new ArrayList<>(elements.subList(index, elements.size()));
+                    break;
+                }
+
+                continue;
+            }
+
+            // the overhang ends inside this element: keep its remainder aligned
+            if(op.consumesReadBases())
+            {
+                clippedReadBases += remainingOverhang;
+            }
+
+            tail = new ArrayList<>();
+            tail.add(new CigarElement(element.getLength() - remainingOverhang, op));
+            tail.addAll(elements.subList(index + 1, elements.size()));
+            remainingOverhang = 0;
+            break;
+        }
+
+        if(remainingOverhang > 0 || tail == null)
         {
             return null;
         }
 
-        List<CigarElement> out = new ArrayList<>(elements.size());
-        out.add(new CigarElement(existingLeadingSoftClip + overhang, CigarOperator.S));
-        out.add(new CigarElement(aligned.getLength() - overhang, CigarOperator.M));
-        out.addAll(elements.subList(alignedIndex + 1, elements.size()));
+        // A deletion left at the clip boundary would have to be dropped to give a valid alignment start, and dropping
+        // it moves the first aligned base past contigStart - which the caller has already pinned. Decline instead of
+        // emitting a placement that is off by the deletion's length.
+        if(tail.isEmpty() || tail.get(0).getOperator() != CigarOperator.M)
+        {
+            return null;
+        }
+
+        List<CigarElement> out = new ArrayList<>(tail.size() + 1);
+        out.add(new CigarElement(existingLeadingSoftClip + clippedReadBases, CigarOperator.S));
+        out.addAll(tail);
         return new Cigar(out);
     }
 
