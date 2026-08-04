@@ -16,6 +16,7 @@ import java.util.Set;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.tars.liftback.TarsTestFixtures;
 import com.hartwig.hmftools.tars.liftback.TarsTestFixtures.TestGenome;
+import com.hartwig.hmftools.tars.liftback.supplementary.SupplementaryResolver.BoundarySnap;
 import com.hartwig.hmftools.tars.liftback.supplementary.SupplementaryResolver.Candidate;
 import com.hartwig.hmftools.tars.liftback.supplementary.SupplementaryResolver.RejectReason;
 import com.hartwig.hmftools.tars.liftback.supplementary.SupplementaryResolver.Result;
@@ -1244,5 +1245,91 @@ public class SupplementaryResolverTest
         assertTrue(result.merged());
         assertEquals("30M70N10M", result.mergedCigar());
         assertEquals(101, result.mergedStart());
+    }
+
+    // Boundary snap: BWA over-extends past the exon end into the intron, and with no merge to carry the correction the
+    // retraction onto the annotated intron start happens on its own. 96M ends at 1095, so the intron would start at 1096.
+    @Test
+    public void testSnapsRightBoundaryOntoAnnotatedIntronStart()
+    {
+        SupplementaryResolver resolver = defaultResolver(annotated(new ChrBaseRegion(CHR1, 1095, 2000)));
+
+        BoundarySnap snap = resolver.snapToAnnotatedBoundary(CHR1, 1000, "96M55S");
+
+        assertEquals("95M56S", snap.cigar());
+        assertEquals(1000, snap.start());
+        assertEquals(1, snap.rightShift());
+        assertEquals(0, snap.leftShift());
+    }
+
+    @Test
+    public void testSnapsLeftBoundaryOntoAnnotatedIntronEnd()
+    {
+        SupplementaryResolver resolver = defaultResolver(annotated(new ChrBaseRegion(CHR1, 500, 1000)));
+
+        BoundarySnap snap = resolver.snapToAnnotatedBoundary(CHR1, 1000, "55S96M");
+
+        assertEquals("56S95M", snap.cigar());
+        assertEquals(1001, snap.start());
+        assertEquals(1, snap.leftShift());
+        assertEquals(0, snap.rightShift());
+    }
+
+    @Test
+    public void testSnapsBothBoundariesIndependently()
+    {
+        SupplementaryResolver resolver = defaultResolver(annotated(
+                new ChrBaseRegion(CHR1, 500, 1000), new ChrBaseRegion(CHR1, 1099, 2000)));
+
+        BoundarySnap snap = resolver.snapToAnnotatedBoundary(CHR1, 1000, "20S100M31S");
+
+        assertEquals("21S98M32S", snap.cigar());
+        assertEquals(1001, snap.start());
+        assertEquals(1, snap.leftShift());
+        assertEquals(1, snap.rightShift());
+    }
+
+    // BWA already landed on the annotated boundary, so there is nothing to correct.
+    @Test
+    public void testNoSnapWhenBoundaryAlreadyAnnotated()
+    {
+        SupplementaryResolver resolver = defaultResolver(annotated(new ChrBaseRegion(CHR1, 1096, 2000)));
+
+        assertNull(resolver.snapToAnnotatedBoundary(CHR1, 1000, "96M55S"));
+    }
+
+    @Test
+    public void testNoSnapWhenNoAnnotatedBoundaryWithinReach()
+    {
+        SupplementaryResolver resolver = defaultResolver(annotated(new ChrBaseRegion(CHR1, 1050, 2000)));
+
+        assertNull(resolver.snapToAnnotatedBoundary(CHR1, 1000, "96M55S"));
+    }
+
+    // Two annotated starts in reach, at shift 1 and shift 3: the intended one cannot be told apart, so leave it alone.
+    @Test
+    public void testNoSnapWhenTwoAnnotatedBoundariesInReach()
+    {
+        SupplementaryResolver resolver = defaultResolver(annotated(
+                new ChrBaseRegion(CHR1, 1095, 2000), new ChrBaseRegion(CHR1, 1093, 2000)));
+
+        assertNull(resolver.snapToAnnotatedBoundary(CHR1, 1000, "96M55S"));
+    }
+
+    // 95M1I55S aligns to 1094, so shift 1 would reach the annotated start - the indel at the boundary is what blocks it.
+    @Test
+    public void testNoSnapWithIndelAtTheBoundary()
+    {
+        SupplementaryResolver resolver = defaultResolver(annotated(new ChrBaseRegion(CHR1, 1094, 2000)));
+
+        assertNull(resolver.snapToAnnotatedBoundary(CHR1, 1000, "95M1I55S"));
+    }
+
+    @Test
+    public void testNoSnapWithoutATerminalSoftClip()
+    {
+        SupplementaryResolver resolver = defaultResolver(annotated(new ChrBaseRegion(CHR1, 1095, 2000)));
+
+        assertNull(resolver.snapToAnnotatedBoundary(CHR1, 1000, "151M"));
     }
 }

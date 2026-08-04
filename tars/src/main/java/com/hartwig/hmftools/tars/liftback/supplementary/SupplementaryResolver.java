@@ -71,8 +71,7 @@ public class SupplementaryResolver
     }
 
     // On success, mergedCigar/mergedStart describe the new primary and droppedSupplementaryIndices lists the absorbed
-    // supps. On failure, rejectReason carries the gate hit, and adjustedCigar/adjustedStart are set when the boundary
-    // was snapped back to a splice motif without merging - null/-1 when the boundary was left alone.
+    // supps. On failure, rejectReason carries the gate that was hit.
     public record Result(
             boolean merged, String mergedCigar, int mergedStart, List<Integer> droppedSupplementaryIndices,
             List<ChrBaseRegion> introducedIntrons, int chainDepth, RejectReason rejectReason)
@@ -88,6 +87,12 @@ public class SupplementaryResolver
             }
             return new Result(false, null, -1, Collections.emptyList(), Collections.emptyList(), 0, reason);
         }
+    }
+
+    // A retraction of one or both terminal boundaries onto an annotated splice boundary: the resulting start and cigar,
+    // and how far each side gave up. Only a left-side retraction moves the start.
+    public record BoundarySnap(int start, String cigar, int leftShift, int rightShift)
+    {
     }
 
     // Why a candidate was not merged, reported on the result.
@@ -214,6 +219,88 @@ public class SupplementaryResolver
         return new Result(
                 true, CigarUtils.cigarElementsToStr(primaryCigar), primaryStart,
                 dropped, introns, chainDepth, null);
+    }
+
+    // Retracts an over-extended terminal boundary onto an annotated splice boundary, independently of any merge. BWA
+    // extends a few bases past the true exon boundary when the intron's leading bases happen to match the read. A merge
+    // carries that correction in the cigar it builds, but a read whose supplementary cannot be merged - a fusion, whose
+    // partner is a different gene - keeps BWA's boundary, so it is corrected here instead. Both terminal boundaries are
+    // considered, since the two ends of a fusion junction come from two different records.
+    public BoundarySnap snapToAnnotatedBoundary(final String chromosome, final int start, final String cigar)
+    {
+        List<CigarElement> elements = CigarUtils.cigarElementsFromStr(cigar);
+        if(CigarUtils.hasHardClip(elements))
+        {
+            return null;
+        }
+
+        int rightShift = annotatedBoundaryShift(chromosome, start, elements, true);
+        int leftShift = annotatedBoundaryShift(chromosome, start, elements, false);
+        if(rightShift == 0 && leftShift == 0)
+        {
+            return null;
+        }
+
+        List<CigarElement> snapped = elements;
+        if(rightShift > 0)
+        {
+            snapped = MergeCigarOps.shiftBoundaryIntoSoftclip(snapped, rightShift, true);
+        }
+        if(snapped != null && leftShift > 0)
+        {
+            snapped = MergeCigarOps.shiftBoundaryIntoSoftclip(snapped, leftShift, false);
+        }
+        if(snapped == null)
+        {
+            // both ends retracting the same matched run can ask for more bases than it has; leave the read alone
+            return null;
+        }
+
+        return new BoundarySnap(start + leftShift, CigarUtils.cigarElementsToStr(snapped), leftShift, rightShift);
+    }
+
+    // The one retraction in 1..MaxRefVerifyBoundaryShift that puts this side's boundary on an annotated intron boundary.
+    // 0 when BWA already left it on one, when none is in reach, or when several are and the intended one cannot be told
+    // apart. Anchor floor matches attemptRefVerifySide: a retraction may not consume the whole matched run.
+    private int annotatedBoundaryShift(
+            final String chromosome, final int start, final List<CigarElement> elements, final boolean rightSide)
+    {
+        int softClipLength = rightSide
+                ? CigarUtils.rightSoftClipLength(elements)
+                : CigarUtils.leftSoftClipLength(elements);
+        if(softClipLength == 0 || MergeCigarOps.opAdjacentToSoftClip(elements, !rightSide))
+        {
+            return 0;
+        }
+
+        int anchor = MergeCigarOps.matchedRun(elements, rightSide);
+        int alignedEnd = start + CigarUtils.cigarAlignedLength(elements) - 1;
+        int snapShift = 0;
+
+        for(int shift = 0; shift <= mConfig.MaxRefVerifyBoundaryShift; ++shift)
+        {
+            if(anchor - shift < 1)
+            {
+                break;
+            }
+
+            int boundary = rightSide ? (alignedEnd - shift + 1) : (start + shift - 1);
+            boolean annotated = rightSide
+                    ? !mAnnotatedIndex.introByStart(chromosome, boundary).isEmpty()
+                    : !mAnnotatedIndex.introByEnd(chromosome, boundary).isEmpty();
+            if(!annotated)
+            {
+                continue;
+            }
+
+            if(shift == 0 || snapShift > 0)
+            {
+                return 0;
+            }
+            snapShift = shift;
+        }
+
+        return snapShift;
     }
 
     private Result tryRefVerifyOnly(final Candidate candidate)
