@@ -183,6 +183,19 @@ public class LiftBackGroupProcessor
         // (2) the softclip extension is deferred here (post-resolve) so resolve saw the original clip. Clean primary unchanged.
         mOverhangReconciler.reconcileChosenPrimary(resolved, primary, 0, droppedBySupplementary);
 
+        // Captured before the boundary snap. The AS-floor unmap below stands down once the primary has been post-processed,
+        // because a merge or collapse lengthens the alignment and leaves bwa's AS pessimistic. A snap only shortens it, so
+        // the true score is lower and the unmap should still apply - letting the snap set this flag would rescue reads the
+        // floor is meant to drop.
+        boolean primaryPostProcessed = resolved[0] != primaryResult;
+
+        // A merge builds its own junction and so fixes the boundary on the way; with no merge, BWA's boundaries stand.
+        // Runs after the overhang gate because the gate's softclip extension would re-consume the bases just given up.
+        if(droppedBySupplementary == null)
+        {
+            snapBoundariesToAnnotated(records, resolved);
+        }
+
         ReadDecision decision = new ReadDecision(resolved, droppedBySupplementary, introduced);
 
         // post-lift exclusion: if the final primary placement lands in an excluded (rRNA / contamination) region,
@@ -199,7 +212,6 @@ public class LiftBackGroupProcessor
             // Unmap the chosen primary during decide (not emit) so the mate pair and supp-orphan gate observe it. Two
             // triggers: over bwa's XA cap (MAPQ 0, no XA = too many loci); or a residual short anchor below bwa's -T 30
             // floor liftback couldn't improve, only when supp resolve left the primary's stale bwa AS valid.
-            boolean primaryPostProcessed = resolved[0] != primaryResult;
             if(exceedsMappingCap(primary, resolved[0]))
             {
                 resolved[0] = LiftedRecord.unmapped("over_cap_unmapped");
@@ -414,6 +426,43 @@ public class LiftBackGroupProcessor
             dropped[suppIndices.get(dtoIdx)] = true;
         }
         return dropped;
+    }
+
+    // Retracts boundaries that over-ran an annotated splice boundary, on every placed record in the group rather than
+    // just the primary: a fusion's two junction ends come from two different records, so correcting only the primary
+    // leaves the partner end on BWA's coordinate and the junction still reads as novel downstream.
+    // Only chimeric groups qualify. A lone read ending a few bases inside an intron is as likely to be intron retention
+    // as over-extension, and retracting it would give up real aligned bases; a split read has a partner to account for
+    // the bases it gives up.
+    private void snapBoundariesToAnnotated(final List<SAMRecord> records, final LiftedRecord[] resolved)
+    {
+        if(mSupplementaryResolver == null || records.size() < 2)
+        {
+            return;
+        }
+
+        for(int i = 0; i < records.size(); ++i)
+        {
+            LiftedRecord lifted = resolved[i];
+            if(lifted == null || !lifted.hasPlacement())
+            {
+                continue;
+            }
+
+            SupplementaryResolver.BoundarySnap snap = mSupplementaryResolver.snapToAnnotatedBoundary(
+                    lifted.finalChromosome(), lifted.finalPos(), lifted.finalCigar());
+            if(snap == null)
+            {
+                continue;
+            }
+
+            resolved[i] = lifted.withRevisedPrimary(
+                    snap.start(), snap.cigar(), lifted.updatedMapQuality(), "boundary-snapped");
+            TARS_LOGGER.trace(
+                    "boundary-snapped {}: {}:{} {} -> {}:{} {}", records.get(i).getReadName(),
+                    lifted.finalChromosome(), lifted.finalPos(), lifted.finalCigar(),
+                    lifted.finalChromosome(), snap.start(), snap.cigar());
+        }
     }
 
     // Dedup key for supplementaries: lifted (chrom, pos, cigar) + lifted strand. Opposite-strand placements at the

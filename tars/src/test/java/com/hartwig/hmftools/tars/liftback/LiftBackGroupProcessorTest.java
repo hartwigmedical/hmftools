@@ -28,6 +28,7 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.tars.liftback.TarsTestFixtures.TestGenome;
 import com.hartwig.hmftools.tars.liftback.overhang.OverhangGate;
+import com.hartwig.hmftools.tars.liftback.supplementary.AnnotatedJunctionIndex;
 import com.hartwig.hmftools.tars.liftback.supplementary.SupplementaryConfig;
 import com.hartwig.hmftools.tars.liftback.supplementary.SupplementaryResolver;
 
@@ -385,5 +386,62 @@ public class LiftBackGroupProcessorTest
         assertTrue(
                 "other copy carried in XA",
                 out1.getStringAttribute("XA") != null && out1.getStringAttribute("XA").contains(otherCopy));
+    }
+
+    // Junctions taken from the same sidecar entry the discriminator lifts against, so the intron coords and the
+    // chromosome key match what the lift emits: chr1 introns 200-299 and 400-499 between the three exons.
+    private static SupplementaryResolver contigSupplementary()
+    {
+        return new SupplementaryResolver(
+                AnnotatedJunctionIndex.fromContigEntries(List.of(threeExonContig())), null, SupplementaryConfig.defaults());
+    }
+
+    @Test
+    public void testBoundarySnapReachesBothRecordsOfASplitRead()
+    {
+        // The fusion shape: 51M ends at 200, one base into the annotated intron, and the supp starts at 499, one base
+        // before the exon at 500. Their read coverage leaves a gap so no merge can carry either correction. Asserted on
+        // the emitted records rather than on the resolver, because the snap has to survive the overhang gate to be worth
+        // having, and on both records because a fusion's two junction ends come from two of them.
+        SAMRecord primary = primaryRecord(CHR_1, 150, "51M100S");
+        SAMRecord supp = supplementaryRecord(CHR_1, 499, "100S51M", CHR_1 + ",150,+,51M100S,60,0;");
+
+        List<SAMRecord> emitted = process(List.of(primary, supp), contigSupplementary());
+
+        assertEquals(2, emitted.size());
+        assertEquals("50M101S", emitted.get(0).getCigarString());
+        assertEquals(150, emitted.get(0).getAlignmentStart());
+        assertEquals("101S50M", emitted.get(1).getCigarString());
+        assertEquals("left retraction moves the start", 500, emitted.get(1).getAlignmentStart());
+    }
+
+    @Test
+    public void testBoundarySnapDoesNotRescueALowAlignmentScorePrimary()
+    {
+        // AS 20 is under the floor, so the primary unmaps and its supp is dropped as an orphan. The snap must not change
+        // that: it shortens the alignment, so bwa's stale AS is if anything generous. Suppression is for the merge and
+        // collapse passes, which lengthen it.
+        SAMRecord primary = primaryRecord(CHR_1, 150, "51M100S");
+        primary.setAttribute("AS", 20);
+        SAMRecord supp = supplementaryRecord(CHR_1, 499, "100S51M", CHR_1 + ",150,+,51M100S,60,0;");
+
+        List<SAMRecord> emitted = process(List.of(primary, supp), contigSupplementary());
+
+        assertEquals(1, emitted.size());
+        assertTrue(emitted.get(0).getReadUnmappedFlag());
+        assertFalse(emitted.get(0).getSupplementaryAlignmentFlag());
+    }
+
+    @Test
+    public void testNoBoundarySnapForAReadWithNoSupplementary()
+    {
+        // Same over-extended boundary as above, but with no partner record: this is as likely to be intron retention as
+        // over-extension, so the bases stay aligned.
+        SAMRecord primary = primaryRecord(CHR_1, 150, "51M100S");
+
+        List<SAMRecord> emitted = process(List.of(primary), contigSupplementary());
+
+        assertEquals(1, emitted.size());
+        assertEquals("51M100S", emitted.get(0).getCigarString());
     }
 }
