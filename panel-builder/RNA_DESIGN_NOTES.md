@@ -10,7 +10,7 @@ is in the sections further down. Everything in the batch/merge records below (A1
 
 | # | Item | Code tag / location | Notes |
 |---|------|---------------------|-------|
-| 1 | RNA generation performance (end-to-end run spends minutes on RNA) | *(untagged)* | Root-caused: BWA-MEM alignment of junction-crossing candidates. Option A done (1.45x); A+ in progress. See "Performance — RNA generation". |
+| 1 | RNA generation performance | *(untagged)* | Largely resolved: Options A + A+ done (RNA phase ~1.7x faster, byte-identical). Cross-exon batching and DNA-coverRegion batching investigated → no further gain at ~10 cores (batching only helps novel-sequence/alignment probes, and per-exon batching already saturates). Only remaining lever is many-core servers (batch tuning) + the fixed profile-file load. See "Performance — RNA generation". |
 | 2 | Quality score of non-contiguous (spliced / SV) probes distorted | `FIXME` `ProbeQualityModel.computeFromAlignments` | `targetScore` assumes a full-length on-target match. Pre-existing (affects SV too). See "Open issue — quality score…". |
 | 3 | RefSeq/NM transcript resolution disabled | `TODO` `GenesRna.resolveTranscript` | Validate the non-1:1 Ensembl↔RefSeq mapping, then re-enable. |
 | 4 | Part-coding exon classified as fully coding | `TODO` `GenesRna.createTargets` | A long exon with few coding bases is tiled entirely as coding. Reconsider. |
