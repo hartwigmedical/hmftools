@@ -15,7 +15,6 @@ is in the sections further down. Everything in the batch/merge records below (A1
 | 3 | RefSeq/NM transcript resolution disabled | `TODO` `GenesRna.resolveTranscript` | Validate the non-1:1 Ensembl↔RefSeq mapping, then re-enable. |
 | 4 | Part-coding exon classified as fully coding | `TODO` `GenesRna.createTargets` | A long exon with few coding bases is tiled entirely as coding. Reconsider. |
 | 5 | `PanelData` getters return live internal lists | `TODO` `PanelData` | No live aliasing bug found; defensively copy (also `ProbeGenerationResult` ctor). Own commit. |
-| 6 | Rejected spliced (multi-region) probe reporting | `TODO(RNA)` `ProbeGenerationResult` | Decide how a rejected non-variant multi-region probe is reported. |
 | 7 | Probe can't be filled to `PROBE_LENGTH` (mapping shorter than a probe) | `TODO?` `ProbeGenerator.coverMappedRange` | Very short transcript / tiny exon with short neighbours: even padding across junctions totals < `PROBE_LENGTH`, so no full-length probe fits and the target is silently uncovered. Decide desired behaviour (accept no coverage, or a shorter-probe fallback). |
 | 8 | RNA strandedness | *(design decision, deferred)* | RNA is single-stranded; currently emit genome-forward only. Decide one strand vs both. |
 | 9 | README "exon aware tiling algorithm" section | *(doc)* | Complete the user-facing description. |
@@ -463,8 +462,6 @@ Background/context (the actionable items are in the "Outstanding follow-ups" tab
   sorted, fixed order (transcript order, exon order).
 - Testing without sample data: build fake `TranscriptData` / `ExonData` fixtures + a small synthetic
   ref genome. Validate BED in IGV. No real sample IDs anywhere.
-- **Follow-up #6 detail** — `ProbeGenerationResult.rejectProbe` (`TODO(RNA)`): a rejected multi-region non-variant
-  (spliced) probe currently splits single-region into rejected regions, else reports the whole probe.
 - **Follow-up #5 detail** — defensive-copying: an audit found no live aliasing bug, but several classes store/return
   collections by reference while peers (`SequenceDefinition`, `RegionMapping`, `ProbeGenerationResult` factories)
   defensively copy. Priority: `PanelData` getters and the `ProbeGenerationResult` canonical constructor. Not worth it
