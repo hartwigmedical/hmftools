@@ -333,6 +333,9 @@ positions.
   split target's coding/UTR boundary is an interior edge within the exon. Contrast: DNA `Genes` clamps coding to
   `[CodingStart, CodingEnd]` (±`GENE_CODING_REGION_EXPAND`) and gives a fully noncoding exon just one centred UTR
   probe, with no 5'/3' distinction.
+  **Fully noncoding gene** (no coding transcripts): there is no coding span and hence no real 5'/3' distinction,
+  so each exon is covered as one whole-exon UTR target when either UTR is enabled (labelled 5' if both, 3' if
+  only 3'); nothing is produced if neither UTR is requested. (`GenesRna.noncodingGeneTargets`.)
   **Planned refinement (small coding part):** a boundary exon whose coding part is shorter than a probe is
   currently folded to whole-coding (or whole-UTR). Splitting it would leave a sub-probe-length coding target
   that must pad to `PROBE_LENGTH`; the padding should prefer the adjacent same-exon UTR (contiguous, single

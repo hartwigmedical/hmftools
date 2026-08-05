@@ -327,9 +327,8 @@ public class GenesRna
         OptionalInt geneCodingStart = transcripts.stream().filter(t -> !t.nonCoding()).mapToInt(t -> t.CodingStart).min();
         if(geneCodingStart.isEmpty())
         {
-            // Noncoding gene: no coding to anchor the 5'/3' UTR split, so nothing is produced.
-            LOGGER.warn("Gene {} has no coding transcripts; no RNA probes produced", geneData.GeneName);
-            return new GeneTargets(mapping, emptyList());
+            // Noncoding gene: no coding span, so there is no 5'/3' distinction. Cover each exon as UTR if either UTR is requested.
+            return noncodingGeneTargets(geneData, mergedExons, mapping, options);
         }
         int codingStart = geneCodingStart.getAsInt();
         boolean forwardStrand = geneData.forwardStrand();
@@ -347,6 +346,10 @@ public class GenesRna
             boolean isCodingExon = codingBases > 0 && nonCodingBases < PROBE_LENGTH;
             boolean isNonCodingExon = nonCodingBases > 0 && codingBases < PROBE_LENGTH;
 
+            // TODO: small coding part of a boundary exon. When the coding part is shorter than a probe it is folded into a whole-exon target
+            //  (coding here, or UTR if the coding part is the smaller side). To give it a coding-specific probe, split it out and pad the short
+            //  coding probe into the adjacent same-exon UTR (contiguous, single-region) rather than across the splice junction into the next
+            //  exon (spliced). See RNA_DESIGN_NOTES "Planned - small coding part padding" (follow-up #4).
             if(isCodingExon)
             {
                 // Any noncoding portion is shorter than a probe, so cover the whole exon as coding.
@@ -384,6 +387,27 @@ public class GenesRna
                 .sorted(Comparator.comparingInt(RnaTarget::spaceStart))
                 .toList();
         return new GeneTargets(mapping, selected);
+    }
+
+    // Targets for a noncoding gene (no coding transcripts): the transcript is all noncoding exonic sequence, so it is covered as UTR when
+    // either UTR is requested. With no coding span there is no real 5' vs 3' distinction, so each exon is one whole-exon UTR target labelled
+    // with whichever UTR is enabled (5' if both). If neither UTR is requested, nothing is produced.
+    private static GeneTargets noncodingGeneTargets(final GeneData geneData, final List<GeneUtils.MergedExonRegion> mergedExons,
+            final RegionMapping mapping, final GeneOptions options)
+    {
+        if(!options.utr5() && !options.utr3())
+        {
+            LOGGER.debug("Gene {} is noncoding and no UTR requested; no RNA probes produced", geneData.GeneName);
+            return new GeneTargets(mapping, emptyList());
+        }
+        RnaRegionType utrType = options.utr5() ? RnaRegionType.UTR_5 : RnaRegionType.UTR_3;
+        List<RnaTarget> targets = new ArrayList<>();
+        for(GeneUtils.MergedExonRegion mergedExon : mergedExons)
+        {
+            addTarget(targets, mapping, geneData, utrType, mergedExon.Region.start(), mergedExon.Region.end());
+        }
+        targets.sort(Comparator.comparingInt(RnaTarget::spaceStart));
+        return new GeneTargets(mapping, targets);
     }
 
     // 5' UTR below the coding span on the forward strand (3' on the reverse strand), and vice versa above it.

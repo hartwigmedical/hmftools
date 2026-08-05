@@ -123,6 +123,51 @@ public class GenesRnaTest
         assertEquals(List.of(new RnaTarget(CODING, 200, 350)), result.targets());
     }
 
+    // Noncoding gene: a single noncoding transcript (no coding span) with two exons.
+    private static List<TranscriptData> noncodingTranscript()
+    {
+        TranscriptData transcript = new TranscriptData(
+                1, "ENST1", "GENE1", true, FORWARD, 1000, 1299, null, null, "lincRNA", null);
+        transcript.setExons(List.of(
+                new ExonData(1, 1000, 1099, 1, -1, -1),
+                new ExonData(1, 1200, 1299, 2, -1, -1)));
+        return List.of(transcript);
+    }
+
+    @Test
+    public void testNoncodingGeneCoveredAsUtr()
+    {
+        // No coding span, so no 5'/3' distinction: each exon is one UTR target (labelled 5' when both UTRs are enabled).
+        GeneData gene = new GeneData("GENE1", "GENE1", "1", FORWARD, 1000, 1299, "");
+        GeneTargets result = GenesRna.createTargets(gene, noncodingTranscript(), new GeneOptions(true, true));
+
+        assertEquals(
+                List.of(new RnaTarget(UTR_5, 0, 100), new RnaTarget(UTR_5, 100, 200)),
+                result.targets());
+    }
+
+    @Test
+    public void testNoncodingGeneUtr3Only()
+    {
+        // With only 3' UTR enabled the noncoding exons are still covered (labelled 3').
+        GeneData gene = new GeneData("GENE1", "GENE1", "1", FORWARD, 1000, 1299, "");
+        GeneTargets result = GenesRna.createTargets(gene, noncodingTranscript(), new GeneOptions(false, true));
+
+        assertEquals(
+                List.of(new RnaTarget(UTR_3, 0, 100), new RnaTarget(UTR_3, 100, 200)),
+                result.targets());
+    }
+
+    @Test
+    public void testNoncodingGeneNoUtrRequested()
+    {
+        // Noncoding gene with no UTR requested: nothing to cover.
+        GeneData gene = new GeneData("GENE1", "GENE1", "1", FORWARD, 1000, 1299, "");
+        GeneTargets result = GenesRna.createTargets(gene, noncodingTranscript(), new GeneOptions(false, false));
+
+        assertEquals(List.of(), result.targets());
+    }
+
     @Test
     public void testResolveTranscript()
     {
