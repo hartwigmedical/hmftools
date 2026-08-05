@@ -2,22 +2,20 @@ package com.hartwig.hmftools.panelbuilder.probequality;
 
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.panelbuilder.probequality.Utils.partitionStream;
-
 import java.util.Comparator;
 import java.util.List;
-import java.util.function.Supplier;
-import java.util.stream.Stream;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.broadinstitute.hellbender.utils.bwa.BwaMemAligner;
+import com.hartwig.hmftools.common.bwa.BwaMemAligner;
+import com.hartwig.hmftools.common.bwa.BwaMemAlignParams;
+import com.hartwig.hmftools.common.bwa.BwaMemAlignerConfig;
+import com.hartwig.hmftools.common.bwa.IBwaMemAligner;
+
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
 
 // Evaluates the off-target risk of a probe given its alignments from BWA.
 public class ProbeQualityModel
 {
-    private final BwaMemAligner mAligner;
+    private final IBwaMemAligner mAligner;
     // Desired length of the probes.
     // All probes tested with this model must have this length (BWA-MEM config relies on it).
     private final int mTargetProbeLength;
@@ -27,27 +25,47 @@ public class ProbeQualityModel
     // E.g. value of 10 means an alignment with score = mMatchScoreThreshold contributes 10 risk score points.
     private final int mMatchScoreOffset;
 
-    private static final Logger LOGGER = LogManager.getLogger(ProbeQualityModel.class);
-
-    public ProbeQualityModel(final Supplier<BwaMemAligner> alignerFactory, final int mTargetProbeLength, final int mMatchScoreThreshold,
-            final int mMatchScoreOffset)
+    // Use in production; the constructor is for injecting a test aligner.
+    public static ProbeQualityModel create(
+            final String bwaIndexImage, final int threads, final int targetProbeLength, final int matchScoreThreshold,
+            final int matchScoreOffset)
     {
-        mAligner = alignerFactory.get();
-        if(mTargetProbeLength < 1)
+        BwaMemAlignerConfig config = new BwaMemAlignerConfig(
+                bwaIndexImage, alignParams(targetProbeLength, matchScoreThreshold), true, threads, null);
+        return new ProbeQualityModel(new BwaMemAligner(config), targetProbeLength, matchScoreThreshold, matchScoreOffset);
+    }
+
+    public ProbeQualityModel(final IBwaMemAligner aligner, final int targetProbeLength, final int matchScoreThreshold,
+            final int matchScoreOffset)
+    {
+        mAligner = aligner;
+        if(targetProbeLength < 1)
         {
             throw new IllegalArgumentException("targetProbeLength must be >= 1");
         }
-        this.mTargetProbeLength = mTargetProbeLength;
-        this.mMatchScoreThreshold = mMatchScoreThreshold;
-        if(mMatchScoreOffset < 0)
+        mTargetProbeLength = targetProbeLength;
+        mMatchScoreThreshold = matchScoreThreshold;
+        if(matchScoreOffset < 0)
         {
             // < 0 will break the maths.
             throw new IllegalArgumentException("matchScoreOffset must be >= 0");
         }
-        this.mMatchScoreOffset = mMatchScoreOffset;
+        mMatchScoreOffset = matchScoreOffset;
+    }
 
-        setBwaMemParams(mAligner);
-        logBwaMemParams(mAligner);
+    // BWA-MEM alignment parameters tuned to find the many low-scoring off-target matches this model relies on.
+    private static BwaMemAlignParams alignParams(int targetProbeLength, int matchScoreThreshold)
+    {
+        return BwaMemAlignParams.DEFAULT
+                .withSeedLengthMin(min(19, targetProbeLength / 2))
+                // Don't prune seeds with many genome occurrences (key performance parameter).
+                .withSeed3MaxOccurrence(2000)
+                .withMemMaxOccurrence(2000)
+                // Other minor params to encourage more alignments to be found.
+                .withMemReseedFactor(0.5f)
+                .withChainOverlapFactor(0.1f)
+                .withBandWidth(targetProbeLength)
+                .withMinAlignScore(matchScoreThreshold);
     }
 
     public record Result(
@@ -82,52 +100,8 @@ public class ProbeQualityModel
             }
         });
 
-        List<List<BwaMemAlignment>> alignments = runAlignment(probes, 0);
+        List<List<BwaMemAlignment>> alignments = mAligner.alignSequences(probes);
         return alignments.stream().map(this::computeFromAlignments).toList();
-    }
-
-    private List<List<BwaMemAlignment>> runAlignment(List<byte[]> probes, int batchSize)
-    {
-        if(batchSize <= 0)
-        {
-            batchSize = probes.size();
-        }
-        try
-        {
-            Stream<List<byte[]>> batches = batchSize < probes.size() ? partitionStream(probes.stream(), batchSize) : Stream.of(probes);
-            return batches
-                    .flatMap(batch ->
-                    {
-                        LOGGER.trace("Running BWA-MEM alignment on {} queries", batch.size());
-                        List<List<BwaMemAlignment>> batchAlignments = mAligner.alignSeqs(batch);
-                        if(batchAlignments.size() != batch.size())
-                        {
-                            // Presumably, this shouldn't occur, but we'll check to give a nicer error just in case.
-                            throw new RuntimeException("Alignment failed");
-                        }
-                        return batchAlignments.stream();
-                    })
-                    .toList();
-        }
-        catch(IllegalArgumentException e)
-        {
-            // Silly issue with the BWA-MEM JNI wrapper where it may try to allocate a ByteBuffer larger than is allowed (which is
-            // subsequently a silly issue with ByteBuffer being limited to 2^31 bytes).
-            // We don't have much control over this issue since the number of alignments produced can't be predicted or tightly controlled.
-            // Further, modifying the wrapper code is a pain.
-            // So instead we will catch the error and shrink the sequence set, hopefully reducing the allocation to an acceptable size.
-            int newBatchSize = batchSize / 10;
-            if(newBatchSize >= 1)
-            {
-                LOGGER.warn("Aligning sequences with batch size {} failed, trying again with batch size {}",
-                        batchSize, newBatchSize);
-                return runAlignment(probes, newBatchSize);
-            }
-            else
-            {
-                throw e;
-            }
-        }
     }
 
     private Result computeFromAlignments(final List<BwaMemAlignment> alignments)
@@ -151,45 +125,5 @@ public class ProbeQualityModel
         double effectiveOffTargetMatchLength = (double) riskScore / (targetScore - mMatchScoreThreshold + mMatchScoreOffset);
         double qualityScore = 1 / (1 + effectiveOffTargetMatchLength);
         return new Result(qualityScore, riskScore, offTargetCount, offTargetScoreSum);
-    }
-
-    private void setBwaMemParams(BwaMemAligner aligner)
-    {
-        // Ensure we can find alignments fitting our parameters.
-        aligner.setMinSeedLengthOption(min(19, mTargetProbeLength / 2));
-        // Output many alignments per query.
-        aligner.setFlagOption(aligner.getFlagOption() | BwaMemAligner.MEM_F_ALL);
-        aligner.setOutputScoreThresholdOption(mMatchScoreThreshold);
-        // Don't prune seeds with many occurrences in the genome. This is a key performance tuning parameter.
-        aligner.setMaxMemIntvOption(2000);
-        aligner.setMaxSeedOccurencesOption(2000);
-        // Other minor params to encourage more alignments to be found.
-        aligner.setBandwidthOption(mTargetProbeLength);
-        aligner.setSplitFactorOption(0.5f);
-        aligner.setDropRatioOption(0.1f);
-    }
-
-    private static void logBwaMemParams(BwaMemAligner aligner)
-    {
-        LOGGER.debug("BWA-MEM options:");
-        LOGGER.debug("  MinSeedLength: {}", aligner.getMinSeedLengthOption());
-        LOGGER.debug("  SplitFactor: {}", aligner.getSplitFactorOption());
-        LOGGER.debug("  SplitWidth: {}", aligner.getSplitWidthOption());
-        LOGGER.debug("  MaxSeedOccurrences: {}", aligner.getMaxSeedOccurencesOption());
-        LOGGER.debug("  MaxMemOccurrences: {}", aligner.getMaxMemIntvOption());
-        LOGGER.debug("  DropRatio: {}", aligner.getDropRatioOption());
-        LOGGER.debug("  Match: {}", aligner.getMatchScoreOption());
-        LOGGER.debug("  Mismatch: {}", aligner.getMismatchPenaltyOption());
-        LOGGER.debug("  IGapOpen: {}", aligner.getIGapOpenPenaltyOption());
-        LOGGER.debug("  IGapExtend: {}", aligner.getIGapExtendPenaltyOption());
-        LOGGER.debug("  DGapOpen: {}", aligner.getDGapOpenPenaltyOption());
-        LOGGER.debug("  DGapExtend: {}", aligner.getDGapExtendPenaltyOption());
-        LOGGER.debug("  Clip3: {}", aligner.getClip3PenaltyOption());
-        LOGGER.debug("  Clip5: {}", aligner.getClip5PenaltyOption());
-        LOGGER.debug("  Bandwidth: {}", aligner.getBandwidthOption());
-        LOGGER.debug("  ZDrop: {}", aligner.getZDropOption());
-        LOGGER.debug("  OutputScoreThreshold: {}", aligner.getOutputScoreThresholdOption());
-        LOGGER.debug("  Flags: {}", aligner.getFlagOption());
-        LOGGER.debug("  Threads: {}", aligner.getNThreadsOption());
     }
 }

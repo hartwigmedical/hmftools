@@ -4,7 +4,6 @@ import static java.lang.Math.round;
 import static java.lang.System.exit;
 import static java.util.Objects.requireNonNull;
 
-import static com.hartwig.hmftools.common.bwa.BwaUtils.loadAlignerLibrary;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.deriveRefGenomeVersion;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
 import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
@@ -12,12 +11,11 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkCreate
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.APP_NAME;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.PROBE_LENGTH;
 import static com.hartwig.hmftools.panelbuilder.Utils.estimatePanelOnTargetRate;
-import static com.hartwig.hmftools.panelbuilder.probequality.Utils.createBwaMemAligner;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.function.Supplier;
 
+import com.hartwig.hmftools.common.bwa.BwaMemAligner;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.genome.refgenome.CachedRefGenome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
@@ -30,7 +28,6 @@ import com.hartwig.hmftools.panelbuilder.samplevariants.SampleVariants;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.broadinstitute.hellbender.utils.bwa.BwaMemAligner;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -57,9 +54,9 @@ public class PanelBuilderApplication
         mRefGenomeVersion = deriveRefGenomeVersion(refGenomeSource);
 
         ProbeQualityProfile probeQualityProfile = ProbeQualityProfile.loadFromResourceFile(mConfig.probeQualityProfileFile());
-        loadAlignerLibrary(mConfig.bwaLibPath());
-        Supplier<BwaMemAligner> alignerFactory = () -> createBwaMemAligner(mConfig.bwaIndexImageFile(), mConfig.threads());
-        ProbeQualityModel probeQualityModel = new ProbeQualityModel(alignerFactory, PROBE_LENGTH,
+        BwaMemAligner.initLibrary(mConfig.bwaLibPath());
+        ProbeQualityModel probeQualityModel = ProbeQualityModel.create(
+                mConfig.bwaIndexImageFile(), mConfig.threads(), PROBE_LENGTH,
                 probeQualityProfile.matchScoreThreshold(), probeQualityProfile.matchScoreOffset());
 
         mProbeGenerator = ProbeGenerator.construct(mRefGenome, probeQualityProfile, probeQualityModel, this::writeCandidateProbe);

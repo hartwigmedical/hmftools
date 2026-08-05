@@ -77,6 +77,48 @@ public record BwaMemAlignParams(
                 seedLengthMin, seed3MaxOccurrence, memMaxOccurrence, memReseedFactor, chainOverlapFactor, bandWidth, zDropoff, value);
     }
 
+    public BwaMemAlignParams withSeedLengthMin(int value)
+    {
+        return new BwaMemAlignParams(
+                matchReward, mismatchPenalty, uncertainBasePenalty, gapOpenPenalty, gapExtendPenalty, clipPenalty,
+                value, seed3MaxOccurrence, memMaxOccurrence, memReseedFactor, chainOverlapFactor, bandWidth, zDropoff, minAlignScore);
+    }
+
+    public BwaMemAlignParams withSeed3MaxOccurrence(int value)
+    {
+        return new BwaMemAlignParams(
+                matchReward, mismatchPenalty, uncertainBasePenalty, gapOpenPenalty, gapExtendPenalty, clipPenalty,
+                seedLengthMin, value, memMaxOccurrence, memReseedFactor, chainOverlapFactor, bandWidth, zDropoff, minAlignScore);
+    }
+
+    public BwaMemAlignParams withMemMaxOccurrence(int value)
+    {
+        return new BwaMemAlignParams(
+                matchReward, mismatchPenalty, uncertainBasePenalty, gapOpenPenalty, gapExtendPenalty, clipPenalty,
+                seedLengthMin, seed3MaxOccurrence, value, memReseedFactor, chainOverlapFactor, bandWidth, zDropoff, minAlignScore);
+    }
+
+    public BwaMemAlignParams withMemReseedFactor(float value)
+    {
+        return new BwaMemAlignParams(
+                matchReward, mismatchPenalty, uncertainBasePenalty, gapOpenPenalty, gapExtendPenalty, clipPenalty,
+                seedLengthMin, seed3MaxOccurrence, memMaxOccurrence, value, chainOverlapFactor, bandWidth, zDropoff, minAlignScore);
+    }
+
+    public BwaMemAlignParams withChainOverlapFactor(float value)
+    {
+        return new BwaMemAlignParams(
+                matchReward, mismatchPenalty, uncertainBasePenalty, gapOpenPenalty, gapExtendPenalty, clipPenalty,
+                seedLengthMin, seed3MaxOccurrence, memMaxOccurrence, memReseedFactor, value, bandWidth, zDropoff, minAlignScore);
+    }
+
+    public BwaMemAlignParams withBandWidth(int value)
+    {
+        return new BwaMemAlignParams(
+                matchReward, mismatchPenalty, uncertainBasePenalty, gapOpenPenalty, gapExtendPenalty, clipPenalty,
+                seedLengthMin, seed3MaxOccurrence, memMaxOccurrence, memReseedFactor, chainOverlapFactor, value, zDropoff, minAlignScore);
+    }
+
     public static final BwaMemAlignParams DEFAULT = new BwaMemAlignParams(
             1, 4, 1, 6, 1, 5, 19,
             20, 500, 1.5f, 0.5f, 100, 100, 30);
