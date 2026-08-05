@@ -421,9 +421,23 @@ GRCh38). Timings are the isolated RNA-generation phase (27s fixed load overhead 
   for short-exon targets (no single-region candidate), falling back to the full sweep only when the centred candidate is unacceptable (the
   placement may then shift and depend on the full acceptance pattern). Result: RNA phase 225s -> **189s** (cumulative **1.73x** vs baseline
   326s; total run 353s -> 216s). CPU 2221s -> 1823s (fewer BWA queries). Output byte-identical; all unit tests green.
-- **Diminishing returns / remaining lever.** After A+, wall is BWA-bound at ~65% thread saturation (user/real ~8.4 on 13 threads). Cutting BWA
-  query count now saves CPU more than wall (the short-exon alignment was already well parallelised). The remaining lever is better thread
-  saturation - batch the alignment-model calls across exons instead of once per `coverExonRange` (Option C) - ceiling ~1.5x wall. Not yet done.
+- **Cross-exon alignment batching [tried, reverted - no gain].** After A+, wall is BWA-bound. Hypothesis: pooling each exon's junction-crossing
+  alignments into one big batch across all exons would raise thread saturation. Implemented and measured against A+ (averaged, alternating, to
+  remove thermal bias):
+    - No batching at all (align one query at a time): **~1680s, fully serial** (user/real ~1.0) - i.e. **batching is worth ~7x**, because BWA
+      only parallelises across the queries within a single align call.
+    - A+ per-exon batching: **~226s** (10 threads).
+    - Cross-exon batching: **~227s** (10 threads) - statistically identical to A+.
+  Conclusion: A+'s per-exon batches (~11-200 queries) already exceed the core count, so they already saturate the alignment threads; pooling
+  further adds nothing at ~10 cores (and was marginally *worse* at an oversubscribed 13 threads). Cross-exon batching would only help when cores
+  far exceed the per-exon candidate count (many-core servers); revisit there. **Kept:** RNA generation now goes through the `CoverExonRange`
+  spec / `ProbeGenerator.generateBatch` interface for consistency with the other generators (per-exon alignment batching retained). **Reverted:**
+  the cross-exon pooling machinery. `ProbeGenerator.Batch` documents which spec types are pooled (alignment-model: single-probe, exon) and which
+  are not (profile-scored generic specs).
+- **DNA `coverRegion` batching [investigated, not worth it].** JFR of a DNA-only gene run shows **zero** alignment-model calls - DNA gene tiling
+  is 100% profile-scored (contiguous single-region), dominated by the one-time profile-file load, with negligible candidate scoring. Batching
+  only accelerates the alignment model (BWA cross-query parallelism), so pooling `coverRegion` candidates gives no speedup at any thread count.
+  The only DNA path that reaches the model is SV/custom-variant single probes, already pooled by `singleProbeBatch`.
 
 ### Rejected — profile aggregation as a spliced-probe quality score
 
