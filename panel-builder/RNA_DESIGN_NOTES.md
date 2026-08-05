@@ -32,7 +32,7 @@ is in the sections further down. Everything in the batch/merge records below (A1
   `RnaProbeGeneratorTest`, `RegionMappingTest`). Not yet wired (B5). Candidate target regions are added by the caller (mirrors
   `coverUncoveredRegion`).
 - **B3 [DONE]** — `GenesRna` (mirrors `Genes`): loads the RNA genes file (enum `Column` with `DelimFileReader`), resolves transcripts
-  (default all merged; else Ensembl `TransName` — **RefSeq/NM resolution disabled for now**, needs validation of the non-1:1 mapping),
+  (canonical transcript by default; else Ensembl `TransName` subset — **RefSeq/NM resolution disabled for now**),
   merges
   exons via the new shared `GeneUtils.mergeExons`, builds the per-gene exon `RegionMapping`, and computes strand-aware target ranges
   (`createTargets`). **Whole-exon classification:** an exon with any coding base is one coding target (whole exon); a fully noncoding exon
@@ -161,7 +161,7 @@ validate by unit tests, then a synthetic end-to-end panel. Nothing DNA-facing ch
       junction crossing happens only in the padding branch. Kept as a separate class from `ProbeGenerator`
       for now (composition over the shared `ProbeEvaluator`); DNA paths untouched.
 - **B3. Transcript resolution + target ranges. [DONE]** `GenesRna`: loads RNA genes file; resolves
-  transcripts (all-transcripts default, else Ensembl `TransName` subset — RefSeq/NM disabled for now);
+  transcripts (canonical by default, else Ensembl `TransName` subset — RefSeq/NM disabled for now);
   merges exons (shared `GeneUtils.mergeExons`); builds the exon `RegionMapping`; computes strand-aware
   target ranges via `createTargets` with **whole-exon classification** (any coding base → whole exon is
   a coding target; fully noncoding exon → single 5'/3' UTR target by position + strand). Coding always,
@@ -346,13 +346,14 @@ positions.
 
 ### Transcript resolution (Ensembl; NM deferred)
 
-**Default = all transcripts for the gene, merged.** Unlike DNA `Genes` (which defaults to the
-canonical transcript plus optional extras), RNA defaults to every transcript of the gene with exons
-merged via `GeneUtils.mergeExons`. An optional input field (`TransNames`) specifies an exact subset of
-transcripts instead.
+**Default = the canonical transcript.** RNA defaults to the gene's canonical transcript (like DNA `Genes`);
+an optional input field (`TransNames`) specifies an exact subset of transcripts instead. Multiple resolved
+transcripts still have their exons merged via `GeneUtils.mergeExons`.
 
-- No subset given → `EnsemblDataCache.getTranscripts(geneId)` → merge all.
-- Subset given → resolve each listed ID against `TranscriptData.TransName` (Ensembl).
+- No subset given → `EnsemblDataCache.getCanonicalTranscriptData(geneId)`.
+- Subset given → resolve each listed ID against `TranscriptData.TransName` (Ensembl), from `getTranscripts(geneId)`.
+- Probe/target extra info is `gene:transcriptId(s):featureType` (the transcript id(s) always listed, canonical id by
+  default). DNA likewise outputs the transcript id, not a "canon" placeholder.
 - **NM/RefSeq resolution is disabled for now** (`GenesRna.resolveTranscript` matches `TransName` only). It
   needs validation first: the Ensembl↔RefSeq mapping is not 1:1 and `RefSeqId` may be null or multi-valued.
   Re-enable via a `RefSeqId` fallback with clear not-found / ambiguous errors once validated.

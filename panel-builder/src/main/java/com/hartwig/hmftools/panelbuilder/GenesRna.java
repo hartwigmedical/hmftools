@@ -145,9 +145,7 @@ public class GenesRna
     private record GeneTranscriptData(
             GeneData gene,
             List<TranscriptData> transcripts,
-            GeneOptions options,
-            // Whether the user requested a specific subset of transcripts (rather than the default of all transcripts).
-            boolean specificTranscripts
+            GeneOptions options
     )
     {
     }
@@ -204,23 +202,29 @@ public class GenesRna
             LOGGER.error("No transcripts resolved for gene: {}", geneDef.geneName());
             return Optional.empty();
         }
-        boolean specificTranscripts = !geneDef.transcriptNames().isEmpty();
-        return Optional.of(new GeneTranscriptData(geneData, transcripts, geneDef.options(), specificTranscripts));
+        return Optional.of(new GeneTranscriptData(geneData, transcripts, geneDef.options()));
     }
 
-    // Resolves the transcripts to use: all of the gene's transcripts if none were specified, otherwise the specified Ensembl transcripts.
+    // Resolves the transcripts to use: the canonical transcript if none were specified, otherwise the specified Ensembl transcripts.
     private static List<TranscriptData> resolveTranscripts(final GeneData geneData, final List<String> transcriptNames,
             final EnsemblDataCache ensemblData)
     {
+        if(transcriptNames.isEmpty())
+        {
+            // Default: the canonical transcript only.
+            TranscriptData canonical = ensemblData.getCanonicalTranscriptData(geneData.GeneId);
+            if(canonical == null)
+            {
+                LOGGER.error("Gene canonical transcript not found: {}", geneData.GeneName);
+                return emptyList();
+            }
+            return List.of(canonical);
+        }
+
         List<TranscriptData> allTranscripts = ensemblData.getTranscripts(geneData.GeneId);
         if(allTranscripts == null || allTranscripts.isEmpty())
         {
             return emptyList();
-        }
-
-        if(transcriptNames.isEmpty())
-        {
-            return allTranscripts;
         }
 
         List<TranscriptData> resolved = new ArrayList<>();
@@ -426,19 +430,10 @@ public class GenesRna
 
     private static TargetMetadata createTargetMetadata(final GeneTranscriptData gene, final RnaTarget target)
     {
-        // List the transcripts only when the user requested a specific subset; for the default (all transcripts) the extra info is just the
-        // gene name and target type.
+        // Extra info is gene name, transcript id(s), and target type. Transcript ids are always listed (the canonical id by default).
         String geneName = gene.gene().GeneName;
-        String extraInfo;
-        if(gene.specificTranscripts())
-        {
-            List<String> transcriptNames = gene.transcripts().stream().map(GenesRna::formatTranscriptName).toList();
-            extraInfo = format("%s:%s:%s", geneName, join("/", transcriptNames), target.type().name());
-        }
-        else
-        {
-            extraInfo = format("%s:%s", geneName, target.type().name());
-        }
+        List<String> transcriptNames = gene.transcripts().stream().map(GenesRna::formatTranscriptName).toList();
+        String extraInfo = format("%s:%s:%s", geneName, join("/", transcriptNames), target.type().name());
         // Store the gene name so per-gene statistics can be recovered later.
         return new TargetMetadata(TARGET_TYPE, extraInfo, geneName);
     }

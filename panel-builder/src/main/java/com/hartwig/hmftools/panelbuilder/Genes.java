@@ -475,12 +475,14 @@ public class Genes
 
     private static String formatTranscriptName(final TranscriptData transcriptData)
     {
-        return formatTranscriptName(transcriptData.IsCanonical ? null : transcriptData.TransName);
+        // Output the transcript id (including for the canonical transcript, rather than a "canon" placeholder).
+        return transcriptData.TransName;
     }
 
+    // Formats a requested transcript name for logging, where null denotes the (as-yet-unresolved) canonical transcript.
     private static String formatTranscriptName(@Nullable final String transcriptName)
     {
-        return Objects.requireNonNullElse(transcriptName, "canon");
+        return Objects.requireNonNullElse(transcriptName, "canonical");
     }
 
     private static List<GeneStats> computeGeneStats(final ProbeGenerationResult result, List<GeneTranscriptData> genes)
