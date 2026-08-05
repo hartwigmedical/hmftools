@@ -10,7 +10,7 @@ is in the sections further down. Everything in the batch/merge records below (A1
 
 | # | Item | Code tag / location | Notes |
 |---|------|---------------------|-------|
-| 1 | RNA generation performance (end-to-end run spends minutes on RNA) | *(untagged)* | Likely short-region probes routing to the alignment model + dense candidate generation over merged exons. Profile first. |
+| 1 | RNA generation performance (end-to-end run spends minutes on RNA) | *(untagged)* | Root-caused: BWA-MEM alignment of junction-crossing candidates. Option A done (1.45x); A+ in progress. See "Performance — RNA generation". |
 | 2 | Quality score of non-contiguous (spliced / SV) probes distorted | `FIXME` `ProbeQualityModel.computeFromAlignments` | `targetScore` assumes a full-length on-target match. Pre-existing (affects SV too). See "Open issue — quality score…". |
 | 3 | RefSeq/NM transcript resolution disabled | `TODO` `GenesRna.resolveTranscript` | Validate the non-1:1 Ensembl↔RefSeq mapping, then re-enable. |
 | 4 | Part-coding exon classified as fully coding | `TODO` `GenesRna.createTargets` | A long exon with few coding bases is tiled entirely as coding. Reconsider. |
@@ -397,6 +397,49 @@ Candidate fixes to revisit:
    More accurate, heavier (new resource + index).
 
 Action: prototype (1), compare against hand-checked probes, decide. Track as its own task.
+
+## Performance — RNA generation (investigation + fixes)
+
+Investigated on branch `AUS-422-panel-builder-rna-v1` (2026-08-04), validated on the public `panelbuilder/validate` set (489 RNA genes,
+GRCh38). Timings are the isolated RNA-generation phase (27s fixed load overhead subtracted), 13 threads.
+
+- **Root cause.** RNA gene generation runs single-threaded on `main`; the only parallelism is inside BWA-MEM's own thread pool. Junction-
+  crossing (spliced) and short-region candidate probes route to the BWA **alignment model** (`ProbeQualityModel`) rather than the profile,
+  because the profile cannot score a non-contiguous sequence or a region shorter than one window (40b). `ProbeGenerator` generated a
+  candidate at every probe-space position across each of ~10,713 merged-exon targets and evaluated all of them — ~2.4M of ~5.7M candidates
+  routed to BWA, to keep only ~3,516 spliced probes (>99.8% discarded).
+- **Profiling (JFR, full RNA run).** `BwaMemIndex.createAlignments` = ~74% of main-thread runnable samples; the rest is one-time profile-file
+  loading (~11%, float-parse + gz-inflate). Candidate generation and profile scoring are negligible. So **BWA query volume is the only
+  meaningful lever** — batching across exons (limited, threads already ~68% saturated) and profile-path micro-optimisation are not worth it.
+- **Option A [DONE].** Two-pass candidate generation in `ProbeGenerator.coverMappedRange`: pass 1 = within-exon (single-region, profile-scored)
+  candidates; pass 2 = spliced candidates only for target positions pass 1 leaves uncovered (short exons; short sub-ranges abutting a junction
+  after a rejection split), bounded to the junction neighbourhood. DNA identity mapping never splices, so pass 2 is inert (DNA unaffected).
+  Result: RNA phase 326s -> 225s (**1.45x**). Output byte-identical (`rna_probes`/`panel`/`rejections`/`gene_stats`/`candidate_targets`;
+  `rna_targets.bed` differs in tie-order only). All unit tests green.
+- **Option A+ [DONE].** A short exon (< `PROBE_LENGTH`) still BWA-evaluated every junction-crossing position to keep one centred padded probe.
+  The single-probe placement only ever selects within `PROBE_SHIFT_MAX` of the centred tiling position, so pass 2 evaluates just that window
+  for short-exon targets (no single-region candidate), falling back to the full sweep only when the centred candidate is unacceptable (the
+  placement may then shift and depend on the full acceptance pattern). Result: RNA phase 225s -> **189s** (cumulative **1.73x** vs baseline
+  326s; total run 353s -> 216s). CPU 2221s -> 1823s (fewer BWA queries). Output byte-identical; all unit tests green.
+- **Diminishing returns / remaining lever.** After A+, wall is BWA-bound at ~65% thread saturation (user/real ~8.4 on 13 threads). Cutting BWA
+  query count now saves CPU more than wall (the short-exon alignment was already well parallelised). The remaining lever is better thread
+  saturation - batch the alignment-model calls across exons instead of once per `coverExonRange` (Option C) - ceiling ~1.5x wall. Not yet done.
+
+### Rejected — profile aggregation as a spliced-probe quality score
+
+Side analysis over 84,648 real spliced candidates: a profile estimate = min over the constituent region fragments' profile scores vs the
+alignment-model score. **Not usable.** Pearson r = 0.75 but systematically optimistic (mean 0.78 vs model 0.59); at the accept threshold it
+**falsely accepts 9.5% of model-rejected spliced probes** — i.e. it overestimates quality, which is disallowed. The error concentrates where
+a fragment is substantial but shorter than the 40b profile window (false-accept rate peaks at 30–39b = 3.3%; <20b or ≥40b are safe ~0.3%):
+the profile is blind to that sub-window fragment, and to the artificial junction's off-targets entirely — both fundamental, not tunable. So
+the alignment model stays for spliced probes; the win is fewer BWA queries (Option A/A+), not a cheaper score. (The model QS for spliced is
+itself distorted low by the `targetScore` issue, follow-up #2 — comparing against it is imperfect, but does not change the conclusion.)
+
+Do **not** change the profile window aggregation (`ProbeQualityProfile.aggregateQualityScore`, a length-weighted soft-min) — it is
+empirically validated against whole-probe alignment and real probe performance, and must not be made to overestimate. A safe cheap
+accept/reject for the *single-region* (profile) path is available via bounds `LB = min raw window over all overlapping windows <= aggregate <=
+UB = min over fully-contained windows` (auto-accept when `LB >= threshold`, auto-reject when `UB < threshold`, exact soft-min only in the
+narrow ambiguous band) — never overestimates — but the profile path is not the bottleneck, so it is not pursued.
 
 ## Other issues to keep in mind
 
