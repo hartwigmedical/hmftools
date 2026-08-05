@@ -16,7 +16,7 @@ is in the sections further down. Everything in the batch/merge records below (A1
 | 4 | Part-coding exon classified as fully coding | `TODO` `GenesRna.createTargets` | A long exon with few coding bases is tiled entirely as coding. Reconsider. |
 | 5 | `PanelData` getters return live internal lists | `TODO` `PanelData` | No live aliasing bug found; defensively copy (also `ProbeGenerationResult` ctor). Own commit. |
 | 6 | Rejected spliced (multi-region) probe reporting | `TODO(RNA)` `ProbeGenerationResult` | Decide how a rejected non-variant multi-region probe is reported. |
-| 7 | `SingleProbe` requires exact `PROBE_LENGTH` | *(untagged)* | Define the can't-fill fallback for a short-exon padded probe. |
+| 7 | Probe can't be filled to `PROBE_LENGTH` (mapping shorter than a probe) | `TODO?` `ProbeGenerator.coverMappedRange` | Very short transcript / tiny exon with short neighbours: even padding across junctions totals < `PROBE_LENGTH`, so no full-length probe fits and the target is silently uncovered. Decide desired behaviour (accept no coverage, or a shorter-probe fallback). |
 | 8 | RNA strandedness | *(design decision, deferred)* | RNA is single-stranded; currently emit genome-forward only. Decide one strand vs both. |
 | 9 | README "exon aware tiling algorithm" section | *(doc)* | Complete the user-facing description. |
 

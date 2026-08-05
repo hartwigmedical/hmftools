@@ -264,6 +264,12 @@ public class ProbeGenerator
         int minStart = max(0, rangeStart - PROBE_LENGTH + 1);
         int maxStart = min(mapping.length() - PROBE_LENGTH, rangeEnd - 1);
         BaseRegion targetRegion = spaceRegion(rangeStart, rangeEnd);
+        // TODO? Can't-fill case: when the whole mapping is shorter than a probe (mapping.length() < PROBE_LENGTH), maxStart < minStart, so no
+        //  candidate window fits and the target is left uncovered (no probe). This is the RNA short-exon padding limit - a target exon plus all
+        //  adjacent exonic sequence available to pad across junctions still totals < PROBE_LENGTH (a very short transcript, or a tiny exon whose
+        //  neighbours are also short). Probes are fixed at PROBE_LENGTH throughout (alignment model, quality profile, output), so no full-length
+        //  probe can be built. Currently such a target silently gets no coverage. Decide the desired behaviour: accept no coverage (and document
+        //  it), or a fallback (e.g. a shorter probe, which is a pipeline-wide change). See RNA_DESIGN_NOTES follow-up #7.
 
         // Accepted candidate windows indexed by probe-space start (as a 1-indexed coordinate), merged into maximal acceptable sub-ranges.
         Map<Integer, Probe> acceptableProbes = new HashMap<>();
