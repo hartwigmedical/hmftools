@@ -15,12 +15,12 @@ import com.hartwig.hmftools.compar.common.field.FieldInfo;
 public class LilacQcComparData extends ComparableItem
 {
     public final com.hartwig.hmftools.common.hla.LilacQcData QcData;
-    public final List<LilacAllele> Alleles;
+    public final String AllelesStr;
 
-    public LilacQcComparData(final LilacQcData qcData, final List<LilacAllele> alleles, final List<FieldInfo> fields)
+    public LilacQcComparData(final LilacQcData qcData, final String allelesStr, final List<FieldInfo> fields)
     {
         QcData = qcData;
-        Alleles = alleles;
+        // Alleles = alleles;
 
         addStringValue(LilacQcComparer.Fields.Status.toString(), QcData.status(), fields);
         addIntValue(LilacQcComparer.Fields.TotalFragments.toString(), QcData.totalFragments(), fields);
@@ -29,8 +29,8 @@ public class LilacQcComparData extends ComparableItem
         addIntValue(LilacQcComparer.Fields.DiscardedIndels.toString(), QcData.discardedIndels(), fields);
         addStringValue(LilacQcComparer.Fields.HlaYAllele.toString(), QcData.hlaYAllele(), fields);
 
-        String allelesStr = Alleles.stream().map(x -> x.allele()).collect(Collectors.joining(ITEM_DELIM));
-        addStringValue(LilacQcComparer.Fields.Alleles.toString(), allelesStr, fields);
+        AllelesStr = allelesStr;
+        addStringValue(LilacQcComparer.Fields.Alleles.toString(), AllelesStr, fields);
     }
 
     @Override

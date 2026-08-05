@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.compar.lilac;
 
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.compar.common.CategoryType.LILAC_QC;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.FieldCheckCache.getOrMakeFieldCheck;
@@ -96,7 +97,9 @@ public class LilacQcComparer extends ItemComparer
                 List<LilacAllele> geneAlleles = alleles.stream()
                         .filter(x -> x.genes().equals(qcData.genes()))
                         .collect(Collectors.toList());
-                comparableItems.add(new LilacQcComparData(qcData, geneAlleles, mFields));
+
+                String allelesStr = geneAlleles.stream().map(x -> x.allele()).collect(Collectors.joining(ITEM_DELIM));
+                comparableItems.add(new LilacQcComparData(qcData, allelesStr, mFields));
             }
         }
         catch(IOException e)

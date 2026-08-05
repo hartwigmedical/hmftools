@@ -19,14 +19,8 @@ public class TestLilacQcDataBuilder
     public int discardedIndels = 1;
     public int discardedAlignmentFragments = 30;
     public String hlaYAllele = "NONE";
-    public List<LilacAllele> alleles = List.of(
-            TestLilacAlleleDataBuilder.BUILDER.create(b -> b.allele = "A*01:01").Allele,
-            TestLilacAlleleDataBuilder.BUILDER.create(b -> b.allele = "A*01:01").Allele,
-            TestLilacAlleleDataBuilder.BUILDER.createWithAlternateDefaults(b -> b.allele = "B*01:01").Allele,
-            TestLilacAlleleDataBuilder.BUILDER.createWithAlternateDefaults(b -> b.allele = "B*01:02").Allele,
-            TestLilacAlleleDataBuilder.BUILDER.create(b -> b.allele = "C*02:01").Allele,
-            TestLilacAlleleDataBuilder.BUILDER.createWithAlternateDefaults(b -> b.allele = "C*03:04").Allele
-    );
+
+    public String allelesStr = "A*01:01;A*01:01;B*01:01;B*01:02;C*02:01;C*03:04";
 
     private static final Consumer<TestLilacQcDataBuilder> ALTERNATE_INITIALIZER = b ->
     {
@@ -37,14 +31,8 @@ public class TestLilacQcDataBuilder
         b.discardedIndels = 30;
         b.discardedAlignmentFragments = 50;
         b.hlaYAllele = "Y*02:01";
-        b.alleles = List.of(
-                TestLilacAlleleDataBuilder.BUILDER.createWithAlternateDefaults(c -> c.allele = "A*01:01").Allele,
-                TestLilacAlleleDataBuilder.BUILDER.createWithAlternateDefaults(c -> c.allele = "A*01:01").Allele,
-                TestLilacAlleleDataBuilder.BUILDER.create(c -> c.allele = "B*01:01").Allele,
-                TestLilacAlleleDataBuilder.BUILDER.create(c -> c.allele = "B*01:02").Allele,
-                TestLilacAlleleDataBuilder.BUILDER.createWithAlternateDefaults(c -> c.allele = "C*02:01").Allele,
-                TestLilacAlleleDataBuilder.BUILDER.create(c -> c.allele = "C*04:05").Allele
-        );
+
+        b.allelesStr = "A*01:01;A*01:01;B*01:01;B*01:02;C*02:01;C*04:05";
     };
 
     public static final TestComparableItemBuilder<TestLilacQcDataBuilder, LilacQcComparData> BUILDER =
@@ -62,6 +50,6 @@ public class TestLilacQcDataBuilder
                 .hlaYAllele(hlaYAllele)
                 .build();
 
-        return new LilacQcComparData(qcData, alleles, new LilacQcComparer(null, Collections.emptyMap()).fieldsList());
+        return new LilacQcComparData(qcData, allelesStr, new LilacQcComparer(null, Collections.emptyMap()).fieldsList());
     }
 }
