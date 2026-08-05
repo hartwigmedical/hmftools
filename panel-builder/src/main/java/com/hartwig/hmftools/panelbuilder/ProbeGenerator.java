@@ -77,15 +77,20 @@ public class ProbeGenerator
     // Object to encapsulate batch generation of probes.
     //
     // Why batching, and why only some spec types are pooled:
-    // The expensive step is the probe quality score. Probes whose sequence is contiguous in the reference (single-region DNA tiling, het
-    // sites, CDR3, gene coding regions) are scored by the fast in-memory quality profile, which is single-threaded and cheap - pooling them
-    // buys nothing, so those (the "generic" specs) are handled one at a time. Probes whose sequence is not contiguous with the reference
-    // (variant/SV single probes, RNA junction-crossing probes) fall back to the BWA alignment model, which parallelises across the queries in
-    // one align call. Aligning them together keeps all the threads busy, so those candidates are evaluated in one large stream:
-    //   - SingleProbe specs are pooled across all specs (singleProbeBatch).
-    //   - CoverExonRange (RNA) candidates are already pooled per exon inside coverMappedRange, which is enough to saturate the alignment
-    //     threads at typical core counts; pooling further across exons was measured to give no speedup at ~10 threads (it would help only when
-    //     cores far exceed the per-exon candidate count), so exon specs are simply generated one at a time here.
+    // The expensive step is the probe quality score. It has two paths, and only one benefits from batching:
+    //   - A probe whose sequence exists contiguously in the reference is scored by the fast in-memory quality profile - single-threaded and
+    //     cheap. Pooling these parallelises nothing.
+    //   - A probe with a NOVEL sequence (not present contiguously in the reference) has no profile entry, so it falls back to the BWA alignment
+    //     model. BWA parallelises across the queries within one align call, so aligning many novel-sequence candidates together keeps all the
+    //     threads busy - a large speedup (measured ~7x vs aligning one at a time).
+    // So batching is only worthwhile for the generation types that can produce novel-sequence probes:
+    //   - SingleProbe (variant / SV probes - the constructed sequence spans a breakend or variant, so it is novel): pooled across all specs
+    //     (singleProbeBatch).
+    //   - CoverExonRange (RNA - a junction-crossing probe splices two exons, so it is novel): pooled per exon inside coverMappedRange, which
+    //     already exceeds the core count and saturates the alignment threads; pooling further across exons was measured to give no speedup at
+    //     ~10 threads (it would help only when cores far exceed the per-exon candidate count), so exon specs are generated one at a time here.
+    // Every other type only ever produces reference-contiguous probes (single-region DNA tiling, het sites, CDR3, gene coding regions), so it
+    // is profile-scored and there is nothing to batch - those "generic" specs are handled one at a time.
     public class Batch
     {
         private final List<ProbeGenerationSpec> mGenericSpecs = new ArrayList<>();
@@ -124,7 +129,8 @@ public class ProbeGenerator
 
         private ProbeGenerationResult generateGenericSpecs(final PanelCoverage coverage, PanelStore resultStore)
         {
-            // Not pooled: these are profile-scored (no alignment), so evaluating them together would not parallelise anything.
+            // Not pooled: these only produce reference-contiguous (non-novel) sequences, so they are profile-scored, not aligned - batching
+            // would parallelise nothing.
             return mGenericSpecs.stream().map(spec ->
                     {
                         ProbeGenerationResult result = generateGenericSpec(spec, coverage);
@@ -136,7 +142,8 @@ public class ProbeGenerator
 
         private ProbeGenerationResult generateSingleProbeSpecs(final PanelCoverage coverage, PanelStore resultStore)
         {
-            // Pooled across all specs: these route to the alignment model, which parallelises across the queries in one align call.
+            // Pooled across all specs: variant/SV probes have novel sequences, so they route to the alignment model, which parallelises across
+            // the queries in one align call.
             return singleProbeBatch(mSingleProbeSpecs, coverage, resultStore);
         }
 
