@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.OptionalInt;
 import java.util.function.IntPredicate;
+import java.util.stream.Stream;
 
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
@@ -295,13 +296,30 @@ public class ProbeGeneratorExonRangeTest
                 result.rejectedFeatures().stream().map(RejectedFeature::region).toList());
     }
 
+    // Exercises the batch (production) interface with a single spec; the single-spec convenience lives here in test code, not production.
     private static ProbeGenerationResult generate(final RegionMapping mapping, int rangeStart, int rangeEnd,
             final IntPredicate acceptableStart)
     {
         ProbeGenerator generator = new ProbeGenerator(Map.of(), fakeEvaluator(mapping, acceptableStart), null);
-        ProbeGenerationResult result = generator.coverExonRange(mapping, rangeStart, rangeEnd, METADATA, CRITERIA, STRATEGY);
+        ProbeGenerationSpec spec = new ProbeGenerationSpec.CoverExonRange(mapping, rangeStart, rangeEnd, METADATA, CRITERIA, STRATEGY);
+        ProbeGenerationResult result = generator.generateBatch(Stream.of(spec), new NoCoveragePanel());
         assertProbeInvariants(mapping, rangeStart, rangeEnd, result);
         return result;
+    }
+
+    // Minimal PanelBuffer: RNA exon-range generation does no coverage subtraction, and the result is taken from generateBatch's return value.
+    private static class NoCoveragePanel implements PanelBuffer
+    {
+        @Override
+        public Stream<ChrBaseRegion> coveredRegions()
+        {
+            return Stream.empty();
+        }
+
+        @Override
+        public void addResult(final ProbeGenerationResult result)
+        {
+        }
     }
 
     // Generic invariants that must hold for any result, checked automatically for every scenario.

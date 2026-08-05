@@ -75,17 +75,32 @@ public class ProbeGenerator
     }
 
     // Object to encapsulate batch generation of probes.
-    // Generating in batches is more efficient because of computing the probe quality model (alignment).
+    //
+    // Why batching, and why only some spec types are pooled:
+    // The expensive step is the probe quality score. Probes whose sequence is contiguous in the reference (single-region DNA tiling, het
+    // sites, CDR3, gene coding regions) are scored by the fast in-memory quality profile, which is single-threaded and cheap - pooling them
+    // buys nothing, so those (the "generic" specs) are handled one at a time. Probes whose sequence is not contiguous with the reference
+    // (variant/SV single probes, RNA junction-crossing probes) fall back to the BWA alignment model, which parallelises across the queries in
+    // one align call. Aligning them together keeps all the threads busy, so those candidates are evaluated in one large stream:
+    //   - SingleProbe specs are pooled across all specs (singleProbeBatch).
+    //   - CoverExonRange (RNA) candidates are already pooled per exon inside coverMappedRange, which is enough to saturate the alignment
+    //     threads at typical core counts; pooling further across exons was measured to give no speedup at ~10 threads (it would help only when
+    //     cores far exceed the per-exon candidate count), so exon specs are simply generated one at a time here.
     public class Batch
     {
         private final List<ProbeGenerationSpec> mGenericSpecs = new ArrayList<>();
         private final List<ProbeGenerationSpec.SingleProbe> mSingleProbeSpecs = new ArrayList<>();
+        private final List<ProbeGenerationSpec.CoverExonRange> mExonRangeSpecs = new ArrayList<>();
 
         public void add(final ProbeGenerationSpec spec)
         {
             if(spec instanceof ProbeGenerationSpec.SingleProbe singleProbeSpec)
             {
                 mSingleProbeSpecs.add(singleProbeSpec);
+            }
+            else if(spec instanceof ProbeGenerationSpec.CoverExonRange exonRangeSpec)
+            {
+                mExonRangeSpecs.add(exonRangeSpec);
             }
             else
             {
@@ -101,14 +116,15 @@ public class ProbeGenerator
         public ProbeGenerationResult generate(PanelBuffer resultBuffer)
         {
             ProbeGenerationResult result = generateGenericSpecs(resultBuffer, resultBuffer)
-                    .add(generateSingleProbeSpecs(resultBuffer, resultBuffer));
+                    .add(generateSingleProbeSpecs(resultBuffer, resultBuffer))
+                    .add(generateExonRangeSpecs(mExonRangeSpecs, resultBuffer));
             clear();
             return result;
         }
 
         private ProbeGenerationResult generateGenericSpecs(final PanelCoverage coverage, PanelStore resultStore)
         {
-            // TODO: batch probe evaluation
+            // Not pooled: these are profile-scored (no alignment), so evaluating them together would not parallelise anything.
             return mGenericSpecs.stream().map(spec ->
                     {
                         ProbeGenerationResult result = generateGenericSpec(spec, coverage);
@@ -120,6 +136,7 @@ public class ProbeGenerator
 
         private ProbeGenerationResult generateSingleProbeSpecs(final PanelCoverage coverage, PanelStore resultStore)
         {
+            // Pooled across all specs: these route to the alignment model, which parallelises across the queries in one align call.
             return singleProbeBatch(mSingleProbeSpecs, coverage, resultStore);
         }
 
@@ -127,6 +144,7 @@ public class ProbeGenerator
         {
             mGenericSpecs.clear();
             mSingleProbeSpecs.clear();
+            mExonRangeSpecs.clear();
         }
     }
 
@@ -208,21 +226,25 @@ public class ProbeGenerator
     {
     }
 
-    // Covers a probe-space target range within a single exon of a transcript's exon mapping (RNA). Tiling edges that coincide with an exon
-    // boundary are pinned flush (good splice-junction coverage); a probe window near an exon edge maps to a spliced (multi-region) probe.
-    // The range must lie within a single mapped exon. Candidate target regions are not added here; the caller adds them.
-    public ProbeGenerationResult coverExonRange(final RegionMapping mapping, int rangeStart, int rangeEnd, final TargetMetadata metadata,
-            final ProbeEvaluator.Criteria evalCriteria, final ProbeSelector.Strategy localSelect)
+    // Generates exon-aware (RNA) probes for a batch of CoverExonRange specs, adding each result to the store and returning the combined
+    // result. Each exon covers a probe-space range within a single mapped exon: tiling edges coinciding with an exon boundary are pinned flush
+    // (good splice-junction coverage), and a probe window near an exon edge maps to a spliced (multi-region) probe. Exons are generated one at
+    // a time - the alignment of an exon's junction-crossing candidates is already batched within coverMappedRange (see the Batch comment).
+    private ProbeGenerationResult generateExonRangeSpecs(final List<ProbeGenerationSpec.CoverExonRange> specs, final PanelStore resultStore)
     {
-        if(!(rangeStart >= 0 && rangeStart < rangeEnd && rangeEnd <= mapping.length()))
+        ProbeGenerationResult total = new ProbeGenerationResult();
+        for(ProbeGenerationSpec.CoverExonRange spec : specs)
         {
-            throw new IllegalArgumentException("Invalid probe-space range");
+            ProbeGenerationResult result = coverMappedRange(
+                    spec.mapping(), spec.rangeStart(), spec.rangeEnd(), spec.metadata(), spec.evalCriteria(), spec.localSelectStrategy(),
+                    spec.mapping()::isRegionBoundary);
+            // coverMappedRange does not add the candidate target region (it mirrors coverUncoveredRegion); add the exon region here.
+            ChrBaseRegion exonRegion = spec.mapping().toGenomeRegions(spec.rangeStart(), spec.rangeEnd()).get(0);
+            result = result.add(new ProbeGenerationResult(emptyList(), List.of(new TargetRegion(exonRegion, spec.metadata())), emptyList()));
+            resultStore.addResult(result);
+            total = total.add(result);
         }
-        if(mapping.toGenomeRegions(rangeStart, rangeEnd).size() != 1)
-        {
-            throw new IllegalArgumentException("Target range must lie within a single mapped region (exon)");
-        }
-        return coverMappedRange(mapping, rangeStart, rangeEnd, metadata, evalCriteria, localSelect, mapping::isRegionBoundary);
+        return total;
     }
 
     // Probe-space analogue of coverUncoveredRegion, driven off a RegionMapping (identity mapping for DNA, exon mapping for RNA). The target

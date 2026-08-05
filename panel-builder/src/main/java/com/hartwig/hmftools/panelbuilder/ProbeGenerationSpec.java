@@ -11,7 +11,7 @@ import com.hartwig.hmftools.common.region.ChrBaseRegion;
 // Useful to have this as data to decouple the probe generation code.
 public sealed interface ProbeGenerationSpec
         permits ProbeGenerationSpec.CoverRegion, ProbeGenerationSpec.CoverOneSubregion, ProbeGenerationSpec.CoverOnePosition,
-        ProbeGenerationSpec.SingleProbe
+        ProbeGenerationSpec.CoverExonRange, ProbeGenerationSpec.SingleProbe
 {
     // Generate the best acceptable probes to cover an entire region (general purpose).
     record CoverRegion(
@@ -21,6 +21,30 @@ public sealed interface ProbeGenerationSpec
             ProbeSelector.Strategy localSelectStrategy
     ) implements ProbeGenerationSpec
     {
+    }
+
+    // Generate exon-aware (RNA) probes covering a probe-space target range within a single exon of a transcript's exon mapping. Submitting
+    // many of these in one batch lets the generator batch the expensive junction-crossing quality-score alignments across all exons.
+    record CoverExonRange(
+            RegionMapping mapping,
+            int rangeStart,
+            int rangeEnd,
+            TargetMetadata metadata,
+            ProbeEvaluator.Criteria evalCriteria,
+            ProbeSelector.Strategy localSelectStrategy
+    ) implements ProbeGenerationSpec
+    {
+        public CoverExonRange
+        {
+            if(!(rangeStart >= 0 && rangeStart < rangeEnd && rangeEnd <= mapping.length()))
+            {
+                throw new IllegalArgumentException("Invalid probe-space range");
+            }
+            if(mapping.toGenomeRegions(rangeStart, rangeEnd).size() != 1)
+            {
+                throw new IllegalArgumentException("Target range must lie within a single mapped region (exon)");
+            }
+        }
     }
 
     // Generate the one best acceptable probe contained within the specified region.

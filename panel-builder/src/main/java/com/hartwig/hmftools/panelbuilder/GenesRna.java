@@ -282,7 +282,9 @@ public class GenesRna
     private static ProbeGenerationResult generateProbes(final List<GeneTranscriptData> genes, final ProbeGenerator probeGenerator,
             PanelData panelData)
     {
-        ProbeGenerationResult total = new ProbeGenerationResult();
+        // Build one CoverExonRange spec per exon target and submit them as a single batch, so the generator can batch the (expensive)
+        // junction-crossing quality-score alignments across all exons rather than per exon.
+        List<ProbeGenerationSpec> specs = new ArrayList<>();
         for(GeneTranscriptData gene : genes)
         {
             GeneTargets geneTargets = createTargets(gene.gene(), gene.transcripts(), gene.options());
@@ -293,17 +295,11 @@ public class GenesRna
             for(RnaTarget target : geneTargets.targets())
             {
                 TargetMetadata metadata = createTargetMetadata(gene, target);
-                ProbeGenerationResult result = probeGenerator.coverExonRange(
-                        geneTargets.mapping(), target.spaceStart(), target.spaceEnd(), metadata, PROBE_CRITERIA, PROBE_SELECT);
-                // coverExonRange does not add the candidate target region (it mirrors coverUncoveredRegion); add it here.
-                ChrBaseRegion targetRegion = geneTargets.mapping().toGenomeRegions(target.spaceStart(), target.spaceEnd()).get(0);
-                result = result.add(new ProbeGenerationResult(
-                        emptyList(), List.of(new TargetRegion(targetRegion, metadata)), emptyList()));
-                panelData.addResult(result);
-                total = total.add(result);
+                specs.add(new ProbeGenerationSpec.CoverExonRange(
+                        geneTargets.mapping(), target.spaceStart(), target.spaceEnd(), metadata, PROBE_CRITERIA, PROBE_SELECT));
             }
         }
-        return total;
+        return probeGenerator.generateBatch(specs.stream(), panelData);
     }
 
     // Computes the exon-aware target ranges for a gene: the coding sequence (always) and, if requested, the 5' and 3' UTRs. All exons of the
