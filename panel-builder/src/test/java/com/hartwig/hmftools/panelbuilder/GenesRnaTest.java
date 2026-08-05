@@ -88,6 +88,41 @@ public class GenesRnaTest
                 result.targets());
     }
 
+    // Single exon [1000,1499] (500b), coding span 1200..1349: 200b of 5' UTR, 150b of coding, 150b of 3' UTR - each at least a probe length,
+    // so the exon is partially coding and split into three separate targets.
+    private static List<TranscriptData> partlyCodingTranscript(byte strand)
+    {
+        TranscriptData transcript = new TranscriptData(
+                1, "ENST1", "GENE1", true, strand, 1000, 1499, 1200, 1349, "protein_coding", null);
+        transcript.setExons(List.of(new ExonData(1, 1000, 1499, 1, -1, -1)));
+        return List.of(transcript);
+    }
+
+    @Test
+    public void testPartiallyCodingExonSplit()
+    {
+        GeneData gene = new GeneData("GENE1", "GENE1", "1", FORWARD, 1000, 1499, "");
+        GeneTargets result = GenesRna.createTargets(gene, partlyCodingTranscript(FORWARD), new GeneOptions(true, true));
+
+        // The coding part is its own target; the flanking UTR parts are separate (5' below the coding span, 3' above, on the forward strand).
+        assertEquals(
+                List.of(
+                        new RnaTarget(UTR_5, 0, 200),
+                        new RnaTarget(CODING, 200, 350),
+                        new RnaTarget(UTR_3, 350, 500)),
+                result.targets());
+    }
+
+    @Test
+    public void testPartiallyCodingExonSplitUtrsExcluded()
+    {
+        // With UTRs disabled only the coding part of the split exon is covered - not the whole exon.
+        GeneData gene = new GeneData("GENE1", "GENE1", "1", FORWARD, 1000, 1499, "");
+        GeneTargets result = GenesRna.createTargets(gene, partlyCodingTranscript(FORWARD), new GeneOptions(false, false));
+
+        assertEquals(List.of(new RnaTarget(CODING, 200, 350)), result.targets());
+    }
+
     @Test
     public void testResolveTranscript()
     {

@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.panelbuilder;
 
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static java.lang.String.format;
 import static java.lang.String.join;
 import static java.util.Collections.emptyList;
@@ -9,6 +11,7 @@ import static com.hartwig.hmftools.panelbuilder.GeneUtils.mergeExons;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.GENE_RNA_GC_TARGET;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.GENE_RNA_GC_TOLERANCE;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.GENE_RNA_QUALITY_MIN;
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.PROBE_LENGTH;
 import static com.hartwig.hmftools.panelbuilder.Utils.findDuplicates;
 
 import java.util.ArrayList;
@@ -303,11 +306,14 @@ public class GenesRna
     }
 
     // Computes the exon-aware target ranges for a gene: the coding sequence (always) and, if requested, the 5' and 3' UTRs. All exons of the
-    // selected transcripts are merged into one RegionMapping (so short-exon probes can pad across junctions). Each merged exon is one target,
-    // classified whole: an exon with any coding bases is treated as coding, otherwise it is a fully noncoding (UTR) exon, 5' or 3' by its
-    // position relative to the coding span (strand-aware). Both edges of each target are therefore true splice junctions.
-    // TODO: reconsider classifying a part-coding exon as entirely coding. A very long exon with only a few coding bases would be tiled fully
-    //  as coding, covering a lot of UTR sequence that cannot be excluded and is not attributed to the 5'/3' UTR features.
+    // selected transcripts are merged into one RegionMapping (so short-exon probes can pad across junctions), then each merged exon is
+    // classified by how many of its bases are coding vs noncoding:
+    //   - coding exon (some coding, less than a probe of noncoding): one whole-exon coding target;
+    //   - noncoding exon (some noncoding, less than a probe of coding): one whole-exon UTR target (5' or 3' by position, strand-aware);
+    //   - partially coding exon (at least a probe of each): split into a coding target plus the flanking UTR target(s), so a long exon's UTR
+    //     is not covered as coding.
+    // A whole exon or exon part is therefore probed once, with a single feature type. UTR targets are kept only if the corresponding UTR is
+    // enabled.
     static GeneTargets createTargets(final GeneData geneData, final List<TranscriptData> transcripts, final GeneOptions options)
     {
         List<GeneUtils.MergedExonRegion> mergedExons = mergeExons(transcripts);
@@ -317,33 +323,57 @@ public class GenesRna
                 .toList();
         RegionMapping mapping = new RegionMapping(exonRegions);
 
-        // Gene-wide coding start (across coding transcripts); used to classify fully noncoding exons as 5' or 3'.
-        OptionalInt codingStart = transcripts.stream().filter(t -> !t.nonCoding()).mapToInt(t -> t.CodingStart).min();
-        if(codingStart.isEmpty())
+        // Gene-wide coding start (across coding transcripts); used to classify a fully noncoding exon as 5' or 3'.
+        OptionalInt geneCodingStart = transcripts.stream().filter(t -> !t.nonCoding()).mapToInt(t -> t.CodingStart).min();
+        if(geneCodingStart.isEmpty())
         {
             // Noncoding gene: no coding to anchor the 5'/3' UTR split, so nothing is produced.
             LOGGER.warn("Gene {} has no coding transcripts; no RNA probes produced", geneData.GeneName);
             return new GeneTargets(mapping, emptyList());
         }
+        int codingStart = geneCodingStart.getAsInt();
+        boolean forwardStrand = geneData.forwardStrand();
 
         List<RnaTarget> targets = new ArrayList<>();
         for(GeneUtils.MergedExonRegion mergedExon : mergedExons)
         {
             BaseRegion exon = mergedExon.Region;
-            RnaRegionType type;
-            if(mergedExon.IsCoding)
+            // Coding bases are the exon's overlap with the coding span; the rest are noncoding (UTR).
+            int codingStartInExon = mergedExon.IsCoding ? max(exon.start(), mergedExon.CodingStart) : 0;
+            int codingEndInExon = mergedExon.IsCoding ? min(exon.end(), mergedExon.CodingEnd) : -1;
+            int codingBases = mergedExon.IsCoding ? max(0, codingEndInExon - codingStartInExon + 1) : 0;
+            int nonCodingBases = exon.baseLength() - codingBases;
+
+            boolean isCodingExon = codingBases > 0 && nonCodingBases < PROBE_LENGTH;
+            boolean isNonCodingExon = nonCodingBases > 0 && codingBases < PROBE_LENGTH;
+
+            if(isCodingExon)
             {
-                type = RnaRegionType.CODING;
+                // Any noncoding portion is shorter than a probe, so cover the whole exon as coding.
+                addTarget(targets, mapping, geneData, RnaRegionType.CODING, exon.start(), exon.end());
+            }
+            else if(isNonCodingExon)
+            {
+                // Any coding portion is shorter than a probe, so cover the whole exon as one UTR feature.
+                addTarget(targets, mapping, geneData, utrType(exon.end() < codingStart, forwardStrand), exon.start(), exon.end());
             }
             else
             {
-                // Fully noncoding exon: below the coding start is 5' UTR on the forward strand, 3' UTR on the reverse strand (and vice versa).
-                boolean belowCoding = exon.end() < codingStart.getAsInt();
-                type = belowCoding == geneData.forwardStrand() ? RnaRegionType.UTR_5 : RnaRegionType.UTR_3;
+                // Partially coding: coding and noncoding parts are each at least a probe long, so cover them separately.
+                addTarget(targets, mapping, geneData, RnaRegionType.CODING, codingStartInExon, codingEndInExon);
+                if(exon.start() < codingStartInExon)
+                {
+                    addTarget(targets, mapping, geneData, utrType(true, forwardStrand), exon.start(), codingStartInExon - 1);
+                }
+                if(exon.end() > codingEndInExon)
+                {
+                    addTarget(targets, mapping, geneData, utrType(false, forwardStrand), codingEndInExon + 1, exon.end());
+                }
             }
-            addTarget(targets, mapping, geneData, type, exon.start(), exon.end());
         }
 
+        // Each exon (or exon part) produced exactly one target with one feature type, so enabling both UTRs cannot probe a region twice.
+        // Keep only the enabled UTR features (coding is always kept).
         List<RnaTarget> selected = targets.stream()
                 .filter(target -> switch(target.type())
                 {
@@ -354,6 +384,12 @@ public class GenesRna
                 .sorted(Comparator.comparingInt(RnaTarget::spaceStart))
                 .toList();
         return new GeneTargets(mapping, selected);
+    }
+
+    // 5' UTR below the coding span on the forward strand (3' on the reverse strand), and vice versa above it.
+    private static RnaRegionType utrType(boolean belowCoding, boolean forwardStrand)
+    {
+        return belowCoding == forwardStrand ? RnaRegionType.UTR_5 : RnaRegionType.UTR_3;
     }
 
     private static void addTarget(final List<RnaTarget> targets, final RegionMapping mapping, final GeneData geneData,

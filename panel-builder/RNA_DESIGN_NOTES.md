@@ -12,7 +12,7 @@ is in the sections further down. Everything in the batch/merge records below (A1
 |---|------|---------------------|-------|
 | 1 | RNA generation performance | *(untagged)* | Largely resolved: Options A + A+ done (RNA phase ~1.7x faster, byte-identical). Cross-exon batching and DNA-coverRegion batching investigated → no further gain at ~10 cores (batching only helps novel-sequence/alignment probes, and per-exon batching already saturates). Only remaining lever is many-core servers (batch tuning) + the fixed profile-file load. See "Performance — RNA generation". |
 | 3 | RefSeq/NM transcript resolution disabled | `TODO` `GenesRna.resolveTranscript` | Validate the non-1:1 Ensembl↔RefSeq mapping, then re-enable. |
-| 4 | Part-coding exon classified as fully coding | `TODO` `GenesRna.createTargets` | A long exon with few coding bases is tiled entirely as coding. Reconsider. |
+| 4 | Small coding part of a boundary exon folded into one whole-exon target | *(planned)* `GenesRna.createTargets` | Large part-coding exons now split into coding + UTR targets (done). Remaining: a boundary exon whose coding part is < a probe is folded whole; splitting it needs the short coding probe to pad into the same-exon UTR, not across the junction. See "Planned — small coding part padding". |
 | 5 | `PanelData` getters return live internal lists | `TODO` `PanelData` | No live aliasing bug found; defensively copy (also `ProbeGenerationResult` ctor). Own commit. |
 | 7 | Probe can't be filled to `PROBE_LENGTH` (mapping shorter than a probe) | `TODO?` `ProbeGenerator.coverMappedRange` | Very short transcript / tiny exon with short neighbours: even padding across junctions totals < `PROBE_LENGTH`, so no full-length probe fits and the target is silently uncovered. Decide desired behaviour (accept no coverage, or a shorter-probe fallback). |
 | 8 | RNA strandedness | *(design decision, deferred)* | RNA is single-stranded; currently emit genome-forward only. Decide one strand vs both. |
@@ -320,15 +320,24 @@ refactor. Spliced candidates always route to the BWA alignment model (window pro
 short-exon RNA generation is slower per candidate; bounded because short regions have few candidate
 positions.
 
-- Exon classification is **whole-exon, not a coding/UTR split within an exon** (revised from the earlier
-  per-exon split idea): an exon with any coding base is one coding target covering the whole exon; a fully
-  noncoding exon is one 5'/3' UTR target. 5' vs 3' is by exon position relative to the gene coding start,
-  **strand-dependent** (below coding start → 5' on forward, 3' on reverse). This keeps both target edges on
-  true splice junctions (pinned flush) and lets 5'/3' UTR be toggled independently, at the cost that a
-  part-coding exon's UTR bases are covered as coding and not attributed to a UTR feature. TODO in
-  `GenesRna.createTargets` to reconsider (long exon, few coding bases). Contrast: DNA `Genes` clamps coding
-  to `[CodingStart, CodingEnd]` (±`GENE_CODING_REGION_EXPAND`) and gives a fully noncoding exon just one
-  centred UTR probe, with no 5'/3' distinction.
+- Exon classification is **by coding-base count**, per merged exon (`GenesRna.createTargets`). Let `codingBases`
+  be the exon's overlap with the coding span and `nonCodingBases` the rest:
+    - **coding exon** (`codingBases > 0 && nonCodingBases < PROBE_LENGTH`): one whole-exon coding target - the
+      small noncoding sliver is folded into coding rather than made its own sub-probe-length target;
+    - **noncoding exon** (`nonCodingBases > 0 && codingBases < PROBE_LENGTH`): one whole-exon UTR target, 5' or
+      3' by exon position relative to the gene coding start (strand-dependent: below → 5' forward / 3' reverse);
+    - **partially coding exon** (neither of the above, i.e. both parts at least a probe long): split into a
+      coding target plus the flanking UTR target(s), so a long exon's UTR is not covered as coding.
+  Each exon (or part) yields exactly one target with one feature type, computed up front, so enabling both UTRs
+  never probes a region twice. Both edges of a whole-exon target are true splice junctions (pinned flush); a
+  split target's coding/UTR boundary is an interior edge within the exon. Contrast: DNA `Genes` clamps coding to
+  `[CodingStart, CodingEnd]` (±`GENE_CODING_REGION_EXPAND`) and gives a fully noncoding exon just one centred UTR
+  probe, with no 5'/3' distinction.
+  **Planned refinement (small coding part):** a boundary exon whose coding part is shorter than a probe is
+  currently folded to whole-coding (or whole-UTR). Splitting it would leave a sub-probe-length coding target
+  that must pad to `PROBE_LENGTH`; the padding should prefer the adjacent same-exon UTR (contiguous, single
+  region, good QS) over the adjacent exon across the splice junction (spliced, worse QS). See "Planned — small
+  coding part padding".
 - RNA constants in `PanelBuilderConstants` (`RNA_EXON_SINGLE_PROBE_SLACK` = the size-rule X;
   `GENE_RNA_QUALITY_MIN` / `GENE_RNA_GC_TARGET` / `GENE_RNA_GC_TOLERANCE` criteria).
 
@@ -466,6 +475,41 @@ empirically validated against whole-probe alignment and real probe performance, 
 accept/reject for the *single-region* (profile) path is available via bounds `LB = min raw window over all overlapping windows <= aggregate <=
 UB = min over fully-contained windows` (auto-accept when `LB >= threshold`, auto-reject when `UB < threshold`, exact soft-min only in the
 narrow ambiguous band) — never overestimates — but the profile path is not the bottleneck, so it is not pursued.
+
+## Planned — small coding part padding (follow-up #4)
+
+Now that partially coding exons (coding and noncoding parts each ≥ a probe) split into separate coding + UTR
+targets, the remaining case is a **boundary exon whose coding part is shorter than a probe** (e.g. a first/last
+coding exon with a long UTR and only ~40-100b of coding). It is currently folded into a single whole-exon
+target (coding if the noncoding part is also short, else UTR), so there is no coding-specific probe.
+
+**Goal:** generate a coding-focused probe for that short coding part, padded to `PROBE_LENGTH`. The coding part
+sits against a real splice junction on one side and the **same-exon UTR** on the other. Padding should prefer
+the same-exon UTR (contiguous → a single-region probe, good profile-scored QS) over the adjacent exon across
+the junction (spliced → alignment-model QS, worse, and the follow-up-#2 class of distortion). The UTR bases
+consumed as padding are covered anyway by the UTR target, so the only cost is a little overlap.
+
+**Why it isn't automatic today.** `coverExonRange` covers each target independently over the per-exon
+`RegionMapping`. A short target range is centred and padded symmetrically, extending in probe-space into
+whatever is adjacent - which, at the coding/UTR boundary, is the same-exon UTR (single region), but at the
+exon-junction boundary is the next exon (spliced). Centring can spill across the junction even when same-exon
+UTR is available on the other side. The tiler has no notion of "prefer this side".
+
+**Options:**
+1. **Target-level (simplest):** in `createTargets`, when the coding part is short, extend the coding target
+   range into the adjacent same-exon UTR by enough to reach `PROBE_LENGTH` (staying within the exon), so the
+   tiler places a single-region probe without crossing the junction. Fall back to the current fold only if the
+   exon can't supply enough UTR. Keeps the tiler unchanged; the coding+UTR overlap is explicit and bounded.
+2. **Tiler-level:** give the short-range placement a direction preference - when one edge is a mapping boundary
+   (junction) and the other is interior (same-region), pad away from the junction (anchor near the junction,
+   grow into the contiguous region) instead of centring. More general (also helps rejection-split slivers), but
+   touches the shared tiling path and needs the DNA characterisation gate.
+3. **Do nothing:** keep folding short-coding boundary exons. Simplest; the coding bases are still covered (as
+   part of the whole-exon target), just not as a coding-specific probe.
+
+**Recommendation:** option 1 - localised to `GenesRna`, no change to the shared/validated tiler, and directly
+expresses "prefer UTR over adjacent exon". Decide the minimum coding length worth splitting, and whether the
+UTR-overlap probe should count toward the coding or UTR feature in stats/output.
 
 ## Other issues to keep in mind
 
