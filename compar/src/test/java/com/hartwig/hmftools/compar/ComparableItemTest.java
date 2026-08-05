@@ -241,7 +241,7 @@ public abstract class ComparableItemTest<I extends ComparableItem, C extends Ite
         Collection<String> fieldNames;
 
         if(!fields.isEmpty())
-            fieldNames = fields.stream().map(x -> x.name()).collect(Collectors.toSet());
+            fieldNames = fields.stream().map(x -> x.Name).collect(Collectors.toSet());
         else
             fieldNames = comparer.displayFieldNames();
 

@@ -183,12 +183,12 @@ public class FieldCheckCache
 
             for(FieldInfo fieldInfo : fields)
             {
-                if(!fieldInfo.fieldCheck().IsCompared) // ignore display only fields
+                if(!fieldInfo.FieldCheck.IsCompared) // ignore display only fields
                     continue;
 
-                if(categoryOverrides == null || !categoryOverrides.containsKey(fieldInfo.name()))
+                if(categoryOverrides == null || !categoryOverrides.containsKey(fieldInfo.Name))
                 {
-                    String message = format("category(%s) field(%s) missing from overrides file", comparer.category(), fieldInfo.name());
+                    String message = format("category(%s) field(%s) missing from overrides file", comparer.category(), fieldInfo.Name);
                     recordProblem(message, true);
                 }
             }

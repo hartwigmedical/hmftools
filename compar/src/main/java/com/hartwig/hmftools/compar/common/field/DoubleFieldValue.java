@@ -22,7 +22,7 @@ public class DoubleFieldValue extends FieldValue
         if(Value == otherDouble.Value)
             return false;
 
-        ThresholdFieldCheck thresholdFieldCheck = (ThresholdFieldCheck)Field.fieldCheck();
+        ThresholdFieldCheck thresholdFieldCheck = (ThresholdFieldCheck)Field.FieldCheck;
 
         double absDiff = abs(Value - otherDouble.Value);
         double percDiff = absDiff / max(abs(Value), abs(otherDouble.Value));

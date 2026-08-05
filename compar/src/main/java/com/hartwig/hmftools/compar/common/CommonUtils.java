@@ -64,7 +64,7 @@ public class CommonUtils
 
                 for(TruthsetValue truthsetValue : truthsetValues)
                 {
-                    if(fields.stream().noneMatch(x -> x.name().equals(truthsetValue.FieldName)))
+                    if(fields.stream().noneMatch(x -> x.Name.equals(truthsetValue.FieldName)))
                     {
                         CMP_LOGGER.error("category({}) invalid truthset entry({})", comparer.category(), truthsetValue);
                         return false;
@@ -189,11 +189,11 @@ public class CommonUtils
 
         for(FieldInfo field : fields)
         {
-            if(!field.fieldCheck().IsCompared)
+            if(!field.FieldCheck.IsCompared)
                 continue;
 
-            FieldValue oldValue = oldFieldValues.get(field.name());
-            FieldValue newValue = newFieldValues.get(field.name());
+            FieldValue oldValue = oldFieldValues.get(field.Name);
+            FieldValue newValue = newFieldValues.get(field.Name);
 
             if(oldValue == null || newValue == null)
                 continue;

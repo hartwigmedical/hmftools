@@ -112,14 +112,14 @@ public class DriverData extends ComparableItem
 
         for(FieldInfo field : fields)
         {
-            if(!field.fieldCheck().IsCompared)
+            if(!field.FieldCheck.IsCompared)
                 continue;
 
-            if(!bothPass && field.name().equals(DriverComparer.Fields.Likelihood.toString()))
+            if(!bothPass && field.Name.equals(DriverComparer.Fields.Likelihood.toString()))
                 continue;
 
-            FieldValue oldValue = oldFieldValues.get(field.name());
-            FieldValue newValue = newFieldValues.get(field.name());
+            FieldValue oldValue = oldFieldValues.get(field.Name);
+            FieldValue newValue = newFieldValues.get(field.Name);
 
             if(oldValue == null || newValue == null)
                 continue;

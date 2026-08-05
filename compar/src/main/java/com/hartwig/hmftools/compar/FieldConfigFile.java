@@ -40,7 +40,7 @@ public class FieldConfigFile
             {
                 List<FieldInfo> fields = comparer.fieldsList();
 
-                fields.stream().filter(x -> !x.displayOnly()).forEach(x -> lines.add(toLine(comparer.category(), x)));
+                fields.stream().filter(x -> !x.DisplayOnly).forEach(x -> lines.add(toLine(comparer.category(), x)));
             }
 
             Files.write(new File(filename).toPath(), lines);
@@ -57,17 +57,17 @@ public class FieldConfigFile
         Double absoluteThreshold = null;
         Double percentThreshold = null;
 
-        if(fieldInfo.fieldCheck() instanceof ThresholdFieldCheck)
+        if(fieldInfo.FieldCheck instanceof ThresholdFieldCheck)
         {
-            ThresholdFieldCheck thresholdFieldCheck = (ThresholdFieldCheck)fieldInfo.fieldCheck();
+            ThresholdFieldCheck thresholdFieldCheck = (ThresholdFieldCheck)fieldInfo.FieldCheck;
             absoluteThreshold = thresholdFieldCheck.AbsoluteDiff;
             percentThreshold = thresholdFieldCheck.PercentageDiff;
         }
 
         return new StringJoiner(TSV_DELIM)
                 .add(category.toString())
-                .add(fieldInfo.name())
-                .add(String.valueOf(fieldInfo.fieldCheck().IsCompared))
+                .add(fieldInfo.Name)
+                .add(String.valueOf(fieldInfo.FieldCheck.IsCompared))
                 .add(absoluteThreshold == null ? NONE_SETTING : String.valueOf(absoluteThreshold))
                 .add(percentThreshold == null ? NONE_SETTING : (percentThreshold * 100) + "%")
                 .toString();

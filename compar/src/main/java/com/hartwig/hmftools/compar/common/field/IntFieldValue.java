@@ -22,7 +22,7 @@ public class IntFieldValue extends FieldValue
         if(Value == otherValue.Value)
             return false;
 
-        ThresholdFieldCheck thresholdFieldCheck = (ThresholdFieldCheck)Field.fieldCheck();
+        ThresholdFieldCheck thresholdFieldCheck = (ThresholdFieldCheck)Field.FieldCheck;
 
         double absDiff = abs(Value - otherValue.Value);
         double percDiff = absDiff / max(abs(Value), abs(otherValue.Value));

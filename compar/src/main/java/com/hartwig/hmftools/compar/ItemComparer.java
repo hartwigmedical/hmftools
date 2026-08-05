@@ -32,7 +32,7 @@ public abstract class ItemComparer
 
     public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final PipelineSourcePaths fileSources)
     {
-        return loadFromFile(sampleId, germlineSampleId, fileSources);
+        return Collections.emptyList();
     }
 
     public List<ComparableItem> loadFromTruthset(final List<TruthsetValue> truthsetValues)
@@ -44,7 +44,7 @@ public abstract class ItemComparer
 
     public List<String> displayFieldNames()
     {
-        return mFields.stream().map(x -> x.name()).collect(Collectors.toList());
+        return mFields.stream().map(x -> x.Name).collect(Collectors.toList());
     }
 
     public boolean hasReportable() { return true; }

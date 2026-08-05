@@ -13,8 +13,8 @@ public abstract class FieldValue
         Field = field;
     }
 
-    public String name() { return Field.name(); }
-    public String formatString() { return Field.formatString(); }
+    public String name() { return Field.Name; }
+    public String formatString() { return Field.FormatString; }
 
     public abstract boolean hasDifference(final FieldValue other);
 

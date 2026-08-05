@@ -4,25 +4,25 @@ import java.util.List;
 
 public class FieldInfo
 {
-    private final String mName;
-    private final String mFormatString;
-    private final FieldCheck mFieldCheck;
-    private final boolean mDisplayOnly;
+    public final String Name;
+    public final String FormatString;
+    public final FieldCheck FieldCheck;
+    public final boolean DisplayOnly;
 
     public FieldInfo(final String name, final FieldCheck fieldCheck, final String formatString)
     {
-        mName = name;
-        mFormatString = formatString;
+        Name = name;
+        FormatString = formatString;
 
         if(fieldCheck == null)
         {
-            mFieldCheck = new FieldCheck(false);
-            mDisplayOnly = true;
+            FieldCheck = new FieldCheck(false);
+            DisplayOnly = true;
         }
         else
         {
-            mFieldCheck = fieldCheck;
-            mDisplayOnly = false;
+            FieldCheck = fieldCheck;
+            DisplayOnly = false;
         }
     }
 
@@ -31,13 +31,8 @@ public class FieldInfo
         return new FieldInfo(name, null, formatString);
     }
 
-    public String name() { return mName; }
-    public String formatString() { return mFormatString; }
-    public FieldCheck fieldCheck() { return mFieldCheck; }
-    public boolean displayOnly() { return mDisplayOnly; }
-
     public static FieldInfo findField(final String fieldName, final List<FieldInfo> fields)
     {
-        return fields.stream().filter(x -> x.name().equals(fieldName)).findFirst().orElse(null);
+        return fields.stream().filter(x -> x.Name.equals(fieldName)).findFirst().orElse(null);
     }
 }

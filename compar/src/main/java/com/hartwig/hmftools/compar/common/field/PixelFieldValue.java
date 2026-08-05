@@ -40,7 +40,7 @@ public class PixelFieldValue extends FieldValue
         int totalPixels = countSpanningPixels(otherImage, Image);
         double percDiff = (double) absDiff / totalPixels;
 
-        ThresholdFieldCheck thresholdFieldCheck = (ThresholdFieldCheck)Field.fieldCheck();
+        ThresholdFieldCheck thresholdFieldCheck = (ThresholdFieldCheck)Field.FieldCheck;
 
         boolean satisfiesAbsDiff = thresholdFieldCheck.AbsoluteDiff == null || absDiff > thresholdFieldCheck.AbsoluteDiff;
         boolean satisfiesRelDiff = thresholdFieldCheck.PercentageDiff == null || percDiff > thresholdFieldCheck.PercentageDiff;
