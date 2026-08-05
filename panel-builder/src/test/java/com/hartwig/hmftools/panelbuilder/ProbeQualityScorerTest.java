@@ -48,11 +48,12 @@ public class ProbeQualityScorerTest
         return result.getValue();
     }
 
-    private List<Double> computeQualityModel(final List<String> probes)
+    private List<Double> computeQualityModel(final List<String> probes, final List<List<ChrBaseRegion>> sourceRegions)
     {
         // Assert probes are batched per call as expected.
         assertEquals(Math.min(mModelResults.size(), BATCH_SIZE), probes.size());
         assertTrue(probes.size() < BUFFER_SIZE);
+        assertEquals(probes.size(), sourceRegions.size());
 
         ArrayList<Double> results = new ArrayList<>();
         for(String probe : probes)

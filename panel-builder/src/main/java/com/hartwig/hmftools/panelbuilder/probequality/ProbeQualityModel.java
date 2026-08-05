@@ -4,11 +4,17 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.panelbuilder.probequality.Utils.partitionStream;
 
-import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
+
+import htsjdk.samtools.SAMSequenceDictionary;
+import htsjdk.samtools.SAMSequenceRecord;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAligner;
@@ -26,13 +32,19 @@ public class ProbeQualityModel
     // Amount that one alignment match counts towards the risk score.
     // E.g. value of 10 means an alignment with score = mMatchScoreThreshold contributes 10 risk score points.
     private final int mMatchScoreOffset;
+    // BWA-MEM per-base match reward; a full-length perfect alignment scores mTargetProbeLength * mMatchScore.
+    private final int mMatchScore;
+    // Maps a BWA alignment's reference contig index (getRefId) to its chromosome name, so an alignment can be tested against a probe's source
+    // regions. Built from the reference sequence dictionary, whose order matches the BWA index.
+    private final Map<Integer, String> mRefIdToChromosome;
 
     private static final Logger LOGGER = LogManager.getLogger(ProbeQualityModel.class);
 
     public ProbeQualityModel(final Supplier<BwaMemAligner> alignerFactory, final int mTargetProbeLength, final int mMatchScoreThreshold,
-            final int mMatchScoreOffset)
+            final int mMatchScoreOffset, final Map<Integer, String> refIdToChromosome)
     {
         mAligner = alignerFactory.get();
+        mRefIdToChromosome = refIdToChromosome;
         if(mTargetProbeLength < 1)
         {
             throw new IllegalArgumentException("targetProbeLength must be >= 1");
@@ -47,6 +59,7 @@ public class ProbeQualityModel
         this.mMatchScoreOffset = mMatchScoreOffset;
 
         setBwaMemParams(mAligner);
+        mMatchScore = mAligner.getMatchScoreOption();
         logBwaMemParams(mAligner);
     }
 
@@ -65,15 +78,30 @@ public class ProbeQualityModel
     {
     }
 
-    public List<Result> computeFromSeqString(final List<String> probes)
+    // Builds the refId -> chromosome map the model needs, from a reference genome sequence dictionary. The dictionary order matches the BWA
+    // index contig order, so an alignment's getRefId() indexes into it.
+    public static Map<Integer, String> buildRefIdToChromosome(final SAMSequenceDictionary refGenomeDictionary)
     {
-        List<byte[]> probeBytes = probes.stream().map(String::getBytes).toList();
-        return computeFromSeqBytes(probeBytes);
+        return refGenomeDictionary.getSequences().stream()
+                .collect(Collectors.toMap(SAMSequenceRecord::getSequenceIndex, SAMSequenceRecord::getSequenceName));
     }
 
-    // Compute probe qualities for a list of probes.
-    public List<Result> computeFromSeqBytes(final List<byte[]> probes)
+    public List<Result> computeFromSeqString(final List<String> probes, final List<List<ChrBaseRegion>> probeSourceRegions)
     {
+        List<byte[]> probeBytes = probes.stream().map(String::getBytes).toList();
+        return computeFromSeqBytes(probeBytes, probeSourceRegions);
+    }
+
+    // Compute probe qualities for a list of probes. probeSourceRegions[i] is the reference region(s) probe i is built from (its intended
+    // capture loci): one region for a normal reference-contiguous probe, several for a constructed probe (each fragment of a variant/SV probe
+    // or RNA spliced probe). Alignments landing on those regions are the on-target captures and are excluded from the off-target risk; the
+    // rest count as off-target. The on-target quality is normalised against a theoretical full-length match.
+    public List<Result> computeFromSeqBytes(final List<byte[]> probes, final List<List<ChrBaseRegion>> probeSourceRegions)
+    {
+        if(probes.size() != probeSourceRegions.size())
+        {
+            throw new IllegalArgumentException("probes and probeSourceRegions must be the same size");
+        }
         probes.forEach(probe ->
         {
             if(probe.length != mTargetProbeLength)
@@ -83,7 +111,9 @@ public class ProbeQualityModel
         });
 
         List<List<BwaMemAlignment>> alignments = runAlignment(probes, 0);
-        return alignments.stream().map(this::computeFromAlignments).toList();
+        return IntStream.range(0, alignments.size())
+                .mapToObj(i -> computeFromAlignments(alignments.get(i), probeSourceRegions.get(i)))
+                .toList();
     }
 
     private List<List<BwaMemAlignment>> runAlignment(List<byte[]> probes, int batchSize)
@@ -131,24 +161,19 @@ public class ProbeQualityModel
         }
     }
 
-    private Result computeFromAlignments(final List<BwaMemAlignment> alignments)
+    private Result computeFromAlignments(final List<BwaMemAlignment> alignments, final List<ChrBaseRegion> sourceRegions)
     {
-        // Order by best match first.
-        alignments.sort(Comparator.comparing(BwaMemAlignment::getAlignerScore, Comparator.reverseOrder()));
-        // First alignment which is assumed to be the on-target exact match.
-        // FIXME: this assumes the on-target match is full length. For a sequence that is not contiguous in the reference genome (SV probes,
-        //  RNA spliced probes), BWA's best hit is only a partial (single-fragment) alignment with a lower score, so targetScore is
-        //  understated and the quality score is distorted (off-target risk overstated). Candidate fix: use a theoretical
-        //  targetScore = probeLength * matchScore for non-contiguous sequences. See RNA_DESIGN_NOTES "quality score of non-contiguous
-        //  constructed sequences". Track as its own task.
-        int targetScore = alignments.get(0).getAlignerScore();
+        // Normalise against a theoretical perfect full-length match. The probe's intended target is its source region(s): for a normal probe,
+        // the single region it was taken from; for a constructed probe (variant/SV, RNA spliced), each fragment's source locus - all of which
+        // it is designed to capture. Alignments landing on those regions are the on-target captures and are excluded; every other alignment
+        // above the threshold is off-target. (Previously the single top alignment was assumed to be a full-length on-target match and dropped,
+        // and its score used as the normaliser - both wrong for constructed sequences, whose best hit is only a partial fragment.)
+        int targetScore = mTargetProbeLength * mMatchScore;
         List<Integer> offTarget = alignments.stream()
-                // Drop the first alignment which is assumed to be the on-target exact match.
-                .skip(1)
+                .filter(alignment -> !isOnTarget(alignment, sourceRegions))
                 // Only need the alignment scores. The alignment score from BWA-MEM is effectively a similarity score.
                 .map(BwaMemAlignment::getAlignerScore)
-                // Keep only alignments with score above the configured threshold.
-                .takeWhile(score -> score >= mMatchScoreThreshold)
+                .filter(score -> score >= mMatchScoreThreshold)
                 .toList();
         int offTargetCount = offTarget.size();
         long offTargetScoreSum = offTarget.stream().mapToLong(s -> s).sum();
@@ -157,6 +182,27 @@ public class ProbeQualityModel
         double effectiveOffTargetMatchLength = (double) riskScore / (targetScore - mMatchScoreThreshold + mMatchScoreOffset);
         double qualityScore = 1 / (1 + effectiveOffTargetMatchLength);
         return new Result(qualityScore, riskScore, offTargetCount, offTargetScoreSum);
+    }
+
+    // Whether an alignment lands on one of the probe's source regions (an intended on-target capture). The alignment's reference contig index
+    // is resolved to a chromosome name via the reference sequence dictionary, then compared to the source regions.
+    private boolean isOnTarget(final BwaMemAlignment alignment, final List<ChrBaseRegion> sourceRegions)
+    {
+        String chromosome = mRefIdToChromosome.get(alignment.getRefId());
+        if(chromosome == null)
+        {
+            return false;
+        }
+        int alignmentStart = alignment.getRefStart() + 1;   // BWA reference positions are 0-based; source regions are 1-based.
+        int alignmentEnd = alignment.getRefEnd();
+        for(ChrBaseRegion region : sourceRegions)
+        {
+            if(chromosome.equals(region.chromosome()) && alignmentStart <= region.end() && alignmentEnd >= region.start())
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void setBwaMemParams(BwaMemAligner aligner)

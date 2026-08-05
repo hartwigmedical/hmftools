@@ -11,7 +11,6 @@ is in the sections further down. Everything in the batch/merge records below (A1
 | # | Item | Code tag / location | Notes |
 |---|------|---------------------|-------|
 | 1 | RNA generation performance | *(untagged)* | Largely resolved: Options A + A+ done (RNA phase ~1.7x faster, byte-identical). Cross-exon batching and DNA-coverRegion batching investigated → no further gain at ~10 cores (batching only helps novel-sequence/alignment probes, and per-exon batching already saturates). Only remaining lever is many-core servers (batch tuning) + the fixed profile-file load. See "Performance — RNA generation". |
-| 2 | Quality score of non-contiguous (spliced / SV) probes distorted | `FIXME` `ProbeQualityModel.computeFromAlignments` | `targetScore` assumes a full-length on-target match. Pre-existing (affects SV too). See "Open issue — quality score…". |
 | 3 | RefSeq/NM transcript resolution disabled | `TODO` `GenesRna.resolveTranscript` | Validate the non-1:1 Ensembl↔RefSeq mapping, then re-enable. |
 | 4 | Part-coding exon classified as fully coding | `TODO` `GenesRna.createTargets` | A long exon with few coding bases is tiled entirely as coding. Reconsider. |
 | 5 | `PanelData` getters return live internal lists | `TODO` `PanelData` | No live aliasing bug found; defensively copy (also `ProbeGenerationResult` ctor). Own commit. |
@@ -357,10 +356,24 @@ transcripts instead.
   assert in code at output time that DNA probes have ≤2 region segments.
 - **Phasing**: model refactor is a standalone first step (pure refactor, DNA tests green).
 
-## Open issue — quality score of non-contiguous constructed sequences
+## Quality score of non-contiguous constructed sequences [RESOLVED]
 
-**This is a pre-existing issue, not RNA-specific.** `ProbeQualityModel.computeFromAlignments`
-assumes `alignments.get(0)` is the full-length on-target exact self-match and uses its score as the
+**Resolved (region-based on-target exclusion).** `ProbeQualityModel` now takes each probe's source region(s)
+(`SequenceDefinition.regions()`) and a `refId->chromosome` map built from the reference sequence dictionary
+(`ProbeQualityModel.buildRefIdToChromosome`, the esvee/SagaMatcher pattern). In `computeFromAlignments`,
+alignments landing on any source region are the intended on-target captures and are excluded from the
+off-target risk; `targetScore` is the theoretical full-length score (`probeLength * matchScore`). This fixes
+both sub-distortions for constructed sequences: the understated `targetScore` (was read from a partial best
+hit) and the on-target fragments being miscounted as off-target. A contiguous probe has one source region, so
+its single on-target self-match is excluded exactly as before — DNA output is unchanged. Validated: RNA
+single-region QS byte-identical; spliced QS rose (mean +0.14, correcting the over-penalisation) with only a
+0.1% ripple in the kept-probe set. For SV probes both breakend flanks are source regions (we are targeting
+the SV, i.e. capturing both flanks to measure its allele fraction), so only genuine off-target repeats count.
+
+Original description of the (now-fixed) issue:
+
+**This was a pre-existing issue, not RNA-specific.** `ProbeQualityModel.computeFromAlignments` assumed
+`alignments.get(0)` was the full-length on-target exact self-match and used its score as the
 `targetScore` denominator that normalises the quality score.
 
 For a sequence that is **not contiguous in the reference genome**, BWA's best hit is only a partial

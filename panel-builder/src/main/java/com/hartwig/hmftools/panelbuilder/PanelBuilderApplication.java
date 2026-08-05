@@ -67,7 +67,8 @@ public class PanelBuilderApplication
         Supplier<BwaMemAligner> alignerFactory = () -> createBwaMemAligner(mConfig.bwaIndexImageFile(), mConfig.threads());
         ProbeQualityModel probeQualityModel = new ProbeQualityModel(
                 alignerFactory, PROBE_LENGTH,
-                probeQualityProfile.matchScoreThreshold(), probeQualityProfile.matchScoreOffset());
+                probeQualityProfile.matchScoreThreshold(), probeQualityProfile.matchScoreOffset(),
+                ProbeQualityModel.buildRefIdToChromosome(refGenomeSource.refGenomeFile().getSequenceDictionary()));
 
         mProbeGenerator = ProbeGenerator.construct(mRefGenome, probeQualityProfile, probeQualityModel, this::writeCandidateProbe);
         mRnaProbeGenerator = ProbeGenerator.construct(mRefGenome, probeQualityProfile, probeQualityModel, this::writeRnaCandidateProbe);

@@ -11,6 +11,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.OptionalDouble;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -26,7 +27,8 @@ public class ProbeQualityScorer
 {
     // Use function references rather than exact implementations to allow test mocks.
     private final Function<ChrBaseRegion, OptionalDouble> mComputeQualityProfile;
-    private final Function<List<String>, List<Double>> mComputeQualityModel;
+    // (sequences, sourceRegions) -> quality scores. sourceRegions[i] = the reference region(s) probe i is built from (its on-target loci).
+    private final BiFunction<List<String>, List<List<ChrBaseRegion>>, List<Double>> mComputeQualityModel;
     // Shortest region the profile can score; probes with any shorter region fall back to the model.
     private final int mProfileMinRegionLength;
     // Aim to batch this many probes together when invoking the probe quality model.
@@ -38,8 +40,8 @@ public class ProbeQualityScorer
     private static final int DEFAULT_MAX_BUFFER_SIZE = 50000;
 
     protected ProbeQualityScorer(final Function<ChrBaseRegion, OptionalDouble> computeQualityProfile,
-            final Function<List<String>, List<Double>> computeQualityModel, int profileMinRegionLength, int modelBatchSize,
-            int maxBufferSize)
+            final BiFunction<List<String>, List<List<ChrBaseRegion>>, List<Double>> computeQualityModel, int profileMinRegionLength,
+            int modelBatchSize, int maxBufferSize)
     {
         mComputeQualityProfile = computeQualityProfile;
         mComputeQualityModel = computeQualityModel;
@@ -56,7 +58,8 @@ public class ProbeQualityScorer
     {
         this(
                 qualityProfile::computeQualityScore,
-                probes -> qualityModel.computeFromSeqString(probes).stream().map(ProbeQualityModel.Result::qualityScore).toList(),
+                (probes, sourceRegions) ->
+                        qualityModel.computeFromSeqString(probes, sourceRegions).stream().map(ProbeQualityModel.Result::qualityScore).toList(),
                 qualityProfile.baseWindowLength(), DEFAULT_MODEL_BATCH_SIZE, DEFAULT_MAX_BUFFER_SIZE);
     }
 
@@ -181,6 +184,9 @@ public class ProbeQualityScorer
     {
         ArrayList<Probe> result = new ArrayList<>(probes.size());
         ArrayList<String> sequences = new ArrayList<>();
+        // Each model-scored probe's source region(s) - the reference loci it is built from (its intended on-target captures). Alignments on
+        // these are excluded from off-target risk. One region for a normal probe; several for a constructed one (variant/SV, RNA spliced).
+        ArrayList<List<ChrBaseRegion>> sourceRegions = new ArrayList<>();
         ArrayList<Integer> indices = new ArrayList<>();
         for(int i = 0; i < probes.size(); ++i)
         {
@@ -188,12 +194,13 @@ public class ProbeQualityScorer
             if(!probe.rejected() && probe.qualityScore() == null)
             {
                 sequences.add(requireNonNull(probe.sequence()));
+                sourceRegions.add(probe.definition().regions());
                 indices.add(i);
             }
             result.add(probe);
         }
 
-        List<Double> modelResults = mComputeQualityModel.apply(sequences);
+        List<Double> modelResults = mComputeQualityModel.apply(sequences, sourceRegions);
         for(int i = 0; i < indices.size(); ++i)
         {
             int index = indices.get(i);
