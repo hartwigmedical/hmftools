@@ -117,7 +117,8 @@ public class ProbeTiling
 
     // Unified tiling entry point. With neither edge pinned this is the ordinary centred tiling (the DNA path); pinning an edge flush to an
     // exon boundary is the RNA generalisation for splice-junction coverage.
-    public static List<Integer> calculateProbeTiling(final BaseRegion region, final BaseRegion probeBounds, boolean pinStart, boolean pinEnd)
+    public static List<Integer> calculateProbeTiling(final BaseRegion region, final BaseRegion probeBounds, boolean pinStart,
+            boolean pinEnd)
     {
         if(!pinStart && !pinEnd)
         {

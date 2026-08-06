@@ -29,7 +29,8 @@ public class ProbeQualityScorerTest
     private static final int PROFILE_MIN_REGION_LENGTH = 40;
 
     private final ProbeQualityScorer mScorer =
-            new ProbeQualityScorer(this::computeQualityProfile, this::computeQualityModel, PROFILE_MIN_REGION_LENGTH, BATCH_SIZE,
+            new ProbeQualityScorer(
+                    this::computeQualityProfile, this::computeQualityModel, PROFILE_MIN_REGION_LENGTH, BATCH_SIZE,
                     BUFFER_SIZE);
 
     // Helpers for making the test cases more automated.

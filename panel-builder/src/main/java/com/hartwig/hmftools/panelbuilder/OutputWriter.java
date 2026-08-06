@@ -42,7 +42,8 @@ public class OutputWriter implements AutoCloseable
 
     private static final Logger LOGGER = LogManager.getLogger(OutputWriter.class);
 
-    public OutputWriter(final String outputDir, @Nullable final String outputId, boolean verboseOutput, boolean rnaOutput) throws IOException
+    public OutputWriter(final String outputDir, @Nullable final String outputId, boolean verboseOutput, boolean rnaOutput)
+            throws IOException
     {
         Function<String, String> outputFilePath = fileName ->
         {

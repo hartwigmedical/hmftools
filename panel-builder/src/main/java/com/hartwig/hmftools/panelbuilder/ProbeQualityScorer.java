@@ -59,7 +59,10 @@ public class ProbeQualityScorer
         this(
                 qualityProfile::computeQualityScore,
                 (probes, sourceRegions) ->
-                        qualityModel.computeFromSeqString(probes, sourceRegions).stream().map(ProbeQualityModel.Result::qualityScore).toList(),
+                        qualityModel.computeFromSeqString(probes, sourceRegions)
+                                .stream()
+                                .map(ProbeQualityModel.Result::qualityScore)
+                                .toList(),
                 qualityProfile.baseWindowLength(), DEFAULT_MODEL_BATCH_SIZE, DEFAULT_MAX_BUFFER_SIZE);
     }
 

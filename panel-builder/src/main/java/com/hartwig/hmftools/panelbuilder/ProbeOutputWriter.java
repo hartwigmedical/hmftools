@@ -155,8 +155,10 @@ public class ProbeOutputWriter implements AutoCloseable
         if(verboseOutput)
         {
             Enum<?>[] candidateColumns = rna ? RnaCandidateProbesColumns.values() : CandidateProbesColumns.values();
-            BiConsumer<Probe, DelimFileWriter.Row> candidateRowWriter = rna ? this::writeRnaCandidateProbesRow : this::writeCandidateProbesRow;
-            mCandidateProbesTsvWriter = new DelimFileWriter<>(outputFilePath.apply(candidateProbesFile), candidateColumns, candidateRowWriter);
+            BiConsumer<Probe, DelimFileWriter.Row> candidateRowWriter =
+                    rna ? this::writeRnaCandidateProbesRow : this::writeCandidateProbesRow;
+            mCandidateProbesTsvWriter = new DelimFileWriter<>(
+                    outputFilePath.apply(candidateProbesFile), candidateColumns, candidateRowWriter);
             mCandidateProbesBuffer = new ArrayList<>(CANDIDATE_PROBES_BUFFER_SIZE);
         }
         else
@@ -333,7 +335,8 @@ public class ProbeOutputWriter implements AutoCloseable
             // TODO: should write the regions from the probe too?
             if(rejectedFeature.region() != null)
             {
-                writeBedRow(requireNonNull(rejectedFeature.region()), targetMetadataToBedName(rejectedFeature.metadata()),
+                writeBedRow(
+                        requireNonNull(rejectedFeature.region()), targetMetadataToBedName(rejectedFeature.metadata()),
                         mRejectedFeaturesBedWriter);
             }
         }

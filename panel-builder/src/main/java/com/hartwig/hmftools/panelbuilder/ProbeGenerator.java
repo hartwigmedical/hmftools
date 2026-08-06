@@ -226,7 +226,8 @@ public class ProbeGenerator
                     spec.mapping()::isRegionBoundary);
             // The coverage step does not add the candidate target region; add the exon region here.
             ChrBaseRegion exonRegion = spec.mapping().toGenomeRegions(spec.rangeStart(), spec.rangeEnd()).get(0);
-            result = result.add(new ProbeGenerationResult(emptyList(), List.of(new TargetRegion(exonRegion, spec.metadata())), emptyList()));
+            result = result.add(
+                    new ProbeGenerationResult(emptyList(), List.of(new TargetRegion(exonRegion, spec.metadata())), emptyList()));
             resultStore.addResult(result);
             total = total.add(result);
         }

@@ -162,7 +162,8 @@ public class ProbeQualityProfiler
         LOGGER.debug("Output file: {}", outputFile);
 
         mBaseWindowGenerator = new BaseWindowGenerator(refGenome, specificRegions, baseWindowLength, baseWindowSpacing, batchSize);
-        mProbeQualityModel = new ProbeQualityModel(alignerFactory, baseWindowLength, matchScoreThreshold, matchScoreOffset,
+        mProbeQualityModel = new ProbeQualityModel(
+                alignerFactory, baseWindowLength, matchScoreThreshold, matchScoreOffset,
                 ProbeQualityModel.buildRefIdToChromosome(refGenome.refGenomeFile().getSequenceDictionary()));
         mOutputWriter = initialiseOutputWriter(outputFile, mVerboseOutput);
     }
