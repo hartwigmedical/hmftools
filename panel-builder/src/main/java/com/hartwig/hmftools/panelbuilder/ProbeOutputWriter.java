@@ -170,12 +170,8 @@ public class ProbeOutputWriter implements AutoCloseable
     {
         LOGGER.debug("Writing {} panel probes to file", probes.size());
 
-        // Sort for consistent output. RNA orders by the full segment list (a total order over multi-region probes); DNA orders by its single
-        // region (probes with no single region sort last).
-        Comparator<Probe> order = mRna
-                ? Comparator.comparing(Probe::definition)
-                : Comparator.comparing(probe -> probe.definition().singleRegionOrNull(), Comparator.nullsLast(Comparator.naturalOrder()));
-        List<Probe> probesSorted = probes.stream().sorted(order).toList();
+        // Sort for consistent output. For the majority case of single-region probes this is just sort by region.
+        List<Probe> probesSorted = probes.stream().sorted(Comparator.comparing(Probe::definition)).toList();
 
         for(Probe probe : probesSorted)
         {

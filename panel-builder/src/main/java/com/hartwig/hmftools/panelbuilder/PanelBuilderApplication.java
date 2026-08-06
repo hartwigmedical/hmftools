@@ -104,7 +104,7 @@ public class PanelBuilderApplication
         SampleVariants.ExtraOutput sampleVariantsExtraOutput = generateSampleVariantProbes();
 
         LOGGER.info("Writing output");
-        ProbeOutputWriter dnaOutput = mOutputWriter.panelOutput();
+        ProbeOutputWriter dnaOutput = mOutputWriter.dnaPanelOutput();
         dnaOutput.writeProbes(mPanelData.probes());
         dnaOutput.writeCoveredTargetRegions(mPanelData.coveredTargetRegions());
         dnaOutput.writeCoveredRegions(mPanelData.probes());

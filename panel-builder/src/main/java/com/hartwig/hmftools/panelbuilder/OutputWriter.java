@@ -74,7 +74,7 @@ public class OutputWriter implements AutoCloseable
                 OutputWriter::writeSampleVariantInfoRow);
     }
 
-    public ProbeOutputWriter panelOutput()
+    public ProbeOutputWriter dnaPanelOutput()
     {
         return mDnaOutput;
     }
