@@ -70,48 +70,14 @@ public class GermlineVariantDataTest extends ComparableItemTest<GermlineVariantD
         fieldToAlternateValueInitializer.put(FLD_FILTER, b -> b.filters = alternateValueSource.Filters);
 
         nameToAlternateIndexInitializer = Map.of(
-                "Chromosome", b ->
-                {
-                    b.chromosome = alternateValueSource.Chromosome;
-                    b.comparisonChromosome = alternateValueSource.mComparisonChromosome;
-                },
-                "Position", b ->
-                {
-                    b.position = alternateValueSource.Position;
-                    b.comparisonPosition = alternateValueSource.mComparisonPosition;
-                },
+                "Chromosome", b -> b.chromosome = alternateValueSource.Chromosome,
+                "Position", b -> b.position = alternateValueSource.Position,
                 "Ref", b -> b.ref = alternateValueSource.Ref,
                 "Alt", b -> b.alt = alternateValueSource.Alt,
                 "Type", b -> b.type = alternateValueSource.Type
         );
         reportabilityFieldToFalseReportabilityInitializer = Map.of(FLD_REPORTED, b -> b.reported = false);
         nameToNonPassInitializer = Collections.emptyMap();
-    }
-
-    @Test
-    public void fullyMatchesSelfWithLiftover()
-    {
-        GermlineVariantData victim = TestGermlineVariantDataBuilder.BUILDER.create(b ->
-        {
-            b.comparisonChromosome = "8";
-            b.comparisonPosition = 10000;
-        });
-        GermlineVariantData liftoverVictim = TestGermlineVariantDataBuilder.BUILDER.create(b ->
-        {
-            b.chromosome = "8";
-            b.position = 10000;
-        });
-        FieldCheckCache detailedFieldConfig = createDefaultThresholds(MatchLevel.DETAILED);
-        FieldCheckCache reportableFieldConfig = createDefaultThresholds(MatchLevel.REPORTABLE);
-
-        assertTrue(victim.matches(liftoverVictim));
-        assertTrue(liftoverVictim.matches(victim));
-        assertNull(victim.findMismatch(comparer, liftoverVictim, MatchLevel.DETAILED, false));
-        assertNull(victim.findMismatch(comparer, liftoverVictim, MatchLevel.REPORTABLE, false));
-
-        Mismatch expectedMatch = new Mismatch(victim, liftoverVictim, MismatchType.FULL_MATCH, Collections.emptyList());
-        assertEquals(expectedMatch, victim.findMismatch(comparer, liftoverVictim, MatchLevel.DETAILED, true));
-        assertEquals(expectedMatch, victim.findMismatch(comparer, liftoverVictim, MatchLevel.REPORTABLE, true));
     }
 
     @Test

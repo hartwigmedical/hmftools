@@ -23,8 +23,8 @@ import com.hartwig.hmftools.compar.common.field.FieldValue;
 public class DriverData extends ComparableItem
 {
     public final DriverCatalog DriverCatalog;
+    public final String ComparisonChromosome;
 
-    public final String mComparisonChromosome;
     private final String mKey;
     private final boolean mCheckTranscript;
     private final boolean mIsPass;
@@ -35,7 +35,7 @@ public class DriverData extends ComparableItem
     {
         DriverCatalog = driverCatalog;
 
-        mComparisonChromosome = comparisonChromosome;
+        ComparisonChromosome = comparisonChromosome;
         mCheckTranscript = checkTranscript;
 
         String key = format("%s_%s", driverCatalog.driver(), driverCatalog.gene());

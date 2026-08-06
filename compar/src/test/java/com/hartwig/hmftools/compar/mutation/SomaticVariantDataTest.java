@@ -85,16 +85,8 @@ public class SomaticVariantDataTest extends ComparableItemTest<SomaticVariantDat
         fieldToAlternateValueInitializer.put(FLD_FILTER, b -> b.filters = alternateValueSource.Filters);
 
         nameToAlternateIndexInitializer = Map.of(
-                "Chromosome", b ->
-                {
-                    b.chromosome = alternateValueSource.Chromosome;
-                    b.comparisonChromosome = alternateValueSource.mComparisonChromosome;
-                },
-                "Position", b ->
-                {
-                    b.position = alternateValueSource.Position;
-                    b.comparisonPosition = alternateValueSource.mComparisonPosition;
-                },
+                "Chromosome", b -> b.chromosome = alternateValueSource.Chromosome,
+                "Position", b -> b.position = alternateValueSource.Position,
                 "Ref", b -> b.ref = alternateValueSource.Ref,
                 "Alt", b -> b.alt = alternateValueSource.Alt,
                 "Type", b -> b.type = alternateValueSource.Type
@@ -109,32 +101,6 @@ public class SomaticVariantDataTest extends ComparableItemTest<SomaticVariantDat
         );
     }
 
-    @Test
-    public void fullyMatchesSelfWithLiftover()
-    {
-        SomaticVariantData victim = TestSomaticVariantDataBuilder.BUILDER.create(b ->
-        {
-            b.comparisonChromosome = "8";
-            b.comparisonPosition = 10000;
-        });
-        SomaticVariantData liftoverVictim = TestSomaticVariantDataBuilder.BUILDER.create(b ->
-        {
-            b.chromosome = "8";
-            b.position = 10000;
-        });
-        FieldCheckCache detailedFieldConfig = createDefaultThresholds(MatchLevel.DETAILED);
-        FieldCheckCache reportableFieldConfig = createDefaultThresholds(MatchLevel.REPORTABLE);
-
-        assertTrue(victim.matches(liftoverVictim));
-        assertTrue(liftoverVictim.matches(victim));
-        assertNull(victim.findMismatch(comparer, liftoverVictim, MatchLevel.DETAILED, false));
-        assertNull(victim.findMismatch(comparer, liftoverVictim, MatchLevel.REPORTABLE, false));
-
-        Mismatch expectedMatch = new Mismatch(victim, liftoverVictim, MismatchType.FULL_MATCH, Collections.emptyList());
-        assertEquals(expectedMatch, victim.findMismatch(comparer, liftoverVictim, MatchLevel.DETAILED, true));
-        assertEquals(expectedMatch, victim.findMismatch(comparer, liftoverVictim, MatchLevel.REPORTABLE, true));
-    }
-
     @Ignore
     @Test
     public void unfilteredMatchHandledCorrectly()
@@ -147,8 +113,6 @@ public class SomaticVariantDataTest extends ComparableItemTest<SomaticVariantDat
             b.ref = passVictim.Ref;
             b.alt = passVictim.Alt;
             b.type = passVictim.Type;
-            b.comparisonChromosome = passVictim.mComparisonChromosome;
-            b.comparisonPosition = passVictim.mComparisonPosition;
             b.isFromUnfilteredVcf = true;
             b.filters = Set.of("TumorQual");
         });
@@ -171,16 +135,5 @@ public class SomaticVariantDataTest extends ComparableItemTest<SomaticVariantDat
         assertEquals(filteredVictim, oppositeMismatch.OldItem);
         assertEquals(passVictim, oppositeMismatch.NewItem);
         assertDifferencesAreForFields(union(SAGE_ONLY_FIELDS, Set.of(FLD_FILTER)), mismatch.DiffValues);
-    }
-
-    @Test
-    public void keyNonEmptyForLiftover()
-    {
-        SomaticVariantData victim = TestSomaticVariantDataBuilder.BUILDER.create(b ->
-        {
-            b.comparisonChromosome = "8";
-            b.comparisonPosition = 10000;
-        });
-        assertFalse(victim.key().isEmpty());
     }
 }

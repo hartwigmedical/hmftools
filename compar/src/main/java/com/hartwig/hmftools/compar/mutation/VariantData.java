@@ -47,9 +47,6 @@ public class VariantData extends ComparableItem
 
     public final boolean IsFromUnfilteredVcf; // may not use this class for unfiltered variants
 
-    public final String mComparisonChromosome;
-    public final int mComparisonPosition;
-
     static final String FLD_REPORTED = "Reported";
     static final String FLD_QUAL = "Qual";
     static final String FLD_FILTER = "Filter";
@@ -76,7 +73,7 @@ public class VariantData extends ComparableItem
             final String canonicalHgvsProteinImpact, final String otherReportedEffects, final int qual,
             final Set<String> filters, final double variantCopyNumber, final double purityAdjustedVaf,
             final int tumorSupportingReadCount, final int tumorTotalReadCount, final boolean isFromUnfilteredVcf,
-            final String comparisonChromosome, final int comparisonPosition, final List<FieldInfo> fields)
+            final List<FieldInfo> fields)
     {
         Category = category;
         Chromosome = chromosome;
@@ -101,9 +98,6 @@ public class VariantData extends ComparableItem
         TumorTotalReadCount = tumorTotalReadCount;
 
         IsFromUnfilteredVcf = isFromUnfilteredVcf;
-
-        mComparisonChromosome = comparisonChromosome;
-        mComparisonPosition = comparisonPosition;
 
         addBoolValue(FLD_REPORTED, reported, fields);
         addStringValue(FLD_HOTSPOT, hotspotStatus.toString(), fields);
@@ -132,15 +126,7 @@ public class VariantData extends ComparableItem
     @Override
     public String key()
     {
-        if(mComparisonPosition != Position)
-        {
-            return String.format("%s:%d %s>%s %s liftover(%s)",
-                    Chromosome, Position, Ref, Alt, Type, mComparisonPosition);
-        }
-        else
-        {
-            return String.format("%s:%d %s>%s %s", Chromosome, Position, Ref, Alt, Type);
-        }
+        return String.format("%s:%d %s>%s %s", Chromosome, Position, Ref, Alt, Type);
     }
 
     @Override
@@ -164,7 +150,7 @@ public class VariantData extends ComparableItem
     {
         final VariantData otherVar = (VariantData) other;
 
-        if(!mComparisonChromosome.equals(otherVar.Chromosome) || mComparisonPosition != otherVar.Position)
+        if(!Chromosome.equals(otherVar.Chromosome) || Position != otherVar.Position)
             return false;
 
         if(!Ref.equals(otherVar.Ref) || !Alt.equals(otherVar.Alt))
@@ -193,9 +179,6 @@ public class VariantData extends ComparableItem
             return PASS_FILTER;
         }
     }
-
-    public String comparisonChromosome() { return mComparisonChromosome; }
-    public int comparisonPosition() { return mComparisonPosition; }
 
     static List<String> sharedFieldNames()
     {

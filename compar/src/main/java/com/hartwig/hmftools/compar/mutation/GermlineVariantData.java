@@ -31,14 +31,13 @@ public class GermlineVariantData extends VariantData
             final String canonicalHgvsProteinImpact, final String otherReportedEffects, final int qual,
             final Set<String> filters, final double variantCopyNumber, final double purityAdjustedVaf,
             final int tumorSupportingReadCount, final int tumorTotalReadCount, final boolean isFromUnfilteredVcf,
-            final String comparisonChromosome, final int comparisonPosition,
             final List<FieldInfo> fields)
     {
         super(
                 GERMLINE_VARIANT, chromosome, position, ref, alt, type, gene, reported, hotspotStatus, tier,
                 canonicalEffect, canonicalCodingEffect, canonicalHgvsCodingImpact, canonicalHgvsProteinImpact, otherReportedEffects,
                 qual, filters, variantCopyNumber, purityAdjustedVaf, tumorSupportingReadCount, tumorTotalReadCount,
-                isFromUnfilteredVcf, comparisonChromosome, comparisonPosition, fields);
+                isFromUnfilteredVcf, fields);
     }
 
     public static GermlineVariantData fromContext(
@@ -52,8 +51,14 @@ public class GermlineVariantData extends VariantData
 
         VariantImpact variantImpact = VariantImpactSerialiser.fromVariantContext(context);
 
-        BasePosition comparisonPosition = determineComparisonGenomePosition(
-                chromosome, position, sourceType, config.RequiresLiftover, config.LiftoverCache);
+        if(config.RequiresLiftover && sourceType == SourceType.OLD)
+        {
+            BasePosition comparisonPosition = determineComparisonGenomePosition(
+                    chromosome, position, sourceType, config.RequiresLiftover, config.LiftoverCache);
+
+            position = comparisonPosition.Position;
+            chromosome = comparisonPosition.Chromosome;
+        }
 
         var tumorAllelicDepth = AllelicDepth.fromGenotype(context.getGenotype(sampleId));
 
@@ -75,8 +80,6 @@ public class GermlineVariantData extends VariantData
                 tumorAllelicDepth.AlleleReadCount,
                 tumorAllelicDepth.TotalReadCount,
                 fromUnfilteredFile,
-                comparisonPosition.Chromosome,
-                comparisonPosition.Position,
                 fields);
     }
 }

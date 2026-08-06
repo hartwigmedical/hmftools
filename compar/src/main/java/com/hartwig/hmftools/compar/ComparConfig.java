@@ -440,7 +440,7 @@ public class ComparConfig
         configBuilder.addConfigItem(KNOWN_MISMATCH_FILE, "File with sample curations or expected mismatches");
         configBuilder.addFlag(INCLUDE_MATCHES, "Also write matches to output file(s)");
         configBuilder.addFlag(RESTRICT_TO_DRIVERS, "Restrict any comparison involving genes to driver gene panel");
-        configBuilder.addFlag(REQUIRES_LIFTOVER, "Lift over ref positions from v37 to v 38");
+        configBuilder.addFlag(REQUIRES_LIFTOVER, "Lift over 'old' positions from v37 to v 38");
         configBuilder.addPath(FIELD_CONFIG_FILE, false, "Config file for overwriting field settings");
         configBuilder.addFlag(STRICT_FIELD_CONFIG, "Require a complete field config file to be provided");
 

@@ -74,8 +74,7 @@ public class TestGermlineVariantDataBuilder
                 chromosome, position, ref, alt, type, gene, reported, hotspotStatus, tier,
                 canonicalEffect, canonicalCodingEffect, canonicalHgvsCodingImpact, canonicalHgvsProteinImpact, otherReportedEffects,
                 (int)qual, filters, variantCopyNumber, purityAdjustedVaf, tumorSupportingReadCount, tumorTotalReadCount,
-                false, comparisonChromosome, comparisonPosition,
-                new GermlineVariantComparer(null, Collections.emptyMap()).fieldsList());
+                false, new GermlineVariantComparer(null, Collections.emptyMap()).fieldsList());
 
         /*
         SmallVariant variant = ImmutableSmallVariantImpl.builder()

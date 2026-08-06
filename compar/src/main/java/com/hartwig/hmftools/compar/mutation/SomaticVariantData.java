@@ -48,7 +48,6 @@ public class SomaticVariantData extends VariantData
             final String canonicalHgvsProteinImpact, final String otherReportedEffects, final int qual,
             final Set<String> filters, final double variantCopyNumber, final double purityAdjustedVaf,
             final int tumorSupportingReadCount, final int tumorTotalReadCount, final boolean isFromUnfilteredVcf,
-            final String comparisonChromosome, final int comparisonPosition,
             boolean biallelic, double biallelicProb, final boolean hasLPS, final double subclonalLikelihood,
             final List<FieldInfo> fields)
     {
@@ -56,7 +55,7 @@ public class SomaticVariantData extends VariantData
                 SOMATIC_VARIANT, chromosome, position, ref, alt, type, gene, reported, hotspotStatus, tier,
                 canonicalEffect, canonicalCodingEffect, canonicalHgvsCodingImpact, canonicalHgvsProteinImpact, otherReportedEffects,
                 qual, filters, variantCopyNumber, purityAdjustedVaf, tumorSupportingReadCount, tumorTotalReadCount,
-                isFromUnfilteredVcf, comparisonChromosome, comparisonPosition, fields);
+                isFromUnfilteredVcf, fields);
 
         BiallelicProbability = biallelicProb;
         Biallelic = biallelic;
@@ -80,8 +79,14 @@ public class SomaticVariantData extends VariantData
 
         VariantImpact variantImpact = VariantImpactSerialiser.fromVariantContext(context);
 
-        BasePosition comparisonPosition = determineComparisonGenomePosition(
-                chromosome, position, sourceType, config.RequiresLiftover, config.LiftoverCache);
+        if(config.RequiresLiftover && sourceType == SourceType.OLD)
+        {
+            BasePosition comparisonPosition = determineComparisonGenomePosition(
+                    chromosome, position, sourceType, config.RequiresLiftover, config.LiftoverCache);
+
+            position = comparisonPosition.Position;
+            chromosome = comparisonPosition.Chromosome;
+        }
 
         var tumorAllelicDepth = AllelicDepth.fromGenotype(context.getGenotype(sampleId));
 
@@ -103,8 +108,6 @@ public class SomaticVariantData extends VariantData
                 tumorAllelicDepth.AlleleReadCount,
                 tumorAllelicDepth.TotalReadCount,
                 fromUnfilteredFile,
-                comparisonPosition.Chromosome,
-                comparisonPosition.Position,
                 context.getAttributeAsBoolean(PURPLE_BIALLELIC_FLAG, false),
                 context.getAttributeAsDouble(PURPLE_BIALLELIC_PROB, 0),
                 context.hasAttribute(LOCAL_PHASE_SET),

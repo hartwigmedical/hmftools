@@ -36,8 +36,6 @@ public class TestSomaticVariantDataBuilder
     public int tumorTotalReadCount = 116;
     public int tumorSupportingReadCount = 21;
     public boolean isFromUnfilteredVcf = false;
-    public String comparisonChromosome = "7";
-    public int comparisonPosition = 140453136;
 
     private static final Consumer<TestSomaticVariantDataBuilder> ALTERNATE_INITIALIZER = b ->
     {
@@ -65,8 +63,6 @@ public class TestSomaticVariantDataBuilder
         b.purityAdjustedVaf = 1.1;
         b.tumorTotalReadCount = 312;
         b.tumorSupportingReadCount = 50;
-        b.comparisonChromosome = "8";
-        b.comparisonPosition = 10000;
     };
 
     public static final TestComparableItemBuilder<TestSomaticVariantDataBuilder, SomaticVariantData> BUILDER =
@@ -82,8 +78,7 @@ public class TestSomaticVariantDataBuilder
                 chromosome, position, ref, alt, type, gene, reported, hotspotStatus, tier,
                 canonicalEffect, canonicalCodingEffect, canonicalHgvsCodingImpact, canonicalHgvsProteinImpact, otherReportedEffects,
                 qual, filters, variantCopyNumber, purityAdjustedVaf, tumorSupportingReadCount, tumorTotalReadCount,
-                isFromUnfilteredVcf, comparisonChromosome, comparisonPosition,
-                biallelic, biallelicProb, hasLPS, subclonalLikelihood,
+                isFromUnfilteredVcf, biallelic, biallelicProb, hasLPS, subclonalLikelihood,
                 new SomaticVariantComparer(null, Collections.emptyMap()).fieldsList());
     }
 }

@@ -142,7 +142,7 @@ public class SomaticVariantComparer extends ItemComparer
                 SomaticVariantData matchedVariant = null;
 
                 // shift index2 back to index at or before first potentially matching variant
-                while(index2 > 0 && (index2 >= chromosomeNewVariants.size() || chromosomeNewVariants.get(index2).Position >= oldVariant.comparisonPosition()))
+                while(index2 > 0 && (index2 >= chromosomeNewVariants.size() || chromosomeNewVariants.get(index2).Position >= oldVariant.Position))
                 {
                     --index2;
                 }
@@ -157,7 +157,7 @@ public class SomaticVariantComparer extends ItemComparer
                         chromosomeNewVariants.remove(index2);
                         break;
                     }
-                    else if(newVariant.Position > oldVariant.comparisonPosition())
+                    else if(newVariant.Position > oldVariant.Position)
                     {
                         break;
                     }
@@ -226,7 +226,7 @@ public class SomaticVariantComparer extends ItemComparer
             return null;
 
         List<VariantContext> candidates = unfilteredVcfReader.findVariants(
-                testVariant.comparisonChromosome(), testVariant.comparisonPosition(), testVariant.comparisonPosition());
+                testVariant.Chromosome, testVariant.Position, testVariant.Position);
 
         for(VariantContext context : candidates)
         {
@@ -236,7 +236,7 @@ public class SomaticVariantComparer extends ItemComparer
             if(!testVariant.Ref.equals(ref) || !testVariant.Alt.equals(alt))
                 continue;
 
-            final AllelicDepth tumorAllelicDepth = AllelicDepth.fromGenotype(context.getGenotype(sourceSampleId));
+            AllelicDepth tumorAllelicDepth = AllelicDepth.fromGenotype(context.getGenotype(sourceSampleId));
 
             // only extract fields set by Sage (ie not Pave nor Purple)
             return new SomaticVariantData(
@@ -245,7 +245,6 @@ public class SomaticVariantComparer extends ItemComparer
                     "", "", "", "",
                     "", (int)context.getPhredScaledQual(), context.getFilters(), 0, 0,
                     tumorAllelicDepth.AlleleReadCount, tumorAllelicDepth.TotalReadCount, true,
-                    testVariant.Chromosome, testVariant.Position,
                     false, 0, false, 0, mFields);
         }
 

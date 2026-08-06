@@ -43,7 +43,7 @@ public class DriverDataTest extends ComparableItemTest<DriverData, DriverCompare
                 DriverComparer.Fields.Likelihood.toString(), b -> b.likelihood = alternateValueSource.DriverCatalog.driverLikelihood(),
                 DriverComparer.Fields.MinCopyNumber.toString(), b -> b.minCopyNumber = alternateValueSource.DriverCatalog.minCopyNumber(),
                 DriverComparer.Fields.MaxCopyNumber.toString(), b -> b.maxCopyNumber = alternateValueSource.DriverCatalog.maxCopyNumber(),
-                DriverComparer.Fields.Chromosome.toString(), b -> b.comparisonChromosome = alternateValueSource.mComparisonChromosome,
+                DriverComparer.Fields.Chromosome.toString(), b -> b.comparisonChromosome = alternateValueSource.ComparisonChromosome,
                 DriverComparer.Fields.ChromosomeBand.toString(), b -> b.chromosomeBand = alternateValueSource.DriverCatalog.chromosomeBand()
         );
         nameToAlternateIndexInitializer = Map.of(
