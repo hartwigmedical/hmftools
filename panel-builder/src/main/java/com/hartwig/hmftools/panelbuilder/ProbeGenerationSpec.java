@@ -23,8 +23,7 @@ public sealed interface ProbeGenerationSpec
     {
     }
 
-    // Generate exon-aware (RNA) probes covering a probe-space target range within a single exon of a transcript's exon mapping. Submitting
-    // many of these in one batch lets the generator batch the expensive junction-crossing quality-score alignments across all exons.
+    // Generate exon-aware (RNA) probes covering a probe-space target range within a single exon of a transcript's exon mapping.
     record CoverExonRange(
             RegionMapping mapping,
             int rangeStart,

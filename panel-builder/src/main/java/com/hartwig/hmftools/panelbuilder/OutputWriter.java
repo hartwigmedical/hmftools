@@ -23,8 +23,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 
-// Writes all file output data. The per-panel probe output (probes, regions, rejections, gene stats, candidate probes) is delegated to a
-// ProbeOutputWriter, one for the DNA panel and, when requested, one for the RNA panel. Sample variant info is DNA-panel only.
+// Writes all file output data. Per-panel probe output is delegated to a probe-output writer, one for the DNA panel and, when requested, one
+// for the RNA panel. Sample variant info is DNA-panel only.
 public class OutputWriter implements AutoCloseable
 {
     private final ProbeOutputWriter mDnaOutput;

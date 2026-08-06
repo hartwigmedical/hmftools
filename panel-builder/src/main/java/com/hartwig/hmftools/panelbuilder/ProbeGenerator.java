@@ -74,23 +74,10 @@ public class ProbeGenerator
         return new ProbeGenerator(refGenome.chromosomeLengths(), probeEvaluator, candidateCallback);
     }
 
-    // Object to encapsulate batch generation of probes.
-    //
-    // Why batching, and why only some spec types are pooled:
-    // The expensive step is the probe quality score. It has two paths, and only one benefits from batching:
-    //   - A probe whose sequence exists contiguously in the reference is scored by the fast in-memory quality profile - single-threaded and
-    //     cheap. Pooling these parallelises nothing.
-    //   - A probe with a NOVEL sequence (not present contiguously in the reference) has no profile entry, so it falls back to the BWA alignment
-    //     model. BWA parallelises across the queries within one align call, so aligning many novel-sequence candidates together keeps all the
-    //     threads busy - a large speedup (measured ~7x vs aligning one at a time).
-    // So batching is only worthwhile for the generation types that can produce novel-sequence probes:
-    //   - SingleProbe (variant / SV probes - the constructed sequence spans a breakend or variant, so it is novel): pooled across all specs
-    //     (singleProbeBatch).
-    //   - CoverExonRange (RNA - a junction-crossing probe splices two exons, so it is novel): pooled per exon inside coverMappedRange, which
-    //     already exceeds the core count and saturates the alignment threads; pooling further across exons was measured to give no speedup at
-    //     ~10 threads (it would help only when cores far exceed the per-exon candidate count), so exon specs are generated one at a time here.
-    // Every other type only ever produces reference-contiguous probes (single-region DNA tiling, het sites, CDR3, gene coding regions), so it
-    // is profile-scored and there is nothing to batch - those "generic" specs are handled one at a time.
+    // Batches probe generation so the expensive path - scoring a novel (non-reference-contiguous) sequence via BWA alignment - can align many
+    // candidates in one call, where BWA parallelises across queries (~7x speedup). Only spec types that produce novel sequences are pooled:
+    // variant/SV probes span a breakend so are pooled across all specs; RNA exon ranges cross splice junctions so are pooled per exon (which
+    // already saturates the aligner). Reference-contiguous probes are profile-scored with nothing to parallelise, so they run one at a time.
     public class Batch
     {
         private final List<ProbeGenerationSpec> mGenericSpecs = new ArrayList<>();
@@ -129,8 +116,6 @@ public class ProbeGenerator
 
         private ProbeGenerationResult generateGenericSpecs(final PanelCoverage coverage, PanelStore resultStore)
         {
-            // Not pooled: these only produce reference-contiguous (non-novel) sequences, so they are profile-scored, not aligned - batching
-            // would parallelise nothing.
             return mGenericSpecs.stream().map(spec ->
                     {
                         ProbeGenerationResult result = generateGenericSpec(spec, coverage);
@@ -142,8 +127,6 @@ public class ProbeGenerator
 
         private ProbeGenerationResult generateSingleProbeSpecs(final PanelCoverage coverage, PanelStore resultStore)
         {
-            // Pooled across all specs: variant/SV probes have novel sequences, so they route to the alignment model, which parallelises across
-            // the queries in one align call.
             return singleProbeBatch(mSingleProbeSpecs, coverage, resultStore);
         }
 
@@ -208,9 +191,7 @@ public class ProbeGenerator
             subregions.forEach(subregion -> LOGGER.debug("Split region into uncovered subregion: {}", subregion));
         }
 
-        // DNA runs the shared probe-space coverage over an identity (whole-chromosome) mapping: probe-space position = genome position - 1.
-        // No tiling edges are pinned (chromosome ends and target edges are arbitrary, not feature boundaries), so it reproduces the
-        // genome-space tiling exactly.
+        // Identity (whole-chromosome) mapping with no pinned edges, so this reproduces the plain genome-space tiling exactly.
         RegionMapping mapping = RegionMapping.wholeChromosome(region.chromosome(), mChromosomeLengths.get(region.chromosome()));
         IntPredicate noPinning = position -> false;
         ProbeGenerationResult result = subregions.stream()
@@ -233,10 +214,8 @@ public class ProbeGenerator
     {
     }
 
-    // Generates exon-aware (RNA) probes for a batch of CoverExonRange specs, adding each result to the store and returning the combined
-    // result. Each exon covers a probe-space range within a single mapped exon: tiling edges coinciding with an exon boundary are pinned flush
-    // (good splice-junction coverage), and a probe window near an exon edge maps to a spliced (multi-region) probe. Exons are generated one at
-    // a time - the alignment of an exon's junction-crossing candidates is already batched within coverMappedRange (see the Batch comment).
+    // Generates exon-aware (RNA) probes for a batch of exon-range specs, combining the results. Tiling edges are pinned flush to exon
+    // boundaries for splice-junction coverage; a window near an edge becomes a spliced multi-region probe.
     private ProbeGenerationResult generateExonRangeSpecs(final List<ProbeGenerationSpec.CoverExonRange> specs, final PanelStore resultStore)
     {
         ProbeGenerationResult total = new ProbeGenerationResult();
@@ -245,7 +224,7 @@ public class ProbeGenerator
             ProbeGenerationResult result = coverMappedRange(
                     spec.mapping(), spec.rangeStart(), spec.rangeEnd(), spec.metadata(), spec.evalCriteria(), spec.localSelectStrategy(),
                     spec.mapping()::isRegionBoundary);
-            // coverMappedRange does not add the candidate target region (it mirrors coverUncoveredRegion); add the exon region here.
+            // The coverage step does not add the candidate target region; add the exon region here.
             ChrBaseRegion exonRegion = spec.mapping().toGenomeRegions(spec.rangeStart(), spec.rangeEnd()).get(0);
             result = result.add(new ProbeGenerationResult(emptyList(), List.of(new TargetRegion(exonRegion, spec.metadata())), emptyList()));
             resultStore.addResult(result);
@@ -254,30 +233,23 @@ public class ProbeGenerator
         return total;
     }
 
-    // Probe-space analogue of coverUncoveredRegion, driven off a RegionMapping (identity mapping for DNA, exon mapping for RNA). The target
-    // range [rangeStart, rangeEnd) is in probe-space. Candidate windows map back to genome via the mapping (a single region for DNA, possibly
-    // spliced for RNA). Candidate target regions are not added here; the caller adds them. Probe-space positions are wrapped as 1-indexed
-    // BaseRegions (position + 1) so the shared BaseRegion maths apply directly.
+    // Covers a probe-space target range [rangeStart, rangeEnd) using the region mapping (identity for DNA, ordered exons for RNA). Candidate
+    // windows map back to genome regions - one for DNA, possibly spliced for RNA. Probe-space positions are wrapped as 1-indexed regions so
+    // the shared region maths apply. The caller adds candidate target regions, not this method.
     private ProbeGenerationResult coverMappedRange(final RegionMapping mapping, int rangeStart, int rangeEnd, final TargetMetadata metadata,
             final ProbeEvaluator.Criteria evalCriteria, final ProbeSelector.Strategy localSelect, final IntPredicate pinBoundary)
     {
         int minStart = max(0, rangeStart - PROBE_LENGTH + 1);
         int maxStart = min(mapping.length() - PROBE_LENGTH, rangeEnd - 1);
         BaseRegion targetRegion = spaceRegion(rangeStart, rangeEnd);
-        // TODO? Can't-fill case: when the whole mapping is shorter than a probe (mapping.length() < PROBE_LENGTH), maxStart < minStart, so no
-        //  candidate window fits and the target is left uncovered (no probe). This is the RNA short-exon padding limit - a target exon plus all
-        //  adjacent exonic sequence available to pad across junctions still totals < PROBE_LENGTH (a very short transcript, or a tiny exon whose
-        //  neighbours are also short). Probes are fixed at PROBE_LENGTH throughout (alignment model, quality profile, output), so no full-length
-        //  probe can be built. Currently such a target silently gets no coverage. Decide the desired behaviour: accept no coverage (and document
-        //  it), or a fallback (e.g. a shorter probe, which is a pipeline-wide change). See RNA_DESIGN_NOTES follow-up #7.
+        // TODO? When the whole mapping is shorter than a probe, no window fits and the target gets no coverage - the short-exon padding limit.
+        //  Probes are fixed length throughout, so a fix means a pipeline-wide change (e.g. shorter probes). See RNA_DESIGN_NOTES follow-up #7.
 
         // Accepted candidate windows indexed by probe-space start (as a 1-indexed coordinate), merged into maximal acceptable sub-ranges.
         Map<Integer, Probe> acceptableProbes = new HashMap<>();
 
-        // Pass 1: within-exon (single-region) candidates only. These are the cheap, profile-scored path and cover any exon sequence at least a
-        // probe length long. Spliced (junction-crossing) candidates are expensive - they route to the alignment model - and are only ever
-        // selected to pad a short sub-range across a junction, so they are deferred to pass 2 and generated only where single-region probes
-        // leave the target uncovered. For the DNA identity mapping every candidate is single-region, so pass 2 is inert.
+        // Pass 1: cheap within-exon (single-region) candidates only. The expensive spliced candidates are deferred to pass 2 and built only
+        // where these leave the target uncovered. For the DNA identity mapping every candidate is single-region, so pass 2 is inert.
         List<Probe> singleRegionCandidates = IntStream.rangeClosed(minStart, maxStart)
                 .mapToObj(start -> probeAtStart(mapping, start, rangeStart, rangeEnd, metadata))
                 .filter(probe -> probe.definition().regions().size() == 1)
@@ -286,19 +258,16 @@ public class ProbeGenerator
                 .filter(Probe::accepted)
                 .forEachOrdered(probe -> acceptableProbes.put(spaceWindow(probeSpaceStart(mapping, probe)).start(), probe));
 
-        // Pass 2: spliced candidates only for target positions no acceptable single-region probe covers (short exons; short sub-ranges left by
-        // a rejected region abutting a junction). Spliced windows exist only near exon boundaries, so this is empty for a covered exon
-        // interior and bounded to the junction neighbourhood otherwise.
+        // Pass 2: spliced candidates only where no acceptable single-region probe covers the target (short exons, or sub-ranges abutting a
+        // junction). Bounded to the junction neighbourhood, so it is empty for a covered exon interior.
         List<BaseRegion> uncoveredBySingleRegion = regionNegatedIntersection(
                 targetRegion, acceptableProbes.values().stream().map(probe -> spaceWindow(probeSpaceStart(mapping, probe))));
         if(!uncoveredBySingleRegion.isEmpty())
         {
             SortedSet<Integer> splicedStarts = allSplicedStartsOverlapping(uncoveredBySingleRegion, minStart, maxStart);
 
-            // Short-exon fast path: with no single-region candidate the whole exon is covered (if at all) by one centred padded probe, and
-            // that single probe can only be placed within PROBE_SHIFT_MAX of the centred tiling position - so aligning every junction-crossing
-            // position is wasted. Evaluate just that window; only if the centred candidate itself is unacceptable can the placement shift and
-            // depend on the wider acceptance pattern, in which case fall back to the full sweep. This is behaviour-preserving.
+            // Short-exon fast path: with no single-region candidate the exon is covered by one centred padded probe placeable only near the
+            // centred position, so evaluate just that neighbourhood, falling back to the full sweep only if nothing lands there. Exact.
             SortedSet<Integer> toEvaluate = splicedStarts;
             List<Integer> centreStarts = List.of();
             if(singleRegionCandidates.isEmpty())
@@ -371,8 +340,8 @@ public class ProbeGenerator
         return new ProbeGenerationResult(probes, emptyList(), rejectedFeatures);
     }
 
-    // Probe-space analogue of coverAcceptableSubregion, pin-aware. A tiling edge that coincides with a mapping boundary (exon boundary for
-    // RNA; never for the DNA identity mapping) is pinned flush; otherwise the DNA shift constraints apply (probes may extend past the target).
+    // Tiles and shifts probes over an acceptable sub-range. A tiling edge coinciding with an exon boundary is pinned flush; otherwise the
+    // usual shift constraints apply (probes may extend past the target). Pinning never triggers for the DNA identity mapping.
     private CoverAcceptableSubregionResult coverAcceptableMappedSubrange(final RegionMapping mapping, final BaseRegion acceptableSubregion,
             final BaseRegion targetRegion, final Map<Integer, Probe> acceptableProbes, final ProbeSelector.Strategy localSelect,
             final IntPredicate pinBoundary)
@@ -380,9 +349,8 @@ public class ProbeGenerator
         BaseRegion tilingTarget = regionIntersection(acceptableSubregion, targetRegion).orElseThrow();
         BaseRegion probeBounds = acceptableSubregion;
 
-        // Pinning flushes the outermost probes to feature boundaries, which is only meaningful when tiling multiple probes. A range that fits
-        // in a single probe (within the uncovered budget) is centred instead - it cannot be flush to both boundaries, and a short range is
-        // centred and padded across the boundary. This is inert for DNA (never pins).
+        // Pinning the outermost probes flush to boundaries is only meaningful with multiple probes; a range fitting a single probe is centred
+        // instead. Inert for DNA.
         boolean singleProbe = tilingTarget.baseLength() <= PROBE_LENGTH + REGION_UNCOVERED_MAX;
         boolean pinStart = !singleProbe && pinBoundary.test(tilingTarget.start() - 1);
         boolean pinEnd = !singleProbe && pinBoundary.test(tilingTarget.end());

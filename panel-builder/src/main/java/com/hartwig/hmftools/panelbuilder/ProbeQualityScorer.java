@@ -141,10 +141,8 @@ public class ProbeQualityScorer
     {
         if(canUseProfile(probe.definition()))
         {
-            // The profile scores each region against fixed-length windows and cannot score a region shorter than one window. That similarity
-            // measure is length-dependent and has no empirical basis below the window length, so any such probe falls back to the model
-            // (which scores the full-length probe sequence). Applies to any probe with a short region, e.g. an RNA probe crossing an exon
-            // junction with only a few bases in one exon, or a variant probe with a very short region.
+            // The profile scores fixed-length windows and cannot score a region shorter than one window, so any probe with such a short
+            // region falls back to the model (e.g. an RNA junction probe with few bases in one exon, or a short-region variant probe).
             if(probe.definition().regions().stream().anyMatch(region -> region.baseLength() < mProfileMinRegionLength))
             {
                 return OptionalDouble.empty();
@@ -184,8 +182,7 @@ public class ProbeQualityScorer
     {
         ArrayList<Probe> result = new ArrayList<>(probes.size());
         ArrayList<String> sequences = new ArrayList<>();
-        // Each model-scored probe's source region(s) - the reference loci it is built from (its intended on-target captures). Alignments on
-        // these are excluded from off-target risk. One region for a normal probe; several for a constructed one (variant/SV, RNA spliced).
+        // Each model-scored probe's source region(s) - the reference loci it is built from, used to exclude on-target alignments.
         ArrayList<List<ChrBaseRegion>> sourceRegions = new ArrayList<>();
         ArrayList<Integer> indices = new ArrayList<>();
         for(int i = 0; i < probes.size(); ++i)

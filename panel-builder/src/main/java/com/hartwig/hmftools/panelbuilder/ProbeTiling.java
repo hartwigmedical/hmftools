@@ -16,8 +16,7 @@ import java.util.stream.IntStream;
 
 import com.hartwig.hmftools.common.region.BaseRegion;
 
-// Pure positional maths for evenly tiling probes over a region. Coordinate-space agnostic (works on any 1-D position range), so it is shared
-// by DNA genome-space tiling and RNA probe-space tiling.
+// Pure positional maths for evenly tiling probes over a 1-D position range. Coordinate-space agnostic, so shared by DNA and RNA tiling.
 public class ProbeTiling
 {
     // Calculates the best probe tiling of a region.
@@ -116,9 +115,8 @@ public class ProbeTiling
         return probes;
     }
 
-    // Unified tiling entry point. Tiles a region, pinning an edge flush when it coincides with a mapping boundary (exon boundary for RNA);
-    // an unpinned edge is a normal tiling edge with a small permitted uncovered gap. With neither edge pinned this is the ordinary centred
-    // tiling (identical to the DNA path); pinning is the RNA generalisation for splice-junction coverage.
+    // Unified tiling entry point. With neither edge pinned this is the ordinary centred tiling (the DNA path); pinning an edge flush to an
+    // exon boundary is the RNA generalisation for splice-junction coverage.
     public static List<Integer> calculateProbeTiling(final BaseRegion region, final BaseRegion probeBounds, boolean pinStart, boolean pinEnd)
     {
         if(!pinStart && !pinEnd)
@@ -129,11 +127,8 @@ public class ProbeTiling
         return calculateContainedTiling(region, pinStart, pinEnd);
     }
 
-    // Tiles probes strictly contained within the region, optionally pinning the outermost probes flush to the region edges.
-    // Used for RNA exon tiling: pin an edge that coincides with an exon boundary (so the splice-junction-proximal sequence is covered), and
-    // leave an edge unpinned when it abuts a rejected region (a small uncovered gap there is acceptable). Probes never extend outside the
-    // region (unlike the centred DNA tiling), so this is the natural fit for the region-mapping (probe-space) model.
-    // Returns the probe start positions. Empty if the region is shorter than a probe (the caller should pad instead).
+    // Tiles probes strictly contained within the region, optionally pinning the outermost probes flush to the region edges (unlike the centred
+    // tiling, probes never extend outside). Returns the probe start positions, empty if the region is shorter than a probe.
     public static List<Integer> calculateContainedTiling(final BaseRegion region, boolean pinStart, boolean pinEnd)
     {
         if(!region.hasValidPositions())
@@ -147,8 +142,8 @@ public class ProbeTiling
             return emptyList();
         }
 
-        // REGION_UNCOVERED_MAX is the total uncovered budget for the whole region, not per edge. A pinned edge must be flush (no uncovered
-        // there), so the budget applies only when at least one edge is unpinned.
+        // The uncovered budget is for the whole region, not per edge, and a pinned edge must be flush - so it applies only when an edge is
+        // unpinned.
         int allowedUncovered = (pinStart && pinEnd) ? 0 : REGION_UNCOVERED_MAX;
         int probeCount = (int) ceil(max(1, length - allowedUncovered) / (double) PROBE_LENGTH);
         // How much of the region the probes span; the remainder (if any) is the allowed uncovered edge slack.

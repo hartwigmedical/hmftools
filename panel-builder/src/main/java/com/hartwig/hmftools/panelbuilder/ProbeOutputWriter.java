@@ -29,10 +29,9 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.BiConsumer;
 import org.jetbrains.annotations.Nullable;
 
-// Writes the output files for one probe panel (DNA or RNA): probes (TSV/FASTA/BED), covered target regions, covered regions, candidate
-// target regions, rejected features, gene stats, and (verbose only) candidate probes. DNA and RNA share this logic; they differ only in the
-// probes/candidate-probes TSV layout (DNA uses the start/end BasicProbeLayout, limited to two regions; RNA lists all segments generically to
-// allow spliced probes) and the FASTA id prefix.
+// Writes the output files for one probe panel (DNA or RNA): probes, covered/candidate regions, rejected features, gene stats, and (verbose
+// only) candidate probes. DNA and RNA share this logic, differing only in the probe TSV layout (DNA uses fixed start/insert/end columns
+// limited to two regions; RNA lists all segments generically for spliced probes) and the FASTA id prefix.
 public class ProbeOutputWriter implements AutoCloseable
 {
     private final boolean mRna;
@@ -70,8 +69,7 @@ public class ProbeOutputWriter implements AutoCloseable
         GCContent
     }
 
-    // RNA probes may span more than two regions (spliced across exon junctions), so unlike the DNA probe format all segments are listed
-    // generically. Ref segments are genome-forward (see RNA design decision).
+    // RNA probes may span more than two regions (spliced across junctions), so all segments are listed generically.
     private enum RnaProbesColumns
     {
         Segments,
@@ -172,8 +170,8 @@ public class ProbeOutputWriter implements AutoCloseable
     {
         LOGGER.debug("Writing {} panel probes to file", probes.size());
 
-        // Sort for consistent output. RNA uses the full SequenceDefinition (a total order over multi-region probes); DNA sorts by its single
-        // region (variant probes with no single region sort last).
+        // Sort for consistent output. RNA orders by the full segment list (a total order over multi-region probes); DNA orders by its single
+        // region (probes with no single region sort last).
         Comparator<Probe> order = mRna
                 ? Comparator.comparing(Probe::definition)
                 : Comparator.comparing(probe -> probe.definition().singleRegionOrNull(), Comparator.nullsLast(Comparator.naturalOrder()));
@@ -212,9 +210,7 @@ public class ProbeOutputWriter implements AutoCloseable
 
     private void writeProbesRow(final Probe probe, DelimFileWriter.Row row)
     {
-        // Note this throws if the probe is not in the right format.
-        // The DNA panel probes output format represents at most a start and end region. Multi-region (e.g. spliced) probes require a
-        // different output; RNA has its own format.
+        // The DNA format represents at most a start and end region, so this throws on a multi-region probe (RNA has its own format).
         BasicProbeLayout layout = BasicProbeLayout.from(probe.definition());
         ChrBaseRegion start = layout.startRegion();
         Orientation startOrientation = layout.startOrientation();

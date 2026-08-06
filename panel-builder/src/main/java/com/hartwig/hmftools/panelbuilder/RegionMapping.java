@@ -12,11 +12,9 @@ import java.util.OptionalInt;
 import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
-// An ordered list of non-overlapping reference genome regions treated as contiguous in probe-sequence space.
-// Probe-sequence space is 0-indexed [0, length): the regions concatenated in list order.
-// This lets probe generation reach outside a target region by consulting the mapping to find the adjacent genome region - for DNA the
-// mapping is a whole chromosome (so it just continues along the genome), for RNA it is the ordered exons (so it continues into the adjacent
-// exon). The mapping is genome-forward and orientation-agnostic; strand handling (if any) is the caller's concern.
+// An ordered list of non-overlapping reference genome regions treated as contiguous in probe-sequence space, 0-indexed [0, length) in list
+// order. Lets probe generation continue past a region boundary into the adjacent region (the whole chromosome for DNA, the next exon for
+// RNA). Genome-forward and orientation-agnostic; strand handling is the caller's concern.
 public class RegionMapping
 {
     private final List<ChrBaseRegion> mRegions;
@@ -54,8 +52,7 @@ public class RegionMapping
         mLength = mRegions.stream().mapToInt(ChrBaseRegion::baseLength).sum();
     }
 
-    // Identity mapping: a whole chromosome as a single region, so probe-space is genome position - 1. Extension along probe-space just
-    // continues along the chromosome - i.e. the DNA case.
+    // Identity mapping - a whole chromosome as one region, so probe-space is genome position - 1 (the DNA case).
     public static RegionMapping wholeChromosome(final String chromosome, int length)
     {
         return new RegionMapping(List.of(new ChrBaseRegion(chromosome, 1, length)));
@@ -66,9 +63,8 @@ public class RegionMapping
         return mLength;
     }
 
-    // Checks if a probe-space position coincides with a boundary between mapped regions, i.e. the start of the first region (0), the end of
-    // the last region (length), or a junction between two adjacent regions. Used to decide when to pin a tiling edge flush to an exon
-    // boundary (for good splice-junction coverage).
+    // Whether a probe-space position coincides with a region boundary (start, end, or a junction between adjacent regions). Used to decide
+    // when to pin a tiling edge flush to an exon boundary.
     public boolean isRegionBoundary(int probeSpacePosition)
     {
         if(probeSpacePosition == 0)
@@ -126,9 +122,8 @@ public class RegionMapping
         throw new IllegalStateException("Probe-space position not found");
     }
 
-    // Converts a probe-space range [spaceStart, spaceEnd) to the ordered genome regions it covers, split at region boundaries.
-    // A range within one mapped region yields one region; a range crossing junctions yields several. The caller checks any condition it
-    // needs (e.g. exactly one region).
+    // Converts a probe-space range [spaceStart, spaceEnd) to the ordered genome regions it covers, split at region boundaries: one region if
+    // within a single mapped region, several if it crosses junctions.
     public List<ChrBaseRegion> toGenomeRegions(int spaceStart, int spaceEnd)
     {
         if(!(spaceStart >= 0 && spaceStart < spaceEnd && spaceEnd <= mLength))

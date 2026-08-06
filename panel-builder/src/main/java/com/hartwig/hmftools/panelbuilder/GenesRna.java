@@ -34,10 +34,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 
-// Probes covering the transcribed (exonic) sequence of selected genes, for RNA panels.
-// Coding sequence is always covered; the 5' and 3' UTRs are optional per gene. Probes are exon-aware: they only cover exonic bases, tiled
-// within each exon and flush to splice junctions, with short exons padded across the junction into the adjacent exon. This is all driven off
-// a per-gene RegionMapping (the merged exons as a contiguous probe-space) and ProbeGenerator.coverExonRange.
+// Probes covering the transcribed (exonic) sequence of selected genes, for RNA panels. Coding sequence is always covered; the 5' and 3' UTRs
+// are optional per gene. Probes are exon-aware - tiled within each exon, flush to splice junctions, with short exons padded across junctions
+// into the adjacent exon.
 public class GenesRna
 {
     private static final TargetMetadata.Type TARGET_TYPE = TargetMetadata.Type.GENE_RNA;
@@ -95,7 +94,7 @@ public class GenesRna
     private record GeneDefinition(
             String geneName,
             GeneOptions options,
-            // Empty means all transcripts of the gene (merged); otherwise the specific transcripts to use (ENST or NM ids).
+            // Empty means the canonical transcript; otherwise the specific Ensembl transcripts to use (ENST ids).
             List<String> transcriptNames
     )
     {
@@ -244,10 +243,8 @@ public class GenesRna
         return error ? emptyList() : resolved;
     }
 
-    // Resolves a single Ensembl transcript by its TransName. RefSeq (NM) resolution is not yet supported (needs additional validation of the
-    // non-1:1 Ensembl<->RefSeq mapping), so any non-Ensembl id is reported as not found.
-    // TODO: validate the Ensembl<->RefSeq mapping (RefSeqId may be null or multi-valued) and re-enable NM resolution via a RefSeqId fallback
-    //  with clear not-found / ambiguous errors.
+    // Resolves a single Ensembl transcript by name. RefSeq (NM) ids are reported as not found for now.
+    // TODO: support NM resolution via the (non-1:1) Ensembl<->RefSeq mapping, with clear not-found / ambiguous errors.
     @Nullable
     static TranscriptData resolveTranscript(final GeneData geneData, final List<TranscriptData> allTranscripts,
             final String transcriptName)
@@ -289,8 +286,7 @@ public class GenesRna
     private static ProbeGenerationResult generateProbes(final List<GeneTranscriptData> genes, final ProbeGenerator probeGenerator,
             PanelData panelData)
     {
-        // Build one CoverExonRange spec per exon target and submit them as a single batch, so the generator can batch the (expensive)
-        // junction-crossing quality-score alignments across all exons rather than per exon.
+        // One spec per exon target, submitted as a single batch so the expensive junction-crossing alignments are batched together.
         List<ProbeGenerationSpec> specs = new ArrayList<>();
         for(GeneTranscriptData gene : genes)
         {
@@ -309,15 +305,12 @@ public class GenesRna
         return probeGenerator.generateBatch(specs.stream(), panelData);
     }
 
-    // Computes the exon-aware target ranges for a gene: the coding sequence (always) and, if requested, the 5' and 3' UTRs. All exons of the
-    // selected transcripts are merged into one RegionMapping (so short-exon probes can pad across junctions), then each merged exon is
-    // classified by how many of its bases are coding vs noncoding:
-    //   - coding exon (some coding, less than a probe of noncoding): one whole-exon coding target;
-    //   - noncoding exon (some noncoding, less than a probe of coding): one whole-exon UTR target (5' or 3' by position, strand-aware);
-    //   - partially coding exon (at least a probe of each): split into a coding target plus the flanking UTR target(s), so a long exon's UTR
-    //     is not covered as coding.
-    // A whole exon or exon part is therefore probed once, with a single feature type. UTR targets are kept only if the corresponding UTR is
-    // enabled.
+    // Computes the exon-aware target ranges for a gene: the coding sequence (always) and, if requested, the 5' and 3' UTRs. The selected
+    // transcripts' exons are merged, then each merged exon is classified by its coding vs noncoding base counts:
+    //   - mostly coding (< a probe of noncoding): one whole-exon coding target;
+    //   - mostly noncoding (< a probe of coding): one whole-exon UTR target (5' or 3' by position, strand-aware);
+    //   - partially coding (at least a probe of each): split into a coding target plus the flanking UTR target(s).
+    // Each exon or exon part is thus probed once, with a single feature type; UTR targets are kept only if that UTR is enabled.
     static GeneTargets createTargets(final GeneData geneData, final List<TranscriptData> transcripts, final GeneOptions options)
     {
         List<GeneUtils.MergedExonRegion> mergedExons = mergeExons(transcripts);
@@ -350,10 +343,8 @@ public class GenesRna
             boolean isCodingExon = codingBases > 0 && nonCodingBases < PROBE_LENGTH;
             boolean isNonCodingExon = nonCodingBases > 0 && codingBases < PROBE_LENGTH;
 
-            // TODO: small coding part of a boundary exon. When the coding part is shorter than a probe it is folded into a whole-exon target
-            //  (coding here, or UTR if the coding part is the smaller side). To give it a coding-specific probe, split it out and pad the short
-            //  coding probe into the adjacent same-exon UTR (contiguous, single-region) rather than across the splice junction into the next
-            //  exon (spliced). See RNA_DESIGN_NOTES "Planned - small coding part padding" (follow-up #4).
+            // TODO: a coding part shorter than a probe is folded into a whole-exon target rather than getting its own coding probe padded into
+            //  the adjacent same-exon UTR. See RNA_DESIGN_NOTES follow-up #4.
             if(isCodingExon)
             {
                 // Any noncoding portion is shorter than a probe, so cover the whole exon as coding.
@@ -393,9 +384,8 @@ public class GenesRna
         return new GeneTargets(mapping, selected);
     }
 
-    // Targets for a noncoding gene (no coding transcripts): the transcript is all noncoding exonic sequence, so it is covered as UTR when
-    // either UTR is requested. With no coding span there is no real 5' vs 3' distinction, so each exon is one whole-exon UTR target labelled
-    // with whichever UTR is enabled (5' if both). If neither UTR is requested, nothing is produced.
+    // Targets for a noncoding gene: all exonic sequence is covered as UTR if either UTR is requested. With no coding span there is no 5'/3'
+    // distinction, so each exon is one UTR target labelled with whichever UTR is enabled (5' if both).
     private static GeneTargets noncodingGeneTargets(final GeneData geneData, final List<GeneUtils.MergedExonRegion> mergedExons,
             final RegionMapping mapping, final GeneOptions options)
     {

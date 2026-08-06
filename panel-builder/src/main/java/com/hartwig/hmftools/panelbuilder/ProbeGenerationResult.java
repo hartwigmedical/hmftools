@@ -71,9 +71,8 @@ public record ProbeGenerationResult(
     // Convenience method for creating a result from a single rejected probe.
     public static ProbeGenerationResult rejectProbe(final Probe probe)
     {
-        // If the probe is entirely determined by a single reference genome region, report that region as rejected. Otherwise the probe's
-        // sequence is not a single reference region (a variant/SV probe, or an RNA spliced exon probe), so report the whole probe, giving the
-        // user the constructed sequence to inspect rather than a single genome region.
+        // For a single-region probe, report that region as rejected; otherwise (variant/SV, or RNA spliced) report the whole probe so the user
+        // can inspect the constructed sequence.
         if(probe.definition().isSingleRegion())
         {
             return ProbeGenerationResult.rejectTargets(probeTargetRegions(probe));

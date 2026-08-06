@@ -147,9 +147,8 @@ public class SequenceUtils
         return true;
     }
 
-    // Checks whether the probe sequence is within maxBasesDifference bases of a contiguous stretch of the reference genome.
-    // True only for simple near-ref probes: an exact single region, a single breakend with a small insert, or a same-chromosome
-    // SNV/small INDEL/SV. Anything more complex (translocations, spliced multi-region probes) is treated as dissimilar.
+    // Whether the probe sequence is within maxBasesDifference bases of a contiguous stretch of reference genome. True only for simple near-ref
+    // probes (single region, single breakend + small insert, same-chromosome SNV/small INDEL/SV); anything more complex is dissimilar.
     public static boolean isSequenceSimilarToRef(final SequenceDefinition definition, int maxBasesDifference)
     {
         List<ChrBaseRegion> regions = definition.regions();

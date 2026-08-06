@@ -8,8 +8,7 @@ import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import org.jetbrains.annotations.Nullable;
 
 // The start + insert + end decomposition of a probe sequence. Valid only for probes with at most two regions (single region, single
-// breakend, or a two-region variant). Wraps up this view (and its validation) used by the DNA panel output and probe-region mapping,
-// keeping that assumption out of SequenceDefinition itself.
+// breakend, or a two-region variant), keeping that assumption out of SequenceDefinition.
 public record BasicProbeLayout(
         @Nullable ChrBaseRegion startRegion,
         @Nullable Orientation startOrientation,
