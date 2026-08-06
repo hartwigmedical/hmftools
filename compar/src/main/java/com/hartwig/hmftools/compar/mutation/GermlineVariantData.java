@@ -38,6 +38,8 @@ public class GermlineVariantData extends VariantData
                 canonicalEffect, canonicalCodingEffect, canonicalHgvsCodingImpact, canonicalHgvsProteinImpact, otherReportedEffects,
                 qual, filters, variantCopyNumber, purityAdjustedVaf, tumorSupportingReadCount, tumorTotalReadCount,
                 isFromUnfilteredVcf, fields);
+
+        addDefaultValues(fields);
     }
 
     public static GermlineVariantData fromContext(

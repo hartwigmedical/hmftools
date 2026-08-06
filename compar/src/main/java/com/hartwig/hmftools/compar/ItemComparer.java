@@ -2,6 +2,7 @@ package com.hartwig.hmftools.compar;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -35,7 +36,7 @@ public abstract class ItemComparer
         return Collections.emptyList();
     }
 
-    public List<ComparableItem> loadFromTruthset(final List<TruthsetValue> truthsetValues)
+    public List<ComparableItem> loadFromTruthset(final Map<String,List<TruthsetValue>> valuesByKey)
     {
         return Collections.emptyList();
     }

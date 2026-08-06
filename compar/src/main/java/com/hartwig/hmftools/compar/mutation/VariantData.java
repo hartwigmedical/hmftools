@@ -2,6 +2,7 @@ package com.hartwig.hmftools.compar.mutation;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS_FILTER;
+import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.FieldCheckCache.getOrMakeFieldCheck;
 
 import java.util.List;
@@ -11,6 +12,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.HotspotType;
+import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.compar.ComparableItem;
@@ -99,6 +101,7 @@ public class VariantData extends ComparableItem
 
         IsFromUnfilteredVcf = isFromUnfilteredVcf;
 
+        /*
         addBoolValue(FLD_REPORTED, reported, fields);
         addStringValue(FLD_HOTSPOT, hotspotStatus.toString(), fields);
         addStringValue(FLD_TIER, tier.toString(), fields);
@@ -120,6 +123,31 @@ public class VariantData extends ComparableItem
         }
 
         addStringValue(FLD_FILTER, filtersStr(), fields);
+        */
+    }
+
+    protected void addDefaultValues(final List<FieldInfo> fields)
+    {
+        addBoolValue(FLD_REPORTED, Reported, fields);
+        addStringValue(FLD_HOTSPOT, HotspotStatus.toString(), fields);
+        addStringValue(FLD_TIER, Tier.toString(), fields);
+        addIntValue(FLD_QUAL, Qual, fields);
+        addIntValue(FLD_TUMOR_SUPPORTING_READ_COUNT, TumorSupportingReadCount, fields);
+        addIntValue(FLD_TUMOR_TOTAL_READ_COUNT, TumorTotalReadCount, fields);
+        addStringValue(FLD_FILTER, filtersStr(), fields);
+
+        if(!IsFromUnfilteredVcf)
+        {
+            // leave out of comparison if created from a filtered variant
+            addDoubleValue(FLD_VARIANT_COPY_NUMBER, VariantCopyNumber, fields);
+            addDoubleValue(FLD_PURITY_ADJUSTED_VAF, PurityAdjustedVaf, fields);
+            addStringValue(FLD_GENE, Gene, fields);
+            addStringValue(FLD_CANON_EFFECT, CanonicalEffect, fields);
+            addStringValue(FLD_CODING_EFFECT, CanonicalCodingEffect, fields);
+            addStringValue(FLD_HGVS_CODING, CanonicalHgvsCodingImpact, fields);
+            addStringValue(FLD_HGVS_PROTEIN, CanonicalHgvsProteinImpact, fields);
+            addStringValue(FLD_OTHER_REPORTED, OtherReportedEffects, fields);
+        }
     }
 
     @Override
@@ -228,5 +256,19 @@ public class VariantData extends ComparableItem
                 null));
 
         fields.add(new FieldInfo(FLD_FILTER, getOrMakeFieldCheck(fieldCheckMap, FLD_FILTER), null));
+    }
+
+    public static SimpleVariant fromTruthsetKey(final String key)
+    {
+        try
+        {
+            String[] keyParts = key.split(":", 4);
+            return new SimpleVariant(keyParts[0], Integer.parseInt(keyParts[1]), keyParts[2], keyParts[3]);
+        }
+        catch(Exception e)
+        {
+            CMP_LOGGER.error("invalid variant key({})", key);
+            return null;
+        }
     }
 }

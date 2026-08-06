@@ -19,6 +19,7 @@ import java.nio.file.Files;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -71,16 +72,10 @@ public class CommonUtils
                     }
                 }
 
-                items = comparer.loadFromTruthset(truthsetValues);
+                // group by items keys
+                Map<String, List<TruthsetValue>> truthsetValuesByKey = truthsetValues.stream().collect(Collectors.groupingBy(x -> x.Key));
 
-                /* an invalid check but need to group by key
-                if(items.size() != truthsetValues.size())
-                {
-                    CMP_LOGGER.error("category({}) failed to map all truthset entries(truthset={} items={})",
-                            comparer.category(), truthsetValues.size(), items.size());
-                    return false;
-                }
-                */
+                items = comparer.loadFromTruthset(truthsetValuesByKey);
             }
 
             if(items != null)

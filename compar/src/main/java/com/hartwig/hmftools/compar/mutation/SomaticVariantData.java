@@ -16,15 +16,18 @@ import static com.hartwig.hmftools.compar.common.CommonUtils.determineComparison
 import java.util.List;
 import java.util.Set;
 
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.HotspotType;
+import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.common.SourceType;
+import com.hartwig.hmftools.compar.common.TruthsetValue;
 import com.hartwig.hmftools.compar.common.field.FieldInfo;
 
 import htsjdk.variant.variantcontext.VariantContext;
@@ -61,11 +64,6 @@ public class SomaticVariantData extends VariantData
         Biallelic = biallelic;
         HasLPS = hasLPS;
         SubclonalLikelihood = subclonalLikelihood;
-
-        addDoubleValue(FLD_BIALLELIC_PROB, biallelicProb, fields);
-        addBoolValue(FLD_BIALLELIC, biallelic, fields);
-        addBoolValue(FLD_LPS, hasLPS, fields);
-        addDoubleValue(FLD_SUBCLONAL_LIKELIHOOD, subclonalLikelihood, fields);
     }
 
     public static SomaticVariantData fromContext(
@@ -90,7 +88,7 @@ public class SomaticVariantData extends VariantData
 
         var tumorAllelicDepth = AllelicDepth.fromGenotype(context.getGenotype(sampleId));
 
-        return new SomaticVariantData(
+        SomaticVariantData variant = new SomaticVariantData(
                 chromosome, position, ref, alt, VariantType.type(context),
                 variantImpact.GeneName,
                 context.getAttributeAsBoolean(REPORTED_FLAG, false),
@@ -113,6 +111,107 @@ public class SomaticVariantData extends VariantData
                 context.hasAttribute(LOCAL_PHASE_SET),
                 context.getAttributeAsDouble(SUBCLONAL_LIKELIHOOD_FLAG, 0),
                 fields);
+
+        variant.addVAllValues(fields);
+        return variant;
+    }
+
+    protected void addVAllValues(final List<FieldInfo> fields)
+    {
+        addDefaultValues(fields);
+
+        addBoolValue(FLD_LPS, HasLPS, fields);
+
+        if(!IsFromUnfilteredVcf)
+        {
+            addDoubleValue(FLD_BIALLELIC_PROB, BiallelicProbability, fields);
+            addBoolValue(FLD_BIALLELIC, Biallelic, fields);
+            addDoubleValue(FLD_SUBCLONAL_LIKELIHOOD, SubclonalLikelihood, fields);
+        }
+    }
+
+    public static SomaticVariantData fromTruthset(final List<TruthsetValue> truthsetValues, final List<FieldInfo> fields)
+    {
+        SimpleVariant simpleVariant = fromTruthsetKey(truthsetValues.get(0).Key);
+
+        if(simpleVariant == null)
+            return null;
+
+        String chromosome = simpleVariant.Chromosome;
+        int position = simpleVariant.Position;
+        String ref = simpleVariant.Ref;
+        String alt = simpleVariant.Alt;
+        VariantType type = simpleVariant.Type;
+
+        String gene = "";
+        boolean reported = false;
+        HotspotType hotspotStatus = HotspotType.NON_HOTSPOT;
+        VariantTier tier = VariantTier.LOW_CONFIDENCE;
+        String canonicalEffect = "";
+        String canonicalCodingEffect = "";
+        String canonicalHgvsCodingImpact = "";
+        String canonicalHgvsProteinImpact = "";
+        String otherReportedEffects = "";
+        int qual = 0;
+        Set<String> filters = Sets.newHashSet();
+        double variantCopyNumber = 0;
+        double purityAdjustedVaf = 0;
+        int tumorSupportingReadCount = 0;
+        int tumorTotalReadCount = 0;
+        boolean biallelic = false;
+        double biallelicProb = 0;
+        boolean hasLPS = false;
+        double subclonalLikelihood= 0;
+
+        for(TruthsetValue truthsetValue : truthsetValues)
+        {
+            if(truthsetValue.FieldName.equals(FLD_REPORTED))
+                reported = Boolean.parseBoolean(truthsetValue.Value);
+            else if(truthsetValue.FieldName.equals(FLD_GENE))
+                gene = truthsetValue.Value;
+            else if(truthsetValue.FieldName.equals(FLD_PURITY_ADJUSTED_VAF))
+                purityAdjustedVaf = Double.parseDouble(truthsetValue.Value);
+            else if(truthsetValue.FieldName.equals(FLD_VARIANT_COPY_NUMBER))
+                variantCopyNumber = Double.parseDouble(truthsetValue.Value);
+            else if(truthsetValue.FieldName.equals(FLD_CANON_EFFECT))
+                canonicalEffect = truthsetValue.Value;
+            else if(truthsetValue.FieldName.equals(FLD_TUMOR_TOTAL_READ_COUNT))
+                tumorTotalReadCount = Integer.parseInt(truthsetValue.Value);
+            else if(truthsetValue.FieldName.equals(FLD_TUMOR_SUPPORTING_READ_COUNT))
+                tumorSupportingReadCount = Integer.parseInt(truthsetValue.Value);
+        }
+
+        SomaticVariantData variant = new SomaticVariantData(
+                chromosome, position, ref, alt, type, gene, reported, hotspotStatus, tier,
+                canonicalEffect, canonicalCodingEffect, canonicalHgvsCodingImpact, canonicalHgvsProteinImpact, otherReportedEffects,
+                qual, filters, variantCopyNumber, purityAdjustedVaf, tumorSupportingReadCount, tumorTotalReadCount,
+                false, biallelic, biallelicProb, hasLPS, subclonalLikelihood, fields);
+
+        variant.addTruthsetValues(truthsetValues, fields);
+
+        return variant;
+    }
+
+    private void addTruthsetValues(List<TruthsetValue> truthsetValues, final List<FieldInfo> fields)
+    {
+        // now add fields
+        for(TruthsetValue truthsetValue : truthsetValues)
+        {
+            if(truthsetValue.FieldName.equals(FLD_GENE))
+                addBoolValue(FLD_REPORTED, Reported, fields);
+            else if(truthsetValue.FieldName.equals(FLD_GENE))
+                addStringValue(FLD_GENE, Gene, fields);
+            else if(truthsetValue.FieldName.equals(FLD_PURITY_ADJUSTED_VAF))
+                addDoubleValue(FLD_PURITY_ADJUSTED_VAF, PurityAdjustedVaf, fields);
+            else if(truthsetValue.FieldName.equals(FLD_VARIANT_COPY_NUMBER))
+                addDoubleValue(FLD_VARIANT_COPY_NUMBER, VariantCopyNumber, fields);
+            else if(truthsetValue.FieldName.equals(FLD_CANON_EFFECT))
+                addStringValue(FLD_CANON_EFFECT, CanonicalEffect, fields);
+            else if(truthsetValue.FieldName.equals(FLD_TUMOR_TOTAL_READ_COUNT))
+                addIntValue(FLD_TUMOR_TOTAL_READ_COUNT, TumorTotalReadCount, fields);
+            else if(truthsetValue.FieldName.equals(FLD_TUMOR_SUPPORTING_READ_COUNT))
+                addIntValue(FLD_TUMOR_SUPPORTING_READ_COUNT, TumorSupportingReadCount, fields);
+        }
     }
 
     public String toString() { return format("%s gene(%s:%s)", key(), Gene, CanonicalCodingEffect); }

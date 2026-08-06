@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.compar.mutation;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -8,6 +9,7 @@ import com.hartwig.hmftools.common.variant.HotspotType;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.compar.TestComparableItemBuilder;
+import com.hartwig.hmftools.compar.common.field.FieldInfo;
 
 public class TestSomaticVariantDataBuilder
 {
@@ -74,11 +76,16 @@ public class TestSomaticVariantDataBuilder
 
     private SomaticVariantData build()
     {
-        return new SomaticVariantData(
+        List<FieldInfo> fields = new SomaticVariantComparer(null, Collections.emptyMap()).fieldsList();
+
+        SomaticVariantData variant = new SomaticVariantData(
                 chromosome, position, ref, alt, type, gene, reported, hotspotStatus, tier,
                 canonicalEffect, canonicalCodingEffect, canonicalHgvsCodingImpact, canonicalHgvsProteinImpact, otherReportedEffects,
                 qual, filters, variantCopyNumber, purityAdjustedVaf, tumorSupportingReadCount, tumorTotalReadCount,
-                isFromUnfilteredVcf, biallelic, biallelicProb, hasLPS, subclonalLikelihood,
-                new SomaticVariantComparer(null, Collections.emptyMap()).fieldsList());
+                isFromUnfilteredVcf, biallelic, biallelicProb, hasLPS, subclonalLikelihood, fields);
+
+        variant.addVAllValues(fields);
+
+        return variant;
     }
 }

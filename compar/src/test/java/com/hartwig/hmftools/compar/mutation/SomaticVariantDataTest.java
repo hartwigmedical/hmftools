@@ -22,8 +22,6 @@ import static com.hartwig.hmftools.compar.mutation.VariantData.FLD_TUMOR_SUPPORT
 import static com.hartwig.hmftools.compar.mutation.VariantData.FLD_TUMOR_TOTAL_READ_COUNT;
 import static com.hartwig.hmftools.compar.mutation.VariantData.FLD_VARIANT_COPY_NUMBER;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import static junit.framework.TestCase.assertEquals;
@@ -35,22 +33,17 @@ import java.util.Set;
 
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItemTest;
-import com.hartwig.hmftools.compar.FieldCheckCache;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.MismatchType;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class SomaticVariantDataTest extends ComparableItemTest<SomaticVariantData, SomaticVariantComparer, TestSomaticVariantDataBuilder>
 {
-    private static final Set<String> PAVE_ONLY_FIELDS =
-            Set.of(FLD_GENE, FLD_CANON_EFFECT, FLD_CODING_EFFECT, FLD_HGVS_CODING, FLD_HGVS_PROTEIN);
-    private static final Set<String> SAGE_ONLY_FIELDS =
-            Set.of(FLD_QUAL, FLD_REPORTED, FLD_TIER, FLD_TUMOR_SUPPORTING_READ_COUNT, FLD_TUMOR_TOTAL_READ_COUNT, FLD_LPS, FLD_FILTER);
-    private static final Set<String> FIELDS_UP_TO_PAVE = union(SAGE_ONLY_FIELDS, PAVE_ONLY_FIELDS);
+    private static final Set<String> UNFILTERED_FIELDS = Set.of(
+            FLD_QUAL, FLD_REPORTED, FLD_TIER, FLD_HOTSPOT, FLD_TUMOR_SUPPORTING_READ_COUNT, FLD_TUMOR_TOTAL_READ_COUNT, FLD_FILTER, FLD_LPS);
 
     @Before
     public void setUp()
@@ -101,7 +94,6 @@ public class SomaticVariantDataTest extends ComparableItemTest<SomaticVariantDat
         );
     }
 
-    @Ignore
     @Test
     public void unfilteredMatchHandledCorrectly()
     {
@@ -120,13 +112,12 @@ public class SomaticVariantDataTest extends ComparableItemTest<SomaticVariantDat
         assertTrue(passVictim.matches(filteredVictim));
 
         MatchLevel matchLevel = MatchLevel.DETAILED;
-        FieldCheckCache fieldConfig = createDefaultThresholds(matchLevel);
         Mismatch mismatch = passVictim.findMismatch(comparer, filteredVictim, matchLevel, false);
 
         assertEquals(MismatchType.OLD_ONLY, mismatch.Type);
         assertEquals(passVictim, mismatch.OldItem);
         assertEquals(filteredVictim, mismatch.NewItem);
-        assertDifferencesAreForFields(union(SAGE_ONLY_FIELDS, Set.of(FLD_FILTER)), mismatch.DiffValues);
+        assertDifferencesAreForFields(union(UNFILTERED_FIELDS, Set.of(FLD_FILTER)), mismatch.DiffValues);
 
         assertTrue(filteredVictim.matches(passVictim));
         Mismatch oppositeMismatch = filteredVictim.findMismatch(comparer, passVictim, matchLevel, false);
@@ -134,6 +125,6 @@ public class SomaticVariantDataTest extends ComparableItemTest<SomaticVariantDat
         assertEquals(MismatchType.NEW_ONLY, oppositeMismatch.Type);
         assertEquals(filteredVictim, oppositeMismatch.OldItem);
         assertEquals(passVictim, oppositeMismatch.NewItem);
-        assertDifferencesAreForFields(union(SAGE_ONLY_FIELDS, Set.of(FLD_FILTER)), mismatch.DiffValues);
+        assertDifferencesAreForFields(union(UNFILTERED_FIELDS, Set.of(FLD_FILTER)), mismatch.DiffValues);
     }
 }

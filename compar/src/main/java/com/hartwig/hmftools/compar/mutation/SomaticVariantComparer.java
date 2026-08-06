@@ -17,8 +17,10 @@ import static com.hartwig.hmftools.compar.mutation.SomaticVariantData.FLD_LPS;
 import static com.hartwig.hmftools.compar.mutation.SomaticVariantData.FLD_SUBCLONAL_LIKELIHOOD;
 import static com.hartwig.hmftools.compar.mutation.VariantData.addComparerFields;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -40,8 +42,10 @@ import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.SourceData;
 import com.hartwig.hmftools.compar.common.SourceType;
+import com.hartwig.hmftools.compar.common.TruthsetValue;
 import com.hartwig.hmftools.compar.common.field.FieldCheck;
 import com.hartwig.hmftools.compar.common.field.FieldInfo;
+import com.hartwig.hmftools.compar.purple.PurityData;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
@@ -291,9 +295,48 @@ public class SomaticVariantComparer extends ItemComparer
     {
         String sourceSampleId = mConfig.sourceSampleId(sourceType, sampleId);
         SourceData sourceData = mConfig.getSourceData(sourceType);
-
         String sourceReferenceId = mConfig.sourceReferenceId(sourceType, sampleId);
-        return loadVariants(sourceSampleId, PipelineSourcePaths.sampleInstance(sourceData.PipelinePaths, sourceSampleId, sourceReferenceId));
+
+        List<SomaticVariantData> variants = Lists.newArrayList();
+
+        if(sourceData.PipelinePaths != null)
+        {
+            variants.addAll(loadVariants(
+                    sourceSampleId, PipelineSourcePaths.sampleInstance(sourceData.PipelinePaths, sourceSampleId, sourceReferenceId)));
+        }
+        else
+        {
+            List<TruthsetValue> truthsetValues = sourceData.Truthset.sampleTruthsetEntries(sampleId).get(category());
+
+            if(truthsetValues == null || truthsetValues.isEmpty())
+                return Collections.emptyList();
+
+            // validate truthset fields against the comparer
+            List<FieldInfo> fields = fieldsList();
+
+            for(TruthsetValue truthsetValue : truthsetValues)
+            {
+                if(fields.stream().noneMatch(x -> x.Name.equals(truthsetValue.FieldName)))
+                {
+                    CMP_LOGGER.error("category({}) invalid truthset entry({})", category(), truthsetValue);
+                    return null;
+                }
+            }
+
+            // group by keys
+            Map<String, List<TruthsetValue>> truthsetValuesByKey = truthsetValues.stream()
+                    .collect(Collectors.groupingBy(x -> x.Key));
+
+            for(Map.Entry<String,List<TruthsetValue>> entry : truthsetValuesByKey.entrySet())
+            {
+                SomaticVariantData variant = SomaticVariantData.fromTruthset(entry.getValue(), mFields);
+
+                if(variant != null)
+                    variants.add(variant);
+            }
+        }
+
+        return variants;
     }
 
     @Override
@@ -306,7 +349,7 @@ public class SomaticVariantComparer extends ItemComparer
 
     private List<SomaticVariantData> loadVariants(final String sampleId, final PipelineSourcePaths fileSources)
     {
-        final List<SomaticVariantData> variants = Lists.newArrayList();
+        List<SomaticVariantData> variants = Lists.newArrayList();
 
         String vcfFile = PurpleCommon.purpleSomaticVcfFile(fileSources.Purple, sampleId);
 

@@ -158,10 +158,13 @@ public class PurityComparer extends ItemComparer
         return comparableItems;
     }
 
-    public List<ComparableItem> loadFromTruthset(final List<TruthsetValue> truthsetValues)
+    public List<ComparableItem> loadFromTruthset(final Map<String,List<TruthsetValue>> valuesByKey)
     {
         List<ComparableItem> comparableItems = Lists.newArrayList();
-        comparableItems.add(new PurityData(truthsetValues, mFields));
+
+        if(valuesByKey.size() == 1)
+            comparableItems.add(new PurityData(valuesByKey.get(PURITY.toString()), mFields));
+
         return comparableItems;
     }
 }
