@@ -327,6 +327,13 @@ public class BamRecordReader implements BamReader
                     continue;
 
                 ChrBaseRegion sliceRegion = new ChrBaseRegion(geneCodingRegions.Chromosome, codingRegion.start(), codingRegion.end());
+
+                if(variant.CanonicalCodingEffect == CodingEffect.SPLICE)
+                {
+                    sliceRegion.setStart(sliceRegion.start() - SPLICE_VARIANT_BUFFER);
+                    sliceRegion.setEnd(sliceRegion.end() + SPLICE_VARIANT_BUFFER);
+                }
+
                 List<Read> regionCodingRecords = findVariantRecords(variant, sliceRegion);
                 List<Read> codingRecords = Lists.newArrayList();
 

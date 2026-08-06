@@ -2,29 +2,25 @@ package com.hartwig.hmftools.panelbuilder.probequality;
 
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.panelbuilder.probequality.Utils.partitionStream;
-
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
+import com.hartwig.hmftools.common.bwa.BwaMemAligner;
+import com.hartwig.hmftools.common.bwa.BwaMemAlignParams;
+import com.hartwig.hmftools.common.bwa.BwaMemAlignerConfig;
+import com.hartwig.hmftools.common.bwa.IBwaMemAligner;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.broadinstitute.hellbender.utils.bwa.BwaMemAligner;
-import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
 
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SAMSequenceRecord;
+import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
 
 // Evaluates the off-target risk of a probe given its alignments from BWA.
 public class ProbeQualityModel
 {
-    private final BwaMemAligner mAligner;
+    private final IBwaMemAligner mAligner;
     // Desired length of the probes.
     // All probes tested with this model must have this length (BWA-MEM config relies on it).
     private final int mTargetProbeLength;
@@ -33,34 +29,56 @@ public class ProbeQualityModel
     // Amount that one alignment match counts towards the risk score.
     // E.g. value of 10 means an alignment with score = mMatchScoreThreshold contributes 10 risk score points.
     private final int mMatchScoreOffset;
-    // BWA-MEM per-base match reward; a full-length perfect alignment scores the probe length times this.
+    // BWA-MEM per-base match reward; a full-length perfect alignment scores mTargetProbeLength * mMatchScore.
     private final int mMatchScore;
-    // Maps a BWA alignment's reference contig index to a chromosome name, so an alignment can be tested against a probe's source regions.
+    // Maps a BWA alignment's reference contig index (getRefId) to its chromosome name, so an alignment can be tested against a probe's source
+    // regions. Built from the reference sequence dictionary, whose order matches the BWA index.
     private final Map<Integer, String> mRefIdToChromosome;
 
-    private static final Logger LOGGER = LogManager.getLogger(ProbeQualityModel.class);
-
-    public ProbeQualityModel(final Supplier<BwaMemAligner> alignerFactory, final int mTargetProbeLength, final int mMatchScoreThreshold,
-            final int mMatchScoreOffset, final Map<Integer, String> refIdToChromosome)
+    // Use in production; the constructor is for injecting a test aligner.
+    public static ProbeQualityModel create(
+            final String bwaIndexImage, final int threads, final int targetProbeLength, final int matchScoreThreshold,
+            final int matchScoreOffset, final Map<Integer, String> refIdToChromosome)
     {
-        mAligner = alignerFactory.get();
-        mRefIdToChromosome = refIdToChromosome;
-        if(mTargetProbeLength < 1)
+        BwaMemAlignerConfig config = new BwaMemAlignerConfig(
+                bwaIndexImage, alignParams(targetProbeLength, matchScoreThreshold), true, threads, null);
+        return new ProbeQualityModel(
+                new BwaMemAligner(config), targetProbeLength, matchScoreThreshold, matchScoreOffset, refIdToChromosome);
+    }
+
+    public ProbeQualityModel(final IBwaMemAligner aligner, final int targetProbeLength, final int matchScoreThreshold,
+            final int matchScoreOffset, final Map<Integer, String> refIdToChromosome)
+    {
+        mAligner = aligner;
+        if(targetProbeLength < 1)
         {
             throw new IllegalArgumentException("targetProbeLength must be >= 1");
         }
-        this.mTargetProbeLength = mTargetProbeLength;
-        this.mMatchScoreThreshold = mMatchScoreThreshold;
-        if(mMatchScoreOffset < 0)
+        mTargetProbeLength = targetProbeLength;
+        mMatchScoreThreshold = matchScoreThreshold;
+        if(matchScoreOffset < 0)
         {
             // < 0 will break the maths.
             throw new IllegalArgumentException("matchScoreOffset must be >= 0");
         }
-        this.mMatchScoreOffset = mMatchScoreOffset;
+        mMatchScoreOffset = matchScoreOffset;
+        mMatchScore = BwaMemAlignParams.DEFAULT.matchReward();
+        mRefIdToChromosome = refIdToChromosome;
+    }
 
-        setBwaMemParams(mAligner);
-        mMatchScore = mAligner.getMatchScoreOption();
-        logBwaMemParams(mAligner);
+    // BWA-MEM alignment parameters tuned to find the many low-scoring off-target matches this model relies on.
+    private static BwaMemAlignParams alignParams(int targetProbeLength, int matchScoreThreshold)
+    {
+        return BwaMemAlignParams.DEFAULT
+                .withSeedLengthMin(min(19, targetProbeLength / 2))
+                // Don't prune seeds with many genome occurrences (key performance parameter).
+                .withSeed3MaxOccurrence(2000)
+                .withMemMaxOccurrence(2000)
+                // Other minor params to encourage more alignments to be found.
+                .withMemReseedFactor(0.5f)
+                .withChainOverlapFactor(0.1f)
+                .withBandWidth(targetProbeLength)
+                .withMinAlignScore(matchScoreThreshold);
     }
 
     public record Result(
@@ -78,7 +96,7 @@ public class ProbeQualityModel
     {
     }
 
-    // Builds the contig-index -> chromosome map from a reference sequence dictionary (its order matches the BWA index contig order).
+    // Builds the refId -> chromosome map from a reference genome sequence dictionary, whose order matches the BWA index.
     public static Map<Integer, String> buildRefIdToChromosome(final SAMSequenceDictionary refGenomeDictionary)
     {
         return refGenomeDictionary.getSequences().stream()
@@ -91,9 +109,9 @@ public class ProbeQualityModel
         return computeFromSeqBytes(probeBytes, probeSourceRegions);
     }
 
-    // Computes probe qualities. probeSourceRegions[i] is the reference region(s) probe i is built from (its intended capture loci) - one for a
-    // normal probe, several for a constructed one (variant/SV, RNA spliced). Alignments on those regions are on-target and excluded from the
-    // off-target risk; the rest count as off-target, normalised against a theoretical full-length match.
+    // Compute probe qualities. probeSourceRegions[i] is the reference region(s) probe i is built from (its intended on-target capture loci):
+    // one region for a normal probe, several for a constructed probe (variant/SV, RNA spliced). Alignments landing on those are excluded from
+    // the off-target risk; the rest count as off-target, normalised against a theoretical full-length match.
     public List<Result> computeFromSeqBytes(final List<byte[]> probes, final List<List<ChrBaseRegion>> probeSourceRegions)
     {
         if(probes.size() != probeSourceRegions.size())
@@ -108,66 +126,19 @@ public class ProbeQualityModel
             }
         });
 
-        List<List<BwaMemAlignment>> alignments = runAlignment(probes, 0);
+        List<List<BwaMemAlignment>> alignments = mAligner.alignSequences(probes);
         return IntStream.range(0, alignments.size())
                 .mapToObj(i -> computeFromAlignments(alignments.get(i), probeSourceRegions.get(i)))
                 .toList();
     }
 
-    private List<List<BwaMemAlignment>> runAlignment(List<byte[]> probes, int batchSize)
-    {
-        if(batchSize <= 0)
-        {
-            batchSize = probes.size();
-        }
-        try
-        {
-            Stream<List<byte[]>> batches = batchSize < probes.size() ? partitionStream(probes.stream(), batchSize) : Stream.of(probes);
-            return batches
-                    .flatMap(batch ->
-                    {
-                        LOGGER.trace("Running BWA-MEM alignment on {} queries", batch.size());
-                        List<List<BwaMemAlignment>> batchAlignments = mAligner.alignSeqs(batch);
-                        if(batchAlignments.size() != batch.size())
-                        {
-                            // Presumably, this shouldn't occur, but we'll check to give a nicer error just in case.
-                            throw new RuntimeException("Alignment failed");
-                        }
-                        return batchAlignments.stream();
-                    })
-                    .toList();
-        }
-        catch(IllegalArgumentException e)
-        {
-            // Silly issue with the BWA-MEM JNI wrapper where it may try to allocate a ByteBuffer larger than is allowed (which is
-            // subsequently a silly issue with ByteBuffer being limited to 2^31 bytes).
-            // We don't have much control over this issue since the number of alignments produced can't be predicted or tightly controlled.
-            // Further, modifying the wrapper code is a pain.
-            // So instead we will catch the error and shrink the sequence set, hopefully reducing the allocation to an acceptable size.
-            int newBatchSize = batchSize / 10;
-            if(newBatchSize >= 1)
-            {
-                LOGGER.warn(
-                        "Aligning sequences with batch size {} failed, trying again with batch size {}",
-                        batchSize, newBatchSize);
-                return runAlignment(probes, newBatchSize);
-            }
-            else
-            {
-                throw e;
-            }
-        }
-    }
-
     private Result computeFromAlignments(final List<BwaMemAlignment> alignments, final List<ChrBaseRegion> sourceRegions)
     {
-        // On-target alignments (those on the source regions) are excluded; every other alignment above the threshold is off-target, normalised
-        // against a theoretical full-length match. (Previously the single top hit was dropped and used as the normaliser - wrong for a
-        // constructed sequence, whose best hit is only a partial fragment.)
+        // Normalise against a theoretical perfect full-length match. Alignments landing on the probe's source region(s) are the intended
+        // on-target captures and are excluded; every other alignment above the threshold is off-target.
         int targetScore = mTargetProbeLength * mMatchScore;
         List<Integer> offTarget = alignments.stream()
                 .filter(alignment -> !isOnTarget(alignment, sourceRegions))
-                // Only need the alignment scores. The alignment score from BWA-MEM is effectively a similarity score.
                 .map(BwaMemAlignment::getAlignerScore)
                 .filter(score -> score >= mMatchScoreThreshold)
                 .toList();
@@ -180,7 +151,8 @@ public class ProbeQualityModel
         return new Result(qualityScore, riskScore, offTargetCount, offTargetScoreSum);
     }
 
-    // Whether an alignment lands on one of the probe's source regions (an intended on-target capture).
+    // Whether an alignment lands on one of the probe's source regions (an intended on-target capture), resolving the alignment's reference
+    // contig index to a chromosome name via the sequence dictionary.
     private boolean isOnTarget(final BwaMemAlignment alignment, final List<ChrBaseRegion> sourceRegions)
     {
         String chromosome = mRefIdToChromosome.get(alignment.getRefId());
@@ -198,45 +170,5 @@ public class ProbeQualityModel
             }
         }
         return false;
-    }
-
-    private void setBwaMemParams(BwaMemAligner aligner)
-    {
-        // Ensure we can find alignments fitting our parameters.
-        aligner.setMinSeedLengthOption(min(19, mTargetProbeLength / 2));
-        // Output many alignments per query.
-        aligner.setFlagOption(aligner.getFlagOption() | BwaMemAligner.MEM_F_ALL);
-        aligner.setOutputScoreThresholdOption(mMatchScoreThreshold);
-        // Don't prune seeds with many occurrences in the genome. This is a key performance tuning parameter.
-        aligner.setMaxMemIntvOption(2000);
-        aligner.setMaxSeedOccurencesOption(2000);
-        // Other minor params to encourage more alignments to be found.
-        aligner.setBandwidthOption(mTargetProbeLength);
-        aligner.setSplitFactorOption(0.5f);
-        aligner.setDropRatioOption(0.1f);
-    }
-
-    private static void logBwaMemParams(BwaMemAligner aligner)
-    {
-        LOGGER.debug("BWA-MEM options:");
-        LOGGER.debug("  MinSeedLength: {}", aligner.getMinSeedLengthOption());
-        LOGGER.debug("  SplitFactor: {}", aligner.getSplitFactorOption());
-        LOGGER.debug("  SplitWidth: {}", aligner.getSplitWidthOption());
-        LOGGER.debug("  MaxSeedOccurrences: {}", aligner.getMaxSeedOccurencesOption());
-        LOGGER.debug("  MaxMemOccurrences: {}", aligner.getMaxMemIntvOption());
-        LOGGER.debug("  DropRatio: {}", aligner.getDropRatioOption());
-        LOGGER.debug("  Match: {}", aligner.getMatchScoreOption());
-        LOGGER.debug("  Mismatch: {}", aligner.getMismatchPenaltyOption());
-        LOGGER.debug("  IGapOpen: {}", aligner.getIGapOpenPenaltyOption());
-        LOGGER.debug("  IGapExtend: {}", aligner.getIGapExtendPenaltyOption());
-        LOGGER.debug("  DGapOpen: {}", aligner.getDGapOpenPenaltyOption());
-        LOGGER.debug("  DGapExtend: {}", aligner.getDGapExtendPenaltyOption());
-        LOGGER.debug("  Clip3: {}", aligner.getClip3PenaltyOption());
-        LOGGER.debug("  Clip5: {}", aligner.getClip5PenaltyOption());
-        LOGGER.debug("  Bandwidth: {}", aligner.getBandwidthOption());
-        LOGGER.debug("  ZDrop: {}", aligner.getZDropOption());
-        LOGGER.debug("  OutputScoreThreshold: {}", aligner.getOutputScoreThresholdOption());
-        LOGGER.debug("  Flags: {}", aligner.getFlagOption());
-        LOGGER.debug("  Threads: {}", aligner.getNThreadsOption());
     }
 }

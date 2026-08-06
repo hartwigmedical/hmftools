@@ -5,7 +5,6 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.bwa.BwaUtils.BWA_LIB_PATH;
 import static com.hartwig.hmftools.common.bwa.BwaUtils.BWA_LIB_PATH_DESC;
 import static com.hartwig.hmftools.common.bwa.BwaUtils.LIBBWA_PATH;
-import static com.hartwig.hmftools.common.bwa.BwaUtils.loadAlignerLibrary;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeFile;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
@@ -17,16 +16,15 @@ import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION_S
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.panelbuilder.probequality.Utils.createBwaMemAligner;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.List;
 import java.util.StringJoiner;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 
+import com.hartwig.hmftools.common.bwa.BwaMemAligner;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.perf.TaskExecutor;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
@@ -35,7 +33,6 @@ import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.broadinstitute.hellbender.utils.bwa.BwaMemAligner;
 
 // Tool for helping with panel probe design. It produces a file which annotates the genome with information informing how likely a probe is
 // to hybridise with off-target genome regions.
@@ -148,12 +145,11 @@ public class ProbeQualityProfiler
         }
         LOGGER.debug("Threads: {}", threads);
 
-        loadAlignerLibrary(configBuilder.getValue(BWA_LIB_PATH));
+        BwaMemAligner.initLibrary(configBuilder.getValue(BWA_LIB_PATH));
         LOGGER.debug("BWA-MEM library path: {}", System.getProperty(LIBBWA_PATH));
 
         String bwaIndexImageFile = configBuilder.getValue(BWA_INDEX_IMAGE_FILE_CONFIG, refGenomePath + ".img");
         LOGGER.debug("BWA-MEM index image: {}", bwaIndexImageFile);
-        Supplier<BwaMemAligner> alignerFactory = () -> createBwaMemAligner(bwaIndexImageFile, threads);
 
         mVerboseOutput = configBuilder.hasFlag(VERBOSE_OUTPUT_CONFIG);
         LOGGER.debug("Verbose output: {}", mVerboseOutput);
@@ -162,8 +158,8 @@ public class ProbeQualityProfiler
         LOGGER.debug("Output file: {}", outputFile);
 
         mBaseWindowGenerator = new BaseWindowGenerator(refGenome, specificRegions, baseWindowLength, baseWindowSpacing, batchSize);
-        mProbeQualityModel = new ProbeQualityModel(
-                alignerFactory, baseWindowLength, matchScoreThreshold, matchScoreOffset,
+        mProbeQualityModel = ProbeQualityModel.create(
+                bwaIndexImageFile, threads, baseWindowLength, matchScoreThreshold, matchScoreOffset,
                 ProbeQualityModel.buildRefIdToChromosome(refGenome.refGenomeFile().getSequenceDictionary()));
         mOutputWriter = initialiseOutputWriter(outputFile, mVerboseOutput);
     }
