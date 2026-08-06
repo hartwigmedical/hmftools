@@ -16,7 +16,6 @@ public class ComparTask implements Callable<Void>
 {
     private final int mTaskId;
     private final ComparConfig mConfig;
-    private final FieldCheckCache mFieldConfig;
     private final List<String> mSampleIds;
     private final List<ItemComparer> mComparers;
 
@@ -26,7 +25,6 @@ public class ComparTask implements Callable<Void>
     {
         mTaskId = taskId;
         mConfig = config;
-        mFieldConfig = fieldCheckCache;
         mWriter = writer;
 
         mSampleIds = Lists.newArrayList();

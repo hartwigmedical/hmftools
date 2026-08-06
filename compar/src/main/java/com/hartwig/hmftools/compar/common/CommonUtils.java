@@ -73,12 +73,14 @@ public class CommonUtils
 
                 items = comparer.loadFromTruthset(truthsetValues);
 
+                /* an invalid check but need to group by key
                 if(items.size() != truthsetValues.size())
                 {
                     CMP_LOGGER.error("category({}) failed to map all truthset entries(truthset={} items={})",
                             comparer.category(), truthsetValues.size(), items.size());
                     return false;
                 }
+                */
             }
 
             if(items != null)

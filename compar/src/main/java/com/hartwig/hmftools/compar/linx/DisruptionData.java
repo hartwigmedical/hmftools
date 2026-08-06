@@ -7,6 +7,7 @@ import java.util.List;
 import com.hartwig.hmftools.common.purple.ReportedStatus;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.ComparableItem;
+import com.hartwig.hmftools.compar.common.field.BreakendsFieldValue;
 import com.hartwig.hmftools.compar.common.field.FieldInfo;
 
 public class DisruptionData extends ComparableItem

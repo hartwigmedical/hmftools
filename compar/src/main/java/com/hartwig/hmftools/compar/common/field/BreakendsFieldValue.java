@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.compar.linx;
+package com.hartwig.hmftools.compar.common.field;
 
 import static java.lang.String.format;
 
@@ -9,8 +9,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
-import com.hartwig.hmftools.compar.common.field.FieldInfo;
-import com.hartwig.hmftools.compar.common.field.FieldValue;
+import com.hartwig.hmftools.compar.linx.BreakendData;
 
 public class BreakendsFieldValue extends FieldValue
 {

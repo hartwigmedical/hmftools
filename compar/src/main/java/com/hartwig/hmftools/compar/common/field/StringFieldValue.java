@@ -16,7 +16,6 @@ public class StringFieldValue extends FieldValue
     public boolean hasDifference(final FieldValue other)
     {
         StringFieldValue otherValue = (StringFieldValue)other;
-
         return !Value.equals(otherValue.Value);
     }
 

@@ -13,7 +13,6 @@ import com.hartwig.hmftools.compar.common.field.FieldInfo;
 import com.hartwig.hmftools.compar.common.field.IntFieldValue;
 import com.hartwig.hmftools.compar.common.field.PixelFieldValue;
 import com.hartwig.hmftools.compar.common.field.StringFieldValue;
-import com.hartwig.hmftools.compar.common.field.ThresholdFieldCheck;
 
 import org.junit.Test;
 
@@ -58,7 +57,7 @@ public class FieldValueTest
     @Test
     public void testIntFieldValue()
     {
-        ThresholdFieldCheck thresholdFieldCheck = new ThresholdFieldCheck(true, 10.0, 0.2);
+        FieldCheck thresholdFieldCheck = new FieldCheck(true, 10.0, 0.2);
 
         IntFieldValue fieldValue1 = new IntFieldValue(
                 new FieldInfo(FIELD_NAME, thresholdFieldCheck, null), 80);
@@ -77,7 +76,7 @@ public class FieldValueTest
     @Test
     public void testDoubleFieldValue()
     {
-        ThresholdFieldCheck thresholdFieldCheck = new ThresholdFieldCheck(true, 10.0, 0.2);
+        FieldCheck thresholdFieldCheck = new FieldCheck(true, 10.0, 0.2);
 
         DoubleFieldValue fieldValue1 = new DoubleFieldValue(
                 new FieldInfo(FIELD_NAME, thresholdFieldCheck, null), 80);
@@ -119,7 +118,7 @@ public class FieldValueTest
     @Test
     public void testPixelFieldValue()
     {
-        ThresholdFieldCheck thresholdFieldCheck = new ThresholdFieldCheck(true, 1.0, 0.1);
+        FieldCheck thresholdFieldCheck = new FieldCheck(true, 1.0, 0.1);
 
         PixelFieldValue fieldValue1 = new PixelFieldValue(
                 new FieldInfo(FIELD_NAME, thresholdFieldCheck, null), createImage(10));

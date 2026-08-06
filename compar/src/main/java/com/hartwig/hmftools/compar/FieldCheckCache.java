@@ -23,7 +23,6 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.field.FieldCheck;
 import com.hartwig.hmftools.compar.common.field.FieldInfo;
-import com.hartwig.hmftools.compar.common.field.ThresholdFieldCheck;
 
 import org.apache.logging.log4j.Level;
 
@@ -75,7 +74,7 @@ public class FieldCheckCache
 
         logProblems();
 
-        return hasErrors();
+        return !hasErrors();
     }
 
     public void loadOverrides(final String filename) throws IOException
@@ -99,21 +98,31 @@ public class FieldCheckCache
             {
                 CategoryType categoryType = CategoryType.valueOf(values[categoryIndex]);
                 String fieldName = values[fieldIndex];
-                boolean isCompared = Boolean.parseBoolean(values[comparedIndex]);
 
-                Double absThreshold = parseThreshold(values[absoluteThresholdIndex]);
-                Double percThreshold = parseThreshold(values[percentThresholdIndex]);
+                String boolStr = values[comparedIndex];
 
-                FieldCheck fieldCheck;
+                boolean isCompared = false;
 
-                if(absThreshold != null || percThreshold != null)
+                if(boolStr.equalsIgnoreCase(Boolean.TRUE.toString()))
                 {
-                    fieldCheck = new ThresholdFieldCheck(isCompared, absThreshold, percThreshold);
+                    isCompared = true;
+                }
+                else if(boolStr.equalsIgnoreCase(Boolean.FALSE.toString()))
+                {
+                    isCompared = false;
                 }
                 else
                 {
-                    fieldCheck = new FieldCheck(isCompared);
+                    throw new Exception(format("invalid boolean value: %s", boolStr));
                 }
+
+                boolean absThresholdOverriden = !values[absoluteThresholdIndex].isEmpty();
+                boolean percThresholdOverriden = !values[percentThresholdIndex].isEmpty();
+                Double absThreshold = parseThreshold(values[absoluteThresholdIndex]);
+                Double percThreshold = parseThreshold(values[percentThresholdIndex]);
+
+                FieldCheck fieldCheck = new FieldCheck(
+                        isCompared, absThreshold, percThreshold, absThresholdOverriden, percThresholdOverriden);
 
                 Map<String,FieldCheck> categoryOverrides = mFieldCheckOverrides.get(categoryType);
 
@@ -155,11 +164,21 @@ public class FieldCheckCache
         mErrorMessages.forEach(CMP_LOGGER::error);
     }
 
-    public static ThresholdFieldCheck getOrMakeFieldCheck(
+    public static FieldCheck getOrMakeFieldCheck(
             final Map<String,FieldCheck> fieldCheckMap, final String field, final Double absThreshold, final Double percThreshold)
     {
         FieldCheck override = fieldCheckMap.get(field);
-        return override != null ? (ThresholdFieldCheck)override : new ThresholdFieldCheck(true, absThreshold, percThreshold);
+
+        if(override == null)
+            return new FieldCheck(true, absThreshold, percThreshold);
+
+        if(!override.IsCompared)
+            return new FieldCheck(false);
+
+        return new FieldCheck(
+                override.IsCompared,
+                override.AbsThresholdOverriden ? override.AbsDiffThreshold : absThreshold,
+                override.PercThresholdOverriden ? override.PercDiffThreshold : percThreshold);
     }
 
     public static FieldCheck getOrMakeFieldCheck(final Map<String,FieldCheck> fieldCheckMap, final String field)

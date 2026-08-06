@@ -12,8 +12,8 @@ import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.compar.common.CategoryType;
+import com.hartwig.hmftools.compar.common.field.FieldCheck;
 import com.hartwig.hmftools.compar.common.field.FieldInfo;
-import com.hartwig.hmftools.compar.common.field.ThresholdFieldCheck;
 
 public class FieldConfigFile
 {
@@ -54,22 +54,14 @@ public class FieldConfigFile
 
     private static String toLine(final CategoryType category, final FieldInfo fieldInfo)
     {
-        Double absoluteThreshold = null;
-        Double percentThreshold = null;
-
-        if(fieldInfo.FieldCheck instanceof ThresholdFieldCheck)
-        {
-            ThresholdFieldCheck thresholdFieldCheck = (ThresholdFieldCheck)fieldInfo.FieldCheck;
-            absoluteThreshold = thresholdFieldCheck.AbsoluteDiff;
-            percentThreshold = thresholdFieldCheck.PercentageDiff;
-        }
+        FieldCheck fieldCheck = fieldInfo.FieldCheck;
 
         return new StringJoiner(TSV_DELIM)
                 .add(category.toString())
                 .add(fieldInfo.Name)
                 .add(String.valueOf(fieldInfo.FieldCheck.IsCompared))
-                .add(absoluteThreshold == null ? NONE_SETTING : String.valueOf(absoluteThreshold))
-                .add(percentThreshold == null ? NONE_SETTING : (percentThreshold * 100) + "%")
+                .add(fieldCheck.AbsDiffThreshold == null ? NONE_SETTING : String.valueOf(fieldCheck.AbsDiffThreshold))
+                .add(fieldCheck.PercDiffThreshold == null ? NONE_SETTING : (fieldCheck.PercDiffThreshold * 100) + "%")
                 .toString();
     }
 

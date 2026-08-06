@@ -16,7 +16,6 @@ public class BoolFieldValue extends FieldValue
     public boolean hasDifference(final FieldValue other)
     {
         BoolFieldValue otherValue = (BoolFieldValue)other;
-
         return Value != otherValue.Value;
     }
 
