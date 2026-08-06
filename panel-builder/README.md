@@ -36,7 +36,7 @@ Resource files specific to PanelBuilder are [available here](https://console.clo
 | ensembl_data_dir      | Path                         | (none)                      | Ensembl cache directory.                                                                                                                 |
 | bwa_lib               | Path                         | Search in current directory | Path to BWA-MEM shared library object.                                                                                                   |
 | genes                 | Path                         | (none)                      | Path to TSV file containing desired gene features. If not specified, gene probes are not produced.                                       |
-| genes_rna             | Path                         | (none)                      | Path to TSV file containing desired RNA gene features. If not specified, RNA gene probes are not produced.  |
+| genes_rna             | Path                         | (none)                      | Path to TSV file containing desired RNA gene features. If not specified, RNA gene probes are not produced.                               |
 | cn_backbone           | Flag                         | (none)                      | If specified, include copy number backbone probes in the panel.                                                                          |
 | cn_backbone_res_kb    | Integer                      | 1000                        | Approximate spacing between copy number backbone probes, in kb.                                                                          |
 | het_sites             | Path                         | (none)                      | Path to heterozygous SNP sites TSV file for copy number backbone. May be GZIP'd.                                                         |
@@ -369,12 +369,12 @@ Notes:
 
 TSV file with these columns:
 
-| Column      | Type                 | Description                                                                                     |
-|-------------|----------------------|-------------------------------------------------------------------------------------------------|
-| GeneName    | String               | Ensembl gene name.                                                                              |
-| Include5UTR | Boolean              | Produce probes in 5' UTR regions?                                                                     |
-| Include3UTR | Boolean              | Produce probes in 3' UTR regions?                                                                     |
-| TransNames  | Comma separated list | Ensembl names of the transcripts to cover. If empty, the gene's canonical transcript is used.   |
+| Column      | Type                 | Description                                                                                   |
+|-------------|----------------------|-----------------------------------------------------------------------------------------------|
+| GeneName    | String               | Ensembl gene name.                                                                            |
+| Include5UTR | Boolean              | Produce probes in 5' UTR regions?                                                             |
+| Include3UTR | Boolean              | Produce probes in 3' UTR regions?                                                             |
+| TransNames  | Comma separated list | Ensembl names of the transcripts to cover. If empty, the gene's canonical transcript is used. |
 
 Example:
 
@@ -453,8 +453,8 @@ The DNA and RNA panels produce the same set of per-panel files, distinguished by
 
 Main outputs:
 
-| File               | Description                                                                                                                                                                        |
-|--------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| File                     | Description                                                                                                                                                                        |
+|--------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | {dna,rna}_probes.tsv     | Full information for each probe in the panel.                                                                                                                                      |
 | {dna,rna}_probes.fasta   | Base sequences of probes in the panel.                                                                                                                                             |
 | {dna,rna}_rejections.tsv | Full information for each uncovered region or rejected probe.                                                                                                                      |
@@ -462,15 +462,15 @@ Main outputs:
 
 Informational/visualisation/debugging outputs:
 
-| File                         | Description                                                                                                               |
-|------------------------------|---------------------------------------------------------------------------------------------------------------------------|
+| File                               | Description                                                                                                               |
+|------------------------------------|---------------------------------------------------------------------------------------------------------------------------|
 | {dna,rna}_probes.bed               | Individual probe regions. Similar to `dna_panel.bed` but regions are not merged.                                          |
-| {dna,rna}_targets.bed              | Individual regions which the probes are targeting (subset of `_probes.bed`).                                           |
+| {dna,rna}_targets.bed              | Individual regions which the probes are targeting (subset of `_probes.bed`).                                              |
 | {dna,rna}_rejections.bed           | Regions which were rejected. Excludes variant probes.                                                                     |
 | {dna,rna}_gene_stats.tsv           | Statistics on probes on a per-gene basis. Only produced if gene features were requested.                                  |
 | {dna,rna}_candidate_targets.bed.gz | All target regions evaluated for suitability.                                                                             |
 | {dna,rna}_candidate_probes.tsv.gz  | All probes evaluated for suitability. Only produced if `verbose_output` is specified.                                     |
-| sample_variant_info.tsv      | Additional information used in processing on a per-variant basis. Only produced if sample variants probes were requested. |
+| sample_variant_info.tsv            | Additional information used in processing on a per-variant basis. Only produced if sample variants probes were requested. |
 
 The probe region/sequence columns are different between DNA and RNA due to differing possibilities:
 - DNA: `StartRegion`, `MiddleSequence`, `EndRegion`.
