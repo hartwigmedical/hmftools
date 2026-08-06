@@ -10,7 +10,6 @@ is in the sections further down. Everything in the batch/merge records below (A1
 
 | # | Item | Code tag / location | Notes |
 |---|------|---------------------|-------|
-| 1 | RNA generation performance | *(untagged)* | Largely resolved: Options A + A+ done (RNA phase ~1.7x faster, byte-identical). Cross-exon batching and DNA-coverRegion batching investigated → no further gain at ~10 cores (batching only helps novel-sequence/alignment probes, and per-exon batching already saturates). Only remaining lever is many-core servers (batch tuning) + the fixed profile-file load. See "Performance — RNA generation". |
 | 3 | RefSeq/NM transcript resolution disabled | `TODO` `GenesRna.resolveTranscript` | Validate the non-1:1 Ensembl↔RefSeq mapping, then re-enable. |
 | 4 | Small coding part of a boundary exon folded into one whole-exon target | *(planned)* `GenesRna.createTargets` | Large part-coding exons now split into coding + UTR targets (done). Remaining: a boundary exon whose coding part is < a probe is folded whole; splitting it needs the short coding probe to pad into the same-exon UTR, not across the junction. See "Planned — small coding part padding". |
 | 5 | `PanelData` getters return live internal lists | `TODO` `PanelData` | No live aliasing bug found; defensively copy (also `ProbeGenerationResult` ctor). Own commit. |

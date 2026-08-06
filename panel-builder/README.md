@@ -362,7 +362,7 @@ Probe evaluation criteria:
 
 Notes:
 
-- **Transcript selection.** If no transcripts are specified, all transcripts of the gene are used, with their exons merged. Otherwise the listed Ensembl transcripts are used (merged).
+- **Transcript selection.** If no transcripts are specified, the gene's canonical transcript is used. Otherwise the listed Ensembl transcripts are used, with their exons merged.
 - **Strand.** Probe sequences are output genome-forward, regardless of gene strand.
 
 #### RNA Gene Feature Input File
@@ -372,9 +372,9 @@ TSV file with these columns:
 | Column      | Type                 | Description                                                                                     |
 |-------------|----------------------|-------------------------------------------------------------------------------------------------|
 | GeneName    | String               | Ensembl gene name.                                                                              |
-| Include5UTR | Boolean              | Produce 5' UTR exon probes?                                                                     |
-| Include3UTR | Boolean              | Produce 3' UTR exon probes?                                                                     |
-| TransNames  | Comma separated list | Ensembl names of the transcripts to cover. If empty, all transcripts of the gene are used.      |
+| Include5UTR | Boolean              | Produce probes in 5' UTR regions?                                                                     |
+| Include3UTR | Boolean              | Produce probes in 3' UTR regions?                                                                     |
+| TransNames  | Comma separated list | Ensembl names of the transcripts to cover. If empty, the gene's canonical transcript is used.   |
 
 Example:
 
@@ -406,7 +406,25 @@ This identifies all subregions where overlap with a probe would cause that probe
 
 ### Exon-aware Tiling (RNA)
 
-TODO
+This section describes how probes are tiled for RNA gene features (see "Genes RNA").
+It extends the "Whole Region Tiling" algorithm so that probes cover only exonic (transcribed) sequence.
+
+Goals:
+
+- Probes cover only exonic bases, never intronic bases, so they hybridise to spliced RNA.
+- The sequence right at each splice junction is covered well, and prefer containing probes within the exon, so probes capture both the known transcript and novel splices/fusions through that junction.
+- Aside from these constraints, coverage and overlap behave like whole region tiling.
+
+Each target region (a coding or UTR part of an exon) is tiled according to its length:
+
+1. **Longer than a probe:** tiled as in whole region tiling, except the outermost probes are pinned flush to the exon boundaries instead of leaving the usual edge gap. Interior probes are evenly spaced.
+2. **About one probe long:** a single probe centred in the range, with a small edge gap allowed (as in whole region tiling).
+3. **Shorter than a probe:** a probe cannot fit within the exon, so a single probe is centred and padded across the splice junction(s) into the adjacent exon(s) if possible.
+
+Two further cases follow from the above:
+
+- **Rejected region within an exon:** as in whole region tiling, the exon is split at the rejected region into acceptable sub-ranges, each tiled by the rules above.
+- **Not coverable:** if no acceptable, in-bounds probe can be formed, then no probe is produced and the range is marked rejected.
 
 ### Probe Overlap Handling
 
