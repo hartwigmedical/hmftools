@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.compar.common.FileCommon.FLD_SAMPLE_ID;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -48,12 +49,18 @@ public class TruthsetCache
         }
     }
 
-    public Map<CategoryType,List<TruthsetValue>> sampleTruthsetEntries(final String sampleId)
+    public List<TruthsetValue> sampleTruthsetEntries(final String sampleId, final CategoryType category)
     {
+        Map<CategoryType, List<TruthsetValue>> categoryMap;
         if(mSampleDataMap.size() == 1 && mSampleDataMap.containsKey(NO_SAMPLE_ID))
-            return mSampleDataMap.get(NO_SAMPLE_ID);
-
-        return mSampleDataMap.get(sampleId);
+        {
+            categoryMap = mSampleDataMap.get(NO_SAMPLE_ID);
+        }
+        else
+        {
+            categoryMap = mSampleDataMap.get(sampleId);
+        }
+        return categoryMap != null ? categoryMap.get(category) : Collections.emptyList();
     }
 
     private static final Set<String> FIXED_FIELDS = Set.of(FLD_CATEGORY, FLD_SAMPLE_ID, FLD_STATUS, FLD_ITEM_KEY, FLD_FIELD_VALUES);

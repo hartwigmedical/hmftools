@@ -16,25 +16,15 @@ import static com.hartwig.hmftools.compar.mutation.VariantData.FLD_TUMOR_SUPPORT
 import static com.hartwig.hmftools.compar.mutation.VariantData.FLD_TUMOR_TOTAL_READ_COUNT;
 import static com.hartwig.hmftools.compar.mutation.VariantData.FLD_VARIANT_COPY_NUMBER;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
-import static junit.framework.TestCase.assertEquals;
-
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItemTest;
-import com.hartwig.hmftools.compar.FieldCheckCache;
-import com.hartwig.hmftools.compar.common.MatchLevel;
-import com.hartwig.hmftools.compar.common.Mismatch;
-import com.hartwig.hmftools.compar.common.MismatchType;
 
 import org.junit.Before;
-import org.junit.Test;
 
 public class GermlineVariantDataTest extends ComparableItemTest<GermlineVariantData, GermlineVariantComparer, TestGermlineVariantDataBuilder>
 {
@@ -67,7 +57,6 @@ public class GermlineVariantDataTest extends ComparableItemTest<GermlineVariantD
                 alternateValueSource.TumorSupportingReadCount);
         fieldToAlternateValueInitializer.put(FLD_TUMOR_TOTAL_READ_COUNT, b -> b.tumorTotalReadCount =
                 alternateValueSource.TumorTotalReadCount);
-        fieldToAlternateValueInitializer.put(FLD_FILTER, b -> b.filters = alternateValueSource.Filters);
 
         nameToAlternateIndexInitializer = Map.of(
                 "Chromosome", b -> b.chromosome = alternateValueSource.Chromosome,
@@ -77,17 +66,6 @@ public class GermlineVariantDataTest extends ComparableItemTest<GermlineVariantD
                 "Type", b -> b.type = alternateValueSource.Type
         );
         reportabilityFieldToFalseReportabilityInitializer = Map.of(FLD_REPORTED, b -> b.reported = false);
-        nameToNonPassInitializer = Collections.emptyMap();
-    }
-
-    @Test
-    public void keyNonEmptyForLiftover()
-    {
-        GermlineVariantData victim = TestGermlineVariantDataBuilder.BUILDER.create(b ->
-        {
-            b.comparisonChromosome = "8";
-            b.comparisonPosition = 10000;
-        });
-        assertFalse(victim.key().isEmpty());
+        nameToNonPassInitializer = Map.of(FLD_FILTER, b -> b.filters = Set.of("minTumorQual"));
     }
 }

@@ -32,8 +32,6 @@ public class TestGermlineVariantDataBuilder
     public double purityAdjustedVaf = 0.45;
     public int tumorTotalReadCount = 116;
     public int tumorSupportingReadCount = 21;
-    public String comparisonChromosome = "7";
-    public int comparisonPosition = 140453136;
 
     private static final Consumer<TestGermlineVariantDataBuilder> ALTERNATE_INITIALIZER = b ->
     {
@@ -52,13 +50,10 @@ public class TestGermlineVariantDataBuilder
         b.canonicalHgvsProteinImpact = "p.Val601Glu";
         b.otherReportedEffects = "OTHER_EFFECT";
         b.qual = 512;
-        b.filters = Set.of("minTumorQual");
         b.variantCopyNumber = 3.6;
         b.purityAdjustedVaf = 1.1;
         b.tumorTotalReadCount = 312;
         b.tumorSupportingReadCount = 50;
-        b.comparisonChromosome = "8";
-        b.comparisonPosition = 10000;
     };
 
     public static final TestComparableItemBuilder<TestGermlineVariantDataBuilder, GermlineVariantData> BUILDER =

@@ -12,7 +12,6 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.compar.ComparConfig;
-import com.hartwig.hmftools.compar.FieldCheckCache;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.MismatchType;

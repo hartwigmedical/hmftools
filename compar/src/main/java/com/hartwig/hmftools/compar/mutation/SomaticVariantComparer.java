@@ -45,7 +45,6 @@ import com.hartwig.hmftools.compar.common.SourceType;
 import com.hartwig.hmftools.compar.common.TruthsetValue;
 import com.hartwig.hmftools.compar.common.field.FieldCheck;
 import com.hartwig.hmftools.compar.common.field.FieldInfo;
-import com.hartwig.hmftools.compar.purple.PurityData;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
@@ -301,12 +300,17 @@ public class SomaticVariantComparer extends ItemComparer
 
         if(sourceData.PipelinePaths != null)
         {
-            variants.addAll(loadVariants(
-                    sourceSampleId, PipelineSourcePaths.sampleInstance(sourceData.PipelinePaths, sourceSampleId, sourceReferenceId)));
+            List<SomaticVariantData> fileVariants = loadVariants(
+                    sourceSampleId, PipelineSourcePaths.sampleInstance(sourceData.PipelinePaths, sourceSampleId, sourceReferenceId));
+            if(fileVariants == null)
+            {
+                return null;
+            }
+            variants.addAll(fileVariants);
         }
         else
         {
-            List<TruthsetValue> truthsetValues = sourceData.Truthset.sampleTruthsetEntries(sampleId).get(category());
+            List<TruthsetValue> truthsetValues = sourceData.Truthset.sampleTruthsetEntries(sampleId, category());
 
             if(truthsetValues == null || truthsetValues.isEmpty())
                 return Collections.emptyList();
@@ -331,8 +335,10 @@ public class SomaticVariantComparer extends ItemComparer
             {
                 SomaticVariantData variant = SomaticVariantData.fromTruthset(entry.getValue(), mFields);
 
-                if(variant != null)
-                    variants.add(variant);
+                if(variant == null)
+                    return null;
+
+                variants.add(variant);
             }
         }
 

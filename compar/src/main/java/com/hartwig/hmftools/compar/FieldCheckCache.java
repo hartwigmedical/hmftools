@@ -116,13 +116,13 @@ public class FieldCheckCache
                     throw new Exception(format("invalid boolean value: %s", boolStr));
                 }
 
-                boolean absThresholdOverriden = !values[absoluteThresholdIndex].isEmpty();
-                boolean percThresholdOverriden = !values[percentThresholdIndex].isEmpty();
+                boolean absThresholdOverridden = !values[absoluteThresholdIndex].isEmpty();
+                boolean percThresholdOverridden = !values[percentThresholdIndex].isEmpty();
                 Double absThreshold = parseThreshold(values[absoluteThresholdIndex]);
                 Double percThreshold = parseThreshold(values[percentThresholdIndex]);
 
                 FieldCheck fieldCheck = new FieldCheck(
-                        isCompared, absThreshold, percThreshold, absThresholdOverriden, percThresholdOverriden);
+                        isCompared, absThreshold, percThreshold, absThresholdOverridden, percThresholdOverridden);
 
                 Map<String,FieldCheck> categoryOverrides = mFieldCheckOverrides.get(categoryType);
 
@@ -177,8 +177,8 @@ public class FieldCheckCache
 
         return new FieldCheck(
                 override.IsCompared,
-                override.AbsThresholdOverriden ? override.AbsDiffThreshold : absThreshold,
-                override.PercThresholdOverriden ? override.PercDiffThreshold : percThreshold);
+                override.AbsThresholdOverridden ? override.AbsDiffThreshold : absThreshold,
+                override.PercThresholdOverridden ? override.PercDiffThreshold : percThreshold);
     }
 
     public static FieldCheck getOrMakeFieldCheck(final Map<String,FieldCheck> fieldCheckMap, final String field)

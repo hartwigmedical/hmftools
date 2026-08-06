@@ -16,7 +16,6 @@ public class LilacQcComparDataTest extends ComparableItemTest<LilacQcComparData,
         comparer = new LilacQcComparer(new ComparConfig(), Collections.emptyMap());
         builder = TestLilacQcDataBuilder.BUILDER;
 
-        String allelesStr = builder.create().AllelesStr;
         LilacQcComparData alternateValueSource = builder.createWithAlternateDefaults();
 
         // Does not include every field because field comparisons within alleles don't work well in generic tests

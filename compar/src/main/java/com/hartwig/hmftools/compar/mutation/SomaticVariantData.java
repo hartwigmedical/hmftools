@@ -197,7 +197,7 @@ public class SomaticVariantData extends VariantData
         // now add fields
         for(TruthsetValue truthsetValue : truthsetValues)
         {
-            if(truthsetValue.FieldName.equals(FLD_GENE))
+            if(truthsetValue.FieldName.equals(FLD_REPORTED))
                 addBoolValue(FLD_REPORTED, Reported, fields);
             else if(truthsetValue.FieldName.equals(FLD_GENE))
                 addStringValue(FLD_GENE, Gene, fields);

@@ -60,7 +60,6 @@ public class TestSomaticVariantDataBuilder
         b.hasLPS = true;
         b.qual = 512;
         b.subclonalLikelihood = 1.;
-        b.filters = Set.of("PON");
         b.variantCopyNumber = 3.6;
         b.purityAdjustedVaf = 1.1;
         b.tumorTotalReadCount = 312;

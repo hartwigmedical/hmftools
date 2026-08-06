@@ -131,8 +131,8 @@ Differences in field values are considered one of the following ways
 
 ### Field Config Files
 The `Compared` setting and default thresholds for every field are defined per category in code, and are exported for reference to:
-- [field.config.compar.tsv](src/main/resources/field_config/reportable/field.config.compar.tsv) for the default `-match_level REPORTABLE`
-- [field.config.compar.tsv](src/main/resources/field_config/detailed/field.config.compar.tsv) for `-match_level DETAILED`, which also includes the extra categories and fields that are only compared in detailed mode
+- [compar_cohort.field_config.tsv](src/main/resources/field_config/reportable/compar_cohort.field_config.tsv) for the default `-match_level REPORTABLE`
+- [compar_cohort.field_config.tsv](src/main/resources/field_config/detailed/compar_cohort.field_config.tsv) for `-match_level DETAILED`, which also includes the extra categories and fields that are only compared in detailed mode
 
 Each file lists one row per field, for every category that is run at that match level:
 
@@ -149,7 +149,7 @@ These defaults can be overridden with `-field_config_file`, pointing to a TSV fi
 If `-strict_field_config` is also set, every compared field for every category being run must have an entry in the file, and Compar will exit
 with an error if any are missing.
 
-Every Compar run also writes out the field config it actually used (i.e. after applying any overrides) to `field.config.compar.tsv` in the
+Optionally, a Compar run also writes out the field config it actually used (i.e. after applying any overrides) to a `.field_config.tsv` file in the
 output directory. This is a record of exactly what was compared for that run, and can itself be used as a `-field_config_file` input to repeat
 the comparison later with the same settings.
 

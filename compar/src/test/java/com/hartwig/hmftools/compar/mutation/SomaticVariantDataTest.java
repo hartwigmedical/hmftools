@@ -75,7 +75,6 @@ public class SomaticVariantDataTest extends ComparableItemTest<SomaticVariantDat
         fieldToAlternateValueInitializer.put(FLD_VARIANT_COPY_NUMBER, b -> b.variantCopyNumber = alternateValueSource.VariantCopyNumber);
         fieldToAlternateValueInitializer.put(FLD_PURITY_ADJUSTED_VAF, b -> b.purityAdjustedVaf = alternateValueSource.PurityAdjustedVaf);
         fieldToAlternateValueInitializer.put(FLD_LPS, b -> b.hasLPS = alternateValueSource.HasLPS);
-        fieldToAlternateValueInitializer.put(FLD_FILTER, b -> b.filters = alternateValueSource.Filters);
 
         nameToAlternateIndexInitializer = Map.of(
                 "Chromosome", b -> b.chromosome = alternateValueSource.Chromosome,
@@ -87,10 +86,7 @@ public class SomaticVariantDataTest extends ComparableItemTest<SomaticVariantDat
         reportabilityFieldToFalseReportabilityInitializer = Map.of(FLD_REPORTED, b -> b.reported = false);
         nameToNonPassInitializer = Map.of(
                 "UnfilteredVcf", b -> b.isFromUnfilteredVcf = true,
-                "NonGene", b -> {
-                    b.gene = "";
-                    b.reported = false;
-                }
+                FLD_FILTER, b -> b.filters = Set.of("PON")
         );
     }
 

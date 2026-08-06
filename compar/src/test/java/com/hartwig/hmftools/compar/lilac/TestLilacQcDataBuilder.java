@@ -3,11 +3,9 @@ package com.hartwig.hmftools.compar.lilac;
 import static com.hartwig.hmftools.common.hla.HlaCommon.MHC_CLASS_I;
 
 import java.util.Collections;
-import java.util.List;
 import java.util.function.Consumer;
 
 import com.hartwig.hmftools.common.hla.ImmutableLilacQcData;
-import com.hartwig.hmftools.common.hla.LilacAllele;
 import com.hartwig.hmftools.compar.TestComparableItemBuilder;
 
 public class TestLilacQcDataBuilder

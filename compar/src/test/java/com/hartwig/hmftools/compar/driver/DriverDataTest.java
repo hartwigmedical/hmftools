@@ -2,6 +2,8 @@ package com.hartwig.hmftools.compar.driver;
 
 import static com.hartwig.hmftools.common.driver.DriverCategory.ONCO;
 import static com.hartwig.hmftools.common.driver.LikelihoodMethod.AMP;
+import static com.hartwig.hmftools.compar.ComparTestUtil.assertDifferencesAreForFields;
+import static com.hartwig.hmftools.compar.driver.TestDriverDataBuilder.buildAlternatePurityData;
 import static com.hartwig.hmftools.compar.driver.TestDriverDataBuilder.buildPurityData;
 
 import static org.junit.Assert.assertFalse;
@@ -12,6 +14,7 @@ import static junit.framework.TestCase.assertEquals;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.driver.DriverCatalog;
@@ -119,6 +122,62 @@ public class DriverDataTest extends ComparableItemTest<DriverData, DriverCompare
         assertTrue(victimOtherTranscript.matches(victim));
         assertTrue(victimCanonical.matches(victim));
         assertTrue(victimOtherTranscriptAndCanonical.matches(victim));
+    }
+
+    @Test
+    public void passVsNonPassComparison()
+    {
+        PurplePurity reportedPurity = buildPurityData();
+        PurplePurity notReportedPurity = buildAlternatePurityData();
+
+        DriverCatalog reportedCatalog = createDriverCatalog("KRAS", DriverType.MUTATION, 0.7, 2);
+
+        DriverCatalog notReportedCatalog = ImmutableDriverCatalog.builder()
+                .from(reportedCatalog)
+                .minCopyNumber(5)
+                .maxCopyNumber(5)
+                .driverLikelihood(0.)
+                .reportedStatus(ReportedStatus.NOT_REPORTED)
+                .build();
+
+        DriverData passDriver = new DriverData(reportedCatalog, reportedPurity, "1", false, true, comparer.fieldsList());
+        DriverData nonPassDriver = new DriverData(notReportedCatalog, notReportedPurity, "1", false, false, comparer.fieldsList());
+
+        assertTrue(passDriver.matches(nonPassDriver));
+
+        // fields only meaningful for a called driver are omitted entirely when isPass is false
+        assertTrue(passDriver.fieldValues().containsKey(DriverComparer.Fields.Likelihood.toString()));
+        assertTrue(passDriver.fieldValues().containsKey(DriverComparer.Fields.Purity.toString()));
+
+        assertFalse(nonPassDriver.fieldValues().containsKey(DriverComparer.Fields.Likelihood.toString()));
+        assertFalse(nonPassDriver.fieldValues().containsKey(DriverComparer.Fields.LikelihoodMethod.toString()));
+        assertFalse(nonPassDriver.fieldValues().containsKey(DriverComparer.Fields.Chromosome.toString()));
+        assertFalse(nonPassDriver.fieldValues().containsKey(DriverComparer.Fields.ChromosomeBand.toString()));
+
+        assertTrue(nonPassDriver.fieldValues().containsKey(DriverComparer.Fields.MinCopyNumber.toString()));
+        assertTrue(nonPassDriver.fieldValues().containsKey(DriverComparer.Fields.MaxCopyNumber.toString()));
+        assertTrue(nonPassDriver.fieldValues().containsKey(DriverComparer.Fields.Purity.toString()));
+        assertTrue(nonPassDriver.fieldValues().containsKey(DriverComparer.Fields.Ploidy.toString()));
+
+        // compared fields is limited to relevant fields
+        Set<String> expectedDiffFields = Set.of(
+                DriverComparer.Fields.MinCopyNumber.toString(), DriverComparer.Fields.MaxCopyNumber.toString());
+
+        Mismatch detailedOldOnly = passDriver.findMismatch(comparer, nonPassDriver, MatchLevel.DETAILED, false);
+        assertEquals(MismatchType.OLD_ONLY, detailedOldOnly.Type);
+        assertDifferencesAreForFields(expectedDiffFields, detailedOldOnly.DiffValues);
+
+        Mismatch detailedNewOnly = nonPassDriver.findMismatch(comparer, passDriver, MatchLevel.DETAILED, false);
+        assertEquals(MismatchType.NEW_ONLY, detailedNewOnly.Type);
+        assertDifferencesAreForFields(expectedDiffFields, detailedNewOnly.DiffValues);
+
+        Mismatch reportableOldOnly = passDriver.findMismatch(comparer, nonPassDriver, MatchLevel.REPORTABLE, false);
+        assertEquals(MismatchType.OLD_ONLY, reportableOldOnly.Type);
+        assertDifferencesAreForFields(expectedDiffFields, reportableOldOnly.DiffValues);
+
+        Mismatch reportableNewOnly = nonPassDriver.findMismatch(comparer, passDriver, MatchLevel.REPORTABLE, false);
+        assertEquals(MismatchType.NEW_ONLY, reportableNewOnly.Type);
+        assertDifferencesAreForFields(expectedDiffFields, reportableNewOnly.DiffValues);
     }
 
     @Test

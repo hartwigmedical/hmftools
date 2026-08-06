@@ -42,12 +42,12 @@ public class DriverData extends ComparableItem
         mKey = driverCatalog.isCanonical() ? key : key + "_" + driverCatalog.transcript();
         mIsPass = isPass;
 
-        addDoubleValue(DriverComparer.Fields.Likelihood.toString(), driverCatalog.driverLikelihood(), fields);
         addDoubleValue(DriverComparer.Fields.MinCopyNumber.toString(), driverCatalog.minCopyNumber(), fields);
         addDoubleValue(DriverComparer.Fields.MaxCopyNumber.toString(), driverCatalog.maxCopyNumber(), fields);
 
         if(isPass)
         {
+            addDoubleValue(DriverComparer.Fields.Likelihood.toString(), driverCatalog.driverLikelihood(), fields);
             addStringValue(DriverComparer.Fields.LikelihoodMethod.toString(), driverCatalog.likelihoodMethod().toString(), fields);
             addStringValue(DriverComparer.Fields.Chromosome.toString(), comparisonChromosome, fields);
             addStringValue(DriverComparer.Fields.ChromosomeBand.toString(), driverCatalog.chromosomeBand(), fields);
@@ -101,6 +101,8 @@ public class DriverData extends ComparableItem
         return true;
     }
 
+    /*
+    @Override
     public Mismatch findMismatch(
             final ItemComparer comparer, final ComparableItem other, final MatchLevel matchLevel, final boolean includeMatches)
     {
@@ -137,4 +139,5 @@ public class DriverData extends ComparableItem
 
         return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches);
     }
+     */
 }

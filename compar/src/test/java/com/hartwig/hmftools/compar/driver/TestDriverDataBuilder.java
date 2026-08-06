@@ -87,4 +87,13 @@ public class TestDriverDataBuilder
                 0, false, 0, MicrosatelliteStatus.MSS, 0, TumorMutationalStatus.LOW,
                 0, TumorMutationalStatus.LOW, 0, RunMode.TUMOR_GERMLINE, false);
     }
+
+    protected static PurplePurity buildAlternatePurityData()
+    {
+        return new PurplePurity(
+                0.8, 1, 1, 1, 3, Gender.FEMALE, FittedPurityMethod.NORMAL, 1,
+                1, 1, 1, 1, 1, 1,
+                0, false, 0, MicrosatelliteStatus.MSS, 0, TumorMutationalStatus.LOW,
+                0, TumorMutationalStatus.LOW, 0, RunMode.TUMOR_GERMLINE, false);
+    }
 }

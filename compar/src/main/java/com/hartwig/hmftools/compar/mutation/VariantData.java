@@ -168,8 +168,7 @@ public class VariantData extends ComparableItem
     @Override
     public boolean isPass()
     {
-        // a reportable variant not in a gene should be impossible
-        return !IsFromUnfilteredVcf && (Reported || !Gene.isEmpty());
+        return !IsFromUnfilteredVcf && filtersStr().equals(PASS_FILTER);
     }
 
     @Override

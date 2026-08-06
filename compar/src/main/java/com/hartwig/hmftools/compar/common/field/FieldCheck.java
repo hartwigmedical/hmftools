@@ -12,8 +12,8 @@ public class FieldCheck
     public final Double PercDiffThreshold;
 
     // only used for overrides loaded from file
-    public final Boolean AbsThresholdOverriden;
-    public final Boolean PercThresholdOverriden;
+    public final Boolean AbsThresholdOverridden;
+    public final Boolean PercThresholdOverridden;
 
     public FieldCheck(final boolean isCompared)
     {
@@ -27,13 +27,13 @@ public class FieldCheck
 
     public FieldCheck(
             final boolean isCompared, final Double absDiffThreshold, final Double percDiffThreshold,
-            final boolean absThresholdOverriden, final boolean percThresholdOverriden)
+            final boolean absThresholdOverridden, final boolean percThresholdOverridden)
     {
         IsCompared = isCompared;
         AbsDiffThreshold = absDiffThreshold;
         PercDiffThreshold = percDiffThreshold;
-        AbsThresholdOverriden = absThresholdOverriden;
-        PercThresholdOverriden = percThresholdOverriden;
+        AbsThresholdOverridden = absThresholdOverridden;
+        PercThresholdOverridden = percThresholdOverridden;
     }
 
     public boolean hasThresholds() { return AbsDiffThreshold != null || PercDiffThreshold != null; }

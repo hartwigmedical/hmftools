@@ -55,7 +55,7 @@ public class CommonUtils
             }
             else
             {
-                List<TruthsetValue> truthsetValues = source.Truthset.sampleTruthsetEntries(sampleId).get(comparer.category());
+                List<TruthsetValue> truthsetValues = source.Truthset.sampleTruthsetEntries(sampleId, comparer.category());
 
                 if(truthsetValues == null || truthsetValues.isEmpty())
                     continue;
@@ -243,14 +243,14 @@ public class CommonUtils
             final ComparableItem oldItem, final ComparableItem newItem, final List<String> diffs,
             final MatchLevel matchLevel, final boolean includeMatches)
     {
-        boolean refCountsAsCalled = countsAsCalled(oldItem, matchLevel);
+        boolean oldCountsAsCalled = countsAsCalled(oldItem, matchLevel);
         boolean newCountsAsCalled = countsAsCalled(newItem, matchLevel);
-        if(!refCountsAsCalled && !newCountsAsCalled)
+        if(!oldCountsAsCalled && !newCountsAsCalled)
         {
             // ignore unimportant differences
             return null;
         }
-        else if(refCountsAsCalled && newCountsAsCalled && diffs.isEmpty() && !includeMatches)
+        else if(oldCountsAsCalled && newCountsAsCalled && diffs.isEmpty() && !includeMatches)
         {
             // ignore perfect matches when not including matches
             return null;
@@ -258,19 +258,19 @@ public class CommonUtils
         else
         {
             MismatchType mismatchType;
-            if(refCountsAsCalled && !newCountsAsCalled)
+            if(oldCountsAsCalled && !newCountsAsCalled)
             {
                 mismatchType = OLD_ONLY;
             }
-            else if(!refCountsAsCalled && newCountsAsCalled)
+            else if(!oldCountsAsCalled && newCountsAsCalled)
             {
                 mismatchType = NEW_ONLY;
             }
-            else if(refCountsAsCalled && newCountsAsCalled && !diffs.isEmpty())
+            else if(oldCountsAsCalled && newCountsAsCalled && !diffs.isEmpty())
             {
                 mismatchType = VALUE;
             }
-            else if(refCountsAsCalled && newCountsAsCalled && includeMatches)
+            else if(oldCountsAsCalled && newCountsAsCalled && includeMatches)
             {
                 mismatchType = FULL_MATCH;
             }
