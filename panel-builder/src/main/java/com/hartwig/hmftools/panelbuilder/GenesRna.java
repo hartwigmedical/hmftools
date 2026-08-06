@@ -30,6 +30,7 @@ import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.file.DelimFileReader;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
@@ -124,13 +125,17 @@ public class GenesRna
         }
     }
 
-    private static List<String> parseTranscripts(@Nullable final String field)
+    static List<String> parseTranscripts(@Nullable final String field)
     {
         if(field == null || field.isEmpty())
         {
             return emptyList();
         }
-        List<String> transcriptNames = Arrays.asList(field.strip().split(","));
+        // Excel wraps a field containing commas in double quotes (e.g. "ENST1,ENST2"); strip the enclosing quotes before splitting, and any
+        // per-value quotes after.
+        List<String> transcriptNames = Arrays.stream(StringUtils.unwrap(field.strip(), '"').split(","))
+                .map(name -> StringUtils.unwrap(name.strip(), '"'))
+                .toList();
         for(String transcriptName : transcriptNames)
         {
             if(transcriptName.isBlank())

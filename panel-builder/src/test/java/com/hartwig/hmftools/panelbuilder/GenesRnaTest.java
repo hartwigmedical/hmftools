@@ -169,6 +169,21 @@ public class GenesRnaTest
     }
 
     @Test
+    public void testParseTranscripts()
+    {
+        // Plain comma-separated.
+        assertEquals(List.of("ENST1", "ENST2"), GenesRna.parseTranscripts("ENST1,ENST2"));
+        // Excel wraps a comma-containing field in double quotes - the enclosing quotes must be stripped.
+        assertEquals(List.of("ENST1", "ENST2"), GenesRna.parseTranscripts("\"ENST1,ENST2\""));
+        // Single value, and whitespace around values.
+        assertEquals(List.of("ENST1"), GenesRna.parseTranscripts("ENST1"));
+        assertEquals(List.of("ENST1", "ENST2"), GenesRna.parseTranscripts("\"ENST1, ENST2\""));
+        // Empty / null -> no transcripts.
+        assertEquals(List.of(), GenesRna.parseTranscripts(null));
+        assertEquals(List.of(), GenesRna.parseTranscripts(""));
+    }
+
+    @Test
     public void testResolveTranscript()
     {
         GeneData gene = new GeneData("GENE1", "GENE1", "1", FORWARD, 1000, 3099, "");
