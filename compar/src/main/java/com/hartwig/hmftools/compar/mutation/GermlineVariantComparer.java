@@ -56,9 +56,6 @@ public class GermlineVariantComparer extends ItemComparer
         {
             for(VariantContext variantContext : vcfFileReader.iterator())
             {
-                if(variantContext.isFiltered())
-                    continue;
-
                 GermlineVariantData variant = GermlineVariantData.fromContext(
                         variantContext, sampleId, false, fileSources.Source, mConfig, mFields);
 

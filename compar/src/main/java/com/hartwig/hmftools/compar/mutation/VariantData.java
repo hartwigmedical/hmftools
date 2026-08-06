@@ -102,20 +102,22 @@ public class VariantData extends ComparableItem
         addBoolValue(FLD_REPORTED, reported, fields);
         addStringValue(FLD_HOTSPOT, hotspotStatus.toString(), fields);
         addStringValue(FLD_TIER, tier.toString(), fields);
-        addStringValue(FLD_GENE, gene, fields);
-        addStringValue(FLD_CANON_EFFECT, canonicalEffect, fields);
-        addStringValue(FLD_CODING_EFFECT, canonicalCodingEffect, fields);
-        addStringValue(FLD_HGVS_CODING, canonicalHgvsCodingImpact, fields);
-        addStringValue(FLD_HGVS_PROTEIN, canonicalHgvsProteinImpact, fields);
-        addStringValue(FLD_OTHER_REPORTED, otherReportedEffects, fields);
-
         addIntValue(FLD_QUAL, qual, fields);
-
-        addDoubleValue(FLD_VARIANT_COPY_NUMBER, variantCopyNumber, fields);
-        addDoubleValue(FLD_PURITY_ADJUSTED_VAF, purityAdjustedVaf, fields);
-
         addIntValue(FLD_TUMOR_SUPPORTING_READ_COUNT, tumorSupportingReadCount, fields);
         addIntValue(FLD_TUMOR_TOTAL_READ_COUNT, tumorTotalReadCount, fields);
+
+        if(!isFromUnfilteredVcf)
+        {
+            // leave out of comparison if created from a filtered variant
+            addDoubleValue(FLD_VARIANT_COPY_NUMBER, variantCopyNumber, fields);
+            addDoubleValue(FLD_PURITY_ADJUSTED_VAF, purityAdjustedVaf, fields);
+            addStringValue(FLD_GENE, gene, fields);
+            addStringValue(FLD_CANON_EFFECT, canonicalEffect, fields);
+            addStringValue(FLD_CODING_EFFECT, canonicalCodingEffect, fields);
+            addStringValue(FLD_HGVS_CODING, canonicalHgvsCodingImpact, fields);
+            addStringValue(FLD_HGVS_PROTEIN, canonicalHgvsProteinImpact, fields);
+            addStringValue(FLD_OTHER_REPORTED, otherReportedEffects, fields);
+        }
 
         addStringValue(FLD_FILTER, filtersStr(), fields);
     }

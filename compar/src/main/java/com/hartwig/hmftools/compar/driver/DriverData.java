@@ -42,12 +42,16 @@ public class DriverData extends ComparableItem
         mKey = driverCatalog.isCanonical() ? key : key + "_" + driverCatalog.transcript();
         mIsPass = isPass;
 
-        addStringValue(DriverComparer.Fields.LikelihoodMethod.toString(), driverCatalog.likelihoodMethod().toString(), fields);
         addDoubleValue(DriverComparer.Fields.Likelihood.toString(), driverCatalog.driverLikelihood(), fields);
         addDoubleValue(DriverComparer.Fields.MinCopyNumber.toString(), driverCatalog.minCopyNumber(), fields);
         addDoubleValue(DriverComparer.Fields.MaxCopyNumber.toString(), driverCatalog.maxCopyNumber(), fields);
-        addStringValue(DriverComparer.Fields.Chromosome.toString(), comparisonChromosome, fields);
-        addStringValue(DriverComparer.Fields.ChromosomeBand.toString(), driverCatalog.chromosomeBand(), fields);
+
+        if(isPass)
+        {
+            addStringValue(DriverComparer.Fields.LikelihoodMethod.toString(), driverCatalog.likelihoodMethod().toString(), fields);
+            addStringValue(DriverComparer.Fields.Chromosome.toString(), comparisonChromosome, fields);
+            addStringValue(DriverComparer.Fields.ChromosomeBand.toString(), driverCatalog.chromosomeBand(), fields);
+        }
 
         addDoubleValue(DriverComparer.Fields.Purity.toString(), purity.Purity, fields);
         addDoubleValue(DriverComparer.Fields.Ploidy.toString(), purity.Ploidy, fields);

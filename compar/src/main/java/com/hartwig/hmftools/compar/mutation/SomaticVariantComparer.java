@@ -320,9 +320,6 @@ public class SomaticVariantComparer extends ItemComparer
 
         for(VariantContext variantContext : vcfFileReader.iterator())
         {
-            if(variantContext.isFiltered())
-                continue;
-
             SomaticVariantData variant = SomaticVariantData.fromContext(
                     variantContext, sampleId, false, fileSources.Source, mConfig, mFields);
 
