@@ -2,10 +2,16 @@ package com.hartwig.hmftools.tars.common;
 
 import static com.hartwig.hmftools.tars.common.TarsConstants.MATCH;
 import static com.hartwig.hmftools.tars.common.TarsConstants.MISMATCH;
+import static com.hartwig.hmftools.tars.common.TarsConstants.GAP_EXTEND;
+import static com.hartwig.hmftools.tars.common.TarsConstants.GAP_OPEN;
 
 import static htsjdk.samtools.util.SequenceUtil.basesEqual;
 
+import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+
+import htsjdk.samtools.Cigar;
+import htsjdk.samtools.CigarElement;
 
 // Scores read bases against the reference the way bwa-mem does, for the passes that re-check a lifted placement.
 public final class BwaScoring
@@ -62,5 +68,63 @@ public final class BwaScoring
             }
         }
         return bestLength;
+    }
+
+    public static int genomicScore(
+            final RefGenomeInterface refGenome, final String chromosome, final int alignmentStart, final String cigarStr,
+            final byte[] readBases)
+    {
+        if(refGenome == null || readBases == null || cigarStr == null)
+        {
+            return Integer.MIN_VALUE;
+        }
+
+        Cigar cigar = CigarUtils.cigarFromStr(cigarStr);
+        int totalScore = 0;
+        int queryPos = 0;
+        int refPos = alignmentStart;
+
+        for(CigarElement element : cigar.getCigarElements())
+        {
+            int length = element.getLength();
+            switch(element.getOperator())
+            {
+                case M:
+                case EQ:
+                case X:
+                    byte[] ref = refWindow(refGenome, chromosome, refPos, refPos + length - 1);
+                    for(int i = 0; i < length; ++i)
+                    {
+                        boolean scorable = ref != null && queryPos + i < readBases.length;
+                        totalScore += scorable ? baseScore(readBases[queryPos + i], ref[i]) : MISMATCH;
+                    }
+                    queryPos += length;
+                    refPos += length;
+                    break;
+
+                case I:
+                    totalScore += GAP_OPEN + (length - 1) * GAP_EXTEND;
+                    queryPos += length;
+                    break;
+
+                case D:
+                    totalScore += GAP_OPEN + (length - 1) * GAP_EXTEND;
+                    refPos += length;
+                    break;
+
+                case N:
+                    refPos += length;
+                    break;
+
+                case S:
+                    queryPos += length;
+                    break;
+
+                default:
+                    break;
+            }
+        }
+
+        return totalScore;
     }
 }

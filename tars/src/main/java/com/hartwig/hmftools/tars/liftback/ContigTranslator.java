@@ -1,15 +1,17 @@
 package com.hartwig.hmftools.tars.liftback;
 
-import static com.hartwig.hmftools.common.bam.CigarUtils.leftSoftClipLength;
 import static com.hartwig.hmftools.common.bam.CigarUtils.leftSoftClipped;
 import static com.hartwig.hmftools.common.bam.CigarUtils.rightSoftClipped;
+import static com.hartwig.hmftools.tars.common.TarsCigarUtils.clampLeadingReferenceToSoftClip;
+import static com.hartwig.hmftools.tars.common.TarsCigarUtils.clampTrailingReferenceToSoftClip;
+import static com.hartwig.hmftools.tars.common.TarsCigarUtils.normalize;
 import static com.hartwig.hmftools.tars.common.TarsConstants.ALT_CONTIG_SUFFIX;
 import static com.hartwig.hmftools.tars.common.TarsConstants.MAX_MERGED_DELETION_BP;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -82,8 +84,7 @@ public final class ContigTranslator
                 true, translated.softClipAtExonBoundary(), forwardStrand, entry.strand());
     }
 
-    // Lifts each entry of a bwa XA tag ("chrom,<sign>pos,cigar,NM;" repeated, the position sign carrying the strand).
-    // Malformed entries and placements that fail to lift are skipped: XA comes from the aligner, outside our control.
+    // Lifts each XA entry, skips invalid placements and keeps one copy of each lifted placement.
     public List<LiftedAlignment> liftXaAlignments(final String xaTag)
     {
         List<LiftedAlignment> lifted = new ArrayList<>();
@@ -92,6 +93,7 @@ public final class ContigTranslator
             return lifted;
         }
 
+        Set<String> seenKeys = new HashSet<>();
         for(String entry : xaTag.split(";"))
         {
             if(entry.isEmpty())
@@ -123,13 +125,19 @@ public final class ContigTranslator
 
             LiftedAlignment alignment = liftAlignment(
                     fields[0], Math.abs(signedPosition), fields[2], numMismatches, signedPosition >= 0);
-            if(alignment != null)
+            if(alignment != null && seenKeys.add(liftedKey(alignment)))
             {
                 lifted.add(alignment);
             }
         }
 
         return lifted;
+    }
+
+    private static String liftedKey(final LiftedAlignment alignment)
+    {
+        return alignment.LiftedChromosome + ":" + alignment.LiftedPos + ":" + alignment.LiftedCigar
+                + ":" + (alignment.ForwardStrand ? '+' : '-');
     }
 
     // Segment owning altPos, or null when the contig is unknown. A spacer or leading-overhang position resolves to the
@@ -216,7 +224,7 @@ public final class ContigTranslator
         if(contigPos < contig.contigStart())
         {
             int overhang = contig.contigStart() - contigPos;
-            cigar = clampLeadingMToSoftClip(cigar, overhang);
+            cigar = clampLeadingReferenceToSoftClip(cigar, overhang);
             if(cigar == null)
             {
                 return null;
@@ -228,7 +236,7 @@ public final class ContigTranslator
         if(readEnd > contig.contigEnd())
         {
             int overhang = readEnd - contig.contigEnd();
-            cigar = clampTrailingMToSoftClip(cigar, overhang);
+            cigar = clampTrailingReferenceToSoftClip(cigar, overhang);
             if(cigar == null)
             {
                 return null;
@@ -314,21 +322,8 @@ public final class ContigTranslator
 
         return new ContigTranslateResult(
                 contig.chromosome(), genomicStart,
-                new Cigar(mergeAdjacentSameOp(dropZeroLength(outElements))),
+                new Cigar(normalize(outElements)),
                 softClipAtExonBoundary);
-    }
-
-    static List<CigarElement> dropZeroLength(final List<CigarElement> elements)
-    {
-        List<CigarElement> result = new ArrayList<>(elements.size());
-
-        for(CigarElement element : elements)
-        {
-            if(element.getLength() > 0)
-                result.add(element);
-        }
-
-        return result;
     }
 
     // A D straddling an exon boundary lifts as xD nN yD; folding the small flanking Ds into the N preserves both spans.
@@ -372,26 +367,6 @@ public final class ContigTranslator
         return element.getOperator() == CigarOperator.D && element.getLength() <= MAX_MERGED_DELETION_BP;
     }
 
-    static List<CigarElement> mergeAdjacentSameOp(final List<CigarElement> elements)
-    {
-        List<CigarElement> merged = new ArrayList<>(elements.size());
-
-        for(CigarElement element : elements)
-        {
-            if(!merged.isEmpty() && merged.get(merged.size() - 1).getOperator() == element.getOperator())
-            {
-                CigarElement prev = merged.remove(merged.size() - 1);
-                merged.add(new CigarElement(prev.getLength() + element.getLength(), element.getOperator()));
-            }
-            else
-            {
-                merged.add(element);
-            }
-        }
-
-        return merged;
-    }
-
     // exon span index + genomic position where an alignment begins.
     private record SpanLocation(int spanIndex, int genomicPos)
     {
@@ -431,103 +406,5 @@ public final class ContigTranslator
             }
         }
         return false;
-    }
-
-    // Soft-clips the leading `overhang` reference bases, merging any existing leading S. Walks as many elements as the
-    // overhang spans rather than requiring the first aligned block to cover it on its own: an insertion contributes read
-    // bases but no reference, a deletion the reverse, so a short terminal block followed by an indel still clamps.
-    // Null when the overhang consumes the whole alignment, leaving nothing aligned.
-    private static Cigar clampLeadingMToSoftClip(final Cigar cigar, final int overhang)
-    {
-        List<CigarElement> elements = cigar.getCigarElements();
-
-        int existingLeadingSoftClip = leftSoftClipLength(cigar);
-        int index = existingLeadingSoftClip > 0 ? 1 : 0;
-
-        int remainingOverhang = overhang;
-        int clippedReadBases = 0;
-        List<CigarElement> tail = null;
-
-        while(index < elements.size())
-        {
-            CigarElement element = elements.get(index);
-            CigarOperator op = element.getOperator();
-
-            if(!op.consumesReferenceBases())
-            {
-                // an insertion's bases are read-only: they fall inside the clip without shortening the overhang
-                if(op.consumesReadBases())
-                {
-                    clippedReadBases += element.getLength();
-                }
-                ++index;
-                continue;
-            }
-
-            if(element.getLength() <= remainingOverhang)
-            {
-                remainingOverhang -= element.getLength();
-                if(op.consumesReadBases())
-                {
-                    clippedReadBases += element.getLength();
-                }
-                ++index;
-
-                if(remainingOverhang == 0)
-                {
-                    tail = new ArrayList<>(elements.subList(index, elements.size()));
-                    break;
-                }
-
-                continue;
-            }
-
-            // the overhang ends inside this element: keep its remainder aligned
-            if(op.consumesReadBases())
-            {
-                clippedReadBases += remainingOverhang;
-            }
-
-            tail = new ArrayList<>();
-            tail.add(new CigarElement(element.getLength() - remainingOverhang, op));
-            tail.addAll(elements.subList(index + 1, elements.size()));
-            remainingOverhang = 0;
-            break;
-        }
-
-        if(remainingOverhang > 0 || tail == null)
-        {
-            return null;
-        }
-
-        // A deletion left at the clip boundary would have to be dropped to give a valid alignment start, and dropping
-        // it moves the first aligned base past contigStart - which the caller has already pinned. Decline instead of
-        // emitting a placement that is off by the deletion's length.
-        if(tail.isEmpty() || tail.get(0).getOperator() != CigarOperator.M)
-        {
-            return null;
-        }
-
-        List<CigarElement> out = new ArrayList<>(tail.size() + 1);
-        out.add(new CigarElement(existingLeadingSoftClip + clippedReadBases, CigarOperator.S));
-        out.addAll(tail);
-        return new Cigar(out);
-    }
-
-    // trailing-edge mirror of clampLeadingMToSoftClip: reverse the elements, clamp the (now-leading) edge, reverse back.
-    private static Cigar clampTrailingMToSoftClip(final Cigar cigar, final int overhang)
-    {
-        List<CigarElement> reversed = new ArrayList<>(cigar.getCigarElements());
-        Collections.reverse(reversed);
-
-        Cigar clamped = clampLeadingMToSoftClip(new Cigar(reversed), overhang);
-        if(clamped == null)
-        {
-            return null;
-        }
-
-        List<CigarElement> out = new ArrayList<>(clamped.getCigarElements());
-        Collections.reverse(out);
-        return new Cigar(out);
     }
 }

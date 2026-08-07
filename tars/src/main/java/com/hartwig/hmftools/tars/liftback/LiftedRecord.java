@@ -1,9 +1,15 @@
 package com.hartwig.hmftools.tars.liftback;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+
+import com.hartwig.hmftools.common.codon.Nucleotides;
+import com.hartwig.hmftools.tars.liftback.features.SoftClipExtender;
+
+import htsjdk.samtools.SAMRecord;
 
 // Tars' in-flight view of one SAMRecord: 1:N over its candidate placements (own alignment + lifted XA alts), of which
 // primaryIndex is the one written back; the placement accessors are valid only once hasPlacement() holds.
@@ -22,6 +28,7 @@ public record LiftedRecord(
     // accessors below assume it, so a mismatch is a lift bug and fails here rather than downstream.
     public LiftedRecord
     {
+        liftedAlignments = List.copyOf(liftedAlignments);
         boolean validIndex = liftedAlignments.isEmpty()
                 ? primaryIndex == NO_PRIMARY
                 : primaryIndex >= 0 && primaryIndex < liftedAlignments.size();
@@ -106,6 +113,56 @@ public record LiftedRecord(
                 newUpdatedMapQuality, numLoci, appendNote(notes, note), primaryIndex, revised);
     }
 
+    public LiftedRecord withLiftedAlignments(final List<LiftedAlignment> alignments)
+    {
+        return new LiftedRecord(updatedMapQuality, numLoci, notes, primaryIndex, alignments);
+    }
+
+    public LiftedRecord withPrimaryTranscriptStrand(final int transcriptStrand)
+    {
+        List<LiftedAlignment> revised = new ArrayList<>(liftedAlignments);
+        revised.set(primaryIndex, primaryAlignment().withTranscriptStrand(transcriptStrand));
+        return withLiftedAlignments(revised);
+    }
+
+    public LiftedRecord withExtendedSoftClips(final SoftClipExtender extender, final SAMRecord record)
+    {
+        if(extender == null || !extender.enabled() || !hasPlacement() || liftedAlignments.isEmpty())
+        {
+            return this;
+        }
+
+        byte[] forwardBases = record.getReadBases();
+        if(forwardBases == null || forwardBases.length == 0)
+        {
+            return this;
+        }
+
+        boolean changed = false;
+        boolean recordForward = !record.getReadNegativeStrandFlag();
+        byte[] reverseBases = hasOppositeStrandAlignment(recordForward) ? reverseComplement(forwardBases) : null;
+        List<LiftedAlignment> revised = new ArrayList<>(liftedAlignments);
+
+        for(int i = 0; i < revised.size(); ++i)
+        {
+            LiftedAlignment alignment = revised.get(i);
+            if(alignment.Dropped || alignment.LiftedCigar == null)
+            {
+                continue;
+            }
+
+            LiftedAlignment extended = extender.extend(
+                    alignment, alignment.ForwardStrand == recordForward ? forwardBases : reverseBases);
+            if(extended != alignment)
+            {
+                revised.set(i, extended);
+                changed = true;
+            }
+        }
+
+        return changed ? withLiftedAlignments(revised) : this;
+    }
+
     // The XA tag for this record: every kept non-primary placement, minus alts whose span overlaps the primary's (a
     // shared-exon isoform read lifting back onto the primary's coords carries no alternative-position info), each
     // distinct locus once. Null when nothing is left to report.
@@ -134,5 +191,24 @@ public record LiftedRecord(
             return note;
         }
         return existing + ";" + note;
+    }
+
+    private boolean hasOppositeStrandAlignment(final boolean recordForward)
+    {
+        for(LiftedAlignment alignment : liftedAlignments)
+        {
+            if(alignment.ForwardStrand != recordForward)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static byte[] reverseComplement(final byte[] bases)
+    {
+        byte[] reversed = Arrays.copyOf(bases, bases.length);
+        Nucleotides.reverseComplementBasesInPlace(reversed, 0, reversed.length);
+        return reversed;
     }
 }

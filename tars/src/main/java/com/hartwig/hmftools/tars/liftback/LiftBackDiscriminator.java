@@ -17,6 +17,8 @@ import java.util.Map;
 import java.util.Set;
 
 import com.hartwig.hmftools.tars.common.ContigEntry;
+import com.hartwig.hmftools.tars.liftback.features.OverhangGate;
+import com.hartwig.hmftools.tars.liftback.features.SoftClipExtender;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -27,17 +29,17 @@ public class LiftBackDiscriminator
     private final ContigTranslator mContigTranslator;
 
     // when present, resolves hidden ties (XS==AS, no XA) on ref-only primaries landing inside an annotated exon.
-    private final ExonRegionIndex mExonIndex;
+    private final EnsemblAnnotationIndex mEnsemblAnnotationIndex;
 
     public LiftBackDiscriminator(final List<ContigEntry> entries)
     {
         this(entries, null);
     }
 
-    public LiftBackDiscriminator(final List<ContigEntry> entries, final ExonRegionIndex exonIndex)
+    public LiftBackDiscriminator(final List<ContigEntry> entries, final EnsemblAnnotationIndex annotationIndex)
     {
         mContigTranslator = new ContigTranslator(entries);
-        mExonIndex = exonIndex;
+        mEnsemblAnnotationIndex = annotationIndex;
     }
 
     ContigTranslator contigTranslator()
@@ -84,18 +86,25 @@ public class LiftBackDiscriminator
                 segment.transName(), segment.contigStart(), segment.contigEnd(), segment.exonSpans().size());
     }
 
-    // No-reconcile convenience for non-discriminating callers (supplementaries, unmapped, lift-only paths, tests).
+    // Convenience for non-discriminating callers (supplementaries, unmapped, lift-only paths, tests).
     public LiftedRecord resolve(final SAMRecord record)
     {
         return resolve(record, null, null);
     }
 
-    public LiftedRecord resolve(final SAMRecord record, final OverhangReconciler reconciler)
+    public LiftedRecord resolve(final SAMRecord record, final OverhangGate overhangGate)
     {
-        return resolve(record, reconciler, null);
+        return resolve(record, overhangGate, null, null);
     }
 
-    public LiftedRecord resolve(final SAMRecord record, final OverhangReconciler reconciler, final LiftedRecord mate)
+    public LiftedRecord resolve(final SAMRecord record, final OverhangGate overhangGate, final LiftedRecord mate)
+    {
+        return resolve(record, overhangGate, null, mate);
+    }
+
+    public LiftedRecord resolve(
+            final SAMRecord record, final OverhangGate overhangGate, final SoftClipExtender softClipExtender,
+            final LiftedRecord mate)
     {
         if(record.getReadUnmappedFlag())
         {
@@ -107,10 +116,22 @@ public class LiftBackDiscriminator
             return liftSupplementary(record);
         }
 
-        return resolvePrimary(record, reconciler, mate);
+        return resolvePrimary(record, overhangGate, softClipExtender, mate);
     }
 
-    private LiftedRecord resolvePrimary(final SAMRecord record, final OverhangReconciler reconciler, final LiftedRecord mate)
+    private LiftedRecord resolvePrimary(
+            final SAMRecord record, final OverhangGate overhangGate, final SoftClipExtender softClipExtender,
+            final LiftedRecord mate)
+    {
+        LiftedRecord candidates = liftPrimaryCandidates(record, overhangGate);
+        if(!candidates.hasPlacement())
+        {
+            return candidates;
+        }
+        return resolvePrimaryCandidates(record, candidates.liftedAlignments(), softClipExtender, mate);
+    }
+
+    public LiftedRecord liftPrimaryCandidates(final SAMRecord record, final OverhangGate overhangGate)
     {
         LiftedAlignment self = liftSelf(record);
 
@@ -119,27 +140,52 @@ public class LiftBackDiscriminator
             return LiftedRecord.unmapped("primary_translate_failed");
         }
 
-        List<LiftedAlignment> alts = parseAndLiftXa(record);
+        List<LiftedAlignment> alts = mContigTranslator.liftXaAlignments(record.getStringAttribute(XA_ATTRIBUTE));
         List<LiftedAlignment> allAlignments = new ArrayList<>(1 + alts.size());
         allAlignments.add(self);
         allAlignments.addAll(alts);
+        int inputMapQuality = record.getMappingQuality();
 
-        // Normalize each candidate's cigar before discriminating so the ref-vs-tx features are measured, not assumed.
+        // Gate lifted candidates before discriminating so ref-vs-tx features are measured, not assumed.
         // Null on the lift-only paths, where nothing is being decided.
-        if(reconciler != null)
+        if(overhangGate != null)
         {
-            reconciler.reconcileAlignmentsToGenome(allAlignments, record);
+            overhangGate.gateCandidates(allAlignments, record);
         }
 
-        // reconciling can replace self (index 0) with a revised copy, so re-fetch it before the pick.
-        self = allAlignments.get(0);
+        return new LiftedRecord(inputMapQuality, 0, "", 0, allAlignments);
+    }
+
+    public LiftedRecord resolvePrimaryCandidates(
+            final SAMRecord record, List<LiftedAlignment> allAlignments, final SoftClipExtender softClipExtender,
+            final LiftedRecord mate)
+    {
+        int inputMapQuality = record.getMappingQuality();
+        if(softClipExtender != null)
+        {
+            LiftedRecord candidates = new LiftedRecord(inputMapQuality, 0, "", 0, allAlignments)
+                    .withExtendedSoftClips(softClipExtender, record);
+            allAlignments = new ArrayList<>(candidates.liftedAlignments());
+            softClipExtender.scoreCandidates(allAlignments, record);
+        }
+
+        // Feature passes can replace self (index 0) with a revised copy, so re-fetch it before the pick.
+        LiftedAlignment self = allAlignments.get(0);
 
         boolean concordant = isConcordant(allAlignments);
-        int inputMapQuality = record.getMappingQuality();
         int seed = readSeed(record.getReadName());
+        boolean hasSupplementaryMergeCandidate = hasSupplementaryMergeCandidate(allAlignments);
         ApplyResult outcome = apply(
-                allAlignments, concordant, self, seed, inputMapQuality != 0, mate);
+                allAlignments, concordant, self, seed, inputMapQuality != 0 && !hasSupplementaryMergeCandidate, mate);
         LiftedAlignment effectivePrimary = outcome.effectivePrimary();
+
+        for(LiftedAlignment alignment : allAlignments)
+        {
+            if(alignment != effectivePrimary && alignment.hasSupplementaryMerge())
+            {
+                alignment.Dropped = true;
+            }
+        }
 
         List<LiftedAlignment> keptAlignments = new ArrayList<>(allAlignments.size());
         for(LiftedAlignment alignment : allAlignments)
@@ -154,11 +200,22 @@ public class LiftBackDiscriminator
         int numLoci = keptAlignments.size() == 1 ? 1 : countDistinctLoci(keptAlignments, effectivePrimary);
 
         boolean hiddenTie = inputMapQuality == 0 && hasHiddenTie(record);
-        boolean inAnnotatedExon = mExonIndex != null
-                && mExonIndex.contains(effectivePrimary.LiftedChromosome, effectivePrimary.LiftedPos);
+        boolean inAnnotatedExon = mEnsemblAnnotationIndex != null
+                && mEnsemblAnnotationIndex.containsExon(effectivePrimary.LiftedChromosome, effectivePrimary.LiftedPos);
         boolean randomTie = outcome.note().equals("random");
         int updatedMapQuality = decidePrimaryMapQuality(
                 inputMapQuality, numLoci, hiddenTie, effectivePrimary.FromTxContig, inAnnotatedExon, randomTie);
+        String note = outcome.note();
+
+        if(effectivePrimary.hasSupplementaryMerge())
+        {
+            updatedMapQuality = Math.max(updatedMapQuality, effectivePrimary.MergedSupplementaryMapQuality);
+            if(numLoci == 1)
+            {
+                updatedMapQuality = CONFIDENT_MAPQ;
+            }
+            note = appendNote(note, "supplementary-resolved");
+        }
 
         if(outcome.primaryIndex() != 0)
         {
@@ -168,11 +225,31 @@ public class LiftBackDiscriminator
                     effectivePrimary.LiftedCigar, outcome.note());
         }
 
-        return new LiftedRecord(updatedMapQuality, numLoci, outcome.note(), outcome.primaryIndex(), allAlignments);
+        return new LiftedRecord(updatedMapQuality, numLoci, note, outcome.primaryIndex(), allAlignments);
+    }
+
+    private static boolean hasSupplementaryMergeCandidate(final List<LiftedAlignment> alignments)
+    {
+        for(LiftedAlignment alignment : alignments)
+        {
+            if(alignment.hasSupplementaryMerge())
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static String appendNote(final String existing, final String note)
+    {
+        if(existing == null || existing.isEmpty())
+        {
+            return note;
+        }
+        return existing + ";" + note;
     }
 
     // A supplementary is only lifted, never discriminated: lift its own coords with no XA parse or locus pick.
-    // MAPQ=0 on a tx-contig supplementary is the multi-alt-contig tie artefact; bump to CONFIDENT_MAPQ.
     private LiftedRecord liftSupplementary(final SAMRecord record)
     {
         LiftedAlignment lifted = liftSelf(record);
@@ -182,27 +259,7 @@ public class LiftBackDiscriminator
             return LiftedRecord.unmapped("supp_translate_failed");
         }
 
-        int inputMapQuality = record.getMappingQuality();
-        int outputMapQuality = (lifted.FromTxContig && inputMapQuality == 0) ? CONFIDENT_MAPQ : inputMapQuality;
-
-        return new LiftedRecord(outputMapQuality, 1, "", 0, List.of(lifted));
-    }
-
-    // Self is excluded from the dedup key set so a Tx XA alt lifting to the same coords as a ref self is preserved (drives CONCORDANT).
-    private List<LiftedAlignment> parseAndLiftXa(final SAMRecord record)
-    {
-        List<LiftedAlignment> alts = new ArrayList<>();
-        Set<String> seenKeys = new HashSet<>();
-
-        for(LiftedAlignment lifted : mContigTranslator.liftXaAlignments(record.getStringAttribute(XA_ATTRIBUTE)))
-        {
-            if(seenKeys.add(liftedKey(lifted)))
-            {
-                alts.add(lifted);
-            }
-        }
-
-        return alts;
+        return new LiftedRecord(record.getMappingQuality(), 1, "", 0, List.of(lifted));
     }
 
     // Distinct genomic loci among kept alignments: an alt overlapping the primary collapses into it; non-overlapping
@@ -245,7 +302,7 @@ public class LiftBackDiscriminator
     }
 
     // Emit-time NH recompute: drops Dropped alts and collapses alts overlapping the primary, so NH stays consistent
-    // with the XA after the soft-clip extension mutates the shared list. A placement-less record maps to one locus by definition.
+    // with the final XA. A placement-less record maps to one locus by definition.
     public static int countDistinctLoci(final LiftedRecord liftedRecord)
     {
         if(!liftedRecord.hasPlacement())
@@ -262,12 +319,6 @@ public class LiftBackDiscriminator
             }
         }
         return Math.max(countDistinctLoci(kept, liftedRecord.primaryAlignment()), 1);
-    }
-
-    private static String liftedKey(final LiftedAlignment alignment)
-    {
-        return alignment.LiftedChromosome + ":" + alignment.LiftedPos + ":" + alignment.LiftedCigar
-                + ":" + (alignment.ForwardStrand ? '+' : '-');
     }
 
     private static int getInt(final SAMRecord record, final String tag)
@@ -309,7 +360,7 @@ public class LiftBackDiscriminator
     // runs; it is a fabricated placement, so it contributes neither a source nor a locus.
     public static boolean isConcordant(final List<LiftedAlignment> alignments)
     {
-        Set<String> loci = new HashSet<>();
+        Set<AlignmentKey.Locus> loci = new HashSet<>();
         Set<String> distinctCigars = new HashSet<>();
         boolean hasRef = false;
         boolean hasTx = false;
@@ -327,7 +378,7 @@ public class LiftBackDiscriminator
                 return false;
             }
 
-            loci.add(alignment.locusKey());
+            loci.add(alignment.key().locus());
             distinctCigars.add(alignment.LiftedCigar);
 
             if(alignment.FromTxContig)
@@ -371,9 +422,8 @@ public class LiftBackDiscriminator
         return pickByScore(alignments, self, seed, mate);
     }
 
-    // Highest recomputed genome score wins ("score"). Top-score ties are settled in order by: mate proximity ("mate"),
-    // then a spliced placement over a same-locus soft-clip ("junction"), then a read-name seed ("random"). Nothing is
-    // dropped; losers ride in XA. Unscored candidates (a split read left for Step 3) keep bwa's primary.
+    // Highest recomputed genome score wins ("score"). Top-score ties are settled in order by: supplementary support,
+    // mate proximity, junction over soft clip, then a read-name seed. Nothing is dropped; losers ride in XA.
     private static ApplyResult pickByScore(
             final List<LiftedAlignment> alignments, final LiftedAlignment self, final int seed, final LiftedRecord mate)
     {
@@ -395,18 +445,18 @@ public class LiftBackDiscriminator
         {
             topScore = Math.max(topScore, alignment.GenomicScore);
         }
-        if(topScore == Integer.MIN_VALUE)
+        if(topScore == Integer.MIN_VALUE && !hasSupplementaryMergeCandidate(candidates))
         {
-            return keepBwaPrimary(alignments, self); // unscored (split read left for Step 3): keep bwa's placement
+            return keepBwaPrimary(alignments, self);
         }
 
         // Collapse identical placements (same locus + CIGAR from different sources, e.g. a ref self and a tx alt that
         // lift to the same contiguous alignment) so the tie is over distinct placements, not weighted by source count.
         List<LiftedAlignment> top = new ArrayList<>();
-        Set<String> topKeys = new HashSet<>();
+        Set<AlignmentKey> topKeys = new HashSet<>();
         for(LiftedAlignment alignment : candidates)
         {
-            if(alignment.GenomicScore == topScore && topKeys.add(placementKey(alignment)))
+            if(alignment.GenomicScore == topScore && topKeys.add(alignment.key()))
             {
                 top.add(alignment);
             }
@@ -422,28 +472,50 @@ public class LiftBackDiscriminator
         }
         else
         {
-            List<LiftedAlignment> contenders = mateProximalSubset(top, mate);
+            List<LiftedAlignment> contenders = supplementarySupportedSubset(top);
             if(contenders.size() == 1)
             {
                 winner = contenders.get(0);
-                note = "mate";
+                note = "supplementary";
             }
             else
             {
-                LiftedAlignment junction = preferJunctionOverSoftClip(contenders);
-                if(junction != null)
+                contenders = mateProximalSubset(contenders, mate);
+                if(contenders.size() == 1)
                 {
-                    winner = junction;
-                    note = "junction";
+                    winner = contenders.get(0);
+                    note = "mate";
                 }
                 else
                 {
-                    winner = contenders.get(Math.floorMod(seed, contenders.size()));
-                    note = "random";
+                    LiftedAlignment junction = preferJunctionOverSoftClip(contenders);
+                    if(junction != null)
+                    {
+                        winner = junction;
+                        note = "junction";
+                    }
+                    else
+                    {
+                        winner = contenders.get(Math.floorMod(seed, contenders.size()));
+                        note = "random";
+                    }
                 }
             }
         }
         return new ApplyResult(indexOf(alignments, winner), winner, note);
+    }
+
+    private static List<LiftedAlignment> supplementarySupportedSubset(final List<LiftedAlignment> top)
+    {
+        List<LiftedAlignment> supported = new ArrayList<>();
+        for(LiftedAlignment alignment : top)
+        {
+            if(alignment.hasSupplementaryMerge())
+            {
+                supported.add(alignment);
+            }
+        }
+        return supported.isEmpty() ? top : supported;
     }
 
     private static ApplyResult keepBwaPrimary(final List<LiftedAlignment> alignments, final LiftedAlignment self)
@@ -484,19 +556,31 @@ public class LiftBackDiscriminator
 
     private static boolean isMateProximal(final LiftedAlignment alignment, final LiftedRecord mate)
     {
-        if(!mate.finalChromosome().equals(alignment.LiftedChromosome))
+        for(LiftedAlignment mateAlignment : mate.liftedAlignments())
+        {
+            if(!mateAlignment.Dropped && isMateProximal(alignment, mateAlignment))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean isMateProximal(final LiftedAlignment alignment, final LiftedAlignment mate)
+    {
+        if(!mate.LiftedChromosome.equals(alignment.LiftedChromosome))
         {
             return false;
         }
-        int mateEnd = mate.primaryAlignment().alignedEnd();
+        int mateEnd = mate.alignedEnd();
         int gap;
         if(alignment.LiftedPos > mateEnd)
         {
             gap = alignment.LiftedPos - mateEnd;
         }
-        else if(alignment.LiftedPos < mate.finalPos())
+        else if(alignment.LiftedPos < mate.LiftedPos)
         {
-            gap = mate.finalPos() - alignment.LiftedPos;
+            gap = mate.LiftedPos - alignment.LiftedPos;
         }
         else
         {
@@ -530,8 +614,4 @@ public class LiftBackDiscriminator
         return null;
     }
 
-    private static String placementKey(final LiftedAlignment alignment)
-    {
-        return alignment.locusKey() + ":" + alignment.LiftedCigar;
-    }
 }

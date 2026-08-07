@@ -14,18 +14,9 @@ import com.hartwig.hmftools.tars.liftback.TarsTestFixtures.TestGenome;
 
 import org.junit.Test;
 
-// Whole-pipeline tests driven through the parametric LiftBackScenario harness: each test declares reads + tags +
-// geometry and asserts the lifted result of the full per-group pipeline (resolve -> overhang-gate peel ->
-// supplementary-resolve -> post-resolve peel + reclaim -> mate-patch -> NH/unmap policy). Per-component behaviour is
-// unit-tested in LiftBackDiscriminatorTest / SpliceLiftBackApplyTest / the supplementary + overhang suites.
-//
-// Standard three-exon contig (exons 100-199, 300-399, 500-549; introns 200-299, 400-499; contig length 250) with an
-// all-'A' genome carrying canonical GT..AG at the intron boundaries so the ref-dependent passes (supplementary-resolve
-// ref-verify, tail-extend, collapse) have a motif to land on; scenarios that need matching exon bases add them via bases().
+// Full-pipeline scenarios from candidate construction through BAM emission.
 public class LiftBackScenarioTest
 {
-    // three-exon contig geometry (exons 100-199, 300-399, 500-549; introns 200-299, 400-499), all-'A' genome with
-    // canonical GT..AG seeded at the intron boundaries so supplementary-resolve ref-verify / canonicalize have a motif to land on.
     private static TestGenome scenarioGenome()
     {
         return new TestGenome().with(CHR_1, 2000, 'A')
@@ -91,23 +82,20 @@ public class LiftBackScenarioTest
     }
 
     @Test
-    public void testGenomicTerminalSoftclipNotReclaimed()
+    public void testGenomicTerminalSoftclipExtended()
     {
-        // a GENOMIC (non-tx) read with a trailing soft-clip whose clipped bases continue contiguously in the all-'A'
-        // genome. The standalone reclaim is tx-match-only, so the genomic over-clip is left as bwa placed it: 50M10S stays.
+        // Soft-clip extension runs on lifted candidates before primary choice.
         scenario()
                 .read(primary("frag9", CHR_1, 1000, "50M10S").bases("A".repeat(60)))
                 .read(mate("frag9", CHR_1, 1500, "50M").bases("A".repeat(50)))
                 .run()
-                .assertLifted("frag9", PRIMARY, CHR_1, 1000, "50M10S");
+                .assertLifted("frag9", PRIMARY, CHR_1, 1000, "60M");
     }
 
     @Test
-    public void testTxMatchTerminalSoftclipReclaimed()
+    public void testTxMatchTerminalSoftclipExtended()
     {
-        // a tx-contig read (exon1, lifts to chr1:100) with a trailing soft-clip whose clipped bases continue
-        // contiguously in the genome. The chosen primary is a tx-match, so the post-resolve reclaim walks the 10S into
-        // the reference -> 50M.
+        // Tx candidates get the same terminal soft-clip extension as genomic candidates.
         scenario()
                 .read(primary("frag10", TX_CONTIG, 1, "40M10S").bases("A".repeat(50)))
                 .read(mate("frag10", CHR_1, 1500, "50M").bases("A".repeat(50)))
@@ -155,6 +143,26 @@ public class LiftBackScenarioTest
                 .assertLifted("frag5", PRIMARY, CHR_1, 150, "50M100N50M")
                 .assertSuppCount("frag5", 0)
                 .assertMapQuality("frag5", PRIMARY, 60);
+    }
+
+    @Test
+    public void testSupplementaryCanMergeWithXaCandidateBeforePrimaryChoice()
+    {
+        // The primary's XA candidate and supplementary form the supported splice. The reciprocal SA tags match BWA output.
+        scenario()
+                .read(primary("frag7", CHR_1, 900, "50M50S").mapQuality(0)
+                        .xa(CHR_1 + ",+150,50M50S,0")
+                        .sa(CHR_1 + ",300,+,50S50M,0,0;")
+                        .bases("A".repeat(100)))
+                .read(supp("frag7", CHR_1, 300, "50S50M").mapQuality(0)
+                        .sa(CHR_1 + ",900,+,50M50S,0,0;")
+                        .bases("A".repeat(100)))
+                .read(mate("frag7", CHR_1, 800, "50M").bases("A".repeat(50)))
+                .run()
+                .assertLifted("frag7", PRIMARY, CHR_1, 150, "50M100N50M")
+                .assertSuppCount("frag7", 0)
+                .assertMapQuality("frag7", PRIMARY, 0)
+                .assertXa("frag7", PRIMARY, CHR_1 + ",+900,100M,0;");
     }
 
     @Test

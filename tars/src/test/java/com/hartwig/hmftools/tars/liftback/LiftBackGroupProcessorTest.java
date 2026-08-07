@@ -23,14 +23,16 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.region.BaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.tars.liftback.TarsTestFixtures.TestGenome;
-import com.hartwig.hmftools.tars.liftback.overhang.OverhangGate;
-import com.hartwig.hmftools.tars.liftback.supplementary.AnnotatedJunctionIndex;
-import com.hartwig.hmftools.tars.liftback.supplementary.SupplementaryConfig;
-import com.hartwig.hmftools.tars.liftback.supplementary.SupplementaryResolver;
+import com.hartwig.hmftools.tars.liftback.features.OverhangGate;
+import com.hartwig.hmftools.tars.liftback.features.SoftClipExtender;
+import com.hartwig.hmftools.tars.liftback.features.SupplementaryConfig;
+import com.hartwig.hmftools.tars.liftback.features.SupplementaryResolver;
 
 import org.junit.Test;
 
@@ -50,7 +52,7 @@ public class LiftBackGroupProcessorTest
     {
         LiftBackGroupProcessor processor = new LiftBackGroupProcessor(
                 new LiftBackDiscriminator(List.of(threeExonContig())),
-                supplementaryResolver, overhangGate, refGenome, excludedRegions);
+                supplementaryResolver, overhangGate, new SoftClipExtender(refGenome), refGenome, excludedRegions);
 
         List<SAMRecord> emitted = new ArrayList<>();
         processor.processNameGroup(group, emitted::add);
@@ -388,12 +390,83 @@ public class LiftBackGroupProcessorTest
                 out1.getStringAttribute("XA") != null && out1.getStringAttribute("XA").contains(otherCopy));
     }
 
+    @Test
+    public void testFirstMateUsesSecondMateCandidates()
+    {
+        String sequence = "ACGT".repeat(13);
+        RefGenomeInterface ref = new TestGenome()
+                .with("chr5", 500, 'A').with("chr10", 500, 'A')
+                .set("chr5", 100, sequence).set("chr10", 100, sequence)
+                .asRefGenome();
+
+        SAMRecord first = primaryRecord("paired", "chr5", 100, "52M");
+        first.setMappingQuality(0);
+        first.setReadBases(bases(sequence));
+        first.setAttribute("XA", "chr10,+100,52M,0;");
+
+        SAMRecord second = secondMateRecord("paired", "chr10", 120, "52M");
+        second.setReadBases(bases(sequence));
+
+        List<SAMRecord> emitted = process(List.of(first, second), null, new OverhangGate(ref), ref, null);
+
+        assertEquals("chr10", emitted.stream().filter(SAMRecord::getFirstOfPairFlag).findFirst().orElseThrow().getReferenceName());
+    }
+
+    @Test
+    public void testProcessorMergesSupplementaryChainBeforeDiscrimination()
+    {
+        SAMRecord primary = primaryRecord(CHR_1, 1000, "50M101S");
+        SAMRecord middle = supplementaryRecord(CHR_1, 2000, "50S60M41S", CHR_1 + ",1000,+,50M101S,0,0;");
+        SAMRecord last = supplementaryRecord(CHR_1, 3000, "110S41M", CHR_1 + ",1000,+,50M101S,0,0;");
+        primary.setReadBases(bases("A".repeat(151)));
+        middle.setReadBases(bases("A".repeat(151)));
+        last.setReadBases(bases("A".repeat(151)));
+        SupplementaryResolver resolver = new SupplementaryResolver(
+                Set.of(new ChrBaseRegion(CHR_1, 1050, 1999), new ChrBaseRegion(CHR_1, 2060, 2999)),
+                SupplementaryConfig.defaults());
+
+        List<SAMRecord> emitted = process(List.of(primary, middle, last), resolver);
+
+        assertEquals(1, emitted.size());
+        assertEquals("50M950N60M940N41M", emitted.get(0).getCigarString());
+    }
+
+    @Test
+    public void testGenomicSupplementaryMergeGetsXsFromAnnotation()
+    {
+        SAMRecord primary = primaryRecord(CHR_1, 150, "50M101S");
+        SAMRecord supplementary = supplementaryRecord(CHR_1, 300, "50S101M", CHR_1 + ",150,+,50M101S,0,0;");
+        primary.setReadBases(bases("A".repeat(151)));
+        supplementary.setReadBases(bases("A".repeat(151)));
+
+        List<SAMRecord> emitted = process(List.of(primary, supplementary), contigSupplementary());
+
+        assertEquals(1, emitted.size());
+        assertEquals("50M100N101M", emitted.get(0).getCigarString());
+        assertEquals(Character.valueOf('+'), emitted.get(0).getAttribute("XS"));
+    }
+
+    @Test
+    public void testFinalGenomicScoreControlsAlignmentScoreFloor()
+    {
+        RefGenomeInterface ref = new TestGenome().with(CHR_1, 500, 'A').asRefGenome();
+        SAMRecord primary = primaryRecord(CHR_1, 1, "20M100N3M48S");
+        primary.setReadBases(bases("C".repeat(71)));
+        primary.setAttribute("AS", 60);
+
+        List<SAMRecord> emitted = process(
+                List.of(primary), noopSupplementary(), new OverhangGate(ref), ref, null);
+
+        assertEquals(1, emitted.size());
+        assertTrue(emitted.get(0).getReadUnmappedFlag());
+    }
+
     // Junctions taken from the same sidecar entry the discriminator lifts against, so the intron coords and the
     // chromosome key match what the lift emits: chr1 introns 200-299 and 400-499 between the three exons.
     private static SupplementaryResolver contigSupplementary()
     {
         return new SupplementaryResolver(
-                AnnotatedJunctionIndex.fromContigEntries(List.of(threeExonContig())), null, SupplementaryConfig.defaults());
+                EnsemblAnnotationIndex.fromContigEntries(List.of(threeExonContig())), null, SupplementaryConfig.defaults());
     }
 
     @Test
@@ -443,5 +516,51 @@ public class LiftBackGroupProcessorTest
 
         assertEquals(1, emitted.size());
         assertEquals("51M100S", emitted.get(0).getCigarString());
+    }
+
+    // The snap tests above run with no reference, which leaves the extension pass inert. These two supply one, so the
+    // snap and the extension are exercised against each other.
+
+    @Test
+    public void testBoundarySnapSurvivesSoftClipExtension()
+    {
+        // The base a snap retracts is one bwa had aligned, so it still matches the reference and an extension running
+        // afterwards reclaims it, putting the boundary back inside the intron. The read matches for its first 51 bases
+        // and mismatches beyond, so that single base is the only one the extension could take.
+        RefGenomeInterface refGenome = new TestGenome().with(CHR_1, 700, 'A').asRefGenome();
+        byte[] readBases = bases("A".repeat(51) + "T".repeat(100));
+
+        SAMRecord primary = primaryRecord(CHR_1, 150, "51M100S");
+        primary.setReadBases(readBases);
+        SAMRecord supp = supplementaryRecord(CHR_1, 499, "100S51M", CHR_1 + ",150,+,51M100S,60,0;");
+        supp.setReadBases(readBases);
+
+        List<SAMRecord> emitted = process(List.of(primary, supp), contigSupplementary(), null, refGenome, null);
+
+        assertEquals(2, emitted.size());
+        assertEquals("retraction not re-consumed by the extension", "50M101S", emitted.get(0).getCigarString());
+        assertEquals(150, emitted.get(0).getAlignmentStart());
+    }
+
+    @Test
+    public void testSoftClipExtensionStandsDownTheAlignmentScoreFloor()
+    {
+        // AS 20 is under the floor, but the extension lengthens 51M to 61M, so bwa's recorded score is stale and
+        // pessimistic for the same reason a merge makes it stale. Split-read shape whose read coverage leaves a gap, so
+        // no merge happens and the extension is the only thing that can stand the floor down.
+        RefGenomeInterface refGenome = new TestGenome().with(CHR_1, 700, 'A').asRefGenome();
+        byte[] readBases = bases("A".repeat(61) + "T".repeat(90));
+
+        SAMRecord primary = primaryRecord(CHR_1, 150, "51M100S");
+        primary.setReadBases(readBases);
+        primary.setAttribute("AS", 20);
+        SAMRecord supp = supplementaryRecord(CHR_1, 499, "100S51M", CHR_1 + ",150,+,51M100S,60,0;");
+        supp.setReadBases(readBases);
+
+        List<SAMRecord> emitted = process(List.of(primary, supp), contigSupplementary(), null, refGenome, null);
+
+        assertEquals(2, emitted.size());
+        assertFalse("an extended primary is not unmapped on a stale AS", emitted.get(0).getReadUnmappedFlag());
+        assertEquals("61M90S", emitted.get(0).getCigarString());
     }
 }

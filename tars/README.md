@@ -11,8 +11,8 @@ BAM (no transcript contigs, spliced reads carried as `N` gaps) ready for REDUX a
 * [What a read goes through](#what-a-read-goes-through)
     * [Step 0: Translate transcriptome alignments to reference genome](#step-0-translate-transcriptome-alignments-to-reference-genome)
     * [Step 1: Score short overhangs against the reference genome, collapse weak scoring ones](#step-1-score-short-overhangs-against-the-reference-genome-collapse-weak-scoring-ones)
-    * [Step 2: Decide which alignments to keep for a read](#step-2-decide-which-alignments-to-keep-for-a-read)
-    * [Step 3: Resolve supplementary records into splice junctions](#step-3-resolve-supplementary-records-into-splice-junctions)
+    * [Step 2: Resolve supplementary records into splice junction candidates](#step-2-resolve-supplementary-records-into-splice-junction-candidates)
+    * [Step 3: Decide which alignments to keep for a read](#step-3-decide-which-alignments-to-keep-for-a-read)
 
 ## What TARS does
 
@@ -128,8 +128,8 @@ tars through these steps in order:
 ```
 Step 0  Translate   lift every candidate (primary + XA alts) to genome coordinates
 Step 1  Overhang    re-evaluate each overhang and collapse the weak scoring ones
-Step 2  Decide      choose which alignments to keep as the primary and its XA alternates
-Step 3  Merge       resolve supplementary records into splice junctions
+Step 2  Merge       try each lifted primary/XA candidate with all lifted supplementaries
+Step 3  Decide      choose which alignments to keep as the primary and its XA alternates
 ```
 
 ### Step 0: Translate transcriptome alignments to reference genome
@@ -155,35 +155,16 @@ it only when the intronic reference AS > short overhang AS.
 
 **1c.** With no soft clip and a single junction: not checked, no intervention.
 
-### Step 2: Decide which alignments to keep for a read
-
-A read now has its own alignment plus any `XA` alternate alignments: each a genomic (ref) or translated transcriptome
-(tx) alignment. TARS picks one as the primary, keeps only the relevant `XA`, and sets its `MAPQ`. Every read lands in one
-of three buckets:
-
-- **B1. Ref only:** the read aligns only to the genome (ref); TARS passes it through untouched. One exception: a
-  `MAPQ 0` read with no `XA` is unmapped, since a missing `XA` under bwa's `-h` cap means too many placements to report.
-
-- **B2. Transcriptome locus:** one or more transcript contigs of the same gene lift to a single genomic locus with the
-  same CIGAR. TARS places the read back with `N` gaps / introns and, as a unique placement, sets `MAPQ` to 60.
-
-- **B3. Multi-mapper:** the read has more than one candidate (ref, tx, or both, at one locus or several). TARS picks one
-  alignment as the primary by the following rules, in order, and the rest still-eligible placements are added to the `XA`
-  tag:
-    - **score:** the highest recomputed genome-space `bwa-mem` score wins outright
-    - **score tie:** candidates tied on the top score are settled, in order, by:
-        - **mate proximity:** a locus on the mate's chromosome within a transcript span of the mate wins
-        - **junction over soft clip:** at one locus, a spliced placement (`N` junction) beats a soft-clipped placement,
-          the read bwa clipped rather than cross the intron
-        - **random read-name seed:** a reproducible pseudo-random pick when neither of the above separates the tie
-
-### Step 3: Resolve supplementary records into splice junctions
+### Step 2: Resolve supplementary records into splice junction candidates
 
 `bwa-mem2` is run with `-T 19`, allowing short-anchor supplementary alignments at junction sites (annotated or novel) to
-be kept. Given the pre-requisites, TARS merges such a supplementary back into its primary with a splice junction and drops
-the supplementary. The merge requires:
+be kept. TARS passes all lifted supplementaries to each primary/XA candidate so the resolver can build a splice chain.
+A successful merge becomes another placement candidate for the discriminator; if it wins, every absorbed supplementary
+record is dropped.
 
-- the primary and supplementary are within reach and complementary to each other's soft clips
+The merge requires:
+
+- the candidate and supplementary are within reach and complementary to each other's soft clips
 - the implied intron length is within [`supp_implied_min_intron_length`, `supp_implied_max_intron_length`]
 - exactly one supplementary is within reach on that side, otherwise it is ambiguous and left unmerged
 
@@ -197,6 +178,29 @@ On a successful resolve, it's still ambiguous where the splice junction is. TARS
 
 When several positions tie at the chosen tier, the pick is pseudo-random but seeded by the read, so an ambiguous
 junction is distributed across its equal options yet stays reproducible run to run.
+
+### Step 3: Decide which alignments to keep for a read
+
+A read now has its own alignment plus any `XA` alternate alignments: each a genomic (ref) or translated transcriptome
+(tx) alignment, plus any supplementary-supported merge candidates. TARS picks one as the primary, keeps only the relevant
+`XA`, and sets its `MAPQ`. Every read lands in one of three buckets:
+
+- **B1. Ref only:** the read aligns only to the genome (ref); TARS passes it through untouched. One exception: a
+  `MAPQ 0` read with no `XA` is unmapped, since a missing `XA` under bwa's `-h` cap means too many placements to report.
+
+- **B2. Transcriptome locus:** one or more transcript contigs of the same gene lift to a single genomic locus with the
+  same CIGAR. TARS places the read back with `N` gaps / introns and, as a unique placement, sets `MAPQ` to 60.
+
+- **B3. Multi-mapper:** the read has more than one candidate (ref, tx, or both, at one locus or several). TARS picks one
+  alignment as the primary by the following rules, in order, and the rest still-eligible placements are added to the `XA`
+  tag:
+    - **score:** the highest recomputed genome-space `bwa-mem` score wins outright
+    - **score tie:** candidates tied on the top score are settled, in order, by:
+        - **supplementary support:** a primary+supplementary merge beats unsupported placements
+        - **mate proximity:** a locus on the mate's chromosome within a transcript span of the mate wins
+        - **junction over soft clip:** at one locus, a spliced placement (`N` junction) beats a soft-clipped placement,
+          the read bwa clipped rather than cross the intron
+        - **random read-name seed:** a reproducible pseudo-random pick when neither of the above separates the tie
 
 The merged primary's MAPQ is `max(primary, supplementary)`, bumped to 60 when the primary + supplementary pair maps to a
 single locus (no competing alternative alignment).
