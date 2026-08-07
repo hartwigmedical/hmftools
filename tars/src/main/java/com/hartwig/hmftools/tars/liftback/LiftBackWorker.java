@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 
+import com.hartwig.hmftools.tars.common.TarsCigarUtils;
+
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
@@ -126,8 +128,7 @@ public class LiftBackWorker extends Thread
             return;
         }
 
-        Cigar cleaned = new Cigar(
-                ContigTranslator.mergeAdjacentSameOp(ContigTranslator.dropZeroLength(cigar.getCigarElements())));
+        Cigar cleaned = TarsCigarUtils.normalize(cigar);
 
         byte[] bases = record.getReadBases();
         int seqLength = bases != null ? bases.length : 0;

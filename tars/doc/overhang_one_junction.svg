@@ -1,6 +1,6 @@
 <svg viewBox="0 0 880 276" xmlns="http://www.w3.org/2000/svg" role="img">
 <title>Step 1: one splice junction, kept or collapsed</title>
-<desc>Short overhangs (12 bp or fewer) next to a soft clip, decided by the overhang score (bar = 5). Bar widths are proportional to base count; introns (N) are drawn as fixed gaps. Kept: chr5:181,241,515, 125M 534N 11M 15S, the 11M overhang matches its far exon (AS +11) so the junction is kept. Collapsed: the exp8 field read 25535, 100M 83N 3M 48S, has a 3 bp anchor scoring 3, so the junction is dropped to 100M 51S. Collapsed by SNV: a 7 bp anchor with one mismatch scores 6 minus 4 equals 2, below the bar, so a genuine junction is collapsed to 100M 51S even though its CIGAR M is longer. Score counts matches, not M length. M + S totals 151.</desc>
+<desc>Short overhangs (12 bp or fewer) next to a soft clip, decided by the overhang score (bar = 5). Bar widths are proportional to base count; introns (N) are drawn as fixed gaps. Kept: chr5:181,241,515, 125M 534N 11M 15S, the 11M overhang matches its far exon (AS +11) so the junction is kept. Collapsed: a 100M 83N 3M 48S alignment has a 3 bp anchor scoring 3, so the junction is dropped to 100M 51S. Collapsed by SNV: a 7 bp anchor with one mismatch scores 6 minus 4 equals 2, below the bar, so a genuine junction is collapsed to 100M 51S even though its CIGAR M is longer. Score counts matches, not M length. M + S totals 151.</desc>
 <style>
 svg { font-family: Arial, Helvetica, sans-serif; }
 svg {
@@ -48,8 +48,8 @@ svg {
 <rect x="778" y="86" width="30" height="16" rx="2" fill="url(#softclip)"/><text class="oncigsm" x="793" y="98" fill="var(--warn-dark)">15S</text>
 <line class="rule" x1="40" y1="118" x2="820" y2="118"/>
 
-<!-- collapsed: short anchor (real exp8 read) -->
-<text x="40" y="140"><tspan class="cond" fill="var(--drop)">collapsed</tspan><tspan class="condsub">  &#183;  exp8 read 25535, 3 bp anchor, score +3</tspan></text>
+<!-- collapsed: short anchor -->
+<text x="40" y="140"><tspan class="cond" fill="var(--drop)">collapsed</tspan><tspan class="condsub">  &#183;  3 bp anchor, score +3</tspan></text>
 <rect class="m" x="40" y="150" width="200" height="16" rx="2"/><text class="oncig" x="140" y="162">100M</text>
 <line class="nline" x1="240" y1="158" x2="276" y2="158"/><rect x="242" y="151" width="28" height="13" fill="var(--bg)"/><text class="nlbl" x="256" y="162">83N</text>
 <rect class="m" x="276" y="150" width="14" height="16" rx="2"/><text class="oncigsm" x="283" y="162" fill="#FFFFFF">3M</text>

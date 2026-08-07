@@ -270,6 +270,7 @@ public class LiftBackDiscriminatorTest
     {
         SAMRecord record = newRecord(TX_CONTIG, 51, "100M");
         record.setSupplementaryAlignmentFlag(true);
+        record.setMappingQuality(0);
 
         LiftBackDiscriminator resolver = new LiftBackDiscriminator(contigMap());
         LiftedRecord result = resolver.resolve(record);
@@ -279,6 +280,7 @@ public class LiftBackDiscriminatorTest
         assertEquals(150, result.finalPos());
         assertEquals("50M100N50M", result.finalCigar());
         assertTrue(result.hasNCigar());
+        assertEquals(0, result.updatedMapQuality());
     }
 
     @Test
@@ -434,8 +436,8 @@ public class LiftBackDiscriminatorTest
         LiftBackDiscriminator noIndex = new LiftBackDiscriminator(contigMap());
         assertEquals(0, noIndex.resolve(record).updatedMapQuality());
 
-        ExonRegionIndex exonIndex = exonRegionIndex(CHR_1, List.of(new int[] { 1400, 1700 }));
-        LiftBackDiscriminator withIndex = new LiftBackDiscriminator(contigMap(), exonIndex);
+        EnsemblAnnotationIndex annotationIndex = exonRegionIndex(CHR_1, List.of(new int[] { 1400, 1700 }));
+        LiftBackDiscriminator withIndex = new LiftBackDiscriminator(contigMap(), annotationIndex);
         LiftedRecord result = withIndex.resolve(record);
         assertEquals(0, result.updatedMapQuality());
     }
@@ -449,9 +451,9 @@ public class LiftBackDiscriminatorTest
         record.setAttribute("AS", 151);
         record.setAttribute("XS", 151);
 
-        ExonRegionIndex exonIndex = exonRegionIndex(
+        EnsemblAnnotationIndex annotationIndex = exonRegionIndex(
                 CHR_1, List.of(new int[] { 1400, 1700 })); // exon at 1400-1700; primary at 5000 is intergenic
-        LiftBackDiscriminator resolver = new LiftBackDiscriminator(contigMap(), exonIndex);
+        LiftBackDiscriminator resolver = new LiftBackDiscriminator(contigMap(), annotationIndex);
         assertEquals(0, resolver.resolve(record).updatedMapQuality());
     }
 
@@ -523,8 +525,7 @@ public class LiftBackDiscriminatorTest
     public void testCountDistinctLociFromListRecountsPostExtension()
     {
         // The record overload backs the emit-time NH recompute: it takes the primary from primaryIndex, drops Dropped
-        // alts, and collapses alts overlapping the primary - so NH stays consistent with the XA after
-        // reconcileChosenPrimary's alt extension mutates the shared list.
+        // alts, and collapses alts overlapping the primary so NH stays consistent with the XA tag.
         LiftedAlignment primary = liftedAt(CHR_1, 1000, "100M");   // span 1000-1099
         LiftedAlignment overlapping = liftedAt(CHR_1, 1050, "100M");   // 1050-1149 overlaps the primary
         LiftedAlignment distant = liftedAt(CHR_1, 5000, "100M");   // a genuinely distinct locus

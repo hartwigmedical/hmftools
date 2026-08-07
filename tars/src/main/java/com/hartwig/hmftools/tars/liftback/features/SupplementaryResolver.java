@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.tars.liftback.supplementary;
+package com.hartwig.hmftools.tars.liftback.features;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -9,19 +9,22 @@ import java.util.List;
 import java.util.Set;
 
 import static com.hartwig.hmftools.common.utils.Arrays.reverseArray;
+import static com.hartwig.hmftools.tars.common.TarsCigarUtils.indelAdjacentToTerminalSoftClip;
+import static com.hartwig.hmftools.tars.common.TarsCigarUtils.retractTerminalMatchIntoSoftClip;
+import static com.hartwig.hmftools.tars.common.TarsCigarUtils.terminalMatchedRun;
 
 import static htsjdk.samtools.util.SequenceUtil.basesEqual;
 
 import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.tars.liftback.EnsemblAnnotationIndex;
 import com.hartwig.hmftools.tars.common.BwaScoring;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
 
-// Merges a primary's terminal softclip with an annotated-intron-spanning supplementary into a
-// single spliced primary (N op). Chains up to SupplementaryConfig.MaxSuppMerges merges per read; README Step 3.
+// Merges a primary candidate's terminal softclip with a supplementary into a spliced placement candidate.
 //
 // A supplementary merges into the primary only when all of these hold. RejectReason names the first that fails; several
 // reasons are the two-sided variants of one rule, so there are fewer conditions than reasons.
@@ -37,7 +40,6 @@ import htsjdk.samtools.CigarOperator;
 //   8. a junction position scores above Tier.NONE, or is annotated
 //      when AnnotatedOnly is set                                   NOVEL_JUNCTION
 // With no supplementary at all, tryRefVerifyOnly takes over and reports the REF_VERIFY_* reasons instead.
-// TODO revisit this later to simplify
 public class SupplementaryResolver
 {
     // Plain-value input, testable without SAMRecord. readBases seeds the tie-break between equally scoring
@@ -74,10 +76,10 @@ public class SupplementaryResolver
     // supps. On failure, rejectReason carries the gate that was hit.
     public record Result(
             boolean merged, String mergedCigar, int mergedStart, List<Integer> droppedSupplementaryIndices,
-            List<ChrBaseRegion> introducedIntrons, int chainDepth, RejectReason rejectReason)
+            List<ChrBaseRegion> introducedIntrons, int chainDepth, int spliceStrand, RejectReason rejectReason)
     {
         private static final Result NO_MERGE_NO_OP = new Result(
-                false, null, -1, Collections.emptyList(), Collections.emptyList(), 0, RejectReason.NO_TERMINAL_SOFTCLIP);
+                false, null, -1, Collections.emptyList(), Collections.emptyList(), 0, 0, RejectReason.NO_TERMINAL_SOFTCLIP);
 
         public static Result noMerge(final RejectReason reason)
         {
@@ -85,7 +87,7 @@ public class SupplementaryResolver
             {
                 return NO_MERGE_NO_OP;
             }
-            return new Result(false, null, -1, Collections.emptyList(), Collections.emptyList(), 0, reason);
+            return new Result(false, null, -1, Collections.emptyList(), Collections.emptyList(), 0, 0, reason);
         }
     }
 
@@ -129,22 +131,22 @@ public class SupplementaryResolver
     // no junction position scored above Tier.NONE; a real position is a read offset, so never negative
     private static final int NO_JUNCTION_POSITION = -1;
 
-    private final AnnotatedJunctionIndex mAnnotatedIndex;
+    private final EnsemblAnnotationIndex mEnsemblAnnotationIndex;
     private final RefGenomeInterface mRefGenome;
     private final SupplementaryConfig mConfig;
 
     public SupplementaryResolver(final Set<ChrBaseRegion> annotatedJunctions, final SupplementaryConfig config)
     {
         this(
-                new AnnotatedJunctionIndex(annotatedJunctions != null ? annotatedJunctions : new HashSet<>()),
+                EnsemblAnnotationIndex.fromJunctions(annotatedJunctions != null ? annotatedJunctions : new HashSet<>()),
                 null, config);
     }
 
     public SupplementaryResolver(
-            final AnnotatedJunctionIndex annotatedIndex, final RefGenomeInterface refGenome,
+            final EnsemblAnnotationIndex annotationIndex, final RefGenomeInterface refGenome,
             final SupplementaryConfig config)
     {
-        mAnnotatedIndex = annotatedIndex != null ? annotatedIndex : new AnnotatedJunctionIndex(new HashSet<>());
+        mEnsemblAnnotationIndex = annotationIndex != null ? annotationIndex : EnsemblAnnotationIndex.fromJunctions(new HashSet<>());
         mRefGenome = refGenome;
         mConfig = config;
     }
@@ -173,6 +175,8 @@ public class SupplementaryResolver
         List<ChrBaseRegion> introns = new ArrayList<>();
         RejectReason lastReject = null;
         int chainDepth = 0;
+        int spliceStrand = 0;
+        boolean conflictingStrands = false;
 
         while(chainDepth < mConfig.MaxSuppMerges && !remaining.isEmpty())
         {
@@ -206,6 +210,18 @@ public class SupplementaryResolver
             primaryCigar = merge.MergedCigar;
             dropped.add(merge.MergedSupp.index());
             introns.add(merge.IntroducedIntron);
+            if(merge.SpliceStrand != 0)
+            {
+                if(spliceStrand == 0 && !conflictingStrands)
+                {
+                    spliceStrand = merge.SpliceStrand;
+                }
+                else if(spliceStrand != merge.SpliceStrand)
+                {
+                    spliceStrand = 0;
+                    conflictingStrands = true;
+                }
+            }
             remaining.remove(merge.MergedSupp);
             ++chainDepth;
         }
@@ -218,7 +234,7 @@ public class SupplementaryResolver
 
         return new Result(
                 true, CigarUtils.cigarElementsToStr(primaryCigar), primaryStart,
-                dropped, introns, chainDepth, null);
+                dropped, introns, chainDepth, spliceStrand, null);
     }
 
     // Retracts an over-extended terminal boundary onto an annotated splice boundary, independently of any merge. BWA
@@ -244,11 +260,11 @@ public class SupplementaryResolver
         List<CigarElement> snapped = elements;
         if(rightShift > 0)
         {
-            snapped = MergeCigarOps.shiftBoundaryIntoSoftclip(snapped, rightShift, true);
+            snapped = retractTerminalMatchIntoSoftClip(snapped, rightShift, true);
         }
         if(snapped != null && leftShift > 0)
         {
-            snapped = MergeCigarOps.shiftBoundaryIntoSoftclip(snapped, leftShift, false);
+            snapped = retractTerminalMatchIntoSoftClip(snapped, leftShift, false);
         }
         if(snapped == null)
         {
@@ -268,12 +284,12 @@ public class SupplementaryResolver
         int softClipLength = rightSide
                 ? CigarUtils.rightSoftClipLength(elements)
                 : CigarUtils.leftSoftClipLength(elements);
-        if(softClipLength == 0 || MergeCigarOps.opAdjacentToSoftClip(elements, !rightSide))
+        if(softClipLength == 0 || indelAdjacentToTerminalSoftClip(elements, !rightSide))
         {
             return 0;
         }
 
-        int anchor = MergeCigarOps.matchedRun(elements, rightSide);
+        int anchor = terminalMatchedRun(elements, rightSide);
         int alignedEnd = start + CigarUtils.cigarAlignedLength(elements) - 1;
         int snapShift = 0;
 
@@ -286,8 +302,8 @@ public class SupplementaryResolver
 
             int boundary = rightSide ? (alignedEnd - shift + 1) : (start + shift - 1);
             boolean annotated = rightSide
-                    ? !mAnnotatedIndex.introByStart(chromosome, boundary).isEmpty()
-                    : !mAnnotatedIndex.introByEnd(chromosome, boundary).isEmpty();
+                    ? !mEnsemblAnnotationIndex.junctionsByStart(chromosome, boundary).isEmpty()
+                    : !mEnsemblAnnotationIndex.junctionsByEnd(chromosome, boundary).isEmpty();
             if(!annotated)
             {
                 continue;
@@ -368,7 +384,7 @@ public class SupplementaryResolver
     private Result attemptRefVerifySide(
             final Candidate candidate, final List<CigarElement> primaryCigar, final boolean rightExtend)
     {
-        if(MergeCigarOps.opAdjacentToSoftClip(primaryCigar, !rightExtend))
+        if(indelAdjacentToTerminalSoftClip(primaryCigar, !rightExtend))
         {
             return Result.noMerge(RejectReason.COMPLEX_CIGAR_SHAPE);
         }
@@ -377,8 +393,8 @@ public class SupplementaryResolver
                 ? CigarUtils.rightSoftClipLength(primaryCigar)
                 : CigarUtils.leftSoftClipLength(primaryCigar);
         int primaryAnchor = rightExtend
-                ? MergeCigarOps.matchedRun(primaryCigar, true)
-                : MergeCigarOps.matchedRun(primaryCigar, false);
+                ? terminalMatchedRun(primaryCigar, true)
+                : terminalMatchedRun(primaryCigar, false);
 
         // BWA often over-extends a few bases past the true exon boundary. Snap back up to
         // MaxRefVerifyBoundaryShift (smallest shift first), rolling over-extension into the softclip.
@@ -392,14 +408,14 @@ public class SupplementaryResolver
                 break;
             List<CigarElement> shiftedCigar = shift == 0
                     ? primaryCigar
-                    : MergeCigarOps.shiftBoundaryIntoSoftclip(primaryCigar, shift, rightExtend);
+                    : retractTerminalMatchIntoSoftClip(primaryCigar, shift, rightExtend);
             if(shiftedCigar == null)
                 break;
 
             int boundary = rightExtend ? (primaryRefEnd + 1 - shift) : (candidate.primaryStart() - 1 + shift);
             List<ChrBaseRegion> candidates = rightExtend
-                    ? mAnnotatedIndex.introByStart(candidate.chromosome(), boundary)
-                    : mAnnotatedIndex.introByEnd(candidate.chromosome(), boundary);
+                    ? mEnsemblAnnotationIndex.junctionsByStart(candidate.chromosome(), boundary)
+                    : mEnsemblAnnotationIndex.junctionsByEnd(candidate.chromosome(), boundary);
             if(candidates.isEmpty())
                 continue;
 
@@ -541,11 +557,11 @@ public class SupplementaryResolver
         return new Result(
                 true, CigarUtils.cigarElementsToStr(merged), mergedStart,
                 Collections.emptyList(), Collections.singletonList(chosen),
-                1, null);
+                1, junctionStrand(chosen), null);
     }
 
     // Longest run matching ref from the junction-proximal end, scored with the shared bwa-mem model
-    // (match +1, mismatch -4) so ref-verify matches collapse/tail-extend. Leading clips
+    // (match +1, mismatch -4) so ref-verify matches the ref-dependent feature passes. Leading clips
     // reverse both arrays so the walk runs from the high-index proximal end outward.
     private static int proximalScoringRun(final byte[] softclipBases, final byte[] refBases, final boolean rightExtend)
     {
@@ -573,7 +589,7 @@ public class SupplementaryResolver
 
     private Tier classifyJunctionTier(final ChrBaseRegion candidateIntron)
     {
-        if(mAnnotatedIndex.contains(candidateIntron))
+        if(mEnsemblAnnotationIndex.containsJunction(candidateIntron))
         {
             return Tier.ANNOTATED;
         }
@@ -586,6 +602,67 @@ public class SupplementaryResolver
         byte[] acceptor = refBases(
                 candidateIntron.Chromosome, candidateIntron.end() - 1, candidateIntron.end());
         return motifTier(donor, acceptor);
+    }
+
+    private int junctionStrand(final ChrBaseRegion intron)
+    {
+        int annotatedStrand = mEnsemblAnnotationIndex.junctionStrand(intron);
+        if(annotatedStrand != 0 || mRefGenome == null)
+        {
+            return annotatedStrand;
+        }
+
+        byte[] donor = refBases(intron.Chromosome, intron.start(), intron.start() + 1);
+        byte[] acceptor = refBases(intron.Chromosome, intron.end() - 1, intron.end());
+        return motifStrand(donor, acceptor);
+    }
+
+    public int spliceStrand(final String chromosome, final int start, final String cigar)
+    {
+        int referencePosition = start;
+        int strand = 0;
+        for(CigarElement element : CigarUtils.cigarElementsFromStr(cigar))
+        {
+            if(element.getOperator() == CigarOperator.N)
+            {
+                int intronStrand = junctionStrand(new ChrBaseRegion(
+                        chromosome, referencePosition, referencePosition + element.getLength() - 1));
+                if(intronStrand == 0 || strand != 0 && strand != intronStrand)
+                {
+                    return 0;
+                }
+                strand = intronStrand;
+            }
+            if(element.getOperator().consumesReferenceBases())
+            {
+                referencePosition += element.getLength();
+            }
+        }
+        return strand;
+    }
+
+    static int motifStrand(final byte[] donorBases, final byte[] acceptorBases)
+    {
+        if(donorBases == null || donorBases.length != 2 || acceptorBases == null || acceptorBases.length != 2)
+        {
+            return 0;
+        }
+
+        String donor = upperCase(donorBases);
+        String acceptor = upperCase(acceptorBases);
+        if(donor.equals("GT") && acceptor.equals("AG")
+                || donor.equals("GC") && acceptor.equals("AG")
+                || donor.equals("AT") && acceptor.equals("AC"))
+        {
+            return 1;
+        }
+        if(donor.equals("CT") && acceptor.equals("AC")
+                || donor.equals("CT") && acceptor.equals("GC")
+                || donor.equals("GT") && acceptor.equals("AT"))
+        {
+            return -1;
+        }
+        return 0;
     }
 
     // Donor/acceptor 2-base flanks: GT-AG canonical (~99% of sites), GC-AG and AT-AC semi-canonical. The strand is
@@ -695,7 +772,7 @@ public class SupplementaryResolver
         // overlaps the primary's span, clamp the supp to its primary-distal anchor before merge logic.
         Side primarySide = Side.of(primaryStart, primaryCigar);
         int suppStart = supp.start();
-        MergeCigarOps.ClampedSupp clamped = MergeCigarOps.clampSuppToPrimaryBoundary(suppCigar, suppStart, primaryStart, primarySide.RefEnd);
+        ClampedSupp clamped = clampSuppToPrimaryBoundary(suppCigar, suppStart, primaryStart, primarySide.RefEnd);
         if(clamped != null)
         {
             suppCigar = clamped.Cigar;
@@ -747,7 +824,7 @@ public class SupplementaryResolver
             return RejectReason.COMPLEX_CIGAR_SHAPE;
         }
 
-        if(MergeCigarOps.opAdjacentToSoftClip(up.Cigar, false) || MergeCigarOps.opAdjacentToSoftClip(down.Cigar, true))
+        if(indelAdjacentToTerminalSoftClip(up.Cigar, false) || indelAdjacentToTerminalSoftClip(down.Cigar, true))
         {
             return RejectReason.COMPLEX_CIGAR_SHAPE;
         }
@@ -822,10 +899,9 @@ public class SupplementaryResolver
 
         int upLoss = upMatchedRead - junctionReadPosition;
         int downLoss = junctionReadPosition - down.LeadingS;
-        List<CigarElement> merged = MergeCigarOps.buildMergedCigar(up.Cigar, down.Cigar, upLoss, downLoss, intronLength);
-        return MergeOutcome.success(
-                up.Start, merged, intronAt(candidate, up, down, upMatchedRead, junctionReadPosition),
-                supp, primaryIsUpstream);
+        List<CigarElement> merged = buildMergedCigar(up.Cigar, down.Cigar, upLoss, downLoss, intronLength);
+        ChrBaseRegion intron = intronAt(candidate, up, down, upMatchedRead, junctionReadPosition);
+        return MergeOutcome.success(up.Start, merged, intron, supp, primaryIsUpstream, junctionStrand(intron));
     }
 
     // The intron implied by putting the junction at this read position: the upstream alignment gives up the bases
@@ -920,6 +996,142 @@ public class SupplementaryResolver
         return NO_JUNCTION_POSITION;
     }
 
+    private static List<CigarElement> buildMergedCigar(
+            final List<CigarElement> upCigar, final List<CigarElement> downCigar,
+            final int upLoss, final int downLoss, final int intronLength)
+    {
+        List<CigarElement> merged = new ArrayList<>(upCigar.size() + downCigar.size());
+        for(int i = 0; i < upCigar.size() - 1; ++i)
+        {
+            if(i == upCigar.size() - 2 && upLoss > 0)
+            {
+                merged.add(new CigarElement(upCigar.get(i).getLength() - upLoss, upCigar.get(i).getOperator()));
+            }
+            else
+            {
+                merged.add(upCigar.get(i));
+            }
+        }
+        merged.add(new CigarElement(intronLength, CigarOperator.N));
+        for(int i = 1; i < downCigar.size(); ++i)
+        {
+            if(i == 1 && downLoss > 0)
+            {
+                merged.add(new CigarElement(downCigar.get(i).getLength() - downLoss, downCigar.get(i).getOperator()));
+            }
+            else
+            {
+                merged.add(downCigar.get(i));
+            }
+        }
+        return merged;
+    }
+
+    private static ClampedSupp clampSuppToPrimaryBoundary(
+            final List<CigarElement> suppCigar, final int suppStart,
+            final int primaryStart, final int primaryRefEnd)
+    {
+        boolean keepHead = suppStart < primaryStart;
+        if(!keepHead && suppStart + CigarUtils.cigarAlignedLength(suppCigar) - 1 <= primaryRefEnd)
+        {
+            return null;
+        }
+
+        int refCursor = suppStart;
+        int readCursor = 0;
+        int splitIndex = -1;
+        int readAtSplit = 0;
+        int refAfterSplit = -1;
+        boolean lastBlockInsidePrimary = false;
+
+        for(int i = 0; i < suppCigar.size(); ++i)
+        {
+            CigarOperator op = suppCigar.get(i).getOperator();
+            int length = suppCigar.get(i).getLength();
+
+            if(keepHead)
+            {
+                if(op == CigarOperator.N && splitIndex == -1)
+                {
+                    splitIndex = i;
+                    readAtSplit = readCursor;
+                }
+                else if(splitIndex != -1 && refCursor >= primaryStart && op.isAlignment())
+                {
+                    return cutAt(suppCigar, suppStart, splitIndex, readAtSplit, true);
+                }
+            }
+            else
+            {
+                if(op.isAlignment())
+                {
+                    lastBlockInsidePrimary = refCursor + length - 1 <= primaryRefEnd;
+                }
+                else if(op == CigarOperator.N && lastBlockInsidePrimary)
+                {
+                    splitIndex = i;
+                    readAtSplit = readCursor;
+                    refAfterSplit = refCursor + length;
+                }
+            }
+
+            if(op.consumesReferenceBases())
+            {
+                refCursor += length;
+            }
+            if(op.consumesReadBases())
+            {
+                readCursor += length;
+            }
+        }
+
+        if(keepHead || splitIndex == -1)
+        {
+            return null;
+        }
+
+        return cutAt(suppCigar, refAfterSplit, splitIndex, readAtSplit, false);
+    }
+
+    private static ClampedSupp cutAt(
+            final List<CigarElement> suppCigar, final int start,
+            final int splitIndex, final int readAtSplit, final boolean keepHead)
+    {
+        List<CigarElement> trimmed = new ArrayList<>(suppCigar.size());
+
+        if(keepHead)
+        {
+            trimmed.addAll(suppCigar.subList(0, splitIndex));
+            int clipLength = CigarUtils.cigarBaseLength(suppCigar) - readAtSplit;
+            if(clipLength > 0)
+            {
+                trimmed.add(new CigarElement(clipLength, CigarOperator.S));
+            }
+        }
+        else
+        {
+            if(readAtSplit > 0)
+            {
+                trimmed.add(new CigarElement(readAtSplit, CigarOperator.S));
+            }
+            trimmed.addAll(suppCigar.subList(splitIndex + 1, suppCigar.size()));
+        }
+
+        return new ClampedSupp(start, trimmed);
+    }
+
+    private static final class ClampedSupp
+    {
+        int Start;
+        List<CigarElement> Cigar;
+
+        ClampedSupp(final int start, final List<CigarElement> cigar)
+        {
+            Start = start;
+            Cigar = cigar;
+        }
+    }
+
     private static final class Side
     {
         int Start;
@@ -949,7 +1161,7 @@ public class SupplementaryResolver
             return new Side(
                     start, cigar,
                     CigarUtils.leftSoftClipLength(cigar), CigarUtils.rightSoftClipLength(cigar),
-                    MergeCigarOps.matchedRun(cigar, false), MergeCigarOps.matchedRun(cigar, true),
+                    terminalMatchedRun(cigar, false), terminalMatchedRun(cigar, true),
                     start + CigarUtils.cigarAlignedLength(cigar) - 1);
         }
     }
@@ -962,11 +1174,12 @@ public class SupplementaryResolver
         ChrBaseRegion IntroducedIntron;
         Supplementary MergedSupp;
         boolean RightExtend;       // which terminal softclip of the primary this merge resolved
+        int SpliceStrand;
 
         private MergeOutcome(
                 final RejectReason reject,
                 final int mergedStart, final List<CigarElement> mergedCigar,
-                final ChrBaseRegion intron, final Supplementary supp, final boolean rightExtend)
+                final ChrBaseRegion intron, final Supplementary supp, final boolean rightExtend, final int spliceStrand)
         {
             Reject = reject;
             MergedStart = mergedStart;
@@ -974,18 +1187,19 @@ public class SupplementaryResolver
             IntroducedIntron = intron;
             MergedSupp = supp;
             RightExtend = rightExtend;
+            SpliceStrand = spliceStrand;
         }
 
         static MergeOutcome reject(final RejectReason reason)
         {
-            return new MergeOutcome(reason, -1, null, null, null, false);
+            return new MergeOutcome(reason, -1, null, null, null, false, 0);
         }
 
         static MergeOutcome success(
                 final int start, final List<CigarElement> cigar,
-                final ChrBaseRegion intron, final Supplementary supp, final boolean rightExtend)
+                final ChrBaseRegion intron, final Supplementary supp, final boolean rightExtend, final int spliceStrand)
         {
-            return new MergeOutcome(null, start, cigar, intron, supp, rightExtend);
+            return new MergeOutcome(null, start, cigar, intron, supp, rightExtend, spliceStrand);
         }
 
         boolean isSuccess()

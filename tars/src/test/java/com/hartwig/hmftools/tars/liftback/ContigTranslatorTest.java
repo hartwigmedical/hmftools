@@ -13,6 +13,7 @@ import java.util.List;
 import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.tars.common.ContigEntry;
+import com.hartwig.hmftools.tars.common.TarsCigarUtils;
 
 import org.junit.Test;
 
@@ -281,6 +282,22 @@ public class ContigTranslatorTest
     }
 
     @Test
+    public void testXaAlignmentsAreLiftedAndDeduplicated()
+    {
+        ContigTranslator translator = new ContigTranslator(List.of(threeExonContig()));
+
+        List<LiftedAlignment> alignments = translator.liftXaAlignments(
+                "ensG_T_tx,+51,50M,1;ensG_T_tx,+51,50M,1;ensG_T_tx,-201,30M,2;bad;unknown_tx,+1,10M,0;");
+
+        assertEquals(2, alignments.size());
+        assertEquals(150, alignments.get(0).LiftedPos);
+        assertEquals("50M", alignments.get(0).LiftedCigar);
+        assertTrue(alignments.get(0).ForwardStrand);
+        assertEquals(500, alignments.get(1).LiftedPos);
+        assertFalse(alignments.get(1).ForwardStrand);
+    }
+
+    @Test
     public void testContiguousSpansEmitNoZeroLengthIntron()
     {
         // adjacent spans (no gap) imply no intron, so no 0-length N element is emitted
@@ -303,7 +320,7 @@ public class ContigTranslatorTest
         // a 0-length interior element (eg a 0M for a zero-span exon between two introns) is dropped, then the
         // flanking introns merge into one
         List<CigarElement> elements = cigar("72M102N0M2538N79M").getCigarElements();
-        Cigar result = new Cigar(ContigTranslator.mergeAdjacentSameOp(ContigTranslator.dropZeroLength(elements)));
+        Cigar result = new Cigar(TarsCigarUtils.normalize(elements));
         assertEquals("72M2640N79M", result.toString());
     }
 

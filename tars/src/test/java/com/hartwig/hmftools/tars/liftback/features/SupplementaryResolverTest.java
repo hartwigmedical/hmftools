@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.tars.liftback.supplementary;
+package com.hartwig.hmftools.tars.liftback.features;
 
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.bases;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.repeatedBase;
@@ -11,17 +11,21 @@ import static org.junit.Assert.assertTrue;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
+import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.tars.common.ContigEntry;
+import com.hartwig.hmftools.tars.liftback.EnsemblAnnotationIndex;
 import com.hartwig.hmftools.tars.liftback.TarsTestFixtures;
 import com.hartwig.hmftools.tars.liftback.TarsTestFixtures.TestGenome;
-import com.hartwig.hmftools.tars.liftback.supplementary.SupplementaryResolver.BoundarySnap;
-import com.hartwig.hmftools.tars.liftback.supplementary.SupplementaryResolver.Candidate;
-import com.hartwig.hmftools.tars.liftback.supplementary.SupplementaryResolver.RejectReason;
-import com.hartwig.hmftools.tars.liftback.supplementary.SupplementaryResolver.Result;
-import com.hartwig.hmftools.tars.liftback.supplementary.SupplementaryResolver.Supplementary;
-import com.hartwig.hmftools.tars.liftback.supplementary.SupplementaryResolver.Tier;
+import com.hartwig.hmftools.tars.liftback.features.SupplementaryResolver.BoundarySnap;
+import com.hartwig.hmftools.tars.liftback.features.SupplementaryResolver.Candidate;
+import com.hartwig.hmftools.tars.liftback.features.SupplementaryResolver.RejectReason;
+import com.hartwig.hmftools.tars.liftback.features.SupplementaryResolver.Result;
+import com.hartwig.hmftools.tars.liftback.features.SupplementaryResolver.Supplementary;
+import com.hartwig.hmftools.tars.liftback.features.SupplementaryResolver.Tier;
 
 import org.junit.Test;
 
@@ -84,10 +88,25 @@ public class SupplementaryResolverTest
     }
 
     @Test
+    public void testSpliceStrandComesFromAnnotationAndMotif()
+    {
+        EnsemblAnnotationIndex annotation = EnsemblAnnotationIndex.fromContigEntries(List.of(
+                ContigEntry.annotationOnly(
+                        "g", "gn", "tn", CHR1, -1,
+                        List.of(new BaseRegion(100, 199), new BaseRegion(300, 399)))));
+        SupplementaryResolver annotatedResolver = new SupplementaryResolver(
+                annotation, null, SupplementaryConfig.defaults());
+
+        assertEquals(-1, annotatedResolver.spliceStrand(CHR1, 150, "50M100N50M"));
+        assertEquals(1, SupplementaryResolver.motifStrand(bases("GT"), bases("AG")));
+        assertEquals(-1, SupplementaryResolver.motifStrand(bases("CT"), bases("AC")));
+    }
+
+    @Test
     public void testResolveAcrossPreCollapsedTerminalClip()
     {
-        // exp8 read 25535: the overhang gate now collapses the tx-contig over-run (100M83N3M48S) to 100M51S
-        // upstream, so supplementary resolve receives the clean clip and merges it across the true 156N junction.
+        // The overhang gate now collapses the tx-contig over-run (100M83N3M48S) to 100M51S upstream, so
+        // supplementary resolve receives the clean clip and merges it across the true 156N junction.
         // (The fold that used to do this inside the resolver was removed; the gate owns terminal micro-junction handling.)
         int primStart = 1051270;
         String primCigar = "100M51S";
@@ -739,7 +758,7 @@ public class SupplementaryResolverTest
     private static SupplementaryResolver resolverWithRef(final Set<ChrBaseRegion> annotated, final TestGenome genome)
     {
         return new SupplementaryResolver(
-                new AnnotatedJunctionIndex(annotated), genome.asRefGenome(), SupplementaryConfig.defaults());
+                EnsemblAnnotationIndex.fromJunctions(annotated), genome.asRefGenome(), SupplementaryConfig.defaults());
     }
 
     // 'N' genome with a canonical GT-AG motif seeded at the intron flanks.

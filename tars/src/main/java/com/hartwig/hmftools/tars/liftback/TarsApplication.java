@@ -27,8 +27,6 @@ import com.hartwig.hmftools.common.bamops.BamToolName;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.tars.common.ContigEntry;
 import com.hartwig.hmftools.tars.common.ContigSidecar;
-import com.hartwig.hmftools.tars.liftback.supplementary.AnnotatedJunctionIndex;
-
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMSequenceDictionary;
@@ -126,19 +124,15 @@ public class TarsApplication
 
     private LiftBackResources buildResources(final List<ContigEntry> contigEntries, final SAMFileHeader inputHeader)
     {
-        // exon + junction annotation are derived from the sidecar's exonSpans (all rows, including annotation-only
-        // ones for transcripts without a contig), so liftback needs no ensembl cache.
-        ExonRegionIndex exonIndex = ExonRegionIndex.fromContigEntries(contigEntries);
-        TARS_LOGGER.info("built annotated-exon index from sidecar");
+        // exon + junction annotation are derived from the sidecar's exonSpans, so liftback needs no ensembl cache.
+        EnsemblAnnotationIndex annotationIndex = EnsemblAnnotationIndex.fromContigEntries(contigEntries);
+        TARS_LOGGER.info("built annotation index from sidecar: {} junctions", annotationIndex.junctionCount());
 
         // annotation-only rows have no contig to lift against, so the discriminator sees only real contig entries.
         List<ContigEntry> liftEntries = contigEntries.stream()
                 .filter(entry -> entry.contigStart() > 0).collect(Collectors.toList());
-        LiftBackDiscriminator discriminator = new LiftBackDiscriminator(liftEntries, exonIndex);
+        LiftBackDiscriminator discriminator = new LiftBackDiscriminator(liftEntries, annotationIndex);
         validateBamAgainstSidecar(inputHeader, discriminator.contigTranslator().contigNames());
-
-        AnnotatedJunctionIndex junctionIndex = AnnotatedJunctionIndex.fromContigEntries(contigEntries);
-        TARS_LOGGER.info("built {} annotated junctions from sidecar", junctionIndex.size());
 
         ExcludedRegions excludedRegions = null;
         if(mConfig.RnaUnmapRegionsFile != null)
@@ -148,7 +142,7 @@ public class TarsApplication
         }
 
         return new LiftBackResources(
-                discriminator, junctionIndex, mConfig.RefGenomeFile,
+                discriminator, annotationIndex, mConfig.RefGenomeFile,
                 mConfig.Supplementary, excludedRegions);
     }
 

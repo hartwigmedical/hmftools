@@ -23,7 +23,7 @@ import static com.hartwig.hmftools.tars.common.TarsConstants.MIN_IMPLIED_INTRON_
 import com.hartwig.hmftools.common.bamops.BamToolName;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.tars.liftback.supplementary.SupplementaryConfig;
+import com.hartwig.hmftools.tars.liftback.features.SupplementaryConfig;
 
 public class TarsConfig
 {

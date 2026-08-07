@@ -37,3 +37,4 @@ patient-db/patient-db-logs/*.log
 .Rhistory
 
 /CLAUDE.md
+.claude/*

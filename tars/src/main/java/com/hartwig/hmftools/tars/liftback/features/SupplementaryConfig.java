@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.tars.liftback.supplementary;
+package com.hartwig.hmftools.tars.liftback.features;
 
 import static com.hartwig.hmftools.tars.common.TarsConstants.MAX_IMPLIED_INTRON_LENGTH;
 import static com.hartwig.hmftools.tars.common.TarsConstants.MAX_REF_VERIFY_BOUNDARY_SHIFT;

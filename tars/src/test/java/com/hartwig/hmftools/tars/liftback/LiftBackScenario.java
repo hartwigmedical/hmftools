@@ -17,18 +17,18 @@ import java.util.Set;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.tars.common.ContigEntry;
 import com.hartwig.hmftools.tars.liftback.TarsTestFixtures.TestGenome;
-import com.hartwig.hmftools.tars.liftback.overhang.OverhangGate;
-import com.hartwig.hmftools.tars.liftback.supplementary.AnnotatedJunctionIndex;
-import com.hartwig.hmftools.tars.liftback.supplementary.SupplementaryResolver;
+import com.hartwig.hmftools.tars.liftback.features.OverhangGate;
+import com.hartwig.hmftools.tars.liftback.features.SoftClipExtender;
+import com.hartwig.hmftools.tars.liftback.features.SupplementaryResolver;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
-import com.hartwig.hmftools.tars.liftback.supplementary.SupplementaryConfig;
+import com.hartwig.hmftools.tars.liftback.features.SupplementaryConfig;
 
 import htsjdk.samtools.SAMRecord;
 
 // Parametric, standalone whole-pipeline test harness. Declare the transcript-contig geometry, the reference genome,
 // the annotated junctions and a set of reads (primary + mate + any supplementaries, each with arbitrary tags), then
-// run() drives the real LiftBackGroupProcessor.processNameGroup exactly as production does (overhang gate ->
-// discriminator -> supplementary resolve -> reclaim -> mate patch -> NH / unmap policy). Assert the lifted
+// run() drives the real LiftBackGroupProcessor.processNameGroup exactly as production does (candidate features ->
+// discriminator -> supplementary resolve -> mate patch -> NH / unmap policy). Assert the lifted
 // placement of every emitted record.
 //
 // Usage:
@@ -50,7 +50,7 @@ public final class LiftBackScenario
     private final Set<ChrBaseRegion> mAnnotatedIntrons = new HashSet<>();
     private final List<ReadSpec> mReads = new ArrayList<>();
     private TestGenome mGenome;
-    private ExonRegionIndex mExonIndex;
+    private EnsemblAnnotationIndex mEnsemblAnnotationIndex;
 
     public enum ReadRole
     {
@@ -83,9 +83,9 @@ public final class LiftBackScenario
     }
 
     // optional: drives the hidden-tie exon override in the MAPQ policy.
-    public LiftBackScenario exonIndex(final ExonRegionIndex exonIndex)
+    public LiftBackScenario exonIndex(final EnsemblAnnotationIndex annotationIndex)
     {
-        mExonIndex = exonIndex;
+        mEnsemblAnnotationIndex = annotationIndex;
         return this;
     }
 
@@ -118,16 +118,17 @@ public final class LiftBackScenario
     public Result run()
     {
         RefGenomeInterface ref = mGenome != null ? mGenome.asRefGenome() : null;
-        AnnotatedJunctionIndex junctionIndex = new AnnotatedJunctionIndex(mAnnotatedIntrons);
+        EnsemblAnnotationIndex annotationIndex = EnsemblAnnotationIndex.fromJunctions(mAnnotatedIntrons);
 
-        LiftBackDiscriminator resolver = mExonIndex != null
-                ? new LiftBackDiscriminator(mContigs, mExonIndex)
+        LiftBackDiscriminator resolver = mEnsemblAnnotationIndex != null
+                ? new LiftBackDiscriminator(mContigs, mEnsemblAnnotationIndex)
                 : new LiftBackDiscriminator(mContigs);
-        SupplementaryResolver supplementary = new SupplementaryResolver(junctionIndex, ref, SupplementaryConfig.defaults());
+        SupplementaryResolver supplementary = new SupplementaryResolver(annotationIndex, ref, SupplementaryConfig.defaults());
         OverhangGate overhangGate = new OverhangGate(ref);
+        SoftClipExtender softClipExtender = new SoftClipExtender(ref);
 
         LiftBackGroupProcessor processor = new LiftBackGroupProcessor(
-                resolver, supplementary, overhangGate, ref, null);
+                resolver, supplementary, overhangGate, softClipExtender, ref, null);
 
         List<SAMRecord> emitted = new ArrayList<>();
         for(List<SAMRecord> group : groupByReadName())

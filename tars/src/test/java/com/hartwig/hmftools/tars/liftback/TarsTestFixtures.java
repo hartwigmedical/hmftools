@@ -40,9 +40,9 @@ public final class TarsTestFixtures
                 List.of(new BaseRegion(100, 199), new BaseRegion(300, 399), new BaseRegion(500, 549)));
     }
 
-    // an ExonRegionIndex from a single entry carrying the exon spans on the given chromosome (bare "1" or "chr1" both
+    // an EnsemblAnnotationIndex from a single entry carrying the exon spans on the given chromosome (bare "1" or "chr1" both
     // normalize to the V38 chr1 key the lift emits).
-    public static ExonRegionIndex exonRegionIndex(final String chromosome, final List<int[]> exonSpans)
+    public static EnsemblAnnotationIndex exonRegionIndex(final String chromosome, final List<int[]> exonSpans)
     {
         List<BaseRegion> spans = new ArrayList<>();
         for(int[] span : exonSpans)
@@ -50,7 +50,7 @@ public final class TarsTestFixtures
             spans.add(new BaseRegion(span[0], span[1]));
         }
         ContigEntry entry = ContigEntry.annotationOnly(GENE_ID, GENE_NAME, TRANS_NAME, V38.versionedChromosome(chromosome), 1, spans);
-        return ExonRegionIndex.fromContigEntries(List.of(entry));
+        return EnsemblAnnotationIndex.fromContigEntries(List.of(entry));
     }
 
     public static SAMRecord primaryRecord(final String contig, final int pos, final String cigar)
