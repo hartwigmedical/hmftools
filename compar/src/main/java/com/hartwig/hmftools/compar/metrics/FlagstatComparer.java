@@ -67,17 +67,21 @@ public class FlagstatComparer implements ItemComparer
     @Override
     public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final FileSources fileSources)
     {
-        final List<ComparableItem> comparableItems = Lists.newArrayList();
+        List<ComparableItem> comparableItems = Lists.newArrayList();
         try
         {
-            BamFlagStats flagstat = BamFlagStats.read(determineFlagStatsFilePath(sampleId, fileSources.TumorFlagstat));
+            String sourceFile = isTumor() ? fileSources.TumorFlagstat : fileSources.GermlineFlagstat;
+            String sourceSampleId = isTumor() ? sampleId : germlineSampleId;
+            BamFlagStats flagstat = BamFlagStats.read(determineFlagStatsFilePath(sourceSampleId, sourceFile));
             comparableItems.add(new FlagstatData(mCategory, flagstat));
         }
         catch(IOException e)
         {
-            CMP_LOGGER.warn("sample({}) failed to load tumor flagstat data: {}", sampleId, e.toString());
+            CMP_LOGGER.warn("sample({}) failed to load {} flagstat data: {}", sampleId, isTumor() ? "tumor" : "germline", e.toString());
             return null;
         }
         return comparableItems;
     }
+
+    private boolean isTumor() { return mCategory == CategoryType.TUMOR_FLAGSTAT; }
 }
