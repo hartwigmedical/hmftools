@@ -35,6 +35,7 @@ public class PurpleConfig
     public final ChartConfig Charting;
     public final boolean TargetRegionsMode;
     public final boolean IgnorePlotErrors;
+    public final boolean RunResegmentation;
     public final int SvQualFilter;
     public final int Threads;
 
@@ -51,6 +52,7 @@ public class PurpleConfig
     public static final String IGNORE_PLOT_ERRORS = "ignore_plot_errors";
     public static final String SKIP_CIRCOS_GENES = "skip_circos_genes";
     public static final String SV_QUAL_FILTER = "sv_qual_filter";
+    public static final String RUN_RESEGMENTATION = "run_resegmentation";
 
     public PurpleConfig(final String version, final ConfigBuilder configBuilder)
     {
@@ -107,6 +109,7 @@ public class PurpleConfig
         RunDrivers = DriverGenePanelConfig.isConfigured(configBuilder);
         IgnorePlotErrors = configBuilder.hasFlag(IGNORE_PLOT_ERRORS);
         SkipCircosGenes = configBuilder.hasFlag(SKIP_CIRCOS_GENES);
+        RunResegmentation = configBuilder.hasFlag(RUN_RESEGMENTATION);
         SvQualFilter = configBuilder.getInteger(SV_QUAL_FILTER);
 
         WriteAllSomatics = configBuilder.hasFlag(WRITE_ALL_SOMATICS);
@@ -156,6 +159,7 @@ public class PurpleConfig
         configBuilder.addFlag(WRITE_ALL_SOMATICS, "Write all variants regardless of filters");
         configBuilder.addFlag(IGNORE_PLOT_ERRORS, "Run to completion if plotting fails");
         configBuilder.addFlag(SKIP_CIRCOS_GENES, "Skip plotting driver genes on Circos");
+        configBuilder.addFlag(RUN_RESEGMENTATION, "Run resegementation routine");
         configBuilder.addInteger(SV_QUAL_FILTER, "Min SV qual, 0 is disabled", 0);
 
         FittingConfig.addConfig(configBuilder);

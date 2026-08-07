@@ -72,6 +72,7 @@ import com.hartwig.hmftools.purple.germline.GermlineVariants;
 import com.hartwig.hmftools.purple.plot.Charts;
 import com.hartwig.hmftools.purple.plot.RChartData;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
+import com.hartwig.hmftools.purple.reseg.Resegmentation;
 import com.hartwig.hmftools.purple.segment.Segmentation;
 import com.hartwig.hmftools.purple.somatic.SomaticPurityEnrichment;
 import com.hartwig.hmftools.purple.somatic.SomaticStream;
@@ -267,6 +268,20 @@ public class PurpleApplication
 
             writeEmptyResultFiles(tumorId, sampleData, sampleDataFiles, observedRegions);
             System.exit(0);
+        }
+
+        // run resegmentation
+        if(mConfig.RunResegmentation)
+        {
+            // for now log regions prior to resegmentation
+            String preResegFile = mConfig.OutputDir + tumorId + ".purple.pre_resegmented_regions.tsv";
+            List<PurpleSegment> rawSegments = observedRegions.stream().map(ObservedRegion::toSegment).collect(Collectors.toList());
+            PurpleSegment.write(preResegFile, rawSegments);
+
+            List<ObservedRegion> resegmentedRegions = Resegmentation.run(observedRegions, mConfig.Threads);
+
+            observedRegions.clear();
+            observedRegions.addAll(resegmentedRegions);
         }
 
         List<GeneCopyNumber> geneCopyNumbers = Lists.newArrayList();

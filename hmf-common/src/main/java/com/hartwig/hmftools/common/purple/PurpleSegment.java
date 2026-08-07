@@ -186,7 +186,7 @@ public final class PurpleSegment extends ChrBaseRegion
         Files.write(new File(filename).toPath(), lines);
     }
 
-    private static String header()
+    public static String header()
     {
         return new StringJoiner(TSV_DELIM, "", "")
                 .add("chromosome")
@@ -219,7 +219,7 @@ public final class PurpleSegment extends ChrBaseRegion
 
     private static final DecimalFormat FORMAT = new DecimalFormat("0.0000");
 
-    private String toTsv()
+    public String toTsv()
     {
         return new StringJoiner(TSV_DELIM)
                 .add(Chromosome)
