@@ -7,18 +7,18 @@ import static java.lang.Math.pow;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.Doubles.round;
-import static com.hartwig.hmftools.purple.PurpleConstants.RESEG_TUMOR_RATIO_DIFF_BOUND_MAX;
-import static com.hartwig.hmftools.purple.PurpleConstants.RESEG_TUMOR_RATIO_DIFF_BOUND_MIN;
-import static com.hartwig.hmftools.purple.PurpleConstants.RESEG_TUMOR_RATIO_DIFF_STEP;
-import static com.hartwig.hmftools.purple.PurpleConstants.RESEG_TUMOR_RATIO_MAX_PEAKS;
-import static com.hartwig.hmftools.purple.PurpleConstants.RESEG_TUMOR_RATIO_PEAK_GAP;
-import static com.hartwig.hmftools.purple.PurpleConstants.RESEG_TUMOR_RATIO_PEAK_PROPORTION;
-import static com.hartwig.hmftools.purple.PurpleConstants.RESEG_TUMOR_RATIO_PEAK_RATIO;
-import static com.hartwig.hmftools.purple.PurpleConstants.RESEG_TUMOR_RATIO_RATIO_PENALTY;
-import static com.hartwig.hmftools.purple.PurpleConstants.RESEG_TUMOR_RATIO_ROLL_AVG_COUNT;
-import static com.hartwig.hmftools.purple.PurpleConstants.RESEG_TUMOR_RATIO_TROUGH_DIFF;
-import static com.hartwig.hmftools.purple.PurpleConstants.RESEG_TUMOR_RATIO_TROUGH_GAP;
-import static com.hartwig.hmftools.purple.PurpleConstants.RESEG_TUMOR_RATIO_TROUGH_RATIO;
+import static com.hartwig.hmftools.purple.PurpleConstants.RESEG_MAX_PEAKS;
+import static com.hartwig.hmftools.purple.PurpleConstants.RESEG_MAX_SEGMENTATION_PENALTY_RATIO;
+import static com.hartwig.hmftools.purple.PurpleConstants.RESEG_PEAK_MIN_GAP;
+import static com.hartwig.hmftools.purple.PurpleConstants.RESEG_PEAK_MIN_PROPORTION;
+import static com.hartwig.hmftools.purple.PurpleConstants.RESEG_PEAK_MIN_RATIO;
+import static com.hartwig.hmftools.purple.PurpleConstants.RESEG_RATIO_BUCKET_MAX;
+import static com.hartwig.hmftools.purple.PurpleConstants.RESEG_RATIO_BUCKET_MIN;
+import static com.hartwig.hmftools.purple.PurpleConstants.RESEG_RATIO_BUCKET_STEP;
+import static com.hartwig.hmftools.purple.PurpleConstants.RESEG_ROLLING_AVG_WINDOW;
+import static com.hartwig.hmftools.purple.PurpleConstants.RESEG_TROUGH_MIN_DIFF;
+import static com.hartwig.hmftools.purple.PurpleConstants.RESEG_TROUGH_MIN_GAP;
+import static com.hartwig.hmftools.purple.PurpleConstants.RESEG_TROUGH_MIN_RATIO;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 
 import java.util.Collections;
@@ -65,10 +65,10 @@ public class ResegmentationUtils
 
     private void findObservedTumorRatioPenalty()
     {
-        int ratioCount = (int)((RESEG_TUMOR_RATIO_DIFF_BOUND_MAX - RESEG_TUMOR_RATIO_DIFF_BOUND_MIN) / RESEG_TUMOR_RATIO_DIFF_STEP + 1);
+        int ratioCount = (int)((RESEG_RATIO_BUCKET_MAX - RESEG_RATIO_BUCKET_MIN) / RESEG_RATIO_BUCKET_STEP + 1);
         List<TumorRatioDataCount> tumorRatioDataCounts = Lists.newArrayListWithCapacity(ratioCount);
 
-        for(double ratio = 0; ratio <= RESEG_TUMOR_RATIO_DIFF_BOUND_MAX; ratio += RESEG_TUMOR_RATIO_DIFF_STEP)
+        for(double ratio = 0; ratio <= RESEG_RATIO_BUCKET_MAX; ratio += RESEG_RATIO_BUCKET_STEP)
         {
             tumorRatioDataCounts.add(new TumorRatioDataCount(ratio));
         }
@@ -82,9 +82,9 @@ public class ResegmentationUtils
                 continue;
 
             double ratioChange = abs(region.OriginalData.observedTumorRatio() - prevRegion.OriginalData.observedTumorRatio());
-            ratioChange = min(round(ratioChange, 2), RESEG_TUMOR_RATIO_DIFF_BOUND_MAX);
+            ratioChange = min(round(ratioChange, 2), RESEG_RATIO_BUCKET_MAX);
 
-            int ratioIndex = (int)(ratioChange / RESEG_TUMOR_RATIO_DIFF_STEP);
+            int ratioIndex = (int)(ratioChange / RESEG_RATIO_BUCKET_STEP);
             ++tumorRatioDataCounts.get(ratioIndex).Count;
         }
 
@@ -116,8 +116,8 @@ public class ResegmentationUtils
                 int peakIndex = peakIndices.get(i);
                 double peakAvg = tumorRatioDataCounts.get(peakIndex).RollingAverage;
 
-                if(peakAvg - troughAvg >= RESEG_TUMOR_RATIO_TROUGH_DIFF
-                && (troughAvg == 0 || peakAvg / troughAvg >= RESEG_TUMOR_RATIO_TROUGH_RATIO))
+                if(peakAvg - troughAvg >= RESEG_TROUGH_MIN_DIFF
+                && (troughAvg == 0 || peakAvg / troughAvg >= RESEG_TROUGH_MIN_RATIO))
                 {
                     prevValidPeakIndex = peakIndex;
                     break;
@@ -132,8 +132,8 @@ public class ResegmentationUtils
                 int peakIndex = peakIndices.get(i);
                 double peakAvg = tumorRatioDataCounts.get(peakIndex).RollingAverage;
 
-                if(peakAvg - troughAvg >= RESEG_TUMOR_RATIO_TROUGH_DIFF
-                && (troughAvg == 0 || peakAvg / troughAvg >= RESEG_TUMOR_RATIO_TROUGH_RATIO))
+                if(peakAvg - troughAvg >= RESEG_TROUGH_MIN_DIFF
+                && (troughAvg == 0 || peakAvg / troughAvg >= RESEG_TROUGH_MIN_RATIO))
                 {
                     nextValidPeakIndex = peakIndex;
                     break;
@@ -159,7 +159,7 @@ public class ResegmentationUtils
                 TroughData lower = validTroughs.get(index);
                 TroughData upper = validTroughs.get(index + 1);
 
-                if(upper.Ratio - lower.Ratio >= RESEG_TUMOR_RATIO_TROUGH_GAP)
+                if(upper.Ratio - lower.Ratio >= RESEG_TROUGH_MIN_GAP)
                 {
                     ++index;
                 }
@@ -190,7 +190,7 @@ public class ResegmentationUtils
         // take the lowest peak
         double lowestTroughRatio = validTroughs.stream().mapToDouble(x -> x.Ratio).min().orElse(0);
 
-        lowestTroughRatio = min(lowestTroughRatio, RESEG_TUMOR_RATIO_RATIO_PENALTY);
+        lowestTroughRatio = min(lowestTroughRatio, RESEG_MAX_SEGMENTATION_PENALTY_RATIO);
 
         mSegmentationPenalty = round(pow(lowestTroughRatio, 2) * 2, 4);
 
@@ -269,7 +269,7 @@ public class ResegmentationUtils
 
     private static void calcRollingAverages(int ratioCount, final List<TumorRatioDataCount> tumorRatioDataCounts)
     {
-        int halfRolling = RESEG_TUMOR_RATIO_ROLL_AVG_COUNT / 2;
+        int halfRolling = RESEG_ROLLING_AVG_WINDOW / 2;
         for(int i = halfRolling; i < ratioCount - halfRolling; ++i)
         {
             double countTotal = 0;
@@ -278,7 +278,7 @@ public class ResegmentationUtils
                 countTotal += tumorRatioDataCounts.get(k).Count;
             }
 
-            tumorRatioDataCounts.get(i).RollingAverage = countTotal / RESEG_TUMOR_RATIO_ROLL_AVG_COUNT;
+            tumorRatioDataCounts.get(i).RollingAverage = countTotal / RESEG_ROLLING_AVG_WINDOW;
         }
     }
 
@@ -334,10 +334,10 @@ public class ResegmentationUtils
 
     private void findObservedTumorRatioPeak()
     {
-        int ratioCount = (int)((RESEG_TUMOR_RATIO_DIFF_BOUND_MAX - RESEG_TUMOR_RATIO_DIFF_BOUND_MIN) / RESEG_TUMOR_RATIO_DIFF_STEP + 1);
+        int ratioCount = (int)((RESEG_RATIO_BUCKET_MAX - RESEG_RATIO_BUCKET_MIN) / RESEG_RATIO_BUCKET_STEP + 1);
         List<TumorRatioDataCount> tumorRatioDataCounts = Lists.newArrayListWithCapacity(ratioCount);
 
-        for(double ratio = 0; ratio <= RESEG_TUMOR_RATIO_DIFF_BOUND_MAX; ratio += RESEG_TUMOR_RATIO_DIFF_STEP)
+        for(double ratio = 0; ratio <= RESEG_RATIO_BUCKET_MAX; ratio += RESEG_RATIO_BUCKET_STEP)
         {
             tumorRatioDataCounts.add(new TumorRatioDataCount(ratio));
         }
@@ -351,9 +351,9 @@ public class ResegmentationUtils
                 continue;
 
             // use same bounds as for tumor ratio diff
-            double tumorRatio = max(min(region.OriginalData.observedTumorRatio(), RESEG_TUMOR_RATIO_DIFF_BOUND_MAX), 0);
+            double tumorRatio = max(min(region.OriginalData.observedTumorRatio(), RESEG_RATIO_BUCKET_MAX), 0);
 
-            int ratioIndex = (int)(tumorRatio / RESEG_TUMOR_RATIO_DIFF_STEP);
+            int ratioIndex = (int)(tumorRatio / RESEG_RATIO_BUCKET_STEP);
             ++tumorRatioDataCounts.get(ratioIndex).Count;
         }
 
@@ -375,7 +375,7 @@ public class ResegmentationUtils
             Integer peakIndex = peakIndices.get(i);
             double peakAvg = tumorRatioDataCounts.get(peakIndex).RollingAverage;
 
-            if(peakAvg / totalCounts < RESEG_TUMOR_RATIO_PEAK_PROPORTION)
+            if(peakAvg / totalCounts < RESEG_PEAK_MIN_PROPORTION)
                 continue;
 
             Integer prevValidPeakIndex = null;
@@ -392,7 +392,7 @@ public class ResegmentationUtils
                     int otherPeakIndex = peakIndices.get(k);
                     double otherPeakAvg = tumorRatioDataCounts.get(otherPeakIndex).RollingAverage;
 
-                    if(otherPeakAvg == 0 || peakAvg / otherPeakAvg >= RESEG_TUMOR_RATIO_PEAK_RATIO)
+                    if(otherPeakAvg == 0 || peakAvg / otherPeakAvg >= RESEG_PEAK_MIN_RATIO)
                     {
                         if(ud == 0)
                             prevValidPeakIndex = otherPeakIndex;
@@ -435,8 +435,8 @@ public class ResegmentationUtils
 
                 // if right_peak[0] - left_peak[3] >= MIN_PEAK_GAP and right_peak[2] - left_peak[0] >= MIN_PEAK_GAP:
 
-                if(upper.Ratio - lower.NextPeakRatio >= RESEG_TUMOR_RATIO_PEAK_GAP
-                && upper.PrevPeakRatio - lower.Ratio >= RESEG_TUMOR_RATIO_PEAK_GAP)
+                if(upper.Ratio - lower.NextPeakRatio >= RESEG_PEAK_MIN_GAP
+                && upper.PrevPeakRatio - lower.Ratio >= RESEG_PEAK_MIN_GAP)
                 {
                     ++index;
                 }
@@ -460,11 +460,11 @@ public class ResegmentationUtils
                 break;
         }
 
-        if(validPeaks.size() > RESEG_TUMOR_RATIO_MAX_PEAKS)
+        if(validPeaks.size() > RESEG_MAX_PEAKS)
         {
             List<PeakData> sortedPeaks = Lists.newArrayList(validPeaks);
             Collections.sort(sortedPeaks, Comparator.comparingDouble(x -> -x.Average));
-            double minAverage = sortedPeaks.get(RESEG_TUMOR_RATIO_MAX_PEAKS - 1).Average;
+            double minAverage = sortedPeaks.get(RESEG_MAX_PEAKS - 1).Average;
 
             validPeaks = validPeaks.stream().filter(x -> x.Average >= minAverage).collect(Collectors.toList());
         }
@@ -478,7 +478,7 @@ public class ResegmentationUtils
 
         if(validPeaks.size() > 1)
         {
-            double maxAverage = validPeaks.get(RESEG_TUMOR_RATIO_MAX_PEAKS - 1).Average;
+            double maxAverage = validPeaks.get(RESEG_MAX_PEAKS - 1).Average;
 
             for(int i = 0; i < validPeaks.size(); ++i)
             {
@@ -498,7 +498,7 @@ public class ResegmentationUtils
 
         double lowestTroughRatio = validPeaks.stream().mapToDouble(x -> x.Ratio).min().orElse(0);
 
-        lowestTroughRatio = min(lowestTroughRatio, RESEG_TUMOR_RATIO_RATIO_PENALTY);
+        lowestTroughRatio = min(lowestTroughRatio, RESEG_MAX_SEGMENTATION_PENALTY_RATIO);
 
         mSegmentationPenalty = round(pow(lowestTroughRatio, 2) * 2, 4);
 

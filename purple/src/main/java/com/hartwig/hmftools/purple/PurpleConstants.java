@@ -93,21 +93,6 @@ public class PurpleConstants
     public static final int RESEG_MAX_SUPERSEGMENT_SIZE_FOR_BRUTE_FORCE = 10;
     public static final int RESEG_BAF_WEIGHT_THRESHOLD = 50;
 
-    public static final double RESEG_TUMOR_RATIO_DIFF_BOUND_MIN = 0;
-    public static final double RESEG_TUMOR_RATIO_DIFF_BOUND_MAX = 3;
-    public static final double RESEG_TUMOR_RATIO_DIFF_STEP = 0.01;
-    public static final int RESEG_TUMOR_RATIO_ROLL_AVG_COUNT = 5;
-
-    public static final double RESEG_TUMOR_RATIO_TROUGH_RATIO = 1.2;
-    public static final double RESEG_TUMOR_RATIO_TROUGH_DIFF = 5;
-    public static final double RESEG_TUMOR_RATIO_TROUGH_GAP = 0.1;
-    public static final double RESEG_TUMOR_RATIO_RATIO_PENALTY = 0.35;
-
-    public static final double RESEG_TUMOR_RATIO_PEAK_RATIO = 1.25;
-    public static final double RESEG_TUMOR_RATIO_PEAK_GAP = 0.1;
-    public static final double RESEG_TUMOR_RATIO_PEAK_PROPORTION = 0.002;
-    public static final int RESEG_TUMOR_RATIO_MAX_PEAKS = 5;
-
     // somatic fitting
     public static final double SNV_HOTSPOT_VAF_PROBABILITY = 0.01;
     public static final int SNV_HOTSPOT_MAX_SNV_COUNT = 2000;

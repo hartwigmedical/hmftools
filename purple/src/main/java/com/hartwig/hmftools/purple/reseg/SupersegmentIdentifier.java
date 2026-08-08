@@ -9,7 +9,7 @@ import com.hartwig.hmftools.purple.region.ObservedRegion;
 
 public final class SupersegmentIdentifier
 {
-    // identifies the 'supersegments' - contiguous runs of SV-unsupported diploid segments,
+    // identifies supersegments - contiguous runs of SV-unsupported diploid segments,
     // potentially bridging over isolated skippable germline deletions or short SVs
     private SupersegmentIdentifier() {}
 

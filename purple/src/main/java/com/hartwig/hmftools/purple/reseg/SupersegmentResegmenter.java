@@ -9,14 +9,9 @@ import java.util.List;
 import java.util.function.ToDoubleFunction;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
 
-/**
- * Step 5: resegments a supersegment's members into subsegments, trading off per-subsegment
- * observedTumorRatio deviation against the per-sample segmentation penalty.
- */
 public final class SupersegmentResegmenter
 {
-    private SupersegmentResegmenter() {}
-
+    // calculates optimal segmentation based on the calculated tumor ratio penalty
     public static List<ObservedRegion> resegment(final List<ObservedRegion> members, double segmentationPenalty)
     {
         if(members.size() > RESEG_MAX_SUPERSEGMENT_SIZE_FOR_BRUTE_FORCE)
@@ -77,9 +72,9 @@ public final class SupersegmentResegmenter
         return bestIndex;
     }
 
-    // returns null if no partition beats the unpartitioned (0-cut) baseline - caller should aggregate members as one
     private static List<List<ObservedRegion>> findBestPartition(final List<ObservedRegion> members, double segmentationPenalty)
     {
+        // returns null if no partition beats the unpartitioned (0-cut) baseline - caller should aggregate members as one
         int n = members.size();
 
         double lowestPenalty = deviationPenalty(members);
@@ -199,7 +194,6 @@ public final class SupersegmentResegmenter
         return sum;
     }
 
-    // all k-combinations of {1, ..., rangeSize}, in ascending lexicographic order (matches itertools.combinations)
     private static List<int[]> combinationsOf(int rangeSize, int k)
     {
         List<int[]> result = new ArrayList<>();
@@ -209,6 +203,7 @@ public final class SupersegmentResegmenter
 
     private static void combinationsHelper(final List<int[]> result, final int[] combo, int comboIndex, int start, int rangeSize, int k)
     {
+        // finds all possible splits in segments
         if(comboIndex == k)
         {
             result.add(combo.clone());
