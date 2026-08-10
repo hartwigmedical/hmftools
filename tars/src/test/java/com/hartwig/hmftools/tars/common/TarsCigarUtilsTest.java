@@ -5,7 +5,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import com.hartwig.hmftools.common.bam.CigarUtils;
@@ -51,30 +50,6 @@ public class TarsCigarUtilsTest
     }
 
     @Test
-    public void testExtendTerminalSoftclipIntoAdjacentMatch()
-    {
-        List<CigarElement> leading = mutableElements("5S20M");
-        assertTrue(TarsCigarUtils.extendTerminalSoftClipIntoMatch(leading, true, 3));
-        assertEquals("2S23M", new Cigar(leading).toString());
-
-        List<CigarElement> trailing = mutableElements("20M5S");
-        assertTrue(TarsCigarUtils.extendTerminalSoftClipIntoMatch(trailing, false, 5));
-        assertEquals("25M", new Cigar(trailing).toString());
-    }
-
-    @Test
-    public void testRetractTerminalMatchIntoSoftclip()
-    {
-        assertEquals(
-                "20M3M11S",
-                new Cigar(TarsCigarUtils.retractTerminalMatchIntoSoftClip(elements("20M10M4S"), 7, true)).toString());
-        assertEquals(
-                "7S7M20M",
-                new Cigar(TarsCigarUtils.retractTerminalMatchIntoSoftClip(elements("4S10M20M"), 3, false)).toString());
-        assertNull(TarsCigarUtils.retractTerminalMatchIntoSoftClip(elements("4S3M20M"), 3, false));
-    }
-
-    @Test
     public void testClampReferenceOverhangIntoSoftclip()
     {
         assertEquals("1S9M", TarsCigarUtils.clampLeadingReferenceToSoftClip(cigar("10M"), 1).toString());
@@ -99,8 +74,4 @@ public class TarsCigarUtilsTest
         return cigar(cigar).getCigarElements();
     }
 
-    private static List<CigarElement> mutableElements(final String cigar)
-    {
-        return new ArrayList<>(elements(cigar));
-    }
 }

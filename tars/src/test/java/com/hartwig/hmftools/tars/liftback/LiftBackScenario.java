@@ -17,8 +17,8 @@ import java.util.Set;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.tars.common.ContigEntry;
 import com.hartwig.hmftools.tars.liftback.TarsTestFixtures.TestGenome;
+import com.hartwig.hmftools.tars.liftback.features.GenomicAlignmentScorer;
 import com.hartwig.hmftools.tars.liftback.features.OverhangGate;
-import com.hartwig.hmftools.tars.liftback.features.SoftClipExtender;
 import com.hartwig.hmftools.tars.liftback.features.SupplementaryResolver;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.tars.liftback.features.SupplementaryConfig;
@@ -125,10 +125,10 @@ public final class LiftBackScenario
                 : new LiftBackDiscriminator(mContigs);
         SupplementaryResolver supplementary = new SupplementaryResolver(annotationIndex, ref, SupplementaryConfig.defaults());
         OverhangGate overhangGate = new OverhangGate(ref);
-        SoftClipExtender softClipExtender = new SoftClipExtender(ref);
+        GenomicAlignmentScorer alignmentScorer = new GenomicAlignmentScorer(ref);
 
         LiftBackGroupProcessor processor = new LiftBackGroupProcessor(
-                resolver, supplementary, overhangGate, softClipExtender, ref, null);
+                resolver, supplementary, overhangGate, alignmentScorer, ref, null);
 
         List<SAMRecord> emitted = new ArrayList<>();
         for(List<SAMRecord> group : groupByReadName())
@@ -158,7 +158,7 @@ public final class LiftBackScenario
     }
 
     // A record plus its role, with fluent tag setters. SEQ defaults to the fixture bases; override with bases(...)
-    // when a ref-dependent pass (overhang gate / supplementary-resolve ref-verify / canonicalize) must compare read vs genome.
+    // when a ref-dependent pass (overhang gate / supplementary motif scan) must compare read vs genome.
     public static final class ReadSpec
     {
         final String ReadName;

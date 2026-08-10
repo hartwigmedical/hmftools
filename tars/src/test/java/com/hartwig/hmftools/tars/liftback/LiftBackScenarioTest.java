@@ -51,8 +51,8 @@ public class LiftBackScenarioTest
     @Test
     public void testUnliftableReadIsMarkedUnmapped()
     {
-        // primary starts past the contig end (tx 251, contig length 250) -> translation fails -> emitted unmapped,
-        // XA stripped; the surviving mate loses proper-pair and is flagged mate-unmapped.
+        // primary starts past the contig end (tx 251, contig length 250) -> translation fails -> emitted unmapped
+        // beside its mapped mate; the surviving mate loses proper-pair and is flagged mate-unmapped.
         scenario()
                 .read(primary("frag7", TX_CONTIG, 251, "50M"))
                 .read(mate("frag7", CHR_1, 600, "50M"))
@@ -82,25 +82,25 @@ public class LiftBackScenarioTest
     }
 
     @Test
-    public void testGenomicTerminalSoftclipExtended()
+    public void testGenomicTerminalSoftclipIsPreserved()
     {
-        // Soft-clip extension runs on lifted candidates before primary choice.
+        // TARS does not opportunistically turn a terminal soft clip into matches.
         scenario()
                 .read(primary("frag9", CHR_1, 1000, "50M10S").bases("A".repeat(60)))
                 .read(mate("frag9", CHR_1, 1500, "50M").bases("A".repeat(50)))
                 .run()
-                .assertLifted("frag9", PRIMARY, CHR_1, 1000, "60M");
+                .assertLifted("frag9", PRIMARY, CHR_1, 1000, "50M10S");
     }
 
     @Test
-    public void testTxMatchTerminalSoftclipExtended()
+    public void testTxTerminalSoftclipIsPreserved()
     {
-        // Tx candidates get the same terminal soft-clip extension as genomic candidates.
+        // Liftback preserves a terminal soft clip unless a documented overhang collapse or supplementary merge changes it.
         scenario()
                 .read(primary("frag10", TX_CONTIG, 1, "40M10S").bases("A".repeat(50)))
                 .read(mate("frag10", CHR_1, 1500, "50M").bases("A".repeat(50)))
                 .run()
-                .assertLifted("frag10", PRIMARY, CHR_1, 100, "50M");
+                .assertLifted("frag10", PRIMARY, CHR_1, 100, "40M10S");
     }
 
     @Test
@@ -162,7 +162,7 @@ public class LiftBackScenarioTest
                 .assertLifted("frag7", PRIMARY, CHR_1, 150, "50M100N50M")
                 .assertSuppCount("frag7", 0)
                 .assertMapQuality("frag7", PRIMARY, 0)
-                .assertXa("frag7", PRIMARY, CHR_1 + ",+900,100M,0;");
+                .assertXa("frag7", PRIMARY, CHR_1 + ",+900,50M50S,0;");
     }
 
     @Test

@@ -18,11 +18,10 @@ import java.util.Set;
 
 import com.hartwig.hmftools.tars.common.ContigEntry;
 import com.hartwig.hmftools.tars.liftback.features.OverhangGate;
-import com.hartwig.hmftools.tars.liftback.features.SoftClipExtender;
 
 import htsjdk.samtools.SAMRecord;
 
-// Lifts a SAMRecord's alignments to genomic coordinates and decides its outcome: which candidate becomes the primary,
+// Lifts a SAMRecord's alignments to genomic coordinates and decides its outcome: which alignment becomes the primary,
 // how many loci it maps to, and what MAPQ that placement earns. Every input record produces exactly one result.
 public class LiftBackDiscriminator
 {
@@ -61,9 +60,11 @@ public class LiftBackDiscriminator
         return lifted;
     }
 
-    // A lift that produces nothing is rare, so log it per read against the transcript segment owning the position:
-    // the cause reads off the numbers. pos below segStart or readEnd above segEnd is an overhang the clamp could not
-    // absorb, pos above segEnd is an inter-transcript spacer hit, and wholly inside means the walk ran off the last exon.
+    // A lift that produces nothing is rare, so log it against the transcript segment owning the position. A position
+    // outside every segment landed in the spacer between transcripts, where there is nothing to lift onto - junk
+    // placement rather than a lift that went wrong - so it is worded apart. Inside a segment the cause reads off the
+    // numbers: readEnd above segEnd is an overhang the clamp could not absorb, wholly inside means the walk ran off
+    // the last exon.
     private void logLiftFailure(final SAMRecord record)
     {
         String contig = record.getReferenceName();
@@ -75,14 +76,24 @@ public class LiftBackDiscriminator
         if(segment == null)
         {
             TARS_LOGGER.debug(
-                    "lift failed {} {}: {}:{}-{} {} - contig has no segments",
-                    record.getReadName(), role, contig, pos, readEnd, record.getCigarString());
+                    "lift failed {}: {}:{}-{} {} - contig has no segments",
+                    role, contig, pos, readEnd, record.getCigarString());
+            return;
+        }
+
+        // findSegment clamps to the nearer neighbour, so a position outside its bounds never sat inside a transcript
+        if(pos < segment.contigStart() || pos > segment.contigEnd())
+        {
+            TARS_LOGGER.debug(
+                    "unlifted {}: {}:{}-{} {} - inter-transcript spacer, nearest segment {} [{}-{}]",
+                    role, contig, pos, readEnd, record.getCigarString(),
+                    segment.transName(), segment.contigStart(), segment.contigEnd());
             return;
         }
 
         TARS_LOGGER.debug(
-                "lift failed {} {}: {}:{}-{} {} - segment {} [{}-{}] exons({})",
-                record.getReadName(), role, contig, pos, readEnd, record.getCigarString(),
+                "lift failed {}: {}:{}-{} {} - segment {} [{}-{}] exons({})",
+                role, contig, pos, readEnd, record.getCigarString(),
                 segment.transName(), segment.contigStart(), segment.contigEnd(), segment.exonSpans().size());
     }
 
@@ -94,17 +105,10 @@ public class LiftBackDiscriminator
 
     public LiftedRecord resolve(final SAMRecord record, final OverhangGate overhangGate)
     {
-        return resolve(record, overhangGate, null, null);
+        return resolve(record, overhangGate, null);
     }
 
     public LiftedRecord resolve(final SAMRecord record, final OverhangGate overhangGate, final LiftedRecord mate)
-    {
-        return resolve(record, overhangGate, null, mate);
-    }
-
-    public LiftedRecord resolve(
-            final SAMRecord record, final OverhangGate overhangGate, final SoftClipExtender softClipExtender,
-            final LiftedRecord mate)
     {
         if(record.getReadUnmappedFlag())
         {
@@ -113,26 +117,27 @@ public class LiftBackDiscriminator
 
         if(record.getSupplementaryAlignmentFlag())
         {
-            return liftSupplementary(record);
+            return liftSupplementaryAlignment(record);
         }
 
-        return resolvePrimary(record, overhangGate, softClipExtender, mate);
-    }
-
-    private LiftedRecord resolvePrimary(
-            final SAMRecord record, final OverhangGate overhangGate, final SoftClipExtender softClipExtender,
-            final LiftedRecord mate)
-    {
-        LiftedRecord candidates = liftPrimaryCandidates(record, overhangGate);
-        if(!candidates.hasPlacement())
+        LiftedRecord alignments = liftPrimaryAlignments(record, overhangGate);
+        if(!alignments.hasPlacement())
         {
-            return candidates;
+            return alignments;
         }
-        return resolvePrimaryCandidates(record, candidates.liftedAlignments(), softClipExtender, mate);
+        return selectPrimaryAlignment(record, alignments.liftedAlignments(), mate);
     }
 
-    public LiftedRecord liftPrimaryCandidates(final SAMRecord record, final OverhangGate overhangGate)
+    // Steps 0-1: lift the primary and XA alternatives into genomic coordinates, then apply the documented overhang gate.
+    public LiftedRecord liftPrimaryAlignments(final SAMRecord record, final OverhangGate overhangGate)
     {
+        // An unmapped read has reference name "*", which the translator would pass through as a ref-genome placement -
+        // the pair then looks mapped to the mate patch and loses its mate-unmapped flag. Same guard as resolve().
+        if(record.getReadUnmappedFlag())
+        {
+            return LiftedRecord.unmapped("");
+        }
+
         LiftedAlignment self = liftSelf(record);
 
         if(self == null)
@@ -140,14 +145,14 @@ public class LiftBackDiscriminator
             return LiftedRecord.unmapped("primary_translate_failed");
         }
 
-        List<LiftedAlignment> alts = mContigTranslator.liftXaAlignments(record.getStringAttribute(XA_ATTRIBUTE));
-        List<LiftedAlignment> allAlignments = new ArrayList<>(1 + alts.size());
+        List<LiftedAlignment> alternativeAlignments =
+                mContigTranslator.liftXaAlignments(record.getStringAttribute(XA_ATTRIBUTE));
+        List<LiftedAlignment> allAlignments = new ArrayList<>(1 + alternativeAlignments.size());
         allAlignments.add(self);
-        allAlignments.addAll(alts);
+        allAlignments.addAll(alternativeAlignments);
         int inputMapQuality = record.getMappingQuality();
 
-        // Gate lifted candidates before discriminating so ref-vs-tx features are measured, not assumed.
-        // Null on the lift-only paths, where nothing is being decided.
+        // Null on lift-only paths, where overhangs are deliberately left untouched.
         if(overhangGate != null)
         {
             overhangGate.gateCandidates(allAlignments, record);
@@ -156,20 +161,10 @@ public class LiftBackDiscriminator
         return new LiftedRecord(inputMapQuality, 0, "", 0, allAlignments);
     }
 
-    public LiftedRecord resolvePrimaryCandidates(
-            final SAMRecord record, List<LiftedAlignment> allAlignments, final SoftClipExtender softClipExtender,
-            final LiftedRecord mate)
+    public LiftedRecord selectPrimaryAlignment(
+            final SAMRecord record, final List<LiftedAlignment> allAlignments, final LiftedRecord mate)
     {
         int inputMapQuality = record.getMappingQuality();
-        if(softClipExtender != null)
-        {
-            LiftedRecord candidates = new LiftedRecord(inputMapQuality, 0, "", 0, allAlignments)
-                    .withExtendedSoftClips(softClipExtender, record);
-            allAlignments = new ArrayList<>(candidates.liftedAlignments());
-            softClipExtender.scoreCandidates(allAlignments, record);
-        }
-
-        // Feature passes can replace self (index 0) with a revised copy, so re-fetch it before the pick.
         LiftedAlignment self = allAlignments.get(0);
 
         boolean concordant = isConcordant(allAlignments);
@@ -196,7 +191,7 @@ public class LiftBackDiscriminator
             }
         }
 
-        // Single kept candidate: the locus scan collapses to 1, so skip the per-read map.
+        // Single kept alignment: the locus scan collapses to 1, so skip the per-read map.
         int numLoci = keptAlignments.size() == 1 ? 1 : countDistinctLoci(keptAlignments, effectivePrimary);
 
         boolean hiddenTie = inputMapQuality == 0 && hasHiddenTie(record);
@@ -250,7 +245,7 @@ public class LiftBackDiscriminator
     }
 
     // A supplementary is only lifted, never discriminated: lift its own coords with no XA parse or locus pick.
-    private LiftedRecord liftSupplementary(final SAMRecord record)
+    public LiftedRecord liftSupplementaryAlignment(final SAMRecord record)
     {
         LiftedAlignment lifted = liftSelf(record);
 

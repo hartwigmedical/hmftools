@@ -97,7 +97,7 @@ Optional:
 | Flag               | Default | Description                                                              |
 |--------------------|---------|--------------------------------------------------------------------------|
 | output_id          | (none)  | id inserted into every output files |
-| rna_unmap_regions  | (none)  | Curated excluded regions (rRNA / 7SL / multi-map zones) whose reads are removed from the lifted output; see [rna_excluded_regions.38.tsv](https://source.cloud.google.com/hmf-pipeline-development/common-resources-public/+/master:rna/38/rna_excluded_regions.38.tsv) |
+| rna_unmap_regions  | (none)  | Curated excluded regions (rRNA / 7SL / multi-map zones) whose reads are unmapped in the lifted output using REDUX SAM conventions; see [rna_excluded_regions.38.tsv](https://source.cloud.google.com/hmf-pipeline-development/common-resources-public/+/master:rna/38/rna_excluded_regions.38.tsv) |
 | write_liftback_tsv | off     | Per-record debug TSVs; off by default (creates a `~100GB` file)            |
 | threads            | 1       | Worker threads; reads process in parallel per read-group |
 
@@ -204,5 +204,8 @@ A read now has its own alignment plus any `XA` alternate alignments: each a geno
 
 The merged primary's MAPQ is `max(primary, supplementary)`, bumped to 60 when the primary + supplementary pair maps to a
 single locus (no competing alternative alignment).
+
+Whenever TARS decides to unmap an alignment, it uses the same SAM field and tag transformation as REDUX, including the
+original-coordinate `UM` tag and REDUX's paired-read coordinate handling.
 
 ![merge supplementary record to primary](doc/rescue_via_supplementary.svg)

@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.tars.liftback;
 
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.ALIGNMENT_SCORE_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.firstInPair;
 import static com.hartwig.hmftools.tars.common.TarsConstants.PRIMARY_AS_UNMAP_THRESHOLD;
 import static com.hartwig.hmftools.tars.common.TarsConstants.TARS_LOGGER;
@@ -13,16 +14,18 @@ import java.util.function.Consumer;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.tars.liftback.CandidateFactory.CandidateSet;
+import com.hartwig.hmftools.tars.liftback.features.GenomicAlignmentScorer;
 import com.hartwig.hmftools.tars.liftback.features.OverhangGate;
-import com.hartwig.hmftools.tars.liftback.features.SoftClipExtender;
 import com.hartwig.hmftools.tars.liftback.features.SupplementaryResolver;
 
 import htsjdk.samtools.SAMRecord;
 
 public class LiftBackGroupProcessor
 {
-    private final CandidateFactory mCandidateFactory;
+    private final LiftBackDiscriminator mDiscriminator;
+    private final SupplementaryResolver mSupplementaryResolver;
+    private final OverhangGate mOverhangGate;
+    private final GenomicAlignmentScorer mAlignmentScorer;
     private final BamRecordEmitter mEmitter;
 
     private int mRecordsSeen;
@@ -36,11 +39,13 @@ public class LiftBackGroupProcessor
 
     public LiftBackGroupProcessor(
             final LiftBackDiscriminator discriminator, final SupplementaryResolver supplementaryResolver,
-            final OverhangGate overhangGate, final SoftClipExtender softClipExtender,
+            final OverhangGate overhangGate, final GenomicAlignmentScorer alignmentScorer,
             final RefGenomeInterface refGenome, final ExcludedRegions excludedRegions)
     {
-        mCandidateFactory = new CandidateFactory(
-                discriminator, supplementaryResolver, overhangGate, softClipExtender);
+        mDiscriminator = discriminator;
+        mSupplementaryResolver = supplementaryResolver;
+        mOverhangGate = overhangGate;
+        mAlignmentScorer = alignmentScorer;
         mEmitter = new BamRecordEmitter(
                 discriminator.contigTranslator(), supplementaryResolver != null, refGenome, excludedRegions);
     }
@@ -76,35 +81,35 @@ public class LiftBackGroupProcessor
             (firstInPair(record) ? firstOfPair : secondOfPair).add(record);
         }
 
-        CandidateSet firstCandidates = liftCandidates(firstOfPair);
-        CandidateSet secondCandidates = liftCandidates(secondOfPair);
+        LiftedRecord firstAlignments = liftPrimaryAlignments(firstOfPair);
+        LiftedRecord secondAlignments = liftPrimaryAlignments(secondOfPair);
         LiftedMatePair matePair = new LiftedMatePair();
 
         ReadDecision firstDecision = decideRead(
-                firstOfPair, List.of(), candidateRecord(secondCandidates), firstCandidates);
+                firstOfPair, List.of(), secondAlignments, firstAlignments);
         recordPrimary(firstOfPair, firstDecision, matePair);
 
         ReadDecision secondDecision = decideRead(
                 secondOfPair, firstDecision.introducedIntrons(),
-                chosenPlacement(firstDecision.primaryResult(), candidateRecord(firstCandidates)), secondCandidates);
+                chosenPlacement(firstDecision.primaryResult(), firstAlignments), secondAlignments);
         recordPrimary(secondOfPair, secondDecision, matePair);
 
         emit(firstOfPair, firstDecision, matePair, consumer);
         emit(secondOfPair, secondDecision, matePair, consumer);
     }
 
-    private CandidateSet liftCandidates(final List<SAMRecord> records)
+    private LiftedRecord liftPrimaryAlignments(final List<SAMRecord> records)
     {
         if(records.isEmpty() || records.get(0).getReadUnmappedFlag())
         {
             return null;
         }
-        return mCandidateFactory.liftPrimary(records.get(0));
+        return mDiscriminator.liftPrimaryAlignments(records.get(0), mOverhangGate);
     }
 
     private ReadDecision decideRead(
             final List<SAMRecord> records, final List<ChrBaseRegion> mateHintIntrons,
-            final LiftedRecord mate, final CandidateSet liftedPrimaryCandidates)
+            final LiftedRecord mate, final LiftedRecord preLiftedPrimaryAlignments)
     {
         if(records.isEmpty())
         {
@@ -120,42 +125,27 @@ public class LiftBackGroupProcessor
         }
 
         List<LiftedRecord> resolved = new ArrayList<>(Collections.nCopies(records.size(), null));
-        CandidateSet primaryCandidates = liftedPrimaryCandidates != null
-                ? liftedPrimaryCandidates : mCandidateFactory.liftPrimary(primary);
+        LiftedRecord primaryAlignments = preLiftedPrimaryAlignments != null
+                ? preLiftedPrimaryAlignments : mDiscriminator.liftPrimaryAlignments(primary, mOverhangGate);
         boolean hasSupplementaries = records.size() > 1;
 
         if(hasSupplementaries)
         {
+            // Step 2: lift the supplementary records and add any supported spliced primary alignments.
             for(int i = 1; i < records.size(); ++i)
             {
-                resolved.set(i, mCandidateFactory.liftSupplementary(records.get(i)));
+                resolved.set(i, mDiscriminator.liftSupplementaryAlignment(records.get(i)));
             }
-            CandidateFactory.Expansion expansion = mCandidateFactory.addSupplementaryCandidates(
-                    records, primaryCandidates, resolved, mateHintIntrons);
-            if(expansion.attempted())
-            {
-                ++mSupplementaryCandidates;
-            }
-            primaryCandidates = expansion.candidates();
+            primaryAlignments = addSupplementarySupportedAlignments(
+                    records, primaryAlignments, resolved, mateHintIntrons);
         }
 
-        resolved.set(0, mCandidateFactory.selectPrimary(primary, primaryCandidates, mate));
+        // Step 3: score the genomic alignments and select the primary placement.
+        resolved.set(0, selectPrimaryAlignment(primary, primaryAlignments, mate));
         SupplementaryResolution supplementary = supplementaryResult(records.size(), resolved.get(0));
         List<ChrBaseRegion> introducedIntrons = new ArrayList<>();
 
-        if(!hasSupplementaries)
-        {
-            CandidateFactory.Revision revision = mCandidateFactory.reviseWithoutSupplementaries(
-                    primary, resolved.get(0), mateHintIntrons);
-            resolved.set(0, revision.result());
-            if(revision.revised())
-            {
-                supplementary = new SupplementaryResolution(Set.of(), true);
-                introducedIntrons.addAll(revision.introducedIntrons());
-                ++mPrimaryRevisions;
-            }
-        }
-        else if(supplementary.revised())
+        if(supplementary.revised())
         {
             LiftedAlignment winner = resolved.get(0).primaryAlignment();
             introducedIntrons.addAll(winner.MergedSupplementaryIntrons);
@@ -164,16 +154,7 @@ public class LiftBackGroupProcessor
             mSupplementariesAbsorbed += supplementary.absorbed().size();
         }
 
-        List<LiftedRecord> finalRecords = List.copyOf(resolved);
-        if(hasSupplementaries)
-        {
-            finalRecords = mCandidateFactory.extendSoftClips(records, finalRecords);
-        }
-        if(!supplementary.revised())
-        {
-            finalRecords = mCandidateFactory.snapBoundaries(records, finalRecords);
-        }
-        finalRecords = mCandidateFactory.assignSpliceStrands(finalRecords);
+        List<LiftedRecord> finalRecords = annotateSpliceStrands(List.copyOf(resolved));
 
         UnmapDecision unmapDecision = applyUnmapPolicy(primary, finalRecords.get(0));
         if(unmapDecision.result() != finalRecords.get(0))
@@ -182,6 +163,135 @@ public class LiftBackGroupProcessor
         }
         return new ReadDecision(
                 finalRecords, supplementary.absorbed(), introducedIntrons, unmapDecision.unmapped());
+    }
+
+    private LiftedRecord addSupplementarySupportedAlignments(
+            final List<SAMRecord> records, final LiftedRecord primaryAlignments,
+            final List<LiftedRecord> liftedRecords, final List<ChrBaseRegion> mateHintIntrons)
+    {
+        SAMRecord primary = records.get(0);
+        if(mSupplementaryResolver == null || primary.getReadUnmappedFlag() || !primaryAlignments.hasPlacement())
+        {
+            return primaryAlignments;
+        }
+
+        List<SupplementaryResolver.Supplementary> supplementaries = new ArrayList<>();
+        for(int i = 1; i < records.size(); ++i)
+        {
+            SAMRecord record = records.get(i);
+            LiftedRecord lifted = liftedRecords.get(i);
+            if(record.getSupplementaryAlignmentFlag() && !record.getReadUnmappedFlag()
+                    && lifted != null && lifted.hasPlacement())
+            {
+                supplementaries.add(new SupplementaryResolver.Supplementary(
+                        i, lifted.finalChromosome(), !record.getReadNegativeStrandFlag(),
+                        lifted.finalPos(), lifted.finalCigar(), record.getMappingQuality()));
+            }
+        }
+        if(supplementaries.isEmpty())
+        {
+            return primaryAlignments;
+        }
+        ++mSupplementaryCandidates;
+
+        List<LiftedAlignment> expanded = new ArrayList<>(primaryAlignments.liftedAlignments());
+        Set<SupplementaryAlignmentKey> seen = new HashSet<>();
+        for(LiftedAlignment alignment : primaryAlignments.liftedAlignments())
+        {
+            seen.add(new SupplementaryAlignmentKey(alignment.key(), List.of()));
+        }
+
+        for(LiftedAlignment alignment : primaryAlignments.liftedAlignments())
+        {
+            if(alignment.Dropped || alignment.LiftedCigar == null)
+            {
+                continue;
+            }
+
+            SupplementaryResolver.Result result = mSupplementaryResolver.resolve(new SupplementaryResolver.Candidate(
+                    alignment.LiftedChromosome, alignment.ForwardStrand, primary.getReadLength(),
+                    alignment.LiftedPos, alignment.LiftedCigar, supplementaries,
+                    primary.getReadBases(), mateHintIntrons));
+            if(!result.merged())
+            {
+                continue;
+            }
+
+            int supplementaryMapQuality = 0;
+            for(Integer recordIndex : result.droppedSupplementaryIndices())
+            {
+                supplementaryMapQuality = Math.max(
+                        supplementaryMapQuality, records.get(recordIndex).getMappingQuality());
+            }
+
+            LiftedAlignment merged = alignment.withSupplementaryMerge(
+                    result.mergedStart(), result.mergedCigar(), result.droppedSupplementaryIndices(),
+                    result.introducedIntrons(), supplementaryMapQuality, result.spliceStrand());
+            if(seen.add(new SupplementaryAlignmentKey(merged.key(), result.droppedSupplementaryIndices())))
+            {
+                expanded.add(merged);
+            }
+        }
+
+        return primaryAlignments.withLiftedAlignments(List.copyOf(expanded));
+    }
+
+    private LiftedRecord selectPrimaryAlignment(
+            final SAMRecord primary, final LiftedRecord alignments, final LiftedRecord mate)
+    {
+        if(!alignments.hasPlacement())
+        {
+            return alignments;
+        }
+        if(mAlignmentScorer != null)
+        {
+            mAlignmentScorer.scoreCandidates(alignments.liftedAlignments(), primary);
+        }
+        return mDiscriminator.selectPrimaryAlignment(primary, alignments.liftedAlignments(), mate);
+    }
+
+    private List<LiftedRecord> annotateSpliceStrands(final List<LiftedRecord> liftedRecords)
+    {
+        if(mSupplementaryResolver == null)
+        {
+            return liftedRecords;
+        }
+
+        List<LiftedRecord> annotated = new ArrayList<>(liftedRecords);
+        for(int i = 0; i < liftedRecords.size(); ++i)
+        {
+            LiftedRecord lifted = liftedRecords.get(i);
+            if(lifted == null || !lifted.hasPlacement() || !lifted.hasNCigar() || lifted.transcriptStrand() != 0)
+            {
+                continue;
+            }
+
+            int strand = mSupplementaryResolver.spliceStrand(
+                    lifted.finalChromosome(), lifted.finalPos(), lifted.finalCigar());
+            if(strand != 0)
+            {
+                annotated.set(i, lifted.withPrimaryTranscriptStrand(strand));
+            }
+        }
+        return List.copyOf(annotated);
+    }
+
+    private Integer finalAlignmentScore(final SAMRecord primary, final LiftedRecord lifted)
+    {
+        // Lift-only test paths omit supplementary resolution and intentionally skip the production AS floor.
+        if(mSupplementaryResolver == null)
+        {
+            return null;
+        }
+        if(lifted.hasPlacement() && mAlignmentScorer != null)
+        {
+            int score = mAlignmentScorer.scoreRecord(lifted.primaryAlignment(), primary);
+            if(score != Integer.MIN_VALUE)
+            {
+                return score;
+            }
+        }
+        return primary.getIntegerAttribute(ALIGNMENT_SCORE_ATTRIBUTE);
     }
 
     private UnmapDecision applyUnmapPolicy(final SAMRecord primary, final LiftedRecord result)
@@ -198,11 +308,12 @@ public class LiftBackGroupProcessor
         if(BamRecordEmitter.exceedsMappingCap(primary, result))
         {
             ++mPrimariesUnmappedOverCap;
-            TARS_LOGGER.trace("over-cap unmap {}: inputMapQuality=0, no XA", primary.getReadName());
+            TARS_LOGGER.trace("over-cap unmap {}:{}: inputMapQuality=0, no XA",
+                    primary.getReferenceName(), primary.getAlignmentStart());
             return new UnmapDecision(LiftedRecord.unmapped("over_cap_unmapped"), true);
         }
 
-        Integer alignmentScore = mCandidateFactory.finalAlignmentScore(primary, result);
+        Integer alignmentScore = finalAlignmentScore(primary, result);
         if(alignmentScore != null && alignmentScore < PRIMARY_AS_UNMAP_THRESHOLD)
         {
             ++mPrimariesUnmappedLowAlignmentScore;
@@ -250,11 +361,6 @@ public class LiftBackGroupProcessor
         {
             pair.recordPrimary(firstInPair(records.get(0)), decision.primaryResult());
         }
-    }
-
-    private static LiftedRecord candidateRecord(final CandidateSet candidates)
-    {
-        return candidates != null ? candidates.record() : null;
     }
 
     private static LiftedRecord chosenPlacement(final LiftedRecord decided, final LiftedRecord fallback)
@@ -306,5 +412,13 @@ public class LiftBackGroupProcessor
 
     private record UnmapDecision(LiftedRecord result, boolean unmapped)
     {
+    }
+
+    private record SupplementaryAlignmentKey(AlignmentKey alignment, List<Integer> absorbedSupplementaries)
+    {
+        private SupplementaryAlignmentKey
+        {
+            absorbedSupplementaries = List.copyOf(absorbedSupplementaries);
+        }
     }
 }

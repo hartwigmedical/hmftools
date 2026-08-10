@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.tars.liftback;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.ALIGNMENT_SCORE_ATTRIBUTE;
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.MISMATCHES_AND_DELETIONS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
@@ -153,7 +152,12 @@ public final class BamRecordEmitter
         applyResultToRecord(record, result, matePair, unmapDecided);
         if(record.getReadUnmappedFlag())
         {
-            record.setReadNegativeStrandFlag(false);
+            matePair.patchMateFields(record);
+            if(!record.getSupplementaryAlignmentFlag())
+            {
+                consumer.accept(record);
+            }
+            return;
         }
 
         String rewrittenSa = rebuiltSuppSa != null
@@ -185,7 +189,7 @@ public final class BamRecordEmitter
             }
             if(unmapDecided)
             {
-                markPrimaryUnmapped(record);
+                markPrimaryUnmapped(record, matePair);
                 return;
             }
             if(record.isSecondaryOrSupplementary() && mirrorOwnPrimaryOntoFailedSupp(record, matePair))
@@ -193,14 +197,7 @@ public final class BamRecordEmitter
                 return;
             }
 
-            record.setReadUnmappedFlag(true);
-            record.setReadNegativeStrandFlag(false);
-            record.setReferenceName(SAMRecord.NO_ALIGNMENT_REFERENCE_NAME);
-            record.setAlignmentStart(SAMRecord.NO_ALIGNMENT_START);
-            record.setCigarString(SAMRecord.NO_ALIGNMENT_CIGAR);
-            record.setMappingQuality(0);
-            record.setAttribute(XA_ATTRIBUTE, null);
-            record.setAttribute(SUPPLEMENTARY_ATTRIBUTE, null);
+            matePair.unmapRead(record);
             return;
         }
 
@@ -241,23 +238,9 @@ public final class BamRecordEmitter
         }
     }
 
-    static void markPrimaryUnmapped(final SAMRecord record)
+    static void markPrimaryUnmapped(final SAMRecord record, final LiftedMatePair matePair)
     {
-        record.setReadUnmappedFlag(true);
-        record.setReadNegativeStrandFlag(false);
-        record.setReferenceName(SAMRecord.NO_ALIGNMENT_REFERENCE_NAME);
-        record.setAlignmentStart(SAMRecord.NO_ALIGNMENT_START);
-        record.setCigarString(SAMRecord.NO_ALIGNMENT_CIGAR);
-        record.setMappingQuality(0);
-        record.setAttribute(SUPPLEMENTARY_ATTRIBUTE, null);
-        record.setAttribute(XA_ATTRIBUTE, null);
-        record.setAttribute(NUM_HITS_ATTRIBUTE, null);
-        record.setAttribute(MATE_CIGAR_ATTRIBUTE, null);
-        if(record.getReadPairedFlag())
-        {
-            record.setProperPairFlag(false);
-            record.setInferredInsertSize(0);
-        }
+        matePair.unmapRead(record);
     }
 
     static boolean willBeUnmapped(final SAMRecord record, final LiftedRecord result)

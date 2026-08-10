@@ -1,6 +1,13 @@
 package com.hartwig.hmftools.tars.liftback;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CHROMOSOME_INDEX;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CHROMOSOME_NAME;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CIGAR;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_POSITION;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.UNMAPP_COORDS_DELIM;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.UNMAP_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.firstInPair;
 
 import htsjdk.samtools.SAMRecord;
@@ -37,6 +44,52 @@ public class LiftedMatePair
         return firstOfPair ? mFirstInPair : mSecondInPair;
     }
 
+    // Unlike REDUX's record-at-a-time transition, TARS already has both final primary decisions for the name group.
+    // Write the final pair state directly: park an unmapped read at its mapped mate, or clear both sides if neither maps.
+    public void unmapRead(final SAMRecord record)
+    {
+        LiftedRecord mate = record.getReadPairedFlag() ? mateOf(firstInPair(record)) : null;
+        String originalChromosome = record.getReferenceName();
+        int originalPosition = record.getAlignmentStart();
+
+        record.setReadUnmappedFlag(true);
+        record.setMappingQuality(0);
+        record.setProperPairFlag(false);
+        record.setInferredInsertSize(0);
+        if(!record.isSecondaryOrSupplementary())
+        {
+            String chromosome = originalChromosome.replaceAll(UNMAPP_COORDS_DELIM, "");
+            record.setAttribute(UNMAP_ATTRIBUTE, chromosome + UNMAPP_COORDS_DELIM + originalPosition);
+        }
+
+        if(mate != null && mate.hasPlacement())
+        {
+            record.setReferenceName(mate.finalChromosome());
+            record.setAlignmentStart(mate.finalPos());
+            record.setMateUnmappedFlag(false);
+            record.setMateReferenceName(mate.finalChromosome());
+            record.setMateAlignmentStart(mate.finalPos());
+            record.setMateNegativeStrandFlag(mate.negativeStrand());
+            record.setAttribute(MATE_CIGAR_ATTRIBUTE, mate.finalCigar());
+        }
+        else
+        {
+            clearReadCoordinates(record);
+            if(record.getReadPairedFlag())
+            {
+                record.setMateUnmappedFlag(true);
+                clearMateCoordinates(record);
+                record.setAttribute(MATE_CIGAR_ATTRIBUTE, null);
+            }
+        }
+
+        record.setCigarString(NO_CIGAR);
+        if(record.hasAttribute(SUPPLEMENTARY_ATTRIBUTE))
+        {
+            record.setAttribute(SUPPLEMENTARY_ATTRIBUTE, null);
+        }
+    }
+
     // Patches a record's mate fields (RNEXT/PNEXT/mate-strand/MC) and TLEN from its mate's lifted primary.
     public void patchMateFields(final SAMRecord record)
     {
@@ -58,18 +111,35 @@ public class LiftedMatePair
 
     private static void applyUnmappedMate(final SAMRecord record)
     {
+        record.setMateUnmappedFlag(true);
+        record.setProperPairFlag(false);
+        record.setInferredInsertSize(0);
+        record.setAttribute(MATE_CIGAR_ATTRIBUTE, null);
+
         if(record.getReadUnmappedFlag())
         {
-            record.setReferenceName(SAMRecord.NO_ALIGNMENT_REFERENCE_NAME);
-            record.setAlignmentStart(SAMRecord.NO_ALIGNMENT_START);
+            clearReadCoordinates(record);
+            clearMateCoordinates(record);
         }
-        record.setMateUnmappedFlag(true);
-        record.setMateReferenceName(record.getReferenceName());
-        record.setMateAlignmentStart(record.getAlignmentStart());
-        record.setMateNegativeStrandFlag(false);
-        record.setInferredInsertSize(0);
-        record.setProperPairFlag(false);
-        record.setAttribute(MATE_CIGAR_ATTRIBUTE, null);
+        else
+        {
+            record.setMateReferenceName(record.getReferenceName());
+            record.setMateAlignmentStart(record.getAlignmentStart());
+        }
+    }
+
+    private static void clearReadCoordinates(final SAMRecord record)
+    {
+        record.setAlignmentStart(NO_POSITION);
+        record.setReferenceIndex(NO_CHROMOSOME_INDEX);
+        record.setReferenceName(NO_CHROMOSOME_NAME);
+    }
+
+    private static void clearMateCoordinates(final SAMRecord record)
+    {
+        record.setMateAlignmentStart(NO_POSITION);
+        record.setMateReferenceIndex(NO_CHROMOSOME_INDEX);
+        record.setMateReferenceName(NO_CHROMOSOME_NAME);
     }
 
     private static void applyMappedMate(final SAMRecord record, final LiftedRecord mate)

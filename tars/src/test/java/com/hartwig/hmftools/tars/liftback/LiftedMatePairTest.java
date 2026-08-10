@@ -214,6 +214,32 @@ public class LiftedMatePairTest
     }
 
     @Test
+    public void testNewlyUnmappedReadUsesReduxFieldsAtLiftedMateLocus()
+    {
+        LiftedMatePair pair = new LiftedMatePair();
+        pair.recordPrimary(false, liftedRecordAt("1", 400, "50M", true));
+
+        SAMRecord r1 = TarsTestFixtures.pairedRecord("read1", true, "1", 100, "50M", true);
+        r1.setProperPairFlag(true);
+        r1.setInferredInsertSize(350);
+        r1.setMappingQuality(60);
+        r1.setAttribute("SA", "2,200,+,20M30S,30,1;");
+
+        pair.unmapRead(r1);
+
+        assertTrue(r1.getReadUnmappedFlag());
+        assertTrue("REDUX preserves the read strand", r1.getReadNegativeStrandFlag());
+        assertEquals("1:100", r1.getStringAttribute("UM"));
+        assertEquals("1", r1.getReferenceName());
+        assertEquals(400, r1.getAlignmentStart());
+        assertEquals(SAMRecord.NO_ALIGNMENT_CIGAR, r1.getCigarString());
+        assertEquals(0, r1.getMappingQuality());
+        assertFalse(r1.getProperPairFlag());
+        assertEquals(0, r1.getInferredInsertSize());
+        assertNull(r1.getStringAttribute("SA"));
+    }
+
+    @Test
     public void testBothMatesUnmappedClearsOwnCoordinates()
     {
         // When both mates are unmapped, the read's stale pre-lift coordinates are cleared.
