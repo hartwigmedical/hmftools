@@ -1,9 +1,11 @@
 package com.hartwig.hmftools.tars.liftback;
 
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CHROMOSOME_NAME;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.TX_CONTIG;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.bases;
+import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.pairedUnmappedRecord;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.primaryRecord;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.refGenome;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.secondMateRecord;
@@ -30,7 +32,7 @@ import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.tars.liftback.TarsTestFixtures.TestGenome;
 import com.hartwig.hmftools.tars.liftback.features.OverhangGate;
-import com.hartwig.hmftools.tars.liftback.features.SoftClipExtender;
+import com.hartwig.hmftools.tars.liftback.features.GenomicAlignmentScorer;
 import com.hartwig.hmftools.tars.liftback.features.SupplementaryConfig;
 import com.hartwig.hmftools.tars.liftback.features.SupplementaryResolver;
 
@@ -52,7 +54,7 @@ public class LiftBackGroupProcessorTest
     {
         LiftBackGroupProcessor processor = new LiftBackGroupProcessor(
                 new LiftBackDiscriminator(List.of(threeExonContig())),
-                supplementaryResolver, overhangGate, new SoftClipExtender(refGenome), refGenome, excludedRegions);
+                supplementaryResolver, overhangGate, new GenomicAlignmentScorer(refGenome), refGenome, excludedRegions);
 
         List<SAMRecord> emitted = new ArrayList<>();
         processor.processNameGroup(group, emitted::add);
@@ -207,6 +209,41 @@ public class LiftBackGroupProcessorTest
         assertEquals(300, out1.getMateAlignmentStart());
         assertEquals(CHR_1, out2.getMateReferenceName());
         assertEquals(100, out2.getMateAlignmentStart());
+    }
+
+    @Test
+    public void testOneUnmappedMateIsPlacedBesideMappedMateReduxStyle()
+    {
+        // /1 is deliberately unmapped by TARS's genomic over-cap rule while /2 remains mapped. REDUX represents
+        // that fragment by parking /1 at /2's genomic coordinate; /2 points its unmapped-mate fields back to itself.
+        SAMRecord mate1 = primaryRecord(CHR_1, 100, "50M");
+        mate1.setMappingQuality(0);
+        SAMRecord mate2 = secondMateRecord(CHR_1, 600, "50M");
+
+        List<SAMRecord> emitted = process(List.of(mate1, mate2));
+
+        assertEquals(2, emitted.size());
+        SAMRecord out1 = emitted.stream().filter(SAMRecord::getFirstOfPairFlag).findFirst().orElseThrow();
+        SAMRecord out2 = emitted.stream().filter(record -> !record.getFirstOfPairFlag()).findFirst().orElseThrow();
+
+        assertTrue(out1.getReadUnmappedFlag());
+        assertEquals(SAMRecord.NO_ALIGNMENT_CIGAR, out1.getCigarString());
+        assertEquals(0, out1.getMappingQuality());
+        assertEquals("1:100", out1.getStringAttribute("UM"));
+        assertEquals(out2.getReferenceName(), out1.getReferenceName());
+        assertEquals(out2.getAlignmentStart(), out1.getAlignmentStart());
+        assertFalse(out1.getMateUnmappedFlag());
+        assertEquals(out2.getReferenceName(), out1.getMateReferenceName());
+        assertEquals(out2.getAlignmentStart(), out1.getMateAlignmentStart());
+
+        assertFalse(out2.getReadUnmappedFlag());
+        assertTrue(out2.getMateUnmappedFlag());
+        assertEquals(out2.getReferenceName(), out2.getMateReferenceName());
+        assertEquals(out2.getAlignmentStart(), out2.getMateAlignmentStart());
+        assertFalse(out1.getProperPairFlag());
+        assertFalse(out2.getProperPairFlag());
+        assertEquals(0, out1.getInferredInsertSize());
+        assertEquals(0, out2.getInferredInsertSize());
     }
 
     @Test
@@ -461,6 +498,43 @@ public class LiftBackGroupProcessorTest
         assertTrue(emitted.get(0).getReadUnmappedFlag());
     }
 
+    // bwa emits a pair with both ends unmapped as flags 77/141 - paired, read unmapped, mate unmapped. The mate-unmapped
+    // bit must survive the lift: clearing it leaves a record claiming a mapped mate with RNEXT unset, which REDUX rejects
+    // with htsjdk's INVALID_FLAG_MATE_UNMAPPED.
+    @Test
+    public void testBothEndsUnmappedPairKeepsMateUnmappedFlag()
+    {
+        SAMRecord first = pairedUnmappedRecord("frag1", true);
+        first.setMateUnmappedFlag(true);
+
+        SAMRecord second = pairedUnmappedRecord("frag1", false);
+        second.setMateUnmappedFlag(true);
+
+        List<SAMRecord> emitted = process(List.of(first, second));
+
+        assertEquals(2, emitted.size());
+        for(SAMRecord record : emitted)
+        {
+            String side = record.getFirstOfPairFlag() ? "first" : "second";
+            assertEquals(side + " RNEXT", NO_CHROMOSOME_NAME, record.getMateReferenceName());
+            assertEquals(side + " flags", record.getFirstOfPairFlag() ? 77 : 141, record.getFlags());
+            assertTrue(side + " read should stay unmapped", record.getReadUnmappedFlag());
+            assertTrue(side + " mate-unmapped flag should survive the lift", record.getMateUnmappedFlag());
+        }
+    }
+
+    // Isolates the mate patch from the group processor: an unrecorded mate must leave the mate-unmapped bit set.
+    @Test
+    public void testPatchMateFieldsKeepsMateUnmappedForUnplacedMate()
+    {
+        SAMRecord record = pairedUnmappedRecord("frag1", true);
+        record.setMateUnmappedFlag(true);
+
+        new LiftedMatePair().patchMateFields(record);
+
+        assertEquals("flags", 77, record.getFlags());
+    }
+
     // Junctions taken from the same sidecar entry the discriminator lifts against, so the intron coords and the
     // chromosome key match what the lift emits: chr1 introns 200-299 and 400-499 between the three exons.
     private static SupplementaryResolver contigSupplementary()
@@ -469,98 +543,4 @@ public class LiftBackGroupProcessorTest
                 EnsemblAnnotationIndex.fromContigEntries(List.of(threeExonContig())), null, SupplementaryConfig.defaults());
     }
 
-    @Test
-    public void testBoundarySnapReachesBothRecordsOfASplitRead()
-    {
-        // The fusion shape: 51M ends at 200, one base into the annotated intron, and the supp starts at 499, one base
-        // before the exon at 500. Their read coverage leaves a gap so no merge can carry either correction. Asserted on
-        // the emitted records rather than on the resolver, because the snap has to survive the overhang gate to be worth
-        // having, and on both records because a fusion's two junction ends come from two of them.
-        SAMRecord primary = primaryRecord(CHR_1, 150, "51M100S");
-        SAMRecord supp = supplementaryRecord(CHR_1, 499, "100S51M", CHR_1 + ",150,+,51M100S,60,0;");
-
-        List<SAMRecord> emitted = process(List.of(primary, supp), contigSupplementary());
-
-        assertEquals(2, emitted.size());
-        assertEquals("50M101S", emitted.get(0).getCigarString());
-        assertEquals(150, emitted.get(0).getAlignmentStart());
-        assertEquals("101S50M", emitted.get(1).getCigarString());
-        assertEquals("left retraction moves the start", 500, emitted.get(1).getAlignmentStart());
-    }
-
-    @Test
-    public void testBoundarySnapDoesNotRescueALowAlignmentScorePrimary()
-    {
-        // AS 20 is under the floor, so the primary unmaps and its supp is dropped as an orphan. The snap must not change
-        // that: it shortens the alignment, so bwa's stale AS is if anything generous. Suppression is for the merge and
-        // collapse passes, which lengthen it.
-        SAMRecord primary = primaryRecord(CHR_1, 150, "51M100S");
-        primary.setAttribute("AS", 20);
-        SAMRecord supp = supplementaryRecord(CHR_1, 499, "100S51M", CHR_1 + ",150,+,51M100S,60,0;");
-
-        List<SAMRecord> emitted = process(List.of(primary, supp), contigSupplementary());
-
-        assertEquals(1, emitted.size());
-        assertTrue(emitted.get(0).getReadUnmappedFlag());
-        assertFalse(emitted.get(0).getSupplementaryAlignmentFlag());
-    }
-
-    @Test
-    public void testNoBoundarySnapForAReadWithNoSupplementary()
-    {
-        // Same over-extended boundary as above, but with no partner record: this is as likely to be intron retention as
-        // over-extension, so the bases stay aligned.
-        SAMRecord primary = primaryRecord(CHR_1, 150, "51M100S");
-
-        List<SAMRecord> emitted = process(List.of(primary), contigSupplementary());
-
-        assertEquals(1, emitted.size());
-        assertEquals("51M100S", emitted.get(0).getCigarString());
-    }
-
-    // The snap tests above run with no reference, which leaves the extension pass inert. These two supply one, so the
-    // snap and the extension are exercised against each other.
-
-    @Test
-    public void testBoundarySnapSurvivesSoftClipExtension()
-    {
-        // The base a snap retracts is one bwa had aligned, so it still matches the reference and an extension running
-        // afterwards reclaims it, putting the boundary back inside the intron. The read matches for its first 51 bases
-        // and mismatches beyond, so that single base is the only one the extension could take.
-        RefGenomeInterface refGenome = new TestGenome().with(CHR_1, 700, 'A').asRefGenome();
-        byte[] readBases = bases("A".repeat(51) + "T".repeat(100));
-
-        SAMRecord primary = primaryRecord(CHR_1, 150, "51M100S");
-        primary.setReadBases(readBases);
-        SAMRecord supp = supplementaryRecord(CHR_1, 499, "100S51M", CHR_1 + ",150,+,51M100S,60,0;");
-        supp.setReadBases(readBases);
-
-        List<SAMRecord> emitted = process(List.of(primary, supp), contigSupplementary(), null, refGenome, null);
-
-        assertEquals(2, emitted.size());
-        assertEquals("retraction not re-consumed by the extension", "50M101S", emitted.get(0).getCigarString());
-        assertEquals(150, emitted.get(0).getAlignmentStart());
-    }
-
-    @Test
-    public void testSoftClipExtensionStandsDownTheAlignmentScoreFloor()
-    {
-        // AS 20 is under the floor, but the extension lengthens 51M to 61M, so bwa's recorded score is stale and
-        // pessimistic for the same reason a merge makes it stale. Split-read shape whose read coverage leaves a gap, so
-        // no merge happens and the extension is the only thing that can stand the floor down.
-        RefGenomeInterface refGenome = new TestGenome().with(CHR_1, 700, 'A').asRefGenome();
-        byte[] readBases = bases("A".repeat(61) + "T".repeat(90));
-
-        SAMRecord primary = primaryRecord(CHR_1, 150, "51M100S");
-        primary.setReadBases(readBases);
-        primary.setAttribute("AS", 20);
-        SAMRecord supp = supplementaryRecord(CHR_1, 499, "100S51M", CHR_1 + ",150,+,51M100S,60,0;");
-        supp.setReadBases(readBases);
-
-        List<SAMRecord> emitted = process(List.of(primary, supp), contigSupplementary(), null, refGenome, null);
-
-        assertEquals(2, emitted.size());
-        assertFalse("an extended primary is not unmapped on a stale AS", emitted.get(0).getReadUnmappedFlag());
-        assertEquals("61M90S", emitted.get(0).getCigarString());
-    }
 }

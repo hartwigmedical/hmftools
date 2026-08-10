@@ -4,8 +4,8 @@ import static com.hartwig.hmftools.tars.common.TarsConstants.TARS_LOGGER;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
+import com.hartwig.hmftools.tars.liftback.features.GenomicAlignmentScorer;
 import com.hartwig.hmftools.tars.liftback.features.OverhangGate;
-import com.hartwig.hmftools.tars.liftback.features.SoftClipExtender;
 import com.hartwig.hmftools.tars.liftback.features.SupplementaryConfig;
 import com.hartwig.hmftools.tars.liftback.features.SupplementaryResolver;
 
@@ -41,7 +41,7 @@ public final class LiftBackResources
                 mDiscriminator,
                 new SupplementaryResolver(mEnsemblAnnotationIndex, refGenome, mSupplementary),
                 new OverhangGate(refGenome),
-                new SoftClipExtender(refGenome),
+                new GenomicAlignmentScorer(refGenome),
                 refGenome,
                 mExcludedRegions);
     }

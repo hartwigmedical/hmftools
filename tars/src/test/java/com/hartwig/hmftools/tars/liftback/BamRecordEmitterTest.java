@@ -115,11 +115,12 @@ public class BamRecordEmitterTest
     }
 
     @Test
-    public void testMarkPrimaryUnmappedClearsAllStaleTags()
+    public void testMarkPrimaryUnmappedUsesReduxSamRepresentation()
     {
         SAMRecord record = newRecord(CHR_1, 1000, "50M");
         record.setReadPairedFlag(true);
         record.setFirstOfPairFlag(true);
+        record.setReadNegativeStrandFlag(true);
         record.setProperPairFlag(true);
         record.setInferredInsertSize(150);
         record.setAttribute("SA", "chrX,1,+,30M,30,0;");
@@ -128,16 +129,18 @@ public class BamRecordEmitterTest
         record.setAttribute("MC", "50M");
         record.setMappingQuality(60);
 
-        BamRecordEmitter.markPrimaryUnmapped(record);
+        BamRecordEmitter.markPrimaryUnmapped(record, new LiftedMatePair());
 
         assertTrue(record.getReadUnmappedFlag());
+        assertTrue("REDUX preserves the alignment strand flag", record.getReadNegativeStrandFlag());
+        assertEquals("1:1000", record.getStringAttribute("UM"));
         assertEquals(SAMRecord.NO_ALIGNMENT_CIGAR, record.getCigarString());
         assertEquals(0, record.getMappingQuality());
         assertFalse(record.getProperPairFlag());
         assertEquals(0, record.getInferredInsertSize());
         assertNull(record.getStringAttribute("SA"));
-        assertNull(record.getStringAttribute("XA"));
-        assertNull(record.getIntegerAttribute("NH"));
+        assertEquals("chrY,+1,50M,0;", record.getStringAttribute("XA"));
+        assertEquals(Integer.valueOf(1), record.getIntegerAttribute("NH"));
         assertNull(record.getStringAttribute("MC"));
     }
 

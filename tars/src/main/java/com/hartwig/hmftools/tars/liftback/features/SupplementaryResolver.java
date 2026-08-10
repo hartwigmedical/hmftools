@@ -8,12 +8,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import static com.hartwig.hmftools.common.utils.Arrays.reverseArray;
 import static com.hartwig.hmftools.tars.common.TarsCigarUtils.indelAdjacentToTerminalSoftClip;
-import static com.hartwig.hmftools.tars.common.TarsCigarUtils.retractTerminalMatchIntoSoftClip;
 import static com.hartwig.hmftools.tars.common.TarsCigarUtils.terminalMatchedRun;
-
-import static htsjdk.samtools.util.SequenceUtil.basesEqual;
 
 import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
@@ -39,7 +35,6 @@ import htsjdk.samtools.CigarOperator;
 //   7. both anchors are at least MinAnchorOverhang                 SHORT_ANCHOR
 //   8. a junction position scores above Tier.NONE, or is annotated
 //      when AnnotatedOnly is set                                   NOVEL_JUNCTION
-// With no supplementary at all, tryRefVerifyOnly takes over and reports the REF_VERIFY_* reasons instead.
 public class SupplementaryResolver
 {
     // Plain-value input, testable without SAMRecord. readBases seeds the tie-break between equally scoring
@@ -91,12 +86,6 @@ public class SupplementaryResolver
         }
     }
 
-    // A retraction of one or both terminal boundaries onto an annotated splice boundary: the resulting start and cigar,
-    // and how far each side gave up. Only a left-side retraction moves the start.
-    public record BoundarySnap(int start, String cigar, int leftShift, int rightShift)
-    {
-    }
-
     // Why a candidate was not merged, reported on the result.
     public enum RejectReason
     {
@@ -111,11 +100,7 @@ public class SupplementaryResolver
         SHORT_ANCHOR,                 // primary or supp matched portion < MinAnchorOverhang
         NOVEL_JUNCTION,               // candidate intron not in annotated set (and AnnotatedOnly is true)
         COMPLEX_CIGAR_SHAPE,          // hard clip, indel adjacent to softclip boundary, etc.
-        MULTIPLE_SUPPS_IN_REACH,      // more than one supp within merge reach; refuse to guess which splice
-        // ref-verify path: primary has a terminal softclip but no matching supp
-        REF_VERIFY_NO_CANDIDATE_EXON, // no annotated junction's adjacent exon lines up with the softclip
-        REF_VERIFY_MISMATCH_TOO_HIGH, // softclipped read bases don't match the candidate exon's ref bases
-        REF_VERIFY_AMBIGUOUS          // multiple annotated downstream/upstream exons match; refuse to guess
+        MULTIPLE_SUPPS_IN_REACH       // more than one supp within merge reach; refuse to guess which splice
     }
 
     // Splice-motif strength of a candidate junction, weakest to strongest. Declaration order is meaningful: candidates
@@ -160,7 +145,7 @@ public class SupplementaryResolver
     {
         if(candidate.supplementaries().isEmpty())
         {
-            return tryRefVerifyOnly(candidate);
+            return Result.noMerge(RejectReason.NO_MATCHING_SUPP);
         }
 
         List<CigarElement> primaryCigar = CigarUtils.cigarElementsFromStr(candidate.primaryCigar());
@@ -235,356 +220,6 @@ public class SupplementaryResolver
         return new Result(
                 true, CigarUtils.cigarElementsToStr(primaryCigar), primaryStart,
                 dropped, introns, chainDepth, spliceStrand, null);
-    }
-
-    // Retracts an over-extended terminal boundary onto an annotated splice boundary, independently of any merge. BWA
-    // extends a few bases past the true exon boundary when the intron's leading bases happen to match the read. A merge
-    // carries that correction in the cigar it builds, but a read whose supplementary cannot be merged - a fusion, whose
-    // partner is a different gene - keeps BWA's boundary, so it is corrected here instead. Both terminal boundaries are
-    // considered, since the two ends of a fusion junction come from two different records.
-    public BoundarySnap snapToAnnotatedBoundary(final String chromosome, final int start, final String cigar)
-    {
-        List<CigarElement> elements = CigarUtils.cigarElementsFromStr(cigar);
-        if(CigarUtils.hasHardClip(elements))
-        {
-            return null;
-        }
-
-        int rightShift = annotatedBoundaryShift(chromosome, start, elements, true);
-        int leftShift = annotatedBoundaryShift(chromosome, start, elements, false);
-        if(rightShift == 0 && leftShift == 0)
-        {
-            return null;
-        }
-
-        List<CigarElement> snapped = elements;
-        if(rightShift > 0)
-        {
-            snapped = retractTerminalMatchIntoSoftClip(snapped, rightShift, true);
-        }
-        if(snapped != null && leftShift > 0)
-        {
-            snapped = retractTerminalMatchIntoSoftClip(snapped, leftShift, false);
-        }
-        if(snapped == null)
-        {
-            // both ends retracting the same matched run can ask for more bases than it has; leave the read alone
-            return null;
-        }
-
-        return new BoundarySnap(start + leftShift, CigarUtils.cigarElementsToStr(snapped), leftShift, rightShift);
-    }
-
-    // The one retraction in 1..MaxRefVerifyBoundaryShift that puts this side's boundary on an annotated intron boundary.
-    // 0 when BWA already left it on one, when none is in reach, or when several are and the intended one cannot be told
-    // apart. Anchor floor matches attemptRefVerifySide: a retraction may not consume the whole matched run.
-    private int annotatedBoundaryShift(
-            final String chromosome, final int start, final List<CigarElement> elements, final boolean rightSide)
-    {
-        int softClipLength = rightSide
-                ? CigarUtils.rightSoftClipLength(elements)
-                : CigarUtils.leftSoftClipLength(elements);
-        if(softClipLength == 0 || indelAdjacentToTerminalSoftClip(elements, !rightSide))
-        {
-            return 0;
-        }
-
-        int anchor = terminalMatchedRun(elements, rightSide);
-        int alignedEnd = start + CigarUtils.cigarAlignedLength(elements) - 1;
-        int snapShift = 0;
-
-        for(int shift = 0; shift <= mConfig.MaxRefVerifyBoundaryShift; ++shift)
-        {
-            if(anchor - shift < 1)
-            {
-                break;
-            }
-
-            int boundary = rightSide ? (alignedEnd - shift + 1) : (start + shift - 1);
-            boolean annotated = rightSide
-                    ? !mEnsemblAnnotationIndex.junctionsByStart(chromosome, boundary).isEmpty()
-                    : !mEnsemblAnnotationIndex.junctionsByEnd(chromosome, boundary).isEmpty();
-            if(!annotated)
-            {
-                continue;
-            }
-
-            if(shift == 0 || snapShift > 0)
-            {
-                return 0;
-            }
-            snapShift = shift;
-        }
-
-        return snapShift;
-    }
-
-    private Result tryRefVerifyOnly(final Candidate candidate)
-    {
-        if(mRefGenome == null || candidate.readBases() == null)
-        {
-            return Result.noMerge(RejectReason.NO_MATCHING_SUPP);
-        }
-
-        List<CigarElement> primaryCigar = CigarUtils.cigarElementsFromStr(candidate.primaryCigar());
-        if(CigarUtils.hasHardClip(primaryCigar))
-        {
-            return Result.noMerge(RejectReason.COMPLEX_CIGAR_SHAPE);
-        }
-        if(primaryCigar.isEmpty())
-        {
-            return Result.noMerge(RejectReason.NO_TERMINAL_SOFTCLIP);
-        }
-
-        boolean trailingS = primaryCigar.get(primaryCigar.size() - 1).getOperator() == CigarOperator.S;
-        boolean leadingS = primaryCigar.get(0).getOperator() == CigarOperator.S;
-        if(!trailingS && !leadingS)
-        {
-            return Result.noMerge(RejectReason.NO_TERMINAL_SOFTCLIP);
-        }
-
-        // Both-end clips: try longer clip first (more likely the splice tail). First win is taken.
-        boolean[] sides;
-        if(trailingS && leadingS)
-        {
-            boolean trailingFirst =
-                    CigarUtils.rightSoftClipLength(primaryCigar) >= CigarUtils.leftSoftClipLength(primaryCigar);
-            sides = new boolean[] { trailingFirst, !trailingFirst };
-        }
-        else
-        {
-            sides = new boolean[] { trailingS };
-        }
-
-        boolean anyCandidate = false;
-        Result lastFailure = Result.noMerge(RejectReason.REF_VERIFY_MISMATCH_TOO_HIGH);
-        for(boolean rightExtend : sides)
-        {
-            Result sideResult = attemptRefVerifySide(candidate, primaryCigar, rightExtend);
-            if(sideResult.merged())
-            {
-                return sideResult;
-            }
-            if(sideResult.rejectReason() != RejectReason.REF_VERIFY_NO_CANDIDATE_EXON)
-            {
-                anyCandidate = true;
-                lastFailure = sideResult;
-            }
-        }
-
-        if(!anyCandidate)
-        {
-            return Result.noMerge(RejectReason.REF_VERIFY_NO_CANDIDATE_EXON);
-        }
-        return lastFailure;
-    }
-
-    // Ref-verify one terminal softclip against annotated donors/acceptors with boundary snap.
-    // Does NOT count the no-candidate reject; tryRefVerifyOnly aggregates across both ends.
-    private Result attemptRefVerifySide(
-            final Candidate candidate, final List<CigarElement> primaryCigar, final boolean rightExtend)
-    {
-        if(indelAdjacentToTerminalSoftClip(primaryCigar, !rightExtend))
-        {
-            return Result.noMerge(RejectReason.COMPLEX_CIGAR_SHAPE);
-        }
-
-        int softclipLen = rightExtend
-                ? CigarUtils.rightSoftClipLength(primaryCigar)
-                : CigarUtils.leftSoftClipLength(primaryCigar);
-        int primaryAnchor = rightExtend
-                ? terminalMatchedRun(primaryCigar, true)
-                : terminalMatchedRun(primaryCigar, false);
-
-        // BWA often over-extends a few bases past the true exon boundary. Snap back up to
-        // MaxRefVerifyBoundaryShift (smallest shift first), rolling over-extension into the softclip.
-        int primaryRefEnd = candidate.primaryStart() + CigarUtils.cigarAlignedLength(primaryCigar) - 1;
-        boolean anyCandidate = false;
-        Result lastFailure = Result.noMerge(RejectReason.REF_VERIFY_MISMATCH_TOO_HIGH);
-
-        for(int shift = 0; shift <= mConfig.MaxRefVerifyBoundaryShift; ++shift)
-        {
-            if(primaryAnchor - shift < 1)
-                break;
-            List<CigarElement> shiftedCigar = shift == 0
-                    ? primaryCigar
-                    : retractTerminalMatchIntoSoftClip(primaryCigar, shift, rightExtend);
-            if(shiftedCigar == null)
-                break;
-
-            int boundary = rightExtend ? (primaryRefEnd + 1 - shift) : (candidate.primaryStart() - 1 + shift);
-            List<ChrBaseRegion> candidates = rightExtend
-                    ? mEnsemblAnnotationIndex.junctionsByStart(candidate.chromosome(), boundary)
-                    : mEnsemblAnnotationIndex.junctionsByEnd(candidate.chromosome(), boundary);
-            if(candidates.isEmpty())
-                continue;
-
-            anyCandidate = true;
-            Result result = verifyAgainstCandidates(
-                    candidate, shiftedCigar, candidates, softclipLen + shift, rightExtend);
-            if(result.merged())
-            {
-                return result;
-            }
-            lastFailure = result;
-        }
-
-        if(!anyCandidate)
-        {
-            return Result.noMerge(RejectReason.REF_VERIFY_NO_CANDIDATE_EXON);
-        }
-        return lastFailure;
-    }
-
-    private Result verifyAgainstCandidates(
-            final Candidate candidate, final List<CigarElement> primaryCigar,
-            final List<ChrBaseRegion> candidates, final int softclipLen, final boolean rightExtend)
-    {
-        if(candidates.isEmpty())
-        {
-            return Result.noMerge(RejectReason.REF_VERIFY_NO_CANDIDATE_EXON);
-        }
-
-        byte[] readBases = candidate.readBases();
-        byte[] softclipBases = new byte[softclipLen];
-        if(rightExtend)
-        {
-            System.arraycopy(readBases, readBases.length - softclipLen, softclipBases, 0, softclipLen);
-        }
-        else
-        {
-            System.arraycopy(readBases, 0, softclipBases, 0, softclipLen);
-        }
-
-        // Match from the junction-proximal end (bwa-mem score walk). The outer softclip residual stays
-        // soft-clipped since bwa often carries adapter/low-quality bases there (e.g. 19S132M ->
-        // 6S15M..N..130M, not 21M..N..130M). Proximal end is the high index for a leading softclip.
-        boolean proximalAtEnd = !rightExtend;
-        ChrBaseRegion chosen = null;
-        int chosenRun = 0;
-        int chosenMismatches = Integer.MAX_VALUE;
-        boolean ambiguous = false;
-
-        for(ChrBaseRegion candidateIntron : candidates)
-        {
-            int intronLength = candidateIntron.end() - candidateIntron.start() + 1;
-            if(intronLength < mConfig.MinIntronLength || intronLength > mConfig.MaxIntronLength)
-                continue;
-
-            int refStart;
-            int refEnd;
-            if(rightExtend)
-            {
-                refStart = candidateIntron.end() + 1;
-                refEnd = candidateIntron.end() + softclipLen;
-            }
-            else
-            {
-                refStart = candidateIntron.start() - softclipLen;
-                refEnd = candidateIntron.start() - 1;
-            }
-
-            byte[] refBases = refBases(candidate.chromosome(), refStart, refEnd);
-            if(refBases == null || refBases.length != softclipLen)
-                continue;
-
-            int run = proximalScoringRun(softclipBases, refBases, rightExtend);
-            if(run == 0)
-                continue;
-            int mismatches = mismatchesInRun(softclipBases, refBases, softclipLen, run, proximalAtEnd);
-
-            // Longest run wins; tie-break fewest mismatches. Two introns tying both -> ambiguous -> reject.
-            if(run > chosenRun || (run == chosenRun && mismatches < chosenMismatches))
-            {
-                chosen = candidateIntron;
-                chosenRun = run;
-                chosenMismatches = mismatches;
-                ambiguous = false;
-            }
-            else if(run == chosenRun && mismatches == chosenMismatches && !candidateIntron.equals(chosen))
-            {
-                ambiguous = true;
-            }
-        }
-
-        if(chosen == null)
-        {
-            return Result.noMerge(RejectReason.REF_VERIFY_MISMATCH_TOO_HIGH);
-        }
-        if(ambiguous)
-        {
-            return Result.noMerge(RejectReason.REF_VERIFY_AMBIGUOUS);
-        }
-
-        return buildRefVerifyMerge(candidate, primaryCigar, chosen, chosenRun, softclipLen, rightExtend);
-    }
-
-    private Result buildRefVerifyMerge(
-            final Candidate candidate, final List<CigarElement> primaryCigar,
-            final ChrBaseRegion chosen, final int matchedRun, final int softclipLen, final boolean rightExtend)
-    {
-        int intronLength = chosen.end() - chosen.start() + 1;
-        int residualSoftclip = softclipLen - matchedRun;
-        List<CigarElement> merged = new ArrayList<>(primaryCigar.size() + 3);
-        if(rightExtend)
-        {
-            for(int i = 0; i < primaryCigar.size() - 1; ++i)
-            {
-                merged.add(primaryCigar.get(i));
-            }
-            merged.add(new CigarElement(intronLength, CigarOperator.N));
-            merged.add(new CigarElement(matchedRun, CigarOperator.M));
-            if(residualSoftclip > 0)
-            {
-                merged.add(new CigarElement(residualSoftclip, CigarOperator.S));
-            }
-        }
-        else
-        {
-            if(residualSoftclip > 0)
-            {
-                merged.add(new CigarElement(residualSoftclip, CigarOperator.S));
-            }
-            merged.add(new CigarElement(matchedRun, CigarOperator.M));
-            merged.add(new CigarElement(intronLength, CigarOperator.N));
-            for(int i = 1; i < primaryCigar.size(); ++i)
-            {
-                merged.add(primaryCigar.get(i));
-            }
-        }
-
-        int mergedStart = rightExtend ? candidate.primaryStart() : (chosen.start() - matchedRun);
-        return new Result(
-                true, CigarUtils.cigarElementsToStr(merged), mergedStart,
-                Collections.emptyList(), Collections.singletonList(chosen),
-                1, junctionStrand(chosen), null);
-    }
-
-    // Longest run matching ref from the junction-proximal end, scored with the shared bwa-mem model
-    // (match +1, mismatch -4) so ref-verify matches the ref-dependent feature passes. Leading clips
-    // reverse both arrays so the walk runs from the high-index proximal end outward.
-    private static int proximalScoringRun(final byte[] softclipBases, final byte[] refBases, final boolean rightExtend)
-    {
-        if(rightExtend)
-        {
-            return BwaScoring.maxScoringPrefix(softclipBases, refBases);
-        }
-        return BwaScoring.maxScoringPrefix(reverseArray(softclipBases), reverseArray(refBases));
-    }
-
-    private static int mismatchesInRun(
-            final byte[] softclipBases, final byte[] refBases, final int len, final int run, final boolean proximalAtEnd)
-    {
-        int mismatches = 0;
-        for(int k = 1; k <= run; ++k)
-        {
-            int index = proximalAtEnd ? (len - k) : (k - 1);
-            if(!basesEqual(softclipBases[index], refBases[index]))
-            {
-                ++mismatches;
-            }
-        }
-        return mismatches;
     }
 
     private Tier classifyJunctionTier(final ChrBaseRegion candidateIntron)

@@ -112,67 +112,6 @@ public final class TarsCigarUtils
         return previous == CigarOperator.I || previous == CigarOperator.D;
     }
 
-    public static boolean extendTerminalSoftClipIntoMatch(
-            final List<CigarElement> elements, final boolean leadingSide, final int extensionLength)
-    {
-        if(extensionLength <= 0 || elements.size() < 2)
-        {
-            return false;
-        }
-
-        int softClipIndex = leadingSide ? 0 : elements.size() - 1;
-        int matchIndex = leadingSide ? 1 : elements.size() - 2;
-        CigarElement softClip = elements.get(softClipIndex);
-        CigarElement match = elements.get(matchIndex);
-        if(softClip.getOperator() != CigarOperator.S || !isMatchedOp(match.getOperator())
-                || softClip.getLength() < extensionLength)
-        {
-            return false;
-        }
-
-        elements.set(matchIndex, new CigarElement(match.getLength() + extensionLength, match.getOperator()));
-        if(softClip.getLength() == extensionLength)
-        {
-            elements.remove(softClipIndex);
-        }
-        else
-        {
-            elements.set(softClipIndex, new CigarElement(softClip.getLength() - extensionLength, CigarOperator.S));
-        }
-        return true;
-    }
-
-    public static List<CigarElement> retractTerminalMatchIntoSoftClip(
-            final List<CigarElement> elements, final int shift, final boolean rightSide)
-    {
-        if(shift <= 0)
-        {
-            return new ArrayList<>(elements);
-        }
-
-        List<CigarElement> shifted = new ArrayList<>(elements);
-        int last = shifted.size() - 1;
-        int softClipIndex = rightSide ? last : 0;
-        int matchIndex = rightSide ? last - 1 : 1;
-        if(matchIndex < 0 || matchIndex >= shifted.size())
-        {
-            return null;
-        }
-
-        CigarElement softClip = shifted.get(softClipIndex);
-        CigarElement match = shifted.get(matchIndex);
-        if(softClip.getOperator() != CigarOperator.S
-                || (match.getOperator() != CigarOperator.M && match.getOperator() != CigarOperator.EQ)
-                || match.getLength() - shift < 1)
-        {
-            return null;
-        }
-
-        shifted.set(matchIndex, new CigarElement(match.getLength() - shift, match.getOperator()));
-        shifted.set(softClipIndex, new CigarElement(softClip.getLength() + shift, CigarOperator.S));
-        return shifted;
-    }
-
     public static Cigar clampLeadingReferenceToSoftClip(final Cigar cigar, final int overhang)
     {
         List<CigarElement> elements = cigar.getCigarElements();

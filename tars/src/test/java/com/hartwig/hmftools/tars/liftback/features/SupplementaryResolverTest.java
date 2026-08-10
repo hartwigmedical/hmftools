@@ -20,7 +20,6 @@ import com.hartwig.hmftools.tars.common.ContigEntry;
 import com.hartwig.hmftools.tars.liftback.EnsemblAnnotationIndex;
 import com.hartwig.hmftools.tars.liftback.TarsTestFixtures;
 import com.hartwig.hmftools.tars.liftback.TarsTestFixtures.TestGenome;
-import com.hartwig.hmftools.tars.liftback.features.SupplementaryResolver.BoundarySnap;
 import com.hartwig.hmftools.tars.liftback.features.SupplementaryResolver.Candidate;
 import com.hartwig.hmftools.tars.liftback.features.SupplementaryResolver.RejectReason;
 import com.hartwig.hmftools.tars.liftback.features.SupplementaryResolver.Result;
@@ -100,6 +99,21 @@ public class SupplementaryResolverTest
         assertEquals(-1, annotatedResolver.spliceStrand(CHR1, 150, "50M100N50M"));
         assertEquals(1, SupplementaryResolver.motifStrand(bases("GT"), bases("AG")));
         assertEquals(-1, SupplementaryResolver.motifStrand(bases("CT"), bases("AC")));
+    }
+
+    @Test
+    public void testDoesNotInferAJunctionWithoutASupplementary()
+    {
+        TestGenome genome = new TestGenome().with(CHR1, 300, 'A').set(CHR1, 201, 5, 'C');
+        Candidate candidate = new Candidate(
+                CHR1, true, 35, 101, "30M5S", Collections.emptyList(),
+                bases("A".repeat(30) + "C".repeat(5)), Collections.emptyList());
+
+        Result result = resolverWithRef(
+                annotated(new ChrBaseRegion(CHR1, 131, 200)), genome).resolve(candidate);
+
+        assertFalse(result.merged());
+        assertEquals(RejectReason.NO_MATCHING_SUPP, result.rejectReason());
     }
 
     @Test
@@ -303,7 +317,7 @@ public class SupplementaryResolverTest
     @Test
     public void testRejectNovelJunctionWhenAnnotatedOnly()
     {
-        SupplementaryConfig strict = new SupplementaryConfig(21, 1_000_000, 4, true, 5, 0);
+        SupplementaryConfig strict = new SupplementaryConfig(21, 1_000_000, 4, true, 5);
         Candidate cand = candidate(
                 CHR1, true, READ_LEN, 1000, "94M57S",
                 supp(0, CHR1, true, 1200, "94S57M", 60));
@@ -317,7 +331,7 @@ public class SupplementaryResolverTest
     @Test
     public void testAcceptNovelJunctionWhenAnnotatedOnlyFalse()
     {
-        SupplementaryConfig perm = new SupplementaryConfig(21, 1_000_000, 4, false, 0, 0);
+        SupplementaryConfig perm = new SupplementaryConfig(21, 1_000_000, 4, false, 0);
         Candidate cand = candidate(
                 CHR1, true, READ_LEN, 1000, "94M57S",
                 supp(0, CHR1, true, 1200, "94S57M", 60));
@@ -549,7 +563,7 @@ public class SupplementaryResolverTest
     {
         // cap=2 stops the chain after 2 merges even when more supps are available.
         SupplementaryConfig cappedConfig =
-                new SupplementaryConfig(21, 1_000_000, 2, true, 0, 0);
+                new SupplementaryConfig(21, 1_000_000, 2, true, 0);
 
         int primaryStart = 1000;
         Candidate cand = candidate(
@@ -590,7 +604,7 @@ public class SupplementaryResolverTest
     public void testEachOutcomeReportsItsRejectReason()
     {
         // AnnotatedOnly=true so the novel-junction reject is observable.
-        SupplementaryConfig strict = new SupplementaryConfig(21, 1_000_000, 4, true, 5, 0);
+        SupplementaryConfig strict = new SupplementaryConfig(21, 1_000_000, 4, true, 5);
         SupplementaryResolver resolver = new SupplementaryResolver(
                 annotated(new ChrBaseRegion(CHR1, 1095, 1499)), strict);
 
@@ -728,7 +742,7 @@ public class SupplementaryResolverTest
     @Test
     public void testNoAnnotatedPositionWithAnnotatedOnlyTrueRejects()
     {
-        SupplementaryConfig strict = new SupplementaryConfig(21, 1_000_000, 4, true, 5, 0);
+        SupplementaryConfig strict = new SupplementaryConfig(21, 1_000_000, 4, true, 5);
         Candidate cand = candidate(
                 CHR1, true, 151, 1001, "94M57S",
                 supp(0, CHR1, true, 1500, "92S59M", 60));
@@ -754,7 +768,7 @@ public class SupplementaryResolverTest
         assertEquals("93M407N58M", result.mergedCigar());
     }
 
-    // Resolver wired to a base-level genome, for the motif-scan and ref-verify passes.
+    // Resolver wired to a base-level genome for motif scanning.
     private static SupplementaryResolver resolverWithRef(final Set<ChrBaseRegion> annotated, final TestGenome genome)
     {
         return new SupplementaryResolver(
@@ -766,14 +780,6 @@ public class SupplementaryResolverTest
     {
         return new TestGenome().with(CHR1, chromLen, 'N')
                 .set(CHR1, intronStart, "GT").set(CHR1, intronEnd - 1, "AG");
-    }
-
-    // Candidate carrying read bases for ref-verify: no supplementaries, no mate hints.
-    private static Candidate refVerifyCandidate(final int start, final String cigar, final int readLen, final byte[] readBases)
-    {
-        return new Candidate(
-                CHR1, true, readLen, start, cigar,
-                Collections.emptyList(), readBases, Collections.emptyList());
     }
 
     @Test
@@ -1056,299 +1062,5 @@ public class SupplementaryResolverTest
         assertEquals(Tier.NONE, SupplementaryResolver.motifTier(bases("GT"), bases("A")));
         assertEquals(Tier.NONE, SupplementaryResolver.motifTier(bases("GTC"), bases("AG")));
     }
-    @Test
-    public void testRefVerifyRightExtendSuccess()
-    {
-        // Trailing 5S "CCCCC" matches chr1:201..205 exactly across annotated intron (131, 200).
-        TestGenome genome = new TestGenome().with(CHR1, 300, 'A').set(CHR1, 201, 5, 'C');
-        byte[] readBases = bases("A".repeat(30) + "C".repeat(5));
 
-        Candidate cand = refVerifyCandidate(101, "30M5S", 35, readBases);
-
-        Result result = resolverWithRef(annotated(new ChrBaseRegion(CHR1, 131, 200)), genome).resolve(cand);
-
-        assertTrue(result.merged());
-        assertEquals("30M70N5M", result.mergedCigar());
-        assertEquals(101, result.mergedStart());
-    }
-
-    @Test
-    public void testRefVerifyRightExtendSnapsBackOverExtendedBoundary()
-    {
-        // bwa over-extended 1 base into the intron (31M4S); boundary snap trims back to find
-        // the annotated intron at 131 and ref-verifies the 5-base tail.
-        TestGenome genome = new TestGenome().with(CHR1, 300, 'A')
-                .set(CHR1, 131, "C").set(CHR1, 201, 5, 'C');
-        byte[] readBases = bases("A".repeat(30) + "C".repeat(5));
-
-        Candidate cand = refVerifyCandidate(101, "31M4S", 35, readBases);
-
-        Result result = resolverWithRef(annotated(new ChrBaseRegion(CHR1, 131, 200)), genome).resolve(cand);
-
-        assertTrue(result.merged());
-        assertEquals("30M70N5M", result.mergedCigar());
-        assertEquals(101, result.mergedStart());
-    }
-
-    @Test
-    public void testRefVerifyBothEndsClippedResolvesJunctionTailKeepsOtherClip()
-    {
-        // Both ends clipped: trailing 5S is the junction tail; leading 5S must survive untouched.
-        TestGenome genome = new TestGenome().with(CHR1, 300, 'A').set(CHR1, 201, 5, 'C');
-        byte[] readBases = bases("T".repeat(5) + "A".repeat(30) + "C".repeat(5));
-
-        Candidate cand = refVerifyCandidate(101, "5S30M5S", 40, readBases);
-
-        Result result = resolverWithRef(annotated(new ChrBaseRegion(CHR1, 131, 200)), genome).resolve(cand);
-
-        assertTrue(result.merged());
-        assertEquals("5S30M70N5M", result.mergedCigar());
-        assertEquals(101, result.mergedStart());
-    }
-
-    @Test
-    public void testRefVerifyRightExtendRejectsOnMismatch()
-    {
-        // Ref all 'G'; read has 'C' - mismatch rejects the merge.
-        TestGenome genome = new TestGenome().with(CHR1, 300, 'G');
-        byte[] readBases = bases("A".repeat(30) + "C".repeat(5));
-
-        Candidate cand = refVerifyCandidate(101, "30M5S", 35, readBases);
-
-        Result result = resolverWithRef(annotated(new ChrBaseRegion(CHR1, 131, 200)), genome).resolve(cand);
-
-        assertFalse(result.merged());
-        assertEquals(RejectReason.REF_VERIFY_MISMATCH_TOO_HIGH, result.rejectReason());
-    }
-
-    @Test
-    public void testRefVerifyClipsMismatchNotRecoveredByScore()
-    {
-        // 20-base trailing clip: 18 proximal matches, then a mismatch with only 1 trailing match. Under the
-        // shared bwa-mem score walk (mismatch -4) one trailing match cannot recover the mismatch, so the run
-        // stops at 18 and the outer 2 bases stay soft-clipped.
-        TestGenome genome = new TestGenome().with(CHR1, 300, 'A')
-                .set(CHR1, 201, 18, 'C').set(CHR1, 219, "GC");
-        byte[] readBases = bases("A".repeat(20) + "C".repeat(20));
-
-        Candidate cand = refVerifyCandidate(101, "20M20S", 40, readBases);
-
-        Result result = resolverWithRef(annotated(new ChrBaseRegion(CHR1, 121, 200)), genome).resolve(cand);
-
-        assertTrue(result.merged());
-        assertEquals("20M80N18M2S", result.mergedCigar());
-    }
-
-    @Test
-    public void testRefVerifyLeftExtendSuccess()
-    {
-        // Leading 5S "TTTTT" matches chr1:126..130 exactly across annotated intron (131, 200).
-        TestGenome genome = new TestGenome().with(CHR1, 300, 'A').set(CHR1, 126, 5, 'T');
-        byte[] readBases = bases("T".repeat(5) + "A".repeat(30));
-
-        Candidate cand = refVerifyCandidate(201, "5S30M", 35, readBases);
-
-        Result result = resolverWithRef(annotated(new ChrBaseRegion(CHR1, 131, 200)), genome).resolve(cand);
-
-        assertTrue(result.merged());
-        assertEquals("5M70N30M", result.mergedCigar());
-        assertEquals(126, result.mergedStart());
-    }
-
-    @Test
-    public void testRefVerifyRejectsWhenNoCandidateExon()
-    {
-        // Empty annotation - no candidate exon for the trailing softclip.
-        TestGenome genome = new TestGenome().with(CHR1, 300, 'A');
-        Candidate cand = refVerifyCandidate(101, "30M5S", 35, repeatedBase(35, 'A'));
-
-        Result result = resolverWithRef(Collections.emptySet(), genome).resolve(cand);
-
-        assertFalse(result.merged());
-        assertEquals(RejectReason.REF_VERIFY_NO_CANDIDATE_EXON, result.rejectReason());
-    }
-
-    @Test
-    public void testRefVerifyAmbiguousRejected()
-    {
-        // Two annotated introns share donor; both downstream exons (201..205 and 501..505) match "CCCCC" - ambiguous.
-        TestGenome genome = new TestGenome().with(CHR1, 600, 'A')
-                .set(CHR1, 201, 5, 'C').set(CHR1, 501, 5, 'C');
-        byte[] readBases = bases("A".repeat(30) + "C".repeat(5));
-
-        Candidate cand = refVerifyCandidate(101, "30M5S", 35, readBases);
-
-        Result result = resolverWithRef(
-                annotated(new ChrBaseRegion(CHR1, 131, 200), new ChrBaseRegion(CHR1, 131, 500)), genome).resolve(cand);
-
-        assertFalse(result.merged());
-        assertEquals(RejectReason.REF_VERIFY_AMBIGUOUS, result.rejectReason());
-    }
-
-    @Test
-    public void testRefVerifyWithoutRefSourceSkipsSilently()
-    {
-        // No RefSequenceSource - ref-verify skips silently.
-        Candidate cand = candidate(CHR1, true, 35, 101, "30M5S");
-
-        Result result = defaultResolver(annotated()).resolve(cand);
-
-        assertFalse(result.merged());
-        assertEquals(RejectReason.NO_MATCHING_SUPP, result.rejectReason());
-    }
-
-    @Test
-    public void testRefVerifyPartialMatchTrailingKeepsOuterClip()
-    {
-        // 15 proximal bases match the exon; outer 4 are adapter residual - only proximal bases convert
-        // to M, outer stay clipped: 30M19S -> 30M70N15M4S.
-        TestGenome genome = new TestGenome().with(CHR1, 300, 'A').set(CHR1, 201, 15, 'C');   // downstream exon: 15 bases
-        byte[] readBases = bases("A".repeat(30) + "C".repeat(15) + "T".repeat(4));   // overhang + adapter residual
-
-        Candidate cand = refVerifyCandidate(101, "30M19S", 49, readBases);
-
-        Result result = resolverWithRef(annotated(new ChrBaseRegion(CHR1, 131, 200)), genome).resolve(cand);
-
-        assertTrue(result.merged());
-        assertEquals("30M70N15M4S", result.mergedCigar());
-        assertEquals(101, result.mergedStart());
-    }
-
-    @Test
-    public void testRefVerifyPartialMatchLeadingKeepsOuterClip()
-    {
-        // Mirror on leading side: outer 4 are adapter, proximal 15 are real overhang -> 4S15M70N30M.
-        TestGenome genome = new TestGenome().with(CHR1, 300, 'A').set(CHR1, 116, 15, 'C');   // upstream exon: 15 bases
-        byte[] readBases = bases("T".repeat(4) + "C".repeat(15) + "A".repeat(30));   // adapter + overhang
-
-        Candidate cand = refVerifyCandidate(201, "19S30M", 49, readBases);
-
-        Result result = resolverWithRef(annotated(new ChrBaseRegion(CHR1, 131, 200)), genome).resolve(cand);
-
-        assertTrue(result.merged());
-        assertEquals("4S15M70N30M", result.mergedCigar());
-        assertEquals(116, result.mergedStart());
-    }
-
-    @Test
-    public void testRefVerifyShortPartialRunNowMerges()
-    {
-        // 8-base proximal match: the MinPartialMatchRun guard was removed, so the partial match now merges with
-        // the divergent residual left soft-clipped (30M70N8M11S).
-        TestGenome genome = new TestGenome().with(CHR1, 300, 'A').set(CHR1, 201, 8, 'C');   // only 8 matching bases
-        byte[] readBases = bases("A".repeat(30) + "C".repeat(8) + "T".repeat(11));   // 8-base match + divergent residual
-
-        Candidate cand = refVerifyCandidate(101, "30M19S", 49, readBases);
-
-        Result result = resolverWithRef(annotated(new ChrBaseRegion(CHR1, 131, 200)), genome).resolve(cand);
-
-        assertTrue(result.merged());
-        assertEquals("30M70N8M11S", result.mergedCigar());
-        assertEquals(101, result.mergedStart());
-    }
-
-    @Test
-    public void testRefVerifySnapsBackSevenBaseOverExtension()
-    {
-        // bwa over-extended 7 bases into the intron (37M3S); boundary snap (MaxBoundaryShift>=8)
-        // trims back to find annotated intron 131 and re-verifies the 10-base tail.
-        TestGenome genome = new TestGenome().with(CHR1, 300, 'A')
-                .set(CHR1, 131, 7, 'C')     // bwa's 7 over-extended bases
-                .set(CHR1, 201, 10, 'C');   // real downstream exon
-        byte[] readBases = bases("A".repeat(30) + "C".repeat(10));   // 7 over-extended + 3 clipped
-
-        Candidate cand = refVerifyCandidate(101, "37M3S", 40, readBases);
-
-        Result result = resolverWithRef(annotated(new ChrBaseRegion(CHR1, 131, 200)), genome).resolve(cand);
-
-        assertTrue(result.merged());
-        assertEquals("30M70N10M", result.mergedCigar());
-        assertEquals(101, result.mergedStart());
-    }
-
-    // Boundary snap: BWA over-extends past the exon end into the intron, and with no merge to carry the correction the
-    // retraction onto the annotated intron start happens on its own. 96M ends at 1095, so the intron would start at 1096.
-    @Test
-    public void testSnapsRightBoundaryOntoAnnotatedIntronStart()
-    {
-        SupplementaryResolver resolver = defaultResolver(annotated(new ChrBaseRegion(CHR1, 1095, 2000)));
-
-        BoundarySnap snap = resolver.snapToAnnotatedBoundary(CHR1, 1000, "96M55S");
-
-        assertEquals("95M56S", snap.cigar());
-        assertEquals(1000, snap.start());
-        assertEquals(1, snap.rightShift());
-        assertEquals(0, snap.leftShift());
-    }
-
-    @Test
-    public void testSnapsLeftBoundaryOntoAnnotatedIntronEnd()
-    {
-        SupplementaryResolver resolver = defaultResolver(annotated(new ChrBaseRegion(CHR1, 500, 1000)));
-
-        BoundarySnap snap = resolver.snapToAnnotatedBoundary(CHR1, 1000, "55S96M");
-
-        assertEquals("56S95M", snap.cigar());
-        assertEquals(1001, snap.start());
-        assertEquals(1, snap.leftShift());
-        assertEquals(0, snap.rightShift());
-    }
-
-    @Test
-    public void testSnapsBothBoundariesIndependently()
-    {
-        SupplementaryResolver resolver = defaultResolver(annotated(
-                new ChrBaseRegion(CHR1, 500, 1000), new ChrBaseRegion(CHR1, 1099, 2000)));
-
-        BoundarySnap snap = resolver.snapToAnnotatedBoundary(CHR1, 1000, "20S100M31S");
-
-        assertEquals("21S98M32S", snap.cigar());
-        assertEquals(1001, snap.start());
-        assertEquals(1, snap.leftShift());
-        assertEquals(1, snap.rightShift());
-    }
-
-    // BWA already landed on the annotated boundary, so there is nothing to correct.
-    @Test
-    public void testNoSnapWhenBoundaryAlreadyAnnotated()
-    {
-        SupplementaryResolver resolver = defaultResolver(annotated(new ChrBaseRegion(CHR1, 1096, 2000)));
-
-        assertNull(resolver.snapToAnnotatedBoundary(CHR1, 1000, "96M55S"));
-    }
-
-    @Test
-    public void testNoSnapWhenNoAnnotatedBoundaryWithinReach()
-    {
-        SupplementaryResolver resolver = defaultResolver(annotated(new ChrBaseRegion(CHR1, 1050, 2000)));
-
-        assertNull(resolver.snapToAnnotatedBoundary(CHR1, 1000, "96M55S"));
-    }
-
-    // Two annotated starts in reach, at shift 1 and shift 3: the intended one cannot be told apart, so leave it alone.
-    @Test
-    public void testNoSnapWhenTwoAnnotatedBoundariesInReach()
-    {
-        SupplementaryResolver resolver = defaultResolver(annotated(
-                new ChrBaseRegion(CHR1, 1095, 2000), new ChrBaseRegion(CHR1, 1093, 2000)));
-
-        assertNull(resolver.snapToAnnotatedBoundary(CHR1, 1000, "96M55S"));
-    }
-
-    // 95M1I55S aligns to 1094, so shift 1 would reach the annotated start - the indel at the boundary is what blocks it.
-    @Test
-    public void testNoSnapWithIndelAtTheBoundary()
-    {
-        SupplementaryResolver resolver = defaultResolver(annotated(new ChrBaseRegion(CHR1, 1094, 2000)));
-
-        assertNull(resolver.snapToAnnotatedBoundary(CHR1, 1000, "95M1I55S"));
-    }
-
-    @Test
-    public void testNoSnapWithoutATerminalSoftClip()
-    {
-        SupplementaryResolver resolver = defaultResolver(annotated(new ChrBaseRegion(CHR1, 1095, 2000)));
-
-        assertNull(resolver.snapToAnnotatedBoundary(CHR1, 1000, "151M"));
-    }
 }

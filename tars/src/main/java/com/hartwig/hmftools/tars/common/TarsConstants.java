@@ -50,7 +50,4 @@ public final class TarsConstants
     // Maximum read-span overlap accepted during a supplementary merge.
     public static final int MAX_SUPP_READ_OVERLAP = 5;
 
-    // ref-verify only: how far the primary's own boundary may be pulled back into its soft clip while
-    // looking for an annotated junction to splice at
-    public static final int MAX_REF_VERIFY_BOUNDARY_SHIFT = 8;
 }
