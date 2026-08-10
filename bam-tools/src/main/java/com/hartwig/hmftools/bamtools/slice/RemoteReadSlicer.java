@@ -3,18 +3,15 @@ package com.hartwig.hmftools.bamtools.slice;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.readToString;
 
-import java.util.List;
-
 import com.hartwig.hmftools.common.bam.BamSlicer;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.common.region.ExcludedRegions;
 
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
 
 public class RemoteReadSlicer implements Runnable
 {
-    private final SliceConfig mConfig;
+    private final SliceParams mParams;
 
     private final ThreadLocal<SamReader> mSamReader;
     private final BamSlicer mBamSlicer;
@@ -25,9 +22,9 @@ public class RemoteReadSlicer implements Runnable
     private int mReadsProcessed = 0;
 
     public RemoteReadSlicer(
-            final ChrBaseRegion slice, final SliceConfig config, final ReadCache readCache, final ThreadLocal<SamReader> samReader)
+            final ChrBaseRegion slice, final SliceParams params, final ReadCache readCache, final ThreadLocal<SamReader> samReader)
     {
-        mConfig = config;
+        mParams = params;
         mReadCache = readCache;
         mSamReader = samReader;
 
@@ -52,12 +49,12 @@ public class RemoteReadSlicer implements Runnable
     {
         ++mReadsProcessed;
 
-        if(mConfig.LogReadIds.contains(read.getReadName()))
+        if(mParams.LogReadIds.contains(read.getReadName()))
         {
             BT_LOGGER.debug("specific read({})", readToString(read));
         }
 
-        if(mConfig.MaxRemoteReads > 0 && mReadsProcessed >= mConfig.MaxRemoteReads)
+        if(mParams.MaxRemoteReads > 0 && mReadsProcessed >= mParams.MaxRemoteReads)
         {
             BT_LOGGER.debug("region({}) halting reads of remote region, processed {} reads",
                     mCurrentSlice, mReadsProcessed);
@@ -70,9 +67,6 @@ public class RemoteReadSlicer implements Runnable
             BT_LOGGER.debug("region({}) processed {} reads, current pos({})",
                     mCurrentSlice, mReadsProcessed, read.getAlignmentStart());
         }
-
-        if(mConfig.OnlySupplementaries && !read.getSupplementaryAlignmentFlag())
-            return;
 
         boolean allComplete = mReadCache.addReadRecord(read);
 

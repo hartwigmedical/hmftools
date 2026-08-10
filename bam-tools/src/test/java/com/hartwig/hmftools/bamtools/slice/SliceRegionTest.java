@@ -16,6 +16,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Collections;
+import java.util.List;
+
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.test.ReadIdGenerator;
@@ -28,6 +31,9 @@ import htsjdk.samtools.SAMRecord;
 public class SliceRegionTest
 {
     private static final SliceConfig CONFIG = new SliceConfig();
+    private static final SliceParams PARAMS = new SliceParams(
+            false, Collections.emptyList(), 0, 1000, 1000, 151);
+
     private static final ReadIdGenerator READ_ID_GENERATOR = new ReadIdGenerator();
 
     private final ReadCache mReadCache;
@@ -46,8 +52,9 @@ public class SliceRegionTest
     public void testRegionSlicerSingleRegion()
     {
         ChrBaseRegion sliceRegion = new ChrBaseRegion(CHR_1, 1000, 2000);
+        List<ChrBaseRegion> allRegions = List.of(sliceRegion);
 
-        RegionBamSlicer regionSlicer = new RegionBamSlicer(sliceRegion, CONFIG, mReadCache, null);
+        RegionBamSlicer regionSlicer = new RegionBamSlicer(sliceRegion, allRegions, PARAMS, mReadCache, null);
 
         // reads outside the region are ignored
         SAMRecord read = createSamRecord(READ_ID_GENERATOR.nextId(), CHR_1, 850, CHR_1, 1300,false, null);
@@ -122,7 +129,7 @@ public class SliceRegionTest
     public void testRegionSlicerMultiRegion()
     {
         ChrBaseRegion sliceRegion = new ChrBaseRegion(CHR_1, 1000, 2000);
-        RegionBamSlicer regionSlicer = new RegionBamSlicer(sliceRegion, CONFIG, mReadCache, null);
+        RegionBamSlicer regionSlicer = new RegionBamSlicer(sliceRegion, List.of(sliceRegion), PARAMS, mReadCache, null);
 
         // test 1: all reads are in different regions: primary first chr1, primary second chr 2, supp second chr 3, supp first chr 4
         SupplementaryReadData suppData = new SupplementaryReadData(CHR_4, 1000, SUPP_POS_STRAND, READ_CIGAR, 60);
@@ -136,7 +143,7 @@ public class SliceRegionTest
 
         // the mate
         sliceRegion = new ChrBaseRegion(CHR_2, 1000, 2000);
-        regionSlicer = new RegionBamSlicer(sliceRegion, CONFIG, mReadCache, null);
+        regionSlicer = new RegionBamSlicer(sliceRegion, List.of(sliceRegion), PARAMS, mReadCache, null);
 
         suppData = new SupplementaryReadData(CHR_3, 1000, SUPP_POS_STRAND, READ_CIGAR, 60);
         read = createSamRecord(read.getReadName(), CHR_2, 1000, CHR_1, 1000, false, suppData);
@@ -149,7 +156,7 @@ public class SliceRegionTest
 
         // the mate's supp
         sliceRegion = new ChrBaseRegion(CHR_3, 1000, 2000);
-        regionSlicer = new RegionBamSlicer(sliceRegion, CONFIG, mReadCache, null);
+        regionSlicer = new RegionBamSlicer(sliceRegion, List.of(sliceRegion), PARAMS, mReadCache, null);
 
         suppData = new SupplementaryReadData(CHR_2, 1000, SUPP_POS_STRAND, READ_CIGAR, 60);
         read = createSamRecord(read.getReadName(), CHR_3, 1000, CHR_1, 1000, true, suppData);
@@ -161,7 +168,7 @@ public class SliceRegionTest
 
         // the first primary's supp
         sliceRegion = new ChrBaseRegion(CHR_4, 1000, 2000);
-        regionSlicer = new RegionBamSlicer(sliceRegion, CONFIG, mReadCache, null);
+        regionSlicer = new RegionBamSlicer(sliceRegion, List.of(sliceRegion), PARAMS, mReadCache, null);
 
         suppData = new SupplementaryReadData(CHR_1, 1000, SUPP_POS_STRAND, READ_CIGAR, 60);
         read = createSamRecord(read.getReadName(), CHR_4, 1000, CHR_2, 1000, true, suppData);
@@ -176,7 +183,7 @@ public class SliceRegionTest
     {
         ChrBaseRegion sliceRegion = new ChrBaseRegion(CHR_1, 1000, 2000);
 
-        RegionBamSlicer regionSlicer = new RegionBamSlicer(sliceRegion, CONFIG, mReadCache, null);
+        RegionBamSlicer regionSlicer = new RegionBamSlicer(sliceRegion, List.of(sliceRegion), PARAMS, mReadCache, null);
 
         SupplementaryReadData suppData = new SupplementaryReadData(CHR_1, 1500, SUPP_POS_STRAND, READ_CIGAR, 60);
         SAMRecord read = createSamRecord(READ_ID_GENERATOR.nextId(), CHR_1, 1000, NO_CHROMOSOME_NAME, NO_POSITION, false, suppData);

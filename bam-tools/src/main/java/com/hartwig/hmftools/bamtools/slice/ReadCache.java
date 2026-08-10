@@ -22,12 +22,12 @@ public class ReadCache
     private static final int REGION_CONSOLIDATION_DISTANCE = 10_000;
 
     private final Map<String,Fragment> mFragmentMap;
-    private final SliceWriter mSliceWriter;
+    private final IReadWriter mReadWriter;
     private volatile boolean mProcessingRemoteRegions;
 
-    public ReadCache(final SliceWriter sliceWriter)
+    public ReadCache(final IReadWriter sliceWriter)
     {
-        mSliceWriter = sliceWriter;
+        mReadWriter = sliceWriter;
 
         mFragmentMap = Maps.newHashMap();
         mProcessingRemoteRegions = false;
@@ -45,7 +45,7 @@ public class ReadCache
             if(mProcessingRemoteRegions)
                 return false;
 
-            mSliceWriter.writeRead(read); // write without tracking of fragment info
+            mReadWriter.writeRead(read); // write without tracking of fragment info
             return false;
         }
 
@@ -78,7 +78,7 @@ public class ReadCache
 
         if(isNewRead)
         {
-            mSliceWriter.writeRead(read);
+            mReadWriter.writeRead(read);
         }
 
         return mFragmentMap.isEmpty();

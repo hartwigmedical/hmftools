@@ -31,11 +31,12 @@ import htsjdk.samtools.ValidationStringency;
 public class RegionSlicer
 {
     private final SliceConfig mConfig;
-    private final List<SamReader> mBamReaders = Collections.synchronizedList(new ArrayList<>());
+    private final List<SamReader> mBamReaders;
 
     public RegionSlicer(final ConfigBuilder configBuilder)
     {
         mConfig = new SliceConfig(configBuilder);
+        mBamReaders = Collections.synchronizedList(new ArrayList<>());
     }
 
     public void run() throws ExecutionException, InterruptedException, IOException
@@ -57,7 +58,8 @@ public class RegionSlicer
 
         for(ChrBaseRegion region : mConfig.SliceRegions.Regions)
         {
-            futures.add(CompletableFuture.runAsync(new RegionBamSlicer(region, mConfig, readCache, threadBamReader), executorService));
+            futures.add(CompletableFuture.runAsync(new RegionBamSlicer(
+                    region, mConfig.SliceRegions.Regions, mConfig.Params, readCache, threadBamReader), executorService));
         }
 
         BT_LOGGER.info("splitting {} regions across {} threads", mConfig.SliceRegions.Regions.size(), mConfig.Threads);
@@ -86,7 +88,7 @@ public class RegionSlicer
                     if(ChrBaseRegion.overlaps(excludedRegions, region))
                         continue;
 
-                    futures.add(CompletableFuture.runAsync(new RemoteReadSlicer(region, mConfig, readCache, threadBamReader),
+                    futures.add(CompletableFuture.runAsync(new RemoteReadSlicer(region, mConfig.Params, readCache, threadBamReader),
                             executorService));
                 }
 

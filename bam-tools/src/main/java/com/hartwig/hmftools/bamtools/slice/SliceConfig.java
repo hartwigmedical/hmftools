@@ -46,29 +46,23 @@ public class SliceConfig
     public final String RefGenomeFile;
     public final RefGenomeVersion RefGenVersion;
 
-    public final int PartitionSize;
-
     public final String OutputDir;
 
     public final boolean WriteBam;
     public final boolean UnsortedBam;
     public final boolean WriteReads;
     public final boolean DropExcluded;
-    public final boolean OnlySupplementaries;
     public final boolean WriteReadBases;
     public final boolean SkipRemoteReads;
     public final boolean LogMissingReads;
-    public final boolean DropDuplicates;
-    public final int MaxRemoteReads;
-    public final int MaxPartitionReads;
+
+    public final SliceParams Params;
     public final int MaxUnmappedReads;
     public final int Threads;
-    public final int DownsampleFactor;
     public final String BamToolPath;
 
     // debug
     public final SpecificRegions SliceRegions;
-    public final List<String> LogReadIds;
     public final boolean PerfDebug;
 
     private boolean mIsValid;
@@ -78,11 +72,7 @@ public class SliceConfig
     private static final String UNSORTED_BAM = "unsorted_bam";
     private static final String WRITE_READS = "write_reads";
     private static final String DROP_EXCLUDED = "drop_excluded";
-    private static final String ONLY_SUPPS = "only_supps";
-    private static final String MAX_PARTITION_READS = "max_partition_reads";
-    private static final String MAX_REMOTE_READS = "max_remote_reads";
-    private static final String DOWNSAMPLE_FACTOR = "downsample_factor";
-    private static final String DROP_DUPLICATES = "drop_duplicates";
+
     private static final String SKIP_REMOTE_READS = "skip_remote_reads";
     private static final String WRITE_READ_BASES = "write_read_bases";
     private static final String MAX_UNMAPPED_READS = "max_unmapped_reads";
@@ -90,7 +80,6 @@ public class SliceConfig
 
     public static final int UNMAPPED_READS_DISABLED = -1;
     public static final int UNMAPPED_READS_ALL = 0;
-    protected static final int DOWNSAMPLE_BASES = 100;
 
     public SliceConfig(final ConfigBuilder configBuilder)
     {
@@ -115,17 +104,14 @@ public class SliceConfig
         }
 
         WriteReads = configBuilder.hasFlag(WRITE_READS);
-        WriteBam = !WriteReads || configBuilder.hasFlag(WRITE_BAM) || configBuilder.hasFlag(BAMTOOL_PATH);
+        WriteBam = !WriteReads || configBuilder.hasFlag(WRITE_BAM) || configBuilder.hasValue(BAMTOOL_PATH);
         UnsortedBam = configBuilder.hasFlag(UNSORTED_BAM);
         DropExcluded = configBuilder.hasFlag(DROP_EXCLUDED);
         WriteReadBases = WriteReads && configBuilder.hasFlag(WRITE_READ_BASES);
-        OnlySupplementaries = configBuilder.hasFlag(ONLY_SUPPS);
         LogMissingReads = configBuilder.hasFlag(LOG_MISSING_READS);
         SkipRemoteReads = configBuilder.hasFlag(SKIP_REMOTE_READS);
-        DropDuplicates = configBuilder.hasFlag(DROP_DUPLICATES);
-        MaxRemoteReads = configBuilder.getInteger(MAX_REMOTE_READS);
-        DownsampleFactor = configBuilder.getInteger(DOWNSAMPLE_FACTOR);
-        MaxPartitionReads = configBuilder.getInteger(MAX_PARTITION_READS);
+
+        Params = new SliceParams(configBuilder);
         MaxUnmappedReads = configBuilder.getInteger(MAX_UNMAPPED_READS);
 
         if(BamFile == null || OutputDir == null || RefGenomeFile == null)
@@ -138,8 +124,6 @@ public class SliceConfig
         RefGenVersion = deriveRefGenomeVersion(BamFile);
         BT_LOGGER.info("input bam({}) refGenome({})", BamFile, RefGenVersion);
         BT_LOGGER.info("output({}) and file prefix({})", OutputDir, OutputPrefix);
-
-        PartitionSize = configBuilder.getInteger(PARTITION_SIZE);
 
         SliceRegions = new SpecificRegions();
 
@@ -163,7 +147,6 @@ public class SliceConfig
 
         Threads = parseThreads(configBuilder);
 
-        LogReadIds = parseLogReadIds(configBuilder);
         PerfDebug = configBuilder.hasFlag(PERF_DEBUG);
     }
 
@@ -194,18 +177,16 @@ public class SliceConfig
         configBuilder.addConfigItem(OUTPUT_PREFIX, "File prefix for BAM and read TSV");
 
         configBuilder.addInteger(PARTITION_SIZE, "Partition size", DEFAULT_CHR_PARTITION_SIZE);
-        configBuilder.addInteger(MAX_PARTITION_READS, "Max partition reads (perf-only)", 0);
-        configBuilder.addInteger(MAX_REMOTE_READS, "Max remote reads (perf-only)", 0);
         configBuilder.addInteger(MAX_UNMAPPED_READS, "Max unmapped reads: 0 means all, -1 to disable (default)", -1);
-        configBuilder.addInteger(DOWNSAMPLE_FACTOR, "Downsample to X reads per 100", 0);
         configBuilder.addFlag(WRITE_BAM, "Write BAM file for sliced region");
         configBuilder.addFlag(UNSORTED_BAM, "Write BAM unsorted");
+
+        SliceParams.addConfig(configBuilder);
+
         configBuilder.addFlag(WRITE_READS, "Write reads file for sliced region");
         configBuilder.addFlag(WRITE_READ_BASES, "Write read bases to TSV file");
         configBuilder.addFlag(SKIP_REMOTE_READS, "Skip slicing remote reads");
         configBuilder.addFlag(DROP_EXCLUDED, "Ignore remote reads in excluded regions (eg poly-G)");
-        configBuilder.addFlag(ONLY_SUPPS, "Only capture supplementary reads");
-        configBuilder.addFlag(DROP_DUPLICATES, "Ignore duplicate reads");
         configBuilder.addFlag(LOG_MISSING_READS, "Log missing reads");
         configBuilder.addFlag(PERF_DEBUG, PERF_DEBUG_DESC);
         BamToolName.addConfig(configBuilder);
@@ -213,7 +194,6 @@ public class SliceConfig
         addOutputOptions(configBuilder);
         addLoggingOptions(configBuilder);
         addSpecificChromosomesRegionsConfig(configBuilder);
-        configBuilder.addConfigItem(LOG_READ_IDS, LOG_READ_IDS_DESC);
     }
 
     @VisibleForTesting
@@ -231,18 +211,15 @@ public class SliceConfig
         SkipRemoteReads = false;
         UnsortedBam = false;
         DropExcluded = false;
-        OnlySupplementaries = false;
         LogMissingReads = false;
-        DropDuplicates = false;
-        MaxRemoteReads = 0;
-        MaxPartitionReads = 0;
-        DownsampleFactor = 0;
+
+        Params = new SliceParams(
+                false, Collections.emptyList(), 0, 0, 0, 151);
+
         MaxUnmappedReads = UNMAPPED_READS_DISABLED;
-        PartitionSize = DEFAULT_CHR_PARTITION_SIZE;
         SliceRegions = new SpecificRegions();
         Threads = 0;
         BamToolPath = null;
         PerfDebug = false;
-        LogReadIds = Collections.emptyList();
     }
 }

@@ -28,7 +28,7 @@ import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.util.StringUtil;
 
-public class SliceWriter implements AutoCloseable
+public class SliceWriter implements IReadWriter
 {
     private final SliceConfig mConfig;
 
@@ -67,6 +67,7 @@ public class SliceWriter implements AutoCloseable
         return new SAMFileWriterFactory().makeBAMWriter(fileHeader, false, new File(outputBamFile));
     }
 
+    @Override
     public synchronized void writeRead(final SAMRecord read) { doWriteRecord(read); }
 
     public synchronized long writeCount() { return mRecordWriteCount; }
@@ -159,7 +160,6 @@ public class SliceWriter implements AutoCloseable
         }
     }
 
-    @Override
     public void close()
     {
         if(mBamWriter != null)
