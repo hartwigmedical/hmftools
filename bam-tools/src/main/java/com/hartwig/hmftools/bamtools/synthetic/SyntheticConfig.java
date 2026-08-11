@@ -9,12 +9,14 @@ import static com.hartwig.hmftools.bamtools.synthetic.SyntheticConstants.DEFAULT
 import static com.hartwig.hmftools.bamtools.synthetic.SyntheticConstants.DEFAULT_MAX_SVS;
 import static com.hartwig.hmftools.common.bam.BamUtils.deriveRefGenomeVersion;
 import static com.hartwig.hmftools.common.bamops.BamToolName.BAMTOOL_PATH;
+import static com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig.loadDriverGenes;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeFile;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LINX_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LINX_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.LINX_GERMLINE_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE;
@@ -28,8 +30,13 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.filenamePar
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.pathFromFile;
 
+import java.util.List;
+
 import com.hartwig.hmftools.bamtools.slice.SliceParams;
 import com.hartwig.hmftools.common.bamops.BamToolName;
+import com.hartwig.hmftools.common.driver.panel.DriverGene;
+import com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
@@ -45,6 +52,10 @@ public class SyntheticConfig
     public final String RegionsFilename;
     public final String PurpleDir;
     public final String LinxDir;
+    public final String LinxGermlineDir;
+    public final List<DriverGene> DriverGenes;
+    public final String EnsemblDataDir;
+    public final String GermlineHetSites;
     public final String OutputDir;
 
     public final boolean WriteBam;
@@ -62,10 +73,10 @@ public class SyntheticConfig
     private static final String WRITE_BAM = "write_bam";
     private static final String WRITE_REGION_DATA = "write_region_data";
 
-    private static final String TARGET_DEPTH = "target_depth";
     private static final String MAX_SMALL_VARIANTS = "max_small_variants";
     private static final String MAX_SVS = "max_svs";
     private static final String CN_BACKBONE_DISTANCE = "cn_backbone_distance";
+    private static final String GERMLINE_HET_SITES = "germline_het_sites";
 
     public SyntheticConfig(final ConfigBuilder configBuilder)
     {
@@ -91,6 +102,11 @@ public class SyntheticConfig
 
         PurpleDir = configBuilder.getValue(PURPLE_DIR_CFG);
         LinxDir = configBuilder.getValue(LINX_DIR_CFG);
+        LinxGermlineDir = configBuilder.getValue(LINX_GERMLINE_DIR_CFG, LinxDir);
+
+        DriverGenes = loadDriverGenes(configBuilder);
+        EnsemblDataDir = configBuilder.getValue(EnsemblDataCache.ENSEMBL_DATA_DIR);
+        GermlineHetSites = configBuilder.getValue(GERMLINE_HET_SITES);
 
         BamToolPath = configBuilder.getValue(BAMTOOL_PATH);
 
@@ -122,11 +138,13 @@ public class SyntheticConfig
     public boolean isPanelMode() { return RegionsFilename != null; }
     public boolean isWgsMode() { return !isPanelMode(); }
 
+    /*
     public String formFilename(final String fileExtension)
     {
         String outputFile = OutputDir + SampleId + "." + OutputPrefix + fileExtension;
         return outputFile;
     }
+    */
 
     public static void addConfig(final ConfigBuilder configBuilder)
     {
@@ -136,7 +154,12 @@ public class SyntheticConfig
 
         configBuilder.addPath(PURPLE_DIR_CFG, false, PURPLE_DIR_DESC);
         configBuilder.addPath(LINX_DIR_CFG, false, LINX_DIR_DESC);
+        configBuilder.addPath(LINX_GERMLINE_DIR_CFG, false, LINX_GERMLINE_DIR_CFG);
         configBuilder.addPath(REGIONS_FILE, false, "Region or panel definition file");
+        configBuilder.addPath(GERMLINE_HET_SITES, false, "Germline heterozygous sites");
+
+        DriverGenePanelConfig.addGenePanelOption(configBuilder, false);
+        EnsemblDataCache.addEnsemblDir(configBuilder);
 
         addRefGenomeFile(configBuilder, true);;
         configBuilder.addConfigItem(OUTPUT_PREFIX, true,"File prefix for BAM and region info TSV");

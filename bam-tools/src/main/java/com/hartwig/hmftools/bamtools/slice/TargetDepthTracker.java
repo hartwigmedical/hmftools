@@ -19,36 +19,77 @@ public class TargetDepthTracker
     private final ChrBaseRegion mRegion;
     private final boolean mApplyDownsampling;
     private final int mReadLength;
+    private final boolean mUseCoveragePerWindow;
 
-    private int mDownsampleWindowSize;
+    private int mWindowSize;
     private int mTargetDepth;
+
+    private int mWindowStartPosition;
+    private int mWindowReadCount; // count of reads starting in the current window
+    private int mMaxReadsPerWindow;
+    private int mBaseMaxReadsPerWindow;
 
     private final List<DepthWindow> mDepthWindows;
 
     private static final double DEPTH_WINDOW_FRACTION = 0.25;
+    private static final double ROLLING_WINDOW_FRACTION = 0.5;
+    private static final double MAX_CARRY_OVER_PERCENT = 0.25;
 
-    public TargetDepthTracker(final ChrBaseRegion region, boolean applyDownsampling, int targetDepth, int readLength)
+    public TargetDepthTracker(
+            final ChrBaseRegion region, boolean applyDownsampling, int targetDepth, int readLength,  boolean useCoveragePerWindow)
     {
         mRegion = region;
         mApplyDownsampling = applyDownsampling;
         mReadLength = readLength;
+        mUseCoveragePerWindow = useCoveragePerWindow;
 
-        mTargetDepth = targetDepth;
+        mWindowStartPosition = 0;
+        mMaxReadsPerWindow = 0;
+        mWindowReadCount = 0;
 
         mDepthWindows = Lists.newArrayList();
-        mDownsampleWindowSize = 0;
+        mWindowSize = 0;
 
-        computeDownsamplingFactors();
+        setTargetDepth(targetDepth);
     }
 
     public void setTargetDepth(int targetDepth)
     {
         mTargetDepth = targetDepth;
-        computeDownsamplingFactors();
+
+        if(mUseCoveragePerWindow)
+            computeDownsamplingFactors();
+        else
+            computeWindowReadCounts();
     }
+
+    private boolean isSmallRegion() { return mReadLength >= mRegion.baseLength(); }
 
     public int targetDepth() { return mTargetDepth; }
     public boolean applyDownsampling() { return mApplyDownsampling; }
+
+    public int windowSize() { return mWindowSize; }
+    public int maxReadsPerWindow() { return mMaxReadsPerWindow; }
+    public int baseMaxReadsPerWindow() { return mBaseMaxReadsPerWindow; }
+    public int windowReadCount() { return mWindowReadCount; }
+
+    private void computeWindowReadCounts()
+    {
+        mWindowReadCount = 0;
+        mWindowStartPosition = mRegion.start();
+
+        if(isSmallRegion())
+        {
+            // no need for a rolling window for very short regions
+            mWindowSize = mRegion.baseLength();
+            mMaxReadsPerWindow = mBaseMaxReadsPerWindow = mTargetDepth;
+            return;
+        }
+
+        mWindowSize = (int)ceil(mReadLength * ROLLING_WINDOW_FRACTION);
+        mBaseMaxReadsPerWindow = (int)ceil(mTargetDepth * (double)mWindowSize / mReadLength);
+        mMaxReadsPerWindow = mBaseMaxReadsPerWindow;
+    }
 
     public void computeDownsamplingFactors()
     {
@@ -56,15 +97,15 @@ public class TargetDepthTracker
             return;
 
         mDepthWindows.clear();
-        mDownsampleWindowSize = (int)round(mReadLength * DEPTH_WINDOW_FRACTION);
+        mWindowSize = (int)round(mReadLength * DEPTH_WINDOW_FRACTION);
 
         int minLength = min(mReadLength, mRegion.baseLength());
-        int requiredWindows = (int)ceil(minLength / mDownsampleWindowSize) + 1;
+        int requiredWindows = (int)ceil(minLength / mWindowSize) + 1;
 
         int windowStart = mRegion.start();
         for(int i = 0; i < requiredWindows; ++i)
         {
-            int windowEnd = windowStart + mDownsampleWindowSize - 1;
+            int windowEnd = windowStart + mWindowSize - 1;
             mDepthWindows.add(new DepthWindow(windowStart, windowEnd));
             windowStart = windowEnd + 1;
         }
@@ -78,6 +119,44 @@ public class TargetDepthTracker
         if(readStart > mRegion.end() || readEnd < mRegion.start())
             return true;
 
+        if(mUseCoveragePerWindow)
+            return processByWindowCoverage(isDuplicate, readStart, readEnd);
+        else
+            return processByRollingWindow(isDuplicate, readStart);
+    }
+
+    private boolean processByRollingWindow(boolean isDuplicate, int readStart)
+    {
+        if(!isSmallRegion())
+        {
+            int carryOverReads = 0;
+            int windowEnd = mWindowStartPosition + mWindowSize - 1;
+
+            if(readStart > windowEnd)
+            {
+                if(readStart < windowEnd + mWindowSize)
+                {
+                    int spareCapacity = mBaseMaxReadsPerWindow - mWindowReadCount;
+                    carryOverReads = min(spareCapacity, (int)round(MAX_CARRY_OVER_PERCENT * mBaseMaxReadsPerWindow));
+                }
+
+                mWindowStartPosition = readStart;
+                mWindowReadCount = 0;
+                mMaxReadsPerWindow = mBaseMaxReadsPerWindow + carryOverReads;
+            }
+        }
+
+        if(mWindowReadCount >= mMaxReadsPerWindow)
+            return false;
+
+        if(!isDuplicate)
+            ++mWindowReadCount;
+
+        return true;
+    }
+
+    private boolean processByWindowCoverage(boolean isDuplicate, int readStart, int readEnd)
+    {
         // purge windows once read start has progressed past their end
         while(!mDepthWindows.isEmpty() && readStart > mDepthWindows.get(0).PosEnd)
         {
@@ -94,7 +173,7 @@ public class TargetDepthTracker
 
             while(maxPosEnd > windowEnd)
             {
-                windowEnd = windowStart + mDownsampleWindowSize - 1;
+                windowEnd = windowStart + mWindowSize - 1;
                 mDepthWindows.add(new DepthWindow(windowStart, windowEnd));
                 windowStart = windowEnd + 1;
             }

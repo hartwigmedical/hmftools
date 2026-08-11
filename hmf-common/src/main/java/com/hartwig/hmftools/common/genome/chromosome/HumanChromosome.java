@@ -101,10 +101,10 @@ public enum HumanChromosome implements Chromosome
 
     public static boolean contains(final String chromosome)
     {
-        final String trimmedContig = RefGenomeFunctions.stripChrPrefix(chromosome);
+        String trimmedContig = RefGenomeFunctions.stripChrPrefix(chromosome);
         if(isNumeric(trimmedContig))
         {
-            final int integerContig = Integer.parseInt(trimmedContig);
+            int integerContig = Integer.parseInt(trimmedContig);
             return integerContig >= 1 && integerContig <= 22;
         }
 

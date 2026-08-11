@@ -31,6 +31,7 @@ public class RegionBamSlicer implements Runnable
     private final ReadCache mReadCache;
     private final ChrBaseRegion mCurrentRegion;
     private final List<ChrBaseRegion> mLowerRegions;
+
     private int mReadsProcessed;
 
     private final TargetDepthTracker mTargetDepthTracker;
@@ -58,7 +59,7 @@ public class RegionBamSlicer implements Runnable
         mReadsProcessed = 0;
 
         mTargetDepthTracker = new TargetDepthTracker(
-                mCurrentRegion, mParams.TargetDepth > 0, mParams.TargetDepth, mParams.ReadLength);
+                mCurrentRegion, mParams.TargetDepth > 0, mParams.TargetDepth, mParams.ReadLength, false);
     }
 
     public void setTargetDepth(int targetDepth)
@@ -82,7 +83,7 @@ public class RegionBamSlicer implements Runnable
     @VisibleForTesting
     public void processSamRecord(final SAMRecord read)
     {
-        if(mParams.LogReadIds.contains(read.getReadName()))
+        if(mParams.CheckLogReads && mParams.LogReadIds.contains(read.getReadName()))
         {
             BT_LOGGER.debug("specific read({})", readToString(read));
         }
@@ -109,29 +110,6 @@ public class RegionBamSlicer implements Runnable
         {
             return;
         }
-
-        /*
-        if(mParams.DownsampleFactor > 0)
-        {
-            // down-sample at a fixed rate specified in config per X bases (default = 100)
-            if(readStart > mDownsamplePositionStart + DOWNSAMPLE_BASES)
-            {
-                mDownsamplePositionStart = readStart;
-                mDownsampleReadCount = 0;
-            }
-            else if(mDownsampleReadCount > mParams.DownsampleFactor)
-            {
-                // processed sufficient reads for this window
-                return;
-            }
-            else
-            {
-                // duplicates are included but not counted towards down-sampling so the intended depth is based on primaries
-                if(!read.getDuplicateReadFlag())
-                    ++mDownsampleReadCount;
-            }
-        }
-        */
 
         mReadCache.addReadRecord(read);
 

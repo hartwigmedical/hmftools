@@ -49,7 +49,7 @@ public class RegionSlicer
         long startTimeMs = System.currentTimeMillis();
 
         SliceWriter sliceWriter = new SliceWriter(mConfig);
-        ReadCache readCache = new ReadCache(sliceWriter);
+        ReadCache readCache = new ReadCache(sliceWriter, mConfig.DropIncompleteFragments);
 
         ThreadLocal<SamReader> threadBamReader = createThreadLocalBamReader();
         ExecutorService executorService = createExecutorService();
@@ -112,13 +112,15 @@ public class RegionSlicer
         }
 
         executorService.shutdown();
-        sliceWriter.close();
-        closeBamReaders();
 
         if(mConfig.LogMissingReads)
-        {
             readCache.logMissingReads(excludedRegions);
-        }
+
+        if(mConfig.DropIncompleteFragments)
+            readCache.writeCompleteFragments();
+
+        sliceWriter.close();
+        closeBamReaders();
 
         BT_LOGGER.info("Regions slice complete, mins({})", runTimeMinsStr(startTimeMs));
     }

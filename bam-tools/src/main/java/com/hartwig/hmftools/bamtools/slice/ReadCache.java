@@ -23,11 +23,13 @@ public class ReadCache
 
     private final Map<String,Fragment> mFragmentMap;
     private final IReadWriter mReadWriter;
+    private final boolean mCheckCompleteFragments;
     private volatile boolean mProcessingRemoteRegions;
 
-    public ReadCache(final IReadWriter sliceWriter)
+    public ReadCache(final IReadWriter sliceWriter, final boolean checkCompleteFragments)
     {
         mReadWriter = sliceWriter;
+        mCheckCompleteFragments = checkCompleteFragments;
 
         mFragmentMap = Maps.newHashMap();
         mProcessingRemoteRegions = false;
@@ -78,10 +80,58 @@ public class ReadCache
 
         if(isNewRead)
         {
-            mReadWriter.writeRead(read);
+            if(mCheckCompleteFragments)
+            {
+                if(fragment.isComplete())
+                {
+                    mReadWriter.writeRead(read);
+                    fragment.cachedReads().forEach(x -> mReadWriter.writeRead(x));
+                    fragment.clearCachedReads();
+                }
+                else
+                {
+                    fragment.addCachedRead(read);
+                }
+            }
+            else
+            {
+                mReadWriter.writeRead(read);
+            }
         }
 
         return mFragmentMap.isEmpty();
+    }
+
+    public void writeCompleteFragments()
+    {
+        if(!mCheckCompleteFragments)
+            return;
+
+        int incompleteFragments = 0;
+        int incompleteReads = 0;
+
+        for(Fragment fragment : mFragmentMap.values())
+        {
+            if(fragment.isComplete())
+            {
+                for(SAMRecord read : fragment.cachedReads())
+                {
+                    mReadWriter.writeRead(read);
+                }
+            }
+            else
+            {
+                ++incompleteFragments;
+                incompleteReads += fragment.cachedReads().size();
+            }
+
+            fragment.clearCachedReads();
+        }
+
+        if(incompleteFragments > 0)
+        {
+            BT_LOGGER.info("incomplete fragments({}) reads({})", incompleteFragments, incompleteReads);
+        }
     }
 
     public List<ChrBaseRegion> collateRemoteReadRegions()

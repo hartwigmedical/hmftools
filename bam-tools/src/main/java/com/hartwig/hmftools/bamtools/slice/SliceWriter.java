@@ -5,6 +5,7 @@ import static java.lang.Math.abs;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
 import static com.hartwig.hmftools.common.bamops.BamToolName.fromPath;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.BAM_EXTENSION;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
@@ -53,7 +54,9 @@ public class SliceWriter implements IReadWriter
         mOutputBam = mConfig.formFilename(WriteType.BAM);
 
         boolean writeUnsortedBam = mConfig.UnsortedBam || mConfig.BamToolPath != null;
-        mUnsortedOutputBam = mOutputBam.replaceAll("bam", "unsorted.bam");
+
+        int bamExtension = mOutputBam.lastIndexOf(BAM_EXTENSION);
+        mUnsortedOutputBam = mOutputBam.substring(0, bamExtension) + ".unsorted" + BAM_EXTENSION;
 
         SAMFileHeader fileHeader = samReader.getFileHeader().clone();
 

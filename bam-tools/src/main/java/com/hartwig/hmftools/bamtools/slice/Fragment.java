@@ -16,8 +16,10 @@ public class Fragment
     private final String mReadId;
     private final boolean mUnpaired;
 
-    public final List<ReadInfo> mReceivedReads;
-    public final List<ReadInfo> mPendingReads;
+    private final List<ReadInfo> mReceivedReads;
+    private final List<ReadInfo> mPendingReads;
+
+    private final List<SAMRecord> mCachedReads;
 
     public Fragment(final SAMRecord read)
     {
@@ -28,11 +30,17 @@ public class Fragment
         mUnpaired = !read.getReadPairedFlag();
 
         processRead(read);
+
+        mCachedReads = Lists.newArrayListWithExpectedSize(2);
     }
 
     public String readId() { return mReadId; }
     public List<ReadInfo> receivedReads() { return mReceivedReads; }
     public List<ReadInfo> pendingReads() { return mPendingReads; }
+
+    public List<SAMRecord> cachedReads() { return mCachedReads; }
+    public void addCachedRead(final SAMRecord read) { mCachedReads.add(read); }
+    public void clearCachedReads() { mCachedReads.clear(); }
 
     public boolean processRead(final SAMRecord read)
     {
@@ -128,6 +136,7 @@ public class Fragment
 
     public String toString()
     {
-        return format("id(%s) received(%d) pending(%d)", mReadId, mReceivedReads.size(), mPendingReads.size());
+        return format("id(%s) received(%d) pending(%d) cached(%d)",
+                mReadId, mReceivedReads.size(), mPendingReads.size(), mCachedReads.size());
     }
 }

@@ -45,7 +45,7 @@ public class SliceRegionTest
     public SliceRegionTest()
     {
         mSliceWriter = new SliceWriter(CONFIG);
-        mReadCache = new ReadCache(mSliceWriter);
+        mReadCache = new ReadCache(mSliceWriter, false);
     }
 
     @Test

@@ -1,19 +1,25 @@
 package com.hartwig.hmftools.bamtools.synthetic;
 
+import static java.lang.Math.abs;
+import static java.lang.Math.round;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
 import static com.hartwig.hmftools.bamtools.synthetic.RegionType.CN_BACKBONE;
 import static com.hartwig.hmftools.bamtools.synthetic.RegionType.DISRUPTION;
+import static com.hartwig.hmftools.bamtools.synthetic.RegionType.DRIVER_GENE;
 import static com.hartwig.hmftools.bamtools.synthetic.RegionType.FUSION;
+import static com.hartwig.hmftools.bamtools.synthetic.RegionType.GERMLINE_HET_SITE;
 import static com.hartwig.hmftools.bamtools.synthetic.RegionType.GERMLINE_MUTATION;
 import static com.hartwig.hmftools.bamtools.synthetic.RegionType.GERMLINE_SV;
 import static com.hartwig.hmftools.bamtools.synthetic.RegionType.PANEL;
 import static com.hartwig.hmftools.bamtools.synthetic.RegionType.SOMATIC_MUTATION;
 import static com.hartwig.hmftools.bamtools.synthetic.RegionType.SOMATIC_SV;
 import static com.hartwig.hmftools.bamtools.synthetic.RegionType.typesStr;
+import static com.hartwig.hmftools.bamtools.synthetic.SyntheticConstants.CN_BACKBONE_BUFFER;
 import static com.hartwig.hmftools.bamtools.synthetic.SyntheticConstants.SMALL_VARIANT_BUFFER;
 import static com.hartwig.hmftools.bamtools.synthetic.SyntheticConstants.SV_DISCORDANT_BUFFER;
+import static com.hartwig.hmftools.common.driver.panel.DriverGeneRegions.buildDriverGeneBaseRegions;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.region.ChrBaseRegion.loadChrBaseRegionList;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
@@ -34,16 +40,22 @@ import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS_FILTER;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringJoiner;
+import java.util.stream.Collectors;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.amber.AmberSite;
+import com.hartwig.hmftools.common.amber.AmberSitesFile;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
-import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxFusion;
@@ -52,6 +64,7 @@ import com.hartwig.hmftools.common.purple.PurpleCommon;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumberFile;
 import com.hartwig.hmftools.common.purple.ReportedStatus;
+import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantFileLoader;
@@ -81,6 +94,11 @@ public class RegionsBuilder
         if(mConfig.RegionsFilename != null)
         {
             loadPanelRegions();
+        }
+
+        if(!mConfig.DriverGenes.isEmpty())
+        {
+            addDriverGeneRegions();
         }
 
         if(mConfig.PurpleDir != null)
@@ -120,6 +138,31 @@ public class RegionsBuilder
         return true;
     }
 
+    private void addDriverGeneRegions()
+    {
+        if(mConfig.EnsemblDataDir == null)
+            return;
+
+        EnsemblDataCache geneDataCache = new EnsemblDataCache(mConfig.EnsemblDataDir, mConfig.RefGenVersion);
+        geneDataCache.setRequiredData(true, false, false, true);
+        geneDataCache.load(false);
+
+        Map<String,List<BaseRegion>> driverGeneRegions = buildDriverGeneBaseRegions(
+                geneDataCache, mConfig.DriverGenes.stream().map(x -> x.gene()).collect(Collectors.toList()),
+                false, true);
+
+        for(Map.Entry<String,List<BaseRegion>> entry : driverGeneRegions.entrySet())
+        {
+            String chromosome = entry.getKey();
+
+            for(BaseRegion region : entry.getValue())
+            {
+                RegionData regionData = new RegionData(chromosome, region.start(), region.end(), DRIVER_GENE);
+                mRegions.add(regionData);
+            }
+        }
+    }
+
     private void addCopyNumberBackbone()
     {
         if(!mConfig.isWgsMode() || mConfig.CopyNumberBackboneDistance <= 0)
@@ -127,14 +170,70 @@ public class RegionsBuilder
 
         RefGenomeCoordinates refGenomeCoordinates = RefGenomeCoordinates.refGenomeCoordinates(mConfig.RefGenVersion);
 
+        ListMultimap<Chromosome, AmberSite> germlineHetSitesMap = ArrayListMultimap.create();
+        if(mConfig.GermlineHetSites != null)
+        {
+            try
+            {
+                germlineHetSitesMap.putAll(AmberSitesFile.sites(mConfig.GermlineHetSites));
+            }
+            catch(IOException e)
+            {
+                BT_LOGGER.error("failed to load germline het sites: {}", e.toString());
+                System.exit(1);
+            }
+        }
+
         for(Map.Entry<Chromosome,Integer> entry : refGenomeCoordinates.Lengths.entrySet())
         {
-            String chrStr = mConfig.RefGenVersion.versionedChromosome(entry.getKey().toString());
+            Chromosome chromosome = entry.getKey();
+            String chrStr = mConfig.RefGenVersion.versionedChromosome(chromosome.toString());
             int length = entry.getValue();
+
+            List<AmberSite> amberSites = germlineHetSitesMap.get(chromosome).stream().collect(Collectors.toList());
+            Collections.sort(amberSites);
+
+            RegionType regionType = CN_BACKBONE;
+
+            int amberIndex = 0;
+            int minAmberDistance = (int)round(mConfig.CopyNumberBackboneDistance * 0.1);
 
             for(int position = mConfig.CopyNumberBackboneDistance; position < length; position += mConfig.CopyNumberBackboneDistance)
             {
-                RegionData regionData = new RegionData(chrStr, position, position, CN_BACKBONE);
+                // move to any close germline get site
+                int selectedPosition = position;
+
+                if(amberSites != null && !amberSites.isEmpty())
+                {
+                    AmberSite closestSite = null;
+                    int closestDistance = minAmberDistance + 1;
+
+                    for(; amberIndex < amberSites.size(); ++amberIndex)
+                    {
+                        AmberSite amberSite = amberSites.get(amberIndex);
+                        int distance = abs(position - amberSite.Position);
+
+                        if(distance < minAmberDistance && distance < closestDistance)
+                        {
+                            closestDistance = distance;
+                            closestSite = amberSite;
+                        }
+                        else if(amberSite.Position > position)
+                        {
+                            break;
+                        }
+                    }
+
+                    if(closestSite != null)
+                    {
+                        selectedPosition = closestSite.Position;
+                        regionType = GERMLINE_HET_SITE;
+                    }
+                }
+
+                RegionData regionData = new RegionData(
+                        chrStr, selectedPosition - CN_BACKBONE_BUFFER, selectedPosition + CN_BACKBONE_BUFFER, regionType);
+
                 mRegions.add(regionData);
             }
         }
@@ -218,8 +317,6 @@ public class RegionsBuilder
             if(sv.type() != SGL && applyDiscordantBuffer(sv.type(), sv.position(true), sv.position(false)))
                 positionBuffer = SV_DISCORDANT_BUFFER;
 
-            if(sv.type() == BND)
-
             for(int se = SE_START; se <= SE_END; ++se)
             {
                 if(sv.type() == SGL && se == SE_END)
@@ -291,10 +388,10 @@ public class RegionsBuilder
                 }
             }
 
-            if(mConfig.ReferenceId != null)
+            if(mConfig.ReferenceId != null && mConfig.LinxGermlineDir != null)
             {
-                String germlineSvAnnotationFile = LinxSvAnnotation.generateFilename(mConfig.LinxDir, mConfig.SampleId, true);
-                String germlineBreakendFile = LinxBreakend.generateFilename(mConfig.LinxDir, mConfig.SampleId, true);
+                String germlineSvAnnotationFile = LinxSvAnnotation.generateFilename(mConfig.LinxGermlineDir, mConfig.SampleId, true);
+                String germlineBreakendFile = LinxBreakend.generateFilename(mConfig.LinxGermlineDir, mConfig.SampleId, true);
                 // String germlineDisruptionFile = LinxGermlineDisruption.generateFilename(mConfig.LinxDir, mConfig.SampleId);
 
                 List<LinxBreakend> germlineBreakends = LinxBreakend.read(germlineBreakendFile);
@@ -429,7 +526,7 @@ public class RegionsBuilder
     {
         try
         {
-            String filename = mConfig.formFilename(".region_data.tsv");
+            String filename = mConfig.OutputDir + mConfig.SampleId + "." + mConfig.OutputPrefix + ".region_data.tsv";
             BufferedWriter writer = createBufferedWriter(filename, false);
 
             StringJoiner sj = new StringJoiner(TSV_DELIM);

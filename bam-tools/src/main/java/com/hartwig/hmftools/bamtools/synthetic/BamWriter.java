@@ -3,6 +3,7 @@ package com.hartwig.hmftools.bamtools.synthetic;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
 import static com.hartwig.hmftools.common.bamops.BamToolName.fromPath;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.BAM_EXTENSION;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.filenamePart;
 
 import java.io.File;
 import java.io.IOException;
@@ -42,9 +43,11 @@ public class BamWriter implements IReadWriter
         SamReader samReader = SamReaderFactory.makeDefault()
                 .referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(mConfig.BamFile));
 
-        mFinalOutputBam = mConfig.formFilename(BAM_EXTENSION);
+        String bamFile = filenamePart(mConfig.BamFile);
+        int bamExtension = bamFile.lastIndexOf(BAM_EXTENSION);
+        mFinalOutputBam = mConfig.OutputDir + bamFile.substring(0, bamExtension) + "." + mConfig.OutputPrefix + BAM_EXTENSION;
 
-        int bamExtension = mFinalOutputBam.lastIndexOf(BAM_EXTENSION);
+        bamExtension = mFinalOutputBam.lastIndexOf(BAM_EXTENSION);
         mUnsortedOutputBam = mFinalOutputBam.substring(0, bamExtension) + ".unsorted.bam";
 
         SAMFileHeader fileHeader = samReader.getFileHeader().clone();

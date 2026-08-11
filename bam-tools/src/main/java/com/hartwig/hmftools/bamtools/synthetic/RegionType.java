@@ -8,8 +8,10 @@ import java.util.stream.Collectors;
 public enum RegionType
 {
     PANEL,
+    DRIVER_GENE,
     COPY_NUMBER,
     CN_BACKBONE,
+    GERMLINE_HET_SITE,
     SOMATIC_MUTATION,
     GERMLINE_MUTATION,
     SOMATIC_SV,

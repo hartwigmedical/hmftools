@@ -116,7 +116,7 @@ public class BamReader
 
     public void run()
     {
-        BT_LOGGER.debug("processing region({})", mRegion);
+        BT_LOGGER.trace("processing region({})", mRegion);
 
         mPerfCounter.start(mConfig.PerfDebug ? mRegion.toString() : null);
         mBamSlicer.slice(mSamReader, mRegion, this::processSamRecord);

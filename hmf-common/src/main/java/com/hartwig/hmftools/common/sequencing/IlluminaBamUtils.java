@@ -8,6 +8,7 @@ import org.jetbrains.annotations.Nullable;
 public class IlluminaBamUtils
 {
     public static final byte ILLUMINA_HIGH_BASE_QUAL = 30;
+    public static final int ILLUMINA_DEFAULT_READ_LENGTH = 151;
 
     public static boolean isHighBaseQual(final byte qual)
     {

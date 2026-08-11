@@ -8,4 +8,5 @@ public final class SyntheticConstants
     public static final int DEFAULT_MAX_SMALL_VARIANTS = 5000;
     public static final int SV_DISCORDANT_BUFFER = 100;
     public static final int SMALL_VARIANT_BUFFER = 10;
+    public static final int CN_BACKBONE_BUFFER = 300;
 }

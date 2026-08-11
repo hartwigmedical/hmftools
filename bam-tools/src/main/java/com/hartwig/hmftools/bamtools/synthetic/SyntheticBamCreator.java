@@ -25,6 +25,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hartwig.hmftools.bamtools.slice.ReadCache;
 import com.hartwig.hmftools.bamtools.slice.RegionBamSlicer;
 import com.hartwig.hmftools.bamtools.slice.RemoteReadSlicer;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
@@ -52,7 +53,7 @@ public class SyntheticBamCreator
         long startTimeMs = System.currentTimeMillis();
 
         BamWriter bamWriter = new BamWriter(mConfig);
-        ReadCache readCache = new ReadCache(bamWriter);
+        ReadCache readCache = new ReadCache(bamWriter, mConfig.Params.isDownsampling());
 
         RegionsBuilder regionsBuilder = new RegionsBuilder(mConfig);
 
@@ -98,6 +99,9 @@ public class SyntheticBamCreator
 
             for(ChrBaseRegion region : remotePositions)
             {
+                if(!HumanChromosome.contains(region.Chromosome))
+                    continue;
+
                 futures.add(CompletableFuture.runAsync(
                         new RemoteReadSlicer(region, mConfig.Params, readCache, threadBamReader), executorService));
             }
@@ -112,6 +116,9 @@ public class SyntheticBamCreator
         BT_LOGGER.info("remote slice complete");
 
         executorService.shutdown();
+
+        readCache.writeCompleteFragments();
+
         bamWriter.close();
         closeBamReaders();
 

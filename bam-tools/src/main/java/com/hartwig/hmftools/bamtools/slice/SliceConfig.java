@@ -55,6 +55,7 @@ public class SliceConfig
     public final boolean WriteReadBases;
     public final boolean SkipRemoteReads;
     public final boolean LogMissingReads;
+    public final boolean DropIncompleteFragments;
 
     public final SliceParams Params;
     public final int MaxUnmappedReads;
@@ -77,6 +78,7 @@ public class SliceConfig
     private static final String WRITE_READ_BASES = "write_read_bases";
     private static final String MAX_UNMAPPED_READS = "max_unmapped_reads";
     private static final String LOG_MISSING_READS = "log_missing_reads";
+    private static final String DROP_INCOMPLETE_FRAGMENTS = "drop_incompletes";
 
     public static final int UNMAPPED_READS_DISABLED = -1;
     public static final int UNMAPPED_READS_ALL = 0;
@@ -110,6 +112,7 @@ public class SliceConfig
         WriteReadBases = WriteReads && configBuilder.hasFlag(WRITE_READ_BASES);
         LogMissingReads = configBuilder.hasFlag(LOG_MISSING_READS);
         SkipRemoteReads = configBuilder.hasFlag(SKIP_REMOTE_READS);
+        DropIncompleteFragments = configBuilder.hasFlag(DROP_INCOMPLETE_FRAGMENTS);
 
         Params = new SliceParams(configBuilder);
         MaxUnmappedReads = configBuilder.getInteger(MAX_UNMAPPED_READS);
@@ -187,6 +190,8 @@ public class SliceConfig
         configBuilder.addFlag(WRITE_READ_BASES, "Write read bases to TSV file");
         configBuilder.addFlag(SKIP_REMOTE_READS, "Skip slicing remote reads");
         configBuilder.addFlag(DROP_EXCLUDED, "Ignore remote reads in excluded regions (eg poly-G)");
+        configBuilder.addFlag(DROP_INCOMPLETE_FRAGMENTS, "Drop fragments were not all reads were sliced (eg due to down-sampling");
+
         configBuilder.addFlag(LOG_MISSING_READS, "Log missing reads");
         configBuilder.addFlag(PERF_DEBUG, PERF_DEBUG_DESC);
         BamToolName.addConfig(configBuilder);
@@ -212,6 +217,7 @@ public class SliceConfig
         UnsortedBam = false;
         DropExcluded = false;
         LogMissingReads = false;
+        DropIncompleteFragments = false;
 
         Params = new SliceParams(
                 false, Collections.emptyList(), 0, 0, 0, 151);
