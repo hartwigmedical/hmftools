@@ -128,7 +128,7 @@ public final class LinxBreakendInterpreter
     }
 
     @VisibleForTesting
-    static double junctionCopyNumber(final LinxSvAnnotation svAnnotation)
+    protected static double junctionCopyNumber(final LinxSvAnnotation svAnnotation)
     {
         return 0.5D * (svAnnotation.junctionCopyNumberMin() + svAnnotation.junctionCopyNumberMax());
     }

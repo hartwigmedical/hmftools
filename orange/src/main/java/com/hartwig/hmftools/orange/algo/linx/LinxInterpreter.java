@@ -5,6 +5,7 @@ import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.linx.LinxCommonTypes.formVisPlotClusterPrefix;
 import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
+import static com.hartwig.hmftools.orange.algo.linx.LinxBreakendInterpreter.junctionCopyNumber;
 
 import java.util.List;
 
@@ -85,15 +86,18 @@ public class LinxInterpreter
                 continue;
             }
 
-            LinxSvAnnotation svAnnotation = findSvAnnotation(breakendUp, linx.somaticSvAnnotations());
+            LinxSvAnnotation svAnnotationUp = findSvAnnotation(breakendUp, linx.somaticSvAnnotations());
 
-            if(svAnnotation == null)
+            LinxSvAnnotation svAnnotationDown = breakendUp.svId() == breakendDown.svId() ?
+                    svAnnotationUp : findSvAnnotation(breakendDown, linx.somaticSvAnnotations());
+
+            if(svAnnotationUp == null || svAnnotationDown == null)
             {
                 LOGGER.error("fusion({}) missing corresponding svAnnotation", fusion);
                 continue;
             }
 
-            String plotFilename = findReportableLinxPlot(linx.reportableEventPlots(), svAnnotation.clusterId());
+            String plotFilename = findReportableLinxPlot(linx.reportableEventPlots(), svAnnotationUp.clusterId());
 
             LinxFusionType fusionType = LinxFusionType.valueOf(fusion.reportedType().toString());
 
@@ -108,13 +112,13 @@ public class LinxInterpreter
             String contextUp = buildContextStr(breakendUp.regionType(), fusionType, fusion.fusedExonUp());
             String contextDown = buildContextStr(breakendDown.regionType(), fusionType, fusion.fusedExonDown());
 
-            double avgJcn = (breakendUp.undisruptedCopyNumber() + breakendDown.undisruptedCopyNumber()) * 0.5;
+            double avgJcn = (junctionCopyNumber(svAnnotationUp) + junctionCopyNumber(svAnnotationDown)) * 0.5;
 
             AllelicDepth rnaSupport = findRnaSupport(fusion, isofoxData);
 
             LinxFusion convertedFusion = ImmutableLinxFusion.builder()
                     .geneUp(geneUp)
-                    .clusterId(svAnnotation.clusterId())
+                    .clusterId(svAnnotationUp.clusterId())
                     .contextUp(contextUp)
                     .transcriptUp(breakendUp.transcriptId())
                     .geneDown(geneDown)
