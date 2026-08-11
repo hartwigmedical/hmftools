@@ -845,7 +845,10 @@ public class DisruptionFinder implements CohortFileInterface
             if(driverGene == null)
                 continue;
 
-                ReportedStatus reportedStatus = driverGene.reportDisruption() ? ReportedStatus.REPORTED : ReportedStatus.NOT_REPORTED;
+            ReportedStatus reportedStatus = driverGene.reportDisruption() ? ReportedStatus.REPORTED : ReportedStatus.NOT_REPORTED;
+
+            double likelihood = disruptionData.UndisruptedCopyNumber < 0.5 ? 1 : 0;
+            boolean biallelic = disruptionData.UndisruptedCopyNumber < 0.5;
 
             DriverCatalog driverCatalog = ImmutableDriverCatalog.builder()
                     .driver(DriverType.DISRUPTION)
@@ -857,13 +860,13 @@ public class DisruptionFinder implements CohortFileInterface
                     .chromosomeBand(disruptionData.Gene.KaryotypeBand)
                     .likelihoodMethod(LikelihoodMethod.DISRUPTION)
                     .reportedStatus(reportedStatus)
-                    .driverLikelihood(0)
+                    .driverLikelihood(likelihood)
                     .missense(0)
                     .nonsense(0)
                     .splice(0)
                     .inframe(0)
                     .frameshift(0)
-                    .biallelic(disruptionData.UndisruptedCopyNumber < 0.5)
+                    .biallelic(biallelic)
                     .minCopyNumber(disruptionData.UndisruptedCopyNumber)
                     .maxCopyNumber(disruptionData.MaxCopyNumber)
                     .build();
