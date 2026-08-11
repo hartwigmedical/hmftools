@@ -74,7 +74,7 @@ public final class DnaFusionTable
 
             if(hasRna)
             {
-                rowCells.add(cells.createContent(String.valueOf(fusion.rnaSupport().alleleReadCount())));
+                rowCells.add(cells.createContent(rnaSupportField(fusion.rnaSupport())));
             }
 
             rowCells.add(cells.createContent(fusion.driverInterpretation().toString()));
@@ -115,15 +115,13 @@ public final class DnaFusionTable
         throw new IllegalStateException();
     }
 
-    /*
     private static String rnaSupportField(final AllelicDepth rnaSupport)
     {
         if(rnaSupport == null)
             return ReportResources.NOT_AVAILABLE;
         else
-            return formatSupportField(rnaSupport.alleleReadCount(), rnaSupport.totalReadCount());
+            return String.valueOf(rnaSupport.alleleReadCount());
     }
-    */
 
     private static List<LinxFusion> sortLinxFusions(final List<LinxFusion> fusions)
     {
