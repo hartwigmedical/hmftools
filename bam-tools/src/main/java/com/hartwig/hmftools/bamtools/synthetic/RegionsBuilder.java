@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.bamtools.synthetic;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.ceil;
 import static java.lang.Math.round;
 import static java.lang.String.format;
 
@@ -32,6 +33,7 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.INF;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_REGION_END;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_REGION_START;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
@@ -91,38 +93,45 @@ public class RegionsBuilder
 
     public void buildRegions()
     {
-        if(mConfig.RegionsFilename != null)
+        if(mConfig.isPanelMode())
         {
             loadPanelRegions();
         }
-
-        if(!mConfig.DriverGenes.isEmpty())
+        else
         {
-            addDriverGeneRegions();
-        }
+            if(!mConfig.DriverGenes.isEmpty())
+            {
+                addDriverGeneRegions();
+            }
 
-        if(mConfig.PurpleDir != null)
-        {
-            if(!loadPurpleRegions())
-                System.exit(1);
-        }
+            if(mConfig.PurpleDir != null)
+            {
+                loadPurpleRegions();
+            }
 
-        if(mConfig.LinxDir != null)
-        {
-            if(!loadLinxRegions())
-                System.exit(1);
-        }
+            if(mConfig.LinxDir != null)
+            {
+                loadLinxRegions();
+            }
 
-        addCopyNumberBackbone();
+            addCopyNumberBackbone();
+        }
 
         mergeRegions();
+
+        loadPurpleCopyNumbers();
 
         setRegionCopyNumbers();
 
         logRegionStats();
 
         if(mConfig.WriteRegionData)
+        {
             writeRegionData();
+
+            if(mConfig.isWgsMode())
+                writeCobaltRegionFile();
+        }
     }
 
     private boolean loadPanelRegions()
@@ -140,7 +149,7 @@ public class RegionsBuilder
 
     private void addDriverGeneRegions()
     {
-        if(mConfig.EnsemblDataDir == null)
+        if(mConfig.EnsemblDataDir == null || mConfig.isPanelMode())
             return;
 
         EnsemblDataCache geneDataCache = new EnsemblDataCache(mConfig.EnsemblDataDir, mConfig.RefGenVersion);
@@ -239,13 +248,27 @@ public class RegionsBuilder
         }
     }
 
-    private boolean loadPurpleRegions()
+    private void loadPurpleCopyNumbers()
     {
+        if(mConfig.PurpleDir == null)
+            return;
+
         try
         {
             String copyNumberFile = PurpleCopyNumberFile.generateFilenameForReading(mConfig.PurpleDir, mConfig.SampleId);
             mCopyNumbers.addAll(PurpleCopyNumberFile.read(copyNumberFile));
+        }
+        catch(IOException e)
+        {
+            BT_LOGGER.error("failed to to load Purple data: {}", e.toString());
+            System.exit(1);
+        }
+    }
 
+    private void loadPurpleRegions()
+    {
+        try
+        {
             addSmallVariants(true);
 
             if(mConfig.ReferenceId != null)
@@ -256,10 +279,8 @@ public class RegionsBuilder
         catch(IOException e)
         {
             BT_LOGGER.error("failed to to load Purple data: {}", e.toString());
-            return false;
+            System.exit(1);
         }
-
-        return true;
     }
 
     private void addSmallVariants(boolean isSomatic) throws IOException
@@ -351,7 +372,7 @@ public class RegionsBuilder
             return false;
     }
 
-    private boolean loadLinxRegions()
+    private void loadLinxRegions()
     {
         try
         {
@@ -409,10 +430,8 @@ public class RegionsBuilder
         catch(IOException e)
         {
             BT_LOGGER.error("failed to to load Linx data: {}", e.toString());
-            return false;
+            System.exit(1);
         }
-
-        return true;
     }
 
     private void addStructuralVariantRegion(
@@ -559,4 +578,49 @@ public class RegionsBuilder
             BT_LOGGER.error(" failed to write region data: {}", e.toString());
         }
     }
+
+    private void writeCobaltRegionFile()
+    {
+        // for use in WGS synthetic samples to function as a region-limiter
+        try
+        {
+            String filename = mConfig.OutputDir + mConfig.SampleId + "." + mConfig.OutputPrefix + ".cobalt_region_file.tsv";
+            BufferedWriter writer = createBufferedWriter(filename, false);
+
+            StringJoiner sj = new StringJoiner(TSV_DELIM);
+
+            sj.add(FLD_CHROMOSOME).add(FLD_POSITION).add("RelativeEnrichment");
+
+            writer.write(sj.toString());
+            writer.newLine();
+
+            double windowSize = 1000;
+
+            for(RegionData regionData : mRegions)
+            {
+                // make positions rounded to the standard window-size + 1 for all entries within a region
+                int position = (int)(ceil(regionData.start() / windowSize) * windowSize) + 1;
+
+                while(position < regionData.end())
+                {
+                    sj = new StringJoiner(TSV_DELIM);
+                    sj.add(regionData.Chromosome);
+                    sj.add(String.valueOf(position));
+                    sj.add("1");
+                    writer.write(sj.toString());
+                    writer.newLine();
+
+                    position += windowSize;
+                }
+            }
+
+            writer.close();
+
+        }
+        catch(IOException e)
+        {
+            BT_LOGGER.error(" failed to write region Cobalt data: {}", e.toString());
+        }
+    }
+
 }

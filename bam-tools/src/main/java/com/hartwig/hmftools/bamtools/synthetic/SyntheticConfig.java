@@ -138,14 +138,6 @@ public class SyntheticConfig
     public boolean isPanelMode() { return RegionsFilename != null; }
     public boolean isWgsMode() { return !isPanelMode(); }
 
-    /*
-    public String formFilename(final String fileExtension)
-    {
-        String outputFile = OutputDir + SampleId + "." + OutputPrefix + fileExtension;
-        return outputFile;
-    }
-    */
-
     public static void addConfig(final ConfigBuilder configBuilder)
     {
         configBuilder.addConfigItem(SAMPLE, true, SAMPLE_DESC);
