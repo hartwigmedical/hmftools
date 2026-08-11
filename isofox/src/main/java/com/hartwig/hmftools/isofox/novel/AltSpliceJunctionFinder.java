@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.isofox.novel;
 
 import static java.lang.Math.abs;
-import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.rna.NovelSpliceJunctionFile.ALT_SJ_FILE_ID;
 import static com.hartwig.hmftools.common.rna.NovelSpliceJunctionFile.ALT_SJ_UNFILTERED_FILE_ID;
@@ -271,15 +270,16 @@ public class AltSpliceJunctionFinder
         if(abs(nearestExonBoundary[SE_START]) > MAX_HOMOLOGY_LENGTH && abs(nearestExonBoundary[SE_END]) > MAX_HOMOLOGY_LENGTH)
             return;
 
-        // check the closer of the 2 ends
-        int minDistance = min(nearestExonBoundary[SE_START], nearestExonBoundary[SE_END]);
+        // check the closer of the 2 ends, keeping its sign since that sets the shift direction
+        int minDistance = abs(nearestExonBoundary[SE_START]) < abs(nearestExonBoundary[SE_END]) ?
+                nearestExonBoundary[SE_START] : nearestExonBoundary[SE_END];
         int juncBaseIndex = MAX_HOMOLOGY_LENGTH;
 
         if(minDistance > 0)
         {
             // SJ is past the nearest exon boundary, so compare the preceding bases
             final String startBases = junctionBases[SE_START].substring(juncBaseIndex - abs(minDistance), juncBaseIndex);
-            final String endBases = junctionBases[SE_START].substring(juncBaseIndex - abs(minDistance), juncBaseIndex);
+            final String endBases = junctionBases[SE_END].substring(juncBaseIndex - abs(minDistance), juncBaseIndex);
 
             if(!startBases.equals(endBases))
                 return;
@@ -293,7 +293,7 @@ public class AltSpliceJunctionFinder
             //      S E
 
             final String startBases = junctionBases[SE_START].substring(juncBaseIndex, juncBaseIndex + abs(minDistance));
-            final String endBases = junctionBases[SE_START].substring(juncBaseIndex, juncBaseIndex + abs(minDistance));
+            final String endBases = junctionBases[SE_END].substring(juncBaseIndex, juncBaseIndex + abs(minDistance));
 
             if(!startBases.equals(endBases))
                 return;

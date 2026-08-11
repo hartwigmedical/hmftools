@@ -52,7 +52,7 @@ public class ChimericReadCache
 
             BufferedWriter writer = createBufferedWriter(outputFileName, false);
             writer.write("ReadGroupCount,ReadId,FusionGroup,Chromosome,PosStart,PosEnd,Orientation,Cigar");
-            writer.write(",Flags,HasSupplAlign,SuppData,BasesStart,BasesEnd,MateChr,MatePosStart");
+            writer.write(",Flags,MapQuality,NumLoci,HasSupplAlign,SuppData,BasesStart,BasesEnd,MateChr,MatePosStart");
             writer.write(",GeneSetStart,GeneSetEnd,GenicStart,GenicEnd,InterGeneSplit");
             writer.write(",MappedCoords,ScRegionsMatchedStart,ScRegionsMatchedEnd");
             writer.write(",TopTransMatch,TransExonData,UpperTopTransMatch,UpperTransExonData");
@@ -85,8 +85,9 @@ public class ChimericReadCache
                         read.SuppData != null, read.ReadBases, read.flags(), read.MateChromosome, read.MatePosStart));
                 */
 
-                mReadWriter.write(String.format(",%d,%s,%s,%s,%s,%s,%d",
-                        read.Flags, read.HasSuppAlignment, read.SuppData != null ? read.SuppData.asDelimStr() : "NONE",
+                mReadWriter.write(String.format(",%d,%d,%d,%s,%s,%s,%s,%s,%d",
+                        read.Flags, read.MapQuality, read.NumLoci,
+                        read.HasSuppAlignment, read.SuppData != null ? read.SuppData.asDelimStr() : "NONE",
                         read.BoundaryBases[SE_START], read.BoundaryBases[SE_END], read.MateChromosome, read.MatePosStart));
 
                 mReadWriter.write(String.format(",%d,%d,%s,%s,%s",
