@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.isofox.fusion;
 
+import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome.lowerChromosome;
@@ -17,8 +18,14 @@ import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formLocation;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.hasRealignableSoftClip;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.isRealignedFragmentCandidate;
 
+import static htsjdk.samtools.SAMFlag.FIRST_OF_PAIR;
+
 import java.util.List;
 import java.util.Map;
+
+import htsjdk.samtools.CigarElement;
+import htsjdk.samtools.CigarOperator;
+import htsjdk.samtools.TextCigarCodec;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -139,6 +146,7 @@ public class FusionFragmentBuilder
         byte[] junctionOrientations = { 0, 0 };
         int[] geneCollections = { -1, -1 };
         String[] chromosomes = {"", ""};
+        FusionRead[] junctionReads = { null, null };
 
         int posIndex = 0;
 
@@ -148,6 +156,7 @@ public class FusionFragmentBuilder
                 continue;
 
             chromosomes[posIndex] = read.Chromosome;
+            junctionReads[posIndex] = read;
 
             if(read.isLongestSoftClip(SE_START))
             {
@@ -183,12 +192,52 @@ public class FusionFragmentBuilder
         {
             int index = se == SE_START ? lowerIndex : switchIndex(lowerIndex);
             fragment.junctionPositions()[se] = junctionPositions[index];
+            fragment.alignedJunctionPositions()[se] = junctionPositions[index];
             fragment.junctionOrientations()[se] = junctionOrientations[index];
             fragment.orientations()[se] = junctionOrientations[index];
             fragment.geneCollections()[se] = geneCollections[index];
         }
 
+        removeJunctionOverlap(fragment, junctionReads[0], junctionReads[1]);
         fragment.setType(MATCHED_JUNCTION);
+    }
+
+    private static void removeJunctionOverlap(final FusionFragment fragment, final FusionRead first, final FusionRead second)
+    {
+        int overlapBases = junctionOverlapBases(fragment, first, second);
+
+        fragment.setJunctionOverlapBases(overlapBases);
+
+        // SE_END gives them up, so every fragment of the junction reaches the same position hash
+        if(overlapBases > 0)
+            fragment.junctionPositions()[SE_END] -= overlapBases * fragment.junctionOrientations()[SE_END];
+    }
+
+    private static int junctionOverlapBases(final FusionFragment fragment, final FusionRead first, final FusionRead second)
+    {
+        if(first == null || second == null || firstOfPair(first) != firstOfPair(second))
+            return 0;
+
+        // a read in 3 alignments crosses 2 junctions, so bases shared by 2 of them need not be shared at this one
+        if(fragment.reads().stream().filter(x -> firstOfPair(x) == firstOfPair(first)).count() != 2)
+            return 0;
+
+        return max(alignedReadBases(first) + alignedReadBases(second) - first.ReadBaseLength, 0);
+    }
+
+    private static boolean firstOfPair(final FusionRead read) { return (read.Flags & FIRST_OF_PAIR.intValue()) != 0; }
+
+    private static int alignedReadBases(final FusionRead read)
+    {
+        int alignedBases = 0;
+
+        for(CigarElement element : TextCigarCodec.decode(read.Cigar).getCigarElements())
+        {
+            if(element.getOperator().consumesReadBases() && element.getOperator() != CigarOperator.S)
+                alignedBases += element.getLength();
+        }
+
+        return alignedBases;
     }
 
     private static void setSplitReadJunctionData(final FusionFragment fragment, final FusionRead splitRead)

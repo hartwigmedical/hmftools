@@ -35,6 +35,8 @@ public class FusionFragment
     private final String[] mChromosomes;
     private final byte[] mOrientations;
     private final int[] mJunctionPositions; // fusion junction if exists
+    private final int[] mAlignedJunctionPositions; // for lookups into data keyed on the BAM's positions
+    private int mJunctionOverlapBases; // read bases both junction sides aligned through
     private final byte[] mJunctionOrientations; // orientation at junction if exists
     private final FusionJunctionType[] mJunctionTypes;
     private FusionFragmentType mType;
@@ -50,6 +52,8 @@ public class FusionFragment
 
         mGeneCollections = new int[] {NO_GENE_ID, NO_GENE_ID};
         mJunctionPositions = new int[] {-1, -1};
+        mAlignedJunctionPositions = new int[] {-1, -1};
+        mJunctionOverlapBases = 0;
         mChromosomes = new String[] {"", ""};
         mJunctionOrientations = new byte[] {0, 0};
         mOrientations = new byte[] {0, 0};
@@ -95,6 +99,9 @@ public class FusionFragment
     }
 
     public final int[] junctionPositions() { return mJunctionPositions; }
+    public final int[] alignedJunctionPositions() { return mAlignedJunctionPositions; }
+    public int junctionOverlapBases() { return mJunctionOverlapBases; }
+    public void setJunctionOverlapBases(int overlapBases) { mJunctionOverlapBases = overlapBases; }
     public final byte[] junctionOrientations() { return mJunctionOrientations; }
 
     public final RegionMatchType[] regionMatchTypes() { return mRegionMatchTypes; }
