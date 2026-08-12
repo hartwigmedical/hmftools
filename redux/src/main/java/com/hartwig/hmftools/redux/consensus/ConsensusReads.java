@@ -233,15 +233,12 @@ public class ConsensusReads
 
         if(lastDelim <= 0)
         {
-            return umiId != null ? readId + READ_ID_DELIM + CONSENSUS_PREFIX + umiId : CONSENSUS_PREFIX + readId;
+            return CONSENSUS_PREFIX + readId;
         }
 
         String groupId = readId.substring(0, lastDelim) + READ_ID_DELIM + CONSENSUS_PREFIX;
 
-        if(umiId != null)
-            return groupId + umiId;
-        else
-            return groupId + readId.substring(lastDelim + 1);
+        return groupId + readId.substring(lastDelim + 1);
     }
 
     public static SAMRecord buildFromRead(final SAMRecord read, final String groupReadId, boolean isFirstOfPair)
