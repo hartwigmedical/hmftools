@@ -102,7 +102,7 @@ public class ReadCache
         return mFragmentMap.isEmpty();
     }
 
-    public void writeCompleteFragments()
+    public void flushCompleteFragments()
     {
         if(!mCheckCompleteFragments)
             return;
@@ -203,26 +203,15 @@ public class ReadCache
         return remoteRegions;
     }
 
-    public void logMissingReads(final List<ChrBaseRegion> excludedRegions)
+    public void logMissingReads(int maxToLog)
     {
+        int count = 0;
+
         for(Fragment fragment : mFragmentMap.values())
         {
             List<ReadInfo> pendingReads = fragment.pendingReads();
 
             if(pendingReads.isEmpty())
-                continue;
-
-            boolean inExcluded = false;
-            for(ChrBaseRegion excludedRegion : excludedRegions)
-            {
-                if(pendingReads.stream().anyMatch(x -> excludedRegion.overlaps(x.Contig, x.AlignmentStart, x.AlignmentStart)))
-                {
-                    inExcluded = true;
-                    break;
-                }
-            }
-
-            if(inExcluded)
                 continue;
 
             BT_LOGGER.warn("read id({}) has {} missing reads:", fragment.readId(), pendingReads.size());
@@ -236,6 +225,11 @@ public class ReadCache
             {
                 BT_LOGGER.debug("received read id({}) info({})", fragment.readId(), readInfo);
             }
+
+            ++count;
+
+            if(maxToLog > 0 && count > maxToLog)
+                return;
         }
     }
 

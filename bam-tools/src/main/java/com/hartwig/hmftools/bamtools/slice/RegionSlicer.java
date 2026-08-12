@@ -17,7 +17,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.hartwig.hmftools.common.region.ExcludedRegions;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
@@ -71,9 +70,6 @@ public class RegionSlicer
         BT_LOGGER.info("initial slice complete, read written({}) cached fragments({})",
                 sliceWriter.writeCount(), readCache.fragmentMap().size());
 
-        List<ChrBaseRegion> excludedRegions = mConfig.DropExcluded ?
-                ExcludedRegions.getPolyGRegions(mConfig.RefGenVersion) : Collections.emptyList();
-
         if(!mConfig.SkipRemoteReads)
         {
             readCache.setProcessingRemoteRegions(true);
@@ -85,9 +81,6 @@ public class RegionSlicer
 
                 for(ChrBaseRegion region : remotePositions)
                 {
-                    if(ChrBaseRegion.overlaps(excludedRegions, region))
-                        continue;
-
                     futures.add(CompletableFuture.runAsync(new RemoteReadSlicer(region, mConfig.Params, readCache, threadBamReader),
                             executorService));
                 }
@@ -114,10 +107,10 @@ public class RegionSlicer
         executorService.shutdown();
 
         if(mConfig.LogMissingReads)
-            readCache.logMissingReads(excludedRegions);
+            readCache.logMissingReads(100);
 
         if(mConfig.DropIncompleteFragments)
-            readCache.writeCompleteFragments();
+            readCache.flushCompleteFragments();
 
         sliceWriter.close();
         closeBamReaders();

@@ -117,7 +117,9 @@ public class SyntheticBamCreator
 
         executorService.shutdown();
 
-        readCache.writeCompleteFragments();
+        readCache.logMissingReads(100);
+
+        readCache.flushCompleteFragments();
 
         bamWriter.close();
         closeBamReaders();
