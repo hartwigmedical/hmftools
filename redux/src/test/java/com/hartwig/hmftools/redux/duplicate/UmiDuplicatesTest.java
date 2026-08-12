@@ -477,10 +477,10 @@ public class UmiDuplicatesTest
         DuplicateGroup mateUmiGroup = mateUmiGroups.get(0);
 
         SAMRecord readTemplate = TemplateReads.selectTemplateRead(readUmiGroup.reads(), readUmiGroup.fragCoordinates());
-        String readConsensusReadName = formConsensusReadId(readTemplate, readUmiGroup.umi());
+        String readConsensusReadName = formConsensusReadId(readTemplate);
 
         SAMRecord mateTemplate = TemplateReads.selectTemplateRead(mateUmiGroup.reads(), mateUmiGroup.fragCoordinates());
-        String mateConsensusReadName = formConsensusReadId(mateTemplate, mateUmiGroup.umi());
+        String mateConsensusReadName = formConsensusReadId(mateTemplate);
 
         assertEquals(readConsensusReadName, mateConsensusReadName);
     }

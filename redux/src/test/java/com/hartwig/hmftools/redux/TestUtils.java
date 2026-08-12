@@ -88,7 +88,7 @@ public final class TestUtils
             final ConsensusReads consensusReads, final List<SAMRecord> reads, final String umiId)
     {
         FragmentCoords fragmentCoords = FragmentCoords.fromRead(reads.get(0), false);
-        return consensusReads.createConsensusRead(reads, fragmentCoords, umiId);
+        return consensusReads.createConsensusRead(reads, fragmentCoords);
     }
 
     public static SAMRecord createUnpairedRecord(final String readName, final String chromosome, final int readStart, int readEnd,

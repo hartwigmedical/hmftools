@@ -94,7 +94,7 @@ public class DuplicateGroup
     {
         try
         {
-            ConsensusReadInfo consensusReadInfo = consensusReads.createConsensusRead(mReads, mFragmentCoords, mUmi);
+            ConsensusReadInfo consensusReadInfo = consensusReads.createConsensusRead(mReads, mFragmentCoords);
 
             // set consensus read attributes
             ConsensusType consensusType = mDualStrand ? DUAL : SINGLE;

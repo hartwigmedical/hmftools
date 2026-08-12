@@ -776,7 +776,7 @@ public class SbxDuplexReadTest
         List<SAMRecord> reads = Lists.newArrayList(read1, read2, read3);
 
         FragmentCoords coords = FragmentCoords.fromRead(read1, false);
-        ConsensusReadInfo consensusOutput = consensusReads.createConsensusRead(reads, coords, null);
+        ConsensusReadInfo consensusOutput = consensusReads.createConsensusRead(reads, coords);
         ConsensusOutcome consensusOutcome = consensusOutput.Outcome;
         SAMRecord consensusRead = consensusOutput.ConsensusRead;
 
@@ -816,7 +816,7 @@ public class SbxDuplexReadTest
         List<SAMRecord> reads = Lists.newArrayList(read1, read2, read3);
 
         FragmentCoords coords = FragmentCoords.fromRead(read1, false);
-        ConsensusReadInfo consensusOutput = consensusReads.createConsensusRead(reads, coords, null);
+        ConsensusReadInfo consensusOutput = consensusReads.createConsensusRead(reads, coords);
         ConsensusOutcome consensusOutcome = consensusOutput.Outcome;
         SAMRecord consensusRead = consensusOutput.ConsensusRead;
 
@@ -849,7 +849,7 @@ public class SbxDuplexReadTest
         List<SAMRecord> reads = Lists.newArrayList(read1, read2);
 
         FragmentCoords coords = FragmentCoords.fromRead(read1, false);
-        ConsensusReadInfo consensusOutput = consensusReads.createConsensusRead(reads, coords, null);
+        ConsensusReadInfo consensusOutput = consensusReads.createConsensusRead(reads, coords);
         ConsensusOutcome consensusOutcome = consensusOutput.Outcome;
         SAMRecord consensusRead = consensusOutput.ConsensusRead;
 
@@ -881,7 +881,7 @@ public class SbxDuplexReadTest
         List<SAMRecord> reads = Lists.newArrayList(read1, read2);
 
         FragmentCoords coords = FragmentCoords.fromRead(read1, false);
-        ConsensusReadInfo consensusOutput = consensusReads.createConsensusRead(reads, coords, null);
+        ConsensusReadInfo consensusOutput = consensusReads.createConsensusRead(reads, coords);
         ConsensusOutcome consensusOutcome = consensusOutput.Outcome;
         SAMRecord consensusRead = consensusOutput.ConsensusRead;
 

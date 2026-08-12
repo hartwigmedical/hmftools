@@ -272,7 +272,7 @@ public class ConsensusReadsTest
 
         ConsensusReadInfo readInfo = createConsensusRead(mConsensusReads, reads, UMI_ID_1);
         assertEquals(ALIGNMENT_ONLY, readInfo.Outcome);
-        String consensusReadId = ConsensusReads.formConsensusReadId(read3, null);
+        String consensusReadId = ConsensusReads.formConsensusReadId(read3);
         assertEquals(consensusReadId, readInfo.ConsensusRead.getReadName());
         assertEquals(1005, readInfo.ConsensusRead.getMateAlignmentStart());
         assertEquals(mateCigar3, readInfo.ConsensusRead.getStringAttribute(MATE_CIGAR_ATTRIBUTE));
@@ -558,8 +558,7 @@ public class ConsensusReadsTest
         read2.setMateUnmappedFlag(true);
         read2.setMateAlignmentStart(2);
 
-        ConsensusReadInfo readConsensusInfo = mConsensusReads.createConsensusRead(
-                List.of(read1, read2), createFragmentCoords(read1), "");
+        ConsensusReadInfo readConsensusInfo = mConsensusReads.createConsensusRead(List.of(read1, read2), createFragmentCoords(read1));
 
         assertEquals(readConsensusInfo.TemplateRead, read1);
         assertEquals(readCigar1, readConsensusInfo.ConsensusRead.getCigarString());
@@ -579,8 +578,7 @@ public class ConsensusReadsTest
         mate2.setReadUnmappedFlag(true);
         mate2.setAlignmentStart(2);
 
-        ConsensusReadInfo mateConsensusInfo = mConsensusReads.createConsensusRead(
-                List.of(mate1, mate2), createFragmentCoords(mate1), "");
+        ConsensusReadInfo mateConsensusInfo = mConsensusReads.createConsensusRead(List.of(mate1, mate2), createFragmentCoords(mate1));
 
         assertEquals(NO_CIGAR, mateConsensusInfo.ConsensusRead.getCigarString());
         assertEquals(1, mateConsensusInfo.ConsensusRead.getAlignmentStart());
@@ -614,7 +612,7 @@ public class ConsensusReadsTest
         SAMRecord read4 = createConsensusInputRecord(nextReadId(),10, readBases4, readCigar4,  false);
 
         ConsensusReadInfo readConsensusInfo = mConsensusReads.createConsensusRead(
-                List.of(read1, read2, read3, read4), createFragmentCoords(read1), "");
+                List.of(read1, read2, read3, read4), createFragmentCoords(read1));
 
         assertEquals(readConsensusInfo.TemplateRead, read1);
         assertEquals(readCigar1, readConsensusInfo.ConsensusRead.getCigarString());
@@ -652,7 +650,7 @@ public class ConsensusReadsTest
         SAMRecord read6 = createConsensusInputRecord(nextReadId(),8, readBases6, readCigar6,  false);
 
         readConsensusInfo = mConsensusReads.createConsensusRead(
-                List.of(read1, read2, read3, read4, read5, read6), createFragmentCoords(read1), "");
+                List.of(read1, read2, read3, read4, read5, read6), createFragmentCoords(read1));
 
         assertEquals(readConsensusInfo.TemplateRead, read1);
         assertEquals(readCigar1, readConsensusInfo.ConsensusRead.getCigarString());

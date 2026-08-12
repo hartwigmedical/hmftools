@@ -39,7 +39,7 @@ public class ConsensusReadUtilsTest
         SAMRecord read1 = createSamRecord(
                 readIdFixed + READ_ID_DELIM_STR + "READ_01", 100, TEST_READ_BASES, TEST_READ_CIGAR, TEST_READ_CIGAR);
 
-        String consensusReadId = ConsensusReads.formConsensusReadId(read1, null);
+        String consensusReadId = ConsensusReads.formConsensusReadId(read1);
 
         assertEquals("ABAB:8:SAMPLE:2:222:12345:CNS_READ_01", consensusReadId);
 
@@ -49,7 +49,7 @@ public class ConsensusReadUtilsTest
                 readIdFixed + READ_ID_DELIM_STR + "READ_01" + READ_ID_DELIM_STR + unmiId,
                 100, TEST_READ_BASES, TEST_READ_CIGAR, TEST_READ_CIGAR);
 
-        consensusReadId = ConsensusReads.formConsensusReadId(read1, unmiId);
+        consensusReadId = ConsensusReads.formConsensusReadId(read1);
 
         assertEquals("ABAB:8:SAMPLE:2:222:12345:READ_01:CNS_" + unmiId, consensusReadId);
     }

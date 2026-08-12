@@ -74,13 +74,12 @@ public class ConsensusReads
         this(refGenome, ILLUMINA);
     }
 
-    public ConsensusReadInfo createConsensusRead(
-            final List<SAMRecord> reads, final FragmentCoords fragmentCoords, @Nullable final String umiId)
+    public ConsensusReadInfo createConsensusRead(final List<SAMRecord> reads, final FragmentCoords fragmentCoords)
     {
         String consensusReadId  = "";
 
         SAMRecord templateRead = TemplateReads.selectTemplateRead(reads, fragmentCoords);
-        consensusReadId = formConsensusReadId(templateRead, umiId);
+        consensusReadId = formConsensusReadId(templateRead);
 
         if(reads.size() <= 1 || reads.get(0).getReadUnmappedFlag())
         {
@@ -224,7 +223,7 @@ public class ConsensusReads
     }
 
     @VisibleForTesting
-    public static String formConsensusReadId(final SAMRecord templateRead, @Nullable final String umiId)
+    public static String formConsensusReadId(final SAMRecord templateRead)
     {
         // take the first read's ID after sorting, include the CNS identifier, and append the UMI if it has one
         String readId = templateRead.getReadName();
