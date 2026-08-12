@@ -44,9 +44,7 @@ public final class SamRecordUtils
     // Redux tags
     public static final String CONSENSUS_READ_ATTRIBUTE = "CR";
     public static final String CONSENSUS_TYPE_ATTRIBUTE = "UT"; // originally UMI type - single, dual or none
-    public static final String UMI_ATTRIBUTE = "UI"; // the UMI group ID
     public static final String CONSENSUS_INFO_DELIM = ";";
-    public static final String BASE_MODIFICATIONS_ATTRIBUTE = "MM";
     public static final String BQSR_ORIGINAL_QUALS = "OQ";
 
     public static final String UNMAP_ATTRIBUTE = "UM"; // the read was unmapped

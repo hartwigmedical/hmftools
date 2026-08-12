@@ -2,7 +2,6 @@ package com.hartwig.hmftools.redux.write;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.UMI_ATTRIBUTE;
 import static com.hartwig.hmftools.redux.ReduxConstants.BQR_MIN_MAP_QUAL;
 import static com.hartwig.hmftools.redux.common.FragmentStatus.DUPLICATE;
 import static com.hartwig.hmftools.redux.common.FragmentStatus.PRIMARY;
@@ -114,9 +113,6 @@ public abstract class BamWriter
 
         for(SAMRecord read : group.allReads())
         {
-            if(mConfig.UMIs.Enabled)
-                read.setAttribute(UMI_ATTRIBUTE, group.umi());
-
             // if the group was formed from unmapped poly-G reads then mark all reads as duplicates
             FragmentStatus fragmentStatus = !group.polyGUnmapped() && group.isPrimaryRead(read) ? PRIMARY : DUPLICATE;
 
