@@ -175,6 +175,10 @@ public class SomaticVariantData extends VariantData
                 variantCopyNumber = Double.parseDouble(truthsetValue.Value);
             else if(truthsetValue.FieldName.equals(FLD_CANON_EFFECT))
                 canonicalEffect = truthsetValue.Value;
+            else if(truthsetValue.FieldName.equals(FLD_HGVS_CODING))
+                canonicalHgvsCodingImpact = truthsetValue.Value;
+            else if(truthsetValue.FieldName.equals(FLD_HGVS_PROTEIN))
+                canonicalHgvsProteinImpact = truthsetValue.Value;
             else if(truthsetValue.FieldName.equals(FLD_TUMOR_TOTAL_READ_COUNT))
                 tumorTotalReadCount = Integer.parseInt(truthsetValue.Value);
             else if(truthsetValue.FieldName.equals(FLD_TUMOR_SUPPORTING_READ_COUNT))
@@ -207,6 +211,10 @@ public class SomaticVariantData extends VariantData
                 addDoubleValue(FLD_VARIANT_COPY_NUMBER, VariantCopyNumber, fields);
             else if(truthsetValue.FieldName.equals(FLD_CANON_EFFECT))
                 addStringValue(FLD_CANON_EFFECT, CanonicalEffect, fields);
+            else if(truthsetValue.FieldName.equals(FLD_HGVS_CODING))
+                addStringValue(FLD_HGVS_CODING, CanonicalHgvsCodingImpact, fields);
+            else if(truthsetValue.FieldName.equals(FLD_HGVS_PROTEIN))
+                addStringValue(FLD_HGVS_PROTEIN, CanonicalHgvsProteinImpact, fields);
             else if(truthsetValue.FieldName.equals(FLD_TUMOR_TOTAL_READ_COUNT))
                 addIntValue(FLD_TUMOR_TOTAL_READ_COUNT, TumorTotalReadCount, fields);
             else if(truthsetValue.FieldName.equals(FLD_TUMOR_SUPPORTING_READ_COUNT))

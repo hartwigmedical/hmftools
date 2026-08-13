@@ -34,6 +34,8 @@ public class TruthsetCache
     private static final String VALUE_ABSENT = "Absent";
     private static final String NO_SAMPLE_ID = "";
 
+    // expected format: SampleId (if has multiple),Category,Key,Status (optional),FieldValues or columns per field value
+
     public TruthsetCache()
     {
         mSampleDataMap = Maps.newHashMap();
@@ -134,6 +136,9 @@ public class TruthsetCache
 
                             int fieldIndex = entry.getValue();
                             String value = values[fieldIndex];
+
+                            if(value.equals(NOT_ASSESSED_NA)) // rather than assuming an empty column means not known
+                                continue;
 
                             truthsetValues.add(new TruthsetValue(itemKey, fieldName, value, requireAbsent));
                         }
