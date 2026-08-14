@@ -208,8 +208,8 @@ public class BamRecordEmitterTest
 
         LiftedRecord result = TarsTestFixtures.recordBuilder()
                 .alignments(List.of(
-                        new LiftedAlignment(CHR_1, 5000, "100M", 0, false, false, false, 0),
-                        new LiftedAlignment(CHR_1, 150, "50M100N50M", 0, true, false, true, 1)))
+                        new LiftedAlignment(CHR_1, 5000, "100M", 0, false, false, 0),
+                        new LiftedAlignment(CHR_1, 150, "50M100N50M", 0, true, true, 1)))
                 .primaryIndex(1)
                 .build();
         assertFalse("precondition: swap flips strand to forward", result.negativeStrand());

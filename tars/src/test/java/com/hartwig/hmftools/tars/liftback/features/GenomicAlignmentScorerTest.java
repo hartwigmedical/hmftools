@@ -30,7 +30,7 @@ public class GenomicAlignmentScorerTest
 
     private static LiftedAlignment refAlt(final String chrom, final int pos, final String cigar, final boolean forwardStrand)
     {
-        return new LiftedAlignment(chrom, pos, cigar, 0, false, false, forwardStrand, 0);
+        return new LiftedAlignment(chrom, pos, cigar, 0, false, forwardStrand, 0);
     }
 
     @Test

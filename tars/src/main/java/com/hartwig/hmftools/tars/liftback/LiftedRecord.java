@@ -47,11 +47,6 @@ public record LiftedRecord(
         return Math.max(liftedAlignments.size() - 1, 0);
     }
 
-    public boolean swapped()
-    {
-        return primaryIndex > 0;
-    }
-
     // false when nothing lifted; the placement accessors below throw in that case.
     public boolean hasPlacement()
     {
@@ -94,17 +89,6 @@ public record LiftedRecord(
         return primaryAlignment().TranscriptStrand;
     }
 
-    // Revise the chosen primary in place (overhang collapse, supplementary merge) so placement and alignment set cannot drift apart.
-    public LiftedRecord withRevisedPrimary(
-            final int newPos, final String newCigar, final int newUpdatedMapQuality, final String note)
-    {
-        List<LiftedAlignment> revised = new ArrayList<>(liftedAlignments);
-        revised.set(primaryIndex, primaryAlignment().withLiftedCigar(newPos, newCigar));
-
-        return new LiftedRecord(
-                newUpdatedMapQuality, numLoci, appendNote(notes, note), primaryIndex, revised);
-    }
-
     public LiftedRecord withLiftedAlignments(final List<LiftedAlignment> alignments)
     {
         return new LiftedRecord(updatedMapQuality, numLoci, notes, primaryIndex, alignments);
@@ -135,15 +119,6 @@ public record LiftedRecord(
         }
 
         return altEntries.isEmpty() ? null : String.join("", altEntries);
-    }
-
-    private static String appendNote(final String existing, final String note)
-    {
-        if(existing == null || existing.isEmpty())
-        {
-            return note;
-        }
-        return existing + ";" + note;
     }
 
 }

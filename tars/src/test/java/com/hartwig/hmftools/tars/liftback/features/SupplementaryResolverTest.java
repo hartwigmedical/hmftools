@@ -58,7 +58,7 @@ public class SupplementaryResolverTest
 
     private SupplementaryResolver defaultResolver(final Set<ChrBaseRegion> annotated)
     {
-        return new SupplementaryResolver(annotated, SupplementaryConfig.defaults());
+        return new SupplementaryResolver(annotated, TarsTestFixtures.supplementaryConfig());
     }
 
     @Test
@@ -93,7 +93,7 @@ public class SupplementaryResolverTest
                         "g", "gn", "tn", CHR1, -1,
                         List.of(new BaseRegion(100, 199), new BaseRegion(300, 399)))));
         SupplementaryResolver annotatedResolver = new SupplementaryResolver(
-                annotation, null, SupplementaryConfig.defaults());
+                annotation, null, TarsTestFixtures.supplementaryConfig());
 
         assertEquals(-1, annotatedResolver.spliceStrand(CHR1, 150, "50M100N50M"));
         assertEquals(1, SupplementaryResolver.motifStrand(bases("GT"), bases("AG")));
@@ -626,7 +626,7 @@ public class SupplementaryResolverTest
     public void testOppositeStrandSuppRejected()
     {
         SupplementaryResolver resolver = new SupplementaryResolver(
-                Collections.emptySet(), SupplementaryConfig.defaults());
+                Collections.emptySet(), TarsTestFixtures.supplementaryConfig());
 
         Candidate cand = candidate(
                 CHR1, true, READ_LEN, 1000, "94M57S",
@@ -767,7 +767,7 @@ public class SupplementaryResolverTest
     private static SupplementaryResolver resolverWithRef(final Set<ChrBaseRegion> annotated, final TestGenome genome)
     {
         return new SupplementaryResolver(
-                EnsemblAnnotationIndex.fromJunctions(annotated), genome.asRefGenome(), SupplementaryConfig.defaults());
+                EnsemblAnnotationIndex.fromJunctions(annotated), genome.asRefGenome(), TarsTestFixtures.supplementaryConfig());
     }
 
     private static TestGenome refWithCanonicalIntron(final int chromLen, final int intronStart, final int intronEnd)

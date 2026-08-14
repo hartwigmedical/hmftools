@@ -101,11 +101,6 @@ public class LiftBackDiscriminator
         return resolve(record, null, null);
     }
 
-    public LiftedRecord resolve(final SAMRecord record, final OverhangGate overhangGate)
-    {
-        return resolve(record, overhangGate, null);
-    }
-
     public LiftedRecord resolve(final SAMRecord record, final OverhangGate overhangGate, final LiftedRecord mate)
     {
         if(record.getReadUnmappedFlag())

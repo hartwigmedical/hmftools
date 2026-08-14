@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.pairedUnmapped
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.primaryRecord;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.refGenome;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.secondMateRecord;
+import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.supplementaryConfig;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.supplementaryRecord;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.threeExonContig;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.unpairedPrimaryRecord;
@@ -33,7 +34,6 @@ import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.tars.liftback.TarsTestFixtures.TestGenome;
 import com.hartwig.hmftools.tars.liftback.features.OverhangGate;
 import com.hartwig.hmftools.tars.liftback.features.GenomicAlignmentScorer;
-import com.hartwig.hmftools.tars.liftback.features.SupplementaryConfig;
 import com.hartwig.hmftools.tars.liftback.features.SupplementaryResolver;
 
 import org.junit.Test;
@@ -78,7 +78,7 @@ public class LiftBackGroupProcessorTest
     // a non-null resolver activates the AS-unmap gate, but with no annotated junctions it cannot improve any primary
     private static SupplementaryResolver noopSupplementary()
     {
-        return new SupplementaryResolver(Collections.emptySet(), SupplementaryConfig.defaults());
+        return new SupplementaryResolver(Collections.emptySet(), supplementaryConfig());
     }
 
     @Test
@@ -445,7 +445,7 @@ public class LiftBackGroupProcessorTest
         last.setReadBases(bases("A".repeat(151)));
         SupplementaryResolver resolver = new SupplementaryResolver(
                 Set.of(new ChrBaseRegion(CHR_1, 1050, 1999), new ChrBaseRegion(CHR_1, 2060, 2999)),
-                SupplementaryConfig.defaults());
+                supplementaryConfig());
 
         List<SAMRecord> emitted = process(List.of(primary, middle, last), resolver);
 
@@ -524,7 +524,7 @@ public class LiftBackGroupProcessorTest
     private static SupplementaryResolver contigSupplementary()
     {
         return new SupplementaryResolver(
-                EnsemblAnnotationIndex.fromContigEntries(List.of(threeExonContig())), null, SupplementaryConfig.defaults());
+                EnsemblAnnotationIndex.fromContigEntries(List.of(threeExonContig())), null, supplementaryConfig());
     }
 
     @Test

@@ -506,7 +506,7 @@ public class LiftBackDiscriminatorTest
 
     private static LiftedAlignment liftedAt(final String chrom, final int pos, final String cigar)
     {
-        return new LiftedAlignment(chrom, pos, cigar, 0, false, false, true, 0);
+        return new LiftedAlignment(chrom, pos, cigar, 0, false, true, 0);
     }
 
     @Test
@@ -558,14 +558,14 @@ public class LiftBackDiscriminatorTest
     private static final String SOFTCLIP_CIGAR = "50M51S";
 
     private static LiftedAlignment tx(
-            final String chrom, final int pos, final String cigar, final boolean softClipAtBoundary, final int numMismatches)
+            final String chrom, final int pos, final String cigar, final int numMismatches)
     {
-        return new LiftedAlignment(chrom, pos, cigar, numMismatches, true, softClipAtBoundary, true, 1);
+        return new LiftedAlignment(chrom, pos, cigar, numMismatches, true, true, 1);
     }
 
     private static LiftedAlignment ref(final String chrom, final int pos, final String cigar)
     {
-        return new LiftedAlignment(chrom, pos, cigar, 0, false, false, true, 0);
+        return new LiftedAlignment(chrom, pos, cigar, 0, false, true, 0);
     }
 
     private static List<LiftedAlignment> set(final LiftedAlignment... alignments)
@@ -590,21 +590,21 @@ public class LiftBackDiscriminatorTest
         // one locus, ref and tx on the same gapless cigar: the two views agree
         assertTrue(concordantOf(
                 ref(CHR1, 100, FULL_MATCH_CIGAR),
-                tx(CHR1, 100, FULL_MATCH_CIGAR, false, 0)));
+                tx(CHR1, 100, FULL_MATCH_CIGAR, 0)));
 
         // a surviving N means the two views disagree about splicing
         assertFalse(concordantOf(
                 ref(CHR1, 100, FULL_MATCH_CIGAR),
-                tx(CHR1, 100, TX_JUNCTION_CIGAR, false, 0)));
+                tx(CHR1, 100, TX_JUNCTION_CIGAR, 0)));
 
         // same locus but different cigars
         assertFalse(concordantOf(
                 ref(CHR1, 100, SOFTCLIP_CIGAR),
-                tx(CHR1, 100, FULL_MATCH_CIGAR, false, 0)));
+                tx(CHR1, 100, FULL_MATCH_CIGAR, 0)));
 
         // a single source cannot agree with itself, at one locus or several
         assertFalse(concordantOf(ref(CHR1, 100, FULL_MATCH_CIGAR)));
-        assertFalse(concordantOf(tx(CHR1, 100, TX_JUNCTION_CIGAR, false, 0)));
+        assertFalse(concordantOf(tx(CHR1, 100, TX_JUNCTION_CIGAR, 0)));
         assertFalse(concordantOf(
                 ref(CHR1, 100, FULL_MATCH_CIGAR),
                 ref(CHR2, 200, FULL_MATCH_CIGAR)));
@@ -612,7 +612,7 @@ public class LiftBackDiscriminatorTest
         // more than one locus is a contest even when the cigars match
         assertFalse(concordantOf(
                 ref(CHR1, 100, FULL_MATCH_CIGAR),
-                tx(CHR2, 200, FULL_MATCH_CIGAR, false, 0)));
+                tx(CHR2, 200, FULL_MATCH_CIGAR, 0)));
     }
 
     @Test
@@ -620,7 +620,7 @@ public class LiftBackDiscriminatorTest
     {
         // The overhang gate marks a collapsed XA alt Dropped before the discriminator runs; ignoring it leaves a lone
         // ref source, so the otherwise-agreeing pair is not concordant.
-        LiftedAlignment droppedTx = tx(CHR1, 100, FULL_MATCH_CIGAR, false, 0);
+        LiftedAlignment droppedTx = tx(CHR1, 100, FULL_MATCH_CIGAR, 0);
         droppedTx.Dropped = true;
 
         assertFalse(concordantOf(ref(CHR1, 100, FULL_MATCH_CIGAR), droppedTx));
@@ -630,7 +630,7 @@ public class LiftBackDiscriminatorTest
     private static List<LiftedAlignment> contestedSet()
     {
         LiftedAlignment self = ref(CHR1, 100, "50M51S");
-        LiftedAlignment txAlt = tx(CHR1, 100, "100M", false, 0);
+        LiftedAlignment txAlt = tx(CHR1, 100, "100M", 0);
         return set(self, txAlt);
     }
 
@@ -638,7 +638,7 @@ public class LiftBackDiscriminatorTest
     private static List<LiftedAlignment> multiLocusSet()
     {
         LiftedAlignment self = ref(CHR1, 100, "151M");
-        LiftedAlignment altB = tx(CHR2, 200, "151M", false, 0);
+        LiftedAlignment altB = tx(CHR2, 200, "151M", 0);
         return set(self, altB);
     }
 
@@ -713,7 +713,7 @@ public class LiftBackDiscriminatorTest
         // A spliced and a soft-clip placement at the same locus, tied on score: the junction wins outright, whatever
         // the seed. Seed 0 over set order [soft-clip, junction] would pick the soft-clip on a plain random tie.
         LiftedAlignment softClip = ref(CHR1, 100, SOFTCLIP_CIGAR);
-        LiftedAlignment junction = tx(CHR1, 100, TX_JUNCTION_CIGAR, false, 0);
+        LiftedAlignment junction = tx(CHR1, 100, TX_JUNCTION_CIGAR, 0);
         List<LiftedAlignment> alignments = set(softClip, junction);
         alignments.get(0).GenomicScore = 80;
         alignments.get(1).GenomicScore = 80;
@@ -729,7 +729,7 @@ public class LiftBackDiscriminatorTest
     {
         // Junction and soft-clip sit at different loci, so the same-locus rule does not fire and the tie is random.
         LiftedAlignment softClip = ref(CHR1, 100, SOFTCLIP_CIGAR);
-        LiftedAlignment junction = tx(CHR2, 200, TX_JUNCTION_CIGAR, false, 0);
+        LiftedAlignment junction = tx(CHR2, 200, TX_JUNCTION_CIGAR, 0);
         List<LiftedAlignment> alignments = set(softClip, junction);
         alignments.get(0).GenomicScore = 80;
         alignments.get(1).GenomicScore = 80;
@@ -767,8 +767,8 @@ public class LiftBackDiscriminatorTest
         // Self and a tx alt lift to the same locus and CIGAR, a third tx alt is a distinct spliced placement. The
         // identical pair collapses, so seed 1 ties over two placements and lands on the spliced one, not the duplicate.
         LiftedAlignment self = ref(CHR1, 100, "100M");
-        LiftedAlignment txSame = tx(CHR1, 100, "100M", false, 0);
-        LiftedAlignment txSpliced = tx(CHR1, 100, TX_JUNCTION_CIGAR, false, 0);
+        LiftedAlignment txSame = tx(CHR1, 100, "100M", 0);
+        LiftedAlignment txSpliced = tx(CHR1, 100, TX_JUNCTION_CIGAR, 0);
         List<LiftedAlignment> alignments = set(self, txSame, txSpliced);
         alignments.get(0).GenomicScore = 100;
         alignments.get(1).GenomicScore = 100;

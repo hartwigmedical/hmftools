@@ -2,7 +2,8 @@ package com.hartwig.hmftools.tars.liftback;
 
 import static com.hartwig.hmftools.common.bamops.BamToolName.BAMTOOL_PATH;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeFile;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeVersion;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
@@ -20,7 +21,6 @@ import static com.hartwig.hmftools.tars.common.TarsConstants.MAX_SUPP_READ_OVERL
 import static com.hartwig.hmftools.tars.common.TarsConstants.MIN_IMPLIED_INTRON_LENGTH;
 
 import com.hartwig.hmftools.common.bamops.BamToolName;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.tars.liftback.features.SupplementaryConfig;
 
@@ -47,7 +47,6 @@ public class TarsConfig
     public final String SampleId;
     public final String InputBam;
     public final String RefGenomeFile;
-    public final RefGenomeVersion RefGenVersion;
     public final String ContigSidecarFile;
     public final SupplementaryConfig Supplementary;
     public final String RnaUnmapRegionsFile;
@@ -61,7 +60,6 @@ public class TarsConfig
         SampleId = configBuilder.getValue(SAMPLE);
         InputBam = configBuilder.getValue(INPUT_BAM);
         RefGenomeFile = configBuilder.getValue(REF_GENOME);
-        RefGenVersion = RefGenomeVersion.from(configBuilder);
         ContigSidecarFile = configBuilder.getValue(CONTIG_SIDECAR);
         Supplementary = new SupplementaryConfig(
                 configBuilder.getInteger(SUPP_IMPLIED_MIN_INTRON_LENGTH),
@@ -122,7 +120,9 @@ public class TarsConfig
     {
         configBuilder.addConfigItem(SAMPLE, true, SAMPLE_DESC);
         configBuilder.addPath(INPUT_BAM, true, INPUT_BAM_DESC);
-        addRefGenomeConfig(configBuilder, true);
+        addRefGenomeFile(configBuilder, true);
+        // liftback works off the sidecar, not the version, but existing command lines pass it
+        addRefGenomeVersion(configBuilder);
         configBuilder.addPath(CONTIG_SIDECAR, true, CONTIG_SIDECAR_DESC);
         configBuilder.addInteger(
                 SUPP_IMPLIED_MIN_INTRON_LENGTH,
