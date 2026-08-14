@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.purple.reseg;
 
+import static java.lang.Math.min;
+
 import static com.hartwig.hmftools.common.utils.Doubles.round;
 import static com.hartwig.hmftools.purple.PurpleConstants.RESEG_MAX_SEGMENTATION_PENALTY_RATIO;
 import static com.hartwig.hmftools.purple.PurpleConstants.RESEG_RATIO_BUCKET_MAX;
@@ -7,10 +9,10 @@ import static com.hartwig.hmftools.purple.PurpleConstants.RESEG_TROUGH_MIN_DIFF;
 import static com.hartwig.hmftools.purple.PurpleConstants.RESEG_TROUGH_MIN_GAP;
 import static com.hartwig.hmftools.purple.PurpleConstants.RESEG_TROUGH_MIN_RATIO;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.OptionalInt;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
 import com.hartwig.hmftools.purple.reseg.RatioBucketSeries.Bucket;
 
@@ -28,7 +30,7 @@ public final class PenaltyCalculator
 
     public static double calculatePenalty(final List<ObservedRegion> segmentsInOrder)
     {
-        RatioBucketSeries bucketSeries = new RatioBucketSeries();
+        RatioBucketSeries rawTumorRatioDiffs = new RatioBucketSeries();
 
         for(int i = 1; i < segmentsInOrder.size(); i++)
         {
@@ -39,50 +41,50 @@ public final class PenaltyCalculator
                 continue;
 
             double ratioChange = Math.abs(curr.observedTumorRatio() - prev.observedTumorRatio());
-            ratioChange = Math.min(round(ratioChange, 2), RESEG_RATIO_BUCKET_MAX);
+            ratioChange = min(round(ratioChange, 2), RESEG_RATIO_BUCKET_MAX);
 
-            bucketSeries.addCount(ratioChange, 1);
+            rawTumorRatioDiffs.addCount(ratioChange, 1);
         }
 
-        List<Bucket> series = bucketSeries.buildSmoothedSeries();
+        List<Bucket> tumorRatioDiffs = rawTumorRatioDiffs.buildSmoothedSeries();
 
-        if(series.size() < 2)
+        if(tumorRatioDiffs.size() < 2)
             return DEFAULT_PENALTY;
 
-        List<Integer> peakIndices = PeakTroughFinder.findLocalExtremaIndices(series, true);
-        List<Integer> troughIndices = PeakTroughFinder.findLocalExtremaIndices(series, false);
+        List<Integer> peakIndices = PeakTroughFinder.findLocalPeakOrTroughIndices(tumorRatioDiffs, true);
+        List<Integer> troughIndices = PeakTroughFinder.findLocalPeakOrTroughIndices(tumorRatioDiffs, false);
 
-        // boundary rule: bucket 0 is a synthetic trough or peak depending on the initial slope
-        if(series.get(0).value() < series.get(1).value())
+        // add the first bucket as a peak or trough
+        if(tumorRatioDiffs.get(0).value() < tumorRatioDiffs.get(1).value())
             troughIndices.add(0, 0);
-        else if(series.get(0).value() > series.get(1).value())
+        else if(tumorRatioDiffs.get(0).value() > tumorRatioDiffs.get(1).value())
             peakIndices.add(0, 0);
 
-        List<PeakTroughData> validTroughs = new ArrayList<>();
+        List<PeakTroughData> validTroughs = Lists.newArrayList();
 
         for(int troughIndex : troughIndices)
         {
-            double troughValue = series.get(troughIndex).value();
+            double troughValue = tumorRatioDiffs.get(troughIndex).value();
 
-            OptionalInt prevPeak = PeakTroughFinder.findNearestSatisfyingBelow(
-                    peakIndices, troughIndex, peakIndex -> isValidTroughSupport(troughValue, series.get(peakIndex).value()));
+            OptionalInt prevPeak = PeakTroughFinder.findNearestBelowRequired(
+                    peakIndices, troughIndex, peakIndex -> isValidTroughSupport(troughValue, tumorRatioDiffs.get(peakIndex).value()));
 
-            OptionalInt nextPeak = PeakTroughFinder.findNearestSatisfyingAbove(
-                    peakIndices, troughIndex, peakIndex -> isValidTroughSupport(troughValue, series.get(peakIndex).value()));
+            OptionalInt nextPeak = PeakTroughFinder.findNearestAboveRequired(
+                    peakIndices, troughIndex, peakIndex -> isValidTroughSupport(troughValue, tumorRatioDiffs.get(peakIndex).value()));
 
             if(prevPeak.isEmpty() || nextPeak.isEmpty())
                 continue;
 
             validTroughs.add(new PeakTroughData(
-                    series.get(troughIndex).level(), troughValue,
-                    series.get(prevPeak.getAsInt()).level(), series.get(nextPeak.getAsInt()).level()));
+                    tumorRatioDiffs.get(troughIndex).level(), troughValue,
+                    tumorRatioDiffs.get(prevPeak.getAsInt()).level(), tumorRatioDiffs.get(nextPeak.getAsInt()).level()));
         }
 
-        List<PeakTroughData> consolidated = PeakTroughFinder.consolidate(
+        List<PeakTroughData> consolidatedTroughs = PeakTroughFinder.consolidateResults(
                 validTroughs, (left, right) -> right.Level - left.Level >= RESEG_TROUGH_MIN_GAP, x -> x.Value, false);
 
-        double lowestTroughLevel = consolidated.stream().mapToDouble(x -> x.Level).min().orElse(RESEG_MAX_SEGMENTATION_PENALTY_RATIO);
-        double penaltyBucket = Math.min(lowestTroughLevel, RESEG_MAX_SEGMENTATION_PENALTY_RATIO);
+        double lowestTroughLevel = consolidatedTroughs.stream().mapToDouble(x -> x.Level).min().orElse(RESEG_MAX_SEGMENTATION_PENALTY_RATIO);
+        double penaltyBucket = min(lowestTroughLevel, RESEG_MAX_SEGMENTATION_PENALTY_RATIO);
 
         return calcPenality(penaltyBucket);
     }

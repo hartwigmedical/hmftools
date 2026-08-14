@@ -9,6 +9,8 @@ import static com.hartwig.hmftools.purple.PurpleConstants.RESEG_ROLLING_AVG_WIND
 import java.util.ArrayList;
 import java.util.List;
 
+import com.google.common.collect.Lists;
+
 public final class RatioBucketSeries
 {
     // used to cache and manipulate binned observed tumor ratios and diffs
@@ -33,12 +35,11 @@ public final class RatioBucketSeries
         mCounts[index] += weight;
     }
 
-    // rolling-average, edge-trimmed (buckets without a full window are dropped, not zero-filled),
-    // then plateau-collapsed, ready for peak/trough scanning
     public List<Bucket> buildSmoothedSeries()
     {
+        // rolling-average, edge-trimmed (buckets without a full window are dropped, then duplicates are removed
         int half = RESEG_ROLLING_AVG_WINDOW / 2;
-        List<Bucket> smoothed = new ArrayList<>();
+        List<Bucket> smoothed = Lists.newArrayList();
 
         for(int i = half; i < mBucketCount - half; i++)
         {
@@ -53,10 +54,10 @@ public final class RatioBucketSeries
             smoothed.add(new Bucket(level, avg));
         }
 
-        return collapsePlateaus(smoothed);
+        return removeDuplicates(smoothed);
     }
 
-    private static List<Bucket> collapsePlateaus(final List<Bucket> series)
+    private static List<Bucket> removeDuplicates(final List<Bucket> series)
     {
         List<Bucket> collapsed = new ArrayList<>();
 

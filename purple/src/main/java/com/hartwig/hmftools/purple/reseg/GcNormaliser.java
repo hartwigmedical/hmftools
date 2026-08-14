@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.purple.reseg;
 
+import static java.lang.Double.NaN;
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.common.utils.Doubles.median;
 import static com.hartwig.hmftools.common.utils.Doubles.round;
 import static com.hartwig.hmftools.purple.PurpleConstants.RESEG_GC_PERCENTILES;
@@ -19,6 +22,8 @@ import java.util.TreeMap;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
@@ -26,42 +31,59 @@ import com.hartwig.hmftools.purple.region.ObservedRegion;
 public final class GcNormaliser
 {
     // per-sample bucketed GC-content normalisation of observedTumorRatio, restricted to diploid
-    // segments with a positive bafCount (and, if a primary ratio peak was identified, within its bounds)
-    private GcNormaliser() {}
-
+    // segments with a positive bafCount. If a primary ratio peak was found, also restrict to with its bounds.
     private static final int MAX_SUPPRESSION_PASSES = 20;
 
     public static List<ObservedRegion> normalise(final List<ObservedRegion> allSegments, final Optional<RatioPeakResult> peakResult)
     {
-        List<GcBin> allBins = GcBin.allBins();
+        List<GcBin> allBins = GcBin.createdBins();
 
         // the set of bins actually touched by any segment in the full sample, used to resolve the
         // out-of-range LOW/HIGH clamp bins to the observed extremes rather than the theoretical ones
         Set<GcBin> observedBins = Sets.newHashSet();
+
+        GcBin lowClampBin = null;
+        GcBin highClampBin = null;
+
         for(ObservedRegion segment : allSegments)
         {
-            findBin(segment.gcContent(), allBins).ifPresent(observedBins::add);
+            GcBin gcBin = findBin(segment.gcContent(), allBins);
+            if(gcBin != null)
+            {
+                observedBins.add(gcBin);
+
+                if(lowClampBin == null || gcBin.Lower < lowClampBin.Lower)
+                    lowClampBin = gcBin;
+
+                if(highClampBin == null || gcBin.Upper > highClampBin.Upper)
+                    highClampBin = gcBin;
+
+                if(observedBins.size() == allBins.size())
+                    break;
+            }
         }
 
-        GcBin lowClampBin = observedBins.isEmpty()
-                ? allBins.get(0) : Collections.min(observedBins, Comparator.comparingDouble(b -> b.Lower));
+        if(lowClampBin == null)
+            lowClampBin = allBins.get(0);
 
-        GcBin highClampBin = observedBins.isEmpty()
-                ? allBins.get(allBins.size() - 1) : Collections.max(observedBins, Comparator.comparingDouble(b -> b.Upper));
+        if(highClampBin == null)
+            highClampBin = allBins.get(allBins.size() - 1);
 
-        List<ObservedRegion> population = allSegments.stream()
+        List<ObservedRegion> validIputSegments = allSegments.stream()
                 .filter(x -> x.germlineStatus() == GermlineStatus.DIPLOID && x.bafCount() > 0)
                 .filter(x -> peakResult.map(r -> x.observedTumorRatio() >= r.LeftBound && x.observedTumorRatio() <= r.RightBound).orElse(true))
                 .collect(Collectors.toList());
 
-        Map<GcBin, Double> gcAdjustments = calculateGcAdjustments(population, allBins);
+        Map<GcBin,Double> gcAdjustments = calculateGcAdjustments(validIputSegments, allBins);
 
-        List<ObservedRegion> result = new ArrayList<>(allSegments.size());
+        List<ObservedRegion> gcAdjustedRegions = Lists.newArrayListWithCapacity(allSegments.size());
 
         for(ObservedRegion segment : allSegments)
         {
-            GcBin bin = findBin(segment.gcContent(), allBins)
-                    .orElseGet(() -> segment.gcContent() <= lowClampBin.Lower ? lowClampBin : highClampBin);
+            GcBin bin = findBin(segment.gcContent(), allBins);
+
+            if(bin == null)
+                bin = segment.gcContent() <= lowClampBin.Lower ? lowClampBin : highClampBin;
 
             double adjustment = gcAdjustments.getOrDefault(bin, 1.0);
 
@@ -72,24 +94,52 @@ public final class GcNormaliser
 
             ObservedRegion newRegion = ObservedRegion.fromOther(segment);
             newRegion.setObservedTumorRatio(newRatio);
-            result.add(newRegion);
+            gcAdjustedRegions.add(newRegion);
         }
 
-        return result;
+        return gcAdjustedRegions;
     }
 
-    static Map<GcBin, Double> calculateGcAdjustments(final List<ObservedRegion> population, final List<GcBin> allBins)
+    static Map<GcBin, Double> calculateGcAdjustments(final List<ObservedRegion> regions, final List<GcBin> allBins)
     {
-        double totalWeight = population.stream().mapToDouble(s -> s.bafCount()).sum();
+        double totalWeight = regions.stream().mapToDouble(s -> s.bafCount()).sum();
 
         double[] binProportion = new double[allBins.size()];
+
+        List<List<ObservedRegion>> regionsByGcBin = Lists.newArrayListWithCapacity(allBins.size());
 
         for(int i = 0; i < allBins.size(); i++)
         {
             GcBin bin = allBins.get(i);
-            double binWeight = population.stream().filter(x -> bin.contains(x.gcContent())).mapToDouble(s -> s.bafCount()).sum();
+
+            List<ObservedRegion> binRegions = Lists.newArrayList();
+            regionsByGcBin.add(binRegions);
+
+            double binWeight = 0;
+
+            for(ObservedRegion region : regions)
+            {
+                int bafCount = region.bafCount();
+                if(bin.contains(region.gcContent()))
+                {
+                    binWeight += bafCount;
+                    binRegions.add(region);
+                }
+            }
+
             binProportion[i] = totalWeight > 0 ? binWeight / totalWeight : 0;
         }
+
+        /*
+        for(int i = 0; i < allBins.size(); i++)
+        {
+            GcBin bin = allBins.get(i);
+            double binWeight = regions.stream().filter(x -> bin.contains(x.gcContent())).mapToDouble(s -> s.bafCount()).sum();
+            binProportion[i] = totalWeight > 0 ? binWeight / totalWeight : 0;
+        }
+        */
+
+        List<RatioBafCount> allSegmentRatioCounts = buildRatioBafCounts(regions);
 
         double[][] grid = new double[allBins.size()][RESEG_GC_PERCENTILES.length];
 
@@ -97,18 +147,52 @@ public final class GcNormaliser
         {
             double percentile = RESEG_GC_PERCENTILES[p];
 
-            OptionalDouble allValue = weightedPercentileAcross(population, s -> true, percentile);
+            OptionalDouble allValue = weightedPercentileAcross(regions, s -> true, percentile);
 
             for(int i = 0; i < allBins.size(); i++)
             {
                 GcBin bin = allBins.get(i);
-                OptionalDouble binValue = weightedPercentileAcross(population, x -> bin.contains(x.gcContent()), percentile);
+
+                List<ObservedRegion> gcSegments = regionsByGcBin.get(i);
+                List<RatioBafCount> gcSegmentRatioCounts = buildRatioBafCounts(gcSegments);
+
+                Double allSegsPercRatio = weightRatioAcrossPercentile(allSegmentRatioCounts, percentile);
+                Double gcSegsPercRatio = weightRatioAcrossPercentile(gcSegmentRatioCounts, percentile);
+
+                OptionalDouble binValue = weightedPercentileAcross(regions, x -> bin.contains(x.gcContent()), percentile);
+
 
                 grid[i][p] = (binValue.isPresent() && allValue.isPresent() && allValue.getAsDouble() != 0)
                         ? binValue.getAsDouble() / allValue.getAsDouble()
-                        : Double.NaN;
+                        : NaN;
+
+                if(allSegsPercRatio != null && gcSegsPercRatio != null && allSegsPercRatio != null)
+                    grid[i][p] = gcSegsPercRatio / allSegsPercRatio;
+                else
+                    grid[i][p] = NaN;
             }
         }
+
+        /*
+        double[][] grid = new double[allBins.size()][RESEG_GC_PERCENTILES.length];
+
+        for(int p = 0; p < RESEG_GC_PERCENTILES.length; p++)
+        {
+            double percentile = RESEG_GC_PERCENTILES[p];
+
+            OptionalDouble allValue = weightedPercentileAcross(regions, s -> true, percentile);
+
+            for(int i = 0; i < allBins.size(); i++)
+            {
+                GcBin bin = allBins.get(i);
+                OptionalDouble binValue = weightedPercentileAcross(regions, x -> bin.contains(x.gcContent()), percentile);
+
+                grid[i][p] = (binValue.isPresent() && allValue.isPresent() && allValue.getAsDouble() != 0)
+                        ? binValue.getAsDouble() / allValue.getAsDouble()
+                        : NaN;
+            }
+        }
+        */
 
         suppressSparseValues(grid, binProportion);
 
@@ -124,7 +208,7 @@ public final class GcNormaliser
                     valid.add(v);
             }
 
-            adjustments.put(allBins.get(i), valid.isEmpty() ? Double.NaN : median(valid));
+            adjustments.put(allBins.get(i), valid.isEmpty() ? NaN : median(valid));
         }
 
         return adjustments;
@@ -155,7 +239,7 @@ public final class GcNormaliser
                     if(!Double.isNaN(curr) && !Double.isNaN(prev)
                     && Math.abs(curr - prev) > RESEG_GC_SPARSE_MIN_JUMP && binProportion[i] < RESEG_GC_SPARSE_MAX_PROPORTION)
                     {
-                        grid[i][p] = Double.NaN;
+                        grid[i][p] = NaN;
                     }
                 }
             }
@@ -202,14 +286,77 @@ public final class GcNormaliser
         return WeightedPercentile.compute(pairs, percentile);
     }
 
-    private static Optional<GcBin> findBin(double gcContent, final List<GcBin> allBins)
+    private static class RatioBafCount
     {
-        for(GcBin bin : allBins)
+        public final double Ratio;
+        public int BafCount;
+
+        public RatioBafCount(double ratio)
         {
-            if(bin.contains(gcContent))
-                return Optional.of(bin);
+            Ratio = ratio;
+            BafCount = 0;
         }
 
-        return Optional.empty();
+        public String toString() { return format("%.4f: %d", Ratio, BafCount); }
+    }
+
+    private static List<RatioBafCount> buildRatioBafCounts(final List<ObservedRegion> segments)
+    {
+        List<RatioBafCount> ratioBafCounts = Lists.newArrayList();
+
+        for(ObservedRegion segment : segments)
+        {
+            RatioBafCount ratioBafCount = ratioBafCounts.stream()
+                    .filter(x -> x.Ratio == segment.observedTumorRatio()).findFirst().orElse(null);
+
+            if(ratioBafCount == null)
+            {
+                ratioBafCount = new RatioBafCount(segment.observedTumorRatio());
+                ratioBafCounts.add(ratioBafCount);
+            }
+
+            ratioBafCount.BafCount += segment.bafCount();
+        }
+
+        Collections.sort(ratioBafCounts, Comparator.comparingDouble(x -> x.Ratio));
+
+        return ratioBafCounts;
+    }
+
+    private static Double weightRatioAcrossPercentile(final List<RatioBafCount> ratioBafCounts, double percentile)
+    {
+        double totalWeight = ratioBafCounts.stream().mapToDouble(x -> x.BafCount).sum();
+
+        if(totalWeight <= 0)
+            return null;
+
+        double cumulative = 0;
+        Double lower = null;
+        Double upper = null;
+
+        for(RatioBafCount ratioBafCount : ratioBafCounts)
+        {
+            cumulative += ratioBafCount.BafCount;
+            double cumulativeProportion = cumulative / totalWeight;
+
+            if(lower == null && cumulativeProportion >= percentile)
+                lower = ratioBafCount.Ratio;
+
+            if(upper == null && cumulativeProportion > percentile)
+                upper = ratioBafCount.Ratio;
+
+            if(lower != null && upper != null)
+                break;
+        }
+
+        if(lower == null || upper == null)
+            return null;
+
+        return (lower + upper) / 2;
+    }
+
+    private static GcBin findBin(double gcContent, final List<GcBin> allBins)
+    {
+        return allBins.stream().filter(x -> x.contains(gcContent)).findFirst().orElse(null);
     }
 }

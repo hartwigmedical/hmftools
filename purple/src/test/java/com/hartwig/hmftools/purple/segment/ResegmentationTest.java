@@ -110,7 +110,7 @@ public class ResegmentationTest
             pos += 1000;
         }
 
-        Optional<RatioPeakResult> result = RatioPeakAnalyser.analyse(segments);
+        Optional<RatioPeakResult> result = RatioPeakAnalyser.findRatioPeak(segments);
 
         assertTrue(result.isPresent());
 
@@ -134,7 +134,7 @@ public class ResegmentationTest
             pos += 1000;
         }
 
-        Optional<RatioPeakResult> result = RatioPeakAnalyser.analyse(segments);
+        Optional<RatioPeakResult> result = RatioPeakAnalyser.findRatioPeak(segments);
 
         assertFalse(result.isPresent());
     }
@@ -204,10 +204,10 @@ public class ResegmentationTest
     {
         List<Bucket> series = bucketsOf(1, 3, 2, 5, 1, 4, 2);
 
-        List<Integer> peaks = PeakTroughFinder.findLocalExtremaIndices(series, true);
+        List<Integer> peaks = PeakTroughFinder.findLocalPeakOrTroughIndices(series, true);
         assertEquals(Arrays.asList(1, 3, 5), peaks);
 
-        List<Integer> troughs = PeakTroughFinder.findLocalExtremaIndices(series, false);
+        List<Integer> troughs = PeakTroughFinder.findLocalPeakOrTroughIndices(series, false);
         assertEquals(Arrays.asList(2, 4), troughs);
     }
 
@@ -218,22 +218,22 @@ public class ResegmentationTest
         List<Integer> candidates = Arrays.asList(1, 3, 5);
 
         // only candidate 3 satisfies -> nearest-below search from center 4 should find it directly
-        OptionalInt belowDirect = PeakTroughFinder.findNearestSatisfyingBelow(candidates, 4, idx -> idx == 3);
+        OptionalInt belowDirect = PeakTroughFinder.findNearestBelowRequired(candidates, 4, idx -> idx == 3);
         assertTrue(belowDirect.isPresent());
         assertEquals(3, belowDirect.getAsInt());
 
         // only candidate 1 satisfies (not the nearer candidate 3) -> must walk further out
-        OptionalInt belowFurther = PeakTroughFinder.findNearestSatisfyingBelow(candidates, 4, idx -> idx == 1);
+        OptionalInt belowFurther = PeakTroughFinder.findNearestBelowRequired(candidates, 4, idx -> idx == 1);
         assertTrue(belowFurther.isPresent());
         assertEquals(1, belowFurther.getAsInt());
 
         // only candidate 5 satisfies, searching above center 2 (must skip nearer candidate 3)
-        OptionalInt above = PeakTroughFinder.findNearestSatisfyingAbove(candidates, 2, idx -> idx == 5);
+        OptionalInt above = PeakTroughFinder.findNearestAboveRequired(candidates, 2, idx -> idx == 5);
         assertTrue(above.isPresent());
         assertEquals(5, above.getAsInt());
 
         // nothing satisfies
-        OptionalInt none = PeakTroughFinder.findNearestSatisfyingBelow(candidates, 4, idx -> false);
+        OptionalInt none = PeakTroughFinder.findNearestBelowRequired(candidates, 4, idx -> false);
         assertFalse(none.isPresent());
     }
 
@@ -245,7 +245,7 @@ public class ResegmentationTest
                 new PeakTroughData(0.15, 3, 0, 0),
                 new PeakTroughData(0.30, 1, 0, 0));
 
-        List<PeakTroughData> result = PeakTroughFinder.consolidate(
+        List<PeakTroughData> result = PeakTroughFinder.consolidateResults(
                 troughs, (left, right) -> right.Level - left.Level >= 0.1, x -> x.Value, false);
 
         assertEquals(2, result.size());
@@ -259,7 +259,7 @@ public class ResegmentationTest
         PeakTroughData a = new PeakTroughData(0.10, 5, 0, 0.20);
         PeakTroughData b = new PeakTroughData(0.15, 8, 0.12, 0.25);
 
-        List<PeakTroughData> result = PeakTroughFinder.consolidate(
+        List<PeakTroughData> result = PeakTroughFinder.consolidateResults(
                 Arrays.asList(a, b),
                 (left, right) -> right.Level - left.SupportAboveLevel >= 0.1 && right.SupportBelowLevel - left.Level >= 0.1,
                 x -> x.Value, true);
@@ -276,10 +276,10 @@ public class ResegmentationTest
                 new PeakTroughData(0.15, 3, 0, 0),
                 new PeakTroughData(0.30, 1, 0, 0));
 
-        List<PeakTroughData> once = PeakTroughFinder.consolidate(
+        List<PeakTroughData> once = PeakTroughFinder.consolidateResults(
                 troughs, (left, right) -> right.Level - left.Level >= 0.1, x -> x.Value, false);
 
-        List<PeakTroughData> twice = PeakTroughFinder.consolidate(
+        List<PeakTroughData> twice = PeakTroughFinder.consolidateResults(
                 once, (left, right) -> right.Level - left.Level >= 0.1, x -> x.Value, false);
 
         assertEquals(once.size(), twice.size());

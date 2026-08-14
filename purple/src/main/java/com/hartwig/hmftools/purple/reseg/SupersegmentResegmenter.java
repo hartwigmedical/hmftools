@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.purple.reseg;
 
+import static java.lang.Math.abs;
+import static java.lang.System.arraycopy;
+
 import static com.hartwig.hmftools.purple.PurpleConstants.RESEG_BAF_WEIGHT_THRESHOLD;
 import static com.hartwig.hmftools.purple.PurpleConstants.RESEG_MAX_SUPERSEGMENT_SIZE_FOR_BRUTE_FORCE;
 import static com.hartwig.hmftools.purple.region.ObservedRegion.fromOther;
@@ -7,6 +10,8 @@ import static com.hartwig.hmftools.purple.region.ObservedRegion.fromOther;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.ToDoubleFunction;
+
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
 
 public final class SupersegmentResegmenter
@@ -20,13 +25,13 @@ public final class SupersegmentResegmenter
         List<List<ObservedRegion>> bestPartition = findBestPartition(members, segmentationPenalty);
 
         if(bestPartition == null)
-            return List.of(aggregate(members));
+            return List.of(aggregateRegions(members));
 
         List<ObservedRegion> result = new ArrayList<>();
 
         for(List<ObservedRegion> subsegment : bestPartition)
         {
-            result.add(aggregate(subsegment));
+            result.add(aggregateRegions(subsegment));
         }
 
         return result;
@@ -50,7 +55,7 @@ public final class SupersegmentResegmenter
             return result;
         }
 
-        return List.of(aggregate(members));
+        return List.of(aggregateRegions(members));
     }
 
     private static int findLargestAdjacentDiffIndex(final List<ObservedRegion> members)
@@ -60,7 +65,7 @@ public final class SupersegmentResegmenter
 
         for(int i = 1; i < members.size(); i++)
         {
-            double diff = Math.abs(members.get(i).observedTumorRatio() - members.get(i - 1).observedTumorRatio());
+            double diff = abs(members.get(i).observedTumorRatio() - members.get(i - 1).observedTumorRatio());
 
             if(diff >= bestDiff)
             {
@@ -112,11 +117,11 @@ public final class SupersegmentResegmenter
         if(bestPartitionPoints == null)
             return null;
 
-        List<List<ObservedRegion>> result = new ArrayList<>();
+        List<List<ObservedRegion>> result = Lists.newArrayList();
 
         for(int j = 0; j < bestPartitionPoints.length - 1; j++)
         {
-            result.add(new ArrayList<>(members.subList(bestPartitionPoints[j], bestPartitionPoints[j + 1])));
+            result.add(Lists.newArrayList(members.subList(bestPartitionPoints[j], bestPartitionPoints[j + 1])));
         }
 
         return result;
@@ -132,9 +137,9 @@ public final class SupersegmentResegmenter
         for(int i = 0; i < m; i++)
         {
             double ratio = subsegmentMembers.get(i).observedTumorRatio();
-            double prevDiff = (i > 0) ? Math.abs(ratio - subsegmentMembers.get(i - 1).observedTumorRatio()) : 0;
-            double nextDiff = (i < m - 1) ? Math.abs(ratio - subsegmentMembers.get(i + 1).observedTumorRatio()) : 0;
-            double meanDiff = Math.abs(ratio - mean);
+            double prevDiff = (i > 0) ? abs(ratio - subsegmentMembers.get(i - 1).observedTumorRatio()) : 0;
+            double nextDiff = (i < m - 1) ? abs(ratio - subsegmentMembers.get(i + 1).observedTumorRatio()) : 0;
+            double meanDiff = abs(ratio - mean);
 
             double deviation = Math.max(prevDiff, Math.max(nextDiff, meanDiff));
             total += deviation * deviation;
@@ -143,7 +148,7 @@ public final class SupersegmentResegmenter
         return total;
     }
 
-    static ObservedRegion aggregate(final List<ObservedRegion> members)
+    static ObservedRegion aggregateRegions(final List<ObservedRegion> members)
     {
         ObservedRegion first = members.get(0);
         ObservedRegion last = members.get(members.size() - 1);
@@ -221,7 +226,7 @@ public final class SupersegmentResegmenter
     {
         int[] padded = new int[cuts.length + 2];
         padded[0] = 0;
-        System.arraycopy(cuts, 0, padded, 1, cuts.length);
+        arraycopy(cuts, 0, padded, 1, cuts.length);
         padded[padded.length - 1] = n;
         return padded;
     }

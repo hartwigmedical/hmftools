@@ -8,7 +8,6 @@ import static com.hartwig.hmftools.purple.PurpleConstants.RESEG_PEAK_MIN_RATIO;
 import static com.hartwig.hmftools.purple.PurpleConstants.RESEG_RATIO_BUCKET_MAX;
 import static com.hartwig.hmftools.purple.PurpleConstants.RESEG_RATIO_BUCKET_MIN;
 
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -16,6 +15,7 @@ import java.util.OptionalInt;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
 import com.hartwig.hmftools.purple.reseg.RatioBucketSeries.Bucket;
@@ -26,9 +26,9 @@ public final class RatioPeakAnalyser
     // segments with a positive bafCount) used to scope the GC normalisation
     private RatioPeakAnalyser() {}
 
-    public static Optional<RatioPeakResult> analyse(final List<ObservedRegion> segments)
+    public static Optional<RatioPeakResult> findRatioPeak(final List<ObservedRegion> segments)
     {
-        RatioBucketSeries bucketSeries = new RatioBucketSeries();
+        RatioBucketSeries rawTumorRatios = new RatioBucketSeries();
 
         for(ObservedRegion segment : segments)
         {
@@ -36,50 +36,50 @@ public final class RatioPeakAnalyser
                 continue;
 
             double ratio = round(segment.observedTumorRatio(), 2);
-            bucketSeries.addCount(ratio, segment.bafCount());
+            rawTumorRatios.addCount(ratio, segment.bafCount());
         }
 
-        List<Bucket> series = bucketSeries.buildSmoothedSeries();
+        List<Bucket> tumorRatios = rawTumorRatios.buildSmoothedSeries();
 
-        if(series.size() < 2)
+        if(tumorRatios.size() < 2)
             return Optional.empty();
 
-        List<Integer> peakIndices = PeakTroughFinder.findLocalExtremaIndices(series, true);
+        List<Integer> peakIndices = PeakTroughFinder.findLocalPeakOrTroughIndices(tumorRatios, true);
 
-        double totalWeight = series.stream().mapToDouble(Bucket::value).sum();
+        double totalWeight = tumorRatios.stream().mapToDouble(Bucket::value).sum();
 
-        List<Integer> allIndices = IntStream.range(0, series.size()).boxed().collect(Collectors.toList());
+        List<Integer> allIndices = IntStream.range(0, tumorRatios.size()).boxed().collect(Collectors.toList());
 
-        List<PeakTroughData> validPeaks = new ArrayList<>();
+        List<PeakTroughData> validPeaks = Lists.newArrayList();
 
         for(int peakIndex : peakIndices)
         {
-            double peakValue = series.get(peakIndex).value();
+            double peakValue = tumorRatios.get(peakIndex).value();
 
             if(totalWeight <= 0 || peakValue / totalWeight < RESEG_PEAK_MIN_PROPORTION)
                 continue;
 
-            OptionalInt leftTrough = PeakTroughFinder.findNearestSatisfyingBelow(
-                    allIndices, peakIndex, otherIndex -> isValidPeakSupport(peakValue, series.get(otherIndex).value()));
+            OptionalInt leftTrough = PeakTroughFinder.findNearestBelowRequired(
+                    allIndices, peakIndex, otherIndex -> isValidPeakSupport(peakValue, tumorRatios.get(otherIndex).value()));
 
-            OptionalInt rightTrough = PeakTroughFinder.findNearestSatisfyingAbove(
-                    allIndices, peakIndex, otherIndex -> isValidPeakSupport(peakValue, series.get(otherIndex).value()));
+            OptionalInt rightTrough = PeakTroughFinder.findNearestAboveRequired(
+                    allIndices, peakIndex, otherIndex -> isValidPeakSupport(peakValue, tumorRatios.get(otherIndex).value()));
 
             if(leftTrough.isEmpty() || rightTrough.isEmpty())
                 continue;
 
             validPeaks.add(new PeakTroughData(
-                    series.get(peakIndex).level(), peakValue,
-                    series.get(leftTrough.getAsInt()).level(), series.get(rightTrough.getAsInt()).level()));
+                    tumorRatios.get(peakIndex).level(), peakValue,
+                    tumorRatios.get(leftTrough.getAsInt()).level(), tumorRatios.get(rightTrough.getAsInt()).level()));
         }
 
-        List<PeakTroughData> consolidated = PeakTroughFinder.consolidate(
+        List<PeakTroughData> consolidatedPeaks = PeakTroughFinder.consolidateResults(
                 validPeaks,
                 (left, right) -> right.Level - left.SupportAboveLevel >= RESEG_PEAK_MIN_GAP
                         && right.SupportBelowLevel - left.Level >= RESEG_PEAK_MIN_GAP,
                 x -> x.Value, true);
 
-        List<PeakTroughData> topPeaks = consolidated.stream()
+        List<PeakTroughData> topPeaks = consolidatedPeaks.stream()
                 .sorted(Comparator.comparingDouble((PeakTroughData x) -> x.Value).reversed())
                 .limit(RESEG_MAX_PEAKS)
                 .collect(Collectors.toList());

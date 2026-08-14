@@ -10,7 +10,6 @@ import java.util.List;
 
 public final class GcBin
 {
-    // A left-open, right-closed gcContent bin, e.g. (0.33, 0.35]
     public final double Lower;
     public final double Upper;
 
@@ -30,8 +29,7 @@ public final class GcBin
         return String.format("(%.2f-%.2f]", Lower, Upper);
     }
 
-    // fixed, ordered list of all bins from GC_BIN_MIN to GC_BIN_MAX, one canonical instance per bin
-    public static List<GcBin> allBins()
+    public static List<GcBin> createdBins()
     {
         List<GcBin> bins = new ArrayList<>();
         int binCount = (int)Math.round((RESEG_GC_BIN_MAX - RESEG_GC_BIN_MIN) / RESEG_GC_BIN_WIDTH);

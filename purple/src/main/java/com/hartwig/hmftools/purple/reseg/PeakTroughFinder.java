@@ -8,16 +8,17 @@ import java.util.Set;
 import java.util.function.IntPredicate;
 import java.util.function.ToDoubleFunction;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.purple.reseg.RatioBucketSeries.Bucket;
 
 public final class PeakTroughFinder
 {
     private PeakTroughFinder() {}
 
-    // strict local maxima (findPeaks=true) or minima (false), excluding the first and last bucket
-    public static List<Integer> findLocalExtremaIndices(final List<Bucket> series, boolean findPeaks)
+    public static List<Integer> findLocalPeakOrTroughIndices(final List<Bucket> series, boolean findPeaks)
     {
-        List<Integer> indices = new ArrayList<>();
+        // find peak or trough indices
+        List<Integer> indices = Lists.newArrayList();
 
         for(int i = 1; i < series.size() - 1; i++)
         {
@@ -40,11 +41,11 @@ public final class PeakTroughFinder
         return indices;
     }
 
-    // searches sortedCandidates (ascending) for the nearest index below centerIndex satisfying the predicate,
-    // trying progressively further candidates only if nearer ones fail
-    public static OptionalInt findNearestSatisfyingBelow(
+    public static OptionalInt findNearestBelowRequired(
             final List<Integer> sortedCandidates, int centerIndex, final IntPredicate satisfies)
     {
+        // searches sortedCandidates (ascending) for the nearest index below centerIndex satisfying the predicate,
+        // trying progressively further candidates only if nearer ones fail
         for(int i = sortedCandidates.size() - 1; i >= 0; i--)
         {
             int candidate = sortedCandidates.get(i);
@@ -59,7 +60,7 @@ public final class PeakTroughFinder
         return OptionalInt.empty();
     }
 
-    public static OptionalInt findNearestSatisfyingAbove(
+    public static OptionalInt findNearestAboveRequired(
             final List<Integer> sortedCandidates, int centerIndex, final IntPredicate satisfies)
     {
         for(int candidate : sortedCandidates)
@@ -74,14 +75,14 @@ public final class PeakTroughFinder
         return OptionalInt.empty();
     }
 
-    // Pairwise left-to-right consolidation, mirroring the reference's "collect all drops from this pass over
-    // the pre-pass list, then apply them all at once, repeat until a full pass drops nothing" semantics -
-    // NOT immediate in-loop removal, which would let earlier drops influence later decisions within the same pass.
-    public static <T> List<T> consolidate(
-            final List<T> sortedByLevel, final KeepBothTest<T> keepBothTest,
-            final ToDoubleFunction<T> valueFn, boolean keepHigherValue)
+    public static List<PeakTroughData> consolidateResults(
+            final List<PeakTroughData> sortedByLevel, final KeepBothTest<PeakTroughData> keepBothTest,
+            final ToDoubleFunction<PeakTroughData> valueFn, boolean keepHigherValue)
     {
-        List<T> current = new ArrayList<>(sortedByLevel);
+        // Pairwise left-to-right consolidation, mirroring the reference's "collect all drops from this pass over
+        // the pre-pass list, then apply them all at once, repeat until a full pass drops nothing" semantics -
+        // NOT immediate in-loop removal, which would let earlier drops influence later decisions within the same pass.
+        List<PeakTroughData> current = new ArrayList<>(sortedByLevel);
         boolean anyDropped = true;
 
         while(anyDropped)
@@ -91,8 +92,8 @@ public final class PeakTroughFinder
 
             for(int i = 0; i < current.size() - 1; i++)
             {
-                T left = current.get(i);
-                T right = current.get(i + 1);
+                PeakTroughData left = current.get(i);
+                PeakTroughData right = current.get(i + 1);
 
                 if(keepBothTest.keepBoth(left, right))
                     continue;
@@ -109,7 +110,7 @@ public final class PeakTroughFinder
 
             if(anyDropped)
             {
-                List<T> next = new ArrayList<>();
+                List<PeakTroughData> next = new ArrayList<>();
 
                 for(int i = 0; i < current.size(); i++)
                 {
