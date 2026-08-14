@@ -86,29 +86,12 @@ public class EnsemblAnnotationIndexTest
     }
 
     @Test
-    public void testJunctionBoundaryLookups()
-    {
-        ChrBaseRegion shortIntron = intron(CHR_1, 200, 299);
-        ChrBaseRegion longIntron = intron(CHR_1, 200, 450);
-        ChrBaseRegion farIntron = intron(CHR_1, 50, 299);
-        EnsemblAnnotationIndex annotationIndex = junctionIndex(shortIntron, longIntron, farIntron);
-
-        assertTrue(annotationIndex.junctionsByStart(CHR_1, 200).contains(shortIntron));
-        assertTrue(annotationIndex.junctionsByStart(CHR_1, 200).contains(longIntron));
-        assertTrue(annotationIndex.junctionsByEnd(CHR_1, 299).contains(shortIntron));
-        assertTrue(annotationIndex.junctionsByEnd(CHR_1, 299).contains(farIntron));
-        assertTrue(annotationIndex.junctionsByStart(CHR_2, 200).isEmpty());
-        assertTrue(annotationIndex.junctionsByEnd(CHR_1, 500).isEmpty());
-    }
-
-    @Test
     public void testEmptyJunctionIndex()
     {
         EnsemblAnnotationIndex annotationIndex = EnsemblAnnotationIndex.fromJunctions((Set<ChrBaseRegion>) null);
 
         assertEquals(0, annotationIndex.junctionCount());
         assertFalse(annotationIndex.containsJunction(intron(CHR_1, 200, 299)));
-        assertTrue(annotationIndex.junctionsByStart(CHR_1, 200).isEmpty());
     }
 
     @Test

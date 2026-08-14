@@ -2,6 +2,7 @@ package com.hartwig.hmftools.tars.liftback;
 
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.primaryRecord;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.secondMateRecord;
+import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.supplementaryConfig;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.supplementaryRecord;
 
 import static org.junit.Assert.assertEquals;
@@ -14,14 +15,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.tars.common.ContigEntry;
 import com.hartwig.hmftools.tars.liftback.TarsTestFixtures.TestGenome;
 import com.hartwig.hmftools.tars.liftback.features.GenomicAlignmentScorer;
 import com.hartwig.hmftools.tars.liftback.features.OverhangGate;
 import com.hartwig.hmftools.tars.liftback.features.SupplementaryResolver;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
-import com.hartwig.hmftools.tars.liftback.features.SupplementaryConfig;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -115,7 +115,7 @@ public final class LiftBackScenario
         LiftBackDiscriminator resolver = mEnsemblAnnotationIndex != null
                 ? new LiftBackDiscriminator(mContigs, mEnsemblAnnotationIndex)
                 : new LiftBackDiscriminator(mContigs);
-        SupplementaryResolver supplementary = new SupplementaryResolver(annotationIndex, ref, SupplementaryConfig.defaults());
+        SupplementaryResolver supplementary = new SupplementaryResolver(annotationIndex, ref, supplementaryConfig());
         OverhangGate overhangGate = new OverhangGate(ref);
         GenomicAlignmentScorer alignmentScorer = new GenomicAlignmentScorer(ref);
 

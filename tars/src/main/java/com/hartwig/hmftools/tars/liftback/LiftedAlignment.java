@@ -8,8 +8,7 @@ import java.util.List;
 import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
-// One component of a record's alignment set (the record itself or an XA alt), post-lift. SoftClipAtBoundary is set only
-// when a leading/trailing S abuts an interior (not outermost) exon boundary.
+// One component of a record's alignment set (the record itself or an XA alt), post-lift.
 public class LiftedAlignment
 {
     public final String LiftedChromosome;
@@ -17,7 +16,6 @@ public class LiftedAlignment
     public final String LiftedCigar;
     public final int NumMismatches;
     public final boolean FromTxContig;
-    public final boolean SoftClipAtBoundary;
     public final boolean ForwardStrand;
     // +1 forward / -1 reverse for tx-contig alignments; 0 when no transcript strand is known.
     public final int TranscriptStrand;
@@ -34,16 +32,16 @@ public class LiftedAlignment
 
     public LiftedAlignment(
             final String liftedChrom, final int liftedPos, final String liftedCigar, final int numMismatches,
-            final boolean fromTxContig, final boolean softClipAtBoundary, final boolean forwardStrand, final int transcriptStrand)
+            final boolean fromTxContig, final boolean forwardStrand, final int transcriptStrand)
     {
         this(
-                liftedChrom, liftedPos, liftedCigar, numMismatches, fromTxContig, softClipAtBoundary, forwardStrand,
-                transcriptStrand, Collections.emptyList(), Collections.emptyList(), -1);
+                liftedChrom, liftedPos, liftedCigar, numMismatches, fromTxContig, forwardStrand, transcriptStrand,
+                Collections.emptyList(), Collections.emptyList(), -1);
     }
 
     private LiftedAlignment(
             final String liftedChrom, final int liftedPos, final String liftedCigar, final int numMismatches,
-            final boolean fromTxContig, final boolean softClipAtBoundary, final boolean forwardStrand, final int transcriptStrand,
+            final boolean fromTxContig, final boolean forwardStrand, final int transcriptStrand,
             final List<Integer> mergedSupplementaryIndices, final List<ChrBaseRegion> mergedSupplementaryIntrons,
             final int mergedSupplementaryMapQuality)
     {
@@ -52,7 +50,6 @@ public class LiftedAlignment
         LiftedCigar = liftedCigar;
         NumMismatches = numMismatches;
         FromTxContig = fromTxContig;
-        SoftClipAtBoundary = softClipAtBoundary;
         ForwardStrand = forwardStrand;
         TranscriptStrand = transcriptStrand;
         MergedSupplementaryIndices = List.copyOf(mergedSupplementaryIndices);
@@ -60,14 +57,12 @@ public class LiftedAlignment
         MergedSupplementaryMapQuality = mergedSupplementaryMapQuality;
     }
 
-    // copy with a revised lifted position and cigar; the boundary-softclip flag drops if the new cigar has no softclip.
-    // the chosen primary is tracked by index on LiftedRecord, so no copy here carries it.
+    // Copy with a revised lifted position and cigar. The chosen primary is tracked by index on LiftedRecord.
     public LiftedAlignment withLiftedCigar(final int liftedPos, final String liftedCigar)
     {
-        boolean stillSoftClipped = liftedCigar.indexOf('S') >= 0;
         LiftedAlignment revised = new LiftedAlignment(
                 LiftedChromosome, liftedPos, liftedCigar, NumMismatches,
-                FromTxContig, SoftClipAtBoundary && stillSoftClipped, ForwardStrand, TranscriptStrand,
+                FromTxContig, ForwardStrand, TranscriptStrand,
                 MergedSupplementaryIndices, MergedSupplementaryIntrons, MergedSupplementaryMapQuality);
         revised.Dropped = Dropped;
         revised.GenomicScore = GenomicScore;
@@ -82,7 +77,7 @@ public class LiftedAlignment
         int mergedTranscriptStrand = TranscriptStrand != 0 ? TranscriptStrand : spliceStrand;
         LiftedAlignment revised = new LiftedAlignment(
                 LiftedChromosome, liftedPos, liftedCigar, NumMismatches,
-                FromTxContig, false, ForwardStrand, mergedTranscriptStrand,
+                FromTxContig, ForwardStrand, mergedTranscriptStrand,
                 mergedSupplementaryIndices, mergedSupplementaryIntrons, mergedSupplementaryMapQuality);
         revised.GenomicScore = GenomicScore;
         return revised;
@@ -92,7 +87,7 @@ public class LiftedAlignment
     {
         LiftedAlignment revised = new LiftedAlignment(
                 LiftedChromosome, LiftedPos, LiftedCigar, NumMismatches,
-                FromTxContig, SoftClipAtBoundary, ForwardStrand, transcriptStrand,
+                FromTxContig, ForwardStrand, transcriptStrand,
                 MergedSupplementaryIndices, MergedSupplementaryIntrons, MergedSupplementaryMapQuality);
         revised.Dropped = Dropped;
         revised.GenomicScore = GenomicScore;

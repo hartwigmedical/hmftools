@@ -31,12 +31,12 @@ public class TarsCigarUtilsTest
         assertEquals(30, TarsCigarUtils.terminalMatchedRun(elements, false));
         assertEquals(4, TarsCigarUtils.terminalMatchedRun(elements, true));
         assertEquals(0, TarsCigarUtils.terminalMatchedRun(elements("5S2I30M"), false));
+        assertEquals(30, TarsCigarUtils.terminalMatchedRun(elements("5S30X10I4M"), false));
     }
 
     @Test
-    public void testMatchPredicatesKeepMismatchOperatorExplicit()
+    public void testMatchOrEqualExcludesMismatchOperator()
     {
-        assertTrue(TarsCigarUtils.isMatchedOp(CigarOperator.X));
         assertFalse(TarsCigarUtils.isMatchOrEqualOp(CigarOperator.X));
     }
 

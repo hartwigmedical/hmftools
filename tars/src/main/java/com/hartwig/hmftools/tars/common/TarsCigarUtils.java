@@ -57,11 +57,6 @@ public final class TarsCigarUtils
         return merged;
     }
 
-    public static boolean isMatchedOp(final CigarOperator op)
-    {
-        return op == CigarOperator.M || op == CigarOperator.EQ || op == CigarOperator.X;
-    }
-
     public static boolean isMatchOrEqualOp(final CigarOperator op)
     {
         return op == CigarOperator.M || op == CigarOperator.EQ;
@@ -78,7 +73,7 @@ public final class TarsCigarUtils
             {
                 continue;
             }
-            if(isMatchedOp(op))
+            if(op.isAlignment())
             {
                 return elements.get(i).getLength();
             }

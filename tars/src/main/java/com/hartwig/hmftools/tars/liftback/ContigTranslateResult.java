@@ -13,8 +13,7 @@ import htsjdk.samtools.CigarOperator;
 public record ContigTranslateResult(
         String chromosome,
         int genomicStart,
-        Cigar genomicCigar,
-        boolean softClipAtExonBoundary)
+        Cigar genomicCigar)
 {
     // the genomic CIGAR's N gaps, i.e. the re-inserted introns
     public List<BaseRegion> impliedIntrons()

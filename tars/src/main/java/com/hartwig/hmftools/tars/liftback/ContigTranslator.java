@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.tars.liftback;
 
-import static com.hartwig.hmftools.common.bam.CigarUtils.leftSoftClipped;
-import static com.hartwig.hmftools.common.bam.CigarUtils.rightSoftClipped;
 import static com.hartwig.hmftools.tars.common.TarsCigarUtils.clampLeadingReferenceToSoftClip;
 import static com.hartwig.hmftools.tars.common.TarsCigarUtils.clampTrailingReferenceToSoftClip;
 import static com.hartwig.hmftools.tars.common.TarsCigarUtils.isMatchOrEqualOp;
@@ -64,7 +62,7 @@ public final class ContigTranslator
                 return null;
             }
 
-            return new LiftedAlignment(contig, pos, cigarStr, nm, false, false, forwardStrand, 0);
+            return new LiftedAlignment(contig, pos, cigarStr, nm, false, forwardStrand, 0);
         }
 
         ContigEntry entry = findSegment(contig, pos);
@@ -82,7 +80,7 @@ public final class ContigTranslator
         String genomicCigar = new Cigar(mergeDeletionsIntoSplice(translated.genomicCigar().getCigarElements())).toString();
         return new LiftedAlignment(
                 translated.chromosome(), translated.genomicStart(), genomicCigar, nm,
-                true, translated.softClipAtExonBoundary(), forwardStrand, entry.strand());
+                true, forwardStrand, entry.strand());
     }
 
     // Skips invalid XA entries and keeps one copy of each lifted placement.
@@ -215,7 +213,7 @@ public final class ContigTranslator
             return null; // read starts past the end of the contig
         }
 
-        return walkCigarToGenome(contig, spans, start, clampedCigar, hasSoftClipAtExonBoundary(contig, contigPos, contigCigar));
+        return walkCigarToGenome(contig, spans, start, clampedCigar);
     }
 
     // bwa-mem2 can anchor into the alt-contig spacer-N region on either side; convert the overhanging M
@@ -267,8 +265,7 @@ public final class ContigTranslator
     // Walks the clamped contig-space CIGAR, emitting an N at every exon boundary crossed.
     // Returns null when the read extends past the last exon.
     private static ContigTranslateResult walkCigarToGenome(
-            final ContigEntry contig, final List<BaseRegion> spans, final SpanLocation start, final Cigar cigar,
-            final boolean softClipAtExonBoundary)
+            final ContigEntry contig, final List<BaseRegion> spans, final SpanLocation start, final Cigar cigar)
     {
         int genomicStart = start.genomicPos();
         int currentSpanIndex = start.spanIndex();
@@ -323,8 +320,7 @@ public final class ContigTranslator
 
         return new ContigTranslateResult(
                 contig.chromosome(), genomicStart,
-                new Cigar(normalize(outElements)),
-                softClipAtExonBoundary);
+                new Cigar(normalize(outElements)));
     }
 
     // A D straddling an exon boundary lifts as xD nN yD; folding the small flanking Ds into the N preserves both spans.
@@ -385,39 +381,4 @@ public final class ContigTranslator
     {
     }
 
-    // true if a leading or trailing S abuts an interior exon boundary (not the outermost end of the first/last exon)
-    private static boolean hasSoftClipAtExonBoundary(
-            final ContigEntry contig, final int contigPos, final Cigar contigCigar)
-    {
-        List<BaseRegion> spans = contig.exonSpans();
-        if(spans.size() < 2 || contigCigar.isEmpty())
-        {
-            return false;
-        }
-
-        boolean leadingSoftClip = leftSoftClipped(contigCigar);
-        boolean trailingSoftClip = rightSoftClipped(contigCigar);
-        if(!leadingSoftClip && !trailingSoftClip)
-        {
-            return false;
-        }
-
-        int localPos = contigPos - contig.contigStart() + 1;
-        int endLocalPos = localPos + contigCigar.getReferenceLength() - 1;
-
-        int exonLengthSoFar = 0;
-        for(int i = 0; i < spans.size() - 1; ++i)
-        {
-            exonLengthSoFar += spans.get(i).baseLength();
-            if(leadingSoftClip && localPos == exonLengthSoFar + 1)
-            {
-                return true;
-            }
-            if(trailingSoftClip && endLocalPos == exonLengthSoFar)
-            {
-                return true;
-            }
-        }
-        return false;
-    }
 }

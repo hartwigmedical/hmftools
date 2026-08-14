@@ -2,6 +2,10 @@ package com.hartwig.hmftools.tars.liftback;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
+import static com.hartwig.hmftools.tars.common.TarsConstants.MAX_IMPLIED_INTRON_LENGTH;
+import static com.hartwig.hmftools.tars.common.TarsConstants.MAX_SUPP_MERGES;
+import static com.hartwig.hmftools.tars.common.TarsConstants.MAX_SUPP_READ_OVERLAP;
+import static com.hartwig.hmftools.tars.common.TarsConstants.MIN_IMPLIED_INTRON_LENGTH;
 
 import static org.junit.Assert.assertEquals;
 
@@ -12,10 +16,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.tars.common.ContigEntry;
+import com.hartwig.hmftools.tars.liftback.features.SupplementaryConfig;
 
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMRecord;
@@ -31,6 +36,13 @@ public final class TarsTestFixtures
     public static final String TX_CONTIG = "ens" + GENE_ID + "_" + GENE_NAME + "_" + TRANS_NAME;
 
     private TarsTestFixtures() { }
+
+    public static SupplementaryConfig supplementaryConfig()
+    {
+        return new SupplementaryConfig(
+                MIN_IMPLIED_INTRON_LENGTH, MAX_IMPLIED_INTRON_LENGTH,
+                MAX_SUPP_MERGES, false, MAX_SUPP_READ_OVERLAP);
+    }
 
     // exon spans on chr1: 100-199, 300-399, 500-549; introns 200-299, 400-499; contig length 250.
     public static ContigEntry threeExonContig()
@@ -242,14 +254,14 @@ public final class TarsTestFixtures
 
     public static LiftedAlignment selfAlignment(final String chrom, final int pos, final String cigar)
     {
-        return new LiftedAlignment(chrom, pos, cigar, 0, false, false, true, 0);
+        return new LiftedAlignment(chrom, pos, cigar, 0, false, true, 0);
     }
 
     // Single-placement lifted record - the shape a mate is read as.
     public static LiftedRecord liftedRecordAt(
             final String chromosome, final int pos, final String cigar, final boolean negativeStrand)
     {
-        LiftedAlignment alignment = new LiftedAlignment(chromosome, pos, cigar, 0, false, false, !negativeStrand, 0);
+        LiftedAlignment alignment = new LiftedAlignment(chromosome, pos, cigar, 0, false, !negativeStrand, 0);
         return recordBuilder().alignments(List.of(alignment)).build();
     }
 

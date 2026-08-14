@@ -249,28 +249,6 @@ public class ContigTranslatorTest
     }
 
     @Test
-    public void testSoftClipAtExonBoundaryReported()
-    {
-        // soft-clip abutting an interior exon boundary, trailing then leading -> true
-        assertTrue(ContigTranslator.translate(threeExonContig(), 71, cigar("30M20S")).softClipAtExonBoundary());
-        assertTrue(ContigTranslator.translate(threeExonContig(), 101, cigar("20S30M")).softClipAtExonBoundary());
-
-        // soft-clip away from any boundary, and no soft-clip at all -> false
-        assertFalse(ContigTranslator.translate(threeExonContig(), 60, cigar("30M20S")).softClipAtExonBoundary());
-        assertFalse(ContigTranslator.translate(threeExonContig(), 71, cigar("30M")).softClipAtExonBoundary());
-
-        // single-exon contig has no interior boundaries -> false either side
-        ContigEntry singleExon = new ContigEntry(
-                "single", 1, 100, "G", "X", "T", CHR_1, 1, List.of(new BaseRegion(100, 199)));
-        assertFalse(ContigTranslator.translate(singleExon, 1, cigar("50S50M")).softClipAtExonBoundary());
-        assertFalse(ContigTranslator.translate(singleExon, 1, cigar("50M50S")).softClipAtExonBoundary());
-
-        // outer edges of the contig are not interior boundaries -> false
-        assertFalse(ContigTranslator.translate(threeExonContig(), 1, cigar("20S30M")).softClipAtExonBoundary());
-        assertFalse(ContigTranslator.translate(threeExonContig(), 201, cigar("50M20S")).softClipAtExonBoundary());
-    }
-
-    @Test
     public void testXaAlignmentsAreLiftedAndDeduplicated()
     {
         ContigTranslator translator = new ContigTranslator(List.of(threeExonContig()));

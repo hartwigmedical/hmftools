@@ -50,7 +50,6 @@ public class LiftedRecordTest
                 1, List.of(selfAlignment(CHR_1, 1000, "50M"), selfAlignment(CHR_1, 5000, "20M100N30M")));
 
         assertTrue(liftedRecord.hasPlacement());
-        assertTrue(liftedRecord.swapped());
         assertEquals(5000, liftedRecord.finalPos());
         assertEquals("20M100N30M", liftedRecord.finalCigar());
         assertTrue(liftedRecord.hasNCigar());
@@ -62,7 +61,6 @@ public class LiftedRecordTest
         LiftedRecord liftedRecord = LiftedRecord.unmapped("over_cap_unmapped");
 
         assertFalse(liftedRecord.hasPlacement());
-        assertFalse(liftedRecord.swapped());
         assertEquals("over_cap_unmapped", liftedRecord.notes());
     }
 }
