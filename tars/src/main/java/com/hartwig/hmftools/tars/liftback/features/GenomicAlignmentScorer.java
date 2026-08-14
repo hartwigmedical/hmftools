@@ -10,8 +10,8 @@ import com.hartwig.hmftools.tars.liftback.LiftedAlignment;
 
 import htsjdk.samtools.SAMRecord;
 
-// Recomputes bwa-style alignment scores after candidates have been lifted to genome space. It deliberately leaves
-// CIGARs unchanged: the only soft-clip walk in TARS is the documented weak-overhang collapse in OverhangGate.
+// Recomputes bwa-style alignment scores after candidates are lifted to genome space. Cigars are left unchanged: the only
+// soft-clip walk in TARS is the weak-overhang collapse in OverhangGate.
 public class GenomicAlignmentScorer
 {
     private final RefGenomeInterface mRefGenome;

@@ -12,7 +12,6 @@ import com.hartwig.hmftools.common.region.BaseRegion;
 
 import org.junit.Test;
 
-// excludes() overlap contract
 public class ExcludedRegionsTest
 {
     private static final String CHR = "1";
@@ -27,13 +26,10 @@ public class ExcludedRegionsTest
     @Test
     public void testExcludes()
     {
-        // span inside the region
         assertTrue(regions(1000, 2000).excludes(CHR, 1500, 1600));
 
-        // span outside the region
         assertFalse(regions(1000, 2000).excludes(CHR, 2500, 2600));
 
-        // different chromosome
         assertFalse(regions(1000, 2000).excludes("2", 1500, 1600));
 
         // query end == region start: inclusive overlap fires

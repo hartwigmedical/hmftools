@@ -11,7 +11,7 @@ import java.util.List;
 
 import org.junit.Test;
 
-// The placement invariant: a record either has candidates and a chosen one among them, or has neither.
+// The placement invariant: a record has candidates and a chosen one among them, or neither.
 public class LiftedRecordTest
 {
     private static LiftedRecord resolved(final int primaryIndex, final List<LiftedAlignment> alignments)

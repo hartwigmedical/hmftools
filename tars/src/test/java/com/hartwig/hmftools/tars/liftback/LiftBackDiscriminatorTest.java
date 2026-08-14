@@ -22,8 +22,7 @@ import org.junit.Test;
 
 import htsjdk.samtools.SAMRecord;
 
-// Lift + decide over a record: coordinate lifting and result assembly, the primary pick over a hand-built
-// alignment set, and the MAPQ policy. Cigar translation itself is covered in ContigTranslatorTest.
+// Covers lifting, the primary pick and the MAPQ policy. Cigar translation itself is covered in ContigTranslatorTest.
 public class LiftBackDiscriminatorTest
 {
     private static List<ContigEntry> contigMap()
@@ -31,7 +30,7 @@ public class LiftBackDiscriminatorTest
         return List.of(threeExonContig());
     }
 
-    // no pairing flags: these tests must not carry them, and the read name seeds the random tie-break.
+    // No pairing flags, and the read name seeds the random tie-break.
     private static SAMRecord newRecord(final String contig, final int pos, final String cigar)
     {
         return TarsTestFixtures.mappedRecord("read", contig, pos, cigar);
@@ -42,8 +41,8 @@ public class LiftBackDiscriminatorTest
         return TarsTestFixtures.unmappedRecord("read");
     }
 
-    // Ultima single-end: no pairing flags at all, so any unguarded htsjdk pair getter on the resolve path throws.
-    // The lifted placement must match the paired case exactly - pairing plays no part in the decision.
+    // Ultima single-end: with no pairing flags, an unguarded htsjdk pair getter on the resolve path throws.
+    // The lifted placement must match the paired case: pairing plays no part in the decision.
     @Test
     public void testSingleEndPrimaryLifted()
     {
@@ -124,7 +123,7 @@ public class LiftBackDiscriminatorTest
     @Test
     public void testRefTxAgree()
     {
-        SAMRecord record = newRecord(CHR_1, 100, "50M"); // ref primary; Tx alt at contig pos 1 -> same locus+CIGAR
+        SAMRecord record = newRecord(CHR_1, 100, "50M"); // Tx alt at contig pos 1 lifts to the same locus and CIGAR
         record.setAttribute("XA", TX_CONTIG + ",+1,50M,0;");
 
         LiftBackDiscriminator resolver = new LiftBackDiscriminator(contigMap());
@@ -136,7 +135,7 @@ public class LiftBackDiscriminatorTest
     @Test
     public void testIntronRetRefBetter()
     {
-        // ref chr1:170 50M (last 20bp in intron); Tx pos 71 30M20S lifts to chr1:170-199 soft-clipped at exon boundary.
+        // ref chr1:170 50M has its last 20bp in the intron; Tx pos 71 30M20S lifts soft-clipped at the exon boundary.
         SAMRecord record = newRecord(CHR_1, 170, "50M");
         record.setAttribute("XA", TX_CONTIG + ",+71,30M20S,0;");
 
@@ -149,7 +148,7 @@ public class LiftBackDiscriminatorTest
     @Test
     public void testTxSoftClipNotAtBoundaryFallsToAmbiguous()
     {
-        // ref 50M full match; Tx 25M25S - 25M ends mid-exon (chr1:194), trailing clip NOT at exon boundary -> AMBIGUOUS.
+        // Tx 25M ends mid-exon (chr1:194), so the trailing clip is not at an exon boundary -> AMBIGUOUS.
         SAMRecord record = newRecord(CHR_1, 170, "50M");
         record.setAttribute("XA", TX_CONTIG + ",+71,25M25S,0;");
 
@@ -162,7 +161,7 @@ public class LiftBackDiscriminatorTest
     @Test
     public void testMultiLocusTwoLoci()
     {
-        SAMRecord record = newRecord(TX_CONTIG, 1, "50M"); // Tx primary + ref alt on different chrom -> two loci
+        SAMRecord record = newRecord(TX_CONTIG, 1, "50M"); // Tx primary + ref alt on a different chrom -> two loci
         record.setAttribute("XA", "chr5,+5000,50M,0;");
 
         LiftBackDiscriminator resolver = new LiftBackDiscriminator(contigMap());
@@ -174,9 +173,8 @@ public class LiftBackDiscriminatorTest
     @Test
     public void testDistinctLocusAltBlocksMapQualityRescue()
     {
-        // Tx primary (perfect) + a lower-scoring XA alt (3 mismatches) at a distinct locus. bwa left the read
-        // MAPQ 0; two distinct genomic loci means it stays a multimapper - TARS does not override bwa's call with a
-        // weaker reconstructed score - so numLoci == 2 and MAPQ is held at 0.
+        // Two distinct genomic loci keep the read a multimapper even though the XA alt scores worse: TARS does not
+        // override bwa's MAPQ 0 with a weaker reconstructed score.
         SAMRecord record = newRecord(TX_CONTIG, 1, "50M");
         record.setMappingQuality(0);
         record.setAttribute("XA", "chr5,+5000,50M,3;");
@@ -191,10 +189,9 @@ public class LiftBackDiscriminatorTest
     @Test
     public void testNestedSpanAltCountsAsSingleLocusAndBumpsMapQuality()
     {
-        // Regression: a 5'-softclipped isoform alt begins at a downstream exon of the SAME placement. It lifts to a
-        // different start (chr1:300) but a span (300-349) nested inside the junction-crossing primary's (chr1:150-349),
-        // so it is the same genomic locus, not a second one. A MAPQ-0 read here is therefore a single-locus placement
-        // and must bump to 60 -- keying loci on exact start (the old behaviour) miscounted this as two loci and held it at 0.
+        // A 5'-softclipped isoform alt starts at a downstream exon of the same placement: different start, but a span
+        // nested inside the junction-crossing primary's, so it is one locus and the MAPQ-0 read bumps to 60.
+        // Keying loci on exact start counted this as two loci and held MAPQ at 0.
         SAMRecord record = newRecord(TX_CONTIG, 51, "100M"); // -> chr1:150 50M100N50M, genomic span 150-349
         record.setMappingQuality(0);
         record.setAttribute("XA", TX_CONTIG + ",+101,50S50M,0;"); // -> chr1:300 50S50M, span 300-349 (nested)
@@ -209,10 +206,8 @@ public class LiftBackDiscriminatorTest
     @Test
     public void testChainedOverlapAltNotMergedThroughPrimary()
     {
-        // A tandem-repeat-style read: primary chr1:1000-1099; alt B chr1:1080-1179 overlaps the primary; alt C
-        // chr1:1160-1259 overlaps B but NOT the primary. C is a genuinely distinct locus, so numLoci must be 2 and a
-        // MAPQ-0 read stays 0. Locus identity is anchored on the PRIMARY's span - C must not be chained back into the
-        // primary via B (a naive interval-merge over all alignments would wrongly collapse to one locus and bump to 60).
+        // Primary 1000-1099; alt B 1080-1179 overlaps it; alt C 1160-1259 overlaps B but not the primary. Locus identity
+        // is anchored on the primary's span, so C stays a distinct locus rather than being chained in via B.
         SAMRecord record = newRecord(CHR_1, 1000, "100M");
         record.setMappingQuality(0);
         record.setAttribute("XA", CHR_1 + ",+1080,100M,0;" + CHR_1 + ",+1160,100M,0;");
@@ -227,7 +222,7 @@ public class LiftBackDiscriminatorTest
     @Test
     public void testRefOnlyMulti()
     {
-        SAMRecord record = newRecord(CHR_1, 1000, "50M"); // ref primary + ref alt on different chrom, no tx
+        SAMRecord record = newRecord(CHR_1, 1000, "50M");
         record.setAttribute("XA", "chr5,+5000,50M,0;");
 
         LiftBackDiscriminator resolver = new LiftBackDiscriminator(contigMap());
@@ -323,7 +318,7 @@ public class LiftBackDiscriminatorTest
     @Test
     public void testIntronRetRefBetterLeadingSoftClipBoundary()
     {
-        // Tx alt contig pos 101 with leading 20S at exon-1/exon-2 boundary; ref chr1:300 full match.
+        // Tx alt at contig pos 101 carries its leading 20S at the exon-1/exon-2 boundary.
         SAMRecord record = newRecord(CHR_1, 300, "30M");
         record.setAttribute("XA", TX_CONTIG + ",+101,20S30M,0;");
 
@@ -349,8 +344,8 @@ public class LiftBackDiscriminatorTest
     @Test
     public void testXaDedupKeepsAltMatchingSelfButDropsXaDuplicate()
     {
-        // Two XA entries lifting to the same (chr1,100,50M): one Tx, one ref. XA dedup is XA-internal only,
-        // so the Tx alt is kept (drives CONCORDANT); the duplicate ref XA collapses.
+        // Two XA entries lift to the same (chr1,100,50M): one Tx, one ref. XA dedup is XA-internal only, so the Tx alt
+        // is kept and drives CONCORDANT while the duplicate ref XA collapses.
         SAMRecord record = newRecord(CHR_1, 100, "50M");
         record.setAttribute("XA", TX_CONTIG + ",+1,50M,0;" + CHR_1 + ",+100,50M,0;");
 
@@ -364,7 +359,7 @@ public class LiftBackDiscriminatorTest
     @Test
     public void testXaWithMalformedNmStillLifted()
     {
-        SAMRecord record = newRecord(TX_CONTIG, 1, "50M"); // garbled NM field must not silently drop the alt
+        SAMRecord record = newRecord(TX_CONTIG, 1, "50M"); // a garbled NM field must not silently drop the alt
         record.setAttribute("XA", "chr5,+5000,50M,not_a_number;");
 
         LiftBackDiscriminator resolver = new LiftBackDiscriminator(contigMap());
@@ -376,7 +371,7 @@ public class LiftBackDiscriminatorTest
     @Test
     public void testCrossLocusBothSplicedRemainsMultiLocus()
     {
-        // Both Tx primary and ref XA alt have spliced CIGARs at different loci - ambiguous, must NOT swap.
+        // Tx primary and ref alt are both spliced but at different loci: ambiguous, so the primary must not swap.
         SAMRecord record = newRecord(TX_CONTIG, 51, "100M");
         record.setAttribute("XA", "chr5,+5000,50M100N50M,0;");
 
@@ -423,8 +418,8 @@ public class LiftBackDiscriminatorTest
         assertEquals(3, result.numLoci());
     }
 
-    // Hidden tie (XS==AS) on a ref-only primary landing outside any indexed exon: no vouching evidence, so the
-    // unresolved hidden tie holds MAPQ at 0 (the equal-scoring alt bwa did not emit may be real).
+    // Hidden tie (XS==AS) on a ref-only primary outside any indexed exon: no evidence either way, so MAPQ holds at 0
+    // because the equal-scoring alt bwa did not emit may be real.
     @Test
     public void testHiddenTieRefOnlyOutsideIndexedExonHoldsAtZero() throws Exception
     {
@@ -442,7 +437,7 @@ public class LiftBackDiscriminatorTest
         assertEquals(0, result.updatedMapQuality());
     }
 
-    // Hidden tie with primary outside any annotated exon: rescue stays blocked.
+    // Hidden tie with the primary outside any annotated exon: rescue stays blocked.
     @Test
     public void testHiddenTieOutsideExonKeepsMapQualityZero() throws Exception
     {
@@ -452,66 +447,59 @@ public class LiftBackDiscriminatorTest
         record.setAttribute("XS", 151);
 
         EnsemblAnnotationIndex annotationIndex = exonRegionIndex(
-                CHR_1, List.of(new int[] { 1400, 1700 })); // exon at 1400-1700; primary at 5000 is intergenic
+                CHR_1, List.of(new int[] { 1400, 1700 })); // primary at 5000 is intergenic
         LiftBackDiscriminator resolver = new LiftBackDiscriminator(contigMap(), annotationIndex);
         assertEquals(0, resolver.resolve(record).updatedMapQuality());
     }
 
-    // Direct unit tests for the extracted MAPQ policy; independent of LiftBackDiscriminator / SAMRecord plumbing.
-    // decidePrimaryMapQuality positional args: (inputMapQuality, numLoci, hiddenTie, primaryFromTxContig, primaryInAnnotatedExon).
+    // decidePrimaryMapQuality args: (inputMapQuality, numLoci, hiddenTie, primaryFromTxContig, primaryInAnnotatedExon, randomTie).
     @Test
     public void testMapQualityPolicy_singleLocusZeroRescues()
     {
-        // single locus, MAPQ0, no hidden tie -> 60
         assertEquals(60, LiftBackDiscriminator.decidePrimaryMapQuality(0, 1, false, false, false, false));
     }
 
     @Test
     public void testMapQualityPolicy_hiddenTieRefPrimaryNoExonHoldsAtZero()
     {
-        // unresolved hidden tie holds at 0
         assertEquals(0, LiftBackDiscriminator.decidePrimaryMapQuality(0, 1, true, false, false, false));
     }
 
     @Test
     public void testMapQualityPolicy_hiddenTieTxPrimaryRescues()
     {
-        // tx provenance overrides hidden tie
         assertEquals(60, LiftBackDiscriminator.decidePrimaryMapQuality(0, 1, true, true, false, false));
     }
 
     @Test
     public void testMapQualityPolicy_hiddenTieInAnnotatedExonRescues()
     {
-        // annotated exon overrides hidden tie
         assertEquals(60, LiftBackDiscriminator.decidePrimaryMapQuality(0, 1, true, false, true, false));
     }
 
     @Test
     public void testMapQualityPolicy_inputSixtyPassesAsRescued()
     {
-        // input 60 passes through unchanged
         assertEquals(60, LiftBackDiscriminator.decidePrimaryMapQuality(60, 1, false, false, false, false));
     }
 
     @Test
     public void testMapQualityPolicy_gradedMapQualityPassesThrough()
     {
-        // graded signal; leave alone
+        // a graded MAPQ is a real bwa signal, so it is left alone
         assertEquals(37, LiftBackDiscriminator.decidePrimaryMapQuality(37, 1, false, false, false, false));
     }
 
     @Test
     public void testMapQualityPolicy_multiLocusNeverBumps()
     {
-        // multi-locus never bumped
         assertEquals(0, LiftBackDiscriminator.decidePrimaryMapQuality(0, 2, false, false, false, false));
     }
 
     @Test
     public void testMapQualityPolicy_randomTieNotBumped()
     {
-        // a random-tie pick is a coin-flip among distinct placements, so it is not a confident unique call
+        // a random-tie pick is a coin-flip among distinct placements, not a confident unique call
         assertEquals(0, LiftBackDiscriminator.decidePrimaryMapQuality(0, 1, false, false, false, true));
         assertEquals(60, LiftBackDiscriminator.decidePrimaryMapQuality(0, 1, false, false, false, false));
     }
@@ -524,8 +512,8 @@ public class LiftBackDiscriminatorTest
     @Test
     public void testCountDistinctLociFromListRecountsPostExtension()
     {
-        // The record overload backs the emit-time NH recompute: it takes the primary from primaryIndex, drops Dropped
-        // alts, and collapses alts overlapping the primary so NH stays consistent with the XA tag.
+        // The record overload backs the emit-time NH recompute: primary from primaryIndex, Dropped alts excluded, alts
+        // overlapping the primary collapsed, so NH stays consistent with the XA tag.
         LiftedAlignment primary = liftedAt(CHR_1, 1000, "100M");   // span 1000-1099
         LiftedAlignment overlapping = liftedAt(CHR_1, 1050, "100M");   // 1050-1149 overlaps the primary
         LiftedAlignment distant = liftedAt(CHR_1, 5000, "100M");   // a genuinely distinct locus
@@ -548,9 +536,8 @@ public class LiftBackDiscriminatorTest
     @Test
     public void testOppositeStrandXaAltsNotCollapsed()
     {
-        // Two XA alts at the same genomic locus and cigar but opposite strands are distinct placements. The lifted
-        // dedup key includes strand, so both survive into the XA output; previously they collapsed to one, silently
-        // dropping a strand-distinct placement.
+        // Two XA alts at the same locus and cigar but opposite strands are distinct placements, so the lifted dedup key
+        // includes strand and both survive into the XA output.
         SAMRecord record = newRecord(CHR_1, 1000, "50M");
         record.setAttribute("XA", "chr5,+5000,50M,0;chr5,-5000,50M,0;");
 
@@ -565,7 +552,7 @@ public class LiftBackDiscriminatorTest
     private static final String CHR1 = "chr1";
     private static final String CHR2 = "chr2";
 
-    // carries an N: post-Step-1 the discriminator treats any surviving N as a real junction.
+    // Post-Step-1 the discriminator treats any surviving N as a real junction.
     private static final String TX_JUNCTION_CIGAR = "50M100N50M";
     private static final String FULL_MATCH_CIGAR = "100M";
     private static final String SOFTCLIP_CIGAR = "50M51S";
@@ -600,7 +587,7 @@ public class LiftBackDiscriminatorTest
     @Test
     public void testConcordant()
     {
-        // one locus, ref and tx on the same gapless cigar: the two views agree, nothing to choose between
+        // one locus, ref and tx on the same gapless cigar: the two views agree
         assertTrue(concordantOf(
                 ref(CHR1, 100, FULL_MATCH_CIGAR),
                 tx(CHR1, 100, FULL_MATCH_CIGAR, false, 0)));
@@ -631,17 +618,15 @@ public class LiftBackDiscriminatorTest
     @Test
     public void testConcordantSkipsGateDroppedAlt()
     {
-        // an XA alt the overhang gate collapsed to a contiguous alignment is marked Dropped before the discriminator
-        // runs; ignoring it leaves a lone ref source, so the otherwise-agreeing pair is not concordant.
+        // The overhang gate marks a collapsed XA alt Dropped before the discriminator runs; ignoring it leaves a lone
+        // ref source, so the otherwise-agreeing pair is not concordant.
         LiftedAlignment droppedTx = tx(CHR1, 100, FULL_MATCH_CIGAR, false, 0);
         droppedTx.Dropped = true;
 
         assertFalse(concordantOf(ref(CHR1, 100, FULL_MATCH_CIGAR), droppedTx));
     }
 
-    // ---- apply(): score-based primary pick (no shape rules) ----
-
-    // single locus: a ref (softclipped) and a tx (contiguous) candidate that only score can separate.
+    // One locus, a soft-clipped ref and a contiguous tx candidate that only score can separate.
     private static List<LiftedAlignment> contestedSet()
     {
         LiftedAlignment self = ref(CHR1, 100, "50M51S");
@@ -649,7 +634,7 @@ public class LiftBackDiscriminatorTest
         return set(self, txAlt);
     }
 
-    // two loci: a ref and a tx placement.
+    // Two loci: a ref and a tx placement.
     private static List<LiftedAlignment> multiLocusSet()
     {
         LiftedAlignment self = ref(CHR1, 100, "151M");
@@ -672,7 +657,7 @@ public class LiftBackDiscriminatorTest
     @Test
     public void testUnscoredKeepsSelf()
     {
-        // contested but no candidate scored (a split read left for Step 3): keep bwa's primary, drop nothing.
+        // No candidate scored (a split read left for Step 3): keep bwa's primary and drop nothing.
         List<LiftedAlignment> alignments = contestedSet();
         LiftBackDiscriminator.ApplyResult outcome = LiftBackDiscriminator.apply(alignments, false, alignments.get(0), 0, false);
         assertSame(alignments.get(0), outcome.effectivePrimary());
@@ -684,7 +669,7 @@ public class LiftBackDiscriminatorTest
     @Test
     public void testDecisiveScoreWinsRegardlessOfSeed()
     {
-        // higher genome score wins outright; the seed does not matter.
+        // The higher genomic score wins outright, whatever the seed.
         List<LiftedAlignment> refWins = contestedSet();
         refWins.get(0).GenomicScore = 90;
         refWins.get(1).GenomicScore = 50;
@@ -705,7 +690,7 @@ public class LiftBackDiscriminatorTest
     @Test
     public void testScoreTieFallsToSeededRandom()
     {
-        // equal scores -> seeded pick, reproducible. contestedSet order is [self, tx]; seed 0 -> self, seed 1 -> tx.
+        // Equal scores fall to the seeded pick. contestedSet order is [self, tx]: seed 0 -> self, seed 1 -> tx.
         List<LiftedAlignment> even = contestedSet();
         even.get(0).GenomicScore = 70;
         even.get(1).GenomicScore = 70;
@@ -725,9 +710,8 @@ public class LiftBackDiscriminatorTest
     @Test
     public void testScoreTieJunctionBeatsSoftClipAtSameLocus()
     {
-        // a spliced placement and a soft-clip placement at the same locus, tied on score -> the junction wins
-        // outright (not the coin), regardless of seed. set order is [soft-clip, junction] and seed 0 would pick
-        // the soft-clip if this were a plain random tie, so the junction winning proves the shape rule fired.
+        // A spliced and a soft-clip placement at the same locus, tied on score: the junction wins outright, whatever
+        // the seed. Seed 0 over set order [soft-clip, junction] would pick the soft-clip on a plain random tie.
         LiftedAlignment softClip = ref(CHR1, 100, SOFTCLIP_CIGAR);
         LiftedAlignment junction = tx(CHR1, 100, TX_JUNCTION_CIGAR, false, 0);
         List<LiftedAlignment> alignments = set(softClip, junction);
@@ -743,7 +727,7 @@ public class LiftBackDiscriminatorTest
     @Test
     public void testScoreTieJunctionAtDifferentLocusStaysRandom()
     {
-        // junction and soft-clip sit at different loci, so the same-locus rule does not fire and the tie is random.
+        // Junction and soft-clip sit at different loci, so the same-locus rule does not fire and the tie is random.
         LiftedAlignment softClip = ref(CHR1, 100, SOFTCLIP_CIGAR);
         LiftedAlignment junction = tx(CHR2, 200, TX_JUNCTION_CIGAR, false, 0);
         List<LiftedAlignment> alignments = set(softClip, junction);
@@ -780,9 +764,8 @@ public class LiftBackDiscriminatorTest
     @Test
     public void testScoreTieCollapsesIdenticalPlacements()
     {
-        // self and a tx alt lift to the same locus and CIGAR; a third tx alt is a distinct spliced placement. The two
-        // identical placements collapse to one, so the seeded tie is over two distinct placements, not three: seed 1
-        // lands on the spliced placement (it would land on the duplicate 100M without the collapse).
+        // Self and a tx alt lift to the same locus and CIGAR, a third tx alt is a distinct spliced placement. The
+        // identical pair collapses, so seed 1 ties over two placements and lands on the spliced one, not the duplicate.
         LiftedAlignment self = ref(CHR1, 100, "100M");
         LiftedAlignment txSame = tx(CHR1, 100, "100M", false, 0);
         LiftedAlignment txSpliced = tx(CHR1, 100, TX_JUNCTION_CIGAR, false, 0);
@@ -798,12 +781,12 @@ public class LiftBackDiscriminatorTest
     @Test
     public void testMultiLocusTieMateProximityPicksMateLocus()
     {
-        // tied loci CHR1:100 and CHR2:200; the mate maps on CHR2 near 200, so that locus wins over the seed.
+        // Tied loci CHR1:100 and CHR2:200 with the mate on CHR2 near 200: mate proximity beats the seed, which would
+        // otherwise pick CHR1:100.
         List<LiftedAlignment> alignments = multiLocusSet();
         alignments.get(0).GenomicScore = 100;
         alignments.get(1).GenomicScore = 100;
         LiftedRecord mate = TarsTestFixtures.liftedRecordAt(CHR2, 250, "100M", false);
-        // seed 0 would pick CHR1:100; mate proximity overrides to the CHR2 locus.
         LiftBackDiscriminator.ApplyResult outcome = LiftBackDiscriminator.apply(alignments, false, alignments.get(0), 0, false, mate);
         assertSame(alignments.get(1), outcome.effectivePrimary());
         assertEquals("mate", outcome.note());
@@ -814,7 +797,7 @@ public class LiftBackDiscriminatorTest
     @Test
     public void testMultiLocusTieMateOnNeitherChromStaysRandom()
     {
-        // the mate is on a third chromosome, so proximity does not discriminate and the seed decides.
+        // The mate is on a third chromosome, so proximity does not discriminate and the seed decides.
         List<LiftedAlignment> alignments = multiLocusSet();
         alignments.get(0).GenomicScore = 100;
         alignments.get(1).GenomicScore = 100;
@@ -827,7 +810,7 @@ public class LiftBackDiscriminatorTest
     @Test
     public void testMultiLocusTieMateTooFarStaysRandom()
     {
-        // mate is on CHR1 but past MATE_PROXIMITY_MAX_DISTANCE from the CHR1 locus, so it is not proximal.
+        // The mate is on CHR1 but past MATE_PROXIMITY_MAX_DISTANCE from the CHR1 locus, so it is not proximal.
         List<LiftedAlignment> alignments = multiLocusSet();
         alignments.get(0).GenomicScore = 100;
         alignments.get(1).GenomicScore = 100;

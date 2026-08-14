@@ -20,7 +20,7 @@ import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.tars.common.ContigEntry;
 import com.hartwig.hmftools.tars.common.ContigSidecar;
 
-// builds one contig sequence per chromosome (ex: trans1 + xN + trans2 + ...) with sidecar file for liftback
+// builds one contig sequence per chromosome (trans1 + N-spacer + trans2 + ...) plus a sidecar file for liftback
 public class SpliceFastaBuilder
 {
     // N-padding between transcripts on the same alt contig
@@ -85,8 +85,8 @@ public class SpliceFastaBuilder
 
                     for(TranscriptData transcript : transcripts)
                     {
-                        // single-exon transcripts have no junctions, so no contig; still record their exon as an
-                        // annotation-only row so the liftback exon index matches the full ensembl cache.
+                        // single-exon transcripts have no junctions, so no contig; record the exon as an annotation-only
+                        // row so the liftback exon index covers the full ensembl cache
                         if(transcript.exons().size() < 2)
                         {
                             ++skippedSingleExon;
@@ -100,7 +100,7 @@ public class SpliceFastaBuilder
                         if(result == null)
                             continue;
 
-                        // all-N contig is alignment-useless, so no contig; keep its exons as annotation only.
+                        // an all-N sequence cannot be aligned to, so no contig; keep its exons as annotation only
                         if(result.sequence().chars().allMatch(c -> c == 'N' || c == 'n'))
                         {
                             contigEntries.add(ContigEntry.annotationOnly(
@@ -142,7 +142,7 @@ public class SpliceFastaBuilder
         TARS_LOGGER.info("SpliceFastaBuilder complete, mins({})", runTimeMinsStr(startTimeMs));
     }
 
-    // builds the chromosome's alt-contig sequence, recording where each transcript lands in it
+    // packs transcripts into the chromosome's alt-contig sequence and appends a ContigEntry for where each one lands
     static String packChromosomeContig(
             final String altContig, final List<TranscriptContigBuilder.TranscriptContigResult> transcripts,
             final List<ContigEntry> entries, final int spacerLength)

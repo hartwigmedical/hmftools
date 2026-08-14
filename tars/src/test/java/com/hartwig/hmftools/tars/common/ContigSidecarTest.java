@@ -66,7 +66,6 @@ public class ContigSidecarTest
     @Test
     public void testHeaderOnlySidecarReadsAsEmpty() throws IOException
     {
-        // a sidecar with only its header row (no entries) loads as an empty list rather than failing
         File tempFile = Files.createTempFile("contig_sidecar_empty_", ".tsv").toFile();
         tempFile.deleteOnExit();
 

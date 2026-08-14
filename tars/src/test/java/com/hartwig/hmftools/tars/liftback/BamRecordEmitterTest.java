@@ -196,7 +196,6 @@ public class BamRecordEmitterTest
     @Test
     public void testStrandSwapReverseComplementsSeqAndQuals()
     {
-        // Swapping strand requires SEQ and qualities to follow the emitted genomic orientation.
         SAMRecord record = newRecord(CHR_1, 5000, "100M");
         record.setReadNegativeStrandFlag(true);
         record.setMappingQuality(0);

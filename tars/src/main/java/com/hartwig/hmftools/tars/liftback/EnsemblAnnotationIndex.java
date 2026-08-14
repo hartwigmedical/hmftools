@@ -144,9 +144,9 @@ public final class EnsemblAnnotationIndex
         return index;
     }
 
-    // Union-merge overlapping/adjacent spans into sorted, non-overlapping ranges. Deliberately not
-    // BaseRegion.checkMergeOverlaps: that overwrites the end with the next span's (setEnd, not max), so an exon
-    // nested inside an earlier-starting one shrinks the merged span - and exons nest across isoforms.
+    // Union-merge overlapping/adjacent spans into sorted, non-overlapping ranges. Not BaseRegion.checkMergeOverlaps:
+    // it sets the merged end from the next span rather than the max, so an exon nested inside an earlier-starting one
+    // shrinks the merged span - and exons nest across isoforms.
     private static void mergeSpans(final List<BaseRegion> regions)
     {
         regions.sort(Comparator.comparingInt(BaseRegion::start));

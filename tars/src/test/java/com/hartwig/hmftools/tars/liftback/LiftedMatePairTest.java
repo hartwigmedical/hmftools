@@ -16,8 +16,7 @@ import org.junit.Test;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMRecord;
 
-// Pair-side lookup semantics (mateOf the opposite side, ownPrimary the same side, null when absent)
-// and the mate-field patch those lookups feed: RNEXT/PNEXT/mate-strand/MC and TLEN.
+// Pair-side lookups (mateOf the opposite side, ownPrimary the same side) and the mate-field patch they feed.
 public class LiftedMatePairTest
 {
     private static LiftedRecord info(final int alignmentStart)
@@ -76,7 +75,6 @@ public class LiftedMatePairTest
     @Test
     public void testNullWhenMateNotYetRecorded()
     {
-        // /1 is decided before /2 has been lifted, so its mate lookup is null while its own side is set
         LiftedRecord firstInfo = info(100);
         LiftedMatePair pair = new LiftedMatePair();
         pair.recordPrimary(true, firstInfo);
@@ -101,14 +99,12 @@ public class LiftedMatePairTest
         assertFalse(r1.getMateUnmappedFlag());
         // leftmost R1 at 100, R2's 100M ends at 499 -> span = 400, positive on R1
         assertEquals(400, r1.getInferredInsertSize());
-        // MC must reflect the mate's lifted CIGAR
         assertEquals("100M", r1.getStringAttribute(MATE_CIGAR_ATTRIBUTE));
     }
 
     @Test
     public void testMateCigarWrittenAsLiftedNCigar()
     {
-        // junction-spanning mate: MC must carry the lifted N-CIGAR, not the stale pre-lift value
         LiftedMatePair pair = new LiftedMatePair();
         LiftedRecord r2Info = liftedRecordAt("1", 400, "20M500N30M", true);
         pair.recordPrimary(false, r2Info);
@@ -175,7 +171,7 @@ public class LiftedMatePairTest
         pair.patchMateFields(r1);
 
         assertTrue(r1.getMateUnmappedFlag());
-        // SAM: unmapped mate placed at the read's own position
+        // SAM rule: an unmapped mate is placed at the read's own position
         assertEquals("1", r1.getMateReferenceName());
         assertEquals(100, r1.getMateAlignmentStart());
         assertEquals(0, r1.getInferredInsertSize());
@@ -196,8 +192,7 @@ public class LiftedMatePairTest
     @Test
     public void testUnmappedReadWithMappedMateParkedAtMateLocus()
     {
-        // An unmapped read whose mate is mapped is placed at the mate's coordinates so the pair stays
-        // together in a coord-sorted BAM. It is not a proper pair and carries no insert size.
+        // An unmapped read is parked at its mapped mate's coordinates so the pair stays together in a coord-sorted BAM.
         LiftedMatePair pair = new LiftedMatePair();
         pair.recordPrimary(false, liftedRecordAt("1", 400, "50M", true));
 
@@ -242,12 +237,11 @@ public class LiftedMatePairTest
     @Test
     public void testBothMatesUnmappedClearsOwnCoordinates()
     {
-        // When both mates are unmapped, the read's stale pre-lift coordinates are cleared.
         LiftedMatePair pair = new LiftedMatePair();
         pair.recordPrimary(false, LiftedRecord.unmapped(""));
 
         SAMRecord r1 = TarsTestFixtures.pairedUnmappedRecord("read1", true);
-        r1.setReferenceName("1");          // stale pre-lift placement carried over from bwa
+        r1.setReferenceName("1");          // stale pre-lift placement from bwa
         r1.setAlignmentStart(100);
         pair.patchMateFields(r1);
 
@@ -273,7 +267,6 @@ public class LiftedMatePairTest
     @Test
     public void testPatchSuppRecordPatchedFromMatePrimary()
     {
-        // supplementary R1 must still use R2's primary info
         LiftedMatePair pair = new LiftedMatePair();
         LiftedRecord r2Info = liftedRecordAt("1", 400, "50M", true);
         pair.recordPrimary(false, r2Info);

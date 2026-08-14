@@ -32,8 +32,6 @@ public class ShardedChunkProducerTest
     @Rule
     public TemporaryFolder mFolder = new TemporaryFolder();
 
-    // ---- stage 1: byte-range splitting on read-name boundaries (regression for the small-input EOF bug) ----
-
     private static SAMFileHeader nameGroupedHeader()
     {
         SAMFileHeader header = new SAMFileHeader();
@@ -57,11 +55,12 @@ public class ShardedChunkProducerTest
         return bam;
     }
 
+    // regression for the small-input EOF bug: a high shard count once produced EOF as a shard start.
     @Test
     public void testSmallInputHighShardCountNeverStartsAtEof() throws IOException
     {
         SAMFileHeader header = nameGroupedHeader();
-        File bam = writeNameGroupedBam(header, 40);   // tiny: far fewer blocks than shardCount
+        File bam = writeNameGroupedBam(header, 40);   // far fewer BGZF blocks than shardCount
 
         List<ShardRange> ranges = ShardedChunkProducer.computeSplits(bam, header, 64);
 
@@ -79,7 +78,7 @@ public class ShardedChunkProducerTest
             }
         }
 
-        assertEquals(80, names.size());   // 40 fragments x 2 reads, none dropped or double-counted
+        assertEquals(80, names.size());   // 40 fragments x 2 reads
         for(int i = 0; i < names.size(); i += 2)
             assertEquals("fragment split across a shard boundary", names.get(i), names.get(i + 1));
     }
@@ -94,8 +93,6 @@ public class ShardedChunkProducerTest
         assertEquals(1, ranges.size());
         assertTrue(ranges.get(0).endVptr() == ShardedChunkProducer.EOF);
     }
-
-    // ---- stage 3: chunks are cut only at a read-name boundary, so no fragment is split across two chunks ----
 
     private static SAMRecord read(final String name)
     {
@@ -124,8 +121,7 @@ public class ShardedChunkProducerTest
     @Test
     public void testCutsOnlyAtNameBoundary() throws InterruptedException
     {
-        // three records per fragment, target 2 reads: the cut waits for the name to change rather than firing
-        // mid-fragment, so each chunk holds whole fragments.
+        // three records per fragment against a target of 2 reads: every cut must wait for the name to change.
         List<SAMRecord> records = new ArrayList<>();
         for(int fragment = 0; fragment < 5; ++fragment)
         {
@@ -158,7 +154,6 @@ public class ShardedChunkProducerTest
     @Test
     public void testOversizeFragmentStaysWhole() throws InterruptedException
     {
-        // a single fragment larger than the target must not be split -- the boundary check gates the cut.
         List<SAMRecord> records = new ArrayList<>();
         for(int i = 0; i < 10; ++i)
         {
@@ -170,8 +165,6 @@ public class ShardedChunkProducerTest
         assertWholeFragments(chunks);
         assertEquals(10, chunks.get(0).size());
     }
-
-    // ---- end-to-end: the threaded producer reads the whole BAM across shards, then queues one END_OF_STREAM per worker ----
 
     @Test
     public void testProducerEmitsAllRecordsThenEndOfStream() throws Exception
@@ -198,7 +191,7 @@ public class ShardedChunkProducerTest
         }
         producer.join();
 
-        assertEquals(100, records);   // 50 fragments x 2 reads, all recovered
+        assertEquals(100, records);   // 50 fragments x 2 reads
         assertEquals(workers, sentinels);
     }
 }

@@ -24,16 +24,13 @@ import htsjdk.samtools.ValidationStringency;
 import htsjdk.samtools.util.BinaryCodec;
 import htsjdk.samtools.util.BlockCompressedInputStream;
 
-// Reads a name-sorted BAM in parallel. With no coordinate index to slice by, it is sharded by raw byte range in
-// three stages:
-//  - split the file into ranges that each begin on a read-name boundary: snap a target offset to the next BGZF
-//    block, then advance to the first read-name change
-//  - decode each range's records on its own thread
-//  - cut those records into name-aligned chunks on the shared queue for the workers
-// Every boundary is a read-name boundary, so a shard always holds whole fragments - mates/supplementaries never
-// split, no cross-shard reconciliation.
-// BGZF block layout (section 4.1) and the virtual file offset we shift (coffset<<16, section 4.1.1) are defined in
-// the SAM/BAM spec: https://samtools.github.io/hts-specs/SAMv1.pdf
+// Reads a name-sorted BAM in parallel. With no coordinate index to slice by, it shards by raw byte range: snap a
+// target offset to the next BGZF block, advance to the first read-name change, decode each range on its own thread,
+// then cut those records into name-aligned chunks on the shared queue for the workers.
+// Every boundary is a read-name boundary, so a shard holds whole fragments: mates/supplementaries never split and
+// there is no cross-shard reconciliation.
+// BGZF block layout (section 4.1) and the virtual file offset shifted here (coffset<<16, section 4.1.1) are defined
+// in the SAM/BAM spec: https://samtools.github.io/hts-specs/SAMv1.pdf
 public class ShardedChunkProducer extends Thread
 {
     private final String mInputBam;
@@ -45,7 +42,7 @@ public class ShardedChunkProducer extends Thread
 
     private static final long PROGRESS_INTERVAL_MS = 15_000;
 
-    // sentinel enqueued once per worker to signal end-of-stream (compared by reference).
+    // enqueued once per worker to signal end-of-stream; compared by reference.
     public static final List<SAMRecord> END_OF_STREAM = new ArrayList<>();
 
     public ShardedChunkProducer(
@@ -126,8 +123,6 @@ public class ShardedChunkProducer extends Thread
         }
     }
 
-    // ---- stage 1: split into byte ranges that each start on a read-name boundary ----
-
     static final long EOF = Long.MAX_VALUE;
 
     // BGZF block-header magic: gzip magic (1f 8b), deflate method (08), FEXTRA flag (04)
@@ -165,8 +160,7 @@ public class ShardedChunkProducer extends Thread
 
             long splitVptr = firstGroupBoundaryVptr(bam, header, blockStart << 16);
             if(splitVptr == EOF)
-                break; // no group boundary before EOF (tiny input, probe hit the BGZF end marker): the rest is one
-            // shard. EOF must never be a shard start - the iterator would then seek to Long.MAX_VALUE.
+                break; // no group boundary before EOF: the rest is one shard, and EOF as a shard start would seek to Long.MAX_VALUE
 
             if(splitVptr > splits.get(splits.size() - 1))
             {
@@ -184,7 +178,6 @@ public class ShardedChunkProducer extends Thread
         return ranges;
     }
 
-    // virtual pointer of the first alignment record (just past the BAM header).
     private static long headerEndVptr(final File bam, final SAMFileHeader header) throws IOException
     {
         try(BlockCompressedInputStream stream = new BlockCompressedInputStream(bam))
@@ -204,7 +197,7 @@ public class ShardedChunkProducer extends Thread
         }
     }
 
-    // the next valid BGZF block header at/after targetOffset, as a compressed offset (-1 if none).
+    // next BGZF block header at/after targetOffset, as a compressed offset; -1 if none.
     private static long findBlockStart(final File bam, final long targetOffset) throws IOException
     {
         try(RandomAccessFile raf = new RandomAccessFile(bam, "r"))
@@ -236,7 +229,7 @@ public class ShardedChunkProducer extends Thread
         return -1;
     }
 
-    // virtual pointer of the first read-name change at/after blockVptr (the next group boundary); EOF if none.
+    // virtual pointer of the first read-name change at/after blockVptr; EOF if none.
     private static long firstGroupBoundaryVptr(final File bam, final SAMFileHeader header, final long blockVptr)
             throws IOException
     {
@@ -266,10 +259,7 @@ public class ShardedChunkProducer extends Thread
         }
     }
 
-    // ---- stage 2: decode the records in one shard range ----
-
-    // Both range ends are read-name boundaries (stage 1), so stopping once the next record reaches endVptr keeps
-    // every fragment whole.
+    // Both range ends are read-name boundaries, so stopping once the next record reaches endVptr keeps fragments whole.
     static final class ShardRecordIterator implements Iterator<SAMRecord>, Closeable
     {
         private final BlockCompressedInputStream mStream;
@@ -339,10 +329,8 @@ public class ShardedChunkProducer extends Thread
         }
     }
 
-    // ---- stage 3: cut a shard's records into name-aligned chunks ----
-
-    // Flush a chunk only at a name boundary once it reaches targetReads, so a fragment's records stay together -
-    // splitting them would orphan mates/supps and defeat the per-group cache. readsCounter (nullable) tracks progress.
+    // Flush only at a name boundary once the chunk reaches targetReads: splitting a fragment would orphan its
+    // mates/supplementaries and defeat the per-group cache. readsCounter is nullable.
     static void streamChunks(
             final Iterator<SAMRecord> iter, final int targetReads,
             final BlockingQueue<List<SAMRecord>> queue, final LongAdder readsCounter)
@@ -379,8 +367,6 @@ public class ShardedChunkProducer extends Thread
             queue.put(chunk);
         }
     }
-
-    // ---- progress + resource helpers ----
 
     // periodic progress: reads processed and rough % of the input consumed across all shards.
     private void runMonitor(

@@ -18,9 +18,8 @@ import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMFileWriterFactory;
 import htsjdk.samtools.SAMRecord;
 
-// Drains read-name chunks, transforms each contiguous name-group with a per-group LiftedMatePair, and writes
-// lifted records to its own unsorted shard. Owns its engines and ref genome handle so nothing serialises across
-// workers. Exits on END_OF_STREAM.
+// Drains chunks, splits each into contiguous name-groups for the processor and writes lifted records to its own
+// unsorted shard. Owns its processor and ref genome handle so nothing serialises across workers.
 public class LiftBackWorker extends Thread
 {
     private final BlockingQueue<List<SAMRecord>> mQueue;
@@ -36,7 +35,8 @@ public class LiftBackWorker extends Thread
         mShardWriter = new SAMFileWriterFactory().makeBAMWriter(header, false, new File(shardBam));
     }
 
-    // counted by the processor, which sees each record's pre-lift state. Read by TarsApplication after the join.
+    // processor counters, incremented on the pre-lift record so they count inputs not emitted records
+    // read by TarsApplication only after the worker threads join
     public int recordsSeen() { return mProcessor.recordsSeen(); }
 
     public int primariesSeen() { return mProcessor.primariesSeen(); }
@@ -104,17 +104,15 @@ public class LiftBackWorker extends Thread
         }
     }
 
-    // Every kept record lands here: normalise it, then write it to this worker's shard.
     private void write(final SAMRecord record)
     {
         sanitizeForOutput(record);
         mShardWriter.addAlignment(record);
     }
 
-    // No malformed record leaves tars: htsjdk and redux reject a zero-length CIGAR element or a SEQ length that
-    // disagrees with the CIGAR. Normalise the CIGAR and, if SEQ still disagrees - eg a failed-lift supplementary
-    // mirrored onto its primary's coords - write a matching all-M placeholder so the read stays valid and in the SA
-    // chain rather than being dropped or crashing downstream.
+    // htsjdk and redux reject a zero-length CIGAR element or a SEQ length that disagrees with the CIGAR. Normalise the
+    // CIGAR and, if SEQ still disagrees (e.g. a failed-lift supplementary mirrored onto its primary's coords), write a
+    // matching all-M placeholder so the read stays valid and in the SA chain.
     static void sanitizeForOutput(final SAMRecord record)
     {
         if(record.getReadUnmappedFlag())

@@ -86,7 +86,7 @@ public class TarsConfig
         }
     }
 
-    // Common output stem; also namespaces per-worker shard intermediates so repeated runs into one dir don't clobber each other.
+    // common output stem; also namespaces the per-worker shard files so repeated runs into one dir don't clobber each other
     public String filePrefix()
     {
         String prefix = OutputDir + SampleId + "." + FILE_ID;

@@ -36,8 +36,7 @@ public class LiftBackScenarioTest
     @Test
     public void testExonSpanningReadLiftsToJunctionCigar()
     {
-        // r1 spans exon1->exon2 (50M100N50M); the mate at tx 197 crosses exon2->exon3 with a 4M leading anchor
-        // (above the micro-anchor floor of 3) -> 4M100N46M. Mate fields cross-point at each other's lifted locus.
+        // the mate at tx 197 starts 4 bases before the exon2 boundary, so the lift splits it across the exon2->exon3 junction.
         scenario()
                 .read(primary("frag1", TX_CONTIG, 51, "100M"))
                 .read(mate("frag1", TX_CONTIG, 197, "50M"))
@@ -51,8 +50,7 @@ public class LiftBackScenarioTest
     @Test
     public void testUnliftableReadIsMarkedUnmapped()
     {
-        // primary starts past the contig end (tx 251, contig length 250) -> translation fails -> emitted unmapped
-        // beside its mapped mate; the surviving mate loses proper-pair and is flagged mate-unmapped.
+        // the primary starts past the contig end (tx 251, contig length 250), so translation fails.
         scenario()
                 .read(primary("frag7", TX_CONTIG, 251, "50M"))
                 .read(mate("frag7", CHR_1, 600, "50M"))
@@ -67,9 +65,7 @@ public class LiftBackScenarioTest
     @Test
     public void testSupplementarySaTagRewrittenToGenomicCoords()
     {
-        // a split read: primary on exon1 (100M, no terminal softclip so no merge), supplementary on exon2, each
-        // pointing at the other via a tx-contig SA. The primary's SA must be lifted to chr1 (no _tx name), the supp
-        // lifts to its exon2/exon3 genomic locus, and both records' mate fields point at the mate.
+        // the primary has no terminal soft clip so the supplementary is not merged in; both keep a tx-contig SA to rewrite.
         scenario()
                 .read(primary("frag8", TX_CONTIG, 51, "100M").sa(TX_CONTIG + ",197,+,50M,60,0;"))
                 .read(supp("frag8", TX_CONTIG, 197, "50M").sa(TX_CONTIG + ",51,+,100M,60,0;"))
@@ -95,7 +91,7 @@ public class LiftBackScenarioTest
     @Test
     public void testTxTerminalSoftclipIsPreserved()
     {
-        // Liftback preserves a terminal soft clip unless a documented overhang collapse or supplementary merge changes it.
+        // Liftback preserves a terminal soft clip unless an overhang collapse or supplementary merge changes it.
         scenario()
                 .read(primary("frag10", TX_CONTIG, 1, "40M10S").bases("A".repeat(50)))
                 .read(mate("frag10", CHR_1, 1500, "50M").bases("A".repeat(50)))
@@ -106,7 +102,6 @@ public class LiftBackScenarioTest
     @Test
     public void testSingleLocusTxMapQualityZeroBumpsToSixty()
     {
-        // a tx-only read at a single genomic locus with bwa MAPQ 0 lifts and is promoted to 60 with no XA alt.
         scenario()
                 .read(primary("frag2", TX_CONTIG, 1, "50M").mapQuality(0))
                 .run()
@@ -118,8 +113,7 @@ public class LiftBackScenarioTest
     @Test
     public void testSplitReadResolvedAcrossAnnotatedJunctionDropsSupp()
     {
-        // primary (exon1 side) + supplementary (exon2 side) flanking the annotated intron 200-299 merge into one
-        // spliced primary; the supplementary is dropped, leaving primary/1 + mate/2.
+        // primary and supplementary flank the annotated intron 200-299, so they merge into one spliced primary.
         scenario()
                 .read(primary("frag3", CHR_1, 150, "50M50S").bases("A".repeat(100)))
                 .read(supp("frag3", CHR_1, 300, "50S50M").bases("A".repeat(100)))
@@ -127,14 +121,13 @@ public class LiftBackScenarioTest
                 .run()
                 .assertLifted("frag3", PRIMARY, CHR_1, 150, "50M100N50M")
                 .assertSuppCount("frag3", 0)
-                .assertEmittedCount(2); // merged supp dropped: only primary/1 + mate/2 remain
+                .assertEmittedCount(2); // primary/1 + mate/2
     }
 
     @Test
     public void testSplitReadUniquePairBumpsMapQualityToSixty()
     {
-        // bwa gave the split halves MAPQ 0; the XA alt overlaps the primary placement, so the primary+supplementary
-        // pair maps to a single locus and the merged spliced primary is promoted to 60.
+        // the XA alt overlaps the primary placement, so the primary+supplementary pair maps to a single locus.
         scenario()
                 .read(primary("frag5", CHR_1, 150, "50M50S").mapQuality(0).xa(CHR_1 + ",+150,50M50S,0").bases("A".repeat(100)))
                 .read(supp("frag5", CHR_1, 300, "50S50M").mapQuality(0).bases("A".repeat(100)))
@@ -148,7 +141,7 @@ public class LiftBackScenarioTest
     @Test
     public void testSupplementaryCanMergeWithXaCandidateBeforePrimaryChoice()
     {
-        // The primary's XA candidate and supplementary form the supported splice. The reciprocal SA tags match BWA output.
+        // the supported splice is the primary's XA candidate plus the supplementary, not the primary placement.
         scenario()
                 .read(primary("frag7", CHR_1, 900, "50M50S").mapQuality(0)
                         .xa(CHR_1 + ",+150,50M50S,0")
@@ -168,8 +161,7 @@ public class LiftBackScenarioTest
     @Test
     public void testSplitReadMultiLocusPairKeepsBwaMapQuality()
     {
-        // same merge, but the XA alt is a distinct locus (chr1:900), so the pair does not uniquely map: the merged
-        // primary keeps its bwa MAPQ 0 rather than being bumped.
+        // same merge, but the XA alt is a distinct locus (chr1:900), so the pair does not uniquely map.
         scenario()
                 .read(primary("frag6", CHR_1, 150, "50M50S").mapQuality(0).xa(CHR_1 + ",+900,50M50S,0").bases("A".repeat(100)))
                 .read(supp("frag6", CHR_1, 300, "50S50M").mapQuality(0).bases("A".repeat(100)))

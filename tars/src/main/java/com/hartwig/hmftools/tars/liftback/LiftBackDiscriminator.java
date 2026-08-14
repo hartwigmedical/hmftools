@@ -21,8 +21,8 @@ import com.hartwig.hmftools.tars.liftback.features.OverhangGate;
 
 import htsjdk.samtools.SAMRecord;
 
-// Lifts a SAMRecord's alignments to genomic coordinates and decides its outcome: which alignment becomes the primary,
-// how many loci it maps to, and what MAPQ that placement earns. Every input record produces exactly one result.
+// Lifts a SAMRecord's alignments to genomic coordinates and decides the primary alignment, locus count and MAPQ.
+// Every input record produces exactly one result.
 public class LiftBackDiscriminator
 {
     private final ContigTranslator mContigTranslator;
@@ -60,11 +60,9 @@ public class LiftBackDiscriminator
         return lifted;
     }
 
-    // A lift that produces nothing is rare, so log it against the transcript segment owning the position. A position
-    // outside every segment landed in the spacer between transcripts, where there is nothing to lift onto - junk
-    // placement rather than a lift that went wrong - so it is worded apart. Inside a segment the cause reads off the
-    // numbers: readEnd above segEnd is an overhang the clamp could not absorb, wholly inside means the walk ran off
-    // the last exon.
+    // Lift failures are rare, so log them against the transcript segment owning the position. A position outside every segment
+    // landed in the inter-transcript spacer with nothing to lift onto, so it logs as unlifted rather than a lift failure. Inside
+    // a segment, readEnd past segEnd is an overhang the clamp could not absorb; wholly inside means the walk ran off the last exon.
     private void logLiftFailure(final SAMRecord record)
     {
         String contig = record.getReferenceName();
@@ -97,7 +95,7 @@ public class LiftBackDiscriminator
                 segment.transName(), segment.contigStart(), segment.contigEnd(), segment.exonSpans().size());
     }
 
-    // Convenience for non-discriminating callers (supplementaries, unmapped, lift-only paths, tests).
+    // Convenience for non-discriminating callers: supplementaries, unmapped, lift-only paths, tests.
     public LiftedRecord resolve(final SAMRecord record)
     {
         return resolve(record, null, null);
@@ -117,7 +115,7 @@ public class LiftBackDiscriminator
 
         if(record.getSupplementaryAlignmentFlag())
         {
-            return liftSupplementaryAlignment(record);
+            return liftSupplementaryAlignment(record, overhangGate);
         }
 
         LiftedRecord alignments = liftPrimaryAlignments(record, overhangGate);
@@ -128,11 +126,11 @@ public class LiftBackDiscriminator
         return selectPrimaryAlignment(record, alignments.liftedAlignments(), mate);
     }
 
-    // Steps 0-1: lift the primary and XA alternatives into genomic coordinates, then apply the documented overhang gate.
+    // README Steps 0-1: lift the primary and XA alts to genomic coordinates, then apply the overhang gate.
     public LiftedRecord liftPrimaryAlignments(final SAMRecord record, final OverhangGate overhangGate)
     {
-        // An unmapped read has reference name "*", which the translator would pass through as a ref-genome placement -
-        // the pair then looks mapped to the mate patch and loses its mate-unmapped flag. Same guard as resolve().
+        // An unmapped read has reference name "*", which the translator would pass through as a ref-genome placement:
+        // the pair then looks mapped and loses its mate-unmapped flag. Same guard as resolve().
         if(record.getReadUnmappedFlag())
         {
             return LiftedRecord.unmapped("");
@@ -244,8 +242,10 @@ public class LiftBackDiscriminator
         return existing + ";" + note;
     }
 
-    // A supplementary is only lifted, never discriminated: lift its own coords with no XA parse or locus pick.
-    public LiftedRecord liftSupplementaryAlignment(final SAMRecord record)
+    // A supplementary is only lifted, never discriminated: no XA parse and no locus pick. It still gets the overhang
+    // gate, since a contig-boundary overhang is a property of the lift and not of the record's role: an ungated
+    // supplementary keeps a one or two base block spliced to its real anchor, which downstream becomes the fusion junction.
+    public LiftedRecord liftSupplementaryAlignment(final SAMRecord record, final OverhangGate overhangGate)
     {
         LiftedAlignment lifted = liftSelf(record);
 
@@ -254,7 +254,16 @@ public class LiftBackDiscriminator
             return LiftedRecord.unmapped("supp_translate_failed");
         }
 
-        return new LiftedRecord(record.getMappingQuality(), 1, "", 0, List.of(lifted));
+        List<LiftedAlignment> alignments = new ArrayList<>(1);
+        alignments.add(lifted);
+
+        // Null on lift-only paths, where overhangs are deliberately left untouched.
+        if(overhangGate != null)
+        {
+            overhangGate.gateCandidates(alignments, record);
+        }
+
+        return new LiftedRecord(record.getMappingQuality(), 1, "", 0, alignments);
     }
 
     // Distinct genomic loci among kept alignments: an alt overlapping the primary collapses into it; non-overlapping
@@ -389,7 +398,7 @@ public class LiftBackDiscriminator
         return hasRef && hasTx && loci.size() == 1 && distinctCigars.size() == 1;
     }
 
-    // primaryIndex is the winner's position in the alignment list, which is what LiftedRecord stores.
+    // primaryIndex is the winner's position in the alignment list, as stored by LiftedRecord.
     public record ApplyResult(int primaryIndex, LiftedAlignment effectivePrimary, String note)
     {
     }
@@ -402,10 +411,9 @@ public class LiftBackDiscriminator
         return apply(alignments, concordant, self, seed, bwaHasPriority, null);
     }
 
-    // Returns the winning candidate, its index and a short note. When bwa expressed no priority
-    // (bwaHasPriority false, ie MAPQ 0) it ranks candidates by recomputed genomic score and takes the clear winner, falling
-    // back to mate-proximity / junction / seed tie-breaks only on a score tie or unscored candidates (split read left for
-    // supplementary-resolve). bwaHasPriority true leaves bwa's order untouched; mate is the other read's lifted record, or null.
+    // Returns the winning candidate, its index and a short note. With bwaHasPriority false (MAPQ 0) candidates are ranked by
+    // recomputed genomic score, falling back to mate-proximity / junction / seed tie-breaks only on a score tie or unscored
+    // candidates (split read left for supplementary-resolve). bwaHasPriority true leaves bwa's order untouched.
     public static ApplyResult apply(
             final List<LiftedAlignment> alignments, final boolean concordant, final LiftedAlignment self,
             final int seed, final boolean bwaHasPriority, final LiftedRecord mate)
@@ -531,7 +539,7 @@ public class LiftBackDiscriminator
         return LiftedRecord.NO_PRIMARY;
     }
 
-    // Tied candidates proximal to the mate; the full set unchanged when the mate is absent or does not discriminate.
+    // Falls back to the full set when the mate is absent or does not discriminate.
     private static List<LiftedAlignment> mateProximalSubset(final List<LiftedAlignment> top, final LiftedRecord mate)
     {
         if(mate == null || !mate.hasPlacement())
@@ -584,9 +592,9 @@ public class LiftBackDiscriminator
         return gap <= MATE_PROXIMITY_MAX_DISTANCE;
     }
 
-    // Tie-break within an equal-top-score set: a spliced placement (a real N junction) beats a clipped placement
-    // (soft-clip, no N) at the same lifted locus. Both describe the same read at the same start; the junction is the
-    // correct RNA interpretation - bwa soft-clipped rather than cross the intron - so it is not left to the coin.
+    // Tie-break within an equal-top-score set: a spliced placement (real N junction) beats a clipped placement
+    // (soft-clip, no N) at the same lifted locus. bwa soft-clipped rather than cross the intron, so the junction is
+    // the correct RNA interpretation and is not left to the seed.
     private static LiftedAlignment preferJunctionOverSoftClip(final List<LiftedAlignment> top)
     {
         for(LiftedAlignment junction : top)

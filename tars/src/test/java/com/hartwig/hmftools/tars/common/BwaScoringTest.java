@@ -19,13 +19,11 @@ public class BwaScoringTest
         // TARS keeps a short anchor only when its recomputed bwa-mem score reaches the overhang threshold.
         assertEquals(5, BwaScoring.score(bases("A".repeat(9) + "C"), reference));
 
-        // When a junction is collapsed, only the matching part of the folded window stays aligned.
         assertEquals(5, BwaScoring.maxScoringPrefix(bases("A".repeat(5) + "C".repeat(3)), reference));
 
-        // A completely unsupported overhang becomes soft clip.
         assertEquals(0, BwaScoring.maxScoringPrefix(bases("C".repeat(5)), reference));
 
-        // A real read can contain an internal mismatch; keep extending when later matches recover the best score.
+        // keep extending past an internal mismatch when later matches recover the best score
         assertEquals(10, BwaScoring.maxScoringPrefix(bases("A".repeat(5) + "C" + "A".repeat(4)), reference));
     }
 

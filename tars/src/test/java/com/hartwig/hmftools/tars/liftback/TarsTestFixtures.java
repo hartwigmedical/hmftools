@@ -20,8 +20,8 @@ import com.hartwig.hmftools.tars.common.ContigEntry;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMRecord;
 
-// Shared test fixtures for the liftback suite: the standard three-exon transcript contig, SAMRecord builders,
-// a MockRefGenome-backed reference genome, and factories/builder for LiftedAlignment + LiftedRecord.
+// Shared fixtures for the liftback suite: the three-exon transcript contig, SAMRecord builders, an in-memory reference
+// genome and factories for LiftedAlignment + LiftedRecord.
 public final class TarsTestFixtures
 {
     public static final String GENOMIC_CHR = CHR_1;
@@ -40,8 +40,7 @@ public final class TarsTestFixtures
                 List.of(new BaseRegion(100, 199), new BaseRegion(300, 399), new BaseRegion(500, 549)));
     }
 
-    // an EnsemblAnnotationIndex from a single entry carrying the exon spans on the given chromosome (bare "1" or "chr1" both
-    // normalize to the V38 chr1 key the lift emits).
+    // bare "1" and "chr1" both normalize to the V38 chr1 key the lift emits.
     public static EnsemblAnnotationIndex exonRegionIndex(final String chromosome, final List<int[]> exonSpans)
     {
         List<BaseRegion> spans = new ArrayList<>();
@@ -79,7 +78,7 @@ public final class TarsTestFixtures
         return record;
     }
 
-    // Mapped record on either side of a pair, with an explicit strand - for mate-field patching.
+    // Mapped record on either side of a pair with an explicit strand - for mate-field patching.
     public static SAMRecord pairedRecord(
             final String readName, final boolean firstOfPair, final String contig, final int pos, final String cigar,
             final boolean negativeStrand)
@@ -144,7 +143,7 @@ public final class TarsTestFixtures
         return record;
     }
 
-    // mapped single-end (Ultima) primary: like primaryRecord but with no pairing flags set at all.
+    // Mapped single-end (Ultima) primary: like primaryRecord but with no pairing flags set at all.
     public static SAMRecord unpairedPrimaryRecord(final String contig, final int pos, final String cigar)
     {
         return unpairedPrimaryRecord("readX", contig, pos, cigar);
@@ -165,7 +164,7 @@ public final class TarsTestFixtures
         return record;
     }
 
-    // reference genome over a single in-memory chromosome
+    // Reference genome over a single in-memory chromosome.
     public static RefGenomeInterface refGenome(final String chromosome, final String bases)
     {
         return new TestGenome().with(chromosome, bases(bases)).asRefGenome();
@@ -183,8 +182,7 @@ public final class TarsTestFixtures
         return sequence.getBytes(StandardCharsets.US_ASCII);
     }
 
-    // Mutable in-memory genome for the ref-dependent passes. Allocate a chromosome with with(), overwrite bases at
-    // 1-based coords with set(), then hand asRefGenome() to the engine.
+    // Mutable in-memory genome for the ref-dependent passes; set() coordinates are 1-based.
     public static final class TestGenome
     {
         private final Map<String, byte[]> mBases = new HashMap<>();
@@ -201,7 +199,7 @@ public final class TarsTestFixtures
             return this;
         }
 
-        // overwrite bases at a 1-based start (e.g. to match a read for NM=0, or seed a splice motif).
+        // Overwrite bases to match a read for NM=0, or to seed a splice motif.
         public TestGenome set(final String chromosome, final int oneBasedStart, final String sequence)
         {
             byte[] seq = mBases.get(chromosome);
@@ -212,7 +210,7 @@ public final class TarsTestFixtures
             return this;
         }
 
-        // overwrite a run of one base at a 1-based start (e.g. a divergent exon/intron stretch).
+        // Overwrite a run of one base, e.g. a divergent exon/intron stretch.
         public TestGenome set(final String chromosome, final int oneBasedStart, final int count, final char base)
         {
             byte[] seq = mBases.get(chromosome);
@@ -234,7 +232,7 @@ public final class TarsTestFixtures
         }
     }
 
-    // assert a lifted record's genomic placement (chrom + start + cigar) in one line.
+    // Assert a lifted record's genomic placement: chrom, start and cigar.
     public static void assertLifted(final SAMRecord record, final String chrom, final int pos, final String cigar)
     {
         assertEquals(chrom, record.getReferenceName());
@@ -247,7 +245,7 @@ public final class TarsTestFixtures
         return new LiftedAlignment(chrom, pos, cigar, 0, false, false, true, 0);
     }
 
-    // A lifted record holding a single placement - the shape a mate is read as.
+    // Single-placement lifted record - the shape a mate is read as.
     public static LiftedRecord liftedRecordAt(
             final String chromosome, final int pos, final String cigar, final boolean negativeStrand)
     {
@@ -260,8 +258,7 @@ public final class TarsTestFixtures
         return new RecordBuilder();
     }
 
-    // Fluent builder over LiftedRecord, defaulting to a clean single-locus primary. The placement comes from the
-    // supplied alignments (primaryIndex, default 0), so tests set only the decision fields they care about.
+    // Builds a LiftedRecord defaulting to a clean single-locus primary; placement comes from the supplied alignments at primaryIndex.
     public static final class RecordBuilder
     {
         private int mUpdatedMapQuality = 60;

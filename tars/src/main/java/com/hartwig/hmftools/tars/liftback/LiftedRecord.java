@@ -5,8 +5,8 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-// Tars' in-flight view of one SAMRecord: 1:N over its candidate placements (own alignment + lifted XA alts), of which
-// primaryIndex is the one written back; the placement accessors are valid only once hasPlacement() holds.
+// One SAMRecord's candidate placements during lift-back: the read's own alignment plus its lifted XA alts, of which
+// primaryIndex is the one written back.
 public record LiftedRecord(
         int updatedMapQuality,
         // locus count as decided; deliberately NOT recomputed by later primary-only revisions
@@ -18,8 +18,8 @@ public record LiftedRecord(
 {
     public static final int NO_PRIMARY = -1;
 
-    // Either the record has candidates and one of them is the chosen placement, or it has neither. The placement
-    // accessors below assume it, so a mismatch is a lift bug and fails here rather than downstream.
+    // Either the record has candidates and one of them is the chosen placement, or it has neither: a mismatch is a
+    // lift bug, so fail here rather than downstream.
     public LiftedRecord
     {
         liftedAlignments = List.copyOf(liftedAlignments);
@@ -34,26 +34,25 @@ public record LiftedRecord(
         }
     }
 
-    // No placement: either the read arrived unmapped, or lift-back gave up on it. Which one is answered by the input
-    // record's own unmapped flag, so only the reason is carried here.
+    // No placement: the read arrived unmapped or lift-back gave up. The input record's own unmapped flag says which,
+    // so only the reason is carried here.
     public static LiftedRecord unmapped(final String note)
     {
         return new LiftedRecord(0, 0, note, NO_PRIMARY, List.of());
     }
 
-    // alts the aligner offered in XA that lifted, dropped ones included: the set is self plus those.
+    // XA alts the aligner offered that lifted, dropped ones included: the alignment set is self plus those.
     public int numXaAlts()
     {
         return Math.max(liftedAlignments.size() - 1, 0);
     }
 
-    // the pick moved off the aligner's own primary at element 0
     public boolean swapped()
     {
         return primaryIndex > 0;
     }
 
-    // false when nothing lifted; the accessors below throw in that case.
+    // false when nothing lifted; the placement accessors below throw in that case.
     public boolean hasPlacement()
     {
         return primaryIndex >= 0;
@@ -95,8 +94,7 @@ public record LiftedRecord(
         return primaryAlignment().TranscriptStrand;
     }
 
-    // Revises the chosen primary's placement (overhang collapse, supplementary merge) with a new MAPQ and an appended note.
-    // The revision lands on the alignment, so the placement and the alignment set cannot drift apart.
+    // Revise the chosen primary in place (overhang collapse, supplementary merge) so placement and alignment set cannot drift apart.
     public LiftedRecord withRevisedPrimary(
             final int newPos, final String newCigar, final int newUpdatedMapQuality, final String note)
     {
@@ -119,9 +117,8 @@ public record LiftedRecord(
         return withLiftedAlignments(revised);
     }
 
-    // The XA tag for this record: every kept non-primary placement, minus alts whose span overlaps the primary's (a
-    // shared-exon isoform read lifting back onto the primary's coords carries no alternative-position info), each
-    // distinct locus once. Null when nothing is left to report.
+    // XA tag: every kept non-primary placement, each distinct locus once, minus alts overlapping the primary's span
+    // (a shared-exon isoform read lifting back onto the primary's coords carries no alternative-position info).
     public String xaTag()
     {
         LiftedAlignment primary = primaryAlignment();

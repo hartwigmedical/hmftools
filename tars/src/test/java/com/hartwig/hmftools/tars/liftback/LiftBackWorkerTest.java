@@ -17,8 +17,7 @@ import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;
 
-// The write-boundary guard: nothing with a zero-length CIGAR element or a SEQ length disagreeing with its CIGAR
-// reaches the BAM, since htsjdk and REDUX both reject those.
+// Write-boundary guard: htsjdk and REDUX both reject a zero-length CIGAR element or a SEQ length disagreeing with the CIGAR.
 public class LiftBackWorkerTest
 {
     private static SAMRecord mappedRecordWithSeq(final Cigar cigar, final int seqLength)
@@ -42,7 +41,7 @@ public class LiftBackWorkerTest
     @Test
     public void testSanitizeSeqCigarMismatchReplacedWithPlaceholder()
     {
-        // eg a failed-lift supp mirrored onto its primary's 100M cigar while carrying only 50 hard-clipped bases
+        // a failed-lift supplementary mirrored onto its primary's 100M cigar while carrying only 50 hard-clipped bases
         SAMRecord record = mappedRecordWithSeq(new Cigar(List.of(new CigarElement(100, CigarOperator.M))), 50);
 
         sanitizeForOutput(record);
