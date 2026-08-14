@@ -1,9 +1,7 @@
 package com.hartwig.hmftools.tars.liftback.features;
 
-import java.util.Arrays;
 import java.util.List;
 
-import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.tars.common.BwaScoring;
 import com.hartwig.hmftools.tars.liftback.LiftedAlignment;
@@ -33,14 +31,11 @@ public class GenomicAlignmentScorer
             return;
         }
 
-        byte[] forwardBases = record.getReadBases();
-        if(forwardBases == null || forwardBases.length == 0)
+        ReadBases readBases = ReadBases.of(record);
+        if(readBases == null)
         {
             return;
         }
-
-        boolean recordForward = !record.getReadNegativeStrandFlag();
-        byte[] reverseBases = hasOppositeStrandCandidate(alignments, recordForward) ? reverseComplement(forwardBases) : null;
 
         for(LiftedAlignment alignment : alignments)
         {
@@ -49,7 +44,7 @@ public class GenomicAlignmentScorer
                 continue;
             }
 
-            score(alignment, basesFor(alignment, recordForward, forwardBases, reverseBases));
+            score(alignment, readBases.forAlignment(alignment));
         }
     }
 
@@ -71,42 +66,15 @@ public class GenomicAlignmentScorer
             return Integer.MIN_VALUE;
         }
 
-        byte[] bases = record.getReadBases();
-        if(bases == null || bases.length == 0)
+        ReadBases readBases = ReadBases.of(record);
+        if(readBases == null)
         {
             return Integer.MIN_VALUE;
         }
-        if(alignment.ForwardStrand == record.getReadNegativeStrandFlag())
-        {
-            bases = reverseComplement(bases);
-        }
+
         return BwaScoring.genomicScore(
-                mRefGenome, alignment.LiftedChromosome, alignment.LiftedPos, alignment.LiftedCigar, bases);
+                mRefGenome, alignment.LiftedChromosome, alignment.LiftedPos, alignment.LiftedCigar,
+                readBases.forAlignment(alignment));
     }
 
-    private static boolean hasOppositeStrandCandidate(final List<LiftedAlignment> alignments, final boolean recordForward)
-    {
-        for(LiftedAlignment alignment : alignments)
-        {
-            if(alignment.ForwardStrand != recordForward)
-            {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private static byte[] basesFor(
-            final LiftedAlignment alignment, final boolean recordForward, final byte[] forwardBases,
-            final byte[] reverseBases)
-    {
-        return alignment.ForwardStrand == recordForward ? forwardBases : reverseBases;
-    }
-
-    private static byte[] reverseComplement(final byte[] bases)
-    {
-        byte[] reversed = Arrays.copyOf(bases, bases.length);
-        Nucleotides.reverseComplementBasesInPlace(reversed, 0, reversed.length);
-        return reversed;
-    }
 }

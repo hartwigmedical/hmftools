@@ -11,7 +11,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import com.hartwig.hmftools.common.bam.CigarUtils;
-import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.tars.common.BwaScoring;
 import com.hartwig.hmftools.tars.common.TarsCigarUtils;
@@ -47,15 +46,13 @@ public class OverhangGate
             return;
         }
 
-        byte[] forwardBases = record.getReadBases();
-        if(forwardBases == null || forwardBases.length == 0)
+        ReadBases readBases = ReadBases.of(record);
+        if(readBases == null)
         {
             return;
         }
 
         LiftedAlignment self = alignments.get(0);
-        boolean recordForward = !record.getReadNegativeStrandFlag();
-        byte[] reverseBases = hasOppositeStrandCandidate(alignments, recordForward) ? reverseComplement(forwardBases) : null;
 
         for(int i = 0; i < alignments.size(); ++i)
         {
@@ -65,7 +62,7 @@ public class OverhangGate
                 continue;
             }
 
-            Outcome outcome = gate(alignment, basesFor(alignment, recordForward, forwardBases, reverseBases));
+            Outcome outcome = gate(alignment, readBases.forAlignment(alignment));
             if(outcome == null)
             {
                 continue;
@@ -82,36 +79,6 @@ public class OverhangGate
                 alignments.set(i, outcome.alignment());
             }
         }
-    }
-
-    private static boolean hasOppositeStrandCandidate(final List<LiftedAlignment> alignments, final boolean recordForward)
-    {
-        for(LiftedAlignment alignment : alignments)
-        {
-            if(alignment.ForwardStrand != recordForward)
-            {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private static byte[] basesFor(
-            final LiftedAlignment alignment, final boolean recordForward, final byte[] forwardBases,
-            final byte[] reverseBases)
-    {
-        if(alignment.ForwardStrand == recordForward)
-        {
-            return forwardBases;
-        }
-        return reverseBases;
-    }
-
-    private static byte[] reverseComplement(final byte[] bases)
-    {
-        byte[] reversed = Arrays.copyOf(bases, bases.length);
-        Nucleotides.reverseComplementBasesInPlace(reversed, 0, reversed.length);
-        return reversed;
     }
 
     private record Result(int pos, String cigar, boolean dropped)

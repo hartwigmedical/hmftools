@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRI
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.XA_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.XS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.firstInPair;
+import static com.hartwig.hmftools.common.utils.Arrays.reverseArray;
 import static com.hartwig.hmftools.tars.common.TarsConstants.SUPP_AS_DROP_THRESHOLD;
 
 import java.util.HashSet;
@@ -229,14 +230,7 @@ public final class BamRecordEmitter
             byte[] qualities = record.getBaseQualities();
             if(qualities != null && qualities.length > 0)
             {
-                byte[] reversed = qualities.clone();
-                for(int i = 0, j = reversed.length - 1; i < j; ++i, --j)
-                {
-                    byte value = reversed[i];
-                    reversed[i] = reversed[j];
-                    reversed[j] = value;
-                }
-                record.setBaseQualities(reversed);
+                record.setBaseQualities(reverseArray(qualities));
             }
         }
 
