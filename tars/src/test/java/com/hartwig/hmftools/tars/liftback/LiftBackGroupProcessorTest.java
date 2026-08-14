@@ -40,14 +40,10 @@ import org.junit.Test;
 
 import htsjdk.samtools.SAMRecord;
 
-// Drives LiftBackGroupProcessor.processNameGroup with a capturing consumer to assert which records are emitted,
-// dropped or unmapped. The orphaned-supplementary rule is the load-bearing one: a record that stays supplementary
-// must carry an SA tag, because REDUX dedup reads the primary's coords from it, so a supp whose SA entries all fail
-// to lift is dropped rather than emitted with a null SA.
+// A record that stays supplementary must carry an SA tag, since REDUX dedup reads the primary's coords from it: a supp whose
+// SA entries all fail to lift is dropped rather than emitted with a null SA.
 public class LiftBackGroupProcessorTest
 {
-    // Every scenario varies only which collaborator is non-null, so one full harness keeps a ctor change to a
-    // single call site.
     private static List<SAMRecord> process(
             final List<SAMRecord> group, final SupplementaryResolver supplementaryResolver,
             final OverhangGate overhangGate, final RefGenomeInterface refGenome, final ExcludedRegions excludedRegions)
@@ -79,8 +75,7 @@ public class LiftBackGroupProcessorTest
         return new ExcludedRegions(regions);
     }
 
-    // Supplementary resolver with no annotated junctions: present, so the AS-unmap gate is active, but a no-op,
-    // so a primary with no resolvable supps stays un-improved.
+    // a non-null resolver activates the AS-unmap gate, but with no annotated junctions it cannot improve any primary
     private static SupplementaryResolver noopSupplementary()
     {
         return new SupplementaryResolver(Collections.emptySet(), SupplementaryConfig.defaults());
@@ -89,8 +84,7 @@ public class LiftBackGroupProcessorTest
     @Test
     public void testPrimaryLiftingIntoExcludedRegionIsUnmapped()
     {
-        // tx primary (exon1) lifts to chr1:100; an excluded region covering it unmaps the read REDUX-style:
-        // kept in the output but flagged unmapped with no cigar, not aligned in the excluded zone.
+        // the tx primary lifts to chr1:100, inside the excluded region; REDUX-style unmapping keeps the record but clears the cigar
         SAMRecord primary = primaryRecord(TX_CONTIG, 1, "50M");
 
         List<SAMRecord> emitted = process(List.of(primary), null, null, null, excludedRegion(CHR_1, 50, 300));
@@ -114,9 +108,8 @@ public class LiftBackGroupProcessorTest
     @Test
     public void testRecomputesNmAgainstGenomicRefAndDropsMd()
     {
-        // primary on the tx contig (exon1 100-199) lifts cleanly to chr1:100 50M. The genomic ref stub returns all
-        // 'A'; the read has two trailing mismatches, so NM must be recomputed to 2 rather than carried from the
-        // stale tx-contig NM:0, and MD must be dropped.
+        // the genomic ref stub is all 'A' and the read ends in two mismatches, so NM must be recomputed to 2 rather than carried
+        // from the stale tx-contig NM:0, and MD must be dropped
         SAMRecord primary = primaryRecord(TX_CONTIG, 1, "50M");
         primary.setReadBases(bases("A".repeat(48) + "CC"));
         primary.setAttribute("NM", 0);
@@ -134,7 +127,7 @@ public class LiftBackGroupProcessorTest
     @Test
     public void testEmittedPrimaryTaggedWithLocusCountNh()
     {
-        SAMRecord primary = primaryRecord(TX_CONTIG, 1, "50M");   // single-locus ref-only primary
+        SAMRecord primary = primaryRecord(TX_CONTIG, 1, "50M");
 
         List<SAMRecord> emitted = process(List.of(primary));
 
@@ -145,8 +138,8 @@ public class LiftBackGroupProcessorTest
     @Test
     public void testOverCapGenomicPrimaryMapQuality0NoXaUnmapped()
     {
-        // a GENOMIC primary emitted MAPQ 0 with no XA maps past the XA cap (75+ distinct genomic loci), so it is
-        // unmapped even though, with no XA, the discriminator sees a single locus and would otherwise bump to 60.
+        // bwa emits MAPQ 0 and no XA when a read maps past the -h 75 XA cap, so this genomic primary is unmapped even though the
+        // discriminator sees a single locus and would otherwise bump it to 60
         SAMRecord primary = primaryRecord(CHR_1, 100, "50M");
         primary.setMappingQuality(0);
 
@@ -159,8 +152,8 @@ public class LiftBackGroupProcessorTest
     @Test
     public void testOverCapTxPrimaryMapQuality0NoXaKept()
     {
-        // a TX-CONTIG primary with MAPQ 0 and no XA hit 75+ transcript contigs of one gene, which all lift to one
-        // genomic locus - the over-cap rule is ref-only-gated and must not unmap it.
+        // a tx-contig primary at MAPQ 0 with no XA hit the XA cap on transcript contigs of one gene which all lift to one genomic
+        // locus, so the over-cap rule is ref-only-gated and must not unmap it
         SAMRecord primary = primaryRecord(TX_CONTIG, 1, "50M");
         primary.setMappingQuality(0);
 
@@ -174,7 +167,7 @@ public class LiftBackGroupProcessorTest
     @Test
     public void testMapQuality0WithXaKeptMapped()
     {
-        // MAPQ 0 but XA present is an ordinary few-way multimapper within the cap; keep and lift it.
+        // MAPQ 0 with XA present is an ordinary multimapper within the cap: keep and lift it
         SAMRecord primary = primaryRecord(TX_CONTIG, 1, "50M");
         primary.setMappingQuality(0);
         primary.setAttribute("XA", CHR_1 + ",+5000,50M,0;");
@@ -188,9 +181,8 @@ public class LiftBackGroupProcessorTest
     @Test
     public void testPairedMatesPatchedAgainstPerGroupPair()
     {
-        // both mates of one fragment in the group: /1 lifts to chr1:100, /2 (exon2) to chr1:300. The per-group
-        // pair must let each mate's fields point at the other's lifted coords - the single-pass correctness
-        // property that replaced the whole-sample first pass.
+        // /1 lifts to chr1:100 and /2 (exon2) to chr1:300; the per-group pair must point each mate's fields at the other's lifted
+        // coords without a whole-sample first pass
         SAMRecord mate1 = primaryRecord(TX_CONTIG, 1, "50M");
         SAMRecord mate2 = secondMateRecord(TX_CONTIG, 101, "50M");
 
@@ -214,8 +206,8 @@ public class LiftBackGroupProcessorTest
     @Test
     public void testOneUnmappedMateIsPlacedBesideMappedMateReduxStyle()
     {
-        // /1 is deliberately unmapped by TARS's genomic over-cap rule while /2 remains mapped. REDUX represents
-        // that fragment by parking /1 at /2's genomic coordinate; /2 points its unmapped-mate fields back to itself.
+        // /1 is unmapped by the genomic over-cap rule while /2 stays mapped. REDUX parks the unmapped mate at /2's genomic
+        // coordinate, and /2 points its unmapped-mate fields back at itself.
         SAMRecord mate1 = primaryRecord(CHR_1, 100, "50M");
         mate1.setMappingQuality(0);
         SAMRecord mate2 = secondMateRecord(CHR_1, 600, "50M");
@@ -249,8 +241,7 @@ public class LiftBackGroupProcessorTest
     @Test
     public void testSingleEndPrimaryLiftedWithoutMatePatching()
     {
-        // Ultima single-end: an unpaired primary must lift with no mate patching, and without the
-        // getFirstOfPairFlag() throw the per-group mate refresh used to hit on unpaired input.
+        // Ultima single-end: an unpaired primary lifts with no mate patching, and getFirstOfPairFlag() throws on unpaired records
         SAMRecord primary = unpairedPrimaryRecord(TX_CONTIG, 1, "50M");
 
         List<SAMRecord> emitted = process(List.of(primary));
@@ -268,8 +259,7 @@ public class LiftBackGroupProcessorTest
     @Test
     public void testSingleEndPrimaryWithSupplementaryLifted()
     {
-        // unpaired primary plus its supplementary both lift and emit; exercises the mate refresh with a supp in
-        // the group, which is where the unpaired getFirstOfPairFlag() call sat.
+        // exercises the mate refresh with a supp in the group, which is where the unpaired getFirstOfPairFlag() call sat
         SAMRecord primary = unpairedPrimaryRecord(TX_CONTIG, 100, "50M");
         SAMRecord supp = unpairedSupplementaryRecord(TX_CONTIG, 110, "30M", TX_CONTIG + ",100,+,50M,0,0;");
 
@@ -283,8 +273,7 @@ public class LiftBackGroupProcessorTest
     @Test
     public void testDuplicateSupplementariesCollapsed()
     {
-        // two supps lifting to the same chromosome, position, cigar and strand collapse to one - bwa can emit the
-        // same junction across multiple tx contigs.
+        // bwa can emit the same junction on multiple tx contigs, so supps lifting to identical coords and strand collapse to one
         SAMRecord primary = primaryRecord(TX_CONTIG, 1, "50M");
         SAMRecord supp1 = supplementaryRecord(TX_CONTIG, 110, "30M", TX_CONTIG + ",1,+,50M,0,0;");
         SAMRecord supp2 = supplementaryRecord(TX_CONTIG, 110, "30M", TX_CONTIG + ",1,+,50M,0,0;");
@@ -298,8 +287,7 @@ public class LiftBackGroupProcessorTest
     @Test
     public void testOrphanedSupplementaryIsDropped()
     {
-        // primary lifts cleanly; the supp lifts too, but its only SA entry points at an out-of-range tx position
-        // that fails to lift, so the rewritten SA is null and the supp is dropped rather than emitted.
+        // the supp's only SA entry is an out-of-range tx position, so the SA rewrite yields null and the supp is dropped
         SAMRecord primary = primaryRecord(TX_CONTIG, 100, "50M");
         SAMRecord supp = supplementaryRecord(TX_CONTIG, 110, "30M", TX_CONTIG + ",9999,+,30M,0,0;");
 
@@ -312,7 +300,7 @@ public class LiftBackGroupProcessorTest
     @Test
     public void testSupplementaryWithLiftableSaIsKept()
     {
-        // same shape, but the SA entry lifts, so the supp is emitted with a rewritten genomic SA.
+        // same shape as the orphan case, but the SA entry lifts, so the supp is emitted with a rewritten genomic SA
         SAMRecord primary = primaryRecord(TX_CONTIG, 100, "50M");
         SAMRecord supp = supplementaryRecord(TX_CONTIG, 110, "30M", TX_CONTIG + ",100,+,50M,0,0;");
 
@@ -330,8 +318,7 @@ public class LiftBackGroupProcessorTest
     @Test
     public void testLowAsPrimaryUnmappedWhenLiftbackDidNotImprove()
     {
-        // primary lifts but bwa scored it below the -T 30 floor, and supplementary resolve (no junctions) cannot
-        // improve it.
+        // the primary lifts but scores below the AS floor of 30, and supplementary resolve with no junctions cannot improve it
         SAMRecord primary = primaryRecord(TX_CONTIG, 100, "50M");
         primary.setAttribute("AS", 20);
 
@@ -369,10 +356,9 @@ public class LiftBackGroupProcessorTest
     @Test
     public void testLowAsPrimaryUnmapDropsItsSupplementary()
     {
-        // The AS-floor unmap happens during decide, so the supp-orphan gate observes the unmapped primary and drops
-        // the supplementary. Firing it only at emit would leave the chosen primary mapped, so the supp would
-        // survive with an SA referencing a primary emitted as unmapped - a dangling locus for REDUX FragmentCoords.
-        // The supp's SA lifts cleanly, so without the decide-time unmap this would emit two records, not one.
+        // the AS-floor unmap happens during decide, so the supp-orphan gate sees the unmapped primary and drops the supplementary.
+        // Unmapping only at emit would leave the supp with an SA referencing a primary emitted as unmapped, a dangling locus for
+        // REDUX FragmentCoords. The supp's SA lifts cleanly, so without the decide-time unmap this emits two records, not one.
         SAMRecord primary = primaryRecord(TX_CONTIG, 100, "50M");
         primary.setAttribute("AS", 20);
         SAMRecord supp = supplementaryRecord(TX_CONTIG, 110, "30M", TX_CONTIG + ",100,+,50M,0,0;");
@@ -387,23 +373,22 @@ public class LiftBackGroupProcessorTest
     @Test
     public void testMultimapperMatesColocatedAtOneLocus()
     {
-        // Real-shape multimapper (the TERT / chr10 field case): a fully-overlapping short-insert pair whose two
-        // mates map equally well (NM 0, tied genomic score) to two genomic copies. Through the full group processor
-        // the fragment must not be torn across the copies - both mates land on one chromosome, the other in XA.
-        String seq = "ACGTTGCA".repeat(7).substring(0, 55);   // both copies carry this exact sequence
+        // a fully-overlapping short-insert pair whose mates map equally well (NM 0, tied genomic score) to two genomic copies:
+        // the fragment must not be torn across the copies, so both mates land on one chromosome and the other goes to XA
+        String seq = "ACGTTGCA".repeat(7).substring(0, 55);
         RefGenomeInterface ref = new TestGenome()
                 .with("chr5", 300, 'A').with("chr10", 300, 'A')
                 .set("chr5", 100, seq).set("chr10", 100, seq)
                 .asRefGenome();
 
-        SAMRecord mate1 = primaryRecord("frag", "chr5", 100, "55M");   // read /1, reverse strand
+        SAMRecord mate1 = primaryRecord("frag", "chr5", 100, "55M");
         mate1.setMappingQuality(0);
         mate1.setReadNegativeStrandFlag(true);
         mate1.setProperPairFlag(false);
         mate1.setReadBases(bases(seq));
         mate1.setAttribute("XA", "chr10,-100,55M,0;");
 
-        SAMRecord mate2 = secondMateRecord("frag", "chr10", 100, "55M");   // read /2, forward strand
+        SAMRecord mate2 = secondMateRecord("frag", "chr10", 100, "55M");
         mate2.setMappingQuality(0);
         mate2.setProperPairFlag(false);
         mate2.setReadBases(bases(seq));
@@ -498,9 +483,8 @@ public class LiftBackGroupProcessorTest
         assertTrue(emitted.get(0).getReadUnmappedFlag());
     }
 
-    // bwa emits a pair with both ends unmapped as flags 77/141 - paired, read unmapped, mate unmapped. The mate-unmapped
-    // bit must survive the lift: clearing it leaves a record claiming a mapped mate with RNEXT unset, which REDUX rejects
-    // with htsjdk's INVALID_FLAG_MATE_UNMAPPED.
+    // bwa emits a pair with both ends unmapped as flags 77/141. Clearing the mate-unmapped bit leaves a record claiming a mapped
+    // mate with RNEXT unset, which REDUX rejects with htsjdk's INVALID_FLAG_MATE_UNMAPPED.
     @Test
     public void testBothEndsUnmappedPairKeepsMateUnmappedFlag()
     {
@@ -535,12 +519,74 @@ public class LiftBackGroupProcessorTest
         assertEquals("flags", 77, record.getFlags());
     }
 
-    // Junctions taken from the same sidecar entry the discriminator lifts against, so the intron coords and the
-    // chromosome key match what the lift emits: chr1 introns 200-299 and 400-499 between the three exons.
+    // junctions built from the same sidecar entry the discriminator lifts against, so the intron coords and chromosome key match
+    // what the lift emits: chr1 introns 200-299 and 400-499 between the three exons
     private static SupplementaryResolver contigSupplementary()
     {
         return new SupplementaryResolver(
                 EnsemblAnnotationIndex.fromContigEntries(List.of(threeExonContig())), null, SupplementaryConfig.defaults());
+    }
+
+    @Test
+    public void testOverhangCollapseAlsoRunsOnASupplementary()
+    {
+        // a weak 2M overhang before a supplementary's splice junction must be collapsed like a primary's. Left ungated the 2M
+        // block is the fragment's lowest mapped coordinate and becomes the reported fusion junction, two bases of evidence
+        // standing in for the real anchor past the N gap.
+        RefGenomeInterface ref = new TestGenome()
+                .with(CHR_1, 6000, 'A')
+                .asRefGenome();
+
+        // the primary's matched bases stop at 50 and the supplementary's resume at 100, so the read-coverage gap refuses the merge
+        // and the supplementary is emitted on its own, which is where an ungated overhang survives
+        SAMRecord primary = primaryRecord(CHR_1, 5000, "50M101S");
+        primary.setReadBases(bases("A".repeat(151)));
+
+        SAMRecord supp = supplementaryRecord(CHR_1, 1000, "99S2M100N50M", CHR_1 + ",5000,+,50M101S,60,0;");
+        supp.setReadBases(primary.getReadBases());
+
+        List<SAMRecord> emitted = process(List.of(primary, supp), contigSupplementary(), new OverhangGate(ref), ref, null);
+
+        SAMRecord emittedPrimary = emitted.stream().filter(x -> !x.getSupplementaryAlignmentFlag()).findFirst().orElse(null);
+        SAMRecord emittedSupp = emitted.stream().filter(SAMRecord::getSupplementaryAlignmentFlag).findFirst().orElse(null);
+        assertTrue(emittedPrimary != null);
+        assertTrue(emittedSupp != null);
+        assertEquals(5000, emittedPrimary.getAlignmentStart());
+        assertEquals("50M101S", emittedPrimary.getCigarString());
+        assertEquals(1001, emittedSupp.getAlignmentStart());
+        assertEquals("151M", emittedSupp.getCigarString());
+        assertEquals(Integer.valueOf(0), emittedPrimary.getIntegerAttribute("NM"));
+        assertEquals(Integer.valueOf(0), emittedSupp.getIntegerAttribute("NM"));
+        assertEquals(CHR_1 + ",1001,+,151M,60,0;", emittedPrimary.getStringAttribute("SA"));
+        assertEquals(CHR_1 + ",5000,+,50M101S,60,0;", emittedSupp.getStringAttribute("SA"));
+    }
+
+    @Test
+    public void testEveryEmittedAlignmentGetsACompleteReciprocalSaTag()
+    {
+        SAMRecord primary = primaryRecord(CHR_1, 100, "50M100S");
+        SAMRecord supp1 = supplementaryRecord(
+                CHR_1, 300, "50H50M50H", CHR_1 + ",100,+,50M100S,60,0;");
+        SAMRecord supp2 = supplementaryRecord(
+                CHR_1, 500, "100H50M", CHR_1 + ",100,+,50M100S,60,0;");
+        supp2.setReadNegativeStrandFlag(true);
+        supp2.setMappingQuality(40);
+
+        List<SAMRecord> emitted = process(List.of(primary, supp1, supp2));
+
+        assertEquals(3, emitted.size());
+        SAMRecord emittedPrimary = emitted.get(0);
+        SAMRecord emittedSupp1 = emitted.get(1);
+        SAMRecord emittedSupp2 = emitted.get(2);
+        assertEquals(
+                CHR_1 + ",300,+,50S50M50S,60,0;" + CHR_1 + ",500,-,100S50M,40,0;",
+                emittedPrimary.getStringAttribute("SA"));
+        assertEquals(
+                CHR_1 + ",100,+,50M100S,60,0;" + CHR_1 + ",500,-,100S50M,40,0;",
+                emittedSupp1.getStringAttribute("SA"));
+        assertEquals(
+                CHR_1 + ",100,+,50M100S,60,0;" + CHR_1 + ",300,+,50S50M50S,60,0;",
+                emittedSupp2.getStringAttribute("SA"));
     }
 
 }

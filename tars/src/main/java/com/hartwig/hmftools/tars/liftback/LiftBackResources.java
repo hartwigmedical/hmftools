@@ -9,16 +9,16 @@ import com.hartwig.hmftools.tars.liftback.features.OverhangGate;
 import com.hartwig.hmftools.tars.liftback.features.SupplementaryConfig;
 import com.hartwig.hmftools.tars.liftback.features.SupplementaryResolver;
 
-// The read-only inputs every LiftBackWorker shares, plus the per-worker assembly that turns them into a processor.
-// The ref genome is why this is a factory rather than a plain holder: htsjdk's indexed FASTA reader is not
-// thread-safe, so each worker gets its own handle and its own copy of everything that keeps a reference to one.
+// The read-only inputs every LiftBackWorker shares, plus the per-worker assembly into a processor. A factory rather
+// than a plain holder because htsjdk's indexed FASTA reader is not thread-safe: each worker gets its own ref genome
+// handle and its own copy of everything holding one.
 public final class LiftBackResources
 {
     private final LiftBackDiscriminator mDiscriminator;
     private final EnsemblAnnotationIndex mEnsemblAnnotationIndex;
     private final String mRefGenomeFile;
     private final SupplementaryConfig mSupplementary;
-    private final ExcludedRegions mExcludedRegions; // nullable: drop fragments here before lifting
+    private final ExcludedRegions mExcludedRegions; // nullable: unmaps primaries that land in these regions post-lift
 
     public LiftBackResources(
             final LiftBackDiscriminator discriminator, final EnsemblAnnotationIndex annotationIndex, final String refGenomeFile,
@@ -31,8 +31,8 @@ public final class LiftBackResources
         mExcludedRegions = excludedRegions;
     }
 
-    // One call per worker. The discriminator, annotation index and excluded regions are immutable and shared; the ref
-    // genome handle and the two engines that hold on to it are not, so they are built fresh here.
+    // one call per worker: the discriminator, annotation index and excluded regions are shared, the ref genome handle
+    // and everything holding it is built fresh
     public LiftBackGroupProcessor createProcessor()
     {
         RefGenomeInterface refGenome = openRefGenome();

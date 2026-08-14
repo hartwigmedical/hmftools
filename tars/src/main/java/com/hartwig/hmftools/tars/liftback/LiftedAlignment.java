@@ -19,7 +19,7 @@ public class LiftedAlignment
     public final boolean FromTxContig;
     public final boolean SoftClipAtBoundary;
     public final boolean ForwardStrand;
-    // +1 forward / -1 reverse for tx-contig alignments; 0 otherwise (no transcript strand known).
+    // +1 forward / -1 reverse for tx-contig alignments; 0 when no transcript strand is known.
     public final int TranscriptStrand;
     public final List<Integer> MergedSupplementaryIndices;
     public final List<ChrBaseRegion> MergedSupplementaryIntrons;
@@ -61,7 +61,7 @@ public class LiftedAlignment
     }
 
     // copy with a revised lifted position and cigar; the boundary-softclip flag drops if the new cigar has no softclip.
-    // Dropped and GenomicScore carry over; the chosen primary is tracked by index on LiftedRecord, not here.
+    // the chosen primary is tracked by index on LiftedRecord, so no copy here carries it.
     public LiftedAlignment withLiftedCigar(final int liftedPos, final String liftedCigar)
     {
         boolean stillSoftClipped = liftedCigar.indexOf('S') >= 0;
@@ -104,14 +104,13 @@ public class LiftedAlignment
         return !MergedSupplementaryIndices.isEmpty();
     }
 
-    // this placement as a bwa XA entry: "chrom,<sign>pos,cigar,NM;", the position sign carrying the strand.
+    // bwa XA entry "chrom,<sign>pos,cigar,NM;", the position sign carrying the strand.
     public String toXaEntry()
     {
         return LiftedChromosome + ',' + (ForwardStrand ? '+' : '-') + LiftedPos + ','
                 + LiftedCigar + ',' + NumMismatches + ';';
     }
 
-    // chrom:pos key grouping alignments by genomic locus.
     public String locusKey()
     {
         return LiftedChromosome + ":" + LiftedPos;
@@ -127,7 +126,7 @@ public class LiftedAlignment
         return LiftedPos + CigarUtils.calcCigarAlignedLength(LiftedCigar) - 1;
     }
 
-    // Same-locus test shared by the NH locus count and the XA build - the two must agree, or a read is emitted with
+    // Same-locus test shared by the NH locus count and the XA build: the two must agree, or a read is emitted with
     // NH=1 alongside a non-empty XA. False against a null other, so an absent primary collapses nothing.
     public boolean overlaps(final LiftedAlignment other)
     {

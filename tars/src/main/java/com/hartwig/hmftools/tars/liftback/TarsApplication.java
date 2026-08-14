@@ -33,8 +33,8 @@ import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.SamReaderFactory;
 
-// Driver for the liftback stage. Consumes bwa's name-grouped BAM directly (mates + supplementaries contiguous), cuts
-// it into whole-fragment chunks and lifts them across N workers, then sorts + indexes the concatenated output.
+// Driver for the liftback stage. Cuts bwa's name-grouped BAM (mates + supplementaries contiguous) into whole-fragment
+// chunks, lifts them across N workers, then sorts + indexes the concatenated output.
 public class TarsApplication
 {
     private final TarsConfig mConfig;
@@ -91,7 +91,7 @@ public class TarsApplication
         TARS_LOGGER.info("TarsApplication complete, mins({})", runTimeMinsStr(startTimeMs));
     }
 
-    // One producer streams bwa's name-grouped BAM into whole-fragment chunks; N workers lift + emit per-shard.
+    // one producer streams bwa's name-grouped BAM into whole-fragment chunks; N workers lift + emit per-shard
     private List<LiftBackWorker> runChunkStream(
             final LiftBackResources resources, final SAMFileHeader outputHeader, final List<String> shardBams)
     {
@@ -99,8 +99,8 @@ public class TarsApplication
         BlockingQueue<List<SAMRecord>> chunkQueue =
                 new ArrayBlockingQueue<>(Math.max(workerCount * CHUNK_QUEUE_DEPTH_PER_THREAD, 2));
 
-        // a single-thread BGZF parse starves the workers, so several shard threads each parse their own byte range
-        // (split on read-name-group boundaries); a handful saturates the bounded queue, so shard count is capped low.
+        // a single-thread BGZF parse starves the workers, so shard threads each parse their own byte range, split on
+        // read-name-group boundaries; a handful saturates the bounded queue, hence the low cap.
         int shardCount = Math.max(1, Math.min(workerCount, READER_SHARD_CAP));
         ShardedChunkProducer producer = new ShardedChunkProducer(
                 mConfig.InputBam, mConfig.RefGenomeFile, chunkQueue, workerCount, CHUNK_TARGET_READS, shardCount);
@@ -146,8 +146,7 @@ public class TarsApplication
                 mConfig.Supplementary, excludedRegions);
     }
 
-    // Fails fast on a BAM/sidecar mismatch: an alt contig missing from the sidecar cannot be lifted, and would
-    // otherwise leak its _tx name into the output.
+    // an alt contig missing from the sidecar cannot be lifted and would leak its _tx name into the output, so fail fast
     private void validateBamAgainstSidecar(final SAMFileHeader inputHeader, final Set<String> sidecarContigs)
     {
         Set<String> missing = new TreeSet<>();
@@ -172,7 +171,7 @@ public class TarsApplication
         System.exit(1);
     }
 
-    // input @SQ, read once: both the sidecar check and the output header derive from it.
+    // input @SQ, read once: both the sidecar check and the output header derive from it
     private SAMFileHeader readInputHeader()
     {
         return SamReaderFactory.makeDefault()
@@ -181,7 +180,7 @@ public class TarsApplication
                 .getFileHeader();
     }
 
-    // strip the _tx alt contigs from @SQ (and mark unsorted) so the lifted BAM carries a pure genomic dictionary.
+    // strip the _tx alt contigs from @SQ so the lifted BAM carries a pure genomic dictionary
     private static SAMFileHeader buildOutputHeader(final SAMFileHeader inputHeader)
     {
         SAMFileHeader header = inputHeader.clone();
@@ -206,8 +205,7 @@ public class TarsApplication
         return header;
     }
 
-    // Run totals: what came in, and every route by which a mapped primary ends up unmapped. The three deliberate
-    // routes are normal outcomes and are kept apart from LiftFailed, which alone signals a sidecar/FASTA mismatch.
+    // the three deliberate unmapping routes are normal outcomes, kept apart from LiftFailed which alone signals a sidecar/FASTA mismatch
     private record RunCounts(
             long RecordsSeen, long PrimariesSeen, long LiftFailed, long ExcludedRegion, long OverCap, long LowAlignmentScore,
             long SupplementaryCandidates, long PrimaryRevisions, long SupplementaryMerges, long SupplementariesAbsorbed)
@@ -238,9 +236,9 @@ public class TarsApplication
                 suppCandidates, primaryRevisions, suppMerges, suppAbsorbed);
     }
 
-    // A wholesale lift failure is systemic, not per-read: almost always a sidecar built against a different FASTA than
-    // the reads were aligned to. Deliberate unmapping is normal and excluded, so this rate reflects only lifts that
-    // produced nothing. Logged, not fatal, so the written BAM stays inspectable.
+    // A wholesale lift failure is systemic: almost always a sidecar built against a different FASTA than the reads were
+    // aligned to. Deliberate unmapping is excluded, so the rate covers only lifts that produced nothing. Logged, not
+    // fatal, so the written BAM stays inspectable.
     private static void logLiftFailureRate(final RunCounts counts)
     {
         TARS_LOGGER.info(
@@ -291,15 +289,13 @@ public class TarsApplication
         }
     }
 
-    // a standalone total: no percentage, nothing to express it as a share of
     private static void writeTotal(final BufferedWriter writer, final String metric, final long value) throws IOException
     {
         writer.write(String.join(TSV_DELIM, metric, String.valueOf(value), "", ""));
         writer.newLine();
     }
 
-    // Basis is named as well as counted so the percentage can be read without knowing which denominator applies -
-    // the unmap reasons are shares of mapped primaries, the merge outcomes shares of merge candidates.
+    // Basis names the denominator: unmap reasons are shares of mapped primaries, merge outcomes shares of merge candidates.
     private static void writeMetric(
             final BufferedWriter writer, final String metric, final long value, final String basisName, final long basis)
             throws IOException

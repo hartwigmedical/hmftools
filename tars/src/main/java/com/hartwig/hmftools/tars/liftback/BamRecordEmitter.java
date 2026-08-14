@@ -8,7 +8,6 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.XA_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.XS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.firstInPair;
 import static com.hartwig.hmftools.tars.common.TarsConstants.SUPP_AS_DROP_THRESHOLD;
-import static com.hartwig.hmftools.tars.liftback.SaTagRewriter.rewriteSaTag;
 
 import java.util.HashSet;
 import java.util.List;
@@ -73,12 +72,10 @@ public final class BamRecordEmitter
         boolean finalPrimaryUnmapped = primaryUnmapped || willBeUnmapped(primary, primaryResult);
         boolean[] willEmit = computeWillEmit(
                 records, liftedRecords, absorbedSupplementaries, primary, finalPrimaryUnmapped);
-        Set<String> droppedSuppSaKeys = SaTagRewriter.droppedSuppSaKeys(
-                records, willEmit, primary, mContigTranslator);
         int numHits = LiftBackDiscriminator.countDistinctLoci(primaryResult);
-        boolean primarySwapped = !finalPrimaryUnmapped && primaryResult.swapped();
-        LiftedRecord[] resolved = liftedRecords.toArray(LiftedRecord[]::new);
 
+        // Apply every final placement before building any SA tag, so SA entries take coordinates, cigar, strand, MAPQ and
+        // refreshed NM from the records that are emitted.
         for(int i = 0; i < records.size(); ++i)
         {
             if(!willEmit[i])
@@ -87,12 +84,36 @@ public final class BamRecordEmitter
             }
 
             SAMRecord record = records.get(i);
-            String rebuiltSuppSa = primarySwapped && record != primary && record.getSupplementaryAlignmentFlag()
-                    ? SaTagRewriter.buildSwappedSuppSa(records, resolved, willEmit, primaryResult, i)
-                    : null;
-            applyAndWrite(
-                    record, liftedRecords.get(i), numHits, droppedSuppSaKeys, matePair, consumer,
-                    rebuiltSuppSa, primaryUnmapped && record == primary);
+            LiftedRecord result = liftedRecords.get(i);
+            boolean unmapDecided = primaryUnmapped && record == primary;
+            if(!record.isSecondaryOrSupplementary() && !record.getReadUnmappedFlag())
+            {
+                ++mPrimariesSeen;
+                if(!result.hasPlacement() && !unmapDecided)
+                {
+                    ++mPrimariesLiftFailed;
+                }
+            }
+
+            applyResultToRecord(record, result, matePair, unmapDecided);
+            if(record.getReadUnmappedFlag() && record.getSupplementaryAlignmentFlag())
+            {
+                willEmit[i] = false;
+            }
+            else if(!record.getReadUnmappedFlag())
+            {
+                refreshNmDropMd(record);
+            }
+        }
+
+        for(int i = 0; i < records.size(); ++i)
+        {
+            if(willEmit[i])
+            {
+                writeRecord(
+                        records, liftedRecords.get(i), willEmit, i, numHits, primary,
+                        primaryUnmapped && records.get(i) == primary, matePair, consumer);
+            }
         }
     }
 
@@ -129,52 +150,46 @@ public final class BamRecordEmitter
             {
                 drop = true;
             }
+            if(!drop && record.getSupplementaryAlignmentFlag()
+                    && !SaTagRewriter.hasLiftableAlignment(
+                            record.getStringAttribute(SUPPLEMENTARY_ATTRIBUTE), mContigTranslator))
+            {
+                drop = true;
+            }
             willEmit[i] = !drop;
         }
         return willEmit;
     }
 
-    private void applyAndWrite(
-            final SAMRecord record, final LiftedRecord result, final int numHits,
-            final Set<String> droppedSuppSaKeys, final LiftedMatePair matePair,
-            final Consumer<SAMRecord> consumer, final String rebuiltSuppSa, final boolean unmapDecided)
+    private static void writeRecord(
+            final List<SAMRecord> records, final LiftedRecord result, final boolean[] willEmit,
+            final int recordIndex, final int numHits, final SAMRecord primary, final boolean unmapDecided,
+            final LiftedMatePair matePair, final Consumer<SAMRecord> consumer)
     {
+        SAMRecord record = records.get(recordIndex);
         boolean writeNumHits = result.hasPlacement() || !unmapDecided && !record.getReadUnmappedFlag();
-        if(!record.isSecondaryOrSupplementary() && !record.getReadUnmappedFlag())
-        {
-            ++mPrimariesSeen;
-            if(!result.hasPlacement() && !unmapDecided)
-            {
-                ++mPrimariesLiftFailed;
-            }
-        }
-
-        applyResultToRecord(record, result, matePair, unmapDecided);
         if(record.getReadUnmappedFlag())
         {
             matePair.patchMateFields(record);
-            if(!record.getSupplementaryAlignmentFlag())
+            if(record == primary)
             {
                 consumer.accept(record);
             }
             return;
         }
 
-        String rewrittenSa = rebuiltSuppSa != null
-                ? rebuiltSuppSa
-                : rewriteSaTag(record.getStringAttribute(SUPPLEMENTARY_ATTRIBUTE), mContigTranslator, droppedSuppSaKeys);
-        if(rewrittenSa == null && record.getSupplementaryAlignmentFlag())
+        String saTag = SaTagRewriter.buildForRecord(records, willEmit, primary, recordIndex);
+        if(saTag == null && record.getSupplementaryAlignmentFlag())
         {
             return;
         }
 
-        record.setAttribute(SUPPLEMENTARY_ATTRIBUTE, rewrittenSa);
+        record.setAttribute(SUPPLEMENTARY_ATTRIBUTE, saTag);
         matePair.patchMateFields(record);
         if(writeNumHits)
         {
             record.setAttribute(NUM_HITS_ATTRIBUTE, numHits);
         }
-        refreshNmDropMd(record);
         consumer.accept(record);
     }
 

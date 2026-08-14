@@ -12,9 +12,9 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.firstInPair;
 
 import htsjdk.samtools.SAMRecord;
 
-// One read pair's lifted records, and the mate-field patch they exist to serve: a record's RNEXT/PNEXT/mate-strand/
-// MC/TLEN come from its mate's lifted placement, which is only known once that mate has been lifted. Scoped to a
-// single name-group, so the pair is two slots rather than a keyed cache.
+// One read pair's lifted records, and the mate-field patch they serve: a record's RNEXT/PNEXT/mate-strand/MC/TLEN come
+// from its mate's lifted placement, known only once that mate has been lifted. Scoped to a single name group, so the
+// pair is two slots rather than a keyed cache.
 public class LiftedMatePair
 {
     private LiftedRecord mFirstInPair;
@@ -32,7 +32,7 @@ public class LiftedMatePair
         }
     }
 
-    // null until the mate has been lifted - /1 is decided before /2 exists, so it sees no mate.
+    // null until the mate has been lifted: /1 is decided before /2 exists, so it sees no mate.
     public LiftedRecord mateOf(final boolean firstOfPair)
     {
         return firstOfPair ? mSecondInPair : mFirstInPair;
@@ -44,8 +44,8 @@ public class LiftedMatePair
         return firstOfPair ? mFirstInPair : mSecondInPair;
     }
 
-    // Unlike REDUX's record-at-a-time transition, TARS already has both final primary decisions for the name group.
-    // Write the final pair state directly: park an unmapped read at its mapped mate, or clear both sides if neither maps.
+    // TARS already has both final primary decisions for the name group, so write the final pair state directly: park an
+    // unmapped read at its mapped mate, or clear both sides if neither maps.
     public void unmapRead(final SAMRecord record)
     {
         LiftedRecord mate = record.getReadPairedFlag() ? mateOf(firstInPair(record)) : null;
@@ -90,7 +90,7 @@ public class LiftedMatePair
         }
     }
 
-    // Patches a record's mate fields (RNEXT/PNEXT/mate-strand/MC) and TLEN from its mate's lifted primary.
+    // sets RNEXT/PNEXT/mate-strand/MC and TLEN from the mate's lifted primary
     public void patchMateFields(final SAMRecord record)
     {
         if(!record.getReadPairedFlag())
@@ -169,8 +169,8 @@ public class LiftedMatePair
         record.setInferredInsertSize(computeInferredInsertSize(record, mate));
     }
 
-    // TLEN: signed distance between mates' 5' ends (strand-aware), +/-1 so the leftmost-5' mate is positive.
-    // Using 5' ends (not alignment-start) fixes sign for same-start pairs and magnitude when softclips extend an end.
+    // TLEN: signed distance between mates' 5' ends, +/-1 so the leftmost-5' mate is positive. Using 5' ends rather than
+    // alignment start fixes the sign for same-start pairs and the magnitude when softclips extend an end.
     static int computeInferredInsertSize(final SAMRecord record, final LiftedRecord mate)
     {
         int readFivePrime = record.getReadNegativeStrandFlag() ? record.getAlignmentEnd() : record.getAlignmentStart();

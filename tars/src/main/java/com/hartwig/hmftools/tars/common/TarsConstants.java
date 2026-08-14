@@ -12,11 +12,11 @@ public final class TarsConstants
     // alt contig name suffix, e.g. chr1 -> chr1_tx
     public static final String ALT_CONTIG_SUFFIX = "_tx";
 
-    // a deletion this size or smaller either side of a splice N is folded into it (10M100N5D5M -> 10M105N5M) so the
-    // junction stays on the annotated boundary; anything larger is kept as a real deletion
+    // a deletion this size or smaller beside a splice N is folded into it (10M100N5D5M -> 10M105N5M),
+    // keeping the junction on the annotated boundary; anything larger stays a real deletion
     public static final int MAX_MERGED_DELETION_BP = 5;
 
-    // bwa-mem scoring, used wherever tars re-scores against the genome
+    // bwa-mem scoring, used when re-scoring a placement against the genome
     public static final int MATCH = 1;
     public static final int MISMATCH = -4;
     public static final int GAP_OPEN = -6;
@@ -28,11 +28,9 @@ public final class TarsConstants
     // overhangs longer than this are trusted without scoring
     public static final int MIN_OVERHANG_LENGTH = 12;
 
-    // MAPQ of a placement taken as confident
     public static final int CONFIDENT_MAPQ = 60;
 
-    // bwa's own default -T floor: a primary still under it after lift-back is unmapped, a supplementary only bwa's
-    // lowered -T 19 kept is dropped
+    // bwa's default -T floor: after lift-back a primary under it is unmapped, a supplementary only -T 19 kept is dropped
     public static final int PRIMARY_AS_UNMAP_THRESHOLD = 30;
     public static final int SUPP_AS_DROP_THRESHOLD = 30;
 

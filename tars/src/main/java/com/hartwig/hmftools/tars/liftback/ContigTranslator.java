@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.bam.CigarUtils.leftSoftClipped;
 import static com.hartwig.hmftools.common.bam.CigarUtils.rightSoftClipped;
 import static com.hartwig.hmftools.tars.common.TarsCigarUtils.clampLeadingReferenceToSoftClip;
 import static com.hartwig.hmftools.tars.common.TarsCigarUtils.clampTrailingReferenceToSoftClip;
+import static com.hartwig.hmftools.tars.common.TarsCigarUtils.isMatchOrEqualOp;
 import static com.hartwig.hmftools.tars.common.TarsCigarUtils.normalize;
 import static com.hartwig.hmftools.tars.common.TarsConstants.ALT_CONTIG_SUFFIX;
 import static com.hartwig.hmftools.tars.common.TarsConstants.MAX_MERGED_DELETION_BP;
@@ -25,11 +26,11 @@ import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
 
 // Translates a transcript-contig alignment (pos + cigar) to genome coordinates, re-inserting introns as N gaps.
-// Holds the sidecar's segments per alt contig so a position can be resolved to its owning transcript first;
-// translate() is the coordinate walk on its own and needs no index.
+// Holds the sidecar segments per alt contig so a position resolves to its owning transcript first; translate() is the
+// coordinate walk on its own and needs no index.
 public final class ContigTranslator
 {
-    // per-alt-contig segments sorted by contigStart for binary search back to the owning transcript.
+    // sorted by contigStart for binary search back to the owning transcript.
     private final Map<String, List<ContigEntry>> mSegmentsByAltContig;
 
     public ContigTranslator(final List<ContigEntry> entries)
@@ -50,8 +51,8 @@ public final class ContigTranslator
         return mSegmentsByAltContig.keySet();
     }
 
-    // Lifts one placement to genomic coordinates. Returns null when the contig is an unknown alt contig or the position
-    // falls outside any transcript; ref-genome placements pass through unchanged.
+    // Lifts one placement to genomic coordinates. Returns null for an unknown alt contig or a position outside any
+    // transcript; ref-genome placements pass through unchanged.
     public LiftedAlignment liftAlignment(
             final String contig, final int pos, final String cigarStr, final int nm, final boolean forwardStrand)
     {
@@ -84,7 +85,7 @@ public final class ContigTranslator
                 true, translated.softClipAtExonBoundary(), forwardStrand, entry.strand());
     }
 
-    // Lifts each XA entry, skips invalid placements and keeps one copy of each lifted placement.
+    // Skips invalid XA entries and keeps one copy of each lifted placement.
     public List<LiftedAlignment> liftXaAlignments(final String xaTag)
     {
         List<LiftedAlignment> lifted = new ArrayList<>();
@@ -141,7 +142,7 @@ public final class ContigTranslator
     }
 
     // Segment owning altPos, or null when the contig is unknown. A spacer or leading-overhang position resolves to the
-    // nearest segment so the overhang clamp below can salvage it.
+    // nearest segment so the overhang clamp can salvage it.
     ContigEntry findSegment(final String altContig, final int altPos)
     {
         List<ContigEntry> segments = mSegmentsByAltContig.get(altContig);
@@ -169,8 +170,8 @@ public final class ContigTranslator
         return segment;
     }
 
-    // index of the last segment with contigStart <= altPos, or 0 when altPos precedes the first, mirroring
-    // BaseRegion.binarySearch (segments are ContigEntry, not BaseRegion, so its overload cannot be applied directly).
+    // index of the last segment with contigStart <= altPos, or 0 when altPos precedes the first. Mirrors
+    // BaseRegion.binarySearch, which cannot be applied directly since segments are ContigEntry.
     private static int floorIndexByContigStart(final List<ContigEntry> segments, final int altPos)
     {
         int low = 0;
@@ -246,7 +247,7 @@ public final class ContigTranslator
         return cigar;
     }
 
-    // localPos is a 1-based offset into the concatenated exons; returns the containing span and its genomic position.
+    // localPos is a 1-based offset into the concatenated exons.
     private static SpanLocation locateStartSpan(final List<BaseRegion> spans, final int localPos)
     {
         int exonLengthSoFar = 0;
@@ -263,8 +264,8 @@ public final class ContigTranslator
         return null;
     }
 
-    // Walks the clamped contig-space CIGAR, emitting an N at every exon boundary crossed to produce a
-    // genome-spaced CIGAR. Returns null when the read extends past the last exon.
+    // Walks the clamped contig-space CIGAR, emitting an N at every exon boundary crossed.
+    // Returns null when the read extends past the last exon.
     private static ContigTranslateResult walkCigarToGenome(
             final ContigEntry contig, final List<BaseRegion> spans, final SpanLocation start, final Cigar cigar,
             final boolean softClipAtExonBoundary)
@@ -347,14 +348,27 @@ public final class ContigTranslator
 
             int splicedLength = element.getLength();
 
-            if(!result.isEmpty() && isAbsorbableDeletion(result.get(result.size() - 1)))
+            // Absorb only while an aligned block still flanks that side of the splice. Absorbing a terminal deletion
+            // would leave the N at the end of the cigar, which downstream reads as a junction with no exon beside it.
+            if(result.size() >= 2 && isAbsorbableDeletion(result.get(result.size() - 1))
+                    && isMatchOrEqualOp(result.get(result.size() - 2).getOperator()))
             {
                 splicedLength += result.remove(result.size() - 1).getLength();
             }
 
-            while(i + 1 < elements.size() && isAbsorbableDeletion(elements.get(i + 1)))
+            int afterDeletions = i + 1;
+            while(afterDeletions < elements.size() && isAbsorbableDeletion(elements.get(afterDeletions)))
             {
-                splicedLength += elements.get(++i).getLength();
+                ++afterDeletions;
+            }
+
+            if(afterDeletions > i + 1 && afterDeletions < elements.size()
+                    && isMatchOrEqualOp(elements.get(afterDeletions).getOperator()))
+            {
+                while(i + 1 < afterDeletions)
+                {
+                    splicedLength += elements.get(++i).getLength();
+                }
             }
 
             result.add(new CigarElement(splicedLength, CigarOperator.N));
@@ -367,7 +381,6 @@ public final class ContigTranslator
         return element.getOperator() == CigarOperator.D && element.getLength() <= MAX_MERGED_DELETION_BP;
     }
 
-    // exon span index + genomic position where an alignment begins.
     private record SpanLocation(int spanIndex, int genomicPos)
     {
     }

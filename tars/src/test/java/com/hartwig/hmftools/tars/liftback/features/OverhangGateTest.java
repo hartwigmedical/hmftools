@@ -123,7 +123,7 @@ public class OverhangGateTest
 
         gate.gateCandidates(collapsedAltAlignments, collapseRecord);
 
-        // Collapsed XA alts are dropped from the alternate loci.
+        // A collapsed XA alt is dropped, while self above is kept.
         assertTrue(collapsedAlt.Dropped);
 
     }

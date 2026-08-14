@@ -131,10 +131,10 @@ public class LiftBackGroupProcessor
 
         if(hasSupplementaries)
         {
-            // Step 2: lift the supplementary records and add any supported spliced primary alignments.
+            // Step 2: lift the supplementary records and add any spliced primary alignments they support.
             for(int i = 1; i < records.size(); ++i)
             {
-                resolved.set(i, mDiscriminator.liftSupplementaryAlignment(records.get(i)));
+                resolved.set(i, mDiscriminator.liftSupplementaryAlignment(records.get(i), mOverhangGate));
             }
             primaryAlignments = addSupplementarySupportedAlignments(
                     records, primaryAlignments, resolved, mateHintIntrons);
@@ -278,7 +278,7 @@ public class LiftBackGroupProcessor
 
     private Integer finalAlignmentScore(final SAMRecord primary, final LiftedRecord lifted)
     {
-        // Lift-only test paths omit supplementary resolution and intentionally skip the production AS floor.
+        // lift-only paths have no supplementary resolver and skip the production AS floor
         if(mSupplementaryResolver == null)
         {
             return null;

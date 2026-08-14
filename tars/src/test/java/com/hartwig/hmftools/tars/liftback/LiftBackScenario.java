@@ -25,11 +25,9 @@ import com.hartwig.hmftools.tars.liftback.features.SupplementaryConfig;
 
 import htsjdk.samtools.SAMRecord;
 
-// Parametric, standalone whole-pipeline test harness. Declare the transcript-contig geometry, the reference genome,
-// the annotated junctions and a set of reads (primary + mate + any supplementaries, each with arbitrary tags), then
-// run() drives the real LiftBackGroupProcessor.processNameGroup exactly as production does (candidate features ->
-// discriminator -> supplementary resolve -> mate patch -> NH / unmap policy). Assert the lifted
-// placement of every emitted record.
+// Whole-pipeline test harness: declare the contig geometry, reference genome, annotated junctions and reads, then run() drives the
+// real LiftBackGroupProcessor.processNameGroup (candidate features -> discriminator -> supplementary resolve -> mate patch -> NH /
+// unmap policy) and Result asserts the lifted placement of every emitted record.
 //
 // Usage:
 //   LiftBackScenario.create()
@@ -41,8 +39,6 @@ import htsjdk.samtools.SAMRecord;
 //       .read(supp("frag1", TX_CONTIG, 300, "50S50M").sa("chr1_tx,51,+,100M,60,0;"))
 //       .run()
 //       .assertLifted("frag1", ReadRole.PRIMARY, CHR_1, 150, "50M100N50M")
-//       .assertMapQuality("frag1", ReadRole.PRIMARY, 60)
-//       .assertNoXa("frag1", ReadRole.PRIMARY)
 //       .assertSuppCount("frag1", 0);
 public final class LiftBackScenario
 {
@@ -82,7 +78,7 @@ public final class LiftBackScenario
         return this;
     }
 
-    // optional: drives the hidden-tie exon override in the MAPQ policy.
+    // Optional: drives the hidden-tie exon override in the MAPQ policy.
     public LiftBackScenario exonIndex(final EnsemblAnnotationIndex annotationIndex)
     {
         mEnsemblAnnotationIndex = annotationIndex;
@@ -94,8 +90,6 @@ public final class LiftBackScenario
         mReads.add(spec);
         return this;
     }
-
-    // ----- read factories: build a record for the given role, then chain tag setters -----
 
     public static ReadSpec primary(final String readName, final String contig, final int pos, final String cigar)
     {
@@ -109,11 +103,9 @@ public final class LiftBackScenario
 
     public static ReadSpec supp(final String readName, final String contig, final int pos, final String cigar)
     {
-        // supplementaryRecord(readName, contig, pos, cigar) leaves the SA tag null; set it with .sa(...) when needed.
+        // the SA tag is left null; set it with .sa(...) when needed.
         return new ReadSpec(readName, ReadRole.SUPPLEMENTARY, supplementaryRecord(readName, contig, pos, cigar));
     }
-
-    // ----- run the full pipeline and collect every emitted record -----
 
     public Result run()
     {
@@ -138,7 +130,7 @@ public final class LiftBackScenario
         return new Result(emitted);
     }
 
-    // reads sharing a name form one name-group; preserve declaration order across groups.
+    // reads sharing a name form one name-group, in declaration order.
     private List<List<SAMRecord>> groupByReadName()
     {
         List<List<SAMRecord>> groups = new ArrayList<>();
@@ -157,8 +149,7 @@ public final class LiftBackScenario
         return groups;
     }
 
-    // A record plus its role, with fluent tag setters. SEQ defaults to the fixture bases; override with bases(...)
-    // when a ref-dependent pass (overhang gate / supplementary motif scan) must compare read vs genome.
+    // set bases(...) when a ref-dependent pass (overhang gate, supplementary motif scan) must compare read against genome.
     public static final class ReadSpec
     {
         final String ReadName;
@@ -300,7 +291,7 @@ public final class LiftBackScenario
             return this;
         }
 
-        // mate reference-name + start cross-pointer (set by LiftBackRecordOps.patchMateFields against the mate's lifted primary).
+        // mate cross-pointer, set by LiftBackRecordOps.patchMateFields against the mate's lifted primary.
         public Result assertMate(final String readName, final ReadRole role, final String mateChrom, final int matePos)
         {
             SAMRecord record = record(readName, role);
@@ -326,7 +317,7 @@ public final class LiftBackScenario
             return this;
         }
 
-        // SA tag lifted to genomic space: present, starts at the given chromosome, and carries no _tx contig name.
+        // SA must be present, start at the given chromosome, and carry no _tx contig name.
         public Result assertSaGenomic(final String readName, final ReadRole role, final String chrom)
         {
             SAMRecord record = record(readName, role);

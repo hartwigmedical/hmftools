@@ -53,7 +53,7 @@ public class TranscriptContigBuilderTest
     {
         // Rank-order for a negative-strand transcript is genomic-descending; builder must re-sort to genomic-ascending.
         TranscriptData transcript = transcript();
-        addExon(transcript, 500, 549, 1); // 5' end of mRNA, but genomic-high
+        addExon(transcript, 500, 549, 1);
         addExon(transcript, 300, 399, 2);
         addExon(transcript, 100, 199, 3);
 
@@ -141,9 +141,8 @@ public class TranscriptContigBuilderTest
         return createEnsemblGeneData(GENE_ID, GENE_NAME, CHR_1, strand, 100, 549);
     }
 
-    // Local builders are retained because GeneTestUtils.createTransExons only models uniform exon length and
-    // genomic-ascending rank, whereas these tests need non-uniform exons (100/100/50bp) and a negative-strand
-    // transcript whose ranks descend genomically.
+    // GeneTestUtils.createTransExons only models uniform exon length and genomic-ascending rank; these tests need
+    // non-uniform exons (100/100/50bp) and a negative-strand transcript whose ranks descend genomically
     private static TranscriptData transcript()
     {
         return transcript(1, TRANS_NAME, true);
@@ -161,7 +160,7 @@ public class TranscriptContigBuilderTest
 
     private static MockRefGenome buildMockRef()
     {
-        // position-distinguishable bases so sequence-content assertions actually catch bad concatenations
+        // position-varying bases so sequence-content assertions catch bad concatenations
         MockRefGenome refGenome = new MockRefGenome(true);
         char[] alphabet = { 'A', 'C', 'G', 'T' };
         StringBuilder bases = new StringBuilder();

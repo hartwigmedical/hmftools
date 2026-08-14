@@ -59,8 +59,7 @@ public class EnsemblAnnotationIndexTest
     @Test
     public void testNestedExonKeepsEnclosingSpan()
     {
-        // an exon nested inside an earlier-starting one must not shrink the merged span: the union end wins, so
-        // the enclosing exon's tail (past the nested exon's end) still reports contained.
+        // the merged span takes the union end, so the enclosing exon's tail past the nested exon's end stays contained
         EnsemblAnnotationIndex annotationIndex = annotationIndex("1", List.of(new int[] { 100, 200 }, new int[] { 100, 150 }));
         assertTrue(annotationIndex.containsExon("chr1", 175));
         assertTrue(annotationIndex.containsExon("chr1", 200));

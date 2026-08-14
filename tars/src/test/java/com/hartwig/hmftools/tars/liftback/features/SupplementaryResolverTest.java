@@ -28,7 +28,7 @@ import com.hartwig.hmftools.tars.liftback.features.SupplementaryResolver.Tier;
 
 import org.junit.Test;
 
-// Tests for SupplementaryResolver. Reads are 151bp (Illumina default) unless noted.
+// Reads are 151bp (Illumina default) unless noted.
 public class SupplementaryResolverTest
 {
     private static final String CHR1 = "chr1";
@@ -64,7 +64,6 @@ public class SupplementaryResolverTest
     @Test
     public void testRightExtendCleanMerge()
     {
-        // Clean complementary cigars across an annotated intron; tests core right-extend.
         int primStart = 31448368;
         String primCigar = "94M57S";
         int suppStart = 31448541;
@@ -119,9 +118,8 @@ public class SupplementaryResolverTest
     @Test
     public void testResolveAcrossPreCollapsedTerminalClip()
     {
-        // The overhang gate now collapses the tx-contig over-run (100M83N3M48S) to 100M51S upstream, so
-        // supplementary resolve receives the clean clip and merges it across the true 156N junction.
-        // (The fold that used to do this inside the resolver was removed; the gate owns terminal micro-junction handling.)
+        // The overhang gate collapses the tx-contig over-run (100M83N3M48S) to 100M51S before the resolver runs, so the
+        // resolver sees a clean terminal clip and merges it across the true 156N junction.
         int primStart = 1051270;
         String primCigar = "100M51S";
         int suppStart = 1051525;
@@ -142,7 +140,7 @@ public class SupplementaryResolverTest
     @Test
     public void testLeftExtendCleanMerge()
     {
-        // Mirror of right-extend: primary starts after junction, supp covers the upstream exon.
+        // Mirror of right-extend: the primary starts after the junction and the supp covers the upstream exon.
         int suppStart = 31448368;
         String suppCigar = "57M94S";
         int primStart = 31448541;
@@ -162,7 +160,7 @@ public class SupplementaryResolverTest
     @Test
     public void testChainMergeAcrossThreeExons()
     {
-        // 3-exon read: primary on first exon, two supps on middle and last exons.
+        // 3-exon read: primary on the first exon, two supps on the middle and last exons.
         int primStart = 1000;
         String primCigar = "50M101S";
         int suppMidStart = 2000;
@@ -189,7 +187,7 @@ public class SupplementaryResolverTest
         assertTrue(result.droppedSupplementaryIndices().contains(0));
         assertTrue(result.droppedSupplementaryIndices().contains(1));
 
-        // introduced introns are recorded in chain order (first exon boundary first).
+        // Introduced introns are recorded in chain order, first exon boundary first.
         assertEquals(2, result.introducedIntrons().size());
         assertEquals(new ChrBaseRegion(CHR1, 1050, 1999), result.introducedIntrons().get(0));
         assertEquals(new ChrBaseRegion(CHR1, 2060, 2999), result.introducedIntrons().get(1));
@@ -198,7 +196,6 @@ public class SupplementaryResolverTest
     @Test
     public void testMergeWhenPrimaryAlreadyHasInternalN()
     {
-        // Primary already has an internal junction; supp picks up the next exon.
         int primStart = 1000;
         String primCigar = "50M200N40M61S";
         int suppStart = 1500;
@@ -483,7 +480,7 @@ public class SupplementaryResolverTest
     @Test
     public void testPrimaryBothSidesClippedChainMergesBothSupps()
     {
-        // Full middle-anchored 3-exon scenario: chain merges right first then left.
+        // Middle-anchored 3-exon read: the chain merges right first, then left.
         Supplementary right = supp(0, CHR1, true, 1500, "95S56M", 60);
         Supplementary left = supp(1, CHR1, true, 500, "5M146S", 60);
         Candidate cand = new Candidate(
@@ -660,8 +657,7 @@ public class SupplementaryResolverTest
     @Test
     public void testExp7Case3Chr5_34937631()
     {
-        // exp7 chr5:34937631: overlap=2, the junction position lands at read offset 61 (trust-supp) on the annotated junction,
-        // producing the expected 61M1166N90M.
+        // overlap=2: the junction lands at read offset 61 (trust-supp) on the annotated junction, giving 61M1166N90M.
         String chr5 = "chr5";
         ChrBaseRegion annotatedIntron = new ChrBaseRegion(chr5, 34937692, 34938857);
         Candidate cand = candidate(
@@ -710,8 +706,8 @@ public class SupplementaryResolverTest
     @Test
     public void testOverlapWithinToleranceSeededPickAmongAnnotated()
     {
-        // overlap=2, both L's land on an annotated junction (a tie at the ANNOTATED tier). The pick is seeded by
-        // the read (deterministic), not by max-min-anchor; this candidate resolves to trustPrimary.
+        // overlap=2 and both L's land on an annotated junction. The ANNOTATED-tier tie is broken by a read-seeded
+        // deterministic pick, not by max-min-anchor; this candidate resolves to trustPrimary.
         ChrBaseRegion trustPrimary = new ChrBaseRegion(CHR1, 1095, 1499);
         ChrBaseRegion trustSupp = new ChrBaseRegion(CHR1, 1093, 1497);
         Candidate cand = candidate(
@@ -756,8 +752,8 @@ public class SupplementaryResolverTest
     @Test
     public void testNoAnnotatedPositionWithDefaultsFallsBackToMidpoint()
     {
-        // AnnotatedOnly=false - with no annotated or motif match the junction is placed at the midpoint of the
-        // ambiguous overlap range (rounded down), not at bwa's split point.
+        // With no annotated or motif match the junction is placed at the midpoint of the ambiguous overlap range
+        // (rounded down), not at bwa's split point.
         Candidate cand = candidate(
                 CHR1, true, 151, 1001, "94M57S",
                 supp(0, CHR1, true, 1500, "92S59M", 60));
@@ -768,14 +764,12 @@ public class SupplementaryResolverTest
         assertEquals("93M407N58M", result.mergedCigar());
     }
 
-    // Resolver wired to a base-level genome for motif scanning.
     private static SupplementaryResolver resolverWithRef(final Set<ChrBaseRegion> annotated, final TestGenome genome)
     {
         return new SupplementaryResolver(
                 EnsemblAnnotationIndex.fromJunctions(annotated), genome.asRefGenome(), SupplementaryConfig.defaults());
     }
 
-    // 'N' genome with a canonical GT-AG motif seeded at the intron flanks.
     private static TestGenome refWithCanonicalIntron(final int chromLen, final int intronStart, final int intronEnd)
     {
         return new TestGenome().with(CHR1, chromLen, 'N')
@@ -785,7 +779,7 @@ public class SupplementaryResolverTest
     @Test
     public void testMotifScanPicksCanonicalGTagWhenUnannotated()
     {
-        // Canonical GT-AG motif placed at intron (1095, 1499) with no annotation - merge via motif scan.
+        // Canonical GT-AG motif at intron (1095, 1499) with no annotation: merge via motif scan.
         Candidate cand = candidate(
                 CHR1, true, 151, 1001, "94M57S",
                 supp(0, CHR1, true, 1500, "94S57M", 60));
@@ -839,7 +833,7 @@ public class SupplementaryResolverTest
     @Test
     public void testMotifScanAcceptsReverseStrandCanonical()
     {
-        // Reverse-strand transcript: genomic forward CT...AC (RC of GT-AG). Merge via motif scan.
+        // Reverse-strand transcript: genomic forward CT-AC is the reverse complement of GT-AG.
         TestGenome genome = new TestGenome().with(CHR1, 2000, 'N')
                 .set(CHR1, 1095, "CT").set(CHR1, 1498, "AC");
 
@@ -856,7 +850,7 @@ public class SupplementaryResolverTest
     @Test
     public void testMotifScanIgnoredWhenNoMotifAndNoAnnotated()
     {
-        // All-N ref, no annotation, AnnotatedOnly=false - falls through to trust-primary fallback.
+        // All-N ref with no annotation falls through to the trust-primary fallback.
         TestGenome genome = new TestGenome().with(CHR1, 2000, 'N');
         Candidate cand = candidate(
                 CHR1, true, 151, 1001, "94M57S",
@@ -871,7 +865,7 @@ public class SupplementaryResolverTest
     @Test
     public void testMotifScanLeftExtendCanonical()
     {
-        // Left-extend with canonical GT-AG motif at intron (1058, 1499).
+        // Left-extend with a canonical GT-AG motif at intron (1058, 1499).
         TestGenome genome = new TestGenome().with(CHR1, 2000, 'N')
                 .set(CHR1, 1058, "GT").set(CHR1, 1498, "AG");
 
@@ -889,8 +883,8 @@ public class SupplementaryResolverTest
     public void testSuppWithInternalNBeforePrimaryClampedToItsFirstBlock()
     {
         // ContigTranslator can expand a cross-exon M into M-N-M. This supp already spans the junction and its post-N
-        // block lands exactly on the primary, so it carries no soft clip at all and pairs with nothing. Clamping it
-        // back to its first block (57M94S at 1000) makes it the upstream anchor and the merge re-derives the splice.
+        // block lands on the primary, so it carries no soft clip and pairs with nothing. Clamping it back to its first
+        // block (57M94S at 1000) makes it the upstream anchor and the merge re-derives the splice.
         Candidate cand = candidate(
                 CHR1, true, 151, 2000, "57S94M",
                 supp(0, CHR1, true, 1000, "57M943N94M", 60));
@@ -906,7 +900,7 @@ public class SupplementaryResolverTest
     @Test
     public void testSuppWithInternalNPastPrimaryClampedToItsLastBlock()
     {
-        // Mirror: the supp overruns the primary's end instead of starting before it, so it is clamped to its last
+        // Mirror: the supp overruns the primary's end rather than starting before it, so it is clamped to its last
         // block (94S57M at 2037) and becomes the downstream anchor.
         Candidate cand = candidate(
                 CHR1, true, 151, 1000, "94M57S",
@@ -923,8 +917,8 @@ public class SupplementaryResolverTest
     @Test
     public void testSuppWithInternalNInsidePrimarySpanNotClamped()
     {
-        // Neither before the primary's start nor past its end, so there is nothing to clamp: the supp keeps its
-        // M-N-M shape, has no terminal soft clip, and no merge partner is found.
+        // Nothing to clamp: the supp sits inside the primary's span, so it keeps its M-N-M shape, has no terminal soft
+        // clip and finds no merge partner.
         Candidate cand = candidate(
                 CHR1, true, 151, 900, "151M",
                 supp(0, CHR1, true, 1000, "57M20N94M", 60));
@@ -976,8 +970,8 @@ public class SupplementaryResolverTest
     @Test
     public void testMateHintPinsIntronEndWhenPrimaryIsDownstream()
     {
-        // Mirror of the upstream case: here the primary carries the leading clip, so the hint pins the intron end
-        // rather than its start. Same geometry with the roles swapped, so the merged alignment is identical.
+        // The primary carries the leading clip, so the hint pins the intron end rather than its start. Same geometry as
+        // the upstream case with the roles swapped, so the merged alignment is identical.
         Candidate withoutHint = candidate(
                 CHR1, true, 151, 1498, "92S59M",
                 supp(0, CHR1, true, 1001, "94M57S", 60));
@@ -1000,7 +994,7 @@ public class SupplementaryResolverTest
     @Test
     public void testMateHintOutsideOverlapWindowIgnored()
     {
-        // Hint outside the overlap window - ignored, falls back to the midpoint of the range.
+        // Falls back to the midpoint of the ambiguous range.
         ChrBaseRegion hint = new ChrBaseRegion(CHR1, 50000, 50100);
         Candidate cand = new Candidate(
                 CHR1, true, 151, 1001, "94M57S",
@@ -1027,26 +1021,22 @@ public class SupplementaryResolverTest
         assertNull(result.rejectReason());
     }
 
-    // ---- motifTier: donor/acceptor flank classification ----
-
     @Test
     public void testClassifiesMotifTiers()
     {
-        // canonical GT-AG and its reverse-complement CT-AC (strand unknown at scan time)
+        // Strand is unknown at scan time, so GT-AG and its reverse complement CT-AC both score canonical.
         assertEquals(Tier.CANONICAL, SupplementaryResolver.motifTier(bases("GT"), bases("AG")));
         assertEquals(Tier.CANONICAL, SupplementaryResolver.motifTier(bases("CT"), bases("AC")));
 
-        // semi-canonical GC-AG / AT-AC and their reverse-complements CT-GC / GT-AT
         assertEquals(Tier.SEMI_CANONICAL, SupplementaryResolver.motifTier(bases("GC"), bases("AG")));
         assertEquals(Tier.SEMI_CANONICAL, SupplementaryResolver.motifTier(bases("CT"), bases("GC")));
         assertEquals(Tier.SEMI_CANONICAL, SupplementaryResolver.motifTier(bases("AT"), bases("AC")));
         assertEquals(Tier.SEMI_CANONICAL, SupplementaryResolver.motifTier(bases("GT"), bases("AT")));
 
-        // lowercase normalises to the same tier
         assertEquals(Tier.CANONICAL, SupplementaryResolver.motifTier(bases("gt"), bases("ag")));
         assertEquals(Tier.CANONICAL, SupplementaryResolver.motifTier(bases("ct"), bases("ac")));
 
-        // non-motif flanks, including a matching donor with a non-matching acceptor
+        // Both flanks must match: a canonical donor with a non-motif acceptor is NONE.
         assertEquals(Tier.NONE, SupplementaryResolver.motifTier(bases("AA"), bases("GG")));
         assertEquals(Tier.NONE, SupplementaryResolver.motifTier(bases("NN"), bases("NN")));
         assertEquals(Tier.NONE, SupplementaryResolver.motifTier(bases("GT"), bases("CC")));
