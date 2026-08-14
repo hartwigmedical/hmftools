@@ -28,7 +28,7 @@ public final class Resegmentation
             PPL_LOGGER.trace("primary ratio peak: {}", peakResult.get());
         }
 
-        List<ObservedRegion> normalisedSegments = GcNormaliser.normalise(inputRegions, peakResult);
+        List<ObservedRegion> normalisedSegments = GcNormaliser.normaliseRegions(inputRegions, peakResult.get());
 
         SupersegmentResult supersegmentResult = SupersegmentIdentifier.identify(normalisedSegments);
 

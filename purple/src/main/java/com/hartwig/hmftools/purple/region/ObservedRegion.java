@@ -141,6 +141,7 @@ public class ObservedRegion implements FittingRegion
     public void setObservedNormalRatio(double ratio) { mObservedNormalRatio = ratio; }
 
     public double unnormalisedObservedNormalRatio() { return mUnnormalisedObservedNormalRatio; }
+    public void setUnnormalisedObservedNormalRatio(double ratio) { mUnnormalisedObservedNormalRatio = ratio; }
 
     public GermlineStatus germlineStatus() { return mGermlineStatus; }
     public void setGermlineStatus(final GermlineStatus status)

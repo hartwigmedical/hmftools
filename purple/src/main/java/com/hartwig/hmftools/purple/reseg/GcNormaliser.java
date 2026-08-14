@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.purple.reseg;
 
 import static java.lang.Double.NaN;
+import static java.lang.Math.abs;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.Doubles.median;
@@ -15,18 +16,15 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import java.util.OptionalDouble;
 import java.util.Set;
-import java.util.TreeMap;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
+
+import org.jetbrains.annotations.Nullable;
 
 public final class GcNormaliser
 {
@@ -34,7 +32,7 @@ public final class GcNormaliser
     // segments with a positive bafCount. If a primary ratio peak was found, also restrict to with its bounds.
     private static final int MAX_SUPPRESSION_PASSES = 20;
 
-    public static List<ObservedRegion> normalise(final List<ObservedRegion> allSegments, final Optional<RatioPeakResult> peakResult)
+    public static List<ObservedRegion> normaliseRegions(final List<ObservedRegion> allSegments, @Nullable final RatioPeakResult peakResult)
     {
         List<GcBin> allBins = GcBin.createdBins();
 
@@ -42,8 +40,8 @@ public final class GcNormaliser
         // out-of-range LOW/HIGH clamp bins to the observed extremes rather than the theoretical ones
         Set<GcBin> observedBins = Sets.newHashSet();
 
-        GcBin lowClampBin = null;
-        GcBin highClampBin = null;
+        GcBin lowerGcBin = null;
+        GcBin highGcBin = null;
 
         for(ObservedRegion segment : allSegments)
         {
@@ -52,26 +50,25 @@ public final class GcNormaliser
             {
                 observedBins.add(gcBin);
 
-                if(lowClampBin == null || gcBin.Lower < lowClampBin.Lower)
-                    lowClampBin = gcBin;
+                if(lowerGcBin == null || gcBin.Lower < lowerGcBin.Lower)
+                    lowerGcBin = gcBin;
 
-                if(highClampBin == null || gcBin.Upper > highClampBin.Upper)
-                    highClampBin = gcBin;
+                if(highGcBin == null || gcBin.Upper > highGcBin.Upper)
+                    highGcBin = gcBin;
 
                 if(observedBins.size() == allBins.size())
                     break;
             }
         }
 
-        if(lowClampBin == null)
-            lowClampBin = allBins.get(0);
+        if(lowerGcBin == null)
+            lowerGcBin = allBins.get(0);
 
-        if(highClampBin == null)
-            highClampBin = allBins.get(allBins.size() - 1);
+        if(highGcBin == null)
+            highGcBin = allBins.get(allBins.size() - 1);
 
         List<ObservedRegion> validIputSegments = allSegments.stream()
-                .filter(x -> x.germlineStatus() == GermlineStatus.DIPLOID && x.bafCount() > 0)
-                .filter(x -> peakResult.map(r -> x.observedTumorRatio() >= r.LeftBound && x.observedTumorRatio() <= r.RightBound).orElse(true))
+                .filter(x -> isValidRegion(x, peakResult))
                 .collect(Collectors.toList());
 
         Map<GcBin,Double> gcAdjustments = calculateGcAdjustments(validIputSegments, allBins);
@@ -83,7 +80,7 @@ public final class GcNormaliser
             GcBin bin = findBin(segment.gcContent(), allBins);
 
             if(bin == null)
-                bin = segment.gcContent() <= lowClampBin.Lower ? lowClampBin : highClampBin;
+                bin = segment.gcContent() <= lowerGcBin.Lower ? lowerGcBin : highGcBin;
 
             double adjustment = gcAdjustments.getOrDefault(bin, 1.0);
 
@@ -100,7 +97,24 @@ public final class GcNormaliser
         return gcAdjustedRegions;
     }
 
-    static Map<GcBin, Double> calculateGcAdjustments(final List<ObservedRegion> regions, final List<GcBin> allBins)
+    private static boolean isValidRegion(final ObservedRegion region, @Nullable final RatioPeakResult peakResult)
+    {
+        if(region.bafCount() <= 0)
+            return false;
+
+        if(region.germlineStatus() != GermlineStatus.DIPLOID)
+            return false;
+
+        if(peakResult != null)
+        {
+            if(region.observedTumorRatio() < peakResult.LeftBound || region.observedTumorRatio() > peakResult.RightBound)
+                return false;
+        }
+
+        return true;
+    }
+
+    private static Map<GcBin,Double> calculateGcAdjustments(final List<ObservedRegion> regions, final List<GcBin> allBins)
     {
         double totalWeight = regions.stream().mapToDouble(s -> s.bafCount()).sum();
 
@@ -130,15 +144,6 @@ public final class GcNormaliser
             binProportion[i] = totalWeight > 0 ? binWeight / totalWeight : 0;
         }
 
-        /*
-        for(int i = 0; i < allBins.size(); i++)
-        {
-            GcBin bin = allBins.get(i);
-            double binWeight = regions.stream().filter(x -> bin.contains(x.gcContent())).mapToDouble(s -> s.bafCount()).sum();
-            binProportion[i] = totalWeight > 0 ? binWeight / totalWeight : 0;
-        }
-        */
-
         List<RatioBafCount> allSegmentRatioCounts = buildRatioBafCounts(regions);
 
         double[][] grid = new double[allBins.size()][RESEG_GC_PERCENTILES.length];
@@ -147,24 +152,13 @@ public final class GcNormaliser
         {
             double percentile = RESEG_GC_PERCENTILES[p];
 
-            OptionalDouble allValue = weightedPercentileAcross(regions, s -> true, percentile);
-
             for(int i = 0; i < allBins.size(); i++)
             {
-                GcBin bin = allBins.get(i);
-
                 List<ObservedRegion> gcSegments = regionsByGcBin.get(i);
                 List<RatioBafCount> gcSegmentRatioCounts = buildRatioBafCounts(gcSegments);
 
                 Double allSegsPercRatio = weightRatioAcrossPercentile(allSegmentRatioCounts, percentile);
                 Double gcSegsPercRatio = weightRatioAcrossPercentile(gcSegmentRatioCounts, percentile);
-
-                OptionalDouble binValue = weightedPercentileAcross(regions, x -> bin.contains(x.gcContent()), percentile);
-
-
-                grid[i][p] = (binValue.isPresent() && allValue.isPresent() && allValue.getAsDouble() != 0)
-                        ? binValue.getAsDouble() / allValue.getAsDouble()
-                        : NaN;
 
                 if(allSegsPercRatio != null && gcSegsPercRatio != null && allSegsPercRatio != null)
                     grid[i][p] = gcSegsPercRatio / allSegsPercRatio;
@@ -172,27 +166,6 @@ public final class GcNormaliser
                     grid[i][p] = NaN;
             }
         }
-
-        /*
-        double[][] grid = new double[allBins.size()][RESEG_GC_PERCENTILES.length];
-
-        for(int p = 0; p < RESEG_GC_PERCENTILES.length; p++)
-        {
-            double percentile = RESEG_GC_PERCENTILES[p];
-
-            OptionalDouble allValue = weightedPercentileAcross(regions, s -> true, percentile);
-
-            for(int i = 0; i < allBins.size(); i++)
-            {
-                GcBin bin = allBins.get(i);
-                OptionalDouble binValue = weightedPercentileAcross(regions, x -> bin.contains(x.gcContent()), percentile);
-
-                grid[i][p] = (binValue.isPresent() && allValue.isPresent() && allValue.getAsDouble() != 0)
-                        ? binValue.getAsDouble() / allValue.getAsDouble()
-                        : NaN;
-            }
-        }
-        */
 
         suppressSparseValues(grid, binProportion);
 
@@ -214,11 +187,10 @@ public final class GcNormaliser
         return adjustments;
     }
 
-    // marks (percentile,bin) entries that jump too much from the preceding bin and are backed by too
-    // little data as unreliable, then forward-fills them from the nearest preceding valid bin, repeating
-    // until a full pass finds nothing left to suppress
     private static void suppressSparseValues(final double[][] grid, final double[] binProportion)
     {
+        // mark entries that jump too much from the preceding bin and are backed by too little data as unreliable, then forward-fill
+        // them from the nearest preceding valid bin, repeating until a full pass finds nothing left to suppress
         int binCount = grid.length;
         int percentileCount = grid[0].length;
 
@@ -237,7 +209,7 @@ public final class GcNormaliser
                     double prev = grid[i - 1][p];
 
                     if(!Double.isNaN(curr) && !Double.isNaN(prev)
-                    && Math.abs(curr - prev) > RESEG_GC_SPARSE_MIN_JUMP && binProportion[i] < RESEG_GC_SPARSE_MAX_PROPORTION)
+                    && abs(curr - prev) > RESEG_GC_SPARSE_MIN_JUMP && binProportion[i] < RESEG_GC_SPARSE_MAX_PROPORTION)
                     {
                         grid[i][p] = NaN;
                     }
@@ -264,26 +236,6 @@ public final class GcNormaliser
                 }
             }
         }
-    }
-
-    private static OptionalDouble weightedPercentileAcross(
-            final List<ObservedRegion> segments, final Predicate<ObservedRegion> filter, double percentile)
-    {
-        Map<Double, Double> weightByRatio = new TreeMap<>();
-
-        for(ObservedRegion segment : segments)
-        {
-            if(!filter.test(segment))
-                continue;
-
-            weightByRatio.merge(segment.observedTumorRatio(), (double)segment.bafCount(), Double::sum);
-        }
-
-        List<WeightedPercentile.RatioWeightPair> pairs = weightByRatio.entrySet().stream()
-                .map(e -> new WeightedPercentile.RatioWeightPair(e.getKey(), e.getValue()))
-                .collect(Collectors.toList());
-
-        return WeightedPercentile.compute(pairs, percentile);
     }
 
     private static class RatioBafCount

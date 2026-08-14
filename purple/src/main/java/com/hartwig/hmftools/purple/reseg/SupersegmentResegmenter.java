@@ -1,6 +1,9 @@
 package com.hartwig.hmftools.purple.reseg;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.max;
+import static java.lang.Math.min;
+import static java.lang.Math.sqrt;
 import static java.lang.System.arraycopy;
 
 import static com.hartwig.hmftools.purple.PurpleConstants.RESEG_BAF_WEIGHT_THRESHOLD;
@@ -16,22 +19,22 @@ import com.hartwig.hmftools.purple.region.ObservedRegion;
 
 public final class SupersegmentResegmenter
 {
-    // calculates optimal segmentation based on the calculated tumor ratio penalty
     public static List<ObservedRegion> resegment(final List<ObservedRegion> members, double segmentationPenalty)
     {
+        // calculate optimal segmentation based on the calculated tumor ratio penalty
         if(members.size() > RESEG_MAX_SUPERSEGMENT_SIZE_FOR_BRUTE_FORCE)
             return splitLargeSupersegment(members, segmentationPenalty);
 
         List<List<ObservedRegion>> bestPartition = findBestPartition(members, segmentationPenalty);
 
         if(bestPartition == null)
-            return List.of(aggregateRegions(members));
+            return List.of(formNewRegion(members));
 
         List<ObservedRegion> result = new ArrayList<>();
 
         for(List<ObservedRegion> subsegment : bestPartition)
         {
-            result.add(aggregateRegions(subsegment));
+            result.add(formNewRegion(subsegment));
         }
 
         return result;
@@ -42,7 +45,7 @@ public final class SupersegmentResegmenter
         double maxRatio = members.stream().mapToDouble(m -> m.observedTumorRatio()).max().orElse(0);
         double minRatio = members.stream().mapToDouble(m -> m.observedTumorRatio()).min().orElse(0);
 
-        if(maxRatio - minRatio > Math.sqrt(segmentationPenalty / 2))
+        if(maxRatio - minRatio > sqrt(segmentationPenalty / 2))
         {
             int cutoffIndex = findLargestAdjacentDiffIndex(members);
 
@@ -55,7 +58,7 @@ public final class SupersegmentResegmenter
             return result;
         }
 
-        return List.of(aggregateRegions(members));
+        return List.of(formNewRegion(members));
     }
 
     private static int findLargestAdjacentDiffIndex(final List<ObservedRegion> members)
@@ -141,47 +144,63 @@ public final class SupersegmentResegmenter
             double nextDiff = (i < m - 1) ? abs(ratio - subsegmentMembers.get(i + 1).observedTumorRatio()) : 0;
             double meanDiff = abs(ratio - mean);
 
-            double deviation = Math.max(prevDiff, Math.max(nextDiff, meanDiff));
+            double deviation = max(prevDiff, max(nextDiff, meanDiff));
             total += deviation * deviation;
         }
 
         return total;
     }
 
-    static ObservedRegion aggregateRegions(final List<ObservedRegion> members)
+    private static ObservedRegion formNewRegion(final List<ObservedRegion> regions)
     {
-        ObservedRegion first = members.get(0);
-        ObservedRegion last = members.get(members.size() - 1);
+        int bafTotal = 0;
+        int depthWindowTotal = 0;
+        double weightedObsBAFTotal = 0;
+        double weightedObsNormRatioTotal = 0;
+        double weightedUnnormalisedObsNormRatioTotal = 0;
+        double gcRatioTotal = 0;
+        int totalLength = 0;
 
-        boolean useBaf = members.stream().mapToInt(m -> m.bafCount()).max().orElse(0) >= RESEG_BAF_WEIGHT_THRESHOLD;
+        boolean hasRatioSupport = false;
+        int minStart = -1;
+        int maxStart = 0;
 
-        double weightSum = useBaf
-                ? members.stream().mapToDouble(m -> m.bafCount()).sum()
-                : members.stream().mapToDouble(m -> m.depthWindowCount()).sum();
-
-        double observedBAF;
-        double observedTumorRatio;
-
-        if(weightSum > 0)
+        for(ObservedRegion region : regions)
         {
-            observedBAF = weightedSum(members, useBaf, m -> m.observedBAF()) / weightSum;
-            observedTumorRatio = weightedSum(members, useBaf, m -> m.observedTumorRatio()) / weightSum;
-        }
-        else
-        {
-            observedBAF = members.stream().mapToDouble(m -> m.observedBAF()).average().orElse(0);
-            observedTumorRatio = members.stream().mapToDouble(m -> m.observedTumorRatio()).average().orElse(0);
+            bafTotal += region.bafCount();
+            weightedObsBAFTotal += region.bafCount() * region.observedBAF();
+
+            depthWindowTotal += region.depthWindowCount();
+            weightedObsNormRatioTotal += region.depthWindowCount() * region.observedNormalRatio();
+
+            weightedUnnormalisedObsNormRatioTotal += region.depthWindowCount() * region.unnormalisedObservedNormalRatio();
+
+            hasRatioSupport |= region.ratioSupport();
+
+            int regionLength = region.end() - region.start() + 1;
+            totalLength += regionLength;
+            gcRatioTotal += region.gcContent() * regionLength;
+
+            minStart = minStart < 0 ? region.minStart() : min(minStart, region.minStart());
+            maxStart = max(maxStart, region.maxStart());
         }
 
-        int bafCount = members.stream().mapToInt(m -> m.bafCount()).sum();
-        int depthWindowCount = members.stream().mapToInt(m -> m.depthWindowCount()).sum();
+        ObservedRegion first = regions.get(0);
+        ObservedRegion last = regions.get(regions.size() - 1);
 
         ObservedRegion newRegion = fromOther(first);
         newRegion.setEnd(last.end());
-        newRegion.setBafCount(bafCount);
-        newRegion.setObservedBAF(observedBAF);
-        newRegion.setDepthWindowCount(depthWindowCount);
-        newRegion.setObservedTumorRatio(observedTumorRatio);
+        newRegion.setMinStart(minStart);
+        newRegion.setMaxStart(maxStart);
+
+        newRegion.setBafCount(bafTotal);
+        newRegion.setDepthWindowCount(depthWindowTotal);
+
+        newRegion.setObservedBAF(weightedObsBAFTotal / bafTotal);
+        newRegion.setObservedNormalRatio(weightedObsNormRatioTotal / depthWindowTotal);
+        newRegion.setUnnormalisedObservedNormalRatio(weightedUnnormalisedObsNormRatioTotal / depthWindowTotal);
+        newRegion.setRatioSupport(hasRatioSupport);
+        newRegion.setGcContent(gcRatioTotal / totalLength);
 
         return newRegion;
     }

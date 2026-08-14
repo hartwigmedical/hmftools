@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.purple.reseg;
 
-public final class RatioPeakResult
+public class RatioPeakResult
 {
     public final PeakTroughData PrimaryPeak;
     public final double LeftBound;

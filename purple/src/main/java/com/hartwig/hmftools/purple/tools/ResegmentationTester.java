@@ -191,6 +191,9 @@ public class ResegmentationTester
             if(hasRatioDifference(oldSegment.ObservedTumorRatio, newSegment.ObservedTumorRatio))
                 diffs.add(format("ObservedTumorRatio(%.3f/%.3f)", oldSegment.ObservedTumorRatio, newSegment.ObservedTumorRatio));
 
+            if(hasRatioDifference(oldSegment.ObservedNormalRatio, newSegment.ObservedNormalRatio))
+                diffs.add(format("ObservedNormalRatio(%.3f/%.3f)", oldSegment.ObservedNormalRatio, newSegment.ObservedNormalRatio));
+
             if(oldSegment.GermlineState != newSegment.GermlineState)
                 diffs.add(format("GermlineStatus(%s/%s)", oldSegment.GermlineState, newSegment.GermlineState));
 
