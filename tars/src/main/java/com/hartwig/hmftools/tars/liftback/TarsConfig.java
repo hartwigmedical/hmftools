@@ -98,16 +98,7 @@ public class TarsConfig
     // <sample>.tars[.<outputId>][.<stage>].bam
     public String formBamFilename(final String stage)
     {
-        String filename = OutputDir + SampleId + "." + FILE_ID;
-        if(OutputId != null)
-        {
-            filename += "." + OutputId;
-        }
-        if(stage != null)
-        {
-            filename += "." + stage;
-        }
-        return filename + BAM_EXTENSION;
+        return filePrefix() + (stage != null ? "." + stage : "") + BAM_EXTENSION;
     }
 
     public String formUnsortedBam() { return formBamFilename("unsorted"); }
