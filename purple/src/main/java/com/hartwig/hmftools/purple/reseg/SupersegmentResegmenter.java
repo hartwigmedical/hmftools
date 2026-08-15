@@ -28,13 +28,13 @@ public final class SupersegmentResegmenter
         List<List<ObservedRegion>> bestPartition = findBestPartition(members, segmentationPenalty);
 
         if(bestPartition == null)
-            return List.of(formNewRegion(members));
+            return List.of(aggregateRegions(members));
 
-        List<ObservedRegion> result = new ArrayList<>();
+        List<ObservedRegion> result = Lists.newArrayList();
 
         for(List<ObservedRegion> subsegment : bestPartition)
         {
-            result.add(formNewRegion(subsegment));
+            result.add(aggregateRegions(subsegment));
         }
 
         return result;
@@ -58,7 +58,7 @@ public final class SupersegmentResegmenter
             return result;
         }
 
-        return List.of(formNewRegion(members));
+        return List.of(aggregateRegions(members));
     }
 
     private static int findLargestAdjacentDiffIndex(final List<ObservedRegion> members)
@@ -151,71 +151,41 @@ public final class SupersegmentResegmenter
         return total;
     }
 
-    private static ObservedRegion formNewRegion(final List<ObservedRegion> regions)
+    private static ObservedRegion aggregateRegions(final List<ObservedRegion> regions)
     {
-        int bafTotal = 0;
-        int depthWindowTotal = 0;
-        double weightedObsBAFTotal = 0;
-        double weightedObsNormRatioTotal = 0;
-        double weightedUnnormalisedObsNormRatioTotal = 0;
-        double gcRatioTotal = 0;
-        int totalLength = 0;
-
-        boolean hasRatioSupport = false;
-        int minStart = -1;
-        int maxStart = 0;
-
-        for(ObservedRegion region : regions)
-        {
-            bafTotal += region.bafCount();
-            weightedObsBAFTotal += region.bafCount() * region.observedBAF();
-
-            depthWindowTotal += region.depthWindowCount();
-            weightedObsNormRatioTotal += region.depthWindowCount() * region.observedNormalRatio();
-
-            weightedUnnormalisedObsNormRatioTotal += region.depthWindowCount() * region.unnormalisedObservedNormalRatio();
-
-            hasRatioSupport |= region.ratioSupport();
-
-            int regionLength = region.end() - region.start() + 1;
-            totalLength += regionLength;
-            gcRatioTotal += region.gcContent() * regionLength;
-
-            minStart = minStart < 0 ? region.minStart() : min(minStart, region.minStart());
-            maxStart = max(maxStart, region.maxStart());
-        }
-
         ObservedRegion first = regions.get(0);
         ObservedRegion last = regions.get(regions.size() - 1);
 
-        ObservedRegion newRegion = fromOther(first);
-        newRegion.setEnd(last.end());
-        newRegion.setMinStart(minStart);
-        newRegion.setMaxStart(maxStart);
+        boolean useBaf = regions.stream().mapToInt(m -> m.bafCount()).max().orElse(0) >= RESEG_BAF_WEIGHT_THRESHOLD;
 
-        newRegion.setBafCount(bafTotal);
-        newRegion.setDepthWindowCount(depthWindowTotal);
+        int bafCountsTotal = 0;
+        int depthWindowCountsTotal = 0;
+        double weightedObsBafTotal = 0;
+        double weightedObsTumorRatioTotal = 0;
 
-        newRegion.setObservedBAF(weightedObsBAFTotal / bafTotal);
-        newRegion.setObservedNormalRatio(weightedObsNormRatioTotal / depthWindowTotal);
-        newRegion.setUnnormalisedObservedNormalRatio(weightedUnnormalisedObsNormRatioTotal / depthWindowTotal);
-        newRegion.setRatioSupport(hasRatioSupport);
-        newRegion.setGcContent(gcRatioTotal / totalLength);
-
-        return newRegion;
-    }
-
-    private static double weightedSum(final List<ObservedRegion> members, boolean useBaf, final ToDoubleFunction<ObservedRegion> fieldFn)
-    {
-        double sum = 0;
-
-        for(ObservedRegion m : members)
+        for(ObservedRegion region : regions)
         {
-            double weight = useBaf ? m.bafCount() : m.depthWindowCount();
-            sum += weight * fieldFn.applyAsDouble(m);
+            int count = useBaf ? region.bafCount() : region.depthWindowCount();
+
+            depthWindowCountsTotal += region.depthWindowCount();
+            bafCountsTotal += region.bafCount();
+
+            weightedObsBafTotal += region.observedBAF() * count;
+            weightedObsTumorRatioTotal += region.observedTumorRatio() * count;
         }
 
-        return sum;
+        int countsTotal = useBaf ? bafCountsTotal : depthWindowCountsTotal;
+        double calcObservedBAF = weightedObsBafTotal / countsTotal;
+        double calObservedTumorRatio = weightedObsTumorRatioTotal / countsTotal;
+
+        ObservedRegion newRegion = fromOther(first);
+        newRegion.setEnd(last.end());
+        newRegion.setBafCount(bafCountsTotal);
+        newRegion.setObservedBAF(calcObservedBAF);
+        newRegion.setDepthWindowCount(depthWindowCountsTotal);
+        newRegion.setObservedTumorRatio(calObservedTumorRatio);
+
+        return newRegion;
     }
 
     private static List<int[]> combinationsOf(int rangeSize, int k)

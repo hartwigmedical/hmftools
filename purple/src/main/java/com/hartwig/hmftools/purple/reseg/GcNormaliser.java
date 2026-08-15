@@ -87,7 +87,8 @@ public final class GcNormaliser
             if(Double.isNaN(adjustment) || adjustment <= 0)
                 adjustment = 1.0;
 
-            double newRatio = round(segment.observedTumorRatio() / adjustment, 4);
+            // double newRatio = round(segment.observedTumorRatio() / adjustment, 4);
+            double newRatio = segment.observedTumorRatio() / adjustment; // skip rounding
 
             ObservedRegion newRegion = ObservedRegion.fromOther(segment);
             newRegion.setObservedTumorRatio(newRatio);
@@ -169,19 +170,24 @@ public final class GcNormaliser
 
         suppressSparseValues(grid, binProportion);
 
-        Map<GcBin, Double> adjustments = new LinkedHashMap<>();
+        Map<GcBin,Double> adjustments = new LinkedHashMap<>();
 
         for(int i = 0; i < allBins.size(); i++)
         {
-            List<Double> valid = new ArrayList<>();
+            List<Double> validEntries = Lists.newArrayList();
 
             for(double v : grid[i])
             {
                 if(!Double.isNaN(v))
-                    valid.add(v);
+                    validEntries.add(v);
             }
 
-            adjustments.put(allBins.get(i), valid.isEmpty() ? NaN : median(valid));
+            double medianAdjustment = validEntries.isEmpty() ? NaN : median(validEntries); // no rounding to 4dp as in protoype
+
+            // if(!Double.isNaN(medianAdjustment))
+            //    medianAdjustment = round(medianAdjustment, 4);
+
+            adjustments.put(allBins.get(i), medianAdjustment);
         }
 
         return adjustments;
