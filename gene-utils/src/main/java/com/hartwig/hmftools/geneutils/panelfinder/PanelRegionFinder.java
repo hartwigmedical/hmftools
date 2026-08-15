@@ -1,7 +1,10 @@
 package com.hartwig.hmftools.geneutils.panelfinder;
 
+import static java.lang.Math.abs;
+import static java.lang.Math.min;
 import static java.lang.Math.round;
 import static java.lang.String.format;
+import static java.lang.String.valueOf;
 
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._Y;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
@@ -17,6 +20,7 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBuffe
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.APP_NAME;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.GU_LOGGER;
 import static com.hartwig.hmftools.geneutils.panelfinder.PanelFinderConfig.CHROMOSOME_Y_SAMPLE_FRACTION;
+import static com.hartwig.hmftools.geneutils.panelfinder.PanelFinderConfig.GENE_PROXIMITY_MIN;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -280,21 +284,75 @@ public class PanelRegionFinder
                 List<GeneData> overlappingGenes = geneDataList.stream()
                         .filter(x -> region.overlaps(x.Chromosome, x.GeneStart, x.GeneEnd)).collect(Collectors.toList());
 
-                if(overlappingGenes.isEmpty())
-                    continue;
+                GeneData closestGene = null;
+                ExonData closestExon = null;
+                int closestNonOverlap = -1;
 
-                for(GeneData geneData : overlappingGenes)
+                if(!overlappingGenes.isEmpty())
                 {
-                    TranscriptData transcriptData = ensemblDataCache.getCanonicalTranscriptData(geneData.GeneId);
-
-                    if(transcriptData == null)
-                        continue;
-
-                    for(ExonData exon : transcriptData.exons())
+                    for(GeneData geneData : overlappingGenes)
                     {
-                        if(positionsOverlap(region.start(), region.end(), exon.Start, exon.End))
-                            region.addGeneExon(new GeneExonData(geneData.GeneName, exon.Rank, exon.Start, exon.End));
+                        TranscriptData transcriptData = ensemblDataCache.getCanonicalTranscriptData(geneData.GeneId);
+
+                        if(transcriptData == null)
+                            continue;
+
+                        for(ExonData exon : transcriptData.exons())
+                        {
+                            if(positionsOverlap(region.start(), region.end(), exon.Start, exon.End))
+                            {
+                                region.addGeneExon(new GeneExonData(geneData.GeneName, exon.Rank, exon.Start, exon.End));
+                            }
+                            else if(region.geneExons().isEmpty())
+                            {
+                                int absDistance = min(abs(exon.End - region.start()), abs(exon.Start - region.end()));
+
+                                if(closestNonOverlap == -1 || absDistance < closestNonOverlap)
+                                {
+                                    closestGene = geneData;
+                                    closestExon = exon;
+                                    closestNonOverlap = absDistance;
+                                }
+                            }
+                        }
                     }
+                }
+                else
+                {
+                    for(GeneData geneData : geneDataList)
+                    {
+                        if(geneData.GeneEnd < region.start() - GENE_PROXIMITY_MIN)
+                            continue;
+
+                        if(geneData.GeneStart > region.end() + GENE_PROXIMITY_MIN)
+                            break;
+
+                        int absDistance = min(abs(geneData.GeneEnd - region.start()), abs(geneData.GeneStart - region.end()));
+
+                        if(absDistance <= GENE_PROXIMITY_MIN && (closestNonOverlap == -1 || absDistance < closestNonOverlap))
+                        {
+                            closestGene = geneData;
+                            closestNonOverlap = absDistance;
+                        }
+                    }
+                }
+
+                // if no overlaps were found, then find the closest
+                if(region.geneExons().isEmpty() && closestGene != null)
+                {
+                    String closeInfo;
+
+                    if(closestExon != null)
+                    {
+                        closeInfo = format("%s exon(%d) distance(%d)", closestGene.GeneName, closestExon.Rank, closestNonOverlap);
+                    }
+                    else
+                    {
+                        boolean isUpstream = (region.end() < closestGene.GeneStart) == closestGene.forwardStrand();
+                        closeInfo = format("%s %s distance(%d)", closestGene.GeneName, isUpstream ? "upstream" : "downstream", closestNonOverlap);
+                    }
+
+                    region.setClosestGeneInfo(closeInfo);
                 }
             }
         }
@@ -343,9 +401,11 @@ public class PanelRegionFinder
 
             sj.add("PanelRegionCount");
             sj.add("PanelRegionInfo");
+            sj.add("NearestPanelRegion");
 
             sj.add("GeneExonCount");
             sj.add("GeneExonInfo");
+            sj.add("NearbyGeneInfo");
 
             sj.add("MappabilityMedian");
             sj.add("MappabilityMin");
@@ -379,22 +439,53 @@ public class PanelRegionFinder
 
                     sj = new StringJoiner(TSV_DELIM);
                     sj.add(region.Chromosome);
-                    sj.add(String.valueOf(region.start()));
-                    sj.add(String.valueOf(region.end()));
+                    sj.add(valueOf(region.start()));
+                    sj.add(valueOf(region.end()));
 
-                    sj.add(String.valueOf(region.highDepths().size()));
+                    sj.add(valueOf(region.highDepths().size()));
 
                     int maxDepth = region.highDepths().stream().mapToInt(x -> x.MaxDepth).max().orElse(0);
                     int maxSamples = region.highDepths().stream().mapToInt(x -> x.SampleCount).max().orElse(0);
-                    sj.add(String.valueOf(maxDepth));
-                    sj.add(String.valueOf(maxSamples));
-                    sj.add(String.valueOf(HighDepthData.toString(region.highDepths())));
+                    sj.add(valueOf(maxDepth));
+                    sj.add(valueOf(maxSamples));
+                    sj.add(valueOf(HighDepthData.toString(region.highDepths())));
 
-                    sj.add(String.valueOf(region.panelRegions().size()));
-                    sj.add(String.valueOf(PanelData.toString(region.panelRegions())));
+                    sj.add(valueOf(region.panelRegions().size()));
+                    sj.add(valueOf(PanelData.toString(region.panelRegions())));
 
-                    sj.add(String.valueOf(region.geneExons().size()));
-                    sj.add(String.valueOf(GeneExonData.toString(region.geneExons())));
+                    // report closest panel region if not one
+                    int closetPanelRegion = 0;
+
+                    if(region.panelRegions().isEmpty())
+                    {
+                        closetPanelRegion = -1; // will denote none found within required bases
+
+                        for(RegionData panelRegion : regions)
+                        {
+                            if(panelRegion.panelRegions().isEmpty())
+                                continue;
+
+                            if(panelRegion.end() < region.start() - GENE_PROXIMITY_MIN)
+                                continue;
+
+                            if(panelRegion.start() > region.end() + GENE_PROXIMITY_MIN)
+                                break;
+
+                            int absDistance = min(abs(panelRegion.end() - region.start()), abs(panelRegion.start() - region.end()));
+
+                            if(absDistance <= GENE_PROXIMITY_MIN && (closetPanelRegion == -1 || absDistance < closetPanelRegion))
+                            {
+                                closetPanelRegion = absDistance;
+                            }
+                        }
+                    }
+
+                    sj.add(valueOf(closetPanelRegion));
+
+                    sj.add(valueOf(region.geneExons().size()));
+                    sj.add(valueOf(GeneExonData.toString(region.geneExons())));
+
+                    sj.add(valueOf(region.closestGeneInfo()));
 
                     double minMappability = region.mappabilityScores().stream().mapToDouble(x -> x.Quality).min().orElse(0);
                     double maxMappability = region.mappabilityScores().stream().mapToDouble(x -> x.Quality).max().orElse(0);
@@ -409,8 +500,8 @@ public class PanelRegionFinder
                     {
                         sj = new StringJoiner(TSV_DELIM);
                         sj.add(region.Chromosome);
-                        sj.add(String.valueOf(region.start() - 1)); // since as BED
-                        sj.add(String.valueOf(region.end()));
+                        sj.add(valueOf(region.start() - 1)); // since as BED
+                        sj.add(valueOf(region.end()));
                         sj.add(region.label());
 
                         bedWriter.write(sj.toString());

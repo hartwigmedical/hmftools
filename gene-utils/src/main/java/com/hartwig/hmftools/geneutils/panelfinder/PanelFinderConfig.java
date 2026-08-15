@@ -34,6 +34,7 @@ public class PanelFinderConfig
     private static final String HIGH_DEPTH_TRIM_COUNT = "high_depth_trim_count";
 
     protected static final double CHROMOSOME_Y_SAMPLE_FRACTION = 0.4;
+    protected static final int GENE_PROXIMITY_MIN = 10000;
 
     public PanelFinderConfig(final ConfigBuilder configBuilder)
     {

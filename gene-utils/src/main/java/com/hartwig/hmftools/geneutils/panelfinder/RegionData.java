@@ -17,6 +17,8 @@ public class RegionData extends ChrBaseRegion
     private final List<PanelData> mPanelRegions;
     private final List<RegionQuality> mMappabilityScores;
 
+    private String mClosestGeneInfo;
+
     public RegionData(final ChrBaseRegion region)
     {
         super(region.Chromosome, region.start(), region.end());
@@ -25,6 +27,7 @@ public class RegionData extends ChrBaseRegion
         mGeneExons = Lists.newArrayList();
         mPanelRegions = Lists.newArrayList();
         mMappabilityScores = Lists.newArrayList();
+        mClosestGeneInfo = "";
     }
 
     public List<HighDepthData> highDepths() { return mHighDepths; }
@@ -52,6 +55,9 @@ public class RegionData extends ChrBaseRegion
     {
         mGeneExons.add(geneExon);
     }
+
+    public String closestGeneInfo() { return mClosestGeneInfo; }
+    public void setClosestGeneInfo(final String info) { mClosestGeneInfo = info; }
 
     public void mergeRegion(final RegionData other)
     {
