@@ -6,7 +6,6 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.purple.region.ObservedRegion.fromOther;
 
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -16,14 +15,14 @@ import com.hartwig.hmftools.purple.region.ObservedRegion;
 
 public final class SkippedSegmentReinjector
 {
-    public static List<ObservedRegion> reinject(final List<ObservedRegion> step5Subsegments, final Supersegment supersegment)
+    public static List<ObservedRegion> reinjectSkippedRegions(final List<ObservedRegion> resegmentedRegions, final Supersegment supersegment)
     {
         if(supersegment.SkippableMembers.isEmpty())
-            return step5Subsegments;
+            return resegmentedRegions;
 
         List<ObservedRegion> result = Lists.newArrayList();
 
-        for(ObservedRegion subsegment : step5Subsegments)
+        for(ObservedRegion subsegment : resegmentedRegions)
         {
             List<ObservedRegion> skipsToInject = supersegment.SkippableMembers.stream()
                     .filter(skip -> skip.start() > subsegment.start() && skip.end() < subsegment.end())
@@ -64,44 +63,24 @@ public final class SkippedSegmentReinjector
 
         if(relevantBothNone.isEmpty())
         {
-            throw new IllegalStateException(format(
-                    "no bothNone members found for reinjected range(%d-%d)", rangeStart, rangeEnd));
+            throw new IllegalStateException(format("no bothNone members found for reinjected range(%d-%d)", rangeStart, rangeEnd));
         }
 
         if(relevantBothNone.size() == 1)
-            return relevantBothNone.get(0);
-
-        return formBlendedRegion(relevantBothNone);
-
-        /*
-        int minStart = relevantBothNone.stream().mapToInt(x -> x.start()).min().getAsInt();
-        int maxEnd = relevantBothNone.stream().mapToInt(x -> x.end()).max().getAsInt();
-
-        if(minStart != rangeStart || maxEnd != rangeEnd)
         {
-            throw new IllegalStateException(format(
-                    "reinjected range(%d-%d) bounds mismatch: bothNone members span(%d-%d)",
-                    rangeStart, rangeEnd, minStart, maxEnd));
+            ObservedRegion newRegion = fromOther(relevantBothNone.get(0));
+            newRegion.setObservedTumorRatio(subsegment.observedTumorRatio());
+            newRegion.setObservedBAF(subsegment.observedBAF());
+            return newRegion;
         }
 
-        int bafCount = relevantBothNone.stream().mapToInt(x -> x.bafCount()).sum();
-        int depthWindowCount = relevantBothNone.stream().mapToInt(x -> x.depthWindowCount()).sum();
-
-        ObservedRegion newRegion = ObservedRegion.fromOther(subsegment);
-        newRegion.setStart(rangeStart);
-        newRegion.setEnd(rangeEnd);
-        newRegion.setBafCount(bafCount);
-        newRegion.setDepthWindowCount(depthWindowCount);
-
-        return newRegion;
-        */
+        return formBlendedRegion(relevantBothNone, subsegment);
     }
 
-    public static ObservedRegion formBlendedRegion(final List<ObservedRegion> regions)
+    public static ObservedRegion formBlendedRegion(final List<ObservedRegion> regions, final ObservedRegion subsegment)
     {
         int bafTotal = 0;
         int depthWindowTotal = 0;
-        double weightedObsBAFTotal = 0;
         double weightedObsNormRatioTotal = 0;
         double weightedUnnormalisedObsNormRatioTotal = 0;
         double gcRatioTotal = 0;
@@ -114,7 +93,6 @@ public final class SkippedSegmentReinjector
         for(ObservedRegion region : regions)
         {
             bafTotal += region.bafCount();
-            weightedObsBAFTotal += region.bafCount() * region.observedBAF();
 
             depthWindowTotal += region.depthWindowCount();
             weightedObsNormRatioTotal += region.depthWindowCount() * region.observedNormalRatio();
@@ -139,10 +117,12 @@ public final class SkippedSegmentReinjector
         newRegion.setMinStart(minStart);
         newRegion.setMaxStart(maxStart);
 
+        newRegion.setObservedTumorRatio(subsegment.observedTumorRatio());
+        newRegion.setObservedBAF(subsegment.observedBAF());
+
         newRegion.setBafCount(bafTotal);
         newRegion.setDepthWindowCount(depthWindowTotal);
 
-        newRegion.setObservedBAF(weightedObsBAFTotal / bafTotal);
         newRegion.setObservedNormalRatio(weightedObsNormRatioTotal / depthWindowTotal);
         newRegion.setUnnormalisedObservedNormalRatio(weightedUnnormalisedObsNormRatioTotal / depthWindowTotal);
         newRegion.setRatioSupport(hasRatioSupport);

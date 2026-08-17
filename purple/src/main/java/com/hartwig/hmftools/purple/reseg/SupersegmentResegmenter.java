@@ -156,7 +156,7 @@ public final class SupersegmentResegmenter
         ObservedRegion first = regions.get(0);
         ObservedRegion last = regions.get(regions.size() - 1);
 
-        boolean useBaf = regions.stream().mapToInt(m -> m.bafCount()).max().orElse(0) >= RESEG_BAF_WEIGHT_THRESHOLD;
+        boolean useBaf = regions.stream().anyMatch(x -> x.bafCount() >= RESEG_BAF_WEIGHT_THRESHOLD);
 
         int bafCountsTotal = 0;
         int depthWindowCountsTotal = 0;

@@ -76,8 +76,8 @@ public final class Resegmentation
         @Override
         public Void call()
         {
-            List<ObservedRegion> resegmented = SupersegmentResegmenter.resegment(mSupersegment.BothNoneMembers, mSegmentationPenalty);
-            SupersegmentResults.addAll(SkippedSegmentReinjector.reinject(resegmented, mSupersegment));
+            List<ObservedRegion> resegmentedRegions = SupersegmentResegmenter.resegment(mSupersegment.BothNoneMembers, mSegmentationPenalty);
+            SupersegmentResults.addAll(SkippedSegmentReinjector.reinjectSkippedRegions(resegmentedRegions, mSupersegment));
             return null;
         }
     }
