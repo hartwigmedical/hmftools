@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.purple.PurpleConstants.RESEG_PEAK_MIN_PROPORT
 import static com.hartwig.hmftools.purple.PurpleConstants.RESEG_PEAK_MIN_RATIO;
 import static com.hartwig.hmftools.purple.PurpleConstants.RESEG_RATIO_BUCKET_MAX;
 import static com.hartwig.hmftools.purple.PurpleConstants.RESEG_RATIO_BUCKET_MIN;
+import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 
 import java.util.Comparator;
 import java.util.List;
@@ -26,7 +27,7 @@ public final class RatioPeakAnalyser
     // segments with a positive bafCount) used to scope the GC normalisation
     private RatioPeakAnalyser() {}
 
-    public static Optional<RatioPeakResult> findRatioPeak(final List<ObservedRegion> segments)
+    public static RatioPeakResult findRatioPeak(final List<ObservedRegion> segments)
     {
         RatioBucketSeries rawTumorRatios = new RatioBucketSeries();
 
@@ -42,7 +43,7 @@ public final class RatioPeakAnalyser
         List<Bucket> tumorRatios = rawTumorRatios.buildSmoothedSeries();
 
         if(tumorRatios.size() < 2)
-            return Optional.empty();
+            return null;
 
         List<Integer> peakIndices = PeakTroughFinder.findLocalPeakOrTroughIndices(tumorRatios, true);
 
@@ -85,7 +86,7 @@ public final class RatioPeakAnalyser
                 .collect(Collectors.toList());
 
         if(topPeaks.size() < 2)
-            return Optional.empty();
+            return null;
 
         PeakTroughData primary = topPeaks.get(0);
         List<PeakTroughData> others = topPeaks.subList(1, topPeaks.size());
@@ -102,7 +103,10 @@ public final class RatioPeakAnalyser
                 .map(p -> round((p.SupportBelowLevel + 2 * primary.SupportAboveLevel) / 3, 4))
                 .orElse(RESEG_RATIO_BUCKET_MAX);
 
-        return Optional.of(new RatioPeakResult(primary, leftBound, rightBound));
+        RatioPeakResult peak = new RatioPeakResult(primary, leftBound, rightBound);
+        PPL_LOGGER.trace("primary ratio peak: {}", peak);
+
+        return peak;
     }
 
     private static boolean isValidPeakSupport(double peakValue, double otherValue)

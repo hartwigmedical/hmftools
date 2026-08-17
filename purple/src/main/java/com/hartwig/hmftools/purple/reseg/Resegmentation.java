@@ -21,14 +21,9 @@ public final class Resegmentation
         double segmentationPenalty = PenaltyCalculator.calculatePenalty(inputRegions);
         PPL_LOGGER.trace("resegmentation penalty: {}", segmentationPenalty);
 
-        Optional<RatioPeakResult> peakResult = RatioPeakAnalyser.findRatioPeak(inputRegions);
+        RatioPeakResult peakResult = RatioPeakAnalyser.findRatioPeak(inputRegions);
 
-        if(peakResult.isPresent())
-        {
-            PPL_LOGGER.trace("primary ratio peak: {}", peakResult.get());
-        }
-
-        List<ObservedRegion> normalisedSegments = GcNormaliser.normaliseRegions(inputRegions, peakResult.get());
+        List<ObservedRegion> normalisedSegments = GcNormaliser.normaliseRegions(inputRegions, peakResult);
 
         SupersegmentResult supersegmentResult = SupersegmentIdentifier.identify(normalisedSegments);
 

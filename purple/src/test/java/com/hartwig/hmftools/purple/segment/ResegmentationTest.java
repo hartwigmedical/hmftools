@@ -2,6 +2,8 @@ package com.hartwig.hmftools.purple.segment;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
@@ -110,16 +112,16 @@ public class ResegmentationTest
             pos += 1000;
         }
 
-        Optional<RatioPeakResult> result = RatioPeakAnalyser.findRatioPeak(segments);
+        RatioPeakResult ratioPeak = RatioPeakAnalyser.findRatioPeak(segments);
 
-        assertTrue(result.isPresent());
+        assertNotNull(ratioPeak);
 
         // the smoothing window spreads each ratio spike into a 5-wide plateau; the peak level reported
         // is the first (lowest-level) bucket of that plateau, not the raw spike ratio itself
-        double primaryLevel = result.get().PrimaryPeak.Level;
+        double primaryLevel = ratioPeak.PrimaryPeak.Level;
         assertEquals(0.98, primaryLevel, 1e-9);
-        assertTrue(result.get().LeftBound < primaryLevel);
-        assertTrue(result.get().RightBound > primaryLevel);
+        assertTrue(ratioPeak.LeftBound < primaryLevel);
+        assertTrue(ratioPeak.RightBound > primaryLevel);
     }
 
     @Test
@@ -134,9 +136,9 @@ public class ResegmentationTest
             pos += 1000;
         }
 
-        Optional<RatioPeakResult> result = RatioPeakAnalyser.findRatioPeak(segments);
+        RatioPeakResult ratioPeak = RatioPeakAnalyser.findRatioPeak(segments);
 
-        assertFalse(result.isPresent());
+        assertNull(ratioPeak);
     }
 
     // tumor ratio penalty
