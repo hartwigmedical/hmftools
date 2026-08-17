@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.isofox.fusion;
 
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
@@ -127,21 +128,6 @@ public class FusionFragment
 
     public final List<FusionTransExon>[] getTransExonRefs() { return mTransExonRefs; }
 
-    /*
-    public List<String> getGeneIds(int seIndex)
-    {
-        final List<String> geneIds = Lists.newArrayList();
-
-        for(FusionTransExonRef transExonRef : mTransExonRefs[seIndex])
-        {
-            if(!geneIds.contains(transExonRef.GeneId))
-                geneIds.add(transExonRef.GeneId);
-        }
-
-        return geneIds;
-    }
-    */
-
     public final List<FusionRead> readsByLocation(final int se)
     {
         if(mType == UNKNOWN)
@@ -267,6 +253,34 @@ public class FusionFragment
                 }
             }
         }
+    }
+
+    public String softClipBases(int junctionPosition, byte junctionOrientation)
+    {
+        int seIndex = junctionOrientation == ORIENT_FWD ? SE_END : SE_START;
+
+        for(FusionRead read : mReadGroup.Reads)
+        {
+            if(read.SoftClipLengths[seIndex] == 0)
+                continue;
+
+            if(read.Positions[seIndex] == junctionPosition)
+            {
+                int softClipLength = read.SoftClipLengths[seIndex];
+
+                if(junctionOrientation == ORIENT_FWD)
+                {
+                    int boundaryBaseLength = read.BoundaryBases[seIndex].length();
+                    return read.BoundaryBases[seIndex].substring(boundaryBaseLength - softClipLength);
+                }
+                else
+                {
+                    return read.BoundaryBases[seIndex].substring(0, softClipLength);
+                }
+            }
+        }
+
+        return "";
     }
 
     public String toString()

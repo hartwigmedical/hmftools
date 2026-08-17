@@ -719,13 +719,13 @@ public class FusionFinder implements Callable<Void>
 
                             ISF_LOGGER.trace("fusion1({}) homology({}/{}) start(junc={} adj={}) end(junc={} adj={})",
                                     fusion1.toString(), fusion1.junctionHomology()[SE_START], fusion1.junctionHomology()[SE_END],
-                                    fusion1.junctionBases()[SE_START], fusion1.adjacentJunctionBases()[SE_START],
-                                    fusion1.junctionBases()[SE_END], fusion1.adjacentJunctionBases()[SE_END]);
+                                    fusion1.junctionRefBases()[SE_START], fusion1.postJunctionRefBases()[SE_START],
+                                    fusion1.junctionRefBases()[SE_END], fusion1.postJunctionRefBases()[SE_END]);
 
                             ISF_LOGGER.trace("fusion2({}) homology({}/{}) start(junc={} adj={}) end(junc={} adj={})",
                                     fusion2.toString(), fusion2.junctionHomology()[SE_START], fusion2.junctionHomology()[SE_END],
-                                    fusion2.junctionBases()[SE_START], fusion2.adjacentJunctionBases()[SE_START],
-                                    fusion2.junctionBases()[SE_END], fusion2.adjacentJunctionBases()[SE_END]);
+                                    fusion2.junctionRefBases()[SE_START], fusion2.postJunctionRefBases()[SE_START],
+                                    fusion2.junctionRefBases()[SE_END], fusion2.postJunctionRefBases()[SE_END]);
                         }
 
                         final FusionReadData fusion1Const = fusion1;
