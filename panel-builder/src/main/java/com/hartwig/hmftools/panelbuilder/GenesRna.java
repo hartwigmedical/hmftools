@@ -357,8 +357,10 @@ public class GenesRna
             }
             else if(isNonCodingExon)
             {
-                // Any coding portion is shorter than a probe, so cover the whole exon as one UTR feature.
-                addTarget(targets, mapping, geneData, utrType(exon.end() < codingStart, forwardStrand), exon.start(), exon.end());
+                // Any coding portion is shorter than a probe, so cover the whole exon as one UTR feature. The UTR side is decided by where
+                // the exon's noncoding bulk lies: an exon reaching below the coding span (fully below, or straddling the coding start with a
+                // small coding tail - e.g. a reverse gene's 3' terminal exon) is the below-coding-span UTR; otherwise it is the above-span UTR.
+                addTarget(targets, mapping, geneData, utrType(exon.start() < codingStart, forwardStrand), exon.start(), exon.end());
             }
             else
             {

@@ -88,6 +88,49 @@ public class GenesRnaTest
                 result.targets());
     }
 
+    // Two exons; the terminal exon straddles the coding start with only a short coding tail (100b < a probe), so it is folded whole into a
+    // single UTR target. Its noncoding bulk lies below the coding span, so it is the below-span UTR (3' on the reverse strand, e.g. a reverse
+    // gene's 3' terminal exon like KRAS; 5' on the forward strand). The other exon [4000,4200] is fully coding.
+    //   exonUtr    [1000,3099] -> probe-space [0,2100):     coding 3000..3099 (100b), noncoding below -> folded whole-exon UTR
+    //   exonCoding [4000,4200] -> probe-space [2100,2301):  fully coding
+    private static List<TranscriptData> straddlingBoundaryTranscript(byte strand)
+    {
+        TranscriptData transcript = new TranscriptData(
+                1, "ENST1", "GENE1", true, strand, 1000, 4200, 3000, 4200, "protein_coding", null);
+        transcript.setExons(List.of(
+                new ExonData(1, 1000, 3099, 1, -1, -1),
+                new ExonData(1, 4000, 4200, 2, -1, -1)));
+        return List.of(transcript);
+    }
+
+    @Test
+    public void testStraddlingBoundaryExonForward()
+    {
+        // Forward strand: the straddling exon's UTR is below the coding span, so 5'.
+        GeneData gene = new GeneData("GENE1", "GENE1", "1", FORWARD, 1000, 4200, "");
+        GeneTargets result = GenesRna.createTargets(gene, straddlingBoundaryTranscript(FORWARD), new GeneOptions(true, true));
+
+        assertEquals(
+                List.of(
+                        new RnaTarget(UTR_5, 0, 2100),
+                        new RnaTarget(CODING, 2100, 2301)),
+                result.targets());
+    }
+
+    @Test
+    public void testStraddlingBoundaryExonReverse()
+    {
+        // Reverse strand: the same below-span UTR is 3' (the mislabel-as-5' regression case, e.g. KRAS).
+        GeneData gene = new GeneData("GENE1", "GENE1", "1", REVERSE, 1000, 4200, "");
+        GeneTargets result = GenesRna.createTargets(gene, straddlingBoundaryTranscript(REVERSE), new GeneOptions(true, true));
+
+        assertEquals(
+                List.of(
+                        new RnaTarget(UTR_3, 0, 2100),
+                        new RnaTarget(CODING, 2100, 2301)),
+                result.targets());
+    }
+
     // Single exon [1000,1499] (500b), coding span 1200..1349: 200b of 5' UTR, 150b of coding, 150b of 3' UTR - each at least a probe length,
     // so the exon is partially coding and split into three separate targets.
     private static List<TranscriptData> partlyCodingTranscript(byte strand)
