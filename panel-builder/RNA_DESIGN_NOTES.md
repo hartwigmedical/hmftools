@@ -15,7 +15,6 @@ is in the sections further down. Everything in the batch/merge records below (A1
 | 5 | `PanelData` getters return live internal lists | `TODO` `PanelData` | No live aliasing bug found; defensively copy (also `ProbeGenerationResult` ctor). Own commit. |
 | 7 | Probe can't be filled to `PROBE_LENGTH` (mapping shorter than a probe) | `TODO?` `ProbeGenerator.coverMappedRange` | Very short transcript / tiny exon with short neighbours: even padding across junctions totals < `PROBE_LENGTH`, so no full-length probe fits and the target is silently uncovered. Decide desired behaviour (accept no coverage, or a shorter-probe fallback). |
 | 8 | RNA strandedness | *(design decision, deferred)* | RNA is single-stranded; currently emit genome-forward only. Decide one strand vs both. |
-| 9 | README "exon aware tiling algorithm" section | *(doc)* | Complete the user-facing description. |
 
 ## Implementation status
 
