@@ -3,6 +3,8 @@ package com.hartwig.hmftools.compar.lilac;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.CategoryType.LILAC_ALLELE;
 import static com.hartwig.hmftools.compar.FieldCheckCache.getOrMakeFieldCheck;
+import static com.hartwig.hmftools.compar.common.ComparConstants.COPY_NUMBER_ABS_THRESHOLD;
+import static com.hartwig.hmftools.compar.common.ComparConstants.COPY_NUMBER_PERC_THRESHOLD;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -56,7 +58,7 @@ public class LilacAlleleComparer extends ItemComparer
 
         mFields.add(new FieldInfo(
                 Fields.TumorCopyNumber.toString(),
-                getOrMakeFieldCheck(fieldCheckMap, Fields.TumorCopyNumber.toString(), 0.5, 0.15),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.TumorCopyNumber.toString(), COPY_NUMBER_ABS_THRESHOLD, COPY_NUMBER_PERC_THRESHOLD),
                 "%.2f"));
 
         mFields.add(new FieldInfo(

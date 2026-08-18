@@ -7,6 +7,8 @@ import static com.hartwig.hmftools.compar.common.CategoryType.DRIVER;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.CommonUtils.determineComparisonChromosome;
 import static com.hartwig.hmftools.compar.FieldCheckCache.getOrMakeFieldCheck;
+import static com.hartwig.hmftools.compar.common.ComparConstants.COPY_NUMBER_ABS_THRESHOLD;
+import static com.hartwig.hmftools.compar.common.ComparConstants.COPY_NUMBER_PERC_THRESHOLD;
 import static com.hartwig.hmftools.compar.common.SourceType.NEW;
 import static com.hartwig.hmftools.compar.common.SourceType.OLD;
 
@@ -79,12 +81,12 @@ public class DriverComparer extends ItemComparer
 
         mFields.add(new FieldInfo(
                 Fields.MinCopyNumber.toString(),
-                getOrMakeFieldCheck(fieldCheckMap, Fields.MinCopyNumber.toString(), 0.3, 0.15),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.MinCopyNumber.toString(), COPY_NUMBER_ABS_THRESHOLD, COPY_NUMBER_PERC_THRESHOLD),
                 "%.2f"));
 
         mFields.add(new FieldInfo(
                 Fields.MaxCopyNumber.toString(),
-                getOrMakeFieldCheck(fieldCheckMap, Fields.MaxCopyNumber.toString(), 0.3, 0.15),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.MaxCopyNumber.toString(), COPY_NUMBER_ABS_THRESHOLD, COPY_NUMBER_PERC_THRESHOLD),
                 "%.2f"));
 
         mFields.add(new FieldInfo(

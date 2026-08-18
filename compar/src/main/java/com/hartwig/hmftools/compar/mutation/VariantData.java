@@ -4,6 +4,8 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS_FILTER;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.FieldCheckCache.getOrMakeFieldCheck;
+import static com.hartwig.hmftools.compar.common.ComparConstants.COPY_NUMBER_ABS_THRESHOLD;
+import static com.hartwig.hmftools.compar.common.ComparConstants.COPY_NUMBER_PERC_THRESHOLD;
 
 import java.util.List;
 import java.util.Map;
@@ -212,7 +214,7 @@ public class VariantData extends ComparableItem
 
         fields.add(new FieldInfo(
                 FLD_VARIANT_COPY_NUMBER,
-                getOrMakeFieldCheck(fieldCheckMap, FLD_VARIANT_COPY_NUMBER, 0.3, 0.3),
+                getOrMakeFieldCheck(fieldCheckMap, FLD_VARIANT_COPY_NUMBER, COPY_NUMBER_ABS_THRESHOLD, COPY_NUMBER_PERC_THRESHOLD),
                 "%.2f"));
 
         fields.add(new FieldInfo(

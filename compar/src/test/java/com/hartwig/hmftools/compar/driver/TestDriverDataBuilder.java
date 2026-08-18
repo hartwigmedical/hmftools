@@ -40,7 +40,7 @@ public class TestDriverDataBuilder
         b.isCanonical = true;
         b.likelihoodMethod = LikelihoodMethod.HOTSPOT;
         b.likelihood = 0.9;
-        b.minCopyNumber = 0.6;
+        b.minCopyNumber = 0.65;
         b.maxCopyNumber = 0.9;
         b.chromosomeBand = "7q34";
         b.comparisonChromosome = "chr7";

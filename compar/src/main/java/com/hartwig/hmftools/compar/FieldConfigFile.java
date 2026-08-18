@@ -2,7 +2,7 @@ package com.hartwig.hmftools.compar;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
-import static com.hartwig.hmftools.compar.common.FileCommon.FLD_CATEGORY;
+import static com.hartwig.hmftools.compar.common.ComparConstants.FLD_CATEGORY;
 
 import java.io.File;
 import java.io.IOException;

@@ -9,7 +9,7 @@ import static com.hartwig.hmftools.compar.FieldConfigFile.FLD_ABSOLUTE_THRESHOLD
 import static com.hartwig.hmftools.compar.FieldConfigFile.FLD_COMPARED;
 import static com.hartwig.hmftools.compar.FieldConfigFile.FLD_FIELD;
 import static com.hartwig.hmftools.compar.FieldConfigFile.FLD_PERCENT_THRESHOLD;
-import static com.hartwig.hmftools.compar.common.FileCommon.FLD_CATEGORY;
+import static com.hartwig.hmftools.compar.common.ComparConstants.FLD_CATEGORY;
 
 import java.io.File;
 import java.io.IOException;

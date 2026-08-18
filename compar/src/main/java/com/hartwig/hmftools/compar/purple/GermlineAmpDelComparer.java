@@ -3,6 +3,8 @@ package com.hartwig.hmftools.compar.purple;
 import static com.hartwig.hmftools.compar.common.CategoryType.GERMLINE_AMP_DEL;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.FieldCheckCache.getOrMakeFieldCheck;
+import static com.hartwig.hmftools.compar.common.ComparConstants.COPY_NUMBER_ABS_THRESHOLD;
+import static com.hartwig.hmftools.compar.common.ComparConstants.COPY_NUMBER_PERC_THRESHOLD;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -48,12 +50,12 @@ public class GermlineAmpDelComparer extends ItemComparer
 
         mFields.add(new FieldInfo(
                 Fields.GermlineCopyNumber.toString(),
-                getOrMakeFieldCheck(fieldCheckMap, Fields.GermlineCopyNumber.toString(), 0.2, 0.1),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.GermlineCopyNumber.toString(), COPY_NUMBER_ABS_THRESHOLD, COPY_NUMBER_PERC_THRESHOLD),
                 "%.2f"));
 
         mFields.add(new FieldInfo(
                 Fields.TumorCopyNumber.toString(),
-                getOrMakeFieldCheck(fieldCheckMap, Fields.TumorCopyNumber.toString(), 0.2, 0.1),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.TumorCopyNumber.toString(), COPY_NUMBER_ABS_THRESHOLD, COPY_NUMBER_PERC_THRESHOLD),
                 "%.2f"));
     }
 

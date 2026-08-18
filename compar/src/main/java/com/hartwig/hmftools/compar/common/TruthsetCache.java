@@ -4,9 +4,9 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
-import static com.hartwig.hmftools.compar.common.FileCommon.FLD_CATEGORY;
-import static com.hartwig.hmftools.compar.common.FileCommon.FLD_ITEM_KEY;
-import static com.hartwig.hmftools.compar.common.FileCommon.FLD_SAMPLE_ID;
+import static com.hartwig.hmftools.compar.common.ComparConstants.FLD_CATEGORY;
+import static com.hartwig.hmftools.compar.common.ComparConstants.FLD_ITEM_KEY;
+import static com.hartwig.hmftools.compar.common.ComparConstants.FLD_SAMPLE_ID;
 
 import java.io.IOException;
 import java.nio.file.Files;

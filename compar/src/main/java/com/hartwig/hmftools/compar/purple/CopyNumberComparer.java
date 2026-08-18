@@ -3,6 +3,8 @@ package com.hartwig.hmftools.compar.purple;
 import static com.hartwig.hmftools.compar.common.CategoryType.COPY_NUMBER;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.FieldCheckCache.getOrMakeFieldCheck;
+import static com.hartwig.hmftools.compar.common.ComparConstants.COPY_NUMBER_ABS_THRESHOLD;
+import static com.hartwig.hmftools.compar.common.ComparConstants.COPY_NUMBER_PERC_THRESHOLD;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -36,12 +38,13 @@ public class CopyNumberComparer extends ItemComparer
 
         mFields.add(new FieldInfo(
                 Fields.CopyNumber.toString(),
-                getOrMakeFieldCheck(fieldCheckMap, Fields.CopyNumber.toString(), 0.5, 0.15),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.CopyNumber.toString(), COPY_NUMBER_ABS_THRESHOLD, COPY_NUMBER_PERC_THRESHOLD),
                 "%.2f"));
 
         mFields.add(new FieldInfo(
                 Fields.MajorAlleleCopyNumber.toString(),
-                getOrMakeFieldCheck(fieldCheckMap, Fields.MajorAlleleCopyNumber.toString(), 0.5, 0.15),
+                getOrMakeFieldCheck(
+                        fieldCheckMap, Fields.MajorAlleleCopyNumber.toString(), COPY_NUMBER_ABS_THRESHOLD, COPY_NUMBER_PERC_THRESHOLD),
                 "%.2f"));
 
         mFields.add(new FieldInfo(
