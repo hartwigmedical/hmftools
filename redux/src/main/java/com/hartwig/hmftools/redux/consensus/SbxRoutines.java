@@ -648,15 +648,15 @@ public final class SbxRoutines
         for(int i = 0; i < readLength; ++i)
         {
             // values to handle and convert:
-            // 93 - convert to 40
-            // 18 - convert to 27
-            // 1 - leave as-is but adjust adjacent bases
+            // duplex qual (ie 39) - convert to 40
+            // simplex qual (ie 22) - convert to 27
+            // duplex mismatch qual (ie 5) - leave as-is but adjust adjacent bases
             // 3 (DUPLEX_NO_CONSENSUS_QUAL) - convert 1 and adjust adjacent bases
             // 2 (SIMPLEX_NO_CONSENSUS_QUAL) - convert to 1
 
             byte qual = newBaseQuals[i];
 
-            if(qual == DUPLEX_NO_CONSENSUS_QUAL || qual <= SBX_DUPLEX_MISMATCH_QUAL)
+            if(qual == DUPLEX_NO_CONSENSUS_QUAL || qual == SBX_DUPLEX_MISMATCH_QUAL || qual == RAW_DUPLEX_MISMATCH_QUAL)
             {
                 if(duplexMismatchIndices == null)
                     duplexMismatchIndices = Lists.newArrayList();
@@ -879,7 +879,7 @@ public final class SbxRoutines
             if(readIndex >= bases.length)
                 break;
 
-            if(baseQuals[readIndex] > SBX_DUPLEX_MISMATCH_QUAL)
+            if(baseQuals[readIndex] > RAW_DUPLEX_MISMATCH_QUAL)
                 continue;
 
             int repeatLength = 1;
@@ -888,7 +888,7 @@ public final class SbxRoutines
 
             for(int i = readIndex + 1; i <= readIndexEnd; ++i)
             {
-                if(baseQuals[i] > SBX_DUPLEX_MISMATCH_QUAL)
+                if(baseQuals[i] > RAW_DUPLEX_MISMATCH_QUAL)
                     break;
 
                 if(bases[i] != repeatBase)
