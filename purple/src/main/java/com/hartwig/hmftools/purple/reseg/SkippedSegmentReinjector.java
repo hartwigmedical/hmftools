@@ -38,7 +38,7 @@ public final class SkippedSegmentReinjector
 
             if(skipsToInject.isEmpty())
             {
-                result.add(subsegment);
+                result.add(buildReinjectedSegment(subsegment, supersegment, subsegment.start(), subsegment.end()));
                 continue;
             }
 

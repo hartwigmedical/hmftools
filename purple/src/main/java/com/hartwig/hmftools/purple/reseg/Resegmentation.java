@@ -18,12 +18,12 @@ public final class Resegmentation
 {
     public static List<ObservedRegion> run(final List<ObservedRegion> inputRegions, int threads)
     {
-        double segmentationPenalty = PenaltyCalculator.calculatePenalty(inputRegions);
-        PPL_LOGGER.trace("resegmentation penalty: {}", segmentationPenalty);
-
         RatioPeakResult peakResult = RatioPeakAnalyser.findRatioPeak(inputRegions);
 
         List<ObservedRegion> normalisedSegments = GcNormaliser.normaliseRegions(inputRegions, peakResult);
+
+        double segmentationPenalty = PenaltyCalculator.calculatePenalty(normalisedSegments);
+        PPL_LOGGER.trace("resegmentation penalty: {}", segmentationPenalty);
 
         SupersegmentResult supersegmentResult = SupersegmentIdentifier.identify(normalisedSegments);
 
