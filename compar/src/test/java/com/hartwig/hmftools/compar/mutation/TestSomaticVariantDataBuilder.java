@@ -34,7 +34,7 @@ public class TestSomaticVariantDataBuilder
     public double subclonalLikelihood = 0.;
     public Set<String> filters = Collections.emptySet();
     public double variantCopyNumber = 1.1;
-    public double purityAdjustedVaf = 0.45;
+    public double alleleFrequency = 0.45;
     public int tumorTotalReadCount = 116;
     public int tumorSupportingReadCount = 21;
     public boolean isFromUnfilteredVcf = false;
@@ -61,7 +61,7 @@ public class TestSomaticVariantDataBuilder
         b.qual = 512;
         b.subclonalLikelihood = 1.;
         b.variantCopyNumber = 3.6;
-        b.purityAdjustedVaf = 1.1;
+        b.alleleFrequency = 0.95;
         b.tumorTotalReadCount = 312;
         b.tumorSupportingReadCount = 50;
     };
@@ -80,8 +80,8 @@ public class TestSomaticVariantDataBuilder
         SomaticVariantData variant = new SomaticVariantData(
                 chromosome, position, ref, alt, type, gene, reported, hotspotStatus, tier,
                 canonicalEffect, canonicalCodingEffect, canonicalHgvsCodingImpact, canonicalHgvsProteinImpact, otherReportedEffects,
-                qual, filters, variantCopyNumber, purityAdjustedVaf, tumorSupportingReadCount, tumorTotalReadCount,
-                isFromUnfilteredVcf, biallelic, biallelicProb, hasLPS, subclonalLikelihood, fields);
+                qual, filters, variantCopyNumber, alleleFrequency, tumorSupportingReadCount, tumorTotalReadCount,
+                isFromUnfilteredVcf, biallelic, biallelicProb, hasLPS, subclonalLikelihood);
 
         variant.addVAllValues(fields);
 

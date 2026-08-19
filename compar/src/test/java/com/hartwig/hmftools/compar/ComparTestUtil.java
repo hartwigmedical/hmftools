@@ -36,7 +36,7 @@ public class ComparTestUtil
         assertTrue(testMessage, refVictim.matches(newVictim));
         assertTrue(testMessage, newVictim.matches(refVictim));
 
-        Mismatch detailedMismatch = refVictim.findMismatch(comparer, newVictim, matchLevel, false);
+        Mismatch detailedMismatch = refVictim.findMismatch(comparer, newVictim, matchLevel, false, false);
 
         assertNotNull(testMessage, detailedMismatch);
         assertEquals(testMessage, expectedMismatchType, detailedMismatch.Type);

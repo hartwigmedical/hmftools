@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.compar.mutation;
 
+import static com.hartwig.hmftools.compar.mutation.VariantData.FLD_AF;
 import static com.hartwig.hmftools.compar.mutation.VariantData.FLD_REPORTED;
 import static com.hartwig.hmftools.compar.mutation.VariantData.FLD_FILTER;
 import static com.hartwig.hmftools.compar.mutation.VariantData.FLD_QUAL;
@@ -10,7 +11,6 @@ import static com.hartwig.hmftools.compar.mutation.VariantData.FLD_HGVS_CODING;
 import static com.hartwig.hmftools.compar.mutation.VariantData.FLD_HGVS_PROTEIN;
 import static com.hartwig.hmftools.compar.mutation.VariantData.FLD_HOTSPOT;
 import static com.hartwig.hmftools.compar.mutation.VariantData.FLD_OTHER_REPORTED;
-import static com.hartwig.hmftools.compar.mutation.VariantData.FLD_PURITY_ADJUSTED_VAF;
 import static com.hartwig.hmftools.compar.mutation.VariantData.FLD_TIER;
 import static com.hartwig.hmftools.compar.mutation.VariantData.FLD_TUMOR_SUPPORTING_READ_COUNT;
 import static com.hartwig.hmftools.compar.mutation.VariantData.FLD_TUMOR_TOTAL_READ_COUNT;
@@ -51,8 +51,7 @@ public class GermlineVariantDataTest extends ComparableItemTest<GermlineVariantD
         fieldToAlternateValueInitializer.put(FLD_QUAL, b -> b.qual = alternateValueSource.Qual);
         fieldToAlternateValueInitializer.put(FLD_VARIANT_COPY_NUMBER, b -> b.variantCopyNumber =
                 alternateValueSource.VariantCopyNumber);
-        fieldToAlternateValueInitializer.put(FLD_PURITY_ADJUSTED_VAF, b -> b.purityAdjustedVaf =
-                alternateValueSource.PurityAdjustedVaf);
+        fieldToAlternateValueInitializer.put(FLD_AF, b -> b.alleleFrequency = alternateValueSource.AlleleFrequency);
         fieldToAlternateValueInitializer.put(FLD_TUMOR_SUPPORTING_READ_COUNT, b -> b.tumorSupportingReadCount =
                 alternateValueSource.TumorSupportingReadCount);
         fieldToAlternateValueInitializer.put(FLD_TUMOR_TOTAL_READ_COUNT, b -> b.tumorTotalReadCount =

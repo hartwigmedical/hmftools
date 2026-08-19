@@ -37,7 +37,7 @@ public class GermlineVariantData extends VariantData
                 GERMLINE_VARIANT, chromosome, position, ref, alt, type, gene, reported, hotspotStatus, tier,
                 canonicalEffect, canonicalCodingEffect, canonicalHgvsCodingImpact, canonicalHgvsProteinImpact, otherReportedEffects,
                 qual, filters, variantCopyNumber, purityAdjustedVaf, tumorSupportingReadCount, tumorTotalReadCount,
-                isFromUnfilteredVcf, fields);
+                isFromUnfilteredVcf);
 
         addDefaultValues(fields);
     }
@@ -62,7 +62,7 @@ public class GermlineVariantData extends VariantData
             chromosome = comparisonPosition.Chromosome;
         }
 
-        var tumorAllelicDepth = AllelicDepth.fromGenotype(context.getGenotype(sampleId));
+        AllelicDepth tumorAllelicDepth = AllelicDepth.fromGenotype(context.getGenotype(sampleId));
 
         return new GermlineVariantData(
                 chromosome, position, ref, alt, VariantType.type(context),
@@ -78,7 +78,7 @@ public class GermlineVariantData extends VariantData
                 (int)context.getPhredScaledQual(),
                 context.getFilters(),
                 context.getAttributeAsDouble(PURPLE_VARIANT_CN, 0),
-                context.getAttributeAsDouble(PURPLE_AF, 0),
+                tumorAllelicDepth.alleleFrequency(),
                 tumorAllelicDepth.AlleleReadCount,
                 tumorAllelicDepth.TotalReadCount,
                 fromUnfilteredFile,

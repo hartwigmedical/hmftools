@@ -41,6 +41,7 @@ public class CommonUtils
         MatchLevel matchLevel = config.MatchingLevel;
 
         Map<SourceType,List<ComparableItem>> sourceItems = Maps.newHashMap();
+        boolean includesTruthset = false;
 
         for(SourceData source : config.Sources)
         {
@@ -55,6 +56,8 @@ public class CommonUtils
             }
             else
             {
+                includesTruthset = true;
+
                 List<TruthsetValue> truthsetValues = source.Truthset.sampleTruthsetEntries(sampleId, comparer.category());
 
                 if(truthsetValues == null || truthsetValues.isEmpty())
@@ -88,7 +91,7 @@ public class CommonUtils
         {
             // previously support comparisons for N sources but now can only be 2 as controlled by config
             CommonUtils.compareItems(
-                    comparer, mismatches, matchLevel, config.IncludeMatches,
+                    comparer, mismatches, matchLevel, config.IncludeMatches, includesTruthset,
                     sourceItems.get(SourceType.OLD), sourceItems.get(SourceType.NEW));
 
             return true;
@@ -114,7 +117,7 @@ public class CommonUtils
 
     public static void compareItems(
             final ItemComparer comparer, final List<Mismatch> mismatches, final MatchLevel matchLevel, final boolean includeMatches,
-            final List<ComparableItem> items1, final List<ComparableItem> items2)
+            final boolean includesTruthset, final List<ComparableItem> items1, final List<ComparableItem> items2)
     {
         int index1 = 0;
         while(index1 < items1.size())
@@ -137,9 +140,9 @@ public class CommonUtils
                     // skip checking for diffs if the items are not reportable
                     boolean eitherReportable = item1.reportable() || item2.reportable();
 
-                    if(matchLevel != REPORTABLE || eitherReportable)
+                    if(matchLevel != REPORTABLE || eitherReportable || includesTruthset)
                     {
-                        Mismatch mismatch = item1.findMismatch(comparer, item2, matchLevel, includeMatches);
+                        Mismatch mismatch = item1.findMismatch(comparer, item2, matchLevel, includeMatches, includesTruthset);
 
                         if(mismatch != null)
                         {
@@ -241,10 +244,11 @@ public class CommonUtils
 
     public static Mismatch createMismatchFromDiffs(
             final ComparableItem oldItem, final ComparableItem newItem, final List<String> diffs,
-            final MatchLevel matchLevel, final boolean includeMatches)
+            final MatchLevel matchLevel, final boolean includeMatches, final boolean includesTruthset)
     {
-        boolean oldCountsAsCalled = countsAsCalled(oldItem, matchLevel);
-        boolean newCountsAsCalled = countsAsCalled(newItem, matchLevel);
+        boolean oldCountsAsCalled = countsAsCalled(oldItem, matchLevel) || includesTruthset;
+        boolean newCountsAsCalled = countsAsCalled(newItem, matchLevel) || includesTruthset;
+
         if(!oldCountsAsCalled && !newCountsAsCalled)
         {
             // ignore unimportant differences
@@ -279,6 +283,7 @@ public class CommonUtils
                 // should be impossible due to earlier filters
                 mismatchType = INVALID_ERROR;
             }
+
             return new Mismatch(oldItem, newItem, mismatchType, diffs);
         }
     }

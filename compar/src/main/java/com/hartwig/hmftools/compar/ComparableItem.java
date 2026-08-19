@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.compar.common.field.FieldInfo.findField;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.MatchLevel;
@@ -38,11 +39,12 @@ public abstract class ComparableItem
     public abstract boolean matches(final ComparableItem other);
 
     public Mismatch findMismatch(
-            final ItemComparer comparer, final ComparableItem other, final MatchLevel matchLevel, final boolean includeMatches)
+            final ItemComparer comparer, final ComparableItem other, final MatchLevel matchLevel, final boolean includeMatches,
+            final boolean includesTruthset)
     {
         List<String> diffs = findDiffs(comparer, this, other);
 
-        return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches);
+        return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches, includesTruthset);
     }
 
     public Map<String,FieldValue> fieldValues() { return mValues; }
@@ -71,4 +73,13 @@ public abstract class ComparableItem
     {
         mValues.put(fieldName, new StringFieldValue(findField(fieldName, fields), value));
     }
+
+    @VisibleForTesting
+    public Mismatch findMismatch(
+            final ItemComparer comparer, final ComparableItem other, final MatchLevel matchLevel, final boolean includeMatches)
+    {
+        List<String> diffs = findDiffs(comparer, this, other);
+        return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches, false);
+    }
+
 }

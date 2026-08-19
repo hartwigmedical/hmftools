@@ -65,12 +65,12 @@ public class CommonUtilsTest
         TestComparableItem oldItem = new TestComparableItem(true, false);
         TestComparableItem newItem = new TestComparableItem(true, false);
 
-        assertNull(createMismatchFromDiffs(oldItem, newItem, NO_DIFFS, DETAILED, false));
-        assertNull(createMismatchFromDiffs(oldItem, newItem, NO_DIFFS, DETAILED, true));
+        assertNull(createMismatchFromDiffs(oldItem, newItem, NO_DIFFS, DETAILED, false, false));
+        assertNull(createMismatchFromDiffs(oldItem, newItem, NO_DIFFS, DETAILED, true, false));
 
         // even with diffs present, neither side counts as called so the difference is unimportant
-        assertNull(createMismatchFromDiffs(oldItem, newItem, SOME_DIFFS, DETAILED, false));
-        assertNull(createMismatchFromDiffs(oldItem, newItem, SOME_DIFFS, DETAILED, true));
+        assertNull(createMismatchFromDiffs(oldItem, newItem, SOME_DIFFS, DETAILED, false, false));
+        assertNull(createMismatchFromDiffs(oldItem, newItem, SOME_DIFFS, DETAILED, true, false));
     }
 
     @Test
@@ -79,9 +79,9 @@ public class CommonUtilsTest
         TestComparableItem oldItem = new TestComparableItem(true, true);
         TestComparableItem newItem = new TestComparableItem(true, true);
 
-        assertNull(createMismatchFromDiffs(oldItem, newItem, NO_DIFFS, DETAILED, false));
+        assertNull(createMismatchFromDiffs(oldItem, newItem, NO_DIFFS, DETAILED, false, false));
 
-        Mismatch mismatch = createMismatchFromDiffs(oldItem, newItem, NO_DIFFS, DETAILED, true);
+        Mismatch mismatch = createMismatchFromDiffs(oldItem, newItem, NO_DIFFS, DETAILED, true, false);
         assertEquals(FULL_MATCH, mismatch.Type);
     }
 
@@ -91,11 +91,11 @@ public class CommonUtilsTest
         TestComparableItem oldItem = new TestComparableItem(true, true);
         TestComparableItem newItem = new TestComparableItem(true, true);
 
-        Mismatch mismatch = createMismatchFromDiffs(oldItem, newItem, SOME_DIFFS, DETAILED, false);
+        Mismatch mismatch = createMismatchFromDiffs(oldItem, newItem, SOME_DIFFS, DETAILED, false, false);
         assertEquals(VALUE, mismatch.Type);
 
         // still VALUE when matches are also being included
-        mismatch = createMismatchFromDiffs(oldItem, newItem, SOME_DIFFS, DETAILED, true);
+        mismatch = createMismatchFromDiffs(oldItem, newItem, SOME_DIFFS, DETAILED, true, false);
         assertEquals(VALUE, mismatch.Type);
     }
 
@@ -108,10 +108,10 @@ public class CommonUtilsTest
         // this is the regression case: the two items were paired up despite one being an artificial
         // "not called" placeholder, and the always-compared fields happened to produce no diffs -
         // that must still surface as OLD_ONLY rather than being silently dropped
-        Mismatch mismatch = createMismatchFromDiffs(oldItem, newItem, NO_DIFFS, DETAILED, false);
+        Mismatch mismatch = createMismatchFromDiffs(oldItem, newItem, NO_DIFFS, DETAILED, false, false);
         assertEquals(OLD_ONLY, mismatch.Type);
 
-        mismatch = createMismatchFromDiffs(oldItem, newItem, SOME_DIFFS, DETAILED, false);
+        mismatch = createMismatchFromDiffs(oldItem, newItem, SOME_DIFFS, DETAILED, false, false);
         assertEquals(OLD_ONLY, mismatch.Type);
     }
 
@@ -123,10 +123,10 @@ public class CommonUtilsTest
 
         // regression case for the dropped NEW_ONLY AMP scenario: no diffs found, but the new side
         // is called and the old side is not, so this must still be reported as NEW_ONLY
-        Mismatch mismatch = createMismatchFromDiffs(oldItem, newItem, NO_DIFFS, DETAILED, false);
+        Mismatch mismatch = createMismatchFromDiffs(oldItem, newItem, NO_DIFFS, DETAILED, false, false);
         assertEquals(NEW_ONLY, mismatch.Type);
 
-        mismatch = createMismatchFromDiffs(oldItem, newItem, SOME_DIFFS, DETAILED, false);
+        mismatch = createMismatchFromDiffs(oldItem, newItem, SOME_DIFFS, DETAILED, false, false);
         assertEquals(NEW_ONLY, mismatch.Type);
     }
 
@@ -137,13 +137,13 @@ public class CommonUtilsTest
         TestComparableItem oldItem = new TestComparableItem(false, true);
         TestComparableItem newItem = new TestComparableItem(true, true);
 
-        Mismatch mismatch = createMismatchFromDiffs(oldItem, newItem, NO_DIFFS, REPORTABLE, false);
+        Mismatch mismatch = createMismatchFromDiffs(oldItem, newItem, NO_DIFFS, REPORTABLE, false, false);
         assertEquals(NEW_ONLY, mismatch.Type);
 
         // both reportable, no diffs -> ignored unless includeMatches
         TestComparableItem bothReportable1 = new TestComparableItem(true, false);
         TestComparableItem bothReportable2 = new TestComparableItem(true, false);
-        assertNull(createMismatchFromDiffs(bothReportable1, bothReportable2, NO_DIFFS, REPORTABLE, false));
+        assertNull(createMismatchFromDiffs(bothReportable1, bothReportable2, NO_DIFFS, REPORTABLE, false, false));
     }
 
     @Test
@@ -157,7 +157,7 @@ public class CommonUtilsTest
         MatchLevel matchLevel = MatchLevel.DETAILED;
         boolean includeMatches = false;
 
-        CommonUtils.compareItems(null, mismatches, matchLevel, includeMatches, refItems, newItems);
+        CommonUtils.compareItems(null, mismatches, matchLevel, includeMatches, false, refItems, newItems);
 
         assertTrue(mismatches.isEmpty());
     }

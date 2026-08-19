@@ -19,24 +19,24 @@ public class SourceData
     public final Map<String,String> SampleIdMapping; // maps from the common tumor SampleId to the tumor Sample Id for this source
     public final Map<String,String> ReferenceSampleIdMapping; // as above for the reference Id
 
-    public SourceData(final SourceType type, final PipelineSourcePaths pipelinePaths)
+    public SourceData(final SourceType type, final PipelineSourcePaths pipelinePaths, final TruthsetCache truthset)
     {
         Type = type;
         PipelinePaths = pipelinePaths;
-        Truthset = null;
+        Truthset = truthset;
 
         SampleIdMapping = Maps.newHashMap();
         ReferenceSampleIdMapping = Maps.newHashMap();
     }
 
-    public SourceData(final SourceType type, final TruthsetCache truthset)
+    public static SourceData fromPipelineSource(final SourceType type, PipelineSourcePaths pipelinePaths)
     {
-        Type = type;
-        PipelinePaths = null;
-        Truthset = truthset;
+        return new SourceData(type, pipelinePaths, null);
+    }
 
-        SampleIdMapping = Maps.newHashMap();
-        ReferenceSampleIdMapping = Maps.newHashMap();
+    public static SourceData fromTruthsetSource(final SourceType type, final TruthsetCache truthset)
+    {
+        return new SourceData(type, null, truthset);
     }
 
     public String configName() { return Type.toString().toLowerCase(); }

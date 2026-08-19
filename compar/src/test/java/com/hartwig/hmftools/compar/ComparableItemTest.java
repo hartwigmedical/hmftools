@@ -83,7 +83,7 @@ public abstract class ComparableItemTest<I extends ComparableItem, C extends Ite
             assertFalse("Test ref.matches(new) is False", refVictim.matches(newVictim));
         }
 
-        Mismatch mismatch = refVictim.findMismatch(comparer, newVictim, matchLevel, false);
+        Mismatch mismatch = refVictim.findMismatch(comparer, newVictim, matchLevel, false, false);
 
         assertEquals(MismatchType.VALUE, mismatch.Type);
         assertEquals(refVictim, mismatch.OldItem);

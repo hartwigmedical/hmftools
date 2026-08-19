@@ -397,14 +397,13 @@ public class ComparConfig
             {
                 TruthsetCache truthsetCache = new TruthsetCache();
                 truthsetCache.loadFiles(configBuilder.getValue(truthsetConfig));
-                Sources.add(new SourceData(sourceType, truthsetCache));
+                Sources.add(SourceData.fromTruthsetSource(sourceType, truthsetCache));
             }
             else
             {
                 PipelineSourcePaths pipelinePaths = fromConfig(sourceType, configBuilder);
-                Sources.add(new SourceData(sourceType, pipelinePaths));
+                Sources.add(SourceData.fromPipelineSource(sourceType, pipelinePaths));
             }
-
         }
 
         return true;
@@ -456,8 +455,8 @@ public class ComparConfig
         SampleIds = Lists.newArrayList();
         SampleToReferenceIds = Maps.newHashMap();
         Sources = Lists.newArrayList();
-        Sources.add(new SourceData(OLD, new TruthsetCache()));
-        Sources.add(new SourceData(NEW, new TruthsetCache()));
+        Sources.add(new SourceData(OLD, null, null));
+        Sources.add(new SourceData(NEW, null, null));
 
         Categories = Sets.newHashSet();
         MatchingLevel = REPORTABLE;

@@ -233,7 +233,7 @@ public class DriverDataTest extends ComparableItemTest<DriverData, DriverCompare
                 purity, "4", false, true, driverComparer.fieldsList()));
 
         List<Mismatch> mismatches = Lists.newArrayList();
-        CommonUtils.compareItems(driverComparer, mismatches, MatchLevel.REPORTABLE, includeMatches, refItems, newItems);
+        CommonUtils.compareItems(driverComparer, mismatches, MatchLevel.REPORTABLE, includeMatches, false, refItems, newItems);
         return mismatches;
     }
 

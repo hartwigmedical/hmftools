@@ -111,8 +111,8 @@ public class MismatchFile
         {
             for(FieldDisplayInfo fieldInfo : fieldDisplayValues)
             {
-                sj.add(fieldInfo.oldValue());
-                sj.add(fieldInfo.newValue());
+                sj.add(fieldInfo.oldValue() != null ? fieldInfo.oldValue() : "");
+                sj.add(fieldInfo.newValue() != null ? fieldInfo.newValue() : "");
             }
         }
         else
@@ -133,7 +133,10 @@ public class MismatchFile
 
         for(FieldDisplayInfo fieldInfo : fieldDisplayValues)
         {
-            displaySj.add(format("%s=%s", fieldInfo.name(), useOld ? fieldInfo.oldValue() : fieldInfo.newValue()));
+            String value = useOld ? fieldInfo.oldValue() : fieldInfo.newValue();
+
+            if(value != null) // supress values not present (ie in the truthset)
+                displaySj.add(format("%s=%s", fieldInfo.name(), value));
         }
 
         return displaySj.toString();

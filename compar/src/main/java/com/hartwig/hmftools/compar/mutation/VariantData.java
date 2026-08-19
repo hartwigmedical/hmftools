@@ -45,7 +45,7 @@ public class VariantData extends ComparableItem
     public final int Qual;
     public final Set<String> Filters;
     public final double VariantCopyNumber;
-    public final double PurityAdjustedVaf;
+    public final double AlleleFrequency;
     public final int TumorSupportingReadCount;
     public final int TumorTotalReadCount;
 
@@ -63,7 +63,7 @@ public class VariantData extends ComparableItem
     static final String FLD_HGVS_PROTEIN = "CanonicalHgvsProtein";
     static final String FLD_OTHER_REPORTED = "OtherReportedEffects";
     static final String FLD_VARIANT_COPY_NUMBER = "VariantCopyNumber";
-    static final String FLD_PURITY_ADJUSTED_VAF = "PurityAdjustedVaf";
+    static final String FLD_AF = "AF";
     static final String FLD_TUMOR_SUPPORTING_READ_COUNT = "TumorSupportingReadCount";
     static final String FLD_TUMOR_TOTAL_READ_COUNT = "TumorTotalReadCount";
 
@@ -75,9 +75,8 @@ public class VariantData extends ComparableItem
             final boolean reported, final HotspotType hotspotStatus, final VariantTier tier,
             final String canonicalEffect, final String canonicalCodingEffect, final String canonicalHgvsCodingImpact,
             final String canonicalHgvsProteinImpact, final String otherReportedEffects, final int qual,
-            final Set<String> filters, final double variantCopyNumber, final double purityAdjustedVaf,
-            final int tumorSupportingReadCount, final int tumorTotalReadCount, final boolean isFromUnfilteredVcf,
-            final List<FieldInfo> fields)
+            final Set<String> filters, final double variantCopyNumber, final double alleleFrequency,
+            final int tumorSupportingReadCount, final int tumorTotalReadCount, final boolean isFromUnfilteredVcf)
     {
         Category = category;
         Chromosome = chromosome;
@@ -97,7 +96,7 @@ public class VariantData extends ComparableItem
         Qual = qual;
         Filters = filters;
         VariantCopyNumber = variantCopyNumber;
-        PurityAdjustedVaf = purityAdjustedVaf;
+        AlleleFrequency = alleleFrequency;
         TumorSupportingReadCount = tumorSupportingReadCount;
         TumorTotalReadCount = tumorTotalReadCount;
 
@@ -110,6 +109,7 @@ public class VariantData extends ComparableItem
         addStringValue(FLD_HOTSPOT, HotspotStatus.toString(), fields);
         addStringValue(FLD_TIER, Tier.toString(), fields);
         addIntValue(FLD_QUAL, Qual, fields);
+        addDoubleValue(FLD_AF, AlleleFrequency, fields);
         addIntValue(FLD_TUMOR_SUPPORTING_READ_COUNT, TumorSupportingReadCount, fields);
         addIntValue(FLD_TUMOR_TOTAL_READ_COUNT, TumorTotalReadCount, fields);
         addStringValue(FLD_FILTER, filtersStr(), fields);
@@ -118,7 +118,6 @@ public class VariantData extends ComparableItem
         {
             // leave out of comparison if created from a filtered variant
             addDoubleValue(FLD_VARIANT_COPY_NUMBER, VariantCopyNumber, fields);
-            addDoubleValue(FLD_PURITY_ADJUSTED_VAF, PurityAdjustedVaf, fields);
             addStringValue(FLD_GENE, Gene, fields);
             addStringValue(FLD_CANON_EFFECT, CanonicalEffect, fields);
             addStringValue(FLD_CODING_EFFECT, CanonicalCodingEffect, fields);
@@ -175,12 +174,6 @@ public class VariantData extends ComparableItem
         {
             return Filters.stream().collect(Collectors.joining(ITEM_DELIM));
         }
-        /*
-        else if(IsFromUnfilteredVcf)
-        {
-            return "FILTERED";
-        }
-        */
         else
         {
             return PASS_FILTER;
@@ -191,7 +184,7 @@ public class VariantData extends ComparableItem
     {
         return Lists.newArrayList(
                 FLD_REPORTED, FLD_HOTSPOT, FLD_TIER, FLD_GENE, FLD_CANON_EFFECT, FLD_CODING_EFFECT,
-                FLD_HGVS_CODING, FLD_HGVS_PROTEIN, FLD_OTHER_REPORTED, FLD_QUAL, FLD_VARIANT_COPY_NUMBER, FLD_PURITY_ADJUSTED_VAF,
+                FLD_HGVS_CODING, FLD_HGVS_PROTEIN, FLD_OTHER_REPORTED, FLD_QUAL, FLD_VARIANT_COPY_NUMBER, FLD_AF,
                 FLD_TUMOR_SUPPORTING_READ_COUNT, FLD_TUMOR_TOTAL_READ_COUNT, FLD_FILTER);
     }
 
@@ -218,8 +211,8 @@ public class VariantData extends ComparableItem
                 "%.2f"));
 
         fields.add(new FieldInfo(
-                FLD_PURITY_ADJUSTED_VAF,
-                getOrMakeFieldCheck(fieldCheckMap, FLD_PURITY_ADJUSTED_VAF, 0.2, null),
+                FLD_AF,
+                getOrMakeFieldCheck(fieldCheckMap, FLD_AF, 0.2, null),
                 "%.2f"));
 
         fields.add(new FieldInfo(

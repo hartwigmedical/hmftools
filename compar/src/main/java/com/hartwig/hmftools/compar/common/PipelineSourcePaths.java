@@ -22,10 +22,14 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.LINX_DIR_CFG
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LINX_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LINX_GERMLINE_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LINX_GERMLINE_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.PAVE_SOMATIC_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.PAVE_SOMATIC_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PEACH_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PEACH_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAGE_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAGE_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SIGS_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SIGS_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TEAL_DIR_CFG;
@@ -52,7 +56,8 @@ public class PipelineSourcePaths
     public final String Chord;
     public final String Peach;
     public final String Virus;
-    public final String SomaticVcf;
+    public final String SageSomatic;
+    public final String PaveSomatic;
     public final String SomaticUnfilteredVcf;
     public final String TumorFlagstat;
     public final String GermlineFlagstat;
@@ -66,7 +71,6 @@ public class PipelineSourcePaths
     public final String Isofox;
 
     private static final String SAMPLE_DIR = "sample_dir";
-    private static final String SOMATIC_VCF = "somatic_vcf";
     private static final String SOMATIC_UNFILTERED_VCF = "somatic_unfiltered_vcf";
     private static final String TUMOR_FLAGSTAT = "tumor_flagstat_dir";
     private static final String GERMLINE_FLAGSTAT = "germline_flagstat_dir";
@@ -75,9 +79,10 @@ public class PipelineSourcePaths
     private static final String SNP_GENOTYPE = "snp_genotype_dir";
 
     public PipelineSourcePaths(
-            final SourceType source, final String linx, final String cobalt, final String purple, final String linxGermline, final String cuppa,
-            final String lilac, final String chord, final String peach, final String virus, final String somaticVcf,
-            final String somaticUnfilteredVcf, final String tumorFlagstat, final String germlineFlagstat, final String tumorBamMetrics,
+            final SourceType source, final String linx, final String cobalt, final String purple, final String linxGermline,
+            final String cuppa, final String lilac, final String chord, final String peach, final String virus,
+            final String sageSomaticDir, final String paveSomaticDir, final String somaticUnfilteredVcf,
+            final String tumorFlagstat, final String germlineFlagstat, final String tumorBamMetrics,
             final String germlineBamMetrics, final String snpGenotype, final String cider, final String teal, final String vChord,
             final String sigs, final String isofox)
     {
@@ -91,7 +96,8 @@ public class PipelineSourcePaths
         Chord = chord;
         Peach = peach;
         Virus = virus;
-        SomaticVcf = somaticVcf;
+        SageSomatic = sageSomaticDir;
+        PaveSomatic = paveSomaticDir;
         SomaticUnfilteredVcf = somaticUnfilteredVcf;
         TumorFlagstat = tumorFlagstat;
         GermlineFlagstat = germlineFlagstat;
@@ -118,7 +124,8 @@ public class PipelineSourcePaths
                 convertWildcardSamplePath(fileSources.Chord, sampleId, referenceId),
                 convertWildcardSamplePath(fileSources.Peach, sampleId, referenceId),
                 convertWildcardSamplePath(fileSources.Virus, sampleId, referenceId),
-                convertWildcardSamplePath(fileSources.SomaticVcf, sampleId, referenceId),
+                convertWildcardSamplePath(fileSources.SageSomatic, sampleId, referenceId),
+                convertWildcardSamplePath(fileSources.PaveSomatic, sampleId, referenceId),
                 convertWildcardSamplePath(fileSources.SomaticUnfilteredVcf, sampleId, referenceId),
                 convertWildcardSamplePath(fileSources.TumorFlagstat, sampleId, referenceId),
                 convertWildcardSamplePath(fileSources.GermlineFlagstat, sampleId, referenceId),
@@ -157,6 +164,8 @@ public class PipelineSourcePaths
             addPathConfig(configBuilder, CUPPA_DIR_CFG, CUPPA_DIR_DESC, sourceType);
             addPathConfig(configBuilder, PEACH_DIR_CFG, PEACH_DIR_DESC, sourceType);
             addPathConfig(configBuilder, VIRUS_DIR_CFG, VIRUS_DIR_DESC, sourceType);
+            addPathConfig(configBuilder, SAGE_DIR_CFG, SAGE_DIR_DESC, sourceType);
+            addPathConfig(configBuilder, PAVE_SOMATIC_DIR_CFG, PAVE_SOMATIC_DIR_DESC, sourceType);
             addPathConfig(configBuilder, CIDER_DIR_CFG, CIDER_DIR_DESC, sourceType);
             addPathConfig(configBuilder, TEAL_DIR_CFG, TEAL_DIR_DESC, sourceType);
             addPathConfig(configBuilder, V_CHORD_DIR_CFG, V_CHORD_DIR_DESC, sourceType);
@@ -167,10 +176,6 @@ public class PipelineSourcePaths
             addPathConfig(configBuilder, TUMOR_BAM_METRICS, formSourceDescription("Tumor BAM metrics", sourceType), sourceType);
             addPathConfig(configBuilder, GERMLINE_BAM_METRICS, formSourceDescription("Germline BAM metrics", sourceType), sourceType);
             addPathConfig(configBuilder, SNP_GENOTYPE, formSourceDescription("SNP genotype", sourceType), sourceType);
-
-            configBuilder.addPath(
-                    formSourceConfig(SOMATIC_VCF, sourceType), false,
-                    formSourceDescription("Non-Purple somatic VCF (eg Pave, Sage)", sourceType));
 
             configBuilder.addPath(
                     formSourceConfig(SOMATIC_UNFILTERED_VCF, sourceType), false,
@@ -219,7 +224,9 @@ public class PipelineSourcePaths
         String peachDir = getDirectory(configBuilder, sampleDir, defaultToolDirs.peachDir(), PEACH_DIR_CFG, sourceType);
         String virusDir = getDirectory(configBuilder, sampleDir, defaultToolDirs.virusInterpreterDir(), VIRUS_DIR_CFG, sourceType);
 
-        String somaticVcf = getConfigValue(configBuilder, SOMATIC_VCF, sourceType);
+        String sageSomaticDir = getDirectory(configBuilder, sampleDir, defaultToolDirs.sageSomaticDir(), SAGE_DIR_CFG, sourceType);
+        String paveSomaticDir = getDirectory(configBuilder, sampleDir, defaultToolDirs.paveSomaticDir(), PAVE_SOMATIC_DIR_CFG, sourceType);
+
         String somaticUnfilteredVcf = getConfigValue(configBuilder, SOMATIC_UNFILTERED_VCF, sourceType);
 
         String tumorFlagstat = getDirectory(configBuilder, sampleDir, defaultToolDirs.tumorFlagstatDir(), TUMOR_FLAGSTAT, sourceType);
@@ -233,9 +240,10 @@ public class PipelineSourcePaths
         String sigsDir = getDirectory(configBuilder, sampleDir, defaultToolDirs.sigsDir(), SIGS_DIR_CFG, sourceType);
         String isofoxDir = getDirectory(configBuilder, sampleDir, defaultToolDirs.isofoxDir(), ISOFOX_DIR_CFG, sourceType);
 
-        return new PipelineSourcePaths(sourceType, linxDir, cobaltDir, purpleDir, linxGermlineDir, cuppaDir, lilacDir, chordDir, peachDir, virusDir,
-                somaticVcf, somaticUnfilteredVcf, tumorFlagstat, germlineFlagstat, tumorBamMetrics, germlineBamMetrics, snpGenotype,
-                ciderDir, tealDir, vChordDir, sigsDir, isofoxDir);
+        return new PipelineSourcePaths(
+                sourceType, linxDir, cobaltDir, purpleDir, linxGermlineDir, cuppaDir, lilacDir, chordDir, peachDir,
+                virusDir, sageSomaticDir, paveSomaticDir, somaticUnfilteredVcf, tumorFlagstat, germlineFlagstat,
+                tumorBamMetrics, germlineBamMetrics, snpGenotype, ciderDir, tealDir, vChordDir, sigsDir, isofoxDir);
     }
 
     private static PipelineToolDirectories resolveDefaultToolDirs(final ConfigBuilder configBuilder, final SourceType sourceType)

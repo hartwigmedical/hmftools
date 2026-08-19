@@ -29,7 +29,7 @@ public class TestGermlineVariantDataBuilder
     public double qual = 275;
     public Set<String> filters = Collections.emptySet();
     public double variantCopyNumber = 1.1;
-    public double purityAdjustedVaf = 0.45;
+    public double alleleFrequency = 0.45;
     public int tumorTotalReadCount = 116;
     public int tumorSupportingReadCount = 21;
 
@@ -51,7 +51,7 @@ public class TestGermlineVariantDataBuilder
         b.otherReportedEffects = "OTHER_EFFECT";
         b.qual = 512;
         b.variantCopyNumber = 3.6;
-        b.purityAdjustedVaf = 1.1;
+        b.alleleFrequency = 1.1;
         b.tumorTotalReadCount = 312;
         b.tumorSupportingReadCount = 50;
     };
@@ -68,7 +68,7 @@ public class TestGermlineVariantDataBuilder
         return new GermlineVariantData(
                 chromosome, position, ref, alt, type, gene, reported, hotspotStatus, tier,
                 canonicalEffect, canonicalCodingEffect, canonicalHgvsCodingImpact, canonicalHgvsProteinImpact, otherReportedEffects,
-                (int)qual, filters, variantCopyNumber, purityAdjustedVaf, tumorSupportingReadCount, tumorTotalReadCount,
+                (int)qual, filters, variantCopyNumber, alleleFrequency, tumorSupportingReadCount, tumorTotalReadCount,
                 false, new GermlineVariantComparer(null, Collections.emptyMap()).fieldsList());
 
         /*

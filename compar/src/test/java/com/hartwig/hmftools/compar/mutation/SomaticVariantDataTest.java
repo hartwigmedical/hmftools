@@ -2,6 +2,7 @@ package com.hartwig.hmftools.compar.mutation;
 
 import static com.hartwig.hmftools.compar.ComparTestUtil.assertDifferencesAreForFields;
 import static com.hartwig.hmftools.compar.ComparTestUtil.union;
+import static com.hartwig.hmftools.compar.mutation.VariantData.FLD_AF;
 import static com.hartwig.hmftools.compar.mutation.VariantData.FLD_REPORTED;
 import static com.hartwig.hmftools.compar.mutation.VariantData.FLD_FILTER;
 import static com.hartwig.hmftools.compar.mutation.VariantData.FLD_QUAL;
@@ -16,7 +17,6 @@ import static com.hartwig.hmftools.compar.mutation.VariantData.FLD_HGVS_CODING;
 import static com.hartwig.hmftools.compar.mutation.VariantData.FLD_HGVS_PROTEIN;
 import static com.hartwig.hmftools.compar.mutation.VariantData.FLD_HOTSPOT;
 import static com.hartwig.hmftools.compar.mutation.VariantData.FLD_OTHER_REPORTED;
-import static com.hartwig.hmftools.compar.mutation.VariantData.FLD_PURITY_ADJUSTED_VAF;
 import static com.hartwig.hmftools.compar.mutation.VariantData.FLD_TIER;
 import static com.hartwig.hmftools.compar.mutation.VariantData.FLD_TUMOR_SUPPORTING_READ_COUNT;
 import static com.hartwig.hmftools.compar.mutation.VariantData.FLD_TUMOR_TOTAL_READ_COUNT;
@@ -43,7 +43,7 @@ import org.junit.Test;
 public class SomaticVariantDataTest extends ComparableItemTest<SomaticVariantData, SomaticVariantComparer, TestSomaticVariantDataBuilder>
 {
     private static final Set<String> UNFILTERED_FIELDS = Set.of(
-            FLD_QUAL, FLD_REPORTED, FLD_TIER, FLD_HOTSPOT, FLD_TUMOR_SUPPORTING_READ_COUNT, FLD_TUMOR_TOTAL_READ_COUNT, FLD_FILTER, FLD_LPS);
+            FLD_QUAL, FLD_REPORTED, FLD_TIER, FLD_HOTSPOT, FLD_AF, FLD_TUMOR_SUPPORTING_READ_COUNT, FLD_TUMOR_TOTAL_READ_COUNT, FLD_FILTER, FLD_LPS);
 
     @Before
     public void setUp()
@@ -73,7 +73,7 @@ public class SomaticVariantDataTest extends ComparableItemTest<SomaticVariantDat
         fieldToAlternateValueInitializer.put(FLD_SUBCLONAL_LIKELIHOOD, b -> b.subclonalLikelihood =
                 alternateValueSource.SubclonalLikelihood);
         fieldToAlternateValueInitializer.put(FLD_VARIANT_COPY_NUMBER, b -> b.variantCopyNumber = alternateValueSource.VariantCopyNumber);
-        fieldToAlternateValueInitializer.put(FLD_PURITY_ADJUSTED_VAF, b -> b.purityAdjustedVaf = alternateValueSource.PurityAdjustedVaf);
+        fieldToAlternateValueInitializer.put(FLD_AF, b -> b.alleleFrequency = alternateValueSource.AlleleFrequency);
         fieldToAlternateValueInitializer.put(FLD_LPS, b -> b.hasLPS = alternateValueSource.HasLPS);
 
         nameToAlternateIndexInitializer = Map.of(

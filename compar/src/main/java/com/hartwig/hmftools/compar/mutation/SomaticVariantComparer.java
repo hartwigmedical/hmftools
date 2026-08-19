@@ -1,5 +1,9 @@
 package com.hartwig.hmftools.compar.mutation;
 
+import static com.hartwig.hmftools.common.sage.SageCommon.PAVE_SOMATIC_VCF_ID;
+import static com.hartwig.hmftools.common.sage.SageCommon.SAGE_FILE_ID;
+import static com.hartwig.hmftools.common.sage.SageCommon.SAGE_SOMATIC_VCF_ID;
+import static com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser.fromVariantContext;
 import static com.hartwig.hmftools.compar.common.CategoryType.SOMATIC_VARIANT;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.CommonUtils.countsAsCalled;
@@ -17,6 +21,8 @@ import static com.hartwig.hmftools.compar.mutation.SomaticVariantData.FLD_LPS;
 import static com.hartwig.hmftools.compar.mutation.SomaticVariantData.FLD_SUBCLONAL_LIKELIHOOD;
 import static com.hartwig.hmftools.compar.mutation.VariantData.addComparerFields;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -32,6 +38,7 @@ import com.hartwig.hmftools.common.variant.HotspotType;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
+import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
@@ -50,7 +57,8 @@ import htsjdk.variant.variantcontext.VariantContext;
 
 public class SomaticVariantComparer extends ItemComparer
 {
-    private final Map<SourceType,VcfFileReader> mUnfilteredVcfReaders;
+    private final Map<SourceType,VcfFileReader> mSageVcfReaders;
+    private final Map<SourceType,VcfFileReader> mPaveVcfReaders;
 
     public SomaticVariantComparer(final ComparConfig config, final Map<String, FieldCheck> fieldCheckMap)
     {
@@ -74,7 +82,8 @@ public class SomaticVariantComparer extends ItemComparer
                 getOrMakeFieldCheck(fieldCheckMap, FLD_SUBCLONAL_LIKELIHOOD, 0.6, null),
                 "%.2f"));
 
-        mUnfilteredVcfReaders = Maps.newHashMap();
+        mSageVcfReaders = Maps.newHashMap();
+        mPaveVcfReaders = Maps.newHashMap();
     }
 
     @Override
@@ -83,6 +92,9 @@ public class SomaticVariantComparer extends ItemComparer
     @Override
     public boolean processSample(final String sampleId, final List<Mismatch> mismatches)
     {
+        mSageVcfReaders.clear();
+        mPaveVcfReaders.clear();
+
         // use a custom method optimised for large numbers of variants
         MatchLevel matchLevel = mConfig.MatchingLevel;
 
@@ -98,7 +110,7 @@ public class SomaticVariantComparer extends ItemComparer
     {
         boolean hasOldItems = oldVariants != null;
         boolean hasNewItems = newVariants != null;
-        final List<String> emptyDiffs = List.of();
+        List<String> emptyDiffs = List.of();
 
         if(!hasOldItems || !hasNewItems)
         {
@@ -117,9 +129,11 @@ public class SomaticVariantComparer extends ItemComparer
         String oldSourceSampleId = mConfig.sourceSampleId(OLD, sampleId);
         String newSourceSampleId = mConfig.sourceSampleId(NEW, sampleId);
 
-        final Map<String,List<SomaticVariantData>> oldVariantsMap = buildVariantMap(oldVariants);
-        final Map<String,List<SomaticVariantData>> newVariantsMap = buildVariantMap(newVariants);
-        final List<SomaticVariantData> emptyVariants = List.of();
+        boolean includesTruthset = mConfig.Sources.stream().anyMatch(x -> x.Truthset != null);
+
+        Map<String,List<SomaticVariantData>> oldVariantsMap = buildVariantMap(oldVariants);
+        Map<String,List<SomaticVariantData>> newVariantsMap = buildVariantMap(newVariants);
+        List<SomaticVariantData> emptyVariants = List.of();
 
         for(HumanChromosome chromosome : HumanChromosome.values())
         {
@@ -145,14 +159,15 @@ public class SomaticVariantComparer extends ItemComparer
                 SomaticVariantData matchedVariant = null;
 
                 // shift index2 back to index at or before first potentially matching variant
-                while(index2 > 0 && (index2 >= chromosomeNewVariants.size() || chromosomeNewVariants.get(index2).Position >= oldVariant.Position))
+                while(index2 > 0
+                && (index2 >= chromosomeNewVariants.size() || chromosomeNewVariants.get(index2).Position >= oldVariant.Position))
                 {
                     --index2;
                 }
 
                 while(index2 < chromosomeNewVariants.size())
                 {
-                    final SomaticVariantData newVariant = chromosomeNewVariants.get(index2);
+                    SomaticVariantData newVariant = chromosomeNewVariants.get(index2);
 
                     if(oldVariant.matches(newVariant))
                     {
@@ -182,9 +197,11 @@ public class SomaticVariantComparer extends ItemComparer
                 {
                     chromosomeOldVariants.remove(index1);
 
-                    if(includeMismatchWithVariant(oldVariant, matchLevel) || includeMismatchWithVariant(matchedVariant, matchLevel))
+                    if(includesTruthset || includeMismatchWithVariant(oldVariant, matchLevel)
+                    || includeMismatchWithVariant(matchedVariant, matchLevel))
                     {
-                        Mismatch mismatch = oldVariant.findMismatch(this, matchedVariant, matchLevel, mConfig.IncludeMatches);
+                        Mismatch mismatch = oldVariant.findMismatch(
+                                this, matchedVariant, matchLevel, mConfig.IncludeMatches, includesTruthset);
 
                         if(mismatch != null)
                             mismatches.add(mismatch);
@@ -201,14 +218,15 @@ public class SomaticVariantComparer extends ItemComparer
 
             for(SomaticVariantData newVariant : chromosomeNewVariants)
             {
-                if(!includeMismatchWithVariant(newVariant, matchLevel))
+                if(!includesTruthset && !includeMismatchWithVariant(newVariant, matchLevel))
                     continue;
 
                 SomaticVariantData unfilteredVariant = findUnfilteredVariant(newVariant, OLD, oldSourceSampleId);
 
                 if(unfilteredVariant != null)
                 {
-                    mismatches.add(unfilteredVariant.findMismatch(this, newVariant, matchLevel, mConfig.IncludeMatches));
+                    mismatches.add(unfilteredVariant.findMismatch(
+                            this, newVariant, matchLevel, mConfig.IncludeMatches, includesTruthset));
                 }
                 else
                 {
@@ -223,38 +241,33 @@ public class SomaticVariantComparer extends ItemComparer
     protected SomaticVariantData findUnfilteredVariant(
             final SomaticVariantData testVariant, final SourceType sourceType, final String sourceSampleId)
     {
-        VcfFileReader unfilteredVcfReader = mUnfilteredVcfReaders.get(sourceType);
-
-        if(unfilteredVcfReader == null)
-            return null;
-
-        List<VariantContext> candidates = unfilteredVcfReader.findVariants(
-                testVariant.Chromosome, testVariant.Position, testVariant.Position);
-
-        for(VariantContext context : candidates)
+        // first look in the Pave VCFs, then back into the Sage ones
+        for(int i = 0; i <= 1; ++i)
         {
-            String ref = context.getReference().getBaseString();
-            String alt = !context.getAlternateAlleles().isEmpty() ? context.getAlternateAlleles().get(0).toString() : ref;
+            VcfFileReader vcfReader = (i == 0) ? mPaveVcfReaders.get(sourceType) : mSageVcfReaders.get(sourceType);
 
-            if(!testVariant.Ref.equals(ref) || !testVariant.Alt.equals(alt))
+            if(vcfReader == null)
                 continue;
 
-            AllelicDepth tumorAllelicDepth = AllelicDepth.fromGenotype(context.getGenotype(sourceSampleId));
+            List<VariantContext> candidates = vcfReader.findVariants(
+                    testVariant.Chromosome, testVariant.Position, testVariant.Position);
 
-            // only extract fields set by Sage (ie not Pave nor Purple)
-            return new SomaticVariantData(
-                    context.getContig(), context.getStart(), ref, alt, VariantType.type(context),
-                    "", false, HotspotType.fromVariant(context), VariantTier.fromContext(context),
-                    "", "", "", "",
-                    "", (int)context.getPhredScaledQual(), context.getFilters(), 0, 0,
-                    tumorAllelicDepth.AlleleReadCount, tumorAllelicDepth.TotalReadCount, true,
-                    false, 0, false, 0, mFields);
+            for(VariantContext variantContext : candidates)
+            {
+                String ref = variantContext.getReference().getBaseString();
+                String alt = !variantContext.getAlternateAlleles().isEmpty() ? variantContext.getAlternateAlleles().get(0).toString() : ref;
+
+                if(!testVariant.Ref.equals(ref) || !testVariant.Alt.equals(alt))
+                    continue;
+
+                return SomaticVariantData.fromContext(variantContext, sourceSampleId, true, sourceType, mConfig, mFields);
+            }
         }
 
         return null;
     }
 
-    private boolean includeMismatchWithVariant(SomaticVariantData variant, MatchLevel matchLevel)
+    private boolean includeMismatchWithVariant(final SomaticVariantData variant, final MatchLevel matchLevel)
     {
         return countsAsCalled(variant, matchLevel);
     }
@@ -383,17 +396,41 @@ public class SomaticVariantComparer extends ItemComparer
         // prepare the unfiltered file source if configured
         if(!fileSources.SomaticUnfilteredVcf.isEmpty())
         {
-            VcfFileReader unfilteredVcfReader = new VcfFileReader(fileSources.SomaticUnfilteredVcf);
+            boolean isSage = fileSources.SomaticUnfilteredVcf.contains(SAGE_FILE_ID);
 
-            if(!unfilteredVcfReader.fileValid())
+            loadVcfReader(
+                    fileSources.SomaticUnfilteredVcf,
+                    isSage ? mSageVcfReaders : mPaveVcfReaders, fileSources.Source);
+        }
+        else
+        {
+            String sageVcf = fileSources.SageSomatic + sampleId + SAGE_SOMATIC_VCF_ID;
+            String paveVcf = fileSources.PaveSomatic + sampleId + PAVE_SOMATIC_VCF_ID;
+
+            if(!fileSources.SageSomatic.isEmpty() && Files.exists(Paths.get(sageVcf)))
             {
-                CMP_LOGGER.error("failed to read somatic unfiltered VCF file({})", fileSources.SomaticUnfilteredVcf);
-                return null;
+                loadVcfReader(sageVcf, mSageVcfReaders, fileSources.Source);
             }
 
-            mUnfilteredVcfReaders.put(fileSources.Source, unfilteredVcfReader);
+            if(!fileSources.PaveSomatic.isEmpty() && Files.exists(Paths.get(paveVcf)))
+            {
+                loadVcfReader(paveVcf, mPaveVcfReaders, fileSources.Source);
+            }
         }
 
         return variants;
+    }
+
+    private static void loadVcfReader(final String vcfFilename, final Map<SourceType,VcfFileReader> vcfReaders, final SourceType source)
+    {
+        VcfFileReader vcfReader = new VcfFileReader(vcfFilename);
+
+        if(!vcfReader.fileValid())
+        {
+            CMP_LOGGER.error("failed to read somatic unfiltered VCF file({})", vcfFilename);
+            return;
+        }
+
+        vcfReaders.put(source, vcfReader);
     }
 }

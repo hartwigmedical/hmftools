@@ -20,7 +20,8 @@ public class InvalidDataItem extends ComparableItem
 
     @Override
     public Mismatch findMismatch(
-            final ItemComparer comparer, final ComparableItem other, final MatchLevel matchLevel, final boolean includeMatches)
+            final ItemComparer comparer, final ComparableItem other, final MatchLevel matchLevel, final boolean includeMatches,
+            final boolean includesTruthset)
     {
         return null;
     }

@@ -176,8 +176,8 @@ public class MismatchWriter
 
             fieldDisplayValues.add(new FieldDisplayInfo(
                     fieldName,
-                    oldValue != null ? oldValue.displayValue() : "",
-                    newValue != null ? newValue.displayValue() : ""));
+                    oldValue != null ? oldValue.displayValue() : null,
+                    newValue != null ? newValue.displayValue() : null));
         }
 
         return fieldDisplayValues;

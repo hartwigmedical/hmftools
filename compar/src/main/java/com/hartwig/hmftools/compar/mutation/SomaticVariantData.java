@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.compar.mutation;
 
-import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_AF;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_BIALLELIC_PROB;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_VARIANT_CN;
 
@@ -51,14 +50,13 @@ public class SomaticVariantData extends VariantData
             final String canonicalHgvsProteinImpact, final String otherReportedEffects, final int qual,
             final Set<String> filters, final double variantCopyNumber, final double purityAdjustedVaf,
             final int tumorSupportingReadCount, final int tumorTotalReadCount, final boolean isFromUnfilteredVcf,
-            boolean biallelic, double biallelicProb, final boolean hasLPS, final double subclonalLikelihood,
-            final List<FieldInfo> fields)
+            boolean biallelic, double biallelicProb, final boolean hasLPS, final double subclonalLikelihood)
     {
         super(
                 SOMATIC_VARIANT, chromosome, position, ref, alt, type, gene, reported, hotspotStatus, tier,
                 canonicalEffect, canonicalCodingEffect, canonicalHgvsCodingImpact, canonicalHgvsProteinImpact, otherReportedEffects,
                 qual, filters, variantCopyNumber, purityAdjustedVaf, tumorSupportingReadCount, tumorTotalReadCount,
-                isFromUnfilteredVcf, fields);
+                isFromUnfilteredVcf);
 
         BiallelicProbability = biallelicProb;
         Biallelic = biallelic;
@@ -102,15 +100,14 @@ public class SomaticVariantData extends VariantData
                 (int)context.getPhredScaledQual(),
                 context.getFilters(),
                 context.getAttributeAsDouble(PURPLE_VARIANT_CN, 0),
-                context.getAttributeAsDouble(PURPLE_AF, 0),
+                tumorAllelicDepth.alleleFrequency(),
                 tumorAllelicDepth.AlleleReadCount,
                 tumorAllelicDepth.TotalReadCount,
                 fromUnfilteredFile,
                 context.getAttributeAsBoolean(PURPLE_BIALLELIC_FLAG, false),
                 context.getAttributeAsDouble(PURPLE_BIALLELIC_PROB, 0),
                 context.hasAttribute(LOCAL_PHASE_SET),
-                context.getAttributeAsDouble(SUBCLONAL_LIKELIHOOD_FLAG, 0),
-                fields);
+                context.getAttributeAsDouble(SUBCLONAL_LIKELIHOOD_FLAG, 0));
 
         variant.addVAllValues(fields);
         return variant;
@@ -155,7 +152,7 @@ public class SomaticVariantData extends VariantData
         int qual = 0;
         Set<String> filters = Sets.newHashSet();
         double variantCopyNumber = 0;
-        double purityAdjustedVaf = 0;
+        double alleleFrequency = 0;
         int tumorSupportingReadCount = 0;
         int tumorTotalReadCount = 0;
         boolean biallelic = false;
@@ -169,8 +166,8 @@ public class SomaticVariantData extends VariantData
                 reported = Boolean.parseBoolean(truthsetValue.Value);
             else if(truthsetValue.FieldName.equals(FLD_GENE))
                 gene = truthsetValue.Value;
-            else if(truthsetValue.FieldName.equals(FLD_PURITY_ADJUSTED_VAF))
-                purityAdjustedVaf = Double.parseDouble(truthsetValue.Value);
+            else if(truthsetValue.FieldName.equals(FLD_AF))
+                alleleFrequency = Double.parseDouble(truthsetValue.Value);
             else if(truthsetValue.FieldName.equals(FLD_VARIANT_COPY_NUMBER))
                 variantCopyNumber = Double.parseDouble(truthsetValue.Value);
             else if(truthsetValue.FieldName.equals(FLD_CANON_EFFECT))
@@ -188,8 +185,8 @@ public class SomaticVariantData extends VariantData
         SomaticVariantData variant = new SomaticVariantData(
                 chromosome, position, ref, alt, type, gene, reported, hotspotStatus, tier,
                 canonicalEffect, canonicalCodingEffect, canonicalHgvsCodingImpact, canonicalHgvsProteinImpact, otherReportedEffects,
-                qual, filters, variantCopyNumber, purityAdjustedVaf, tumorSupportingReadCount, tumorTotalReadCount,
-                false, biallelic, biallelicProb, hasLPS, subclonalLikelihood, fields);
+                qual, filters, variantCopyNumber, alleleFrequency, tumorSupportingReadCount, tumorTotalReadCount,
+                false, biallelic, biallelicProb, hasLPS, subclonalLikelihood);
 
         variant.addTruthsetValues(truthsetValues, fields);
 
@@ -205,8 +202,8 @@ public class SomaticVariantData extends VariantData
                 addBoolValue(FLD_REPORTED, Reported, fields);
             else if(truthsetValue.FieldName.equals(FLD_GENE))
                 addStringValue(FLD_GENE, Gene, fields);
-            else if(truthsetValue.FieldName.equals(FLD_PURITY_ADJUSTED_VAF))
-                addDoubleValue(FLD_PURITY_ADJUSTED_VAF, PurityAdjustedVaf, fields);
+            else if(truthsetValue.FieldName.equals(FLD_AF))
+                addDoubleValue(FLD_AF, AlleleFrequency, fields);
             else if(truthsetValue.FieldName.equals(FLD_VARIANT_COPY_NUMBER))
                 addDoubleValue(FLD_VARIANT_COPY_NUMBER, VariantCopyNumber, fields);
             else if(truthsetValue.FieldName.equals(FLD_CANON_EFFECT))
