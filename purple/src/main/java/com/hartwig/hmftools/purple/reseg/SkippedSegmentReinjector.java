@@ -18,7 +18,14 @@ public final class SkippedSegmentReinjector
     public static List<ObservedRegion> reinjectSkippedRegions(final List<ObservedRegion> resegmentedRegions, final Supersegment supersegment)
     {
         if(supersegment.SkippableMembers.isEmpty())
-            return resegmentedRegions;
+        {
+            if(resegmentedRegions.size() != 1)
+            {
+                return resegmentedRegions;
+            }
+
+            return List.of(formBlendedRegion(supersegment.BothNoneMembers, resegmentedRegions.get(0)));
+        }
 
         List<ObservedRegion> result = Lists.newArrayList();
 

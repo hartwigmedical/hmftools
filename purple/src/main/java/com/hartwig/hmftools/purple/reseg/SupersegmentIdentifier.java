@@ -3,6 +3,7 @@ package com.hartwig.hmftools.purple.reseg;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.purple.SegmentSupport;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
@@ -71,8 +72,8 @@ public final class SupersegmentIdentifier
                 newSuperSegment[i + 1] = false;
         }
 
-        List<Supersegment> supersegments = new ArrayList<>();
-        List<ObservedRegion> excludedSegments = new ArrayList<>();
+        List<Supersegment> supersegments = Lists.newArrayList();
+        List<ObservedRegion> excludedSegments = Lists.newArrayList();
 
         List<ObservedRegion> currentBothNone = null;
         List<ObservedRegion> currentSkippable = null;
@@ -86,8 +87,8 @@ public final class SupersegmentIdentifier
                 if(currentBothNone != null)
                     supersegments.add(new Supersegment(supersegments.size(), currentBothNone, currentSkippable));
 
-                currentBothNone = new ArrayList<>();
-                currentSkippable = new ArrayList<>();
+                currentBothNone = Lists.newArrayList();
+                currentSkippable = Lists.newArrayList();
             }
 
             if(bothNone[i])
