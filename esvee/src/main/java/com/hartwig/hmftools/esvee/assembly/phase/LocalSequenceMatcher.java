@@ -39,7 +39,7 @@ public class LocalSequenceMatcher
 
         int chromosomeEnd = mRefGenome.getChromosomeLength(assembly.junction().Chromosome);
 
-        if(localRegionEnd >= chromosomeEnd)
+        if(localRegionStart < 1 || localRegionEnd >= chromosomeEnd)
             return null;
 
         byte[] refGenomeBases = mRefGenome.getBases(assembly.junction().Chromosome, localRegionStart, localRegionEnd);
