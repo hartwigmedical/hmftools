@@ -182,6 +182,9 @@ public class SomaticVariantData extends VariantData
                 tumorSupportingReadCount = Integer.parseInt(truthsetValue.Value);
         }
 
+        if(!canonicalHgvsProteinImpact.isEmpty())
+            canonicalHgvsProteinImpact = checkConvertAminoAcids(canonicalHgvsProteinImpact);
+
         SomaticVariantData variant = new SomaticVariantData(
                 chromosome, position, ref, alt, type, gene, reported, hotspotStatus, tier,
                 canonicalEffect, canonicalCodingEffect, canonicalHgvsCodingImpact, canonicalHgvsProteinImpact, otherReportedEffects,

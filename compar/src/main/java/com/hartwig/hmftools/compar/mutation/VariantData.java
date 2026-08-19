@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.compar.mutation;
 
+import static com.hartwig.hmftools.common.codon.AminoAcids.TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER;
+import static com.hartwig.hmftools.common.codon.HgvsCommon.HGVS_STOP_TRI_CODE;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS_FILTER;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
@@ -228,7 +230,7 @@ public class VariantData extends ComparableItem
         fields.add(new FieldInfo(FLD_FILTER, getOrMakeFieldCheck(fieldCheckMap, FLD_FILTER), null));
     }
 
-    public static SimpleVariant fromTruthsetKey(final String key)
+    protected static SimpleVariant fromTruthsetKey(final String key)
     {
         try
         {
@@ -240,5 +242,47 @@ public class VariantData extends ComparableItem
             CMP_LOGGER.error("invalid variant key({})", key);
             return null;
         }
+    }
+
+    protected static String checkConvertAminoAcids(final String hgvsProtein)
+    {
+        // a convenience for truthset variants using single-letter amino acids
+        StringBuilder sb = new StringBuilder();
+
+        for(int i = 0; i < hgvsProtein.length(); ++i)
+        {
+            char c = hgvsProtein.charAt(i);
+            String cStr = String.valueOf(c);
+
+            // check if the character matches a known single-letter AA
+            String longAA = TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER.entrySet().stream()
+                    .filter(x -> x.getValue().equals(cStr)).map(x -> x.getKey()).findFirst().orElse(null);
+
+            if(longAA == null)
+            {
+                sb.append(c);
+                continue;
+            }
+
+            // check if the 3-letter sequence matches a known 3-letter AA
+            if(i <= hgvsProtein.length() - 3)
+            {
+                String existingLongAA = hgvsProtein.substring(i, i + 3);
+
+                if(existingLongAA.equals(longAA)
+                || TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER.containsKey(existingLongAA)
+                || existingLongAA.equals(HGVS_STOP_TRI_CODE))
+                {
+                    sb.append(existingLongAA);
+                    i += 2;
+                    continue;
+                }
+            }
+
+            // if not, use the 3-letter AA`
+            sb.append(longAA);
+        }
+
+        return sb.toString();
     }
 }
