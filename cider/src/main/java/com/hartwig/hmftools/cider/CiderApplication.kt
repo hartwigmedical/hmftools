@@ -19,9 +19,11 @@ import com.hartwig.hmftools.common.genome.region.GenomeRegions
 import com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder
 import com.hartwig.hmftools.common.utils.config.ConfigUtils
+import com.hartwig.hmftools.common.utils.config.VersionInfo
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils
 import htsjdk.samtools.SAMFileHeader
 import htsjdk.samtools.SAMFileWriterFactory
+import htsjdk.samtools.SAMProgramRecord
 import htsjdk.samtools.SAMRecord
 import htsjdk.samtools.SamReaderFactory
 import htsjdk.samtools.cram.ref.ReferenceSource
@@ -227,6 +229,13 @@ class CiderApplication(configBuilder: ConfigBuilder)
         val readerFactory = readerFactory(mParams)
         var samFileHeader: SAMFileHeader
         readerFactory.open(File(mParams.bamPath)).use { samReader -> samFileHeader = samReader.fileHeader }
+
+        // stamp header so this BAM is identifiable as Cider output
+        val ciderProgramRecord = SAMProgramRecord("cider")
+        ciderProgramRecord.programName = "Cider"
+        ciderProgramRecord.programVersion = VersionInfo.fromAppName("Cider").version()
+        samFileHeader.addProgramRecord(ciderProgramRecord)
+
         SAMFileWriterFactory().makeBAMWriter(
             samFileHeader, false, File(outBamPath)
         ).use { bamFileWriter ->
