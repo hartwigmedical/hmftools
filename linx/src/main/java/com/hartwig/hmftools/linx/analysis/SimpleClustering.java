@@ -831,7 +831,7 @@ public class SimpleClustering implements CohortFileInterface
         if(type == DEL)
             return length > mState.getDelCutoffLength();
         else if(type == DUP)
-            return length > mState.getDelCutoffLength();
+            return length > mState.getDupCutoffLength();
         else
             return false;
     }
