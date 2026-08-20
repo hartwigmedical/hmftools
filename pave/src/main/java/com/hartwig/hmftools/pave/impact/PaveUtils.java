@@ -103,7 +103,7 @@ public final class PaveUtils
         // if MH = ins/del sequence and MH = N*repeatSeq, then extend to the end of the repeat ( -N repeat sequences for the del case),
         // where N = any multiple of the repeat sequence
 
-        String altBases = variant.isDeletion() ? altBases = variant.Ref.substring(1) : variant.Alt.substring(1);
+        String altBases = variant.isDeletion() ? variant.Ref.substring(1) : variant.Alt.substring(1);
 
         int mcLength = variant.microhomology().length();
 
