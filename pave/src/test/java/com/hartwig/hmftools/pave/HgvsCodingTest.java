@@ -252,6 +252,86 @@ public class HgvsCodingTest
         assertEquals("c.16-4_16-3dupAA", impact.codingContext().Hgvs);
     }
 
+    @Test
+    public void testRealignedCodingDuplication1()
+    {
+        // pos codons: M 20-22 (1-3) A 23-25 (4-6) E 26-28 (7-9) N 29-31 (10-12) L 32-34 (13-15) G 35-37 (16-18)
+        // amino acids:           M  A  E  N  L  G
+        // exon 1:                20        30
+        // position:              012345678901234567
+        // coding position:       123456789012345678
+        String refCodingBases1 = "ATGGCTGAAAACTTAGGC";
+
+        MockRefGenome refGenome = new MockRefGenome();
+
+        String refBases = generateTestBases(20) + refCodingBases1 + generateTestBases(30);
+        refGenome.RefGenomeMap.put(CHR_1, refBases);
+        ImpactClassifier classifier = new ImpactClassifier(refGenome);
+
+        TranscriptData posTrans = createTransExons(
+                GENE_ID_1, TRANS_ID_1, FusionCommon.POS_STRAND, new int[] { 10, 50 }, 24,
+                20, 64, false, "");
+
+        addGeneTranscript(posTrans);
+
+        // test 1: realignment for homopolymer expansion
+        int pos = 26;
+        String ref = refBases.substring(pos, pos + 1);
+        String alt = ref + "A";
+        VariantData var = new VariantData(CHR_1, pos, ref, alt);
+
+        var.setVariantDetails(NO_LOCAL_PHASE_SET, "A", "A", 4);
+        var.setRealignedVariant(createRightAlignedVariant(var, refGenome));
+
+        PaveUtils.findVariantImpacts(var, classifier, GENE_DATA_CACHE, null);
+
+        assertTrue(var.getImpacts().containsKey(GENE_NAME_1));
+        VariantTransImpact impact = var.getImpacts().get(GENE_NAME_1).get(0);
+
+        assertEquals(FRAMESHIFT, impact.topEffect());
+        assertEquals("c.11dupA", impact.codingContext().Hgvs);
+    }
+
+    @Test
+    public void testRealignedCodingDuplication2()
+    {
+        // pos codons: M 20-22 (1-3) A 23-25 (4-6) E 26-28 (7-9) E 29-31 (10-12) E 32-34 (13-15) N 35-37 (16-18)
+        // amino acids:           M  A  E  E  E  N  L  G
+        // exon 1:                20        30
+        // position:              012345678901234567
+        // coding position:       123456789012345678
+        String refCodingBases1 = "ATGGCTGAAGAAGAACTT";
+
+        MockRefGenome refGenome = new MockRefGenome();
+
+        String refBases = generateTestBases(20) + refCodingBases1 + generateTestBases(30);
+        refGenome.RefGenomeMap.put(CHR_1, refBases);
+        ImpactClassifier classifier = new ImpactClassifier(refGenome);
+
+        TranscriptData posTrans = createTransExons(
+                GENE_ID_1, TRANS_ID_1, FusionCommon.POS_STRAND, new int[] { 10, 50 }, 34,
+                20, 64, false, "");
+
+        addGeneTranscript(posTrans);
+
+        // test 1: realignment for homopolymer expansion
+        int pos = 25;
+        String ref = refBases.substring(pos, pos + 1);
+        String alt = ref + "GAA";
+        VariantData var = new VariantData(CHR_1, pos, ref, alt);
+
+        var.setVariantDetails(NO_LOCAL_PHASE_SET, "GAA", "GAA", 3);
+        var.setRealignedVariant(createRightAlignedVariant(var, refGenome));
+
+        PaveUtils.findVariantImpacts(var, classifier, GENE_DATA_CACHE, null);
+
+        assertTrue(var.getImpacts().containsKey(GENE_NAME_1));
+        VariantTransImpact impact = var.getImpacts().get(GENE_NAME_1).get(0);
+
+        assertEquals(INFRAME_INSERTION, impact.topEffect());
+        assertEquals("c.13_15dupGAA", impact.codingContext().Hgvs);
+    }
+
     private void addGeneTranscript(final TranscriptData transcriptData)
     {
         GeneData geneData = createEnsemblGeneData(
@@ -498,7 +578,6 @@ public class HgvsCodingTest
         assertEquals("p.Ala4_Asp5dup", impact.proteinContext().Hgvs);
     }
 
-    @Ignore
     @Test
     public void testRightAlignmentOfCodingOfFrameshiftDuplication()
     {
@@ -506,6 +585,7 @@ public class HgvsCodingTest
         // amino acids:           M   A   D   M   A   S   Q
         // exon 1:                20           30
         // position:              012 345 678 901 234 567 890
+        // coding base:           123 456 789 012 345 678 901
         String refCodingBases1 = "ATG GCT GAT ATG GCC TCG CAG".replace(" ", "");
         String intronicBases = "TTTTGGGGCCCCAAA"; // same as previous test
         String refCodingBases2 = "TTAGGACACGAGTAA"; // ditto
@@ -529,15 +609,14 @@ public class HgvsCodingTest
         var.setVariantDetails(NO_LOCAL_PHASE_SET, altBases, altBases, 1);
 
         VariantTransImpact impact = classifier.classifyVariant(var, posTrans);
-        assertEquals(INFRAME_INSERTION, impact.topEffect());
+        assertEquals(FRAMESHIFT, impact.topEffect());
 
         // ATG GCT GAT A[TG GCC] TCG CAG -> ATG GCT GAT A[TG GCC TG GCC] TCG CAG = ATG GCT GAT AT[G GCC TG GCC T]CG CAG
-        assertEquals("c.9_14dupGCTGAT", impact.codingContext().Hgvs);
+        assertEquals("c.11_15dupTGGCC", impact.codingContext().Hgvs);
         // new AA seq is M A D M A W P
-        assertEquals("p.Trp6fs", impact.proteinContext().Hgvs);
+        assertEquals("p.Ser6fs", impact.proteinContext().Hgvs);
     }
 
-    @Ignore
     @Test
     public void testRightAlignmentOfCodingOfFrameshiftDeletion()
     {
