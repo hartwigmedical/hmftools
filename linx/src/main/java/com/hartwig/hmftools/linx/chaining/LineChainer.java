@@ -68,7 +68,7 @@ public class LineChainer implements CohortFileInterface
         mSourceChromosomes = Sets.newHashSet();
     }
 
-    public final List<SvChain> getChains() { return mChains; }
+    public List<SvChain> getChains() { return mChains; }
 
     public void enableLogging() { mLoggingEnabled = true; }
 
@@ -97,13 +97,13 @@ public class LineChainer implements CohortFileInterface
         // in many cases the source elements will have already formed into assembled links to the insertion site
         // and these should be removed from consideration and stored in independent chains
 
-        final List<SvVarData> sglMapped = Lists.newArrayList();
+        List<SvVarData> sglMapped = Lists.newArrayList();
 
         for(SvVarData var : mSvList)
         {
             for(int se = SE_START; se <= SE_END; ++se)
             {
-                final SvBreakend breakend = var.getBreakend(se);
+                SvBreakend breakend = var.getBreakend(se);
 
                 if(breakend == null)
                 {
@@ -153,7 +153,7 @@ public class LineChainer implements CohortFileInterface
 
         for(int se = SE_START; se <= SE_END; ++se)
         {
-            final SvBreakend breakend = pair.getBreakend(se);
+            SvBreakend breakend = pair.getBreakend(se);
             if(breakend.getSV().isSglBreakend() && !breakend.usesStart())
             {
                 breakend.getSV().setSglEndBreakend(breakend);
@@ -196,7 +196,7 @@ public class LineChainer implements CohortFileInterface
         // breakends going to insertion sites, or the new linked pair joins 2 chains with their other ends going similarly
         while(true)
         {
-            final List<LinkedPair> possiblePairs = Lists.newArrayList();
+            List<LinkedPair> possiblePairs = Lists.newArrayList();
             LinkedPair shortestPair = null;
 
             for(int i = 0; i < mSourceBreakends.size(); ++i)
@@ -277,8 +277,8 @@ public class LineChainer implements CohortFileInterface
             return null;
 
         // the other ends of these breakends must either go to the same insertion location or be part of chains which do the same
-        final SvBreakend otherBreakend1 = getOtherBreakend(breakend1);
-        final SvBreakend otherBreakend2 = getOtherBreakend(breakend2);
+        SvBreakend otherBreakend1 = getOtherBreakend(breakend1);
+        SvBreakend otherBreakend2 = getOtherBreakend(breakend2);
 
         if(otherBreakend1 == null || otherBreakend2 == null)
             return null;
@@ -308,27 +308,27 @@ public class LineChainer implements CohortFileInterface
 
     private void addSglMappings(final List<SvVarData> sglMapped)
     {
-        final Set<SvVarData> sglCandidates = Sets.newHashSet();
+        Set<SvVarData> sglCandidates = Sets.newHashSet();
 
         if(mSourceBreakends.isEmpty())
         {
             for(int i = 0; i < sglMapped.size(); ++i)
             {
-                final SvVarData sgl1 = sglMapped.get(i);
+                SvVarData sgl1 = sglMapped.get(i);
 
                 if(sglCandidates.contains(sgl1))
                     continue;
 
                 for(int j = i+1; j < sglMapped.size(); ++j)
                 {
-                    final SvVarData sgl2 = sglMapped.get(j);
+                    SvVarData sgl2 = sglMapped.get(j);
 
                     if(sglCandidates.contains(sgl2))
                         continue;
 
-                    for(final SglMapping mapping1 : sgl1.getSglMappings())
+                    for(SglMapping mapping1 : sgl1.getSglMappings())
                     {
-                        final SglMapping mapping2 = sgl2.getSglMappings().stream()
+                        SglMapping mapping2 = sgl2.getSglMappings().stream()
                                 .filter(x -> x.possibleLink(mapping1)).findFirst().orElse(null);
 
                         if(mapping2 != null)
@@ -357,7 +357,7 @@ public class LineChainer implements CohortFileInterface
                 {
                     int minDistance = max(breakend.anchorDistance() - breakend.homology().length(), MIN_TEMPLATED_INSERTION_LENGTH);
 
-                    for(final SglMapping mapping : sgl.getSglMappings())
+                    for(SglMapping mapping : sgl.getSglMappings())
                     {
                         if(isPossibleLink(mapping.Chromosome, mapping.Position, mapping.Orientation,
                                 breakend.chromosome(), breakend.position(), breakend.orientation(), minDistance))
@@ -411,33 +411,33 @@ public class LineChainer implements CohortFileInterface
 
         List<String> outputLines = Lists.newArrayList();
 
-        for(final SvChain chain : mChains)
+        for(SvChain chain : mChains)
         {
-            final int[] typeCounts = new int[StructuralVariantType.values().length];
+            int[] typeCounts = new int[StructuralVariantType.values().length];
 
-            for(final SvVarData var : chain.getSvList())
+            for(SvVarData var : chain.getSvList())
             {
                 ++typeCounts[typeAsInt(var.type())];
             }
 
-            final SvBreakend chainStart = chain.getOpenBreakend(true);
-            final SvBreakend chainEnd = chain.getOpenBreakend(false);
-            final LinkedPair firstLink = chain.getLinkedPairs().get(0);
-            final LinkedPair lastLink = chain.getLinkedPairs().get(chain.getLinkedPairs().size() - 1);
+            SvBreakend chainStart = chain.getOpenBreakend(true);
+            SvBreakend chainEnd = chain.getOpenBreakend(false);
+            LinkedPair firstLink = chain.getLinkedPairs().get(0);
+            LinkedPair lastLink = chain.getLinkedPairs().get(chain.getLinkedPairs().size() - 1);
 
             int chainSvCount = chain.getSvCount();
-            final int[] sourcePositions = { -1, -1 };
-            final byte[] sourceOrients = { 0, 0 };
+            int[] sourcePositions = { -1, -1 };
+            byte[] sourceOrients = { 0, 0 };
             int lowerSourceIndex = 0;
             int lowerInsertIndex = 0;
             int[] insertPositions = { -1, -1 };
             String insertChr = "0";
-            final int[] invPositions = { -1, -1 };
+            int[] invPositions = { -1, -1 };
             byte invOrient = 0;
 
             chain.getSvList().stream().forEach(x -> mLoggedSVs.add(x));
 
-            final SvVarData inv = chain.getSvList().stream()
+            SvVarData inv = chain.getSvList().stream()
                     .filter(x -> x.type() == INV)
                     .filter(x -> x.inLineElement())
                     .findFirst().orElse(null);
@@ -480,9 +480,9 @@ public class LineChainer implements CohortFileInterface
             // check for an unmapped SGL or INF in a DB at the insertion site
             if(insertPositions[1] < 0 && insertPositions[0] > 0 && chainStart.getDBLink() != null)
             {
-                final DbPair dbPair = chainStart.getDBLink();
-                final SvBreakend otherBreakend = dbPair.getOtherBreakend(chainStart);
-                final SvVarData otherSV = otherBreakend.getSV();
+                DbPair dbPair = chainStart.getDBLink();
+                SvBreakend otherBreakend = dbPair.getOtherBreakend(chainStart);
+                SvVarData otherSV = otherBreakend.getSV();
                 if(dbPair.length() <= MIN_DEL_LENGTH &&
                         mSvList.contains(otherSV) && !chain.getSvList().contains(otherSV))
                 {
@@ -494,9 +494,9 @@ public class LineChainer implements CohortFileInterface
             }
             else if(insertPositions[0] < 0 && insertPositions[1] > 0 && chainEnd.getDBLink() != null)
             {
-                final DbPair dbPair = chainEnd.getDBLink();
-                final SvBreakend otherBreakend = dbPair.getOtherBreakend(chainEnd);
-                final SvVarData otherSV = otherBreakend.getSV();
+                DbPair dbPair = chainEnd.getDBLink();
+                SvBreakend otherBreakend = dbPair.getOtherBreakend(chainEnd);
+                SvVarData otherSV = otherBreakend.getSV();
                 if(dbPair.length() <= MIN_DEL_LENGTH && mSvList.contains(otherSV) && !chain.getSvList().contains(otherSV))
                 {
                     insertPositions[0] = otherBreakend.position();
@@ -542,26 +542,26 @@ public class LineChainer implements CohortFileInterface
         if(!mLoggingEnabled || mCohortDataWriter == null)
             return;
 
-        final List<SvVarData> unchainedSVs = mSvList.stream().filter(x -> !mLoggedSVs.contains(x)).collect(Collectors.toList());
+        List<SvVarData> unchainedSVs = mSvList.stream().filter(x -> !mLoggedSVs.contains(x)).collect(Collectors.toList());
 
         int nonChainId = mChains.size();
 
         List<String> outputLines = Lists.newArrayList();
 
-        for(final SvVarData var : unchainedSVs)
+        for(SvVarData var : unchainedSVs)
         {
             if(mLoggedSVs.contains(var))
                 continue;
 
-            final int[] typeCounts = new int[StructuralVariantType.values().length];
+            int[] typeCounts = new int[StructuralVariantType.values().length];
             ++typeCounts[typeAsInt(var.type())];
 
             String sourceChr = "";
-            final int[] sourcePositions = { -1, -1 };
+            int[] sourcePositions = { -1, -1 };
             int lowerSourceIndex = 0;
             int lowerInsertIndex = 0;
-            final int[] insertPositions = { -1, -1 };
-            final int[] invPositions = { -1, -1 };
+            int[] insertPositions = { -1, -1 };
+            int[] invPositions = { -1, -1 };
             byte invOrient = 0;
             String insertChr = "0";
             byte[] sourceOrient = {0, 0};
@@ -569,7 +569,7 @@ public class LineChainer implements CohortFileInterface
 
             for(int se = SE_START; se <= SE_END; ++se)
             {
-                final SvBreakend breakend = var.getBreakend(se);
+                SvBreakend breakend = var.getBreakend(se);
                 if(breakend == null)
                     continue;
 
@@ -596,14 +596,14 @@ public class LineChainer implements CohortFileInterface
                     // typically SGL=2, BND=1_SGL=1, BND=2 (diff orients) or BND=1_INV=1_SGL=1
                     if(breakend.getDBLink() != null)
                     {
-                        final DbPair dbPair = breakend.getDBLink();
-                        final SvBreakend otherBreakend = dbPair.getOtherBreakend(breakend);
-                        final SvVarData otherSV = otherBreakend.getSV();
+                        DbPair dbPair = breakend.getDBLink();
+                        SvBreakend otherBreakend = dbPair.getOtherBreakend(breakend);
+                        SvVarData otherSV = otherBreakend.getSV();
                         if(dbPair.length() <= MIN_DEL_LENGTH && mSvList.contains(otherSV) && !mLoggedSVs.contains(otherSV))
                         {
                             // check for a matching source line element
-                            final SvBreakend firstOtherBreakend = breakend.getOtherBreakend();
-                            final SvBreakend secondOtherBreakend = otherBreakend.getOtherBreakend();
+                            SvBreakend firstOtherBreakend = breakend.getOtherBreakend();
+                            SvBreakend secondOtherBreakend = otherBreakend.getOtherBreakend();
 
                             boolean isValidPairing = (firstOtherBreakend == null || secondOtherBreakend == null)
                                     || (firstOtherBreakend.inLineElement() && secondOtherBreakend.inLineElement()

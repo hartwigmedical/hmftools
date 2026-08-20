@@ -122,7 +122,7 @@ public class DriverGeneAnnotator implements CohortFileInterface
             if(!driverTypeHandled(driverGene))
                 continue;
 
-            final GeneData geneData = mGeneTransCache.getGeneDataByName(driverGene.gene());
+            GeneData geneData = mGeneTransCache.getGeneDataByName(driverGene.gene());
 
             if(geneData == null)
             {
@@ -130,7 +130,7 @@ public class DriverGeneAnnotator implements CohortFileInterface
                 continue;
             }
 
-            final TranscriptData transcriptData = mGeneTransCache.getTranscriptData(geneData.GeneId, driverGene.transcript());
+            TranscriptData transcriptData = mGeneTransCache.getTranscriptData(geneData.GeneId, driverGene.transcript());
 
             if(transcriptData == null)
             {
@@ -170,14 +170,14 @@ public class DriverGeneAnnotator implements CohortFileInterface
             }
             else if(driverGene.driver() == DriverType.AMP || driverGene.driver() == PARTIAL_AMP)
             {
-                final List<SvBreakend> breakendList = mChrBreakendMap.get(dgData.GeneInfo.Chromosome);
+                List<SvBreakend> breakendList = mChrBreakendMap.get(dgData.GeneInfo.Chromosome);
                 mAmpDrivers.annotateAmplification(dgData, breakendList);
             }
 
             writeDriverData(dgData);
         }
 
-        final List<DriverGeneData> disDelDrivers = mDelDrivers.findDisruptiveDelDrivers(mChrBreakendMap);
+        List<DriverGeneData> disDelDrivers = mDelDrivers.findDisruptiveDelDrivers(mChrBreakendMap);
         disDelDrivers.forEach(x -> writeDriverData(x));
 
         mChrBreakendMap = null;

@@ -39,7 +39,7 @@ public class ChainJcnLimits
         mChrBreakendMap = null;
     }
 
-    public final Map<String, List<SegmentJcn>> getChrAlleleJCNs() { return mChrAlleleJCNs; }
+    public Map<String, List<SegmentJcn>> getChrAlleleJCNs() { return mChrAlleleJCNs; }
     public double getValidAlleleJcnSegmentPerc() { return mValidAlleleJcnSegmentPerc; }
 
     public void initialise(int clusterId, final Map<String,List<SvBreakend>> chrBreakendMap)
@@ -54,16 +54,16 @@ public class ChainJcnLimits
     public static final int RANGE_TOTAL = 0;
     public static final int DELETED_TOTAL = 1;
 
-    public final long[] calcRangeData()
+    public long[] calcRangeData()
     {
         if(mChrAlleleJCNs.isEmpty())
             return null;
 
         long[] rangeData = {0, 0};
 
-        for(final List<SegmentJcn> segmentList : mChrAlleleJCNs.values())
+        for(List<SegmentJcn> segmentList : mChrAlleleJCNs.values())
         {
-            for(final SegmentJcn segment : segmentList)
+            for(SegmentJcn segment : segmentList)
             {
                 if(segment.clusterJcn() >= CLUSTER_ALLELE_JCN_MIN)
                     rangeData[RANGE_TOTAL] += segment.length();
@@ -80,10 +80,10 @@ public class ChainJcnLimits
         int totalSegCount = 0;
         int totalValidSegCount = 0;
 
-        for(final Map.Entry<String, List<SvBreakend>> entry : mChrBreakendMap.entrySet())
+        for(Map.Entry<String, List<SvBreakend>> entry : mChrBreakendMap.entrySet())
         {
-            final String chromosome = entry.getKey();
-            final List<SvBreakend> breakendList = entry.getValue();
+            String chromosome = entry.getKey();
+            List<SvBreakend> breakendList = entry.getValue();
             int breakendCount = breakendList.size();
 
             // a multi-dim array of breakend index for this arm to A allele JCN, B non-disrupted JCN, and cluster JCN
@@ -297,10 +297,10 @@ public class ChainJcnLimits
 
     public boolean linkHasJcnSupport(final LinkedPair pair, double jcn)
     {
-        final SvBreakend lowerBreakend = pair.getBreakend(true);
-        final SvBreakend upperBreakend = pair.getBreakend(false);
+        SvBreakend lowerBreakend = pair.getBreakend(true);
+        SvBreakend upperBreakend = pair.getBreakend(false);
 
-        final List<SegmentJcn> segments = mChrAlleleJCNs.get(pair.chromosome());
+        List<SegmentJcn> segments = mChrAlleleJCNs.get(pair.chromosome());
 
         if(segments == null || segments.isEmpty())
             return false;
@@ -309,7 +309,7 @@ public class ChainJcnLimits
 
         for(int i = startIndex + 1; i < upperBreakend.getClusterChrPosIndex(); ++i)
         {
-            final SegmentJcn segment = segments.get(i);
+            SegmentJcn segment = segments.get(i);
 
             if(!segment.isValid())
                 continue;
@@ -325,10 +325,10 @@ public class ChainJcnLimits
 
     public void assignLinkJcn(final LinkedPair pair, double jcn)
     {
-        final SvBreakend lowerBreakend = pair.getBreakend(true);
-        final SvBreakend upperBreakend = pair.getBreakend(false);
+        SvBreakend lowerBreakend = pair.getBreakend(true);
+        SvBreakend upperBreakend = pair.getBreakend(false);
 
-        final List<SegmentJcn> segments = mChrAlleleJCNs.get(pair.chromosome());
+        List<SegmentJcn> segments = mChrAlleleJCNs.get(pair.chromosome());
 
         if(segments == null || segments.isEmpty())
             return;

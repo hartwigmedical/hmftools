@@ -140,8 +140,8 @@ public class ComplexClustering
     private boolean canMergeClustersOnFoldbacks(final SvCluster cluster1, final SvCluster cluster2)
     {
         // merge any clusters with foldbacks on the same arm
-        final List<SvVarData> cluster1Foldbacks = cluster1.getFoldbacks();
-        final List<SvVarData> cluster2Foldbacks = cluster2.getFoldbacks();
+        List<SvVarData> cluster1Foldbacks = cluster1.getFoldbacks();
+        List<SvVarData> cluster2Foldbacks = cluster2.getFoldbacks();
 
         if(cluster1Foldbacks.isEmpty() && cluster2Foldbacks.isEmpty())
             return false;
@@ -202,8 +202,8 @@ public class ComplexClustering
         cluster1.setArmLinks();
         cluster2.setArmLinks();
 
-        final List<SvVarData> crossArmList1 = cluster1.getUnlinkedRemoteSVs();
-        final List<SvVarData> crossArmList2 = cluster2.getUnlinkedRemoteSVs();
+        List<SvVarData> crossArmList1 = cluster1.getUnlinkedRemoteSVs();
+        List<SvVarData> crossArmList2 = cluster2.getUnlinkedRemoteSVs();
 
         // now that the candidate arm groups have been established, just need to find a single BND
         // from each cluster that falls into the same par of arm groups
@@ -272,7 +272,7 @@ public class ComplexClustering
 
                 for(int i = 0; i < breakendList.size() - 1; ++i)
                 {
-                    final SvBreakend lowerBreakend = breakendList.get(i);
+                    SvBreakend lowerBreakend = breakendList.get(i);
                     SvBreakend upperBreakend = breakendList.get(i + 1);
 
                     if(lowerBreakend.arm() != upperBreakend.arm())
@@ -288,7 +288,7 @@ public class ComplexClustering
                         if(lowerBreakend.orientation() == upperBreakend.orientation())
                         {
                             // exclude this pair if the front breakend is a DB
-                            final SvBreakend frontBE = lowerBreakend.orientation() == 1 ? lowerBreakend : upperBreakend;
+                            SvBreakend frontBE = lowerBreakend.orientation() == 1 ? lowerBreakend : upperBreakend;
 
                             if(frontBE.getDBLink() != null && frontBE.getDBLink().length() < 0)
                                 continue;
@@ -301,7 +301,7 @@ public class ComplexClustering
                                 continue;
 
                             // include this pair if the back breakend is consecutive but masked by a DB
-                            final SvBreakend backBE = lowerBreakend.orientation() == -1 ? lowerBreakend : upperBreakend;
+                            SvBreakend backBE = lowerBreakend.orientation() == -1 ? lowerBreakend : upperBreakend;
 
                             if(backBE.getDBLink() != null && backBE.getDBLink().length() < 0)
                             {
@@ -328,8 +328,8 @@ public class ComplexClustering
 
                     for(int j = chrIndexLower + 1; j <= chrIndexUpper - 1; ++j)
                     {
-                        final SvBreakend breakend = fullBreakendList.get(j);
-                        final SvCluster otherCluster = breakend.getCluster();
+                        SvBreakend breakend = fullBreakendList.get(j);
+                        SvCluster otherCluster = breakend.getCluster();
 
                         if(otherCluster.isResolved() || otherCluster == cluster)
                             continue;
@@ -341,7 +341,7 @@ public class ComplexClustering
                     if(unclusteredStraddledBreakends != 1)
                         continue;
 
-                    final SvCluster otherCluster = otherBreakend.getCluster();
+                    SvCluster otherCluster = otherBreakend.getCluster();
 
                     if(otherCluster == cluster || otherCluster.isResolved() || mergedClusters.contains(otherCluster))
                         continue;
@@ -357,7 +357,7 @@ public class ComplexClustering
                             cluster.id(), isFoldbackPair ? "foldback" : "consecutive",
                             lowerBreakend.toString(), upperBreakend.toString(), otherCluster.id(), otherBreakend.toString());
 
-                    final ClusteringReason reason = isFoldbackPair ? OVERLAP_FOLDBACKS : CONSEC_BREAKS;
+                    ClusteringReason reason = isFoldbackPair ? OVERLAP_FOLDBACKS : CONSEC_BREAKS;
                     mSimpleClustering.addClusterReasons(otherBreakend.getSV(), lowerBreakend.getSV(), reason);
 
                     otherCluster.addClusterReason(reason);
@@ -440,7 +440,7 @@ public class ComplexClustering
                         if(index < 0 || index >= fullBreakendList.size())
                             break;
 
-                        final SvBreakend nextBreakend = fullBreakendList.get(index);
+                        SvBreakend nextBreakend = fullBreakendList.get(index);
 
                         if(SimpleClustering.variantsHaveDifferentJcn(boundaryBreakend, nextBreakend))
                             continue;
@@ -448,7 +448,7 @@ public class ComplexClustering
                         if(abs(nextBreakend.position() - boundaryBreakend.position()) > MAX_MERGE_DISTANCE)
                             break;
 
-                        final SvCluster otherCluster = nextBreakend.getCluster();
+                        SvCluster otherCluster = nextBreakend.getCluster();
 
                         if(otherCluster == cluster || skipClusterType(otherCluster))
                             continue;
@@ -552,10 +552,10 @@ public class ComplexClustering
                 {
                     if(var.sglToSatelliteRepeats() && satelliteChrArms1.contains(makeChrArmStr(var.chromosome(true), var.arm(true))))
                     {
-                        final String chromosome = var.chromosome(true);
+                        String chromosome = var.chromosome(true);
 
                         // find the other linking SGL
-                        final SvVarData otherSV = srCluster.getSVs().stream()
+                        SvVarData otherSV = srCluster.getSVs().stream()
                                 .filter(x -> x.sglToSatelliteRepeats() && x.chromosome(true).equals(chromosome))
                                 .findFirst().get();
 

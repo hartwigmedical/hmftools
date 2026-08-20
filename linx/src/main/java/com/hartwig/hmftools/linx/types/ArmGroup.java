@@ -36,10 +36,10 @@ public class ArmGroup
         mEndPos = -1;
     }
 
-    public final String id() { return mId; }
+    public String id() { return mId; }
 
-    public final String chromosome() { return mChromosome; }
-    public final Arm arm() { return mArm; }
+    public String chromosome() { return mChromosome; }
+    public Arm arm() { return mArm; }
     public int posStart() { return mStartPos; }
     public int posEnd() { return mEndPos; }
 
@@ -63,7 +63,7 @@ public class ArmGroup
             int index = 0;
             while(index < mBreakends.size())
             {
-                final SvBreakend otherBreakend = mBreakends.get(index);
+                SvBreakend otherBreakend = mBreakends.get(index);
 
                 if(breakend.position() < otherBreakend.position())
                     break;

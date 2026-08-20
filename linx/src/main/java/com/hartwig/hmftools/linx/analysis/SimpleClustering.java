@@ -84,12 +84,12 @@ public class SimpleClustering implements CohortFileInterface
         // walk through each chromosome and breakend list
         for(Map.Entry<String, List<SvBreakend>> entry : mState.getChrBreakendMap().entrySet())
         {
-            final List<SvBreakend> breakendList = entry.getValue();
+            List<SvBreakend> breakendList = entry.getValue();
 
             int currentIndex = 0;
             while (currentIndex < breakendList.size())
             {
-                final SvBreakend breakend = breakendList.get(currentIndex);
+                SvBreakend breakend = breakendList.get(currentIndex);
                 SvVarData var = breakend.getSV();
 
                 SvBreakend nextBreakend = null;
@@ -97,7 +97,7 @@ public class SimpleClustering implements CohortFileInterface
 
                 for(; nextIndex < breakendList.size(); ++nextIndex)
                 {
-                    final SvBreakend nextBe = breakendList.get(nextIndex);
+                    SvBreakend nextBe = breakendList.get(nextIndex);
                     nextBreakend = nextBe;
                     break;
                 }
@@ -485,12 +485,12 @@ public class SimpleClustering implements CohortFileInterface
                 int i = 0;
                 while(i < unclusteredBreakends.size())
                 {
-                    final SvBreakend be1 = unclusteredBreakends.get(i);
+                    SvBreakend be1 = unclusteredBreakends.get(i);
 
                     boolean found = false;
                     for(int j = i+1; j < unclusteredBreakends.size(); ++j)
                     {
-                        final SvBreakend be2 = unclusteredBreakends.get(j);
+                        SvBreakend be2 = unclusteredBreakends.get(j);
 
                         if(be1.getCluster() == be2.getCluster())
                         {
@@ -606,7 +606,7 @@ public class SimpleClustering implements CohortFileInterface
         }
     }
 
-    private boolean mergeOnOverlappingInvDupDels(List<SvCluster> clusters, boolean allowDelDupOverlaps)
+    private boolean mergeOnOverlappingInvDupDels(final List<SvCluster> clusters, boolean allowDelDupOverlaps)
     {
         // merge any clusters with overlapping inversions, long dels or long dups on the same arm
         List<SvCluster> longDDIClusters = clusters.stream()
@@ -658,7 +658,7 @@ public class SimpleClustering implements CohortFileInterface
 
                 for(SvVarData var1 : cluster1Svs)
                 {
-                    for(final SvVarData var2 : cluster2Svs)
+                    for(SvVarData var2 : cluster2Svs)
                     {
                         boolean pairContainsInv = var1.type() == INV || var2.type() == INV;
 
@@ -826,7 +826,7 @@ public class SimpleClustering implements CohortFileInterface
             return false;
     }
 
-    protected boolean exceedsDupDelCutoffLength(StructuralVariantType type, int length)
+    protected boolean exceedsDupDelCutoffLength(final StructuralVariantType type, int length)
     {
         if(type == DEL)
             return length > mState.getDelCutoffLength();
@@ -849,11 +849,11 @@ public class SimpleClustering implements CohortFileInterface
             if(se1 == SE_END && var1.isSglBreakend())
                 continue;
 
-            final SvBreakend breakend1 = var1.getBreakend(se1);
+            SvBreakend breakend1 = var1.getBreakend(se1);
 
             for(int se2 = SE_START; se2 <= SE_END; ++se2)
             {
-                final SvBreakend breakend2 = var2.getBreakend(se2);
+                SvBreakend breakend2 = var2.getBreakend(se2);
 
                 if(!breakend1.getChrArm().equals(breakend2.getChrArm()))
                     continue;
@@ -921,7 +921,7 @@ public class SimpleClustering implements CohortFileInterface
 
             boolean mergedOtherClusters = false;
 
-            for(final Map.Entry<String, List<SvBreakend>> entry : cluster.getChrBreakendMap().entrySet())
+            for(Map.Entry<String, List<SvBreakend>> entry : cluster.getChrBreakendMap().entrySet())
             {
                 List<SvBreakend> breakendList = entry.getValue();
 
@@ -1055,13 +1055,13 @@ public class SimpleClustering implements CohortFileInterface
     {
         // merge any facing breakends whose JCNs exceed the threshold, regardless of distance, as long as the region in between
         // has continuous major allele copy number at or above this same threshold
-        final List<SvCluster> mergedClusters = Lists.newArrayList();
+        List<SvCluster> mergedClusters = Lists.newArrayList();
 
         for(Map.Entry<String, List<SvBreakend>> entry : mState.getChrBreakendMap().entrySet())
         {
-            final List<SvBreakend> breakendList = entry.getValue();
+            List<SvBreakend> breakendList = entry.getValue();
 
-            for(final SvBreakend breakend : breakendList)
+            for(SvBreakend breakend : breakendList)
             {
                 if(breakend.orientation() == ORIENT_FWD)
                     continue;
@@ -1080,7 +1080,7 @@ public class SimpleClustering implements CohortFileInterface
                 // now look for from here through a region of sustained high major allele CN until a facing breakend is reached
                 for(int index = breakend.getChrPosIndex() + 1; index < breakendList.size(); ++index)
                 {
-                    final SvBreakend nextBreakend = breakendList.get(index);
+                    SvBreakend nextBreakend = breakendList.get(index);
 
                     if(nextBreakend.orientation() == ORIENT_REV)
                         continue;
@@ -1279,13 +1279,13 @@ public class SimpleClustering implements CohortFileInterface
     public boolean validateClustering(final List<SvCluster> clusters)
     {
         // validation that every SV was put into a cluster
-        for(final Map.Entry<String, List<SvBreakend>> entry : mState.getChrBreakendMap().entrySet())
+        for(Map.Entry<String, List<SvBreakend>> entry : mState.getChrBreakendMap().entrySet())
         {
-            final List<SvBreakend> breakendList = entry.getValue();
+            List<SvBreakend> breakendList = entry.getValue();
 
             for(int i = 0; i < breakendList.size(); ++i)
             {
-                final SvBreakend breakend = breakendList.get(i);
+                SvBreakend breakend = breakendList.get(i);
                 SvVarData var = breakend.getSV();
                 if(var.getCluster() == null)
                 {
@@ -1332,10 +1332,10 @@ public class SimpleClustering implements CohortFileInterface
     {
         for(int i = 0; i < clusters.size(); ++i)
         {
-            final SvCluster cluster1 = clusters.get(i);
+            SvCluster cluster1 = clusters.get(i);
             for(int j = i + 1; j < clusters.size(); ++j)
             {
-                final SvCluster cluster2 = clusters.get(j);
+                SvCluster cluster2 = clusters.get(j);
 
                 if(cluster1 == cluster2 || cluster1.id() == cluster2.id())
                 {

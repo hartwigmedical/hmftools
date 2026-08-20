@@ -38,7 +38,7 @@ public class BfbFinder
         if(cluster.getFoldbacks().isEmpty() || cluster.getSvCount() == 1)
             return;
 
-        final List<SvVarData> candidateDMSVs = Lists.newArrayList();
+        List<SvVarData> candidateDMSVs = Lists.newArrayList();
 
         double clusterMaxJcn = 0; // the max of the JCN min values
 
@@ -104,7 +104,7 @@ public class BfbFinder
 
         for(ArmGroup armGroup : cluster.getArmGroups())
         {
-            final TelomereCentromereCnData tcData = mCnDataLoader.getChrTeleCentroData().get(armGroup.chromosome());
+            TelomereCentromereCnData tcData = mCnDataLoader.getChrTeleCentroData().get(armGroup.chromosome());
 
             if(tcData != null)
             {

@@ -209,11 +209,11 @@ public class DeletionDrivers
         // find homozygous disruptions by looking for either:
         // 1. Evidence of copy number dropping to zero within a gene from disruptive SVs other than simple (unphased) DELs
         // 2. Duplication of exons from DUPs or other complex clusters
-        final List<String> delDriverGeneIds = mDataCache.getDriverGeneDataList().stream()
+        List<String> delDriverGeneIds = mDataCache.getDriverGeneDataList().stream()
                 .filter(x -> x.DriverData.driver() == DriverType.DEL)
                 .map(x -> x.GeneInfo.GeneId).collect(Collectors.toList());
 
-        final List<DriverGeneData> disDelDrivers = Lists.newArrayList();
+        List<DriverGeneData> disDelDrivers = Lists.newArrayList();
 
         for(Map.Entry<String,List<SvBreakend>> entry : chrBreakendMap.entrySet())
         {
@@ -225,7 +225,7 @@ public class DeletionDrivers
                 if(!delType && !dupType)
                     continue;
 
-                final List<BreakendGeneData> genesList = breakend.getSV().getGenesList(breakend.usesStart()).stream()
+                List<BreakendGeneData> genesList = breakend.getSV().getGenesList(breakend.usesStart()).stream()
                         .filter(x -> !delDriverGeneIds.contains(x.geneId()))
                         .filter(x -> mReportableDisruptionGeneTranscripts.containsKey(x.geneId()))
                         .collect(Collectors.toList());
@@ -267,7 +267,7 @@ public class DeletionDrivers
             final SvBreakend breakend, final BreakendTransData transcript,
             final List<String> delDriverGeneIds, final List<DriverGeneData> disDelDrivers)
     {
-        final DbPair dbLink = breakend.getDBLink();
+        DbPair dbLink = breakend.getDBLink();
 
         // calculate the copy number over the deletion bridge section
         double cnLowSide = breakend.copyNumberLowSide();
@@ -282,11 +282,11 @@ public class DeletionDrivers
             return;
 
         // both the SVs involved in the deletion must be disruptive, ie cannot be simple intronic DELs
-        final String geneId = transcript.breakendGeneData().geneId();
+        String geneId = transcript.breakendGeneData().geneId();
 
-        final SvBreakend otherBreakend = dbLink.getOtherBreakend(breakend);
+        SvBreakend otherBreakend = dbLink.getOtherBreakend(breakend);
 
-        final BreakendGeneData matchingGene = otherBreakend.getSV().getGenesList(otherBreakend.usesStart()).stream()
+        BreakendGeneData matchingGene = otherBreakend.getSV().getGenesList(otherBreakend.usesStart()).stream()
                 .filter(x -> x.geneId().equals(geneId))
                 .findFirst().orElse(null);
 
@@ -319,15 +319,15 @@ public class DeletionDrivers
             final SvBreakend breakend, final BreakendTransData transcript,
             final List<String> delDriverGeneIds, final List<DriverGeneData> disDelDrivers)
     {
-        final String geneId = transcript.breakendGeneData().geneId();
+        String geneId = transcript.breakendGeneData().geneId();
 
         // DUP must be wholly contained within the same gene
         if(breakend.getSV().getGenesList(!breakend.usesStart()).stream().noneMatch(x -> x.geneId().equals(geneId)))
             return;
 
-        final SvBreakend otherBreakend = breakend.getOtherBreakend();
+        SvBreakend otherBreakend = breakend.getOtherBreakend();
 
-        final BreakendGeneData matchingGene = otherBreakend.getSV().getGenesList(otherBreakend.usesStart()).stream()
+        BreakendGeneData matchingGene = otherBreakend.getSV().getGenesList(otherBreakend.usesStart()).stream()
                 .filter(x -> x.geneId().equals(geneId))
                 .findFirst().orElse(null);
 

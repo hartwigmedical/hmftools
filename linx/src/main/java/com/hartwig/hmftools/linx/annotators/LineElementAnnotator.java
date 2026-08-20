@@ -104,7 +104,7 @@ public class LineElementAnnotator {
 
         for(int se = SE_START; se <= SE_END; ++se)
         {
-            for(final ChrBaseRegion lineRegion : mKnownLineElements)
+            for(ChrBaseRegion lineRegion : mKnownLineElements)
             {
                 if(!lineRegion.Chromosome.equals(svData.chromosome(isStart(se))))
                     continue;
@@ -128,7 +128,7 @@ public class LineElementAnnotator {
     {
         for(int se = SE_START; se <= SE_END; ++se)
         {
-            final SvBreakend breakend = var.getBreakend(se);
+            SvBreakend breakend = var.getBreakend(se);
 
             if(breakend == null)
                 continue;
@@ -164,13 +164,13 @@ public class LineElementAnnotator {
 
         for(Map.Entry<String, List<SvBreakend>> entry : cluster.getChrBreakendMap().entrySet())
         {
-            final List<SvBreakend> breakendList = entry.getValue();
+            List<SvBreakend> breakendList = entry.getValue();
 
             lineState.clear();
 
             for(int i = 0; i < breakendList.size(); ++i)
             {
-                final SvBreakend breakend = breakendList.get(i);
+                SvBreakend breakend = breakendList.get(i);
 
                 if(breakend.hasLineElement(SUSPECT))
                     continue; // breakends may have already been marked if proximate to an earlier suspect site
@@ -185,7 +185,7 @@ public class LineElementAnnotator {
 
                 for(int j = i + 1; j < breakendList.size(); ++j)
                 {
-                    final SvBreakend nextBreakend = breakendList.get(j);
+                    SvBreakend nextBreakend = breakendList.get(j);
 
                     if(abs(nextBreakend.position() - breakend.position()) > mProximityDistance)
                         break;
@@ -196,7 +196,7 @@ public class LineElementAnnotator {
                 // and in the reverse direction
                 for(int j = i - 1; j >= 0; --j)
                 {
-                    final SvBreakend prevBreakend = breakendList.get(j);
+                    SvBreakend prevBreakend = breakendList.get(j);
 
                     if(abs(breakend.position() - prevBreakend.position()) > mProximityDistance)
                         break;
@@ -207,7 +207,7 @@ public class LineElementAnnotator {
                 // check for a proximate DEL matching exon positions which would invalidate this as a LINE cluster
                 if(mPseudoGeneFinder != null)
                 {
-                    final SvBreakend pseudoDel = proximateBreakends.stream()
+                    SvBreakend pseudoDel = proximateBreakends.stream()
                             .filter(x -> x.type() == DEL)
                             .filter(x -> mPseudoGeneFinder.variantMatchesPseudogeneExons(x.getSV()))
                             .findFirst().orElse(null);
@@ -323,9 +323,9 @@ public class LineElementAnnotator {
 
             if(cluster.getTypeCount(SGL) == 2 && (hasSglLineRepeatClass || hasInsertSites))
             {
-                final SvVarData var1 = cluster.getSV(0);
-                final SvVarData var2 = cluster.getSV(1);
-                final DbPair dbLink = var1.getDBLink(true);
+                SvVarData var1 = cluster.getSV(0);
+                SvVarData var2 = cluster.getSV(1);
+                DbPair dbLink = var1.getDBLink(true);
                 boolean inShortDB = dbLink != null && dbLink == var2.getDBLink(true) && dbLink.length() <= MIN_DEL_LENGTH;
 
                 if(inShortDB)
@@ -338,7 +338,7 @@ public class LineElementAnnotator {
 
             if(cluster.getTypeCount(SGL) == 1 && (hasSglLineRepeatClass || hasInsertSites))
             {
-                final SvVarData var = cluster.getSVs().stream().filter(x -> x.type() == SGL).findFirst().orElse(null);
+                SvVarData var = cluster.getSVs().stream().filter(x -> x.type() == SGL).findFirst().orElse(null);
 
                 if(cluster.getSvCount() == 1)
                 {

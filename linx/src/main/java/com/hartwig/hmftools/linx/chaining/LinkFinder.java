@@ -42,31 +42,31 @@ public class LinkFinder
 
         for(Map.Entry<String, List<SvBreakend>> entry : chrBreakendMap.entrySet())
         {
-            final List<SvBreakend> breakendList = entry.getValue();
+            List<SvBreakend> breakendList = entry.getValue();
 
             if(breakendList.size() == 1)
                 continue;
 
             for(int i = 0; i < breakendList.size() -1; ++i)
             {
-                final SvBreakend lowerBreakend = breakendList.get(i);
+                SvBreakend lowerBreakend = breakendList.get(i);
 
                 if(lowerBreakend.orientation() != -1)
                     continue;
 
-                final SvVarData lowerSV = lowerBreakend.getSV();
+                SvVarData lowerSV = lowerBreakend.getSV();
 
                 if(lowerSV.type() == INS || lowerSV.isSglBreakend())
                     continue;
 
                 for(int j = i+1; j < breakendList.size(); ++j)
                 {
-                    final SvBreakend upperBreakend = breakendList.get(j);
+                    SvBreakend upperBreakend = breakendList.get(j);
 
                     if(upperBreakend.orientation() != 1)
                         continue;
 
-                    final SvVarData upperSV = upperBreakend.getSV();
+                    SvVarData upperSV = upperBreakend.getSV();
 
                     if(upperBreakend.getSV() == lowerBreakend.getSV())
                         continue;
@@ -127,38 +127,38 @@ public class LinkFinder
         // check for the scenario where one link A-B is made but also A-C and B-C, where B is a short simple SV
         boolean reassessMultiConnection = false;
 
-        for(final SvBreakend breakend : multiConnectionBreakends)
+        for(SvBreakend breakend : multiConnectionBreakends)
         {
-            final List<LinkedPair> links = breakend.getSV().getAssembledLinkedPairs(breakend.usesStart());
+            List<LinkedPair> links = breakend.getSV().getAssembledLinkedPairs(breakend.usesStart());
 
             if(links.size() < 2)
                 continue;
 
             List<LinkedPair> spanningLinks = Lists.newArrayList();
 
-            for(final LinkedPair pair : links)
+            for(LinkedPair pair : links)
             {
                 if(spanningLinks.contains(pair))
                     continue;
 
-                final SvBreakend otherBreakend = pair.getOtherBreakend(breakend);
-                final SvVarData otherSv = otherBreakend.getSV();
+                SvBreakend otherBreakend = pair.getOtherBreakend(breakend);
+                SvVarData otherSv = otherBreakend.getSV();
 
                 if(otherSv.type() != DEL && otherSv.type() != DUP)
                     continue;
 
                 // now look for a common breakend partner
-                final List<LinkedPair> otherLinks = otherSv.getAssembledLinkedPairs(!otherBreakend.usesStart());
+                List<LinkedPair> otherLinks = otherSv.getAssembledLinkedPairs(!otherBreakend.usesStart());
 
                 if(otherLinks.isEmpty())
                     continue;
 
-                for(final LinkedPair otherPair : links)
+                for(LinkedPair otherPair : links)
                 {
                     if(otherPair == pair)
                         continue;
 
-                    final SvBreakend otherBreakend1 = otherPair.getOtherBreakend(breakend);
+                    SvBreakend otherBreakend1 = otherPair.getOtherBreakend(breakend);
 
                     if(otherLinks.stream().anyMatch(x -> x.hasBreakend(otherBreakend1)))
                     {
@@ -175,7 +175,7 @@ public class LinkFinder
             {
                 breakend.getSV().getLinkedPairs(breakend.usesStart()).remove(pair);
 
-                final SvBreakend otherBreakend = pair.getOtherBreakend(breakend);
+                SvBreakend otherBreakend = pair.getOtherBreakend(breakend);
                 otherBreakend.getSV().getLinkedPairs(otherBreakend.usesStart()).remove(pair);
 
                 linkedPairs.remove(pair);
@@ -188,11 +188,11 @@ public class LinkFinder
         {
             hasMultiConnection = false;
 
-            for(final LinkedPair pair : linkedPairs)
+            for(LinkedPair pair : linkedPairs)
             {
                 for(int se = SE_START; se <= SE_END; ++se)
                 {
-                    final SvBreakend breakend = pair.getBreakend(se);
+                    SvBreakend breakend = pair.getBreakend(se);
 
                     if(linkedPairs.stream().filter(x -> x != pair).anyMatch(x -> x.hasBreakend(breakend)))
                     {
@@ -306,8 +306,8 @@ public class LinkFinder
     private static void markDeletionBridge(DbPair dbPair)
     {
         // if either SV has a shorter DB already in existence, then keep it
-        final DbPair existingDBLink1 = dbPair.lowerSV().getDBLink(dbPair.lowerLinkOnStart());
-        final DbPair existingDBLink2 = dbPair.upperSV().getDBLink(dbPair.upperLinkOnStart());
+        DbPair existingDBLink1 = dbPair.lowerSV().getDBLink(dbPair.lowerLinkOnStart());
+        DbPair existingDBLink2 = dbPair.upperSV().getDBLink(dbPair.upperLinkOnStart());
 
         if((existingDBLink1 != null && existingDBLink1.length() < dbPair.length())
         || (existingDBLink2 != null && existingDBLink2.length() < dbPair.length()))
