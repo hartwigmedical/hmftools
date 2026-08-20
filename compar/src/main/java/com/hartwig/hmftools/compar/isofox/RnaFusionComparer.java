@@ -2,9 +2,10 @@ package com.hartwig.hmftools.compar.isofox;
 
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.FieldCheckCache.getOrMakeFieldCheck;
+import static com.hartwig.hmftools.compar.common.CategoryType.PURITY;
+import static com.hartwig.hmftools.compar.common.CategoryType.RNA_FUSION;
+import static com.hartwig.hmftools.compar.isofox.RnaGeneDataComparer.checkOldIsofoxFilename;
 
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -12,6 +13,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.region.BasePosition;
+import com.hartwig.hmftools.common.rna.ImmutableRnaFusion;
 import com.hartwig.hmftools.common.rna.RnaFusion;
 import com.hartwig.hmftools.common.rna.RnaFusionFile;
 import com.hartwig.hmftools.compar.ComparConfig;
@@ -20,8 +22,11 @@ import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.common.PipelineSourcePaths;
+import com.hartwig.hmftools.compar.common.SourceType;
+import com.hartwig.hmftools.compar.common.TruthsetValue;
 import com.hartwig.hmftools.compar.common.field.FieldCheck;
 import com.hartwig.hmftools.compar.common.field.FieldInfo;
+import com.hartwig.hmftools.compar.purple.PurityData;
 
 public class RnaFusionComparer extends ItemComparer
 {
@@ -72,11 +77,13 @@ public class RnaFusionComparer extends ItemComparer
     @Override
     public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final PipelineSourcePaths fileSources)
     {
-        String filename = determineFileName(sampleId, fileSources);
+        String filename = RnaFusionFile.generateFilename(fileSources.Isofox, sampleId);
+        filename = checkOldIsofoxFilename(filename);
+
         List<RnaFusion> fusions = RnaFusionFile.read(filename);
         if(fusions == null)
         {
-            CMP_LOGGER.warn("sample({}) failed to load Isofox Gene data", sampleId);
+            CMP_LOGGER.warn("sample({}) failed to load Isofox fusion data", sampleId);
             return null;
         }
 
@@ -84,30 +91,38 @@ public class RnaFusionComparer extends ItemComparer
 
         for(RnaFusion fusion : fusions)
         {
-            BasePosition comparisonPositionUp = CommonUtils.determineComparisonGenomePosition(
-                    fusion.chromosomeUp(), fusion.positionUp(), fileSources.Source, mConfig.RequiresLiftover, mConfig.LiftoverCache);
+            if(mConfig.RequiresLiftover && fileSources.Source == SourceType.OLD)
+            {
+                BasePosition liftedPositionUp = CommonUtils.determineComparisonGenomePosition(
+                        fusion.chromosomeUp(), fusion.positionUp(), fileSources.Source, mConfig.RequiresLiftover, mConfig.LiftoverCache);
 
-            BasePosition comparisonPositionDown = CommonUtils.determineComparisonGenomePosition(
-                    fusion.chromosomeDown(), fusion.positionDown(), fileSources.Source, mConfig.RequiresLiftover, mConfig.LiftoverCache);
+                BasePosition liftedPositionDown = CommonUtils.determineComparisonGenomePosition(
+                        fusion.chromosomeDown(), fusion.positionDown(), fileSources.Source, mConfig.RequiresLiftover, mConfig.LiftoverCache);
 
-            comparableItems.add(new RnaFusionData(fusion, comparisonPositionUp, comparisonPositionDown, mFields));
+                RnaFusion adjustedFusion = ImmutableRnaFusion.builder().from(fusion)
+                        .chromosomeUp(liftedPositionUp.Chromosome)
+                        .chromosomeDown(liftedPositionDown.Chromosome)
+                        .positionUp(liftedPositionUp.Position)
+                        .positionDown(liftedPositionDown.Position)
+                        .build();
+
+                comparableItems.add(new RnaFusionData(adjustedFusion, mFields));
+            }
+            else
+            {
+                comparableItems.add(new RnaFusionData(fusion, mFields));
+           }
         }
 
         return comparableItems;
     }
 
-    private static String determineFileName(final String sampleId, final PipelineSourcePaths fileSources)
+    public List<ComparableItem> loadFromTruthset(final Map<String,List<TruthsetValue>> valuesByKey)
     {
-        String filename = RnaFusionFile.generateFilename(fileSources.Isofox, sampleId);
-        String oldFilename = filename.replace(".tsv", ".csv");
+        List<ComparableItem> comparableItems = Lists.newArrayList();
 
-        if(!Files.exists(Paths.get(filename)) && Files.exists(Paths.get(oldFilename)))
-        {
-            return oldFilename;
-        }
-        else
-        {
-            return filename;
-        }
+        // TODO
+        
+        return comparableItems;
     }
 }

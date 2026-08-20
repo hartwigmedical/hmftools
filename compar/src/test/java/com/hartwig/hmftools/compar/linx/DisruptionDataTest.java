@@ -42,41 +42,17 @@ public class DisruptionDataTest extends ComparableItemTest<DisruptionData, Disru
     }
 
     @Test
-    public void fullyMatchesSelfWithLiftover()
-    {
-        BreakendData refBreakend = TestBreakendDataBuilder.BUILDER.create(b -> {
-            b.comparisonChromosome = "21";
-            b.comparisonPosition = 40000000;
-        });
-        BreakendData newBreakend = TestBreakendDataBuilder.BUILDER.create(b -> {
-            b.chromosome = "21";
-            b.position = 40000000;
-        });
-        DisruptionData refVictim = builder.create(b -> b.breakends = List.of(refBreakend));
-        DisruptionData newVictim = builder.create(b -> b.breakends = List.of(newBreakend));
-
-        MatchLevel matchLevel = MatchLevel.DETAILED;
-        FieldCheckCache fieldConfig = createDefaultThresholds(matchLevel);
-
-        assertTrue(refVictim.matches(newVictim));
-        assertNull(refVictim.findMismatch(comparer, newVictim, matchLevel, false));
-    }
-
-    @Test
     public void unmatchedSvsAreRecognized()
     {
         BreakendData sharedBreakend1 = TestBreakendDataBuilder.BUILDER.create();
         BreakendData sharedBreakend2 = TestBreakendDataBuilder.BUILDER.create(b -> {
             b.position = 41100000;
-            b.comparisonPosition = 41100000;
         });
         BreakendData refUniqueBreakend = TestBreakendDataBuilder.BUILDER.create(b -> {
             b.position = 42000000;
-            b.comparisonPosition = 42000000;
         });
         BreakendData newUniqueBreakend = TestBreakendDataBuilder.BUILDER.create(b -> {
             b.position = 40000000;
-            b.comparisonPosition = 40000000;
         });
         DisruptionData refVictim = builder.create(b -> b.breakends = List.of(sharedBreakend1, sharedBreakend2, refUniqueBreakend));
         DisruptionData newVictim = builder.create(b -> b.breakends = List.of(newUniqueBreakend, sharedBreakend1, sharedBreakend2));

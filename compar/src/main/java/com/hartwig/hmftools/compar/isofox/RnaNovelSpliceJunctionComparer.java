@@ -2,9 +2,8 @@ package com.hartwig.hmftools.compar.isofox;
 
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.FieldCheckCache.getOrMakeFieldCheck;
+import static com.hartwig.hmftools.compar.isofox.RnaGeneDataComparer.checkOldIsofoxFilename;
 
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -12,6 +11,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.region.BasePosition;
+import com.hartwig.hmftools.common.rna.ImmutableNovelSpliceJunction;
 import com.hartwig.hmftools.common.rna.NovelSpliceJunction;
 import com.hartwig.hmftools.common.rna.NovelSpliceJunctionFile;
 import com.hartwig.hmftools.compar.ComparConfig;
@@ -20,6 +20,7 @@ import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.common.PipelineSourcePaths;
+import com.hartwig.hmftools.compar.common.SourceType;
 import com.hartwig.hmftools.compar.common.field.FieldCheck;
 import com.hartwig.hmftools.compar.common.field.FieldInfo;
 
@@ -75,11 +76,13 @@ public class RnaNovelSpliceJunctionComparer extends ItemComparer
     @Override
     public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final PipelineSourcePaths fileSources)
     {
-        String filename = determineFileName(sampleId, fileSources);
+        String filename = NovelSpliceJunctionFile.generateFilename(fileSources.Isofox, sampleId);
+        filename = checkOldIsofoxFilename(filename);
+
         List<NovelSpliceJunction> junctions = NovelSpliceJunctionFile.read(filename);
         if(junctions == null)
         {
-            CMP_LOGGER.warn("sample({}) failed to load Isofox Gene data", sampleId);
+            CMP_LOGGER.warn("sample({}) failed to load Isofox alt splice junction data", sampleId);
             return null;
         }
 
@@ -87,30 +90,28 @@ public class RnaNovelSpliceJunctionComparer extends ItemComparer
 
         for(NovelSpliceJunction junction : junctions)
         {
-            BasePosition comparisonPositionStart = CommonUtils.determineComparisonGenomePosition(
-                    junction.chromosome(), junction.junctionStart(), fileSources.Source, mConfig.RequiresLiftover, mConfig.LiftoverCache);
+            if(mConfig.RequiresLiftover && fileSources.Source == SourceType.OLD)
+            {
+                BasePosition liftoverPositionStart = CommonUtils.determineComparisonGenomePosition(
+                        junction.chromosome(), junction.junctionStart(), fileSources.Source, mConfig.RequiresLiftover, mConfig.LiftoverCache);
 
-            BasePosition comparisonPositionEnd = CommonUtils.determineComparisonGenomePosition(
-                    junction.chromosome(), junction.junctionEnd(), fileSources.Source, mConfig.RequiresLiftover, mConfig.LiftoverCache);
+                BasePosition liftoverPositionEnd = CommonUtils.determineComparisonGenomePosition(
+                        junction.chromosome(), junction.junctionEnd(), fileSources.Source, mConfig.RequiresLiftover, mConfig.LiftoverCache);
 
-            comparableItems.add(new RnaNovelSpliceJunctionData(junction, comparisonPositionStart, comparisonPositionEnd, mFields));
+                NovelSpliceJunction adjustedJunction = ImmutableNovelSpliceJunction.builder().from(junction)
+                        .chromosome(liftoverPositionStart.Chromosome)
+                        .junctionStart(liftoverPositionStart.Position)
+                        .junctionEnd(liftoverPositionEnd.Position)
+                        .build();
+
+                comparableItems.add(new RnaNovelSpliceJunctionData(adjustedJunction, mFields));
+            }
+            else
+            {
+                comparableItems.add(new RnaNovelSpliceJunctionData(junction, mFields));
+            }
         }
 
         return comparableItems;
-    }
-
-    private static String determineFileName(final String sampleId, final PipelineSourcePaths fileSources)
-    {
-        String filename = NovelSpliceJunctionFile.generateFilename(fileSources.Isofox, sampleId);
-        String oldFilename = filename.replace(".tsv", ".csv");
-
-        if(!Files.exists(Paths.get(filename)) && Files.exists(Paths.get(oldFilename)))
-        {
-            return oldFilename;
-        }
-        else
-        {
-            return filename;
-        }
     }
 }

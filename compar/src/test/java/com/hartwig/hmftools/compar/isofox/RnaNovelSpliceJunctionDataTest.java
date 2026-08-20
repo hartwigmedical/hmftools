@@ -44,16 +44,12 @@ public class RnaNovelSpliceJunctionDataTest
                 FLD_GENE_NAME, b -> b.geneName = alternateValueSource.Junction.geneName(),
                 FLD_CHROMOSOME, b -> {
                     b.chromosome = alternateValueSource.Junction.chromosome();
-                    b.comparisonChromosomeStart = alternateValueSource.ComparisonPositionStart.Chromosome;
-                    b.comparisonChromosomeEnd = alternateValueSource.ComparisonPositionEnd.Chromosome;
                 },
                 FLD_ALT_SJ_POS_START, b -> {
                     b.junctionStart = alternateValueSource.Junction.junctionStart();
-                    b.comparisonPositionStart = alternateValueSource.ComparisonPositionStart.Position;
                 },
                 FLD_ALT_SJ_POS_END, b -> {
                     b.junctionEnd = alternateValueSource.Junction.junctionEnd();
-                    b.comparisonPositionEnd = alternateValueSource.ComparisonPositionEnd.Position;
                 });
         reportabilityFieldToFalseReportabilityInitializer = Collections.emptyMap();
         nameToNonPassInitializer = Collections.emptyMap();
@@ -71,53 +67,5 @@ public class RnaNovelSpliceJunctionDataTest
     public void singleFieldMismatchesAreRecognizedInReportableMode()
     {
         // Override since Isofox output is never compared in reportable mode
-    }
-
-    @Test
-    public void fullyMatchesSelfWithLiftoverStart()
-    {
-        RnaNovelSpliceJunctionData victim = TestNovelSpliceJunctionDataBuilder.BUILDER.create(b -> b.comparisonPositionStart = 5000);
-        RnaNovelSpliceJunctionData liftoverVictim = TestNovelSpliceJunctionDataBuilder.BUILDER.create(b -> b.junctionStart = 5000);
-
-        MatchLevel matchLevel = MatchLevel.DETAILED;
-        FieldCheckCache fieldConfig = createDefaultThresholds(matchLevel);
-
-        assertTrue(victim.matches(liftoverVictim));
-        assertTrue(liftoverVictim.matches(victim));
-        assertNull(victim.findMismatch(comparer, liftoverVictim, matchLevel, false));
-
-        Mismatch expectedMatch = new Mismatch(victim, liftoverVictim, MismatchType.FULL_MATCH, Collections.emptyList());
-        assertEquals(expectedMatch, victim.findMismatch(comparer, liftoverVictim, matchLevel, true));
-    }
-
-    @Test
-    public void fullyMatchesSelfWithLiftoverEnd()
-    {
-        RnaNovelSpliceJunctionData victim = TestNovelSpliceJunctionDataBuilder.BUILDER.create(b -> b.comparisonPositionEnd = 6000);
-        RnaNovelSpliceJunctionData liftoverVictim = TestNovelSpliceJunctionDataBuilder.BUILDER.create(b -> b.junctionEnd = 6000);
-
-        MatchLevel matchLevel = MatchLevel.DETAILED;
-        FieldCheckCache fieldConfig = createDefaultThresholds(matchLevel);
-
-        assertTrue(victim.matches(liftoverVictim));
-        assertTrue(liftoverVictim.matches(victim));
-        assertNull(victim.findMismatch(comparer, liftoverVictim, matchLevel, false));
-
-        Mismatch expectedMatch = new Mismatch(victim, liftoverVictim, MismatchType.FULL_MATCH, Collections.emptyList());
-        assertEquals(expectedMatch, victim.findMismatch(comparer, liftoverVictim, matchLevel, true));
-    }
-
-    @Test
-    public void keyNonEmptyForLiftoverStart()
-    {
-        RnaNovelSpliceJunctionData victim = TestNovelSpliceJunctionDataBuilder.BUILDER.create(b -> b.comparisonPositionStart = 5000);
-        assertFalse(victim.key().isEmpty());
-    }
-
-    @Test
-    public void keyNonEmptyForLiftoverEnd()
-    {
-        RnaNovelSpliceJunctionData victim = TestNovelSpliceJunctionDataBuilder.BUILDER.create(b -> b.comparisonPositionEnd = 6000);
-        assertFalse(victim.key().isEmpty());
     }
 }

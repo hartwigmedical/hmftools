@@ -37,7 +37,6 @@ public class TestSnpGenotypeDataBuilder
         BasePosition comparisonBasePosition = new BasePosition(comparisonChromosome, comparisonPosition);
 
         return new SnpGenotypeData(
-                chromosome, position, ref, alt, genotype, vcfSampleId, comparisonBasePosition,
-                new SnpGenotypeComparer(null, Collections.emptyMap()).fieldsList());
+                chromosome, position, ref, alt, genotype, vcfSampleId, new SnpGenotypeComparer(null, Collections.emptyMap()).fieldsList());
     }
 }

@@ -12,16 +12,10 @@ import com.hartwig.hmftools.compar.common.field.FieldInfo;
 public class RnaFusionData extends ComparableItem
 {
     public final RnaFusion Fusion;
-    public final BasePosition ComparisonPositionUp;
-    public final BasePosition ComparisonPositionDown;
 
-    public RnaFusionData(
-            final RnaFusion rnaFusion, final BasePosition comparisonPositionUp, final BasePosition comparisonPositionDown,
-            final List<FieldInfo> fields)
+    public RnaFusionData(final RnaFusion rnaFusion, final List<FieldInfo> fields)
     {
         Fusion = rnaFusion;
-        ComparisonPositionUp = comparisonPositionUp;
-        ComparisonPositionDown = comparisonPositionDown;
 
         addStringValue(RnaFusionComparer.Fields.KnownFusionType.toString(), rnaFusion.knownType().toString(), fields);
         addStringValue(RnaFusionComparer.Fields.JuncTypeUp.toString(), rnaFusion.junctionTypeUp(), fields);
@@ -41,15 +35,6 @@ public class RnaFusionData extends ComparableItem
         String key = String.format("%s %s:%d-%s:%d", Fusion.name(), Fusion.chromosomeUp(),
                 Fusion.positionUp(), Fusion.chromosomeDown(), Fusion.positionDown());
 
-        boolean upLifted = ComparisonPositionUp.Position != Fusion.positionUp()
-                || !ComparisonPositionUp.Chromosome.equals(Fusion.chromosomeUp());
-
-        boolean downLifted = ComparisonPositionDown.Position != Fusion.positionDown()
-                || !ComparisonPositionDown.Chromosome.equals(Fusion.chromosomeDown());
-
-        if(upLifted || downLifted)
-            key += String.format(" liftover(%s-%s)", ComparisonPositionUp, ComparisonPositionDown);
-
         return key;
     }
 
@@ -67,18 +52,16 @@ public class RnaFusionData extends ComparableItem
         if(!otherData.Fusion.name().equals(Fusion.name())){
             return false;
         }
-        if(!otherData.Fusion.chromosomeUp().equals(ComparisonPositionUp.Chromosome))
-        {
+
+        if(!otherData.Fusion.chromosomeUp().equals(Fusion.chromosomeUp()))
             return false;
-        }
-        if(!otherData.Fusion.chromosomeDown().equals(ComparisonPositionDown.Chromosome))
-        {
+
+        if(!otherData.Fusion.chromosomeDown().equals(Fusion.chromosomeDown()))
             return false;
-        }
-        if(otherData.Fusion.positionUp() != ComparisonPositionUp.Position)
-        {
+
+        if(otherData.Fusion.positionUp() != Fusion.positionUp())
             return false;
-        }
-        return otherData.Fusion.positionDown() == ComparisonPositionDown.Position;
+
+        return otherData.Fusion.positionDown() == Fusion.positionDown();
     }
 }

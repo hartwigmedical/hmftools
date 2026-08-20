@@ -150,10 +150,15 @@ public class DisruptionComparer extends ItemComparer
                 String chromosome = usesStart ? var.startChromosome() : var.endChromosome();
                 int position = usesStart ? var.startPosition() : var.endPosition();
 
-                BasePosition comparisonPosition = determineComparisonGenomePosition(
-                        chromosome, position, sourceType, mConfig.RequiresLiftover, mConfig.LiftoverCache);
+                BasePosition liftoverPosition = null;
 
-                BreakendData breakendData = buildBreakendData(breakend, var, comparisonPosition);
+                if(mConfig.RequiresLiftover && sourceType == SourceType.OLD)
+                {
+                    liftoverPosition = determineComparisonGenomePosition(
+                            chromosome, position, sourceType, mConfig.RequiresLiftover, mConfig.LiftoverCache);
+                }
+
+                BreakendData breakendData = buildBreakendData(breakend, var, liftoverPosition);
 
                 geneBreakends.add(breakendData);
             }
@@ -172,7 +177,7 @@ public class DisruptionComparer extends ItemComparer
     }
 
     protected static BreakendData buildBreakendData(
-            final LinxBreakend breakend, final StructuralVariantData var, @Nullable final BasePosition comparisonPosition)
+            final LinxBreakend breakend, final StructuralVariantData var, @Nullable final BasePosition liftoverPosition)
     {
         boolean usesStart = breakend.isStart();
 
@@ -180,8 +185,19 @@ public class DisruptionComparer extends ItemComparer
                 new int[] { var.startIntervalOffsetStart(), var.startIntervalOffsetEnd() } :
                 new int[] { var.endIntervalOffsetStart(), var.endIntervalOffsetEnd() };
 
-        String chromosome = usesStart ? var.startChromosome() : var.endChromosome();
-        int position = usesStart ? var.startPosition() : var.endPosition();
+        String chromosome;
+        int position;
+
+        if(liftoverPosition != null)
+        {
+            chromosome = liftoverPosition.Chromosome;
+            position = liftoverPosition.Position;
+        }
+        else
+        {
+            chromosome = usesStart ? var.startChromosome() : var.endChromosome();
+            position = usesStart ? var.startPosition() : var.endPosition();
+        }
 
         int depthStart = var.startTumorReferenceFragmentCount() + var.startNormalReferenceFragmentCount();
         int fragsStart = var.startTumorReferenceFragmentCount();
@@ -192,8 +208,6 @@ public class DisruptionComparer extends ItemComparer
         return new BreakendData(
             breakend, usesStart ? var.vcfIdStart() : var.vcfIdEnd(), var.type(), chromosome, position,
             usesStart ? var.startOrientation() : var.endOrientation(), homologyOffsets,
-            usesStart ? depthStart : depthEnd, usesStart ? fragsStart : fragsEnd, qual,
-                comparisonPosition != null ? comparisonPosition.Chromosome : chromosome,
-                comparisonPosition != null ? comparisonPosition.Position : position);
+            usesStart ? depthStart : depthEnd, usesStart ? fragsStart : fragsEnd, qual);
     }
 }

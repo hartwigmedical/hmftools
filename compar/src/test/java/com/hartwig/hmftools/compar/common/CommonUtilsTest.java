@@ -17,13 +17,16 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.GenomeLiftoverCache;
 import com.hartwig.hmftools.common.region.BasePosition;
+import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.FieldCheckCache;
+import com.hartwig.hmftools.compar.purple.PurityComparer;
 
 import org.junit.Test;
 
@@ -149,15 +152,15 @@ public class CommonUtilsTest
     @Test
     public void emptyComparison()
     {
-        FieldCheckCache fieldConfig = new FieldCheckCache();
-
         List<Mismatch> mismatches = new ArrayList<>();
-        List<ComparableItem> refItems = new ArrayList<>();
+        List<ComparableItem> oldItems = new ArrayList<>();
         List<ComparableItem> newItems = new ArrayList<>();
         MatchLevel matchLevel = MatchLevel.DETAILED;
         boolean includeMatches = false;
 
-        CommonUtils.compareItems(null, mismatches, matchLevel, includeMatches, false, refItems, newItems);
+        PurityComparer comparer = new PurityComparer(new ComparConfig(), Collections.emptyMap());
+
+        CommonUtils.compareItems(comparer, mismatches, matchLevel, includeMatches, false, oldItems, newItems);
 
         assertTrue(mismatches.isEmpty());
     }

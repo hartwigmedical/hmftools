@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.compar.isofox;
 
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_EXTENSION;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_EXTENSION;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.FieldCheckCache.getOrMakeFieldCheck;
 
@@ -72,7 +74,9 @@ public class RnaGeneDataComparer extends ItemComparer
     @Override
     public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final PipelineSourcePaths fileSources)
     {
-        final String filename = determineFileName(sampleId, fileSources);
+        String filename = GeneExpressionFile.generateFilename(fileSources.Isofox, sampleId);
+        filename = checkOldIsofoxFilename(filename);
+
         List<GeneExpression> geneExpressions = GeneExpressionFile.read(filename);
         if(geneExpressions == null)
         {
@@ -83,11 +87,9 @@ public class RnaGeneDataComparer extends ItemComparer
         return geneExpressions.stream().map(x -> new RnaGeneData(x, mFields)).collect(Collectors.toList());
     }
 
-    @NotNull
-    private static String determineFileName(final String sampleId, final PipelineSourcePaths fileSources)
+    protected static String checkOldIsofoxFilename(final String filename)
     {
-        String filename = GeneExpressionFile.generateFilename(fileSources.Isofox, sampleId);
-        String oldFilename = filename.replace(".tsv", ".csv");
+        String oldFilename = filename.replace(TSV_EXTENSION, CSV_EXTENSION);
 
         if(!Files.exists(Paths.get(filename)) && Files.exists(Paths.get(oldFilename)))
         {

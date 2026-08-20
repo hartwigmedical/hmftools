@@ -25,6 +25,7 @@ import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.common.PipelineSourcePaths;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.MatchLevel;
+import com.hartwig.hmftools.compar.common.SourceType;
 import com.hartwig.hmftools.compar.common.field.FieldCheck;
 import com.hartwig.hmftools.compar.common.field.FieldInfo;
 
@@ -105,8 +106,14 @@ public class GermlineSvComparer extends ItemComparer
                 String chromosome = usesStart ? var.ChromosomeStart : var.ChromosomeEnd;
                 int position = usesStart ? var.PositionStart : var.PositionEnd;
 
-                BasePosition comparisonPosition = determineComparisonGenomePosition(
-                        chromosome, position, fileSources.Source, mConfig.RequiresLiftover, mConfig.LiftoverCache);
+                if(mConfig.RequiresLiftover && fileSources.Source == SourceType.OLD)
+                {
+                    BasePosition comparisonPosition = determineComparisonGenomePosition(
+                            chromosome, position, fileSources.Source, mConfig.RequiresLiftover, mConfig.LiftoverCache);
+
+                    position = comparisonPosition.Position;
+                    chromosome = comparisonPosition.Chromosome;
+                }
 
                 int frags = var.GermlineFragments;
                 int depth = (usesStart ? var.GermlineReferenceFragmentsStart : var.GermlineReferenceFragmentsEnd) + frags;
@@ -114,8 +121,7 @@ public class GermlineSvComparer extends ItemComparer
 
                 BreakendData breakendData = new BreakendData(
                         breakend, var.VcfId, var.Type, chromosome, position,
-                        usesStart ? var.OrientStart : var.OrientEnd, homologyOffsets, depth, frags, qual,
-                        comparisonPosition.Chromosome, comparisonPosition.Position);
+                        usesStart ? var.OrientStart : var.OrientEnd, homologyOffsets, depth, frags, qual);
 
                 geneBreakends.add(breakendData);
             }

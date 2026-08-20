@@ -117,7 +117,7 @@ public class TestFusionDataBuilder
 
         return new BreakendData(
                 breakend, "", StructuralVariantType.DEL, CHR_1, 1000, (byte)1, new int[] {0, 0},
-                100, 50, 60, CHR_1, 1000);
+                100, 50, 60); // , CHR_1, 1000
     }
 
 }

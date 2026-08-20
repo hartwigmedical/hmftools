@@ -4,7 +4,6 @@ import static com.hartwig.hmftools.compar.common.CategoryType.SNP_GENOTYPE;
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.field.FieldInfo;
@@ -17,11 +16,10 @@ public class SnpGenotypeData extends ComparableItem
     public final String Alt;
     public final String Genotype;
     public final String VcfSampleId;
-    public final BasePosition mComparisonPosition;
 
     public SnpGenotypeData(
             final String chromosome, final int position, final String ref, final String alt, final String genotype,
-            final String vcfSampleId, final BasePosition comparisonPosition, final List<FieldInfo> fields)
+            final String vcfSampleId, final List<FieldInfo> fields)
     {
         Chromosome = chromosome;
         Position = position;
@@ -29,8 +27,7 @@ public class SnpGenotypeData extends ComparableItem
         Alt = alt;
         Genotype = genotype;
         VcfSampleId = vcfSampleId;
-        mComparisonPosition = comparisonPosition;
-        
+
         addStringValue(SnpGenotypeComparer.Fields.Alt.toString(), alt, fields);
         addStringValue(SnpGenotypeComparer.Fields.Genotype.toString(), genotype, fields);
         addStringValue(SnpGenotypeComparer.Fields.VcfSampleId.toString(), vcfSampleId, fields);
@@ -45,14 +42,7 @@ public class SnpGenotypeData extends ComparableItem
     @Override
     public String key()
     {
-        if(mComparisonPosition.Position != Position)
-        {
-            return String.format("%s:%d %s liftover(%s)", Chromosome, Position, Ref, mComparisonPosition);
-        }
-        else
-        {
-            return String.format("%s:%d %s", Chromosome, Position, Ref);
-        }
+        return String.format("%s:%d %s", Chromosome, Position, Ref);
     }
 
     @Override
@@ -60,7 +50,7 @@ public class SnpGenotypeData extends ComparableItem
     {
         final SnpGenotypeData otherVar = (SnpGenotypeData) other;
 
-        if(!mComparisonPosition.Chromosome.equals(otherVar.Chromosome) || mComparisonPosition.Position != otherVar.Position)
+        if(!Chromosome.equals(otherVar.Chromosome) || Position != otherVar.Position)
             return false;
 
         if(!Ref.equals(otherVar.Ref))

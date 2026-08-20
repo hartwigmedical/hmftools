@@ -2,10 +2,9 @@ package com.hartwig.hmftools.compar.isofox;
 
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.FieldCheckCache.getOrMakeFieldCheck;
+import static com.hartwig.hmftools.compar.isofox.RnaGeneDataComparer.checkOldIsofoxFilename;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -62,7 +61,8 @@ public class RnaTranscriptDataComparer extends ItemComparer
 
         try
         {
-            String filename = determineFileName(sampleId, fileSources);
+            String filename = TranscriptExpressionFile.generateFilename(fileSources.Isofox, sampleId);
+            filename = checkOldIsofoxFilename(filename);
             TranscriptExpressionFile.read(filename).stream().map(x -> new RnaTranscriptData(x, mFields)).forEach(comparableItems::add);
         }
         catch(IOException e)
@@ -72,20 +72,5 @@ public class RnaTranscriptDataComparer extends ItemComparer
         }
 
         return comparableItems;
-    }
-
-    private static String determineFileName(final String sampleId, final PipelineSourcePaths fileSources)
-    {
-        String filename = TranscriptExpressionFile.generateFilename(fileSources.Isofox, sampleId);
-        String oldFilename = filename.replace(".tsv", ".csv");
-
-        if(!Files.exists(Paths.get(filename)) && Files.exists(Paths.get(oldFilename)))
-        {
-            return oldFilename;
-        }
-        else
-        {
-            return filename;
-        }
     }
 }

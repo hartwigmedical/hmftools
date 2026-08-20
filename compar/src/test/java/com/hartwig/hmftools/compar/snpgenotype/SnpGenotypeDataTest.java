@@ -41,53 +41,14 @@ public class SnpGenotypeDataTest extends ComparableItemTest<SnpGenotypeData, Snp
                 "Chromosome", b ->
                 {
                     b.chromosome = alternateValueSource.Chromosome;
-                    b.comparisonChromosome = alternateValueSource.mComparisonPosition.Chromosome;
                 },
                 "Position", b ->
                 {
                     b.position = alternateValueSource.Position;
-                    b.comparisonPosition = alternateValueSource.mComparisonPosition.Position;
                 },
                 "Ref", b -> b.ref = alternateValueSource.Ref
         );
         reportabilityFieldToFalseReportabilityInitializer = Collections.emptyMap();
         nameToNonPassInitializer = Collections.emptyMap();
-    }
-
-    @Test
-    public void fullyMatchesSelfWithLiftover()
-    {
-        SnpGenotypeData victim = TestSnpGenotypeDataBuilder.BUILDER.create(b ->
-        {
-            b.comparisonChromosome = "11";
-            b.comparisonPosition = 30000;
-        });
-        SnpGenotypeData liftoverVictim = TestSnpGenotypeDataBuilder.BUILDER.create(b ->
-        {
-            b.chromosome = "11";
-            b.position = 30000;
-        });
-        FieldCheckCache detailedFieldConfig = createDefaultThresholds(MatchLevel.DETAILED);
-        FieldCheckCache reportableFieldConfig = createDefaultThresholds(MatchLevel.REPORTABLE);
-
-        assertTrue(victim.matches(liftoverVictim));
-        assertTrue(liftoverVictim.matches(victim));
-        assertNull(victim.findMismatch(comparer, liftoverVictim, MatchLevel.DETAILED, false));
-        assertNull(victim.findMismatch(comparer, liftoverVictim, MatchLevel.REPORTABLE, false));
-
-        Mismatch expectedMatch = new Mismatch(victim, liftoverVictim, MismatchType.FULL_MATCH, Collections.emptyList());
-        assertEquals(expectedMatch, victim.findMismatch(comparer, liftoverVictim, MatchLevel.DETAILED, true));
-        assertEquals(expectedMatch, victim.findMismatch(comparer, liftoverVictim, MatchLevel.REPORTABLE, true));
-    }
-
-    @Test
-    public void keyNonEmptyForLiftover()
-    {
-        SnpGenotypeData victim = TestSnpGenotypeDataBuilder.BUILDER.create(b ->
-        {
-            b.comparisonChromosome = "11";
-            b.comparisonPosition = 30000;
-        });
-        assertFalse(victim.key().isEmpty());
     }
 }

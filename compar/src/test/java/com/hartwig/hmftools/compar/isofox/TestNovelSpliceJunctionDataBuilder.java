@@ -20,10 +20,6 @@ public class TestNovelSpliceJunctionDataBuilder
     public int fragmentCount = 1000;
     public AltSpliceJunctionContext regionStart = AltSpliceJunctionContext.SPLICE_JUNC;
     public AltSpliceJunctionContext regionEnd = AltSpliceJunctionContext.SPLICE_JUNC;
-    public String comparisonChromosomeStart = "9";
-    public int comparisonPositionStart = 1000;
-    public String comparisonChromosomeEnd = "9";
-    public int comparisonPositionEnd = 2000;
 
     private static final Consumer<TestNovelSpliceJunctionDataBuilder> ALTERNATE_INITIALIZER = b ->
     {
@@ -35,10 +31,6 @@ public class TestNovelSpliceJunctionDataBuilder
         b.fragmentCount = 500;
         b.regionStart = AltSpliceJunctionContext.EXONIC;
         b.regionEnd = AltSpliceJunctionContext.INTRONIC;
-        b.comparisonChromosomeStart = "7";
-        b.comparisonPositionStart = 3000;
-        b.comparisonChromosomeEnd = "7";
-        b.comparisonPositionEnd = 4000;
     };
 
     public static final TestComparableItemBuilder<TestNovelSpliceJunctionDataBuilder, RnaNovelSpliceJunctionData> BUILDER =
@@ -68,8 +60,6 @@ public class TestNovelSpliceJunctionDataBuilder
 
         return new RnaNovelSpliceJunctionData(
                 junction,
-                new BasePosition(comparisonChromosomeStart, comparisonPositionStart),
-                new BasePosition(comparisonChromosomeEnd, comparisonPositionEnd),
                 new RnaNovelSpliceJunctionComparer(null, Collections.emptyMap()).fieldsList());
     }
 }

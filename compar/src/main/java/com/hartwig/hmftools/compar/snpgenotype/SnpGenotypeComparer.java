@@ -19,6 +19,7 @@ import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.PipelineSourcePaths;
+import com.hartwig.hmftools.compar.common.SourceType;
 import com.hartwig.hmftools.compar.common.field.FieldCheck;
 import com.hartwig.hmftools.compar.common.field.FieldInfo;
 
@@ -75,8 +76,9 @@ public class SnpGenotypeComparer extends ItemComparer
             return null;
         }
 
-        final List<ComparableItem> items = Lists.newArrayList();
-        try (CloseableTribbleIterator<VariantContext> variantReader = vcfFileReader.iterator())
+        List<ComparableItem> items = Lists.newArrayList();
+
+        try(CloseableTribbleIterator<VariantContext> variantReader = vcfFileReader.iterator())
         {
             for(VariantContext variantContext : variantReader)
             {
@@ -93,10 +95,16 @@ public class SnpGenotypeComparer extends ItemComparer
                 String vcfSampleId = vcfSampleIds.get(0);
                 String genotype = variantContext.getGenotype(vcfSampleId).getType().name();
 
-                BasePosition comparisonPosition = determineComparisonGenomePosition(
-                        chromosome, position, fileSources.Source, mConfig.RequiresLiftover, mConfig.LiftoverCache);
+                if(mConfig.RequiresLiftover && fileSources.Source == SourceType.OLD)
+                {
+                    BasePosition liftoverPosition = determineComparisonGenomePosition(
+                            chromosome, position, fileSources.Source, mConfig.RequiresLiftover, mConfig.LiftoverCache);
 
-                items.add(new SnpGenotypeData(chromosome, position, ref, alt, genotype, vcfSampleId, comparisonPosition, mFields));
+                    chromosome = liftoverPosition.Chromosome;
+                    position = liftoverPosition.Position;
+                }
+
+                items.add(new SnpGenotypeData(chromosome, position, ref, alt, genotype, vcfSampleId, mFields));
             }
         }
         catch(Exception e)

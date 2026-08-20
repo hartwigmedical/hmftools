@@ -39,22 +39,18 @@ public class RnaFusionDataTest extends ComparableItemTest<RnaFusionData, RnaFusi
                 "ChromosomeUp", b ->
                 {
                     b.chromosomeUp = alternateValueSource.Fusion.chromosomeUp();
-                    b.comparisonChromosomeUp = alternateValueSource.ComparisonPositionUp.Chromosome;
                 },
                 "ChromosomeDown", b ->
                 {
                     b.chromosomeDown = alternateValueSource.Fusion.chromosomeDown();
-                    b.comparisonChromosomeDown = alternateValueSource.ComparisonPositionDown.Chromosome;
                 },
                 "PositionUp", b ->
                 {
                     b.positionUp = alternateValueSource.Fusion.positionUp();
-                    b.comparisonPositionUp = alternateValueSource.ComparisonPositionUp.Position;
                 },
                 "PositionDown", b ->
                 {
                     b.positionDown = alternateValueSource.Fusion.positionDown();
-                    b.comparisonPositionDown = alternateValueSource.ComparisonPositionDown.Position;
                 }
         );
         reportabilityFieldToFalseReportabilityInitializer = Collections.emptyMap();
@@ -73,53 +69,5 @@ public class RnaFusionDataTest extends ComparableItemTest<RnaFusionData, RnaFusi
     public void singleFieldMismatchesAreRecognizedInReportableMode()
     {
         // Override since Isofox output is never compared in reportable mode
-    }
-
-    @Test
-    public void fullyMatchesSelfWithLiftoverUp()
-    {
-        RnaFusionData victim = TestRnaFusionDataBuilder.BUILDER.create(b -> b.comparisonPositionUp = 5000);
-        RnaFusionData liftoverVictim = TestRnaFusionDataBuilder.BUILDER.create(b -> b.positionUp = 5000);
-
-        MatchLevel matchLevel = MatchLevel.DETAILED;
-        FieldCheckCache fieldConfig = createDefaultThresholds(matchLevel);
-
-        assertTrue(victim.matches(liftoverVictim));
-        assertTrue(liftoverVictim.matches(victim));
-        assertNull(victim.findMismatch(comparer, liftoverVictim, matchLevel, false));
-
-        Mismatch expectedMatch = new Mismatch(victim, liftoverVictim, MismatchType.FULL_MATCH, Collections.emptyList());
-        assertEquals(expectedMatch, victim.findMismatch(comparer, liftoverVictim, matchLevel, true));
-    }
-
-    @Test
-    public void fullyMatchesSelfWithLiftoverDown()
-    {
-        RnaFusionData victim = TestRnaFusionDataBuilder.BUILDER.create(b -> b.comparisonPositionDown = 6000);
-        RnaFusionData liftoverVictim = TestRnaFusionDataBuilder.BUILDER.create(b -> b.positionDown = 6000);
-
-        MatchLevel matchLevel = MatchLevel.DETAILED;
-        FieldCheckCache fieldConfig = createDefaultThresholds(matchLevel);
-
-        assertTrue(victim.matches(liftoverVictim));
-        assertTrue(liftoverVictim.matches(victim));
-        assertNull(victim.findMismatch(comparer, liftoverVictim, matchLevel, false));
-
-        Mismatch expectedMatch = new Mismatch(victim, liftoverVictim, MismatchType.FULL_MATCH, Collections.emptyList());
-        assertEquals(expectedMatch, victim.findMismatch(comparer, liftoverVictim, matchLevel, true));
-    }
-
-    @Test
-    public void keyNonEmptyForLiftoverUp()
-    {
-        RnaFusionData victim = TestRnaFusionDataBuilder.BUILDER.create(b -> b.comparisonPositionUp = 5000);
-        assertFalse(victim.key().isEmpty());
-    }
-
-    @Test
-    public void keyNonEmptyForLiftoverDown()
-    {
-        RnaFusionData victim = TestRnaFusionDataBuilder.BUILDER.create(b -> b.comparisonPositionDown = 6000);
-        assertFalse(victim.key().isEmpty());
     }
 }

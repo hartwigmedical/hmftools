@@ -1,9 +1,8 @@
 package com.hartwig.hmftools.compar.isofox;
 
-import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_EXTENSION;
-import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_EXTENSION;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.FieldCheckCache.getOrMakeFieldCheck;
+import static com.hartwig.hmftools.compar.isofox.RnaGeneDataComparer.checkOldIsofoxFilename;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -134,11 +133,14 @@ public class RnaSummaryComparer extends ItemComparer
     @Override
     public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final PipelineSourcePaths fileSources)
     {
-        final List<ComparableItem> comparableItems = Lists.newArrayList();
+        List<ComparableItem> comparableItems = Lists.newArrayList();
 
         try
         {
-            List<String> lines = Files.readAllLines(Paths.get(determineFileName(sampleId, fileSources)));
+            String filename = RnaStatisticFile.generateFilename(fileSources.Isofox, sampleId);
+            filename = checkOldIsofoxFilename(filename);
+
+            List<String> lines = Files.readAllLines(Paths.get(filename));
             RnaStatistics rnaStatistics = RnaStatisticFile.fromLines(lines);
             comparableItems.add(new RnaSummaryData(rnaStatistics, mFields));
         }
@@ -149,20 +151,5 @@ public class RnaSummaryComparer extends ItemComparer
         }
 
         return comparableItems;
-    }
-
-    private static String determineFileName(final String sampleId, final PipelineSourcePaths fileSources)
-    {
-        String filename = RnaStatisticFile.generateFilename(fileSources.Isofox, sampleId);
-        String oldFilename = filename.replace(TSV_EXTENSION, CSV_EXTENSION);
-
-        if(!Files.exists(Paths.get(filename)) && Files.exists(Paths.get(oldFilename)))
-        {
-            return oldFilename;
-        }
-        else
-        {
-            return filename;
-        }
     }
 }
