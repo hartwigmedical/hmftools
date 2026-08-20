@@ -29,6 +29,9 @@ public class SourceData
         ReferenceSampleIdMapping = Maps.newHashMap();
     }
 
+    public boolean isPipelineSourced() { return PipelinePaths != null; }
+    public boolean isTruthsetSourced() { return Truthset != null; }
+
     public static SourceData fromPipelineSource(final SourceType type, PipelineSourcePaths pipelinePaths)
     {
         return new SourceData(type, pipelinePaths, null);

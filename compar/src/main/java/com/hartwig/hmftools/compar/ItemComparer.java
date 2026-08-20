@@ -50,4 +50,6 @@ public abstract class ItemComparer
 
     public boolean hasReportable() { return true; }
 
+    public ComparConfig config() { return mConfig; }
+
 }

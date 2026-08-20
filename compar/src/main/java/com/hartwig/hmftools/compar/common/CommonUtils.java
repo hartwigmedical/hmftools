@@ -117,30 +117,46 @@ public class CommonUtils
 
     public static void compareItems(
             final ItemComparer comparer, final List<Mismatch> mismatches, final MatchLevel matchLevel, final boolean includeMatches,
-            final boolean includesTruthset, final List<ComparableItem> items1, final List<ComparableItem> items2)
+            final boolean includesTruthset, final List<ComparableItem> oldItems, final List<ComparableItem> newItems)
     {
+        boolean oldTruthsetSourced = comparer.config().isTruthsetSourced(SourceType.OLD);
+        boolean newTruthsetSourced = comparer.config().isTruthsetSourced(SourceType.NEW);
+
         int index1 = 0;
-        while(index1 < items1.size())
+        while(index1 < oldItems.size())
         {
-            final ComparableItem item1 = items1.get(index1);
+            final ComparableItem item1 = oldItems.get(index1);
 
             boolean matched = false;
 
             int index2 = 0;
-            while(index2 < items2.size())
+            while(index2 < newItems.size())
             {
-                final ComparableItem item2 = items2.get(index2);
+                final ComparableItem item2 = newItems.get(index2);
 
                 if(item1.matches(item2))
                 {
-                    items1.remove(index1);
-                    items2.remove(index2);
+                    oldItems.remove(index1);
+                    newItems.remove(index2);
                     matched = true;
 
                     // skip checking for diffs if the items are not reportable
-                    boolean eitherReportable = item1.reportable() || item2.reportable();
+                    boolean checkMismatch;
 
-                    if(matchLevel != REPORTABLE || eitherReportable || includesTruthset)
+                    if(matchLevel != REPORTABLE)
+                    {
+                        checkMismatch = true;
+                    }
+                    else if(item1.reportable() || item2.reportable())
+                    {
+                        checkMismatch = true;
+                    }
+                    else
+                    {
+                        checkMismatch = oldTruthsetSourced || newTruthsetSourced;
+                    }
+
+                    if(checkMismatch)
                     {
                         Mismatch mismatch = item1.findMismatch(comparer, item2, matchLevel, includeMatches, includesTruthset);
 
@@ -164,17 +180,17 @@ public class CommonUtils
             }
         }
 
-        if(items1.isEmpty() && items2.isEmpty())
+        if(oldItems.isEmpty() && newItems.isEmpty())
         {
             return;
         }
 
         List<String> emptyDiffs = Lists.newArrayList();
 
-        items1.stream().filter(x -> matchLevel != REPORTABLE || x.reportable())
+        oldItems.stream().filter(x -> matchLevel != REPORTABLE || x.reportable())
                 .forEach(x -> mismatches.add(new Mismatch(x, null, OLD_ONLY, emptyDiffs)));
 
-        items2.stream().filter(x -> matchLevel != REPORTABLE || x.reportable())
+        newItems.stream().filter(x -> matchLevel != REPORTABLE || x.reportable())
                 .forEach(x -> mismatches.add(new Mismatch(null, x, NEW_ONLY, emptyDiffs)));
     }
 

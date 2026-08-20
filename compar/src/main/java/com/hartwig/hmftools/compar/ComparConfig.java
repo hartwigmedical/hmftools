@@ -247,6 +247,9 @@ public class ComparConfig
         return Sources.stream().filter(x -> x.Type == sourceType).findFirst().orElse(null);
     }
 
+    public boolean isPipelineSourced(final SourceType sourceType) { return getSourceData(sourceType).isPipelineSourced(); }
+    public boolean isTruthsetSourced(final SourceType sourceType) { return getSourceData(sourceType).isTruthsetSourced(); }
+
     public String sourceSampleId(final SourceType sourceType, final String sampleId)
     {
         SourceData sourceData = getSourceData(sourceType);

@@ -129,7 +129,8 @@ public class SomaticVariantComparer extends ItemComparer
         String oldSourceSampleId = mConfig.sourceSampleId(OLD, sampleId);
         String newSourceSampleId = mConfig.sourceSampleId(NEW, sampleId);
 
-        boolean includesTruthset = mConfig.Sources.stream().anyMatch(x -> x.Truthset != null);
+        boolean oldTruthsetSourced = mConfig.isTruthsetSourced(SourceType.OLD);
+        boolean newTruthsetSourced = mConfig.isTruthsetSourced(SourceType.NEW);
 
         Map<String,List<SomaticVariantData>> oldVariantsMap = buildVariantMap(oldVariants);
         Map<String,List<SomaticVariantData>> newVariantsMap = buildVariantMap(newVariants);
@@ -197,11 +198,12 @@ public class SomaticVariantComparer extends ItemComparer
                 {
                     chromosomeOldVariants.remove(index1);
 
-                    if(includesTruthset || includeMismatchWithVariant(oldVariant, matchLevel)
-                    || includeMismatchWithVariant(matchedVariant, matchLevel))
+                    if((includeMismatchWithVariant(oldVariant, matchLevel) || oldTruthsetSourced)
+                    || (includeMismatchWithVariant(matchedVariant, matchLevel) || newTruthsetSourced))
                     {
                         Mismatch mismatch = oldVariant.findMismatch(
-                                this, matchedVariant, matchLevel, mConfig.IncludeMatches, includesTruthset);
+                                this, matchedVariant, matchLevel, mConfig.IncludeMatches,
+                                oldTruthsetSourced || newTruthsetSourced);
 
                         if(mismatch != null)
                             mismatches.add(mismatch);
@@ -218,7 +220,7 @@ public class SomaticVariantComparer extends ItemComparer
 
             for(SomaticVariantData newVariant : chromosomeNewVariants)
             {
-                if(!includesTruthset && !includeMismatchWithVariant(newVariant, matchLevel))
+                if(!newTruthsetSourced && !includeMismatchWithVariant(newVariant, matchLevel))
                     continue;
 
                 SomaticVariantData unfilteredVariant = findUnfilteredVariant(newVariant, OLD, oldSourceSampleId);
@@ -226,7 +228,7 @@ public class SomaticVariantComparer extends ItemComparer
                 if(unfilteredVariant != null)
                 {
                     mismatches.add(unfilteredVariant.findMismatch(
-                            this, newVariant, matchLevel, mConfig.IncludeMatches, includesTruthset));
+                            this, newVariant, matchLevel, mConfig.IncludeMatches, newTruthsetSourced));
                 }
                 else
                 {
