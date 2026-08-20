@@ -41,8 +41,8 @@ public class ClusteringState
         mHomLossList = homLossEvents;
     }
 
-    public int getDupCutoffLength() { return mDelCutoffLength; }
-    public int getDelCutoffLength() { return mDupCutoffLength; }
+    public int getDelCutoffLength() { return mDelCutoffLength; }
+    public int getDupCutoffLength() { return mDupCutoffLength; }
 
     public void reset()
     {
