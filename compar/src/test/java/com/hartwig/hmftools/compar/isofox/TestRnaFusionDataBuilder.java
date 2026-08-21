@@ -78,6 +78,6 @@ public class TestRnaFusionDataBuilder
                 .cohortFrequency(-1)
                 .build();
 
-        return new RnaFusionData(fusion, new RnaFusionComparer(null, Collections.emptyMap()).fieldsList());
+        return RnaFusionData.from(fusion, new RnaFusionComparer(null, Collections.emptyMap()).fieldsList());
     }
 }

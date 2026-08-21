@@ -89,9 +89,8 @@ public class CommonUtils
 
         if(sourceItems.containsKey(SourceType.OLD) && sourceItems.containsKey(SourceType.NEW))
         {
-            // previously support comparisons for N sources but now can only be 2 as controlled by config
-            CommonUtils.compareItems(
-                    comparer, mismatches, matchLevel, config.IncludeMatches, includesTruthset,
+            comparer.compareItems(
+                    mismatches, matchLevel, config.IncludeMatches, includesTruthset,
                     sourceItems.get(SourceType.OLD), sourceItems.get(SourceType.NEW));
 
             return true;

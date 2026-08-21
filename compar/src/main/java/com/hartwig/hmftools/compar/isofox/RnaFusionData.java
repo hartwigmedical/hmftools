@@ -133,7 +133,11 @@ public class RnaFusionData extends ComparableItem
     public boolean matches(final ComparableItem other)
     {
         final RnaFusionData otherData = (RnaFusionData)other;
+        return isMatched(otherData);
+    }
 
+    public boolean isMatched(final RnaFusionData otherData)
+    {
         if(!otherData.Name.equals(Name))
             return false;
 

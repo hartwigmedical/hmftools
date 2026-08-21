@@ -25,28 +25,28 @@ public class RnaFusionDataTest extends ComparableItemTest<RnaFusionData, RnaFusi
         RnaFusionData alternateValueSource = builder.createWithAlternateDefaults();
 
         fieldToAlternateValueInitializer = Map.of(
-                RnaFusionComparer.Fields.KnownType.toString(), b -> b.knownType = alternateValueSource.Fusion.knownType(),
-                RnaFusionComparer.Fields.JuncTypeUp.toString(), b -> b.junctionTypeUp = alternateValueSource.Fusion.junctionTypeUp(),
-                RnaFusionComparer.Fields.JuncTypeDown.toString(), b -> b.junctionTypeDown = alternateValueSource.Fusion.junctionTypeDown(),
-                RnaFusionComparer.Fields.SplitFrags.toString(), b -> b.splitFragments = alternateValueSource.Fusion.splitFragments()
+                RnaFusionComparer.Fields.KnownType.toString(), b -> b.knownType = alternateValueSource.KnownType,
+                RnaFusionComparer.Fields.JuncTypeUp.toString(), b -> b.junctionTypeUp = alternateValueSource.JunctionTypeUp,
+                RnaFusionComparer.Fields.JuncTypeDown.toString(), b -> b.junctionTypeDown = alternateValueSource.JunctionTypeDown,
+                RnaFusionComparer.Fields.SplitFrags.toString(), b -> b.splitFragments = alternateValueSource.SplitFragments
         );
         nameToAlternateIndexInitializer = Map.of(
-                "FusionName", b -> b.name = alternateValueSource.Fusion.name(),
+                "FusionName", b -> b.name = alternateValueSource.Name,
                 "ChromosomeUp", b ->
                 {
-                    b.chromosomeUp = alternateValueSource.Fusion.chromosomeUp();
+                    b.chromosomeUp = alternateValueSource.ChromosomeUp;
                 },
                 "ChromosomeDown", b ->
                 {
-                    b.chromosomeDown = alternateValueSource.Fusion.chromosomeDown();
+                    b.chromosomeDown = alternateValueSource.ChromosomeDown;
                 },
                 "PositionUp", b ->
                 {
-                    b.positionUp = alternateValueSource.Fusion.positionUp();
+                    b.positionUp = alternateValueSource.PositionUp;
                 },
                 "PositionDown", b ->
                 {
-                    b.positionDown = alternateValueSource.Fusion.positionDown();
+                    b.positionDown = alternateValueSource.PositionDown;
                 }
         );
         reportabilityFieldToFalseReportabilityInitializer = Collections.emptyMap();
