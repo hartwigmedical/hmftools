@@ -11,10 +11,6 @@ import java.util.Map;
 
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItemTest;
-import com.hartwig.hmftools.compar.FieldCheckCache;
-import com.hartwig.hmftools.compar.common.MatchLevel;
-import com.hartwig.hmftools.compar.common.Mismatch;
-import com.hartwig.hmftools.compar.common.MismatchType;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -29,7 +25,7 @@ public class RnaFusionDataTest extends ComparableItemTest<RnaFusionData, RnaFusi
         RnaFusionData alternateValueSource = builder.createWithAlternateDefaults();
 
         fieldToAlternateValueInitializer = Map.of(
-                RnaFusionComparer.Fields.KnownFusionType.toString(), b -> b.knownType = alternateValueSource.Fusion.knownType(),
+                RnaFusionComparer.Fields.KnownType.toString(), b -> b.knownType = alternateValueSource.Fusion.knownType(),
                 RnaFusionComparer.Fields.JuncTypeUp.toString(), b -> b.junctionTypeUp = alternateValueSource.Fusion.junctionTypeUp(),
                 RnaFusionComparer.Fields.JuncTypeDown.toString(), b -> b.junctionTypeDown = alternateValueSource.Fusion.junctionTypeDown(),
                 RnaFusionComparer.Fields.SplitFrags.toString(), b -> b.splitFragments = alternateValueSource.Fusion.splitFragments()

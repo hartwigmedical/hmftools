@@ -2,8 +2,6 @@ package com.hartwig.hmftools.compar.isofox;
 
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.FieldCheckCache.getOrMakeFieldCheck;
-import static com.hartwig.hmftools.compar.common.CategoryType.PURITY;
-import static com.hartwig.hmftools.compar.common.CategoryType.RNA_FUSION;
 import static com.hartwig.hmftools.compar.isofox.RnaGeneDataComparer.checkOldIsofoxFilename;
 
 import java.util.Arrays;
@@ -26,13 +24,12 @@ import com.hartwig.hmftools.compar.common.SourceType;
 import com.hartwig.hmftools.compar.common.TruthsetValue;
 import com.hartwig.hmftools.compar.common.field.FieldCheck;
 import com.hartwig.hmftools.compar.common.field.FieldInfo;
-import com.hartwig.hmftools.compar.purple.PurityData;
 
 public class RnaFusionComparer extends ItemComparer
 {
     protected enum Fields
     {
-        KnownFusionType,
+        KnownType,
         JuncTypeUp,
         JuncTypeDown,
         SplitFrags;
@@ -43,7 +40,7 @@ public class RnaFusionComparer extends ItemComparer
         super(config);
 
         mFields.add(new FieldInfo(
-                Fields.KnownFusionType.toString(), getOrMakeFieldCheck(fieldCheckMap, Fields.KnownFusionType.toString()), null));
+                Fields.KnownType.toString(), getOrMakeFieldCheck(fieldCheckMap, Fields.KnownType.toString()), null));
 
         mFields.add(new FieldInfo(
                 Fields.JuncTypeUp.toString(), getOrMakeFieldCheck(fieldCheckMap, Fields.JuncTypeUp.toString()), null));
@@ -65,7 +62,7 @@ public class RnaFusionComparer extends ItemComparer
     @Override
     public boolean hasReportable()
     {
-        return false;
+        return true;
     }
 
     @Override
@@ -106,23 +103,28 @@ public class RnaFusionComparer extends ItemComparer
                         .positionDown(liftedPositionDown.Position)
                         .build();
 
-                comparableItems.add(new RnaFusionData(adjustedFusion, mFields));
+                comparableItems.add(RnaFusionData.from(adjustedFusion, mFields));
             }
             else
             {
-                comparableItems.add(new RnaFusionData(fusion, mFields));
+                comparableItems.add(RnaFusionData.from(fusion, mFields));
            }
         }
 
         return comparableItems;
     }
 
+    @Override
     public List<ComparableItem> loadFromTruthset(final Map<String,List<TruthsetValue>> valuesByKey)
     {
         List<ComparableItem> comparableItems = Lists.newArrayList();
 
-        // TODO
-        
+        for(List<TruthsetValue> truthsetValues : valuesByKey.values())
+        {
+            RnaFusionData fusionData = RnaFusionData.fromTruthset(truthsetValues, mFields);
+            comparableItems.add(fusionData);
+        }
+
         return comparableItems;
     }
 }

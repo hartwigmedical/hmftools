@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.compar.common.field;
 
+import static java.lang.String.format;
+
 import java.util.List;
 
 public class FieldInfo
@@ -35,4 +37,6 @@ public class FieldInfo
     {
         return fields.stream().filter(x -> x.Name.equals(fieldName)).findFirst().orElse(null);
     }
+
+    public String toString() { return format("%s: %s %s", Name, FieldCheck, DisplayOnly ? "display-only" : ""); }
 }
