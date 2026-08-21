@@ -11,10 +11,10 @@ is in the sections further down. Everything in the batch/merge records below (A1
 | # | Item | Code tag / location | Notes |
 |---|------|---------------------|-------|
 | 3 | Non-Ensembl (RefSeq/NM) transcript resolution deferred | `GenesRna.resolveTranscript` | Deferred by decision: only Ensembl (ENST) transcripts are supported; any other id is reported as not found. |
-| 4 | Small coding part of a boundary exon folded into one whole-exon target | *(planned)* `GenesRna.createTargets` | Large part-coding exons now split into coding + UTR targets (done). Remaining: a boundary exon whose coding part is < a probe is folded whole; splitting it needs the short coding probe to pad into the same-exon UTR, not across the junction. See "Planned — small coding part padding". |
-| 5 | `PanelData` getters return live internal lists | `TODO` `PanelData` | No live aliasing bug found; defensively copy (also `ProbeGenerationResult` ctor). Own commit. |
-| 7 | Probe can't be filled to `PROBE_LENGTH` (mapping shorter than a probe) | `TODO?` `ProbeGenerator.coverMappedRange` | Very short transcript / tiny exon with short neighbours: even padding across junctions totals < `PROBE_LENGTH`, so no full-length probe fits and the target is silently uncovered. Decide desired behaviour (accept no coverage, or a shorter-probe fallback). |
-| 8 | RNA strandedness | *(design decision, deferred)* | RNA is single-stranded; currently emit genome-forward only. Decide one strand vs both. |
+| 4 | Small coding part of a boundary exon folded into one whole-exon target | `TODO` `GenesRna.createTargets` | **Deferred for now.** Large part-coding exons already split into coding + UTR targets. Remaining: a boundary exon whose coding part is < a probe is folded whole; the coding bases are still covered (as part of the whole-exon target), just not by a coding-specific probe. Deferred; the `TODO` note is kept in code. Approach recorded in "Planned — small coding part padding". |
+| 5 | `PanelData` getters return live internal lists | `TODO` `PanelData` | **Resolved for now: accept the current behaviour.** No live aliasing bug found; defensive copying is a robustness-only cleanup. Deferred; the `TODO` note is kept in code (also applies to the `ProbeGenerationResult` ctor). |
+| 7 | Probe can't be filled to `PROBE_LENGTH` (mapping shorter than a probe) | `TODO?` `ProbeGenerator.coverMappedRange` | **Resolved for now: accept no coverage.** A whole transcript under `PROBE_LENGTH` (only tiny non-coding RNAs; protein-coding transcripts are never this short) has no exonic sequence left to pad into, so no full-length probe fits and the target is reported uncovered in the rejection output. Accepted as the behaviour; the `TODO?` note is kept in code. Revisit only if such genes need coverage (a genomic-flank fallback for mono-exonic transcripts is the likely approach). |
+| 8 | RNA strandedness | *(resolved)* | **Resolved: genome-forward output is correct.** For standard hybridization capture the library is denatured before hybridisation, so both target strands are present and a single-stranded bait captures the locus regardless of its sense — bait strand is effectively a labelling convention. GC/Tm/off-target (and thus QS/GC evaluation) are identical for an oligo and its reverse complement, and downstream variant/CNV/fusion calling only sees enriched reads aligned to the genome. Emitting genome-forward (matching the DNA convention) is correct and sufficient. Revisit only for a non-standard single-stranded-target assay, a manufacturer requiring a specific sense, or a decision to tile both strands for sensitivity in hard regions (an extra-bait choice, not a strand choice). |
 
 ## Implementation status
 
@@ -70,8 +70,8 @@ Everything above is additive/behaviour-preserving for DNA; all DNA and RNA unit 
 
 ## Decisions (B4/B5)
 
-- **Forward strand only.** RNA probes are emitted genome-forward (matching the DNA FASTA convention); single-strand output of a chosen strand
-  is deferred (see the strandedness open issue).
+- **Forward strand only.** RNA probes are emitted genome-forward (matching the DNA FASTA convention). Resolved as correct: a denatured
+  capture library presents both strands, so bait sense is a labelling convention only (follow-up #8).
 - **Per-panel file prefixes.** DNA and RNA produce the same set of files, prefixed `dna_` / `rna_` (e.g. `dna_probes.tsv` /
   `rna_probes.tsv`). Originally the DNA files were left unprefixed to keep DNA output byte-identical during validation; once validated, the
   `dna_` prefix was applied. `sample_variant_info.tsv` is not a per-panel file and stays unprefixed.
@@ -358,8 +358,7 @@ transcripts still have their exons merged via `GeneUtils.mergeExons`.
 
 ## Decisions
 
-- **QS for spliced probes**: treat as a pre-existing issue (see below), document, revisit later.
-  Do not block RNA on it.
+- **QS for spliced probes**: was treated as a pre-existing issue; now **resolved** (see the QS section below).
 - **FASTA orientation**: genome forward (matches current DNA convention). Do NOT reverse-complement
   reverse-strand transcripts.
 - **Output separation**: separate DNA and RNA output files where appropriate. Keep the DNA probe
@@ -469,8 +468,8 @@ alignment-model score. **Not usable.** Pearson r = 0.75 but systematically optim
 **falsely accepts 9.5% of model-rejected spliced probes** — i.e. it overestimates quality, which is disallowed. The error concentrates where
 a fragment is substantial but shorter than the 40b profile window (false-accept rate peaks at 30–39b = 3.3%; <20b or ≥40b are safe ~0.3%):
 the profile is blind to that sub-window fragment, and to the artificial junction's off-targets entirely — both fundamental, not tunable. So
-the alignment model stays for spliced probes; the win is fewer BWA queries (Option A/A+), not a cheaper score. (The model QS for spliced is
-itself distorted low by the `targetScore` issue, follow-up #2 — comparing against it is imperfect, but does not change the conclusion.)
+the alignment model stays for spliced probes; the win is fewer BWA queries (Option A/A+), not a cheaper score. (At the time of this analysis
+the model QS for spliced was distorted low by the `targetScore` issue, since resolved — comparing against it was imperfect, but does not change the conclusion.)
 
 Do **not** change the profile window aggregation (`ProbeQualityProfile.aggregateQualityScore`, a length-weighted soft-min) — it is
 empirically validated against whole-probe alignment and real probe performance, and must not be made to overestimate. A safe cheap
@@ -488,7 +487,7 @@ target (coding if the noncoding part is also short, else UTR), so there is no co
 **Goal:** generate a coding-focused probe for that short coding part, padded to `PROBE_LENGTH`. The coding part
 sits against a real splice junction on one side and the **same-exon UTR** on the other. Padding should prefer
 the same-exon UTR (contiguous → a single-region probe, good profile-scored QS) over the adjacent exon across
-the junction (spliced → alignment-model QS, worse, and the follow-up-#2 class of distortion). The UTR bases
+the junction (spliced → alignment-model QS, worse). The UTR bases
 consumed as padding are covered anyway by the UTR target, so the only cost is a little overlap.
 
 **Why it isn't automatic today.** `coverExonRange` covers each target independently over the per-exon
@@ -535,8 +534,8 @@ Background/context (the actionable items are in the "Outstanding follow-ups" tab
   specified; Ensembl cache loaded once and shared; RNA verbose candidate-probe output added.
 - **Merge probe generation:** DNA and RNA unified into one `ProbeGenerator` path (M1–M5); `RnaProbeGenerator` deleted.
 
-Still open: see the "Outstanding follow-ups" table at the top (performance, README tiling section, plus the
-code-tagged items).
+Still open: see the "Outstanding follow-ups" table at the top (the code-tagged items #4, #5, #8). Performance
+(Option A/A+) and the README tiling section are done.
 
 ## Merge plan: unify DNA + RNA probe generation
 

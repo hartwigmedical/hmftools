@@ -244,7 +244,8 @@ public class ProbeGenerator
         int maxStart = min(mapping.length() - PROBE_LENGTH, rangeEnd - 1);
         BaseRegion targetRegion = spaceRegion(rangeStart, rangeEnd);
         // TODO? When the whole mapping is shorter than a probe, no window fits and the target gets no coverage - the short-exon padding limit.
-        //  Probes are fixed length throughout, so a fix means a pipeline-wide change (e.g. shorter probes). See RNA_DESIGN_NOTES follow-up #7.
+        //  Probes are fixed length throughout, so a fix means a pipeline-wide change (e.g. shorter probes). Accepted for now; only tiny
+        //  non-coding RNAs are this short, and the uncovered target is reported in the rejection output.
 
         // Accepted candidate windows indexed by probe-space start (as a 1-indexed coordinate), merged into maximal acceptable sub-ranges.
         Map<Integer, Probe> acceptableProbes = new HashMap<>();

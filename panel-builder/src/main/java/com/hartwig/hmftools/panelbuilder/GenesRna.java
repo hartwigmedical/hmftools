@@ -348,7 +348,7 @@ public class GenesRna
             boolean isNonCodingExon = nonCodingBases > 0 && codingBases < PROBE_LENGTH;
 
             // TODO: a coding part shorter than a probe is folded into a whole-exon target rather than getting its own coding probe padded into
-            //  the adjacent same-exon UTR. See RNA_DESIGN_NOTES follow-up #4.
+            //  the adjacent same-exon UTR. Deferred for now; the coding bases are still covered by the whole-exon target.
             if(isCodingExon)
             {
                 // Any noncoding portion is shorter than a probe, so cover the whole exon as coding.
