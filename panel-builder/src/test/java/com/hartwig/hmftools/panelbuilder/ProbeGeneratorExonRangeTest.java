@@ -236,7 +236,6 @@ public class ProbeGeneratorExonRangeTest
         List<ChrBaseRegion> probes = singleRegions(result);
         assertEquals(
                 List.of(
-                        // TODO? is it correct to produce 3 overlapping probes, or prefer 2 gapped probes?
                         new ChrBaseRegion("1", 1001, 1120),
                         new ChrBaseRegion("1", 1066, 1185),
                         new ChrBaseRegion("1", 1131, 1250)),
