@@ -24,6 +24,11 @@ public class PanelBuilderConstants
     // 0 = maximise overlap. 1 = maximise extension.
     public static final double PROBE_OVERLAP_EXTENSION_BALANCE = 0.5;
 
+    // RNA probe constants.
+    // Extra length beyond a probe within which an exon (or acceptable sub-range) is still covered by a single centred probe rather than
+    // tiled with multiple probes.
+    public static final int RNA_EXON_SINGLE_PROBE_SLACK = REGION_UNCOVERED_MAX;
+
     // Gene probes constants.
     // All the region and gap sizes should be much larger than the probe size to avoid probe overlap.
     // Space between the gene and upstream/downstream region probes.
@@ -43,6 +48,11 @@ public class PanelBuilderConstants
     public static final double GENE_GENERAL_GC_TARGET = 0.45;
     public static final double GENE_GENERAL_GC_TOLERANCE = 1;
     public static final double GENE_CN_QUALITY_MIN = 0.5;
+
+    // Gene RNA probes constants.
+    public static final double GENE_RNA_QUALITY_MIN = 0.05;
+    public static final double GENE_RNA_GC_TARGET = 0.45;
+    public static final double GENE_RNA_GC_TOLERANCE = 1;
 
     // Copy number backbone constants.
     public static final int CN_BACKBONE_RESOLUTION_KB_DEFAULT = 1_000;
@@ -101,7 +111,7 @@ public class PanelBuilderConstants
     public static final double SAMPLE_SUBCLONAL_LIKELIHOOD_MIN = 0.95;
     public static final int SAMPLE_INSERT_SEQUENCE_LENGTH_MAX = 60;
 
-    // Output naming.
+    // Output naming. The per-panel probe output files share these base names, prefixed per panel (DNA / RNA) at write time.
     public static final String PANEL_PROBES_FILE_STEM = "probes";
     public static final String COVERED_TARGET_REGIONS_FILE_NAME = "targets.bed";
     public static final String COVERED_REGIONS_FILE_NAME = "panel.bed";
@@ -112,6 +122,10 @@ public class PanelBuilderConstants
     public static final String CANDIDATE_PROBES_FILE_NAME = "candidate_probes.tsv.gz";
     public static final String GENE_STATS_FILE_NAME = "gene_stats.tsv";
     public static final String SAMPLE_VARIANT_INFO_FILE_NAME = "sample_variant_info.tsv";
+
+    // Per-panel output file prefixes. DNA and RNA produce the same set of files, distinguished by prefix.
+    public static final String DNA_OUTPUT_PREFIX = "dna_";
+    public static final String RNA_OUTPUT_PREFIX = "rna_";
 
     public static final String FASTA_EXTENSION = ".fasta";
 

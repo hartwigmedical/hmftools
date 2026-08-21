@@ -72,6 +72,7 @@ public class PanelData implements PanelBuffer
         }
     }
 
+    // TODO: these getters return the live internal lists by reference (peers copy defensively). No aliasing bug today, but return copies.
     public List<Probe> probes()
     {
         return mProbes;

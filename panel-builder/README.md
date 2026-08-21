@@ -10,6 +10,7 @@ Resource files specific to PanelBuilder are [available here](https://console.clo
 ## Supported Features
 
 - Genes (coding, promoter, UTR, flanks)
+- Genes RNA (exon-aware transcript probes)
 - Copy number backbone
 - CDR3
 - Sample variants from WiGiTS analysis
@@ -35,6 +36,7 @@ Resource files specific to PanelBuilder are [available here](https://console.clo
 | ensembl_data_dir      | Path                         | (none)                      | Ensembl cache directory.                                                                                                                 |
 | bwa_lib               | Path                         | Search in current directory | Path to BWA-MEM shared library object.                                                                                                   |
 | genes                 | Path                         | (none)                      | Path to TSV file containing desired gene features. If not specified, gene probes are not produced.                                       |
+| genes_rna             | Path                         | (none)                      | Path to TSV file containing desired RNA gene features. If not specified, RNA gene probes are not produced.                               |
 | cn_backbone           | Flag                         | (none)                      | If specified, include copy number backbone probes in the panel.                                                                          |
 | cn_backbone_res_kb    | Integer                      | 1000                        | Approximate spacing between copy number backbone probes, in kb.                                                                          |
 | het_sites             | Path                         | (none)                      | Path to heterozygous SNP sites TSV file for copy number backbone. May be GZIP'd.                                                         |
@@ -118,6 +120,8 @@ It is important to note that when you request a particular feature, PanelBuilder
 You should check the output to see which probes/regions were rejected and determine if that is acceptable for your use case.
 
 ## Feature Details & Probe Generation
+
+Features are for DNA probes except where specified.
 
 ### Genes
 
@@ -343,6 +347,43 @@ ChromosomeStart	PositionStart	OrientationStart	ChromosomeEnd	PositionEnd	Orienta
 1	30900000	1	1	30900100	-1	AGGCTGAC	INDEL	NULL
 ```
 
+### Genes RNA
+
+Probes covering the transcribed (exonic) sequence of selected genes, for RNA panels.
+Coding sequence is always covered; the 5' and 3' UTRs are optional per gene.
+This is separate from the DNA gene feature above and is written to separate output files (see "Output" section).
+
+Probes are placed in an exon-aware manner designed to maximise performance for both known transcripts and novel splices/fusions.
+This is done by ensuring probes are constrained to be within exon boundaries where possible. See "Exon-aware Tiling (RNA)" section for more details.
+
+Probe evaluation criteria:
+
+- `QS>=0.05`
+
+Notes:
+
+- **Transcript selection.** If no transcripts are specified, the gene's canonical transcript is used. Otherwise the listed Ensembl transcripts are used, with their exons merged.
+- **Strand.** Probe sequences are output genome-forward, regardless of gene strand.
+
+#### RNA Gene Feature Input File
+
+TSV file with these columns:
+
+| Column      | Type                 | Description                                                                                   |
+|-------------|----------------------|-----------------------------------------------------------------------------------------------|
+| GeneName    | String               | Ensembl gene name.                                                                            |
+| Include5UTR | Boolean              | Produce probes in 5' UTR regions?                                                             |
+| Include3UTR | Boolean              | Produce probes in 3' UTR regions?                                                             |
+| TransNames  | Comma separated list | Ensembl names of the transcripts to cover. If empty, the gene's canonical transcript is used. |
+
+Example:
+
+```text
+GeneName	Include5UTR	Include3UTR	TransNames
+EGFR	FALSE	FALSE	
+TP53	TRUE	TRUE	ENST00000269305
+```
+
 ### Whole Region Tiling
 
 This section describes the algorithm used when a large region is to be fully covered with probes.
@@ -363,6 +404,28 @@ This identifies all subregions where overlap with a probe would cause that probe
     - If the probes cover more bases than the subregion size, the "extra" bases are allocated equally between probe overlap and extension outside the subregion.
 4. Subregions of the target region which are not covered by the resulting set of probes (and are not the 10b of allowable uncovered edge) are marked as rejected.
 
+### Exon-aware Tiling (RNA)
+
+This section describes how probes are tiled for RNA gene features (see "Genes RNA").
+It extends the "Whole Region Tiling" algorithm so that probes cover only exonic (transcribed) sequence.
+
+Goals:
+
+- Probes cover only exonic bases, never intronic bases, so they hybridise to spliced RNA.
+- The sequence right at each splice junction is covered well, and prefer containing probes within the exon, so probes capture both the known transcript and novel splices/fusions through that junction.
+- Aside from these constraints, coverage and overlap behave like whole region tiling.
+
+Each target region (a coding or UTR part of an exon) is tiled according to its length:
+
+1. **Longer than a probe:** tiled as in whole region tiling, except the outermost probes are pinned flush to the exon boundaries instead of leaving the usual edge gap. Interior probes are evenly spaced.
+2. **About one probe long:** a single probe centred in the range, with a small edge gap allowed (as in whole region tiling).
+3. **Shorter than a probe:** a probe cannot fit within the exon, so a single probe is centred and padded across the splice junction(s) into the adjacent exon(s) if possible.
+
+Two further cases follow from the above:
+
+- **Rejected region within an exon:** as in whole region tiling, the exon is split at the rejected region into acceptable sub-ranges, each tiled by the rules above.
+- **Not coverable:** if no acceptable, in-bounds probe can be formed, then no probe is produced and the range is marked rejected.
+
 ### Probe Overlap Handling
 
 Probes are generated in this order, with probes generated first having priority over subsequent probes:
@@ -382,27 +445,35 @@ Exceptions:
 - Whole region tiling: The algorithm attempts to avoid overlapping existing probes, although it is not guaranteed.
 - Variant probes: If the variant introduces at least 5b of difference to the reference genome, the probe is always included, no matter the amount of overlap with existing probes.
 
+RNA probes are completely separate from DNA probes.
+
 ## Output
+
+The DNA and RNA panels produce the same set of per-panel files, distinguished by a `dna_` or `rna_` prefix, indicated with `{dna,rna}` below.
 
 Main outputs:
 
-| File           | Description                                                                                                                                                                        |
-|----------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| probes.tsv     | Full information for each probe in the panel.                                                                                                                                      |
-| probes.fasta   | Base sequences of probes in the panel.                                                                                                                                             |
-| rejections.tsv | Full information for each uncovered region or rejected probe.                                                                                                                      |
-| panel.bed      | Probe regions, merged and deduplicated. These are the reference genome regions which the panel covers and are expected to be captured. This is NOT the same as the target regions. |
+| File                     | Description                                                                                                                                                                        |
+|--------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| {dna,rna}_probes.tsv     | Full information for each probe in the panel.                                                                                                                                      |
+| {dna,rna}_probes.fasta   | Base sequences of probes in the panel.                                                                                                                                             |
+| {dna,rna}_rejections.tsv | Full information for each uncovered region or rejected probe.                                                                                                                      |
+| {dna,rna}_panel.bed      | Probe regions, merged and deduplicated. These are the reference genome regions which the panel covers and are expected to be captured. This is NOT the same as the target regions. |
 
 Informational/visualisation/debugging outputs:
 
-| File                     | Description                                                                                                               |
-|--------------------------|---------------------------------------------------------------------------------------------------------------------------|
-| probes.bed               | Individual probe regions. Similar to `panel.bed` but regions are not merged.                                              |
-| targets.bed              | Individual regions which the probes are targeting (subset of `probes.bed`).                                               |
-| rejections.bed           | Regions which were rejected. Excludes variant probes.                                                                     |                                                                                                
-| gene_stats.tsv           | Statistics on probes on a per-gene basis. Only produced if gene features were requested.                                  |
-| sample_variant_info.tsv  | Additional information used in processing on a per-variant basis. Only produced if sample variants probes were requested. |
-| candidate_targets.bed.gz | All target regions evaluated for suitability.                                                                             |
-| candidate_probes.tsv.gz  | All probes evaluated for suitability. Only produced if `verbose_output` is specified.                                     |
+| File                               | Description                                                                                                               |
+|------------------------------------|---------------------------------------------------------------------------------------------------------------------------|
+| {dna,rna}_probes.bed               | Individual probe regions. Similar to `dna_panel.bed` but regions are not merged.                                          |
+| {dna,rna}_targets.bed              | Individual regions which the probes are targeting (subset of `_probes.bed`).                                              |
+| {dna,rna}_rejections.bed           | Regions which were rejected. Excludes variant probes.                                                                     |
+| {dna,rna}_gene_stats.tsv           | Statistics on probes on a per-gene basis. Only produced if gene features were requested.                                  |
+| {dna,rna}_candidate_targets.bed.gz | All target regions evaluated for suitability.                                                                             |
+| {dna,rna}_candidate_probes.tsv.gz  | All probes evaluated for suitability. Only produced if `verbose_output` is specified.                                     |
+| sample_variant_info.tsv            | Additional information used in processing on a per-variant basis. Only produced if sample variants probes were requested. |
+
+The probe region/sequence columns are different between DNA and RNA due to differing possibilities:
+- DNA: `StartRegion`, `MiddleSequence`, `EndRegion`.
+- RNA: `Segment` - list of regions or sequences.
 
 All output files will be prefixed by `output_id` if specified.

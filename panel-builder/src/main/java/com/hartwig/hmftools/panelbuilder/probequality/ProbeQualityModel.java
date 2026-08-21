@@ -2,14 +2,19 @@ package com.hartwig.hmftools.panelbuilder.probequality;
 
 import static java.lang.Math.min;
 
-import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import com.hartwig.hmftools.common.bwa.BwaMemAligner;
 import com.hartwig.hmftools.common.bwa.BwaMemAlignParams;
 import com.hartwig.hmftools.common.bwa.BwaMemAlignerConfig;
 import com.hartwig.hmftools.common.bwa.IBwaMemAligner;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
+import htsjdk.samtools.SAMSequenceDictionary;
+import htsjdk.samtools.SAMSequenceRecord;
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
 
 // Evaluates the off-target risk of a probe given its alignments from BWA.
@@ -24,19 +29,25 @@ public class ProbeQualityModel
     // Amount that one alignment match counts towards the risk score.
     // E.g. value of 10 means an alignment with score = mMatchScoreThreshold contributes 10 risk score points.
     private final int mMatchScoreOffset;
+    // BWA-MEM per-base match reward; a full-length perfect alignment scores mTargetProbeLength * mMatchScore.
+    private final int mMatchScore;
+    // Maps a BWA alignment's reference contig index (getRefId) to its chromosome name, so an alignment can be tested against a probe's source
+    // regions. Built from the reference sequence dictionary, whose order matches the BWA index.
+    private final Map<Integer, String> mRefIdToChromosome;
 
     // Use in production; the constructor is for injecting a test aligner.
     public static ProbeQualityModel create(
             final String bwaIndexImage, final int threads, final int targetProbeLength, final int matchScoreThreshold,
-            final int matchScoreOffset)
+            final int matchScoreOffset, final Map<Integer, String> refIdToChromosome)
     {
         BwaMemAlignerConfig config = new BwaMemAlignerConfig(
                 bwaIndexImage, alignParams(targetProbeLength, matchScoreThreshold), true, threads, null);
-        return new ProbeQualityModel(new BwaMemAligner(config), targetProbeLength, matchScoreThreshold, matchScoreOffset);
+        return new ProbeQualityModel(
+                new BwaMemAligner(config), targetProbeLength, matchScoreThreshold, matchScoreOffset, refIdToChromosome);
     }
 
     public ProbeQualityModel(final IBwaMemAligner aligner, final int targetProbeLength, final int matchScoreThreshold,
-            final int matchScoreOffset)
+            final int matchScoreOffset, final Map<Integer, String> refIdToChromosome)
     {
         mAligner = aligner;
         if(targetProbeLength < 1)
@@ -51,6 +62,8 @@ public class ProbeQualityModel
             throw new IllegalArgumentException("matchScoreOffset must be >= 0");
         }
         mMatchScoreOffset = matchScoreOffset;
+        mMatchScore = BwaMemAlignParams.DEFAULT.matchReward();
+        mRefIdToChromosome = refIdToChromosome;
     }
 
     // BWA-MEM alignment parameters tuned to find the many low-scoring off-target matches this model relies on.
@@ -83,15 +96,28 @@ public class ProbeQualityModel
     {
     }
 
-    public List<Result> computeFromSeqString(final List<String> probes)
+    // Builds the refId -> chromosome map from a reference genome sequence dictionary, whose order matches the BWA index.
+    public static Map<Integer, String> buildRefIdToChromosome(final SAMSequenceDictionary refGenomeDictionary)
     {
-        List<byte[]> probeBytes = probes.stream().map(String::getBytes).toList();
-        return computeFromSeqBytes(probeBytes);
+        return refGenomeDictionary.getSequences().stream()
+                .collect(Collectors.toMap(SAMSequenceRecord::getSequenceIndex, SAMSequenceRecord::getSequenceName));
     }
 
-    // Compute probe qualities for a list of probes.
-    public List<Result> computeFromSeqBytes(final List<byte[]> probes)
+    public List<Result> computeFromSeqString(final List<String> probes, final List<List<ChrBaseRegion>> probeSourceRegions)
     {
+        List<byte[]> probeBytes = probes.stream().map(String::getBytes).toList();
+        return computeFromSeqBytes(probeBytes, probeSourceRegions);
+    }
+
+    // Compute probe qualities. probeSourceRegions[i] is the reference region(s) probe i is built from (its intended on-target capture loci):
+    // one region for a normal probe, several for a constructed probe (variant/SV, RNA spliced). Alignments landing on those are excluded from
+    // the off-target risk; the rest count as off-target, normalised against a theoretical full-length match.
+    public List<Result> computeFromSeqBytes(final List<byte[]> probes, final List<List<ChrBaseRegion>> probeSourceRegions)
+    {
+        if(probes.size() != probeSourceRegions.size())
+        {
+            throw new IllegalArgumentException("probes and probeSourceRegions must be the same size");
+        }
         probes.forEach(probe ->
         {
             if(probe.length != mTargetProbeLength)
@@ -101,22 +127,20 @@ public class ProbeQualityModel
         });
 
         List<List<BwaMemAlignment>> alignments = mAligner.alignSequences(probes);
-        return alignments.stream().map(this::computeFromAlignments).toList();
+        return IntStream.range(0, alignments.size())
+                .mapToObj(i -> computeFromAlignments(alignments.get(i), probeSourceRegions.get(i)))
+                .toList();
     }
 
-    private Result computeFromAlignments(final List<BwaMemAlignment> alignments)
+    private Result computeFromAlignments(final List<BwaMemAlignment> alignments, final List<ChrBaseRegion> sourceRegions)
     {
-        // Order by best match first.
-        alignments.sort(Comparator.comparing(BwaMemAlignment::getAlignerScore, Comparator.reverseOrder()));
-        // First alignment which is assumed to be the on-target exact match.
-        int targetScore = alignments.get(0).getAlignerScore();
+        // Normalise against a theoretical perfect full-length match. Alignments landing on the probe's source region(s) are the intended
+        // on-target captures and are excluded; every other alignment above the threshold is off-target.
+        int targetScore = mTargetProbeLength * mMatchScore;
         List<Integer> offTarget = alignments.stream()
-                // Drop the first alignment which is assumed to be the on-target exact match.
-                .skip(1)
-                // Only need the alignment scores. The alignment score from BWA-MEM is effectively a similarity score.
+                .filter(alignment -> !isOnTarget(alignment, sourceRegions))
                 .map(BwaMemAlignment::getAlignerScore)
-                // Keep only alignments with score above the configured threshold.
-                .takeWhile(score -> score >= mMatchScoreThreshold)
+                .filter(score -> score >= mMatchScoreThreshold)
                 .toList();
         int offTargetCount = offTarget.size();
         long offTargetScoreSum = offTarget.stream().mapToLong(s -> s).sum();
@@ -125,5 +149,26 @@ public class ProbeQualityModel
         double effectiveOffTargetMatchLength = (double) riskScore / (targetScore - mMatchScoreThreshold + mMatchScoreOffset);
         double qualityScore = 1 / (1 + effectiveOffTargetMatchLength);
         return new Result(qualityScore, riskScore, offTargetCount, offTargetScoreSum);
+    }
+
+    // Whether an alignment lands on one of the probe's source regions (an intended on-target capture), resolving the alignment's reference
+    // contig index to a chromosome name via the sequence dictionary.
+    private boolean isOnTarget(final BwaMemAlignment alignment, final List<ChrBaseRegion> sourceRegions)
+    {
+        String chromosome = mRefIdToChromosome.get(alignment.getRefId());
+        if(chromosome == null)
+        {
+            return false;
+        }
+        int alignmentStart = alignment.getRefStart() + 1;   // BWA reference positions are 0-based; source regions are 1-based.
+        int alignmentEnd = alignment.getRefEnd();
+        for(ChrBaseRegion region : sourceRegions)
+        {
+            if(chromosome.equals(region.chromosome()) && alignmentStart <= region.end() && alignmentEnd >= region.start())
+            {
+                return true;
+            }
+        }
+        return false;
     }
 }
