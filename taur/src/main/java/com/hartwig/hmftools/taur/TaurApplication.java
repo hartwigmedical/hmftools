@@ -45,9 +45,6 @@ public class TaurApplication
 {
     private final TaurConfig mConfig;
 
-    private BufferedWriter mWriterR1;
-    private BufferedWriter mWriterR2;
-
     public static final String APP_NAME = "Taur";
 
     private static final int LINE_LOG_COUNT = 1000000;
@@ -113,28 +110,17 @@ public class TaurApplication
         TR_LOGGER.info("Taur complete, totalReads({}), mins({})", readCount, runTimeMinsStr(startTimeMs));
     }
 
-    private BufferedWriter createOutputWriter(final String inputFile)
-    {
-        String outputFile = mConfig.outputFastqFilename(inputFile);
-
-        try
-        {
-            return outputFile.endsWith(".gz") ? createGzipBufferedWriter(outputFile) : createBufferedWriter(outputFile);
-        }
-        catch(IOException e)
-        {
-            TR_LOGGER.error("error creating fastq output file({}): {}", outputFile, e.toString());
-            System.exit(1);
-            return null;
-        }
-    }
-
     private static BufferedReader openReader(final String fastqFile) throws Exception
     {
-        InputStream fis = Files.newInputStream(Paths.get(fastqFile));
-        BufferedInputStream bis = new BufferedInputStream(fis);
-        GZIPInputStream gzis = new GZIPInputStream(bis);
-        InputStreamReader isr = new InputStreamReader(gzis, StandardCharsets.UTF_8);
+        InputStream inputStream = Files.newInputStream(Paths.get(fastqFile));
+
+        if(fastqFile.endsWith(FASTQ_ZIP_EXTENSION))
+        {
+            BufferedInputStream bis = new BufferedInputStream(inputStream);
+            inputStream = new GZIPInputStream(bis);
+        }
+
+        InputStreamReader isr = new InputStreamReader(inputStream, StandardCharsets.UTF_8);
         return new BufferedReader(isr);
     }
 
