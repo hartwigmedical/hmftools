@@ -248,8 +248,7 @@ public class GenesRna
         return error ? emptyList() : resolved;
     }
 
-    // Resolves a single Ensembl transcript by name. RefSeq (NM) ids are reported as not found for now.
-    // TODO: support NM resolution via the (non-1:1) Ensembl<->RefSeq mapping, with clear not-found / ambiguous errors.
+    // Resolves a single Ensembl transcript by name.
     @Nullable
     static TranscriptData resolveTranscript(final GeneData geneData, final List<TranscriptData> allTranscripts,
             final String transcriptName)

@@ -10,7 +10,7 @@ is in the sections further down. Everything in the batch/merge records below (A1
 
 | # | Item | Code tag / location | Notes |
 |---|------|---------------------|-------|
-| 3 | RefSeq/NM transcript resolution disabled | `TODO` `GenesRna.resolveTranscript` | Validate the non-1:1 Ensembl↔RefSeq mapping, then re-enable. |
+| 3 | Non-Ensembl (RefSeq/NM) transcript resolution deferred | `GenesRna.resolveTranscript` | Deferred by decision: only Ensembl (ENST) transcripts are supported; any other id is reported as not found. |
 | 4 | Small coding part of a boundary exon folded into one whole-exon target | *(planned)* `GenesRna.createTargets` | Large part-coding exons now split into coding + UTR targets (done). Remaining: a boundary exon whose coding part is < a probe is folded whole; splitting it needs the short coding probe to pad into the same-exon UTR, not across the junction. See "Planned — small coding part padding". |
 | 5 | `PanelData` getters return live internal lists | `TODO` `PanelData` | No live aliasing bug found; defensively copy (also `ProbeGenerationResult` ctor). Own commit. |
 | 7 | Probe can't be filled to `PROBE_LENGTH` (mapping shorter than a probe) | `TODO?` `ProbeGenerator.coverMappedRange` | Very short transcript / tiny exon with short neighbours: even padding across junctions totals < `PROBE_LENGTH`, so no full-length probe fits and the target is silently uncovered. Decide desired behaviour (accept no coverage, or a shorter-probe fallback). |
@@ -30,7 +30,7 @@ is in the sections further down. Everything in the batch/merge records below (A1
   `RnaProbeGeneratorTest`, `RegionMappingTest`). Not yet wired (B5). Candidate target regions are added by the caller (mirrors
   `coverUncoveredRegion`).
 - **B3 [DONE]** — `GenesRna` (mirrors `Genes`): loads the RNA genes file (enum `Column` with `DelimFileReader`), resolves transcripts
-  (canonical transcript by default; else Ensembl `TransName` subset — **RefSeq/NM resolution disabled for now**),
+  (canonical transcript by default; else Ensembl `TransName` subset — **only Ensembl transcripts supported**),
   merges
   exons via the new shared `GeneUtils.mergeExons`, builds the per-gene exon `RegionMapping`, and computes strand-aware target ranges
   (`createTargets`). **Whole-exon classification:** an exon with any coding base is one coding target (whole exon); a fully noncoding exon
@@ -159,7 +159,7 @@ validate by unit tests, then a synthetic end-to-end panel. Nothing DNA-facing ch
       junction crossing happens only in the padding branch. Kept as a separate class from `ProbeGenerator`
       for now (composition over the shared `ProbeEvaluator`); DNA paths untouched.
 - **B3. Transcript resolution + target ranges. [DONE]** `GenesRna`: loads RNA genes file; resolves
-  transcripts (canonical by default, else Ensembl `TransName` subset — RefSeq/NM disabled for now);
+  transcripts (canonical by default, else Ensembl `TransName` subset — only Ensembl supported);
   merges exons (shared `GeneUtils.mergeExons`); builds the exon `RegionMapping`; computes strand-aware
   target ranges via `createTargets` with **whole-exon classification** (any coding base → whole exon is
   a coding target; fully noncoding exon → single 5'/3' UTR target by position + strand). Coding always,
@@ -352,9 +352,9 @@ transcripts still have their exons merged via `GeneUtils.mergeExons`.
 - Subset given → resolve each listed ID against `TranscriptData.TransName` (Ensembl), from `getTranscripts(geneId)`.
 - Probe/target extra info is `gene:transcriptId(s):featureType` (the transcript id(s) always listed, canonical id by
   default). DNA likewise outputs the transcript id, not a "canon" placeholder.
-- **NM/RefSeq resolution is disabled for now** (`GenesRna.resolveTranscript` matches `TransName` only). It
-  needs validation first: the Ensembl↔RefSeq mapping is not 1:1 and `RefSeqId` may be null or multi-valued.
-  Re-enable via a `RefSeqId` fallback with clear not-found / ambiguous errors once validated.
+- **Only Ensembl transcripts are supported** (`GenesRna.resolveTranscript` matches `TransName` only). Non-Ensembl
+  (RefSeq/NM) resolution is deferred by decision: the Ensembl↔RefSeq mapping is not 1:1 and `RefSeqId` may be null
+  or multi-valued, so it would need validation before being offered. Any non-Ensembl id is reported as not found.
 
 ## Decisions
 

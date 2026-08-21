@@ -230,20 +230,20 @@ public class GenesRnaTest
     public void testResolveTranscript()
     {
         GeneData gene = new GeneData("GENE1", "GENE1", "1", FORWARD, 1000, 3099, "");
-        TranscriptData enst1 = transcript("ENST1", "NM_1");
-        TranscriptData enst2 = transcript("ENST2", null);
+        TranscriptData enst1 = transcript("ENST1");
+        TranscriptData enst2 = transcript("ENST2");
         List<TranscriptData> all = List.of(enst1, enst2);
 
         // Ensembl name match.
         assertSame(enst2, GenesRna.resolveTranscript(gene, all, "ENST2"));
         // Unknown Ensembl name.
         assertNull(GenesRna.resolveTranscript(gene, all, "ENST9"));
-        // RefSeq (NM) resolution is currently disabled, so a RefSeq id is not matched even though the transcript carries it.
+        // Only Ensembl ids are supported; a non-Ensembl (e.g. RefSeq) id is not matched.
         assertNull(GenesRna.resolveTranscript(gene, all, "NM_1"));
     }
 
-    private static TranscriptData transcript(final String transName, final String refSeqId)
+    private static TranscriptData transcript(final String transName)
     {
-        return new TranscriptData(1, transName, "GENE1", false, FORWARD, 1000, 2000, 1000, 2000, "protein_coding", refSeqId);
+        return new TranscriptData(1, transName, "GENE1", false, FORWARD, 1000, 2000, 1000, 2000, "protein_coding", null);
     }
 }
