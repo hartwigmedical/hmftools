@@ -35,21 +35,21 @@ public class RnaNovelSpliceJunctionDataTest
         RnaNovelSpliceJunctionData alternateValueSource = builder.createWithAlternateDefaults();
 
         fieldToAlternateValueInitializer = Map.of(
-                RnaNovelSpliceJunctionComparer.Fields.Type.toString(), b -> b.type = alternateValueSource.Junction.type(),
-                RnaNovelSpliceJunctionComparer.Fields.FragmentCount.toString(), b -> b.fragmentCount = alternateValueSource.Junction.fragmentCount(),
-                RnaNovelSpliceJunctionComparer.Fields.RegionStart.toString(), b -> b.regionStart = alternateValueSource.Junction.regionStart(),
-                RnaNovelSpliceJunctionComparer.Fields.RegionEnd.toString(), b -> b.regionEnd = alternateValueSource.Junction.regionEnd());
+                RnaNovelSpliceJunctionComparer.Fields.Type.toString(), b -> b.type = alternateValueSource.Type,
+                RnaNovelSpliceJunctionComparer.Fields.FragmentCount.toString(), b -> b.fragmentCount = alternateValueSource.FragmentCount,
+                RnaNovelSpliceJunctionComparer.Fields.RegionStart.toString(), b -> b.regionStart = alternateValueSource.RegionTypeStart,
+                RnaNovelSpliceJunctionComparer.Fields.RegionEnd.toString(), b -> b.regionEnd = alternateValueSource.RegionTypeEnd);
 
         nameToAlternateIndexInitializer = Map.of(
-                FLD_GENE_NAME, b -> b.geneName = alternateValueSource.Junction.geneName(),
+                FLD_GENE_NAME, b -> b.geneName = alternateValueSource.GeneName,
                 FLD_CHROMOSOME, b -> {
-                    b.chromosome = alternateValueSource.Junction.chromosome();
+                    b.chromosome = alternateValueSource.Chromosome;
                 },
                 FLD_ALT_SJ_POS_START, b -> {
-                    b.junctionStart = alternateValueSource.Junction.junctionStart();
+                    b.junctionStart = alternateValueSource.JunctionStart;
                 },
                 FLD_ALT_SJ_POS_END, b -> {
-                    b.junctionEnd = alternateValueSource.Junction.junctionEnd();
+                    b.junctionEnd = alternateValueSource.JunctionEnd;
                 });
         reportabilityFieldToFalseReportabilityInitializer = Collections.emptyMap();
         nameToNonPassInitializer = Collections.emptyMap();

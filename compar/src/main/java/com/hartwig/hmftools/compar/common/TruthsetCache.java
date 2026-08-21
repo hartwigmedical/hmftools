@@ -23,7 +23,8 @@ public class TruthsetCache
 {
     private final Map<String,Map<CategoryType,List<TruthsetValue>>> mSampleDataMap;
 
-    private static final String FLD_STATUS = "Status";
+    public static final String FLD_STATUS = "Status";
+
     private static final String FLD_FIELD_VALUES = "FieldValues";
 
     private static final String FIELD_VALUE_DELIM = ";";
@@ -127,6 +128,8 @@ public class TruthsetCache
                     }
                     else
                     {
+                        boolean hasFields = false;
+
                         for(Map.Entry<String, Integer> entry : fieldsIndexMap.entrySet())
                         {
                             String fieldName = entry.getKey();
@@ -140,8 +143,12 @@ public class TruthsetCache
                             if(value.equals(NOT_ASSESSED_NA)) // rather than assuming an empty column means not known
                                 continue;
 
+                            hasFields = true;
                             truthsetValues.add(new TruthsetValue(itemKey, fieldName, value, requireAbsent));
                         }
+
+                        if(!hasFields)
+                            truthsetValues.add(new TruthsetValue(itemKey, FLD_STATUS, "", requireAbsent));
                     }
                 }
                 catch(Exception e)

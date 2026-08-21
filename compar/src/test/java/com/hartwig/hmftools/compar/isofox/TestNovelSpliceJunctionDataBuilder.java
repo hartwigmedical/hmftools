@@ -58,7 +58,7 @@ public class TestNovelSpliceJunctionDataBuilder
                 .cohortFrequency(-1)
                 .build();
 
-        return new RnaNovelSpliceJunctionData(
+        return RnaNovelSpliceJunctionData.from(
                 junction,
                 new RnaNovelSpliceJunctionComparer(null, Collections.emptyMap()).fieldsList());
     }

@@ -21,6 +21,7 @@ import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.common.PipelineSourcePaths;
 import com.hartwig.hmftools.compar.common.SourceType;
+import com.hartwig.hmftools.compar.common.TruthsetValue;
 import com.hartwig.hmftools.compar.common.field.FieldCheck;
 import com.hartwig.hmftools.compar.common.field.FieldInfo;
 
@@ -64,7 +65,7 @@ public class RnaNovelSpliceJunctionComparer extends ItemComparer
     @Override
     public boolean hasReportable()
     {
-        return false;
+        return true;
     }
 
     @Override
@@ -104,14 +105,29 @@ public class RnaNovelSpliceJunctionComparer extends ItemComparer
                         .junctionEnd(liftoverPositionEnd.Position)
                         .build();
 
-                comparableItems.add(new RnaNovelSpliceJunctionData(adjustedJunction, mFields));
+                comparableItems.add(RnaNovelSpliceJunctionData.from(adjustedJunction, mFields));
             }
             else
             {
-                comparableItems.add(new RnaNovelSpliceJunctionData(junction, mFields));
+                comparableItems.add(RnaNovelSpliceJunctionData.from(junction, mFields));
             }
         }
 
         return comparableItems;
     }
+
+    @Override
+    public List<ComparableItem> loadFromTruthset(final Map<String,List<TruthsetValue>> valuesByKey)
+    {
+        List<ComparableItem> comparableItems = Lists.newArrayList();
+
+        for(List<TruthsetValue> truthsetValues : valuesByKey.values())
+        {
+            RnaNovelSpliceJunctionData junction = RnaNovelSpliceJunctionData.fromTruthset(truthsetValues, mFields);
+            comparableItems.add(junction);
+        }
+
+        return comparableItems;
+    }
+
 }

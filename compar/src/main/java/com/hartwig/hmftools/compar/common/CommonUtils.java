@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.compar.common.MismatchType.INVALID_OLD;
 import static com.hartwig.hmftools.compar.common.MismatchType.NEW_ONLY;
 import static com.hartwig.hmftools.compar.common.MismatchType.OLD_ONLY;
 import static com.hartwig.hmftools.compar.common.MismatchType.VALUE;
+import static com.hartwig.hmftools.compar.common.TruthsetCache.FLD_STATUS;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -68,6 +69,9 @@ public class CommonUtils
 
                 for(TruthsetValue truthsetValue : truthsetValues)
                 {
+                    if(truthsetValue.FieldName.equals(FLD_STATUS))
+                        continue;
+
                     if(fields.stream().noneMatch(x -> x.Name.equals(truthsetValue.FieldName)))
                     {
                         CMP_LOGGER.error("category({}) invalid truthset entry({})", comparer.category(), truthsetValue);
