@@ -3,6 +3,7 @@ package com.hartwig.hmftools.bamtools.synthetic;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
 import static com.hartwig.hmftools.common.bamops.BamToolName.fromPath;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.BAM_EXTENSION;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CRAM_EXTENSION;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.filenamePart;
 
 import java.io.File;
@@ -44,7 +45,10 @@ public class BamWriter implements IReadWriter
                 .referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(mConfig.BamFile));
 
         String bamFile = filenamePart(mConfig.BamFile);
-        int bamExtension = bamFile.lastIndexOf(BAM_EXTENSION);
+        String extension = bamFile.contains(BAM_EXTENSION) ? BAM_EXTENSION : CRAM_EXTENSION;
+        int bamExtension = bamFile.lastIndexOf(extension);
+
+        // write BAMs even if reads in CRAMs
         mFinalOutputBam = mConfig.OutputDir + bamFile.substring(0, bamExtension) + "." + mConfig.OutputPrefix + BAM_EXTENSION;
 
         bamExtension = mFinalOutputBam.lastIndexOf(BAM_EXTENSION);

@@ -57,7 +57,7 @@ public class PartitionThread extends Thread
 
                 BamReader bamReader = new BamReader(partition.Region, mConfig, mSamReader, mBamSlicer, mCombinedStats);
 
-                if(partition.TaskId > 0 && (partition.TaskId % 10) == 0)
+                if(partition.TaskId > 0 && (partition.TaskId % 100) == 0)
                 {
                     BT_LOGGER.info("processing partition({}), remaining({})", partition.TaskId, mPartitions.size());
                 }

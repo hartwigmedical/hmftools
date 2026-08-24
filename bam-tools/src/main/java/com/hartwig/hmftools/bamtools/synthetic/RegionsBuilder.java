@@ -34,6 +34,8 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION_END;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION_START;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_REGION_END;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_REGION_START;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
@@ -550,7 +552,7 @@ public class RegionsBuilder
 
             StringJoiner sj = new StringJoiner(TSV_DELIM);
 
-            sj.add(FLD_CHROMOSOME).add(FLD_REGION_START).add(FLD_REGION_END);
+            sj.add(FLD_CHROMOSOME).add(FLD_POSITION_START).add(FLD_POSITION_END);
             sj.add("Types").add("CopyNumber");
 
             writer.write(sj.toString());

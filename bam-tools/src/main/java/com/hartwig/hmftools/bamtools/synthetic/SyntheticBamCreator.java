@@ -132,10 +132,18 @@ public class SyntheticBamCreator
         if(mConfig.Params.TargetDepth <= 0)
             return 0;
 
-        int expectedCopies = regionData.Chromosome.contains("Y") ? 1 : 2;
-        double copyNumberAdjustment = min(max(0, regionData.copyNumber() / expectedCopies), MAX_CN_MULTIPLE);
+        int regionTargetDepth;
 
-        int regionTargetDepth = (int)round(mConfig.Params.TargetDepth * copyNumberAdjustment);
+        if(mConfig.PurpleDir != null)
+        {
+            int expectedCopies = regionData.Chromosome.contains("Y") ? 1 : 2;
+            double copyNumberAdjustment = min(max(0, regionData.copyNumber() / expectedCopies), MAX_CN_MULTIPLE);
+            regionTargetDepth = (int)round(mConfig.Params.TargetDepth * copyNumberAdjustment);
+        }
+        else
+        {
+            regionTargetDepth = mConfig.Params.TargetDepth;
+        }
 
         return regionTargetDepth;
     }
