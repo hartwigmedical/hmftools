@@ -19,12 +19,11 @@ public final class SkippedSegmentReinjector
     {
         if(supersegment.SkippableMembers.isEmpty())
         {
-            if(resegmentedRegions.size() != 1)
-            {
+            if(resegmentedRegions.size() == supersegment.BothNoneMembers.size())
                 return resegmentedRegions;
-            }
 
-            return List.of(formBlendedRegion(supersegment.BothNoneMembers, resegmentedRegions.get(0)));
+            if(resegmentedRegions.size() != 1)
+                return List.of(formBlendedRegion(supersegment.BothNoneMembers, resegmentedRegions.get(0)));
         }
 
         List<ObservedRegion> result = Lists.newArrayList();

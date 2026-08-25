@@ -271,7 +271,7 @@ public class PurpleApplication
         }
 
         // run resegmentation
-        if(mConfig.RunResegmentation)
+        if(!mConfig.TargetRegionsMode)
         {
             // for now log regions prior to resegmentation
             String preResegFile = mConfig.OutputDir + tumorId + ".purple.pre_resegmented_regions.tsv";
