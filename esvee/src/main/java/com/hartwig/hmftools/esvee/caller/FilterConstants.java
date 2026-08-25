@@ -102,10 +102,13 @@ public class FilterConstants
     public static final double MIN_AF_WEAK_JUNCTION_STRAND_BIAS_MIN = 0.1;
     public static final double MIN_AF_WEAK_JUNCTION_SUPP_REMOTE_THRESHOLD = 0.5;
     public static final double MIN_AF_WEAK_JUNCTION_PROX_JUNC_READ_THRESHOLD = 0.1;
-    public static final double MIN_AF_WEAK_JUNCTION_DISC_RATE_FACTOR_LONG = 1.25;
+    public static final double MIN_AF_WEAK_JUNCTION_DISC_RATE_FACTOR_LONG = 1.5;
     public static final double MIN_AF_WEAK_JUNCTION_DISC_RATE_FACTOR_SGL = 1;
     public static final double MIN_AF_WEAK_JUNCTION_DISC_RATE_FACTOR_OTHER = 0.75;
-
+    public static final double MIN_AF_WEAK_JUNCTION_MAX_AF = 0.15;
+    public static final double MIN_AF_WEAK_JUNCTION_MAX_AF_SGLS = 0.2;
+    public static final int MIN_AF_WEAK_JUNCTION_SGL_JUNCTION_DISTANCE = 20;
+    public static final int MIN_AF_WEAK_JUNCTION_SGL_MIN_AVG_SC_LENGTH = 30;
 
     public static final ChrBaseRegion PMS2_V37 = new ChrBaseRegion("7", 6002870, 6058756); // has 10K buffer
     public static final ChrBaseRegion PMS2_V38 = new ChrBaseRegion("chr7", 5960925, 6019106);

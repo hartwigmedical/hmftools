@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.AVG_SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.PROX_JUNC_READ_RATIO;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SPLIT_FRAGS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SUPP_REMOTE_REGION_RATIO;
@@ -38,7 +39,11 @@ import static com.hartwig.hmftools.esvee.caller.FilterConstants.MIN_AF_WEAK_JUNC
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.MIN_AF_WEAK_JUNCTION_DISC_RATE_FACTOR_OTHER;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.MIN_AF_WEAK_JUNCTION_DISC_RATE_FACTOR_SGL;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.MIN_AF_WEAK_JUNCTION_DISC_RATE_MIN;
+import static com.hartwig.hmftools.esvee.caller.FilterConstants.MIN_AF_WEAK_JUNCTION_MAX_AF;
+import static com.hartwig.hmftools.esvee.caller.FilterConstants.MIN_AF_WEAK_JUNCTION_MAX_AF_SGLS;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.MIN_AF_WEAK_JUNCTION_PROX_JUNC_READ_THRESHOLD;
+import static com.hartwig.hmftools.esvee.caller.FilterConstants.MIN_AF_WEAK_JUNCTION_SGL_JUNCTION_DISTANCE;
+import static com.hartwig.hmftools.esvee.caller.FilterConstants.MIN_AF_WEAK_JUNCTION_SGL_MIN_AVG_SC_LENGTH;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.MIN_AF_WEAK_JUNCTION_STRAND_BIAS_MIN;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.MIN_AF_WEAK_JUNCTION_SUPP_REMOTE_THRESHOLD;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.MIN_AVG_FRAG_FACTOR;
@@ -190,9 +195,7 @@ public class VariantFilters
     private boolean belowMinSupport(final Variant var)
     {
         if(var.isSagaMatched())
-        {
             return false;
-        }
 
         double supportThreshold;
 
@@ -228,9 +231,7 @@ public class VariantFilters
     private boolean belowMinAf(final Variant var)
     {
         if(var.isSagaMatched())
-        {
             return false;
-        }
 
         double afThreshold;
 
@@ -265,22 +266,46 @@ public class VariantFilters
         // - SGLs: 0.05 + (discRate - 0.005) * 1
         // - Other variants: 0.001 + (discRate - 0.005) * 0.75
 
-        double afThreshold = var.isSgl() && !var.isLineSite() ? mFilterConstants.MinAfSgl : mFilterConstants.MinAfJunction;
+        boolean useSglThresholds = var.isSgl() && !var.isLineSite();
+        double afThreshold = useSglThresholds ? mFilterConstants.MinAfSgl : mFilterConstants.MinAfJunction;
         double discRateThreshold = MIN_AF_WEAK_JUNCTION_DISC_RATE_MIN;
 
         if(discordantRate > discRateThreshold)
         {
-            if(var.type() == StructuralVariantType.SGL)
+            double discRateExcess = discordantRate - discRateThreshold;
+
+            if(useSglThresholds)
             {
-                afThreshold += (discordantRate - discRateThreshold) * MIN_AF_WEAK_JUNCTION_DISC_RATE_FACTOR_SGL;
+                afThreshold += discRateExcess * MIN_AF_WEAK_JUNCTION_DISC_RATE_FACTOR_SGL;
+
+                // extend the AF filter for less certain SGL assemblies
+                int breakendPosition = var.breakendStart().Position;
+                String breakendChr = var.breakendStart().Chromosome;
+
+                boolean isCloseToJunction = var.originalJunctions().stream().anyMatch(x -> x.Chromosome.equals(breakendChr)
+                        && abs(x.Position - breakendPosition) <= MIN_AF_WEAK_JUNCTION_SGL_JUNCTION_DISTANCE);
+
+                int avgJuncReadSoftClip = var.breakendStart().Context.getAttributeAsInt(AVG_SOFT_CLIP_LENGTH, 0);
+
+                boolean hasLowAvgSoftLength = avgJuncReadSoftClip > 0 && avgJuncReadSoftClip < MIN_AF_WEAK_JUNCTION_SGL_MIN_AVG_SC_LENGTH;
+
+                if(!isCloseToJunction || hasLowAvgSoftLength)
+                {
+                    afThreshold += discRateExcess;
+                }
+
+                afThreshold = min(afThreshold, MIN_AF_WEAK_JUNCTION_MAX_AF_SGLS);
+
             }
             else if((var.type() == BND || var.svLength() >= WEAK_ASSEMBLY_LONG_LENGTH) && var.originalJunctions().size() == 1)
             {
-                afThreshold += (discordantRate - discRateThreshold) * MIN_AF_WEAK_JUNCTION_DISC_RATE_FACTOR_LONG;
+                afThreshold += discRateExcess * MIN_AF_WEAK_JUNCTION_DISC_RATE_FACTOR_LONG;
+                afThreshold = min(afThreshold, MIN_AF_WEAK_JUNCTION_MAX_AF);
             }
             else
             {
-                afThreshold += (discordantRate - discRateThreshold) * MIN_AF_WEAK_JUNCTION_DISC_RATE_FACTOR_OTHER;
+                afThreshold += discRateExcess * MIN_AF_WEAK_JUNCTION_DISC_RATE_FACTOR_OTHER;
+                afThreshold = min(afThreshold, MIN_AF_WEAK_JUNCTION_MAX_AF);
             }
         }
 

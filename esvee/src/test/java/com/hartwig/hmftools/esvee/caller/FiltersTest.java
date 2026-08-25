@@ -343,7 +343,6 @@ public class FiltersTest
                 "01", CHR_1, CHR_1, 100, 150, ORIENT_FWD, ORIENT_FWD, "",
                 commonAttributes, tumorAttributes, tumorAttributes);
 
-
         mVariantFilters.applyFilters(var);
 
         assertTrue(var.filters().contains(FilterType.UNPAIRED_THREE_PRIME_RANGE));
@@ -411,7 +410,9 @@ public class FiltersTest
         assertTrue(applyWeakJunctionMinAfFilter(var));
 
         tumorAttributes.clear();
+        tumorAttributes.put(REF_DEPTH, 101);
         tumorAttributes.put(SPLIT_FRAGS, 4);
+        tumorAttributes.put(TOTAL_FRAGS, 4);
         tumorAttributes.put(STRAND_BIAS, 0.5);
 
         commonAttributes.clear();
@@ -438,6 +439,32 @@ public class FiltersTest
         variantFilters.applyFilters(var);
 
         assertTrue(var.filters().contains(FilterType.WEAK_JUNC_MIN_AF));
+
+        // and for SGLs
+        tumorAttributes.put(STRAND_BIAS, 1);
+
+        // first using the maximum AF threshold
+        var = createSv(
+                "01", CHR_1, null, 130, 0, ORIENT_FWD, ORIENT_FWD, "",
+                commonAttributes, tumorAttributes, tumorAttributes);
+
+        assertTrue(applyWeakJunctionMinAfFilter(var));
+
+        variantFilters.applyFilters(var);
+
+        assertTrue(var.filters().contains(FilterType.WEAK_JUNC_MIN_AF));
+
+        // and now with a VAF above it
+        tumorAttributes.put(REF_DEPTH, 80);
+        tumorAttributes.put(SPLIT_FRAGS, 22);
+        tumorAttributes.put(TOTAL_FRAGS, 22);
+
+        var = createSv(
+                "01", CHR_1, null, 130, 0, ORIENT_FWD, ORIENT_FWD, "",
+                commonAttributes, tumorAttributes, tumorAttributes);
+
+        variantFilters.applyFilters(var);
+        assertFalse(var.filters().contains(FilterType.WEAK_JUNC_MIN_AF));
     }
 
     @Test

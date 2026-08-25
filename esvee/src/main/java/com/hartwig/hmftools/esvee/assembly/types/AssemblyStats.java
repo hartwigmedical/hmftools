@@ -29,6 +29,8 @@ public class AssemblyStats
     public int JuncMateUnmappedRemote;
     public int JuncMateUnmappedRefSide;
     public int IndelReads;
+    public int SoftClipJuncReads;
+    public int SoftClipExtensionBaseTotal;
 
     public double ProximateJuncReadRatio;
 
@@ -62,6 +64,8 @@ public class AssemblyStats
         JuncMateUnmappedRemote = 0;
         JuncMateUnmappedRefSide = 0;
         IndelReads = 0;
+        SoftClipJuncReads = 0;
+        SoftClipExtensionBaseTotal = 0;
         ProximateJuncReadRatio = 0;
 
         IndelLengthTotal = 0;
@@ -86,9 +90,18 @@ public class AssemblyStats
         if(supportRead.type().isSplitSupport())
         {
             if(supportRead.type() == INDEL)
+            {
                 ++IndelReads;
+            }
             else if(junction.indelBased() && supportRead.indelCoords() != null && supportRead.indelCoords().Length >= MIN_VARIANT_LENGTH)
+            {
                 ++IndelReads;
+            }
+            else
+            {
+                ++SoftClipJuncReads;
+                SoftClipExtensionBaseTotal += supportRead.extensionBaseOverlap();
+            }
 
             if(supportRead.isSupplementary())
             {

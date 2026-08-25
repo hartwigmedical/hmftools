@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.esvee.assembly.output;
 
+import static java.lang.Math.round;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_N_BASE;
@@ -19,6 +20,8 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.ASM_LINKS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.ASM_LINKS_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.AVG_FRAG_LENGTH;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.AVG_FRAG_LENGTH_DESC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.AVG_SOFT_CLIP_LENGTH;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.AVG_SOFT_CLIP_LENGTH_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.BE_ASM_ORIENT;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.BE_ASM_ORIENT_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.BE_ASM_POS;
@@ -224,6 +227,7 @@ public class VcfWriter implements AutoCloseable
         metaData.add(new VCFInfoHeaderLine(MAX_LOCAL_REPEAT, 1, VCFHeaderLineType.Integer, MAX_LOCAL_REPEAT_DESC));
         metaData.add(new VCFInfoHeaderLine(PROX_JUNC_READ_RATIO, 1, VCFHeaderLineType.Float, PROX_JUNC_READ_RATIO_DESC));
         metaData.add(new VCFInfoHeaderLine(SUPP_REMOTE_REGION_RATIO, 1, VCFHeaderLineType.Float, SUPP_REMOTE_REGION_RATIO_DESC));
+        metaData.add(new VCFInfoHeaderLine(AVG_SOFT_CLIP_LENGTH, 1, VCFHeaderLineType.Integer, AVG_SOFT_CLIP_LENGTH_DESC));
         metaData.add(new VCFInfoHeaderLine(SAGA_VARIANT, 1, VCFHeaderLineType.String, SAGA_VARIANT_DESC));
         metaData.add(new VCFInfoHeaderLine(SAGA_INFERRED_BREAKEND, 1, VCFHeaderLineType.Flag, SAGA_INFERRED_BREAKEND_DESC));
 
@@ -379,6 +383,8 @@ public class VcfWriter implements AutoCloseable
 
         double minProximateJuncRatio = -1;
         double minSuppRemoteRegionRatio = -1;
+        int totalSoftClipReads = 0;
+        int totalSoftClipExtensionLength = 0;
 
         for(JunctionAssembly assembly : assemblyAlignment.assemblies())
         {
@@ -390,14 +396,21 @@ public class VcfWriter implements AutoCloseable
                 double suppRemoteRegionRatio = assembly.stats().suppRemoteRegionRatio();
                 if(minSuppRemoteRegionRatio < 0 || suppRemoteRegionRatio < minSuppRemoteRegionRatio)
                     minSuppRemoteRegionRatio = suppRemoteRegionRatio;
+
+                totalSoftClipReads += assembly.stats().SoftClipJuncReads;
+                totalSoftClipExtensionLength += assembly.stats().SoftClipExtensionBaseTotal;
             }
         }
+
+        int averageSoftClipLength = totalSoftClipReads > 0 ? (int)round((double)totalSoftClipExtensionLength / totalSoftClipReads) : 0;
 
         if(minProximateJuncRatio >= 0)
             builder.attribute(PROX_JUNC_READ_RATIO, minProximateJuncRatio);
 
         if(minSuppRemoteRegionRatio >= 0)
             builder.attribute(SUPP_REMOTE_REGION_RATIO, minSuppRemoteRegionRatio);
+
+        builder.attribute(AVG_SOFT_CLIP_LENGTH, averageSoftClipLength);
 
         SagaSequenceMatch sagaMatch = assemblyAlignment.sagaMatch();
         if(sagaMatch != null)

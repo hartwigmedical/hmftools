@@ -53,7 +53,6 @@ public class SupportRead
     private final String mMateChromosome;
     private final int mMateAlignmentStart;
     private final int mMateAlignmentEnd;
-    private final int mMateFragmentEnd; // 5' unclipped position of mate
     private final int mFlags;
     private final int mBaseLength;
 
@@ -110,14 +109,12 @@ public class SupportRead
             mMateChromosome = read.mateChromosome();
             mMateAlignmentStart = read.mateAlignmentStart();
             mMateAlignmentEnd = read.mateAlignmentEnd();
-            mMateFragmentEnd = read.mateFragmentEnd();
         }
         else
         {
             mMateChromosome = NO_CHROMOSOME_NAME;
             mMateAlignmentStart = NO_POSITION;
             mMateAlignmentEnd = NO_POSITION;
-            mMateFragmentEnd = NO_POSITION;
         }
 
         mIsReference = read.isReference();
