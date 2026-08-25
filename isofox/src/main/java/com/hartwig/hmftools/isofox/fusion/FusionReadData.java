@@ -228,8 +228,7 @@ public class FusionReadData
 
                     mJunctionRefBases[se] = junctionBases.substring(0, refBaseLength);
                     mPostJunctionRefBases[se] = junctionBases.substring(refBaseLength);
-                    mJunctionSpliceBases[se] = junctionBases.substring(JUNCTION_BASE_LENGTH, JUNCTION_BASE_LENGTH + 2);
-                    mJunctionSpliceBases[se].substring(0, 2);
+                    mJunctionSpliceBases[se] = mPostJunctionRefBases[se].substring(0, 2);
 
                     mJunctionSoftClipBases[se] = softClipBases.length() > JUNCTION_BASE_LENGTH ?
                             softClipBases.substring(0, JUNCTION_BASE_LENGTH) : softClipBases;
@@ -280,7 +279,8 @@ public class FusionReadData
             int halfOverlap = overlapLength / 2;
             int exactStart = (overlapLength % 2) == 0 ? halfOverlap : halfOverlap + 1; // round up if an odd length
             int exactEnd = overlapLength - exactStart;
-            mJunctionPositions[SE_START] -= exactStart;
+            mJunctionPositions[SE_START] -= exactEnd * mJunctionOrientations[SE_START];
+            mJunctionPositions[SE_END] -= exactStart * mJunctionOrientations[SE_END];
         }
     }
 
