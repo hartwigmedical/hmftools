@@ -61,33 +61,45 @@ public class SbxBamUtils
             return baseIndex <= duplexBaseIndex;
     }
 
-    public static List<Integer> getDuplexIndelIndices(String ycTagStr)
+    public static List<Integer> getDuplexIndelIndices(final String ycTagStr)
     {
         List<Integer> duplexIndels = null;
-
-        int lastDelim = ycTagStr.lastIndexOf(SBX_YC_TAG_DELIM_LIT);
-
-        if(lastDelim <= 0)
-            return null;
-
-        ycTagStr = ycTagStr.substring(0, lastDelim);
 
         int simplexHeadLength = 0;
         String duplexRegion = "";
 
-        if(!ycTagStr.startsWith(SBX_YC_TAG_DELIM_LIT))
+        if(!ycTagStr.contains(SBX_YC_TAG_DELIM_LIT))
         {
-            String[] ycTagComponents = ycTagStr.split(SBX_YC_TAG_DELIM);
+            // Alexios alpha tag format: 0-20H190-0
+            DuplexInfo oldDuplexInfo = parseOldTag(ycTagStr);
 
-            if(ycTagComponents.length < 2)
-                return null;
-
-            simplexHeadLength = Integer.parseInt(ycTagComponents[0]);
-            duplexRegion = ycTagComponents[1];
+            simplexHeadLength = oldDuplexInfo.simplexHeadLength();
+            duplexRegion = oldDuplexInfo.duplexRegion();
         }
         else
         {
-            duplexRegion = ycTagStr.substring(1);
+            // current format: 0+20H190+0
+            int lastDelim = ycTagStr.lastIndexOf(SBX_YC_TAG_DELIM_LIT);
+
+            if(lastDelim <= 0)
+                return null;
+
+            String ycTagStripped = ycTagStr.substring(0, lastDelim);
+
+            if(!ycTagStripped.startsWith(SBX_YC_TAG_DELIM_LIT))
+            {
+                String[] ycTagComponents = ycTagStripped.split(SBX_YC_TAG_DELIM);
+
+                if(ycTagComponents.length < 2)
+                    return null;
+
+                simplexHeadLength = Integer.parseInt(ycTagComponents[0]);
+                duplexRegion = ycTagComponents[1];
+            }
+            else
+            {
+                duplexRegion = ycTagStripped.substring(1);
+            }
         }
 
         int readIndex = simplexHeadLength;
@@ -133,6 +145,18 @@ public class SbxBamUtils
         }
 
         return duplexIndels != null ? duplexIndels : Collections.emptyList();
+    }
+
+    private record DuplexInfo(String duplexRegion, int simplexHeadLength) {}
+
+    private static DuplexInfo parseOldTag(final String ycTagStr)
+    {
+        String[] ycTagComponents = ycTagStr.split("-");
+
+        int simplexHeadLength = Integer.parseInt(ycTagComponents[0]);
+        String duplexRegion = ycTagComponents[1];
+
+        return new DuplexInfo(duplexRegion, simplexHeadLength);
     }
 
     @Nullable

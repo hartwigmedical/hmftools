@@ -86,10 +86,44 @@ public final class SbxRoutines
 
     public static final int DEFAULT_SBX_MAX_DUPLICATE_DISTANCE = SBX_MAX_DUPLICATE_DISTANCE;
 
+    private static final byte OLD_RAW_DUPLEX_QUAL = 93;
+    private static final byte OLD_RAW_SIMPLEX_QUAL = 18;
+    private static final byte OLD_RAW_DUPLEX_MISMATCH_QUAL = 0;
+
+    private static void checkConvertOldQuals(final SAMRecord record)
+    {
+        // backwards compatibility for Alexios alpha
+        byte[] baseQuals = record.getBaseQualities();
+
+        for(int i = 0; i < baseQuals.length; ++i)
+        {
+            byte qual = baseQuals[i];
+
+            switch(qual)
+            {
+                case OLD_RAW_DUPLEX_QUAL:
+                    baseQuals[i] = RAW_DUPLEX_QUAL;
+                    break;
+
+                case OLD_RAW_SIMPLEX_QUAL:
+                    baseQuals[i] = RAW_SIMPLEX_QUAL;
+                    break;
+
+                case OLD_RAW_DUPLEX_MISMATCH_QUAL:
+                    baseQuals[i] = RAW_DUPLEX_MISMATCH_QUAL;
+                    break;
+
+                default:
+                    return;
+            }
+        }
+    }
+
     public static void prepProcessRead(final SAMRecord record)
     {
         try
         {
+            checkConvertOldQuals(record);
             stripDuplexIndels(record);
 
             // ensure both sides of repeats are marked with duplex mismatch low-qual bases
