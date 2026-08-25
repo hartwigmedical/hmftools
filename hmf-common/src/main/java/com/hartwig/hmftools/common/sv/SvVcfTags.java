@@ -93,6 +93,9 @@ public final class SvVcfTags
     public static final String SUPP_REMOTE_REGION_RATIO = "SRRR";
     public static final String SUPP_REMOTE_REGION_RATIO_DESC = "Supplementary remote region ratio";
 
+    public static final String AVG_SOFT_CLIP_LENGTH = "ASCL";
+    public static final String AVG_SOFT_CLIP_LENGTH_DESC = "Average junction soft-clip length";
+
     public static final String SAGA_VARIANT = "SAGA";
     public static final String SAGA_VARIANT_DESC = "ID and breakends of the matched SAGA variant";
 
