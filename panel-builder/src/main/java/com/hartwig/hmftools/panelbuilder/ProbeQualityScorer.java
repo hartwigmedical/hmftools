@@ -4,13 +4,14 @@ import static java.util.Collections.emptyIterator;
 import static java.util.Objects.requireNonNull;
 
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.PROBE_QUALITY_PROFILE_MAX_REF_DIFF;
-import static com.hartwig.hmftools.panelbuilder.SequenceUtils.sequenceIndelSize;
+import static com.hartwig.hmftools.panelbuilder.SequenceUtils.isSequenceSimilarToRef;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.OptionalDouble;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -26,7 +27,10 @@ public class ProbeQualityScorer
 {
     // Use function references rather than exact implementations to allow test mocks.
     private final Function<ChrBaseRegion, OptionalDouble> mComputeQualityProfile;
-    private final Function<List<String>, List<Double>> mComputeQualityModel;
+    // (sequences, sourceRegions) -> quality scores. sourceRegions[i] = the reference region(s) probe i is built from (its on-target loci).
+    private final BiFunction<List<String>, List<List<ChrBaseRegion>>, List<Double>> mComputeQualityModel;
+    // Shortest region the profile can score; probes with any shorter region fall back to the model.
+    private final int mProfileMinRegionLength;
     // Aim to batch this many probes together when invoking the probe quality model.
     private final int mModelBatchSize;
     // Buffer at most this many probes total.
@@ -36,10 +40,12 @@ public class ProbeQualityScorer
     private static final int DEFAULT_MAX_BUFFER_SIZE = 50000;
 
     protected ProbeQualityScorer(final Function<ChrBaseRegion, OptionalDouble> computeQualityProfile,
-            final Function<List<String>, List<Double>> computeQualityModel, int modelBatchSize, int maxBufferSize)
+            final BiFunction<List<String>, List<List<ChrBaseRegion>>, List<Double>> computeQualityModel, int profileMinRegionLength,
+            int modelBatchSize, int maxBufferSize)
     {
         mComputeQualityProfile = computeQualityProfile;
         mComputeQualityModel = computeQualityModel;
+        mProfileMinRegionLength = profileMinRegionLength;
         if(modelBatchSize < 1 || maxBufferSize < 1 || modelBatchSize > maxBufferSize)
         {
             throw new IllegalArgumentException("Invalid batching configuration");
@@ -52,8 +58,12 @@ public class ProbeQualityScorer
     {
         this(
                 qualityProfile::computeQualityScore,
-                probes -> qualityModel.computeFromSeqString(probes).stream().map(ProbeQualityModel.Result::qualityScore).toList(),
-                DEFAULT_MODEL_BATCH_SIZE, DEFAULT_MAX_BUFFER_SIZE);
+                (probes, sourceRegions) ->
+                        qualityModel.computeFromSeqString(probes, sourceRegions)
+                                .stream()
+                                .map(ProbeQualityModel.Result::qualityScore)
+                                .toList(),
+                qualityProfile.baseWindowLength(), DEFAULT_MODEL_BATCH_SIZE, DEFAULT_MAX_BUFFER_SIZE);
     }
 
     public Stream<Probe> computeQualityScores(Stream<Probe> probes)
@@ -134,6 +144,13 @@ public class ProbeQualityScorer
     {
         if(canUseProfile(probe.definition()))
         {
+            // The profile scores fixed-length windows and cannot score a region shorter than one window, so any probe with such a short
+            // region falls back to the model (e.g. an RNA junction probe with few bases in one exon, or a short-region variant probe).
+            if(probe.definition().regions().stream().anyMatch(region -> region.baseLength() < mProfileMinRegionLength))
+            {
+                return OptionalDouble.empty();
+            }
+
             // Use the worst quality score from the constituent regions. This is most conservative.
             return probe.definition().regions().stream()
                     .map(mComputeQualityProfile)
@@ -160,7 +177,7 @@ public class ProbeQualityScorer
     {
         // If the sequence is very close to the ref genome, then there's no need to use the probe quality model.
         // We assume a small perturbation of the ref sequence will not produce a large change in quality score.
-        return sequenceIndelSize(sequenceDefinition).orElse(Integer.MAX_VALUE) <= PROBE_QUALITY_PROFILE_MAX_REF_DIFF;
+        return isSequenceSimilarToRef(sequenceDefinition, PROBE_QUALITY_PROFILE_MAX_REF_DIFF);
     }
 
     // Where necessary, set quality scores as computed by the probe quality model.
@@ -168,6 +185,8 @@ public class ProbeQualityScorer
     {
         ArrayList<Probe> result = new ArrayList<>(probes.size());
         ArrayList<String> sequences = new ArrayList<>();
+        // Each model-scored probe's source region(s) - the reference loci it is built from, used to exclude on-target alignments.
+        ArrayList<List<ChrBaseRegion>> sourceRegions = new ArrayList<>();
         ArrayList<Integer> indices = new ArrayList<>();
         for(int i = 0; i < probes.size(); ++i)
         {
@@ -175,12 +194,13 @@ public class ProbeQualityScorer
             if(!probe.rejected() && probe.qualityScore() == null)
             {
                 sequences.add(requireNonNull(probe.sequence()));
+                sourceRegions.add(probe.definition().regions());
                 indices.add(i);
             }
             result.add(probe);
         }
 
-        List<Double> modelResults = mComputeQualityModel.apply(sequences);
+        List<Double> modelResults = mComputeQualityModel.apply(sequences, sourceRegions);
         for(int i = 0; i < indices.size(); ++i)
         {
             int index = indices.get(i);

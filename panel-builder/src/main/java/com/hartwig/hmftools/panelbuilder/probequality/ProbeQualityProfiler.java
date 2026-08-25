@@ -158,7 +158,9 @@ public class ProbeQualityProfiler
         LOGGER.debug("Output file: {}", outputFile);
 
         mBaseWindowGenerator = new BaseWindowGenerator(refGenome, specificRegions, baseWindowLength, baseWindowSpacing, batchSize);
-        mProbeQualityModel = ProbeQualityModel.create(bwaIndexImageFile, threads, baseWindowLength, matchScoreThreshold, matchScoreOffset);
+        mProbeQualityModel = ProbeQualityModel.create(
+                bwaIndexImageFile, threads, baseWindowLength, matchScoreThreshold, matchScoreOffset,
+                ProbeQualityModel.buildRefIdToChromosome(refGenome.refGenomeFile().getSequenceDictionary()));
         mOutputWriter = initialiseOutputWriter(outputFile, mVerboseOutput);
     }
 
@@ -253,7 +255,10 @@ public class ProbeQualityProfiler
         LOGGER.debug("Skipped {} windows with denormal bases", denormalWindows);
 
         List<byte[]> sequences = filteredWindows.stream().map(BaseWindowGenerator.BaseWindow::sequence).toList();
-        List<ProbeQualityModel.Result> modelResults = mProbeQualityModel.computeFromSeqBytes(sequences);
+        // Each profile window is a contiguous reference sequence, so its own region is the on-target locus.
+        List<List<ChrBaseRegion>> sourceRegions =
+                filteredWindows.stream().map(window -> List.of(window.region())).toList();
+        List<ProbeQualityModel.Result> modelResults = mProbeQualityModel.computeFromSeqBytes(sequences, sourceRegions);
 
         LOGGER.debug("Writing results");
         try

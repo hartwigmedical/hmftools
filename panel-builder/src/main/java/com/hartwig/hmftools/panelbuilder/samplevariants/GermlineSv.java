@@ -79,7 +79,8 @@ public class GermlineSv implements StructuralVariant
     @Override
     public String toString()
     {
-        return format("%s:%d:%d - %s:%d:%d %s %s",
+        return format(
+                "%s:%d:%d - %s:%d:%d %s %s",
                 mVariant.ChromosomeStart, mVariant.PositionStart, mVariant.OrientStart,
                 mVariant.ChromosomeEnd, mVariant.PositionEnd, mVariant.OrientEnd,
                 mVariant.Type, Optional.ofNullable(gene()).orElse(""));

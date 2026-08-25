@@ -36,6 +36,7 @@ public record PanelBuilderConfig(
         String bwaIndexImageFile,
         @Nullable String bwaLibPath,
         @Nullable String genesFile,
+        @Nullable String rnaGenesFile,
         boolean includeCnBackbone,
         @Nullable String hetSitesFile,
         int cnBackboneResolution,
@@ -60,6 +61,8 @@ public record PanelBuilderConfig(
     private static final String DESC_CN_BACKBONE_RESOLUTION = "Approximate spacing between copy number backbone probes, in kb";
     private static final String CFG_TARGET_GENES_FILE = "genes";
     private static final String DESC_TARGET_GENES_FILE = "Gene options and transcript TSV file";
+    private static final String CFG_RNA_GENES_FILE = "genes_rna";
+    private static final String DESC_RNA_GENES_FILE = "RNA gene options and transcript TSV file";
     private static final String CFG_INCLUDE_CDR3 = "cdr3";
     private static final String DESC_INCLUDE_CDR3 = "Include fixed CDR3 panel probes";
     private static final String CFG_CUSTOM_REGIONS_FILE = "custom_regions";
@@ -84,6 +87,7 @@ public record PanelBuilderConfig(
                 configBuilder.getValue(CFG_BWA_INDEX_IMAGE_FILE, refGenomePath + ".img"),
                 configBuilder.getValue(BWA_LIB_PATH),
                 configBuilder.getValue(CFG_TARGET_GENES_FILE),
+                configBuilder.getValue(CFG_RNA_GENES_FILE),
                 configBuilder.hasFlag(CFG_INCLUDE_CN_BACKBONE),
                 configBuilder.getValue(CFG_HET_SITES_FILE),
                 configBuilder.getInteger(CFG_CN_BACKBONE_RESOLUTION) * 1000,
@@ -111,6 +115,7 @@ public record PanelBuilderConfig(
         configBuilder.addPath(CFG_HET_SITES_FILE, false, DESC_HET_SITES_FILE);
         configBuilder.addInteger(CFG_CN_BACKBONE_RESOLUTION, DESC_CN_BACKBONE_RESOLUTION, CN_BACKBONE_RESOLUTION_KB_DEFAULT);
         configBuilder.addPath(CFG_TARGET_GENES_FILE, false, DESC_TARGET_GENES_FILE);
+        configBuilder.addPath(CFG_RNA_GENES_FILE, false, DESC_RNA_GENES_FILE);
         configBuilder.addFlag(CFG_INCLUDE_CDR3, DESC_INCLUDE_CDR3);
         configBuilder.addPaths(CFG_CUSTOM_REGIONS_FILE, false, DESC_CUSTOM_REGIONS_FILE);
         configBuilder.addPath(CFG_CUSTOM_SMALL_VARIANTS_FILE, false, DESC_CUSTOM_SMALL_VARIANTS_FILE);
