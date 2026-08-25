@@ -1,6 +1,9 @@
 package com.hartwig.hmftools.esvee.assembly;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.max;
+import static java.lang.Math.round;
+import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MAX_JUNC_POS_DIFF;
@@ -18,10 +21,12 @@ import static com.hartwig.hmftools.esvee.common.SvConstants.LINE_MIN_SOFT_CLIP_S
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_VARIANT_LENGTH;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
@@ -282,5 +287,46 @@ public class JunctionReadTypes
         }
 
         return proximateCount > 0 ? exactExtensionCount / (double)proximateCount : 0;
+    }
+
+    public static double calcRemoteSuppRegionFrequency(final Junction junction, final List<Read> rawReads)
+    {
+        if(!junction.softClipBased())
+            return 0;
+
+        // determine the ratio of extension reads vs any soft-clipped read within range - for use as a downstream filter
+        Map<String,Integer> remoteSuppRegionFrequency = Maps.newHashMap();
+
+        for(Read read : rawReads)
+        {
+            if(read.supplementaryData() == null || read.supplementaryData().MapQuality < 30)
+                continue;
+
+            if(!recordSoftClipsAtJunction(read, junction))
+                continue;
+
+            // track remote locations rounded to 1K coordinates
+            String remoteLocationStr = format("%s_%d",
+                    read.supplementaryData().Chromosome, round(read.supplementaryData().Position / 1000.0));
+
+            remoteSuppRegionFrequency.merge(remoteLocationStr, 1, Integer::sum);
+        }
+
+        if(remoteSuppRegionFrequency.isEmpty())
+            return 0;
+
+        if(remoteSuppRegionFrequency.size() == 1)
+            return 1.0;
+
+        int total = 0;
+        int maxRegion = 0;
+
+        for(Integer count : remoteSuppRegionFrequency.values())
+        {
+            total += count;
+            maxRegion = max(maxRegion, count);
+        }
+
+        return total > 0 ? maxRegion / (double)total : 0;
     }
 }

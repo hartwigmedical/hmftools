@@ -393,7 +393,7 @@ public class VcfWriter implements AutoCloseable
                 if(minProximateJuncRatio < 0 || assembly.stats().ProximateJuncReadRatio < minProximateJuncRatio)
                     minProximateJuncRatio = assembly.stats().ProximateJuncReadRatio;
 
-                double suppRemoteRegionRatio = assembly.stats().suppRemoteRegionRatio();
+                double suppRemoteRegionRatio = assembly.stats().SupplementaryRemoteRegionRatio;
                 if(minSuppRemoteRegionRatio < 0 || suppRemoteRegionRatio < minSuppRemoteRegionRatio)
                     minSuppRemoteRegionRatio = suppRemoteRegionRatio;
 

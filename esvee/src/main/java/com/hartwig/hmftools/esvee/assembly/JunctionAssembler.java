@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.PRIMARY_ASSE
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.findIndelExtensionReads;
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.setIndelStatus;
 import static com.hartwig.hmftools.esvee.assembly.JunctionReadTypes.calcProximateJunctionReadRatio;
+import static com.hartwig.hmftools.esvee.assembly.JunctionReadTypes.calcRemoteSuppRegionFrequency;
 import static com.hartwig.hmftools.esvee.assembly.LineUtils.isLineWithLocalAlignedInsert;
 import static com.hartwig.hmftools.esvee.assembly.SeqTechUtils.findSbxPossibleDuplicates;
 import static com.hartwig.hmftools.esvee.assembly.SeqTechUtils.passSbxDistinctPrimePositionsFilter;
@@ -245,7 +246,9 @@ public class JunctionAssembler
                 }
             }
 
-            assembly.stats().ProximateJuncReadRatio = calcProximateJunctionReadRatio(mJunction, rawReads); // used for downstream filtering
+            // calculations for for downstream filtering
+            assembly.stats().ProximateJuncReadRatio = calcProximateJunctionReadRatio(mJunction, rawReads);
+            assembly.stats().SupplementaryRemoteRegionRatio = calcRemoteSuppRegionFrequency(mJunction, rawReads);
         }
 
         return assemblies;
