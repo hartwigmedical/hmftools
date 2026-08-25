@@ -7,6 +7,7 @@ import static java.lang.Math.round;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.readToString;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 
@@ -87,6 +88,9 @@ public class RegionBamSlicer implements Runnable
         {
             BT_LOGGER.debug("specific read({})", readToString(read));
         }
+
+        if(mParams.DropConsensus && read.hasAttribute(CONSENSUS_READ_ATTRIBUTE))
+            return;
 
         int readStart = read.getAlignmentStart();
         int readEnd = max(read.getAlignmentEnd(), readStart); // accounting for unmapped mates

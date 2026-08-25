@@ -16,6 +16,7 @@ import static com.hartwig.hmftools.common.region.ChrBaseRegion.loadChrBaseRegion
 import static com.hartwig.hmftools.common.region.SpecificRegions.addSpecificChromosomesRegionsConfig;
 import static com.hartwig.hmftools.common.bam.BamUtils.deriveRefGenomeVersion;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.addThreadOptions;
+import static com.hartwig.hmftools.common.sequencing.IlluminaBamUtils.ILLUMINA_DEFAULT_READ_LENGTH;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LOG_READ_IDS;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LOG_READ_IDS_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PERF_DEBUG_DESC;
@@ -220,7 +221,8 @@ public class SliceConfig
         DropIncompleteFragments = false;
 
         Params = new SliceParams(
-                false, Collections.emptyList(), 0, 0, 0, 151);
+                false, Collections.emptyList(), 0, 0, 0,
+                ILLUMINA_DEFAULT_READ_LENGTH, false);
 
         MaxUnmappedReads = UNMAPPED_READS_DISABLED;
         SliceRegions = new SpecificRegions();

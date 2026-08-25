@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_POSITION;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SupplementaryReadData.ALIGNMENTS_DELIM;
 import static com.hartwig.hmftools.common.bam.SupplementaryReadData.SUPP_POS_STRAND;
+import static com.hartwig.hmftools.common.sequencing.IlluminaBamUtils.ILLUMINA_DEFAULT_READ_LENGTH;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_3;
@@ -32,7 +33,8 @@ public class SliceRegionTest
 {
     private static final SliceConfig CONFIG = new SliceConfig();
     private static final SliceParams PARAMS = new SliceParams(
-            false, Collections.emptyList(), 0, 1000, 1000, 151);
+            false, Collections.emptyList(), 0, 1000, 1000,
+            ILLUMINA_DEFAULT_READ_LENGTH, false);
 
     private static final ReadIdGenerator READ_ID_GENERATOR = new ReadIdGenerator();
 
