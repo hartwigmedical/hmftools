@@ -78,7 +78,7 @@ public class BamCalculationTest extends CalculationsTestBase
     {
         public BC(final WindowStatuses mGenomeFilter, final CobaltScope scope, final RefGenomeVersion version)
         {
-            super(mGenomeFilter, scope, version);
+            super(mGenomeFilter, scope);
         }
 
         @Override
@@ -88,7 +88,7 @@ public class BamCalculationTest extends CalculationsTestBase
         }
 
         @Override
-        ResultsNormaliser createMegaBaseScaleNormaliser(final RefGenomeVersion version)
+        ResultsNormaliser megaBaseScaleNormaliser()
         {
             return MbScaleNormaliser;
         }

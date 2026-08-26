@@ -16,11 +16,11 @@ class GCPail
     final int mGC;
     private final DescriptiveStatistics mStatistics = new DescriptiveStatistics();
 
-    GCPail(final int mGC)
+    GCPail(final int gc)
     {
-        Preconditions.checkArgument(mGC >= 0);
-        Preconditions.checkArgument(mGC <= 100);
-        this.mGC = mGC;
+        Preconditions.checkArgument(gc >= 0);
+        Preconditions.checkArgument(gc <= 100);
+        mGC = gc;
     }
 
     double median()

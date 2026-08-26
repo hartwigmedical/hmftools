@@ -81,7 +81,7 @@ class CobaltWindow
         }
         else
         {
-            if(this.mChromosome.isAutosome() && IsInTargetRegion && ReadDepth > 0)
+            if(mChromosome.isAutosome() && IsInTargetRegion && ReadDepth > 0)
             {
                 bucket.addReading(ReadDepth);
             }

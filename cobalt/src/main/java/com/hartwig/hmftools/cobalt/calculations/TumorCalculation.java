@@ -11,9 +11,9 @@ class TumorCalculation extends BamCalculation
 {
     private ResultsConsolidator mResultsConsolidator;
 
-    TumorCalculation(final WindowStatuses mGenomeFilter, CobaltScope scope, RefGenomeVersion version)
+    TumorCalculation(final WindowStatuses mGenomeFilter, CobaltScope scope)
     {
-        super(mGenomeFilter, scope, version);
+        super(mGenomeFilter, scope);
     }
 
     ReadDepthStatisticsNormaliser createReadDepthsNormaliser()
@@ -21,7 +21,8 @@ class TumorCalculation extends BamCalculation
         return Scope.medianByMeanNormaliser();
     }
 
-    ResultsNormaliser createMegaBaseScaleNormaliser(RefGenomeVersion version)
+    @Override
+    ResultsNormaliser megaBaseScaleNormaliser()
     {
         return new DoNothingNormaliser();
     }

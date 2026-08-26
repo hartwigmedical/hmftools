@@ -21,12 +21,11 @@ public class DiploidNormaliser implements ResultsNormaliser
     private final Map<Chromosome, DiploidRatioNormaliser> chromosomeToNormaliser = new HashMap<>();
     private List<MedianRatio> mMedianRatios;
 
-    public DiploidNormaliser(final int rollingMedianMaxDistance, final int rollingMedianMinCoverage,
-            final RefGenomeVersion mRefGenomeVersion)
+    public DiploidNormaliser(final int rollingMedianMaxDistance, final int rollingMedianMinCoverage, final RefGenomeVersion refGenVersion)
     {
-        this.mRollingMedianMaxDistance = rollingMedianMaxDistance;
-        this.mRollingMedianMinCoverage = rollingMedianMinCoverage;
-        this.mRefGenomeVersion = mRefGenomeVersion;
+        mRollingMedianMaxDistance = rollingMedianMaxDistance;
+        mRollingMedianMinCoverage = rollingMedianMinCoverage;
+        mRefGenomeVersion = refGenVersion;
     }
 
     @Override

@@ -231,21 +231,19 @@ public class CobaltConfig
         return readerFactory;
     }
 
+    public boolean targetedPanelMode() { return TargetRegionNormFile != null; }
+
     public CobaltScope scope()
     {
-        if(TargetRegionNormFile == null)
-        {
+        if(!targetedPanelMode())
             return new WholeGenome();
-        }
-        else
-        {
-            ListMultimap<Chromosome, TargetRegionEnrichment> chrEnrichmentMap = TargetRegionEnrichment.loadEnrichmentFile(TargetRegionNormFile);
 
-            RefGenomeCoordinates refGenomeCoordinates = RefGenomeCoordinates.refGenomeCoordinates(RefGenVersion);
-            TargetRegions.ChromosomeData chromosomeData = chromosome -> refGenomeCoordinates.lengths().get(chromosome);
+        ListMultimap<Chromosome, TargetRegionEnrichment> chrEnrichmentMap = TargetRegionEnrichment.loadEnrichmentFile(TargetRegionNormFile);
 
-            return new TargetRegions(chrEnrichmentMap, chromosomeData);
-        }
+        RefGenomeCoordinates refGenomeCoordinates = RefGenomeCoordinates.refGenomeCoordinates(RefGenVersion);
+        TargetRegions.ChromosomeData chromosomeData = chromosome -> refGenomeCoordinates.lengths().get(chromosome);
+
+        return new TargetRegions(chrEnrichmentMap, chromosomeData);
     }
 
     public ListMultimap<Chromosome, GCProfile> gcProfileData()
@@ -323,10 +321,7 @@ public class CobaltConfig
         return mExcludedRegions;
     }
 
-    public RefGenomeVersion genome()
-    {
-        return RefGenVersion;
-    }
+    public RefGenomeVersion refGenomeVersion() { return RefGenVersion; }
 
     private void loadExcludedRegions()
     {

@@ -7,7 +7,6 @@ import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 
 public interface CobaltScope
 {
-
     ResultsNormaliser finalNormaliser();
 
     ReadDepthStatisticsNormaliser medianByMeanNormaliser();

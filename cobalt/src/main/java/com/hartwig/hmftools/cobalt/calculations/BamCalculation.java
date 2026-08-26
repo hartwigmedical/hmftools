@@ -7,6 +7,7 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.hartwig.hmftools.cobalt.consolidation.ResultsConsolidator;
 import com.hartwig.hmftools.cobalt.count.DepthReading;
+import com.hartwig.hmftools.cobalt.normalisers.DoNothingNormaliser;
 import com.hartwig.hmftools.cobalt.normalisers.ReadDepthStatisticsNormaliser;
 import com.hartwig.hmftools.cobalt.normalisers.ResultsNormaliser;
 import com.hartwig.hmftools.cobalt.targeted.CobaltScope;
@@ -22,16 +23,14 @@ abstract class BamCalculation
     protected final CobaltScope Scope;
     private GcBucketStatistics BucketStatistics;
     final ReadDepthStatisticsNormaliser MeanNormaliser;
-    final ResultsNormaliser MegaBaseScaleNormaliser;
     private final ResultsNormaliser FinalNormaliser;
 
-    BamCalculation(final WindowStatuses mGenomeFilter, CobaltScope scope, RefGenomeVersion version)
+    BamCalculation(final WindowStatuses genomeFilter, final CobaltScope scope)
     {
-        this.mGenomeFilter = mGenomeFilter;
-        this.Scope = scope;
+        mGenomeFilter = genomeFilter;
+        Scope = scope;
         MeanNormaliser = createReadDepthsNormaliser();
         FinalNormaliser = createFinalNormaliser();
-        MegaBaseScaleNormaliser = createMegaBaseScaleNormaliser(version);
     }
 
     void addReading(Chromosome chromosome, DepthReading readDepth)
@@ -73,7 +72,7 @@ abstract class BamCalculation
         BamRatios bamRatios = new BamRatios(bamResults);
         bamRatios.normalise(MeanNormaliser);
         bamRatios.consolidate(consolidator());
-        bamRatios.normalise(MegaBaseScaleNormaliser);
+        bamRatios.normalise(megaBaseScaleNormaliser());
         bamRatios.normalise(FinalNormaliser);
         return bamRatios.Ratios;
     }
@@ -85,7 +84,7 @@ abstract class BamCalculation
 
     abstract ReadDepthStatisticsNormaliser createReadDepthsNormaliser();
 
-    abstract ResultsNormaliser createMegaBaseScaleNormaliser(RefGenomeVersion version);
+    abstract ResultsNormaliser megaBaseScaleNormaliser();
 
     ResultsNormaliser createFinalNormaliser()
     {

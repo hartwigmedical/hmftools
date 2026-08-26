@@ -189,7 +189,7 @@ public class CobaltCalculatorTest extends CalculationsTestBase
         when(config.gcProfileData()).thenReturn(gcProfileData);
         when(config.excludedRegions()).thenReturn(excludedRegions);
         when(config.diploidRegions()).thenReturn(ArrayListMultimap.create());
-        when(config.genome()).thenReturn(V38);
+        when(config.refGenomeVersion()).thenReturn(V38);
 
         // Create the reference and tumor depth readings
         for(int i = 0; i < 15; i++)

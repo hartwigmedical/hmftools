@@ -25,13 +25,13 @@ public class CobaltCalculator
     public CobaltCalculator(
             final ListMultimap<HumanChromosome, DepthReading> tumourDepthReadings,
             final ListMultimap<HumanChromosome, DepthReading> referenceDepthReadings,
-            CobaltConfig config)
+            final CobaltConfig config)
     {
         Preconditions.checkArgument(!tumourDepthReadings.isEmpty() || !referenceDepthReadings.isEmpty());
         WindowStatuses mWindowStatuses = new WindowStatuses(config.gcProfileData(), config.excludedRegions(), config.diploidRegions());
         CobaltScope scope = config.scope();
 
-        TumorCalculation tumorCalc = new TumorCalculation(mWindowStatuses, scope, config.genome());
+        TumorCalculation tumorCalc = new TumorCalculation(mWindowStatuses, scope);
         tumourDepthReadings.forEach(tumorCalc::addReading);
         ListMultimap<Chromosome, BamRatio> tumorResults = tumorCalc.calculateRatios();
         mTumorStats = tumorCalc.medianReadDepths();
@@ -42,7 +42,9 @@ public class CobaltCalculator
                     format(mTumorStats.medianReadDepth()), format(mTumorStats.meanReadDepth()));
         }
 
-        ReferenceCalculation referenceCalc = new ReferenceCalculation(mWindowStatuses, scope, config.genome(), tumorCalc.consolidator());
+        ReferenceCalculation referenceCalc = new ReferenceCalculation(
+                mWindowStatuses, scope, config.refGenomeVersion(), tumorCalc.consolidator(), !config.targetedPanelMode());
+
         referenceDepthReadings.forEach(referenceCalc::addReading);
         ListMultimap<Chromosome, BamRatio> referenceResults = referenceCalc.calculateRatios();
         mMedianRatios = referenceCalc.medianRatios();
@@ -54,7 +56,7 @@ public class CobaltCalculator
                     format(mReferenceStatistics.medianReadDepth()), format(mReferenceStatistics.meanReadDepth()));
         }
 
-        ResultsCollator collator = new ResultsCollator(config.genome());
+        ResultsCollator collator = new ResultsCollator(config.refGenomeVersion());
         mRatios = collator.collateResults(tumorResults, referenceResults);
     }
 

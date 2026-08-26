@@ -23,14 +23,16 @@ public class ReferenceCalculationTest
         ReadDepthStatisticsNormaliser theMeanOne = mock(ReadDepthStatisticsNormaliser.class);
         CobaltScope scope = mock(CobaltScope.class);
         when(scope.medianByMeanNormaliser()).thenReturn(theMeanOne);
-        Calculation = new ReferenceCalculation(mock(WindowStatuses.class), scope, V38, new NoOpConsolidator());
+        Calculation = new ReferenceCalculation(mock(WindowStatuses.class), scope, V38, new NoOpConsolidator(), true);
         Assert.assertEquals(theMeanOne, Calculation.createReadDepthsNormaliser());
     }
 
     @Test
     public void createMegaBaseScaleNormaliser()
     {
-        Calculation = new ReferenceCalculation(mock(WindowStatuses.class), mock(CobaltScope.class), V38, new NoOpConsolidator());
-        Assert.assertTrue(Calculation.createMegaBaseScaleNormaliser(V38) instanceof DiploidNormaliser);
+        Calculation = new ReferenceCalculation(
+                mock(WindowStatuses.class), mock(CobaltScope.class), V38, new NoOpConsolidator(), true);
+
+        Assert.assertTrue(Calculation.megaBaseScaleNormaliser() instanceof DiploidNormaliser);
     }
 }

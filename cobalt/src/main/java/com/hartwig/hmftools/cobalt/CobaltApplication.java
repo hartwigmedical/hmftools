@@ -130,11 +130,14 @@ public class CobaltApplication
     {
         if(mConfig.TumorId != null)
         {
-            CobaltRatioSegmenter.writeTumorSegments(results, mConfig.PcfGamma, mConfig.RefGenVersion, executorService, mConfig.tumorPcfFileName());
+            CobaltRatioSegmenter.writeTumorSegments(
+                    results, mConfig.PcfGamma, mConfig.RefGenVersion, executorService, mConfig.tumorPcfFileName());
         }
-        if(mConfig.ReferenceId != null)
+
+        if(mConfig.ReferenceId != null && mConfig.TargetRegionNormFile == null)
         {
-            CobaltRatioSegmenter.writeReferenceSegments(results, mConfig.PcfGamma, mConfig.RefGenVersion, executorService, mConfig.referencePcfFileName());
+            CobaltRatioSegmenter.writeReferenceSegments(
+                    results, mConfig.PcfGamma, mConfig.RefGenVersion, executorService, mConfig.referencePcfFileName());
         }
     }
 
