@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.purple;
 
-import static com.hartwig.hmftools.common.genome.gc.GCProfileFactory.GC_PROFILE;
 import static com.hartwig.hmftools.common.genome.gc.GCProfileFactory.addGcProfilePath;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
@@ -66,7 +65,6 @@ public class ReferenceData
     public final ListMultimap<Chromosome,SimpleVariant> SomaticHotspots;
     public final ListMultimap<Chromosome, SimpleVariant> GermlineHotspots;
 
-    public final String GcProfileFilename;
     public final TargetRegionsData TargetRegions;
 
     private boolean mIsValid;
@@ -85,7 +83,6 @@ public class ReferenceData
         }
 
         final String refGenomePath = configBuilder.getValue(REF_GENOME);
-        GcProfileFilename = configBuilder.getValue(GC_PROFILE);
 
         RefGenome = RefGenomeSource.loadRefGenome(refGenomePath);
 
@@ -227,7 +224,6 @@ public class ReferenceData
 
         configBuilder.addConfigItem(SOMATIC_HOTSPOT, false, "Path to somatic hotspot VCF", "");
         configBuilder.addConfigItem(GERMLINE_HOTSPOT, false, "Path to germline hotspot VCF", "");
-        addGcProfilePath(configBuilder, false);
         configBuilder.addPath(COHORT_AMP_DEL_FREQ_FILE, false, "Path to cohort germline deletions frequency file");
         configBuilder.addPath(TARGET_REGIONS_BED, false, TARGET_REGIONS_BED_DESC);
         TargetRegionsData.registerConfig(configBuilder);
@@ -252,7 +248,6 @@ public class ReferenceData
     public ReferenceData()
     {
         mIsValid = true;
-        GcProfileFilename = null;
         RefGenome = null;
         RefGenVersion = V38;
         ChromosomeLengths = Maps.newHashMap();
