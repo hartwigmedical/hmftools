@@ -64,8 +64,9 @@ public class EnsemblDAO
             new GeneData("ENSG00000258414", "AL121790.1","14", POS_STRAND,
                     37564047,37579125, "q21.1"));
 
-    // GOPC processed transcript which matches a ROS1 splice site - only in v38
-    private static final List<String> TRANSCRIPT_EXCLUSIONS = Lists.newArrayList("ENST00000467125");
+    // ENST00000467125: GOPC processed transcript which matches a ROS1 splice site - only in v38
+    // ENST00000454623: MET 3-exon transcript matching known fusion (exon-skipping) in canonical
+    private static final List<String> TRANSCRIPT_EXCLUSIONS = Lists.newArrayList("ENST00000467125", "ENST00000454623");
 
     private static final String DB_URL = "ensembl_db";
     private static final String DB_USER = "ensembl_user";
