@@ -132,7 +132,8 @@ public class ReferenceData
 
         if(requiredAminoAcids)
         {
-            loadTranscriptAminoAcidData(GeneDataCache.dataPath(), TransAminoAcidMap, Collections.emptyList(), canonicalOnly);
+            loadTranscriptAminoAcidData(
+                    GeneDataCache.dataPath(), GeneDataCache.refGenomeVersion(), TransAminoAcidMap, Collections.emptyList(), canonicalOnly);
         }
     }
 
