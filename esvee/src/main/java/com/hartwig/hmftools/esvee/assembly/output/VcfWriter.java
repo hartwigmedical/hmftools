@@ -271,10 +271,12 @@ public class VcfWriter implements AutoCloseable
 
         int totalSplitFrags = 0;
         int totalDiscFrags = 0;
+
         for(String sampleId : mSampleNames)
         {
             int sampleSupportIndex = mSampleNameIndex.get(sampleId);
             BreakendSupport breakendSupport = breakend.sampleSupport().get(sampleSupportIndex);
+
             genotypes.add(buildGenotype(sampleId, breakendSupport));
 
             totalSplitFrags += breakendSupport.SplitFragments;

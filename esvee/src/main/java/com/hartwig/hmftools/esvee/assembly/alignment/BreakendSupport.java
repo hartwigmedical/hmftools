@@ -24,7 +24,27 @@ public class BreakendSupport
     public double strandBias()
     {
         int totalReads = ForwardReads + ReverseReads;
-        return totalReads > 0 ? ForwardReads / (double)totalReads : 0;
+        return totalReads > 0 ? ForwardReads / (double)totalReads : 0.5;
+    }
+
+    public void checkMirroredSupport(final BreakendSupport otherSupport, boolean isInverted)
+    {
+        if(ForwardReads > 0 || ReverseReads > 0)
+            return;
+
+        if(otherSupport.ForwardReads == 0 && otherSupport.ReverseReads == 0)
+            return;
+
+        if(isInverted)
+        {
+            ForwardReads = otherSupport.ReverseReads;
+            ReverseReads = otherSupport.ForwardReads;
+        }
+        else
+        {
+            ForwardReads = otherSupport.ForwardReads;
+            ReverseReads = otherSupport.ReverseReads;
+        }
     }
 
     public String toString()

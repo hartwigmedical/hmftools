@@ -192,6 +192,22 @@ public class AlignmentFragments
 
             fragmentReads.setFragmentLength();
         }
+
+        for(Breakend breakend : mAssemblyAlignment.breakends())
+        {
+            // ensure 2-sided support is mirrored
+            if(breakend.otherBreakend() == null)
+                continue;
+
+            boolean isInverted = breakend.Orient == breakend.otherBreakend().Orient;
+
+            for(int i = 0; i < breakend.sampleSupport().size(); ++i)
+            {
+                BreakendSupport breakendSupport = breakend.sampleSupport().get(i);
+                BreakendSupport otherSupport = breakend.otherBreakend().sampleSupport().get(i);
+                breakendSupport.checkMirroredSupport(otherSupport, isInverted);
+            }
+        }
     }
 
     private void processSupportReads(final SupportRead firstRead, final SupportRead secondRead, boolean inPrimaryAssembly)
