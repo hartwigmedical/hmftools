@@ -13,20 +13,20 @@ import com.hartwig.hmftools.cobalt.normalisers.ResultsNormaliser;
 import com.hartwig.hmftools.cobalt.normalisers.UnityNormaliser;
 import com.hartwig.hmftools.cobalt.consolidation.NoOpConsolidator;
 import com.hartwig.hmftools.cobalt.consolidation.ResultsConsolidator;
-import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 
 public class TargetRegions implements CobaltScope
 {
     public interface ChromosomeData
     {
-        int length(Chromosome chromosome);
+        int length(HumanChromosome chromosome);
     }
 
-    private final Map<Chromosome, ArrayList<TargetRegionEnrichment>> mEnrichments = new HashMap<>();
+    private final Map<HumanChromosome, ArrayList<TargetRegionEnrichment>> mEnrichments = new HashMap<>();
 
-    public TargetRegions(ListMultimap<Chromosome, TargetRegionEnrichment> enrichments, final ChromosomeData chromosomeData)
+    public TargetRegions(ListMultimap<HumanChromosome, TargetRegionEnrichment> enrichments, final ChromosomeData chromosomeData)
     {
-        for(Chromosome chromosome : enrichments.keySet())
+        for(HumanChromosome chromosome : enrichments.keySet())
         {
             int length = chromosomeData.length(chromosome);
             int numberOfSlots = length / WINDOW_SIZE;
@@ -67,19 +67,19 @@ public class TargetRegions implements CobaltScope
     }
 
     @Override
-    public boolean onTarget(final Chromosome chromosome, final int position)
+    public boolean onTarget(final HumanChromosome chromosome, final int position)
     {
         return getEnrichment(chromosome, position) != null;
     }
 
     @Override
-    public double enrichmentQuotient(final Chromosome chromosome, final int position)
+    public double enrichmentQuotient(final HumanChromosome chromosome, final int position)
     {
         TargetRegionEnrichment enrichment = getEnrichment(chromosome, position);
         return enrichment == null ? -1.0 : enrichment.Enrichment;
     }
 
-    private TargetRegionEnrichment getEnrichment(final Chromosome chromosome, final int position)
+    private TargetRegionEnrichment getEnrichment(final HumanChromosome chromosome, final int position)
     {
         if(mEnrichments.containsKey(chromosome))
         {

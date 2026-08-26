@@ -10,13 +10,13 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.hartwig.hmftools.cobalt.calculations.BamRatio;
-import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 
 public class LowCoverageConsolidator implements ResultsConsolidator
 {
-    private final ArrayListMultimap<Chromosome, LowCovBucket> Boundaries = ArrayListMultimap.create();
+    private final ArrayListMultimap<HumanChromosome, LowCovBucket> Boundaries = ArrayListMultimap.create();
     private final int ConsolidationCount;
 
     public LowCoverageConsolidator(final int consolidationCount)
@@ -26,19 +26,19 @@ public class LowCoverageConsolidator implements ResultsConsolidator
     }
 
     @Override
-    public ListMultimap<Chromosome, BamRatio> consolidate(ListMultimap<Chromosome, BamRatio> ratios)
+    public ListMultimap<HumanChromosome, BamRatio> consolidate(ListMultimap<HumanChromosome, BamRatio> ratios)
     {
         createBoundariesIfNecessary(ratios);
         return populateLowCoverageRatio(ratios);
     }
 
-    private void createBoundariesIfNecessary(ListMultimap<Chromosome, BamRatio> ratios)
+    private void createBoundariesIfNecessary(ListMultimap<HumanChromosome, BamRatio> ratios)
     {
         if(!Boundaries.isEmpty())
         {
             return;
         }
-        for(Chromosome chromosome : ratios.keySet())
+        for(HumanChromosome chromosome : ratios.keySet())
         {
             List<Integer> nonMaskedPositions = ratios.get(chromosome).stream()
                     .filter(bamRatio -> bamRatio.ratio() >= 0)
@@ -50,10 +50,10 @@ public class LowCoverageConsolidator implements ResultsConsolidator
     }
 
     // we create a pan window ratio by taking the mean count of super windows that combine multiple windows
-    private ListMultimap<Chromosome, BamRatio> populateLowCoverageRatio(final ListMultimap<Chromosome, BamRatio> rawRatios)
+    private ListMultimap<HumanChromosome, BamRatio> populateLowCoverageRatio(final ListMultimap<HumanChromosome, BamRatio> rawRatios)
     {
-        ListMultimap<Chromosome, BamRatio> result = ArrayListMultimap.create();
-        for(Chromosome chromosome : Boundaries.keySet())
+        ListMultimap<HumanChromosome, BamRatio> result = ArrayListMultimap.create();
+        for(HumanChromosome chromosome : Boundaries.keySet())
         {
             List<BamRatio> chromosomeRatios = rawRatios.get(chromosome);
             Iterator<LowCovBucket> bucketItr = Boundaries.get(chromosome).iterator();

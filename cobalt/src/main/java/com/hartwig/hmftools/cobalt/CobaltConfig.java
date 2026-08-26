@@ -51,7 +51,7 @@ import com.hartwig.hmftools.common.bam.BamUtils;
 import com.hartwig.hmftools.common.cobalt.CobaltGcMedianFile;
 import com.hartwig.hmftools.common.cobalt.CobaltMedianRatioFile;
 import com.hartwig.hmftools.common.cobalt.CobaltRatioFile;
-import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.gc.GCProfile;
 import com.hartwig.hmftools.common.genome.gc.GCProfileFactory;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
@@ -238,7 +238,7 @@ public class CobaltConfig
         if(!targetedPanelMode())
             return new WholeGenome();
 
-        ListMultimap<Chromosome, TargetRegionEnrichment> chrEnrichmentMap = TargetRegionEnrichment.loadEnrichmentFile(TargetRegionNormFile);
+        ListMultimap<HumanChromosome, TargetRegionEnrichment> chrEnrichmentMap = TargetRegionEnrichment.loadEnrichmentFile(TargetRegionNormFile);
 
         RefGenomeCoordinates refGenomeCoordinates = RefGenomeCoordinates.refGenomeCoordinates(RefGenVersion);
         TargetRegions.ChromosomeData chromosomeData = chromosome -> refGenomeCoordinates.lengths().get(chromosome);
@@ -246,7 +246,7 @@ public class CobaltConfig
         return new TargetRegions(chrEnrichmentMap, chromosomeData);
     }
 
-    public ListMultimap<Chromosome, GCProfile> gcProfileData()
+    public ListMultimap<HumanChromosome, GCProfile> gcProfileData()
     {
         try
         {
@@ -259,7 +259,7 @@ public class CobaltConfig
         }
     }
 
-    public ListMultimap<Chromosome, DiploidStatus> diploidRegions()
+    public ListMultimap<HumanChromosome, DiploidStatus> diploidRegions()
     {
         if(TumorOnlyDiploidBed == null)
         {

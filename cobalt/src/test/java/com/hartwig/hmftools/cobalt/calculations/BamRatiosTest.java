@@ -21,7 +21,7 @@ import com.google.common.collect.ListMultimap;
 import com.hartwig.hmftools.cobalt.consolidation.NoOpConsolidator;
 import com.hartwig.hmftools.cobalt.consolidation.ResultsConsolidator;
 import com.hartwig.hmftools.cobalt.normalisers.ResultsNormaliser;
-import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -32,15 +32,15 @@ public class BamRatiosTest extends CalculationsTestBase
 {
     private final Random RandomGenerator = new Random();
     private BamRatios mBamRatios;
-    private Map<Chromosome, List<Integer>> OriginalPositions;
-    private Map<Chromosome, List<Double>> OriginalRatios;
-    private Map<Chromosome, List<Double>> OriginalDepths;
-    private Map<Chromosome, List<Double>> OriginalGCs;
+    private Map<HumanChromosome, List<Integer>> OriginalPositions;
+    private Map<HumanChromosome, List<Double>> OriginalRatios;
+    private Map<HumanChromosome, List<Double>> OriginalDepths;
+    private Map<HumanChromosome, List<Double>> OriginalGCs;
 
     @Before
     public void setup()
     {
-        ListMultimap<Chromosome, BamRatio> ratios = ArrayListMultimap.create();
+        ListMultimap<HumanChromosome, BamRatio> ratios = ArrayListMultimap.create();
         for (int i=0; i<100; i++)
         {
             int position = i * 1000 + 1;
@@ -111,7 +111,7 @@ public class BamRatiosTest extends CalculationsTestBase
     @Test
     public void consolidateBy10()
     {
-        ListMultimap<Chromosome, BamRatio> consolidatedRatios = ArrayListMultimap.create();
+        ListMultimap<HumanChromosome, BamRatio> consolidatedRatios = ArrayListMultimap.create();
         for (int i=1; i<=10; i++)
         {
             int position = i * 10_000 + 1;
@@ -155,7 +155,7 @@ public class BamRatiosTest extends CalculationsTestBase
     @Test
     public void consolidateBy30()
     {
-        ListMultimap<Chromosome, BamRatio> consolidatedRatios = ArrayListMultimap.create();
+        ListMultimap<HumanChromosome, BamRatio> consolidatedRatios = ArrayListMultimap.create();
         for (int i=1; i<=3; i++)
         {
             int position = i * 30_000 + 1;
@@ -200,7 +200,7 @@ public class BamRatiosTest extends CalculationsTestBase
     public void consolidateEmpty()
     {
         mBamRatios = new BamRatios(ArrayListMultimap.create());
-        ListMultimap<Chromosome, BamRatio> consolidatedRatios = ArrayListMultimap.create();
+        ListMultimap<HumanChromosome, BamRatio> consolidatedRatios = ArrayListMultimap.create();
         for (int i=1; i<=5; i++)
         {
             int position = i * 10_000 + 1;
@@ -213,7 +213,7 @@ public class BamRatiosTest extends CalculationsTestBase
         assertEquals(0, mBamRatios.Ratios.size());
     }
 
-    BamRatio randomRatio(Chromosome chromosome, int position)
+    BamRatio randomRatio(HumanChromosome chromosome, int position)
     {
         double ratio = RandomGenerator.nextDouble();
         double depth = RandomGenerator.nextDouble() * 10.0;
@@ -221,29 +221,29 @@ public class BamRatiosTest extends CalculationsTestBase
         return new BamRatio(chromosome, position, depth, ratio, gc);
     }
 
-    private Map<Chromosome, List<Integer>> extractPositions()
+    private Map<HumanChromosome, List<Integer>> extractPositions()
     {
         return  extractValues(BamRatio::position);
     }
 
-    private Map<Chromosome, List<Double>> extractRatios()
+    private Map<HumanChromosome, List<Double>> extractRatios()
     {
         return extractValues(BamRatio::ratio);
     }
 
-    private Map<Chromosome, List<Double>> extractGCs()
+    private Map<HumanChromosome, List<Double>> extractGCs()
     {
         return extractValues(BamRatio::gcContent);
     }
 
-    private Map<Chromosome, List<Double>> extractDepths()
+    private Map<HumanChromosome, List<Double>> extractDepths()
     {
         return extractValues(BamRatio::readDepth);
     }
 
-    private <T extends Number> Map<Chromosome, List<T>> extractValues(Function<BamRatio, T> f)
+    private <T extends Number> Map<HumanChromosome, List<T>> extractValues(Function<BamRatio, T> f)
     {
-        Map<Chromosome, List<T>> result = new HashMap<>();
+        Map<HumanChromosome, List<T>> result = new HashMap<>();
         mBamRatios.Ratios.keySet().forEach(chromosome -> {
             List<T> chrPositions = mBamRatios.Ratios.get(chromosome).stream().map(f).toList();
             result.put(chromosome, chrPositions);

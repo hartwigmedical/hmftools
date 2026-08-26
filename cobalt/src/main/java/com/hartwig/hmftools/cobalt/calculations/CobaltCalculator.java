@@ -12,12 +12,11 @@ import com.hartwig.hmftools.cobalt.targeted.CobaltScope;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.cobalt.GcMedianReadDepth;
 import com.hartwig.hmftools.common.cobalt.MedianRatio;
-import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 
 public class CobaltCalculator
 {
-    private final ListMultimap<Chromosome, CobaltRatio> mRatios;
+    private final ListMultimap<HumanChromosome, CobaltRatio> mRatios;
     private final List<MedianRatio> mMedianRatios;
     private final GcMedianReadDepth mTumorStats;
     private final GcMedianReadDepth mReferenceStatistics;
@@ -33,7 +32,7 @@ public class CobaltCalculator
 
         TumorCalculation tumorCalc = new TumorCalculation(mWindowStatuses, scope);
         tumourDepthReadings.forEach(tumorCalc::addReading);
-        ListMultimap<Chromosome, BamRatio> tumorResults = tumorCalc.calculateRatios();
+        ListMultimap<HumanChromosome, BamRatio> tumorResults = tumorCalc.calculateRatios();
         mTumorStats = tumorCalc.medianReadDepths();
 
         if(!tumourDepthReadings.isEmpty())
@@ -46,7 +45,7 @@ public class CobaltCalculator
                 mWindowStatuses, scope, config.refGenomeVersion(), tumorCalc.consolidator(), !config.targetedPanelMode());
 
         referenceDepthReadings.forEach(referenceCalc::addReading);
-        ListMultimap<Chromosome, BamRatio> referenceResults = referenceCalc.calculateRatios();
+        ListMultimap<HumanChromosome, BamRatio> referenceResults = referenceCalc.calculateRatios();
         mMedianRatios = referenceCalc.medianRatios();
         mReferenceStatistics = referenceCalc.medianReadDepths();
 
@@ -60,7 +59,7 @@ public class CobaltCalculator
         mRatios = collator.collateResults(tumorResults, referenceResults);
     }
 
-    public ListMultimap<Chromosome, CobaltRatio> getCalculatedRatios()
+    public ListMultimap<HumanChromosome, CobaltRatio> getCalculatedRatios()
     {
         return mRatios;
     }

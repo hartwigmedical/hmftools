@@ -8,7 +8,7 @@ import com.hartwig.hmftools.cobalt.normalisers.ResultsNormaliser;
 import com.hartwig.hmftools.cobalt.consolidation.LowCoverageConsolidator;
 import com.hartwig.hmftools.cobalt.consolidation.NoOpConsolidator;
 import com.hartwig.hmftools.cobalt.consolidation.ResultsConsolidator;
-import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 
 public class WholeGenome implements CobaltScope
 {
@@ -25,13 +25,13 @@ public class WholeGenome implements CobaltScope
     }
 
     @Override
-    public double enrichmentQuotient(final Chromosome chromosome, final int position)
+    public double enrichmentQuotient(final HumanChromosome chromosome, final int position)
     {
         return 1.0;
     }
 
     @Override
-    public boolean onTarget(final Chromosome chromosome, final int position)
+    public boolean onTarget(final HumanChromosome chromosome, final int position)
     {
         return true; //todo
     }

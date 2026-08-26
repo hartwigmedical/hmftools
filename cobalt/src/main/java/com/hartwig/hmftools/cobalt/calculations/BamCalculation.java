@@ -7,17 +7,15 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.hartwig.hmftools.cobalt.consolidation.ResultsConsolidator;
 import com.hartwig.hmftools.cobalt.count.DepthReading;
-import com.hartwig.hmftools.cobalt.normalisers.DoNothingNormaliser;
 import com.hartwig.hmftools.cobalt.normalisers.ReadDepthStatisticsNormaliser;
 import com.hartwig.hmftools.cobalt.normalisers.ResultsNormaliser;
 import com.hartwig.hmftools.cobalt.targeted.CobaltScope;
 import com.hartwig.hmftools.common.cobalt.GcMedianReadDepth;
-import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 
 abstract class BamCalculation
 {
-    private final ListMultimap<Chromosome, CobaltWindow> WindowsByChromosome = ArrayListMultimap.create();
+    private final ListMultimap<HumanChromosome, CobaltWindow> WindowsByChromosome = ArrayListMultimap.create();
     private final GCPailsList mGCPailsList = new GCPailsList();
     private final WindowStatuses mGenomeFilter;
     protected final CobaltScope Scope;
@@ -33,7 +31,7 @@ abstract class BamCalculation
         FinalNormaliser = createFinalNormaliser();
     }
 
-    void addReading(Chromosome chromosome, DepthReading readDepth)
+    void addReading(final HumanChromosome chromosome, DepthReading readDepth)
     {
         // The genome filter takes into account gc mappability, excluded pseudo-gene regions
         // and excluded non-diploid regions, depending on the mode.
@@ -49,10 +47,11 @@ abstract class BamCalculation
         WindowsByChromosome.put(chromosome, bucketedWindow);
     }
 
-    ListMultimap<Chromosome, BamRatio> calculateRatios()
+    ListMultimap<HumanChromosome, BamRatio> calculateRatios()
     {
         BucketStatistics = new GcBucketStatistics(mGCPailsList, GC_BUCKET_MIN, GC_BUCKET_MAX);
-        final ListMultimap<Chromosome, BamRatio> bamResults = ArrayListMultimap.create();
+        ListMultimap<HumanChromosome, BamRatio> bamResults = ArrayListMultimap.create();
+
         WindowsByChromosome.forEach((chromosome, window) ->
         {
             // Windows are converted to BamRatios. The essential values of a BamRatio are its ratio
@@ -68,6 +67,7 @@ abstract class BamCalculation
             bamRatio.applyEnrichment(Scope.enrichmentQuotient(chromosome, window.Position));
             bamResults.put(chromosome, bamRatio);
         });
+
         // Apply the remaining normalisation and consolidation steps. Some of these are no-ops depending on the mode.
         BamRatios bamRatios = new BamRatios(bamResults);
         bamRatios.normalise(MeanNormaliser);

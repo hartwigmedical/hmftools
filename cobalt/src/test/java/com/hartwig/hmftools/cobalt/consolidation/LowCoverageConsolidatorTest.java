@@ -11,7 +11,7 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.hartwig.hmftools.cobalt.calculations.BamRatio;
 import com.hartwig.hmftools.cobalt.calculations.CalculationsTestBase;
-import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 
 import org.junit.Test;
 
@@ -20,7 +20,7 @@ public class LowCoverageConsolidatorTest extends CalculationsTestBase
     @Test
     public void ratioAndGcAreAveragedInConsolidation()
     {
-        ListMultimap<Chromosome, BamRatio> ratios = ArrayListMultimap.create();
+        ListMultimap<HumanChromosome, BamRatio> ratios = ArrayListMultimap.create();
         for(int i = 0; i < 40; i++)
         {
             int position = i * 1000 + 1;
@@ -31,7 +31,7 @@ public class LowCoverageConsolidatorTest extends CalculationsTestBase
         }
         int consolidationCount = ResultsConsolidator.calcConsolidationCount(8.0);
         LowCoverageConsolidator consolidator = new LowCoverageConsolidator(consolidationCount);
-        ListMultimap<Chromosome, BamRatio> result = consolidator.consolidate(ratios);
+        ListMultimap<HumanChromosome, BamRatio> result = consolidator.consolidate(ratios);
 
         assertEquals(2, result.keySet().size());
         List<BamRatio> ratios1 = result.get(_1);
@@ -58,7 +58,7 @@ public class LowCoverageConsolidatorTest extends CalculationsTestBase
     @Test
     public void useConsolidationCount()
     {
-        ListMultimap<Chromosome, BamRatio> ratios = ArrayListMultimap.create();
+        ListMultimap<HumanChromosome, BamRatio> ratios = ArrayListMultimap.create();
         for(int i = 0; i < 40; i++)
         {
             int position = i * 1000 + 1;
@@ -69,7 +69,7 @@ public class LowCoverageConsolidatorTest extends CalculationsTestBase
         }
         int consolidationCount = ResultsConsolidator.calcConsolidationCount(4.0);
         LowCoverageConsolidator consolidator = new LowCoverageConsolidator(consolidationCount);
-        ListMultimap<Chromosome, BamRatio> result = consolidator.consolidate(ratios);
+        ListMultimap<HumanChromosome, BamRatio> result = consolidator.consolidate(ratios);
 
         assertEquals(2, result.keySet().size());
         List<BamRatio> ratios1 = result.get(_1);
@@ -93,7 +93,7 @@ public class LowCoverageConsolidatorTest extends CalculationsTestBase
     @Test
     public void maskedRatiosAreSkippedInConsolidation()
     {
-        ListMultimap<Chromosome, BamRatio> ratios = ArrayListMultimap.create();
+        ListMultimap<HumanChromosome, BamRatio> ratios = ArrayListMultimap.create();
         for(int i = 0; i < 200; i++)
         {
             int position = i * 1000 + 1;
@@ -108,7 +108,7 @@ public class LowCoverageConsolidatorTest extends CalculationsTestBase
         }
         int consolidationCount = ResultsConsolidator.calcConsolidationCount(8.0);
         LowCoverageConsolidator consolidator = new LowCoverageConsolidator(consolidationCount);
-        ListMultimap<Chromosome, BamRatio> result = consolidator.consolidate(ratios);
+        ListMultimap<HumanChromosome, BamRatio> result = consolidator.consolidate(ratios);
 
         assertEquals(1, result.keySet().size());
         List<BamRatio> ratios1 = result.get(_1);
@@ -126,7 +126,7 @@ public class LowCoverageConsolidatorTest extends CalculationsTestBase
     @Test
     public void consolidatedRegionsAreLimitedInExtent()
     {
-        ListMultimap<Chromosome, BamRatio> ratios = ArrayListMultimap.create();
+        ListMultimap<HumanChromosome, BamRatio> ratios = ArrayListMultimap.create();
         for(int i = 0; i < 200; i++)
         {
             int position = i * 100_000 + 1;
@@ -142,7 +142,7 @@ public class LowCoverageConsolidatorTest extends CalculationsTestBase
 
         int consolidationCount = ResultsConsolidator.calcConsolidationCount(8.0);
         LowCoverageConsolidator consolidator = new LowCoverageConsolidator(consolidationCount);
-        ListMultimap<Chromosome, BamRatio> result = consolidator.consolidate(ratios);
+        ListMultimap<HumanChromosome, BamRatio> result = consolidator.consolidate(ratios);
 
         assertEquals(1, result.keySet().size());
         List<BamRatio> ratios1 = result.get(_1);
@@ -159,7 +159,7 @@ public class LowCoverageConsolidatorTest extends CalculationsTestBase
     @Test
     public void boundariesAreReused()
     {
-        ListMultimap<Chromosome, BamRatio> tumorRatios = ArrayListMultimap.create();
+        ListMultimap<HumanChromosome, BamRatio> tumorRatios = ArrayListMultimap.create();
         for(int i = 0; i < 1000; i++)
         {
             int position = i * 1000 + 1;
@@ -177,16 +177,16 @@ public class LowCoverageConsolidatorTest extends CalculationsTestBase
 
         int consolidationCount = ResultsConsolidator.calcConsolidationCount(8.0);
         LowCoverageConsolidator consolidator = new LowCoverageConsolidator(consolidationCount);
-        ListMultimap<Chromosome, BamRatio> tumCons = consolidator.consolidate(tumorRatios);
+        ListMultimap<HumanChromosome, BamRatio> tumCons = consolidator.consolidate(tumorRatios);
 
-        ListMultimap<Chromosome, BamRatio> referenceRatios = ArrayListMultimap.create();
+        ListMultimap<HumanChromosome, BamRatio> referenceRatios = ArrayListMultimap.create();
         for(int i = 0; i < 1000; i++)
         {
             int position = i * 1000 + 1;
             referenceRatios.put(_1, br(_1, position, 11.0, 0.51, true));
             referenceRatios.put(_2, br(_2, position, 13.0, 0.53, true));
         }
-        ListMultimap<Chromosome, BamRatio> refCons = consolidator.consolidate(referenceRatios);
+        ListMultimap<HumanChromosome, BamRatio> refCons = consolidator.consolidate(referenceRatios);
 
         List<Integer> consolidatedTumorRatioPositionsChr1 = tumCons.get(_1).stream().map(bamRatio -> bamRatio.Position).toList();
         List<Integer> consolidatedTumorRatioPositionsChr2 = tumCons.get(_2).stream().map(bamRatio -> bamRatio.Position).toList();

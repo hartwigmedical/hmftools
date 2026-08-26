@@ -31,7 +31,7 @@ public class DiploidNormaliser implements ResultsNormaliser
     @Override
     public void recordValue(final BamRatio bamRatio)
     {
-        DiploidRatioNormaliser normaliserForChromosome = chromosomeToNormaliser.computeIfAbsent(bamRatio.mChromosome,
+        DiploidRatioNormaliser normaliserForChromosome = chromosomeToNormaliser.computeIfAbsent(bamRatio.Chromosome,
                 k -> new DiploidRatioNormaliser(mRollingMedianMaxDistance, mRollingMedianMinCoverage));
         normaliserForChromosome.recordRatio(bamRatio);
     }
@@ -65,13 +65,13 @@ public class DiploidNormaliser implements ResultsNormaliser
     @Override
     public void normalise(BamRatio bamRatio)
     {
-        if(bamRatio.mChromosome.equals(HumanChromosome._Y))
+        if(bamRatio.Chromosome.equals(HumanChromosome._Y))
         {
             bamRatio.setDiploidAdjustedRatio(bamRatio.ratio());
         }
         else
         {
-            double normalised = chromosomeToNormaliser.get(bamRatio.mChromosome).normalise(bamRatio);
+            double normalised = chromosomeToNormaliser.get(bamRatio.Chromosome).normalise(bamRatio);
             bamRatio.setDiploidAdjustedRatio(normalised);
         }
     }

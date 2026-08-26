@@ -9,26 +9,27 @@ import java.util.Set;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
-import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
 class ResultsCollator
 {
-    private final RefGenomeVersion GenomeVersion;
+    private final RefGenomeVersion mGenomeVersion;
 
     ResultsCollator(RefGenomeVersion genomeVersion)
     {
-        this.GenomeVersion = genomeVersion;
+        mGenomeVersion = genomeVersion;
     }
 
-    ListMultimap<Chromosome, CobaltRatio> collateResults(ListMultimap<Chromosome, BamRatio> tumorResults,
-            ListMultimap<Chromosome, BamRatio> referenceResults)
+    ListMultimap<HumanChromosome, CobaltRatio> collateResults(
+            final ListMultimap<HumanChromosome, BamRatio> tumorResults,
+            final ListMultimap<HumanChromosome, BamRatio> referenceResults)
     {
         checkArgument(!tumorResults.isEmpty() || !referenceResults.isEmpty());
         checkArgument(tumorResults.isEmpty() || referenceResults.isEmpty() || tumorResults.keySet().equals(referenceResults.keySet()));
 
-        final ListMultimap<Chromosome, CobaltRatio> finalResults = ArrayListMultimap.create();
-        Set<Chromosome> chromosomes = tumorResults.isEmpty() ? referenceResults.keySet() : tumorResults.keySet();
+        final ListMultimap<HumanChromosome, CobaltRatio> finalResults = ArrayListMultimap.create();
+        Set<HumanChromosome> chromosomes = tumorResults.isEmpty() ? referenceResults.keySet() : tumorResults.keySet();
         chromosomes.forEach((chromosome) ->
         {
             List<BamRatio> tumorRatiosForChromosome = tumorResults.get(chromosome);
@@ -50,7 +51,7 @@ class ResultsCollator
     private CobaltRatio merge(BamRatio referenceRatio, BamRatio tumorRatio)
     {
         checkArgument(referenceRatio != null || tumorRatio != null);
-        checkArgument(referenceRatio == null || tumorRatio == null || referenceRatio.mChromosome.equals(tumorRatio.mChromosome));
+        checkArgument(referenceRatio == null || tumorRatio == null || referenceRatio.Chromosome.equals(tumorRatio.Chromosome));
         checkArgument(referenceRatio == null || tumorRatio == null || referenceRatio.Position == tumorRatio.Position);
         if(tumorRatio == null)
         {
@@ -60,7 +61,7 @@ class ResultsCollator
         {
             return tumorOnlyCobaltRatio(tumorRatio);
         }
-        return new CobaltRatio(GenomeVersion.versionedChromosome(referenceRatio.mChromosome), referenceRatio.Position,
+        return new CobaltRatio(mGenomeVersion.versionedChromosome(referenceRatio.Chromosome), referenceRatio.Position,
                 referenceRatio.readDepth(), referenceRatio.ratio(), referenceRatio.gcContent(), referenceRatio.getDiploidAdjustedRatio(),
                 tumorRatio.readDepth(), tumorRatio.ratio(), tumorRatio.gcContent());
     }
@@ -68,7 +69,7 @@ class ResultsCollator
     private CobaltRatio tumorOnlyCobaltRatio(BamRatio tumorRatio)
     {
         checkArgument(tumorRatio != null);
-        return new CobaltRatio(GenomeVersion.versionedChromosome(tumorRatio.mChromosome), tumorRatio.Position,
+        return new CobaltRatio(mGenomeVersion.versionedChromosome(tumorRatio.Chromosome), tumorRatio.Position,
                 -1.0, -1.0, -1.0, -1.0,
                 tumorRatio.readDepth(), tumorRatio.ratio(), tumorRatio.gcContent());
     }
@@ -76,7 +77,7 @@ class ResultsCollator
     private CobaltRatio referenceOnlyCobaltRatio(BamRatio referenceRatio)
     {
         checkArgument(referenceRatio != null);
-        return new CobaltRatio(GenomeVersion.versionedChromosome(referenceRatio.mChromosome), referenceRatio.Position,
+        return new CobaltRatio(mGenomeVersion.versionedChromosome(referenceRatio.Chromosome), referenceRatio.Position,
                 referenceRatio.readDepth(), referenceRatio.ratio(), referenceRatio.gcContent(), referenceRatio.getDiploidAdjustedRatio(),
                 -1.0, -1.0, -1.0);
     }

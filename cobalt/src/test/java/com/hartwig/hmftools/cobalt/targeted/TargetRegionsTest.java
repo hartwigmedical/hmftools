@@ -13,7 +13,7 @@ import com.google.common.collect.ListMultimap;
 import com.hartwig.hmftools.cobalt.normalisers.NoOpReadDepthStatisticsNormaliser;
 import com.hartwig.hmftools.cobalt.normalisers.UnityNormaliser;
 import com.hartwig.hmftools.cobalt.consolidation.NoOpConsolidator;
-import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -26,7 +26,7 @@ public class TargetRegionsTest
     @Before
     public void setup()
     {
-        ListMultimap<Chromosome, TargetRegionEnrichment> initialData = ArrayListMultimap.create();
+        ListMultimap<HumanChromosome, TargetRegionEnrichment> initialData = ArrayListMultimap.create();
         initialData.put(_1, tre(_1, 5_001, 0.5));
         initialData.put(_1, tre(_1, 6_001, 0.6));
         initialData.put(_1, tre(_1, 7_001, 0.5));
@@ -105,12 +105,12 @@ public class TargetRegionsTest
         assertTrue(enricher.medianByMeanNormaliser() instanceof NoOpReadDepthStatisticsNormaliser);
     }
 
-    void check(double expected, Chromosome chromosome, int position)
+    void check(double expected, HumanChromosome chromosome, int position)
     {
         assertEquals(expected, enricher.enrichmentQuotient(chromosome, position), 0.0001);
     }
 
-    private TargetRegionEnrichment tre(Chromosome chromosome, int position, double enrichment)
+    private TargetRegionEnrichment tre(HumanChromosome chromosome, int position, double enrichment)
     {
         return new TargetRegionEnrichment(chromosome, position, enrichment);
     }

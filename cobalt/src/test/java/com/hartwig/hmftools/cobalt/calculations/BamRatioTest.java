@@ -52,7 +52,7 @@ public class BamRatioTest
     public void constructors()
     {
         BamRatio br = new BamRatio(_Y, 19_001, 123.4, 0.55);
-        assertEquals(_Y, br.mChromosome);
+        assertEquals(_Y, br.Chromosome);
         assertEquals(19_001, br.position());
         assertEquals(123.4, br.ratio(), 0.001);
         assertEquals(123.4, br.readDepth(), 0.001);
@@ -60,7 +60,7 @@ public class BamRatioTest
         assertEquals(-1.0, br.getDiploidAdjustedRatio(), 0.001);
 
         br = new BamRatio(_X, 19_001, 123.4, 12.34, 0.34);
-        assertEquals(_X, br.mChromosome);
+        assertEquals(_X, br.Chromosome);
         assertEquals(19_001, br.position());
         assertEquals(12.34, br.ratio(), 0.001);
         assertEquals(123.4, br.readDepth(), 0.001);
@@ -125,7 +125,7 @@ public class BamRatioTest
     {
         BamRatio ratio = new BamRatio(_1, StartPosition, Double.NaN, 0.49, true);
         ratio.normaliseByMean(0.5);
-        assertEquals(_1, ratio.mChromosome);
+        assertEquals(_1, ratio.Chromosome);
         assertEquals(1001, ratio.Position);
         assertEquals(-1.0, ratio.ratio(), 0.001);
         assertEquals(-1.0, ratio.readDepth(), 0.001);
@@ -190,7 +190,7 @@ public class BamRatioTest
     public void handleNaNDepthInConstructor()
     {
         BamRatio ratio = new BamRatio(_1, StartPosition, Double.NaN, 0.49, true);
-        assertEquals(_1, ratio.mChromosome);
+        assertEquals(_1, ratio.Chromosome);
         assertEquals(1001, ratio.Position);
         assertEquals(-1.0, ratio.ratio(), 0.001);
         assertEquals(-1.0, ratio.readDepth(), 0.001);
@@ -201,7 +201,7 @@ public class BamRatioTest
     public void handleNaNGcInConstructor()
     {
         BamRatio ratio = new BamRatio(_1, StartPosition, 34, Double.NaN, true);
-        assertEquals(_1, ratio.mChromosome);
+        assertEquals(_1, ratio.Chromosome);
         assertEquals(1001, ratio.Position);
         assertEquals(34, ratio.ratio(), 0.001);
         assertEquals(34, ratio.readDepth(), 0.001);
@@ -213,7 +213,7 @@ public class BamRatioTest
     public void inTargetRegion()
     {
         BamRatio ratio = new BamRatio(_1, StartPosition, ReadDepth, ReadGcContent, true);
-        assertEquals(_1, ratio.mChromosome);
+        assertEquals(_1, ratio.Chromosome);
         assertEquals(1001, ratio.Position);
         assertEquals(82, ratio.ratio(), 0.001);
         assertEquals(82, ratio.readDepth(), 0.001);
@@ -224,7 +224,7 @@ public class BamRatioTest
     public void outsideTargetRegion()
     {
         BamRatio ratio = new BamRatio(_1, StartPosition, ReadDepth, ReadGcContent, false);
-        assertEquals(_1, ratio.mChromosome);
+        assertEquals(_1, ratio.Chromosome);
         assertEquals(1001, ratio.Position);
         checkBlanked(ratio);
     }

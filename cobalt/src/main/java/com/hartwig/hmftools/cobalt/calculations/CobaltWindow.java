@@ -4,11 +4,11 @@ import java.util.Objects;
 
 import com.google.common.base.Preconditions;
 import com.hartwig.hmftools.cobalt.count.DepthReading;
-import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 
 class CobaltWindow
 {
-    public final Chromosome mChromosome;
+    public final HumanChromosome mChromosome;
     public final int Position;
     private final Double ReadDepth;
     public final Double GcContent;
@@ -16,24 +16,24 @@ class CobaltWindow
     public final boolean IsInExcludedRegion;
     public final boolean IsInTargetRegion;
 
-    CobaltWindow(final Chromosome chromosome, final DepthReading depth, boolean isInExcludedRegion, boolean isInTargetRegion)
+    CobaltWindow(final HumanChromosome chromosome, final DepthReading depth, boolean isInExcludedRegion, boolean isInTargetRegion)
     {
         mChromosome = chromosome;
         Position = depth.StartPosition;
         ReadDepth = depth.ReadDepth;
         GcContent = depth.ReadGcContent;
-        this.GcBucket = null;
+        GcBucket = null;
         IsInExcludedRegion = isInExcludedRegion;
         IsInTargetRegion = isInTargetRegion;
     }
 
-    CobaltWindow(Chromosome chromosome, int position, double readDepth, double gcContent, GCPail GcBucket, boolean isInTargetRegion)
+    CobaltWindow(final HumanChromosome chromosome, int position, double readDepth, double gcContent, GCPail gcBucket, boolean isInTargetRegion)
     {
         mChromosome = chromosome;
         Position = position;
         ReadDepth = readDepth;
         GcContent = gcContent;
-        this.GcBucket = GcBucket;
+        GcBucket = gcBucket;
         IsInExcludedRegion = false;
         IsInTargetRegion = isInTargetRegion;
     }

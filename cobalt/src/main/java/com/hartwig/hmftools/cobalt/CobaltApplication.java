@@ -26,7 +26,6 @@ import com.hartwig.hmftools.common.cobalt.CobaltGcMedianFile;
 import com.hartwig.hmftools.common.cobalt.CobaltMedianRatioFile;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.cobalt.CobaltRatioFile;
-import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.VersionInfo;
@@ -88,7 +87,7 @@ public class CobaltApplication
             }
 
             CobaltCalculator calculator = new CobaltCalculator(tumourDepths, refDepths, mConfig);
-            ListMultimap<Chromosome, CobaltRatio> results = calculator.getCalculatedRatios();
+            ListMultimap<HumanChromosome, CobaltRatio> results = calculator.getCalculatedRatios();
 
             final List<CobaltRatio> collectedRatios = new ArrayList<>();
             results.keySet().forEach(chromosome -> collectedRatios.addAll(results.get(chromosome)));
@@ -126,7 +125,7 @@ public class CobaltApplication
         CB_LOGGER.info("Cobalt complete, mins({})", runTimeMinsStr(startTimeMs));
     }
 
-    private void writePcf(final ListMultimap<Chromosome, CobaltRatio> results, final ExecutorService executorService) throws Exception
+    private void writePcf(final ListMultimap<HumanChromosome, CobaltRatio> results, final ExecutorService executorService) throws Exception
     {
         if(mConfig.TumorId != null)
         {

@@ -12,7 +12,6 @@ import java.util.function.Consumer;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
-import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 
 import org.jetbrains.annotations.NotNull;
@@ -25,10 +24,10 @@ import htsjdk.tribble.readers.LineIterator;
 
 public class DiploidRegionLoader implements Consumer<Locatable>
 {
-    private final ListMultimap<Chromosome, DiploidStatus> Regions = ArrayListMultimap.create();
+    private final ListMultimap<HumanChromosome, DiploidStatus> Regions = ArrayListMultimap.create();
 
     private String mChromosome = null;
-    private Chromosome CurrentChromosome;
+    private HumanChromosome CurrentChromosome;
     private int mPosition = 0;
 
     public DiploidRegionLoader(final String diploidBedPath) throws IOException
@@ -85,7 +84,7 @@ public class DiploidRegionLoader implements Consumer<Locatable>
         }
     }
 
-    public ListMultimap<Chromosome, DiploidStatus> regions()
+    public ListMultimap<HumanChromosome, DiploidStatus> regions()
     {
         return Regions;
     }

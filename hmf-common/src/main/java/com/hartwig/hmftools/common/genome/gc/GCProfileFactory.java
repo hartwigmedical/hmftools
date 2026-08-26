@@ -10,12 +10,9 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-
-import org.apache.commons.cli.Options;
 
 public final class GCProfileFactory
 {
@@ -35,11 +32,6 @@ public final class GCProfileFactory
     public static void addGcProfilePath(final ConfigBuilder configBuilder, boolean required)
     {
         configBuilder.addPath(GC_PROFILE, required, GC_PROFILE_DESC);
-    }
-
-    public static Multimap<Chromosome, GCProfile> loadGCContent(final String fileName) throws IOException
-    {
-        return loadGCContent(WINDOW_SIZE, Files.readAllLines(new File(fileName).toPath()));
     }
 
     public static Map<String,List<GCProfile>> loadChrGcProfileMap(final String fileName) throws IOException
@@ -67,17 +59,18 @@ public final class GCProfileFactory
         return chrProfileMap;
     }
 
-    public static ListMultimap<Chromosome, GCProfile> loadGCContent(int windowSize, final String fileName) throws IOException
+    public static ListMultimap<HumanChromosome,GCProfile> loadGCContent(int windowSize, final String fileName) throws IOException
     {
-        return loadGCContent(windowSize, Files.readAllLines(new File(fileName).toPath()));
+        return loadGcContentFile(windowSize, Files.readAllLines(new File(fileName).toPath()));
     }
 
-    private static ListMultimap<Chromosome, GCProfile> loadGCContent(int windowSize, final List<String> lines)
+    private static ListMultimap<HumanChromosome, GCProfile> loadGcContentFile(int windowSize, final List<String> lines)
     {
-        final ListMultimap<Chromosome, GCProfile> result = ArrayListMultimap.create();
+        ListMultimap<HumanChromosome,GCProfile> result = ArrayListMultimap.create();
         for(String line : lines)
         {
-            final GCProfile gcProfile = fromLine(windowSize, line);
+            GCProfile gcProfile = fromLine(windowSize, line);
+
             if(HumanChromosome.contains(gcProfile.chromosome()))
             {
                 result.put(HumanChromosome.fromString(gcProfile.chromosome()), gcProfile);

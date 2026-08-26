@@ -3,50 +3,51 @@ package com.hartwig.hmftools.cobalt.calculations;
 import java.util.Objects;
 
 import com.hartwig.hmftools.cobalt.count.DepthReading;
-import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.utils.Doubles;
 
 public class BamRatio
 {
-    public final Chromosome mChromosome;
+    public final HumanChromosome Chromosome;
     public final int Position;
-    private final double mReadDepth;
-    private double Ratio;
-    private double DiploidAdjustedRatio = -1.0;
-    private final double GcContent;
-    private boolean Included;
+    public final double ReadDepth;
+    public final double GcContent;
 
-    public BamRatio(Chromosome chromosome, DepthReading readDepth, boolean inTargetRegion)
+    private double mRatio;
+    private double mDiploidAdjustedRatio = -1.0;
+    private boolean mIncluded;
+
+    public BamRatio(HumanChromosome chromosome, DepthReading readDepth, boolean inTargetRegion)
     {
         this(chromosome, readDepth.StartPosition, readDepth.ReadDepth, readDepth.ReadGcContent, inTargetRegion);
     }
 
-    public BamRatio(Chromosome chromosome, int position, double readDepth, double gcContent)
+    public BamRatio(HumanChromosome chromosome, int position, double readDepth, double gcContent)
     {
         this(chromosome, position, readDepth, readDepth, gcContent);
     }
 
-    public BamRatio(Chromosome chromosome, int position, double readDepth, double ratio, double gcContent)
+    public BamRatio(HumanChromosome chromosome, int position, double readDepth, double ratio, double gcContent)
     {
-        mChromosome = chromosome;
+        Chromosome = chromosome;
         Position = position;
-        mReadDepth = readDepth;
-        Ratio = ratio;
+        ReadDepth = readDepth;
+        mRatio = ratio;
         GcContent = gcContent;
-        Included = true;
+        mIncluded = true;
     }
 
-    public BamRatio(Chromosome chromosome, int position, double readDepth, double gcContent, boolean included)
+    public BamRatio(HumanChromosome chromosome, int position, double readDepth, double gcContent, boolean included)
     {
-        mChromosome = chromosome;
+        Chromosome = chromosome;
         Position = position;
-        mReadDepth = Double.isFinite(readDepth) ? readDepth : -1.0;
-        Ratio = mReadDepth;
+        ReadDepth = Double.isFinite(readDepth) ? readDepth : -1.0;
+        mRatio = ReadDepth;
         GcContent = Double.isFinite(gcContent) ? gcContent : -1.0;
-        Included = included;
-        if(!Included)
+        mIncluded = included;
+        if(!mIncluded)
         {
-            Ratio = -1.0;
+            mRatio = -1.0;
         }
     }
 
@@ -68,43 +69,43 @@ public class BamRatio
     public void normaliseDiploidAdjustedRatio(double factor)
     {
         // ratio 0 => {-1 if not relevant, 0 if relevant}
-        if(DiploidAdjustedRatio == 0.0)
+        if(mDiploidAdjustedRatio == 0.0)
         {
             return;
         }
-        if(factor <= 0 || Double.isNaN(factor) || DiploidAdjustedRatio < 0)
+        if(factor <= 0 || Double.isNaN(factor) || mDiploidAdjustedRatio < 0)
         {
-            DiploidAdjustedRatio = -1.0;
+            mDiploidAdjustedRatio = -1.0;
         }
         else
         {
-            DiploidAdjustedRatio = DiploidAdjustedRatio / factor;
+            mDiploidAdjustedRatio = mDiploidAdjustedRatio / factor;
         }
     }
 
     public void setDiploidAdjustedRatio(double ratio)
     {
-        if(Ratio == 0.0)
+        if(mRatio == 0.0)
         {
-            DiploidAdjustedRatio = 0.0;
+            mDiploidAdjustedRatio = 0.0;
         }
         else
         {
-            DiploidAdjustedRatio = ratio;
+            mDiploidAdjustedRatio = ratio;
         }
     }
 
     public double getDiploidAdjustedRatio()
     {
-        return DiploidAdjustedRatio;
+        return mDiploidAdjustedRatio;
     }
 
     public void overrideRatio(double ratio)
     {
-        Ratio = ratio;
-        if(Ratio > 0)
+        mRatio = ratio;
+        if(mRatio > 0)
         {
-            Included = true;
+            mIncluded = true;
         }
     }
 
@@ -112,22 +113,22 @@ public class BamRatio
     {
         if(Double.isNaN(factor))
         {
-            Included = false;
-            Ratio = -1.0;
+            mIncluded = false;
+            mRatio = -1.0;
             return;
         }
-        if(Doubles.isZero(Ratio))
+        if(Doubles.isZero(mRatio))
         {
             return;
         }
-        if(factor <= 0 || !Included || Ratio < 0)
+        if(factor <= 0 || !mIncluded || mRatio < 0)
         {
-            Included = false;
-            Ratio = -1.0;
+            mIncluded = false;
+            mRatio = -1.0;
         }
         else
         {
-            Ratio /= factor;
+            mRatio /= factor;
         }
     }
 
@@ -138,12 +139,12 @@ public class BamRatio
 
     public double readDepth()
     {
-        return mReadDepth;
+        return ReadDepth;
     }
 
     public double ratio()
     {
-        return Included ? Ratio : -1.0;
+        return mIncluded ? mRatio : -1.0;
     }
 
     public double gcContent()
@@ -159,25 +160,25 @@ public class BamRatio
             return false;
         }
         final BamRatio bamRatio = (BamRatio) o;
-        return Position == bamRatio.Position && Objects.equals(mChromosome, bamRatio.mChromosome);
+        return Position == bamRatio.Position && Objects.equals(Chromosome, bamRatio.Chromosome);
     }
 
     @Override
     public int hashCode()
     {
-        return Objects.hash(mChromosome, Position);
+        return Objects.hash(Chromosome, Position);
     }
 
     @Override
     public String toString()
     {
         return "BamRatio{" +
-                "mChromosome=" + mChromosome +
+                "mChromosome=" + Chromosome +
                 ", Position=" + Position +
-                ", mReadDepth=" + mReadDepth +
-                ", Ratio=" + Ratio +
+                ", mReadDepth=" + ReadDepth +
+                ", Ratio=" + mRatio +
                 ", GcContent=" + GcContent +
-                ", Included=" + Included +
+                ", Included=" + mIncluded +
                 '}';
     }
 }

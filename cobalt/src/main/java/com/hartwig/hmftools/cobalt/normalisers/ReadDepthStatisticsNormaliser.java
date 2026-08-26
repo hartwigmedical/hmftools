@@ -38,7 +38,7 @@ public class ReadDepthStatisticsNormaliser implements ResultsNormaliser
     {
         Preconditions.checkState(Ratio < 0.0);
 
-        if(!bamRatio.mChromosome.isAutosome())
+        if(!bamRatio.Chromosome.isAutosome())
         {
             return;
         }

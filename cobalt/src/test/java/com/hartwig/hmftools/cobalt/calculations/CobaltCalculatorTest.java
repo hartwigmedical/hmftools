@@ -26,7 +26,6 @@ import com.hartwig.hmftools.cobalt.targeted.CobaltScope;
 import com.hartwig.hmftools.cobalt.targeted.WholeGenome;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.cobalt.MedianRatio;
-import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.gc.GCProfile;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
@@ -77,7 +76,7 @@ public class CobaltCalculatorTest extends CalculationsTestBase
         }
 
         @Override
-        public double enrichmentQuotient(final Chromosome chromosome, final int position)
+        public double enrichmentQuotient(final HumanChromosome chromosome, final int position)
         {
             if(chromosome == _1)
             {
@@ -93,7 +92,7 @@ public class CobaltCalculatorTest extends CalculationsTestBase
         }
 
         @Override
-        public boolean onTarget(final Chromosome chromosome, final int position)
+        public boolean onTarget(final HumanChromosome chromosome, final int position)
         {
             if(chromosome == _1)
             {
@@ -162,7 +161,7 @@ public class CobaltCalculatorTest extends CalculationsTestBase
         //        refGcRatiosTargeted.put(0.51, (24.5 + 26 + 23) / 3.0);
 
         // Set up gc profile data to have everything mappable but for one region on chr1.
-        ListMultimap<Chromosome, GCProfile> gcProfileData = ArrayListMultimap.create();
+        ListMultimap<HumanChromosome, GCProfile> gcProfileData = ArrayListMultimap.create();
         int position = 0;
         gcProfileData.put(_1, gcProfile(_1, position, 1.0));
         position += 1000;
@@ -232,7 +231,7 @@ public class CobaltCalculatorTest extends CalculationsTestBase
         when(config.scope()).thenReturn(new WholeGenome());
 
         CobaltCalculator calculator = new CobaltCalculator(tumorDepths, referenceDepths, config);
-        ListMultimap<Chromosome, CobaltRatio> cobaltRatios = calculator.getCalculatedRatios();
+        ListMultimap<HumanChromosome, CobaltRatio> cobaltRatios = calculator.getCalculatedRatios();
         assertEquals(2, cobaltRatios.keySet().size());
         List<CobaltRatio> ratios1 = cobaltRatios.get(_1);
         assertEquals(15, ratios1.size());
@@ -282,7 +281,7 @@ public class CobaltCalculatorTest extends CalculationsTestBase
         when(config.scope()).thenReturn(new WholeGenome());
 
         CobaltCalculator calculator = new CobaltCalculator(tumorDepths, ArrayListMultimap.create(), config);
-        ListMultimap<Chromosome, CobaltRatio> cobaltRatios = calculator.getCalculatedRatios();
+        ListMultimap<HumanChromosome, CobaltRatio> cobaltRatios = calculator.getCalculatedRatios();
         assertEquals(2, cobaltRatios.keySet().size());
         List<CobaltRatio> ratios1 = cobaltRatios.get(_1);
         assertEquals(15, ratios1.size());
@@ -317,7 +316,7 @@ public class CobaltCalculatorTest extends CalculationsTestBase
         when(config.scope()).thenReturn(new WholeGenome());
 
         CobaltCalculator calculator = new CobaltCalculator(ArrayListMultimap.create(), referenceDepths, config);
-        ListMultimap<Chromosome, CobaltRatio> cobaltRatios = calculator.getCalculatedRatios();
+        ListMultimap<HumanChromosome, CobaltRatio> cobaltRatios = calculator.getCalculatedRatios();
         assertEquals(2, cobaltRatios.keySet().size());
         List<CobaltRatio> ratios1 = cobaltRatios.get(_1);
         assertEquals(15, ratios1.size());
@@ -363,7 +362,7 @@ public class CobaltCalculatorTest extends CalculationsTestBase
         when(config.scope()).thenReturn(targetedScope);
 
         CobaltCalculator calculator = new CobaltCalculator(tumorDepths, referenceDepths, config);
-        ListMultimap<Chromosome, CobaltRatio> cobaltRatios = calculator.getCalculatedRatios();
+        ListMultimap<HumanChromosome, CobaltRatio> cobaltRatios = calculator.getCalculatedRatios();
         assertEquals(2, cobaltRatios.keySet().size());
         List<CobaltRatio> ratios1 = cobaltRatios.get(_1);
         assertEquals(15, ratios1.size());
@@ -425,7 +424,7 @@ public class CobaltCalculatorTest extends CalculationsTestBase
         when(config.scope()).thenReturn(targetedScope);
 
         CobaltCalculator calculator = new CobaltCalculator(tumorDepths, ArrayListMultimap.create(), config);
-        ListMultimap<Chromosome, CobaltRatio> cobaltRatios = calculator.getCalculatedRatios();
+        ListMultimap<HumanChromosome, CobaltRatio> cobaltRatios = calculator.getCalculatedRatios();
         assertEquals(2, cobaltRatios.keySet().size());
         List<CobaltRatio> ratios1 = cobaltRatios.get(_1);
         assertEquals(15, ratios1.size());
@@ -470,7 +469,7 @@ public class CobaltCalculatorTest extends CalculationsTestBase
         when(config.scope()).thenReturn(targetedScope);
 
         CobaltCalculator calculator = new CobaltCalculator(ArrayListMultimap.create(), referenceDepths, config);
-        ListMultimap<Chromosome, CobaltRatio> cobaltRatios = calculator.getCalculatedRatios();
+        ListMultimap<HumanChromosome, CobaltRatio> cobaltRatios = calculator.getCalculatedRatios();
         assertEquals(2, cobaltRatios.keySet().size());
         List<Double> expectedRawReferenceRatios = new ArrayList<>();
         for(int i = 4; i < 15; i++)
@@ -521,7 +520,7 @@ public class CobaltCalculatorTest extends CalculationsTestBase
         assertEquals(6, medianRatios.get(1).Count, 0.001);
     }
 
-    private void checkRatio(CobaltRatio ratio, Chromosome chromosome, int position,
+    private void checkRatio(CobaltRatio ratio, HumanChromosome chromosome, int position,
             double referenceReadDepth,
             double tumorReadDepth,
             double referenceGcRatio,
