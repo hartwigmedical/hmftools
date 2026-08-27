@@ -21,13 +21,10 @@ public class BreakendData
     public final int Depth;
     public final int Frags;
     public final int Qual;
-    public final String ComparisonChromosome;
-    public final int ComparisonPosition;
 
     public BreakendData(
             final LinxBreakend breakend, final String svId, final StructuralVariantType svType, final String chromosome,
-            final int position, final byte orientation, final int[] homologyOffset, int depth, int frags, int qual,
-            final String comparisonChromosome, final int comparisonPosition)
+            final int position, final byte orientation, final int[] homologyOffset, int depth, int frags, int qual)
     {
         Breakend = breakend;
         SvId = svId;
@@ -39,19 +36,17 @@ public class BreakendData
         Frags = frags;
         Qual = qual;
         HomologyOffset = homologyOffset;
-        ComparisonChromosome = comparisonChromosome;
-        ComparisonPosition = comparisonPosition;
     }
 
     public boolean matches(final BreakendData other)
     {
         // check SV info
-        if(SvType != other.SvType || !ComparisonChromosome.equals(other.Chromosome) || Orientation != other.Orientation)
+        if(SvType != other.SvType || !Chromosome.equals(other.Chromosome) || Orientation != other.Orientation)
             return false;
 
         // check breakend info
         if(!positionsOverlap(
-                ComparisonPosition + HomologyOffset[0], ComparisonPosition + HomologyOffset[1],
+                Position + HomologyOffset[0], Position + HomologyOffset[1],
                 other.Position + other.HomologyOffset[0], other.Position + other.HomologyOffset[1]))
         {
             return false;
@@ -68,14 +63,7 @@ public class BreakendData
 
     public String svInfoStr()
     {
-        if(!ComparisonChromosome.equals(Chromosome) || ComparisonPosition != Position)
-        {
-            return format("%s:%s %s:%d:%d (%s:%d)", SvId, SvType, Chromosome, Position, Orientation, ComparisonChromosome, ComparisonPosition);
-        }
-        else
-        {
-            return format("%s:%s %s:%d:%d", SvId, SvType, Chromosome, Position, Orientation);
-        }
+        return format("%s:%s %s:%d:%d", SvId, SvType, Chromosome, Position, Orientation);
     }
 
     public String transcriptStr()

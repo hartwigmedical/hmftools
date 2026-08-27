@@ -110,7 +110,35 @@ public record PipelineToolDirectories(
             "virusinterpreter",
             "qsee");
 
-    public static final PipelineToolDirectories OA_V2_3_FORMAT = OA_V2_2_FORMAT;
+    public static final PipelineToolDirectories OA_V2_3_FORMAT = new PipelineToolDirectories(
+            "amber",
+            "chord",
+            "cider",
+            "cobalt",
+            "cuppa",
+            "esvee",
+            "bamtools/$",
+            "bamtools/$",
+            "isofox",
+            "lilac",
+            "linx/germline_annotations",
+            "linx/somatic_annotations",
+            "orange",
+            "pave",
+            "pave",
+            "peach",
+            "purple",
+            "sage/germline",
+            "sage/somatic",
+            "sigs",
+            "",
+            "teal",
+            "bamtools/*",
+            "bamtools/*",
+            "vchord",  // not yet implemented in this version
+            "virusbreakend",
+            "virusinterpreter",
+            "qsee");
 
     public static final PipelineToolDirectories OA_V3_0_FORMAT = new PipelineToolDirectories(
             "amber",

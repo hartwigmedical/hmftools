@@ -2,12 +2,21 @@ package com.hartwig.hmftools.compar.linx;
 
 import static java.util.Collections.emptyList;
 
+import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
+
+import java.util.Collections;
 import java.util.function.Consumer;
 
+import com.hartwig.hmftools.common.gene.TranscriptCodingType;
+import com.hartwig.hmftools.common.gene.TranscriptRegionType;
 import com.hartwig.hmftools.common.linx.FusionLikelihoodType;
 import com.hartwig.hmftools.common.linx.FusionPhasedType;
+import com.hartwig.hmftools.common.linx.ImmutableLinxBreakend;
 import com.hartwig.hmftools.common.linx.ImmutableLinxFusion;
+import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxFusion;
+import com.hartwig.hmftools.common.purple.ReportedStatus;
+import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.compar.TestComparableItemBuilder;
 
 public class TestFusionDataBuilder
@@ -74,6 +83,41 @@ public class TestFusionDataBuilder
                 .skippedExonsDown(-1)
                 .build();
 
-        return new FusionData(fusion, fusionName, null, null);
+        return new FusionData(
+                fusion, fusionName, buildBreakendData(), buildBreakendData(),
+                new FusionComparer(null, Collections.emptyMap()).fieldsList());
     }
+
+    private static BreakendData buildBreakendData()
+    {
+        final LinxBreakend breakend = ImmutableLinxBreakend.builder()
+                .transcriptId("ENST001")
+                .canonical(true)
+                .reportedStatus(ReportedStatus.REPORTED)
+                .regionType(TranscriptRegionType.INTRONIC)
+                .codingType(TranscriptCodingType.CODING)
+                .nextSpliceExonRank(1)
+                .id(-1)
+                .svId(-1)
+                .vcfId("")
+                .coords("")
+                .isStart(true)
+                .gene("")
+                .geneOrientation("")
+                .disruptive(true)
+                .undisruptedCopyNumber(-1)
+                .biotype("")
+                .exonUp(-1)
+                .exonDown(-1)
+                .exonicBasePhase(-1)
+                .nextSpliceExonPhase(-1)
+                .nextSpliceDistance(-1)
+                .totalExonCount(-1)
+                .build();
+
+        return new BreakendData(
+                breakend, "", StructuralVariantType.DEL, CHR_1, 1000, (byte)1, new int[] {0, 0},
+                100, 50, 60); // , CHR_1, 1000
+    }
+
 }

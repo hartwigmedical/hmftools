@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.compar.vchord;
 
+import java.util.Collections;
 import java.util.function.Consumer;
 
 import com.hartwig.hmftools.common.vchord.ImmutableVChordPrediction;
@@ -37,6 +38,7 @@ public class TestVChordDataBuilder
                 .pancreaticCancerScore(pancreatic)
                 .prostateCancerScore(prostate)
                 .otherCancerScore(other)
-                .build());
+                .build(),
+                new VChordComparer(null, Collections.emptyMap()).fieldsList());
     }
 }

@@ -1,10 +1,5 @@
 package com.hartwig.hmftools.compar.peach;
 
-import static com.hartwig.hmftools.compar.peach.PeachData.FLD_ALLELE_COUNT;
-import static com.hartwig.hmftools.compar.peach.PeachData.FLD_DRUGS;
-import static com.hartwig.hmftools.compar.peach.PeachData.FLD_FUNCTION;
-import static com.hartwig.hmftools.compar.peach.PeachData.FLD_PRESCRIPTION_URLS;
-
 import java.util.Collections;
 import java.util.Map;
 
@@ -18,15 +13,15 @@ public class PeachDataTest extends ComparableItemTest<PeachData, PeachComparer, 
     @Before
     public void setUp()
     {
-        comparer = new PeachComparer(new ComparConfig());
+        comparer = new PeachComparer(new ComparConfig(), Collections.emptyMap());
         builder = TestPeachDataBuilder.BUILDER;
         PeachData alternateValueSource = builder.createWithAlternateDefaults();
 
         fieldToAlternateValueInitializer = Map.of(
-                FLD_ALLELE_COUNT, b -> b.alleleCount = alternateValueSource.Genotype.alleleCount(),
-                FLD_FUNCTION, b -> b.function = alternateValueSource.Genotype.function(),
-                FLD_DRUGS, b -> b.linkedDrugs = alternateValueSource.Genotype.linkedDrugs(),
-                FLD_PRESCRIPTION_URLS, b -> b.prescriptionUrls = alternateValueSource.Genotype.urlPrescriptionInfo()
+                PeachComparer.Fields.AlleleCount.toString(), b -> b.alleleCount = alternateValueSource.Genotype.alleleCount(),
+                PeachComparer.Fields.Function.toString(), b -> b.function = alternateValueSource.Genotype.function(),
+                PeachComparer.Fields.Drugs.toString(), b -> b.linkedDrugs = alternateValueSource.Genotype.linkedDrugs(),
+                PeachComparer.Fields.PrescriptionUrls.toString(), b -> b.prescriptionUrls = alternateValueSource.Genotype.urlPrescriptionInfo()
         );
         nameToAlternateIndexInitializer = Map.of(
                 "Gene", b -> b.gene = alternateValueSource.Genotype.gene(),

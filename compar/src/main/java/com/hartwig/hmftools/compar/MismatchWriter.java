@@ -5,7 +5,6 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_EXTENSIO
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.compar.MismatchFile.loadSampleCurations;
-import static com.hartwig.hmftools.compar.common.CommonUtils.buildComparers;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.CurationType.NONE;
 
@@ -18,12 +17,15 @@ import java.util.StringJoiner;
 
 import javax.annotation.Nullable;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.compar.common.CategoryType;
+import com.hartwig.hmftools.compar.common.FieldDisplayInfo;
 import com.hartwig.hmftools.compar.common.KnownMismatch;
 import com.hartwig.hmftools.compar.common.CurationInfo;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.WriteType;
+import com.hartwig.hmftools.compar.common.field.FieldValue;
 
 public class MismatchWriter
 {
@@ -50,23 +52,15 @@ public class MismatchWriter
         mWriteCurationComment = mSampleKnownMismatches.values().stream().anyMatch(x -> x.stream().anyMatch(y -> !y.Curation.Comment.isEmpty()));
     }
 
-    public boolean initialiseOutputFiles()
+    public boolean initialiseOutputFiles(final FieldCheckCache fieldCheckCache)
     {
-        String filePrefix = mConfig.OutputDir;
-
-        if(mConfig.singleSample())
-            filePrefix += mConfig.SampleIds.get(0) + ".cmp";
-        else
-            filePrefix += "compar_cohort";
-
-        if(mConfig.OutputId != null)
-            filePrefix += "." + mConfig.OutputId;
+        String filePrefix = mConfig.formOutputFilePrefix();
 
         try
         {
             if(mConfig.WriteTypes.contains(WriteType.TYPE_SPECIFIC))
             {
-                List<ItemComparer> comparers = buildComparers(mConfig);
+                List<ItemComparer> comparers = ComparerUtils.buildComparers(mConfig, fieldCheckCache);
 
                 for(ItemComparer comparer : comparers)
                 {
@@ -78,7 +72,7 @@ public class MismatchWriter
 
                     writer.write(MismatchFile.commonHeader(mConfig.multiSample(), false));
 
-                    List<String> compareFields = comparer.comparedFieldNames();
+                    List<String> compareFields = comparer.displayFieldNames();
 
                     for(String field : compareFields)
                     {
@@ -130,6 +124,7 @@ public class MismatchWriter
 
         try
         {
+            // List<Field> displayFields = determineDisplayFields(comparer);
             CategoryType category = comparer.category();
 
             BufferedWriter categoryWriter = mCategoryWriters.get(category);
@@ -138,6 +133,8 @@ public class MismatchWriter
 
             for(Mismatch mismatch : mismatches)
             {
+                List<FieldDisplayInfo> fieldDisplayValues = extractDisplayData(comparer, mismatch);
+
                 // check or any expected mismatches / curations
                 Map<String,CurationInfo> matchCurations = KnownMismatch.matchCurations(mismatch, knownMismatches);
 
@@ -147,13 +144,13 @@ public class MismatchWriter
                     for(String diff : mismatch.DiffValues)
                     {
                         Mismatch singleMismatch = new Mismatch(mismatch.OldItem, mismatch.NewItem, mismatch.Type, List.of(diff));
-                        writeMismatch(sampleId, singleMismatch, comparer, categoryWriter, matchCurations.get(diff));
+                        writeMismatch(sampleId, singleMismatch, fieldDisplayValues, categoryWriter, matchCurations.get(diff));
                     }
                 }
                 else
                 {
                     CurationInfo curationInfo = !matchCurations.isEmpty() ? matchCurations.entrySet().iterator().next().getValue() : null;
-                    writeMismatch(sampleId, mismatch, comparer, categoryWriter, curationInfo);
+                    writeMismatch(sampleId, mismatch, fieldDisplayValues, categoryWriter, curationInfo);
                 }
             }
         }
@@ -163,9 +160,32 @@ public class MismatchWriter
         }
     }
 
+    private List<FieldDisplayInfo> extractDisplayData(final ItemComparer comparer, final Mismatch mismatch)
+    {
+        List<FieldDisplayInfo> fieldDisplayValues = Lists.newArrayList();
+
+        List<String> fieldNames = comparer.displayFieldNames();
+
+        Map<String,FieldValue> oldFieldValues = mismatch.OldItem != null ? mismatch.OldItem.fieldValues() : Collections.emptyMap();
+        Map<String,FieldValue> newFieldValues = mismatch.NewItem != null ? mismatch.NewItem.fieldValues() : Collections.emptyMap();
+
+        for(String fieldName : fieldNames)
+        {
+            FieldValue oldValue = oldFieldValues.get(fieldName);
+            FieldValue newValue = newFieldValues.get(fieldName);
+
+            fieldDisplayValues.add(new FieldDisplayInfo(
+                    fieldName,
+                    oldValue != null ? oldValue.displayValue() : null,
+                    newValue != null ? newValue.displayValue() : null));
+        }
+
+        return fieldDisplayValues;
+    }
+
     private void writeMismatch(
-            final String sampleId, final Mismatch mismatch, final ItemComparer comparer, final BufferedWriter categoryWriter,
-            @Nullable final CurationInfo curationInfo) throws IOException
+            final String sampleId, final Mismatch mismatch, final List<FieldDisplayInfo> fieldDisplayValues,
+            final BufferedWriter categoryWriter, @Nullable final CurationInfo curationInfo) throws IOException
     {
         StringJoiner sj = new StringJoiner(TSV_DELIM);
 
@@ -181,7 +201,7 @@ public class MismatchWriter
 
         if(mCombinedWriter != null)
         {
-            sj.add(MismatchFile.toTsv(mismatch, false, comparer.comparedFieldNames()));
+            sj.add(MismatchFile.toTsv(mismatch, false, fieldDisplayValues));
 
             if(mWriteCurations)
             {
@@ -207,7 +227,7 @@ public class MismatchWriter
 
         if(categoryWriter != null)
         {
-            categoryWriter.write(MismatchFile.toTsv(mismatch, true, comparer.comparedFieldNames()));
+            categoryWriter.write(MismatchFile.toTsv(mismatch, true, fieldDisplayValues));
             categoryWriter.newLine();
         }
     }

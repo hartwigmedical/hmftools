@@ -2,101 +2,151 @@ package com.hartwig.hmftools.compar.purple;
 
 import static com.hartwig.hmftools.compar.common.CategoryType.PURITY;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
-import static com.hartwig.hmftools.compar.purple.PurityData.FLD_CN_SEGS;
-import static com.hartwig.hmftools.compar.purple.PurityData.FLD_CONTAMINATION;
-import static com.hartwig.hmftools.compar.purple.PurityData.FLD_FIT_METHOD;
-import static com.hartwig.hmftools.compar.purple.PurityData.FLD_GENDER;
-import static com.hartwig.hmftools.compar.purple.PurityData.FLD_GERM_ABS;
-import static com.hartwig.hmftools.compar.purple.PurityData.FLD_MS_INDELS;
-import static com.hartwig.hmftools.compar.purple.PurityData.FLD_MS_STATUS;
-import static com.hartwig.hmftools.compar.purple.PurityData.FLD_PLOIDY;
-import static com.hartwig.hmftools.compar.purple.PurityData.FLD_PURITY;
-import static com.hartwig.hmftools.compar.purple.PurityData.FLD_QC_STATUS;
-import static com.hartwig.hmftools.compar.purple.PurityData.FLD_SV_TMB;
-import static com.hartwig.hmftools.compar.purple.PurityData.FLD_TINC_LEVEL;
-import static com.hartwig.hmftools.compar.purple.PurityData.FLD_TMB;
-import static com.hartwig.hmftools.compar.purple.PurityData.FLD_TMB_STATUS;
-import static com.hartwig.hmftools.compar.purple.PurityData.FLD_TML;
-import static com.hartwig.hmftools.compar.purple.PurityData.FLD_TML_STATUS;
-import static com.hartwig.hmftools.compar.purple.PurityData.FLD_UNS_CN_SEGS;
+import static com.hartwig.hmftools.compar.FieldCheckCache.getOrMakeFieldCheck;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.purple.PurityContextFile;
 import com.hartwig.hmftools.compar.common.CategoryType;
-import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.common.DiffThresholds;
-import com.hartwig.hmftools.compar.common.FileSources;
+import com.hartwig.hmftools.compar.common.PipelineSourcePaths;
 import com.hartwig.hmftools.compar.ItemComparer;
-import com.hartwig.hmftools.compar.common.Mismatch;
-import com.hartwig.hmftools.compar.common.SourceType;
-import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
+import com.hartwig.hmftools.compar.common.TruthsetValue;
+import com.hartwig.hmftools.compar.common.field.FieldCheck;
+import com.hartwig.hmftools.compar.common.field.FieldInfo;
 
-public class PurityComparer implements ItemComparer
+public class PurityComparer extends ItemComparer
 {
-    private final ComparConfig mConfig;
-
-    public PurityComparer(final ComparConfig config)
+    protected enum Fields
     {
-        mConfig = config;
+        Purity,
+        Ploidy,
+        Contamination,
+        TmbPerMb,
+        MsIndelsPerMb,
+        Tml,
+        CopyNumberSegments,
+        UnsupportedCopyNumberSegments,
+        SvTmb,
+        QcStatus,
+        Gender,
+        GermlineAberrations,
+        FitMethod,
+        MsStatus,
+        TmbStatus,
+        TmlStatus,
+        TincLevel;
+    }
+
+    public PurityComparer(final ComparConfig config, final Map<String,FieldCheck> fieldCheckMap)
+    {
+        super(config);
+
+        mFields.add(new FieldInfo(
+                Fields.Purity.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.Purity.toString(), 0.04, null),
+                "%.2f"));
+
+        mFields.add(new FieldInfo(
+                Fields.Ploidy.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.Ploidy.toString(), 0.1, null),
+                "%.2f"));
+
+        mFields.add(new FieldInfo(
+                Fields.Contamination.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.Contamination.toString(), 0.005, null),
+                "%.4f"));
+
+        mFields.add(new FieldInfo(
+                Fields.TmbPerMb.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.TmbPerMb.toString(), 0.1, 0.05),
+                "%.2f"));
+
+        mFields.add(new FieldInfo(
+                Fields.MsIndelsPerMb.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.MsIndelsPerMb.toString(), 0.1, 0.05),
+                "%.2f"));
+
+        mFields.add(new FieldInfo(
+                Fields.Tml.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.Tml.toString(), 1.0, 0.05),
+                null));
+
+        mFields.add(new FieldInfo(
+                Fields.CopyNumberSegments.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.CopyNumberSegments.toString(), 5.0, 0.2),
+                null));
+
+        mFields.add(new FieldInfo(
+                Fields.UnsupportedCopyNumberSegments.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.UnsupportedCopyNumberSegments.toString(), 5.0, 0.2),
+                null));
+
+        mFields.add(new FieldInfo(
+                Fields.SvTmb.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.SvTmb.toString(), 5.0, 0.05),
+                null));
+
+        mFields.add(new FieldInfo(
+                Fields.QcStatus.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.QcStatus.toString()), null));
+
+        mFields.add(new FieldInfo(
+                Fields.Gender.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.Gender.toString()),null));
+
+        mFields.add(new FieldInfo(
+                Fields.GermlineAberrations.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.GermlineAberrations.toString()), null));
+
+        mFields.add(new FieldInfo(
+                Fields.FitMethod.toString(), getOrMakeFieldCheck(fieldCheckMap, Fields.FitMethod.toString()),
+                null));
+
+        mFields.add(new FieldInfo(
+                Fields.MsStatus.toString(), getOrMakeFieldCheck(fieldCheckMap, Fields.MsStatus.toString()),
+                null));
+
+        mFields.add(new FieldInfo(
+                Fields.TmbStatus.toString(), getOrMakeFieldCheck(fieldCheckMap, Fields.TmbStatus.toString()),
+                null));
+
+        mFields.add(new FieldInfo(
+                Fields.TmlStatus.toString(), getOrMakeFieldCheck(fieldCheckMap, Fields.TmlStatus.toString()),
+                null));
+
+        mFields.add(new FieldInfo(
+                Fields.TincLevel.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.TincLevel.toString(), 0.1, null),
+                "%.3f"));
     }
 
     @Override
     public CategoryType category() { return PURITY; }
 
     @Override
-    public void registerThresholds(final DiffThresholds thresholds)
+    public List<String> displayFieldNames()
     {
-        thresholds.addFieldThreshold(FLD_PURITY, 0.04, 0);
-        thresholds.addFieldThreshold(FLD_PLOIDY, 0.1, 0);
-        thresholds.addFieldThreshold(FLD_CONTAMINATION, 0.005, 0);
-        thresholds.addFieldThreshold(FLD_TMB, 0.1, 0.05);
-        thresholds.addFieldThreshold(FLD_MS_INDELS, 0.1, 0.05);
-        thresholds.addFieldThreshold(FLD_TML, 1, 0.05);
-        thresholds.addFieldThreshold(FLD_CN_SEGS, 5, 0.2);
-        thresholds.addFieldThreshold(FLD_UNS_CN_SEGS, 5, 0.2);
-        thresholds.addFieldThreshold(FLD_SV_TMB, 5, 0.05);
-        thresholds.addFieldThreshold(FLD_TINC_LEVEL, 0.1, 0);
+        return Arrays.stream(Fields.values()).map(x -> x.toString()).collect(Collectors.toList());
     }
 
     @Override
-    public boolean processSample(final String sampleId, final List<Mismatch> mismatches)
-    {
-        return CommonUtils.processSample(this, mConfig, sampleId, mismatches);
-    }
-
-    @Override
-    public List<String> comparedFieldNames()
-    {
-        return Lists.newArrayList(
-                FLD_PURITY, FLD_PLOIDY, FLD_CONTAMINATION, FLD_TMB, FLD_TML, FLD_MS_INDELS, FLD_SV_TMB, FLD_CN_SEGS ,FLD_UNS_CN_SEGS,
-                FLD_QC_STATUS, FLD_GENDER, FLD_GERM_ABS, FLD_FIT_METHOD, FLD_MS_STATUS, FLD_TMB_STATUS, FLD_TML_STATUS, FLD_TINC_LEVEL);
-    }
-
-    @Override
-    public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess, final SourceType sourceType)
-    {
-        PurityContext purityContext = dbAccess.readPurityContext(sampleId);
-
-        List<ComparableItem> items = Lists.newArrayList();
-        items.add(new PurityData(purityContext));
-        return items;
-    }
-
-    @Override
-    public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final FileSources fileSources)
+    public List<ComparableItem> loadFromFile(
+            final String sampleId, final String germlineSampleId, final PipelineSourcePaths fileSources)
     {
         List<ComparableItem> comparableItems = Lists.newArrayList();
 
         try
         {
             PurityContext purityContext = PurityContextFile.read(fileSources.Purple, sampleId);
-            comparableItems.add(new PurityData(purityContext));
+            comparableItems.add(new PurityData(purityContext, mFields));
 
         }
         catch(IOException e)
@@ -104,6 +154,16 @@ public class PurityComparer implements ItemComparer
             CMP_LOGGER.warn("sample({}) failed to load Purple purity data: {}", sampleId, e.toString());
             return null;
         }
+
+        return comparableItems;
+    }
+
+    public List<ComparableItem> loadFromTruthset(final Map<String,List<TruthsetValue>> valuesByKey)
+    {
+        List<ComparableItem> comparableItems = Lists.newArrayList();
+
+        if(valuesByKey.size() == 1)
+            comparableItems.add(new PurityData(valuesByKey.get(PURITY.toString()), mFields));
 
         return comparableItems;
     }

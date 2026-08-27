@@ -23,8 +23,6 @@ public class TestBreakendDataBuilder
     public int position = 41500000;
     public byte orientation = 0;
     public int[] homologyOffset = {0, 0};
-    public String comparisonChromosome = "chr21";
-    public int comparisonPosition = 41500000;
 
     private static final Consumer<TestBreakendDataBuilder> ALTERNATE_INITIALIZER = b ->
     {
@@ -39,8 +37,6 @@ public class TestBreakendDataBuilder
         b.position = 10000;
         b.orientation = 1;
         b.homologyOffset = new int[] { -9, 10 };
-        b.comparisonChromosome = "chr1";
-        b.comparisonPosition = 10000;
     };
 
     public static final TestComparableItemBuilder<TestBreakendDataBuilder, BreakendData> BUILDER =
@@ -74,7 +70,6 @@ public class TestBreakendDataBuilder
                 .build();
 
         return new BreakendData(
-                breakend, "", svType, chromosome, position, orientation, homologyOffset,
-                100, 50, 60, comparisonChromosome, comparisonPosition);
+                breakend, "", svType, chromosome, position, orientation, homologyOffset, 100, 50, 60);
     }
 }

@@ -9,7 +9,9 @@ import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.CurationType.EXPECTED;
 import static com.hartwig.hmftools.compar.common.CurationType.INVALID;
 import static com.hartwig.hmftools.compar.common.CurationType.NONE;
-import static com.hartwig.hmftools.compar.common.DiffFunctions.diffsStr;
+import static com.hartwig.hmftools.compar.common.ComparConstants.FLD_CATEGORY;
+import static com.hartwig.hmftools.compar.common.ComparConstants.FLD_ITEM_KEY;
+import static com.hartwig.hmftools.compar.common.ComparConstants.FLD_SAMPLE_ID;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -26,6 +28,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.CurationInfo;
 import com.hartwig.hmftools.compar.common.CurationType;
+import com.hartwig.hmftools.compar.common.FieldDisplayInfo;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.KnownMismatch;
 import com.hartwig.hmftools.compar.common.MismatchType;
@@ -34,18 +37,12 @@ import org.jetbrains.annotations.Nullable;
 
 public class MismatchFile
 {
-    private enum Columns // for the generic file output
-    {
-        SampleId,
-        Category,
-        MismatchType,
-        Key,
-        Differences,
-        OldValues,
-        NewValues,
-        CurationType,
-        CurationComment;
-    }
+    private static final String FLD_MISMATCH_TYPE = "MismatchType";
+    private static final String FLD_OLD_VALUES = "OldValues";
+    private static final String FLD_NEW_VALUES = "NewValues";
+    private static final String FLD_DIFFERENCES = "Differences";
+    private static final String FLD_CURATION_COMMENT = "CurationComment";
+    private static final String FLD_CURATION_TYPE = "CurationType";
 
     // differences is list of the form: field(oldValue/newValue)
     public static String commonHeader(boolean includeSampleId, boolean includeCatagory)
@@ -53,12 +50,12 @@ public class MismatchFile
         StringJoiner sj = new StringJoiner(TSV_DELIM);
 
         if(includeSampleId)
-            sj.add(Columns.SampleId.toString());
+            sj.add(FLD_SAMPLE_ID.toString());
 
         if(includeCatagory)
-            sj.add(Columns.Category.toString());
+            sj.add(FLD_CATEGORY);
 
-        sj.add(Columns.MismatchType.toString()).add(Columns.Key.toString()).add(Columns.Differences.toString());
+        sj.add(FLD_MISMATCH_TYPE).add(FLD_ITEM_KEY).add(FLD_DIFFERENCES);
         return sj.toString();
     }
 
@@ -66,15 +63,15 @@ public class MismatchFile
     {
         StringJoiner sj = new StringJoiner(TSV_DELIM);
         sj.add(commonHeader(includeSampleId, true));
-        sj.add(Columns.OldValues.toString());
-        sj.add(Columns.NewValues.toString());
+        sj.add(FLD_OLD_VALUES);
+        sj.add(FLD_NEW_VALUES);
 
         if(includeCuration)
         {
-            sj.add(Columns.CurationType.toString());
+            sj.add(FLD_CURATION_TYPE);
 
             if(includeComment)
-                sj.add(Columns.CurationComment.toString());
+                sj.add(FLD_CURATION_COMMENT);
         }
 
         return sj.toString();
@@ -102,59 +99,44 @@ public class MismatchFile
         return sj.toString();
     }
 
-    public static String toTsv(final Mismatch mismatch, boolean writeFieldValues, final List<String> comparedFieldsNames)
+    public static String toTsv(final Mismatch mismatch, boolean writeFieldValues, final List<FieldDisplayInfo> fieldDisplayValues)
     {
         StringJoiner sj = new StringJoiner(TSV_DELIM);
 
         sj.add(commonTsv(!writeFieldValues, mismatch));
 
-        sj.add(diffsStr(mismatch.DiffValues));
+        sj.add(String.join(ITEM_DELIM, mismatch.DiffValues));
 
         if(writeFieldValues)
         {
-            List<String> oldFieldValues = mismatch.OldItem != null ? mismatch.OldItem.displayValues() : null;
-            List<String> newFieldValues = mismatch.NewItem != null ? mismatch.NewItem.displayValues() : null;
-            int fieldCount = oldFieldValues != null ? oldFieldValues.size() : newFieldValues.size();
-
-            for(int i = 0; i < fieldCount; ++i)
+            for(FieldDisplayInfo fieldInfo : fieldDisplayValues)
             {
-                if(oldFieldValues != null)
-                    sj.add(oldFieldValues.get(i));
-                else
-                    sj.add("");
-
-                if(newFieldValues != null)
-                    sj.add(newFieldValues.get(i));
-                else
-                    sj.add("");
+                sj.add(fieldInfo.oldValue() != null ? fieldInfo.oldValue() : "");
+                sj.add(fieldInfo.newValue() != null ? fieldInfo.newValue() : "");
             }
         }
         else
         {
-            sj.add(itemValues(mismatch.OldItem, comparedFieldsNames));
-            sj.add(itemValues(mismatch.NewItem, comparedFieldsNames));
+            sj.add(itemValues(mismatch.OldItem, fieldDisplayValues, true));
+            sj.add(itemValues(mismatch.NewItem, fieldDisplayValues, false));
         }
 
         return sj.toString();
     }
 
-    private static String itemValues(final ComparableItem item, final List<String> comparedFieldsNames)
+    private static String itemValues(final ComparableItem item, final List<FieldDisplayInfo> fieldDisplayValues, boolean useOld)
     {
         if(item == null)
             return "";
 
         StringJoiner displaySj = new StringJoiner(ITEM_DELIM);
 
-        List<String> itemDisplayValues = item.displayValues();
-
-        for(int i = 0; i < itemDisplayValues.size(); ++i)
+        for(FieldDisplayInfo fieldInfo : fieldDisplayValues)
         {
-            displaySj.add(format("%s=%s", comparedFieldsNames.get(i), itemDisplayValues.get(i)));
-        }
+            String value = useOld ? fieldInfo.oldValue() : fieldInfo.newValue();
 
-        for(String extraInfo : item.extraInfoValues())
-        {
-            displaySj.add(extraInfo);
+            if(value != null) // supress values not present (ie in the truthset)
+                displaySj.add(format("%s=%s", fieldInfo.name(), value));
         }
 
         return displaySj.toString();
@@ -170,14 +152,14 @@ public class MismatchFile
             Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), TSV_DELIM);
             lines.remove(0);
 
-            Integer sampleIndex = fieldsIndexMap.get(Columns.SampleId.toString());
+            Integer sampleIndex = fieldsIndexMap.get(FLD_SAMPLE_ID);
 
-            int categoryIndex = fieldsIndexMap.get(Columns.Category.toString());
-            int mismatchTypeIndex = fieldsIndexMap.get(Columns.MismatchType.toString());
-            int keyIndex = fieldsIndexMap.get(Columns.Key.toString());
-            int differencesIndex = fieldsIndexMap.get(Columns.Differences.toString());
-            Integer curationIndex = fieldsIndexMap.get(Columns.CurationType.toString());
-            Integer commentIndex = fieldsIndexMap.get(Columns.CurationComment.toString());
+            int categoryIndex = fieldsIndexMap.get(FLD_CATEGORY);
+            int mismatchTypeIndex = fieldsIndexMap.get(FLD_MISMATCH_TYPE);
+            int keyIndex = fieldsIndexMap.get(FLD_ITEM_KEY);
+            int differencesIndex = fieldsIndexMap.get(FLD_DIFFERENCES);
+            Integer curationIndex = fieldsIndexMap.get(FLD_CURATION_TYPE);
+            Integer commentIndex = fieldsIndexMap.get(FLD_CURATION_COMMENT);
 
             List<KnownMismatch> mismatches = null;
             String currentSampleId = "";
@@ -258,6 +240,4 @@ public class MismatchFile
         return sampleMismatches;
 
     }
-
-
 }

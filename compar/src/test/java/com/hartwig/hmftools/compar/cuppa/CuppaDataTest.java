@@ -1,8 +1,5 @@
 package com.hartwig.hmftools.compar.cuppa;
 
-import static com.hartwig.hmftools.compar.cuppa.CuppaData.FLD_PROBABILITY;
-import static com.hartwig.hmftools.compar.cuppa.CuppaData.FLD_TOP_CANCER_TYPE;
-
 import java.util.Collections;
 import java.util.Map;
 
@@ -16,12 +13,12 @@ public class CuppaDataTest extends ComparableItemTest<CuppaData, CuppaComparer, 
     @Before
     public void setUp()
     {
-        comparer = new CuppaComparer(new ComparConfig());
+        comparer = new CuppaComparer(new ComparConfig(), Collections.emptyMap());
         builder = TestCuppaDataBuilder.BUILDER;
         CuppaData alternateValueSource = builder.createWithAlternateDefaults();
         fieldToAlternateValueInitializer = Map.of(
-                FLD_TOP_CANCER_TYPE, b -> b.cancerType = alternateValueSource.PredictionEntry.CancerType,
-                FLD_PROBABILITY, b -> b.dataValue = alternateValueSource.PredictionEntry.DataValue
+                CuppaComparer.Fields.TopCancerType.toString(), b -> b.cancerType = alternateValueSource.PredictionEntry.CancerType,
+                CuppaComparer.Fields.Probability.toString(), b -> b.dataValue = alternateValueSource.PredictionEntry.DataValue
         );
         nameToAlternateIndexInitializer = Map.of(
                 "dataType", b -> b.dataType = alternateValueSource.PredictionEntry.DataType,
