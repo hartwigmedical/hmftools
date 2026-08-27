@@ -102,7 +102,7 @@ public class FilterConstants
     public static final double MIN_AF_WEAK_JUNCTION_STRAND_BIAS_MIN = 0.1;
     public static final double MIN_AF_WEAK_JUNCTION_SUPP_REMOTE_THRESHOLD = 0.5;
     public static final double MIN_AF_WEAK_JUNCTION_PROX_JUNC_READ_THRESHOLD = 0.1;
-    public static final double MIN_AF_WEAK_JUNCTION_DISC_RATE_FACTOR_LONG = 1.5;
+    public static final double MIN_AF_WEAK_JUNCTION_DISC_RATE_FACTOR_LONG = 3.0;
     public static final double MIN_AF_WEAK_JUNCTION_DISC_RATE_FACTOR_SGL = 1;
     public static final double MIN_AF_WEAK_JUNCTION_DISC_RATE_FACTOR_OTHER = 0.75;
     public static final double MIN_AF_WEAK_JUNCTION_MAX_AF = 0.15;

@@ -87,6 +87,7 @@ import java.util.Map;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.common.sv.SvVcfTags;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
@@ -281,9 +282,11 @@ public class VariantFilters
                 // extend the AF filter for less certain SGL assemblies
                 int breakendPosition = var.breakendStart().Position;
                 String breakendChr = var.breakendStart().Chromosome;
+                Orientation breakendOrient = var.breakendStart().Orient;
 
                 boolean isCloseToJunction = var.originalJunctions().stream().anyMatch(x -> x.Chromosome.equals(breakendChr)
-                        && abs(x.Position - breakendPosition) <= MIN_AF_WEAK_JUNCTION_SGL_JUNCTION_DISTANCE);
+                        && abs(x.Position - breakendPosition) <= MIN_AF_WEAK_JUNCTION_SGL_JUNCTION_DISTANCE
+                        && x.Orient == breakendOrient);
 
                 int avgJuncReadSoftClip = var.breakendStart().Context.getAttributeAsInt(AVG_SOFT_CLIP_LENGTH, 0);
 
