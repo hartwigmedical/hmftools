@@ -58,6 +58,7 @@ public class CommonUtils
             else
             {
                 includesTruthset = true;
+                sourceItems.put(source.Type, Collections.emptyList()); // by default nothing found, but not the same as invalid
 
                 List<TruthsetValue> truthsetValues = source.Truthset.sampleTruthsetEntries(sampleId, comparer.category());
 

@@ -190,11 +190,7 @@ public class RnaFusionComparer extends ItemComparer
                 }
                 else
                 {
-                    // could compare fragments but unlikely to be provided
-                    if(includeMatches)
-                    {
-                        mismatches.add(new Mismatch(oldFusion, newFusion, FULL_MATCH, Collections.emptyList()));
-                    }
+                    mismatches.add(oldFusion.findMismatch(this, newFusion, matchLevel, includeMatches, includesTruthset));
                 }
             }
 
@@ -205,10 +201,6 @@ public class RnaFusionComparer extends ItemComparer
                 if(oldFusion == null)
                 {
                     newFusionStr.add(fusionInfo(newFusion));
-                }
-                else
-                {
-                    mismatches.add(new Mismatch(oldFusion, newFusion, FULL_MATCH, Collections.emptyList()));
                 }
             }
 
