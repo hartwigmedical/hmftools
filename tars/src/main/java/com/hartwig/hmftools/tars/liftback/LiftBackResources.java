@@ -7,7 +7,7 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.tars.liftback.features.GenomicAlignmentScorer;
 import com.hartwig.hmftools.tars.liftback.features.OverhangGate;
 import com.hartwig.hmftools.tars.liftback.features.SupplementaryConfig;
-import com.hartwig.hmftools.tars.liftback.features.SupplementaryResolver;
+import com.hartwig.hmftools.tars.liftback.features.SupplementaryMerger;
 
 // The read-only inputs every LiftBackWorker shares, plus the per-worker assembly into a processor. A factory rather
 // than a plain holder because htsjdk's indexed FASTA reader is not thread-safe: each worker gets its own ref genome
@@ -39,7 +39,7 @@ public final class LiftBackResources
 
         return new LiftBackGroupProcessor(
                 mDiscriminator,
-                new SupplementaryResolver(mEnsemblAnnotationIndex, refGenome, mSupplementary),
+                new SupplementaryMerger(mEnsemblAnnotationIndex, refGenome, mSupplementary),
                 new OverhangGate(refGenome),
                 new GenomicAlignmentScorer(refGenome),
                 refGenome,

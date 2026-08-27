@@ -21,12 +21,12 @@ import com.hartwig.hmftools.tars.common.ContigEntry;
 import com.hartwig.hmftools.tars.liftback.TarsTestFixtures.TestGenome;
 import com.hartwig.hmftools.tars.liftback.features.GenomicAlignmentScorer;
 import com.hartwig.hmftools.tars.liftback.features.OverhangGate;
-import com.hartwig.hmftools.tars.liftback.features.SupplementaryResolver;
+import com.hartwig.hmftools.tars.liftback.features.SupplementaryMerger;
 
 import htsjdk.samtools.SAMRecord;
 
 // Whole-pipeline test harness: declare the contig geometry, reference genome, annotated junctions and reads, then run() drives the
-// real LiftBackGroupProcessor.processNameGroup (candidate features -> discriminator -> supplementary resolve -> mate patch -> NH /
+// real LiftBackGroupProcessor.processNameGroup (placement features -> discriminator -> supplementary merge -> mate patch -> NH /
 // unmap policy) and Result asserts the lifted placement of every emitted record.
 //
 // Usage:
@@ -115,7 +115,7 @@ public final class LiftBackScenario
         LiftBackDiscriminator resolver = mEnsemblAnnotationIndex != null
                 ? new LiftBackDiscriminator(mContigs, mEnsemblAnnotationIndex)
                 : new LiftBackDiscriminator(mContigs);
-        SupplementaryResolver supplementary = new SupplementaryResolver(annotationIndex, ref, supplementaryConfig());
+        SupplementaryMerger supplementary = new SupplementaryMerger(annotationIndex, ref, supplementaryConfig());
         OverhangGate overhangGate = new OverhangGate(ref);
         GenomicAlignmentScorer alignmentScorer = new GenomicAlignmentScorer(ref);
 

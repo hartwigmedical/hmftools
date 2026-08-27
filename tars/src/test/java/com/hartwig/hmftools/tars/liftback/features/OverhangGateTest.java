@@ -101,7 +101,7 @@ public class OverhangGateTest
     }
 
     @Test
-    public void testAppliesGateToCandidateList()
+    public void testAppliesGateToPlacementList()
     {
         OverhangGate gate = gate(genome());
 
@@ -109,7 +109,7 @@ public class OverhangGateTest
         SAMRecord selfRecord = primaryRecord(CHR_1, 1, "20M100N8M4S");
         selfRecord.setReadBases(bases("C".repeat(32)));
 
-        gate.gateCandidates(selfOnly, selfRecord);
+        gate.gatePlacements(selfOnly, selfRecord);
 
         // Self keeps a collapsed cigar and is never dropped.
         assertEquals("20M12S", selfOnly.get(0).LiftedCigar);
@@ -121,7 +121,7 @@ public class OverhangGateTest
         SAMRecord collapseRecord = primaryRecord(CHR_1, 100, "50M");
         collapseRecord.setReadBases(bases("C".repeat(50)));
 
-        gate.gateCandidates(collapsedAltAlignments, collapseRecord);
+        gate.gatePlacements(collapsedAltAlignments, collapseRecord);
 
         // A collapsed XA alt is dropped, while self above is kept.
         assertTrue(collapsedAlt.Dropped);

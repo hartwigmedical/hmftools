@@ -39,7 +39,7 @@ public class OverhangGate
         return mRefGenome != null;
     }
 
-    public void gateCandidates(final List<LiftedAlignment> alignments, final SAMRecord record)
+    public void gatePlacements(final List<LiftedAlignment> alignments, final SAMRecord record)
     {
         if(!enabled() || alignments.isEmpty())
         {

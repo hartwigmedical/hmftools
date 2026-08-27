@@ -13,7 +13,10 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.LongAdder;
+
+import com.hartwig.hmftools.common.utils.MemoryCalcs;
 
 import htsjdk.samtools.BAMRecordCodec;
 import htsjdk.samtools.SAMFileHeader;
@@ -41,6 +44,8 @@ public class ShardedChunkProducer extends Thread
     private final int mShardCount;
 
     private static final long PROGRESS_INTERVAL_MS = 15_000;
+
+    private final AtomicInteger mPeakMemoryMb = new AtomicInteger();
 
     // enqueued once per worker to signal end-of-stream; compared by reference.
     public static final List<SAMRecord> END_OF_STREAM = new ArrayList<>();
@@ -97,6 +102,11 @@ public class ShardedChunkProducer extends Thread
             done.set(true);
             monitor.interrupt();
             closeQuietly(iterators);
+
+            mPeakMemoryMb.accumulateAndGet(MemoryCalcs.calcMemoryUsage(), Math::max);
+
+            TARS_LOGGER.info("liftback read {} reads across {} shard(s), peak memory({}mb)",
+                    readsCounter.sum(), ranges.size(), mPeakMemoryMb.get());
 
             for(int i = 0; i < mWorkerCount; ++i)
             {
@@ -395,7 +405,10 @@ public class ShardedChunkProducer extends Thread
             }
 
             int percent = fileLength > 0 ? (int) Math.min(100, consumed * 100 / fileLength) : 0;
-            TARS_LOGGER.info("liftback processed {} reads ({}% of input)", readsCounter.sum(), percent);
+            int memoryMb = MemoryCalcs.calcMemoryUsage();
+            mPeakMemoryMb.accumulateAndGet(memoryMb, Math::max);
+
+            TARS_LOGGER.info("liftback processed {} reads ({}% of input) memory({}mb)", readsCounter.sum(), percent, memoryMb);
         }
     }
 

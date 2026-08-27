@@ -5,7 +5,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-// One SAMRecord's candidate placements during lift-back: the read's own alignment plus its lifted XA alts, of which
+// One SAMRecord's placements during lift-back: the read's own alignment plus its lifted XA alts, of which
 // primaryIndex is the one written back.
 public record LiftedRecord(
         int updatedMapQuality,
@@ -18,7 +18,7 @@ public record LiftedRecord(
 {
     public static final int NO_PRIMARY = -1;
 
-    // Either the record has candidates and one of them is the chosen placement, or it has neither: a mismatch is a
+    // Either the record has placements and one of them is the chosen placement, or it has neither: a mismatch is a
     // lift bug, so fail here rather than downstream.
     public LiftedRecord
     {

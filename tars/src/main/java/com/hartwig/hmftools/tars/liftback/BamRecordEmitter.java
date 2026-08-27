@@ -31,31 +31,20 @@ public final class BamRecordEmitter
     private static final String NUM_HITS_ATTRIBUTE = "NH";
 
     private final ContigTranslator mContigTranslator;
-    private final boolean mSupplementaryResolverEnabled;
+    private final boolean mSupplementaryMergerEnabled;
     private final RefGenomeInterface mRefGenome;
     private final ExcludedRegions mExcludedRegions;
-
-    private int mPrimariesSeen;
-    private int mPrimariesLiftFailed;
+    private final LiftBackStats mStats;
 
     public BamRecordEmitter(
-            final ContigTranslator contigTranslator, final boolean supplementaryResolverEnabled,
-            final RefGenomeInterface refGenome, final ExcludedRegions excludedRegions)
+            final ContigTranslator contigTranslator, final boolean supplementaryMergerEnabled,
+            final RefGenomeInterface refGenome, final ExcludedRegions excludedRegions, final LiftBackStats stats)
     {
         mContigTranslator = contigTranslator;
-        mSupplementaryResolverEnabled = supplementaryResolverEnabled;
+        mSupplementaryMergerEnabled = supplementaryMergerEnabled;
         mRefGenome = refGenome;
         mExcludedRegions = excludedRegions;
-    }
-
-    public int primariesSeen()
-    {
-        return mPrimariesSeen;
-    }
-
-    public int primariesLiftFailed()
-    {
-        return mPrimariesLiftFailed;
+        mStats = stats;
     }
 
     public void emit(
@@ -89,10 +78,10 @@ public final class BamRecordEmitter
             boolean unmapDecided = primaryUnmapped && record == primary;
             if(!record.isSecondaryOrSupplementary() && !record.getReadUnmappedFlag())
             {
-                ++mPrimariesSeen;
+                ++mStats.PrimariesSeen;
                 if(!result.hasPlacement() && !unmapDecided)
                 {
-                    ++mPrimariesLiftFailed;
+                    ++mStats.LiftFailed;
                 }
             }
 
@@ -138,7 +127,7 @@ public final class BamRecordEmitter
             {
                 drop = true;
             }
-            if(!drop && mSupplementaryResolverEnabled && record.getSupplementaryAlignmentFlag()
+            if(!drop && mSupplementaryMergerEnabled && record.getSupplementaryAlignmentFlag()
                     && !record.getReadUnmappedFlag())
             {
                 Integer alignmentScore = record.getIntegerAttribute(ALIGNMENT_SCORE_ATTRIBUTE);

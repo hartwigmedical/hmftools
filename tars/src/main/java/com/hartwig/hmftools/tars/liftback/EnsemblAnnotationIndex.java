@@ -35,7 +35,7 @@ public final class EnsemblAnnotationIndex
         if(exons == null)
             return false;
 
-        // merged spans are non-overlapping, so the last exon starting at or before pos is the only candidate.
+        // merged spans are non-overlapping, so the last exon starting at or before pos is the only placement.
         BaseRegion exon = exons.get(BaseRegion.binarySearch(pos, exons));
         return exon.containsPosition(pos);
     }

@@ -16,63 +16,38 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.tars.liftback.features.GenomicAlignmentScorer;
 import com.hartwig.hmftools.tars.liftback.features.OverhangGate;
-import com.hartwig.hmftools.tars.liftback.features.SupplementaryResolver;
+import com.hartwig.hmftools.tars.liftback.features.SupplementaryMerger;
 
 import htsjdk.samtools.SAMRecord;
 
 public class LiftBackGroupProcessor
 {
     private final LiftBackDiscriminator mDiscriminator;
-    private final SupplementaryResolver mSupplementaryResolver;
+    private final SupplementaryMerger mSupplementaryMerger;
     private final OverhangGate mOverhangGate;
     private final GenomicAlignmentScorer mAlignmentScorer;
     private final BamRecordEmitter mEmitter;
-
-    private int mRecordsSeen;
-    private int mPrimariesUnmappedExcludedRegion;
-    private int mPrimariesUnmappedOverCap;
-    private int mPrimariesUnmappedLowAlignmentScore;
-    private int mSupplementaryCandidates;
-    private int mPrimaryRevisions;
-    private int mSupplementaryMerges;
-    private int mSupplementariesAbsorbed;
+    private final LiftBackStats mStats;
 
     public LiftBackGroupProcessor(
-            final LiftBackDiscriminator discriminator, final SupplementaryResolver supplementaryResolver,
+            final LiftBackDiscriminator discriminator, final SupplementaryMerger supplementaryMerger,
             final OverhangGate overhangGate, final GenomicAlignmentScorer alignmentScorer,
             final RefGenomeInterface refGenome, final ExcludedRegions excludedRegions)
     {
         mDiscriminator = discriminator;
-        mSupplementaryResolver = supplementaryResolver;
+        mSupplementaryMerger = supplementaryMerger;
         mOverhangGate = overhangGate;
         mAlignmentScorer = alignmentScorer;
+        mStats = new LiftBackStats();
         mEmitter = new BamRecordEmitter(
-                discriminator.contigTranslator(), supplementaryResolver != null, refGenome, excludedRegions);
+                discriminator.contigTranslator(), supplementaryMerger != null, refGenome, excludedRegions, mStats);
     }
 
-    public int recordsSeen() { return mRecordsSeen; }
-
-    public int primariesSeen() { return mEmitter.primariesSeen(); }
-
-    public int primariesLiftFailed() { return mEmitter.primariesLiftFailed(); }
-
-    public int primariesUnmappedExcludedRegion() { return mPrimariesUnmappedExcludedRegion; }
-
-    public int primariesUnmappedOverCap() { return mPrimariesUnmappedOverCap; }
-
-    public int primariesUnmappedLowAlignmentScore() { return mPrimariesUnmappedLowAlignmentScore; }
-
-    public int supplementaryCandidates() { return mSupplementaryCandidates; }
-
-    public int primaryRevisions() { return mPrimaryRevisions; }
-
-    public int supplementaryMerges() { return mSupplementaryMerges; }
-
-    public int supplementariesAbsorbed() { return mSupplementariesAbsorbed; }
+    public LiftBackStats stats() { return mStats; }
 
     public void processNameGroup(final List<SAMRecord> group, final Consumer<SAMRecord> consumer)
     {
-        mRecordsSeen += group.size();
+        mStats.RecordsSeen += group.size();
 
         List<SAMRecord> firstOfPair = new ArrayList<>();
         List<SAMRecord> secondOfPair = new ArrayList<>();
@@ -142,16 +117,15 @@ public class LiftBackGroupProcessor
 
         // Step 3: score the genomic alignments and select the primary placement.
         resolved.set(0, selectPrimaryAlignment(primary, primaryAlignments, mate));
-        SupplementaryResolution supplementary = supplementaryResult(records.size(), resolved.get(0));
+        SupplementaryMerge supplementary = supplementaryMerge(records.size(), resolved.get(0));
         List<ChrBaseRegion> introducedIntrons = new ArrayList<>();
 
         if(supplementary.revised())
         {
             LiftedAlignment winner = resolved.get(0).primaryAlignment();
             introducedIntrons.addAll(winner.MergedSupplementaryIntrons);
-            ++mPrimaryRevisions;
-            ++mSupplementaryMerges;
-            mSupplementariesAbsorbed += supplementary.absorbed().size();
+            ++mStats.SupplementaryMerges;
+            mStats.SupplementariesAbsorbed += supplementary.absorbed().size();
         }
 
         List<LiftedRecord> finalRecords = annotateSpliceStrands(List.copyOf(resolved));
@@ -170,12 +144,12 @@ public class LiftBackGroupProcessor
             final List<LiftedRecord> liftedRecords, final List<ChrBaseRegion> mateHintIntrons)
     {
         SAMRecord primary = records.get(0);
-        if(mSupplementaryResolver == null || primary.getReadUnmappedFlag() || !primaryAlignments.hasPlacement())
+        if(mSupplementaryMerger == null || primary.getReadUnmappedFlag() || !primaryAlignments.hasPlacement())
         {
             return primaryAlignments;
         }
 
-        List<SupplementaryResolver.Supplementary> supplementaries = new ArrayList<>();
+        List<SupplementaryMerger.Supplementary> supplementaries = new ArrayList<>();
         for(int i = 1; i < records.size(); ++i)
         {
             SAMRecord record = records.get(i);
@@ -183,7 +157,7 @@ public class LiftBackGroupProcessor
             if(record.getSupplementaryAlignmentFlag() && !record.getReadUnmappedFlag()
                     && lifted != null && lifted.hasPlacement())
             {
-                supplementaries.add(new SupplementaryResolver.Supplementary(
+                supplementaries.add(new SupplementaryMerger.Supplementary(
                         i, lifted.finalChromosome(), !record.getReadNegativeStrandFlag(),
                         lifted.finalPos(), lifted.finalCigar(), record.getMappingQuality()));
             }
@@ -192,7 +166,7 @@ public class LiftBackGroupProcessor
         {
             return primaryAlignments;
         }
-        ++mSupplementaryCandidates;
+        ++mStats.MergeableSupplementaries;
 
         List<LiftedAlignment> expanded = new ArrayList<>(primaryAlignments.liftedAlignments());
         Set<SupplementaryAlignmentKey> seen = new HashSet<>();
@@ -208,7 +182,7 @@ public class LiftBackGroupProcessor
                 continue;
             }
 
-            SupplementaryResolver.Result result = mSupplementaryResolver.resolve(new SupplementaryResolver.Candidate(
+            SupplementaryMerger.Result result = mSupplementaryMerger.merge(new SupplementaryMerger.Placement(
                     alignment.LiftedChromosome, alignment.ForwardStrand, primary.getReadLength(),
                     alignment.LiftedPos, alignment.LiftedCigar, supplementaries,
                     primary.getReadBases(), mateHintIntrons));
@@ -245,14 +219,14 @@ public class LiftBackGroupProcessor
         }
         if(mAlignmentScorer != null)
         {
-            mAlignmentScorer.scoreCandidates(alignments.liftedAlignments(), primary);
+            mAlignmentScorer.scorePlacements(alignments.liftedAlignments(), primary);
         }
         return mDiscriminator.selectPrimaryAlignment(primary, alignments.liftedAlignments(), mate);
     }
 
     private List<LiftedRecord> annotateSpliceStrands(final List<LiftedRecord> liftedRecords)
     {
-        if(mSupplementaryResolver == null)
+        if(mSupplementaryMerger == null)
         {
             return liftedRecords;
         }
@@ -266,7 +240,7 @@ public class LiftBackGroupProcessor
                 continue;
             }
 
-            int strand = mSupplementaryResolver.spliceStrand(
+            int strand = mSupplementaryMerger.spliceStrand(
                     lifted.finalChromosome(), lifted.finalPos(), lifted.finalCigar());
             if(strand != 0)
             {
@@ -278,8 +252,8 @@ public class LiftBackGroupProcessor
 
     private Integer finalAlignmentScore(final SAMRecord primary, final LiftedRecord lifted)
     {
-        // lift-only paths have no supplementary resolver and skip the production AS floor
-        if(mSupplementaryResolver == null)
+        // lift-only paths have no supplementary merger and skip the production AS floor
+        if(mSupplementaryMerger == null)
         {
             return null;
         }
@@ -298,7 +272,7 @@ public class LiftBackGroupProcessor
     {
         if(mEmitter.excludes(result))
         {
-            ++mPrimariesUnmappedExcludedRegion;
+            ++mStats.UnmappedExcludedRegion;
             return new UnmapDecision(LiftedRecord.unmapped("excluded_region_unmapped"), true);
         }
         if(primary.getReadUnmappedFlag())
@@ -307,7 +281,7 @@ public class LiftBackGroupProcessor
         }
         if(BamRecordEmitter.exceedsMappingCap(primary, result))
         {
-            ++mPrimariesUnmappedOverCap;
+            ++mStats.UnmappedOverCap;
             TARS_LOGGER.trace("over-cap unmap {}:{}: inputMapQuality=0, no XA",
                     primary.getReferenceName(), primary.getAlignmentStart());
             return new UnmapDecision(LiftedRecord.unmapped("over_cap_unmapped"), true);
@@ -316,7 +290,7 @@ public class LiftBackGroupProcessor
         Integer alignmentScore = finalAlignmentScore(primary, result);
         if(alignmentScore != null && alignmentScore < PRIMARY_AS_UNMAP_THRESHOLD)
         {
-            ++mPrimariesUnmappedLowAlignmentScore;
+            ++mStats.UnmappedLowAlignmentScore;
             TARS_LOGGER.trace(
                     "AS-floor unmap {}: AS={} < {}",
                     primary.getReadName(), alignmentScore, PRIMARY_AS_UNMAP_THRESHOLD);
@@ -334,13 +308,13 @@ public class LiftBackGroupProcessor
                 decision.primaryUnmapped(), matePair, consumer);
     }
 
-    private static SupplementaryResolution supplementaryResult(
+    private static SupplementaryMerge supplementaryMerge(
             final int recordCount, final LiftedRecord primaryResult)
     {
         if(primaryResult == null || !primaryResult.hasPlacement()
                 || !primaryResult.primaryAlignment().hasSupplementaryMerge())
         {
-            return SupplementaryResolution.NONE;
+            return SupplementaryMerge.NONE;
         }
 
         Set<Integer> absorbed = new HashSet<>();
@@ -351,7 +325,7 @@ public class LiftBackGroupProcessor
                 absorbed.add(index);
             }
         }
-        return new SupplementaryResolution(absorbed, true);
+        return new SupplementaryMerge(absorbed, true);
     }
 
     private static void recordPrimary(
@@ -400,11 +374,11 @@ public class LiftBackGroupProcessor
         }
     }
 
-    private record SupplementaryResolution(Set<Integer> absorbed, boolean revised)
+    private record SupplementaryMerge(Set<Integer> absorbed, boolean revised)
     {
-        private static final SupplementaryResolution NONE = new SupplementaryResolution(Set.of(), false);
+        private static final SupplementaryMerge NONE = new SupplementaryMerge(Set.of(), false);
 
-        private SupplementaryResolution
+        private SupplementaryMerge
         {
             absorbed = Set.copyOf(absorbed);
         }

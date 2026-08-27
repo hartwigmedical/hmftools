@@ -148,7 +148,7 @@ public class LiftBackDiscriminator
         // Null on lift-only paths, where overhangs are deliberately left untouched.
         if(overhangGate != null)
         {
-            overhangGate.gateCandidates(allAlignments, record);
+            overhangGate.gatePlacements(allAlignments, record);
         }
 
         return new LiftedRecord(inputMapQuality, 0, "", 0, allAlignments);
@@ -162,9 +162,9 @@ public class LiftBackDiscriminator
 
         boolean concordant = isConcordant(allAlignments);
         int seed = readSeed(record.getReadName());
-        boolean hasSupplementaryMergeCandidate = hasSupplementaryMergeCandidate(allAlignments);
+        boolean hasMergeableSupplementary = hasMergeableSupplementary(allAlignments);
         ApplyResult outcome = apply(
-                allAlignments, concordant, self, seed, inputMapQuality != 0 && !hasSupplementaryMergeCandidate, mate);
+                allAlignments, concordant, self, seed, inputMapQuality != 0 && !hasMergeableSupplementary, mate);
         LiftedAlignment effectivePrimary = outcome.effectivePrimary();
 
         for(LiftedAlignment alignment : allAlignments)
@@ -216,7 +216,7 @@ public class LiftBackDiscriminator
         return new LiftedRecord(updatedMapQuality, numLoci, note, outcome.primaryIndex(), allAlignments);
     }
 
-    private static boolean hasSupplementaryMergeCandidate(final List<LiftedAlignment> alignments)
+    private static boolean hasMergeableSupplementary(final List<LiftedAlignment> alignments)
     {
         for(LiftedAlignment alignment : alignments)
         {
@@ -255,7 +255,7 @@ public class LiftBackDiscriminator
         // Null on lift-only paths, where overhangs are deliberately left untouched.
         if(overhangGate != null)
         {
-            overhangGate.gateCandidates(alignments, record);
+            overhangGate.gatePlacements(alignments, record);
         }
 
         return new LiftedRecord(record.getMappingQuality(), 1, "", 0, alignments);
@@ -406,9 +406,9 @@ public class LiftBackDiscriminator
         return apply(alignments, concordant, self, seed, bwaHasPriority, null);
     }
 
-    // Returns the winning candidate, its index and a short note. With bwaHasPriority false (MAPQ 0) candidates are ranked by
+    // Returns the winning placement, its index and a short note. With bwaHasPriority false (MAPQ 0) placements are ranked by
     // recomputed genomic score, falling back to mate-proximity / junction / seed tie-breaks only on a score tie or unscored
-    // candidates (split read left for supplementary-resolve). bwaHasPriority true leaves bwa's order untouched.
+    // placements (split read left for supplementary-resolve). bwaHasPriority true leaves bwa's order untouched.
     public static ApplyResult apply(
             final List<LiftedAlignment> alignments, final boolean concordant, final LiftedAlignment self,
             final int seed, final boolean bwaHasPriority, final LiftedRecord mate)
@@ -425,25 +425,25 @@ public class LiftBackDiscriminator
     private static ApplyResult pickByScore(
             final List<LiftedAlignment> alignments, final LiftedAlignment self, final int seed, final LiftedRecord mate)
     {
-        List<LiftedAlignment> candidates = new ArrayList<>();
+        List<LiftedAlignment> placements = new ArrayList<>();
         for(LiftedAlignment alignment : alignments)
         {
             if(!alignment.Dropped)
             {
-                candidates.add(alignment);
+                placements.add(alignment);
             }
         }
-        if(candidates.size() < 2)
+        if(placements.size() < 2)
         {
             return keepBwaPrimary(alignments, self);
         }
 
         int topScore = Integer.MIN_VALUE;
-        for(LiftedAlignment alignment : candidates)
+        for(LiftedAlignment alignment : placements)
         {
             topScore = Math.max(topScore, alignment.GenomicScore);
         }
-        if(topScore == Integer.MIN_VALUE && !hasSupplementaryMergeCandidate(candidates))
+        if(topScore == Integer.MIN_VALUE && !hasMergeableSupplementary(placements))
         {
             return keepBwaPrimary(alignments, self);
         }
@@ -452,7 +452,7 @@ public class LiftBackDiscriminator
         // lift to the same contiguous alignment) so the tie is over distinct placements, not weighted by source count.
         List<LiftedAlignment> top = new ArrayList<>();
         Set<AlignmentKey> topKeys = new HashSet<>();
-        for(LiftedAlignment alignment : candidates)
+        for(LiftedAlignment alignment : placements)
         {
             if(alignment.GenomicScore == topScore && topKeys.add(alignment.key()))
             {
@@ -521,7 +521,7 @@ public class LiftBackDiscriminator
         return new ApplyResult(indexOf(alignments, self), self, "");
     }
 
-    // identity, not equals: a candidate revised by withLiftedCigar is a distinct object at the same list position.
+    // identity, not equals: a placement revised by withLiftedCigar is a distinct object at the same list position.
     private static int indexOf(final List<LiftedAlignment> alignments, final LiftedAlignment target)
     {
         for(int i = 0; i < alignments.size(); ++i)

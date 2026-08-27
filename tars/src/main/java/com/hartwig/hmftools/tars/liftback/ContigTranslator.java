@@ -149,17 +149,17 @@ public final class ContigTranslator
             return null;
         }
 
-        int candidate = floorIndexByContigStart(segments, altPos);
-        ContigEntry segment = segments.get(candidate);
+        int placement = floorIndexByContigStart(segments, altPos);
+        ContigEntry segment = segments.get(placement);
         if(altPos <= segment.contigEnd())
         {
             return segment;
         }
 
         // altPos in an inter-segment spacer: pick the nearer neighbour to clamp against.
-        if(candidate + 1 < segments.size())
+        if(placement + 1 < segments.size())
         {
-            ContigEntry next = segments.get(candidate + 1);
+            ContigEntry next = segments.get(placement + 1);
             int leadingOverhang = next.contigStart() - altPos;
             int trailingOverhang = altPos - segment.contigEnd();
             return leadingOverhang <= trailingOverhang ? next : segment;
