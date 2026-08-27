@@ -4,22 +4,40 @@ public class Statistics
 {
     public long OrigReadCount;
     public long NewReadCount;
-    public long DiffCount;
     public long Matched;
+    public long DiffCount;
+    public long ValueDiffCount;
+    public long OrigOnlyCount;
+    public long NewOnlyCount;
+    public long IgnoredReadRecords;
 
-    public Statistics()
+    public void recordOrigOnly()
     {
-        OrigReadCount = 0;
-        NewReadCount = 0;
-        DiffCount = 0;
-        Matched = 0;
+        ++OrigOnlyCount;
+        ++DiffCount;
+    }
+
+    public void recordNewOnly()
+    {
+        ++NewOnlyCount;
+        ++DiffCount;
+    }
+
+    public void recordValue()
+    {
+        ++ValueDiffCount;
+        ++DiffCount;
     }
 
     public void merge(final Statistics other)
     {
         OrigReadCount += other.OrigReadCount;
         NewReadCount += other.NewReadCount;
-        DiffCount += other.DiffCount;
         Matched += other.Matched;
+        DiffCount += other.DiffCount;
+        ValueDiffCount += other.ValueDiffCount;
+        OrigOnlyCount += other.OrigOnlyCount;
+        NewOnlyCount += other.NewOnlyCount;
+        IgnoredReadRecords += other.IgnoredReadRecords;
     }
 }
