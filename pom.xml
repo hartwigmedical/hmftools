@@ -42,6 +42,7 @@
         <module>taur</module>
         <module>teal</module>
         <module>virus-interpreter</module>
+        <module>virusdetect</module>
         <module>v-chord</module>
         <module>v-cuppa</module>
         <module>wisp</module>
@@ -93,6 +94,7 @@
         <taur.version>1.0</taur.version>
         <teal.version>1.4</teal.version>
         <virus-interpreter.version>1.7.1</virus-interpreter.version>
+        <virusdetect.version>1.0</virusdetect.version>
         <v-chord.version>1.0.1</v-chord.version>
         <v-cuppa.version>0.1</v-cuppa.version>
         <wisp.version>1.4</wisp.version>
