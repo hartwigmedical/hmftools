@@ -148,7 +148,7 @@ public class AltContigRemapperTest extends RemapperTestBase
         expectedSecondaryFor9.setMateReferenceIndex(5);
         expectedSecondaryFor9.setMateAlignmentStart(31354760 + 1);
         expectedSecondaryFor9.setInferredInsertSize(0);
-        expectedSecondaryFor9.setAttribute(SAMTag.SA.name(),"chr6,31354348,+,72M79S,60,2;");
+        expectedSecondaryFor9.setAttribute(SAMTag.SA.name(), "chr6,31354348,+,72M79S,60,2;");
         // This is a reverse strand match.
         expectedSecondaryFor9.setReadBases(Nucleotides.reverseComplementBases(expectedSecondaryFor9.getReadBases()));
         expectedSecondaryFor9.setBaseQualities(reverseArray(expectedSecondaryFor9.getBaseQualities()));
@@ -236,7 +236,7 @@ public class AltContigRemapperTest extends RemapperTestBase
         // This is a forward strand match, whereas the input was reverse strand.
         expectedPrincipalFor13.setReadBases(Nucleotides.reverseComplementBases(expectedPrincipalFor13.getReadBases()));
         expectedPrincipalFor13.setBaseQualities(reverseArray(expectedPrincipalFor13.getBaseQualities()));
-        expectedPrincipalFor13.setAttribute(SAMTag.SA.name(),"chr2,32916487,-,67S36M48S,0,0;");
+        expectedPrincipalFor13.setAttribute(SAMTag.SA.name(), "chr2,32916487,-,67S36M48S,0,0;");
         checkOutputContains(expectedPrincipalFor13, results);
 
         SAMRecord expectedSecondaryFor13 = records.get(13).deepCopy();
@@ -250,7 +250,7 @@ public class AltContigRemapperTest extends RemapperTestBase
         expectedSecondaryFor13.setMateReferenceIndex(5);
         expectedSecondaryFor13.setMateAlignmentStart(31354513 + 1);
         expectedSecondaryFor13.setInferredInsertSize(0);
-        expectedSecondaryFor13.setAttribute(SAMTag.SA.name(),"chr6,31354376,+,44M107S,60,1;");
+        expectedSecondaryFor13.setAttribute(SAMTag.SA.name(), "chr6,31354376,+,44M107S,60,1;");
         checkOutputContains(expectedSecondaryFor13, results);
 
         // input[14] and input[15]: A00624:8:HHKYHDSXX:2:2276:27299:7623, forward and reverse respectively
@@ -278,7 +278,7 @@ public class AltContigRemapperTest extends RemapperTestBase
         expectedFor15.setFlags(147);
         expectedFor15.setReferenceIndex(5);
         expectedFor15.setAlignmentStart(31356606);
-        expectedFor15.setMappingQuality(0);
+        expectedFor15.setMappingQuality(18);
         expectedFor15.setCigarString("48M3I100M");
         expectedFor15.setMateReferenceIndex(5);
         expectedFor15.setMateAlignmentStart(31356204 + 1);

@@ -83,7 +83,10 @@ public class PageRipper
         }
 
         Assert.assertTrue("Image within bounds is not single color", isSingleColor);
-        Assert.assertEquals(expectedColor.getRGB(), referenceRgb);
+        Color actualColor = new Color(referenceRgb, true);
+        Assert.assertEquals(expectedColor.getRed(), actualColor.getRed());
+        Assert.assertEquals(expectedColor.getGreen(), actualColor.getGreen());
+        Assert.assertEquals(expectedColor.getBlue(), actualColor.getBlue());
     }
 
     @NotNull
