@@ -1,8 +1,13 @@
 package com.hartwig.hmftools.virusdetect;
 
+import java.util.Set;
+
 public class VirusConstants
 {
     public static final String APP_NAME = "VirusDetect";
+
+    // Host-reference decoy contigs whose mapped reads are treated as viral candidates (v38 naming). Provisional.
+    public static final Set<String> DECOY_CONTIGS = Set.of("chrEBV");
 
     // Provisional defaults, to be tuned on real data.
 

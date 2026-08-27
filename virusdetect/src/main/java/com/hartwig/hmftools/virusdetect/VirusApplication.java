@@ -5,6 +5,7 @@ import static java.lang.System.exit;
 import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkCreateOutputDir;
 import static com.hartwig.hmftools.virusdetect.VirusConstants.APP_NAME;
+import static com.hartwig.hmftools.virusdetect.VirusConstants.DECOY_CONTIGS;
 
 import java.io.IOException;
 
@@ -18,6 +19,7 @@ public class VirusApplication
 {
     private final VirusConfig mConfig;
     private final ViralReference mViralReference;
+    private final CandidateReadExtractor mCandidateExtractor;
 
     private static final Logger LOGGER = LogManager.getLogger(VirusApplication.class);
 
@@ -27,6 +29,9 @@ public class VirusApplication
 
         LOGGER.info("Loading prerequisite data");
         mViralReference = ViralReference.load(config.viralRefFile(), config.viralRefInfoFile());
+
+        CandidateReadFilter candidateFilter = new CandidateReadFilter(config.minSoftClipBases(), DECOY_CONTIGS);
+        mCandidateExtractor = new CandidateReadExtractor(config.refGenomeFile(), candidateFilter);
     }
 
     public void run() throws IOException
@@ -38,8 +43,10 @@ public class VirusApplication
 
         checkCreateOutputDir(mConfig.outputDir());
 
+        String candidateFasta = candidateFastaFile();
+        mCandidateExtractor.extractToFasta(mConfig.tumorBam(), candidateFasta);
+
         // TODO: placeholder pipeline; each step is replaced by its implementation as it lands.
-        LOGGER.info("Extracting candidate viral reads -> FASTA (stub)");
         LOGGER.info("Realigning candidates to viral reference -> BAM (stub)");
         LOGGER.info("Computing per-contig stats over aligned BAM -> debug TSV (stub)");
         LOGGER.info("Selecting representative contig per oncology group (stub)");
@@ -48,6 +55,11 @@ public class VirusApplication
         LOGGER.info("Annotating QC and writing detected TSV (stub)");
 
         LOGGER.info("VirusDetect complete, mins({})", runTimeMinsStr(startTimeMs));
+    }
+
+    private String candidateFastaFile()
+    {
+        return mConfig.outputDir() + mConfig.sampleId() + ".virus.candidates.fasta";
     }
 
     public static void main(@NotNull String[] args)
