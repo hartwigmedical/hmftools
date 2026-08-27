@@ -17,12 +17,16 @@ import org.jetbrains.annotations.NotNull;
 public class VirusApplication
 {
     private final VirusConfig mConfig;
+    private final ViralReference mViralReference;
 
     private static final Logger LOGGER = LogManager.getLogger(VirusApplication.class);
 
-    public VirusApplication(final VirusConfig config)
+    public VirusApplication(VirusConfig config)
     {
         mConfig = config;
+
+        LOGGER.info("Loading prerequisite data");
+        mViralReference = ViralReference.load(config.viralRefFile(), config.viralRefInfoFile());
     }
 
     public void run() throws IOException
@@ -35,7 +39,6 @@ public class VirusApplication
         checkCreateOutputDir(mConfig.outputDir());
 
         // TODO: placeholder pipeline; each step is replaced by its implementation as it lands.
-        LOGGER.info("Loading curated viral reference (stub)");
         LOGGER.info("Extracting candidate viral reads -> FASTA (stub)");
         LOGGER.info("Realigning candidates to viral reference -> BAM (stub)");
         LOGGER.info("Computing per-contig stats over aligned BAM -> debug TSV (stub)");
@@ -47,7 +50,7 @@ public class VirusApplication
         LOGGER.info("VirusDetect complete, mins({})", runTimeMinsStr(startTimeMs));
     }
 
-    public static void main(@NotNull final String[] args)
+    public static void main(@NotNull String[] args)
     {
         ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
 
