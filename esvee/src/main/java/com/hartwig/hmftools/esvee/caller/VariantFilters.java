@@ -259,7 +259,11 @@ public class VariantFilters
         if(discordantRate < MIN_AF_WEAK_JUNCTION_DISC_RATE_MIN)
             return false;
 
-        if(!applyWeakJunctionMinAfFilter(var))
+        boolean useSglThresholds = var.isSgl() && !var.isLineSite();
+
+        boolean applyWeakJunctionAfThreshold = applyWeakJunctionMinAfFilter(var);
+
+        if(!useSglThresholds && !applyWeakJunctionAfThreshold)
             return false;
 
         // adjust the standard min AF as follows:
@@ -267,7 +271,6 @@ public class VariantFilters
         // - SGLs: 0.05 + (discRate - 0.005) * 1
         // - Other variants: 0.001 + (discRate - 0.005) * 0.75
 
-        boolean useSglThresholds = var.isSgl() && !var.isLineSite();
         double afThreshold = useSglThresholds ? mFilterConstants.MinAfSgl : mFilterConstants.MinAfJunction;
         double discRateThreshold = MIN_AF_WEAK_JUNCTION_DISC_RATE_MIN;
 
@@ -277,7 +280,8 @@ public class VariantFilters
 
             if(useSglThresholds)
             {
-                afThreshold += discRateExcess * MIN_AF_WEAK_JUNCTION_DISC_RATE_FACTOR_SGL;
+                if(applyWeakJunctionAfThreshold)
+                    afThreshold += discRateExcess * MIN_AF_WEAK_JUNCTION_DISC_RATE_FACTOR_SGL;
 
                 // extend the AF filter for less certain SGL assemblies
                 int breakendPosition = var.breakendStart().Position;
@@ -294,7 +298,7 @@ public class VariantFilters
 
                 if(!isCloseToJunction || hasLowAvgSoftLength)
                 {
-                    afThreshold += discRateExcess;
+                    afThreshold += discRateExcess * 2;
                 }
 
                 afThreshold = min(afThreshold, MIN_AF_WEAK_JUNCTION_MAX_AF_SGLS);
