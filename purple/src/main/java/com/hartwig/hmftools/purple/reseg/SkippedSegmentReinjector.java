@@ -22,7 +22,7 @@ public final class SkippedSegmentReinjector
             if(resegmentedRegions.size() == supersegment.BothNoneMembers.size())
                 return resegmentedRegions;
 
-            if(resegmentedRegions.size() != 1)
+            if(resegmentedRegions.size() == 1)
                 return List.of(formBlendedRegion(supersegment.BothNoneMembers, resegmentedRegions.get(0)));
         }
 
