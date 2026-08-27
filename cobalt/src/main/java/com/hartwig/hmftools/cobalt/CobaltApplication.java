@@ -133,7 +133,7 @@ public class CobaltApplication
                     results, mConfig.PcfGamma, mConfig.RefGenVersion, executorService, mConfig.tumorPcfFileName());
         }
 
-        if(mConfig.ReferenceId != null && mConfig.TargetRegionNormFile == null)
+        if(mConfig.ReferenceId != null)
         {
             CobaltRatioSegmenter.writeReferenceSegments(
                     results, mConfig.PcfGamma, mConfig.RefGenVersion, executorService, mConfig.referencePcfFileName());

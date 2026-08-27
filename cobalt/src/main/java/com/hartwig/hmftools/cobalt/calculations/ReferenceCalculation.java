@@ -5,7 +5,10 @@ import static com.hartwig.hmftools.cobalt.CobaltConstants.ROLLING_MEDIAN_MIN_COV
 
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
+import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.cobalt.consolidation.ResultsConsolidator;
 import com.hartwig.hmftools.cobalt.normalisers.DiploidNormaliser;
 import com.hartwig.hmftools.cobalt.normalisers.DoNothingNormaliser;
@@ -13,7 +16,9 @@ import com.hartwig.hmftools.cobalt.normalisers.ReadDepthStatisticsNormaliser;
 import com.hartwig.hmftools.cobalt.normalisers.ResultsNormaliser;
 import com.hartwig.hmftools.cobalt.targeted.CobaltScope;
 import com.hartwig.hmftools.common.cobalt.MedianRatio;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.utils.Doubles;
 
 class ReferenceCalculation extends BamCalculation
 {
@@ -42,12 +47,24 @@ class ReferenceCalculation extends BamCalculation
         return Scope.medianByMeanNormaliser();
     }
 
-    List<MedianRatio> medianRatios()
+    List<MedianRatio> medianRatios(final ListMultimap<HumanChromosome, BamRatio> referenceResults, final RefGenomeVersion refGenomeVersion)
     {
         if(mMegaBaseDiploidNormaliser instanceof DiploidNormaliser)
             return ((DiploidNormaliser)mMegaBaseDiploidNormaliser).medianRatios();
-        else
-            return Collections.emptyList();
+
+        List<MedianRatio> medianRatios = Lists.newArrayList();
+
+        for(HumanChromosome chromosome : HumanChromosome.values())
+        {
+            List<BamRatio> bamRatios = referenceResults.get(chromosome);
+            bamRatios.forEach(x -> x.setDiploidAdjustedRatio(x.ratio()));
+            List<Double> ratios = bamRatios.stream().map(x -> x.ratio()).collect(Collectors.toList());
+
+            double median = Doubles.median(ratios);
+            medianRatios.add(new MedianRatio(refGenomeVersion.versionedChromosome(chromosome.toString()), median, bamRatios.size()));
+        }
+
+        return medianRatios;
     }
 
     @Override

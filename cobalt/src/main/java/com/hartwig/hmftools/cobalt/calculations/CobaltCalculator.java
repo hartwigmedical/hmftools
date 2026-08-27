@@ -46,7 +46,7 @@ public class CobaltCalculator
 
         referenceDepthReadings.forEach(referenceCalc::addReading);
         ListMultimap<HumanChromosome, BamRatio> referenceResults = referenceCalc.calculateRatios();
-        mMedianRatios = referenceCalc.medianRatios();
+        mMedianRatios = referenceCalc.medianRatios(referenceResults, config.RefGenVersion);
         mReferenceStatistics = referenceCalc.medianReadDepths();
 
         if(!referenceDepthReadings.isEmpty())
