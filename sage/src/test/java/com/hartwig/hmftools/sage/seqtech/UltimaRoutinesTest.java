@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.test.SamRecordTestUtils.cloneSamRecord
 import static com.hartwig.hmftools.sage.common.TestUtils.READ_ID_GENERATOR;
 import static com.hartwig.hmftools.sage.common.TestUtils.REF_BASES_200;
 import static com.hartwig.hmftools.sage.common.TestUtils.TEST_CONFIG;
+import static com.hartwig.hmftools.sage.common.TestUtils.MOCK_REF_GENOME;
 import static com.hartwig.hmftools.sage.common.TestUtils.buildCigarString;
 import static com.hartwig.hmftools.sage.common.TestUtils.buildSamRecord;
 import static com.hartwig.hmftools.sage.common.TestUtils.setIlluminaSequencing;
@@ -58,7 +59,8 @@ public class UltimaRoutinesTest
 
         RefContextCache refContextCache = new RefContextCache(TEST_CONFIG, Collections.emptyList(), Collections.emptyList());
 
-        RefContextConsumer refContextConsumer = new RefContextConsumer(TEST_CONFIG, region, refSequence, refContextCache, Collections.emptyList());
+        RefContextConsumer refContextConsumer = new RefContextConsumer(
+                TEST_CONFIG, region, refSequence, MOCK_REF_GENOME, refContextCache, Collections.emptyList());
 
         // first a valid read without low-qual bases
         String readBases = refBases.substring(0, 22) + variant.alt() + refBases.substring(23);
@@ -112,7 +114,8 @@ public class UltimaRoutinesTest
         refBases = REF_BASES_200.substring(0, 10) + TEST_LEFT_FLANK + "AACGAGAGATTTT" + "TTTTTACGTA" + REF_BASES_200.substring(0, 10);
         refSequence = new RefSequence(1, refBases.getBytes());
 
-        refContextConsumer = new RefContextConsumer(TEST_CONFIG, region, refSequence, refContextCache, Collections.emptyList());
+        refContextConsumer = new RefContextConsumer(
+                TEST_CONFIG, region, refSequence, MOCK_REF_GENOME, refContextCache, Collections.emptyList());
 
         readBases = refBases.substring(0, 22) + variant.alt() + refBases.substring(23);
 
