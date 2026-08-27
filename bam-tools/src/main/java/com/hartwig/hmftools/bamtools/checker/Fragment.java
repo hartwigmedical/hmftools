@@ -387,7 +387,10 @@ public class Fragment
             }
         }
 
-        if(mFirstUnmapped && mSecondUnmapped)
+        boolean firstNowUnmapped = mFirstUnmapped || (firstPrimary != null && firstPrimary.getReadUnmappedFlag());
+        boolean secondNowUnmapped = mSecondUnmapped || (secondPrimary != null && secondPrimary.getReadUnmappedFlag() );
+
+        if(firstNowUnmapped && secondNowUnmapped)
         {
             for(SAMRecord read : mReads)
             {

@@ -8,6 +8,8 @@ import static com.hartwig.hmftools.bamtools.common.CommonUtils.DEFAULT_CHR_PARTI
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.PARTITION_SIZE;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.REGIONS_FILE;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.loadSpecificRegionsConfig;
+import static com.hartwig.hmftools.common.bam.BamUtils.BAM_VALIDATION_STRINGENCY_DESC;
+import static com.hartwig.hmftools.common.bam.BamUtils.addValidationStringencyOption;
 import static com.hartwig.hmftools.common.bam.BamUtils.deriveRefGenomeVersion;
 import static com.hartwig.hmftools.common.bamops.BamToolName.BAMTOOL_PATH;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
@@ -30,6 +32,7 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.pathFromFil
 
 import java.util.List;
 
+import com.hartwig.hmftools.common.bam.BamUtils;
 import com.hartwig.hmftools.common.bamops.BamToolName;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
@@ -37,6 +40,7 @@ import com.hartwig.hmftools.common.region.SpecificRegions;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 import htsjdk.samtools.SAMSequenceRecord;
+import htsjdk.samtools.ValidationStringency;
 
 public class CheckConfig
 {
@@ -56,6 +60,7 @@ public class CheckConfig
     public final boolean ReverseBqsr;
     public final boolean DropIncompleteFragments;
     public final int SortThreadMemory;
+    public final ValidationStringency BamStringency;
 
     public static CheckParams Params = new CheckParams(); // global since used per-fragment
 
@@ -132,6 +137,8 @@ public class CheckConfig
         WriteIncompleteFragments = configBuilder.hasFlag(WRITE_INCOMPLETE_FRAGS) || MaxWriteIncompleteFragments > 0;
         DropIncompleteFragments = configBuilder.hasFlag(DROP_INCOMPLETE_FRAGS);
 
+        BamStringency = BamUtils.validationStringency(configBuilder);
+
         LOG_READ_COUNT = configBuilder.getInteger(CFG_LOG_READ_COUNT);
         SortThreadMemory = configBuilder.getInteger(SORT_THREAD_MEMORY);
     }
@@ -182,6 +189,10 @@ public class CheckConfig
         configBuilder.addConfigItem(OUTPUT_BAM_FILE, "Output BAM filename, default is input BAM + 'final'");
 
         BamToolName.addConfig(configBuilder);
+
+        configBuilder.addConfigItem(
+                BamUtils.BAM_VALIDATION_STRINGENCY, false, BAM_VALIDATION_STRINGENCY_DESC, ValidationStringency.LENIENT.toString());
+
         addThreadOptions(configBuilder);
         addOutputOptions(configBuilder);
         addLoggingOptions(configBuilder);
