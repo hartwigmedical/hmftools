@@ -626,7 +626,7 @@ public class LiftBackDiscriminatorTest
         assertFalse(concordantOf(ref(CHR1, 100, FULL_MATCH_CIGAR), droppedTx));
     }
 
-    // One locus, a soft-clipped ref and a contiguous tx candidate that only score can separate.
+    // One locus, a soft-clipped ref and a contiguous tx placement that only score can separate.
     private static List<LiftedAlignment> contestedSet()
     {
         LiftedAlignment self = ref(CHR1, 100, "50M51S");
@@ -657,7 +657,7 @@ public class LiftBackDiscriminatorTest
     @Test
     public void testUnscoredKeepsSelf()
     {
-        // No candidate scored (a split read left for Step 3): keep bwa's primary and drop nothing.
+        // No placement scored (a split read left for Step 3): keep bwa's primary and drop nothing.
         List<LiftedAlignment> alignments = contestedSet();
         LiftBackDiscriminator.ApplyResult outcome = LiftBackDiscriminator.apply(alignments, false, alignments.get(0), 0, false);
         assertSame(alignments.get(0), outcome.effectivePrimary());
@@ -734,7 +734,7 @@ public class LiftBackDiscriminatorTest
         alignments.get(0).GenomicScore = 80;
         alignments.get(1).GenomicScore = 80;
         LiftBackDiscriminator.ApplyResult outcome = LiftBackDiscriminator.apply(alignments, false, softClip, 0, false);
-        assertSame("seed 0 -> first candidate", softClip, outcome.effectivePrimary());
+        assertSame("seed 0 -> first placement", softClip, outcome.effectivePrimary());
         assertEquals("random", outcome.note());
     }
 
@@ -757,7 +757,7 @@ public class LiftBackDiscriminatorTest
         alignments.get(0).GenomicScore = 100;
         alignments.get(1).GenomicScore = 100;
         LiftBackDiscriminator.ApplyResult outcome = LiftBackDiscriminator.apply(alignments, false, alignments.get(0), 1, false);
-        assertSame("seed 1 -> second candidate", alignments.get(1), outcome.effectivePrimary());
+        assertSame("seed 1 -> second placement", alignments.get(1), outcome.effectivePrimary());
         assertEquals("random", outcome.note());
     }
 
@@ -803,7 +803,7 @@ public class LiftBackDiscriminatorTest
         alignments.get(1).GenomicScore = 100;
         LiftedRecord mate = TarsTestFixtures.liftedRecordAt("chr9", 500, "100M", false);
         LiftBackDiscriminator.ApplyResult outcome = LiftBackDiscriminator.apply(alignments, false, alignments.get(0), 1, false, mate);
-        assertSame("seed 1 -> second candidate", alignments.get(1), outcome.effectivePrimary());
+        assertSame("seed 1 -> second placement", alignments.get(1), outcome.effectivePrimary());
         assertEquals("random", outcome.note());
     }
 
@@ -816,7 +816,7 @@ public class LiftBackDiscriminatorTest
         alignments.get(1).GenomicScore = 100;
         LiftedRecord mate = TarsTestFixtures.liftedRecordAt(CHR1, 5_000_000, "100M", false);
         LiftBackDiscriminator.ApplyResult outcome = LiftBackDiscriminator.apply(alignments, false, alignments.get(0), 1, false, mate);
-        assertSame("seed 1 -> second candidate", alignments.get(1), outcome.effectivePrimary());
+        assertSame("seed 1 -> second placement", alignments.get(1), outcome.effectivePrimary());
         assertEquals("random", outcome.note());
     }
 }

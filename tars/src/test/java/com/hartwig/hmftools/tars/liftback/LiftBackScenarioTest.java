@@ -14,7 +14,7 @@ import com.hartwig.hmftools.tars.liftback.TarsTestFixtures.TestGenome;
 
 import org.junit.Test;
 
-// Full-pipeline scenarios from candidate construction through BAM emission.
+// Full-pipeline scenarios from placement construction through BAM emission.
 public class LiftBackScenarioTest
 {
     private static TestGenome scenarioGenome()
@@ -139,9 +139,9 @@ public class LiftBackScenarioTest
     }
 
     @Test
-    public void testSupplementaryCanMergeWithXaCandidateBeforePrimaryChoice()
+    public void testSupplementaryCanMergeWithXaPlacementBeforePrimaryChoice()
     {
-        // the supported splice is the primary's XA candidate plus the supplementary, not the primary placement.
+        // the supported splice is the primary's XA placement plus the supplementary, not the primary placement.
         scenario()
                 .read(primary("frag7", CHR_1, 900, "50M50S").mapQuality(0)
                         .xa(CHR_1 + ",+150,50M50S,0")

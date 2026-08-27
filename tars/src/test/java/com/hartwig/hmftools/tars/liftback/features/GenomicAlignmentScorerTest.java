@@ -34,7 +34,7 @@ public class GenomicAlignmentScorerTest
     }
 
     @Test
-    public void testScoresCandidatesInGenomeSpaceOnTheirOwnStrands()
+    public void testScoresPlacementsInGenomeSpaceOnTheirOwnStrands()
     {
         TestGenome genome = genome().set(CHR_1, 2000, "T".repeat(50));
         GenomicAlignmentScorer scorer = new GenomicAlignmentScorer(genome.asRefGenome());
@@ -47,7 +47,7 @@ public class GenomicAlignmentScorerTest
         byte[] forward = bases("A".repeat(50));
         record.setReadBases(forward);
 
-        scorer.scoreCandidates(alignments, record);
+        scorer.scorePlacements(alignments, record);
 
         byte[] reverseComplement = Arrays.copyOf(forward, forward.length);
         SequenceUtil.reverseComplement(reverseComplement);
@@ -60,7 +60,7 @@ public class GenomicAlignmentScorerTest
     }
 
     @Test
-    public void testSupplementaryTagDoesNotSuppressCandidateScoring()
+    public void testSupplementaryTagDoesNotSuppressPlacementScoring()
     {
         GenomicAlignmentScorer scorer = new GenomicAlignmentScorer(genome().asRefGenome());
 
@@ -70,7 +70,7 @@ public class GenomicAlignmentScorerTest
         record.setReadBases(bases("A".repeat(50)));
         record.setAttribute("SA", CHR_1 + ",2000,+,50M,0,0;");
 
-        scorer.scoreCandidates(alignments, record);
+        scorer.scorePlacements(alignments, record);
 
         assertEquals(50, alignments.get(0).GenomicScore);
         assertEquals(50, alignments.get(1).GenomicScore);

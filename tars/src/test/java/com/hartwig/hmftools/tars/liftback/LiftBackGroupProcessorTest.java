@@ -34,7 +34,7 @@ import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.tars.liftback.TarsTestFixtures.TestGenome;
 import com.hartwig.hmftools.tars.liftback.features.OverhangGate;
 import com.hartwig.hmftools.tars.liftback.features.GenomicAlignmentScorer;
-import com.hartwig.hmftools.tars.liftback.features.SupplementaryResolver;
+import com.hartwig.hmftools.tars.liftback.features.SupplementaryMerger;
 
 import org.junit.Test;
 
@@ -44,16 +44,21 @@ import htsjdk.samtools.SAMRecord;
 // SA entries all fail to lift is dropped rather than emitted with a null SA.
 public class LiftBackGroupProcessorTest
 {
+    private static LiftBackGroupProcessor processor(
+            final SupplementaryMerger supplementaryMerger, final OverhangGate overhangGate,
+            final RefGenomeInterface refGenome, final ExcludedRegions excludedRegions)
+    {
+        return new LiftBackGroupProcessor(
+                new LiftBackDiscriminator(List.of(threeExonContig())),
+                supplementaryMerger, overhangGate, new GenomicAlignmentScorer(refGenome), refGenome, excludedRegions);
+    }
+
     private static List<SAMRecord> process(
-            final List<SAMRecord> group, final SupplementaryResolver supplementaryResolver,
+            final List<SAMRecord> group, final SupplementaryMerger supplementaryMerger,
             final OverhangGate overhangGate, final RefGenomeInterface refGenome, final ExcludedRegions excludedRegions)
     {
-        LiftBackGroupProcessor processor = new LiftBackGroupProcessor(
-                new LiftBackDiscriminator(List.of(threeExonContig())),
-                supplementaryResolver, overhangGate, new GenomicAlignmentScorer(refGenome), refGenome, excludedRegions);
-
         List<SAMRecord> emitted = new ArrayList<>();
-        processor.processNameGroup(group, emitted::add);
+        processor(supplementaryMerger, overhangGate, refGenome, excludedRegions).processNameGroup(group, emitted::add);
         return emitted;
     }
 
@@ -62,9 +67,9 @@ public class LiftBackGroupProcessorTest
         return process(group, null, null, null, null);
     }
 
-    private static List<SAMRecord> process(final List<SAMRecord> group, final SupplementaryResolver supplementaryResolver)
+    private static List<SAMRecord> process(final List<SAMRecord> group, final SupplementaryMerger supplementaryMerger)
     {
-        return process(group, supplementaryResolver, null, null, null);
+        return process(group, supplementaryMerger, null, null, null);
     }
 
     private static ExcludedRegions excludedRegion(final String chromosome, final int start, final int end)
@@ -75,10 +80,10 @@ public class LiftBackGroupProcessorTest
         return new ExcludedRegions(regions);
     }
 
-    // a non-null resolver activates the AS-unmap gate, but with no annotated junctions it cannot improve any primary
-    private static SupplementaryResolver noopSupplementary()
+    // a non-null merger activates the AS-unmap gate, but with no annotated junctions it cannot improve any primary
+    private static SupplementaryMerger noopSupplementary()
     {
-        return new SupplementaryResolver(Collections.emptySet(), supplementaryConfig());
+        return new SupplementaryMerger(Collections.emptySet(), supplementaryConfig());
     }
 
     @Test
@@ -92,6 +97,42 @@ public class LiftBackGroupProcessorTest
         assertEquals(1, emitted.size());
         assertTrue(emitted.get(0).getReadUnmappedFlag());
         assertEquals(SAMRecord.NO_ALIGNMENT_CIGAR, emitted.get(0).getCigarString());
+    }
+
+    @Test
+    public void testStatsCountInputsAndUnmapReasonsAcrossGroups()
+    {
+        LiftBackGroupProcessor processor = processor(null, null, null, excludedRegion(CHR_1, 50, 300));
+
+        // both mates lift to chr1:100, inside the excluded region
+        processor.processNameGroup(
+                List.of(primaryRecord(TX_CONTIG, 1, "50M"), secondMateRecord(TX_CONTIG, 1, "50M")), record -> { });
+        processor.processNameGroup(List.of(unpairedPrimaryRecord(TX_CONTIG, 1, "50M")), record -> { });
+
+        LiftBackStats stats = processor.stats();
+        assertEquals(3, stats.RecordsSeen);
+        assertEquals(3, stats.PrimariesSeen);
+        assertEquals(3, stats.UnmappedExcludedRegion);
+
+        // a deliberate unmap is not a lift failure
+        assertEquals(0, stats.LiftFailed);
+    }
+
+    @Test
+    public void testStatsSumAcrossWorkers()
+    {
+        LiftBackGroupProcessor first = processor(null, null, null, excludedRegion(CHR_1, 50, 300));
+        LiftBackGroupProcessor second = processor(null, null, null, excludedRegion(CHR_1, 50, 300));
+        first.processNameGroup(List.of(unpairedPrimaryRecord(TX_CONTIG, 1, "50M")), record -> { });
+        second.processNameGroup(List.of(unpairedPrimaryRecord(TX_CONTIG, 1, "50M")), record -> { });
+
+        LiftBackStats totals = new LiftBackStats();
+        totals.add(first.stats());
+        totals.add(second.stats());
+
+        assertEquals(2, totals.RecordsSeen);
+        assertEquals(2, totals.PrimariesSeen);
+        assertEquals(2, totals.UnmappedExcludedRegion);
     }
 
     @Test
@@ -318,7 +359,7 @@ public class LiftBackGroupProcessorTest
     @Test
     public void testLowAsPrimaryUnmappedWhenLiftbackDidNotImprove()
     {
-        // the primary lifts but scores below the AS floor of 30, and supplementary resolve with no junctions cannot improve it
+        // the primary lifts but scores below the AS floor of 30, and supplementary merge with no junctions cannot improve it
         SAMRecord primary = primaryRecord(TX_CONTIG, 100, "50M");
         primary.setAttribute("AS", 20);
 
@@ -341,9 +382,9 @@ public class LiftBackGroupProcessorTest
     }
 
     @Test
-    public void testLowAsPrimaryKeptWithoutSupplementaryResolver()
+    public void testLowAsPrimaryKeptWithoutSupplementaryMerger()
     {
-        // with no supplementary resolver the AS-unmap gate is inactive, so a low-AS primary is left as-is.
+        // with no supplementary merger the AS-unmap gate is inactive, so a low-AS primary is left as-is.
         SAMRecord primary = primaryRecord(TX_CONTIG, 100, "50M");
         primary.setAttribute("AS", 20);
 
@@ -413,7 +454,7 @@ public class LiftBackGroupProcessorTest
     }
 
     @Test
-    public void testFirstMateUsesSecondMateCandidates()
+    public void testFirstMateUsesSecondMatePlacements()
     {
         String sequence = "ACGT".repeat(13);
         RefGenomeInterface ref = new TestGenome()
@@ -443,11 +484,11 @@ public class LiftBackGroupProcessorTest
         primary.setReadBases(bases("A".repeat(151)));
         middle.setReadBases(bases("A".repeat(151)));
         last.setReadBases(bases("A".repeat(151)));
-        SupplementaryResolver resolver = new SupplementaryResolver(
+        SupplementaryMerger merger = new SupplementaryMerger(
                 Set.of(new ChrBaseRegion(CHR_1, 1050, 1999), new ChrBaseRegion(CHR_1, 2060, 2999)),
                 supplementaryConfig());
 
-        List<SAMRecord> emitted = process(List.of(primary, middle, last), resolver);
+        List<SAMRecord> emitted = process(List.of(primary, middle, last), merger);
 
         assertEquals(1, emitted.size());
         assertEquals("50M950N60M940N41M", emitted.get(0).getCigarString());
@@ -521,9 +562,9 @@ public class LiftBackGroupProcessorTest
 
     // junctions built from the same sidecar entry the discriminator lifts against, so the intron coords and chromosome key match
     // what the lift emits: chr1 introns 200-299 and 400-499 between the three exons
-    private static SupplementaryResolver contigSupplementary()
+    private static SupplementaryMerger contigSupplementary()
     {
-        return new SupplementaryResolver(
+        return new SupplementaryMerger(
                 EnsemblAnnotationIndex.fromContigEntries(List.of(threeExonContig())), null, supplementaryConfig());
     }
 

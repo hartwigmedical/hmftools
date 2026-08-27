@@ -6,6 +6,8 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRe
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeVersion;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.parseThreads;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.PERF_LOG_TIME;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.PERF_LOG_TIME_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
@@ -54,6 +56,7 @@ public class TarsConfig
     public final String OutputId;
     public final String BamToolPath;
     public final int Threads;
+    public final double PerfLogTime;
 
     public TarsConfig(final ConfigBuilder configBuilder)
     {
@@ -72,6 +75,7 @@ public class TarsConfig
         OutputId = configBuilder.getValue(OUTPUT_ID);
         BamToolPath = configBuilder.getValue(BAMTOOL_PATH);
         Threads = parseThreads(configBuilder);
+        PerfLogTime = configBuilder.getDecimal(PERF_LOG_TIME);
 
         if(OutputDir == null)
         {
@@ -107,6 +111,10 @@ public class TarsConfig
 
     public String formSummaryFile() { return filePrefix() + ".summary" + TSV_EXTENSION; }
 
+    public String formRegionPerfFile() { return filePrefix() + ".region_perf" + TSV_EXTENSION; }
+
+    public boolean perfDebug() { return PerfLogTime > 0; }
+
     public static void registerConfig(final ConfigBuilder configBuilder)
     {
         configBuilder.addConfigItem(SAMPLE, true, SAMPLE_DESC);
@@ -117,15 +125,16 @@ public class TarsConfig
         configBuilder.addPath(CONTIG_SIDECAR, true, CONTIG_SIDECAR_DESC);
         configBuilder.addInteger(
                 SUPP_IMPLIED_MIN_INTRON_LENGTH,
-                "Supplementary resolve: min implied intron length", MIN_IMPLIED_INTRON_LENGTH);
+                "Supplementary merge: min implied intron length", MIN_IMPLIED_INTRON_LENGTH);
         configBuilder.addInteger(
                 SUPP_IMPLIED_MAX_INTRON_LENGTH,
-                "Supplementary resolve: max implied intron length", MAX_IMPLIED_INTRON_LENGTH);
+                "Supplementary merge: max implied intron length", MAX_IMPLIED_INTRON_LENGTH);
         configBuilder.addPath(RNA_UNMAP_REGIONS, false, RNA_UNMAP_REGIONS_DESC);
         BamToolName.addConfig(configBuilder);
 
         addOutputOptions(configBuilder);
         addThreadOptions(configBuilder);
         addLoggingOptions(configBuilder);
+        configBuilder.addDecimal(PERF_LOG_TIME, PERF_LOG_TIME_DESC, 0);
     }
 }

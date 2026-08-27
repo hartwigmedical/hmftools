@@ -26,7 +26,7 @@ public class LiftedAlignment
     // set when an overhang collapse made this alt a duplicate placement; excluded from the XA tag.
     public boolean Dropped = false;
 
-    // bwa-mem-style score of the lifted placement against the genome, letting tx and ref candidates compare on one scale.
+    // bwa-mem-style score of the lifted placement against the genome, letting tx and ref placements compare on one scale.
     // Integer.MIN_VALUE = not computed.
     public int GenomicScore = Integer.MIN_VALUE;
 

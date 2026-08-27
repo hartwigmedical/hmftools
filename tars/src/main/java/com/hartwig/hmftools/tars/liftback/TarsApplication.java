@@ -67,9 +67,10 @@ public class TarsApplication
             System.exit(1);
         }
 
-        RunCounts counts = aggregate(workers);
+        LiftBackStats counts = aggregate(workers);
         logLiftFailureRate(counts);
         writeSummary(counts);
+        writeRegionPerf(workers);
 
         TARS_LOGGER.info("liftback processing complete, mins({}); concatenating + sorting shards", runTimeMinsStr(startTimeMs));
 
@@ -114,7 +115,8 @@ public class TarsApplication
             String shardBam = formShardBamPath(i);
             shardBams.add(shardBam);
 
-            LiftBackWorker worker = new LiftBackWorker(chunkQueue, resources, outputHeader, shardBam);
+            LiftBackWorker worker = new LiftBackWorker(
+                    chunkQueue, resources, outputHeader, shardBam, mConfig.perfDebug() ? new RegionPerfTracker() : null);
             workers.add(worker);
             threadTasks.add(worker);
         }
@@ -205,41 +207,17 @@ public class TarsApplication
         return header;
     }
 
-    // the three deliberate unmapping routes are normal outcomes, kept apart from LiftFailed which alone signals a sidecar/FASTA mismatch
-    private record RunCounts(
-            long RecordsSeen, long PrimariesSeen, long LiftFailed, long ExcludedRegion, long OverCap, long LowAlignmentScore,
-            long SupplementaryCandidates, long PrimaryRevisions, long SupplementaryMerges, long SupplementariesAbsorbed)
+    private static LiftBackStats aggregate(final List<LiftBackWorker> workers)
     {
-    }
-
-    private static RunCounts aggregate(final List<LiftBackWorker> workers)
-    {
-        long recordsSeen = 0, primariesSeen = 0, liftFailed = 0, excludedRegion = 0, overCap = 0, lowAlignmentScore = 0;
-        long suppCandidates = 0, primaryRevisions = 0, suppMerges = 0, suppAbsorbed = 0;
-
-        for(LiftBackWorker worker : workers)
-        {
-            recordsSeen += worker.recordsSeen();
-            primariesSeen += worker.primariesSeen();
-            liftFailed += worker.primariesLiftFailed();
-            excludedRegion += worker.primariesUnmappedExcludedRegion();
-            overCap += worker.primariesUnmappedOverCap();
-            lowAlignmentScore += worker.primariesUnmappedLowAlignmentScore();
-            suppCandidates += worker.supplementaryCandidates();
-            primaryRevisions += worker.primaryRevisions();
-            suppMerges += worker.supplementaryMerges();
-            suppAbsorbed += worker.supplementariesAbsorbed();
-        }
-
-        return new RunCounts(
-                recordsSeen, primariesSeen, liftFailed, excludedRegion, overCap, lowAlignmentScore,
-                suppCandidates, primaryRevisions, suppMerges, suppAbsorbed);
+        LiftBackStats totals = new LiftBackStats();
+        workers.forEach(worker -> totals.add(worker.stats()));
+        return totals;
     }
 
     // A wholesale lift failure is systemic: almost always a sidecar built against a different FASTA than the reads were
     // aligned to. Deliberate unmapping is excluded, so the rate covers only lifts that produced nothing. Logged, not
     // fatal, so the written BAM stays inspectable.
-    private static void logLiftFailureRate(final RunCounts counts)
+    private static void logLiftFailureRate(final LiftBackStats counts)
     {
         TARS_LOGGER.info(
                 "processed {} records, {} mapped primaries, {} failed to lift",
@@ -255,7 +233,7 @@ public class TarsApplication
         }
     }
 
-    private void writeSummary(final RunCounts counts)
+    private void writeSummary(final LiftBackStats counts)
     {
         String filename = mConfig.formSummaryFile();
 
@@ -268,18 +246,17 @@ public class TarsApplication
             writeTotal(writer, "mapped_primaries", counts.PrimariesSeen);
 
             writeMetric(writer, "lift_failed", counts.LiftFailed, "mapped_primaries", counts.PrimariesSeen);
-            writeMetric(writer, "unmapped_excluded_region", counts.ExcludedRegion, "mapped_primaries", counts.PrimariesSeen);
-            writeMetric(writer, "unmapped_over_cap", counts.OverCap, "mapped_primaries", counts.PrimariesSeen);
-            writeMetric(writer, "unmapped_low_alignment_score", counts.LowAlignmentScore, "mapped_primaries", counts.PrimariesSeen);
+            writeMetric(writer, "unmapped_excluded_region", counts.UnmappedExcludedRegion, "mapped_primaries", counts.PrimariesSeen);
+            writeMetric(writer, "unmapped_over_cap", counts.UnmappedOverCap, "mapped_primaries", counts.PrimariesSeen);
+            writeMetric(writer, "unmapped_low_alignment_score", counts.UnmappedLowAlignmentScore, "mapped_primaries", counts.PrimariesSeen);
 
             writeMetric(
-                    writer, "supp_merge_candidates", counts.SupplementaryCandidates, "mapped_primaries", counts.PrimariesSeen);
-            writeMetric(writer, "primary_revised", counts.PrimaryRevisions, "mapped_primaries", counts.PrimariesSeen);
+                    writer, "mergeable_supplementaries", counts.MergeableSupplementaries, "mapped_primaries", counts.PrimariesSeen);
             writeMetric(
-                    writer, "supp_merged", counts.SupplementaryMerges, "supp_merge_candidates", counts.SupplementaryCandidates);
+                    writer, "supp_merged", counts.SupplementaryMerges, "mergeable_supplementaries", counts.MergeableSupplementaries);
             writeMetric(
-                    writer, "supps_absorbed", counts.SupplementariesAbsorbed, "supp_merge_candidates",
-                    counts.SupplementaryCandidates);
+                    writer, "supps_absorbed", counts.SupplementariesAbsorbed, "mergeable_supplementaries",
+                    counts.MergeableSupplementaries);
 
             TARS_LOGGER.info("wrote summary to {}", filename);
         }
@@ -289,13 +266,25 @@ public class TarsApplication
         }
     }
 
+    private void writeRegionPerf(final List<LiftBackWorker> workers)
+    {
+        if(!mConfig.perfDebug())
+        {
+            return;
+        }
+
+        RegionPerfTracker combined = new RegionPerfTracker();
+        workers.forEach(worker -> combined.merge(worker.regionPerf()));
+        combined.write(mConfig.formRegionPerfFile(), mConfig.PerfLogTime);
+    }
+
     private static void writeTotal(final BufferedWriter writer, final String metric, final long value) throws IOException
     {
         writer.write(String.join(TSV_DELIM, metric, String.valueOf(value), "", ""));
         writer.newLine();
     }
 
-    // Basis names the denominator: unmap reasons are shares of mapped primaries, merge outcomes shares of merge candidates.
+    // Basis names the denominator: unmap reasons are shares of mapped primaries, merge outcomes shares of merge placements.
     private static void writeMetric(
             final BufferedWriter writer, final String metric, final long value, final String basisName, final long basis)
             throws IOException
