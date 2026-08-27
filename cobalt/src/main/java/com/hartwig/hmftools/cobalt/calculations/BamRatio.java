@@ -14,7 +14,7 @@ public class BamRatio
     public final double GcContent;
 
     private double mRatio;
-    private double mDiploidAdjustedRatio = -1.0;
+    private double mDiploidAdjustedRatio;
     private boolean mIncluded;
 
     public BamRatio(HumanChromosome chromosome, DepthReading readDepth, boolean inTargetRegion)
@@ -32,9 +32,11 @@ public class BamRatio
         Chromosome = chromosome;
         Position = position;
         ReadDepth = readDepth;
-        mRatio = ratio;
         GcContent = gcContent;
+
+        mRatio = ratio;
         mIncluded = true;
+        mDiploidAdjustedRatio = -1.0;
     }
 
     public BamRatio(HumanChromosome chromosome, int position, double readDepth, double gcContent, boolean included)
@@ -42,9 +44,12 @@ public class BamRatio
         Chromosome = chromosome;
         Position = position;
         ReadDepth = Double.isFinite(readDepth) ? readDepth : -1.0;
-        mRatio = ReadDepth;
         GcContent = Double.isFinite(gcContent) ? gcContent : -1.0;
+
+        mRatio = ReadDepth;
+        mDiploidAdjustedRatio = -1.0;
         mIncluded = included;
+
         if(!mIncluded)
         {
             mRatio = -1.0;

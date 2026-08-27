@@ -57,8 +57,17 @@ class ReferenceCalculation extends BamCalculation
         for(HumanChromosome chromosome : HumanChromosome.values())
         {
             List<BamRatio> bamRatios = referenceResults.get(chromosome);
-            bamRatios.forEach(x -> x.setDiploidAdjustedRatio(x.ratio()));
-            List<Double> ratios = bamRatios.stream().map(x -> x.ratio()).collect(Collectors.toList());
+
+            List<Double> ratios = Lists.newArrayList();
+
+            for(BamRatio bamRatio : bamRatios)
+            {
+                if(bamRatio.ratio() > 0)
+                {
+                    bamRatio.setDiploidAdjustedRatio(bamRatio.ratio());
+                    ratios.add(bamRatio.ratio());
+                }
+            }
 
             double median = Doubles.median(ratios);
             medianRatios.add(new MedianRatio(refGenomeVersion.versionedChromosome(chromosome.toString()), median, bamRatios.size()));
