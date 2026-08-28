@@ -23,7 +23,7 @@ public record CnBackboneResolution(
         return overrides.getOrDefault(chromosome, defaultResolution);
     }
 
-    // defaultKb: global spacing in kb. overridesStr: comma-separated chr:kb pairs, or null for none.
+    // Overrides are comma-separated chr:kb pairs, or null/blank for none.
     public static CnBackboneResolution parse(int defaultKb, @Nullable final String overridesStr)
     {
         Map<HumanChromosome, Integer> overrides = (overridesStr == null || overridesStr.isBlank())
