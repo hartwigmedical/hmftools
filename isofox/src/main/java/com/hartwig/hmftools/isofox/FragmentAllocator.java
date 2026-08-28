@@ -5,6 +5,7 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.firstInPair;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.readToString;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_ID;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_NAME;
@@ -160,7 +161,9 @@ public class FragmentAllocator
         boolean keepSupplementaries = mRunFusions || mConfig.runFunction(ALT_SPLICE_JUNCTIONS);
 
         boolean keepSecondaries = STAR_ALIGNER && mConfig.runFunction(TRANSCRIPT_COUNTS);
-        int minMapQuality = mConfig.runFunction(TRANSCRIPT_COUNTS) ? 0 : SINGLE_MAP_QUALITY;
+
+        // fusions typically aren't run without expression, but for STAR the existing logic was to drop reads with map qual less than the max
+        int minMapQuality = mConfig.runFunction(TRANSCRIPT_COUNTS) || !STAR_ALIGNER ? 0 : SINGLE_MAP_QUALITY;
 
         mBamSlicer = new BamSlicer(minMapQuality, mKeepDuplicates, keepSupplementaries, keepSecondaries);
 
@@ -302,14 +305,16 @@ public class FragmentAllocator
         if(!positionWithin(record.getStart(), mValidReadStartRegion[SE_START], mValidReadStartRegion[SE_END]))
             return;
 
+        if(mConfig.LogReadIds.contains(record.getReadName()))
+        {
+            ISF_LOGGER.debug("specific read: {}", readToString(record));
+        }
+
         if(mConfig.Filters.skipRead(record, true))
         {
             ++mChimericReads.getStats().Excluded;
             return;
         }
-
-        // if(mConfig.skipFilteredRead(record.getReadName()))
-        //    return;
 
         trackFragmentCounts(record);
 

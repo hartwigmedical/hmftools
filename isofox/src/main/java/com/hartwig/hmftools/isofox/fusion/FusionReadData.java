@@ -134,7 +134,6 @@ public class FusionReadData
     public final byte[] junctionOrientations() { return mJunctionOrientations; }
     public final String[] junctionRefBases() { return mJunctionRefBases; }
     public final String[] postJunctionRefBases() { return mPostJunctionRefBases; }
-    public final String[] getmJunctionSoftClipBases() { return mJunctionSoftClipBases; }
     public final String[] junctionSpliceBases() { return mJunctionSpliceBases; }
     public final int[] junctionHomology() { return mJunctionHomology; }
 

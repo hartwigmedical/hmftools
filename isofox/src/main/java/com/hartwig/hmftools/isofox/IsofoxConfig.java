@@ -8,12 +8,15 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRe
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.rna.RnaCommon.ISF_FILE_ID;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.LOG_READ_IDS;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.LOG_READ_IDS_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.NEO_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.NEO_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PERF_DEBUG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PERF_DEBUG_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.parseLogReadIds;
 import static com.hartwig.hmftools.common.utils.config.ConfigItem.enumValueSelectionAsStr;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadDelimitedIdFile;
@@ -44,12 +47,15 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.driver.panel.DriverGene;
 import com.hartwig.hmftools.common.driver.panel.DriverGeneFile;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
@@ -141,7 +147,7 @@ public class IsofoxConfig
     public final boolean RunValidations;
     public final boolean RunPerfChecks;
     public final int Threads;
-    public final List<String> FilteredReadIds;
+    public final Set<String> LogReadIds;
 
     public static final Logger ISF_LOGGER = LogManager.getLogger(IsofoxConfig.class);
 
@@ -252,9 +258,7 @@ public class IsofoxConfig
 
         RunValidations = configBuilder.hasValue(RUN_VALIDATIONS);
         RunPerfChecks = configBuilder.hasValue(PERF_CHECKS);
-
-        FilteredReadIds = configBuilder.hasValue(FILTER_READS_FILE) ?
-                loadDelimitedIdFile(configBuilder.getValue(FILTER_READS_FILE), "FilteredReadIds", CSV_DELIM) : null;
+        LogReadIds = Sets.newHashSet(parseLogReadIds(configBuilder).stream().collect(Collectors.toSet()));
     }
 
     public boolean isValid()
@@ -325,8 +329,6 @@ public class IsofoxConfig
             return OutputDir + SampleId + ISF_FILE_ID + fileId;
     }
 
-    public boolean skipFilteredRead(final String readId) { return FilteredReadIds != null && !FilteredReadIds.contains(readId); }
-
     public IsofoxConfig(final RefGenomeInterface refGenome)
     {
         SampleId = "TEST";
@@ -369,7 +371,7 @@ public class IsofoxConfig
         RunValidations = true;
         RunPerfChecks = false;
         Threads = 0;
-        FilteredReadIds = null;
+        LogReadIds = Collections.emptySet();
     }
 
     public static void registerConfig(final ConfigBuilder configBuilder)
@@ -419,5 +421,6 @@ public class IsofoxConfig
         FusionConfig.registerConfig(configBuilder);
         addThreadOptions(configBuilder);
         configBuilder.addFlag(PERF_DEBUG, PERF_DEBUG_DESC);
+        configBuilder.addConfigItem(LOG_READ_IDS, LOG_READ_IDS_DESC);
     }
 }

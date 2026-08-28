@@ -109,11 +109,11 @@ public class GeneRegionFilters
         return SpecificChrRegions.excludeChromosome(chromosome);
     }
 
-    private static final int READ_END_BUFFER = 150;
+    private static final int READ_END_BUFFER = 150; // NOTE: could use BAM sampling read length
 
     public boolean skipRead(final SAMRecord read, boolean checkMateAndSupp)
     {
-        if(skipRead(read.getContig(), read.getAlignmentStart(), read.getAlignmentEnd()))
+        if(skipRead(read.getContig(), read.getAlignmentStart(), read.getAlignmentEnd(), false))
             return true;
 
         if(checkMateAndSupp)
@@ -122,7 +122,7 @@ public class GeneRegionFilters
             if(!read.getMateUnmappedFlag())
             {
                 int mateReadStart = read.getMateAlignmentStart();
-                if(skipRead(read.getMateReferenceName(), mateReadStart, mateReadStart))
+                if(skipRead(read.getMateReferenceName(), mateReadStart, mateReadStart, true))
                 {
                     return true;
                 }
@@ -131,7 +131,7 @@ public class GeneRegionFilters
             SupplementaryReadData suppData = SupplementaryReadData.extractAlignment(read);
             if(suppData != null)
             {
-                if(skipRead(suppData.Chromosome, suppData.Position, suppData.Position))
+                if(skipRead(suppData.Chromosome, suppData.Position, suppData.Position, true))
                     return true;
             }
         }
@@ -141,16 +141,16 @@ public class GeneRegionFilters
 
     public boolean skipRead(final String chromosome, int readStart)
     {
-        return skipRead(chromosome, readStart, readStart + READ_END_BUFFER);
+        return skipRead(chromosome, readStart, readStart + READ_END_BUFFER, false);
     }
 
-    public boolean skipRead(final String chromosome, int readStart, int readEnd)
+    public boolean skipRead(final String chromosome, int readStart, int readEnd, boolean isMateOrSupp)
     {
         // currently only used to filter out chimeric reads
         if(!HumanChromosome.contains(chromosome))
             return true;
 
-        if(mHasSpecificRegions)
+        if(!isMateOrSupp && mHasSpecificRegions)
         {
             if(SpecificChrRegions.excludeChromosome(chromosome))
                 return true;

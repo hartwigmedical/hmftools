@@ -374,7 +374,22 @@ public class Isofox
                         .filter(x -> positionsOverlap(region.start(), region.end(), x.GeneStart, x.GeneEnd))
                         .collect(Collectors.toList());
 
-                chrGeneMap.put(region.Chromosome, regionGeneList);
+                if(!regionGeneList.isEmpty())
+                {
+                    List<GeneData> chrGeneDataList = chrGeneMap.get(region.Chromosome);
+
+                    if(chrGeneDataList == null)
+                    {
+                        chrGeneDataList = Lists.newArrayList();
+                        chrGeneMap.put(region.Chromosome, chrGeneDataList);
+                    }
+
+                    for(GeneData geneData : regionGeneList)
+                    {
+                        if(!chrGeneDataList.contains(geneData))
+                            chrGeneDataList.add(geneData);
+                    }
+                }
             }
         }
 
