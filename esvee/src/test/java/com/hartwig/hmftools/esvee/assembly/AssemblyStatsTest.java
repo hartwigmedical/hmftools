@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.esvee.TestUtils.TEST_READ_ID;
 import static com.hartwig.hmftools.esvee.TestUtils.createRead;
 import static com.hartwig.hmftools.esvee.assembly.JunctionReadTypes.calcProximateJunctionReadRatio;
 import static com.hartwig.hmftools.esvee.assembly.JunctionReadTypes.calcRemoteSuppRegionFrequency;
+import static com.hartwig.hmftools.esvee.caller.FilterConstants.MIN_AF_WEAK_JUNCTION_SUPP_REMOTE_THRESHOLD;
 
 import static org.junit.Assert.assertEquals;
 
@@ -47,8 +48,16 @@ public class AssemblyStatsTest
         read.bamRecord().setAttribute(SUPPLEMENTARY_ATTRIBUTE, "2,1000,+,40M60S,30,0");
         allReads.add(read);
 
+        // reverts to 0.5 if the top 2 frequencies are close to each other
         double suppRemoteRegionRatio = calcRemoteSuppRegionFrequency(negJunction, allReads);
-        assertEquals(0.67, suppRemoteRegionRatio, 0.1);
+        assertEquals(MIN_AF_WEAK_JUNCTION_SUPP_REMOTE_THRESHOLD, suppRemoteRegionRatio, 0.01);
+
+        read = createRead(TEST_READ_ID, readStartPos, assemblyBases, "40S60M");
+        read.bamRecord().setAttribute(SUPPLEMENTARY_ATTRIBUTE, "1,1000,+,40M60S,30,0");
+        allReads.add(read);
+
+        suppRemoteRegionRatio = calcRemoteSuppRegionFrequency(negJunction, allReads);
+        assertEquals(0.8, suppRemoteRegionRatio, 0.1);
     }
 
     @Test

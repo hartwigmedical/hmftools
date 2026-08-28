@@ -13,13 +13,17 @@ import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_SOFT_CLIP_SECONDARY_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_SOFT_CLIP_SECONDARY_LENGTH_LOWER;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.JUNCTION_PROXIMATE_READ_DISTANCE;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.JUNCTION_REMOTE_SUPP_RATIO_MIN_SC;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.readIndexFromPosition;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.readJunctionExtensionLength;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.recordSoftClipsAtJunction;
+import static com.hartwig.hmftools.esvee.caller.FilterConstants.MIN_AF_WEAK_JUNCTION_SUPP_REMOTE_THRESHOLD;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LINE_MIN_EXTENSION_LENGTH;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LINE_MIN_SOFT_CLIP_SECONDARY_LENGTH;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_VARIANT_LENGTH;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -302,8 +306,16 @@ public class JunctionReadTypes
             if(read.supplementaryData() == null || read.supplementaryData().MapQuality < 30)
                 continue;
 
-            if(!recordSoftClipsAtJunction(read, junction))
-                continue;
+            if(junction.isForward())
+            {
+                if(read.alignmentEnd() != junction.Position || read.rightClipLength() < JUNCTION_REMOTE_SUPP_RATIO_MIN_SC)
+                    continue;
+            }
+            else
+            {
+                if(read.alignmentStart() != junction.Position || read.leftClipLength() < JUNCTION_REMOTE_SUPP_RATIO_MIN_SC)
+                    continue;
+            }
 
             // track remote locations rounded to 1K coordinates
             String remoteLocationStr = format("%s_%d",
@@ -321,11 +333,19 @@ public class JunctionReadTypes
         int total = 0;
         int maxRegion = 0;
 
+        List<Integer> frequencies = Lists.newArrayListWithCapacity(remoteSuppRegionFrequency.size());
+
         for(Integer count : remoteSuppRegionFrequency.values())
         {
+            frequencies.add(count);
             total += count;
             maxRegion = max(maxRegion, count);
         }
+
+        Collections.sort(frequencies, Collections.reverseOrder());
+
+        if(frequencies.get(0) < frequencies.get(1) + 2)
+            return MIN_AF_WEAK_JUNCTION_SUPP_REMOTE_THRESHOLD; // set the ratio to thel level where the junction will be marked as weak
 
         return total > 0 ? maxRegion / (double)total : 0;
     }
