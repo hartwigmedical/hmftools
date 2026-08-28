@@ -37,7 +37,7 @@ public class ViralReadAlignerTest
 
     // A read is kept on every contig it hits above the min-score fraction (0.5 -> min score 50); per-hit fate inline below.
     @Test
-    public void writesAlignmentsAboveThresholdWithContigAndScore() throws IOException
+    public void testWritesAlignmentsAboveThresholdWithContigAndScore() throws IOException
     {
         Map<String, List<BwaMemAlignment>> alignments = Map.of(
                 R1_BASES, List.of(

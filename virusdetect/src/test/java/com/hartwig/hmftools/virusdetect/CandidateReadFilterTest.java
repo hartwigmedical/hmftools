@@ -25,39 +25,39 @@ public class CandidateReadFilterTest
     private static final CandidateReadFilter FILTER = new CandidateReadFilter(20, Set.of("chrEBV"));
 
     @Test
-    public void unmappedReadIsCandidate()
+    public void testUnmappedReadIsCandidate()
     {
         assertTrue(FILTER.isCandidate(read(4, "*", "*")));
     }
 
     @Test
-    public void mappedReadWithUnmappedMateIsCandidate()
+    public void testMappedReadWithUnmappedMateIsCandidate()
     {
         // paired (0x1) + mate unmapped (0x8) + first of pair (0x40)
         assertTrue(FILTER.isCandidate(read(73, "chr1", "100M")));
     }
 
     @Test
-    public void longSoftClipIsCandidateEitherSide()
+    public void testLongSoftClipIsCandidateEitherSide()
     {
         assertTrue(FILTER.isCandidate(read(0, "chr1", "20S80M")));
         assertTrue(FILTER.isCandidate(read(0, "chr1", "80M20S")));
     }
 
     @Test
-    public void softClipBelowThresholdIsNotCandidate()
+    public void testSoftClipBelowThresholdIsNotCandidate()
     {
         assertFalse(FILTER.isCandidate(read(0, "chr1", "19S81M")));
     }
 
     @Test
-    public void decoyMappedReadIsCandidate()
+    public void testDecoyMappedReadIsCandidate()
     {
         assertTrue(FILTER.isCandidate(read(0, "chrEBV", "100M")));
     }
 
     @Test
-    public void plainMappedReadIsNotCandidate()
+    public void testPlainMappedReadIsNotCandidate()
     {
         assertFalse(FILTER.isCandidate(read(0, "chr1", "100M")));
     }

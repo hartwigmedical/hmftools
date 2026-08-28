@@ -28,7 +28,7 @@ public class CandidateReadExtractorTest
 
     // Filtering, dedup, and mate-numbered single-end output exercised together (per-read fate inline below).
     @Test
-    public void writesFilteredDedupedReadsWithMateSuffix() throws IOException
+    public void testWritesFilteredDedupedReadsWithMateSuffix() throws IOException
     {
         SAMFileHeader header = header();
         List<SAMRecord> records = List.of(

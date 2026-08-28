@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.virusdetect;
 
+import static java.util.stream.Collectors.toMap;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -22,18 +24,30 @@ public class ViralReference
 {
     private final List<ViralContig> mContigs;
     private final SAMSequenceDictionary mSequenceDictionary;
+    private final Map<String, ViralContig> mContigsByName;
 
     private static final Logger LOGGER = LogManager.getLogger(ViralReference.class);
 
-    private ViralReference(List<ViralContig> contigs, SAMSequenceDictionary sequenceDictionary)
+    ViralReference(List<ViralContig> contigs, SAMSequenceDictionary sequenceDictionary)
     {
         mContigs = contigs;
         mSequenceDictionary = sequenceDictionary;
+        mContigsByName = contigs.stream().collect(toMap(ViralContig::name, contig -> contig));
     }
 
     public List<ViralContig> contigs()
     {
         return mContigs;
+    }
+
+    public ViralContig contig(String name)
+    {
+        ViralContig contig = mContigsByName.get(name);
+        if(contig == null)
+        {
+            throw new IllegalArgumentException("unknown viral contig: " + name);
+        }
+        return contig;
     }
 
     // Contigs in FASTA order, matching the BWA index so an alignment's reference index resolves to a contig by position.

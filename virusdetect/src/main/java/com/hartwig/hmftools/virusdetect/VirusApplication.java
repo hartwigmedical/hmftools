@@ -7,9 +7,11 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkCreate
 import static com.hartwig.hmftools.virusdetect.VirusConstants.ALIGNED_BAM_SUFFIX;
 import static com.hartwig.hmftools.virusdetect.VirusConstants.APP_NAME;
 import static com.hartwig.hmftools.virusdetect.VirusConstants.CANDIDATE_FASTA_SUFFIX;
+import static com.hartwig.hmftools.virusdetect.VirusConstants.CONTIG_STATS_TSV_SUFFIX;
 import static com.hartwig.hmftools.virusdetect.VirusConstants.DECOY_CONTIGS;
 
 import java.io.IOException;
+import java.util.Map;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
@@ -47,14 +49,16 @@ public class VirusApplication
 
         checkCreateOutputDir(mConfig.outputDir());
 
-        String candidateFasta = candidateFastaFile();
-        mCandidateExtractor.extractToFasta(mConfig.tumorBam(), candidateFasta);
+        String candidateFastaFile = candidateFastaFile();
+        mCandidateExtractor.extractToFasta(mConfig.tumorBam(), candidateFastaFile);
 
-        String alignedBam = alignedBamFile();
-        mAligner.align(candidateFasta, alignedBam);
+        String alignedBamFile = alignedBamFile();
+        mAligner.align(candidateFastaFile, alignedBamFile);
+
+        Map<String, ContigStats> contigStats = new ContigStatsCalculator().compute(alignedBamFile, mViralReference);
+        VirusOutputWriter.writeContigStats(contigStatsFile(), contigStats.values(), mViralReference);
 
         // TODO: placeholder pipeline; each step is replaced by its implementation as it lands.
-        LOGGER.info("Computing per-contig stats over aligned BAM -> debug TSV (stub)");
         LOGGER.info("Selecting representative contig per oncology group (stub)");
         LOGGER.info("Filtering aligned BAM to representatives -> BAM (stub)");
         LOGGER.info("Computing per-contig stats over representative BAM (stub)");
@@ -71,6 +75,11 @@ public class VirusApplication
     private String alignedBamFile()
     {
         return mConfig.outputDir() + mConfig.sampleId() + ALIGNED_BAM_SUFFIX;
+    }
+
+    private String contigStatsFile()
+    {
+        return mConfig.outputDir() + mConfig.sampleId() + CONTIG_STATS_TSV_SUFFIX;
     }
 
     public static void main(@NotNull String[] args)

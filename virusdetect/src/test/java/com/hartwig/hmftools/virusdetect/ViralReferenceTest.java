@@ -41,40 +41,40 @@ public class ViralReferenceTest
     public TemporaryFolder mTempDir = new TemporaryFolder();
 
     @Test
-    public void joinsContigsInFastaOrderWithInfo()
+    public void testJoinsContigsInFastaOrderWithInfo()
     {
         List<ViralContig> contigs = ViralReference.join(dictionary("contigA", "contigB", "contigC"), INFO);
         assertEquals(List.of(CONTIG_A, CONTIG_B, CONTIG_C), contigs);
     }
 
     @Test
-    public void joinThrowsWhenContigHasNoInfoRow()
+    public void testJoinThrowsWhenContigHasNoInfoRow()
     {
         Map<String, InfoRow> infoMissingC = Map.of("contigA", INFO_A, "contigB", INFO_B);
         assertThrows(UserInputError.class, () -> ViralReference.join(dictionary("contigA", "contigB", "contigC"), infoMissingC));
     }
 
     @Test
-    public void joinThrowsWhenInfoRowHasNoContig()
+    public void testJoinThrowsWhenInfoRowHasNoContig()
     {
         assertThrows(UserInputError.class, () -> ViralReference.join(dictionary("contigA", "contigB"), INFO));
     }
 
     @Test
-    public void loadsInfoRowsByContig() throws IOException
+    public void testLoadsInfoRowsByContig() throws IOException
     {
         assertEquals(INFO, ViralReference.loadInfo(writeTsv(VALID_INFO_TSV)));
     }
 
     @Test
-    public void loadInfoThrowsOnDuplicateContig() throws IOException
+    public void testLoadInfoThrowsOnDuplicateContig() throws IOException
     {
         String duplicate = VALID_INFO_TSV + "contigA\tVirus Alpha\tGroup Alpha\n";
         assertThrows(UserInputError.class, () -> ViralReference.loadInfo(writeTsv(duplicate)));
     }
 
     @Test
-    public void loadInfoThrowsOnMissingColumn() throws IOException
+    public void testLoadInfoThrowsOnMissingColumn() throws IOException
     {
         String noGroup = """
                 ref_contig\tvirus_name

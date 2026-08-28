@@ -15,9 +15,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 
-// Scans the tumor BAM/CRAM once and writes candidate viral reads single-end to a FASTA. Duplicate
-// and secondary/supplementary alignments are skipped so each read is emitted once; the mate number
-// is appended to the FASTA id to keep the two reads of a pair distinct.
+// Scans the tumor BAM/CRAM once and writes candidate viral reads single-end to a FASTA, each read once.
+// FASTA ids carry the mate number so the two reads of a pair stay distinct.
 public class CandidateReadExtractor
 {
     @Nullable
@@ -32,7 +31,7 @@ public class CandidateReadExtractor
         mFilter = filter;
     }
 
-    public int extractToFasta(String tumorBam, String outputFasta)
+    public int extractToFasta(String tumorBamFile, String outputFastaFile)
     {
         SamReaderFactory factory = SamReaderFactory.makeDefault().validationStringency(ValidationStringency.SILENT);
         if(mRefGenomeFile != null)
@@ -41,8 +40,8 @@ public class CandidateReadExtractor
         }
 
         int candidateCount = 0;
-        try(SamReader reader = factory.open(new File(tumorBam));
-                BufferedWriter writer = createBufferedWriter(outputFasta))
+        try(SamReader reader = factory.open(new File(tumorBamFile));
+                BufferedWriter writer = createBufferedWriter(outputFastaFile))
         {
             for(SAMRecord record : reader)
             {
@@ -63,7 +62,7 @@ public class CandidateReadExtractor
             throw new RuntimeException("failed to extract candidate reads", e);
         }
 
-        LOGGER.info("extracted {} candidate reads to {}", candidateCount, outputFasta);
+        LOGGER.info("extracted {} candidate reads to {}", candidateCount, outputFastaFile);
         return candidateCount;
     }
 

@@ -63,10 +63,10 @@ public class ViralReadAligner
         mChunkSize = chunkSize;
     }
 
-    public void align(String candidateFasta, String outputBam)
+    public void align(String candidateFastaFile, String outputBamFile)
     {
-        try(FastaSequenceFile fasta = new FastaSequenceFile(new File(candidateFasta), true);
-                SAMFileWriter writer = new SAMFileWriterFactory().makeBAMWriter(mHeader, false, new File(outputBam)))
+        try(FastaSequenceFile fasta = new FastaSequenceFile(new File(candidateFastaFile), true);
+                SAMFileWriter writer = new SAMFileWriterFactory().makeBAMWriter(mHeader, false, new File(outputBamFile)))
         {
             // Written a chunk at a time so peak heap is one chunk, not the whole sample.
             Stream<ReferenceSequence> reads = Stream.generate(fasta::nextSequence).takeWhile(Objects::nonNull);
@@ -75,7 +75,7 @@ public class ViralReadAligner
                     .reduce(ChunkResult.EMPTY, ChunkResult::add);
 
             LOGGER.info("aligned {} candidate reads: {} with viral alignments, {} alignments written to {}",
-                    total.totalReads(), total.alignedReads(), total.writtenAlignments(), outputBam);
+                    total.totalReads(), total.alignedReads(), total.writtenAlignments(), outputBamFile);
         }
     }
 
