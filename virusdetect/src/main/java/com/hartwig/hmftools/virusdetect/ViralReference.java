@@ -22,12 +22,14 @@ import org.apache.logging.log4j.Logger;
 public class ViralReference
 {
     private final List<ViralContig> mContigs;
+    private final SAMSequenceDictionary mSequenceDictionary;
 
     private static final Logger LOGGER = LogManager.getLogger(ViralReference.class);
 
-    private ViralReference(List<ViralContig> contigs)
+    private ViralReference(List<ViralContig> contigs, SAMSequenceDictionary sequenceDictionary)
     {
         mContigs = contigs;
+        mSequenceDictionary = sequenceDictionary;
     }
 
     public List<ViralContig> contigs()
@@ -35,12 +37,20 @@ public class ViralReference
         return mContigs;
     }
 
+    // The FASTA sequence dictionary, in FASTA order, matching the BWA index: an alignment's reference
+    // index resolves to a contig by position, and this is the header for the aligned BAM.
+    public SAMSequenceDictionary sequenceDictionary()
+    {
+        return mSequenceDictionary;
+    }
+
     public static ViralReference load(String fastaFile, String infoTsvFile)
     {
         Map<String, InfoRow> info = loadInfo(infoTsvFile);
-        List<ViralContig> contigs = join(loadSequenceDictionary(fastaFile), info);
+        SAMSequenceDictionary dictionary = loadSequenceDictionary(fastaFile);
+        List<ViralContig> contigs = join(dictionary, info);
         LOGGER.info("loaded viral reference: {} contigs", contigs.size());
-        return new ViralReference(contigs);
+        return new ViralReference(contigs, dictionary);
     }
 
     // Joins FASTA contigs (in FASTA order) to their info rows, enforcing the 1:1 integrity rule.

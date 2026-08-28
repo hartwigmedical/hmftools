@@ -9,6 +9,10 @@ public class VirusConstants
     // Host-reference decoy contigs whose mapped reads are treated as viral candidates (v38 naming). Provisional.
     public static final Set<String> DECOY_CONTIGS = Set.of("chrEBV");
 
+    // Output file suffixes, appended to the sample id.
+    public static final String CANDIDATE_FASTA_SUFFIX = ".virus.candidates.fasta";
+    public static final String ALIGNED_BAM_SUFFIX = ".virus.aligned.bam";
+
     // Provisional defaults, to be tuned on real data.
 
     // Minimum soft-clip length for a read to count as a candidate.

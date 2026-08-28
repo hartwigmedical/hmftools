@@ -4,7 +4,9 @@ import static java.lang.System.exit;
 
 import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkCreateOutputDir;
+import static com.hartwig.hmftools.virusdetect.VirusConstants.ALIGNED_BAM_SUFFIX;
 import static com.hartwig.hmftools.virusdetect.VirusConstants.APP_NAME;
+import static com.hartwig.hmftools.virusdetect.VirusConstants.CANDIDATE_FASTA_SUFFIX;
 import static com.hartwig.hmftools.virusdetect.VirusConstants.DECOY_CONTIGS;
 
 import java.io.IOException;
@@ -20,6 +22,7 @@ public class VirusApplication
     private final VirusConfig mConfig;
     private final ViralReference mViralReference;
     private final CandidateReadExtractor mCandidateExtractor;
+    private final ViralReadAligner mAligner;
 
     private static final Logger LOGGER = LogManager.getLogger(VirusApplication.class);
 
@@ -32,6 +35,7 @@ public class VirusApplication
 
         CandidateReadFilter candidateFilter = new CandidateReadFilter(config.minSoftClipBases(), DECOY_CONTIGS);
         mCandidateExtractor = new CandidateReadExtractor(config.refGenomeFile(), candidateFilter);
+        mAligner = ViralReadAligner.create(config, mViralReference);
     }
 
     public void run() throws IOException
@@ -46,8 +50,10 @@ public class VirusApplication
         String candidateFasta = candidateFastaFile();
         mCandidateExtractor.extractToFasta(mConfig.tumorBam(), candidateFasta);
 
+        String alignedBam = alignedBamFile();
+        mAligner.align(candidateFasta, alignedBam);
+
         // TODO: placeholder pipeline; each step is replaced by its implementation as it lands.
-        LOGGER.info("Realigning candidates to viral reference -> BAM (stub)");
         LOGGER.info("Computing per-contig stats over aligned BAM -> debug TSV (stub)");
         LOGGER.info("Selecting representative contig per oncology group (stub)");
         LOGGER.info("Filtering aligned BAM to representatives -> BAM (stub)");
@@ -59,7 +65,12 @@ public class VirusApplication
 
     private String candidateFastaFile()
     {
-        return mConfig.outputDir() + mConfig.sampleId() + ".virus.candidates.fasta";
+        return mConfig.outputDir() + mConfig.sampleId() + CANDIDATE_FASTA_SUFFIX;
+    }
+
+    private String alignedBamFile()
+    {
+        return mConfig.outputDir() + mConfig.sampleId() + ALIGNED_BAM_SUFFIX;
     }
 
     public static void main(@NotNull String[] args)
