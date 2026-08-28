@@ -15,6 +15,7 @@ import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.switchIndex;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.INTRON;
 import static com.hartwig.hmftools.isofox.common.CommonUtils.impliedSvType;
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.JUNCTION_BASE_LENGTH;
@@ -64,6 +65,7 @@ public class FusionReadData
     private final String[] mJunctionRefBases; // the 10 bases leading up to the junction
     private final String[] mPostJunctionRefBases; // the 10 bases continuing on from the junction
     private final String[] mJunctionSpliceBases; // the 2 donor/acceptor bases
+    private int mSplitJunctionOverlap;
 
     private final List<TransExonRef>[] mTransExonRefs;
     private final int[] mReadDepth;
@@ -87,6 +89,7 @@ public class FusionReadData
         mPostJunctionRefBases = new String[] {"", ""};
         mJunctionSoftClipBases = new String[] {"", ""};
         mJunctionSpliceBases = new String[] {"", ""};
+        mSplitJunctionOverlap = 0;
 
         mFragments = null;
         mFragmentCounts = Maps.newHashMap();
@@ -258,6 +261,9 @@ public class FusionReadData
 
     private void setHomologyPositionAdjustment()
     {
+        if(!mFragment.type().isJunctionType())
+            return;
+
         // a search for an exact overlap in junction soft-clip bases in the other junction's ref bases to fix alignment inconsistencies
         boolean sameOrientation = mJunctionOrientations[SE_START] == mJunctionOrientations[SE_END];
 
@@ -273,13 +279,39 @@ public class FusionReadData
 
         int overlapLength = otherJuncRefBases.indexOf(juncSoftClipBases);
 
-        if(overlapLength > 0)
+        mSplitJunctionOverlap = max(overlapLength, 0);
+    }
+
+    public void adjustPositionsSpliceAware()
+    {
+        if(mSplitJunctionOverlap == 0)
+            return;
+
+        ISF_LOGGER.trace("fusion({}) homology({}/{}) splitJuncOverlap({}) junctionTypes({}/{})",
+                toString(), mJunctionHomology[0], mJunctionHomology[1],
+                mSplitJunctionOverlap, mFragment.junctionTypes()[0], mFragment.junctionTypes()[1]);
+
+        // favour known over canonical over unknown
+        int juncStartTypeOrdinal = mFragment.junctionTypes()[0].ordinal();
+        int juncEndTypeOrdinal = mFragment.junctionTypes()[1].ordinal();
+
+        if(juncStartTypeOrdinal < juncEndTypeOrdinal)
         {
-            int halfOverlap = overlapLength / 2;
-            int exactStart = (overlapLength % 2) == 0 ? halfOverlap : halfOverlap + 1; // round up if an odd length
-            int exactEnd = overlapLength - exactStart;
-            mJunctionPositions[SE_START] -= exactEnd * mJunctionOrientations[SE_START];
-            mJunctionPositions[SE_END] -= exactStart * mJunctionOrientations[SE_END];
+            // for a DEL this shifts the position up further up since orientation is -ve
+            mJunctionPositions[SE_END] -= mSplitJunctionOverlap * mJunctionOrientations[SE_END];
+        }
+        else if(juncEndTypeOrdinal < juncStartTypeOrdinal)
+        {
+            mJunctionPositions[SE_START] -= mSplitJunctionOverlap * mJunctionOrientations[SE_START];
+        }
+        else
+        {
+            // split the change
+            int halfOverlap = mSplitJunctionOverlap / 2;
+            int exactStart = (mSplitJunctionOverlap % 2) == 0 ? halfOverlap : halfOverlap + 1; // round up if an odd length
+            int exactEnd = mSplitJunctionOverlap - exactStart;
+            mJunctionPositions[SE_START] -= exactStart * mJunctionOrientations[SE_START];
+            mJunctionPositions[SE_END] -= exactEnd * mJunctionOrientations[SE_END];
         }
     }
 

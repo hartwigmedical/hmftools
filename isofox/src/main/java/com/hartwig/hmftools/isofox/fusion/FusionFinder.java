@@ -482,6 +482,7 @@ public class FusionFinder implements Callable<Void>
 
         fusionData.setJunctionBases(mConfig.RefGenome);
         setGeneData(fusionData);
+        fusionData.adjustPositionsSpliceAware();
 
         fusions.add(fusionData);
 
