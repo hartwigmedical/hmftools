@@ -17,8 +17,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 // The curated viral reference: contig names and lengths (from the FASTA sequence dictionary) joined
-// to each contig's virus name and oncology group (from the info TSV). Contigs are held in FASTA
-// order, the alignment-target order relied on when translating BWA reference indices to names.
+// to each contig's virus name and oncology group (from the info TSV).
 public class ViralReference
 {
     private final List<ViralContig> mContigs;
@@ -37,8 +36,7 @@ public class ViralReference
         return mContigs;
     }
 
-    // The FASTA sequence dictionary, in FASTA order, matching the BWA index: an alignment's reference
-    // index resolves to a contig by position, and this is the header for the aligned BAM.
+    // Contigs in FASTA order, matching the BWA index so an alignment's reference index resolves to a contig by position.
     public SAMSequenceDictionary sequenceDictionary()
     {
         return mSequenceDictionary;

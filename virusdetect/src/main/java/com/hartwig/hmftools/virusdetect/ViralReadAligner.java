@@ -30,14 +30,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
 
-// Realigns candidate reads to the viral reference with BWA-MEM (all-hits) and writes the alignments
-// to a BAM. The FASTA is read in fixed-size chunks and each chunk's alignments are written before the
-// next is aligned, so peak heap is one chunk rather than the whole sample. An alignment's BWA reference
-// index maps to a contig via the BAM header, whose sequence dictionary is the viral reference in FASTA
-// (BWA index) order. The reads carry only name and bases (from the FASTA), so each record is built afresh
-// from the alignment; base qualities and any original tags are not available at this stage. Alignment is
-// single-end: records are unpaired with no mate, the two mates of a pair distinguished only by the FASTA
-// read-name suffix.
+// Realigns candidate reads (a FASTA of read name + bases) to the viral reference with BWA-MEM in
+// all-hits mode, writing the alignments to a BAM.
 public class ViralReadAligner
 {
     private final IBwaMemAligner mAligner;
@@ -74,6 +68,7 @@ public class ViralReadAligner
         try(FastaSequenceFile fasta = new FastaSequenceFile(new File(candidateFasta), true);
                 SAMFileWriter writer = new SAMFileWriterFactory().makeBAMWriter(mHeader, false, new File(outputBam)))
         {
+            // Written a chunk at a time so peak heap is one chunk, not the whole sample.
             Stream<ReferenceSequence> reads = Stream.generate(fasta::nextSequence).takeWhile(Objects::nonNull);
             ChunkResult total = partitionStream(reads, mChunkSize)
                     .map(chunk -> alignChunk(chunk, writer))
@@ -114,6 +109,8 @@ public class ViralReadAligner
                 .toList();
     }
 
+    // Built from the alignment alone: the FASTA carried only name and bases, so there are no base
+    // qualities, no original tags, and no mate (single-end; pair mates differ only by name suffix).
     private SAMRecord toRecord(String readName, byte[] readBases, BwaMemAlignment alignment)
     {
         SAMRecord record = new SAMRecord(mHeader);

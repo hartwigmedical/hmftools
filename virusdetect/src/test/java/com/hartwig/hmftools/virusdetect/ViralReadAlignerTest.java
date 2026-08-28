@@ -35,9 +35,7 @@ public class ViralReadAlignerTest
     private static final String R2_BASES = "C".repeat(100);
     private static final String R3_BASES = "G".repeat(100);
 
-    // A read is aligned to every contig it hits above the min-score fraction (here 0.5 -> min score 50). This exercises:
-    // a kept forward primary, a kept reverse hard-clipped secondary (sequence omitted to stay consistent with the CIGAR),
-    // a dropped below-threshold hit on the same read, a read with no hit, and a read whose only hit is below threshold.
+    // A read is kept on every contig it hits above the min-score fraction (0.5 -> min score 50); per-hit fate inline below.
     @Test
     public void writesAlignmentsAboveThresholdWithContigAndScore() throws IOException
     {

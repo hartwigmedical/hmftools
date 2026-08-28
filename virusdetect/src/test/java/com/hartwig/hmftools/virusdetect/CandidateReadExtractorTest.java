@@ -26,10 +26,7 @@ public class CandidateReadExtractorTest
     @Rule
     public TemporaryFolder mTempDir = new TemporaryFolder();
 
-    // The extractor filters (via CandidateReadFilter), drops duplicate/secondary/supplementary reads,
-    // and writes survivors single-end with a mate-numbered id. This exercises those behaviours together:
-    // a plain read is filtered out, a duplicate (that would otherwise qualify) is dropped, and two
-    // candidates from opposite pair mates are written with /1 and /2 ids and their own bases.
+    // Filtering, dedup, and mate-numbered single-end output exercised together (per-read fate inline below).
     @Test
     public void writesFilteredDedupedReadsWithMateSuffix() throws IOException
     {
