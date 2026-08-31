@@ -38,7 +38,7 @@ public class VirusApplication
         LOGGER.info("viral reference model loaded");
 
         CandidateReadFilter candidateFilter = new CandidateReadFilter(MIN_SOFT_CLIP_BASES_DEFAULT, DECOY_CONTIGS);
-        mCandidateExtractor = new CandidateReadExtractor(config.refGenomeFile(), candidateFilter);
+        mCandidateExtractor = new CandidateReadExtractor(config.refGenomeFile(), candidateFilter, config.threads());
         mAligner = ViralReadAligner.create(config, mViralReference);
     }
 

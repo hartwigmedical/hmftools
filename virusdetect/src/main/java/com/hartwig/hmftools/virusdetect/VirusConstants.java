@@ -25,6 +25,9 @@ public class VirusConstants
     // Candidate reads submitted to BWA per alignment call (bounds heap).
     public static final int ALIGNMENT_BATCH_SIZE_DEFAULT = 100_000;
 
+    // Genome partition size for multi-threaded candidate extraction.
+    public static final int EXTRACTION_PARTITION_SIZE = 1_000_000;
+
     // Minimum reads for an oncology group to be considered present. Not user-exposed yet; tuned internally first.
     public static final int MIN_READS_DEFAULT = 2;
 }
