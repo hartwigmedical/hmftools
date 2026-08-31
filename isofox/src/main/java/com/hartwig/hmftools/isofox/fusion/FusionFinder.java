@@ -17,10 +17,13 @@ import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT_J
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.MATCHED_JUNCTION;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.REALIGNED;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.REALIGN_CANDIDATE;
+import static com.hartwig.hmftools.isofox.fusion.FusionJunctionType.CANONICAL;
 import static com.hartwig.hmftools.isofox.fusion.FusionJunctionType.KNOWN;
 import static com.hartwig.hmftools.isofox.fusion.FusionReadGroup.mergeChimericReadMaps;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.checkMissingGeneData;
+import static com.hartwig.hmftools.isofox.fusion.FusionUtils.findExonBoundaryMatches;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formChromosomePair;
+import static com.hartwig.hmftools.isofox.fusion.FusionUtils.matchesCanonicalSpliceJunction;
 import static com.hartwig.hmftools.isofox.fusion.HardFilteredCache.removePartialGroupsWithHardFilteredMatch;
 
 import java.util.List;
@@ -43,6 +46,7 @@ import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.TransExonRef;
 
 import org.apache.logging.log4j.Level;
+import org.jetbrains.annotations.Nullable;
 
 public class FusionFinder implements Callable<Void>
 {
@@ -445,7 +449,7 @@ public class FusionFinder implements Callable<Void>
         if(!mPassingFusions.knownFusionCache().hasKnownFusion(fusionData.getGeneName(FS_UP), fusionData.getGeneName(FS_DOWN)))
             return false;
 
-        return fragment.junctionTypes()[FS_UP] == KNOWN || fragment.junctionTypes()[FS_DOWN] == KNOWN;
+        return fragment.fragJunctionTypes()[FS_UP] == KNOWN || fragment.fragJunctionTypes()[FS_DOWN] == KNOWN;
     }
 
     private FusionReadData createOrUpdateFusion(final FusionFragment fragment)
@@ -464,8 +468,11 @@ public class FusionFinder implements Callable<Void>
             existingFusion.addFusionFragment(fragment, mConfig.Fusions.CacheFragments);
 
             // mark donor-acceptor types whether strands are known or not
-            fragment.junctionTypes()[SE_START] = existingFusion.getInitialFragment().junctionTypes()[SE_START];
-            fragment.junctionTypes()[SE_END] = existingFusion.getInitialFragment().junctionTypes()[SE_END];
+            fragment.fragJunctionTypes()[SE_START] = existingFusion.getInitialFragment().fragJunctionTypes()[SE_START];
+            fragment.fragJunctionTypes()[SE_END] = existingFusion.getInitialFragment().fragJunctionTypes()[SE_END];
+            // fragment.junctionTypes()[SE_START] = existingFusion.junctionTypes()[SE_START];
+            // fragment.junctionTypes()[SE_END] = existingFusion.junctionTypes()[SE_END];
+
             return null;
         }
 
@@ -506,6 +513,7 @@ public class FusionFinder implements Callable<Void>
         List<GeneData>[] genesByPosition = new List[] { Lists.newArrayList(), Lists.newArrayList() };
         List<TranscriptData>[] validTransDataList = new List[] { Lists.newArrayList(), Lists.newArrayList() };
 
+        // use the initial fragment to identify
         FusionFragment initialFragment = fusionData.getInitialFragment();
 
         List<TranscriptData> transcriptsCache = Lists.newArrayList();
@@ -514,6 +522,7 @@ public class FusionFinder implements Callable<Void>
         {
             List<TranscriptData> transDataList = Lists.newArrayList();
             Set<String> spliceGeneIds = Sets.newHashSet();
+            List<TransExonRef> allExonRefs = Lists.newArrayList();
 
             for(FusionTransExon transExonRef : initialFragment.getTransExonRefs()[se])
             {
@@ -532,23 +541,49 @@ public class FusionFinder implements Callable<Void>
                 if(!transDataList.contains(transData))
                     transDataList.add(transData);
 
-                fusionData.getTransExonRefsByPos(se).add(new TransExonRef(
+                allExonRefs.add(new TransExonRef(
                         transData.GeneId, transData.TransId, transData.TransName, transExonRef.ExonRank, transData.IsCanonical));
 
                 spliceGeneIds.add(transData.GeneId);
             }
 
+            List<TransExonRef> exonBoundaryMatches = findExonBoundaryMatches(
+                    transDataList, fusionData.junctionPositions()[se], fusionData.junctionOrientations()[se],
+                    fusionData.splitJunctionOverlap());
+
+            if(!exonBoundaryMatches.isEmpty())
+            {
+                fusionData.getTransExonRefsByPos(se).addAll(exonBoundaryMatches);
+                fusionData.junctionTypes()[se] = KNOWN;
+
+                // purge unmatched transcripts where a boundary was matched
+                validTransDataList[se] = transDataList.stream()
+                        .filter(x -> exonBoundaryMatches.stream().anyMatch(y -> x.TransId == y.TransId))
+                        .collect(Collectors.toList());
+
+            }
+            else
+            {
+                // add all transcripts from the initial fragment
+                fusionData.getTransExonRefsByPos(se).addAll(allExonRefs);
+
+                validTransDataList[se].addAll(transDataList);
+            }
+
             // purge any invalid transcript-exons and mark the junction as known if applicable
+            // this is no longer required for the sake of the fusion, but can be left in place for the fragment
             initialFragment.validateTranscriptExons(transDataList, se);
 
             if(!spliceGeneIds.isEmpty())
             {
                 genesByPosition[se] = spliceGeneIds.stream().map(x -> mGeneTransCache.getGeneDataById(x)).collect(Collectors.toList());
 
+                /*
                 final int seIndex = se;
                 validTransDataList[se] = transDataList.stream()
                         .filter(x -> initialFragment.getTransExonRefs()[seIndex].stream().anyMatch(y -> x.TransId == y.TransId))
                         .collect(Collectors.toList());
+                */
             }
         }
 
@@ -632,7 +667,28 @@ public class FusionFinder implements Callable<Void>
             }
         }
 
-        initialFragment.setJunctionTypes(mConfig.RefGenome, fusionData.getGeneStrands(), fusionData.junctionSpliceBases());
+        for(int se = SE_START; se <= SE_END; ++se)
+        {
+            // now that the stream (ie up or down) of the fusion has been determined, check for canonical splice sites if not known
+            if(fusionData.junctionTypes()[se] != KNOWN)
+            {
+                if(matchesCanonicalSpliceJunction(
+                        fusionData.junctionOrientations()[se], fusionData.junctionSpliceBases()[se], fusionData.geneStrandByPosition(se)))
+                {
+                    fusionData.junctionTypes()[se] = CANONICAL;
+                }
+            }
+        }
+
+        initialFragment.setJunctionTypes(fusionData.getGeneStrands(), fusionData.junctionSpliceBases());
+
+        if(initialFragment.fragJunctionTypes()[SE_START] != fusionData.junctionTypes()[SE_START]
+        || initialFragment.fragJunctionTypes()[SE_END] != fusionData.junctionTypes()[SE_END])
+        {
+            ISF_LOGGER.warn("fusion({}) junction types differ: fusion({}/{}) vs fragment({}/{})",
+                    fusionData, fusionData.junctionTypes()[SE_START], fusionData.junctionTypes()[SE_END],
+                    initialFragment.fragJunctionTypes()[SE_START], initialFragment.fragJunctionTypes()[SE_END]);
+        }
     }
 
     private void prioritiseLongestCodingFusionGene(final List<GeneData> geneList, final List<TranscriptData> transDataList)
@@ -1034,7 +1090,7 @@ public class FusionFinder implements Callable<Void>
         if(mPassingFusions.knownFusionCache().hasKnownFusion(fusionData.getGeneName(FS_UP), fusionData.getGeneName(FS_DOWN)))
             return false;
 
-        final FusionJunctionType[] junctionTypes = fusionData.getInitialFragment().junctionTypes();
+        final FusionJunctionType[] junctionTypes = fusionData.getInitialFragment().fragJunctionTypes();
 
         return junctionTypes[SE_START] != KNOWN && junctionTypes[SE_END] != KNOWN;
     }

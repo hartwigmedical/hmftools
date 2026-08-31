@@ -66,6 +66,7 @@ public class FusionReadData
     private final String[] mPostJunctionRefBases; // the 10 bases continuing on from the junction
     private final String[] mJunctionSpliceBases; // the 2 donor/acceptor bases
     private int mSplitJunctionOverlap;
+    private final FusionJunctionType[] mJunctionTypes;
 
     private final List<TransExonRef>[] mTransExonRefs;
     private final int[] mReadDepth;
@@ -90,6 +91,7 @@ public class FusionReadData
         mJunctionSoftClipBases = new String[] {"", ""};
         mJunctionSpliceBases = new String[] {"", ""};
         mSplitJunctionOverlap = 0;
+        mJunctionTypes = new FusionJunctionType[] { FusionJunctionType.UNKNOWN, FusionJunctionType.UNKNOWN };
 
         mFragments = null;
         mFragmentCounts = Maps.newHashMap();
@@ -139,6 +141,7 @@ public class FusionReadData
     public final String[] postJunctionRefBases() { return mPostJunctionRefBases; }
     public final String[] junctionSpliceBases() { return mJunctionSpliceBases; }
     public final int[] junctionHomology() { return mJunctionHomology; }
+    public final int splitJunctionOverlap() { return mSplitJunctionOverlap; }
 
     public boolean hasIncompleteData() { return mIncompleteData; }
     public void setIncompleteData() { mIncompleteData = true; }
@@ -206,6 +209,7 @@ public class FusionReadData
     public boolean isUnspliced() { return getInitialFragment().isUnspliced() && getInitialFragment().type().isJunctionType(); }
 
     public boolean hasViableGenes() { return mFusionGenes[FS_UP] != null && mFusionGenes[FS_DOWN] != null; }
+    public FusionJunctionType[] junctionTypes() { return mJunctionTypes; }
 
     public void setJunctionBases(final RefGenomeInterface refGenome)
     {
@@ -289,11 +293,13 @@ public class FusionReadData
 
         ISF_LOGGER.trace("fusion({}) homology({}/{}) splitJuncOverlap({}) junctionTypes({}/{})",
                 toString(), mJunctionHomology[0], mJunctionHomology[1],
-                mSplitJunctionOverlap, mFragment.junctionTypes()[0], mFragment.junctionTypes()[1]);
+                mSplitJunctionOverlap, mFragment.fragJunctionTypes()[0], mFragment.fragJunctionTypes()[1]);
 
         // favour known over canonical over unknown
-        int juncStartTypeOrdinal = mFragment.junctionTypes()[0].ordinal();
-        int juncEndTypeOrdinal = mFragment.junctionTypes()[1].ordinal();
+        int juncStartTypeOrdinal = mFragment.fragJunctionTypes()[0].ordinal();
+        int juncEndTypeOrdinal = mFragment.fragJunctionTypes()[1].ordinal();
+        // int juncStartTypeOrdinal = mJunctionTypes[0].ordinal();
+        // int juncEndTypeOrdinal = mJunctionTypes[1].ordinal();
 
         if(juncStartTypeOrdinal < juncEndTypeOrdinal)
         {
@@ -425,6 +431,11 @@ public class FusionReadData
         }
     }
 
+    public Byte geneStrandByPosition(int se)
+    {
+        return mFusionGenes[se] != null ? mFusionGenes[se].Strand : null;
+    }
+
     public byte[] getGeneStrands()
     {
         if(!hasViableGenes())
@@ -435,8 +446,6 @@ public class FusionReadData
         else
             return new byte[] { mFusionGenes[SE_END].Strand, mFusionGenes[SE_START].Strand };
     }
-
-    public final Set<Integer> getRelatedFusions() { return mRelatedSplicedFusions; }
 
     public void addRelatedFusion(int id, boolean isSpliced)
     {
@@ -688,7 +697,7 @@ public class FusionReadData
 
             junctionPositions[fs] = mJunctionPositions[mStreamIndices[fs]];
             junctionOrientations[fs] = mJunctionOrientations[mStreamIndices[fs]];
-            junctionTypes[fs] = sampleFragment.junctionTypes()[mStreamIndices[fs]];
+            junctionTypes[fs] = sampleFragment.fragJunctionTypes()[mStreamIndices[fs]];
 
             GeneData geneData = mFusionGenes[fs];
 

@@ -3,12 +3,15 @@ package com.hartwig.hmftools.isofox.fusion;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsWithin;
+import static com.hartwig.hmftools.isofox.common.CommonUtils.canonicalAcceptor;
+import static com.hartwig.hmftools.isofox.common.CommonUtils.canonicalDonor;
 import static com.hartwig.hmftools.isofox.common.CommonUtils.deriveCommonRegions;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.NONE;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.matchRank;
@@ -26,6 +29,8 @@ import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.isofox.common.RegionMatchType;
 import com.hartwig.hmftools.isofox.common.TransExonRef;
+
+import org.jetbrains.annotations.Nullable;
 
 public class FusionUtils
 {
@@ -193,25 +198,61 @@ public class FusionUtils
         read.setUpperTransExonRefs(transExonRefs, topMatchType);
     }
 
-    public static final String SUPP_ALIGNMENT_DELIM = ",";
-
-    public static Integer suppAlignmentPosition(final String suppAlignment)
+    public static List<TransExonRef> findExonBoundaryMatches(
+            final List<TranscriptData> transDataList, final int juncPosition, final byte juncOrientation, final int positionBuffer)
     {
-        // 21,39794900,-,33M43S,255,0;
-        if(suppAlignment == null)
-            return null;
+        List<TransExonRef> matchedExons = Lists.newArrayList();
 
-        final String[] items = suppAlignment.split(SUPP_ALIGNMENT_DELIM);
-        return items.length >= 5 ? Integer.parseInt(items[1]) : null;
+        int juncPosLower = juncPosition;
+        int juncPosUpper = juncPosition;
+
+        if(positionBuffer > 0)
+        {
+            if(juncOrientation == ORIENT_FWD)
+                juncPosLower -= positionBuffer;
+            else
+                juncPosUpper += positionBuffer;
+        }
+
+        for(TranscriptData transData : transDataList)
+        {
+            for(ExonData exon : transData.exons())
+            {
+                int exonPosition = juncOrientation == ORIENT_FWD ? exon.End : exon.Start;
+
+                if(positionWithin(exonPosition, juncPosLower, juncPosUpper))
+                {
+                    matchedExons.add(new TransExonRef(transData.GeneId, transData.TransId, transData.TransName, exon.Rank));
+                    break;
+                }
+            }
+        }
+
+        return matchedExons;
     }
 
-    public static String suppAlignmentChromosome(final String suppAlignment)
+    public static boolean matchesCanonicalSpliceJunction(
+            final byte juncOrientation, final String juncSpliceBases, @Nullable final Byte juncStrand)
     {
-        if(suppAlignment == null)
-            return null;
+        if(juncStrand != null)
+        {
+            boolean isDonor = (juncOrientation == juncStrand);
 
-        final String[] items = suppAlignment.split(SUPP_ALIGNMENT_DELIM);
-        return items.length >= 5 ? items[0] : null;
+            if(isDonor && canonicalDonor(juncSpliceBases, juncStrand))
+                return true;
+            else if(!isDonor && canonicalAcceptor(juncSpliceBases, juncStrand))
+                return true;
+        }
+        else
+        {
+            // try them both if strand is not known
+            byte asDonorStrand = juncOrientation;
+            byte asAcceptorStrand = (byte)(-juncOrientation);
+
+            if(canonicalDonor(juncSpliceBases, asDonorStrand) || canonicalAcceptor(juncSpliceBases, asAcceptorStrand))
+                return true;
+        }
+
+        return false;
     }
-
 }

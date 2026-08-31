@@ -99,7 +99,7 @@ public class FusionFragment
     public final byte[] junctionOrientations() { return mJunctionOrientations; }
 
     public final RegionMatchType[] regionMatchTypes() { return mRegionMatchTypes; }
-    public final FusionJunctionType[] junctionTypes() { return mJunctionTypes; }
+    public final FusionJunctionType[] fragJunctionTypes() { return mJunctionTypes; }
 
     public boolean isUnspliced() { return mRegionMatchTypes[SE_START] == INTRON && mRegionMatchTypes[SE_END] == INTRON; }
     public boolean isSpliced() { return exonBoundary(mRegionMatchTypes[SE_START]) && exonBoundary(mRegionMatchTypes[SE_END]); }
@@ -218,11 +218,8 @@ public class FusionFragment
         }
     }
 
-    public void setJunctionTypes(final RefGenomeInterface refGenome, final byte[] junctionStrands, final String[] junctionSpliceBases)
+    public void setJunctionTypes(final byte[] junctionStrands, final String[] junctionSpliceBases)
     {
-        if(refGenome == null)
-            return;
-
         for(int se = SE_START; se <= SE_END; ++se)
         {
             if(mJunctionTypes[se] == KNOWN)
