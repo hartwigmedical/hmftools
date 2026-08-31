@@ -10,6 +10,7 @@ import com.hartwig.hmftools.sage.common.ReadContextMatcher;
 import com.hartwig.hmftools.sage.common.ReadMatchInfo;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
 
+import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;
 
 public class Realignment
@@ -89,6 +90,11 @@ public class Realignment
     public static int realignedReadIndexPosition(final VariantReadContext readContext, final SAMRecord record)
     {
         int variantCoreEndPosition = readContext.CorePositionEnd;
+
+        if(readContext.variant().isInsert() && readContext.readCigar().endsWith(CigarOperator.S.toString()))
+        {
+            variantCoreEndPosition -= readContext.variant().indelLength();
+        }
 
         int coreEndReadIndex = getReadIndexFromPosition(
                 record.getAlignmentStart(), record.getCigar().getCigarElements(), variantCoreEndPosition,
