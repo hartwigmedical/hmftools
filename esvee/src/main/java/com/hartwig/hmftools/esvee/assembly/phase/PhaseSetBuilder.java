@@ -653,6 +653,9 @@ public class PhaseSetBuilder
         if(mLineRelatedAssemblies.isEmpty())
             return;
 
+        List<JunctionAssembly> lineRelatedAssemblies = mLineRelatedAssemblies.stream().collect(Collectors.toList());
+        Collections.sort(lineRelatedAssemblies, Comparator.comparing(x -> x.junction()));
+
         initialisePerfStage(Stage.FindLineExtensions);
 
         List<JunctionAssembly> proximateLineAssemblies = Lists.newArrayList();
@@ -664,7 +667,7 @@ public class PhaseSetBuilder
             if(assembly.hasLineSequence())
                 continue;
 
-            JunctionAssembly lineAssembly = mLineRelatedAssemblies.stream().filter(x -> isLineInsertPair(assembly, x)).findFirst().orElse(null);
+            JunctionAssembly lineAssembly = lineRelatedAssemblies.stream().filter(x -> isLineInsertPair(assembly, x)).findFirst().orElse(null);
 
             if(lineAssembly == null)
                 continue;
