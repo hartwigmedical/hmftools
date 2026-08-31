@@ -328,7 +328,10 @@ public class JunctionReadTypes
             return 0;
 
         if(remoteSuppRegionFrequency.size() == 1)
-            return 1.0;
+        {
+            int count = remoteSuppRegionFrequency.values().iterator().next();
+            return count >= 2 ? 1.0 : MIN_AF_WEAK_JUNCTION_SUPP_REMOTE_THRESHOLD;
+        }
 
         int total = 0;
         int maxRegion = 0;
