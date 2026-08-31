@@ -86,7 +86,7 @@ public class FilterConstants
     public static final int INV_SHORT_RATE_HIGHER = 400;
 
     public static final int INV_SHORT_FRAGMENT_LENGTH = 300;
-    public static final double INV_SHORT_FRAGMENT_MIN_AF = 0.1;
+    public static final double INV_SHORT_FRAGMENT_MIN_AF = 0.15;
     public static final int INV_SHORT_FRAGMENT_AF_RATIO = 100;
 
     public static final int PRIME_MAX_PERMITTED_RANGE = 50;
