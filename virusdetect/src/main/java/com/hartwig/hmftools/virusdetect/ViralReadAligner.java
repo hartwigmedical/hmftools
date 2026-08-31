@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.ALIGNMENT_SCORE_ATT
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.MISMATCHES_AND_DELETIONS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.utils.Streams.partitionStream;
+import static com.hartwig.hmftools.virusdetect.VirusConstants.MIN_ALIGNMENT_SCORE_FRACTION_DEFAULT;
 
 import java.io.File;
 import java.util.List;
@@ -52,7 +53,7 @@ public class ViralReadAligner
         IBwaMemAligner aligner = new BwaMemAligner(buildAlignerConfig(config));
 
         return new ViralReadAligner(
-                aligner, buildHeader(reference.sequenceDictionary()), config.minAlignmentScoreFraction(), config.alignmentBatchSize());
+                aligner, buildHeader(reference.sequenceDictionary()), MIN_ALIGNMENT_SCORE_FRACTION_DEFAULT, config.alignmentBatchSize());
     }
 
     ViralReadAligner(IBwaMemAligner aligner, SAMFileHeader header, double minAlignmentScoreFraction, int chunkSize)

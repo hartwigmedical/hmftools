@@ -17,8 +17,6 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputId;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.virusdetect.VirusConstants.ALIGNMENT_BATCH_SIZE_DEFAULT;
-import static com.hartwig.hmftools.virusdetect.VirusConstants.MIN_ALIGNMENT_SCORE_FRACTION_DEFAULT;
-import static com.hartwig.hmftools.virusdetect.VirusConstants.MIN_SOFT_CLIP_BASES_DEFAULT;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
@@ -32,8 +30,6 @@ public record VirusConfig(
         String viralRefInfoFile,
         String viralBwaIndexImage,
         @Nullable String bwaLibPath,
-        int minSoftClipBases,
-        double minAlignmentScoreFraction,
         int alignmentBatchSize,
         int threads,
         String outputDir,
@@ -46,10 +42,6 @@ public record VirusConfig(
     private static final String DESC_VIRAL_REF_INFO_FILE = "Viral reference info TSV (contig -> virus name + oncology group)";
     private static final String CFG_VIRAL_BWA_INDEX_IMAGE = "viral_bwa_index_image";
     private static final String DESC_VIRAL_BWA_INDEX_IMAGE = "Viral reference BWA-MEM index GATK image file";
-    private static final String CFG_MIN_SOFT_CLIP_BASES = "min_soft_clip_bases";
-    private static final String DESC_MIN_SOFT_CLIP_BASES = "Minimum soft-clip length for a candidate read";
-    private static final String CFG_MIN_ALIGNMENT_SCORE_FRACTION = "min_align_score_frac";
-    private static final String DESC_MIN_ALIGNMENT_SCORE_FRACTION = "Minimum BWA alignment score as a fraction of read length";
     private static final String CFG_ALIGNMENT_BATCH_SIZE = "align_batch_size";
     private static final String DESC_ALIGNMENT_BATCH_SIZE = "Candidate reads submitted to BWA per alignment call";
 
@@ -64,8 +56,6 @@ public record VirusConfig(
                 configBuilder.getValue(CFG_VIRAL_REF_INFO_FILE),
                 configBuilder.getValue(CFG_VIRAL_BWA_INDEX_IMAGE, viralRefFile + ".img"),
                 configBuilder.getValue(BWA_LIB_PATH),
-                configBuilder.getInteger(CFG_MIN_SOFT_CLIP_BASES),
-                configBuilder.getDecimal(CFG_MIN_ALIGNMENT_SCORE_FRACTION),
                 configBuilder.getInteger(CFG_ALIGNMENT_BATCH_SIZE),
                 parseThreads(configBuilder),
                 parseOutputDir(configBuilder),
@@ -83,9 +73,6 @@ public record VirusConfig(
         configBuilder.addPath(CFG_VIRAL_BWA_INDEX_IMAGE, false, DESC_VIRAL_BWA_INDEX_IMAGE);
         configBuilder.addPath(BWA_LIB_PATH, false, BWA_LIB_PATH_DESC);
 
-        configBuilder.addInteger(CFG_MIN_SOFT_CLIP_BASES, DESC_MIN_SOFT_CLIP_BASES, MIN_SOFT_CLIP_BASES_DEFAULT);
-        configBuilder.addDecimal(CFG_MIN_ALIGNMENT_SCORE_FRACTION, DESC_MIN_ALIGNMENT_SCORE_FRACTION,
-                MIN_ALIGNMENT_SCORE_FRACTION_DEFAULT);
         configBuilder.addInteger(CFG_ALIGNMENT_BATCH_SIZE, DESC_ALIGNMENT_BATCH_SIZE, ALIGNMENT_BATCH_SIZE_DEFAULT);
 
         addThreadOptions(configBuilder);

@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.virusdetect.VirusConstants.APP_NAME;
 import static com.hartwig.hmftools.virusdetect.VirusConstants.CANDIDATE_FASTA_SUFFIX;
 import static com.hartwig.hmftools.virusdetect.VirusConstants.CONTIG_STATS_TSV_SUFFIX;
 import static com.hartwig.hmftools.virusdetect.VirusConstants.DECOY_CONTIGS;
+import static com.hartwig.hmftools.virusdetect.VirusConstants.MIN_SOFT_CLIP_BASES_DEFAULT;
 
 import java.io.IOException;
 import java.util.Map;
@@ -35,7 +36,7 @@ public class VirusApplication
         LOGGER.info("Loading prerequisite data");
         mViralReference = ViralReference.load(config.viralRefFile(), config.viralRefInfoFile());
 
-        CandidateReadFilter candidateFilter = new CandidateReadFilter(config.minSoftClipBases(), DECOY_CONTIGS);
+        CandidateReadFilter candidateFilter = new CandidateReadFilter(MIN_SOFT_CLIP_BASES_DEFAULT, DECOY_CONTIGS);
         mCandidateExtractor = new CandidateReadExtractor(config.refGenomeFile(), candidateFilter);
         mAligner = ViralReadAligner.create(config, mViralReference);
     }
