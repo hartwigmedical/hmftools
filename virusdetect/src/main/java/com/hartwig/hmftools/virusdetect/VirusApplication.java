@@ -33,8 +33,9 @@ public class VirusApplication
     {
         mConfig = config;
 
-        LOGGER.info("Loading prerequisite data");
+        LOGGER.info("loading viral reference model");
         mViralReference = ViralReference.load(config.viralRefFile(), config.viralRefInfoFile());
+        LOGGER.info("viral reference model loaded");
 
         CandidateReadFilter candidateFilter = new CandidateReadFilter(MIN_SOFT_CLIP_BASES_DEFAULT, DECOY_CONTIGS);
         mCandidateExtractor = new CandidateReadExtractor(config.refGenomeFile(), candidateFilter);
@@ -50,14 +51,20 @@ public class VirusApplication
 
         checkCreateOutputDir(mConfig.outputDir());
 
+        LOGGER.info("Extracting candidate viral reads from tumor BAM");
         String candidateFastaFile = candidateFastaFile();
         mCandidateExtractor.extractToFasta(mConfig.tumorBam(), candidateFastaFile);
+        LOGGER.info("Candidate read extraction complete");
 
+        LOGGER.info("Aligning candidate reads to viral reference");
         String alignedBamFile = alignedBamFile();
         mAligner.align(candidateFastaFile, alignedBamFile);
+        LOGGER.info("Alignment complete");
 
+        LOGGER.info("Computing per-contig statistics");
         Map<String, ContigStats> contigStats = new ContigStatsCalculator().compute(alignedBamFile, mViralReference);
         VirusOutputWriter.writeContigStats(contigStatsFile(), contigStats.values(), mViralReference);
+        LOGGER.info("Per-contig statistics complete");
 
         // TODO: placeholder pipeline; each step is replaced by its implementation as it lands.
         LOGGER.info("Selecting representative contig per oncology group (stub)");
