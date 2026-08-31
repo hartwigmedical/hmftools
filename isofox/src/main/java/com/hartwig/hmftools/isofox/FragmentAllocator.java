@@ -1014,8 +1014,6 @@ public class FragmentAllocator
         if(!mAltSpliceJunctionFinder.enabled() || mChimericReads.getLocalChimericReads().isEmpty())
             return;
 
-        final List<Integer> invalidTrans = Lists.newArrayList();
-
         for(final List<Read> reads : mChimericReads.getLocalChimericReads())
         {
             Read read1 = null;
@@ -1048,11 +1046,20 @@ public class FragmentAllocator
             if(read1 == null || read2 == null)
                 continue;
 
+            // the transcripts these reads map to, otherwise the alt-SJ cannot be classified against a known splice site
+            final List<Integer> readTransIds = Lists.newArrayList(read1.getTranscriptClassifications().keySet());
+
+            for(Integer transId : read2.getTranscriptClassifications().keySet())
+            {
+                if(!readTransIds.contains(transId))
+                    readTransIds.add(transId);
+            }
+
             int readPosMin = min(read1.PosStart, read2.PosStart);
             int readPosMax = max(read1.PosEnd, read2.PosEnd);
 
             final List<GeneReadData> overlapGenes = mCurrentGenes.findGenesCoveringRange(readPosMin, readPosMax, false);
-            mAltSpliceJunctionFinder.evaluateFragmentReads(overlapGenes, read1, read2, invalidTrans);
+            mAltSpliceJunctionFinder.evaluateFragmentReads(overlapGenes, read1, read2, readTransIds);
         }
     }
 
@@ -1099,7 +1106,8 @@ public class FragmentAllocator
             StringJoiner sj = new StringJoiner(TSV_DELIM);
             sj.add(FLD_GENE_ID).add(FLD_GENE_NAME).add("ReadIndex").add("ReadId");
             sj.add(FLD_CHROMOSOME).add(FLD_POS_START).add(FLD_POS_END).add("Cigar").add("InsertSize").add("MateChr").add("MatePosStart");
-            sj.add("Flags").add("FirstInPair").add("ReadReversed").add("SuppData").add("Consensus").add("FragType");
+            sj.add("Flags").add("FirstInPair").add("ReadReversed").add("SuppData").add("Consensus");
+            sj.add("MapQuality").add("NumLoci").add("FragType");
             sj.add("TransId").add("TransClass").add("ValidTrans").add("ExonRank").add("ExonStart");
             sj.add("RegionStart").add("RegionEnd").add("RegionClass").add("ScRegionsStart").add("SvRegionsEnd");
             writer.write(sj.toString());
@@ -1160,6 +1168,10 @@ public class FragmentAllocator
             sj.add(String.valueOf(read.isReadReversed()));
             sj.add(read.suppAlignmentAsStr());
             sj.add(String.valueOf(read.isConsensusRead()));
+
+            // STAR signals multi-mapping through map quality, bwa through the XA count, so both are needed to compare arms
+            sj.add(String.valueOf(read.mapQuality()));
+            sj.add(String.valueOf(read.numLoci()));
 
             sj.add(geneReadType.toString());
 

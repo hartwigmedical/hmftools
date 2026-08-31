@@ -45,6 +45,8 @@ public class FusionRead
     public boolean IsDuplicate;
     public boolean ContainsSplit;
     public int Flags;
+    public final short MapQuality;
+    public final int NumLoci;
 
     public final List<int[]> MappedCoords;
 
@@ -75,6 +77,9 @@ public class FusionRead
         IsDuplicate = read.isDuplicate();
         ContainsSplit = read.containsSplit();
         Flags = read.flags();
+
+        MapQuality = read.mapQuality();
+        NumLoci = read.numLoci();
 
         SuppData = read.hasSuppAlignment() ? SupplementaryReadData.extractAlignment(read.getSuppAlignment()) : null;
 

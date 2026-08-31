@@ -538,10 +538,13 @@ public class ChimericReadTracker
         {
             int[] splitJunction = findSplitReadJunction(splitRead);
 
-            addJunction(splitRead, SE_START, splitJunction[SE_START], ORIENT_FWD);
-            addJunction(splitRead, SE_END, splitJunction[SE_END], ORIENT_REV);
+            if(splitJunction != null)
+            {
+                addJunction(splitRead, SE_START, splitJunction[SE_START], ORIENT_FWD);
+                addJunction(splitRead, SE_END, splitJunction[SE_END], ORIENT_REV);
 
-            return;
+                return;
+            }
         }
 
         final int[] junctionPositions = new int[SE_PAIR];
