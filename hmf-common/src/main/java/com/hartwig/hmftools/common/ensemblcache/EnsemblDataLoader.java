@@ -65,6 +65,18 @@ public final class EnsemblDataLoader
     public static String ensemblProteinDataFile(final RefGenomeVersion rgVersion) { return formFileName(PROTEIN_FEATURE_DATA_FILE_ID, rgVersion); }
     public static String ensemblAminoAcidDataFile(final RefGenomeVersion rgVersion) { return formFileName(TRANS_AMINO_ACIDS_FILE_ID, rgVersion); }
 
+    private static String checkOldFilename(final String filename)
+    {
+        if(Files.exists(Paths.get(filename)))
+            return filename;
+
+        String oldFilename = filename.replaceAll("37.csv", "csv").replaceAll("38.csv", "csv");
+        if(Files.exists(Paths.get(oldFilename)))
+            return oldFilename;
+
+        return filename; // keep original even if invalid
+    }
+
     private static String formFileName(final String fileId, final RefGenomeVersion refGenomeVersion)
     {
         return fileId + "." + refGenomeVersion.identifier() + CSV_EXTENSION;
@@ -78,6 +90,8 @@ public final class EnsemblDataLoader
             return false;
 
         String filename = checkAddDirSeparator(dataPath) + ensemblGeneDataFile(version);
+
+        filename = checkOldFilename(filename);
 
         if(!Files.exists(Paths.get(filename)))
             return false;
@@ -164,6 +178,8 @@ public final class EnsemblDataLoader
             final List<String> nonCanonicalTrans)
     {
         String filename = checkAddDirSeparator(dataPath) + ensemblTransExonDataFile(version);
+
+        filename = checkOldFilename(filename);
 
         if(!Files.exists(Paths.get(filename)))
             return false;
@@ -298,6 +314,8 @@ public final class EnsemblDataLoader
     {
         String filename = checkAddDirSeparator(dataPath) + ensemblProteinDataFile(version);
 
+        filename = checkOldFilename(filename);
+
         if(!Files.exists(Paths.get(filename)))
             return false;
 
@@ -377,6 +395,8 @@ public final class EnsemblDataLoader
     {
         String filename = checkAddDirSeparator(dataPath) + ensemblSpliceDataFile(version);
 
+        filename = checkOldFilename(filename);
+
         if(!Files.exists(Paths.get(filename)))
             return false;
 
@@ -435,6 +455,8 @@ public final class EnsemblDataLoader
             final List<String> restrictedGeneIds, boolean canonicalOnly)
     {
         String filename = checkAddDirSeparator(dataPath) + ensemblAminoAcidDataFile(version);
+
+        filename = checkOldFilename(filename);
 
         if(!Files.exists(Paths.get(filename)))
             return false;
