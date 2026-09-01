@@ -149,14 +149,15 @@ public class CandidateReadExtractor
         ExecutorService executor = Executors.newFixedThreadPool(mThreads);
         List<CompletableFuture<Void>> futures = new ArrayList<>();
 
+        // The unmapped reads sit in a single block that cannot be sharded, so they are scanned by one long-running
+        // task. It is submitted first so it runs concurrently with the region tasks from the start; queued last it
+        // would instead be picked up only as the region work drained, tacking its full duration onto the end.
+        futures.add(CompletableFuture.runAsync(() -> sliceUnmapped(slicer, threadReader, threadPart), executor));
+
         for(ChrBaseRegion region : partitions)
         {
             futures.add(CompletableFuture.runAsync(() -> sliceRegion(slicer, threadReader, threadPart, region), executor));
         }
-
-        // The unmapped reads sit in a single block that cannot be sharded, so they are scanned by one task; its
-        // duration relative to the region tasks shows whether the unmapped tail dominates the run.
-        futures.add(CompletableFuture.runAsync(() -> sliceUnmapped(slicer, threadReader, threadPart), executor));
 
         try
         {
