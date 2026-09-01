@@ -154,7 +154,6 @@ public class FusionWriter
                 mFragmentWriter.write(",Orient" + prefix);
                 mFragmentWriter.write(",JuncPos" + prefix);
                 mFragmentWriter.write(",JuncOrient" + prefix);
-                mFragmentWriter.write(",JuncType" + prefix);
                 mFragmentWriter.write(",GeneSet" + prefix);
                 mFragmentWriter.write(",Region" + prefix);
             }

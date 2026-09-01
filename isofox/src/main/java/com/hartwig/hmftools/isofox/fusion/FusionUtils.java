@@ -222,7 +222,8 @@ public class FusionUtils
 
                 if(positionWithin(exonPosition, juncPosLower, juncPosUpper))
                 {
-                    matchedExons.add(new TransExonRef(transData.GeneId, transData.TransId, transData.TransName, exon.Rank));
+                    matchedExons.add(new TransExonRef(
+                            transData.GeneId, transData.TransId, transData.TransName, exon.Rank, transData.IsCanonical));
                     break;
                 }
             }
