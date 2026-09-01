@@ -35,10 +35,10 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 
-// Scans the tumor BAM/CRAM once and writes candidate viral reads single-end to a gzipped FASTA, each read once.
+// Scans the tumor BAM/CRAM once and writes candidate viral reads single-end to a FASTA, each read once.
 // FASTA ids carry the mate number so the two reads of a pair stay distinct. With multiple threads the scan is
 // sharded by genome partition (plus the unmapped tail), which requires an indexed input; each worker writes its
-// own gzipped part lock-free and the parts are concatenated into the output once every task has finished.
+// own part lock-free and the parts are concatenated into the output once every task has finished.
 public class CandidateReadExtractor
 {
     @Nullable
@@ -129,8 +129,8 @@ public class CandidateReadExtractor
         BamSlicer slicer = new BamSlicer(0, true, true, true);
         slicer.setKeepUnmapped();
 
-        // One reader and one gzipped FASTA part per worker thread, both created lazily on first use, so scanning
-        // and compression run lock-free. Readers are closed and parts concatenated once every task has finished.
+        // One reader and one FASTA part per worker thread, both created lazily on first use, so scanning and writing
+        // run lock-free. Readers are closed and parts concatenated once every task has finished.
         List<SamReader> readers = Collections.synchronizedList(new ArrayList<>());
         List<FastaPart> parts = Collections.synchronizedList(new ArrayList<>());
         AtomicInteger nextPartIndex = new AtomicInteger();
@@ -289,8 +289,8 @@ public class CandidateReadExtractor
         return String.format("%.1f", (System.currentTimeMillis() - startTimeMs) / 1000.0);
     }
 
-    // A worker's private gzipped FASTA shard, written lock-free by the single thread that owns it. Independently
-    // valid gzip, so the shards concatenate byte-wise into one gzip stream. Not thread-safe: one instance per thread.
+    // A worker's private FASTA shard, written lock-free by the single thread that owns it. The shards concatenate
+    // byte-wise into the output. Not thread-safe: one instance per thread.
     private static class FastaPart
     {
         private final Path mPath;
@@ -299,8 +299,7 @@ public class CandidateReadExtractor
 
         static FastaPart create(String outputFastaFile, int index)
         {
-            String base = outputFastaFile.endsWith(".gz") ? outputFastaFile.substring(0, outputFastaFile.length() - 3) : outputFastaFile;
-            String path = base + ".part" + index + ".gz";
+            String path = outputFastaFile + ".part" + index;
             try
             {
                 return new FastaPart(path, createBufferedWriter(path));
