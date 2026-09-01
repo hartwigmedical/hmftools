@@ -10,7 +10,7 @@ public class VirusConstants
     public static final Set<String> DECOY_CONTIGS = Set.of("chrEBV");
 
     // Output file suffixes, appended to the sample id.
-    public static final String CANDIDATE_FASTA_SUFFIX = ".virus.candidates.fasta";
+    public static final String CANDIDATE_FASTA_SUFFIX = ".virus.candidates.fasta.gz";
     public static final String ALIGNED_BAM_SUFFIX = ".virus.aligned.bam";
     public static final String CONTIG_STATS_TSV_SUFFIX = ".virus.contig_stats.tsv";
 

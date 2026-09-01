@@ -2,8 +2,11 @@ package com.hartwig.hmftools.virusdetect;
 
 import static java.util.Collections.singleton;
 
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedReader;
+
 import static org.junit.Assert.assertEquals;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -61,7 +64,7 @@ public class CandidateReadExtractorTest
                 unmapped(header, "unmap", 0x1 | 0x4 | 0x80, "GGGGG"));
 
         String bam = writeIndexedBam(header, records);
-        String fasta = new File(mTempDir.getRoot(), "candidates.parallel.fasta").getPath();
+        String fasta = new File(mTempDir.getRoot(), "candidates.parallel.fasta.gz").getPath();
 
         int count = new CandidateReadExtractor(null, new CandidateReadFilter(20, singleton("chrEBV")), 4).extractToFasta(bam, fasta);
 
@@ -124,7 +127,11 @@ public class CandidateReadExtractorTest
 
     private static Set<String> fastaEntries(String fasta) throws IOException
     {
-        List<String> lines = Files.readAllLines(new File(fasta).toPath());
+        List<String> lines;
+        try(BufferedReader reader = createBufferedReader(fasta))
+        {
+            lines = reader.lines().toList();
+        }
         Set<String> entries = new HashSet<>();
         for(int i = 0; i < lines.size(); i += 2)
         {

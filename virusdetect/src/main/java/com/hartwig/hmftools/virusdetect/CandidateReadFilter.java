@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.virusdetect;
 
-import static java.lang.Math.max;
-
 import static com.hartwig.hmftools.common.bam.CigarUtils.leftSoftClipLength;
 import static com.hartwig.hmftools.common.bam.CigarUtils.rightSoftClipLength;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.mateUnmapped;
@@ -33,7 +31,7 @@ public class CandidateReadFilter
         {
             return true;
         }
-        if(max(leftSoftClipLength(record), rightSoftClipLength(record)) >= mMinSoftClipBases)
+        if(leftSoftClipLength(record) >= mMinSoftClipBases || rightSoftClipLength(record) >= mMinSoftClipBases)
         {
             return true;
         }
