@@ -12,6 +12,7 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SAMSequenceRecord;
 
+import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
 
 public class CandidateReadFilterTest
@@ -62,10 +63,54 @@ public class CandidateReadFilterTest
         assertFalse(FILTER.isCandidate(read(0, "chr1", "100M")));
     }
 
+    @Test
+    public void testClippedReadWithoutSupplementaryIsCandidate()
+    {
+        // no SA tag: the clipped bases were not placed in the host, so the clip may mark a viral junction
+        assertTrue(FILTER.isCandidate(read(0, "chr1", "30S70M")));
+    }
+
+    @Test
+    public void testClippedReadWithHostSupplementaryIsNotCandidate()
+    {
+        // clipped bases align elsewhere in the host (chr1), so the clip is not viral evidence
+        assertFalse(FILTER.isCandidate(read(0, "chr1", "30S70M", "chr1,200,+,70M30S,60,0;")));
+    }
+
+    @Test
+    public void testClippedReadWithViralSupplementaryIsCandidate()
+    {
+        // clipped bases align to the viral decoy, so the clip marks a viral junction
+        assertTrue(FILTER.isCandidate(read(0, "chr1", "30S70M", "chrEBV,200,+,70M30S,60,0;")));
+    }
+
+    @Test
+    public void testClippedReadWithViralAndHostSupplementaryIsNotCandidate()
+    {
+        // any host-placed clipped bases disqualify the clip, even alongside a viral supplementary
+        assertFalse(FILTER.isCandidate(read(0, "chr1", "30S70M", "chrEBV,200,+,70M30S,60,0;chr1,900,+,70M30S,60,0;")));
+    }
+
+    @Test
+    public void testHostSupplementaryClipWithUnmappedMateIsStillCandidate()
+    {
+        // the supplementary check only gates the clip rule; the unmapped-mate rule still applies (0x1|0x8|0x40 = 73)
+        assertTrue(FILTER.isCandidate(read(73, "chr1", "30S70M", "chr1,200,+,70M30S,60,0;")));
+    }
+
     private static SAMRecord read(int flags, String contig, String cigar)
+    {
+        return read(flags, contig, cigar, null);
+    }
+
+    private static SAMRecord read(int flags, String contig, String cigar, @Nullable String supplementaryTag)
     {
         String position = contig.equals("*") ? "0" : "100";
         String line = String.join("\t", "read", String.valueOf(flags), contig, position, "0", cigar, "*", "0", "0", BASES, "*");
+        if(supplementaryTag != null)
+        {
+            line = line + "\tSA:Z:" + supplementaryTag;
+        }
         return SamRecordTestUtils.parseSamString(line, DICT);
     }
 }

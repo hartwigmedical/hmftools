@@ -17,7 +17,7 @@ public class VirusConstants
     // Provisional defaults, to be tuned on real data.
 
     // Minimum soft-clip length for a read to count as a candidate.
-    public static final int MIN_SOFT_CLIP_BASES_DEFAULT = 20;
+    public static final int MIN_SOFT_CLIP_BASES_DEFAULT = 30;
 
     // Minimum BWA alignment score, as a fraction of read length, to keep an alignment.
     public static final double MIN_ALIGNMENT_SCORE_FRACTION_DEFAULT = 0.5;
