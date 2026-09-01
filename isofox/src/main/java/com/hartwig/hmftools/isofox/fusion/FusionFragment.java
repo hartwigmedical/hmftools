@@ -37,7 +37,6 @@ public class FusionFragment
     private final byte[] mOrientations;
     private final int[] mJunctionPositions; // fusion junction if exists
     private final byte[] mJunctionOrientations; // orientation at junction if exists
-    private final FusionJunctionType[] mJunctionTypes;
     private FusionFragmentType mType;
     private final String[] mLocationIds; // used to group proximate fragments and fusions
 
@@ -55,7 +54,6 @@ public class FusionFragment
         mJunctionOrientations = new byte[] {0, 0};
         mOrientations = new byte[] {0, 0};
         mRegionMatchTypes = new RegionMatchType[] { RegionMatchType.NONE, RegionMatchType.NONE };
-        mJunctionTypes = new FusionJunctionType[] { FusionJunctionType.UNKNOWN, FusionJunctionType.UNKNOWN };
         mLocationIds = new String[] {"", ""};
 
         mTransExonRefs = new List[SE_PAIR];
@@ -99,7 +97,6 @@ public class FusionFragment
     public final byte[] junctionOrientations() { return mJunctionOrientations; }
 
     public final RegionMatchType[] regionMatchTypes() { return mRegionMatchTypes; }
-    public final FusionJunctionType[] fragJunctionTypes() { return mJunctionTypes; }
 
     public boolean isUnspliced() { return mRegionMatchTypes[SE_START] == INTRON && mRegionMatchTypes[SE_END] == INTRON; }
     public boolean isSpliced() { return exonBoundary(mRegionMatchTypes[SE_START]) && exonBoundary(mRegionMatchTypes[SE_END]); }
@@ -213,42 +210,7 @@ public class FusionFragment
                 continue;
             }
 
-            mJunctionTypes[seIndex] = KNOWN;
             ++index;
-        }
-    }
-
-    public void setJunctionTypes(final byte[] junctionStrands, final String[] junctionSpliceBases)
-    {
-        for(int se = SE_START; se <= SE_END; ++se)
-        {
-            if(mJunctionTypes[se] == KNOWN)
-            {
-                continue;
-            }
-            else if(mJunctionPositions[se] > 0)
-            {
-                String daBases = junctionSpliceBases[se];
-
-                if(junctionStrands != null)
-                {
-                    boolean isDonor = (mJunctionOrientations[se] == junctionStrands[se]);
-
-                    if(isDonor && canonicalDonor(daBases, junctionStrands[se]))
-                        mJunctionTypes[se] = FusionJunctionType.CANONICAL;
-                    else if(!isDonor && canonicalAcceptor(daBases, junctionStrands[se]))
-                        mJunctionTypes[se] = FusionJunctionType.CANONICAL;
-                }
-                else
-                {
-                    // try them both
-                    byte asDonorStrand = mJunctionOrientations[se];
-                    byte asAcceptorStrand = (byte)(-mJunctionOrientations[se]);
-
-                    if(canonicalDonor(daBases, asDonorStrand) || canonicalAcceptor(daBases, asAcceptorStrand))
-                        mJunctionTypes[se] = FusionJunctionType.CANONICAL;
-                }
-            }
         }
     }
 

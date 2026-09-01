@@ -188,9 +188,9 @@ public class FusionWriter
 
             for(int se = SE_START; se <= SE_END; ++se)
             {
-                mFragmentWriter.write(String.format(",%s,%d,%d,%d,%s,%d,%s",
+                mFragmentWriter.write(String.format(",%s,%d,%d,%d,%d,%s",
                         fragment.chromosomes()[se], fragment.orientations()[se],
-                        fragment.junctionPositions()[se], fragment.junctionOrientations()[se], fragment.fragJunctionTypes()[se],
+                        fragment.junctionPositions()[se], fragment.junctionOrientations()[se],
                         fragment.geneCollections()[se], fragment.regionMatchTypes()[se]));
             }
 

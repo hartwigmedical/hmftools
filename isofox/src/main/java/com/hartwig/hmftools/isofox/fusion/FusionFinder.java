@@ -440,7 +440,7 @@ public class FusionFinder implements Callable<Void>
             return true;
 
         FusionReadData fusionData = new FusionReadData(0, fragment);
-        fusionData.setJunctionBases(mConfig.RefGenome);
+        fusionData.setJunctionBases(mConfig.RefGenome, true);
         setGeneData(fusionData);
 
         if(!fusionData.hasViableGenes())
@@ -449,7 +449,7 @@ public class FusionFinder implements Callable<Void>
         if(!mPassingFusions.knownFusionCache().hasKnownFusion(fusionData.getGeneName(FS_UP), fusionData.getGeneName(FS_DOWN)))
             return false;
 
-        return fragment.fragJunctionTypes()[FS_UP] == KNOWN || fragment.fragJunctionTypes()[FS_DOWN] == KNOWN;
+        return fusionData.junctionTypes()[FS_UP] == KNOWN || fusionData.junctionTypes()[FS_DOWN] == KNOWN;
     }
 
     private FusionReadData createOrUpdateFusion(final FusionFragment fragment)
@@ -466,13 +466,6 @@ public class FusionFinder implements Callable<Void>
         if(existingFusion != null)
         {
             existingFusion.addFusionFragment(fragment, mConfig.Fusions.CacheFragments);
-
-            // mark donor-acceptor types whether strands are known or not
-            fragment.fragJunctionTypes()[SE_START] = existingFusion.getInitialFragment().fragJunctionTypes()[SE_START];
-            fragment.fragJunctionTypes()[SE_END] = existingFusion.getInitialFragment().fragJunctionTypes()[SE_END];
-            // fragment.junctionTypes()[SE_START] = existingFusion.junctionTypes()[SE_START];
-            // fragment.junctionTypes()[SE_END] = existingFusion.junctionTypes()[SE_END];
-
             return null;
         }
 
@@ -487,9 +480,9 @@ public class FusionFinder implements Callable<Void>
         int fusionId = mFusionWriter.getNextFusionId();
         final FusionReadData fusionData = new FusionReadData(fusionId, fragment);
 
-        fusionData.setJunctionBases(mConfig.RefGenome);
+        fusionData.setJunctionBases(mConfig.RefGenome, true);
         setGeneData(fusionData);
-        fusionData.adjustPositionsSpliceAware();
+        fusionData.adjustPositionsSpliceAware(mConfig.RefGenome);
 
         fusions.add(fusionData);
 
@@ -577,13 +570,6 @@ public class FusionFinder implements Callable<Void>
             if(!spliceGeneIds.isEmpty())
             {
                 genesByPosition[se] = spliceGeneIds.stream().map(x -> mGeneTransCache.getGeneDataById(x)).collect(Collectors.toList());
-
-                /*
-                final int seIndex = se;
-                validTransDataList[se] = transDataList.stream()
-                        .filter(x -> initialFragment.getTransExonRefs()[seIndex].stream().anyMatch(y -> x.TransId == y.TransId))
-                        .collect(Collectors.toList());
-                */
             }
         }
 
@@ -669,7 +655,7 @@ public class FusionFinder implements Callable<Void>
 
         for(int se = SE_START; se <= SE_END; ++se)
         {
-            // now that the stream (ie up or down) of the fusion has been determined, check for canonical splice sites if not known
+            // now that the strandedness of the fusion has been determined, check for canonical splice sites if not matching known
             if(fusionData.junctionTypes()[se] != KNOWN)
             {
                 if(matchesCanonicalSpliceJunction(
@@ -678,16 +664,6 @@ public class FusionFinder implements Callable<Void>
                     fusionData.junctionTypes()[se] = CANONICAL;
                 }
             }
-        }
-
-        initialFragment.setJunctionTypes(fusionData.getGeneStrands(), fusionData.junctionSpliceBases());
-
-        if(initialFragment.fragJunctionTypes()[SE_START] != fusionData.junctionTypes()[SE_START]
-        || initialFragment.fragJunctionTypes()[SE_END] != fusionData.junctionTypes()[SE_END])
-        {
-            ISF_LOGGER.warn("fusion({}) junction types differ: fusion({}/{}) vs fragment({}/{})",
-                    fusionData, fusionData.junctionTypes()[SE_START], fusionData.junctionTypes()[SE_END],
-                    initialFragment.fragJunctionTypes()[SE_START], initialFragment.fragJunctionTypes()[SE_END]);
         }
     }
 
@@ -1090,9 +1066,7 @@ public class FusionFinder implements Callable<Void>
         if(mPassingFusions.knownFusionCache().hasKnownFusion(fusionData.getGeneName(FS_UP), fusionData.getGeneName(FS_DOWN)))
             return false;
 
-        final FusionJunctionType[] junctionTypes = fusionData.getInitialFragment().fragJunctionTypes();
-
-        return junctionTypes[SE_START] != KNOWN && junctionTypes[SE_END] != KNOWN;
+        return fusionData.junctionTypes()[SE_START] != KNOWN && fusionData.junctionTypes()[SE_END] != KNOWN;
     }
 
     private void checkLocalDuplicates()

@@ -735,8 +735,8 @@ public class FusionDataTest
         read3.setStrand(true, false);
 
         FusionReadData fusion = callJunctionFusion(finder, gc1, gc2, read1, read2, read3);
-        assertEquals(1100, fusion.junctionPositions()[SE_START]);
-        assertEquals(10200, fusion.junctionPositions()[SE_END]);
+        assertEquals(1099, fusion.junctionPositions()[SE_START]);
+        assertEquals(10199, fusion.junctionPositions()[SE_END]);
         assertEquals(ORIENT_FWD, fusion.junctionOrientations()[SE_START]);
         assertEquals(ORIENT_REV, fusion.junctionOrientations()[SE_END]);
         assertEquals(1, fusion.getFragments(MATCHED_JUNCTION).size());
@@ -775,8 +775,8 @@ public class FusionDataTest
         FusionReadData fusion = callJunctionFusion(finder, gc1, gc2, read1, read2, read3);
         assertEquals(ORIENT_FWD, fusion.junctionOrientations()[SE_START]);
         assertEquals(ORIENT_FWD, fusion.junctionOrientations()[SE_END]);
-        assertEquals(1100, fusion.junctionPositions()[SE_START]);
-        assertEquals(10300, fusion.junctionPositions()[SE_END]);
+        assertEquals(1099, fusion.junctionPositions()[SE_START]);
+        assertEquals(10301, fusion.junctionPositions()[SE_END]);
     }
 
     @Test

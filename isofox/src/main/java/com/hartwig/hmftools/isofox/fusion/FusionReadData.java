@@ -26,6 +26,9 @@ import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT_J
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.MATCHED_JUNCTION;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.REALIGNED;
+import static com.hartwig.hmftools.isofox.fusion.FusionJunctionType.CANONICAL;
+import static com.hartwig.hmftools.isofox.fusion.FusionJunctionType.KNOWN;
+import static com.hartwig.hmftools.isofox.fusion.FusionUtils.matchesCanonicalSpliceJunction;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.setMaxSplitMappedLength;
 
 import java.util.List;
@@ -211,7 +214,7 @@ public class FusionReadData
     public boolean hasViableGenes() { return mFusionGenes[FS_UP] != null && mFusionGenes[FS_DOWN] != null; }
     public FusionJunctionType[] junctionTypes() { return mJunctionTypes; }
 
-    public void setJunctionBases(final RefGenomeInterface refGenome)
+    public void setJunctionBases(final RefGenomeInterface refGenome, boolean checkHomology)
     {
         if(!mFragment.type().isJunctionType())
             return;
@@ -259,8 +262,11 @@ public class FusionReadData
             // junction may be in an invalid region, just ignore these
         }
 
-        setHomologyPositionAdjustment();
-        setHomologyOffsets();
+        if(checkHomology)
+        {
+            setHomologyPositionAdjustment();
+            setHomologyOffsets();
+        }
     }
 
     private void setHomologyPositionAdjustment()
@@ -284,41 +290,6 @@ public class FusionReadData
         int overlapLength = otherJuncRefBases.indexOf(juncSoftClipBases);
 
         mSplitJunctionOverlap = max(overlapLength, 0);
-    }
-
-    public void adjustPositionsSpliceAware()
-    {
-        if(mSplitJunctionOverlap == 0)
-            return;
-
-        ISF_LOGGER.trace("fusion({}) homology({}/{}) splitJuncOverlap({}) junctionTypes({}/{})",
-                toString(), mJunctionHomology[0], mJunctionHomology[1],
-                mSplitJunctionOverlap, mFragment.fragJunctionTypes()[0], mFragment.fragJunctionTypes()[1]);
-
-        // favour known over canonical over unknown
-        int juncStartTypeOrdinal = mFragment.fragJunctionTypes()[0].ordinal();
-        int juncEndTypeOrdinal = mFragment.fragJunctionTypes()[1].ordinal();
-        // int juncStartTypeOrdinal = mJunctionTypes[0].ordinal();
-        // int juncEndTypeOrdinal = mJunctionTypes[1].ordinal();
-
-        if(juncStartTypeOrdinal < juncEndTypeOrdinal)
-        {
-            // for a DEL this shifts the position up further up since orientation is -ve
-            mJunctionPositions[SE_END] -= mSplitJunctionOverlap * mJunctionOrientations[SE_END];
-        }
-        else if(juncEndTypeOrdinal < juncStartTypeOrdinal)
-        {
-            mJunctionPositions[SE_START] -= mSplitJunctionOverlap * mJunctionOrientations[SE_START];
-        }
-        else
-        {
-            // split the change
-            int halfOverlap = mSplitJunctionOverlap / 2;
-            int exactStart = (mSplitJunctionOverlap % 2) == 0 ? halfOverlap : halfOverlap + 1; // round up if an odd length
-            int exactEnd = mSplitJunctionOverlap - exactStart;
-            mJunctionPositions[SE_START] -= exactStart * mJunctionOrientations[SE_START];
-            mJunctionPositions[SE_END] -= exactEnd * mJunctionOrientations[SE_END];
-        }
     }
 
     private void setHomologyOffsets()
@@ -360,6 +331,53 @@ public class FusionReadData
                     mJunctionHomology[SE_START] = -i;
                 else
                     mJunctionHomology[SE_END] = i;
+            }
+        }
+    }
+
+    public void adjustPositionsSpliceAware(final RefGenomeInterface refGenome)
+    {
+        if(mSplitJunctionOverlap == 0)
+            return;
+
+        ISF_LOGGER.trace("fusion({}) homology({}/{}) splitJuncOverlap({}) junctionTypes({}/{})",
+                toString(), mJunctionHomology[0], mJunctionHomology[1], mSplitJunctionOverlap, mJunctionTypes[0], mJunctionTypes[1]);
+
+        // favour known over canonical over unknown
+        int juncStartTypeOrdinal = mJunctionTypes[0].ordinal();
+        int juncEndTypeOrdinal = mJunctionTypes[1].ordinal();
+
+        if(juncStartTypeOrdinal < juncEndTypeOrdinal)
+        {
+            // for a DEL this shifts the position up further up since orientation is -ve
+            mJunctionPositions[SE_END] -= mSplitJunctionOverlap * mJunctionOrientations[SE_END];
+        }
+        else if(juncEndTypeOrdinal < juncStartTypeOrdinal)
+        {
+            mJunctionPositions[SE_START] -= mSplitJunctionOverlap * mJunctionOrientations[SE_START];
+        }
+        else
+        {
+            // split the change
+            int halfOverlap = mSplitJunctionOverlap / 2;
+            int exactStart = (mSplitJunctionOverlap % 2) == 0 ? halfOverlap : halfOverlap + 1; // round up if an odd length
+            int exactEnd = mSplitJunctionOverlap - exactStart;
+            mJunctionPositions[SE_START] -= exactStart * mJunctionOrientations[SE_START];
+            mJunctionPositions[SE_END] -= exactEnd * mJunctionOrientations[SE_END];
+        }
+
+        setJunctionBases(refGenome, false);
+
+        // re-check for canonical splice sites
+        for(int se = SE_START; se <= SE_END; ++se)
+        {
+            // now that the stream (ie up or down) of the fusion has been determined, check for canonical splice sites if not known
+            if(mJunctionTypes[se] == KNOWN)
+                continue;
+
+            if(matchesCanonicalSpliceJunction(mJunctionOrientations[se], mJunctionSpliceBases[se], geneStrandByPosition(se)))
+            {
+                mJunctionTypes[se] = CANONICAL;
             }
         }
     }
@@ -434,17 +452,6 @@ public class FusionReadData
     public Byte geneStrandByPosition(int se)
     {
         return mFusionGenes[se] != null ? mFusionGenes[se].Strand : null;
-    }
-
-    public byte[] getGeneStrands()
-    {
-        if(!hasViableGenes())
-            return null;
-
-        if(mStreamIndices[FS_UP] == SE_START)
-            return new byte[] { mFusionGenes[SE_START].Strand, mFusionGenes[SE_END].Strand };
-        else
-            return new byte[] { mFusionGenes[SE_END].Strand, mFusionGenes[SE_START].Strand };
     }
 
     public void addRelatedFusion(int id, boolean isSpliced)
@@ -697,7 +704,7 @@ public class FusionReadData
 
             junctionPositions[fs] = mJunctionPositions[mStreamIndices[fs]];
             junctionOrientations[fs] = mJunctionOrientations[mStreamIndices[fs]];
-            junctionTypes[fs] = sampleFragment.fragJunctionTypes()[mStreamIndices[fs]];
+            junctionTypes[fs] = mJunctionTypes[mStreamIndices[fs]];
 
             GeneData geneData = mFusionGenes[fs];
 
