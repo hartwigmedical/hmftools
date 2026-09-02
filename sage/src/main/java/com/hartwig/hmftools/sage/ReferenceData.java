@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.sage;
 
 import static com.hartwig.hmftools.common.driver.panel.DriverGeneRegions.buildDriverGeneBaseRegions;
+import static com.hartwig.hmftools.common.driver.panel.DriverGeneRegions.findInvalidDriverGenes;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.loadTranscriptAminoAcidData;
 import static com.hartwig.hmftools.common.hla.HlaCommon.hlaChromosome;
 import static com.hartwig.hmftools.common.region.BedFileReader.loadBedFileChrMap;
@@ -146,6 +147,15 @@ public class ReferenceData
         {
             if(DriverGenes != null)
             {
+                // validate that driver genes have matching entries in Ensembl
+                List<DriverGene> invalidDriverGenes = findInvalidDriverGenes(DriverGenes, GeneDataCache);
+                if(!invalidDriverGenes.isEmpty())
+                {
+                    SG_LOGGER.error("invalid driver gene names: {}",
+                            invalidDriverGenes.stream().map( x -> x.gene()).collect(Collectors.joining(";")));
+                    System.exit(1);
+                }
+
                 List<String> driverGeneNames = DriverGenes.stream().map(DriverGene::gene).collect(Collectors.toList());
 
                 Map<String, List<BaseRegion>> driverGeneRegions = buildDriverGeneBaseRegions(
