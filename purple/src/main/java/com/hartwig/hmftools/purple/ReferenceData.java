@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.purple;
 
+import static com.hartwig.hmftools.common.driver.panel.DriverGeneRegions.findInvalidDriverGenes;
 import static com.hartwig.hmftools.common.genome.gc.GCProfileFactory.addGcProfilePath;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
@@ -22,6 +23,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ArrayListMultimap;
@@ -156,6 +158,15 @@ public class ReferenceData
         OtherReportableTranscripts = Maps.newHashMap();
         GeneTransCache = new EnsemblDataCache(configBuilder);
         loadGeneTransCache();
+
+        // validate that driver genes have matching entries in Ensembl
+        List<DriverGene> invalidDriverGenes = findInvalidDriverGenes(DriverGenes.DriverGeneList, GeneTransCache);
+        if(!invalidDriverGenes.isEmpty())
+        {
+            PPL_LOGGER.error("invalid driver gene names: {}",
+                    invalidDriverGenes.stream().map( x -> x.gene()).collect(Collectors.joining(";")));
+            System.exit(1);
+        }
 
         if(mIsValid && config.tumorOnlyMode())
         {

@@ -5,6 +5,7 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
 import static com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL;
 import static com.hartwig.hmftools.common.driver.panel.DriverGeneRegions.buildDriverGeneRegions;
+import static com.hartwig.hmftools.common.driver.panel.DriverGeneRegions.findInvalidDriverGenes;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
 import static com.hartwig.hmftools.common.metrics.GeneDepthFile.generateExonCoverageFilename;
 import static com.hartwig.hmftools.common.metrics.GeneDepthFile.generateGeneCoverageFilename;
@@ -24,6 +25,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.driver.panel.DriverGene;
 import com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig;
+import com.hartwig.hmftools.common.driver.panel.DriverGeneRegions;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
@@ -56,6 +58,14 @@ public class GeneCoverage
         ensemblDataCache.createGeneNameIdMap();
 
         List<DriverGene> driverGenes = DriverGenePanelConfig.loadDriverGenes(configBuilder);
+
+        List<DriverGene> invalidDriverGenes = findInvalidDriverGenes(driverGenes, ensemblDataCache);
+        if(!invalidDriverGenes.isEmpty())
+        {
+            BT_LOGGER.error("invalid driver gene names: {}",
+                    invalidDriverGenes.stream().map( x -> x.gene()).collect(Collectors.joining(";")));
+            System.exit(1);
+        }
 
         List<String> coverageGenes = driverGenes.stream().map(x -> x.gene()).collect(Collectors.toList());
 
