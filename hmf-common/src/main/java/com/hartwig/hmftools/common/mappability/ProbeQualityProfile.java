@@ -44,7 +44,7 @@ public class ProbeQualityProfile
     protected final Map<String, WindowArray> mWindows;
 
     public static final String CFG_PROBE_QUALITY_FILE = "probe_quality_profile";
-    private static final String DESC_PROBE_QUALITY_FILE = "Genome regions to probe quality";
+    public static final String DESC_PROBE_QUALITY_FILE = "Genome regions to probe quality";
 
     // Must match the config used for generating the file.
     private static final int RESOURCE_BASE_WINDOW_LENGTH = 40;

@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.geneutils.panelfinder;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
 import static java.lang.String.format;
@@ -9,7 +10,9 @@ import static java.lang.String.valueOf;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._Y;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.region.TaggedRegion.loadRegionsFromBedFile;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadDelimitedIdFile;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_NAME;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POS_END;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POS_START;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_REGION_END;
@@ -20,7 +23,7 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBuffe
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.APP_NAME;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.GU_LOGGER;
 import static com.hartwig.hmftools.geneutils.panelfinder.PanelFinderConfig.CHROMOSOME_Y_SAMPLE_FRACTION;
-import static com.hartwig.hmftools.geneutils.panelfinder.PanelFinderConfig.GENE_PROXIMITY_MIN;
+import static com.hartwig.hmftools.geneutils.panelfinder.PanelFinderConfig.DEFAULT_GENE_UPSTREAM_DISTANCE;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -29,11 +32,13 @@ import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.GeneData;
@@ -45,6 +50,7 @@ import com.hartwig.hmftools.common.mappability.RegionQuality;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.region.TaggedRegion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.common.utils.file.FileReaderUtils;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -270,6 +276,13 @@ public class PanelRegionFinder
         ensemblDataCache.setRequiredData(true, false, false, true);
         ensemblDataCache.load(false);
 
+        Set<String> panelGeneNames = Sets.newHashSet();
+
+        if(mConfig.GeneIdFile != null)
+        {
+            panelGeneNames.addAll(loadDelimitedIdFile(mConfig.GeneIdFile, FLD_GENE_NAME, TSV_DELIM));
+        }
+
         for(Map.Entry<String,List<RegionData>> entry : mChrRegions.entrySet())
         {
             List<RegionData> regions = entry.getValue();
@@ -279,33 +292,59 @@ public class PanelRegionFinder
             if(geneDataList == null)
                 continue;
 
+            List<GeneTransData> geneTransDataList = Lists.newArrayListWithCapacity(geneDataList.size());
+
+            // combine gene and transcript data
+            for(GeneData geneData : geneDataList)
+            {
+                TranscriptData transcriptData = ensemblDataCache.getCanonicalTranscriptData(geneData.GeneId);
+
+                if(transcriptData != null)
+                {
+                    geneTransDataList.add(new GeneTransData(geneData, transcriptData));
+                }
+            }
+
+            List<GeneTransData> panelGeneDataList = geneTransDataList.stream()
+                    .filter(x -> panelGeneNames.contains(x.geneData().GeneName)).collect(Collectors.toList());
+
             for(RegionData region : regions)
             {
-                List<GeneData> overlappingGenes = geneDataList.stream()
-                        .filter(x -> region.overlaps(x.Chromosome, x.GeneStart, x.GeneEnd)).collect(Collectors.toList());
+                List<GeneTransData> overlappingTranscripts = geneTransDataList.stream()
+                        .filter(x -> region.overlaps(x.geneData().Chromosome, x.transcriptData().TransStart, x.transcriptData().TransEnd))
+                        .collect(Collectors.toList());
+
+                GeneTransData panelGeneOverlap = panelGeneDataList.stream()
+                        .filter(x -> regionOverlapsGeneBounds(region, x)).findFirst().orElse(null);
+
+                if(panelGeneOverlap != null)
+                    region.setPanelGene(panelGeneOverlap.geneData().GeneName);
 
                 GeneData closestGene = null;
                 ExonData closestExon = null;
                 int closestNonOverlap = -1;
 
-                if(!overlappingGenes.isEmpty())
+                if(!overlappingTranscripts.isEmpty())
                 {
-                    for(GeneData geneData : overlappingGenes)
+                    for(GeneTransData geneTransData : overlappingTranscripts)
                     {
-                        TranscriptData transcriptData = ensemblDataCache.getCanonicalTranscriptData(geneData.GeneId);
+                        GeneData geneData = geneTransData.geneData();
+                        TranscriptData transcriptData = geneTransData.transcriptData();
 
-                        if(transcriptData == null)
-                            continue;
-
-                        for(ExonData exon : transcriptData.exons())
+                        // any region within exons will be annotated
+                        for(int i = 0; i < transcriptData.exons().size(); ++i)
                         {
+                            ExonData exon = transcriptData.exons().get(i);
+                            ExonData nextExon = i < transcriptData.exons().size() - 1 ? transcriptData.exons().get(i + 1) : null;
+
                             if(positionsOverlap(region.start(), region.end(), exon.Start, exon.End))
                             {
                                 region.addGeneExon(new GeneExonData(geneData.GeneName, exon.Rank, exon.Start, exon.End));
                             }
-                            else if(region.geneExons().isEmpty())
+                            else if(region.geneExons().isEmpty() && nextExon != null
+                            && region.start() > exon.End && region.end() < nextExon.Start)
                             {
-                                int absDistance = min(abs(exon.End - region.start()), abs(exon.Start - region.end()));
+                                int absDistance = min(abs(exon.End - region.start()), abs(nextExon.Start - region.end()));
 
                                 if(closestNonOverlap == -1 || absDistance < closestNonOverlap)
                                 {
@@ -319,17 +358,29 @@ public class PanelRegionFinder
                 }
                 else
                 {
-                    for(GeneData geneData : geneDataList)
+                    for(GeneTransData geneTransData : geneTransDataList)
                     {
-                        if(geneData.GeneEnd < region.start() - GENE_PROXIMITY_MIN)
-                            continue;
+                        GeneData geneData = geneTransData.geneData();
+                        TranscriptData transcriptData = geneTransData.transcriptData();
 
-                        if(geneData.GeneStart > region.end() + GENE_PROXIMITY_MIN)
-                            break;
+                        int absDistance = min(abs(transcriptData.TransEnd - region.start()), abs(transcriptData.TransStart - region.end()));
 
-                        int absDistance = min(abs(geneData.GeneEnd - region.start()), abs(geneData.GeneStart - region.end()));
+                        if(region.end() < geneData.GeneStart)
+                        {
+                            int permittedDistance = geneData.forwardStrand() ? mConfig.GeneUpstreamDistance : mConfig.GeneDownstreamDistance;
 
-                        if(absDistance <= GENE_PROXIMITY_MIN && (closestNonOverlap == -1 || absDistance < closestNonOverlap))
+                            if(absDistance > permittedDistance)
+                                break;
+                        }
+                        else
+                        {
+                            int permittedDistance = !geneData.forwardStrand() ? mConfig.GeneUpstreamDistance : mConfig.GeneDownstreamDistance;
+
+                            if(absDistance > permittedDistance)
+                                continue;
+                        }
+
+                        if(closestNonOverlap == -1 || absDistance < closestNonOverlap)
                         {
                             closestGene = geneData;
                             closestNonOverlap = absDistance;
@@ -356,6 +407,27 @@ public class PanelRegionFinder
                 }
             }
         }
+    }
+
+    private record GeneTransData(GeneData geneData, TranscriptData transcriptData) {}
+
+    private boolean regionOverlapsGeneBounds(final RegionData region, final GeneTransData geneTransData)
+    {
+        int lowerGeneBounds = geneTransData.transcriptData().TransStart;
+        int upperGeneBounds = geneTransData.transcriptData().TransEnd;
+
+        if(geneTransData.geneData().forwardStrand())
+        {
+            lowerGeneBounds -= mConfig.GeneUpstreamDistance;
+            upperGeneBounds += mConfig.GeneDownstreamDistance;
+        }
+        else
+        {
+            lowerGeneBounds -= mConfig.GeneDownstreamDistance;
+            upperGeneBounds += mConfig.GeneUpstreamDistance;
+        }
+
+        return positionsOverlap(region.start(), region.end(), lowerGeneBounds, upperGeneBounds);
     }
 
     private void annotateMappability()
@@ -401,6 +473,8 @@ public class PanelRegionFinder
 
             sj.add("PanelRegionCount");
             sj.add("PanelRegionInfo");
+            sj.add("PanelGene");
+            sj.add("NonPanelRegionLength");
             sj.add("NearestPanelRegion");
 
             sj.add("GeneExonCount");
@@ -428,12 +502,16 @@ public class PanelRegionFinder
 
                 for(RegionData region : regions)
                 {
+                    if(mConfig.RequirePanelGene && region.panelRegions().isEmpty() && region.panelGeneName().isEmpty())
+                        continue;
+
                     // filter on mappability
                     double meanMappability = region.meanMappability();
 
                     if(mConfig.MinMappability > 0)
                     {
-                        if(region.panelRegions().isEmpty() && meanMappability < mConfig.MinMappability)
+                        // apply the min mappability check if not in an existing panel region and not a known panel gene
+                        if(region.panelRegions().isEmpty() && meanMappability < mConfig.MinMappability && region.panelGeneName().isEmpty())
                             continue;
                     }
 
@@ -465,20 +543,28 @@ public class PanelRegionFinder
                             if(panelRegion.panelRegions().isEmpty())
                                 continue;
 
-                            if(panelRegion.end() < region.start() - GENE_PROXIMITY_MIN)
+                            if(panelRegion.end() < region.start() - DEFAULT_GENE_UPSTREAM_DISTANCE)
                                 continue;
 
-                            if(panelRegion.start() > region.end() + GENE_PROXIMITY_MIN)
+                            if(panelRegion.start() > region.end() + DEFAULT_GENE_UPSTREAM_DISTANCE)
                                 break;
 
                             int absDistance = min(abs(panelRegion.end() - region.start()), abs(panelRegion.start() - region.end()));
 
-                            if(absDistance <= GENE_PROXIMITY_MIN && (closetPanelRegion == -1 || absDistance < closetPanelRegion))
+                            if(absDistance <= DEFAULT_GENE_UPSTREAM_DISTANCE && (closetPanelRegion == -1 || absDistance < closetPanelRegion))
                             {
                                 closetPanelRegion = absDistance;
                             }
                         }
                     }
+
+                    sj.add(region.panelGeneName());
+
+                    // length of the region not covered by panel regions
+                    int regionLength = region.baseLength();
+                    int panelRegionsLength = region.panelRegions().stream().mapToInt(x -> x.baseLength()).sum();
+                    int nonPanelLength = max(regionLength - panelRegionsLength, 0);
+                    sj.add(valueOf(nonPanelLength));
 
                     sj.add(valueOf(closetPanelRegion));
 
