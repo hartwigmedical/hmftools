@@ -69,6 +69,7 @@ public class FusionReadData
     private final String[] mPostJunctionRefBases; // the 10 bases continuing on from the junction
     private final String[] mJunctionSpliceBases; // the 2 donor/acceptor bases
     private int mSplitJunctionOverlap;
+    private boolean mSplitJunctionOverlapApplied;
     private final FusionJunctionType[] mJunctionTypes;
 
     private final List<TransExonRef>[] mTransExonRefs;
@@ -94,6 +95,7 @@ public class FusionReadData
         mJunctionSoftClipBases = new String[] {"", ""};
         mJunctionSpliceBases = new String[] {"", ""};
         mSplitJunctionOverlap = 0;
+        mSplitJunctionOverlapApplied = false;
         mJunctionTypes = new FusionJunctionType[] { FusionJunctionType.UNKNOWN, FusionJunctionType.UNKNOWN };
 
         mFragments = null;
@@ -144,7 +146,10 @@ public class FusionReadData
     public final String[] postJunctionRefBases() { return mPostJunctionRefBases; }
     public final String[] junctionSpliceBases() { return mJunctionSpliceBases; }
     public final int[] junctionHomology() { return mJunctionHomology; }
-    public final int splitJunctionOverlap() { return mSplitJunctionOverlap; }
+
+    public int splitJunctionOverlap() { return mSplitJunctionOverlap; }
+    public boolean splitJunctionOverlapApplied() { return mSplitJunctionOverlapApplied; }
+    public void markSplitJunctionOverlapApplied() { mSplitJunctionOverlapApplied = true; }
 
     public boolean hasIncompleteData() { return mIncompleteData; }
     public void setIncompleteData() { mIncompleteData = true; }
@@ -214,7 +219,15 @@ public class FusionReadData
     public boolean hasViableGenes() { return mFusionGenes[FS_UP] != null && mFusionGenes[FS_DOWN] != null; }
     public FusionJunctionType[] junctionTypes() { return mJunctionTypes; }
 
-    public void setJunctionBases(final RefGenomeInterface refGenome, boolean checkHomology)
+    public void setJunctionBases(final RefGenomeInterface refGenome)
+    {
+        for(int se = SE_START; se <= SE_END; ++se)
+        {
+            setJunctionBases(refGenome, se);
+        }
+    }
+
+    public void setJunctionBases(final RefGenomeInterface refGenome, int seIndex)
     {
         if(!mFragment.type().isJunctionType())
             return;
@@ -223,53 +236,44 @@ public class FusionReadData
 
         try
         {
-            for(int se = SE_START; se <= SE_END; ++se)
+            int junctionPosition = mJunctionPositions[seIndex];
+
+            String softClipBases =  mFragment.type() == MATCHED_JUNCTION ?
+                    mFragment.softClipBases(junctionPosition, junctionOrientations()[seIndex]) : "";
+
+            if(junctionOrientations()[seIndex] == ORIENT_FWD)
             {
-                int junctionPosition = mJunctionPositions[se];
+                String junctionBases = refGenome.getBaseString(
+                        mChromosomes[seIndex], junctionPosition - refBaseLength + 1, junctionPosition + JUNCTION_BASE_LENGTH);
 
-                String softClipBases =  mFragment.type() == MATCHED_JUNCTION ?
-                        mFragment.softClipBases(junctionPosition, junctionOrientations()[se]) : "";
+                mJunctionRefBases[seIndex] = junctionBases.substring(0, refBaseLength);
+                mPostJunctionRefBases[seIndex] = junctionBases.substring(refBaseLength);
+                mJunctionSpliceBases[seIndex] = mPostJunctionRefBases[seIndex].substring(0, 2);
 
-                if(junctionOrientations()[se] == ORIENT_FWD)
-                {
-                    String junctionBases = refGenome.getBaseString(
-                            mChromosomes[se], junctionPosition - refBaseLength + 1, junctionPosition + JUNCTION_BASE_LENGTH);
+                mJunctionSoftClipBases[seIndex] = softClipBases.length() > JUNCTION_BASE_LENGTH ?
+                        softClipBases.substring(0, JUNCTION_BASE_LENGTH) : softClipBases;
+            }
+            else
+            {
+                String junctionBases = refGenome.getBaseString(
+                        mChromosomes[seIndex], junctionPosition - JUNCTION_BASE_LENGTH, junctionPosition + refBaseLength - 1);
 
-                    mJunctionRefBases[se] = junctionBases.substring(0, refBaseLength);
-                    mPostJunctionRefBases[se] = junctionBases.substring(refBaseLength);
-                    mJunctionSpliceBases[se] = mPostJunctionRefBases[se].substring(0, 2);
+                mJunctionRefBases[seIndex] = junctionBases.substring(JUNCTION_BASE_LENGTH);
+                mPostJunctionRefBases[seIndex] = junctionBases.substring(0, JUNCTION_BASE_LENGTH);
+                mJunctionSpliceBases[seIndex] = mPostJunctionRefBases[seIndex].substring(JUNCTION_BASE_LENGTH - 2);
 
-                    mJunctionSoftClipBases[se] = softClipBases.length() > JUNCTION_BASE_LENGTH ?
-                            softClipBases.substring(0, JUNCTION_BASE_LENGTH) : softClipBases;
-                }
-                else
-                {
-                    String junctionBases = refGenome.getBaseString(
-                            mChromosomes[se], junctionPosition - JUNCTION_BASE_LENGTH, junctionPosition + refBaseLength - 1);
-
-                    mJunctionRefBases[se] = junctionBases.substring(JUNCTION_BASE_LENGTH);
-                    mPostJunctionRefBases[se] = junctionBases.substring(0, JUNCTION_BASE_LENGTH);
-                    mJunctionSpliceBases[se] = mPostJunctionRefBases[se].substring(JUNCTION_BASE_LENGTH - 2);
-
-                    int softClipLength = softClipBases.length();
-                    mJunctionSoftClipBases[se] = softClipLength > JUNCTION_BASE_LENGTH ?
-                            softClipBases.substring(softClipLength - JUNCTION_BASE_LENGTH) : softClipBases;
-                }
+                int softClipLength = softClipBases.length();
+                mJunctionSoftClipBases[seIndex] = softClipLength > JUNCTION_BASE_LENGTH ?
+                        softClipBases.substring(softClipLength - JUNCTION_BASE_LENGTH) : softClipBases;
             }
         }
         catch(Exception e)
         {
             // junction may be in an invalid region, just ignore these
         }
-
-        if(checkHomology)
-        {
-            setHomologyPositionAdjustment();
-            setHomologyOffsets();
-        }
     }
 
-    private void setHomologyPositionAdjustment()
+    public void checkHomologyPositionAdjustment()
     {
         if(!mFragment.type().isJunctionType())
             return;
@@ -287,12 +291,32 @@ public class FusionReadData
         if(sameOrientation)
             otherJuncRefBases = Nucleotides.reverseComplementBases(otherJuncRefBases);
 
-        int overlapLength = otherJuncRefBases.indexOf(juncSoftClipBases);
+        int overlapLength;
+
+        if(mJunctionOrientations[SE_END] == ORIENT_FWD)
+        {
+            int indexOfSoftClip = otherJuncRefBases.lastIndexOf(juncSoftClipBases);
+
+            if(indexOfSoftClip < 0)
+                return;
+
+            // where the end junction has +ve orientation, no overlap would mean these soft-clip bases are flush against the end of the ref bases
+            overlapLength = otherJuncRefBases.length() - (indexOfSoftClip + juncSoftClipBases.length());
+        }
+        else
+        {
+            int indexOfSoftClip = otherJuncRefBases.indexOf(juncSoftClipBases);
+
+            if(indexOfSoftClip < 0)
+                return;
+
+            overlapLength = indexOfSoftClip;
+        }
 
         mSplitJunctionOverlap = max(overlapLength, 0);
     }
 
-    private void setHomologyOffsets()
+    public void setHomologyOffsets()
     {
         boolean startHasPosOrient = mJunctionOrientations[SE_START] == ORIENT_FWD;
 
@@ -335,6 +359,7 @@ public class FusionReadData
         }
     }
 
+    @Deprecated
     public void adjustPositionsSpliceAware(final RefGenomeInterface refGenome)
     {
         if(mSplitJunctionOverlap == 0)
@@ -366,7 +391,7 @@ public class FusionReadData
             mJunctionPositions[SE_END] -= exactEnd * mJunctionOrientations[SE_END];
         }
 
-        setJunctionBases(refGenome, false);
+        setJunctionBases(refGenome);
 
         // re-check for canonical splice sites
         for(int se = SE_START; se <= SE_END; ++se)

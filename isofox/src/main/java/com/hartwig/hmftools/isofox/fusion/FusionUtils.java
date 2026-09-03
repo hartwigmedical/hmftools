@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.isofox.fusion;
 
+import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
@@ -10,6 +11,7 @@ import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsWithin;
+import static com.hartwig.hmftools.common.sv.StartEndIterator.switchIndex;
 import static com.hartwig.hmftools.isofox.common.CommonUtils.canonicalAcceptor;
 import static com.hartwig.hmftools.isofox.common.CommonUtils.canonicalDonor;
 import static com.hartwig.hmftools.isofox.common.CommonUtils.deriveCommonRegions;
@@ -17,6 +19,8 @@ import static com.hartwig.hmftools.isofox.common.RegionMatchType.NONE;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.matchRank;
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.REALIGN_MAX_SOFT_CLIP_BASE_LENGTH;
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.REALIGN_MIN_SOFT_CLIP_BASE_LENGTH;
+import static com.hartwig.hmftools.isofox.fusion.FusionJunctionType.CANONICAL;
+import static com.hartwig.hmftools.isofox.fusion.FusionJunctionType.KNOWN;
 import static com.hartwig.hmftools.isofox.fusion.FusionTransExon.fromList;
 import static com.hartwig.hmftools.isofox.fusion.FusionTransExon.mergeUnique;
 
@@ -27,6 +31,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.isofox.common.RegionMatchType;
 import com.hartwig.hmftools.isofox.common.TransExonRef;
 
@@ -198,11 +203,168 @@ public class FusionUtils
         read.setUpperTransExonRefs(transExonRefs, topMatchType);
     }
 
-    public static List<TransExonRef> findExonBoundaryMatches(
-            final List<TranscriptData> transDataList, final int juncPosition, final byte juncOrientation, final int positionBuffer)
+    public static void checkFusionPositionAdjustmentsVsKnownExons(
+            final FusionReadData fusion, final List<TranscriptData>[] transcriptLists, final RefGenomeInterface refGenome)
     {
-        List<TransExonRef> matchedExons = Lists.newArrayList();
+        int positionBuffer = fusion.splitJunctionOverlap();
+        boolean adjustmentsApplied = false;
 
+        int[] requiredPositionAdjusts = new int[] {0, 0};
+
+        for(int se = SE_START; se <= SE_END; ++se)
+        {
+            List<TranscriptData> transDataList = transcriptLists[se];
+            List<TransExonRef> matchedTransExons = Lists.newArrayList();
+
+            ExonBoundaryMatch topExonMatch = null;
+
+            // look for an exact exon boundary match using the overlap and record if it would require a position adjustment
+            int juncPosition = fusion.junctionPositions()[se];
+            byte juncOrient = fusion.junctionOrientations()[se];
+
+            // take any previous adjustment from the other position's known exon match
+            if(requiredPositionAdjusts[se] != 0)
+            {
+                juncPosition -= requiredPositionAdjusts[se] * juncOrient;
+            }
+
+            for(TranscriptData transData : transDataList)
+            {
+                ExonBoundaryMatch exonMatch = findExonBoundaryMatch(transData, juncPosition, juncOrient, positionBuffer);
+
+                if(exonMatch == null)
+                    continue;
+
+                if(topExonMatch == null || (exonMatch.isExact() && !topExonMatch.isExact()))
+                {
+                    topExonMatch = exonMatch;
+
+                    // only keep transcripts matching the best
+                    matchedTransExons.clear();
+                    matchedTransExons.add(exonMatch.transExonRef());
+                }
+                else if(exonMatch.isExact() == topExonMatch.isExact())
+                {
+                    matchedTransExons.add(exonMatch.transExonRef());
+                }
+            }
+
+            if(!matchedTransExons.isEmpty())
+            {
+                // purge other previously added non-matching transcript references
+                fusion.getTransExonRefsByPos(se).clear();
+                fusion.getTransExonRefsByPos(se).addAll(matchedTransExons);
+            }
+
+            if(topExonMatch != null)
+            {
+                fusion.junctionTypes()[se] = FusionJunctionType.KNOWN;
+
+                if(!adjustmentsApplied)
+                {
+                    // adjust the positions if required
+                    if(topExonMatch.boundaryPosition() != juncPosition)
+                    {
+                        int positionAdjust = abs(topExonMatch.boundaryPosition() - juncPosition);
+
+                        requiredPositionAdjusts[se] = positionAdjust;
+
+                        // adjust the other position by the remainder
+                        int otherSe = switchIndex(se);
+                        int otherPositionAdjust = positionBuffer - positionAdjust;
+                        requiredPositionAdjusts[otherSe] = otherPositionAdjust;
+                    }
+                    else
+                    {
+                        // the other position must absorb any position adjustment
+                        int otherSe = switchIndex(se);
+                        requiredPositionAdjusts[otherSe] = positionBuffer;
+                    }
+
+                    // cancel any check for position adjustment for the upper / other position
+                    positionBuffer = 0;
+                    adjustmentsApplied = true;
+                }
+            }
+        }
+
+        if(adjustmentsApplied)
+        {
+            fusion.markSplitJunctionOverlapApplied();
+
+            for(int se = SE_START; se <= SE_END; ++se)
+            {
+                int positionAdjustment = requiredPositionAdjusts[se];
+
+                if(positionAdjustment != 0)
+                {
+                    fusion.junctionPositions()[se] -= positionAdjustment * fusion.junctionOrientations()[se];
+
+                    // reset junction bases now the position has shifted
+                    fusion.setJunctionBases(refGenome, se);
+                }
+            }
+        }
+    }
+
+    public static void checkFusionPositionAdjustmentsVsCanonicalSpliceSites(final FusionReadData fusion, final RefGenomeInterface refGenome)
+    {
+        // now fusion genes have been identified, check for canonical splice sites, and apply any remaining position adjustments
+        checkCanonicalSpliceJunction(fusion);
+
+        if(fusion.splitJunctionOverlap() == 0 || fusion.splitJunctionOverlapApplied())
+            return;
+
+        int positionAdjustment = fusion.splitJunctionOverlap();
+
+        // favour known over canonical over unknown
+        int[] juncPositions = fusion.junctionPositions();
+        byte[] juncOrientations = fusion.junctionOrientations();
+
+        int juncStartTypeOrdinal = fusion.junctionTypes()[SE_START].ordinal();
+        int juncEndTypeOrdinal = fusion.junctionTypes()[SE_START].ordinal();
+
+        int[] positionsAdjustments = new int[] {0, 0};
+
+        if(juncStartTypeOrdinal < juncEndTypeOrdinal)
+        {
+            // for a DEL this shifts the position up further up since orientation is -ve
+            positionsAdjustments[SE_END] = positionAdjustment;
+        }
+        else if(juncEndTypeOrdinal < juncStartTypeOrdinal)
+        {
+            positionsAdjustments[SE_START] = positionAdjustment;
+        }
+        else
+        {
+            // split the change
+            int halfOverlap = positionAdjustment / 2;
+
+            positionsAdjustments[SE_START] = (positionAdjustment % 2) == 0 ? halfOverlap : halfOverlap + 1; // round up if an odd length
+            positionsAdjustments[SE_END] = positionAdjustment - positionsAdjustments[SE_START];
+        }
+
+        for(int se = SE_START; se <= SE_END; ++se)
+        {
+            if(positionsAdjustments[se] != 0)
+            {
+                juncPositions[se] -= positionsAdjustments[se] * juncOrientations[se];
+                fusion.setJunctionBases(refGenome, se);
+
+                if(fusion.junctionTypes()[se] != KNOWN
+                && matchesCanonicalSpliceJunction(juncOrientations[se], fusion.junctionSpliceBases()[se], fusion.geneStrandByPosition(se)))
+                {
+                    fusion.junctionTypes()[se] = CANONICAL;
+                }
+            }
+        }
+    }
+
+    private record ExonBoundaryMatch(TransExonRef transExonRef, int boundaryPosition, boolean isExact) {}
+
+    private static ExonBoundaryMatch findExonBoundaryMatch(
+            final TranscriptData transData, final int juncPosition, final byte juncOrientation, final int positionBuffer)
+    {
         int juncPosLower = juncPosition;
         int juncPosUpper = juncPosition;
 
@@ -214,22 +376,38 @@ public class FusionUtils
                 juncPosUpper += positionBuffer;
         }
 
-        for(TranscriptData transData : transDataList)
+        for(ExonData exon : transData.exons())
         {
-            for(ExonData exon : transData.exons())
-            {
-                int exonPosition = juncOrientation == ORIENT_FWD ? exon.End : exon.Start;
+            int exonPosition = juncOrientation == ORIENT_FWD ? exon.End : exon.Start;
 
-                if(positionWithin(exonPosition, juncPosLower, juncPosUpper))
-                {
-                    matchedExons.add(new TransExonRef(
-                            transData.GeneId, transData.TransId, transData.TransName, exon.Rank, transData.IsCanonical));
-                    break;
-                }
+            if(positionWithin(exonPosition, juncPosLower, juncPosUpper))
+            {
+                TransExonRef transExonRef = new TransExonRef(
+                        transData.GeneId, transData.TransId, transData.TransName, exon.Rank, transData.IsCanonical);
+
+                boolean isExact = juncPosition == exonPosition;
+
+                return new ExonBoundaryMatch(transExonRef, exonPosition, isExact);
             }
         }
 
-        return matchedExons;
+        return null;
+    }
+
+    public static void checkCanonicalSpliceJunction(final FusionReadData fusion)
+    {
+        for(int se = SE_START; se <= SE_END; ++se)
+        {
+            // now that the strandedness of the fusion has been determined, check for canonical splice sites if not matching known
+            if(fusion.junctionTypes()[se] == KNOWN)
+                continue;
+
+            if(matchesCanonicalSpliceJunction(
+                    fusion.junctionOrientations()[se], fusion.junctionSpliceBases()[se], fusion.geneStrandByPosition(se)))
+            {
+                fusion.junctionTypes()[se] = CANONICAL;
+            }
+        }
     }
 
     public static boolean matchesCanonicalSpliceJunction(

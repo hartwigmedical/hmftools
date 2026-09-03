@@ -17,13 +17,11 @@ import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT_J
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.MATCHED_JUNCTION;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.REALIGNED;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.REALIGN_CANDIDATE;
-import static com.hartwig.hmftools.isofox.fusion.FusionJunctionType.CANONICAL;
 import static com.hartwig.hmftools.isofox.fusion.FusionJunctionType.KNOWN;
 import static com.hartwig.hmftools.isofox.fusion.FusionReadGroup.mergeChimericReadMaps;
+import static com.hartwig.hmftools.isofox.fusion.FusionUtils.checkFusionPositionAdjustmentsVsCanonicalSpliceSites;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.checkMissingGeneData;
-import static com.hartwig.hmftools.isofox.fusion.FusionUtils.findExonBoundaryMatches;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formChromosomePair;
-import static com.hartwig.hmftools.isofox.fusion.FusionUtils.matchesCanonicalSpliceJunction;
 import static com.hartwig.hmftools.isofox.fusion.HardFilteredCache.removePartialGroupsWithHardFilteredMatch;
 
 import java.util.List;
@@ -46,7 +44,6 @@ import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.TransExonRef;
 
 import org.apache.logging.log4j.Level;
-import org.jetbrains.annotations.Nullable;
 
 public class FusionFinder implements Callable<Void>
 {
@@ -440,8 +437,10 @@ public class FusionFinder implements Callable<Void>
             return true;
 
         FusionReadData fusionData = new FusionReadData(0, fragment);
-        fusionData.setJunctionBases(mConfig.RefGenome, true);
+
+        fusionData.setJunctionBases(mConfig.RefGenome);
         setGeneData(fusionData);
+        fusionData.setHomologyOffsets();
 
         if(!fusionData.hasViableGenes())
             return false;
@@ -480,9 +479,10 @@ public class FusionFinder implements Callable<Void>
         int fusionId = mFusionWriter.getNextFusionId();
         final FusionReadData fusionData = new FusionReadData(fusionId, fragment);
 
-        fusionData.setJunctionBases(mConfig.RefGenome, true);
+        fusionData.setJunctionBases(mConfig.RefGenome);
+        fusionData.checkHomologyPositionAdjustment();
         setGeneData(fusionData);
-        fusionData.adjustPositionsSpliceAware(mConfig.RefGenome);
+        fusionData.setHomologyOffsets();
 
         fusions.add(fusionData);
 
@@ -504,18 +504,17 @@ public class FusionFinder implements Callable<Void>
     {
         // get the genes supporting the splice junction in the terms of an SV (ie lower chromosome and lower position first)
         List<GeneData>[] genesByPosition = new List[] { Lists.newArrayList(), Lists.newArrayList() };
-        List<TranscriptData>[] validTransDataList = new List[] { Lists.newArrayList(), Lists.newArrayList() };
 
         // use the initial fragment to identify
         FusionFragment initialFragment = fusionData.getInitialFragment();
 
         List<TranscriptData> transcriptsCache = Lists.newArrayList();
+        List<TranscriptData>[] transcriptLists = new List[] { Lists.newArrayList(), Lists.newArrayList() };
 
         for(int se = SE_START; se <= SE_END; ++se)
         {
-            List<TranscriptData> transDataList = Lists.newArrayList();
+            List<TranscriptData> transDataList = transcriptLists[se];
             Set<String> spliceGeneIds = Sets.newHashSet();
-            List<TransExonRef> allExonRefs = Lists.newArrayList();
 
             for(FusionTransExon transExonRef : initialFragment.getTransExonRefs()[se])
             {
@@ -534,33 +533,11 @@ public class FusionFinder implements Callable<Void>
                 if(!transDataList.contains(transData))
                     transDataList.add(transData);
 
-                allExonRefs.add(new TransExonRef(
+                // initially keep all transcript refs until they can be check for splicing matches
+                fusionData.getTransExonRefsByPos(se).add(new TransExonRef(
                         transData.GeneId, transData.TransId, transData.TransName, transExonRef.ExonRank, transData.IsCanonical));
 
                 spliceGeneIds.add(transData.GeneId);
-            }
-
-            List<TransExonRef> exonBoundaryMatches = findExonBoundaryMatches(
-                    transDataList, fusionData.junctionPositions()[se], fusionData.junctionOrientations()[se],
-                    fusionData.splitJunctionOverlap());
-
-            if(!exonBoundaryMatches.isEmpty())
-            {
-                fusionData.getTransExonRefsByPos(se).addAll(exonBoundaryMatches);
-                fusionData.junctionTypes()[se] = KNOWN;
-
-                // purge unmatched transcripts where a boundary was matched
-                validTransDataList[se] = transDataList.stream()
-                        .filter(x -> exonBoundaryMatches.stream().anyMatch(y -> x.TransId == y.TransId))
-                        .collect(Collectors.toList());
-
-            }
-            else
-            {
-                // add all transcripts from the initial fragment
-                fusionData.getTransExonRefsByPos(se).addAll(allExonRefs);
-
-                validTransDataList[se].addAll(transDataList);
             }
 
             // purge any invalid transcript-exons and mark the junction as known if applicable
@@ -570,6 +547,20 @@ public class FusionFinder implements Callable<Void>
             if(!spliceGeneIds.isEmpty())
             {
                 genesByPosition[se] = spliceGeneIds.stream().map(x -> mGeneTransCache.getGeneDataById(x)).collect(Collectors.toList());
+            }
+        }
+
+        FusionUtils.checkFusionPositionAdjustmentsVsKnownExons(fusionData, transcriptLists, mConfig.RefGenome);
+
+        List<TranscriptData>[] validTransDataList = new List[] { Lists.newArrayList(), Lists.newArrayList() };
+
+        for(int se = SE_START; se <= SE_END; ++se)
+        {
+            // cull the full list of transcripts down to those matching the junction
+            for(TranscriptData transcriptData : transcriptLists[se])
+            {
+                if(fusionData.getTransExonRefsByPos(se).stream().anyMatch(x -> x.TransId == transcriptData.TransId))
+                    validTransDataList[se].add(transcriptData);
             }
         }
 
@@ -653,18 +644,7 @@ public class FusionFinder implements Callable<Void>
             }
         }
 
-        for(int se = SE_START; se <= SE_END; ++se)
-        {
-            // now that the strandedness of the fusion has been determined, check for canonical splice sites if not matching known
-            if(fusionData.junctionTypes()[se] != KNOWN)
-            {
-                if(matchesCanonicalSpliceJunction(
-                        fusionData.junctionOrientations()[se], fusionData.junctionSpliceBases()[se], fusionData.geneStrandByPosition(se)))
-                {
-                    fusionData.junctionTypes()[se] = CANONICAL;
-                }
-            }
-        }
+        checkFusionPositionAdjustmentsVsCanonicalSpliceSites(fusionData, mConfig.RefGenome);
     }
 
     private void prioritiseLongestCodingFusionGene(final List<GeneData> geneList, final List<TranscriptData> transDataList)
