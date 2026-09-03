@@ -985,7 +985,7 @@ public class Read
             int softClipLength = leftClipLength();
             trimLength = min(trimLength, softClipLength);
 
-            // trim from upper end
+            // trim from lower end
             mReadBases = mReadBases.substring(trimLength);
 
             mUnclippedStart += trimLength;
@@ -1006,6 +1006,6 @@ public class Read
     public String toString()
     {
         return String.format("range(%s: %d -> %d, range=%d) length(%d) cigar(%s) id(%s)",
-                Chromosome, PosStart, PosEnd, range(), baseLength(), mCigarStr != null ? mCigarStr : "", Id);
+                Chromosome, PosStart, PosEnd, range(), baseLength(), mCigarStr != null ? mCigarStr : mOriginalCigarStr, Id);
     }
 }

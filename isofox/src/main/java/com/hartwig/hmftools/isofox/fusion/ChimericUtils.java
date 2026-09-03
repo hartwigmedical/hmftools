@@ -1,13 +1,18 @@
 package com.hartwig.hmftools.isofox.fusion;
 
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.readToString;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
 import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
+import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.REALIGN_MAX_SOFT_CLIP_BASE_LENGTH;
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.REALIGN_MIN_SOFT_CLIP_BASE_LENGTH;
+
+import static htsjdk.samtools.CigarOperator.M;
+import static htsjdk.samtools.CigarOperator.N;
 
 import java.util.List;
 
@@ -15,6 +20,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.isofox.common.Read;
 import com.hartwig.hmftools.isofox.common.TransExonRef;
 
+import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
 
 public final class ChimericUtils
@@ -60,22 +66,31 @@ public final class ChimericUtils
         if(!read.containsSplit())
             return null;
 
-        int maxSplitLength = read.cigarElements().stream()
-                .filter(x -> x.getOperator() == CigarOperator.N)
-                .mapToInt(x -> x.getLength()).max().orElse(0);
+        int readPosition = read.PosStart;
+        CigarElement maxSplitElement = null;
+        int maxSplitPosStart = 0;
 
-        List<int[]> mappedCoords = read.getMappedRegionCoords();
-        for(int i = 0; i < mappedCoords.size() - 1; ++i)
+        for(int i = 0; i < read.cigarElements().size() - 1; ++i)
         {
-            final int[] lowerCoords = mappedCoords.get(i);
-            final int[] upperCoords = mappedCoords.get(i + 1);
+            CigarElement element = read.cigarElements().get(i);
 
-            if(upperCoords[SE_START] - lowerCoords[SE_END] - 1 == maxSplitLength)
+            if(element.getOperator() == N)
             {
-                return new int[] { lowerCoords[SE_END], upperCoords[SE_START] };
+                if(maxSplitElement == null || element.getLength() > maxSplitElement.getLength())
+                {
+                    maxSplitElement = element;
+                    maxSplitPosStart = readPosition - 1; // last base of the prior aligned section
+                }
             }
+
+            if(element.getOperator().consumesReferenceBases())
+                readPosition += element.getLength();
         }
 
+        if(maxSplitElement != null)
+            return new int[] { maxSplitPosStart, maxSplitPosStart + maxSplitElement.getLength() + 1 };
+
+        // ISF_LOGGER.error("read({}) has split but cannot find split coords", read);
         return null;
     }
 
