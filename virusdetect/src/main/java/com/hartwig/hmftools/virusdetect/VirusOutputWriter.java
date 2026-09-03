@@ -20,21 +20,22 @@ public class VirusOutputWriter
                 .sorted(comparingInt(ContigStats::readCount).reversed().thenComparing(ContigStats::contig))
                 .toList();
 
-        DelimFileWriter.write(file, Column.values(), ordered, (stat, row) ->
-        {
-            ViralContig contig = reference.contig(stat.contig());
-            row.set(Column.contig, stat.contig());
-            row.set(Column.virus_name, contig.virusName());
-            row.set(Column.oncology_group, contig.oncologyGroup());
-            row.set(Column.contig_length, stat.contigLength());
-            row.set(Column.read_count, stat.readCount());
-            row.set(Column.covered_bases, stat.coveredBases());
-            row.set(Column.coverage_fraction, stat.coverageFraction());
-            row.set(Column.min_depth, stat.minDepth());
-            row.set(Column.max_depth, stat.maxDepth());
-            row.set(Column.mean_depth, stat.meanDepth());
-            row.set(Column.mean_aligner_score, stat.meanAlignerScore());
-        });
+        DelimFileWriter.write(
+                file, Column.values(), ordered, (stat, row) ->
+                {
+                    ViralContig contig = reference.contig(stat.contig());
+                    row.set(Column.contig, stat.contig());
+                    row.set(Column.virus_name, contig.virusName());
+                    row.set(Column.oncology_group, contig.oncologyGroup());
+                    row.set(Column.contig_length, stat.contigLength());
+                    row.set(Column.read_count, stat.readCount());
+                    row.set(Column.covered_bases, stat.coveredBases());
+                    row.set(Column.coverage_fraction, stat.coverageFraction());
+                    row.set(Column.min_depth, stat.minDepth());
+                    row.set(Column.max_depth, stat.maxDepth());
+                    row.set(Column.mean_depth, stat.meanDepth());
+                    row.set(Column.mean_aligner_score, stat.meanAlignerScore());
+                });
 
         LOGGER.info("wrote {} contig stats to {}", ordered.size(), file);
     }

@@ -13,6 +13,11 @@ import java.util.Map;
 
 import com.hartwig.hmftools.common.bwa.IBwaMemAligner;
 
+import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
+
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMSequenceDictionary;
@@ -20,11 +25,6 @@ import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.ValidationStringency;
-
-import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 
 public class ViralReadAlignerTest
 {

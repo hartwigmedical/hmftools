@@ -34,7 +34,7 @@ public class CandidateReadFilter
         {
             return true;
         }
-        if (isViralDecoyContig(record.getReferenceName()))
+        if(isViralDecoyContig(record.getReferenceName()))
         {
             return true;
         }

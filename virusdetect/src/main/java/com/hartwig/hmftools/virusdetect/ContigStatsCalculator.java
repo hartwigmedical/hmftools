@@ -37,7 +37,8 @@ public class ContigStatsCalculator
         {
             return StreamSupport.stream(reader.spliterator(), false)
                     .filter(record -> !record.getReadUnmappedFlag())
-                    .collect(groupingBy(SAMRecord::getReferenceName,
+                    .collect(groupingBy(
+                            SAMRecord::getReferenceName,
                             toMap(SAMRecord::getReadName, identity(), ContigStatsCalculator::better)));
         }
         catch(IOException e)

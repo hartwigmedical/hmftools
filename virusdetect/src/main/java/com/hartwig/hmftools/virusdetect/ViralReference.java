@@ -11,12 +11,12 @@ import java.util.Map;
 
 import com.hartwig.hmftools.common.utils.file.DelimFileReader;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 // The curated viral reference: contig names and lengths (from the FASTA sequence dictionary) joined
 // to each contig's virus name and oncology group (from the info TSV).

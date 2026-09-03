@@ -11,12 +11,12 @@ import java.util.Map;
 
 import com.hartwig.hmftools.virusdetect.ViralReference.InfoRow;
 
-import htsjdk.samtools.SAMSequenceDictionary;
-import htsjdk.samtools.SAMSequenceRecord;
-
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+
+import htsjdk.samtools.SAMSequenceDictionary;
+import htsjdk.samtools.SAMSequenceRecord;
 
 public class ViralReferenceTest
 {

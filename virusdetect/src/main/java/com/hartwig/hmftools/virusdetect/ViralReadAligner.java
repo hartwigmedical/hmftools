@@ -13,11 +13,15 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
 
-import com.hartwig.hmftools.common.bwa.BwaMemAligner;
 import com.hartwig.hmftools.common.bwa.BwaMemAlignParams;
+import com.hartwig.hmftools.common.bwa.BwaMemAligner;
 import com.hartwig.hmftools.common.bwa.BwaMemAlignerConfig;
 import com.hartwig.hmftools.common.bwa.IBwaMemAligner;
 import com.hartwig.hmftools.common.codon.Nucleotides;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
 
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileWriter;
@@ -26,10 +30,6 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.reference.FastaSequenceFile;
 import htsjdk.samtools.reference.ReferenceSequence;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
 
 // Realigns candidate reads (a FASTA of read name + bases) to the viral reference with BWA-MEM in
 // all-hits mode, writing the alignments to a BAM.
@@ -75,7 +75,8 @@ public class ViralReadAligner
                     .map(chunk -> alignChunk(chunk, writer))
                     .reduce(ChunkResult.EMPTY, ChunkResult::add);
 
-            LOGGER.info("aligned {} candidate reads: {} with viral alignments, {} alignments written to {}",
+            LOGGER.info(
+                    "aligned {} candidate reads: {} with viral alignments, {} alignments written to {}",
                     total.totalReads(), total.alignedReads(), total.writtenAlignments(), outputBamFile);
         }
     }

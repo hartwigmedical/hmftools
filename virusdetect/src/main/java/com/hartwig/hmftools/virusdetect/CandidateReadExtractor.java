@@ -24,16 +24,16 @@ import java.util.concurrent.atomic.AtomicInteger;
 import com.hartwig.hmftools.common.bam.BamSlicer;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.Nullable;
+
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.ValidationStringency;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.Nullable;
 
 // Scans the tumor BAM/CRAM once and writes candidate viral reads single-end to a FASTA, each read once.
 // FASTA ids carry the mate number so the two reads of a pair stay distinct. With multiple threads the scan is
@@ -135,12 +135,14 @@ public class CandidateReadExtractor
         List<FastaPart> parts = Collections.synchronizedList(new ArrayList<>());
         AtomicInteger nextPartIndex = new AtomicInteger();
 
-        ThreadLocal<SamReader> threadReader = ThreadLocal.withInitial(() -> {
+        ThreadLocal<SamReader> threadReader = ThreadLocal.withInitial(() ->
+        {
             SamReader reader = factory.open(new File(tumorBamFile));
             readers.add(reader);
             return reader;
         });
-        ThreadLocal<FastaPart> threadPart = ThreadLocal.withInitial(() -> {
+        ThreadLocal<FastaPart> threadPart = ThreadLocal.withInitial(() ->
+        {
             FastaPart part = FastaPart.create(outputFastaFile, nextPartIndex.getAndIncrement());
             parts.add(part);
             return part;
@@ -182,24 +184,26 @@ public class CandidateReadExtractor
         FastaPart part = threadPart.get();
         int startCount = part.count();
 
-        slicer.slice(threadReader.get(), region, record -> {
-            if(isExcluded(record))
-            {
-                return;
-            }
+        slicer.slice(
+                threadReader.get(), region, record ->
+                {
+                    if(isExcluded(record))
+                    {
+                        return;
+                    }
 
-            // A mapped read is owned by the partition containing its start, so copies returned by an overlapping
-            // neighbour partition are ignored.
-            if(record.getAlignmentStart() < region.start())
-            {
-                return;
-            }
+                    // A mapped read is owned by the partition containing its start, so copies returned by an overlapping
+                    // neighbour partition are ignored.
+                    if(record.getAlignmentStart() < region.start())
+                    {
+                        return;
+                    }
 
-            if(mFilter.isCandidate(record))
-            {
-                part.add(record);
-            }
-        });
+                    if(mFilter.isCandidate(record))
+                    {
+                        part.add(record);
+                    }
+                });
 
         LOGGER.debug("region({}) {} candidates in {}s", region, part.count() - startCount, secondsSince(startTimeMs));
     }
@@ -210,16 +214,18 @@ public class CandidateReadExtractor
         FastaPart part = threadPart.get();
         int startCount = part.count();
 
-        slicer.queryUnmapped(threadReader.get(), record -> {
-            if(isExcluded(record))
-            {
-                return;
-            }
-            if(mFilter.isCandidate(record))
-            {
-                part.add(record);
-            }
-        });
+        slicer.queryUnmapped(
+                threadReader.get(), record ->
+                {
+                    if(isExcluded(record))
+                    {
+                        return;
+                    }
+                    if(mFilter.isCandidate(record))
+                    {
+                        part.add(record);
+                    }
+                });
 
         LOGGER.debug("unmapped reads {} candidates in {}s", part.count() - startCount, secondsSince(startTimeMs));
     }

@@ -8,12 +8,12 @@ import java.util.Set;
 
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
 
+import org.jetbrains.annotations.Nullable;
+import org.junit.Test;
+
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SAMSequenceRecord;
-
-import org.jetbrains.annotations.Nullable;
-import org.junit.Test;
 
 public class CandidateReadFilterTest
 {
