@@ -55,7 +55,9 @@ public class ReadCache
     public static final int DEFAULT_POP_DISTANCE_CHECK = 100; // how often in base terms to check for popping read groups
     public static final int DEFAULT_LOG_READ_COUNT_THRESHOLD = 100000; // based on observed cache sizes for deep panels
     public static final int DEFAULT_DYNAMIC_READ_COUNT_THRESHOLD = 100_000; // level at which steps are taken to reduce the cache size
-    public static final int MAX_DISTANCE_FOR_REVERSE_STRAND_DUPLICATES = 1000; // a reverse key can sit far past its own reads
+
+    // set with RNA and N-splits in mind - see logic below
+    public static final int REVERSE_STRAND_MAX_ALIGNMENT_START_DIFF = 1000;
 
     public ReadCache(
             int groupSize, int maxSoftClipLength, boolean useFragmentOrientation, final DuplicatesConfig duplicatesConfig,
@@ -195,10 +197,16 @@ public class ReadCache
                     }
                     else
                     {
-                        SAMRecord lastRead = reads.get(reads.size() - 1);
+                        // negative strand reads with splits can have their 5' end far away from the alignment start and hence the current
+                        // min read positions. eg a -ve strand read with cigar 100M20000N51M can have alignment start of 1000 and the
+                        // unclipped 5' end at 21150, and so it could wait for current read min position to read that end position before
+                        // being release to be sure no other matching frag-coord reads arrive. To protect against this unlikely scenario,
+                        // these reads are release once the current min position has moved sufficiently past their 3' lower end
+
+                        SAMRecord lastRead = reads.get(reads.size() - 1); // only the last read needs checking since they are added in order
 
                         if(readPosition > popFragCoordUpperPosition
-                        && lastRead.getAlignmentStart() + MAX_DISTANCE_FOR_REVERSE_STRAND_DUPLICATES > mCurrentReadMinPosition)
+                        && lastRead.getAlignmentStart() + REVERSE_STRAND_MAX_ALIGNMENT_START_DIFF > mCurrentReadMinPosition)
                             continue;
                     }
                 }
