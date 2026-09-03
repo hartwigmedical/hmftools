@@ -21,6 +21,7 @@ import static com.hartwig.hmftools.isofox.fusion.FusionConstants.REALIGN_MAX_SOF
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.REALIGN_MIN_SOFT_CLIP_BASE_LENGTH;
 import static com.hartwig.hmftools.isofox.fusion.FusionJunctionType.CANONICAL;
 import static com.hartwig.hmftools.isofox.fusion.FusionJunctionType.KNOWN;
+import static com.hartwig.hmftools.isofox.fusion.FusionJunctionType.UNKNOWN;
 import static com.hartwig.hmftools.isofox.fusion.FusionTransExon.fromList;
 import static com.hartwig.hmftools.isofox.fusion.FusionTransExon.mergeUnique;
 
@@ -351,10 +352,11 @@ public class FusionUtils
                 juncPositions[se] -= positionsAdjustments[se] * juncOrientations[se];
                 fusion.setJunctionBases(refGenome, se);
 
-                if(fusion.junctionTypes()[se] != KNOWN
-                && matchesCanonicalSpliceJunction(juncOrientations[se], fusion.junctionSpliceBases()[se], fusion.geneStrandByPosition(se)))
+                if(fusion.junctionTypes()[se] != KNOWN)
                 {
-                    fusion.junctionTypes()[se] = CANONICAL;
+                    // this can revert an existing canonical junction back to unknown after a position adjustment
+                    fusion.junctionTypes()[se] = matchesCanonicalSpliceJunction(
+                            juncOrientations[se], fusion.junctionSpliceBases()[se], fusion.geneStrandByPosition(se)) ? CANONICAL : UNKNOWN;
                 }
             }
         }
