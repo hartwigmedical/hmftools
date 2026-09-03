@@ -16,12 +16,12 @@ import htsjdk.samtools.SAMRecord;
 public class CandidateReadFilter
 {
     private final int mMinSoftClipBases;
-    private final Set<String> mDecoyContigs;
+    private final Set<String> mViralDecoyContigs;
 
-    public CandidateReadFilter(int minSoftClipBases, Set<String> decoyContigs)
+    public CandidateReadFilter(int minSoftClipBases, Set<String> viralDecoyContigs)
     {
         mMinSoftClipBases = minSoftClipBases;
-        mDecoyContigs = decoyContigs;
+        mViralDecoyContigs = viralDecoyContigs;
     }
 
     public boolean isCandidate(SAMRecord record)
@@ -34,24 +34,36 @@ public class CandidateReadFilter
         {
             return true;
         }
-        if((leftSoftClipLength(record) >= mMinSoftClipBases || rightSoftClipLength(record) >= mMinSoftClipBases)
-                && clippedBasesNotInHost(record))
+        if (isViralDecoyContig(record.getReferenceName()))
         {
             return true;
         }
-        return mDecoyContigs.contains(record.getReferenceName());
+        boolean hasSignificantClip = (leftSoftClipLength(record) >= mMinSoftClipBases || rightSoftClipLength(record) >= mMinSoftClipBases);
+        if(hasSignificantClip && clippedBasesAreCandidate(record))
+        {
+            return true;
+        }
+        return false;
     }
 
     // A supplementary alignment means the aligner placed the clipped bases elsewhere in the host reference; if any
     // lands on a non-viral contig the clip is explained by host sequence, not a viral junction. With no supplementary
     // the clipped bases were not placed in the host, so the clip may mark a viral junction.
-    private boolean clippedBasesNotInHost(SAMRecord record)
+    private boolean clippedBasesAreCandidate(SAMRecord record)
     {
         List<SupplementaryReadData> supplementaries = SupplementaryReadData.extractAlignments(record);
-        if(supplementaries == null)
+        if(supplementaries == null || supplementaries.isEmpty())
         {
             return true;
         }
-        return supplementaries.stream().allMatch(supplementary -> mDecoyContigs.contains(supplementary.Chromosome));
+        else
+        {
+            return supplementaries.stream().allMatch(supplementary -> isViralDecoyContig(supplementary.Chromosome));
+        }
+    }
+
+    private boolean isViralDecoyContig(String contig)
+    {
+        return mViralDecoyContigs.contains(contig);
     }
 }
