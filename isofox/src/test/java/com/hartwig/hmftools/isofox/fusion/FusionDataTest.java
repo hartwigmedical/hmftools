@@ -780,6 +780,94 @@ public class FusionDataTest
     }
 
     @Test
+    public void testFusionKnownExonBoundaryPositionAdjustments()
+    {
+        // test 1: lower position can be shifted to match a know exon boundary
+        EnsemblDataCache geneTransCache = createGeneDataCache();
+
+        addTestGenes(geneTransCache);
+        addTestTranscripts(geneTransCache);
+
+        IsofoxConfig config = createIsofoxConfig();
+        populateRefGenome(config.RefGenome);
+
+        FusionFinder finder = createFusionFinder(config, geneTransCache);
+
+        int gcId = 0;
+        GeneCollection gc1 = createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_1)));
+        GeneCollection gc2 = createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_2)));
+
+        int readId = 0;
+        Read read1 = createMappedRead(readId, gc1, 1050, 1089, createCigar(0, 40, 0));
+
+        String junctionBases = config.RefGenome.getBaseString(gc1.chromosome(), 1071, 1100)
+                + config.RefGenome.getBaseString(gc1.chromosome(), 10220, 10229);
+
+        Read read2 = createMappedRead(readId, gc1, 1071, 1100, createCigar(0, 30, 10), junctionBases);
+
+        junctionBases = config.RefGenome.getBaseString(gc1.chromosome(), 1091, 1100)
+                + config.RefGenome.getBaseString(gc1.chromosome(), 10220, 10249);
+
+        Read read3 = createMappedRead(readId, gc2, 10219, 10228, createCigar(10, 30, 0), junctionBases);
+
+        read3.setStrand(true, false);
+
+        FusionReadData fusion = callJunctionFusion(finder, gc1, gc2, read1, read2, read3);
+        assertEquals(1100, fusion.junctionPositions()[SE_START]);
+        assertEquals(10220, fusion.junctionPositions()[SE_END]);
+        assertEquals(ORIENT_FWD, fusion.junctionOrientations()[SE_START]);
+        assertEquals(ORIENT_REV, fusion.junctionOrientations()[SE_END]);
+        assertEquals(1, fusion.splitJunctionOverlap());
+        assertEquals(FusionJunctionType.KNOWN, fusion.junctionTypes()[SE_START]);
+        assertEquals(FusionJunctionType.UNKNOWN, fusion.junctionTypes()[SE_END]);
+        assertEquals(1, fusion.getFragments(MATCHED_JUNCTION).size());
+
+        // test 2: the lower positions needs adjusting to match a know exon boundary
+        junctionBases = config.RefGenome.getBaseString(gc1.chromosome(), 1072, 1101)
+                + config.RefGenome.getBaseString(gc1.chromosome(), 10220, 10229);
+
+        read2 = createMappedRead(readId, gc1, 1072, 1101, createCigar(0, 30, 10), junctionBases);
+
+        junctionBases = config.RefGenome.getBaseString(gc1.chromosome(), 1090, 1099)
+                + config.RefGenome.getBaseString(gc1.chromosome(), 10220, 10249);
+
+        read3 = createMappedRead(readId, gc2, 10219, 10248, createCigar(10, 30, 0), junctionBases);
+
+        read3.setStrand(true, false);
+
+        fusion = callJunctionFusion(finder, gc1, gc2, read1, read2, read3);
+        assertEquals(1100, fusion.junctionPositions()[SE_START]); // adjusted to exon
+        assertEquals(10219, fusion.junctionPositions()[SE_END]); // remains unch
+        assertEquals(ORIENT_FWD, fusion.junctionOrientations()[SE_START]);
+        assertEquals(ORIENT_REV, fusion.junctionOrientations()[SE_END]);
+        assertEquals(1, fusion.splitJunctionOverlap());
+        assertEquals(FusionJunctionType.KNOWN, fusion.junctionTypes()[SE_START]);
+        assertEquals(FusionJunctionType.UNKNOWN, fusion.junctionTypes()[SE_END]);
+        assertEquals(1, fusion.getFragments(MATCHED_JUNCTION).size());
+
+        // test 3: the upper position needs shifting to the exon boundary
+        junctionBases = config.RefGenome.getBaseString(gc1.chromosome(), 1052, 1081)
+                + config.RefGenome.getBaseString(gc1.chromosome(), 10200, 10209);
+
+        read2 = createMappedRead(readId, gc1, 1052, 1081, createCigar(0, 30, 10), junctionBases);
+
+        junctionBases = config.RefGenome.getBaseString(gc1.chromosome(), 1080, 1081)
+                + config.RefGenome.getBaseString(gc1.chromosome(), 10199, 10228);
+
+        read3 = createMappedRead(readId, gc2, 10199, 10228, createCigar(10, 30, 0), junctionBases);
+
+        read3.setStrand(true, false);
+
+        fusion = callJunctionFusion(finder, gc1, gc2, read1, read2, read3);
+        assertEquals(1081, fusion.junctionPositions()[SE_START]); // remains unch
+        assertEquals(10200, fusion.junctionPositions()[SE_END]); // adjusted to exon
+        assertEquals(1, fusion.splitJunctionOverlap());
+        assertEquals(FusionJunctionType.CANONICAL, fusion.junctionTypes()[SE_START]);
+        assertEquals(FusionJunctionType.KNOWN, fusion.junctionTypes()[SE_END]);
+        assertEquals(1, fusion.getFragments(MATCHED_JUNCTION).size());
+    }
+
+    @Test
     public void testHomologyMerging()
     {
         // Configurator.setRootLevel(Level.DEBUG);

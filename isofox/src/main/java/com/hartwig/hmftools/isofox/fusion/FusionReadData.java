@@ -15,7 +15,6 @@ import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.switchIndex;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
-import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.INTRON;
 import static com.hartwig.hmftools.isofox.common.CommonUtils.impliedSvType;
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.JUNCTION_BASE_LENGTH;
@@ -26,9 +25,6 @@ import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT_J
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.MATCHED_JUNCTION;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.REALIGNED;
-import static com.hartwig.hmftools.isofox.fusion.FusionJunctionType.CANONICAL;
-import static com.hartwig.hmftools.isofox.fusion.FusionJunctionType.KNOWN;
-import static com.hartwig.hmftools.isofox.fusion.FusionUtils.matchesCanonicalSpliceJunction;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.setMaxSplitMappedLength;
 
 import java.util.List;
@@ -355,54 +351,6 @@ public class FusionReadData
                     mJunctionHomology[SE_START] = -i;
                 else
                     mJunctionHomology[SE_END] = i;
-            }
-        }
-    }
-
-    @Deprecated
-    public void adjustPositionsSpliceAware(final RefGenomeInterface refGenome)
-    {
-        if(mSplitJunctionOverlap == 0)
-            return;
-
-        ISF_LOGGER.trace("fusion({}) homology({}/{}) splitJuncOverlap({}) junctionTypes({}/{})",
-                toString(), mJunctionHomology[0], mJunctionHomology[1], mSplitJunctionOverlap, mJunctionTypes[0], mJunctionTypes[1]);
-
-        // favour known over canonical over unknown
-        int juncStartTypeOrdinal = mJunctionTypes[0].ordinal();
-        int juncEndTypeOrdinal = mJunctionTypes[1].ordinal();
-
-        if(juncStartTypeOrdinal < juncEndTypeOrdinal)
-        {
-            // for a DEL this shifts the position up further up since orientation is -ve
-            mJunctionPositions[SE_END] -= mSplitJunctionOverlap * mJunctionOrientations[SE_END];
-        }
-        else if(juncEndTypeOrdinal < juncStartTypeOrdinal)
-        {
-            mJunctionPositions[SE_START] -= mSplitJunctionOverlap * mJunctionOrientations[SE_START];
-        }
-        else
-        {
-            // split the change
-            int halfOverlap = mSplitJunctionOverlap / 2;
-            int exactStart = (mSplitJunctionOverlap % 2) == 0 ? halfOverlap : halfOverlap + 1; // round up if an odd length
-            int exactEnd = mSplitJunctionOverlap - exactStart;
-            mJunctionPositions[SE_START] -= exactStart * mJunctionOrientations[SE_START];
-            mJunctionPositions[SE_END] -= exactEnd * mJunctionOrientations[SE_END];
-        }
-
-        setJunctionBases(refGenome);
-
-        // re-check for canonical splice sites
-        for(int se = SE_START; se <= SE_END; ++se)
-        {
-            // now that the stream (ie up or down) of the fusion has been determined, check for canonical splice sites if not known
-            if(mJunctionTypes[se] == KNOWN)
-                continue;
-
-            if(matchesCanonicalSpliceJunction(mJunctionOrientations[se], mJunctionSpliceBases[se], geneStrandByPosition(se)))
-            {
-                mJunctionTypes[se] = CANONICAL;
             }
         }
     }
