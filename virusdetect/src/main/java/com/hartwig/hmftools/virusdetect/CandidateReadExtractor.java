@@ -84,6 +84,7 @@ public class CandidateReadExtractor
         {
             for(SAMRecord record : reader)
             {
+                // TODO: dedupe with other record processing?
                 if(isExcluded(record))
                 {
                     continue;
@@ -185,6 +186,7 @@ public class CandidateReadExtractor
         int startCount = part.count();
 
         slicer.slice(
+                // TODO: should be method instead of lamba?
                 threadReader.get(), region, record ->
                 {
                     if(isExcluded(record))
@@ -215,6 +217,7 @@ public class CandidateReadExtractor
         int startCount = part.count();
 
         slicer.queryUnmapped(
+                // TODO: should be method instead of lamba?
                 threadReader.get(), record ->
                 {
                     if(isExcluded(record))
