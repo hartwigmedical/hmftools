@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.redux;
 
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.getFivePrimeUnclippedPosition;
 import static com.hartwig.hmftools.common.bam.SupplementaryReadData.SUPP_POS_STRAND;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
@@ -192,6 +193,84 @@ public class ReadCacheTest
     }
 
     @Test
+    public void testReverseSplicedReadWithinThresholdIsStillMarkedDuplicate()
+    {
+        ReadCache readCache = new ReadCache(ReadCache.DEFAULT_GROUP_SIZE, ReadCache.DEFAULT_MAX_SOFT_CLIP, false);
+
+        SAMRecord splicedRead = createSplicedRecord(100, "50M2000N50M");
+        SAMRecord splicedDuplicate = createSplicedRecord(600, "50M1500N50M");
+
+        assertEquals(FragmentCoords.fromRead(splicedRead, false).Key, FragmentCoords.fromRead(splicedDuplicate, false).Key);
+
+        readCache.processRead(splicedRead);
+        readCache.processRead(splicedDuplicate);
+
+        FragmentCoordReads fragCoordReads = readCache.popReads();
+        assertNull(fragCoordReads);
+
+        processUnsplicedDuplicates(readCache);
+
+        fragCoordReads = readCache.popReads();
+        assertNotNull(fragCoordReads);
+
+        assertEquals(1, fragCoordReads.DuplicateGroups.size());
+        assertEquals(0, fragCoordReads.SingleReads.size());
+
+        // this read takes the read position past the threshold from the second spliced read, releasing both
+        SAMRecord read3 = createRecord(CHR_1, 1700);
+
+        readCache.processRead(read3);
+
+        fragCoordReads = readCache.popReads();
+        assertNotNull(fragCoordReads);
+
+        assertEquals(2, fragCoordReads.DuplicateGroups.size());
+        assertEquals(0, fragCoordReads.SingleReads.size());
+    }
+
+    @Test
+    public void testReverseSplicedReadBeyondThresholdMissesDuplicate()
+    {
+        ReadCache readCache = new ReadCache(ReadCache.DEFAULT_GROUP_SIZE, ReadCache.DEFAULT_MAX_SOFT_CLIP, false);
+
+        SAMRecord splicedRead = createSplicedRecord(100, "50M2000N50M");
+        SAMRecord splicedDuplicate = createSplicedRecord(1200, "50M900N50M");
+
+        assertEquals(FragmentCoords.fromRead(splicedRead, false).Key, FragmentCoords.fromRead(splicedDuplicate, false).Key);
+
+        readCache.processRead(splicedRead);
+
+        FragmentCoordReads fragCoordReads = readCache.popReads();
+        assertNull(fragCoordReads);
+
+        processUnsplicedDuplicates(readCache);
+
+        fragCoordReads = readCache.popReads();
+        assertNotNull(fragCoordReads);
+
+        assertEquals(1, fragCoordReads.DuplicateGroups.size());
+        assertEquals(0, fragCoordReads.SingleReads.size());
+
+        // this read takes the read position past the threshold, so the spliced read is released on its own
+        SAMRecord read3 = createRecord(CHR_1, 1100);
+
+        readCache.processRead(read3);
+
+        fragCoordReads = readCache.popReads();
+        assertNotNull(fragCoordReads);
+
+        assertEquals(1, fragCoordReads.DuplicateGroups.size());
+        assertEquals(1, fragCoordReads.SingleReads.size());
+
+        readCache.processRead(splicedDuplicate);
+
+        fragCoordReads = readCache.evictAll();
+
+        assertEquals(0, fragCoordReads.DuplicateGroups.size());
+        assertEquals(2, fragCoordReads.SingleReads.size());
+    }
+
+    @Test
     public void testReadCacheReadPositionWithinGroupBounds()
     {
         final int readLength = 143;
@@ -218,6 +297,21 @@ public class ReadCacheTest
         assertEquals(
                 Sets.newHashSet("READ_001", "READ_002"),
                 duplicateGroupReads.stream().map(SAMRecord::getReadName).collect(Collectors.toCollection(Sets::newHashSet)));
+    }
+
+    private static void processUnsplicedDuplicates(final ReadCache readCache)
+    {
+        readCache.processRead(createRecord(CHR_1, 700));
+        readCache.processRead(createRecord(CHR_1, 700));
+        readCache.processRead(createRecord(CHR_1, 900));
+        readCache.processRead(createRecord(CHR_1, 900));
+    }
+
+    private static SAMRecord createSplicedRecord(final int readStart, final String cigar)
+    {
+        return createSamRecord(
+                READ_ID_GEN.nextId(), CHR_1, readStart, "A".repeat(100), cigar,
+                CHR_1, 3000, true, false, null, false, TEST_READ_CIGAR);
     }
 
     private static SAMRecord createRecord(final String chromosome, final int readStart)
