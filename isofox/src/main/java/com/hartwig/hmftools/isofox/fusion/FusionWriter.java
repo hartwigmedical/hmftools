@@ -2,7 +2,6 @@ package com.hartwig.hmftools.isofox.fusion;
 
 import static com.hartwig.hmftools.common.bam.SupplementaryReadData.fromAlignment;
 import static com.hartwig.hmftools.common.rna.RnaFusionFile.PASS_FUSION_FILE_ID;
-import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
@@ -14,14 +13,10 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.StringJoiner;
 
-import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.rna.RnaFusion;
 import com.hartwig.hmftools.common.rna.RnaFusionFile;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
-import com.hartwig.hmftools.isofox.common.Read;
-import com.hartwig.hmftools.isofox.common.TransExonRef;
 
 public class FusionWriter
 {
@@ -159,7 +154,6 @@ public class FusionWriter
                 mFragmentWriter.write(",Orient" + prefix);
                 mFragmentWriter.write(",JuncPos" + prefix);
                 mFragmentWriter.write(",JuncOrient" + prefix);
-                mFragmentWriter.write(",JuncType" + prefix);
                 mFragmentWriter.write(",GeneSet" + prefix);
                 mFragmentWriter.write(",Region" + prefix);
             }
@@ -193,9 +187,9 @@ public class FusionWriter
 
             for(int se = SE_START; se <= SE_END; ++se)
             {
-                mFragmentWriter.write(String.format(",%s,%d,%d,%d,%s,%d,%s",
+                mFragmentWriter.write(String.format(",%s,%d,%d,%d,%d,%s",
                         fragment.chromosomes()[se], fragment.orientations()[se],
-                        fragment.junctionPositions()[se], fragment.junctionOrientations()[se], fragment.junctionTypes()[se],
+                        fragment.junctionPositions()[se], fragment.junctionOrientations()[se],
                         fragment.geneCollections()[se], fragment.regionMatchTypes()[se]));
             }
 

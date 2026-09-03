@@ -187,7 +187,7 @@ public class FusionFiltersTest
         final GeneCollection gc5 =
                 createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_5)));
 
-        FragmentAllocator bamReader1 = new FragmentAllocator(config, ALT_SJ_COHORT_CACHE, new ResultsWriter(config));
+        FragmentAllocator bamReader1 = new FragmentAllocator(config, geneTransCache, ALT_SJ_COHORT_CACHE, new ResultsWriter(config));
 
         FusionTaskManager fusionTaskManager = new FusionTaskManager(config, geneTransCache);
 
@@ -255,7 +255,7 @@ public class FusionFiltersTest
         assertTrue(finderChr1.getFusionCandidates().isEmpty());
 
         // now chromosome 2
-        FragmentAllocator bamReader2 = new FragmentAllocator(config, ALT_SJ_COHORT_CACHE, new ResultsWriter(config));
+        FragmentAllocator bamReader2 = new FragmentAllocator(config, geneTransCache, ALT_SJ_COHORT_CACHE, new ResultsWriter(config));
         bamReader2.processReadRecords(gc3, Lists.newArrayList(readPair1[1]));
         bamReader2.processReadRecords(gc3, Lists.newArrayList(readPair2[1]));
         bamReader2.processReadRecords(gc3, Lists.newArrayList(readPair3[1]));

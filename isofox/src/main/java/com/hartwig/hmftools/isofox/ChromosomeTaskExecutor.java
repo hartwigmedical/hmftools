@@ -104,7 +104,7 @@ public class ChromosomeTaskExecutor implements Callable<Void>
 
         mExpectedCountsCache = expectedCountsCache;
 
-        mBamFragmentAllocator = new FragmentAllocator(mConfig, altSjCohortCache, resultsWriter);
+        mBamFragmentAllocator = new FragmentAllocator(mConfig, mGeneTransCache, altSjCohortCache, resultsWriter);
         mBamFragmentAllocator.registerKnownFusionPairs(mGeneTransCache);
 
         mGcRatioCounts = mBamFragmentAllocator.getGcRatioCounts();
@@ -484,7 +484,7 @@ public class ChromosomeTaskExecutor implements Callable<Void>
         geneCollectionSummary.GeneResults.add(geneResult);
 
         geneCollectionSummary.setFitAllocations();
-        geneCollectionSummary.assignLowMapQualityFragments();
+        geneCollectionSummary.assignMultiMappedFragments();
         geneCollectionSummary.TranscriptResults.forEach(x -> x.setPreGcFitAllocation(x.getFitAllocation()));
     }
 

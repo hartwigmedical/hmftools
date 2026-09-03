@@ -169,7 +169,7 @@ public class AltSpliceJunctionFinder
         if(read.getTranscriptClassifications().values().contains(TransMatchType.SPLICE_JUNCTION))
             return false;
 
-        if(read.getMappedRegionCoords().size() == 1)
+        if(read.getMappedRegionCoords(false).size() == 1)
             return false;
 
         return true;

@@ -19,6 +19,7 @@ import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.REALIGNED;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.REALIGN_CANDIDATE;
 import static com.hartwig.hmftools.isofox.fusion.FusionJunctionType.KNOWN;
 import static com.hartwig.hmftools.isofox.fusion.FusionReadGroup.mergeChimericReadMaps;
+import static com.hartwig.hmftools.isofox.fusion.FusionUtils.checkFusionPositionAdjustmentsVsCanonicalSpliceSites;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.checkMissingGeneData;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formChromosomePair;
 import static com.hartwig.hmftools.isofox.fusion.HardFilteredCache.removePartialGroupsWithHardFilteredMatch;
@@ -436,8 +437,10 @@ public class FusionFinder implements Callable<Void>
             return true;
 
         FusionReadData fusionData = new FusionReadData(0, fragment);
+
         fusionData.setJunctionBases(mConfig.RefGenome);
         setGeneData(fusionData);
+        fusionData.setHomologyOffsets();
 
         if(!fusionData.hasViableGenes())
             return false;
@@ -445,7 +448,7 @@ public class FusionFinder implements Callable<Void>
         if(!mPassingFusions.knownFusionCache().hasKnownFusion(fusionData.getGeneName(FS_UP), fusionData.getGeneName(FS_DOWN)))
             return false;
 
-        return fragment.junctionTypes()[FS_UP] == KNOWN || fragment.junctionTypes()[FS_DOWN] == KNOWN;
+        return fusionData.junctionTypes()[FS_UP] == KNOWN || fusionData.junctionTypes()[FS_DOWN] == KNOWN;
     }
 
     private FusionReadData createOrUpdateFusion(final FusionFragment fragment)
@@ -462,10 +465,6 @@ public class FusionFinder implements Callable<Void>
         if(existingFusion != null)
         {
             existingFusion.addFusionFragment(fragment, mConfig.Fusions.CacheFragments);
-
-            // mark donor-acceptor types whether strands are known or not
-            fragment.junctionTypes()[SE_START] = existingFusion.getInitialFragment().junctionTypes()[SE_START];
-            fragment.junctionTypes()[SE_END] = existingFusion.getInitialFragment().junctionTypes()[SE_END];
             return null;
         }
 
@@ -481,7 +480,9 @@ public class FusionFinder implements Callable<Void>
         final FusionReadData fusionData = new FusionReadData(fusionId, fragment);
 
         fusionData.setJunctionBases(mConfig.RefGenome);
+        fusionData.checkHomologyPositionAdjustment();
         setGeneData(fusionData);
+        fusionData.setHomologyOffsets();
 
         fusions.add(fusionData);
 
@@ -503,15 +504,16 @@ public class FusionFinder implements Callable<Void>
     {
         // get the genes supporting the splice junction in the terms of an SV (ie lower chromosome and lower position first)
         List<GeneData>[] genesByPosition = new List[] { Lists.newArrayList(), Lists.newArrayList() };
-        List<TranscriptData>[] validTransDataList = new List[] { Lists.newArrayList(), Lists.newArrayList() };
 
+        // use the initial fragment to identify
         FusionFragment initialFragment = fusionData.getInitialFragment();
 
         List<TranscriptData> transcriptsCache = Lists.newArrayList();
+        List<TranscriptData>[] transcriptLists = new List[] { Lists.newArrayList(), Lists.newArrayList() };
 
         for(int se = SE_START; se <= SE_END; ++se)
         {
-            List<TranscriptData> transDataList = Lists.newArrayList();
+            List<TranscriptData> transDataList = transcriptLists[se];
             Set<String> spliceGeneIds = Sets.newHashSet();
 
             for(FusionTransExon transExonRef : initialFragment.getTransExonRefs()[se])
@@ -531,6 +533,7 @@ public class FusionFinder implements Callable<Void>
                 if(!transDataList.contains(transData))
                     transDataList.add(transData);
 
+                // initially keep all transcript refs until they can be check for splicing matches
                 fusionData.getTransExonRefsByPos(se).add(new TransExonRef(
                         transData.GeneId, transData.TransId, transData.TransName, transExonRef.ExonRank, transData.IsCanonical));
 
@@ -538,16 +541,26 @@ public class FusionFinder implements Callable<Void>
             }
 
             // purge any invalid transcript-exons and mark the junction as known if applicable
+            // this is no longer required for the sake of the fusion, but can be left in place for the fragment
             initialFragment.validateTranscriptExons(transDataList, se);
 
             if(!spliceGeneIds.isEmpty())
             {
                 genesByPosition[se] = spliceGeneIds.stream().map(x -> mGeneTransCache.getGeneDataById(x)).collect(Collectors.toList());
+            }
+        }
 
-                final int seIndex = se;
-                validTransDataList[se] = transDataList.stream()
-                        .filter(x -> initialFragment.getTransExonRefs()[seIndex].stream().anyMatch(y -> x.TransId == y.TransId))
-                        .collect(Collectors.toList());
+        FusionUtils.checkFusionPositionAdjustmentsVsKnownExons(fusionData, transcriptLists, mConfig.RefGenome);
+
+        List<TranscriptData>[] validTransDataList = new List[] { Lists.newArrayList(), Lists.newArrayList() };
+
+        for(int se = SE_START; se <= SE_END; ++se)
+        {
+            // cull the full list of transcripts down to those matching the junction
+            for(TranscriptData transcriptData : transcriptLists[se])
+            {
+                if(fusionData.getTransExonRefsByPos(se).stream().anyMatch(x -> x.TransId == transcriptData.TransId))
+                    validTransDataList[se].add(transcriptData);
             }
         }
 
@@ -631,7 +644,7 @@ public class FusionFinder implements Callable<Void>
             }
         }
 
-        initialFragment.setJunctionTypes(mConfig.RefGenome, fusionData.getGeneStrands(), fusionData.junctionSpliceBases());
+        checkFusionPositionAdjustmentsVsCanonicalSpliceSites(fusionData, mConfig.RefGenome);
     }
 
     private void prioritiseLongestCodingFusionGene(final List<GeneData> geneList, final List<TranscriptData> transDataList)
@@ -719,13 +732,13 @@ public class FusionFinder implements Callable<Void>
 
                             ISF_LOGGER.trace("fusion1({}) homology({}/{}) start(junc={} adj={}) end(junc={} adj={})",
                                     fusion1.toString(), fusion1.junctionHomology()[SE_START], fusion1.junctionHomology()[SE_END],
-                                    fusion1.junctionBases()[SE_START], fusion1.adjacentJunctionBases()[SE_START],
-                                    fusion1.junctionBases()[SE_END], fusion1.adjacentJunctionBases()[SE_END]);
+                                    fusion1.junctionRefBases()[SE_START], fusion1.postJunctionRefBases()[SE_START],
+                                    fusion1.junctionRefBases()[SE_END], fusion1.postJunctionRefBases()[SE_END]);
 
                             ISF_LOGGER.trace("fusion2({}) homology({}/{}) start(junc={} adj={}) end(junc={} adj={})",
                                     fusion2.toString(), fusion2.junctionHomology()[SE_START], fusion2.junctionHomology()[SE_END],
-                                    fusion2.junctionBases()[SE_START], fusion2.adjacentJunctionBases()[SE_START],
-                                    fusion2.junctionBases()[SE_END], fusion2.adjacentJunctionBases()[SE_END]);
+                                    fusion2.junctionRefBases()[SE_START], fusion2.postJunctionRefBases()[SE_START],
+                                    fusion2.junctionRefBases()[SE_END], fusion2.postJunctionRefBases()[SE_END]);
                         }
 
                         final FusionReadData fusion1Const = fusion1;
@@ -1033,9 +1046,7 @@ public class FusionFinder implements Callable<Void>
         if(mPassingFusions.knownFusionCache().hasKnownFusion(fusionData.getGeneName(FS_UP), fusionData.getGeneName(FS_DOWN)))
             return false;
 
-        final FusionJunctionType[] junctionTypes = fusionData.getInitialFragment().junctionTypes();
-
-        return junctionTypes[SE_START] != KNOWN && junctionTypes[SE_END] != KNOWN;
+        return fusionData.junctionTypes()[SE_START] != KNOWN && fusionData.junctionTypes()[SE_END] != KNOWN;
     }
 
     private void checkLocalDuplicates()
