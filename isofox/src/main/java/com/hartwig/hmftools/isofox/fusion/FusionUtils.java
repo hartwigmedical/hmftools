@@ -322,7 +322,7 @@ public class FusionUtils
         byte[] juncOrientations = fusion.junctionOrientations();
 
         int juncStartTypeOrdinal = fusion.junctionTypes()[SE_START].ordinal();
-        int juncEndTypeOrdinal = fusion.junctionTypes()[SE_START].ordinal();
+        int juncEndTypeOrdinal = fusion.junctionTypes()[SE_END].ordinal();
 
         int[] positionsAdjustments = new int[] {0, 0};
 
