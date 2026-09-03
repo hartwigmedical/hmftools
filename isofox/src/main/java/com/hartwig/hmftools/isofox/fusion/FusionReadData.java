@@ -275,7 +275,8 @@ public class FusionReadData
             return;
 
         // a search for an exact overlap in junction soft-clip bases in the other junction's ref bases to fix alignment inconsistencies
-        boolean sameOrientation = mJunctionOrientations[SE_START] == mJunctionOrientations[SE_END];
+        byte otherJuncOrientation = mJunctionOrientations[SE_END];
+        boolean sameOrientation = mJunctionOrientations[SE_START] == otherJuncOrientation;
 
         String juncSoftClipBases = mJunctionSoftClipBases[SE_START];
 
@@ -285,11 +286,14 @@ public class FusionReadData
         String otherJuncRefBases = mJunctionRefBases[SE_END];
 
         if(sameOrientation)
+        {
             otherJuncRefBases = Nucleotides.reverseComplementBases(otherJuncRefBases);
+            otherJuncOrientation *= -1;
+        }
 
         int overlapLength;
 
-        if(mJunctionOrientations[SE_END] == ORIENT_FWD)
+        if(otherJuncOrientation == ORIENT_FWD)
         {
             int indexOfSoftClip = otherJuncRefBases.lastIndexOf(juncSoftClipBases);
 
