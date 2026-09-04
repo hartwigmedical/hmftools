@@ -17,6 +17,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -171,10 +172,15 @@ public class ContigStatsCalculator
 
         double meanDepth = length > 0 ? (double) depthSum / length : 0;
         double meanScore = (double) scoreSum / reads.size();
+
         int readsBestInRivals = margins == null ? 0 : margins.size();
+        Optional<ContigStats.MarginSummary> marginSummary = readsBestInRivals == 0
+                ? Optional.empty()
+                : Optional.of(new ContigStats.MarginSummary(mean(margins), percentile(margins, 50), percentile(margins, 90)));
+
         return new ContigStats(
                 contig, length, reads.size(), coveredBases, minDepth, maxDepth, meanDepth, meanScore,
-                readVotes, readsBestInRivals, mean(margins), percentile(margins, 50), percentile(margins, 90));
+                readVotes, readsBestInRivals, marginSummary);
     }
 
     private static SAMRecord better(SAMRecord a, SAMRecord b)
@@ -213,22 +219,14 @@ public class ContigStatsCalculator
         return editDistance + clippedBases;
     }
 
-    private static double mean(@Nullable List<Integer> values)
+    private static double mean(List<Integer> values)
     {
-        if(values == null || values.isEmpty())
-        {
-            return Double.NaN;
-        }
-        return values.stream().mapToInt(Integer::intValue).average().orElse(Double.NaN);
+        return values.stream().mapToInt(Integer::intValue).average().orElseThrow();
     }
 
-    // Nearest-rank percentile; NaN when there are no values.
-    private static double percentile(@Nullable List<Integer> values, double percent)
+    // Nearest-rank percentile.
+    private static double percentile(List<Integer> values, double percent)
     {
-        if(values == null || values.isEmpty())
-        {
-            return Double.NaN;
-        }
         List<Integer> sorted = values.stream().sorted().toList();
         int index = (int) Math.ceil(percent / 100.0 * sorted.size()) - 1;
         index = max(0, min(sorted.size() - 1, index));

@@ -4,6 +4,7 @@ import static java.util.Comparator.comparingInt;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 import com.hartwig.hmftools.common.utils.file.DelimFileWriter;
 
@@ -38,11 +39,10 @@ public class VirusOutputWriter
                     row.set(Column.read_votes, stat.readVotes());
                     row.set(Column.reads_best_in_rivals, stat.readsBestInRivals());
 
-                    // A contig no read contests holds no margins; write null rather than a misleading zero.
-                    boolean contested = stat.readsBestInRivals() > 0;
-                    row.setOrNull(Column.margin_mean, contested ? stat.marginMean() : null);
-                    row.setOrNull(Column.margin_median, contested ? stat.marginMedian() : null);
-                    row.setOrNull(Column.margin_p90, contested ? stat.marginP90() : null);
+                    Optional<ContigStats.MarginSummary> margins = stat.margins();
+                    row.setOrNull(Column.margin_mean, margins.map(ContigStats.MarginSummary::mean).orElse(null));
+                    row.setOrNull(Column.margin_median, margins.map(ContigStats.MarginSummary::median).orElse(null));
+                    row.setOrNull(Column.margin_p90, margins.map(ContigStats.MarginSummary::p90).orElse(null));
                 });
 
         LOGGER.info("wrote {} contig stats to {}", ordered.size(), file);

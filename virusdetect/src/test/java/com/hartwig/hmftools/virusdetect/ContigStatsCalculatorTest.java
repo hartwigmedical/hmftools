@@ -96,13 +96,14 @@ public class ContigStatsCalculatorTest
 
         // v1 wins both reads; margins are runner-up minus best edit distance: r1 4-1=3, r2 5-0=5.
         assertEquals(2, v1.readsBestInRivals());
-        assertEquals(4.0, v1.marginMean(), EPSILON);
-        assertEquals(3.0, v1.marginMedian(), EPSILON);
-        assertEquals(5.0, v1.marginP90(), EPSILON);
+        ContigStats.MarginSummary v1Margins = v1.margins().orElseThrow();
+        assertEquals(4.0, v1Margins.mean(), EPSILON);
+        assertEquals(3.0, v1Margins.median(), EPSILON);
+        assertEquals(5.0, v1Margins.p90(), EPSILON);
 
         // v2 is never a read's best, so it holds no margins.
         assertEquals(0, v2.readsBestInRivals());
-        assertTrue(Double.isNaN(v2.marginMean()));
+        assertTrue(v2.margins().isEmpty());
     }
 
     // A read matches v1 full-length with 5 mismatches, but v2 only after clipping 40 bases (1 mismatch in the rest).
@@ -130,7 +131,7 @@ public class ContigStatsCalculatorTest
         assertEquals(1, stats.get("v1").readsBestInRivals());
         assertEquals(0, stats.get("v2").readsBestInRivals());
         // margin = v2 divergence (1 mismatch + 40 clipped) - v1 divergence (5 mismatches) = 36.
-        assertEquals(36.0, stats.get("v1").marginMean(), EPSILON);
+        assertEquals(36.0, stats.get("v1").margins().orElseThrow().mean(), EPSILON);
     }
 
     // A read that ties across contigs has no strict winner, so no contig is credited with a best-in-rivals read;
@@ -149,8 +150,8 @@ public class ContigStatsCalculatorTest
 
         assertEquals(0, stats.get("v1").readsBestInRivals());
         assertEquals(0, stats.get("v2").readsBestInRivals());
-        assertTrue(Double.isNaN(stats.get("v1").marginMean()));
-        assertTrue(Double.isNaN(stats.get("v2").marginMean()));
+        assertTrue(stats.get("v1").margins().isEmpty());
+        assertTrue(stats.get("v2").margins().isEmpty());
         assertEquals(0.5, stats.get("v1").readVotes(), EPSILON);
         assertEquals(0.5, stats.get("v2").readVotes(), EPSILON);
     }
