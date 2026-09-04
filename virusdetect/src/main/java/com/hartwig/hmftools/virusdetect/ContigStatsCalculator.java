@@ -112,8 +112,9 @@ public class ContigStatsCalculator
         }
     }
 
-    // A read aligning to >= 2 contigs is contested between strains; its margin, the runner-up divergence minus the
-    // best, is credited to its best contig.
+    // A read aligning to >= 2 contigs is contested between strains. If one contig strictly beats the rest, the read's
+    // margin (runner-up divergence minus best) is credited to it. A read that ties for best credits no contig, since
+    // none stands out among indistinguishable strains.
     private static void addMargin(Map<String, SAMRecord> byContig, Map<String, List<Integer>> marginsByContig)
     {
         if(byContig.size() < 2)
@@ -121,15 +122,17 @@ public class ContigStatsCalculator
             return;
         }
 
-        List<String> ranked = byContig.entrySet().stream()
-                .sorted(Comparator.<Map.Entry<String, SAMRecord>>comparingInt(entry -> divergence(entry.getValue()))
-                        .thenComparing(Map.Entry::getKey))
-                .map(Map.Entry::getKey)
+        List<Map.Entry<String, SAMRecord>> ranked = byContig.entrySet().stream()
+                .sorted(Comparator.<Map.Entry<String, SAMRecord>>comparingInt(entry -> divergence(entry.getValue())))
                 .toList();
 
-        String bestContig = ranked.get(0);
-        int margin = divergence(byContig.get(ranked.get(1))) - divergence(byContig.get(bestContig));
-        marginsByContig.computeIfAbsent(bestContig, k -> new ArrayList<>()).add(margin);
+        int margin = divergence(ranked.get(1).getValue()) - divergence(ranked.get(0).getValue());
+        if(margin == 0)
+        {
+            return;
+        }
+
+        marginsByContig.computeIfAbsent(ranked.get(0).getKey(), k -> new ArrayList<>()).add(margin);
     }
 
     private static ContigStats computeContig(

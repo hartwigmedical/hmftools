@@ -13,8 +13,8 @@ public record ContigStats(
         double meanAlignerScore,    // mean BWA alignment score across those reads
         // Strain rivalry against the near-identical sibling contigs of the same virus:
         double readVotes,           // reads softly attributed to this strain, split across contigs by divergence
-        int readsBestInRivals,      // reads won outright where a rival contig was also in play
-        // Divergence lead over the runner-up on the won reads; NaN when no read was contested.
+        int readsBestInRivals,      // reads that strictly beat every rival contig (ties credit no contig)
+        // Divergence lead over the runner-up on those strictly-won reads; NaN when there were none.
         double marginMean,
         double marginMedian,
         double marginP90)

@@ -133,6 +133,28 @@ public class ContigStatsCalculatorTest
         assertEquals(36.0, stats.get("v1").marginMean(), EPSILON);
     }
 
+    // A read that ties across contigs has no strict winner, so no contig is credited with a best-in-rivals read;
+    // the tied contigs stay symmetric. The read still splits its vote evenly between them.
+    @Test
+    public void testTiedReadCreditsNoContigAsBest() throws IOException
+    {
+        ViralReference reference = reference();
+        SAMFileHeader header = header();
+
+        List<SAMRecord> records = List.of(
+                aligned(header, "r", 0, "v1", 1, "10M", 10, 2),
+                aligned(header, "r", 0x100, "v2", 1, "10M", 10, 2));
+
+        Map<String, ContigStats> stats = new ContigStatsCalculator(0.5).compute(writeBam(header, records), reference);
+
+        assertEquals(0, stats.get("v1").readsBestInRivals());
+        assertEquals(0, stats.get("v2").readsBestInRivals());
+        assertTrue(Double.isNaN(stats.get("v1").marginMean()));
+        assertTrue(Double.isNaN(stats.get("v2").marginMean()));
+        assertEquals(0.5, stats.get("v1").readVotes(), EPSILON);
+        assertEquals(0.5, stats.get("v2").readVotes(), EPSILON);
+    }
+
     private static ViralReference reference()
     {
         List<ViralContig> contigs = List.of(
