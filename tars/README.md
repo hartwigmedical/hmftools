@@ -56,7 +56,7 @@ Concatenate the FASTA onto the genome FASTA and `bwa-mem2 index` the result befo
 ```
 java -jar tars.jar
     -sample COLO829T
-    -input_bam COLO829T.bwa_tx.namegrouped.bam
+    -input_bam COLO829T.lane_01.bwa_tx.namegrouped.bam,COLO829T.lane_02.bwa_tx.namegrouped.bam
     -ref_genome /path_to_fasta/genome_plus_tx.fasta
     -contig_sidecar /path_to/ref_genome_v38_rna_contigs.rna_contigs_mappings.tsv
     -rna_unmap_regions /ref_data/rna/38/rna_excluded_regions.38.tsv
@@ -84,7 +84,7 @@ Optional:
 | Flag               | Description                                                                  |
 |--------------------|------------------------------------------------------------------------------|
 | sample             | Sample ID. prefix to each output file (`<sample>.tars.*`)                  |
-| input_bam          | bwa-mem2 output against the combined FASTA, **name-grouped** (not coord-sorted)|
+| input_bam          | bwa-mem2 output against the combined FASTA, **name-grouped** (not coord-sorted). Separate with `,` for multiple lane BAMs |
 | ref_genome         | The same combined genome + transcript FASTA used at alignment                 |
 | contig_sidecar     | Contig sidecar TSV from `SpliceFastaBuilder` (`*.rna_contigs_mappings.tsv`)    |
 | bamtool            | samtools path (used to decompress the input and sort + index output)          |

@@ -261,9 +261,6 @@ public class LiftBackGroupProcessor
         return List.copyOf(snapped);
     }
 
-    // A retraction only shrinks the alignment, so it can split one overlapping locus into two but never merge two. That
-    // makes the promoted-MAPQ case the only one that can go stale: give back bwa's own MAPQ when TARS raised it from 0
-    // on a unique-locus reading that the snap has just falsified. A non-zero bwa MAPQ with NH > 1 is legitimate.
     private static LiftedRecord applySnap(
             final SAMRecord record, final LiftedRecord lifted, final SupplementaryMerger.BoundarySnap snap)
     {
@@ -327,8 +324,6 @@ public class LiftBackGroupProcessor
         return primary.getIntegerAttribute(ALIGNMENT_SCORE_ATTRIBUTE);
     }
 
-    // bwa's AS describes the alignment bwa emitted; it only still describes the record when nothing about the placement
-    // moved. Strand counts: an XA pick can keep coordinates and cigar while flipping orientation.
     private static boolean placementChanged(final SAMRecord primary, final LiftedAlignment alignment)
     {
         return !primary.getReferenceName().equals(alignment.LiftedChromosome)

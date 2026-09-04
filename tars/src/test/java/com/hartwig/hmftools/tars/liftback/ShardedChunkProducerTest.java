@@ -42,7 +42,13 @@ public class ShardedChunkProducerTest
 
     private File writeNameGroupedBam(final SAMFileHeader header, final int fragments) throws IOException
     {
-        File bam = mFolder.newFile("small.bam");
+        return writeNameGroupedBam(header, fragments, "small.bam");
+    }
+
+    private File writeNameGroupedBam(final SAMFileHeader header, final int fragments, final String filename)
+            throws IOException
+    {
+        File bam = mFolder.newFile(filename);
         try(SAMFileWriter writer = new SAMFileWriterFactory().makeBAMWriter(header, true, bam))
         {
             for(int i = 0; i < fragments; ++i)
@@ -176,7 +182,7 @@ public class ShardedChunkProducerTest
         int workers = 2;
         BlockingQueue<List<SAMRecord>> queue = new LinkedBlockingQueue<>();
         ShardedChunkProducer producer = new ShardedChunkProducer(
-                bam.getAbsolutePath(), ref.getAbsolutePath(), queue, workers, 8, 4);
+                List.of(bam.getAbsolutePath()), ref.getAbsolutePath(), queue, workers, 8, 4);
         producer.start();
 
         int records = 0;
@@ -193,5 +199,47 @@ public class ShardedChunkProducerTest
 
         assertEquals(100, records);   // 50 fragments x 2 reads
         assertEquals(workers, sentinels);
+    }
+
+    @Test
+    public void testProducerReadsEveryInputBamAndSignalsOnce() throws Exception
+    {
+        SAMFileHeader header = nameGroupedHeader();
+        File firstBam = writeNameGroupedBam(header, 50, "lane_01.bam");
+        File secondBam = writeNameGroupedBam(header, 30, "lane_02.bam");
+        File ref = mFolder.newFile("multi_ref.fa");
+
+        int workers = 2;
+        BlockingQueue<List<SAMRecord>> queue = new LinkedBlockingQueue<>();
+        ShardedChunkProducer producer = new ShardedChunkProducer(
+                List.of(firstBam.getAbsolutePath(), secondBam.getAbsolutePath()),
+                ref.getAbsolutePath(), queue, workers, 8, 4);
+        producer.start();
+
+        int records = 0;
+        int sentinels = 0;
+        List<List<SAMRecord>> chunks = new ArrayList<>();
+        while(sentinels < workers)
+        {
+            List<SAMRecord> chunk = queue.take();
+            if(chunk == ShardedChunkProducer.END_OF_STREAM)
+            {
+                ++sentinels;
+            }
+            else
+            {
+                records += chunk.size();
+                chunks.add(chunk);
+            }
+        }
+        producer.join();
+
+        assertEquals(160, records);
+        assertEquals(workers, sentinels);
+
+        for(List<SAMRecord> chunk : chunks)
+        {
+            assertEquals(chunk.get(0).getReadName(), chunk.get(1).getReadName());
+        }
     }
 }
