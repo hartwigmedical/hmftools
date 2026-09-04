@@ -35,6 +35,14 @@ public class VirusOutputWriter
                     row.set(Column.max_depth, stat.maxDepth());
                     row.set(Column.mean_depth, stat.meanDepth());
                     row.set(Column.mean_aligner_score, stat.meanAlignerScore());
+                    row.set(Column.vote_reads, stat.voteReads());
+                    row.set(Column.contested_reads, stat.contestedReads());
+
+                    // A contig no read contests holds no margins; write null rather than a misleading zero.
+                    boolean contested = stat.contestedReads() > 0;
+                    row.setOrNull(Column.margin_mean, contested ? stat.marginMean() : null);
+                    row.setOrNull(Column.margin_median, contested ? stat.marginMedian() : null);
+                    row.setOrNull(Column.margin_p90, contested ? stat.marginP90() : null);
                 });
 
         LOGGER.info("wrote {} contig stats to {}", ordered.size(), file);
@@ -52,6 +60,11 @@ public class VirusOutputWriter
         min_depth,
         max_depth,
         mean_depth,
-        mean_aligner_score
+        mean_aligner_score,
+        vote_reads,
+        contested_reads,
+        margin_mean,
+        margin_median,
+        margin_p90
     }
 }
