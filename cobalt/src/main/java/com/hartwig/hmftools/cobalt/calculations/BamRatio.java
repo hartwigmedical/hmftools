@@ -122,10 +122,10 @@ public class BamRatio
             mRatio = -1.0;
             return;
         }
+
         if(Doubles.isZero(mRatio))
-        {
             return;
-        }
+
         if(factor <= 0 || !mIncluded || mRatio < 0)
         {
             mIncluded = false;

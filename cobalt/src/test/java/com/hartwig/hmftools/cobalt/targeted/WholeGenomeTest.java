@@ -71,6 +71,6 @@ public class WholeGenomeTest
 
     void check(HumanChromosome chromosome, int position)
     {
-        assertEquals(1.0, scope.enrichmentQuotient(chromosome, position), 0.0001);
+        assertEquals(1.0, scope.findRegionEnrichment(chromosome, position), 0.0001);
     }
 }

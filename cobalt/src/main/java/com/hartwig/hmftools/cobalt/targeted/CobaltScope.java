@@ -13,7 +13,7 @@ public interface CobaltScope
 
     ResultsConsolidator resultsConsolidator(double medianReadDepth);
 
-    double enrichmentQuotient(HumanChromosome chromosome, int position);
+    double findRegionEnrichment(final HumanChromosome chromosome, int position);
 
-    boolean onTarget(HumanChromosome chromosome, int position);
+    boolean onTarget(final HumanChromosome chromosome, int position);
 }

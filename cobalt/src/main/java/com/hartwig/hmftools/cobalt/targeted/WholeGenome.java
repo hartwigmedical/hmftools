@@ -25,7 +25,7 @@ public class WholeGenome implements CobaltScope
     }
 
     @Override
-    public double enrichmentQuotient(final HumanChromosome chromosome, final int position)
+    public double findRegionEnrichment(final HumanChromosome chromosome, final int position)
     {
         return 1.0;
     }

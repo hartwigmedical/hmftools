@@ -38,7 +38,7 @@ public class BamCalculationTest extends CalculationsTestBase
         Mockito.when(genomeFilter.exclude(Mockito.any(), Mockito.any())).thenReturn(false);
         final CobaltScope scope = Mockito.mock(CobaltScope.class);
         Mockito.when(scope.onTarget(Mockito.any(), Mockito.any(Integer.class))).thenReturn(true);
-        Mockito.when(scope.enrichmentQuotient(Mockito.any(), Mockito.anyInt())).thenReturn(1.0);
+        Mockito.when(scope.findRegionEnrichment(Mockito.any(), Mockito.anyInt())).thenReturn(1.0);
         calculation = new BC(genomeFilter, scope, V38);
     }
 

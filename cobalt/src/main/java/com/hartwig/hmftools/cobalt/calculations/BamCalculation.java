@@ -64,7 +64,7 @@ abstract class BamCalculation
             bamRatio.normaliseForGc(BucketStatistics.medianReadDepth(window.GcBucket));
 
             // Target region normalisation (does nothing in whole genome mode)
-            bamRatio.applyEnrichment(Scope.enrichmentQuotient(chromosome, window.Position));
+            bamRatio.applyEnrichment(Scope.findRegionEnrichment(chromosome, window.Position));
             bamResults.put(chromosome, bamRatio);
         });
 

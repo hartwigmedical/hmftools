@@ -8,16 +8,18 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Map;
+
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.hartwig.hmftools.cobalt.normalisers.NoOpReadDepthStatisticsNormaliser;
 import com.hartwig.hmftools.cobalt.normalisers.UnityNormaliser;
 import com.hartwig.hmftools.cobalt.consolidation.NoOpConsolidator;
+import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mockito;
 
 public class TargetRegionsTest
 {
@@ -34,12 +36,11 @@ public class TargetRegionsTest
         initialData.put(_1, tre(_1, 11_001, 0.4));
         initialData.put(_2, tre(_2, 3_001, 0.52));
         initialData.put(_2, tre(_2, 4_001, 0.62));
-        TargetRegions.ChromosomeData chromosomeData = Mockito.mock();
-        Mockito.when(chromosomeData.length(Mockito.eq(_1))).thenReturn(15_000);
-        Mockito.when(chromosomeData.length(Mockito.eq(_2))).thenReturn(10_000);
-        Mockito.when(chromosomeData.length(Mockito.eq(_3))).thenReturn(30_000);
 
-        enricher = new TargetRegions(initialData, chromosomeData);
+        Map<Chromosome,Integer> chrLengths = Map.of(_1, 15_000, _2, 10_000, _3, 30_000);
+
+        enricher = new TargetRegions();
+        enricher.addNormalisationMap(initialData, chrLengths);
     }
 
     @Test
@@ -107,7 +108,7 @@ public class TargetRegionsTest
 
     void check(double expected, HumanChromosome chromosome, int position)
     {
-        assertEquals(expected, enricher.enrichmentQuotient(chromosome, position), 0.0001);
+        assertEquals(expected, enricher.findRegionEnrichment(chromosome, position), 0.0001);
     }
 
     private TargetRegionEnrichment tre(HumanChromosome chromosome, int position, double enrichment)

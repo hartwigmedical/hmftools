@@ -23,6 +23,7 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_BAM;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_BAM_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_DESC;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.CONFIG_FILE_DELIM;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkCreateOutputDir;
@@ -33,18 +34,19 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.cobalt.count.BamReadCounter;
 import com.hartwig.hmftools.cobalt.diploid.DiploidRegionLoader;
 import com.hartwig.hmftools.cobalt.diploid.DiploidStatus;
 import com.hartwig.hmftools.cobalt.exclusions.ExcludedRegionsFile;
 import com.hartwig.hmftools.cobalt.targeted.CobaltScope;
-import com.hartwig.hmftools.cobalt.targeted.TargetRegionEnrichment;
 import com.hartwig.hmftools.cobalt.targeted.TargetRegions;
 import com.hartwig.hmftools.cobalt.targeted.WholeGenome;
 import com.hartwig.hmftools.common.bam.BamUtils;
@@ -54,7 +56,6 @@ import com.hartwig.hmftools.common.cobalt.CobaltRatioFile;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.gc.GCProfile;
 import com.hartwig.hmftools.common.genome.gc.GCProfileFactory;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.region.SpecificRegions;
@@ -75,6 +76,7 @@ public class CobaltConfig
     public static final String PCF_GAMMA = "pcf_gamma";
 
     public static final String TARGET_REGION_NORM_FILE = "target_region_norm_file";
+    public static final String TARGET_REGION_NORM_FILES = "target_region_norm_files";
     private static final String INCLUDE_DUPLICATES = "include_duplicates";
 
     public static final String GC_RATIO_MIN = "gc_ratio_min";
@@ -103,7 +105,7 @@ public class CobaltConfig
     public final boolean SkipPcfCalc;
 
     public final String TumorOnlyDiploidBed;
-    public final String TargetRegionNormFile;
+    public final List<String> TargetRegionNormFiles;
     public List<ChrBaseRegion> mExcludedRegions;
 
     // debug
@@ -122,7 +124,19 @@ public class CobaltConfig
         GcProfilePath = configBuilder.getValue(GC_PROFILE);
 
         TumorOnlyDiploidBed = configBuilder.getValue(TUMOR_ONLY_DIPLOID_BED);
-        TargetRegionNormFile = configBuilder.getValue(TARGET_REGION_NORM_FILE);
+
+        TargetRegionNormFiles = Lists.newArrayList();
+
+        if(configBuilder.hasValue(TARGET_REGION_NORM_FILE))
+        {
+            TargetRegionNormFiles.add(configBuilder.getValue(TARGET_REGION_NORM_FILE));
+        }
+        else if(configBuilder.hasValue(TARGET_REGION_NORM_FILES))
+        {
+            String[] panelFiles = configBuilder.getValue(TARGET_REGION_NORM_FILES).split(CONFIG_FILE_DELIM, -1);
+            Arrays.stream(panelFiles).forEach(x -> TargetRegionNormFiles.add(x));
+        }
+
         RefGenomePath = configBuilder.getValue(REF_GENOME);
         RefGenVersion = RefGenomeVersion.from(configBuilder);
 
@@ -161,6 +175,7 @@ public class CobaltConfig
 
         configBuilder.addPath(TUMOR_ONLY_DIPLOID_BED, false, "Diploid regions for tumor-only mode");
         configBuilder.addPath(TARGET_REGION_NORM_FILE, false, "Targeted regions normalisation file");
+        configBuilder.addPaths(TARGET_REGION_NORM_FILES, false, "Targeted regions normalisation file(s), separated by ','");
 
         configBuilder.addInteger(MIN_MAPPING_QUALITY, "Min map quality", DEFAULT_MIN_MAPPING_QUALITY);
         configBuilder.addInteger(PCF_GAMMA, "Gamma value for copy number PCF", DEFAULT_PCF_GAMMA);
@@ -231,19 +246,16 @@ public class CobaltConfig
         return readerFactory;
     }
 
-    public boolean targetedPanelMode() { return TargetRegionNormFile != null; }
+    public boolean targetedPanelMode() { return !TargetRegionNormFiles.isEmpty(); }
 
     public CobaltScope scope()
     {
         if(!targetedPanelMode())
             return new WholeGenome();
 
-        ListMultimap<HumanChromosome, TargetRegionEnrichment> chrEnrichmentMap = TargetRegionEnrichment.loadEnrichmentFile(TargetRegionNormFile);
-
-        RefGenomeCoordinates refGenomeCoordinates = RefGenomeCoordinates.refGenomeCoordinates(RefGenVersion);
-        TargetRegions.ChromosomeData chromosomeData = chromosome -> refGenomeCoordinates.lengths().get(chromosome);
-
-        return new TargetRegions(chrEnrichmentMap, chromosomeData);
+        TargetRegions targetRegions = new TargetRegions();
+        targetRegions.loadNormalisationFiles(TargetRegionNormFiles, RefGenVersion);
+        return targetRegions;
     }
 
     public ListMultimap<HumanChromosome, GCProfile> gcProfileData()

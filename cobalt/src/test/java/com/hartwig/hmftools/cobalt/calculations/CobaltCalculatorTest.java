@@ -76,7 +76,7 @@ public class CobaltCalculatorTest extends CalculationsTestBase
         }
 
         @Override
-        public double enrichmentQuotient(final HumanChromosome chromosome, final int position)
+        public double findRegionEnrichment(final HumanChromosome chromosome, final int position)
         {
             if(chromosome == _1)
             {
