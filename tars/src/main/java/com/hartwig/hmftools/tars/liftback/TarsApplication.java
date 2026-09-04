@@ -22,6 +22,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.stream.Collectors;
 
+import com.hartwig.hmftools.common.bamops.BamMerger;
 import com.hartwig.hmftools.common.bamops.BamOperations;
 import com.hartwig.hmftools.common.bamops.BamToolName;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
@@ -104,7 +105,7 @@ public class TarsApplication
         // read-name-group boundaries; a handful saturates the bounded queue, hence the low cap.
         int shardCount = Math.max(1, Math.min(workerCount, READER_SHARD_CAP));
         ShardedChunkProducer producer = new ShardedChunkProducer(
-                mConfig.InputBam, mConfig.RefGenomeFile, chunkQueue, workerCount, CHUNK_TARGET_READS, shardCount);
+                mConfig.InputBams, mConfig.RefGenomeFile, chunkQueue, workerCount, CHUNK_TARGET_READS, shardCount);
 
         List<LiftBackWorker> workers = new ArrayList<>();
         List<Thread> threadTasks = new ArrayList<>();
@@ -176,10 +177,7 @@ public class TarsApplication
     // input @SQ, read once: both the sidecar check and the output header derive from it
     private SAMFileHeader readInputHeader()
     {
-        return SamReaderFactory.makeDefault()
-                .referenceSequence(new File(mConfig.RefGenomeFile))
-                .open(new File(mConfig.InputBam))
-                .getFileHeader();
+        return BamMerger.buildCombinedHeader(mConfig.InputBams, mConfig.RefGenomeFile);
     }
 
     // strip the _tx alt contigs from @SQ so the lifted BAM carries a pure genomic dictionary

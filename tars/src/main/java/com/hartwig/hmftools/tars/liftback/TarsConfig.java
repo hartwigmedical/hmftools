@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.PERF_LOG_TIM
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PERF_LOG_TIME_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.CONFIG_FILE_DELIM;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.BAM_EXTENSION;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_EXTENSION;
@@ -23,6 +24,10 @@ import static com.hartwig.hmftools.tars.common.TarsConstants.MAX_SUPP_MERGES;
 import static com.hartwig.hmftools.tars.common.TarsConstants.MAX_SUPP_READ_OVERLAP;
 import static com.hartwig.hmftools.tars.common.TarsConstants.MIN_IMPLIED_INTRON_LENGTH;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import com.hartwig.hmftools.common.bamops.BamToolName;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.tars.liftback.features.SupplementaryConfig;
@@ -33,7 +38,8 @@ public class TarsConfig
     private static final String FILE_ID = "tars";
 
     public static final String INPUT_BAM = "input_bam";
-    public static final String INPUT_BAM_DESC = "Input BAM aligned against ref + transcript-contig FASTA";
+    public static final String INPUT_BAM_DESC =
+            "Input BAM aligned against ref + transcript-contig FASTA, separated by ',' if multiple";
 
     public static final String CONTIG_SIDECAR = "contig_sidecar";
     public static final String CONTIG_SIDECAR_DESC = "Contig sidecar TSV from SpliceFastaBuilder";
@@ -48,7 +54,7 @@ public class TarsConfig
                     + "a read lifting into any region is excluded post-lift (primary unmapped, supplementaries dropped)";
 
     public final String SampleId;
-    public final String InputBam;
+    public final List<String> InputBams;
     public final String RefGenomeFile;
     public final String ContigSidecarFile;
     public final SupplementaryConfig Supplementary;
@@ -62,7 +68,8 @@ public class TarsConfig
     public TarsConfig(final ConfigBuilder configBuilder)
     {
         SampleId = configBuilder.getValue(SAMPLE);
-        InputBam = configBuilder.getValue(INPUT_BAM);
+        InputBams = Arrays.stream(configBuilder.getValue(INPUT_BAM).split(CONFIG_FILE_DELIM, -1))
+                .collect(Collectors.toList());
         RefGenomeFile = configBuilder.getValue(REF_GENOME);
         ContigSidecarFile = configBuilder.getValue(CONTIG_SIDECAR);
         Supplementary = new SupplementaryConfig(
@@ -120,7 +127,7 @@ public class TarsConfig
     public static void registerConfig(final ConfigBuilder configBuilder)
     {
         configBuilder.addConfigItem(SAMPLE, true, SAMPLE_DESC);
-        configBuilder.addPath(INPUT_BAM, true, INPUT_BAM_DESC);
+        configBuilder.addPaths(INPUT_BAM, true, INPUT_BAM_DESC);
         addRefGenomeFile(configBuilder, true);
         // liftback works off the sidecar, not the version, but existing command lines pass it
         addRefGenomeVersion(configBuilder);

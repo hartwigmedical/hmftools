@@ -36,7 +36,7 @@ import htsjdk.samtools.util.BlockCompressedInputStream;
 // in the SAM/BAM spec: https://samtools.github.io/hts-specs/SAMv1.pdf
 public class ShardedChunkProducer extends Thread
 {
-    private final String mInputBam;
+    private final List<String> mInputBams;
     private final String mRefGenomeFile;
     private final BlockingQueue<List<SAMRecord>> mQueue;
     private final int mWorkerCount;
@@ -51,10 +51,10 @@ public class ShardedChunkProducer extends Thread
     public static final List<SAMRecord> END_OF_STREAM = new ArrayList<>();
 
     public ShardedChunkProducer(
-            final String inputBam, final String refGenomeFile, final BlockingQueue<List<SAMRecord>> queue,
+            final List<String> inputBams, final String refGenomeFile, final BlockingQueue<List<SAMRecord>> queue,
             final int workerCount, final int chunkTargetReads, final int shardCount)
     {
-        mInputBam = inputBam;
+        mInputBams = inputBams;
         mRefGenomeFile = refGenomeFile;
         mQueue = queue;
         mWorkerCount = workerCount;
@@ -67,46 +67,21 @@ public class ShardedChunkProducer extends Thread
     {
         try
         {
-            File bam = new File(mInputBam);
-            SAMFileHeader header = readHeader(bam);
-            List<ShardRange> ranges = computeSplits(bam, header, mShardCount);
-            TARS_LOGGER.info("liftback reading input across {} shard(s)", ranges.size());
-
-            // kept open until all shards finish so the monitor can read their offsets.
-            List<ShardRecordIterator> iterators = new ArrayList<>();
-            for(ShardRange range : ranges)
-            {
-                iterators.add(new ShardRecordIterator(bam, header, range));
-            }
-
             LongAdder readsCounter = new LongAdder();
-            AtomicBoolean done = new AtomicBoolean(false);
+            long totalBytes = totalInputBytes();
+            long completedBytes = 0;
 
-            Thread monitor = new Thread(() -> runMonitor(iterators, bam.length(), readsCounter, done), "tars-progress");
-            monitor.setDaemon(true);
-            monitor.start();
-
-            List<Thread> shardThreads = new ArrayList<>();
-            for(ShardRecordIterator iter : iterators)
+            for(String inputBam : mInputBams)
             {
-                Thread shard = new Thread(() -> readShard(iter, readsCounter), "tars-shard");
-                shard.start();
-                shardThreads.add(shard);
+                File bam = new File(inputBam);
+                readInput(bam, readsCounter, completedBytes, totalBytes);
+                completedBytes += bam.length();
             }
-
-            for(Thread shard : shardThreads)
-            {
-                shard.join();
-            }
-
-            done.set(true);
-            monitor.interrupt();
-            closeQuietly(iterators);
 
             mPeakMemoryMb.accumulateAndGet(MemoryCalcs.calcMemoryUsage(), Math::max);
 
-            TARS_LOGGER.info("liftback read {} reads across {} shard(s), peak memory({}mb)",
-                    readsCounter.sum(), ranges.size(), mPeakMemoryMb.get());
+            TARS_LOGGER.info("liftback read {} reads from {} input BAM(s), peak memory({}mb)",
+                    readsCounter.sum(), mInputBams.size(), mPeakMemoryMb.get());
 
             for(int i = 0; i < mWorkerCount; ++i)
             {
@@ -118,6 +93,56 @@ public class ShardedChunkProducer extends Thread
             TARS_LOGGER.error("liftback sharded producer failed: {}", e.toString());
             System.exit(1);
         }
+    }
+
+    private long totalInputBytes()
+    {
+        long total = 0;
+        for(String inputBam : mInputBams)
+        {
+            total += new File(inputBam).length();
+        }
+        return total;
+    }
+
+    private void readInput(
+            final File bam, final LongAdder readsCounter, final long completedBytes, final long totalBytes)
+            throws IOException, InterruptedException
+    {
+        SAMFileHeader header = readHeader(bam);
+        List<ShardRange> ranges = computeSplits(bam, header, mShardCount);
+        TARS_LOGGER.info("liftback reading {} across {} shard(s)", bam.getName(), ranges.size());
+
+        // kept open until all shards finish so the monitor can read their offsets.
+        List<ShardRecordIterator> iterators = new ArrayList<>();
+        for(ShardRange range : ranges)
+        {
+            iterators.add(new ShardRecordIterator(bam, header, range));
+        }
+
+        AtomicBoolean done = new AtomicBoolean(false);
+
+        Thread monitor = new Thread(
+                () -> runMonitor(iterators, completedBytes, totalBytes, readsCounter, done), "tars-progress");
+        monitor.setDaemon(true);
+        monitor.start();
+
+        List<Thread> shardThreads = new ArrayList<>();
+        for(ShardRecordIterator iter : iterators)
+        {
+            Thread shard = new Thread(() -> readShard(iter, readsCounter), "tars-shard");
+            shard.start();
+            shardThreads.add(shard);
+        }
+
+        for(Thread shard : shardThreads)
+        {
+            shard.join();
+        }
+
+        done.set(true);
+        monitor.interrupt();
+        closeQuietly(iterators);
     }
 
     private void readShard(final ShardRecordIterator iter, final LongAdder readsCounter)
@@ -378,10 +403,10 @@ public class ShardedChunkProducer extends Thread
         }
     }
 
-    // periodic progress: reads processed and rough % of the input consumed across all shards.
+    // periodic progress: reads processed and rough % of the whole input consumed, across all shards and all files.
     private void runMonitor(
-            final List<ShardRecordIterator> iterators, final long fileLength, final LongAdder readsCounter,
-            final AtomicBoolean done)
+            final List<ShardRecordIterator> iterators, final long completedBytes, final long totalBytes,
+            final LongAdder readsCounter, final AtomicBoolean done)
     {
         while(!done.get())
         {
@@ -398,13 +423,13 @@ public class ShardedChunkProducer extends Thread
                 return;
             }
 
-            long consumed = 0;
+            long consumed = completedBytes;
             for(ShardRecordIterator iter : iterators)
             {
                 consumed += iter.consumedBytes();
             }
 
-            int percent = fileLength > 0 ? (int) Math.min(100, consumed * 100 / fileLength) : 0;
+            int percent = totalBytes > 0 ? (int) Math.min(100, consumed * 100 / totalBytes) : 0;
             int memoryMb = MemoryCalcs.calcMemoryUsage();
             mPeakMemoryMb.accumulateAndGet(memoryMb, Math::max);
 
