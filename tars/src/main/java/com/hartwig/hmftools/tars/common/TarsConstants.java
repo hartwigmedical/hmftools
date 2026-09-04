@@ -48,4 +48,8 @@ public final class TarsConstants
     // Maximum read-span overlap accepted during a supplementary merge.
     public static final int MAX_SUPP_READ_OVERLAP = 5;
 
+    // how far a terminal boundary may be pulled back into its soft clip while looking for an annotated
+    // splice boundary to retract onto
+    public static final int MAX_ANNOTATED_BOUNDARY_SHIFT = 8;
+
 }

@@ -510,8 +510,24 @@ public class LiftBackGroupProcessorTest
     }
 
     @Test
-    public void testFinalGenomicScoreControlsAlignmentScoreFloor()
+    public void testUnchangedGenomicPlacementKeepsBwaAlignmentScore()
     {
+        // chr1:1 50M forward lifts to itself, so bwa's AS still describes the emitted record and the floor trusts it
+        RefGenomeInterface ref = new TestGenome().with(CHR_1, 500, 'A').asRefGenome();
+        SAMRecord primary = primaryRecord(CHR_1, 1, "50M");
+        primary.setReadBases(bases("C".repeat(50)));
+        primary.setAttribute("AS", 60);
+
+        List<SAMRecord> emitted = process(List.of(primary), noopSupplementary(), null, ref, null);
+
+        assertEquals(1, emitted.size());
+        assertFalse(emitted.get(0).getReadUnmappedFlag());
+    }
+
+    @Test
+    public void testChangedPlacementIsRescoredAgainstTheGenome()
+    {
+        // the overhang gate rewrites the cigar, so bwa's AS=60 no longer describes the record; the genome says otherwise
         RefGenomeInterface ref = new TestGenome().with(CHR_1, 500, 'A').asRefGenome();
         SAMRecord primary = primaryRecord(CHR_1, 1, "20M100N3M48S");
         primary.setReadBases(bases("C".repeat(71)));

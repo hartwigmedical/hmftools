@@ -76,5 +76,4 @@ public class GenomicAlignmentScorer
                 mRefGenome, alignment.LiftedChromosome, alignment.LiftedPos, alignment.LiftedCigar,
                 readBases.forAlignment(alignment));
     }
-
 }

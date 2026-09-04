@@ -18,6 +18,7 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOp
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkCreateOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.tars.common.TarsConstants.MAX_IMPLIED_INTRON_LENGTH;
+import static com.hartwig.hmftools.tars.common.TarsConstants.MAX_ANNOTATED_BOUNDARY_SHIFT;
 import static com.hartwig.hmftools.tars.common.TarsConstants.MAX_SUPP_MERGES;
 import static com.hartwig.hmftools.tars.common.TarsConstants.MAX_SUPP_READ_OVERLAP;
 import static com.hartwig.hmftools.tars.common.TarsConstants.MIN_IMPLIED_INTRON_LENGTH;
@@ -69,7 +70,8 @@ public class TarsConfig
                 configBuilder.getInteger(SUPP_IMPLIED_MAX_INTRON_LENGTH),
                 MAX_SUPP_MERGES,
                 false,
-                MAX_SUPP_READ_OVERLAP);
+                MAX_SUPP_READ_OVERLAP,
+                MAX_ANNOTATED_BOUNDARY_SHIFT);
         RnaUnmapRegionsFile = configBuilder.getValue(RNA_UNMAP_REGIONS);
         OutputDir = parseOutputDir(configBuilder);
         OutputId = configBuilder.getValue(OUTPUT_ID);
