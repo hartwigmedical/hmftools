@@ -91,17 +91,17 @@ public class ContigStatsCalculatorTest
         ContigStats v2 = stats.get("v2");
 
         // r1: v1 weight 0.5^0, v2 0.5^3; r2: v1 0.5^0, v2 0.5^5. Votes per read sum to 1, so both contigs sum to 2.
-        assertEquals(1.0 / (1 + Math.pow(0.5, 3)) + 1.0 / (1 + Math.pow(0.5, 5)), v1.voteReads(), EPSILON);
-        assertEquals(2.0 - v1.voteReads(), v2.voteReads(), EPSILON);
+        assertEquals(1.0 / (1 + Math.pow(0.5, 3)) + 1.0 / (1 + Math.pow(0.5, 5)), v1.readVotes(), EPSILON);
+        assertEquals(2.0 - v1.readVotes(), v2.readVotes(), EPSILON);
 
         // v1 wins both reads; margins are runner-up minus best edit distance: r1 4-1=3, r2 5-0=5.
-        assertEquals(2, v1.contestedReads());
+        assertEquals(2, v1.readsBestInRivals());
         assertEquals(4.0, v1.marginMean(), EPSILON);
         assertEquals(3.0, v1.marginMedian(), EPSILON);
         assertEquals(5.0, v1.marginP90(), EPSILON);
 
         // v2 is never a read's best, so it holds no margins.
-        assertEquals(0, v2.contestedReads());
+        assertEquals(0, v2.readsBestInRivals());
         assertTrue(Double.isNaN(v2.marginMean()));
     }
 
@@ -127,8 +127,8 @@ public class ContigStatsCalculatorTest
 
         Map<String, ContigStats> stats = new ContigStatsCalculator(0.5).compute(writeBam(header, records), reference);
 
-        assertEquals(1, stats.get("v1").contestedReads());
-        assertEquals(0, stats.get("v2").contestedReads());
+        assertEquals(1, stats.get("v1").readsBestInRivals());
+        assertEquals(0, stats.get("v2").readsBestInRivals());
         // margin = v2 divergence (1 mismatch + 40 clipped) - v1 divergence (5 mismatches) = 36.
         assertEquals(36.0, stats.get("v1").marginMean(), EPSILON);
     }

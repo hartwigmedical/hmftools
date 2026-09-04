@@ -133,7 +133,7 @@ public class ContigStatsCalculator
     }
 
     private static ContigStats computeContig(
-            String contig, int length, Collection<SAMRecord> reads, double voteReads, @Nullable List<Integer> margins)
+            String contig, int length, Collection<SAMRecord> reads, double readVotes, @Nullable List<Integer> margins)
     {
         int[] depth = new int[length];
         long scoreSum = 0;
@@ -168,10 +168,10 @@ public class ContigStatsCalculator
 
         double meanDepth = length > 0 ? (double) depthSum / length : 0;
         double meanScore = (double) scoreSum / reads.size();
-        int contestedReads = margins == null ? 0 : margins.size();
+        int readsBestInRivals = margins == null ? 0 : margins.size();
         return new ContigStats(
                 contig, length, reads.size(), coveredBases, minDepth, maxDepth, meanDepth, meanScore,
-                voteReads, contestedReads, mean(margins), percentile(margins, 50), percentile(margins, 90));
+                readVotes, readsBestInRivals, mean(margins), percentile(margins, 50), percentile(margins, 90));
     }
 
     private static SAMRecord better(SAMRecord a, SAMRecord b)
