@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Set;
 
 import static com.hartwig.hmftools.tars.common.TarsCigarUtils.indelAdjacentToTerminalSoftClip;
+import static com.hartwig.hmftools.tars.common.TarsCigarUtils.retractTerminalMatchIntoSoftClip;
 import static com.hartwig.hmftools.tars.common.TarsCigarUtils.terminalMatchedRun;
 
 import com.hartwig.hmftools.common.bam.CigarUtils;
@@ -101,7 +102,14 @@ public class SupplementaryMerger
     // no junction position scored above the lowest tier; a real position is a read offset, so never negative
     private static final int NO_JUNCTION_POSITION = -1;
 
+    // A retraction of one or both terminal boundaries onto an annotated splice boundary: the resulting start and cigar,
+    // and how far each side gave up. Only a left-side retraction moves the start.
+    public record BoundarySnap(int start, String cigar, int leftShift, int rightShift)
+    {
+    }
+
     private final SpliceJunctions mSpliceJunctions;
+    private final EnsemblAnnotationIndex mEnsemblAnnotationIndex;
     private final SupplementaryConfig mConfig;
 
     public SupplementaryMerger(final Set<ChrBaseRegion> annotatedJunctions, final SupplementaryConfig config)
@@ -115,9 +123,92 @@ public class SupplementaryMerger
             final EnsemblAnnotationIndex annotationIndex, final RefGenomeInterface refGenome,
             final SupplementaryConfig config)
     {
-        mSpliceJunctions = new SpliceJunctions(
-                annotationIndex != null ? annotationIndex : EnsemblAnnotationIndex.fromJunctions(new HashSet<>()), refGenome);
+        mEnsemblAnnotationIndex = annotationIndex != null
+                ? annotationIndex : EnsemblAnnotationIndex.fromJunctions(new HashSet<>());
+        mSpliceJunctions = new SpliceJunctions(mEnsemblAnnotationIndex, refGenome);
         mConfig = config;
+    }
+
+    // Retracts an over-extended terminal boundary onto an annotated splice boundary, independently of any merge. BWA
+    // extends a few bases past the true exon boundary when the intron's leading bases happen to match the read. A merge
+    // carries that correction in the cigar it builds, but a read whose supplementary cannot be merged - a fusion, whose
+    // partner is a different gene - keeps BWA's boundary, so it is corrected here instead. Both terminal boundaries are
+    // considered, since the two ends of a fusion junction come from two different records.
+    public BoundarySnap snapToAnnotatedBoundary(final String chromosome, final int start, final String cigar)
+    {
+        List<CigarElement> elements = CigarUtils.cigarElementsFromStr(cigar);
+        if(CigarUtils.hasHardClip(elements))
+        {
+            return null;
+        }
+
+        int rightShift = annotatedBoundaryShift(chromosome, start, elements, true);
+        int leftShift = annotatedBoundaryShift(chromosome, start, elements, false);
+        if(rightShift == 0 && leftShift == 0)
+        {
+            return null;
+        }
+
+        List<CigarElement> snapped = elements;
+        if(rightShift > 0)
+        {
+            snapped = retractTerminalMatchIntoSoftClip(snapped, rightShift, true);
+        }
+        if(snapped != null && leftShift > 0)
+        {
+            snapped = retractTerminalMatchIntoSoftClip(snapped, leftShift, false);
+        }
+        if(snapped == null)
+        {
+            // both ends retracting the same matched run can ask for more bases than it has; leave the read alone
+            return null;
+        }
+
+        return new BoundarySnap(start + leftShift, CigarUtils.cigarElementsToStr(snapped), leftShift, rightShift);
+    }
+
+    // The one retraction in 1..MaxAnnotatedBoundaryShift that puts this side's boundary on an annotated intron boundary.
+    // 0 when BWA already left it on one, when none is in reach, or when several are and the intended one cannot be told
+    // apart. A retraction may not consume the whole matched run.
+    private int annotatedBoundaryShift(
+            final String chromosome, final int start, final List<CigarElement> elements, final boolean rightSide)
+    {
+        int softClipLength = rightSide
+                ? CigarUtils.rightSoftClipLength(elements)
+                : CigarUtils.leftSoftClipLength(elements);
+        if(softClipLength == 0 || indelAdjacentToTerminalSoftClip(elements, !rightSide))
+        {
+            return 0;
+        }
+
+        int anchor = terminalMatchedRun(elements, rightSide);
+        int alignedEnd = start + CigarUtils.cigarAlignedLength(elements) - 1;
+        int snapShift = 0;
+
+        for(int shift = 0; shift <= mConfig.MaxAnnotatedBoundaryShift; ++shift)
+        {
+            if(anchor - shift < 1)
+            {
+                break;
+            }
+
+            int boundary = rightSide ? (alignedEnd - shift + 1) : (start + shift - 1);
+            boolean annotated = rightSide
+                    ? !mEnsemblAnnotationIndex.junctionsByStart(chromosome, boundary).isEmpty()
+                    : !mEnsemblAnnotationIndex.junctionsByEnd(chromosome, boundary).isEmpty();
+            if(!annotated)
+            {
+                continue;
+            }
+
+            if(shift == 0 || snapShift > 0)
+            {
+                return 0;
+            }
+            snapShift = shift;
+        }
+
+        return snapShift;
     }
 
     public int spliceStrand(final String chromosome, final int start, final String cigar)

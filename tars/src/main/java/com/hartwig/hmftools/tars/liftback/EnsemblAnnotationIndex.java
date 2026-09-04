@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.tars.common.ContigEntry;
@@ -19,6 +20,8 @@ public final class EnsemblAnnotationIndex
     private final Map<String, List<BaseRegion>> mExonsByChromosome;
     private final Set<ChrBaseRegion> mJunctions;
     private final Map<ChrBaseRegion, Integer> mJunctionStrands;
+    private final Map<BasePosition, List<ChrBaseRegion>> mJunctionsByStart;
+    private final Map<BasePosition, List<ChrBaseRegion>> mJunctionsByEnd;
 
     private EnsemblAnnotationIndex(
             final Map<String, List<BaseRegion>> exonsByChromosome, final Set<ChrBaseRegion> junctions,
@@ -27,6 +30,8 @@ public final class EnsemblAnnotationIndex
         mExonsByChromosome = exonsByChromosome;
         mJunctions = junctions != null ? Set.copyOf(junctions) : Collections.emptySet();
         mJunctionStrands = junctionStrands != null ? Map.copyOf(junctionStrands) : Collections.emptyMap();
+        mJunctionsByStart = indexJunctionBoundaries(mJunctions, true);
+        mJunctionsByEnd = indexJunctionBoundaries(mJunctions, false);
     }
 
     public boolean containsExon(final String chromosome, final int pos)
@@ -53,6 +58,28 @@ public final class EnsemblAnnotationIndex
     public int junctionCount()
     {
         return mJunctions.size();
+    }
+
+    public List<ChrBaseRegion> junctionsByStart(final String chromosome, final int intronStart)
+    {
+        return mJunctionsByStart.getOrDefault(new BasePosition(chromosome, intronStart), Collections.emptyList());
+    }
+
+    public List<ChrBaseRegion> junctionsByEnd(final String chromosome, final int intronEnd)
+    {
+        return mJunctionsByEnd.getOrDefault(new BasePosition(chromosome, intronEnd), Collections.emptyList());
+    }
+
+    private static Map<BasePosition, List<ChrBaseRegion>> indexJunctionBoundaries(
+            final Set<ChrBaseRegion> junctions, final boolean byStart)
+    {
+        Map<BasePosition, List<ChrBaseRegion>> index = new HashMap<>();
+        for(ChrBaseRegion intron : junctions)
+        {
+            int position = byStart ? intron.start() : intron.end();
+            index.computeIfAbsent(new BasePosition(intron.Chromosome, position), k -> new ArrayList<>()).add(intron);
+        }
+        return index;
     }
 
     public static EnsemblAnnotationIndex fromJunctions(final Set<ChrBaseRegion> junctions)

@@ -128,7 +128,9 @@ public class LiftBackGroupProcessor
             mStats.SupplementariesAbsorbed += supplementary.absorbed().size();
         }
 
-        List<LiftedRecord> finalRecords = annotateSpliceStrands(List.copyOf(resolved));
+        List<LiftedRecord> finalRecords = snapBoundaries(
+                records, List.copyOf(resolved), supplementary.absorbed());
+        finalRecords = annotateSpliceStrands(finalRecords);
 
         UnmapDecision unmapDecision = applyUnmapPolicy(primary, finalRecords.get(0));
         if(unmapDecision.result() != finalRecords.get(0))
@@ -224,6 +226,60 @@ public class LiftBackGroupProcessor
         return mDiscriminator.selectPrimaryAlignment(primary, alignments.liftedAlignments(), mate);
     }
 
+    private List<LiftedRecord> snapBoundaries(
+            final List<SAMRecord> records, final List<LiftedRecord> liftedRecords,
+            final Set<Integer> absorbedSupplementaries)
+    {
+        if(mSupplementaryMerger == null || records.size() < 2)
+        {
+            return liftedRecords;
+        }
+
+        List<LiftedRecord> snapped = new ArrayList<>(liftedRecords);
+        for(int i = 0; i < records.size(); ++i)
+        {
+            if(absorbedSupplementaries.contains(i))
+            {
+                continue;
+            }
+
+            LiftedRecord lifted = liftedRecords.get(i);
+            if(lifted == null || !lifted.hasPlacement())
+            {
+                continue;
+            }
+
+            SupplementaryMerger.BoundarySnap snap = mSupplementaryMerger.snapToAnnotatedBoundary(
+                    lifted.finalChromosome(), lifted.finalPos(), lifted.finalCigar());
+            if(snap == null)
+            {
+                continue;
+            }
+
+            snapped.set(i, applySnap(records.get(i), lifted, snap));
+        }
+        return List.copyOf(snapped);
+    }
+
+    // A retraction only shrinks the alignment, so it can split one overlapping locus into two but never merge two. That
+    // makes the promoted-MAPQ case the only one that can go stale: give back bwa's own MAPQ when TARS raised it from 0
+    // on a unique-locus reading that the snap has just falsified. A non-zero bwa MAPQ with NH > 1 is legitimate.
+    private static LiftedRecord applySnap(
+            final SAMRecord record, final LiftedRecord lifted, final SupplementaryMerger.BoundarySnap snap)
+    {
+        LiftedRecord snapped = lifted.withRevisedPrimary(
+                snap.start(), snap.cigar(), lifted.updatedMapQuality(), "boundary-snapped");
+
+        int inputMapQuality = record.getMappingQuality();
+        if(inputMapQuality == 0 && lifted.updatedMapQuality() > 0
+                && LiftBackDiscriminator.countDistinctLoci(snapped) > 1)
+        {
+            return lifted.withRevisedPrimary(snap.start(), snap.cigar(), inputMapQuality, "boundary-snapped");
+        }
+
+        return snapped;
+    }
+
     private List<LiftedRecord> annotateSpliceStrands(final List<LiftedRecord> liftedRecords)
     {
         if(mSupplementaryMerger == null)
@@ -257,7 +313,9 @@ public class LiftBackGroupProcessor
         {
             return null;
         }
-        if(lifted.hasPlacement() && mAlignmentScorer != null)
+
+        if(lifted.hasPlacement() && mAlignmentScorer != null
+                && placementChanged(primary, lifted.primaryAlignment()))
         {
             int score = mAlignmentScorer.scoreRecord(lifted.primaryAlignment(), primary);
             if(score != Integer.MIN_VALUE)
@@ -265,7 +323,18 @@ public class LiftBackGroupProcessor
                 return score;
             }
         }
+
         return primary.getIntegerAttribute(ALIGNMENT_SCORE_ATTRIBUTE);
+    }
+
+    // bwa's AS describes the alignment bwa emitted; it only still describes the record when nothing about the placement
+    // moved. Strand counts: an XA pick can keep coordinates and cigar while flipping orientation.
+    private static boolean placementChanged(final SAMRecord primary, final LiftedAlignment alignment)
+    {
+        return !primary.getReferenceName().equals(alignment.LiftedChromosome)
+                || primary.getAlignmentStart() != alignment.LiftedPos
+                || !primary.getCigarString().equals(alignment.LiftedCigar)
+                || primary.getReadNegativeStrandFlag() == alignment.ForwardStrand;
     }
 
     private UnmapDecision applyUnmapPolicy(final SAMRecord primary, final LiftedRecord result)
