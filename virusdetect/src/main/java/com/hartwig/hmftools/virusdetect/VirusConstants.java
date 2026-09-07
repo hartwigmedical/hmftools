@@ -28,9 +28,6 @@ public class VirusConstants
     // Genome partition size for multi-threaded candidate extraction.
     public static final int EXTRACTION_PARTITION_SIZE = 1_000_000;
 
-    // Minimum reads for an oncology group to be considered present. Not user-exposed yet; tuned internally first.
-    public static final int MIN_READS_DEFAULT = 2;
-
     // Chance a read base reflects its true origin, in the strain-vote model; sets how softly a contested read's vote
     // splits across strains. Pessimistically low because per-base qualities are not retained. Provisional.
     public static final double VOTE_CORRECT_BASE_PROBABILITY = 0.25;
