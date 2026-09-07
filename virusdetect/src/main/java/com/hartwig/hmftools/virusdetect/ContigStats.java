@@ -9,20 +9,16 @@ public record ContigStats(
         int readCount,              // reads with any alignment to this contig
         int coveredBases,           // contig positions with at least one aligned base
         // Depth spans the whole contig, so uncovered positions count as depth 0.
-        int minDepth,
-        int maxDepth,
-        double meanDepth,
+        SummaryStats depth,
         double meanAlignerScore,    // mean BWA alignment score across those reads
         // Strain rivalry against the near-identical sibling contigs of the same virus:
         double readVotes,           // reads softly attributed to this strain, split across contigs by divergence
         int readsBestInRivals,      // reads that strictly beat every rival contig (ties credit no contig)
         // Divergence lead over the runner-up on strictly-won reads; empty when there were none.
-        Optional<MarginSummary> margins)
+        Optional<SummaryStats> margins)
 {
     public double coverageFraction()
     {
         return contigLength == 0 ? 0 : (double) coveredBases / contigLength;
     }
-
-    public record MarginSummary(double mean, double median, double p90) {}
 }

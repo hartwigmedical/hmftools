@@ -156,30 +156,21 @@ public class ContigStatsCalculator
         }
 
         int coveredBases = 0;
-        int minDepth = length > 0 ? Integer.MAX_VALUE : 0;
-        int maxDepth = 0;
-        long depthSum = 0;
         for(int d : depth)
         {
             if(d > 0)
             {
                 ++coveredBases;
             }
-            minDepth = min(minDepth, d);
-            maxDepth = max(maxDepth, d);
-            depthSum += d;
         }
 
-        double meanDepth = length > 0 ? (double) depthSum / length : 0;
         double meanScore = (double) scoreSum / reads.size();
 
         int readsBestInRivals = margins == null ? 0 : margins.size();
-        Optional<ContigStats.MarginSummary> marginSummary = readsBestInRivals == 0
-                ? Optional.empty()
-                : Optional.of(new ContigStats.MarginSummary(mean(margins), percentile(margins, 50), percentile(margins, 90)));
+        Optional<SummaryStats> marginSummary = margins == null ? Optional.empty() : Optional.of(SummaryStats.from(margins));
 
         return new ContigStats(
-                contig, length, reads.size(), coveredBases, minDepth, maxDepth, meanDepth, meanScore,
+                contig, length, reads.size(), coveredBases, SummaryStats.from(depth), meanScore,
                 readVotes, readsBestInRivals, marginSummary);
     }
 
@@ -217,19 +208,5 @@ public class ContigStatsCalculator
 
         int clippedBases = leftClipLength(record.getCigar()) + rightClipLength(record.getCigar());
         return editDistance + clippedBases;
-    }
-
-    private static double mean(List<Integer> values)
-    {
-        return values.stream().mapToInt(Integer::intValue).average().orElseThrow();
-    }
-
-    // Nearest-rank percentile.
-    private static double percentile(List<Integer> values, double percent)
-    {
-        List<Integer> sorted = values.stream().sorted().toList();
-        int index = (int) Math.ceil(percent / 100.0 * sorted.size()) - 1;
-        index = max(0, min(sorted.size() - 1, index));
-        return sorted.get(index);
     }
 }

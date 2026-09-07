@@ -32,17 +32,26 @@ public class VirusOutputWriter
                     row.set(Column.read_count, stat.readCount());
                     row.set(Column.covered_bases, stat.coveredBases());
                     row.set(Column.coverage_fraction, stat.coverageFraction());
-                    row.set(Column.min_depth, stat.minDepth());
-                    row.set(Column.max_depth, stat.maxDepth());
-                    row.set(Column.mean_depth, stat.meanDepth());
+
+                    SummaryStats depth = stat.depth();
+                    row.set(Column.depth_mean, depth.mean());
+                    row.set(Column.depth_min, depth.min());
+                    row.set(Column.depth_p5, depth.p5());
+                    row.set(Column.depth_p50, depth.p50());
+                    row.set(Column.depth_p95, depth.p95());
+                    row.set(Column.depth_max, depth.max());
+
                     row.set(Column.mean_aligner_score, stat.meanAlignerScore());
                     row.set(Column.read_votes, stat.readVotes());
                     row.set(Column.reads_best_in_rivals, stat.readsBestInRivals());
 
-                    Optional<ContigStats.MarginSummary> margins = stat.margins();
-                    row.setOrNull(Column.margin_mean, margins.map(ContigStats.MarginSummary::mean).orElse(null));
-                    row.setOrNull(Column.margin_median, margins.map(ContigStats.MarginSummary::median).orElse(null));
-                    row.setOrNull(Column.margin_p90, margins.map(ContigStats.MarginSummary::p90).orElse(null));
+                    Optional<SummaryStats> margins = stat.margins();
+                    row.setOrNull(Column.margin_mean, margins.map(SummaryStats::mean).orElse(null));
+                    row.setOrNull(Column.margin_min, margins.map(SummaryStats::min).orElse(null));
+                    row.setOrNull(Column.margin_p5, margins.map(SummaryStats::p5).orElse(null));
+                    row.setOrNull(Column.margin_p50, margins.map(SummaryStats::p50).orElse(null));
+                    row.setOrNull(Column.margin_p95, margins.map(SummaryStats::p95).orElse(null));
+                    row.setOrNull(Column.margin_max, margins.map(SummaryStats::max).orElse(null));
                 });
 
         LOGGER.info("wrote {} contig stats to {}", ordered.size(), file);
@@ -57,14 +66,20 @@ public class VirusOutputWriter
         read_count,
         covered_bases,
         coverage_fraction,
-        min_depth,
-        max_depth,
-        mean_depth,
+        depth_mean,
+        depth_min,
+        depth_p5,
+        depth_p50,
+        depth_p95,
+        depth_max,
         mean_aligner_score,
         read_votes,
         reads_best_in_rivals,
         margin_mean,
-        margin_median,
-        margin_p90
+        margin_min,
+        margin_p5,
+        margin_p50,
+        margin_p95,
+        margin_max
     }
 }

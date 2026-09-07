@@ -54,18 +54,20 @@ public class ContigStatsCalculatorTest
         assertEquals(20, v1.contigLength());
         assertEquals(2, v1.readCount());              // r1 counted once despite two alignments
         assertEquals(10, v1.coveredBases());          // positions 1-10
-        assertEquals(0, v1.minDepth());               // positions 11-20 uncovered
-        assertEquals(2, v1.maxDepth());               // positions 6-10 covered by both reads
-        assertEquals(15.0 / 20, v1.meanDepth(), EPSILON);
+        assertEquals(0.0, v1.depth().min(), EPSILON);        // positions 11-20 uncovered
+        assertEquals(2.0, v1.depth().max(), EPSILON);        // positions 6-10 covered by both reads
+        assertEquals(15.0 / 20, v1.depth().mean(), EPSILON);
+        assertEquals(0.0, v1.depth().p50(), EPSILON);        // >half the contig uncovered, so median depth is 0
+        assertEquals(2.0, v1.depth().p95(), EPSILON);
         assertEquals(9.0, v1.meanAlignerScore(), EPSILON);   // (10 + 8) / 2
         assertEquals(0.5, v1.coverageFraction(), EPSILON);
 
         ContigStats v2 = stats.get("v2");
         assertEquals(1, v2.readCount());
         assertEquals(10, v2.coveredBases());
-        assertEquals(1, v2.minDepth());
-        assertEquals(1, v2.maxDepth());
-        assertEquals(1.0, v2.meanDepth(), EPSILON);
+        assertEquals(1.0, v2.depth().min(), EPSILON);
+        assertEquals(1.0, v2.depth().max(), EPSILON);
+        assertEquals(1.0, v2.depth().mean(), EPSILON);
         assertEquals(9.0, v2.meanAlignerScore(), EPSILON);
         assertEquals(1.0, v2.coverageFraction(), EPSILON);
     }
@@ -96,10 +98,12 @@ public class ContigStatsCalculatorTest
 
         // v1 wins both reads; margins are runner-up minus best edit distance: r1 4-1=3, r2 5-0=5.
         assertEquals(2, v1.readsBestInRivals());
-        ContigStats.MarginSummary v1Margins = v1.margins().orElseThrow();
+        SummaryStats v1Margins = v1.margins().orElseThrow();
         assertEquals(4.0, v1Margins.mean(), EPSILON);
-        assertEquals(3.0, v1Margins.median(), EPSILON);
-        assertEquals(5.0, v1Margins.p90(), EPSILON);
+        assertEquals(3.0, v1Margins.min(), EPSILON);
+        assertEquals(3.0, v1Margins.p50(), EPSILON);
+        assertEquals(5.0, v1Margins.p95(), EPSILON);
+        assertEquals(5.0, v1Margins.max(), EPSILON);
 
         // v2 is never a read's best, so it holds no margins.
         assertEquals(0, v2.readsBestInRivals());
