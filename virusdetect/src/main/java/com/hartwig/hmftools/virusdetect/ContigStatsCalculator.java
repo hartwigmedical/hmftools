@@ -140,10 +140,11 @@ public class ContigStatsCalculator
             String contig, int length, Collection<SAMRecord> reads, double readVotes, @Nullable List<Integer> margins)
     {
         int[] depth = new int[length];
-        long scoreSum = 0;
+        int[] scores = new int[reads.size()];
+        int readIndex = 0;
         for(SAMRecord read : reads)
         {
-            scoreSum += alignerScore(read);
+            scores[readIndex++] = alignerScore(read);
             for(AlignmentBlock block : read.getAlignmentBlocks())
             {
                 int start = max(0, block.getReferenceStart() - 1);   // aligned blocks are 1-based
@@ -164,13 +165,11 @@ public class ContigStatsCalculator
             }
         }
 
-        double meanScore = (double) scoreSum / reads.size();
-
         int readsBestInRivals = margins == null ? 0 : margins.size();
         Optional<SummaryStats> marginSummary = margins == null ? Optional.empty() : Optional.of(SummaryStats.from(margins));
 
         return new ContigStats(
-                contig, length, reads.size(), coveredBases, SummaryStats.from(depth), meanScore,
+                contig, length, reads.size(), coveredBases, SummaryStats.from(depth), SummaryStats.from(scores),
                 readVotes, readsBestInRivals, marginSummary);
     }
 

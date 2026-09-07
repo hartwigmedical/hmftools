@@ -10,7 +10,7 @@ public record ContigStats(
         int coveredBases,           // contig positions with at least one aligned base
         // Depth spans the whole contig, so uncovered positions count as depth 0.
         SummaryStats depth,
-        double meanAlignerScore,    // mean BWA alignment score across those reads
+        SummaryStats alignerScore,  // BWA alignment score distribution across those reads
         // Strain rivalry against the near-identical sibling contigs of the same virus:
         double readVotes,           // reads softly attributed to this strain, split across contigs by divergence
         int readsBestInRivals,      // reads that strictly beat every rival contig (ties credit no contig)

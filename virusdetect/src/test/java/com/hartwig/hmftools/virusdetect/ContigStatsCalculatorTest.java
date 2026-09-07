@@ -59,7 +59,9 @@ public class ContigStatsCalculatorTest
         assertEquals(15.0 / 20, v1.depth().mean(), EPSILON);
         assertEquals(0.0, v1.depth().p50(), EPSILON);        // >half the contig uncovered, so median depth is 0
         assertEquals(2.0, v1.depth().p95(), EPSILON);
-        assertEquals(9.0, v1.meanAlignerScore(), EPSILON);   // (10 + 8) / 2
+        assertEquals(9.0, v1.alignerScore().mean(), EPSILON);   // (10 + 8) / 2
+        assertEquals(8.0, v1.alignerScore().min(), EPSILON);
+        assertEquals(10.0, v1.alignerScore().max(), EPSILON);
         assertEquals(0.5, v1.coverageFraction(), EPSILON);
 
         ContigStats v2 = stats.get("v2");
@@ -68,7 +70,7 @@ public class ContigStatsCalculatorTest
         assertEquals(1.0, v2.depth().min(), EPSILON);
         assertEquals(1.0, v2.depth().max(), EPSILON);
         assertEquals(1.0, v2.depth().mean(), EPSILON);
-        assertEquals(9.0, v2.meanAlignerScore(), EPSILON);
+        assertEquals(9.0, v2.alignerScore().mean(), EPSILON);
         assertEquals(1.0, v2.coverageFraction(), EPSILON);
     }
 

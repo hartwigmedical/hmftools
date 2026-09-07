@@ -41,7 +41,14 @@ public class VirusOutputWriter
                     row.set(Column.depth_p95, depth.p95());
                     row.set(Column.depth_max, depth.max());
 
-                    row.set(Column.mean_aligner_score, stat.meanAlignerScore());
+                    SummaryStats alignerScore = stat.alignerScore();
+                    row.set(Column.aligner_score_mean, alignerScore.mean());
+                    row.set(Column.aligner_score_min, alignerScore.min());
+                    row.set(Column.aligner_score_p5, alignerScore.p5());
+                    row.set(Column.aligner_score_p50, alignerScore.p50());
+                    row.set(Column.aligner_score_p95, alignerScore.p95());
+                    row.set(Column.aligner_score_max, alignerScore.max());
+
                     row.set(Column.read_votes, stat.readVotes());
                     row.set(Column.reads_best_in_rivals, stat.readsBestInRivals());
 
@@ -72,7 +79,12 @@ public class VirusOutputWriter
         depth_p50,
         depth_p95,
         depth_max,
-        mean_aligner_score,
+        aligner_score_mean,
+        aligner_score_min,
+        aligner_score_p5,
+        aligner_score_p50,
+        aligner_score_p95,
+        aligner_score_max,
         read_votes,
         reads_best_in_rivals,
         margin_mean,
