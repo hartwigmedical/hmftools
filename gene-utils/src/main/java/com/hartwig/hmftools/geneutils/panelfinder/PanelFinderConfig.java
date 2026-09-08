@@ -21,6 +21,7 @@ public class PanelFinderConfig
     public final String EnsemblDataPath;
     public final String MappabilityProfileFile;
     public final String GeneIdFile;
+    public final String DriverGenePanel;
     public final RefGenomeVersion RefGenVersion;
     public final String OutputFile;
     public final String OutputBed;
@@ -59,6 +60,7 @@ public class PanelFinderConfig
 
         EnsemblDataPath = configBuilder.getValue(ENSEMBL_DATA_DIR);
         MappabilityProfileFile = configBuilder.getValue(CFG_PROBE_QUALITY_FILE);
+        DriverGenePanel = configBuilder.getValue(DriverGenePanelConfig.DRIVER_GENE_PANEL);
 
         HighDepthTrimCount = configBuilder.getInteger(HIGH_DEPTH_TRIM_COUNT);
         MinMappability = configBuilder.getDecimal(MIN_MAPPABILITY);
@@ -79,6 +81,7 @@ public class PanelFinderConfig
         configBuilder.addConfigItem(OUTPUT_FILE, false, "Output filename");
         configBuilder.addConfigItem(OUTPUT_BED, false, "Output panel definition BED");
         configBuilder.addPath(CFG_PROBE_QUALITY_FILE, false, DESC_PROBE_QUALITY_FILE);
+        DriverGenePanelConfig.addGenePanelOption(configBuilder, false);
 
         configBuilder.addDecimal(MIN_MAPPABILITY, "Min mappability to use a high-depth region", 0);
         configBuilder.addInteger(MIN_SAMPLE_COUNT, "Min high-depth sample count", 0);

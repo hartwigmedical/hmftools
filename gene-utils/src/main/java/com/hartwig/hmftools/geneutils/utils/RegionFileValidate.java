@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.geneutils.utils;
 
-import static java.lang.String.format;
-
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome.lowerChromosome;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeVersion;

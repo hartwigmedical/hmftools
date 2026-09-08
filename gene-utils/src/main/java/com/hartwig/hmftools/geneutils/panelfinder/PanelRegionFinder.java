@@ -10,6 +10,7 @@ import static java.lang.String.valueOf;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._Y;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.region.TaggedRegion.loadRegionsFromBedFile;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.convertWildcardSamplePath;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadDelimitedIdFile;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_NAME;
@@ -39,6 +40,8 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.driver.panel.DriverGene;
+import com.hartwig.hmftools.common.driver.panel.DriverGeneFile;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.GeneData;
@@ -59,12 +62,14 @@ public class PanelRegionFinder
     private final PanelFinderConfig mConfig;
 
     private final Map<String,List<RegionData>> mChrRegions;
+    private final Set<String> mPanelGeneNames;
 
     public PanelRegionFinder(final ConfigBuilder configBuilder)
     {
         mConfig = new PanelFinderConfig(configBuilder);
 
         mChrRegions = Maps.newHashMap();
+        mPanelGeneNames = Sets.newHashSet();
     }
 
     public void run()
@@ -76,6 +81,8 @@ public class PanelRegionFinder
 
         // load existing panel bed and merge
         loadPanelRegions();
+
+        loadPanelGenes();
 
         // annotate with canonical transcript info
         annotateGeneExons();
@@ -266,6 +273,32 @@ public class PanelRegionFinder
         regions.add(regionData);
     }
 
+    private void loadPanelGenes()
+    {
+        if(mConfig.GeneIdFile != null)
+        {
+            mPanelGeneNames.addAll(loadDelimitedIdFile(mConfig.GeneIdFile, FLD_GENE_NAME, TSV_DELIM));
+        }
+        else if(mConfig.DriverGenePanel != null)
+        {
+            try
+            {
+                List<DriverGene> driverGenes = DriverGeneFile.read(mConfig.DriverGenePanel);
+                driverGenes.forEach(x -> mPanelGeneNames.add(x.gene()));
+            }
+            catch(IOException e)
+            {
+                GU_LOGGER.error("invalid driver gene panel file: {}", e.toString());
+                System.exit(1);
+            }
+        }
+
+        if(!mPanelGeneNames.isEmpty())
+        {
+            GU_LOGGER.info("loaded {} panel gene names", mPanelGeneNames.size());
+        }
+    }
+
     private void annotateGeneExons()
     {
         if(mConfig.EnsemblDataPath == null)
@@ -276,12 +309,6 @@ public class PanelRegionFinder
         ensemblDataCache.setRequiredData(true, false, false, true);
         ensemblDataCache.load(false);
 
-        Set<String> panelGeneNames = Sets.newHashSet();
-
-        if(mConfig.GeneIdFile != null)
-        {
-            panelGeneNames.addAll(loadDelimitedIdFile(mConfig.GeneIdFile, FLD_GENE_NAME, TSV_DELIM));
-        }
 
         for(Map.Entry<String,List<RegionData>> entry : mChrRegions.entrySet())
         {
@@ -306,7 +333,7 @@ public class PanelRegionFinder
             }
 
             List<GeneTransData> panelGeneDataList = geneTransDataList.stream()
-                    .filter(x -> panelGeneNames.contains(x.geneData().GeneName)).collect(Collectors.toList());
+                    .filter(x -> mPanelGeneNames.contains(x.geneData().GeneName)).collect(Collectors.toList());
 
             for(RegionData region : regions)
             {
