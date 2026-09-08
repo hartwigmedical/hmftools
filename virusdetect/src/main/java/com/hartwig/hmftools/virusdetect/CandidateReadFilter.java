@@ -2,6 +2,7 @@ package com.hartwig.hmftools.virusdetect;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.leftSoftClipLength;
 import static com.hartwig.hmftools.common.bam.CigarUtils.rightSoftClipLength;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.UNMAP_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.mateUnmapped;
 
 import java.util.List;
@@ -11,8 +12,7 @@ import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 
 import htsjdk.samtools.SAMRecord;
 
-// Decides whether a read is a candidate for viral realignment: fully unmapped, one mate unmapped, mapped to a
-// host-reference decoy contig, or long soft clip whose clipped bases are not already placed elsewhere in the host.
+// Decides whether a read is a candidate for viral realignment.
 public class CandidateReadFilter
 {
     private final int mMinSoftClipBases;
@@ -26,18 +26,23 @@ public class CandidateReadFilter
 
     public boolean isCandidate(SAMRecord record)
     {
+        // Genuinely unaligned, so possibly viral. A read redux itself unmapped (UM tag) is instead host sequence
+        // from a bad region, not genuinely unaligned, so it is excluded.
         if(record.getReadUnmappedFlag())
         {
-            return true;
+            return !record.hasAttribute(UNMAP_ATTRIBUTE);
         }
+        // The unmapped mate may be viral; this read anchors it.
         if(mateUnmapped(record))
         {
             return true;
         }
+        // Mapped to a host-reference viral decoy contig.
         if(isViralDecoyContig(record.getReferenceName()))
         {
             return true;
         }
+        // A long soft clip whose clipped bases were not placed elsewhere in the host may mark a viral junction.
         boolean hasSignificantClip = (leftSoftClipLength(record) >= mMinSoftClipBases || rightSoftClipLength(record) >= mMinSoftClipBases);
         if(hasSignificantClip && clippedBasesAreCandidate(record))
         {

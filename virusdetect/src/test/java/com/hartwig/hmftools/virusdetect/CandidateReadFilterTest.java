@@ -32,6 +32,15 @@ public class CandidateReadFilterTest
     }
 
     @Test
+    public void testReduxUnmappedReadIsNotCandidate()
+    {
+        // the UM tag means redux unmapped this host read from a bad region; it is not a genuine viral read
+        SAMRecord record = read(4, "*", "*");
+        record.setAttribute("UM", "chr1:100");
+        assertFalse(FILTER.isCandidate(record));
+    }
+
+    @Test
     public void testMappedReadWithUnmappedMateIsCandidate()
     {
         // paired (0x1) + mate unmapped (0x8) + first of pair (0x40)
