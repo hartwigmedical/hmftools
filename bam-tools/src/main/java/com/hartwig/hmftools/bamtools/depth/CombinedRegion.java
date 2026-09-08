@@ -6,8 +6,9 @@ import static java.lang.String.format;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.region.HighDepthRegion;
 
-class CombinedRegion
+public class CombinedRegion
 {
     public List<PositionCount> Depth;
 
@@ -17,7 +18,7 @@ class CombinedRegion
 
         for(int pos = region.start(); pos <= region.end(); ++pos)
         {
-            Depth.add(new PositionCount(pos, region.DepthMin, region.DepthMax));
+            Depth.add(new PositionCount(pos, region.DepthMin, region.DepthMax, region.DepthAvg));
         }
     }
 
@@ -50,7 +51,7 @@ class CombinedRegion
                 if(pos == existing.Position)
                 {
                     found = true;
-                    ++existing.Count;
+                    existing.DepthAverages.add(region.DepthAvg);
                     existing.DepthMax = max(existing.DepthMax, region.DepthMax);
                     break;
                 }
@@ -65,7 +66,7 @@ class CombinedRegion
 
             if(!found)
             {
-                Depth.add(existingIndex, new PositionCount(pos, region.DepthMin, region.DepthMax));
+                Depth.add(existingIndex, new PositionCount(pos, region.DepthMin, region.DepthMax, region.DepthAvg));
             }
         }
     }
@@ -84,7 +85,7 @@ class CombinedRegion
                 if(otherCount.Position == existing.Position)
                 {
                     found = true;
-                    existing.Count += otherCount.Count;
+                    existing.DepthAverages.addAll(otherCount.DepthAverages);
                     break;
                 }
 

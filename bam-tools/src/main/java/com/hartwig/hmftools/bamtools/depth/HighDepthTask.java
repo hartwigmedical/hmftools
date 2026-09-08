@@ -4,7 +4,6 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
-import static com.hartwig.hmftools.bamtools.depth.HighDepthConfig.HIGH_DEPTH_REGION_MAX_GAP;
 import static com.hartwig.hmftools.bamtools.depth.HighDepthFinder.writeHighDepthRegions;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions.stripChrPrefix;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
@@ -17,8 +16,8 @@ import java.util.concurrent.Callable;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.bam.BamSlicer;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
-import com.hartwig.hmftools.common.perf.PerformanceCounter;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.common.region.HighDepthRegion;
 
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
@@ -26,7 +25,7 @@ import htsjdk.samtools.SamReaderFactory;
 
 public class HighDepthTask implements Callable<Void>
 {
-    private final HighDepthConfig mConfig;
+    private final FinderConfig mConfig;
     private final String mChromosome;
     private final BufferedWriter mWriter;
 
@@ -35,11 +34,10 @@ public class HighDepthTask implements Callable<Void>
     private final int[] mBaseDepth;
 
     private ChrBaseRegion mCurrentPartition;
-    private final PerformanceCounter mPerfCounter;
     private int mRecordCounter;
     private int mHighDepthRegionCounter;
 
-    public HighDepthTask(final String chromosome, final HighDepthConfig config, final BufferedWriter writer)
+    public HighDepthTask(final String chromosome, final FinderConfig config, final BufferedWriter writer)
     {
         mConfig = config;
         mChromosome = chromosome;
@@ -51,7 +49,6 @@ public class HighDepthTask implements Callable<Void>
         mBaseDepth = new int[mConfig.PartitionSize];
         mCurrentPartition = null;
 
-        mPerfCounter = new PerformanceCounter("Slice");
         mRecordCounter = 0;
         mHighDepthRegionCounter = 0;
     }
@@ -100,7 +97,6 @@ public class HighDepthTask implements Callable<Void>
 
         BT_LOGGER.info("chr({}) processing complete, totalReads({}) highDepthRegions({})",
                 mChromosome, mRecordCounter, mHighDepthRegionCounter);
-        mPerfCounter.logStats();
 
         return null;
     }
@@ -114,13 +110,9 @@ public class HighDepthTask implements Callable<Void>
 
         mCurrentPartition = partition;
 
-        mPerfCounter.start();
-
         mBamSlicer.slice(mSamReader, mCurrentPartition, this::processSamRecord);
 
         findHighDepthRegions();
-
-        mPerfCounter.stop();
     }
 
     private void processSamRecord(final SAMRecord record)
@@ -147,6 +139,9 @@ public class HighDepthTask implements Callable<Void>
 
         HighDepthRegion currentRegion = null;
 
+        long regionDepthTotal = 0;
+        long depthBelowThreshold = 0;
+
         for(int i = 0; i < mBaseDepth.length; ++i)
         {
             int position = mCurrentPartition.start() + i;
@@ -159,6 +154,8 @@ public class HighDepthTask implements Callable<Void>
                     currentRegion = new HighDepthRegion(new ChrBaseRegion(mChromosome, position, position));
                     currentRegion.DepthMin = baseDepth;
                     currentRegion.DepthMax = baseDepth;
+                    regionDepthTotal = baseDepth;
+
                     highDepthRegions.add(currentRegion);
                 }
                 else
@@ -166,6 +163,10 @@ public class HighDepthTask implements Callable<Void>
                     // extend the region
                     currentRegion.setEnd(position);
                     currentRegion.DepthMax = max(currentRegion.DepthMax, baseDepth);
+                    regionDepthTotal += baseDepth;
+
+                    regionDepthTotal += depthBelowThreshold;
+                    depthBelowThreshold = 0;
                 }
             }
             else
@@ -173,13 +174,21 @@ public class HighDepthTask implements Callable<Void>
                 if(currentRegion == null)
                     continue;
 
-                if(position - currentRegion.end() < HIGH_DEPTH_REGION_MAX_GAP) // continue checking but don't extend the region
+                depthBelowThreshold += baseDepth;
+
+                if(position - currentRegion.end() < mConfig.MaxRegionGap) // continue checking but don't extend the region
                     continue;
 
                 // end this region
+                currentRegion.DepthAvg = (int)Math.round(regionDepthTotal / (double)currentRegion.baseLength());
                 currentRegion = null;
+                regionDepthTotal = 0;
+                depthBelowThreshold = 0;
             }
         }
+
+        if(currentRegion != null)
+            currentRegion.DepthAvg = (int)Math.round(regionDepthTotal / (double)currentRegion.baseLength());
 
         if(!highDepthRegions.isEmpty())
         {

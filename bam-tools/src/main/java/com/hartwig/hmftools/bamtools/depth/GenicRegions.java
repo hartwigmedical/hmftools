@@ -29,6 +29,7 @@ import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.common.region.HighDepthRegion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 public class GenicRegions
