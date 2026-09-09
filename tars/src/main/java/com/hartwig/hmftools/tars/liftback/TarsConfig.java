@@ -6,8 +6,6 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRe
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeVersion;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.parseThreads;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.PERF_LOG_TIME;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.PERF_LOG_TIME_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.CONFIG_FILE_DELIM;
@@ -19,7 +17,6 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOp
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkCreateOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.tars.common.TarsConstants.MAX_IMPLIED_INTRON_LENGTH;
-import static com.hartwig.hmftools.tars.common.TarsConstants.MAX_ANNOTATED_BOUNDARY_SHIFT;
 import static com.hartwig.hmftools.tars.common.TarsConstants.MAX_SUPP_MERGES;
 import static com.hartwig.hmftools.tars.common.TarsConstants.MAX_SUPP_READ_OVERLAP;
 import static com.hartwig.hmftools.tars.common.TarsConstants.MIN_IMPLIED_INTRON_LENGTH;
@@ -63,7 +60,6 @@ public class TarsConfig
     public final String OutputId;
     public final String BamToolPath;
     public final int Threads;
-    public final double PerfLogTime;
 
     public TarsConfig(final ConfigBuilder configBuilder)
     {
@@ -77,14 +73,12 @@ public class TarsConfig
                 configBuilder.getInteger(SUPP_IMPLIED_MAX_INTRON_LENGTH),
                 MAX_SUPP_MERGES,
                 false,
-                MAX_SUPP_READ_OVERLAP,
-                MAX_ANNOTATED_BOUNDARY_SHIFT);
+                MAX_SUPP_READ_OVERLAP);
         RnaUnmapRegionsFile = configBuilder.getValue(RNA_UNMAP_REGIONS);
         OutputDir = parseOutputDir(configBuilder);
         OutputId = configBuilder.getValue(OUTPUT_ID);
         BamToolPath = configBuilder.getValue(BAMTOOL_PATH);
         Threads = parseThreads(configBuilder);
-        PerfLogTime = configBuilder.getDecimal(PERF_LOG_TIME);
 
         if(OutputDir == null)
         {
@@ -120,10 +114,6 @@ public class TarsConfig
 
     public String formSummaryFile() { return filePrefix() + ".summary" + TSV_EXTENSION; }
 
-    public String formRegionPerfFile() { return filePrefix() + ".region_perf" + TSV_EXTENSION; }
-
-    public boolean perfDebug() { return PerfLogTime > 0; }
-
     public static void registerConfig(final ConfigBuilder configBuilder)
     {
         configBuilder.addConfigItem(SAMPLE, true, SAMPLE_DESC);
@@ -144,6 +134,5 @@ public class TarsConfig
         addOutputOptions(configBuilder);
         addThreadOptions(configBuilder);
         addLoggingOptions(configBuilder);
-        configBuilder.addDecimal(PERF_LOG_TIME, PERF_LOG_TIME_DESC, 0);
     }
 }

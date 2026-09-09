@@ -35,6 +35,7 @@ import com.hartwig.hmftools.tars.liftback.TarsTestFixtures.TestGenome;
 import com.hartwig.hmftools.tars.liftback.features.OverhangGate;
 import com.hartwig.hmftools.tars.liftback.features.GenomicAlignmentScorer;
 import com.hartwig.hmftools.tars.liftback.features.SupplementaryMerger;
+import com.hartwig.hmftools.tars.liftback.features.SupplementaryMerger.RejectReason;
 
 import org.junit.Test;
 
@@ -49,7 +50,7 @@ public class LiftBackGroupProcessorTest
             final RefGenomeInterface refGenome, final ExcludedRegions excludedRegions)
     {
         return new LiftBackGroupProcessor(
-                new LiftBackDiscriminator(List.of(threeExonContig())),
+                new PlacementSelector(List.of(threeExonContig())),
                 supplementaryMerger, overhangGate, new GenomicAlignmentScorer(refGenome), refGenome, excludedRegions);
     }
 
@@ -136,6 +137,27 @@ public class LiftBackGroupProcessorTest
     }
 
     @Test
+    public void testSupplementaryMergeRejectReasonStatsAggregate()
+    {
+        LiftBackStats first = new LiftBackStats();
+        first.SupplementaryMergeAttempts = 1;
+        first.recordSupplementaryMergeRejection(RejectReason.NO_TERMINAL_SOFTCLIP);
+        LiftBackStats second = new LiftBackStats();
+        second.SupplementaryMergeAttempts = 2;
+        second.SupplementaryMergeSuccessfulCandidates = 1;
+        second.recordSupplementaryMergeRejection(RejectReason.DIFFERENT_CHROMOSOME);
+
+        LiftBackStats totals = new LiftBackStats();
+        totals.add(first);
+        totals.add(second);
+
+        assertEquals(3, totals.SupplementaryMergeAttempts);
+        assertEquals(1, totals.SupplementaryMergeSuccessfulCandidates);
+        assertEquals(1, totals.supplementaryMergeRejections(RejectReason.NO_TERMINAL_SOFTCLIP));
+        assertEquals(1, totals.supplementaryMergeRejections(RejectReason.DIFFERENT_CHROMOSOME));
+    }
+
+    @Test
     public void testPrimaryOutsideExcludedRegionIsKept()
     {
         SAMRecord primary = primaryRecord(TX_CONTIG, 1, "50M");   // chr1:100
@@ -180,7 +202,7 @@ public class LiftBackGroupProcessorTest
     public void testOverCapGenomicPrimaryMapQuality0NoXaUnmapped()
     {
         // bwa emits MAPQ 0 and no XA when a read maps past the -h 75 XA cap, so this genomic primary is unmapped even though the
-        // discriminator sees a single locus and would otherwise bump it to 60
+        // placement selection sees a single locus and would otherwise bump it to 60
         SAMRecord primary = primaryRecord(CHR_1, 100, "50M");
         primary.setMappingQuality(0);
 
@@ -339,6 +361,20 @@ public class LiftBackGroupProcessorTest
     }
 
     @Test
+    public void testSupplementaryWhoseOwnPlacementCannotBeLiftedIsDropped()
+    {
+        SAMRecord primary = primaryRecord(TX_CONTIG, 1, "50M");
+        SAMRecord supplementary = supplementaryRecord(
+                TX_CONTIG, 251, "10M", TX_CONTIG + ",1,+,50M,60,0;");
+
+        List<SAMRecord> emitted = process(List.of(primary, supplementary));
+
+        assertEquals(1, emitted.size());
+        assertFalse(emitted.get(0).getSupplementaryAlignmentFlag());
+        assertNull(emitted.get(0).getAttribute(SUPPLEMENTARY_ATTRIBUTE));
+    }
+
+    @Test
     public void testSupplementaryWithLiftableSaIsKept()
     {
         // same shape as the orphan case, but the SA entry lifts, so the supp is emitted with a rewritten genomic SA
@@ -476,6 +512,70 @@ public class LiftBackGroupProcessorTest
     }
 
     @Test
+    public void testLowMapQualityReadChoosesClosestMatePlacement()
+    {
+        // Both first-mate placements are perfect matches and within 1 Mb of the mate. The closer XA
+        // placement must win instead of leaving the choice to the read-name seed and creating a false
+        // 500 kb discordant fragment.
+        String sequence = "ACGT".repeat(13);
+        RefGenomeInterface ref = new TestGenome()
+                .with("chr5", 600_000, 'A')
+                .set("chr5", 100, sequence)
+                .set("chr5", 250, sequence)
+                .set("chr5", 500_000, sequence)
+                .asRefGenome();
+
+        SAMRecord first = primaryRecord("paired", "chr5", 500_000, "52M");
+        first.setMappingQuality(0);
+        first.setProperPairFlag(false);
+        first.setReadBases(bases(sequence));
+        first.setAttribute("XA", "chr5,+100,52M,0;");
+
+        SAMRecord second = secondMateRecord("paired", "chr5", 250, "52M");
+        second.setProperPairFlag(false);
+        second.setReadBases(bases(sequence));
+
+        List<SAMRecord> emitted = process(List.of(first, second), null, new OverhangGate(ref), ref, null);
+
+        SAMRecord outFirst = emitted.stream().filter(SAMRecord::getFirstOfPairFlag).findFirst().orElseThrow();
+        SAMRecord outSecond = emitted.stream().filter(SAMRecord::getSecondOfPairFlag).findFirst().orElseThrow();
+        assertEquals(100, outFirst.getAlignmentStart());
+        assertEquals(250, outSecond.getAlignmentStart());
+        assertEquals(250, outFirst.getMateAlignmentStart());
+        assertEquals(100, outSecond.getMateAlignmentStart());
+    }
+
+    @Test
+    public void testLowMapQualityPairUsesProximityBeforeAlignmentScore()
+    {
+        String sequence = "ACGT".repeat(13);
+        String oneMismatch = "T" + sequence.substring(1);
+        RefGenomeInterface ref = new TestGenome()
+                .with("chr5", 600_000, 'A')
+                .set("chr5", 100, oneMismatch)
+                .set("chr5", 250, sequence)
+                .set("chr5", 500_000, sequence)
+                .asRefGenome();
+
+        SAMRecord first = primaryRecord("paired", "chr5", 500_000, "52M");
+        first.setMappingQuality(0);
+        first.setProperPairFlag(false);
+        first.setReadBases(bases(sequence));
+        first.setAttribute("XA", "chr5,+100,52M,1;");
+
+        SAMRecord second = secondMateRecord("paired", "chr5", 250, "52M");
+        second.setProperPairFlag(false);
+        second.setReadBases(bases(sequence));
+
+        List<SAMRecord> emitted = process(List.of(first, second), null, new OverhangGate(ref), ref, null);
+
+        SAMRecord outFirst = emitted.stream().filter(SAMRecord::getFirstOfPairFlag).findFirst().orElseThrow();
+        SAMRecord outSecond = emitted.stream().filter(SAMRecord::getSecondOfPairFlag).findFirst().orElseThrow();
+        assertEquals(100, outFirst.getAlignmentStart());
+        assertEquals(250, outSecond.getAlignmentStart());
+    }
+
+    @Test
     public void testProcessorMergesSupplementaryChainBeforeDiscrimination()
     {
         SAMRecord primary = primaryRecord(CHR_1, 1000, "50M101S");
@@ -487,11 +587,13 @@ public class LiftBackGroupProcessorTest
         SupplementaryMerger merger = new SupplementaryMerger(
                 Set.of(new ChrBaseRegion(CHR_1, 1050, 1999), new ChrBaseRegion(CHR_1, 2060, 2999)),
                 supplementaryConfig());
+        RefGenomeInterface ref = new TestGenome().with(CHR_1, 4000, 'A').asRefGenome();
 
-        List<SAMRecord> emitted = process(List.of(primary, middle, last), merger);
+        List<SAMRecord> emitted = process(List.of(primary, middle, last), merger, null, ref, null);
 
         assertEquals(1, emitted.size());
         assertEquals("50M950N60M940N41M", emitted.get(0).getCigarString());
+        assertEquals(Integer.valueOf(151), emitted.get(0).getIntegerAttribute("AS"));
     }
 
     @Test
@@ -507,6 +609,78 @@ public class LiftBackGroupProcessorTest
         assertEquals(1, emitted.size());
         assertEquals("50M100N101M", emitted.get(0).getCigarString());
         assertEquals(Character.valueOf('+'), emitted.get(0).getAttribute("XS"));
+    }
+
+    @Test
+    public void testSupplementaryXaCanSupplyTheClosestMergePlacement()
+    {
+        SAMRecord primary = primaryRecord(CHR_1, 1000, "50M50S");
+        SAMRecord supplementary = supplementaryRecord(
+                "chr5", 5000, "50S50M", CHR_1 + ",1000,+,50M50S,60,0;");
+        supplementary.setMappingQuality(0);
+        supplementary.setAttribute("XA", CHR_1 + ",+1200,50S50M,0;");
+        primary.setReadBases(bases("A".repeat(100)));
+        supplementary.setReadBases(primary.getReadBases());
+
+        LiftBackGroupProcessor processor = processor(
+                new SupplementaryMerger(Collections.emptySet(), supplementaryConfig()), null, null, null);
+        List<SAMRecord> emitted = new ArrayList<>();
+        processor.processNameGroup(List.of(primary, supplementary), emitted::add);
+
+        assertEquals(1, emitted.size());
+        assertEquals(CHR_1, emitted.get(0).getReferenceName());
+        assertEquals(1000, emitted.get(0).getAlignmentStart());
+        assertEquals("50M150N50M", emitted.get(0).getCigarString());
+        assertEquals(1, processor.stats().SupplementaryMergeAttempts);
+        assertEquals(1, processor.stats().SupplementaryMergeSuccessfulCandidates);
+    }
+
+    @Test
+    public void testSelectedSupplementaryXaIsEmittedWhenMergeFails()
+    {
+        SAMRecord primary = primaryRecord(CHR_1, 1000, "100M");
+        SAMRecord supplementary = supplementaryRecord(
+                "chr5", 5000, "50S50M", CHR_1 + ",1000,+,100M,60,0;");
+        supplementary.setMappingQuality(0);
+        supplementary.setAttribute("XA", CHR_1 + ",+1200,50S50M,0;");
+        primary.setReadBases(bases("A".repeat(100)));
+        supplementary.setReadBases(primary.getReadBases());
+
+        RefGenomeInterface ref = new TestGenome()
+                .with(CHR_1, 2000, 'A')
+                .with("chr5", 6000, 'A')
+                .asRefGenome();
+        List<SAMRecord> emitted = process(
+                List.of(primary, supplementary),
+                new SupplementaryMerger(Collections.emptySet(), supplementaryConfig()), null, ref, null);
+
+        assertEquals(2, emitted.size());
+        SAMRecord emittedSupplementary = emitted.stream()
+                .filter(SAMRecord::getSupplementaryAlignmentFlag)
+                .findFirst().orElseThrow();
+        assertEquals(CHR_1, emittedSupplementary.getReferenceName());
+        assertEquals(1200, emittedSupplementary.getAlignmentStart());
+        assertEquals("50S50M", emittedSupplementary.getCigarString());
+        assertEquals("chr5,+5000,50S50M,0;", emittedSupplementary.getStringAttribute("XA"));
+        assertTrue(emittedSupplementary.getStringAttribute("SA").startsWith(CHR_1 + ",1000,"));
+        assertEquals(Integer.valueOf(50), emittedSupplementary.getIntegerAttribute("AS"));
+        assertEquals(Integer.valueOf(0), emittedSupplementary.getIntegerAttribute("NM"));
+    }
+
+    @Test
+    public void testSupplementaryMergeRejectionIsCounted()
+    {
+        SAMRecord primary = primaryRecord(CHR_1, 1000, "100M");
+        SAMRecord supplementary = supplementaryRecord(
+                CHR_1, 1200, "50S50M", CHR_1 + ",1000,+,100M,60,0;");
+
+        LiftBackGroupProcessor processor = processor(
+                new SupplementaryMerger(Collections.emptySet(), supplementaryConfig()), null, null, null);
+        processor.processNameGroup(List.of(primary, supplementary), record -> { });
+
+        assertEquals(1, processor.stats().SupplementaryMergeAttempts);
+        assertEquals(0, processor.stats().SupplementaryMergeSuccessfulCandidates);
+        assertEquals(1, processor.stats().supplementaryMergeRejections(RejectReason.NO_TERMINAL_SOFTCLIP));
     }
 
     @Test
@@ -538,6 +712,21 @@ public class LiftBackGroupProcessorTest
 
         assertEquals(1, emitted.size());
         assertTrue(emitted.get(0).getReadUnmappedFlag());
+    }
+
+    @Test
+    public void testChangedPlacementWithoutSequenceDoesNotUseStaleAlignmentScore()
+    {
+        RefGenomeInterface ref = new TestGenome().with(CHR_1, 500, 'A').asRefGenome();
+        SAMRecord primary = primaryRecord(CHR_1, 1, "20M100N3M48S");
+        primary.setAttribute("AS", 20);
+
+        List<SAMRecord> emitted = process(
+                List.of(primary), noopSupplementary(), new OverhangGate(ref), ref, null);
+
+        assertEquals(1, emitted.size());
+        assertFalse(emitted.get(0).getReadUnmappedFlag());
+        assertNull(emitted.get(0).getAttribute("AS"));
     }
 
     // bwa emits a pair with both ends unmapped as flags 77/141. Clearing the mate-unmapped bit leaves a record claiming a mapped
@@ -576,7 +765,7 @@ public class LiftBackGroupProcessorTest
         assertEquals("flags", 77, record.getFlags());
     }
 
-    // junctions built from the same sidecar entry the discriminator lifts against, so the intron coords and chromosome key match
+    // junctions built from the same sidecar entry the selector lifts against, so the intron coords and chromosome key match
     // what the lift emits: chr1 introns 200-299 and 400-499 between the three exons
     private static SupplementaryMerger contigSupplementary()
     {

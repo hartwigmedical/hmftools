@@ -37,9 +37,9 @@ public class BamRecordEmitterTest
     public void testTxPrimaryRewrittenToGenomicCoords()
     {
         SAMRecord record = newRecord(TX_CONTIG, 51, "100M");
-        LiftBackDiscriminator resolver = new LiftBackDiscriminator(List.of(threeExonContig()));
+        PlacementSelector selector = new PlacementSelector(List.of(threeExonContig()));
 
-        BamRecordEmitter.applyResultToRecord(record, resolver.resolve(record), new LiftedMatePair(), false);
+        BamRecordEmitter.applyResultToRecord(record, selector.resolve(record), new LiftedMatePair(), false);
 
         assertLifted(record, CHR_1, 150, "50M100N50M");
         assertNull(record.getStringAttribute(XA_TAG));
@@ -49,9 +49,9 @@ public class BamRecordEmitterTest
     public void testUnliftableRecordMarkedUnmappedAndStripped()
     {
         SAMRecord record = newRecord(TX_CONTIG, 251, "10M");
-        LiftBackDiscriminator resolver = new LiftBackDiscriminator(List.of(threeExonContig()));
+        PlacementSelector selector = new PlacementSelector(List.of(threeExonContig()));
 
-        BamRecordEmitter.applyResultToRecord(record, resolver.resolve(record), new LiftedMatePair(), false);
+        BamRecordEmitter.applyResultToRecord(record, selector.resolve(record), new LiftedMatePair(), false);
 
         assertTrue(record.getReadUnmappedFlag());
         assertEquals(SAMRecord.NO_ALIGNMENT_REFERENCE_NAME, record.getReferenceName());
@@ -66,9 +66,9 @@ public class BamRecordEmitterTest
     {
         SAMRecord record = newRecord(CHR_1, 1000, "50M");
         record.setAttribute(XA_TAG, TX_CONTIG + ",+1,50M,0;");
-        LiftBackDiscriminator resolver = new LiftBackDiscriminator(List.of(threeExonContig()));
+        PlacementSelector selector = new PlacementSelector(List.of(threeExonContig()));
 
-        BamRecordEmitter.applyResultToRecord(record, resolver.resolve(record), new LiftedMatePair(), false);
+        BamRecordEmitter.applyResultToRecord(record, selector.resolve(record), new LiftedMatePair(), false);
 
         assertEquals(CHR_1, record.getReferenceName());
         assertEquals(1000, record.getAlignmentStart());
@@ -81,9 +81,9 @@ public class BamRecordEmitterTest
         SAMRecord record = new SAMRecord(new SAMFileHeader());
         record.setReadName("read");
         record.setReadUnmappedFlag(true);
-        LiftBackDiscriminator resolver = new LiftBackDiscriminator(List.of(threeExonContig()));
+        PlacementSelector selector = new PlacementSelector(List.of(threeExonContig()));
 
-        BamRecordEmitter.applyResultToRecord(record, resolver.resolve(record), new LiftedMatePair(), false);
+        BamRecordEmitter.applyResultToRecord(record, selector.resolve(record), new LiftedMatePair(), false);
 
         assertTrue(record.getReadUnmappedFlag());
     }
@@ -91,27 +91,27 @@ public class BamRecordEmitterTest
     @Test
     public void testWillBeUnmapped()
     {
-        LiftBackDiscriminator resolver = new LiftBackDiscriminator(List.of(threeExonContig()));
+        PlacementSelector selector = new PlacementSelector(List.of(threeExonContig()));
 
         SAMRecord unliftable = unmappedRecord();
-        assertTrue(BamRecordEmitter.willBeUnmapped(unliftable, resolver.resolve(unliftable)));
+        assertTrue(BamRecordEmitter.willBeUnmapped(unliftable, selector.resolve(unliftable)));
 
         SAMRecord clean = newRecord(TX_CONTIG, 51, "100M");
-        assertFalse(BamRecordEmitter.willBeUnmapped(clean, resolver.resolve(clean)));
+        assertFalse(BamRecordEmitter.willBeUnmapped(clean, selector.resolve(clean)));
 
         SAMRecord overCap = newRecord(CHR_1, 1000, "100M");
         overCap.setMappingQuality(0);
-        assertTrue(BamRecordEmitter.willBeUnmapped(overCap, resolver.resolve(overCap)));
+        assertTrue(BamRecordEmitter.willBeUnmapped(overCap, selector.resolve(overCap)));
 
         // Transcript hits may collapse to one genomic locus, so the genomic over-cap rule does not apply.
         SAMRecord txOverCap = newRecord(TX_CONTIG, 51, "100M");
         txOverCap.setMappingQuality(0);
-        assertFalse(BamRecordEmitter.willBeUnmapped(txOverCap, resolver.resolve(txOverCap)));
+        assertFalse(BamRecordEmitter.willBeUnmapped(txOverCap, selector.resolve(txOverCap)));
 
         SAMRecord multimapper = newRecord(TX_CONTIG, 51, "100M");
         multimapper.setMappingQuality(0);
         multimapper.setAttribute("XA", CHR_1 + ",+5000,100M,0;");
-        assertFalse(BamRecordEmitter.willBeUnmapped(multimapper, resolver.resolve(multimapper)));
+        assertFalse(BamRecordEmitter.willBeUnmapped(multimapper, selector.resolve(multimapper)));
     }
 
     @Test
@@ -149,9 +149,9 @@ public class BamRecordEmitterTest
     {
         // A genuine 1 bp exon anchor must survive coordinate translation.
         SAMRecord record = newRecord(TX_CONTIG, 200, "50M");
-        LiftBackDiscriminator resolver = new LiftBackDiscriminator(List.of(threeExonContig()));
+        PlacementSelector selector = new PlacementSelector(List.of(threeExonContig()));
 
-        BamRecordEmitter.applyResultToRecord(record, resolver.resolve(record), new LiftedMatePair(), false);
+        BamRecordEmitter.applyResultToRecord(record, selector.resolve(record), new LiftedMatePair(), false);
 
         assertLifted(record, CHR_1, 399, "1M100N49M");
     }
@@ -161,9 +161,9 @@ public class BamRecordEmitterTest
     {
         SAMRecord record = newRecord(TX_CONTIG, 51, "100M");
         record.setAttribute(XA_TAG, CHR_1 + ",+150,50M50S,0;");
-        LiftBackDiscriminator resolver = new LiftBackDiscriminator(List.of(threeExonContig()));
+        PlacementSelector selector = new PlacementSelector(List.of(threeExonContig()));
 
-        BamRecordEmitter.applyResultToRecord(record, resolver.resolve(record), new LiftedMatePair(), false);
+        BamRecordEmitter.applyResultToRecord(record, selector.resolve(record), new LiftedMatePair(), false);
 
         assertLifted(record, CHR_1, 150, "50M100N50M");
         assertNull(record.getStringAttribute(XA_TAG));
@@ -173,9 +173,9 @@ public class BamRecordEmitterTest
     public void testSplicedTxRecordGetsXsAStrand()
     {
         SAMRecord record = newRecord(TX_CONTIG, 51, "100M");
-        LiftBackDiscriminator resolver = new LiftBackDiscriminator(List.of(threeExonContig()));
+        PlacementSelector selector = new PlacementSelector(List.of(threeExonContig()));
 
-        BamRecordEmitter.applyResultToRecord(record, resolver.resolve(record), new LiftedMatePair(), false);
+        BamRecordEmitter.applyResultToRecord(record, selector.resolve(record), new LiftedMatePair(), false);
 
         assertTrue("expected N in lifted cigar", record.getCigarString().contains("N"));
         assertEquals(Character.valueOf('+'), record.getAttribute("XS"));
@@ -185,9 +185,9 @@ public class BamRecordEmitterTest
     public void testNonSplicedRecordHasNoXsA()
     {
         SAMRecord record = newRecord(CHR_1, 1000, "100M");
-        LiftBackDiscriminator resolver = new LiftBackDiscriminator(List.of(threeExonContig()));
+        PlacementSelector selector = new PlacementSelector(List.of(threeExonContig()));
 
-        BamRecordEmitter.applyResultToRecord(record, resolver.resolve(record), new LiftedMatePair(), false);
+        BamRecordEmitter.applyResultToRecord(record, selector.resolve(record), new LiftedMatePair(), false);
 
         assertFalse("expected no N in lifted cigar", record.getCigarString().contains("N"));
         assertNull(record.getAttribute("XS"));
@@ -229,12 +229,51 @@ public class BamRecordEmitterTest
     {
         SAMRecord record = newRecord(TX_CONTIG, 51, "100M");
         record.setReadBases(("A".repeat(99) + "C").getBytes());
-        LiftBackDiscriminator resolver = new LiftBackDiscriminator(List.of(threeExonContig()));
+        PlacementSelector selector = new PlacementSelector(List.of(threeExonContig()));
 
-        BamRecordEmitter.applyResultToRecord(record, resolver.resolve(record), new LiftedMatePair(), false);
+        BamRecordEmitter.applyResultToRecord(record, selector.resolve(record), new LiftedMatePair(), false);
 
         assertFalse(record.getReadNegativeStrandFlag());
         assertEquals("A".repeat(99) + "C", record.getReadString());
+    }
+
+    @Test
+    public void testWritesRecomputedAlignmentScore()
+    {
+        SAMRecord record = newRecord(CHR_1, 100, "50M");
+        record.setAttribute("AS", 50);
+        LiftedAlignment alignment = new LiftedAlignment(CHR_1, 100, "45M5S", 0, false, true, 0);
+        alignment.GenomicScore = 42;
+        LiftedRecord result = TarsTestFixtures.recordBuilder().alignments(List.of(alignment)).build();
+
+        BamRecordEmitter.applyResultToRecord(record, result, new LiftedMatePair(), false);
+
+        assertEquals(Integer.valueOf(42), record.getIntegerAttribute("AS"));
+    }
+
+    @Test
+    public void testClearsStaleAlignmentScoreWhenRescoreIsUnavailable()
+    {
+        SAMRecord record = newRecord(CHR_1, 100, "50M");
+        record.setAttribute("AS", 50);
+        LiftedAlignment alignment = new LiftedAlignment(CHR_1, 100, "45M5S", 0, false, true, 0);
+        LiftedRecord result = TarsTestFixtures.recordBuilder().alignments(List.of(alignment)).build();
+
+        BamRecordEmitter.applyResultToRecord(record, result, new LiftedMatePair(), false);
+
+        assertNull(record.getAttribute("AS"));
+    }
+
+    @Test
+    public void testIntronOnlyLiftKeepsInputAlignmentScore()
+    {
+        SAMRecord record = newRecord(TX_CONTIG, 51, "100M");
+        record.setAttribute("AS", 100);
+        PlacementSelector selector = new PlacementSelector(List.of(threeExonContig()));
+
+        BamRecordEmitter.applyResultToRecord(record, selector.resolve(record), new LiftedMatePair(), false);
+
+        assertEquals(Integer.valueOf(100), record.getIntegerAttribute("AS"));
     }
 
     private static SAMRecord unmappedRecord()

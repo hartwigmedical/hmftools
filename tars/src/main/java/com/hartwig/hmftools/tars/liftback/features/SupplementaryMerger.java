@@ -4,16 +4,21 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import static com.hartwig.hmftools.tars.common.TarsCigarUtils.indelAdjacentToTerminalSoftClip;
-import static com.hartwig.hmftools.tars.common.TarsCigarUtils.retractTerminalMatchIntoSoftClip;
 import static com.hartwig.hmftools.tars.common.TarsCigarUtils.terminalMatchedRun;
+import static com.hartwig.hmftools.tars.common.TarsConstants.LOCAL_SV_MAX_LENGTH;
+import static com.hartwig.hmftools.common.sv.SvUtils.formSvType;
 
 import com.hartwig.hmftools.common.bam.CigarUtils;
+import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.tars.liftback.EnsemblAnnotationIndex;
 
 import htsjdk.samtools.CigarElement;
@@ -102,12 +107,6 @@ public class SupplementaryMerger
     // no junction position scored above the lowest tier; a real position is a read offset, so never negative
     private static final int NO_JUNCTION_POSITION = -1;
 
-    // A retraction of one or both terminal boundaries onto an annotated splice boundary: the resulting start and cigar,
-    // and how far each side gave up. Only a left-side retraction moves the start.
-    public record BoundarySnap(int start, String cigar, int leftShift, int rightShift)
-    {
-    }
-
     private final SpliceJunctions mSpliceJunctions;
     private final EnsemblAnnotationIndex mEnsemblAnnotationIndex;
     private final SupplementaryConfig mConfig;
@@ -129,88 +128,7 @@ public class SupplementaryMerger
         mConfig = config;
     }
 
-    // Retracts an over-extended terminal boundary onto an annotated splice boundary, independently of any merge. BWA
-    // extends a few bases past the true exon boundary when the intron's leading bases happen to match the read. A merge
-    // carries that correction in the cigar it builds, but a read whose supplementary cannot be merged - a fusion, whose
-    // partner is a different gene - keeps BWA's boundary, so it is corrected here instead. Both terminal boundaries are
-    // considered, since the two ends of a fusion junction come from two different records.
-    public BoundarySnap snapToAnnotatedBoundary(final String chromosome, final int start, final String cigar)
-    {
-        List<CigarElement> elements = CigarUtils.cigarElementsFromStr(cigar);
-        if(CigarUtils.hasHardClip(elements))
-        {
-            return null;
-        }
-
-        int rightShift = annotatedBoundaryShift(chromosome, start, elements, true);
-        int leftShift = annotatedBoundaryShift(chromosome, start, elements, false);
-        if(rightShift == 0 && leftShift == 0)
-        {
-            return null;
-        }
-
-        List<CigarElement> snapped = elements;
-        if(rightShift > 0)
-        {
-            snapped = retractTerminalMatchIntoSoftClip(snapped, rightShift, true);
-        }
-        if(snapped != null && leftShift > 0)
-        {
-            snapped = retractTerminalMatchIntoSoftClip(snapped, leftShift, false);
-        }
-        if(snapped == null)
-        {
-            // both ends retracting the same matched run can ask for more bases than it has; leave the read alone
-            return null;
-        }
-
-        return new BoundarySnap(start + leftShift, CigarUtils.cigarElementsToStr(snapped), leftShift, rightShift);
-    }
-
-    // The one retraction in 1..MaxAnnotatedBoundaryShift that puts this side's boundary on an annotated intron boundary.
-    // 0 when BWA already left it on one, when none is in reach, or when several are and the intended one cannot be told
-    // apart. A retraction may not consume the whole matched run.
-    private int annotatedBoundaryShift(
-            final String chromosome, final int start, final List<CigarElement> elements, final boolean rightSide)
-    {
-        int softClipLength = rightSide
-                ? CigarUtils.rightSoftClipLength(elements)
-                : CigarUtils.leftSoftClipLength(elements);
-        if(softClipLength == 0 || indelAdjacentToTerminalSoftClip(elements, !rightSide))
-        {
-            return 0;
-        }
-
-        int anchor = terminalMatchedRun(elements, rightSide);
-        int alignedEnd = start + CigarUtils.cigarAlignedLength(elements) - 1;
-        int snapShift = 0;
-
-        for(int shift = 0; shift <= mConfig.MaxAnnotatedBoundaryShift; ++shift)
-        {
-            if(anchor - shift < 1)
-            {
-                break;
-            }
-
-            int boundary = rightSide ? (alignedEnd - shift + 1) : (start + shift - 1);
-            boolean annotated = rightSide
-                    ? !mEnsemblAnnotationIndex.junctionsByStart(chromosome, boundary).isEmpty()
-                    : !mEnsemblAnnotationIndex.junctionsByEnd(chromosome, boundary).isEmpty();
-            if(!annotated)
-            {
-                continue;
-            }
-
-            if(shift == 0 || snapShift > 0)
-            {
-                return 0;
-            }
-            snapShift = shift;
-        }
-
-        return snapShift;
-    }
-
+    // Returns the strand shared by the annotated junctions in this CIGAR, or 0 when it is unknown or conflicting.
     public int spliceStrand(final String chromosome, final int start, final String cigar)
     {
         return mSpliceJunctions.spliceStrand(chromosome, start, cigar);
@@ -282,7 +200,9 @@ public class SupplementaryMerger
                     conflictingStrands = true;
                 }
             }
-            remaining.remove(merge.MergedSupp);
+            // XA alternatives share the source record index. Once one placement is absorbed, no other placement of
+            // that same physical supplementary may be reused in the splice chain.
+            remaining.removeIf(supp -> supp.index() == merge.MergedSupp.index());
             ++chainDepth;
         }
 
@@ -301,12 +221,14 @@ public class SupplementaryMerger
             final Placement placement, final int primaryStart,
             final List<CigarElement> primaryCigar, final List<Supplementary> supps)
     {
+        List<Supplementary> selectedSupplementaries =
+                selectSupplementaryPlacements(placement, primaryStart, primaryCigar, supps);
+
         MergeOutcome chosen = null;
         RejectReason lastReject = null;
         boolean rightMerged = false;
         boolean leftMerged = false;
-
-        for(Supplementary supp : supps)
+        for(Supplementary supp : selectedSupplementaries)
         {
             MergeOutcome outcome = tryMerge(placement, primaryStart, primaryCigar, supp);
             if(!outcome.isSuccess())
@@ -335,6 +257,128 @@ public class SupplementaryMerger
                 ? chosen
                 : MergeOutcome.reject(lastReject != null ? lastReject : RejectReason.NO_MATCHING_SUPP);
     }
+
+    // For a MAPQ-0 supplementary, select one placement per SAM record before doing any merge-shape or junction
+    // calculation. Prefer the shortest DEL, then DUP, then INV within 1 Mb; use deterministic random order otherwise.
+    public static List<Supplementary> selectSupplementaryPlacements(final Placement placement)
+    {
+        return selectSupplementaryPlacements(
+                placement, placement.primaryStart(), CigarUtils.cigarElementsFromStr(placement.primaryCigar()),
+                placement.supplementaries());
+    }
+
+    static List<Supplementary> selectSupplementaryPlacements(
+            final Placement placement, final int primaryStart, final List<CigarElement> primaryCigar,
+            final List<Supplementary> supplementaries)
+    {
+        Map<Integer, Supplementary> selected = new LinkedHashMap<>();
+
+        for(Supplementary candidate : supplementaries)
+        {
+            Supplementary current = selected.get(candidate.index());
+            if(current == null)
+            {
+                selected.put(candidate.index(), candidate);
+                continue;
+            }
+
+            if(current.mapQuality() != 0)
+            {
+                continue;
+            }
+
+            if(comparePlacementPriority(placement, primaryStart, primaryCigar, candidate, current) < 0)
+            {
+                selected.put(candidate.index(), candidate);
+            }
+        }
+
+        return new ArrayList<>(selected.values());
+    }
+
+    private static int comparePlacementPriority(
+            final Placement placement, final int primaryStart, final List<CigarElement> primaryCigar,
+            final Supplementary candidate, final Supplementary current)
+    {
+        PlacementPriority candidatePriority = placementPriority(placement, primaryStart, primaryCigar, candidate);
+        PlacementPriority currentPriority = placementPriority(placement, primaryStart, primaryCigar, current);
+
+        int typeComparison = Integer.compare(candidatePriority.TypeRank, currentPriority.TypeRank);
+        if(typeComparison != 0)
+        {
+            return typeComparison;
+        }
+
+        int lengthComparison = Long.compare(candidatePriority.Length, currentPriority.Length);
+        if(lengthComparison != 0)
+        {
+            return lengthComparison;
+        }
+
+        return Integer.compareUnsigned(candidatePriority.RandomOrder, currentPriority.RandomOrder);
+    }
+
+    private static PlacementPriority placementPriority(
+            final Placement placement, final int primaryStart, final List<CigarElement> primaryCigar,
+            final Supplementary supplementary)
+    {
+        StructuralVariantType type = StructuralVariantType.BND;
+        long length = Long.MAX_VALUE;
+
+        if(placement.chromosome().equals(supplementary.chromosome()))
+        {
+            Side primarySide = Side.of(primaryStart, primaryCigar);
+            Side supplementarySide = Side.of(
+                    supplementary.start(), CigarUtils.cigarElementsFromStr(supplementary.cigar()));
+            if(primarySide.LeadingS != supplementarySide.LeadingS)
+            {
+                boolean primaryLinksEnd = primarySide.LeadingS < supplementarySide.LeadingS;
+                boolean supplementaryLinksEnd = !primaryLinksEnd;
+
+                int primaryBreakend = breakendPosition(primarySide, placement.forwardStrand(), primaryLinksEnd);
+                int supplementaryBreakend =
+                        breakendPosition(supplementarySide, supplementary.forwardStrand(), supplementaryLinksEnd);
+                Orientation primaryOrientation = breakendOrientation(placement.forwardStrand(), primaryLinksEnd);
+                Orientation supplementaryOrientation =
+                        breakendOrientation(supplementary.forwardStrand(), supplementaryLinksEnd);
+
+                type = formSvType(
+                        placement.chromosome(), supplementary.chromosome(), primaryBreakend, supplementaryBreakend,
+                        primaryOrientation, supplementaryOrientation, false);
+                length = Math.abs((long) primaryBreakend - supplementaryBreakend);
+            }
+        }
+
+        int typeRank = length <= LOCAL_SV_MAX_LENGTH ? switch(type)
+        {
+            case DEL -> 0;
+            case DUP -> 1;
+            case INV -> 2;
+            default -> 3;
+        } : 3;
+        if(typeRank == 3)
+        {
+            length = Long.MAX_VALUE;
+        }
+        int randomOrder = 31 * Arrays.hashCode(placement.readBases()) + supplementary.hashCode();
+        return new PlacementPriority(typeRank, length, randomOrder);
+    }
+
+    private static int breakendPosition(final Side side, final boolean forwardStrand, final boolean linksEnd)
+    {
+        if(linksEnd)
+        {
+            return forwardStrand ? side.RefEnd : side.Start;
+        }
+        return forwardStrand ? side.Start : side.RefEnd;
+    }
+
+    private static Orientation breakendOrientation(final boolean forwardStrand, final boolean linksEnd)
+    {
+        return linksEnd == forwardStrand ? Orientation.FORWARD : Orientation.REVERSE;
+    }
+
+    private record PlacementPriority(int TypeRank, long Length, int RandomOrder) { }
 
     // Higher MAPQ wins, then the smaller intron. Only ever compares a right-extend against a left-extend: a second supp
     // on either side is rejected above, and the chain loop picks up the loser next pass.

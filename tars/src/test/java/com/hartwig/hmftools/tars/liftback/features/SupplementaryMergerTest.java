@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.tars.liftback.features;
 
-import static com.hartwig.hmftools.tars.common.TarsConstants.MAX_ANNOTATED_BOUNDARY_SHIFT;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.bases;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.repeatedBase;
 
@@ -16,6 +15,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.tars.common.ContigEntry;
@@ -60,48 +60,6 @@ public class SupplementaryMergerTest
     private SupplementaryMerger defaultMerger(final Set<ChrBaseRegion> annotated)
     {
         return new SupplementaryMerger(annotated, TarsTestFixtures.supplementaryConfig());
-    }
-
-    @Test
-    public void testSnapRetractsAnOverExtendedBoundaryOntoAnAnnotatedJunction()
-    {
-        // 100M ends at 1099, so bwa's boundary is 1100; the annotated intron starts at 1098, two bases back
-        SupplementaryMerger.BoundarySnap snap = defaultMerger(annotated(new ChrBaseRegion(CHR1, 1098, 1500)))
-                .snapToAnnotatedBoundary(CHR1, 1000, "100M51S");
-
-        assertNotNull(snap);
-        assertEquals("98M53S", snap.cigar());
-        assertEquals(1000, snap.start());
-        assertEquals(2, snap.rightShift());
-        assertEquals(0, snap.leftShift());
-    }
-
-    @Test
-    public void testSnapLeavesABoundaryThatIsAlreadyAnnotated()
-    {
-        SupplementaryMerger.BoundarySnap snap = defaultMerger(annotated(new ChrBaseRegion(CHR1, 1100, 1500)))
-                .snapToAnnotatedBoundary(CHR1, 1000, "100M51S");
-
-        assertNull(snap);
-    }
-
-    @Test
-    public void testSnapRefusesWhenTwoRetractionsBothLandOnAnnotatedJunctions()
-    {
-        SupplementaryMerger.BoundarySnap snap = defaultMerger(annotated(
-                        new ChrBaseRegion(CHR1, 1098, 1500), new ChrBaseRegion(CHR1, 1096, 1600)))
-                .snapToAnnotatedBoundary(CHR1, 1000, "100M51S");
-
-        assertNull(snap);
-    }
-
-    @Test
-    public void testSnapNeedsATerminalSoftClip()
-    {
-        SupplementaryMerger.BoundarySnap snap = defaultMerger(annotated(new ChrBaseRegion(CHR1, 1098, 1500)))
-                .snapToAnnotatedBoundary(CHR1, 1000, "151M");
-
-        assertNull(snap);
     }
 
     @Test
@@ -356,7 +314,7 @@ public class SupplementaryMergerTest
     @Test
     public void testRejectNovelJunctionWhenAnnotatedOnly()
     {
-        SupplementaryConfig strict = new SupplementaryConfig(21, 1_000_000, 4, true, 5, MAX_ANNOTATED_BOUNDARY_SHIFT);
+        SupplementaryConfig strict = new SupplementaryConfig(21, 1_000_000, 4, true, 5);
         Placement cand = placement(
                 CHR1, true, READ_LEN, 1000, "94M57S",
                 supp(0, CHR1, true, 1200, "94S57M", 60));
@@ -370,7 +328,7 @@ public class SupplementaryMergerTest
     @Test
     public void testAcceptNovelJunctionWhenAnnotatedOnlyFalse()
     {
-        SupplementaryConfig perm = new SupplementaryConfig(21, 1_000_000, 4, false, 0, MAX_ANNOTATED_BOUNDARY_SHIFT);
+        SupplementaryConfig perm = new SupplementaryConfig(21, 1_000_000, 4, false, 0);
         Placement cand = placement(
                 CHR1, true, READ_LEN, 1000, "94M57S",
                 supp(0, CHR1, true, 1200, "94S57M", 60));
@@ -585,6 +543,117 @@ public class SupplementaryMergerTest
     }
 
     @Test
+    public void testDeletionPreferredOverCloserDuplication()
+    {
+        Placement cand = placement(
+                CHR1, true, READ_LEN, 1001, "94M57S",
+                supp(0, CHR1, true, 900, "94S57M", 0),
+                supp(0, CHR1, true, 1500, "94S57M", 0));
+
+        Result result = defaultMerger(annotated()).merge(cand);
+
+        assertTrue(result.merged());
+        assertEquals("94M405N57M", result.mergedCigar());
+        assertEquals(List.of(0), result.droppedSupplementaryIndices());
+    }
+
+    @Test
+    public void testSupplementaryPlacementSelectionOrder()
+    {
+        Supplementary deletion = supp(0, CHR1, true, 1800, "94S57M", 0);
+        Supplementary duplication = supp(0, CHR1, true, 900, "94S57M", 0);
+        Supplementary inversion = supp(0, CHR1, false, 1200, "94S57M", 0);
+        Supplementary translocation = supp(0, CHR2, true, 1010, "94S57M", 0);
+        Placement cand = placement(
+                CHR1, true, READ_LEN, 1001, "94M57S",
+                translocation, inversion, duplication, deletion);
+
+        List<Supplementary> selected = SupplementaryMerger.selectSupplementaryPlacements(
+                cand, cand.primaryStart(), CigarUtils.cigarElementsFromStr(cand.primaryCigar()), cand.supplementaries());
+
+        assertEquals(List.of(deletion), selected);
+    }
+
+    @Test
+    public void testShortestDuplicationAndInversionAreSelectedWithinTheirType()
+    {
+        Supplementary longDuplication = supp(0, CHR1, true, 500, "94S57M", 0);
+        Supplementary shortDuplication = supp(0, CHR1, true, 900, "94S57M", 0);
+        Supplementary longInversion = supp(1, CHR1, false, 1800, "94S57M", 0);
+        Supplementary shortInversion = supp(1, CHR1, false, 1200, "94S57M", 0);
+        Placement cand = placement(
+                CHR1, true, READ_LEN, 1001, "94M57S",
+                longDuplication, shortDuplication, longInversion, shortInversion);
+
+        List<Supplementary> selected = SupplementaryMerger.selectSupplementaryPlacements(
+                cand, cand.primaryStart(), CigarUtils.cigarElementsFromStr(cand.primaryCigar()), cand.supplementaries());
+
+        assertEquals(List.of(shortDuplication, shortInversion), selected);
+    }
+
+    @Test
+    public void testPositiveMapQualityKeepsSupplementaryMainAlignment()
+    {
+        Supplementary main = supp(0, CHR2, true, 1010, "94S57M", 20);
+        Supplementary deletion = supp(0, CHR1, true, 1800, "94S57M", 20);
+        Placement cand = placement(CHR1, true, READ_LEN, 1001, "94M57S", main, deletion);
+
+        assertEquals(List.of(main), SupplementaryMerger.selectSupplementaryPlacements(cand));
+    }
+
+    @Test
+    public void testSupplementarySvPreferenceStopsPastOneMegabase()
+    {
+        Supplementary distantDeletion = supp(0, CHR1, true, 1_001_200, "94S57M", 0);
+        Supplementary localInversion = supp(0, CHR1, false, 1200, "94S57M", 0);
+        Placement cand = placement(
+                CHR1, true, READ_LEN, 1001, "94M57S", distantDeletion, localInversion);
+
+        assertEquals(List.of(localInversion), SupplementaryMerger.selectSupplementaryPlacements(cand));
+    }
+
+    @Test
+    public void testSupplementarySvPreferenceIncludesOneMegabaseBoundary()
+    {
+        Supplementary boundaryDeletion = supp(0, CHR1, true, 1_001_094, "94S57M", 0);
+        Supplementary localInversion = supp(0, CHR1, false, 1200, "94S57M", 0);
+        Placement cand = placement(
+                CHR1, true, READ_LEN, 1001, "94M57S", localInversion, boundaryDeletion);
+
+        assertEquals(List.of(boundaryDeletion), SupplementaryMerger.selectSupplementaryPlacements(cand));
+    }
+
+    @Test
+    public void testShortestDeletionWinsAcrossBothSides()
+    {
+        Placement cand = placement(
+                CHR1, true, READ_LEN, 1001, "5S90M56S",
+                supp(0, CHR1, true, 1500, "95S56M", 60),
+                supp(0, CHR1, true, 502, "5M146S", 60));
+
+        Result result = defaultMerger(annotated()).merge(cand);
+
+        assertTrue(result.merged());
+        assertEquals("5S90M409N56M", result.mergedCigar());
+    }
+
+    @Test
+    public void testAlternativePlacementsOfAbsorbedSupplementaryCannotBeReused()
+    {
+        Placement cand = placement(
+                CHR1, true, READ_LEN, 1001, "5S90M56S",
+                supp(0, CHR1, true, 1500, "95S56M", 60),
+                supp(0, CHR1, true, 500, "5M146S", 60));
+
+        Result result = defaultMerger(annotated()).merge(cand);
+
+        assertTrue(result.merged());
+        assertEquals("5S90M409N56M", result.mergedCigar());
+        assertEquals(1, result.chainDepth());
+        assertEquals(List.of(0), result.droppedSupplementaryIndices());
+    }
+
+    @Test
     public void testMergeWhenSuppMapQualityZero()
     {
         ChrBaseRegion intron = new ChrBaseRegion(CHR1, 1095, 1499);
@@ -602,7 +671,7 @@ public class SupplementaryMergerTest
     {
         // cap=2 stops the chain after 2 merges even when more supps are available.
         SupplementaryConfig cappedConfig =
-                new SupplementaryConfig(21, 1_000_000, 2, true, 0, MAX_ANNOTATED_BOUNDARY_SHIFT);
+                new SupplementaryConfig(21, 1_000_000, 2, true, 0);
 
         int primaryStart = 1000;
         Placement cand = placement(
@@ -643,7 +712,7 @@ public class SupplementaryMergerTest
     public void testEachOutcomeReportsItsRejectReason()
     {
         // AnnotatedOnly=true so the novel-junction reject is observable.
-        SupplementaryConfig strict = new SupplementaryConfig(21, 1_000_000, 4, true, 5, MAX_ANNOTATED_BOUNDARY_SHIFT);
+        SupplementaryConfig strict = new SupplementaryConfig(21, 1_000_000, 4, true, 5);
         SupplementaryMerger merger = new SupplementaryMerger(
                 annotated(new ChrBaseRegion(CHR1, 1095, 1499)), strict);
 
@@ -780,7 +849,7 @@ public class SupplementaryMergerTest
     @Test
     public void testNoAnnotatedPositionWithAnnotatedOnlyTrueRejects()
     {
-        SupplementaryConfig strict = new SupplementaryConfig(21, 1_000_000, 4, true, 5, MAX_ANNOTATED_BOUNDARY_SHIFT);
+        SupplementaryConfig strict = new SupplementaryConfig(21, 1_000_000, 4, true, 5);
         Placement cand = placement(
                 CHR1, true, 151, 1001, "94M57S",
                 supp(0, CHR1, true, 1500, "92S59M", 60));

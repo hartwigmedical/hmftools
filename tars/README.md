@@ -12,7 +12,11 @@ BAM (no transcript contigs, spliced reads carried as `N` gaps) ready for REDUX a
     * [Step 0: Translate transcriptome alignments to reference genome](#step-0-translate-transcriptome-alignments-to-reference-genome)
     * [Step 1: Score short overhangs against the reference genome, collapse weak scoring ones](#step-1-score-short-overhangs-against-the-reference-genome-collapse-weak-scoring-ones)
     * [Step 2: Resolve supplementary records into splice junction candidates](#step-2-resolve-supplementary-records-into-splice-junction-candidates)
+        * [Step 2.1: Pick the main alignment for a supplementary record](#step-21-pick-the-main-alignment-for-a-supplementary-record)
+        * [Step 2.2a: Resolve supplementary records into splice junctions](#step-22a-resolve-supplementary-records-into-splice-junctions)
+        * [Step 2.2b: On a successful resolve](#step-22b-on-a-successful-resolve)
     * [Step 3: Decide which alignments to keep for a read](#step-3-decide-which-alignments-to-keep-for-a-read)
+    * [Step 4: Emit records](#step-4-emit-records)
 
 ## What TARS does
 
@@ -60,7 +64,7 @@ java -jar tars.jar
     -ref_genome /path_to_fasta/genome_plus_tx.fasta
     -contig_sidecar /path_to/ref_genome_v38_rna_contigs.rna_contigs_mappings.tsv
     -rna_unmap_regions /ref_data/rna/38/rna_excluded_regions.38.tsv
-    -bamtool /path_to_samtools/
+    -bamtool /path/to/samtools
     -output_dir /path_to_output/
     -threads 24
 ```
@@ -69,13 +73,10 @@ java -jar tars.jar
 
 Every file is named `<sample>.tars.<...>`. Two are written by default:
 
-* `<sample>.tars.bam` (+ `.bai`) - the lifted, coord-sorted genomic BAM, ready for REDUX.
+* `<sample>.tars.bam` (+ `.bai`) - the lifted, coordinate-sorted genomic BAM, ready for REDUX.
 * `<sample>.tars.summary.tsv` - a counts summary of what liftback did.
 
-Optional:
-
-* `-output_id chr1_slice` inserts the token into every name: `<sample>.tars.chr1_slice.bam`.
-* `-write_liftback_tsv` writes per-record debug TSVs; off by default (~100GB; per-read detail the summary can't give).
+`-output_id chr1_slice` inserts the token into every name: `<sample>.tars.chr1_slice.bam`.
 
 ### Flags
 
@@ -83,20 +84,19 @@ Optional:
 
 | Flag               | Description                                                                  |
 |--------------------|------------------------------------------------------------------------------|
-| sample             | Sample ID. prefix to each output file (`<sample>.tars.*`)                  |
+| sample             | Sample ID; prefix for each output file (`<sample>.tars.*`)                  |
 | input_bam          | bwa-mem2 output against the combined FASTA, **name-grouped** (not coord-sorted). Separate with `,` for multiple lane BAMs |
 | ref_genome         | The same combined genome + transcript FASTA used at alignment                 |
 | contig_sidecar     | Contig sidecar TSV from `SpliceFastaBuilder` (`*.rna_contigs_mappings.tsv`)    |
-| bamtool            | samtools path (used to decompress the input and sort + index output)          |
+| bamtool            | Path to samtools or sambamba; concatenates, sorts, and indexes the output      |
 | output_dir         | Directory for the lifted BAM and summary file                                     |
 
 **Optional**
 
 | Flag               | Default | Description                                                              |
 |--------------------|---------|--------------------------------------------------------------------------|
-| output_id          | (none)  | id inserted into every output files |
+| output_id          | (none)  | ID inserted into every output filename |
 | rna_unmap_regions  | (none)  | Curated excluded regions (rRNA / 7SL / multi-map zones) whose reads are unmapped in the lifted output using REDUX SAM conventions; see [rna_excluded_regions.38.tsv](https://source.cloud.google.com/hmf-pipeline-development/common-resources-public/+/master:rna/38/rna_excluded_regions.38.tsv) |
-| write_liftback_tsv | off     | Per-record debug TSVs; off by default (creates a `~100GB` file)            |
 | threads            | 1       | Worker threads; reads process in parallel per read-group |
 
 **Tuning thresholds**
@@ -107,27 +107,28 @@ Optional:
 | supp_implied_max_intron_length  | 1000000   | Max implied intron length for a primary+supp merge            |
 
 Note: no `ensembl_data_dir` - liftback reads exon/junction annotation from the sidecar (only `SpliceFastaBuilder` needs
-ensembl).
+Ensembl).
 
 ### Upstream bwa-mem2 flags
 
 Not tars config, but liftback depends on them.
 
-| Setting | Default | What it is |
+| Setting | Value | What it is |
 |---|---|---|
-| `-T` | 19 | bwa-mem2 minimum alignment score to output; set below the default 30 to surface short-anchor supplementaries for supplementary resolve |
-| `-h` | 75 | bwa-mem2 XA cap; maximum alternate loci listed per read before it is unmapped |
+| `-T` | 19 | bwa-mem2 minimum alignment score to output; set below the default 30 to retain short-anchor supplementaries for Step 2 |
+| `-h` | 75 | bwa-mem2 XA hit cap used by the TARS alignment |
 
 ## What a read goes through
 
 After bwa-mem2 alignment, a read that spans an exon boundary or has supplementaries around novel junctions is processed by
-tars through these steps in order:
+TARS through these steps in order:
 
 ```
-Step 0  Translate   lift every candidate (primary + XA alts) to genome coordinates
+Step 0  Translate   lift every primary and supplementary placement, including XA alts
 Step 1  Overhang    re-evaluate each overhang and collapse the weak scoring ones
-Step 2  Merge       try each lifted primary/XA candidate with all lifted supplementaries
-Step 3  Decide      choose which alignments to keep as the primary and its XA alternates
+Step 2  Merge       pick one alignment per supplementary record, then try splice merges
+Step 3  Decide      choose the mate placements together, then keep the remaining XA alternates
+Step 4  Emit        update the records and write the BAM
 ```
 
 ### Step 0: Translate transcriptome alignments to reference genome
@@ -138,7 +139,7 @@ Every read's transcriptome alignment is translated to genomic coordinates, with 
 
 ### Step 1: Score short overhangs against the reference genome, collapse weak scoring ones
 
-A short overhang (`<= 12M`) next to a splice junction at a read end is re-scored using bwa-mem2 style scoring against the
+A short overhang (`<= 12M`) next to a splice junction at a read end is re-scored using bwa-mem2-style scoring against the
 reference genome. There are 3 cases:
 
 **1a.** With a soft clip: keep the junction if the overhang scores > 5; otherwise drop the `N` junction and walk the soft
@@ -146,7 +147,7 @@ clip onto the reference genome, leaving a contiguous alignment.
 
 ![1 splice junction](doc/overhang_one_junction.svg)
 
-**1b.** With >1 splice junctions: keep the junction if the short overhang aligns positively (AS > 0), otherwise collapse
+**1b.** With multiple splice junctions: keep the junction if the short overhang aligns positively (AS > 0), otherwise collapse
 it only when the intronic reference AS > short overhang AS.
 
 ![more than 1 splice junction](doc/overhang_two_junctions.svg)
@@ -156,26 +157,43 @@ it only when the intronic reference AS > short overhang AS.
 ### Step 2: Resolve supplementary records into splice junction candidates
 
 `bwa-mem2` is run with `-T 19`, allowing short-anchor supplementary alignments at junction sites (annotated or novel) to
-be kept. TARS passes all lifted supplementaries to each primary/XA candidate so the resolver can build a splice chain.
-A successful merge becomes another placement candidate for the discriminator; if it wins, every absorbed supplementary
-record is dropped.
+be kept.
 
-The merge requires:
+#### Step 2.1: Pick the main alignment for a supplementary record
 
-- the candidate and supplementary are within reach and complementary to each other's soft clips
+At `MAPQ 0`, TARS picks one alignment from each supplementary record in this order:
+
+1. shortest `DEL` within 1 Mb
+2. shortest `DUP` within 1 Mb
+3. shortest `INV` within 1 Mb
+4. deterministic random
+
+At positive MAPQ, TARS keeps the main alignment. The selected alignment is used for the merge and emitted record.
+
+#### Step 2.2a: Resolve supplementary records into splice junctions
+
+TARS tries the selected alignments against the primary splice chain. A merge requires:
+
+- the same chromosome and strand
+- simple CIGARs with complementary terminal soft clips
+- full read coverage, at most 5 bp overlap, and no reference overlap
 - the implied intron length is within [`supp_implied_min_intron_length`, `supp_implied_max_intron_length`]
-- exactly one supplementary is within reach on that side, otherwise it is ambiguous and left unmerged
+- at most one supplementary merge per terminal soft clip
 
-On a successful resolve, it's still ambiguous where the splice junction is. TARS attempts in this order:
+A successful merge becomes a candidate for Step 3. If it wins, the absorbed supplementary records are dropped.
 
-1. an annotated boundary / known junction (Ensembl)
+![merge supplementary record to primary](doc/rescue_via_supplementary.svg)
+
+#### Step 2.2b: On a successful resolve
+
+The junction position may still be ambiguous. TARS uses this order:
+
+1. an annotated junction (Ensembl)
 2. a canonical `GT-AG` splice motif, then semi-canonical
 3. the mate's already-resolved junction
 4. the midpoint of the ambiguous read range, rounded down
-5. otherwise keep whatever was chosen
 
-When several positions tie at the chosen tier, the pick is pseudo-random but seeded by the read, so an ambiguous
-junction is distributed across its equal options yet stays reproducible run to run.
+Ties at the chosen annotated or motif tier use a deterministic read-seeded choice.
 
 ### Step 3: Decide which alignments to keep for a read
 
@@ -183,27 +201,25 @@ A read now has its own alignment plus any `XA` alternate alignments: each a geno
 (tx) alignment, plus any supplementary-supported merge candidates. TARS picks one as the primary, keeps only the relevant
 `XA`, and sets its `MAPQ`. Every read lands in one of three buckets:
 
-- **B1. Ref only:** the read aligns only to the genome (ref); TARS passes it through untouched. One exception: a
-  `MAPQ 0` read with no `XA` is unmapped, since a missing `XA` under bwa's `-h` cap means too many placements to report.
+- **B1. Ref only:** keep BWA's primary. A genomic `MAPQ 0` read with no `XA` is treated as over-cap and unmapped.
 
-- **B2. Transcriptome locus:** one or more transcript contigs of the same gene lift to a single genomic locus with the
-  same CIGAR. TARS places the read back with `N` gaps / introns and, as a unique placement, sets `MAPQ` to 60.
+- **B2. Ref/tx agreement:** ref and tx alignments lift to the same contiguous locus and CIGAR; keep BWA's primary.
 
-- **B3. Multi-mapper:** the read has more than one candidate (ref, tx, or both, at one locus or several). TARS picks one
-  alignment as the primary by the following rules, in order, and the rest still-eligible placements are added to the `XA`
-  tag:
-    - **score:** the highest recomputed genome-space `bwa-mem` score wins outright
-    - **score tie:** candidates tied on the top score are settled, in order, by:
-        - **supplementary support:** a primary+supplementary merge beats unsupported placements
-        - **mate proximity:** a locus on the mate's chromosome within a transcript span of the mate wins
-        - **junction over soft clip:** at one locus, a spliced placement (`N` junction) beats a soft-clipped placement,
-          the read bwa clipped rather than cross the intron
-        - **random read-name seed:** a reproducible pseudo-random pick when neither of the above separates the tie
+- **B3. Multi-mapper:** for a `MAPQ 0` pair, TARS selects both mates together in this order:
+    1. shortest `DEL` within 1 Mb
+    2. shortest `DUP` within 1 Mb
+    3. shortest `INV` within 1 Mb
+    4. deterministic random
 
-The merged primary's MAPQ is `max(primary, supplementary)`, bumped to 60 when the primary + supplementary pair maps to a
-single locus (no competing alternative alignment).
+  A positive-MAPQ mate remains fixed. A valid supplementary merge is still resolved independently.
 
-Whenever TARS decides to unmap an alignment, it uses the same SAM field and tag transformation as REDUX, including the
-original-coordinate `UM` tag and REDUX's paired-read coordinate handling.
+### Step 4: Emit records
 
-![merge supplementary record to primary](doc/rescue_via_supplementary.svg)
+- **MAPQ:** keep BWA's value; decisive single-locus `MAPQ 0` becomes 60; merged uses
+  `max(primary, supplementary)`, or 60 for one locus. Random picks stay at 0; `XS == AS` stays at 0 unless the selected
+  alignment came from tx or starts in an annotated exon.
+- **Fields and tags:** write remaining alignments to `XA`; rebuild `SA`; update `AS`, `XS`, `NH`, `NM`, and mate fields;
+  remove `MD`.
+- **Filtering:** drop absorbed, duplicate, unliftable, excluded, `AS < 30`, or supplementaries without a surviving `SA`
+  partner. Unmap unliftable, excluded, over-cap, or `AS < 30` primaries using REDUX conventions.
+- **Logging:** skip expected `inter-transcript spacer` misses; log other lift failures.

@@ -26,7 +26,7 @@ import com.hartwig.hmftools.tars.liftback.features.SupplementaryMerger;
 import htsjdk.samtools.SAMRecord;
 
 // Whole-pipeline test harness: declare the contig geometry, reference genome, annotated junctions and reads, then run() drives the
-// real LiftBackGroupProcessor.processNameGroup (placement features -> discriminator -> supplementary merge -> mate patch -> NH /
+// real LiftBackGroupProcessor.processNameGroup (placement features -> selection -> supplementary merge -> mate patch -> NH /
 // unmap policy) and Result asserts the lifted placement of every emitted record.
 //
 // Usage:
@@ -112,15 +112,15 @@ public final class LiftBackScenario
         RefGenomeInterface ref = mGenome != null ? mGenome.asRefGenome() : null;
         EnsemblAnnotationIndex annotationIndex = EnsemblAnnotationIndex.fromJunctions(mAnnotatedIntrons);
 
-        LiftBackDiscriminator resolver = mEnsemblAnnotationIndex != null
-                ? new LiftBackDiscriminator(mContigs, mEnsemblAnnotationIndex)
-                : new LiftBackDiscriminator(mContigs);
+        PlacementSelector selector = mEnsemblAnnotationIndex != null
+                ? new PlacementSelector(mContigs, mEnsemblAnnotationIndex)
+                : new PlacementSelector(mContigs);
         SupplementaryMerger supplementary = new SupplementaryMerger(annotationIndex, ref, supplementaryConfig());
         OverhangGate overhangGate = new OverhangGate(ref);
         GenomicAlignmentScorer alignmentScorer = new GenomicAlignmentScorer(ref);
 
         LiftBackGroupProcessor processor = new LiftBackGroupProcessor(
-                resolver, supplementary, overhangGate, alignmentScorer, ref, null);
+                selector, supplementary, overhangGate, alignmentScorer, ref, null);
 
         List<SAMRecord> emitted = new ArrayList<>();
         for(List<SAMRecord> group : groupByReadName())

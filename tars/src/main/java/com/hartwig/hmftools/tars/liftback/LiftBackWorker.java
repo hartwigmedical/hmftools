@@ -11,8 +11,6 @@ import java.util.concurrent.BlockingQueue;
 import com.hartwig.hmftools.tars.common.TarsCigarUtils;
 
 import htsjdk.samtools.Cigar;
-import htsjdk.samtools.CigarElement;
-import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMFileWriterFactory;
@@ -25,22 +23,15 @@ public class LiftBackWorker extends Thread
     private final BlockingQueue<List<SAMRecord>> mQueue;
     private final LiftBackGroupProcessor mProcessor;
     private final SAMFileWriter mShardWriter;
-    private final RegionPerfTracker mRegionPerf;
-
-    private String mGroupContig;
-    private int mGroupPosition;
 
     public LiftBackWorker(
             final BlockingQueue<List<SAMRecord>> queue, final LiftBackResources resources,
-            final SAMFileHeader header, final String shardBam, final RegionPerfTracker regionPerf)
+            final SAMFileHeader header, final String shardBam)
     {
         mQueue = queue;
         mProcessor = resources.createProcessor();
         mShardWriter = new SAMFileWriterFactory().makeBAMWriter(header, false, new File(shardBam));
-        mRegionPerf = regionPerf;
     }
-
-    public RegionPerfTracker regionPerf() { return mRegionPerf; }
 
     // counters are incremented on the pre-lift record so they count inputs not emitted records; read by TarsApplication
     // only after the worker threads join
@@ -80,7 +71,7 @@ public class LiftBackWorker extends Thread
             String name = record.getReadName();
             if(currentName != null && !name.equals(currentName))
             {
-                processGroup(group);
+                mProcessor.processNameGroup(group, this::write);
                 group.clear();
             }
             group.add(record);
@@ -89,43 +80,18 @@ public class LiftBackWorker extends Thread
 
         if(!group.isEmpty())
         {
-            processGroup(group);
-        }
-    }
-
-    private void processGroup(final List<SAMRecord> group)
-    {
-        if(mRegionPerf == null)
-        {
             mProcessor.processNameGroup(group, this::write);
-            return;
         }
-
-        mGroupContig = null;
-        mGroupPosition = 0;
-        int readCount = group.size();
-
-        long startTimeNanos = System.nanoTime();
-        mProcessor.processNameGroup(group, this::write);
-        mRegionPerf.add(mGroupContig, mGroupPosition, System.nanoTime() - startTimeNanos, readCount);
     }
 
     private void write(final SAMRecord record)
     {
         sanitizeForOutput(record);
-
-        if(mRegionPerf != null && mGroupContig == null && !record.getReadUnmappedFlag())
-        {
-            mGroupContig = record.getReferenceName();
-            mGroupPosition = record.getAlignmentStart();
-        }
-
         mShardWriter.addAlignment(record);
     }
 
-    // htsjdk and redux reject a zero-length CIGAR element or a SEQ length that disagrees with the CIGAR. Normalise the
-    // CIGAR and, if SEQ still disagrees (e.g. a failed-lift supplementary mirrored onto its primary's coords), write a
-    // matching all-M placeholder so the read stays valid and in the SA chain.
+    // htsjdk and REDUX reject zero-length CIGAR elements or a SEQ length that disagrees with the CIGAR. Normalise safe
+    // structural noise, but fail on a length mismatch rather than inventing an alignment that the input did not support.
     static void sanitizeForOutput(final SAMRecord record)
     {
         if(record.getReadUnmappedFlag())
@@ -146,9 +112,9 @@ public class LiftBackWorker extends Thread
 
         if(seqLength > 0 && cleaned.getReadLength() != seqLength)
         {
-            TARS_LOGGER.warn("read({}) seq length({}) disagrees with cigar({}); writing {}M placeholder",
-                    record.getReadName(), seqLength, cleaned, seqLength);
-            cleaned = new Cigar(List.of(new CigarElement(seqLength, CigarOperator.M)));
+            throw new IllegalStateException(String.format(
+                    "read(%s) SEQ length(%d) disagrees with CIGAR(%s) read length(%d)",
+                    record.getReadName(), seqLength, cleaned, cleaned.getReadLength()));
         }
 
         if(!cleaned.equals(cigar))

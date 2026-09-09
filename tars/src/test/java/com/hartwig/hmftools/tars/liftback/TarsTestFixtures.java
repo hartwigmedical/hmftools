@@ -3,7 +3,6 @@ package com.hartwig.hmftools.tars.liftback;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.tars.common.TarsConstants.MAX_IMPLIED_INTRON_LENGTH;
-import static com.hartwig.hmftools.tars.common.TarsConstants.MAX_ANNOTATED_BOUNDARY_SHIFT;
 import static com.hartwig.hmftools.tars.common.TarsConstants.MAX_SUPP_MERGES;
 import static com.hartwig.hmftools.tars.common.TarsConstants.MAX_SUPP_READ_OVERLAP;
 import static com.hartwig.hmftools.tars.common.TarsConstants.MIN_IMPLIED_INTRON_LENGTH;
@@ -42,7 +41,7 @@ public final class TarsTestFixtures
     {
         return new SupplementaryConfig(
                 MIN_IMPLIED_INTRON_LENGTH, MAX_IMPLIED_INTRON_LENGTH,
-                MAX_SUPP_MERGES, false, MAX_SUPP_READ_OVERLAP, MAX_ANNOTATED_BOUNDARY_SHIFT);
+                MAX_SUPP_MERGES, false, MAX_SUPP_READ_OVERLAP);
     }
 
     // exon spans on chr1: 100-199, 300-399, 500-549; introns 200-299, 400-499; contig length 250.

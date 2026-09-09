@@ -150,7 +150,7 @@ public class LiftBackScenarioTest
                 .read(supp("frag7", CHR_1, 300, "50S50M").mapQuality(0)
                         .sa(CHR_1 + ",900,+,50M50S,0,0;")
                         .bases("A".repeat(100)))
-                .read(mate("frag7", CHR_1, 800, "50M").bases("A".repeat(50)))
+                .read(mate("frag7", CHR_1, 400, "50M").bases("A".repeat(50)))
                 .run()
                 .assertLifted("frag7", PRIMARY, CHR_1, 150, "50M100N50M")
                 .assertSuppCount("frag7", 0)
@@ -161,11 +161,12 @@ public class LiftBackScenarioTest
     @Test
     public void testSplitReadMultiLocusPairKeepsBwaMapQuality()
     {
-        // same merge, but the XA alt is a distinct locus (chr1:900), so the pair does not uniquely map.
+        // same merge, but the XA alt is a distinct locus (chr1:900), so the pair does not uniquely map. The mate is
+        // closest to the merged placement because mate proximity is considered before supplementary support.
         scenario()
                 .read(primary("frag6", CHR_1, 150, "50M50S").mapQuality(0).xa(CHR_1 + ",+900,50M50S,0").bases("A".repeat(100)))
                 .read(supp("frag6", CHR_1, 300, "50S50M").mapQuality(0).bases("A".repeat(100)))
-                .read(mate("frag6", CHR_1, 800, "50M").bases("A".repeat(50)))
+                .read(mate("frag6", CHR_1, 400, "50M").bases("A".repeat(50)))
                 .run()
                 .assertLifted("frag6", PRIMARY, CHR_1, 150, "50M100N50M")
                 .assertSuppCount("frag6", 0)
