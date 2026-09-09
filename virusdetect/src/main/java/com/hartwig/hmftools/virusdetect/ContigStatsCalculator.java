@@ -76,8 +76,8 @@ public class ContigStatsCalculator
         return stats;
     }
 
-    // Each read's alignments on each contig: the best (highest-scoring) record, plus how many alignments the read has
-    // there (BWA -a can place one read on the same contig more than once, via internal repeats or multiple loci).
+    // Each read's alignments on each contig: the best (highest-scoring) record, plus how many the read has there
+    // (BWA -a can map a read to one contig more than once).
     private static Map<String, Map<String, ReadContigAlignment>> readAlignments(String bamFile)
     {
         Map<String, Map<String, ReadContigAlignment>> alignmentsByRead = new HashMap<>();

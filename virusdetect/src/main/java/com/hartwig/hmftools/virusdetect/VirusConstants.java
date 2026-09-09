@@ -19,8 +19,7 @@ public class VirusConstants
     // Minimum soft-clip length for a host-mapped read to count as a candidate.
     public static final int MIN_SOFT_CLIP_BASES_DEFAULT = 30;
 
-    // Minimum BWA-MEM alignment score to emit an alignment (BWA -T). Passed explicitly for visibility; it is the only
-    // score floor we apply and happens to match the BWA default.
+    // Minimum BWA-MEM alignment score (-T), our only score floor. Set explicitly for visibility; matches the BWA default.
     public static final int MIN_ALIGNMENT_SCORE_DEFAULT = 30;
 
     // Candidate reads submitted to BWA per alignment call (bounds heap).
@@ -29,7 +28,7 @@ public class VirusConstants
     // Genome partition size for multi-threaded candidate extraction.
     public static final int EXTRACTION_PARTITION_SIZE = 1_000_000;
 
-    // Chance a read base reflects its true origin, in the strain-vote model; sets how softly a contested read's vote
-    // splits across strains. Pessimistically low because per-base qualities are not retained. Provisional.
+    // How softly a contested read's vote splits across strains: chance a base is right. Pessimistically low, as per-base
+    // qualities are not retained. Provisional.
     public static final double VOTE_CORRECT_BASE_PROBABILITY = 0.25;
 }

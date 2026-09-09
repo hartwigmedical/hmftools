@@ -51,9 +51,8 @@ public class CandidateReadFilter
         return false;
     }
 
-    // A supplementary alignment means the aligner placed the clipped bases elsewhere in the host reference; if any
-    // lands on a non-viral contig the clip is explained by host sequence, not a viral junction. With no supplementary
-    // the clipped bases were not placed in the host, so the clip may mark a viral junction.
+    // A supplementary alignment places the clipped bases elsewhere in the host; if any lands on a non-viral contig the
+    // clip is host sequence, not a viral junction. No supplementary means the clip may mark one.
     private boolean clippedBasesAreCandidate(SAMRecord record)
     {
         List<SupplementaryReadData> supplementaries = SupplementaryReadData.extractAlignments(record);

@@ -36,7 +36,7 @@ public class ViralReadAlignerTest
     private static final String R3_BASES = "G".repeat(100);
 
     // No app-level score filter: every alignment the aligner emits is written; only a no-hit read is dropped.
-    // (BWA's own minAlignScore floor is applied inside BWA, before our code, so it is not exercised by this fake.)
+    // (BWA's own minimum-score floor lives in BWA, before our code, so this fake does not exercise it.)
     @Test
     public void testWritesEveryViralAlignmentWithContigAndScore() throws IOException
     {

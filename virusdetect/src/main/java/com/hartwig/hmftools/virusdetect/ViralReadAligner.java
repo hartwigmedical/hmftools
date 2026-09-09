@@ -96,8 +96,8 @@ public class ViralReadAligner
         return new ChunkResult(reads.size(), alignedReads, writtenAlignments);
     }
 
-    // No app-level score filter: every alignment BWA emits (all already meet its minAlignScore floor, -T) is kept.
-    // A read with no hit (refId < 0) supports no virus and is not written.
+    // No app-level score filter: every alignment BWA emits is kept (BWA already applied its own minimum-score floor).
+    // A read with no hit supports no virus and is not written.
     private List<SAMRecord> toRecords(String readName, byte[] readBases, List<BwaMemAlignment> alignments)
     {
         return alignments.stream()
