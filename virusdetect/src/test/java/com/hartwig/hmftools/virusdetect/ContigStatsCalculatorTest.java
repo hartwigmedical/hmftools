@@ -32,8 +32,8 @@ public class ContigStatsCalculatorTest
 
     private static final double EPSILON = 1e-9;
 
-    // v1 (length 20): read r1 covers 1-10 (score 10), read r2 covers 6-10 (score 8); a lower-scoring
-    // secondary of r1 on v1 is deduped away. v2 (length 10): read r3 covers it fully.
+    // v1 (length 20): read r1 covers 1-10 (score 10), read r2 covers 6-10 (score 8); a lower-scoring secondary of r1
+    // on v1 is deduped for depth/score but still counts toward r1's two alignments there. v2 (length 10): read r3 full.
     @Test
     public void testComputesPerContigDepthAndCoverage() throws IOException
     {
@@ -53,6 +53,10 @@ public class ContigStatsCalculatorTest
         ContigStats v1 = stats.get("v1");
         assertEquals(20, v1.contigLength());
         assertEquals(2, v1.readCount());              // r1 counted once despite two alignments
+        assertEquals(1, v1.multiAlignReads());          // r1 has two alignments on v1, r2 one
+        assertEquals(1.5, v1.alignPerRead().mean(), EPSILON);   // r1 -> 2, r2 -> 1
+        assertEquals(1.0, v1.alignPerRead().min(), EPSILON);
+        assertEquals(2.0, v1.alignPerRead().max(), EPSILON);
         assertEquals(10, v1.coveredBases());          // positions 1-10
         assertEquals(0.0, v1.depth().min(), EPSILON);        // positions 11-20 uncovered
         assertEquals(2.0, v1.depth().max(), EPSILON);        // positions 6-10 covered by both reads
@@ -66,6 +70,8 @@ public class ContigStatsCalculatorTest
 
         ContigStats v2 = stats.get("v2");
         assertEquals(1, v2.readCount());
+        assertEquals(0, v2.multiAlignReads());          // r3 has a single alignment on v2
+        assertEquals(1.0, v2.alignPerRead().mean(), EPSILON);
         assertEquals(10, v2.coveredBases());
         assertEquals(1.0, v2.depth().min(), EPSILON);
         assertEquals(1.0, v2.depth().max(), EPSILON);

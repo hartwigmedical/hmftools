@@ -30,8 +30,17 @@ public class VirusOutputWriter
                     row.set(Column.oncology_group, contig.oncologyGroup());
                     row.set(Column.contig_length, stat.contigLength());
                     row.set(Column.read_count, stat.readCount());
+                    row.set(Column.multi_align_reads, stat.multiAlignReads());
                     row.set(Column.covered_bases, stat.coveredBases());
                     row.set(Column.coverage_fraction, stat.coverageFraction());
+
+                    SummaryStats alignPerRead = stat.alignPerRead();
+                    row.set(Column.align_per_read_mean, alignPerRead.mean());
+                    row.set(Column.align_per_read_min, alignPerRead.min());
+                    row.set(Column.align_per_read_p5, alignPerRead.p5());
+                    row.set(Column.align_per_read_p50, alignPerRead.p50());
+                    row.set(Column.align_per_read_p95, alignPerRead.p95());
+                    row.set(Column.align_per_read_max, alignPerRead.max());
 
                     SummaryStats depth = stat.depth();
                     row.set(Column.depth_mean, depth.mean());
@@ -71,6 +80,13 @@ public class VirusOutputWriter
         oncology_group,
         contig_length,
         read_count,
+        multi_align_reads,
+        align_per_read_mean,
+        align_per_read_min,
+        align_per_read_p5,
+        align_per_read_p50,
+        align_per_read_p95,
+        align_per_read_max,
         covered_bases,
         coverage_fraction,
         depth_mean,

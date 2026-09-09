@@ -7,6 +7,8 @@ public record ContigStats(
         String contig,
         int contigLength,
         int readCount,              // reads with any alignment to this contig
+        int multiAlignReads,          // reads with more than one alignment to this contig (BWA -a repeats/multi-loci)
+        SummaryStats alignPerRead,  // alignments to this contig per read (>= 1)
         int coveredBases,           // contig positions with at least one aligned base
         // Depth spans the whole contig, so uncovered positions count as depth 0.
         SummaryStats depth,

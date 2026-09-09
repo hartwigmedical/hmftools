@@ -45,17 +45,24 @@ public class ContigStatsCalculator
 
     public Map<String, ContigStats> compute(String bamFile, ViralReference reference)
     {
-        Map<String, Map<String, SAMRecord>> alignmentsByRead = readBestAlignments(bamFile);
+        Map<String, Map<String, ReadContigAlignment>> alignmentsByRead = readAlignments(bamFile);
 
         Map<String, List<SAMRecord>> recordsByContig = new HashMap<>();
+        Map<String, List<Integer>> alignmentCountsByContig = new HashMap<>();
         Map<String, Double> votesByContig = new HashMap<>();
         Map<String, List<Integer>> marginsByContig = new HashMap<>();
 
-        for(Map<String, SAMRecord> byContig : alignmentsByRead.values())
+        for(Map<String, ReadContigAlignment> byContig : alignmentsByRead.values())
         {
-            byContig.forEach((contig, record) -> recordsByContig.computeIfAbsent(contig, k -> new ArrayList<>()).add(record));
-            addVotes(byContig, votesByContig);
-            addMargin(byContig, marginsByContig);
+            Map<String, SAMRecord> bestByContig = new HashMap<>();
+            byContig.forEach((contig, alignment) ->
+            {
+                recordsByContig.computeIfAbsent(contig, k -> new ArrayList<>()).add(alignment.best());
+                alignmentCountsByContig.computeIfAbsent(contig, k -> new ArrayList<>()).add(alignment.count());
+                bestByContig.put(contig, alignment.best());
+            });
+            addVotes(bestByContig, votesByContig);
+            addMargin(bestByContig, marginsByContig);
         }
 
         Map<String, ContigStats> stats = new HashMap<>();
@@ -63,16 +70,17 @@ public class ContigStatsCalculator
         {
             String contig = entry.getKey();
             stats.put(contig, computeContig(
-                    contig, reference.contig(contig).length(), entry.getValue(),
+                    contig, reference.contig(contig).length(), entry.getValue(), alignmentCountsByContig.get(contig),
                     votesByContig.getOrDefault(contig, 0.0), marginsByContig.get(contig)));
         }
         return stats;
     }
 
-    // Best (highest-scoring) alignment of each read on each contig; a read holds at most one record per contig.
-    private static Map<String, Map<String, SAMRecord>> readBestAlignments(String bamFile)
+    // Each read's alignments on each contig: the best (highest-scoring) record, plus how many alignments the read has
+    // there (BWA -a can place one read on the same contig more than once, via internal repeats or multiple loci).
+    private static Map<String, Map<String, ReadContigAlignment>> readAlignments(String bamFile)
     {
-        Map<String, Map<String, SAMRecord>> alignmentsByRead = new HashMap<>();
+        Map<String, Map<String, ReadContigAlignment>> alignmentsByRead = new HashMap<>();
         try(SamReader reader = SamReaderFactory.makeDefault().validationStringency(ValidationStringency.SILENT).open(new File(bamFile)))
         {
             for(SAMRecord record : reader)
@@ -82,7 +90,7 @@ public class ContigStatsCalculator
                     continue;
                 }
                 alignmentsByRead.computeIfAbsent(record.getReadName(), k -> new HashMap<>())
-                        .merge(record.getReferenceName(), record, ContigStatsCalculator::better);
+                        .merge(record.getReferenceName(), new ReadContigAlignment(record, 1), ReadContigAlignment::combine);
             }
         }
         catch(IOException e)
@@ -137,7 +145,8 @@ public class ContigStatsCalculator
     }
 
     private static ContigStats computeContig(
-            String contig, int length, Collection<SAMRecord> reads, double readVotes, @Nullable List<Integer> margins)
+            String contig, int length, Collection<SAMRecord> reads, List<Integer> alignmentCounts,
+            double readVotes, @Nullable List<Integer> margins)
     {
         int[] depth = new int[length];
         int[] scores = new int[reads.size()];
@@ -168,9 +177,11 @@ public class ContigStatsCalculator
         int readsBestInRivals = margins == null ? 0 : margins.size();
         Optional<SummaryStats> marginSummary = margins == null ? Optional.empty() : Optional.of(SummaryStats.from(margins));
 
+        int multiAlignReads = (int) alignmentCounts.stream().filter(count -> count > 1).count();
+
         return new ContigStats(
-                contig, length, reads.size(), coveredBases, SummaryStats.from(depth), SummaryStats.from(scores),
-                readVotes, readsBestInRivals, marginSummary);
+                contig, length, reads.size(), multiAlignReads, SummaryStats.from(alignmentCounts), coveredBases,
+                SummaryStats.from(depth), SummaryStats.from(scores), readVotes, readsBestInRivals, marginSummary);
     }
 
     private static SAMRecord better(SAMRecord a, SAMRecord b)
@@ -207,5 +218,14 @@ public class ContigStatsCalculator
 
         int clippedBases = leftClipLength(record.getCigar()) + rightClipLength(record.getCigar());
         return editDistance + clippedBases;
+    }
+
+    // A read's alignments on one contig: the best-scoring record, and the total number of alignments there.
+    private record ReadContigAlignment(SAMRecord best, int count)
+    {
+        ReadContigAlignment combine(ReadContigAlignment other)
+        {
+            return new ReadContigAlignment(better(best, other.best), count + other.count);
+        }
     }
 }
