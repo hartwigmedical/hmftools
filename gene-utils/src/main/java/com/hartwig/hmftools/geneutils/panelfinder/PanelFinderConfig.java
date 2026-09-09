@@ -33,6 +33,9 @@ public class PanelFinderConfig
     public final int GeneDownstreamDistance;
     public final boolean RequirePanelGene;
 
+    public final int BackboneMinInterval;
+    public final int BackboneMaxLength;
+
     private static final String HIGH_DEPTH_FILE = "high_depth_file";
     private static final String OUTPUT_FILE = "output_file";
     private static final String OUTPUT_BED = "output_bed";
@@ -44,6 +47,9 @@ public class PanelFinderConfig
     private static final String GENE_UPSTREAM_DISTANCE = "max_upstream_distance";
     private static final String GENE_DOWNSTREAM_DISTANCE = "max_downstream_distance";
     private static final String REQUIRE_PANEL_GENE = "req_panel_gene";
+
+    private static final String BACKBONE_MIN_INTERVAL = "backbone_min_interval";
+    private static final String BACKBONE_MAX_LENGTH = "backbone_max_length";
 
     protected static final double CHROMOSOME_Y_SAMPLE_FRACTION = 0.4;
     protected static final int DEFAULT_GENE_UPSTREAM_DISTANCE = 10000;
@@ -65,6 +71,8 @@ public class PanelFinderConfig
         HighDepthTrimCount = configBuilder.getInteger(HIGH_DEPTH_TRIM_COUNT);
         MinMappability = configBuilder.getDecimal(MIN_MAPPABILITY);
         MinSampleCount = configBuilder.getInteger(MIN_SAMPLE_COUNT);
+        BackboneMinInterval = configBuilder.getInteger(BACKBONE_MIN_INTERVAL);
+        BackboneMaxLength = configBuilder.getInteger(BACKBONE_MAX_LENGTH);
         RequirePanelGene = configBuilder.hasFlag(REQUIRE_PANEL_GENE);
 
         GeneUpstreamDistance = configBuilder.getInteger(GENE_UPSTREAM_DISTANCE);
@@ -88,6 +96,8 @@ public class PanelFinderConfig
         configBuilder.addInteger(HIGH_DEPTH_TRIM_COUNT, "High-depth region trim bases count", 0);
         configBuilder.addInteger(GENE_UPSTREAM_DISTANCE, "Max distance upstream of gene", DEFAULT_GENE_UPSTREAM_DISTANCE);
         configBuilder.addInteger(GENE_DOWNSTREAM_DISTANCE, "Max distance downstream of gene", DEFAULT_GENE_DOWNSTREAM_DISTANCE);
+        configBuilder.addInteger(BACKBONE_MIN_INTERVAL, "Backbone min interval from next selected region, zero is not applied", 0);
+        configBuilder.addInteger(BACKBONE_MAX_LENGTH, "Backbone max length, zero is not applied", 0);
         configBuilder.addFlag(REQUIRE_PANEL_GENE, "Restrict new regions to those overlapping a panel gene");
 
         addLoggingOptions(configBuilder);

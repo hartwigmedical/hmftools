@@ -9,6 +9,11 @@ import static java.lang.String.valueOf;
 
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._Y;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
+import static com.hartwig.hmftools.common.region.ChrBaseRegion.getChromosomeFieldIndex;
+import static com.hartwig.hmftools.common.region.HighDepthRegion.FLD_DEPTH_AVG;
+import static com.hartwig.hmftools.common.region.HighDepthRegion.FLD_DEPTH_MAX;
+import static com.hartwig.hmftools.common.region.HighDepthRegion.FLD_DEPTH_MIN;
+import static com.hartwig.hmftools.common.region.HighDepthRegion.FLD_SAMPLE_COUNT;
 import static com.hartwig.hmftools.common.region.TaggedRegion.loadRegionsFromBedFile;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.convertWildcardSamplePath;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadDelimitedIdFile;
@@ -51,7 +56,10 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.mappability.ProbeQualityProfile;
 import com.hartwig.hmftools.common.mappability.RegionQuality;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.common.region.HighDepthRegion;
 import com.hartwig.hmftools.common.region.TaggedRegion;
+import com.hartwig.hmftools.common.sv.StartEndIterator;
+import com.hartwig.hmftools.common.utils.StartEndPair;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.file.FileReaderUtils;
 
@@ -90,15 +98,12 @@ public class PanelRegionFinder
         // annotate with genome mappability
         annotateMappability();
 
+        applyFinalFilters();
+
         // write results
         writeResults();
 
         GU_LOGGER.info("panel region finder complete");
-    }
-
-    private static boolean isBedFile(final String filename)
-    {
-        return filename.endsWith(".bed") || filename.endsWith(".bed.gz");
     }
 
     private void loadHighDepthRegions()
@@ -115,9 +120,10 @@ public class PanelRegionFinder
             int chrIndex = fieldsIndexMap.get(FLD_CHROMOSOME);
             int posStartIndex = fieldsIndexMap.get(FLD_POS_START);
             int posEndIndex = fieldsIndexMap.get(FLD_POS_END);
-            int sampleCountIndex = fieldsIndexMap.get("SampleCount");
-            int depthMinIndex = fieldsIndexMap.get("DepthMin");
-            int depthMaxIndex = fieldsIndexMap.get("DepthMax");
+            int sampleCountIndex = fieldsIndexMap.get(FLD_SAMPLE_COUNT);
+            int depthMinIndex = fieldsIndexMap.get(FLD_DEPTH_MIN);
+            int depthMaxIndex = fieldsIndexMap.get(FLD_DEPTH_MAX);
+            Integer depthAvgIndex = fieldsIndexMap.get(FLD_DEPTH_AVG);
 
             double minSamplesChromosomeY = CHROMOSOME_Y_SAMPLE_FRACTION * mConfig.MinSampleCount;
 
@@ -134,6 +140,7 @@ public class PanelRegionFinder
                 int sampleCount = Integer.parseInt(values[sampleCountIndex]);
                 int depthMin = Integer.parseInt(values[depthMinIndex]);
                 int depthMax = Integer.parseInt(values[depthMaxIndex]);
+                int depthAvg = depthAvgIndex != null ? Integer.parseInt(values[depthAvgIndex]) : 0;
 
                 ++count;
 
@@ -166,8 +173,8 @@ public class PanelRegionFinder
                     }
                 }
 
-                HighDepthData highDepthData = new HighDepthData(
-                        new ChrBaseRegion(chromosome, regionStart, regionEnd), sampleCount, depthMin, depthMax);
+                HighDepthRegion highDepthData = new HighDepthRegion(
+                        chromosome, regionStart, regionEnd, depthMin, depthMax, depthAvg, sampleCount);
 
                 List<RegionData> regions = mChrRegions.get(highDepthData.Chromosome);
 
@@ -478,6 +485,91 @@ public class PanelRegionFinder
         }
     }
 
+    private void applyFinalFilters()
+    {
+        for(HumanChromosome chromosome : HumanChromosome.values())
+        {
+            String chrStr = mConfig.RefGenVersion.versionedChromosome(chromosome.toString());
+
+            List<RegionData> regions = mChrRegions.get(chrStr);
+
+            if(regions == null)
+                continue;
+
+            // should already be sorted but ensure
+            Collections.sort(regions);
+
+            int index = 0;
+
+            while(index < regions.size())
+            {
+                RegionData region = regions.get(index);
+
+                if(!region.panelRelated())
+                {
+                    if(mConfig.RequirePanelGene)
+                    {
+                        regions.remove(index);
+                        continue;
+                    }
+
+                    // filter on mappability
+                    double meanMappability = region.meanMappability();
+
+                    if(mConfig.MinMappability > 0)
+                    {
+                        // apply the min mappability check if not in an existing panel region and not a known panel gene
+                        if(meanMappability < mConfig.MinMappability)
+                        {
+                            regions.remove(index);
+                            continue;
+                        }
+                    }
+                }
+
+                ++index;
+            }
+
+            if(mConfig.BackboneMinInterval > 0 || mConfig.BackboneMaxLength > 0)
+            {
+                index = 0;
+
+                while(index < regions.size())
+                {
+                    RegionData region = regions.get(index);
+
+                    if(!region.panelRelated())
+                    {
+                        boolean hasValidLength = mConfig.BackboneMaxLength == 0 || region.baseLength() <= mConfig.BackboneMaxLength;
+
+                        boolean isCloseToOtherInterval = false;
+
+                        if(mConfig.BackboneMinInterval > 0)
+                        {
+                            if(index > 0 && region.start() - regions.get(index - 1).end() < mConfig.BackboneMinInterval)
+                            {
+                                isCloseToOtherInterval = true;
+                            }
+                            else if(index < regions.size() - 1
+                            && regions.get(index + 1).start() - region.end() < mConfig.BackboneMinInterval)
+                            {
+                                isCloseToOtherInterval = true;
+                            }
+                        }
+
+                        if(!hasValidLength && isCloseToOtherInterval)
+                        {
+                            regions.remove(index);
+                            continue;
+                        }
+                    }
+
+                    ++index;
+                }
+            }
+        }
+    }
+
     private void writeResults()
     {
         GU_LOGGER.info("writing {} regions to file({})", mChrRegions.values().stream().mapToInt(x -> x.size()).sum(), mConfig.OutputFile);
@@ -494,8 +586,9 @@ public class PanelRegionFinder
             sj.add(FLD_REGION_END);
 
             sj.add("HighDepthCount");
-            sj.add("HighDepthMaxDepth");
-            sj.add("HighDepthMaxSamples");
+            sj.add("HighDepthMax");
+            sj.add("HighDepthAvg");
+            sj.add("HighDepthSamples");
             sj.add("HighDepthInfo");
 
             sj.add("PanelRegionCount");
@@ -503,12 +596,13 @@ public class PanelRegionFinder
             sj.add("PanelGene");
             sj.add("NonPanelRegionLength");
             sj.add("NearestPanelRegion");
+            sj.add("NearestRegion");
 
             sj.add("GeneExonCount");
             sj.add("GeneExonInfo");
             sj.add("NearbyGeneInfo");
 
-            sj.add("MappabilityMedian");
+            sj.add("MappabilityAvg");
             sj.add("MappabilityMin");
             sj.add("MappabilityMax");
 
@@ -524,23 +618,9 @@ public class PanelRegionFinder
                 if(regions == null)
                     continue;
 
-                // should already be sorted but ensure
-                Collections.sort(regions);
-
-                for(RegionData region : regions)
+                for(int i = 0; i < regions.size(); ++i)
                 {
-                    if(mConfig.RequirePanelGene && region.panelRegions().isEmpty() && region.panelGeneName().isEmpty())
-                        continue;
-
-                    // filter on mappability
-                    double meanMappability = region.meanMappability();
-
-                    if(mConfig.MinMappability > 0)
-                    {
-                        // apply the min mappability check if not in an existing panel region and not a known panel gene
-                        if(region.panelRegions().isEmpty() && meanMappability < mConfig.MinMappability && region.panelGeneName().isEmpty())
-                            continue;
-                    }
+                    RegionData region = regions.get(i);
 
                     sj = new StringJoiner(TSV_DELIM);
                     sj.add(region.Chromosome);
@@ -549,39 +629,44 @@ public class PanelRegionFinder
 
                     sj.add(valueOf(region.highDepths().size()));
 
-                    int maxDepth = region.highDepths().stream().mapToInt(x -> x.MaxDepth).max().orElse(0);
+                    int maxDepth = region.highDepths().stream().mapToInt(x -> x.DepthMax).max().orElse(0);
+                    double avgDepth = region.highDepths().stream().mapToInt(x -> x.DepthAvg).average().orElse(0);
                     int maxSamples = region.highDepths().stream().mapToInt(x -> x.SampleCount).max().orElse(0);
                     sj.add(valueOf(maxDepth));
+                    sj.add(format("%.0f", avgDepth));
                     sj.add(valueOf(maxSamples));
-                    sj.add(valueOf(HighDepthData.toString(region.highDepths())));
+                    sj.add(valueOf(RegionData.toString(region.highDepths())));
 
                     sj.add(valueOf(region.panelRegions().size()));
                     sj.add(valueOf(PanelData.toString(region.panelRegions())));
 
                     // report closest panel region if not one
-                    int closetPanelRegion = 0;
+                    int closestPanelRegion = -1;
+                    int closestRegion = -1;
 
-                    if(region.panelRegions().isEmpty())
+                    // search up and down from the current region
+                    for(int j = 0; j <= 1; ++j)
                     {
-                        closetPanelRegion = -1; // will denote none found within required bases
+                        boolean searchDown = (j == 0);
+                        int nextIndex = searchDown ? i - 1 : i + 1;
 
-                        for(RegionData panelRegion : regions)
+                        while(nextIndex >= 0 && nextIndex < regions.size())
                         {
-                            if(panelRegion.panelRegions().isEmpty())
-                                continue;
+                            RegionData nextRegion = regions.get(nextIndex);
+                            int distance = searchDown ? region.start() - nextRegion.end() : nextRegion.start() - region.end();
 
-                            if(panelRegion.end() < region.start() - DEFAULT_GENE_UPSTREAM_DISTANCE)
-                                continue;
+                            if(closestRegion < 0 || distance < closestRegion)
+                                closestRegion = distance;
 
-                            if(panelRegion.start() > region.end() + DEFAULT_GENE_UPSTREAM_DISTANCE)
-                                break;
-
-                            int absDistance = min(abs(panelRegion.end() - region.start()), abs(panelRegion.start() - region.end()));
-
-                            if(absDistance <= DEFAULT_GENE_UPSTREAM_DISTANCE && (closetPanelRegion == -1 || absDistance < closetPanelRegion))
+                            if(!nextRegion.panelRegions().isEmpty())
                             {
-                                closetPanelRegion = absDistance;
+                                 if(closestPanelRegion < 0 || distance < closestPanelRegion)
+                                     closestPanelRegion = distance;
+
+                                break;
                             }
+
+                            nextIndex += searchDown ?  -1 : 1;
                         }
                     }
 
@@ -593,7 +678,8 @@ public class PanelRegionFinder
                     int nonPanelLength = max(regionLength - panelRegionsLength, 0);
                     sj.add(valueOf(nonPanelLength));
 
-                    sj.add(valueOf(closetPanelRegion));
+                    sj.add(valueOf(closestPanelRegion));
+                    sj.add(valueOf(closestRegion));
 
                     sj.add(valueOf(region.geneExons().size()));
                     sj.add(valueOf(GeneExonData.toString(region.geneExons())));
@@ -602,6 +688,8 @@ public class PanelRegionFinder
 
                     double minMappability = region.mappabilityScores().stream().mapToDouble(x -> x.Quality).min().orElse(0);
                     double maxMappability = region.mappabilityScores().stream().mapToDouble(x -> x.Quality).max().orElse(0);
+                    double meanMappability = region.meanMappability();
+
                     sj.add(format("%.3f", meanMappability));
                     sj.add(format("%.3f", minMappability));
                     sj.add(format("%.3f", maxMappability));

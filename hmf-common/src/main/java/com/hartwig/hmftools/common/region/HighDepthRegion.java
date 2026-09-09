@@ -20,6 +20,17 @@ public class HighDepthRegion extends ChrBaseRegion
         SampleCount = 0;
     }
 
+    public HighDepthRegion(
+            final String chromosome, final int posStart, final int posEnd,
+            final int depthMin, final int depthMax, final int depthAvg, final int sampleCount)
+    {
+        super(chromosome, posStart, posEnd);
+        DepthMin = depthMin;
+        DepthMax = depthMax;
+        DepthAvg = depthAvg;
+        SampleCount = sampleCount;
+    }
+
     // file loading
     public static final String FLD_SAMPLE_COUNT = "SampleCount";
     public static final String FLD_DEPTH_MIN = "DepthMin";

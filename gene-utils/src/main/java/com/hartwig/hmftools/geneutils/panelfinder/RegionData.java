@@ -4,15 +4,19 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
+
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.mappability.RegionQuality;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.common.region.HighDepthRegion;
 
 public class RegionData extends ChrBaseRegion
 {
-    private final List<HighDepthData> mHighDepths;
+    private final List<HighDepthRegion> mHighDepths;
     private final List<GeneExonData> mGeneExons;
     private final List<PanelData> mPanelRegions;
     private final List<RegionQuality> mMappabilityScores;
@@ -32,15 +36,18 @@ public class RegionData extends ChrBaseRegion
         mClosestGeneInfo = "";
     }
 
-    public List<HighDepthData> highDepths() { return mHighDepths; }
+    public List<HighDepthRegion> highDepths() { return mHighDepths; }
     public List<GeneExonData> geneExons() { return mGeneExons; }
     public List<PanelData> panelRegions() { return mPanelRegions; }
+
+    public boolean panelRelated() { return !mPanelRegions.isEmpty() || !mPanelGeneName.isEmpty(); }
+
     public List<RegionQuality> mappabilityScores() { return mMappabilityScores; }
 
     public void setPanelGene(final String name) { mPanelGeneName = name; }
     public String panelGeneName() { return mPanelGeneName; }
 
-    public void addHighDepth(final HighDepthData highDepth)
+    public void addHighDepth(final HighDepthRegion highDepth)
     {
         mHighDepths.add(highDepth);
 
@@ -82,10 +89,12 @@ public class RegionData extends ChrBaseRegion
         int totalBases = 0;
         double totalQuality = 0;
 
+        // limit probe qual regions to sections overlapping the region
         for(RegionQuality regionQuality : mMappabilityScores)
         {
-            totalQuality += regionQuality.Quality * regionQuality.baseLength();
-            totalBases += regionQuality.baseLength();
+            int regionOverlap = min(end(), regionQuality.end()) - max(start(), regionQuality.start()) + 1;
+            totalQuality += regionQuality.Quality * regionOverlap;
+            totalBases += regionOverlap;
         }
 
         return totalBases > 0 ? totalQuality / totalBases : 0;
@@ -93,18 +102,27 @@ public class RegionData extends ChrBaseRegion
 
     public String label()
     {
-        if(mPanelRegions.isEmpty())
-            return "HIGH_DEPTH";
+        if(!panelRelated())
+            return "NEW";
 
         if(mPanelRegions.size() == 1)
-            return mPanelRegions.get(0).Label;
+            return "EXISTING_" + mPanelRegions.get(0).Label;
 
-        return format("%s_MULTI", mPanelRegions.get(0).Label);
+        if(mPanelRegions.isEmpty() && !mPanelGeneName.isEmpty())
+            return "NEW_" + mPanelGeneName;
+
+        return format("EXISTING_%s_MULTI", mPanelRegions.get(0).Label);
     }
 
     public String toString()
     {
         return format("%s: highDepth(%s) genes(%s) panels(%s)",
-                super.toString(), HighDepthData.toString(mHighDepths), GeneExonData.toString(mGeneExons), PanelData.toString(mPanelRegions));
+                super.toString(), toString(mHighDepths), GeneExonData.toString(mGeneExons), PanelData.toString(mPanelRegions));
     }
+
+    public static String toString(final List<HighDepthRegion> highDepths)
+    {
+        return highDepths.stream().map(x -> x.toString()).collect(Collectors.joining(ITEM_DELIM));
+    }
+
 }
