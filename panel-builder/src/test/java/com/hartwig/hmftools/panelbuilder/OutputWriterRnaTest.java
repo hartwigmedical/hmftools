@@ -35,7 +35,7 @@ public class OutputWriterRnaTest
                 .withGcContent(0.5);
 
         Path outputDir = Files.createTempDirectory("panelbuilder-rna-output");
-        try(OutputWriter writer = new OutputWriter(outputDir.toString(), null, false, true))
+        try(OutputWriter writer = new OutputWriter(outputDir.toString(), null, false, false, true, false))
         {
             writer.rnaPanelOutput().writeProbes(List.of(probe));
         }
