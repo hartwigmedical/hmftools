@@ -234,8 +234,6 @@ class SomaticHypermutationTest {
     @Test
     fun testCompareVJRegionToImgtVAssemblyShort()
     {
-        // FIXME: junk setup, make it better like the other tests
-
         //   sections:       |---V----||-anchor-||--CDR3--||-anchor-||---J----|
         //   query:               |----------------------------------------|
         //   alignment:             |----------------|
