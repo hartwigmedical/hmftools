@@ -35,26 +35,27 @@ public class ViralReadAlignerTest
     private static final String R2_BASES = "C".repeat(100);
     private static final String R3_BASES = "G".repeat(100);
 
-    // A read is kept on every contig it hits above the min-score fraction (0.5 -> min score 50); per-hit fate inline below.
+    // No app-level score filter: every alignment the aligner emits is written; only a no-hit read is dropped.
+    // (BWA's own minAlignScore floor is applied inside BWA, before our code, so it is not exercised by this fake.)
     @Test
-    public void testWritesAlignmentsAboveThresholdWithContigAndScore() throws IOException
+    public void testWritesEveryViralAlignmentWithContigAndScore() throws IOException
     {
         Map<String, List<BwaMemAlignment>> alignments = Map.of(
                 R1_BASES, List.of(
                         alignment(0, 0, 9, 80, "100M"),        // forward primary on hpv16, pos 10
                         alignment(0x110, 1, 4, 60, "10H90M"),  // reverse secondary on hpv18, pos 5
-                        alignment(0x100, 0, 200, 10, "100M")), // below threshold: dropped
+                        alignment(0x100, 0, 200, 10, "100M")), // low score, kept: no app-level score filter
                 R2_BASES, List.of(noHit()),                    // no viral alignment: dropped
-                R3_BASES, List.of(alignment(0, 0, 0, 40, "100M"))); // only hit below threshold: dropped
+                R3_BASES, List.of(alignment(0, 0, 0, 40, "100M"))); // low score, kept
 
-        ViralReadAligner aligner = new ViralReadAligner(new FakeAligner(alignments), header(), 0.5, 2);
+        ViralReadAligner aligner = new ViralReadAligner(new FakeAligner(alignments), header(), 2);
 
         String fasta = writeFasta();
         String bam = new File(mTempDir.getRoot(), "aligned.bam").getPath();
         aligner.align(fasta, bam);
 
         List<SAMRecord> records = readBam(bam);
-        assertEquals(2, records.size());
+        assertEquals(4, records.size());
 
         SAMRecord primary = records.get(0);
         assertEquals("r1", primary.getReadName());
@@ -73,6 +74,17 @@ public class ViralReadAlignerTest
         assertEquals(60, (int) secondary.getIntegerAttribute("AS"));
         assertTrue(secondary.getReadNegativeStrandFlag());
         assertEquals("*", secondary.getReadString());
+
+        SAMRecord lowScore = records.get(2);
+        assertEquals("r1", lowScore.getReadName());
+        assertEquals("hpv16", lowScore.getReferenceName());
+        assertEquals(201, lowScore.getAlignmentStart());
+        assertEquals(10, (int) lowScore.getIntegerAttribute("AS"));
+
+        SAMRecord r3 = records.get(3);
+        assertEquals("r3", r3.getReadName());
+        assertEquals("hpv16", r3.getReferenceName());
+        assertEquals(40, (int) r3.getIntegerAttribute("AS"));
     }
 
     private static BwaMemAlignment alignment(int samFlag, int refId, int refStart, int score, String cigar)

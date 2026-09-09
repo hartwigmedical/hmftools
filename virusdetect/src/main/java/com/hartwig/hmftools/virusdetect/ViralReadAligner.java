@@ -1,12 +1,10 @@
 package com.hartwig.hmftools.virusdetect;
 
-import static java.lang.Math.ceil;
-
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.ALIGNMENT_SCORE_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.MISMATCHES_AND_DELETIONS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.utils.Streams.partitionStream;
-import static com.hartwig.hmftools.virusdetect.VirusConstants.MIN_ALIGNMENT_SCORE_FRACTION_DEFAULT;
+import static com.hartwig.hmftools.virusdetect.VirusConstants.MIN_ALIGNMENT_SCORE_DEFAULT;
 
 import java.io.File;
 import java.util.List;
@@ -37,7 +35,6 @@ public class ViralReadAligner
 {
     private final IBwaMemAligner mAligner;
     private final SAMFileHeader mHeader;
-    private final double mMinAlignmentScoreFraction;
     private final int mChunkSize;
 
     private static final Logger LOGGER = LogManager.getLogger(ViralReadAligner.class);
@@ -52,15 +49,13 @@ public class ViralReadAligner
         BwaMemAligner.initLibrary(config.bwaLibPath());
         IBwaMemAligner aligner = new BwaMemAligner(buildAlignerConfig(config));
 
-        return new ViralReadAligner(
-                aligner, buildHeader(reference.sequenceDictionary()), MIN_ALIGNMENT_SCORE_FRACTION_DEFAULT, config.alignmentBatchSize());
+        return new ViralReadAligner(aligner, buildHeader(reference.sequenceDictionary()), config.alignmentBatchSize());
     }
 
-    ViralReadAligner(IBwaMemAligner aligner, SAMFileHeader header, double minAlignmentScoreFraction, int chunkSize)
+    ViralReadAligner(IBwaMemAligner aligner, SAMFileHeader header, int chunkSize)
     {
         mAligner = aligner;
         mHeader = header;
-        mMinAlignmentScoreFraction = minAlignmentScoreFraction;
         mChunkSize = chunkSize;
     }
 
@@ -101,12 +96,12 @@ public class ViralReadAligner
         return new ChunkResult(reads.size(), alignedReads, writtenAlignments);
     }
 
-    // Alignments scoring below the read-length fraction, and reads with no hit, support no virus and are not written.
+    // No app-level score filter: every alignment BWA emits (all already meet its minAlignScore floor, -T) is kept.
+    // A read with no hit (refId < 0) supports no virus and is not written.
     private List<SAMRecord> toRecords(String readName, byte[] readBases, List<BwaMemAlignment> alignments)
     {
-        int minScore = (int) ceil(mMinAlignmentScoreFraction * readBases.length);
         return alignments.stream()
-                .filter(alignment -> alignment.getRefId() >= 0 && alignment.getAlignerScore() >= minScore)
+                .filter(alignment -> alignment.getRefId() >= 0)
                 .map(alignment -> toRecord(readName, readBases, alignment))
                 .toList();
     }
@@ -142,8 +137,9 @@ public class ViralReadAligner
     private static BwaMemAlignerConfig buildAlignerConfig(VirusConfig config)
     {
         boolean allAlignments = true;
+        BwaMemAlignParams params = BwaMemAlignParams.DEFAULT.withMinAlignScore(MIN_ALIGNMENT_SCORE_DEFAULT);
         return new BwaMemAlignerConfig(
-                config.viralBwaIndexImage(), BwaMemAlignParams.DEFAULT, allAlignments, config.threads(), config.alignmentBatchSize());
+                config.viralBwaIndexImage(), params, allAlignments, config.threads(), config.alignmentBatchSize());
     }
 
     private static SAMFileHeader buildHeader(SAMSequenceDictionary dictionary)

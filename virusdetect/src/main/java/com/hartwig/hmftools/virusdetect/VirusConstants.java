@@ -16,11 +16,12 @@ public class VirusConstants
 
     // Provisional defaults, to be tuned on real data.
 
-    // Minimum soft-clip length for a read to count as a candidate.
+    // Minimum soft-clip length for a host-mapped read to count as a candidate.
     public static final int MIN_SOFT_CLIP_BASES_DEFAULT = 30;
 
-    // Minimum BWA alignment score, as a fraction of read length, to keep an alignment.
-    public static final double MIN_ALIGNMENT_SCORE_FRACTION_DEFAULT = 0.5;
+    // Minimum BWA-MEM alignment score to emit an alignment (BWA -T). Passed explicitly for visibility; it is the only
+    // score floor we apply and happens to match the BWA default.
+    public static final int MIN_ALIGNMENT_SCORE_DEFAULT = 30;
 
     // Candidate reads submitted to BWA per alignment call (bounds heap).
     public static final int ALIGNMENT_BATCH_SIZE_DEFAULT = 100_000;
