@@ -38,7 +38,7 @@ To install, download the latest compiled jar file from the [download links](#ver
 
 PEACH requires Java 17+.
 
-TODO: Add link to config files
+PEACH resource file names are documented in the [pipeline resource overview](../pipeline/README_RESOURCES.md#peach).
 
 ## Arguments
 ### Example Usage
