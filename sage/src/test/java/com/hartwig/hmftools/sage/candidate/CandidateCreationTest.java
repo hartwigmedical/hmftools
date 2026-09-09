@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.cloneSamRecord;
 import static com.hartwig.hmftools.sage.common.TestUtils.REF_BASES_200;
 import static com.hartwig.hmftools.sage.common.TestUtils.TEST_CONFIG;
+import static com.hartwig.hmftools.sage.common.TestUtils.MOCK_REF_GENOME;
 import static com.hartwig.hmftools.sage.common.TestUtils.buildCigarString;
 import static com.hartwig.hmftools.sage.common.TestUtils.buildSamRecord;
 import static com.hartwig.hmftools.sage.common.TestUtils.createSamRecord;
@@ -86,7 +87,8 @@ public class CandidateCreationTest
 
         RefContextCache refContextCache = new RefContextCache(TEST_CONFIG, Collections.emptyList(), Collections.emptyList());
 
-        RefContextConsumer refContextConsumer = new RefContextConsumer(TEST_CONFIG, region, refSequence, refContextCache, Collections.emptyList());
+        RefContextConsumer refContextConsumer = new RefContextConsumer(
+                TEST_CONFIG, region, refSequence, MOCK_REF_GENOME, refContextCache, Collections.emptyList());
 
         // send through a read with the SNV, then another with the SNV also immediately followed by an insert
         String readBases = refBases.substring(100, 117) + variant.alt() + refBases.substring(118, 135);
@@ -138,7 +140,8 @@ public class CandidateCreationTest
 
         ChrBaseRegion region = new ChrBaseRegion(CHR_1, 0, 200);
         RefContextCache refContextCache = new RefContextCache(TEST_CONFIG, Collections.emptyList(), Collections.emptyList());
-        RefContextConsumer refContextConsumer = new RefContextConsumer(TEST_CONFIG, region, refSequence, refContextCache, Collections.emptyList());
+        RefContextConsumer refContextConsumer = new RefContextConsumer(
+                TEST_CONFIG, region, refSequence, MOCK_REF_GENOME, refContextCache, Collections.emptyList());
 
         // send through a read with the SNV, then another with the SNV also immediately followed by an insert
         String readBases = refBases.substring(1, 25) + variant1.alt() + refBases.substring(26, 30) + variant2.alt() + refBases.substring(31);

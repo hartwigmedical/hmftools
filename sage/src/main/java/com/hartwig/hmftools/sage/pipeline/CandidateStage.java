@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.sage.pipeline.ChromosomePartition.getPanelReg
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.sage.SageCallConfig;
@@ -28,7 +29,7 @@ public class CandidateStage
     private final SamSlicerFactory mSamSlicerFactory;
 
     public CandidateStage(
-            final SageCallConfig config, final List<SimpleVariant> hotspots,
+            final SageCallConfig config, final RefGenomeInterface refGenome, final List<SimpleVariant> hotspots,
             final List<BaseRegion> panelRegions, final List<BaseRegion> highConfidenceRegions,
             final SamSlicerFactory samSlicerFactory)
     {
@@ -38,7 +39,7 @@ public class CandidateStage
         mHighConfidenceRegions = highConfidenceRegions;
         mSamSlicerFactory = samSlicerFactory;
 
-        mCandidateEvidence = new CandidateEvidence(config.Common, hotspots, panelRegions);
+        mCandidateEvidence = new CandidateEvidence(config.Common, refGenome, hotspots, panelRegions);
     }
 
     public int totalReadsProcessed() { return mCandidateEvidence.totalReadsProcessed(); }
