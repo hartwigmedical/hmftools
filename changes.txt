@@ -1,0 +1,111 @@
+TARS changes from baseline
+==========================
+
+Baseline: f284971400 (BAM produced 10 August)
+Comparison: AUS418-tars-star-replacement at c761be09ab plus the current working-tree changes
+
+
+Changes affecting BAM output
+----------------------------
+
+- Alignment selection and MAPQ: mate-aware selection, supplementary-supported placement selection
+  and final-score handling have been updated as detailed below. This can change the selected
+  coordinates, CIGAR, strand, MAPQ, AS and XA tags.
+
+- Low-alignment-score unmapping: the AS floor remains 30, but it is now applied after supplementary
+  merging and primary selection, using the score of the final placement where required. In the
+  comparison BAM, `unmapped_low_alignment_score` decreased from 213,664 to 178,685: 34,979 fewer
+  primaries were unmapped. The emitted AS tag is updated when the final placement is rescored and
+  removed when a required score cannot be calculated.
+
+- Terminal CIGAR handling: reference re-verification and annotation-driven boundary snapping have
+  been removed. BWA's terminal boundaries and soft clips are retained, except when the existing
+  overhang gate deliberately collapses a weak splice junction. This produced 88,198 CIGAR
+  differences without a mapping-status change.
+
+- Supplementary merge ordering: the supplementary merge stage now runs before final primary
+  selection. This lets merged and unmerged candidates be scored together, so the primary is selected
+  fairly across all viable placements. When a merged placement wins, absorbed supplementary records
+  are removed and SA tags are rebuilt from the records that remain.
+
+- Other functional improvements: SAM/BAM field handling and the liftback implementation were
+  simplified and corrected for consistency; supplementary records that cannot be lifted are now
+  dropped rather than represented by a fabricated alignment.
+
+
+Changes to TARS related to alignment selection and MAPQ
+-------------------------------------------------------
+
+NEW means not present in the current local commit.
+
+1. Translate alignments
+   - Lift the primary and XA alignments to genomic coordinates.
+   - Lift each supplementary alignment separately.
+   - [NEW] Lift and consider each supplementary's XA placements.
+   - [NEW] Lift both mates before selecting either primary.
+
+2. Overhang Score Gate
+   - Re-score terminal splice overhangs up to 12 bases.
+   - With a soft clip, keep a score above 5; otherwise collapse the junction.
+   - With multiple junctions, keep a positive score. Otherwise collapse only if the intronic
+     alignment scores higher.
+   - Leave a single junction without a soft clip unchanged.
+
+3. Build supplementary-supported placements
+   - Try every primary and XA placement with all lifted supplementary alignments.
+   - [NEW] At MAPQ 0, select one placement per supplementary: shortest DEL within 1 Mb,
+     shortest DUP within 1 Mb, shortest INV within 1 Mb, then deterministic random.
+   - [NEW] At positive MAPQ, keep the supplementary's main alignment.
+   - [NEW] Try the merge only with the selected supplementary placement.
+   - [NEW] Treat supplementary XA as alternative locations, not extra read support. Use each
+     supplementary record at most once.
+   - For a successful merge, it has to meet certain conditions.
+   - Choose the junction in this order: annotation, canonical motif, semi-canonical motif, mate
+     junction, midpoint.
+   - Add each successful merge as a placement. Keep the original placement as an alternative.
+   - [NEW] Count every merge rejection by reason in the summary TSV.
+
+4. Select the primary placement
+   - Ref only: keep the genomic alignment. Unmap MAPQ 0 with no XA.
+   - Single transcriptome locus: emit the genomic placement at MAPQ 60.
+   - Matching reference and transcript placements at one locus with the same CIGAR: keep BWA's
+     primary.
+   - Positive MAPQ: keep BWA's placement. Resolve a valid supplementary merge independently.
+   - For MAPQ 0 paired multi-mappers, use this order:
+     1. [NEW] Build every mate-placement pair and select both mates together.
+     2. [NEW] Shortest DEL within 1 Mb.
+     3. [NEW] Shortest DUP within 1 Mb.
+     4. [NEW] Shortest INV within 1 Mb.
+     5. Deterministic read-name tie-break.
+   - [NEW] Treat all pairs over 1 Mb equally.
+
+5. Set MAPQ and write the records
+   - Keep the input MAPQ by default.
+   - Resolved MAPQ 0 with one locus: MAPQ 60.
+   - Multiple loci, a read-name tie, or unresolved `XS == AS`: keep MAPQ 0.
+   - Merged primary: use the higher primary/supplementary MAPQ; use MAPQ 60 if unique.
+   - Standalone supplementary: keep its input MAPQ.
+   - [NEW] Check AS using the final selected or merged placement. Update the emitted AS, or remove
+     it if a required rescore is unavailable.
+   - Unmap a final placement in an excluded region or with AS below 30.
+   - If a merged placement wins, drop the absorbed supplementaries.
+   - [NEW] Drop a supplementary that cannot be lifted; do not fabricate an alignment.
+   - Rebuild SA and write remaining eligible, non-overlapping placements to XA.
+
+
+Downstream impact measured with ISOFOX
+--------------------------------------
+
+For the terminal-boundary change, using ISOFOX 2.1-beta.3 on both BAMs:
+
+- total fragments increased by 19,034 (+0.043%)
+- unfiltered alternative splice junctions increased by 76
+
+
+Input and configuration
+-----------------------
+
+- `-input_bam` now accepts a comma-separated list of name-grouped BAMs, removing the lane-BAM merge
+  step. This has no intended effect on BAM records.
+- `-ref_genome_version` is no longer required for liftback; the required information comes from the
+  contig sidecar.

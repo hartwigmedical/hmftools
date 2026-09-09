@@ -1,12 +1,19 @@
 package com.hartwig.hmftools.tars.liftback.features;
 
+import static com.hartwig.hmftools.tars.common.TarsCigarUtils.mergeAdjacentSameOp;
+
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.tars.common.BwaScoring;
 import com.hartwig.hmftools.tars.liftback.LiftedAlignment;
 
+import htsjdk.samtools.CigarElement;
+import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.TextCigarCodec;
 
 // Recomputes bwa-style alignment scores after placements are lifted to genome space. Cigars are left unchanged: the only
 // soft-clip walk in TARS is the weak-overhang collapse in OverhangGate.
@@ -75,5 +82,27 @@ public class GenomicAlignmentScorer
         return BwaScoring.genomicScore(
                 mRefGenome, alignment.LiftedChromosome, alignment.LiftedPos, alignment.LiftedCigar,
                 readBases.forAlignment(alignment));
+    }
+
+    // An intron-only lift preserves BWA's scoring operations: the transcript contig contains the same exonic bases and
+    // N has no alignment-score cost. Any other CIGAR change makes the input AS stale and requires a genomic rescore.
+    public static boolean requiresRescore(final SAMRecord record, final LiftedAlignment alignment)
+    {
+        List<CigarElement> liftedOps = new ArrayList<>();
+        for(CigarElement element : TextCigarCodec.decode(alignment.LiftedCigar).getCigarElements())
+        {
+            if(element.getOperator() != CigarOperator.N)
+            {
+                liftedOps.add(element);
+            }
+        }
+
+        List<CigarElement> inputOps = new ArrayList<>(record.getCigar().getCigarElements());
+        if(record.getReadNegativeStrandFlag() == alignment.ForwardStrand)
+        {
+            Collections.reverse(inputOps);
+        }
+
+        return !mergeAdjacentSameOp(liftedOps).equals(mergeAdjacentSameOp(inputOps));
     }
 }

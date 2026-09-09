@@ -44,7 +44,13 @@ public record LiftedRecord(
     // XA alts the aligner offered that lifted, dropped ones included: the alignment set is self plus those.
     public int numXaAlts()
     {
-        return Math.max(liftedAlignments.size() - 1, 0);
+        int altCount = 0;
+        for(int i = 1; i < liftedAlignments.size(); ++i)
+        {
+            if(!liftedAlignments.get(i).hasSupplementaryMerge()) ++altCount;
+        }
+
+        return altCount;
     }
 
     // false when nothing lifted; the placement accessors below throw in that case.
@@ -103,6 +109,11 @@ public record LiftedRecord(
     public LiftedRecord withLiftedAlignments(final List<LiftedAlignment> alignments)
     {
         return new LiftedRecord(updatedMapQuality, numLoci, notes, primaryIndex, alignments);
+    }
+
+    public LiftedRecord withPrimaryIndex(final int newPrimaryIndex)
+    {
+        return new LiftedRecord(updatedMapQuality, numLoci, notes, newPrimaryIndex, liftedAlignments);
     }
 
     public LiftedRecord withPrimaryTranscriptStrand(final int transcriptStrand)

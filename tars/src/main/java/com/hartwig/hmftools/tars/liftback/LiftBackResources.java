@@ -14,31 +14,31 @@ import com.hartwig.hmftools.tars.liftback.features.SupplementaryMerger;
 // handle and its own copy of everything holding one.
 public final class LiftBackResources
 {
-    private final LiftBackDiscriminator mDiscriminator;
+    private final PlacementSelector mPlacementSelector;
     private final EnsemblAnnotationIndex mEnsemblAnnotationIndex;
     private final String mRefGenomeFile;
     private final SupplementaryConfig mSupplementary;
     private final ExcludedRegions mExcludedRegions; // nullable: unmaps primaries that land in these regions post-lift
 
     public LiftBackResources(
-            final LiftBackDiscriminator discriminator, final EnsemblAnnotationIndex annotationIndex, final String refGenomeFile,
+            final PlacementSelector placementSelector, final EnsemblAnnotationIndex annotationIndex, final String refGenomeFile,
             final SupplementaryConfig supplementary, final ExcludedRegions excludedRegions)
     {
-        mDiscriminator = discriminator;
+        mPlacementSelector = placementSelector;
         mEnsemblAnnotationIndex = annotationIndex;
         mRefGenomeFile = refGenomeFile;
         mSupplementary = supplementary;
         mExcludedRegions = excludedRegions;
     }
 
-    // one call per worker: the discriminator, annotation index and excluded regions are shared, the ref genome handle
+    // one call per worker: the placementSelector, annotation index and excluded regions are shared, the ref genome handle
     // and everything holding it is built fresh
     public LiftBackGroupProcessor createProcessor()
     {
         RefGenomeInterface refGenome = openRefGenome();
 
         return new LiftBackGroupProcessor(
-                mDiscriminator,
+                mPlacementSelector,
                 new SupplementaryMerger(mEnsemblAnnotationIndex, refGenome, mSupplementary),
                 new OverhangGate(refGenome),
                 new GenomicAlignmentScorer(refGenome),

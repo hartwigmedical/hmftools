@@ -6,7 +6,6 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIB
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.XA_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.XS_ATTRIBUTE;
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.firstInPair;
 import static com.hartwig.hmftools.common.utils.Arrays.reverseArray;
 import static com.hartwig.hmftools.tars.common.TarsConstants.SUPP_AS_DROP_THRESHOLD;
 
@@ -19,6 +18,7 @@ import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.tars.common.BwaScoring;
 import com.hartwig.hmftools.tars.common.TarsCigarUtils;
+import com.hartwig.hmftools.tars.liftback.features.GenomicAlignmentScorer;
 
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
@@ -62,7 +62,7 @@ public final class BamRecordEmitter
         boolean finalPrimaryUnmapped = primaryUnmapped || willBeUnmapped(primary, primaryResult);
         boolean[] willEmit = computeWillEmit(
                 records, liftedRecords, absorbedSupplementaries, primary, finalPrimaryUnmapped);
-        int numHits = LiftBackDiscriminator.countDistinctLoci(primaryResult);
+        int numHits = PlacementSelector.countDistinctLoci(primaryResult);
 
         // Apply every final placement before building any SA tag, so SA entries take coordinates, cigar, strand, MAPQ and
         // refreshed NM from the records that are emitted.
@@ -111,7 +111,7 @@ public final class BamRecordEmitter
             final List<SAMRecord> records, final List<LiftedRecord> liftedRecords,
             final Set<Integer> absorbedSupplementaries, final SAMRecord primary, final boolean primaryUnmapped)
     {
-        Set<AlignmentKey> emittedSupplementaries = new HashSet<>();
+        Set<AlignmentKey> emittedSupplementaries = null;
         boolean[] willEmit = new boolean[records.size()];
         for(int i = 0; i < records.size(); ++i)
         {
@@ -122,15 +122,31 @@ public final class BamRecordEmitter
             {
                 drop = true;
             }
-            if(!drop && record != primary && record.getSupplementaryAlignmentFlag()
-                    && !emittedSupplementaries.add(dedupKey(result)))
+            if(!drop && record.getSupplementaryAlignmentFlag()
+                    && (result == null || !result.hasPlacement()))
             {
                 drop = true;
+            }
+            if(!drop && record != primary && record.getSupplementaryAlignmentFlag())
+            {
+                if(emittedSupplementaries == null)
+                {
+                    emittedSupplementaries = new HashSet<>();
+                }
+
+                if(!emittedSupplementaries.add(dedupKey(result)))
+                {
+                    drop = true;
+                }
             }
             if(!drop && mSupplementaryMergerEnabled && record.getSupplementaryAlignmentFlag()
                     && !record.getReadUnmappedFlag())
             {
                 Integer alignmentScore = record.getIntegerAttribute(ALIGNMENT_SCORE_ATTRIBUTE);
+                if(result.primaryAlignment().GenomicScore != Integer.MIN_VALUE)
+                {
+                    alignmentScore = result.primaryAlignment().GenomicScore;
+                }
                 if(alignmentScore != null && alignmentScore < SUPP_AS_DROP_THRESHOLD)
                 {
                     drop = true;
@@ -197,15 +213,13 @@ public final class BamRecordEmitter
                 markPrimaryUnmapped(record, matePair);
                 return;
             }
-            if(record.isSecondaryOrSupplementary() && mirrorOwnPrimaryOntoFailedSupp(record, matePair))
-            {
-                return;
-            }
-
             matePair.unmapRead(record);
             return;
         }
 
+        LiftedAlignment finalAlignment = result.primaryAlignment();
+        boolean clearStaleAlignmentScore = finalAlignment.GenomicScore == Integer.MIN_VALUE
+                && (result.primaryIndex() != 0 || GenomicAlignmentScorer.requiresRescore(record, finalAlignment));
         Cigar liftedCigar = TarsCigarUtils.normalize(TextCigarCodec.decode(result.finalCigar()));
         if(result.negativeStrand() != record.getReadNegativeStrandFlag())
         {
@@ -229,6 +243,14 @@ public final class BamRecordEmitter
         record.setReadNegativeStrandFlag(result.negativeStrand());
         record.setMappingQuality(result.updatedMapQuality());
         record.setAttribute(XA_ATTRIBUTE, result.xaTag());
+        if(finalAlignment.GenomicScore != Integer.MIN_VALUE)
+        {
+            record.setAttribute(ALIGNMENT_SCORE_ATTRIBUTE, finalAlignment.GenomicScore);
+        }
+        else if(clearStaleAlignmentScore)
+        {
+            record.setAttribute(ALIGNMENT_SCORE_ATTRIBUTE, null);
+        }
         record.setAttribute(XS_ATTRIBUTE, null);
         if(result.hasNCigar() && result.transcriptStrand() != 0)
         {
@@ -264,26 +286,6 @@ public final class BamRecordEmitter
         return result.hasPlacement()
                 ? result.primaryAlignment().key()
                 : new AlignmentKey("*", 0, "*", true);
-    }
-
-    private static boolean mirrorOwnPrimaryOntoFailedSupp(final SAMRecord record, final LiftedMatePair matePair)
-    {
-        if(!record.getReadPairedFlag())
-        {
-            return false;
-        }
-        LiftedRecord primary = matePair.ownPrimary(firstInPair(record));
-        if(primary == null || !primary.hasPlacement())
-        {
-            return false;
-        }
-
-        record.setReferenceName(primary.finalChromosome());
-        record.setAlignmentStart(primary.finalPos());
-        record.setCigarString(primary.finalCigar());
-        record.setMappingQuality(0);
-        record.setAttribute(XA_ATTRIBUTE, null);
-        return true;
     }
 
     private void refreshNmDropMd(final SAMRecord record)

@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.primaryRecord;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.selfAlignment;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
@@ -74,5 +75,33 @@ public class GenomicAlignmentScorerTest
 
         assertEquals(50, alignments.get(0).GenomicScore);
         assertEquals(50, alignments.get(1).GenomicScore);
+    }
+
+    @Test
+    public void testIntronOnlyLiftDoesNotRequireRescore()
+    {
+        SAMRecord record = primaryRecord(CHR_1, 100, "100M");
+        LiftedAlignment lifted = refAlt(CHR_1, 100, "50M100N50M", true);
+
+        assertFalse(GenomicAlignmentScorer.requiresRescore(record, lifted));
+    }
+
+    @Test
+    public void testChangedScoringOperationsRequireRescore()
+    {
+        SAMRecord record = primaryRecord(CHR_1, 100, "100M");
+        LiftedAlignment lifted = refAlt(CHR_1, 100, "95M5S", true);
+
+        assertTrue(GenomicAlignmentScorer.requiresRescore(record, lifted));
+    }
+
+    @Test
+    public void testStrandFlipComparesReversedCigarOperations()
+    {
+        SAMRecord record = primaryRecord(CHR_1, 100, "10S40M");
+        record.setReadNegativeStrandFlag(true);
+        LiftedAlignment lifted = refAlt(CHR_1, 100, "40M10S", true);
+
+        assertFalse(GenomicAlignmentScorer.requiresRescore(record, lifted));
     }
 }

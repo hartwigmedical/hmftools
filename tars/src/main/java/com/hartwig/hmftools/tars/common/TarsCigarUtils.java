@@ -107,37 +107,6 @@ public final class TarsCigarUtils
         return previous == CigarOperator.I || previous == CigarOperator.D;
     }
 
-    public static List<CigarElement> retractTerminalMatchIntoSoftClip(
-            final List<CigarElement> elements, final int shift, final boolean rightSide)
-    {
-        if(shift <= 0)
-        {
-            return new ArrayList<>(elements);
-        }
-
-        List<CigarElement> shifted = new ArrayList<>(elements);
-        int last = shifted.size() - 1;
-        int softClipIndex = rightSide ? last : 0;
-        int matchIndex = rightSide ? last - 1 : 1;
-        if(matchIndex < 0 || matchIndex >= shifted.size())
-        {
-            return null;
-        }
-
-        CigarElement softClip = shifted.get(softClipIndex);
-        CigarElement match = shifted.get(matchIndex);
-        if(softClip.getOperator() != CigarOperator.S
-                || (match.getOperator() != CigarOperator.M && match.getOperator() != CigarOperator.EQ)
-                || match.getLength() - shift < 1)
-        {
-            return null;
-        }
-
-        shifted.set(matchIndex, new CigarElement(match.getLength() - shift, match.getOperator()));
-        shifted.set(softClipIndex, new CigarElement(softClip.getLength() + shift, CigarOperator.S));
-        return shifted;
-    }
-
     public static Cigar clampLeadingReferenceToSoftClip(final Cigar cigar, final int overhang)
     {
         List<CigarElement> elements = cigar.getCigarElements();

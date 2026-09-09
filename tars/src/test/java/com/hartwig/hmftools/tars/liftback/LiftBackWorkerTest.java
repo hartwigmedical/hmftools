@@ -38,16 +38,13 @@ public class LiftBackWorkerTest
         assertEquals("50M", record.getCigarString());
     }
 
-    @Test
-    public void testSanitizeSeqCigarMismatchReplacedWithPlaceholder()
+    @Test(expected = IllegalStateException.class)
+    public void testSanitizeRejectsSeqCigarMismatch()
     {
-        // a failed-lift supplementary mirrored onto its primary's 100M cigar while carrying only 50 hard-clipped bases
+        // A length mismatch is an upstream transformation bug; fabricating an all-M alignment would corrupt the BAM.
         SAMRecord record = mappedRecordWithSeq(new Cigar(List.of(new CigarElement(100, CigarOperator.M))), 50);
 
         sanitizeForOutput(record);
-
-        assertEquals("50M", record.getCigarString());
-        assertEquals(50, record.getCigar().getReadLength());
     }
 
     @Test

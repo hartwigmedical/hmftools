@@ -34,8 +34,8 @@ public final class TarsConstants
     public static final int PRIMARY_AS_UNMAP_THRESHOLD = 30;
     public static final int SUPP_AS_DROP_THRESHOLD = 30;
 
-    // Prefer a tied locus near its mate.
-    public static final int MATE_PROXIMITY_MAX_DISTANCE = 1_000_000;
+    // Maximum DEL/DUP/INV length preferred during MAPQ-0 placement selection.
+    public static final int LOCAL_SV_MAX_LENGTH = 1_000_000;
 
     // Valid intron bounds for supplementary merges.
     public static final int MIN_IMPLIED_INTRON_LENGTH = 21;
@@ -47,9 +47,5 @@ public final class TarsConstants
 
     // Maximum read-span overlap accepted during a supplementary merge.
     public static final int MAX_SUPP_READ_OVERLAP = 5;
-
-    // how far a terminal boundary may be pulled back into its soft clip while looking for an annotated
-    // splice boundary to retract onto
-    public static final int MAX_ANNOTATED_BOUNDARY_SHIFT = 8;
 
 }

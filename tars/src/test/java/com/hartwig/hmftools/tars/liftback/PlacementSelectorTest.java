@@ -23,7 +23,7 @@ import org.junit.Test;
 import htsjdk.samtools.SAMRecord;
 
 // Covers lifting, the primary pick and the MAPQ policy. Cigar translation itself is covered in ContigTranslatorTest.
-public class LiftBackDiscriminatorTest
+public class PlacementSelectorTest
 {
     private static List<ContigEntry> contigMap()
     {
@@ -46,8 +46,8 @@ public class LiftBackDiscriminatorTest
     @Test
     public void testSingleEndPrimaryLifted()
     {
-        LiftBackDiscriminator resolver = new LiftBackDiscriminator(contigMap());
-        LiftedRecord result = resolver.resolve(TarsTestFixtures.unpairedPrimaryRecord(TX_CONTIG, 51, "100M"));
+        PlacementSelector selector = new PlacementSelector(contigMap());
+        LiftedRecord result = selector.resolve(TarsTestFixtures.unpairedPrimaryRecord(TX_CONTIG, 51, "100M"));
 
         assertTrue(result.hasPlacement());
         assertEquals(CHR_1, result.finalChromosome());
@@ -58,8 +58,8 @@ public class LiftBackDiscriminatorTest
     @Test
     public void testSingleEndSupplementaryLifted()
     {
-        LiftBackDiscriminator resolver = new LiftBackDiscriminator(contigMap());
-        LiftedRecord result = resolver.resolve(
+        PlacementSelector selector = new PlacementSelector(contigMap());
+        LiftedRecord result = selector.resolve(
                 TarsTestFixtures.unpairedSupplementaryRecord(TX_CONTIG, 51, "100M", TX_CONTIG + ",1,+,60M40S,60,0;"));
 
         assertTrue(result.hasPlacement());
@@ -70,8 +70,8 @@ public class LiftBackDiscriminatorTest
     @Test
     public void testUnmapped()
     {
-        LiftBackDiscriminator resolver = new LiftBackDiscriminator(contigMap());
-        LiftedRecord result = resolver.resolve(newUnmappedRecord());
+        PlacementSelector selector = new PlacementSelector(contigMap());
+        LiftedRecord result = selector.resolve(newUnmappedRecord());
 
         assertFalse(result.hasPlacement());
         assertTrue(result.liftedAlignments().isEmpty());
@@ -82,8 +82,8 @@ public class LiftBackDiscriminatorTest
     {
         SAMRecord record = newRecord(CHR_1, 1000, "150M");
 
-        LiftBackDiscriminator resolver = new LiftBackDiscriminator(contigMap());
-        LiftedRecord result = resolver.resolve(record);
+        PlacementSelector selector = new PlacementSelector(contigMap());
+        LiftedRecord result = selector.resolve(record);
 
         assertEquals(CHR_1, result.finalChromosome());
         assertEquals(1000, result.finalPos());
@@ -97,8 +97,8 @@ public class LiftBackDiscriminatorTest
     {
         SAMRecord record = newRecord(TX_CONTIG, 1, "50M"); // contig pos 1, 50M -> exon 1 (chr1:100-149)
 
-        LiftBackDiscriminator resolver = new LiftBackDiscriminator(contigMap());
-        LiftedRecord result = resolver.resolve(record);
+        PlacementSelector selector = new PlacementSelector(contigMap());
+        LiftedRecord result = selector.resolve(record);
 
         assertEquals(CHR_1, result.finalChromosome());
         assertEquals(100, result.finalPos());
@@ -111,8 +111,8 @@ public class LiftBackDiscriminatorTest
     {
         SAMRecord record = newRecord(TX_CONTIG, 51, "100M"); // crosses exon 1 -> exon 2 (intron 200-299)
 
-        LiftBackDiscriminator resolver = new LiftBackDiscriminator(contigMap());
-        LiftedRecord result = resolver.resolve(record);
+        PlacementSelector selector = new PlacementSelector(contigMap());
+        LiftedRecord result = selector.resolve(record);
 
         assertEquals(CHR_1, result.finalChromosome());
         assertEquals(150, result.finalPos());
@@ -126,8 +126,8 @@ public class LiftBackDiscriminatorTest
         SAMRecord record = newRecord(CHR_1, 100, "50M"); // Tx alt at contig pos 1 lifts to the same locus and CIGAR
         record.setAttribute("XA", TX_CONTIG + ",+1,50M,0;");
 
-        LiftBackDiscriminator resolver = new LiftBackDiscriminator(contigMap());
-        LiftedRecord result = resolver.resolve(record);
+        PlacementSelector selector = new PlacementSelector(contigMap());
+        LiftedRecord result = selector.resolve(record);
 
         assertEquals(1, result.numLoci());
     }
@@ -139,8 +139,8 @@ public class LiftBackDiscriminatorTest
         SAMRecord record = newRecord(CHR_1, 170, "50M");
         record.setAttribute("XA", TX_CONTIG + ",+71,30M20S,0;");
 
-        LiftBackDiscriminator resolver = new LiftBackDiscriminator(contigMap());
-        LiftedRecord result = resolver.resolve(record);
+        PlacementSelector selector = new PlacementSelector(contigMap());
+        LiftedRecord result = selector.resolve(record);
 
         assertEquals(1, result.numLoci());
     }
@@ -152,8 +152,8 @@ public class LiftBackDiscriminatorTest
         SAMRecord record = newRecord(CHR_1, 170, "50M");
         record.setAttribute("XA", TX_CONTIG + ",+71,25M25S,0;");
 
-        LiftBackDiscriminator resolver = new LiftBackDiscriminator(contigMap());
-        LiftedRecord result = resolver.resolve(record);
+        PlacementSelector selector = new PlacementSelector(contigMap());
+        LiftedRecord result = selector.resolve(record);
 
         assertEquals(1, result.numLoci());
     }
@@ -164,8 +164,8 @@ public class LiftBackDiscriminatorTest
         SAMRecord record = newRecord(TX_CONTIG, 1, "50M"); // Tx primary + ref alt on a different chrom -> two loci
         record.setAttribute("XA", "chr5,+5000,50M,0;");
 
-        LiftBackDiscriminator resolver = new LiftBackDiscriminator(contigMap());
-        LiftedRecord result = resolver.resolve(record);
+        PlacementSelector selector = new PlacementSelector(contigMap());
+        LiftedRecord result = selector.resolve(record);
 
         assertEquals(2, result.numLoci());
     }
@@ -179,8 +179,8 @@ public class LiftBackDiscriminatorTest
         record.setMappingQuality(0);
         record.setAttribute("XA", "chr5,+5000,50M,3;");
 
-        LiftBackDiscriminator resolver = new LiftBackDiscriminator(contigMap());
-        LiftedRecord result = resolver.resolve(record);
+        PlacementSelector selector = new PlacementSelector(contigMap());
+        LiftedRecord result = selector.resolve(record);
 
         assertEquals(2, result.numLoci());
         assertEquals(0, result.updatedMapQuality());
@@ -196,8 +196,8 @@ public class LiftBackDiscriminatorTest
         record.setMappingQuality(0);
         record.setAttribute("XA", TX_CONTIG + ",+101,50S50M,0;"); // -> chr1:300 50S50M, span 300-349 (nested)
 
-        LiftBackDiscriminator resolver = new LiftBackDiscriminator(contigMap());
-        LiftedRecord result = resolver.resolve(record);
+        PlacementSelector selector = new PlacementSelector(contigMap());
+        LiftedRecord result = selector.resolve(record);
 
         assertEquals(1, result.numLoci());
         assertEquals(60, result.updatedMapQuality());
@@ -212,8 +212,8 @@ public class LiftBackDiscriminatorTest
         record.setMappingQuality(0);
         record.setAttribute("XA", CHR_1 + ",+1080,100M,0;" + CHR_1 + ",+1160,100M,0;");
 
-        LiftBackDiscriminator resolver = new LiftBackDiscriminator(contigMap());
-        LiftedRecord result = resolver.resolve(record);
+        PlacementSelector selector = new PlacementSelector(contigMap());
+        LiftedRecord result = selector.resolve(record);
 
         assertEquals(2, result.numLoci());
         assertEquals(0, result.updatedMapQuality());
@@ -225,8 +225,8 @@ public class LiftBackDiscriminatorTest
         SAMRecord record = newRecord(CHR_1, 1000, "50M");
         record.setAttribute("XA", "chr5,+5000,50M,0;");
 
-        LiftBackDiscriminator resolver = new LiftBackDiscriminator(contigMap());
-        LiftedRecord result = resolver.resolve(record);
+        PlacementSelector selector = new PlacementSelector(contigMap());
+        LiftedRecord result = selector.resolve(record);
 
         assertEquals(2, result.numLoci());
     }
@@ -242,8 +242,8 @@ public class LiftBackDiscriminatorTest
         SAMRecord record = newRecord(TX_CONTIG, 1, "50M");
         record.setAttribute("XA", "ensG_OTHER_T,+1,50M,0;");
 
-        LiftBackDiscriminator resolver = new LiftBackDiscriminator(twoContigs);
-        LiftedRecord result = resolver.resolve(record);
+        PlacementSelector selector = new PlacementSelector(twoContigs);
+        LiftedRecord result = selector.resolve(record);
 
         assertEquals(2, result.numLoci());
     }
@@ -254,8 +254,8 @@ public class LiftBackDiscriminatorTest
         SAMRecord record = newRecord(CHR_1, 1000, "60M40H");
         record.setSupplementaryAlignmentFlag(true);
 
-        LiftBackDiscriminator resolver = new LiftBackDiscriminator(contigMap());
-        LiftedRecord result = resolver.resolve(record);
+        PlacementSelector selector = new PlacementSelector(contigMap());
+        LiftedRecord result = selector.resolve(record);
 
         assertTrue(result.hasPlacement());
     }
@@ -267,8 +267,8 @@ public class LiftBackDiscriminatorTest
         record.setSupplementaryAlignmentFlag(true);
         record.setMappingQuality(0);
 
-        LiftBackDiscriminator resolver = new LiftBackDiscriminator(contigMap());
-        LiftedRecord result = resolver.resolve(record);
+        PlacementSelector selector = new PlacementSelector(contigMap());
+        LiftedRecord result = selector.resolve(record);
 
         assertTrue(result.hasPlacement());
         assertEquals(CHR_1, result.finalChromosome());
@@ -279,13 +279,30 @@ public class LiftBackDiscriminatorTest
     }
 
     @Test
+    public void testSupplementaryXaAlignmentsAreLiftedAndDeduplicatedAgainstSelf()
+    {
+        SAMRecord record = newRecord(CHR_1, 300, "50S50M");
+        record.setSupplementaryAlignmentFlag(true);
+        record.setAttribute(
+                "XA", CHR_1 + ",+300,50S50M,0;" + TX_CONTIG + ",+151,50S50M,0;");
+
+        LiftedRecord result = new PlacementSelector(contigMap()).resolve(record);
+
+        assertEquals(2, result.liftedAlignments().size());
+        assertEquals(CHR_1, result.liftedAlignments().get(1).LiftedChromosome);
+        assertEquals(350, result.liftedAlignments().get(1).LiftedPos);
+        assertEquals("50S50M", result.liftedAlignments().get(1).LiftedCigar);
+        assertTrue(result.liftedAlignments().get(1).FromTxContig);
+    }
+
+    @Test
     public void testSupplementaryOnTxContigUnliftablePastEnd()
     {
         SAMRecord record = newRecord(TX_CONTIG, 251, "10M"); // pos 251 past contigEnd(250)
         record.setSupplementaryAlignmentFlag(true);
 
-        LiftBackDiscriminator resolver = new LiftBackDiscriminator(contigMap());
-        LiftedRecord result = resolver.resolve(record);
+        PlacementSelector selector = new PlacementSelector(contigMap());
+        LiftedRecord result = selector.resolve(record);
 
         assertFalse(result.hasPlacement());
         assertTrue(result.notes().contains("supp_translate_failed"));
@@ -297,8 +314,8 @@ public class LiftBackDiscriminatorTest
     {
         SAMRecord record = newRecord(TX_CONTIG, 251, "10M");
 
-        LiftBackDiscriminator resolver = new LiftBackDiscriminator(contigMap());
-        LiftedRecord result = resolver.resolve(record);
+        PlacementSelector selector = new PlacementSelector(contigMap());
+        LiftedRecord result = selector.resolve(record);
 
         assertFalse(result.hasPlacement());
         assertTrue(result.notes().contains("primary_translate_failed"));
@@ -309,8 +326,8 @@ public class LiftBackDiscriminatorTest
     {
         SAMRecord record = newRecord(TX_CONTIG, 200, "100M"); // 49bp past contigEnd(250) -> trailing 49S
 
-        LiftBackDiscriminator resolver = new LiftBackDiscriminator(contigMap());
-        LiftedRecord result = resolver.resolve(record);
+        PlacementSelector selector = new PlacementSelector(contigMap());
+        LiftedRecord result = selector.resolve(record);
 
         assertTrue(result.finalCigar().endsWith("49S"));
     }
@@ -322,8 +339,8 @@ public class LiftBackDiscriminatorTest
         SAMRecord record = newRecord(CHR_1, 300, "30M");
         record.setAttribute("XA", TX_CONTIG + ",+101,20S30M,0;");
 
-        LiftBackDiscriminator resolver = new LiftBackDiscriminator(contigMap());
-        LiftedRecord result = resolver.resolve(record);
+        PlacementSelector selector = new PlacementSelector(contigMap());
+        LiftedRecord result = selector.resolve(record);
 
         assertEquals(1, result.numLoci());
     }
@@ -334,8 +351,8 @@ public class LiftBackDiscriminatorTest
         SAMRecord record = newRecord(TX_CONTIG, 1, "50M"); // two identical XA entries -> one alt retained
         record.setAttribute("XA", "chr5,+5000,50M,0;chr5,+5000,50M,0;");
 
-        LiftBackDiscriminator resolver = new LiftBackDiscriminator(contigMap());
-        LiftedRecord result = resolver.resolve(record);
+        PlacementSelector selector = new PlacementSelector(contigMap());
+        LiftedRecord result = selector.resolve(record);
 
         assertEquals(2, result.liftedAlignments().size()); // self + one deduped alt
         assertEquals(1, result.numXaAlts());
@@ -349,8 +366,8 @@ public class LiftBackDiscriminatorTest
         SAMRecord record = newRecord(CHR_1, 100, "50M");
         record.setAttribute("XA", TX_CONTIG + ",+1,50M,0;" + CHR_1 + ",+100,50M,0;");
 
-        LiftBackDiscriminator resolver = new LiftBackDiscriminator(contigMap());
-        LiftedRecord result = resolver.resolve(record);
+        PlacementSelector selector = new PlacementSelector(contigMap());
+        LiftedRecord result = selector.resolve(record);
 
         assertEquals(2, result.liftedAlignments().size()); // self + Tx alt; ref XA collapsed
         assertEquals(1, result.numXaAlts());
@@ -362,8 +379,8 @@ public class LiftBackDiscriminatorTest
         SAMRecord record = newRecord(TX_CONTIG, 1, "50M"); // a garbled NM field must not silently drop the alt
         record.setAttribute("XA", "chr5,+5000,50M,not_a_number;");
 
-        LiftBackDiscriminator resolver = new LiftBackDiscriminator(contigMap());
-        LiftedRecord result = resolver.resolve(record);
+        PlacementSelector selector = new PlacementSelector(contigMap());
+        LiftedRecord result = selector.resolve(record);
 
         assertEquals(2, result.liftedAlignments().size());
     }
@@ -375,8 +392,8 @@ public class LiftBackDiscriminatorTest
         SAMRecord record = newRecord(TX_CONTIG, 51, "100M");
         record.setAttribute("XA", "chr5,+5000,50M100N50M,0;");
 
-        LiftBackDiscriminator resolver = new LiftBackDiscriminator(contigMap());
-        LiftedRecord result = resolver.resolve(record);
+        PlacementSelector selector = new PlacementSelector(contigMap());
+        LiftedRecord result = selector.resolve(record);
 
         assertTrue(result.primaryAlignment().FromTxContig);
     }
@@ -394,8 +411,8 @@ public class LiftBackDiscriminatorTest
                         + TX_CONTIG + ",+51,100M,0;"
                         + TX_CONTIG + ",+51,100M,0;");
 
-        LiftBackDiscriminator resolver = new LiftBackDiscriminator(contigMap());
-        LiftedRecord result = resolver.resolve(primary);
+        PlacementSelector selector = new PlacementSelector(contigMap());
+        LiftedRecord result = selector.resolve(primary);
 
         assertEquals(CHR_1, result.finalChromosome());
         assertEquals(150, result.finalPos());
@@ -412,8 +429,8 @@ public class LiftBackDiscriminatorTest
                 CHR_1 + ",+2000,150M,0;"
                         + CHR_1 + ",+3000,150M,0;");
 
-        LiftBackDiscriminator resolver = new LiftBackDiscriminator(contigMap());
-        LiftedRecord result = resolver.resolve(primary);
+        PlacementSelector selector = new PlacementSelector(contigMap());
+        LiftedRecord result = selector.resolve(primary);
 
         assertEquals(3, result.numLoci());
     }
@@ -428,11 +445,11 @@ public class LiftBackDiscriminatorTest
         record.setAttribute("AS", 151);
         record.setAttribute("XS", 151);
 
-        LiftBackDiscriminator noIndex = new LiftBackDiscriminator(contigMap());
+        PlacementSelector noIndex = new PlacementSelector(contigMap());
         assertEquals(0, noIndex.resolve(record).updatedMapQuality());
 
         EnsemblAnnotationIndex annotationIndex = exonRegionIndex(CHR_1, List.of(new int[] { 1400, 1700 }));
-        LiftBackDiscriminator withIndex = new LiftBackDiscriminator(contigMap(), annotationIndex);
+        PlacementSelector withIndex = new PlacementSelector(contigMap(), annotationIndex);
         LiftedRecord result = withIndex.resolve(record);
         assertEquals(0, result.updatedMapQuality());
     }
@@ -448,60 +465,60 @@ public class LiftBackDiscriminatorTest
 
         EnsemblAnnotationIndex annotationIndex = exonRegionIndex(
                 CHR_1, List.of(new int[] { 1400, 1700 })); // primary at 5000 is intergenic
-        LiftBackDiscriminator resolver = new LiftBackDiscriminator(contigMap(), annotationIndex);
-        assertEquals(0, resolver.resolve(record).updatedMapQuality());
+        PlacementSelector selector = new PlacementSelector(contigMap(), annotationIndex);
+        assertEquals(0, selector.resolve(record).updatedMapQuality());
     }
 
     // decidePrimaryMapQuality args: (inputMapQuality, numLoci, hiddenTie, primaryFromTxContig, primaryInAnnotatedExon, randomTie).
     @Test
     public void testMapQualityPolicy_singleLocusZeroRescues()
     {
-        assertEquals(60, LiftBackDiscriminator.decidePrimaryMapQuality(0, 1, false, false, false, false));
+        assertEquals(60, PlacementSelector.decidePrimaryMapQuality(0, 1, false, false, false, false));
     }
 
     @Test
     public void testMapQualityPolicy_hiddenTieRefPrimaryNoExonHoldsAtZero()
     {
-        assertEquals(0, LiftBackDiscriminator.decidePrimaryMapQuality(0, 1, true, false, false, false));
+        assertEquals(0, PlacementSelector.decidePrimaryMapQuality(0, 1, true, false, false, false));
     }
 
     @Test
     public void testMapQualityPolicy_hiddenTieTxPrimaryRescues()
     {
-        assertEquals(60, LiftBackDiscriminator.decidePrimaryMapQuality(0, 1, true, true, false, false));
+        assertEquals(60, PlacementSelector.decidePrimaryMapQuality(0, 1, true, true, false, false));
     }
 
     @Test
     public void testMapQualityPolicy_hiddenTieInAnnotatedExonRescues()
     {
-        assertEquals(60, LiftBackDiscriminator.decidePrimaryMapQuality(0, 1, true, false, true, false));
+        assertEquals(60, PlacementSelector.decidePrimaryMapQuality(0, 1, true, false, true, false));
     }
 
     @Test
     public void testMapQualityPolicy_inputSixtyPassesAsRescued()
     {
-        assertEquals(60, LiftBackDiscriminator.decidePrimaryMapQuality(60, 1, false, false, false, false));
+        assertEquals(60, PlacementSelector.decidePrimaryMapQuality(60, 1, false, false, false, false));
     }
 
     @Test
     public void testMapQualityPolicy_gradedMapQualityPassesThrough()
     {
         // a graded MAPQ is a real bwa signal, so it is left alone
-        assertEquals(37, LiftBackDiscriminator.decidePrimaryMapQuality(37, 1, false, false, false, false));
+        assertEquals(37, PlacementSelector.decidePrimaryMapQuality(37, 1, false, false, false, false));
     }
 
     @Test
     public void testMapQualityPolicy_multiLocusNeverBumps()
     {
-        assertEquals(0, LiftBackDiscriminator.decidePrimaryMapQuality(0, 2, false, false, false, false));
+        assertEquals(0, PlacementSelector.decidePrimaryMapQuality(0, 2, false, false, false, false));
     }
 
     @Test
     public void testMapQualityPolicy_randomTieNotBumped()
     {
         // a random-tie pick is a coin-flip among distinct placements, not a confident unique call
-        assertEquals(0, LiftBackDiscriminator.decidePrimaryMapQuality(0, 1, false, false, false, true));
-        assertEquals(60, LiftBackDiscriminator.decidePrimaryMapQuality(0, 1, false, false, false, false));
+        assertEquals(0, PlacementSelector.decidePrimaryMapQuality(0, 1, false, false, false, true));
+        assertEquals(60, PlacementSelector.decidePrimaryMapQuality(0, 1, false, false, false, false));
     }
 
     private static LiftedAlignment liftedAt(final String chrom, final int pos, final String cigar)
@@ -525,12 +542,12 @@ public class LiftBackDiscriminatorTest
         assertEquals(2, countDistinctLociOf(primary, distant));
         assertEquals(1, countDistinctLociOf(primary, droppedDistant));
         // no primary placement (an unmapped record's empty list) -> 1
-        assertEquals(1, LiftBackDiscriminator.countDistinctLoci(LiftedRecord.unmapped("")));
+        assertEquals(1, PlacementSelector.countDistinctLoci(LiftedRecord.unmapped("")));
     }
 
     private static int countDistinctLociOf(final LiftedAlignment... alignments)
     {
-        return LiftBackDiscriminator.countDistinctLoci(recordBuilder().alignments(List.of(alignments)).build());
+        return PlacementSelector.countDistinctLoci(recordBuilder().alignments(List.of(alignments)).build());
     }
 
     @Test
@@ -541,8 +558,8 @@ public class LiftBackDiscriminatorTest
         SAMRecord record = newRecord(CHR_1, 1000, "50M");
         record.setAttribute("XA", "chr5,+5000,50M,0;chr5,-5000,50M,0;");
 
-        LiftBackDiscriminator resolver = new LiftBackDiscriminator(contigMap());
-        LiftedRecord result = resolver.resolve(record);
+        PlacementSelector selector = new PlacementSelector(contigMap());
+        LiftedRecord result = selector.resolve(record);
 
         String xa = result.xaTag();
         assertNotNull(xa);
@@ -552,7 +569,7 @@ public class LiftBackDiscriminatorTest
     private static final String CHR1 = "chr1";
     private static final String CHR2 = "chr2";
 
-    // Post-Step-1 the discriminator treats any surviving N as a real junction.
+    // Post-Step-1 the selector treats any surviving N as a real junction.
     private static final String TX_JUNCTION_CIGAR = "50M100N50M";
     private static final String FULL_MATCH_CIGAR = "100M";
     private static final String SOFTCLIP_CIGAR = "50M51S";
@@ -568,6 +585,11 @@ public class LiftBackDiscriminatorTest
         return new LiftedAlignment(chrom, pos, cigar, 0, false, true, 0);
     }
 
+    private static LiftedAlignment refReverse(final String chrom, final int pos, final String cigar)
+    {
+        return new LiftedAlignment(chrom, pos, cigar, 0, false, false, 0);
+    }
+
     private static List<LiftedAlignment> set(final LiftedAlignment... alignments)
     {
         List<LiftedAlignment> list = new ArrayList<>();
@@ -580,7 +602,7 @@ public class LiftBackDiscriminatorTest
 
     private static boolean concordantOf(final LiftedAlignment... alignments)
     {
-        return LiftBackDiscriminator.isConcordant(set(alignments));
+        return PlacementSelector.isConcordant(set(alignments));
     }
 
     // Concordant is the one evidence flag that changes the pick: it short-circuits apply() to keep bwa's primary.
@@ -618,7 +640,7 @@ public class LiftBackDiscriminatorTest
     @Test
     public void testConcordantSkipsGateDroppedAlt()
     {
-        // The overhang gate marks a collapsed XA alt Dropped before the discriminator runs; ignoring it leaves a lone
+        // The overhang gate marks a collapsed XA alt Dropped before the selector runs; ignoring it leaves a lone
         // ref source, so the otherwise-agreeing pair is not concordant.
         LiftedAlignment droppedTx = tx(CHR1, 100, FULL_MATCH_CIGAR, 0);
         droppedTx.Dropped = true;
@@ -649,7 +671,7 @@ public class LiftBackDiscriminatorTest
         List<LiftedAlignment> alignments = contestedSet();
         alignments.get(0).GenomicScore = 10;
         alignments.get(1).GenomicScore = 99;
-        LiftBackDiscriminator.ApplyResult outcome = LiftBackDiscriminator.apply(alignments, false, alignments.get(0), 0, true);
+        PlacementSelector.ApplyResult outcome = PlacementSelector.apply(alignments, false, alignments.get(0), 0, true);
         assertSame(alignments.get(0), outcome.effectivePrimary());
         assertEquals("", outcome.note());
     }
@@ -659,7 +681,7 @@ public class LiftBackDiscriminatorTest
     {
         // No placement scored (a split read left for Step 3): keep bwa's primary and drop nothing.
         List<LiftedAlignment> alignments = contestedSet();
-        LiftBackDiscriminator.ApplyResult outcome = LiftBackDiscriminator.apply(alignments, false, alignments.get(0), 0, false);
+        PlacementSelector.ApplyResult outcome = PlacementSelector.apply(alignments, false, alignments.get(0), 0, false);
         assertSame(alignments.get(0), outcome.effectivePrimary());
         assertEquals("", outcome.note());
         assertFalse(alignments.get(0).Dropped);
@@ -673,14 +695,14 @@ public class LiftBackDiscriminatorTest
         List<LiftedAlignment> refWins = contestedSet();
         refWins.get(0).GenomicScore = 90;
         refWins.get(1).GenomicScore = 50;
-        LiftBackDiscriminator.ApplyResult refResult = LiftBackDiscriminator.apply(refWins, false, refWins.get(0), 1, false);
+        PlacementSelector.ApplyResult refResult = PlacementSelector.apply(refWins, false, refWins.get(0), 1, false);
         assertSame(refWins.get(0), refResult.effectivePrimary());
         assertEquals("score", refResult.note());
 
         List<LiftedAlignment> txWins = contestedSet();
         txWins.get(0).GenomicScore = 40;
         txWins.get(1).GenomicScore = 88;
-        LiftBackDiscriminator.ApplyResult txResult = LiftBackDiscriminator.apply(txWins, false, txWins.get(0), 0, false);
+        PlacementSelector.ApplyResult txResult = PlacementSelector.apply(txWins, false, txWins.get(0), 0, false);
         assertSame(txWins.get(1), txResult.effectivePrimary());
         assertEquals("score", txResult.note());
         assertEquals(1, txResult.primaryIndex());
@@ -694,14 +716,14 @@ public class LiftBackDiscriminatorTest
         List<LiftedAlignment> even = contestedSet();
         even.get(0).GenomicScore = 70;
         even.get(1).GenomicScore = 70;
-        LiftBackDiscriminator.ApplyResult evenResult = LiftBackDiscriminator.apply(even, false, even.get(0), 0, false);
+        PlacementSelector.ApplyResult evenResult = PlacementSelector.apply(even, false, even.get(0), 0, false);
         assertSame(even.get(0), evenResult.effectivePrimary());
         assertEquals("random", evenResult.note());
 
         List<LiftedAlignment> odd = contestedSet();
         odd.get(0).GenomicScore = 70;
         odd.get(1).GenomicScore = 70;
-        LiftBackDiscriminator.ApplyResult oddResult = LiftBackDiscriminator.apply(odd, false, odd.get(0), 1, false);
+        PlacementSelector.ApplyResult oddResult = PlacementSelector.apply(odd, false, odd.get(0), 1, false);
         assertSame(odd.get(1), oddResult.effectivePrimary());
         assertEquals("random", oddResult.note());
         assertFalse("tie loser rides in XA, not dropped", odd.get(0).Dropped);
@@ -717,7 +739,7 @@ public class LiftBackDiscriminatorTest
         List<LiftedAlignment> alignments = set(softClip, junction);
         alignments.get(0).GenomicScore = 80;
         alignments.get(1).GenomicScore = 80;
-        LiftBackDiscriminator.ApplyResult outcome = LiftBackDiscriminator.apply(alignments, false, softClip, 0, false);
+        PlacementSelector.ApplyResult outcome = PlacementSelector.apply(alignments, false, softClip, 0, false);
         assertSame(junction, outcome.effectivePrimary());
         assertEquals("junction", outcome.note());
         assertEquals(alignments.indexOf(junction), outcome.primaryIndex());
@@ -733,7 +755,7 @@ public class LiftBackDiscriminatorTest
         List<LiftedAlignment> alignments = set(softClip, junction);
         alignments.get(0).GenomicScore = 80;
         alignments.get(1).GenomicScore = 80;
-        LiftBackDiscriminator.ApplyResult outcome = LiftBackDiscriminator.apply(alignments, false, softClip, 0, false);
+        PlacementSelector.ApplyResult outcome = PlacementSelector.apply(alignments, false, softClip, 0, false);
         assertSame("seed 0 -> first placement", softClip, outcome.effectivePrimary());
         assertEquals("random", outcome.note());
     }
@@ -744,7 +766,7 @@ public class LiftBackDiscriminatorTest
         List<LiftedAlignment> alignments = multiLocusSet();
         alignments.get(0).GenomicScore = 60;
         alignments.get(1).GenomicScore = 130;
-        LiftBackDiscriminator.ApplyResult outcome = LiftBackDiscriminator.apply(alignments, false, alignments.get(0), 0, false);
+        PlacementSelector.ApplyResult outcome = PlacementSelector.apply(alignments, false, alignments.get(0), 0, false);
         assertSame(alignments.get(1), outcome.effectivePrimary());
         assertEquals("score", outcome.note());
         assertFalse("all placements ride in XA", alignments.get(0).Dropped);
@@ -756,7 +778,7 @@ public class LiftBackDiscriminatorTest
         List<LiftedAlignment> alignments = multiLocusSet();
         alignments.get(0).GenomicScore = 100;
         alignments.get(1).GenomicScore = 100;
-        LiftBackDiscriminator.ApplyResult outcome = LiftBackDiscriminator.apply(alignments, false, alignments.get(0), 1, false);
+        PlacementSelector.ApplyResult outcome = PlacementSelector.apply(alignments, false, alignments.get(0), 1, false);
         assertSame("seed 1 -> second placement", alignments.get(1), outcome.effectivePrimary());
         assertEquals("random", outcome.note());
     }
@@ -773,7 +795,7 @@ public class LiftBackDiscriminatorTest
         alignments.get(0).GenomicScore = 100;
         alignments.get(1).GenomicScore = 100;
         alignments.get(2).GenomicScore = 100;
-        LiftBackDiscriminator.ApplyResult outcome = LiftBackDiscriminator.apply(alignments, false, self, 1, false);
+        PlacementSelector.ApplyResult outcome = PlacementSelector.apply(alignments, false, self, 1, false);
         assertSame(txSpliced, outcome.effectivePrimary());
         assertEquals("random", outcome.note());
     }
@@ -787,11 +809,164 @@ public class LiftBackDiscriminatorTest
         alignments.get(0).GenomicScore = 100;
         alignments.get(1).GenomicScore = 100;
         LiftedRecord mate = TarsTestFixtures.liftedRecordAt(CHR2, 250, "100M", false);
-        LiftBackDiscriminator.ApplyResult outcome = LiftBackDiscriminator.apply(alignments, false, alignments.get(0), 0, false, mate);
+        PlacementSelector.ApplyResult outcome = PlacementSelector.apply(alignments, false, alignments.get(0), 0, false, mate);
         assertSame(alignments.get(1), outcome.effectivePrimary());
         assertEquals("mate", outcome.note());
         assertEquals(1, outcome.primaryIndex());
         assertFalse("tie loser rides in XA, not dropped", alignments.get(0).Dropped);
+    }
+
+    @Test
+    public void testMultiLocusTiePicksClosestMatePlacement()
+    {
+        // Both candidates are within the broad 1 Mb transcript-span limit, but only CHR1:100 forms a
+        // plausible short fragment with the mate. Treating proximity as a yes/no threshold leaves this
+        // to the read-name seed and can create a false 500 kb discordant fragment.
+        LiftedAlignment close = ref(CHR1, 100, "100M");
+        LiftedAlignment distant = tx(CHR1, 500_000, "100M", 0);
+        close.GenomicScore = 100;
+        distant.GenomicScore = 100;
+        List<LiftedAlignment> alignments = set(close, distant);
+        LiftedRecord mate = TarsTestFixtures.liftedRecordAt(CHR1, 250, "100M", false);
+
+        PlacementSelector.ApplyResult outcome = PlacementSelector.apply(
+                alignments, false, close, 1, false, mate);
+
+        assertSame(close, outcome.effectivePrimary());
+        assertEquals("mate", outcome.note());
+    }
+
+    @Test
+    public void testClosestMatePlacementBeatsSupplementarySupport()
+    {
+        // A MAPQ-0 supplementary must not pull the primary hundreds of kilobases away when an equally
+        // scoring placement forms a much tighter pair.
+        LiftedAlignment close = ref(CHR1, 100, "100M");
+        LiftedAlignment distant = tx(CHR1, 500_000, "50M50S", 0).withSupplementaryMerge(
+                500_000, "100M", List.of(1), List.of(), 0, 0);
+        close.GenomicScore = 100;
+        distant.GenomicScore = 100;
+        List<LiftedAlignment> alignments = set(close, distant);
+        LiftedRecord mate = TarsTestFixtures.liftedRecordAt(CHR1, 250, "100M", false);
+
+        PlacementSelector.ApplyResult outcome = PlacementSelector.apply(
+                alignments, false, close, 1, false, mate);
+
+        assertSame(close, outcome.effectivePrimary());
+        assertEquals("mate", outcome.note());
+    }
+
+    @Test
+    public void testPairProximityPrecedesCombinedAlignmentScore()
+    {
+        LiftedAlignment close = ref(CHR1, 100, "52M");
+        LiftedAlignment distant = ref(CHR1, 500_000, "52M");
+        close.GenomicScore = 50;
+        distant.GenomicScore = 100;
+
+        LiftedAlignment mate = ref(CHR1, 250, "52M");
+        mate.GenomicScore = 100;
+
+        PlacementSelector.PairApplyResult outcome = PlacementSelector.applyPair(
+                set(close, distant), false, close, false,
+                set(mate), false, mate, false, 0);
+
+        assertSame(close, outcome.first().effectivePrimary());
+        assertSame(mate, outcome.second().effectivePrimary());
+        assertEquals("mate", outcome.first().note());
+    }
+
+    @Test
+    public void testPairSelectionPrefersDeletionBeforeShorterDuplication()
+    {
+        LiftedAlignment deletion = ref(CHR1, 100, "100M");
+        LiftedAlignment duplication = ref(CHR1, 1100, "100M");
+        LiftedAlignment mate = refReverse(CHR1, 1000, "100M");
+
+        PlacementSelector.PairApplyResult outcome = PlacementSelector.applyPair(
+                set(deletion, duplication), false, deletion, false,
+                set(mate), false, mate, true, 0);
+
+        assertSame(deletion, outcome.first().effectivePrimary());
+    }
+
+    @Test
+    public void testPairSvPreferenceStopsPastOneMegabase()
+    {
+        LiftedAlignment distantDeletion = ref(CHR1, 100, "100M");
+        LiftedAlignment localInversion = refReverse(CHR1, 1_999_000, "100M");
+        LiftedAlignment mate = refReverse(CHR1, 2_000_000, "100M");
+
+        PlacementSelector.PairApplyResult outcome = PlacementSelector.applyPair(
+                set(distantDeletion, localInversion), false, distantDeletion, false,
+                set(mate), false, mate, true, 0);
+
+        assertSame(localInversion, outcome.first().effectivePrimary());
+    }
+
+    @Test
+    public void testPairSvPreferenceIncludesOneMegabaseBoundary()
+    {
+        LiftedAlignment boundaryDeletion = ref(CHR1, 100, "100M");
+        LiftedAlignment localInversion = refReverse(CHR1, 1_000_000, "100M");
+        LiftedAlignment mate = refReverse(CHR1, 1_000_199, "100M");
+
+        PlacementSelector.PairApplyResult outcome = PlacementSelector.applyPair(
+                set(localInversion, boundaryDeletion), false, localInversion, false,
+                set(mate), false, mate, true, 0);
+
+        assertSame(boundaryDeletion, outcome.first().effectivePrimary());
+    }
+
+    @Test
+    public void testPositiveMapQualityPairKeepsBwaPlacements()
+    {
+        LiftedAlignment bwa = ref(CHR1, 1100, "100M");
+        LiftedAlignment alternative = ref(CHR1, 100, "100M");
+        LiftedAlignment mate = refReverse(CHR1, 1000, "100M");
+
+        PlacementSelector.PairApplyResult outcome = PlacementSelector.applyPair(
+                set(bwa, alternative), false, bwa, true,
+                set(mate), false, mate, true, 0);
+
+        assertSame(bwa, outcome.first().effectivePrimary());
+    }
+
+    @Test
+    public void testPairSelectionIsIndependentOfMateOrder()
+    {
+        LiftedAlignment firstChr1 = ref(CHR1, 100, "52M");
+        LiftedAlignment firstChr2 = ref(CHR2, 100, "52M");
+        LiftedAlignment secondChr1 = ref(CHR1, 250, "52M");
+        LiftedAlignment secondChr2 = ref(CHR2, 250, "52M");
+        firstChr1.GenomicScore = 50;
+        firstChr2.GenomicScore = 100;
+        secondChr1.GenomicScore = 100;
+        secondChr2.GenomicScore = 50;
+
+        PlacementSelector.PairApplyResult forward = PlacementSelector.applyPair(
+                set(firstChr1, firstChr2), false, firstChr1, false,
+                set(secondChr1, secondChr2), false, secondChr1, false, 0);
+        PlacementSelector.PairApplyResult reverse = PlacementSelector.applyPair(
+                set(secondChr1, secondChr2), false, secondChr1, false,
+                set(firstChr1, firstChr2), false, firstChr1, false, 0);
+
+        assertSame(firstChr1, forward.first().effectivePrimary());
+        assertSame(secondChr1, forward.second().effectivePrimary());
+        assertSame(secondChr1, reverse.first().effectivePrimary());
+        assertSame(firstChr1, reverse.second().effectivePrimary());
+    }
+
+    @Test
+    public void testMateDistanceExcludesIntronicCigarSpan()
+    {
+        LiftedAlignment spliced = ref(CHR1, 100, "10M1000N10M");
+        LiftedAlignment insideIntron = ref(CHR1, 500, "10M");
+        LiftedAlignment overlappingExon = ref(CHR1, 1115, "10M");
+
+        assertEquals(391, spliced.alignedBlockDistance(insideIntron));
+        assertEquals(0, spliced.alignedBlockDistance(overlappingExon));
+        assertEquals(Integer.MAX_VALUE, spliced.alignedBlockDistance(ref(CHR2, 100, "10M")));
     }
 
     @Test
@@ -802,7 +977,7 @@ public class LiftBackDiscriminatorTest
         alignments.get(0).GenomicScore = 100;
         alignments.get(1).GenomicScore = 100;
         LiftedRecord mate = TarsTestFixtures.liftedRecordAt("chr9", 500, "100M", false);
-        LiftBackDiscriminator.ApplyResult outcome = LiftBackDiscriminator.apply(alignments, false, alignments.get(0), 1, false, mate);
+        PlacementSelector.ApplyResult outcome = PlacementSelector.apply(alignments, false, alignments.get(0), 1, false, mate);
         assertSame("seed 1 -> second placement", alignments.get(1), outcome.effectivePrimary());
         assertEquals("random", outcome.note());
     }
@@ -810,12 +985,12 @@ public class LiftBackDiscriminatorTest
     @Test
     public void testMultiLocusTieMateTooFarStaysRandom()
     {
-        // The mate is on CHR1 but past MATE_PROXIMITY_MAX_DISTANCE from the CHR1 locus, so it is not proximal.
+        // The mate is on CHR1 but more than 1 Mb from the CHR1 locus, so it is not proximal.
         List<LiftedAlignment> alignments = multiLocusSet();
         alignments.get(0).GenomicScore = 100;
         alignments.get(1).GenomicScore = 100;
         LiftedRecord mate = TarsTestFixtures.liftedRecordAt(CHR1, 5_000_000, "100M", false);
-        LiftBackDiscriminator.ApplyResult outcome = LiftBackDiscriminator.apply(alignments, false, alignments.get(0), 1, false, mate);
+        PlacementSelector.ApplyResult outcome = PlacementSelector.apply(alignments, false, alignments.get(0), 1, false, mate);
         assertSame("seed 1 -> second placement", alignments.get(1), outcome.effectivePrimary());
         assertEquals("random", outcome.note());
     }

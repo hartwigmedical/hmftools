@@ -16,6 +16,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -28,6 +29,7 @@ import com.hartwig.hmftools.common.bamops.BamToolName;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.tars.common.ContigEntry;
 import com.hartwig.hmftools.tars.common.ContigSidecar;
+import com.hartwig.hmftools.tars.liftback.features.SupplementaryMerger.RejectReason;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMSequenceDictionary;
@@ -71,7 +73,6 @@ public class TarsApplication
         LiftBackStats counts = aggregate(workers);
         logLiftFailureRate(counts);
         writeSummary(counts);
-        writeRegionPerf(workers);
 
         TARS_LOGGER.info("liftback processing complete, mins({}); concatenating + sorting shards", runTimeMinsStr(startTimeMs));
 
@@ -116,8 +117,7 @@ public class TarsApplication
             String shardBam = formShardBamPath(i);
             shardBams.add(shardBam);
 
-            LiftBackWorker worker = new LiftBackWorker(
-                    chunkQueue, resources, outputHeader, shardBam, mConfig.perfDebug() ? new RegionPerfTracker() : null);
+            LiftBackWorker worker = new LiftBackWorker(chunkQueue, resources, outputHeader, shardBam);
             workers.add(worker);
             threadTasks.add(worker);
         }
@@ -131,11 +131,11 @@ public class TarsApplication
         EnsemblAnnotationIndex annotationIndex = EnsemblAnnotationIndex.fromContigEntries(contigEntries);
         TARS_LOGGER.info("built annotation index from sidecar: {} junctions", annotationIndex.junctionCount());
 
-        // annotation-only rows have no contig to lift against, so the discriminator sees only real contig entries.
+        // annotation-only rows have no contig to lift against, so the placementSelector sees only real contig entries.
         List<ContigEntry> liftEntries = contigEntries.stream()
                 .filter(entry -> entry.contigStart() > 0).collect(Collectors.toList());
-        LiftBackDiscriminator discriminator = new LiftBackDiscriminator(liftEntries, annotationIndex);
-        validateBamAgainstSidecar(inputHeader, discriminator.contigTranslator().contigNames());
+        PlacementSelector placementSelector = new PlacementSelector(liftEntries, annotationIndex);
+        validateBamAgainstSidecar(inputHeader, placementSelector.contigTranslator().contigNames());
 
         ExcludedRegions excludedRegions = null;
         if(mConfig.RnaUnmapRegionsFile != null)
@@ -145,7 +145,7 @@ public class TarsApplication
         }
 
         return new LiftBackResources(
-                discriminator, annotationIndex, mConfig.RefGenomeFile,
+                placementSelector, annotationIndex, mConfig.RefGenomeFile,
                 mConfig.Supplementary, excludedRegions);
     }
 
@@ -250,6 +250,17 @@ public class TarsApplication
 
             writeMetric(
                     writer, "mergeable_supplementaries", counts.MergeableSupplementaries, "mapped_primaries", counts.PrimariesSeen);
+            writeTotal(writer, "supp_merge_attempts", counts.SupplementaryMergeAttempts);
+            writeMetric(
+                    writer, "supp_merge_successful_candidates", counts.SupplementaryMergeSuccessfulCandidates,
+                    "supp_merge_attempts", counts.SupplementaryMergeAttempts);
+            for(RejectReason reason : RejectReason.values())
+            {
+                writeMetric(
+                        writer, "supp_rejected_" + reason.name().toLowerCase(Locale.ROOT),
+                        counts.supplementaryMergeRejections(reason),
+                        "supp_merge_attempts", counts.SupplementaryMergeAttempts);
+            }
             writeMetric(
                     writer, "supp_merged", counts.SupplementaryMerges, "mergeable_supplementaries", counts.MergeableSupplementaries);
             writeMetric(
@@ -262,18 +273,6 @@ public class TarsApplication
         {
             TARS_LOGGER.warn("failed to write summary {}: {}", filename, e.toString());
         }
-    }
-
-    private void writeRegionPerf(final List<LiftBackWorker> workers)
-    {
-        if(!mConfig.perfDebug())
-        {
-            return;
-        }
-
-        RegionPerfTracker combined = new RegionPerfTracker();
-        workers.forEach(worker -> combined.merge(worker.regionPerf()));
-        combined.write(mConfig.formRegionPerfFile(), mConfig.PerfLogTime);
     }
 
     private static void writeTotal(final BufferedWriter writer, final String metric, final long value) throws IOException
