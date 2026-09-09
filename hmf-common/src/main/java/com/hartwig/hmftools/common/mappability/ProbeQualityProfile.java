@@ -139,7 +139,8 @@ public class ProbeQualityProfile
 
         List<RegionQuality> regionQualities = Lists.newArrayList();
 
-        int windowIndex = windowsStart.getAsInt() + 1;
+        // by default windows span 40 bases
+        int windowIndex = windowsStart.getAsInt();
         BaseRegion qualRegion = windowArray.getRegion(windowIndex);
         double qual = windowArray.getQualityScore(windowIndex);
 
@@ -154,7 +155,7 @@ public class ProbeQualityProfile
             if(qualRegion.start() > region.end())
                 break;
 
-            qual = windowArray.getQualityScore(windowsStart.getAsInt());
+            qual = windowArray.getQualityScore(windowIndex);
 
             if(qual == currentReqionQuality.Quality)
             {
@@ -162,8 +163,7 @@ public class ProbeQualityProfile
             }
             else
             {
-                int nextRegionStart = currentReqionQuality.end() + 1;
-                currentReqionQuality = new RegionQuality(new BaseRegion(nextRegionStart, qualRegion.end()), qual);
+                currentReqionQuality = new RegionQuality(qualRegion, qual);
                 regionQualities.add(currentReqionQuality);
             }
 
