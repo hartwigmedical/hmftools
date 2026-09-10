@@ -64,7 +64,6 @@ import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.bam.BamSlicer;
-import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.isofox.common.BaseDepth;
 import com.hartwig.hmftools.isofox.common.FragmentMatchType;
@@ -232,52 +231,7 @@ public class FragmentAllocator
         mValidReadStartRegion[SE_START] = geneRegion.start();
         mValidReadStartRegion[SE_END] = geneRegion.end();
 
-        List<BaseRegion> excludedRegions = mConfig.Filters.findExcludedRegions(geneRegion);
-
-        if(!excludedRegions.isEmpty())
-        {
-            // genic regions are wholly contained within an excluded region
-            BaseRegion geneBaseRegion = new BaseRegion(geneRegion.start(), geneRegion.end());
-            if(excludedRegions.stream().anyMatch(x -> x.containsRegion(geneBaseRegion)))
-                return;
-
-            // slice around any excluded regions
-            ISF_LOGGER.debug("gene collection({}) region({}) slicing around excluded regions({})",
-                    mCurrentGenes, geneRegion, excludedRegions.stream().map(x -> x.toString()).collect(Collectors.joining(";")));
-
-            int regionStart = geneRegion.start();
-            List<ChrBaseRegion> sliceRegions = Lists.newArrayList();
-
-            for(int i = 0; i < excludedRegions.size(); ++i)
-            {
-                BaseRegion excludedRegion = excludedRegions.get(i);
-
-                if(regionStart < excludedRegion.start())
-                {
-                    sliceRegions.add(new ChrBaseRegion(geneRegion.Chromosome, regionStart, excludedRegion.start() - 1));
-                }
-
-                regionStart = excludedRegion.end() + 1;
-            }
-
-            if(regionStart < geneRegion.end())
-            {
-                sliceRegions.add(new ChrBaseRegion(geneRegion.Chromosome, regionStart, geneRegion.end()));
-            }
-
-            for(ChrBaseRegion sliceRegion : sliceRegions)
-            {
-                // no buffer for slicing around regions since they already have a buffer configured / set
-                if(sliceRegion.isValid())
-                {
-                    mBamSlicer.slice(mSamReader, sliceRegion, this::processSamRecord);
-                }
-            }
-        }
-        else
-        {
-            mBamSlicer.slice(mSamReader, geneRegion, this::processSamRecord);
-        }
+        mBamSlicer.slice(mSamReader, geneRegion, this::processSamRecord);
 
         if(mEnrichedGeneFragments > 0)
             mExpressionReadTracker.processEnrichedGeneFragments(mEnrichedGeneFragments);

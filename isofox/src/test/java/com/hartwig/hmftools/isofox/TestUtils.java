@@ -425,8 +425,6 @@ public class TestUtils
     public static FusionFinder createFusionFinder(
             final IsofoxConfig config, final EnsemblDataCache geneTransCache, final RacFragmentCache racFragmentCache)
     {
-        config.Filters.buildGeneRegions(geneTransCache);
-
         return new FusionFinder(
                 "FF", config, geneTransCache, racFragmentCache,
                 new PassingFusions(config.Fusions.KnownFusions, null), new FusionWriter(config));

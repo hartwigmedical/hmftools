@@ -178,11 +178,6 @@ public class FragmentSizeCalcs implements Callable<Void>
 
             ChrBaseRegion sliceRegion = new ChrBaseRegion(mChromosome, mCurrentGenesRange);
 
-            List<BaseRegion> excludedRegions = mConfig.Filters.findExcludedRegions(sliceRegion);
-
-            if(!excludedRegions.isEmpty())
-                continue;
-
             if(currentGeneIndex >= nextLogCount)
             {
                 nextLogCount += 100;

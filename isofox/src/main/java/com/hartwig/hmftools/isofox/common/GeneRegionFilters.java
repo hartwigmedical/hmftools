@@ -1,29 +1,19 @@
 package com.hartwig.hmftools.isofox.common;
 
-import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
-import static com.hartwig.hmftools.common.region.ChrBaseRegion.loadChrBaseRegions;
 import static com.hartwig.hmftools.common.region.SpecificRegions.addSpecificChromosomesRegionsConfig;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.GENE_ID_FILE;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.GENE_ID_FILE_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadGeneIdsFile;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
-import static com.hartwig.hmftools.isofox.IsofoxConstants.ENRICHED_GENE_BUFFER;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.SpecificRegions;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
@@ -37,7 +27,6 @@ public class GeneRegionFilters
 
     public final List<String> RestrictedGeneIds; // limit expression analysis to a set of panel genes
     public final List<String> EnrichedGeneIds; // genes to count by not fully process for any functional purpose
-    public final Map<String,List<BaseRegion>> ExcludedRegions;
 
     public final List<ChrBaseRegion> ImmuneGeneRegions;
 
@@ -46,7 +35,6 @@ public class GeneRegionFilters
 
     // config
     private static final String ENRICHED_GENE_IDS = "enriched_gene_ids";
-    private static final String EXCLUDED_REGIONS = "excluded_regions";
 
     public GeneRegionFilters(final RefGenomeVersion refGenomeVersion)
     {
@@ -56,7 +44,6 @@ public class GeneRegionFilters
         mHasSpecificRegions = false;
 
         ImmuneGeneRegions = Lists.newArrayList();
-        ExcludedRegions = Maps.newHashMap();
 
         mRefGenomeVersion = refGenomeVersion;
     }
@@ -65,7 +52,6 @@ public class GeneRegionFilters
     {
         configBuilder.addPath(GENE_ID_FILE, false, GENE_ID_FILE_DESC);
         configBuilder.addConfigItem(ENRICHED_GENE_IDS, "List of geneIds to treat as enriched");
-        configBuilder.addPath(EXCLUDED_REGIONS, false, "List of excluded regions");
         addSpecificChromosomesRegionsConfig(configBuilder);
     }
 
@@ -91,13 +77,6 @@ public class GeneRegionFilters
             {
                 ISF_LOGGER.info("file({}) loaded {} restricted genes", inputFile, RestrictedGeneIds.size());
             }
-        }
-
-        if(configBuilder.hasValue(EXCLUDED_REGIONS))
-        {
-            String excludedRegionsFile = configBuilder.getValue(EXCLUDED_REGIONS);
-            ExcludedRegions.putAll(loadChrBaseRegions(excludedRegionsFile, false));
-            ISF_LOGGER.info("file({}) loaded {} excluded regions", excludedRegionsFile, ExcludedRegions.size());
         }
 
         SpecificChrRegions = SpecificRegions.from(configBuilder);
@@ -159,55 +138,6 @@ public class GeneRegionFilters
                 return true;
         }
 
-        List<BaseRegion> excludedRegions = ExcludedRegions.get(chromosome);
-
-        if(excludedRegions != null)
-        {
-            if(excludedRegions.stream().anyMatch(x -> positionsOverlap(x.start(), x.end(), readStart, readEnd)))
-                return true;
-        }
-
         return false;
-    }
-
-    public List<BaseRegion> findExcludedRegions(final ChrBaseRegion region)
-    {
-        List<BaseRegion> excludedRegions = ExcludedRegions.get(region.Chromosome);
-
-        if(excludedRegions == null)
-            return Collections.emptyList();
-
-        return excludedRegions.stream().filter(x -> x.overlaps(region)).collect(Collectors.toList());
-    }
-
-    public void buildGeneRegions(final EnsemblDataCache geneTransCache)
-    {
-        // add the regions from any enriched genes to the excluded regions set
-        for(String enrichedGeneId : EnrichedGeneIds)
-        {
-            GeneData geneData = geneTransCache.getGeneDataById(enrichedGeneId);
-
-            if(geneData == null)
-            {
-                ISF_LOGGER.warn("enriched gene ID({}) missing from Ensembl cache", enrichedGeneId);
-                continue;
-            }
-
-            List<BaseRegion> excludedRegions = ExcludedRegions.get(geneData.Chromosome);
-
-            if(excludedRegions == null)
-            {
-                excludedRegions = Lists.newArrayList();
-                ExcludedRegions.put(geneData.Chromosome, excludedRegions);
-            }
-
-            excludedRegions.add(new BaseRegion(
-                    geneData.GeneStart - ENRICHED_GENE_BUFFER, geneData.GeneEnd + ENRICHED_GENE_BUFFER));
-        }
-
-        for(List<BaseRegion> excludedRegions : ExcludedRegions.values())
-        {
-            Collections.sort(excludedRegions);
-        }
     }
 }
