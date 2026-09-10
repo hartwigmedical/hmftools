@@ -297,9 +297,9 @@ public class SupplementaryMerger
             final Placement placement, final int primaryStart, final List<CigarElement> primaryCigar,
             final Supplementary candidate, final Supplementary current)
     {
-        LocalSvPriority.Rank candidatePriority = placementPriority(
+        PlacementPairPriority candidatePriority = placementPriority(
                 placement, primaryStart, primaryCigar, candidate);
-        LocalSvPriority.Rank currentPriority = placementPriority(
+        PlacementPairPriority currentPriority = placementPriority(
                 placement, primaryStart, primaryCigar, current);
 
         int priorityComparison = candidatePriority.compareTo(currentPriority);
@@ -313,7 +313,7 @@ public class SupplementaryMerger
         return Integer.compareUnsigned(candidateRandomOrder, currentRandomOrder);
     }
 
-    private static LocalSvPriority.Rank placementPriority(
+    private static PlacementPairPriority placementPriority(
             final Placement placement, final int primaryStart, final List<CigarElement> primaryCigar,
             final Supplementary supplementary)
     {
@@ -334,12 +334,12 @@ public class SupplementaryMerger
                 Orientation supplementaryOrientation =
                         breakendOrientation(supplementary.forwardStrand(), supplementaryLinksEnd);
 
-                return LocalSvPriority.between(
+                return PlacementPairPriority.between(
                         placement.chromosome(), primaryBreakend, primaryOrientation,
                         supplementary.chromosome(), supplementaryBreakend, supplementaryOrientation);
             }
         }
-        return LocalSvPriority.fallback();
+        return PlacementPairPriority.fallback();
     }
 
     private static int breakendPosition(final Side side, final boolean forwardStrand, final boolean linksEnd)
