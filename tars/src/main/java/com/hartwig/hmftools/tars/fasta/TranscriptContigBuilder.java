@@ -10,7 +10,6 @@ import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.region.BaseRegion;
 
-// Concatenates a transcript's exons into a forward-strand sequence with its genomic exon spans.
 public class TranscriptContigBuilder
 {
     private final RefGenomeInterface mRefGenome;

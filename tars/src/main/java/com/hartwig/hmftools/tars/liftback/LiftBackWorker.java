@@ -16,8 +16,7 @@ import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMFileWriterFactory;
 import htsjdk.samtools.SAMRecord;
 
-// Drains chunks, splits each into contiguous name-groups for the processor and writes lifted records to its own
-// unsorted shard. Owns its processor and ref genome handle so nothing serialises across workers.
+// Owns its processor and ref genome handle so nothing serialises across workers.
 public class LiftBackWorker extends Thread
 {
     private final BlockingQueue<List<SAMRecord>> mQueue;

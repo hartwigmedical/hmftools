@@ -13,7 +13,6 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
 
-// Scores read bases against the reference the way bwa-mem does, for the passes that re-check a lifted placement.
 public final class BwaScoring
 {
     private BwaScoring() { }

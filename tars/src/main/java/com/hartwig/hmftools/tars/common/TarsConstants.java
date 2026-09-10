@@ -37,15 +37,12 @@ public final class TarsConstants
     // Maximum DEL/DUP/INV length preferred during MAPQ-0 placement selection.
     public static final int LOCAL_SV_MAX_LENGTH = 1_000_000;
 
-    // Valid intron bounds for supplementary merges.
     public static final int MIN_IMPLIED_INTRON_LENGTH = 21;
 
     public static final int MAX_IMPLIED_INTRON_LENGTH = 1_000_000;
 
-    // Most supplementaries folded into one primary.
     public static final int MAX_SUPP_MERGES = 2;
 
-    // Maximum read-span overlap accepted during a supplementary merge.
     public static final int MAX_SUPP_READ_OVERLAP = 5;
 
 }

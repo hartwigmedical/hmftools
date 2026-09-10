@@ -800,14 +800,28 @@ public class PlacementSelectorTest
     public void testPairSelectionPrefersDeletionBeforeShorterDuplication()
     {
         LiftedAlignment deletion = ref(CHR1, 100, "100M");
-        LiftedAlignment duplication = ref(CHR1, 1100, "100M");
-        LiftedAlignment mate = refReverse(CHR1, 1000, "100M");
+        LiftedAlignment duplication = ref(CHR1, 12_000, "100M");
+        LiftedAlignment mate = refReverse(CHR1, 10_000, "100M");
 
         PlacementSelector.PairSelection outcome = PlacementSelector.selectPair(
                 set(deletion, duplication), false, deletion, false,
                 set(mate), false, mate, true, 0);
 
         assertSame(deletion, outcome.first().alignment());
+    }
+
+    @Test
+    public void testLocalPairingPrecedesSvShapedAlternative()
+    {
+        LiftedAlignment localPlacement = ref(CHR1, 100_000, "100M");
+        LiftedAlignment deletion = ref(CHR1, 100, "100M");
+        LiftedAlignment mate = refReverse(CHR1, 100_050, "100M");
+
+        PlacementSelector.PairSelection outcome = PlacementSelector.selectPair(
+                set(deletion, localPlacement), false, deletion, false,
+                set(mate), false, mate, true, 0);
+
+        assertSame(localPlacement, outcome.first().alignment());
     }
 
     @Test
@@ -828,7 +842,7 @@ public class PlacementSelectorTest
     public void testPairSvPreferenceIncludesOneMegabaseBoundary()
     {
         LiftedAlignment boundaryDeletion = ref(CHR1, 100, "100M");
-        LiftedAlignment localInversion = refReverse(CHR1, 1_000_000, "100M");
+        LiftedAlignment localInversion = refReverse(CHR1, 998_000, "100M");
         LiftedAlignment mate = refReverse(CHR1, 1_000_199, "100M");
 
         PlacementSelector.PairSelection outcome = PlacementSelector.selectPair(

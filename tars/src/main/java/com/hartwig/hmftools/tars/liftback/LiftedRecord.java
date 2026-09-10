@@ -5,8 +5,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-// One SAMRecord's placements during lift-back: the read's own alignment plus its lifted XA alts, of which
-// primaryIndex is the one written back.
 public record LiftedRecord(
         int updatedMapQuality,
         // locus count as decided; deliberately NOT recomputed by later primary-only revisions
@@ -18,8 +16,6 @@ public record LiftedRecord(
 {
     public static final int NO_PRIMARY = -1;
 
-    // Either the record has placements and one of them is the chosen placement, or it has neither: a mismatch is a
-    // lift bug, so fail here rather than downstream.
     public LiftedRecord
     {
         liftedAlignments = List.copyOf(liftedAlignments);
@@ -34,14 +30,12 @@ public record LiftedRecord(
         }
     }
 
-    // No placement: the read arrived unmapped or lift-back gave up. The input record's own unmapped flag says which,
-    // so only the reason is carried here.
     public static LiftedRecord unmapped(final String note)
     {
         return new LiftedRecord(0, 0, note, NO_PRIMARY, List.of());
     }
 
-    // XA alts the aligner offered that lifted, dropped ones included: the alignment set is self plus those.
+    // dropped alts included
     public int numXaAlts()
     {
         int altCount = 0;
@@ -95,7 +89,6 @@ public record LiftedRecord(
         return primaryAlignment().TranscriptStrand;
     }
 
-    // Revise the chosen primary in place (overhang collapse, supplementary merge) so placement and alignment set cannot drift apart.
     public LiftedRecord withRevisedPrimary(
             final int newPos, final String newCigar, final int newUpdatedMapQuality, final String note)
     {
@@ -123,8 +116,8 @@ public record LiftedRecord(
         return withLiftedAlignments(revised);
     }
 
-    // XA tag: every kept non-primary placement, each distinct locus once, minus alts overlapping the primary's span
-    // (a shared-exon isoform read lifting back onto the primary's coords carries no alternative-position info).
+    // alts overlapping the primary's span are excluded: a shared-exon isoform read lifting back onto the primary's
+    // coords carries no alternative-position info
     public String xaTag()
     {
         LiftedAlignment primary = primaryAlignment();

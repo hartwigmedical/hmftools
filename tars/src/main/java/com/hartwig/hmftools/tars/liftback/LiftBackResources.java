@@ -9,9 +9,8 @@ import com.hartwig.hmftools.tars.liftback.features.OverhangGate;
 import com.hartwig.hmftools.tars.liftback.features.SupplementaryConfig;
 import com.hartwig.hmftools.tars.liftback.features.SupplementaryMerger;
 
-// The read-only inputs every LiftBackWorker shares, plus the per-worker assembly into a processor. A factory rather
-// than a plain holder because htsjdk's indexed FASTA reader is not thread-safe: each worker gets its own ref genome
-// handle and its own copy of everything holding one.
+// A factory rather than a plain holder because htsjdk's indexed FASTA reader is not thread-safe: each worker gets its
+// own ref genome handle and its own copy of everything holding one.
 public final class LiftBackResources
 {
     private final PlacementSelector mPlacementSelector;
@@ -31,8 +30,6 @@ public final class LiftBackResources
         mExcludedRegions = excludedRegions;
     }
 
-    // one call per worker: the placementSelector, annotation index and excluded regions are shared, the ref genome handle
-    // and everything holding it is built fresh
     public LiftBackGroupProcessor createProcessor()
     {
         RefGenomeInterface refGenome = openRefGenome();

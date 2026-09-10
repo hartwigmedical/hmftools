@@ -231,7 +231,6 @@ public class SupplementaryMerger
                 : MergeOutcome.reject(lastReject != null ? lastReject : RejectReason.NO_MATCHING_SUPP);
     }
 
-    // Select one placement per supplementary record before attempting a merge.
     public static List<Supplementary> selectSupplementaryPlacements(final Placement placement)
     {
         return selectSupplementaryPlacements(
@@ -331,7 +330,6 @@ public class SupplementaryMerger
         return linksEnd == forwardStrand ? Orientation.FORWARD : Orientation.REVERSE;
     }
 
-    // Higher MAPQ wins, then the smaller intron.
     private static boolean isBetterMerge(final MergeOutcome outcome, final MergeOutcome chosen)
     {
         if(outcome.MergedSupp.mapQuality() != chosen.MergedSupp.mapQuality())

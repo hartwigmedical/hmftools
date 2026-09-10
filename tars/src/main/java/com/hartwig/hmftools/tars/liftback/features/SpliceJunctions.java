@@ -11,8 +11,6 @@ import com.hartwig.hmftools.tars.liftback.EnsemblAnnotationIndex;
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
 
-// Rates a candidate intron against the annotated junctions from the sidecar and, failing that, the reference splice
-// motif at its flanks.
 public class SpliceJunctions
 {
     // Splice-motif strength of a candidate junction, weakest to strongest. Declaration order is meaningful: candidates
