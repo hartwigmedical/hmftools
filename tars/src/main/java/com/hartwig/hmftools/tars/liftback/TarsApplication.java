@@ -36,8 +36,6 @@ import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.SamReaderFactory;
 
-// Driver for the liftback stage. Cuts bwa's name-grouped BAM (mates + supplementaries contiguous) into whole-fragment
-// chunks, lifts them across N workers, then sorts + indexes the concatenated output.
 public class TarsApplication
 {
     private final TarsConfig mConfig;
@@ -94,7 +92,6 @@ public class TarsApplication
         TARS_LOGGER.info("TarsApplication complete, mins({})", runTimeMinsStr(startTimeMs));
     }
 
-    // one producer streams bwa's name-grouped BAM into whole-fragment chunks; N workers lift + emit per-shard
     private List<LiftBackWorker> runChunkStream(
             final LiftBackResources resources, final SAMFileHeader outputHeader, final List<String> shardBams)
     {
@@ -174,7 +171,6 @@ public class TarsApplication
         System.exit(1);
     }
 
-    // input @SQ, read once: both the sidecar check and the output header derive from it
     private SAMFileHeader readInputHeader()
     {
         return BamMerger.buildCombinedHeader(mConfig.InputBams, mConfig.RefGenomeFile);

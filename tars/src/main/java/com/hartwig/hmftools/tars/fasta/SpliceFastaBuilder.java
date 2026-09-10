@@ -142,7 +142,6 @@ public class SpliceFastaBuilder
         TARS_LOGGER.info("SpliceFastaBuilder complete, mins({})", runTimeMinsStr(startTimeMs));
     }
 
-    // packs transcripts into the chromosome's alt-contig sequence and appends a ContigEntry for where each one lands
     static String packChromosomeContig(
             final String altContig, final List<TranscriptContigBuilder.TranscriptContigResult> transcripts,
             final List<ContigEntry> entries, final int spacerLength)

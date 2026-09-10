@@ -7,8 +7,7 @@ import com.hartwig.hmftools.tars.liftback.LiftedAlignment;
 
 import htsjdk.samtools.SAMRecord;
 
-// A record's read bases in the orientation each lifted placement needs. Built per record on one worker thread, so the
-// lazily filled reverse complement needs no synchronisation.
+// Built per record on one worker thread, so the lazily filled reverse complement needs no synchronisation.
 final class ReadBases
 {
     private final byte[] mForward;

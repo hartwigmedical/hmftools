@@ -9,13 +9,11 @@ import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
 
-// genome-space result of translating a transcript-contig alignment
 public record ContigTranslateResult(
         String chromosome,
         int genomicStart,
         Cigar genomicCigar)
 {
-    // the genomic CIGAR's N gaps, i.e. the re-inserted introns
     public List<BaseRegion> impliedIntrons()
     {
         List<BaseRegion> introns = new ArrayList<>();

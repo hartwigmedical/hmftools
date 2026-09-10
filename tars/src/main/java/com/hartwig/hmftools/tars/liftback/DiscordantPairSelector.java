@@ -48,10 +48,12 @@ final class DiscordantPairSelector
             return Optional.empty();
         }
 
-        bestPairs.sort(Comparator.comparing(PairCandidate::canonicalKey));
-        PairCandidate winner = bestPairs.get(Math.floorMod(seed, bestPairs.size()));
-        return Optional.of(new Choice(
-                winner.first(), winner.second(), bestPairs.size() == 1 ? "mate" : "random"));
+        List<PairCandidate> contenders = topScoring(bestPairs);
+
+        contenders.sort(Comparator.comparing(PairCandidate::canonicalKey));
+        PairCandidate winner = contenders.get(Math.floorMod(seed, contenders.size()));
+        String note = bestPairs.size() == 1 ? "mate" : (contenders.size() == 1 ? "score" : "random");
+        return Optional.of(new Choice(winner.first(), winner.second(), note));
     }
 
     private static List<LiftedAlignment> candidates(final MatePlacements mate)
@@ -89,6 +91,31 @@ final class DiscordantPairSelector
         return candidates;
     }
 
+    // pair priority ranks by SV category and separation, so where it cannot separate two pairs the better-scoring
+    // placement is taken rather than an arbitrary one
+    private static List<PairCandidate> topScoring(final List<PairCandidate> pairs)
+    {
+        long topScore = Long.MIN_VALUE;
+        for(PairCandidate pair : pairs)
+        {
+            if(pair.first().GenomicScore == Integer.MIN_VALUE || pair.second().GenomicScore == Integer.MIN_VALUE)
+            {
+                return pairs;
+            }
+            topScore = Math.max(topScore, (long) pair.first().GenomicScore + pair.second().GenomicScore);
+        }
+
+        List<PairCandidate> topScored = new ArrayList<>();
+        for(PairCandidate pair : pairs)
+        {
+            if((long) pair.first().GenomicScore + pair.second().GenomicScore == topScore)
+            {
+                topScored.add(pair);
+            }
+        }
+        return topScored;
+    }
+
     private static PlacementPairPriority priority(
             final LiftedAlignment first, final LiftedAlignment second)
     {
@@ -96,9 +123,14 @@ final class DiscordantPairSelector
         int secondBreakend = second.ForwardStrand ? second.alignedEnd() : second.LiftedPos;
         Orientation firstOrientation = first.ForwardStrand ? Orientation.FORWARD : Orientation.REVERSE;
         Orientation secondOrientation = second.ForwardStrand ? Orientation.FORWARD : Orientation.REVERSE;
-        return PlacementPairPriority.between(
+
+        // an intron is not aligned sequence, so separation is measured between aligned blocks rather than across the
+        // outer cigar span, which would penalise a spliced placement by the length of its introns
+        int separation = first.alignedBlockDistance(second);
+
+        return PlacementPairPriority.betweenMates(
                 first.LiftedChromosome, firstBreakend, firstOrientation,
-                second.LiftedChromosome, secondBreakend, secondOrientation);
+                second.LiftedChromosome, secondBreakend, secondOrientation, separation);
     }
 
     record MatePlacements(

@@ -12,9 +12,7 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.firstInPair;
 
 import htsjdk.samtools.SAMRecord;
 
-// One read pair's lifted records, and the mate-field patch they serve: a record's RNEXT/PNEXT/mate-strand/MC/TLEN come
-// from its mate's lifted placement, known only once that mate has been lifted. Scoped to a single name group, so the
-// pair is two slots rather than a keyed cache.
+// Scoped to a single name group, so the pair is two slots rather than a keyed cache.
 public class LiftedMatePair
 {
     private LiftedRecord mFirstInPair;
@@ -44,8 +42,6 @@ public class LiftedMatePair
         return firstOfPair ? mFirstInPair : mSecondInPair;
     }
 
-    // TARS already has both final primary decisions for the name group, so write the final pair state directly: park an
-    // unmapped read at its mapped mate, or clear both sides if neither maps.
     public void unmapRead(final SAMRecord record)
     {
         LiftedRecord mate = record.getReadPairedFlag() ? mateOf(firstInPair(record)) : null;
@@ -90,7 +86,6 @@ public class LiftedMatePair
         }
     }
 
-    // sets RNEXT/PNEXT/mate-strand/MC and TLEN from the mate's lifted primary
     public void patchMateFields(final SAMRecord record)
     {
         if(!record.getReadPairedFlag())

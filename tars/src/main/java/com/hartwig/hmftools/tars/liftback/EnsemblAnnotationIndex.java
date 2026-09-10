@@ -14,7 +14,6 @@ import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.tars.common.ContigEntry;
 
-// Sidecar-derived annotation used during liftback: merged exon spans plus exact intron/junction membership.
 public final class EnsemblAnnotationIndex
 {
     private final Map<String, List<BaseRegion>> mExonsByChromosome;

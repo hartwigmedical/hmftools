@@ -161,14 +161,15 @@ be kept.
 
 #### Step 2.1: Pick the main alignment for a supplementary record
 
-At `MAPQ 0`, TARS picks one alignment from each supplementary record in this order:
+For `MAPQ > 0`, TARS picks its sole alignment. For `MAPQ 0`, TARS picks one alignment (main + `XA` entries) from each
+supplementary record (within 1 Mb):
 
-1. shortest `DEL` within 1 Mb
-2. shortest `DUP` within 1 Mb
-3. shortest `INV` within 1 Mb
+1. shortest `DEL`
+2. shortest `DUP`
+3. shortest `INV`
 4. deterministic random
 
-At positive MAPQ, TARS keeps the main alignment. The selected alignment is used for the merge and emitted record.
+A selected `XA` alignment becomes the supplementary's main alignment, whether or not a merge succeeds.
 
 #### Step 2.2a: Resolve supplementary records into splice junctions
 
@@ -205,21 +206,28 @@ A read now has its own alignment plus any `XA` alternate alignments: each a geno
 
 - **B2. Ref/tx agreement:** ref and tx alignments lift to the same contiguous locus and CIGAR; keep BWA's primary.
 
-- **B3. Multi-mapper:** for a `MAPQ 0` pair, TARS selects both mates together in this order:
-    1. shortest `DEL` within 1 Mb
-    2. shortest `DUP` within 1 Mb
-    3. shortest `INV` within 1 Mb
-    4. deterministic random
+- **B3. Multi-mapper:** for a `MAPQ 0` pair, TARS selects both mates together (within 1 Mb; distances exclude introns):
+    1. closest mates under 1 kb apart (`9M2209N142M` measures from its `142M` exon, not across the intron)
+    2. shortest `DEL`
+    3. shortest `DUP`
+    4. shortest `INV`
+    5. highest combined alignment score
+    6. deterministic random
 
-  A positive-MAPQ mate remains fixed. A valid supplementary merge is still resolved independently.
+  A mate with positive MAPQ is not moved; it anchors the pair. Supplementary merges from Step 2 still apply at any MAPQ.
 
 ### Step 4: Emit records
 
-- **MAPQ:** keep BWA's value; decisive single-locus `MAPQ 0` becomes 60; merged uses
-  `max(primary, supplementary)`, or 60 for one locus. Random picks stay at 0; `XS == AS` stays at 0 unless the selected
-  alignment came from tx or starts in an annotated exon.
-- **Fields and tags:** write remaining alignments to `XA`; rebuild `SA`; update `AS`, `XS`, `NH`, `NM`, and mate fields;
-  remove `MD`.
-- **Filtering:** drop absorbed, duplicate, unliftable, excluded, `AS < 30`, or supplementaries without a surviving `SA`
-  partner. Unmap unliftable, excluded, over-cap, or `AS < 30` primaries using REDUX conventions.
-- **Logging:** skip expected `inter-transcript spacer` misses; log other lift failures.
+TARS sets the MAPQ in this order:
+
+1. keep a positive input MAPQ
+2. raise `MAPQ 0` to 60 at a single locus, unless the pick was a random tie
+3. leave an `XS == AS` tie at 0 unless the winner came from a transcript contig or an annotated exon
+4. take `max(primary, supplementary)` for a supplementary merge, or 60 at a single locus
+
+TARS then finalises each record:
+
+- write the remaining alignments to `XA`, rebuild `SA`, update `AS`, `XS`, `NH`, `NM` and mate fields, remove `MD`
+- drop absorbed, duplicate, unliftable, excluded, `AS < 30`, and supplementaries with no surviving `SA` partner
+- unmap unliftable, excluded, over-cap, and `AS < 30` primaries using REDUX conventions
+- skip expected `inter-transcript spacer` misses, log other lift failures

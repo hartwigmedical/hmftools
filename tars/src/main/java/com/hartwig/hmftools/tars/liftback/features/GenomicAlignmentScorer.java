@@ -15,8 +15,7 @@ import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.TextCigarCodec;
 
-// Recomputes bwa-style alignment scores after placements are lifted to genome space. Cigars are left unchanged: the only
-// soft-clip walk in TARS is the weak-overhang collapse in OverhangGate.
+// Cigars are left unchanged: the only soft-clip walk in TARS is the weak-overhang collapse in OverhangGate.
 public class GenomicAlignmentScorer
 {
     private final RefGenomeInterface mRefGenome;

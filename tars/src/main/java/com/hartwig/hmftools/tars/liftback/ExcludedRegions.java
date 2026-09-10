@@ -9,8 +9,7 @@ import java.util.Map;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
-// Genomic contamination zones (rRNA / 7SL / acrocentric) loaded from a TSV (Chromosome/PosStart/PosEnd), queried
-// on genomic coordinates. Per-chromosome, sorted for O(log n) overlap tests.
+// Genomic contamination zones (rRNA / 7SL / acrocentric) loaded from a TSV of Chromosome/PosStart/PosEnd.
 public final class ExcludedRegions
 {
     private final Map<String, List<BaseRegion>> mRegionsByChromosome;

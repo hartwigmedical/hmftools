@@ -15,9 +15,11 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.tars.common.ContigEntry;
 import com.hartwig.hmftools.tars.liftback.features.OverhangGate;
 
+import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
 
 public class PlacementSelector
@@ -125,6 +127,18 @@ public class PlacementSelector
             }
         }
 
+        if(TARS_LOGGER.isTraceEnabled() && keptAlignments.size() > 1)
+        {
+            for(LiftedAlignment alignment : keptAlignments)
+            {
+                TARS_LOGGER.trace(
+                        "candidate {}: mapQuality={} {}:{} {} score={} fromTx={} chosen={}",
+                        record.getReadName(), inputMapQuality,
+                        alignment.LiftedChromosome, alignment.LiftedPos, alignment.LiftedCigar,
+                        alignment.GenomicScore, alignment.FromTxContig, alignment == effectivePrimary);
+            }
+        }
+
         int numLoci = keptAlignments.size() == 1 ? 1 : countDistinctLoci(keptAlignments, effectivePrimary);
 
         boolean hiddenTie = inputMapQuality == 0 && hasHiddenTie(record);
@@ -153,7 +167,49 @@ public class PlacementSelector
                     effectivePrimary.LiftedCigar, selection.reason());
         }
 
+        if(TARS_LOGGER.isTraceEnabled())
+        {
+            LiftedAlignment bestScored = effectivePrimary;
+            for(LiftedAlignment alignment : keptAlignments)
+            {
+                if(alignment.GenomicScore > bestScored.GenomicScore)
+                {
+                    bestScored = alignment;
+                }
+            }
+
+            if(bestScored != effectivePrimary)
+            {
+                TARS_LOGGER.trace(
+                        "score regression {}: inputMapQuality={} reason={} selected {}:{} {} aligned={} score={}"
+                                + " over {}:{} {} aligned={} score={}",
+                        record.getReadName(), inputMapQuality, selection.reason(),
+                        effectivePrimary.LiftedChromosome, effectivePrimary.LiftedPos, effectivePrimary.LiftedCigar,
+                        alignedBaseCount(effectivePrimary.LiftedCigar), effectivePrimary.GenomicScore,
+                        bestScored.LiftedChromosome, bestScored.LiftedPos, bestScored.LiftedCigar,
+                        alignedBaseCount(bestScored.LiftedCigar), bestScored.GenomicScore);
+            }
+        }
+
         return new LiftedRecord(updatedMapQuality, numLoci, note, selection.alignmentIndex(), allAlignments);
+    }
+
+    private static int alignedBaseCount(final String cigar)
+    {
+        if(cigar == null)
+        {
+            return 0;
+        }
+
+        int alignedBases = 0;
+        for(CigarElement element : CigarUtils.cigarFromStr(cigar).getCigarElements())
+        {
+            if(element.getOperator().isAlignment())
+            {
+                alignedBases += element.getLength();
+            }
+        }
+        return alignedBases;
     }
 
     public static boolean usesGenomicScore(final List<LiftedAlignment> alignments, final int inputMapQuality)

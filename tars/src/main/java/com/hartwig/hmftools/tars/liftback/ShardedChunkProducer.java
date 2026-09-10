@@ -27,13 +27,9 @@ import htsjdk.samtools.ValidationStringency;
 import htsjdk.samtools.util.BinaryCodec;
 import htsjdk.samtools.util.BlockCompressedInputStream;
 
-// Reads a name-sorted BAM in parallel. With no coordinate index to slice by, it shards by raw byte range: snap a
-// target offset to the next BGZF block, advance to the first read-name change, decode each range on its own thread,
-// then cut those records into name-aligned chunks on the shared queue for the workers.
-// Every boundary is a read-name boundary, so a shard holds whole fragments: mates/supplementaries never split and
-// there is no cross-shard reconciliation.
-// BGZF block layout (section 4.1) and the virtual file offset shifted here (coffset<<16, section 4.1.1) are defined
-// in the SAM/BAM spec: https://samtools.github.io/hts-specs/SAMv1.pdf
+// Shards a name-sorted BAM by raw byte range, there being no coordinate index to slice by. Every shard boundary is a
+// read-name boundary, so mates and supplementaries never split across shards and no reconciliation is needed.
+// BGZF block layout and the virtual offset shifted here (coffset<<16): https://samtools.github.io/hts-specs/SAMv1.pdf
 public class ShardedChunkProducer extends Thread
 {
     private final List<String> mInputBams;
@@ -47,7 +43,7 @@ public class ShardedChunkProducer extends Thread
 
     private final AtomicInteger mPeakMemoryMb = new AtomicInteger();
 
-    // enqueued once per worker to signal end-of-stream; compared by reference.
+    // compared by reference
     public static final List<SAMRecord> END_OF_STREAM = new ArrayList<>();
 
     public ShardedChunkProducer(
@@ -232,7 +228,6 @@ public class ShardedChunkProducer extends Thread
         }
     }
 
-    // next BGZF block header at/after targetOffset, as a compressed offset; -1 if none.
     private static long findBlockStart(final File bam, final long targetOffset) throws IOException
     {
         try(RandomAccessFile raf = new RandomAccessFile(bam, "r"))
@@ -264,7 +259,6 @@ public class ShardedChunkProducer extends Thread
         return -1;
     }
 
-    // virtual pointer of the first read-name change at/after blockVptr; EOF if none.
     private static long firstGroupBoundaryVptr(final File bam, final SAMFileHeader header, final long blockVptr)
             throws IOException
     {
@@ -322,7 +316,6 @@ public class ShardedChunkProducer extends Thread
             mNext = readNext();
         }
 
-        // compressed bytes consumed so far; the monitor sums these across shards.
         long consumedBytes()
         {
             return Math.max(0, (mStream.getFilePointer() >>> 16) - mStartOffset);
@@ -335,7 +328,7 @@ public class ShardedChunkProducer extends Thread
                 return null;
             }
 
-            return mCodec.decode(); // null at EOF
+            return mCodec.decode();
         }
 
         @Override
@@ -403,7 +396,6 @@ public class ShardedChunkProducer extends Thread
         }
     }
 
-    // periodic progress: reads processed and rough % of the whole input consumed, across all shards and all files.
     private void runMonitor(
             final List<ShardRecordIterator> iterators, final long completedBytes, final long totalBytes,
             final LongAdder readsCounter, final AtomicBoolean done)

@@ -13,7 +13,6 @@ import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
 
-// One component of a record's alignment set (the record itself or an XA alt), post-lift.
 public class LiftedAlignment
 {
     public final String LiftedChromosome;
@@ -32,8 +31,7 @@ public class LiftedAlignment
     // set when an overhang collapse made this alt a duplicate placement; excluded from the XA tag.
     public boolean Dropped = false;
 
-    // bwa-mem-style score of the lifted placement against the genome, letting tx and ref placements compare on one scale.
-    // Integer.MIN_VALUE = not computed.
+    // Integer.MIN_VALUE = not computed
     public int GenomicScore = Integer.MIN_VALUE;
 
     public LiftedAlignment(
@@ -64,8 +62,7 @@ public class LiftedAlignment
         mAlignedBlocks = alignedBlocks(liftedPos, liftedCigar);
     }
 
-    // Copy with a revised lifted position and cigar. The chosen primary is tracked by index on LiftedRecord.
-    // GenomicScore is left uncomputed: it described the previous cigar.
+    // GenomicScore is left uncomputed: it described the previous cigar
     public LiftedAlignment withLiftedCigar(final int liftedPos, final String liftedCigar)
     {
         LiftedAlignment revised = new LiftedAlignment(

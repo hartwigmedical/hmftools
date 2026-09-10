@@ -83,7 +83,6 @@ public final class ContigTranslator
                 true, forwardStrand, entry.strand());
     }
 
-    // Skips invalid XA entries and keeps one copy of each lifted placement.
     public List<LiftedAlignment> liftXaAlignments(final String xaTag)
     {
         List<LiftedAlignment> lifted = new ArrayList<>();
@@ -156,7 +155,6 @@ public final class ContigTranslator
             return segment;
         }
 
-        // altPos in an inter-segment spacer: pick the nearer neighbour to clamp against.
         if(placement + 1 < segments.size())
         {
             ContigEntry next = segments.get(placement + 1);
@@ -263,7 +261,6 @@ public final class ContigTranslator
     }
 
     // Walks the clamped contig-space CIGAR, emitting an N at every exon boundary crossed.
-    // Returns null when the read extends past the last exon.
     private static ContigTranslateResult walkCigarToGenome(
             final ContigEntry contig, final List<BaseRegion> spans, final SpanLocation start, final Cigar cigar)
     {
