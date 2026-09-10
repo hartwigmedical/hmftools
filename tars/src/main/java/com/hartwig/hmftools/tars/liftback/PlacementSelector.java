@@ -4,10 +4,8 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.ALIGNMENT_SCORE_ATT
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.XA_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.XS_ATTRIBUTE;
-import static com.hartwig.hmftools.common.sv.SvUtils.formSvType;
 import static com.hartwig.hmftools.tars.common.TarsConstants.CONFIDENT_MAPQ;
 import static com.hartwig.hmftools.tars.common.TarsConstants.LOCAL_SV_MAX_LENGTH;
-import static com.hartwig.hmftools.tars.common.TarsConstants.PRIMARY_AS_UNMAP_THRESHOLD;
 import static com.hartwig.hmftools.tars.common.TarsConstants.TARS_LOGGER;
 
 import java.util.ArrayList;
@@ -16,10 +14,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
-import com.hartwig.hmftools.common.genome.region.Orientation;
-import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.tars.common.ContigEntry;
 import com.hartwig.hmftools.tars.liftback.features.OverhangGate;
 
@@ -465,122 +462,20 @@ public class PlacementSelector
         ApplyResult independentSecond = apply(
                 secondAlignments, secondConcordant, secondSelf, seed, secondBwaHasPriority);
 
-        List<LiftedAlignment> firstCandidates = pairCandidates(
-                firstAlignments, independentFirst.effectivePrimary(), firstConcordant || !firstMapqZero);
-        List<LiftedAlignment> secondCandidates = pairCandidates(
-                secondAlignments, independentSecond.effectivePrimary(), secondConcordant || !secondMapqZero);
-        List<PairCandidate> bestPairs = new ArrayList<>();
-        int bestTypeRank = Integer.MAX_VALUE;
-        long bestLength = Long.MAX_VALUE;
-
-        for(LiftedAlignment first : firstCandidates)
-        {
-            for(LiftedAlignment second : secondCandidates)
-            {
-                PairPriority priority = pairPriority(first, second);
-                PairCandidate pair = new PairCandidate(first, second);
-                boolean better = priority.TypeRank < bestTypeRank
-                        || (priority.TypeRank == bestTypeRank && priority.Length < bestLength);
-                boolean tied = priority.TypeRank == bestTypeRank && priority.Length == bestLength;
-                if(better)
-                {
-                    bestPairs.clear();
-                    bestTypeRank = priority.TypeRank;
-                    bestLength = priority.Length;
-                }
-                if(better || tied)
-                {
-                    bestPairs.add(pair);
-                }
-            }
-        }
-        if(bestPairs.isEmpty())
+        Optional<DiscordantPairSelector.Choice> selection = DiscordantPairSelector.select(
+                new DiscordantPairSelector.MatePlacements(
+                        firstAlignments, independentFirst.effectivePrimary(), firstMapqZero && !firstConcordant),
+                new DiscordantPairSelector.MatePlacements(
+                        secondAlignments, independentSecond.effectivePrimary(), secondMapqZero && !secondConcordant),
+                seed);
+        if(selection.isEmpty())
         {
             return new PairApplyResult(independentFirst, independentSecond);
         }
-
-        bestPairs.sort(Comparator.comparing(PairCandidate::canonicalKey));
-        PairCandidate winner = bestPairs.get(Math.floorMod(seed, bestPairs.size()));
-        String note = bestPairs.size() == 1 ? "mate" : "random";
+        DiscordantPairSelector.Choice winner = selection.get();
         return new PairApplyResult(
-                new ApplyResult(indexOf(firstAlignments, winner.first()), winner.first(), note),
-                new ApplyResult(indexOf(secondAlignments, winner.second()), winner.second(), note));
-    }
-
-    private static List<LiftedAlignment> pairCandidates(
-            final List<LiftedAlignment> alignments, final LiftedAlignment self, final boolean fixed)
-    {
-        if(fixed)
-        {
-            return List.of(self);
-        }
-
-        List<LiftedAlignment> candidates = new ArrayList<>();
-        Set<AlignmentKey> seen = new HashSet<>();
-        for(LiftedAlignment alignment : alignments)
-        {
-            if(!alignment.Dropped
-                    && (alignment.GenomicScore == Integer.MIN_VALUE
-                            || alignment.GenomicScore >= PRIMARY_AS_UNMAP_THRESHOLD)
-                    && seen.add(alignment.key()))
-            {
-                candidates.add(alignment);
-            }
-        }
-        if(!candidates.isEmpty())
-        {
-            return candidates;
-        }
-
-        // Preserve the normal unmap path when every scored placement is below the AS floor.
-        for(LiftedAlignment alignment : alignments)
-        {
-            if(!alignment.Dropped && seen.add(alignment.key()))
-            {
-                candidates.add(alignment);
-            }
-        }
-        return candidates;
-    }
-
-    private static PairPriority pairPriority(final LiftedAlignment first, final LiftedAlignment second)
-    {
-        StructuralVariantType type = StructuralVariantType.BND;
-        long length = Long.MAX_VALUE;
-        if(first.LiftedChromosome.equals(second.LiftedChromosome))
-        {
-            int firstBreakend = first.ForwardStrand ? first.alignedEnd() : first.LiftedPos;
-            int secondBreakend = second.ForwardStrand ? second.alignedEnd() : second.LiftedPos;
-            Orientation firstOrientation = first.ForwardStrand ? Orientation.FORWARD : Orientation.REVERSE;
-            Orientation secondOrientation = second.ForwardStrand ? Orientation.FORWARD : Orientation.REVERSE;
-            type = formSvType(
-                    first.LiftedChromosome, second.LiftedChromosome, firstBreakend, secondBreakend,
-                    firstOrientation, secondOrientation, false);
-            length = Math.abs((long) firstBreakend - secondBreakend);
-        }
-
-        int typeRank = length <= LOCAL_SV_MAX_LENGTH ? switch(type)
-        {
-            case DEL -> 0;
-            case DUP -> 1;
-            case INV -> 2;
-            default -> 3;
-        } : 3;
-        return new PairPriority(typeRank, typeRank == 3 ? Long.MAX_VALUE : length);
-    }
-
-    private record PairPriority(int TypeRank, long Length) { }
-
-    private record PairCandidate(LiftedAlignment first, LiftedAlignment second)
-    {
-        String canonicalKey()
-        {
-            String firstKey = first.key().toString();
-            String secondKey = second.key().toString();
-            return firstKey.compareTo(secondKey) <= 0
-                    ? firstKey + '|' + secondKey
-                    : secondKey + '|' + firstKey;
-        }
+                new ApplyResult(indexOf(firstAlignments, winner.first()), winner.first(), winner.note()),
+                new ApplyResult(indexOf(secondAlignments, winner.second()), winner.second(), winner.note()));
     }
 
     // Mate-agnostic overload: single-end reads and callers with no lifted mate.

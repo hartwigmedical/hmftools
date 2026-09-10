@@ -11,14 +11,11 @@ import java.util.Set;
 
 import static com.hartwig.hmftools.tars.common.TarsCigarUtils.indelAdjacentToTerminalSoftClip;
 import static com.hartwig.hmftools.tars.common.TarsCigarUtils.terminalMatchedRun;
-import static com.hartwig.hmftools.tars.common.TarsConstants.LOCAL_SV_MAX_LENGTH;
-import static com.hartwig.hmftools.common.sv.SvUtils.formSvType;
 
 import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
-import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.tars.liftback.EnsemblAnnotationIndex;
 
 import htsjdk.samtools.CigarElement;
@@ -300,31 +297,26 @@ public class SupplementaryMerger
             final Placement placement, final int primaryStart, final List<CigarElement> primaryCigar,
             final Supplementary candidate, final Supplementary current)
     {
-        PlacementPriority candidatePriority = placementPriority(placement, primaryStart, primaryCigar, candidate);
-        PlacementPriority currentPriority = placementPriority(placement, primaryStart, primaryCigar, current);
+        LocalSvPriority.Rank candidatePriority = placementPriority(
+                placement, primaryStart, primaryCigar, candidate);
+        LocalSvPriority.Rank currentPriority = placementPriority(
+                placement, primaryStart, primaryCigar, current);
 
-        int typeComparison = Integer.compare(candidatePriority.TypeRank, currentPriority.TypeRank);
-        if(typeComparison != 0)
+        int priorityComparison = candidatePriority.compareTo(currentPriority);
+        if(priorityComparison != 0)
         {
-            return typeComparison;
+            return priorityComparison;
         }
 
-        int lengthComparison = Long.compare(candidatePriority.Length, currentPriority.Length);
-        if(lengthComparison != 0)
-        {
-            return lengthComparison;
-        }
-
-        return Integer.compareUnsigned(candidatePriority.RandomOrder, currentPriority.RandomOrder);
+        int candidateRandomOrder = 31 * Arrays.hashCode(placement.readBases()) + candidate.hashCode();
+        int currentRandomOrder = 31 * Arrays.hashCode(placement.readBases()) + current.hashCode();
+        return Integer.compareUnsigned(candidateRandomOrder, currentRandomOrder);
     }
 
-    private static PlacementPriority placementPriority(
+    private static LocalSvPriority.Rank placementPriority(
             final Placement placement, final int primaryStart, final List<CigarElement> primaryCigar,
             final Supplementary supplementary)
     {
-        StructuralVariantType type = StructuralVariantType.BND;
-        long length = Long.MAX_VALUE;
-
         if(placement.chromosome().equals(supplementary.chromosome()))
         {
             Side primarySide = Side.of(primaryStart, primaryCigar);
@@ -342,26 +334,12 @@ public class SupplementaryMerger
                 Orientation supplementaryOrientation =
                         breakendOrientation(supplementary.forwardStrand(), supplementaryLinksEnd);
 
-                type = formSvType(
-                        placement.chromosome(), supplementary.chromosome(), primaryBreakend, supplementaryBreakend,
-                        primaryOrientation, supplementaryOrientation, false);
-                length = Math.abs((long) primaryBreakend - supplementaryBreakend);
+                return LocalSvPriority.between(
+                        placement.chromosome(), primaryBreakend, primaryOrientation,
+                        supplementary.chromosome(), supplementaryBreakend, supplementaryOrientation);
             }
         }
-
-        int typeRank = length <= LOCAL_SV_MAX_LENGTH ? switch(type)
-        {
-            case DEL -> 0;
-            case DUP -> 1;
-            case INV -> 2;
-            default -> 3;
-        } : 3;
-        if(typeRank == 3)
-        {
-            length = Long.MAX_VALUE;
-        }
-        int randomOrder = 31 * Arrays.hashCode(placement.readBases()) + supplementary.hashCode();
-        return new PlacementPriority(typeRank, length, randomOrder);
+        return LocalSvPriority.fallback();
     }
 
     private static int breakendPosition(final Side side, final boolean forwardStrand, final boolean linksEnd)
@@ -377,8 +355,6 @@ public class SupplementaryMerger
     {
         return linksEnd == forwardStrand ? Orientation.FORWARD : Orientation.REVERSE;
     }
-
-    private record PlacementPriority(int TypeRank, long Length, int RandomOrder) { }
 
     // Higher MAPQ wins, then the smaller intron. Only ever compares a right-extend against a left-extend: a second supp
     // on either side is rejected above, and the chain loop picks up the loser next pass.
