@@ -10,7 +10,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import com.hartwig.hmftools.common.genome.region.Orientation;
-import com.hartwig.hmftools.tars.liftback.features.LocalSvPriority;
+import com.hartwig.hmftools.tars.liftback.features.PlacementPairPriority;
 
 // Selects the two emitted placements as one fragment when either mate has MAPQ 0.
 final class DiscordantPairSelector
@@ -20,13 +20,13 @@ final class DiscordantPairSelector
     static Optional<Choice> select(final MatePlacements first, final MatePlacements second, final int seed)
     {
         List<PairCandidate> bestPairs = new ArrayList<>();
-        LocalSvPriority.Rank bestPriority = null;
+        PlacementPairPriority bestPriority = null;
 
         for(LiftedAlignment firstAlignment : candidates(first))
         {
             for(LiftedAlignment secondAlignment : candidates(second))
             {
-                LocalSvPriority.Rank priority = priority(firstAlignment, secondAlignment);
+                PlacementPairPriority priority = priority(firstAlignment, secondAlignment);
                 PairCandidate pair = new PairCandidate(firstAlignment, secondAlignment);
                 int comparison = bestPriority == null ? -1 : priority.compareTo(bestPriority);
                 boolean better = comparison < 0;
@@ -89,14 +89,14 @@ final class DiscordantPairSelector
         return candidates;
     }
 
-    private static LocalSvPriority.Rank priority(
+    private static PlacementPairPriority priority(
             final LiftedAlignment first, final LiftedAlignment second)
     {
         int firstBreakend = first.ForwardStrand ? first.alignedEnd() : first.LiftedPos;
         int secondBreakend = second.ForwardStrand ? second.alignedEnd() : second.LiftedPos;
         Orientation firstOrientation = first.ForwardStrand ? Orientation.FORWARD : Orientation.REVERSE;
         Orientation secondOrientation = second.ForwardStrand ? Orientation.FORWARD : Orientation.REVERSE;
-        return LocalSvPriority.between(
+        return PlacementPairPriority.between(
                 first.LiftedChromosome, firstBreakend, firstOrientation,
                 second.LiftedChromosome, secondBreakend, secondOrientation);
     }
