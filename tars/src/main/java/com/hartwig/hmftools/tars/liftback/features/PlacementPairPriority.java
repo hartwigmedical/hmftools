@@ -15,12 +15,12 @@ public final class PlacementPairPriority implements Comparable<PlacementPairPrio
     private static final PlacementPairPriority FALLBACK =
             new PlacementPairPriority(OTHER, Long.MAX_VALUE);
 
-    private final int mType;
+    private final int mCategory;
     private final long mLength;
 
-    private PlacementPairPriority(final int type, final long length)
+    private PlacementPairPriority(final int category, final long length)
     {
-        mType = type;
+        mCategory = category;
         mLength = length;
     }
 
@@ -55,14 +55,14 @@ public final class PlacementPairPriority implements Comparable<PlacementPairPrio
         }
 
         boolean firstIsLower = firstPosition < secondPosition;
-        int type = firstIsLower == firstOrientation.isForward() ? DELETION : DUPLICATION;
-        return new PlacementPairPriority(type, length);
+        int category = firstIsLower == firstOrientation.isForward() ? DELETION : DUPLICATION;
+        return new PlacementPairPriority(category, length);
     }
 
     @Override
     public int compareTo(final PlacementPairPriority other)
     {
-        int typeComparison = Integer.compare(mType, other.mType);
-        return typeComparison != 0 ? typeComparison : Long.compare(mLength, other.mLength);
+        int categoryComparison = Integer.compare(mCategory, other.mCategory);
+        return categoryComparison != 0 ? categoryComparison : Long.compare(mLength, other.mLength);
     }
 }

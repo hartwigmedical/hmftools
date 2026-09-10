@@ -605,7 +605,7 @@ public class PlacementSelectorTest
         return PlacementSelector.isConcordant(set(alignments));
     }
 
-    // Concordant is the one evidence flag that changes the pick: it short-circuits apply() to keep bwa's primary.
+    // Concordant is the one evidence flag that changes the pick: it keeps bwa's primary.
     @Test
     public void testConcordant()
     {
@@ -671,9 +671,9 @@ public class PlacementSelectorTest
         List<LiftedAlignment> alignments = contestedSet();
         alignments.get(0).GenomicScore = 10;
         alignments.get(1).GenomicScore = 99;
-        PlacementSelector.ApplyResult outcome = PlacementSelector.apply(alignments, false, alignments.get(0), 0, true);
-        assertSame(alignments.get(0), outcome.effectivePrimary());
-        assertEquals("", outcome.note());
+        PlacementSelector.Selection outcome = PlacementSelector.select(alignments, false, alignments.get(0), 0, true);
+        assertSame(alignments.get(0), outcome.alignment());
+        assertEquals("", outcome.reason());
     }
 
     @Test
@@ -681,9 +681,9 @@ public class PlacementSelectorTest
     {
         // No placement scored (a split read left for Step 3): keep bwa's primary and drop nothing.
         List<LiftedAlignment> alignments = contestedSet();
-        PlacementSelector.ApplyResult outcome = PlacementSelector.apply(alignments, false, alignments.get(0), 0, false);
-        assertSame(alignments.get(0), outcome.effectivePrimary());
-        assertEquals("", outcome.note());
+        PlacementSelector.Selection outcome = PlacementSelector.select(alignments, false, alignments.get(0), 0, false);
+        assertSame(alignments.get(0), outcome.alignment());
+        assertEquals("", outcome.reason());
         assertFalse(alignments.get(0).Dropped);
         assertFalse(alignments.get(1).Dropped);
     }
@@ -695,17 +695,17 @@ public class PlacementSelectorTest
         List<LiftedAlignment> refWins = contestedSet();
         refWins.get(0).GenomicScore = 90;
         refWins.get(1).GenomicScore = 50;
-        PlacementSelector.ApplyResult refResult = PlacementSelector.apply(refWins, false, refWins.get(0), 1, false);
-        assertSame(refWins.get(0), refResult.effectivePrimary());
-        assertEquals("score", refResult.note());
+        PlacementSelector.Selection refResult = PlacementSelector.select(refWins, false, refWins.get(0), 1, false);
+        assertSame(refWins.get(0), refResult.alignment());
+        assertEquals("score", refResult.reason());
 
         List<LiftedAlignment> txWins = contestedSet();
         txWins.get(0).GenomicScore = 40;
         txWins.get(1).GenomicScore = 88;
-        PlacementSelector.ApplyResult txResult = PlacementSelector.apply(txWins, false, txWins.get(0), 0, false);
-        assertSame(txWins.get(1), txResult.effectivePrimary());
-        assertEquals("score", txResult.note());
-        assertEquals(1, txResult.primaryIndex());
+        PlacementSelector.Selection txResult = PlacementSelector.select(txWins, false, txWins.get(0), 0, false);
+        assertSame(txWins.get(1), txResult.alignment());
+        assertEquals("score", txResult.reason());
+        assertEquals(1, txResult.alignmentIndex());
         assertFalse("loser rides in XA, not dropped", txWins.get(0).Dropped);
     }
 
@@ -716,16 +716,16 @@ public class PlacementSelectorTest
         List<LiftedAlignment> even = contestedSet();
         even.get(0).GenomicScore = 70;
         even.get(1).GenomicScore = 70;
-        PlacementSelector.ApplyResult evenResult = PlacementSelector.apply(even, false, even.get(0), 0, false);
-        assertSame(even.get(0), evenResult.effectivePrimary());
-        assertEquals("random", evenResult.note());
+        PlacementSelector.Selection evenResult = PlacementSelector.select(even, false, even.get(0), 0, false);
+        assertSame(even.get(0), evenResult.alignment());
+        assertEquals("random", evenResult.reason());
 
         List<LiftedAlignment> odd = contestedSet();
         odd.get(0).GenomicScore = 70;
         odd.get(1).GenomicScore = 70;
-        PlacementSelector.ApplyResult oddResult = PlacementSelector.apply(odd, false, odd.get(0), 1, false);
-        assertSame(odd.get(1), oddResult.effectivePrimary());
-        assertEquals("random", oddResult.note());
+        PlacementSelector.Selection oddResult = PlacementSelector.select(odd, false, odd.get(0), 1, false);
+        assertSame(odd.get(1), oddResult.alignment());
+        assertEquals("random", oddResult.reason());
         assertFalse("tie loser rides in XA, not dropped", odd.get(0).Dropped);
     }
 
@@ -739,10 +739,10 @@ public class PlacementSelectorTest
         List<LiftedAlignment> alignments = set(softClip, junction);
         alignments.get(0).GenomicScore = 80;
         alignments.get(1).GenomicScore = 80;
-        PlacementSelector.ApplyResult outcome = PlacementSelector.apply(alignments, false, softClip, 0, false);
-        assertSame(junction, outcome.effectivePrimary());
-        assertEquals("junction", outcome.note());
-        assertEquals(alignments.indexOf(junction), outcome.primaryIndex());
+        PlacementSelector.Selection outcome = PlacementSelector.select(alignments, false, softClip, 0, false);
+        assertSame(junction, outcome.alignment());
+        assertEquals("junction", outcome.reason());
+        assertEquals(alignments.indexOf(junction), outcome.alignmentIndex());
         assertFalse("soft-clip loser rides in XA, not dropped", softClip.Dropped);
     }
 
@@ -755,9 +755,9 @@ public class PlacementSelectorTest
         List<LiftedAlignment> alignments = set(softClip, junction);
         alignments.get(0).GenomicScore = 80;
         alignments.get(1).GenomicScore = 80;
-        PlacementSelector.ApplyResult outcome = PlacementSelector.apply(alignments, false, softClip, 0, false);
-        assertSame("seed 0 -> first placement", softClip, outcome.effectivePrimary());
-        assertEquals("random", outcome.note());
+        PlacementSelector.Selection outcome = PlacementSelector.select(alignments, false, softClip, 0, false);
+        assertSame("seed 0 -> first placement", softClip, outcome.alignment());
+        assertEquals("random", outcome.reason());
     }
 
     @Test
@@ -766,9 +766,9 @@ public class PlacementSelectorTest
         List<LiftedAlignment> alignments = multiLocusSet();
         alignments.get(0).GenomicScore = 60;
         alignments.get(1).GenomicScore = 130;
-        PlacementSelector.ApplyResult outcome = PlacementSelector.apply(alignments, false, alignments.get(0), 0, false);
-        assertSame(alignments.get(1), outcome.effectivePrimary());
-        assertEquals("score", outcome.note());
+        PlacementSelector.Selection outcome = PlacementSelector.select(alignments, false, alignments.get(0), 0, false);
+        assertSame(alignments.get(1), outcome.alignment());
+        assertEquals("score", outcome.reason());
         assertFalse("all placements ride in XA", alignments.get(0).Dropped);
     }
 
@@ -778,9 +778,9 @@ public class PlacementSelectorTest
         List<LiftedAlignment> alignments = multiLocusSet();
         alignments.get(0).GenomicScore = 100;
         alignments.get(1).GenomicScore = 100;
-        PlacementSelector.ApplyResult outcome = PlacementSelector.apply(alignments, false, alignments.get(0), 1, false);
-        assertSame("seed 1 -> second placement", alignments.get(1), outcome.effectivePrimary());
-        assertEquals("random", outcome.note());
+        PlacementSelector.Selection outcome = PlacementSelector.select(alignments, false, alignments.get(0), 1, false);
+        assertSame("seed 1 -> second placement", alignments.get(1), outcome.alignment());
+        assertEquals("random", outcome.reason());
     }
 
     @Test
@@ -795,9 +795,9 @@ public class PlacementSelectorTest
         alignments.get(0).GenomicScore = 100;
         alignments.get(1).GenomicScore = 100;
         alignments.get(2).GenomicScore = 100;
-        PlacementSelector.ApplyResult outcome = PlacementSelector.apply(alignments, false, self, 1, false);
-        assertSame(txSpliced, outcome.effectivePrimary());
-        assertEquals("random", outcome.note());
+        PlacementSelector.Selection outcome = PlacementSelector.select(alignments, false, self, 1, false);
+        assertSame(txSpliced, outcome.alignment());
+        assertEquals("random", outcome.reason());
     }
 
     @Test
@@ -809,10 +809,10 @@ public class PlacementSelectorTest
         alignments.get(0).GenomicScore = 100;
         alignments.get(1).GenomicScore = 100;
         LiftedRecord mate = TarsTestFixtures.liftedRecordAt(CHR2, 250, "100M", false);
-        PlacementSelector.ApplyResult outcome = PlacementSelector.apply(alignments, false, alignments.get(0), 0, false, mate);
-        assertSame(alignments.get(1), outcome.effectivePrimary());
-        assertEquals("mate", outcome.note());
-        assertEquals(1, outcome.primaryIndex());
+        PlacementSelector.Selection outcome = PlacementSelector.select(alignments, false, alignments.get(0), 0, false, mate);
+        assertSame(alignments.get(1), outcome.alignment());
+        assertEquals("mate", outcome.reason());
+        assertEquals(1, outcome.alignmentIndex());
         assertFalse("tie loser rides in XA, not dropped", alignments.get(0).Dropped);
     }
 
@@ -829,11 +829,11 @@ public class PlacementSelectorTest
         List<LiftedAlignment> alignments = set(close, distant);
         LiftedRecord mate = TarsTestFixtures.liftedRecordAt(CHR1, 250, "100M", false);
 
-        PlacementSelector.ApplyResult outcome = PlacementSelector.apply(
+        PlacementSelector.Selection outcome = PlacementSelector.select(
                 alignments, false, close, 1, false, mate);
 
-        assertSame(close, outcome.effectivePrimary());
-        assertEquals("mate", outcome.note());
+        assertSame(close, outcome.alignment());
+        assertEquals("mate", outcome.reason());
     }
 
     @Test
@@ -849,11 +849,11 @@ public class PlacementSelectorTest
         List<LiftedAlignment> alignments = set(close, distant);
         LiftedRecord mate = TarsTestFixtures.liftedRecordAt(CHR1, 250, "100M", false);
 
-        PlacementSelector.ApplyResult outcome = PlacementSelector.apply(
+        PlacementSelector.Selection outcome = PlacementSelector.select(
                 alignments, false, close, 1, false, mate);
 
-        assertSame(close, outcome.effectivePrimary());
-        assertEquals("mate", outcome.note());
+        assertSame(close, outcome.alignment());
+        assertEquals("mate", outcome.reason());
     }
 
     @Test
@@ -867,13 +867,13 @@ public class PlacementSelectorTest
         LiftedAlignment mate = ref(CHR1, 250, "52M");
         mate.GenomicScore = 100;
 
-        PlacementSelector.PairApplyResult outcome = PlacementSelector.applyPair(
+        PlacementSelector.PairSelection outcome = PlacementSelector.selectPair(
                 set(close, distant), false, close, false,
                 set(mate), false, mate, false, 0);
 
-        assertSame(close, outcome.first().effectivePrimary());
-        assertSame(mate, outcome.second().effectivePrimary());
-        assertEquals("mate", outcome.first().note());
+        assertSame(close, outcome.first().alignment());
+        assertSame(mate, outcome.second().alignment());
+        assertEquals("mate", outcome.first().reason());
     }
 
     @Test
@@ -883,11 +883,11 @@ public class PlacementSelectorTest
         LiftedAlignment duplication = ref(CHR1, 1100, "100M");
         LiftedAlignment mate = refReverse(CHR1, 1000, "100M");
 
-        PlacementSelector.PairApplyResult outcome = PlacementSelector.applyPair(
+        PlacementSelector.PairSelection outcome = PlacementSelector.selectPair(
                 set(deletion, duplication), false, deletion, false,
                 set(mate), false, mate, true, 0);
 
-        assertSame(deletion, outcome.first().effectivePrimary());
+        assertSame(deletion, outcome.first().alignment());
     }
 
     @Test
@@ -897,11 +897,11 @@ public class PlacementSelectorTest
         LiftedAlignment localInversion = refReverse(CHR1, 1_999_000, "100M");
         LiftedAlignment mate = refReverse(CHR1, 2_000_000, "100M");
 
-        PlacementSelector.PairApplyResult outcome = PlacementSelector.applyPair(
+        PlacementSelector.PairSelection outcome = PlacementSelector.selectPair(
                 set(distantDeletion, localInversion), false, distantDeletion, false,
                 set(mate), false, mate, true, 0);
 
-        assertSame(localInversion, outcome.first().effectivePrimary());
+        assertSame(localInversion, outcome.first().alignment());
     }
 
     @Test
@@ -911,11 +911,11 @@ public class PlacementSelectorTest
         LiftedAlignment localInversion = refReverse(CHR1, 1_000_000, "100M");
         LiftedAlignment mate = refReverse(CHR1, 1_000_199, "100M");
 
-        PlacementSelector.PairApplyResult outcome = PlacementSelector.applyPair(
+        PlacementSelector.PairSelection outcome = PlacementSelector.selectPair(
                 set(localInversion, boundaryDeletion), false, localInversion, false,
                 set(mate), false, mate, true, 0);
 
-        assertSame(boundaryDeletion, outcome.first().effectivePrimary());
+        assertSame(boundaryDeletion, outcome.first().alignment());
     }
 
     @Test
@@ -925,11 +925,11 @@ public class PlacementSelectorTest
         LiftedAlignment alternative = ref(CHR1, 100, "100M");
         LiftedAlignment mate = refReverse(CHR1, 1000, "100M");
 
-        PlacementSelector.PairApplyResult outcome = PlacementSelector.applyPair(
+        PlacementSelector.PairSelection outcome = PlacementSelector.selectPair(
                 set(bwa, alternative), false, bwa, true,
                 set(mate), false, mate, true, 0);
 
-        assertSame(bwa, outcome.first().effectivePrimary());
+        assertSame(bwa, outcome.first().alignment());
     }
 
     @Test
@@ -940,12 +940,12 @@ public class PlacementSelectorTest
         first.Dropped = true;
         second.Dropped = true;
 
-        PlacementSelector.PairApplyResult outcome = PlacementSelector.applyPair(
+        PlacementSelector.PairSelection outcome = PlacementSelector.selectPair(
                 set(first), false, first, false,
                 set(second), false, second, false, 0);
 
-        assertSame(first, outcome.first().effectivePrimary());
-        assertSame(second, outcome.second().effectivePrimary());
+        assertSame(first, outcome.first().alignment());
+        assertSame(second, outcome.second().alignment());
     }
 
     @Test
@@ -960,17 +960,17 @@ public class PlacementSelectorTest
         secondChr1.GenomicScore = 100;
         secondChr2.GenomicScore = 50;
 
-        PlacementSelector.PairApplyResult forward = PlacementSelector.applyPair(
+        PlacementSelector.PairSelection forward = PlacementSelector.selectPair(
                 set(firstChr1, firstChr2), false, firstChr1, false,
                 set(secondChr1, secondChr2), false, secondChr1, false, 0);
-        PlacementSelector.PairApplyResult reverse = PlacementSelector.applyPair(
+        PlacementSelector.PairSelection reverse = PlacementSelector.selectPair(
                 set(secondChr1, secondChr2), false, secondChr1, false,
                 set(firstChr1, firstChr2), false, firstChr1, false, 0);
 
-        assertSame(firstChr1, forward.first().effectivePrimary());
-        assertSame(secondChr1, forward.second().effectivePrimary());
-        assertSame(secondChr1, reverse.first().effectivePrimary());
-        assertSame(firstChr1, reverse.second().effectivePrimary());
+        assertSame(firstChr1, forward.first().alignment());
+        assertSame(secondChr1, forward.second().alignment());
+        assertSame(secondChr1, reverse.first().alignment());
+        assertSame(firstChr1, reverse.second().alignment());
     }
 
     @Test
@@ -993,9 +993,9 @@ public class PlacementSelectorTest
         alignments.get(0).GenomicScore = 100;
         alignments.get(1).GenomicScore = 100;
         LiftedRecord mate = TarsTestFixtures.liftedRecordAt("chr9", 500, "100M", false);
-        PlacementSelector.ApplyResult outcome = PlacementSelector.apply(alignments, false, alignments.get(0), 1, false, mate);
-        assertSame("seed 1 -> second placement", alignments.get(1), outcome.effectivePrimary());
-        assertEquals("random", outcome.note());
+        PlacementSelector.Selection outcome = PlacementSelector.select(alignments, false, alignments.get(0), 1, false, mate);
+        assertSame("seed 1 -> second placement", alignments.get(1), outcome.alignment());
+        assertEquals("random", outcome.reason());
     }
 
     @Test
@@ -1006,8 +1006,8 @@ public class PlacementSelectorTest
         alignments.get(0).GenomicScore = 100;
         alignments.get(1).GenomicScore = 100;
         LiftedRecord mate = TarsTestFixtures.liftedRecordAt(CHR1, 5_000_000, "100M", false);
-        PlacementSelector.ApplyResult outcome = PlacementSelector.apply(alignments, false, alignments.get(0), 1, false, mate);
-        assertSame("seed 1 -> second placement", alignments.get(1), outcome.effectivePrimary());
-        assertEquals("random", outcome.note());
+        PlacementSelector.Selection outcome = PlacementSelector.select(alignments, false, alignments.get(0), 1, false, mate);
+        assertSame("seed 1 -> second placement", alignments.get(1), outcome.alignment());
+        assertEquals("random", outcome.reason());
     }
 }
