@@ -111,7 +111,6 @@ public class LiftBackGroupProcessor
 
         if(hasSupplementaries)
         {
-            // Step 2: lift the supplementary records and add any spliced primary alignments they support.
             for(int i = 1; i < records.size(); ++i)
             {
                 resolved.set(i, mPlacementSelector.liftSupplementaryAlignment(records.get(i), mOverhangGate));
@@ -120,7 +119,7 @@ public class LiftBackGroupProcessor
                     records, primaryAlignments, resolved, mateHintIntrons);
         }
 
-        // Score before pair selection so mate proximity can be applied only to placements that pass the AS floor.
+        // Pair selection only considers placements that pass the AS floor.
         scorePrimaryAlignments(primary, primaryAlignments);
         resolved.set(0, primaryAlignments);
         return new PreparedRead(records, List.copyOf(resolved));
@@ -198,7 +197,6 @@ public class LiftBackGroupProcessor
 
     private Integer finalAlignmentScore(final SAMRecord primary, final LiftedRecord lifted)
     {
-        // lift-only paths have no supplementary merger and skip the production AS floor
         if(!mSupplementaryResolver.enabled())
         {
             return null;

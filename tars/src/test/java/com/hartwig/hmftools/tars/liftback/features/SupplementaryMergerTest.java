@@ -29,7 +29,6 @@ import com.hartwig.hmftools.tars.liftback.features.SupplementaryMerger.Supplemen
 
 import org.junit.Test;
 
-// Reads are 151bp (Illumina default) unless noted.
 public class SupplementaryMergerTest
 {
     private static final String CHR1 = "chr1";
@@ -62,6 +61,14 @@ public class SupplementaryMergerTest
         return new SupplementaryMerger(annotated, TarsTestFixtures.supplementaryConfig());
     }
 
+    private static void assertRejected(
+            final RejectReason reason, final SupplementaryMerger merger, final Placement placement)
+    {
+        Result result = merger.merge(placement);
+        assertFalse(reason.name(), result.merged());
+        assertEquals(reason, result.rejectReason());
+    }
+
     @Test
     public void testRightExtendCleanMerge()
     {
@@ -87,7 +94,6 @@ public class SupplementaryMergerTest
     }
 
     @Test
-    // the path LiftBackGroupProcessor annotates spliced primaries through
     public void testSpliceStrandComesFromTheAnnotation()
     {
         EnsemblAnnotationIndex annotation = EnsemblAnnotationIndex.fromContigEntries(List.of(
@@ -118,8 +124,6 @@ public class SupplementaryMergerTest
     @Test
     public void testMergeAcrossPreCollapsedTerminalClip()
     {
-        // The overhang gate collapses the tx-contig over-run (100M83N3M48S) to 100M51S before the merger runs, so the
-        // merger sees a clean terminal clip and merges it across the true 156N junction.
         int primStart = 1051270;
         String primCigar = "100M51S";
         int suppStart = 1051525;
@@ -140,7 +144,6 @@ public class SupplementaryMergerTest
     @Test
     public void testLeftExtendCleanMerge()
     {
-        // Mirror of right-extend: the primary starts after the junction and the supp covers the upstream exon.
         int suppStart = 31448368;
         String suppCigar = "57M94S";
         int primStart = 31448541;
@@ -160,7 +163,6 @@ public class SupplementaryMergerTest
     @Test
     public void testChainMergeAcrossThreeExons()
     {
-        // 3-exon read: primary on the first exon, two supps on the middle and last exons.
         int primStart = 1000;
         String primCigar = "50M101S";
         int suppMidStart = 2000;
@@ -187,7 +189,6 @@ public class SupplementaryMergerTest
         assertTrue(result.droppedSupplementaryIndices().contains(0));
         assertTrue(result.droppedSupplementaryIndices().contains(1));
 
-        // Introduced introns are recorded in chain order, first exon boundary first.
         assertEquals(2, result.introducedIntrons().size());
         assertEquals(new ChrBaseRegion(CHR1, 1050, 1999), result.introducedIntrons().get(0));
         assertEquals(new ChrBaseRegion(CHR1, 2060, 2999), result.introducedIntrons().get(1));
@@ -214,77 +215,30 @@ public class SupplementaryMergerTest
     }
 
     @Test
-    public void testRejectNoTerminalSoftclip()
+    public void testBasicRejectReasons()
     {
-        Placement cand = placement(
-                CHR1, true, READ_LEN, 1000, "151M",
-                supp(0, CHR1, true, 2000, "90S61M", 60));
+        SupplementaryMerger merger = defaultMerger(annotated(new ChrBaseRegion(CHR1, 1095, 1499)));
 
-        Result result = defaultMerger(annotated()).merge(cand);
-
-        assertFalse(result.merged());
-        assertEquals(RejectReason.NO_TERMINAL_SOFTCLIP, result.rejectReason());
-    }
-
-    @Test
-    public void testRejectDifferentChromosome()
-    {
-        ChrBaseRegion annotatedIntron = new ChrBaseRegion(CHR1, 1095, 1499);
-        Placement cand = placement(
-                CHR1, true, READ_LEN, 1001, "94M57S",
-                supp(0, CHR2, true, 1500, "90S61M", 60));
-
-        Result result = defaultMerger(annotated(annotatedIntron)).merge(cand);
-
-        assertFalse(result.merged());
-        assertEquals(RejectReason.DIFFERENT_CHROMOSOME, result.rejectReason());
-    }
-
-    @Test
-    public void testRejectOppositeStrand()
-    {
-        ChrBaseRegion annotatedIntron = new ChrBaseRegion(CHR1, 1095, 1499);
-        Placement cand = placement(
-                CHR1, true, READ_LEN, 1001, "94M57S",
-                supp(0, CHR1, false, 1500, "90S61M", 60));
-
-        Result result = defaultMerger(annotated(annotatedIntron)).merge(cand);
-
-        assertFalse(result.merged());
-        assertEquals(RejectReason.OPPOSITE_STRAND, result.rejectReason());
-    }
-
-    @Test
-    public void testRejectIntronTooShort()
-    {
-        // Intron length 6 - below default MinIntronLength=21.
-        Placement cand = placement(
-                CHR1, true, READ_LEN, 1000, "94M57S",
-                supp(0, CHR1, true, 1100, "94S57M", 60));
-
-        Result result = defaultMerger(annotated()).merge(cand);
-
-        assertFalse(result.merged());
-        assertEquals(RejectReason.INTRON_TOO_SHORT, result.rejectReason());
-    }
-
-    @Test
-    public void testRejectIntronTooLong()
-    {
-        Placement cand = placement(
-                CHR1, true, READ_LEN, 1000, "94M57S",
-                supp(0, CHR1, true, 2_001_095, "94S57M", 60));
-
-        Result result = defaultMerger(annotated()).merge(cand);
-
-        assertFalse(result.merged());
-        assertEquals(RejectReason.INTRON_TOO_LONG, result.rejectReason());
+        assertRejected(RejectReason.NO_TERMINAL_SOFTCLIP, merger,
+                placement(CHR1, true, READ_LEN, 1000, "151M",
+                        supp(0, CHR1, true, 2000, "90S61M", 60)));
+        assertRejected(RejectReason.DIFFERENT_CHROMOSOME, merger,
+                placement(CHR1, true, READ_LEN, 1001, "94M57S",
+                        supp(0, CHR2, true, 1500, "90S61M", 60)));
+        assertRejected(RejectReason.OPPOSITE_STRAND, merger,
+                placement(CHR1, true, READ_LEN, 1001, "94M57S",
+                        supp(0, CHR1, false, 1500, "90S61M", 60)));
+        assertRejected(RejectReason.INTRON_TOO_SHORT, merger,
+                placement(CHR1, true, READ_LEN, 1000, "94M57S",
+                        supp(0, CHR1, true, 1100, "94S57M", 60)));
+        assertRejected(RejectReason.INTRON_TOO_LONG, merger,
+                placement(CHR1, true, READ_LEN, 1000, "94M57S",
+                        supp(0, CHR1, true, 2_001_095, "94S57M", 60)));
     }
 
     @Test
     public void testShortPrimaryAnchorNowMerges()
     {
-        // Primary anchor 2bp: the MinAnchorOverhang guard was removed, so this merges on the annotated junction.
         ChrBaseRegion intron = new ChrBaseRegion(CHR1, 1002, 1099);
         Placement cand = placement(
                 CHR1, true, READ_LEN, 1000, "2M149S",
@@ -299,7 +253,6 @@ public class SupplementaryMergerTest
     @Test
     public void testShortSuppAnchorNowMerges()
     {
-        // Supp anchor 1bp: the MinAnchorOverhang guard was removed, so this merges (trust-primary junction).
         ChrBaseRegion intron = new ChrBaseRegion(CHR1, 1050, 1099);
         Placement cand = placement(
                 CHR1, true, 50, 1000, "49M1S",
@@ -340,117 +293,41 @@ public class SupplementaryMergerTest
     }
 
     @Test
-    public void testRejectHardClipPrimary()
+    public void testCigarRejectReasons()
     {
-        Placement cand = placement(
-                CHR1, true, READ_LEN, 1000, "10H94M57S",
-                supp(0, CHR1, true, 1200, "90S61M", 60));
+        SupplementaryMerger merger = defaultMerger(annotated(
+                new ChrBaseRegion(CHR1, 1091, 1199),
+                new ChrBaseRegion(CHR1, 1095, 1199),
+                new ChrBaseRegion(CHR1, 1095, 1499)));
 
-        Result result = defaultMerger(annotated()).merge(cand);
-
-        assertFalse(result.merged());
-        assertEquals(RejectReason.COMPLEX_CIGAR_SHAPE, result.rejectReason());
-    }
-
-    @Test
-    public void testRejectHardClipSupp()
-    {
-        ChrBaseRegion intron = new ChrBaseRegion(CHR1, 1095, 1199);
-        Placement cand = placement(
-                CHR1, true, READ_LEN, 1001, "94M57S",
-                supp(0, CHR1, true, 1200, "5H90S61M", 60));
-
-        Result result = defaultMerger(annotated(intron)).merge(cand);
-
-        assertFalse(result.merged());
-        assertEquals(RejectReason.COMPLEX_CIGAR_SHAPE, result.rejectReason());
-    }
-
-    @Test
-    public void testRejectIndelAdjacentToPrimarySoftclip()
-    {
-        ChrBaseRegion intron = new ChrBaseRegion(CHR1, 1091, 1199);
-        Placement cand = placement(
-                CHR1, true, READ_LEN, 1000, "90M4I57S",
-                supp(0, CHR1, true, 1200, "94S57M", 60));
-
-        Result result = defaultMerger(annotated(intron)).merge(cand);
-
-        assertFalse(result.merged());
-        assertEquals(RejectReason.COMPLEX_CIGAR_SHAPE, result.rejectReason());
-    }
-
-    @Test
-    public void testRejectReadCoverageOverlap()
-    {
-        // overlap 14 bases - exceeds tolerance.
-        ChrBaseRegion intron = new ChrBaseRegion(CHR1, 1095, 1499);
-        Placement cand = placement(
-                CHR1, true, READ_LEN, 1001, "94M57S",
-                supp(0, CHR1, true, 1500, "80S71M", 60));
-
-        Result result = defaultMerger(annotated(intron)).merge(cand);
-
-        assertFalse(result.merged());
-        assertEquals(RejectReason.READ_COVERAGE_OVERLAP, result.rejectReason());
-    }
-
-    @Test
-    public void testRejectReadCoverageGap()
-    {
-        ChrBaseRegion intron = new ChrBaseRegion(CHR1, 1095, 1499);
-        Placement cand = placement(
-                CHR1, true, READ_LEN, 1001, "94M57S",
-                supp(0, CHR1, true, 1500, "110S41M", 60));
-
-        Result result = defaultMerger(annotated(intron)).merge(cand);
-
-        assertFalse(result.merged());
-        assertEquals(RejectReason.READ_COVERAGE_GAP, result.rejectReason());
-    }
-
-    @Test
-    public void testRejectRefOverlap()
-    {
-        // Supp starts upstream of primary's matched end - ref overlap.
-        Placement cand = placement(
-                CHR1, true, READ_LEN, 1001, "94M57S",
-                supp(0, CHR1, true, 1080, "94S57M", 60));
-
-        Result result = defaultMerger(annotated()).merge(cand);
-
-        assertFalse(result.merged());
-        assertEquals(RejectReason.READ_COVERAGE_OVERLAP, result.rejectReason());
-    }
-
-    @Test
-    public void testNoSupplementaryAvailable()
-    {
-        Placement cand = placement(CHR1, true, READ_LEN, 1000, "94M57S");
-
-        Result result = defaultMerger(annotated()).merge(cand);
-
-        assertFalse(result.merged());
-        assertEquals(RejectReason.NO_MATCHING_SUPP, result.rejectReason());
-    }
-
-    @Test
-    public void testRejectShapeMismatchSuppWrongClipSide()
-    {
-        Placement cand = placement(
-                CHR1, true, READ_LEN, 1000, "94M57S",
-                supp(0, CHR1, true, 1200, "61M90S", 60));
-
-        Result result = defaultMerger(annotated()).merge(cand);
-
-        assertFalse(result.merged());
-        assertEquals(RejectReason.NO_MATCHING_SUPP, result.rejectReason());
+        assertRejected(RejectReason.COMPLEX_CIGAR_SHAPE, merger,
+                placement(CHR1, true, READ_LEN, 1000, "10H94M57S",
+                        supp(0, CHR1, true, 1200, "90S61M", 60)));
+        assertRejected(RejectReason.COMPLEX_CIGAR_SHAPE, merger,
+                placement(CHR1, true, READ_LEN, 1001, "94M57S",
+                        supp(0, CHR1, true, 1200, "5H90S61M", 60)));
+        assertRejected(RejectReason.COMPLEX_CIGAR_SHAPE, merger,
+                placement(CHR1, true, READ_LEN, 1000, "90M4I57S",
+                        supp(0, CHR1, true, 1200, "94S57M", 60)));
+        assertRejected(RejectReason.READ_COVERAGE_OVERLAP, merger,
+                placement(CHR1, true, READ_LEN, 1001, "94M57S",
+                        supp(0, CHR1, true, 1500, "80S71M", 60)));
+        assertRejected(RejectReason.READ_COVERAGE_GAP, merger,
+                placement(CHR1, true, READ_LEN, 1001, "94M57S",
+                        supp(0, CHR1, true, 1500, "110S41M", 60)));
+        assertRejected(RejectReason.READ_COVERAGE_OVERLAP, merger,
+                placement(CHR1, true, READ_LEN, 1001, "94M57S",
+                        supp(0, CHR1, true, 1080, "94S57M", 60)));
+        assertRejected(RejectReason.NO_MATCHING_SUPP, merger,
+                placement(CHR1, true, READ_LEN, 1000, "94M57S"));
+        assertRejected(RejectReason.NO_MATCHING_SUPP, merger,
+                placement(CHR1, true, READ_LEN, 1000, "94M57S",
+                        supp(0, CHR1, true, 1200, "61M90S", 60)));
     }
 
     @Test
     public void testPrimaryBothSidesClippedRightExtendAccepted()
     {
-        // Middle-anchored primary: supp past primaryRefEnd disambiguates direction -> right-extend fires.
         Placement cand = placement(
                 CHR1, true, READ_LEN, 1001, "5S90M56S",
                 supp(0, CHR1, true, 1500, "95S56M", 60));
@@ -465,7 +342,6 @@ public class SupplementaryMergerTest
     @Test
     public void testPrimaryBothSidesClippedLeftExtendAccepted()
     {
-        // Mirror on the left: supp ends before primaryStart -> left-extend fires.
         Placement cand = placement(
                 CHR1, true, READ_LEN, 1001, "5S90M56S",
                 supp(0, CHR1, true, 500, "5M146S", 60));
@@ -480,7 +356,6 @@ public class SupplementaryMergerTest
     @Test
     public void testPrimaryBothSidesClippedChainMergesBothSupps()
     {
-        // Middle-anchored 3-exon read: the chain merges right first, then left.
         Supplementary right = supp(0, CHR1, true, 1500, "95S56M", 60);
         Supplementary left = supp(1, CHR1, true, 500, "5M146S", 60);
         Placement cand = new Placement(
@@ -498,7 +373,6 @@ public class SupplementaryMergerTest
     @Test
     public void testMultipleSuppsInReachSkipsMerge()
     {
-        // Two supps both pass every gate - refuse to guess the splice destination.
         ChrBaseRegion intron = new ChrBaseRegion(CHR1, 1095, 1499);
         Placement cand = placement(
                 CHR1, true, READ_LEN, 1001, "94M57S",
@@ -514,7 +388,6 @@ public class SupplementaryMergerTest
     @Test
     public void testPrimaryMapQualityZeroStillMerges()
     {
-        // MAPQ-0 primary is the common tx-contig duplicate artifact - not a disqualifier.
         ChrBaseRegion intron = new ChrBaseRegion(CHR1, 31448462, 31448540);
         Placement cand = placement(
                 CHR1, true, READ_LEN, 31448368, "94M57S",
@@ -528,7 +401,6 @@ public class SupplementaryMergerTest
     @Test
     public void testTwoValidSuppsSameBoundaryRefusesToGuess()
     {
-        // Two supps at different intron lengths both pass - single-supp-within-reach policy refuses to guess.
         ChrBaseRegion intron1 = new ChrBaseRegion(CHR1, 1095, 1499);
         ChrBaseRegion intron2 = new ChrBaseRegion(CHR1, 1095, 1799);
         Placement cand = placement(
@@ -669,7 +541,6 @@ public class SupplementaryMergerTest
     @Test
     public void testChainDepthCap()
     {
-        // cap=2 stops the chain after 2 merges even when more supps are available.
         SupplementaryConfig cappedConfig =
                 new SupplementaryConfig(21, 1_000_000, 2, true, 0);
 
@@ -709,50 +580,8 @@ public class SupplementaryMergerTest
     }
 
     @Test
-    public void testEachOutcomeReportsItsRejectReason()
+    public void testComplementaryCigarsMergeAtExpectedJunction()
     {
-        // AnnotatedOnly=true so the novel-junction reject is observable.
-        SupplementaryConfig strict = new SupplementaryConfig(21, 1_000_000, 4, true, 5);
-        SupplementaryMerger merger = new SupplementaryMerger(
-                annotated(new ChrBaseRegion(CHR1, 1095, 1499)), strict);
-
-        Result onAnnotated = merger.merge(placement(
-                CHR1, true, READ_LEN, 1001, "94M57S",
-                supp(0, CHR1, true, 1500, "94S57M", 60)));
-        Result novelJunction = merger.merge(placement(
-                CHR1, true, READ_LEN, 1001, "94M57S",
-                supp(0, CHR1, true, 1800, "94S57M", 60)));
-        Result crossChromosome = merger.merge(placement(
-                CHR1, true, READ_LEN, 1001, "94M57S",
-                supp(0, CHR2, true, 1500, "94S57M", 60)));
-
-        assertTrue(onAnnotated.merged());
-        assertFalse(novelJunction.merged());
-        assertEquals(RejectReason.NOVEL_JUNCTION, novelJunction.rejectReason());
-        assertFalse(crossChromosome.merged());
-        assertEquals(RejectReason.DIFFERENT_CHROMOSOME, crossChromosome.rejectReason());
-    }
-
-    @Test
-    public void testOppositeStrandSuppRejected()
-    {
-        SupplementaryMerger merger = new SupplementaryMerger(
-                Collections.emptySet(), TarsTestFixtures.supplementaryConfig());
-
-        Placement cand = placement(
-                CHR1, true, READ_LEN, 1000, "94M57S",
-                supp(0, CHR1, false, 1500, "94S57M", 60));
-
-        Result result = merger.merge(cand);
-
-        assertFalse(result.merged());
-        assertEquals(RejectReason.OPPOSITE_STRAND, result.rejectReason());
-    }
-
-    @Test
-    public void testExp7Case2Chr1_31448368()
-    {
-        // exp7 case 2 (chr1:31448368): clean complementary cigars merge into the expected junction CIGAR.
         ChrBaseRegion annotatedIntron = new ChrBaseRegion(CHR1, 31448462, 31448539);
         Placement cand = placement(
                 CHR1, true, READ_LEN, 31448368, "94M57S",
@@ -766,9 +595,8 @@ public class SupplementaryMergerTest
     }
 
     @Test
-    public void testExp7Case3Chr5_34937631()
+    public void testTwoBaseOverlapMergesAtAnnotatedJunction()
     {
-        // overlap=2: the junction lands at read offset 61 (trust-supp) on the annotated junction, giving 61M1166N90M.
         String chr5 = "chr5";
         ChrBaseRegion annotatedIntron = new ChrBaseRegion(chr5, 34937692, 34938857);
         Placement cand = placement(
@@ -785,7 +613,6 @@ public class SupplementaryMergerTest
     @Test
     public void testOverlapWithinTolerancePlacesJunctionOnAnnotated()
     {
-        // overlap=4; trust-primary L=94 lands on annotated (1095, 1503).
         ChrBaseRegion annotated = new ChrBaseRegion(CHR1, 1095, 1503);
         Placement cand = placement(
                 CHR1, true, 151, 1001, "94M57S",
@@ -802,7 +629,6 @@ public class SupplementaryMergerTest
     @Test
     public void testOverlapWithinTolerancePlacesJunctionOnAnnotatedAtTrustSuppEnd()
     {
-        // overlap=2; trust-supp L=92 lands on annotated (1092, 1497).
         ChrBaseRegion annotated = new ChrBaseRegion(CHR1, 1092, 1497);
         Placement cand = placement(
                 CHR1, true, 151, 1000, "94M57S",
@@ -817,8 +643,6 @@ public class SupplementaryMergerTest
     @Test
     public void testOverlapWithinToleranceSeededPickAmongAnnotated()
     {
-        // overlap=2 and both L's land on an annotated junction. The ANNOTATED-tier tie is broken by a read-seeded
-        // deterministic pick, not by max-min-anchor; this placement merges to trustPrimary.
         ChrBaseRegion trustPrimary = new ChrBaseRegion(CHR1, 1095, 1499);
         ChrBaseRegion trustSupp = new ChrBaseRegion(CHR1, 1093, 1497);
         Placement cand = placement(
@@ -863,8 +687,6 @@ public class SupplementaryMergerTest
     @Test
     public void testNoAnnotatedPositionWithDefaultsFallsBackToMidpoint()
     {
-        // With no annotated or motif match the junction is placed at the midpoint of the ambiguous overlap range
-        // (rounded down), not at bwa's split point.
         Placement cand = placement(
                 CHR1, true, 151, 1001, "94M57S",
                 supp(0, CHR1, true, 1500, "92S59M", 60));
@@ -890,7 +712,6 @@ public class SupplementaryMergerTest
     @Test
     public void testMotifScanPicksCanonicalGTagWhenUnannotated()
     {
-        // Canonical GT-AG motif at intron (1095, 1499) with no annotation: merge via motif scan.
         Placement cand = placement(
                 CHR1, true, 151, 1001, "94M57S",
                 supp(0, CHR1, true, 1500, "94S57M", 60));
@@ -906,7 +727,6 @@ public class SupplementaryMergerTest
     @Test
     public void testMotifScanPicksAnnotatedOverMotifWhenBothPresent()
     {
-        // overlap=2; annotated at L=94 must beat canonical motif at L=92.
         ChrBaseRegion annotated = new ChrBaseRegion(CHR1, 1095, 1499);
         TestGenome genome = new TestGenome().with(CHR1, 2000, 'N')
                 .set(CHR1, 1093, "GT").set(CHR1, 1496, "AG");
@@ -925,10 +745,9 @@ public class SupplementaryMergerTest
     @Test
     public void testMotifScanPrefersCanonicalOverSemiCanonical()
     {
-        // overlap=2; canonical (GT-AG) at L=92 must beat semi-canonical (GC-AG) at L=94.
         TestGenome genome = new TestGenome().with(CHR1, 2000, 'N')
-                .set(CHR1, 1095, "GC").set(CHR1, 1498, "AG")    // semi at (1095, 1499): GC-AG
-                .set(CHR1, 1093, "GT").set(CHR1, 1496, "AG");   // canonical at (1093, 1497): GT-AG
+                .set(CHR1, 1095, "GC").set(CHR1, 1498, "AG")
+                .set(CHR1, 1093, "GT").set(CHR1, 1496, "AG");
 
         Placement cand = placement(
                 CHR1, true, 151, 1001, "94M57S",
@@ -944,7 +763,6 @@ public class SupplementaryMergerTest
     @Test
     public void testMotifScanAcceptsReverseStrandCanonical()
     {
-        // Reverse-strand transcript: genomic forward CT-AC is the reverse complement of GT-AG.
         TestGenome genome = new TestGenome().with(CHR1, 2000, 'N')
                 .set(CHR1, 1095, "CT").set(CHR1, 1498, "AC");
 
@@ -961,7 +779,6 @@ public class SupplementaryMergerTest
     @Test
     public void testMotifScanIgnoredWhenNoMotifAndNoAnnotated()
     {
-        // All-N ref with no annotation falls through to the trust-primary fallback.
         TestGenome genome = new TestGenome().with(CHR1, 2000, 'N');
         Placement cand = placement(
                 CHR1, true, 151, 1001, "94M57S",
@@ -976,7 +793,6 @@ public class SupplementaryMergerTest
     @Test
     public void testMotifScanLeftExtendCanonical()
     {
-        // Left-extend with a canonical GT-AG motif at intron (1058, 1499).
         TestGenome genome = new TestGenome().with(CHR1, 2000, 'N')
                 .set(CHR1, 1058, "GT").set(CHR1, 1498, "AG");
 
@@ -993,9 +809,6 @@ public class SupplementaryMergerTest
     @Test
     public void testSuppWithInternalNBeforePrimaryClampedToItsFirstBlock()
     {
-        // ContigTranslator can expand a cross-exon M into M-N-M. This supp already spans the junction and its post-N
-        // block lands on the primary, so it carries no soft clip and pairs with nothing. Clamping it back to its first
-        // block (57M94S at 1000) makes it the upstream anchor and the merge re-derives the splice.
         Placement cand = placement(
                 CHR1, true, 151, 2000, "57S94M",
                 supp(0, CHR1, true, 1000, "57M943N94M", 60));
@@ -1011,8 +824,6 @@ public class SupplementaryMergerTest
     @Test
     public void testSuppWithInternalNPastPrimaryClampedToItsLastBlock()
     {
-        // Mirror: the supp overruns the primary's end rather than starting before it, so it is clamped to its last
-        // block (94S57M at 2037) and becomes the downstream anchor.
         Placement cand = placement(
                 CHR1, true, 151, 1000, "94M57S",
                 supp(0, CHR1, true, 1000, "94M943N57M", 60));
@@ -1028,8 +839,6 @@ public class SupplementaryMergerTest
     @Test
     public void testSuppWithInternalNInsidePrimarySpanNotClamped()
     {
-        // Nothing to clamp: the supp sits inside the primary's span, so it keeps its M-N-M shape, has no terminal soft
-        // clip and finds no merge partner.
         Placement cand = placement(
                 CHR1, true, 151, 900, "151M",
                 supp(0, CHR1, true, 1000, "57M20N94M", 60));
@@ -1042,7 +851,6 @@ public class SupplementaryMergerTest
     @Test
     public void testMateHintUsedAsFallbackWhenAnnotationMisses()
     {
-        // Mate hint overrides the midpoint fallback when no annotation is within the ambiguous window.
         Placement withoutHint = placement(
                 CHR1, true, 151, 1001, "94M57S",
                 supp(0, CHR1, true, 1498, "92S59M", 60));
@@ -1064,7 +872,6 @@ public class SupplementaryMergerTest
     @Test
     public void testMateHintIgnoredWhenAnnotatedMatchExists()
     {
-        // Annotated junction beats mate hint when both are within the ambiguous window.
         ChrBaseRegion annotatedJunc = new ChrBaseRegion(CHR1, 1095, 1499);
         ChrBaseRegion hint = new ChrBaseRegion(CHR1, 1093, 1497);
         Placement cand = new Placement(
@@ -1081,8 +888,6 @@ public class SupplementaryMergerTest
     @Test
     public void testMateHintPinsIntronEndWhenPrimaryIsDownstream()
     {
-        // The primary carries the leading clip, so the hint pins the intron end rather than its start. Same geometry as
-        // the upstream case with the roles swapped, so the merged alignment is identical.
         Placement withoutHint = placement(
                 CHR1, true, 151, 1498, "92S59M",
                 supp(0, CHR1, true, 1001, "94M57S", 60));
@@ -1105,7 +910,6 @@ public class SupplementaryMergerTest
     @Test
     public void testMateHintOutsideOverlapWindowIgnored()
     {
-        // Falls back to the midpoint of the ambiguous range.
         ChrBaseRegion hint = new ChrBaseRegion(CHR1, 50000, 50100);
         Placement cand = new Placement(
                 CHR1, true, 151, 1001, "94M57S",

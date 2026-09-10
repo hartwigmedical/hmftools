@@ -20,13 +20,10 @@ import com.hartwig.hmftools.tars.liftback.features.OverhangGate;
 
 import htsjdk.samtools.SAMRecord;
 
-// Lifts a SAMRecord's alignments to genomic coordinates and decides the primary alignment, locus count and MAPQ.
-// Every input record produces exactly one result.
 public class PlacementSelector
 {
     private final AlignmentLifter mAlignmentLifter;
 
-    // when present, resolves hidden ties (XS==AS, no XA) on ref-only primaries landing inside an annotated exon.
     private final EnsemblAnnotationIndex mEnsemblAnnotationIndex;
 
     public PlacementSelector(final List<ContigEntry> entries)
@@ -45,7 +42,6 @@ public class PlacementSelector
         return mAlignmentLifter.translator();
     }
 
-    // Convenience for non-discriminating callers: supplementaries, unmapped, lift-only paths, tests.
     public LiftedRecord resolve(final SAMRecord record)
     {
         return resolve(record, null, null);
@@ -71,7 +67,6 @@ public class PlacementSelector
         return selectPrimaryAlignment(record, alignments.liftedAlignments(), mate);
     }
 
-    // README Steps 0-1: lift the primary and XA alts to genomic coordinates, then apply the overhang gate.
     public LiftedRecord liftPrimaryAlignments(final SAMRecord record, final OverhangGate overhangGate)
     {
         return mAlignmentLifter.liftPrimary(record, overhangGate);
@@ -130,7 +125,6 @@ public class PlacementSelector
             }
         }
 
-        // Single kept alignment: the locus scan collapses to 1, so skip the per-read map.
         int numLoci = keptAlignments.size() == 1 ? 1 : countDistinctLoci(keptAlignments, effectivePrimary);
 
         boolean hiddenTie = inputMapQuality == 0 && hasHiddenTie(record);
@@ -188,15 +182,12 @@ public class PlacementSelector
         return existing + ";" + note;
     }
 
-    // Lift a supplementary's own placement and XA alternatives together. The placement selected relative to the final
-    // primary is used both for merging and for emission when the supplementary is not absorbed.
     public LiftedRecord liftSupplementaryAlignment(final SAMRecord record, final OverhangGate overhangGate)
     {
         return mAlignmentLifter.liftSupplementary(record, overhangGate);
     }
 
-    // Distinct genomic loci among kept alignments: an alt overlapping the primary collapses into it; non-overlapping
-    // alts interval-merge among themselves but are never chained back through the primary.
+    // Alternatives collapse into the primary or each other, but do not chain through the primary.
     private static int countDistinctLoci(final List<LiftedAlignment> alignments, final LiftedAlignment primary)
     {
         Map<String, List<int[]>> distinctSpans = new HashMap<>();
@@ -234,8 +225,6 @@ public class PlacementSelector
         return loci;
     }
 
-    // Emit-time NH recompute: drops Dropped alts and collapses alts overlapping the primary, so NH stays consistent
-    // with the final XA. A placement-less record maps to one locus by definition.
     public static int countDistinctLoci(final LiftedRecord liftedRecord)
     {
         if(!liftedRecord.hasPlacement())
@@ -254,9 +243,7 @@ public class PlacementSelector
         return Math.max(countDistinctLoci(kept, liftedRecord.primaryAlignment()), 1);
     }
 
-    // Only a MAPQ-0 primary is ever bumped, and only when it lifts to a single locus off a decisive pick. A hidden tie
-    // (XS==AS, an equal-scoring alt bwa did not emit) blocks the bump unless tx provenance or an annotated exon vouches
-    // for the placement. Anything bwa graded is left alone.
+    // XS == AS blocks a MAPQ bump unless transcript evidence resolves the hidden tie.
     static int decidePrimaryMapQuality(
             final int inputMapQuality, final int numLoci, final boolean hiddenTie,
             final boolean primaryFromTxContig, final boolean primaryInAnnotatedExon, final boolean randomTie)
@@ -267,14 +254,12 @@ public class PlacementSelector
         return confident ? CONFIDENT_MAPQ : inputMapQuality;
     }
 
-    // Deterministic per-read seed for the random placement picks; mates share a read name, so a pair is placed together.
     static int readSeed(final String readName)
     {
         int hash = readName.hashCode();
         return hash ^ (hash >>> 16);
     }
 
-    // When XS == AS, an equally-scoring alt was not emitted by bwa; flag as a hidden tie to skip the MAPQ bump.
     private static boolean hasHiddenTie(final SAMRecord record)
     {
         Integer alignmentScore = record.getIntegerAttribute(ALIGNMENT_SCORE_ATTRIBUTE);
@@ -282,9 +267,6 @@ public class PlacementSelector
         return alignmentScore != null && suboptimalScore != null && suboptimalScore.intValue() == alignmentScore.intValue();
     }
 
-    // Ref and tx agree on one contiguous placement, so there is nothing to choose between and the pick keeps bwa's
-    // primary. An alt the overhang gate collapsed to a contiguous alignment is marked Dropped before placement selection
-    // runs; it is a fabricated placement, so it contributes neither a source nor a locus.
     public static boolean isConcordant(final List<LiftedAlignment> alignments)
     {
         Set<AlignmentKey.Locus> loci = new HashSet<>();
@@ -299,7 +281,6 @@ public class PlacementSelector
                 continue;
             }
 
-            // a surviving N means the two views disagree about splicing
             if(alignment.cigarHasN())
             {
                 return false;
@@ -321,7 +302,6 @@ public class PlacementSelector
         return hasRef && hasTx && loci.size() == 1 && distinctCigars.size() == 1;
     }
 
-    // alignmentIndex is the winner's position in the alignment list, as stored by LiftedRecord.
     record Selection(int alignmentIndex, LiftedAlignment alignment, String reason)
     {
     }
@@ -330,8 +310,6 @@ public class PlacementSelector
     {
     }
 
-    // MAPQ-0 mates are selected as one fragment. Prefer the shortest DEL, then DUP, then INV within 1 Mb; pairs outside
-    // that window are equivalent. Both placements are returned together, so read order cannot influence the result.
     static PairSelection selectPair(
             final List<LiftedAlignment> firstAlignments, final boolean firstConcordant,
             final LiftedAlignment firstSelf, final boolean firstBwaHasPriority,
@@ -371,7 +349,6 @@ public class PlacementSelector
                 new Selection(indexOf(secondAlignments, winner.second()), winner.second(), winner.note()));
     }
 
-    // Mate-agnostic overload: single-end reads and callers with no lifted mate.
     static Selection select(
             final List<LiftedAlignment> alignments, final boolean concordant, final LiftedAlignment self,
             final int seed, final boolean bwaHasPriority)
@@ -379,9 +356,6 @@ public class PlacementSelector
         return select(alignments, concordant, self, seed, bwaHasPriority, null);
     }
 
-    // Returns the winning placement, its index and a short note. With bwaHasPriority false (MAPQ 0) placements are ranked by
-    // recomputed genomic score, falling back to mate-proximity / junction / seed tie-breaks only on a score tie or unscored
-    // placements (split read left for supplementary-resolve). bwaHasPriority true leaves bwa's order untouched.
     static Selection select(
             final List<LiftedAlignment> alignments, final boolean concordant, final LiftedAlignment self,
             final int seed, final boolean bwaHasPriority, final LiftedRecord mate)
@@ -393,8 +367,6 @@ public class PlacementSelector
         return pickByScore(alignments, self, seed, mate);
     }
 
-    // Highest recomputed genome score wins ("score"). Top-score ties are settled in order by: closest plausible mate,
-    // supplementary support, junction over soft clip, then a read-name seed. Nothing is dropped; losers ride in XA.
     private static Selection pickByScore(
             final List<LiftedAlignment> alignments, final LiftedAlignment self, final int seed, final LiftedRecord mate)
     {
@@ -421,8 +393,7 @@ public class PlacementSelector
             return keepBwaPrimary(alignments, self);
         }
 
-        // Collapse identical placements (same locus + CIGAR from different sources, e.g. a ref self and a tx alt that
-        // lift to the same contiguous alignment) so the tie is over distinct placements, not weighted by source count.
+        // Do not weight a placement by the number of sources that produced it.
         List<LiftedAlignment> top = new ArrayList<>();
         Set<AlignmentKey> topKeys = new HashSet<>();
         for(LiftedAlignment alignment : placements)
@@ -507,9 +478,6 @@ public class PlacementSelector
         return LiftedRecord.NO_PRIMARY;
     }
 
-    // Prefer the candidate with the smallest gap to any viable mate placement. The 1 Mb limit prevents a distant
-    // same-chromosome mate from influencing the decision; an absent mate, an out-of-range mate or a distance tie leaves
-    // the full contender set unchanged.
     private static List<LiftedAlignment> closestMateSubset(final List<LiftedAlignment> top, final LiftedRecord mate)
     {
         if(mate == null || !mate.hasPlacement())
@@ -556,9 +524,6 @@ public class PlacementSelector
         return alignment.alignedBlockDistance(mate);
     }
 
-    // Tie-break within an equal-top-score set: a spliced placement (real N junction) beats a clipped placement
-    // (soft-clip, no N) at the same lifted locus. bwa soft-clipped rather than cross the intron, so the junction is
-    // the correct RNA interpretation and is not left to the seed.
     private static LiftedAlignment preferJunctionOverSoftClip(final List<LiftedAlignment> top)
     {
         for(LiftedAlignment junction : top)

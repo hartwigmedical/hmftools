@@ -22,7 +22,6 @@ import org.junit.Test;
 
 import htsjdk.samtools.SAMRecord;
 
-// Covers lifting, the primary pick and the MAPQ policy. Cigar translation itself is covered in ContigTranslatorTest.
 public class PlacementSelectorTest
 {
     private static List<ContigEntry> contigMap()
@@ -30,7 +29,6 @@ public class PlacementSelectorTest
         return List.of(threeExonContig());
     }
 
-    // No pairing flags, and the read name seeds the random tie-break.
     private static SAMRecord newRecord(final String contig, final int pos, final String cigar)
     {
         return TarsTestFixtures.mappedRecord("read", contig, pos, cigar);
@@ -41,8 +39,6 @@ public class PlacementSelectorTest
         return TarsTestFixtures.unmappedRecord("read");
     }
 
-    // Ultima single-end: with no pairing flags, an unguarded htsjdk pair getter on the resolve path throws.
-    // The lifted placement must match the paired case: pairing plays no part in the decision.
     @Test
     public void testSingleEndPrimaryLifted()
     {
@@ -95,7 +91,7 @@ public class PlacementSelectorTest
     @Test
     public void testTxPrimaryUniqueWithinExon()
     {
-        SAMRecord record = newRecord(TX_CONTIG, 1, "50M"); // contig pos 1, 50M -> exon 1 (chr1:100-149)
+        SAMRecord record = newRecord(TX_CONTIG, 1, "50M");
 
         PlacementSelector selector = new PlacementSelector(contigMap());
         LiftedRecord result = selector.resolve(record);
@@ -109,7 +105,7 @@ public class PlacementSelectorTest
     @Test
     public void testTxPrimaryUniqueJunctionCrosser()
     {
-        SAMRecord record = newRecord(TX_CONTIG, 51, "100M"); // crosses exon 1 -> exon 2 (intron 200-299)
+        SAMRecord record = newRecord(TX_CONTIG, 51, "100M");
 
         PlacementSelector selector = new PlacementSelector(contigMap());
         LiftedRecord result = selector.resolve(record);
@@ -123,7 +119,7 @@ public class PlacementSelectorTest
     @Test
     public void testRefTxAgree()
     {
-        SAMRecord record = newRecord(CHR_1, 100, "50M"); // Tx alt at contig pos 1 lifts to the same locus and CIGAR
+        SAMRecord record = newRecord(CHR_1, 100, "50M");
         record.setAttribute("XA", TX_CONTIG + ",+1,50M,0;");
 
         PlacementSelector selector = new PlacementSelector(contigMap());
@@ -135,7 +131,6 @@ public class PlacementSelectorTest
     @Test
     public void testIntronRetRefBetter()
     {
-        // ref chr1:170 50M has its last 20bp in the intron; Tx pos 71 30M20S lifts soft-clipped at the exon boundary.
         SAMRecord record = newRecord(CHR_1, 170, "50M");
         record.setAttribute("XA", TX_CONTIG + ",+71,30M20S,0;");
 
@@ -148,7 +143,6 @@ public class PlacementSelectorTest
     @Test
     public void testTxSoftClipNotAtBoundaryFallsToAmbiguous()
     {
-        // Tx 25M ends mid-exon (chr1:194), so the trailing clip is not at an exon boundary -> AMBIGUOUS.
         SAMRecord record = newRecord(CHR_1, 170, "50M");
         record.setAttribute("XA", TX_CONTIG + ",+71,25M25S,0;");
 
@@ -161,7 +155,7 @@ public class PlacementSelectorTest
     @Test
     public void testMultiLocusTwoLoci()
     {
-        SAMRecord record = newRecord(TX_CONTIG, 1, "50M"); // Tx primary + ref alt on a different chrom -> two loci
+        SAMRecord record = newRecord(TX_CONTIG, 1, "50M");
         record.setAttribute("XA", "chr5,+5000,50M,0;");
 
         PlacementSelector selector = new PlacementSelector(contigMap());
@@ -173,8 +167,6 @@ public class PlacementSelectorTest
     @Test
     public void testDistinctLocusAltBlocksMapQualityRescue()
     {
-        // Two distinct genomic loci keep the read a multimapper even though the XA alt scores worse: TARS does not
-        // override bwa's MAPQ 0 with a weaker reconstructed score.
         SAMRecord record = newRecord(TX_CONTIG, 1, "50M");
         record.setMappingQuality(0);
         record.setAttribute("XA", "chr5,+5000,50M,3;");
@@ -189,12 +181,9 @@ public class PlacementSelectorTest
     @Test
     public void testNestedSpanAltCountsAsSingleLocusAndBumpsMapQuality()
     {
-        // A 5'-softclipped isoform alt starts at a downstream exon of the same placement: different start, but a span
-        // nested inside the junction-crossing primary's, so it is one locus and the MAPQ-0 read bumps to 60.
-        // Keying loci on exact start counted this as two loci and held MAPQ at 0.
-        SAMRecord record = newRecord(TX_CONTIG, 51, "100M"); // -> chr1:150 50M100N50M, genomic span 150-349
+        SAMRecord record = newRecord(TX_CONTIG, 51, "100M");
         record.setMappingQuality(0);
-        record.setAttribute("XA", TX_CONTIG + ",+101,50S50M,0;"); // -> chr1:300 50S50M, span 300-349 (nested)
+        record.setAttribute("XA", TX_CONTIG + ",+101,50S50M,0;");
 
         PlacementSelector selector = new PlacementSelector(contigMap());
         LiftedRecord result = selector.resolve(record);
@@ -206,8 +195,6 @@ public class PlacementSelectorTest
     @Test
     public void testChainedOverlapAltNotMergedThroughPrimary()
     {
-        // Primary 1000-1099; alt B 1080-1179 overlaps it; alt C 1160-1259 overlaps B but not the primary. Locus identity
-        // is anchored on the primary's span, so C stays a distinct locus rather than being chained in via B.
         SAMRecord record = newRecord(CHR_1, 1000, "100M");
         record.setMappingQuality(0);
         record.setAttribute("XA", CHR_1 + ",+1080,100M,0;" + CHR_1 + ",+1160,100M,0;");
@@ -298,7 +285,7 @@ public class PlacementSelectorTest
     @Test
     public void testSupplementaryOnTxContigUnliftablePastEnd()
     {
-        SAMRecord record = newRecord(TX_CONTIG, 251, "10M"); // pos 251 past contigEnd(250)
+        SAMRecord record = newRecord(TX_CONTIG, 251, "10M");
         record.setSupplementaryAlignmentFlag(true);
 
         PlacementSelector selector = new PlacementSelector(contigMap());
@@ -324,7 +311,7 @@ public class PlacementSelectorTest
     @Test
     public void testPrimaryTrailingOverhangClampedToSoftClip()
     {
-        SAMRecord record = newRecord(TX_CONTIG, 200, "100M"); // 49bp past contigEnd(250) -> trailing 49S
+        SAMRecord record = newRecord(TX_CONTIG, 200, "100M");
 
         PlacementSelector selector = new PlacementSelector(contigMap());
         LiftedRecord result = selector.resolve(record);
@@ -335,7 +322,6 @@ public class PlacementSelectorTest
     @Test
     public void testIntronRetRefBetterLeadingSoftClipBoundary()
     {
-        // Tx alt at contig pos 101 carries its leading 20S at the exon-1/exon-2 boundary.
         SAMRecord record = newRecord(CHR_1, 300, "30M");
         record.setAttribute("XA", TX_CONTIG + ",+101,20S30M,0;");
 
@@ -348,35 +334,33 @@ public class PlacementSelectorTest
     @Test
     public void testXaDedupDropsDuplicateAlts()
     {
-        SAMRecord record = newRecord(TX_CONTIG, 1, "50M"); // two identical XA entries -> one alt retained
+        SAMRecord record = newRecord(TX_CONTIG, 1, "50M");
         record.setAttribute("XA", "chr5,+5000,50M,0;chr5,+5000,50M,0;");
 
         PlacementSelector selector = new PlacementSelector(contigMap());
         LiftedRecord result = selector.resolve(record);
 
-        assertEquals(2, result.liftedAlignments().size()); // self + one deduped alt
+        assertEquals(2, result.liftedAlignments().size());
         assertEquals(1, result.numXaAlts());
     }
 
     @Test
     public void testXaDedupKeepsAltMatchingSelfButDropsXaDuplicate()
     {
-        // Two XA entries lift to the same (chr1,100,50M): one Tx, one ref. XA dedup is XA-internal only, so the Tx alt
-        // is kept and drives CONCORDANT while the duplicate ref XA collapses.
         SAMRecord record = newRecord(CHR_1, 100, "50M");
         record.setAttribute("XA", TX_CONTIG + ",+1,50M,0;" + CHR_1 + ",+100,50M,0;");
 
         PlacementSelector selector = new PlacementSelector(contigMap());
         LiftedRecord result = selector.resolve(record);
 
-        assertEquals(2, result.liftedAlignments().size()); // self + Tx alt; ref XA collapsed
+        assertEquals(2, result.liftedAlignments().size());
         assertEquals(1, result.numXaAlts());
     }
 
     @Test
     public void testXaWithMalformedNmStillLifted()
     {
-        SAMRecord record = newRecord(TX_CONTIG, 1, "50M"); // a garbled NM field must not silently drop the alt
+        SAMRecord record = newRecord(TX_CONTIG, 1, "50M");
         record.setAttribute("XA", "chr5,+5000,50M,not_a_number;");
 
         PlacementSelector selector = new PlacementSelector(contigMap());
@@ -388,7 +372,6 @@ public class PlacementSelectorTest
     @Test
     public void testCrossLocusBothSplicedRemainsMultiLocus()
     {
-        // Tx primary and ref alt are both spliced but at different loci: ambiguous, so the primary must not swap.
         SAMRecord record = newRecord(TX_CONTIG, 51, "100M");
         record.setAttribute("XA", "chr5,+5000,50M100N50M,0;");
 
@@ -398,12 +381,10 @@ public class PlacementSelectorTest
         assertTrue(result.primaryAlignment().FromTxContig);
     }
 
-    // numLoci must reflect the deduped genomic-locus count, not the XA entry count (NH is derived from it).
     @Test
     public void testNumLociDedupesIdenticalLiftedXaEntries()
     {
-        SAMRecord primary = newRecord(TX_CONTIG, 51, "100M"); // lifts to chr1:150 50M100N50M
-        // four XA entries all lifting to the same locus -> numLoci still 1
+        SAMRecord primary = newRecord(TX_CONTIG, 51, "100M");
         primary.setAttribute(
                 "XA",
                 TX_CONTIG + ",+51,100M,0;"
@@ -435,8 +416,6 @@ public class PlacementSelectorTest
         assertEquals(3, result.numLoci());
     }
 
-    // Hidden tie (XS==AS) on a ref-only primary outside any indexed exon: no evidence either way, so MAPQ holds at 0
-    // because the equal-scoring alt bwa did not emit may be real.
     @Test
     public void testHiddenTieRefOnlyOutsideIndexedExonHoldsAtZero() throws Exception
     {
@@ -454,7 +433,6 @@ public class PlacementSelectorTest
         assertEquals(0, result.updatedMapQuality());
     }
 
-    // Hidden tie with the primary outside any annotated exon: rescue stays blocked.
     @Test
     public void testHiddenTieOutsideExonKeepsMapQualityZero() throws Exception
     {
@@ -464,61 +442,35 @@ public class PlacementSelectorTest
         record.setAttribute("XS", 151);
 
         EnsemblAnnotationIndex annotationIndex = exonRegionIndex(
-                CHR_1, List.of(new int[] { 1400, 1700 })); // primary at 5000 is intergenic
+                CHR_1, List.of(new int[] { 1400, 1700 }));
         PlacementSelector selector = new PlacementSelector(contigMap(), annotationIndex);
         assertEquals(0, selector.resolve(record).updatedMapQuality());
     }
 
-    // decidePrimaryMapQuality args: (inputMapQuality, numLoci, hiddenTie, primaryFromTxContig, primaryInAnnotatedExon, randomTie).
     @Test
-    public void testMapQualityPolicy_singleLocusZeroRescues()
+    public void testMapQualityPolicy()
     {
-        assertEquals(60, PlacementSelector.decidePrimaryMapQuality(0, 1, false, false, false, false));
+        List<MapQualityCase> cases = List.of(
+                new MapQualityCase("single locus", 0, 1, false, false, false, false, 60),
+                new MapQualityCase("hidden tie", 0, 1, true, false, false, false, 0),
+                new MapQualityCase("hidden tie on tx", 0, 1, true, true, false, false, 60),
+                new MapQualityCase("hidden tie in exon", 0, 1, true, false, true, false, 60),
+                new MapQualityCase("MAPQ 60", 60, 1, false, false, false, false, 60),
+                new MapQualityCase("graded MAPQ", 37, 1, false, false, false, false, 37),
+                new MapQualityCase("multiple loci", 0, 2, false, false, false, false, 0),
+                new MapQualityCase("random tie", 0, 1, false, false, false, true, 0));
+
+        for(MapQualityCase test : cases)
+        {
+            assertEquals(test.name(), test.expected(), PlacementSelector.decidePrimaryMapQuality(
+                    test.input(), test.loci(), test.hiddenTie(), test.fromTx(), test.inExon(), test.randomTie()));
+        }
     }
 
-    @Test
-    public void testMapQualityPolicy_hiddenTieRefPrimaryNoExonHoldsAtZero()
+    private record MapQualityCase(
+            String name, int input, int loci, boolean hiddenTie, boolean fromTx,
+            boolean inExon, boolean randomTie, int expected)
     {
-        assertEquals(0, PlacementSelector.decidePrimaryMapQuality(0, 1, true, false, false, false));
-    }
-
-    @Test
-    public void testMapQualityPolicy_hiddenTieTxPrimaryRescues()
-    {
-        assertEquals(60, PlacementSelector.decidePrimaryMapQuality(0, 1, true, true, false, false));
-    }
-
-    @Test
-    public void testMapQualityPolicy_hiddenTieInAnnotatedExonRescues()
-    {
-        assertEquals(60, PlacementSelector.decidePrimaryMapQuality(0, 1, true, false, true, false));
-    }
-
-    @Test
-    public void testMapQualityPolicy_inputSixtyPassesAsRescued()
-    {
-        assertEquals(60, PlacementSelector.decidePrimaryMapQuality(60, 1, false, false, false, false));
-    }
-
-    @Test
-    public void testMapQualityPolicy_gradedMapQualityPassesThrough()
-    {
-        // a graded MAPQ is a real bwa signal, so it is left alone
-        assertEquals(37, PlacementSelector.decidePrimaryMapQuality(37, 1, false, false, false, false));
-    }
-
-    @Test
-    public void testMapQualityPolicy_multiLocusNeverBumps()
-    {
-        assertEquals(0, PlacementSelector.decidePrimaryMapQuality(0, 2, false, false, false, false));
-    }
-
-    @Test
-    public void testMapQualityPolicy_randomTieNotBumped()
-    {
-        // a random-tie pick is a coin-flip among distinct placements, not a confident unique call
-        assertEquals(0, PlacementSelector.decidePrimaryMapQuality(0, 1, false, false, false, true));
-        assertEquals(60, PlacementSelector.decidePrimaryMapQuality(0, 1, false, false, false, false));
     }
 
     private static LiftedAlignment liftedAt(final String chrom, final int pos, final String cigar)
@@ -529,11 +481,9 @@ public class PlacementSelectorTest
     @Test
     public void testCountDistinctLociFromListRecountsPostExtension()
     {
-        // The record overload backs the emit-time NH recompute: primary from primaryIndex, Dropped alts excluded, alts
-        // overlapping the primary collapsed, so NH stays consistent with the XA tag.
-        LiftedAlignment primary = liftedAt(CHR_1, 1000, "100M");   // span 1000-1099
-        LiftedAlignment overlapping = liftedAt(CHR_1, 1050, "100M");   // 1050-1149 overlaps the primary
-        LiftedAlignment distant = liftedAt(CHR_1, 5000, "100M");   // a genuinely distinct locus
+        LiftedAlignment primary = liftedAt(CHR_1, 1000, "100M");
+        LiftedAlignment overlapping = liftedAt(CHR_1, 1050, "100M");
+        LiftedAlignment distant = liftedAt(CHR_1, 5000, "100M");
         LiftedAlignment droppedDistant = liftedAt(CHR_1, 8000, "100M");
         droppedDistant.Dropped = true;
 
@@ -541,7 +491,6 @@ public class PlacementSelectorTest
         assertEquals(1, countDistinctLociOf(primary, overlapping));
         assertEquals(2, countDistinctLociOf(primary, distant));
         assertEquals(1, countDistinctLociOf(primary, droppedDistant));
-        // no primary placement (an unmapped record's empty list) -> 1
         assertEquals(1, PlacementSelector.countDistinctLoci(LiftedRecord.unmapped("")));
     }
 
@@ -553,8 +502,6 @@ public class PlacementSelectorTest
     @Test
     public void testOppositeStrandXaAltsNotCollapsed()
     {
-        // Two XA alts at the same locus and cigar but opposite strands are distinct placements, so the lifted dedup key
-        // includes strand and both survive into the XA output.
         SAMRecord record = newRecord(CHR_1, 1000, "50M");
         record.setAttribute("XA", "chr5,+5000,50M,0;chr5,-5000,50M,0;");
 
@@ -569,7 +516,6 @@ public class PlacementSelectorTest
     private static final String CHR1 = "chr1";
     private static final String CHR2 = "chr2";
 
-    // Post-Step-1 the selector treats any surviving N as a real junction.
     private static final String TX_JUNCTION_CIGAR = "50M100N50M";
     private static final String FULL_MATCH_CIGAR = "100M";
     private static final String SOFTCLIP_CIGAR = "50M51S";
@@ -605,33 +551,27 @@ public class PlacementSelectorTest
         return PlacementSelector.isConcordant(set(alignments));
     }
 
-    // Concordant is the one evidence flag that changes the pick: it keeps bwa's primary.
     @Test
     public void testConcordant()
     {
-        // one locus, ref and tx on the same gapless cigar: the two views agree
         assertTrue(concordantOf(
                 ref(CHR1, 100, FULL_MATCH_CIGAR),
                 tx(CHR1, 100, FULL_MATCH_CIGAR, 0)));
 
-        // a surviving N means the two views disagree about splicing
         assertFalse(concordantOf(
                 ref(CHR1, 100, FULL_MATCH_CIGAR),
                 tx(CHR1, 100, TX_JUNCTION_CIGAR, 0)));
 
-        // same locus but different cigars
         assertFalse(concordantOf(
                 ref(CHR1, 100, SOFTCLIP_CIGAR),
                 tx(CHR1, 100, FULL_MATCH_CIGAR, 0)));
 
-        // a single source cannot agree with itself, at one locus or several
         assertFalse(concordantOf(ref(CHR1, 100, FULL_MATCH_CIGAR)));
         assertFalse(concordantOf(tx(CHR1, 100, TX_JUNCTION_CIGAR, 0)));
         assertFalse(concordantOf(
                 ref(CHR1, 100, FULL_MATCH_CIGAR),
                 ref(CHR2, 200, FULL_MATCH_CIGAR)));
 
-        // more than one locus is a contest even when the cigars match
         assertFalse(concordantOf(
                 ref(CHR1, 100, FULL_MATCH_CIGAR),
                 tx(CHR2, 200, FULL_MATCH_CIGAR, 0)));
@@ -640,15 +580,12 @@ public class PlacementSelectorTest
     @Test
     public void testConcordantSkipsGateDroppedAlt()
     {
-        // The overhang gate marks a collapsed XA alt Dropped before the selector runs; ignoring it leaves a lone
-        // ref source, so the otherwise-agreeing pair is not concordant.
         LiftedAlignment droppedTx = tx(CHR1, 100, FULL_MATCH_CIGAR, 0);
         droppedTx.Dropped = true;
 
         assertFalse(concordantOf(ref(CHR1, 100, FULL_MATCH_CIGAR), droppedTx));
     }
 
-    // One locus, a soft-clipped ref and a contiguous tx placement that only score can separate.
     private static List<LiftedAlignment> contestedSet()
     {
         LiftedAlignment self = ref(CHR1, 100, "50M51S");
@@ -656,7 +593,6 @@ public class PlacementSelectorTest
         return set(self, txAlt);
     }
 
-    // Two loci: a ref and a tx placement.
     private static List<LiftedAlignment> multiLocusSet()
     {
         LiftedAlignment self = ref(CHR1, 100, "151M");
@@ -667,7 +603,6 @@ public class PlacementSelectorTest
     @Test
     public void testBwaPriorityKeepsSelf()
     {
-        // MAPQ > 0: bwa ranked the placements, so its primary is kept regardless of score.
         List<LiftedAlignment> alignments = contestedSet();
         alignments.get(0).GenomicScore = 10;
         alignments.get(1).GenomicScore = 99;
@@ -679,7 +614,6 @@ public class PlacementSelectorTest
     @Test
     public void testUnscoredKeepsSelf()
     {
-        // No placement scored (a split read left for Step 3): keep bwa's primary and drop nothing.
         List<LiftedAlignment> alignments = contestedSet();
         PlacementSelector.Selection outcome = PlacementSelector.select(alignments, false, alignments.get(0), 0, false);
         assertSame(alignments.get(0), outcome.alignment());
@@ -691,7 +625,6 @@ public class PlacementSelectorTest
     @Test
     public void testDecisiveScoreWinsRegardlessOfSeed()
     {
-        // The higher genomic score wins outright, whatever the seed.
         List<LiftedAlignment> refWins = contestedSet();
         refWins.get(0).GenomicScore = 90;
         refWins.get(1).GenomicScore = 50;
@@ -712,7 +645,6 @@ public class PlacementSelectorTest
     @Test
     public void testScoreTieFallsToSeededRandom()
     {
-        // Equal scores fall to the seeded pick. contestedSet order is [self, tx]: seed 0 -> self, seed 1 -> tx.
         List<LiftedAlignment> even = contestedSet();
         even.get(0).GenomicScore = 70;
         even.get(1).GenomicScore = 70;
@@ -732,8 +664,6 @@ public class PlacementSelectorTest
     @Test
     public void testScoreTieJunctionBeatsSoftClipAtSameLocus()
     {
-        // A spliced and a soft-clip placement at the same locus, tied on score: the junction wins outright, whatever
-        // the seed. Seed 0 over set order [soft-clip, junction] would pick the soft-clip on a plain random tie.
         LiftedAlignment softClip = ref(CHR1, 100, SOFTCLIP_CIGAR);
         LiftedAlignment junction = tx(CHR1, 100, TX_JUNCTION_CIGAR, 0);
         List<LiftedAlignment> alignments = set(softClip, junction);
@@ -749,7 +679,6 @@ public class PlacementSelectorTest
     @Test
     public void testScoreTieJunctionAtDifferentLocusStaysRandom()
     {
-        // Junction and soft-clip sit at different loci, so the same-locus rule does not fire and the tie is random.
         LiftedAlignment softClip = ref(CHR1, 100, SOFTCLIP_CIGAR);
         LiftedAlignment junction = tx(CHR2, 200, TX_JUNCTION_CIGAR, 0);
         List<LiftedAlignment> alignments = set(softClip, junction);
@@ -786,8 +715,6 @@ public class PlacementSelectorTest
     @Test
     public void testScoreTieCollapsesIdenticalPlacements()
     {
-        // Self and a tx alt lift to the same locus and CIGAR, a third tx alt is a distinct spliced placement. The
-        // identical pair collapses, so seed 1 ties over two placements and lands on the spliced one, not the duplicate.
         LiftedAlignment self = ref(CHR1, 100, "100M");
         LiftedAlignment txSame = tx(CHR1, 100, "100M", 0);
         LiftedAlignment txSpliced = tx(CHR1, 100, TX_JUNCTION_CIGAR, 0);
@@ -803,8 +730,6 @@ public class PlacementSelectorTest
     @Test
     public void testMultiLocusTieMateProximityPicksMateLocus()
     {
-        // Tied loci CHR1:100 and CHR2:200 with the mate on CHR2 near 200: mate proximity beats the seed, which would
-        // otherwise pick CHR1:100.
         List<LiftedAlignment> alignments = multiLocusSet();
         alignments.get(0).GenomicScore = 100;
         alignments.get(1).GenomicScore = 100;
@@ -819,9 +744,6 @@ public class PlacementSelectorTest
     @Test
     public void testMultiLocusTiePicksClosestMatePlacement()
     {
-        // Both candidates are within the broad 1 Mb transcript-span limit, but only CHR1:100 forms a
-        // plausible short fragment with the mate. Treating proximity as a yes/no threshold leaves this
-        // to the read-name seed and can create a false 500 kb discordant fragment.
         LiftedAlignment close = ref(CHR1, 100, "100M");
         LiftedAlignment distant = tx(CHR1, 500_000, "100M", 0);
         close.GenomicScore = 100;
@@ -839,8 +761,6 @@ public class PlacementSelectorTest
     @Test
     public void testClosestMatePlacementBeatsSupplementarySupport()
     {
-        // A MAPQ-0 supplementary must not pull the primary hundreds of kilobases away when an equally
-        // scoring placement forms a much tighter pair.
         LiftedAlignment close = ref(CHR1, 100, "100M");
         LiftedAlignment distant = tx(CHR1, 500_000, "50M50S", 0).withSupplementaryMerge(
                 500_000, "100M", List.of(1), List.of(), 0, 0);
@@ -988,7 +908,6 @@ public class PlacementSelectorTest
     @Test
     public void testMultiLocusTieMateOnNeitherChromStaysRandom()
     {
-        // The mate is on a third chromosome, so proximity does not discriminate and the seed decides.
         List<LiftedAlignment> alignments = multiLocusSet();
         alignments.get(0).GenomicScore = 100;
         alignments.get(1).GenomicScore = 100;
@@ -1001,7 +920,6 @@ public class PlacementSelectorTest
     @Test
     public void testMultiLocusTieMateTooFarStaysRandom()
     {
-        // The mate is on CHR1 but more than 1 Mb from the CHR1 locus, so it is not proximal.
         List<LiftedAlignment> alignments = multiLocusSet();
         alignments.get(0).GenomicScore = 100;
         alignments.get(1).GenomicScore = 100;
