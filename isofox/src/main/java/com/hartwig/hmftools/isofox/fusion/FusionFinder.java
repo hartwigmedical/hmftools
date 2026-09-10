@@ -1035,33 +1035,45 @@ public class FusionFinder implements Callable<Void>
 
     private boolean hardFilterFusion(final FusionReadData fusionData)
     {
-        // apply a map qual filter
-        List<FusionFragment> splitFragments = fusionData.getFragments(MATCHED_JUNCTION);
+        String geneUp = fusionData.getGeneName(FS_UP);
+        String geneDown = fusionData.getGeneName(FS_DOWN);
 
-        if(splitFragments != null)
+        boolean isKnownPair = mPassingFusions.knownFusionCache().hasKnownFusion(geneUp, geneDown);
+
+        boolean isPromiscuousGene = !isKnownPair
+                && (mPassingFusions.knownFusionCache().hasPromiscuousFiveGene(geneUp)
+                || mPassingFusions.knownFusionCache().hasPromiscuousThreeGene(geneDown));
+
+        if(!isKnownPair && !isPromiscuousGene)
         {
-            boolean hasValidMapQual = false;
-            boolean hasSupplementaries = false;
+            // apply a map qual filter
+            List<FusionFragment> splitFragments = fusionData.getFragments(MATCHED_JUNCTION);
 
-            for(FusionFragment fragment : splitFragments)
+            if(splitFragments != null)
             {
-                for(FusionRead read : fragment.reads())
-                {
-                    if(read.isSupplementaryAlignment())
-                    {
-                        hasSupplementaries = true;
+                boolean hasValidMapQual = false;
+                boolean hasSupplementaries = false;
 
-                        if(read.MapQuality >= FILTER_MIN_MAP_QUAL)
+                for(FusionFragment fragment : splitFragments)
+                {
+                    for(FusionRead read : fragment.reads())
+                    {
+                        if(read.isSupplementaryAlignment())
                         {
-                            hasValidMapQual = true;
-                            break;
+                            hasSupplementaries = true;
+
+                            if(read.MapQuality >= FILTER_MIN_MAP_QUAL)
+                            {
+                                hasValidMapQual = true;
+                                break;
+                            }
                         }
                     }
                 }
-            }
 
-            if(hasSupplementaries && !hasValidMapQual)
-                return true;
+                if(hasSupplementaries && !hasValidMapQual)
+                    return true;
+            }
         }
 
         if(mConfig.Fusions.MinHardFilterFrags <= 1)
@@ -1070,7 +1082,7 @@ public class FusionFinder implements Callable<Void>
         if(fusionData.getTotalFragmentTypeCount() >= mConfig.Fusions.MinHardFilterFrags)
             return false;
 
-        if(mPassingFusions.knownFusionCache().hasKnownFusion(fusionData.getGeneName(FS_UP), fusionData.getGeneName(FS_DOWN)))
+        if(isKnownPair)
             return false;
 
         return fusionData.junctionTypes()[SE_START] != KNOWN && fusionData.junctionTypes()[SE_END] != KNOWN;
