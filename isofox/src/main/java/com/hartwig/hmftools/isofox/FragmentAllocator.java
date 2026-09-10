@@ -423,6 +423,7 @@ public class FragmentAllocator
         int numLoci = min(read1.numLoci(), read2.numLoci());
         boolean isMultiMapped = STAR_ALIGNER ? minMapQuality <= MULTI_MAP_QUALITY_THRESHOLD : numLoci > 1;
         double fragmentCount = STAR_ALIGNER ? starFragmentCount(minMapQuality) : 1;
+
         List<Read.AltAlignment> altLoci = read1.numLoci() <= read2.numLoci() ? read1.altLoci() : read2.altLoci();
 
         boolean isChimeric = mChimericReads.isChimeric(read1, read2, isDuplicate, isMultiMapped);

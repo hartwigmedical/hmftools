@@ -15,4 +15,6 @@ public class FusionConstants
 
     public static final int FILTER_COHORT_LIMIT_KNOWN = 5;
     public static final int FILTER_COHORT_LIMIT_NOT_KNOWN = 2;
+
+    public static final int FILTER_MIN_MAP_QUAL = 10;
 }

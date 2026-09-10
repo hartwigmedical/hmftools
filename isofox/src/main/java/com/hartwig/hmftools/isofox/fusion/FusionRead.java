@@ -23,6 +23,8 @@ import com.hartwig.hmftools.isofox.common.Read;
 import com.hartwig.hmftools.isofox.common.RegionMatchType;
 import com.hartwig.hmftools.isofox.common.RegionReadData;
 
+import htsjdk.samtools.SAMFlag;
+
 public class FusionRead
 {
     // skip read ID since always obtainable from the read-group
@@ -32,6 +34,8 @@ public class FusionRead
     public final String Cigar;
     public final String MateChromosome;
     public int MatePosStart;
+    public final int Flags;
+    public final short MapQuality;
 
     public final int[] SoftClipLengths;
     public final String[] BoundaryBases;
@@ -44,7 +48,6 @@ public class FusionRead
     public final SupplementaryReadData SuppData;
     public boolean IsDuplicate;
     public boolean ContainsSplit;
-    public int Flags;
 
     public final List<int[]> MappedCoords;
 
@@ -75,6 +78,7 @@ public class FusionRead
         IsDuplicate = read.isDuplicate();
         ContainsSplit = read.containsSplit();
         Flags = read.flags();
+        MapQuality = read.mapQuality();
 
         SuppData = read.hasSuppAlignment() ? SupplementaryReadData.extractAlignment(read.getSuppAlignment()) : null;
 
@@ -121,6 +125,7 @@ public class FusionRead
     }
     public boolean isSoftClipped(int se) { return SoftClipLengths[se] > 0; }
     public boolean isLongestSoftClip(int se) { return SoftClipLengths[se] > SoftClipLengths[switchIndex(se)]; }
+    public boolean isSupplementaryAlignment() { return (Flags & SAMFlag.SUPPLEMENTARY_ALIGNMENT.intValue()) != 0; }
 
     public final int[] junctionPositions() { return mJunctionPositions; }
 

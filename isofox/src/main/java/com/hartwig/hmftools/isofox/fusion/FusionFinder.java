@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.common.sv.StartEndIterator.switchIndex;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.common.Read.NO_GENE_ID;
 import static com.hartwig.hmftools.isofox.common.TransExonRef.hasMatchWithinRange;
+import static com.hartwig.hmftools.isofox.fusion.FusionConstants.FILTER_MIN_MAP_QUAL;
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.HIGH_LOG_COUNT;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT_JUNCTION;
@@ -1011,9 +1012,6 @@ public class FusionFinder implements Callable<Void>
 
     private void hardFilterFusions()
     {
-        if(mConfig.Fusions.MinHardFilterFrags <= 1)
-            return;
-
         for(List<FusionReadData> fusionCandidates : mFusionCandidates.values())
         {
             int index = 0;
@@ -1037,6 +1035,35 @@ public class FusionFinder implements Callable<Void>
 
     private boolean hardFilterFusion(final FusionReadData fusionData)
     {
+        // apply a map qual filter
+        List<FusionFragment> splitFragments = fusionData.getFragments(MATCHED_JUNCTION);
+
+        if(splitFragments != null)
+        {
+            boolean hasValidMapQual = false;
+            boolean hasSupplementaries = false;
+
+            for(FusionFragment fragment : splitFragments)
+            {
+                for(FusionRead read : fragment.reads())
+                {
+                    if(read.isSupplementaryAlignment())
+                    {
+                        hasSupplementaries = true;
+
+                        if(read.MapQuality >= FILTER_MIN_MAP_QUAL)
+                        {
+                            hasValidMapQual = true;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if(hasSupplementaries && !hasValidMapQual)
+                return true;
+        }
+
         if(mConfig.Fusions.MinHardFilterFrags <= 1)
             return false;
 

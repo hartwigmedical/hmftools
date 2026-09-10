@@ -95,7 +95,6 @@ public class Read
     private final Map<RegionReadData,RegionMatchType> mMappedRegions; // regions related to this read and their match type
     private final Map<Integer,TransMatchType> mTranscriptClassification;
     private final Map<RegionMatchType,List<TransExonRef>> mTransExonRefs;
-    private final Map<RegionMatchType,List<TransExonRef>> mUpperTransExonRefs; // TE refs for upper coords if a spanning read
 
     public static final int NO_GENE_ID = -1;
 
@@ -218,7 +217,6 @@ public class Read
 
         mMappedRegions = Maps.newHashMap();
         mTransExonRefs = Maps.newHashMap();
-        mUpperTransExonRefs = Maps.newHashMap();
         mTranscriptClassification = Maps.newHashMap();
         mLowerInferredAdded = false;
         mUpperInferredAdded = false;
