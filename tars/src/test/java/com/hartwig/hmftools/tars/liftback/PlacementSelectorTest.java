@@ -933,6 +933,22 @@ public class PlacementSelectorTest
     }
 
     @Test
+    public void testPairSelectionFallsBackWhenAllPlacementsAreDropped()
+    {
+        LiftedAlignment first = ref(CHR1, 100, "100M");
+        LiftedAlignment second = refReverse(CHR1, 300, "100M");
+        first.Dropped = true;
+        second.Dropped = true;
+
+        PlacementSelector.PairApplyResult outcome = PlacementSelector.applyPair(
+                set(first), false, first, false,
+                set(second), false, second, false, 0);
+
+        assertSame(first, outcome.first().effectivePrimary());
+        assertSame(second, outcome.second().effectivePrimary());
+    }
+
+    @Test
     public void testPairSelectionIsIndependentOfMateOrder()
     {
         LiftedAlignment firstChr1 = ref(CHR1, 100, "52M");

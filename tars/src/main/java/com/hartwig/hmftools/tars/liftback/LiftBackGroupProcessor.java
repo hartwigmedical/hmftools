@@ -7,8 +7,6 @@ import static com.hartwig.hmftools.tars.common.TarsConstants.TARS_LOGGER;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
-import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -24,7 +22,7 @@ import htsjdk.samtools.SAMRecord;
 public class LiftBackGroupProcessor
 {
     private final PlacementSelector mPlacementSelector;
-    private final SupplementaryMerger mSupplementaryMerger;
+    private final SupplementaryAlignmentResolver mSupplementaryResolver;
     private final OverhangGate mOverhangGate;
     private final GenomicAlignmentScorer mAlignmentScorer;
     private final BamRecordEmitter mEmitter;
@@ -36,12 +34,13 @@ public class LiftBackGroupProcessor
             final RefGenomeInterface refGenome, final ExcludedRegions excludedRegions)
     {
         mPlacementSelector = placementSelector;
-        mSupplementaryMerger = supplementaryMerger;
         mOverhangGate = overhangGate;
         mAlignmentScorer = alignmentScorer;
         mStats = new LiftBackStats();
+        mSupplementaryResolver = new SupplementaryAlignmentResolver(
+                supplementaryMerger, alignmentScorer, mStats);
         mEmitter = new BamRecordEmitter(
-                placementSelector.contigTranslator(), supplementaryMerger != null, refGenome, excludedRegions, mStats);
+                placementSelector.contigTranslator(), mSupplementaryResolver.enabled(), refGenome, excludedRegions, mStats);
     }
 
     public LiftBackStats stats() { return mStats; }
@@ -117,7 +116,7 @@ public class LiftBackGroupProcessor
             {
                 resolved.set(i, mPlacementSelector.liftSupplementaryAlignment(records.get(i), mOverhangGate));
             }
-            primaryAlignments = addSupplementarySupportedAlignments(
+            primaryAlignments = mSupplementaryResolver.addSupportedAlignments(
                     records, primaryAlignments, resolved, mateHintIntrons);
         }
 
@@ -147,21 +146,9 @@ public class LiftBackGroupProcessor
             resolved.set(0, selected);
         }
 
-        SupplementaryMerge supplementary = supplementaryMerge(records.size(), resolved.get(0));
-        List<ChrBaseRegion> introducedIntrons = new ArrayList<>();
-
-        if(supplementary.revised())
-        {
-            LiftedAlignment winner = resolved.get(0).primaryAlignment();
-            introducedIntrons.addAll(winner.MergedSupplementaryIntrons);
-            ++mStats.SupplementaryMerges;
-            mStats.SupplementariesAbsorbed += supplementary.absorbed().size();
-        }
-
-        resolved = new ArrayList<>(selectSupplementaryAlignments(
-                records, List.copyOf(resolved), resolved.get(0), supplementary.absorbed()));
-
-        List<LiftedRecord> finalRecords = annotateSpliceStrands(List.copyOf(resolved));
+        SupplementaryAlignmentResolver.Resolution supplementary = mSupplementaryResolver.finish(
+                records, List.copyOf(resolved), resolved.get(0));
+        List<LiftedRecord> finalRecords = supplementary.liftedRecords();
 
         UnmapDecision unmapDecision = applyUnmapPolicy(primary, finalRecords.get(0));
         if(unmapDecision.result() != finalRecords.get(0))
@@ -169,7 +156,8 @@ public class LiftBackGroupProcessor
             finalRecords = replacePrimary(finalRecords, unmapDecision.result());
         }
         return new ReadDecision(
-                finalRecords, supplementary.absorbed(), introducedIntrons, unmapDecision.unmapped());
+                finalRecords, supplementary.absorbedSupplementaries(),
+                supplementary.introducedIntrons(), unmapDecision.unmapped());
     }
 
     private PlacementSelector.PairApplyResult chooseMatePair(
@@ -195,159 +183,6 @@ public class LiftBackGroupProcessor
         return provisional.effectivePrimary().MergedSupplementaryIntrons;
     }
 
-    private LiftedRecord addSupplementarySupportedAlignments(
-            final List<SAMRecord> records, final LiftedRecord primaryAlignments,
-            final List<LiftedRecord> liftedRecords, final List<ChrBaseRegion> mateHintIntrons)
-    {
-        SAMRecord primary = records.get(0);
-        if(mSupplementaryMerger == null || primary.getReadUnmappedFlag() || !primaryAlignments.hasPlacement())
-        {
-            return primaryAlignments;
-        }
-
-        List<SupplementaryMerger.Supplementary> supplementaries =
-                supplementaryPlacements(records, liftedRecords).alignments();
-        if(supplementaries.isEmpty())
-        {
-            return primaryAlignments;
-        }
-        ++mStats.MergeableSupplementaries;
-
-        List<LiftedAlignment> expanded = new ArrayList<>(primaryAlignments.liftedAlignments());
-        Set<SupplementaryAlignmentKey> seen = new HashSet<>();
-        for(LiftedAlignment alignment : primaryAlignments.liftedAlignments())
-        {
-            seen.add(new SupplementaryAlignmentKey(alignment.key(), List.of()));
-        }
-
-        for(LiftedAlignment alignment : primaryAlignments.liftedAlignments())
-        {
-            if(alignment.Dropped || alignment.LiftedCigar == null)
-            {
-                continue;
-            }
-
-            SupplementaryMerger.Result result = mSupplementaryMerger.merge(new SupplementaryMerger.Placement(
-                    alignment.LiftedChromosome, alignment.ForwardStrand, primary.getReadLength(),
-                    alignment.LiftedPos, alignment.LiftedCigar, supplementaries,
-                    primary.getReadBases(), mateHintIntrons));
-            ++mStats.SupplementaryMergeAttempts;
-            if(!result.merged())
-            {
-                mStats.recordSupplementaryMergeRejection(result.rejectReason());
-                continue;
-            }
-            ++mStats.SupplementaryMergeSuccessfulCandidates;
-
-            int supplementaryMapQuality = 0;
-            for(Integer recordIndex : result.droppedSupplementaryIndices())
-            {
-                supplementaryMapQuality = Math.max(
-                        supplementaryMapQuality, records.get(recordIndex).getMappingQuality());
-            }
-
-            LiftedAlignment merged = alignment.withSupplementaryMerge(
-                    result.mergedStart(), result.mergedCigar(), result.droppedSupplementaryIndices(),
-                    result.introducedIntrons(), supplementaryMapQuality, result.spliceStrand());
-            if(seen.add(new SupplementaryAlignmentKey(merged.key(), result.droppedSupplementaryIndices())))
-            {
-                expanded.add(merged);
-            }
-        }
-
-        return primaryAlignments.withLiftedAlignments(List.copyOf(expanded));
-    }
-
-    private List<LiftedRecord> selectSupplementaryAlignments(
-            final List<SAMRecord> records, final List<LiftedRecord> liftedRecords,
-            final LiftedRecord primaryResult, final Set<Integer> absorbedSupplementaries)
-    {
-        if(mSupplementaryMerger == null || !primaryResult.hasPlacement())
-        {
-            return liftedRecords;
-        }
-
-        SupplementaryPlacements placements = supplementaryPlacements(records, liftedRecords);
-        if(placements.alignments().isEmpty())
-        {
-            return liftedRecords;
-        }
-
-        LiftedAlignment primary = primaryResult.primaryAlignment();
-        SupplementaryMerger.Placement context = new SupplementaryMerger.Placement(
-                primary.LiftedChromosome, primary.ForwardStrand, records.get(0).getReadLength(),
-                primary.LiftedPos, primary.LiftedCigar, placements.alignments(), records.get(0).getReadBases(), List.of());
-        List<SupplementaryMerger.Supplementary> selected =
-                SupplementaryMerger.selectSupplementaryPlacements(context);
-
-        List<LiftedRecord> revised = null;
-        for(SupplementaryMerger.Supplementary supplementary : selected)
-        {
-            int recordIndex = supplementary.index();
-            if(absorbedSupplementaries.contains(recordIndex))
-            {
-                continue;
-            }
-
-            Integer alignmentIndex = placements.alignmentIndices().get(supplementary);
-            LiftedRecord lifted = liftedRecords.get(recordIndex);
-            if(alignmentIndex == null || lifted == null || alignmentIndex == lifted.primaryIndex())
-            {
-                continue;
-            }
-
-            LiftedRecord selectedRecord = lifted.withPrimaryIndex(alignmentIndex);
-            int score = mAlignmentScorer != null
-                    ? mAlignmentScorer.scoreRecord(selectedRecord.primaryAlignment(), records.get(recordIndex))
-                    : Integer.MIN_VALUE;
-            if(score != Integer.MIN_VALUE)
-            {
-                selectedRecord.primaryAlignment().GenomicScore = score;
-            }
-
-            if(revised == null)
-            {
-                revised = new ArrayList<>(liftedRecords);
-            }
-            revised.set(recordIndex, selectedRecord);
-        }
-
-        return revised != null ? List.copyOf(revised) : liftedRecords;
-    }
-
-    private static SupplementaryPlacements supplementaryPlacements(
-            final List<SAMRecord> records, final List<LiftedRecord> liftedRecords)
-    {
-        List<SupplementaryMerger.Supplementary> alignments = new ArrayList<>();
-        IdentityHashMap<SupplementaryMerger.Supplementary, Integer> alignmentIndices = new IdentityHashMap<>();
-        for(int i = 1; i < records.size(); ++i)
-        {
-            SAMRecord record = records.get(i);
-            LiftedRecord lifted = liftedRecords.get(i);
-            if(!record.getSupplementaryAlignmentFlag() || record.getReadUnmappedFlag()
-                    || lifted == null || !lifted.hasPlacement())
-            {
-                continue;
-            }
-
-            for(int alignmentIndex = 0; alignmentIndex < lifted.liftedAlignments().size(); ++alignmentIndex)
-            {
-                LiftedAlignment alignment = lifted.liftedAlignments().get(alignmentIndex);
-                if(alignment.Dropped || alignment.LiftedCigar == null)
-                {
-                    continue;
-                }
-
-                SupplementaryMerger.Supplementary supplementary = new SupplementaryMerger.Supplementary(
-                        i, alignment.LiftedChromosome, alignment.ForwardStrand,
-                        alignment.LiftedPos, alignment.LiftedCigar, record.getMappingQuality());
-                alignments.add(supplementary);
-                alignmentIndices.put(supplementary, alignmentIndex);
-            }
-        }
-        return new SupplementaryPlacements(List.copyOf(alignments), alignmentIndices);
-    }
-
     private void scorePrimaryAlignments(final SAMRecord primary, final LiftedRecord alignments)
     {
         if(!alignments.hasPlacement())
@@ -361,40 +196,10 @@ public class LiftBackGroupProcessor
         }
     }
 
-    private List<LiftedRecord> annotateSpliceStrands(final List<LiftedRecord> liftedRecords)
-    {
-        if(mSupplementaryMerger == null)
-        {
-            return liftedRecords;
-        }
-
-        List<LiftedRecord> annotated = null;
-        for(int i = 0; i < liftedRecords.size(); ++i)
-        {
-            LiftedRecord lifted = liftedRecords.get(i);
-            if(lifted == null || !lifted.hasPlacement() || !lifted.hasNCigar() || lifted.transcriptStrand() != 0)
-            {
-                continue;
-            }
-
-            int strand = mSupplementaryMerger.spliceStrand(
-                    lifted.finalChromosome(), lifted.finalPos(), lifted.finalCigar());
-            if(strand != 0)
-            {
-                if(annotated == null)
-                {
-                    annotated = new ArrayList<>(liftedRecords);
-                }
-                annotated.set(i, lifted.withPrimaryTranscriptStrand(strand));
-            }
-        }
-        return annotated != null ? List.copyOf(annotated) : liftedRecords;
-    }
-
     private Integer finalAlignmentScore(final SAMRecord primary, final LiftedRecord lifted)
     {
         // lift-only paths have no supplementary merger and skip the production AS floor
-        if(mSupplementaryMerger == null)
+        if(!mSupplementaryResolver.enabled())
         {
             return null;
         }
@@ -465,26 +270,6 @@ public class LiftBackGroupProcessor
         mEmitter.emit(
                 records, decision.liftedRecords(), decision.absorbedSupplementaries(),
                 decision.primaryUnmapped(), matePair, consumer);
-    }
-
-    private static SupplementaryMerge supplementaryMerge(
-            final int recordCount, final LiftedRecord primaryResult)
-    {
-        if(primaryResult == null || !primaryResult.hasPlacement()
-                || !primaryResult.primaryAlignment().hasSupplementaryMerge())
-        {
-            return SupplementaryMerge.NONE;
-        }
-
-        Set<Integer> absorbed = new HashSet<>();
-        for(Integer index : primaryResult.primaryAlignment().MergedSupplementaryIndices)
-        {
-            if(index >= 0 && index < recordCount)
-            {
-                absorbed.add(index);
-            }
-        }
-        return new SupplementaryMerge(absorbed, true);
     }
 
     private static void recordPrimary(
@@ -559,31 +344,7 @@ public class LiftBackGroupProcessor
         }
     }
 
-    private record SupplementaryMerge(Set<Integer> absorbed, boolean revised)
-    {
-        private static final SupplementaryMerge NONE = new SupplementaryMerge(Set.of(), false);
-
-        private SupplementaryMerge
-        {
-            absorbed = Set.copyOf(absorbed);
-        }
-    }
-
     private record UnmapDecision(LiftedRecord result, boolean unmapped)
-    {
-    }
-
-    private record SupplementaryAlignmentKey(AlignmentKey alignment, List<Integer> absorbedSupplementaries)
-    {
-        private SupplementaryAlignmentKey
-        {
-            absorbedSupplementaries = List.copyOf(absorbedSupplementaries);
-        }
-    }
-
-    private record SupplementaryPlacements(
-            List<SupplementaryMerger.Supplementary> alignments,
-            IdentityHashMap<SupplementaryMerger.Supplementary, Integer> alignmentIndices)
     {
     }
 }
