@@ -21,24 +21,8 @@ import com.hartwig.hmftools.tars.liftback.EnsemblAnnotationIndex;
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
 
-// Merges a primary placement's terminal softclip with a supplementary into a spliced placement.
-//
-// A supplementary merges into the primary only when all of these hold; RejectReason names the first that fails.
-//   1. the primary has a terminal softclip to extend across      NO_TERMINAL_SOFTCLIP
-//   2. exactly one supplementary reaches that side               MULTIPLE_SUPPS_IN_REACH
-//   3. the supp is on the same chromosome and the same strand    DIFFERENT_CHROMOSOME, OPPOSITE_STRAND
-//   4. the cigars are complementary and simple - no hard clip,
-//      no indel at the boundary, full read length, one clear side  NO_MATCHING_SUPP, COMPLEX_CIGAR_SHAPE
-//   5. primary M and supp M abut on the read, overlapping by at
-//      most MaxSuppReadOverlap and not at all on the reference     READ_COVERAGE_GAP, READ_COVERAGE_OVERLAP
-//   6. the implied intron is within [MinIntronLength, MaxIntronLength]  INTRON_TOO_SHORT, INTRON_TOO_LONG
-//   7. both anchors are at least MinAnchorOverhang                 SHORT_ANCHOR
-//   8. a junction position scores above SpliceJunctions.Tier.NONE, or is annotated
-//      when AnnotatedOnly is set                                   NOVEL_JUNCTION
 public class SupplementaryMerger
 {
-    // readBases seeds the tie-break between equally scoring junction positions; mateHintIntrons biases that choice
-    // toward the partner mate's merged junctions.
     // NOTE: generated equals/hashCode compare readBases by array identity, so do not use as a Set/Map key.
     public record Placement(
             String chromosome, boolean forwardStrand, int readLength, int primaryStart, String primaryCigar,
@@ -60,14 +44,11 @@ public class SupplementaryMerger
         }
     }
 
-    // index is the supplementary's position in the caller's list, so the merger can report which supps to drop.
     public record Supplementary(
             int index, String chromosome, boolean forwardStrand, int start, String cigar, int mapQuality)
     {
     }
 
-    // mergedCigar/mergedStart describe the new primary and droppedSupplementaryIndices the absorbed supps on success;
-    // rejectReason carries the gate that was hit on failure.
     public record Result(
             boolean merged, String mergedCigar, int mergedStart, List<Integer> droppedSupplementaryIndices,
             List<ChrBaseRegion> introducedIntrons, int chainDepth, int spliceStrand, RejectReason rejectReason)
@@ -87,21 +68,20 @@ public class SupplementaryMerger
 
     public enum RejectReason
     {
-        NO_TERMINAL_SOFTCLIP,         // primary cigar has no leading or trailing S to extend across
-        NO_MATCHING_SUPP,             // no supplementary had a complementary cigar shape
+        NO_TERMINAL_SOFTCLIP,
+        NO_MATCHING_SUPP,
         DIFFERENT_CHROMOSOME,
         OPPOSITE_STRAND,
-        READ_COVERAGE_OVERLAP,        // primary's M + supp's M overlap on the read
-        READ_COVERAGE_GAP,            // primary's M + supp's M leave a gap on the read
+        READ_COVERAGE_OVERLAP,
+        READ_COVERAGE_GAP,
         INTRON_TOO_SHORT,
         INTRON_TOO_LONG,
-        SHORT_ANCHOR,                 // primary or supp matched portion < MinAnchorOverhang
-        NOVEL_JUNCTION,               // candidate intron not in annotated set (and AnnotatedOnly is true)
-        COMPLEX_CIGAR_SHAPE,          // hard clip, indel adjacent to softclip boundary, etc.
-        MULTIPLE_SUPPS_IN_REACH       // more than one supp within merge reach; refuse to guess which splice
+        SHORT_ANCHOR,
+        NOVEL_JUNCTION,
+        COMPLEX_CIGAR_SHAPE,
+        MULTIPLE_SUPPS_IN_REACH
     }
 
-    // no junction position scored above the lowest tier; a real position is a read offset, so never negative
     private static final int NO_JUNCTION_POSITION = -1;
 
     private final SpliceJunctions mSpliceJunctions;
@@ -125,7 +105,6 @@ public class SupplementaryMerger
         mConfig = config;
     }
 
-    // Returns the strand shared by the annotated junctions in this CIGAR, or 0 when it is unknown or conflicting.
     public int spliceStrand(final String chromosome, final int start, final String cigar)
     {
         return mSpliceJunctions.spliceStrand(chromosome, start, cigar);
@@ -197,15 +176,13 @@ public class SupplementaryMerger
                     conflictingStrands = true;
                 }
             }
-            // XA alternatives share the source record index. Once one placement is absorbed, no other placement of
-            // that same physical supplementary may be reused in the splice chain.
+            // Do not reuse another XA placement from the absorbed supplementary record.
             remaining.removeIf(supp -> supp.index() == merge.MergedSupp.index());
             ++chainDepth;
         }
 
         if(chainDepth == 0)
         {
-            // unreachable: a first-iteration failure returns above
             return Result.noMerge(lastReject != null ? lastReject : RejectReason.NO_MATCHING_SUPP);
         }
 
@@ -234,8 +211,7 @@ public class SupplementaryMerger
                 continue;
             }
 
-            // At most one supp per terminal softclip can be merged. A second reaching the same side leaves no way to
-            // tell which splice is real, so reject the read rather than guess.
+            // Reject multiple valid alignments reaching the same soft clip.
             if(outcome.RightExtend ? rightMerged : leftMerged)
             {
                 return MergeOutcome.reject(RejectReason.MULTIPLE_SUPPS_IN_REACH);
@@ -255,8 +231,7 @@ public class SupplementaryMerger
                 : MergeOutcome.reject(lastReject != null ? lastReject : RejectReason.NO_MATCHING_SUPP);
     }
 
-    // For a MAPQ-0 supplementary, select one placement per SAM record before doing any merge-shape or junction
-    // calculation. Prefer the shortest DEL, then DUP, then INV within 1 Mb; use deterministic random order otherwise.
+    // Select one placement per supplementary record before attempting a merge.
     public static List<Supplementary> selectSupplementaryPlacements(final Placement placement)
     {
         return selectSupplementaryPlacements(
@@ -356,8 +331,7 @@ public class SupplementaryMerger
         return linksEnd == forwardStrand ? Orientation.FORWARD : Orientation.REVERSE;
     }
 
-    // Higher MAPQ wins, then the smaller intron. Only ever compares a right-extend against a left-extend: a second supp
-    // on either side is rejected above, and the chain loop picks up the loser next pass.
+    // Higher MAPQ wins, then the smaller intron.
     private static boolean isBetterMerge(final MergeOutcome outcome, final MergeOutcome chosen)
     {
         if(outcome.MergedSupp.mapQuality() != chosen.MergedSupp.mapQuality())
@@ -387,8 +361,7 @@ public class SupplementaryMerger
             return MergeOutcome.reject(RejectReason.COMPLEX_CIGAR_SHAPE);
         }
 
-        // ContigTranslator can expand a cross-exon M into M-N-M. When the post-N M overlaps the primary's span, clamp
-        // the supp to its primary-distal anchor first.
+        // Keep the primary-distal block of a translated M-N-M alignment.
         Side primarySide = Side.of(primaryStart, primaryCigar);
         int suppStart = supp.start();
         ClampedSupp clamped = clampSuppToPrimaryBoundary(suppCigar, suppStart, primaryStart, primarySide.RefEnd);
@@ -407,8 +380,7 @@ public class SupplementaryMerger
             return MergeOutcome.reject(RejectReason.NO_MATCHING_SUPP);
         }
 
-        // Clipped at both ends, so the supp could extend either way. The side of the primary it sits on settles it; if
-        // it sits cleanly on neither, refuse to guess.
+        // Genomic position resolves a supplementary clipped at both ends.
         if(rightExtend && leftExtend)
         {
             if(suppSide.Start > primarySide.RefEnd && suppSide.RefEnd >= primarySide.Start)
@@ -432,8 +404,6 @@ public class SupplementaryMerger
         return mergeJunction(placement, up, down, primaryIsUpstream, supp);
     }
 
-    // Conditions 4-6 of the merge policy for a matched up/down anchor pair, cheapest first. Returns the first failure,
-    // or null when the pair may merge.
     private RejectReason anchorPairReject(
             final Placement placement, final Side up, final Side down, final int overlap, final int intronLength)
     {
@@ -471,8 +441,6 @@ public class SupplementaryMerger
         return null;
     }
 
-    // Direction-agnostic merge: validates the anchor pair, scores junction positions by tier, falls back to the mate
-    // hint then the midpoint. supp is carried through as result payload only.
     private MergeOutcome mergeJunction(
             final Placement placement, final Side up, final Side down,
             final boolean primaryIsUpstream, final Supplementary supp)
@@ -480,7 +448,6 @@ public class SupplementaryMerger
         int upMatchedRead = placement.readLength() - up.TrailingS;
         int overlap = upMatchedRead - down.LeadingS;
 
-        // Intron length is invariant under the junction position, so compute it once.
         int intronLength = (down.Start - 1 - up.RefEnd) + overlap;
 
         RejectReason gateReject = anchorPairReject(placement, up, down, overlap, intronLength);
@@ -489,8 +456,7 @@ public class SupplementaryMerger
             return MergeOutcome.reject(gateReject);
         }
 
-        // Junction position priority: annotated boundary (sidecar) > canonical > semi-canonical motif, then the mate's
-        // intron, then the midpoint of the ambiguous range.
+        // Annotation, motif, mate hint, then midpoint.
         int junctionReadPosition = scanJunctionPositions(placement, up, down, upMatchedRead, primaryIsUpstream);
 
         if(junctionReadPosition == NO_JUNCTION_POSITION)
@@ -505,8 +471,6 @@ public class SupplementaryMerger
                 return MergeOutcome.reject(RejectReason.NOVEL_JUNCTION);
             }
 
-            // midpoint of the ambiguous read range [down.LeadingS, upMatchedRead], rounded down. The scan and mate
-            // paths already check the anchors, so only this fallback has to.
             junctionReadPosition = (upMatchedRead + down.LeadingS) / 2;
             if(up.TrailingM < upMatchedRead - junctionReadPosition
                     || down.LeadingM < junctionReadPosition - down.LeadingS)
@@ -522,8 +486,6 @@ public class SupplementaryMerger
         return MergeOutcome.success(up.Start, merged, intron, supp, primaryIsUpstream, mSpliceJunctions.strand(intron));
     }
 
-    // Intron implied by putting the junction at this read position: the upstream alignment gives up the bases past it,
-    // the downstream alignment the bases before it.
     private static ChrBaseRegion intronAt(
             final Placement placement, final Side up, final Side down,
             final int upMatchedRead, final int readPosition)
@@ -534,9 +496,7 @@ public class SupplementaryMerger
                 placement.chromosome(), up.RefEnd - upLoss + 1, down.Start + downLoss - 1);
     }
 
-    // Scores every valid junction position by tier and returns one at the highest tier present. Ties there are broken
-    // pseudo-randomly but deterministically (read-seeded) so ambiguous junctions distribute yet stay reproducible.
-    // Returns NO_JUNCTION_POSITION when no position reaches a splice motif or annotated boundary.
+    // Choose the highest junction tier; break ties deterministically per read.
     private int scanJunctionPositions(
             final Placement placement, final Side up, final Side down,
             final int upMatchedRead, final boolean primaryIsUpstream)
@@ -579,16 +539,13 @@ public class SupplementaryMerger
         return bestPositions.get(index);
     }
 
-    // Deterministic per-read seed: hashing the read bases (when available) with the upstream boundary keeps a tie
-    // reproducible run to run while letting two reads over the same junction pick differently.
     private static int tieBreakSeed(final Placement placement, final Side up)
     {
         int base = placement.readBases() != null ? Arrays.hashCode(placement.readBases()) : 0;
         return 31 * base + up.RefEnd;
     }
 
-    // Use the mate's merged intron as a hint: primary-upstream pins the intron start, primary-downstream pins its
-    // end. Either way the pinned end fixes the read position, and intronAt reproduces the hinted intron.
+    // A mate hint pins the corresponding intron boundary.
     private int junctionPositionFromMate(
             final Placement placement, final Side up, final Side down,
             final int upMatchedRead, final boolean primaryIsUpstream)
@@ -791,7 +748,7 @@ public class SupplementaryMerger
         List<CigarElement> MergedCigar;
         ChrBaseRegion IntroducedIntron;
         Supplementary MergedSupp;
-        boolean RightExtend;       // which terminal softclip of the primary this merge extended
+        boolean RightExtend;
         int SpliceStrand;
 
         private MergeOutcome(

@@ -14,7 +14,6 @@ import com.hartwig.hmftools.tars.liftback.features.OverhangGate;
 
 import htsjdk.samtools.SAMRecord;
 
-// README Steps 0-1: lift every placement to the genome, then apply the overhang gate.
 final class AlignmentLifter
 {
     private final ContigTranslator mTranslator;
@@ -66,7 +65,6 @@ final class AlignmentLifter
         seen.add(self.key());
         for(LiftedAlignment alignment : mTranslator.liftXaAlignments(record.getStringAttribute(XA_ATTRIBUTE)))
         {
-            // Duplicate XA placements must not compete more than once.
             if(seen.add(alignment.key()))
             {
                 alignments.add(alignment);
@@ -93,14 +91,12 @@ final class AlignmentLifter
     private static void gate(
             final List<LiftedAlignment> alignments, final SAMRecord record, final OverhangGate overhangGate)
     {
-        // Null on lift-only paths, where overhangs are deliberately left untouched.
         if(overhangGate != null)
         {
             overhangGate.gatePlacements(alignments, record);
         }
     }
 
-    // Spacer alignments are expected misses. Log only failures that start inside a transcript segment.
     private void logLiftFailure(final SAMRecord record)
     {
         String contig = record.getReferenceName();
@@ -117,7 +113,7 @@ final class AlignmentLifter
             return;
         }
 
-        // findSegment clamps to the nearer neighbour, so a position outside its bounds is in the spacer.
+        // findSegment returns the nearest segment for spacer positions.
         if(pos < segment.contigStart() || pos > segment.contigEnd())
         {
             return;
