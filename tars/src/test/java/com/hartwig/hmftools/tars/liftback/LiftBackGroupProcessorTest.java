@@ -50,7 +50,7 @@ public class LiftBackGroupProcessorTest
             final RefGenomeInterface refGenome, final ExcludedRegions excludedRegions)
     {
         return new LiftBackGroupProcessor(
-                new PlacementSelector(List.of(threeExonContig())),
+                new AlignmentSelector(List.of(threeExonContig())),
                 supplementaryMerger, overhangGate, new GenomicAlignmentScorer(refGenome), refGenome, excludedRegions);
     }
 
@@ -380,6 +380,7 @@ public class LiftBackGroupProcessorTest
         // same shape as the orphan case, but the SA entry lifts, so the supp is emitted with a rewritten genomic SA
         SAMRecord primary = primaryRecord(TX_CONTIG, 100, "50M");
         SAMRecord supp = supplementaryRecord(TX_CONTIG, 110, "30M", TX_CONTIG + ",100,+,50M,0,0;");
+        supp.setMappingQuality(0);
 
         List<SAMRecord> emitted = process(List.of(primary, supp));
 
@@ -390,6 +391,8 @@ public class LiftBackGroupProcessorTest
         String rewrittenSa = emittedSupp.getStringAttribute(SUPPLEMENTARY_ATTRIBUTE);
         assertNotNull(rewrittenSa);
         assertTrue(rewrittenSa.startsWith(CHR_1 + ","));
+        assertNull(emittedSupp.getAttribute("XA"));
+        assertEquals(60, emittedSupp.getMappingQuality());
     }
 
     @Test
@@ -662,6 +665,7 @@ public class LiftBackGroupProcessorTest
         assertEquals(1200, emittedSupplementary.getAlignmentStart());
         assertEquals("50S50M", emittedSupplementary.getCigarString());
         assertEquals("chr5,+5000,50S50M,0;", emittedSupplementary.getStringAttribute("XA"));
+        assertEquals(0, emittedSupplementary.getMappingQuality());
         assertTrue(emittedSupplementary.getStringAttribute("SA").startsWith(CHR_1 + ",1000,"));
         assertEquals(Integer.valueOf(50), emittedSupplementary.getIntegerAttribute("AS"));
         assertEquals(Integer.valueOf(0), emittedSupplementary.getIntegerAttribute("NM"));

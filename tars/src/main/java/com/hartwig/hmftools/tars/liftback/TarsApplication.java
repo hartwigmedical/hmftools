@@ -128,11 +128,11 @@ public class TarsApplication
         EnsemblAnnotationIndex annotationIndex = EnsemblAnnotationIndex.fromContigEntries(contigEntries);
         TARS_LOGGER.info("built annotation index from sidecar: {} junctions", annotationIndex.junctionCount());
 
-        // annotation-only rows have no contig to lift against, so the placementSelector sees only real contig entries.
+        // Annotation-only rows have no contig to lift against.
         List<ContigEntry> liftEntries = contigEntries.stream()
                 .filter(entry -> entry.contigStart() > 0).collect(Collectors.toList());
-        PlacementSelector placementSelector = new PlacementSelector(liftEntries, annotationIndex);
-        validateBamAgainstSidecar(inputHeader, placementSelector.contigTranslator().contigNames());
+        AlignmentSelector alignmentSelector = new AlignmentSelector(liftEntries, annotationIndex);
+        validateBamAgainstSidecar(inputHeader, alignmentSelector.contigTranslator().contigNames());
 
         ExcludedRegions excludedRegions = null;
         if(mConfig.RnaUnmapRegionsFile != null)
@@ -142,7 +142,7 @@ public class TarsApplication
         }
 
         return new LiftBackResources(
-                placementSelector, annotationIndex, mConfig.RefGenomeFile,
+                alignmentSelector, annotationIndex, mConfig.RefGenomeFile,
                 mConfig.Supplementary, excludedRegions);
     }
 

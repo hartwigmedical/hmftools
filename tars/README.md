@@ -170,6 +170,7 @@ supplementary record (within 1 Mb):
 4. deterministic random
 
 A selected `XA` alignment becomes the supplementary's main alignment, whether or not a merge succeeds.
+After lifting, a `MAPQ 0` supplementary with no remaining `XA` is raised to 60.
 
 #### Step 2.2a: Resolve supplementary records into splice junctions
 

@@ -62,7 +62,7 @@ public final class BamRecordEmitter
         boolean finalPrimaryUnmapped = primaryUnmapped || willBeUnmapped(primary, primaryResult);
         boolean[] willEmit = computeWillEmit(
                 records, liftedRecords, absorbedSupplementaries, primary, finalPrimaryUnmapped);
-        int numHits = PlacementSelector.countDistinctLoci(primaryResult);
+        int numHits = AlignmentSelector.countDistinctLoci(primaryResult);
 
         // Apply every final placement before building any SA tag, so SA entries take coordinates, cigar, strand, MAPQ and
         // refreshed NM from the records that are emitted.

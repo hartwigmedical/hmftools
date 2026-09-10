@@ -112,9 +112,9 @@ public final class LiftBackScenario
         RefGenomeInterface ref = mGenome != null ? mGenome.asRefGenome() : null;
         EnsemblAnnotationIndex annotationIndex = EnsemblAnnotationIndex.fromJunctions(mAnnotatedIntrons);
 
-        PlacementSelector selector = mEnsemblAnnotationIndex != null
-                ? new PlacementSelector(mContigs, mEnsemblAnnotationIndex)
-                : new PlacementSelector(mContigs);
+        AlignmentSelector selector = mEnsemblAnnotationIndex != null
+                ? new AlignmentSelector(mContigs, mEnsemblAnnotationIndex)
+                : new AlignmentSelector(mContigs);
         SupplementaryMerger supplementary = new SupplementaryMerger(annotationIndex, ref, supplementaryConfig());
         OverhangGate overhangGate = new OverhangGate(ref);
         GenomicAlignmentScorer alignmentScorer = new GenomicAlignmentScorer(ref);

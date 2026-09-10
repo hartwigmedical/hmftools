@@ -2,7 +2,6 @@ package com.hartwig.hmftools.tars.liftback;
 
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Set;
 
@@ -43,7 +42,7 @@ final class SupplementaryAlignmentResolver
             return primaryAlignments;
         }
 
-        List<SupplementaryMerger.Supplementary> supplementaries = placements(records, liftedRecords).alignments();
+        List<AlignmentSelector.RecordAlignment> supplementaries = placements(records, liftedRecords);
         if(supplementaries.isEmpty())
         {
             return primaryAlignments;
@@ -108,7 +107,38 @@ final class SupplementaryAlignmentResolver
 
         List<LiftedRecord> selected = selectRecordAlignments(
                 records, liftedRecords, primaryResult, absorbed);
-        return new Resolution(annotateSpliceStrands(selected), absorbed);
+        return new Resolution(annotateSpliceStrands(finaliseSupplementaries(records, selected, absorbed)), absorbed);
+    }
+
+    private static List<LiftedRecord> finaliseSupplementaries(
+            final List<SAMRecord> records, final List<LiftedRecord> liftedRecords,
+            final Set<Integer> absorbedSupplementaries)
+    {
+        List<LiftedRecord> finalised = null;
+        for(int i = 1; i < records.size(); ++i)
+        {
+            if(absorbedSupplementaries.contains(i) || !records.get(i).getSupplementaryAlignmentFlag())
+            {
+                continue;
+            }
+
+            LiftedRecord lifted = liftedRecords.get(i);
+            if(lifted == null)
+            {
+                continue;
+            }
+
+            LiftedRecord result = AlignmentSelector.finaliseSupplementary(lifted);
+            if(result != lifted)
+            {
+                if(finalised == null)
+                {
+                    finalised = new ArrayList<>(liftedRecords);
+                }
+                finalised.set(i, result);
+            }
+        }
+        return finalised != null ? List.copyOf(finalised) : liftedRecords;
     }
 
     private List<LiftedRecord> selectRecordAlignments(
@@ -120,31 +150,29 @@ final class SupplementaryAlignmentResolver
             return liftedRecords;
         }
 
-        SupplementaryPlacements placements = placements(records, liftedRecords);
-        if(placements.alignments().isEmpty())
+        List<AlignmentSelector.RecordAlignment> placements = placements(records, liftedRecords);
+        if(placements.isEmpty())
         {
             return liftedRecords;
         }
 
         LiftedAlignment primary = primaryResult.primaryAlignment();
-        SupplementaryMerger.Placement context = new SupplementaryMerger.Placement(
-                primary.LiftedChromosome, primary.ForwardStrand, records.get(0).getReadLength(),
-                primary.LiftedPos, primary.LiftedCigar, placements.alignments(), records.get(0).getReadBases(), List.of());
-        List<SupplementaryMerger.Supplementary> selected =
-                SupplementaryMerger.selectSupplementaryPlacements(context);
+        List<AlignmentSelector.RecordAlignment> selected = AlignmentSelector.selectSupplementaryAlignments(
+                primary.LiftedChromosome, primary.ForwardStrand, primary.LiftedPos, primary.LiftedCigar,
+                records.get(0).getReadBases(), placements);
 
         List<LiftedRecord> revised = null;
-        for(SupplementaryMerger.Supplementary supplementary : selected)
+        for(AlignmentSelector.RecordAlignment supplementary : selected)
         {
-            int recordIndex = supplementary.index();
+            int recordIndex = supplementary.recordIndex();
             if(absorbedSupplementaries.contains(recordIndex))
             {
                 continue;
             }
 
-            Integer alignmentIndex = placements.alignmentIndices().get(supplementary);
+            int alignmentIndex = supplementary.alignmentIndex();
             LiftedRecord lifted = liftedRecords.get(recordIndex);
-            if(alignmentIndex == null || lifted == null || alignmentIndex == lifted.primaryIndex())
+            if(lifted == null || alignmentIndex == lifted.primaryIndex())
             {
                 continue;
             }
@@ -168,11 +196,10 @@ final class SupplementaryAlignmentResolver
         return revised != null ? List.copyOf(revised) : liftedRecords;
     }
 
-    private static SupplementaryPlacements placements(
+    private static List<AlignmentSelector.RecordAlignment> placements(
             final List<SAMRecord> records, final List<LiftedRecord> liftedRecords)
     {
-        List<SupplementaryMerger.Supplementary> alignments = new ArrayList<>();
-        IdentityHashMap<SupplementaryMerger.Supplementary, Integer> alignmentIndices = new IdentityHashMap<>();
+        List<AlignmentSelector.RecordAlignment> alignments = new ArrayList<>();
         for(int i = 1; i < records.size(); ++i)
         {
             SAMRecord record = records.get(i);
@@ -191,14 +218,11 @@ final class SupplementaryAlignmentResolver
                     continue;
                 }
 
-                SupplementaryMerger.Supplementary supplementary = new SupplementaryMerger.Supplementary(
-                        i, alignment.LiftedChromosome, alignment.ForwardStrand,
-                        alignment.LiftedPos, alignment.LiftedCigar, record.getMappingQuality());
-                alignments.add(supplementary);
-                alignmentIndices.put(supplementary, alignmentIndex);
+                alignments.add(new AlignmentSelector.RecordAlignment(
+                        i, alignmentIndex, alignment, record.getMappingQuality()));
             }
         }
-        return new SupplementaryPlacements(List.copyOf(alignments), alignmentIndices);
+        return List.copyOf(alignments);
     }
 
     private List<LiftedRecord> annotateSpliceStrands(final List<LiftedRecord> liftedRecords)
@@ -275,9 +299,4 @@ final class SupplementaryAlignmentResolver
         }
     }
 
-    private record SupplementaryPlacements(
-            List<SupplementaryMerger.Supplementary> alignments,
-            IdentityHashMap<SupplementaryMerger.Supplementary, Integer> alignmentIndices)
-    {
-    }
 }

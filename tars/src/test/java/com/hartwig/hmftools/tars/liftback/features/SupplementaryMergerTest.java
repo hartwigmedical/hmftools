@@ -19,13 +19,14 @@ import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.tars.common.ContigEntry;
+import com.hartwig.hmftools.tars.liftback.AlignmentSelector.RecordAlignment;
 import com.hartwig.hmftools.tars.liftback.EnsemblAnnotationIndex;
+import com.hartwig.hmftools.tars.liftback.LiftedAlignment;
 import com.hartwig.hmftools.tars.liftback.TarsTestFixtures;
 import com.hartwig.hmftools.tars.liftback.TarsTestFixtures.TestGenome;
 import com.hartwig.hmftools.tars.liftback.features.SupplementaryMerger.Placement;
 import com.hartwig.hmftools.tars.liftback.features.SupplementaryMerger.RejectReason;
 import com.hartwig.hmftools.tars.liftback.features.SupplementaryMerger.Result;
-import com.hartwig.hmftools.tars.liftback.features.SupplementaryMerger.Supplementary;
 
 import org.junit.Test;
 
@@ -42,18 +43,19 @@ public class SupplementaryMergerTest
 
     private static Placement placement(
             final String chrom, final boolean forward, final int readLen, final int primStart,
-            final String primCigar, final Supplementary... supps)
+            final String primCigar, final RecordAlignment... supps)
     {
         return new Placement(
                 chrom, forward, readLen, primStart, primCigar,
                 supps.length == 0 ? Collections.emptyList() : Arrays.asList(supps));
     }
 
-    private static Supplementary supp(
+    private static RecordAlignment supp(
             final int index, final String chrom, final boolean forward, final int start,
             final String cigar, final int mapQuality)
     {
-        return new Supplementary(index, chrom, forward, start, cigar, mapQuality);
+        return new RecordAlignment(
+                index, 0, new LiftedAlignment(chrom, start, cigar, 0, false, forward, 0), mapQuality);
     }
 
     private SupplementaryMerger defaultMerger(final Set<ChrBaseRegion> annotated)
@@ -78,7 +80,7 @@ public class SupplementaryMergerTest
         String suppCigar = "94S57M";
 
         ChrBaseRegion annotatedIntron = new ChrBaseRegion(CHR1, 31448462, 31448540);
-        Supplementary supp = supp(0, CHR1, true, suppStart, suppCigar, 60);
+        RecordAlignment supp = supp(0, CHR1, true, suppStart, suppCigar, 60);
         Placement cand = placement(CHR1, true, READ_LEN, primStart, primCigar, supp);
 
         Result result = defaultMerger(annotated(annotatedIntron)).merge(cand);
@@ -130,7 +132,7 @@ public class SupplementaryMergerTest
         String suppCigar = "99S52M";
 
         ChrBaseRegion annotatedIntron = new ChrBaseRegion(CHR1, 1051370, 1051525);
-        Supplementary supp = supp(0, CHR1, true, suppStart, suppCigar, 60);
+        RecordAlignment supp = supp(0, CHR1, true, suppStart, suppCigar, 60);
         Placement cand = placement(CHR1, true, READ_LEN, primStart, primCigar, supp);
 
         Result result = defaultMerger(annotated(annotatedIntron)).merge(cand);
@@ -150,7 +152,7 @@ public class SupplementaryMergerTest
         String primCigar = "57S94M";
 
         ChrBaseRegion intron = new ChrBaseRegion(CHR1, 31448425, 31448540);
-        Supplementary supp = supp(0, CHR1, true, suppStart, suppCigar, 60);
+        RecordAlignment supp = supp(0, CHR1, true, suppStart, suppCigar, 60);
         Placement cand = placement(CHR1, true, READ_LEN, primStart, primCigar, supp);
 
         Result result = defaultMerger(annotated(intron)).merge(cand);
@@ -356,8 +358,8 @@ public class SupplementaryMergerTest
     @Test
     public void testPrimaryBothSidesClippedChainMergesBothSupps()
     {
-        Supplementary right = supp(0, CHR1, true, 1500, "95S56M", 60);
-        Supplementary left = supp(1, CHR1, true, 500, "5M146S", 60);
+        RecordAlignment right = supp(0, CHR1, true, 1500, "95S56M", 60);
+        RecordAlignment left = supp(1, CHR1, true, 500, "5M146S", 60);
         Placement cand = new Placement(
                 CHR1, true, READ_LEN, 1001, "5S90M56S",
                 Arrays.asList(right, left));
@@ -427,72 +429,6 @@ public class SupplementaryMergerTest
         assertTrue(result.merged());
         assertEquals("94M405N57M", result.mergedCigar());
         assertEquals(List.of(0), result.droppedSupplementaryIndices());
-    }
-
-    @Test
-    public void testSupplementaryPlacementSelectionOrder()
-    {
-        Supplementary deletion = supp(0, CHR1, true, 1800, "94S57M", 0);
-        Supplementary duplication = supp(0, CHR1, true, 900, "94S57M", 0);
-        Supplementary inversion = supp(0, CHR1, false, 1200, "94S57M", 0);
-        Supplementary translocation = supp(0, CHR2, true, 1010, "94S57M", 0);
-        Placement cand = placement(
-                CHR1, true, READ_LEN, 1001, "94M57S",
-                translocation, inversion, duplication, deletion);
-
-        List<Supplementary> selected = SupplementaryMerger.selectSupplementaryPlacements(
-                cand, cand.primaryStart(), CigarUtils.cigarElementsFromStr(cand.primaryCigar()), cand.supplementaries());
-
-        assertEquals(List.of(deletion), selected);
-    }
-
-    @Test
-    public void testShortestDuplicationAndInversionAreSelectedWithinTheirType()
-    {
-        Supplementary longDuplication = supp(0, CHR1, true, 500, "94S57M", 0);
-        Supplementary shortDuplication = supp(0, CHR1, true, 900, "94S57M", 0);
-        Supplementary longInversion = supp(1, CHR1, false, 1800, "94S57M", 0);
-        Supplementary shortInversion = supp(1, CHR1, false, 1200, "94S57M", 0);
-        Placement cand = placement(
-                CHR1, true, READ_LEN, 1001, "94M57S",
-                longDuplication, shortDuplication, longInversion, shortInversion);
-
-        List<Supplementary> selected = SupplementaryMerger.selectSupplementaryPlacements(
-                cand, cand.primaryStart(), CigarUtils.cigarElementsFromStr(cand.primaryCigar()), cand.supplementaries());
-
-        assertEquals(List.of(shortDuplication, shortInversion), selected);
-    }
-
-    @Test
-    public void testPositiveMapQualityKeepsSupplementaryMainAlignment()
-    {
-        Supplementary main = supp(0, CHR2, true, 1010, "94S57M", 20);
-        Supplementary deletion = supp(0, CHR1, true, 1800, "94S57M", 20);
-        Placement cand = placement(CHR1, true, READ_LEN, 1001, "94M57S", main, deletion);
-
-        assertEquals(List.of(main), SupplementaryMerger.selectSupplementaryPlacements(cand));
-    }
-
-    @Test
-    public void testSupplementarySvPreferenceStopsPastOneMegabase()
-    {
-        Supplementary distantDeletion = supp(0, CHR1, true, 1_001_200, "94S57M", 0);
-        Supplementary localInversion = supp(0, CHR1, false, 1200, "94S57M", 0);
-        Placement cand = placement(
-                CHR1, true, READ_LEN, 1001, "94M57S", distantDeletion, localInversion);
-
-        assertEquals(List.of(localInversion), SupplementaryMerger.selectSupplementaryPlacements(cand));
-    }
-
-    @Test
-    public void testSupplementarySvPreferenceIncludesOneMegabaseBoundary()
-    {
-        Supplementary boundaryDeletion = supp(0, CHR1, true, 1_001_094, "94S57M", 0);
-        Supplementary localInversion = supp(0, CHR1, false, 1200, "94S57M", 0);
-        Placement cand = placement(
-                CHR1, true, READ_LEN, 1001, "94M57S", localInversion, boundaryDeletion);
-
-        assertEquals(List.of(boundaryDeletion), SupplementaryMerger.selectSupplementaryPlacements(cand));
     }
 
     @Test

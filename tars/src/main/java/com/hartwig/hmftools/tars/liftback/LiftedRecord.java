@@ -109,6 +109,11 @@ public record LiftedRecord(
         return new LiftedRecord(updatedMapQuality, numLoci, notes, newPrimaryIndex, liftedAlignments);
     }
 
+    public LiftedRecord withMapQuality(final int mapQuality)
+    {
+        return new LiftedRecord(mapQuality, numLoci, notes, primaryIndex, liftedAlignments);
+    }
+
     public LiftedRecord withPrimaryTranscriptStrand(final int transcriptStrand)
     {
         List<LiftedAlignment> revised = new ArrayList<>(liftedAlignments);

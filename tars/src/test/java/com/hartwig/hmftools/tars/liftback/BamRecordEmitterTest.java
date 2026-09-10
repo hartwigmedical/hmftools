@@ -37,7 +37,7 @@ public class BamRecordEmitterTest
     public void testTxPrimaryRewrittenToGenomicCoords()
     {
         SAMRecord record = newRecord(TX_CONTIG, 51, "100M");
-        PlacementSelector selector = new PlacementSelector(List.of(threeExonContig()));
+        AlignmentSelector selector = new AlignmentSelector(List.of(threeExonContig()));
 
         BamRecordEmitter.applyResultToRecord(record, selector.resolve(record), new LiftedMatePair(), false);
 
@@ -49,7 +49,7 @@ public class BamRecordEmitterTest
     public void testUnliftableRecordMarkedUnmappedAndStripped()
     {
         SAMRecord record = newRecord(TX_CONTIG, 251, "10M");
-        PlacementSelector selector = new PlacementSelector(List.of(threeExonContig()));
+        AlignmentSelector selector = new AlignmentSelector(List.of(threeExonContig()));
 
         BamRecordEmitter.applyResultToRecord(record, selector.resolve(record), new LiftedMatePair(), false);
 
@@ -66,7 +66,7 @@ public class BamRecordEmitterTest
     {
         SAMRecord record = newRecord(CHR_1, 1000, "50M");
         record.setAttribute(XA_TAG, TX_CONTIG + ",+1,50M,0;");
-        PlacementSelector selector = new PlacementSelector(List.of(threeExonContig()));
+        AlignmentSelector selector = new AlignmentSelector(List.of(threeExonContig()));
 
         BamRecordEmitter.applyResultToRecord(record, selector.resolve(record), new LiftedMatePair(), false);
 
@@ -81,7 +81,7 @@ public class BamRecordEmitterTest
         SAMRecord record = new SAMRecord(new SAMFileHeader());
         record.setReadName("read");
         record.setReadUnmappedFlag(true);
-        PlacementSelector selector = new PlacementSelector(List.of(threeExonContig()));
+        AlignmentSelector selector = new AlignmentSelector(List.of(threeExonContig()));
 
         BamRecordEmitter.applyResultToRecord(record, selector.resolve(record), new LiftedMatePair(), false);
 
@@ -91,7 +91,7 @@ public class BamRecordEmitterTest
     @Test
     public void testWillBeUnmapped()
     {
-        PlacementSelector selector = new PlacementSelector(List.of(threeExonContig()));
+        AlignmentSelector selector = new AlignmentSelector(List.of(threeExonContig()));
 
         SAMRecord unliftable = unmappedRecord();
         assertTrue(BamRecordEmitter.willBeUnmapped(unliftable, selector.resolve(unliftable)));
@@ -149,7 +149,7 @@ public class BamRecordEmitterTest
     {
         // A genuine 1 bp exon anchor must survive coordinate translation.
         SAMRecord record = newRecord(TX_CONTIG, 200, "50M");
-        PlacementSelector selector = new PlacementSelector(List.of(threeExonContig()));
+        AlignmentSelector selector = new AlignmentSelector(List.of(threeExonContig()));
 
         BamRecordEmitter.applyResultToRecord(record, selector.resolve(record), new LiftedMatePair(), false);
 
@@ -161,7 +161,7 @@ public class BamRecordEmitterTest
     {
         SAMRecord record = newRecord(TX_CONTIG, 51, "100M");
         record.setAttribute(XA_TAG, CHR_1 + ",+150,50M50S,0;");
-        PlacementSelector selector = new PlacementSelector(List.of(threeExonContig()));
+        AlignmentSelector selector = new AlignmentSelector(List.of(threeExonContig()));
 
         BamRecordEmitter.applyResultToRecord(record, selector.resolve(record), new LiftedMatePair(), false);
 
@@ -173,7 +173,7 @@ public class BamRecordEmitterTest
     public void testSplicedTxRecordGetsXsAStrand()
     {
         SAMRecord record = newRecord(TX_CONTIG, 51, "100M");
-        PlacementSelector selector = new PlacementSelector(List.of(threeExonContig()));
+        AlignmentSelector selector = new AlignmentSelector(List.of(threeExonContig()));
 
         BamRecordEmitter.applyResultToRecord(record, selector.resolve(record), new LiftedMatePair(), false);
 
@@ -185,7 +185,7 @@ public class BamRecordEmitterTest
     public void testNonSplicedRecordHasNoXsA()
     {
         SAMRecord record = newRecord(CHR_1, 1000, "100M");
-        PlacementSelector selector = new PlacementSelector(List.of(threeExonContig()));
+        AlignmentSelector selector = new AlignmentSelector(List.of(threeExonContig()));
 
         BamRecordEmitter.applyResultToRecord(record, selector.resolve(record), new LiftedMatePair(), false);
 
@@ -229,7 +229,7 @@ public class BamRecordEmitterTest
     {
         SAMRecord record = newRecord(TX_CONTIG, 51, "100M");
         record.setReadBases(("A".repeat(99) + "C").getBytes());
-        PlacementSelector selector = new PlacementSelector(List.of(threeExonContig()));
+        AlignmentSelector selector = new AlignmentSelector(List.of(threeExonContig()));
 
         BamRecordEmitter.applyResultToRecord(record, selector.resolve(record), new LiftedMatePair(), false);
 
@@ -269,7 +269,7 @@ public class BamRecordEmitterTest
     {
         SAMRecord record = newRecord(TX_CONTIG, 51, "100M");
         record.setAttribute("AS", 100);
-        PlacementSelector selector = new PlacementSelector(List.of(threeExonContig()));
+        AlignmentSelector selector = new AlignmentSelector(List.of(threeExonContig()));
 
         BamRecordEmitter.applyResultToRecord(record, selector.resolve(record), new LiftedMatePair(), false);
 

@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.threeExonConti
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
@@ -22,7 +23,7 @@ import org.junit.Test;
 
 import htsjdk.samtools.SAMRecord;
 
-public class PlacementSelectorTest
+public class AlignmentSelectorTest
 {
     private static List<ContigEntry> contigMap()
     {
@@ -42,7 +43,7 @@ public class PlacementSelectorTest
     @Test
     public void testSingleEndPrimaryLifted()
     {
-        PlacementSelector selector = new PlacementSelector(contigMap());
+        AlignmentSelector selector = new AlignmentSelector(contigMap());
         LiftedRecord result = selector.resolve(TarsTestFixtures.unpairedPrimaryRecord(TX_CONTIG, 51, "100M"));
 
         assertTrue(result.hasPlacement());
@@ -54,7 +55,7 @@ public class PlacementSelectorTest
     @Test
     public void testSingleEndSupplementaryLifted()
     {
-        PlacementSelector selector = new PlacementSelector(contigMap());
+        AlignmentSelector selector = new AlignmentSelector(contigMap());
         LiftedRecord result = selector.resolve(
                 TarsTestFixtures.unpairedSupplementaryRecord(TX_CONTIG, 51, "100M", TX_CONTIG + ",1,+,60M40S,60,0;"));
 
@@ -66,7 +67,7 @@ public class PlacementSelectorTest
     @Test
     public void testUnmapped()
     {
-        PlacementSelector selector = new PlacementSelector(contigMap());
+        AlignmentSelector selector = new AlignmentSelector(contigMap());
         LiftedRecord result = selector.resolve(newUnmappedRecord());
 
         assertFalse(result.hasPlacement());
@@ -78,7 +79,7 @@ public class PlacementSelectorTest
     {
         SAMRecord record = newRecord(CHR_1, 1000, "150M");
 
-        PlacementSelector selector = new PlacementSelector(contigMap());
+        AlignmentSelector selector = new AlignmentSelector(contigMap());
         LiftedRecord result = selector.resolve(record);
 
         assertEquals(CHR_1, result.finalChromosome());
@@ -93,7 +94,7 @@ public class PlacementSelectorTest
     {
         SAMRecord record = newRecord(TX_CONTIG, 1, "50M");
 
-        PlacementSelector selector = new PlacementSelector(contigMap());
+        AlignmentSelector selector = new AlignmentSelector(contigMap());
         LiftedRecord result = selector.resolve(record);
 
         assertEquals(CHR_1, result.finalChromosome());
@@ -107,7 +108,7 @@ public class PlacementSelectorTest
     {
         SAMRecord record = newRecord(TX_CONTIG, 51, "100M");
 
-        PlacementSelector selector = new PlacementSelector(contigMap());
+        AlignmentSelector selector = new AlignmentSelector(contigMap());
         LiftedRecord result = selector.resolve(record);
 
         assertEquals(CHR_1, result.finalChromosome());
@@ -122,7 +123,7 @@ public class PlacementSelectorTest
         SAMRecord record = newRecord(CHR_1, 100, "50M");
         record.setAttribute("XA", TX_CONTIG + ",+1,50M,0;");
 
-        PlacementSelector selector = new PlacementSelector(contigMap());
+        AlignmentSelector selector = new AlignmentSelector(contigMap());
         LiftedRecord result = selector.resolve(record);
 
         assertEquals(1, result.numLoci());
@@ -134,7 +135,7 @@ public class PlacementSelectorTest
         SAMRecord record = newRecord(CHR_1, 170, "50M");
         record.setAttribute("XA", TX_CONTIG + ",+71,30M20S,0;");
 
-        PlacementSelector selector = new PlacementSelector(contigMap());
+        AlignmentSelector selector = new AlignmentSelector(contigMap());
         LiftedRecord result = selector.resolve(record);
 
         assertEquals(1, result.numLoci());
@@ -146,7 +147,7 @@ public class PlacementSelectorTest
         SAMRecord record = newRecord(CHR_1, 170, "50M");
         record.setAttribute("XA", TX_CONTIG + ",+71,25M25S,0;");
 
-        PlacementSelector selector = new PlacementSelector(contigMap());
+        AlignmentSelector selector = new AlignmentSelector(contigMap());
         LiftedRecord result = selector.resolve(record);
 
         assertEquals(1, result.numLoci());
@@ -158,7 +159,7 @@ public class PlacementSelectorTest
         SAMRecord record = newRecord(TX_CONTIG, 1, "50M");
         record.setAttribute("XA", "chr5,+5000,50M,0;");
 
-        PlacementSelector selector = new PlacementSelector(contigMap());
+        AlignmentSelector selector = new AlignmentSelector(contigMap());
         LiftedRecord result = selector.resolve(record);
 
         assertEquals(2, result.numLoci());
@@ -171,7 +172,7 @@ public class PlacementSelectorTest
         record.setMappingQuality(0);
         record.setAttribute("XA", "chr5,+5000,50M,3;");
 
-        PlacementSelector selector = new PlacementSelector(contigMap());
+        AlignmentSelector selector = new AlignmentSelector(contigMap());
         LiftedRecord result = selector.resolve(record);
 
         assertEquals(2, result.numLoci());
@@ -185,7 +186,7 @@ public class PlacementSelectorTest
         record.setMappingQuality(0);
         record.setAttribute("XA", TX_CONTIG + ",+101,50S50M,0;");
 
-        PlacementSelector selector = new PlacementSelector(contigMap());
+        AlignmentSelector selector = new AlignmentSelector(contigMap());
         LiftedRecord result = selector.resolve(record);
 
         assertEquals(1, result.numLoci());
@@ -199,7 +200,7 @@ public class PlacementSelectorTest
         record.setMappingQuality(0);
         record.setAttribute("XA", CHR_1 + ",+1080,100M,0;" + CHR_1 + ",+1160,100M,0;");
 
-        PlacementSelector selector = new PlacementSelector(contigMap());
+        AlignmentSelector selector = new AlignmentSelector(contigMap());
         LiftedRecord result = selector.resolve(record);
 
         assertEquals(2, result.numLoci());
@@ -212,7 +213,7 @@ public class PlacementSelectorTest
         SAMRecord record = newRecord(CHR_1, 1000, "50M");
         record.setAttribute("XA", "chr5,+5000,50M,0;");
 
-        PlacementSelector selector = new PlacementSelector(contigMap());
+        AlignmentSelector selector = new AlignmentSelector(contigMap());
         LiftedRecord result = selector.resolve(record);
 
         assertEquals(2, result.numLoci());
@@ -229,7 +230,7 @@ public class PlacementSelectorTest
         SAMRecord record = newRecord(TX_CONTIG, 1, "50M");
         record.setAttribute("XA", "ensG_OTHER_T,+1,50M,0;");
 
-        PlacementSelector selector = new PlacementSelector(twoContigs);
+        AlignmentSelector selector = new AlignmentSelector(twoContigs);
         LiftedRecord result = selector.resolve(record);
 
         assertEquals(2, result.numLoci());
@@ -241,7 +242,7 @@ public class PlacementSelectorTest
         SAMRecord record = newRecord(CHR_1, 1000, "60M40H");
         record.setSupplementaryAlignmentFlag(true);
 
-        PlacementSelector selector = new PlacementSelector(contigMap());
+        AlignmentSelector selector = new AlignmentSelector(contigMap());
         LiftedRecord result = selector.resolve(record);
 
         assertTrue(result.hasPlacement());
@@ -254,7 +255,7 @@ public class PlacementSelectorTest
         record.setSupplementaryAlignmentFlag(true);
         record.setMappingQuality(0);
 
-        PlacementSelector selector = new PlacementSelector(contigMap());
+        AlignmentSelector selector = new AlignmentSelector(contigMap());
         LiftedRecord result = selector.resolve(record);
 
         assertTrue(result.hasPlacement());
@@ -262,7 +263,8 @@ public class PlacementSelectorTest
         assertEquals(150, result.finalPos());
         assertEquals("50M100N50M", result.finalCigar());
         assertTrue(result.hasNCigar());
-        assertEquals(0, result.updatedMapQuality());
+        assertNull(result.xaTag());
+        assertEquals(60, result.updatedMapQuality());
     }
 
     @Test
@@ -273,7 +275,7 @@ public class PlacementSelectorTest
         record.setAttribute(
                 "XA", CHR_1 + ",+300,50S50M,0;" + TX_CONTIG + ",+151,50S50M,0;");
 
-        LiftedRecord result = new PlacementSelector(contigMap()).resolve(record);
+        LiftedRecord result = new AlignmentSelector(contigMap()).resolve(record);
 
         assertEquals(2, result.liftedAlignments().size());
         assertEquals(CHR_1, result.liftedAlignments().get(1).LiftedChromosome);
@@ -288,7 +290,7 @@ public class PlacementSelectorTest
         SAMRecord record = newRecord(TX_CONTIG, 251, "10M");
         record.setSupplementaryAlignmentFlag(true);
 
-        PlacementSelector selector = new PlacementSelector(contigMap());
+        AlignmentSelector selector = new AlignmentSelector(contigMap());
         LiftedRecord result = selector.resolve(record);
 
         assertFalse(result.hasPlacement());
@@ -301,7 +303,7 @@ public class PlacementSelectorTest
     {
         SAMRecord record = newRecord(TX_CONTIG, 251, "10M");
 
-        PlacementSelector selector = new PlacementSelector(contigMap());
+        AlignmentSelector selector = new AlignmentSelector(contigMap());
         LiftedRecord result = selector.resolve(record);
 
         assertFalse(result.hasPlacement());
@@ -313,7 +315,7 @@ public class PlacementSelectorTest
     {
         SAMRecord record = newRecord(TX_CONTIG, 200, "100M");
 
-        PlacementSelector selector = new PlacementSelector(contigMap());
+        AlignmentSelector selector = new AlignmentSelector(contigMap());
         LiftedRecord result = selector.resolve(record);
 
         assertTrue(result.finalCigar().endsWith("49S"));
@@ -325,7 +327,7 @@ public class PlacementSelectorTest
         SAMRecord record = newRecord(CHR_1, 300, "30M");
         record.setAttribute("XA", TX_CONTIG + ",+101,20S30M,0;");
 
-        PlacementSelector selector = new PlacementSelector(contigMap());
+        AlignmentSelector selector = new AlignmentSelector(contigMap());
         LiftedRecord result = selector.resolve(record);
 
         assertEquals(1, result.numLoci());
@@ -337,7 +339,7 @@ public class PlacementSelectorTest
         SAMRecord record = newRecord(TX_CONTIG, 1, "50M");
         record.setAttribute("XA", "chr5,+5000,50M,0;chr5,+5000,50M,0;");
 
-        PlacementSelector selector = new PlacementSelector(contigMap());
+        AlignmentSelector selector = new AlignmentSelector(contigMap());
         LiftedRecord result = selector.resolve(record);
 
         assertEquals(2, result.liftedAlignments().size());
@@ -350,7 +352,7 @@ public class PlacementSelectorTest
         SAMRecord record = newRecord(CHR_1, 100, "50M");
         record.setAttribute("XA", TX_CONTIG + ",+1,50M,0;" + CHR_1 + ",+100,50M,0;");
 
-        PlacementSelector selector = new PlacementSelector(contigMap());
+        AlignmentSelector selector = new AlignmentSelector(contigMap());
         LiftedRecord result = selector.resolve(record);
 
         assertEquals(2, result.liftedAlignments().size());
@@ -363,7 +365,7 @@ public class PlacementSelectorTest
         SAMRecord record = newRecord(TX_CONTIG, 1, "50M");
         record.setAttribute("XA", "chr5,+5000,50M,not_a_number;");
 
-        PlacementSelector selector = new PlacementSelector(contigMap());
+        AlignmentSelector selector = new AlignmentSelector(contigMap());
         LiftedRecord result = selector.resolve(record);
 
         assertEquals(2, result.liftedAlignments().size());
@@ -375,7 +377,7 @@ public class PlacementSelectorTest
         SAMRecord record = newRecord(TX_CONTIG, 51, "100M");
         record.setAttribute("XA", "chr5,+5000,50M100N50M,0;");
 
-        PlacementSelector selector = new PlacementSelector(contigMap());
+        AlignmentSelector selector = new AlignmentSelector(contigMap());
         LiftedRecord result = selector.resolve(record);
 
         assertTrue(result.primaryAlignment().FromTxContig);
@@ -392,7 +394,7 @@ public class PlacementSelectorTest
                         + TX_CONTIG + ",+51,100M,0;"
                         + TX_CONTIG + ",+51,100M,0;");
 
-        PlacementSelector selector = new PlacementSelector(contigMap());
+        AlignmentSelector selector = new AlignmentSelector(contigMap());
         LiftedRecord result = selector.resolve(primary);
 
         assertEquals(CHR_1, result.finalChromosome());
@@ -410,7 +412,7 @@ public class PlacementSelectorTest
                 CHR_1 + ",+2000,150M,0;"
                         + CHR_1 + ",+3000,150M,0;");
 
-        PlacementSelector selector = new PlacementSelector(contigMap());
+        AlignmentSelector selector = new AlignmentSelector(contigMap());
         LiftedRecord result = selector.resolve(primary);
 
         assertEquals(3, result.numLoci());
@@ -424,11 +426,11 @@ public class PlacementSelectorTest
         record.setAttribute("AS", 151);
         record.setAttribute("XS", 151);
 
-        PlacementSelector noIndex = new PlacementSelector(contigMap());
+        AlignmentSelector noIndex = new AlignmentSelector(contigMap());
         assertEquals(0, noIndex.resolve(record).updatedMapQuality());
 
         EnsemblAnnotationIndex annotationIndex = exonRegionIndex(CHR_1, List.of(new int[] { 1400, 1700 }));
-        PlacementSelector withIndex = new PlacementSelector(contigMap(), annotationIndex);
+        AlignmentSelector withIndex = new AlignmentSelector(contigMap(), annotationIndex);
         LiftedRecord result = withIndex.resolve(record);
         assertEquals(0, result.updatedMapQuality());
     }
@@ -443,7 +445,7 @@ public class PlacementSelectorTest
 
         EnsemblAnnotationIndex annotationIndex = exonRegionIndex(
                 CHR_1, List.of(new int[] { 1400, 1700 }));
-        PlacementSelector selector = new PlacementSelector(contigMap(), annotationIndex);
+        AlignmentSelector selector = new AlignmentSelector(contigMap(), annotationIndex);
         assertEquals(0, selector.resolve(record).updatedMapQuality());
     }
 
@@ -462,7 +464,7 @@ public class PlacementSelectorTest
 
         for(MapQualityCase test : cases)
         {
-            assertEquals(test.name(), test.expected(), PlacementSelector.decidePrimaryMapQuality(
+            assertEquals(test.name(), test.expected(), AlignmentSelector.decidePrimaryMapQuality(
                     test.input(), test.loci(), test.hiddenTie(), test.fromTx(), test.inExon(), test.randomTie()));
         }
     }
@@ -491,12 +493,12 @@ public class PlacementSelectorTest
         assertEquals(1, countDistinctLociOf(primary, overlapping));
         assertEquals(2, countDistinctLociOf(primary, distant));
         assertEquals(1, countDistinctLociOf(primary, droppedDistant));
-        assertEquals(1, PlacementSelector.countDistinctLoci(LiftedRecord.unmapped("")));
+        assertEquals(1, AlignmentSelector.countDistinctLoci(LiftedRecord.unmapped("")));
     }
 
     private static int countDistinctLociOf(final LiftedAlignment... alignments)
     {
-        return PlacementSelector.countDistinctLoci(recordBuilder().alignments(List.of(alignments)).build());
+        return AlignmentSelector.countDistinctLoci(recordBuilder().alignments(List.of(alignments)).build());
     }
 
     @Test
@@ -505,7 +507,7 @@ public class PlacementSelectorTest
         SAMRecord record = newRecord(CHR_1, 1000, "50M");
         record.setAttribute("XA", "chr5,+5000,50M,0;chr5,-5000,50M,0;");
 
-        PlacementSelector selector = new PlacementSelector(contigMap());
+        AlignmentSelector selector = new AlignmentSelector(contigMap());
         LiftedRecord result = selector.resolve(record);
 
         String xa = result.xaTag();
@@ -548,7 +550,7 @@ public class PlacementSelectorTest
 
     private static boolean concordantOf(final LiftedAlignment... alignments)
     {
-        return PlacementSelector.isConcordant(set(alignments));
+        return AlignmentSelector.isConcordant(set(alignments));
     }
 
     @Test
@@ -606,7 +608,7 @@ public class PlacementSelectorTest
         List<LiftedAlignment> alignments = contestedSet();
         alignments.get(0).GenomicScore = 10;
         alignments.get(1).GenomicScore = 99;
-        PlacementSelector.Selection outcome = PlacementSelector.select(alignments, false, alignments.get(0), 0, true);
+        AlignmentSelector.Selection outcome = AlignmentSelector.select(alignments, false, alignments.get(0), 0, true);
         assertSame(alignments.get(0), outcome.alignment());
         assertEquals("", outcome.reason());
     }
@@ -615,7 +617,7 @@ public class PlacementSelectorTest
     public void testUnscoredKeepsSelf()
     {
         List<LiftedAlignment> alignments = contestedSet();
-        PlacementSelector.Selection outcome = PlacementSelector.select(alignments, false, alignments.get(0), 0, false);
+        AlignmentSelector.Selection outcome = AlignmentSelector.select(alignments, false, alignments.get(0), 0, false);
         assertSame(alignments.get(0), outcome.alignment());
         assertEquals("", outcome.reason());
         assertFalse(alignments.get(0).Dropped);
@@ -628,14 +630,14 @@ public class PlacementSelectorTest
         List<LiftedAlignment> refWins = contestedSet();
         refWins.get(0).GenomicScore = 90;
         refWins.get(1).GenomicScore = 50;
-        PlacementSelector.Selection refResult = PlacementSelector.select(refWins, false, refWins.get(0), 1, false);
+        AlignmentSelector.Selection refResult = AlignmentSelector.select(refWins, false, refWins.get(0), 1, false);
         assertSame(refWins.get(0), refResult.alignment());
         assertEquals("score", refResult.reason());
 
         List<LiftedAlignment> txWins = contestedSet();
         txWins.get(0).GenomicScore = 40;
         txWins.get(1).GenomicScore = 88;
-        PlacementSelector.Selection txResult = PlacementSelector.select(txWins, false, txWins.get(0), 0, false);
+        AlignmentSelector.Selection txResult = AlignmentSelector.select(txWins, false, txWins.get(0), 0, false);
         assertSame(txWins.get(1), txResult.alignment());
         assertEquals("score", txResult.reason());
         assertEquals(1, txResult.alignmentIndex());
@@ -648,14 +650,14 @@ public class PlacementSelectorTest
         List<LiftedAlignment> even = contestedSet();
         even.get(0).GenomicScore = 70;
         even.get(1).GenomicScore = 70;
-        PlacementSelector.Selection evenResult = PlacementSelector.select(even, false, even.get(0), 0, false);
+        AlignmentSelector.Selection evenResult = AlignmentSelector.select(even, false, even.get(0), 0, false);
         assertSame(even.get(0), evenResult.alignment());
         assertEquals("random", evenResult.reason());
 
         List<LiftedAlignment> odd = contestedSet();
         odd.get(0).GenomicScore = 70;
         odd.get(1).GenomicScore = 70;
-        PlacementSelector.Selection oddResult = PlacementSelector.select(odd, false, odd.get(0), 1, false);
+        AlignmentSelector.Selection oddResult = AlignmentSelector.select(odd, false, odd.get(0), 1, false);
         assertSame(odd.get(1), oddResult.alignment());
         assertEquals("random", oddResult.reason());
         assertFalse("tie loser rides in XA, not dropped", odd.get(0).Dropped);
@@ -669,7 +671,7 @@ public class PlacementSelectorTest
         List<LiftedAlignment> alignments = set(softClip, junction);
         alignments.get(0).GenomicScore = 80;
         alignments.get(1).GenomicScore = 80;
-        PlacementSelector.Selection outcome = PlacementSelector.select(alignments, false, softClip, 0, false);
+        AlignmentSelector.Selection outcome = AlignmentSelector.select(alignments, false, softClip, 0, false);
         assertSame(junction, outcome.alignment());
         assertEquals("junction", outcome.reason());
         assertEquals(alignments.indexOf(junction), outcome.alignmentIndex());
@@ -684,7 +686,7 @@ public class PlacementSelectorTest
         List<LiftedAlignment> alignments = set(softClip, junction);
         alignments.get(0).GenomicScore = 80;
         alignments.get(1).GenomicScore = 80;
-        PlacementSelector.Selection outcome = PlacementSelector.select(alignments, false, softClip, 0, false);
+        AlignmentSelector.Selection outcome = AlignmentSelector.select(alignments, false, softClip, 0, false);
         assertSame("seed 0 -> first placement", softClip, outcome.alignment());
         assertEquals("random", outcome.reason());
     }
@@ -695,7 +697,7 @@ public class PlacementSelectorTest
         List<LiftedAlignment> alignments = multiLocusSet();
         alignments.get(0).GenomicScore = 60;
         alignments.get(1).GenomicScore = 130;
-        PlacementSelector.Selection outcome = PlacementSelector.select(alignments, false, alignments.get(0), 0, false);
+        AlignmentSelector.Selection outcome = AlignmentSelector.select(alignments, false, alignments.get(0), 0, false);
         assertSame(alignments.get(1), outcome.alignment());
         assertEquals("score", outcome.reason());
         assertFalse("all placements ride in XA", alignments.get(0).Dropped);
@@ -707,7 +709,7 @@ public class PlacementSelectorTest
         List<LiftedAlignment> alignments = multiLocusSet();
         alignments.get(0).GenomicScore = 100;
         alignments.get(1).GenomicScore = 100;
-        PlacementSelector.Selection outcome = PlacementSelector.select(alignments, false, alignments.get(0), 1, false);
+        AlignmentSelector.Selection outcome = AlignmentSelector.select(alignments, false, alignments.get(0), 1, false);
         assertSame("seed 1 -> second placement", alignments.get(1), outcome.alignment());
         assertEquals("random", outcome.reason());
     }
@@ -722,7 +724,7 @@ public class PlacementSelectorTest
         alignments.get(0).GenomicScore = 100;
         alignments.get(1).GenomicScore = 100;
         alignments.get(2).GenomicScore = 100;
-        PlacementSelector.Selection outcome = PlacementSelector.select(alignments, false, self, 1, false);
+        AlignmentSelector.Selection outcome = AlignmentSelector.select(alignments, false, self, 1, false);
         assertSame(txSpliced, outcome.alignment());
         assertEquals("random", outcome.reason());
     }
@@ -734,7 +736,7 @@ public class PlacementSelectorTest
         alignments.get(0).GenomicScore = 100;
         alignments.get(1).GenomicScore = 100;
         LiftedRecord mate = TarsTestFixtures.liftedRecordAt(CHR2, 250, "100M", false);
-        PlacementSelector.Selection outcome = PlacementSelector.select(alignments, false, alignments.get(0), 0, false, mate);
+        AlignmentSelector.Selection outcome = AlignmentSelector.select(alignments, false, alignments.get(0), 0, false, mate);
         assertSame(alignments.get(1), outcome.alignment());
         assertEquals("mate", outcome.reason());
         assertEquals(1, outcome.alignmentIndex());
@@ -751,7 +753,7 @@ public class PlacementSelectorTest
         List<LiftedAlignment> alignments = set(close, distant);
         LiftedRecord mate = TarsTestFixtures.liftedRecordAt(CHR1, 250, "100M", false);
 
-        PlacementSelector.Selection outcome = PlacementSelector.select(
+        AlignmentSelector.Selection outcome = AlignmentSelector.select(
                 alignments, false, close, 1, false, mate);
 
         assertSame(close, outcome.alignment());
@@ -769,7 +771,7 @@ public class PlacementSelectorTest
         List<LiftedAlignment> alignments = set(close, distant);
         LiftedRecord mate = TarsTestFixtures.liftedRecordAt(CHR1, 250, "100M", false);
 
-        PlacementSelector.Selection outcome = PlacementSelector.select(
+        AlignmentSelector.Selection outcome = AlignmentSelector.select(
                 alignments, false, close, 1, false, mate);
 
         assertSame(close, outcome.alignment());
@@ -787,7 +789,7 @@ public class PlacementSelectorTest
         LiftedAlignment mate = ref(CHR1, 250, "52M");
         mate.GenomicScore = 100;
 
-        PlacementSelector.PairSelection outcome = PlacementSelector.selectPair(
+        AlignmentSelector.PairSelection outcome = AlignmentSelector.selectPair(
                 set(close, distant), false, close, false,
                 set(mate), false, mate, false, 0);
 
@@ -797,13 +799,31 @@ public class PlacementSelectorTest
     }
 
     @Test
+    public void testPairScoreIgnoresUnsetScoreForFixedMate()
+    {
+        LiftedAlignment spliced = ref(CHR1, 150_704_335, "9M2209N142M");
+        LiftedAlignment clipped = ref(CHR1, 150_706_572, "28S123M");
+        LiftedAlignment mate = ref(CHR1, 150_704_161, "34M82N67M2209N50M");
+        spliced.GenomicScore = 151;
+        clipped.GenomicScore = 123;
+
+        AlignmentSelector.PairSelection outcome = AlignmentSelector.selectPair(
+                set(spliced, clipped), false, clipped, false,
+                set(mate), false, mate, false, 0);
+
+        assertSame(spliced, outcome.first().alignment());
+        assertSame(mate, outcome.second().alignment());
+        assertEquals("score", outcome.first().reason());
+    }
+
+    @Test
     public void testPairSelectionPrefersDeletionBeforeShorterDuplication()
     {
         LiftedAlignment deletion = ref(CHR1, 100, "100M");
         LiftedAlignment duplication = ref(CHR1, 12_000, "100M");
         LiftedAlignment mate = refReverse(CHR1, 10_000, "100M");
 
-        PlacementSelector.PairSelection outcome = PlacementSelector.selectPair(
+        AlignmentSelector.PairSelection outcome = AlignmentSelector.selectPair(
                 set(deletion, duplication), false, deletion, false,
                 set(mate), false, mate, true, 0);
 
@@ -817,7 +837,7 @@ public class PlacementSelectorTest
         LiftedAlignment deletion = ref(CHR1, 100, "100M");
         LiftedAlignment mate = refReverse(CHR1, 100_050, "100M");
 
-        PlacementSelector.PairSelection outcome = PlacementSelector.selectPair(
+        AlignmentSelector.PairSelection outcome = AlignmentSelector.selectPair(
                 set(deletion, localPlacement), false, deletion, false,
                 set(mate), false, mate, true, 0);
 
@@ -831,7 +851,7 @@ public class PlacementSelectorTest
         LiftedAlignment localInversion = refReverse(CHR1, 1_999_000, "100M");
         LiftedAlignment mate = refReverse(CHR1, 2_000_000, "100M");
 
-        PlacementSelector.PairSelection outcome = PlacementSelector.selectPair(
+        AlignmentSelector.PairSelection outcome = AlignmentSelector.selectPair(
                 set(distantDeletion, localInversion), false, distantDeletion, false,
                 set(mate), false, mate, true, 0);
 
@@ -845,7 +865,7 @@ public class PlacementSelectorTest
         LiftedAlignment localInversion = refReverse(CHR1, 998_000, "100M");
         LiftedAlignment mate = refReverse(CHR1, 1_000_199, "100M");
 
-        PlacementSelector.PairSelection outcome = PlacementSelector.selectPair(
+        AlignmentSelector.PairSelection outcome = AlignmentSelector.selectPair(
                 set(localInversion, boundaryDeletion), false, localInversion, false,
                 set(mate), false, mate, true, 0);
 
@@ -859,7 +879,7 @@ public class PlacementSelectorTest
         LiftedAlignment alternative = ref(CHR1, 100, "100M");
         LiftedAlignment mate = refReverse(CHR1, 1000, "100M");
 
-        PlacementSelector.PairSelection outcome = PlacementSelector.selectPair(
+        AlignmentSelector.PairSelection outcome = AlignmentSelector.selectPair(
                 set(bwa, alternative), false, bwa, true,
                 set(mate), false, mate, true, 0);
 
@@ -874,7 +894,7 @@ public class PlacementSelectorTest
         first.Dropped = true;
         second.Dropped = true;
 
-        PlacementSelector.PairSelection outcome = PlacementSelector.selectPair(
+        AlignmentSelector.PairSelection outcome = AlignmentSelector.selectPair(
                 set(first), false, first, false,
                 set(second), false, second, false, 0);
 
@@ -894,10 +914,10 @@ public class PlacementSelectorTest
         secondChr1.GenomicScore = 100;
         secondChr2.GenomicScore = 50;
 
-        PlacementSelector.PairSelection forward = PlacementSelector.selectPair(
+        AlignmentSelector.PairSelection forward = AlignmentSelector.selectPair(
                 set(firstChr1, firstChr2), false, firstChr1, false,
                 set(secondChr1, secondChr2), false, secondChr1, false, 0);
-        PlacementSelector.PairSelection reverse = PlacementSelector.selectPair(
+        AlignmentSelector.PairSelection reverse = AlignmentSelector.selectPair(
                 set(secondChr1, secondChr2), false, secondChr1, false,
                 set(firstChr1, firstChr2), false, firstChr1, false, 0);
 
@@ -926,7 +946,7 @@ public class PlacementSelectorTest
         alignments.get(0).GenomicScore = 100;
         alignments.get(1).GenomicScore = 100;
         LiftedRecord mate = TarsTestFixtures.liftedRecordAt("chr9", 500, "100M", false);
-        PlacementSelector.Selection outcome = PlacementSelector.select(alignments, false, alignments.get(0), 1, false, mate);
+        AlignmentSelector.Selection outcome = AlignmentSelector.select(alignments, false, alignments.get(0), 1, false, mate);
         assertSame("seed 1 -> second placement", alignments.get(1), outcome.alignment());
         assertEquals("random", outcome.reason());
     }
@@ -938,8 +958,77 @@ public class PlacementSelectorTest
         alignments.get(0).GenomicScore = 100;
         alignments.get(1).GenomicScore = 100;
         LiftedRecord mate = TarsTestFixtures.liftedRecordAt(CHR1, 5_000_000, "100M", false);
-        PlacementSelector.Selection outcome = PlacementSelector.select(alignments, false, alignments.get(0), 1, false, mate);
+        AlignmentSelector.Selection outcome = AlignmentSelector.select(alignments, false, alignments.get(0), 1, false, mate);
         assertSame("seed 1 -> second placement", alignments.get(1), outcome.alignment());
         assertEquals("random", outcome.reason());
+    }
+
+    @Test
+    public void testSupplementaryAlignmentSelectionOrder()
+    {
+        AlignmentSelector.RecordAlignment deletion = supp(0, CHR1, true, 1800, 0);
+        AlignmentSelector.RecordAlignment duplication = supp(0, CHR1, true, 900, 0);
+        AlignmentSelector.RecordAlignment inversion = supp(0, CHR1, false, 1200, 0);
+        AlignmentSelector.RecordAlignment translocation = supp(0, CHR2, true, 1010, 0);
+
+        assertEquals(
+                List.of(deletion),
+                selectSupplementaries(translocation, inversion, duplication, deletion));
+    }
+
+    @Test
+    public void testShortestSupplementaryAlignmentWithinType()
+    {
+        AlignmentSelector.RecordAlignment longDuplication = supp(0, CHR1, true, 500, 0);
+        AlignmentSelector.RecordAlignment shortDuplication = supp(0, CHR1, true, 900, 0);
+        AlignmentSelector.RecordAlignment longInversion = supp(1, CHR1, false, 1800, 0);
+        AlignmentSelector.RecordAlignment shortInversion = supp(1, CHR1, false, 1200, 0);
+
+        assertEquals(
+                List.of(shortDuplication, shortInversion),
+                selectSupplementaries(longDuplication, shortDuplication, longInversion, shortInversion));
+    }
+
+    @Test
+    public void testPositiveMapQualityKeepsSupplementaryMainAlignment()
+    {
+        AlignmentSelector.RecordAlignment main = supp(0, CHR2, true, 1010, 20);
+        AlignmentSelector.RecordAlignment deletion = supp(0, CHR1, true, 1800, 20);
+
+        assertEquals(List.of(main), selectSupplementaries(main, deletion));
+    }
+
+    @Test
+    public void testSupplementaryPreferenceStopsPastOneMegabase()
+    {
+        AlignmentSelector.RecordAlignment distantDeletion = supp(0, CHR1, true, 1_001_200, 0);
+        AlignmentSelector.RecordAlignment localInversion = supp(0, CHR1, false, 1200, 0);
+
+        assertEquals(List.of(localInversion), selectSupplementaries(distantDeletion, localInversion));
+    }
+
+    @Test
+    public void testSupplementaryPreferenceIncludesOneMegabaseBoundary()
+    {
+        AlignmentSelector.RecordAlignment boundaryDeletion = supp(0, CHR1, true, 1_001_094, 0);
+        AlignmentSelector.RecordAlignment localInversion = supp(0, CHR1, false, 1200, 0);
+
+        assertEquals(List.of(boundaryDeletion), selectSupplementaries(localInversion, boundaryDeletion));
+    }
+
+    private static AlignmentSelector.RecordAlignment supp(
+            final int recordIndex, final String chromosome, final boolean forwardStrand,
+            final int position, final int mapQuality)
+    {
+        LiftedAlignment alignment = new LiftedAlignment(
+                chromosome, position, "94S57M", 0, false, forwardStrand, 0);
+        return new AlignmentSelector.RecordAlignment(recordIndex, 0, alignment, mapQuality);
+    }
+
+    private static List<AlignmentSelector.RecordAlignment> selectSupplementaries(
+            final AlignmentSelector.RecordAlignment... alignments)
+    {
+        return AlignmentSelector.selectSupplementaryAlignments(
+                CHR1, true, 1001, "94M57S", null, List.of(alignments));
     }
 }

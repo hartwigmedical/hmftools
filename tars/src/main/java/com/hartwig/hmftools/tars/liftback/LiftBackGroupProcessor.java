@@ -21,7 +21,7 @@ import htsjdk.samtools.SAMRecord;
 
 public class LiftBackGroupProcessor
 {
-    private final PlacementSelector mPlacementSelector;
+    private final AlignmentSelector mAlignmentSelector;
     private final SupplementaryAlignmentResolver mSupplementaryResolver;
     private final OverhangGate mOverhangGate;
     private final GenomicAlignmentScorer mAlignmentScorer;
@@ -29,18 +29,19 @@ public class LiftBackGroupProcessor
     private final LiftBackStats mStats;
 
     public LiftBackGroupProcessor(
-            final PlacementSelector placementSelector, final SupplementaryMerger supplementaryMerger,
+            final AlignmentSelector alignmentSelector, final SupplementaryMerger supplementaryMerger,
             final OverhangGate overhangGate, final GenomicAlignmentScorer alignmentScorer,
             final RefGenomeInterface refGenome, final ExcludedRegions excludedRegions)
     {
-        mPlacementSelector = placementSelector;
+        mAlignmentSelector = alignmentSelector;
         mOverhangGate = overhangGate;
         mAlignmentScorer = alignmentScorer;
         mStats = new LiftBackStats();
         mSupplementaryResolver = new SupplementaryAlignmentResolver(
                 supplementaryMerger, alignmentScorer, mStats);
         mEmitter = new BamRecordEmitter(
-                placementSelector.contigTranslator(), mSupplementaryResolver.enabled(), refGenome, excludedRegions, mStats);
+                alignmentSelector.contigTranslator(), mSupplementaryResolver.enabled(),
+                refGenome, excludedRegions, mStats);
     }
 
     public LiftBackStats stats() { return mStats; }
@@ -64,7 +65,7 @@ public class LiftBackGroupProcessor
         List<ChrBaseRegion> firstIntrons = provisionalIntrons(firstPrepared, secondAlignments);
         PreparedRead secondPrepared = prepareRead(secondOfPair, firstIntrons, secondAlignments);
 
-        PlacementSelector.PairSelection pairSelection = chooseMatePair(firstPrepared, secondPrepared);
+        AlignmentSelector.PairSelection pairSelection = chooseMatePair(firstPrepared, secondPrepared);
         ReadDecision firstDecision = finishRead(
                 firstPrepared, pairSelection != null ? pairSelection.first() : null, secondPrepared.primaryAlignments());
         recordPrimary(firstOfPair, firstDecision, matePair);
@@ -84,7 +85,7 @@ public class LiftBackGroupProcessor
         {
             return null;
         }
-        return mPlacementSelector.liftPrimaryAlignments(records.get(0), mOverhangGate);
+        return mAlignmentSelector.liftPrimaryAlignments(records.get(0), mOverhangGate);
     }
 
     private PreparedRead prepareRead(
@@ -106,14 +107,14 @@ public class LiftBackGroupProcessor
 
         List<LiftedRecord> resolved = new ArrayList<>(Collections.nCopies(records.size(), null));
         LiftedRecord primaryAlignments = preLiftedPrimaryAlignments != null
-                ? preLiftedPrimaryAlignments : mPlacementSelector.liftPrimaryAlignments(primary, mOverhangGate);
+                ? preLiftedPrimaryAlignments : mAlignmentSelector.liftPrimaryAlignments(primary, mOverhangGate);
         boolean hasSupplementaries = records.size() > 1;
 
         if(hasSupplementaries)
         {
             for(int i = 1; i < records.size(); ++i)
             {
-                resolved.set(i, mPlacementSelector.liftSupplementaryAlignment(records.get(i), mOverhangGate));
+                resolved.set(i, mAlignmentSelector.liftSupplementaryAlignment(records.get(i), mOverhangGate));
             }
             primaryAlignments = mSupplementaryResolver.addSupportedAlignments(
                     records, primaryAlignments, resolved, mateHintIntrons);
@@ -126,7 +127,7 @@ public class LiftBackGroupProcessor
     }
 
     private ReadDecision finishRead(
-            final PreparedRead prepared, final PlacementSelector.Selection pairSelection, final LiftedRecord mate)
+            final PreparedRead prepared, final AlignmentSelector.Selection pairSelection, final LiftedRecord mate)
     {
         if(prepared.records().isEmpty())
         {
@@ -140,8 +141,8 @@ public class LiftBackGroupProcessor
         if(primaryAlignments.hasPlacement())
         {
             LiftedRecord selected = pairSelection != null
-                    ? mPlacementSelector.selectPrimaryAlignment(primary, primaryAlignments.liftedAlignments(), pairSelection)
-                    : mPlacementSelector.selectPrimaryAlignment(primary, primaryAlignments.liftedAlignments(), mate);
+                    ? mAlignmentSelector.selectPrimaryAlignment(primary, primaryAlignments.liftedAlignments(), pairSelection)
+                    : mAlignmentSelector.selectPrimaryAlignment(primary, primaryAlignments.liftedAlignments(), mate);
             resolved.set(0, selected);
         }
 
@@ -159,14 +160,14 @@ public class LiftBackGroupProcessor
                 unmapDecision.unmapped());
     }
 
-    private PlacementSelector.PairSelection chooseMatePair(
+    private AlignmentSelector.PairSelection chooseMatePair(
             final PreparedRead first, final PreparedRead second)
     {
         if(!first.hasPlacement() || !second.hasPlacement())
         {
             return null;
         }
-        return mPlacementSelector.chooseMatePair(
+        return mAlignmentSelector.chooseMatePair(
                 first.primary(), first.primaryAlignments().liftedAlignments(),
                 second.primary(), second.primaryAlignments().liftedAlignments());
     }
@@ -177,7 +178,7 @@ public class LiftBackGroupProcessor
         {
             return List.of();
         }
-        PlacementSelector.Selection provisional = mPlacementSelector.choosePrimaryAlignment(
+        AlignmentSelector.Selection provisional = mAlignmentSelector.choosePrimaryAlignment(
                 read.primary(), read.primaryAlignments().liftedAlignments(), mate);
         return provisional.alignment().MergedSupplementaryIntrons;
     }
@@ -189,7 +190,7 @@ public class LiftBackGroupProcessor
             return;
         }
         if(mAlignmentScorer != null
-                && PlacementSelector.usesGenomicScore(alignments.liftedAlignments(), primary.getMappingQuality()))
+                && AlignmentSelector.usesGenomicScore(alignments.liftedAlignments(), primary.getMappingQuality()))
         {
             mAlignmentScorer.scorePlacements(alignments.liftedAlignments(), primary);
         }
