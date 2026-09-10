@@ -64,7 +64,7 @@ public class LiftBackGroupProcessor
         List<ChrBaseRegion> firstIntrons = provisionalIntrons(firstPrepared, secondAlignments);
         PreparedRead secondPrepared = prepareRead(secondOfPair, firstIntrons, secondAlignments);
 
-        PlacementSelector.PairApplyResult pairSelection = chooseMatePair(firstPrepared, secondPrepared);
+        PlacementSelector.PairSelection pairSelection = chooseMatePair(firstPrepared, secondPrepared);
         ReadDecision firstDecision = finishRead(
                 firstPrepared, pairSelection != null ? pairSelection.first() : null, secondPrepared.primaryAlignments());
         recordPrimary(firstOfPair, firstDecision, matePair);
@@ -127,7 +127,7 @@ public class LiftBackGroupProcessor
     }
 
     private ReadDecision finishRead(
-            final PreparedRead prepared, final PlacementSelector.ApplyResult pairSelection, final LiftedRecord mate)
+            final PreparedRead prepared, final PlacementSelector.Selection pairSelection, final LiftedRecord mate)
     {
         if(prepared.records().isEmpty())
         {
@@ -157,10 +157,10 @@ public class LiftBackGroupProcessor
         }
         return new ReadDecision(
                 finalRecords, supplementary.absorbedSupplementaries(),
-                supplementary.introducedIntrons(), unmapDecision.unmapped());
+                unmapDecision.unmapped());
     }
 
-    private PlacementSelector.PairApplyResult chooseMatePair(
+    private PlacementSelector.PairSelection chooseMatePair(
             final PreparedRead first, final PreparedRead second)
     {
         if(!first.hasPlacement() || !second.hasPlacement())
@@ -178,9 +178,9 @@ public class LiftBackGroupProcessor
         {
             return List.of();
         }
-        PlacementSelector.ApplyResult provisional = mPlacementSelector.choosePrimaryAlignment(
+        PlacementSelector.Selection provisional = mPlacementSelector.choosePrimaryAlignment(
                 read.primary(), read.primaryAlignments().liftedAlignments(), mate);
-        return provisional.effectivePrimary().MergedSupplementaryIntrons;
+        return provisional.alignment().MergedSupplementaryIntrons;
     }
 
     private void scorePrimaryAlignments(final SAMRecord primary, final LiftedRecord alignments)
@@ -301,15 +301,14 @@ public class LiftBackGroupProcessor
 
     private record ReadDecision(
             List<LiftedRecord> liftedRecords, Set<Integer> absorbedSupplementaries,
-            List<ChrBaseRegion> introducedIntrons, boolean primaryUnmapped)
+            boolean primaryUnmapped)
     {
-        private static final ReadDecision EMPTY = new ReadDecision(List.of(), Set.of(), List.of(), false);
+        private static final ReadDecision EMPTY = new ReadDecision(List.of(), Set.of(), false);
 
         private ReadDecision
         {
             liftedRecords = List.copyOf(liftedRecords);
             absorbedSupplementaries = Set.copyOf(absorbedSupplementaries);
-            introducedIntrons = List.copyOf(introducedIntrons);
         }
 
         LiftedRecord primaryResult()

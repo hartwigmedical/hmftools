@@ -100,17 +100,15 @@ final class SupplementaryAlignmentResolver
             final LiftedRecord primaryResult)
     {
         Set<Integer> absorbed = absorbedSupplementaries(records.size(), primaryResult);
-        List<ChrBaseRegion> introducedIntrons = List.of();
         if(hasSupplementaryMerge(primaryResult))
         {
-            introducedIntrons = primaryResult.primaryAlignment().MergedSupplementaryIntrons;
             ++mStats.SupplementaryMerges;
             mStats.SupplementariesAbsorbed += absorbed.size();
         }
 
         List<LiftedRecord> selected = selectRecordAlignments(
                 records, liftedRecords, primaryResult, absorbed);
-        return new Resolution(annotateSpliceStrands(selected), absorbed, introducedIntrons);
+        return new Resolution(annotateSpliceStrands(selected), absorbed);
     }
 
     private List<LiftedRecord> selectRecordAlignments(
@@ -259,14 +257,12 @@ final class SupplementaryAlignmentResolver
     }
 
     record Resolution(
-            List<LiftedRecord> liftedRecords, Set<Integer> absorbedSupplementaries,
-            List<ChrBaseRegion> introducedIntrons)
+            List<LiftedRecord> liftedRecords, Set<Integer> absorbedSupplementaries)
     {
         Resolution
         {
             liftedRecords = List.copyOf(liftedRecords);
             absorbedSupplementaries = Set.copyOf(absorbedSupplementaries);
-            introducedIntrons = List.copyOf(introducedIntrons);
         }
     }
 
