@@ -197,29 +197,6 @@ public class TransClassificationTest
     }
 
     @Test
-    public void testStarChimericFlagNotTrusted()
-    {
-        // STAR clears the proper-pair flag on fragments it calls chimeric, though the reads may be a concordant pair
-        Read read = createReadRecord(1, CHR_1, 100, 119, REF_BASE_STR_1, createCigar(0, 20, 0));
-        read.setFlag(SAMFlag.PROPER_PAIR, false);
-
-        try
-        {
-            // bwa / tars trust the flag, so a cleared proper-pair means chimeric
-            IsofoxConstants.STAR_ALIGNER = false;
-            assertTrue(read.isChimeric());
-
-            // STAR ignores the flag, so the concordant pair is not chimeric
-            IsofoxConstants.STAR_ALIGNER = true;
-            assertFalse(read.isChimeric());
-        }
-        finally
-        {
-            IsofoxConstants.STAR_ALIGNER = false;
-        }
-    }
-
-    @Test
     public void testFragmentLengthCalcs()
     {
         String transName1 = "TRANS01";

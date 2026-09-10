@@ -4,8 +4,6 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.cigarElementsToStr;
-import static com.hartwig.hmftools.common.bam.CigarUtils.leftSoftClipped;
-import static com.hartwig.hmftools.common.bam.CigarUtils.rightSoftClipped;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.XA_ATTRIBUTE;
@@ -19,8 +17,6 @@ import static com.hartwig.hmftools.common.region.BaseRegion.positionsWithin;
 import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
 import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
-import static com.hartwig.hmftools.isofox.IsofoxConstants.MULTI_MAP_QUALITY_THRESHOLD;
-import static com.hartwig.hmftools.isofox.IsofoxConstants.STAR_ALIGNER;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_BOUNDARY;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_INTRON;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.INTRON;
@@ -100,11 +96,8 @@ public class Read
 
     public static Read from(final SAMRecord record)
     {
-        String readId = record.isSecondaryAlignment() ? String.format("%s_%s",
-                record.getReadName(), record.getAttribute("HI")) : record.getReadName();
-
         Read read = new Read(
-                readId, record.getReferenceName(), record.getStart(), record.getEnd(),
+                record.getReadName(), record.getReferenceName(), record.getStart(), record.getEnd(),
                 record.getReadString(), record.getCigar(), record.getInferredInsertSize(), record.getFlags(),
                 record.getMateReferenceName(), record.getMateAlignmentStart());
 
@@ -258,7 +251,6 @@ public class Read
     public boolean isInversion() { return isReadReversed() == isMateNegStrand(); }
     public boolean isProperPair() { return (mFlags & SAMFlag.PROPER_PAIR.intValue()) != 0; }
     public boolean isSupplementaryAlignment() { return (mFlags & SAMFlag.SUPPLEMENTARY_ALIGNMENT.intValue()) != 0; }
-    public boolean isSecondaryAlignment() { return (mFlags & SAMFlag.SECONDARY_ALIGNMENT.intValue()) != 0; }
 
     public void setFragmentInsertSize(int size) { mFragmentInsertSize = size; }
     public void setSuppAlignment(final String suppAlign) { mSupplementaryAlignment = suppAlign; }
@@ -308,15 +300,14 @@ public class Read
 
     public void setAltLoci(final List<AltAlignment> altLoci) { mAltLoci = altLoci; }
     public List<AltAlignment> altLoci() { return mAltLoci; }
+    public int numLoci() { return mAltLoci != null ? 1 + mAltLoci.size() : 1; }
+
+    public boolean isMultiMapped() { return numLoci() > 1; }
 
     public boolean isConsensusRead() { return mConsensusRead; }
     public void markConsensusRead() { mConsensusRead = true; }
 
-    public int numLoci() { return mAltLoci != null ? 1 + mAltLoci.size() : 1; }
-
     public int baseLength() { return mReadBases.length(); }
-
-    public boolean isMultiMapped() { return STAR_ALIGNER ? mMapQuality <= MULTI_MAP_QUALITY_THRESHOLD : numLoci() > 1; }
 
     public int fragmentInsertSize() { return mFragmentInsertSize; }
 
@@ -375,8 +366,7 @@ public class Read
         if(isSupplementaryAlignment() || mSupplementaryAlignment != null)
             return true;
 
-        // STAR clears the proper-pair flag on its own chimeric calls, so it is not trusted as a chimeric signal
-        if(!STAR_ALIGNER && !isProperPair())
+        if(!isProperPair())
             return true;
 
         return false;

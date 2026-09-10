@@ -281,7 +281,7 @@ public class ChimericReadTracker
         {
             Read read = (Read)object;
 
-            if(read.isMateUnmapped() || inImmuneRegion(read) || read.isSecondaryAlignment())
+            if(read.isMateUnmapped() || inImmuneRegion(read))
                 continue;
 
             if(!read.isDuplicate())

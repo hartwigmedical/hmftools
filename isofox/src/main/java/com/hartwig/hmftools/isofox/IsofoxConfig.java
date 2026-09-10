@@ -97,7 +97,6 @@ public class IsofoxConfig
 
     private static final String DROP_DUPLICATES = "drop_dups";
     private static final String SINGLE_MAP_QUAL = "single_map_qual";
-    private static final String STAR_ALIGNER = "star_aligner";
 
     // debug and performance
     private static final String GENE_READ_LIMIT = "gene_read_limit";
@@ -214,14 +213,7 @@ public class IsofoxConfig
 
         MaxFragmentLength = configBuilder.getInteger(LONG_FRAGMENT_LIMIT);
 
-        if(configBuilder.hasFlag(STAR_ALIGNER))
-        {
-            IsofoxConstants.STAR_ALIGNER = true;
-            ISF_LOGGER.info("running based on STAR alignment");
-        }
-
-        IsofoxConstants.SINGLE_MAP_QUALITY = configBuilder.hasValue(SINGLE_MAP_QUAL) ?
-                (short)configBuilder.getInteger(SINGLE_MAP_QUAL) : (short)(IsofoxConstants.STAR_ALIGNER ? 255 : DEFAULT_SINGLE_MAP_QUALITY);
+        IsofoxConstants.SINGLE_MAP_QUALITY = (short)configBuilder.getInteger(SINGLE_MAP_QUAL);
         DropDuplicates = configBuilder.hasValue(DROP_DUPLICATES);
 
         WriteTypes = WriteType.parseConfig(configBuilder.getValue(WRITE_TYPES));
@@ -409,7 +401,6 @@ public class IsofoxConfig
         configBuilder.addPath(PANEL_TPM_NORM_FILE, false, "Panel TPM normalisation file");
         configBuilder.addInteger(READ_LENGTH, "Sample sequencing read length, if 0 then is inferred from reads", 0);
         configBuilder.addInteger(SINGLE_MAP_QUAL, "Map quality for reads mapped to a single location", DEFAULT_SINGLE_MAP_QUALITY);
-        configBuilder.addFlag(STAR_ALIGNER, "Applies STAR-aligner settings");
 
         configBuilder.addConfigItem(ER_FRAGMENT_LENGTHS, false, ER_FRAGMENT_LENGTHS_DESC, DEFAULT_EXPECTED_RATE_LENGTHS);
 

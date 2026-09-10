@@ -19,9 +19,6 @@ import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
-import static com.hartwig.hmftools.isofox.IsofoxConstants.MULTI_MAP_QUALITY_THRESHOLD;
-import static com.hartwig.hmftools.isofox.IsofoxConstants.SINGLE_MAP_QUALITY;
-import static com.hartwig.hmftools.isofox.IsofoxConstants.STAR_ALIGNER;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.ALT_SPLICE_JUNCTIONS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.STATISTICS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.TRANSCRIPT_COUNTS;
@@ -160,12 +157,10 @@ public class FragmentAllocator
         // reads with supplementary alignment data are only used for chimeric read handling (eg fusions & alt-SJs)
         boolean keepSupplementaries = mRunFusions || mConfig.runFunction(ALT_SPLICE_JUNCTIONS);
 
-        boolean keepSecondaries = STAR_ALIGNER && mConfig.runFunction(TRANSCRIPT_COUNTS);
-
         // fusions typically aren't run without expression, but for STAR the existing logic was to drop reads with map qual less than the max
-        int minMapQuality = mConfig.runFunction(TRANSCRIPT_COUNTS) || !STAR_ALIGNER ? 0 : SINGLE_MAP_QUALITY;
+        int minMapQuality = 0;
 
-        mBamSlicer = new BamSlicer(minMapQuality, mKeepDuplicates, keepSupplementaries, keepSecondaries);
+        mBamSlicer = new BamSlicer(minMapQuality, mKeepDuplicates, keepSupplementaries, false);
 
         mReadDataWriter = resultsWriter.getReadDataWriter();
         mMultiMapLociWriter = resultsWriter.getMultiMapLociWriter();
@@ -335,7 +330,7 @@ public class FragmentAllocator
         ++mGeneReadCount;
 
         // count each fragment once by only taking the first read, and supplmentaries are ignored
-        if(record.getSupplementaryAlignmentFlag() || record.isSecondaryAlignment())
+        if(record.getSupplementaryAlignmentFlag())
             return;
 
         if(!firstInPair(record))
@@ -419,10 +414,9 @@ public class FragmentAllocator
 
         boolean isDuplicate = read1.isDuplicate() || read2.isDuplicate();
 
-        int minMapQuality = min(read1.mapQuality(), read2.mapQuality());
         int numLoci = min(read1.numLoci(), read2.numLoci());
-        boolean isMultiMapped = STAR_ALIGNER ? minMapQuality <= MULTI_MAP_QUALITY_THRESHOLD : numLoci > 1;
-        double fragmentCount = STAR_ALIGNER ? starFragmentCount(minMapQuality) : 1;
+        boolean isMultiMapped = numLoci > 1;
+        double fragmentCount = 1; // no longer dimished by multi-mapping, could revert to an integer
 
         List<Read.AltAlignment> altLoci = read1.numLoci() <= read2.numLoci() ? read1.altLoci() : read2.altLoci();
 
@@ -454,7 +448,7 @@ public class FragmentAllocator
         // some of these may be re-processed as alternative SJ candidates if they are within a single gene
         if(isChimeric)
         {
-            if(!isMultiMapped && !read1.isSecondaryAlignment() && !read2.isSecondaryAlignment())
+            if(!isMultiMapped)
             {
                 if(mChimericReads.enabled())
                     mChimericReads.addChimericReadPair(read1, read2);
@@ -721,7 +715,7 @@ public class FragmentAllocator
             mExpressionReadTracker.processUnsplicedGenes(
                     comboTransMatchType, overlapGenes, validTranscripts, commonMappings, fragmentCount, isMultiMapped);
 
-            if(!read1.isSecondaryAlignment() && !read2.isSecondaryAlignment() && supportedGeneIsForward != null)
+            if(supportedGeneIsForward != null)
             {
                 // track fragment strandedness
                 boolean firstIsForward = read1.isFirstOfPair() ? !read1.isReadReversed() : !read2.isReadReversed();
@@ -737,7 +731,7 @@ public class FragmentAllocator
             }
         }
 
-        if(!read1.isSecondaryAlignment() && !read2.isSecondaryAlignment() && !isConsensusRead)
+        if(!isConsensusRead)
         {
             mCurrentGenes.addCount(fragmentType, 1);
         }
@@ -859,7 +853,7 @@ public class FragmentAllocator
             return;
 
         // check criteria for using the read for expression
-        if(!record.getReadPairedFlag() || record.isSecondaryAlignment() || record.getSupplementaryAlignmentFlag())
+        if(!record.getReadPairedFlag() || record.getSupplementaryAlignmentFlag())
             return;
 
         if(record.getReadNegativeStrandFlag() == record.getMateNegativeStrandFlag())
@@ -882,21 +876,6 @@ public class FragmentAllocator
     }
 
     public List<CategoryCountsData> getTransComboData() { return mExpressionReadTracker.getTransComboData(); }
-
-    static double starFragmentCount(int minMapQuality)
-    {
-        if(minMapQuality > MULTI_MAP_QUALITY_THRESHOLD)
-            return 1;
-
-        if(minMapQuality == 3)
-            return 0.5;
-        else if(minMapQuality == 2)
-            return 0.33;
-        else if(minMapQuality == 1)
-            return 0.2;
-        else
-            return 0.1;
-    }
 
     private boolean altOverlapsExon(final GeneData gene, final ChrBaseRegion altRegion)
     {
