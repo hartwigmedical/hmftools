@@ -75,7 +75,7 @@ public class FusionWriter
             mPassingFusionWriter.write(RnaFusionFile.header());
             mPassingFusionWriter.newLine();
 
-            mFusionReadWriter = initialiseReadWriter();
+            mFusionReadWriter = null; // initialiseReadWriter(); // currently unsed
         }
         catch(IOException e)
         {

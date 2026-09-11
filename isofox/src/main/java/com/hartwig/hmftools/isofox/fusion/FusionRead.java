@@ -6,7 +6,10 @@ import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.switchIndex;
+import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_BOUNDARY;
+import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_INTRON;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.NONE;
+import static com.hartwig.hmftools.isofox.common.RegionMatchType.WITHIN_EXON;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.matchRank;
 import static com.hartwig.hmftools.isofox.fusion.FusionTransExon.fromList;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.extractTopTransExonRefs;
@@ -151,10 +154,10 @@ public class FusionRead
             {
                 RegionMatchType matchType = entry.getValue();
 
-                if(matchRank(matchType) < matchRank(mRegionMatchType))
+                if(!possiblyExonic(matchType) && possiblyExonic(mRegionMatchType))
                     continue;
 
-                if(matchRank(matchType) > matchRank(mRegionMatchType))
+                if(possiblyExonic(matchType) && !possiblyExonic(mRegionMatchType))
                 {
                     mRegionMatchType = matchType;
                     mTransExonRefs.clear();
@@ -168,6 +171,11 @@ public class FusionRead
         {
             mRegionMatchType = extractTopTransExonRefs(read.getReadTransExonRefs(), mRegionMatchType, mTransExonRefs);
         }
+    }
+
+    private static boolean possiblyExonic(final RegionMatchType matchType)
+    {
+        return matchType == EXON_BOUNDARY || matchType == EXON_INTRON || matchType == WITHIN_EXON;
     }
 
     public void setUpperTransExonRefs(final List<FusionTransExon> transExonRefs, final RegionMatchType matchType)

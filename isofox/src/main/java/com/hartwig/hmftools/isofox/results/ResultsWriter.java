@@ -51,11 +51,9 @@ import java.util.StringJoiner;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.bam.ClippedSide;
-import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
-import com.hartwig.hmftools.isofox.WriteType;
 import com.hartwig.hmftools.isofox.common.BaseDepth;
 import com.hartwig.hmftools.isofox.common.Read;
 import com.hartwig.hmftools.isofox.fusion.ChimericPosData;
