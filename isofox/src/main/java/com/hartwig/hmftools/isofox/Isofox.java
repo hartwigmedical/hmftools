@@ -232,21 +232,18 @@ public class Isofox
     {
         FragmentTypeCounts totalFragmentCounts = new FragmentTypeCounts();
 
-        long enrichedGeneFragCount = 0;
-        GcRatioCounts nonEnrichedGcRatioCounts = new GcRatioCounts();
+        GcRatioCounts gcRatioCounts = new GcRatioCounts();
 
         for(ChromosomeTaskExecutor chrTask : chrTasks)
         {
             totalFragmentCounts.combine(chrTask.getCombinedCounts());
 
-            enrichedGeneFragCount += chrTask.getEnrichedGenesFragmentCount();
-
-            nonEnrichedGcRatioCounts.mergeRatioCounts(chrTask.getNonEnrichedGcRatioCounts().getCounts());
+            gcRatioCounts.mergeRatioCounts(chrTask.getNonEnrichedGcRatioCounts().getCounts());
         }
 
         if(mConfig.applyGcBiasAdjust())
         {
-            applyGcAdjustments(chrTasks, callableList, nonEnrichedGcRatioCounts);
+            applyGcAdjustments(chrTasks, callableList, gcRatioCounts);
         }
 
         if(mConfig.writeType(GC_RATIO))
@@ -260,9 +257,6 @@ public class Isofox
             copyVector(combinedGcRatioCounts.getCounts(), percentData);
             convertToPercentages(percentData);
             writeReadGcRatioCounts(mResultsWriter.getReadGcRatioWriter(), "ALL_PERC", percentData, true);
-
-            if(!mConfig.Filters.EnrichedGeneIds.isEmpty())
-                writeReadGcRatioCounts(mResultsWriter.getReadGcRatioWriter(), "NON_ENRICHED", nonEnrichedGcRatioCounts.getCounts(), false);
 
             if(mConfig.applyGcBiasAdjust())
             {
@@ -282,7 +276,7 @@ public class Isofox
         final List<GeneCollectionSummary> geneSummaryData = Lists.newArrayList();
         chrTasks.stream().forEach(x -> geneSummaryData.addAll(x.getGeneCollectionSummaryData()));
 
-        double[] tpmFactors = calcTpmFactors(geneSummaryData, mConfig.Filters.EnrichedGeneIds);
+        double[] tpmFactors = calcTpmFactors(geneSummaryData);
 
         PanelTpmNormaliser panelTpmNormaliser = new PanelTpmNormaliser(mConfig.PanelTpmNormFile);
 
@@ -304,7 +298,7 @@ public class Isofox
         // write summary statistics
         if(mConfig.runFunction(IsofoxFunction.TRANSCRIPT_COUNTS) || mConfig.runFunction(IsofoxFunction.STATISTICS))
         {
-            double medianGCRatio = nonEnrichedGcRatioCounts.getPercentileRatio(0.5);
+            double medianGCRatio = gcRatioCounts.getPercentileRatio(0.5);
 
             int lowCoverageThreshold = LOW_COVERAGE_THRESHOLD;
             int splicedGeneThreshold = SPLICE_GENE_THRESHOLD;
@@ -318,9 +312,9 @@ public class Isofox
                 splicedGeneThreshold = (int)(panelGeneCoverage * SPLICE_GENE_THRESHOLD);
             }
 
-            final RnaStatistics summaryStats = createSummaryStats(
-                    totalFragmentCounts, enrichedGeneFragCount, spliceGeneCount,
-                    medianGCRatio, mFragmentLengthDistribution, mMaxObservedReadLength > 0 ? mMaxObservedReadLength : mConfig.ReadLength,
+            RnaStatistics summaryStats = createSummaryStats(
+                    totalFragmentCounts, spliceGeneCount, medianGCRatio, mFragmentLengthDistribution,
+                    mMaxObservedReadLength > 0 ? mMaxObservedReadLength : mConfig.ReadLength,
                     lowCoverageThreshold, splicedGeneThreshold);
 
             mResultsWriter.writeSummaryStats(summaryStats);

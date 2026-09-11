@@ -120,7 +120,6 @@ public class FragmentAllocator
 
     private final BufferedWriter mReadDataWriter;
     private final BufferedWriter mMultiMapLociWriter;
-    private long mEnrichedGeneFragments;
 
     private final EnsemblDataCache mGeneTransCache;
 
@@ -144,7 +143,6 @@ public class FragmentAllocator
         mGeneReadCount = 0;
         mTotalBamReadCount = 0;
         mNextGeneCountLog = 0;
-        mEnrichedGeneFragments = 0;
         mValidReadStartRegion = new int[SE_PAIR];
 
         mSamReader = mConfig.BamFile != null ?
@@ -209,7 +207,6 @@ public class FragmentAllocator
 
         mGeneReadCount = 0;
         mNextGeneCountLog = GENE_LOG_COUNT;
-        mEnrichedGeneFragments = 0;
 
         // and width around the base depth region to pick up junctions outside the gene
         int[] baseDepthRange = new int[SE_PAIR];
@@ -232,9 +229,6 @@ public class FragmentAllocator
         mValidReadStartRegion[SE_END] = geneRegion.end();
 
         mBamSlicer.slice(mSamReader, geneRegion, this::processSamRecord);
-
-        if(mEnrichedGeneFragments > 0)
-            mExpressionReadTracker.processEnrichedGeneFragments(mEnrichedGeneFragments);
 
         if(mChimericReads.enabled())
         {
@@ -266,12 +260,6 @@ public class FragmentAllocator
         }
 
         trackFragmentCounts(record);
-
-        if(mCurrentGenes.inEnrichedRegion(record.getStart(), record.getEnd()))
-        {
-            processEnrichedRegionRead(record);
-            return;
-        }
 
         Read read = Read.from(record);
 
@@ -792,41 +780,6 @@ public class FragmentAllocator
         ISF_LOGGER.warn("chr({}) genes({}) readCount({}) exceeds max read count",
                 mCurrentGenes.chromosome(), mCurrentGenes.geneNames(), mGeneReadCount);
         return true;
-    }
-
-    private void processEnrichedRegionRead(final SAMRecord record)
-    {
-        if(mGeneReadCount >= mNextGeneCountLog)
-        {
-            mNextGeneCountLog += GENE_LOG_COUNT;
-            ISF_LOGGER.info("chr({}) genes({}) enriched bamRecordCount({})",
-                    mCurrentGenes.chromosome(), mCurrentGenes.geneNames(), mGeneReadCount);
-        }
-
-        if(reachedGeneReadLimit())
-            return;
-
-        // check criteria for using the read for expression
-        if(!record.getReadPairedFlag() || record.getSupplementaryAlignmentFlag())
-            return;
-
-        if(record.getReadNegativeStrandFlag() == record.getMateNegativeStrandFlag())
-            return;
-
-        if(!record.getReferenceName().equals(record.getMateReferenceName()))
-            return;
-
-        if(!record.getFirstOfPairFlag()) // only count 1 read per fragment
-            return;
-
-        if(record.hasAttribute(CONSENSUS_READ_ATTRIBUTE))
-            return;
-
-        // no further classification of fragment is performed - ie they are considered supporting
-        ++mEnrichedGeneFragments;
-
-        // add to overall counts - since these are within a single exon, consider them supporting the transcript + unspliced
-        mCurrentGenes.addCount(TRANS_SUPPORTING, 1);
     }
 
     public List<CategoryCountsData> getTransComboData() { return mExpressionReadTracker.getTransComboData(); }

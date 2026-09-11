@@ -32,7 +32,6 @@ public record IsofoxSummaryData(RnaStatistics RnaStatistics) implements Comparab
     static final String FLD_FRAG_LENGTH_5TH = Column.FragLength5th.toString();
     static final String FLD_FRAG_LENGTH_50TH = Column.FragLength50th.toString();
     static final String FLD_FRAG_LENGTH_95TH = Column.FragLength95th.toString();
-    static final String FLD_ENRICHED_GENE_PERC = Column.EnrichedGenePercent.toString();
     static final String FLD_MEDIAN_GC_RATIO = Column.MedianGCRatio.toString();
     static final String FLD_FORWARD_STRAND_PERC = Column.ForwardStrandPercent.toString();
 
@@ -63,7 +62,6 @@ public record IsofoxSummaryData(RnaStatistics RnaStatistics) implements Comparab
         values.add(format("%.1f", RnaStatistics.fragmentLength5thPercent()));
         values.add(format("%.1f", RnaStatistics.fragmentLength50thPercent()));
         values.add(format("%.1f", RnaStatistics.fragmentLength95thPercent()));
-        values.add(format("%.2f", RnaStatistics.enrichedGenePercent()));
         return values;
     }
 
@@ -101,7 +99,6 @@ public record IsofoxSummaryData(RnaStatistics RnaStatistics) implements Comparab
         checkDiff(diffs, FLD_FRAG_LENGTH_5TH, ref.fragmentLength5thPercent(), otherData.fragmentLength5thPercent(), thresholds);
         checkDiff(diffs, FLD_FRAG_LENGTH_50TH, ref.fragmentLength50thPercent(), otherData.fragmentLength50thPercent(), thresholds);
         checkDiff(diffs, FLD_FRAG_LENGTH_95TH, ref.fragmentLength95thPercent(), otherData.fragmentLength95thPercent(), thresholds);
-        checkDiff(diffs, FLD_ENRICHED_GENE_PERC, ref.enrichedGenePercent(), otherData.enrichedGenePercent(), thresholds);
         checkDiff(diffs, FLD_MEDIAN_GC_RATIO, ref.medianGCRatio(), otherData.medianGCRatio(), thresholds);
         checkDiff(diffs, FLD_FORWARD_STRAND_PERC, ref.forwardStrandPercent(), otherData.forwardStrandPercent(), thresholds);
 

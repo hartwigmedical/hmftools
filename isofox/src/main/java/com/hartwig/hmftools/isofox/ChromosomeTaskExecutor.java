@@ -74,7 +74,6 @@ public class ChromosomeTaskExecutor implements Callable<Void>
 
     // cache of results
     private final List<GeneCollectionSummary> mGeneCollectionSummaryData;
-    private long mEnrichedGenesFragmentCount;
     private final FragmentTypeCounts mCombinedFragmentCounts;
     private final GcRatioCounts mNonEnrichedGcRatioCounts;
     private int mTotalReadsProcessed;
@@ -112,7 +111,6 @@ public class ChromosomeTaskExecutor implements Callable<Void>
         mTranscriptGcRatios = transcriptGcCalcs;
 
         mGeneCollectionSummaryData = Lists.newArrayList();
-        mEnrichedGenesFragmentCount = 0;
         mTotalReadsProcessed = 0;
         mCombinedFragmentCounts = new FragmentTypeCounts();
         mNonEnrichedGcRatioCounts = new GcRatioCounts();
@@ -181,7 +179,6 @@ public class ChromosomeTaskExecutor implements Callable<Void>
             List<GeneReadData> geneReadDataList = createGeneReadData(overlappingGenes, mGeneTransCache);
 
             GeneCollection geneCollection = new GeneCollection(mCollectionId++, geneReadDataList);
-            geneCollection.markEnrichedAndExcludedGenes(mConfig, mGeneTransCache);
 
             if(!genesFiltered) // reads will be taken from the previous gene collection's end
             {
@@ -387,28 +384,8 @@ public class ChromosomeTaskExecutor implements Callable<Void>
             mResultsWriter.writeSpliceJunctionData(geneCollection);
         }
 
-        if(!mConfig.Filters.EnrichedGeneIds.isEmpty())
-        {
-            long enrichedGeneFragments = geneCollection.genes().stream()
-                    .anyMatch(x -> mConfig.Filters.EnrichedGeneIds.contains(x.Gene.GeneId))
-                    ? geneCollection.fragmentTypeCounts().typeCount(TOTAL) : 0;
-
-            if(enrichedGeneFragments > 0)
-            {
-                mEnrichedGenesFragmentCount += enrichedGeneFragments;
-            }
-            else
-            {
-                if(mBamFragmentAllocator.getGeneGcRatioCounts() != null)
-                    mNonEnrichedGcRatioCounts.mergeRatioCounts(mBamFragmentAllocator.getGeneGcRatioCounts().getCounts());
-            }
-        }
-        else
-        {
-            // take them all
-            if(mBamFragmentAllocator.getGeneGcRatioCounts() != null)
-                mNonEnrichedGcRatioCounts.mergeRatioCounts(mBamFragmentAllocator.getGeneGcRatioCounts().getCounts());
-        }
+        if(mBamFragmentAllocator.getGeneGcRatioCounts() != null)
+            mNonEnrichedGcRatioCounts.mergeRatioCounts(mBamFragmentAllocator.getGeneGcRatioCounts().getCounts());
 
         mCombinedFragmentCounts.combine(geneCollection.fragmentTypeCounts());
 
@@ -488,7 +465,6 @@ public class ChromosomeTaskExecutor implements Callable<Void>
         geneCollectionSummary.TranscriptResults.forEach(x -> x.setPreGcFitAllocation(x.getFitAllocation()));
     }
 
-    public long getEnrichedGenesFragmentCount() { return mEnrichedGenesFragmentCount; }
     public FragmentTypeCounts getCombinedCounts() { return mCombinedFragmentCounts; }
     public GcRatioCounts getNonEnrichedGcRatioCounts() { return mNonEnrichedGcRatioCounts; }
 

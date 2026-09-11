@@ -104,36 +104,6 @@ public class ExpressionReadTracker
         }
     }
 
-    public void processEnrichedGeneFragments(long enrichedGeneFragments)
-    {
-        if(!mEnabled)
-            return;
-
-        // add to category counts
-        final int[] enrichedRegion = mGenes.getEnrichedRegion();
-        final List<String> unsplicedGeneIds = mGenes.findGenesCoveringRange(enrichedRegion[SE_START], enrichedRegion[SE_END], true)
-                .stream().map(x -> x.Gene.GeneId).collect(Collectors.toList());
-
-        final List<Integer> transIds = mGenes.getEnrichedTranscripts().stream().map(x -> Integer.valueOf(x.TransId)).collect(Collectors.toList());
-        CategoryCountsData catCounts = getCategoryCountsData(transIds, unsplicedGeneIds);
-
-        // compute and cache GC data
-        double gcRatio = calcGcRatioFromReadRegions(mConfig.RefGenome, mGenes.chromosome(), Lists.newArrayList(mGenes.getEnrichedRegion()));
-
-        int[] gcRatioIndices = { -1, -1 };
-        double[] gcRatioCounts = { 0, 0 };
-
-        if(mGcRatioCounts != null)
-        {
-            mGcRatioCounts.determineRatioData(gcRatio, gcRatioIndices, gcRatioCounts);
-            gcRatioCounts[0] *= enrichedGeneFragments;
-            gcRatioCounts[1] *= enrichedGeneFragments;
-        }
-
-        addGcCounts(catCounts, gcRatioIndices, gcRatioCounts, enrichedGeneFragments, false);
-
-    }
-
     private CategoryCountsData getCategoryCountsData(final List<Integer> transcripts, final List<String> geneIds)
     {
         CategoryCountsData transComboCounts = mTransComboData.stream()
@@ -247,5 +217,4 @@ public class ExpressionReadTracker
             catCounts.addCounts(count, multiMapped);
         }
     }
-
 }
