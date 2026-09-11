@@ -21,7 +21,6 @@ public class TestIsofoxSummaryDataBuilder
     public double fragmentLength5thPercent = 31;
     public double fragmentLength50thPercent = 100;
     public double fragmentLength95thPercent = 150;
-    public double enrichedGenePercent = 0.2;
     public double medianGCRatio = 0.5;
     public double forwardStrandPercent = 0.9;
 
@@ -38,7 +37,6 @@ public class TestIsofoxSummaryDataBuilder
         b.fragmentLength5thPercent = 25;
         b.fragmentLength50thPercent = 80;
         b.fragmentLength95thPercent = 120;
-        b.enrichedGenePercent = 0.4;
         b.medianGCRatio = 0.6;
         b.forwardStrandPercent = 0.5;
     };
@@ -61,7 +59,6 @@ public class TestIsofoxSummaryDataBuilder
                 .fragmentLength5thPercent(fragmentLength5thPercent)
                 .fragmentLength50thPercent(fragmentLength50thPercent)
                 .fragmentLength95thPercent(fragmentLength95thPercent)
-                .enrichedGenePercent(enrichedGenePercent)
                 .medianGCRatio(medianGCRatio)
                 .forwardStrandPercent(forwardStrandPercent)
                 .build();

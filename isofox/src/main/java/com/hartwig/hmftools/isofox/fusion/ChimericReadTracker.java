@@ -53,7 +53,6 @@ public class ChimericReadTracker
     private GeneCollection mGeneCollection; // the current collection being processed
     private final Map<String,ChimericReadGroup> mChimericReadMap;
     private final Map<String, FusionReadGroup> mFusionReadGroupMap;
-    private final List<FusionReadGroup> mLocalCompleteGroups; // 2-read same-gene-collection groups with a split junction
 
     // junction position from fusion junction candidate reads are cached to identify candidate realignable reads
     private JunctionRacFragments mJunctionRacGroups;
@@ -93,7 +92,6 @@ public class ChimericReadTracker
         mFusionReadGroupMap = Maps.newHashMap();
         mJunctionRacGroups = null;
         mLocalChimericReads = Lists.newArrayList();
-        mLocalCompleteGroups = Lists.newArrayList();
         mCandidateRealignedGroups = Lists.newArrayList();
         mPostGeneReadMap = Maps.newHashMap();
         mPreviousPostGeneReadMap = Maps.newHashMap();
@@ -196,7 +194,6 @@ public class ChimericReadTracker
 
         mChimericReadMap.clear();
         mFusionReadGroupMap.clear();
-        mLocalCompleteGroups.clear();
         mCandidateRealignedGroups.clear();
         mChimericStats.clear();
         mLocalChimericReads.clear();
@@ -281,7 +278,7 @@ public class ChimericReadTracker
         {
             Read read = (Read)object;
 
-            if(read.isMateUnmapped() || inImmuneRegion(read) || read.isSecondaryAlignment())
+            if(read.isMateUnmapped() || inImmuneRegion(read))
                 continue;
 
             if(!read.isDuplicate())
@@ -390,7 +387,6 @@ public class ChimericReadTracker
         {
             // clear other chimeric state except for local junction information
             mChimericReadMap.clear();
-            mLocalCompleteGroups.clear();
             mCandidateRealignedGroups.clear();
             mChimericStats.clear();
         }
@@ -538,8 +534,12 @@ public class ChimericReadTracker
         {
             int[] splitJunction = findSplitReadJunction(splitRead);
 
-            addJunction(splitRead, SE_START, splitJunction[SE_START], ORIENT_FWD);
-            addJunction(splitRead, SE_END, splitJunction[SE_END], ORIENT_REV);
+            if(splitJunction != null)
+            {
+                addJunction(splitRead, SE_START, splitJunction[SE_START], ORIENT_FWD);
+                addJunction(splitRead, SE_END, splitJunction[SE_END], ORIENT_REV);
+            }
+
 
             return;
         }

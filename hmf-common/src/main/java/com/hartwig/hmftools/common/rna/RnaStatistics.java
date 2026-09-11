@@ -22,10 +22,6 @@ public abstract class RnaStatistics
     public abstract double fragmentLength50thPercent();
     public abstract double fragmentLength95thPercent();
 
-    // proportion of fragments in 7 highly expressed genes
-    public abstract double enrichedGenePercent();
-
-    // Median GC (excluding 7 highly expressed genes)
     public abstract double medianGCRatio();
 
     public abstract double forwardStrandPercent();

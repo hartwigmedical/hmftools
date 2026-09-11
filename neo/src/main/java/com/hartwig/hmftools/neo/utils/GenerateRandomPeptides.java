@@ -6,6 +6,8 @@ import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeVersion;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.from;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
@@ -87,7 +89,8 @@ public class GenerateRandomPeptides
         mEnsemblDataCache.load(false);
 
         mTransAminoAcidMap = Maps.newHashMap();
-        EnsemblDataLoader.loadTranscriptAminoAcidData(ensemblDataDir, mTransAminoAcidMap, Lists.newArrayList(), true);
+        EnsemblDataLoader.loadTranscriptAminoAcidData(
+                ensemblDataDir, from(configBuilder), mTransAminoAcidMap, Lists.newArrayList(), true);
 
         mTranscriptExpression = new TranscriptExpression(configBuilder.getValue(IMMUNE_EXPRESSION_FILE));
 
@@ -360,6 +363,7 @@ public class GenerateRandomPeptides
     {
         ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
         addEnsemblDir(configBuilder);
+        addRefGenomeVersion(configBuilder);
         configBuilder.addConfigItem(OUTPUT_FILE, true, "Output filename");
         configBuilder.addRequiredInteger(REQ_PEPTIDES, "Number of peptides to find randomly from the proteome");
         configBuilder.addConfigItem(PEPTIDES_LENGTHS, false, "Peptide lengths, separated by ';'");

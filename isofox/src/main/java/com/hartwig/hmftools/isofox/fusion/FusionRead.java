@@ -6,7 +6,10 @@ import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.switchIndex;
+import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_BOUNDARY;
+import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_INTRON;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.NONE;
+import static com.hartwig.hmftools.isofox.common.RegionMatchType.WITHIN_EXON;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.matchRank;
 import static com.hartwig.hmftools.isofox.fusion.FusionTransExon.fromList;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.extractTopTransExonRefs;
@@ -23,6 +26,8 @@ import com.hartwig.hmftools.isofox.common.Read;
 import com.hartwig.hmftools.isofox.common.RegionMatchType;
 import com.hartwig.hmftools.isofox.common.RegionReadData;
 
+import htsjdk.samtools.SAMFlag;
+
 public class FusionRead
 {
     // skip read ID since always obtainable from the read-group
@@ -32,6 +37,8 @@ public class FusionRead
     public final String Cigar;
     public final String MateChromosome;
     public int MatePosStart;
+    public final int Flags;
+    public final short MapQuality;
 
     public final int[] SoftClipLengths;
     public final String[] BoundaryBases;
@@ -44,7 +51,6 @@ public class FusionRead
     public final SupplementaryReadData SuppData;
     public boolean IsDuplicate;
     public boolean ContainsSplit;
-    public int Flags;
 
     public final List<int[]> MappedCoords;
 
@@ -75,6 +81,7 @@ public class FusionRead
         IsDuplicate = read.isDuplicate();
         ContainsSplit = read.containsSplit();
         Flags = read.flags();
+        MapQuality = read.mapQuality();
 
         SuppData = read.hasSuppAlignment() ? SupplementaryReadData.extractAlignment(read.getSuppAlignment()) : null;
 
@@ -121,6 +128,7 @@ public class FusionRead
     }
     public boolean isSoftClipped(int se) { return SoftClipLengths[se] > 0; }
     public boolean isLongestSoftClip(int se) { return SoftClipLengths[se] > SoftClipLengths[switchIndex(se)]; }
+    public boolean isSupplementaryAlignment() { return (Flags & SAMFlag.SUPPLEMENTARY_ALIGNMENT.intValue()) != 0; }
 
     public final int[] junctionPositions() { return mJunctionPositions; }
 
@@ -146,10 +154,10 @@ public class FusionRead
             {
                 RegionMatchType matchType = entry.getValue();
 
-                if(matchRank(matchType) < matchRank(mRegionMatchType))
+                if(!possiblyExonic(matchType) && possiblyExonic(mRegionMatchType))
                     continue;
 
-                if(matchRank(matchType) > matchRank(mRegionMatchType))
+                if(possiblyExonic(matchType) && !possiblyExonic(mRegionMatchType))
                 {
                     mRegionMatchType = matchType;
                     mTransExonRefs.clear();
@@ -163,6 +171,11 @@ public class FusionRead
         {
             mRegionMatchType = extractTopTransExonRefs(read.getReadTransExonRefs(), mRegionMatchType, mTransExonRefs);
         }
+    }
+
+    private static boolean possiblyExonic(final RegionMatchType matchType)
+    {
+        return matchType == EXON_BOUNDARY || matchType == EXON_INTRON || matchType == WITHIN_EXON;
     }
 
     public void setUpperTransExonRefs(final List<FusionTransExon> transExonRefs, final RegionMatchType matchType)

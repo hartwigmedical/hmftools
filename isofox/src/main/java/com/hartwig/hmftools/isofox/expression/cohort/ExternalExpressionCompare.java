@@ -154,12 +154,12 @@ public class ExternalExpressionCompare
 
             if(mTransScope)
             {
-                mWriter.write(String.format(",TransName,ISOFOX_TPM,%s_TPM,RawFrags,FittedFrags,%s_Reads,EffectiveLength,LowMapQualFrags",
+                mWriter.write(String.format(",TransName,ISOFOX_TPM,%s_TPM,RawFrags,FittedFrags,%s_Reads,EffectiveLength,MultiMappedFragments",
                         sourceName, sourceName));
             }
             else
             {
-                mWriter.write(String.format(",ISOFOX_TPM,%s_TPM,SplicedFragments,UnsplicedFragments,LowMapQualFrags", sourceName));
+                mWriter.write(String.format(",ISOFOX_TPM,%s_TPM,SplicedFragments,UnsplicedFragments,MultiMappedFragments", sourceName));
             }
 
             mWriter.newLine();
@@ -181,13 +181,13 @@ public class ExternalExpressionCompare
                 mWriter.write(String.format(",%s,%.3g,%.3g,%.1f,%.1f,%d,%d,%.1f",
                         isofoxExpData.TransName, isofoxExpData.tpm(), externalExpData != null ? externalExpData.tpm() : -1,
                         isofoxExpData.rawFragment(), isofoxExpData.fittedFragments(),
-                        externalExpData != null ? externalExpData.readCount() : -1, isofoxExpData.EffectiveLength, isofoxExpData.LowMapQualFrags));
+                        externalExpData != null ? externalExpData.readCount() : -1, isofoxExpData.EffectiveLength, isofoxExpData.MultiMappedFragments));
             }
             else
             {
                 mWriter.write(String.format(",%.3g,%.3g,%d,%d,%.1f",
                         isofoxExpData.tpm(), externalExpData != null ? externalExpData.tpm() : -1,
-                        isofoxExpData.SplicedFragments, isofoxExpData.UnsplicedFragments, isofoxExpData.LowMapQualFrags));
+                        isofoxExpData.SplicedFragments, isofoxExpData.UnsplicedFragments, isofoxExpData.MultiMappedFragments));
             }
 
             mWriter.newLine();
@@ -220,7 +220,7 @@ public class ExternalExpressionCompare
             Integer effectiveLengthIndex = fieldsMap.get(FLD_EFFECTIVE_LENGTH);
             Integer splicedIndex = fieldsMap.get(FLD_SPLICED_FRAGS);
             Integer unsplicedIndex = fieldsMap.get(FLD_UNSPLICED_FRAGS);
-            Integer lowQualIndex = fieldsMap.get("LowMapQualFrags");
+            Integer lowQualIndex = fieldsMap.get("MultiMappedFragments");
 
             for(final String data : lines)
             {

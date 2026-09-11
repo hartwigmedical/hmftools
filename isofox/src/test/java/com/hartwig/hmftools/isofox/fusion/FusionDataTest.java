@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.isofox.fusion;
 
+import static com.hartwig.hmftools.common.codon.Nucleotides.reverseComplementBases;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
@@ -662,7 +663,6 @@ public class FusionDataTest
         Read read4 = createMappedRead(readId, gc1, 551, 590, createCigar(0, 40, 0));
         read4.setStrand(true, false);
 
-        // readGroups1.put(read3.Id, new ReadGroup(read3, read4));
         addRacReadGroup(racFragmentCache, new ChimericReadGroup(read3, read4), ORIENT_FWD, 600);
 
         junctionBases = config.RefGenome.getBaseString(gc1.chromosome(), 591, 600)
@@ -699,6 +699,172 @@ public class FusionDataTest
         assertEquals(MATCHED_JUNCTION, fusion.getInitialFragment().type());
         assertEquals(1, fusion.getFragmentTypeCount(MATCHED_JUNCTION));
         assertEquals(2, fusion.getFragmentTypeCount(REALIGNED));
+    }
+
+    @Test
+    public void testJunctionOverlapMatch()
+    {
+        EnsemblDataCache geneTransCache = createGeneDataCache();
+
+        addTestGenes(geneTransCache);
+        addTestTranscripts(geneTransCache);
+
+        IsofoxConfig config = createIsofoxConfig();
+        populateRefGenome(config.RefGenome);
+
+        FusionFinder finder = createFusionFinder(config, geneTransCache);
+
+        int gcId = 0;
+        GeneCollection gc1 = createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_1)));
+        GeneCollection gc2 = createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_2)));
+
+        int readId = 0;
+        Read read1 = createMappedRead(readId, gc1, 1050, 1089, createCigar(0, 40, 0));
+
+        String junctionBases = config.RefGenome.getBaseString(gc1.chromosome(), 1071, 1100)
+                + config.RefGenome.getBaseString(gc1.chromosome(), 10200, 10209);
+
+        Read read2 = createMappedRead(readId, gc1, 1071, 1100, createCigar(0, 30, 10), junctionBases);
+
+        junctionBases = config.RefGenome.getBaseString(gc1.chromosome(), 1091, 1100)
+                + config.RefGenome.getBaseString(gc1.chromosome(), 10200, 10229);
+
+        // the upper read brings the position in due to a differing alignment
+        Read read3 = createMappedRead(readId, gc2, 10199, 10228, createCigar(10, 30, 0), junctionBases);
+
+        read3.setStrand(true, false);
+
+        FusionReadData fusion = callJunctionFusion(finder, gc1, gc2, read1, read2, read3);
+        assertEquals(1100, fusion.junctionPositions()[SE_START]);
+        assertEquals(10200, fusion.junctionPositions()[SE_END]);
+        assertEquals(ORIENT_FWD, fusion.junctionOrientations()[SE_START]);
+        assertEquals(ORIENT_REV, fusion.junctionOrientations()[SE_END]);
+        assertEquals(1, fusion.getFragments(MATCHED_JUNCTION).size());
+    }
+
+    @Test
+    public void testSameOrientationJunctionOverlap()
+    {
+        EnsemblDataCache geneTransCache = createGeneDataCache();
+
+        addTestGenes(geneTransCache);
+        addTestTranscripts(geneTransCache);
+
+        IsofoxConfig config = createIsofoxConfig();
+        populateRefGenome(config.RefGenome);
+
+        FusionFinder finder = createFusionFinder(config, geneTransCache);
+
+        int gcId = 0;
+        GeneCollection gc1 = createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_1)));
+        GeneCollection gc2 = createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_2)));
+
+        int readId = 0;
+        Read read1 = createMappedRead(readId, gc1, 1050, 1089, createCigar(0, 40, 0));
+
+        String junctionBases = config.RefGenome.getBaseString(gc1.chromosome(), 1071, 1100)
+                + reverseComplementBases(config.RefGenome.getBaseString(gc1.chromosome(), 10291, 10300));
+
+        Read read2 = createMappedRead(readId, gc1, 1071, 1100, createCigar(0, 30, 10), junctionBases);
+
+        junctionBases = config.RefGenome.getBaseString(gc1.chromosome(), 10272, 10301)
+                + reverseComplementBases(config.RefGenome.getBaseString(gc1.chromosome(), 1091, 1100));
+
+        Read read3 = createMappedRead(readId, gc2, 10272, 10301, createCigar(0, 30, 10), junctionBases);
+
+        FusionReadData fusion = callJunctionFusion(finder, gc1, gc2, read1, read2, read3);
+        assertEquals(ORIENT_FWD, fusion.junctionOrientations()[SE_START]);
+        assertEquals(ORIENT_FWD, fusion.junctionOrientations()[SE_END]);
+        assertEquals(1100, fusion.junctionPositions()[SE_START]);
+        assertEquals(10300, fusion.junctionPositions()[SE_END]);
+    }
+
+    @Test
+    public void testFusionKnownExonBoundaryPositionAdjustments()
+    {
+        // test 1: lower position can be shifted to match a know exon boundary
+        EnsemblDataCache geneTransCache = createGeneDataCache();
+
+        addTestGenes(geneTransCache);
+        addTestTranscripts(geneTransCache);
+
+        IsofoxConfig config = createIsofoxConfig();
+        populateRefGenome(config.RefGenome);
+
+        FusionFinder finder = createFusionFinder(config, geneTransCache);
+
+        int gcId = 0;
+        GeneCollection gc1 = createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_1)));
+        GeneCollection gc2 = createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_2)));
+
+        int readId = 0;
+        Read read1 = createMappedRead(readId, gc1, 1050, 1089, createCigar(0, 40, 0));
+
+        String junctionBases = config.RefGenome.getBaseString(gc1.chromosome(), 1071, 1100)
+                + config.RefGenome.getBaseString(gc1.chromosome(), 10220, 10229);
+
+        Read read2 = createMappedRead(readId, gc1, 1071, 1100, createCigar(0, 30, 10), junctionBases);
+
+        junctionBases = config.RefGenome.getBaseString(gc1.chromosome(), 1091, 1100)
+                + config.RefGenome.getBaseString(gc1.chromosome(), 10220, 10249);
+
+        Read read3 = createMappedRead(readId, gc2, 10219, 10228, createCigar(10, 30, 0), junctionBases);
+
+        read3.setStrand(true, false);
+
+        FusionReadData fusion = callJunctionFusion(finder, gc1, gc2, read1, read2, read3);
+        assertEquals(1100, fusion.junctionPositions()[SE_START]);
+        assertEquals(10220, fusion.junctionPositions()[SE_END]);
+        assertEquals(ORIENT_FWD, fusion.junctionOrientations()[SE_START]);
+        assertEquals(ORIENT_REV, fusion.junctionOrientations()[SE_END]);
+        assertEquals(1, fusion.splitJunctionOverlap());
+        assertEquals(FusionJunctionType.KNOWN, fusion.junctionTypes()[SE_START]);
+        assertEquals(FusionJunctionType.UNKNOWN, fusion.junctionTypes()[SE_END]);
+        assertEquals(1, fusion.getFragments(MATCHED_JUNCTION).size());
+
+        // test 2: the lower positions needs adjusting to match a know exon boundary
+        junctionBases = config.RefGenome.getBaseString(gc1.chromosome(), 1072, 1101)
+                + config.RefGenome.getBaseString(gc1.chromosome(), 10220, 10229);
+
+        read2 = createMappedRead(readId, gc1, 1072, 1101, createCigar(0, 30, 10), junctionBases);
+
+        junctionBases = config.RefGenome.getBaseString(gc1.chromosome(), 1090, 1099)
+                + config.RefGenome.getBaseString(gc1.chromosome(), 10220, 10249);
+
+        read3 = createMappedRead(readId, gc2, 10219, 10248, createCigar(10, 30, 0), junctionBases);
+
+        read3.setStrand(true, false);
+
+        fusion = callJunctionFusion(finder, gc1, gc2, read1, read2, read3);
+        assertEquals(1100, fusion.junctionPositions()[SE_START]); // adjusted to exon
+        assertEquals(10219, fusion.junctionPositions()[SE_END]); // remains unch
+        assertEquals(ORIENT_FWD, fusion.junctionOrientations()[SE_START]);
+        assertEquals(ORIENT_REV, fusion.junctionOrientations()[SE_END]);
+        assertEquals(1, fusion.splitJunctionOverlap());
+        assertEquals(FusionJunctionType.KNOWN, fusion.junctionTypes()[SE_START]);
+        assertEquals(FusionJunctionType.UNKNOWN, fusion.junctionTypes()[SE_END]);
+        assertEquals(1, fusion.getFragments(MATCHED_JUNCTION).size());
+
+        // test 3: the upper position needs shifting to the exon boundary
+        junctionBases = config.RefGenome.getBaseString(gc1.chromosome(), 1052, 1081)
+                + config.RefGenome.getBaseString(gc1.chromosome(), 10200, 10209);
+
+        read2 = createMappedRead(readId, gc1, 1052, 1081, createCigar(0, 30, 10), junctionBases);
+
+        junctionBases = config.RefGenome.getBaseString(gc1.chromosome(), 1080, 1081)
+                + config.RefGenome.getBaseString(gc1.chromosome(), 10199, 10228);
+
+        read3 = createMappedRead(readId, gc2, 10199, 10228, createCigar(10, 30, 0), junctionBases);
+
+        read3.setStrand(true, false);
+
+        fusion = callJunctionFusion(finder, gc1, gc2, read1, read2, read3);
+        assertEquals(1081, fusion.junctionPositions()[SE_START]); // remains unch
+        assertEquals(10200, fusion.junctionPositions()[SE_END]); // adjusted to exon
+        assertEquals(1, fusion.splitJunctionOverlap());
+        assertEquals(FusionJunctionType.CANONICAL, fusion.junctionTypes()[SE_START]);
+        assertEquals(FusionJunctionType.KNOWN, fusion.junctionTypes()[SE_END]);
+        assertEquals(1, fusion.getFragments(MATCHED_JUNCTION).size());
     }
 
     @Test
@@ -739,16 +905,11 @@ public class FusionDataTest
         junctionBases = config.RefGenome.getBaseString(gc1.chromosome(), 1091, 1100)
                 + config.RefGenome.getBaseString(gc1.chromosome(), 10200, 10229);
 
-        Read read3 = createMappedRead(readId, gc2, 10200, 102929, createCigar(10, 30, 0), junctionBases);
+        Read read3 = createMappedRead(readId, gc2, 10200, 10229, createCigar(10, 30, 0), junctionBases);
 
-        read2.setFlag(FIRST_OF_PAIR, true);
-        read3.setFlag(SECOND_OF_PAIR, false);
         read3.setStrand(true, false);
-        read2.setSuppAlignment(String.format("%s;%d;%s", read3.Chromosome, read3.PosStart, read3.cigarStr()));
-        read3.setSuppAlignment(String.format("%s;%d;%s", read2.Chromosome, read2.PosStart, read2.cigarStr()));
 
-        readGroups1.put(read1.Id, createGroup(read1, read2));
-        readGroups2.put(read1.Id, createGroup(read3));
+        addSuppReadGroups(readGroups1, readGroups2, read1, read2, read3);
 
         // a second fragment with 2 bases difference due to homology
         read1 = createMappedRead(++readId, gc1, 1050, 1089, createCigar(0, 40, 0));
@@ -761,16 +922,11 @@ public class FusionDataTest
         junctionBases = config.RefGenome.getBaseString(gc1.chromosome(), 1093, 1102)
                 + config.RefGenome.getBaseString(gc1.chromosome(), 10202, 10231);
 
-        read3 = createMappedRead(readId, gc2, 10202, 102931, createCigar(10, 30, 0), junctionBases);
+        read3 = createMappedRead(readId, gc2, 10202, 10231, createCigar(10, 30, 0), junctionBases);
 
-        read2.setFlag(FIRST_OF_PAIR, true);
-        read3.setFlag(SECOND_OF_PAIR, false);
         read3.setStrand(true, false);
-        read2.setSuppAlignment(String.format("%s;%d;%s", read3.Chromosome, read3.PosStart, read3.cigarStr()));
-        read3.setSuppAlignment(String.format("%s;%d;%s", read2.Chromosome, read2.PosStart, read2.cigarStr()));
 
-        readGroups1.put(read1.Id, createGroup(read1, read2));
-        readGroups2.put(read1.Id, createGroup(read3));
+        addSuppReadGroups(readGroups1, readGroups2, read1, read2, read3);
 
         BaseDepth baseDepth = new BaseDepth();
         List<FusionReadGroup> completeGroups = finder.processNewChimericReadGroups(gc1, baseDepth, readGroups1);
@@ -870,5 +1026,37 @@ public class FusionDataTest
         assertEquals(0, fusion.getFragments(REALIGNED).size());
         assertEquals(1100, fusion.junctionPositions()[SE_START]);
         assertEquals(10200, fusion.junctionPositions()[SE_END]);
+    }
+
+    private static void addSuppReadGroups(
+            final Map<String, FusionReadGroup> readGroups1, final Map<String, FusionReadGroup> readGroups2, final Read mate,
+            final Read donorRead, final Read acceptorRead)
+    {
+        donorRead.setFlag(FIRST_OF_PAIR, true);
+        acceptorRead.setFlag(SECOND_OF_PAIR, false);
+        donorRead.setSuppAlignment(String.format("%s;%d;%s", acceptorRead.Chromosome, acceptorRead.PosStart, acceptorRead.cigarStr()));
+        acceptorRead.setSuppAlignment(String.format("%s;%d;%s", donorRead.Chromosome, donorRead.PosStart, donorRead.cigarStr()));
+
+        readGroups1.put(mate.Id, createGroup(mate, donorRead));
+        readGroups2.put(mate.Id, createGroup(acceptorRead));
+    }
+
+    private static FusionReadData callJunctionFusion(
+            final FusionFinder finder, final GeneCollection gc1, final GeneCollection gc2, final Read mate,
+            final Read donorRead, final Read acceptorRead)
+    {
+        Map<String, FusionReadGroup> readGroups1 = Maps.newHashMap();
+        Map<String, FusionReadGroup> readGroups2 = Maps.newHashMap();
+        addSuppReadGroups(readGroups1, readGroups2, mate, donorRead, acceptorRead);
+
+        BaseDepth baseDepth = new BaseDepth();
+        finder.processLocalReadGroups(finder.processNewChimericReadGroups(gc1, baseDepth, readGroups1));
+        finder.processLocalReadGroups(finder.processNewChimericReadGroups(gc2, baseDepth, readGroups2));
+
+        assertEquals(1, finder.getFusionCandidates().size());
+        List<FusionReadData> fusions = finder.getFusionCandidates().values().iterator().next();
+        assertEquals(1, fusions.size());
+
+        return fusions.get(0);
     }
 }

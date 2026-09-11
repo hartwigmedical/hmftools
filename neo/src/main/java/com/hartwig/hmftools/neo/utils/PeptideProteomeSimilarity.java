@@ -5,6 +5,8 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.convertAminoAcidsToGeneMap;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeVersion;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.from;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
@@ -71,7 +73,11 @@ public class PeptideProteomeSimilarity
         if(configBuilder.hasValue(ENSEMBL_DATA_DIR))
         {
             Map<String, TranscriptAminoAcids> transAminoAcidMap = Maps.newHashMap();
-            EnsemblDataLoader.loadTranscriptAminoAcidData(configBuilder.getValue(ENSEMBL_DATA_DIR), transAminoAcidMap, Lists.newArrayList(), false);
+
+            EnsemblDataLoader.loadTranscriptAminoAcidData(
+                    configBuilder.getValue(ENSEMBL_DATA_DIR), from(configBuilder), transAminoAcidMap, Lists.newArrayList(),
+                    false);
+
             mTransAminoAcidMap = convertAminoAcidsToGeneMap(transAminoAcidMap);
         }
         else
@@ -495,6 +501,7 @@ public class PeptideProteomeSimilarity
     {
         ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
         addEnsemblDir(configBuilder);
+        addRefGenomeVersion(configBuilder);
         configBuilder.addPath(PEPTIDES_FILE, true, "Peptides file");
         configBuilder.addPath(PROTEOME_RANKS_FILE, true, "Proteome ranks file");
         ScoreConfig.registerConfig(configBuilder);

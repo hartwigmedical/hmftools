@@ -18,7 +18,7 @@ public class GeneCollectionSummary
     public final List<GeneResult> GeneResults;
     public final List<TranscriptResult> TranscriptResults;
 
-    private final int mTotalLowMqFragments;
+    private final int mTotalMultiMappedFragments;
     private final Map<String,Double> mFitAllocations; // results from the expected rate vs counts fit routine, stored per transcript
     private double mFitResiduals;
 
@@ -32,7 +32,7 @@ public class GeneCollectionSummary
         GeneResults = Lists.newArrayList();
         TranscriptResults = Lists.newArrayList();
 
-        mTotalLowMqFragments = TransCategoryCounts.stream().mapToInt(x -> x.lowMapQualFragments()).sum();
+        mTotalMultiMappedFragments = TransCategoryCounts.stream().mapToInt(x -> x.multiMappedFragments()).sum();
 
         mFitAllocations = Maps.newHashMap();
         mFitResiduals = 0;
@@ -115,9 +115,9 @@ public class GeneCollectionSummary
         TransCategoryCounts.forEach(x -> x.adjustCounts(adjustFactor));
     }
 
-    public void assignLowMapQualityFragments()
+    public void assignMultiMappedFragments()
     {
-        if(mTotalLowMqFragments == 0)
+        if(mTotalMultiMappedFragments == 0)
             return;
 
         double totalTranscriptAlloc = TranscriptResults.stream().mapToDouble(x -> x.getFitAllocation()).sum();
@@ -127,22 +127,22 @@ public class GeneCollectionSummary
         if(totalAlloc == 0)
             return;
 
-        double splicedLowMqFrags = mTotalLowMqFragments * totalTranscriptAlloc / totalAlloc;
-        double unsplicedLowMqFrags = mTotalLowMqFragments * totalUnsplicedAlloc / totalAlloc;
+        double splicedMultiMappedFrags = mTotalMultiMappedFragments * totalTranscriptAlloc / totalAlloc;
+        double unsplicedMultiMappedFrags = mTotalMultiMappedFragments * totalUnsplicedAlloc / totalAlloc;
 
         // divide amongst transcripts
         for(final TranscriptResult transResult : TranscriptResults)
         {
-            double transAlloc = totalTranscriptAlloc > 0 ? transResult.getFitAllocation() / totalTranscriptAlloc * splicedLowMqFrags : 0;
-            transResult.setLowMapQualsAllocation(transAlloc);
+            double transAlloc = totalTranscriptAlloc > 0 ? transResult.getFitAllocation() / totalTranscriptAlloc * splicedMultiMappedFrags : 0;
+            transResult.setMultiMappedAllocation(transAlloc);
         }
 
         // split amongst genes as per fragment allocation
         for(final GeneResult geneResult : GeneResults)
         {
-            double splicedAlloc = totalTranscriptAlloc > 0 ? geneResult.getSplicedAlloc() / totalTranscriptAlloc * splicedLowMqFrags : 0;
-            double unsplicedAlloc = totalUnsplicedAlloc > 0 ? geneResult.getUnsplicedAlloc() / totalUnsplicedAlloc * unsplicedLowMqFrags : 0;
-            geneResult.setLowMapQualsAllocation(splicedAlloc + unsplicedAlloc);
+            double splicedAlloc = totalTranscriptAlloc > 0 ? geneResult.getSplicedAlloc() / totalTranscriptAlloc * splicedMultiMappedFrags : 0;
+            double unsplicedAlloc = totalUnsplicedAlloc > 0 ? geneResult.getUnsplicedAlloc() / totalUnsplicedAlloc * unsplicedMultiMappedFrags : 0;
+            geneResult.setMultiMappedAllocation(splicedAlloc + unsplicedAlloc);
         }
     }
 }
