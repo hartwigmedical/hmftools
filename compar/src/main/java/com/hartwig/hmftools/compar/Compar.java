@@ -4,6 +4,7 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
+import static com.hartwig.hmftools.compar.common.WriteType.FIELD_CONFIG;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -45,7 +46,14 @@ public class Compar
             CMP_LOGGER.info("running comparison for {} sample(s)", mConfig.SampleIds.size());
         }
 
-        if(!mWriter.initialiseOutputFiles())
+        FieldCheckCache fieldCheckCache = new FieldCheckCache(mConfig.StrictFieldConfig);
+
+        if(!fieldCheckCache.processOverridesFile(mConfig))
+        {
+            System.exit(1);
+        }
+
+        if(!mWriter.initialiseOutputFiles(fieldCheckCache))
         {
             System.exit(1);
         }
@@ -58,7 +66,7 @@ public class Compar
 
             for(int i = 0; i < min(mConfig.SampleIds.size(), mConfig.Threads); ++i)
             {
-                sampleTasks.add(new ComparTask(i, mConfig, mWriter));
+                sampleTasks.add(new ComparTask(i, mConfig, fieldCheckCache, mWriter));
             }
 
             int taskIndex = 0;
@@ -77,12 +85,17 @@ public class Compar
         }
         else
         {
-            ComparTask sampleTask = new ComparTask(0, mConfig, mWriter);
+            ComparTask sampleTask = new ComparTask(0, mConfig, fieldCheckCache, mWriter);
             sampleTask.getSampleIds().addAll(mConfig.SampleIds);
             sampleTask.call();
         }
 
         mWriter.close();
+
+        if(mConfig.WriteTypes.contains(FIELD_CONFIG))
+        {
+            fieldCheckCache.writeFieldOverridesFile(mConfig);
+        }
 
         if(mConfig.multiSample())
         {

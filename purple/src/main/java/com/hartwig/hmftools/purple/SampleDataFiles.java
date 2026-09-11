@@ -3,6 +3,8 @@ package com.hartwig.hmftools.purple;
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.PIPELINE_FORMAT_CFG;
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.PIPELINE_FORMAT_FILE_CFG;
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectoriesFile.COBALT_DIR;
+import static com.hartwig.hmftools.common.sage.SageCommon.PAVE_GERMLINE_VCF_ID;
+import static com.hartwig.hmftools.common.sage.SageCommon.PAVE_SOMATIC_VCF_ID;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.AMBER_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.AMBER_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.COBALT_DIR_CFG;
@@ -120,10 +122,10 @@ public class SampleDataFiles
                 pipelineToolDirectories.esveeDir(), sampleId, ".esvee.germline.vcf.gz");
 
         SomaticVcfFile = getFilename(configBuilder, SOMATIC_VARIANTS, PAVE_SOMATIC_DIR_CFG,
-                pipelineToolDirectories.paveSomaticDir(), sampleId, ".pave.somatic.vcf.gz");
+                pipelineToolDirectories.paveSomaticDir(), sampleId, PAVE_SOMATIC_VCF_ID);
 
         GermlineVcfFile = getFilename(configBuilder, GERMLINE_VARIANTS, PAVE_GERMLINE_DIR_CFG,
-                pipelineToolDirectories.paveGermlineDir(), sampleId, ".pave.germline.vcf.gz");
+                pipelineToolDirectories.paveGermlineDir(), sampleId, PAVE_GERMLINE_VCF_ID);
 
         ReduxTumorDirectory = configBuilder.getValue(REDUX_TUMOR_DIR_CFG);
     }

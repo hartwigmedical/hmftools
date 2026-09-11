@@ -2,52 +2,59 @@ package com.hartwig.hmftools.compar.driver;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.compar.common.CategoryType.DRIVER;
-import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_CHROMOSOME_BAND;
 import static com.hartwig.hmftools.compar.common.CommonUtils.createMismatchFromDiffs;
-import static com.hartwig.hmftools.compar.common.DiffFunctions.checkDiff;
 
 import java.util.List;
-
-import javax.annotation.Nullable;
+import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.driver.DriverCatalog;
-import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.PurplePurity;
 import com.hartwig.hmftools.common.purple.ReportedStatus;
+import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.common.DiffThresholds;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
+import com.hartwig.hmftools.compar.common.field.FieldInfo;
+import com.hartwig.hmftools.compar.common.field.FieldValue;
 
-public class DriverData implements ComparableItem
+public class DriverData extends ComparableItem
 {
     public final DriverCatalog DriverCatalog;
+    public final String ComparisonChromosome;
 
-    private final PurplePurity mPurity;
-    public final String mComparisonChromosome;
     private final String mKey;
     private final boolean mCheckTranscript;
-
-    protected static final String FLD_LIKELIHOOD = "Likelihood";
-    protected static final String FLD_LIKE_METHOD = "LikelihoodMethod";
-    protected static final String FLD_MIN_COPY_NUMBER = "MinCopyNumber";
-    protected static final String FLD_MAX_COPY_NUMBER = "MaxCopyNumber";
+    private final boolean mIsPass;
 
     public DriverData(
-            final DriverCatalog driverCatalog, final PurplePurity purity, final String comparisonChromosome, boolean checkTranscript)
+            final DriverCatalog driverCatalog, final PurplePurity purity, final String comparisonChromosome,
+            boolean checkTranscript, boolean isPass, final List<FieldInfo> fields)
     {
         DriverCatalog = driverCatalog;
 
-        mPurity = purity;
-        mComparisonChromosome = comparisonChromosome;
+        ComparisonChromosome = comparisonChromosome;
         mCheckTranscript = checkTranscript;
 
         String key = format("%s_%s", driverCatalog.driver(), driverCatalog.gene());
         mKey = driverCatalog.isCanonical() ? key : key + "_" + driverCatalog.transcript();
+        mIsPass = isPass;
+
+        addDoubleValue(DriverComparer.Fields.MinCopyNumber.toString(), driverCatalog.minCopyNumber(), fields);
+        addDoubleValue(DriverComparer.Fields.MaxCopyNumber.toString(), driverCatalog.maxCopyNumber(), fields);
+
+        if(isPass)
+        {
+            addDoubleValue(DriverComparer.Fields.Likelihood.toString(), driverCatalog.driverLikelihood(), fields);
+            addStringValue(DriverComparer.Fields.LikelihoodMethod.toString(), driverCatalog.likelihoodMethod().toString(), fields);
+            addStringValue(DriverComparer.Fields.Chromosome.toString(), comparisonChromosome, fields);
+            addStringValue(DriverComparer.Fields.ChromosomeBand.toString(), driverCatalog.chromosomeBand(), fields);
+        }
+
+        addDoubleValue(DriverComparer.Fields.Purity.toString(), purity.Purity, fields);
+        addDoubleValue(DriverComparer.Fields.Ploidy.toString(), purity.Ploidy, fields);
     }
 
     @Override
@@ -60,23 +67,9 @@ public class DriverData implements ComparableItem
     }
 
     @Override
-    public List<String> displayValues()
+    public boolean isPass()
     {
-        List<String> values = Lists.newArrayList();
-        values.add(format("%s", DriverCatalog.likelihoodMethod()));
-        values.add(format("%.2f", DriverCatalog.driverLikelihood()));
-        values.add(format("%.2f", DriverCatalog.minCopyNumber()));
-        values.add(format("%.2f", DriverCatalog.maxCopyNumber()));
-        return values;
-    }
-
-    @Override
-    public List<String> extraInfoValues()
-    {
-        List<String> values = Lists.newArrayList();
-        values.add(format("Purity=%.2f", mPurity.Purity));
-        values.add(format("Ploidy=%.2f", mPurity.Ploidy));
-        return values;
+        return mIsPass;
     }
 
     @Override
@@ -108,24 +101,43 @@ public class DriverData implements ComparableItem
         return true;
     }
 
+    /*
     @Override
     public Mismatch findMismatch(
-            final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds, final boolean includeMatches)
+            final ItemComparer comparer, final ComparableItem other, final MatchLevel matchLevel, final boolean includeMatches)
     {
-        final DriverData otherDriver = (DriverData)other;
+        // comparison is custom here so that non-reportable drivers can skip comparisons if synthetically created
+        List<String> diffs = Lists.newArrayList();
 
-        final List<String> diffs = Lists.newArrayList();
+        // find and compare fields present in both items
+        List<FieldInfo> fields = comparer.fieldsList();
+        Map<String, FieldValue> oldFieldValues = fieldValues();
+        Map<String,FieldValue> newFieldValues = other.fieldValues();
 
-        checkDiff(
-                diffs, FLD_LIKE_METHOD,
-                DriverCatalog.likelihoodMethod().toString(), otherDriver.DriverCatalog.likelihoodMethod().toString());
+        boolean bothPass = isPass() && other.isPass();
 
-        checkDiff(diffs, FLD_LIKELIHOOD, DriverCatalog.driverLikelihood(), otherDriver.DriverCatalog.driverLikelihood(), thresholds);
-        checkDiff(diffs, FLD_MIN_COPY_NUMBER, DriverCatalog.minCopyNumber(), otherDriver.DriverCatalog.minCopyNumber(), thresholds);
-        checkDiff(diffs, FLD_MAX_COPY_NUMBER, DriverCatalog.maxCopyNumber(), otherDriver.DriverCatalog.maxCopyNumber(), thresholds);
-        checkDiff(diffs, FLD_CHROMOSOME, mComparisonChromosome, otherDriver.mComparisonChromosome);
-        checkDiff(diffs, FLD_CHROMOSOME_BAND, DriverCatalog.chromosomeBand(), otherDriver.DriverCatalog.chromosomeBand());
+        for(FieldInfo field : fields)
+        {
+            if(!field.FieldCheck.IsCompared)
+                continue;
+
+            if(!bothPass && field.Name.equals(DriverComparer.Fields.Likelihood.toString()))
+                continue;
+
+            FieldValue oldValue = oldFieldValues.get(field.Name);
+            FieldValue newValue = newFieldValues.get(field.Name);
+
+            if(oldValue == null || newValue == null)
+                continue;
+
+            if(oldValue.hasDifference(newValue))
+            {
+                oldValue.addDiffInfo(oldValue, newValue, diffs);
+            }
+        }
+
 
         return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches);
     }
+     */
 }

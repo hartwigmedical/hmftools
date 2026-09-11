@@ -1,20 +1,11 @@
 package com.hartwig.hmftools.compar.mutation;
 
-import static com.hartwig.hmftools.compar.mutation.GermlineVariantData.FILTER_DELIMITER;
-
 import java.util.Collections;
 import java.util.Set;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.common.genotype.GenotypeStatus;
-import com.hartwig.hmftools.common.purple.GermlineStatus;
-import com.hartwig.hmftools.common.region.BasePosition;
-import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.HotspotType;
-import com.hartwig.hmftools.common.variant.ImmutableSmallVariantImpl;
-import com.hartwig.hmftools.common.variant.SmallVariant;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.compar.TestComparableItemBuilder;
@@ -31,18 +22,16 @@ public class TestGermlineVariantDataBuilder
     public HotspotType hotspotStatus = HotspotType.HOTSPOT;
     public VariantTier tier = VariantTier.HOTSPOT;
     public String canonicalEffect = "missense_variant";
-    public CodingEffect canonicalCodingEffect = CodingEffect.MISSENSE;
+    public String canonicalCodingEffect = CodingEffect.MISSENSE.toString();
     public String canonicalHgvsCodingImpact = "c.1799T>A";
     public String canonicalHgvsProteinImpact = "p.Val600Glu";
     public String otherReportedEffects = "";
     public double qual = 275;
     public Set<String> filters = Collections.emptySet();
     public double variantCopyNumber = 1.1;
-    public double purityAdjustedVaf = 0.45;
+    public double alleleFrequency = 0.45;
     public int tumorTotalReadCount = 116;
     public int tumorSupportingReadCount = 21;
-    public String comparisonChromosome = "7";
-    public int comparisonPosition = 140453136;
 
     private static final Consumer<TestGermlineVariantDataBuilder> ALTERNATE_INITIALIZER = b ->
     {
@@ -56,18 +45,15 @@ public class TestGermlineVariantDataBuilder
         b.hotspotStatus = HotspotType.NEAR_HOTSPOT;
         b.tier = VariantTier.PANEL;
         b.canonicalEffect = "synonymous_variant";
-        b.canonicalCodingEffect = CodingEffect.SYNONYMOUS;
+        b.canonicalCodingEffect = CodingEffect.SYNONYMOUS.toString();
         b.canonicalHgvsCodingImpact = "c.1800T>A";
         b.canonicalHgvsProteinImpact = "p.Val601Glu";
         b.otherReportedEffects = "OTHER_EFFECT";
         b.qual = 512;
-        b.filters = Set.of("minTumorQual");
         b.variantCopyNumber = 3.6;
-        b.purityAdjustedVaf = 1.1;
+        b.alleleFrequency = 1.1;
         b.tumorTotalReadCount = 312;
         b.tumorSupportingReadCount = 50;
-        b.comparisonChromosome = "8";
-        b.comparisonPosition = 10000;
     };
 
     public static final TestComparableItemBuilder<TestGermlineVariantDataBuilder, GermlineVariantData> BUILDER =
@@ -79,6 +65,13 @@ public class TestGermlineVariantDataBuilder
 
     private GermlineVariantData build()
     {
+        return new GermlineVariantData(
+                chromosome, position, ref, alt, type, gene, reported, hotspotStatus, tier,
+                canonicalEffect, canonicalCodingEffect, canonicalHgvsCodingImpact, canonicalHgvsProteinImpact, otherReportedEffects,
+                (int)qual, filters, variantCopyNumber, alleleFrequency, tumorSupportingReadCount, tumorTotalReadCount,
+                false, new GermlineVariantComparer(null, Collections.emptyMap()).fieldsList());
+
+        /*
         SmallVariant variant = ImmutableSmallVariantImpl.builder()
                 .chromosome(chromosome)
                 .position(position)
@@ -125,5 +118,6 @@ public class TestGermlineVariantDataBuilder
                 .build();
         BasePosition comparisonBasePosition = new BasePosition(comparisonChromosome, comparisonPosition);
         return new GermlineVariantData(variant, comparisonBasePosition);
+         */
     }
 }

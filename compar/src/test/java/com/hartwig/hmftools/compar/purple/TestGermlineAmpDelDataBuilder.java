@@ -1,0 +1,63 @@
+package com.hartwig.hmftools.compar.purple;
+
+import java.util.Collections;
+import java.util.function.Consumer;
+
+import com.hartwig.hmftools.common.purple.GermlineAmpDel;
+import com.hartwig.hmftools.common.purple.GermlineDetectionMethod;
+import com.hartwig.hmftools.common.purple.GermlineStatus;
+import com.hartwig.hmftools.common.purple.ReportedStatus;
+import com.hartwig.hmftools.compar.TestComparableItemBuilder;
+
+public class TestGermlineAmpDelDataBuilder
+{
+    public String gene = "BRAF";
+    public boolean reported = true;
+    public GermlineStatus germlineStatus = GermlineStatus.HET_DELETION;
+    public GermlineStatus tumorStatus = GermlineStatus.HOM_DELETION;
+    public double germlineCopyNumber = 1;
+    public double tumorCopyNumber = 0;
+
+    private static final Consumer<TestGermlineAmpDelDataBuilder> ALTERNATE_INITIALIZER = b ->
+    {
+        b.gene = "BRCA2";
+        b.reported = false;
+        b.germlineStatus = GermlineStatus.DIPLOID;
+        b.tumorStatus = GermlineStatus.AMPLIFICATION;
+        b.germlineCopyNumber = 2;
+        b.tumorCopyNumber = 3;
+    };
+
+    public static final TestComparableItemBuilder<TestGermlineAmpDelDataBuilder, GermlineAmpDelData> BUILDER =
+            new TestComparableItemBuilder<>(
+                    TestGermlineAmpDelDataBuilder::new,
+                    TestGermlineAmpDelDataBuilder::build,
+                    ALTERNATE_INITIALIZER
+            );
+
+    private GermlineAmpDelData build()
+    {
+        return new GermlineAmpDelData(
+                new GermlineAmpDel(
+                        gene, "",
+                        "",
+                        "",
+                        -1,
+                        -1,
+                        -1,
+                        -1,
+                        -1,
+                        false,
+                        GermlineDetectionMethod.SEGMENT,
+                        germlineStatus,
+                        tumorStatus,
+                        germlineCopyNumber,
+                        tumorCopyNumber,
+                        "",
+                        -1,
+                        reported ? ReportedStatus.REPORTED : ReportedStatus.NONE
+                ),
+                new GermlineAmpDelComparer(null, Collections.emptyMap()).fieldsList()
+        );
+    }
+}

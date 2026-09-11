@@ -1,23 +1,14 @@
 package com.hartwig.hmftools.compar.snpgenotype;
 
-import static java.lang.String.format;
-
-import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_ALT;
 import static com.hartwig.hmftools.compar.common.CategoryType.SNP_GENOTYPE;
-import static com.hartwig.hmftools.compar.common.CommonUtils.createMismatchFromDiffs;
-import static com.hartwig.hmftools.compar.common.DiffFunctions.checkDiff;
 
 import java.util.List;
 
-import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.common.CategoryType;
-import com.hartwig.hmftools.compar.common.DiffThresholds;
-import com.hartwig.hmftools.compar.common.MatchLevel;
-import com.hartwig.hmftools.compar.common.Mismatch;
+import com.hartwig.hmftools.compar.common.field.FieldInfo;
 
-public class SnpGenotypeData implements ComparableItem
+public class SnpGenotypeData extends ComparableItem
 {
     public final String Chromosome;
     public final int Position;
@@ -25,13 +16,10 @@ public class SnpGenotypeData implements ComparableItem
     public final String Alt;
     public final String Genotype;
     public final String VcfSampleId;
-    public final BasePosition mComparisonPosition;
 
-    protected static final String FLD_GENOTYPE = "Genotype";
-    protected static final String FLD_VCF_SAMPLE_ID = "VcfSampleId";
-
-    public SnpGenotypeData(final String chromosome, final int position, final String ref, final String alt, final String genotype,
-            final String vcfSampleId, final BasePosition comparisonPosition)
+    public SnpGenotypeData(
+            final String chromosome, final int position, final String ref, final String alt, final String genotype,
+            final String vcfSampleId, final List<FieldInfo> fields)
     {
         Chromosome = chromosome;
         Position = position;
@@ -39,7 +27,10 @@ public class SnpGenotypeData implements ComparableItem
         Alt = alt;
         Genotype = genotype;
         VcfSampleId = vcfSampleId;
-        mComparisonPosition = comparisonPosition;
+
+        addStringValue(SnpGenotypeComparer.Fields.Alt.toString(), alt, fields);
+        addStringValue(SnpGenotypeComparer.Fields.Genotype.toString(), genotype, fields);
+        addStringValue(SnpGenotypeComparer.Fields.VcfSampleId.toString(), vcfSampleId, fields);
     }
 
     @Override
@@ -51,24 +42,7 @@ public class SnpGenotypeData implements ComparableItem
     @Override
     public String key()
     {
-        if(mComparisonPosition.Position != Position)
-        {
-            return String.format("%s:%d %s liftover(%s)", Chromosome, Position, Ref, mComparisonPosition);
-        }
-        else
-        {
-            return String.format("%s:%d %s", Chromosome, Position, Ref);
-        }
-    }
-
-    @Override
-    public List<String> displayValues()
-    {
-        List<String> values = Lists.newArrayList();
-        values.add(format("%s", Alt));
-        values.add(format("%s", Genotype));
-        values.add(format("%s", VcfSampleId));
-        return values;
+        return String.format("%s:%d %s", Chromosome, Position, Ref);
     }
 
     @Override
@@ -76,27 +50,12 @@ public class SnpGenotypeData implements ComparableItem
     {
         final SnpGenotypeData otherVar = (SnpGenotypeData) other;
 
-        if(!mComparisonPosition.Chromosome.equals(otherVar.Chromosome) || mComparisonPosition.Position != otherVar.Position)
+        if(!Chromosome.equals(otherVar.Chromosome) || Position != otherVar.Position)
             return false;
 
         if(!Ref.equals(otherVar.Ref))
             return false;
 
         return true;
-    }
-
-    @Override
-    public Mismatch findMismatch(
-            final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds, final boolean includeMatches)
-    {
-        final SnpGenotypeData otherData = (SnpGenotypeData) other;
-
-        final List<String> diffs = Lists.newArrayList();
-
-        checkDiff(diffs, FLD_ALT, Alt, otherData.Alt);
-        checkDiff(diffs, FLD_GENOTYPE, Genotype, otherData.Genotype);
-        checkDiff(diffs, FLD_VCF_SAMPLE_ID, VcfSampleId, otherData.VcfSampleId);
-
-        return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches);
     }
 }

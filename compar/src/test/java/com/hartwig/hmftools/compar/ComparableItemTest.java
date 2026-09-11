@@ -2,7 +2,6 @@ package com.hartwig.hmftools.compar;
 
 import static com.hartwig.hmftools.compar.ComparTestUtil.assertDifferencesAreForFields;
 import static com.hartwig.hmftools.compar.ComparTestUtil.assertSingleFieldMismatch;
-import static com.hartwig.hmftools.compar.ComparTestUtil.assertValueDifferencesAsExpected;
 import static com.hartwig.hmftools.compar.ComparTestUtil.combine;
 import static com.hartwig.hmftools.compar.ComparTestUtil.union;
 
@@ -12,15 +11,18 @@ import static org.junit.Assert.assertTrue;
 
 import static junit.framework.TestCase.assertEquals;
 
+import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.compar.common.DiffThresholds;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.MismatchType;
+import com.hartwig.hmftools.compar.common.field.FieldInfo;
 
 import org.junit.Test;
 
@@ -36,6 +38,7 @@ public abstract class ComparableItemTest<I extends ComparableItem, C extends Ite
 
     // Map from name of field compared in "findMismatch" to initializer that changes that field from the default value.
     // This is meant for causing "VALUE" differences in testing.
+    // Fields affecting reportability should not be included here, but instead in reportabilityFieldToFalseReportabilityInitializer
     protected Map<String, Consumer<B>> fieldToAlternateValueInitializer;
 
     // Map from name of field or fields used in "matches" method to initializer that changes that field from the default value.
@@ -65,14 +68,28 @@ public abstract class ComparableItemTest<I extends ComparableItem, C extends Ite
     @Test
     public void fullyDifferent()
     {
-        assertValueDifferencesAsExpected(
-                builder.create(),
-                builder.createWithAlternateDefaults(),
-                MatchLevel.DETAILED,
-                createDefaultThresholds(),
-                getAllValueFieldNames(),
-                nameToAlternateIndexInitializer.isEmpty()
-        );
+        final ComparableItem refVictim = builder.create();
+        final ComparableItem newVictim = builder.createWithAlternateDefaults();
+
+        MatchLevel matchLevel = MatchLevel.DETAILED;
+        final FieldCheckCache fieldConfig = createDefaultThresholds(matchLevel);
+        final Set<String> expectedFieldNames = getAllValueFieldNames();
+        if(nameToAlternateIndexInitializer.isEmpty())
+        {
+            assertTrue("Test ref.matches(new) is True", refVictim.matches(newVictim));
+        }
+        else
+        {
+            assertFalse("Test ref.matches(new) is False", refVictim.matches(newVictim));
+        }
+
+        Mismatch mismatch = refVictim.findMismatch(comparer, newVictim, matchLevel, false, false);
+
+        assertEquals(MismatchType.VALUE, mismatch.Type);
+        assertEquals(refVictim, mismatch.OldItem);
+        assertEquals(newVictim, mismatch.NewItem);
+
+        assertDifferencesAreForFields(expectedFieldNames, mismatch.DiffValues);
     }
 
     @Test
@@ -107,26 +124,28 @@ public abstract class ComparableItemTest<I extends ComparableItem, C extends Ite
             String field = entry.getKey();
             I reportableVictim = builder.create();
             I nonReportableVictim = builder.create(entry.getValue());
-            DiffThresholds diffThresholds = createDefaultThresholds();
 
-            assertSingleFieldMismatch(field, reportableVictim, nonReportableVictim, MatchLevel.DETAILED, diffThresholds, MismatchType.VALUE);
-            assertSingleFieldMismatch(field, nonReportableVictim, reportableVictim, MatchLevel.DETAILED, diffThresholds, MismatchType.VALUE);
+            FieldCheckCache detailedFieldConfig = createDefaultThresholds(MatchLevel.DETAILED);
+            assertSingleFieldMismatch(comparer, field, reportableVictim, nonReportableVictim, MatchLevel.DETAILED, MismatchType.VALUE);
+            assertSingleFieldMismatch(comparer, field, nonReportableVictim, reportableVictim, MatchLevel.DETAILED, MismatchType.VALUE);
 
-            assertSingleFieldMismatch(field, reportableVictim, nonReportableVictim, MatchLevel.REPORTABLE, diffThresholds, MismatchType.OLD_ONLY);
-            assertSingleFieldMismatch(field, nonReportableVictim, reportableVictim, MatchLevel.REPORTABLE, diffThresholds, MismatchType.NEW_ONLY);
+            FieldCheckCache reportableFieldConfig = createDefaultThresholds(MatchLevel.REPORTABLE);
+            assertSingleFieldMismatch(comparer, field, reportableVictim, nonReportableVictim, MatchLevel.REPORTABLE, MismatchType.OLD_ONLY);
+            assertSingleFieldMismatch(comparer, field, nonReportableVictim, reportableVictim, MatchLevel.REPORTABLE, MismatchType.NEW_ONLY);
         }
     }
 
     @Test
     public void onlyMatchesIndex()
     {
-        DiffThresholds diffThresholds = createDefaultThresholds();
-
         I refVictim = builder.create();
         I newVictim = builder.create(combine(getAllAlternateValueInitializers()));
 
         assertTrue(refVictim.matches(newVictim));
-        Mismatch mismatch = refVictim.findMismatch(newVictim, MatchLevel.DETAILED, diffThresholds, false);
+
+        MatchLevel matchLevel = MatchLevel.DETAILED;
+        FieldCheckCache fieldConfig = createDefaultThresholds(matchLevel);
+        Mismatch mismatch = refVictim.findMismatch(comparer, newVictim, matchLevel, false);
 
         assertEquals(MismatchType.VALUE, mismatch.Type);
         assertEquals(refVictim, mismatch.OldItem);
@@ -141,9 +160,15 @@ public abstract class ComparableItemTest<I extends ComparableItem, C extends Ite
     }
 
     @Test
-    public void amountOfDisplayValuesMatches()
+    public void displayFieldNamesAreValidInDetailedMode()
     {
-        assertEquals(comparer.comparedFieldNames().size(), builder.create().displayValues().size());
+        assertDisplayFieldNamesAreValid(MatchLevel.DETAILED);
+    }
+
+    @Test
+    public void displayFieldNamesAreValidInReportableMode()
+    {
+        assertDisplayFieldNamesAreValid(MatchLevel.REPORTABLE);
     }
 
     @Test
@@ -162,11 +187,12 @@ public abstract class ComparableItemTest<I extends ComparableItem, C extends Ite
             I refVictim = builder.create(initializer);
             I newVictim = builder.createWithAlternateDefaults(initializer);
 
-            DiffThresholds diffThresholds = createDefaultThresholds();
+            MatchLevel matchLevel = MatchLevel.DETAILED;
+            FieldCheckCache fieldConfig = createDefaultThresholds(matchLevel);
             assertNull("Test non-PASS due to " + name + " is ignored when not including matches",
-                    refVictim.findMismatch(newVictim, MatchLevel.DETAILED, diffThresholds, false));
+                    refVictim.findMismatch(comparer, newVictim, matchLevel, false));
             assertNull("Test non-PASS due to " + name + " is ignored when including matches",
-                    refVictim.findMismatch(newVictim, MatchLevel.DETAILED, diffThresholds, true));
+                    refVictim.findMismatch(comparer, newVictim, matchLevel, true));
         }
     }
 
@@ -180,31 +206,51 @@ public abstract class ComparableItemTest<I extends ComparableItem, C extends Ite
             I passVictim = builder.create();
             I nonPassVictim = builder.createWithAlternateDefaults(initializer);
 
-            DiffThresholds diffThresholds = createDefaultThresholds();
+            MatchLevel matchLevel = MatchLevel.DETAILED;
+            FieldCheckCache fieldConfig = createDefaultThresholds(matchLevel);
             assertEquals("Test non-PASS due to " + name + " can cause REF_ONLY when not including matches",
-                    MismatchType.OLD_ONLY, passVictim.findMismatch(nonPassVictim, MatchLevel.DETAILED, diffThresholds, false).Type);
+                    MismatchType.OLD_ONLY, passVictim.findMismatch(comparer, nonPassVictim, matchLevel, false).Type);
             assertEquals("Test non-PASS due to " + name + " can cause REF_ONLY when including matches",
-                    MismatchType.OLD_ONLY, passVictim.findMismatch(nonPassVictim, MatchLevel.DETAILED, diffThresholds, true).Type);
+                    MismatchType.OLD_ONLY, passVictim.findMismatch(comparer, nonPassVictim, matchLevel, true).Type);
 
             assertEquals("Test non-PASS due to " + name + " can cause NEW_ONLY when not including matches",
-                    MismatchType.NEW_ONLY, nonPassVictim.findMismatch(passVictim, MatchLevel.DETAILED, diffThresholds, false).Type);
+                    MismatchType.NEW_ONLY, nonPassVictim.findMismatch(comparer, passVictim, matchLevel, false).Type);
             assertEquals("Test non-PASS due to " + name + " can cause NEW_ONLY when including matches",
-                    MismatchType.NEW_ONLY, nonPassVictim.findMismatch(passVictim, MatchLevel.DETAILED, diffThresholds, true).Type);
+                    MismatchType.NEW_ONLY, nonPassVictim.findMismatch(comparer, passVictim, matchLevel, true).Type);
         }
     }
 
     private void assertFullyMatchesSelf(final MatchLevel matchLevel)
     {
-        DiffThresholds diffThresholds = createDefaultThresholds();
+        FieldCheckCache fieldConfig = createDefaultThresholds(matchLevel);
 
         I victim = builder.create();
 
         assertTrue(victim.matches(victim));
 
-        assertNull(victim.findMismatch(victim, matchLevel, diffThresholds, false));
+        assertNull(victim.findMismatch(comparer, victim, matchLevel, false));
 
         Mismatch expectedMatch = new Mismatch(victim, victim, MismatchType.FULL_MATCH, Collections.emptyList());
-        assertEquals(expectedMatch, victim.findMismatch(victim, matchLevel, diffThresholds, true));
+        assertEquals(expectedMatch, victim.findMismatch(comparer, victim, matchLevel, true));
+    }
+
+    private void assertDisplayFieldNamesAreValid(final MatchLevel matchLevel)
+    {
+        List<FieldInfo> fields = comparer.fieldsList();
+
+        Collection<String> fieldNames;
+
+        if(!fields.isEmpty())
+            fieldNames = fields.stream().map(x -> x.Name).collect(Collectors.toSet());
+        else
+            fieldNames = comparer.displayFieldNames();
+
+        for(String displayFieldName : comparer.displayFieldNames())
+        {
+            assertTrue(
+                    "displayFieldNames() contains \"" + displayFieldName + "\" which is not returned by fields(" + matchLevel + ")",
+                    fieldNames.contains(displayFieldName));
+        }
     }
 
     private void assertSingleFieldMismatchesAreRecognized(final MatchLevel matchLevel)
@@ -214,17 +260,16 @@ public abstract class ComparableItemTest<I extends ComparableItem, C extends Ite
             String field = entry.getKey();
             I refVictim = builder.create();
             I newVictim = builder.create(entry.getValue());
-            DiffThresholds diffThresholds = createDefaultThresholds();
+            FieldCheckCache fieldConfig = createDefaultThresholds(matchLevel);
 
-            assertSingleFieldMismatch(field, refVictim, newVictim, matchLevel, diffThresholds, MismatchType.VALUE);
+            assertSingleFieldMismatch(comparer, field, refVictim, newVictim, matchLevel, MismatchType.VALUE);
         }
     }
 
-    protected DiffThresholds createDefaultThresholds()
+    protected FieldCheckCache createDefaultThresholds(MatchLevel matchLevel)
     {
-        DiffThresholds diffThresholds = new DiffThresholds();
-        comparer.registerThresholds(diffThresholds);
-        return diffThresholds;
+        FieldCheckCache fieldConfig = new FieldCheckCache();
+        return fieldConfig;
     }
 
     private Set<String> getAllValueFieldNames()

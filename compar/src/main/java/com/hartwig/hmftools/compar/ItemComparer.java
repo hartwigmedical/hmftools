@@ -1,28 +1,64 @@
 package com.hartwig.hmftools.compar;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.compar.common.CategoryType;
-import com.hartwig.hmftools.compar.common.DiffThresholds;
-import com.hartwig.hmftools.compar.common.FileSources;
+import com.hartwig.hmftools.compar.common.CommonUtils;
+import com.hartwig.hmftools.compar.common.MatchLevel;
+import com.hartwig.hmftools.compar.common.PipelineSourcePaths;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.SourceType;
-import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
+import com.hartwig.hmftools.compar.common.TruthsetValue;
+import com.hartwig.hmftools.compar.common.field.FieldInfo;
 
-public interface ItemComparer
+public abstract class ItemComparer
 {
-    CategoryType category();
+    protected final ComparConfig mConfig;
+    protected final List<FieldInfo> mFields;
 
-    boolean processSample(final String sampleId, final List<Mismatch> mismatches);
+    public ItemComparer(final ComparConfig config)
+    {
+        mConfig = config;
+        mFields = Lists.newArrayList();
+    }
 
-    List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess, final SourceType sourceType);
+    public abstract CategoryType category();
 
-    List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final FileSources fileSources);
+    public boolean processSample(final String sampleId, final List<Mismatch> mismatches)
+    {
+        return CommonUtils.processSample(this, mConfig, sampleId, mismatches);
+    }
 
-    List<String> comparedFieldNames();
+    public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final PipelineSourcePaths fileSources)
+    {
+        return Collections.emptyList();
+    }
 
-    default void registerThresholds(final DiffThresholds thresholds) {}
+    public List<ComparableItem> loadFromTruthset(final Map<String,List<TruthsetValue>> valuesByKey)
+    {
+        return Collections.emptyList();
+    }
 
-    default boolean hasReportable() { return true; }
+    public void compareItems(
+            final List<Mismatch> mismatches, final MatchLevel matchLevel, final boolean includeMatches,
+            final boolean includesTruthset, final List<ComparableItem> oldItems, final List<ComparableItem> newItems)
+    {
+        CommonUtils.compareItems(this, mismatches, matchLevel, includeMatches, includesTruthset,oldItems, newItems);
+    }
+
+    public List<FieldInfo> fieldsList() { return mFields; }
+
+    public List<String> displayFieldNames()
+    {
+        return mFields.stream().map(x -> x.Name).collect(Collectors.toList());
+    }
+
+    public boolean hasReportable() { return true; }
+
+    public ComparConfig config() { return mConfig; }
 
 }

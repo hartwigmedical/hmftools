@@ -2,74 +2,69 @@ package com.hartwig.hmftools.compar.purple;
 
 import static com.hartwig.hmftools.compar.common.CategoryType.COPY_NUMBER;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
-import static com.hartwig.hmftools.compar.common.CommonUtils.determineComparisonGenomePosition;
-import static com.hartwig.hmftools.compar.purple.CopyNumberData.FLD_COPY_NUMBER;
-import static com.hartwig.hmftools.compar.purple.CopyNumberData.FLD_MAJOR_ALLELE_CN;
-import static com.hartwig.hmftools.compar.purple.CopyNumberData.FLD_METHOD;
+import static com.hartwig.hmftools.compar.FieldCheckCache.getOrMakeFieldCheck;
+import static com.hartwig.hmftools.compar.common.ComparConstants.COPY_NUMBER_ABS_THRESHOLD;
+import static com.hartwig.hmftools.compar.common.ComparConstants.COPY_NUMBER_PERC_THRESHOLD;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumberFile;
-import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.compar.common.CategoryType;
-import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.common.DiffThresholds;
-import com.hartwig.hmftools.compar.common.FileSources;
+import com.hartwig.hmftools.compar.common.PipelineSourcePaths;
 import com.hartwig.hmftools.compar.ItemComparer;
-import com.hartwig.hmftools.compar.common.Mismatch;
-import com.hartwig.hmftools.compar.common.SourceType;
-import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
+import com.hartwig.hmftools.compar.common.field.FieldCheck;
+import com.hartwig.hmftools.compar.common.field.FieldInfo;
 
-public class CopyNumberComparer implements ItemComparer
+public class CopyNumberComparer extends ItemComparer
 {
-    private final ComparConfig mConfig;
-
-    public CopyNumberComparer(final ComparConfig config)
+    protected enum Fields
     {
-        mConfig = config;
+        CopyNumber,
+        MajorAlleleCopyNumber,
+        Method;
+    }
+
+    public CopyNumberComparer(final ComparConfig config, final Map<String, FieldCheck> fieldCheckMap)
+    {
+        super(config);
+
+        mFields.add(new FieldInfo(
+                Fields.CopyNumber.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.CopyNumber.toString(), COPY_NUMBER_ABS_THRESHOLD, COPY_NUMBER_PERC_THRESHOLD),
+                "%.2f"));
+
+        mFields.add(new FieldInfo(
+                Fields.MajorAlleleCopyNumber.toString(),
+                getOrMakeFieldCheck(
+                        fieldCheckMap, Fields.MajorAlleleCopyNumber.toString(), COPY_NUMBER_ABS_THRESHOLD, COPY_NUMBER_PERC_THRESHOLD),
+                "%.2f"));
+
+        mFields.add(new FieldInfo(
+                Fields.Method.toString(), getOrMakeFieldCheck(fieldCheckMap, Fields.Method.toString()), null));
     }
 
     @Override
     public CategoryType category() { return COPY_NUMBER; }
 
     @Override
-    public void registerThresholds(final DiffThresholds thresholds)
-    {
-        thresholds.addFieldThreshold(FLD_COPY_NUMBER, 0.5, 0.15);
-        thresholds.addFieldThreshold(FLD_MAJOR_ALLELE_CN, 0.5, 0.15);
-    }
-
-    @Override
     public boolean hasReportable() { return false; }
 
     @Override
-    public boolean processSample(final String sampleId, final List<Mismatch> mismatches)
+    public List<String> displayFieldNames()
     {
-        return CommonUtils.processSample(this, mConfig, sampleId, mismatches);
+        return Arrays.stream(Fields.values()).map(x -> x.toString()).collect(Collectors.toList());
     }
 
     @Override
-    public List<String> comparedFieldNames()
-    {
-        return Lists.newArrayList(FLD_COPY_NUMBER, FLD_MAJOR_ALLELE_CN, FLD_METHOD);
-    }
-
-    @Override
-    public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess, final SourceType sourceType)
-    {
-        final List<PurpleCopyNumber> copyNumbers = dbAccess.readCopynumbers(sampleId);
-        List<ComparableItem> items = Lists.newArrayList();
-        copyNumbers.forEach(x -> items.add(createCopyNumberData(x, sourceType)));
-        return items;
-    }
-
-    @Override
-    public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final FileSources fileSources)
+    public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final PipelineSourcePaths fileSources)
     {
         final List<ComparableItem> comparableItems = Lists.newArrayList();
 
@@ -78,7 +73,7 @@ public class CopyNumberComparer implements ItemComparer
             List<PurpleCopyNumber> copyNumbers = PurpleCopyNumberFile.read(PurpleCopyNumberFile.generateFilenameForReading(
                     fileSources.Purple, sampleId));
 
-            copyNumbers.forEach(x -> comparableItems.add(createCopyNumberData(x, fileSources.Source)));
+            copyNumbers.forEach(x -> comparableItems.add(createCopyNumberData(x)));
         }
         catch(IOException e)
         {
@@ -89,18 +84,11 @@ public class CopyNumberComparer implements ItemComparer
         return comparableItems;
     }
 
-    private CopyNumberData createCopyNumberData(final PurpleCopyNumber copyNumber, final SourceType sourceType)
+    private CopyNumberData createCopyNumberData(final PurpleCopyNumber copyNumber)
     {
-        BasePosition comparisonPositionStart = determineComparisonGenomePosition(
-                copyNumber.chromosome(), copyNumber.start(), sourceType, mConfig.RequiresLiftover, mConfig.LiftoverCache);
-
-        BasePosition comparisonPositionEnd = determineComparisonGenomePosition(
-                copyNumber.chromosome(), copyNumber.end(), sourceType, mConfig.RequiresLiftover, mConfig.LiftoverCache);
-
         return new CopyNumberData(
                 copyNumber.chromosome(), copyNumber.start(), copyNumber.end(),
                 copyNumber.averageTumorCopyNumber(), copyNumber.majorAlleleCopyNumber(),
-                copyNumber.method(), comparisonPositionStart, comparisonPositionEnd
-        );
+                copyNumber.method(), mFields);
     }
 }

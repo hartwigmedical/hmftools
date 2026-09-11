@@ -1,102 +1,68 @@
 package com.hartwig.hmftools.compar.mutation;
 
-import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS_FILTER;
 import static com.hartwig.hmftools.compar.common.CategoryType.GERMLINE_VARIANT;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
-import static com.hartwig.hmftools.compar.common.CommonUtils.determineComparisonGenomePosition;
-import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.GERMLINEVARIANT;
+import static com.hartwig.hmftools.compar.mutation.VariantData.addComparerFields;
 
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.PurpleCommon;
-import com.hartwig.hmftools.common.region.BasePosition;
-import com.hartwig.hmftools.common.variant.SmallVariant;
-import com.hartwig.hmftools.common.variant.SmallVariantFactory;
+import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.compar.common.CategoryType;
-import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.common.DiffThresholds;
-import com.hartwig.hmftools.compar.common.FileSources;
+import com.hartwig.hmftools.compar.common.PipelineSourcePaths;
 import com.hartwig.hmftools.compar.ItemComparer;
-import com.hartwig.hmftools.compar.common.Mismatch;
-import com.hartwig.hmftools.compar.common.SourceType;
-import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
-import com.hartwig.hmftools.patientdb.dao.GermlineVariantDAO;
+import com.hartwig.hmftools.compar.common.field.FieldCheck;
 
-import org.jooq.Record;
-import org.jooq.Result;
+import htsjdk.variant.variantcontext.VariantContext;
 
-public class GermlineVariantComparer implements ItemComparer
+public class GermlineVariantComparer extends ItemComparer
 {
-    private final ComparConfig mConfig;
-
-    public GermlineVariantComparer(final ComparConfig config)
+    public GermlineVariantComparer(final ComparConfig config, final Map<String,FieldCheck> fieldCheckMap)
     {
-        mConfig = config;
+        super(config);
+
+        addComparerFields(mFields, fieldCheckMap);
     }
 
     @Override
     public CategoryType category() { return GERMLINE_VARIANT; }
 
     @Override
-    public boolean processSample(final String sampleId, final List<Mismatch> mismatches)
+    public List<String> displayFieldNames()
     {
-        return CommonUtils.processSample(this, mConfig, sampleId, mismatches);
+        return VariantData.sharedFieldNames();
     }
 
     @Override
-    public void registerThresholds(final DiffThresholds thresholds)
-    {
-        VariantCommon.registerThresholds(thresholds);
-    }
-
-    @Override
-    public List<String> comparedFieldNames()
-    {
-        return VariantCommon.comparedFieldNames();
-    }
-
-    @Override
-    public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess, final SourceType sourceType)
-    {
-        Result<Record> result = dbAccess.context().select()
-                .from(GERMLINEVARIANT)
-                .where(GERMLINEVARIANT.FILTER.eq(PASS_FILTER))
-                .and(GERMLINEVARIANT.SAMPLEID.eq(sampleId))
-                .fetch();
-
-        final List<ComparableItem> variants = Lists.newArrayList();
-        for (Record record : result)
-        {
-            SmallVariant variant = GermlineVariantDAO.buildFromRecord(record);
-            BasePosition comparisonPosition = determineComparisonGenomePosition(
-                    variant.chromosome(), variant.position(), sourceType, mConfig.RequiresLiftover, mConfig.LiftoverCache);
-            variants.add(new GermlineVariantData(variant, comparisonPosition));
-        }
-
-        return variants;
-    }
-
-    @Override
-    public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final FileSources fileSources)
+    public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final PipelineSourcePaths fileSources)
     {
         final List<ComparableItem> comparableItems = Lists.newArrayList();
 
         String vcfFile = PurpleCommon.purpleGermlineVcfFile(fileSources.Purple, sampleId);
 
+        VcfFileReader vcfFileReader = new VcfFileReader(vcfFile);
+
+        if(!vcfFileReader.fileValid())
+        {
+            CMP_LOGGER.warn("failed to read germline VCF file({})", vcfFile);
+            return null;
+        }
+
         try
         {
-            List<SmallVariant> variants = SmallVariantFactory.loadVariants(sampleId, vcfFile);
-            for(SmallVariant variant : variants)
+            for(VariantContext variantContext : vcfFileReader.iterator())
             {
-                if(!variant.isFiltered())
-                {
-                    BasePosition comparisonPosition = determineComparisonGenomePosition(
-                            variant.chromosome(), variant.position(), fileSources.Source, mConfig.RequiresLiftover, mConfig.LiftoverCache);
-                    comparableItems.add(new GermlineVariantData(variant, comparisonPosition));
-                }
+                GermlineVariantData variant = GermlineVariantData.fromContext(
+                        variantContext, sampleId, false, fileSources.Source, mConfig, mFields);
+
+                if(mConfig.RestrictToDrivers && !mConfig.DriverGenes.contains(variant.Gene))
+                    continue;
+
+                comparableItems.add(variant);
             }
 
             CMP_LOGGER.debug("sample({}) loaded {} {} germline variants", sampleId, fileSources.Source, comparableItems.size());

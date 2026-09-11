@@ -1,11 +1,5 @@
 package com.hartwig.hmftools.compar.chord;
 
-import static com.hartwig.hmftools.compar.chord.ChordComparData.FLD_BRCA1;
-import static com.hartwig.hmftools.compar.chord.ChordComparData.FLD_BRCA2;
-import static com.hartwig.hmftools.compar.chord.ChordComparData.FLD_SCORE;
-import static com.hartwig.hmftools.compar.chord.ChordComparData.FLD_STATUS;
-import static com.hartwig.hmftools.compar.chord.ChordComparData.FLD_TYPE;
-
 import java.util.Collections;
 import java.util.Map;
 
@@ -19,15 +13,15 @@ public class ChordComparDataTest extends ComparableItemTest<ChordComparData, Cho
     @Before
     public void setUp()
     {
-        comparer = new ChordComparer(new ComparConfig());
+        comparer = new ChordComparer(new ComparConfig(), Collections.emptyMap());
         builder = TestChordComparDataBuilder.BUILDER;
         ChordComparData alternateValueSource = builder.createWithAlternateDefaults();
         fieldToAlternateValueInitializer = Map.of(
-                FLD_BRCA1, b -> b.brca1 = alternateValueSource.Chord.BRCA1Value(),
-                FLD_BRCA2, b -> b.brca2 = alternateValueSource.Chord.BRCA2Value(),
-                FLD_STATUS, b -> b.status = alternateValueSource.Chord.hrStatus(),
-                FLD_TYPE, b -> b.type = alternateValueSource.Chord.hrdType(),
-                FLD_SCORE, b -> b.score = alternateValueSource.Chord.hrdValue()
+                ChordComparer.Fields.BRCA1.toString(), b -> b.brca1 = alternateValueSource.Chord.BRCA1Value(),
+                ChordComparer.Fields.BRCA2.toString(), b -> b.brca2 = alternateValueSource.Chord.BRCA2Value(),
+                ChordComparer.Fields.Status.toString(), b -> b.status = alternateValueSource.Chord.hrStatus(),
+                ChordComparer.Fields.Type.toString(), b -> b.type = alternateValueSource.Chord.hrdType(),
+                ChordComparer.Fields.Score.toString(), b -> b.score = alternateValueSource.Chord.hrdValue()
         );
         nameToAlternateIndexInitializer = Collections.emptyMap();
         reportabilityFieldToFalseReportabilityInitializer = Collections.emptyMap();

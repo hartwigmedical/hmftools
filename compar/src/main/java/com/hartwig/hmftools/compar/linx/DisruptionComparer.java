@@ -3,14 +3,13 @@ package com.hartwig.hmftools.compar.linx;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.sv.StructuralVariantData.convertSvData;
-import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.compar.common.CategoryType.DISRUPTION;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
-import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
 import static com.hartwig.hmftools.compar.common.CommonUtils.determineComparisonGenomePosition;
-import static com.hartwig.hmftools.compar.linx.DisruptionData.FLD_BREAKEND_INFO;
+import static com.hartwig.hmftools.compar.FieldCheckCache.getOrMakeFieldCheck;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -30,31 +29,40 @@ import com.hartwig.hmftools.common.sv.StructuralVariantFileLoader;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.variant.filter.AlwaysPassFilter;
 import com.hartwig.hmftools.compar.common.CategoryType;
-import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.common.DiffThresholds;
-import com.hartwig.hmftools.compar.common.FileSources;
+import com.hartwig.hmftools.compar.common.PipelineSourcePaths;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.MatchLevel;
-import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.SourceType;
-import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
+import com.hartwig.hmftools.compar.common.field.FieldCheck;
+import com.hartwig.hmftools.compar.common.field.FieldInfo;
 
 import htsjdk.tribble.TribbleException;
 
-public class DisruptionComparer implements ItemComparer
+public class DisruptionComparer extends ItemComparer
 {
-    private final ComparConfig mConfig;
+    protected enum Fields
+    {
+        Reported,
+        BreakendInfo;
+    }
 
     private final Map<SourceType,List<LinxBreakend>> mBreakends;
     private final Map<SourceType,List<StructuralVariantData>> mSvDataList;
 
-    public DisruptionComparer(final ComparConfig config)
+    public DisruptionComparer(final ComparConfig config, final Map<String, FieldCheck> fieldCheckMap)
     {
-        mConfig = config;
+        super(config);
+
         mBreakends = Maps.newHashMap();
         mSvDataList = Maps.newHashMap();
+
+        mFields.add(new FieldInfo(
+                Fields.Reported.toString(), getOrMakeFieldCheck(fieldCheckMap, Fields.Reported.toString()), null));
+
+        mFields.add(new FieldInfo(
+                Fields.BreakendInfo.toString(), getOrMakeFieldCheck(fieldCheckMap, Fields.BreakendInfo.toString()), null));
     }
 
     public Map<SourceType,List<LinxBreakend>> breakends() { return mBreakends; }
@@ -64,34 +72,13 @@ public class DisruptionComparer implements ItemComparer
     public CategoryType category() { return DISRUPTION; }
 
     @Override
-    public void registerThresholds(final DiffThresholds thresholds) {}
-
-    @Override
-    public boolean processSample(final String sampleId, final List<Mismatch> mismatches)
+    public List<String> displayFieldNames()
     {
-        return CommonUtils.processSample(this, mConfig, sampleId, mismatches);
+        return Arrays.stream(Fields.values()).map(x -> x.toString()).collect(Collectors.toList());
     }
 
     @Override
-    public List<String> comparedFieldNames()
-    {
-        return Lists.newArrayList(FLD_REPORTED, FLD_BREAKEND_INFO);
-    }
-
-    @Override
-    public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess, final SourceType sourceType)
-    {
-        List<StructuralVariantData> svDataList = Lists.newArrayList(dbAccess.readStructuralVariantData(sampleId));
-        List<LinxBreakend> breakends = Lists.newArrayList(dbAccess.readBreakends(sampleId));
-
-        mSvDataList.put(sourceType, svDataList);
-        mBreakends.put(sourceType, breakends);
-
-        return buildBreakends(sourceType);
-    }
-
-    @Override
-    public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final FileSources fileSources)
+    public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final PipelineSourcePaths fileSources)
     {
         List<StructuralVariantData> svDataList = Lists.newArrayList();
         List<LinxBreakend> breakends = Lists.newArrayList();
@@ -134,7 +121,7 @@ public class DisruptionComparer implements ItemComparer
 
         Map<String,List<BreakendData>> geneBreakendMap = Maps.newHashMap();
 
-        MatchLevel matchLevel = mConfig.Categories.getOrDefault(DISRUPTION, MatchLevel.REPORTABLE);
+        MatchLevel matchLevel = mConfig.MatchingLevel;
 
         List<StructuralVariantData> svDataList = mSvDataList.get(sourceType);
         List<LinxBreakend> breakends = mBreakends.get(sourceType);
@@ -163,10 +150,15 @@ public class DisruptionComparer implements ItemComparer
                 String chromosome = usesStart ? var.startChromosome() : var.endChromosome();
                 int position = usesStart ? var.startPosition() : var.endPosition();
 
-                BasePosition comparisonPosition = determineComparisonGenomePosition(
-                        chromosome, position, sourceType, mConfig.RequiresLiftover, mConfig.LiftoverCache);
+                BasePosition liftoverPosition = null;
 
-                BreakendData breakendData = buildBreakendData(breakend, var, comparisonPosition);
+                if(mConfig.RequiresLiftover && sourceType == SourceType.OLD)
+                {
+                    liftoverPosition = determineComparisonGenomePosition(
+                            chromosome, position, sourceType, mConfig.RequiresLiftover, mConfig.LiftoverCache);
+                }
+
+                BreakendData breakendData = buildBreakendData(breakend, var, liftoverPosition);
 
                 geneBreakends.add(breakendData);
             }
@@ -177,7 +169,7 @@ public class DisruptionComparer implements ItemComparer
             String geneName = entry.getKey();
             List<BreakendData> geneBreakends = entry.getValue();
 
-            DisruptionData disruptionData = new DisruptionData(DISRUPTION, geneName, geneBreakends);
+            DisruptionData disruptionData = new DisruptionData(DISRUPTION, geneName, geneBreakends, mFields);
             items.add(disruptionData);
         }
 
@@ -185,7 +177,7 @@ public class DisruptionComparer implements ItemComparer
     }
 
     protected static BreakendData buildBreakendData(
-            final LinxBreakend breakend, final StructuralVariantData var, @Nullable final BasePosition comparisonPosition)
+            final LinxBreakend breakend, final StructuralVariantData var, @Nullable final BasePosition liftoverPosition)
     {
         boolean usesStart = breakend.isStart();
 
@@ -193,8 +185,19 @@ public class DisruptionComparer implements ItemComparer
                 new int[] { var.startIntervalOffsetStart(), var.startIntervalOffsetEnd() } :
                 new int[] { var.endIntervalOffsetStart(), var.endIntervalOffsetEnd() };
 
-        String chromosome = usesStart ? var.startChromosome() : var.endChromosome();
-        int position = usesStart ? var.startPosition() : var.endPosition();
+        String chromosome;
+        int position;
+
+        if(liftoverPosition != null)
+        {
+            chromosome = liftoverPosition.Chromosome;
+            position = liftoverPosition.Position;
+        }
+        else
+        {
+            chromosome = usesStart ? var.startChromosome() : var.endChromosome();
+            position = usesStart ? var.startPosition() : var.endPosition();
+        }
 
         int depthStart = var.startTumorReferenceFragmentCount() + var.startNormalReferenceFragmentCount();
         int fragsStart = var.startTumorReferenceFragmentCount();
@@ -205,8 +208,6 @@ public class DisruptionComparer implements ItemComparer
         return new BreakendData(
             breakend, usesStart ? var.vcfIdStart() : var.vcfIdEnd(), var.type(), chromosome, position,
             usesStart ? var.startOrientation() : var.endOrientation(), homologyOffsets,
-            usesStart ? depthStart : depthEnd, usesStart ? fragsStart : fragsEnd, qual,
-                comparisonPosition != null ? comparisonPosition.Chromosome : chromosome,
-                comparisonPosition != null ? comparisonPosition.Position : position);
+            usesStart ? depthStart : depthEnd, usesStart ? fragsStart : fragsEnd, qual);
     }
 }
