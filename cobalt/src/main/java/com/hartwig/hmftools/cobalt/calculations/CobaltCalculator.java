@@ -1,8 +1,11 @@
 package com.hartwig.hmftools.cobalt.calculations;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.cobalt.CobaltConfig.CB_LOGGER;
 import static com.hartwig.hmftools.cobalt.targeted.TargetRegions.mergeTumorRatios;
 
+import java.util.Collections;
 import java.util.List;
 
 import com.google.common.base.Preconditions;
@@ -35,7 +38,20 @@ public class CobaltCalculator
 
         ResultsConsolidator resultsConsolidator = null;
         ListMultimap<HumanChromosome,BamRatio> tumorResults = null;
+
+        List<MedianRatio> referenceMedianRatios = null;
+        GcMedianReadDepth refGcMedianReadDepth = null;
         ListMultimap<HumanChromosome, BamRatio> referenceResults = null;
+
+        boolean hasReference = config.hasReferenceId();
+
+        if(!hasReference)
+        {
+            // initialise with empty values
+            referenceMedianRatios = Collections.emptyList();
+            refGcMedianReadDepth = GcMedianReadDepth.NO_RESULTS;
+            referenceResults = ArrayListMultimap.create();
+        }
 
         if(config.targetedPanelMode())
         {
@@ -51,98 +67,104 @@ public class CobaltCalculator
             referenceResults = ArrayListMultimap.create();
 
             GcMedianReadDepth tumorGcMedianReadDepth = null;
-            List<MedianRatio> referenceMedianRatios = null;
-            GcMedianReadDepth refGcMedianReadDepth = null;
 
-            for(TargetRegions targetRegionScope : panelScopes)
+            for(int i = 0; i < panelScopes.size(); ++i)
             {
+                TargetRegions targetRegionScope = panelScopes.get(i);
                 TumorCalculation tumorCalc = new TumorCalculation(windowStatuses, targetRegionScope);
+
                 tumourDepthReadings.forEach(tumorCalc::addReading);
+
                 ListMultimap<HumanChromosome, BamRatio> panelRatios = tumorCalc.calculateRatios();
+
+                logReadDepthInfo(tumorCalc, format("tumor panel %d", i));
 
                 mergeTumorRatios(tumorResults, panelRatios);
 
                 if(resultsConsolidator == null)
-                {
-                    // only the first of these are used when multiple panels are handled
                     resultsConsolidator = tumorCalc.consolidator();
 
-                    // only the first panel's GC read info will be written to file
+                if(tumorGcMedianReadDepth == null)
+                {
+                    // only the first panel's GC read info will be cached and written to file
                     tumorGcMedianReadDepth = tumorCalc.medianReadDepths();
                 }
 
-                ReferenceCalculation referenceCalc = new ReferenceCalculation(
-                        windowStatuses, targetRegionScope, config.refGenomeVersion(), resultsConsolidator, !config.targetedPanelMode());
-
-                referenceDepthReadings.forEach(referenceCalc::addReading);
-                ListMultimap<HumanChromosome, BamRatio> refPanelRatios = referenceCalc.calculateRatios();
-
-                mergeTumorRatios(referenceResults, refPanelRatios);
-
-                GcMedianReadDepth refTargetRegionGcMedianReadDepth = referenceCalc.medianReadDepths();
-
-                if(referenceMedianRatios == null)
+                if(hasReference)
                 {
-                    // as per tumor, only take the initial target region values
-                    referenceMedianRatios = referenceCalc.medianRatios(referenceResults, config.refGenomeVersion());
-                    refGcMedianReadDepth = refTargetRegionGcMedianReadDepth;
-                }
+                    ReferenceCalculation referenceCalc = new ReferenceCalculation(
+                            windowStatuses, targetRegionScope, config.refGenomeVersion(), resultsConsolidator, !config.targetedPanelMode());
 
-                if(!referenceDepthReadings.isEmpty())
-                {
-                    CB_LOGGER.info("reference sample median({}), mean({})",
-                            formatReadDepth(refTargetRegionGcMedianReadDepth.medianReadDepth()), formatReadDepth(refTargetRegionGcMedianReadDepth.meanReadDepth()));
+                    referenceDepthReadings.forEach(referenceCalc::addReading);
+
+                    ListMultimap<HumanChromosome, BamRatio> refPanelRatios = referenceCalc.calculateRatios();
+
+                    logReadDepthInfo(referenceCalc, format("reference panel %d", i));
+
+                    mergeTumorRatios(referenceResults, refPanelRatios);
+
+                    GcMedianReadDepth refTargetRegionGcMedianReadDepth = referenceCalc.medianReadDepths();
+
+                    if(referenceMedianRatios == null)
+                    {
+                        // as per tumor, only take the initial target region values
+                        referenceMedianRatios = referenceCalc.medianRatios(referenceResults, config.refGenomeVersion());
+                        refGcMedianReadDepth = refTargetRegionGcMedianReadDepth;
+                    }
                 }
             }
 
             mTumorStats = tumorGcMedianReadDepth;
-            mMedianRatios = referenceMedianRatios;
-            mReferenceStatistics = refGcMedianReadDepth;
         }
         else
         {
             WholeGenome scope = new WholeGenome();
 
             TumorCalculation tumorCalc = new TumorCalculation(windowStatuses, scope);
+
             tumourDepthReadings.forEach(tumorCalc::addReading);
+
             tumorResults = tumorCalc.calculateRatios();
+
+            logReadDepthInfo(tumorCalc, "tumor");
+
             mTumorStats = tumorCalc.medianReadDepths();
 
             resultsConsolidator = tumorCalc.consolidator();
 
-            ReferenceCalculation referenceCalc = new ReferenceCalculation(
-                    windowStatuses, scope, config.refGenomeVersion(), resultsConsolidator, !config.targetedPanelMode());
-
-            referenceDepthReadings.forEach(referenceCalc::addReading);
-            referenceResults = referenceCalc.calculateRatios();
-            mMedianRatios = referenceCalc.medianRatios(referenceResults, config.refGenomeVersion());
-            mReferenceStatistics = referenceCalc.medianReadDepths();
-
-            if(!referenceDepthReadings.isEmpty())
+            if(hasReference)
             {
-                CB_LOGGER.info("reference sample median({}), mean({})",
-                        formatReadDepth(mReferenceStatistics.medianReadDepth()), formatReadDepth(mReferenceStatistics.meanReadDepth()));
+                ReferenceCalculation referenceCalc = new ReferenceCalculation(
+                        windowStatuses, scope, config.refGenomeVersion(), resultsConsolidator, !config.targetedPanelMode());
+
+                referenceDepthReadings.forEach(referenceCalc::addReading);
+
+                referenceResults = referenceCalc.calculateRatios();
+
+                logReadDepthInfo(referenceCalc, "reference");
+
+                referenceMedianRatios = referenceCalc.medianRatios(referenceResults, config.refGenomeVersion());
+                refGcMedianReadDepth = referenceCalc.medianReadDepths();
             }
         }
 
-        if(!tumourDepthReadings.isEmpty())
-        {
-            CB_LOGGER.info("tumor sample median({}), mean({}}",
-                    formatReadDepth(mTumorStats.medianReadDepth()), formatReadDepth(mTumorStats.meanReadDepth()));
-        }
+        mMedianRatios = referenceMedianRatios;
+        mReferenceStatistics = refGcMedianReadDepth;
 
         ResultsCollator collator = new ResultsCollator(config.refGenomeVersion());
         mRatios = collator.collateResults(tumorResults, referenceResults);
     }
 
     public ListMultimap<HumanChromosome, CobaltRatio> getCalculatedRatios() { return mRatios; }
-
     public List<MedianRatio> medianRatios() { return mMedianRatios; }
     public GcMedianReadDepth tumorMedianReadDepth() { return mTumorStats; }
     public GcMedianReadDepth referenceMedianReadDepth() { return mReferenceStatistics; }
 
-    private static String formatReadDepth(Double value)
+    private void logReadDepthInfo(final BamCalculation bamCalculation, final String id)
     {
-        return String.format("%.2f", value);
+        GcMedianReadDepth gcMedianReadDepth = bamCalculation.medianReadDepths();
+
+        CB_LOGGER.info(format("%s sample median(%.2f) mean(%.2f)",
+                id, gcMedianReadDepth.medianReadDepth(), gcMedianReadDepth.meanReadDepth()));
     }
 }

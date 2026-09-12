@@ -230,6 +230,7 @@ public class CobaltCalculatorTest extends CalculationsTestBase
     public void tumorAndReferenceWholeGenomeTest()
     {
         when(config.targetedPanelMode()).thenReturn(false);
+        when(config.hasReferenceId()).thenReturn(true);
 
         CobaltCalculator calculator = new CobaltCalculator(tumorDepths, referenceDepths, config);
         ListMultimap<HumanChromosome, CobaltRatio> cobaltRatios = calculator.getCalculatedRatios();
@@ -315,6 +316,7 @@ public class CobaltCalculatorTest extends CalculationsTestBase
     public void referenceOnlyWholeGenomeTest()
     {
         when(config.targetedPanelMode()).thenReturn(false);
+        when(config.hasReferenceId()).thenReturn(true);
 
         CobaltCalculator calculator = new CobaltCalculator(ArrayListMultimap.create(), referenceDepths, config);
         ListMultimap<HumanChromosome, CobaltRatio> cobaltRatios = calculator.getCalculatedRatios();
@@ -361,6 +363,7 @@ public class CobaltCalculatorTest extends CalculationsTestBase
     public void tumorAndReferenceTargetedTest()
     {
         when(config.targetedPanelMode()).thenReturn(true);
+        when(config.hasReferenceId()).thenReturn(true);
 
         TargetRegions scope = (TargetRegions)targetedScope;
         when(config.targetRegionScopes()).thenReturn(List.of(scope));
@@ -469,7 +472,7 @@ public class CobaltCalculatorTest extends CalculationsTestBase
         }
 
         List<MedianRatio> medianRatios = calculator.medianRatios();
-        assertEquals(24, medianRatios.size());
+        assertEquals(0, medianRatios.size());
     }
 
     private void checkRatio(CobaltRatio ratio, HumanChromosome chromosome, int position,

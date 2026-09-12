@@ -40,6 +40,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
@@ -365,4 +366,7 @@ public class CobaltConfig
         }
         return null;
     }
+
+    @VisibleForTesting
+    public boolean hasReferenceId() { return ReferenceId != null && !ReferenceId.isEmpty(); }
 }
