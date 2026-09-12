@@ -92,7 +92,7 @@ public class LowCoverageConsolidator implements ResultsConsolidator
                             bucketRatios = new DescriptiveStatistics();
                             bucketGCs = new DescriptiveStatistics();
                             bucketRatios.addValue(bamRatio.ratio());
-                            bucketGCs.addValue(bamRatio.gcContent());
+                            bucketGCs.addValue(bamRatio.GcContent);
                         }
                         else
                         {
@@ -105,7 +105,7 @@ public class LowCoverageConsolidator implements ResultsConsolidator
                     {
                         // Add the data for this ratio to the current bucket data.
                         bucketRatios.addValue(bamRatio.ratio());
-                        bucketGCs.addValue(bamRatio.gcContent());
+                        bucketGCs.addValue(bamRatio.GcContent);
                     }
                 }
             }

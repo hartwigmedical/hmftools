@@ -11,7 +11,7 @@ class TumorCalculation extends BamCalculation
 {
     private ResultsConsolidator mResultsConsolidator;
 
-    TumorCalculation(final WindowStatuses mGenomeFilter, CobaltScope scope)
+    TumorCalculation(final WindowStatuses mGenomeFilter, final CobaltScope scope)
     {
         super(mGenomeFilter, scope);
     }

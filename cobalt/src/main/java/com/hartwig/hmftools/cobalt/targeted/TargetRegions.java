@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.cobalt.targeted;
 
+import static com.hartwig.hmftools.cobalt.CobaltConfig.CB_LOGGER;
 import static com.hartwig.hmftools.common.genome.gc.GCProfileFactory.WINDOW_SIZE;
 
 import java.util.ArrayList;
@@ -9,7 +10,7 @@ import java.util.Map;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ListMultimap;
-import com.google.common.collect.Lists;
+import com.hartwig.hmftools.cobalt.calculations.BamRatio;
 import com.hartwig.hmftools.cobalt.normalisers.NoOpReadDepthStatisticsNormaliser;
 import com.hartwig.hmftools.cobalt.normalisers.ReadDepthStatisticsNormaliser;
 import com.hartwig.hmftools.cobalt.normalisers.ResultsNormaliser;
@@ -23,62 +24,45 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
 public class TargetRegions implements CobaltScope
 {
-    private class EnrichmentMap
-    {
-        private final Map<HumanChromosome, ArrayList<TargetRegionEnrichment>> mChrEnrichments;
-
-        public EnrichmentMap(
-                final ListMultimap<HumanChromosome, TargetRegionEnrichment> enrichments, final Map<Chromosome,Integer> chrLengths)
-        {
-            mChrEnrichments = new HashMap<>();
-
-            for(HumanChromosome chromosome : enrichments.keySet())
-            {
-                int length = chrLengths.get(chromosome);
-                int numberOfSlots = length / WINDOW_SIZE;
-                ArrayList<TargetRegionEnrichment> enrichmentsForChromosome = new ArrayList<>(numberOfSlots);
-                int position = 1;
-
-                Map<Integer, TargetRegionEnrichment> positionToSuppliedItem = new HashMap<>();
-
-                for(TargetRegionEnrichment enrichment : enrichments.get(chromosome))
-                {
-                    positionToSuppliedItem.put(enrichment.Position, enrichment);
-                }
-
-                for(int i = 0; i < numberOfSlots; i++)
-                {
-                    TargetRegionEnrichment suppliedItem = positionToSuppliedItem.get(position);
-                    enrichmentsForChromosome.add(i, suppliedItem);
-                    position += WINDOW_SIZE;
-                }
-
-                mChrEnrichments.put(chromosome, enrichmentsForChromosome);
-            }
-        }
-
-        public TargetRegionEnrichment getEnrichment(final HumanChromosome chromosome, final int position)
-        {
-            return mChrEnrichments.containsKey(chromosome) ? mChrEnrichments.get(chromosome).get(position / WINDOW_SIZE) : null;
-        }
-    }
-
-    private final List<EnrichmentMap> mEnrichmentMaps;
+    private final Map<HumanChromosome, ArrayList<TargetRegionEnrichment>> mChrEnrichments;
 
     public TargetRegions()
     {
-        mEnrichmentMaps = Lists.newArrayList();
+        mChrEnrichments = new HashMap<>();
     }
 
-    public void loadNormalisationFiles(final List<String> filenames, final RefGenomeVersion refGenomeVersion)
+    public void loadNormalisationFile(final String filename, final RefGenomeVersion refGenomeVersion)
     {
         RefGenomeCoordinates refGenomeCoordinates = RefGenomeCoordinates.refGenomeCoordinates(refGenomeVersion);
+        ListMultimap<HumanChromosome, TargetRegionEnrichment> chrEnrichmentMap = TargetRegionEnrichment.loadEnrichmentFile(filename);
+        addEnrichmentData(chrEnrichmentMap, refGenomeCoordinates.Lengths);
+    }
 
-        for(String filename : filenames)
+    private void addEnrichmentData(
+            final ListMultimap<HumanChromosome, TargetRegionEnrichment> chrEnrichmentMap, final Map<Chromosome,Integer> chrLengths)
+    {
+        for(HumanChromosome chromosome : chrEnrichmentMap.keySet())
         {
-            ListMultimap<HumanChromosome, TargetRegionEnrichment> chrEnrichmentMap = TargetRegionEnrichment.loadEnrichmentFile(filename);
+            int length = chrLengths.get(chromosome);
+            int numberOfSlots = length / WINDOW_SIZE;
+            ArrayList<TargetRegionEnrichment> enrichmentsForChromosome = new ArrayList<>(numberOfSlots);
+            int position = 1;
 
-            mEnrichmentMaps.add(new EnrichmentMap(chrEnrichmentMap, refGenomeCoordinates.Lengths));
+            Map<Integer, TargetRegionEnrichment> positionToSuppliedItem = new HashMap<>();
+
+            for(TargetRegionEnrichment enrichment : chrEnrichmentMap.get(chromosome))
+            {
+                positionToSuppliedItem.put(enrichment.Position, enrichment);
+            }
+
+            for(int i = 0; i < numberOfSlots; i++)
+            {
+                TargetRegionEnrichment suppliedItem = positionToSuppliedItem.get(position);
+                enrichmentsForChromosome.add(i, suppliedItem);
+                position += WINDOW_SIZE;
+            }
+
+            mChrEnrichments.put(chromosome, enrichmentsForChromosome);
         }
     }
 
@@ -103,53 +87,67 @@ public class TargetRegions implements CobaltScope
     @Override
     public boolean onTarget(final HumanChromosome chromosome, final int position)
     {
-        // return getEnrichment(chromosome, position) != null;
-
-        for(EnrichmentMap enrichmentMap : mEnrichmentMaps)
-        {
-            TargetRegionEnrichment enrichment = enrichmentMap.getEnrichment(chromosome, position);
-
-            if(enrichment != null)
-                return true;
-        }
-
-        return false;
+        return getEnrichment(chromosome, position) != null;
     }
 
     @Override
     public double findRegionEnrichment(final HumanChromosome chromosome, final int position)
     {
-        // TargetRegionEnrichment enrichment = getEnrichment(chromosome, position);
-        // return enrichment == null ? -1.0 : enrichment.Enrichment;
+        TargetRegionEnrichment enrichment = getEnrichment(chromosome, position);
+        return enrichment == null ? -1.0 : enrichment.Enrichment;
+    }
 
-        List<TargetRegionEnrichment> regionEnrichments = null;
+    private TargetRegionEnrichment getEnrichment(final HumanChromosome chromosome, final int position)
+    {
+        return mChrEnrichments.containsKey(chromosome) ? mChrEnrichments.get(chromosome).get(position / WINDOW_SIZE) : null;
+    }
 
-        for(EnrichmentMap enrichmentMap : mEnrichmentMaps)
+    public static void mergeTumorRatios(
+            final ListMultimap<HumanChromosome, BamRatio> allRatios, final ListMultimap<HumanChromosome, BamRatio> panelRatios)
+    {
+        if(allRatios.isEmpty())
         {
-            TargetRegionEnrichment enrichment = enrichmentMap.getEnrichment(chromosome, position);
-
-            if(enrichment == null || !enrichment.isValid())
-                continue;
-
-            if(regionEnrichments == null)
-            {
-                regionEnrichments = Lists.newArrayListWithCapacity(mEnrichmentMaps.size());
-            }
-
-            regionEnrichments.add(enrichment);
+            allRatios.putAll(panelRatios);
+            return;
         }
 
-        if(regionEnrichments == null)
-            return -1;
+        // other merge ratios, removing duplicates
+        for(HumanChromosome chromosome : panelRatios.keySet())
+        {
+            List<BamRatio> newRatios = panelRatios.get(chromosome);
+            List<BamRatio> existingRatios = allRatios.get(chromosome);
 
-        // average the factors until an alternative approach is found
-        return regionEnrichments.stream().mapToDouble(x -> x.Enrichment).average().orElse(0);
+            if(existingRatios == null)
+            {
+                allRatios.putAll(chromosome, newRatios);
+                continue;
+            }
+
+            if(newRatios.size() != existingRatios.size())
+            {
+                CB_LOGGER.error("chromosome({}) inconsistent tumor ratio array size(existing={} new={})",
+                        chromosome, existingRatios.size(), newRatios.size());
+                System.exit(1);
+            }
+
+            // NOTE: if both ratios are valid then no attempt is made to reconcile the values
+            for(int i = 0; i < existingRatios.size(); ++i)
+            {
+                BamRatio newRatio = newRatios.get(i);
+                BamRatio existingRatio = existingRatios.get(i);
+
+                if(!existingRatio.isValid() && newRatio.isValid())
+                {
+                    existingRatio.overrideRatio(newRatio.ratio());
+                }
+            }
+        }
     }
 
     @VisibleForTesting
     public void addNormalisationMap(
             final ListMultimap<HumanChromosome, TargetRegionEnrichment> chrEnrichmentMap, final Map<Chromosome,Integer> chrLengths)
     {
-        mEnrichmentMaps.add(new EnrichmentMap(chrEnrichmentMap, chrLengths));
+        addEnrichmentData(chrEnrichmentMap, chrLengths);
     }
 }

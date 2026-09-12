@@ -40,19 +40,19 @@ public class LowCoverageConsolidatorTest extends CalculationsTestBase
         assertEquals(4, ratios2.size());
         assertEquals(4001, ratios1.get(0).Position);
         assertEquals(10.045, ratios1.get(0).ratio(), 0.0001);
-        assertEquals(0.445, ratios1.get(0).gcContent(), 0.0001);
+        assertEquals(0.445, ratios1.get(0).GcContent, 0.0001);
         assertEquals(4001, ratios2.get(0).Position);
         assertEquals(10.045, ratios2.get(0).ratio(), 0.0001);
-        assertEquals(0.445, ratios2.get(0).gcContent(), 0.0001);
+        assertEquals(0.445, ratios2.get(0).GcContent, 0.0001);
         assertEquals(14001, ratios1.get(1).Position);
         assertEquals(10.145, ratios1.get(1).ratio(), 0.0001);
-        assertEquals(0.545, ratios1.get(1).gcContent(), 0.0001);
+        assertEquals(0.545, ratios1.get(1).GcContent, 0.0001);
         assertEquals(24001, ratios1.get(2).Position);
         assertEquals(10.245, ratios1.get(2).ratio(), 0.0001);
-        assertEquals(0.645, ratios1.get(2).gcContent(), 0.0001);
+        assertEquals(0.645, ratios1.get(2).GcContent, 0.0001);
         assertEquals(35001, ratios1.get(3).Position);
         assertEquals(10.345, ratios1.get(3).ratio(), 0.0001);
-        assertEquals(0.745, ratios1.get(3).gcContent(), 0.0001);
+        assertEquals(0.745, ratios1.get(3).GcContent, 0.0001);
     }
 
     @Test
@@ -78,16 +78,16 @@ public class LowCoverageConsolidatorTest extends CalculationsTestBase
         assertEquals(2, ratios2.size());
         assertEquals(9001, ratios1.get(0).Position);
         assertEquals(10.095, ratios1.get(0).ratio(), 0.0001);
-        assertEquals(0.495, ratios1.get(0).gcContent(), 0.0001);
+        assertEquals(0.495, ratios1.get(0).GcContent, 0.0001);
         assertEquals(9001, ratios2.get(0).Position);
         assertEquals(10.095, ratios2.get(0).ratio(), 0.0001);
-        assertEquals(0.495, ratios2.get(0).gcContent(), 0.0001);
+        assertEquals(0.495, ratios2.get(0).GcContent, 0.0001);
         assertEquals(30001, ratios1.get(1).Position);
         assertEquals(10.295, ratios1.get(1).ratio(), 0.0001);
-        assertEquals(0.695, ratios1.get(1).gcContent(), 0.0001);
+        assertEquals(0.695, ratios1.get(1).GcContent, 0.0001);
         assertEquals(30001, ratios2.get(1).Position);
         assertEquals(10.295, ratios2.get(1).ratio(), 0.0001);
-        assertEquals(0.695, ratios2.get(1).gcContent(), 0.0001);
+        assertEquals(0.695, ratios2.get(1).GcContent, 0.0001);
     }
 
     @Test
@@ -115,10 +115,10 @@ public class LowCoverageConsolidatorTest extends CalculationsTestBase
         assertEquals(4, ratios1.size());
         assertEquals(23001, ratios1.get(0).Position);
         assertEquals(10.0, ratios1.get(0).ratio(), 0.0001);
-        assertEquals(0.5, ratios1.get(0).gcContent(), 0.0001);
+        assertEquals(0.5, ratios1.get(0).GcContent, 0.0001);
         assertEquals(72001, ratios1.get(1).Position);
         assertEquals(10.0, ratios1.get(1).ratio(), 0.0001);
-        assertEquals(0.5, ratios1.get(1).gcContent(), 0.0001);
+        assertEquals(0.5, ratios1.get(1).GcContent, 0.0001);
         assertEquals(122001, ratios1.get(2).Position);
         assertEquals(172001, ratios1.get(3).Position);
     }

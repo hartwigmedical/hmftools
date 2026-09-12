@@ -137,8 +137,8 @@ public class BamRatiosTest extends CalculationsTestBase
             if (i % 10 == 0)
             {
                 int c = (i / 10) - 1;
-                assertEquals(position,mBamRatios.Ratios.get(_1).get(i).position());
-                assertEquals(position, consolidatedRatios.get(_1).get(c).position());
+                assertEquals(position,mBamRatios.Ratios.get(_1).get(i).Position);
+                assertEquals(position, consolidatedRatios.get(_1).get(c).Position);
                 assertEquals(consolidatedRatios.get(_1).get(c).ratio(),mBamRatios.Ratios.get(_1).get(i).ratio(),  0.0001);
                 assertEquals(consolidatedRatios.get(_2).get(c).ratio(),mBamRatios.Ratios.get(_2).get(i).ratio(),  0.0001);
                 assertEquals(consolidatedRatios.get(_3).get(c).ratio(),mBamRatios.Ratios.get(_3).get(i).ratio(),  0.0001);
@@ -181,8 +181,8 @@ public class BamRatiosTest extends CalculationsTestBase
             if (i % 30 == 0)
             {
                 int c = (i / 30) - 1;
-                assertEquals(position,mBamRatios.Ratios.get(_1).get(i).position());
-                assertEquals(position, consolidatedRatios.get(_1).get(c).position());
+                assertEquals(position,mBamRatios.Ratios.get(_1).get(i).Position);
+                assertEquals(position, consolidatedRatios.get(_1).get(c).Position);
                 assertEquals(consolidatedRatios.get(_1).get(c).ratio(),mBamRatios.Ratios.get(_1).get(i).ratio(),  0.0001);
                 assertEquals(consolidatedRatios.get(_2).get(c).ratio(),mBamRatios.Ratios.get(_2).get(i).ratio(),  0.0001);
                 assertEquals(consolidatedRatios.get(_3).get(c).ratio(),mBamRatios.Ratios.get(_3).get(i).ratio(),  0.0001);
@@ -223,7 +223,7 @@ public class BamRatiosTest extends CalculationsTestBase
 
     private Map<HumanChromosome, List<Integer>> extractPositions()
     {
-        return  extractValues(BamRatio::position);
+        return extractValues(x -> x.Position);
     }
 
     private Map<HumanChromosome, List<Double>> extractRatios()
@@ -233,12 +233,12 @@ public class BamRatiosTest extends CalculationsTestBase
 
     private Map<HumanChromosome, List<Double>> extractGCs()
     {
-        return extractValues(BamRatio::gcContent);
+        return extractValues(x -> x.GcContent);
     }
 
     private Map<HumanChromosome, List<Double>> extractDepths()
     {
-        return extractValues(BamRatio::readDepth);
+        return extractValues(x -> x.ReadDepth);
     }
 
     private <T extends Number> Map<HumanChromosome, List<T>> extractValues(Function<BamRatio, T> f)

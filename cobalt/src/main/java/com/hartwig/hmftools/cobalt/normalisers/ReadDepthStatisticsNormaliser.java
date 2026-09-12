@@ -42,18 +42,18 @@ public class ReadDepthStatisticsNormaliser implements ResultsNormaliser
         {
             return;
         }
-        if(bamRatio.gcContent() < DEFAULT_GC_RATIO_MIN)
+        if(bamRatio.GcContent < DEFAULT_GC_RATIO_MIN)
         {
             return;
         }
-        if(bamRatio.gcContent() > DEFAULT_GC_RATIO_MAX)
+        if(bamRatio.GcContent > DEFAULT_GC_RATIO_MAX)
         {
             return;
         }
         double ratio = bamRatio.ratio();
         if(ratio > 0.0)
         {
-            descriptiveStatistics.addValue(bamRatio.readDepth());
+            descriptiveStatistics.addValue(bamRatio.ReadDepth);
         }
     }
 

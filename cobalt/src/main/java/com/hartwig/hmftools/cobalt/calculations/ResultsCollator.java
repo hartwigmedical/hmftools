@@ -61,24 +61,27 @@ class ResultsCollator
         {
             return tumorOnlyCobaltRatio(tumorRatio);
         }
-        return new CobaltRatio(mGenomeVersion.versionedChromosome(referenceRatio.Chromosome), referenceRatio.Position,
-                referenceRatio.readDepth(), referenceRatio.ratio(), referenceRatio.gcContent(), referenceRatio.getDiploidAdjustedRatio(),
-                tumorRatio.readDepth(), tumorRatio.ratio(), tumorRatio.gcContent());
+        return new CobaltRatio(
+                mGenomeVersion.versionedChromosome(referenceRatio.Chromosome), referenceRatio.Position,
+                referenceRatio.ReadDepth, referenceRatio.ratio(), referenceRatio.GcContent, referenceRatio.getDiploidAdjustedRatio(),
+                tumorRatio.ReadDepth, tumorRatio.ratio(), tumorRatio.GcContent);
     }
 
     private CobaltRatio tumorOnlyCobaltRatio(BamRatio tumorRatio)
     {
         checkArgument(tumorRatio != null);
-        return new CobaltRatio(mGenomeVersion.versionedChromosome(tumorRatio.Chromosome), tumorRatio.Position,
+        return new CobaltRatio(
+                mGenomeVersion.versionedChromosome(tumorRatio.Chromosome), tumorRatio.Position,
                 -1.0, -1.0, -1.0, -1.0,
-                tumorRatio.readDepth(), tumorRatio.ratio(), tumorRatio.gcContent());
+                tumorRatio.ReadDepth, tumorRatio.ratio(), tumorRatio.GcContent);
     }
 
     private CobaltRatio referenceOnlyCobaltRatio(BamRatio referenceRatio)
     {
         checkArgument(referenceRatio != null);
-        return new CobaltRatio(mGenomeVersion.versionedChromosome(referenceRatio.Chromosome), referenceRatio.Position,
-                referenceRatio.readDepth(), referenceRatio.ratio(), referenceRatio.gcContent(), referenceRatio.getDiploidAdjustedRatio(),
+        return new CobaltRatio(
+                mGenomeVersion.versionedChromosome(referenceRatio.Chromosome), referenceRatio.Position,
+                referenceRatio.ReadDepth, referenceRatio.ratio(), referenceRatio.GcContent, referenceRatio.getDiploidAdjustedRatio(),
                 -1.0, -1.0, -1.0);
     }
 }

@@ -35,6 +35,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
@@ -46,9 +47,7 @@ import com.hartwig.hmftools.cobalt.count.BamReadCounter;
 import com.hartwig.hmftools.cobalt.diploid.DiploidRegionLoader;
 import com.hartwig.hmftools.cobalt.diploid.DiploidStatus;
 import com.hartwig.hmftools.cobalt.exclusions.ExcludedRegionsFile;
-import com.hartwig.hmftools.cobalt.targeted.CobaltScope;
 import com.hartwig.hmftools.cobalt.targeted.TargetRegions;
-import com.hartwig.hmftools.cobalt.targeted.WholeGenome;
 import com.hartwig.hmftools.common.bam.BamUtils;
 import com.hartwig.hmftools.common.cobalt.CobaltGcMedianFile;
 import com.hartwig.hmftools.common.cobalt.CobaltMedianRatioFile;
@@ -248,14 +247,21 @@ public class CobaltConfig
 
     public boolean targetedPanelMode() { return !TargetRegionNormFiles.isEmpty(); }
 
-    public CobaltScope scope()
+    public List<TargetRegions> targetRegionScopes()
     {
         if(!targetedPanelMode())
-            return new WholeGenome();
+            return Collections.emptyList();
 
-        TargetRegions targetRegions = new TargetRegions();
-        targetRegions.loadNormalisationFiles(TargetRegionNormFiles, RefGenVersion);
-        return targetRegions;
+        List<TargetRegions> scopes = Lists.newArrayListWithCapacity(TargetRegionNormFiles.size());
+
+        for(String normFile : TargetRegionNormFiles)
+        {
+            TargetRegions targetRegions = new TargetRegions();
+            targetRegions.loadNormalisationFile(normFile, RefGenVersion);
+            scopes.add(targetRegions);
+        }
+
+        return scopes;
     }
 
     public ListMultimap<HumanChromosome, GCProfile> gcProfileData()

@@ -56,6 +56,12 @@ public class BamRatio
         }
     }
 
+    public boolean isValid() { return mRatio >= 0; }
+    public double ratio()
+    {
+        return mIncluded ? mRatio : -1.0;
+    }
+
     public void normaliseForGc(double medianReadDepthForGcBucket)
     {
         normalise(medianReadDepthForGcBucket);
@@ -135,26 +141,6 @@ public class BamRatio
         {
             mRatio /= factor;
         }
-    }
-
-    public int position()
-    {
-        return Position;
-    }
-
-    public double readDepth()
-    {
-        return ReadDepth;
-    }
-
-    public double ratio()
-    {
-        return mIncluded ? mRatio : -1.0;
-    }
-
-    public double gcContent()
-    {
-        return GcContent;
     }
 
     @Override

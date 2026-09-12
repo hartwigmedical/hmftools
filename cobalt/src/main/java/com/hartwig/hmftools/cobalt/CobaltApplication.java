@@ -89,7 +89,7 @@ public class CobaltApplication
             CobaltCalculator calculator = new CobaltCalculator(tumourDepths, refDepths, mConfig);
             ListMultimap<HumanChromosome, CobaltRatio> results = calculator.getCalculatedRatios();
 
-            final List<CobaltRatio> collectedRatios = new ArrayList<>();
+            List<CobaltRatio> collectedRatios = new ArrayList<>();
             results.keySet().forEach(chromosome -> collectedRatios.addAll(results.get(chromosome)));
             CobaltRatioFile.write(mConfig.cobaltRatiosFileName(), collectedRatios);
 
