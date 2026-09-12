@@ -9,16 +9,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.genome.gc.GCBucket;
-import com.hartwig.hmftools.common.genome.gc.GCProfileFactory;
 import com.hartwig.hmftools.common.genome.gc.ImmutableGCBucket;
 
 public final class CobaltGcMedianFile
 {
     private static final String EXTENSION = ".cobalt.gc.median.tsv";
-    private static final int ASSUMED_READ_LENGTH = 151;
 
     public static String generateFilename(final String basePath, final String sample)
     {
@@ -37,21 +34,9 @@ public final class CobaltGcMedianFile
 
     private static GcMedianReadDepth fromLines(final List<String> lines)
     {
-        boolean useReadDepth = true;
         double mean = 0;
         double median = 0;
         int i = 0;
-
-        // read the first line, see if it uses upper case #SampleMean or lower case #sampleMean
-        // lower case sampleMean is newer version that uses read depth
-        // upper case SampleMean is old version that uses read count
-        if(!lines.isEmpty())
-        {
-             if(lines.get(i).startsWith("#SampleMean"))
-             {
-                useReadDepth = false;
-             }
-        }
 
         // skip the #sampleMean     sampleMedian line
         ++i;
@@ -77,16 +62,6 @@ public final class CobaltGcMedianFile
             }
         }
 
-        if(!useReadDepth)
-        {
-            // if we are parsing old version of cobalt output, convert it all to depth by assuming read length of 151
-            mean = convertReadCount(mean);
-            median = convertReadCount(median);
-            medianPerBucket = medianPerBucket.entrySet().stream().collect(Collectors.toMap(
-                    Map.Entry::getKey,
-                    entry -> convertReadCount(entry.getValue())));
-        }
-
         return new GcMedianReadDepth(mean, median, medianPerBucket);
     }
 
@@ -106,15 +81,5 @@ public final class CobaltGcMedianFile
             }
         }
         return lines;
-    }
-
-    // this is backward compatibility conversion from read count to read depth
-    // It assumes read length is 151.
-    private static double convertReadCount(final double readCount)
-    {
-        if(readCount <= 0)
-            return readCount;
-
-        return readCount * ASSUMED_READ_LENGTH / GCProfileFactory.WINDOW_SIZE;
     }
 }
