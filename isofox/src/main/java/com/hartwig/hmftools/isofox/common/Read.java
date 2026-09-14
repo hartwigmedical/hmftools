@@ -37,6 +37,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -340,20 +341,6 @@ public class Read
     public boolean spansGeneCollections()
     {
         return mGeneCollections[SE_START] != mGeneCollections[SE_END];
-    }
-
-    public void setFlag(SAMFlag flag, boolean toggle)
-    {
-        if(toggle)
-            mFlags |= flag.intValue();
-        else
-            mFlags &= ~flag.intValue();
-    }
-
-    public void setStrand(boolean readReversed, boolean mateReadReversed)
-    {
-        setFlag(SAMFlag.READ_REVERSE_STRAND, readReversed);
-        setFlag(SAMFlag.MATE_REVERSE_STRAND, mateReadReversed);
     }
 
     public final Map<RegionMatchType,List<TransExonRef>> getReadTransExonRefs() { return mTransExonRefs; }
@@ -939,6 +926,10 @@ public class Read
         if(orientation() == mateRead.orientation())
             return;
 
+        // no overlap
+        if(unclippedEnd() < mateRead.unclippedStart() || mateRead.unclippedEnd() < unclippedStart())
+            return;
+
         if(orientation().isForward())
         {
             if(mateRead.unclippedEnd() >= unclippedEnd())
@@ -995,5 +986,21 @@ public class Read
     {
         return String.format("range(%s: %d -> %d, range=%d) length(%d) cigar(%s) id(%s)",
                 Chromosome, PosStart, PosEnd, range(), baseLength(), mCigarStr != null ? mCigarStr : mOriginalCigarStr, Id);
+    }
+
+    @VisibleForTesting
+    public void setFlag(SAMFlag flag, boolean toggle)
+    {
+        if(toggle)
+            mFlags |= flag.intValue();
+        else
+            mFlags &= ~flag.intValue();
+    }
+
+    @VisibleForTesting
+    public void setStrand(boolean readReversed, boolean mateReadReversed)
+    {
+        setFlag(SAMFlag.READ_REVERSE_STRAND, readReversed);
+        setFlag(SAMFlag.MATE_REVERSE_STRAND, mateReadReversed);
     }
 }

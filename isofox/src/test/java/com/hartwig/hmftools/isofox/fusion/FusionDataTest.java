@@ -36,6 +36,7 @@ import static com.hartwig.hmftools.isofox.fusion.FusionTestUtils.createGroup;
 
 import static htsjdk.samtools.SAMFlag.FIRST_OF_PAIR;
 import static htsjdk.samtools.SAMFlag.SECOND_OF_PAIR;
+import static htsjdk.samtools.SAMFlag.SUPPLEMENTARY_ALIGNMENT;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
 
@@ -811,6 +812,7 @@ public class FusionDataTest
         Read read3 = createMappedRead(readId, gc2, 10219, 10228, createCigar(10, 30, 0), junctionBases);
 
         read3.setStrand(true, false);
+        read3.setFlag(SUPPLEMENTARY_ALIGNMENT, true);
 
         FusionReadData fusion = callJunctionFusion(finder, gc1, gc2, read1, read2, read3);
         assertEquals(1100, fusion.junctionPositions()[SE_START]);
@@ -1032,8 +1034,11 @@ public class FusionDataTest
             final Map<String, FusionReadGroup> readGroups1, final Map<String, FusionReadGroup> readGroups2, final Read mate,
             final Read donorRead, final Read acceptorRead)
     {
+        // the donor and acceptor reads are a pair of primary and supplementary
         donorRead.setFlag(FIRST_OF_PAIR, true);
-        acceptorRead.setFlag(SECOND_OF_PAIR, false);
+        acceptorRead.setFlag(FIRST_OF_PAIR, true);
+        acceptorRead.setFlag(SUPPLEMENTARY_ALIGNMENT, true);
+
         donorRead.setSuppAlignment(String.format("%s;%d;%s", acceptorRead.Chromosome, acceptorRead.PosStart, acceptorRead.cigarStr()));
         acceptorRead.setSuppAlignment(String.format("%s;%d;%s", donorRead.Chromosome, donorRead.PosStart, donorRead.cigarStr()));
 

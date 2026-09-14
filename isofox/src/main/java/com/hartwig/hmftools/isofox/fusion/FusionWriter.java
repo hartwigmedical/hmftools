@@ -197,7 +197,7 @@ public class FusionWriter
 
     public void writeIncompleteGroupReads(final List<FusionReadGroup> incompleteGroups)
     {
-        incompleteGroups.forEach(x -> writeFusionReadData(x.ReadId, x.Reads, "INCOMPLETE_GROUPS"));
+        incompleteGroups.forEach(x -> writeFusionReadData(x.ReadId, x.reads(), "INCOMPLETE_GROUPS"));
     }
 
     public synchronized void writeFragmentData(final FusionFragment fragment, final String fusionId)

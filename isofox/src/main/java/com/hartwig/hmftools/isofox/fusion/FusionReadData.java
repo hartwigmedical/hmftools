@@ -177,7 +177,7 @@ public class FusionReadData
                 .filter(x -> x.getKey().isJunctionType())
                 .mapToInt(x -> x.getValue().intValue()).sum();
     }
-    
+
     public void addFragmentTypeCount(FusionFragmentType type, int count)
     {
         Integer existingCount = mFragmentCounts.get(type);

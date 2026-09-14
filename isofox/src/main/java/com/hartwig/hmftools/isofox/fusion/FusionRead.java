@@ -128,7 +128,11 @@ public class FusionRead
     }
     public boolean isSoftClipped(int se) { return SoftClipLengths[se] > 0; }
     public boolean isLongestSoftClip(int se) { return SoftClipLengths[se] > SoftClipLengths[switchIndex(se)]; }
+
     public boolean isSupplementaryAlignment() { return (Flags & SAMFlag.SUPPLEMENTARY_ALIGNMENT.intValue()) != 0; }
+    public boolean isFirstOfPair() { return (Flags & SAMFlag.FIRST_OF_PAIR.intValue()) != 0; }
+    public boolean isReadPaired() { return (Flags & SAMFlag.READ_PAIRED.intValue()) != 0; }
+    public boolean isMateUnmapped() { return (Flags & SAMFlag.MATE_UNMAPPED.intValue()) != 0; }
 
     public final int[] junctionPositions() { return mJunctionPositions; }
 
@@ -233,10 +237,10 @@ public class FusionRead
 
     public String toString()
     {
-        return String.format("range(%s: %d -> %d) cigar(%s) junc(%d - %d) gc(%d - %d) sup=%s igs=%s",
-                Chromosome, Positions[SE_START], Positions[SE_END], Cigar,
+        return String.format("range(%s: %d -> %d) cigar(%s) flags(%d) junc(%d - %d) gc(%d - %d) sup(%s hasData=%s) igs=%s",
+                Chromosome, Positions[SE_START], Positions[SE_END], Cigar, Flags,
                 mJunctionPositions != null ? mJunctionPositions[SE_START] : 0, mJunctionPositions != null ? mJunctionPositions[SE_END] : 0,
-                GeneCollections[SE_START], GeneCollections[SE_END], HasSuppAlignment, HasInterGeneSplit);
+                GeneCollections[SE_START], GeneCollections[SE_END], isSupplementaryAlignment(), HasSuppAlignment, HasInterGeneSplit);
     }
 
 }

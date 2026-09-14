@@ -155,11 +155,11 @@ public class FusionTaskManager
                 {
                     if(!mConfig.Filters.SpecificChrRegions.Chromosomes.isEmpty())
                     {
-                        if(readGroup.Reads.stream().anyMatch(x -> mConfig.Filters.SpecificChrRegions.excludeChromosome(x.MateChromosome)))
+                        if(readGroup.reads().stream().anyMatch(x -> mConfig.Filters.SpecificChrRegions.excludeChromosome(x.MateChromosome)))
                             continue;
                     }
 
-                    if(!skipMissingReads(readGroup.Reads))
+                    if(!skipMissingReads(readGroup.reads()))
                     {
                         incompleteGroups.add(readGroup);
                     }

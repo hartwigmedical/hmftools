@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.isofox.TestUtils.createIsofoxConfig;
 import static com.hartwig.hmftools.isofox.TestUtils.createMappedRead;
 import static com.hartwig.hmftools.isofox.TestUtils.createSupplementaryReadPair;
 import static com.hartwig.hmftools.isofox.TestUtils.populateRefGenome;
+import static com.hartwig.hmftools.isofox.TestUtils.setReadFirstSecondInPair;
 import static com.hartwig.hmftools.isofox.fusion.FusionTestUtils.createGeneDataCache;
 
 import static junit.framework.TestCase.assertEquals;
@@ -34,6 +35,8 @@ import com.hartwig.hmftools.isofox.common.Read;
 import com.hartwig.hmftools.isofox.results.ResultsWriter;
 
 import org.junit.Test;
+
+import htsjdk.samtools.SAMFlag;
 
 public class FusionFiltersTest
 {
@@ -182,10 +185,8 @@ public class FusionFiltersTest
 
         int gcId = 0;
 
-        final GeneCollection gc3 =
-                createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_3)));
-        final GeneCollection gc5 =
-                createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_5)));
+        GeneCollection gc3 = createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_3)));
+        GeneCollection gc5 = createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_5)));
 
         FragmentAllocator bamReader1 = new FragmentAllocator(config, geneTransCache, ALT_SJ_COHORT_CACHE, new ResultsWriter(config));
 
@@ -197,19 +198,25 @@ public class FusionFiltersTest
         int readId2 = 2;
         int readId3 = 3;
 
-        Read read1 = createMappedRead(readId1, gc5, 10210, 10249, createCigar(0, 40, 20));
+        // the mate read
+        Read read1 = createMappedRead(readId1, gc5, 10250, 10289, createCigar(0, 40, 0));
+        setReadFirstSecondInPair(read1, false);
 
-        Read[] readPair1 = createSupplementaryReadPair(readId1, gc5, gc3, 10200, 10219, 20281, 20300,
+        Read[] readPair1 = createSupplementaryReadPair(
+                readId1, gc5, gc3, 10200, 10219, 20281, 20300,
                 createCigar(20, 20, 0), createCigar(0, 20, 20), true);
 
+        // TOD): should be setting both primary and supp to have the same strandedness
         readPair1[0].setStrand(true, false);
 
         bamReader1.processReadRecords(gc5, Lists.newArrayList(read1, readPair1[0]));
 
         // supporting the first junction and enough to avoid being hard-filtered
-        Read read2 = createMappedRead(readId2, gc5, 10210, 10249, createCigar(0, 40, 20));
+        Read read2 = createMappedRead(readId2, gc5, 10250, 10289, createCigar(0, 40, 0));
+        setReadFirstSecondInPair(read2, false);
 
-        Read[] readPair2 = createSupplementaryReadPair(readId2, gc5, gc3, 10200, 10219, 20281, 20300,
+        Read[] readPair2 = createSupplementaryReadPair(
+                readId2, gc5, gc3, 10200, 10219, 20281, 20300,
                 createCigar(20, 20, 0), createCigar(0, 20, 20), true);
 
         readPair2[0].setStrand(true, false);
@@ -217,9 +224,11 @@ public class FusionFiltersTest
         bamReader1.processReadRecords(gc5, Lists.newArrayList(read2, readPair2[0]));
 
         // single read for a new junction, hard-filtered - cannot be at a known splice site
-        Read read3 = createMappedRead(readId3, gc5, 10410, 10449, createCigar(0, 40, 20));
+        Read read3 = createMappedRead(readId3, gc5, 10450, 10489, createCigar(0, 40, 0));
+        setReadFirstSecondInPair(read3, false);
 
-        Read[] readPair3 = createSupplementaryReadPair(readId3, gc5, gc3, 10401, 10420, 20480, 20499,
+        Read[] readPair3 = createSupplementaryReadPair(
+                readId3, gc5, gc3, 10401, 10420, 20480, 20499,
                 createCigar(20, 20, 0), createCigar(0, 20, 20), true);
 
         readPair3[0].setStrand(true, false);

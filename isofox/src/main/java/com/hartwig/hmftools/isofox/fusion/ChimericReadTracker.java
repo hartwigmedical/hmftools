@@ -288,7 +288,7 @@ public class ChimericReadTracker
             }
 
             ChimericReadGroup chimericReads = mChimericReadMap.get(read.Id);
-            if (chimericReads == null)
+            if(chimericReads == null)
                 mChimericReadMap.put(read.Id, new ChimericReadGroup(read));
             else
                 chimericReads.addRead(read);

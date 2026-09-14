@@ -1120,11 +1120,6 @@ public class FragmentAllocator
         mRetainedIntronFinder.setGeneData(mCurrentGenes);
         mChimericReads.initialise(mCurrentGenes);
 
-        if(reads.size() == 2)
-        {
-            reads.get(0).setFlag(SAMFlag.FIRST_OF_PAIR, true);
-        }
-
         reads.forEach(x -> processRead(x));
     }
 

@@ -153,7 +153,7 @@ public class FusionFinder implements Callable<Void>
         // identify any read groups with reads spanning into a future gene collection
         // and fill in any missing gene info for reads (partial or complete) which link to this gene collections
         List<FusionReadGroup> spanningGroups = newReadGroups.values().stream()
-                .filter(x -> x.Reads.stream().anyMatch(y -> y.GeneCollections[SE_END] == NO_GENE_ID))
+                .filter(x -> x.reads().stream().anyMatch(y -> y.GeneCollections[SE_END] == NO_GENE_ID))
                 .collect(Collectors.toList());
 
         List<FusionReadGroup> geneCompletedGroups = reconcileSpanningReadGroups(geneCollection, spanningGroups, baseDepth);
@@ -176,7 +176,7 @@ public class FusionFinder implements Callable<Void>
             FusionReadGroup readGroup = mSpanningReadGroups.get(index);
             boolean missingGeneInfo = false;
 
-            for(FusionRead read : readGroup.Reads)
+            for(FusionRead read : readGroup.reads())
             {
                 if(read.GeneCollections[SE_END] != NO_GENE_ID)
                     continue;
@@ -311,9 +311,7 @@ public class FusionFinder implements Callable<Void>
                 continue;
             }
 
-            List<FusionRead> reads = readGroup.Reads;
-
-            if(reads.stream().anyMatch(x -> mConfig.Filters.skipRead(x.MateChromosome, x.MatePosStart)))
+            if(readGroup.reads().stream().anyMatch(x -> mConfig.Filters.skipRead(x.MateChromosome, x.MatePosStart)))
             {
                 ++mExcludedFilteredCount;
                 continue;
@@ -323,7 +321,7 @@ public class FusionFinder implements Callable<Void>
 
             if(fragment.type() == FusionFragmentType.UNKNOWN)
             {
-                mFusionWriter.writeReadData(fragment.readId(), reads, "INVALID_FRAG");
+                mFusionWriter.writeReadData(fragment.readId(), readGroup.reads(), "INVALID_FRAG");
                 continue;
             }
 

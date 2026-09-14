@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.isofox.fusion;
 
+import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome.lowerChromosome;
@@ -142,9 +143,27 @@ public class FusionFragmentBuilder
 
         int posIndex = 0;
 
+        // handle the scenario where both primaries have supplementaries, in which case use the longer for the split junction
+        boolean longestSoftClipFirstInPair = false;
+        int longestSoftClip = 0;
+
         for(FusionRead read : fragment.reads())
         {
-            if(!read.HasSuppAlignment)
+            if(!read.isSupplementaryAlignment() && read.HasSuppAlignment)
+            {
+                int maxSoftClip = max(read.SoftClipLengths[SE_START], read.SoftClipLengths[SE_END]);
+
+                if(maxSoftClip > longestSoftClip)
+                {
+                    longestSoftClip = maxSoftClip;
+                    longestSoftClipFirstInPair = read.isFirstOfPair();
+                }
+            }
+        }
+
+        for(FusionRead read : fragment.reads())
+        {
+            if(!read.HasSuppAlignment || read.isFirstOfPair() != longestSoftClipFirstInPair)
                 continue;
 
             chromosomes[posIndex] = read.Chromosome;

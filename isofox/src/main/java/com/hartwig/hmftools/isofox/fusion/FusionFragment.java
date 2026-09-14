@@ -76,7 +76,7 @@ public class FusionFragment
     }
 
     public String readId() { return mReadGroup.ReadId; }
-    public List<FusionRead> reads() { return mReadGroup.Reads; }
+    public List<FusionRead> reads() { return mReadGroup.reads(); }
     public FusionReadGroup readGroup() { return mReadGroup; }
 
     public FusionFragmentType type() { return mType; }
@@ -132,9 +132,9 @@ public class FusionFragment
 
         // doesn't take junctions into consideration
         if(isSingleGeneCollection())
-            return mReadGroup.Reads;
+            return mReadGroup.reads();
 
-        return mReadGroup.Reads.stream()
+        return mReadGroup.reads().stream()
                 .filter(x -> x.Chromosome.equals(mChromosomes[se]))
                 .filter(x -> x.GeneCollections[SE_START] == mGeneCollections[se] || x.GeneCollections[SE_END] == mGeneCollections[se])
                 .collect(Collectors.toList());
@@ -145,7 +145,7 @@ public class FusionFragment
         // set transcript & exon info for each junction from each applicable read, taking only the highest matches
         for(int se = SE_START; se <= SE_END; ++se)
         {
-            for(final FusionRead read : mReadGroup.Reads)
+            for(final FusionRead read : mReadGroup.reads())
             {
                 if(!isSingleGeneCollection())
                 {
@@ -218,7 +218,7 @@ public class FusionFragment
     {
         int seIndex = junctionOrientation == ORIENT_FWD ? SE_END : SE_START;
 
-        for(FusionRead read : mReadGroup.Reads)
+        for(FusionRead read : mReadGroup.reads())
         {
             if(read.SoftClipLengths[seIndex] == 0)
                 continue;
