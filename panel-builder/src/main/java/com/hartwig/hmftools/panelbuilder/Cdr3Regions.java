@@ -5,6 +5,7 @@ import static java.util.Objects.requireNonNull;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.CDR3_GC_TARGET;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.CDR3_GC_TOLERANCE;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.CDR3_QUALITY_MIN;
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.CDR3_V_UPSTREAM_PROBE_OFFSET;
 import static com.hartwig.hmftools.panelbuilder.ProbeUtils.probeRegionEndingAt;
 import static com.hartwig.hmftools.panelbuilder.ProbeUtils.probeRegionStartingAt;
 
@@ -30,6 +31,7 @@ import org.apache.logging.log4j.Logger;
 // Methodology:
 //   - 1 probe at the end of V regions
 //   - 1 probe at the start of J regions
+//   - for IG V genes, an additional upstream probe (over FR2) to capture somatically hypermutated sequences
 public class Cdr3Regions
 {
     private static final TargetMetadata.Type TARGET_TYPE = TargetMetadata.Type.CDR3;
@@ -93,27 +95,36 @@ public class Cdr3Regions
     private static void generateProbes(final List<IgTcrGene> genes, final ProbeGenerator probeGenerator,
             PanelData panelData)
     {
-        Stream<ProbeGenerationSpec> probeGenerationSpecs = genes.stream().map(Cdr3Regions::createProbeGenerationSpec);
+        Stream<ProbeGenerationSpec> probeGenerationSpecs = genes.stream().flatMap(gene -> createProbeGenerationSpecs(gene).stream());
         probeGenerator.generateBatch(probeGenerationSpecs, panelData);
     }
 
-    private static ProbeGenerationSpec createProbeGenerationSpec(final IgTcrGene gene)
+    private static List<ProbeGenerationSpec> createProbeGenerationSpecs(final IgTcrGene gene)
+    {
+        List<ProbeGenerationSpec> specs = new ArrayList<>();
+        specs.add(createProbeSpec(calculateAnchorProbeRegion(gene), gene.geneName()));
+        if(hasUpstreamProbe(gene))
+        {
+            specs.add(createProbeSpec(calculateUpstreamProbeRegion(gene), gene.geneName() + " upstream"));
+        }
+        return specs;
+    }
+
+    private static ProbeGenerationSpec createProbeSpec(final ChrBaseRegion targetRegion, final String extraInfo)
     {
         // Produce a probe exactly at the determined region or not at all. Shifting probes is not acceptable here.
         // Need to produce a probe which is aligned with the edge of the gene. And want to match the previous CDR3 panel design closely.
-        ChrBaseRegion targetRegion = calculateTargetRegion(gene);
         SequenceDefinition sequenceDefinition = SequenceDefinition.singleRegion(targetRegion);
         TargetedRange targetedRange = TargetedRange.wholeRegion(sequenceDefinition.baseLength());
-        TargetMetadata metadata = createTargetMetadata(gene);
+        TargetMetadata metadata = new TargetMetadata(TARGET_TYPE, extraInfo);
         return new ProbeGenerationSpec.SingleProbe(sequenceDefinition, targetedRange, metadata, PROBE_CRITERIA);
     }
 
-    private static ChrBaseRegion calculateTargetRegion(final IgTcrGene gene)
+    // Probe aligned to the anchor, at the CDR3 edge of the V or J region.
+    private static ChrBaseRegion calculateAnchorProbeRegion(final IgTcrGene gene)
     {
         ChrBaseRegion anchor = requireNonNull(gene.anchorLocation());
-        boolean vForward = gene.region() == IgTcrRegion.V_REGION && gene.geneStrand() == Strand.FORWARD;
-        boolean jReverse = gene.region() == IgTcrRegion.J_REGION && gene.geneStrand() == Strand.REVERSE;
-        if(vForward || jReverse)
+        if(cdr3SideIsRegionEnd(gene))
         {
             return probeRegionEndingAt(anchor.chromosome(), anchor.end());
         }
@@ -123,9 +134,36 @@ public class Cdr3Regions
         }
     }
 
-    private static TargetMetadata createTargetMetadata(final IgTcrGene gene)
+    // Probe shifted upstream (toward FR1) from the V anchor, to improve capture for hypermutated V regions.
+    // This region is known to experience fewer mutations than the region near the anchor.
+    private static ChrBaseRegion calculateUpstreamProbeRegion(final IgTcrGene gene)
     {
-        String extraInfo = gene.geneName();
-        return new TargetMetadata(TARGET_TYPE, extraInfo);
+        ChrBaseRegion anchor = requireNonNull(gene.anchorLocation());
+        if(cdr3SideIsRegionEnd(gene))
+        {
+            return probeRegionEndingAt(anchor.chromosome(), anchor.end() - CDR3_V_UPSTREAM_PROBE_OFFSET);
+        }
+        else
+        {
+            return probeRegionStartingAt(anchor.chromosome(), anchor.start() + CDR3_V_UPSTREAM_PROBE_OFFSET);
+        }
     }
+
+    // The anchor sits at the CDR3-facing edge of the region: the high-coordinate end for a forward-strand V or reverse-strand J.
+    private static boolean cdr3SideIsRegionEnd(final IgTcrGene gene)
+    {
+        boolean vForward = gene.region() == IgTcrRegion.V_REGION && gene.geneStrand() == Strand.FORWARD;
+        boolean jReverse = gene.region() == IgTcrRegion.J_REGION && gene.geneStrand() == Strand.REVERSE;
+        return vForward || jReverse;
+    }
+
+    private static boolean hasUpstreamProbe(final IgTcrGene gene)
+    {
+        return gene.region() == IgTcrRegion.V_REGION
+                && gene.geneName().startsWith("IG")
+                && !UPSTREAM_PROBE_EXCLUDED_GENES.contains(gene.geneName());
+    }
+
+    // IGK-KDE recombination elements, not framework-bearing V/J genes, so an upstream framework probe is meaningless.
+    private static final Set<String> UPSTREAM_PROBE_EXCLUDED_GENES = Set.of("IGKINTR", "IGKDEL");
 }

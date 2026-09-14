@@ -73,6 +73,8 @@ public class PanelBuilderConstants
     public static final double CDR3_QUALITY_MIN = 0.01;
     public static final double CDR3_GC_TARGET = 0.45;
     public static final double CDR3_GC_TOLERANCE = 1;
+    // Distance from end of anchor to nearest end of the upstream probe.
+    public static final int CDR3_V_UPSTREAM_PROBE_OFFSET = 100;
 
     // GC content bounds for probes used for determining copy number.
     // These are tight bounds because different GC can affect the probe amplification process which will affect the calculated copy number.
