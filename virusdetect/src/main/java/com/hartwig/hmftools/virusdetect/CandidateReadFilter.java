@@ -33,6 +33,11 @@ public class CandidateReadFilter
         {
             return true;
         }
+        // The mate maps to a viral decoy contig, so this read anchors a host<->virus fragment (e.g. an integration junction).
+        if(mateMappedToViralDecoy(record))
+        {
+            return true;
+        }
         // Genuinely unaligned, so possibly viral. A read redux itself unmapped (UM tag) is instead host sequence
         // from a bad region, not genuinely unaligned, so it is not a candidate on its own account.
         if(record.getReadUnmappedFlag())
@@ -66,6 +71,11 @@ public class CandidateReadFilter
         {
             return supplementaries.stream().allMatch(supplementary -> isViralDecoyContig(supplementary.Chromosome));
         }
+    }
+
+    private boolean mateMappedToViralDecoy(SAMRecord record)
+    {
+        return record.getReadPairedFlag() && !record.getMateUnmappedFlag() && isViralDecoyContig(record.getMateReferenceName());
     }
 
     private boolean isViralDecoyContig(String contig)

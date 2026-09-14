@@ -77,6 +77,19 @@ public class CandidateReadFilterTest
     }
 
     @Test
+    public void testHostReadWithMateOnDecoyIsCandidate()
+    {
+        // host-mapped read (no significant clip) whose mate maps to the viral decoy: anchors a host<->virus fragment
+        assertTrue(FILTER.isCandidate(readWithMate(0x1 | 0x40, "chr1", "100M", "chrEBV", 1000)));
+    }
+
+    @Test
+    public void testHostReadWithMateOnHostIsNotCandidate()
+    {
+        assertFalse(FILTER.isCandidate(readWithMate(0x1 | 0x40, "chr1", "100M", "chr1", 1000)));
+    }
+
+    @Test
     public void testPlainMappedReadIsNotCandidate()
     {
         assertFalse(FILTER.isCandidate(read(0, "chr1", "100M")));
@@ -120,6 +133,14 @@ public class CandidateReadFilterTest
     private static SAMRecord read(int flags, String contig, String cigar)
     {
         return read(flags, contig, cigar, null);
+    }
+
+    private static SAMRecord readWithMate(int flags, String contig, String cigar, String mateContig, int matePosition)
+    {
+        String position = contig.equals("*") ? "0" : "100";
+        String line = String.join("\t", "read", String.valueOf(flags), contig, position, "0", cigar,
+                mateContig, String.valueOf(matePosition), "0", BASES, "*");
+        return SamRecordTestUtils.parseSamString(line, DICT);
     }
 
     private static SAMRecord read(int flags, String contig, String cigar, @Nullable String supplementaryTag)
