@@ -26,19 +26,21 @@ public class CandidateReadFilter
 
     public boolean isCandidate(SAMRecord record)
     {
+        // Mapped to a viral decoy contig, or an unmapped read placed on one by its mapped mate: either way the
+        // fragment touches a virus, so keep it. Checked first so it takes precedence over the redux-unmapped
+        // exclusion below - a redux-unmapped read sitting on a decoy is still viral evidence.
+        if(isViralDecoyContig(record.getReferenceName()))
+        {
+            return true;
+        }
         // Genuinely unaligned, so possibly viral. A read redux itself unmapped (UM tag) is instead host sequence
-        // from a bad region, not genuinely unaligned, so it is excluded.
+        // from a bad region, not genuinely unaligned, so it is not a candidate on its own account.
         if(record.getReadUnmappedFlag())
         {
             return !record.hasAttribute(UNMAP_ATTRIBUTE);
         }
         // The unmapped mate may be viral; this read anchors it.
         if(mateUnmapped(record))
-        {
-            return true;
-        }
-        // Mapped to a host-reference viral decoy contig.
-        if(isViralDecoyContig(record.getReferenceName()))
         {
             return true;
         }

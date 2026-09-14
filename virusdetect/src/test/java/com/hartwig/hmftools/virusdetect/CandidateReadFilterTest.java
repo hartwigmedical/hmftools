@@ -41,6 +41,16 @@ public class CandidateReadFilterTest
     }
 
     @Test
+    public void testReduxUnmappedReadPlacedOnDecoyIsCandidate()
+    {
+        // unmapped (0x4) but placed on chrEBV by its mapped mate: the fragment touches the virus, so the redux
+        // UM exclusion must not drop it (regression: previously the unmapped branch returned before the decoy check)
+        SAMRecord record = read(4, "chrEBV", "*");
+        record.setAttribute("UM", "chr2:100");
+        assertTrue(FILTER.isCandidate(record));
+    }
+
+    @Test
     public void testMappedReadWithUnmappedMateIsCandidate()
     {
         // paired (0x1) + mate unmapped (0x8) + first of pair (0x40)
