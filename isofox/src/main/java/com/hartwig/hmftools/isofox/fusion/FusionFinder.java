@@ -1079,7 +1079,7 @@ public class FusionFinder implements Callable<Void>
         if(mConfig.Fusions.MinHardFilterFrags <= 1)
             return false;
 
-        if(fusionData.getTotalFragmentTypeCount() >= mConfig.Fusions.MinHardFilterFrags)
+        if(fusionData.supportingFragmentCount() >= mConfig.Fusions.MinHardFilterFrags)
             return false;
 
         if(isKnownPair)

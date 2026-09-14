@@ -172,7 +172,12 @@ public class FusionReadData
         return mFragmentCounts.containsKey(type) ? mFragmentCounts.get(type) : 0;
     }
 
-    public int getTotalFragmentTypeCount() { return mFragmentCounts.values().stream().mapToInt(x -> x.intValue()).sum(); }
+    public int supportingFragmentCount()
+    {
+        return mFragmentCounts.entrySet().stream()
+                .filter(x -> x.getKey().isJunctionType())
+                .mapToInt(x -> x.getValue().intValue()).sum();
+    }
 
     public void addFragmentTypeCount(FusionFragmentType type, int count)
     {

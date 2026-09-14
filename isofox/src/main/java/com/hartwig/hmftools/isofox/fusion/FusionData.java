@@ -170,7 +170,7 @@ public class FusionData
     }
 
     public int totalFragments() { return SplitFrags + RealignedFrags + DiscordantFrags; }
-    public int supportingFragments() { return SplitFrags + RealignedFrags; }
+    public int supportingFragments() { return SplitFrags + DiscordantFrags; }
 
     public String toString()
     {
@@ -178,7 +178,6 @@ public class FusionData
                 Id, Chromosomes[SE_START], Chromosomes[SE_END], JunctionPositions[SE_START], JunctionPositions[SE_END],
                 SvType, GeneNames[SE_START], GeneNames[SE_END], TotalFrags);
     }
-
 
     // output
     public RnaFusion buildRnaFusion()
