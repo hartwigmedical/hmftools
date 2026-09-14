@@ -1,17 +1,13 @@
 package com.hartwig.hmftools.isofox.fusion;
 
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.readToString;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
 import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
-import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
-import static com.hartwig.hmftools.isofox.fusion.FusionConstants.REALIGN_MAX_SOFT_CLIP_BASE_LENGTH;
-import static com.hartwig.hmftools.isofox.fusion.FusionConstants.REALIGN_MIN_SOFT_CLIP_BASE_LENGTH;
+import static com.hartwig.hmftools.isofox.fusion.FusionUtils.aboveJunctionSoftClipThreshold;
 
-import static htsjdk.samtools.CigarOperator.M;
 import static htsjdk.samtools.CigarOperator.N;
 
 import java.util.List;
@@ -21,7 +17,6 @@ import com.hartwig.hmftools.isofox.common.Read;
 import com.hartwig.hmftools.isofox.common.TransExonRef;
 
 import htsjdk.samtools.CigarElement;
-import htsjdk.samtools.CigarOperator;
 
 public final class ChimericUtils
 {
@@ -94,19 +89,19 @@ public final class ChimericUtils
         return null;
     }
 
-    public static boolean hasRealignableSoftClip(final Read read, int se, boolean checkMax)
+    public static boolean hasCandidateJunctionSoftClips(final Read read, int se)
     {
         if(!read.isSoftClipped(se))
             return false;
 
         int scLength = se == SE_START ? read.leftClipLength() : read.rightClipLength();
 
-        return (scLength >= REALIGN_MIN_SOFT_CLIP_BASE_LENGTH && (!checkMax || scLength <= REALIGN_MAX_SOFT_CLIP_BASE_LENGTH));
+        return aboveJunctionSoftClipThreshold(scLength);
     }
 
     public static boolean isRealignedFragmentCandidate(final Read read)
     {
-        return hasRealignableSoftClip(read, SE_START, true) || hasRealignableSoftClip(read, SE_END, true);
+        return hasCandidateJunctionSoftClips(read, SE_START) || hasCandidateJunctionSoftClips(read, SE_END);
     }
 
     public static boolean setHasMultipleKnownSpliceGenes(final List<Read> reads, final List<String[]> knownPairGeneIds)
@@ -133,10 +128,10 @@ public final class ChimericUtils
                 break;
             }
 
-            if(hasRealignableSoftClip(read, SE_START, false))
+            if(hasCandidateJunctionSoftClips(read, SE_START))
                 junctionTransRefs[SE_START].addAll(read.getJunctionMatchingTransRefs(read.getCoordsBoundary(SE_START), false));
 
-            if(hasRealignableSoftClip(read, SE_END, false))
+            if(hasCandidateJunctionSoftClips(read, SE_END))
                 junctionTransRefs[SE_END].addAll(read.getJunctionMatchingTransRefs(read.getCoordsBoundary(SE_END), true));
         }
 

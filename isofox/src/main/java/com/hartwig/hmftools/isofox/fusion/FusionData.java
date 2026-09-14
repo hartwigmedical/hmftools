@@ -179,6 +179,7 @@ public class FusionData
                 SvType, GeneNames[SE_START], GeneNames[SE_END], TotalFrags);
     }
 
+
     // output
     public RnaFusion buildRnaFusion()
     {

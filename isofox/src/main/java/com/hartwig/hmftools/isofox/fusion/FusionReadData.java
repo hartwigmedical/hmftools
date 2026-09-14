@@ -18,7 +18,6 @@ import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.INTRON;
 import static com.hartwig.hmftools.isofox.common.CommonUtils.impliedSvType;
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.JUNCTION_BASE_LENGTH;
-import static com.hartwig.hmftools.isofox.fusion.FusionConstants.REALIGN_MAX_SOFT_CLIP_BASE_LENGTH;
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.REALIGN_MIN_SOFT_CLIP_BASE_LENGTH;
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.SOFT_CLIP_JUNC_BUFFER;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT_JUNCTION;
@@ -178,7 +177,7 @@ public class FusionReadData
                 .filter(x -> x.getKey().isJunctionType())
                 .mapToInt(x -> x.getValue().intValue()).sum();
     }
-
+    
     public void addFragmentTypeCount(FusionFragmentType type, int count)
     {
         Integer existingCount = mFragmentCounts.get(type);
@@ -573,7 +572,7 @@ public class FusionReadData
             // test that soft-clipped bases match the other junction's bases
             int scLength = read.SoftClipLengths[SE_END];
 
-            if(scLength < REALIGN_MIN_SOFT_CLIP_BASE_LENGTH || scLength > REALIGN_MAX_SOFT_CLIP_BASE_LENGTH)
+            if(scLength < REALIGN_MIN_SOFT_CLIP_BASE_LENGTH)
                 return false;
 
             if(junctionBases == null)
@@ -603,7 +602,7 @@ public class FusionReadData
 
             int scLength = read.SoftClipLengths[SE_START];
 
-            if(scLength < REALIGN_MIN_SOFT_CLIP_BASE_LENGTH || scLength > REALIGN_MAX_SOFT_CLIP_BASE_LENGTH)
+            if(scLength < REALIGN_MIN_SOFT_CLIP_BASE_LENGTH)
                 return false;
 
             if(junctionBases == null)
@@ -621,7 +620,6 @@ public class FusionReadData
         }
     }
 
-    public int[] getReadDepth() { return mReadDepth; }
     public int[] getMaxSplitLengths() { return mMaxSplitLengths; }
 
     public String getGeneName(int stream)

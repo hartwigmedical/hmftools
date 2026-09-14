@@ -17,7 +17,6 @@ import static com.hartwig.hmftools.isofox.common.CommonUtils.canonicalDonor;
 import static com.hartwig.hmftools.isofox.common.CommonUtils.deriveCommonRegions;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.NONE;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.matchRank;
-import static com.hartwig.hmftools.isofox.fusion.FusionConstants.REALIGN_MAX_SOFT_CLIP_BASE_LENGTH;
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.REALIGN_MIN_SOFT_CLIP_BASE_LENGTH;
 import static com.hartwig.hmftools.isofox.fusion.FusionJunctionType.CANONICAL;
 import static com.hartwig.hmftools.isofox.fusion.FusionJunctionType.KNOWN;
@@ -59,15 +58,20 @@ public class FusionUtils
         return read.junctionPositions();
     }
 
-    public static boolean hasRealignableSoftClip(final FusionRead read, int se, boolean checkMax)
+    public static boolean aboveJunctionSoftClipThreshold(final int softClipLength)
     {
-        return (read.SoftClipLengths[se] >= REALIGN_MIN_SOFT_CLIP_BASE_LENGTH
-                && (!checkMax || read.SoftClipLengths[se] <= REALIGN_MAX_SOFT_CLIP_BASE_LENGTH));
+        return softClipLength >= REALIGN_MIN_SOFT_CLIP_BASE_LENGTH;
     }
 
-    public static boolean isRealignedFragmentCandidate(final FusionRead read)
+    public static boolean aboveJunctionSoftClipThreshold(final FusionRead read, int se)
     {
-        return hasRealignableSoftClip(read, SE_START, true) || hasRealignableSoftClip(read, SE_END, true);
+        return read.SoftClipLengths[se] >= REALIGN_MIN_SOFT_CLIP_BASE_LENGTH;
+    }
+
+    public static boolean hasCandidateJunctionSoftClips(final FusionRead read)
+    {
+        return aboveJunctionSoftClipThreshold(read.SoftClipLengths[SE_START])
+            || aboveJunctionSoftClipThreshold(read.SoftClipLengths[SE_END]);
     }
 
     public static void setMaxSplitMappedLength(

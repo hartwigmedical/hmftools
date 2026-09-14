@@ -14,8 +14,8 @@ import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.MATCHED_JUNC
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.REALIGN_CANDIDATE;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.findSplitReadJunction;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formLocation;
-import static com.hartwig.hmftools.isofox.fusion.FusionUtils.hasRealignableSoftClip;
-import static com.hartwig.hmftools.isofox.fusion.FusionUtils.isRealignedFragmentCandidate;
+import static com.hartwig.hmftools.isofox.fusion.FusionUtils.aboveJunctionSoftClipThreshold;
+import static com.hartwig.hmftools.isofox.fusion.FusionUtils.hasCandidateJunctionSoftClips;
 
 import java.util.List;
 import java.util.Map;
@@ -116,7 +116,7 @@ public class FusionFragmentBuilder
 
             // set single junction info for candidate realignable fragments
             if(fragment.reads().size() == 2
-            && fragment.reads().stream().anyMatch(x -> isRealignedFragmentCandidate(x))
+            && fragment.reads().stream().anyMatch(x -> hasCandidateJunctionSoftClips(x))
             && fragment.reads().stream().noneMatch(x -> x.spansGeneCollections()))
             {
                 FusionRead read1 = fragment.reads().get(0);
@@ -221,7 +221,7 @@ public class FusionFragmentBuilder
         {
             for(int se = SE_START; se <= SE_END; ++se)
             {
-                if(!hasRealignableSoftClip(read, se, true))
+                if(!aboveJunctionSoftClipThreshold(read, se))
                     continue;
 
                 if(read.SoftClipLengths[se] > maxScLength)
