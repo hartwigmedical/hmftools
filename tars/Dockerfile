@@ -11,7 +11,6 @@ RUN micromamba install -y -n base -c bioconda -c conda-forge \
     procps-ng \
     "openjdk >=8,<=21" \
     "samtools >=1.14" \
-    "sambamba>=1.0.1" \
     && micromamba clean --all --yes
 
 ENV PATH="/opt/conda/bin:/opt/conda/condabin:${PATH}"
