@@ -130,7 +130,8 @@ public class SomaticMutation implements Variant
     @Override
     public String toString()
     {
-        return format("%s:%s %s>%s %s %s",
+        return format(
+                "%s:%s %s>%s %s %s",
                 mVariantDecorator.chromosome(), mVariantDecorator.position(), mVariantDecorator.ref(), mVariantDecorator.alt(),
                 mVariantDecorator.type(), Optional.ofNullable(gene()).orElse(""));
     }

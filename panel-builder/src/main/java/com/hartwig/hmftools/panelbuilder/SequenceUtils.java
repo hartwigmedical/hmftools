@@ -9,7 +9,7 @@ import static com.hartwig.hmftools.common.codon.Nucleotides.reverseComplementBas
 import static com.hartwig.hmftools.panelbuilder.RegionUtils.regionEndingAt;
 import static com.hartwig.hmftools.panelbuilder.RegionUtils.regionStartingAt;
 
-import java.util.OptionalInt;
+import java.util.List;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.region.Orientation;
@@ -19,51 +19,39 @@ public class SequenceUtils
 {
     public static SequenceData buildSequence(final RefGenomeInterface refGenome, final SequenceDefinition definition)
     {
+        List<SequenceData> parts = definition.segments().stream()
+                .map(segment -> buildSegmentSequence(refGenome, segment))
+                .toList();
+
         byte[] sequence = new byte[definition.baseLength()];
         int sequenceIndex = 0;
-        boolean isNormal = true;
-        int gcCount = 0;
-
-        ChrBaseRegion startRegion = definition.startRegion();
-        if(startRegion != null)
+        for(SequenceData part : parts)
         {
-            SequenceData start = getSequence(refGenome, startRegion);
-            int startLength = start.bases().length;
-            arraycopy(start.bases(), 0, sequence, sequenceIndex, startLength);
-            if(definition.startOrientation() == Orientation.REVERSE)
-            {
-                reverseComplementBasesInPlace(sequence, sequenceIndex, startLength);
-            }
-            isNormal &= start.isNormal();
-            gcCount += start.gcCount();
-            sequenceIndex += startLength;
+            arraycopy(part.bases(), 0, sequence, sequenceIndex, part.bases().length);
+            sequenceIndex += part.bases().length;
         }
 
-        {
-            SequenceData insert = validateAndNormaliseSequence(definition.insertSequence());
-            int insertLength = insert.bases().length;
-            arraycopy(insert.bases(), 0, sequence, sequenceIndex, insertLength);
-            sequenceIndex += insertLength;
-            isNormal &= insert.isNormal();
-            gcCount += insert.gcCount();
-        }
-
-        ChrBaseRegion endRegion = definition.endRegion();
-        if(endRegion != null)
-        {
-            SequenceData end = getSequence(refGenome, endRegion);
-            int endLength = end.bases().length;
-            arraycopy(end.bases(), 0, sequence, sequenceIndex, endLength);
-            if(definition.endOrientation() == Orientation.REVERSE)
-            {
-                reverseComplementBasesInPlace(sequence, sequenceIndex, endLength);
-            }
-            isNormal &= end.isNormal();
-            gcCount += end.gcCount();
-            //            sequenceIndex += endLength;
-        }
-
+        boolean isNormal = parts.stream().allMatch(SequenceData::isNormal);
+        int gcCount = parts.stream().mapToInt(SequenceData::gcCount).sum();
         return new SequenceData(sequence, isNormal, gcCount);
+    }
+
+    private static SequenceData buildSegmentSequence(final RefGenomeInterface refGenome, final SequenceSegment segment)
+    {
+        if(segment instanceof RefSegment refSegment)
+        {
+            SequenceData data = getSequence(refGenome, refSegment.region());
+            if(refSegment.orientation() == Orientation.REVERSE)
+            {
+                // Safe to mutate in place: getSequence returns a fresh array. Reverse complement preserves GC count and normality.
+                reverseComplementBasesInPlace(data.bases(), 0, data.bases().length);
+            }
+            return data;
+        }
+        else
+        {
+            return validateAndNormaliseSequence(((InsertSeqSegment) segment).sequence());
+        }
     }
 
     private static SequenceData getSequence(final RefGenomeInterface refGenome, final ChrBaseRegion region)
@@ -159,49 +147,36 @@ public class SequenceUtils
         return true;
     }
 
-    // Calculates the approximate size in bases of the insertion or deletion represented by the sequence.
-    // Returns empty optional if it's a complex variant.
-    public static OptionalInt sequenceIndelSize(final SequenceDefinition sequenceDefinition)
+    // Whether the probe sequence is within maxBasesDifference bases of a contiguous stretch of reference genome. True only for simple near-ref
+    // probes (single region, single breakend + small insert, same-chromosome SNV/small INDEL/SV); anything more complex is dissimilar.
+    public static boolean isSequenceSimilarToRef(final SequenceDefinition definition, int maxBasesDifference)
     {
-        ChrBaseRegion start = sequenceDefinition.startRegion();
-        ChrBaseRegion end = sequenceDefinition.endRegion();
-        int insertLength = sequenceDefinition.insertSequence().length();
+        List<ChrBaseRegion> regions = definition.regions();
+        int regionBases = regions.stream().mapToInt(ChrBaseRegion::baseLength).sum();
+        int insertBases = definition.baseLength() - regionBases;
 
-        if(start != null && end == null)
+        if(regions.size() == 1)
         {
-            return OptionalInt.of(insertLength);
+            // Exact single region (no insert) or single breakend (region + insert): difference is just the insert.
+            return insertBases <= maxBasesDifference;
         }
-        else if(start == null && end != null)
+        if(regions.size() == 2)
         {
-            return OptionalInt.of(insertLength);
-        }
-        else if(start != null && end != null)
-        {
-            if(start.chromosome().equals(end.chromosome()))
+            ChrBaseRegion a = regions.get(0);
+            ChrBaseRegion b = regions.get(1);
+            if(!a.chromosome().equals(b.chromosome()))
             {
-                // SNV, INDEL, or SV on same chromosome.
-                if(start.start() > end.start())
-                {
-                    // Ensure start and end are ordered correctly to calculate the delete length.
-                    start = sequenceDefinition.endRegion();
-                    end = sequenceDefinition.startRegion();
-                }
-                // Clamp to >=0 because theoretically the regions could overlap in the case of an SV.
-                int deleteLength = max(end.start() - start.end() - 1, 0);
-                int difference = max(insertLength, deleteLength);
-                return OptionalInt.of(difference);
+                // Translocation.
+                return false;
             }
-            else
-            {
-                // SV across different chromosomes.
-                return OptionalInt.empty();
-            }
+            // Clamp to >=0 because theoretically the regions could overlap in the case of an SV.
+            ChrBaseRegion lower = a.start() <= b.start() ? a : b;
+            ChrBaseRegion upper = a.start() <= b.start() ? b : a;
+            int deleteBases = max(upper.start() - lower.end() - 1, 0);
+            return max(insertBases, deleteBases) <= maxBasesDifference;
         }
-        else
-        {
-            // This shouldn't occur, but it would mean the probe is not based on the ref genome at all.
-            return OptionalInt.empty();
-        }
+        // More than two regions (spliced) or otherwise complex: dissimilar.
+        return false;
     }
 
     public static SequenceDefinition buildIndelProbe(final String chromosome, int position, final String ref, final String alt,
@@ -217,11 +192,12 @@ public class SequenceUtils
         int postPosition = position + refLength;
         ChrBaseRegion endRegion = regionStartingAt(chromosome, postPosition, endBaseLength);
 
-        SequenceDefinition definition = new SequenceDefinition(startRegion, Orientation.FORWARD, alt, endRegion, Orientation.FORWARD);
+        SequenceDefinition definition = SequenceDefinition.variant(startRegion, Orientation.FORWARD, alt, endRegion, Orientation.FORWARD);
 
         if(definition.baseLength() != probeLength)
         {
-            throw new IllegalArgumentException(format("variant(%s:%d %s->%s) invalid sequenceLength(%d)",
+            throw new IllegalArgumentException(format(
+                    "variant(%s:%d %s->%s) invalid sequenceLength(%d)",
                     chromosome, position, ref, alt, definition.baseLength()));
         }
 
@@ -284,7 +260,7 @@ public class SequenceUtils
             endOrient = Orientation.FORWARD;
         }
 
-        SequenceDefinition definition = new SequenceDefinition(startRegion, startOrient, insertSequence, endRegion, endOrient);
+        SequenceDefinition definition = SequenceDefinition.variant(startRegion, startOrient, insertSequence, endRegion, endOrient);
 
         if(definition.baseLength() != probeLength)
         {

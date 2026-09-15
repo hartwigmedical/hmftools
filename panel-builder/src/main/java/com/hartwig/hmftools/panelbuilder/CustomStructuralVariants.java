@@ -55,9 +55,10 @@ public class CustomStructuralVariants
     private static void checkNoDuplicates(final List<CustomStructuralVariant> customSvs)
     {
         LOGGER.debug("Checking custom structural variants for duplicates");
-        List<CustomStructuralVariant> duplicated = findDuplicates(customSvs, (sv1, sv2) ->
-                sv1.startPosition() == sv2.startPosition() && sv1.startOrientation() == sv2.startOrientation() &&
-                        sv1.endPosition() == sv2.endPosition() && sv1.endOrientation() == sv2.endOrientation());
+        List<CustomStructuralVariant> duplicated = findDuplicates(
+                customSvs, (sv1, sv2) ->
+                        sv1.startPosition() == sv2.startPosition() && sv1.startOrientation() == sv2.startOrientation() &&
+                                sv1.endPosition() == sv2.endPosition() && sv1.endOrientation() == sv2.endOrientation());
         if(!duplicated.isEmpty())
         {
             duplicated.forEach(customSv -> LOGGER.error("Duplicate custom structural variant: {}", customSv));
