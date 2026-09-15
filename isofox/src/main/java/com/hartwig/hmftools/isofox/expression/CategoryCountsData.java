@@ -14,7 +14,7 @@ public class CategoryCountsData
     private final List<Integer> mTranscripts;
     private final List<String> mUnsplicedGenes;
     private double mFragmentCount;
-    private int mLowMapQualFragments;
+    private int mMultiMappedFragments;
     private double[] mFragmentCountsByGcRatio;
 
     // counts by length is only used for expected not actual counts, and is then adjusted by the observed fragment length distribution
@@ -27,7 +27,7 @@ public class CategoryCountsData
         mTranscripts = transcripts;
         mUnsplicedGenes = unsplicedGenes;
         mFragmentCount = 0;
-        mLowMapQualFragments = 0;
+        mMultiMappedFragments = 0;
 
         mCombinedKey = formTranscriptIds();
 
@@ -76,15 +76,15 @@ public class CategoryCountsData
     }
 
     public final double fragmentCount() { return mFragmentCount; }
-    public final int lowMapQualFragments() { return mLowMapQualFragments; }
+    public final int multiMappedFragments() { return mMultiMappedFragments; }
     public final double[] fragmentCountsByGcRatio() { return mFragmentCountsByGcRatio; }
 
-    public void addCounts(double count)
+    public void addCounts(double count, boolean multiMapped)
     {
         mFragmentCount += count;
 
-        if(count < 1)
-            ++mLowMapQualFragments;
+        if(multiMapped)
+            ++mMultiMappedFragments;
     }
 
     public void adjustCounts(double factor)
@@ -92,12 +92,12 @@ public class CategoryCountsData
         mFragmentCount *= factor;
     }
 
-    public void addGcRatioCounts(double count, final int[] gcRatioIndex, final double[] counts)
+    public void addGcRatioCounts(double count, boolean multiMapped, final int[] gcRatioIndex, final double[] counts)
     {
         mFragmentCount += count;
 
-        if(count < 1)
-            ++mLowMapQualFragments;
+        if(multiMapped)
+            ++mMultiMappedFragments;
 
         if(gcRatioIndex != null && counts != null)
         {

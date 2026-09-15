@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.neo.score;
 
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeVersion;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.NEO_FILE_ID;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.RNA_SAMPLE_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.RNA_SAMPLE_ID;
@@ -31,6 +32,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 import com.hartwig.hmftools.neo.bind.ScoreConfig;
@@ -144,6 +146,7 @@ public class NeoScorerConfig
         ScoreConfig.registerConfig(configBuilder);
         ConfigUtils.addLoggingOptions(configBuilder);
         EnsemblDataCache.addEnsemblDir(configBuilder);
+        addRefGenomeVersion(configBuilder);
 
         configBuilder.addDecimal(
                 LIKELIHOOD_THRESHOLD, "Rank threshold to write full peptide data, default 0 (not applied)", 0);

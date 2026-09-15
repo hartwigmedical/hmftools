@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.isofox.fusion;
 
+import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome.lowerChromosome;
@@ -14,8 +15,8 @@ import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.MATCHED_JUNC
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.REALIGN_CANDIDATE;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.findSplitReadJunction;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formLocation;
-import static com.hartwig.hmftools.isofox.fusion.FusionUtils.hasRealignableSoftClip;
-import static com.hartwig.hmftools.isofox.fusion.FusionUtils.isRealignedFragmentCandidate;
+import static com.hartwig.hmftools.isofox.fusion.FusionUtils.aboveJunctionSoftClipThreshold;
+import static com.hartwig.hmftools.isofox.fusion.FusionUtils.hasCandidateJunctionSoftClips;
 
 import java.util.List;
 import java.util.Map;
@@ -116,7 +117,7 @@ public class FusionFragmentBuilder
 
             // set single junction info for candidate realignable fragments
             if(fragment.reads().size() == 2
-            && fragment.reads().stream().anyMatch(x -> isRealignedFragmentCandidate(x))
+            && fragment.reads().stream().anyMatch(x -> hasCandidateJunctionSoftClips(x))
             && fragment.reads().stream().noneMatch(x -> x.spansGeneCollections()))
             {
                 FusionRead read1 = fragment.reads().get(0);
@@ -142,9 +143,27 @@ public class FusionFragmentBuilder
 
         int posIndex = 0;
 
+        // handle the scenario where both primaries have supplementaries, in which case use the longer for the split junction
+        boolean longestSoftClipFirstInPair = false;
+        int longestSoftClip = 0;
+
         for(FusionRead read : fragment.reads())
         {
-            if(!read.HasSuppAlignment)
+            if(!read.isSupplementaryAlignment() && read.HasSuppAlignment)
+            {
+                int maxSoftClip = max(read.SoftClipLengths[SE_START], read.SoftClipLengths[SE_END]);
+
+                if(maxSoftClip > longestSoftClip)
+                {
+                    longestSoftClip = maxSoftClip;
+                    longestSoftClipFirstInPair = read.isFirstOfPair();
+                }
+            }
+        }
+
+        for(FusionRead read : fragment.reads())
+        {
+            if(!read.HasSuppAlignment || read.isFirstOfPair() != longestSoftClipFirstInPair)
                 continue;
 
             chromosomes[posIndex] = read.Chromosome;
@@ -221,7 +240,7 @@ public class FusionFragmentBuilder
         {
             for(int se = SE_START; se <= SE_END; ++se)
             {
-                if(!hasRealignableSoftClip(read, se, true))
+                if(!aboveJunctionSoftClipThreshold(read, se))
                     continue;
 
                 if(read.SoftClipLengths[se] > maxScLength)

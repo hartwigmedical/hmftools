@@ -16,6 +16,7 @@ import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.N;
 import static htsjdk.samtools.SAMFlag.FIRST_OF_PAIR;
 import static htsjdk.samtools.SAMFlag.SECOND_OF_PAIR;
+import static htsjdk.samtools.SAMFlag.SUPPLEMENTARY_ALIGNMENT;
 
 import java.util.List;
 
@@ -285,7 +286,8 @@ public class TestUtils
         return read;
     }
 
-    public static Read[] createSupplementaryReadPair(final int id, final GeneCollection gc1, final GeneCollection gc2,
+    public static Read[] createSupplementaryReadPair(
+            final int id, final GeneCollection gc1, final GeneCollection gc2,
             int posStart1, int posEnd1, int posStart2, int posEnd2, final Cigar cigar1, final Cigar cigar2, boolean firstInPair)
     {
         int readBaseLength = cigar1.getCigarElements().stream()
@@ -297,25 +299,25 @@ public class TestUtils
         Read read1 = createMappedRead(id, gc1, posStart1, posEnd1, cigar1, readBases);
         Read read2 = createMappedRead(id, gc2, posStart2, posEnd2, cigar2, readBases);
         read1.setFlag(FIRST_OF_PAIR, firstInPair);
-        read2.setFlag(SECOND_OF_PAIR, !firstInPair);
+        read2.setFlag(FIRST_OF_PAIR, firstInPair);
+        read2.setFlag(SUPPLEMENTARY_ALIGNMENT, true);
 
         // note: strand is not currently set correctly
         SupplementaryReadData suppData1 = new SupplementaryReadData(
                 read2.Chromosome, read2.PosStart, '+', read2.cigarStr(), 255);
 
         read1.setSuppAlignment(suppData1.asDelimStr());
-        // read1.setSuppAlignment(String.format("%s;%d;%s", read2.Chromosome, read2.PosStart, read2.Cigar.toString()));
 
         SupplementaryReadData suppData2 = new SupplementaryReadData(
                 read1.Chromosome, read1.PosStart, '+', read1.cigarStr(), 255);
 
         read2.setSuppAlignment(suppData2.asDelimStr());
-        // read2.setSuppAlignment(String.format("%s;%d;%s", read1.Chromosome, read1.PosStart, read1.Cigar.toString()));
 
         return new Read[] { read1, read2 };
     }
 
-    public static Read[] createReadPair(final int id, final GeneCollection gc1, final GeneCollection gc2,
+    public static Read[] createReadPair(
+            final int id, final GeneCollection gc1, final GeneCollection gc2,
             int posStart1, int posEnd1, int posStart2, int posEnd2, final Cigar cigar1, final Cigar cigar2, byte orient1, byte orient2)
     {
         int readBaseLength = cigar1.getCigarElements().stream()
@@ -333,6 +335,12 @@ public class TestUtils
         read2.setStrand(orient2 == -1, orient1 == -1);
 
         return new Read[] { read1, read2 };
+    }
+
+    public static void setReadFirstSecondInPair(final Read read, boolean isFirst)
+    {
+        read.setFlag(FIRST_OF_PAIR, isFirst);
+        read.setFlag(SECOND_OF_PAIR, !isFirst);
     }
 
     public static Read createMappedRead(final int id, final GeneCollection geneCollection, int posStart, int posEnd, final Cigar cigar)
@@ -425,8 +433,6 @@ public class TestUtils
     public static FusionFinder createFusionFinder(
             final IsofoxConfig config, final EnsemblDataCache geneTransCache, final RacFragmentCache racFragmentCache)
     {
-        config.Filters.buildGeneRegions(geneTransCache);
-
         return new FusionFinder(
                 "FF", config, geneTransCache, racFragmentCache,
                 new PassingFusions(config.Fusions.KnownFusions, null), new FusionWriter(config));

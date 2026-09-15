@@ -53,7 +53,6 @@ public class ChimericReadTracker
     private GeneCollection mGeneCollection; // the current collection being processed
     private final Map<String,ChimericReadGroup> mChimericReadMap;
     private final Map<String, FusionReadGroup> mFusionReadGroupMap;
-    private final List<FusionReadGroup> mLocalCompleteGroups; // 2-read same-gene-collection groups with a split junction
 
     // junction position from fusion junction candidate reads are cached to identify candidate realignable reads
     private JunctionRacFragments mJunctionRacGroups;
@@ -93,7 +92,6 @@ public class ChimericReadTracker
         mFusionReadGroupMap = Maps.newHashMap();
         mJunctionRacGroups = null;
         mLocalChimericReads = Lists.newArrayList();
-        mLocalCompleteGroups = Lists.newArrayList();
         mCandidateRealignedGroups = Lists.newArrayList();
         mPostGeneReadMap = Maps.newHashMap();
         mPreviousPostGeneReadMap = Maps.newHashMap();
@@ -196,7 +194,6 @@ public class ChimericReadTracker
 
         mChimericReadMap.clear();
         mFusionReadGroupMap.clear();
-        mLocalCompleteGroups.clear();
         mCandidateRealignedGroups.clear();
         mChimericStats.clear();
         mLocalChimericReads.clear();
@@ -214,7 +211,7 @@ public class ChimericReadTracker
 
     public void addRealignmentCandidates(final Read read1, final Read read2)
     {
-        if(read1.isDuplicate() || read2.isDuplicate()) // group complete so drop these
+        if(read1.isDuplicate() || read2.isDuplicate())
             return;
 
         mCandidateRealignedGroups.add(new ChimericReadGroup(read1, read2));
@@ -222,15 +219,12 @@ public class ChimericReadTracker
 
     public void addChimericReadPair(final Read read1, final Read read2)
     {
-        if(inImmuneRegion(read1) || inImmuneRegion(read2))
+        if(read1.isDuplicate() || read2.isDuplicate() || inImmuneRegion(read1) || inImmuneRegion(read2))
             return;
 
-        if(!read1.isDuplicate() && !read2.isDuplicate())
-        {
-            // populate transcript info for intronic reads since it will be used in fusion matching
-            addIntronicTranscriptData(read1);
-            addIntronicTranscriptData(read2);
-        }
+        // populate transcript info for intronic reads since it will be used in fusion matching
+        addIntronicTranscriptData(read1);
+        addIntronicTranscriptData(read2);
 
         // add the pair when it's clear there aren't others with the same ID in the map
         if(mConfig.RunValidations && mChimericReadMap.containsKey(read1.Id))
@@ -273,6 +267,18 @@ public class ChimericReadTracker
             read.addIntronicTranscriptRefs(mGeneCollection.getTranscripts());
     }
 
+    public void addSupplementaryRead(final Read read)
+    {
+        if(inImmuneRegion(read))
+            return;
+
+        ChimericReadGroup chimericReads = mChimericReadMap.get(read.Id);
+        if(chimericReads == null)
+            mChimericReadMap.put(read.Id, new ChimericReadGroup(read));
+        else
+            chimericReads.addRead(read);
+    }
+
     public void postProcessChimericReads(final BaseDepth baseDepth, final FragmentTracker fragmentTracker)
     {
         // check any lone reads - this cannot be one of a pair of non-genic reads since they will have already been dismissed
@@ -281,17 +287,14 @@ public class ChimericReadTracker
         {
             Read read = (Read)object;
 
-            if(read.isMateUnmapped() || inImmuneRegion(read) || read.isSecondaryAlignment())
+            if(read.isDuplicate() || read.isMateUnmapped() || inImmuneRegion(read))
                 continue;
 
-            if(!read.isDuplicate())
-            {
-                baseDepth.processRead(read.getMappedRegionCoords());
-                addIntronicTranscriptData(read);
-            }
+            baseDepth.processRead(read.getMappedRegionCoords());
+            addIntronicTranscriptData(read);
 
             ChimericReadGroup chimericReads = mChimericReadMap.get(read.Id);
-            if (chimericReads == null)
+            if(chimericReads == null)
                 mChimericReadMap.put(read.Id, new ChimericReadGroup(read));
             else
                 chimericReads.addRead(read);
@@ -390,7 +393,6 @@ public class ChimericReadTracker
         {
             // clear other chimeric state except for local junction information
             mChimericReadMap.clear();
-            mLocalCompleteGroups.clear();
             mCandidateRealignedGroups.clear();
             mChimericStats.clear();
         }
@@ -538,8 +540,12 @@ public class ChimericReadTracker
         {
             int[] splitJunction = findSplitReadJunction(splitRead);
 
-            addJunction(splitRead, SE_START, splitJunction[SE_START], ORIENT_FWD);
-            addJunction(splitRead, SE_END, splitJunction[SE_END], ORIENT_REV);
+            if(splitJunction != null)
+            {
+                addJunction(splitRead, SE_START, splitJunction[SE_START], ORIENT_FWD);
+                addJunction(splitRead, SE_END, splitJunction[SE_END], ORIENT_REV);
+            }
+
 
             return;
         }

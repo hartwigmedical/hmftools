@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.isofox.fusion;
 
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
@@ -36,7 +37,6 @@ public class FusionFragment
     private final byte[] mOrientations;
     private final int[] mJunctionPositions; // fusion junction if exists
     private final byte[] mJunctionOrientations; // orientation at junction if exists
-    private final FusionJunctionType[] mJunctionTypes;
     private FusionFragmentType mType;
     private final String[] mLocationIds; // used to group proximate fragments and fusions
 
@@ -54,7 +54,6 @@ public class FusionFragment
         mJunctionOrientations = new byte[] {0, 0};
         mOrientations = new byte[] {0, 0};
         mRegionMatchTypes = new RegionMatchType[] { RegionMatchType.NONE, RegionMatchType.NONE };
-        mJunctionTypes = new FusionJunctionType[] { FusionJunctionType.UNKNOWN, FusionJunctionType.UNKNOWN };
         mLocationIds = new String[] {"", ""};
 
         mTransExonRefs = new List[SE_PAIR];
@@ -77,7 +76,7 @@ public class FusionFragment
     }
 
     public String readId() { return mReadGroup.ReadId; }
-    public List<FusionRead> reads() { return mReadGroup.Reads; }
+    public List<FusionRead> reads() { return mReadGroup.reads(); }
     public FusionReadGroup readGroup() { return mReadGroup; }
 
     public FusionFragmentType type() { return mType; }
@@ -98,7 +97,6 @@ public class FusionFragment
     public final byte[] junctionOrientations() { return mJunctionOrientations; }
 
     public final RegionMatchType[] regionMatchTypes() { return mRegionMatchTypes; }
-    public final FusionJunctionType[] junctionTypes() { return mJunctionTypes; }
 
     public boolean isUnspliced() { return mRegionMatchTypes[SE_START] == INTRON && mRegionMatchTypes[SE_END] == INTRON; }
     public boolean isSpliced() { return exonBoundary(mRegionMatchTypes[SE_START]) && exonBoundary(mRegionMatchTypes[SE_END]); }
@@ -127,21 +125,6 @@ public class FusionFragment
 
     public final List<FusionTransExon>[] getTransExonRefs() { return mTransExonRefs; }
 
-    /*
-    public List<String> getGeneIds(int seIndex)
-    {
-        final List<String> geneIds = Lists.newArrayList();
-
-        for(FusionTransExonRef transExonRef : mTransExonRefs[seIndex])
-        {
-            if(!geneIds.contains(transExonRef.GeneId))
-                geneIds.add(transExonRef.GeneId);
-        }
-
-        return geneIds;
-    }
-    */
-
     public final List<FusionRead> readsByLocation(final int se)
     {
         if(mType == UNKNOWN)
@@ -149,9 +132,9 @@ public class FusionFragment
 
         // doesn't take junctions into consideration
         if(isSingleGeneCollection())
-            return mReadGroup.Reads;
+            return mReadGroup.reads();
 
-        return mReadGroup.Reads.stream()
+        return mReadGroup.reads().stream()
                 .filter(x -> x.Chromosome.equals(mChromosomes[se]))
                 .filter(x -> x.GeneCollections[SE_START] == mGeneCollections[se] || x.GeneCollections[SE_END] == mGeneCollections[se])
                 .collect(Collectors.toList());
@@ -162,7 +145,7 @@ public class FusionFragment
         // set transcript & exon info for each junction from each applicable read, taking only the highest matches
         for(int se = SE_START; se <= SE_END; ++se)
         {
-            for(final FusionRead read : mReadGroup.Reads)
+            for(final FusionRead read : mReadGroup.reads())
             {
                 if(!isSingleGeneCollection())
                 {
@@ -227,46 +210,36 @@ public class FusionFragment
                 continue;
             }
 
-            mJunctionTypes[seIndex] = KNOWN;
             ++index;
         }
     }
 
-    public void setJunctionTypes(final RefGenomeInterface refGenome, final byte[] junctionStrands, final String[] junctionSpliceBases)
+    public String softClipBases(int junctionPosition, byte junctionOrientation)
     {
-        if(refGenome == null)
-            return;
+        int seIndex = junctionOrientation == ORIENT_FWD ? SE_END : SE_START;
 
-        for(int se = SE_START; se <= SE_END; ++se)
+        for(FusionRead read : mReadGroup.reads())
         {
-            if(mJunctionTypes[se] == KNOWN)
-            {
+            if(read.SoftClipLengths[seIndex] == 0)
                 continue;
-            }
-            else if(mJunctionPositions[se] > 0)
+
+            if(read.Positions[seIndex] == junctionPosition)
             {
-                String daBases = junctionSpliceBases[se];
+                int softClipLength = read.SoftClipLengths[seIndex];
 
-                if(junctionStrands != null)
+                if(junctionOrientation == ORIENT_FWD)
                 {
-                    boolean isDonor = (mJunctionOrientations[se] == junctionStrands[se]);
-
-                    if(isDonor && canonicalDonor(daBases, junctionStrands[se]))
-                        mJunctionTypes[se] = FusionJunctionType.CANONICAL;
-                    else if(!isDonor && canonicalAcceptor(daBases, junctionStrands[se]))
-                        mJunctionTypes[se] = FusionJunctionType.CANONICAL;
+                    int boundaryBaseLength = read.BoundaryBases[seIndex].length();
+                    return read.BoundaryBases[seIndex].substring(boundaryBaseLength - softClipLength);
                 }
                 else
                 {
-                    // try them both
-                    byte asDonorStrand = mJunctionOrientations[se];
-                    byte asAcceptorStrand = (byte)(-mJunctionOrientations[se]);
-
-                    if(canonicalDonor(daBases, asDonorStrand) || canonicalAcceptor(daBases, asAcceptorStrand))
-                        mJunctionTypes[se] = FusionJunctionType.CANONICAL;
+                    return read.BoundaryBases[seIndex].substring(0, softClipLength);
                 }
             }
         }
+
+        return "";
     }
 
     public String toString()

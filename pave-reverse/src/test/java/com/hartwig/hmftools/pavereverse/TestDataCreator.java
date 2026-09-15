@@ -52,7 +52,7 @@ public class TestDataCreator
                 //                "SRGAP2,",
                 //                "AP5Z1,"
         );
-        //        copyLinesMatching(new File(fullEnsemblDataDir, "ensembl_protein_features.csv"), outputDir, Set.of());
+        //        copyLinesMatching(new File(fullEnsemblDataDir, "ensembl_protein_features.38.csv"), outputDir, Set.of());
         Set<String> geneIds = Set.of(
                 "ENSG00000139618"
                 //                "ENSG00000198793",
@@ -102,10 +102,10 @@ public class TestDataCreator
         //                "ENSG00000163486", // SRGAP2
         //                "ENSG00000242802" // AP5Z1
         //        );
-        copyLinesMatching(new File(fullEnsemblDataDir, "ensembl_gene_data.csv"), outputDir, geneIds);
-        copyLinesMatching(new File(fullEnsemblDataDir, "ensembl_trans_amino_acids.csv"), outputDir, geneIds);
-        copyLinesMatching(new File(fullEnsemblDataDir, "ensembl_trans_exon_data.csv"), outputDir, geneIds);
-        copyLinesMatching(new File(fullEnsemblDataDir, "ensembl_trans_splice_data.csv"), outputDir, geneIds);
+        copyLinesMatching(new File(fullEnsemblDataDir, "ensembl_gene_data.38.csv"), outputDir, geneIds);
+        copyLinesMatching(new File(fullEnsemblDataDir, "ensembl_trans_amino_acids.38.csv"), outputDir, geneIds);
+        copyLinesMatching(new File(fullEnsemblDataDir, "ensembl_trans_exon_data.38.csv"), outputDir, geneIds);
+        copyLinesMatching(new File(fullEnsemblDataDir, "ensembl_trans_splice_data.38.csv"), outputDir, geneIds);
     }
 
     private static void copyLinesMatching(File input, File outputDir, Set<String> toFind) throws IOException

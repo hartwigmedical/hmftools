@@ -19,9 +19,8 @@ public class IsofoxConstants
 
     public static final double GC_RATIO_BUCKET = 0.01;
 
-    public static final short DEFAULT_SINGLE_MAP_QUALITY = 255;
+    public static final short DEFAULT_SINGLE_MAP_QUALITY = 60;
     public static short SINGLE_MAP_QUALITY = DEFAULT_SINGLE_MAP_QUALITY;
-    public static short MULTI_MAP_QUALITY_THRESHOLD = 3; // multi-mapped fragments are given map quals of 3 or lower
 
     public static final int ENRICHED_GENE_BUFFER = 1000;
 
@@ -34,28 +33,6 @@ public class IsofoxConstants
     public static final double HIGH_EXPRESSION_FOLD_CHANGE_LOW = 1.0;
     public static final double HIGH_EXPRESSION_FOLD_CHANGE_HIGH = 2.3;
     public static final double HIGH_EXPRESSION_PERCENTILE_HIGH = 0.98;
-
-    public static void populateEnrichedGeneIds(final List<String> geneIds, final RefGenomeVersion version)
-    {
-        if(version == RefGenomeVersion.V38)
-        {
-            geneIds.add("ENSG00000276168"); // RN7SL1
-            geneIds.add("ENSG00000274012"); // RN7SL2
-            geneIds.add("ENSG00000278771"); // RN7SL3
-            geneIds.add("ENSG00000263740"); // RN7SL4P
-            geneIds.add("ENSG00000283293"); // RN7SK
-            geneIds.add("ENSG00000265735"); // RN7SL5P
-        }
-        else
-        {
-            geneIds.add("ENSG00000265150");
-            geneIds.add("ENSG00000258486");
-            geneIds.add("ENSG00000202198");
-            geneIds.add("ENSG00000266037");
-            geneIds.add("ENSG00000263740");
-            geneIds.add("ENSG00000265735");
-        }
-    }
 
     // process genes with longer expected processing times first
     public static final List<String> PRIORITISED_CHROMOSOMES = Lists.newArrayList("14", "22", "2", "3", "6", "9", "16", "17");

@@ -162,9 +162,9 @@ public class TranscriptExpression
     private static final int ADJUSTED_TPM = 1;
     private static final double TPM_MILLION = 1000000;
 
-    public static double[] calcTpmFactors(final List<GeneCollectionSummary> geneSummaryData, final List<String> enrichedGeneIds)
+    public static double[] calcTpmFactors(final List<GeneCollectionSummary> geneSummaryData)
     {
-        // exclude enriched genes and cap the contribution of any one gene to 1%
+        // cap the contribution of any one gene to 1%
         double[] results = {0, 0};
 
         List<Double> fragsPerKbSet = Lists.newArrayListWithExpectedSize(200000);
@@ -180,9 +180,6 @@ public class TranscriptExpression
                 double fragsPerKb = transResult.fragmentsPerKb();
 
                 rawFragsPerKbTotal += fragsPerKb;
-
-                if(enrichedGeneIds.contains(transResult.Trans.GeneId))
-                    continue;
 
                 if(fragsPerKb < 0.5)
                 {

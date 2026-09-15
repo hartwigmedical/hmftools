@@ -149,9 +149,6 @@ public class FragmentSizeCalcs implements Callable<Void>
         {
             currentGeneIndex = findNextOverlappingGenes(mGeneDataList, currentGeneIndex, overlappingGenes);
 
-            if(overlappingGenes.stream().anyMatch(x -> mConfig.Filters.EnrichedGeneIds.contains(x.GeneId)))
-                continue;
-
             mCurrentTransDataList.clear();
 
             mFragmentTracker.clear();
@@ -177,11 +174,6 @@ public class FragmentSizeCalcs implements Callable<Void>
                 continue;
 
             ChrBaseRegion sliceRegion = new ChrBaseRegion(mChromosome, mCurrentGenesRange);
-
-            List<BaseRegion> excludedRegions = mConfig.Filters.findExcludedRegions(sliceRegion);
-
-            if(!excludedRegions.isEmpty())
-                continue;
 
             if(currentGeneIndex >= nextLogCount)
             {

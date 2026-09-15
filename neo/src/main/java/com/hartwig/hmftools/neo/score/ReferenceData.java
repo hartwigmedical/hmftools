@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.neo.score;
 
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.from;
 import static com.hartwig.hmftools.common.rna.RnaExpressionMatrix.EXPRESSION_SCOPE_TRANS;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.score.NeoScorerConfig.COHORT_SAMPLE_TPM_FILE;
@@ -12,6 +13,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader;
 import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.rna.RnaExpressionMatrix;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.neo.bind.BindScorer;
@@ -46,8 +48,9 @@ public class ReferenceData
         TpmMedians = new TpmMediansCache(cohortTpmMediansFile);
 
         TransAminoAcidMap = Maps.newHashMap();
+
         EnsemblDataLoader.loadTranscriptAminoAcidData(
-                configBuilder.getValue(ENSEMBL_DATA_DIR), TransAminoAcidMap, Lists.newArrayList(), false);
+                configBuilder.getValue(ENSEMBL_DATA_DIR), from(configBuilder), TransAminoAcidMap, Lists.newArrayList(), false);
     }
 
     public boolean peptideMatchesWildtype(final String peptide, final String transName)

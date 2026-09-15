@@ -5,6 +5,8 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.convertAminoAcidsToGeneMap;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeVersion;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.from;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
@@ -65,7 +67,10 @@ public class RankProteomePeptides
         mAlleles = loadDelimitedIdFile(configBuilder.getValue(ALLELE_FILE), FLD_ALLELE, CSV_DELIM);
 
         Map<String, TranscriptAminoAcids> transAminoAcidMap = Maps.newHashMap();
-        EnsemblDataLoader.loadTranscriptAminoAcidData(configBuilder.getValue(ENSEMBL_DATA_DIR), transAminoAcidMap, Lists.newArrayList(), false);
+
+        EnsemblDataLoader.loadTranscriptAminoAcidData(
+                configBuilder.getValue(ENSEMBL_DATA_DIR), from(configBuilder), transAminoAcidMap, Lists.newArrayList(), false);
+
         mTransAminoAcidMap = convertAminoAcidsToGeneMap(transAminoAcidMap);
 
         mRankCuttoff = configBuilder.getDecimal(RANK_CUTOFF);
@@ -319,6 +324,7 @@ public class RankProteomePeptides
         configBuilder.addDecimal(RANK_CUTOFF, "Number of amino acid flanks to retrieve", 0.01);
         ScoreConfig.registerConfig(configBuilder);
         addEnsemblDir(configBuilder);
+        addRefGenomeVersion(configBuilder);
         addLoggingOptions(configBuilder);
         addOutputOptions(configBuilder);
         addThreadOptions(configBuilder);

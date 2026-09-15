@@ -25,7 +25,8 @@ public class CodingVariantTranslator
         EnsemblCache.setRequiredData(true, true, true, false);
         EnsemblCache.load(false);
         EnsemblCache.createTranscriptIdMap();
-        EnsemblDataLoader.loadTranscriptAminoAcidData(ensemblDataPath, TranscriptAminoAcidsMap, List.of(), false);
+        EnsemblDataLoader.loadTranscriptAminoAcidData(
+                ensemblDataPath, ensemblCache.refGenomeVersion(),TranscriptAminoAcidsMap, List.of(), false);
     }
 
     public BaseSequenceChange translateHgvsCodingVariant(String gene, String transcript, String variant)
