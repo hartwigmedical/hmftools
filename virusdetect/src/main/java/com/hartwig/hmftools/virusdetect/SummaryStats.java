@@ -4,7 +4,7 @@ import java.util.Arrays;
 import java.util.List;
 
 // Distribution summary over a set of integer values.
-public record SummaryStats(double mean, double min, double p5, double p50, double p95, double max)
+public record SummaryStats(double mean, double min, double p5, double p25, double p50, double p75, double p95, double max)
 {
     static SummaryStats from(int[] values)
     {
@@ -33,7 +33,9 @@ public record SummaryStats(double mean, double min, double p5, double p50, doubl
         double mean = (double) sum / sorted.length;
 
         return new SummaryStats(
-                mean, sorted[0], percentile(sorted, 5), percentile(sorted, 50), percentile(sorted, 95), sorted[sorted.length - 1]);
+                mean, sorted[0],
+                percentile(sorted, 5), percentile(sorted, 25), percentile(sorted, 50), percentile(sorted, 75), percentile(sorted, 95),
+                sorted[sorted.length - 1]);
     }
 
     // Nearest-rank percentile over an already-sorted array.

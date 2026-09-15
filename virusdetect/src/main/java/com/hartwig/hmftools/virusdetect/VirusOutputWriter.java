@@ -32,14 +32,15 @@ public class VirusOutputWriter
                     row.set(Column.read_count, stat.readCount());
                     row.set(Column.multi_align_reads, stat.multiAlignReads());
                     row.set(Column.origin_clipped_reads, stat.originClippedReads());
-                    row.set(Column.covered_bases, stat.coveredBases());
                     row.set(Column.coverage_fraction, stat.coverageFraction());
 
                     SummaryStats alignPerRead = stat.alignPerRead();
                     row.set(Column.align_per_read_mean, alignPerRead.mean());
                     row.set(Column.align_per_read_min, alignPerRead.min());
                     row.set(Column.align_per_read_p5, alignPerRead.p5());
+                    row.set(Column.align_per_read_p25, alignPerRead.p25());
                     row.set(Column.align_per_read_p50, alignPerRead.p50());
+                    row.set(Column.align_per_read_p75, alignPerRead.p75());
                     row.set(Column.align_per_read_p95, alignPerRead.p95());
                     row.set(Column.align_per_read_max, alignPerRead.max());
 
@@ -47,7 +48,9 @@ public class VirusOutputWriter
                     row.set(Column.depth_mean, depth.mean());
                     row.set(Column.depth_min, depth.min());
                     row.set(Column.depth_p5, depth.p5());
+                    row.set(Column.depth_p25, depth.p25());
                     row.set(Column.depth_p50, depth.p50());
+                    row.set(Column.depth_p75, depth.p75());
                     row.set(Column.depth_p95, depth.p95());
                     row.set(Column.depth_max, depth.max());
 
@@ -55,7 +58,9 @@ public class VirusOutputWriter
                     row.set(Column.aligner_score_mean, alignerScore.mean());
                     row.set(Column.aligner_score_min, alignerScore.min());
                     row.set(Column.aligner_score_p5, alignerScore.p5());
+                    row.set(Column.aligner_score_p25, alignerScore.p25());
                     row.set(Column.aligner_score_p50, alignerScore.p50());
+                    row.set(Column.aligner_score_p75, alignerScore.p75());
                     row.set(Column.aligner_score_p95, alignerScore.p95());
                     row.set(Column.aligner_score_max, alignerScore.max());
 
@@ -66,7 +71,9 @@ public class VirusOutputWriter
                     row.setOrNull(Column.margin_mean, margins.map(SummaryStats::mean).orElse(null));
                     row.setOrNull(Column.margin_min, margins.map(SummaryStats::min).orElse(null));
                     row.setOrNull(Column.margin_p5, margins.map(SummaryStats::p5).orElse(null));
+                    row.setOrNull(Column.margin_p25, margins.map(SummaryStats::p25).orElse(null));
                     row.setOrNull(Column.margin_p50, margins.map(SummaryStats::p50).orElse(null));
+                    row.setOrNull(Column.margin_p75, margins.map(SummaryStats::p75).orElse(null));
                     row.setOrNull(Column.margin_p95, margins.map(SummaryStats::p95).orElse(null));
                     row.setOrNull(Column.margin_max, margins.map(SummaryStats::max).orElse(null));
                 });
@@ -80,35 +87,42 @@ public class VirusOutputWriter
         virus_name,
         oncology_group,
         contig_length,
+        coverage_fraction,
         read_count,
+        read_votes,
+        reads_best_in_rivals,
         multi_align_reads,
         origin_clipped_reads,
         align_per_read_mean,
         align_per_read_min,
         align_per_read_p5,
+        align_per_read_p25,
         align_per_read_p50,
+        align_per_read_p75,
         align_per_read_p95,
         align_per_read_max,
-        covered_bases,
-        coverage_fraction,
         depth_mean,
         depth_min,
         depth_p5,
+        depth_p25,
         depth_p50,
+        depth_p75,
         depth_p95,
         depth_max,
         aligner_score_mean,
         aligner_score_min,
         aligner_score_p5,
+        aligner_score_p25,
         aligner_score_p50,
+        aligner_score_p75,
         aligner_score_p95,
         aligner_score_max,
-        read_votes,
-        reads_best_in_rivals,
         margin_mean,
         margin_min,
         margin_p5,
+        margin_p25,
         margin_p50,
+        margin_p75,
         margin_p95,
         margin_max
     }
