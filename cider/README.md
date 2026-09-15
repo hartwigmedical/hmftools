@@ -152,6 +152,7 @@ The full set of fields output are:
 | vPIdentLen, jPIdentLen                                     | The length of sequence used to determine vPIdent/jPIdent                                                                                                     |
 | vPIdentIndelBases, jPIdentIndelBases                       | Number of insertion or deletion bases in the alignment used to calculate vPIdent/jPIdent                                                                     |
 | vPIdentClipBases, jPIdentClipBases                         | Number of clipped bases on the alignment to the IMGT sequence. This indicates the number of bases which strongly diverged from the IMGT sequence.            |
+| vImgtRefUnaligned, jImgtRefUnaligned                       | Number of IMGT reference bases on the extension side that the alignment did not reach. Includes possible unassembled sequence and alignment clip bases.      |
 | SHMStatus                                                  | Somatic hypermutation status as calculated from the V gene annotation. See the section below.                                                                |
 | vAlignStart, dAlignStart, jAlignStart                      | Start of the alignment with the V, D or J gene                                                                                                               | 
 | vAlignEnd, dAlignEnd, jAlignEnd                            | End of the alignment with the V, D or J gene                                                                                                                 |
@@ -214,10 +215,11 @@ Finally, the SHM status is decided on the value of `vPIdent`:
 - Else if >= 97%, **MUTATED_BORDERLINE**
 - Else if < 97%, **MUTATED**
 
-Please note the caveats of the SHM status calculation:
+Please note the caveats of the SHM status calculation, where manual inspection is recommended:
 
-- A low value of `vPIdentLen` or high value of `vPIdentClipBases` (> 5-10b) indicates only a partial match to the IMGT sequence. Manual inspection is recommended.
-- A nonzero value of `vPIdentIndelBases` indicates indels in the sample sequence, which are not accounted for in the SHM status calculation.
+- `vPIdentLen` is low. Indicates only a partial match to the IMGT sequence.
+- `vPIdentClipBases` > 5-10b. Indicates only a partial match to the IMGT sequence.
+- `vImgtRefUnaligned` > 5-10b. Indicates possible failure to assemble the full V/J gene sequence, or a poor match to the IMGT sequence.
 - Discretion is particularly recommended when `vPIdent` is near to 97-98%, where small error could change the SHM status.
 
 The % identity calculation logic is performed similarly for the J side, for completeness.

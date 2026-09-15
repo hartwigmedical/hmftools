@@ -82,7 +82,8 @@ public class PanelBuilderApplication
 
         checkCreateOutputDir(mConfig.outputDir());
         mOutputWriter = new OutputWriter(
-                mConfig.outputDir(), mConfig.outputId(), mConfig.verboseOutput(), mConfig.rnaGenesFile() != null);
+                mConfig.outputDir(), mConfig.outputId(), mConfig.verboseOutput(), mConfig.genesFile() != null,
+                mConfig.rnaGenesFile() != null, mConfig.sampleVariants() != null);
 
         LOGGER.info("Generating probes");
         mPanelData = new PanelData();

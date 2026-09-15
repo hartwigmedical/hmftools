@@ -34,7 +34,10 @@ data class ShmGeneComparison(
     val imgtLength: Int,        // Length of the IMGT sequence used in comparison.
     val pctIdentity: Double,    // Range [0, 100]. Excludes indel bases (for now, at least).
     val indelBases: Int,        // Number of bases in indels in the alignment.
-    val clipBases: Int          // Number of bases in the IMGT sequence which could've been aligned but were clipped.
+    val clipBases: Int,         // Number of bases in the IMGT sequence which could've been aligned but were clipped.
+    // IMGT reference bases on the V/J extension side laying beyond the aligned region (from the IMGT reference edge to the alignment start).
+    // Includes clipBases and potential unassembled sequence.
+    val imgtRefUnaligned: Int
 )
 {
     init
@@ -44,6 +47,7 @@ data class ShmGeneComparison(
         require(pctIdentity >= 0.0 && pctIdentity <= 100.0)
         require(indelBases >= 0)
         require(clipBases >= 0)
+        require(imgtRefUnaligned >= 0)
     }
 }
 
@@ -137,6 +141,10 @@ fun compareVJRegionToImgt(
     assert(layoutIndex == layoutEnd)
     assert(imgtIndex == imgtAlignEnd)
 
+    // IMGT reference bases beyond the alignment on the extension side (start of IMGT for V, end for J).
+    val imgtRefUnaligned = max(0,
+        if (isV) imgtAlignStart - imgtSeqBounds.start else imgtSeqBounds.endInclusive + 1 - imgtAlignEnd)
+
     return if (comparedBases == 0) null
     else ShmGeneComparison(
         seqLength = lastComparedLayoutIndex - firstComparedLayoutIndex!! + 1,
@@ -147,5 +155,6 @@ fun compareVJRegionToImgt(
         indelBases = indelBases,
         clipBases = max(0,
             if (isV) min(firstAlignedLayoutIndex!! - layoutStart, imgtAlignStart - imgtSeqBounds.start)
-                    else min(layoutEnd - lastAlignedLayoutIndex, imgtSeqBounds.endInclusive + 1 - imgtAlignEnd)))
+                    else min(layoutEnd - lastAlignedLayoutIndex, imgtSeqBounds.endInclusive + 1 - imgtAlignEnd)),
+        imgtRefUnaligned = imgtRefUnaligned)
 }

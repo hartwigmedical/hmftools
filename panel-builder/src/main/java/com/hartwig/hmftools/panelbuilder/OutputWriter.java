@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.panelbuilder;
 
+import static java.util.Objects.requireNonNull;
+
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.CANDIDATE_PROBES_FILE_NAME;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.CANDIDATE_TARGET_REGIONS_FILE_NAME;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.COVERED_REGIONS_FILE_NAME;
@@ -31,6 +33,8 @@ public class OutputWriter implements AutoCloseable
     // Null when RNA probes are not requested.
     @Nullable
     private final ProbeOutputWriter mRnaOutput;
+    // Null when sample variants are not requested.
+    @Nullable
     private final DelimFileWriter<SampleVariants.VariantInfo> mSampleVariantInfoTsvWriter;
 
     private enum SampleVariantInfoColumns
@@ -42,8 +46,8 @@ public class OutputWriter implements AutoCloseable
 
     private static final Logger LOGGER = LogManager.getLogger(OutputWriter.class);
 
-    public OutputWriter(final String outputDir, @Nullable final String outputId, boolean verboseOutput, boolean rnaOutput)
-            throws IOException
+    public OutputWriter(final String outputDir, @Nullable final String outputId, boolean verboseOutput, boolean geneStats,
+            boolean rnaOutput, boolean sampleVariants) throws IOException
     {
         Function<String, String> outputFilePath = fileName ->
         {
@@ -61,18 +65,20 @@ public class OutputWriter implements AutoCloseable
         mDnaOutput = new ProbeOutputWriter(
                 dnaFilePath, PANEL_PROBES_FILE_STEM, COVERED_TARGET_REGIONS_FILE_NAME, COVERED_REGIONS_FILE_NAME,
                 REJECTED_FEATURES_FILE_STEM, CANDIDATE_TARGET_REGIONS_FILE_NAME, CANDIDATE_PROBES_FILE_NAME, GENE_STATS_FILE_NAME,
-                verboseOutput, false);
+                geneStats, verboseOutput, false);
 
         mRnaOutput = rnaOutput
                 ? new ProbeOutputWriter(
                 rnaFilePath, PANEL_PROBES_FILE_STEM, COVERED_TARGET_REGIONS_FILE_NAME, COVERED_REGIONS_FILE_NAME,
                 REJECTED_FEATURES_FILE_STEM, CANDIDATE_TARGET_REGIONS_FILE_NAME, CANDIDATE_PROBES_FILE_NAME, GENE_STATS_FILE_NAME,
-                verboseOutput, true)
+                true, verboseOutput, true)
                 : null;
 
-        mSampleVariantInfoTsvWriter = new DelimFileWriter<>(
+        mSampleVariantInfoTsvWriter = sampleVariants
+                ? new DelimFileWriter<>(
                 outputFilePath.apply(SAMPLE_VARIANT_INFO_FILE_NAME), SampleVariantInfoColumns.values(),
-                OutputWriter::writeSampleVariantInfoRow);
+                OutputWriter::writeSampleVariantInfoRow)
+                : null;
     }
 
     public ProbeOutputWriter dnaPanelOutput()
@@ -102,7 +108,7 @@ public class OutputWriter implements AutoCloseable
 
     public void writeSampleVariantInfos(final List<SampleVariants.VariantInfo> variantInfos)
     {
-        variantInfos.forEach(mSampleVariantInfoTsvWriter::writeRow);
+        variantInfos.forEach(requireNonNull(mSampleVariantInfoTsvWriter)::writeRow);
     }
 
     private static void writeSampleVariantInfoRow(final SampleVariants.VariantInfo variantInfo, DelimFileWriter.Row row)
@@ -122,6 +128,9 @@ public class OutputWriter implements AutoCloseable
         {
             mRnaOutput.close();
         }
-        mSampleVariantInfoTsvWriter.close();
+        if(mSampleVariantInfoTsvWriter != null)
+        {
+            mSampleVariantInfoTsvWriter.close();
+        }
     }
 }

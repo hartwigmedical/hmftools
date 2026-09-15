@@ -55,6 +55,7 @@ public class ReadCache
     public static final int DEFAULT_POP_DISTANCE_CHECK = 100; // how often in base terms to check for popping read groups
     public static final int DEFAULT_LOG_READ_COUNT_THRESHOLD = 100000; // based on observed cache sizes for deep panels
     public static final int DEFAULT_DYNAMIC_READ_COUNT_THRESHOLD = 100_000; // level at which steps are taken to reduce the cache size
+    public static final int MAX_DISTANCE_FOR_REVERSE_STRAND_DUPLICATES = 1000; // a reverse key can sit far past its own reads
 
     public ReadCache(
             int groupSize, int maxSoftClipLength, boolean useFragmentOrientation, final DuplicatesConfig duplicatesConfig,
@@ -147,6 +148,7 @@ public class ReadCache
         //  - if the fragment coords lower position <= max soft-clip length from current read start position
         // 2. Uses the upper read position (ie unclipped read end position)
         //  - if the fragment coords upper position < current read start position
+        //  - and if its reads start more than the max reverse-strand duplicate distance from the current read start position
         // 3. otherwise for a new chromosome or if evicting all fragments, take them all
         //
         // then remove any read groups which are then empty
@@ -172,9 +174,6 @@ public class ReadCache
         {
             ReadPositionGroup group = mPositionGroups.get(groupIndex);
 
-            if(group.Chromosome.equals(mCurrentChromosome) && mCurrentReadMinPosition < group.PositionStart)
-                break;
-
             boolean takeAllFragments = !group.Chromosome.equals(mCurrentChromosome) || group.PositionEnd < popFragCoordLowerPosition;
 
             Set<FragmentCoords> processedCoords = takeAllFragments ? null : Sets.newHashSet();
@@ -182,6 +181,8 @@ public class ReadCache
             for(Map.Entry<FragmentCoords,List<SAMRecord>> entry : group.FragCoordsMap.entrySet())
             {
                 FragmentCoords fragCoords = entry.getKey();
+
+                List<SAMRecord> reads = entry.getValue();
 
                 if(!takeAllFragments && group.Chromosome.equals(mCurrentChromosome))
                 {
@@ -194,15 +195,16 @@ public class ReadCache
                     }
                     else
                     {
-                        if(readPosition > popFragCoordUpperPosition)
+                        SAMRecord lastRead = reads.get(reads.size() - 1);
+
+                        if(readPosition > popFragCoordUpperPosition
+                        && lastRead.getAlignmentStart() + MAX_DISTANCE_FOR_REVERSE_STRAND_DUPLICATES > mCurrentReadMinPosition)
                             continue;
                     }
                 }
 
                 if(!takeAllFragments)
                     processedCoords.add(fragCoords);
-
-                List<SAMRecord> reads = entry.getValue();
 
                 if(reads.size() > 1)
                 {

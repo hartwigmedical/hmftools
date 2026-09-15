@@ -43,6 +43,8 @@ public class ProbeOutputWriter implements AutoCloseable
     private final DelimFileWriter<RejectedFeature> mRejectedFeaturesTsvWriter;
     private final BufferedWriter mRejectedFeaturesBedWriter;
     private final BufferedWriter mCandidateTargetRegionsBedWriter;
+    // Null when gene features are not requested for this panel.
+    @Nullable
     private final DelimFileWriter<GeneStats> mGeneStatsTsvWriter;
     // Verbose output only; null otherwise.
     @Nullable
@@ -129,7 +131,8 @@ public class ProbeOutputWriter implements AutoCloseable
 
     public ProbeOutputWriter(final Function<String, String> outputFilePath, final String probesStem, final String coveredTargetRegionsFile,
             final String coveredRegionsFile, final String rejectedFeaturesStem, final String candidateTargetRegionsFile,
-            final String candidateProbesFile, final String geneStatsFile, boolean verboseOutput, boolean rna) throws IOException
+            final String candidateProbesFile, final String geneStatsFile, boolean geneStats, boolean verboseOutput, boolean rna)
+            throws IOException
     {
         mRna = rna;
 
@@ -149,8 +152,10 @@ public class ProbeOutputWriter implements AutoCloseable
 
         mCandidateTargetRegionsBedWriter = createBufferedWriter(outputFilePath.apply(candidateTargetRegionsFile));
 
-        mGeneStatsTsvWriter =
-                new DelimFileWriter<>(outputFilePath.apply(geneStatsFile), GeneStatsColumns.values(), ProbeOutputWriter::writeGeneStatsRow);
+        mGeneStatsTsvWriter = geneStats
+                ? new DelimFileWriter<>(
+                outputFilePath.apply(geneStatsFile), GeneStatsColumns.values(), ProbeOutputWriter::writeGeneStatsRow)
+                : null;
 
         if(verboseOutput)
         {
@@ -356,7 +361,7 @@ public class ProbeOutputWriter implements AutoCloseable
 
     public void writeGeneStats(final List<GeneStats> geneStats)
     {
-        geneStats.forEach(mGeneStatsTsvWriter::writeRow);
+        geneStats.forEach(requireNonNull(mGeneStatsTsvWriter)::writeRow);
     }
 
     private static void writeGeneStatsRow(final GeneStats stats, DelimFileWriter.Row row)
@@ -475,7 +480,10 @@ public class ProbeOutputWriter implements AutoCloseable
         mRejectedFeaturesTsvWriter.close();
         mRejectedFeaturesBedWriter.close();
         mCandidateTargetRegionsBedWriter.close();
-        mGeneStatsTsvWriter.close();
+        if(mGeneStatsTsvWriter != null)
+        {
+            mGeneStatsTsvWriter.close();
+        }
         if(mCandidateProbesTsvWriter != null)
         {
             checkFlushCandidateProbes(true);
