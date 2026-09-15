@@ -198,9 +198,11 @@ public class ContigStatsCalculator
             int multiAlignReads = (int) mAlignmentCounts.stream().filter(count -> count > 1).count();
             SummaryStats alignerScoreSummary = SummaryStats.from(mAlignments.stream().mapToInt(ReadAlignment::alignerScore).toArray());
             Optional<SummaryStats> marginSummary = mMargins.isEmpty() ? Optional.empty() : Optional.of(SummaryStats.from(mMargins));
+            Optional<List<Integer>> marginPercentiles =
+                    mMargins.isEmpty() ? Optional.empty() : Optional.of(SummaryStats.percentileCurve(mMargins));
             return new ContigStats(
                     contig, contigLength, mAlignments.size(), multiAlignReads, SummaryStats.from(mAlignmentCounts), originClippedReads,
-                    coveredBases, depthSummary, alignerScoreSummary, mVotes, mMargins.size(), marginSummary);
+                    coveredBases, depthSummary, alignerScoreSummary, mVotes, mMargins.size(), marginSummary, marginPercentiles);
         }
     }
 

@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.virusdetect;
 
+import java.util.List;
 import java.util.Optional;
 
 // Per-contig support over a set of aligned reads, plus how it fares against the sibling contigs of the same virus.
@@ -25,7 +26,9 @@ public record ContigStats(
         // reads that strictly beat every rival contig (ties credit no contig)
         int readsBestInRivals,
         // divergence lead over the runner-up on strictly-won reads; empty when there were none
-        Optional<SummaryStats> margins)
+        Optional<SummaryStats> margins,
+        // margin value at each percentile 0..100 (101 points), the full strict-win distribution; empty when there were none
+        Optional<List<Integer>> marginPercentiles)
 {
     public double coverageFraction()
     {

@@ -2,6 +2,7 @@ package com.hartwig.hmftools.virusdetect;
 
 import static java.util.Comparator.comparingInt;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -79,6 +80,45 @@ public class VirusOutputWriter
                 });
 
         LOGGER.info("wrote {} contig stats to {}", ordered.size(), file);
+    }
+
+    // One row per contig, the strict-win margin value at every percentile 0..100: the full distribution, for
+    // choosing how to tell near-identical twins from genuinely rival strains. Null across all percentiles when a
+    // contig strictly won no read.
+    // For testing / calibration only — likely removed once the representative-selection rule is settled.
+    public static void writeMarginDistribution(String file, Collection<ContigStats> stats, ViralReference reference)
+    {
+        List<ContigStats> ordered = stats.stream()
+                .sorted(comparingInt(ContigStats::readCount).reversed().thenComparing(ContigStats::contig))
+                .toList();
+
+        List<String> columns = new ArrayList<>(List.of("contig", "virus_name", "oncology_group"));
+        for(int percent = 0; percent <= 100; ++percent)
+        {
+            columns.add(percentileColumn(percent));
+        }
+
+        DelimFileWriter.write(
+                file, columns, ordered, (stat, row) ->
+                {
+                    ViralContig contig = reference.contig(stat.contig());
+                    row.set("contig", stat.contig());
+                    row.set("virus_name", contig.virusName());
+                    row.set("oncology_group", contig.oncologyGroup());
+
+                    List<Integer> curve = stat.marginPercentiles().orElse(null);
+                    for(int percent = 0; percent <= 100; ++percent)
+                    {
+                        row.setOrNull(percentileColumn(percent), curve == null ? null : curve.get(percent));
+                    }
+                });
+
+        LOGGER.info("wrote {} contig margin distributions to {}", ordered.size(), file);
+    }
+
+    private static String percentileColumn(int percent)
+    {
+        return "pct_" + percent;
     }
 
     private enum Column

@@ -13,6 +13,7 @@ public class VirusConstants
     public static final String CANDIDATE_FASTA_SUFFIX = ".virus.candidates.fasta";
     public static final String ALIGNED_BAM_SUFFIX = ".virus.aligned.bam";
     public static final String CONTIG_STATS_TSV_SUFFIX = ".virus.contig_stats.tsv";
+    public static final String MARGIN_DISTRIBUTION_TSV_SUFFIX = ".virus.margin_distribution.tsv";
 
     // Provisional defaults, to be tuned on real data.
 

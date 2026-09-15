@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.virusdetect;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -36,6 +37,23 @@ public record SummaryStats(double mean, double min, double p5, double p25, doubl
                 mean, sorted[0],
                 percentile(sorted, 5), percentile(sorted, 25), percentile(sorted, 50), percentile(sorted, 75), percentile(sorted, 95),
                 sorted[sorted.length - 1]);
+    }
+
+    // Value at each integer percentile 0..100 inclusive (101 points): enough to reconstruct the distribution shape.
+    static List<Integer> percentileCurve(List<Integer> values)
+    {
+        int[] sorted = values.stream().mapToInt(Integer::intValue).sorted().toArray();
+        if(sorted.length == 0)
+        {
+            throw new IllegalArgumentException("cannot summarise an empty set of values");
+        }
+
+        List<Integer> curve = new ArrayList<>(101);
+        for(int percent = 0; percent <= 100; ++percent)
+        {
+            curve.add((int) percentile(sorted, percent));
+        }
+        return curve;
     }
 
     // Nearest-rank percentile over an already-sorted array.

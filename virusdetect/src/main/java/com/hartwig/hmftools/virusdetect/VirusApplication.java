@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.virusdetect.VirusConstants.APP_NAME;
 import static com.hartwig.hmftools.virusdetect.VirusConstants.CANDIDATE_FASTA_SUFFIX;
 import static com.hartwig.hmftools.virusdetect.VirusConstants.CONTIG_STATS_TSV_SUFFIX;
 import static com.hartwig.hmftools.virusdetect.VirusConstants.DECOY_CONTIGS;
+import static com.hartwig.hmftools.virusdetect.VirusConstants.MARGIN_DISTRIBUTION_TSV_SUFFIX;
 import static com.hartwig.hmftools.virusdetect.VirusConstants.MIN_SOFT_CLIP_BASES_DEFAULT;
 
 import java.io.IOException;
@@ -64,6 +65,7 @@ public class VirusApplication
         LOGGER.info("Computing per-contig statistics");
         Map<String, ContigStats> contigStats = new ContigStatsCalculator().compute(alignedBamFile, mViralReference);
         VirusOutputWriter.writeContigStats(contigStatsFile(), contigStats.values(), mViralReference);
+        VirusOutputWriter.writeMarginDistribution(marginDistributionFile(), contigStats.values(), mViralReference);
         LOGGER.info("Per-contig statistics complete");
 
         // TODO: placeholder pipeline; each step is replaced by its implementation as it lands.
@@ -88,6 +90,11 @@ public class VirusApplication
     private String contigStatsFile()
     {
         return mConfig.outputDir() + mConfig.sampleId() + CONTIG_STATS_TSV_SUFFIX;
+    }
+
+    private String marginDistributionFile()
+    {
+        return mConfig.outputDir() + mConfig.sampleId() + MARGIN_DISTRIBUTION_TSV_SUFFIX;
     }
 
     public static void main(@NotNull String[] args)
