@@ -351,9 +351,13 @@ public class FragmentAllocator
             - not supporting any transcript - eg alternative splice sites or unspliced reads
         */
 
-        read1.trimAdapterSoftClipBases(read2);
-        read2.trimAdapterSoftClipBases(read1);
+        if(!read1.isSupplementaryAlignment() && !read2.isSupplementaryAlignment())
+        {
+            read1.trimAdapterSoftClipBases(read2);
+            read2.trimAdapterSoftClipBases(read1);
+        }
 
+        // duplicates will be used for transcript counts but nothing else
         boolean isDuplicate = read1.isDuplicate() || read2.isDuplicate();
 
         int numLoci = min(read1.numLoci(), read2.numLoci());
@@ -390,7 +394,7 @@ public class FragmentAllocator
         // some of these may be re-processed as alternative SJ candidates if they are within a single gene
         if(isChimeric)
         {
-            if(!isMultiMapped)
+            if(!isMultiMapped && !isDuplicate)
             {
                 if(mChimericReads.enabled())
                     mChimericReads.addChimericReadPair(read1, read2);
@@ -903,7 +907,7 @@ public class FragmentAllocator
 
         final List<Integer> invalidTrans = Lists.newArrayList();
 
-        for(final List<Read> reads : mChimericReads.getLocalChimericReads())
+        for(List<Read> reads : mChimericReads.getLocalChimericReads())
         {
             Read read1 = null;
             Read read2 = null;

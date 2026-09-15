@@ -211,7 +211,7 @@ public class ChimericReadTracker
 
     public void addRealignmentCandidates(final Read read1, final Read read2)
     {
-        if(read1.isDuplicate() || read2.isDuplicate()) // group complete so drop these
+        if(read1.isDuplicate() || read2.isDuplicate())
             return;
 
         mCandidateRealignedGroups.add(new ChimericReadGroup(read1, read2));
@@ -219,15 +219,12 @@ public class ChimericReadTracker
 
     public void addChimericReadPair(final Read read1, final Read read2)
     {
-        if(inImmuneRegion(read1) || inImmuneRegion(read2))
+        if(read1.isDuplicate() || read2.isDuplicate() || inImmuneRegion(read1) || inImmuneRegion(read2))
             return;
 
-        if(!read1.isDuplicate() && !read2.isDuplicate())
-        {
-            // populate transcript info for intronic reads since it will be used in fusion matching
-            addIntronicTranscriptData(read1);
-            addIntronicTranscriptData(read2);
-        }
+        // populate transcript info for intronic reads since it will be used in fusion matching
+        addIntronicTranscriptData(read1);
+        addIntronicTranscriptData(read2);
 
         // add the pair when it's clear there aren't others with the same ID in the map
         if(mConfig.RunValidations && mChimericReadMap.containsKey(read1.Id))
@@ -278,14 +275,11 @@ public class ChimericReadTracker
         {
             Read read = (Read)object;
 
-            if(read.isMateUnmapped() || inImmuneRegion(read))
+            if(read.isDuplicate() || read.isMateUnmapped() || inImmuneRegion(read))
                 continue;
 
-            if(!read.isDuplicate())
-            {
-                baseDepth.processRead(read.getMappedRegionCoords());
-                addIntronicTranscriptData(read);
-            }
+            baseDepth.processRead(read.getMappedRegionCoords());
+            addIntronicTranscriptData(read);
 
             ChimericReadGroup chimericReads = mChimericReadMap.get(read.Id);
             if(chimericReads == null)
