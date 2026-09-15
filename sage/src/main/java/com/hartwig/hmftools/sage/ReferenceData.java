@@ -151,7 +151,7 @@ public class ReferenceData
                 List<DriverGene> invalidDriverGenes = findInvalidDriverGenes(DriverGenes, GeneDataCache);
                 if(!invalidDriverGenes.isEmpty())
                 {
-                    SG_LOGGER.error("invalid driver gene names: {}",
+                    SG_LOGGER.error("Invalid non-Ensembl gene names: {}",
                             invalidDriverGenes.stream().map( x -> x.gene()).collect(Collectors.joining(";")));
                     System.exit(1);
                 }

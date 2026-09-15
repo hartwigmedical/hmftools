@@ -16,6 +16,7 @@ import static com.hartwig.hmftools.linx.cohort.CohortDataWriter.cohortDataFilena
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatJcn;
 import static com.hartwig.hmftools.linx.annotators.PseudoGeneFinder.isPseudogeneDeletion;
+import static com.hartwig.hmftools.linx.types.LinxConstants.DISRUPTION_CN_REPORTABLE_THRESHOLD;
 import static com.hartwig.hmftools.linx.types.ResolvedType.LINE;
 import static com.hartwig.hmftools.linx.visualiser.file.VisGeneAnnotationType.DISRUPTION;
 
@@ -847,8 +848,8 @@ public class DisruptionFinder implements CohortFileInterface
 
             ReportedStatus reportedStatus = driverGene.reportDisruption() ? ReportedStatus.REPORTED : ReportedStatus.NOT_REPORTED;
 
-            double likelihood = disruptionData.UndisruptedCopyNumber < 0.5 ? 1 : 0;
-            boolean biallelic = disruptionData.UndisruptedCopyNumber < 0.5;
+            double likelihood = disruptionData.UndisruptedCopyNumber < DISRUPTION_CN_REPORTABLE_THRESHOLD ? 1 : 0;
+            boolean biallelic = disruptionData.UndisruptedCopyNumber < DISRUPTION_CN_REPORTABLE_THRESHOLD;
 
             DriverCatalog driverCatalog = ImmutableDriverCatalog.builder()
                     .driver(DriverType.DISRUPTION)

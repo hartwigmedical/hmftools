@@ -62,7 +62,7 @@ public class GeneCoverage
         List<DriverGene> invalidDriverGenes = findInvalidDriverGenes(driverGenes, ensemblDataCache);
         if(!invalidDriverGenes.isEmpty())
         {
-            BT_LOGGER.error("invalid driver gene names: {}",
+            BT_LOGGER.error("Invalid non-Ensembl gene names: {}",
                     invalidDriverGenes.stream().map( x -> x.gene()).collect(Collectors.joining(";")));
             System.exit(1);
         }

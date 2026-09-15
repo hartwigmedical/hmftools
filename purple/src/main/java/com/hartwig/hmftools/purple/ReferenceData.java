@@ -163,7 +163,7 @@ public class ReferenceData
         List<DriverGene> invalidDriverGenes = findInvalidDriverGenes(DriverGenes.DriverGeneList, GeneTransCache);
         if(!invalidDriverGenes.isEmpty())
         {
-            PPL_LOGGER.error("invalid driver gene names: {}",
+            PPL_LOGGER.error("Invalid non-Ensembl gene names: {}",
                     invalidDriverGenes.stream().map( x -> x.gene()).collect(Collectors.joining(";")));
             System.exit(1);
         }

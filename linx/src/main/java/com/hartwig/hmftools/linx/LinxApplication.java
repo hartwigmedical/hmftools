@@ -103,7 +103,7 @@ public class LinxApplication
 
                 if(!invalidDriverGenes.isEmpty())
                 {
-                    LNX_LOGGER.error("invalid driver gene names: {}",
+                    LNX_LOGGER.error("Invalid non-Ensembl gene names: {}",
                             invalidDriverGenes.stream().map( x -> x.gene()).collect(Collectors.joining(";")));
                     System.exit(1);
                 }
