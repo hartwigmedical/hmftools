@@ -329,7 +329,7 @@ public class FragmentAllocator
 
         if(otherRead != null)
         {
-            processReadPair(read, otherRead);
+            processFragmentReads(read, otherRead);
             return true;
         }
 
@@ -357,7 +357,7 @@ public class FragmentAllocator
         mChimericReads.addSupplementaryRead(read);
     }
 
-    private void processReadPair(final Read read1, final Read read2)
+    private void processFragmentReads(final Read read1, final Read read2)
     {
         /* process the pair of reads from a fragment:
             - fully outside the gene (due to the buffer used, ignore

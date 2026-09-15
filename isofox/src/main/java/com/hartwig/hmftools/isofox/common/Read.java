@@ -552,7 +552,7 @@ public class Read
                 : getCoordsBoundary(SE_END) + clipLength <= transRegions.stream().mapToInt(RegionReadData::end).max().orElse(0);
     }
 
-    public boolean likelyAdaperSoftClipping()
+    private boolean likelyAdaperSoftClipping()
     {
         return mFragmentInsertSize < baseLength();
     }
