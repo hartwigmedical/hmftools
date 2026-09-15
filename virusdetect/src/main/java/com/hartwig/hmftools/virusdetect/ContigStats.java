@@ -6,18 +6,25 @@ import java.util.Optional;
 public record ContigStats(
         String contig,
         int contigLength,
-        int readCount,              // reads with any alignment to this contig
-        int multiAlignReads,          // reads with more than one alignment to this contig (BWA -a repeats/multi-loci)
-        SummaryStats alignPerRead,  // alignments to this contig per read (>= 1)
-        int originClippedReads,     // alignments dropped for clipping over the contig end (circular-genome artifact)
-        int coveredBases,           // contig positions with at least one aligned base
-        // Depth spans the whole contig, so uncovered positions count as depth 0.
+        // reads with any alignment to this contig
+        int readCount,
+        // reads with more than one alignment to this contig (BWA -a repeats/multi-loci)
+        int multiAlignReads,
+        // alignments to this contig per read (>= 1)
+        SummaryStats alignPerRead,
+        // alignments dropped for clipping over the contig end (circular-genome artifact)
+        int originClippedReads,
+        // contig positions with at least one aligned base
+        int coveredBases,
+        // depth spans the whole contig, so uncovered positions count as depth 0
         SummaryStats depth,
-        SummaryStats alignerScore,  // BWA alignment score distribution across those reads
-        // Strain rivalry against the near-identical sibling contigs of the same virus:
-        double readVotes,           // reads softly attributed to this strain, split across contigs by divergence
-        int readsBestInRivals,      // reads that strictly beat every rival contig (ties credit no contig)
-        // Divergence lead over the runner-up on strictly-won reads; empty when there were none.
+        // BWA alignment score distribution across those reads
+        SummaryStats alignerScore,
+        // strain rivalry: reads softly attributed to this strain, split across the sibling contigs by divergence
+        double readVotes,
+        // reads that strictly beat every rival contig (ties credit no contig)
+        int readsBestInRivals,
+        // divergence lead over the runner-up on strictly-won reads; empty when there were none
         Optional<SummaryStats> margins)
 {
     public double coverageFraction()
