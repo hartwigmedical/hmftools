@@ -80,6 +80,27 @@ public class ContigStatsCalculatorTest
         assertEquals(1.0, v2.coverageFraction(), EPSILON);
     }
 
+    // Alignments whose clip projects past a contig end straddle the circular genome origin: they are dropped from the
+    // stats and counted separately. A clip that stays within the contig (or within tolerance of an end) is kept.
+    @Test
+    public void testDropsAlignmentsClippingOverContigEnds() throws IOException
+    {
+        ViralReference reference = reference();   // v1 length 20
+        SAMFileHeader header = header();
+
+        List<SAMRecord> records = List.of(
+                aligned(header, "r1", 0, "v1", 1, "10S10M", 10),    // left clip projects to -9: over the start
+                aligned(header, "r2", 0, "v1", 11, "10M10S", 10),   // right clip projects to 30: over the end
+                aligned(header, "r3", 0, "v1", 6, "10M", 9),        // no clip: kept
+                aligned(header, "r4", 0, "v1", 10, "5S10M", 8));    // clip projects to 5, within the contig: kept
+
+        Map<String, ContigStats> stats = new ContigStatsCalculator().compute(writeBam(header, records), reference);
+
+        ContigStats v1 = stats.get("v1");
+        assertEquals(2, v1.readCount());            // r3 and r4 kept
+        assertEquals(2, v1.originClippedReads());   // r1 and r2 dropped
+    }
+
     // r1 and r2 each align to both contigs, more closely to v1 (fewer mismatches). Both reads' votes and their
     // contested margins land on v1; v2, never a read's best, holds no margins.
     @Test
@@ -119,24 +140,25 @@ public class ContigStatsCalculatorTest
     }
 
     // A read matches v1 full-length with 5 mismatches, but v2 only after clipping 40 bases (1 mismatch in the rest).
-    // Counting the clip against v2, v1 explains the read far better and wins, despite v2's lower NM.
+    // Counting the clip against v2, v1 explains the read far better and wins, despite v2's lower NM. v2's clip is
+    // mid-contig, so it is real divergence, not an origin artifact that would be dropped.
     @Test
     public void testClippingCountsAgainstContigInRivalry() throws IOException
     {
         List<ViralContig> contigs = List.of(
-                new ViralContig("v1", 100, "Virus 1", "Group 1"),
-                new ViralContig("v2", 100, "Virus 1", "Group 1"));
+                new ViralContig("v1", 200, "Virus 1", "Group 1"),
+                new ViralContig("v2", 200, "Virus 1", "Group 1"));
         ViralReference reference = new ViralReference(contigs, new SAMSequenceDictionary(List.of(
-                new SAMSequenceRecord("v1", 100), new SAMSequenceRecord("v2", 100))));
+                new SAMSequenceRecord("v1", 200), new SAMSequenceRecord("v2", 200))));
 
         SAMFileHeader header = new SAMFileHeader();
         header.setSortOrder(SAMFileHeader.SortOrder.unsorted);
-        header.addSequence(new SAMSequenceRecord("v1", 100));
-        header.addSequence(new SAMSequenceRecord("v2", 100));
+        header.addSequence(new SAMSequenceRecord("v1", 200));
+        header.addSequence(new SAMSequenceRecord("v2", 200));
 
         List<SAMRecord> records = List.of(
-                aligned(header, "r", 0, "v1", 1, "100M", 90, 5),
-                aligned(header, "r", 0x100, "v2", 1, "40S60M", 60, 1));
+                aligned(header, "r", 0, "v1", 50, "100M", 90, 5),
+                aligned(header, "r", 0x100, "v2", 100, "40S60M", 60, 1));
 
         Map<String, ContigStats> stats = new ContigStatsCalculator(0.5).compute(writeBam(header, records), reference);
 

@@ -9,6 +9,7 @@ public record ContigStats(
         int readCount,              // reads with any alignment to this contig
         int multiAlignReads,          // reads with more than one alignment to this contig (BWA -a repeats/multi-loci)
         SummaryStats alignPerRead,  // alignments to this contig per read (>= 1)
+        int originClippedReads,     // alignments dropped for clipping over the contig end (circular-genome artifact)
         int coveredBases,           // contig positions with at least one aligned base
         // Depth spans the whole contig, so uncovered positions count as depth 0.
         SummaryStats depth,

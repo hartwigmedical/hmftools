@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.bam.CigarUtils.leftClipLength;
 import static com.hartwig.hmftools.common.bam.CigarUtils.rightClipLength;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.ALIGNMENT_SCORE_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
+import static com.hartwig.hmftools.virusdetect.VirusConstants.ORIGIN_CLIP_TOLERANCE;
 import static com.hartwig.hmftools.virusdetect.VirusConstants.VOTE_CORRECT_BASE_PROBABILITY;
 
 import java.io.File;
@@ -45,7 +46,8 @@ public class ContigStatsCalculator
 
     public Map<String, ContigStats> compute(String bamFile, ViralReference reference)
     {
-        Map<String, Map<String, ReadContigAlignment>> alignmentsByRead = readAlignments(bamFile);
+        AlignmentScan scan = readAlignments(bamFile, reference);
+        Map<String, Map<String, ReadContigAlignment>> alignmentsByRead = scan.alignmentsByRead();
 
         Map<String, List<SAMRecord>> recordsByContig = new HashMap<>();
         Map<String, List<Integer>> alignmentCountsByContig = new HashMap<>();
@@ -71,16 +73,19 @@ public class ContigStatsCalculator
             String contig = entry.getKey();
             stats.put(contig, computeContig(
                     contig, reference.contig(contig).length(), entry.getValue(), alignmentCountsByContig.get(contig),
-                    votesByContig.getOrDefault(contig, 0.0), marginsByContig.get(contig)));
+                    scan.originClippedByContig().getOrDefault(contig, 0), votesByContig.getOrDefault(contig, 0.0),
+                    marginsByContig.get(contig)));
         }
         return stats;
     }
 
     // Each read's alignments on each contig: the best (highest-scoring) record, plus how many the read has there
-    // (BWA -a can map a read to one contig more than once).
-    private static Map<String, Map<String, ReadContigAlignment>> readAlignments(String bamFile)
+    // (BWA -a can map a read to one contig more than once). Alignments clipping over a contig end are dropped as a
+    // circular-genome artifact and counted per contig instead.
+    private static AlignmentScan readAlignments(String bamFile, ViralReference reference)
     {
         Map<String, Map<String, ReadContigAlignment>> alignmentsByRead = new HashMap<>();
+        Map<String, Integer> originClippedByContig = new HashMap<>();
         try(SamReader reader = SamReaderFactory.makeDefault().validationStringency(ValidationStringency.SILENT).open(new File(bamFile)))
         {
             for(SAMRecord record : reader)
@@ -89,15 +94,31 @@ public class ContigStatsCalculator
                 {
                     continue;
                 }
+                String contig = record.getReferenceName();
+                if(clipsOverContigEnd(record, reference.contig(contig).length()))
+                {
+                    originClippedByContig.merge(contig, 1, Integer::sum);
+                    continue;
+                }
                 alignmentsByRead.computeIfAbsent(record.getReadName(), k -> new HashMap<>())
-                        .merge(record.getReferenceName(), new ReadContigAlignment(record, 1), ReadContigAlignment::combine);
+                        .merge(contig, new ReadContigAlignment(record, 1), ReadContigAlignment::combine);
             }
         }
         catch(IOException e)
         {
             throw new RuntimeException("failed to read aligned BAM", e);
         }
-        return alignmentsByRead;
+        return new AlignmentScan(alignmentsByRead, originClippedByContig);
+    }
+
+    // The clipped bases of an alignment would project onto reference positions just beyond its aligned span. When that
+    // projection runs past a contig end, the read straddles the circular genome's linearization origin: those bases
+    // wrap to the other end and cannot align linearly. This is an artifact, not real divergence.
+    private static boolean clipsOverContigEnd(SAMRecord record, int contigLength)
+    {
+        boolean clipsOverStart = record.getAlignmentStart() - leftClipLength(record.getCigar()) < 1 - ORIGIN_CLIP_TOLERANCE;
+        boolean clipsOverEnd = record.getAlignmentEnd() + rightClipLength(record.getCigar()) > contigLength + ORIGIN_CLIP_TOLERANCE;
+        return clipsOverStart || clipsOverEnd;
     }
 
     // A read's vote splits across the contigs it hits by how well each explains it: every extra base a contig fails
@@ -146,7 +167,7 @@ public class ContigStatsCalculator
 
     private static ContigStats computeContig(
             String contig, int length, Collection<SAMRecord> reads, List<Integer> alignmentCounts,
-            double readVotes, @Nullable List<Integer> margins)
+            int originClippedReads, double readVotes, @Nullable List<Integer> margins)
     {
         int[] depth = new int[length];
         int[] scores = new int[reads.size()];
@@ -180,7 +201,7 @@ public class ContigStatsCalculator
         int multiAlignReads = (int) alignmentCounts.stream().filter(count -> count > 1).count();
 
         return new ContigStats(
-                contig, length, reads.size(), multiAlignReads, SummaryStats.from(alignmentCounts), coveredBases,
+                contig, length, reads.size(), multiAlignReads, SummaryStats.from(alignmentCounts), originClippedReads, coveredBases,
                 SummaryStats.from(depth), SummaryStats.from(scores), readVotes, readsBestInRivals, marginSummary);
     }
 
@@ -218,6 +239,13 @@ public class ContigStatsCalculator
 
         int clippedBases = leftClipLength(record.getCigar()) + rightClipLength(record.getCigar());
         return editDistance + clippedBases;
+    }
+
+    // The scan of the aligned BAM: kept alignments per read, and per-contig counts of alignments dropped for clipping
+    // over the contig end.
+    private record AlignmentScan(
+            Map<String, Map<String, ReadContigAlignment>> alignmentsByRead, Map<String, Integer> originClippedByContig)
+    {
     }
 
     // A read's alignments on one contig: the best-scoring record, and the total number of alignments there.

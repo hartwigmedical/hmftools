@@ -31,4 +31,8 @@ public class VirusConstants
     // How softly a contested read's vote splits across strains: chance a base is right. Pessimistically low, as per-base
     // qualities are not retained. Provisional.
     public static final double VOTE_CORRECT_BASE_PROBABILITY = 0.25;
+
+    // A clip counts as hanging over a contig end (a circular-genome artifact) when its bases would extend past the
+    // boundary by more than this tolerance. Such alignments are dropped from all stats.
+    public static final int ORIGIN_CLIP_TOLERANCE = 4;
 }

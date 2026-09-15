@@ -31,6 +31,7 @@ public class VirusOutputWriter
                     row.set(Column.contig_length, stat.contigLength());
                     row.set(Column.read_count, stat.readCount());
                     row.set(Column.multi_align_reads, stat.multiAlignReads());
+                    row.set(Column.origin_clipped_reads, stat.originClippedReads());
                     row.set(Column.covered_bases, stat.coveredBases());
                     row.set(Column.coverage_fraction, stat.coverageFraction());
 
@@ -81,6 +82,7 @@ public class VirusOutputWriter
         contig_length,
         read_count,
         multi_align_reads,
+        origin_clipped_reads,
         align_per_read_mean,
         align_per_read_min,
         align_per_read_p5,
