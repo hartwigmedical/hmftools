@@ -39,8 +39,6 @@ public class FusionReadGroup
         return reads.stream().anyMatch(x -> x.HasSuppAlignment);
     }
 
-    public boolean hasDuplicateRead() { return mReads.stream().anyMatch(x -> x.IsDuplicate); }
-
     public void merge(final FusionReadGroup other)
     {
         other.reads().forEach(x -> addRead(x));

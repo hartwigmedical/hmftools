@@ -10,7 +10,6 @@ import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_BOUNDARY;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_INTRON;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.NONE;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.WITHIN_EXON;
-import static com.hartwig.hmftools.isofox.common.RegionMatchType.matchRank;
 import static com.hartwig.hmftools.isofox.fusion.FusionTransExon.fromList;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.extractTopTransExonRefs;
 
@@ -49,7 +48,6 @@ public class FusionRead
     public boolean HasInterGeneSplit;
     public boolean HasSuppAlignment;
     public final SupplementaryReadData SuppData;
-    public boolean IsDuplicate;
     public boolean ContainsSplit;
 
     public final List<int[]> MappedCoords;
@@ -78,7 +76,6 @@ public class FusionRead
         IsGenicRegion = read.getIsGenicRegion();
         HasInterGeneSplit = read.hasInterGeneSplit();
         HasSuppAlignment = read.hasSuppAlignment();
-        IsDuplicate = read.isDuplicate();
         ContainsSplit = read.containsSplit();
         Flags = read.flags();
         MapQuality = read.mapQuality();

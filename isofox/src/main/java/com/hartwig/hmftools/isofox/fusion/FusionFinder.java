@@ -68,7 +68,6 @@ public class FusionFinder implements Callable<Void>
     private final FusionWriter mFusionWriter;
 
     private int mHardFilteredCount;
-    private int mDuplicateGroupFilteredCount;
     private int mExcludedFilteredCount;
 
     private final PerformanceCounter[] mPerfCounters;
@@ -99,7 +98,6 @@ public class FusionFinder implements Callable<Void>
 
         mFusionWriter = fusionWriter;
         mHardFilteredCount = 0;
-        mDuplicateGroupFilteredCount = 0;
         mExcludedFilteredCount = 0;
 
         if(mConfig.Fusions.RunPerfChecks)
@@ -125,8 +123,6 @@ public class FusionFinder implements Callable<Void>
     public final RacFragmentCache racFragmentCache() { return mRacFragmentCache; }
 
     public int hardFilteredCount() { return mHardFilteredCount; }
-    public int duplicateFilteredCount() { return mDuplicateGroupFilteredCount; }
-    public int excludedReadCount() { return mExcludedFilteredCount; }
 
     public void clearState(boolean isFinal)
     {
@@ -272,8 +268,8 @@ public class FusionFinder implements Callable<Void>
 
         if(mHardFilteredCount > 0)
         {
-            ISF_LOGGER.info("chr({}) fusion processing complete, filtered(hard={} excluded={} duplicate={})",
-                    mChromosome, mHardFilteredCount, mExcludedFilteredCount, mDuplicateGroupFilteredCount);
+            ISF_LOGGER.info("chr({}) fusion processing complete, filtered(hard={} excluded={})",
+                    mChromosome, mHardFilteredCount, mExcludedFilteredCount);
         }
     }
 
@@ -302,13 +298,6 @@ public class FusionFinder implements Callable<Void>
             if(readGroupCount > 0 && (readGroupCount % HIGH_LOG_COUNT) == 0 && mConfig.Fusions.RunPerfChecks)
             {
                 ISF_LOGGER.info("chr({}) processed {} {} chimeric read groups", mChromosome, readGroupCount, scope);
-            }
-
-            // exclude any group with a duplicate read now that group is complete (since not all reads are marked as duplicates)
-            if(readGroup.hasDuplicateRead())
-            {
-                ++mDuplicateGroupFilteredCount;
-                continue;
             }
 
             if(readGroup.reads().stream().anyMatch(x -> mConfig.Filters.skipRead(x.MateChromosome, x.MatePosStart)))
