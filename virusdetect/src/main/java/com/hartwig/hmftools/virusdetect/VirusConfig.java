@@ -33,7 +33,8 @@ public record VirusConfig(
         int alignmentBatchSize,
         int threads,
         String outputDir,
-        @Nullable String outputId
+        @Nullable String outputId,
+        boolean reuseCandidateFasta
 )
 {
     private static final String CFG_VIRAL_REF_FILE = "viral_ref";
@@ -44,6 +45,9 @@ public record VirusConfig(
     private static final String DESC_VIRAL_BWA_INDEX_IMAGE = "Viral reference BWA-MEM index GATK image file";
     private static final String CFG_ALIGNMENT_BATCH_SIZE = "align_batch_size";
     private static final String DESC_ALIGNMENT_BATCH_SIZE = "Candidate reads submitted to BWA per alignment call";
+    private static final String CFG_REUSE_CANDIDATE_FASTA = "reuse_candidate_fasta";
+    private static final String DESC_REUSE_CANDIDATE_FASTA =
+            "Dev: skip read extraction and reuse the candidate FASTA already at the output location";
 
     public static VirusConfig fromConfigBuilder(final ConfigBuilder configBuilder)
     {
@@ -59,7 +63,8 @@ public record VirusConfig(
                 configBuilder.getInteger(CFG_ALIGNMENT_BATCH_SIZE),
                 parseThreads(configBuilder),
                 parseOutputDir(configBuilder),
-                configBuilder.getValue(OUTPUT_ID)
+                configBuilder.getValue(OUTPUT_ID),
+                configBuilder.hasFlag(CFG_REUSE_CANDIDATE_FASTA)
         );
     }
 
@@ -74,6 +79,7 @@ public record VirusConfig(
         configBuilder.addPath(BWA_LIB_PATH, false, BWA_LIB_PATH_DESC);
 
         configBuilder.addInteger(CFG_ALIGNMENT_BATCH_SIZE, DESC_ALIGNMENT_BATCH_SIZE, ALIGNMENT_BATCH_SIZE_DEFAULT);
+        configBuilder.addFlag(CFG_REUSE_CANDIDATE_FASTA, DESC_REUSE_CANDIDATE_FASTA);
 
         addThreadOptions(configBuilder);
         configBuilder.addConfigItem(OUTPUT_DIR, true, OUTPUT_DIR_DESC);

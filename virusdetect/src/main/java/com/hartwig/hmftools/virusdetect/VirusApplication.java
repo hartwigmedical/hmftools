@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.virusdetect.VirusConstants.DECOY_CONTIGS;
 import static com.hartwig.hmftools.virusdetect.VirusConstants.MARGIN_DISTRIBUTION_TSV_SUFFIX;
 import static com.hartwig.hmftools.virusdetect.VirusConstants.MIN_SOFT_CLIP_BASES_DEFAULT;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 
@@ -52,10 +53,17 @@ public class VirusApplication
 
         checkCreateOutputDir(mConfig.outputDir());
 
-        LOGGER.info("Extracting candidate viral reads from tumor BAM");
         String candidateFastaFile = candidateFastaFile();
-        mCandidateExtractor.extractToFasta(mConfig.tumorBam(), candidateFastaFile);
-        LOGGER.info("Candidate read extraction complete");
+        if(mConfig.reuseCandidateFasta() && new File(candidateFastaFile).exists())
+        {
+            LOGGER.info("Reusing existing candidate FASTA: {}", candidateFastaFile);
+        }
+        else
+        {
+            LOGGER.info("Extracting candidate viral reads from tumor BAM");
+            mCandidateExtractor.extractToFasta(mConfig.tumorBam(), candidateFastaFile);
+            LOGGER.info("Candidate read extraction complete");
+        }
 
         LOGGER.info("Aligning candidate reads to viral reference");
         String alignedBamFile = alignedBamFile();
