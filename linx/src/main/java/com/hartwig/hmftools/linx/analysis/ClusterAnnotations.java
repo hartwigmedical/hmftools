@@ -62,13 +62,13 @@ public class ClusterAnnotations
             return;
 
         // gather up start and end arms from each chain, to determine origin arms for the cluster
-        final List<String> startEndArms = Lists.newArrayList();
+        List<String> startEndArms = Lists.newArrayList();
 
-        for(final SvChain chain : cluster.getChains())
+        for(SvChain chain : cluster.getChains())
         {
             for(int be1 = SE_START; be1 <= SE_END; ++be1)
             {
-                final SvBreakend chainEnd = chain.getOpenBreakend(isStart(be1));
+                SvBreakend chainEnd = chain.getOpenBreakend(isStart(be1));
                 if(chainEnd == null)
                     continue;
 
@@ -77,10 +77,10 @@ public class ClusterAnnotations
             }
         }
 
-        for(final SvChain chain : cluster.getChains())
+        for(SvChain chain : cluster.getChains())
         {
-            final SvBreakend chainStart = chain.getOpenBreakend(true);
-            final SvBreakend chainEnd = chain.getOpenBreakend(false);
+            SvBreakend chainStart = chain.getOpenBreakend(true);
+            SvBreakend chainEnd = chain.getOpenBreakend(false);
 
             SvBreakend chainLowerBe = null;
             SvBreakend chainUpperBe = null;
@@ -103,7 +103,7 @@ public class ClusterAnnotations
                     chainEndsCN = max(chainStartCN, chainEndCN);
             }
 
-            for(final LinkedPair pair : chain.getLinkedPairs())
+            for(LinkedPair pair : chain.getLinkedPairs())
             {
                 if(pair.first().isSglBreakend() || pair.second().isSglBreakend())
                     continue;
@@ -157,7 +157,7 @@ public class ClusterAnnotations
                 List<LinkedPair> uniqueOverlaps = Lists.newArrayList();
                 int overlapCount = 0;
 
-                for(final LinkedPair otherPair : chain.getLinkedPairs())
+                for(LinkedPair otherPair : chain.getLinkedPairs())
                 {
                     if(pair == otherPair)
                         continue;
@@ -190,7 +190,7 @@ public class ClusterAnnotations
                 pair.setOverlapCount(overlapCount);
 
                 // find closest SV in this cluster
-                final List<SvBreakend> breakendList = chrBreakendMap.get(pair.chromosome());
+                List<SvBreakend> breakendList = chrBreakendMap.get(pair.chromosome());
 
                 int[] nextSVData = getNextClusterSVData(cluster, breakendList, pair);
                 pair.setNextSVData(nextSVData[NEXT_SV_DISTANCE], nextSVData[NEXT_CLUSTERED_SV_DISTANCE]);
@@ -247,8 +247,8 @@ public class ClusterAnnotations
 
         for(int i = lowerIndex + 1; i <= upperIndex - 1; ++i)
         {
-            final SvBreakend breakend = breakendList.get(i);
-            final SvCluster otherCluster = breakend.getCluster();
+            SvBreakend breakend = breakendList.get(i);
+            SvCluster otherCluster = breakend.getCluster();
 
             if(otherCluster == cluster || otherCluster.isResolved())
                 continue;
@@ -279,7 +279,7 @@ public class ClusterAnnotations
         {
             for(int i = lowerIndex - 1; i >= 0; --i)
             {
-                final SvBreakend breakend = breakendList.get(i);
+                SvBreakend breakend = breakendList.get(i);
                 int distance = lowerBreakend.position() - breakend.position();
 
                 if(breakend.getCluster() == cluster)
@@ -299,7 +299,7 @@ public class ClusterAnnotations
         {
             for(int i = upperIndex + 1; i < breakendList.size(); ++i)
             {
-                final SvBreakend breakend = breakendList.get(i);
+                SvBreakend breakend = breakendList.get(i);
 
                 int distance = breakend.position() - upperBreakend.position();
 
@@ -342,17 +342,17 @@ public class ClusterAnnotations
 
             Map<SvCluster, Integer> otherClusterMatches = Maps.newHashMap();
 
-            for(final Map.Entry<String, List<SvBreakend>> entry : cluster.getChrBreakendMap().entrySet())
+            for(Map.Entry<String, List<SvBreakend>> entry : cluster.getChrBreakendMap().entrySet())
             {
-                final List<SvBreakend> breakendList = entry.getValue();
-                final List<SvBreakend> fullBreakendList = chrBreakendMap.get(entry.getKey());
+                List<SvBreakend> breakendList = entry.getValue();
+                List<SvBreakend> fullBreakendList = chrBreakendMap.get(entry.getKey());
 
                 genomicSpan += MAX_MERGE_DISTANCE * 2; // account for outer breakends in the cluster
 
                 for(int i = 0; i < breakendList.size() - 1; ++i)
                 {
-                    final SvBreakend breakend = breakendList.get(i);
-                    final SvBreakend nextBreakend = breakendList.get(i + 1);
+                    SvBreakend breakend = breakendList.get(i);
+                    SvBreakend nextBreakend = breakendList.get(i + 1);
 
                     int breakendDistance = nextBreakend.position() - breakend.position();
 
@@ -366,8 +366,8 @@ public class ClusterAnnotations
 
                     for(int j = breakend.getChrPosIndex() + 1; j < nextBreakend.getChrPosIndex(); ++j)
                     {
-                        final SvBreakend otherBreakend = fullBreakendList.get(j);
-                        final SvCluster otherCluster = otherBreakend.getCluster();
+                        SvBreakend otherBreakend = fullBreakendList.get(j);
+                        SvCluster otherCluster = otherBreakend.getCluster();
 
                         if(!complexClusters.contains(otherCluster) || encounteredClusters.contains(otherCluster))
                             continue;
@@ -397,7 +397,7 @@ public class ClusterAnnotations
                 {
                     boolean traverseUp = (i == 0);
 
-                    final SvBreakend refBreakend = !traverseUp ? breakendList.get(0) : breakendList.get(breakendList.size() - 1);
+                    SvBreakend refBreakend = !traverseUp ? breakendList.get(0) : breakendList.get(breakendList.size() - 1);
                     int index = refBreakend.getChrPosIndex();
 
                     List<SvCluster> encounteredClusters = Lists.newArrayList();
@@ -409,8 +409,8 @@ public class ClusterAnnotations
                         if(index < 0 || index >= fullBreakendList.size())
                             break;
 
-                        final SvBreakend otherBreakend = fullBreakendList.get(index);
-                        final SvCluster otherCluster = otherBreakend.getCluster();
+                        SvBreakend otherBreakend = fullBreakendList.get(index);
+                        SvCluster otherCluster = otherBreakend.getCluster();
 
                         if(!complexClusters.contains(otherCluster) || encounteredClusters.contains(otherCluster))
                             continue;
@@ -432,12 +432,12 @@ public class ClusterAnnotations
                 }
             }
 
-            for(final Map.Entry<SvCluster, Integer> entry : otherClusterMatches.entrySet())
+            for(Map.Entry<SvCluster, Integer> entry : otherClusterMatches.entrySet())
             {
                 if(entry.getValue() <= 1)
                     continue;
 
-                final SvCluster otherCluster = entry.getKey();
+                SvCluster otherCluster = entry.getKey();
 
                 if(reportedClusters.stream().anyMatch(x -> x[0] == otherCluster && x[1] == cluster))
                     continue;
@@ -472,7 +472,7 @@ public class ClusterAnnotations
                 {
                     String overlappingChrStr = "";
 
-                    for(final ArmGroup group : cluster.getArmGroups())
+                    for(ArmGroup group : cluster.getArmGroups())
                     {
                         if(otherCluster.getArmGroups().stream().anyMatch(x -> x.id().equals(group.id())))
                         {
@@ -520,20 +520,20 @@ public class ClusterAnnotations
         int shortTiCount = 0;
         int longTiCount = 0;
 
-        for(final SvChain chain : cluster.getChains())
+        for(SvChain chain : cluster.getChains())
         {
             boolean chainConsistent = chain.isConsistent();
 
             cluster.getMetrics().ChainedLength += chain.getLength(false);
 
-            for(final LinkedPair pair : chain.getLinkedPairs())
+            for(LinkedPair pair : chain.getLinkedPairs())
             {
-                final SvVarData first = pair.first();
+                SvVarData first = pair.first();
 
                 if(pair.first().isSglBreakend() || pair.second().isSglBreakend())
                     continue;
 
-                final String chrArm = first.getBreakend(pair.firstLinkOnStart()).getChrArm();
+                String chrArm = first.getBreakend(pair.firstLinkOnStart()).getChrArm();
 
                 if(pair.baseLength() <= SHORT_TI_LENGTH)
                 {
@@ -555,7 +555,7 @@ public class ClusterAnnotations
 
             for(int se = SE_START; se <= SE_END; ++se)
             {
-                final SvBreakend chainBreakend = chain.getOpenBreakend(se);
+                SvBreakend chainBreakend = chain.getOpenBreakend(se);
 
                 if(chainBreakend != null)
                 {
@@ -564,9 +564,9 @@ public class ClusterAnnotations
             }
         }
 
-        final List<SvVarData> unlinkedSVs = cluster.getUnlinkedSVs();
+        List<SvVarData> unlinkedSVs = cluster.getUnlinkedSVs();
 
-        for(final SvVarData var : unlinkedSVs)
+        for(SvVarData var : unlinkedSVs)
         {
             for(int se = SE_START; se <= SE_END; ++se)
             {
@@ -584,7 +584,7 @@ public class ClusterAnnotations
         // determine complex / active arms as those with more than 1 local topology event not including TI-only segments
         Map<String,Integer> armClusterCounts = Maps.newHashMap();
 
-        for(final ArmCluster armCluster : cluster.getArmClusters())
+        for(ArmCluster armCluster : cluster.getArmClusters())
         {
             if(armCluster.getType() == ArmClusterType.TI_ONLY)
                 continue;
@@ -631,7 +631,7 @@ public class ClusterAnnotations
 
     private static void addBreakendToArmConsistency(final Map<String,Integer> armConsistencyMap, final SvBreakend breakend)
     {
-        final String chrArm = breakend.getChrArm();
+        String chrArm = breakend.getChrArm();
 
         Integer armConsistency = armConsistencyMap.get(chrArm);
         if(armConsistency == null)
@@ -671,8 +671,8 @@ public class ClusterAnnotations
             if(!chain.isConsistent() || chain.isClosedLoop())
                 continue;
 
-            final SvBreakend chainStart = chain.getOpenBreakend(true);
-            final SvBreakend chainEnd = chain.getOpenBreakend(false);
+            SvBreakend chainStart = chain.getOpenBreakend(true);
+            SvBreakend chainEnd = chain.getOpenBreakend(false);
 
             if(chainStart == null || chainEnd == null || !chainEnd.getChrArm().equals(chainStart.getChrArm()))
                 continue;
@@ -681,7 +681,7 @@ public class ClusterAnnotations
             if(chain.hasRepeatedSV())
                 continue;
 
-            final ChainMetrics chainMetrics = extractChainMetrics(chain);
+            ChainMetrics chainMetrics = extractChainMetrics(chain);
 
             // require internal TIs with gain, which mandates chain ends are on the same arm
             if(chainMetrics.ChainEndsAway != 1 || chainMetrics.InternalTICnGain == 0 || chainMetrics.OverlappingTIs == 0)
@@ -710,15 +710,15 @@ public class ClusterAnnotations
 
     private static long getCopyNumberGainLength(final SvCluster cluster, final SvChain chain)
     {
-        final SvBreakend chainStart = chain.getOpenBreakend(true);
-        final SvBreakend chainEnd = chain.getOpenBreakend(false);
+        SvBreakend chainStart = chain.getOpenBreakend(true);
+        SvBreakend chainEnd = chain.getOpenBreakend(false);
         int lowerIndex = min(chainStart.getClusterChrPosIndex(), chainEnd.getClusterChrPosIndex());
         int upperIndex = max(chainStart.getClusterChrPosIndex(), chainEnd.getClusterChrPosIndex());
         double chainEndsCN = max(chainStart.copyNumber(), chainEnd.copyNumber());
         long internalGainLength = 0;
 
         // sum of segments of CN gain between the chain ends
-        final List<SvBreakend> breakendList = cluster.getChrBreakendMap().get(chainStart.chromosome());
+        List<SvBreakend> breakendList = cluster.getChrBreakendMap().get(chainStart.chromosome());
 
         int prevPosition = 0;
         double prevCN = 0;

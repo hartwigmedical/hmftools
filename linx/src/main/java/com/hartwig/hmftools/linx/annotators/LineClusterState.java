@@ -117,15 +117,15 @@ public class LineClusterState
         // - the remote single breakend having a poly-A/T insert motif or the BND having a poly A/T source motif
         if(!spanningBreakends.isEmpty())
         {
-            for(final SvBreakend breakend : spanningBreakends)
+            for(SvBreakend breakend : spanningBreakends)
             {
-                final SvBreakend otherBreakend = breakend.getOtherBreakend();
-                final DbPair dbLink = otherBreakend.getDBLink();
+                SvBreakend otherBreakend = breakend.getOtherBreakend();
+                DbPair dbLink = otherBreakend.getDBLink();
 
                 if(dbLink == null)
                     continue;
 
-                final SvBreakend remoteOtherBreakend = dbLink.getOtherBreakend(otherBreakend);
+                SvBreakend remoteOtherBreakend = dbLink.getOtherBreakend(otherBreakend);
 
                 if(remoteOtherBreakend.type() != SGL || !isRemoteIsolatedDeletionBridge(dbLink))
                     continue;
@@ -198,11 +198,11 @@ public class LineClusterState
         if(insSeqLength < POLY_A_MOTIF.length())
             return false;
 
-        final String requiredSequence = (orientation == ORIENT_FWD) == isSource ? POLY_A_MOTIF : POLY_T_MOTIF;
+        String requiredSequence = (orientation == ORIENT_FWD) == isSource ? POLY_A_MOTIF : POLY_T_MOTIF;
 
         if(orientation == ORIENT_FWD || eitherEnd)
         {
-            final String startSeq = insSequence.substring(0, min(insSeqLength, POLY_AT_BASES_SEARCH));
+            String startSeq = insSequence.substring(0, min(insSeqLength, POLY_AT_BASES_SEARCH));
 
             if(containsMotif(startSeq, requiredSequence))
                 return true;
@@ -210,7 +210,7 @@ public class LineClusterState
 
         if(orientation == ORIENT_REV || eitherEnd)
         {
-            final String endSeq = insSequence.substring(max(0, insSeqLength - POLY_AT_BASES_SEARCH), insSeqLength);
+            String endSeq = insSequence.substring(max(0, insSeqLength - POLY_AT_BASES_SEARCH), insSeqLength);
 
             if(containsMotif(endSeq, requiredSequence))
                 return true;
@@ -224,7 +224,7 @@ public class LineClusterState
         if(sequence.contains(motif))
             return true;
 
-        final char base = motif.charAt(0);
+        char base = motif.charAt(0);
         int baseCount = 0;
         for(int i = 0; i < sequence.length(); ++i)
         {
@@ -244,9 +244,9 @@ public class LineClusterState
             return false;
 
         // no other breakends can be within the proximity cut off
-        final List<SvBreakend> breakendList = dbPair.lowerSV().getCluster().getChrBreakendMap().get(dbPair.chromosome());
+        List<SvBreakend> breakendList = dbPair.lowerSV().getCluster().getChrBreakendMap().get(dbPair.chromosome());
 
-        final SvBreakend lowerBreakend = dbPair.getBreakend(true);
+        SvBreakend lowerBreakend = dbPair.getBreakend(true);
         int startIndex = lowerBreakend.getClusterChrPosIndex();
 
         if(startIndex > 0)
@@ -255,7 +255,7 @@ public class LineClusterState
                 return false;
         }
 
-        final SvBreakend upperBreakend = dbPair.getBreakend(false);
+        SvBreakend upperBreakend = dbPair.getBreakend(false);
         int endIndex = upperBreakend.getClusterChrPosIndex();
 
         if(endIndex < breakendList.size() - 1)

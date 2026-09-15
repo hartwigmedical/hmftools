@@ -134,8 +134,8 @@ public class DoubleMinuteFinder implements CohortFileInterface
         }
 
         boolean hasValidSv = false;
-        final List<SvVarData> candidateDmSVs = Lists.newArrayList();
-        final List<SvVarData> candidateFlankedSVs = Lists.newArrayList();
+        List<SvVarData> candidateDmSVs = Lists.newArrayList();
+        List<SvVarData> candidateFlankedSVs = Lists.newArrayList();
 
         for(SvVarData var : cluster.getSVs())
         {
@@ -158,15 +158,15 @@ public class DoubleMinuteFinder implements CohortFileInterface
 
         // take any candidate which are at high enough JCN relative to the max for the group
         double maxDmJcn = candidateDmSVs.stream().mapToDouble(x -> x.jcn()).max().orElse(0);
-        final double minJcn = max(JCN_THRESHOLD, MIN_PERC_OF_MAX_JCN * maxDmJcn);
-        final List<SvVarData> dmSVs = Lists.newArrayList();
+        double minJcn = max(JCN_THRESHOLD, MIN_PERC_OF_MAX_JCN * maxDmJcn);
+        List<SvVarData> dmSVs = Lists.newArrayList();
 
         candidateDmSVs.stream().filter(x -> x.jcn() >= minJcn).forEach(x -> dmSVs.add(x));
 
         // dismiss any single SV which isn't a DUP
         if(dmSVs.size() == 1)
         {
-            final SvVarData var = dmSVs.get(0);
+            SvVarData var = dmSVs.get(0);
 
             if(var.type() != DUP)
                 return;
@@ -175,11 +175,11 @@ public class DoubleMinuteFinder implements CohortFileInterface
                 return;
         }
 
-        final List<SvChain> dmChains = createDMChains(cluster, dmSVs, false);
+        List<SvChain> dmChains = createDMChains(cluster, dmSVs, false);
 
         if(dmSVs.size() > 2 && cluster.requiresReplication())
         {
-            final List<SvChain> variedJcnChains = createDMChains(cluster, dmSVs, true);
+            List<SvChain> variedJcnChains = createDMChains(cluster, dmSVs, true);
 
             // take the more effective of the 2 approaches
             int uniformChainedCount = countChainedSVs(dmSVs, dmChains);
@@ -261,7 +261,7 @@ public class DoubleMinuteFinder implements CohortFileInterface
                 // cache single DUP chains now since the cluster may not go through the chaining routine
                 if(dmChain.getSvCount() == 1 && dmChain.getSvList().get(0).type() == DUP)
                 {
-                    final SvVarData dup = dmChain.getSvList().get(0);
+                    SvVarData dup = dmChain.getSvList().get(0);
                     if(!cluster.getChains().stream().anyMatch(x -> x.getSvList().size() == 1 && x.getSvList().contains(dup)))
                     {
                         cluster.addChain(dmChain, false);
@@ -287,7 +287,7 @@ public class DoubleMinuteFinder implements CohortFileInterface
                 // cache single DUP chains now since the cluster may not go through the chaining routine
                 if(dmChain.getSvCount() == 1 && dmChain.getSvList().get(0).type() == DUP)
                 {
-                    final SvVarData dup = dmChain.getSvList().get(0);
+                    SvVarData dup = dmChain.getSvList().get(0);
                     if(!cluster.getChains().stream().anyMatch(x -> x.getSvList().size() == 1 && x.getSvList().contains(dup)))
                     {
                         cluster.addChain(dmChain, false);
@@ -314,10 +314,10 @@ public class DoubleMinuteFinder implements CohortFileInterface
     private List<SvChain> createDMChains(final SvCluster cluster, final List<SvVarData> dmSvList, boolean applyReplication)
     {
         // first extract stand-alone DUPs to avoid them chaining in just because they can
-        final List<SvChain> dmChains = Lists.newArrayList();
+        List<SvChain> dmChains = Lists.newArrayList();
         int chainId = 0;
 
-        final List<SvVarData> chainSvList = Lists.newArrayList();
+        List<SvVarData> chainSvList = Lists.newArrayList();
 
         for(SvVarData var : dmSvList)
         {
@@ -422,14 +422,14 @@ public class DoubleMinuteFinder implements CohortFileInterface
         if(!mLogCandidates)
             return;
 
-        final DoubleMinuteData dmData = mDoubleMinutes.get(cluster.id());
+        DoubleMinuteData dmData = mDoubleMinutes.get(cluster.id());
 
         if(dmData == null)
             return;
 
         String svIds = "";
-        final int[] typeCounts = new int[StructuralVariantType.values().length];
-        final List<String> chromosomes = Lists.newArrayList();
+        int[] typeCounts = new int[StructuralVariantType.values().length];
+        List<String> chromosomes = Lists.newArrayList();
 
         double minDMJcn = 0;
         double maxDMCopyNumber = 0;
@@ -455,8 +455,8 @@ public class DoubleMinuteFinder implements CohortFileInterface
                 if(var.isSglBreakend() && se== SE_END)
                     continue;
 
-                final SvBreakend breakend = var.getBreakend(se);
-                final String chromosome = breakend.chromosome();
+                SvBreakend breakend = var.getBreakend(se);
+                String chromosome = breakend.chromosome();
 
                 if(!chromosomes.contains(chromosome))
                     chromosomes.add(chromosome);
@@ -465,9 +465,9 @@ public class DoubleMinuteFinder implements CohortFileInterface
             svIds = appendStr(svIds, var.idStr(), ITEM_DELIM_CHR);
         }
 
-        final String dmTypesStr = getSvTypesStr(typeCounts);
+        String dmTypesStr = getSvTypesStr(typeCounts);
 
-        final PurityContext purityContext = mCnDataLoader.getPurityContext();
+        PurityContext purityContext = mCnDataLoader.getPurityContext();
         double samplePurity = purityContext != null ? purityContext.bestFit().purity() : 0;
         double samplePloidy = purityContext != null ? purityContext.bestFit().ploidy() : 0;
 
@@ -480,7 +480,7 @@ public class DoubleMinuteFinder implements CohortFileInterface
                 amplifiedGenesStr = appendStr(amplifiedGenesStr, amplifiedGenes, ITEM_DELIM_CHR);
         }
 
-        final String chromosomeStr = chromosomes.stream().collect(Collectors.joining(ITEM_DELIM));
+        String chromosomeStr = chromosomes.stream().collect(Collectors.joining(ITEM_DELIM));
 
         StringJoiner sj = new StringJoiner(TSV_DELIM);
 
@@ -527,7 +527,7 @@ public class DoubleMinuteFinder implements CohortFileInterface
         double minMinAmr = 0;
         if(dmData.SVs.size() == 1)
         {
-            final SvVarData var = dmData.SVs.get(0);
+            SvVarData var = dmData.SVs.get(0);
 
             minMinAmr = min(
                     getMajorAlleleJcnRatio(var.getBreakend(true)),

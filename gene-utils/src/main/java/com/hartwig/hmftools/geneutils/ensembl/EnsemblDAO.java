@@ -1,10 +1,6 @@
 package com.hartwig.hmftools.geneutils.ensembl;
 
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.ENSEMBL_DELIM;
-import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.ENSEMBL_GENE_DATA_FILE;
-import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.ENSEMBL_PROTEIN_FEATURE_DATA_FILE;
-import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.ENSEMBL_TRANS_EXON_DATA_FILE;
-import static com.hartwig.hmftools.common.gene.TranscriptUtils.codingBaseLength;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
 import static com.hartwig.hmftools.common.genome.region.Strand.POS_STRAND;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
@@ -25,7 +21,6 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -63,9 +58,6 @@ public class EnsemblDAO
 
     // reference transcripts are loaded only to evaluate difference between Ensembl versions and v37 vs v38
     private final Map<String,List<TranscriptData>> mReferenceTranscriptMap; // keyed by geneId
-
-    private static final int COORD_SYSTEM_V37 = 2;
-    private static final int COORD_SYSTEM_V38 = 4;
 
     // not in HGNC but retained
     private static final List<GeneData> GENE_DATA_OVERRIDES = Lists.newArrayList(
@@ -248,9 +240,9 @@ public class EnsemblDAO
         if (!outputFilename.endsWith(File.separator))
             outputFilename += File.separator;
 
-        writeGeneData(outputFilename + ENSEMBL_GENE_DATA_FILE);
-        writeTranscriptExonData(outputFilename + ENSEMBL_TRANS_EXON_DATA_FILE);
-        writeTranscriptProteinData(outputFilename + ENSEMBL_PROTEIN_FEATURE_DATA_FILE);
+        writeGeneData(outputFilename + EnsemblDataLoader.ensemblGeneDataFile(mRefGenomeVersion));
+        writeTranscriptExonData(outputFilename + EnsemblDataLoader.ensemblTransExonDataFile(mRefGenomeVersion));
+        writeTranscriptProteinData(outputFilename + EnsemblDataLoader.ensemblProteinDataFile(mRefGenomeVersion));
     }
 
     private void writeGeneData(final String outputFile)

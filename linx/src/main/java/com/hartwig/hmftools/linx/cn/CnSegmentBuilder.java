@@ -56,8 +56,8 @@ public class CnSegmentBuilder
     {
         // use SV breakend data to re-create the copy number segments
 
-        final Map<String, List<SvCNData>> chrCnDataMap = cnDataLoader.getChrCnDataMap();
-        final Map<Integer, SvCNData[]> svIdCnDataMap = cnDataLoader.getSvIdCnDataMap();
+        Map<String, List<SvCNData>> chrCnDataMap = cnDataLoader.getChrCnDataMap();
+        Map<Integer, SvCNData[]> svIdCnDataMap = cnDataLoader.getSvIdCnDataMap();
 
         chrCnDataMap.clear();
         svIdCnDataMap.clear();
@@ -65,7 +65,7 @@ public class CnSegmentBuilder
         int cnId = 0;
         for(Map.Entry<String, List<SvBreakend>> entry : chrBreakendMap.entrySet())
         {
-            final String chromosome = entry.getKey();
+            String chromosome = entry.getKey();
             List<SvBreakend> breakendList = entry.getValue();
             List<SvCNData> cnDataList = Lists.newArrayList();
             chrCnDataMap.put(chromosome, cnDataList);
@@ -151,7 +151,7 @@ public class CnSegmentBuilder
 
                 if(i < breakendList.size() - 1)
                 {
-                    final SvBreakend nextBreakend = breakendList.get(i + 1);
+                    SvBreakend nextBreakend = breakendList.get(i + 1);
 
                     if(breakend.arm() == P && nextBreakend.arm() == Q)
                     {
@@ -255,8 +255,8 @@ public class CnSegmentBuilder
     {
         // set copy number data for each breakend irrespective of the breakends around it
 
-        final Map<String, List<SvCNData>> chrCnDataMap = cnDataLoader.getChrCnDataMap();
-        final Map<Integer, SvCNData[]> svIdCnDataMap = cnDataLoader.getSvIdCnDataMap();
+        Map<String, List<SvCNData>> chrCnDataMap = cnDataLoader.getChrCnDataMap();
+        Map<Integer, SvCNData[]> svIdCnDataMap = cnDataLoader.getSvIdCnDataMap();
 
         chrCnDataMap.clear();
         svIdCnDataMap.clear();
@@ -267,9 +267,9 @@ public class CnSegmentBuilder
         int cnId = 0;
         for(Map.Entry<String, List<SvBreakend>> entry : chrBreakendMap.entrySet())
         {
-            final String chromosome = entry.getKey();
-            final List<SvBreakend> breakendList = entry.getValue();
-            final List<SvCNData> cnDataList = Lists.newArrayList();
+            String chromosome = entry.getKey();
+            List<SvBreakend> breakendList = entry.getValue();
+            List<SvCNData> cnDataList = Lists.newArrayList();
             chrCnDataMap.put(chromosome, cnDataList);
 
             int centromerePosition = SvUtilities.getChromosomalArmLength(chromosome, P);
