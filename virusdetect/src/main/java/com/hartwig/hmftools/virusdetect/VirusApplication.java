@@ -54,12 +54,17 @@ public class VirusApplication
         checkCreateOutputDir(mConfig.outputDir());
 
         String candidateFastaFile = candidateFastaFile();
-        if(mConfig.reuseCandidateFasta() && new File(candidateFastaFile).exists())
+        boolean reuseExisting = mConfig.reuseCandidateFasta() && new File(candidateFastaFile).exists();
+        if(reuseExisting)
         {
             LOGGER.info("Reusing existing candidate FASTA: {}", candidateFastaFile);
         }
         else
         {
+            if(mConfig.reuseCandidateFasta())
+            {
+                LOGGER.info("Candidate FASTA not found, extracting: {}", candidateFastaFile);
+            }
             LOGGER.info("Extracting candidate viral reads from tumor BAM");
             mCandidateExtractor.extractToFasta(mConfig.tumorBam(), candidateFastaFile);
             LOGGER.info("Candidate read extraction complete");
