@@ -129,8 +129,7 @@ public class GeneCollection
             // mark any read extending beyond this gene collection's bounds in part or full
             for (int se = SE_START; se <= SE_END; ++se)
             {
-                if(positionWithin(
-                        read.getCoordsBoundary(se), mRegionBounds[SE_START], mRegionBounds[SE_END]))
+                if(positionWithin(read.getCoordsBoundary(se), mRegionBounds[SE_START], mRegionBounds[SE_END]))
                 {
                     read.setGeneCollection(se, mId, true);
                 }

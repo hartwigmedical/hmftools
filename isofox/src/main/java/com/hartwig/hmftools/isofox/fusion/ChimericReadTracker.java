@@ -267,6 +267,18 @@ public class ChimericReadTracker
             read.addIntronicTranscriptRefs(mGeneCollection.getTranscripts());
     }
 
+    public void addSupplementaryRead(final Read read)
+    {
+        if(inImmuneRegion(read))
+            return;
+
+        ChimericReadGroup chimericReads = mChimericReadMap.get(read.Id);
+        if(chimericReads == null)
+            mChimericReadMap.put(read.Id, new ChimericReadGroup(read));
+        else
+            chimericReads.addRead(read);
+    }
+
     public void postProcessChimericReads(final BaseDepth baseDepth, final FragmentTracker fragmentTracker)
     {
         // check any lone reads - this cannot be one of a pair of non-genic reads since they will have already been dismissed

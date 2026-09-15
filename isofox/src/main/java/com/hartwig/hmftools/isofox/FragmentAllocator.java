@@ -86,7 +86,6 @@ import com.hartwig.hmftools.isofox.novel.RetainedIntronFinder;
 import com.hartwig.hmftools.isofox.novel.SpliceSiteCounter;
 import com.hartwig.hmftools.isofox.results.ResultsWriter;
 
-import htsjdk.samtools.SAMFlag;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
@@ -184,7 +183,6 @@ public class FragmentAllocator
     public BaseDepth getBaseDepth() { return mBaseDepth; }
     public final ChimericReadTracker getChimericReadTracker() { return mChimericReads; }
     public final SpliceSiteCounter getSpliceSiteCounter() { return mSpliceSiteCounter; }
-    public final FragmentTracker getFragmentTracker() { return mFragmentReads; }
 
     public void clearCache()
     {
@@ -312,16 +310,16 @@ public class FragmentAllocator
         if(reachedGeneReadLimit())
             return;
 
-        final List<RegionReadData> overlappingRegions = findOverlappingRegions(mCurrentGenes.getExonRegions(), read);
-
-        if(!overlappingRegions.isEmpty())
-        {
-            read.processOverlappingRegions(overlappingRegions);
-        }
-
         mCurrentGenes.setReadGeneCollections(read, mValidReadStartRegion);
 
-        checkFragmentRead(read);
+        if(read.isSupplementaryAlignment())
+        {
+            handleSupplementaryRead(read);
+        }
+        else
+        {
+            checkFragmentRead(read);
+        }
     }
 
     private boolean checkFragmentRead(final Read read)
@@ -331,14 +329,35 @@ public class FragmentAllocator
 
         if(otherRead != null)
         {
-            processFragmentReads(read, otherRead);
+            processReadPair(read, otherRead);
             return true;
         }
 
         return false;
     }
 
-    private void processFragmentReads(final Read read1, final Read read2)
+    private void markGeneDataRegions(final Read read)
+    {
+        List<RegionReadData> overlappingRegions = findOverlappingRegions(mCurrentGenes.getExonRegions(), read);
+
+        if(!overlappingRegions.isEmpty())
+        {
+            read.processOverlappingRegions(overlappingRegions);
+        }
+    }
+
+    private void handleSupplementaryRead(final Read read)
+    {
+        if(read.isDuplicate() || read.isMateUnmapped())
+            return;
+
+        mBaseDepth.processRead(read.getMappedRegionCoords());
+
+        markGeneDataRegions(read);
+        mChimericReads.addSupplementaryRead(read);
+    }
+
+    private void processReadPair(final Read read1, final Read read2)
     {
         /* process the pair of reads from a fragment:
             - fully outside the gene (due to the buffer used, ignore
@@ -351,11 +370,11 @@ public class FragmentAllocator
             - not supporting any transcript - eg alternative splice sites or unspliced reads
         */
 
-        if(!read1.isSupplementaryAlignment() && !read2.isSupplementaryAlignment())
-        {
-            read1.trimAdapterSoftClipBases(read2);
-            read2.trimAdapterSoftClipBases(read1);
-        }
+        read1.trimAdapterSoftClipBases(read2);
+        read2.trimAdapterSoftClipBases(read1);
+
+        markGeneDataRegions(read1);
+        markGeneDataRegions(read2);
 
         // duplicates will be used for transcript counts but nothing else
         boolean isDuplicate = read1.isDuplicate() || read2.isDuplicate();
@@ -1127,5 +1146,7 @@ public class FragmentAllocator
         reads.forEach(x -> processRead(x));
     }
 
+    @VisibleForTesting
+    public final FragmentTracker getFragmentTracker() { return mFragmentReads; }
 
 }
