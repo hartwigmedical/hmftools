@@ -174,7 +174,7 @@ public class FusionReadData
     public int supportingFragmentCount()
     {
         return mFragmentCounts.entrySet().stream()
-                .filter(x -> x.getKey().isJunctionType())
+                .filter(x -> x.getKey().isJunctionType() || x.getKey() == DISCORDANT)
                 .mapToInt(x -> x.getValue().intValue()).sum();
     }
 
