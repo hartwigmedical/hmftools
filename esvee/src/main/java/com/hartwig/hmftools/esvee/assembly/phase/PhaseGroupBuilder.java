@@ -69,6 +69,9 @@ public class PhaseGroupBuilder
 
         int taskCount = min(mConfig.Threads, junctionGroupCount);
 
+        if(mConfig.PhaseGroupBuildingSingleThreaded)
+            taskCount = 1; // force to a single thread to improve determinism
+
         // stage one is local phase group building
         Queue<JunctionGroup> junctionGroupQueue = new ConcurrentLinkedQueue<>();
 

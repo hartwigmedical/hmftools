@@ -128,7 +128,9 @@ public class PhaseSetBuilder
         }
         else
         {
+            // sort to ensure linking and phase set building is deterministic
             mAssemblies = mPhaseGroup.assemblies();
+            Collections.sort(mAssemblies, Comparator.comparing(x -> x.junction()));
         }
 
         mLocalSequenceMatcher = new LocalSequenceMatcher(refGenome, LOCAL_ASSEMBLY_MATCH_DISTANCE);

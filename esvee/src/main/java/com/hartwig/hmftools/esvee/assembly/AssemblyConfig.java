@@ -122,6 +122,7 @@ public class AssemblyConfig
 
     public final int AssemblyRefBaseWriteMax;
     public final boolean AssemblyDetailedTsv;
+    public final boolean PhaseGroupBuildingSingleThreaded;
 
     public static boolean WriteCandidateReads;
     public static boolean AssemblyBuildDebug = false;
@@ -149,6 +150,7 @@ public class AssemblyConfig
     private static final String DISC_ONLY_DISABLED = "disc_only_disabled";
     private static final String WRITE_CANDIDATE_READS = "write_candidate_reads";
     private static final String ASSEMBLY_TSV_DETAILED = "assembly_detailed_tsv";
+    private static final String PHASE_GROUP_NO_MULTI_THREAD = "phase_group_no_thread";
 
     private static final String REMOTE_PHASING_READ_CHECK_THRESHOLD = "remote_phase_read_check_threshold";
 
@@ -340,6 +342,7 @@ public class AssemblyConfig
         AssemblyBuildDebug = configBuilder.hasFlag(ASSEMBLY_BUILD_DEBUG);
         AssemblyLogAllReads = configBuilder.hasFlag(ASSEMBLY_BUILD_DEBUG);
         WriteCandidateReads = configBuilder.hasFlag(WRITE_CANDIDATE_READS);
+        PhaseGroupBuildingSingleThreaded = configBuilder.hasFlag(PHASE_GROUP_NO_MULTI_THREAD);
 
         PhaseProcessingLimit = configBuilder.getInteger(PHASE_PROCESSING_LIMIT);
 
@@ -434,6 +437,7 @@ public class AssemblyConfig
 
         configBuilder.addPath(PURPLE_DIR_CFG, false, "Purple data directory for event visualisation");
         configBuilder.addFlag(RUN_ASSEMBLY_VIS, "Run visualiser on specific junctions");
+        configBuilder.addFlag(PHASE_GROUP_NO_MULTI_THREAD, "Single-thread phase group bulding to improve determinism");
 
         BamToolName.addConfig(configBuilder);
 
@@ -490,6 +494,7 @@ public class AssemblyConfig
         ApplyRemotePhasingReadCheckThreshold = false;
         AssemblyBuildDebug = false;
         WriteCandidateReads = false;
+        PhaseGroupBuildingSingleThreaded = false;
 
         READ_ID_TRIMMER = new ReadIdTrimmer(false);
     }
