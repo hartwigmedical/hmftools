@@ -35,6 +35,7 @@ import static com.hartwig.hmftools.esvee.assembly.types.SupportType.EXTENSION;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.isLineInsertPair;
 
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.StringJoiner;
@@ -110,10 +111,16 @@ public class PhaseSetBuilder
         mRemoteReadExtractor = remoteReadExtractor;
         mRemoteReadExtractor.resetCounts();
 
+        int assemblyCount = mPhaseGroup.assemblies().size();
+        mHasHighAssemblyCount = assemblyCount >= HIGH_ASSEMBLY_COUNT;
+
+        // sort to ensure linking and phase set building is deterministic
+        mAssemblies = mPhaseGroup.assemblies();
+        Collections.sort(mAssemblies, Comparator.comparing(x -> x.junction()));
+
         mLocalSequenceMatcher = new LocalSequenceMatcher(refGenome, LOCAL_ASSEMBLY_MATCH_DISTANCE);
 
         mPhaseSets = mPhaseGroup.phaseSets();
-        mAssemblies = mPhaseGroup.assemblies();
         mSecondarySplitLinks = mPhaseGroup.secondaryLinks();
 
         mLineRelatedAssemblies = Sets.newHashSet();
@@ -123,8 +130,6 @@ public class PhaseSetBuilder
         mFacingLinks = Lists.newArrayList();
         mBranchedAssemblies = Lists.newArrayList();
         mLocallyLinkedAssemblies = Sets.newHashSet();
-
-        mHasHighAssemblyCount = mAssemblies.size() >= HIGH_ASSEMBLY_COUNT;
 
         mStartTimeMs = 0;
         mRoutineIteration = 0;
