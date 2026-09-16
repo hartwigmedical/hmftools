@@ -82,10 +82,9 @@ public class VirusOutputWriter
         LOGGER.info("wrote {} contig stats to {}", ordered.size(), file);
     }
 
-    // One row per contig, the strict-win margin value at every percentile 0..100: the full distribution, for
-    // choosing how to tell near-identical twins from genuinely rival strains. Null across all percentiles when a
-    // contig strictly won no read.
-    // For testing / calibration only — likely removed once the representative-selection rule is settled.
+    // One row per contig, the strict-win margin value at every percentile 0..100: the full distribution for
+    // distinguishing near-identical twins from genuinely rival strains. Null across all percentiles when a contig
+    // strictly won no read. Testing/calibration only — likely removed once representative-selection is settled.
     public static void writeMarginDistribution(String file, Collection<ContigStats> stats, ViralReference reference)
     {
         List<ContigStats> ordered = stats.stream()

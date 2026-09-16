@@ -35,10 +35,9 @@ import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.ValidationStringency;
 
-// Scans the tumor BAM/CRAM once and writes candidate viral reads single-end to a FASTA, each read once.
-// FASTA ids carry the mate number so the two reads of a pair stay distinct. With multiple threads the scan is
-// sharded by genome partition (plus the unmapped tail), which requires an indexed input; each worker writes its
-// own part lock-free and the parts are concatenated into the output once every task has finished.
+// Scans the tumor BAM/CRAM once and writes candidate viral reads single-end to a FASTA, each read once, with
+// FASTA ids carrying the mate number so the two reads of a pair stay distinct. Multiple threads shard the scan
+// by genome partition (plus the unmapped tail), which requires an indexed input.
 public class CandidateReadExtractor
 {
     @Nullable
@@ -131,7 +130,7 @@ public class CandidateReadExtractor
         slicer.setKeepUnmapped();
 
         // One reader and one FASTA part per worker thread, both created lazily on first use, so scanning and writing
-        // run lock-free. Readers are closed and parts concatenated once every task has finished.
+        // run lock-free.
         List<SamReader> readers = Collections.synchronizedList(new ArrayList<>());
         List<FastaPart> parts = Collections.synchronizedList(new ArrayList<>());
         AtomicInteger nextPartIndex = new AtomicInteger();
@@ -152,9 +151,8 @@ public class CandidateReadExtractor
         ExecutorService executor = Executors.newFixedThreadPool(mThreads);
         List<CompletableFuture<Void>> futures = new ArrayList<>();
 
-        // The unmapped reads sit in a single block that cannot be sharded, so they are scanned by one long-running
-        // task. It is submitted first so it runs concurrently with the region tasks from the start; queued last it
-        // would instead be picked up only as the region work drained, tacking its full duration onto the end.
+        // The unmapped reads sit in one unshardable block scanned by a single long-running task. Submitted first so it
+        // runs alongside the region tasks from the start, rather than tacking its full duration onto the end.
         futures.add(CompletableFuture.runAsync(() -> sliceUnmapped(slicer, threadReader, threadPart), executor));
 
         for(ChrBaseRegion region : partitions)
@@ -298,8 +296,8 @@ public class CandidateReadExtractor
         return String.format("%.1f", (System.currentTimeMillis() - startTimeMs) / 1000.0);
     }
 
-    // A worker's private FASTA shard, written lock-free by the single thread that owns it. The shards concatenate
-    // byte-wise into the output. Not thread-safe: one instance per thread.
+    // A worker's private FASTA shard, written lock-free by its owning thread and concatenated byte-wise into the
+    // output. Not thread-safe.
     private static class FastaPart
     {
         private final Path mPath;
