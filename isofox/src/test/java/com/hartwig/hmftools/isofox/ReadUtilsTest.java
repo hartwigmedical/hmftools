@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.isofox;
 
+import static com.hartwig.hmftools.common.bam.CigarUtils.cigarFromStr;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.ReadCountsTest.REF_BASE_STR_1;
@@ -11,6 +12,7 @@ import static com.hartwig.hmftools.isofox.TestUtils.createRegion;
 import static com.hartwig.hmftools.isofox.common.Read.markRegionBases;
 import static com.hartwig.hmftools.isofox.common.CommonUtils.deriveCommonRegions;
 import static com.hartwig.hmftools.isofox.common.CommonUtils.findStringOverlaps;
+import static com.hartwig.hmftools.isofox.common.ReadUtils.trimAdapterBases;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -213,14 +215,31 @@ public class ReadUtilsTest
     }
 
     @Test
-    public void testAdapterTrimming()
+    public void testAdapterTrimming2()
     {
         Read read1 = createReadRecord(1, CHR_1, 105, 124, REF_BASE_STR_2, createCigar(10, 20, 10));
         Read read2 = createReadRecord(1, CHR_1, 100, 119, REF_BASE_STR_2, createCigar(10, 20, 10));
         read2.setFlag(SAMFlag.READ_REVERSE_STRAND, true);
-        
-        read1.trimAdapterSoftClipBases(read2);
-        read2.trimAdapterSoftClipBases(read1);
+
+        assertEquals(95, read1.unclippedStart());
+        assertEquals(134, read1.unclippedEnd());
+        assertEquals(90, read2.unclippedStart());
+        assertEquals(129, read2.unclippedEnd());
+
+        trimAdapterBases(read1, read2);
+
+        assertEquals(129, read1.unclippedEnd());
+        assertEquals(95, read2.unclippedStart());
+
+        assertEquals("10S20M5S", read1.cigarStr());
+        assertEquals("5S20M10S", read2.cigarStr());
+
+        // test passing in reversed
+        read1 = createReadRecord(1, CHR_1, 105, 124, REF_BASE_STR_2, createCigar(10, 20, 10));
+        read2 = createReadRecord(1, CHR_1, 100, 119, REF_BASE_STR_2, createCigar(10, 20, 10));
+        read2.setFlag(SAMFlag.READ_REVERSE_STRAND, true);
+
+        trimAdapterBases(read2, read1);
 
         assertEquals(129, read1.unclippedEnd());
         assertEquals(95, read2.unclippedStart());
@@ -233,13 +252,59 @@ public class ReadUtilsTest
         read2 = createReadRecord(1, CHR_1, 94, 113, REF_BASE_STR_2, createCigar(10, 20, 10));
         read2.setFlag(SAMFlag.READ_REVERSE_STRAND, true);
 
-        read1.trimAdapterSoftClipBases(read2);
-        read2.trimAdapterSoftClipBases(read1);
+        assertEquals(95, read1.unclippedStart());
+        assertEquals(134, read1.unclippedEnd());
+        assertEquals(84, read2.unclippedStart());
+        assertEquals(123, read2.unclippedEnd());
+
+        trimAdapterBases(read1, read2);
 
         assertEquals(124, read1.unclippedEnd());
         assertEquals(94, read2.unclippedStart());
 
         assertEquals("10S20M", read1.cigarStr());
         assertEquals("20M10S", read2.cigarStr());
+
+        // test a scenario where N-splitting has lead to conflicting alignments, requiring position indices to find the point of adapter SCs
+
+        // test 1: no trimming
+        // read 1: 100-114 - 886N - 1000-1019 - 5S
+        // read 2: 5S -             1000-1019 - 981N - 2000-2014
+
+        read1 = createReadRecord(1, CHR_1, 100, 1019, REF_BASE_STR_2, cigarFromStr("15M885N20M5S"));
+        read2 = createReadRecord(1, CHR_1, 1000, 2014, REF_BASE_STR_2, cigarFromStr("5S20M980N15M"));
+        read2.setFlag(SAMFlag.READ_REVERSE_STRAND, true);
+
+        assertEquals(100, read1.unclippedStart());
+        assertEquals(1024, read1.unclippedEnd());
+        assertEquals(995, read2.unclippedStart());
+        assertEquals(2014, read2.unclippedEnd());
+
+        trimAdapterBases(read2, read1);
+
+        assertEquals(100, read1.unclippedStart());
+        assertEquals(1024, read1.unclippedEnd());
+        assertEquals(995, read2.unclippedStart());
+        assertEquals(2014, read2.unclippedEnd());
+
+        // test 2: trim from both sides
+        // read 1: 110-114 - 886N - 1000-1019 - 10S
+        // read 2: 10S -             1000-1019 - 981N - 2000-2004
+        read1 = createReadRecord(1, CHR_1, 110, 1019, REF_BASE_STR_2, cigarFromStr("5M885N20M10S"));
+        read2 = createReadRecord(1, CHR_1, 1000, 2004, REF_BASE_STR_2, cigarFromStr("10S20M980N5M"));
+        read2.setFlag(SAMFlag.READ_REVERSE_STRAND, true);
+
+        assertEquals(110, read1.unclippedStart());
+        assertEquals(1029, read1.unclippedEnd());
+        assertEquals(990, read2.unclippedStart());
+        assertEquals(2004, read2.unclippedEnd());
+
+        trimAdapterBases(read2, read1);
+
+        assertEquals(1024, read1.unclippedEnd());
+        assertEquals(995, read2.unclippedStart());
+
+        assertEquals("5M885N20M5S", read1.cigarStr());
+        assertEquals("5S20M980N5M", read2.cigarStr());
     }
 }

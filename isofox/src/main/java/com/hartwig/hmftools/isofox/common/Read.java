@@ -250,7 +250,6 @@ public class Read
     public boolean isMateNegStrand() { return (mFlags & SAMFlag.MATE_REVERSE_STRAND.intValue()) != 0; }
     public boolean isMateUnmapped() { return (mFlags & SAMFlag.MATE_UNMAPPED.intValue()) != 0; }
     public boolean isInversion() { return isReadReversed() == isMateNegStrand(); }
-    public boolean isProperPair() { return (mFlags & SAMFlag.PROPER_PAIR.intValue()) != 0; }
     public boolean isSupplementaryAlignment() { return (mFlags & SAMFlag.SUPPLEMENTARY_ALIGNMENT.intValue()) != 0; }
 
     public void setFragmentInsertSize(int size) { mFragmentInsertSize = size; }
@@ -351,9 +350,6 @@ public class Read
             return true;
 
         if(isSupplementaryAlignment() || mSupplementaryAlignment != null)
-            return true;
-
-        if(!isProperPair())
             return true;
 
         return false;
@@ -921,21 +917,13 @@ public class Read
         mJunctionPositions[se] = junctionPosition;
     }
 
-    public void trimAdapterSoftClipBases(final Read mateRead)
+    public void trimAdapterSoftClipBases(int trimLength)
     {
-        if(orientation() == mateRead.orientation())
-            return;
-
-        // no overlap
-        if(unclippedEnd() < mateRead.unclippedStart() || mateRead.unclippedEnd() < unclippedStart())
+        if(trimLength == 0)
             return;
 
         if(orientation().isForward())
         {
-            if(mateRead.unclippedEnd() >= unclippedEnd())
-                return;
-
-            int trimLength = unclippedEnd() - mateRead.unclippedEnd();
             int softClipLength = rightClipLength();
             trimLength = min(trimLength, softClipLength);
 
@@ -957,10 +945,6 @@ public class Read
         }
         else
         {
-            if(mateRead.unclippedStart() <= unclippedStart())
-                return;
-
-            int trimLength = mateRead.unclippedStart() - unclippedStart();
             int softClipLength = leftClipLength();
             trimLength = min(trimLength, softClipLength);
 

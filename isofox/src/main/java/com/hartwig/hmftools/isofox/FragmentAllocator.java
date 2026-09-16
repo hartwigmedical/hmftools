@@ -38,6 +38,7 @@ import static com.hartwig.hmftools.isofox.common.Read.findOverlappingRegions;
 import static com.hartwig.hmftools.isofox.common.Read.getUniqueValidRegion;
 import static com.hartwig.hmftools.isofox.common.Read.markRegionBases;
 import static com.hartwig.hmftools.isofox.common.Read.validTranscriptType;
+import static com.hartwig.hmftools.isofox.common.ReadUtils.trimAdapterBases;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_INTRON;
 import static com.hartwig.hmftools.isofox.common.CommonUtils.deriveCommonRegions;
 import static com.hartwig.hmftools.isofox.common.TransMatchType.OTHER_TRANS;
@@ -370,8 +371,7 @@ public class FragmentAllocator
             - not supporting any transcript - eg alternative splice sites or unspliced reads
         */
 
-        read1.trimAdapterSoftClipBases(read2);
-        read2.trimAdapterSoftClipBases(read1);
+        trimAdapterBases(read1, read2);
 
         markGeneDataRegions(read1);
         markGeneDataRegions(read2);

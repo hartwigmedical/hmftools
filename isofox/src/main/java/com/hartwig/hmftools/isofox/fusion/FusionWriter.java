@@ -252,8 +252,8 @@ public class FusionWriter
                         read.posStart(), read.posEnd(), read.Orientation, read.Cigar));
 
                 /*
-                mFusionReadWriter.write(String.format(",%s,%s,%s,%s,%s,%s,%d,%s,%d",
-                        read.isFirstOfPair(), read.HasSuppAlignment, read.isReadReversed(), read.isProperPair(),
+                mFusionReadWriter.write(String.format(",%s,%s,%s,%s,%s,%d,%s,%d",
+                        read.isFirstOfPair(), read.HasSuppAlignment, read.isReadReversed(),
                         read.SuppData != null, read.ReadBases, read.flags(), read.MateChromosome, read.MatePosStart));
                 */
 
