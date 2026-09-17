@@ -26,9 +26,9 @@ public class CandidateReadFilter
 
     public boolean isCandidate(SAMRecord record)
     {
-        // Mapped to a viral decoy contig, or an unmapped read placed on one by its mapped mate: either way the
-        // fragment touches a virus, so keep it. Checked first so it takes precedence over the redux-unmapped
-        // exclusion below - a redux-unmapped read sitting on a decoy is still viral evidence.
+        // Mapped to a viral decoy contig, or an unmapped read placed on one by its mapped mate: either way the fragment
+        // touches a virus, so keep it. Checked before the redux-unmapped exclusion, since a redux-unmapped read sitting
+        // on a decoy is still viral evidence.
         if(isViralDecoyContig(record.getReferenceName()))
         {
             return true;

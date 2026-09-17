@@ -58,7 +58,7 @@ public class ContigStatsCalculator
     }
 
     // Folds one read into the per-contig accumulators: its best alignment (and alignment count) on each contig it hits,
-    // plus its cross-contig vote split and strict-win margin.
+    // plus its cross-contig vote split.
     private void accumulateRead(List<ViralAlignment> readAlignments, Map<String, ContigAccumulator> accumulators)
     {
         // Collapse BWA -a repeats: per contig keep the best alignment and count how many the read has there.
