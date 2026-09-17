@@ -34,7 +34,8 @@ public record VirusConfig(
         int threads,
         String outputDir,
         @Nullable String outputId,
-        boolean reuseCandidateFasta
+        boolean reuseCandidateFasta,
+        boolean verboseOutput
 )
 {
     private static final String CFG_VIRAL_REF_FILE = "viral_ref";
@@ -48,6 +49,8 @@ public record VirusConfig(
     private static final String CFG_REUSE_CANDIDATE_FASTA = "reuse_candidate_fasta";
     private static final String DESC_REUSE_CANDIDATE_FASTA =
             "Dev: skip read extraction and reuse the candidate FASTA already at the output location";
+    private static final String CFG_VERBOSE_OUTPUT = "verbose_output";
+    private static final String DESC_VERBOSE_OUTPUT = "Output more information which may be useful for debugging";
 
     public static VirusConfig fromConfigBuilder(final ConfigBuilder configBuilder)
     {
@@ -64,7 +67,8 @@ public record VirusConfig(
                 parseThreads(configBuilder),
                 parseOutputDir(configBuilder),
                 configBuilder.getValue(OUTPUT_ID),
-                configBuilder.hasFlag(CFG_REUSE_CANDIDATE_FASTA)
+                configBuilder.hasFlag(CFG_REUSE_CANDIDATE_FASTA),
+                configBuilder.hasFlag(CFG_VERBOSE_OUTPUT)
         );
     }
 
@@ -80,6 +84,7 @@ public record VirusConfig(
 
         configBuilder.addInteger(CFG_ALIGNMENT_BATCH_SIZE, DESC_ALIGNMENT_BATCH_SIZE, ALIGNMENT_BATCH_SIZE_DEFAULT);
         configBuilder.addFlag(CFG_REUSE_CANDIDATE_FASTA, DESC_REUSE_CANDIDATE_FASTA);
+        configBuilder.addFlag(CFG_VERBOSE_OUTPUT, DESC_VERBOSE_OUTPUT);
 
         addThreadOptions(configBuilder);
         configBuilder.addConfigItem(OUTPUT_DIR, true, OUTPUT_DIR_DESC);

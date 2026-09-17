@@ -16,14 +16,14 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.TextCigarCodec;
 
-public class ReadAlignmentTest
+public class ViralAlignmentTest
 {
     // from() pulls the tags, clips and aligned blocks out of the SAMRecord, and counts clipped bases toward divergence:
     // a 40-base soft clip plus one mismatch is a divergence of 41.
     @Test
     public void testExtractsFieldsAndCountsClipsInDivergence()
     {
-        ReadAlignment alignment = ReadAlignment.from(record(30, "40S60M", 60, 1));
+        ViralAlignment alignment = ViralAlignment.from(record(30, "40S60M", 60, 1));
 
         assertEquals("v1", alignment.contig());
         assertEquals(30, alignment.alignmentStart());
@@ -41,23 +41,23 @@ public class ReadAlignmentTest
     @Test
     public void testDetectsClipsOverContigEnds()
     {
-        assertTrue(ReadAlignment.from(record(30, "40S60M", 60, 0)).clipsOverContigEnd(200));    // left clip projects to -10
-        assertTrue(ReadAlignment.from(record(141, "60M40S", 60, 0)).clipsOverContigEnd(200));   // right clip projects to 240
-        assertFalse(ReadAlignment.from(record(100, "40S60M", 60, 0)).clipsOverContigEnd(200));  // left clip projects to 60
+        assertTrue(ViralAlignment.from(record(30, "40S60M", 60, 0)).clipsOverContigEnd(200));    // left clip projects to -10
+        assertTrue(ViralAlignment.from(record(141, "60M40S", 60, 0)).clipsOverContigEnd(200));   // right clip projects to 240
+        assertFalse(ViralAlignment.from(record(100, "40S60M", 60, 0)).clipsOverContigEnd(200));  // left clip projects to 60
     }
 
     @Test
     public void testThrowsWhenAlignmentScoreMissing()
     {
         SAMRecord record = record(30, "60M", null, 0);
-        assertThrows(IllegalStateException.class, () -> ReadAlignment.from(record));
+        assertThrows(IllegalStateException.class, () -> ViralAlignment.from(record));
     }
 
     @Test
     public void testThrowsWhenEditDistanceMissing()
     {
         SAMRecord record = record(30, "60M", 60, null);
-        assertThrows(IllegalStateException.class, () -> ReadAlignment.from(record));
+        assertThrows(IllegalStateException.class, () -> ViralAlignment.from(record));
     }
 
     private static SAMRecord record(int start, String cigar, @Nullable Integer alignerScore, @Nullable Integer editDistance)

@@ -138,7 +138,8 @@ public class CandidateReadFilterTest
     private static SAMRecord readWithMate(int flags, String contig, String cigar, String mateContig, int matePosition)
     {
         String position = contig.equals("*") ? "0" : "100";
-        String line = String.join("\t", "read", String.valueOf(flags), contig, position, "0", cigar,
+        String line = String.join(
+                "\t", "read", String.valueOf(flags), contig, position, "0", cigar,
                 mateContig, String.valueOf(matePosition), "0", BASES, "*");
         return SamRecordTestUtils.parseSamString(line, DICT);
     }

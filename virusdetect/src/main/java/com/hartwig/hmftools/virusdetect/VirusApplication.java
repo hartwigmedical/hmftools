@@ -9,12 +9,13 @@ import static com.hartwig.hmftools.virusdetect.VirusConstants.APP_NAME;
 import static com.hartwig.hmftools.virusdetect.VirusConstants.CANDIDATE_FASTA_SUFFIX;
 import static com.hartwig.hmftools.virusdetect.VirusConstants.CONTIG_STATS_TSV_SUFFIX;
 import static com.hartwig.hmftools.virusdetect.VirusConstants.DECOY_CONTIGS;
-import static com.hartwig.hmftools.virusdetect.VirusConstants.MARGIN_DISTRIBUTION_TSV_SUFFIX;
 import static com.hartwig.hmftools.virusdetect.VirusConstants.MIN_SOFT_CLIP_BASES_DEFAULT;
+import static com.hartwig.hmftools.virusdetect.VirusConstants.PAIRWISE_MARGINS_TSV_SUFFIX;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
@@ -75,14 +76,24 @@ public class VirusApplication
         mAligner.align(candidateFastaFile, alignedBamFile);
         LOGGER.info("Alignment complete");
 
+        ViralAlignments viralAlignments = ViralAlignments.load(alignedBamFile);
+
         LOGGER.info("Computing per-contig statistics");
-        Map<String, ContigStats> contigStats = new ContigStatsCalculator().compute(alignedBamFile, mViralReference);
-        VirusOutputWriter.writeContigStats(contigStatsFile(), contigStats.values(), mViralReference);
-        VirusOutputWriter.writeMarginDistribution(marginDistributionFile(), contigStats.values(), mViralReference);
+        Map<String, ContigStats> contigStats = new ContigStatsCalculator().compute(viralAlignments, mViralReference);
         LOGGER.info("Per-contig statistics complete");
 
+        LOGGER.info("Selecting representative contig per oncology group");
+        PairwiseMargins pairwise = new PairwiseMarginCalculator().compute(viralAlignments, mViralReference);
+        RepresentativeSelectionResult selection = new RepresentativeSelector().classify(contigStats, pairwise, mViralReference);
+        logSelection(selection);
+
+        VirusOutputWriter.writeContigStats(contigStatsFile(), contigStats.values(), selection.classifications(), mViralReference);
+        if(mConfig.verboseOutput())
+        {
+            VirusOutputWriter.writePairwiseMargins(pairwiseMarginsFile(), pairwise, selection, mViralReference);
+        }
+
         // TODO: placeholder pipeline; each step is replaced by its implementation as it lands.
-        LOGGER.info("Selecting representative contig per oncology group (stub)");
         LOGGER.info("Filtering aligned BAM to representatives -> BAM (stub)");
         LOGGER.info("Computing per-contig stats over representative BAM (stub)");
         LOGGER.info("Annotating QC and writing detected TSV (stub)");
@@ -105,9 +116,26 @@ public class VirusApplication
         return mConfig.outputDir() + mConfig.sampleId() + CONTIG_STATS_TSV_SUFFIX;
     }
 
-    private String marginDistributionFile()
+    private String pairwiseMarginsFile()
     {
-        return mConfig.outputDir() + mConfig.sampleId() + MARGIN_DISTRIBUTION_TSV_SUFFIX;
+        return mConfig.outputDir() + mConfig.sampleId() + PAIRWISE_MARGINS_TSV_SUFFIX;
+    }
+
+    private static void logSelection(RepresentativeSelectionResult selection)
+    {
+        for(ContigClassification classification : selection.classifications())
+        {
+            if(classification.role() == ContigRole.REPRESENTATIVE)
+            {
+                LOGGER.info("oncologyGroup({}) representative({})", classification.oncologyGroup(), classification.contig());
+            }
+        }
+
+        selection.classifications().stream()
+                .filter(classification -> classification.oncologyGroupOutcome() == OncologyGroupOutcome.UNRESOLVED)
+                .collect(Collectors.toMap(
+                        ContigClassification::oncologyGroup, ContigClassification::oncologyGroupSubOutcome, (first, second) -> first))
+                .forEach((oncologyGroup, subOutcome) -> LOGGER.warn("oncologyGroup({}) unresolved({})", oncologyGroup, subOutcome));
     }
 
     public static void main(@NotNull String[] args)

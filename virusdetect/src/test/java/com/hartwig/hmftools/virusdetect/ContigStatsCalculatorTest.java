@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.virusdetect;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 import java.util.Map;
@@ -22,13 +21,13 @@ public class ContigStatsCalculatorTest
     {
         ViralReference reference = reference();
 
-        List<ReadAlignment> alignments = List.of(
+        List<ViralAlignment> alignments = List.of(
                 alignment("r1", "v1", 1, 10, 10, 0),
                 alignment("r1", "v1", 1, 10, 5, 0),   // second, lower-scoring alignment of r1 on v1
                 alignment("r2", "v1", 6, 5, 8, 0),
                 alignment("r3", "v2", 1, 10, 9, 0));
 
-        Map<String, ContigStats> stats = new ContigStatsCalculator().compute(alignments, reference);
+        Map<String, ContigStats> stats = new ContigStatsCalculator().compute(new ViralAlignments(alignments, 0.0), reference);
 
         assertEquals(2, stats.size());
 
@@ -62,21 +61,21 @@ public class ContigStatsCalculatorTest
         assertEquals(1.0, v2.coverageFraction(), EPSILON);
     }
 
-    // r1 and r2 each align to both contigs, more closely to v1 (lower divergence). Both reads' votes and their contested
-    // margins land on v1; v2, never a read's best, holds no margins.
+    // r1 and r2 each align to both contigs, more closely to v1 (lower divergence). Both reads' votes lean to v1 by how
+    // much better it explains each read.
     @Test
-    public void testVotesAndMarginsAttributeStrainSupport()
+    public void testVotesAttributeStrainSupport()
     {
         ViralReference reference = reference();
 
-        List<ReadAlignment> alignments = List.of(
+        List<ViralAlignment> alignments = List.of(
                 alignment("r1", "v1", 1, 10, 10, 1),
                 alignment("r1", "v2", 1, 10, 6, 4),
                 alignment("r2", "v1", 1, 10, 10, 0),
                 alignment("r2", "v2", 1, 10, 5, 5));
 
         // Injected correct-base probability 0.5, so each extra divergent base halves a contig's weight (0.5^diff).
-        Map<String, ContigStats> stats = new ContigStatsCalculator(0.5).compute(alignments, reference);
+        Map<String, ContigStats> stats = new ContigStatsCalculator(0.5).compute(new ViralAlignments(alignments, 0.0), reference);
 
         ContigStats v1 = stats.get("v1");
         ContigStats v2 = stats.get("v2");
@@ -84,38 +83,20 @@ public class ContigStatsCalculatorTest
         // r1: v1 weight 0.5^0, v2 0.5^3; r2: v1 0.5^0, v2 0.5^5. Votes per read sum to 1, so both contigs sum to 2.
         assertEquals(1.0 / (1 + Math.pow(0.5, 3)) + 1.0 / (1 + Math.pow(0.5, 5)), v1.readVotes(), EPSILON);
         assertEquals(2.0 - v1.readVotes(), v2.readVotes(), EPSILON);
-
-        // v1 wins both reads; margins are runner-up minus best divergence: r1 4-1=3, r2 5-0=5.
-        assertEquals(2, v1.readsBestInRivals());
-        SummaryStats v1Margins = v1.margins().orElseThrow();
-        assertEquals(4.0, v1Margins.mean(), EPSILON);
-        assertEquals(3.0, v1Margins.min(), EPSILON);
-        assertEquals(3.0, v1Margins.p50(), EPSILON);
-        assertEquals(5.0, v1Margins.p95(), EPSILON);
-        assertEquals(5.0, v1Margins.max(), EPSILON);
-
-        // v2 is never a read's best, so it holds no margins.
-        assertEquals(0, v2.readsBestInRivals());
-        assertTrue(v2.margins().isEmpty());
     }
 
-    // A read that ties across contigs has no strict winner, so no contig is credited with a best-in-rivals read; the
-    // tied contigs stay symmetric. The read still splits its vote evenly between them.
+    // A read that ties across contigs splits its vote evenly between them.
     @Test
-    public void testTiedReadCreditsNoContigAsBest()
+    public void testTiedReadSplitsVoteEvenly()
     {
         ViralReference reference = reference();
 
-        List<ReadAlignment> alignments = List.of(
+        List<ViralAlignment> alignments = List.of(
                 alignment("r", "v1", 1, 10, 10, 2),
                 alignment("r", "v2", 1, 10, 10, 2));
 
-        Map<String, ContigStats> stats = new ContigStatsCalculator(0.5).compute(alignments, reference);
+        Map<String, ContigStats> stats = new ContigStatsCalculator(0.5).compute(new ViralAlignments(alignments, 0.0), reference);
 
-        assertEquals(0, stats.get("v1").readsBestInRivals());
-        assertEquals(0, stats.get("v2").readsBestInRivals());
-        assertTrue(stats.get("v1").margins().isEmpty());
-        assertTrue(stats.get("v2").margins().isEmpty());
         assertEquals(0.5, stats.get("v1").readVotes(), EPSILON);
         assertEquals(0.5, stats.get("v2").readVotes(), EPSILON);
     }
@@ -127,13 +108,13 @@ public class ContigStatsCalculatorTest
     {
         ViralReference reference = reference();   // v1 length 20
 
-        List<ReadAlignment> alignments = List.of(
+        List<ViralAlignment> alignments = List.of(
                 clipped("r1", "v1", 1, 10, 10, 0),    // left clip projects to -9: over the start
                 clipped("r2", "v1", 11, 20, 0, 10),   // right clip projects to 30: over the end
                 alignment("r3", "v1", 6, 10, 9, 0),   // no clip: kept
                 clipped("r4", "v1", 10, 19, 5, 0));   // clip projects to 5, within the contig: kept
 
-        Map<String, ContigStats> stats = new ContigStatsCalculator().compute(alignments, reference);
+        Map<String, ContigStats> stats = new ContigStatsCalculator().compute(new ViralAlignments(alignments, 0.0), reference);
 
         ContigStats v1 = stats.get("v1");
         assertEquals(2, v1.readCount());            // r3 and r4 kept
@@ -141,17 +122,19 @@ public class ContigStatsCalculatorTest
     }
 
     // A clean, full-length alignment covering [start, start + length - 1] with no clips.
-    private static ReadAlignment alignment(String readName, String contig, int start, int length, int alignerScore, int divergence)
+    private static ViralAlignment alignment(String readName, String contig, int start, int length, int alignerScore, int divergence)
     {
-        return new ReadAlignment(readName, contig, start, start + length - 1, 0, 0, alignerScore, divergence,
-                List.of(new ReadAlignment.AlignedInterval(start, length)));
+        return new ViralAlignment(
+                readName, contig, start, start + length - 1, 0, 0, alignerScore, divergence,
+                List.of(new ViralAlignment.AlignedInterval(start, length)));
     }
 
     // An alignment covering [start, end] with the given clip lengths hanging off each side.
-    private static ReadAlignment clipped(String readName, String contig, int start, int end, int leftClip, int rightClip)
+    private static ViralAlignment clipped(String readName, String contig, int start, int end, int leftClip, int rightClip)
     {
-        return new ReadAlignment(readName, contig, start, end, leftClip, rightClip, 10, leftClip + rightClip,
-                List.of(new ReadAlignment.AlignedInterval(start, end - start + 1)));
+        return new ViralAlignment(
+                readName, contig, start, end, leftClip, rightClip, 10, leftClip + rightClip,
+                List.of(new ViralAlignment.AlignedInterval(start, end - start + 1)));
     }
 
     private static ViralReference reference()

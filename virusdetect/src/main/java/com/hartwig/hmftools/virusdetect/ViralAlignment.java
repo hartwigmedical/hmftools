@@ -11,7 +11,7 @@ import java.util.List;
 import htsjdk.samtools.SAMRecord;
 
 // One viral alignment of a read with just the data required for our analysis.
-public record ReadAlignment(
+public record ViralAlignment(
         String readName,
         String contig,
         int alignmentStart,
@@ -23,7 +23,7 @@ public record ReadAlignment(
         int divergence,
         List<AlignedInterval> alignedIntervals)
 {
-    public ReadAlignment
+    public ViralAlignment
     {
         if(readName.isEmpty())
         {
@@ -59,7 +59,7 @@ public record ReadAlignment(
         }
     }
 
-    public static ReadAlignment from(SAMRecord record)
+    public static ViralAlignment from(SAMRecord record)
     {
         int leftClip = leftClipLength(record.getCigar());
         int rightClip = rightClipLength(record.getCigar());
@@ -71,7 +71,7 @@ public record ReadAlignment(
         int editDistance = requiredTag(record, NUM_MUTATONS_ATTRIBUTE, "edit distance (NM)");
         int alignerScore = requiredTag(record, ALIGNMENT_SCORE_ATTRIBUTE, "alignment score");
 
-        return new ReadAlignment(
+        return new ViralAlignment(
                 record.getReadName(), record.getReferenceName(), record.getAlignmentStart(), record.getAlignmentEnd(),
                 leftClip, rightClip, alignerScore, editDistance + leftClip + rightClip, intervals);
     }
@@ -95,7 +95,10 @@ public record ReadAlignment(
     }
 
     // A contiguous run of reference bases covered by the alignment (a CIGAR M/=/X block); 1-based reference start.
-    public record AlignedInterval(int referenceStart, int length)
+    public record AlignedInterval(
+            int referenceStart,
+            int length
+    )
     {
         public AlignedInterval
         {
