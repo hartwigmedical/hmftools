@@ -18,7 +18,7 @@ public class BamMetricsDataTest
     @Before
     public void setUp()
     {
-        comparer = new BamMetricsComparer(TUMOR_BAM_METRICS, new ComparConfig());
+        comparer = new BamMetricsComparer(TUMOR_BAM_METRICS, new ComparConfig(), Collections.emptyMap());
         builder = TestBamMetricsDataBuilder.BUILDER;
         BamMetricsData alternateValueSource = builder.createWithAlternateDefaults();
 

@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.compar.purple;
 
+import java.util.Collections;
 import java.util.function.Consumer;
 
 import com.hartwig.hmftools.common.purple.CopyNumberMethod;
@@ -36,6 +37,6 @@ public class TestGeneCopyNumberDataBuilder
                     0, 0, 0, 1.0,
                     SegmentSupport.BND, SegmentSupport.BND, CopyNumberMethod.UNKNOWN, minCopyNumber / 2);
 
-        return new GeneCopyNumberData(geneCopyNumber);
+        return new GeneCopyNumberData(geneCopyNumber, new GeneCopyNumberComparer(null, Collections.emptyMap()).fieldsList());
     }
 }

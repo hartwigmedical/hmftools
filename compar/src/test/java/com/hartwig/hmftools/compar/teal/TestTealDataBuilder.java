@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.compar.teal;
 
+import java.util.Collections;
 import java.util.function.Consumer;
 
 import com.hartwig.hmftools.common.teal.ImmutableTelomereLength;
@@ -35,7 +36,8 @@ public class TestTealDataBuilder
                         .duplicateProportion(-1)
                         .meanReadDepth(-1)
                         .gc50ReadDepth(-1)
-                        .build()
+                        .build(),
+                new TealComparer(null, Collections.emptyMap()).fieldsList()
         );
     }
 }

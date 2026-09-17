@@ -27,21 +27,6 @@ public class BreakendDataTest
     }
 
     @Test
-    public void canMatchAfterLiftover()
-    {
-        BreakendData refVictim = TestBreakendDataBuilder.BUILDER.create(b -> {
-            b.comparisonChromosome = "21";
-            b.comparisonPosition = 40000000;
-        });
-        BreakendData newVictim = TestBreakendDataBuilder.BUILDER.create(b -> {
-            b.chromosome = "21";
-            b.position = 40000000;
-        });
-        assertTrue(refVictim.matches(newVictim));
-        assertTrue(newVictim.matches(refVictim));
-    }
-
-    @Test
     public void transcriptIsCheckedWhenAtLeastOneNonCanonical()
     {
         BreakendData victim = TestBreakendDataBuilder.BUILDER.create();
@@ -82,23 +67,19 @@ public class BreakendDataTest
 
         int[] otherHomologyOffset = new int[] { -5, 4 };
         BreakendData victimBarelyOverlapFromAbove = TestBreakendDataBuilder.BUILDER.createWithAlternateDefaults(b -> {
-            b.position = victim.ComparisonPosition + victim.HomologyOffset[1] - otherHomologyOffset[0];
-            b.comparisonPosition = victim.Position + victim.HomologyOffset[1] - otherHomologyOffset[0];
+            b.position = victim.Position + victim.HomologyOffset[1] - otherHomologyOffset[0];
             b.homologyOffset = otherHomologyOffset;
         });
         BreakendData victimBarelyNoOverlapFromAbove = TestBreakendDataBuilder.BUILDER.createWithAlternateDefaults(b -> {
-            b.position = victim.ComparisonPosition + victim.HomologyOffset[1] - otherHomologyOffset[0] + 1;
-            b.comparisonPosition = victim.Position + victim.HomologyOffset[1] - otherHomologyOffset[0] + 1;
+            b.position = victim.Position + victim.HomologyOffset[1] - otherHomologyOffset[0] + 1;
             b.homologyOffset = otherHomologyOffset;
         });
         BreakendData victimBarelyOverlapFromBelow = TestBreakendDataBuilder.BUILDER.createWithAlternateDefaults(b -> {
-            b.position = victim.ComparisonPosition + victim.HomologyOffset[0] - otherHomologyOffset[1];
-            b.comparisonPosition = victim.Position + victim.HomologyOffset[0] - otherHomologyOffset[1];
+            b.position = victim.Position + victim.HomologyOffset[0] - otherHomologyOffset[1];
             b.homologyOffset = otherHomologyOffset;
         });
         BreakendData victimBarelyNoOverlapFromBelow = TestBreakendDataBuilder.BUILDER.createWithAlternateDefaults(b -> {
-            b.position = victim.ComparisonPosition + victim.HomologyOffset[0] - otherHomologyOffset[1] - 1;
-            b.comparisonPosition = victim.Position + victim.HomologyOffset[0] - otherHomologyOffset[1] - 1;
+            b.position = victim.Position + victim.HomologyOffset[0] - otherHomologyOffset[1] - 1;
             b.homologyOffset = otherHomologyOffset;
         });
 
@@ -127,12 +108,10 @@ public class BreakendDataTest
                 "Chromosome", b ->
                 {
                     b.chromosome = alternateDefaults.Chromosome;
-                    b.comparisonChromosome = alternateDefaults.ComparisonChromosome;
                 },
                 "Orientation", b -> b.orientation = alternateDefaults.Orientation,
                 "Position", b -> {
                     b.position = alternateDefaults.Position;
-                    b.comparisonPosition = alternateDefaults.ComparisonPosition;
                 }
         );
 

@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.compar.cider;
 
+import java.util.Collections;
 import java.util.function.Consumer;
 
 import com.hartwig.hmftools.common.cider.ImmutableCdr3Sequence;
@@ -33,6 +34,7 @@ public class TestCiderVdjDataBuilder
                 .assignedReads(-1)
                 .inFrame(true)
                 .containsStop(false)
-                .build());
+                .build(),
+                new CiderVdjComparer(null, Collections.emptyMap()).fieldsList());
     }
 }

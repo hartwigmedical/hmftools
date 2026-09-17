@@ -1,11 +1,9 @@
 package com.hartwig.hmftools.compar.common;
 
-import java.util.Collections;
-import java.util.List;
-
 import com.hartwig.hmftools.compar.ComparableItem;
+import com.hartwig.hmftools.compar.ItemComparer;
 
-public class InvalidDataItem implements ComparableItem
+public class InvalidDataItem extends ComparableItem
 {
     private final CategoryType mCategory;
 
@@ -18,14 +16,12 @@ public class InvalidDataItem implements ComparableItem
     public String key() { return ""; }
 
     @Override
-    public List<String> displayValues() { return Collections.emptyList(); }
-
-    @Override
     public boolean matches(final ComparableItem other) { return false; }
 
     @Override
-    public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds,
-            final boolean includeMatches)
+    public Mismatch findMismatch(
+            final ItemComparer comparer, final ComparableItem other, final MatchLevel matchLevel, final boolean includeMatches,
+            final boolean includesTruthset)
     {
         return null;
     }

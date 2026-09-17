@@ -1,52 +1,97 @@
 package com.hartwig.hmftools.compar.linx;
 
 import static com.hartwig.hmftools.compar.common.CategoryType.FUSION;
-import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
+import static com.hartwig.hmftools.compar.FieldCheckCache.getOrMakeFieldCheck;
 import static com.hartwig.hmftools.compar.linx.DisruptionComparer.buildBreakendData;
-import static com.hartwig.hmftools.compar.linx.FusionData.FLD_CHAIN_LINKS;
-import static com.hartwig.hmftools.compar.linx.FusionData.FLD_CHAIN_TERM;
-import static com.hartwig.hmftools.compar.linx.FusionData.FLD_DOMAINS_KEPT;
-import static com.hartwig.hmftools.compar.linx.FusionData.FLD_DOMAINS_LOST;
-import static com.hartwig.hmftools.compar.linx.FusionData.FLD_EXON_DOWN;
-import static com.hartwig.hmftools.compar.linx.FusionData.FLD_EXON_UP;
-import static com.hartwig.hmftools.compar.linx.FusionData.FLD_JUNCTION_COPY_NUMBER;
-import static com.hartwig.hmftools.compar.linx.FusionData.FLD_LIKELIHOOD;
-import static com.hartwig.hmftools.compar.linx.FusionData.FLD_PHASED;
-import static com.hartwig.hmftools.compar.linx.FusionData.FLD_REPORTED_TYPE;
-import static com.hartwig.hmftools.compar.linx.FusionData.FLD_TRANSCRIPT_DOWN;
-import static com.hartwig.hmftools.compar.linx.FusionData.FLD_TRANSCRIPT_UP;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxFusion;
-import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.sv.StructuralVariantData;
 import com.hartwig.hmftools.compar.common.CategoryType;
-import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.common.DiffThresholds;
-import com.hartwig.hmftools.compar.common.FileSources;
+import com.hartwig.hmftools.compar.common.PipelineSourcePaths;
 import com.hartwig.hmftools.compar.ItemComparer;
-import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.SourceType;
-import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
+import com.hartwig.hmftools.compar.common.field.FieldCheck;
+import com.hartwig.hmftools.compar.common.field.FieldInfo;
 
-public class FusionComparer implements ItemComparer
+public class FusionComparer extends ItemComparer
 {
-    private final ComparConfig mConfig;
+    protected enum Fields
+    {
+        Reported,
+        ReportedType,
+        Phased,
+        Likelihood,
+        FusedExonUp,
+        FusedExonDown,
+        ChainLinks,
+        ChainTerminated,
+        DomainsKept,
+        DomainsLost,
+        BreakendUp,
+        BreakendDown;
+    }
+
     private DisruptionComparer mDisruptionComparer;
 
-    public FusionComparer(final ComparConfig config)
+    public FusionComparer(final ComparConfig config, final Map<String, FieldCheck> fieldCheckMap)
     {
-        mConfig = config;
+        super(config);
+
+        mFields.add(new FieldInfo(
+                Fields.Reported.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.Reported.toString()), null));
+
+        mFields.add(new FieldInfo(
+                Fields.ReportedType.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.ReportedType.toString()), null));
+
+        mFields.add(new FieldInfo(
+                Fields.Phased.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.Phased.toString()), null));
+
+        mFields.add(new FieldInfo(
+                Fields.Likelihood.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.Likelihood.toString()), null));
+
+        mFields.add(new FieldInfo(
+                Fields.FusedExonUp.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.FusedExonUp.toString(), null, null), null));
+
+        mFields.add(new FieldInfo(
+                Fields.FusedExonDown.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.FusedExonDown.toString(), null, null), null));
+
+        mFields.add(new FieldInfo(
+                Fields.ChainLinks.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.ChainLinks.toString(), null, null), null));
+
+        mFields.add(new FieldInfo(
+                Fields.ChainTerminated.toString(), getOrMakeFieldCheck(fieldCheckMap, Fields.ChainTerminated.toString()), null));
+
+        mFields.add(new FieldInfo(
+                Fields.DomainsKept.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.DomainsKept.toString()), null));
+
+        mFields.add(new FieldInfo(
+                Fields.DomainsLost.toString(),
+                getOrMakeFieldCheck(fieldCheckMap, Fields.DomainsLost.toString()), null));
+
+        mFields.add(FieldInfo.displayOnly(Fields.BreakendUp.toString(), null));
+        mFields.add(FieldInfo.displayOnly(Fields.BreakendDown.toString(), null));
+
         mDisruptionComparer = null;
     }
 
@@ -56,36 +101,15 @@ public class FusionComparer implements ItemComparer
     public CategoryType category() { return FUSION; }
 
     @Override
-    public void registerThresholds(final DiffThresholds thresholds)
+    public List<String> displayFieldNames()
     {
-        thresholds.addFieldThreshold(FLD_JUNCTION_COPY_NUMBER, 0.5, 0.2);
-    }
-
-    @Override
-    public boolean processSample(final String sampleId, final List<Mismatch> mismatches)
-    {
-        return CommonUtils.processSample(this, mConfig, sampleId, mismatches);
-    }
-
-    @Override
-    public List<String> comparedFieldNames()
-    {
-        return Lists.newArrayList(
-                FLD_REPORTED, FLD_REPORTED_TYPE, FLD_PHASED, FLD_LIKELIHOOD, FLD_EXON_UP,
-                FLD_EXON_DOWN, FLD_CHAIN_LINKS, FLD_CHAIN_TERM, FLD_DOMAINS_KEPT, FLD_DOMAINS_LOST);
+        return Arrays.stream(Fields.values()).map(x -> x.toString()).collect(Collectors.toList());
 
         // excluded unless matching breakends can be loaded: FLD_TRANSCRIPT_UP, FLD_TRANSCRIPT_DOWN, FLD_JUNCTION_COPY_NUMBER
     }
 
     @Override
-    public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess, final SourceType sourceType)
-    {
-        List<LinxFusion> fusions = dbAccess.readFusions(sampleId);
-        return processFusions(fusions, sourceType);
-    }
-
-    @Override
-    public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final FileSources fileSources)
+    public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final PipelineSourcePaths fileSources)
     {
         try
         {
@@ -120,7 +144,7 @@ public class FusionComparer implements ItemComparer
             BreakendData breakendStart = buildBreakend(fusion.fivePrimeBreakendId(), geneNames[0], breakends, svDataList);
             BreakendData breakendEnd = buildBreakend(fusion.threePrimeBreakendId(), geneNames[1], breakends, svDataList);
 
-            comparableItems.add(new FusionData(fusion, fusion.name(), breakendStart, breakendEnd));
+            comparableItems.add(new FusionData(fusion, fusion.name(), breakendStart, breakendEnd, mFields));
         }
 
         return comparableItems;

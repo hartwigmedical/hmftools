@@ -1,8 +1,5 @@
 package com.hartwig.hmftools.compar.purple;
 
-import static com.hartwig.hmftools.compar.purple.GeneCopyNumberData.FLD_MAX_COPY_NUMBER;
-import static com.hartwig.hmftools.compar.purple.GeneCopyNumberData.FLD_MIN_COPY_NUMBER;
-
 import java.util.Collections;
 import java.util.Map;
 
@@ -17,13 +14,13 @@ public class GeneCopyNumberDataTest extends ComparableItemTest<GeneCopyNumberDat
     @Before
     public void setUp()
     {
-        comparer = new GeneCopyNumberComparer(new ComparConfig());
+        comparer = new GeneCopyNumberComparer(new ComparConfig(), Collections.emptyMap());
         builder = TestGeneCopyNumberDataBuilder.BUILDER;
         GeneCopyNumberData alternateValueSource = builder.createWithAlternateDefaults();
 
         fieldToAlternateValueInitializer = Map.of(
-                FLD_MIN_COPY_NUMBER, b -> b.minCopyNumber = alternateValueSource.CopyNumber.minCopyNumber(),
-                FLD_MAX_COPY_NUMBER, b -> b.maxCopyNumber = alternateValueSource.CopyNumber.maxCopyNumber()
+                GeneCopyNumberComparer.Fields.MinCopyNumber.toString(), b -> b.minCopyNumber = alternateValueSource.CopyNumber.minCopyNumber(),
+                GeneCopyNumberComparer.Fields.MaxCopyNumber.toString(), b -> b.maxCopyNumber = alternateValueSource.CopyNumber.maxCopyNumber()
         );
         nameToAlternateIndexInitializer = Map.of("Gene", b -> b.gene = alternateValueSource.CopyNumber.geneName());
         reportabilityFieldToFalseReportabilityInitializer = Collections.emptyMap();

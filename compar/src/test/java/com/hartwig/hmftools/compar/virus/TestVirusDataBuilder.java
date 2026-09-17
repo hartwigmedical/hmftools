@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.compar.virus;
 
+import java.util.Collections;
 import java.util.function.Consumer;
 
 import com.hartwig.hmftools.common.virus.ImmutableAnnotatedVirus;
@@ -43,7 +44,8 @@ public class TestVirusDataBuilder
                         .percentageCovered(-1)
                         .expectedClonalCoverage(null)
                         .blacklisted(null)
-                        .build()
+                        .build(),
+                new VirusComparer(null, Collections.emptyMap()).fieldsList()
         );
     }
 }

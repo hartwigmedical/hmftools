@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.compar.common;
 
 import java.util.List;
+import java.util.Set;
 
 import com.google.common.collect.Lists;
 
@@ -22,7 +23,8 @@ public enum CategoryType
     GERMLINE_SV,
     CUPPA,
     CUPPA_IMAGE,
-    LILAC,
+    LILAC_QC,
+    LILAC_ALLELE,
     CHORD,
     PEACH,
     VIRUS,
@@ -39,7 +41,7 @@ public enum CategoryType
     RNA_SUMMARY,
     RNA_GENE_DATA,
     RNA_TRANSCRIPT_DATA,
-    NOVEL_SPLICE_JUNCTION,
+    RNA_NOVEL_SPLICE_JUNCTION,
     RNA_FUSION;
 
     public static final String ALL_CATEGORIES = "ALL";
@@ -60,5 +62,25 @@ public enum CategoryType
     public static List<CategoryType> panelCategories()
     {
         return Lists.newArrayList(PURITY, DRIVER, SOMATIC_VARIANT, FUSION, DISRUPTION);
+    }
+
+    public static Set<CategoryType> purpleSomaticOnlyCategories()
+    {
+        return Set.of(SOMATIC_VARIANT);
+    }
+
+    public static Set<CategoryType> purpleGermlineOnlyCategories()
+    {
+        return Set.of(GERMLINE_VARIANT, GERMLINE_AMP_DEL);
+    }
+
+    public static Set<CategoryType> linxSomaticOnlyCategories()
+    {
+        return Set.of(FUSION, DISRUPTION);
+    }
+
+    public static Set<CategoryType> linxGermlineOnlyCategories()
+    {
+        return Set.of(GERMLINE_SV);
     }
 }

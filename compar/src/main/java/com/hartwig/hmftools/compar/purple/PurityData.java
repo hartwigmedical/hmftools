@@ -1,153 +1,113 @@
 package com.hartwig.hmftools.compar.purple;
 
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
+import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.CategoryType.PURITY;
-import static com.hartwig.hmftools.compar.common.CommonUtils.createMismatchFromDiffs;
-import static com.hartwig.hmftools.compar.common.DiffFunctions.checkDiff;
 
 import java.util.List;
-import java.util.Set;
-import java.util.StringJoiner;
+import java.util.stream.Collectors;
 
-import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.genome.chromosome.GermlineAberration;
-import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.common.DiffThresholds;
-import com.hartwig.hmftools.compar.common.MatchLevel;
-import com.hartwig.hmftools.compar.common.Mismatch;
+import com.hartwig.hmftools.compar.common.TruthsetValue;
+import com.hartwig.hmftools.compar.common.field.FieldInfo;
 
-public class PurityData implements ComparableItem
+public class PurityData extends ComparableItem
 {
     public final PurityContext Purity;
 
-    protected static final String FLD_PURITY = "Purity";
-    protected static final String FLD_PLOIDY = "Ploidy";
-    protected static final String FLD_CONTAMINATION = "Contamination";
-    protected static final String FLD_TMB = "TmbPerMb";
-    protected static final String FLD_MS_INDELS = "MsIndelsPerMb";
-    protected static final String FLD_TML = "Tml";
-    protected static final String FLD_CN_SEGS = "CopyNumberSegments";
-    protected static final String FLD_UNS_CN_SEGS = "UnsupportedCopyNumberSegments";
-    protected static final String FLD_SV_TMB = "SvTmb";
-    protected static final String FLD_QC_STATUS = "QcStatus";
-    protected static final String FLD_GENDER = "Gender";
-    protected static final String FLD_GERM_ABS = "GermlineAberrations";
-    protected static final String FLD_FIT_METHOD = "FitMethod";
-    protected static final String FLD_MS_STATUS = "MsStatus";
-    protected static final String FLD_TMB_STATUS = "TmbStatus";
-    protected static final String FLD_TML_STATUS = "TmlStatus";
-    protected static final String FLD_TINC_LEVEL = "TincLevel";
-
-    public PurityData(final PurityContext purityContext)
+    public PurityData(final PurityContext purityContext, final List<FieldInfo> fields)
     {
+        addDoubleValue(PurityComparer.Fields.Purity.toString(), purityContext.bestFit().purity(), fields);
+        addDoubleValue(PurityComparer.Fields.Ploidy.toString(), purityContext.bestFit().ploidy(), fields);
+        addDoubleValue(PurityComparer.Fields.Contamination.toString(), purityContext.qc().contamination(), fields);
+        addDoubleValue(PurityComparer.Fields.TmbPerMb.toString(), purityContext.tumorMutationalBurdenPerMb(), fields);
+        addDoubleValue(PurityComparer.Fields.MsIndelsPerMb.toString(), purityContext.microsatelliteIndelsPerMb(), fields);
+
+        addIntValue(PurityComparer.Fields.Tml.toString(), purityContext.tumorMutationalLoad(), fields);
+        addIntValue(PurityComparer.Fields.CopyNumberSegments.toString(), purityContext.qc().copyNumberSegments(), fields);
+
+        addIntValue(
+                PurityComparer.Fields.UnsupportedCopyNumberSegments.toString(), purityContext.qc().unsupportedCopyNumberSegments(),
+                fields);
+
+        addIntValue(PurityComparer.Fields.SvTmb.toString(), purityContext.svTumorMutationalBurden(), fields);
+
+        addStringValue(
+                PurityComparer.Fields.QcStatus.toString(),
+                purityContext.qc().status().stream().map(x -> x.toString()).collect(Collectors.joining(ITEM_DELIM)),
+                fields);
+
+        addStringValue(PurityComparer.Fields.Gender.toString(), purityContext.gender().toString(), fields);
+
+        addStringValue(
+                PurityComparer.Fields.GermlineAberrations.toString(),
+                purityContext.qc().germlineAberrations().stream().map(x -> x.toString()).collect(Collectors.joining(ITEM_DELIM)),
+                fields);
+
+        addStringValue(PurityComparer.Fields.FitMethod.toString(), purityContext.method().toString(), fields);
+        addStringValue(PurityComparer.Fields.MsStatus.toString(), purityContext.microsatelliteStatus().toString(), fields);
+        addStringValue(PurityComparer.Fields.TmbStatus.toString(), purityContext.tumorMutationalBurdenStatus().toString(), fields);
+        addStringValue(PurityComparer.Fields.TmlStatus.toString(), purityContext.tumorMutationalLoadStatus().toString(), fields);
+
+        addDoubleValue(PurityComparer.Fields.TincLevel.toString(), purityContext.qc().tincLevel(), fields);
+
         Purity = purityContext;
     }
 
-    public CategoryType category() {
-        return PURITY;
+    public PurityData(final List<TruthsetValue> truthsetValues, final List<FieldInfo> fields)
+    {
+        for(TruthsetValue truthsetValue : truthsetValues)
+        {
+            String fieldName = truthsetValue.FieldName;
+            PurityComparer.Fields field = PurityComparer.Fields.valueOf(fieldName);
+
+            switch(field)
+            {
+                case Purity:
+                case Ploidy:
+                case Contamination:
+                case TmbPerMb:
+                case MsIndelsPerMb:
+                case TincLevel:
+                    addDoubleValue(field.toString(), Double.valueOf(truthsetValue.Value), fields);
+                    break;
+
+                case Tml:
+                case CopyNumberSegments:
+                case UnsupportedCopyNumberSegments:
+                case SvTmb:
+                    addIntValue(field.toString(), Integer.valueOf(truthsetValue.Value), fields);
+                    break;
+
+                case QcStatus:
+                case Gender:
+                case GermlineAberrations:
+                case FitMethod:
+                case MsStatus:
+                case TmbStatus:
+                case TmlStatus:
+                    addStringValue(field.toString(), truthsetValue.Value, fields);
+                    break;
+
+                default:
+                    CMP_LOGGER.error("unknown purity field: {}", truthsetValue);
+            }
+        }
+
+        Purity = null;
     }
+
+    public CategoryType category() { return PURITY; }
 
     @Override
-    public String key()
-    {
-        return "";
-    }
-
-    @Override
-    public List<String> displayValues()
-    {
-        List<String> values = Lists.newArrayList();
-        values.add(String.format("%.2f", Purity.bestFit().purity()));
-        values.add(String.format("%.2f", Purity.bestFit().ploidy()));
-        values.add(String.format("%.4f", Purity.qc().contamination()));
-        values.add(String.format("%.2f", Purity.tumorMutationalBurdenPerMb()));
-        values.add(String.format("%d", Purity.tumorMutationalLoad()));
-        values.add(String.format("%.4f", Purity.microsatelliteIndelsPerMb()));
-        values.add(String.format("%d", Purity.svTumorMutationalBurden()));
-        values.add(String.format("%d", Purity.qc().copyNumberSegments()));
-        values.add(String.format("%d", Purity.qc().unsupportedCopyNumberSegments()));
-        values.add(String.format("%s", qcStatus(Purity.qc().status())));
-        values.add(String.format("%s", Purity.qc().cobaltGender()));
-        values.add(String.format("%s", germlineAberrations(Purity.qc().germlineAberrations())));
-        values.add(String.format("%s", Purity.method()));
-        values.add(String.format("%s", Purity.microsatelliteStatus()));
-        values.add(String.format("%s", Purity.tumorMutationalBurdenStatus()));
-        values.add(String.format("%s", Purity.tumorMutationalLoadStatus()));
-        values.add(String.format("%s", Purity.qc().tincLevel()));
-
-        return values;
-    }
+    public String key() { return ""; }
 
     @Override
     public boolean matches(final ComparableItem other)
     {
         // a single record for each sample
         return true;
-    }
-
-    @Override
-    public Mismatch findMismatch(
-            final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds, final boolean includeMatches)
-    {
-        final PurityData otherPurity = (PurityData) other;
-
-        final List<String> diffs = Lists.newArrayList();
-
-        checkDiff(diffs, FLD_PURITY, Purity.bestFit().purity(), otherPurity.Purity.bestFit().purity(), thresholds);
-        checkDiff(diffs, FLD_PLOIDY, Purity.bestFit().ploidy(), otherPurity.Purity.bestFit().ploidy(), thresholds);
-
-        checkDiff(diffs, FLD_CONTAMINATION, Purity.qc().contamination(), otherPurity.Purity.qc().contamination(), thresholds);
-
-        checkDiff(diffs, FLD_TMB, Purity.tumorMutationalBurdenPerMb(), otherPurity.Purity.tumorMutationalBurdenPerMb(), thresholds);
-        checkDiff(diffs, FLD_MS_INDELS, Purity.microsatelliteIndelsPerMb(), otherPurity.Purity.microsatelliteIndelsPerMb(), thresholds);
-        checkDiff(diffs, FLD_TML, Purity.tumorMutationalLoad(), otherPurity.Purity.tumorMutationalLoad(), thresholds);
-
-        checkDiff(diffs, FLD_CN_SEGS, Purity.qc().copyNumberSegments(), otherPurity.Purity.qc().copyNumberSegments(), thresholds);
-
-        checkDiff(
-                diffs, FLD_UNS_CN_SEGS,
-                Purity.qc().unsupportedCopyNumberSegments(), otherPurity.Purity.qc().unsupportedCopyNumberSegments(),thresholds);
-
-        checkDiff(diffs, FLD_SV_TMB, Purity.svTumorMutationalBurden(), otherPurity.Purity.svTumorMutationalBurden(), thresholds);
-
-        checkDiff(diffs, FLD_QC_STATUS, qcStatus(Purity.qc().status()), qcStatus(otherPurity.Purity.qc().status()));
-
-        checkDiff(diffs, FLD_GENDER, Purity.gender().toString(), otherPurity.Purity.gender().toString());
-
-        checkDiff(
-                diffs, FLD_GERM_ABS,
-                germlineAberrations(Purity.qc().germlineAberrations()), germlineAberrations(otherPurity.Purity.qc().germlineAberrations()));
-
-        checkDiff(diffs, FLD_FIT_METHOD, Purity.method().toString(), otherPurity.Purity.method().toString());
-
-        checkDiff(diffs, FLD_MS_STATUS, Purity.microsatelliteStatus().toString(), otherPurity.Purity.microsatelliteStatus().toString());
-
-        checkDiff(
-                diffs, FLD_TMB_STATUS,
-                Purity.tumorMutationalBurdenStatus().toString(), otherPurity.Purity.tumorMutationalBurdenStatus().toString());
-
-        checkDiff(
-                diffs, FLD_TML_STATUS,
-                Purity.tumorMutationalLoadStatus().toString(), otherPurity.Purity.tumorMutationalLoadStatus().toString());
-
-        checkDiff(diffs, FLD_TINC_LEVEL, Purity.qc().tincLevel(), otherPurity.Purity.qc().tincLevel(), thresholds);
-
-        return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches);
-    }
-
-    private static String germlineAberrations(final Set<GermlineAberration> aberrations)
-    {
-        StringJoiner sj = new StringJoiner(";");
-        aberrations.forEach(x -> sj.add(x.toString()));
-        return sj.toString();
-    }
-
-    public static String qcStatus(final Set<PurpleQCStatus> status)
-    {
-        StringJoiner sj = new StringJoiner(";");
-        status.forEach(x -> sj.add(x.toString()));
-        return sj.toString();
     }
 }

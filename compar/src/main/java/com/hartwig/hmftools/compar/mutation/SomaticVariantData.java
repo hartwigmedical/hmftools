@@ -1,424 +1,225 @@
 package com.hartwig.hmftools.compar.mutation;
 
-import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_AF;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_BIALLELIC_PROB;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_VARIANT_CN;
-import static com.hartwig.hmftools.compar.common.CommonUtils.createMismatchFromDiffs;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.variant.CodingEffect.UNDEFINED;
-import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS_FILTER;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_BIALLELIC_FLAG;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.SUBCLONAL_LIKELIHOOD_FLAG;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.REPORTED_FLAG;
-import static com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser.VAR_IMPACT;
 import static com.hartwig.hmftools.compar.common.CategoryType.SOMATIC_VARIANT;
-import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_QUAL;
-import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
 import static com.hartwig.hmftools.compar.common.CommonUtils.determineComparisonGenomePosition;
-import static com.hartwig.hmftools.compar.common.DiffFunctions.FILTER_DIFF;
-import static com.hartwig.hmftools.compar.common.DiffFunctions.checkDiff;
-import static com.hartwig.hmftools.compar.common.DiffFunctions.checkFilterDiffs;
-import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_CANON_EFFECT;
-import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_CODING_EFFECT;
-import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_GENE;
-import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_HGVS_CODING;
-import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_HGVS_PROTEIN;
-import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_HOTSPOT;
-import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_OTHER_REPORTED;
-import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_PURITY_ADJUSTED_VAF;
-import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_TIER;
-import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_TUMOR_SUPPORTING_READ_COUNT;
-import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_TUMOR_TOTAL_READ_COUNT;
-import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_VARIANT_COPY_NUMBER;
-import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SOMATICVARIANT;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
-import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
-import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.HotspotType;
+import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser;
 import com.hartwig.hmftools.compar.ComparConfig;
-import com.hartwig.hmftools.compar.common.CategoryType;
-import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.common.DiffThresholds;
-import com.hartwig.hmftools.compar.common.MatchLevel;
-import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.SourceType;
-import com.hartwig.hmftools.patientdb.database.hmfpatients.Tables;
-
-import org.jooq.Record;
+import com.hartwig.hmftools.compar.common.TruthsetValue;
+import com.hartwig.hmftools.compar.common.field.FieldInfo;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
-public class SomaticVariantData implements ComparableItem
+public class SomaticVariantData extends VariantData
 {
-    public final String Chromosome;
-    public final int Position;
-    public final String Ref;
-    public final String Alt;
-
-    public final VariantType Type;
-    public final String Gene;
-
-    public final boolean Reported;
-    public final HotspotType HotspotStatus;
-    public final VariantTier Tier;
     public final boolean Biallelic;
     public final double BiallelicProbability;
-    public final String CanonicalEffect;
-    public final String CanonicalCodingEffect;
-    public final String CanonicalHgvsCodingImpact;
-    public final String CanonicalHgvsProteinImpact;
-    public final String OtherReportedEffects;
     public final boolean HasLPS;
-    public final int Qual;
     public final double SubclonalLikelihood;
-    public final Set<String> Filters;
-    public final double VariantCopyNumber;
-    public final double PurityAdjustedVaf;
-    public final int TumorSupportingReadCount;
-    public final int TumorTotalReadCount;
-    public final boolean IsFromUnfilteredVcf;
-    public final boolean HasPurpleAnnotation;
-    public final String mComparisonChromosome;
-    public final int mComparisonPosition;
 
-    protected static final String FLD_SUBCLONAL_LIKELIHOOD = "SubclonalLikelihood";
-    protected static final String FLD_LPS = "HasLPS";
     protected static final String FLD_BIALLELIC = "Biallelic";
     protected static final String FLD_BIALLELIC_PROB = "BiallelicProb";
-    protected static final double NO_QUAL_PRESENT = -10;
+    protected static final String FLD_LPS = "HasLPS";
+    protected static final String FLD_SUBCLONAL_LIKELIHOOD = "SubclonalLikelihood";
 
     public SomaticVariantData(
             final String chromosome, final int position, final String ref, final String alt, final VariantType type, final String gene,
-            final boolean reported, final HotspotType hotspotStatus, final VariantTier tier, boolean biallelic, double biallelicProb,
+            final boolean reported, final HotspotType hotspotStatus, final VariantTier tier,
             final String canonicalEffect, final String canonicalCodingEffect, final String canonicalHgvsCodingImpact,
-            final String canonicalHgvsProteinImpact, final String otherReportedEffects, final boolean hasLPS, final int qual,
-            final double subclonalLikelihood, final Set<String> filters, final double variantCopyNumber, final double purityAdjustedVaf,
+            final String canonicalHgvsProteinImpact, final String otherReportedEffects, final int qual,
+            final Set<String> filters, final double variantCopyNumber, final double purityAdjustedVaf,
             final int tumorSupportingReadCount, final int tumorTotalReadCount, final boolean isFromUnfilteredVcf,
-            final boolean hasPurpleAnnotation, final String comparisonChromosome, final int comparisonPosition)
+            boolean biallelic, double biallelicProb, final boolean hasLPS, final double subclonalLikelihood)
     {
-        Chromosome = chromosome;
-        Position = position;
-        Ref = ref;
-        Alt = alt;
-        Type = type;
-        Gene = gene;
-        Reported = reported;
-        HotspotStatus = hotspotStatus;
-        Tier = tier;
+        super(
+                SOMATIC_VARIANT, chromosome, position, ref, alt, type, gene, reported, hotspotStatus, tier,
+                canonicalEffect, canonicalCodingEffect, canonicalHgvsCodingImpact, canonicalHgvsProteinImpact, otherReportedEffects,
+                qual, filters, variantCopyNumber, purityAdjustedVaf, tumorSupportingReadCount, tumorTotalReadCount,
+                isFromUnfilteredVcf);
+
         BiallelicProbability = biallelicProb;
         Biallelic = biallelic;
-        CanonicalEffect = canonicalEffect;
-        CanonicalCodingEffect = canonicalCodingEffect;
-        CanonicalHgvsCodingImpact = canonicalHgvsCodingImpact;
-        CanonicalHgvsProteinImpact = canonicalHgvsProteinImpact;
-        OtherReportedEffects = otherReportedEffects != null ? otherReportedEffects : "";
         HasLPS = hasLPS;
-        Qual = qual;
         SubclonalLikelihood = subclonalLikelihood;
-        Filters = filters;
-        VariantCopyNumber = variantCopyNumber;
-        PurityAdjustedVaf = purityAdjustedVaf;
-        TumorSupportingReadCount = tumorSupportingReadCount;
-        TumorTotalReadCount = tumorTotalReadCount;
-        IsFromUnfilteredVcf = isFromUnfilteredVcf;
-        HasPurpleAnnotation = hasPurpleAnnotation;
-        mComparisonChromosome = comparisonChromosome;
-        mComparisonPosition = comparisonPosition;
-    }
-
-    @Override
-    public CategoryType category() { return SOMATIC_VARIANT; }
-
-    @Override
-    public String key()
-    {
-        if(mComparisonPosition != Position)
-            return format("%s:%d %s>%s %s liftover(%s:%d)", Chromosome, Position, Ref, Alt, Type, mComparisonChromosome, mComparisonPosition);
-        else
-            return format("%s:%d %s>%s %s", Chromosome, Position, Ref, Alt, Type);
-    }
-
-    @Override
-    public List<String> displayValues()
-    {
-        List<String> values = Lists.newArrayList();
-        values.add(format("%s", Reported));
-        values.add(format("%s", HotspotStatus));
-        values.add(format("%s", Tier));
-        values.add(format("%s", Gene));
-        values.add(format("%s", CanonicalEffect));
-        values.add(format("%s", CanonicalCodingEffect));
-        values.add(format("%s", CanonicalHgvsCodingImpact));
-        values.add(format("%s", CanonicalHgvsProteinImpact));
-        values.add(format("%s", OtherReportedEffects));
-        values.add(format("%d", Qual));
-        values.add(format("%.2f", VariantCopyNumber));
-        values.add(format("%.2f", PurityAdjustedVaf));
-        values.add(String.format("%d", TumorSupportingReadCount));
-        values.add(String.format("%d", TumorTotalReadCount));
-
-        values.add(format("%s", Biallelic));
-        values.add(format("%.2f", BiallelicProbability));
-        values.add(format("%.2f", SubclonalLikelihood));
-        values.add(format("%s", HasLPS));
-
-        return values;
-    }
-
-    @Override
-    public boolean reportable() {
-        return !IsFromUnfilteredVcf && Reported;
-    }
-
-    @Override
-    public boolean isPass()
-    {
-        // A reportable variant not in a gene should be impossible, but if it happens we want to see it
-        return !IsFromUnfilteredVcf && (Reported || !Gene.isEmpty());
-    }
-
-    @Override
-    public String geneName() { return Gene; }
-
-    @Override
-    public boolean matches(final ComparableItem other)
-    {
-        final SomaticVariantData otherVar = (SomaticVariantData) other;
-
-        if(!mComparisonChromosome.equals(otherVar.Chromosome) || mComparisonPosition != otherVar.Position)
-            return false;
-
-        if(!Ref.equals(otherVar.Ref) || !Alt.equals(otherVar.Alt))
-            return false;
-
-        if(Type != otherVar.Type)
-            return false;
-
-        return true;
-    }
-
-    public String comparisonChromosome() { return mComparisonChromosome; }
-    public int comparisonPosition() { return mComparisonPosition; }
-
-    @Override
-    public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds,
-            final boolean includeMatches)
-    {
-        final SomaticVariantData otherVar = (SomaticVariantData) other;
-        final List<String> diffs = findDiffs(otherVar, thresholds);
-        return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches);
-    }
-
-    private List<String> findDiffs(final SomaticVariantData otherVar, final DiffThresholds thresholds)
-    {
-        final List<String> diffs = Lists.newArrayList();
-
-        if(Qual != NO_QUAL_PRESENT && otherVar.Qual != NO_QUAL_PRESENT)
-            checkDiff(diffs, FLD_QUAL, Qual, otherVar.Qual, thresholds);
-
-        checkDiff(diffs, FLD_REPORTED, Reported, otherVar.Reported);
-        checkDiff(diffs, FLD_TIER, Tier.toString(), otherVar.Tier.toString());
-        checkDiff(diffs, FLD_TUMOR_SUPPORTING_READ_COUNT, TumorSupportingReadCount, otherVar.TumorSupportingReadCount, thresholds);
-        checkDiff(diffs, FLD_TUMOR_TOTAL_READ_COUNT, TumorTotalReadCount, otherVar.TumorTotalReadCount, thresholds);
-
-        if(canComparePaveFields(otherVar))
-        {
-            // assumes Pave annotated - could possibly check VCF for presence of tags
-            checkDiff(diffs, FLD_GENE, Gene, otherVar.Gene);
-            checkDiff(diffs, FLD_CANON_EFFECT, CanonicalEffect, otherVar.CanonicalEffect);
-            checkDiff(diffs, FLD_CODING_EFFECT, CanonicalCodingEffect, otherVar.CanonicalCodingEffect);
-            checkDiff(diffs, FLD_HGVS_CODING, CanonicalHgvsCodingImpact, otherVar.CanonicalHgvsCodingImpact);
-            checkDiff(diffs, FLD_HGVS_PROTEIN, CanonicalHgvsProteinImpact, otherVar.CanonicalHgvsProteinImpact);
-        }
-
-        if(canComparePurpleFields(otherVar))
-        {
-            checkDiff(diffs, FLD_HOTSPOT, HotspotStatus.toString(), otherVar.HotspotStatus.toString());
-            checkDiff(diffs, FLD_BIALLELIC, Biallelic, otherVar.Biallelic);
-            checkDiff(diffs, FLD_BIALLELIC_PROB, BiallelicProbability, otherVar.BiallelicProbability, thresholds);
-            checkDiff(diffs, FLD_OTHER_REPORTED, OtherReportedEffects, otherVar.OtherReportedEffects);
-            checkDiff(diffs, FLD_SUBCLONAL_LIKELIHOOD, SubclonalLikelihood, otherVar.SubclonalLikelihood, thresholds);
-            checkDiff(diffs, FLD_VARIANT_COPY_NUMBER, VariantCopyNumber, otherVar.VariantCopyNumber, thresholds);
-            checkDiff(diffs, FLD_PURITY_ADJUSTED_VAF, PurityAdjustedVaf, otherVar.PurityAdjustedVaf, thresholds);
-        }
-
-        checkDiff(diffs, FLD_LPS, HasLPS, otherVar.HasLPS);
-
-        // compare filters
-        checkFilterDiffs(Filters, otherVar.Filters, diffs);
-
-        if(Filters.isEmpty() && otherVar.Filters.isEmpty() && !diffs.contains(FILTER_DIFF))
-        {
-            // if ones side is filtered, suggests was filtered downstream of Sage (eg Pave or Purple) so indicate this
-            if(IsFromUnfilteredVcf && !otherVar.IsFromUnfilteredVcf)
-                diffs.add(format("%s(%s/%s)", FILTER_DIFF, "FILTERED", PASS_FILTER));
-            else if(!IsFromUnfilteredVcf && otherVar.IsFromUnfilteredVcf)
-                diffs.add(format("%s(%s/%s)", FILTER_DIFF, PASS_FILTER, "FILTERED"));
-        }
-        return diffs;
-    }
-
-    private boolean canComparePaveFields(final SomaticVariantData otherVar)
-    {
-        return !IsFromUnfilteredVcf && !otherVar.IsFromUnfilteredVcf;
-    }
-
-    private boolean canComparePurpleFields(final SomaticVariantData otherVar)
-    {
-        return HasPurpleAnnotation && otherVar.HasPurpleAnnotation;
     }
 
     public static SomaticVariantData fromContext(
             final VariantContext context, final String sampleId, final boolean fromUnfilteredFile,
-            final boolean hasPurpleAnnotation, final SourceType sourceType, ComparConfig config)
+            final SourceType sourceType, final ComparConfig config, final List<FieldInfo> fields)
     {
         int position = context.getStart();
         String chromosome = context.getContig();
         String ref = context.getReference().getBaseString();
         String alt = !context.getAlternateAlleles().isEmpty() ? context.getAlternateAlleles().get(0).toString() : ref;
 
-        VariantImpact variantImpact;
-        if(context.hasAttribute(VAR_IMPACT))
-            variantImpact = VariantImpactSerialiser.fromVariantContext(context);
-        else
-            variantImpact = fromSnpEffAttributes(context);
+        VariantImpact variantImpact = VariantImpactSerialiser.fromVariantContext(context);
 
-        BasePosition comparisonPosition = determineComparisonGenomePosition(
-                chromosome, position, sourceType, config.RequiresLiftover, config.LiftoverCache);
+        if(config.RequiresLiftover && sourceType == SourceType.OLD)
+        {
+            BasePosition comparisonPosition = determineComparisonGenomePosition(
+                    chromosome, position, sourceType, config.RequiresLiftover, config.LiftoverCache);
+
+            position = comparisonPosition.Position;
+            chromosome = comparisonPosition.Chromosome;
+        }
 
         var tumorAllelicDepth = AllelicDepth.fromGenotype(context.getGenotype(sampleId));
 
-        return new SomaticVariantData(
+        SomaticVariantData variant = new SomaticVariantData(
                 chromosome, position, ref, alt, VariantType.type(context),
                 variantImpact.GeneName,
                 context.getAttributeAsBoolean(REPORTED_FLAG, false),
                 HotspotType.fromVariant(context),
                 VariantTier.fromContext(context),
-                context.getAttributeAsBoolean(PURPLE_BIALLELIC_FLAG, false),
-                context.getAttributeAsDouble(PURPLE_BIALLELIC_PROB, 0),
                 variantImpact.CanonicalEffect,
                 variantImpact.CanonicalCodingEffect.toString(),
                 variantImpact.CanonicalHgvsCoding,
                 variantImpact.CanonicalHgvsProtein,
                 variantImpact.OtherReportableEffects,
-                context.hasAttribute(LOCAL_PHASE_SET),
                 (int)context.getPhredScaledQual(),
-                context.getAttributeAsDouble(SUBCLONAL_LIKELIHOOD_FLAG, 0),
                 context.getFilters(),
                 context.getAttributeAsDouble(PURPLE_VARIANT_CN, 0),
-                context.getAttributeAsDouble(PURPLE_AF, 0),
+                tumorAllelicDepth.alleleFrequency(),
                 tumorAllelicDepth.AlleleReadCount,
                 tumorAllelicDepth.TotalReadCount,
                 fromUnfilteredFile,
-                hasPurpleAnnotation,
-                comparisonPosition.Chromosome,
-                comparisonPosition.Position
-        );
+                context.getAttributeAsBoolean(PURPLE_BIALLELIC_FLAG, false),
+                context.getAttributeAsDouble(PURPLE_BIALLELIC_PROB, 0),
+                context.hasAttribute(LOCAL_PHASE_SET),
+                context.getAttributeAsDouble(SUBCLONAL_LIKELIHOOD_FLAG, 0));
+
+        variant.addVAllValues(fields);
+        return variant;
     }
 
-    public static SomaticVariantData fromRecord(final Record record, final SourceType sourceType, final ComparConfig config)
+    protected void addVAllValues(final List<FieldInfo> fields)
     {
-        Set<String> filters = Arrays.stream(record.getValue(SOMATICVARIANT.FILTER).split(";", -1)).collect(Collectors.toSet());
-        String localPhaseSets = record.get(SOMATICVARIANT.LOCALPHASESET);
-        double qual = record.getValue(Tables.SOMATICVARIANT.QUAL);
+        addDefaultValues(fields);
 
-        var chromosome = record.getValue(SOMATICVARIANT.CHROMOSOME);
-        var position = record.getValue(SOMATICVARIANT.POSITION);
+        addBoolValue(FLD_LPS, HasLPS, fields);
 
-        BasePosition comparisonPosition = determineComparisonGenomePosition(
-                chromosome, position, sourceType, config.RequiresLiftover, config.LiftoverCache);
-
-        return new SomaticVariantData(
-                chromosome,
-                position,
-                record.getValue(Tables.SOMATICVARIANT.REF),
-                record.getValue(Tables.SOMATICVARIANT.ALT),
-                VariantType.valueOf(record.getValue(SOMATICVARIANT.TYPE)),
-                record.getValue(Tables.SOMATICVARIANT.GENE),
-                record.getValue(SOMATICVARIANT.REPORTED).intValue() == 1,
-                HotspotType.valueOf(record.getValue(SOMATICVARIANT.HOTSPOT)),
-                VariantTier.fromString(record.get(SOMATICVARIANT.TIER)),
-                record.getValue(SOMATICVARIANT.BIALLELIC).intValue() == 1,
-                record.getValue(SOMATICVARIANT.BIALLELIC).intValue() == 1 ? 1.0 : 0,
-                record.getValue(SOMATICVARIANT.CANONICALEFFECT),
-                record.getValue(SOMATICVARIANT.CANONICALCODINGEFFECT),
-                record.getValue(SOMATICVARIANT.CANONICALHGVSCODINGIMPACT),
-                record.getValue(SOMATICVARIANT.CANONICALHGVSPROTEINIMPACT),
-                record.getValue(SOMATICVARIANT.OTHERTRANSCRIPTEFFECTS),
-                localPhaseSets != null && !localPhaseSets.isEmpty(),
-                (int)qual, record.getValue(SOMATICVARIANT.SUBCLONALLIKELIHOOD),
-                filters,
-                record.getValue(SOMATICVARIANT.VARIANTCOPYNUMBER),
-                record.getValue(SOMATICVARIANT.ADJUSTEDVAF),
-                record.getValue(SOMATICVARIANT.ALLELEREADCOUNT),
-                record.getValue(SOMATICVARIANT.TOTALREADCOUNT),
-                false,
-                true,
-                comparisonPosition.Chromosome,
-                comparisonPosition.Position);
+        if(!IsFromUnfilteredVcf)
+        {
+            addDoubleValue(FLD_BIALLELIC_PROB, BiallelicProbability, fields);
+            addBoolValue(FLD_BIALLELIC, Biallelic, fields);
+            addDoubleValue(FLD_SUBCLONAL_LIKELIHOOD, SubclonalLikelihood, fields);
+        }
     }
 
-    private static final String SNPEFF_WORST = "SEW";
-    private static final String SNPEFF_CANONICAL = "SEC";
-
-    private static final VariantImpact INVALID_IMPACT = new VariantImpact(
-            "", "", "", UNDEFINED, "", "",
-            false, "", UNDEFINED, 0);
-
-    private static VariantImpact fromSnpEffAttributes(final VariantContext context)
+    public static SomaticVariantData fromTruthset(final List<TruthsetValue> truthsetValues, final List<FieldInfo> fields)
     {
-        if(!context.hasAttribute(SNPEFF_WORST) || !context.hasAttribute(SNPEFF_CANONICAL))
-            return INVALID_IMPACT;
+        SimpleVariant simpleVariant = fromTruthsetKey(truthsetValues.get(0).Key);
 
-        final List<String> worst = context.getAttributeAsStringList(SNPEFF_WORST, "");
-        final List<String> canonical = context.getAttributeAsStringList(SNPEFF_CANONICAL, "");
+        if(simpleVariant == null)
+            return null;
 
-        String canonicalGeneName = "";
+        String chromosome = simpleVariant.Chromosome;
+        int position = simpleVariant.Position;
+        String ref = simpleVariant.Ref;
+        String alt = simpleVariant.Alt;
+        VariantType type = simpleVariant.Type;
+
+        String gene = "";
+        boolean reported = false;
+        HotspotType hotspotStatus = HotspotType.NON_HOTSPOT;
+        VariantTier tier = VariantTier.LOW_CONFIDENCE;
         String canonicalEffect = "";
-        String canonicalTranscript = "";
-        CodingEffect canonicalCodingEffect = UNDEFINED;
+        String canonicalCodingEffect = "";
         String canonicalHgvsCodingImpact = "";
         String canonicalHgvsProteinImpact = "";
-        boolean canonicalSpliceRegion = false;
-        String otherReportableEffects = "";
-        CodingEffect worstCodingEffect = UNDEFINED;
-        int genesAffected = 0;
+        String otherReportedEffects = "";
+        int qual = 0;
+        Set<String> filters = Sets.newHashSet();
+        double variantCopyNumber = 0;
+        double alleleFrequency = 0;
+        int tumorSupportingReadCount = 0;
+        int tumorTotalReadCount = 0;
+        boolean biallelic = false;
+        double biallelicProb = 0;
+        boolean hasLPS = false;
+        double subclonalLikelihood= 0;
 
-        if(worst.size() == 5)
+        for(TruthsetValue truthsetValue : truthsetValues)
         {
-            worstCodingEffect = CodingEffect.valueOf(worst.get(3));
-            genesAffected = Integer.parseInt(worst.get(4));
+            if(truthsetValue.FieldName.equals(FLD_REPORTED))
+                reported = Boolean.parseBoolean(truthsetValue.Value);
+            else if(truthsetValue.FieldName.equals(FLD_GENE))
+                gene = truthsetValue.Value;
+            else if(truthsetValue.FieldName.equals(FLD_AF))
+                alleleFrequency = Double.parseDouble(truthsetValue.Value);
+            else if(truthsetValue.FieldName.equals(FLD_VARIANT_COPY_NUMBER))
+                variantCopyNumber = Double.parseDouble(truthsetValue.Value);
+            else if(truthsetValue.FieldName.equals(FLD_CANON_EFFECT))
+                canonicalEffect = truthsetValue.Value;
+            else if(truthsetValue.FieldName.equals(FLD_HGVS_CODING))
+                canonicalHgvsCodingImpact = truthsetValue.Value;
+            else if(truthsetValue.FieldName.equals(FLD_HGVS_PROTEIN))
+                canonicalHgvsProteinImpact = truthsetValue.Value;
+            else if(truthsetValue.FieldName.equals(FLD_TUMOR_TOTAL_READ_COUNT))
+                tumorTotalReadCount = Integer.parseInt(truthsetValue.Value);
+            else if(truthsetValue.FieldName.equals(FLD_TUMOR_SUPPORTING_READ_COUNT))
+                tumorSupportingReadCount = Integer.parseInt(truthsetValue.Value);
         }
 
-        if(canonical.size() == 6)
+        if(!canonicalHgvsProteinImpact.isEmpty())
+            canonicalHgvsProteinImpact = checkConvertAminoAcids(canonicalHgvsProteinImpact);
+
+        SomaticVariantData variant = new SomaticVariantData(
+                chromosome, position, ref, alt, type, gene, reported, hotspotStatus, tier,
+                canonicalEffect, canonicalCodingEffect, canonicalHgvsCodingImpact, canonicalHgvsProteinImpact, otherReportedEffects,
+                qual, filters, variantCopyNumber, alleleFrequency, tumorSupportingReadCount, tumorTotalReadCount,
+                false, biallelic, biallelicProb, hasLPS, subclonalLikelihood);
+
+        variant.addTruthsetValues(truthsetValues, fields);
+
+        return variant;
+    }
+
+    private void addTruthsetValues(List<TruthsetValue> truthsetValues, final List<FieldInfo> fields)
+    {
+        // now add fields
+        for(TruthsetValue truthsetValue : truthsetValues)
         {
-            canonicalGeneName = canonical.get(0);
-            canonicalTranscript = canonical.get(1);
-            canonicalEffect = canonical.get(2);
-            canonicalCodingEffect = CodingEffect.valueOf(canonical.get(3));
-            canonicalHgvsCodingImpact = canonical.get(4);
-            canonicalHgvsProteinImpact = canonical.get(5);
-
-            canonicalSpliceRegion = canonicalEffect.contains("splice");
+            if(truthsetValue.FieldName.equals(FLD_REPORTED))
+                addBoolValue(FLD_REPORTED, Reported, fields);
+            else if(truthsetValue.FieldName.equals(FLD_GENE))
+                addStringValue(FLD_GENE, Gene, fields);
+            else if(truthsetValue.FieldName.equals(FLD_AF))
+                addDoubleValue(FLD_AF, AlleleFrequency, fields);
+            else if(truthsetValue.FieldName.equals(FLD_VARIANT_COPY_NUMBER))
+                addDoubleValue(FLD_VARIANT_COPY_NUMBER, VariantCopyNumber, fields);
+            else if(truthsetValue.FieldName.equals(FLD_CANON_EFFECT))
+                addStringValue(FLD_CANON_EFFECT, CanonicalEffect, fields);
+            else if(truthsetValue.FieldName.equals(FLD_HGVS_CODING))
+                addStringValue(FLD_HGVS_CODING, CanonicalHgvsCodingImpact, fields);
+            else if(truthsetValue.FieldName.equals(FLD_HGVS_PROTEIN))
+                addStringValue(FLD_HGVS_PROTEIN, CanonicalHgvsProteinImpact, fields);
+            else if(truthsetValue.FieldName.equals(FLD_TUMOR_TOTAL_READ_COUNT))
+                addIntValue(FLD_TUMOR_TOTAL_READ_COUNT, TumorTotalReadCount, fields);
+            else if(truthsetValue.FieldName.equals(FLD_TUMOR_SUPPORTING_READ_COUNT))
+                addIntValue(FLD_TUMOR_SUPPORTING_READ_COUNT, TumorSupportingReadCount, fields);
         }
-
-        return new VariantImpact(
-                canonicalGeneName, canonicalTranscript, canonicalEffect, canonicalCodingEffect, canonicalHgvsCodingImpact,
-                canonicalHgvsProteinImpact, canonicalSpliceRegion, otherReportableEffects, worstCodingEffect, genesAffected);
     }
 
     public String toString() { return format("%s gene(%s:%s)", key(), Gene, CanonicalCodingEffect); }
