@@ -37,6 +37,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.fusion.KnownFusionData;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.gene.GeneData;
@@ -308,7 +309,43 @@ public class AltSpliceJunctionFinder
 
     private void checkJunctionHomology(final int[] spliceJunction, final Map<RegionReadData,RegionMatchType> readRegions)
     {
-        if(readRegions.values().stream().anyMatch(x -> x == EXON_BOUNDARY)) // only consider if neither side matches a known junction
+        // skip if both junctions already match at least one transcript's exon boundaries even if involving skipping
+        Set<RegionReadData> matchedRegions = null;
+        boolean matchesBoth = false;
+
+        for(int se = SE_START; se <= SE_END; ++se)
+        {
+            int splicePosition = spliceJunction[se];
+
+            for(RegionReadData regionReadData : readRegions.keySet())
+            {
+                boolean matchesBoundary = (se == SE_START && splicePosition == regionReadData.end())
+                        || (se == SE_END && splicePosition == regionReadData.start());
+
+                if(matchesBoundary)
+                {
+                    if(se == SE_START)
+                    {
+                        if(matchedRegions == null)
+                        {
+                            matchedRegions = Sets.newHashSet();
+                        }
+
+                        matchedRegions.add(regionReadData);
+                    }
+                    else
+                    {
+                        if(matchedRegions != null && matchedRegions.contains(regionReadData))
+                        {
+                            matchesBoth = true;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        if(matchesBoth)
             return;
 
         // check for a junction position (or both) which can be moved by homology to match a known splice site
@@ -350,7 +387,7 @@ public class AltSpliceJunctionFinder
             if(!startBases.equals(endBases))
                 return;
         }
-        else
+        else if(minDistance < 0)
         {
             // try to shift the junction forwards - requiring the bases to the right at the start to match at each end
 

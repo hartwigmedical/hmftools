@@ -33,6 +33,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.isofox.adjusts.FragmentSize;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
@@ -48,6 +49,8 @@ import org.junit.Test;
 
 public class NovelJunctionsTest
 {
+    private static final String REF_BASES = REF_BASE_STR_1.repeat(50);
+
     @Test
     public void testAltSpliceJunctionTypes()
     {
@@ -57,6 +60,9 @@ public class NovelJunctionsTest
 
         String chromosome = CHR_1;
         String geneId = GENE_ID_1;
+
+        MockRefGenome refGenome = (MockRefGenome)config.RefGenome;
+        refGenome.RefGenomeMap.put(chromosome, REF_BASES); // for homology tests
 
         GeneData geneData = new GeneData(geneId, geneId, chromosome, (byte) 1, 100, 1500, "");
 
@@ -105,7 +111,7 @@ public class NovelJunctionsTest
 
         gene.setTranscripts(transcripts);
 
-        AltSpliceJunctionFinder asjFinder = new AltSpliceJunctionFinder(createIsofoxConfig(), ALT_SJ_COHORT_CACHE, null, null);
+        AltSpliceJunctionFinder asjFinder = new AltSpliceJunctionFinder(config, ALT_SJ_COHORT_CACHE, null, null);
         GeneCollection genes = new GeneCollection(0, Lists.newArrayList(gene));
         asjFinder.setGeneData(genes);
 
