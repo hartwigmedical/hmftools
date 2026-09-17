@@ -24,6 +24,9 @@ public class HlaAlignment
 
     private final BwaMemAlignment BaseAlignment;
     public final int Position;
+    // We get either the contig name or its index, depending on which constructor was used
+    private final Integer mRefIndex;
+    private final String mRefName;
     final Set<SAMFlag> Flags;
     private final int mMapQuality;
     private final String mCigar;
@@ -54,7 +57,9 @@ public class HlaAlignment
     {
         BaseAlignment = baseAlignment;
         Position = alignment.Position;
-        mMapQuality = 0; // Only the edit distance is available in the alts in the xa tag.
+        mRefIndex = null;
+        mRefName = alignment.Chromosome;
+        mMapQuality = baseAlignment.getMapQual();
         mCigar = alignment.Cigar;
         Flags = SAMFlag.getFlags(getSamFlag());
     }
@@ -63,6 +68,8 @@ public class HlaAlignment
     {
         this.BaseAlignment = baseAlignment;
         Position = baseAlignment.getRefStart() + 1;
+        mRefIndex = baseAlignment.getRefId();
+        mRefName = null;
         mMapQuality = baseAlignment.getMapQual();
         mCigar = baseAlignment.getCigar();
         Flags = SAMFlag.getFlags(getSamFlag());
@@ -76,14 +83,36 @@ public class HlaAlignment
         remappedRecord.setFlags(getSamFlag());
         if(isUnmapped())
         {
-            remappedRecord.setReferenceIndex(mate.getRefId());
+            if(mate.mRefIndex != null)
+            {
+                remappedRecord.setReferenceIndex(mate.mRefIndex);
+            }
+            else if(mate.mRefName != null)
+            {
+                remappedRecord.setReferenceName(mate.mRefName);
+            }
+            else
+            {
+                remappedRecord.setReferenceName(SAMRecord.NO_ALIGNMENT_REFERENCE_NAME);
+            }
             remappedRecord.setAlignmentStart(mate.Position);
             remappedRecord.setCigarString("*");
             remappedRecord.setMappingQuality(0);
         }
         else
         {
-            remappedRecord.setReferenceIndex(getRefId());
+            if(mRefIndex != null)
+            {
+                remappedRecord.setReferenceIndex(mRefIndex);
+            }
+            else if(mRefName != null)
+            {
+                remappedRecord.setReferenceName(mRefName);
+            }
+            else
+            {
+                remappedRecord.setReferenceName(SAMRecord.NO_ALIGNMENT_REFERENCE_NAME);
+            }
             remappedRecord.setAlignmentStart(Position);
             remappedRecord.setCigarString(mCigar);
             remappedRecord.setMappingQuality(mMapQuality);
@@ -106,13 +135,34 @@ public class HlaAlignment
         if(mate.isUnmapped())
         {
             remappedRecord.setMateAlignmentStart(Position);
-            remappedRecord.setMateReferenceIndex(getRefId());
-            remappedRecord.setAttribute(SamRecordUtils.MATE_CIGAR_ATTRIBUTE, "*");
+            if(mRefIndex != null)
+            {
+                remappedRecord.setMateReferenceIndex(mRefIndex);
+            }
+            else if(mRefName != null)
+            {
+                remappedRecord.setMateReferenceName(mRefName);
+            }
+            else
+            {
+                remappedRecord.setMateReferenceName(SAMRecord.NO_ALIGNMENT_REFERENCE_NAME);
+            }
         }
         else
         {
             remappedRecord.setMateAlignmentStart(mate.Position);
-            remappedRecord.setMateReferenceIndex(mate.getRefId());
+            if(mate.mRefIndex != null)
+            {
+                remappedRecord.setMateReferenceIndex(mate.mRefIndex);
+            }
+            else if(mate.mRefName != null)
+            {
+                remappedRecord.setMateReferenceName(mate.mRefName);
+            }
+            else
+            {
+                remappedRecord.setMateReferenceName(SAMRecord.NO_ALIGNMENT_REFERENCE_NAME);
+            }
             remappedRecord.setAttribute(SamRecordUtils.MATE_CIGAR_ATTRIBUTE, mate.mCigar);
         }
         remappedRecord.setInferredInsertSize(calculateInsertSize(remappedRecord, mate));
