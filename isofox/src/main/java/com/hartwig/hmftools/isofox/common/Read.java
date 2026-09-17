@@ -362,7 +362,7 @@ public class Read
         if(includeInferred || (!mLowerInferredAdded && !mUpperInferredAdded))
             return mMappedCoords;
 
-        final List<int[]> regions = Lists.newArrayList(mMappedCoords);
+        List<int[]> regions = Lists.newArrayList(mMappedCoords);
 
         if(mLowerInferredAdded)
             regions.remove(0);
@@ -391,7 +391,7 @@ public class Read
 
         for(RegionReadData region : regions)
         {
-            for(final TransExonRef ref : region.getTransExonRefs())
+            for(TransExonRef ref : region.getTransExonRefs())
             {
                 transcripts.add(ref.TransId);
             }
@@ -422,12 +422,12 @@ public class Read
                 RegionReadData region = transRegions.get(0);
                 RegionMatchType matchType = mMappedRegions.get(region);
 
-                if (matchType == RegionMatchType.NONE)
+                if(matchType == RegionMatchType.NONE)
                 {
                     // should never happen since implies this read didn't hit the region at all
                     transMatchType = ALT;
                 }
-                else if (matchType == RegionMatchType.EXON_INTRON)
+                else if(matchType == RegionMatchType.EXON_INTRON)
                 {
                     transMatchType = TransMatchType.UNSPLICED;
                 }
@@ -443,7 +443,7 @@ public class Read
 
                 Collections.sort(transRegions);
 
-                for (int regionIndex = 0; regionIndex < transRegions.size(); ++regionIndex)
+                for(int regionIndex = 0; regionIndex < transRegions.size(); ++regionIndex)
                 {
                     RegionReadData region = transRegions.get(regionIndex);
 
@@ -457,7 +457,7 @@ public class Read
                     if(mLowerInferredAdded)
                         --adjustedMappingIndex;
 
-                    if (adjustedMappingIndex < 0 || adjustedMappingIndex != regionIndex)
+                    if(adjustedMappingIndex < 0 || adjustedMappingIndex != regionIndex)
                     {
                         transMatchType = ALT;
                         break;
@@ -465,14 +465,14 @@ public class Read
 
                     RegionMatchType matchType = mMappedRegions.get(region);
 
-                    if (matchType == RegionMatchType.EXON_INTRON)
+                    if(matchType == RegionMatchType.EXON_INTRON)
                     {
                         transMatchType = TransMatchType.UNSPLICED;
                         break;
                     }
                     else
                     {
-                        final int[] readSection = mMappedCoords.get(mappingIndex);
+                        int[] readSection = mMappedCoords.get(mappingIndex);
                         int readStartPos = readSection[SE_START];
                         int readEndPos = readSection[SE_END];
 
@@ -502,10 +502,10 @@ public class Read
                     }
                 }
 
-                if (transMatchType == UNKNOWN)
+                if(transMatchType == UNKNOWN)
                 {
                     int expectedRegions = maxExonRank - minExonRank + 1;
-                    if (transRegions.size() < expectedRegions)
+                    if(transRegions.size() < expectedRegions)
                         transMatchType = ALT;
                 }
             }
@@ -555,17 +555,17 @@ public class Read
 
     public static final List<RegionReadData> getUniqueValidRegion(final Read read1, final Read read2)
     {
-        final List<RegionReadData> regions = read1.getMappedRegions().entrySet().stream()
+        List<RegionReadData> regions = read1.getMappedRegions().entrySet().stream()
                 .filter(x -> validExonMatch(x.getValue()))
                 .map(x -> x.getKey()).collect(Collectors.toList());
 
-        final List<RegionReadData> regions2 = read2.getMappedRegions().entrySet().stream()
+        List<RegionReadData> regions2 = read2.getMappedRegions().entrySet().stream()
                 .filter(x -> validExonMatch(x.getValue()))
                 .map(x -> x.getKey()).collect(Collectors.toList());
 
         for(RegionReadData region : regions2)
         {
-            if (!regions.contains(region))
+            if(!regions.contains(region))
                 regions.add(region);
         }
 
@@ -581,7 +581,7 @@ public class Read
     {
         for(int i = 0; i < mMappedCoords.size(); ++i)
         {
-            final int[] readSection = mMappedCoords.get(i);
+            int[] readSection = mMappedCoords.get(i);
 
             if(positionsOverlap(readSection[SE_START], readSection[SE_END], region.start(), region.end()))
                 return i;
@@ -593,7 +593,7 @@ public class Read
     private RegionMatchType setRegionMatchType(final RegionReadData region)
     {
         int mappingIndex = getRegionMappingIndex(region);
-        if (mappingIndex < 0)
+        if(mappingIndex < 0)
             return RegionMatchType.NONE;
 
         RegionMatchType matchType = getRegionMatchType(region, mappingIndex);
@@ -604,7 +604,7 @@ public class Read
     public RegionMatchType getRegionMatchType(final RegionReadData region)
     {
         int mappingIndex = getRegionMappingIndex(region);
-        if (mappingIndex < 0)
+        if(mappingIndex < 0)
             return RegionMatchType.NONE;
 
         return getRegionMatchType(region, mappingIndex);
@@ -615,17 +615,17 @@ public class Read
         if(mappingIndex < 0 || mappingIndex >= mMappedCoords.size())
             return RegionMatchType.NONE;
 
-        final int[] readSection = mMappedCoords.get(mappingIndex);
+        int[] readSection = mMappedCoords.get(mappingIndex);
         int readStartPos = readSection[SE_START];
         int readEndPos = readSection[SE_END];
 
-        if (readEndPos < region.start() || readStartPos > region.end())
+        if(readEndPos < region.start() || readStartPos > region.end())
             return RegionMatchType.NONE;
 
-        if (readStartPos < region.start() || readEndPos > region.end())
+        if(readStartPos < region.start() || readEndPos > region.end())
             return RegionMatchType.EXON_INTRON;
 
-        if (readStartPos > region.start() && readEndPos < region.end())
+        if(readStartPos > region.start() && readEndPos < region.end())
             return WITHIN_EXON;
 
         return EXON_BOUNDARY;
@@ -638,12 +638,12 @@ public class Read
         if(regionBaseDepth == null)
             return;
 
-        for(final int[] readSection : readCoords)
+        for(int[] readSection : readCoords)
         {
             int readStartPos = readSection[SE_START];
             int readEndPos = readSection[SE_END];
 
-            if (readStartPos > region.end() || readEndPos < region.start())
+            if(readStartPos > region.end() || readEndPos < region.start())
                 continue;
 
             // process this overlap
@@ -710,9 +710,9 @@ public class Read
         if(extraBaseLength >= 1 && extraBaseLength <= MAX_SC_BASE_MATCH && scLength <= MAX_SC_BASE_MATCH)
         {
             // first check for a match with the next exon on the lower side
-            final String extraBases = mReadBases.substring(0, extraBaseLength);
+            String extraBases = mReadBases.substring(0, extraBaseLength);
 
-            final List<RegionReadData> matchedRegions = region.getPreRegions().stream()
+            List<RegionReadData> matchedRegions = region.getPreRegions().stream()
                     .filter(x -> matchesOtherRegionBases(extraBases, x, false)).collect(Collectors.toList());
 
             if(!matchedRegions.isEmpty())
@@ -720,18 +720,18 @@ public class Read
                 mSoftClipRegionsMatched[SE_START] = matchedRegions.size();
                 mMappedRegions.put(region, EXON_BOUNDARY);
 
-                if (matchedRegions.size() == 1 || (matchedRegions.size() > 1 && extraBaseLength < MIN_SC_BASE_MATCH))
+                if(matchedRegions.size() == 1 || (matchedRegions.size() > 1 && extraBaseLength < MIN_SC_BASE_MATCH))
                 {
                     // truncate the read positions back to match the exon boundary
-                    if (!mLowerInferredAdded && hasRegionOverhang)
+                    if(!mLowerInferredAdded && hasRegionOverhang)
                         readSection[SE_START] += region.start() - readStartPos;
                 }
 
                 // if only one region is matched or the min bases matched is satisfied, then create a mapping to the next region,
                 // otherwise treat the splice support as ambiguous (it not mapped to the next region)
-                if (matchedRegions.size() == 1 || (matchedRegions.size() > 1 && extraBaseLength >= MIN_SC_BASE_MATCH))
+                if(matchedRegions.size() == 1 || (matchedRegions.size() > 1 && extraBaseLength >= MIN_SC_BASE_MATCH))
                 {
-                    for (RegionReadData preRegion : matchedRegions)
+                    for(RegionReadData preRegion : matchedRegions)
                     {
                         // add matched coordinates for this exon and add it as a region
                         mMappedRegions.put(preRegion, EXON_BOUNDARY);
@@ -768,9 +768,9 @@ public class Read
         {
             // now check for a match to the next exon up
             int readLength = baseLength();
-            final String extraBases = mReadBases.substring(readLength - extraBaseLength, readLength);
+            String extraBases = mReadBases.substring(readLength - extraBaseLength, readLength);
 
-            final List<RegionReadData> matchedRegions = region.getPostRegions().stream()
+            List<RegionReadData> matchedRegions = region.getPostRegions().stream()
                     .filter(x -> matchesOtherRegionBases(extraBases, x, true)).collect(Collectors.toList());
 
             if(!matchedRegions.isEmpty())
@@ -779,15 +779,15 @@ public class Read
 
                 mMappedRegions.put(region, EXON_BOUNDARY);
 
-                if (matchedRegions.size() == 1 || (matchedRegions.size() > 1 && extraBaseLength < MIN_SC_BASE_MATCH))
+                if(matchedRegions.size() == 1 || (matchedRegions.size() > 1 && extraBaseLength < MIN_SC_BASE_MATCH))
                 {
-                    if (!mUpperInferredAdded && hasRegionOverhang)
+                    if(!mUpperInferredAdded && hasRegionOverhang)
                         readSection[SE_END] -= readEndPos - region.end();
                 }
 
-                if (matchedRegions.size() == 1 || (matchedRegions.size() > 1 && extraBaseLength >= MIN_SC_BASE_MATCH))
+                if(matchedRegions.size() == 1 || (matchedRegions.size() > 1 && extraBaseLength >= MIN_SC_BASE_MATCH))
                 {
-                    for (RegionReadData postRegion : matchedRegions)
+                    for(RegionReadData postRegion : matchedRegions)
                     {
                         mMappedRegions.put(postRegion, EXON_BOUNDARY);
                         addInferredMappingRegion(false, postRegion.start(), postRegion.start() + extraBaseLength - 1);
@@ -804,7 +804,7 @@ public class Read
         if(extraBases.length() > otherRegionLength)
             return false;
 
-        final String otherRegionBases = matchToStart ? otherRegion.refBases().substring(0, extraBases.length())
+        String otherRegionBases = matchToStart ? otherRegion.refBases().substring(0, extraBases.length())
                 : otherRegion.refBases().substring(otherRegionLength - extraBases.length(), otherRegionLength);
 
         return (otherRegionBases.equals(extraBases));
@@ -822,7 +822,7 @@ public class Read
     {
         if(isLower)
         {
-            if (!mLowerInferredAdded)
+            if(!mLowerInferredAdded)
             {
                 mLowerInferredAdded = true;
                 mMappedCoords.add(0, new int[] { posStart, posEnd });
@@ -860,17 +860,17 @@ public class Read
 
     public void addIntronicTranscriptRefs(final List<TranscriptData> transDataList)
     {
-        final List<TransExonRef> transRefList = Lists.newArrayList();
+        List<TransExonRef> transRefList = Lists.newArrayList();
 
-        for(final TranscriptData transData : transDataList)
+        for(TranscriptData transData : transDataList)
         {
             if(!mMappedCoords.stream().anyMatch(x -> positionsWithin(x[SE_START], x[SE_END], transData.TransStart, transData.TransEnd)))
                 continue;
 
             for(int i = 0; i < transData.exons().size() - 1; ++i)
             {
-                final ExonData exon = transData.exons().get(i);
-                final ExonData nextExon = transData.exons().get(i + 1);
+                ExonData exon = transData.exons().get(i);
+                ExonData nextExon = transData.exons().get(i + 1);
 
                 if(mMappedCoords.stream().anyMatch(x -> positionsWithin(x[SE_START], x[SE_END], exon.End, nextExon.Start)))
                 {
@@ -888,7 +888,7 @@ public class Read
 
     public List<TransExonRef> getJunctionMatchingTransRefs(int junctionPosition, boolean isJunctionStart)
     {
-        final List<TransExonRef> matchedTransRefs = Lists.newArrayList();
+        List<TransExonRef> matchedTransRefs = Lists.newArrayList();
 
         mMappedRegions.entrySet().stream()
                 .filter(x -> exonBoundary(x.getValue()))

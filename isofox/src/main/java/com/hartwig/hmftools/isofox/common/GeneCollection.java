@@ -91,7 +91,7 @@ public class GeneCollection
 
     public int getStrand(int transId)
     {
-        final GeneReadData gene = mTransIdsGeneMap.get(transId);
+        GeneReadData gene = mTransIdsGeneMap.get(transId);
         return gene != null ? gene.Gene.Strand : 0;
     }
 
@@ -127,7 +127,7 @@ public class GeneCollection
         else
         {
             // mark any read extending beyond this gene collection's bounds in part or full
-            for (int se = SE_START; se <= SE_END; ++se)
+            for(int se = SE_START; se <= SE_END; ++se)
             {
                 if(positionWithin(read.getCoordsBoundary(se), mRegionBounds[SE_START], mRegionBounds[SE_END]))
                 {
@@ -145,9 +145,9 @@ public class GeneCollection
 
     private void buildCache()
     {
-        for(final GeneReadData gene : mGenes)
+        for(GeneReadData gene : mGenes)
         {
-            for(final TranscriptData transData : gene.getTranscripts())
+            for(TranscriptData transData : gene.getTranscripts())
             {
                 mTransIdsGeneMap.put(transData.TransId, gene);
                 mTranscripts.add(transData);
@@ -159,12 +159,12 @@ public class GeneCollection
             generateExonicRegions(gene.Gene.GeneId, mChromosome, mExonRegions, gene.getTranscripts());
 
             // cache the relevant set of exon regions back into the gene for convenience
-            for(final TranscriptData transData : gene.getTranscripts())
+            for(TranscriptData transData : gene.getTranscripts())
             {
-                for (final ExonData exon : transData.exons())
+                for(ExonData exon : transData.exons())
                 {
-                    final RegionReadData exonReadData = findExonRegion(mExonRegions, exon.Start, exon.End);
-                    if (exonReadData == null)
+                    RegionReadData exonReadData = findExonRegion(mExonRegions, exon.Start, exon.End);
+                    if(exonReadData == null)
                     {
                         ISF_LOGGER.error("genes({}) failed to create exonic regions", geneNames());
                         return;

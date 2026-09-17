@@ -145,7 +145,7 @@ public class FusionFragment
         // set transcript & exon info for each junction from each applicable read, taking only the highest matches
         for(int se = SE_START; se <= SE_END; ++se)
         {
-            for(final FusionRead read : mReadGroup.reads())
+            for(FusionRead read : mReadGroup.reads())
             {
                 if(!isSingleGeneCollection())
                 {

@@ -123,7 +123,7 @@ public class ExpressionCohortCompare
         final List<Integer> cohortASampleIndices = Lists.newArrayList();
         final List<Integer> cohortBSampleIndices = Lists.newArrayList();
 
-        for(final String sampleId : mConfig.SampleData.SampleIds)
+        for(String sampleId : mConfig.SampleData.SampleIds)
         {
             if(!cancerType.equals(CANCER_TYPE_ALL) && !cancerType.equals(mConfig.SampleData.SampleCancerType.get(sampleId)))
                 continue;

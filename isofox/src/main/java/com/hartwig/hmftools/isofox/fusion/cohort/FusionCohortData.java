@@ -125,7 +125,7 @@ public class FusionCohortData
     {
         StringJoiner output = new StringJoiner(CSV_DELIM);
 
-        for (int fs = FS_UP; fs <= FS_DOWN; ++fs)
+        for(int fs = FS_UP; fs <= FS_DOWN; ++fs)
         {
             output.add(fusion.GeneIds[fs]);
             output.add(fusion.GeneNames[fs]);

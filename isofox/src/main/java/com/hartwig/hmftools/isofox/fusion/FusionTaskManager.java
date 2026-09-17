@@ -174,7 +174,7 @@ public class FusionTaskManager
 
     private boolean skipMissingReads(final List<FusionRead> reads)
     {
-        for(final FusionRead read : reads)
+        for(FusionRead read : reads)
         {
             if(read.HasSuppAlignment)
             {

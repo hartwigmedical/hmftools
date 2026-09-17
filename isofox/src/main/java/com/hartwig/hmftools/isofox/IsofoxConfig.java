@@ -160,7 +160,7 @@ public class IsofoxConfig
         {
             final String[] functionsStr = configBuilder.getValue(FUNCTIONS).split(ITEM_DELIM);
 
-            for(final String functionStr : functionsStr)
+            for(String functionStr : functionsStr)
             {
                 Functions.add(IsofoxFunction.valueOf(functionStr));
             }

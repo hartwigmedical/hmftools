@@ -303,7 +303,7 @@ public class FragmentSizeCalcs implements Callable<Void>
         int posStart = record.getStart();
         int posEnd = record.getEnd();
 
-        for(final TranscriptData transData : mCurrentTransDataList)
+        for(TranscriptData transData : mCurrentTransDataList)
         {
             if(transData.exons().stream().anyMatch(x -> positionsOverlap(posStart, posEnd, x.Start, x.End)))
                 return false;
@@ -386,7 +386,7 @@ public class FragmentSizeCalcs implements Callable<Void>
 
             int lengthCount = 0;
 
-            for(final FragmentSize fragLengthCount : fragmentLengths)
+            for(FragmentSize fragLengthCount : fragmentLengths)
             {
                 if(fragLengthCount.Length >= currentRangeMin && fragLengthCount.Length <= currentRangeMax)
                 {
@@ -410,7 +410,7 @@ public class FragmentSizeCalcs implements Callable<Void>
             int currentTotal = 0;
             int prevLength = 0;
 
-            for(final FragmentSize fragLengthCount : fragmentLengths)
+            for(FragmentSize fragLengthCount : fragmentLengths)
             {
                 double nextPercTotal = (currentTotal + fragLengthCount.Frequency) / totalFragments;
 
@@ -525,7 +525,7 @@ public class FragmentSizeCalcs implements Callable<Void>
             writer.write("FragmentLength,Count");
             writer.newLine();
 
-            for(final FragmentSize fragLengthData : fragmentLengths)
+            for(FragmentSize fragLengthData : fragmentLengths)
             {
                 writer.write(String.format("%d,%d", fragLengthData.Length, fragLengthData.Frequency));
                 writer.newLine();

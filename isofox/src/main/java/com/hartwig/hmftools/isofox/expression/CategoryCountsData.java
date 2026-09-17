@@ -101,9 +101,9 @@ public class CategoryCountsData
 
         if(gcRatioIndex != null && counts != null)
         {
-            for (int i = 0; i < gcRatioIndex.length; ++i)
+            for(int i = 0; i < gcRatioIndex.length; ++i)
             {
-                if (gcRatioIndex[i] >= 0)
+                if(gcRatioIndex[i] >= 0)
                     mFragmentCountsByGcRatio[gcRatioIndex[i]] += counts[i];
             }
         }
@@ -180,12 +180,12 @@ public class CategoryCountsData
         // convert into an order list of ints
         List<Integer> transIds = Lists.newArrayList();
 
-        for (Integer transId : mTranscripts)
+        for(Integer transId : mTranscripts)
         {
             int index = 0;
             while (index < transIds.size())
             {
-                if (transId < transIds.get(index))
+                if(transId < transIds.get(index))
                     break;
 
                 ++index;
@@ -196,7 +196,7 @@ public class CategoryCountsData
 
         List<String> items = Lists.newArrayList();
 
-        for (Integer transId : transIds)
+        for(Integer transId : transIds)
         {
             items.add(String.valueOf(transId));
         }

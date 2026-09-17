@@ -51,11 +51,11 @@ public final class ExpectedRatesCommon
 
     public static Map<String,List<CategoryCountsData>> createTransComboDataMap(final List<CategoryCountsData> categoryCountsData)
     {
-        final Map<String,List<CategoryCountsData>> transGeneCountsMap = Maps.newHashMap();
+        Map<String,List<CategoryCountsData>> transGeneCountsMap = Maps.newHashMap();
 
-        for(final CategoryCountsData tcData : categoryCountsData)
+        for(CategoryCountsData tcData : categoryCountsData)
         {
-            final Set<String> geneTransNames = Sets.newHashSet();
+            Set<String> geneTransNames = Sets.newHashSet();
             tcData.unsplicedGeneIds().forEach(x -> geneTransNames.add(x));
             tcData.transcriptIds().forEach(x -> geneTransNames.add(String.valueOf(x)));
 
@@ -81,7 +81,7 @@ public final class ExpectedRatesCommon
         // convert fragment counts in each category per transcript into the equivalent of a signature per transcript
         collectCategories(categoryCountsData, expRatesData);
 
-        final Map<String,List<CategoryCountsData>> transGeneCountsMap = createTransComboDataMap(categoryCountsData);
+        Map<String,List<CategoryCountsData>> transGeneCountsMap = createTransComboDataMap(categoryCountsData);
 
         int categoryCount = expRatesData.Categories.size();
 
@@ -91,15 +91,15 @@ public final class ExpectedRatesCommon
 
         for(int transIndex = 0; transIndex < expRatesData.TranscriptIds.size(); ++transIndex)
         {
-            final String transId = expRatesData.TranscriptIds.get(transIndex);
+            String transId = expRatesData.TranscriptIds.get(transIndex);
 
             double[] categoryCounts = new double[categoryCount];
 
-            final List<CategoryCountsData> transCounts = transGeneCountsMap.get(transId);
+            List<CategoryCountsData> transCounts = transGeneCountsMap.get(transId);
 
             for(CategoryCountsData tcData : transCounts)
             {
-                final String transKey = tcData.combinedKey();
+                String transKey = tcData.combinedKey();
                 double fragmentCount = tcData.fragmentCount();
 
                 if(fragmentCount > 0)
@@ -125,9 +125,9 @@ public final class ExpectedRatesCommon
     private static void collectCategories(
             final List<CategoryCountsData> categoryCountsData, ExpectedRatesData expRatesData)
     {
-        for(final CategoryCountsData tcData : categoryCountsData)
+        for(CategoryCountsData tcData : categoryCountsData)
         {
-            final String transKey = tcData.combinedKey();
+            String transKey = tcData.combinedKey();
 
             if(tcData.fragmentCount() > 0 || tcData.transcriptIds().isEmpty()) // force inclusion of unspliced gene categories
             {

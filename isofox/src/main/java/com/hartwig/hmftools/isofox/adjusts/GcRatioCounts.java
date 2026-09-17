@@ -55,9 +55,9 @@ public class GcRatioCounts
     public static int calcGcCount(final String bases)
     {
         int gcCount = 0;
-        for (int i = 0; i < bases.length(); ++i)
+        for(int i = 0; i < bases.length(); ++i)
         {
-            if (isGC(bases.charAt(i)))
+            if(isGC(bases.charAt(i)))
                 ++gcCount;
         }
 
@@ -161,7 +161,7 @@ public class GcRatioCounts
     {
         double gcRatioTotal = 0;
         int basesTotal = 0;
-        for(final int[] region : readRegions)
+        for(int[] region : readRegions)
         {
             final String bases = refGenome.getBaseString(chromosome, region[SE_START], region[SE_END]);
             basesTotal += bases.length();

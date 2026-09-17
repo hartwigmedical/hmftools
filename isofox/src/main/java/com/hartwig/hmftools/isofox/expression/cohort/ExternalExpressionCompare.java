@@ -85,7 +85,7 @@ public class ExternalExpressionCompare
             mGeneTransCache.load(true);
             mGeneTransCache.loadTranscriptData(mConfig.RestrictedGeneIds);
 
-            for(final String geneId : mConfig.RestrictedGeneIds)
+            for(String geneId : mConfig.RestrictedGeneIds)
             {
                 final String geneName = mGeneTransCache.getGeneDataById(geneId).GeneName;
 
@@ -222,7 +222,7 @@ public class ExternalExpressionCompare
             Integer unsplicedIndex = fieldsMap.get(FLD_UNSPLICED_FRAGS);
             Integer lowQualIndex = fieldsMap.get("MultiMappedFragments");
 
-            for(final String data : lines)
+            for(String data : lines)
             {
                 ExpressionData expData = mTransScope ?
                         fromIsofoxTranscript(
@@ -265,7 +265,7 @@ public class ExternalExpressionCompare
             final List<String> lines = Files.readAllLines(Paths.get(filename));
             lines.remove(0);
 
-            for(final String data : lines)
+            for(String data : lines)
             {
                 ExpressionData expData = null;
 

@@ -131,7 +131,7 @@ public class CommonUtils
         // first compare bases at same indices, making note of the first difference if there is one
         while(i < str1.length() && j < str2.length())
         {
-            if (str1.charAt(i) == str2.charAt(j))
+            if(str1.charAt(i) == str2.charAt(j))
                 ++matched;
             else if(mismatchIndex == -1)
                 mismatchIndex = i;

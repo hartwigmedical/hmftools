@@ -97,7 +97,7 @@ public class GeneReadData
 
     public int calcExonicRegionLength()
     {
-        final List<int[]> commonExonicRegions = Lists.newArrayList();
+        List<int[]> commonExonicRegions = Lists.newArrayList();
         generateCommonExonicRegions(mExonRegions, commonExonicRegions);
         return commonExonicRegions.stream().mapToInt(x -> x[SE_END] - x[SE_START]).sum();
     }
@@ -115,13 +115,13 @@ public class GeneReadData
 
     public static List<GeneReadData> createGeneReadData(final List<GeneData> geneDataList, final EnsemblDataCache geneTransCache)
     {
-        final List<GeneReadData> geneReadDataList = Lists.newArrayList();
+        List<GeneReadData> geneReadDataList = Lists.newArrayList();
 
         for(GeneData geneData : geneDataList)
         {
             GeneReadData geneReadData = new GeneReadData(geneData);
 
-            final List<TranscriptData> geneTranscripts = geneTransCache.getTranscripts(geneData.GeneId);
+            List<TranscriptData> geneTranscripts = geneTransCache.getTranscripts(geneData.GeneId);
 
             if(geneTranscripts == null || geneTranscripts.isEmpty())
             {

@@ -116,7 +116,7 @@ public class NeoEpitopeReader
 
     public void calcFragmentSupport()
     {
-        for(final NeoEpitopeData neData : mNeoEpitopes)
+        for(NeoEpitopeData neData : mNeoEpitopes)
         {
             clearCache();
 

@@ -402,7 +402,7 @@ public class FragmentAllocator
             return;
         }
 
-        final List<int[]> commonMappings = deriveCommonRegions(read1.getMappedRegionCoords(), read2.getMappedRegionCoords());
+        List<int[]> commonMappings = deriveCommonRegions(read1.getMappedRegionCoords(), read2.getMappedRegionCoords());
 
         if(!isDuplicate)
         {
@@ -447,7 +447,7 @@ public class FragmentAllocator
         int readPosMin = min(read1.PosStart, read2.PosStart);
         int readPosMax = max(read1.PosEnd, read2.PosEnd);
 
-        final List<GeneReadData> overlapGenes = mCurrentGenes.findGenesCoveringRange(readPosMin, readPosMax, true);
+        List<GeneReadData> overlapGenes = mCurrentGenes.findGenesCoveringRange(readPosMin, readPosMax, true);
 
         if(read1.getMappedRegions().isEmpty() && read2.getMappedRegions().isEmpty())
         {
@@ -456,14 +456,14 @@ public class FragmentAllocator
             return;
         }
 
-        final Map<Integer,TransMatchType> firstReadTransTypes = read1.getTranscriptClassifications();
-        final Map<Integer,TransMatchType> secondReadTransTypes = read2.getTranscriptClassifications();
+        Map<Integer,TransMatchType> firstReadTransTypes = read1.getTranscriptClassifications();
+        Map<Integer,TransMatchType> secondReadTransTypes = read2.getTranscriptClassifications();
 
         // first find valid transcripts in both reads
-        final List<Integer> validTranscripts = Lists.newArrayList();
-        final Set<Integer> invalidTranscripts = Sets.newHashSet();
+        List<Integer> validTranscripts = Lists.newArrayList();
+        Set<Integer> invalidTranscripts = Sets.newHashSet();
 
-        final List<RegionReadData> validRegions = getUniqueValidRegion(read1, read2);
+        List<RegionReadData> validRegions = getUniqueValidRegion(read1, read2);
 
         if(mConfig.RunValidations)
         {
@@ -542,14 +542,14 @@ public class FragmentAllocator
                             .filter(x -> x.getValue() != EXON_INTRON)
                             .map(x -> x.getKey()).collect(Collectors.toList());;
 
-                    final List<RegionReadData> regions2 = read2.getMappedRegions().entrySet().stream()
+                    List<RegionReadData> regions2 = read2.getMappedRegions().entrySet().stream()
                             .filter(x -> x.getKey().hasTransId(transId))
                             .filter(x -> x.getValue() != EXON_INTRON)
                             .map(x -> x.getKey()).collect(Collectors.toList());
 
                     for(RegionReadData region : regions2)
                     {
-                        if (!regions.contains(region))
+                        if(!regions.contains(region))
                             regions.add(region);
                     }
 
@@ -734,7 +734,7 @@ public class FragmentAllocator
 
     private int calcFragmentLength(int transId, final Read read1, final Read read2)
     {
-        final TranscriptData transData = mCurrentGenes.getTranscripts().stream().filter(x -> x.TransId == transId).findFirst().orElse(null);
+        TranscriptData transData = mCurrentGenes.getTranscripts().stream().filter(x -> x.TransId == transId).findFirst().orElse(null);
         if(transData == null)
             return -1;
 
@@ -754,7 +754,7 @@ public class FragmentAllocator
         int transcriptBases = 0;
         boolean startFound = false;
 
-        for(final ExonData exon : transData.exons())
+        for(ExonData exon : transData.exons())
         {
             if(!startFound)
             {
@@ -924,7 +924,7 @@ public class FragmentAllocator
         if(!mAltSpliceJunctionFinder.enabled() || mChimericReads.getLocalChimericReads().isEmpty())
             return;
 
-        final List<Integer> invalidTrans = Lists.newArrayList();
+        List<Integer> invalidTrans = Lists.newArrayList();
 
         for(List<Read> reads : mChimericReads.getLocalChimericReads())
         {
@@ -961,7 +961,7 @@ public class FragmentAllocator
             int readPosMin = min(read1.PosStart, read2.PosStart);
             int readPosMax = max(read1.PosEnd, read2.PosEnd);
 
-            final List<GeneReadData> overlapGenes = mCurrentGenes.findGenesCoveringRange(readPosMin, readPosMax, false);
+            List<GeneReadData> overlapGenes = mCurrentGenes.findGenesCoveringRange(readPosMin, readPosMax, false);
             mAltSpliceJunctionFinder.evaluateFragmentReads(overlapGenes, read1, read2, invalidTrans);
         }
     }

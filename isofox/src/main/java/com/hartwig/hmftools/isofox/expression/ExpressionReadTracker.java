@@ -125,7 +125,7 @@ public class ExpressionReadTracker
 
     public void processValidTranscript(int transId, final List<Read> reads, boolean isUniqueTrans)
     {
-        final List<RegionReadData> processedRegions = Lists.newArrayList();
+        List<RegionReadData> processedRegions = Lists.newArrayList();
 
         for(Read read : reads)
         {
@@ -181,7 +181,7 @@ public class ExpressionReadTracker
         int[] gcRatioIndices = { -1, -1 };
         double[] gcRatioCounts = { 0, 0 };
 
-        if (mGcRatioCounts != null)
+        if(mGcRatioCounts != null)
         {
             double gcRatio = calcGcRatioFromReadRegions(mConfig.RefGenome, mGenes.chromosome(), readRegions);
             mGcRatioCounts.determineRatioData(gcRatio, gcRatioIndices, gcRatioCounts);
@@ -200,7 +200,7 @@ public class ExpressionReadTracker
         {
             for(int i = 0; i < gcRatioIndices.length; ++i)
             {
-                if (gcRatioIndices[i] >= 0)
+                if(gcRatioIndices[i] >= 0)
                 {
                     mGcRatioCounts.addGcRatioCount(gcRatioIndices[i], gcRatioCounts[i]);
                     mGeneGcRatioCounts.addGcRatioCount(gcRatioIndices[i], gcRatioCounts[i]);

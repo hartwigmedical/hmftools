@@ -245,7 +245,7 @@ public class FusionWriter
 
         try
         {
-            for(final FusionRead read : reads)
+            for(FusionRead read : reads)
             {
                 mFusionReadWriter.write(String.format("%d,%s,%s,%s,%d,%d,%d,%s",
                         reads.size(), readId, groupStatus, read.Chromosome,
@@ -281,7 +281,7 @@ public class FusionWriter
 
                 if(topTransMatchType != NONE)
                 {
-                    for(final FusionTransExon transExonRef : read.getTransExonRefs(SE_START))
+                    for(FusionTransExon transExonRef : read.getTransExonRefs(SE_START))
                     {
                         transExonData.add(String.format("%d:%d", transExonRef.TransId, transExonRef.ExonRank));
                     }

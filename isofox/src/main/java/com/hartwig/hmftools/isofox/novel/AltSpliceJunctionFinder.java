@@ -381,8 +381,8 @@ public class AltSpliceJunctionFinder
         if(minDistance > 0)
         {
             // SJ is past the nearest exon boundary, so compare the preceding bases
-            final String startBases = junctionBases[SE_START].substring(juncBaseIndex - abs(minDistance), juncBaseIndex);
-            final String endBases = junctionBases[SE_START].substring(juncBaseIndex - abs(minDistance), juncBaseIndex);
+            String startBases = junctionBases[SE_START].substring(juncBaseIndex - abs(minDistance), juncBaseIndex);
+            String endBases = junctionBases[SE_START].substring(juncBaseIndex - abs(minDistance), juncBaseIndex);
 
             if(!startBases.equals(endBases))
                 return;
@@ -395,8 +395,8 @@ public class AltSpliceJunctionFinder
             // 01234567
             //      S E
 
-            final String startBases = junctionBases[SE_START].substring(juncBaseIndex, juncBaseIndex + abs(minDistance));
-            final String endBases = junctionBases[SE_START].substring(juncBaseIndex, juncBaseIndex + abs(minDistance));
+            String startBases = junctionBases[SE_START].substring(juncBaseIndex, juncBaseIndex + abs(minDistance));
+            String endBases = junctionBases[SE_START].substring(juncBaseIndex, juncBaseIndex + abs(minDistance));
 
             if(!startBases.equals(endBases))
                 return;
@@ -418,7 +418,7 @@ public class AltSpliceJunctionFinder
 
         for(int i = 0; i <= 1; ++i)
         {
-            final Read read = (i == 0) ? read1 : read2;
+            Read read = (i == 0) ? read1 : read2;
 
             // take the longer of the 2 soft-clippings
             ClippedSide clippedSide = clippedSide(read);
@@ -446,12 +446,12 @@ public class AltSpliceJunctionFinder
         {
             // flip the SJ around since a DUP/circular has opposite orientations to a standard alt-SJ DEL
             int[] flippedSpliceJunction = { spliceJunction[SE_END], spliceJunction[SE_START] };
-            final AltSpliceJunctionContext[] flippedRegionContexts = { AltSpliceJunctionContext.UNKNOWN, AltSpliceJunctionContext.UNKNOWN };
+            AltSpliceJunctionContext[] flippedRegionContexts = { AltSpliceJunctionContext.UNKNOWN, AltSpliceJunctionContext.UNKNOWN };
 
             classifyRegions(read1, flippedSpliceJunction, sjEndRegions, sjStartRegions, flippedRegionContexts);
             classifyRegions(read2, flippedSpliceJunction, sjEndRegions, sjStartRegions, flippedRegionContexts);
 
-            final AltSpliceJunctionContext[] regionContexts = { flippedRegionContexts[SE_END], flippedRegionContexts[SE_START] };
+            AltSpliceJunctionContext[] regionContexts = { flippedRegionContexts[SE_END], flippedRegionContexts[SE_START] };
 
             altSplicJunction = new AltSpliceJunction(
                     mGenes.chromosome(), spliceJunction, CIRCULAR, read1.Id, regionContexts, sjStartRegions, sjEndRegions);
@@ -484,11 +484,11 @@ public class AltSpliceJunctionFinder
             final List<RegionReadData> sjStartRegions, final List<RegionReadData> sjEndRegions, final AltSpliceJunctionContext[] regionContexts)
     {
         // collect up all exon regions matching the observed novel splice junction
-        final List<Integer> sjMatchedTransIds = Lists.newArrayList();
+        List<Integer> sjMatchedTransIds = Lists.newArrayList();
 
         for(Map.Entry<RegionReadData, RegionMatchType> entry : read.getMappedRegions().entrySet())
         {
-            final RegionReadData region = entry.getKey();
+            RegionReadData region = entry.getKey();
             RegionMatchType matchType = entry.getValue();
 
             if(matchType == RegionMatchType.NONE)
@@ -524,7 +524,7 @@ public class AltSpliceJunctionFinder
 
             for(Map.Entry<RegionReadData, RegionMatchType> entry : read.getMappedRegions().entrySet())
             {
-                final RegionReadData region = entry.getKey();
+                RegionReadData region = entry.getKey();
                 RegionMatchType matchType = entry.getValue();
 
                 if(matchType == RegionMatchType.NONE)
@@ -620,21 +620,21 @@ public class AltSpliceJunctionFinder
             return;
         }
 
-        final List<RegionReadData> regions1 = Lists.newArrayList(firstAltSJ.sjStartRegions());
+        List<RegionReadData> regions1 = Lists.newArrayList(firstAltSJ.sjStartRegions());
         regions1.addAll(firstAltSJ.sjEndRegions());
 
-        final List<RegionReadData> regions2 = Lists.newArrayList(secondAltSJ.sjStartRegions());
+        List<RegionReadData> regions2 = Lists.newArrayList(secondAltSJ.sjStartRegions());
         regions2.addAll(secondAltSJ.sjEndRegions());
 
         List<Integer> commonTranscripts = Lists.newArrayList();
 
-        for(final RegionReadData region1 : regions1)
+        for(RegionReadData region1 : regions1)
         {
             List<Integer> transIds1 = region1.getTransExonRefs().stream().map(x -> x.TransId).collect(Collectors.toList());
 
             for(Integer transId1 : transIds1)
             {
-                for(final RegionReadData region2 : regions2)
+                for(RegionReadData region2 : regions2)
                 {
                     List<Integer> transIds2 = region2.getTransExonRefs().stream().map(x -> x.TransId).collect(Collectors.toList());
 
@@ -731,7 +731,7 @@ public class AltSpliceJunctionFinder
 
         for(AltSpliceJunction altSJ : mAltSpliceJunctions)
         {
-            final List<Integer> transIds = altSJ.candidateTransIds();
+            List<Integer> transIds = altSJ.candidateTransIds();
 
             GeneReadData topGene = null;
             int topMatch = 0;
@@ -740,7 +740,7 @@ public class AltSpliceJunctionFinder
 
             List<GeneReadData> candidateGenes = Lists.newArrayList();
 
-            for(final GeneReadData gene : mGenes.genes())
+            for(GeneReadData gene : mGenes.genes())
             {
                 if(gene.getExonRegions().stream().anyMatch(x -> altSJ.sjStartRegions().contains(x) || altSJ.sjEndRegions().contains(x)))
                 {
@@ -751,7 +751,7 @@ public class AltSpliceJunctionFinder
             if(candidateGenes.isEmpty())
                 candidateGenes = mGenes.genes();
 
-            for(final GeneReadData gene : candidateGenes)
+            for(GeneReadData gene : candidateGenes)
             {
                 if(spliceStrand != 0 && gene.Gene.Strand != spliceStrand)
                     continue;

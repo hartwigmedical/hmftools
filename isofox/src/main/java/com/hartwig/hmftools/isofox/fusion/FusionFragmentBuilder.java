@@ -213,7 +213,7 @@ public class FusionFragmentBuilder
     private static void setSplitReadJunctionData(final FusionFragment fragment, final FusionRead splitRead)
     {
         // set the junction data around the spanning N-split
-        final int[] splitJunction = findSplitReadJunction(splitRead);
+        int[] splitJunction = findSplitReadJunction(splitRead);
 
         if(splitJunction != null)
         {
@@ -267,15 +267,15 @@ public class FusionFragmentBuilder
     private static void setNonJunctionData(final FusionFragment fragment)
     {
         // set gene collections from the reads without any knowledge of which junctions they may support
-        final List<String> chrGeneCollections = Lists.newArrayListWithCapacity(2);
-        final List<String> chromosomes = Lists.newArrayListWithCapacity(2);
-        final Map<String,Integer> positions = Maps.newHashMapWithExpectedSize(2);
-        final List<Integer> geneCollections = Lists.newArrayListWithCapacity(2);
-        final Map<String,FusionRead> reads = Maps.newHashMapWithExpectedSize(2);
+        List<String> chrGeneCollections = Lists.newArrayListWithCapacity(2);
+        List<String> chromosomes = Lists.newArrayListWithCapacity(2);
+        Map<String,Integer> positions = Maps.newHashMapWithExpectedSize(2);
+        List<Integer> geneCollections = Lists.newArrayListWithCapacity(2);
+        Map<String,FusionRead> reads = Maps.newHashMapWithExpectedSize(2);
 
-        final Map<String,List<FusionRead>> readGroups = Maps.newHashMapWithExpectedSize(2);
+        Map<String,List<FusionRead>> readGroups = Maps.newHashMapWithExpectedSize(2);
 
-        for(final FusionRead read : fragment.reads())
+        for(FusionRead read : fragment.reads())
         {
             for(int se = SE_START; se <= SE_END; ++se)
             {
@@ -283,7 +283,7 @@ public class FusionFragmentBuilder
                 if(!read.spansGeneCollections() && se == SE_END)
                     continue;
 
-                final String chrGeneId = formLocation(read.Chromosome, read.GeneCollections[se], true); // genic status ignored for group determination
+                String chrGeneId = formLocation(read.Chromosome, read.GeneCollections[se], true); // genic status ignored for group determination
 
                 List<FusionRead> readGroup = readGroups.get(chrGeneId);
 
@@ -332,7 +332,7 @@ public class FusionFragmentBuilder
         for(int se = SE_START; se <= SE_END; ++se)
         {
             int index = se == SE_START ? lowerIndex : switchIndex(lowerIndex);
-            final String chrGeneId = chrGeneCollections.get(index);
+            String chrGeneId = chrGeneCollections.get(index);
 
             fragment.geneCollections()[se] = geneCollections.get(index);
             fragment.orientations()[se] = reads.get(chrGeneId).Orientation;
@@ -350,7 +350,7 @@ public class FusionFragmentBuilder
         for(int se = SE_START; se <= SE_END; ++se)
         {
             int index = se == SE_START ? lowerIndex : switchIndex(lowerIndex);
-            final String chrGeneId = chrGeneCollections.get(index);
+            String chrGeneId = chrGeneCollections.get(index);
             FusionRead read = reads.get(chrGeneId);
 
             int requiredScSide = switchIndex(se);

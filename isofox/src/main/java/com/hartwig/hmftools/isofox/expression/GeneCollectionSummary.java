@@ -55,9 +55,9 @@ public class GeneCollectionSummary
     {
         Map<String,Double> geneSpliceTotals = Maps.newHashMap();
 
-        for (final TranscriptResult transResult : TranscriptResults)
+        for(TranscriptResult transResult : TranscriptResults)
         {
-            final String transName = transResult.Trans.TransName;
+            String transName = transResult.Trans.TransName;
             double fitAllocation = getFitAllocation(transName);
 
             transResult.setFitAllocation(fitAllocation);
@@ -70,7 +70,7 @@ public class GeneCollectionSummary
 
         }
 
-        for(final GeneResult geneResult : GeneResults)
+        for(GeneResult geneResult : GeneResults)
         {
             Double geneFitAllocation = geneSpliceTotals.get(geneResult.Gene.GeneId);
             geneResult.setFitAllocation(
@@ -89,7 +89,7 @@ public class GeneCollectionSummary
             // divvy up residuals between the genes according to their length
             long totalGeneLength = GeneResults.stream().mapToLong(x -> x.Gene.length()).sum();
 
-            for (final GeneResult geneResult : GeneResults)
+            for(GeneResult geneResult : GeneResults)
             {
                 double residualsFraction = geneResult.Gene.length() / (double) totalGeneLength * mFitResiduals;
                 geneResult.setFitResiduals(residualsFraction);
@@ -102,7 +102,7 @@ public class GeneCollectionSummary
         double originalTotal = 0;
         double newTotal = 0;
 
-        for(final CategoryCountsData catCounts : TransCategoryCounts)
+        for(CategoryCountsData catCounts : TransCategoryCounts)
         {
             originalTotal += catCounts.fragmentCount();
             catCounts.applyGcAdjustments(gcAdjustments);
@@ -131,14 +131,14 @@ public class GeneCollectionSummary
         double unsplicedMultiMappedFrags = mTotalMultiMappedFragments * totalUnsplicedAlloc / totalAlloc;
 
         // divide amongst transcripts
-        for(final TranscriptResult transResult : TranscriptResults)
+        for(TranscriptResult transResult : TranscriptResults)
         {
             double transAlloc = totalTranscriptAlloc > 0 ? transResult.getFitAllocation() / totalTranscriptAlloc * splicedMultiMappedFrags : 0;
             transResult.setMultiMappedAllocation(transAlloc);
         }
 
         // split amongst genes as per fragment allocation
-        for(final GeneResult geneResult : GeneResults)
+        for(GeneResult geneResult : GeneResults)
         {
             double splicedAlloc = totalTranscriptAlloc > 0 ? geneResult.getSplicedAlloc() / totalTranscriptAlloc * splicedMultiMappedFrags : 0;
             double unsplicedAlloc = totalUnsplicedAlloc > 0 ? geneResult.getUnsplicedAlloc() / totalUnsplicedAlloc * unsplicedMultiMappedFrags : 0;

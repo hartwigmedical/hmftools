@@ -68,7 +68,7 @@ public class BaseDepth
         if(mDepth == null)
             return;
 
-        for(final int[] readSection : readCoords)
+        for(int[] readSection : readCoords)
         {
             int readStartPos = readSection[SE_START];
             int readEndPos = readSection[SE_END];
@@ -98,7 +98,7 @@ public class BaseDepth
     {
         final Map<Integer,Integer> depthMap = Maps.newHashMap();
 
-        for(final Integer position : candidateJunctions)
+        for(Integer position : candidateJunctions)
         {
             if(!positionWithin(position, mBaseRange[SE_START], mBaseRange[SE_END]))
                 continue;

@@ -150,10 +150,10 @@ public class ChimericReadTracker
             if(typeData == null)
                 continue;
 
-            for(final KnownFusionData knownData : typeData)
+            for(KnownFusionData knownData : typeData)
             {
-                final GeneData upGene = !knownData.FiveGene.isEmpty() ? geneTransCache.getGeneDataByName(knownData.FiveGene) : null;
-                final GeneData downGene = !knownData.ThreeGene.isEmpty() ? geneTransCache.getGeneDataByName(knownData.ThreeGene) : null;
+                GeneData upGene = !knownData.FiveGene.isEmpty() ? geneTransCache.getGeneDataByName(knownData.FiveGene) : null;
+                GeneData downGene = !knownData.ThreeGene.isEmpty() ? geneTransCache.getGeneDataByName(knownData.ThreeGene) : null;
 
                 if(type == KNOWN_PAIR && upGene != null && downGene != null)
                 {
@@ -232,7 +232,7 @@ public class ChimericReadTracker
             // shouldn't occur
             ISF_LOGGER.error("overriding chimeric read({})", read1.Id);
 
-            final ChimericReadGroup existingGroup = mChimericReadMap.get(read1.Id);
+            ChimericReadGroup existingGroup = mChimericReadMap.get(read1.Id);
 
             for(Read read : existingGroup.reads())
             {
@@ -306,8 +306,8 @@ public class ChimericReadTracker
         for(ChimericReadGroup readGroup : mChimericReadMap.values())
         {
             // skip reads if all will be processed later or have been already
-            final List<Read> reads = readGroup.reads();
-            final String readId = reads.get(0).Id;
+            List<Read> reads = readGroup.reads();
+            String readId = reads.get(0).Id;
 
             int readCount = reads.size();
             boolean readGroupComplete = readGroup.isComplete();
@@ -502,7 +502,7 @@ public class ChimericReadTracker
         if(!preGeneReads.isEmpty())
         {
             // remove any previously processed reads
-            final String readId = preGeneReads.get(0).Id;
+            String readId = preGeneReads.get(0).Id;
             List<Read> prevPostGeneReads = mPreviousPostGeneReadMap.get(readId);
 
             if(prevPostGeneReads != null)
@@ -531,7 +531,7 @@ public class ChimericReadTracker
     private void collectCandidateJunctions(final ChimericReadGroup readGroup)
     {
         // type 1: split reads
-        final Read splitRead = readGroup.reads().stream()
+        Read splitRead = readGroup.reads().stream()
             .filter(x -> x.containsSplit())
             .filter(x -> x.spansGeneCollections() || x.hasInterGeneSplit())
             .findFirst().orElse(null);
@@ -550,10 +550,10 @@ public class ChimericReadTracker
             return;
         }
 
-        final int[] junctionPositions = new int[SE_PAIR];
+        int[] junctionPositions = new int[SE_PAIR];
 
         // type 2: supplementary with clipping
-        final Read suppRead = readGroup.reads().stream().filter(x -> x.hasSuppAlignment()).findFirst().orElse(null);
+        Read suppRead = readGroup.reads().stream().filter(x -> x.hasSuppAlignment()).findFirst().orElse(null);
         if(suppRead != null)
         {
             ClippedSide scSide = Read.clippedSide(suppRead);

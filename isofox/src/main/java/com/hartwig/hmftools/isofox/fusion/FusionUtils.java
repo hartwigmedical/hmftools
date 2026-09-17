@@ -78,7 +78,7 @@ public class FusionUtils
             int seIndex, final List<FusionRead> reads, final int[] junctPositions, final byte[] junctOrientations, final int[] maxSplitLengths)
     {
         // find the longest section mapped across the junction
-        final List<FusionRead> matchingReads = reads.stream()
+        List<FusionRead> matchingReads = reads.stream()
                 .filter(x -> positionWithin(junctPositions[seIndex], x.posStart(), x.posEnd())).collect(Collectors.toList());
 
         if(matchingReads.isEmpty()) // can occur with the fragments from a fusion merged in due to homology
@@ -159,7 +159,7 @@ public class FusionUtils
         // transcript exon data, so populate this now
 
         int upperCoordIndex = read.MappedCoords.size() - 1;
-        final int[] upperCoords = read.MappedCoords.get(upperCoordIndex);
+        int[] upperCoords = read.MappedCoords.get(upperCoordIndex);
 
         List<FusionTransExon> transExonRefs = Lists.newArrayList();
         RegionMatchType topMatchType = NONE;

@@ -64,7 +64,7 @@ public class ExpectedGcRatiosGenerator implements Callable<Void>
         int genesProcessed = 0;
         int nextLogCount = 100;
 
-        for(final GeneData geneData : mGeneDataList)
+        for(GeneData geneData : mGeneDataList)
         {
             final List<TranscriptData> transDataList = mGeneTransCache.getTranscripts(geneData.GeneId);
 
@@ -156,7 +156,7 @@ public class ExpectedGcRatiosGenerator implements Callable<Void>
         int readLength = mConfig.ReadLength;
 
         boolean endOfTrans = false;
-        for(final ExonData exon : transData.exons())
+        for(ExonData exon : transData.exons())
         {
             for(int startPos = exon.Start; startPos <= exon.End; ++startPos)
             {

@@ -49,7 +49,7 @@ public class ExpectedCountsCache
     {
         List<CategoryCountsData> geneSetCountsData = mGeneSetCategoryDataMap.get(chrId);
 
-        if (geneSetCountsData == null || !geneSetCountsDataMatches(geneIds, geneSetCountsData))
+        if(geneSetCountsData == null || !geneSetCountsDataMatches(geneIds, geneSetCountsData))
         {
             geneSetCountsData = findGeneSetCountsData(geneIds);
         }
@@ -59,7 +59,7 @@ public class ExpectedCountsCache
 
     private boolean geneSetCountsDataMatches(final List<String> geneIds, final List<CategoryCountsData> geneSetCountsData)
     {
-        final Set<String> geneTransSet = Sets.newHashSet();
+        Set<String> geneTransSet = Sets.newHashSet();
         geneSetCountsData.forEach(x -> x.unsplicedGeneIds().forEach(y -> geneTransSet.add(y)));
 
         // confirm that the genes in the collection match
@@ -69,7 +69,7 @@ public class ExpectedCountsCache
     private final List<CategoryCountsData> findGeneSetCountsData(final List<String> geneIds)
     {
         // manually find the gene set by looking for a match of all geneIds
-        for(final List<CategoryCountsData> geneCounts : mGeneSetCategoryDataMap.values())
+        for(List<CategoryCountsData> geneCounts : mGeneSetCategoryDataMap.values())
         {
             if(geneSetCountsDataMatches(geneIds, geneCounts))
                 return geneCounts;
@@ -81,7 +81,7 @@ public class ExpectedCountsCache
     // GeneSetId,TransId,Category,Counts for each fragment length
     private boolean loadExpCountsFile()
     {
-        if (!Files.exists(Paths.get(mConfig.ExpCountsFile)))
+        if(!Files.exists(Paths.get(mConfig.ExpCountsFile)))
         {
             ISF_LOGGER.warn("invalid gene ID file({})", mConfig.ExpCountsFile);
             return false;

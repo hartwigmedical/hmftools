@@ -408,7 +408,7 @@ public class FusionFinder implements Callable<Void>
 
     private FusionReadData findExistingFusion(final FusionFragment fragment)
     {
-        final Map<String, FusionReadData> fusionsByPosition = mFusionsByLocation.get(formChromosomePair(fragment.chromosomes()));
+        Map<String, FusionReadData> fusionsByPosition = mFusionsByLocation.get(formChromosomePair(fragment.chromosomes()));
 
         if(fusionsByPosition == null)
             return null;
@@ -465,7 +465,7 @@ public class FusionFinder implements Callable<Void>
         }
 
         int fusionId = mFusionWriter.getNextFusionId();
-        final FusionReadData fusionData = new FusionReadData(fusionId, fragment);
+        FusionReadData fusionData = new FusionReadData(fusionId, fragment);
 
         fusionData.setJunctionBases(mConfig.RefGenome);
         fusionData.checkHomologyPositionAdjustment();
@@ -588,7 +588,7 @@ public class FusionFinder implements Callable<Void>
 
         // organise genes by strand based on the orientations around the splice junction
         // a positive orientation implies either an upstream +ve strand gene or a downstream -ve strand gene
-        final byte[] sjOrientations = fusionData.junctionOrientations();
+        byte[] sjOrientations = fusionData.junctionOrientations();
 
         boolean foundBothStreams = false;
         boolean foundOneStream = false;
@@ -729,7 +729,7 @@ public class FusionFinder implements Callable<Void>
                                     fusion2.junctionRefBases()[SE_END], fusion2.postJunctionRefBases()[SE_END]);
                         }
 
-                        final FusionReadData fusion1Const = fusion1;
+                        FusionReadData fusion1Const = fusion1;
 
                         // no need to consider discordant junctions since reconciliation is only done for non-local fusions
                         if(mConfig.Fusions.CacheFragments)
@@ -767,7 +767,7 @@ public class FusionFinder implements Callable<Void>
     {
         for(Map.Entry<String, List<FusionReadData>> entry : mFusionCandidates.entrySet())
         {
-            final List<FusionReadData> fusions = entry.getValue();
+            List<FusionReadData> fusions = entry.getValue();
 
             if(fusions.size() == 1)
                 continue;
@@ -781,8 +781,8 @@ public class FusionFinder implements Callable<Void>
                 boolean isSpliced = fusion1.isKnownSpliced();
                 boolean isUnspliced = fusion1.isUnspliced();
 
-                final List<TransExonRef> upRefs1 = fusion1.getTransExonRefsByStream(FS_UP);
-                final List<TransExonRef> downRefs1 = fusion1.getTransExonRefsByStream(FS_DOWN);
+                List<TransExonRef> upRefs1 = fusion1.getTransExonRefsByStream(FS_UP);
+                List<TransExonRef> downRefs1 = fusion1.getTransExonRefsByStream(FS_DOWN);
 
                 for(int j = i + 1; j < fusions.size() - 1; ++j)
                 {
@@ -832,13 +832,13 @@ public class FusionFinder implements Callable<Void>
     {
         // create fusions from fragments with 1 or both junctions matching known splice sites between genes without supp alignment
         // and then reassign any other fragments to these new fusions
-        final List<FusionReadData> newFusions = Lists.newArrayList();
+        List<FusionReadData> newFusions = Lists.newArrayList();
 
         for(Map.Entry<String, List<FusionFragment>> entry : mDiscordantFragments.entrySet())
         {
-            final List<FusionFragment> fragments = entry.getValue();
+            List<FusionFragment> fragments = entry.getValue();
 
-            final Set<FusionFragment> allocatedFragments = Sets.newHashSet();
+            Set<FusionFragment> allocatedFragments = Sets.newHashSet();
 
             for(FusionFragment fragment : fragments)
             {
@@ -921,14 +921,14 @@ public class FusionFinder implements Callable<Void>
         // attempt to allocate discordant fragments to fusions
         for(Map.Entry<String, List<FusionFragment>> entry : mDiscordantFragments.entrySet())
         {
-            final List<FusionReadData> fusions = mFusionCandidates.get(entry.getKey());
+            List<FusionReadData> fusions = mFusionCandidates.get(entry.getKey());
 
             if(fusions == null)
                 continue;
 
-            final List<FusionFragment> fragments = entry.getValue();
+            List<FusionFragment> fragments = entry.getValue();
 
-            final Set<FusionFragment> allocatedFragments = Sets.newHashSet();
+            Set<FusionFragment> allocatedFragments = Sets.newHashSet();
 
             for(FusionFragment fragment : fragments)
             {

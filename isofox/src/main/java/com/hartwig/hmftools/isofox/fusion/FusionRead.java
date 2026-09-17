@@ -208,7 +208,7 @@ public class FusionRead
         if(mBoundaryDepth == null)
             mBoundaryDepth = Maps.newHashMap();
 
-        for(final int[] mappedCoords : MappedCoords)
+        for(int[] mappedCoords : MappedCoords)
         {
             mBoundaryDepth.put(mappedCoords[SE_START], baseDepth.depthAtBase(mappedCoords[SE_START]));
             mBoundaryDepth.put(mappedCoords[SE_END], baseDepth.depthAtBase(mappedCoords[SE_END]));
