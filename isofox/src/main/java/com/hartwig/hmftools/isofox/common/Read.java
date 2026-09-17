@@ -919,14 +919,14 @@ public class Read
 
     public void trimAdapterSoftClipBases(int trimLength)
     {
+        int softClipLength = orientation().isForward() ? rightClipLength() : leftClipLength();
+        trimLength = min(trimLength, softClipLength);
+
         if(trimLength == 0)
             return;
 
         if(orientation().isForward())
         {
-            int softClipLength = rightClipLength();
-            trimLength = min(trimLength, softClipLength);
-
             // trim from upper end
             mReadBases = mReadBases.substring(0, mReadBases.length() - trimLength);
 
@@ -945,9 +945,6 @@ public class Read
         }
         else
         {
-            int softClipLength = leftClipLength();
-            trimLength = min(trimLength, softClipLength);
-
             // trim from lower end
             mReadBases = mReadBases.substring(trimLength);
 
