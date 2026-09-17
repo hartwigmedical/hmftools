@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 This script does the following:
 - Whenever a user pushes a git tag in the format '<tool>-<version>' this script will parse that tag.
@@ -184,13 +185,16 @@ def main():
     parser.add_argument('github_key_path', help="Path to private key for the Github deployment bot")
     parser.add_argument('github_client_id', help="Client id for the deployment bot")
     parser.add_argument('github_installation_id', help="Installation id of the deployment bot")
+    parser.add_argument('-nr', '--no-deploy', dest='deploy', help="Don't deploy nor release (to Github). Only build artifacts locally, don't try to publish them.", action='store_true')
+    parser.add_argument('-nd', '--no-docker-build', dest='docker', help="Don't build docker container(s)", action='store_true')
     args = parser.parse_args()
 
-    build_and_release(args.tag, args.github_key_path, args.github_client_id, args.github_installation_id)
+    build_and_release(args, args.github_key_path, args.github_client_id, args.github_installation_id)
 
 
-def build_and_release(raw_tag: str, github_key: str, github_client_id: str, github_installation_id: str):
+def build_and_release(options: str, github_key: str, github_client_id: str, github_installation_id: str):
     logger.info('Starting build and release')
+    raw_tag = options.tag
     match = SEMVER_REGEX.match(raw_tag)
     if not match:
         logger.info(f"Invalid tag: '{raw_tag}' (it does not match the regex pattern: '{SEMVER_REGEX.pattern}')")
@@ -219,10 +223,11 @@ def build_and_release(raw_tag: str, github_key: str, github_client_id: str, gith
     parent_pom.set_version(tag)
     module_pom.set_version(version)
 
-    Maven.deploy_all(module_pom, *dependencies_pom)
-
-    Docker(module, version, is_external_release).build()
-    if is_external_release:
+    if not options.deploy:
+        Maven.deploy_all(module_pom, *dependencies_pom)
+    if not options.docker:
+        Docker(module, version, is_external_release).build()
+    if is_external_release and not options.deploy:
         GithubRelease(raw_tag, module, version, open(f'/workspace/{module}/target/{module}-{version}-jar-with-dependencies.jar', 'rb'), 
             open(github_key, "r").read(), github_client_id, github_installation_id).create()
     else:
