@@ -198,9 +198,10 @@ Note that non-uniform probe density across the genome may bias downstream copy n
 
 ### CDR3 Regions
 
-A fixed set of probes aimed at capturing all VDJ rearrangements in IG and TCR regions.
-These probes are included if you specify the `cdr3` argument.
-
+A fixed set of probes aimed at capturing all VDJ rearrangements in IG and TCR regions. These probes are included if you specify the `cdr3` argument.
+```
+NOTE - In the case of IG somatic hypermutation some CDR3 rearrangements may fail to enrich properly if the mutation rate is too high (~10% or higher)
+```
 Methodology:
 
 1. Consider all V and J IG/TCR genes.
@@ -211,7 +212,7 @@ Probe evaluation criteria:
 
 - `QS>=0.01`.
 
-The QS threshold is low because many of the V/J regions are similar. We have manually determined that this probe set is acceptable.
+The QS threshold is low because many of the V/J regions are similar. We have manually determined that this probe set is acceptable.  
 
 The list of IG/TCR genes is an embedded resource curated by Hartwig.
 
