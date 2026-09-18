@@ -10,6 +10,7 @@ import static java.lang.String.valueOf;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._Y;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.region.ChrBaseRegion.getChromosomeFieldIndex;
+import static com.hartwig.hmftools.common.region.ChrBaseRegion.loadChrBaseRegions;
 import static com.hartwig.hmftools.common.region.HighDepthRegion.FLD_DEPTH_AVG;
 import static com.hartwig.hmftools.common.region.HighDepthRegion.FLD_DEPTH_MAX;
 import static com.hartwig.hmftools.common.region.HighDepthRegion.FLD_DEPTH_MIN;
@@ -55,6 +56,7 @@ import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.mappability.ProbeQualityProfile;
 import com.hartwig.hmftools.common.mappability.RegionQuality;
+import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.region.HighDepthRegion;
 import com.hartwig.hmftools.common.region.TaggedRegion;
@@ -487,9 +489,19 @@ public class PanelRegionFinder
 
     private void applyFinalFilters()
     {
+        Map<String,List<BaseRegion>> excludedRegionsMap = Maps.newHashMap();
+
+        if(mConfig.ExcludedRegionsFile != null)
+        {
+            excludedRegionsMap.putAll(loadChrBaseRegions(mConfig.ExcludedRegionsFile));
+        }
+
         for(HumanChromosome chromosome : HumanChromosome.values())
         {
             String chrStr = mConfig.RefGenVersion.versionedChromosome(chromosome.toString());
+
+            List<BaseRegion> excludedRegions = excludedRegionsMap.containsKey(chrStr) ?
+                    excludedRegionsMap.get(chrStr) : Collections.emptyList();
 
             List<RegionData> regions = mChrRegions.get(chrStr);
 
@@ -508,6 +520,12 @@ public class PanelRegionFinder
                 if(!region.panelRelated())
                 {
                     if(mConfig.RequirePanelGene)
+                    {
+                        regions.remove(index);
+                        continue;
+                    }
+
+                    if(excludedRegions.stream().anyMatch(x -> x.overlaps(region)))
                     {
                         regions.remove(index);
                         continue;

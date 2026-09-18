@@ -22,6 +22,7 @@ public class PanelFinderConfig
     public final String MappabilityProfileFile;
     public final String GeneIdFile;
     public final String DriverGenePanel;
+    public final String ExcludedRegionsFile;
     public final RefGenomeVersion RefGenVersion;
     public final String OutputFile;
     public final String OutputBed;
@@ -47,6 +48,7 @@ public class PanelFinderConfig
     private static final String GENE_UPSTREAM_DISTANCE = "max_upstream_distance";
     private static final String GENE_DOWNSTREAM_DISTANCE = "max_downstream_distance";
     private static final String REQUIRE_PANEL_GENE = "req_panel_gene";
+    private static final String REGION_EXCLUSIONS = "region_exclusions";
 
     private static final String BACKBONE_MIN_INTERVAL = "backbone_min_interval";
     private static final String BACKBONE_MAX_LENGTH = "backbone_max_length";
@@ -67,6 +69,7 @@ public class PanelFinderConfig
         EnsemblDataPath = configBuilder.getValue(ENSEMBL_DATA_DIR);
         MappabilityProfileFile = configBuilder.getValue(CFG_PROBE_QUALITY_FILE);
         DriverGenePanel = configBuilder.getValue(DriverGenePanelConfig.DRIVER_GENE_PANEL);
+        ExcludedRegionsFile = configBuilder.getValue(REGION_EXCLUSIONS);
 
         HighDepthTrimCount = configBuilder.getInteger(HIGH_DEPTH_TRIM_COUNT);
         MinMappability = configBuilder.getDecimal(MIN_MAPPABILITY);
@@ -99,6 +102,7 @@ public class PanelFinderConfig
         configBuilder.addInteger(BACKBONE_MIN_INTERVAL, "Backbone min interval from next selected region, zero is not applied", 0);
         configBuilder.addInteger(BACKBONE_MAX_LENGTH, "Backbone max length, zero is not applied", 0);
         configBuilder.addFlag(REQUIRE_PANEL_GENE, "Restrict new regions to those overlapping a panel gene");
+        configBuilder.addPath(REGION_EXCLUSIONS, false, "Regions to exlcude if have any overlap with input regions");
 
         addLoggingOptions(configBuilder);
     }
