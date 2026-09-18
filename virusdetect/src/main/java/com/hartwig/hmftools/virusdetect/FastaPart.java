@@ -13,9 +13,10 @@ import org.apache.logging.log4j.Logger;
 
 import htsjdk.samtools.SAMRecord;
 
-// One extraction worker's private FASTA shard, written lock-free by its owning thread and later concatenated
-// byte-wise into the candidate FASTA. Not thread-safe.
-class FastaPart
+// One candidate read extraction worker's private FASTA shard.
+// Written lock-free by its owning thread and later concatenated into the candidate FASTA.
+// Not thread-safe.
+public class FastaPart
 {
     private final Path mPath;
     private final BufferedWriter mWriter;
@@ -43,15 +44,15 @@ class FastaPart
         mWriter = writer;
     }
 
-    Path path() { return mPath; }
+    public Path path() { return mPath; }
 
-    int readCount() { return mReadCount; }
+    public int readCount() { return mReadCount; }
 
-    void add(SAMRecord record)
+    public void add(SAMRecord record)
     {
         try
         {
-            // Mates differ only by the suffix: the FASTA is single-ended, so a pair's two reads must stay distinguishable.
+            // The FASTA is single-ended, so a pair's two reads must stay distinguishable.
             String suffix = record.getReadPairedFlag() ? (record.getFirstOfPairFlag() ? "/1" : "/2") : "";
             mWriter.write(">" + record.getReadName() + suffix);
             mWriter.newLine();
@@ -65,7 +66,7 @@ class FastaPart
         ++mReadCount;
     }
 
-    void close() throws IOException
+    public void close() throws IOException
     {
         if(!mClosed)
         {
@@ -76,7 +77,7 @@ class FastaPart
 
     // Releases the shard and removes its file, whether or not it was consumed. Never throws, so it is safe while
     // unwinding a failed extraction.
-    void discard()
+    public void discard()
     {
         try
         {
@@ -85,7 +86,7 @@ class FastaPart
         }
         catch(IOException e)
         {
-            LOGGER.warn("failed to discard candidate FASTA part {}: {}", mPath, e.getMessage());
+            LOGGER.warn("Failed to discard candidate FASTA part {}: {}", mPath, e.getMessage());
         }
     }
 }

@@ -85,7 +85,7 @@ public class CandidateReadExtractor
                 throw new RuntimeException("Candidate read extraction failed");
             }
 
-            int candidateCount = joinFastaParts(workers, outputFastaFile);
+            int candidateCount = joinFastaParts(workers.stream().map(Worker::part).toList(), outputFastaFile);
             LOGGER.info("Extracted {} candidate reads to {}", candidateCount, outputFastaFile);
             return candidateCount;
         }
@@ -95,8 +95,6 @@ public class CandidateReadExtractor
         }
     }
 
-    // The unmapped block is one long scan, so it leads the queue and runs alongside the region scans rather than
-    // tacking its full duration onto the end.
     private static Queue<ChrBaseRegion> scanRegions(SamReaderFactory readerFactory, String tumorBamFile)
     {
         try(SamReader reader = readerFactory.open(new File(tumorBamFile)))
@@ -107,6 +105,7 @@ public class CandidateReadExtractor
             }
 
             Queue<ChrBaseRegion> regions = new ConcurrentLinkedQueue<>();
+            // The unmapped block is not sharded, and it can be quite large, so run it first to avoid a long tail.
             regions.add(UNMAPPED_READS);
             for(SAMSequenceRecord sequence : reader.getFileHeader().getSequenceDictionary().getSequences())
             {
@@ -120,17 +119,17 @@ public class CandidateReadExtractor
         }
     }
 
-    private static int joinFastaParts(List<Worker> workers, String outputFastaFile)
+    private static int joinFastaParts(List<FastaPart> parts, String outputFastaFile)
     {
         long startTimeMs = System.currentTimeMillis();
         int candidateCount = 0;
         try(OutputStream out = new BufferedOutputStream(new FileOutputStream(outputFastaFile)))
         {
-            for(Worker worker : workers)
+            for(FastaPart part : parts)
             {
-                worker.mPart.close();
-                Files.copy(worker.mPart.path(), out);
-                candidateCount += worker.mPart.readCount();
+                part.close();
+                Files.copy(part.path(), out);
+                candidateCount += part.readCount();
             }
         }
         catch(IOException e)
@@ -138,7 +137,7 @@ public class CandidateReadExtractor
             throw new RuntimeException("Failed to join candidate FASTA parts", e);
         }
 
-        LOGGER.debug("Joined {} FASTA parts in {}s", workers.size(), format("%.1f", secondsSinceNow(startTimeMs)));
+        LOGGER.debug("Joined {} FASTA parts in {}s", parts.size(), format("%.1f", secondsSinceNow(startTimeMs)));
         return candidateCount;
     }
 
@@ -159,6 +158,8 @@ public class CandidateReadExtractor
             mSlicer.setKeepUnmapped();
         }
 
+        private FastaPart part() { return mPart; }
+
         @Override
         public void run()
         {
@@ -170,7 +171,7 @@ public class CandidateReadExtractor
                 }
                 catch(NoSuchElementException e)
                 {
-                    return;
+                    break;
                 }
             }
         }
@@ -218,7 +219,7 @@ public class CandidateReadExtractor
             }
             catch(IOException e)
             {
-                LOGGER.warn("failed to close tumor BAM: {}", e.getMessage());
+                LOGGER.warn("Failed to close tumor BAM: {}", e.getMessage());
             }
         }
     }
