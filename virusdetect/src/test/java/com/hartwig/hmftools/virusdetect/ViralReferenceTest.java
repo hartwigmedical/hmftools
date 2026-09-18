@@ -43,21 +43,22 @@ public class ViralReferenceTest
     @Test
     public void testJoinsContigsInFastaOrderWithInfo()
     {
-        List<ViralContig> contigs = ViralReference.join(dictionary("contigA", "contigB", "contigC"), INFO);
+        List<ViralContig> contigs = ViralReference.joinFastaAndInfo(dictionary("contigA", "contigB", "contigC"), INFO);
         assertEquals(List.of(CONTIG_A, CONTIG_B, CONTIG_C), contigs);
     }
 
     @Test
-    public void testJoinThrowsWhenContigHasNoInfoRow()
+    public void testJoinFastaAndInfoThrowsWhenContigHasNoInfoRow()
     {
         Map<String, InfoRow> infoMissingC = Map.of("contigA", INFO_A, "contigB", INFO_B);
-        assertThrows(UserInputError.class, () -> ViralReference.join(dictionary("contigA", "contigB", "contigC"), infoMissingC));
+        assertThrows(
+                UserInputError.class, () -> ViralReference.joinFastaAndInfo(dictionary("contigA", "contigB", "contigC"), infoMissingC));
     }
 
     @Test
-    public void testJoinThrowsWhenInfoRowHasNoContig()
+    public void testJoinFastaAndInfoThrowsWhenInfoRowHasNoContig()
     {
-        assertThrows(UserInputError.class, () -> ViralReference.join(dictionary("contigA", "contigB"), INFO));
+        assertThrows(UserInputError.class, () -> ViralReference.joinFastaAndInfo(dictionary("contigA", "contigB"), INFO));
     }
 
     @Test
@@ -67,14 +68,14 @@ public class ViralReferenceTest
     }
 
     @Test
-    public void testLoadInfoThrowsOnDuplicateContig() throws IOException
+    public void testLoadInfoThrowsOnDuplicateContig()
     {
         String duplicate = VALID_INFO_TSV + "contigA\tVirus Alpha\tGroup Alpha\n";
         assertThrows(UserInputError.class, () -> ViralReference.loadInfo(writeTsv(duplicate)));
     }
 
     @Test
-    public void testLoadInfoThrowsOnMissingColumn() throws IOException
+    public void testLoadInfoThrowsOnMissingColumn()
     {
         String noGroup = """
                 ref_contig\tvirus_name

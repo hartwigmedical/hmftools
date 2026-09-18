@@ -10,7 +10,7 @@ public record ContigStats(
         int multiAlignReads,
         // Alignments to this contig per read (>= 1)
         SummaryStats alignPerRead,
-        // Alignments dropped for clipping over the contig end (circular-genome artifact)
+        // Alignments dropped for clipping over the contig start/end (circular-genome artifact)
         int originClippedReads,
         // Contig positions with at least one aligned base
         int coveredBases,

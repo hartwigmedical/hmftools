@@ -26,7 +26,7 @@ public class CandidateReadFilter
 
     public boolean isCandidate(SAMRecord record)
     {
-        // Mapped to a viral decoy contig, or an unmapped read placed on one by its mapped mate: either way the fragment
+        // Mapped to a viral decoy contig, or an unmapped read placed on one by its mapped mate. Either way the fragment
         // touches a virus, so keep it. Checked before the redux-unmapped exclusion, since a redux-unmapped read sitting
         // on a decoy is still viral evidence.
         if(isViralDecoyContig(record.getReferenceName()))
@@ -44,7 +44,7 @@ public class CandidateReadFilter
         {
             return !record.hasAttribute(UNMAP_ATTRIBUTE);
         }
-        // The unmapped mate may be viral; this read anchors it.
+        // The unmapped mate may be viral, so take this read for integration support.
         if(mateUnmapped(record))
         {
             return true;
@@ -58,8 +58,6 @@ public class CandidateReadFilter
         return false;
     }
 
-    // A supplementary alignment places the clipped bases elsewhere in the host; if any lands on a non-viral contig the
-    // clip is host sequence, not a viral junction. No supplementary means the clip may mark one.
     private boolean clippedBasesAreCandidate(SAMRecord record)
     {
         List<SupplementaryReadData> supplementaries = SupplementaryReadData.extractAlignments(record);
@@ -69,6 +67,8 @@ public class CandidateReadFilter
         }
         else
         {
+            // We assume that if ANY supplementary is possibly host genome, then it's not viral, even if another supplementary maps to a
+            // viral contig.
             return supplementaries.stream().allMatch(supplementary -> isViralDecoyContig(supplementary.Chromosome));
         }
     }

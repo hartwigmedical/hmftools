@@ -18,8 +18,7 @@ import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
-// The curated viral reference: contig names and lengths (from the FASTA sequence dictionary) joined
-// to each contig's virus name and oncology group (from the info TSV).
+// Set of viral contigs loaded from our curated resource.
 public class ViralReference
 {
     private final List<ViralContig> mContigs;
@@ -45,7 +44,7 @@ public class ViralReference
         ViralContig contig = mContigsByName.get(name);
         if(contig == null)
         {
-            throw new IllegalArgumentException("unknown viral contig: " + name);
+            throw new IllegalArgumentException("Unknown viral contig: " + name);
         }
         return contig;
     }
@@ -60,33 +59,33 @@ public class ViralReference
     {
         Map<String, InfoRow> info = loadInfo(infoTsvFile);
         SAMSequenceDictionary dictionary = loadSequenceDictionary(fastaFile);
-        List<ViralContig> contigs = join(dictionary, info);
-        LOGGER.info("loaded viral reference: {} contigs", contigs.size());
+        List<ViralContig> contigs = joinFastaAndInfo(dictionary, info);
+        LOGGER.info("Loaded viral reference: {} contigs", contigs.size());
         return new ViralReference(contigs, dictionary);
     }
 
-    // Joins FASTA contigs (in FASTA order) to their info rows, enforcing the 1:1 integrity rule.
-    static List<ViralContig> join(SAMSequenceDictionary dictionary, Map<String, InfoRow> info)
+    // Joins FASTA contigs to their info rows. Result in FASTA order.
+    static List<ViralContig> joinFastaAndInfo(SAMSequenceDictionary dictionary, Map<String, InfoRow> info)
     {
-        Map<String, InfoRow> remaining = new LinkedHashMap<>(info);
-        List<ViralContig> contigs = new ArrayList<>();
+        Map<String, InfoRow> remainingInfo = new LinkedHashMap<>(info);
+        List<ViralContig> result = new ArrayList<>();
         for(SAMSequenceRecord sequence : dictionary.getSequences())
         {
             String contig = sequence.getSequenceName();
-            InfoRow row = remaining.remove(contig);
+            InfoRow row = remainingInfo.remove(contig);
             if(row == null)
             {
-                throw new UserInputError(String.format("viral reference contig has no info row: %s", contig));
+                throw new UserInputError(String.format("Viral reference contig has no info row: %s", contig));
             }
-            contigs.add(new ViralContig(contig, sequence.getSequenceLength(), row.virusName(), row.oncologyGroup()));
+            result.add(new ViralContig(contig, sequence.getSequenceLength(), row.virusName(), row.oncologyGroup()));
         }
 
-        if(!remaining.isEmpty())
+        if(!remainingInfo.isEmpty())
         {
-            throw new UserInputError(String.format("viral reference info rows have no FASTA contig: %s", remaining.keySet()));
+            throw new UserInputError(String.format("Viral reference info rows have no FASTA contig: %s", remainingInfo.keySet()));
         }
 
-        return contigs;
+        return result;
     }
 
     static Map<String, InfoRow> loadInfo(String infoTsvFile)
@@ -95,21 +94,21 @@ public class ViralReference
         try(DelimFileReader reader = new DelimFileReader(infoTsvFile))
         {
             List<String> columns = reader.getColumnNames();
-            for(Column column : Column.values())
+            for(InfoColumn column : InfoColumn.values())
             {
                 if(!columns.contains(column.name()))
                 {
-                    throw new UserInputError(String.format("viral reference info missing column: %s", column.name()));
+                    throw new UserInputError(String.format("Viral reference info missing column: %s", column.name()));
                 }
             }
 
             for(DelimFileReader.Row row : reader)
             {
-                String contig = row.get(Column.ref_contig);
-                InfoRow previous = info.put(contig, new InfoRow(row.get(Column.virus_name), row.get(Column.oncology_group)));
+                String contig = row.get(InfoColumn.ref_contig);
+                InfoRow previous = info.put(contig, new InfoRow(row.get(InfoColumn.virus_name), row.get(InfoColumn.oncology_group)));
                 if(previous != null)
                 {
-                    throw new UserInputError(String.format("viral reference info has duplicate contig: %s", contig));
+                    throw new UserInputError(String.format("Viral reference info has duplicate contig: %s", contig));
                 }
             }
         }
@@ -123,17 +122,17 @@ public class ViralReference
             SAMSequenceDictionary dictionary = fasta.getSequenceDictionary();
             if(dictionary == null)
             {
-                throw new UserInputError("viral reference FASTA has no sequence dictionary (.dict): " + fastaFile);
+                throw new UserInputError("Viral reference FASTA has no sequence dictionary (.dict): " + fastaFile);
             }
             return dictionary;
         }
         catch(IOException e)
         {
-            throw new RuntimeException("failed to read viral reference FASTA index", e);
+            throw new RuntimeException("Failed to read viral reference FASTA index", e);
         }
     }
 
-    private enum Column
+    private enum InfoColumn
     {
         ref_contig,
         virus_name,

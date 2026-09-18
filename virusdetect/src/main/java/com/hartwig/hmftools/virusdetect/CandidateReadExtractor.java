@@ -35,9 +35,7 @@ import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.ValidationStringency;
 
-// Scans the tumor BAM/CRAM once and writes candidate viral reads single-end to a FASTA, each read once, with
-// FASTA ids carrying the mate number so the two reads of a pair stay distinct. Multiple threads shard the scan
-// by genome partition (plus the unmapped tail), which requires an indexed input.
+// Extracts potentially viral reads from the tumor BAM and writes them to single-ended FASTA ready for alignment.
 public class CandidateReadExtractor
 {
     @Nullable
@@ -71,7 +69,7 @@ public class CandidateReadExtractor
                 ? extractParallel(factory, tumorBamFile, outputFastaFile)
                 : extractSequential(factory, tumorBamFile, outputFastaFile);
 
-        LOGGER.info("extracted {} candidate reads to {}", candidateCount, outputFastaFile);
+        LOGGER.info("Extracted {} candidate reads to {}", candidateCount, outputFastaFile);
         return candidateCount;
     }
 
@@ -85,33 +83,34 @@ public class CandidateReadExtractor
             {
                 if(isCandidate(record))
                 {
-                    writeFasta(writer, record);
+                    writeFastaRecord(writer, record);
                     ++candidateCount;
                 }
             }
         }
         catch(IOException e)
         {
-            throw new RuntimeException("failed to extract candidate reads", e);
+            throw new RuntimeException("Failed to extract candidate reads", e);
         }
 
         return candidateCount;
     }
 
-    private int extractParallel(SamReaderFactory factory, String tumorBamFile, String outputFastaFile)
+    private int extractParallel(SamReaderFactory readerFactory, String tumorBamFile, String outputFastaFile)
     {
+        // TODO: separate sequence dict read into a function. could even include the partition generation too
         SAMSequenceDictionary dictionary;
-        try(SamReader reader = factory.open(new File(tumorBamFile)))
+        try(SamReader reader = readerFactory.open(new File(tumorBamFile)))
         {
             if(!reader.hasIndex())
             {
-                throw new UserInputError("multi-threaded extraction requires an indexed BAM/CRAM: " + tumorBamFile);
+                throw new UserInputError("Multi-threaded extraction requires an indexed BAM/CRAM: " + tumorBamFile);
             }
             dictionary = reader.getFileHeader().getSequenceDictionary();
         }
         catch(IOException e)
         {
-            throw new RuntimeException("failed to open tumor BAM", e);
+            throw new RuntimeException("Failed to open tumor BAM", e);
         }
 
         List<ChrBaseRegion> partitions = new ArrayList<>();
@@ -129,13 +128,13 @@ public class CandidateReadExtractor
         List<FastaPart> parts = Collections.synchronizedList(new ArrayList<>());
         AtomicInteger nextPartIndex = new AtomicInteger();
 
-        ThreadLocal<SamReader> threadReader = ThreadLocal.withInitial(() ->
+        ThreadLocal<SamReader> threadSamReader = ThreadLocal.withInitial(() ->
         {
-            SamReader reader = factory.open(new File(tumorBamFile));
+            SamReader reader = readerFactory.open(new File(tumorBamFile));
             readers.add(reader);
             return reader;
         });
-        ThreadLocal<FastaPart> threadPart = ThreadLocal.withInitial(() ->
+        ThreadLocal<FastaPart> threadFastaPart = ThreadLocal.withInitial(() ->
         {
             FastaPart part = FastaPart.create(outputFastaFile, nextPartIndex.getAndIncrement());
             parts.add(part);
@@ -145,13 +144,12 @@ public class CandidateReadExtractor
         ExecutorService executor = Executors.newFixedThreadPool(mThreads);
         List<CompletableFuture<Void>> futures = new ArrayList<>();
 
-        // The unmapped reads sit in one unshardable block scanned by a single long-running task. Submitted first so it
+        // The unmapped reads sit in one block scanned by a single long-running task. Submitted first so it
         // runs alongside the region tasks from the start, rather than tacking its full duration onto the end.
-        futures.add(CompletableFuture.runAsync(() -> sliceUnmapped(slicer, threadReader, threadPart), executor));
-
+        futures.add(CompletableFuture.runAsync(() -> readAndProcessUnmapped(slicer, threadSamReader, threadFastaPart), executor));
         for(ChrBaseRegion region : partitions)
         {
-            futures.add(CompletableFuture.runAsync(() -> sliceRegion(slicer, threadReader, threadPart, region), executor));
+            futures.add(CompletableFuture.runAsync(() -> readAndProcessRegion(slicer, threadSamReader, threadFastaPart, region), executor));
         }
 
         try
@@ -160,46 +158,49 @@ public class CandidateReadExtractor
         }
         catch(InterruptedException | ExecutionException e)
         {
-            throw new RuntimeException("candidate extraction failed", e);
+            throw new RuntimeException("Candidate extraction failed", e);
         }
         finally
         {
             executor.shutdown();
         }
 
+        // FIXME: needs to be closed also if the above try/catch fails?
         closeReaders(readers);
-        return joinParts(parts, outputFastaFile);
+        return concatFastaParts(parts, outputFastaFile);
     }
 
-    private void sliceRegion(BamSlicer slicer, ThreadLocal<SamReader> threadReader, ThreadLocal<FastaPart> threadPart, ChrBaseRegion region)
+    private void readAndProcessRegion(BamSlicer slicer, ThreadLocal<SamReader> threadReader, ThreadLocal<FastaPart> threadPart,
+            ChrBaseRegion region)
+    {
+        long startTimeMs = System.currentTimeMillis();
+        FastaPart fastaPart = threadPart.get();
+        int startCount = fastaPart.readCount();
+
+        slicer.slice(threadReader.get(), region, record -> processRegionRecord(record, region, fastaPart));
+
+        LOGGER.debug("region({}) {} candidates in {}s", region, fastaPart.readCount() - startCount, secondsSince(startTimeMs));
+    }
+
+    private void readAndProcessUnmapped(BamSlicer slicer, ThreadLocal<SamReader> threadReader, ThreadLocal<FastaPart> threadPart)
     {
         long startTimeMs = System.currentTimeMillis();
         FastaPart part = threadPart.get();
-        int startCount = part.count();
+        int startCount = part.readCount();
 
-        slicer.slice(threadReader.get(), region, record -> consumeRegionRecord(record, region, part));
+        slicer.queryUnmapped(
+                threadReader.get(), record ->
+                {
+                    if(isCandidate(record))
+                    {
+                        part.add(record);
+                    }
+                });
 
-        LOGGER.debug("region({}) {} candidates in {}s", region, part.count() - startCount, secondsSince(startTimeMs));
+        LOGGER.debug("Unmapped reads {} candidates in {}s", part.readCount() - startCount, secondsSince(startTimeMs));
     }
 
-    private void sliceUnmapped(BamSlicer slicer, ThreadLocal<SamReader> threadReader, ThreadLocal<FastaPart> threadPart)
-    {
-        long startTimeMs = System.currentTimeMillis();
-        FastaPart part = threadPart.get();
-        int startCount = part.count();
-
-        slicer.queryUnmapped(threadReader.get(), record ->
-        {
-            if(isCandidate(record))
-            {
-                part.add(record);
-            }
-        });
-
-        LOGGER.debug("unmapped reads {} candidates in {}s", part.count() - startCount, secondsSince(startTimeMs));
-    }
-
-    private void consumeRegionRecord(SAMRecord record, ChrBaseRegion region, FastaPart part)
+    private void processRegionRecord(SAMRecord record, ChrBaseRegion region, FastaPart part)
     {
         // A mapped read is owned by the partition containing its start, so copies returned by an overlapping neighbour
         // partition are ignored.
@@ -209,7 +210,94 @@ public class CandidateReadExtractor
         }
     }
 
-    private static int joinParts(List<FastaPart> parts, String outputFastaFile)
+    private boolean isCandidate(SAMRecord record)
+    {
+        return !isExcluded(record) && mFilter.isCandidate(record);
+    }
+
+    private static boolean isExcluded(SAMRecord record)
+    {
+        return record.getDuplicateReadFlag() || record.isSecondaryOrSupplementary();
+    }
+
+    private static void writeFastaRecord(BufferedWriter writer, SAMRecord record) throws IOException
+    {
+        writer.write(">" + makeFastaLabel(record));
+        writer.newLine();
+        writer.write(record.getReadString());
+        writer.newLine();
+    }
+
+    private static String makeFastaLabel(SAMRecord record)
+    {
+        if(record.getReadPairedFlag())
+        {
+            return record.getReadName() + (record.getFirstOfPairFlag() ? "/1" : "/2");
+        }
+        else
+        {
+            return record.getReadName();
+        }
+    }
+
+    // TODO: put in general utils class
+    private static String secondsSince(long startTimeMs)
+    {
+        return String.format("%.1f", (System.currentTimeMillis() - startTimeMs) / 1000.0);
+    }
+
+    // TODO: worth putting in a separate file for readability?
+    // A worker's private FASTA shard, written lock-free by its owning thread and concatenated byte-wise into the
+    // output. Not thread-safe.
+    private static class FastaPart
+    {
+        private final Path mPath;
+        private final BufferedWriter mWriter;
+        private int mReadCount;
+
+        static FastaPart create(String outputFastaFile, int index)
+        {
+            String path = outputFastaFile + ".part" + index;
+            try
+            {
+                return new FastaPart(path, createBufferedWriter(path));
+            }
+            catch(IOException e)
+            {
+                throw new RuntimeException("Failed to create candidate FASTA part", e);
+            }
+        }
+
+        private FastaPart(String path, BufferedWriter writer)
+        {
+            mPath = new File(path).toPath();
+            mWriter = writer;
+        }
+
+        private void add(SAMRecord record)
+        {
+            try
+            {
+                writeFastaRecord(mWriter, record);
+            }
+            catch(IOException e)
+            {
+                throw new RuntimeException("Failed to write candidate reads", e);
+            }
+            ++mReadCount;
+        }
+
+        private Path path() { return mPath; }
+
+        private int readCount() { return mReadCount; }
+
+        private void close() throws IOException
+        {
+            mWriter.close();
+        }
+    }
+
+    private static int concatFastaParts(List<FastaPart> parts, String outputFastaFile)
     {
         long startTimeMs = System.currentTimeMillis();
         int candidateCount = 0;
@@ -220,15 +308,15 @@ public class CandidateReadExtractor
                 part.close();
                 Files.copy(part.path(), out);
                 Files.delete(part.path());
-                candidateCount += part.count();
+                candidateCount += part.readCount();
             }
         }
         catch(IOException e)
         {
-            throw new RuntimeException("failed to join candidate FASTA parts", e);
+            throw new RuntimeException("Failed to join candidate FASTA parts", e);
         }
 
-        LOGGER.debug("joined {} FASTA parts in {}s", parts.size(), secondsSince(startTimeMs));
+        LOGGER.debug("Joined {} FASTA parts in {}s", parts.size(), secondsSince(startTimeMs));
         return candidateCount;
     }
 
@@ -245,87 +333,5 @@ public class CandidateReadExtractor
                 throw new RuntimeException("failed to close tumor BAM", e);
             }
         }
-    }
-
-    private boolean isCandidate(SAMRecord record)
-    {
-        return !isExcluded(record) && mFilter.isCandidate(record);
-    }
-
-    private static boolean isExcluded(SAMRecord record)
-    {
-        return record.getDuplicateReadFlag() || record.isSecondaryOrSupplementary();
-    }
-
-    private static void writeFasta(BufferedWriter writer, SAMRecord record) throws IOException
-    {
-        writer.write(">" + fastaId(record));
-        writer.newLine();
-        writer.write(record.getReadString());
-        writer.newLine();
-    }
-
-    private static String fastaId(SAMRecord record)
-    {
-        if(record.getReadPairedFlag())
-        {
-            return record.getReadName() + (record.getFirstOfPairFlag() ? "/1" : "/2");
-        }
-        return record.getReadName();
-    }
-
-    private static String secondsSince(long startTimeMs)
-    {
-        return String.format("%.1f", (System.currentTimeMillis() - startTimeMs) / 1000.0);
-    }
-
-    // A worker's private FASTA shard, written lock-free by its owning thread and concatenated byte-wise into the
-    // output. Not thread-safe.
-    private static class FastaPart
-    {
-        private final Path mPath;
-        private final BufferedWriter mWriter;
-        private int mCount;
-
-        static FastaPart create(String outputFastaFile, int index)
-        {
-            String path = outputFastaFile + ".part" + index;
-            try
-            {
-                return new FastaPart(path, createBufferedWriter(path));
-            }
-            catch(IOException e)
-            {
-                throw new RuntimeException("failed to create candidate FASTA part", e);
-            }
-        }
-
-        private FastaPart(String path, BufferedWriter writer)
-        {
-            mPath = new File(path).toPath();
-            mWriter = writer;
-        }
-
-        void add(SAMRecord record)
-        {
-            try
-            {
-                writeFasta(mWriter, record);
-            }
-            catch(IOException e)
-            {
-                throw new RuntimeException("failed to write candidate reads", e);
-            }
-            ++mCount;
-        }
-
-        void close() throws IOException
-        {
-            mWriter.close();
-        }
-
-        Path path() { return mPath; }
-
-        int count() { return mCount; }
     }
 }
