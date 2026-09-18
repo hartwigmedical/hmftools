@@ -32,7 +32,7 @@ public class MultiMapReadTest
     @Test
     public void testUniqueReadHasSingleLocus()
     {
-        Read read = Read.from(createRead(null));
+        Read read = new Read(createRead(null));
         assertEquals(1, read.numLoci());
         assertNull(read.altLoci());
     }
@@ -41,7 +41,7 @@ public class MultiMapReadTest
     public void testXaParsedIntoAltLoci()
     {
         // standard lifted bwa XA: chr,+/-pos,CIGAR,NM; - the position sign encodes strand and must be stripped
-        Read read = Read.from(createRead("2,+5000,20M,1;3,-8000,20M,2;"));
+        Read read = new Read(createRead("2,+5000,20M,1;3,-8000,20M,2;"));
 
         assertEquals(3, read.numLoci());
         assertEquals(2, read.altLoci().size());
@@ -61,7 +61,7 @@ public class MultiMapReadTest
     public void testSplicedAltSpanFromCigar()
     {
         // an alt whose CIGAR has an N gap is flagged spliced and its reference span includes the skipped intron
-        Read read = Read.from(createRead("5,+7000,10M100N10M,0;"));
+        Read read = new Read(createRead("5,+7000,10M100N10M,0;"));
 
         assertEquals(2, read.numLoci());
 
@@ -75,7 +75,7 @@ public class MultiMapReadTest
     public void testMalformedXaEntriesTolerated()
     {
         // a malformed and an empty entry are skipped, leaving the two valid alternate loci
-        Read read = Read.from(createRead("2,+5000,20M,1;garbage;;4,+9000,20M,0;"));
+        Read read = new Read(createRead("2,+5000,20M,1;garbage;;4,+9000,20M,0;"));
 
         assertEquals(3, read.numLoci());
         assertEquals(2, read.altLoci().size());

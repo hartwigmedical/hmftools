@@ -485,17 +485,17 @@ public class ResultsWriter
             StringJoiner sj = new StringJoiner(TSV_DELIM);
             sj.add(String.valueOf(readGroup.size()));
             sj.add(String.valueOf(readGroup.isComplete()));
-            sj.add(primaryRead.Id);
-            sj.add(primaryRead.Chromosome);
-            sj.add(String.valueOf(primaryRead.PosStart));
-            sj.add(String.valueOf(primaryRead.PosEnd));
+            sj.add(primaryRead.id());
+            sj.add(primaryRead.chromosome());
+            sj.add(String.valueOf(primaryRead.alignmentStart()));
+            sj.add(String.valueOf(primaryRead.alignmentEnd()));
             sj.add(primaryRead.cigarStr());
             sj.add(String.valueOf(primaryRead.flags()));
             sj.add(String.valueOf(primaryRead.mapQuality()));
             sj.add(String.valueOf(primaryRead.isSupplementaryAlignment()));
             sj.add(String.valueOf(primaryRead.isDuplicate()));
             sj.add(primaryRead.mateChromosome());
-            sj.add(String.valueOf(primaryRead.mateStartPosition()));
+            sj.add(String.valueOf(primaryRead.mateAlignmentStart()));
 
             sj.add(suppChromosome);
             sj.add(String.valueOf(suppPosition));
@@ -513,7 +513,7 @@ public class ResultsWriter
             sj.add(geneId);
 
             int basePosition = maxClippedSide.Length > 0 ?
-                    (maxClippedSide.isLeft() ? primaryRead.PosStart : primaryRead.PosEnd) : primaryRead.PosStart;
+                    (maxClippedSide.isLeft() ? primaryRead.alignmentStart() : primaryRead.alignmentEnd()) : primaryRead.alignmentStart();
 
             sj.add(String.valueOf(baseDepth.depthAtBase(basePosition)));
 

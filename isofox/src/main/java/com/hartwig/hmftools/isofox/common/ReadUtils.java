@@ -13,7 +13,7 @@ public final class ReadUtils
             return;
 
         // no overlap
-        if(!positionsOverlap(read1.PosStart, read1.PosEnd, read2.PosStart, read2.PosEnd))
+        if(!positionsOverlap(read1.alignmentStart(), read1.alignmentEnd(), read2.alignmentStart(), read2.alignmentEnd()))
             return;
 
         // determine the soft-clip bases to trim from each end
@@ -38,8 +38,8 @@ public final class ReadUtils
         if(readRefPositionStart1 == 0)
             return;
 
-        int readIndexStart1 = getReadIndexFromPosition(read1.PosStart, read1.cigarElements(), readRefPositionStart1);
-        int readIndexStart2 = getReadIndexFromPosition(read2.PosStart, read2.cigarElements(), readRefPositionStart2);
+        int readIndexStart1 = getReadIndexFromPosition(read1.alignmentStart(), read1.cigarElements(), readRefPositionStart1);
+        int readIndexStart2 = getReadIndexFromPosition(read2.alignmentStart(), read2.cigarElements(), readRefPositionStart2);
         int readUpperBaseLength1 = read1.baseLength() - readIndexStart1 - 1;
         int readUpperBaseLength2 = read2.baseLength() - readIndexStart2 - 1;
 

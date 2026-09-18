@@ -227,12 +227,12 @@ public class ChimericReadTracker
         addIntronicTranscriptData(read2);
 
         // add the pair when it's clear there aren't others with the same ID in the map
-        if(mConfig.RunValidations && mChimericReadMap.containsKey(read1.Id))
+        if(mConfig.RunValidations && mChimericReadMap.containsKey(read1.id()))
         {
             // shouldn't occur
-            ISF_LOGGER.error("overriding chimeric read({})", read1.Id);
+            ISF_LOGGER.error("overriding chimeric read({})", read1.id());
 
-            ChimericReadGroup existingGroup = mChimericReadMap.get(read1.Id);
+            ChimericReadGroup existingGroup = mChimericReadMap.get(read1.id());
 
             for(Read read : existingGroup.reads())
             {
@@ -256,7 +256,7 @@ public class ChimericReadTracker
 
             if(!mConfig.Fusions.WriteChimericOnly)
             {
-                mChimericReadMap.put(read1.Id, readGroup);
+                mChimericReadMap.put(read1.id(), readGroup);
             }
         }
     }
@@ -272,9 +272,9 @@ public class ChimericReadTracker
         if(inImmuneRegion(read))
             return;
 
-        ChimericReadGroup chimericReads = mChimericReadMap.get(read.Id);
+        ChimericReadGroup chimericReads = mChimericReadMap.get(read.id());
         if(chimericReads == null)
-            mChimericReadMap.put(read.Id, new ChimericReadGroup(read));
+            mChimericReadMap.put(read.id(), new ChimericReadGroup(read));
         else
             chimericReads.addRead(read);
     }
@@ -293,9 +293,9 @@ public class ChimericReadTracker
             baseDepth.processRead(read.getMappedRegionCoords());
             addIntronicTranscriptData(read);
 
-            ChimericReadGroup chimericReads = mChimericReadMap.get(read.Id);
+            ChimericReadGroup chimericReads = mChimericReadMap.get(read.id());
             if(chimericReads == null)
-                mChimericReadMap.put(read.Id, new ChimericReadGroup(read));
+                mChimericReadMap.put(read.id(), new ChimericReadGroup(read));
             else
                 chimericReads.addRead(read);
         }
@@ -307,7 +307,7 @@ public class ChimericReadTracker
         {
             // skip reads if all will be processed later or have been already
             List<Read> reads = readGroup.reads();
-            String readId = reads.get(0).Id;
+            String readId = reads.get(0).id();
 
             int readCount = reads.size();
             boolean readGroupComplete = readGroup.isComplete();
@@ -402,10 +402,11 @@ public class ChimericReadTracker
     {
         // only skip fragments in immune regions if both junction positions are in one
         boolean inImmuneRegion = mConfig.Filters.ImmuneGeneRegions.stream()
-                .anyMatch(x -> x.Chromosome.equals(read.Chromosome) && positionsOverlap(read.PosStart, read.PosEnd, x.start(), x.end()));
+                .anyMatch(x -> x.Chromosome.equals(read.chromosome())
+                        && positionsOverlap(read.alignmentStart(), read.alignmentEnd(), x.start(), x.end()));
 
         if(inImmuneRegion
-        && mConfig.Filters.ImmuneGeneRegions.stream().anyMatch(x -> x.containsPosition(read.mateChromosome(), read.mateStartPosition())))
+        && mConfig.Filters.ImmuneGeneRegions.stream().anyMatch(x -> x.containsPosition(read.mateChromosome(), read.mateAlignmentStart())))
         {
             return true;
         }
@@ -489,20 +490,20 @@ public class ChimericReadTracker
         // any set of entirely post-gene read(s) will be skipped and then picked up by the next gene collection's processing
         // otherwise record that they were processed to avoid double-processing them in the next gene collection
         List<Read> postGeneReads = !mGeneCollection.isEndOfChromosome() ? reads.stream()
-                .filter(x -> x.PosStart > mGeneCollection.regionBounds()[SE_END])
+                .filter(x -> x.alignmentStart() > mGeneCollection.regionBounds()[SE_END])
                 .collect(Collectors.toList()) : Lists.newArrayList();
 
         if(postGeneReads.size() == reads.size())
             return true;
 
         List<Read> preGeneReads = reads.stream()
-                .filter(x -> x.PosStart < mGeneCollection.regionBounds()[SE_START])
+                .filter(x -> x.alignmentStart() < mGeneCollection.regionBounds()[SE_START])
                 .collect(Collectors.toList());
 
         if(!preGeneReads.isEmpty())
         {
             // remove any previously processed reads
-            String readId = preGeneReads.get(0).Id;
+            String readId = preGeneReads.get(0).id();
             List<Read> prevPostGeneReads = mPreviousPostGeneReadMap.get(readId);
 
             if(prevPostGeneReads != null)
@@ -516,7 +517,7 @@ public class ChimericReadTracker
 
         // cache and stop processing this group
         if(!postGeneReads.isEmpty())
-            mPostGeneReadMap.put(reads.get(0).Id, postGeneReads);
+            mPostGeneReadMap.put(reads.get(0).id(), postGeneReads);
 
         return false;
     }

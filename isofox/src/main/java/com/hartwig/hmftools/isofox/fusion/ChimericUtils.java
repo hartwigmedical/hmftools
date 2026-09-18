@@ -35,8 +35,8 @@ public final class ChimericUtils
                 continue;
 
             if(existingChromosome.equals(""))
-                existingChromosome = read.Chromosome;
-            else if(!existingChromosome.equals(read.Chromosome))
+                existingChromosome = read.chromosome();
+            else if(!existingChromosome.equals(read.chromosome()))
                 return false;
 
             int scLeft = read.isSoftClipped(SE_START) ? read.leftClipLength() : 0;
@@ -61,7 +61,7 @@ public final class ChimericUtils
         if(!read.containsSplit())
             return null;
 
-        int readPosition = read.PosStart;
+        int readPosition = read.alignmentStart();
         CigarElement maxSplitElement = null;
         int maxSplitPosStart = 0;
 

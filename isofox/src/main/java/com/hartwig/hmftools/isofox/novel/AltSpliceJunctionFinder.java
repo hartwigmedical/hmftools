@@ -114,16 +114,16 @@ public class AltSpliceJunctionFinder
                 genes.stream().mapToInt(x -> x.Gene.GeneStart).min().orElse(0) - MAX_NOVEL_SJ_DISTANCE,
                 genes.stream().mapToInt(x -> x.Gene.GeneStart).max().orElse(0) + MAX_NOVEL_SJ_DISTANCE };
 
-        if(!positionsWithin(read1.PosStart, read1.PosEnd, geneBounds[SE_START], geneBounds[SE_END])
-        || !positionsWithin(read2.PosStart, read2.PosEnd, geneBounds[SE_START], geneBounds[SE_END]))
+        if(!positionsWithin(read1.alignmentStart(), read1.alignmentEnd(), geneBounds[SE_START], geneBounds[SE_END])
+        || !positionsWithin(read2.alignmentStart(), read2.alignmentEnd(), geneBounds[SE_START], geneBounds[SE_END]))
         {
             return;
         }
 
         // at least one of the reads must fall within a gene
         final List<GeneReadData> candidateGenes = genes.stream()
-                .filter(x -> positionsWithin(read1.PosStart, read1.PosEnd, x.Gene.GeneStart,x.Gene.GeneEnd)
-                        || positionsWithin(read2.PosStart, read2.PosEnd, x.Gene.GeneStart,x.Gene.GeneEnd))
+                .filter(x -> positionsWithin(read1.alignmentStart(), read1.alignmentEnd(), x.Gene.GeneStart,x.Gene.GeneEnd)
+                        || positionsWithin(read2.alignmentStart(), read2.alignmentEnd(), x.Gene.GeneStart,x.Gene.GeneEnd))
                 .collect(Collectors.toList());
 
         if(candidateGenes.isEmpty())
@@ -147,7 +147,7 @@ public class AltSpliceJunctionFinder
             if(AltSpliceJunctionFinder.isCandidate(read2))
             {
                 // avoid double-counting overlapping reads
-                if(firstAltSJ != null && positionsOverlap(read1.PosStart, read1.PosEnd, read2.PosStart, read2.PosEnd))
+                if(firstAltSJ != null && positionsOverlap(read1.alignmentStart(), read1.alignmentEnd(), read2.alignmentStart(), read2.alignmentEnd()))
                     return;
 
                 secondAltSJ = registerAltSpliceJunction(candidateGenes, read2, relatedTransIds);
@@ -247,7 +247,7 @@ public class AltSpliceJunctionFinder
         AltSpliceJunctionType sjType = classifySpliceJunction(relatedTransIds, sjStartRegions, sjEndRegions, regionContexts);
 
         AltSpliceJunction altSplicJunction = new AltSpliceJunction(
-                mGenes.chromosome(), spliceJunction, sjType, read.Id, regionContexts, sjStartRegions, sjEndRegions);
+                mGenes.chromosome(), spliceJunction, sjType, read.id(), regionContexts, sjStartRegions, sjEndRegions);
 
         altSplicJunction.setCandidateTranscripts(read.getMappedRegions().keySet().stream().collect(Collectors.toList()));
 
@@ -454,7 +454,7 @@ public class AltSpliceJunctionFinder
             AltSpliceJunctionContext[] regionContexts = { flippedRegionContexts[SE_END], flippedRegionContexts[SE_START] };
 
             altSplicJunction = new AltSpliceJunction(
-                    mGenes.chromosome(), spliceJunction, CIRCULAR, read1.Id, regionContexts, sjStartRegions, sjEndRegions);
+                    mGenes.chromosome(), spliceJunction, CIRCULAR, read1.id(), regionContexts, sjStartRegions, sjEndRegions);
         }
         else
         {
@@ -471,7 +471,7 @@ public class AltSpliceJunctionFinder
             AltSpliceJunctionType sjType = classifySpliceJunction(relatedTransIds, sjStartRegions, sjEndRegions, regionContexts);
 
             altSplicJunction = new AltSpliceJunction(
-                    mGenes.chromosome(), spliceJunction, sjType, read1.Id, regionContexts, sjStartRegions, sjEndRegions);
+                    mGenes.chromosome(), spliceJunction, sjType, read1.id(), regionContexts, sjStartRegions, sjEndRegions);
         }
 
         altSplicJunction.setCandidateTranscripts(candidateRegions);

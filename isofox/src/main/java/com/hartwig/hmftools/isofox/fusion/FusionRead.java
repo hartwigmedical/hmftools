@@ -65,11 +65,11 @@ public class FusionRead
 
     public FusionRead(final Read read)
     {
-        Chromosome = read.Chromosome;
-        Positions = new int[] { read.PosStart, read.PosEnd};
+        Chromosome = read.chromosome();
+        Positions = new int[] { read.alignmentStart(), read.alignmentEnd() };
         Orientation = read.orientByte();
         MateChromosome = read.mateChromosome();
-        MatePosStart = read.mateStartPosition();
+        MatePosStart = read.mateAlignmentStart();
         MappedCoords = read.getMappedRegionCoords(false);
         Cigar = read.cigarStr();
         GeneCollections = read.getGeneCollectons();
@@ -78,7 +78,7 @@ public class FusionRead
         HasSuppAlignment = read.hasSuppAlignment();
         ContainsSplit = read.containsSplit();
         Flags = read.flags();
-        MapQuality = read.mapQuality();
+        MapQuality = (short)read.mapQuality();
 
         SuppData = read.hasSuppAlignment() ? SupplementaryReadData.extractAlignment(read.getSuppAlignment()) : null;
 

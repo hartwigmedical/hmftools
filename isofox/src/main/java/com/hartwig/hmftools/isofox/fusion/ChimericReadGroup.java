@@ -26,7 +26,7 @@ public class ChimericReadGroup
         mComplete = readGroupComplete();
     }
 
-    public final String id() { return mReads.get(0).Id; }
+    public final String id() { return mReads.get(0).id(); }
 
     public int size() { return mReads.size(); }
 

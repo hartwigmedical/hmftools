@@ -39,8 +39,8 @@ public class NeoFragmentMatcher
 
         // if this is a single-chromosome fusion, the read may extend into the other stream's bases and so support the fusion
         // or it may support an un-fused gene
-        boolean readWithinStream = (junctionSide == SE_START && read.PosStart >= codingBaseRange[SE_START])
-                || (junctionSide == SE_END && read.PosEnd <= codingBaseRange[SE_END]);
+        boolean readWithinStream = (junctionSide == SE_START && read.alignmentStart() >= codingBaseRange[SE_START])
+                || (junctionSide == SE_END && read.alignmentEnd() <= codingBaseRange[SE_END]);
 
         if(readWithinStream)
         {
@@ -51,8 +51,8 @@ public class NeoFragmentMatcher
             if(overlapBases < MIN_BASE_OVERLAP)
                 return support;
 
-            int maxStartPos = max(read.PosStart, codingBaseRange[SE_START]);
-            int minEndPos = min(read.PosEnd, codingBaseRange[SE_END]);
+            int maxStartPos = max(read.alignmentStart(), codingBaseRange[SE_START]);
+            int minEndPos = min(read.alignmentEnd(), codingBaseRange[SE_END]);
 
             int matchLevel = compareCodingBases(read, neoCodingBases, neData.CodingBaseCoords[stream], maxStartPos, minEndPos);
 
@@ -142,15 +142,15 @@ public class NeoFragmentMatcher
             if(overlapBases < MIN_BASE_OVERLAP)
                 return support;
 
-            int maxStartPos = max(read.PosStart, codingBaseRange[SE_START]);
-            int minEndPos = min(read.PosEnd, codingBaseRange[SE_END]);
+            int maxStartPos = max(read.alignmentStart(), codingBaseRange[SE_START]);
+            int minEndPos = min(read.alignmentEnd(), codingBaseRange[SE_END]);
 
             int matchLevel = compareCodingBases(read, neoCodingBases, neData.CodingBaseCoords[stream], maxStartPos, minEndPos);
 
             if(matchLevel == MISMATCH)
                 return support;
 
-            if(positionWithin(neData.Positions[FS_UP], read.PosStart, read.PosEnd))
+            if(positionWithin(neData.Positions[FS_UP], read.alignmentStart(), read.alignmentEnd()))
             {
                 ++support.NovelFragments[matchLevel];
             }
@@ -398,7 +398,7 @@ public class NeoFragmentMatcher
 
             for(Read read : readGroup.reads())
             {
-                if(!read.Chromosome.equals(chromosome))
+                if(!read.chromosome().equals(chromosome))
                     continue;
 
                 if(read.getMappedRegionCoords().stream().anyMatch(x -> positionWithin(refBase, x[SE_START], x[SE_END])))

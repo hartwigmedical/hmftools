@@ -106,7 +106,7 @@ public class RetainedIntronFinder
              {
                  if(retIntron1.regions().stream().anyMatch(x -> retIntron2.regions().contains(x)))
                  {
-                     ISF_LOGGER.trace("reads({}) support the same exon from exon-intron reads", read1.Id);
+                     ISF_LOGGER.trace("reads({}) support the same exon from exon-intron reads", read1.id());
                      return;
                  }
              }

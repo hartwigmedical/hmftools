@@ -67,7 +67,7 @@ public class SupplementaryJunctionData
         // find the junction from this read's SC and same for the supp mapping data
         ClippedSide scSide = Read.clippedSide(read);
 
-        SupplementaryJunctionData suppJuncData = new SupplementaryJunctionData(read.Id);
+        SupplementaryJunctionData suppJuncData = new SupplementaryJunctionData(read.id());
 
         if(scSide.isLeft())
         {

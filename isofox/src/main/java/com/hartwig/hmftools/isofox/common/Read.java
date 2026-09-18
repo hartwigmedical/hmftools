@@ -7,7 +7,10 @@ import static com.hartwig.hmftools.common.bam.CigarUtils.cigarElementsToStr;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.XA_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.firstInPair;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.generateMappedCoords;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.inferredInsertSize;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.mateNegativeStrand;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_PAIR;
@@ -47,9 +50,6 @@ import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.bam.ClippedSide;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 
-import org.jetbrains.annotations.NotNull;
-
-import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMFlag;
 import htsjdk.samtools.SAMRecord;
@@ -57,18 +57,16 @@ import htsjdk.samtools.TextCigarCodec;
 
 public class Read
 {
-    public final String Id;
-    public final String Chromosome;
-    public final int PosStart;
-    public final int PosEnd;
+    private SAMRecord mRecord;
 
-    private String mReadBases;
+    // make private
+    private int mPosStart;
+    private int mPosEnd;
+
+    private String mReadBases; // cached if trimmed
     private final String mOriginalCigarStr;
     private String mCigarStr;
     private final List<CigarElement> mCigarElements;
-    private int mFlags;
-    private String mMateChromosome;
-    private int mMatePosStart;
 
     public int mUnclippedStart;
     public int mUnclippedEnd;
@@ -80,10 +78,8 @@ public class Read
     private boolean mLowerInferredAdded;
     private boolean mUpperInferredAdded;
     private final int[] mSoftClipRegionsMatched;
-    private int mFragmentInsertSize;
     private String mSupplementaryAlignment;
     private boolean mHasInterGeneSplit;
-    private short mMapQuality;
     private List<AltAlignment> mAltLoci; // alternate genomic mapping loci from XA tag; null if uniquely mapped
     private boolean mConsensusRead;
 
@@ -95,6 +91,65 @@ public class Read
 
     public static final int NO_GENE_ID = -1;
 
+    public Read(final SAMRecord record)
+    {
+        mRecord = record;
+        mPosStart = record.getAlignmentStart();
+        mPosEnd = record.getAlignmentEnd();
+
+        mCigarElements = Lists.newArrayList(record.getCigar().getCigarElements());
+        mOriginalCigarStr = record.getCigarString();
+        mCigarStr = null; // set if trimmed
+
+        // why extract this unless it is definitely used, or parsed
+        mSupplementaryAlignment = record.getStringAttribute(SUPPLEMENTARY_ATTRIBUTE);
+
+        mHasSplit = mCigarElements.stream().anyMatch(x -> x.getOperator() == N);
+
+        setBoundaries();
+
+        mGeneCollections = new int[] { NO_GENE_ID, NO_GENE_ID };
+        mIsGenicRegion = new boolean[] { false, false };
+
+        List<int[]> mappedCoords = generateMappedCoords(mCigarElements, mPosStart);
+        mMappedCoords = Lists.newArrayListWithCapacity(mappedCoords.size());
+        mMappedCoords.addAll(mappedCoords);
+
+        mMappedRegions = Maps.newHashMap();
+        mTransExonRefs = Maps.newHashMap();
+        mTranscriptClassification = Maps.newHashMap();
+        mLowerInferredAdded = false;
+        mUpperInferredAdded = false;
+        mSoftClipRegionsMatched = new int[] {0, 0};
+        mSupplementaryAlignment = null;
+        mHasInterGeneSplit = false;
+        mJunctionPositions = null;
+
+        parseAltLoci(record.getStringAttribute(XA_ATTRIBUTE));
+        mConsensusRead = record.hasAttribute(CONSENSUS_READ_ATTRIBUTE);
+
+        mAltLoci = parseAltLoci(record.getStringAttribute(XA_ATTRIBUTE));
+    }
+
+    private void setBoundaries()
+    {
+        mUnclippedStart = mPosStart;
+
+        if(!mCigarElements.isEmpty()&& mCigarElements.get(0).getOperator() == S)
+            mUnclippedStart -= mCigarElements.get(0).getLength();
+
+        mUnclippedEnd = mPosEnd;
+
+        if(mCigarElements.size() >= 2)
+        {
+            int lastIndex = mCigarElements.size() - 1;
+            if(mCigarElements.get(lastIndex).getOperator() == S)
+                mUnclippedEnd += mCigarElements.get(lastIndex).getLength();
+        }
+    }
+
+    /*
+    @Deprecated
     public static Read from(final SAMRecord record)
     {
         Read read = new Read(
@@ -110,6 +165,228 @@ public class Read
             read.markConsensusRead();
 
         return read;
+    }
+    */
+
+    public String id() { return mRecord.getReadName(); }
+    public String chromosome() { return mRecord.getReferenceName(); }
+    public int alignmentStart() { return mPosStart; }
+    public int alignmentEnd() { return mPosEnd; }
+    public int flags() { return mRecord.getFlags(); }
+
+    public String mateChromosome() { return mRecord.getMateReferenceName(); }
+    public int mateAlignmentStart() { return mRecord.getMateAlignmentStart(); }
+    public int fragmentInsertSize() { return inferredInsertSize(mRecord); }
+    public int mapQuality() { return mRecord.getMappingQuality(); }
+
+    /*
+    @Deprecated
+    public Read(
+            final String id, final String chromosome, int posStart, int posEnd, final String readBases, @NotNull final Cigar cigar,
+            int insertSize, int flags, final String mateChromosome, int matePosStart)
+    {
+        Id = id;
+        Chromosome = chromosome;
+        mPosStart = posStart;
+        mPosEnd = posEnd;
+        mReadBases = readBases;
+
+        mCigarElements = Lists.newArrayList(cigar.getCigarElements());
+        mOriginalCigarStr = cigarElementsToStr(mCigarElements);
+        mCigarStr = null;
+
+        mHasSplit = mCigarElements.stream().anyMatch(x -> x.getOperator() == N);
+
+        mUnclippedStart = mPosStart;
+        if(!mCigarElements.isEmpty()&& mCigarElements.get(0).getOperator() == S)
+            mUnclippedStart -= mCigarElements.get(0).getLength();
+
+        mUnclippedEnd = mPosEnd;
+
+        if(mCigarElements.size() >= 2)
+        {
+            int lastIndex = mCigarElements.size() - 1;
+            if(mCigarElements.get(lastIndex).getOperator() == S)
+                mUnclippedEnd += mCigarElements.get(lastIndex).getLength();
+        }
+
+        mFlags = flags;
+        mMateChromosome = mateChromosome;
+        mMatePosStart = matePosStart;
+
+        mGeneCollections = new int[] { NO_GENE_ID, NO_GENE_ID };
+        mIsGenicRegion = new boolean[] { false, false };
+
+        List<int[]> mappedCoords = generateMappedCoords(mCigarElements, mPosStart);
+        mMappedCoords = Lists.newArrayListWithCapacity(mappedCoords.size());
+        mMappedCoords.addAll(mappedCoords);
+
+        mMappedRegions = Maps.newHashMap();
+        mTransExonRefs = Maps.newHashMap();
+        mTranscriptClassification = Maps.newHashMap();
+        mLowerInferredAdded = false;
+        mUpperInferredAdded = false;
+        mSoftClipRegionsMatched = new int[] {0, 0};
+        mFragmentInsertSize = insertSize;
+        mSupplementaryAlignment = null;
+        mHasInterGeneSplit = false;
+        mMapQuality = 0;
+        mJunctionPositions = null;
+        mConsensusRead = false;
+    }
+    */
+
+    public int range() { return mPosEnd - mPosStart; }
+
+    public byte orientByte() { return !isReadReversed() ? ORIENT_FWD : ORIENT_REV; }
+    public Orientation orientation() { return !isReadReversed() ? Orientation.FORWARD : Orientation.REVERSE; }
+
+    public List<CigarElement> cigarElements() { return mCigarElements; }
+    public String originalCigarStr() { return mCigarStr; }
+    public String cigarStr() { return mCigarStr != null ? mCigarStr : mOriginalCigarStr; }
+
+    public String readBases() { return mReadBases != null ? mReadBases : mRecord.getReadString(); }
+
+    public int unclippedStart() { return mUnclippedStart; }
+    public int unclippedEnd() { return mUnclippedEnd; }
+    public boolean isLeftClipped() { return mUnclippedStart != mPosStart; }
+    public boolean isRightClipped() { return mUnclippedEnd != mPosEnd; }
+    public int leftClipLength() { return max(mPosStart - mUnclippedStart, 0); }
+    public int rightClipLength() { return max(mUnclippedEnd - mPosEnd, 0); }
+
+    public boolean containsSplit() { return mHasSplit; }
+
+    public boolean isReadPaired() { return mRecord.getReadPairedFlag(); }
+    public boolean isReadReversed() { return mRecord.getReadNegativeStrandFlag(); }
+    public boolean isFirstOfPair() { return firstInPair(mRecord); }
+    public boolean isDuplicate() { return mRecord.getDuplicateReadFlag(); }
+    public boolean isTranslocation() { return !chromosome().equals(mateChromosome()); }
+    public boolean isMateNegStrand() { return mateNegativeStrand(mRecord); }
+    public boolean isMateUnmapped() { return mRecord.getMateUnmappedFlag(); }
+    public boolean isInversion() { return isReadReversed() == isMateNegStrand(); }
+    public boolean isSupplementaryAlignment() { return mRecord.getSupplementaryAlignmentFlag(); }
+
+    public void setSuppAlignment(final String suppAlign) { mSupplementaryAlignment = suppAlign; }
+    public String getSuppAlignment() { return mSupplementaryAlignment; }
+
+    public String suppAlignmentAsStr()
+    {
+        return mSupplementaryAlignment != null ? mSupplementaryAlignment.replaceAll(",", ITEM_DELIM) : "NONE";
+    }
+
+    public boolean hasSuppAlignment() { return mSupplementaryAlignment != null; }
+
+    public static ClippedSide clippedSide(final Read read)
+    {
+        int leftScLength = read.leftClipLength();
+        int rightScLength = read.rightClipLength();
+
+        if(leftScLength > 0 && rightScLength > 0)
+        {
+            return leftScLength >= rightScLength ?
+                    new ClippedSide(SE_START, leftScLength, true) : new ClippedSide(SE_END, rightScLength, true);
+        }
+        else if(leftScLength > 0)
+        {
+            return new ClippedSide(SE_START, leftScLength, true);
+        }
+        else
+        {
+            return new ClippedSide(SE_END, rightScLength, rightScLength > 0);
+        }
+    }
+
+    public int[] getSoftClipRegionsMatched() { return mSoftClipRegionsMatched; }
+
+    public boolean isSoftClipped(int se)
+    {
+        if(mSoftClipRegionsMatched[se] > 0)
+            return false;
+
+        return se == SE_START ? isLeftClipped() : isRightClipped();
+    }
+
+    public boolean containsSoftClipping() { return isLeftClipped() || isRightClipped(); }
+
+    public List<AltAlignment> altLoci() { return mAltLoci; }
+    public int numLoci() { return mAltLoci != null ? 1 + mAltLoci.size() : 1; }
+
+    public boolean isMultiMapped() { return numLoci() > 1; }
+
+    public boolean isConsensusRead() { return mConsensusRead; }
+    public void markConsensusRead() { mConsensusRead = true; }
+
+    public int baseLength() { return readBases().length(); }
+
+    public SAMRecord bamRecord() { return mRecord; }
+
+    public int[] getGeneCollectons() { return mGeneCollections; }
+    public boolean[] getIsGenicRegion() { return mIsGenicRegion; }
+
+    public void setGeneCollection(int seIndex, int gc, boolean isGeneic)
+    {
+        mGeneCollections[seIndex] = gc;
+        mIsGenicRegion[seIndex] = isGeneic;
+    }
+
+    public boolean withinGeneCollection() { return mIsGenicRegion[SE_START] && mIsGenicRegion[SE_END]; }
+    public boolean overlapsGeneCollection() { return mIsGenicRegion[SE_START] || mIsGenicRegion[SE_END]; }
+
+    public boolean fullyNonGenic()
+    {
+        return !mIsGenicRegion[SE_START] && !mIsGenicRegion[SE_END]
+                && mGeneCollections[SE_START] != NO_GENE_ID && mGeneCollections[SE_END] != NO_GENE_ID;
+    }
+
+    public boolean matches(final Read other)
+    {
+        return id().equals(other.id()) && flags() == other.flags();
+    }
+
+    public boolean spansGeneCollections()
+    {
+        return mGeneCollections[SE_START] != mGeneCollections[SE_END];
+    }
+
+    public Map<RegionMatchType,List<TransExonRef>> getReadTransExonRefs() { return mTransExonRefs; }
+
+    public boolean isChimeric()
+    {
+        if(isTranslocation() || isInversion())
+            return true;
+
+        if(isSupplementaryAlignment() || mSupplementaryAlignment != null)
+            return true;
+
+        return false;
+    }
+
+    public List<int[]> getMappedRegionCoords() { return mMappedCoords; }
+
+    public List<int[]> getMappedRegionCoords(boolean includeInferred)
+    {
+        if(includeInferred || (!mLowerInferredAdded && !mUpperInferredAdded))
+            return mMappedCoords;
+
+        List<int[]> regions = Lists.newArrayList(mMappedCoords);
+
+        if(mLowerInferredAdded)
+            regions.remove(0);
+
+        if(mUpperInferredAdded)
+            regions.remove(regions.size() - 1);
+
+        return regions;
+    }
+
+    public boolean overlapsMappedReads(int posStart, int posEnd)
+    {
+        return mMappedCoords.stream().anyMatch(x -> positionsOverlap(posStart, posEnd, x[SE_START], x[SE_END]));
+    }
+
+    public int getCoordsBoundary(int se)
+    {
+        return se == SE_START ? mMappedCoords.get(0)[SE_START] : mMappedCoords.get(mMappedCoords.size() - 1)[SE_END];
     }
 
     // an alternate mapping locus from the XA tag: its genomic span and whether that alignment is spliced
@@ -167,220 +444,6 @@ public class Read
         }
 
         return altLoci.isEmpty() ? null : altLoci;
-    }
-
-    public Read(
-            final String id, final String chromosome, int posStart, int posEnd, final String readBases, @NotNull final Cigar cigar,
-            int insertSize, int flags, final String mateChromosome, int matePosStart)
-    {
-        Id = id;
-        Chromosome = chromosome;
-        PosStart = posStart;
-        PosEnd = posEnd;
-        mReadBases = readBases;
-
-        mCigarElements = Lists.newArrayList(cigar.getCigarElements());
-        mOriginalCigarStr = cigarElementsToStr(mCigarElements);
-        mCigarStr = null;
-
-        mHasSplit = mCigarElements.stream().anyMatch(x -> x.getOperator() == N);
-
-        mUnclippedStart = PosStart;
-        if(!mCigarElements.isEmpty()&& mCigarElements.get(0).getOperator() == S)
-            mUnclippedStart -= mCigarElements.get(0).getLength();
-
-        mUnclippedEnd = PosEnd;
-
-        if(mCigarElements.size() >= 2)
-        {
-            int lastIndex = mCigarElements.size() - 1;
-            if(mCigarElements.get(lastIndex).getOperator() == S)
-                mUnclippedEnd += mCigarElements.get(lastIndex).getLength();
-        }
-
-        mFlags = flags;
-        mMateChromosome = mateChromosome;
-        mMatePosStart = matePosStart;
-
-        mGeneCollections = new int[] { NO_GENE_ID, NO_GENE_ID };
-        mIsGenicRegion = new boolean[] { false, false };
-
-        List<int[]> mappedCoords = generateMappedCoords(mCigarElements, PosStart);
-        mMappedCoords = Lists.newArrayListWithCapacity(mappedCoords.size());
-        mMappedCoords.addAll(mappedCoords);
-
-        mMappedRegions = Maps.newHashMap();
-        mTransExonRefs = Maps.newHashMap();
-        mTranscriptClassification = Maps.newHashMap();
-        mLowerInferredAdded = false;
-        mUpperInferredAdded = false;
-        mSoftClipRegionsMatched = new int[] {0, 0};
-        mFragmentInsertSize = insertSize;
-        mSupplementaryAlignment = null;
-        mHasInterGeneSplit = false;
-        mMapQuality = 0;
-        mJunctionPositions = null;
-        mConsensusRead = false;
-    }
-
-    public int range() { return PosEnd - PosStart; }
-
-    public byte orientByte() { return !isReadReversed() ? ORIENT_FWD : ORIENT_REV; }
-    public Orientation orientation() { return !isReadReversed() ? Orientation.FORWARD : Orientation.REVERSE; }
-    public List<CigarElement> cigarElements() { return mCigarElements; }
-    public String originalCigarStr() { return mCigarStr; }
-    public String cigarStr() { return mCigarStr != null ? mCigarStr : mOriginalCigarStr; }
-    public String readBases() { return mReadBases; }
-
-    public int unclippedStart() { return mUnclippedStart; }
-    public int unclippedEnd() { return mUnclippedEnd; }
-    public boolean isLeftClipped() { return mUnclippedStart != PosStart; }
-    public boolean isRightClipped() { return mUnclippedEnd != PosEnd; }
-    public int leftClipLength() { return max(PosStart - mUnclippedStart, 0); }
-    public int rightClipLength() { return max(mUnclippedEnd - PosEnd, 0); }
-
-    public boolean containsSplit() { return mHasSplit; }
-
-    public int flags() { return mFlags; }
-    public boolean isReadPaired() { return (mFlags & SAMFlag.READ_PAIRED.intValue()) != 0; }
-    public boolean isReadReversed() { return (mFlags & SAMFlag.READ_REVERSE_STRAND.intValue()) != 0; }
-    public boolean isFirstOfPair() { return (mFlags & SAMFlag.FIRST_OF_PAIR.intValue()) != 0; }
-    public boolean isDuplicate() { return (mFlags & SAMFlag.DUPLICATE_READ.intValue()) != 0; }
-    public boolean isTranslocation() { return !Chromosome.equals(mMateChromosome); }
-    public boolean isMateNegStrand() { return (mFlags & SAMFlag.MATE_REVERSE_STRAND.intValue()) != 0; }
-    public boolean isMateUnmapped() { return (mFlags & SAMFlag.MATE_UNMAPPED.intValue()) != 0; }
-    public boolean isInversion() { return isReadReversed() == isMateNegStrand(); }
-    public boolean isSupplementaryAlignment() { return (mFlags & SAMFlag.SUPPLEMENTARY_ALIGNMENT.intValue()) != 0; }
-
-    public void setFragmentInsertSize(int size) { mFragmentInsertSize = size; }
-    public void setSuppAlignment(final String suppAlign) { mSupplementaryAlignment = suppAlign; }
-    public String getSuppAlignment() { return mSupplementaryAlignment; }
-
-    public String suppAlignmentAsStr()
-    {
-        return mSupplementaryAlignment != null ? mSupplementaryAlignment.replaceAll(",", ITEM_DELIM) : "NONE";
-    }
-
-    public boolean hasSuppAlignment() { return mSupplementaryAlignment != null; }
-
-    public static ClippedSide clippedSide(final Read read)
-    {
-        int leftScLength = read.leftClipLength();
-        int rightScLength = read.rightClipLength();
-
-        if(leftScLength > 0 && rightScLength > 0)
-        {
-            return leftScLength >= rightScLength ?
-                    new ClippedSide(SE_START, leftScLength, true) : new ClippedSide(SE_END, rightScLength, true);
-        }
-        else if(leftScLength > 0)
-        {
-            return new ClippedSide(SE_START, leftScLength, true);
-        }
-        else
-        {
-            return new ClippedSide(SE_END, rightScLength, rightScLength > 0);
-        }
-    }
-
-    public int[] getSoftClipRegionsMatched() { return mSoftClipRegionsMatched; }
-
-    public boolean isSoftClipped(int se)
-    {
-        if(mSoftClipRegionsMatched[se] > 0)
-            return false;
-
-        return se == SE_START ? isLeftClipped() : isRightClipped();
-    }
-
-    public boolean containsSoftClipping() { return isLeftClipped() || isRightClipped(); }
-
-    public void setMapQuality(short mapQuality) { mMapQuality = mapQuality; }
-    public short mapQuality() { return mMapQuality; }
-
-    public void setAltLoci(final List<AltAlignment> altLoci) { mAltLoci = altLoci; }
-    public List<AltAlignment> altLoci() { return mAltLoci; }
-    public int numLoci() { return mAltLoci != null ? 1 + mAltLoci.size() : 1; }
-
-    public boolean isMultiMapped() { return numLoci() > 1; }
-
-    public boolean isConsensusRead() { return mConsensusRead; }
-    public void markConsensusRead() { mConsensusRead = true; }
-
-    public int baseLength() { return mReadBases.length(); }
-
-    public int fragmentInsertSize() { return mFragmentInsertSize; }
-
-    public String mateChromosome() { return mMateChromosome; }
-    public int mateStartPosition() { return mMatePosStart; }
-
-    public int[] getGeneCollectons() { return mGeneCollections; }
-    public final boolean[] getIsGenicRegion() { return mIsGenicRegion; }
-
-    public void setGeneCollection(int seIndex, int gc, boolean isGeneic)
-    {
-        mGeneCollections[seIndex] = gc;
-        mIsGenicRegion[seIndex] = isGeneic;
-    }
-
-    public boolean withinGeneCollection() { return mIsGenicRegion[SE_START] && mIsGenicRegion[SE_END]; }
-    public boolean overlapsGeneCollection() { return mIsGenicRegion[SE_START] || mIsGenicRegion[SE_END]; }
-
-    public boolean fullyNonGenic()
-    {
-        return !mIsGenicRegion[SE_START] && !mIsGenicRegion[SE_END]
-                && mGeneCollections[SE_START] != NO_GENE_ID && mGeneCollections[SE_END] != NO_GENE_ID;
-    }
-
-    public boolean matches(final Read other)
-    {
-        return Id.equals(other.Id) && cigarStr().equals(other.cigarStr().toString()) && PosStart == other.PosStart && PosEnd == other.PosEnd;
-    }
-
-    public boolean spansGeneCollections()
-    {
-        return mGeneCollections[SE_START] != mGeneCollections[SE_END];
-    }
-
-    public final Map<RegionMatchType,List<TransExonRef>> getReadTransExonRefs() { return mTransExonRefs; }
-
-    public boolean isChimeric()
-    {
-        if(isTranslocation() || isInversion())
-            return true;
-
-        if(isSupplementaryAlignment() || mSupplementaryAlignment != null)
-            return true;
-
-        return false;
-    }
-
-    public List<int[]> getMappedRegionCoords() { return mMappedCoords; }
-
-    public List<int[]> getMappedRegionCoords(boolean includeInferred)
-    {
-        if(includeInferred || (!mLowerInferredAdded && !mUpperInferredAdded))
-            return mMappedCoords;
-
-        List<int[]> regions = Lists.newArrayList(mMappedCoords);
-
-        if(mLowerInferredAdded)
-            regions.remove(0);
-
-        if(mUpperInferredAdded)
-            regions.remove(regions.size() - 1);
-
-        return regions;
-    }
-
-    public boolean overlapsMappedReads(int posStart, int posEnd)
-    {
-        return mMappedCoords.stream().anyMatch(x -> positionsOverlap(posStart, posEnd, x[SE_START], x[SE_END]));
-    }
-
-    public int getCoordsBoundary(int se)
-    {
-        return se == SE_START ? mMappedCoords.get(0)[SE_START] : mMappedCoords.get(mMappedCoords.size() - 1)[SE_END];
     }
 
     public void processOverlappingRegions(final List<RegionReadData> regions)
@@ -550,7 +613,7 @@ public class Read
 
     private boolean likelyAdaperSoftClipping()
     {
-        return mFragmentInsertSize < baseLength();
+        return fragmentInsertSize() < baseLength();
     }
 
     public static final List<RegionReadData> getUniqueValidRegion(final Read read1, final Read read2)
@@ -710,7 +773,7 @@ public class Read
         if(extraBaseLength >= 1 && extraBaseLength <= MAX_SC_BASE_MATCH && scLength <= MAX_SC_BASE_MATCH)
         {
             // first check for a match with the next exon on the lower side
-            String extraBases = mReadBases.substring(0, extraBaseLength);
+            String extraBases = readBases().substring(0, extraBaseLength);
 
             List<RegionReadData> matchedRegions = region.getPreRegions().stream()
                     .filter(x -> matchesOtherRegionBases(extraBases, x, false)).collect(Collectors.toList());
@@ -768,7 +831,7 @@ public class Read
         {
             // now check for a match to the next exon up
             int readLength = baseLength();
-            String extraBases = mReadBases.substring(readLength - extraBaseLength, readLength);
+            String extraBases = readBases().substring(readLength - extraBaseLength, readLength);
 
             List<RegionReadData> matchedRegions = region.getPostRegions().stream()
                     .filter(x -> matchesOtherRegionBases(extraBases, x, true)).collect(Collectors.toList());
@@ -849,7 +912,7 @@ public class Read
         }
     }
 
-    public final Map<RegionReadData,RegionMatchType> getMappedRegions() { return mMappedRegions; }
+    public Map<RegionReadData,RegionMatchType> getMappedRegions() { return mMappedRegions; }
 
     public static List<RegionReadData> findOverlappingRegions(final List<RegionReadData> regions, final Read read)
     {
@@ -928,7 +991,7 @@ public class Read
         if(orientation().isForward())
         {
             // trim from upper end
-            mReadBases = mReadBases.substring(0, mReadBases.length() - trimLength);
+            mReadBases = mRecord.getReadString().substring(0, mRecord.getReadBases().length - trimLength);
 
             mUnclippedEnd -= trimLength;
 
@@ -946,7 +1009,7 @@ public class Read
         else
         {
             // trim from lower end
-            mReadBases = mReadBases.substring(trimLength);
+            mReadBases = mRecord.getReadString().substring(trimLength);
 
             mUnclippedStart += trimLength;
 
@@ -965,17 +1028,24 @@ public class Read
 
     public String toString()
     {
-        return String.format("range(%s: %d -> %d, range=%d) length(%d) cigar(%s) id(%s)",
-                Chromosome, PosStart, PosEnd, range(), baseLength(), mCigarStr != null ? mCigarStr : mOriginalCigarStr, Id);
+        return String.format("%s range(%s: %d -> %d) cigar(%s)",
+                id(), chromosome(), mPosStart, mPosEnd, cigarStr());
     }
 
     @VisibleForTesting
     public void setFlag(SAMFlag flag, boolean toggle)
     {
+        if(mRecord == null)
+            return;
+
+        int newFlags = mRecord.getFlags();
+
         if(toggle)
-            mFlags |= flag.intValue();
+            newFlags |= flag.intValue();
         else
-            mFlags &= ~flag.intValue();
+            newFlags &= ~flag.intValue();
+
+        mRecord.setFlags(newFlags);
     }
 
     @VisibleForTesting

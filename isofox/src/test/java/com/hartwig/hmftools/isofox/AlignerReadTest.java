@@ -21,7 +21,9 @@ public class AlignerReadTest
 
     private static SAMRecord createRead()
     {
-        return createSamRecord("READ_01", "1", 1000, READ_BASES, "20M", "1", 1200, false, false, null);
+        return createSamRecord(
+                "READ_01", "1", 1000, READ_BASES, "20M", "1", 1200,
+                false, false, null);
     }
 
     @Test
@@ -29,11 +31,11 @@ public class AlignerReadTest
     {
         SAMRecord multi = createRead();
         multi.setAttribute(XA_ATTRIBUTE, "2,+5000,20M,1;");
-        assertTrue(Read.from(multi).isMultiMapped());
+        assertTrue(new Read(multi).isMultiMapped());
 
         // a low-MAPQ read with no XA is not multi-mapped under bwa-tars (only XA drives it)
         SAMRecord unique = createRead();
         unique.setMappingQuality(0);
-        assertFalse(Read.from(unique).isMultiMapped());
+        assertFalse(new Read(unique).isMultiMapped());
     }
 }

@@ -37,9 +37,9 @@ public class ChimericPosData
 
     public ChimericPosData(final Read read, int positionBucket)
     {
-        Chromosome = read.Chromosome;
+        Chromosome = read.chromosome();
         Position = positionBucket;
-        InitialReadId = read.Id;
+        InitialReadId = read.id();
         InitialReadBases = read.readBases();
         RemoteRegions = Lists.newArrayList();
 
@@ -124,8 +124,8 @@ public class ChimericPosData
             }
         }
 
-        int positionBucket = ChimericPosData.positionBucket(primaryRead.PosStart);
-        String key = ChimericPosData.key(primaryRead.Chromosome, positionBucket);
+        int positionBucket = ChimericPosData.positionBucket(primaryRead.alignmentStart());
+        String key = ChimericPosData.key(primaryRead.chromosome(), positionBucket);
 
         ChimericPosData posData = chimericPosDataMap.get(key);
 
@@ -136,7 +136,7 @@ public class ChimericPosData
         }
 
         posData.addReadCounts(primaryRead);
-        posData.addRemoteRegion(primaryRead.mateChromosome(), primaryRead.mateStartPosition());
+        posData.addRemoteRegion(primaryRead.mateChromosome(), primaryRead.mateAlignmentStart());
 
         if(!suppChromosome.isEmpty())
             posData.addRemoteRegion(suppChromosome, suppPosition);

@@ -260,7 +260,7 @@ public class FragmentAllocator
 
         trackFragmentCounts(record);
 
-        Read read = Read.from(record);
+        Read read = new Read(record);
 
         processRead(read);
     }
@@ -444,8 +444,8 @@ public class FragmentAllocator
         if(numLoci > 1 && altLoci != null && mMultiMapLociWriter != null)
             recordMultiMapLoci(read1, read2, altLoci);
 
-        int readPosMin = min(read1.PosStart, read2.PosStart);
-        int readPosMax = max(read1.PosEnd, read2.PosEnd);
+        int readPosMin = min(read1.alignmentStart(), read2.alignmentStart());
+        int readPosMax = max(read1.alignmentEnd(), read2.alignmentEnd());
 
         List<GeneReadData> overlapGenes = mCurrentGenes.findGenesCoveringRange(readPosMin, readPosMax, true);
 
@@ -743,8 +743,8 @@ public class FragmentAllocator
 
     public static int calcFragmentLength(final TranscriptData transData, final Read read1, final Read read2)
     {
-        int minReadPos = min(read1.PosStart, read2.PosStart);
-        int maxReadPos = max(read1.PosEnd, read2.PosEnd);
+        int minReadPos = min(read1.alignmentStart(), read2.alignmentStart());
+        int maxReadPos = max(read1.alignmentEnd(), read2.alignmentEnd());
         return calcFragmentLength(transData, minReadPos, maxReadPos);
     }
 
@@ -830,12 +830,12 @@ public class FragmentAllocator
     // InGeneCollection flags whether the locus falls within the gene collection currently being processed
     private void recordMultiMapLoci(final Read read1, final Read read2, final List<Read.AltAlignment> altLoci)
     {
-        int fragStart = min(read1.PosStart, read2.PosStart);
-        int fragEnd = max(read1.PosEnd, read2.PosEnd);
+        int fragStart = min(read1.alignmentStart(), read2.alignmentStart());
+        int fragEnd = max(read1.alignmentEnd(), read2.alignmentEnd());
         boolean primarySpliced = read1.containsSplit() || read2.containsSplit();
 
         writeMultiMapLocus(
-                mMultiMapLociWriter, mCurrentGenes.id(), read1.Id, "PRIMARY", read1.Chromosome, fragStart, fragEnd,
+                mMultiMapLociWriter, mCurrentGenes.id(), read1.id(), "PRIMARY", read1.chromosome(), fragStart, fragEnd,
                 primarySpliced, mCurrentGenes.geneNames(), true);
 
         int[] bounds = mCurrentGenes.regionBounds();
@@ -846,7 +846,7 @@ public class FragmentAllocator
                     && positionsOverlap(locus.Region.start(), locus.Region.end(), bounds[SE_START], bounds[SE_END]);
 
             writeMultiMapLocus(
-                    mMultiMapLociWriter, mCurrentGenes.id(), read1.Id, "XA", locus.Region.Chromosome,
+                    mMultiMapLociWriter, mCurrentGenes.id(), read1.id(), "XA", locus.Region.Chromosome,
                     locus.Region.start(), locus.Region.end(), locus.Spliced, altExonicGeneNames(locus), inGeneCollection);
         }
     }
@@ -958,8 +958,8 @@ public class FragmentAllocator
             if(read1 == null || read2 == null)
                 continue;
 
-            int readPosMin = min(read1.PosStart, read2.PosStart);
-            int readPosMax = max(read1.PosEnd, read2.PosEnd);
+            int readPosMin = min(read1.alignmentStart(), read2.alignmentStart());
+            int readPosMax = max(read1.alignmentEnd(), read2.alignmentEnd());
 
             List<GeneReadData> overlapGenes = mCurrentGenes.findGenesCoveringRange(readPosMin, readPosMax, false);
             mAltSpliceJunctionFinder.evaluateFragmentReads(overlapGenes, read1, read2, invalidTrans);
@@ -1055,15 +1055,15 @@ public class FragmentAllocator
             sj.add(geneReadData.Gene.GeneId);
             sj.add(geneReadData.Gene.GeneName);
             sj.add(String.valueOf(readIndex));
-            sj.add(read.Id);
+            sj.add(read.id());
 
-            sj.add(read.Chromosome);
-            sj.add(String.valueOf(read.PosStart));
-            sj.add(String.valueOf(read.PosEnd));
+            sj.add(read.chromosome());
+            sj.add(String.valueOf(read.alignmentStart()));
+            sj.add(String.valueOf(read.alignmentEnd()));
             sj.add(read.cigarStr());
             sj.add(String.valueOf(read.fragmentInsertSize()));
             sj.add(read.mateChromosome());
-            sj.add(String.valueOf(read.mateStartPosition()));
+            sj.add(String.valueOf(read.mateAlignmentStart()));
 
             sj.add(String.valueOf(read.flags()));
             sj.add(String.valueOf(read.isFirstOfPair()));

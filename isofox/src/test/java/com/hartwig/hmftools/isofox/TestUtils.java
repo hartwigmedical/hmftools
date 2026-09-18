@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.isofox;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.common.test.GeneTestUtils.addGeneData;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.addTransExonData;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.createEnsemblGeneData;
@@ -26,6 +28,7 @@ import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.common.test.SamRecordTestUtils;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
 import com.hartwig.hmftools.isofox.common.Read;
@@ -43,6 +46,7 @@ import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMFlag;
+import htsjdk.samtools.SAMRecord;
 
 public class TestUtils
 {
@@ -271,11 +275,44 @@ public class TestUtils
     }
 
     public static Read createReadRecord(
-            final int id, final String chromosome, int posStart, int posEnd, final String readBases, final Cigar cigar,
+            final int id, final String chromosome, int posStart, int posEnd, final String specificReadBases, final Cigar cigar,
             int flags, final String mateChr, int mateStartPos)
     {
-        Cigar readCigar = cigar != null ? cigar : createCigar(0, (int) (posEnd - posStart + 1), 0);
+        int readAlignmentSpan = posEnd - posStart + 1;
 
+        String cigarStr = cigar != null ? cigar.toString() : format("%dM", readAlignmentSpan);
+        // Cigar readCigar = cigar != null ? cigar : createCigar(0, (int) (posEnd - posStart + 1), 0);
+
+        String readBases = specificReadBases;
+
+        if(readBases == null)
+        {
+            int readBaseLength = 0;
+
+            if(cigar != null)
+            {
+                readBaseLength = cigar.getCigarElements().stream()
+                        .filter(x -> x.getOperator().consumesReadBases()).mapToInt(x -> x.getLength()).sum();
+            }
+            else
+            {
+                readBaseLength = readAlignmentSpan;
+            }
+
+            readBases = generateRandomBases(readBaseLength);
+
+        }
+
+        SAMRecord record = SamRecordTestUtils.createSamRecord(
+                String.valueOf(id), chromosome, posStart, readBases, cigarStr, mateChr, mateStartPos,
+                false, false, null);
+
+        record.setFlags(flags);
+        record.setMappingQuality(SINGLE_MAP_QUALITY);
+        record.setProperPairFlag(true);
+        record.setReadPairedFlag(true);
+
+        /*
         Read read = new Read(String.valueOf(id), chromosome, posStart, posEnd, readBases, readCigar,
                 0, flags, mateChr, mateStartPos);
 
@@ -283,7 +320,9 @@ public class TestUtils
         read.setFlag(SAMFlag.READ_PAIRED, true);
         read.setStrand(false, true);
         read.setMapQuality(SINGLE_MAP_QUALITY);
-        return read;
+        */
+
+        return new Read(record);
     }
 
     public static Read[] createSupplementaryReadPair(
@@ -304,12 +343,12 @@ public class TestUtils
 
         // note: strand is not currently set correctly
         SupplementaryReadData suppData1 = new SupplementaryReadData(
-                read2.Chromosome, read2.PosStart, '+', read2.cigarStr(), 255);
+                read2.chromosome(), read2.alignmentStart(), '+', read2.cigarStr(), 255);
 
         read1.setSuppAlignment(suppData1.asDelimStr());
 
         SupplementaryReadData suppData2 = new SupplementaryReadData(
-                read1.Chromosome, read1.PosStart, '+', read1.cigarStr(), 255);
+                read1.chromosome(), read1.alignmentStart(), '+', read1.cigarStr(), 255);
 
         read2.setSuppAlignment(suppData2.asDelimStr());
 
@@ -454,7 +493,7 @@ public class TestUtils
     public static void addRacReadGroup(
             final RacFragmentCache racFragmentCache, final ChimericReadGroup readGroup, byte juncOrient, int juncPosition)
     {
-        String chromosome = readGroup.reads().get(0).Chromosome;
+        String chromosome = readGroup.reads().get(0).chromosome();
         int gcId = readGroup.reads().get(0).getGeneCollectons()[SE_START];
 
         JunctionRacFragments juncRacFragments = racFragmentCache.getRacFragments(chromosome, gcId);

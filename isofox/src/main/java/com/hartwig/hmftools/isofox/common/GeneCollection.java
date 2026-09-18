@@ -119,7 +119,7 @@ public class GeneCollection
 
     public void setReadGeneCollections(final Read read, final int[] nonGenicBounds)
     {
-        if(positionsWithin(read.PosStart, read.PosEnd, mRegionBounds[SE_START], mRegionBounds[SE_END]))
+        if(positionsWithin(read.alignmentStart(), read.alignmentEnd(), mRegionBounds[SE_START], mRegionBounds[SE_END]))
         {
             read.setGeneCollection(SE_START, mId, true);
             read.setGeneCollection(SE_END, mId, true);
