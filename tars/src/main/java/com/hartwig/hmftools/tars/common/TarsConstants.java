@@ -1,0 +1,48 @@
+package com.hartwig.hmftools.tars.common;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+public final class TarsConstants
+{
+    public static final Logger TARS_LOGGER = LogManager.getLogger(TarsConstants.class);
+
+    public static final String APP_NAME = "Tars";
+
+    // alt contig name suffix, e.g. chr1 -> chr1_tx
+    public static final String ALT_CONTIG_SUFFIX = "_tx";
+
+    // a deletion this size or smaller beside a splice N is folded into it (10M100N5D5M -> 10M105N5M),
+    // keeping the junction on the annotated boundary; anything larger stays a real deletion
+    public static final int MAX_MERGED_DELETION_BP = 5;
+
+    // bwa-mem scoring, used when re-scoring a placement against the genome
+    public static final int MATCH = 1;
+    public static final int MISMATCH = -4;
+    public static final int GAP_OPEN = -6;
+    public static final int GAP_EXTEND = -1;
+
+    // min score to keep a terminal anchor's junction
+    public static final int MIN_OVERHANG_SCORE = 5;
+
+    // overhangs longer than this are trusted without scoring
+    public static final int MIN_OVERHANG_LENGTH = 12;
+
+    public static final int CONFIDENT_MAPQ = 60;
+
+    // bwa's default -T floor: after lift-back a primary under it is unmapped, a supplementary only -T 19 kept is dropped
+    public static final int PRIMARY_AS_UNMAP_THRESHOLD = 30;
+    public static final int SUPP_AS_DROP_THRESHOLD = 30;
+
+    // Maximum DEL/DUP/INV length preferred during MAPQ-0 placement selection.
+    public static final int LOCAL_SV_MAX_LENGTH = 1_000_000;
+
+    public static final int MIN_IMPLIED_INTRON_LENGTH = 21;
+
+    public static final int MAX_IMPLIED_INTRON_LENGTH = 1_000_000;
+
+    public static final int MAX_SUPP_MERGES = 2;
+
+    public static final int MAX_SUPP_READ_OVERLAP = 5;
+
+}
