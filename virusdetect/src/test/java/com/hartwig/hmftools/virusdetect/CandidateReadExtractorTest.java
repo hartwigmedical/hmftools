@@ -3,6 +3,7 @@ package com.hartwig.hmftools.virusdetect;
 import static java.util.Collections.singleton;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 
 import java.io.File;
 import java.io.IOException;
@@ -29,44 +30,41 @@ public class CandidateReadExtractorTest
     public TemporaryFolder mTempDir = new TemporaryFolder();
 
     // Filtering, dedup, and mate-numbered single-end output exercised together (per-read fate inline below).
+    // Run single- and multi-threaded: sharding must not change which reads are candidates, only the output order.
     @Test
     public void testWritesFilteredDedupedReadsWithMateSuffix() throws IOException
     {
-        SAMFileHeader header = header(SAMFileHeader.SortOrder.unsorted);
-        List<SAMRecord> records = List.of(
-                mapped(header, "plain", 0, "chr1", 100, "100M", "AAAAA"),
-                unmapped(header, "dup", 0x4 | 0x400, "TTTTT"),                       // duplicate unmapped: dropped
-                mapped(header, "clip", 0x1 | 0x40, "chr1", 100, "20S80M", "CCCCC"),  // soft-clip candidate, first of pair
-                unmapped(header, "unmap", 0x1 | 0x4 | 0x80, "GGGGG"));               // unmapped candidate, second of pair
-
-        String bam = writeBam(header, records);
-        String fasta = new File(mTempDir.getRoot(), "candidates.fasta").getPath();
-
-        int count = new CandidateReadExtractor(null, new CandidateReadFilter(20, singleton("chrEBV"))).extractToFasta(bam, fasta);
-
-        assertEquals(2, count);
-        assertEquals(List.of(">clip/1", "CCCCC", ">unmap/2", "GGGGG"), Files.readAllLines(new File(fasta).toPath()));
-    }
-
-    // Same filtering over an indexed, coordinate-sorted BAM read via the multi-threaded region-sharded path.
-    // Output order is not deterministic across threads, so the candidate set is compared.
-    @Test
-    public void testParallelExtractionMatchesFiltering() throws IOException
-    {
         SAMFileHeader header = header(SAMFileHeader.SortOrder.coordinate);
         List<SAMRecord> records = List.of(
-                mapped(header, "plain", 0, "chr1", 100, "100M", "AAAAA"),
-                mapped(header, "clip", 0x1 | 0x40, "chr1", 150, "20S80M", "CCCCC"),
-                unmapped(header, "dup", 0x4 | 0x400, "TTTTT"),
-                unmapped(header, "unmap", 0x1 | 0x4 | 0x80, "GGGGG"));
+                mapped(header, "plain", 0, "chr1", 100, "100M", "AAAAA"),             // no viral signal: dropped
+                mapped(header, "clip", 0x1 | 0x40, "chr1", 150, "20S80M", "CCCCC"),   // soft-clip candidate, first of pair
+                unmapped(header, "dup", 0x4 | 0x400, "TTTTT"),                        // duplicate unmapped: dropped
+                unmapped(header, "unmap", 0x1 | 0x4 | 0x80, "GGGGG"));                // unmapped candidate, second of pair
 
         String bam = writeIndexedBam(header, records);
-        String fasta = new File(mTempDir.getRoot(), "candidates.parallel.fasta").getPath();
 
-        int count = new CandidateReadExtractor(null, new CandidateReadFilter(20, singleton("chrEBV")), 4).extractToFasta(bam, fasta);
+        for(int threads : new int[] { 1, 4 })
+        {
+            String fasta = new File(mTempDir.getRoot(), "candidates." + threads + ".fasta").getPath();
+            int count = new CandidateReadExtractor(null, new CandidateReadFilter(20, singleton("chrEBV")), threads)
+                    .extractToFasta(bam, fasta);
 
-        assertEquals(2, count);
-        assertEquals(Set.of(">clip/1\nCCCCC", ">unmap/2\nGGGGG"), fastaEntries(fasta));
+            assertEquals(2, count);
+            assertEquals(Set.of(">clip/1\nCCCCC", ">unmap/2\nGGGGG"), fastaEntries(fasta));
+        }
+    }
+
+    // Sharding the scan by region needs an index, so an unindexed BAM is rejected rather than silently handled.
+    @Test
+    public void testUnindexedBamRejected() throws IOException
+    {
+        SAMFileHeader header = header(SAMFileHeader.SortOrder.unsorted);
+        String bam = writeBam(header, List.of(unmapped(header, "unmap", 0x4, "GGGGG")));
+        String fasta = new File(mTempDir.getRoot(), "candidates.fasta").getPath();
+
+        CandidateReadExtractor extractor = new CandidateReadExtractor(null, new CandidateReadFilter(20, singleton("chrEBV")));
+
+        assertThrows(UserInputError.class, () -> extractor.extractToFasta(bam, fasta));
     }
 
     private static SAMFileHeader header(SAMFileHeader.SortOrder sortOrder)

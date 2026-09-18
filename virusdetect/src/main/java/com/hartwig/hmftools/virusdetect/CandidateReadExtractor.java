@@ -46,9 +46,8 @@ public class CandidateReadExtractor
 
     private static final Logger LOGGER = LogManager.getLogger(CandidateReadExtractor.class);
 
-    // Queued in place of a mapped region: the BAM's block of unmapped reads, and the whole-file scan used without an index.
+    // Queued in place of a mapped region, standing for the BAM's block of unmapped reads.
     private static final ChrBaseRegion UNMAPPED_READS = new ChrBaseRegion("unmapped", NO_POSITION, NO_POSITION);
-    private static final ChrBaseRegion WHOLE_FILE = new ChrBaseRegion("whole-file", NO_POSITION, NO_POSITION);
 
     public CandidateReadExtractor(@Nullable String refGenomeFile, CandidateReadFilter filter)
     {
@@ -98,21 +97,16 @@ public class CandidateReadExtractor
 
     // The unmapped block is one long scan, so it leads the queue and runs alongside the region scans rather than
     // tacking its full duration onto the end.
-    private Queue<ChrBaseRegion> scanRegions(SamReaderFactory readerFactory, String tumorBamFile)
+    private static Queue<ChrBaseRegion> scanRegions(SamReaderFactory readerFactory, String tumorBamFile)
     {
         try(SamReader reader = readerFactory.open(new File(tumorBamFile)))
         {
-            Queue<ChrBaseRegion> regions = new ConcurrentLinkedQueue<>();
             if(!reader.hasIndex())
             {
-                if(mThreads > 1)
-                {
-                    throw new UserInputError("Multi-threaded extraction requires an indexed BAM/CRAM: " + tumorBamFile);
-                }
-                regions.add(WHOLE_FILE);
-                return regions;
+                throw new UserInputError("Tumor BAM/CRAM is not indexed: " + tumorBamFile);
             }
 
+            Queue<ChrBaseRegion> regions = new ConcurrentLinkedQueue<>();
             regions.add(UNMAPPED_READS);
             for(SAMSequenceRecord sequence : reader.getFileHeader().getSequenceDictionary().getSequences())
             {
@@ -186,11 +180,7 @@ public class CandidateReadExtractor
             long startTimeMs = System.currentTimeMillis();
             int startCount = mPart.readCount();
 
-            if(region == WHOLE_FILE)
-            {
-                mReader.forEach(this::addIfCandidate);
-            }
-            else if(region == UNMAPPED_READS)
+            if(region == UNMAPPED_READS)
             {
                 mSlicer.queryUnmapped(mReader, this::addIfCandidate);
             }
