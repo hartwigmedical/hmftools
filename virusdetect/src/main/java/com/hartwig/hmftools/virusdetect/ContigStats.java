@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.virusdetect;
 
+import java.util.Comparator;
+
 // Per-contig support over a set of aligned reads.
 public record ContigStats(
         ViralContig contig,
@@ -20,6 +22,10 @@ public record ContigStats(
         // Strain support: reads softly attributed to this strain, split across the sibling contigs by divergence
         double readVotes)
 {
+    // Best supported first: most read votes, with the contig name breaking ties for determinism.
+    public static final Comparator<ContigStats> BY_SUPPORT =
+            Comparator.comparingDouble(ContigStats::readVotes).reversed().thenComparing(stats -> stats.contig().name());
+
     public double coverageFraction()
     {
         int contigLength = contig.length();

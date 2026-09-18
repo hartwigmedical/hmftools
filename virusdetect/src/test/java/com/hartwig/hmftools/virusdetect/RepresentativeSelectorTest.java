@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.virusdetect;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
@@ -160,8 +161,8 @@ public class RepresentativeSelectorTest
 
         assertEquals(ContigRole.REPRESENTATIVE, byContig.get("v1").role());
         assertEquals(ContigFilterStatus.LOW_VOTE_DENSITY, byContig.get("v2").filterStatus());
-        // Still ranked among the covered contigs, but gets no role
-        assertEquals(Integer.valueOf(2), byContig.get("v2").votesRank());
+        // Prefiltered, so it never reaches the vote ranking
+        assertNull(byContig.get("v2").votesRank());
     }
 
     private static void assertNoRepresentative(Iterable<ContigClassification> classifications)
