@@ -17,7 +17,7 @@ public record ViralAlignments(
         double meanReadLength
 )
 {
-    public static ViralAlignments load(String bamFile)
+    public static ViralAlignments load(String bamFile, ViralReference reference)
     {
         List<ViralAlignment> alignments = new ArrayList<>();
         long readLengthSum = 0;
@@ -31,7 +31,7 @@ public record ViralAlignments(
                 {
                     continue;
                 }
-                alignments.add(ViralAlignment.from(record));
+                alignments.add(ViralAlignment.from(record, reference));
 
                 // Only primaries are significant for measuring read length.
                 if(!record.isSecondaryAlignment() && !record.getSupplementaryAlignmentFlag() && record.getReadLength() > 0)

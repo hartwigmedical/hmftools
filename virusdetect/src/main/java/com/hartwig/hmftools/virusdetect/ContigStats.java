@@ -2,8 +2,7 @@ package com.hartwig.hmftools.virusdetect;
 
 // Per-contig support over a set of aligned reads.
 public record ContigStats(
-        String contig,
-        int contigLength,
+        ViralContig contig,
         // Reads with any alignment to this contig
         int readCount,
         // Reads with more than one alignment to this contig (BWA -a repeats/multi-loci)
@@ -23,6 +22,7 @@ public record ContigStats(
 {
     public double coverageFraction()
     {
+        int contigLength = contig.length();
         return contigLength == 0 ? 0 : (double) coveredBases / contigLength;
     }
 }

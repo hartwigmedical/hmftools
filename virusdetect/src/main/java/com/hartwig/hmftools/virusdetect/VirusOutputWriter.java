@@ -23,23 +23,23 @@ public class VirusOutputWriter
     private static final Logger LOGGER = LogManager.getLogger(VirusOutputWriter.class);
 
     public static void writeContigStats(
-            String file, Collection<ContigStats> stats, List<ContigClassification> classifications, ViralReference reference)
+            String file, Collection<ContigStats> stats, List<ContigClassification> classifications)
     {
-        Map<String, ContigClassification> byContig = classifications.stream()
+        Map<ViralContig, ContigClassification> byContig = classifications.stream()
                 .collect(toMap(ContigClassification::contig, classification -> classification));
 
         List<ContigStats> ordered = stats.stream()
-                .sorted(comparingInt(ContigStats::readCount).reversed().thenComparing(ContigStats::contig))
+                .sorted(comparingInt(ContigStats::readCount).reversed().thenComparing(stat -> stat.contig().name()))
                 .toList();
 
         DelimFileWriter.write(
                 file, Column.values(), ordered, (stat, row) ->
                 {
-                    ViralContig contig = reference.contig(stat.contig());
-                    row.set(Column.contig, stat.contig());
+                    ViralContig contig = stat.contig();
+                    row.set(Column.contig, contig.name());
                     row.set(Column.virus_name, contig.virusName());
                     row.set(Column.oncology_group, contig.oncologyGroup());
-                    row.set(Column.contig_length, stat.contigLength());
+                    row.set(Column.contig_length, contig.length());
                     row.set(Column.read_count, stat.readCount());
                     row.set(Column.multi_align_reads, stat.multiAlignReads());
                     row.set(Column.origin_clipped_reads, stat.originClippedReads());
@@ -95,13 +95,14 @@ public class VirusOutputWriter
     // One row per ordered within-oncology-group contig pair, how decisively the subject fits shared reads better than the
     // opponent as a challenge share at each considered margin value. Includes filtered contigs. Verbose/debug only, for tuning.
     public static void writePairwiseMargins(
-            String file, PairwiseMargins pairwise, RepresentativeSelectionResult selection, ViralReference reference)
+            String file, PairwiseMargins pairwise, RepresentativeSelectionResult selection)
     {
-        Map<String, ContigClassification> byContig = selection.classifications().stream()
+        Map<ViralContig, ContigClassification> byContig = selection.classifications().stream()
                 .collect(toMap(ContigClassification::contig, classification -> classification));
 
         List<PairwiseMargins.ContigPair> pairs = pairwise.pairs().stream()
-                .sorted(comparing(PairwiseMargins.ContigPair::subject).thenComparing(PairwiseMargins.ContigPair::opponent))
+                .sorted(comparing((PairwiseMargins.ContigPair pair) -> pair.subject().name())
+                        .thenComparing(pair -> pair.opponent().name()))
                 .toList();
 
         List<String> columns = Stream.concat(
@@ -112,12 +113,12 @@ public class VirusOutputWriter
         DelimFileWriter.write(
                 file, columns, pairs, (pair, row) ->
                 {
-                    String oncologyGroup = reference.contig(pair.subject()).oncologyGroup();
+                    String oncologyGroup = pair.subject().oncologyGroup();
                     double voteTotal = selection.oncologyGroupVoteTotals().getOrDefault(oncologyGroup, 0.0);
                     row.set(PairwiseColumn.oncology_group, oncologyGroup);
-                    row.set(PairwiseColumn.subject_contig, pair.subject());
+                    row.set(PairwiseColumn.subject_contig, pair.subject().name());
                     row.setOrNull(PairwiseColumn.subject_rank, asString(votesRank(byContig, pair.subject())));
-                    row.set(PairwiseColumn.opponent_contig, pair.opponent());
+                    row.set(PairwiseColumn.opponent_contig, pair.opponent().name());
                     row.setOrNull(PairwiseColumn.opponent_rank, asString(votesRank(byContig, pair.opponent())));
                     row.set(PairwiseColumn.shared_reads, pairwise.sharedReads(pair.subject(), pair.opponent()));
                     for(int margin : CHALLENGE_MARGIN_SWEEP)
@@ -131,7 +132,7 @@ public class VirusOutputWriter
         LOGGER.info("wrote {} pairwise margin rows to {}", pairs.size(), file);
     }
 
-    private static Integer votesRank(Map<String, ContigClassification> byContig, String contig)
+    private static Integer votesRank(Map<ViralContig, ContigClassification> byContig, ViralContig contig)
     {
         ContigClassification classification = byContig.get(contig);
         return classification == null ? null : classification.votesRank();

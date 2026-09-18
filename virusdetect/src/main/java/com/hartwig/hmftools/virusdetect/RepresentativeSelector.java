@@ -5,13 +5,11 @@ import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
 
-import static com.hartwig.hmftools.virusdetect.VirusConstants.COMPARABLE_VOTE_RATIO;
-import static com.hartwig.hmftools.virusdetect.VirusConstants.MIN_CHALLENGE_MARGIN;
-import static com.hartwig.hmftools.virusdetect.VirusConstants.MIN_CHALLENGE_READS;
 import static com.hartwig.hmftools.virusdetect.VirusConstants.MIN_COVERAGE;
 import static com.hartwig.hmftools.virusdetect.VirusConstants.MIN_COVERAGE_LOWER;
 import static com.hartwig.hmftools.virusdetect.VirusConstants.MIN_VOTES_PER_BASE;
 
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -29,11 +27,10 @@ import org.jetbrains.annotations.Nullable;
 // genome in the sample.
 public class RepresentativeSelector
 {
-    public RepresentativeSelectionResult classify(
-            Map<String, ContigStats> contigStats, PairwiseMargins pairwise, ViralReference reference)
+    public RepresentativeSelectionResult classify(Collection<ContigStats> contigStats, PairwiseMargins pairwise)
     {
-        Map<String, List<ContigStats>> contigsByOncologyGroup = contigStats.values().stream()
-                .collect(groupingBy(stats -> reference.contig(stats.contig()).oncologyGroup()));
+        Map<String, List<ContigStats>> contigsByOncologyGroup = contigStats.stream()
+                .collect(groupingBy(stats -> stats.contig().oncologyGroup()));
 
         List<OncologyGroupResult> groupResults = contigsByOncologyGroup.entrySet().stream()
                 .map(entry -> classifyOncologyGroup(entry.getKey(), entry.getValue(), pairwise))
@@ -52,10 +49,10 @@ public class RepresentativeSelector
     private OncologyGroupResult classifyOncologyGroup(String oncologyGroup, List<ContigStats> groupContigs, PairwiseMargins pairwise)
     {
         List<ContigStats> covered = contigsPassingCoverage(groupContigs);
-        Set<String> coveredContigs = contigNames(covered);
+        Set<ViralContig> coveredContigs = contigSet(covered);
         List<ContigClassification> lowCoverage = groupContigs.stream()
                 .filter(stats -> !coveredContigs.contains(stats.contig()))
-                .map(stats -> droppedClassification(stats, oncologyGroup, ContigFilterStatus.LOW_COVERAGE))
+                .map(RepresentativeSelector::lowCoverageClassification)
                 .toList();
 
         if(covered.isEmpty())
@@ -64,15 +61,15 @@ public class RepresentativeSelector
         }
 
         double voteTotal = covered.stream().mapToDouble(ContigStats::readVotes).sum();
-        Map<String, Integer> votesRankByContig = votesRanks(covered);
+        Map<ViralContig, Integer> votesRankByContig = votesRanks(covered);
 
         List<ContigStats> candidates = covered.stream()
                 .filter(stats -> passesVoteDensity(stats, pairwise.meanReadLength()))
                 .toList();
-        Set<String> candidateContigs = contigNames(candidates);
+        Set<ViralContig> candidateContigs = contigSet(candidates);
         List<ContigClassification> lowVoteDensity = covered.stream()
                 .filter(stats -> !candidateContigs.contains(stats.contig()))
-                .map(stats -> lowVoteDensityClassification(stats, oncologyGroup, votesRankByContig, voteTotal))
+                .map(stats -> lowVoteDensityClassification(stats, votesRankByContig, voteTotal))
                 .toList();
 
         if(candidates.isEmpty())
@@ -81,11 +78,10 @@ public class RepresentativeSelector
             return new OncologyGroupResult(oncologyGroup, voteTotal, contigClassifications);
         }
 
-        ChallengeResolution resolution = resolveByChallenges(candidates, votesRankByContig, voteTotal, pairwise);
-        double topVoteShare = candidates.stream().mapToDouble(stats -> voteShare(stats.readVotes(), voteTotal)).max().orElse(0.0);
+        ChallengeGraph graph = ChallengeGraph.build(candidates, pairwise, voteTotal);
+        ChallengeResolution resolution = resolveByChallenges(votesRankByContig, graph);
         List<ContigClassification> candidateClassifications = candidates.stream()
-                .map(candidate -> candidateClassification(
-                        candidate, oncologyGroup, resolution, candidates, votesRankByContig, voteTotal, topVoteShare, pairwise))
+                .map(candidate -> candidateClassification(candidate, resolution, candidates, votesRankByContig, voteTotal, graph))
                 .toList();
 
         List<ContigClassification> contigClassifications =
@@ -94,33 +90,28 @@ public class RepresentativeSelector
         return new OncologyGroupResult(oncologyGroup, voteTotal, contigClassifications);
     }
 
-    // Builds the challenge graph over an oncology group's candidates and reduces it to per-contig roles and an outcome.
-    private ChallengeResolution resolveByChallenges(
-            List<ContigStats> candidates, Map<String, Integer> votesRankByContig, double voteTotal, PairwiseMargins pairwise)
+    // Reduces the challenge graph over an oncology group's candidates to per-contig roles and an outcome.
+    private ChallengeResolution resolveByChallenges(Map<ViralContig, Integer> votesRankByContig, ChallengeGraph graph)
     {
-        List<String> contigs = contigNames(candidates).stream().toList();
+        List<ViralContig> contigs = graph.contigs();
         if(contigs.size() == 1)
         {
             return new ChallengeResolution(
                     Map.of(contigs.get(0), ContigRole.REPRESENTATIVE), Set.of(contigs.get(0)), OncologyGroupSubOutcome.ONE_CANDIDATE);
         }
 
-        Set<String> comparable = abundantContigs(candidates, voteTotal);
+        Set<ViralContig> comparable = graph.comparable();
 
         boolean minorChallengesAbundant = contigs.stream()
                 .filter(contig -> !comparable.contains(contig))
-                .anyMatch(minor -> comparable.stream().anyMatch(peer -> challenges(minor, peer, pairwise, voteTotal)));
+                .anyMatch(minor -> comparable.stream().anyMatch(peer -> graph.challenges(minor, peer)));
 
-        Map<String, Boolean> challengedByPeer = new HashMap<>();
-        for(String contig : comparable)
-        {
-            challengedByPeer.put(
-                    contig,
-                    comparable.stream().anyMatch(peer -> !peer.equals(contig) && challenges(peer, contig, pairwise, voteTotal)));
-        }
-        List<String> unchallenged = comparable.stream().filter(contig -> !challengedByPeer.get(contig)).toList();
+        Set<ViralContig> challengedByPeer = comparable.stream()
+                .filter(contig -> comparable.stream().anyMatch(peer -> !peer.equals(contig) && graph.challenges(peer, contig)))
+                .collect(toSet());
+        List<ViralContig> unchallenged = comparable.stream().filter(contig -> !challengedByPeer.contains(contig)).toList();
 
-        String representative = null;
+        ViralContig representative = null;
         OncologyGroupSubOutcome subOutcome;
         if(minorChallengesAbundant)
         {
@@ -128,8 +119,7 @@ public class RepresentativeSelector
         }
         else if(unchallenged.isEmpty())
         {
-            subOutcome = hasMutualChallenge(comparable, pairwise, voteTotal)
-                    ? OncologyGroupSubOutcome.MUTUAL : OncologyGroupSubOutcome.CYCLE;
+            subOutcome = hasMutualChallenge(comparable, graph) ? OncologyGroupSubOutcome.MUTUAL : OncologyGroupSubOutcome.CYCLE;
         }
         else
         {
@@ -137,17 +127,17 @@ public class RepresentativeSelector
             representative = unchallenged.stream().min(Comparator.comparingInt(votesRankByContig::get)).orElseThrow();
         }
 
-        Map<String, ContigRole> roles = new HashMap<>();
-        for(String contig : contigs)
+        Map<ViralContig, ContigRole> roles = new HashMap<>();
+        for(ViralContig contig : contigs)
         {
-            roles.put(contig, roleFor(contig, representative, comparable, challengedByPeer, pairwise, voteTotal));
+            roles.put(contig, roleFor(contig, representative, comparable, challengedByPeer, graph));
         }
         return new ChallengeResolution(roles, comparable, subOutcome);
     }
 
     private ContigRole roleFor(
-            String contig, String representative, Set<String> comparable,
-            Map<String, Boolean> challengedByPeer, PairwiseMargins pairwise, double voteTotal)
+            ViralContig contig, @Nullable ViralContig representative, Set<ViralContig> comparable,
+            Set<ViralContig> challengedByPeer, ChallengeGraph graph)
     {
         if(contig.equals(representative))
         {
@@ -155,10 +145,10 @@ public class RepresentativeSelector
         }
         if(!comparable.contains(contig))
         {
-            boolean challengesAbundant = comparable.stream().anyMatch(peer -> challenges(contig, peer, pairwise, voteTotal));
+            boolean challengesAbundant = comparable.stream().anyMatch(peer -> graph.challenges(contig, peer));
             return challengesAbundant ? ContigRole.MINOR_CHALLENGER : ContigRole.MINOR;
         }
-        if(challengedByPeer.get(contig))
+        if(challengedByPeer.contains(contig))
         {
             return ContigRole.SECONDARY;
         }
@@ -185,47 +175,28 @@ public class RepresentativeSelector
             return true;
         }
         double voteFloorPerBase = MIN_VOTES_PER_BASE * MIN_COVERAGE / meanReadLength;
-        return stats.readVotes() >= voteFloorPerBase * stats.contigLength();
+        return stats.readVotes() >= voteFloorPerBase * stats.contig().length();
     }
 
-    // Contigs whose vote share is near the oncology group's top: the abundant contenders that contest each other.
-    private static Set<String> abundantContigs(List<ContigStats> candidates, double voteTotal)
+    private static boolean hasMutualChallenge(Set<ViralContig> comparable, ChallengeGraph graph)
     {
-        double topVoteShare = candidates.stream().mapToDouble(stats -> voteShare(stats.readVotes(), voteTotal)).max().orElse(0.0);
-        return candidates.stream()
-                .filter(stats -> topVoteShare > 0 && voteShare(stats.readVotes(), voteTotal) >= COMPARABLE_VOTE_RATIO * topVoteShare)
-                .map(ContigStats::contig)
-                .collect(toSet());
-    }
-
-    private static boolean hasMutualChallenge(Set<String> comparable, PairwiseMargins pairwise, double voteTotal)
-    {
-        return comparable.stream().anyMatch(subject -> comparable.stream().anyMatch(opponent -> !subject.equals(opponent)
-                && challenges(subject, opponent, pairwise, voteTotal) && challenges(opponent, subject, pairwise, voteTotal)));
-    }
-
-    // A contig challenges another when a high enough fraction of the oncology group's reads prefer it by at least the margin.
-    private static boolean challenges(String subject, String opponent, PairwiseMargins pairwise, double voteTotal)
-    {
-        if(voteTotal <= 0)
-        {
-            return false;
-        }
-        return pairwise.challengeReads(subject, opponent, MIN_CHALLENGE_MARGIN) / voteTotal >= MIN_CHALLENGE_READS;
+        return comparable.stream().anyMatch(subject -> comparable.stream().anyMatch(opponent ->
+                !subject.equals(opponent) && graph.challenges(subject, opponent) && graph.challenges(opponent, subject)));
     }
 
     private ContigClassification candidateClassification(
-            ContigStats candidate, String oncologyGroup, ChallengeResolution resolution, List<ContigStats> candidates,
-            Map<String, Integer> votesRankByContig, double voteTotal, double topVoteShare, PairwiseMargins pairwise)
+            ContigStats candidate, ChallengeResolution resolution, List<ContigStats> candidates,
+            Map<ViralContig, Integer> votesRankByContig, double voteTotal, ChallengeGraph graph)
     {
         double candidateVoteShare = voteShare(candidate.readVotes(), voteTotal);
+        double topVoteShare = graph.topVoteShare();
         List<Integer> challenges = candidateRanks(
-                candidates, candidate, other -> challenges(candidate.contig(), other, pairwise, voteTotal), votesRankByContig);
+                candidates, candidate, other -> graph.challenges(candidate.contig(), other), votesRankByContig);
         List<Integer> challengedBy = candidateRanks(
-                candidates, candidate, other -> challenges(other, candidate.contig(), pairwise, voteTotal), votesRankByContig);
+                candidates, candidate, other -> graph.challenges(other, candidate.contig()), votesRankByContig);
 
         return new ContigClassification(
-                candidate.contig(), oncologyGroup, ContigFilterStatus.CANDIDATE,
+                candidate.contig(), ContigFilterStatus.CANDIDATE,
                 votesRankByContig.get(candidate.contig()), candidateVoteShare,
                 topVoteShare > 0 ? candidateVoteShare / topVoteShare : 0.0,
                 resolution.comparable().contains(candidate.contig()),
@@ -237,7 +208,7 @@ public class RepresentativeSelector
     // The votes-ranks of the other candidates matching the challenge relation, sorted for stable output.
     private static List<Integer> candidateRanks(
             List<ContigStats> candidates, ContigStats subject,
-            Predicate<String> matches, Map<String, Integer> votesRankByContig)
+            Predicate<ViralContig> matches, Map<ViralContig, Integer> votesRankByContig)
     {
         return candidates.stream()
                 .map(ContigStats::contig)
@@ -249,27 +220,28 @@ public class RepresentativeSelector
     }
 
     private static ContigClassification lowVoteDensityClassification(
-            ContigStats stats, String oncologyGroup, Map<String, Integer> votesRankByContig, double voteTotal)
+            ContigStats stats, Map<ViralContig, Integer> votesRankByContig, double voteTotal)
     {
         return new ContigClassification(
-                stats.contig(), oncologyGroup, ContigFilterStatus.LOW_VOTE_DENSITY,
+                stats.contig(), ContigFilterStatus.LOW_VOTE_DENSITY,
                 votesRankByContig.get(stats.contig()), voteShare(stats.readVotes(), voteTotal),
                 null, null, emptyList(), emptyList(), null, null, null);
     }
 
-    private static ContigClassification droppedClassification(ContigStats stats, String oncologyGroup, ContigFilterStatus status)
+    private static ContigClassification lowCoverageClassification(ContigStats stats)
     {
         return new ContigClassification(
-                stats.contig(), oncologyGroup, status, null, null, null, null, emptyList(), emptyList(), null, null, null);
+                stats.contig(), ContigFilterStatus.LOW_COVERAGE, null, null, null, null, emptyList(), emptyList(), null, null, null);
     }
 
     // Rank 1 = most read votes; contig name breaks ties for determinism.
-    private static Map<String, Integer> votesRanks(List<ContigStats> covered)
+    private static Map<ViralContig, Integer> votesRanks(List<ContigStats> covered)
     {
         List<ContigStats> ordered = covered.stream()
-                .sorted(Comparator.comparingDouble(ContigStats::readVotes).reversed().thenComparing(ContigStats::contig))
+                .sorted(Comparator.comparingDouble(ContigStats::readVotes).reversed()
+                        .thenComparing(stats -> stats.contig().name()))
                 .toList();
-        Map<String, Integer> votesRankByContig = new HashMap<>();
+        Map<ViralContig, Integer> votesRankByContig = new HashMap<>();
         for(int i = 0; i < ordered.size(); ++i)
         {
             votesRankByContig.put(ordered.get(i).contig(), i + 1);
@@ -277,7 +249,7 @@ public class RepresentativeSelector
         return votesRankByContig;
     }
 
-    private static Set<String> contigNames(List<ContigStats> stats)
+    private static Set<ViralContig> contigSet(List<ContigStats> stats)
     {
         return stats.stream().map(ContigStats::contig).collect(toSet());
     }
@@ -288,8 +260,8 @@ public class RepresentativeSelector
     }
 
     private record ChallengeResolution(
-            Map<String, ContigRole> roles,
-            Set<String> comparable,
+            Map<ViralContig, ContigRole> roles,
+            Set<ViralContig> comparable,
             OncologyGroupSubOutcome subOutcome
     )
     {

@@ -13,7 +13,7 @@ import htsjdk.samtools.SAMRecord;
 // One viral alignment of a read with just the data required for our analysis.
 public record ViralAlignment(
         String readName,
-        String contig,
+        ViralContig contig,
         int alignmentStart,
         int alignmentEnd,
         int leftClip,
@@ -28,10 +28,6 @@ public record ViralAlignment(
         if(readName.isEmpty())
         {
             throw new IllegalArgumentException("read name is empty");
-        }
-        if(contig.isEmpty())
-        {
-            throw new IllegalArgumentException("contig is empty");
         }
         if(alignmentStart < 1)
         {
@@ -59,7 +55,7 @@ public record ViralAlignment(
         }
     }
 
-    public static ViralAlignment from(SAMRecord record)
+    public static ViralAlignment from(SAMRecord record, ViralReference reference)
     {
         int leftClip = leftClipLength(record.getCigar());
         int rightClip = rightClipLength(record.getCigar());
@@ -72,14 +68,15 @@ public record ViralAlignment(
         int alignerScore = requiredTag(record, ALIGNMENT_SCORE_ATTRIBUTE, "alignment score");
 
         return new ViralAlignment(
-                record.getReadName(), record.getReferenceName(), record.getAlignmentStart(), record.getAlignmentEnd(),
-                leftClip, rightClip, alignerScore, editDistance + leftClip + rightClip, intervals);
+                record.getReadName(), reference.contig(record.getReferenceName()), record.getAlignmentStart(),
+                record.getAlignmentEnd(), leftClip, rightClip, alignerScore, editDistance + leftClip + rightClip, intervals);
     }
 
     // The clipped bases project past a contig end, so the read straddles the circular genome's linearization origin:
     // those bases wrap to the other end and cannot align linearly. An artifact, not real divergence.
-    public boolean clipsOverContigEnd(int contigLength)
+    public boolean clipsOverContigEnd()
     {
+        int contigLength = contig.length();
         return alignmentStart - leftClip < 1 - ORIGIN_CLIP_TOLERANCE || alignmentEnd + rightClip > contigLength + ORIGIN_CLIP_TOLERANCE;
     }
 

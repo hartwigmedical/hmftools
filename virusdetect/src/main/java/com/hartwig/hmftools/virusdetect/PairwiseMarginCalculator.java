@@ -16,17 +16,17 @@ import com.hartwig.hmftools.virusdetect.PairwiseMargins.ContigPair;
 // so a subset of reads will preferentially align to one contig with large margin.
 public class PairwiseMarginCalculator
 {
-    public PairwiseMargins compute(ViralAlignments viralAlignments, ViralReference reference)
+    public PairwiseMargins compute(ViralAlignments viralAlignments)
     {
         List<ViralAlignment> withinContig = viralAlignments.alignments().stream()
-                .filter(alignment -> !alignment.clipsOverContigEnd(reference.contig(alignment.contig()).length()))
+                .filter(alignment -> !alignment.clipsOverContigEnd())
                 .toList();
 
         Map<ContigPair, NavigableMap<Integer, Integer>> marginCounts = new HashMap<>();
         Map<ContigPair, Integer> sharedReads = new HashMap<>();
 
         withinContig.stream().collect(groupingBy(ViralAlignment::readName)).values()
-                .forEach(readAlignments -> accumulateRead(readAlignments, reference, marginCounts, sharedReads));
+                .forEach(readAlignments -> accumulateRead(readAlignments, marginCounts, sharedReads));
 
         return new PairwiseMargins(marginCounts, sharedReads, viralAlignments.meanReadLength());
     }
@@ -35,20 +35,20 @@ public class PairwiseMarginCalculator
     // Pairs up the contigs it aligns to within each oncology group.
     // For each ordered pair, records that they share the read, and the subject's winning margin over the opponent (if any).
     private static void accumulateRead(
-            List<ViralAlignment> readAlignments, ViralReference reference,
+            List<ViralAlignment> readAlignments,
             Map<ContigPair, NavigableMap<Integer, Integer>> marginCounts, Map<ContigPair, Integer> sharedReads)
     {
-        Map<String, Integer> bestDivergenceByContig = new HashMap<>();
+        Map<ViralContig, Integer> bestDivergenceByContig = new HashMap<>();
         readAlignments.forEach(alignment -> bestDivergenceByContig.merge(alignment.contig(), alignment.divergence(), Math::min));
 
-        Map<String, List<String>> contigsByOncologyGroup = bestDivergenceByContig.keySet().stream()
-                .collect(groupingBy(contig -> reference.contig(contig).oncologyGroup()));
+        Map<String, List<ViralContig>> contigsByOncologyGroup = bestDivergenceByContig.keySet().stream()
+                .collect(groupingBy(ViralContig::oncologyGroup));
 
-        for(List<String> oncologyGroupContigs : contigsByOncologyGroup.values())
+        for(List<ViralContig> oncologyGroupContigs : contigsByOncologyGroup.values())
         {
-            for(String subject : oncologyGroupContigs)
+            for(ViralContig subject : oncologyGroupContigs)
             {
-                for(String opponent : oncologyGroupContigs)
+                for(ViralContig opponent : oncologyGroupContigs)
                 {
                     if(subject.equals(opponent))
                     {

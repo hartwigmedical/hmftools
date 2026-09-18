@@ -7,8 +7,7 @@ import org.jetbrains.annotations.Nullable;
 // One contig's representative-selection verdict.
 // Fields fill progressively depending on how far the contig got through the selection process.
 public record ContigClassification(
-        String contig,
-        String oncologyGroup,
+        ViralContig contig,
         ContigFilterStatus filterStatus,
         // Set for coverage survivors: rank by read votes within the oncology group, and share of its total votes.
         @Nullable Integer votesRank,

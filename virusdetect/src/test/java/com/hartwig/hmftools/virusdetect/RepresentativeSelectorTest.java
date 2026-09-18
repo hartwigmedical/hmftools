@@ -24,6 +24,9 @@ public class RepresentativeSelectorTest
     private static final int LENGTH = 1000;
     private static final double MEAN_READ_LENGTH = 150.0;
 
+    // Contigs are grouped by name prefix: "h" -> Group H, everything else -> Group A.
+    private static final ViralReference REFERENCE = reference("v1", "v2", "v3", "h1", "h2");
+
     // Two contigs with similar votes and no challenge between them: the one with more votes leads, the other is its twin.
     @Test
     public void testResolvedTwins()
@@ -131,9 +134,9 @@ public class RepresentativeSelectorTest
     {
         Map<String, ContigStats> stats = statsMap(
                 present("v1", 100),
-                stats("v2", 0.05, 100, "Group A"),   // in a covered group, but itself below the relaxed floor
-                stats("h1", 0.05, 100, "Group H"),   // no contig in this group meets the coverage minimum
-                stats("h2", 0.04, 100, "Group H"));
+                stats("v2", 0.05, 100),   // in a covered group, but itself below the relaxed floor
+                stats("h1", 0.05, 100),   // no contig in this group meets the coverage minimum
+                stats("h2", 0.04, 100));
         PairwiseMargins pairwise = new Pairwise().build();
 
         Map<String, ContigClassification> byContig = classify(stats, pairwise);
@@ -150,7 +153,7 @@ public class RepresentativeSelectorTest
     {
         Map<String, ContigStats> stats = statsMap(
                 present("v1", 100),
-                stats("v2", 0.5, 0.1, "Group A"));   // good coverage but almost no votes
+                stats("v2", 0.5, 0.1));   // good coverage but almost no votes
         PairwiseMargins pairwise = new Pairwise().build();
 
         Map<String, ContigClassification> byContig = classify(stats, pairwise);
@@ -171,9 +174,9 @@ public class RepresentativeSelectorTest
 
     private Map<String, ContigClassification> classify(Map<String, ContigStats> stats, PairwiseMargins pairwise)
     {
-        RepresentativeSelectionResult result = new RepresentativeSelector().classify(stats, pairwise, reference(stats.keySet()));
+        RepresentativeSelectionResult result = new RepresentativeSelector().classify(stats.values(), pairwise);
         Map<String, ContigClassification> byContig = new HashMap<>();
-        result.classifications().forEach(classification -> byContig.put(classification.contig(), classification));
+        result.classifications().forEach(classification -> byContig.put(classification.contig().name(), classification));
         return byContig;
     }
 
@@ -182,7 +185,7 @@ public class RepresentativeSelectorTest
         Map<String, ContigStats> map = new HashMap<>();
         for(ContigStats stat : stats)
         {
-            map.put(stat.contig(), stat);
+            map.put(stat.contig().name(), stat);
         }
         return map;
     }
@@ -190,17 +193,17 @@ public class RepresentativeSelectorTest
     // A contig in Group A with good coverage and the given read votes.
     private static ContigStats present(String contig, double votes)
     {
-        return stats(contig, 0.5, votes, "Group A");
+        return stats(contig, 0.5, votes);
     }
 
-    private static ContigStats stats(String contig, double coverage, double votes, String group)
+    private static ContigStats stats(String contig, double coverage, double votes)
     {
         int coveredBases = (int) Math.round(coverage * LENGTH);
         SummaryStats dummy = SummaryStats.from(new int[] { 1 });
-        return new ContigStats(contig, LENGTH, 100, 0, dummy, 0, coveredBases, dummy, dummy, votes);
+        return new ContigStats(REFERENCE.contig(contig), 100, 0, dummy, 0, coveredBases, dummy, dummy, votes);
     }
 
-    private static ViralReference reference(Iterable<String> contigNames)
+    private static ViralReference reference(String... contigNames)
     {
         List<ViralContig> contigs = new ArrayList<>();
         List<SAMSequenceRecord> records = new ArrayList<>();
@@ -222,10 +225,10 @@ public class RepresentativeSelectorTest
 
         private Pairwise challenge(String subject, String opponent, int reads)
         {
-            ContigPair pair = new ContigPair(subject, opponent);
+            ContigPair pair = new ContigPair(REFERENCE.contig(subject), REFERENCE.contig(opponent));
             mMargins.computeIfAbsent(pair, key -> new TreeMap<>()).merge(10, reads, Integer::sum);
             mShared.merge(pair, reads, Integer::sum);
-            mShared.merge(new ContigPair(opponent, subject), reads, Integer::sum);
+            mShared.merge(new ContigPair(REFERENCE.contig(opponent), REFERENCE.contig(subject)), reads, Integer::sum);
             return this;
         }
 

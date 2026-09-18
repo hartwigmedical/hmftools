@@ -13,12 +13,15 @@ public class PairwiseMarginCalculatorTest
 {
     private static final double EPSILON = 1e-9;
 
+    private static final ViralReference REFERENCE = reference();
+
     // v1 and v2 share a group; h1 is in another. Two reads align to both v1 and v2, each fitting v1 better; a third
     // spans the group boundary and must not be paired.
     @Test
     public void testPairsContigsWithinGroupByWinningMargin()
     {
-        ViralReference reference = reference();
+        ViralContig v1 = REFERENCE.contig("v1");
+        ViralContig v2 = REFERENCE.contig("v2");
 
         List<ViralAlignment> alignments = List.of(
                 alignment("r1", "v1", 2),
@@ -28,45 +31,43 @@ public class PairwiseMarginCalculatorTest
                 alignment("r3", "v1", 1),
                 alignment("r3", "h1", 1));  // cross-group: not paired
 
-        PairwiseMargins margins = new PairwiseMarginCalculator().compute(new ViralAlignments(alignments, 150.0), reference);
+        PairwiseMargins margins = new PairwiseMarginCalculator().compute(new ViralAlignments(alignments, 150.0));
 
         assertEquals(150.0, margins.meanReadLength(), EPSILON);
 
         // Both reads shared between v1 and v2, both directions
-        assertEquals(2, margins.sharedReads("v1", "v2"));
-        assertEquals(2, margins.sharedReads("v2", "v1"));
+        assertEquals(2, margins.sharedReads(v1, v2));
+        assertEquals(2, margins.sharedReads(v2, v1));
 
         // v1's winning margins over v2 are 5 (r1) and 3 (r2)
-        assertEquals(2, margins.challengeReads("v1", "v2", 3));
-        assertEquals(1, margins.challengeReads("v1", "v2", 5));
-        assertEquals(0, margins.challengeReads("v1", "v2", 6));
+        assertEquals(2, margins.challengeReads(v1, v2, 3));
+        assertEquals(1, margins.challengeReads(v1, v2, 5));
+        assertEquals(0, margins.challengeReads(v1, v2, 6));
 
         // v2 never fits a shared read better than v1
-        assertEquals(0, margins.challengeReads("v2", "v1", 1));
+        assertEquals(0, margins.challengeReads(v2, v1, 1));
 
         // The cross-group read produced no pair
-        assertEquals(0, margins.sharedReads("v1", "h1"));
+        assertEquals(0, margins.sharedReads(v1, REFERENCE.contig("h1")));
     }
 
     // An alignment whose clip projects past a contig end straddles the circular origin and is dropped before pairing.
     @Test
     public void testDropsOriginStraddlers()
     {
-        ViralReference reference = reference();
-
         List<ViralAlignment> alignments = List.of(
                 alignment("r1", "v1", 2),
                 straddler("r1", "v2"));   // dropped, so r1 has only v1 left and forms no pair
 
-        PairwiseMargins margins = new PairwiseMarginCalculator().compute(new ViralAlignments(alignments, 150.0), reference);
+        PairwiseMargins margins = new PairwiseMarginCalculator().compute(new ViralAlignments(alignments, 150.0));
 
-        assertEquals(0, margins.sharedReads("v1", "v2"));
+        assertEquals(0, margins.sharedReads(REFERENCE.contig("v1"), REFERENCE.contig("v2")));
     }
 
     private static ViralAlignment alignment(String readName, String contig, int divergence)
     {
         return new ViralAlignment(
-                readName, contig, 1, 100, 0, 0, 100, divergence,
+                readName, REFERENCE.contig(contig), 1, 100, 0, 0, 100, divergence,
                 List.of(new ViralAlignment.AlignedInterval(1, 100)));
     }
 
@@ -74,7 +75,7 @@ public class PairwiseMarginCalculatorTest
     private static ViralAlignment straddler(String readName, String contig)
     {
         return new ViralAlignment(
-                readName, contig, 1, 100, 0, 50, 100, 50,
+                readName, REFERENCE.contig(contig), 1, 100, 0, 50, 100, 50,
                 List.of(new ViralAlignment.AlignedInterval(1, 100)));
     }
 

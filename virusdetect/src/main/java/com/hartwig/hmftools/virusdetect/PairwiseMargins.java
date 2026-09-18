@@ -24,7 +24,7 @@ public class PairwiseMargins
     }
 
     // Reads whose best alignment fits the subject at least minMargin divergent bases better than the opponent.
-    public int challengeReads(String subject, String opponent, int minMargin)
+    public int challengeReads(ViralContig subject, ViralContig opponent, int minMargin)
     {
         NavigableMap<Integer, Integer> margins = mMarginCounts.get(new ContigPair(subject, opponent));
         if(margins == null)
@@ -35,7 +35,7 @@ public class PairwiseMargins
     }
 
     // Reads aligned to both contigs (regardless of which one they favour).
-    public int sharedReads(String subject, String opponent)
+    public int sharedReads(ViralContig subject, ViralContig opponent)
     {
         return mSharedReads.getOrDefault(new ContigPair(subject, opponent), 0);
     }
@@ -51,8 +51,8 @@ public class PairwiseMargins
     }
 
     public record ContigPair(
-            String subject,
-            String opponent
+            ViralContig subject,
+            ViralContig opponent
     )
     {
     }

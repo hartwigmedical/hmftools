@@ -33,38 +33,38 @@ public class ContigStatsCalculator
         mCorrectBaseProbability = correctBaseProbability;
     }
 
-    public Map<String, ContigStats> compute(ViralAlignments viralAlignments, ViralReference reference)
+    public Map<ViralContig, ContigStats> compute(ViralAlignments viralAlignments)
     {
         // Alignments clipping over a contig end are a circular-genome artifact: set them aside (counted per contig) and
         // build the stats from the rest.
 
         Map<Boolean, List<ViralAlignment>> byOriginClip = viralAlignments.alignments().stream()
-                .collect(partitioningBy(alignment -> alignment.clipsOverContigEnd(reference.contig(alignment.contig()).length())));
+                .collect(partitioningBy(ViralAlignment::clipsOverContigEnd));
         List<ViralAlignment> filteredAlignments = byOriginClip.get(false);
         List<ViralAlignment> originClipAlignments = byOriginClip.get(true);
 
-        Map<String, ContigAccumulator> accumulators = new HashMap<>();
+        Map<ViralContig, ContigAccumulator> accumulators = new HashMap<>();
         filteredAlignments.stream()
                 .collect(groupingBy(ViralAlignment::readName))
                 .values()
                 .forEach(readAlignments -> accumulateRead(readAlignments, accumulators));
 
-        Map<String, Long> originClippedByContig = originClipAlignments.stream().collect(groupingBy(ViralAlignment::contig, counting()));
+        Map<ViralContig, Long> originClippedByContig = originClipAlignments.stream().collect(
+                groupingBy(ViralAlignment::contig, counting()));
 
         return accumulators.entrySet().stream().collect(toMap(
                 Map.Entry::getKey, entry -> entry.getValue().toContigStats(
-                        entry.getKey(), reference.contig(entry.getKey()).length(),
-                        originClippedByContig.getOrDefault(entry.getKey(), 0L).intValue())));
+                        entry.getKey(), originClippedByContig.getOrDefault(entry.getKey(), 0L).intValue())));
     }
 
     // Folds one read into the per-contig accumulators: its best alignment (and alignment count) on each contig it hits,
     // plus its cross-contig vote split.
-    private void accumulateRead(List<ViralAlignment> readAlignments, Map<String, ContigAccumulator> accumulators)
+    private void accumulateRead(List<ViralAlignment> readAlignments, Map<ViralContig, ContigAccumulator> accumulators)
     {
         // Collapse BWA -a repeats: per contig keep the best alignment and count how many the read has there.
-        Map<String, List<ViralAlignment>> alignmentsByContig = readAlignments.stream().collect(groupingBy(ViralAlignment::contig));
+        Map<ViralContig, List<ViralAlignment>> alignmentsByContig = readAlignments.stream().collect(groupingBy(ViralAlignment::contig));
 
-        Map<String, ViralAlignment> bestAlignmentPerContig = alignmentsByContig.entrySet().stream().collect(toMap(
+        Map<ViralContig, ViralAlignment> bestAlignmentPerContig = alignmentsByContig.entrySet().stream().collect(toMap(
                 Map.Entry::getKey, entry -> entry.getValue().stream().reduce(ContigStatsCalculator::chooseBetterAlignment).orElseThrow()));
 
         alignmentsByContig.forEach((contig, contigAlignments) ->
@@ -79,12 +79,12 @@ public class ContigStatsCalculator
 
     // A read's vote splits across the contigs it hits by how well each explains it: every extra base a contig fails to
     // explain multiplies its share by the (pessimistic) chance a base is right, so the closest contig wins most.
-    private void addVotes(Map<String, ViralAlignment> bestByContig, Map<String, ContigAccumulator> accumulators)
+    private void addVotes(Map<ViralContig, ViralAlignment> bestByContig, Map<ViralContig, ContigAccumulator> accumulators)
     {
         // Offsets the exponents for numeric stability.
         int minDivergence = bestByContig.values().stream().mapToInt(ViralAlignment::divergence).min().orElseThrow();
 
-        Map<String, Double> contigWeights = bestByContig.entrySet().stream()
+        Map<ViralContig, Double> contigWeights = bestByContig.entrySet().stream()
                 .collect(toMap(Map.Entry::getKey, entry -> voteWeight(entry.getValue(), minDivergence)));
 
         double totalWeight = contigWeights.values().stream().mapToDouble(Double::doubleValue).sum();
@@ -128,15 +128,15 @@ public class ContigStatsCalculator
             mVotes += vote;
         }
 
-        private ContigStats toContigStats(String contig, int contigLength, int originClippedReads)
+        private ContigStats toContigStats(ViralContig contig, int originClippedReads)
         {
-            int[] depth = calculateDepth(contigLength, mAlignments);
+            int[] depth = calculateDepth(contig.length(), mAlignments);
             SummaryStats depthSummary = SummaryStats.from(depth);
             int coveredBases = (int) Arrays.stream(depth).filter(d -> d > 0).count();
             int multiAlignReads = (int) mAlignmentCounts.stream().filter(count -> count > 1).count();
             SummaryStats alignerScoreSummary = SummaryStats.from(mAlignments.stream().mapToInt(ViralAlignment::alignerScore).toArray());
             return new ContigStats(
-                    contig, contigLength, mAlignments.size(), multiAlignReads, SummaryStats.from(mAlignmentCounts), originClippedReads,
+                    contig, mAlignments.size(), multiAlignReads, SummaryStats.from(mAlignmentCounts), originClippedReads,
                     coveredBases, depthSummary, alignerScoreSummary, mVotes);
         }
     }

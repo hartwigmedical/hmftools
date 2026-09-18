@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.virusdetect;
 
 // TODO: why don't we use this everywhere as a key rather than the contig name? Could be more readable?
+// A contig which is a virus genome.
 public record ViralContig(
         // Original contig name in the viral reference.
         String name,

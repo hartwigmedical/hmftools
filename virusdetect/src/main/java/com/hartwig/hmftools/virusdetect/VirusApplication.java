@@ -76,21 +76,21 @@ public class VirusApplication
         mAligner.align(candidateFastaFile, alignedBamFile);
         LOGGER.info("Alignment complete");
 
-        ViralAlignments viralAlignments = ViralAlignments.load(alignedBamFile);
+        ViralAlignments viralAlignments = ViralAlignments.load(alignedBamFile, mViralReference);
 
         LOGGER.info("Computing per-contig statistics");
-        Map<String, ContigStats> contigStats = new ContigStatsCalculator().compute(viralAlignments, mViralReference);
+        Map<ViralContig, ContigStats> contigStats = new ContigStatsCalculator().compute(viralAlignments);
         LOGGER.info("Per-contig statistics complete");
 
         LOGGER.info("Selecting representative contig per oncology group");
-        PairwiseMargins pairwise = new PairwiseMarginCalculator().compute(viralAlignments, mViralReference);
-        RepresentativeSelectionResult selection = new RepresentativeSelector().classify(contigStats, pairwise, mViralReference);
+        PairwiseMargins pairwise = new PairwiseMarginCalculator().compute(viralAlignments);
+        RepresentativeSelectionResult selection = new RepresentativeSelector().classify(contigStats.values(), pairwise);
         logSelection(selection);
 
-        VirusOutputWriter.writeContigStats(contigStatsFile(), contigStats.values(), selection.classifications(), mViralReference);
+        VirusOutputWriter.writeContigStats(contigStatsFile(), contigStats.values(), selection.classifications());
         if(mConfig.verboseOutput())
         {
-            VirusOutputWriter.writePairwiseMargins(pairwiseMarginsFile(), pairwise, selection, mViralReference);
+            VirusOutputWriter.writePairwiseMargins(pairwiseMarginsFile(), pairwise, selection);
         }
 
         // TODO: placeholder pipeline; each step is replaced by its implementation as it lands.
@@ -127,14 +127,17 @@ public class VirusApplication
         {
             if(classification.role() == ContigRole.REPRESENTATIVE)
             {
-                LOGGER.info("oncologyGroup({}) representative({})", classification.oncologyGroup(), classification.contig());
+                LOGGER.info(
+                        "oncologyGroup({}) representative({})",
+                        classification.contig().oncologyGroup(), classification.contig().name());
             }
         }
 
         selection.classifications().stream()
                 .filter(classification -> classification.oncologyGroupOutcome() == OncologyGroupOutcome.UNRESOLVED)
                 .collect(Collectors.toMap(
-                        ContigClassification::oncologyGroup, ContigClassification::oncologyGroupSubOutcome, (first, second) -> first))
+                        classification -> classification.contig().oncologyGroup(),
+                        ContigClassification::oncologyGroupSubOutcome, (first, second) -> first))
                 .forEach((oncologyGroup, subOutcome) -> LOGGER.warn("oncologyGroup({}) unresolved({})", oncologyGroup, subOutcome));
     }
 
