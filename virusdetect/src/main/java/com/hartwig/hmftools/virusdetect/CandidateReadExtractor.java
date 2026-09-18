@@ -3,6 +3,7 @@ package com.hartwig.hmftools.virusdetect;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_POSITION;
 import static com.hartwig.hmftools.common.perf.PerformanceCounter.secondsSinceNow;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.executeRunnables;
 import static com.hartwig.hmftools.common.region.PartitionUtils.partitionChromosome;
@@ -16,11 +17,12 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Consumer;
-import java.util.function.Predicate;
+import java.util.NoSuchElementException;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import com.hartwig.hmftools.common.bam.BamSlicer;
+import com.hartwig.hmftools.common.perf.TaskQueue;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 import org.apache.logging.log4j.LogManager;
@@ -28,14 +30,13 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.ValidationStringency;
 
 // Extracts potentially viral reads from the tumor BAM and writes them to single-ended FASTA ready for alignment.
-// The scan is split into jobs which workers claim as they finish, each worker writing its own FASTA shard.
+// Workers claim regions from a shared queue, each writing its own FASTA shard which are joined at the end.
 public class CandidateReadExtractor
 {
     @Nullable
@@ -44,6 +45,10 @@ public class CandidateReadExtractor
     private final int mThreads;
 
     private static final Logger LOGGER = LogManager.getLogger(CandidateReadExtractor.class);
+
+    // Queued in place of a mapped region: the BAM's block of unmapped reads, and the whole-file scan used without an index.
+    private static final ChrBaseRegion UNMAPPED_READS = new ChrBaseRegion("unmapped", NO_POSITION, NO_POSITION);
+    private static final ChrBaseRegion WHOLE_FILE = new ChrBaseRegion("whole-file", NO_POSITION, NO_POSITION);
 
     public CandidateReadExtractor(@Nullable String refGenomeFile, CandidateReadFilter filter)
     {
@@ -65,104 +70,59 @@ public class CandidateReadExtractor
             readerFactory = readerFactory.referenceSequence(new File(mRefGenomeFile));
         }
 
-        List<Consumer<Worker>> jobs = scanJobs(readerFactory, tumorBamFile);
-        List<Worker> workers = createWorkers(min(mThreads, jobs.size()), readerFactory, tumorBamFile, outputFastaFile);
+        Queue<ChrBaseRegion> regions = scanRegions(readerFactory, tumorBamFile);
+        TaskQueue<ChrBaseRegion> queue = new TaskQueue<>(regions, "regions", 0);
+        List<Worker> workers = new ArrayList<>();
 
-        int candidateCount;
         try
         {
-            runJobs(jobs, workers);
-            candidateCount = joinFastaParts(workers, outputFastaFile);
+            for(int i = 0; i < min(mThreads, regions.size()); ++i)
+            {
+                workers.add(new Worker(queue, readerFactory.open(new File(tumorBamFile)), FastaPart.create(outputFastaFile, i)));
+            }
+
+            if(!executeRunnables(workers, workers.size()))
+            {
+                throw new RuntimeException("Candidate read extraction failed");
+            }
+
+            int candidateCount = joinFastaParts(workers, outputFastaFile);
+            LOGGER.info("Extracted {} candidate reads to {}", candidateCount, outputFastaFile);
+            return candidateCount;
         }
         finally
         {
             workers.forEach(Worker::close);
         }
-
-        LOGGER.info("Extracted {} candidate reads to {}", candidateCount, outputFastaFile);
-        return candidateCount;
     }
 
-    private List<Consumer<Worker>> scanJobs(SamReaderFactory readerFactory, String tumorBamFile)
+    // The unmapped block is one long scan, so it leads the queue and runs alongside the region scans rather than
+    // tacking its full duration onto the end.
+    private Queue<ChrBaseRegion> scanRegions(SamReaderFactory readerFactory, String tumorBamFile)
     {
         try(SamReader reader = readerFactory.open(new File(tumorBamFile)))
         {
-            if(reader.hasIndex())
+            Queue<ChrBaseRegion> regions = new ConcurrentLinkedQueue<>();
+            if(!reader.hasIndex())
             {
-                return shardedScanJobs(reader.getFileHeader().getSequenceDictionary());
+                if(mThreads > 1)
+                {
+                    throw new UserInputError("Multi-threaded extraction requires an indexed BAM/CRAM: " + tumorBamFile);
+                }
+                regions.add(WHOLE_FILE);
+                return regions;
             }
 
-            if(mThreads > 1)
+            regions.add(UNMAPPED_READS);
+            for(SAMSequenceRecord sequence : reader.getFileHeader().getSequenceDictionary().getSequences())
             {
-                throw new UserInputError("Multi-threaded extraction requires an indexed BAM/CRAM: " + tumorBamFile);
+                regions.addAll(partitionChromosome(sequence, EXTRACTION_PARTITION_SIZE));
             }
-            return List.of(Worker::scanAll);
+            return regions;
         }
         catch(IOException e)
         {
             throw new RuntimeException("Failed to open tumor BAM", e);
-        }
-    }
-
-    private static List<Consumer<Worker>> shardedScanJobs(SAMSequenceDictionary dictionary)
-    {
-        List<Consumer<Worker>> jobs = new ArrayList<>();
-
-        // The unmapped reads sit in one block scanned by a single long-running job. Claimed first so it runs alongside
-        // the region jobs from the start, rather than tacking its full duration onto the end.
-        jobs.add(Worker::scanUnmapped);
-
-        for(SAMSequenceRecord sequence : dictionary.getSequences())
-        {
-            for(ChrBaseRegion region : partitionChromosome(sequence, EXTRACTION_PARTITION_SIZE))
-            {
-                jobs.add(worker -> worker.scanRegion(region));
-            }
-        }
-        return jobs;
-    }
-
-    private List<Worker> createWorkers(int workerCount, SamReaderFactory readerFactory, String tumorBamFile, String outputFastaFile)
-    {
-        BamSlicer slicer = new BamSlicer(0, true, true, true);
-        slicer.setKeepUnmapped();
-        Predicate<SAMRecord> isCandidate = record ->
-                !record.getDuplicateReadFlag() && !record.isSecondaryOrSupplementary() && mFilter.isCandidate(record);
-
-        List<Worker> workers = new ArrayList<>();
-        try
-        {
-            for(int i = 0; i < workerCount; ++i)
-            {
-                workers.add(new Worker(
-                        readerFactory.open(new File(tumorBamFile)), FastaPart.create(outputFastaFile, i), slicer, isCandidate));
-            }
-        }
-        catch(RuntimeException e)
-        {
-            workers.forEach(Worker::close);
-            throw e;
-        }
-        return workers;
-    }
-
-    private static void runJobs(List<Consumer<Worker>> jobs, List<Worker> workers)
-    {
-        AtomicInteger nextJob = new AtomicInteger();
-        List<Runnable> tasks = workers.stream()
-                .map(worker -> (Runnable) () ->
-                {
-                    int index;
-                    while((index = nextJob.getAndIncrement()) < jobs.size())
-                    {
-                        jobs.get(index).accept(worker);
-                    }
-                })
-                .toList();
-
-        if(!executeRunnables(tasks, workers.size()))
-        {
-            throw new RuntimeException("Candidate read extraction failed");
         }
     }
 
@@ -174,10 +134,9 @@ public class CandidateReadExtractor
         {
             for(Worker worker : workers)
             {
-                FastaPart part = worker.part();
-                part.close();
-                Files.copy(part.path(), out);
-                candidateCount += part.readCount();
+                worker.mPart.close();
+                Files.copy(worker.mPart.path(), out);
+                candidateCount += worker.mPart.readCount();
             }
         }
         catch(IOException e)
@@ -190,68 +149,71 @@ public class CandidateReadExtractor
     }
 
     // One extraction thread's private BAM reader and FASTA shard, so scanning and writing run lock-free.
-    private static class Worker
+    private class Worker implements Runnable
     {
+        private final TaskQueue<ChrBaseRegion> mRegions;
         private final SamReader mReader;
         private final FastaPart mPart;
         private final BamSlicer mSlicer;
-        private final Predicate<SAMRecord> mIsCandidate;
 
-        private Worker(SamReader reader, FastaPart part, BamSlicer slicer, Predicate<SAMRecord> isCandidate)
+        private Worker(TaskQueue<ChrBaseRegion> regions, SamReader reader, FastaPart part)
         {
+            mRegions = regions;
             mReader = reader;
             mPart = part;
-            mSlicer = slicer;
-            mIsCandidate = isCandidate;
+            mSlicer = new BamSlicer(0, true, true, true);
+            mSlicer.setKeepUnmapped();
         }
 
-        private FastaPart part()
+        @Override
+        public void run()
         {
-            return mPart;
-        }
-
-        // Whole-file linear scan, the only option without an index.
-        private void scanAll()
-        {
-            for(SAMRecord record : mReader)
+            while(true)
             {
-                addIfCandidate(record);
+                try
+                {
+                    scan(mRegions.removeItem());
+                }
+                catch(NoSuchElementException e)
+                {
+                    return;
+                }
             }
         }
 
-        private void scanRegion(ChrBaseRegion region)
+        private void scan(ChrBaseRegion region)
         {
             long startTimeMs = System.currentTimeMillis();
             int startCount = mPart.readCount();
 
-            // A mapped read is owned by the partition containing its start, so copies returned by an overlapping
-            // neighbour partition are ignored.
-            mSlicer.slice(mReader, region, record ->
+            if(region == WHOLE_FILE)
             {
-                if(record.getAlignmentStart() >= region.start())
+                mReader.forEach(this::addIfCandidate);
+            }
+            else if(region == UNMAPPED_READS)
+            {
+                mSlicer.queryUnmapped(mReader, this::addIfCandidate);
+            }
+            else
+            {
+                // A mapped read is owned by the partition containing its start, so copies returned by an overlapping
+                // neighbour partition are ignored.
+                mSlicer.slice(mReader, region, record ->
                 {
-                    addIfCandidate(record);
-                }
-            });
+                    if(record.getAlignmentStart() >= region.start())
+                    {
+                        addIfCandidate(record);
+                    }
+                });
+            }
 
             LOGGER.debug("region({}) {} candidates in {}s",
                     region, mPart.readCount() - startCount, format("%.1f", secondsSinceNow(startTimeMs)));
         }
 
-        private void scanUnmapped()
-        {
-            long startTimeMs = System.currentTimeMillis();
-            int startCount = mPart.readCount();
-
-            mSlicer.queryUnmapped(mReader, this::addIfCandidate);
-
-            LOGGER.debug("Unmapped reads {} candidates in {}s",
-                    mPart.readCount() - startCount, format("%.1f", secondsSinceNow(startTimeMs)));
-        }
-
         private void addIfCandidate(SAMRecord record)
         {
-            if(mIsCandidate.test(record))
+            if(!record.getDuplicateReadFlag() && !record.isSecondaryOrSupplementary() && mFilter.isCandidate(record))
             {
                 mPart.add(record);
             }

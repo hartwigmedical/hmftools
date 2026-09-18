@@ -26,10 +26,10 @@ class FastaPart
 
     static FastaPart create(String outputFastaFile, int index)
     {
-        String path = outputFastaFile + ".part" + index;
+        Path path = new File(outputFastaFile + ".part" + index).toPath();
         try
         {
-            return new FastaPart(path, createBufferedWriter(path));
+            return new FastaPart(path, createBufferedWriter(path.toString()));
         }
         catch(IOException e)
         {
@@ -37,17 +37,23 @@ class FastaPart
         }
     }
 
-    private FastaPart(String path, BufferedWriter writer)
+    private FastaPart(Path path, BufferedWriter writer)
     {
-        mPath = new File(path).toPath();
+        mPath = path;
         mWriter = writer;
     }
+
+    Path path() { return mPath; }
+
+    int readCount() { return mReadCount; }
 
     void add(SAMRecord record)
     {
         try
         {
-            mWriter.write(">" + fastaLabel(record));
+            // Mates differ only by the suffix: the FASTA is single-ended, so a pair's two reads must stay distinguishable.
+            String suffix = record.getReadPairedFlag() ? (record.getFirstOfPairFlag() ? "/1" : "/2") : "";
+            mWriter.write(">" + record.getReadName() + suffix);
             mWriter.newLine();
             mWriter.write(record.getReadString());
             mWriter.newLine();
@@ -59,16 +65,6 @@ class FastaPart
         ++mReadCount;
     }
 
-    Path path()
-    {
-        return mPath;
-    }
-
-    int readCount()
-    {
-        return mReadCount;
-    }
-
     void close() throws IOException
     {
         if(!mClosed)
@@ -78,7 +74,7 @@ class FastaPart
         }
     }
 
-    // Releases the part and removes its file, whether or not it was consumed. Never throws, so it is safe while
+    // Releases the shard and removes its file, whether or not it was consumed. Never throws, so it is safe while
     // unwinding a failed extraction.
     void discard()
     {
@@ -91,15 +87,5 @@ class FastaPart
         {
             LOGGER.warn("failed to discard candidate FASTA part {}: {}", mPath, e.getMessage());
         }
-    }
-
-    // Mates differ only by the suffix: the FASTA is single-ended, so a pair's two reads must stay distinguishable.
-    private static String fastaLabel(SAMRecord record)
-    {
-        if(record.getReadPairedFlag())
-        {
-            return record.getReadName() + (record.getFirstOfPairFlag() ? "/1" : "/2");
-        }
-        return record.getReadName();
     }
 }
