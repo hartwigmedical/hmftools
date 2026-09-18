@@ -4,7 +4,6 @@ import static com.hartwig.hmftools.virusdetect.VirusConstants.MIN_CHALLENGE_MARG
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 import java.util.HashMap;
@@ -29,7 +28,7 @@ public class ChallengeGraphTest
     public void testChallengeAtThreshold()
     {
         List<ContigStats> group = List.of(stats(V1, 60), stats(V2, 40));
-        ChallengeGraph graph = ChallengeGraph.build(group, group, margins(V1, V2, MIN_CHALLENGE_MARGIN, 10));
+        ChallengeGraph graph = ChallengeGraph.build(group, 100, margins(V1, V2, MIN_CHALLENGE_MARGIN, 10));
 
         assertTrue(graph.challenges(V1, V2));
         assertFalse(graph.challenges(V2, V1));
@@ -39,7 +38,7 @@ public class ChallengeGraphTest
     public void testNoChallengeBelowThreshold()
     {
         List<ContigStats> group = List.of(stats(V1, 60), stats(V2, 40));
-        ChallengeGraph graph = ChallengeGraph.build(group, group, margins(V1, V2, MIN_CHALLENGE_MARGIN, 9));
+        ChallengeGraph graph = ChallengeGraph.build(group, 100, margins(V1, V2, MIN_CHALLENGE_MARGIN, 9));
 
         assertFalse(graph.challenges(V1, V2));
     }
@@ -49,19 +48,18 @@ public class ChallengeGraphTest
     public void testNoChallengeBelowMargin()
     {
         List<ContigStats> group = List.of(stats(V1, 60), stats(V2, 40));
-        ChallengeGraph graph = ChallengeGraph.build(group, group, margins(V1, V2, MIN_CHALLENGE_MARGIN - 1, 50));
+        ChallengeGraph graph = ChallengeGraph.build(group, 100, margins(V1, V2, MIN_CHALLENGE_MARGIN - 1, 50));
 
         assertFalse(graph.challenges(V1, V2));
     }
 
-    // The fraction is over all the group's contigs, so a contig dropped before selection still counts towards it:
-    // these 8 reads are a tenth of the two candidates but only a twelfth of the group.
+    // The fraction is over every read aligning to the group, including reads which only the contigs dropped before
+    // selection carry. These 8 reads would be 1/10 of the two candidates' own reads, but are a 1/12 of the group's.
     @Test
-    public void testFractionSpansFilteredContigs()
+    public void testFractionSpansEveryGroupRead()
     {
         List<ContigStats> candidates = List.of(stats(V1, 40), stats(V2, 40));
-        List<ContigStats> group = List.of(stats(V1, 40), stats(V2, 40), stats(V3, 20));
-        ChallengeGraph graph = ChallengeGraph.build(candidates, group, margins(V1, V2, MIN_CHALLENGE_MARGIN, 8));
+        ChallengeGraph graph = ChallengeGraph.build(candidates, 96, margins(V1, V2, MIN_CHALLENGE_MARGIN, 8));
 
         assertFalse(graph.challenges(V1, V2));
     }
@@ -71,19 +69,9 @@ public class ChallengeGraphTest
     public void testComparableContigs()
     {
         List<ContigStats> group = List.of(stats(V1, 100), stats(V2, 95), stats(V3, 50));
-        ChallengeGraph graph = ChallengeGraph.build(group, group, margins(V1, V2, MIN_CHALLENGE_MARGIN, 0));
+        ChallengeGraph graph = ChallengeGraph.build(group, 245, margins(V1, V2, MIN_CHALLENGE_MARGIN, 0));
 
         assertEquals(Set.of(V1, V2), graph.comparable());
-    }
-
-    @Test
-    public void testNoVotesThrows()
-    {
-        List<ContigStats> group = List.of(stats(V1, 0));
-
-        assertThrows(
-                IllegalStateException.class,
-                () -> ChallengeGraph.build(group, group, margins(V1, V2, MIN_CHALLENGE_MARGIN, 10)));
     }
 
     private static PairwiseMargins margins(ViralContig subject, ViralContig opponent, int margin, int reads)

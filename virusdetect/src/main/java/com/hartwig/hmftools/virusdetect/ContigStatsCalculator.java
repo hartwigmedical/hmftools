@@ -2,9 +2,7 @@ package com.hartwig.hmftools.virusdetect;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
-import static java.util.stream.Collectors.counting;
 import static java.util.stream.Collectors.groupingBy;
-import static java.util.stream.Collectors.partitioningBy;
 import static java.util.stream.Collectors.toMap;
 
 import static com.hartwig.hmftools.virusdetect.VirusConstants.VOTE_CORRECT_BASE_PROBABILITY;
@@ -35,26 +33,16 @@ public class ContigStatsCalculator
 
     public Map<ViralContig, ContigStats> compute(ViralAlignments viralAlignments)
     {
-        // Alignments clipping over a contig end are a circular-genome artifact: set them aside (counted per contig) and
-        // build the stats from the rest.
-
-        Map<Boolean, List<ViralAlignment>> byOriginClip = viralAlignments.alignments().stream()
-                .collect(partitioningBy(ViralAlignment::clipsOverContigEnd));
-        List<ViralAlignment> filteredAlignments = byOriginClip.get(false);
-        List<ViralAlignment> originClipAlignments = byOriginClip.get(true);
-
         Map<ViralContig, ContigAccumulator> accumulators = new HashMap<>();
-        filteredAlignments.stream()
+        viralAlignments.alignments().stream()
                 .collect(groupingBy(ViralAlignment::readName))
                 .values()
                 .forEach(readAlignments -> accumulateRead(readAlignments, accumulators));
 
-        Map<ViralContig, Long> originClippedByContig = originClipAlignments.stream().collect(
-                groupingBy(ViralAlignment::contig, counting()));
-
+        Map<ViralContig, Integer> originClippedReads = viralAlignments.originClippedReads();
         return accumulators.entrySet().stream().collect(toMap(
                 Map.Entry::getKey, entry -> entry.getValue().toContigStats(
-                        entry.getKey(), originClippedByContig.getOrDefault(entry.getKey(), 0L).intValue())));
+                        entry.getKey(), originClippedReads.getOrDefault(entry.getKey(), 0))));
     }
 
     // Folds one read into the per-contig accumulators: its best alignment (and alignment count) on each contig it hits,

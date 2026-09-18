@@ -56,7 +56,8 @@ public class VirusConstants
     // Lower is more sensitive to rival virus strains.
     public static final int MIN_CHALLENGE_MARGIN = 5;
 
-    // What fraction of reads aligning to an oncology group must diverge to identify a possible rival virus strain?
+    // What fraction of the reads aligning to an oncology group must diverge to identify a possible rival virus strain?
+    // The denominator is the distinct reads aligning anywhere in that oncology group.
     // Lower is more sensitive to rival virus strains.
     public static final double MIN_CHALLENGE_READS = 0.1;
 

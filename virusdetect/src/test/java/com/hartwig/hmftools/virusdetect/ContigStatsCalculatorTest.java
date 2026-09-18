@@ -27,7 +27,7 @@ public class ContigStatsCalculatorTest
                 alignment("r2", "v1", 6, 5, 8, 0),
                 alignment("r3", "v2", 1, 10, 9, 0));
 
-        Map<ViralContig, ContigStats> stats = new ContigStatsCalculator().compute(new ViralAlignments(alignments, 0.0));
+        Map<ViralContig, ContigStats> stats = new ContigStatsCalculator().compute(ViralAlignments.from(alignments, 0.0));
 
         assertEquals(2, stats.size());
 
@@ -73,7 +73,7 @@ public class ContigStatsCalculatorTest
                 alignment("r2", "v2", 1, 10, 5, 5));
 
         // Injected correct-base probability 0.5, so each extra divergent base halves a contig's weight (0.5^diff).
-        Map<ViralContig, ContigStats> stats = new ContigStatsCalculator(0.5).compute(new ViralAlignments(alignments, 0.0));
+        Map<ViralContig, ContigStats> stats = new ContigStatsCalculator(0.5).compute(ViralAlignments.from(alignments, 0.0));
 
         ContigStats v1 = get(stats, "v1");
         ContigStats v2 = get(stats, "v2");
@@ -91,7 +91,7 @@ public class ContigStatsCalculatorTest
                 alignment("r", "v1", 1, 10, 10, 2),
                 alignment("r", "v2", 1, 10, 10, 2));
 
-        Map<ViralContig, ContigStats> stats = new ContigStatsCalculator(0.5).compute(new ViralAlignments(alignments, 0.0));
+        Map<ViralContig, ContigStats> stats = new ContigStatsCalculator(0.5).compute(ViralAlignments.from(alignments, 0.0));
 
         assertEquals(0.5, get(stats, "v1").readVotes(), EPSILON);
         assertEquals(0.5, get(stats, "v2").readVotes(), EPSILON);
@@ -108,7 +108,7 @@ public class ContigStatsCalculatorTest
                 alignment("r3", "v1", 6, 10, 9, 0),   // no clip: kept
                 clipped("r4", "v1", 10, 19, 5, 0));   // clip projects to 5, within the contig: kept
 
-        Map<ViralContig, ContigStats> stats = new ContigStatsCalculator().compute(new ViralAlignments(alignments, 0.0));
+        Map<ViralContig, ContigStats> stats = new ContigStatsCalculator().compute(ViralAlignments.from(alignments, 0.0));
 
         ContigStats v1 = get(stats, "v1");
         assertEquals(2, v1.readCount());            // r3 and r4 kept

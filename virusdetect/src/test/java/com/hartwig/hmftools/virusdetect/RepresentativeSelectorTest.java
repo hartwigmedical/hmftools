@@ -164,7 +164,16 @@ public class RepresentativeSelectorTest
 
     private static List<OncologyGroupSelection> select(Map<String, ContigStats> stats, PairwiseMargins margins)
     {
-        return new RepresentativeSelector().select(stats.values(), margins, MEAN_READ_LENGTH);
+        return new RepresentativeSelector().select(stats.values(), margins, groupReadCounts(stats), MEAN_READ_LENGTH);
+    }
+
+    // Each group is given as many reads as its contigs have votes, so a contig's votes read as its share of the group.
+    private static Map<String, Integer> groupReadCounts(Map<String, ContigStats> stats)
+    {
+        Map<String, Integer> readCounts = new HashMap<>();
+        stats.values().forEach(stat -> readCounts.merge(
+                stat.contig().oncologyGroup(), (int) Math.round(stat.readVotes()), Integer::sum));
+        return readCounts;
     }
 
     private static OncologyGroupSelection group(List<OncologyGroupSelection> selections, String oncologyGroup)

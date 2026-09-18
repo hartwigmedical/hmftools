@@ -6,7 +6,6 @@ import static com.hartwig.hmftools.virusdetect.VirusConstants.COMPARABLE_VOTE_RA
 import static com.hartwig.hmftools.virusdetect.VirusConstants.MIN_CHALLENGE_MARGIN;
 import static com.hartwig.hmftools.virusdetect.VirusConstants.MIN_CHALLENGE_READS;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,8 +28,7 @@ public class ChallengeGraph
         mChallenges = challenges;
     }
 
-    public static ChallengeGraph build(
-            List<ContigStats> candidates, Collection<ContigStats> oncologyGroupContigs, PairwiseMargins margins)
+    public static ChallengeGraph build(List<ContigStats> candidates, int oncologyGroupReads, PairwiseMargins margins)
     {
         List<ViralContig> contigs = candidates.stream().map(ContigStats::contig).toList();
 
@@ -40,14 +38,13 @@ public class ChallengeGraph
                 .map(ContigStats::contig)
                 .collect(toSet());
 
-        double groupVotes = groupVotes(oncologyGroupContigs);
         Map<ViralContig, Set<ViralContig>> challenges = new HashMap<>();
         for(ViralContig subject : contigs)
         {
             challenges.put(
                     subject, contigs.stream()
                             .filter(opponent -> !opponent.equals(subject))
-                            .filter(opponent -> challenges(subject, opponent, margins, groupVotes))
+                            .filter(opponent -> challenges(subject, opponent, margins, oncologyGroupReads))
                             .collect(toSet()));
         }
 
@@ -69,19 +66,12 @@ public class ChallengeGraph
         return mChallenges.getOrDefault(subject, Set.of()).contains(opponent);
     }
 
-    private static boolean challenges(ViralContig subject, ViralContig opponent, PairwiseMargins margins, double groupVotes)
+    private static boolean challenges(
+            ViralContig subject, ViralContig opponent, PairwiseMargins margins, int oncologyGroupReads)
     {
-        return margins.readsWinningBy(subject, opponent, MIN_CHALLENGE_MARGIN) / groupVotes >= MIN_CHALLENGE_READS;
-    }
-
-    private static double groupVotes(Collection<ContigStats> oncologyGroupContigs)
-    {
-        double groupVotes = oncologyGroupContigs.stream().mapToDouble(ContigStats::readVotes).sum();
-        if(groupVotes <= 0)
-        {
-            String oncologyGroup = oncologyGroupContigs.iterator().next().contig().oncologyGroup();
-            throw new IllegalStateException("Oncology group has contig stats but no read votes: " + oncologyGroup);
-        }
-        return groupVotes;
+        // TODO: check oncologyGroupReads not negative?
+        double challengeFraction =
+                margins.readsWinningBy(subject, opponent, MIN_CHALLENGE_MARGIN) / (double) oncologyGroupReads;
+        return challengeFraction >= MIN_CHALLENGE_READS;
     }
 }

@@ -31,7 +31,6 @@ public class PairwiseMargins
         Map<ContigPair, Integer> sharedReads = new HashMap<>();
 
         viralAlignments.alignments().stream()
-                .filter(alignment -> !alignment.clipsOverContigEnd())
                 .collect(groupingBy(ViralAlignment::readName))
                 .values()
                 .forEach(readAlignments -> accumulateRead(readAlignments, marginCounts, sharedReads));

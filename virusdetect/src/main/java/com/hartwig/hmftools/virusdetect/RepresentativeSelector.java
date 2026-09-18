@@ -16,22 +16,26 @@ import java.util.stream.Stream;
 public class RepresentativeSelector
 {
     public List<OncologyGroupSelection> select(
-            Collection<ContigStats> contigStats, PairwiseMargins margins, double meanReadLength)
+            Collection<ContigStats> contigStats, PairwiseMargins margins, Map<String, Integer> oncologyGroupReadCounts,
+            double meanReadLength)
     {
         if(meanReadLength <= 0)
         {
-            throw new IllegalArgumentException("invalid mean read length: " + meanReadLength);
+            throw new IllegalArgumentException("Invalid mean read length: " + meanReadLength);
         }
 
         return contigStats.stream()
                 .collect(groupingBy(stats -> stats.contig().oncologyGroup()))
                 .entrySet().stream()
-                .map(entry -> selectOncologyGroup(entry.getKey(), entry.getValue(), margins, meanReadLength))
+                .map(entry -> selectOncologyGroup(
+                        entry.getKey(), entry.getValue(), margins, readCount(oncologyGroupReadCounts, entry.getKey()),
+                        meanReadLength))
                 .toList();
     }
 
     private OncologyGroupSelection selectOncologyGroup(
-            String oncologyGroup, List<ContigStats> groupContigs, PairwiseMargins margins, double meanReadLength)
+            String oncologyGroup, List<ContigStats> groupContigs, PairwiseMargins margins, int oncologyGroupReads,
+            double meanReadLength)
     {
         GroupCandidates prefiltered = GroupCandidates.prefilter(groupContigs, meanReadLength);
         List<ContigStats> candidates = prefiltered.candidates();
@@ -45,7 +49,7 @@ public class RepresentativeSelector
             return new OncologyGroupSelection(oncologyGroup, OncologyGroupOutcome.NO_CANDIDATES, rejected);
         }
 
-        ChallengeGraph graph = ChallengeGraph.build(candidates, groupContigs, margins);
+        ChallengeGraph graph = ChallengeGraph.build(candidates, oncologyGroupReads, margins);
         RepresentativeChoice choice = RepresentativeChoice.from(candidates, graph);
         Map<ViralContig, Integer> votesRankByContig = votesRanks(candidates);
 
@@ -85,6 +89,17 @@ public class RepresentativeSelector
                 .map(votesRankByContig::get)
                 .sorted()
                 .toList();
+    }
+
+    private static int readCount(Map<String, Integer> oncologyGroupReadCounts, String oncologyGroup)
+    {
+        // TODO: do we need this whole method or is there a Map method that can get or throw?
+        Integer readCount = oncologyGroupReadCounts.get(oncologyGroup);
+        if(readCount == null || readCount == 0)
+        {
+            throw new IllegalStateException("Oncology group has contig stats but no aligned reads: " + oncologyGroup);
+        }
+        return readCount;
     }
 
     // Rank 1 = best supported among the candidates.

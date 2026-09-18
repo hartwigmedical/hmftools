@@ -29,7 +29,7 @@ public class PairwiseMarginsTest
                 alignment("r3", "v1", 1),
                 alignment("r3", "h1", 1));  // cross-group: not paired
 
-        PairwiseMargins margins = PairwiseMargins.from(new ViralAlignments(alignments, 150.0));
+        PairwiseMargins margins = PairwiseMargins.from(ViralAlignments.from(alignments, 150.0));
 
         // Both reads shared between v1 and v2, both directions
         assertEquals(2, margins.sharedReads(v1, v2));
@@ -55,7 +55,7 @@ public class PairwiseMarginsTest
                 alignment("r1", "v1", 2),
                 straddler("r1", "v2"));   // dropped, so r1 has only v1 left and forms no pair
 
-        PairwiseMargins margins = PairwiseMargins.from(new ViralAlignments(alignments, 150.0));
+        PairwiseMargins margins = PairwiseMargins.from(ViralAlignments.from(alignments, 150.0));
 
         assertEquals(0, margins.sharedReads(REFERENCE.contig("v1"), REFERENCE.contig("v2")));
     }
