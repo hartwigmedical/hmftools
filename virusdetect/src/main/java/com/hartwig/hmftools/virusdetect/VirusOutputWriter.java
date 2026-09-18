@@ -79,7 +79,8 @@ public class VirusOutputWriter
                     ContigClassification classification = byContig.get(stat.contig());
                     row.set(Column.filter_status, classification.filterStatus().name());
                     row.setOrNull(Column.votes_rank, asString(classification.votesRank()));
-                    row.setOrNull(Column.vote_share, classification.voteShare());
+                    row.setOrNull(Column.vote_share_pre_filter, classification.preFilterVoteShare());
+                    row.setOrNull(Column.vote_share_post_filter, classification.postFilterVoteShare());
                     row.setOrNull(Column.vote_share_ratio, classification.voteShareRatio());
                     row.setOrNull(Column.comparable, asString(classification.comparable()));
                     row.setOrNull(Column.challenges_ranks, candidateRanks(classification, classification.challengesRanks()));
@@ -182,7 +183,8 @@ public class VirusOutputWriter
         read_count,
         read_votes,
         votes_rank,
-        vote_share,
+        vote_share_pre_filter,
+        vote_share_post_filter,
         vote_share_ratio,
         comparable,
         challenges_ranks,

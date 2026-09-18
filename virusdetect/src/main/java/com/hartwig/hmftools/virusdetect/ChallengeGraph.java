@@ -18,17 +18,13 @@ public class ChallengeGraph
 {
     private final List<ViralContig> mContigs;
     private final Set<ViralContig> mComparable;
-    private final double mTopVoteShare;
     // subject contig -> opponent contigs it challenges
     private final Map<ViralContig, Set<ViralContig>> mChallenges;
 
-    private ChallengeGraph(
-            List<ViralContig> contigs, Set<ViralContig> comparable, double topVoteShare,
-            Map<ViralContig, Set<ViralContig>> challenges)
+    private ChallengeGraph(List<ViralContig> contigs, Set<ViralContig> comparable, Map<ViralContig, Set<ViralContig>> challenges)
     {
         mContigs = contigs;
         mComparable = comparable;
-        mTopVoteShare = topVoteShare;
         mChallenges = challenges;
     }
 
@@ -52,7 +48,7 @@ public class ChallengeGraph
                             .collect(toSet()));
         }
 
-        return new ChallengeGraph(contigs, comparable, topVoteShare, challenges);
+        return new ChallengeGraph(contigs, comparable, challenges);
     }
 
     public List<ViralContig> contigs()
@@ -63,11 +59,6 @@ public class ChallengeGraph
     public Set<ViralContig> comparable()
     {
         return mComparable;
-    }
-
-    public double topVoteShare()
-    {
-        return mTopVoteShare;
     }
 
     public boolean challenges(ViralContig subject, ViralContig opponent)

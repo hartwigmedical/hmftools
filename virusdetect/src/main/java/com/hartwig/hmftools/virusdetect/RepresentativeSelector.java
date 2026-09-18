@@ -48,28 +48,36 @@ public class RepresentativeSelector
 
     private OncologyGroupResult classifyOncologyGroup(String oncologyGroup, List<ContigStats> groupContigs, PairwiseMargins pairwise)
     {
+        double allVotesTotal = groupContigs.stream().mapToDouble(ContigStats::readVotes).sum();
+
         List<ContigStats> covered = contigsPassingCoverage(groupContigs);
         Set<ViralContig> coveredContigs = contigSet(covered);
-        List<ContigClassification> lowCoverage = groupContigs.stream()
-                .filter(stats -> !coveredContigs.contains(stats.contig()))
-                .map(RepresentativeSelector::lowCoverageClassification)
-                .toList();
 
         if(covered.isEmpty())
         {
+            List<ContigClassification> lowCoverage = groupContigs.stream()
+                    .map(stats -> lowCoverageClassification(stats, allVotesTotal, 0.0))
+                    .toList();
             return new OncologyGroupResult(oncologyGroup, null, lowCoverage);
         }
 
-        double voteTotal = covered.stream().mapToDouble(ContigStats::readVotes).sum();
+        double voteTotal = covered.stream().mapToDouble(ContigStats::readVotes).sum();   // challenge-fraction denominator
         Map<ViralContig, Integer> votesRankByContig = votesRanks(covered);
 
         List<ContigStats> candidates = covered.stream()
                 .filter(stats -> passesVoteDensity(stats, pairwise.meanReadLength()))
                 .toList();
         Set<ViralContig> candidateContigs = contigSet(candidates);
+        double candidateVotesTotal = candidates.stream().mapToDouble(ContigStats::readVotes).sum();
+        double topCandidateVotes = candidates.stream().mapToDouble(ContigStats::readVotes).max().orElse(0.0);
+
+        List<ContigClassification> lowCoverage = groupContigs.stream()
+                .filter(stats -> !coveredContigs.contains(stats.contig()))
+                .map(stats -> lowCoverageClassification(stats, allVotesTotal, candidateVotesTotal))
+                .toList();
         List<ContigClassification> lowVoteDensity = covered.stream()
                 .filter(stats -> !candidateContigs.contains(stats.contig()))
-                .map(stats -> lowVoteDensityClassification(stats, votesRankByContig, voteTotal))
+                .map(stats -> lowVoteDensityClassification(stats, votesRankByContig, allVotesTotal, candidateVotesTotal))
                 .toList();
 
         if(candidates.isEmpty())
@@ -81,7 +89,8 @@ public class RepresentativeSelector
         ChallengeGraph graph = ChallengeGraph.build(candidates, pairwise, voteTotal);
         ChallengeResolution resolution = resolveByChallenges(votesRankByContig, graph);
         List<ContigClassification> candidateClassifications = candidates.stream()
-                .map(candidate -> candidateClassification(candidate, resolution, candidates, votesRankByContig, voteTotal, graph))
+                .map(candidate -> candidateClassification(
+                        candidate, resolution, candidates, votesRankByContig, allVotesTotal, candidateVotesTotal, topCandidateVotes, graph))
                 .toList();
 
         List<ContigClassification> contigClassifications =
@@ -186,10 +195,9 @@ public class RepresentativeSelector
 
     private ContigClassification candidateClassification(
             ContigStats candidate, ChallengeResolution resolution, List<ContigStats> candidates,
-            Map<ViralContig, Integer> votesRankByContig, double voteTotal, ChallengeGraph graph)
+            Map<ViralContig, Integer> votesRankByContig, double allVotesTotal, double candidateVotesTotal, double topCandidateVotes,
+            ChallengeGraph graph)
     {
-        double candidateVoteShare = voteShare(candidate.readVotes(), voteTotal);
-        double topVoteShare = graph.topVoteShare();
         List<Integer> challenges = candidateRanks(
                 candidates, candidate, other -> graph.challenges(candidate.contig(), other), votesRankByContig);
         List<Integer> challengedBy = candidateRanks(
@@ -197,8 +205,9 @@ public class RepresentativeSelector
 
         return new ContigClassification(
                 candidate.contig(), ContigFilterStatus.CANDIDATE,
-                votesRankByContig.get(candidate.contig()), candidateVoteShare,
-                topVoteShare > 0 ? candidateVoteShare / topVoteShare : 0.0,
+                votesRankByContig.get(candidate.contig()),
+                shareOrNull(candidate.readVotes(), allVotesTotal), shareOrNull(candidate.readVotes(), candidateVotesTotal),
+                shareOrNull(candidate.readVotes(), topCandidateVotes),
                 resolution.comparable().contains(candidate.contig()),
                 challenges, challengedBy,
                 resolution.roles().get(candidate.contig()),
@@ -220,18 +229,20 @@ public class RepresentativeSelector
     }
 
     private static ContigClassification lowVoteDensityClassification(
-            ContigStats stats, Map<ViralContig, Integer> votesRankByContig, double voteTotal)
+            ContigStats stats, Map<ViralContig, Integer> votesRankByContig, double allVotesTotal, double candidateVotesTotal)
     {
         return new ContigClassification(
-                stats.contig(), ContigFilterStatus.LOW_VOTE_DENSITY,
-                votesRankByContig.get(stats.contig()), voteShare(stats.readVotes(), voteTotal),
+                stats.contig(), ContigFilterStatus.LOW_VOTE_DENSITY, votesRankByContig.get(stats.contig()),
+                shareOrNull(stats.readVotes(), allVotesTotal), shareOrNull(stats.readVotes(), candidateVotesTotal),
                 null, null, emptyList(), emptyList(), null, null, null);
     }
 
-    private static ContigClassification lowCoverageClassification(ContigStats stats)
+    private static ContigClassification lowCoverageClassification(ContigStats stats, double allVotesTotal, double candidateVotesTotal)
     {
         return new ContigClassification(
-                stats.contig(), ContigFilterStatus.LOW_COVERAGE, null, null, null, null, emptyList(), emptyList(), null, null, null);
+                stats.contig(), ContigFilterStatus.LOW_COVERAGE, null,
+                shareOrNull(stats.readVotes(), allVotesTotal), shareOrNull(stats.readVotes(), candidateVotesTotal),
+                null, null, emptyList(), emptyList(), null, null, null);
     }
 
     // Rank 1 = most read votes; contig name breaks ties for determinism.
@@ -254,9 +265,10 @@ public class RepresentativeSelector
         return stats.stream().map(ContigStats::contig).collect(toSet());
     }
 
-    private static double voteShare(double votes, double voteTotal)
+    @Nullable
+    private static Double shareOrNull(double votes, double total)
     {
-        return voteTotal > 0 ? votes / voteTotal : 0.0;
+        return total > 0 ? votes / total : null;
     }
 
     private record ChallengeResolution(
