@@ -21,7 +21,7 @@ public record ContigClassification(
         List<Integer> challengesRanks,
         List<Integer> challengedByRanks,
         @Nullable ContigRole role,
-        @Nullable OncologyGroupOutcome oncologyGroupOutcome,
-        @Nullable OncologyGroupSubOutcome oncologyGroupSubOutcome)
+        @Nullable OncologyGroupResolution oncologyGroupResolution,
+        @Nullable OncologyGroupOutcome oncologyGroupOutcome)
 {
 }

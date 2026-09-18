@@ -134,11 +134,11 @@ public class VirusApplication
         }
 
         selection.classifications().stream()
-                .filter(classification -> classification.oncologyGroupOutcome() == OncologyGroupOutcome.UNRESOLVED)
+                .filter(classification -> classification.oncologyGroupResolution() == OncologyGroupResolution.UNRESOLVED)
                 .collect(Collectors.toMap(
                         classification -> classification.contig().oncologyGroup(),
-                        ContigClassification::oncologyGroupSubOutcome, (first, second) -> first))
-                .forEach((oncologyGroup, subOutcome) -> LOGGER.warn("oncologyGroup({}) unresolved({})", oncologyGroup, subOutcome));
+                        ContigClassification::oncologyGroupOutcome, (first, second) -> first))
+                .forEach((oncologyGroup, outcome) -> LOGGER.warn("oncologyGroup({}) unresolved({})", oncologyGroup, outcome));
     }
 
     public static void main(@NotNull String[] args)

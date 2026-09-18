@@ -86,8 +86,8 @@ public class VirusOutputWriter
                     row.setOrNull(Column.challenges_ranks, candidateRanks(classification, classification.challengesRanks()));
                     row.setOrNull(Column.challenged_by_ranks, candidateRanks(classification, classification.challengedByRanks()));
                     row.setOrNull(Column.role, asString(classification.role()));
+                    row.setOrNull(Column.oncology_group_resolution, asString(classification.oncologyGroupResolution()));
                     row.setOrNull(Column.oncology_group_outcome, asString(classification.oncologyGroupOutcome()));
-                    row.setOrNull(Column.oncology_group_sub_outcome, asString(classification.oncologyGroupSubOutcome()));
                 });
 
         LOGGER.info("wrote {} contig stats to {}", ordered.size(), file);
@@ -174,8 +174,8 @@ public class VirusOutputWriter
         contig,
         virus_name,
         oncology_group,
+        oncology_group_resolution,
         oncology_group_outcome,
-        oncology_group_sub_outcome,
         role,
         filter_status,
         contig_length,

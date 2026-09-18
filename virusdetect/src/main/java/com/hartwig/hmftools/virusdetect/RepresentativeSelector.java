@@ -87,10 +87,11 @@ public class RepresentativeSelector
         }
 
         ChallengeGraph graph = ChallengeGraph.build(candidates, pairwise, voteTotal);
-        ChallengeResolution resolution = resolveByChallenges(votesRankByContig, graph);
+        ChallengeResolution challengeResolution = resolveByChallenges(votesRankByContig, graph);
         List<ContigClassification> candidateClassifications = candidates.stream()
                 .map(candidate -> candidateClassification(
-                        candidate, resolution, candidates, votesRankByContig, allVotesTotal, candidateVotesTotal, topCandidateVotes, graph))
+                        candidate, challengeResolution, candidates, votesRankByContig, allVotesTotal, candidateVotesTotal,
+                        topCandidateVotes, graph))
                 .toList();
 
         List<ContigClassification> contigClassifications =
@@ -106,7 +107,7 @@ public class RepresentativeSelector
         if(contigs.size() == 1)
         {
             return new ChallengeResolution(
-                    Map.of(contigs.get(0), ContigRole.REPRESENTATIVE), Set.of(contigs.get(0)), OncologyGroupSubOutcome.ONE_CANDIDATE);
+                    Map.of(contigs.get(0), ContigRole.REPRESENTATIVE), Set.of(contigs.get(0)), OncologyGroupOutcome.ONE_CANDIDATE);
         }
 
         Set<ViralContig> comparable = graph.comparable();
@@ -121,18 +122,18 @@ public class RepresentativeSelector
         List<ViralContig> unchallenged = comparable.stream().filter(contig -> !challengedByPeer.contains(contig)).toList();
 
         ViralContig representative = null;
-        OncologyGroupSubOutcome subOutcome;
+        OncologyGroupOutcome outcome;
         if(minorChallengesAbundant)
         {
-            subOutcome = OncologyGroupSubOutcome.MINOR_RIVAL;
+            outcome = OncologyGroupOutcome.MINOR_RIVAL;
         }
         else if(unchallenged.isEmpty())
         {
-            subOutcome = hasMutualChallenge(comparable, graph) ? OncologyGroupSubOutcome.MUTUAL : OncologyGroupSubOutcome.CYCLE;
+            outcome = hasMutualChallenge(comparable, graph) ? OncologyGroupOutcome.MUTUAL : OncologyGroupOutcome.CYCLE;
         }
         else
         {
-            subOutcome = OncologyGroupSubOutcome.RESOLVED_CANDIDATES;
+            outcome = OncologyGroupOutcome.RESOLVED_CANDIDATES;
             representative = unchallenged.stream().min(Comparator.comparingInt(votesRankByContig::get)).orElseThrow();
         }
 
@@ -141,7 +142,7 @@ public class RepresentativeSelector
         {
             roles.put(contig, roleFor(contig, representative, comparable, challengedByPeer, graph));
         }
-        return new ChallengeResolution(roles, comparable, subOutcome);
+        return new ChallengeResolution(roles, comparable, outcome);
     }
 
     private ContigRole roleFor(
@@ -194,7 +195,7 @@ public class RepresentativeSelector
     }
 
     private ContigClassification candidateClassification(
-            ContigStats candidate, ChallengeResolution resolution, List<ContigStats> candidates,
+            ContigStats candidate, ChallengeResolution challengeResolution, List<ContigStats> candidates,
             Map<ViralContig, Integer> votesRankByContig, double allVotesTotal, double candidateVotesTotal, double topCandidateVotes,
             ChallengeGraph graph)
     {
@@ -208,10 +209,10 @@ public class RepresentativeSelector
                 votesRankByContig.get(candidate.contig()),
                 shareOrNull(candidate.readVotes(), allVotesTotal), shareOrNull(candidate.readVotes(), candidateVotesTotal),
                 shareOrNull(candidate.readVotes(), topCandidateVotes),
-                resolution.comparable().contains(candidate.contig()),
+                challengeResolution.comparable().contains(candidate.contig()),
                 challenges, challengedBy,
-                resolution.roles().get(candidate.contig()),
-                resolution.subOutcome().outcome(), resolution.subOutcome());
+                challengeResolution.roles().get(candidate.contig()),
+                challengeResolution.outcome().resolution(), challengeResolution.outcome());
     }
 
     // The votes-ranks of the other candidates matching the challenge relation, sorted for stable output.
@@ -274,7 +275,7 @@ public class RepresentativeSelector
     private record ChallengeResolution(
             Map<ViralContig, ContigRole> roles,
             Set<ViralContig> comparable,
-            OncologyGroupSubOutcome subOutcome
+            OncologyGroupOutcome outcome
     )
     {
     }

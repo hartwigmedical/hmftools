@@ -38,8 +38,8 @@ public class RepresentativeSelectorTest
 
         assertEquals(ContigRole.REPRESENTATIVE, byContig.get("v1").role());
         assertEquals(ContigRole.REPRESENTATIVE_TWIN, byContig.get("v2").role());
-        assertEquals(OncologyGroupSubOutcome.RESOLVED_CANDIDATES, byContig.get("v1").oncologyGroupSubOutcome());
-        assertEquals(OncologyGroupOutcome.RESOLVED, byContig.get("v1").oncologyGroupOutcome());
+        assertEquals(OncologyGroupOutcome.RESOLVED_CANDIDATES, byContig.get("v1").oncologyGroupOutcome());
+        assertEquals(OncologyGroupResolution.RESOLVED, byContig.get("v1").oncologyGroupResolution());
     }
 
     // The leader decisively challenges the other contig: the other becomes secondary and the leader is still chosen.
@@ -53,7 +53,7 @@ public class RepresentativeSelectorTest
 
         assertEquals(ContigRole.REPRESENTATIVE, byContig.get("v1").role());
         assertEquals(ContigRole.SECONDARY, byContig.get("v2").role());
-        assertEquals(OncologyGroupSubOutcome.RESOLVED_CANDIDATES, byContig.get("v1").oncologyGroupSubOutcome());
+        assertEquals(OncologyGroupOutcome.RESOLVED_CANDIDATES, byContig.get("v1").oncologyGroupOutcome());
         assertEquals(List.of(2), byContig.get("v1").challengesRanks());
         assertEquals(List.of(1), byContig.get("v2").challengedByRanks());
     }
@@ -67,8 +67,8 @@ public class RepresentativeSelectorTest
 
         Map<String, ContigClassification> byContig = classify(stats, pairwise);
 
-        assertEquals(OncologyGroupSubOutcome.MUTUAL, byContig.get("v1").oncologyGroupSubOutcome());
-        assertEquals(OncologyGroupOutcome.UNRESOLVED, byContig.get("v1").oncologyGroupOutcome());
+        assertEquals(OncologyGroupOutcome.MUTUAL, byContig.get("v1").oncologyGroupOutcome());
+        assertEquals(OncologyGroupResolution.UNRESOLVED, byContig.get("v1").oncologyGroupResolution());
         assertNoRepresentative(byContig.values());
     }
 
@@ -82,7 +82,7 @@ public class RepresentativeSelectorTest
 
         Map<String, ContigClassification> byContig = classify(stats, pairwise);
 
-        assertEquals(OncologyGroupSubOutcome.CYCLE, byContig.get("v1").oncologyGroupSubOutcome());
+        assertEquals(OncologyGroupOutcome.CYCLE, byContig.get("v1").oncologyGroupOutcome());
         assertNoRepresentative(byContig.values());
     }
 
@@ -95,7 +95,7 @@ public class RepresentativeSelectorTest
 
         Map<String, ContigClassification> byContig = classify(stats, pairwise);
 
-        assertEquals(OncologyGroupSubOutcome.MINOR_RIVAL, byContig.get("v1").oncologyGroupSubOutcome());
+        assertEquals(OncologyGroupOutcome.MINOR_RIVAL, byContig.get("v1").oncologyGroupOutcome());
         assertEquals(ContigRole.CONTESTED, byContig.get("v1").role());
         assertEquals(ContigRole.MINOR_CHALLENGER, byContig.get("v3").role());
         assertNoRepresentative(byContig.values());
@@ -112,7 +112,7 @@ public class RepresentativeSelectorTest
 
         assertEquals(ContigRole.REPRESENTATIVE, byContig.get("v1").role());
         assertEquals(ContigRole.MINOR, byContig.get("v3").role());
-        assertEquals(OncologyGroupSubOutcome.RESOLVED_CANDIDATES, byContig.get("v1").oncologyGroupSubOutcome());
+        assertEquals(OncologyGroupOutcome.RESOLVED_CANDIDATES, byContig.get("v1").oncologyGroupOutcome());
     }
 
     // A single candidate resolves trivially.
@@ -125,7 +125,7 @@ public class RepresentativeSelectorTest
         Map<String, ContigClassification> byContig = classify(stats, pairwise);
 
         assertEquals(ContigRole.REPRESENTATIVE, byContig.get("v1").role());
-        assertEquals(OncologyGroupSubOutcome.ONE_CANDIDATE, byContig.get("v1").oncologyGroupSubOutcome());
+        assertEquals(OncologyGroupOutcome.ONE_CANDIDATE, byContig.get("v1").oncologyGroupOutcome());
     }
 
     // A contig below the relaxed coverage floor is dropped; a group where no contig meets the coverage minimum keeps nothing.
