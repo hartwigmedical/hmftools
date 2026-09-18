@@ -83,13 +83,7 @@ public class CandidateReadExtractor
         {
             for(SAMRecord record : reader)
             {
-                // TODO: dedupe with other record processing?
-                if(isExcluded(record))
-                {
-                    continue;
-                }
-
-                if(mFilter.isCandidate(record))
+                if(isCandidate(record))
                 {
                     writeFasta(writer, record);
                     ++candidateCount;
@@ -183,27 +177,7 @@ public class CandidateReadExtractor
         FastaPart part = threadPart.get();
         int startCount = part.count();
 
-        slicer.slice(
-                // TODO: should be method instead of lamba?
-                threadReader.get(), region, record ->
-                {
-                    if(isExcluded(record))
-                    {
-                        return;
-                    }
-
-                    // A mapped read is owned by the partition containing its start, so copies returned by an overlapping
-                    // neighbour partition are ignored.
-                    if(record.getAlignmentStart() < region.start())
-                    {
-                        return;
-                    }
-
-                    if(mFilter.isCandidate(record))
-                    {
-                        part.add(record);
-                    }
-                });
+        slicer.slice(threadReader.get(), region, record -> consumeRegionRecord(record, region, part));
 
         LOGGER.debug("region({}) {} candidates in {}s", region, part.count() - startCount, secondsSince(startTimeMs));
     }
@@ -214,21 +188,25 @@ public class CandidateReadExtractor
         FastaPart part = threadPart.get();
         int startCount = part.count();
 
-        slicer.queryUnmapped(
-                // TODO: should be method instead of lamba?
-                threadReader.get(), record ->
-                {
-                    if(isExcluded(record))
-                    {
-                        return;
-                    }
-                    if(mFilter.isCandidate(record))
-                    {
-                        part.add(record);
-                    }
-                });
+        slicer.queryUnmapped(threadReader.get(), record ->
+        {
+            if(isCandidate(record))
+            {
+                part.add(record);
+            }
+        });
 
         LOGGER.debug("unmapped reads {} candidates in {}s", part.count() - startCount, secondsSince(startTimeMs));
+    }
+
+    private void consumeRegionRecord(SAMRecord record, ChrBaseRegion region, FastaPart part)
+    {
+        // A mapped read is owned by the partition containing its start, so copies returned by an overlapping neighbour
+        // partition are ignored.
+        if(record.getAlignmentStart() >= region.start() && isCandidate(record))
+        {
+            part.add(record);
+        }
     }
 
     private static int joinParts(List<FastaPart> parts, String outputFastaFile)
@@ -267,6 +245,11 @@ public class CandidateReadExtractor
                 throw new RuntimeException("failed to close tumor BAM", e);
             }
         }
+    }
+
+    private boolean isCandidate(SAMRecord record)
+    {
+        return !isExcluded(record) && mFilter.isCandidate(record);
     }
 
     private static boolean isExcluded(SAMRecord record)
