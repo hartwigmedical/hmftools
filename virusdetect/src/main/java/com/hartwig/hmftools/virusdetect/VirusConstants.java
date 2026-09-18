@@ -60,6 +60,6 @@ public class VirusConstants
     // Lower is more sensitive to rival virus strains.
     public static final double MIN_CHALLENGE_READS = 0.1;
 
-    // Margins calculated and output in the verbose output (for debugging and tuning only).
-    public static final List<Integer> CHALLENGE_MARGIN_SWEEP = List.of(1, 2, 3, 5, 8, 10, 15, 20, 30, 40, 50);
+    // Winning margins reported per contig pair in the verbose output (for debugging and tuning only).
+    public static final List<Integer> REPORTED_MARGINS = List.of(1, 2, 3, 5, 8, 10, 15, 20, 30, 40, 50);
 }

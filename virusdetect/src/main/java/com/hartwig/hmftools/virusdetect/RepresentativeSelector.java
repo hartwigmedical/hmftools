@@ -2,7 +2,6 @@ package com.hartwig.hmftools.virusdetect;
 
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.groupingBy;
-import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
 
 import static com.hartwig.hmftools.virusdetect.VirusConstants.MIN_COVERAGE;
@@ -22,31 +21,29 @@ import org.jetbrains.annotations.Nullable;
 
 // Per oncology group, pick at most one representative contig.
 // First, contigs are filtered on coverage and read votes.
-// Then a pairwise "challenges" graph is generated to determine the presence of "rival" contigs - contigs with low
-// overall support, but are decisively supported by a subset of reads. I.e. 1 contig doesn't explain the whole viral
-// genome in the sample.
+// Then a "challenges" graph determines the presence of "rival" contigs - contigs with low overall support, but
+// decisively supported by a subset of reads. I.e. 1 contig doesn't explain the whole viral genome in the sample.
 public class RepresentativeSelector
 {
-    public RepresentativeSelectionResult classify(Collection<ContigStats> contigStats, PairwiseMargins pairwise)
+    public RepresentativeSelectionResult classify(
+            Collection<ContigStats> contigStats, PairwiseMargins margins, double meanReadLength)
     {
-        Map<String, List<ContigStats>> contigsByOncologyGroup = contigStats.stream()
-                .collect(groupingBy(stats -> stats.contig().oncologyGroup()));
+        if(meanReadLength <= 0)
+        {
+            throw new IllegalArgumentException("invalid mean read length: " + meanReadLength);
+        }
 
-        List<OncologyGroupResult> groupResults = contigsByOncologyGroup.entrySet().stream()
-                .map(entry -> classifyOncologyGroup(entry.getKey(), entry.getValue(), pairwise))
+        List<ContigClassification> classifications = contigStats.stream()
+                .collect(groupingBy(stats -> stats.contig().oncologyGroup()))
+                .values().stream()
+                .flatMap(groupContigs -> classifyOncologyGroup(groupContigs, margins, meanReadLength).stream())
                 .toList();
 
-        List<ContigClassification> classifications = groupResults.stream()
-                .flatMap(result -> result.classifications().stream())
-                .toList();
-        Map<String, Double> oncologyGroupVoteTotals = groupResults.stream()
-                .filter(result -> result.voteTotal() != null)
-                .collect(toMap(OncologyGroupResult::oncologyGroup, OncologyGroupResult::voteTotal));
-
-        return new RepresentativeSelectionResult(classifications, oncologyGroupVoteTotals);
+        return new RepresentativeSelectionResult(classifications);
     }
 
-    private OncologyGroupResult classifyOncologyGroup(String oncologyGroup, List<ContigStats> groupContigs, PairwiseMargins pairwise)
+    private List<ContigClassification> classifyOncologyGroup(
+            List<ContigStats> groupContigs, PairwiseMargins margins, double meanReadLength)
     {
         double allVotesTotal = groupContigs.stream().mapToDouble(ContigStats::readVotes).sum();
 
@@ -55,17 +52,13 @@ public class RepresentativeSelector
 
         if(covered.isEmpty())
         {
-            List<ContigClassification> lowCoverage = groupContigs.stream()
-                    .map(stats -> lowCoverageClassification(stats, allVotesTotal, 0.0))
-                    .toList();
-            return new OncologyGroupResult(oncologyGroup, null, lowCoverage);
+            return groupContigs.stream().map(stats -> lowCoverageClassification(stats, allVotesTotal, 0.0)).toList();
         }
 
-        double voteTotal = covered.stream().mapToDouble(ContigStats::readVotes).sum();   // challenge-fraction denominator
         Map<ViralContig, Integer> votesRankByContig = votesRanks(covered);
 
         List<ContigStats> candidates = covered.stream()
-                .filter(stats -> passesVoteDensity(stats, pairwise.meanReadLength()))
+                .filter(stats -> passesVoteDensity(stats, meanReadLength))
                 .toList();
         Set<ViralContig> candidateContigs = contigSet(candidates);
         double candidateVotesTotal = candidates.stream().mapToDouble(ContigStats::readVotes).sum();
@@ -82,11 +75,10 @@ public class RepresentativeSelector
 
         if(candidates.isEmpty())
         {
-            List<ContigClassification> contigClassifications = Stream.concat(lowCoverage.stream(), lowVoteDensity.stream()).toList();
-            return new OncologyGroupResult(oncologyGroup, voteTotal, contigClassifications);
+            return Stream.concat(lowCoverage.stream(), lowVoteDensity.stream()).toList();
         }
 
-        ChallengeGraph graph = ChallengeGraph.build(candidates, pairwise, voteTotal);
+        ChallengeGraph graph = ChallengeGraph.build(candidates, groupContigs, margins);
         ChallengeResolution challengeResolution = resolveByChallenges(votesRankByContig, graph);
         List<ContigClassification> candidateClassifications = candidates.stream()
                 .map(candidate -> candidateClassification(
@@ -94,10 +86,7 @@ public class RepresentativeSelector
                         topCandidateVotes, graph))
                 .toList();
 
-        List<ContigClassification> contigClassifications =
-                Stream.of(lowCoverage, lowVoteDensity, candidateClassifications).flatMap(List::stream).toList();
-
-        return new OncologyGroupResult(oncologyGroup, voteTotal, contigClassifications);
+        return Stream.of(lowCoverage, lowVoteDensity, candidateClassifications).flatMap(List::stream).toList();
     }
 
     // Reduces the challenge graph over an oncology group's candidates to per-contig roles and an outcome.
@@ -276,14 +265,6 @@ public class RepresentativeSelector
             Map<ViralContig, ContigRole> roles,
             Set<ViralContig> comparable,
             OncologyGroupOutcome outcome
-    )
-    {
-    }
-
-    private record OncologyGroupResult(
-            String oncologyGroup,
-            @Nullable Double voteTotal,
-            List<ContigClassification> classifications
     )
     {
     }

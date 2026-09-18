@@ -32,9 +32,9 @@ public class RepresentativeSelectorTest
     public void testResolvedTwins()
     {
         Map<String, ContigStats> stats = statsMap(present("v1", 100), present("v2", 95));
-        PairwiseMargins pairwise = new Pairwise().build();
+        PairwiseMargins margins = new Margins().build();
 
-        Map<String, ContigClassification> byContig = classify(stats, pairwise);
+        Map<String, ContigClassification> byContig = classify(stats, margins);
 
         assertEquals(ContigRole.REPRESENTATIVE, byContig.get("v1").role());
         assertEquals(ContigRole.REPRESENTATIVE_TWIN, byContig.get("v2").role());
@@ -47,9 +47,9 @@ public class RepresentativeSelectorTest
     public void testResolvedWithSecondary()
     {
         Map<String, ContigStats> stats = statsMap(present("v1", 100), present("v2", 95));
-        PairwiseMargins pairwise = new Pairwise().challenge("v1", "v2", 40).build();
+        PairwiseMargins margins = new Margins().challenge("v1", "v2", 40).build();
 
-        Map<String, ContigClassification> byContig = classify(stats, pairwise);
+        Map<String, ContigClassification> byContig = classify(stats, margins);
 
         assertEquals(ContigRole.REPRESENTATIVE, byContig.get("v1").role());
         assertEquals(ContigRole.SECONDARY, byContig.get("v2").role());
@@ -63,9 +63,9 @@ public class RepresentativeSelectorTest
     public void testUnresolvedMutual()
     {
         Map<String, ContigStats> stats = statsMap(present("v1", 100), present("v2", 95));
-        PairwiseMargins pairwise = new Pairwise().challenge("v1", "v2", 40).challenge("v2", "v1", 40).build();
+        PairwiseMargins margins = new Margins().challenge("v1", "v2", 40).challenge("v2", "v1", 40).build();
 
-        Map<String, ContigClassification> byContig = classify(stats, pairwise);
+        Map<String, ContigClassification> byContig = classify(stats, margins);
 
         assertEquals(OncologyGroupOutcome.MUTUAL, byContig.get("v1").oncologyGroupOutcome());
         assertEquals(OncologyGroupResolution.UNRESOLVED, byContig.get("v1").oncologyGroupResolution());
@@ -77,10 +77,10 @@ public class RepresentativeSelectorTest
     public void testUnresolvedCycle()
     {
         Map<String, ContigStats> stats = statsMap(present("v1", 100), present("v2", 98), present("v3", 96));
-        PairwiseMargins pairwise = new Pairwise()
+        PairwiseMargins margins = new Margins()
                 .challenge("v1", "v2", 40).challenge("v2", "v3", 40).challenge("v3", "v1", 40).build();
 
-        Map<String, ContigClassification> byContig = classify(stats, pairwise);
+        Map<String, ContigClassification> byContig = classify(stats, margins);
 
         assertEquals(OncologyGroupOutcome.CYCLE, byContig.get("v1").oncologyGroupOutcome());
         assertNoRepresentative(byContig.values());
@@ -91,9 +91,9 @@ public class RepresentativeSelectorTest
     public void testUnresolvedMinorChallenger()
     {
         Map<String, ContigStats> stats = statsMap(present("v1", 100), present("v3", 10));
-        PairwiseMargins pairwise = new Pairwise().challenge("v3", "v1", 40).build();
+        PairwiseMargins margins = new Margins().challenge("v3", "v1", 40).build();
 
-        Map<String, ContigClassification> byContig = classify(stats, pairwise);
+        Map<String, ContigClassification> byContig = classify(stats, margins);
 
         assertEquals(OncologyGroupOutcome.MINOR_RIVAL, byContig.get("v1").oncologyGroupOutcome());
         assertEquals(ContigRole.CONTESTED, byContig.get("v1").role());
@@ -106,9 +106,9 @@ public class RepresentativeSelectorTest
     public void testResolvedWithMinorBystander()
     {
         Map<String, ContigStats> stats = statsMap(present("v1", 100), present("v3", 10));
-        PairwiseMargins pairwise = new Pairwise().build();
+        PairwiseMargins margins = new Margins().build();
 
-        Map<String, ContigClassification> byContig = classify(stats, pairwise);
+        Map<String, ContigClassification> byContig = classify(stats, margins);
 
         assertEquals(ContigRole.REPRESENTATIVE, byContig.get("v1").role());
         assertEquals(ContigRole.MINOR, byContig.get("v3").role());
@@ -120,9 +120,9 @@ public class RepresentativeSelectorTest
     public void testSoleContig()
     {
         Map<String, ContigStats> stats = statsMap(present("v1", 100));
-        PairwiseMargins pairwise = new Pairwise().build();
+        PairwiseMargins margins = new Margins().build();
 
-        Map<String, ContigClassification> byContig = classify(stats, pairwise);
+        Map<String, ContigClassification> byContig = classify(stats, margins);
 
         assertEquals(ContigRole.REPRESENTATIVE, byContig.get("v1").role());
         assertEquals(OncologyGroupOutcome.ONE_CANDIDATE, byContig.get("v1").oncologyGroupOutcome());
@@ -137,9 +137,9 @@ public class RepresentativeSelectorTest
                 stats("v2", 0.05, 100),   // in a covered group, but itself below the relaxed floor
                 stats("h1", 0.05, 100),   // no contig in this group meets the coverage minimum
                 stats("h2", 0.04, 100));
-        PairwiseMargins pairwise = new Pairwise().build();
+        PairwiseMargins margins = new Margins().build();
 
-        Map<String, ContigClassification> byContig = classify(stats, pairwise);
+        Map<String, ContigClassification> byContig = classify(stats, margins);
 
         assertEquals(ContigRole.REPRESENTATIVE, byContig.get("v1").role());
         assertEquals(ContigFilterStatus.LOW_COVERAGE, byContig.get("v2").filterStatus());
@@ -154,9 +154,9 @@ public class RepresentativeSelectorTest
         Map<String, ContigStats> stats = statsMap(
                 present("v1", 100),
                 stats("v2", 0.5, 0.1));   // good coverage but almost no votes
-        PairwiseMargins pairwise = new Pairwise().build();
+        PairwiseMargins margins = new Margins().build();
 
-        Map<String, ContigClassification> byContig = classify(stats, pairwise);
+        Map<String, ContigClassification> byContig = classify(stats, margins);
 
         assertEquals(ContigRole.REPRESENTATIVE, byContig.get("v1").role());
         assertEquals(ContigFilterStatus.LOW_VOTE_DENSITY, byContig.get("v2").filterStatus());
@@ -172,9 +172,9 @@ public class RepresentativeSelectorTest
         }
     }
 
-    private Map<String, ContigClassification> classify(Map<String, ContigStats> stats, PairwiseMargins pairwise)
+    private Map<String, ContigClassification> classify(Map<String, ContigStats> stats, PairwiseMargins margins)
     {
-        RepresentativeSelectionResult result = new RepresentativeSelector().classify(stats.values(), pairwise);
+        RepresentativeSelectionResult result = new RepresentativeSelector().classify(stats.values(), margins, MEAN_READ_LENGTH);
         Map<String, ContigClassification> byContig = new HashMap<>();
         result.classifications().forEach(classification -> byContig.put(classification.contig().name(), classification));
         return byContig;
@@ -216,14 +216,14 @@ public class RepresentativeSelectorTest
         return new ViralReference(contigs, new SAMSequenceDictionary(records));
     }
 
-    // Builds a PairwiseMargins with controlled challenge edges: each challenge places its reads at a margin above the
+    // Builds pairwise margins with controlled challenge edges: each challenge places its reads at a margin above the
     // selection margin, so they count as decisive.
-    private static class Pairwise
+    private static class Margins
     {
         private final Map<ContigPair, NavigableMap<Integer, Integer>> mMargins = new HashMap<>();
         private final Map<ContigPair, Integer> mShared = new HashMap<>();
 
-        private Pairwise challenge(String subject, String opponent, int reads)
+        private Margins challenge(String subject, String opponent, int reads)
         {
             ContigPair pair = new ContigPair(REFERENCE.contig(subject), REFERENCE.contig(opponent));
             mMargins.computeIfAbsent(pair, key -> new TreeMap<>()).merge(10, reads, Integer::sum);
@@ -234,7 +234,7 @@ public class RepresentativeSelectorTest
 
         private PairwiseMargins build()
         {
-            return new PairwiseMargins(mMargins, mShared, MEAN_READ_LENGTH);
+            return new PairwiseMargins(mMargins, mShared);
         }
     }
 }

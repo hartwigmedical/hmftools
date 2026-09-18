@@ -83,14 +83,15 @@ public class VirusApplication
         LOGGER.info("Per-contig statistics complete");
 
         LOGGER.info("Selecting representative contig per oncology group");
-        PairwiseMargins pairwise = new PairwiseMarginCalculator().compute(viralAlignments);
-        RepresentativeSelectionResult selection = new RepresentativeSelector().classify(contigStats.values(), pairwise);
+        PairwiseMargins pairwiseMargins = PairwiseMargins.from(viralAlignments);
+        RepresentativeSelectionResult selection = new RepresentativeSelector().classify(
+                contigStats.values(), pairwiseMargins, viralAlignments.meanReadLength());
         logSelection(selection);
 
         VirusOutputWriter.writeContigStats(contigStatsFile(), contigStats.values(), selection.classifications());
         if(mConfig.verboseOutput())
         {
-            VirusOutputWriter.writePairwiseMargins(pairwiseMarginsFile(), pairwise, selection);
+            VirusOutputWriter.writePairwiseMargins(pairwiseMarginsFile(), pairwiseMargins, selection);
         }
 
         // TODO: placeholder pipeline; each step is replaced by its implementation as it lands.

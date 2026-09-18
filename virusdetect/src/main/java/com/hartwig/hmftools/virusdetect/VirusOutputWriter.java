@@ -4,7 +4,7 @@ import static java.util.Comparator.comparing;
 import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.toMap;
 
-import static com.hartwig.hmftools.virusdetect.VirusConstants.CHALLENGE_MARGIN_SWEEP;
+import static com.hartwig.hmftools.virusdetect.VirusConstants.REPORTED_MARGINS;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -93,40 +93,35 @@ public class VirusOutputWriter
         LOGGER.info("wrote {} contig stats to {}", ordered.size(), file);
     }
 
-    // One row per ordered within-oncology-group contig pair, how decisively the subject fits shared reads better than the
-    // opponent as a challenge share at each considered margin value. Includes filtered contigs. Verbose/debug only, for tuning.
-    public static void writePairwiseMargins(
-            String file, PairwiseMargins pairwise, RepresentativeSelectionResult selection)
+    // One row per ordered within-oncology-group contig pair: the reads they share, and how many of those fit the subject
+    // better by at least each reported margin. Includes filtered contigs. Verbose/debug only, for tuning.
+    public static void writePairwiseMargins(String file, PairwiseMargins margins, RepresentativeSelectionResult selection)
     {
         Map<ViralContig, ContigClassification> byContig = selection.classifications().stream()
                 .collect(toMap(ContigClassification::contig, classification -> classification));
 
-        List<PairwiseMargins.ContigPair> pairs = pairwise.pairs().stream()
+        List<PairwiseMargins.ContigPair> pairs = margins.pairs().stream()
                 .sorted(comparing((PairwiseMargins.ContigPair pair) -> pair.subject().name())
                         .thenComparing(pair -> pair.opponent().name()))
                 .toList();
 
         List<String> columns = Stream.concat(
-                        Stream.of(PairwiseColumn.values()).map(Enum::name),
+                        Stream.of(PairwiseMarginsColumn.values()).map(Enum::name),
                         marginColumns().stream())
                 .toList();
 
         DelimFileWriter.write(
                 file, columns, pairs, (pair, row) ->
                 {
-                    String oncologyGroup = pair.subject().oncologyGroup();
-                    double voteTotal = selection.oncologyGroupVoteTotals().getOrDefault(oncologyGroup, 0.0);
-                    row.set(PairwiseColumn.oncology_group, oncologyGroup);
-                    row.set(PairwiseColumn.subject_contig, pair.subject().name());
-                    row.setOrNull(PairwiseColumn.subject_rank, asString(votesRank(byContig, pair.subject())));
-                    row.set(PairwiseColumn.opponent_contig, pair.opponent().name());
-                    row.setOrNull(PairwiseColumn.opponent_rank, asString(votesRank(byContig, pair.opponent())));
-                    row.set(PairwiseColumn.shared_reads, pairwise.sharedReads(pair.subject(), pair.opponent()));
-                    for(int margin : CHALLENGE_MARGIN_SWEEP)
+                    row.set(PairwiseMarginsColumn.oncology_group, pair.subject().oncologyGroup());
+                    row.set(PairwiseMarginsColumn.subject_contig, pair.subject().name());
+                    row.setOrNull(PairwiseMarginsColumn.subject_rank, asString(votesRank(byContig, pair.subject())));
+                    row.set(PairwiseMarginsColumn.opponent_contig, pair.opponent().name());
+                    row.setOrNull(PairwiseMarginsColumn.opponent_rank, asString(votesRank(byContig, pair.opponent())));
+                    row.set(PairwiseMarginsColumn.shared_reads, margins.sharedReads(pair.subject(), pair.opponent()));
+                    for(int margin : REPORTED_MARGINS)
                     {
-                        double challengeShare =
-                                voteTotal > 0 ? pairwise.challengeReads(pair.subject(), pair.opponent(), margin) / voteTotal : 0.0;
-                        row.set(marginColumn(margin), challengeShare);
+                        row.set(marginColumn(margin), margins.readsWinningBy(pair.subject(), pair.opponent(), margin));
                     }
                 });
 
@@ -142,7 +137,7 @@ public class VirusOutputWriter
     private static List<String> marginColumns()
     {
         List<String> columns = new ArrayList<>();
-        for(int margin : CHALLENGE_MARGIN_SWEEP)
+        for(int margin : REPORTED_MARGINS)
         {
             columns.add(marginColumn(margin));
         }
@@ -151,7 +146,7 @@ public class VirusOutputWriter
 
     private static String marginColumn(int margin)
     {
-        return "share_m" + margin;
+        return "reads_m" + margin;
     }
 
     // Rank lists apply only to candidates (which carry a role); a non-candidate has no challenge relations to report.
@@ -217,7 +212,7 @@ public class VirusOutputWriter
         aligner_score_max
     }
 
-    private enum PairwiseColumn
+    private enum PairwiseMarginsColumn
     {
         oncology_group,
         subject_contig,
