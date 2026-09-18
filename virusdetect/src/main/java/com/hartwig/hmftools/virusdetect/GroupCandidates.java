@@ -11,17 +11,16 @@ import java.util.List;
 // Rejected contigs are those filtered up-front because they have too little support to be plausible.
 public record GroupCandidates(
         List<ContigStats> candidates,
-        List<Rejected> rejected
+        List<RejectedContig> rejected
 )
 {
-    // TODO: poor name because it seems innoccuous but actually does the entire filtering process.
-    public static GroupCandidates from(List<ContigStats> oncologyGroupContigs, double meanReadLength)
+    public static GroupCandidates prefilter(List<ContigStats> oncologyGroupContigs, double meanReadLength)
     {
         boolean groupPresent = oncologyGroupContigs.stream()
                 .anyMatch(stats -> stats.coverageFraction() >= MIN_COVERAGE);
 
         List<ContigStats> candidates = new ArrayList<>();
-        List<Rejected> rejected = new ArrayList<>();
+        List<RejectedContig> rejected = new ArrayList<>();
         for(ContigStats stats : oncologyGroupContigs)
         {
             ContigFilterStatus status = filterStatus(stats, groupPresent, meanReadLength);
@@ -31,7 +30,7 @@ public record GroupCandidates(
             }
             else
             {
-                rejected.add(new Rejected(stats, status));
+                rejected.add(new RejectedContig(stats, status));
             }
         }
 
@@ -58,13 +57,5 @@ public record GroupCandidates(
     {
         double voteFloorPerBase = MIN_VOTES_PER_BASE * MIN_COVERAGE / meanReadLength;
         return stats.readVotes() >= voteFloorPerBase * stats.contig().length();
-    }
-
-    // TODO: should be in separate file
-    public record Rejected(
-            ContigStats stats,
-            ContigFilterStatus reason
-    )
-    {
     }
 }

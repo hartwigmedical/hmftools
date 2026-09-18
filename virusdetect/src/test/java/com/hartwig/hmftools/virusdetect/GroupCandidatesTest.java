@@ -18,7 +18,7 @@ public class GroupCandidatesTest
     @Test
     public void testRelaxedFloorKeepsStraddlingSibling()
     {
-        GroupCandidates candidates = GroupCandidates.from(
+        GroupCandidates candidates = GroupCandidates.prefilter(
                 List.of(stats("v1", 0.5, 100), stats("v2", 0.095, 100)), MEAN_READ_LENGTH);
 
         assertEquals(List.of("v1", "v2"), names(candidates.candidates()));
@@ -28,7 +28,7 @@ public class GroupCandidatesTest
     @Test
     public void testRelaxedFloorDropsContigBelowIt()
     {
-        GroupCandidates candidates = GroupCandidates.from(
+        GroupCandidates candidates = GroupCandidates.prefilter(
                 List.of(stats("v1", 0.5, 100), stats("v2", 0.05, 100)), MEAN_READ_LENGTH);
 
         assertEquals(List.of("v1"), names(candidates.candidates()));
@@ -39,7 +39,7 @@ public class GroupCandidatesTest
     @Test
     public void testAbsentGroupRejectsEveryContig()
     {
-        GroupCandidates candidates = GroupCandidates.from(
+        GroupCandidates candidates = GroupCandidates.prefilter(
                 List.of(stats("v1", 0.095, 100), stats("v2", 0.09, 100)), MEAN_READ_LENGTH);
 
         assertTrue(candidates.candidates().isEmpty());
@@ -49,7 +49,7 @@ public class GroupCandidatesTest
     @Test
     public void testVoteDensityFloorDropsCoveredContig()
     {
-        GroupCandidates candidates = GroupCandidates.from(
+        GroupCandidates candidates = GroupCandidates.prefilter(
                 List.of(stats("v1", 0.5, 100), stats("v2", 0.5, 0.5)), MEAN_READ_LENGTH);
 
         assertEquals(List.of("v1"), names(candidates.candidates()));
@@ -60,7 +60,7 @@ public class GroupCandidatesTest
     @Test
     public void testCoverageReasonTakesPrecedence()
     {
-        GroupCandidates candidates = GroupCandidates.from(
+        GroupCandidates candidates = GroupCandidates.prefilter(
                 List.of(stats("v1", 0.5, 100), stats("v2", 0.05, 0.1)), MEAN_READ_LENGTH);
 
         assertEquals(ContigFilterStatus.LOW_COVERAGE, candidates.rejected().get(0).reason());

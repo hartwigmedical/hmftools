@@ -33,7 +33,7 @@ public class RepresentativeSelector
     private OncologyGroupSelection selectOncologyGroup(
             String oncologyGroup, List<ContigStats> groupContigs, PairwiseMargins margins, double meanReadLength)
     {
-        GroupCandidates prefiltered = GroupCandidates.from(groupContigs, meanReadLength);
+        GroupCandidates prefiltered = GroupCandidates.prefilter(groupContigs, meanReadLength);
         List<ContigStats> candidates = prefiltered.candidates();
 
         List<ContigSelectionResult> rejected = prefiltered.rejected().stream()
