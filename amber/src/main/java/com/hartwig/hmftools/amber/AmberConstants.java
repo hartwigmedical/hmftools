@@ -4,7 +4,7 @@ public class AmberConstants
 {
     public static final String APP_NAME = "Amber";
 
-    public static final int DEFAULT_MIN_BASE_QUALITY = 13;
+    public static final int DEFAULT_MIN_BASE_QUALITY = 18;
     public static final int DEFAULT_MIN_MAPPING_QUALITY = 50;
     public static final int DEFAULT_TUMOR_ONLY_MIN_SUPPORT = 2;
     public static final double DEFAULT_TUMOR_ONLY_MIN_VAF = 0.025;
@@ -43,7 +43,7 @@ public class AmberConstants
     public static final double LOWER_CDF_BOUND_FOR_CAPTURE = 0.16;
     public static final double UPPER_CDF_BOUND_FOR_CAPTURE = 0.84;
     public static final int MINIMUM_CAPTURED_POINTS = 15;
-    public static final double GNOMAD_FREQUENCY_TOLERANCE = 0.15;
+    public static final double GNOMAD_FREQUENCY_TOLERANCE = 0.20;
     public static final double PEAK_SEARCH_START = 0.005;
     public static final double PEAK_SEARCH_END = 0.37;
     public static final double PEAK_SEARCH_STEP_RATIO = 1.05;
