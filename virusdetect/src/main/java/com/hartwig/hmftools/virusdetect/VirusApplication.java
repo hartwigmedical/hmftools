@@ -14,8 +14,8 @@ import static com.hartwig.hmftools.virusdetect.VirusConstants.PAIRWISE_MARGINS_T
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
@@ -84,14 +84,14 @@ public class VirusApplication
 
         LOGGER.info("Selecting representative contig per oncology group");
         PairwiseMargins pairwiseMargins = PairwiseMargins.from(viralAlignments);
-        RepresentativeSelectionResult selection = new RepresentativeSelector().classify(
+        List<OncologyGroupSelection> selections = new RepresentativeSelector().select(
                 contigStats.values(), pairwiseMargins, viralAlignments.meanReadLength());
-        logSelection(selection);
+        logSelections(selections);
 
-        VirusOutputWriter.writeContigStats(contigStatsFile(), contigStats.values(), selection.classifications());
+        VirusOutputWriter.writeContigStats(contigStatsFile(), selections);
         if(mConfig.verboseOutput())
         {
-            VirusOutputWriter.writePairwiseMargins(pairwiseMarginsFile(), pairwiseMargins, selection);
+            VirusOutputWriter.writePairwiseMargins(pairwiseMarginsFile(), pairwiseMargins, selections);
         }
 
         // TODO: placeholder pipeline; each step is replaced by its implementation as it lands.
@@ -122,24 +122,20 @@ public class VirusApplication
         return mConfig.outputDir() + mConfig.sampleId() + PAIRWISE_MARGINS_TSV_SUFFIX;
     }
 
-    private static void logSelection(RepresentativeSelectionResult selection)
+    private static void logSelections(List<OncologyGroupSelection> selections)
     {
-        for(ContigClassification classification : selection.classifications())
+        for(OncologyGroupSelection selection : selections)
         {
-            if(classification.role() == ContigRole.REPRESENTATIVE)
+            ViralContig representative = selection.representative();
+            if(representative != null)
             {
-                LOGGER.info(
-                        "oncologyGroup({}) representative({})",
-                        classification.contig().oncologyGroup(), classification.contig().name());
+                LOGGER.info("oncologyGroup({}) representative({})", selection.oncologyGroup(), representative.name());
+            }
+            else if(selection.resolution() == OncologyGroupResolution.UNRESOLVED)
+            {
+                LOGGER.warn("oncologyGroup({}) unresolved({})", selection.oncologyGroup(), selection.outcome());
             }
         }
-
-        selection.classifications().stream()
-                .filter(classification -> classification.oncologyGroupResolution() == OncologyGroupResolution.UNRESOLVED)
-                .collect(Collectors.toMap(
-                        classification -> classification.contig().oncologyGroup(),
-                        ContigClassification::oncologyGroupOutcome, (first, second) -> first))
-                .forEach((oncologyGroup, outcome) -> LOGGER.warn("oncologyGroup({}) unresolved({})", oncologyGroup, outcome));
     }
 
     public static void main(@NotNull String[] args)
