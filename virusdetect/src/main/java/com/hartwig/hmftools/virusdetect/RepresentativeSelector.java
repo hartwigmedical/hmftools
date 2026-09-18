@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.virusdetect;
 
+import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.groupingBy;
 
 import java.util.Collection;
@@ -93,13 +94,8 @@ public class RepresentativeSelector
 
     private static int readCount(Map<String, Integer> oncologyGroupReadCounts, String oncologyGroup)
     {
-        // TODO: do we need this whole method or is there a Map method that can get or throw?
-        Integer readCount = oncologyGroupReadCounts.get(oncologyGroup);
-        if(readCount == null || readCount == 0)
-        {
-            throw new IllegalStateException("Oncology group has contig stats but no aligned reads: " + oncologyGroup);
-        }
-        return readCount;
+        return requireNonNull(
+                oncologyGroupReadCounts.get(oncologyGroup), "No aligned read count for oncology group: " + oncologyGroup);
     }
 
     // Rank 1 = best supported among the candidates.

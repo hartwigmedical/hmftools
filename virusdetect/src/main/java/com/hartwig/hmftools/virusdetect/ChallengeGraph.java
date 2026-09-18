@@ -30,6 +30,11 @@ public class ChallengeGraph
 
     public static ChallengeGraph build(List<ContigStats> candidates, int oncologyGroupReads, PairwiseMargins margins)
     {
+        if(oncologyGroupReads <= 0)
+        {
+            throw new IllegalArgumentException("Invalid oncology group read count: " + oncologyGroupReads);
+        }
+
         List<ViralContig> contigs = candidates.stream().map(ContigStats::contig).toList();
 
         double topVotes = candidates.stream().mapToDouble(ContigStats::readVotes).max().orElse(0.0);
@@ -69,7 +74,6 @@ public class ChallengeGraph
     private static boolean challenges(
             ViralContig subject, ViralContig opponent, PairwiseMargins margins, int oncologyGroupReads)
     {
-        // TODO: check oncologyGroupReads not negative?
         double challengeFraction =
                 margins.readsWinningBy(subject, opponent, MIN_CHALLENGE_MARGIN) / (double) oncologyGroupReads;
         return challengeFraction >= MIN_CHALLENGE_READS;
