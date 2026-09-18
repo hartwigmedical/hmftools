@@ -40,7 +40,7 @@ public class VirusOutputWriter
 
                     row.set(ContigStatsColumn.contig, contig.name());
                     row.set(ContigStatsColumn.virus_name, contig.virusName());
-                    row.set(ContigStatsColumn.oncology_group, contig.oncologyGroup());
+                    row.set(ContigStatsColumn.oncology_group, contig.oncologyGroup().name());
                     row.set(ContigStatsColumn.contig_length, contig.length());
                     row.set(ContigStatsColumn.read_count, stat.readCount());
                     row.set(ContigStatsColumn.multi_align_reads, stat.multiAlignReads());
@@ -117,7 +117,7 @@ public class VirusOutputWriter
         DelimFileWriter.write(
                 file, columns, pairs, (pair, row) ->
                 {
-                    row.set(PairwiseMarginsColumn.oncology_group, pair.subject().oncologyGroup());
+                    row.set(PairwiseMarginsColumn.oncology_group, pair.subject().oncologyGroup().name());
                     row.set(PairwiseMarginsColumn.subject_contig, pair.subject().name());
                     row.setOrNull(PairwiseMarginsColumn.subject_rank, asString(votesRankByContig.get(pair.subject())));
                     row.set(PairwiseMarginsColumn.opponent_contig, pair.opponent().name());
@@ -186,7 +186,7 @@ public class VirusOutputWriter
     }
 
     private record ContigStatsRow(
-            String oncologyGroup,
+            OncologyGroup oncologyGroup,
             OncologyGroupOutcome outcome,
             ContigSelectionResult contig,
             @Nullable Double preFilterVoteShare,

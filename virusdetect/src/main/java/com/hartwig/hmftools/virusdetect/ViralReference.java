@@ -105,7 +105,8 @@ public class ViralReference
             for(DelimFileReader.Row row : reader)
             {
                 String contig = row.get(InfoColumn.ref_contig);
-                InfoRow previous = info.put(contig, new InfoRow(row.get(InfoColumn.virus_name), row.get(InfoColumn.oncology_group)));
+                OncologyGroup oncologyGroup = new OncologyGroup(row.get(InfoColumn.oncology_group));
+                InfoRow previous = info.put(contig, new InfoRow(row.get(InfoColumn.virus_name), oncologyGroup));
                 if(previous != null)
                 {
                     throw new UserInputError(String.format("Viral reference info has duplicate contig: %s", contig));
@@ -139,7 +140,7 @@ public class ViralReference
         oncology_group
     }
 
-    record InfoRow(String virusName, String oncologyGroup)
+    record InfoRow(String virusName, OncologyGroup oncologyGroup)
     {
     }
 }

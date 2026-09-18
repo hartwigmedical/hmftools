@@ -23,22 +23,14 @@ public record ViralAlignments(
         // Alignments excluded for clipping over their contig's start or end.
         Map<ViralContig, Integer> originClippedReads,
         // Distinct reads with at least one alignment to any contig of the oncology group.
-        Map<String, Integer> readCountsByOncologyGroup
+        Map<OncologyGroup, Integer> readCountsByOncologyGroup
 )
 {
-    public ViralAlignments
-    {
-        if(alignments.stream().anyMatch(ViralAlignment::clipsOverContigEnd))
-        {
-            throw new IllegalArgumentException("Origin-straddling alignments must be excluded");
-        }
-    }
-
     public static ViralAlignments from(List<ViralAlignment> alignments, double meanReadLength)
     {
         List<ViralAlignment> retained = new ArrayList<>();
         Map<ViralContig, Integer> originClippedReads = new HashMap<>();
-        Map<String, Set<String>> readNamesByOncologyGroup = new HashMap<>();
+        Map<OncologyGroup, Set<String>> readNamesByOncologyGroup = new HashMap<>();
 
         for(ViralAlignment alignment : alignments)
         {
@@ -54,7 +46,7 @@ public record ViralAlignments(
                     .add(alignment.readName());
         }
 
-        Map<String, Integer> readCounts = new HashMap<>();
+        Map<OncologyGroup, Integer> readCounts = new HashMap<>();
         readNamesByOncologyGroup.forEach((oncologyGroup, readNames) -> readCounts.put(oncologyGroup, readNames.size()));
 
         return new ViralAlignments(retained, meanReadLength, originClippedReads, readCounts);

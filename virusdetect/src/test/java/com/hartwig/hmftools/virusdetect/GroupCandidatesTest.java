@@ -74,7 +74,7 @@ public class GroupCandidatesTest
     private static ContigStats stats(String contig, double coverage, double votes)
     {
         SummaryStats dummy = SummaryStats.from(new int[] { 1 });
-        ViralContig viralContig = new ViralContig(contig, LENGTH, "Virus " + contig, "Group A");
+        ViralContig viralContig = new ViralContig(contig, LENGTH, "Virus " + contig, new OncologyGroup("Group A"));
         return new ContigStats(
                 viralContig, 100, 0, dummy, 0, (int) Math.round(coverage * LENGTH), dummy, dummy, votes);
     }

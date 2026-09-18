@@ -90,7 +90,7 @@ public class ViralAlignmentTest
 
     private static ViralReference reference()
     {
-        List<ViralContig> contigs = List.of(new ViralContig("v1", CONTIG_LENGTH, "Virus 1", "Group 1"));
+        List<ViralContig> contigs = List.of(new ViralContig("v1", CONTIG_LENGTH, "Virus 1", new OncologyGroup("Group 1")));
         SAMSequenceDictionary dictionary = new SAMSequenceDictionary(List.of(new SAMSequenceRecord("v1", CONTIG_LENGTH)));
         return new ViralReference(contigs, dictionary);
     }

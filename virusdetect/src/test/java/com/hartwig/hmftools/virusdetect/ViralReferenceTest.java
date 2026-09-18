@@ -20,15 +20,18 @@ import htsjdk.samtools.SAMSequenceRecord;
 
 public class ViralReferenceTest
 {
+    private static final OncologyGroup GROUP_ALPHA = new OncologyGroup("Group Alpha");
+    private static final OncologyGroup GROUP_BETA = new OncologyGroup("Group Beta");
+
     // Three contigs: contigA alone in its group, contigB and contigC sharing a group.
-    private static final InfoRow INFO_A = new InfoRow("Virus Alpha", "Group Alpha");
-    private static final InfoRow INFO_B = new InfoRow("Virus Beta type 1", "Group Beta");
-    private static final InfoRow INFO_C = new InfoRow("Virus Beta type 2", "Group Beta");
+    private static final InfoRow INFO_A = new InfoRow("Virus Alpha", GROUP_ALPHA);
+    private static final InfoRow INFO_B = new InfoRow("Virus Beta type 1", GROUP_BETA);
+    private static final InfoRow INFO_C = new InfoRow("Virus Beta type 2", GROUP_BETA);
     private static final Map<String, InfoRow> INFO = Map.of("contigA", INFO_A, "contigB", INFO_B, "contigC", INFO_C);
 
-    private static final ViralContig CONTIG_A = new ViralContig("contigA", 100, "Virus Alpha", "Group Alpha");
-    private static final ViralContig CONTIG_B = new ViralContig("contigB", 200, "Virus Beta type 1", "Group Beta");
-    private static final ViralContig CONTIG_C = new ViralContig("contigC", 300, "Virus Beta type 2", "Group Beta");
+    private static final ViralContig CONTIG_A = new ViralContig("contigA", 100, "Virus Alpha", GROUP_ALPHA);
+    private static final ViralContig CONTIG_B = new ViralContig("contigB", 200, "Virus Beta type 1", GROUP_BETA);
+    private static final ViralContig CONTIG_C = new ViralContig("contigC", 300, "Virus Beta type 2", GROUP_BETA);
 
     private static final String VALID_INFO_TSV = """
             ref_contig\tvirus_name\toncology_group

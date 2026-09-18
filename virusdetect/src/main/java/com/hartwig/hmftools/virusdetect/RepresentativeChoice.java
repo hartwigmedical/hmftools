@@ -63,16 +63,6 @@ public record RepresentativeChoice(
         return new RepresentativeChoice(roles, outcome);
     }
 
-    @Nullable
-    public ViralContig representative()
-    {
-        return roles.entrySet().stream()
-                .filter(entry -> entry.getValue() == ContigRole.REPRESENTATIVE)
-                .map(Map.Entry::getKey)
-                .findFirst()
-                .orElse(null);
-    }
-
     public ContigRole role(ViralContig contig)
     {
         ContigRole role = roles.get(contig);
@@ -87,7 +77,7 @@ public record RepresentativeChoice(
     {
         return candidates.stream()
                 .filter(stats -> contigs.contains(stats.contig()))
-                .min(ContigStats.BY_SUPPORT)
+                .min(ContigStats.BEST_SUPPORT_FIRST)
                 .orElseThrow()
                 .contig();
     }

@@ -7,7 +7,7 @@ import org.jetbrains.annotations.Nullable;
 // Representative contig selection's outcome for one oncology group.
 // Includes all the contigs which had any alignments.
 public record OncologyGroupSelection(
-        String oncologyGroup,
+        OncologyGroup oncologyGroup,
         OncologyGroupOutcome outcome,
         List<ContigSelectionResult> contigs
 )

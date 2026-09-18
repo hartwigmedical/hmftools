@@ -24,8 +24,8 @@ public class RepresentativeSelectorTest
     private static final int LENGTH = 1000;
     private static final double MEAN_READ_LENGTH = 150.0;
 
-    private static final String GROUP_A = "Group A";
-    private static final String GROUP_H = "Group H";
+    private static final OncologyGroup GROUP_A = new OncologyGroup("Group A");
+    private static final OncologyGroup GROUP_H = new OncologyGroup("Group H");
 
     // Contigs are grouped by name prefix: "h" -> Group H, everything else -> Group A.
     private static final ViralReference REFERENCE = reference("v1", "v2", "v3", "h1", "h2");
@@ -168,15 +168,15 @@ public class RepresentativeSelectorTest
     }
 
     // Each group is given as many reads as its contigs have votes, so a contig's votes read as its share of the group.
-    private static Map<String, Integer> groupReadCounts(Map<String, ContigStats> stats)
+    private static Map<OncologyGroup, Integer> groupReadCounts(Map<String, ContigStats> stats)
     {
-        Map<String, Integer> readCounts = new HashMap<>();
+        Map<OncologyGroup, Integer> readCounts = new HashMap<>();
         stats.values().forEach(stat -> readCounts.merge(
                 stat.contig().oncologyGroup(), (int) Math.round(stat.readVotes()), Integer::sum));
         return readCounts;
     }
 
-    private static OncologyGroupSelection group(List<OncologyGroupSelection> selections, String oncologyGroup)
+    private static OncologyGroupSelection group(List<OncologyGroupSelection> selections, OncologyGroup oncologyGroup)
     {
         return selections.stream()
                 .filter(selection -> selection.oncologyGroup().equals(oncologyGroup))
@@ -232,7 +232,7 @@ public class RepresentativeSelectorTest
         List<SAMSequenceRecord> records = new ArrayList<>();
         for(String name : contigNames)
         {
-            String group = name.startsWith("h") ? GROUP_H : GROUP_A;
+            OncologyGroup group = name.startsWith("h") ? GROUP_H : GROUP_A;
             contigs.add(new ViralContig(name, LENGTH, "Virus " + name, group));
             records.add(new SAMSequenceRecord(name, LENGTH));
         }

@@ -12,9 +12,12 @@ public class ViralAlignmentsTest
 {
     private static final int LENGTH = 100;
 
-    private static final ViralContig V1 = new ViralContig("v1", LENGTH, "Virus v1", "Group A");
-    private static final ViralContig V2 = new ViralContig("v2", LENGTH, "Virus v2", "Group A");
-    private static final ViralContig H1 = new ViralContig("h1", LENGTH, "Virus h1", "Group H");
+    private static final OncologyGroup GROUP_A = new OncologyGroup("Group A");
+    private static final OncologyGroup GROUP_H = new OncologyGroup("Group H");
+
+    private static final ViralContig V1 = new ViralContig("v1", LENGTH, "Virus v1", GROUP_A);
+    private static final ViralContig V2 = new ViralContig("v2", LENGTH, "Virus v2", GROUP_A);
+    private static final ViralContig H1 = new ViralContig("h1", LENGTH, "Virus h1", GROUP_H);
 
     // An alignment clipping over a contig end straddles the circular origin: excluded once here, and reported as a
     // per-contig count so the drop stays visible.
@@ -35,7 +38,7 @@ public class ViralAlignmentsTest
         ViralAlignments alignments = ViralAlignments.from(
                 List.of(alignment("r1", V1), alignment("r1", V2), alignment("r2", V1)), 150.0);
 
-        assertEquals(Map.of("Group A", 2), alignments.readCountsByOncologyGroup());
+        assertEquals(Map.of(GROUP_A, 2), alignments.readCountsByOncologyGroup());
     }
 
     // A read aligning across groups counts towards each of them.
@@ -44,7 +47,7 @@ public class ViralAlignmentsTest
     {
         ViralAlignments alignments = ViralAlignments.from(List.of(alignment("r1", V1), alignment("r1", H1)), 150.0);
 
-        assertEquals(Map.of("Group A", 1, "Group H", 1), alignments.readCountsByOncologyGroup());
+        assertEquals(Map.of(GROUP_A, 1, GROUP_H, 1), alignments.readCountsByOncologyGroup());
     }
 
     // A straddler contributes to no read count, so a contig carrying only straddlers leaves its group unrepresented.
@@ -53,16 +56,7 @@ public class ViralAlignmentsTest
     {
         ViralAlignments alignments = ViralAlignments.from(List.of(alignment("r1", V1), straddler("r2", H1)), 150.0);
 
-        assertEquals(Map.of("Group A", 1), alignments.readCountsByOncologyGroup());
-    }
-
-    // The exclusion is an invariant of the type, not something each stage remembers to apply.
-    @Test
-    public void testStraddlerRejectedByConstructor()
-    {
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> new ViralAlignments(List.of(straddler("r1", V1)), 150.0, Map.of(), Map.of()));
+        assertEquals(Map.of(GROUP_A, 1), alignments.readCountsByOncologyGroup());
     }
 
     private static ViralAlignment alignment(String readName, ViralContig contig)

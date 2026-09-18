@@ -19,9 +19,9 @@ import org.junit.Test;
 
 public class ChallengeGraphTest
 {
-    private static final ViralContig V1 = new ViralContig("v1", 1000, "Virus v1", "Group A");
-    private static final ViralContig V2 = new ViralContig("v2", 1000, "Virus v2", "Group A");
-    private static final ViralContig V3 = new ViralContig("v3", 1000, "Virus v3", "Group A");
+    private static final ViralContig V1 = new ViralContig("v1", 1000, "Virus v1", new OncologyGroup("Group A"));
+    private static final ViralContig V2 = new ViralContig("v2", 1000, "Virus v2", new OncologyGroup("Group A"));
+    private static final ViralContig V3 = new ViralContig("v3", 1000, "Virus v3", new OncologyGroup("Group A"));
 
     // A tenth of the group's reads win by a decisive margin, which meets the challenge threshold of a tenth.
     @Test

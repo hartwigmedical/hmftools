@@ -23,7 +23,7 @@ public record ContigStats(
         double readVotes)
 {
     // Best supported first: most read votes, with the contig name breaking ties for determinism.
-    public static final Comparator<ContigStats> BY_SUPPORT =
+    public static final Comparator<ContigStats> BEST_SUPPORT_FIRST =
             Comparator.comparingDouble(ContigStats::readVotes).reversed().thenComparing(stats -> stats.contig().name());
 
     public double coverageFraction()

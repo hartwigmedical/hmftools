@@ -7,8 +7,7 @@ public record ViralContig(
         int length,
         // Human-readable name of the virus. Only for readability purposes.
         String virusName,
-        // Group of viruses at the level of taxonomy granularity which matters to us.
-        String oncologyGroup
+        OncologyGroup oncologyGroup
 )
 {
 }

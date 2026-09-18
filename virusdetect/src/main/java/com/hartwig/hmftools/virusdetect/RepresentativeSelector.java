@@ -17,7 +17,7 @@ import java.util.stream.Stream;
 public class RepresentativeSelector
 {
     public List<OncologyGroupSelection> select(
-            Collection<ContigStats> contigStats, PairwiseMargins margins, Map<String, Integer> oncologyGroupReadCounts,
+            Collection<ContigStats> contigStats, PairwiseMargins margins, Map<OncologyGroup, Integer> oncologyGroupReadCounts,
             double meanReadLength)
     {
         if(meanReadLength <= 0)
@@ -35,7 +35,7 @@ public class RepresentativeSelector
     }
 
     private OncologyGroupSelection selectOncologyGroup(
-            String oncologyGroup, List<ContigStats> groupContigs, PairwiseMargins margins, int oncologyGroupReads,
+            OncologyGroup oncologyGroup, List<ContigStats> groupContigs, PairwiseMargins margins, int oncologyGroupReads,
             double meanReadLength)
     {
         GroupCandidates prefiltered = GroupCandidates.prefilter(groupContigs, meanReadLength);
@@ -92,7 +92,7 @@ public class RepresentativeSelector
                 .toList();
     }
 
-    private static int readCount(Map<String, Integer> oncologyGroupReadCounts, String oncologyGroup)
+    private static int readCount(Map<OncologyGroup, Integer> oncologyGroupReadCounts, OncologyGroup oncologyGroup)
     {
         return requireNonNull(
                 oncologyGroupReadCounts.get(oncologyGroup), "No aligned read count for oncology group: " + oncologyGroup);
@@ -101,7 +101,7 @@ public class RepresentativeSelector
     // Rank 1 = best supported among the candidates.
     private static Map<ViralContig, Integer> votesRanks(List<ContigStats> candidates)
     {
-        List<ContigStats> ordered = candidates.stream().sorted(ContigStats.BY_SUPPORT).toList();
+        List<ContigStats> ordered = candidates.stream().sorted(ContigStats.BEST_SUPPORT_FIRST).toList();
         Map<ViralContig, Integer> votesRankByContig = new HashMap<>();
         for(int i = 0; i < ordered.size(); ++i)
         {

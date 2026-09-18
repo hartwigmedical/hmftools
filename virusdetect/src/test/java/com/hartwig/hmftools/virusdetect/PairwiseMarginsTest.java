@@ -78,9 +78,9 @@ public class PairwiseMarginsTest
     private static ViralReference reference()
     {
         List<ViralContig> contigs = List.of(
-                new ViralContig("v1", 100, "Virus 1", "Group A"),
-                new ViralContig("v2", 100, "Virus 2", "Group A"),
-                new ViralContig("h1", 100, "Virus H", "Group H"));
+                new ViralContig("v1", 100, "Virus 1", new OncologyGroup("Group A")),
+                new ViralContig("v2", 100, "Virus 2", new OncologyGroup("Group A")),
+                new ViralContig("h1", 100, "Virus H", new OncologyGroup("Group H")));
         SAMSequenceDictionary dictionary = new SAMSequenceDictionary(List.of(
                 new SAMSequenceRecord("v1", 100),
                 new SAMSequenceRecord("v2", 100),

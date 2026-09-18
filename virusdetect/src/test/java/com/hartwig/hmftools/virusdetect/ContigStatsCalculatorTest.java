@@ -139,8 +139,8 @@ public class ContigStatsCalculatorTest
     private static ViralReference reference()
     {
         List<ViralContig> contigs = List.of(
-                new ViralContig("v1", 20, "Virus 1", "Group 1"),
-                new ViralContig("v2", 10, "Virus 2", "Group 2"));
+                new ViralContig("v1", 20, "Virus 1", new OncologyGroup("Group 1")),
+                new ViralContig("v2", 10, "Virus 2", new OncologyGroup("Group 2")));
         SAMSequenceDictionary dictionary = new SAMSequenceDictionary(List.of(
                 new SAMSequenceRecord("v1", 20),
                 new SAMSequenceRecord("v2", 10)));

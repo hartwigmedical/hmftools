@@ -70,7 +70,7 @@ public class PairwiseMargins
         Map<ViralContig, Integer> bestDivergenceByContig = new HashMap<>();
         readAlignments.forEach(alignment -> bestDivergenceByContig.merge(alignment.contig(), alignment.divergence(), Math::min));
 
-        Map<String, List<ViralContig>> contigsByOncologyGroup = bestDivergenceByContig.keySet().stream()
+        Map<OncologyGroup, List<ViralContig>> contigsByOncologyGroup = bestDivergenceByContig.keySet().stream()
                 .collect(groupingBy(ViralContig::oncologyGroup));
 
         for(List<ViralContig> oncologyGroupContigs : contigsByOncologyGroup.values())
