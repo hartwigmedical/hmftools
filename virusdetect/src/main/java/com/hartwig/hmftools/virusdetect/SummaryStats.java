@@ -1,7 +1,10 @@
 package com.hartwig.hmftools.virusdetect;
 
+import java.lang.reflect.RecordComponent;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 // Distribution summary over a set of integer values.
 public record SummaryStats(
@@ -15,6 +18,29 @@ public record SummaryStats(
         double max
 )
 {
+    private static final List<RecordComponent> FIELDS = List.of(SummaryStats.class.getRecordComponents());
+
+    // Field names in declaration order, so a distribution's columns can be named before there is one to write.
+    public static final List<String> FIELD_NAMES = FIELDS.stream().map(RecordComponent::getName).toList();
+
+    // Values by field name, in the same order.
+    public Map<String, Double> fieldValues()
+    {
+        Map<String, Double> values = new LinkedHashMap<>();
+        for(RecordComponent field : FIELDS)
+        {
+            try
+            {
+                values.put(field.getName(), (Double) field.getAccessor().invoke(this));
+            }
+            catch(ReflectiveOperationException e)
+            {
+                throw new IllegalStateException("Cannot read summary stats field: " + field.getName(), e);
+            }
+        }
+        return values;
+    }
+
     static SummaryStats from(int[] values)
     {
         int[] sorted = values.clone();

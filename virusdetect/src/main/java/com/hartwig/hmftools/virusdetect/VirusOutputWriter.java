@@ -6,7 +6,6 @@ import static java.util.stream.Collectors.toMap;
 
 import static com.hartwig.hmftools.virusdetect.VirusConstants.REPORTED_MARGINS;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -32,7 +31,7 @@ public class VirusOutputWriter
                 .toList();
 
         DelimFileWriter.write(
-                file, ContigStatsColumn.values(), rows, (contigRow, row) ->
+                file, CONTIG_STATS_COLUMNS, rows, (contigRow, row) ->
                 {
                     ContigSelectionResult result = contigRow.contig();
                     ContigStats stat = result.stats();
@@ -48,35 +47,9 @@ public class VirusOutputWriter
                     row.set(ContigStatsColumn.coverage_fraction, stat.coverageFraction());
                     row.set(ContigStatsColumn.read_votes, stat.readVotes());
 
-                    SummaryStats alignPerRead = stat.alignPerRead();
-                    row.set(ContigStatsColumn.align_per_read_mean, alignPerRead.mean());
-                    row.set(ContigStatsColumn.align_per_read_min, alignPerRead.min());
-                    row.set(ContigStatsColumn.align_per_read_p5, alignPerRead.p5());
-                    row.set(ContigStatsColumn.align_per_read_p25, alignPerRead.p25());
-                    row.set(ContigStatsColumn.align_per_read_p50, alignPerRead.p50());
-                    row.set(ContigStatsColumn.align_per_read_p75, alignPerRead.p75());
-                    row.set(ContigStatsColumn.align_per_read_p95, alignPerRead.p95());
-                    row.set(ContigStatsColumn.align_per_read_max, alignPerRead.max());
-
-                    SummaryStats depth = stat.depth();
-                    row.set(ContigStatsColumn.depth_mean, depth.mean());
-                    row.set(ContigStatsColumn.depth_min, depth.min());
-                    row.set(ContigStatsColumn.depth_p5, depth.p5());
-                    row.set(ContigStatsColumn.depth_p25, depth.p25());
-                    row.set(ContigStatsColumn.depth_p50, depth.p50());
-                    row.set(ContigStatsColumn.depth_p75, depth.p75());
-                    row.set(ContigStatsColumn.depth_p95, depth.p95());
-                    row.set(ContigStatsColumn.depth_max, depth.max());
-
-                    SummaryStats alignerScore = stat.alignerScore();
-                    row.set(ContigStatsColumn.aligner_score_mean, alignerScore.mean());
-                    row.set(ContigStatsColumn.aligner_score_min, alignerScore.min());
-                    row.set(ContigStatsColumn.aligner_score_p5, alignerScore.p5());
-                    row.set(ContigStatsColumn.aligner_score_p25, alignerScore.p25());
-                    row.set(ContigStatsColumn.aligner_score_p50, alignerScore.p50());
-                    row.set(ContigStatsColumn.aligner_score_p75, alignerScore.p75());
-                    row.set(ContigStatsColumn.aligner_score_p95, alignerScore.p95());
-                    row.set(ContigStatsColumn.aligner_score_max, alignerScore.max());
+                    writeSummaryStats(row, DEPTH_STATS_COLUMNS, stat.depth());
+                    writeSummaryStats(row, ALIGN_PER_READ_STATS_COLUMNS, stat.alignPerRead());
+                    writeSummaryStats(row, ALIGNER_SCORE_STATS_COLUMNS, stat.alignerScore());
 
                     row.set(ContigStatsColumn.oncology_group_resolution, contigRow.resolution().name());
                     row.set(ContigStatsColumn.oncology_group_outcome, contigRow.outcome().name());
@@ -85,51 +58,65 @@ public class VirusOutputWriter
                     row.setOrNull(ContigStatsColumn.vote_share_post_filter, contigRow.postFilterVoteShare());
                     row.setOrNull(ContigStatsColumn.vote_share_ratio, contigRow.voteShareOfTop());
 
+                    // Note unset columns are written as null.
                     CandidateSelectionResult candidate = result.candidate();
-                    row.setOrNull(ContigStatsColumn.votes_rank, candidate == null ? null : String.valueOf(candidate.votesRank()));
-                    row.setOrNull(ContigStatsColumn.comparable, candidate == null ? null : String.valueOf(candidate.comparable()));
-                    row.setOrNull(ContigStatsColumn.role, candidate == null ? null : candidate.role().name());
-                    row.setOrNull(ContigStatsColumn.challenges_ranks, candidate == null ? null : ranks(candidate.challengesRanks()));
-                    row.setOrNull(ContigStatsColumn.challenged_by_ranks, candidate == null ? null : ranks(candidate.challengedByRanks()));
+                    if(candidate != null)
+                    {
+                        row.set(ContigStatsColumn.votes_rank, candidate.votesRank());
+                        row.set(ContigStatsColumn.comparable, candidate.comparable());
+                        row.set(ContigStatsColumn.role, candidate.role().name());
+                        row.set(ContigStatsColumn.challenges_ranks, ranks(candidate.challengesRanks()));
+                        row.set(ContigStatsColumn.challenged_by_ranks, ranks(candidate.challengedByRanks()));
+                    }
                 });
 
         LOGGER.info("wrote {} contig stats to {}", rows.size(), file);
     }
 
-    // One row per ordered within-oncology-group contig pair: the reads they share, and how many of those fit the subject
-    // better by at least each reported margin. Includes prefiltered contigs. Verbose/debug only, for tuning.
-    public static void writePairwiseMargins(String file, PairwiseMargins margins, List<OncologyGroupSelection> selections)
+    private static final String DEPTH_STATS_COLUMNS = "depth";
+    private static final String ALIGN_PER_READ_STATS_COLUMNS = "align_per_read";
+    private static final String ALIGNER_SCORE_STATS_COLUMNS = "aligner_score";
+    private static final List<String> CONTIG_STATS_COLUMNS =
+            Stream.concat(
+                            Stream.of(ContigStatsColumn.values()).map(Enum::name),
+                            Stream.of(DEPTH_STATS_COLUMNS, ALIGN_PER_READ_STATS_COLUMNS, ALIGNER_SCORE_STATS_COLUMNS)
+                                    .flatMap(group -> SummaryStats.FIELD_NAMES.stream()
+                                            .map(field -> summaryStatsColumn(group, field))))
+                    .toList();
+
+    private static void writeSummaryStats(DelimFileWriter.Row row, String group, @Nullable SummaryStats stats)
     {
-        Map<ViralContig, Integer> votesRankByContig = selections.stream()
-                .flatMap(selection -> selection.candidates().stream())
-                .collect(toMap(ContigSelectionResult::contig, result -> result.candidate().votesRank()));
+        if(stats == null)
+        {
+            return;
+        }
 
-        List<PairwiseMargins.ContigPair> pairs = margins.pairs().stream()
-                .sorted(comparing((PairwiseMargins.ContigPair pair) -> pair.subject().name())
-                        .thenComparing(pair -> pair.opponent().name()))
-                .toList();
+        stats.fieldValues().forEach((field, value) -> row.set(summaryStatsColumn(group, field), value));
+    }
 
-        List<String> columns = Stream.concat(
-                        Stream.of(PairwiseMarginsColumn.values()).map(Enum::name),
-                        marginColumns().stream())
-                .toList();
+    private static String summaryStatsColumn(String group, String field)
+    {
+        return group + "_" + field;
+    }
 
-        DelimFileWriter.write(
-                file, columns, pairs, (pair, row) ->
-                {
-                    row.set(PairwiseMarginsColumn.oncology_group, pair.subject().oncologyGroup().name());
-                    row.set(PairwiseMarginsColumn.subject_contig, pair.subject().name());
-                    row.setOrNull(PairwiseMarginsColumn.subject_rank, asString(votesRankByContig.get(pair.subject())));
-                    row.set(PairwiseMarginsColumn.opponent_contig, pair.opponent().name());
-                    row.setOrNull(PairwiseMarginsColumn.opponent_rank, asString(votesRankByContig.get(pair.opponent())));
-                    row.set(PairwiseMarginsColumn.shared_reads, margins.sharedReads(pair.subject(), pair.opponent()));
-                    for(int margin : REPORTED_MARGINS)
-                    {
-                        row.set(marginColumn(margin), margins.readsWinningBy(pair.subject(), pair.opponent(), margin));
-                    }
-                });
+    private static double votes(List<ContigSelectionResult> contigs)
+    {
+        return contigs.stream().mapToDouble(contig -> contig.stats().readVotes()).sum();
+    }
 
-        LOGGER.info("wrote {} pairwise margin rows to {}", pairs.size(), file);
+    private record ContigStatsRow(
+            OncologyGroup oncologyGroup,
+            OncologyGroupOutcome outcome,
+            ContigSelectionResult contig,
+            @Nullable Double preFilterVoteShare,
+            @Nullable Double postFilterVoteShare,
+            @Nullable Double voteShareOfTop
+    )
+    {
+        private OncologyGroupResolution resolution()
+        {
+            return outcome.resolution();
+        }
     }
 
     private static Stream<ContigStatsRow> contigStatsRows(OncologyGroupSelection selection)
@@ -147,57 +134,6 @@ public class VirusOutputWriter
                     share(contigVotes, allContigVotes), share(contigVotes, candidateVotes),
                     share(contigVotes, topCandidateVotes));
         });
-    }
-
-    private static double votes(List<ContigSelectionResult> contigs)
-    {
-        return contigs.stream().mapToDouble(contig -> contig.stats().readVotes()).sum();
-    }
-
-    @Nullable
-    private static Double share(double votes, double total)
-    {
-        return total > 0 ? votes / total : null;
-    }
-
-    private static String ranks(List<Integer> ranks)
-    {
-        return ranks.stream().map(String::valueOf).collect(Collectors.joining(","));
-    }
-
-    private static List<String> marginColumns()
-    {
-        List<String> columns = new ArrayList<>();
-        for(int margin : REPORTED_MARGINS)
-        {
-            columns.add(marginColumn(margin));
-        }
-        return columns;
-    }
-
-    private static String marginColumn(int margin)
-    {
-        return "reads_m" + margin;
-    }
-
-    private static String asString(Object value)
-    {
-        return value == null ? null : value.toString();
-    }
-
-    private record ContigStatsRow(
-            OncologyGroup oncologyGroup,
-            OncologyGroupOutcome outcome,
-            ContigSelectionResult contig,
-            @Nullable Double preFilterVoteShare,
-            @Nullable Double postFilterVoteShare,
-            @Nullable Double voteShareOfTop
-    )
-    {
-        private OncologyGroupResolution resolution()
-        {
-            return outcome.resolution();
-        }
     }
 
     private enum ContigStatsColumn
@@ -221,31 +157,54 @@ public class VirusOutputWriter
         challenges_ranks,
         challenged_by_ranks,
         multi_align_reads,
-        origin_clipped_reads,
-        depth_mean,
-        depth_min,
-        depth_p5,
-        depth_p25,
-        depth_p50,
-        depth_p75,
-        depth_p95,
-        depth_max,
-        align_per_read_mean,
-        align_per_read_min,
-        align_per_read_p5,
-        align_per_read_p25,
-        align_per_read_p50,
-        align_per_read_p75,
-        align_per_read_p95,
-        align_per_read_max,
-        aligner_score_mean,
-        aligner_score_min,
-        aligner_score_p5,
-        aligner_score_p25,
-        aligner_score_p50,
-        aligner_score_p75,
-        aligner_score_p95,
-        aligner_score_max
+        origin_clipped_reads
+    }
+
+    @Nullable
+    private static Double share(double votes, double total)
+    {
+        return total > 0 ? votes / total : null;
+    }
+
+    private static String ranks(List<Integer> ranks)
+    {
+        return ranks.stream().map(String::valueOf).collect(Collectors.joining(","));
+    }
+
+    // One row per ordered within-oncology-group contig pair: the reads they share, and how many of those fit the subject
+    // better by at least each reported margin. Includes prefiltered contigs. Verbose/debug only, for tuning.
+    public static void writePairwiseMargins(String file, PairwiseMargins margins, List<OncologyGroupSelection> selections)
+    {
+        Map<ViralContig, Integer> votesRankByContig = selections.stream()
+                .flatMap(selection -> selection.candidates().stream())
+                .collect(toMap(ContigSelectionResult::contig, result -> result.candidate().votesRank()));
+
+        List<PairwiseMargins.ContigPair> pairs = margins.pairs().stream()
+                .sorted(comparing((PairwiseMargins.ContigPair pair) -> pair.subject().name())
+                        .thenComparing(pair -> pair.opponent().name()))
+                .toList();
+
+        List<String> columns = Stream.concat(
+                        Stream.of(PairwiseMarginsColumn.values()).map(Enum::name),
+                        MARGIN_COLUMNS.stream())
+                .toList();
+
+        DelimFileWriter.write(
+                file, columns, pairs, (pair, row) ->
+                {
+                    row.set(PairwiseMarginsColumn.oncology_group, pair.subject().oncologyGroup().name());
+                    row.set(PairwiseMarginsColumn.subject_contig, pair.subject().name());
+                    row.setOrNull(PairwiseMarginsColumn.subject_rank, asString(votesRankByContig.get(pair.subject())));
+                    row.set(PairwiseMarginsColumn.opponent_contig, pair.opponent().name());
+                    row.setOrNull(PairwiseMarginsColumn.opponent_rank, asString(votesRankByContig.get(pair.opponent())));
+                    row.set(PairwiseMarginsColumn.shared_reads, margins.sharedReads(pair.subject(), pair.opponent()));
+                    for(int margin : REPORTED_MARGINS)
+                    {
+                        row.set(marginColumn(margin), margins.readsWinningBy(pair.subject(), pair.opponent(), margin));
+                    }
+                });
+
+        LOGGER.info("wrote {} pairwise margin rows to {}", pairs.size(), file);
     }
 
     private enum PairwiseMarginsColumn
@@ -256,5 +215,17 @@ public class VirusOutputWriter
         opponent_contig,
         opponent_rank,
         shared_reads
+    }
+
+    private static final List<String> MARGIN_COLUMNS = REPORTED_MARGINS.stream().map(VirusOutputWriter::marginColumn).toList();
+
+    private static String marginColumn(int margin)
+    {
+        return "reads_m" + margin;
+    }
+
+    private static String asString(Object value)
+    {
+        return value == null ? null : value.toString();
     }
 }

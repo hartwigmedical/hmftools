@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.virusdetect;
 
+import static java.util.stream.Collectors.toMap;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -53,18 +55,13 @@ public record ViralAlignments(
                 .map(entry -> ReadAlignments.from(entry.getKey(), entry.getValue()))
                 .toList();
 
-        Map<ViralContig, Integer> originClippedReadCounts = countDistinctReads(originClippedReadsByContig);
+        Map<ViralContig, Integer> originClippedReadCounts = originClippedReadsByContig.entrySet().stream()
+                .collect(toMap(Map.Entry::getKey, entry -> entry.getValue().size()));
 
-        Map<OncologyGroup, Integer> oncologyGroupReadCounts = countDistinctReads(readsByOncologyGroup);
+        Map<OncologyGroup, Integer> oncologyGroupReadCounts = readsByOncologyGroup.entrySet().stream()
+                .collect(toMap(Map.Entry::getKey, entry -> entry.getValue().size()));
 
         return new ViralAlignments(reads, meanReadLength, originClippedReadCounts, oncologyGroupReadCounts);
-    }
-
-    private static <K> Map<K, Integer> countDistinctReads(Map<K, Set<String>> readsByKey)
-    {
-        Map<K, Integer> counts = new HashMap<>();
-        readsByKey.forEach((key, readNames) -> counts.put(key, readNames.size()));
-        return counts;
     }
 
     public static ViralAlignments load(String bamFile, ViralReference reference)
