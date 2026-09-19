@@ -2,7 +2,6 @@ package com.hartwig.hmftools.virusdetect;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
-import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toMap;
 
 import static com.hartwig.hmftools.virusdetect.VirusConstants.VOTE_CORRECT_BASE_PROBABILITY;
@@ -34,10 +33,7 @@ public class ContigStatsCalculator
     public Map<ViralContig, ContigStats> compute(ViralAlignments viralAlignments)
     {
         Map<ViralContig, ContigAccumulator> accumulators = new HashMap<>();
-        viralAlignments.alignments().stream()
-                .collect(groupingBy(ViralAlignment::readName))
-                .values()
-                .forEach(readAlignments -> accumulateRead(readAlignments, accumulators));
+        viralAlignments.reads().forEach(read -> accumulateRead(read, accumulators));
 
         Map<ViralContig, Integer> originClippedReads = viralAlignments.originClippedReads();
         return accumulators.entrySet().stream().collect(toMap(
@@ -47,55 +43,29 @@ public class ContigStatsCalculator
 
     // Folds one read into the per-contig accumulators: its best alignment (and alignment count) on each contig it hits,
     // plus its cross-contig vote split.
-    private void accumulateRead(List<ViralAlignment> readAlignments, Map<ViralContig, ContigAccumulator> accumulators)
+    private void accumulateRead(ReadAlignments read, Map<ViralContig, ContigAccumulator> accumulators)
     {
-        // Collapse BWA -a repeats: per contig keep the best alignment and count how many the read has there.
-        Map<ViralContig, List<ViralAlignment>> alignmentsByContig = readAlignments.stream().collect(groupingBy(ViralAlignment::contig));
+        read.hits().forEach((contig, hit) ->
+                accumulators.computeIfAbsent(contig, k -> new ContigAccumulator()).addRead(hit.best(), hit.alignmentCount()));
 
-        Map<ViralContig, ViralAlignment> bestAlignmentPerContig = alignmentsByContig.entrySet().stream().collect(toMap(
-                Map.Entry::getKey, entry -> entry.getValue().stream().reduce(ContigStatsCalculator::chooseBetterAlignment).orElseThrow()));
-
-        alignmentsByContig.forEach((contig, contigAlignments) ->
-                {
-                    ContigAccumulator accumulator = accumulators.computeIfAbsent(contig, k -> new ContigAccumulator());
-                    accumulator.addRead(bestAlignmentPerContig.get(contig), contigAlignments.size());
-                }
-        );
-
-        addVotes(bestAlignmentPerContig, accumulators);
+        addVotes(read, accumulators);
     }
 
     // A read's vote splits across the contigs it hits by how well each explains it: every extra base a contig fails to
     // explain multiplies its share by the (pessimistic) chance a base is right, so the closest contig wins most.
-    private void addVotes(Map<ViralContig, ViralAlignment> bestByContig, Map<ViralContig, ContigAccumulator> accumulators)
+    private void addVotes(ReadAlignments read, Map<ViralContig, ContigAccumulator> accumulators)
     {
-        // Offsets the exponents for numeric stability.
-        int minDivergence = bestByContig.values().stream().mapToInt(ViralAlignment::divergence).min().orElseThrow();
-
-        Map<ViralContig, Double> contigWeights = bestByContig.entrySet().stream()
-                .collect(toMap(Map.Entry::getKey, entry -> voteWeight(entry.getValue(), minDivergence)));
+        int minDivergence = read.minDivergence();
+        Map<ViralContig, Double> contigWeights = read.hits().entrySet().stream()
+                .collect(toMap(Map.Entry::getKey, entry -> voteWeight(entry.getValue().divergence(), minDivergence)));
 
         double totalWeight = contigWeights.values().stream().mapToDouble(Double::doubleValue).sum();
-        contigWeights.forEach((contig, weight) ->
-        {
-            ContigAccumulator accumulator = accumulators.get(contig);
-            accumulator.addVote(weight / totalWeight);
-        });
+        contigWeights.forEach((contig, weight) -> accumulators.get(contig).addVote(weight / totalWeight));
     }
 
-    private double voteWeight(ViralAlignment alignment, int minDivergence)
+    private double voteWeight(int divergence, int minDivergence)
     {
-        return Math.pow(mCorrectBaseProbability, alignment.divergence() - minDivergence);
-    }
-
-    private static ViralAlignment chooseBetterAlignment(ViralAlignment a, ViralAlignment b)
-    {
-        if(a.alignerScore() != b.alignerScore())
-        {
-            return a.alignerScore() > b.alignerScore() ? a : b;
-        }
-        // Deterministic tie-break on location.
-        return a.alignmentStart() <= b.alignmentStart() ? a : b;
+        return Math.pow(mCorrectBaseProbability, divergence - minDivergence);
     }
 
     // Accumulates one contig's reads (each read's best alignment there), then reduces them to a ContigStats.

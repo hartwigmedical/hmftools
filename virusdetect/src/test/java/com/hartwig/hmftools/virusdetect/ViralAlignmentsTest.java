@@ -27,7 +27,7 @@ public class ViralAlignmentsTest
         ViralAlignments alignments = ViralAlignments.from(
                 List.of(alignment("r1", V1), straddler("r2", V1), straddler("r3", V1)), 150.0);
 
-        assertEquals(1, alignments.alignments().size());
+        assertEquals(1, alignments.reads().size());
         assertEquals(Map.of(V1, 2), alignments.originClippedReads());
     }
 
@@ -57,6 +57,16 @@ public class ViralAlignmentsTest
         ViralAlignments alignments = ViralAlignments.from(List.of(alignment("r1", V1), straddler("r2", H1)), 150.0);
 
         assertEquals(Map.of(GROUP_A, 1), alignments.readCountsByOncologyGroup());
+    }
+
+    // The count is of reads, so a read straddling the origin more than once on a contig is still one drop.
+    @Test
+    public void testOriginClippedCountsReadsNotAlignments()
+    {
+        ViralAlignments alignments = ViralAlignments.from(
+                List.of(straddler("r1", V1), straddler("r1", V1), straddler("r2", V1)), 150.0);
+
+        assertEquals(Map.of(V1, 2), alignments.originClippedReads());
     }
 
     private static ViralAlignment alignment(String readName, ViralContig contig)

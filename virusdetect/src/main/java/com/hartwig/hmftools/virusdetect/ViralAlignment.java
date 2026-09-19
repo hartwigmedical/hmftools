@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.ALIGNMENT_SCORE_ATT
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
 import static com.hartwig.hmftools.virusdetect.VirusConstants.ORIGIN_CLIP_TOLERANCE;
 
+import java.util.Comparator;
 import java.util.List;
 
 import htsjdk.samtools.SAMRecord;
@@ -91,6 +92,14 @@ public record ViralAlignment(
         return value;
     }
 
+    // Sort primarily by divergence because we are mostly interested in per-base difference.
+    // Aligner score is not the best fit.
+    public static final Comparator<ViralAlignment> BEST_FIT_FIRST = Comparator
+            .comparingInt(ViralAlignment::divergence)
+            .thenComparing(ViralAlignment::alignerScore, Comparator.reverseOrder())
+            .thenComparingInt(ViralAlignment::alignmentStart);
+
+    // TODO: should be separate file
     // A contiguous run of reference bases covered by the alignment (a CIGAR M/=/X block); 1-based reference start.
     public record AlignedInterval(
             int referenceStart,

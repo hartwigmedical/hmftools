@@ -30,10 +30,7 @@ public class PairwiseMargins
         Map<ContigPair, NavigableMap<Integer, Integer>> marginCounts = new HashMap<>();
         Map<ContigPair, Integer> sharedReads = new HashMap<>();
 
-        viralAlignments.alignments().stream()
-                .collect(groupingBy(ViralAlignment::readName))
-                .values()
-                .forEach(readAlignments -> accumulateRead(readAlignments, marginCounts, sharedReads));
+        viralAlignments.reads().forEach(read -> accumulateRead(read, marginCounts, sharedReads));
 
         return new PairwiseMargins(marginCounts, sharedReads);
     }
@@ -64,13 +61,10 @@ public class PairwiseMargins
     // Pairs up the contigs it aligns to within each oncology group.
     // For each ordered pair, records that they share the read, and the subject's winning margin over the opponent (if any).
     private static void accumulateRead(
-            List<ViralAlignment> readAlignments,
+            ReadAlignments read,
             Map<ContigPair, NavigableMap<Integer, Integer>> marginCounts, Map<ContigPair, Integer> sharedReads)
     {
-        Map<ViralContig, Integer> bestDivergenceByContig = new HashMap<>();
-        readAlignments.forEach(alignment -> bestDivergenceByContig.merge(alignment.contig(), alignment.divergence(), Math::min));
-
-        Map<OncologyGroup, List<ViralContig>> contigsByOncologyGroup = bestDivergenceByContig.keySet().stream()
+        Map<OncologyGroup, List<ViralContig>> contigsByOncologyGroup = read.hits().keySet().stream()
                 .collect(groupingBy(ViralContig::oncologyGroup));
 
         for(List<ViralContig> oncologyGroupContigs : contigsByOncologyGroup.values())
@@ -86,7 +80,7 @@ public class PairwiseMargins
                     ContigPair pair = new ContigPair(subject, opponent);
                     sharedReads.merge(pair, 1, Integer::sum);
 
-                    int margin = bestDivergenceByContig.get(opponent) - bestDivergenceByContig.get(subject);
+                    int margin = read.hits().get(opponent).divergence() - read.hits().get(subject).divergence();
                     if(margin > 0)
                     {
                         marginCounts.computeIfAbsent(pair, key -> new TreeMap<>()).merge(margin, 1, Integer::sum);

@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -18,9 +19,9 @@ import htsjdk.samtools.ValidationStringency;
 // Each read may have multiple alignments (BWA-MEM -a mode).
 // Alignments straddling a contig's origin are excluded here to avoid linearization artifacts.
 public record ViralAlignments(
-        List<ViralAlignment> alignments,
+        List<ReadAlignments> reads,
         double meanReadLength,
-        // Alignments excluded for clipping over their contig's start or end.
+        // Reads with an alignment dropped for clipping over their contig's start or end.
         Map<ViralContig, Integer> originClippedReads,
         // Distinct reads with at least one alignment to any contig of the oncology group.
         Map<OncologyGroup, Integer> readCountsByOncologyGroup
@@ -28,28 +29,42 @@ public record ViralAlignments(
 {
     public static ViralAlignments from(List<ViralAlignment> alignments, double meanReadLength)
     {
-        List<ViralAlignment> retained = new ArrayList<>();
-        Map<ViralContig, Integer> originClippedReads = new HashMap<>();
-        Map<OncologyGroup, Set<String>> readNamesByOncologyGroup = new HashMap<>();
+        Map<ViralContig, Set<String>> originClippedReadsByContig = new HashMap<>();
+        Map<OncologyGroup, Set<String>> readsByOncologyGroup = new HashMap<>();
+        Map<String, List<ViralAlignment>> alignmentsByRead = new LinkedHashMap<>();
 
         for(ViralAlignment alignment : alignments)
         {
             if(alignment.clipsOverContigEnd())
             {
-                originClippedReads.merge(alignment.contig(), 1, Integer::sum);
-                continue;
+                Set<String> contigReads = originClippedReadsByContig.computeIfAbsent(alignment.contig(), k -> new HashSet<>());
+                contigReads.add(alignment.readName());
             }
+            else{
+                List<ViralAlignment> readAlignments = alignmentsByRead.computeIfAbsent(alignment.readName(), k -> new ArrayList<>());
+                readAlignments.add(alignment);
 
-            retained.add(alignment);
-            readNamesByOncologyGroup
-                    .computeIfAbsent(alignment.contig().oncologyGroup(), oncologyGroup -> new HashSet<>())
-                    .add(alignment.readName());
+                Set<String> oncologyGroupReads = readsByOncologyGroup.computeIfAbsent(alignment.contig().oncologyGroup(), k -> new HashSet<>());
+                oncologyGroupReads.add(alignment.readName());
+            }
         }
 
-        Map<OncologyGroup, Integer> readCounts = new HashMap<>();
-        readNamesByOncologyGroup.forEach((oncologyGroup, readNames) -> readCounts.put(oncologyGroup, readNames.size()));
+        List<ReadAlignments> reads = alignmentsByRead.entrySet().stream()
+                .map(entry -> ReadAlignments.from(entry.getKey(), entry.getValue()))
+                .toList();
 
-        return new ViralAlignments(retained, meanReadLength, originClippedReads, readCounts);
+        Map<ViralContig, Integer> originClippedReadCounts = countDistinctReads(originClippedReadsByContig);
+
+        Map<OncologyGroup, Integer> oncologyGroupReadCounts = countDistinctReads(readsByOncologyGroup);
+
+        return new ViralAlignments(reads, meanReadLength, originClippedReadCounts, oncologyGroupReadCounts);
+    }
+
+    private static <K> Map<K, Integer> countDistinctReads(Map<K, Set<String>> readsByKey)
+    {
+        Map<K, Integer> counts = new HashMap<>();
+        readsByKey.forEach((key, readNames) -> counts.put(key, readNames.size()));
+        return counts;
     }
 
     public static ViralAlignments load(String bamFile, ViralReference reference)
