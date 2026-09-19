@@ -16,9 +16,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
 
+import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.rna.RnaFusion;
 import com.hartwig.hmftools.common.rna.RnaFusionFile;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
+import com.hartwig.hmftools.isofox.common.BaseDepth;
 import com.hartwig.hmftools.isofox.common.RegionMatchType;
 
 public class FusionWriter
@@ -267,9 +269,9 @@ public class FusionWriter
 
                 StringJoiner coordsStr = new StringJoiner(ITEM_DELIM);
 
-                for(int[] coord : read.MappedCoords)
+                for(BaseRegion coord : read.MappedCoords)
                 {
-                    coordsStr.add(String.format("%d:%d", coord[SE_START], coord[SE_END]));
+                    coordsStr.add(String.format("%d:%d", coord.start(), coord.end()));
                 }
 
                 mFusionReadWriter.write(String.format(",%s,%d,%d",

@@ -18,16 +18,24 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import static htsjdk.samtools.CigarOperator.D;
+import static htsjdk.samtools.CigarOperator.I;
+import static htsjdk.samtools.CigarOperator.M;
+import static htsjdk.samtools.CigarOperator.N;
+
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.isofox.common.FragmentTracker;
+import com.hartwig.hmftools.isofox.common.MappedCoords;
 import com.hartwig.hmftools.isofox.common.Read;
 import com.hartwig.hmftools.isofox.common.RegionReadData;
 
 import org.junit.Test;
 
 import htsjdk.samtools.Cigar;
+import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMFlag;
 
 public class ReadUtilsTest
@@ -48,32 +56,82 @@ public class ReadUtilsTest
     @Test
     public void testMappingCoords()
     {
-        List<int[]> mappings1 = Lists.newArrayList();
+        List<CigarElement> cigarElements = Lists.newArrayList(
+                new CigarElement(10, M),
+                new CigarElement(10, I),
+                new CigarElement(10, M),
+                new CigarElement(10, D),
+                new CigarElement(10, M));
+
+        MappedCoords mappedCoords = MappedCoords.build(cigarElements, 100);
+        assertEquals(100, mappedCoords.alignments().get(0).start());
+        assertEquals(139, mappedCoords.alignments().get(0).end());
+
+        assertEquals(1, mappedCoords.alignmentCount());
+
+        assertTrue(mappedCoords.alignmentsOverlap(90, 101));
+        assertTrue(mappedCoords.alignmentsOverlap(138, 150));
+        assertTrue(mappedCoords.alignmentsWithin(99, 139));
+
+        cigarElements = Lists.newArrayList(
+                new CigarElement(11, M),
+                new CigarElement(9, N),
+                new CigarElement(11, M),
+                new CigarElement(9, N),
+                new CigarElement(11, M));
+
+        mappedCoords = MappedCoords.build(cigarElements, 100);
+
+        assertEquals(3, mappedCoords.alignmentCount());
+        assertEquals(100, mappedCoords.alignments().get(0).start());
+        assertEquals(110, mappedCoords.alignments().get(0).end());
+        assertEquals(120, mappedCoords.alignments().get(1).start());
+        assertEquals(130, mappedCoords.alignments().get(1).end());
+        assertEquals(140, mappedCoords.alignments().get(2).start());
+        assertEquals(150, mappedCoords.alignments().get(2).end());
+
+        assertEquals(3, mappedCoords.alignmentCount());
+        assertEquals(3, mappedCoords.originalAlignmentCount());
+
+        // now add inferred sections
+        mappedCoords.addInferredRegion(true, 80, 90);
+
+        assertEquals(4, mappedCoords.alignmentCount());
+        assertEquals(3, mappedCoords.originalAlignmentCount());
+
+        mappedCoords.addInferredRegion(false, 160, 170);
+        assertEquals(5, mappedCoords.alignmentCount());
+    }
+
+    @Test
+    public void testOverlappingCoordinates()
+    {
+        List<BaseRegion> mappings1 = Lists.newArrayList();
 
         // no overlaps
-        mappings1.add(new int[] { 10, 20 });
-        mappings1.add(new int[] { 40, 50 });
+        mappings1.add(new BaseRegion(10, 20));
+        mappings1.add(new BaseRegion(40, 50));
 
-        List<int[]> mappings2 = Lists.newArrayList();
+        List<BaseRegion> mappings2 = Lists.newArrayList();
 
-        mappings2.add(new int[] { 60, 70 });
-        mappings2.add(new int[] { 80, 90 });
+        mappings2.add(new BaseRegion(60, 70));
+        mappings2.add(new BaseRegion(80, 90));
 
-        List<int[]> commonMappings = deriveCommonRegions(mappings1, mappings2);
+        List<BaseRegion> commonMappings = deriveCommonRegions(mappings1, mappings2);
         assertEquals(4, commonMappings.size());
 
         mappings1.clear();
         mappings2.clear();
 
         // widening of all regions only
-        mappings1.add(new int[] { 10, 20 });
-        mappings1.add(new int[] { 40, 50 });
-        mappings1.add(new int[] { 70, 80 });
+        mappings1.add(new BaseRegion(10, 20));
+        mappings1.add(new BaseRegion(40, 50));
+        mappings1.add(new BaseRegion(70, 80));
 
         // no overlaps
-        mappings2.add(new int[] { 25, 35 });
-        mappings2.add(new int[] { 55, 65 });
-        mappings2.add(new int[] { 85, 95 });
+        mappings2.add(new BaseRegion(25, 35));
+        mappings2.add(new BaseRegion(55, 65));
+        mappings2.add(new BaseRegion(85, 95));
 
         commonMappings = deriveCommonRegions(mappings1, mappings2);
         assertEquals(6, commonMappings.size());
@@ -87,51 +145,51 @@ public class ReadUtilsTest
         // widening of all regions only
         mappings2.clear();
 
-        mappings2.add(new int[] { 5, 15 });
-        mappings2.add(new int[] { 35, 45 });
-        mappings2.add(new int[] { 55, 75 });
+        mappings2.add(new BaseRegion(5, 15));
+        mappings2.add(new BaseRegion(35, 45));
+        mappings2.add(new BaseRegion(55, 75));
 
         commonMappings = deriveCommonRegions(mappings1, mappings2);
         assertEquals(3, commonMappings.size());
-        assertEquals(5, commonMappings.get(0)[SE_START]);
-        assertEquals(20, commonMappings.get(0)[SE_END]);
-        assertEquals(35, commonMappings.get(1)[SE_START]);
-        assertEquals(50, commonMappings.get(1)[SE_END]);
-        assertEquals(55, commonMappings.get(2)[SE_START]);
-        assertEquals(80, commonMappings.get(2)[SE_END]);
+        assertEquals(5, commonMappings.get(0).start());
+        assertEquals(20, commonMappings.get(0).end());
+        assertEquals(35, commonMappings.get(1).start());
+        assertEquals(50, commonMappings.get(1).end());
+        assertEquals(55, commonMappings.get(2).start());
+        assertEquals(80, commonMappings.get(2).end());
 
         // one other region overlapping all others
         mappings2.clear();
 
-        mappings2.add(new int[] { 5, 95 });
+        mappings2.add(new BaseRegion(5, 95));
 
         commonMappings = deriveCommonRegions(mappings1, mappings2);
         assertEquals(1, commonMappings.size());
-        assertEquals(5, commonMappings.get(0)[SE_START]);
-        assertEquals(95, commonMappings.get(0)[SE_END]);
+        assertEquals(5, commonMappings.get(0).start());
+        assertEquals(95, commonMappings.get(0).end());
 
         mappings2.clear();
         mappings1.clear();
 
         // a mix of various scenarios
-        mappings1.add(new int[] { 10, 20 });
+        mappings1.add(new BaseRegion(10, 20));
 
-        mappings2.add(new int[] { 30, 40 });
+        mappings2.add(new BaseRegion(30, 40));
 
-        mappings2.add(new int[] { 50, 60 });
-        mappings1.add(new int[] { 55, 75 });
-        mappings1.add(new int[] { 85, 95 });
-        mappings2.add(new int[] { 70, 110 });
+        mappings2.add(new BaseRegion(50, 60));
+        mappings1.add(new BaseRegion(55, 75));
+        mappings1.add(new BaseRegion(85, 95));
+        mappings2.add(new BaseRegion(70, 110));
 
-        mappings2.add(new int[] { 120, 130 });
+        mappings2.add(new BaseRegion(120, 130));
 
-        mappings1.add(new int[] { 140, 150 });
+        mappings1.add(new BaseRegion(140, 150));
 
         commonMappings = deriveCommonRegions(mappings1, mappings2);
         assertEquals(5, commonMappings.size());
 
-        assertEquals(50, commonMappings.get(2)[SE_START]);
-        assertEquals(110, commonMappings.get(2)[SE_END]);
+        assertEquals(50, commonMappings.get(2).start());
+        assertEquals(110, commonMappings.get(2).end());
     }
 
     @Test
@@ -166,8 +224,8 @@ public class ReadUtilsTest
         RegionReadData region = createRegion("GEN01", 1, 1, "1", 100, 119);
         region.setRefBases(REF_BASE_STR_1);
 
-        List<int[]> readCoords = Lists.newArrayList();
-        readCoords.add(new int[] { 100, 119 });
+        List<BaseRegion> readCoords = Lists.newArrayList();
+        readCoords.add(new BaseRegion(100, 119));
 
         markRegionBases(readCoords, region);
         assertEquals(20, region.baseCoverage(1));
@@ -175,9 +233,9 @@ public class ReadUtilsTest
         region.clearState();
 
         readCoords.clear();
-        readCoords.add(new int[] { 100, 104 });
-        readCoords.add(new int[] { 110, 114 });
-        readCoords.add(new int[] { 118, 119 });
+        readCoords.add(new BaseRegion(100, 104));
+        readCoords.add(new BaseRegion(110, 114));
+        readCoords.add(new BaseRegion(118, 119));
 
         markRegionBases(readCoords, region);
         assertEquals(12, region.baseCoverage(1));

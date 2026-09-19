@@ -5,6 +5,8 @@ import static java.lang.Math.max;
 import static com.hartwig.hmftools.common.bam.CigarUtils.getReadIndexFromPosition;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 
+import com.hartwig.hmftools.common.region.BaseRegion;
+
 public final class ReadUtils
 {
     public static void trimAdapterBases(final Read read1, final Read read2)
@@ -20,13 +22,13 @@ public final class ReadUtils
         // note that differing splicing can mean that alignments are no the true indication of 5' base boundaries
         int readRefPositionStart1 = 0;
         int readRefPositionStart2 = 0;
-        for(int[] mappedCoords1 : read1.getMappedRegionCoords())
+        for(BaseRegion mappedCoords1 : read1.getMappedRegionCoords())
         {
-            for(int[] mappedCoords2 : read2.getMappedRegionCoords())
+            for(BaseRegion mappedCoords2 : read2.getMappedRegionCoords())
             {
-                if(positionsOverlap(mappedCoords1[0], mappedCoords1[1], mappedCoords2[0], mappedCoords2[1]))
+                if(positionsOverlap(mappedCoords1.start(), mappedCoords1.end(), mappedCoords2.start(), mappedCoords2.end()))
                 {
-                    readRefPositionStart1 = readRefPositionStart2 = max(mappedCoords1[0], mappedCoords2[0]);
+                    readRefPositionStart1 = readRefPositionStart2 = max(mappedCoords1.start(), mappedCoords2.start());
                     break;
                 }
             }

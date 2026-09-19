@@ -2,7 +2,6 @@ package com.hartwig.hmftools.isofox.common;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
-import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
@@ -18,26 +17,28 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 
 public class CommonUtils
 {
-    public static List<int[]> deriveCommonRegions(final List<int[]> regions1, final List<int[]> regions2)
+    public static List<BaseRegion> deriveCommonRegions(final List<BaseRegion> regions1, final List<BaseRegion> regions2)
     {
         // merges any overlapping regoins to create a combined set without overlaps
         if(regions1.isEmpty() || regions2.isEmpty())
             return regions1.isEmpty() ? regions2 : regions1;
 
-        List<int[]> newRegions = Lists.newArrayList();
-
         // early exit for non-overlapping regions
-        if(regions1.get(regions1.size() - 1)[SE_END] < regions2.get(0)[SE_START])
+        int totalRegions = regions1.size() + regions2.size();
+        List<BaseRegion> newRegions = Lists.newArrayListWithCapacity(totalRegions);
+
+        if(regions1.get(regions1.size() - 1).end() < regions2.get(0).start())
         {
             newRegions.addAll(regions1);
             newRegions.addAll(regions2);
             return newRegions;
         }
-        else if(regions2.get(regions2.size() - 1)[SE_END] < regions1.get(0)[SE_START])
+        else if(regions2.get(regions2.size() - 1).end() < regions1.get(0).start())
         {
             newRegions.addAll(regions2);
             newRegions.addAll(regions1);
@@ -49,19 +50,19 @@ public class CommonUtils
 
         while(index1 < regions1.size() || index2 < regions2.size())
         {
-            int[] region1 = index1 < regions1.size() ? regions1.get(index1) : null;
-            int[] region2 = index2 < regions2.size() ? regions2.get(index2) : null;
+            BaseRegion region1 = index1 < regions1.size() ? regions1.get(index1) : null;
+            BaseRegion region2 = index2 < regions2.size() ? regions2.get(index2) : null;
 
             if(region1 != null && region2 != null)
             {
                 // add the earlier region if not overlapping
-                if(region1[SE_END] < region2[SE_START] - 1)
+                if(region1.end() < region2.start() - 1)
                 {
                     newRegions.add(region1);
                     ++index1;
                     continue;
                 }
-                else if(region2[SE_END] < region1[SE_START] - 1)
+                else if(region2.end() < region1.start() - 1)
                 {
                     newRegions.add(region2);
                     ++index2;
@@ -69,7 +70,7 @@ public class CommonUtils
                 }
 
                 // merge the overlapping regions
-                int[] newRegion = new int[] { min(region1[SE_START], region2[SE_START]), max(region1[SE_END], region2[SE_END]) };
+                BaseRegion newRegion = new BaseRegion(min(region1.start(), region2.start()), max(region1.end(), region2.end()));
                 newRegions.add(newRegion);
 
                 ++index1;
@@ -83,16 +84,16 @@ public class CommonUtils
 
                     boolean merged = false;
 
-                    if(region1 != null && region1[SE_START] <= newRegion[SE_END] + 1)
+                    if(region1 != null && region1.start() <= newRegion.end() + 1)
                     {
-                        newRegion[SE_END] = max(region1[SE_END], newRegion[SE_END]);
+                        newRegion.setEnd(max(region1.end(), newRegion.end()));
                         ++index1;
                         merged = true;
                     }
 
-                    if(region2 != null && region2[SE_START] <= newRegion[SE_END] + 1)
+                    if(region2 != null && region2.start() <= newRegion.end() + 1)
                     {
-                        newRegion[SE_END] = max(region2[SE_END], newRegion[SE_END]);
+                        newRegion.setEnd(max(region2.end(), newRegion.end()));
                         ++index2;
                         merged = true;
                     }

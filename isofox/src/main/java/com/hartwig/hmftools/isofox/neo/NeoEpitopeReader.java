@@ -285,8 +285,8 @@ public class NeoEpitopeReader
                     continue;
 
                 // check that this read covers some part of the neo section
-                if(read.getMappedRegionCoords(false).stream()
-                        .noneMatch(x -> positionsOverlap(codingBaseRange[SE_START], codingBaseRange[SE_END], x[SE_START], x[SE_END])))
+                if(read.getMappedRegionCoordsWithoutInferred().stream()
+                        .noneMatch(x -> positionsOverlap(codingBaseRange[SE_START], codingBaseRange[SE_END], x.start(), x.end())))
                 {
                     continue;
                 }

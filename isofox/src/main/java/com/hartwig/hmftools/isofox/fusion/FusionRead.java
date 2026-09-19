@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
+import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.isofox.common.BaseDepth;
 import com.hartwig.hmftools.isofox.common.Read;
 import com.hartwig.hmftools.isofox.common.RegionMatchType;
@@ -50,7 +51,7 @@ public class FusionRead
     public final SupplementaryReadData SuppData;
     public boolean ContainsSplit;
 
-    public final List<int[]> MappedCoords;
+    public final List<BaseRegion> MappedCoords;
 
     // directly related to fusion junctions, may be set on one, both or no sides
     private final int[] mJunctionPositions;
@@ -70,7 +71,7 @@ public class FusionRead
         Orientation = read.orientByte();
         MateChromosome = read.mateChromosome();
         MatePosStart = read.mateAlignmentStart();
-        MappedCoords = read.getMappedRegionCoords(false);
+        MappedCoords = read.mappedCoords().alignmentsWithoutInferred();
         Cigar = read.cigarStr();
         GeneCollections = read.getGeneCollectons();
         IsGenicRegion = read.getIsGenicRegion();
@@ -114,7 +115,7 @@ public class FusionRead
 
     public int getCoordsBoundary(int se)
     {
-        return se == SE_START ? MappedCoords.get(0)[SE_START] : MappedCoords.get(MappedCoords.size() - 1)[SE_END];
+        return se == SE_START ? MappedCoords.get(0).start() : MappedCoords.get(MappedCoords.size() - 1).end();
     }
 
     public int posStart() { return Positions[SE_START]; }
@@ -208,10 +209,10 @@ public class FusionRead
         if(mBoundaryDepth == null)
             mBoundaryDepth = Maps.newHashMap();
 
-        for(int[] mappedCoords : MappedCoords)
+        for(BaseRegion mappedCoords : MappedCoords)
         {
-            mBoundaryDepth.put(mappedCoords[SE_START], baseDepth.depthAtBase(mappedCoords[SE_START]));
-            mBoundaryDepth.put(mappedCoords[SE_END], baseDepth.depthAtBase(mappedCoords[SE_END]));
+            mBoundaryDepth.put(mappedCoords.start(), baseDepth.depthAtBase(mappedCoords.start()));
+            mBoundaryDepth.put(mappedCoords.end(), baseDepth.depthAtBase(mappedCoords.end()));
         }
     }
 

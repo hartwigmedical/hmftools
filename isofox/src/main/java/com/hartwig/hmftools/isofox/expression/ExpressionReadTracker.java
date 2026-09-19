@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
 import com.hartwig.hmftools.isofox.adjusts.GcRatioCounts;
 import com.hartwig.hmftools.isofox.common.FragmentMatchType;
@@ -58,7 +59,7 @@ public class ExpressionReadTracker
     }
 
     public void processUnsplicedGenes(
-            final List<GeneReadData> overlapGenes, final List<Integer> validTranscripts, final List<int[]> commonMappings,
+            final List<GeneReadData> overlapGenes, final List<Integer> validTranscripts, final List<BaseRegion> commonMappings,
             double fragmentCount, boolean multiMapped)
     {
         if(!mEnabled)
@@ -75,7 +76,7 @@ public class ExpressionReadTracker
 
     public void processUnsplicedGenes(
             final FragmentMatchType comboTransMatchType, final List<GeneReadData> overlapGenes, final List<Integer> validTranscripts,
-            final List<int[]> commonMappings, double fragmentCount, boolean multiMapped)
+            final List<BaseRegion> commonMappings, double fragmentCount, boolean multiMapped)
     {
         if(!mEnabled)
             return;
@@ -99,7 +100,7 @@ public class ExpressionReadTracker
         {
             CategoryCountsData catCounts = getCategoryCountsData(Lists.newArrayList(), unsplicedGeneIds);
 
-            List<int[]> readRegions = deriveCommonRegions(read1.getMappedRegionCoords(), read2.getMappedRegionCoords());
+            List<BaseRegion> readRegions = deriveCommonRegions(read1.getMappedRegionCoords(), read2.getMappedRegionCoords());
             addGcCounts(catCounts, readRegions, fragmentCount, multiMapped);
         }
     }
@@ -176,7 +177,7 @@ public class ExpressionReadTracker
     }
 
     public void addGcCounts(
-            final CategoryCountsData catCounts, final List<int[]> readRegions, double fragmentCount, boolean multiMapped)
+            final CategoryCountsData catCounts, final List<BaseRegion> readRegions, double fragmentCount, boolean multiMapped)
     {
         int[] gcRatioIndices = { -1, -1 };
         double[] gcRatioCounts = { 0, 0 };

@@ -42,6 +42,7 @@ import com.hartwig.hmftools.common.fusion.KnownFusionData;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.rna.AltSpliceJunctionContext;
 import com.hartwig.hmftools.common.rna.AltSpliceJunctionType;
 import com.hartwig.hmftools.common.bam.ClippedSide;
@@ -168,7 +169,7 @@ public class AltSpliceJunctionFinder
         if(read.getTranscriptClassifications().values().contains(TransMatchType.SPLICE_JUNCTION))
             return false;
 
-        if(read.getMappedRegionCoords(false).size() == 1)
+        if(read.mappedCoords().originalAlignmentCount() == 1)
             return false;
 
         return true;
@@ -206,23 +207,23 @@ public class AltSpliceJunctionFinder
         int[] spliceJunction = new int[SE_PAIR];
 
         // find the novel splice junction, and all associated transcripts
-        List<int[]> mappedCoords = read.getMappedRegionCoords();
+        List<BaseRegion> mappedCoords = read.getMappedRegionCoords();
 
-        if(read.inferredCoordAdded(true))
+        if(read.mappedCoords().lowerInferredAlignmentAdded())
         {
-            spliceJunction[SE_START] = mappedCoords.get(1)[SE_END];
-            spliceJunction[SE_END] = mappedCoords.get(2)[SE_START];
+            spliceJunction[SE_START] = mappedCoords.get(1).end();
+            spliceJunction[SE_END] = mappedCoords.get(2).start();
         }
         else
         {
             // look for consecutive mapped coords which don't match any known splice junction
             for(int i = 0; i < mappedCoords.size() - 1; ++i)
             {
-                int[] firstCoords = mappedCoords.get(i);
-                int[] nextCoords = mappedCoords.get(i + 1);
+                BaseRegion firstCoords = mappedCoords.get(i);
+                BaseRegion nextCoords = mappedCoords.get(i + 1);
 
-                int junctionStart = firstCoords[SE_END];
-                int junctionEnd = nextCoords[SE_START];
+                int junctionStart = firstCoords.end();
+                int junctionEnd = nextCoords.start();
 
                 if(matchesKnownSpliceSite(read.getMappedRegions(), junctionStart, junctionEnd))
                     continue;

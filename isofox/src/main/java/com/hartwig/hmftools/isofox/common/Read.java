@@ -15,7 +15,6 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsWithin;
 import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
 import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
@@ -46,6 +45,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.bam.ClippedSide;
 import com.hartwig.hmftools.common.genome.region.Orientation;
@@ -74,10 +74,16 @@ public class Read
 
     private final int[] mGeneCollections;
     private final boolean[] mIsGenicRegion;
+
+    private final MappedCoords mMappedCoords;
+
+    /*
     private final List<int[]> mMappedCoords;
     private boolean mLowerInferredAdded;
     private boolean mUpperInferredAdded;
     private final int[] mSoftClipRegionsMatched;
+    */
+
     private String mSupplementaryAlignment;
     private boolean mHasInterGeneSplit;
     private List<AltAlignment> mAltLoci; // alternate genomic mapping loci from XA tag; null if uniquely mapped
@@ -111,16 +117,19 @@ public class Read
         mGeneCollections = new int[] { NO_GENE_ID, NO_GENE_ID };
         mIsGenicRegion = new boolean[] { false, false };
 
+        mMappedCoords = MappedCoords.build(mCigarElements, mPosStart);
+        /*
         List<int[]> mappedCoords = generateMappedCoords(mCigarElements, mPosStart);
         mMappedCoords = Lists.newArrayListWithCapacity(mappedCoords.size());
         mMappedCoords.addAll(mappedCoords);
+        mLowerInferredAdded = false;
+        mUpperInferredAdded = false;
+        mSoftClipRegionsMatched = new int[] {0, 0};
+        */
 
         mMappedRegions = Maps.newHashMap();
         mTransExonRefs = Maps.newHashMap();
         mTranscriptClassification = Maps.newHashMap();
-        mLowerInferredAdded = false;
-        mUpperInferredAdded = false;
-        mSoftClipRegionsMatched = new int[] {0, 0};
         mSupplementaryAlignment = null;
         mHasInterGeneSplit = false;
         mJunctionPositions = null;
@@ -148,26 +157,6 @@ public class Read
         }
     }
 
-    /*
-    @Deprecated
-    public static Read from(final SAMRecord record)
-    {
-        Read read = new Read(
-                record.getReadName(), record.getReferenceName(), record.getStart(), record.getEnd(),
-                record.getReadString(), record.getCigar(), record.getInferredInsertSize(), record.getFlags(),
-                record.getMateReferenceName(), record.getMateAlignmentStart());
-
-        read.setSuppAlignment(record.getStringAttribute(SUPPLEMENTARY_ATTRIBUTE));
-        read.setMapQuality((short)record.getMappingQuality());
-        read.setAltLoci(parseAltLoci(record.getStringAttribute(XA_ATTRIBUTE)));
-
-        if(record.hasAttribute(CONSENSUS_READ_ATTRIBUTE))
-            read.markConsensusRead();
-
-        return read;
-    }
-    */
-
     public String id() { return mRecord.getReadName(); }
     public String chromosome() { return mRecord.getReferenceName(); }
     public int alignmentStart() { return mPosStart; }
@@ -178,63 +167,6 @@ public class Read
     public int mateAlignmentStart() { return mRecord.getMateAlignmentStart(); }
     public int fragmentInsertSize() { return inferredInsertSize(mRecord); }
     public int mapQuality() { return mRecord.getMappingQuality(); }
-
-    /*
-    @Deprecated
-    public Read(
-            final String id, final String chromosome, int posStart, int posEnd, final String readBases, @NotNull final Cigar cigar,
-            int insertSize, int flags, final String mateChromosome, int matePosStart)
-    {
-        Id = id;
-        Chromosome = chromosome;
-        mPosStart = posStart;
-        mPosEnd = posEnd;
-        mReadBases = readBases;
-
-        mCigarElements = Lists.newArrayList(cigar.getCigarElements());
-        mOriginalCigarStr = cigarElementsToStr(mCigarElements);
-        mCigarStr = null;
-
-        mHasSplit = mCigarElements.stream().anyMatch(x -> x.getOperator() == N);
-
-        mUnclippedStart = mPosStart;
-        if(!mCigarElements.isEmpty()&& mCigarElements.get(0).getOperator() == S)
-            mUnclippedStart -= mCigarElements.get(0).getLength();
-
-        mUnclippedEnd = mPosEnd;
-
-        if(mCigarElements.size() >= 2)
-        {
-            int lastIndex = mCigarElements.size() - 1;
-            if(mCigarElements.get(lastIndex).getOperator() == S)
-                mUnclippedEnd += mCigarElements.get(lastIndex).getLength();
-        }
-
-        mFlags = flags;
-        mMateChromosome = mateChromosome;
-        mMatePosStart = matePosStart;
-
-        mGeneCollections = new int[] { NO_GENE_ID, NO_GENE_ID };
-        mIsGenicRegion = new boolean[] { false, false };
-
-        List<int[]> mappedCoords = generateMappedCoords(mCigarElements, mPosStart);
-        mMappedCoords = Lists.newArrayListWithCapacity(mappedCoords.size());
-        mMappedCoords.addAll(mappedCoords);
-
-        mMappedRegions = Maps.newHashMap();
-        mTransExonRefs = Maps.newHashMap();
-        mTranscriptClassification = Maps.newHashMap();
-        mLowerInferredAdded = false;
-        mUpperInferredAdded = false;
-        mSoftClipRegionsMatched = new int[] {0, 0};
-        mFragmentInsertSize = insertSize;
-        mSupplementaryAlignment = null;
-        mHasInterGeneSplit = false;
-        mMapQuality = 0;
-        mJunctionPositions = null;
-        mConsensusRead = false;
-    }
-    */
 
     public int range() { return mPosEnd - mPosStart; }
 
@@ -276,6 +208,8 @@ public class Read
 
     public boolean hasSuppAlignment() { return mSupplementaryAlignment != null; }
 
+    public MappedCoords mappedCoords() { return mMappedCoords; }
+
     public static ClippedSide clippedSide(final Read read)
     {
         int leftScLength = read.leftClipLength();
@@ -296,11 +230,11 @@ public class Read
         }
     }
 
-    public int[] getSoftClipRegionsMatched() { return mSoftClipRegionsMatched; }
+    // public int[] getSoftClipRegionsMatched() { return mSoftClipRegionsMatched; }
 
     public boolean isSoftClipped(int se)
     {
-        if(mSoftClipRegionsMatched[se] > 0)
+        if(mMappedCoords.isSoftClipRegionMatched(se))
             return false;
 
         return se == SE_START ? isLeftClipped() : isRightClipped();
@@ -361,33 +295,11 @@ public class Read
         return false;
     }
 
-    public List<int[]> getMappedRegionCoords() { return mMappedCoords; }
+    public List<BaseRegion> getMappedRegionCoords() { return mMappedCoords.alignments(); }
+    public List<BaseRegion> getMappedRegionCoordsWithoutInferred() { return mMappedCoords.alignmentsWithoutInferred(); }
 
-    public List<int[]> getMappedRegionCoords(boolean includeInferred)
-    {
-        if(includeInferred || (!mLowerInferredAdded && !mUpperInferredAdded))
-            return mMappedCoords;
-
-        List<int[]> regions = Lists.newArrayList(mMappedCoords);
-
-        if(mLowerInferredAdded)
-            regions.remove(0);
-
-        if(mUpperInferredAdded)
-            regions.remove(regions.size() - 1);
-
-        return regions;
-    }
-
-    public boolean overlapsMappedReads(int posStart, int posEnd)
-    {
-        return mMappedCoords.stream().anyMatch(x -> positionsOverlap(posStart, posEnd, x[SE_START], x[SE_END]));
-    }
-
-    public int getCoordsBoundary(int se)
-    {
-        return se == SE_START ? mMappedCoords.get(0)[SE_START] : mMappedCoords.get(mMappedCoords.size() - 1)[SE_END];
-    }
+    public boolean overlapsMappedCoords(int posStart, int posEnd) { return mMappedCoords.alignmentsOverlap(posStart, posEnd); }
+    public int getCoordsBoundary(int se) { return mMappedCoords.getCoordsBoundary(se); }
 
     // an alternate mapping locus from the XA tag: its genomic span and whether that alignment is spliced
     public static class AltAlignment
@@ -514,10 +426,10 @@ public class Read
                     maxExonRank = max(maxExonRank, exonRank);
                     minExonRank = minExonRank == 0 ? exonRank : min(exonRank, minExonRank);
 
-                    int mappingIndex = getRegionMappingIndex(region);
+                    int mappingIndex = mMappedCoords.findRegionIndex(region);
                     int adjustedMappingIndex = mappingIndex;
 
-                    if(mLowerInferredAdded)
+                    if(mMappedCoords.inferredAlignmentAdded(SE_START))
                         --adjustedMappingIndex;
 
                     if(adjustedMappingIndex < 0 || adjustedMappingIndex != regionIndex)
@@ -535,9 +447,9 @@ public class Read
                     }
                     else
                     {
-                        int[] readSection = mMappedCoords.get(mappingIndex);
-                        int readStartPos = readSection[SE_START];
-                        int readEndPos = readSection[SE_END];
+                        BaseRegion readSection = mMappedCoords.regionByIndex(mappingIndex);
+                        int readStartPos = readSection.start();
+                        int readEndPos = readSection.end();
 
                         boolean missStart = readStartPos > region.start();
                         boolean missEnd = readEndPos < region.end();
@@ -589,9 +501,9 @@ public class Read
             // is classified as alt, unless the clip is within an exon and a threshold
             if(validTranscriptType(transMatchType) && containsSoftClipping() && !likelyAdaperSoftClipping())
             {
-                if(isLeftClipped() && mSoftClipRegionsMatched[SE_START] == 0 && !shortClipWithinExon(SE_START, transRegions))
+                if(isLeftClipped() && !mMappedCoords.isSoftClipRegionMatched(SE_START) && !shortClipWithinExon(SE_START, transRegions))
                     transMatchType = ALT;
-                else if(isRightClipped() && mSoftClipRegionsMatched[SE_END] == 0 && !shortClipWithinExon(SE_END, transRegions))
+                else if(isRightClipped() && !mMappedCoords.isSoftClipRegionMatched(SE_END) && !shortClipWithinExon(SE_END, transRegions))
                     transMatchType = ALT;
             }
 
@@ -640,23 +552,10 @@ public class Read
         return transType == EXONIC || transType == SPLICE_JUNCTION;
     }
 
-    public int getRegionMappingIndex(final RegionReadData region)
-    {
-        for(int i = 0; i < mMappedCoords.size(); ++i)
-        {
-            int[] readSection = mMappedCoords.get(i);
-
-            if(positionsOverlap(readSection[SE_START], readSection[SE_END], region.start(), region.end()))
-                return i;
-        }
-
-        return -1;
-    }
-
     private RegionMatchType setRegionMatchType(final RegionReadData region)
     {
-        int mappingIndex = getRegionMappingIndex(region);
-        if(mappingIndex < 0)
+        int mappingIndex = mMappedCoords.findRegionIndex(region);
+        if(mappingIndex == MappedCoords.INVALID_INDEX)
             return RegionMatchType.NONE;
 
         RegionMatchType matchType = getRegionMatchType(region, mappingIndex);
@@ -666,8 +565,8 @@ public class Read
 
     public RegionMatchType getRegionMatchType(final RegionReadData region)
     {
-        int mappingIndex = getRegionMappingIndex(region);
-        if(mappingIndex < 0)
+        int mappingIndex = mMappedCoords.findRegionIndex(region);
+        if(mappingIndex == MappedCoords.INVALID_INDEX)
             return RegionMatchType.NONE;
 
         return getRegionMatchType(region, mappingIndex);
@@ -675,12 +574,12 @@ public class Read
 
     private RegionMatchType getRegionMatchType(final RegionReadData region, int mappingIndex)
     {
-        if(mappingIndex < 0 || mappingIndex >= mMappedCoords.size())
+        if(mappingIndex == MappedCoords.INVALID_INDEX || mappingIndex >= mMappedCoords.alignmentCount())
             return RegionMatchType.NONE;
 
-        int[] readSection = mMappedCoords.get(mappingIndex);
-        int readStartPos = readSection[SE_START];
-        int readEndPos = readSection[SE_END];
+        BaseRegion readSection = mMappedCoords.regionByIndex(mappingIndex);
+        int readStartPos = readSection.start();
+        int readEndPos = readSection.end();
 
         if(readEndPos < region.start() || readStartPos > region.end())
             return RegionMatchType.NONE;
@@ -694,17 +593,17 @@ public class Read
         return EXON_BOUNDARY;
     }
 
-    public static void markRegionBases(final List<int[]> readCoords, final RegionReadData region)
+    public static void markRegionBases(final List<BaseRegion> readCoords, final RegionReadData region)
     {
         int[] regionBaseDepth = region.refBasesMatched();
 
         if(regionBaseDepth == null)
             return;
 
-        for(int[] readSection : readCoords)
+        for(BaseRegion readSection : readCoords)
         {
-            int readStartPos = readSection[SE_START];
-            int readEndPos = readSection[SE_END];
+            int readStartPos = readSection.start();
+            int readEndPos = readSection.end();
 
             if(readStartPos > region.end() || readEndPos < region.start())
                 continue;
@@ -742,12 +641,9 @@ public class Read
         // check for reads either soft-clipped or seemingly unspliced, where the extra bases can match with the next exon
 
         // check start of read
-        int[] readSection = mLowerInferredAdded ? mMappedCoords.get(1) : mMappedCoords.get(0);
-        int readStartPos = readSection[SE_START];
-        int readEndPos = readSection[SE_END];
-
-        // don't understand why any deleted bases were taken into account, no longer appears correct or relevant
-        // int deletedLength = Cigar.getCigarElements().stream().filter(x -> x.getOperator() == D).mapToInt(x -> x.getLength()).sum();
+        BaseRegion readSection = mMappedCoords.lowestAlignment(false);
+        int readStartPos = readSection.start();
+        int readEndPos = readSection.end();
 
         int extraBaseLength = 0;
         int scLength = 0;
@@ -780,14 +676,14 @@ public class Read
 
             if(!matchedRegions.isEmpty())
             {
-                mSoftClipRegionsMatched[SE_START] = matchedRegions.size();
+                mMappedCoords.addSoftClipRegionMatched(true, matchedRegions.size());
                 mMappedRegions.put(region, EXON_BOUNDARY);
 
                 if(matchedRegions.size() == 1 || (matchedRegions.size() > 1 && extraBaseLength < MIN_SC_BASE_MATCH))
                 {
                     // truncate the read positions back to match the exon boundary
-                    if(!mLowerInferredAdded && hasRegionOverhang)
-                        readSection[SE_START] += region.start() - readStartPos;
+                    if(!mMappedCoords.lowerInferredAlignmentAdded() && hasRegionOverhang)
+                        readSection.setStart(readSection.start() + region.start() - readStartPos);
                 }
 
                 // if only one region is matched or the min bases matched is satisfied, then create a mapping to the next region,
@@ -805,9 +701,9 @@ public class Read
         }
 
         // check end of read
-        readSection = mUpperInferredAdded ? mMappedCoords.get(mMappedCoords.size() - 2) : mMappedCoords.get(mMappedCoords.size() - 1);
-        readStartPos = readSection[SE_START];
-        readEndPos = readSection[SE_END];
+        readSection = mMappedCoords.highestAlignment(false);
+        readStartPos = readSection.start();
+        readEndPos = readSection.end();
 
         extraBaseLength = 0;
         scLength = 0;
@@ -825,8 +721,6 @@ public class Read
             extraBaseLength += scLength;
         }
 
-        // extraBaseLength = max(extraBaseLength - deletedLength, 0);
-
         if(extraBaseLength >= 1 && extraBaseLength <= MAX_SC_BASE_MATCH && scLength <= MAX_SC_BASE_MATCH)
         {
             // now check for a match to the next exon up
@@ -838,14 +732,14 @@ public class Read
 
             if(!matchedRegions.isEmpty())
             {
-                mSoftClipRegionsMatched[SE_END] = matchedRegions.size();
+                mMappedCoords.addSoftClipRegionMatched(false, matchedRegions.size());
 
                 mMappedRegions.put(region, EXON_BOUNDARY);
 
                 if(matchedRegions.size() == 1 || (matchedRegions.size() > 1 && extraBaseLength < MIN_SC_BASE_MATCH))
                 {
-                    if(!mUpperInferredAdded && hasRegionOverhang)
-                        readSection[SE_END] -= readEndPos - region.end();
+                    if(!mMappedCoords.upperInferredAlignmentAdded() && hasRegionOverhang)
+                        readSection.setEnd(readSection.end() - (readEndPos - region.end()));
                 }
 
                 if(matchedRegions.size() == 1 || (matchedRegions.size() > 1 && extraBaseLength >= MIN_SC_BASE_MATCH))
@@ -873,43 +767,11 @@ public class Read
         return (otherRegionBases.equals(extraBases));
     }
 
-    private int mappedRegionCount()
-    {
-        // discount any inferred regions
-        return mMappedCoords.size() - (mLowerInferredAdded ? 1 : 0) - (mUpperInferredAdded ? 1 : 0);
-    }
-
-    public boolean inferredCoordAdded(boolean isLower) { return isLower ? mLowerInferredAdded : mUpperInferredAdded; }
+    private int mappedRegionCount() { return mMappedCoords.originalAlignmentCount(); } // does not include inferred regions
 
     private void addInferredMappingRegion(boolean isLower, int posStart, int posEnd)
     {
-        if(isLower)
-        {
-            if(!mLowerInferredAdded)
-            {
-                mLowerInferredAdded = true;
-                mMappedCoords.add(0, new int[] { posStart, posEnd });
-            }
-            else
-            {
-                // lengthen the new region if required
-                int[] newSection = mMappedCoords.get(0);
-                newSection[SE_START] = min(newSection[SE_START], posStart);
-            }
-        }
-        else
-        {
-            if(!mUpperInferredAdded)
-            {
-                mUpperInferredAdded = true;
-                mMappedCoords.add(new int[] {posStart, posEnd});
-            }
-            else
-            {
-                int[] newSection = mMappedCoords.get(mMappedCoords.size() - 1);
-                newSection[SE_END] = max(newSection[SE_END], posEnd);
-            }
-        }
+        mMappedCoords.addInferredRegion(isLower, posStart, posEnd);
     }
 
     public Map<RegionReadData,RegionMatchType> getMappedRegions() { return mMappedRegions; }
@@ -917,7 +779,7 @@ public class Read
     public static List<RegionReadData> findOverlappingRegions(final List<RegionReadData> regions, final Read read)
     {
         return regions.stream()
-                .filter(x -> read.overlapsMappedReads(x.start(), x.end()))
+                .filter(x -> read.overlapsMappedCoords(x.start(), x.end()))
                 .collect(Collectors.toList());
     }
 
@@ -927,7 +789,7 @@ public class Read
 
         for(TranscriptData transData : transDataList)
         {
-            if(!mMappedCoords.stream().anyMatch(x -> positionsWithin(x[SE_START], x[SE_END], transData.TransStart, transData.TransEnd)))
+            if(!mMappedCoords.alignmentsWithin(transData.TransStart, transData.TransEnd))
                 continue;
 
             for(int i = 0; i < transData.exons().size() - 1; ++i)
@@ -935,7 +797,7 @@ public class Read
                 ExonData exon = transData.exons().get(i);
                 ExonData nextExon = transData.exons().get(i + 1);
 
-                if(mMappedCoords.stream().anyMatch(x -> positionsWithin(x[SE_START], x[SE_END], exon.End, nextExon.Start)))
+                if(mMappedCoords.alignmentsWithin(exon.End, nextExon.Start))
                 {
                     int minExonRank = min(exon.Rank, nextExon.Rank);
                     transRefList.add(new TransExonRef(

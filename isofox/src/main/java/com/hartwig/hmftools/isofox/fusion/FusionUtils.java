@@ -32,6 +32,8 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.common.region.BaseRegion;
+import com.hartwig.hmftools.isofox.common.BaseDepth;
 import com.hartwig.hmftools.isofox.common.RegionMatchType;
 import com.hartwig.hmftools.isofox.common.TransExonRef;
 
@@ -84,7 +86,7 @@ public class FusionUtils
         if(matchingReads.isEmpty()) // can occur with the fragments from a fusion merged in due to homology
             return;
 
-        List<int[]> mappedCoords;
+        List<BaseRegion> mappedCoords;
 
         if(matchingReads.size() == 1)
         {
@@ -97,21 +99,21 @@ public class FusionUtils
 
         int mappedBases = 0;
 
-        for(int[] coord : mappedCoords)
+        for(BaseRegion coord : mappedCoords)
         {
             if(junctOrientations[seIndex] == ORIENT_REV)
             {
-                if(coord[SE_END] < junctPositions[seIndex])
+                if(coord.end() < junctPositions[seIndex])
                     continue;
 
-                mappedBases += coord[SE_END] - max(junctPositions[seIndex], coord[SE_START]) + 1;
+                mappedBases += coord.end() - max(junctPositions[seIndex], coord.start()) + 1;
             }
             else
             {
-                if(coord[SE_START] > junctPositions[seIndex])
+                if(coord.start() > junctPositions[seIndex])
                     break;
 
-                mappedBases += min(junctPositions[seIndex], coord[SE_END]) - coord[SE_START] + 1;
+                mappedBases += min(junctPositions[seIndex], coord.end()) - coord.start() + 1;
             }
         }
 
@@ -159,30 +161,30 @@ public class FusionUtils
         // transcript exon data, so populate this now
 
         int upperCoordIndex = read.MappedCoords.size() - 1;
-        int[] upperCoords = read.MappedCoords.get(upperCoordIndex);
+        BaseRegion upperCoords = read.MappedCoords.get(upperCoordIndex);
 
         List<FusionTransExon> transExonRefs = Lists.newArrayList();
         RegionMatchType topMatchType = NONE;
 
         for(TranscriptData transData : transDataList)
         {
-            if(!positionsWithin(upperCoords[SE_START], upperCoords[SE_END], transData.TransStart, transData.TransEnd))
+            if(!positionsWithin(upperCoords.start(), upperCoords.end(), transData.TransStart, transData.TransEnd))
                 continue;
 
             for(ExonData exonData : transData.exons())
             {
-                if(!positionsOverlap(upperCoords[SE_START], upperCoords[SE_END], exonData.Start, exonData.End))
+                if(!positionsOverlap(upperCoords.start(), upperCoords.end(), exonData.Start, exonData.End))
                     continue;
 
-                if(exonData.Start > upperCoords[SE_END])
+                if(exonData.Start > upperCoords.end())
                     break;
 
                 RegionMatchType matchType;
-                if(upperCoords[SE_START] == exonData.Start || upperCoords[SE_END] == exonData.End)
+                if(upperCoords.start() == exonData.Start || upperCoords.end() == exonData.End)
                 {
                     matchType = RegionMatchType.EXON_BOUNDARY;
                 }
-                else if(positionsWithin(upperCoords[SE_START], upperCoords[SE_END], exonData.Start, exonData.End))
+                else if(positionsWithin(upperCoords.start(), upperCoords.end(), exonData.Start, exonData.End))
                 {
                     matchType = RegionMatchType.WITHIN_EXON;
                 }

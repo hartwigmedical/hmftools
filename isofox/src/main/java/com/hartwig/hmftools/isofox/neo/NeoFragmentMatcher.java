@@ -16,6 +16,7 @@ import static com.hartwig.hmftools.isofox.neo.NeoFragmentSupport.PARTIAL_MATCH;
 
 import java.util.List;
 
+import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.isofox.common.Read;
 import com.hartwig.hmftools.isofox.fusion.ChimericReadGroup;
 
@@ -124,10 +125,10 @@ public class NeoFragmentMatcher
 
             for(int i = 0; i < read.getMappedRegionCoords().size() - 1; ++i)
             {
-                final int[] coordLower = read.getMappedRegionCoords().get(i);
-                final int[] coordUpper = read.getMappedRegionCoords().get(i + 1);
+                BaseRegion coordLower = read.getMappedRegionCoords().get(i);
+                BaseRegion coordUpper = read.getMappedRegionCoords().get(i + 1);
 
-                if(coordLower[SE_END] == fusionJunction[SE_START] && coordUpper[SE_START] == fusionJunction[SE_END])
+                if(coordLower.end() == fusionJunction[SE_START] && coordUpper.start() == fusionJunction[SE_END])
                 {
                     supportsSplit = true;
                     break;
@@ -166,25 +167,25 @@ public class NeoFragmentMatcher
         return support;
     }
 
-    public static int calcCoordinatesOverlap(final List<int[]> coords1, final List<int[]> coords2)
+    public static int calcCoordinatesOverlap(final List<BaseRegion> baseRegions, final List<int[]> coords2)
     {
         int overlapBases = 0;
 
-        for(int[] coord1 : coords1)
+        for(BaseRegion region : baseRegions)
         {
             for(int[] coord2 : coords2)
             {
-                overlapBases += calcBaseOverlap(coord1, coord2);
+                overlapBases += calcBaseOverlap(region, coord2);
             }
         }
 
         return overlapBases;
     }
 
-    public static int calcBaseOverlap(final int[] range1, final int[] range2)
+    public static int calcBaseOverlap(final BaseRegion range1, final int[] range2)
     {
-        int maxStart = max(range1[SE_START], range2[SE_START]);
-        int minEnd = min(range1[SE_END], range2[SE_END]);
+        int maxStart = max(range1.start(), range2[SE_START]);
+        int minEnd = min(range1.end(), range2[SE_END]);
 
         return maxStart <= minEnd ? minEnd - maxStart + 1 : 0;
     }
@@ -274,27 +275,27 @@ public class NeoFragmentMatcher
         if(read.isSoftClipped(SE_START))
             readBaseIndex += read.leftClipLength();
 
-        for(int[] mappedCoords : read.getMappedRegionCoords())
+        for(BaseRegion mappedCoords : read.getMappedRegionCoords())
         {
-            if(posStart > mappedCoords[SE_END])
+            if(posStart > mappedCoords.end())
             {
-                readBaseIndex += mappedCoords[SE_END] - mappedCoords[SE_START] + 1;
+                readBaseIndex += mappedCoords.end() - mappedCoords.start() + 1;
                 continue;
             }
 
             // will now point at the first base of this next region
             int basePos = 0;
-            if(positionWithin(posStart, mappedCoords[SE_START], mappedCoords[SE_END]))
+            if(positionWithin(posStart, mappedCoords.start(), mappedCoords.end()))
             {
-                readBaseIndex += posStart - mappedCoords[SE_START];
+                readBaseIndex += posStart - mappedCoords.start();
                 basePos = posStart;
             }
             else
             {
-                basePos = mappedCoords[SE_START];
+                basePos = mappedCoords.start();
             }
 
-            for(; basePos <= mappedCoords[SE_END]; ++basePos)
+            for(; basePos <= mappedCoords.end(); ++basePos)
             {
                 if(basePos > posEnd || readBaseIndex >= read.baseLength())
                     break;
@@ -310,26 +311,26 @@ public class NeoFragmentMatcher
         int neoBaseIndex = 0;
         String neoBases = "";
 
-        for(int[] mappedCoords : neoCoords)
+        for(int[] neoCoord : neoCoords)
         {
-            if(posStart > mappedCoords[SE_END])
+            if(posStart > neoCoord[SE_END])
             {
-                neoBaseIndex += mappedCoords[SE_END] - mappedCoords[SE_START] + 1;
+                neoBaseIndex += neoCoord[SE_END] - neoCoord[SE_START] + 1;
                 continue;
             }
 
             int basePos = 0;
-            if(positionWithin(posStart, mappedCoords[SE_START], mappedCoords[SE_END]))
+            if(positionWithin(posStart, neoCoord[SE_START], neoCoord[SE_END]))
             {
-                neoBaseIndex += posStart - mappedCoords[SE_START];
+                neoBaseIndex += posStart - neoCoord[SE_START];
                 basePos = posStart;
             }
             else
             {
-                basePos = mappedCoords[SE_START];
+                basePos = neoCoord[SE_START];
             }
 
-            for(; basePos <= mappedCoords[SE_END]; ++basePos)
+            for(; basePos <= neoCoord[SE_END]; ++basePos)
             {
                 if(basePos > posEnd || neoBaseIndex >= neoCodingBases.length())
                     break;
@@ -401,7 +402,7 @@ public class NeoFragmentMatcher
                 if(!read.chromosome().equals(chromosome))
                     continue;
 
-                if(read.getMappedRegionCoords().stream().anyMatch(x -> positionWithin(refBase, x[SE_START], x[SE_END])))
+                if(read.getMappedRegionCoords().stream().anyMatch(x -> positionWithin(refBase, x.start(), x.end())))
                 {
                     coversBase = true;
                     break;

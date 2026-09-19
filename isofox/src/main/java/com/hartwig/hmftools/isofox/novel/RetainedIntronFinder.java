@@ -155,7 +155,7 @@ public class RetainedIntronFinder
                 boolean usesStart = se == SE_START;
                 int regionPos = usesStart ? region.start() : region.end();
 
-                if(!read.getMappedRegionCoords().stream().anyMatch(x -> positionWithin(regionPos, x[SE_START], x[SE_END])))
+                if(!read.getMappedRegionCoords().stream().anyMatch(x -> positionWithin(regionPos, x.start(), x.end())))
                     continue;
 
                 // cannot be the last or first exon

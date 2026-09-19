@@ -14,6 +14,7 @@ import java.util.Set;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.RegionReadData;
@@ -37,7 +38,7 @@ public class SpliceSiteCounter
     public void clear() { mSiteCounts.clear(); }
 
     public void registerSpliceSiteSupport(
-            final List<int[]> readMappedCoords1, final List<int[]> readMappedCoords2, final List<RegionReadData> allRegions)
+            final List<BaseRegion> readMappedCoords1, final List<BaseRegion> readMappedCoords2, final List<RegionReadData> allRegions)
     {
         final Set<Integer> traversedSites = Sets.newHashSet();
         final Set<Integer> supportedSites = Sets.newHashSet();
@@ -50,7 +51,7 @@ public class SpliceSiteCounter
     }
 
     private void registerSpliceSiteSupport(
-            final List<int[]> readMappedCoords, final List<RegionReadData> allRegions,
+            final List<BaseRegion> readMappedCoords, final List<RegionReadData> allRegions,
             final Set<Integer> traversedSites, final Set<Integer> supportedSites)
     {
         // for each read region (ie unique exon) record if the read supports its splice junction on each side, or skips it
@@ -59,10 +60,10 @@ public class SpliceSiteCounter
 
         for(int i = 0; i < readMappedCoords.size() - 1; ++i)
         {
-            int[] mappedCoordLower = readMappedCoords.get(i);
-            int[] mappedCoordUpper = readMappedCoords.get(i + 1);
-            int junctionLower = mappedCoordLower[SE_END];
-            int junctionUpper = mappedCoordUpper[SE_START];
+            BaseRegion mappedCoordLower = readMappedCoords.get(i);
+            BaseRegion mappedCoordUpper = readMappedCoords.get(i + 1);
+            int junctionLower = mappedCoordLower.end();
+            int junctionUpper = mappedCoordUpper.start();
 
             // record if a region start or end is traversed entirely by a mapped coord junction
             for(RegionReadData region : allRegions)

@@ -65,6 +65,7 @@ import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.bam.BamSlicer;
+import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.isofox.common.BaseDepth;
 import com.hartwig.hmftools.isofox.common.FragmentMatchType;
@@ -402,7 +403,7 @@ public class FragmentAllocator
             return;
         }
 
-        List<int[]> commonMappings = deriveCommonRegions(read1.getMappedRegionCoords(), read2.getMappedRegionCoords());
+        List<BaseRegion> commonMappings = deriveCommonRegions(read1.getMappedRegionCoords(), read2.getMappedRegionCoords());
 
         if(!isDuplicate)
         {
@@ -589,11 +590,11 @@ public class FragmentAllocator
 
             if(mConfig.RunValidations)
             {
-                for(int[] readRegion : commonMappings)
+                for(BaseRegion readRegion : commonMappings)
                 {
-                    if(commonMappings.stream().filter(x -> x[SE_START] == readRegion[SE_START] && x[SE_END] == readRegion[SE_END]).count() > 1)
+                    if(commonMappings.stream().filter(x -> x.start() == readRegion.start() && x.end() == readRegion.end()).count() > 1)
                     {
-                        ISF_LOGGER.error("repeated read region({} -> {})", readRegion[SE_START], readRegion[SE_END]);
+                        ISF_LOGGER.error("repeated read region({})", readRegion);
                     }
                 }
             }
@@ -1113,8 +1114,8 @@ public class FragmentAllocator
                     transSj.add(String.valueOf(region.start()));
                     transSj.add(String.valueOf(region.end()));
                     transSj.add(matchType.toString());
-                    transSj.add(String.valueOf(read.getSoftClipRegionsMatched()[SE_START]));
-                    transSj.add(String.valueOf(read.getSoftClipRegionsMatched()[SE_END]));
+                    transSj.add(String.valueOf(read.mappedCoords().softClipRegionsMatched(SE_START)));
+                    transSj.add(String.valueOf(read.mappedCoords().softClipRegionsMatched(SE_END)));
 
                     writer.write(transSj.toString());
                     writer.newLine();
