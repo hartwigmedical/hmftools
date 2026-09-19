@@ -2,8 +2,8 @@ package com.hartwig.hmftools.virusdetect;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toMap;
-import static java.util.stream.Collectors.toSet;
 
 import static com.hartwig.hmftools.virusdetect.VirusConstants.VOTE_CORRECT_BASE_PROBABILITY;
 
@@ -13,10 +13,10 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
-// Per-contig support statistics over aligned reads: each read counted once per contig, by its single best alignment
-// there. Also attributes each read across the contigs it hits as read votes, quantifying strain support within a virus.
+// Per-contig support over aligned reads: each read counted once per contig, by its single best alignment there.
+// Also attributes each read across the contigs it hits as read votes, quantifying strain support within a virus,
+// and judges from coverage and votes whether the contig is present in the sample at all.
 public class ContigSupportCalculator
 {
     // Held rather than read from the constant directly so tests can inject a controllable value.
@@ -35,48 +35,36 @@ public class ContigSupportCalculator
     public Map<ViralContig, ContigSupport> compute(ViralAlignments viralAlignments)
     {
         Map<ViralContig, ContigAccumulator> accumulators = new HashMap<>();
-        viralAlignments.reads().forEach(read -> accumulateRead(read, accumulators));
+        viralAlignments.reads().forEach(read -> processRead(read, accumulators));
 
         // A contig whose every alignment straddled the origin retains no read, but the drop is still worth reporting.
         Map<ViralContig, Integer> originClippedReads = viralAlignments.originClippedReads();
-        originClippedReads.keySet().forEach(contig -> accumulators.computeIfAbsent(contig, k -> new ContigAccumulator()));
+        originClippedReads.keySet().forEach(contig -> accumulators.computeIfAbsent(contig, ContigAccumulator::new));
 
-        // Depth is the costly reduction, so it is taken once here: the group presence decision and each contig's
-        // record both need it.
-        Map<ViralContig, int[]> depths = accumulators.entrySet().stream()
-                .collect(toMap(Map.Entry::getKey, entry -> entry.getValue().calculateDepth(entry.getKey())));
-
-        Set<OncologyGroup> presentGroups = computePresentGroups(depths);
-        return accumulators.entrySet().stream().collect(toMap(
-                Map.Entry::getKey, entry -> entry.getValue().toContigSupport(
-                        entry.getKey(), depths.get(entry.getKey()), originClippedReads.getOrDefault(entry.getKey(), 0),
-                        presentGroups.contains(entry.getKey().oncologyGroup()), viralAlignments.meanReadLength())));
+        return createContigSupports(accumulators, originClippedReads, viralAlignments.meanReadLength());
     }
 
-    private static Set<OncologyGroup> computePresentGroups(Map<ViralContig, int[]> depths)
+    private static class ContigAccumulator
     {
-        return depths.entrySet().stream()
-                .filter(entry -> ContigPrefilter.establishesGroupPresence(coverageFraction(entry.getKey(), entry.getValue())))
-                .map(entry -> entry.getKey().oncologyGroup())
-                .collect(toSet());
+        public final ViralContig Contig;
+        public final List<ViralAlignment> Alignments = new ArrayList<>();
+        public final List<Integer> AlignmentCounts = new ArrayList<>();
+        public double Votes;
+
+        private ContigAccumulator(ViralContig contig)
+        {
+            Contig = contig;
+        }
     }
 
-    private static double coverageFraction(ViralContig contig, int[] depth)
-    {
-        return ContigSupport.coverageFraction(coveredBases(depth), contig);
-    }
-
-    private static int coveredBases(int[] depth)
-    {
-        return (int) Arrays.stream(depth).filter(d -> d > 0).count();
-    }
-
-    // Folds one read into the per-contig accumulators: its best alignment (and alignment count) on each contig it hits,
-    // plus its cross-contig vote split.
-    private void accumulateRead(ReadAlignments read, Map<ViralContig, ContigAccumulator> accumulators)
+    private void processRead(ReadAlignments read, Map<ViralContig, ContigAccumulator> accumulators)
     {
         read.hits().forEach((contig, hit) ->
-                accumulators.computeIfAbsent(contig, k -> new ContigAccumulator()).addRead(hit.best(), hit.alignmentCount()));
+        {
+            ContigAccumulator accumulator = accumulators.computeIfAbsent(contig, ContigAccumulator::new);
+            accumulator.Alignments.add(hit.best());
+            accumulator.AlignmentCounts.add(hit.alignmentCount());
+        });
 
         addVotes(read, accumulators);
     }
@@ -90,7 +78,7 @@ public class ContigSupportCalculator
                 .collect(toMap(Map.Entry::getKey, entry -> voteWeight(entry.getValue().divergence(), minDivergence)));
 
         double totalWeight = contigWeights.values().stream().mapToDouble(Double::doubleValue).sum();
-        contigWeights.forEach((contig, weight) -> accumulators.get(contig).addVote(weight / totalWeight));
+        contigWeights.forEach((contig, weight) -> accumulators.get(contig).Votes += weight / totalWeight);
     }
 
     private double voteWeight(int divergence, int minDivergence)
@@ -98,47 +86,65 @@ public class ContigSupportCalculator
         return Math.pow(mCorrectBaseProbability, divergence - minDivergence);
     }
 
-    // Accumulates one contig's reads (each read's best alignment there), then reduces them to a ContigSupport.
-    private static class ContigAccumulator
+    private static Map<ViralContig, ContigSupport> createContigSupports(
+            Map<ViralContig, ContigAccumulator> accumulators, Map<ViralContig, Integer> originClippedReads,
+            double meanReadLength)
     {
-        private final List<ViralAlignment> mAlignments = new ArrayList<>();
-        private final List<Integer> mAlignmentCounts = new ArrayList<>();
-        private double mVotes;
+        return accumulators.values().stream()
+                .collect(groupingBy(accumulator -> accumulator.Contig.oncologyGroup()))
+                .values().stream()
+                .flatMap(group -> createGroupContigSupports(group, originClippedReads, meanReadLength).stream())
+                .collect(toMap(ContigSupport::contig, support -> support));
+    }
 
-        private void addRead(ViralAlignment best, int alignmentCount)
-        {
-            mAlignments.add(best);
-            mAlignmentCounts.add(alignmentCount);
-        }
+    // Coverage decides both whether the group is present at all and, given that, whether each of its contigs clears
+    // the bar, so one group's depths are taken together.
+    private static List<ContigSupport> createGroupContigSupports(
+            List<ContigAccumulator> group, Map<ViralContig, Integer> originClippedReads, double meanReadLength)
+    {
+        Map<ViralContig, int[]> depths = group.stream().collect(toMap(
+                accumulator -> accumulator.Contig,
+                accumulator -> calculateDepth(accumulator.Contig.length(), accumulator.Alignments)));
 
-        private void addVote(double vote)
-        {
-            mVotes += vote;
-        }
+        Map<ViralContig, Integer> coveredBases = depths.entrySet().stream()
+                .collect(toMap(Map.Entry::getKey, entry -> countCoveredBases(entry.getValue())));
 
-        private ContigSupport toContigSupport(
-                ViralContig contig, int[] depth, int originClippedReads, boolean groupPresent, double meanReadLength)
+        boolean groupPresent = coveredBases.entrySet().stream().anyMatch(entry ->
+                ContigPrefilter.establishesGroupPresence(ContigSupport.coverageFraction(entry.getValue(), entry.getKey())));
+
+        return group.stream().map(accumulator ->
         {
-            int coveredBases = coveredBases(depth);
+            ViralContig contig = accumulator.Contig;
             ContigFilterStatus filterStatus = ContigPrefilter.status(
-                    contig, ContigSupport.coverageFraction(coveredBases, contig), mVotes, groupPresent, meanReadLength);
-            int multiAlignReads = (int) mAlignmentCounts.stream().filter(count -> count > 1).count();
+                    contig, ContigSupport.coverageFraction(coveredBases.get(contig), contig), accumulator.Votes,
+                    groupPresent, meanReadLength);
 
-            // With no retained read there is no distribution to summarise, unlike depth which is zero everywhere.
-            boolean hasReads = !mAlignments.isEmpty();
-            SummaryStats alignPerRead = hasReads ? SummaryStats.from(mAlignmentCounts) : null;
-            SummaryStats alignerScore = hasReads
-                    ? SummaryStats.from(mAlignments.stream().mapToInt(ViralAlignment::alignerScore).toArray()) : null;
+            return createContigSupport(
+                    accumulator, filterStatus, coveredBases.get(contig), SummaryStats.from(depths.get(contig)),
+                    originClippedReads.getOrDefault(contig, 0));
+        }).toList();
+    }
 
-            return new ContigSupport(
-                    contig, filterStatus, mAlignments.size(), multiAlignReads, alignPerRead, originClippedReads,
-                    coveredBases, SummaryStats.from(depth), alignerScore, mVotes);
-        }
+    private static int countCoveredBases(int[] depth)
+    {
+        return (int) Arrays.stream(depth).filter(d -> d > 0).count();
+    }
 
-        private int[] calculateDepth(ViralContig contig)
-        {
-            return ContigSupportCalculator.calculateDepth(contig.length(), mAlignments);
-        }
+    private static ContigSupport createContigSupport(
+            ContigAccumulator accumulator, ContigFilterStatus filterStatus, int coveredBases, SummaryStats depth,
+            int originClippedReads)
+    {
+        int multiAlignReads = (int) accumulator.AlignmentCounts.stream().filter(count -> count > 1).count();
+
+        // Without retained reads there is no distribution to summarise, unlike depth which is zero everywhere.
+        boolean hasReads = !accumulator.Alignments.isEmpty();
+        SummaryStats alignmentsPerRead = hasReads ? SummaryStats.from(accumulator.AlignmentCounts) : null;
+        SummaryStats alignerScore = hasReads
+                ? SummaryStats.from(accumulator.Alignments.stream().mapToInt(ViralAlignment::alignerScore).toArray()) : null;
+
+        return new ContigSupport(
+                accumulator.Contig, filterStatus, accumulator.Alignments.size(), multiAlignReads, alignmentsPerRead,
+                originClippedReads, coveredBases, depth, alignerScore, accumulator.Votes);
     }
 
     private static int[] calculateDepth(int contigLength, Collection<ViralAlignment> alignments)

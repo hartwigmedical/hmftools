@@ -39,9 +39,9 @@ public class ContigSupportCalculatorTest
         assertEquals(20, v1.contig().length());
         assertEquals(2, v1.readCount());              // r1 counted once despite two alignments
         assertEquals(1, v1.multiAlignReads());          // r1 has two alignments on v1, r2 one
-        assertEquals(1.5, v1.alignPerRead().mean(), EPSILON);   // r1 -> 2, r2 -> 1
-        assertEquals(1.0, v1.alignPerRead().min(), EPSILON);
-        assertEquals(2.0, v1.alignPerRead().max(), EPSILON);
+        assertEquals(1.5, v1.alignmentsPerRead().mean(), EPSILON);   // r1 -> 2, r2 -> 1
+        assertEquals(1.0, v1.alignmentsPerRead().min(), EPSILON);
+        assertEquals(2.0, v1.alignmentsPerRead().max(), EPSILON);
         assertEquals(10, v1.coveredBases());          // positions 1-10
         assertEquals(0.0, v1.depth().min(), EPSILON);        // positions 11-20 uncovered
         assertEquals(2.0, v1.depth().max(), EPSILON);        // positions 6-10 covered by both reads
@@ -56,7 +56,7 @@ public class ContigSupportCalculatorTest
         ContigSupport v2 = get(stats, "v2");
         assertEquals(1, v2.readCount());
         assertEquals(0, v2.multiAlignReads());          // r3 has a single alignment on v2
-        assertEquals(1.0, v2.alignPerRead().mean(), EPSILON);
+        assertEquals(1.0, v2.alignmentsPerRead().mean(), EPSILON);
         assertEquals(10, v2.coveredBases());
         assertEquals(1.0, v2.depth().min(), EPSILON);
         assertEquals(1.0, v2.depth().max(), EPSILON);
@@ -139,7 +139,7 @@ public class ContigSupportCalculatorTest
         assertEquals(0, v1.coveredBases());
         assertEquals(0.0, v1.readVotes(), EPSILON);
         assertEquals(0.0, v1.depth().max(), EPSILON);
-        assertNull(v1.alignPerRead());
+        assertNull(v1.alignmentsPerRead());
         assertNull(v1.alignerScore());
     }
 

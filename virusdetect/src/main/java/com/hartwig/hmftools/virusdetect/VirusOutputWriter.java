@@ -22,7 +22,6 @@ public class VirusOutputWriter
 {
     private static final Logger LOGGER = LogManager.getLogger(VirusOutputWriter.class);
 
-    // One row per contig with any alignment: its statistics, and how representative selection judged it.
     public static void writeContigStats(String file, List<OncologyGroupSelection> selections)
     {
         List<ContigStatsRow> rows = selections.stream()
@@ -48,7 +47,7 @@ public class VirusOutputWriter
                     row.set(ContigStatsColumn.read_votes, stat.readVotes());
 
                     writeSummaryStats(row, DEPTH_STATS_COLUMNS, stat.depth());
-                    writeSummaryStats(row, ALIGN_PER_READ_STATS_COLUMNS, stat.alignPerRead());
+                    writeSummaryStats(row, ALIGN_PER_READ_STATS_COLUMNS, stat.alignmentsPerRead());
                     writeSummaryStats(row, ALIGNER_SCORE_STATS_COLUMNS, stat.alignerScore());
 
                     row.set(ContigStatsColumn.oncology_group_resolution, contigRow.selection().resolution().name());

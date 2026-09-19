@@ -10,8 +10,8 @@ public record ContigSupport(
         int readCount,
         // Reads with more than one alignment to this contig (BWA -a repeats/multi-loci).
         int multiAlignReads,
-        // Alignments to this contig per read (>= 1). Null when no read was retained here.
-        @Nullable SummaryStats alignPerRead,
+        // Alignments to this contig per read. Theoretically can be > 1. Null when no read was retained here.
+        @Nullable SummaryStats alignmentsPerRead,
         // Reads with an alignment dropped for clipping over the contig start/end (circular-genome artifact).
         int originClippedReads,
         // Contig positions aligned by at least 1 alignment.
