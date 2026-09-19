@@ -2,6 +2,7 @@ package com.hartwig.hmftools.isofox.fusion;
 
 import static java.lang.Math.abs;
 
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.readToString;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
@@ -445,6 +446,11 @@ public class FusionFinder implements Callable<Void>
         // scenarios:
         // 1. New fusion with correct splice-junction support - may or may not match a known transcript and exon
         // 2. Potential discordant or realigned fragment
+
+        if(mConfig.LogReadIds.contains(fragment.readId()))
+        {
+            ISF_LOGGER.debug("specific fusion fragment: {}", fragment);
+        }
 
         // fusions will be stored in a map keyed by their location pair (chromosome + geneCollectionId)
         // and in an additional map of precise positions to avoid mismatches on gene collections

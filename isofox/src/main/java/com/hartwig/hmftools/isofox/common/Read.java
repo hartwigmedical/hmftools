@@ -8,14 +8,12 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_READ_ATTR
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.XA_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.firstInPair;
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.generateMappedCoords;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.inferredInsertSize;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.mateNegativeStrand;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.common.region.BaseRegion.positionsWithin;
 import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
 import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
@@ -77,13 +75,6 @@ public class Read
 
     private final MappedCoords mMappedCoords;
 
-    /*
-    private final List<int[]> mMappedCoords;
-    private boolean mLowerInferredAdded;
-    private boolean mUpperInferredAdded;
-    private final int[] mSoftClipRegionsMatched;
-    */
-
     private String mSupplementaryAlignment;
     private boolean mHasInterGeneSplit;
     private List<AltAlignment> mAltLoci; // alternate genomic mapping loci from XA tag; null if uniquely mapped
@@ -118,19 +109,10 @@ public class Read
         mIsGenicRegion = new boolean[] { false, false };
 
         mMappedCoords = MappedCoords.build(mCigarElements, mPosStart);
-        /*
-        List<int[]> mappedCoords = generateMappedCoords(mCigarElements, mPosStart);
-        mMappedCoords = Lists.newArrayListWithCapacity(mappedCoords.size());
-        mMappedCoords.addAll(mappedCoords);
-        mLowerInferredAdded = false;
-        mUpperInferredAdded = false;
-        mSoftClipRegionsMatched = new int[] {0, 0};
-        */
 
         mMappedRegions = Maps.newHashMap();
         mTransExonRefs = Maps.newHashMap();
         mTranscriptClassification = Maps.newHashMap();
-        mSupplementaryAlignment = null;
         mHasInterGeneSplit = false;
         mJunctionPositions = null;
 
@@ -168,13 +150,10 @@ public class Read
     public int fragmentInsertSize() { return inferredInsertSize(mRecord); }
     public int mapQuality() { return mRecord.getMappingQuality(); }
 
-    public int range() { return mPosEnd - mPosStart; }
-
     public byte orientByte() { return !isReadReversed() ? ORIENT_FWD : ORIENT_REV; }
     public Orientation orientation() { return !isReadReversed() ? Orientation.FORWARD : Orientation.REVERSE; }
 
     public List<CigarElement> cigarElements() { return mCigarElements; }
-    public String originalCigarStr() { return mCigarStr; }
     public String cigarStr() { return mCigarStr != null ? mCigarStr : mOriginalCigarStr; }
 
     public String readBases() { return mReadBases != null ? mReadBases : mRecord.getReadString(); }
@@ -198,7 +177,6 @@ public class Read
     public boolean isInversion() { return isReadReversed() == isMateNegStrand(); }
     public boolean isSupplementaryAlignment() { return mRecord.getSupplementaryAlignmentFlag(); }
 
-    public void setSuppAlignment(final String suppAlign) { mSupplementaryAlignment = suppAlign; }
     public String getSuppAlignment() { return mSupplementaryAlignment; }
 
     public String suppAlignmentAsStr()
@@ -230,8 +208,6 @@ public class Read
         }
     }
 
-    // public int[] getSoftClipRegionsMatched() { return mSoftClipRegionsMatched; }
-
     public boolean isSoftClipped(int se)
     {
         if(mMappedCoords.isSoftClipRegionMatched(se))
@@ -248,7 +224,6 @@ public class Read
     public boolean isMultiMapped() { return numLoci() > 1; }
 
     public boolean isConsensusRead() { return mConsensusRead; }
-    public void markConsensusRead() { mConsensusRead = true; }
 
     public int baseLength() { return readBases().length(); }
 
@@ -890,8 +865,8 @@ public class Read
 
     public String toString()
     {
-        return String.format("%s range(%s: %d -> %d) cigar(%s)",
-                id(), chromosome(), mPosStart, mPosEnd, cigarStr());
+        return String.format("%s range(%s: %d -> %d) flags(%d) cigar(%s)",
+                id(), chromosome(), mPosStart, mPosEnd, flags(), cigarStr());
     }
 
     @VisibleForTesting
@@ -916,4 +891,7 @@ public class Read
         setFlag(SAMFlag.READ_REVERSE_STRAND, readReversed);
         setFlag(SAMFlag.MATE_REVERSE_STRAND, mateReadReversed);
     }
+
+    @VisibleForTesting
+    public void setSuppAlignment(final String suppAlign) { mSupplementaryAlignment = suppAlign; }
 }
