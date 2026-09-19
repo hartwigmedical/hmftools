@@ -66,16 +66,16 @@ public class GroupCandidatesTest
         assertEquals(ContigFilterStatus.LOW_COVERAGE, candidates.rejected().get(0).reason());
     }
 
-    private static List<String> names(List<ContigStats> stats)
+    private static List<String> names(List<ContigSupport> stats)
     {
         return stats.stream().map(stat -> stat.contig().name()).toList();
     }
 
-    private static ContigStats stats(String contig, double coverage, double votes)
+    private static ContigSupport stats(String contig, double coverage, double votes)
     {
         SummaryStats dummy = SummaryStats.from(new int[] { 1 });
         ViralContig viralContig = new ViralContig(contig, LENGTH, "Virus " + contig, new OncologyGroup("Group A"));
-        return new ContigStats(
+        return new ContigSupport(
                 viralContig, 100, 0, dummy, 0, (int) Math.round(coverage * LENGTH), dummy, dummy, votes);
     }
 }

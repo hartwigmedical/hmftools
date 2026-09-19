@@ -17,7 +17,7 @@ import java.util.stream.Stream;
 public class RepresentativeSelector
 {
     public List<OncologyGroupSelection> select(
-            Collection<ContigStats> contigStats, PairwiseMargins margins, Map<OncologyGroup, Integer> oncologyGroupReadCounts,
+            Collection<ContigSupport> contigStats, PairwiseMargins margins, Map<OncologyGroup, Integer> oncologyGroupReadCounts,
             double meanReadLength)
     {
         if(meanReadLength <= 0)
@@ -34,11 +34,11 @@ public class RepresentativeSelector
     }
 
     private OncologyGroupSelection selectOncologyGroup(
-            OncologyGroup oncologyGroup, List<ContigStats> groupContigs, PairwiseMargins margins,
+            OncologyGroup oncologyGroup, List<ContigSupport> groupContigs, PairwiseMargins margins,
             Map<OncologyGroup, Integer> oncologyGroupReadCounts, double meanReadLength)
     {
         GroupCandidates prefiltered = GroupCandidates.prefilter(groupContigs, meanReadLength);
-        List<ContigStats> candidates = prefiltered.candidates();
+        List<ContigSupport> candidates = prefiltered.candidates();
 
         List<ContigSelectionResult> rejected = prefiltered.rejected().stream()
                 .map(rejection -> new ContigSelectionResult(rejection.stats(), rejection.reason(), null))
@@ -62,7 +62,7 @@ public class RepresentativeSelector
     }
 
     private static ContigSelectionResult candidateResult(
-            ContigStats candidate, RepresentativeChoice choice, ChallengeGraph graph, List<ContigStats> candidates,
+            ContigSupport candidate, RepresentativeChoice choice, ChallengeGraph graph, List<ContigSupport> candidates,
             Map<ViralContig, Integer> votesRankByContig)
     {
         List<Integer> challenges = candidateRanks(
@@ -79,11 +79,11 @@ public class RepresentativeSelector
 
     // The votes-ranks of the other candidates matching the challenge relation, sorted for stable output.
     private static List<Integer> candidateRanks(
-            List<ContigStats> candidates, ContigStats subject,
+            List<ContigSupport> candidates, ContigSupport subject,
             Predicate<ViralContig> matches, Map<ViralContig, Integer> votesRankByContig)
     {
         return candidates.stream()
-                .map(ContigStats::contig)
+                .map(ContigSupport::contig)
                 .filter(contig -> !contig.equals(subject.contig()))
                 .filter(matches)
                 .map(votesRankByContig::get)
@@ -98,9 +98,9 @@ public class RepresentativeSelector
     }
 
     // Rank 1 = best supported among the candidates.
-    private static Map<ViralContig, Integer> votesRanks(List<ContigStats> candidates)
+    private static Map<ViralContig, Integer> votesRanks(List<ContigSupport> candidates)
     {
-        List<ContigStats> ordered = candidates.stream().sorted(ContigStats.BEST_SUPPORT_FIRST).toList();
+        List<ContigSupport> ordered = candidates.stream().sorted(ContigSupport.BEST_SUPPORT_FIRST).toList();
         Map<ViralContig, Integer> votesRankByContig = new HashMap<>();
         for(int i = 0; i < ordered.size(); ++i)
         {

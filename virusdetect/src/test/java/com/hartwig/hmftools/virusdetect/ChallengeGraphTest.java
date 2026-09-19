@@ -27,7 +27,7 @@ public class ChallengeGraphTest
     @Test
     public void testChallengeAtThreshold()
     {
-        List<ContigStats> group = List.of(stats(V1, 60), stats(V2, 40));
+        List<ContigSupport> group = List.of(stats(V1, 60), stats(V2, 40));
         ChallengeGraph graph = ChallengeGraph.build(group, 100, margins(V1, V2, MIN_CHALLENGE_MARGIN, 10));
 
         assertTrue(graph.challenges(V1, V2));
@@ -37,7 +37,7 @@ public class ChallengeGraphTest
     @Test
     public void testNoChallengeBelowThreshold()
     {
-        List<ContigStats> group = List.of(stats(V1, 60), stats(V2, 40));
+        List<ContigSupport> group = List.of(stats(V1, 60), stats(V2, 40));
         ChallengeGraph graph = ChallengeGraph.build(group, 100, margins(V1, V2, MIN_CHALLENGE_MARGIN, 9));
 
         assertFalse(graph.challenges(V1, V2));
@@ -47,7 +47,7 @@ public class ChallengeGraphTest
     @Test
     public void testNoChallengeBelowMargin()
     {
-        List<ContigStats> group = List.of(stats(V1, 60), stats(V2, 40));
+        List<ContigSupport> group = List.of(stats(V1, 60), stats(V2, 40));
         ChallengeGraph graph = ChallengeGraph.build(group, 100, margins(V1, V2, MIN_CHALLENGE_MARGIN - 1, 50));
 
         assertFalse(graph.challenges(V1, V2));
@@ -58,7 +58,7 @@ public class ChallengeGraphTest
     @Test
     public void testFractionSpansEveryGroupRead()
     {
-        List<ContigStats> candidates = List.of(stats(V1, 40), stats(V2, 40));
+        List<ContigSupport> candidates = List.of(stats(V1, 40), stats(V2, 40));
         ChallengeGraph graph = ChallengeGraph.build(candidates, 96, margins(V1, V2, MIN_CHALLENGE_MARGIN, 8));
 
         assertFalse(graph.challenges(V1, V2));
@@ -68,7 +68,7 @@ public class ChallengeGraphTest
     @Test
     public void testComparableContigs()
     {
-        List<ContigStats> group = List.of(stats(V1, 100), stats(V2, 95), stats(V3, 50));
+        List<ContigSupport> group = List.of(stats(V1, 100), stats(V2, 95), stats(V3, 50));
         ChallengeGraph graph = ChallengeGraph.build(group, 245, margins(V1, V2, MIN_CHALLENGE_MARGIN, 0));
 
         assertEquals(Set.of(V1, V2), graph.comparable());
@@ -84,9 +84,9 @@ public class ChallengeGraphTest
         return new PairwiseMargins(marginCounts, sharedReads);
     }
 
-    private static ContigStats stats(ViralContig contig, double votes)
+    private static ContigSupport stats(ViralContig contig, double votes)
     {
         SummaryStats dummy = SummaryStats.from(new int[] { 1 });
-        return new ContigStats(contig, 100, 0, dummy, 0, 500, dummy, dummy, votes);
+        return new ContigSupport(contig, 100, 0, dummy, 0, 500, dummy, dummy, votes);
     }
 }

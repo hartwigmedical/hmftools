@@ -79,7 +79,7 @@ public class VirusApplication
         ViralAlignments viralAlignments = ViralAlignments.load(alignedBamFile, mViralReference);
 
         LOGGER.info("Computing per-contig statistics");
-        Map<ViralContig, ContigStats> contigStats = new ContigStatsCalculator().compute(viralAlignments);
+        Map<ViralContig, ContigSupport> contigStats = new ContigSupportCalculator().compute(viralAlignments);
         LOGGER.info("Per-contig statistics complete");
 
         LOGGER.info("Selecting representative contig per oncology group");

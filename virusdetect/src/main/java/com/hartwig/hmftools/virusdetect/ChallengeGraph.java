@@ -28,19 +28,19 @@ public class ChallengeGraph
         mChallenges = challenges;
     }
 
-    public static ChallengeGraph build(List<ContigStats> candidates, int oncologyGroupReads, PairwiseMargins margins)
+    public static ChallengeGraph build(List<ContigSupport> candidates, int oncologyGroupReads, PairwiseMargins margins)
     {
         if(oncologyGroupReads <= 0)
         {
             throw new IllegalArgumentException("Invalid oncology group read count: " + oncologyGroupReads);
         }
 
-        List<ViralContig> contigs = candidates.stream().map(ContigStats::contig).toList();
+        List<ViralContig> contigs = candidates.stream().map(ContigSupport::contig).toList();
 
-        double topVotes = candidates.stream().mapToDouble(ContigStats::readVotes).max().orElse(0.0);
+        double topVotes = candidates.stream().mapToDouble(ContigSupport::readVotes).max().orElse(0.0);
         Set<ViralContig> comparable = candidates.stream()
                 .filter(stats -> topVotes > 0 && stats.readVotes() >= COMPARABLE_VOTE_RATIO * topVotes)
-                .map(ContigStats::contig)
+                .map(ContigSupport::contig)
                 .collect(toSet());
 
         Map<ViralContig, Set<ViralContig>> challenges = new HashMap<>();

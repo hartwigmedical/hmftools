@@ -17,7 +17,7 @@ public record RepresentativeChoice(
         OncologyGroupOutcome outcome
 )
 {
-    public static RepresentativeChoice from(List<ContigStats> candidates, ChallengeGraph graph)
+    public static RepresentativeChoice from(List<ContigSupport> candidates, ChallengeGraph graph)
     {
         List<ViralContig> contigs = graph.contigs();
         if(contigs.size() == 1)
@@ -73,11 +73,11 @@ public record RepresentativeChoice(
         return role;
     }
 
-    private static ViralContig bestSupported(List<ContigStats> candidates, List<ViralContig> contigs)
+    private static ViralContig bestSupported(List<ContigSupport> candidates, List<ViralContig> contigs)
     {
         return candidates.stream()
                 .filter(stats -> contigs.contains(stats.contig()))
-                .min(ContigStats.BEST_SUPPORT_FIRST)
+                .min(ContigSupport.BEST_SUPPORT_FIRST)
                 .orElseThrow()
                 .contig();
     }

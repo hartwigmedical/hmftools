@@ -11,7 +11,7 @@ import org.junit.Test;
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SAMSequenceRecord;
 
-public class ContigStatsCalculatorTest
+public class ContigSupportCalculatorTest
 {
     private static final double EPSILON = 1e-9;
 
@@ -28,11 +28,11 @@ public class ContigStatsCalculatorTest
                 alignment("r2", "v1", 6, 5, 8, 0),
                 alignment("r3", "v2", 1, 10, 9, 0));
 
-        Map<ViralContig, ContigStats> stats = new ContigStatsCalculator().compute(ViralAlignments.from(alignments, 0.0));
+        Map<ViralContig, ContigSupport> stats = new ContigSupportCalculator().compute(ViralAlignments.from(alignments, 0.0));
 
         assertEquals(2, stats.size());
 
-        ContigStats v1 = get(stats, "v1");
+        ContigSupport v1 = get(stats, "v1");
         assertEquals(20, v1.contig().length());
         assertEquals(2, v1.readCount());              // r1 counted once despite two alignments
         assertEquals(1, v1.multiAlignReads());          // r1 has two alignments on v1, r2 one
@@ -50,7 +50,7 @@ public class ContigStatsCalculatorTest
         assertEquals(10.0, v1.alignerScore().max(), EPSILON);
         assertEquals(0.5, v1.coverageFraction(), EPSILON);
 
-        ContigStats v2 = get(stats, "v2");
+        ContigSupport v2 = get(stats, "v2");
         assertEquals(1, v2.readCount());
         assertEquals(0, v2.multiAlignReads());          // r3 has a single alignment on v2
         assertEquals(1.0, v2.alignPerRead().mean(), EPSILON);
@@ -74,10 +74,10 @@ public class ContigStatsCalculatorTest
                 alignment("r2", "v2", 1, 10, 5, 5));
 
         // Injected correct-base probability 0.5, so each extra divergent base halves a contig's weight (0.5^diff).
-        Map<ViralContig, ContigStats> stats = new ContigStatsCalculator(0.5).compute(ViralAlignments.from(alignments, 0.0));
+        Map<ViralContig, ContigSupport> stats = new ContigSupportCalculator(0.5).compute(ViralAlignments.from(alignments, 0.0));
 
-        ContigStats v1 = get(stats, "v1");
-        ContigStats v2 = get(stats, "v2");
+        ContigSupport v1 = get(stats, "v1");
+        ContigSupport v2 = get(stats, "v2");
 
         // r1: v1 weight 0.5^0, v2 0.5^3; r2: v1 0.5^0, v2 0.5^5. Votes per read sum to 1, so both contigs sum to 2.
         assertEquals(1.0 / (1 + Math.pow(0.5, 3)) + 1.0 / (1 + Math.pow(0.5, 5)), v1.readVotes(), EPSILON);
@@ -92,7 +92,7 @@ public class ContigStatsCalculatorTest
                 alignment("r", "v1", 1, 10, 10, 2),
                 alignment("r", "v2", 1, 10, 10, 2));
 
-        Map<ViralContig, ContigStats> stats = new ContigStatsCalculator(0.5).compute(ViralAlignments.from(alignments, 0.0));
+        Map<ViralContig, ContigSupport> stats = new ContigSupportCalculator(0.5).compute(ViralAlignments.from(alignments, 0.0));
 
         assertEquals(0.5, get(stats, "v1").readVotes(), EPSILON);
         assertEquals(0.5, get(stats, "v2").readVotes(), EPSILON);
@@ -109,9 +109,9 @@ public class ContigStatsCalculatorTest
                 alignment("r3", "v1", 6, 10, 9, 0),   // no clip: kept
                 clipped("r4", "v1", 10, 19, 5, 0));   // clip projects to 5, within the contig: kept
 
-        Map<ViralContig, ContigStats> stats = new ContigStatsCalculator().compute(ViralAlignments.from(alignments, 0.0));
+        Map<ViralContig, ContigSupport> stats = new ContigSupportCalculator().compute(ViralAlignments.from(alignments, 0.0));
 
-        ContigStats v1 = get(stats, "v1");
+        ContigSupport v1 = get(stats, "v1");
         assertEquals(2, v1.readCount());            // r3 and r4 kept
         assertEquals(2, v1.originClippedReads());   // r1 and r2 dropped
     }
@@ -126,9 +126,9 @@ public class ContigStatsCalculatorTest
                 clipped("r2", "v1", 1, 10, 30, 0),
                 alignment("r3", "v2", 1, 10, 9, 0));
 
-        Map<ViralContig, ContigStats> stats = new ContigStatsCalculator().compute(ViralAlignments.from(alignments, 0.0));
+        Map<ViralContig, ContigSupport> stats = new ContigSupportCalculator().compute(ViralAlignments.from(alignments, 0.0));
 
-        ContigStats v1 = get(stats, "v1");
+        ContigSupport v1 = get(stats, "v1");
         assertEquals(0, v1.readCount());
         assertEquals(2, v1.originClippedReads());
         assertEquals(0, v1.coveredBases());
@@ -138,7 +138,7 @@ public class ContigStatsCalculatorTest
         assertNull(v1.alignerScore());
     }
 
-    private static ContigStats get(Map<ViralContig, ContigStats> stats, String contig)
+    private static ContigSupport get(Map<ViralContig, ContigSupport> stats, String contig)
     {
         return stats.get(REFERENCE.contig(contig));
     }

@@ -15,22 +15,22 @@ import java.util.Map;
 
 // Per-contig support statistics over aligned reads: each read counted once per contig, by its single best alignment
 // there. Also attributes each read across the contigs it hits as read votes, quantifying strain support within a virus.
-public class ContigStatsCalculator
+public class ContigSupportCalculator
 {
     // Held rather than read from the constant directly so tests can inject a controllable value.
     private final double mCorrectBaseProbability;
 
-    public ContigStatsCalculator()
+    public ContigSupportCalculator()
     {
         this(VOTE_CORRECT_BASE_PROBABILITY);
     }
 
-    ContigStatsCalculator(double correctBaseProbability)
+    ContigSupportCalculator(double correctBaseProbability)
     {
         mCorrectBaseProbability = correctBaseProbability;
     }
 
-    public Map<ViralContig, ContigStats> compute(ViralAlignments viralAlignments)
+    public Map<ViralContig, ContigSupport> compute(ViralAlignments viralAlignments)
     {
         Map<ViralContig, ContigAccumulator> accumulators = new HashMap<>();
         viralAlignments.reads().forEach(read -> accumulateRead(read, accumulators));
@@ -40,7 +40,7 @@ public class ContigStatsCalculator
         originClippedReads.keySet().forEach(contig -> accumulators.computeIfAbsent(contig, k -> new ContigAccumulator()));
 
         return accumulators.entrySet().stream().collect(toMap(
-                Map.Entry::getKey, entry -> entry.getValue().toContigStats(
+                Map.Entry::getKey, entry -> entry.getValue().toContigSupport(
                         entry.getKey(), originClippedReads.getOrDefault(entry.getKey(), 0))));
     }
 
@@ -71,7 +71,7 @@ public class ContigStatsCalculator
         return Math.pow(mCorrectBaseProbability, divergence - minDivergence);
     }
 
-    // Accumulates one contig's reads (each read's best alignment there), then reduces them to a ContigStats.
+    // Accumulates one contig's reads (each read's best alignment there), then reduces them to a ContigSupport.
     private static class ContigAccumulator
     {
         private final List<ViralAlignment> mAlignments = new ArrayList<>();
@@ -89,7 +89,7 @@ public class ContigStatsCalculator
             mVotes += vote;
         }
 
-        private ContigStats toContigStats(ViralContig contig, int originClippedReads)
+        private ContigSupport toContigSupport(ViralContig contig, int originClippedReads)
         {
             int[] depth = calculateDepth(contig.length(), mAlignments);
             int coveredBases = (int) Arrays.stream(depth).filter(d -> d > 0).count();
@@ -101,7 +101,7 @@ public class ContigStatsCalculator
             SummaryStats alignerScore = hasReads
                     ? SummaryStats.from(mAlignments.stream().mapToInt(ViralAlignment::alignerScore).toArray()) : null;
 
-            return new ContigStats(
+            return new ContigSupport(
                     contig, mAlignments.size(), multiAlignReads, alignPerRead, originClippedReads,
                     coveredBases, SummaryStats.from(depth), alignerScore, mVotes);
         }

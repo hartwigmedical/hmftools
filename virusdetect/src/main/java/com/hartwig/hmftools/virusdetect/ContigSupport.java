@@ -5,7 +5,7 @@ import java.util.Comparator;
 import org.jetbrains.annotations.Nullable;
 
 // Per-contig support over a set of aligned reads.
-public record ContigStats(
+public record ContigSupport(
         ViralContig contig,
         // Reads with any alignment to this contig
         int readCount,
@@ -25,8 +25,8 @@ public record ContigStats(
         double readVotes)
 {
     // Best supported first: most read votes, with the contig name breaking ties for determinism.
-    public static final Comparator<ContigStats> BEST_SUPPORT_FIRST =
-            Comparator.comparingDouble(ContigStats::readVotes).reversed().thenComparing(stats -> stats.contig().name());
+    public static final Comparator<ContigSupport> BEST_SUPPORT_FIRST =
+            Comparator.comparingDouble(ContigSupport::readVotes).reversed().thenComparing(stats -> stats.contig().name());
 
     public double coverageFraction()
     {

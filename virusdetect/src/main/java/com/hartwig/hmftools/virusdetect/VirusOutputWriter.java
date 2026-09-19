@@ -34,7 +34,7 @@ public class VirusOutputWriter
                 file, CONTIG_STATS_COLUMNS, rows, (contigRow, row) ->
                 {
                     ContigSelectionResult result = contigRow.contig();
-                    ContigStats stat = result.stats();
+                    ContigSupport stat = result.stats();
                     ViralContig contig = result.contig();
 
                     row.set(ContigStatsColumn.contig, contig.name());

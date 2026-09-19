@@ -34,7 +34,7 @@ public class RepresentativeSelectorTest
     @Test
     public void testResolvedTwins()
     {
-        Map<String, ContigStats> stats = statsMap(present("v1", 100), present("v2", 95));
+        Map<String, ContigSupport> stats = statsMap(present("v1", 100), present("v2", 95));
 
         List<OncologyGroupSelection> selections = select(stats, new Margins().build());
 
@@ -49,7 +49,7 @@ public class RepresentativeSelectorTest
     @Test
     public void testResolvedWithSecondary()
     {
-        Map<String, ContigStats> stats = statsMap(present("v1", 100), present("v2", 95));
+        Map<String, ContigSupport> stats = statsMap(present("v1", 100), present("v2", 95));
 
         List<OncologyGroupSelection> selections = select(stats, new Margins().challenge("v1", "v2", 40).build());
 
@@ -64,7 +64,7 @@ public class RepresentativeSelectorTest
     @Test
     public void testUnresolvedMutual()
     {
-        Map<String, ContigStats> stats = statsMap(present("v1", 100), present("v2", 95));
+        Map<String, ContigSupport> stats = statsMap(present("v1", 100), present("v2", 95));
         PairwiseMargins margins = new Margins().challenge("v1", "v2", 40).challenge("v2", "v1", 40).build();
 
         List<OncologyGroupSelection> selections = select(stats, margins);
@@ -78,7 +78,7 @@ public class RepresentativeSelectorTest
     @Test
     public void testUnresolvedCycle()
     {
-        Map<String, ContigStats> stats = statsMap(present("v1", 100), present("v2", 98), present("v3", 96));
+        Map<String, ContigSupport> stats = statsMap(present("v1", 100), present("v2", 98), present("v3", 96));
         PairwiseMargins margins = new Margins()
                 .challenge("v1", "v2", 40).challenge("v2", "v3", 40).challenge("v3", "v1", 40).build();
 
@@ -92,7 +92,7 @@ public class RepresentativeSelectorTest
     @Test
     public void testUnresolvedMinorChallenger()
     {
-        Map<String, ContigStats> stats = statsMap(present("v1", 100), present("v3", 10));
+        Map<String, ContigSupport> stats = statsMap(present("v1", 100), present("v3", 10));
 
         List<OncologyGroupSelection> selections = select(stats, new Margins().challenge("v3", "v1", 40).build());
 
@@ -106,7 +106,7 @@ public class RepresentativeSelectorTest
     @Test
     public void testResolvedWithMinorBystander()
     {
-        Map<String, ContigStats> stats = statsMap(present("v1", 100), present("v3", 10));
+        Map<String, ContigSupport> stats = statsMap(present("v1", 100), present("v3", 10));
 
         List<OncologyGroupSelection> selections = select(stats, new Margins().build());
 
@@ -119,7 +119,7 @@ public class RepresentativeSelectorTest
     @Test
     public void testSoleContig()
     {
-        Map<String, ContigStats> stats = statsMap(present("v1", 100));
+        Map<String, ContigSupport> stats = statsMap(present("v1", 100));
 
         List<OncologyGroupSelection> selections = select(stats, new Margins().build());
 
@@ -131,7 +131,7 @@ public class RepresentativeSelectorTest
     @Test
     public void testPrefilteredContigsTakeNoPart()
     {
-        Map<String, ContigStats> stats = statsMap(
+        Map<String, ContigSupport> stats = statsMap(
                 present("v1", 100),
                 stats("v2", 0.05, 100),   // in a covered group, but itself below the relaxed floor
                 stats("h1", 0.05, 100),   // no contig in this group meets the coverage minimum
@@ -151,7 +151,7 @@ public class RepresentativeSelectorTest
     @Test
     public void testVoteDensityPrefilterDropsLowVoteContig()
     {
-        Map<String, ContigStats> stats = statsMap(
+        Map<String, ContigSupport> stats = statsMap(
                 present("v1", 100),
                 stats("v2", 0.5, 0.1));   // good coverage but almost no votes
 
@@ -162,13 +162,13 @@ public class RepresentativeSelectorTest
         assertNull(contig(selections, "v2").candidate());
     }
 
-    private static List<OncologyGroupSelection> select(Map<String, ContigStats> stats, PairwiseMargins margins)
+    private static List<OncologyGroupSelection> select(Map<String, ContigSupport> stats, PairwiseMargins margins)
     {
         return new RepresentativeSelector().select(stats.values(), margins, groupReadCounts(stats), MEAN_READ_LENGTH);
     }
 
     // Each group is given as many reads as its contigs have votes, so a contig's votes read as its share of the group.
-    private static Map<OncologyGroup, Integer> groupReadCounts(Map<String, ContigStats> stats)
+    private static Map<OncologyGroup, Integer> groupReadCounts(Map<String, ContigSupport> stats)
     {
         Map<OncologyGroup, Integer> readCounts = new HashMap<>();
         stats.values().forEach(stat -> readCounts.merge(
@@ -203,10 +203,10 @@ public class RepresentativeSelectorTest
         return candidate(selections, contig).role();
     }
 
-    private static Map<String, ContigStats> statsMap(ContigStats... stats)
+    private static Map<String, ContigSupport> statsMap(ContigSupport... stats)
     {
-        Map<String, ContigStats> map = new HashMap<>();
-        for(ContigStats stat : stats)
+        Map<String, ContigSupport> map = new HashMap<>();
+        for(ContigSupport stat : stats)
         {
             map.put(stat.contig().name(), stat);
         }
@@ -214,16 +214,16 @@ public class RepresentativeSelectorTest
     }
 
     // A contig in Group A with good coverage and the given read votes.
-    private static ContigStats present(String contig, double votes)
+    private static ContigSupport present(String contig, double votes)
     {
         return stats(contig, 0.5, votes);
     }
 
-    private static ContigStats stats(String contig, double coverage, double votes)
+    private static ContigSupport stats(String contig, double coverage, double votes)
     {
         int coveredBases = (int) Math.round(coverage * LENGTH);
         SummaryStats dummy = SummaryStats.from(new int[] { 1 });
-        return new ContigStats(REFERENCE.contig(contig), 100, 0, dummy, 0, coveredBases, dummy, dummy, votes);
+        return new ContigSupport(REFERENCE.contig(contig), 100, 0, dummy, 0, coveredBases, dummy, dummy, votes);
     }
 
     private static ViralReference reference(String... contigNames)
