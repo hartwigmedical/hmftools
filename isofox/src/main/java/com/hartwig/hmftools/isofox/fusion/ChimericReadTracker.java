@@ -277,6 +277,8 @@ public class ChimericReadTracker
             mChimericReadMap.put(read.id(), new ChimericReadGroup(read));
         else
             chimericReads.addRead(read);
+
+        addIntronicTranscriptData(read);
     }
 
     public void postProcessChimericReads(final BaseDepth baseDepth, final FragmentTracker fragmentTracker)
