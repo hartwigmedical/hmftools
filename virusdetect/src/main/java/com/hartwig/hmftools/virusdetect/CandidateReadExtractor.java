@@ -189,16 +189,18 @@ public class CandidateReadExtractor
             {
                 // A mapped read is owned by the partition containing its start, so copies returned by an overlapping
                 // neighbour partition are ignored.
-                mSlicer.slice(mReader, region, record ->
-                {
-                    if(record.getAlignmentStart() >= region.start())
-                    {
-                        addIfCandidate(record);
-                    }
-                });
+                mSlicer.slice(
+                        mReader, region, record ->
+                        {
+                            if(record.getAlignmentStart() >= region.start())
+                            {
+                                addIfCandidate(record);
+                            }
+                        });
             }
 
-            LOGGER.debug("region({}) {} candidates in {}s",
+            LOGGER.debug(
+                    "region({}) {} candidates in {}s",
                     region, mPart.readCount() - startCount, format("%.1f", secondsSinceNow(startTimeMs)));
         }
 

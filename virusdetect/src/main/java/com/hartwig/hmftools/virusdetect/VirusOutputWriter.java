@@ -2,7 +2,6 @@ package com.hartwig.hmftools.virusdetect;
 
 import static java.util.Comparator.comparing;
 import static java.util.Comparator.comparingInt;
-import static java.util.stream.Collectors.toMap;
 
 import static com.hartwig.hmftools.virusdetect.VirusConstants.REPORTED_MARGINS;
 
@@ -121,10 +120,12 @@ public class VirusOutputWriter
                 .mapToDouble(candidate -> candidate.support().readVotes()).max().orElse(0.0);
 
         Stream<ContigStatsRow> candidates = selection.candidates().stream()
-                .map(candidate -> row(selection, candidate.support(), candidate, candidateVotes + rejectedVotes,
+                .map(candidate -> row(
+                        selection, candidate.support(), candidate, candidateVotes + rejectedVotes,
                         candidateVotes, topCandidateVotes));
         Stream<ContigStatsRow> rejected = selection.rejected().stream()
-                .map(support -> row(selection, support, null, candidateVotes + rejectedVotes,
+                .map(support -> row(
+                        selection, support, null, candidateVotes + rejectedVotes,
                         candidateVotes, topCandidateVotes));
 
         return Stream.concat(candidates, rejected);

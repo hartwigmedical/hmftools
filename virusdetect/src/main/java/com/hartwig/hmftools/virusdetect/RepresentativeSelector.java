@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.virusdetect;
 
-import static java.util.Comparator.comparingDouble;
 import static java.util.Collections.disjoint;
+import static java.util.Comparator.comparingDouble;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toMap;
@@ -12,7 +12,6 @@ import static com.hartwig.hmftools.virusdetect.VirusConstants.MIN_CHALLENGE_MARG
 import static com.hartwig.hmftools.virusdetect.VirusConstants.MIN_CHALLENGE_READS;
 
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -151,11 +150,12 @@ public class RepresentativeSelector
         int groupReads = requireNonNull(
                 groupReadCounts.get(oncologyGroup), "No aligned read count for oncology group: " + oncologyGroup);
 
-        return contigs.stream().collect(toMap(subject -> subject, subject -> contigs.stream()
-                .filter(opponent -> !opponent.equals(subject))
-                .filter(opponent -> margins.readsWinningBy(subject, opponent, MIN_CHALLENGE_MARGIN) / (double) groupReads
-                        >= MIN_CHALLENGE_READS)
-                .collect(toSet())));
+        return contigs.stream().collect(toMap(
+                subject -> subject, subject -> contigs.stream()
+                        .filter(opponent -> !opponent.equals(subject))
+                        .filter(opponent -> margins.readsWinningBy(subject, opponent, MIN_CHALLENGE_MARGIN) / (double) groupReads
+                                >= MIN_CHALLENGE_READS)
+                        .collect(toSet())));
     }
 
     private static Map<ViralContig, Set<ViralContig>> invertChallengesMap(Map<ViralContig, Set<ViralContig>> challenges)

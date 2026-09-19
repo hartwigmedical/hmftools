@@ -77,7 +77,8 @@ public class ContigSupportCalculatorTest
                 alignment("r2", "v2", 1, 10, 5, 5));
 
         // Injected correct-base probability 0.5, so each extra divergent base halves a contig's weight (0.5^diff).
-        Map<ViralContig, ContigSupport> stats = new ContigSupportCalculator(0.5).compute(ViralAlignments.from(alignments, MEAN_READ_LENGTH));
+        Map<ViralContig, ContigSupport> stats = new ContigSupportCalculator(0.5).compute(
+                ViralAlignments.from(alignments, MEAN_READ_LENGTH));
 
         ContigSupport v1 = get(stats, "v1");
         ContigSupport v2 = get(stats, "v2");
@@ -95,7 +96,8 @@ public class ContigSupportCalculatorTest
                 alignment("r", "v1", 1, 10, 10, 2),
                 alignment("r", "v2", 1, 10, 10, 2));
 
-        Map<ViralContig, ContigSupport> stats = new ContigSupportCalculator(0.5).compute(ViralAlignments.from(alignments, MEAN_READ_LENGTH));
+        Map<ViralContig, ContigSupport> stats = new ContigSupportCalculator(0.5).compute(
+                ViralAlignments.from(alignments, MEAN_READ_LENGTH));
 
         assertEquals(0.5, get(stats, "v1").readVotes(), EPSILON);
         assertEquals(0.5, get(stats, "v2").readVotes(), EPSILON);

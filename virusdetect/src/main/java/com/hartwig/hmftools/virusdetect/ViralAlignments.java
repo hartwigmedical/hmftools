@@ -50,11 +50,13 @@ public record ViralAlignments(
                 Set<String> contigReads = originClippedReadsByContig.computeIfAbsent(alignment.contig(), k -> new HashSet<>());
                 contigReads.add(alignment.readName());
             }
-            else{
+            else
+            {
                 List<ViralAlignment> readAlignments = alignmentsByRead.computeIfAbsent(alignment.readName(), k -> new ArrayList<>());
                 readAlignments.add(alignment);
 
-                Set<String> oncologyGroupReads = readsByOncologyGroup.computeIfAbsent(alignment.contig().oncologyGroup(), k -> new HashSet<>());
+                Set<String> oncologyGroupReads = readsByOncologyGroup.computeIfAbsent(
+                        alignment.contig().oncologyGroup(), k -> new HashSet<>());
                 oncologyGroupReads.add(alignment.readName());
             }
         }

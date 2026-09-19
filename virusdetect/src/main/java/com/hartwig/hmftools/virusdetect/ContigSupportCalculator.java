@@ -47,9 +47,10 @@ public class ContigSupportCalculator
                 .collect(toMap(Map.Entry::getKey, entry -> entry.getValue().calculateDepth(entry.getKey())));
 
         Set<OncologyGroup> presentGroups = computePresentGroups(depths);
-        return accumulators.entrySet().stream().collect(toMap(Map.Entry::getKey, entry -> entry.getValue().toContigSupport(
-                entry.getKey(), depths.get(entry.getKey()), originClippedReads.getOrDefault(entry.getKey(), 0),
-                presentGroups.contains(entry.getKey().oncologyGroup()), viralAlignments.meanReadLength())));
+        return accumulators.entrySet().stream().collect(toMap(
+                Map.Entry::getKey, entry -> entry.getValue().toContigSupport(
+                        entry.getKey(), depths.get(entry.getKey()), originClippedReads.getOrDefault(entry.getKey(), 0),
+                        presentGroups.contains(entry.getKey().oncologyGroup()), viralAlignments.meanReadLength())));
     }
 
     private static Set<OncologyGroup> computePresentGroups(Map<ViralContig, int[]> depths)

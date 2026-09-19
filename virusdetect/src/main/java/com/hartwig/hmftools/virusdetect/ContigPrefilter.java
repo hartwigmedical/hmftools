@@ -26,9 +26,10 @@ public class ContigPrefilter
         {
             return ContigFilterStatus.LOW_VOTE_DENSITY;
         }
-        else {
-        return ContigFilterStatus.CANDIDATE;
-    }
+        else
+        {
+            return ContigFilterStatus.CANDIDATE;
+        }
     }
 
     // Enough votes to have covered the minimum coverage fraction of the contig at the required depth.
