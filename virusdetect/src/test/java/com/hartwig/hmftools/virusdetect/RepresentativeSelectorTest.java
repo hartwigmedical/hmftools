@@ -1,13 +1,17 @@
 package com.hartwig.hmftools.virusdetect;
 
+import static com.hartwig.hmftools.virusdetect.VirusConstants.MIN_CHALLENGE_MARGIN;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
+import java.util.Set;
 import java.util.TreeMap;
 
 import com.hartwig.hmftools.virusdetect.PairwiseMargins.ContigPair;
@@ -19,10 +23,7 @@ import htsjdk.samtools.SAMSequenceRecord;
 
 public class RepresentativeSelectorTest
 {
-    // All contigs are length 1000 with mean read length 150, so the vote-density floor is
-    // 0.10 * 1000 / 150 ~= 0.67 votes, which every contig here clears unless it has almost no votes.
     private static final int LENGTH = 1000;
-    private static final double MEAN_READ_LENGTH = 150.0;
 
     private static final OncologyGroup GROUP_A = new OncologyGroup("Group A");
     private static final OncologyGroup GROUP_H = new OncologyGroup("Group H");
@@ -34,9 +35,7 @@ public class RepresentativeSelectorTest
     @Test
     public void testResolvedTwins()
     {
-        Map<String, ContigSupport> stats = statsMap(present("v1", 100), present("v2", 95));
-
-        List<OncologyGroupSelection> selections = select(stats, new Margins().build());
+        List<OncologyGroupSelection> selections = select(support(candidate("v1", 100), candidate("v2", 95)), noChallenges());
 
         assertEquals(ContigRole.REPRESENTATIVE, role(selections, "v1"));
         assertEquals(ContigRole.REPRESENTATIVE_TWIN, role(selections, "v2"));
@@ -49,25 +48,23 @@ public class RepresentativeSelectorTest
     @Test
     public void testResolvedWithSecondary()
     {
-        Map<String, ContigSupport> stats = statsMap(present("v1", 100), present("v2", 95));
-
-        List<OncologyGroupSelection> selections = select(stats, new Margins().challenge("v1", "v2", 40).build());
+        List<OncologyGroupSelection> selections = select(
+                support(candidate("v1", 100), candidate("v2", 95)), new Margins().challenge("v1", "v2", 40).build());
 
         assertEquals(ContigRole.REPRESENTATIVE, role(selections, "v1"));
         assertEquals(ContigRole.SECONDARY, role(selections, "v2"));
         assertEquals(OncologyGroupOutcome.RESOLVED_CANDIDATES, group(selections, GROUP_A).outcome());
-        assertEquals(List.of(2), candidate(selections, "v1").challengesRanks());
-        assertEquals(List.of(1), candidate(selections, "v2").challengedByRanks());
+        assertEquals(Set.of(REFERENCE.contig("v2")), result(selections, "v1").challenges());
+        assertEquals(Set.of(REFERENCE.contig("v1")), result(selections, "v2").challengedBy());
     }
 
     // Two contigs challenge each other, so neither can be chosen: unresolved, no representative.
     @Test
     public void testUnresolvedMutual()
     {
-        Map<String, ContigSupport> stats = statsMap(present("v1", 100), present("v2", 95));
         PairwiseMargins margins = new Margins().challenge("v1", "v2", 40).challenge("v2", "v1", 40).build();
 
-        List<OncologyGroupSelection> selections = select(stats, margins);
+        List<OncologyGroupSelection> selections = select(support(candidate("v1", 100), candidate("v2", 95)), margins);
 
         assertEquals(OncologyGroupOutcome.MUTUAL, group(selections, GROUP_A).outcome());
         assertEquals(OncologyGroupResolution.UNRESOLVED, group(selections, GROUP_A).resolution());
@@ -78,11 +75,11 @@ public class RepresentativeSelectorTest
     @Test
     public void testUnresolvedCycle()
     {
-        Map<String, ContigSupport> stats = statsMap(present("v1", 100), present("v2", 98), present("v3", 96));
         PairwiseMargins margins = new Margins()
                 .challenge("v1", "v2", 40).challenge("v2", "v3", 40).challenge("v3", "v1", 40).build();
 
-        List<OncologyGroupSelection> selections = select(stats, margins);
+        List<OncologyGroupSelection> selections =
+                select(support(candidate("v1", 100), candidate("v2", 98), candidate("v3", 96)), margins);
 
         assertEquals(OncologyGroupOutcome.CYCLE, group(selections, GROUP_A).outcome());
         assertNull(group(selections, GROUP_A).representative());
@@ -92,9 +89,8 @@ public class RepresentativeSelectorTest
     @Test
     public void testUnresolvedMinorChallenger()
     {
-        Map<String, ContigSupport> stats = statsMap(present("v1", 100), present("v3", 10));
-
-        List<OncologyGroupSelection> selections = select(stats, new Margins().challenge("v3", "v1", 40).build());
+        List<OncologyGroupSelection> selections = select(
+                support(candidate("v1", 100), candidate("v3", 10)), new Margins().challenge("v3", "v1", 40).build());
 
         assertEquals(OncologyGroupOutcome.MINOR_RIVAL, group(selections, GROUP_A).outcome());
         assertEquals(ContigRole.CONTESTED, role(selections, "v1"));
@@ -106,9 +102,7 @@ public class RepresentativeSelectorTest
     @Test
     public void testResolvedWithMinorBystander()
     {
-        Map<String, ContigSupport> stats = statsMap(present("v1", 100), present("v3", 10));
-
-        List<OncologyGroupSelection> selections = select(stats, new Margins().build());
+        List<OncologyGroupSelection> selections = select(support(candidate("v1", 100), candidate("v3", 10)), noChallenges());
 
         assertEquals(ContigRole.REPRESENTATIVE, role(selections, "v1"));
         assertEquals(ContigRole.MINOR, role(selections, "v3"));
@@ -119,60 +113,84 @@ public class RepresentativeSelectorTest
     @Test
     public void testSoleContig()
     {
-        Map<String, ContigSupport> stats = statsMap(present("v1", 100));
-
-        List<OncologyGroupSelection> selections = select(stats, new Margins().build());
+        List<OncologyGroupSelection> selections = select(support(candidate("v1", 100)), noChallenges());
 
         assertEquals(ContigRole.REPRESENTATIVE, role(selections, "v1"));
         assertEquals(OncologyGroupOutcome.ONE_CANDIDATE, group(selections, GROUP_A).outcome());
     }
 
-    // A contig below the relaxed coverage floor is dropped; a group where no contig meets the coverage minimum keeps nothing.
+    // A tenth of the group's reads winning by a decisive margin meets the challenge threshold of a tenth.
+    // The denominator is every read aligning to the group, so here 200 votes over both contigs means 20 reads.
     @Test
-    public void testPrefilteredContigsTakeNoPart()
+    public void testChallengeAtThreshold()
     {
-        Map<String, ContigSupport> stats = statsMap(
-                present("v1", 100),
-                stats("v2", 0.05, 100),   // in a covered group, but itself below the relaxed floor
-                stats("h1", 0.05, 100),   // no contig in this group meets the coverage minimum
-                stats("h2", 0.04, 100));
+        List<OncologyGroupSelection> selections = select(
+                support(candidate("v1", 100), candidate("v2", 100)), new Margins().challenge("v1", "v2", 20).build());
 
-        List<OncologyGroupSelection> selections = select(stats, new Margins().build());
+        assertEquals(ContigRole.SECONDARY, role(selections, "v2"));
+    }
+
+    @Test
+    public void testNoChallengeBelowThreshold()
+    {
+        List<OncologyGroupSelection> selections = select(
+                support(candidate("v1", 100), candidate("v2", 100)), new Margins().challenge("v1", "v2", 19).build());
+
+        assertEquals(ContigRole.REPRESENTATIVE_TWIN, role(selections, "v2"));
+    }
+
+    // Plenty of winning reads, but none of them wins by enough bases to count.
+    @Test
+    public void testNoChallengeBelowMargin()
+    {
+        PairwiseMargins margins = new Margins().challengeAtMargin("v1", "v2", MIN_CHALLENGE_MARGIN - 1, 100).build();
+
+        List<OncologyGroupSelection> selections = select(support(candidate("v1", 100), candidate("v2", 100)), margins);
+
+        assertEquals(ContigRole.REPRESENTATIVE_TWIN, role(selections, "v2"));
+    }
+
+    // Contigs the prefilter rejected are reported but take no part, and a group with none of them keeps nothing.
+    @Test
+    public void testRejectedContigsTakeNoPart()
+    {
+        List<ContigSupport> support = support(
+                candidate("v1", 100),
+                rejected("v2", ContigFilterStatus.LOW_VOTE_DENSITY),
+                rejected("h1", ContigFilterStatus.LOW_COVERAGE));
+
+        List<OncologyGroupSelection> selections = select(support, noChallenges());
 
         assertEquals(ContigRole.REPRESENTATIVE, role(selections, "v1"));
-        assertEquals(ContigFilterStatus.LOW_COVERAGE, contig(selections, "v2").filterStatus());
-        assertNull(contig(selections, "v2").candidate());
+        assertEquals(List.of("v2"), names(group(selections, GROUP_A).rejected()));
         assertEquals(OncologyGroupOutcome.NO_CANDIDATES, group(selections, GROUP_H).outcome());
         assertEquals(OncologyGroupResolution.NO_CANDIDATES, group(selections, GROUP_H).resolution());
         assertNull(group(selections, GROUP_H).representative());
+        assertTrue(group(selections, GROUP_H).candidates().isEmpty());
     }
 
-    // A contig with good coverage but almost no votes is dropped by the vote-density floor.
+    // Rank follows the votes order, whatever order the contigs arrive in.
     @Test
-    public void testVoteDensityPrefilterDropsLowVoteContig()
+    public void testVotesRankFollowsSupport()
     {
-        Map<String, ContigSupport> stats = statsMap(
-                present("v1", 100),
-                stats("v2", 0.5, 0.1));   // good coverage but almost no votes
+        List<OncologyGroupSelection> selections =
+                select(support(candidate("v2", 95), candidate("v1", 100)), noChallenges());
 
-        List<OncologyGroupSelection> selections = select(stats, new Margins().build());
-
-        assertEquals(ContigRole.REPRESENTATIVE, role(selections, "v1"));
-        assertEquals(ContigFilterStatus.LOW_VOTE_DENSITY, contig(selections, "v2").filterStatus());
-        assertNull(contig(selections, "v2").candidate());
+        assertEquals(1, group(selections, GROUP_A).votesRank(REFERENCE.contig("v1")));
+        assertEquals(2, group(selections, GROUP_A).votesRank(REFERENCE.contig("v2")));
     }
 
-    private static List<OncologyGroupSelection> select(Map<String, ContigSupport> stats, PairwiseMargins margins)
+    private static List<OncologyGroupSelection> select(List<ContigSupport> support, PairwiseMargins margins)
     {
-        return new RepresentativeSelector().select(stats.values(), margins, groupReadCounts(stats), MEAN_READ_LENGTH);
+        return new RepresentativeSelector().select(support, margins, groupReadCounts(support));
     }
 
     // Each group is given as many reads as its contigs have votes, so a contig's votes read as its share of the group.
-    private static Map<OncologyGroup, Integer> groupReadCounts(Map<String, ContigSupport> stats)
+    private static Map<OncologyGroup, Integer> groupReadCounts(List<ContigSupport> support)
     {
         Map<OncologyGroup, Integer> readCounts = new HashMap<>();
-        stats.values().forEach(stat -> readCounts.merge(
-                stat.contig().oncologyGroup(), (int) Math.round(stat.readVotes()), Integer::sum));
+        support.forEach(contig -> readCounts.merge(
+                contig.contig().oncologyGroup(), (int) Math.round(contig.readVotes()), Integer::sum));
         return readCounts;
     }
 
@@ -184,46 +202,44 @@ public class RepresentativeSelectorTest
                 .orElseThrow();
     }
 
-    private static ContigSelectionResult contig(List<OncologyGroupSelection> selections, String contig)
+    private static RepresentativeCandidate result(List<OncologyGroupSelection> selections, String contig)
     {
         return selections.stream()
-                .flatMap(selection -> selection.contigs().stream())
-                .filter(result -> result.contig().name().equals(contig))
+                .flatMap(selection -> selection.candidates().stream())
+                .filter(candidate -> candidate.contig().name().equals(contig))
                 .findFirst()
                 .orElseThrow();
     }
 
-    private static CandidateSelectionResult candidate(List<OncologyGroupSelection> selections, String contig)
-    {
-        return contig(selections, contig).candidate();
-    }
-
     private static ContigRole role(List<OncologyGroupSelection> selections, String contig)
     {
-        return candidate(selections, contig).role();
+        return result(selections, contig).role();
     }
 
-    private static Map<String, ContigSupport> statsMap(ContigSupport... stats)
+    private static List<String> names(List<ContigSupport> support)
     {
-        Map<String, ContigSupport> map = new HashMap<>();
-        for(ContigSupport stat : stats)
-        {
-            map.put(stat.contig().name(), stat);
-        }
-        return map;
+        return support.stream().map(contig -> contig.contig().name()).toList();
     }
 
-    // A contig in Group A with good coverage and the given read votes.
-    private static ContigSupport present(String contig, double votes)
+    private static List<ContigSupport> support(ContigSupport... support)
     {
-        return stats(contig, 0.5, votes);
+        return List.of(support);
     }
 
-    private static ContigSupport stats(String contig, double coverage, double votes)
+    private static ContigSupport candidate(String contig, double votes)
     {
-        int coveredBases = (int) Math.round(coverage * LENGTH);
+        return contigSupport(contig, ContigFilterStatus.CANDIDATE, votes);
+    }
+
+    private static ContigSupport rejected(String contig, ContigFilterStatus filterStatus)
+    {
+        return contigSupport(contig, filterStatus, 100);
+    }
+
+    private static ContigSupport contigSupport(String contig, ContigFilterStatus filterStatus, double votes)
+    {
         SummaryStats dummy = SummaryStats.from(new int[] { 1 });
-        return new ContigSupport(REFERENCE.contig(contig), 100, 0, dummy, 0, coveredBases, dummy, dummy, votes);
+        return new ContigSupport(REFERENCE.contig(contig), filterStatus, 100, 0, dummy, 0, LENGTH / 2, dummy, dummy, votes);
     }
 
     private static ViralReference reference(String... contigNames)
@@ -239,6 +255,11 @@ public class RepresentativeSelectorTest
         return new ViralReference(contigs, new SAMSequenceDictionary(records));
     }
 
+    private static PairwiseMargins noChallenges()
+    {
+        return new Margins().build();
+    }
+
     // Builds pairwise margins with controlled challenge edges: each challenge places its reads at a margin above the
     // selection margin, so they count as decisive.
     private static class Margins
@@ -248,8 +269,13 @@ public class RepresentativeSelectorTest
 
         private Margins challenge(String subject, String opponent, int reads)
         {
+            return challengeAtMargin(subject, opponent, MIN_CHALLENGE_MARGIN * 2, reads);
+        }
+
+        private Margins challengeAtMargin(String subject, String opponent, int margin, int reads)
+        {
             ContigPair pair = new ContigPair(REFERENCE.contig(subject), REFERENCE.contig(opponent));
-            mMargins.computeIfAbsent(pair, key -> new TreeMap<>()).merge(10, reads, Integer::sum);
+            mMargins.computeIfAbsent(pair, key -> new TreeMap<>()).merge(margin, reads, Integer::sum);
             mShared.merge(pair, reads, Integer::sum);
             mShared.merge(new ContigPair(REFERENCE.contig(opponent), REFERENCE.contig(subject)), reads, Integer::sum);
             return this;

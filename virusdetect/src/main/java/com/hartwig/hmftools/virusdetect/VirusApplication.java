@@ -85,8 +85,7 @@ public class VirusApplication
         LOGGER.info("Selecting representative contig per oncology group");
         PairwiseMargins pairwiseMargins = PairwiseMargins.from(viralAlignments);
         List<OncologyGroupSelection> selections = new RepresentativeSelector().select(
-                contigStats.values(), pairwiseMargins, viralAlignments.readCountsByOncologyGroup(),
-                viralAlignments.meanReadLength());
+                contigStats.values(), pairwiseMargins, viralAlignments.readCountsByOncologyGroup());
         logSelections(selections);
 
         VirusOutputWriter.writeContigStats(contigStatsFile(), selections);

@@ -9,7 +9,9 @@ import org.jetbrains.annotations.Nullable;
 public record OncologyGroupSelection(
         OncologyGroup oncologyGroup,
         OncologyGroupOutcome outcome,
-        List<ContigSelectionResult> contigs
+        List<RepresentativeCandidate> candidates,
+        // List of contigs which were filtered so not candidates for representative.
+        List<ContigSupport> rejected
 )
 {
     public OncologyGroupResolution resolution()
@@ -20,15 +22,22 @@ public record OncologyGroupSelection(
     @Nullable
     public ViralContig representative()
     {
-        return contigs.stream()
-                .filter(contig -> contig.candidate() != null && contig.candidate().role() == ContigRole.REPRESENTATIVE)
-                .map(ContigSelectionResult::contig)
+        return candidates.stream()
+                .filter(candidate -> candidate.role() == ContigRole.REPRESENTATIVE)
+                .map(RepresentativeCandidate::contig)
                 .findFirst()
                 .orElse(null);
     }
 
-    public List<ContigSelectionResult> candidates()
+    public int votesRank(ViralContig contig)
     {
-        return contigs.stream().filter(contig -> contig.candidate() != null).toList();
+        for(int i = 0; i < candidates.size(); ++i)
+        {
+            if(candidates.get(i).contig().equals(contig))
+            {
+                return i + 1;
+            }
+        }
+        throw new IllegalArgumentException("Contig was not a selection candidate: " + contig.name());
     }
 }

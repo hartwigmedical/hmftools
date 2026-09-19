@@ -29,6 +29,14 @@ public record ViralAlignments(
         Map<OncologyGroup, Integer> readCountsByOncologyGroup
 )
 {
+    public ViralAlignments
+    {
+        if(!reads.isEmpty() && meanReadLength <= 0)
+        {
+            throw new IllegalArgumentException("Invalid mean read length: " + meanReadLength);
+        }
+    }
+
     public static ViralAlignments from(List<ViralAlignment> alignments, double meanReadLength)
     {
         Map<ViralContig, Set<String>> originClippedReadsByContig = new HashMap<>();
@@ -90,7 +98,7 @@ public record ViralAlignments(
         }
         catch(IOException e)
         {
-            throw new RuntimeException("failed to read aligned BAM", e);
+            throw new RuntimeException("Failed to read aligned BAM", e);
         }
 
         double meanReadLength = readLengthCount > 0 ? (double) readLengthSum / readLengthCount : 0.0;

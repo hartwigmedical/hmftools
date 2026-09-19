@@ -1,36 +1,40 @@
 package com.hartwig.hmftools.virusdetect;
 
-import java.util.Comparator;
-
 import org.jetbrains.annotations.Nullable;
 
-// Per-contig support over a set of aligned reads.
+// Per-contig support information from alignment.
 public record ContigSupport(
         ViralContig contig,
-        // Reads with any alignment to this contig
+        ContigFilterStatus filterStatus,
+        // Reads with any alignment to this contig.
         int readCount,
-        // Reads with more than one alignment to this contig (BWA -a repeats/multi-loci)
+        // Reads with more than one alignment to this contig (BWA -a repeats/multi-loci).
         int multiAlignReads,
         // Alignments to this contig per read (>= 1). Null when no read was retained here.
         @Nullable SummaryStats alignPerRead,
-        // Alignments dropped for clipping over the contig start/end (circular-genome artifact)
+        // Reads with an alignment dropped for clipping over the contig start/end (circular-genome artifact).
         int originClippedReads,
-        // Contig positions with at least one aligned base
+        // Contig positions aligned by at least 1 alignment.
         int coveredBases,
-        // Depth spans the whole contig, so uncovered positions count as depth 0
+        // Note uncovered bases count as depth=0.
         SummaryStats depth,
         // BWA alignment score distribution across those reads. Null when no read was retained here.
         @Nullable SummaryStats alignerScore,
-        // Strain support: reads softly attributed to this strain, split across the sibling contigs by divergence
+        // Read attribution taking into account alignment edit distance (divergence).
         double readVotes)
 {
-    // Best supported first: most read votes, with the contig name breaking ties for determinism.
-    public static final Comparator<ContigSupport> BEST_SUPPORT_FIRST =
-            Comparator.comparingDouble(ContigSupport::readVotes).reversed().thenComparing(stats -> stats.contig().name());
+    public boolean isCandidate()
+    {
+        return filterStatus == ContigFilterStatus.CANDIDATE;
+    }
 
     public double coverageFraction()
     {
-        int contigLength = contig.length();
-        return contigLength == 0 ? 0 : (double) coveredBases / contigLength;
+        return coverageFraction(coveredBases, contig);
+    }
+
+    public static double coverageFraction(int coveredBases, ViralContig contig)
+    {
+        return contig.length() == 0 ? 0 : (double) coveredBases / contig.length();
     }
 }

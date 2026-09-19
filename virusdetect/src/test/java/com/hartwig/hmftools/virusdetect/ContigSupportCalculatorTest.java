@@ -15,6 +15,9 @@ public class ContigSupportCalculatorTest
 {
     private static final double EPSILON = 1e-9;
 
+    // Only the vote-density prefilter reads this; the stats themselves are unaffected.
+    private static final double MEAN_READ_LENGTH = 150.0;
+
     private static final ViralReference REFERENCE = reference();
 
     // v1 (length 20): read r1 covers 1-10 (score 10), read r2 covers 6-10 (score 8); a lower-scoring second alignment of
@@ -28,7 +31,7 @@ public class ContigSupportCalculatorTest
                 alignment("r2", "v1", 6, 5, 8, 0),
                 alignment("r3", "v2", 1, 10, 9, 0));
 
-        Map<ViralContig, ContigSupport> stats = new ContigSupportCalculator().compute(ViralAlignments.from(alignments, 0.0));
+        Map<ViralContig, ContigSupport> stats = new ContigSupportCalculator().compute(ViralAlignments.from(alignments, MEAN_READ_LENGTH));
 
         assertEquals(2, stats.size());
 
@@ -74,7 +77,7 @@ public class ContigSupportCalculatorTest
                 alignment("r2", "v2", 1, 10, 5, 5));
 
         // Injected correct-base probability 0.5, so each extra divergent base halves a contig's weight (0.5^diff).
-        Map<ViralContig, ContigSupport> stats = new ContigSupportCalculator(0.5).compute(ViralAlignments.from(alignments, 0.0));
+        Map<ViralContig, ContigSupport> stats = new ContigSupportCalculator(0.5).compute(ViralAlignments.from(alignments, MEAN_READ_LENGTH));
 
         ContigSupport v1 = get(stats, "v1");
         ContigSupport v2 = get(stats, "v2");
@@ -92,7 +95,7 @@ public class ContigSupportCalculatorTest
                 alignment("r", "v1", 1, 10, 10, 2),
                 alignment("r", "v2", 1, 10, 10, 2));
 
-        Map<ViralContig, ContigSupport> stats = new ContigSupportCalculator(0.5).compute(ViralAlignments.from(alignments, 0.0));
+        Map<ViralContig, ContigSupport> stats = new ContigSupportCalculator(0.5).compute(ViralAlignments.from(alignments, MEAN_READ_LENGTH));
 
         assertEquals(0.5, get(stats, "v1").readVotes(), EPSILON);
         assertEquals(0.5, get(stats, "v2").readVotes(), EPSILON);
@@ -109,7 +112,7 @@ public class ContigSupportCalculatorTest
                 alignment("r3", "v1", 6, 10, 9, 0),   // no clip: kept
                 clipped("r4", "v1", 10, 19, 5, 0));   // clip projects to 5, within the contig: kept
 
-        Map<ViralContig, ContigSupport> stats = new ContigSupportCalculator().compute(ViralAlignments.from(alignments, 0.0));
+        Map<ViralContig, ContigSupport> stats = new ContigSupportCalculator().compute(ViralAlignments.from(alignments, MEAN_READ_LENGTH));
 
         ContigSupport v1 = get(stats, "v1");
         assertEquals(2, v1.readCount());            // r3 and r4 kept
@@ -126,7 +129,7 @@ public class ContigSupportCalculatorTest
                 clipped("r2", "v1", 1, 10, 30, 0),
                 alignment("r3", "v2", 1, 10, 9, 0));
 
-        Map<ViralContig, ContigSupport> stats = new ContigSupportCalculator().compute(ViralAlignments.from(alignments, 0.0));
+        Map<ViralContig, ContigSupport> stats = new ContigSupportCalculator().compute(ViralAlignments.from(alignments, MEAN_READ_LENGTH));
 
         ContigSupport v1 = get(stats, "v1");
         assertEquals(0, v1.readCount());
