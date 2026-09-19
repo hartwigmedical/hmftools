@@ -80,7 +80,8 @@ public class CandidateReadExtractor
                 workers.add(new Worker(queue, readerFactory.open(new File(tumorBamFile)), FastaPart.create(outputFastaFile, i)));
             }
 
-            if(!executeRunnables(workers, workers.size()))
+            boolean execSuccess = executeRunnables(workers, workers.size());
+            if(!execSuccess)
             {
                 throw new RuntimeException("Candidate read extraction failed");
             }

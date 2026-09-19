@@ -23,6 +23,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
+// TODO: rename when app name is decided
 public class VirusApplication
 {
     private final VirusConfig mConfig;
@@ -84,14 +85,14 @@ public class VirusApplication
 
         LOGGER.info("Selecting representative contig per oncology group");
         PairwiseMargins pairwiseMargins = PairwiseMargins.from(viralAlignments);
-        List<OncologyGroupSelection> selections = new RepresentativeSelector().select(
+        List<OncologyGroupRepresentativeSelection> selections = new RepresentativeSelector().select(
                 contigStats.values(), pairwiseMargins, viralAlignments.readCountsByOncologyGroup());
         logSelections(selections);
 
-        VirusOutputWriter.writeContigStats(contigStatsFile(), selections);
+        OutputWriter.writeContigStats(contigStatsFile(), selections);
         if(mConfig.verboseOutput())
         {
-            VirusOutputWriter.writePairwiseMargins(pairwiseMarginsFile(), pairwiseMargins, selections);
+            OutputWriter.writePairwiseMargins(pairwiseMarginsFile(), pairwiseMargins, selections);
         }
 
         // TODO: placeholder pipeline; each step is replaced by its implementation as it lands.
@@ -122,9 +123,9 @@ public class VirusApplication
         return mConfig.outputDir() + mConfig.sampleId() + PAIRWISE_MARGINS_TSV_SUFFIX;
     }
 
-    private static void logSelections(List<OncologyGroupSelection> selections)
+    private static void logSelections(List<OncologyGroupRepresentativeSelection> selections)
     {
-        for(OncologyGroupSelection selection : selections)
+        for(OncologyGroupRepresentativeSelection selection : selections)
         {
             ViralContig representative = selection.representative();
             if(representative != null)

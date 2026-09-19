@@ -18,14 +18,14 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 
-public class VirusOutputWriter
+public class OutputWriter
 {
-    private static final Logger LOGGER = LogManager.getLogger(VirusOutputWriter.class);
+    private static final Logger LOGGER = LogManager.getLogger(OutputWriter.class);
 
-    public static void writeContigStats(String file, List<OncologyGroupSelection> selections)
+    public static void writeContigStats(String file, List<OncologyGroupRepresentativeSelection> selections)
     {
         List<ContigStatsRow> rows = selections.stream()
-                .flatMap(VirusOutputWriter::contigStatsRows)
+                .flatMap(OutputWriter::contigStatsRows)
                 .sorted(comparingInt((ContigStatsRow row) -> row.support().readCount()).reversed()
                         .thenComparing(row -> row.support().contig().name()))
                 .toList();
@@ -61,7 +61,7 @@ public class VirusOutputWriter
                     RepresentativeCandidate candidate = contigRow.candidate();
                     if(candidate != null)
                     {
-                        OncologyGroupSelection selection = contigRow.selection();
+                        OncologyGroupRepresentativeSelection selection = contigRow.selection();
                         row.set(ContigStatsColumn.votes_rank, selection.votesRank(contig));
                         row.set(ContigStatsColumn.comparable, candidate.comparable());
                         row.set(ContigStatsColumn.role, candidate.role().name());
@@ -100,7 +100,7 @@ public class VirusOutputWriter
     }
 
     private record ContigStatsRow(
-            OncologyGroupSelection selection,
+            OncologyGroupRepresentativeSelection selection,
             ContigSupport support,
             // Null for a contig the prefilter rejected, leaving the candidate columns blank.
             @Nullable RepresentativeCandidate candidate,
@@ -111,7 +111,7 @@ public class VirusOutputWriter
     {
     }
 
-    private static Stream<ContigStatsRow> contigStatsRows(OncologyGroupSelection selection)
+    private static Stream<ContigStatsRow> contigStatsRows(OncologyGroupRepresentativeSelection selection)
     {
         double candidateVotes = selection.candidates().stream().mapToDouble(c -> c.support().readVotes()).sum();
         double rejectedVotes = selection.rejected().stream().mapToDouble(ContigSupport::readVotes).sum();
@@ -131,7 +131,7 @@ public class VirusOutputWriter
     }
 
     private static ContigStatsRow row(
-            OncologyGroupSelection selection, ContigSupport support, @Nullable RepresentativeCandidate candidate,
+            OncologyGroupRepresentativeSelection selection, ContigSupport support, @Nullable RepresentativeCandidate candidate,
             double allVotes, double candidateVotes, double topCandidateVotes)
     {
         double votes = support.readVotes();
@@ -170,14 +170,14 @@ public class VirusOutputWriter
         return total > 0 ? votes / total : null;
     }
 
-    private static String ranks(OncologyGroupSelection selection, Set<ViralContig> contigs)
+    private static String ranks(OncologyGroupRepresentativeSelection selection, Set<ViralContig> contigs)
     {
         return contigs.stream().map(selection::votesRank).sorted().map(String::valueOf).collect(Collectors.joining(","));
     }
 
     // One row per ordered within-oncology-group contig pair: the reads they share, and how many of those fit the subject
     // better by at least each reported margin. Includes prefiltered contigs. Verbose/debug only, for tuning.
-    public static void writePairwiseMargins(String file, PairwiseMargins margins, List<OncologyGroupSelection> selections)
+    public static void writePairwiseMargins(String file, PairwiseMargins margins, List<OncologyGroupRepresentativeSelection> selections)
     {
         Map<ViralContig, Integer> votesRankByContig = new HashMap<>();
         selections.forEach(selection -> selection.candidates()
@@ -221,7 +221,7 @@ public class VirusOutputWriter
         shared_reads
     }
 
-    private static final List<String> MARGIN_COLUMNS = REPORTED_MARGINS.stream().map(VirusOutputWriter::marginColumn).toList();
+    private static final List<String> MARGIN_COLUMNS = REPORTED_MARGINS.stream().map(OutputWriter::marginColumn).toList();
 
     private static String marginColumn(int margin)
     {

@@ -35,7 +35,7 @@ public class RepresentativeSelectorTest
     @Test
     public void testResolvedTwins()
     {
-        List<OncologyGroupSelection> selections = select(support(candidate("v1", 100), candidate("v2", 95)), noChallenges());
+        List<OncologyGroupRepresentativeSelection> selections = select(support(candidate("v1", 100), candidate("v2", 95)), noChallenges());
 
         assertEquals(ContigRole.REPRESENTATIVE, role(selections, "v1"));
         assertEquals(ContigRole.REPRESENTATIVE_TWIN, role(selections, "v2"));
@@ -48,7 +48,7 @@ public class RepresentativeSelectorTest
     @Test
     public void testResolvedWithSecondary()
     {
-        List<OncologyGroupSelection> selections = select(
+        List<OncologyGroupRepresentativeSelection> selections = select(
                 support(candidate("v1", 100), candidate("v2", 95)), new Margins().challenge("v1", "v2", 40).build());
 
         assertEquals(ContigRole.REPRESENTATIVE, role(selections, "v1"));
@@ -64,7 +64,7 @@ public class RepresentativeSelectorTest
     {
         PairwiseMargins margins = new Margins().challenge("v1", "v2", 40).challenge("v2", "v1", 40).build();
 
-        List<OncologyGroupSelection> selections = select(support(candidate("v1", 100), candidate("v2", 95)), margins);
+        List<OncologyGroupRepresentativeSelection> selections = select(support(candidate("v1", 100), candidate("v2", 95)), margins);
 
         assertEquals(OncologyGroupOutcome.MUTUAL, group(selections, GROUP_A).outcome());
         assertEquals(OncologyGroupResolution.UNRESOLVED, group(selections, GROUP_A).resolution());
@@ -78,7 +78,7 @@ public class RepresentativeSelectorTest
         PairwiseMargins margins = new Margins()
                 .challenge("v1", "v2", 40).challenge("v2", "v3", 40).challenge("v3", "v1", 40).build();
 
-        List<OncologyGroupSelection> selections =
+        List<OncologyGroupRepresentativeSelection> selections =
                 select(support(candidate("v1", 100), candidate("v2", 98), candidate("v3", 96)), margins);
 
         assertEquals(OncologyGroupOutcome.CYCLE, group(selections, GROUP_A).outcome());
@@ -89,7 +89,7 @@ public class RepresentativeSelectorTest
     @Test
     public void testUnresolvedMinorChallenger()
     {
-        List<OncologyGroupSelection> selections = select(
+        List<OncologyGroupRepresentativeSelection> selections = select(
                 support(candidate("v1", 100), candidate("v3", 10)), new Margins().challenge("v3", "v1", 40).build());
 
         assertEquals(OncologyGroupOutcome.MINOR_RIVAL, group(selections, GROUP_A).outcome());
@@ -102,7 +102,7 @@ public class RepresentativeSelectorTest
     @Test
     public void testResolvedWithMinorBystander()
     {
-        List<OncologyGroupSelection> selections = select(support(candidate("v1", 100), candidate("v3", 10)), noChallenges());
+        List<OncologyGroupRepresentativeSelection> selections = select(support(candidate("v1", 100), candidate("v3", 10)), noChallenges());
 
         assertEquals(ContigRole.REPRESENTATIVE, role(selections, "v1"));
         assertEquals(ContigRole.MINOR, role(selections, "v3"));
@@ -113,7 +113,7 @@ public class RepresentativeSelectorTest
     @Test
     public void testSoleContig()
     {
-        List<OncologyGroupSelection> selections = select(support(candidate("v1", 100)), noChallenges());
+        List<OncologyGroupRepresentativeSelection> selections = select(support(candidate("v1", 100)), noChallenges());
 
         assertEquals(ContigRole.REPRESENTATIVE, role(selections, "v1"));
         assertEquals(OncologyGroupOutcome.ONE_CANDIDATE, group(selections, GROUP_A).outcome());
@@ -124,7 +124,7 @@ public class RepresentativeSelectorTest
     @Test
     public void testChallengeAtThreshold()
     {
-        List<OncologyGroupSelection> selections = select(
+        List<OncologyGroupRepresentativeSelection> selections = select(
                 support(candidate("v1", 100), candidate("v2", 100)), new Margins().challenge("v1", "v2", 20).build());
 
         assertEquals(ContigRole.SECONDARY, role(selections, "v2"));
@@ -133,7 +133,7 @@ public class RepresentativeSelectorTest
     @Test
     public void testNoChallengeBelowThreshold()
     {
-        List<OncologyGroupSelection> selections = select(
+        List<OncologyGroupRepresentativeSelection> selections = select(
                 support(candidate("v1", 100), candidate("v2", 100)), new Margins().challenge("v1", "v2", 19).build());
 
         assertEquals(ContigRole.REPRESENTATIVE_TWIN, role(selections, "v2"));
@@ -145,7 +145,7 @@ public class RepresentativeSelectorTest
     {
         PairwiseMargins margins = new Margins().challengeAtMargin("v1", "v2", MIN_CHALLENGE_MARGIN - 1, 100).build();
 
-        List<OncologyGroupSelection> selections = select(support(candidate("v1", 100), candidate("v2", 100)), margins);
+        List<OncologyGroupRepresentativeSelection> selections = select(support(candidate("v1", 100), candidate("v2", 100)), margins);
 
         assertEquals(ContigRole.REPRESENTATIVE_TWIN, role(selections, "v2"));
     }
@@ -159,7 +159,7 @@ public class RepresentativeSelectorTest
                 rejected("v2", ContigFilterStatus.LOW_VOTE_DENSITY),
                 rejected("h1", ContigFilterStatus.LOW_COVERAGE));
 
-        List<OncologyGroupSelection> selections = select(support, noChallenges());
+        List<OncologyGroupRepresentativeSelection> selections = select(support, noChallenges());
 
         assertEquals(ContigRole.REPRESENTATIVE, role(selections, "v1"));
         assertEquals(List.of("v2"), names(group(selections, GROUP_A).rejected()));
@@ -173,14 +173,14 @@ public class RepresentativeSelectorTest
     @Test
     public void testVotesRankFollowsSupport()
     {
-        List<OncologyGroupSelection> selections =
+        List<OncologyGroupRepresentativeSelection> selections =
                 select(support(candidate("v2", 95), candidate("v1", 100)), noChallenges());
 
         assertEquals(1, group(selections, GROUP_A).votesRank(REFERENCE.contig("v1")));
         assertEquals(2, group(selections, GROUP_A).votesRank(REFERENCE.contig("v2")));
     }
 
-    private static List<OncologyGroupSelection> select(List<ContigSupport> support, PairwiseMargins margins)
+    private static List<OncologyGroupRepresentativeSelection> select(List<ContigSupport> support, PairwiseMargins margins)
     {
         return new RepresentativeSelector().select(support, margins, groupReadCounts(support));
     }
@@ -194,7 +194,8 @@ public class RepresentativeSelectorTest
         return readCounts;
     }
 
-    private static OncologyGroupSelection group(List<OncologyGroupSelection> selections, OncologyGroup oncologyGroup)
+    private static OncologyGroupRepresentativeSelection group(List<OncologyGroupRepresentativeSelection> selections,
+            OncologyGroup oncologyGroup)
     {
         return selections.stream()
                 .filter(selection -> selection.oncologyGroup().equals(oncologyGroup))
@@ -202,7 +203,7 @@ public class RepresentativeSelectorTest
                 .orElseThrow();
     }
 
-    private static RepresentativeCandidate result(List<OncologyGroupSelection> selections, String contig)
+    private static RepresentativeCandidate result(List<OncologyGroupRepresentativeSelection> selections, String contig)
     {
         return selections.stream()
                 .flatMap(selection -> selection.candidates().stream())
@@ -211,7 +212,7 @@ public class RepresentativeSelectorTest
                 .orElseThrow();
     }
 
-    private static ContigRole role(List<OncologyGroupSelection> selections, String contig)
+    private static ContigRole role(List<OncologyGroupRepresentativeSelection> selections, String contig)
     {
         return result(selections, contig).role();
     }

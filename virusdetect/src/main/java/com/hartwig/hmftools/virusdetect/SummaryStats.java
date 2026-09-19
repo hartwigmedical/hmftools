@@ -73,7 +73,7 @@ public record SummaryStats(
                 sorted[sorted.length - 1]);
     }
 
-    // Nearest-rank percentile over an already-sorted array.
+    // Nearest-rank percentile over a sorted array.
     private static double percentile(int[] sorted, double percent)
     {
         int index = (int) Math.ceil(percent / 100.0 * sorted.length) - 1;

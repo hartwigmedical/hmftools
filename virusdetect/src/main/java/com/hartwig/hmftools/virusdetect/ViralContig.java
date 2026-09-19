@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.virusdetect;
 
+// TODO: maybe rename to "viral genome"? "contig" is not that descriptive. But that's a big change
 // A contig which is a virus genome.
 public record ViralContig(
         // Original contig name in the viral reference.

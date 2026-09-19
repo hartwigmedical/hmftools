@@ -26,7 +26,7 @@ import org.jetbrains.annotations.Nullable;
 // decisively supported by a subset of reads. I.e. 1 contig doesn't explain the whole viral genome in the sample.
 public class RepresentativeSelector
 {
-    public List<OncologyGroupSelection> select(
+    public List<OncologyGroupRepresentativeSelection> select(
             Collection<ContigSupport> contigSupport, PairwiseMargins margins, Map<OncologyGroup, Integer> groupReadCounts)
     {
         return contigSupport.stream()
@@ -36,7 +36,7 @@ public class RepresentativeSelector
                 .toList();
     }
 
-    private static OncologyGroupSelection selectOncologyGroup(
+    private static OncologyGroupRepresentativeSelection selectOncologyGroup(
             OncologyGroup oncologyGroup, List<ContigSupport> groupContigs, PairwiseMargins margins,
             Map<OncologyGroup, Integer> groupReadCounts)
     {
@@ -48,7 +48,7 @@ public class RepresentativeSelector
 
         if(candidates.isEmpty())
         {
-            return new OncologyGroupSelection(oncologyGroup, OncologyGroupOutcome.NO_CANDIDATES, List.of(), rejected);
+            return new OncologyGroupRepresentativeSelection(oncologyGroup, OncologyGroupOutcome.NO_CANDIDATES, List.of(), rejected);
         }
 
         List<ViralContig> contigs = candidates.stream().map(ContigSupport::contig).toList();
@@ -79,7 +79,7 @@ public class RepresentativeSelector
                         decideContigRole(candidate.contig(), representative, comparable, minorChallengers, leadSet)))
                 .toList();
 
-        return new OncologyGroupSelection(oncologyGroup, outcome, results, rejected);
+        return new OncologyGroupRepresentativeSelection(oncologyGroup, outcome, results, rejected);
     }
 
     private static OncologyGroupOutcome decideOncologyGroupOutcome(
@@ -96,7 +96,10 @@ public class RepresentativeSelector
             {
                 return OncologyGroupOutcome.MUTUAL;
             }
-            return OncologyGroupOutcome.CYCLE;
+            else
+            {
+                return OncologyGroupOutcome.CYCLE;
+            }
         }
         else if(candidateCount == 1)
         {
@@ -116,16 +119,26 @@ public class RepresentativeSelector
         {
             return ContigRole.REPRESENTATIVE;
         }
-        if(!comparable.contains(contig))
+        else if(!comparable.contains(contig))
         {
             return minorChallengers.contains(contig) ? ContigRole.MINOR_CHALLENGER : ContigRole.MINOR;
         }
-        if(!leaders.contains(contig))
+        else if(!leaders.contains(contig))
         {
             return ContigRole.SECONDARY;
         }
-        // Abundant and unchallenged by peers, but not crowned: a resolved group makes it a twin, else contested.
-        return representative != null ? ContigRole.REPRESENTATIVE_TWIN : ContigRole.CONTESTED;
+        else
+        {
+            // Abundant and unchallenged by peers, but not crowned. A resolved group makes it a twin, else contested.
+            if(representative == null)
+            {
+                return ContigRole.CONTESTED;
+            }
+            else
+            {
+                return ContigRole.REPRESENTATIVE_TWIN;
+            }
+        }
     }
 
     private static Set<ViralContig> comparableContigs(List<ContigSupport> candidates)

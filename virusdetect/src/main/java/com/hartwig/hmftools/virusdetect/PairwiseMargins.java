@@ -43,7 +43,10 @@ public class PairwiseMargins
         {
             return 0;
         }
-        return margins.tailMap(minMargin, true).values().stream().mapToInt(Integer::intValue).sum();
+        else
+        {
+            return margins.tailMap(minMargin, true).values().stream().mapToInt(Integer::intValue).sum();
+        }
     }
 
     // Reads aligned to both contigs (regardless of which one they favour).
@@ -73,17 +76,16 @@ public class PairwiseMargins
             {
                 for(ViralContig opponent : oncologyGroupContigs)
                 {
-                    if(subject.equals(opponent))
+                    if(!subject.equals(opponent))
                     {
-                        continue;
-                    }
-                    ContigPair pair = new ContigPair(subject, opponent);
-                    sharedReads.merge(pair, 1, Integer::sum);
+                        ContigPair pair = new ContigPair(subject, opponent);
+                        sharedReads.merge(pair, 1, Integer::sum);
 
-                    int margin = read.hits().get(opponent).divergence() - read.hits().get(subject).divergence();
-                    if(margin > 0)
-                    {
-                        marginCounts.computeIfAbsent(pair, key -> new TreeMap<>()).merge(margin, 1, Integer::sum);
+                        int margin = read.hits().get(opponent).divergence() - read.hits().get(subject).divergence();
+                        if(margin > 0)
+                        {
+                            marginCounts.computeIfAbsent(pair, key -> new TreeMap<>()).merge(margin, 1, Integer::sum);
+                        }
                     }
                 }
             }

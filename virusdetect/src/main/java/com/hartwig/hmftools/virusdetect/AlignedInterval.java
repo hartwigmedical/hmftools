@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.virusdetect;
 
 // A contiguous run of reference bases covered by an alignment (a CIGAR M/=/X block).
-// 1-based reference start.
 public record AlignedInterval(
+        // 1-based inclusive.
         int referenceStart,
         int length
 )

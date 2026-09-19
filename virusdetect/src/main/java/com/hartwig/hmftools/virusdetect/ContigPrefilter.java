@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.virusdetect.VirusConstants.MIN_VOTES_PER_BASE
 // Determines whether a contig carries enough evidence to be considered present in the sample.
 public class ContigPrefilter
 {
+    // TODO: this method is kind of weird. Bit off to let the calling code coordinate when this result is just passed back into status(). Could be packaged more cohesively?
     // Any contig above the min coverage establishes that its oncology group is present in the sample.
     public static boolean establishesGroupPresence(double coverageFraction)
     {

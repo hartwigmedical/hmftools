@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.virusdetect;
 
+import org.jetbrains.annotations.NotNull;
+
 // A group of viruses at the level of taxonomy granularity which matters to us. Detection resolves one representative
 // contig per group, so the group is the unit the output reports on.
 public record OncologyGroup(String name)
@@ -12,6 +14,7 @@ public record OncologyGroup(String name)
         }
     }
 
+    @NotNull
     @Override
     public String toString()
     {

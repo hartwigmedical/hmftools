@@ -6,7 +6,7 @@ import org.jetbrains.annotations.Nullable;
 
 // Representative contig selection's outcome for one oncology group.
 // Includes all the contigs which had any alignments.
-public record OncologyGroupSelection(
+public record OncologyGroupRepresentativeSelection(
         OncologyGroup oncologyGroup,
         OncologyGroupOutcome outcome,
         List<RepresentativeCandidate> candidates,

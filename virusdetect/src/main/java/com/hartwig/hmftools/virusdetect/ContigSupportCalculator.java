@@ -97,8 +97,6 @@ public class ContigSupportCalculator
                 .collect(toMap(ContigSupport::contig, support -> support));
     }
 
-    // Coverage decides both whether the group is present at all and, given that, whether each of its contigs clears
-    // the bar, so one group's depths are taken together.
     private static List<ContigSupport> createGroupContigSupports(
             List<ContigAccumulator> group, Map<ViralContig, Integer> originClippedReads, double meanReadLength)
     {
@@ -125,11 +123,6 @@ public class ContigSupportCalculator
         }).toList();
     }
 
-    private static int countCoveredBases(int[] depth)
-    {
-        return (int) Arrays.stream(depth).filter(d -> d > 0).count();
-    }
-
     private static ContigSupport createContigSupport(
             ContigAccumulator accumulator, ContigFilterStatus filterStatus, int coveredBases, SummaryStats depth,
             int originClippedReads)
@@ -145,6 +138,11 @@ public class ContigSupportCalculator
         return new ContigSupport(
                 accumulator.Contig, filterStatus, accumulator.Alignments.size(), multiAlignReads, alignmentsPerRead,
                 originClippedReads, coveredBases, depth, alignerScore, accumulator.Votes);
+    }
+
+    private static int countCoveredBases(int[] depth)
+    {
+        return (int) Arrays.stream(depth).filter(d -> d > 0).count();
     }
 
     private static int[] calculateDepth(int contigLength, Collection<ViralAlignment> alignments)
