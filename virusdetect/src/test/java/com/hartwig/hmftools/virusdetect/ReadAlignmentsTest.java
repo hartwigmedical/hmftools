@@ -61,6 +61,6 @@ public class ReadAlignmentsTest
     {
         return new ViralAlignment(
                 "r1", V1, start, start + 99, 0, 0, alignerScore, divergence,
-                List.of(new ViralAlignment.AlignedInterval(start, 100)));
+                List.of(new AlignedInterval(start, 100)));
     }
 }

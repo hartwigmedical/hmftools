@@ -35,7 +35,10 @@ public class ContigStatsCalculator
         Map<ViralContig, ContigAccumulator> accumulators = new HashMap<>();
         viralAlignments.reads().forEach(read -> accumulateRead(read, accumulators));
 
+        // A contig whose every alignment straddled the origin retains no read, but the drop is still worth reporting.
         Map<ViralContig, Integer> originClippedReads = viralAlignments.originClippedReads();
+        originClippedReads.keySet().forEach(contig -> accumulators.computeIfAbsent(contig, k -> new ContigAccumulator()));
+
         return accumulators.entrySet().stream().collect(toMap(
                 Map.Entry::getKey, entry -> entry.getValue().toContigStats(
                         entry.getKey(), originClippedReads.getOrDefault(entry.getKey(), 0))));
@@ -89,13 +92,18 @@ public class ContigStatsCalculator
         private ContigStats toContigStats(ViralContig contig, int originClippedReads)
         {
             int[] depth = calculateDepth(contig.length(), mAlignments);
-            SummaryStats depthSummary = SummaryStats.from(depth);
             int coveredBases = (int) Arrays.stream(depth).filter(d -> d > 0).count();
             int multiAlignReads = (int) mAlignmentCounts.stream().filter(count -> count > 1).count();
-            SummaryStats alignerScoreSummary = SummaryStats.from(mAlignments.stream().mapToInt(ViralAlignment::alignerScore).toArray());
+
+            // With no retained read there is no distribution to summarise, unlike depth which is zero everywhere.
+            boolean hasReads = !mAlignments.isEmpty();
+            SummaryStats alignPerRead = hasReads ? SummaryStats.from(mAlignmentCounts) : null;
+            SummaryStats alignerScore = hasReads
+                    ? SummaryStats.from(mAlignments.stream().mapToInt(ViralAlignment::alignerScore).toArray()) : null;
+
             return new ContigStats(
-                    contig, mAlignments.size(), multiAlignReads, SummaryStats.from(mAlignmentCounts), originClippedReads,
-                    coveredBases, depthSummary, alignerScoreSummary, mVotes);
+                    contig, mAlignments.size(), multiAlignReads, alignPerRead, originClippedReads,
+                    coveredBases, SummaryStats.from(depth), alignerScore, mVotes);
         }
     }
 
@@ -104,7 +112,7 @@ public class ContigStatsCalculator
         int[] depth = new int[contigLength];
         for(ViralAlignment alignment : alignments)
         {
-            for(ViralAlignment.AlignedInterval block : alignment.alignedIntervals())
+            for(AlignedInterval block : alignment.alignedIntervals())
             {
                 int start = max(0, block.referenceStart() - 1);   // intervals are 1-based
                 int end = min(contigLength, block.referenceStart() - 1 + block.length());

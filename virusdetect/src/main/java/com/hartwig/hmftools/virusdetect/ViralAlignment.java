@@ -98,24 +98,4 @@ public record ViralAlignment(
             .comparingInt(ViralAlignment::divergence)
             .thenComparing(ViralAlignment::alignerScore, Comparator.reverseOrder())
             .thenComparingInt(ViralAlignment::alignmentStart);
-
-    // TODO: should be separate file
-    // A contiguous run of reference bases covered by the alignment (a CIGAR M/=/X block); 1-based reference start.
-    public record AlignedInterval(
-            int referenceStart,
-            int length
-    )
-    {
-        public AlignedInterval
-        {
-            if(referenceStart < 1)
-            {
-                throw new IllegalArgumentException("invalid reference start: " + referenceStart);
-            }
-            if(length < 1)
-            {
-                throw new IllegalArgumentException("invalid interval length: " + length);
-            }
-        }
-    }
 }

@@ -64,7 +64,7 @@ public class PairwiseMarginsTest
     {
         return new ViralAlignment(
                 readName, REFERENCE.contig(contig), 1, 100, 0, 0, 100, divergence,
-                List.of(new ViralAlignment.AlignedInterval(1, 100)));
+                List.of(new AlignedInterval(1, 100)));
     }
 
     // A right clip projecting well past the 100-base contig end.
@@ -72,7 +72,7 @@ public class PairwiseMarginsTest
     {
         return new ViralAlignment(
                 readName, REFERENCE.contig(contig), 1, 100, 0, 50, 100, 50,
-                List.of(new ViralAlignment.AlignedInterval(1, 100)));
+                List.of(new AlignedInterval(1, 100)));
     }
 
     private static ViralReference reference()

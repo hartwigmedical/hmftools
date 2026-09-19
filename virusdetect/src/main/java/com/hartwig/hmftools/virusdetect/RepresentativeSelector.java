@@ -29,14 +29,13 @@ public class RepresentativeSelector
                 .collect(groupingBy(stats -> stats.contig().oncologyGroup()))
                 .entrySet().stream()
                 .map(entry -> selectOncologyGroup(
-                        entry.getKey(), entry.getValue(), margins, readCount(oncologyGroupReadCounts, entry.getKey()),
-                        meanReadLength))
+                        entry.getKey(), entry.getValue(), margins, oncologyGroupReadCounts, meanReadLength))
                 .toList();
     }
 
     private OncologyGroupSelection selectOncologyGroup(
-            OncologyGroup oncologyGroup, List<ContigStats> groupContigs, PairwiseMargins margins, int oncologyGroupReads,
-            double meanReadLength)
+            OncologyGroup oncologyGroup, List<ContigStats> groupContigs, PairwiseMargins margins,
+            Map<OncologyGroup, Integer> oncologyGroupReadCounts, double meanReadLength)
     {
         GroupCandidates prefiltered = GroupCandidates.prefilter(groupContigs, meanReadLength);
         List<ContigStats> candidates = prefiltered.candidates();
@@ -50,7 +49,7 @@ public class RepresentativeSelector
             return new OncologyGroupSelection(oncologyGroup, OncologyGroupOutcome.NO_CANDIDATES, rejected);
         }
 
-        ChallengeGraph graph = ChallengeGraph.build(candidates, oncologyGroupReads, margins);
+        ChallengeGraph graph = ChallengeGraph.build(candidates, readCount(oncologyGroupReadCounts, oncologyGroup), margins);
         RepresentativeChoice choice = RepresentativeChoice.from(candidates, graph);
         Map<ViralContig, Integer> votesRankByContig = votesRanks(candidates);
 

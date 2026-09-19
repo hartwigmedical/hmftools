@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.virusdetect;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import java.util.List;
 import java.util.Map;
@@ -115,6 +116,28 @@ public class ContigStatsCalculatorTest
         assertEquals(2, v1.originClippedReads());   // r1 and r2 dropped
     }
 
+    // A contig losing every alignment to the origin keeps its row, so the drop stays visible rather than vanishing.
+    // It has no read to summarise, unlike depth which is zero across the contig.
+    @Test
+    public void testContigWithOnlyOriginClippedAlignmentsIsStillReported()
+    {
+        List<ViralAlignment> alignments = List.of(
+                clipped("r1", "v1", 1, 10, 30, 0),
+                clipped("r2", "v1", 1, 10, 30, 0),
+                alignment("r3", "v2", 1, 10, 9, 0));
+
+        Map<ViralContig, ContigStats> stats = new ContigStatsCalculator().compute(ViralAlignments.from(alignments, 0.0));
+
+        ContigStats v1 = get(stats, "v1");
+        assertEquals(0, v1.readCount());
+        assertEquals(2, v1.originClippedReads());
+        assertEquals(0, v1.coveredBases());
+        assertEquals(0.0, v1.readVotes(), EPSILON);
+        assertEquals(0.0, v1.depth().max(), EPSILON);
+        assertNull(v1.alignPerRead());
+        assertNull(v1.alignerScore());
+    }
+
     private static ContigStats get(Map<ViralContig, ContigStats> stats, String contig)
     {
         return stats.get(REFERENCE.contig(contig));
@@ -125,7 +148,7 @@ public class ContigStatsCalculatorTest
     {
         return new ViralAlignment(
                 readName, REFERENCE.contig(contig), start, start + length - 1, 0, 0, alignerScore, divergence,
-                List.of(new ViralAlignment.AlignedInterval(start, length)));
+                List.of(new AlignedInterval(start, length)));
     }
 
     // An alignment covering [start, end] with the given clip lengths hanging off each side.
@@ -133,7 +156,7 @@ public class ContigStatsCalculatorTest
     {
         return new ViralAlignment(
                 readName, REFERENCE.contig(contig), start, end, leftClip, rightClip, 10, leftClip + rightClip,
-                List.of(new ViralAlignment.AlignedInterval(start, end - start + 1)));
+                List.of(new AlignedInterval(start, end - start + 1)));
     }
 
     private static ViralReference reference()
