@@ -14,6 +14,7 @@ public enum WriteType
     FRAG_LENGTH, // intronic fragment lengths
     FRAG_LENGTH_BY_GENE, // intronic fragment lengths by gene
     READ, // all read attribution
+    FUSION_FRAGMENT,
     CHIMERIC_POSITION_DATA, // chimeric fragments bucketed by position
     SPLICE_SITE, // splice site support
     TRANS_COMBO, // transcript group data for EM algo

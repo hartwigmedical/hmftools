@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.switchIndex;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
+import static com.hartwig.hmftools.isofox.WriteType.FUSION_FRAGMENT;
 import static com.hartwig.hmftools.isofox.common.Read.NO_GENE_ID;
 import static com.hartwig.hmftools.isofox.common.TransExonRef.hasMatchWithinRange;
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.FILTER_MIN_MAP_QUAL;
@@ -70,6 +71,7 @@ public class FusionFinder implements Callable<Void>
 
     private int mHardFilteredCount;
     private int mExcludedFilteredCount;
+    private final boolean mCacheFragments;
 
     private final PerformanceCounter[] mPerfCounters;
 
@@ -100,6 +102,8 @@ public class FusionFinder implements Callable<Void>
         mFusionWriter = fusionWriter;
         mHardFilteredCount = 0;
         mExcludedFilteredCount = 0;
+
+        mCacheFragments = mConfig.Fusions.CacheFragments || mConfig.WriteTypes.contains(FUSION_FRAGMENT);
 
         if(mConfig.Fusions.RunPerfChecks)
         {
@@ -310,10 +314,7 @@ public class FusionFinder implements Callable<Void>
             FusionFragment fragment = new FusionFragment(readGroup);
 
             if(fragment.type() == FusionFragmentType.UNKNOWN)
-            {
-                mFusionWriter.writeReadData(fragment.readId(), readGroup.reads(), "INVALID_FRAG");
                 continue;
-            }
 
             mAllFragments.add(fragment);
         }
@@ -458,7 +459,7 @@ public class FusionFinder implements Callable<Void>
 
         if(existingFusion != null)
         {
-            existingFusion.addFusionFragment(fragment, mConfig.Fusions.CacheFragments);
+            existingFusion.addFusionFragment(fragment, mCacheFragments);
             return null;
         }
 
@@ -738,8 +739,8 @@ public class FusionFinder implements Callable<Void>
                         FusionReadData fusion1Const = fusion1;
 
                         // no need to consider discordant junctions since reconciliation is only done for non-local fusions
-                        if(mConfig.Fusions.CacheFragments)
-                            fusion2.getFragments(MATCHED_JUNCTION).forEach(x -> fusion1Const.addFusionFragment(x, mConfig.Fusions.CacheFragments));
+                        if(mCacheFragments)
+                            fusion2.getFragments(MATCHED_JUNCTION).forEach(x -> fusion1Const.addFusionFragment(x, true));
                         else
                             fusion1Const.addFragmentTypeCount(MATCHED_JUNCTION, fusion2.getFragmentTypeCount(MATCHED_JUNCTION));
 
@@ -902,7 +903,7 @@ public class FusionFinder implements Callable<Void>
                             fragment.setType(DISCORDANT);
                         }
 
-                        fusionData.addFusionFragment(fragment, mConfig.Fusions.CacheFragments);
+                        fusionData.addFusionFragment(fragment, mCacheFragments);
                         allocatedFragments.add(fragment);
                     }
                 }
@@ -956,7 +957,7 @@ public class FusionFinder implements Callable<Void>
                             fragment.setType(DISCORDANT);
                         }
 
-                        fusionData.addFusionFragment(fragment, mConfig.Fusions.CacheFragments);
+                        fusionData.addFusionFragment(fragment, mCacheFragments);
                         allocatedFragments.add(fragment);
                     }
                 }
@@ -995,7 +996,7 @@ public class FusionFinder implements Callable<Void>
                         if(fusionData.canRelignFragmentToJunction(fragment))
                         {
                             fragment.setType(REALIGNED);
-                            fusionData.addFusionFragment(fragment, mConfig.Fusions.CacheFragments);
+                            fusionData.addFusionFragment(fragment, mCacheFragments);
                         }
                     }
                 }
@@ -1143,7 +1144,7 @@ public class FusionFinder implements Callable<Void>
             mFusionWriter.writeFusionData(allFusions, passingFusions, mFusionCandidates);
         }
 
-        if(!mDiscordantFragments.isEmpty() && (mConfig.Fusions.WriteChimericReads || mConfig.Fusions.WriteChimericFragments))
+        if(!mDiscordantFragments.isEmpty() && mConfig.WriteTypes.contains(FUSION_FRAGMENT))
         {
             // assigned fragments have been purged
             List<FusionFragment> unusedFragments = Lists.newArrayList();

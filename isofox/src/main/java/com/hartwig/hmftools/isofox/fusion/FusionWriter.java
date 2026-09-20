@@ -3,14 +3,13 @@ package com.hartwig.hmftools.isofox.fusion;
 import static java.lang.String.valueOf;
 
 import static com.hartwig.hmftools.common.rna.RnaFusionFile.PASS_FUSION_FILE_ID;
-import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
-import static com.hartwig.hmftools.isofox.common.RegionMatchType.NONE;
+import static com.hartwig.hmftools.isofox.WriteType.FUSION_FRAGMENT;
 import static com.hartwig.hmftools.isofox.fusion.FusionReadData.fusionId;
 
 import java.io.BufferedWriter;
@@ -19,21 +18,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
 
-import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.rna.RnaFusion;
 import com.hartwig.hmftools.common.rna.RnaFusionFile;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
-import com.hartwig.hmftools.isofox.common.BaseDepth;
-import com.hartwig.hmftools.isofox.common.RegionMatchType;
 
 public class FusionWriter
 {
     private final IsofoxConfig mConfig;
     private BufferedWriter mFusionWriter;
-    private BufferedWriter mFusionReadWriter;
     private BufferedWriter mPassingFusionWriter;
     private BufferedWriter mFragmentWriter;
-    private final boolean mWriteReads;
     private final boolean mWriteFragments;
 
     private int mNextFusionId;
@@ -43,12 +37,10 @@ public class FusionWriter
     public FusionWriter(final IsofoxConfig config)
     {
         mConfig = config;
-        mWriteReads = mConfig.Fusions.WriteChimericReads;
-        mWriteFragments = mConfig.Fusions.WriteChimericFragments;
+        mWriteFragments = mConfig.WriteTypes.contains(FUSION_FRAGMENT);
 
         mFusionWriter = null;
         mFragmentWriter = null;
-        mFusionReadWriter = null;
         mNextFusionId = 0;
 
         initialiseFusionWriters();
@@ -62,7 +54,6 @@ public class FusionWriter
         closeBufferedWriter(mFusionWriter);
         closeBufferedWriter(mPassingFusionWriter);
         closeBufferedWriter(mFragmentWriter);
-        closeBufferedWriter(mFusionReadWriter);
     }
 
     private void initialiseFusionWriters()
@@ -79,35 +70,10 @@ public class FusionWriter
             mPassingFusionWriter = createBufferedWriter(mConfig.formOutputFile(PASS_FUSION_FILE_ID), false);
             mPassingFusionWriter.write(RnaFusionFile.header());
             mPassingFusionWriter.newLine();
-
-            mFusionReadWriter = null; // initialiseReadWriter(); // currently unsed
         }
         catch(IOException e)
         {
             ISF_LOGGER.error("failed to create fusions file: {}", e.toString());
-        }
-    }
-
-    private BufferedWriter initialiseReadWriter()
-    {
-        // TODO: purge if too similar to chimeric read writing, or update to TSV format
-        try
-        {
-            final String outputFileName = mConfig.formOutputFile("fusion_reads.csv");
-
-            BufferedWriter writer = createBufferedWriter(outputFileName, false);
-            writer.write("ReadGroupCount,ReadId,FusionGroup,Chromosome,PosStart,PosEnd,Orientation,Cigar");
-            writer.write(",Flags,HasSupplAlign,SuppData,BasesStart,BasesEnd,MateChr,MatePosStart");
-            writer.write(",GeneSetStart,GeneSetEnd,GenicStart,GenicEnd,InterGeneSplit");
-            writer.write(",MappedCoords,ScRegionsMatchedStart,ScRegionsMatchedEnd");
-            writer.write(",TopTransMatch,TransExonData,UpperTopTransMatch,UpperTransExonData");
-            writer.newLine();
-            return writer;
-        }
-        catch (IOException e)
-        {
-            ISF_LOGGER.error("failed to write chimeric read data: {}", e.toString());
-            return null;
         }
     }
 
@@ -132,7 +98,7 @@ public class FusionWriter
                 mPassingFusionWriter.newLine();
             }
 
-            if(mWriteReads || mWriteFragments)
+            if(mWriteFragments)
             {
                 for(List<FusionReadData> fusionCandidate : fusionCandidates.values())
                 {
@@ -142,11 +108,7 @@ public class FusionWriter
                         {
                             for(FusionFragment fragment : fragments)
                             {
-                                if(mWriteFragments)
-                                    writeFragmentData(fragment, fusionId(fusion.id()));
-
-                                if(mWriteReads)
-                                    writeReadData(fragment.readId(), fragment.reads(), fusionId(fusion.id()));
+                                writeFragmentData(fragment, fusionId(fusion.id()));
                             }
                         }
                     }
@@ -165,7 +127,6 @@ public class FusionWriter
             return;
 
         fragments.forEach(x -> writeFragmentData(x, "UNFUSED"));
-        fragments.forEach(x -> writeReadData(x.readId(), x.reads(), "UNFUSED"));
     }
 
     private void initialiseFragmentWriter()
@@ -205,11 +166,6 @@ public class FusionWriter
         }
     }
 
-    public void writeIncompleteGroupReads(final List<FusionReadGroup> incompleteGroups)
-    {
-        incompleteGroups.forEach(x -> writeFusionReadData(x.ReadId, x.reads(), "INCOMPLETE_GROUPS"));
-    }
-
     public synchronized void writeFragmentData(final FusionFragment fragment, final String fusionId)
     {
         if(!mWriteFragments)
@@ -243,92 +199,6 @@ public class FusionWriter
         catch (IOException e)
         {
             ISF_LOGGER.error("failed to write fusion fragment data: {}", e.toString());
-        }
-    }
-
-    public synchronized void writeReadData(final String readId, final List<FusionRead> reads, final String groupStatus)
-    {
-        if(mWriteReads)
-        {
-            // not sure if will keep this
-            writeFusionReadData(readId, reads, groupStatus);
-        }
-    }
-
-    private void writeFusionReadData(final String readId, final List<FusionRead> reads, final String groupStatus)
-    {
-        if(mFusionReadWriter == null)
-            return;
-
-        try
-        {
-            for(FusionRead read : reads)
-            {
-                mFusionReadWriter.write(String.format("%d,%s,%s,%s,%d,%d,%d,%s",
-                        reads.size(), readId, groupStatus, read.Chromosome,
-                        read.posStart(), read.posEnd(), read.Orientation, read.Cigar));
-
-                /*
-                mFusionReadWriter.write(String.format(",%s,%s,%s,%s,%s,%d,%s,%d",
-                        read.isFirstOfPair(), read.HasSuppAlignment, read.isReadReversed(),
-                        read.SuppData != null, read.ReadBases, read.flags(), read.MateChromosome, read.MatePosStart));
-                */
-
-                mFusionReadWriter.write(String.format(",%d,%s,%s,%s,%s,%s,%d",
-                        read.Flags, read.HasSuppAlignment, read.SuppData != null ? read.SuppData.asDelimStr() : "NONE",
-                        read.BoundaryBases[SE_START], read.BoundaryBases[SE_END], read.MateChromosome, read.MatePosStart));
-
-                mFusionReadWriter.write(String.format(",%d,%d,%s,%s,%s",
-                        read.GeneCollections[SE_START], read.GeneCollections[SE_END],
-                        read.IsGenicRegion[SE_START], read.IsGenicRegion[SE_END], read.HasInterGeneSplit));
-
-                StringJoiner coordsStr = new StringJoiner(ITEM_DELIM);
-
-                for(BaseRegion coord : read.MappedCoords)
-                {
-                    coordsStr.add(String.format("%d:%d", coord.start(), coord.end()));
-                }
-
-                mFusionReadWriter.write(String.format(",%s,%d,%d",
-                        coordsStr, read.SoftClipLengths[SE_START], read.SoftClipLengths[SE_END]));
-
-                // log the transcript exons affected, and the highest matching transcript
-                StringJoiner transExonData = new StringJoiner(ITEM_DELIM);
-                RegionMatchType topTransMatchType = read.getRegionMatchType(SE_START);
-
-                if(topTransMatchType != NONE)
-                {
-                    for(FusionTransExon transExonRef : read.getTransExonRefs(SE_START))
-                    {
-                        transExonData.add(String.format("%d:%d", transExonRef.TransId, transExonRef.ExonRank));
-                    }
-                }
-
-                StringJoiner upperTransExonData = new StringJoiner(ITEM_DELIM);
-                RegionMatchType upperTopTransMatchType = NONE;
-
-                if(read.spansGeneCollections() && read.getTransExonRefs(SE_END) != null)
-                {
-                    upperTopTransMatchType = read.getRegionMatchType(SE_END);
-
-                    for(FusionTransExon transExonRef : read.getTransExonRefs(SE_END))
-                    {
-                        upperTransExonData.add(String.format("%d:%d", transExonRef.TransId, transExonRef.ExonRank));
-                    }
-                }
-
-                mFusionReadWriter.write(String.format(",%s,%s,%s,%s",
-                        topTransMatchType, transExonData.toString().isEmpty() ? "NONE" : transExonData.toString(),
-                        upperTopTransMatchType, upperTransExonData.toString().isEmpty() ? "NONE" : upperTransExonData.toString()));
-
-                mFusionReadWriter.newLine();
-            }
-
-        }
-        catch (IOException e)
-        {
-            ISF_LOGGER.error("failed to write chimeric read data: {}", e.toString());
-            return;
         }
     }
 }
