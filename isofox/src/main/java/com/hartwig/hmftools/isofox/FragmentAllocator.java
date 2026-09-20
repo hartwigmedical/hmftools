@@ -6,14 +6,8 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.firstInPair;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.readToString;
-import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
-import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_ID;
-import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_NAME;
-import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POS_END;
-import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POS_START;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
@@ -47,10 +41,12 @@ import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.fusion.ChimericUtils.isRealignedFragmentCandidate;
+import static com.hartwig.hmftools.isofox.results.ResultsWriter.writeReadData;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -74,7 +70,6 @@ import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.FragmentType;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
 import com.hartwig.hmftools.isofox.common.Read;
-import com.hartwig.hmftools.isofox.common.RegionMatchType;
 import com.hartwig.hmftools.isofox.common.RegionReadData;
 import com.hartwig.hmftools.isofox.common.TransExonRef;
 import com.hartwig.hmftools.isofox.common.TransMatchType;
@@ -165,7 +160,6 @@ public class FragmentAllocator
         mBaseDepth = new BaseDepth();
 
         mChimericReads = new ChimericReadTracker(mConfig);
-        mChimericReads.setChimericReadWriter(resultsWriter.getChimericReadWriter());
         mChimericReads.setChimericPosDataWriter(resultsWriter.getChimericPositionDataWriter());
 
         mSpliceSiteCounter = new SpliceSiteCounter(resultsWriter.getSpliceSiteWriter());
@@ -357,6 +351,14 @@ public class FragmentAllocator
 
         markGeneDataRegions(read);
         mChimericReads.addSupplementaryRead(read);
+
+        if(mReadDataWriter != null && mConfig.writeType(WriteType.READ))
+        {
+            List<GeneReadData> overlapGenes = mCurrentGenes.findGenesCoveringRange(
+                    read.alignmentStart(), read.alignmentEnd(), true);
+
+            writeReadData(mReadDataWriter, overlapGenes, read, CHIMERIC, 0);
+        }
     }
 
     private void processFragmentReads(final Read read1, final Read read2)
@@ -420,6 +422,16 @@ public class FragmentAllocator
                     mChimericReads.addChimericReadPair(read1, read2);
                 else
                     mCurrentGenes.addCount(CHIMERIC, 1);
+            }
+
+            if(mReadDataWriter != null && mConfig.writeType(WriteType.READ))
+            {
+                List<GeneReadData> overlapGenes = mCurrentGenes.findGenesCoveringRange(
+                        min(read1.alignmentStart(), read2.alignmentStart()),
+                        max(read1.alignmentEnd(), read2.alignmentEnd()), true);
+
+                writeReadData(mReadDataWriter, overlapGenes, read1, CHIMERIC, 0);
+                writeReadData(mReadDataWriter, overlapGenes, read2, CHIMERIC, 0);
             }
 
             return;
@@ -704,11 +716,8 @@ public class FragmentAllocator
 
         if(mReadDataWriter != null && mConfig.writeType(WriteType.READ))
         {
-            for(GeneReadData geneReadData : overlapGenes)
-            {
-                writeReadData(mReadDataWriter, geneReadData, 0, read1, read2, fragmentType, validTranscripts.size());
-                writeReadData(mReadDataWriter, geneReadData, 1, read2, read1, fragmentType, validTranscripts.size());
-            }
+            writeReadData(mReadDataWriter, overlapGenes, read1, fragmentType, validTranscripts.size());
+            writeReadData(mReadDataWriter, overlapGenes, read2, fragmentType, validTranscripts.size());
         }
     }
 
@@ -911,11 +920,8 @@ public class FragmentAllocator
 
         if(mReadDataWriter != null && mConfig.writeType(WriteType.READ))
         {
-            for(GeneReadData geneReadData : genes)
-            {
-                writeReadData(mReadDataWriter, geneReadData, 0, read1, read2, UNSPLICED, 0);
-                writeReadData(mReadDataWriter, geneReadData, 1, read2, read1, UNSPLICED, 0);
-            }
+            writeReadData(mReadDataWriter, genes, read1, UNSPLICED, 0);
+            writeReadData(mReadDataWriter, genes, read2, UNSPLICED, 0);
         }
     }
 
@@ -999,134 +1005,6 @@ public class FragmentAllocator
         mChimericReads.registerKnownFusionPairs(geneTransCache);
     }
 
-    public static BufferedWriter createReadDataWriter(final IsofoxConfig config)
-    {
-        try
-        {
-            String outputFileName = config.formOutputFile("read_data.tsv");
-
-            BufferedWriter writer = createBufferedWriter(outputFileName, false);
-
-            StringJoiner sj = new StringJoiner(TSV_DELIM);
-            sj.add(FLD_GENE_ID).add(FLD_GENE_NAME).add("ReadIndex").add("ReadId");
-            sj.add(FLD_CHROMOSOME).add(FLD_POS_START).add(FLD_POS_END).add("Cigar").add("InsertSize").add("MateChr").add("MatePosStart");
-            sj.add("Flags").add("FirstInPair").add("ReadReversed").add("SuppData").add("Consensus").add("FragType");
-            sj.add("TransId").add("TransClass").add("ValidTrans").add("ExonRank").add("ExonStart");
-            sj.add("RegionStart").add("RegionEnd").add("RegionClass").add("ScRegionsStart").add("SvRegionsEnd");
-            writer.write(sj.toString());
-            writer.newLine();
-            return writer;
-        }
-        catch (IOException e)
-        {
-            ISF_LOGGER.error("failed to create read data writer: {}", e.toString());
-            return null;
-        }
-    }
-
-    public static BufferedWriter createMultiMapLociWriter(final IsofoxConfig config)
-    {
-        try
-        {
-            BufferedWriter writer = createBufferedWriter(config.formOutputFile("multi_map_loci.tsv"), false);
-
-            StringJoiner sj = new StringJoiner(TSV_DELIM);
-            sj.add("GeneCollectionId").add("ReadId").add("RecordType");
-            sj.add(FLD_CHROMOSOME).add(FLD_POS_START).add(FLD_POS_END);
-            sj.add("Spliced").add("Genes").add("InGeneCollection");
-            writer.write(sj.toString());
-            writer.newLine();
-            return writer;
-        }
-        catch(IOException e)
-        {
-            ISF_LOGGER.error("failed to create multi-map loci writer: {}", e.toString());
-            return null;
-        }
-    }
-
-    private synchronized static void writeReadData(
-            final BufferedWriter writer, final GeneReadData geneReadData, int readIndex, final Read read, final Read otherRead,
-            FragmentType geneReadType, int validTranscripts)
-    {
-        try
-        {
-            StringJoiner sj = new StringJoiner(TSV_DELIM);
-
-            sj.add(geneReadData.Gene.GeneId);
-            sj.add(geneReadData.Gene.GeneName);
-            sj.add(String.valueOf(readIndex));
-            sj.add(read.id());
-
-            sj.add(read.chromosome());
-            sj.add(String.valueOf(read.alignmentStart()));
-            sj.add(String.valueOf(read.alignmentEnd()));
-            sj.add(read.cigarStr());
-            sj.add(String.valueOf(read.fragmentInsertSize()));
-            sj.add(read.mateChromosome());
-            sj.add(String.valueOf(read.mateAlignmentStart()));
-
-            sj.add(String.valueOf(read.flags()));
-            sj.add(String.valueOf(read.isFirstOfPair()));
-            sj.add(String.valueOf(read.isReadReversed()));
-            sj.add(read.suppAlignmentAsStr());
-            sj.add(String.valueOf(read.isConsensusRead()));
-
-            sj.add(geneReadType.toString());
-
-            if(read.getTranscriptClassifications().isEmpty())
-            {
-                sj.add("NONE").add("").add("").add("").add("").add("").add("").add("").add("");
-                writer.write(sj.toString());
-                writer.newLine();
-                return;
-            }
-
-            for(Map.Entry<Integer,TransMatchType> entry : read.getTranscriptClassifications().entrySet())
-            {
-                int transId = entry.getKey();
-                TransMatchType transType = entry.getValue();
-
-                for(Map.Entry<RegionReadData, RegionMatchType> rEntry : read.getMappedRegions().entrySet())
-                {
-                    RegionReadData region = rEntry.getKey();
-                    RegionMatchType matchType = rEntry.getValue();
-
-                    if(!region.hasTransId(transId))
-                        continue;
-
-                    /*
-                    if(validTranscriptType(read.getTranscriptClassification(transId)))
-                    {
-                        TranscriptData transData = geneReadData.getTranscripts().stream()
-                                .filter(x -> x.TransId == transId).findFirst().orElse(null);
-                        calcFragmentLength = transData != null ? calcFragmentLength(transData, read, otherRead) : -1;
-                    }
-                    */
-
-                    StringJoiner transSj = new StringJoiner(TSV_DELIM);
-                    transSj.add(sj.toString());
-
-                    transSj.add(String.valueOf(transId));
-                    transSj.add(transType.toString());
-                    transSj.add(String.valueOf(validTranscripts));
-                    transSj.add(String.valueOf(region.getExonRank(transId)));
-                    transSj.add(String.valueOf(region.start()));
-                    transSj.add(String.valueOf(region.end()));
-                    transSj.add(matchType.toString());
-                    transSj.add(String.valueOf(read.mappedCoords().softClipRegionsMatched(SE_START)));
-                    transSj.add(String.valueOf(read.mappedCoords().softClipRegionsMatched(SE_END)));
-
-                    writer.write(transSj.toString());
-                    writer.newLine();
-                }
-            }
-        }
-        catch(IOException e)
-        {
-            ISF_LOGGER.error("failed to write read data file: {}", e.toString());
-        }
-    }
 
     @VisibleForTesting
     public void processReadRecords(final GeneCollection geneCollection, final List<Read> reads)

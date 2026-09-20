@@ -21,7 +21,6 @@ import static com.hartwig.hmftools.isofox.fusion.ChimericUtils.setHasMultipleKno
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.REALIGN_MIN_SOFT_CLIP_BASE_LENGTH;
 import static com.hartwig.hmftools.isofox.fusion.FusionRead.convertReads;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.writeChimericPositionData;
-import static com.hartwig.hmftools.isofox.results.ResultsWriter.writeChimericReadData;
 
 import java.io.BufferedWriter;
 import java.util.List;
@@ -74,7 +73,6 @@ public class ChimericReadTracker
     private final Map<String,List<Read>> mPreviousPostGeneReadMap;
     private final ChimericStats mChimericStats;
 
-    private BufferedWriter mChimericReadWriter;
     private BufferedWriter mChimericPosDataWriter;
     private final Map<String,ChimericPosData> mChimericPosDataMap;
 
@@ -99,7 +97,6 @@ public class ChimericReadTracker
         mHardFilteredReadIds = Maps.newHashMap();
         mGeneCollection = null;
         mKnownSpliteSites = null;
-        mChimericReadWriter = null;
         mChimericPosDataWriter = null;
         mChimericPosDataMap = Maps.newHashMap();
     }
@@ -123,7 +120,6 @@ public class ChimericReadTracker
     public ChimericStats getStats() { return mChimericStats; }
     public Map<String,Set<String>> getHardFilteredReadIds() { return mHardFilteredReadIds; }
 
-    public void setChimericReadWriter(final BufferedWriter writer) { mChimericReadWriter = writer; }
     public void setChimericPosDataWriter(final BufferedWriter writer) { mChimericPosDataWriter = writer; }
 
     public boolean isChimeric(final Read read1, final Read read2, boolean isDuplicate, boolean isMultiMapped)
@@ -359,9 +355,6 @@ public class ChimericReadTracker
                     if(readGroup.reads().stream().noneMatch(x -> x.withinGeneCollection()))
                         continue;
                 }
-
-                if(mChimericReadWriter != null)
-                    writeChimericReadData(mChimericReadWriter, readGroup, baseDepth);
 
                 if(mChimericPosDataWriter != null)
                     addChimericPosData(mChimericPosDataMap, readGroup);
