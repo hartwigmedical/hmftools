@@ -8,12 +8,22 @@ import com.hartwig.hmftools.common.sv.StructuralVariantLeg;
 
 // Where a candidate viral integration joins the host genome, as ESVEE called it.
 public record HostBreakend(
+        // VCF ID field.
+        String id,
         BasePosition basePosition,
         Orientation orientation,
         BreakendSupport support
 )
 {
-    public static HostBreakend from(StructuralVariantLeg leg)
+    public HostBreakend
+    {
+        if(id.isEmpty())
+        {
+            throw new IllegalArgumentException("id cannot be empty");
+        }
+    }
+
+    public static HostBreakend from(String id, StructuralVariantLeg leg)
     {
         BreakendSupport support = new BreakendSupport(
                 // The tumor counts are always present, the tumor genotype having been resolved by name before any SV was built.
@@ -22,6 +32,6 @@ public record HostBreakend(
                 requireNonNull(leg.alleleFrequency()),
                 leg.normalVariantFragmentCount(),
                 leg.normalReferenceFragmentCount());
-        return new HostBreakend(new BasePosition(leg.chromosome(), leg.position()), Orientation.fromByte(leg.orientation()), support);
+        return new HostBreakend(id, new BasePosition(leg.chromosome(), leg.position()), Orientation.fromByte(leg.orientation()), support);
     }
 }

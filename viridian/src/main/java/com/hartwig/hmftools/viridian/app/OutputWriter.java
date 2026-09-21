@@ -15,6 +15,11 @@ import java.util.stream.Stream;
 import com.hartwig.hmftools.common.utils.file.DelimFileWriter;
 import com.hartwig.hmftools.viridian.common.SummaryStats;
 import com.hartwig.hmftools.viridian.detection.contig_support.ContigSupport;
+import com.hartwig.hmftools.viridian.integration.seq_align.ViralSequenceAlignment;
+import com.hartwig.hmftools.viridian.integration.variant_extract.BreakendSupport;
+import com.hartwig.hmftools.viridian.integration.variant_extract.CandidateIntegration;
+import com.hartwig.hmftools.viridian.integration.variant_extract.HostBreakend;
+import com.hartwig.hmftools.viridian.integration.variant_extract.InsertRepeat;
 import com.hartwig.hmftools.viridian.reference.ViralContig;
 import com.hartwig.hmftools.viridian.selection.OncologyGroupRepresentativeSelection;
 import com.hartwig.hmftools.viridian.selection.PairwiseMargins;
@@ -237,6 +242,115 @@ public class OutputWriter
     private static String marginColumn(int margin)
     {
         return "reads_m" + margin;
+    }
+
+    // One row per virus integration candidate.
+    public static void writeIntegrations(String file, List<CandidateIntegration> candidates,
+            Map<CandidateIntegration, ViralSequenceAlignment> viralAlignments)
+    {
+        DelimFileWriter.write(
+                file, IntegrationColumn.values(), candidates, (candidate, row) ->
+                {
+                    row.set(IntegrationColumn.sv_type, candidate.type().name());
+                    row.set(IntegrationColumn.filter, candidate.filter());
+
+                    HostBreakend startBreakend = candidate.startBreakend();
+                    BreakendSupport startSupport = startBreakend.support();
+                    row.set(IntegrationColumn.start_id, startBreakend.id());
+                    row.set(IntegrationColumn.start_chromosome, startBreakend.basePosition().Chromosome);
+                    row.set(IntegrationColumn.start_position, startBreakend.basePosition().Position);
+                    row.set(IntegrationColumn.start_orientation, startBreakend.orientation().asByte());
+                    row.set(IntegrationColumn.start_tumor_variant_frags, startSupport.tumorVariantFragments());
+                    row.set(IntegrationColumn.start_tumor_ref_frags, startSupport.tumorReferenceFragments());
+                    row.set(IntegrationColumn.start_tumor_af, startSupport.tumorAlleleFrequency());
+                    row.setOrNull(IntegrationColumn.start_normal_variant_frags.name(), startSupport.normalVariantFragments());
+                    row.setOrNull(IntegrationColumn.start_normal_ref_frags.name(), startSupport.normalReferenceFragments());
+
+                    // Note unset columns are written as null, leaving a SGL's second breakend blank.
+                    HostBreakend endBreakend = candidate.endBreakend();
+                    if(endBreakend != null)
+                    {
+                        BreakendSupport endSupport = endBreakend.support();
+                        row.set(IntegrationColumn.end_id, endBreakend.id());
+                        row.set(IntegrationColumn.end_chromosome, endBreakend.basePosition().Chromosome);
+                        row.set(IntegrationColumn.end_position, endBreakend.basePosition().Position);
+                        row.set(IntegrationColumn.end_orientation, endBreakend.orientation().asByte());
+                        row.set(IntegrationColumn.end_tumor_variant_frags, endSupport.tumorVariantFragments());
+                        row.set(IntegrationColumn.end_tumor_ref_frags, endSupport.tumorReferenceFragments());
+                        row.set(IntegrationColumn.end_tumor_af, endSupport.tumorAlleleFrequency());
+                        row.setOrNull(IntegrationColumn.end_normal_variant_frags.name(), endSupport.normalVariantFragments());
+                        row.setOrNull(IntegrationColumn.end_normal_ref_frags.name(), endSupport.normalReferenceFragments());
+                    }
+
+                    row.set(IntegrationColumn.line_site, candidate.lineSite());
+                    InsertRepeat insertRepeat = candidate.insertRepeat();
+                    if(insertRepeat != null)
+                    {
+                        row.set(IntegrationColumn.repeat_class, insertRepeat.repeatClass());
+                        row.set(IntegrationColumn.repeat_type, insertRepeat.repeatType());
+                        row.set(IntegrationColumn.repeat_coverage, insertRepeat.coverage());
+                    }
+                    row.set(IntegrationColumn.insert_host_alignments, candidate.insertHostAlignments());
+                    row.set(IntegrationColumn.insert_seq_length, candidate.insertSequence().length());
+                    row.set(IntegrationColumn.insert_sequence, candidate.insertSequence());
+
+                    ViralSequenceAlignment alignment = viralAlignments.get(candidate);
+                    if(alignment != null)
+                    {
+                        ViralContig contig = alignment.contig();
+                        row.set(IntegrationColumn.virus_name, contig.virusName());
+                        row.set(IntegrationColumn.oncology_group, contig.oncologyGroup().name());
+                        row.set(IntegrationColumn.viral_contig, contig.name());
+                        row.set(IntegrationColumn.viral_position, alignment.position());
+                        row.set(IntegrationColumn.viral_orientation, alignment.orientation().asByte());
+                        row.set(IntegrationColumn.align_cigar, alignment.cigar());
+                        row.set(IntegrationColumn.aligned_length, alignment.alignedLength());
+                        row.set(IntegrationColumn.aligner_score, alignment.alignerScore());
+                        row.set(IntegrationColumn.aligned_edit_distance, alignment.alignedEditDistance());
+                    }
+                });
+
+        LOGGER.info("wrote {} integration rows to {}", candidates.size(), file);
+    }
+
+    private enum IntegrationColumn
+    {
+        sv_type,
+        filter,
+        start_id,
+        start_chromosome,
+        start_position,
+        start_orientation,
+        end_id,
+        end_chromosome,
+        end_position,
+        end_orientation,
+        start_tumor_variant_frags,
+        start_tumor_ref_frags,
+        start_tumor_af,
+        start_normal_variant_frags,
+        start_normal_ref_frags,
+        end_tumor_variant_frags,
+        end_tumor_ref_frags,
+        end_tumor_af,
+        end_normal_variant_frags,
+        end_normal_ref_frags,
+        line_site,
+        repeat_class,
+        repeat_type,
+        repeat_coverage,
+        insert_host_alignments,
+        insert_seq_length,
+        insert_sequence,
+        virus_name,
+        oncology_group,
+        viral_contig,
+        viral_position,
+        viral_orientation,
+        align_cigar,
+        aligned_length,
+        aligner_score,
+        aligned_edit_distance
     }
 
     private static String asString(Object value)

@@ -34,6 +34,7 @@ public class CandidateIntegrationExtractorTest
             ##fileformat=VCFv4.2
             ##INFO=<ID=SVTYPE,Number=1,Type=String,Description="">
             ##INFO=<ID=MATEID,Number=1,Type=String,Description="">
+            ##INFO=<ID=SVID,Number=1,Type=String,Description="">
             ##INFO=<ID=LINE,Number=0,Type=Flag,Description="">
             ##INFO=<ID=INSALN,Number=1,Type=String,Description="">
             ##INFO=<ID=INSRMRC,Number=1,Type=String,Description="">
@@ -66,15 +67,15 @@ public class CandidateIntegrationExtractorTest
 
         BreakendSupport support = new BreakendSupport(12, 60, 0.25, 0, 40);
         CandidateIntegration expected = new CandidateIntegration(
-                "sgl_1", StructuralVariantType.SGL, "minQual",
-                new HostBreakend(new BasePosition("chr1", 1000), FORWARD, support), null,
+                StructuralVariantType.SGL, "minQual",
+                new HostBreakend("sgl_1", new BasePosition("chr1", 1000), FORWARD, support), null,
                 INSERT_20, true, new InsertRepeat("SINE", "Alu", 0.8), "chr7:100|+|50M|60");
 
         assertEquals(List.of(expected), extract(records));
     }
 
-    // A paired variant yields one candidate carrying both host breakends, not one per breakend.
-    // It is identified by its start breakend's record id.
+    // A paired variant yields one candidate carrying both host breakends, not one per breakend. It is identified by the
+    // id ESVEE shares between the two records, rather than by either record's own id.
     @Test
     public void extractsPairedVariantAsOneCandidate()
     {
@@ -83,9 +84,9 @@ public class CandidateIntegrationExtractorTest
         BreakendSupport startSupport = new BreakendSupport(8, 55, 0.15, 0, 45);
         BreakendSupport endSupport = new BreakendSupport(8, 57, 0.15, 0, 47);
         CandidateIntegration expected = new CandidateIntegration(
-                "del_1_o", StructuralVariantType.DEL, "PASS",
-                new HostBreakend(new BasePosition("chr1", 5000), FORWARD, startSupport),
-                new HostBreakend(new BasePosition("chr1", 9000), REVERSE, endSupport),
+                StructuralVariantType.DEL, "PASS",
+                new HostBreakend("del_1_o", new BasePosition("chr1", 5000), FORWARD, startSupport),
+                new HostBreakend("del_1_h", new BasePosition("chr1", 9000), REVERSE, endSupport),
                 INSERT_50, false, null, "");
 
         assertEquals(List.of(expected), extract(records));
@@ -102,7 +103,7 @@ public class CandidateIntegrationExtractorTest
                 + pairedDeletion("del_short", INSERT_49)
                 + pairedDeletion("del_long", INSERT_50);
 
-        assertEquals(List.of("sgl_long", "del_long_o"), svIds(extract(records)));
+        assertEquals(List.of("sgl_long", "del_long_o"), breakendIds(extract(records)));
     }
 
     // Viral sequence never becomes a breakend coordinate, so a non-human contig is host-irrelevant and skipped.
@@ -153,10 +154,10 @@ public class CandidateIntegrationExtractorTest
     {
         return record(
                 "chr1", 5000, id + "_o", "A", "A" + insertSequence + "[chr1:9000[", "PASS",
-                "SVTYPE=DEL;MATEID=" + id + "_h", "0:45:0:0.0", "8:55:0:0.15")
+                "SVTYPE=DEL;MATEID=" + id + "_h;SVID=" + id, "0:45:0:0.0", "8:55:0:0.15")
                 + record(
                 "chr1", 9000, id + "_h", "A", "]chr1:5000]" + insertSequence + "A", "PASS",
-                "SVTYPE=DEL;MATEID=" + id + "_o", "0:47:0:0.0", "8:57:0:0.15");
+                "SVTYPE=DEL;MATEID=" + id + "_o;SVID=" + id, "0:47:0:0.0", "8:57:0:0.15");
     }
 
     private static String record(
@@ -168,9 +169,9 @@ public class CandidateIntegrationExtractorTest
                 normalGenotype, tumorGenotype) + "\n";
     }
 
-    private static List<String> svIds(List<CandidateIntegration> candidates)
+    private static List<String> breakendIds(List<CandidateIntegration> candidates)
     {
-        return candidates.stream().map(CandidateIntegration::svId).toList();
+        return candidates.stream().map(candidate -> candidate.startBreakend().id()).toList();
     }
 
     private List<CandidateIntegration> extract(String records)

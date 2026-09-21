@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.viridian.common.ViridianConstants.ALIGNED_REA
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.APP_NAME;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.CANDIDATE_READ_FASTA_SUFFIX;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.CONTIG_INFO_TSV_SUFFIX;
+import static com.hartwig.hmftools.viridian.common.ViridianConstants.INTEGRATIONS_TSV_SUFFIX;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.PAIRWISE_MARGINS_TSV_SUFFIX;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.VIRAL_READ_MIN_SOFT_CLIP_BASES_DEFAULT;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.VIRAL_REF_CONTIGS;
@@ -164,7 +165,7 @@ public class ViridianApplication
         }
     }
 
-    // TODO: placeholder stages, each replaced by its implementation as it lands.
+    // Find where a virus inserted itself into the host genome, from the SVs ESVEE called.
     private void callHostIntegrations()
     {
         String esveeVcf = mConfig.esveeUnfilteredVcf();
@@ -181,7 +182,8 @@ public class ViridianApplication
         Map<CandidateIntegration, ViralSequenceAlignment> alignments = alignCandidateIntegrations(candidates);
         LOGGER.info("Aligned {} of {} inserted sequences to a viral contig", alignments.size(), candidates.size());
 
-        LOGGER.info("Annotating {} integrations and writing TSV (stub)", candidates.size());
+        OutputWriter.writeIntegrations(outputFile(INTEGRATIONS_TSV_SUFFIX), candidates, alignments);
+        LOGGER.info("Integration site calling complete");
     }
 
     private Map<CandidateIntegration, ViralSequenceAlignment> alignCandidateIntegrations(List<CandidateIntegration> candidates)

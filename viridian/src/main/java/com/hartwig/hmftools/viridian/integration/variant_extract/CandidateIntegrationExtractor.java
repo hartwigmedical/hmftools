@@ -89,11 +89,10 @@ public class CandidateIntegrationExtractor
         }
 
         return new CandidateIntegration(
-                variant.id(),
                 variant.type(),
                 requireNonNull(variant.filter()),
-                HostBreakend.from(variant.start()),
-                endLeg != null ? HostBreakend.from(endLeg) : null,
+                HostBreakend.from(startContext.getID(), variant.start()),
+                endLeg != null ? HostBreakend.from(requireNonNull(variant.endContext()).getID(), endLeg) : null,
                 insertSequence,
                 startContext.hasAttribute(LINE_SITE),
                 InsertRepeat.from(variant),

@@ -18,4 +18,6 @@ public record ViralContig(
             throw new IllegalArgumentException("Invalid contig length: " + length);
         }
     }
+
+    // TODO: canonical string representation?
 }

@@ -12,6 +12,7 @@ public class ViridianConstants
     public static final String ALIGNED_READ_BAM_SUFFIX = ".viridian.reads.bam";
     public static final String CONTIG_INFO_TSV_SUFFIX = ".viridian.contig_info.tsv";
     public static final String PAIRWISE_MARGINS_TSV_SUFFIX = ".viridian.pairwise_margins.tsv";
+    public static final String INTEGRATIONS_TSV_SUFFIX = ".viridian.integrations.tsv";
 
     // Genome partition size for multi-threaded candidate extraction.
     public static final int VIRAL_READ_EXTRACTION_PARTITION_SIZE = 1_000_000;

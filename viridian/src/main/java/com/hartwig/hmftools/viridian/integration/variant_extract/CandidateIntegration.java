@@ -6,7 +6,6 @@ import org.jetbrains.annotations.Nullable;
 
 // An SV which might be a viral integration into the host genome.
 public record CandidateIntegration(
-        String svId,
         StructuralVariantType type,
         String filter,
         HostBreakend startBreakend,
@@ -21,10 +20,6 @@ public record CandidateIntegration(
 {
     public CandidateIntegration
     {
-        if(svId.isEmpty())
-        {
-            throw new IllegalArgumentException("svId cannot be empty");
-        }
         if(insertSequence.isEmpty())
         {
             throw new IllegalArgumentException("insertSequence cannot be empty");
