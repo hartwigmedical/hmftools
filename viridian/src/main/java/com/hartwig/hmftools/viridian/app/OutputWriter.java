@@ -303,7 +303,7 @@ public class OutputWriter
                         row.set(IntegrationColumn.viral_contig, contig.name());
                         row.set(IntegrationColumn.viral_position, alignment.position());
                         row.set(IntegrationColumn.viral_orientation, alignment.orientation().asByte());
-                        row.set(IntegrationColumn.align_cigar, alignment.cigar());
+                        row.set(IntegrationColumn.align_cigar, alignment.cigar().toString());
                         row.set(IntegrationColumn.aligned_length, alignment.alignedLength());
                         row.set(IntegrationColumn.aligner_score, alignment.alignerScore());
                         row.set(IntegrationColumn.aligned_edit_distance, alignment.alignedEditDistance());

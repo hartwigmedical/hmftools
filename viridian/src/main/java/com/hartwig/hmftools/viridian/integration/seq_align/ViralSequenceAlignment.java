@@ -1,18 +1,16 @@
 package com.hartwig.hmftools.viridian.integration.seq_align;
 
-import static com.hartwig.hmftools.common.bam.CigarUtils.cigarElementsFromStr;
-
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.viridian.reference.ViralContig;
 
+import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
 
 public record ViralSequenceAlignment(
         ViralContig contig,
         int position,
         Orientation orientation,
-        // TODO: use real CIGAR type rather than String
-        String cigar,
+        Cigar cigar,
         int alignerScore,
         // NM tag. Edit distance over the aligned subsequence only.
         int alignedEditDistance,
@@ -22,6 +20,10 @@ public record ViralSequenceAlignment(
 {
     public ViralSequenceAlignment
     {
+        if(cigar.isEmpty())
+        {
+            throw new IllegalArgumentException("Empty cigar");
+        }
         if(position < 1)
         {
             throw new IllegalArgumentException("Invalid position: " + position);
@@ -42,7 +44,7 @@ public record ViralSequenceAlignment(
 
     public int alignedLength()
     {
-        return cigarElementsFromStr(cigar).stream()
+        return cigar.getCigarElements().stream()
                 .filter(element -> element.getOperator().isAlignment())
                 .mapToInt(CigarElement::getLength)
                 .sum();

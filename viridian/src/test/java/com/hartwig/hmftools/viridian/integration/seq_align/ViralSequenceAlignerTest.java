@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.viridian.integration.seq_align;
 
+import static com.hartwig.hmftools.common.bam.CigarUtils.cigarFromStr;
 import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 
@@ -39,7 +40,7 @@ public class ViralSequenceAlignerTest
                 alignment(0, 1, 499, 45, "32M", 4));
 
         assertEquals(
-                new ViralSequenceAlignment(CONTIG_16, 1000, FORWARD, "32M", 60, 1, 32),
+                new ViralSequenceAlignment(CONTIG_16, 1000, FORWARD, cigarFromStr("32M"), 60, 1, 32),
                 align(SEQUENCE, hits));
     }
 
@@ -65,7 +66,7 @@ public class ViralSequenceAlignerTest
     {
         ViralSequenceAlignment alignment = align(SEQUENCE, List.of(alignment(0, 0, 199, 40, "12S20M", 0)));
 
-        assertEquals("12S20M", alignment.cigar());
+        assertEquals("12S20M", alignment.cigar().toString());
         assertEquals(32, alignment.sequenceLength());
     }
 
@@ -73,7 +74,7 @@ public class ViralSequenceAlignerTest
     public void testAlignAllReportsReverseStrandAlignment()
     {
         assertEquals(
-                new ViralSequenceAlignment(CONTIG_18, 300, REVERSE, "32M", 55, 2, 32),
+                new ViralSequenceAlignment(CONTIG_18, 300, REVERSE, cigarFromStr("32M"), 55, 2, 32),
                 align(SEQUENCE, List.of(alignment(0x10, 1, 299, 55, "32M", 2))));
     }
 

@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.viridian.integration.seq_align;
 
+import static com.hartwig.hmftools.common.bam.CigarUtils.cigarFromStr;
+
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.IntStream;
@@ -73,7 +75,7 @@ public class ViralSequenceAligner
                 viralContig,
                 position,
                 orientation,
-                alignment.getCigar(),
+                cigarFromStr(alignment.getCigar()),
                 alignment.getAlignerScore(),
                 alignment.getNMismatches(),
                 sequenceLength);

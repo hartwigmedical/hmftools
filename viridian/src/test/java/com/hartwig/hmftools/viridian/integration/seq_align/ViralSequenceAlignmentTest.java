@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.viridian.integration.seq_align;
 
+import static com.hartwig.hmftools.common.bam.CigarUtils.cigarFromStr;
 import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 
 import static org.junit.Assert.assertEquals;
@@ -29,6 +30,6 @@ public class ViralSequenceAlignmentTest
 
     private static ViralSequenceAlignment alignment(String cigar, int sequenceLength)
     {
-        return new ViralSequenceAlignment(CONTIG, 1500, FORWARD, cigar, 60, 1, sequenceLength);
+        return new ViralSequenceAlignment(CONTIG, 1500, FORWARD, cigarFromStr(cigar), 60, 1, sequenceLength);
     }
 }
