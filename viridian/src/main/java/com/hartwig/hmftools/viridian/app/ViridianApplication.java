@@ -157,7 +157,7 @@ public class ViridianApplication
             ViralContig representative = selection.representative();
             if(representative != null)
             {
-                LOGGER.info("oncologyGroup({}) representative({})", selection.oncologyGroup(), representative.name());
+                LOGGER.info("oncologyGroup({}) representative({})", selection.oncologyGroup(), representative);
             }
             else if(selection.resolution() == OncologyGroupResolution.UNRESOLVED)
             {

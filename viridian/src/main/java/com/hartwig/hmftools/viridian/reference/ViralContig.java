@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.viridian.reference;
 
+import org.jetbrains.annotations.NotNull;
+
 // TODO: maybe rename to "viral genome"? "contig" is not that descriptive. But that's a big change
 // A contig which is a virus genome.
 public record ViralContig(
@@ -19,5 +21,12 @@ public record ViralContig(
         }
     }
 
-    // TODO: canonical string representation?
+    @NotNull
+    @Override
+    public String toString()
+    {
+        return name;
+    }
+
+    // TODO: natural order by oncology group then name
 }

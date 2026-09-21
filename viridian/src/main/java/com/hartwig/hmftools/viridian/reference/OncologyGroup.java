@@ -3,7 +3,9 @@ package com.hartwig.hmftools.viridian.reference;
 import org.jetbrains.annotations.NotNull;
 
 // A group of viruses at the level of taxonomy granularity which matters to us.
-public record OncologyGroup(String name)
+public record OncologyGroup(
+    String name
+)
 {
     public OncologyGroup
     {
@@ -19,4 +21,6 @@ public record OncologyGroup(String name)
     {
         return name;
     }
+
+    // TODO: natural order by name
 }
