@@ -1,7 +1,9 @@
 package com.hartwig.hmftools.viridian.app;
 
 import static java.util.Comparator.comparing;
-import static java.util.Comparator.comparingInt;
+import static java.util.Comparator.naturalOrder;
+import static java.util.Comparator.nullsLast;
+import static java.util.Comparator.reverseOrder;
 import static java.util.stream.Collectors.toMap;
 
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.REPORTED_MARGINS;
@@ -33,13 +35,13 @@ public class OutputWriter
 {
     private static final Logger LOGGER = LogManager.getLogger(OutputWriter.class);
 
-    // TODO: write in order: oncology group (lexicographically, ascending), read votes (descending)
     public static void writeContigInfo(String file, List<OncologyGroupRepresentativeSelection> selections)
     {
         Map<ViralContig, Integer> votesRanks = candidateVotesRanks(selections);
         List<ContigInfoRow> rows = selections.stream()
                 .flatMap(OutputWriter::contigInfoRows)
-                .sorted(comparingInt((ContigInfoRow row) -> row.support().readCount()).reversed()
+                .sorted(comparing((ContigInfoRow row) -> row.support().contig().oncologyGroup().name())
+                        .thenComparing(row -> row.support().readVotes(), reverseOrder())
                         .thenComparing(row -> row.support().contig().name()))
                 .toList();
 
@@ -196,13 +198,16 @@ public class OutputWriter
 
     // One row per ordered within-oncology-group contig pair: the reads they share, and how many of those fit the subject
     // better by at least each reported margin. Includes support-filtered contigs. Verbose/debug only, for tuning.
-    // TODO: write in order: oncology group (lexicographically, ascending), subject rank (ascending), opponent rank (ascending)
     public static void writePairwiseMargins(String file, PairwiseMargins margins, List<OncologyGroupRepresentativeSelection> selections)
     {
         Map<ViralContig, Integer> votesRanks = candidateVotesRanks(selections);
 
+        // A pair's contigs share an oncology group, and only its candidates are ranked, so unranked contigs sort last.
         List<PairwiseMargins.ContigPair> pairs = margins.pairs().stream()
-                .sorted(comparing((PairwiseMargins.ContigPair pair) -> pair.subject().name())
+                .sorted(comparing((PairwiseMargins.ContigPair pair) -> pair.subject().oncologyGroup().name())
+                        .thenComparing(pair -> votesRanks.get(pair.subject()), nullsLast(naturalOrder()))
+                        .thenComparing(pair -> pair.subject().name())
+                        .thenComparing(pair -> votesRanks.get(pair.opponent()), nullsLast(naturalOrder()))
                         .thenComparing(pair -> pair.opponent().name()))
                 .toList();
 
