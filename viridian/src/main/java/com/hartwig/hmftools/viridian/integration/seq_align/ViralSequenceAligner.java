@@ -10,7 +10,6 @@ import com.hartwig.hmftools.common.bwa.BwaMemAligner;
 import com.hartwig.hmftools.common.bwa.BwaMemAlignerConfig;
 import com.hartwig.hmftools.common.bwa.IBwaMemAligner;
 import com.hartwig.hmftools.common.genome.region.Orientation;
-import com.hartwig.hmftools.viridian.app.ViridianConfig;
 import com.hartwig.hmftools.viridian.reference.ViralContig;
 import com.hartwig.hmftools.viridian.reference.ViralReference;
 
@@ -26,13 +25,11 @@ public class ViralSequenceAligner
     private final IBwaMemAligner mAligner;
     private final ViralReference mReference;
 
-    // TODO: accept individual parameters, not the whole config
-    public static ViralSequenceAligner create(ViridianConfig config, ViralReference reference)
+    public static ViralSequenceAligner create(ViralReference reference, String bwaIndexImage, int threads)
     {
         // TODO: need to adjust min alignment score?
         BwaMemAlignParams params = BwaMemAlignParams.DEFAULT;
-        BwaMemAlignerConfig alignerConfig = new BwaMemAlignerConfig(
-                config.viralBwaIndexImage(), params, false, config.threads(), null);
+        BwaMemAlignerConfig alignerConfig = new BwaMemAlignerConfig(bwaIndexImage, params, false, threads, null);
         BwaMemAligner aligner = new BwaMemAligner(alignerConfig);
         return new ViralSequenceAligner(aligner, reference);
     }

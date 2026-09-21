@@ -16,7 +16,6 @@ import com.hartwig.hmftools.common.bwa.BwaMemAligner;
 import com.hartwig.hmftools.common.bwa.BwaMemAlignerConfig;
 import com.hartwig.hmftools.common.bwa.IBwaMemAligner;
 import com.hartwig.hmftools.common.codon.Nucleotides;
-import com.hartwig.hmftools.viridian.app.ViridianConfig;
 import com.hartwig.hmftools.viridian.reference.ViralReference;
 
 import org.apache.logging.log4j.LogManager;
@@ -41,12 +40,11 @@ public class ViralReadAligner
 
     private static final Logger LOGGER = LogManager.getLogger(ViralReadAligner.class);
 
-    // TODO: accept individual parameters, not the whole config
-    public static ViralReadAligner create(ViridianConfig config, ViralReference reference)
+    public static ViralReadAligner create(ViralReference reference, String bwaIndexImage, int threads, int batchSize)
     {
-        IBwaMemAligner aligner = new BwaMemAligner(buildAlignerConfig(config));
+        IBwaMemAligner aligner = new BwaMemAligner(buildAlignerConfig(bwaIndexImage, threads, batchSize));
 
-        return new ViralReadAligner(aligner, buildHeader(reference.sequenceDictionary()), config.alignmentBatchSize());
+        return new ViralReadAligner(aligner, buildHeader(reference.sequenceDictionary()), batchSize);
     }
 
     ViralReadAligner(IBwaMemAligner aligner, SAMFileHeader header, int chunkSize)
@@ -131,12 +129,11 @@ public class ViralReadAligner
         return record;
     }
 
-    private static BwaMemAlignerConfig buildAlignerConfig(ViridianConfig config)
+    private static BwaMemAlignerConfig buildAlignerConfig(String bwaIndexImage, int threads, int batchSize)
     {
         boolean allAlignments = true;
         BwaMemAlignParams params = BwaMemAlignParams.DEFAULT.withMinAlignScore(VIRAL_READ_MIN_ALIGNMENT_SCORE_DEFAULT);
-        return new BwaMemAlignerConfig(
-                config.viralBwaIndexImage(), params, allAlignments, config.threads(), config.alignmentBatchSize());
+        return new BwaMemAlignerConfig(bwaIndexImage, params, allAlignments, threads, batchSize);
     }
 
     private static SAMFileHeader buildHeader(SAMSequenceDictionary dictionary)

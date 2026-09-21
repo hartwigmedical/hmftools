@@ -115,7 +115,8 @@ public class ViridianApplication
     private String alignCandidateReadsToViralContigs(String candidateReadFasta)
     {
         LOGGER.info("Aligning candidate reads to viral genomes");
-        ViralReadAligner viralReadAligner = ViralReadAligner.create(mConfig, mViralReference);
+        ViralReadAligner viralReadAligner = ViralReadAligner.create(
+                mViralReference, mConfig.viralBwaIndexImage(), mConfig.threads(), mConfig.alignmentBatchSize());
         String viralReadBamFile = outputFile(ALIGNED_READ_BAM_SUFFIX);
         viralReadAligner.align(candidateReadFasta, viralReadBamFile);
         LOGGER.info("Candidate read alignment complete");
@@ -189,7 +190,8 @@ public class ViridianApplication
     private Map<CandidateIntegration, ViralSequenceAlignment> alignCandidateIntegrations(List<CandidateIntegration> candidates)
     {
         List<String> insertSequences = candidates.stream().map(CandidateIntegration::insertSequence).toList();
-        ViralSequenceAligner aligner = ViralSequenceAligner.create(mConfig, mViralReference);
+        ViralSequenceAligner aligner = ViralSequenceAligner.create(
+                mViralReference, mConfig.viralBwaIndexImage(), mConfig.threads());
         List<ViralSequenceAlignment> alignments = aligner.alignAll(insertSequences);
 
         Map<CandidateIntegration, ViralSequenceAlignment> byCandidate = new LinkedHashMap<>();
