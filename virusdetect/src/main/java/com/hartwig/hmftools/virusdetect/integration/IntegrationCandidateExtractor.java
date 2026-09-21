@@ -1,12 +1,14 @@
 package com.hartwig.hmftools.virusdetect.integration;
 
+import static java.util.Objects.requireNonNull;
+
 import static com.hartwig.hmftools.common.sv.SvVcfTags.LINE_SITE;
 import static com.hartwig.hmftools.virusdetect.VirusConstants.MIN_PAIRED_INSERT_LENGTH;
 import static com.hartwig.hmftools.virusdetect.VirusConstants.MIN_SINGLE_INSERT_LENGTH;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantFactory;
@@ -21,9 +23,8 @@ import org.jetbrains.annotations.Nullable;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
-// Reads the ESVEE unfiltered VCF and keeps every SV carrying an inserted sequence long enough to be worth aligning to
-// the viral reference. The unfiltered VCF is read because viral junctions are often single-sided and low support,
-// which is what ESVEE's filters remove; the filter string is carried through as data instead.
+// Reads the ESVEE unfiltered VCF and keeps every SV which could be a viral integration.
+// Uses the ESVEE unfiltered VCF because the viral integrations are interesting even if ESVEE decided to filter.
 public class IntegrationCandidateExtractor
 {
     private final String mTumorSampleId;
@@ -46,49 +47,36 @@ public class IntegrationCandidateExtractor
                 throw new UserInputError("ESVEE VCF could not be read: " + vcfFile);
             }
 
-            // The factory buffers a paired variant until both its mate records arrive, and drops non-human contigs, which
-            // viral sequence never reaches anyway: ESVEE reports it only as inserted sequence in the ALT allele.
             StructuralVariantFactory svFactory = StructuralVariantFactory.build(new AlwaysPassFilter());
             setGenotypeOrdinals(svFactory, reader, vcfFile);
 
-            List<IntegrationCandidate> candidates = new ArrayList<>();
             int variantCount = 0;
-
             for(VariantContext context : reader.iterator())
             {
                 ++variantCount;
-
-                int completedBefore = svFactory.results().size();
                 svFactory.addVariantContext(context);
-                if(svFactory.results().size() == completedBefore)
-                {
-                    continue;
-                }
-
-                StructuralVariant variant = svFactory.results().remove(completedBefore);
-                IntegrationCandidate candidate = toCandidate(variant);
-                if(candidate != null)
-                {
-                    candidates.add(candidate);
-                }
             }
 
+            List<IntegrationCandidate> candidates = svFactory.results().stream()
+                    .map(IntegrationCandidateExtractor::toCandidate)
+                    .filter(Objects::nonNull)
+                    .toList();
+
             LOGGER.info(
-                    "read {} variant records, {} breakends never paired, {} integration candidates",
+                    "Read {} variant records, {} breakends never paired, {} integration candidates",
                     variantCount, svFactory.unmatched().size(), candidates.size());
 
             return candidates;
         }
     }
 
-    // Insert length is the only gate in this phase. Everything past it reaches the output, aligned to a virus or not.
     @Nullable
     private static IntegrationCandidate toCandidate(StructuralVariant variant)
     {
         StructuralVariantLeg endLeg = variant.end();
         String insertSequence = variant.insertSequence();
+        
         int minInsertLength = endLeg == null ? MIN_SINGLE_INSERT_LENGTH : MIN_PAIRED_INSERT_LENGTH;
-
         if(insertSequence.length() < minInsertLength)
         {
             return null;
@@ -103,16 +91,13 @@ public class IntegrationCandidateExtractor
         return new IntegrationCandidate(
                 variant.id(),
                 variant.type(),
-                variant.filter() != null ? variant.filter() : "",
+                requireNonNull(variant.filter()),
                 HostBreakend.from(variant.start()),
                 endLeg != null ? HostBreakend.from(endLeg) : null,
                 insertSequence,
                 startContext.hasAttribute(LINE_SITE),
-                variant.insertSequenceRepeatClass(),
-                variant.insertSequenceRepeatType(),
-                variant.insertSequenceRepeatOrientation(),
-                variant.insertSequenceRepeatCoverage(),
-                variant.insertSequenceAlignments());
+                InsertRepeat.from(variant),
+                requireNonNull(variant.insertSequenceAlignments()));
     }
 
     // Fragment counts are attributed per sample, so the tumor genotype is resolved by name rather than by assuming an

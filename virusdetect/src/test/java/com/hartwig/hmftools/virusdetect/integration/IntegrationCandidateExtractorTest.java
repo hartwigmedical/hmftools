@@ -37,7 +37,6 @@ public class IntegrationCandidateExtractorTest
             ##INFO=<ID=INSALN,Number=1,Type=String,Description="">
             ##INFO=<ID=INSRMRC,Number=1,Type=String,Description="">
             ##INFO=<ID=INSRMRT,Number=1,Type=String,Description="">
-            ##INFO=<ID=INSRMRO,Number=1,Type=String,Description="">
             ##INFO=<ID=INSRMP,Number=1,Type=Float,Description="">
             ##FORMAT=<ID=VF,Number=1,Type=Integer,Description="">
             ##FORMAT=<ID=REF,Number=1,Type=Integer,Description="">
@@ -61,14 +60,14 @@ public class IntegrationCandidateExtractorTest
     {
         String records = record(
                 "chr1", 1000, "sgl_1", "A", "A" + INSERT_20 + ".", "minQual",
-                "SVTYPE=SGL;LINE;INSALN=chr7:100|+|50M|60;INSRMRC=SINE;INSRMRT=Alu;INSRMRO=-;INSRMP=0.8",
+                "SVTYPE=SGL;LINE;INSALN=chr7:100|+|50M|60;INSRMRC=SINE;INSRMRT=Alu;INSRMP=0.8",
                 "0:30:10:0.0", "12:40:20:0.25");
 
         BreakendSupport support = new BreakendSupport(12, 60, 0.25, 0, 40);
         IntegrationCandidate expected = new IntegrationCandidate(
                 "sgl_1", StructuralVariantType.SGL, "minQual",
                 new HostBreakend("chr1", 1000, FORWARD, support), null,
-                INSERT_20, true, "SINE", "Alu", (byte) -1, 0.8, "chr7:100|+|50M|60");
+                INSERT_20, true, new InsertRepeat("SINE", "Alu", 0.8), "chr7:100|+|50M|60");
 
         assertEquals(List.of(expected), extract(records));
     }
@@ -86,7 +85,7 @@ public class IntegrationCandidateExtractorTest
                 "del_1_o", StructuralVariantType.DEL, "PASS",
                 new HostBreakend("chr1", 5000, FORWARD, startSupport),
                 new HostBreakend("chr1", 9000, REVERSE, endSupport),
-                INSERT_50, false, null, null, null, null, "");
+                INSERT_50, false, null, "");
 
         assertEquals(List.of(expected), extract(records));
     }

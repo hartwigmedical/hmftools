@@ -61,12 +61,12 @@ public class VirusConstants
     // Lower is more sensitive to rival virus strains.
     public static final double MIN_CHALLENGE_READS = 0.1;
 
-    // Shortest inserted sequence worth aligning to the viral reference. A paired variant must clear a higher bar because
-    // both its breakends are anchored in the host, so a short insert is more readily explained without a virus.
-    // First guesses, pending calibration on real integration output.
+    // Winning margins reported per contig pair in the verbose output (for debugging and tuning only).
+    public static final List<Integer> REPORTED_MARGINS = List.of(1, 2, 3, 5, 8, 10, 15, 20, 30, 40, 50);
+
+    // Thresholds for insert sequence length to identify variants which could be viral integrations.
+    // SGL length is reduced because usually SGL extension assembly is shorter.
     public static final int MIN_SINGLE_INSERT_LENGTH = 20;
     public static final int MIN_PAIRED_INSERT_LENGTH = 50;
 
-    // Winning margins reported per contig pair in the verbose output (for debugging and tuning only).
-    public static final List<Integer> REPORTED_MARGINS = List.of(1, 2, 3, 5, 8, 10, 15, 20, 30, 40, 50);
 }
