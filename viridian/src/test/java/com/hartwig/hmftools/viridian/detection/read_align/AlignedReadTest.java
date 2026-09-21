@@ -9,7 +9,7 @@ import com.hartwig.hmftools.viridian.reference.ViralContig;
 
 import org.junit.Test;
 
-public class ReadAlignmentsTest
+public class AlignedReadTest
 {
     private static final int LENGTH = 100;
 
@@ -18,7 +18,7 @@ public class ReadAlignmentsTest
     @Test
     public void testFromRepeatAlignmentsCollapseToOneHit()
     {
-        ReadAlignments read = ReadAlignments.from("r1", List.of(alignment(100, 4, 90), alignment(500, 9, 80)));
+        AlignedRead read = AlignedRead.from("r1", List.of(alignment(100, 4, 90), alignment(500, 9, 80)));
 
         assertEquals(1, read.hits().size());
         assertEquals(2, read.hits().get(V1).alignmentCount());

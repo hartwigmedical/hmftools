@@ -25,7 +25,7 @@ import htsjdk.samtools.ValidationStringency;
 // Each read may have multiple alignments (BWA-MEM -a mode).
 // Alignments straddling a contig's origin are excluded here to avoid circular genome linearization artifacts.
 public record ViralReadAlignments(
-        List<ReadAlignments> reads,
+        List<AlignedRead> reads,
         double meanReadLength,
         // Reads with an alignment dropped for clipping over their contig's start or end.
         Map<ViralContig, Integer> originClippedReads,
@@ -65,8 +65,8 @@ public record ViralReadAlignments(
             }
         }
 
-        List<ReadAlignments> reads = alignmentsByRead.entrySet().stream()
-                .map(entry -> ReadAlignments.from(entry.getKey(), entry.getValue()))
+        List<AlignedRead> reads = alignmentsByRead.entrySet().stream()
+                .map(entry -> AlignedRead.from(entry.getKey(), entry.getValue()))
                 .toList();
 
         Map<ViralContig, Integer> originClippedReadCounts = originClippedReadsByContig.entrySet().stream()

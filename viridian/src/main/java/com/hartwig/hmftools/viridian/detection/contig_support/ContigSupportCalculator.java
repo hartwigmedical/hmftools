@@ -16,7 +16,7 @@ import java.util.Map;
 
 import com.hartwig.hmftools.viridian.common.SummaryStats;
 import com.hartwig.hmftools.viridian.detection.read_align.AlignedInterval;
-import com.hartwig.hmftools.viridian.detection.read_align.ReadAlignments;
+import com.hartwig.hmftools.viridian.detection.read_align.AlignedRead;
 import com.hartwig.hmftools.viridian.detection.read_align.ViralReadAlignment;
 import com.hartwig.hmftools.viridian.detection.read_align.ViralReadAlignments;
 import com.hartwig.hmftools.viridian.reference.ViralContig;
@@ -64,7 +64,7 @@ public class ContigSupportCalculator
         }
     }
 
-    private void processRead(ReadAlignments read, Map<ViralContig, ContigAccumulator> accumulators)
+    private void processRead(AlignedRead read, Map<ViralContig, ContigAccumulator> accumulators)
     {
         read.hits().forEach((contig, hit) ->
         {
@@ -78,7 +78,7 @@ public class ContigSupportCalculator
 
     // A read's vote splits across the contigs it hits by how well each explains it: every extra base a contig fails to
     // explain multiplies its share by the (pessimistic) chance a base is right, so the closest contig wins most.
-    private void addVotes(ReadAlignments read, Map<ViralContig, ContigAccumulator> accumulators)
+    private void addVotes(AlignedRead read, Map<ViralContig, ContigAccumulator> accumulators)
     {
         int minDivergence = read.minDivergence();
         Map<ViralContig, Double> contigWeights = read.hits().entrySet().stream()

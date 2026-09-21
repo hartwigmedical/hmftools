@@ -9,7 +9,7 @@ import java.util.NavigableMap;
 import java.util.Set;
 import java.util.TreeMap;
 
-import com.hartwig.hmftools.viridian.detection.read_align.ReadAlignments;
+import com.hartwig.hmftools.viridian.detection.read_align.AlignedRead;
 import com.hartwig.hmftools.viridian.detection.read_align.ViralReadAlignments;
 import com.hartwig.hmftools.viridian.reference.OncologyGroup;
 import com.hartwig.hmftools.viridian.reference.ViralContig;
@@ -69,7 +69,7 @@ public class PairwiseMargins
     // Pairs up the contigs it aligns to within each oncology group.
     // For each ordered pair, records that they share the read, and the subject's winning margin over the opponent (if any).
     private static void accumulateRead(
-            ReadAlignments read,
+            AlignedRead read,
             Map<ContigPair, NavigableMap<Integer, Integer>> marginCounts, Map<ContigPair, Integer> sharedReads)
     {
         Map<OncologyGroup, List<ViralContig>> contigsByOncologyGroup = read.hits().keySet().stream()
