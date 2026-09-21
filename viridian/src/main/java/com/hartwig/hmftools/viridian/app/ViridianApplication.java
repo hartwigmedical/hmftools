@@ -138,7 +138,7 @@ public class ViridianApplication
         PairwiseMargins pairwiseMargins = PairwiseMargins.from(viralReadAlignments);
         List<OncologyGroupRepresentativeSelection> selections = RepresentativeContigSelector.select(
                 viralContigSupports, pairwiseMargins, viralReadAlignments.readCountsByOncologyGroup());
-        logSelections(selections);
+        logRepresentativeContigSelections(selections);
 
         OutputWriter.writeContigInfo(outputFile(CONTIG_INFO_TSV_SUFFIX), selections);
         if(mConfig.verboseOutput())
@@ -146,6 +146,22 @@ public class ViridianApplication
             OutputWriter.writePairwiseMargins(outputFile(PAIRWISE_MARGINS_TSV_SUFFIX), pairwiseMargins, selections);
         }
         LOGGER.info("Selecting representative contigs complete");
+    }
+
+    private static void logRepresentativeContigSelections(List<OncologyGroupRepresentativeSelection> selections)
+    {
+        for(OncologyGroupRepresentativeSelection selection : selections)
+        {
+            ViralContig representative = selection.representative();
+            if(representative != null)
+            {
+                LOGGER.info("oncologyGroup({}) representative({})", selection.oncologyGroup(), representative.name());
+            }
+            else if(selection.resolution() == OncologyGroupResolution.UNRESOLVED)
+            {
+                LOGGER.warn("oncologyGroup({}) unresolved({})", selection.oncologyGroup(), selection.outcome());
+            }
+        }
     }
 
     // TODO: placeholder stages, each replaced by its implementation as it lands.
@@ -195,22 +211,6 @@ public class ViridianApplication
         }
         f += suffix;
         return f;
-    }
-
-    private static void logSelections(List<OncologyGroupRepresentativeSelection> selections)
-    {
-        for(OncologyGroupRepresentativeSelection selection : selections)
-        {
-            ViralContig representative = selection.representative();
-            if(representative != null)
-            {
-                LOGGER.info("oncologyGroup({}) representative({})", selection.oncologyGroup(), representative.name());
-            }
-            else if(selection.resolution() == OncologyGroupResolution.UNRESOLVED)
-            {
-                LOGGER.warn("oncologyGroup({}) unresolved({})", selection.oncologyGroup(), selection.outcome());
-            }
-        }
     }
 
     public static void main(@NotNull String[] args)
