@@ -10,7 +10,6 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.XA_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.firstInPair;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.inferredInsertSize;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.mateNegativeStrand;
-import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
@@ -41,11 +40,11 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.common.bam.ClippedSide;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 
 import htsjdk.samtools.CigarElement;
@@ -75,7 +74,7 @@ public class Read
 
     private final MappedCoords mMappedCoords;
 
-    private String mSupplementaryAlignment;
+    private SupplementaryReadData mSupplementaryData;
     private boolean mHasInterGeneSplit;
     private List<AltAlignment> mAltLoci; // alternate genomic mapping loci from XA tag; null if uniquely mapped
     private boolean mConsensusRead;
@@ -98,8 +97,7 @@ public class Read
         mOriginalCigarStr = record.getCigarString();
         mCigarStr = null; // set if trimmed
 
-        // why extract this unless it is definitely used, or parsed
-        mSupplementaryAlignment = record.getStringAttribute(SUPPLEMENTARY_ATTRIBUTE);
+        mSupplementaryData = SupplementaryReadData.extractAlignment(mRecord);
 
         mHasSplit = mCigarElements.stream().anyMatch(x -> x.getOperator() == N);
 
@@ -158,13 +156,6 @@ public class Read
 
     public String readBases() { return mReadBases != null ? mReadBases : mRecord.getReadString(); }
 
-    public int unclippedStart() { return mUnclippedStart; }
-    public int unclippedEnd() { return mUnclippedEnd; }
-    public boolean isLeftClipped() { return mUnclippedStart != mPosStart; }
-    public boolean isRightClipped() { return mUnclippedEnd != mPosEnd; }
-    public int leftClipLength() { return max(mPosStart - mUnclippedStart, 0); }
-    public int rightClipLength() { return max(mUnclippedEnd - mPosEnd, 0); }
-
     public boolean containsSplit() { return mHasSplit; }
 
     public boolean isReadPaired() { return mRecord.getReadPairedFlag(); }
@@ -177,46 +168,39 @@ public class Read
     public boolean isInversion() { return isReadReversed() == isMateNegStrand(); }
     public boolean isSupplementaryAlignment() { return mRecord.getSupplementaryAlignmentFlag(); }
 
-    public String getSuppAlignment() { return mSupplementaryAlignment; }
-
-    public String suppAlignmentAsStr()
-    {
-        return mSupplementaryAlignment != null ? mSupplementaryAlignment.replaceAll(",", ITEM_DELIM) : "NONE";
-    }
-
-    public boolean hasSuppAlignment() { return mSupplementaryAlignment != null; }
+    public SupplementaryReadData supplementaryData() { return mSupplementaryData; }
+    public boolean hasSuppAlignment() { return mSupplementaryData != null; }
 
     public MappedCoords mappedCoords() { return mMappedCoords; }
 
-    public static ClippedSide clippedSide(final Read read)
-    {
-        int leftScLength = read.leftClipLength();
-        int rightScLength = read.rightClipLength();
+    // soft-clip methods which use the raw read's soft-clips, and not any exon-boundary inferred soft-clips
+    public int unclippedStart() { return mUnclippedStart; }
+    public int unclippedEnd() { return mUnclippedEnd; }
+    public boolean isLeftClipped() { return mUnclippedStart != mPosStart; }
+    public boolean isRightClipped() { return mUnclippedEnd != mPosEnd; }
+    public boolean containsSoftClipping() { return isLeftClipped() || isRightClipped(); }
+    public int leftClipLength() { return max(mPosStart - mUnclippedStart, 0); }
+    public int rightClipLength() { return max(mUnclippedEnd - mPosEnd, 0); }
+    public int longestSoftClip() { return max(leftClipLength(), rightClipLength()); }
 
-        if(leftScLength > 0 && rightScLength > 0)
-        {
-            return leftScLength >= rightScLength ?
-                    new ClippedSide(SE_START, leftScLength, true) : new ClippedSide(SE_END, rightScLength, true);
-        }
-        else if(leftScLength > 0)
-        {
-            return new ClippedSide(SE_START, leftScLength, true);
-        }
-        else
-        {
-            return new ClippedSide(SE_END, rightScLength, rightScLength > 0);
-        }
+    public Boolean longestSoftClipIsLeft()
+    {
+        int left = leftClipLength();
+        int right = rightClipLength();
+
+        if(left == 0 && right == 0)
+            return null;
+
+        return left >= right ? true : false;
     }
 
-    public boolean isSoftClipped(int se)
+    public boolean isSoftClippedNoRegionMatch(int se)
     {
         if(mMappedCoords.isSoftClipRegionMatched(se))
             return false;
 
         return se == SE_START ? isLeftClipped() : isRightClipped();
     }
-
-    public boolean containsSoftClipping() { return isLeftClipped() || isRightClipped(); }
 
     public List<AltAlignment> altLoci() { return mAltLoci; }
     public int numLoci() { return mAltLoci != null ? 1 + mAltLoci.size() : 1; }
@@ -264,7 +248,7 @@ public class Read
         if(isTranslocation() || isInversion())
             return true;
 
-        if(isSupplementaryAlignment() || mSupplementaryAlignment != null)
+        if(isSupplementaryAlignment() || mSupplementaryData != null)
             return true;
 
         return false;
@@ -610,7 +594,7 @@ public class Read
 
     private void checkMissedJunctions(final RegionReadData region)
     {
-        if(mSupplementaryAlignment != null)
+        if(mSupplementaryData != null)
             return;
 
         // check for reads either soft-clipped or seemingly unspliced, where the extra bases can match with the next exon
@@ -893,5 +877,9 @@ public class Read
     }
 
     @VisibleForTesting
-    public void setSuppAlignment(final String suppAlign) { mSupplementaryAlignment = suppAlign; }
+    public void setSuppAlignment(final String suppAlign)
+    {
+        mRecord.setAttribute(SUPPLEMENTARY_ATTRIBUTE, suppAlign);
+        mSupplementaryData = SupplementaryReadData.extractAlignment(mRecord);
+    }
 }

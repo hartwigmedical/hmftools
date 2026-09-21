@@ -65,7 +65,7 @@ public class NeoFragmentMatcher
             // soft-clipped bases from the read which span the fusion junction should match the coding bases on the other stream,
             // after adjusting for strand/orientation
 
-            if(read.isSoftClipped(junctionSide))
+            if(read.isSoftClippedNoRegionMatch(junctionSide))
             {
                 final String postJuncCodingBases = neData.getFusionSoftClippedBases(stream);
 
@@ -272,7 +272,7 @@ public class NeoFragmentMatcher
         int readBaseIndex = 0;
         String readBases = "";
 
-        if(read.isSoftClipped(SE_START))
+        if(read.isSoftClippedNoRegionMatch(SE_START))
             readBaseIndex += read.leftClipLength();
 
         for(BaseRegion mappedCoords : read.getMappedRegionCoords())

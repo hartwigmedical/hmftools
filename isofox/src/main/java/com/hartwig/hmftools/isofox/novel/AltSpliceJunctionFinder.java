@@ -15,7 +15,6 @@ import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.MAX_NOVEL_SJ_DISTANCE;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.ALT_SPLICE_JUNCTIONS;
-import static com.hartwig.hmftools.isofox.common.Read.clippedSide;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_BOUNDARY;
 import static com.hartwig.hmftools.common.rna.AltSpliceJunctionContext.EXONIC;
 import static com.hartwig.hmftools.common.rna.AltSpliceJunctionContext.SPLICE_JUNC;
@@ -45,7 +44,6 @@ import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.rna.AltSpliceJunctionContext;
 import com.hartwig.hmftools.common.rna.AltSpliceJunctionType;
-import com.hartwig.hmftools.common.bam.ClippedSide;
 import com.hartwig.hmftools.common.rna.NovelSpliceJunction;
 import com.hartwig.hmftools.common.rna.NovelSpliceJunctionFile;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
@@ -422,9 +420,9 @@ public class AltSpliceJunctionFinder
             Read read = (i == 0) ? read1 : read2;
 
             // take the longer of the 2 soft-clippings
-            ClippedSide clippedSide = clippedSide(read);
+            Boolean maxSoftOnLeft = read.longestSoftClipIsLeft();
 
-            boolean useLeft = clippedSide != null && clippedSide.isLeft();
+            boolean useLeft = maxSoftOnLeft != null && maxSoftOnLeft;
 
             if(useLeft)
                 spliceJunction[SE_START] = read.getCoordsBoundary(SE_START);

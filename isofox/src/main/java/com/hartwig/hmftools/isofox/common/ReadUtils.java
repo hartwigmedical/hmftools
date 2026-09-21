@@ -4,7 +4,10 @@ import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.getReadIndexFromPosition;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
+import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
 
+import com.hartwig.hmftools.common.bam.ClippedSide;
 import com.hartwig.hmftools.common.region.BaseRegion;
 
 public final class ReadUtils
@@ -62,5 +65,25 @@ public final class ReadUtils
 
         read1.trimAdapterSoftClipBases(trimLength1);
         read2.trimAdapterSoftClipBases(trimLength2);
+    }
+
+    public static ClippedSide clippedSide(final Read read)
+    {
+        int leftScLength = read.leftClipLength();
+        int rightScLength = read.rightClipLength();
+
+        if(leftScLength > 0 && rightScLength > 0)
+        {
+            return leftScLength >= rightScLength ?
+                    new ClippedSide(SE_START, leftScLength, true) : new ClippedSide(SE_END, rightScLength, true);
+        }
+        else if(leftScLength > 0)
+        {
+            return new ClippedSide(SE_START, leftScLength, true);
+        }
+        else
+        {
+            return new ClippedSide(SE_END, rightScLength, rightScLength > 0);
+        }
     }
 }

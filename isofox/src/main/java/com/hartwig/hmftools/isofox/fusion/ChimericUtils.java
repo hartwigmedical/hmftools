@@ -39,8 +39,8 @@ public final class ChimericUtils
             else if(!existingChromosome.equals(read.chromosome()))
                 return false;
 
-            int scLeft = read.isSoftClipped(SE_START) ? read.leftClipLength() : 0;
-            int scRight = read.isSoftClipped(SE_END) ? read.rightClipLength() : 0;
+            int scLeft = read.isSoftClippedNoRegionMatch(SE_START) ? read.leftClipLength() : 0;
+            int scRight = read.isSoftClippedNoRegionMatch(SE_END) ? read.rightClipLength() : 0;
 
             if(scLeft == 0 && scRight == 0)
                 return false;
@@ -91,7 +91,7 @@ public final class ChimericUtils
 
     public static boolean hasCandidateJunctionSoftClips(final Read read, int se)
     {
-        if(!read.isSoftClipped(se))
+        if(!read.isSoftClippedNoRegionMatch(se))
             return false;
 
         int scLength = se == SE_START ? read.leftClipLength() : read.rightClipLength();

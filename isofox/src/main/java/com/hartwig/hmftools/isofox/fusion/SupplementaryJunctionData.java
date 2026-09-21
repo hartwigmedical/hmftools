@@ -59,17 +59,17 @@ public class SupplementaryJunctionData
         if(read == null)
             return null;
 
-        SupplementaryReadData suppData = SupplementaryReadData.extractAlignment(read.getSuppAlignment());
+        SupplementaryReadData suppData = read.supplementaryData();
 
         if(suppData == null)
             return null;
 
         // find the junction from this read's SC and same for the supp mapping data
-        ClippedSide scSide = Read.clippedSide(read);
+        Boolean maxSoftOnLeft = read.longestSoftClipIsLeft();
 
         SupplementaryJunctionData suppJuncData = new SupplementaryJunctionData(read.id());
 
-        if(scSide.isLeft())
+        if(maxSoftOnLeft != null && maxSoftOnLeft)
         {
             suppJuncData.LocalJunctionPos = read.getCoordsBoundary(SE_START);
             suppJuncData.LocalJunctionOrient = ORIENT_REV;
@@ -82,12 +82,12 @@ public class SupplementaryJunctionData
 
         suppJuncData.RemoteChromosome = suppData.Chromosome;
         Cigar remoteCigar = cigarFromStr(suppData.Cigar);
-        scSide = ClippedSide.fromCigar(remoteCigar, true);
+        ClippedSide remoteSoftClipSide = ClippedSide.fromCigar(remoteCigar, true);
 
-        if(scSide == null)
+        if(remoteSoftClipSide == null)
             return null;
 
-        if(scSide.isLeft())
+        if(remoteSoftClipSide.isLeft())
         {
             suppJuncData.RemoteJunctionPos = suppData.Position;
         }

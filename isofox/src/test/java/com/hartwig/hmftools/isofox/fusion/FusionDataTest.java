@@ -46,6 +46,7 @@ import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.fusion.KnownFusionData;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
@@ -813,6 +814,7 @@ public class FusionDataTest
 
         read3.setStrand(true, false);
         read3.setFlag(SUPPLEMENTARY_ALIGNMENT, true);
+        read3.setSuppAlignment(suppDataFromRead(read2).asSamTag());
 
         FusionReadData fusion = callJunctionFusion(finder, gc1, gc2, read1, read2, read3);
         assertEquals(1100, fusion.junctionPositions()[SE_START]);
@@ -1039,11 +1041,17 @@ public class FusionDataTest
         acceptorRead.setFlag(FIRST_OF_PAIR, true);
         acceptorRead.setFlag(SUPPLEMENTARY_ALIGNMENT, true);
 
-        donorRead.setSuppAlignment(String.format("%s;%d;%s", acceptorRead.chromosome(), acceptorRead.alignmentStart(), acceptorRead.cigarStr()));
-        acceptorRead.setSuppAlignment(String.format("%s;%d;%s", donorRead.chromosome(), donorRead.alignmentStart(), donorRead.cigarStr()));
+        donorRead.setSuppAlignment(suppDataFromRead(acceptorRead).asSamTag());
+        acceptorRead.setSuppAlignment(suppDataFromRead(donorRead).asSamTag());
 
         readGroups1.put(mate.id(), createGroup(mate, donorRead));
         readGroups2.put(mate.id(), createGroup(acceptorRead));
+    }
+
+    public static SupplementaryReadData suppDataFromRead(final Read read)
+    {
+        return new SupplementaryReadData(
+                read.chromosome(), read.alignmentStart(), read.orientation().asChar(), read.cigarStr(), read.mapQuality());
     }
 
     private static FusionReadData callJunctionFusion(

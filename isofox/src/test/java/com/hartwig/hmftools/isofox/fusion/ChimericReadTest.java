@@ -287,11 +287,11 @@ public class ChimericReadTest
 
         read1 = createMappedRead(++readId, gc1, 481, 500, createCigar(0, 20, 20));
         read1.setFlag(FIRST_OF_PAIR, true);
-        read1.setSuppAlignment("supp");
+        read1.setSuppAlignment(TEST_SUPP_DATA);
 
         read2 = createMappedRead(++readId, gc1, 2000, 2019, createCigar(20, 20, 0));
         read2.setStrand(true, false);
-        read2.setSuppAlignment("supp");
+        read2.setSuppAlignment(TEST_SUPP_DATA);
 
         // these post-gene reads will be skipped in this gene collection
         Read read3 = createMappedRead(readId, gc1, 2010, 2049, createCigar(0, 40, 0));

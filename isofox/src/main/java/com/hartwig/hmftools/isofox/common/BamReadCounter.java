@@ -28,7 +28,6 @@ import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
-import com.hartwig.hmftools.isofox.WriteType;
 import com.hartwig.hmftools.isofox.results.ResultsWriter;
 
 import htsjdk.samtools.SAMFlag;

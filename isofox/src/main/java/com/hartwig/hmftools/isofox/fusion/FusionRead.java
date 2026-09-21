@@ -2,12 +2,10 @@ package com.hartwig.hmftools.isofox.fusion;
 
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.readToString;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.switchIndex;
-import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_BOUNDARY;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_INTRON;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.NONE;
@@ -82,11 +80,10 @@ public class FusionRead
         ContainsSplit = read.containsSplit();
         Flags = read.flags();
         MapQuality = (short)read.mapQuality();
-
-        SuppData = read.hasSuppAlignment() ? SupplementaryReadData.extractAlignment(read.getSuppAlignment()) : null;
+        SuppData = read.supplementaryData();
 
         SoftClipLengths = new int[]
-                { read.isSoftClipped(SE_START) ? read.leftClipLength() : 0, read.isSoftClipped(SE_END) ? read.rightClipLength() : 0 };
+                { read.isSoftClippedNoRegionMatch(SE_START) ? read.leftClipLength() : 0, read.isSoftClippedNoRegionMatch(SE_END) ? read.rightClipLength() : 0 };
 
         ReadBaseLength = read.baseLength();
         int extraBasesBuffer = 5;

@@ -6,14 +6,11 @@ import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
-import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
-import static com.hartwig.hmftools.isofox.common.Read.clippedSide;
 
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.bam.ClippedSide;
 import com.hartwig.hmftools.isofox.common.Read;
 
 public class ChimericPosData
@@ -85,42 +82,37 @@ public class ChimericPosData
     {
         // use the read with the longest soft-clip if there is one
         Read primaryRead = null;
-        ClippedSide maxClippedSide = null;
+        int maxSoftClip = 0;
         String suppChromosome = "";
         int suppPosition = 0;
 
         for(Read read : readGroup.reads())
         {
-            ClippedSide clippedSide = clippedSide(read);
+            int softClip = read.longestSoftClip();
 
             if(primaryRead == null)
             {
                 primaryRead = read;
-                maxClippedSide = clippedSide;
+                maxSoftClip = softClip;
             }
             else if(primaryRead.isSupplementaryAlignment() && !read.isSupplementaryAlignment())
             {
                 primaryRead = read;
-                maxClippedSide = clippedSide;
+                maxSoftClip = softClip;
             }
             else
             {
-                if(clippedSide.Length > maxClippedSide.Length)
+                if(softClip > maxSoftClip)
                 {
                     primaryRead = read;
-                    maxClippedSide = clippedSide;
+                    maxSoftClip = softClip;
                 }
             }
 
             if(suppChromosome.isEmpty() && read.hasSuppAlignment())
             {
-                String[] suppDataItems = read.getSuppAlignment().split(CSV_DELIM, -1);
-
-                if(suppDataItems.length > 2)
-                {
-                    suppChromosome = suppDataItems[0];
-                    suppPosition = Integer.parseInt(suppDataItems[1]);
-                }
+                suppChromosome = read.supplementaryData().Chromosome;
+                suppPosition = read.supplementaryData().Position;
             }
         }
 

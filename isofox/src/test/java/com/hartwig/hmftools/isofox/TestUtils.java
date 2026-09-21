@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.SINGLE_MAP_QUALITY;
 import static com.hartwig.hmftools.isofox.common.Read.findOverlappingRegions;
+import static com.hartwig.hmftools.isofox.fusion.FusionDataTest.suppDataFromRead;
 
 import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.N;
@@ -312,16 +313,6 @@ public class TestUtils
         record.setProperPairFlag(true);
         record.setReadPairedFlag(true);
 
-        /*
-        Read read = new Read(String.valueOf(id), chromosome, posStart, posEnd, readBases, readCigar,
-                0, flags, mateChr, mateStartPos);
-
-        read.setFlag(SAMFlag.PROPER_PAIR, true);
-        read.setFlag(SAMFlag.READ_PAIRED, true);
-        read.setStrand(false, true);
-        read.setMapQuality(SINGLE_MAP_QUALITY);
-        */
-
         return new Read(record);
     }
 
@@ -342,15 +333,8 @@ public class TestUtils
         read2.setFlag(SUPPLEMENTARY_ALIGNMENT, true);
 
         // note: strand is not currently set correctly
-        SupplementaryReadData suppData1 = new SupplementaryReadData(
-                read2.chromosome(), read2.alignmentStart(), '+', read2.cigarStr(), 255);
-
-        read1.setSuppAlignment(suppData1.asDelimStr());
-
-        SupplementaryReadData suppData2 = new SupplementaryReadData(
-                read1.chromosome(), read1.alignmentStart(), '+', read1.cigarStr(), 255);
-
-        read2.setSuppAlignment(suppData2.asDelimStr());
+        read1.setSuppAlignment(suppDataFromRead(read2).asSamTag());
+        read2.setSuppAlignment(suppDataFromRead(read1).asSamTag());
 
         return new Read[] { read1, read2 };
     }

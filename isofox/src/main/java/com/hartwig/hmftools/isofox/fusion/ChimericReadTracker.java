@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.isofox.IsofoxConstants.MAX_NOVEL_SJ_DISTANCE;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.ALT_SPLICE_JUNCTIONS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.FUSIONS;
 import static com.hartwig.hmftools.isofox.common.FragmentType.CHIMERIC;
+import static com.hartwig.hmftools.isofox.common.ReadUtils.clippedSide;
 import static com.hartwig.hmftools.isofox.fusion.ChimericPosData.addChimericPosData;
 import static com.hartwig.hmftools.isofox.fusion.ChimericUtils.findSplitReadJunction;
 import static com.hartwig.hmftools.isofox.fusion.ChimericUtils.isInversion;
@@ -408,7 +409,7 @@ public class ChimericReadTracker
 
         if(read.hasSuppAlignment())
         {
-            SupplementaryReadData suppData = SupplementaryReadData.extractAlignment(read.getSuppAlignment());
+            SupplementaryReadData suppData = read.supplementaryData();
 
             if(inImmuneRegion && suppData != null
             && mConfig.Filters.ImmuneGeneRegions.stream().anyMatch(x -> x.containsPosition(suppData.Chromosome, suppData.Position)))
@@ -552,7 +553,7 @@ public class ChimericReadTracker
         Read suppRead = readGroup.reads().stream().filter(x -> x.hasSuppAlignment()).findFirst().orElse(null);
         if(suppRead != null)
         {
-            ClippedSide scSide = Read.clippedSide(suppRead);
+            ClippedSide scSide = clippedSide(suppRead);
 
             if(scSide != null && scSide.Length >= REALIGN_MIN_SOFT_CLIP_BASE_LENGTH)
             {
@@ -571,7 +572,7 @@ public class ChimericReadTracker
         // select the side with the longest soft-clipping
         Read read = readGroup.reads().get(0);
 
-        ClippedSide scSide = Read.clippedSide(read);
+        ClippedSide scSide = clippedSide(read);
 
         if(scSide != null)
         {

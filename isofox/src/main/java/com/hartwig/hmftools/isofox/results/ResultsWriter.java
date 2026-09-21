@@ -479,7 +479,7 @@ public class ResultsWriter
             sj.add(valueOf(read.isFirstOfPair()));
             sj.add(valueOf(read.isReadReversed()));
             sj.add(valueOf(read.isSupplementaryAlignment()));
-            sj.add(read.suppAlignmentAsStr());
+            sj.add(read.supplementaryData() != null ? read.supplementaryData().asDelimStr() : "");
 
             sj.add(geneReadType.toString());
 
