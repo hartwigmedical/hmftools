@@ -53,11 +53,10 @@ public class RepresentativeContigSelector
         {
             return new OncologyGroupRepresentativeSelection(oncologyGroup, OncologyGroupOutcome.NO_CANDIDATES, List.of(), rejected);
         }
+        // Note that only groups with enough read coverage reach here.
+        // Contigs with only origin clipped reads drop out.
 
-        // Only groups reaching here have reads counted against them, since a candidate needs coverage from them, whereas
-        // a group can hold contigs supported by nothing but alignments dropped over the origin.
-        int groupReads = requireNonNull(
-                groupReadCounts.get(oncologyGroup), "No aligned read count for oncology group: " + oncologyGroup);
+        int groupReads = requireNonNull(groupReadCounts.get(oncologyGroup));
 
         List<ViralContig> contigs = candidates.stream().map(ContigSupport::contig).toList();
         Set<ViralContig> comparable = comparableContigs(candidates);

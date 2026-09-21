@@ -8,6 +8,7 @@ import java.util.Map;
 
 import com.hartwig.hmftools.virusdetect.reference.ViralContig;
 
+// TODO: better name? Since it's basically the same as ViralReadAlignments
 // One read's viral alignments, reduced to its best alignment on each contig it hits.
 public record ReadAlignments(
         String readName,
