@@ -70,11 +70,7 @@ public class ViridianApplication
 
         BwaMemAligner.initLibrary(mConfig.bwaLibPath());
 
-        String candidateReadFasta = extractCandidateReads();
-
-        String viralReadBam = alignCandidateReadsToViralContigs(candidateReadFasta);
-
-        ViralReadAlignments viralReadAlignments = ViralReadAlignments.load(viralReadBam, mViralReference);
+        ViralReadAlignments viralReadAlignments = getViralReadAlignments();
 
         List<ContigSupport> viralContigSupports = computeViralContigSupport(viralReadAlignments);
 
@@ -85,42 +81,49 @@ public class ViridianApplication
         LOGGER.info("{} complete, mins({})", APP_NAME, runTimeMinsStr(startTimeMs));
     }
 
-    // Extract reads which may be viral into a FASTA.
-    private String extractCandidateReads()
+    private ViralReadAlignments getViralReadAlignments()
+    {
+        String viralReadBamFile = outputFile(ALIGNED_READ_BAM_SUFFIX);
+        // Alignment is pretty slow, so allow reusing the cached BAM for a rerun.
+        if(!canReuseExistingFile(mConfig.reuseReadsBam(), viralReadBamFile, "aligned read BAM"))
+        {
+            alignCandidateReadsToViralContigs(viralReadBamFile);
+        }
+        return ViralReadAlignments.load(viralReadBamFile, mViralReference);
+    }
+
+    private String getCandidateReads()
     {
         String candidateFastaFile = outputFile(CANDIDATE_READ_FASTA_SUFFIX);
-        boolean reuseExisting = mConfig.reuseCandidateFasta() && new File(candidateFastaFile).exists();
-        if(reuseExisting)
+        // Read extraction is very slow for large samples, so allow reusing the cached FASTA for a rerun.
+        if(!canReuseExistingFile(mConfig.reuseReadsFasta(), candidateFastaFile, "candidate read FASTA"))
         {
-            LOGGER.info("Reusing existing candidate FASTA: {}", candidateFastaFile);
-        }
-        else
-        {
-            if(mConfig.reuseCandidateFasta())
-            {
-                LOGGER.info("Candidate FASTA not found, extracting: {}", candidateFastaFile);
-            }
-
-            LOGGER.info("Extracting candidate viral reads from tumor BAM");
-            CandidateReadFilter candidateFilter = new CandidateReadFilter(VIRAL_READ_MIN_SOFT_CLIP_BASES_DEFAULT, VIRAL_REF_CONTIGS);
-            CandidateReadExtractor mCandidateExtractor = new CandidateReadExtractor(
-                    mConfig.refGenomeFile(), candidateFilter, mConfig.threads());
-            mCandidateExtractor.extractToFasta(mConfig.tumorBam(), candidateFastaFile);
-            LOGGER.info("Candidate read extraction complete");
+            extractCandidateReads(candidateFastaFile);
         }
         return candidateFastaFile;
     }
 
-    // Align potentially viral reads to all virus genomes, so we can decide which viruses are present.
-    private String alignCandidateReadsToViralContigs(String candidateReadFasta)
+    // Extract reads which may be viral into a FASTA.
+    private void extractCandidateReads(String candidateFastaFile)
     {
+        LOGGER.info("Extracting candidate viral reads from tumor BAM");
+        CandidateReadFilter candidateFilter = new CandidateReadFilter(VIRAL_READ_MIN_SOFT_CLIP_BASES_DEFAULT, VIRAL_REF_CONTIGS);
+        CandidateReadExtractor mCandidateExtractor = new CandidateReadExtractor(
+                mConfig.refGenomeFile(), candidateFilter, mConfig.threads());
+        mCandidateExtractor.extractToFasta(mConfig.tumorBam(), candidateFastaFile);
+        LOGGER.info("Candidate read extraction complete");
+    }
+
+    // Align potentially viral reads to all virus genomes, so we can decide which viruses are present.
+    private void alignCandidateReadsToViralContigs(String viralReadBamFile)
+    {
+        String candidateReadFasta = getCandidateReads();
+
         LOGGER.info("Aligning candidate reads to viral genomes");
         ViralReadAligner viralReadAligner = ViralReadAligner.create(
                 mViralReference, mConfig.viralBwaIndexImage(), mConfig.threads(), mConfig.alignmentBatchSize());
-        String viralReadBamFile = outputFile(ALIGNED_READ_BAM_SUFFIX);
         viralReadAligner.align(candidateReadFasta, viralReadBamFile);
         LOGGER.info("Candidate read alignment complete");
-        return viralReadBamFile;
     }
 
     // Compute support information for each virus genome and decide which genomes may be present.
@@ -217,6 +220,26 @@ public class ViridianApplication
         return f;
     }
 
+    // Dev/debug skip: if requested, if the file is already cached, use that rather than recomputing it.
+    private static boolean canReuseExistingFile(boolean reuseRequested, String file, String description)
+    {
+        if(!reuseRequested)
+        {
+            return false;
+        }
+        // Check the length rather than only existence, as zero-length files may be left from a run that was stopped midway.
+        else if(new File(file).length() > 0)
+        {
+            LOGGER.info("Reusing existing {}: {}", description, file);
+            return true;
+        }
+        else
+        {
+            LOGGER.debug("Existing {} not present, regenerating: {}", description, file);
+            return false;
+        }
+    }
+
     public static void main(@NotNull String[] args)
     {
         ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
@@ -228,8 +251,8 @@ public class ViridianApplication
         try
         {
             ViridianConfig config = ViridianConfig.fromConfigBuilder(configBuilder);
-            ViridianApplication viridian = new ViridianApplication(config);
-            viridian.run();
+            ViridianApplication app = new ViridianApplication(config);
+            app.run();
         }
         catch(UserInputError e)
         {
