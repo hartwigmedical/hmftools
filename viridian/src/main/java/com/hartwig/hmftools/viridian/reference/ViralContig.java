@@ -1,5 +1,9 @@
 package com.hartwig.hmftools.viridian.reference;
 
+import static java.util.Comparator.comparing;
+
+import java.util.Comparator;
+
 import org.jetbrains.annotations.NotNull;
 
 // TODO: maybe rename to "viral genome"? "contig" is not that descriptive. But that's a big change
@@ -11,7 +15,7 @@ public record ViralContig(
         // Human-readable name of the virus. Only for readability purposes.
         String virusName,
         OncologyGroup oncologyGroup
-)
+) implements Comparable<ViralContig>
 {
     public ViralContig
     {
@@ -28,5 +32,13 @@ public record ViralContig(
         return name;
     }
 
-    // TODO: natural order by oncology group then name
+    // Contig names are unique within the reference, so this orders contigs consistently with equality.
+    @Override
+    public int compareTo(ViralContig other)
+    {
+        return BY_ONCOLOGY_GROUP_THEN_NAME.compare(this, other);
+    }
+
+    private static final Comparator<ViralContig> BY_ONCOLOGY_GROUP_THEN_NAME =
+            comparing(ViralContig::oncologyGroup).thenComparing(ViralContig::name);
 }

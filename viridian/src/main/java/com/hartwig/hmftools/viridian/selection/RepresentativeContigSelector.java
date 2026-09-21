@@ -46,7 +46,7 @@ public class RepresentativeContigSelector
         List<ContigSupport> rejected = groupContigs.stream().filter(support -> !support.isCandidate()).toList();
         List<ContigSupport> candidates = groupContigs.stream()
                 .filter(ContigSupport::isCandidate)
-                .sorted(comparingDouble(ContigSupport::readVotes).reversed().thenComparing(support -> support.contig().name()))
+                .sorted(comparingDouble(ContigSupport::readVotes).reversed().thenComparing(ContigSupport::contig))
                 .toList();
 
         if(candidates.isEmpty())
@@ -153,7 +153,7 @@ public class RepresentativeContigSelector
         double topVotes = candidates.get(0).readVotes();
         if(topVotes <= 0)
         {
-            throw new IllegalStateException("Candidate contig has no read votes: " + candidates.get(0).contig().name());
+            throw new IllegalStateException("Candidate contig has no read votes: " + candidates.get(0).contig());
         }
 
         return candidates.stream()

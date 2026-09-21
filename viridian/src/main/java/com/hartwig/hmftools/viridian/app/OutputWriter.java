@@ -40,9 +40,9 @@ public class OutputWriter
         Map<ViralContig, Integer> votesRanks = candidateVotesRanks(selections);
         List<ContigInfoRow> rows = selections.stream()
                 .flatMap(OutputWriter::contigInfoRows)
-                .sorted(comparing((ContigInfoRow row) -> row.support().contig().oncologyGroup().name())
+                .sorted(comparing((ContigInfoRow row) -> row.support().contig().oncologyGroup())
                         .thenComparing(row -> row.support().readVotes(), reverseOrder())
-                        .thenComparing(row -> row.support().contig().name()))
+                        .thenComparing(row -> row.support().contig()))
                 .toList();
 
         DelimFileWriter.write(
@@ -204,11 +204,11 @@ public class OutputWriter
 
         // A pair's contigs share an oncology group, and only its candidates are ranked, so unranked contigs sort last.
         List<PairwiseMargins.ContigPair> pairs = margins.pairs().stream()
-                .sorted(comparing((PairwiseMargins.ContigPair pair) -> pair.subject().oncologyGroup().name())
+                .sorted(comparing((PairwiseMargins.ContigPair pair) -> pair.subject().oncologyGroup())
                         .thenComparing(pair -> votesRanks.get(pair.subject()), nullsLast(naturalOrder()))
-                        .thenComparing(pair -> pair.subject().name())
+                        .thenComparing(PairwiseMargins.ContigPair::subject)
                         .thenComparing(pair -> votesRanks.get(pair.opponent()), nullsLast(naturalOrder()))
-                        .thenComparing(pair -> pair.opponent().name()))
+                        .thenComparing(PairwiseMargins.ContigPair::opponent))
                 .toList();
 
         List<String> columns = Stream.concat(
