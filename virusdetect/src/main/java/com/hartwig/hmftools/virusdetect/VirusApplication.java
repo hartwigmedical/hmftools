@@ -18,6 +18,8 @@ import java.io.IOException;
 import java.util.List;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.virusdetect.integration.IntegrationCandidate;
+import com.hartwig.hmftools.virusdetect.integration.IntegrationCandidateExtractor;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -110,8 +112,10 @@ public class VirusApplication
             return;
         }
 
-        LOGGER.info("Extracting integration candidates from ESVEE VCF (stub): {}", esveeVcf);
-        LOGGER.info("Aligning candidate insert sequences to the viral reference (stub)");
+        LOGGER.info("Extracting integration candidates from ESVEE VCF: {}", esveeVcf);
+        List<IntegrationCandidate> candidates = new IntegrationCandidateExtractor(mConfig.sampleId()).extract(esveeVcf);
+
+        LOGGER.info("Aligning {} candidate insert sequences to the viral reference (stub)", candidates.size());
         LOGGER.info("Annotating integrations and writing TSV (stub)");
     }
 
