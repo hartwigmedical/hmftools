@@ -28,8 +28,6 @@ public class ViralAlignmentTest
     private static final ViralReference REFERENCE = reference();
     private static final ViralContig CONTIG = REFERENCE.contig("v1");
 
-    // from() pulls the tags, clips and aligned blocks out of the SAMRecord, and counts clipped bases toward divergence:
-    // a 40-base soft clip plus one mismatch is a divergence of 41.
     @Test
     public void testExtractsFieldsAndCountsClipsInDivergence()
     {
@@ -47,10 +45,10 @@ public class ViralAlignmentTest
         assertEquals(60, alignment.alignedIntervals().get(0).length());
     }
 
-    // A clip projecting past a contig boundary (beyond tolerance) straddles the circular origin; one staying inside does not.
     @Test
     public void testDetectsClipsOverContigEnds()
     {
+        // A clip projecting past a contig boundary straddles the circular origin.
         assertTrue(ViralAlignment.from(record(30, "40S60M", 60, 0), REFERENCE).clipsOverContigEnd());    // left clip projects to -10
         assertTrue(ViralAlignment.from(record(141, "60M40S", 60, 0), REFERENCE).clipsOverContigEnd());   // right clip projects to 240
         assertFalse(ViralAlignment.from(record(100, "40S60M", 60, 0), REFERENCE).clipsOverContigEnd());  // left clip projects to 60
@@ -70,21 +68,21 @@ public class ViralAlignmentTest
         assertThrows(IllegalStateException.class, () -> ViralAlignment.from(record, REFERENCE));
     }
 
-    // Soft clips cost nothing in the aligner score but are bases the contig fails to explain, so divergence and score
-    // can disagree. The alignment explaining more of the read wins even when the other scores higher.
     @Test
     public void testLowestDivergenceBeatsHighestScore()
     {
+        // Soft clips cost nothing in the aligner score but are bases the contig fails to explain, so divergence and
+        // score can disagree.
         ViralAlignment wholeRead = alignment(10, 6, 70);
         ViralAlignment clipped = alignment(10, 20, 80);
 
         assertEquals(wholeRead, best(clipped, wholeRead));
     }
 
-    // Equal divergence can still arise from different gap structures, so the stronger alignment breaks the tie.
     @Test
     public void testHighestScoreBreaksDivergenceTie()
     {
+        // Equal divergence can still arise from different gap structures.
         ViralAlignment weaker = alignment(10, 8, 60);
         ViralAlignment stronger = alignment(10, 8, 75);
 

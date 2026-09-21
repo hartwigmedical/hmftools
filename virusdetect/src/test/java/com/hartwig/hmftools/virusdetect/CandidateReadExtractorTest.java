@@ -31,8 +31,6 @@ public class CandidateReadExtractorTest
     @Rule
     public TemporaryFolder mTempDir = new TemporaryFolder();
 
-    // Filtering, the duplicate-flag drop, and mate-numbered single-end output exercised together (per-read fate inline below).
-    // Run single- and multi-threaded: sharding must not change which reads are candidates, only the output order.
     @Test
     public void testWritesFilteredCandidateReadsWithMateSuffix() throws IOException
     {
@@ -46,6 +44,7 @@ public class CandidateReadExtractorTest
 
         String bam = writeIndexedBam(header, records);
 
+        // Multithreading must not change which reads are candidates, only the output order.
         for(int threads : new int[] { 1, 4 })
         {
             String fasta = new File(mTempDir.getRoot(), "candidates." + threads + ".fasta").getPath();
@@ -57,11 +56,10 @@ public class CandidateReadExtractorTest
         }
     }
 
-    // A read overlapping a partition boundary is returned by the slice of both partitions, but belongs to the one
-    // holding its start, so it must reach the FASTA once rather than twice.
     @Test
     public void testReadSpanningPartitionBoundaryWrittenOnce() throws IOException
     {
+        // A read overlapping a boundary is sliced by both partitions, but belongs to the one holding its start.
         SAMFileHeader header = header(SAMFileHeader.SortOrder.coordinate, 2 * EXTRACTION_PARTITION_SIZE);
         int start = EXTRACTION_PARTITION_SIZE - 50;   // the 80 aligned bases run past the first partition's end
         List<SAMRecord> records = List.of(mapped(header, "spanning", 0x1 | 0x40, "chr1", start, "20S80M", "CCCCC"));
@@ -76,11 +74,10 @@ public class CandidateReadExtractorTest
         assertEquals(Set.of(">spanning/1\nCCCCC"), fastaEntries(fasta));
     }
 
-    // An unmapped read placed on a contig by its mapped mate sits in coordinate order, not in the unplaced block at
-    // the end of the BAM, so only the region scan can reach it. Such a read may be an integration site.
     @Test
     public void testPlacedUnmappedReadFoundByRegionScan() throws IOException
     {
+        // Such a read sits in coordinate order, not the unplaced block at the end of the BAM. It may be an integration site.
         SAMFileHeader header = header(SAMFileHeader.SortOrder.coordinate, 10000);
         List<SAMRecord> records = List.of(mapped(header, "placed", 0x1 | 0x4 | 0x40, "chr1", 500, "*", "TTTTT"));
 
@@ -94,10 +91,10 @@ public class CandidateReadExtractorTest
         assertEquals(Set.of(">placed/1\nTTTTT"), fastaEntries(fasta));
     }
 
-    // Sharding the scan by region needs an index, so an unindexed BAM is rejected rather than silently handled.
     @Test
     public void testUnindexedBamRejected() throws IOException
     {
+        // Sharding the scan by region needs an index.
         SAMFileHeader header = header(SAMFileHeader.SortOrder.unsorted, 10000);
         String bam = writeBam(header, List.of(unmapped(header, "unmap", 0x4, "GGGGG")));
         String fasta = new File(mTempDir.getRoot(), "candidates.fasta").getPath();

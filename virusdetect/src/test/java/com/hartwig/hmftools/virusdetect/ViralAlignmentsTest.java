@@ -18,11 +18,10 @@ public class ViralAlignmentsTest
     private static final ViralContig V2 = new ViralContig("v2", LENGTH, "Virus v2", GROUP_A);
     private static final ViralContig H1 = new ViralContig("h1", LENGTH, "Virus h1", GROUP_H);
 
-    // An alignment clipping over a contig end straddles the circular origin: excluded once here, and reported as a
-    // per-contig count so the drop stays visible.
     @Test
     public void testOriginStraddlersExcludedAndCounted()
     {
+        // An alignment clipping over a contig end straddles the circular origin.
         ViralAlignments alignments = ViralAlignments.from(
                 List.of(alignment("r1", V1), straddler("r2", V1), straddler("r3", V1)), 150.0);
 
@@ -30,7 +29,6 @@ public class ViralAlignmentsTest
         assertEquals(Map.of(V1, 2), alignments.originClippedReads());
     }
 
-    // A read aligning to several contigs of a group counts once for that group, unlike the per-contig read counts.
     @Test
     public void testReadCountedOncePerOncologyGroup()
     {
@@ -40,7 +38,6 @@ public class ViralAlignmentsTest
         assertEquals(Map.of(GROUP_A, 2), alignments.readCountsByOncologyGroup());
     }
 
-    // A read aligning across groups counts towards each of them.
     @Test
     public void testReadCountedInEveryOncologyGroupItAligns()
     {
@@ -49,16 +46,15 @@ public class ViralAlignmentsTest
         assertEquals(Map.of(GROUP_A, 1, GROUP_H, 1), alignments.readCountsByOncologyGroup());
     }
 
-    // A straddler contributes to no read count, so a contig carrying only straddlers leaves its group unrepresented.
     @Test
     public void testStraddlersDoNotCountTowardsReadCounts()
     {
+        // A contig carrying only straddlers leaves its group unrepresented.
         ViralAlignments alignments = ViralAlignments.from(List.of(alignment("r1", V1), straddler("r2", H1)), 150.0);
 
         assertEquals(Map.of(GROUP_A, 1), alignments.readCountsByOncologyGroup());
     }
 
-    // The count is of reads, so a read straddling the origin more than once on a contig is still one drop.
     @Test
     public void testOriginClippedCountsReadsNotAlignments()
     {

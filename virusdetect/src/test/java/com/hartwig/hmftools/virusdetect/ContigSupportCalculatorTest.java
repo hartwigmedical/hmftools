@@ -18,8 +18,6 @@ public class ContigSupportCalculatorTest
     private static final ViralContig V1 = new ViralContig("v1", 20, "Virus 1", new OncologyGroup("Group 1"));
     private static final ViralContig V2 = new ViralContig("v2", 10, "Virus 2", new OncologyGroup("Group 2"));
 
-    // v1 (length 20): read r1 covers 1-10 (score 10), read r2 covers 6-10 (score 8); a lower-scoring second alignment of
-    // r1 on v1 is deduped for depth/score but still counts toward r1's two alignments there. v2 (length 10): r3 full.
     @Test
     public void testComputesPerContigDepthAndCoverage()
     {
@@ -48,16 +46,14 @@ public class ContigSupportCalculatorTest
         assertEquals(expectedV2, get(stats, V2));
     }
 
-    // r1 and r2 each align to both contigs, more closely to v1 (lower divergence). Both reads' votes lean to v1 by how
-    // much better it explains each read.
     @Test
-    public void testVotesAttributeStrainSupport()
+    public void testVotesAttributeVirusStrainSupport()
     {
         List<ViralAlignment> alignments = List.of(
                 alignment("r1", V1, 1, 10, 10, 1),
-                alignment("r1", V2, 1, 10, 6, 4),
+                alignment("r1", V2, 1, 10, 6, 4),   // Aligns to another contig with more divergence
                 alignment("r2", V1, 1, 10, 10, 0),
-                alignment("r2", V2, 1, 10, 5, 5));
+                alignment("r2", V2, 1, 10, 5, 5));  // Aligns to another contig with more divergence
 
         // Injected correct-base probability 0.5, so each extra divergent base halves a contig's weight (0.5^diff).
         List<ContigSupport> stats = new ContigSupportCalculator(0.5).compute(
@@ -69,7 +65,6 @@ public class ContigSupportCalculatorTest
         assertEquals(2.0 - v1Votes, get(stats, V2).readVotes(), EPSILON);
     }
 
-    // A read that ties across contigs splits its vote evenly between them.
     @Test
     public void testTiedReadSplitsVoteEvenly()
     {
@@ -84,8 +79,6 @@ public class ContigSupportCalculatorTest
         assertEquals(0.5, get(stats, V2).readVotes(), EPSILON);
     }
 
-    // Alignments whose clip projects past a contig end straddle the circular genome origin: they are dropped from the
-    // stats and counted separately. A clip that stays within the contig is kept.
     @Test
     public void testDropsAlignmentsClippingOverContigEnds()
     {
@@ -103,15 +96,13 @@ public class ContigSupportCalculatorTest
         assertEquals(2, v1.originClippedReads());   // r1 and r2 dropped
     }
 
-    // A contig losing every alignment to the origin keeps its row, so the drop stays visible rather than vanishing.
-    // It has no read to summarise, unlike depth which is zero across the contig.
     @Test
     public void testContigWithOnlyOriginClippedAlignmentsIsStillReported()
     {
         List<ViralAlignment> alignments = List.of(
-                clipped("r1", V1, 1, 10, 30, 0),
-                clipped("r2", V1, 1, 10, 30, 0),
-                alignment("r3", V2, 1, 10, 9, 0));
+                clipped("r1", V1, 1, 10, 30, 0),    // Clipped over origin; dropped
+                clipped("r2", V1, 1, 10, 30, 0),    // Clipped over origin; dropped
+                alignment("r3", V2, 1, 10, 9, 0));  // Not clipped; kept
 
         List<ContigSupport> stats = new ContigSupportCalculator(VOTE_CORRECT_BASE_PROBABILITY).compute(
                 ViralAlignments.from(alignments, MEAN_READ_LENGTH));

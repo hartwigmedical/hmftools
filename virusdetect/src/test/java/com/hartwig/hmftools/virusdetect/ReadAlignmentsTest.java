@@ -12,7 +12,6 @@ public class ReadAlignmentsTest
 
     private static final ViralContig V1 = new ViralContig("v1", 1000, "Virus v1", new OncologyGroup("Group A"));
 
-    // Repeat alignments to one contig collapse to a single hit, counted so the repeat stays visible.
     @Test
     public void testRepeatAlignmentsCollapseToOneHit()
     {

@@ -18,8 +18,6 @@ public class PairwiseMarginsTest
     private static final ViralContig V2 = new ViralContig("v2", LENGTH, "Virus 2", GROUP_A);
     private static final ViralContig H1 = new ViralContig("h1", LENGTH, "Virus H", GROUP_H);
 
-    // v1 and v2 share a group; h1 is in another. Two reads align to both v1 and v2, each fitting v1 better; a third
-    // spans the group boundary and must not be paired.
     @Test
     public void testPairsContigsWithinGroupByWinningMargin()
     {

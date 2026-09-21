@@ -30,10 +30,10 @@ public class RepresentativeSelectorTest
     private static final ViralContig V3 = new ViralContig("v3", LENGTH, "Virus v3", GROUP_A);
     private static final ViralContig H1 = new ViralContig("h1", LENGTH, "Virus h1", GROUP_H);
 
-    // Two contigs with similar votes and no challenge between them: the one with more votes leads, the other is its twin.
     @Test
     public void testResolvedTwins()
     {
+        // Votes close enough to be comparable, and neither contig challenges the other.
         List<OncologyGroupRepresentativeSelection> selections = select(support(candidate(V1, 100), candidate(V2, 95)), margins());
 
         assertEquals(ContigRole.REPRESENTATIVE, role(selections, V1));
@@ -43,7 +43,6 @@ public class RepresentativeSelectorTest
         assertEquals(V1, group(selections, GROUP_A).representative());
     }
 
-    // The leader decisively challenges the other contig: the other becomes secondary and the leader is still chosen.
     @Test
     public void testResolvedWithSecondary()
     {
@@ -57,7 +56,6 @@ public class RepresentativeSelectorTest
         assertEquals(Set.of(V1), result(selections, V2).challengedBy());
     }
 
-    // Two contigs challenge each other, so neither can be chosen: unresolved, no representative.
     @Test
     public void testUnresolvedMutual()
     {
@@ -69,7 +67,6 @@ public class RepresentativeSelectorTest
         assertNull(group(selections, GROUP_A).representative());
     }
 
-    // Three contigs challenge in a loop (v1 beats v2 beats v3 beats v1), so none is unchallenged: unresolved as a cycle.
     @Test
     public void testUnresolvedCycle()
     {
@@ -81,10 +78,10 @@ public class RepresentativeSelectorTest
         assertNull(group(selections, GROUP_A).representative());
     }
 
-    // A low-vote contig decisively challenges the leader: unresolved, and the leader is left contested.
     @Test
     public void testUnresolvedMinorChallenger()
     {
+        // The challenger's votes are far below the leader's, so it is not a comparable peer.
         List<OncologyGroupRepresentativeSelection> selections = select(
                 support(candidate(V1, 100), candidate(V3, 10)), margins(challenge(V3, V1, 40)));
 
@@ -94,7 +91,6 @@ public class RepresentativeSelectorTest
         assertNull(group(selections, GROUP_A).representative());
     }
 
-    // A low-vote contig that challenges nobody: the leader is still chosen and the low-vote contig is minor.
     @Test
     public void testResolvedWithMinorBystander()
     {
@@ -105,7 +101,6 @@ public class RepresentativeSelectorTest
         assertEquals(OncologyGroupOutcome.RESOLVED_CANDIDATES, group(selections, GROUP_A).outcome());
     }
 
-    // A single candidate resolves trivially.
     @Test
     public void testSoleContig()
     {
@@ -115,10 +110,10 @@ public class RepresentativeSelectorTest
         assertEquals(OncologyGroupOutcome.ONE_CANDIDATE, group(selections, GROUP_A).outcome());
     }
 
-    // A tenth of the group's reads winning by a decisive margin meets the challenge threshold of a tenth.
     @Test
     public void testChallengeAtThreshold()
     {
+        // 20 of the group's 200 reads win decisively: exactly the threshold of a tenth.
         List<OncologyGroupRepresentativeSelection> selections = select(
                 support(candidate(V1, 100), candidate(V2, 100)), margins(challenge(V1, V2, 20)), 200);
 
@@ -134,10 +129,10 @@ public class RepresentativeSelectorTest
         assertEquals(ContigRole.REPRESENTATIVE_TWIN, role(selections, V2));
     }
 
-    // Plenty of winning reads, but none of them wins by enough bases to count.
     @Test
     public void testNoChallengeBelowMargin()
     {
+        // Plenty of winning reads, but none wins by enough bases to count.
         List<OncologyGroupRepresentativeSelection> selections = select(
                 support(candidate(V1, 100), candidate(V2, 100)),
                 margins(challenge(V1, V2, 100, MIN_CHALLENGE_MARGIN - 1)));
@@ -145,7 +140,6 @@ public class RepresentativeSelectorTest
         assertEquals(ContigRole.REPRESENTATIVE_TWIN, role(selections, V2));
     }
 
-    // Contigs the prefilter rejected are reported but take no part in selection, and a group with none of them keeps nothing.
     @Test
     public void testRejectedContigsExcluded()
     {
@@ -164,10 +158,10 @@ public class RepresentativeSelectorTest
         assertTrue(group(selections, GROUP_H).candidates().isEmpty());
     }
 
-    // Rank follows the votes order, whatever order the contigs arrive in.
     @Test
     public void testVotesRankFollowsSupport()
     {
+        // The contigs arrive out of votes order.
         List<OncologyGroupRepresentativeSelection> selections = select(support(candidate(V2, 95), candidate(V1, 100)), margins());
 
         assertEquals(1, result(selections, V1).votesRank());
