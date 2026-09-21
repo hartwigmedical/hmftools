@@ -52,7 +52,7 @@
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <mainClass>com.hartwig.hmftools.virusdetect.VirusApplication</mainClass>
+                            <mainClass>com.hartwig.hmftools.virusdetect.app.VirusApplication</mainClass>
                             <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                             <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
                         </manifest>
