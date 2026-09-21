@@ -145,6 +145,8 @@ public class FragmentSizeCalcs implements Callable<Void>
         int currentGeneIndex = 0;
         int nextLogCount = 100;
 
+        boolean hasSpecificRegions = mConfig.Filters.SpecificChrRegions.hasFilters();
+
         while(currentGeneIndex < mGeneDataList.size())
         {
             currentGeneIndex = findNextOverlappingGenes(mGeneDataList, currentGeneIndex, overlappingGenes);
@@ -165,7 +167,7 @@ public class FragmentSizeCalcs implements Callable<Void>
                 mCurrentTransDataList.addAll(mGeneTransCache.getTranscripts(geneData.GeneId));
             }
 
-            if(mCurrentTransDataList.isEmpty() || mCurrentTransDataList.size() > MAX_GENE_TRANS)
+            if(!hasSpecificRegions && (mCurrentTransDataList.isEmpty() || mCurrentTransDataList.size() > MAX_GENE_TRANS))
                 continue;
 
             int geneLength = mCurrentGenesRange[SE_END] - mCurrentGenesRange[SE_START];
@@ -186,7 +188,6 @@ public class FragmentSizeCalcs implements Callable<Void>
 
             mCurrentFragmentCount = 0;
             mCurrentGenes = overlappingGenes.get(0).GeneName;
-
 
             ISF_LOGGER.trace("chromosome({}) gene({} index={}) fragCount({}) nextRegion({})",
                     mChromosome, mCurrentGenes, currentGeneIndex, mProcessedFragments, sliceRegion);
