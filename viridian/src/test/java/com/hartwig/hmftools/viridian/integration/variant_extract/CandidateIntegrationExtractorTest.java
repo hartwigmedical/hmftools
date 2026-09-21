@@ -58,7 +58,7 @@ public class CandidateIntegrationExtractorTest
 
     // A single breakend carrying every annotation the phase records but never acts on.
     @Test
-    public void extractsSingleBreakendWithAnnotations()
+    public void testExtractSingleBreakendWithAnnotations()
     {
         String records = record(
                 "chr1", 1000, "sgl_1", "A", "A" + INSERT_20 + ".", "minQual",
@@ -77,7 +77,7 @@ public class CandidateIntegrationExtractorTest
     // A paired variant yields one candidate carrying both host breakends, not one per breakend. It is identified by the
     // id ESVEE shares between the two records, rather than by either record's own id.
     @Test
-    public void extractsPairedVariantAsOneCandidate()
+    public void testExtractPairedVariantAsOneCandidate()
     {
         String records = pairedDeletion("del_1", INSERT_50);
 
@@ -94,7 +94,7 @@ public class CandidateIntegrationExtractorTest
 
     // Insert length is the only gate: a single breakend needs 20 bases, a paired variant 50.
     @Test
-    public void appliesInsertLengthThresholds()
+    public void testExtractAppliesInsertLengthThresholds()
     {
         String records = record(
                 "chr1", 1000, "sgl_short", "A", "A" + INSERT_19 + ".", "PASS", "SVTYPE=SGL", "0:1:1:0.0", "1:1:1:0.1")
@@ -108,7 +108,7 @@ public class CandidateIntegrationExtractorTest
 
     // Viral sequence never becomes a breakend coordinate, so a non-human contig is host-irrelevant and skipped.
     @Test
-    public void skipsNonHumanContigs()
+    public void testExtractSkipsNonHumanContigs()
     {
         String records = record(
                 "chrEBV", 1000, "ebv_1", "A", "A" + INSERT_20 + ".", "PASS", "SVTYPE=SGL", "0:1:1:0.0", "1:1:1:0.1");
@@ -118,7 +118,7 @@ public class CandidateIntegrationExtractorTest
 
     // A paired breakend whose mate never arrives is incomplete, so it cannot become a candidate.
     @Test
-    public void skipsBreakendWithoutMate()
+    public void testExtractSkipsBreakendWithoutMate()
     {
         String records = record(
                 "chr1", 5000, "orphan_o", "A", "A" + INSERT_50 + "[chr1:9000[", "PASS",
@@ -130,7 +130,7 @@ public class CandidateIntegrationExtractorTest
     // Fragment counts must follow the named tumor sample, not a genotype ordinal, so the columns are ordered
     // tumor-then-reference here to catch an ordinal assumption.
     @Test
-    public void resolvesTumorGenotypeByName()
+    public void testExtractResolvesTumorGenotypeByName()
     {
         String header = HEADER.replace("NORMAL\tTUMOR", "TUMOR\tNORMAL");
         String records = record(
@@ -141,7 +141,7 @@ public class CandidateIntegrationExtractorTest
     }
 
     @Test
-    public void failsWhenTumorSampleAbsent()
+    public void testExtractFailsWhenTumorSampleAbsent()
     {
         String header = HEADER.replace("NORMAL\tTUMOR", "NORMAL\tOTHER");
         String records = record(

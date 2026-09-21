@@ -45,7 +45,7 @@ public class ViralReferenceTest
     public TemporaryFolder mTempDir = new TemporaryFolder();
 
     @Test
-    public void testJoinsContigsInFastaOrderWithInfo()
+    public void testJoinFastaAndInfoJoinsContigsInFastaOrder()
     {
         List<ViralContig> contigs = ViralReference.joinFastaAndInfo(dictionary("contigA", "contigB", "contigC"), INFO);
         assertEquals(List.of(CONTIG_A, CONTIG_B, CONTIG_C), contigs);
@@ -66,7 +66,7 @@ public class ViralReferenceTest
     }
 
     @Test
-    public void testLoadsInfoRowsByContig() throws IOException
+    public void testLoadInfoRowsByContig() throws IOException
     {
         assertEquals(INFO, ViralReference.loadInfo(writeTsv(VALID_INFO_TSV)));
     }

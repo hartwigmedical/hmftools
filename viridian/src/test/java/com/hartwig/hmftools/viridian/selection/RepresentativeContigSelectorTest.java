@@ -40,7 +40,7 @@ public class RepresentativeContigSelectorTest
     private static final ViralContig H1 = new ViralContig("h1", LENGTH, "Virus h1", GROUP_H);
 
     @Test
-    public void testResolvedTwins()
+    public void testSelectResolvedTwins()
     {
         // Votes close enough to be comparable, and neither contig challenges the other.
         List<OncologyGroupRepresentativeSelection> selections = select(support(candidate(V1, 100), candidate(V2, 95)), margins());
@@ -53,7 +53,7 @@ public class RepresentativeContigSelectorTest
     }
 
     @Test
-    public void testResolvedWithSecondary()
+    public void testSelectResolvedWithSecondary()
     {
         List<OncologyGroupRepresentativeSelection> selections = select(
                 support(candidate(V1, 100), candidate(V2, 95)), margins(challenge(V1, V2, 40)));
@@ -66,7 +66,7 @@ public class RepresentativeContigSelectorTest
     }
 
     @Test
-    public void testUnresolvedMutual()
+    public void testSelectUnresolvedMutual()
     {
         List<OncologyGroupRepresentativeSelection> selections = select(
                 support(candidate(V1, 100), candidate(V2, 95)), margins(challenge(V1, V2, 40), challenge(V2, V1, 40)));
@@ -77,7 +77,7 @@ public class RepresentativeContigSelectorTest
     }
 
     @Test
-    public void testUnresolvedCycle()
+    public void testSelectUnresolvedCycle()
     {
         List<OncologyGroupRepresentativeSelection> selections = select(
                 support(candidate(V1, 100), candidate(V2, 98), candidate(V3, 96)),
@@ -88,7 +88,7 @@ public class RepresentativeContigSelectorTest
     }
 
     @Test
-    public void testUnresolvedMinorChallenger()
+    public void testSelectUnresolvedMinorChallenger()
     {
         // The challenger's votes are far below the leader's, so it is not a comparable peer.
         List<OncologyGroupRepresentativeSelection> selections = select(
@@ -101,7 +101,7 @@ public class RepresentativeContigSelectorTest
     }
 
     @Test
-    public void testResolvedWithMinorBystander()
+    public void testSelectResolvedWithMinorBystander()
     {
         List<OncologyGroupRepresentativeSelection> selections = select(support(candidate(V1, 100), candidate(V3, 10)), margins());
 
@@ -111,7 +111,7 @@ public class RepresentativeContigSelectorTest
     }
 
     @Test
-    public void testSoleContig()
+    public void testSelectSoleContig()
     {
         List<OncologyGroupRepresentativeSelection> selections = select(support(candidate(V1, 100)), margins());
 
@@ -120,7 +120,7 @@ public class RepresentativeContigSelectorTest
     }
 
     @Test
-    public void testChallengeAtThreshold()
+    public void testSelectChallengeAtThreshold()
     {
         // 20 of the group's 200 reads win decisively: exactly the threshold of a tenth.
         List<OncologyGroupRepresentativeSelection> selections = select(
@@ -130,7 +130,7 @@ public class RepresentativeContigSelectorTest
     }
 
     @Test
-    public void testNoChallengeBelowThreshold()
+    public void testSelectNoChallengeBelowThreshold()
     {
         List<OncologyGroupRepresentativeSelection> selections = select(
                 support(candidate(V1, 100), candidate(V2, 100)), margins(challenge(V1, V2, 19)), 200);
@@ -139,7 +139,7 @@ public class RepresentativeContigSelectorTest
     }
 
     @Test
-    public void testNoChallengeBelowMargin()
+    public void testSelectNoChallengeBelowMargin()
     {
         // Plenty of winning reads, but none wins by enough bases to count.
         List<OncologyGroupRepresentativeSelection> selections = select(
@@ -150,7 +150,7 @@ public class RepresentativeContigSelectorTest
     }
 
     @Test
-    public void testRejectedContigsExcluded()
+    public void testSelectRejectedContigsExcluded()
     {
         List<ContigSupport> support = support(
                 candidate(V1, 100),
@@ -168,7 +168,7 @@ public class RepresentativeContigSelectorTest
     }
 
     @Test
-    public void testGroupWithoutReadCount()
+    public void testSelectGroupWithoutReadCount()
     {
         // A group can hold a contig supported only by alignments dropped over the contig origin, leaving the group with
         // no reads counted against it. Such a contig is never a candidate, so selection must not need the count.
@@ -182,7 +182,7 @@ public class RepresentativeContigSelectorTest
     }
 
     @Test
-    public void testVotesRankFollowsSupport()
+    public void testSelectVotesRankFollowsSupport()
     {
         // The contigs arrive out of votes order.
         List<OncologyGroupRepresentativeSelection> selections = select(support(candidate(V2, 95), candidate(V1, 100)), margins());

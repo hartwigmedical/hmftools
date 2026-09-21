@@ -39,7 +39,7 @@ public class ViralReadAlignerTest
     private static final String R3_BASES = "G".repeat(100);
 
     @Test
-    public void testWritesEveryViralAlignmentWithContigAndScore() throws IOException
+    public void testAlignWritesEveryViralAlignmentWithContigAndScore() throws IOException
     {
         // The aligner's own minimum-score floor sits upstream, so low-scoring alignments must still be written here.
         Map<String, List<BwaMemAlignment>> alignments = Map.of(

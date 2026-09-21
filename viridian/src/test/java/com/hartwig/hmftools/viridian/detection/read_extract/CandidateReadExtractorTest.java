@@ -33,7 +33,7 @@ public class CandidateReadExtractorTest
     public TemporaryFolder mTempDir = new TemporaryFolder();
 
     @Test
-    public void testWritesFilteredCandidateReadsWithMateSuffix() throws IOException
+    public void testExtractToFastaWritesFilteredCandidateReadsWithMateSuffix() throws IOException
     {
         SAMFileHeader header = header(SAMFileHeader.SortOrder.coordinate, 10000);
         List<SAMRecord> records = List.of(
@@ -58,7 +58,7 @@ public class CandidateReadExtractorTest
     }
 
     @Test
-    public void testReadSpanningPartitionBoundaryWrittenOnce() throws IOException
+    public void testExtractToFastaReadSpanningPartitionBoundaryWrittenOnce() throws IOException
     {
         // A read overlapping a boundary is sliced by both partitions, but belongs to the one holding its start.
         SAMFileHeader header = header(SAMFileHeader.SortOrder.coordinate, 2 * VIRAL_READ_EXTRACTION_PARTITION_SIZE);
@@ -76,7 +76,7 @@ public class CandidateReadExtractorTest
     }
 
     @Test
-    public void testPlacedUnmappedReadFoundByRegionScan() throws IOException
+    public void testExtractToFastaPlacedUnmappedReadFoundByRegionScan() throws IOException
     {
         // Such a read sits in coordinate order, not the unplaced block at the end of the BAM. It may be an integration site.
         SAMFileHeader header = header(SAMFileHeader.SortOrder.coordinate, 10000);
@@ -93,7 +93,7 @@ public class CandidateReadExtractorTest
     }
 
     @Test
-    public void testUnindexedBamRejected() throws IOException
+    public void testExtractToFastaUnindexedBamRejected() throws IOException
     {
         // Sharding the scan by region needs an index.
         SAMFileHeader header = header(SAMFileHeader.SortOrder.unsorted, 10000);

@@ -22,7 +22,7 @@ public class ViralReadAlignmentsTest
     private static final ViralContig H1 = new ViralContig("h1", LENGTH, "Virus h1", GROUP_H);
 
     @Test
-    public void testOriginStraddlersExcludedAndCounted()
+    public void testFromOriginStraddlersExcludedAndCounted()
     {
         // An alignment clipping over a contig end straddles the circular origin.
         ViralReadAlignments alignments = ViralReadAlignments.from(
@@ -33,7 +33,7 @@ public class ViralReadAlignmentsTest
     }
 
     @Test
-    public void testReadCountedOncePerOncologyGroup()
+    public void testFromReadCountedOncePerOncologyGroup()
     {
         ViralReadAlignments alignments = ViralReadAlignments.from(
                 List.of(alignment("r1", V1), alignment("r1", V2), alignment("r2", V1)), 150.0);
@@ -42,7 +42,7 @@ public class ViralReadAlignmentsTest
     }
 
     @Test
-    public void testReadCountedInEveryOncologyGroupItAligns()
+    public void testFromReadCountedInEveryOncologyGroupItAligns()
     {
         ViralReadAlignments alignments = ViralReadAlignments.from(List.of(alignment("r1", V1), alignment("r1", H1)), 150.0);
 
@@ -50,7 +50,7 @@ public class ViralReadAlignmentsTest
     }
 
     @Test
-    public void testStraddlersDoNotCountTowardsReadCounts()
+    public void testFromStraddlersDoNotCountTowardsReadCounts()
     {
         // A contig carrying only straddlers leaves its group unrepresented.
         ViralReadAlignments alignments = ViralReadAlignments.from(List.of(alignment("r1", V1), straddler("r2", H1)), 150.0);
@@ -59,7 +59,7 @@ public class ViralReadAlignmentsTest
     }
 
     @Test
-    public void testOriginClippedCountsReadsNotAlignments()
+    public void testFromOriginClippedCountsReadsNotAlignments()
     {
         ViralReadAlignments alignments = ViralReadAlignments.from(
                 List.of(straddler("r1", V1), straddler("r1", V1), straddler("r2", V1)), 150.0);

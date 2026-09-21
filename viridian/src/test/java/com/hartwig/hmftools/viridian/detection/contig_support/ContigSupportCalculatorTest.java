@@ -26,7 +26,7 @@ public class ContigSupportCalculatorTest
     private static final ViralContig V2 = new ViralContig("v2", 10, "Virus 2", new OncologyGroup("Group 2"));
 
     @Test
-    public void testComputesPerContigDepthAndCoverage()
+    public void testComputePerContigDepthAndCoverage()
     {
         List<ViralReadAlignment> alignments = List.of(
                 alignment("r1", V1, 1, 10, 10, 0),
@@ -54,7 +54,7 @@ public class ContigSupportCalculatorTest
     }
 
     @Test
-    public void testVotesAttributeVirusStrainSupport()
+    public void testComputeVotesAttributeVirusStrainSupport()
     {
         List<ViralReadAlignment> alignments = List.of(
                 alignment("r1", V1, 1, 10, 10, 1),
@@ -73,7 +73,7 @@ public class ContigSupportCalculatorTest
     }
 
     @Test
-    public void testTiedReadSplitsVoteEvenly()
+    public void testComputeTiedReadSplitsVoteEvenly()
     {
         List<ViralReadAlignment> alignments = List.of(
                 alignment("r", V1, 1, 10, 10, 2),
@@ -87,7 +87,7 @@ public class ContigSupportCalculatorTest
     }
 
     @Test
-    public void testDropsAlignmentsClippingOverContigEnds()
+    public void testComputeDropsAlignmentsClippingOverContigEnds()
     {
         List<ViralReadAlignment> alignments = List.of(
                 clipped("r1", V1, 1, 10, 10, 0),    // left clip projects to -9: over the start
@@ -104,7 +104,7 @@ public class ContigSupportCalculatorTest
     }
 
     @Test
-    public void testContigWithOnlyOriginClippedAlignmentsIsStillReported()
+    public void testComputeContigWithOnlyOriginClippedAlignmentsIsStillReported()
     {
         List<ViralReadAlignment> alignments = List.of(
                 clipped("r1", V1, 1, 10, 30, 0),    // Clipped over origin; dropped

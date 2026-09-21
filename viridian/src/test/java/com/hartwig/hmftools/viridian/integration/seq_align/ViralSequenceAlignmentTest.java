@@ -15,14 +15,14 @@ public class ViralSequenceAlignmentTest
 
     // Clipped bases are the host side of an integration junction, so they are not insert bases placed on the virus.
     @Test
-    public void excludesClippedBases()
+    public void testAlignedLengthExcludesClippedBases()
     {
         assertEquals(70, alignment("30S70M", 100).alignedLength());
     }
 
     // Inserted query bases are not placed on the contig, and a deletion consumes no query bases at all.
     @Test
-    public void excludesIndelBases()
+    public void testAlignedLengthExcludesIndelBases()
     {
         assertEquals(28, alignment("10M2I8M3D10M", 30).alignedLength());
     }

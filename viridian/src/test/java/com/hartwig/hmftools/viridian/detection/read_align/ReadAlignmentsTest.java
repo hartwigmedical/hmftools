@@ -16,7 +16,7 @@ public class ReadAlignmentsTest
     private static final ViralContig V1 = new ViralContig("v1", 1000, "Virus v1", new OncologyGroup("Group A"));
 
     @Test
-    public void testRepeatAlignmentsCollapseToOneHit()
+    public void testFromRepeatAlignmentsCollapseToOneHit()
     {
         ReadAlignments read = ReadAlignments.from("r1", List.of(alignment(100, 4, 90), alignment(500, 9, 80)));
 

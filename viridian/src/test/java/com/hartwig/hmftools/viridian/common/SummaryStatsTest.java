@@ -13,7 +13,7 @@ public class SummaryStatsTest
     private static final double EPSILON = 1e-9;
 
     @Test
-    public void testMeanMinMaxAndPercentiles()
+    public void testFromMeanMinMaxAndPercentiles()
     {
         SummaryStats stats = SummaryStats.from(new int[] { 10, 20, 30, 40, 50, 60, 70, 80, 90, 100 });
 
@@ -28,7 +28,7 @@ public class SummaryStatsTest
     }
 
     @Test
-    public void testSingleValue()
+    public void testFromSingleValue()
     {
         SummaryStats stats = SummaryStats.from(new int[] { 7 });
 
@@ -41,7 +41,7 @@ public class SummaryStatsTest
     }
 
     @Test
-    public void testUnsortedInputIsSorted()
+    public void testFromUnsortedInputIsSorted()
     {
         SummaryStats stats = SummaryStats.from(new int[] { 30, 10, 20 });
 
@@ -63,7 +63,7 @@ public class SummaryStatsTest
     }
 
     @Test
-    public void testDoesNotMutateInput()
+    public void testFromDoesNotMutateInput()
     {
         int[] input = { 30, 10, 20 };
         SummaryStats.from(input);
@@ -71,7 +71,7 @@ public class SummaryStatsTest
     }
 
     @Test
-    public void testThrowsOnEmpty()
+    public void testFromThrowsOnEmpty()
     {
         assertThrows(IllegalArgumentException.class, () -> SummaryStats.from(new int[0]));
     }

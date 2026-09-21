@@ -25,7 +25,7 @@ public class PairwiseMarginsTest
     private static final ViralContig H1 = new ViralContig("h1", LENGTH, "Virus H", GROUP_H);
 
     @Test
-    public void testPairsContigsWithinGroupByWinningMargin()
+    public void testFromPairsContigsWithinGroupByWinningMargin()
     {
         List<ViralReadAlignment> alignments = List.of(
                 alignment("r1", V1, 2),

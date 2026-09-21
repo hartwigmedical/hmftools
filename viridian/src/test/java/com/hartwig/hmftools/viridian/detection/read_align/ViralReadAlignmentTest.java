@@ -33,7 +33,7 @@ public class ViralReadAlignmentTest
     private static final ViralContig CONTIG = REFERENCE.contig("v1");
 
     @Test
-    public void testExtractsFieldsAndCountsClipsInDivergence()
+    public void testFromExtractsFieldsAndCountsClipsInDivergence()
     {
         ViralReadAlignment alignment = ViralReadAlignment.from(record(30, "40S60M", 60, 1), REFERENCE);
 
@@ -50,7 +50,7 @@ public class ViralReadAlignmentTest
     }
 
     @Test
-    public void testDetectsClipsOverContigEnds()
+    public void testClipsOverContigEndDetectsClipsPastEitherEnd()
     {
         // A clip projecting past a contig boundary straddles the circular origin.
         assertTrue(ViralReadAlignment.from(record(30, "40S60M", 60, 0), REFERENCE).clipsOverContigEnd());    // left clip projects to -10
@@ -59,21 +59,21 @@ public class ViralReadAlignmentTest
     }
 
     @Test
-    public void testThrowsWhenAlignmentScoreMissing()
+    public void testFromThrowsWhenAlignmentScoreMissing()
     {
         SAMRecord record = record(30, "60M", null, 0);
         assertThrows(IllegalStateException.class, () -> ViralReadAlignment.from(record, REFERENCE));
     }
 
     @Test
-    public void testThrowsWhenEditDistanceMissing()
+    public void testFromThrowsWhenEditDistanceMissing()
     {
         SAMRecord record = record(30, "60M", 60, null);
         assertThrows(IllegalStateException.class, () -> ViralReadAlignment.from(record, REFERENCE));
     }
 
     @Test
-    public void testLowestDivergenceBeatsHighestScore()
+    public void testBestFitFirstLowestDivergenceBeatsHighestScore()
     {
         // Soft clips cost nothing in the aligner score but are bases the contig fails to explain, so divergence and
         // score can disagree.
@@ -84,7 +84,7 @@ public class ViralReadAlignmentTest
     }
 
     @Test
-    public void testHighestScoreBreaksDivergenceTie()
+    public void testBestFitFirstHighestScoreBreaksDivergenceTie()
     {
         // Equal divergence can still arise from different gap structures.
         ViralReadAlignment weaker = alignment(10, 8, 60);

@@ -21,7 +21,7 @@ public class ContigSupportFilterTest
     private static final ViralContig SIBLING = new ViralContig("v2", LENGTH, "Virus v2", GROUP);
 
     @Test
-    public void testRelaxedFloorKeepsStraddlingSibling()
+    public void testStatusesRelaxedFloorKeepsStraddlingSibling()
     {
         // The sibling establishes the group, so this contig is kept down to the relaxed floor of 90 bases.
         assertEquals(ContigFilterStatus.CANDIDATE, statusWithPresentGroup(95));
@@ -29,7 +29,7 @@ public class ContigSupportFilterTest
     }
 
     @Test
-    public void testAbsentGroupRejectsEveryContig()
+    public void testStatusesAbsentGroupRejectsEveryContig()
     {
         // No contig reaches the coverage floor, so the relaxed floor never applies.
         Map<ViralContig, ContigFilterStatus> statuses = statuses(Map.of(CONTIG, 95, SIBLING, 95), Map.of(CONTIG, 100.0, SIBLING, 100.0));
@@ -39,7 +39,7 @@ public class ContigSupportFilterTest
     }
 
     @Test
-    public void testGroupPresenceAtCoverageFloor()
+    public void testStatusesGroupPresenceAtCoverageFloor()
     {
         // A lone contig establishes its group only by reaching the coverage floor, here 0.10 * 1000 = 100 bases.
         assertEquals(ContigFilterStatus.CANDIDATE, status(100, 100.0));
@@ -47,14 +47,14 @@ public class ContigSupportFilterTest
     }
 
     @Test
-    public void testVoteDensityFloorDropsCoveredContig()
+    public void testStatusesVoteDensityFloorDropsCoveredContig()
     {
         assertEquals(ContigFilterStatus.CANDIDATE, status(500, 0.67));
         assertEquals(ContigFilterStatus.LOW_VOTE_DENSITY, status(500, 0.66));
     }
 
     @Test
-    public void testCoverageReasonTakesPrecedence()
+    public void testStatusesCoverageReasonTakesPrecedence()
     {
         // Both filters fail here.
         assertEquals(ContigFilterStatus.LOW_COVERAGE, statusWithPresentGroup(50, 0.1));

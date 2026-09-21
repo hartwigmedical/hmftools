@@ -31,7 +31,7 @@ public class ViralSequenceAlignerTest
     private static final String OTHER_SEQUENCE = "TTGCATTGCATTGCATTGCATTGCATTGCATT";
 
     @Test
-    public void takesTheHighestScoringAlignment()
+    public void testAlignAllTakesHighestScoringAlignment()
     {
         // The same sequence hits both contigs; only the better-scoring hit is kept.
         List<BwaMemAlignment> hits = List.of(
@@ -45,7 +45,7 @@ public class ViralSequenceAlignerTest
 
     // Near-identical contigs give a sequence equal scores, so the choice must not depend on the order BWA returns them.
     @Test
-    public void breaksScoreTiesDeterministically()
+    public void testAlignAllBreaksScoreTiesDeterministically()
     {
         List<BwaMemAlignment> ascending = List.of(
                 alignment(0, 0, 999, 60, "32M", 1),
@@ -61,7 +61,7 @@ public class ViralSequenceAlignerTest
     // A partly aligned sequence keeps the clip in its cigar, and its length stays that of the whole query, so how much
     // of the insert reached a virus can be recovered downstream.
     @Test
-    public void reportsPartiallyAlignedSequence()
+    public void testAlignAllReportsPartiallyAlignedSequence()
     {
         ViralSequenceAlignment alignment = align(SEQUENCE, List.of(alignment(0, 0, 199, 40, "12S20M", 0)));
 
@@ -70,7 +70,7 @@ public class ViralSequenceAlignerTest
     }
 
     @Test
-    public void reportsReverseStrandAlignment()
+    public void testAlignAllReportsReverseStrandAlignment()
     {
         assertEquals(
                 new ViralSequenceAlignment(CONTIG_18, 300, REVERSE, "32M", 55, 2, 32),
@@ -79,7 +79,7 @@ public class ViralSequenceAlignerTest
 
     // A sequence matching no contig yields no alignment, and the results stay aligned with the input order.
     @Test
-    public void returnsNullWhereNothingAligned()
+    public void testAlignAllReturnsNullWhereNothingAligned()
     {
         ViralSequenceAligner aligner = aligner(Map.of(
                 OTHER_SEQUENCE, List.of(noHit()),
