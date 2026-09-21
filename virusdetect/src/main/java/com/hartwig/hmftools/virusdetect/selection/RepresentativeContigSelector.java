@@ -35,14 +35,13 @@ public class RepresentativeContigSelector
         return contigSupport.stream()
                 .collect(groupingBy(support -> support.contig().oncologyGroup()))
                 .entrySet().stream()
-                .map(entry -> selectOncologyGroup(
-                        entry.getKey(), entry.getValue(), margins,
-                        requireNonNull(groupReadCounts.get(entry.getKey()))))
+                .map(entry -> selectOncologyGroup(entry.getKey(), entry.getValue(), margins, groupReadCounts))
                 .toList();
     }
 
     private static OncologyGroupRepresentativeSelection selectOncologyGroup(
-            OncologyGroup oncologyGroup, List<ContigSupport> groupContigs, PairwiseMargins margins, int groupReads)
+            OncologyGroup oncologyGroup, List<ContigSupport> groupContigs, PairwiseMargins margins,
+            Map<OncologyGroup, Integer> groupReadCounts)
     {
         List<ContigSupport> rejected = groupContigs.stream().filter(support -> !support.isCandidate()).toList();
         List<ContigSupport> candidates = groupContigs.stream()
@@ -54,6 +53,11 @@ public class RepresentativeContigSelector
         {
             return new OncologyGroupRepresentativeSelection(oncologyGroup, OncologyGroupOutcome.NO_CANDIDATES, List.of(), rejected);
         }
+
+        // Only groups reaching here have reads counted against them, since a candidate needs coverage from them, whereas
+        // a group can hold contigs supported by nothing but alignments dropped over the origin.
+        int groupReads = requireNonNull(
+                groupReadCounts.get(oncologyGroup), "No aligned read count for oncology group: " + oncologyGroup);
 
         List<ViralContig> contigs = candidates.stream().map(ContigSupport::contig).toList();
         Set<ViralContig> comparable = comparableContigs(candidates);

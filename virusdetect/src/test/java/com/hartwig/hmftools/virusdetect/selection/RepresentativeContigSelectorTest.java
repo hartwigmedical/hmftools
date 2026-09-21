@@ -15,7 +15,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import com.hartwig.hmftools.virusdetect.app.SummaryStats;
+import com.hartwig.hmftools.virusdetect.common.SummaryStats;
 import com.hartwig.hmftools.virusdetect.detection.contig_support.ContigFilterStatus;
 import com.hartwig.hmftools.virusdetect.detection.contig_support.ContigSupport;
 import com.hartwig.hmftools.virusdetect.detection.read_align.AlignedInterval;
@@ -165,6 +165,20 @@ public class RepresentativeContigSelectorTest
         assertEquals(OncologyGroupResolution.NO_CANDIDATES, group(selections, GROUP_H).resolution());
         assertNull(group(selections, GROUP_H).representative());
         assertTrue(group(selections, GROUP_H).candidates().isEmpty());
+    }
+
+    @Test
+    public void testGroupWithoutReadCount()
+    {
+        // A group can hold a contig supported only by alignments dropped over the contig origin, leaving the group with
+        // no reads counted against it. Such a contig is never a candidate, so selection must not need the count.
+        List<ContigSupport> support = support(candidate(V1, 100), rejected(H1, ContigFilterStatus.LOW_COVERAGE));
+        Map<OncologyGroup, Integer> readCounts = Map.of(GROUP_A, 200);
+
+        List<OncologyGroupRepresentativeSelection> selections = RepresentativeContigSelector.select(support, margins(), readCounts);
+
+        assertEquals(ContigRole.REPRESENTATIVE, role(selections, V1));
+        assertEquals(OncologyGroupOutcome.NO_CANDIDATES, group(selections, GROUP_H).outcome());
     }
 
     @Test

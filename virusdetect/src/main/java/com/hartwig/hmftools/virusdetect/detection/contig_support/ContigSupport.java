@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.virusdetect.detection.contig_support;
 
-import com.hartwig.hmftools.virusdetect.app.SummaryStats;
+import com.hartwig.hmftools.virusdetect.common.SummaryStats;
 import com.hartwig.hmftools.virusdetect.reference.ViralContig;
 
 import org.jetbrains.annotations.Nullable;

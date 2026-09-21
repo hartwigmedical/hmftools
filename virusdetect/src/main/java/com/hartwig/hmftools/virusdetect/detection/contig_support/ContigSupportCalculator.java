@@ -14,7 +14,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.hartwig.hmftools.virusdetect.app.SummaryStats;
+import com.hartwig.hmftools.virusdetect.common.SummaryStats;
 import com.hartwig.hmftools.virusdetect.detection.read_align.AlignedInterval;
 import com.hartwig.hmftools.virusdetect.detection.read_align.ReadAlignments;
 import com.hartwig.hmftools.virusdetect.detection.read_align.ViralReadAlignment;

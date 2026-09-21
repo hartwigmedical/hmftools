@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.hartwig.hmftools.common.utils.file.DelimFileWriter;
+import com.hartwig.hmftools.virusdetect.common.SummaryStats;
 import com.hartwig.hmftools.virusdetect.detection.contig_support.ContigSupport;
 import com.hartwig.hmftools.virusdetect.reference.ViralContig;
 import com.hartwig.hmftools.virusdetect.selection.OncologyGroupRepresentativeSelection;

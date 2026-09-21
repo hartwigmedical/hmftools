@@ -6,8 +6,6 @@ import static org.junit.Assert.assertThrows;
 
 import java.util.List;
 
-import com.hartwig.hmftools.virusdetect.app.SummaryStats;
-
 import org.junit.Test;
 
 public class SummaryStatsTest

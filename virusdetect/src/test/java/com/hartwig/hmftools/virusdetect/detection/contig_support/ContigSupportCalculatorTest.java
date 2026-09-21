@@ -6,7 +6,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.List;
 
-import com.hartwig.hmftools.virusdetect.app.SummaryStats;
+import com.hartwig.hmftools.virusdetect.common.SummaryStats;
 import com.hartwig.hmftools.virusdetect.detection.read_align.AlignedInterval;
 import com.hartwig.hmftools.virusdetect.detection.read_align.ViralReadAlignment;
 import com.hartwig.hmftools.virusdetect.detection.read_align.ViralReadAlignments;

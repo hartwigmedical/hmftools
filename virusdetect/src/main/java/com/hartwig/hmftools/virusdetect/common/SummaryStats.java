@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.virusdetect.app;
+package com.hartwig.hmftools.virusdetect.common;
 
 import static java.util.Map.entry;
 import static java.util.stream.Collectors.toMap;
