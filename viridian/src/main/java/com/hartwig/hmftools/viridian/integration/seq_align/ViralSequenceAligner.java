@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.viridian.integration.seq_align;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.cigarFromStr;
+import static com.hartwig.hmftools.viridian.common.ViridianConstants.INTEGRATION_ALIGN_SCORE_MIN;
 
 import java.util.Comparator;
 import java.util.List;
@@ -29,8 +30,7 @@ public class ViralSequenceAligner
 
     public static ViralSequenceAligner create(ViralReference reference, String bwaIndexImage, int threads)
     {
-        // TODO: need to adjust min alignment score?
-        BwaMemAlignParams params = BwaMemAlignParams.DEFAULT;
+        BwaMemAlignParams params = BwaMemAlignParams.DEFAULT.withMinAlignScore(INTEGRATION_ALIGN_SCORE_MIN);
         BwaMemAlignerConfig alignerConfig = new BwaMemAlignerConfig(bwaIndexImage, params, false, threads, null);
         BwaMemAligner aligner = new BwaMemAligner(alignerConfig);
         return new ViralSequenceAligner(aligner, reference);

@@ -33,10 +33,10 @@ public record ViralContig(
     }
 
     @Override
-    public int compareTo(ViralContig other)
+    public int compareTo(@NotNull ViralContig other)
     {
         Comparator<ViralContig> comparator =
-                comparing(ViralContig::oncologyGroup).thenComparing(ViralContig::name)
+                comparing(ViralContig::oncologyGroup).thenComparing(ViralContig::name);
         return comparator.compare(this, other);
     }
 }

@@ -71,4 +71,6 @@ public class ViridianConstants
     public static final int INTEGRATION_SGL_INSERT_LENGTH_MIN = 20;
     public static final int INTEGRATION_VARIANT_INSERT_LENGTH_MIN = 50;
 
+    public static final int INTEGRATION_ALIGN_SCORE_MIN = 20;
+
 }
