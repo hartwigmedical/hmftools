@@ -28,6 +28,7 @@ public class OutputWriter
 {
     private static final Logger LOGGER = LogManager.getLogger(OutputWriter.class);
 
+    // TODO: write in order: oncology group (lexicographically, ascending), read votes (descending)
     public static void writeContigInfo(String file, List<OncologyGroupRepresentativeSelection> selections)
     {
         Map<ViralContig, Integer> votesRanks = candidateVotesRanks(selections);
@@ -190,6 +191,7 @@ public class OutputWriter
 
     // One row per ordered within-oncology-group contig pair: the reads they share, and how many of those fit the subject
     // better by at least each reported margin. Includes support-filtered contigs. Verbose/debug only, for tuning.
+    // TODO: write in order: oncology group (lexicographically, ascending), subject rank (ascending), opponent rank (ascending)
     public static void writePairwiseMargins(String file, PairwiseMargins margins, List<OncologyGroupRepresentativeSelection> selections)
     {
         Map<ViralContig, Integer> votesRanks = candidateVotesRanks(selections);
