@@ -30,6 +30,7 @@ public record VirusConfig(
         String viralRefInfoFile,
         String viralBwaIndexImage,
         @Nullable String bwaLibPath,
+        @Nullable String esveeUnfilteredVcf,
         int alignmentBatchSize,
         int threads,
         String outputDir,
@@ -44,6 +45,8 @@ public record VirusConfig(
     private static final String DESC_VIRAL_REF_INFO_FILE = "Viral reference info TSV (contig -> virus name + oncology group)";
     private static final String CFG_VIRAL_BWA_INDEX_IMAGE = "viral_bwa_index_image";
     private static final String DESC_VIRAL_BWA_INDEX_IMAGE = "Viral reference BWA-MEM index GATK image file";
+    private static final String CFG_ESVEE_UNFILTERED_VCF = "esvee_unfiltered_vcf";
+    private static final String DESC_ESVEE_UNFILTERED_VCF = "ESVEE caller unfiltered VCF";
     private static final String CFG_ALIGNMENT_BATCH_SIZE = "align_batch_size";
     private static final String DESC_ALIGNMENT_BATCH_SIZE = "Candidate reads submitted to BWA per alignment call";
     private static final String CFG_REUSE_CANDIDATE_FASTA = "reuse_candidate_fasta";
@@ -63,6 +66,7 @@ public record VirusConfig(
                 configBuilder.getValue(CFG_VIRAL_REF_INFO_FILE),
                 configBuilder.getValue(CFG_VIRAL_BWA_INDEX_IMAGE, viralRefFile + ".img"),
                 configBuilder.getValue(BWA_LIB_PATH),
+                configBuilder.getValue(CFG_ESVEE_UNFILTERED_VCF),
                 configBuilder.getInteger(CFG_ALIGNMENT_BATCH_SIZE),
                 parseThreads(configBuilder),
                 parseOutputDir(configBuilder),
@@ -81,6 +85,7 @@ public record VirusConfig(
         configBuilder.addPath(CFG_VIRAL_REF_INFO_FILE, true, DESC_VIRAL_REF_INFO_FILE);
         configBuilder.addPath(CFG_VIRAL_BWA_INDEX_IMAGE, false, DESC_VIRAL_BWA_INDEX_IMAGE);
         configBuilder.addPath(BWA_LIB_PATH, false, BWA_LIB_PATH_DESC);
+        configBuilder.addPath(CFG_ESVEE_UNFILTERED_VCF, false, DESC_ESVEE_UNFILTERED_VCF);
 
         configBuilder.addInteger(CFG_ALIGNMENT_BATCH_SIZE, DESC_ALIGNMENT_BATCH_SIZE, ALIGNMENT_BATCH_SIZE_DEFAULT);
         configBuilder.addFlag(CFG_REUSE_CANDIDATE_FASTA, DESC_REUSE_CANDIDATE_FASTA);

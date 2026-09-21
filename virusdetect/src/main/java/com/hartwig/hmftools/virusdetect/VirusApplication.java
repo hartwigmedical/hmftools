@@ -95,12 +95,24 @@ public class VirusApplication
             OutputWriter.writePairwiseMargins(outputFile(PAIRWISE_MARGINS_TSV_SUFFIX), pairwiseMargins, selections);
         }
 
-        // TODO: placeholder pipeline; each step is replaced by its implementation as it lands.
-        LOGGER.info("Filtering aligned BAM to representatives -> BAM (stub)");
-        LOGGER.info("Computing contig info over representative BAM (stub)");
-        LOGGER.info("Annotating QC and writing detected TSV (stub)");
+        callIntegrations();
 
         LOGGER.info("VirusDetect complete, mins({})", runTimeMinsStr(startTimeMs));
+    }
+
+    // TODO: placeholder stages, each replaced by its implementation as it lands.
+    private void callIntegrations()
+    {
+        String esveeVcf = mConfig.esveeUnfilteredVcf();
+        if(esveeVcf == null)
+        {
+            LOGGER.info("ESVEE VCF not specified; skipping integration site calling");
+            return;
+        }
+
+        LOGGER.info("Extracting integration candidates from ESVEE VCF (stub): {}", esveeVcf);
+        LOGGER.info("Aligning candidate insert sequences to the viral reference (stub)");
+        LOGGER.info("Annotating integrations and writing TSV (stub)");
     }
 
     private String outputFile(String suffix)
