@@ -60,7 +60,7 @@ public class ExpressionReadTracker
 
     public void processUnsplicedGenes(
             final List<GeneReadData> overlapGenes, final List<Integer> validTranscripts, final List<BaseRegion> commonMappings,
-            double fragmentCount, boolean multiMapped)
+            int fragmentCount, boolean multiMapped)
     {
         if(!mEnabled)
             return;
@@ -76,7 +76,7 @@ public class ExpressionReadTracker
 
     public void processUnsplicedGenes(
             final FragmentMatchType comboTransMatchType, final List<GeneReadData> overlapGenes, final List<Integer> validTranscripts,
-            final List<BaseRegion> commonMappings, double fragmentCount, boolean multiMapped)
+            final List<BaseRegion> commonMappings, int fragmentCount, boolean multiMapped)
     {
         if(!mEnabled)
             return;
@@ -89,7 +89,7 @@ public class ExpressionReadTracker
     }
 
     public void processIntronicReads(
-            final List<GeneReadData> genes, final Read read1, final Read read2, double fragmentCount, boolean multiMapped)
+            final List<GeneReadData> genes, final Read read1, final Read read2, int fragmentCount, boolean multiMapped)
     {
         if(!mEnabled)
             return;
@@ -177,7 +177,7 @@ public class ExpressionReadTracker
     }
 
     public void addGcCounts(
-            final CategoryCountsData catCounts, final List<BaseRegion> readRegions, double fragmentCount, boolean multiMapped)
+            final CategoryCountsData catCounts, final List<BaseRegion> readRegions, int fragmentCount, boolean multiMapped)
     {
         int[] gcRatioIndices = { -1, -1 };
         double[] gcRatioCounts = { 0, 0 };
@@ -195,7 +195,7 @@ public class ExpressionReadTracker
     }
 
     public void addGcCounts(
-            final CategoryCountsData catCounts, final int[] gcRatioIndices, double[] gcRatioCounts, double count, boolean multiMapped)
+            final CategoryCountsData catCounts, final int[] gcRatioIndices, double[] gcRatioCounts, int count, boolean multiMapped)
     {
         if(mGcRatioCounts != null)
         {

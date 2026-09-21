@@ -18,6 +18,7 @@ import static com.hartwig.hmftools.isofox.WriteType.MULTI_MAP_LOCI;
 import static com.hartwig.hmftools.isofox.WriteType.READ;
 import static com.hartwig.hmftools.isofox.WriteType.SPLICE_SITE;
 import static com.hartwig.hmftools.isofox.WriteType.TRANS_COMBO;
+import static com.hartwig.hmftools.isofox.common.ReadUtils.consensusDuplicateCount;
 import static com.hartwig.hmftools.isofox.novel.CanonicalSpliceJunctionFile.CANONICAL_SJ_FILE_ID;
 import static com.hartwig.hmftools.common.rna.GeneExpressionFile.GENE_EXPRESSION_FILE_ID;
 import static com.hartwig.hmftools.common.rna.RnaStatisticFile.SUMMARY_FILE_ID;
@@ -301,7 +302,7 @@ public class ResultsWriter
             sj.add(valueOf(geneCollection.regionBounds()[SE_START]));
             sj.add(valueOf(geneCollection.regionBounds()[SE_END]));
 
-            final FragmentTypeCounts fragmentCounts = geneCollection.fragmentTypeCounts();
+            FragmentTypeCounts fragmentCounts = geneCollection.fragmentTypeCounts();
             sj.add(valueOf(fragmentCounts.typeCount(TOTAL)));
             sj.add(valueOf(fragmentCounts.typeCount(DUPLICATE)));
             sj.add(valueOf(fragmentCounts.typeCount(TRANS_SUPPORTING)));
@@ -436,12 +437,11 @@ public class ResultsWriter
             StringJoiner sj = new StringJoiner(TSV_DELIM);
             sj.add("ReadId").add("GeneInfo");
             sj.add(FLD_CHROMOSOME).add(FLD_POS_START).add(FLD_POS_END).add("Cigar").add("InsertSize").add("MateChr").add("MatePosStart");
-            sj.add("Flags").add("FirstInPair").add("ReadReversed").add("IsSupp").add("SuppData").add("FragType").add("TransInfo");
+            sj.add("Flags").add("FirstInPair").add("ReadReversed").add("IsSupp").add("SuppData");
+            sj.add("Duplicate").add("ConsensusDupCount");
 
-            /*
-            sj.add("TransId").add("TransClass").add("ValidTrans").add("ExonRank").add("ExonStart");
-            sj.add("RegionStart").add("RegionEnd").add("RegionClass").add("ScMatchedStart").add("ScMatchedEnd");
-            */
+            sj.add("FragType").add("TransInfo");
+
             writer.write(sj.toString());
             writer.newLine();
             return writer;
@@ -480,6 +480,16 @@ public class ResultsWriter
             sj.add(valueOf(read.isReadReversed()));
             sj.add(valueOf(read.isSupplementaryAlignment()));
             sj.add(read.supplementaryData() != null ? read.supplementaryData().asDelimStr() : "");
+
+            sj.add(valueOf(read.isDuplicate()));
+            if(read.isConsensusRead())
+            {
+                sj.add(valueOf(consensusDuplicateCount(read.bamRecord())));
+            }
+            else
+            {
+                sj.add("0");
+            }
 
             sj.add(geneReadType.toString());
 

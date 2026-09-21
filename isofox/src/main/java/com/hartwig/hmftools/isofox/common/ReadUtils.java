@@ -3,12 +3,17 @@ package com.hartwig.hmftools.isofox.common;
 import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.getReadIndexFromPosition;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_INFO_DELIM;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.isofox.common.FragmentType.DUPLICATE;
 
 import com.hartwig.hmftools.common.bam.ClippedSide;
 import com.hartwig.hmftools.common.region.BaseRegion;
+
+import htsjdk.samtools.SAMRecord;
 
 public final class ReadUtils
 {
@@ -85,5 +90,19 @@ public final class ReadUtils
         {
             return new ClippedSide(SE_END, rightScLength, rightScLength > 0);
         }
+    }
+
+    public static int consensusDuplicateCount(final SAMRecord record)
+    {
+        String consensusInfo = record.getStringAttribute(CONSENSUS_READ_ATTRIBUTE);
+
+        if(consensusInfo == null)
+            return 0;
+
+        String[] consensusComponents = consensusInfo.split(CONSENSUS_INFO_DELIM, 3);
+        int duplicateCount = Integer.parseInt(consensusComponents[0]);
+
+        // return 1 less than the cached count since 2 duplicates means 1 primary and 1 duplicate
+        return max(duplicateCount - 1, 1);
     }
 }

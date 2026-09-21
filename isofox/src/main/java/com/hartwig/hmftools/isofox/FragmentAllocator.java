@@ -14,8 +14,6 @@ import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.ALT_SPLICE_JUNCTIONS;
-import static com.hartwig.hmftools.isofox.IsofoxFunction.STATISTICS;
-import static com.hartwig.hmftools.isofox.IsofoxFunction.TRANSCRIPT_COUNTS;
 import static com.hartwig.hmftools.isofox.WriteType.SPLICE_SITE;
 import static com.hartwig.hmftools.isofox.common.FragmentMatchType.DISCORDANT;
 import static com.hartwig.hmftools.isofox.common.FragmentType.ALT;
@@ -32,6 +30,7 @@ import static com.hartwig.hmftools.isofox.common.Read.findOverlappingRegions;
 import static com.hartwig.hmftools.isofox.common.Read.getUniqueValidRegion;
 import static com.hartwig.hmftools.isofox.common.Read.markRegionBases;
 import static com.hartwig.hmftools.isofox.common.Read.validTranscriptType;
+import static com.hartwig.hmftools.isofox.common.ReadUtils.consensusDuplicateCount;
 import static com.hartwig.hmftools.isofox.common.ReadUtils.trimAdapterBases;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_INTRON;
 import static com.hartwig.hmftools.isofox.common.CommonUtils.deriveCommonRegions;
@@ -46,7 +45,6 @@ import static com.hartwig.hmftools.isofox.results.ResultsWriter.writeReadData;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -112,14 +110,13 @@ public class FragmentAllocator
     private final boolean mRunFusions;
     private final boolean mFusionsOnly;
     private final boolean mStatsOnly;
-    private final boolean mKeepDuplicates;
 
     private final BufferedWriter mReadDataWriter;
     private final BufferedWriter mMultiMapLociWriter;
 
     private final EnsemblDataCache mGeneTransCache;
 
-    private static final int GENE_LOG_COUNT = 5000000;
+    private static final int GENE_LOG_COUNT = 2000000;
     private static final int NON_GENIC_BASE_DEPTH_WIDTH = 250000;
 
     public FragmentAllocator(
@@ -144,16 +141,14 @@ public class FragmentAllocator
         mSamReader = mConfig.BamFile != null ?
                 SamReaderFactory.makeDefault().referenceSequence(mConfig.RefGenomeFile).open(new File(mConfig.BamFile)) : null;
 
-        // duplicates aren't counted towards fusions so can be ignored if only running fusions
-        mKeepDuplicates = (mConfig.runFunction(TRANSCRIPT_COUNTS) || mConfig.runFunction(STATISTICS)) && !mConfig.DropDuplicates;
-
         // reads with supplementary alignment data are only used for chimeric read handling (eg fusions & alt-SJs)
         boolean keepSupplementaries = mRunFusions || mConfig.runFunction(ALT_SPLICE_JUNCTIONS);
 
         // fusions typically aren't run without expression, but for STAR the existing logic was to drop reads with map qual less than the max
         int minMapQuality = 0;
 
-        mBamSlicer = new BamSlicer(minMapQuality, mKeepDuplicates, keepSupplementaries, false);
+        // no need to process duplicates since their counts can be extracted from consensus reads for transcript counting
+        mBamSlicer = new BamSlicer(minMapQuality, false, keepSupplementaries, false);
 
         mReadDataWriter = resultsWriter.getReadDataWriter();
         mMultiMapLociWriter = resultsWriter.getMultiMapLociWriter();
@@ -272,23 +267,13 @@ public class FragmentAllocator
         if(!firstInPair(record))
             return;
 
-        if(!mKeepDuplicates)
-        {
-            mCurrentGenes.addCount(TOTAL, 1);
-            return;
-        }
+        mCurrentGenes.addCount(TOTAL, 1);
 
-        // don't count consensus (primary) reads created by Redux to avoid double-counting
         if(record.hasAttribute(CONSENSUS_READ_ATTRIBUTE))
         {
-            mCurrentGenes.addCount(DUPLICATE, -1);
-        }
-        else
-        {
-            mCurrentGenes.addCount(TOTAL, 1);
-
-            if(record.getDuplicateReadFlag())
-                mCurrentGenes.addCount(DUPLICATE, 1);
+            int duplicateCount = consensusDuplicateCount(record);
+            mCurrentGenes.addCount(TOTAL, duplicateCount);
+            mCurrentGenes.addCount(DUPLICATE, duplicateCount);
         }
     }
 
@@ -379,44 +364,47 @@ public class FragmentAllocator
         markGeneDataRegions(read1);
         markGeneDataRegions(read2);
 
-        // duplicates will be used for transcript counts but nothing else
-        boolean isDuplicate = read1.isDuplicate() || read2.isDuplicate();
+        int fragmentCount = 1;
+
+        boolean isConsensusRead = read1.isConsensusRead() || read2.isConsensusRead();
+
+        if(isConsensusRead)
+        {
+            // consensus reads from Redux - these are primaries where duplicate reads are also expected
+            // to avoid the additional count from the artificially created primary, skip these for any logic which is expression related,
+            // (note: only expression uses duplicates)
+            int duplicateCount = consensusDuplicateCount(read1.bamRecord());
+            fragmentCount += duplicateCount;
+        }
 
         int numLoci = min(read1.numLoci(), read2.numLoci());
         boolean isMultiMapped = numLoci > 1;
-        double fragmentCount = 1; // no longer dimished by multi-mapping, could revert to an integer
 
         List<Read.AltAlignment> altLoci = read1.numLoci() <= read2.numLoci() ? read1.altLoci() : read2.altLoci();
 
-        boolean isChimeric = mChimericReads.isChimeric(read1, read2, isDuplicate, isMultiMapped);
+        boolean isChimeric = mChimericReads.isChimeric(read1, read2, false, isMultiMapped);
 
         if(mStatsOnly)
         {
-            if(!isDuplicate)
-            {
-                if(isChimeric)
-                    mCurrentGenes.addCount(CHIMERIC, 1);
-                else if(read1.getMappedRegions().isEmpty() && read2.getMappedRegions().isEmpty())
-                    mCurrentGenes.addCount(UNSPLICED, 1);
-                else
-                    mCurrentGenes.addCount(TRANS_SUPPORTING, 1);
-            }
+            if(isChimeric)
+                mCurrentGenes.addCount(CHIMERIC, 1);
+            else if(read1.getMappedRegions().isEmpty() && read2.getMappedRegions().isEmpty())
+                mCurrentGenes.addCount(UNSPLICED, fragmentCount);
+            else
+                mCurrentGenes.addCount(TRANS_SUPPORTING, fragmentCount);
 
             return;
         }
 
         List<BaseRegion> commonMappings = deriveCommonRegions(read1.getMappedRegionCoords(), read2.getMappedRegionCoords());
 
-        if(!isDuplicate)
-        {
-            mBaseDepth.processRead(commonMappings);
-        }
+        mBaseDepth.processRead(commonMappings);
 
         // if either read is chimeric (including one outside the genic region) then handle them both as such
         // some of these may be re-processed as alternative SJ candidates if they are within a single gene
         if(isChimeric)
         {
-            if(!isMultiMapped && !isDuplicate)
+            if(!isMultiMapped)
             {
                 if(mChimericReads.enabled())
                     mChimericReads.addChimericReadPair(read1, read2);
@@ -449,11 +437,6 @@ public class FragmentAllocator
                 return;
         }
 
-        // consensus reads from Redux - these are primaries where duplicate reads are also expected
-        // to avoid the additional count from the artificially created primary, skip these for any logic which is expression related,
-        // (note: only expression uses duplicates)
-        boolean isConsensusRead = read1.isConsensusRead() || read2.isConsensusRead();
-
         if(numLoci > 1 && altLoci != null && mMultiMapLociWriter != null)
             recordMultiMapLoci(read1, read2, altLoci);
 
@@ -465,7 +448,7 @@ public class FragmentAllocator
         if(read1.getMappedRegions().isEmpty() && read2.getMappedRegions().isEmpty())
         {
             // fully intronic read in every transcript and gene
-            processIntronicReads(overlapGenes, read1, read2, fragmentCount, isMultiMapped, isConsensusRead, isDuplicate);
+            processIntronicReads(overlapGenes, read1, read2, fragmentCount, isMultiMapped);
             return;
         }
 
@@ -492,14 +475,16 @@ public class FragmentAllocator
         // track splice site info
         if(mConfig.writeType(SPLICE_SITE))
         {
-            mSpliceSiteCounter.registerSpliceSiteSupport(read1.getMappedRegionCoords(), read2.getMappedRegionCoords(), mCurrentGenes.getExonRegions());
+            mSpliceSiteCounter.registerSpliceSiteSupport(
+                    read1.getMappedRegionCoords(), read2.getMappedRegionCoords(), mCurrentGenes.getExonRegions());
         }
 
         for(Map.Entry<Integer,TransMatchType> entry : firstReadTransTypes.entrySet())
         {
             int transId = entry.getKey();
 
-            if(validTranscriptType(entry.getValue()) && secondReadTransTypes.containsKey(transId) && validTranscriptType(secondReadTransTypes.get(transId)))
+            if(validTranscriptType(entry.getValue()) && secondReadTransTypes.containsKey(transId)
+            && validTranscriptType(secondReadTransTypes.get(transId)))
             {
                 int calcFragmentLength = calcFragmentLength(transId, read1, read2);
                 boolean validFragmentLength = calcFragmentLength > 0 && calcFragmentLength <= mConfig.MaxFragmentLength;
@@ -579,12 +564,12 @@ public class FragmentAllocator
             if(checkRetainedIntrons && mRetainedIntronFinder.enabled())
                 mRetainedIntronFinder.evaluateFragmentReads(read1, read2);
 
-            if(fragmentType == UNSPLICED && !isConsensusRead)
+            if(fragmentType == UNSPLICED)
             {
                 mExpressionReadTracker.processUnsplicedGenes(overlapGenes, validTranscripts, commonMappings, fragmentCount, isMultiMapped);
             }
         }
-        else if(!isConsensusRead)
+        else
         {
             // record valid read info against each region now that it is known
             fragmentType = TRANS_SUPPORTING;
@@ -687,7 +672,7 @@ public class FragmentAllocator
                 }
 
                 // keep track of which regions have been allocated from this fragment as a whole, so not counting each read separately
-                mExpressionReadTracker.processValidTranscript(transId, Lists.newArrayList(read1, read2), isUniqueTrans);
+                mExpressionReadTracker.processValidTranscript(transId, List.of(read1, read2), isUniqueTrans);
             }
 
             mExpressionReadTracker.processUnsplicedGenes(
@@ -702,17 +687,14 @@ public class FragmentAllocator
                 if(firstIsForward != secondIsForward)
                 {
                     if(firstIsForward == supportedGeneIsForward)
-                        mCurrentGenes.addCount(FORWARD_STRAND, 1);
+                        mCurrentGenes.addCount(FORWARD_STRAND, fragmentCount);
                     else
-                        mCurrentGenes.addCount(REVERSE_STRAND, 1);
+                        mCurrentGenes.addCount(REVERSE_STRAND, fragmentCount);
                 }
             }
         }
 
-        if(!isConsensusRead)
-        {
-            mCurrentGenes.addCount(fragmentType, 1);
-        }
+        mCurrentGenes.addCount(fragmentType, fragmentCount);
 
         if(mReadDataWriter != null && mConfig.writeType(WriteType.READ))
         {
@@ -836,10 +818,13 @@ public class FragmentAllocator
         return false;
     }
 
-    // record a multi-mapped fragment's primary alignment plus each XA alternate locus (opt-in WriteType.MULTI_MAP_LOCI);
-    // InGeneCollection flags whether the locus falls within the gene collection currently being processed
     private void recordMultiMapLoci(final Read read1, final Read read2, final List<Read.AltAlignment> altLoci)
     {
+        if(mMultiMapLociWriter == null)
+            return;
+
+        // record a multi-mapped fragment's primary alignment plus each XA alternate locus (opt-in WriteType.MULTI_MAP_LOCI);
+        // InGeneCollection flags whether the locus falls within the gene collection currently being processed
         int fragStart = min(read1.alignmentStart(), read2.alignmentStart());
         int fragEnd = max(read1.alignmentEnd(), read2.alignmentEnd());
         boolean primarySpliced = read1.containsSplit() || read2.containsSplit();
@@ -898,25 +883,20 @@ public class FragmentAllocator
     }
 
     private void processIntronicReads(
-            final List<GeneReadData> genes, final Read read1, final Read read2, double fragmentCount, boolean multiMapped,
-            boolean isConsensusRead, boolean isDuplicate)
+            final List<GeneReadData> genes, final Read read1, final Read read2, int fragmentCount, boolean multiMapped)
     {
         if(read1.containsSplit() || read2.containsSplit())
         {
-            if(!isDuplicate)
-                mCurrentGenes.addCount(ALT, 1);
+            mCurrentGenes.addCount(ALT, 1); // does not count duplicates since not expression related
 
-            if(mAltSpliceJunctionFinder.enabled() && !isDuplicate)
+            if(mAltSpliceJunctionFinder.enabled())
                 mAltSpliceJunctionFinder.evaluateFragmentReads(genes, read1, read2, Lists.newArrayList());
 
             return;
         }
 
-        if(!isConsensusRead)
-        {
-            mExpressionReadTracker.processIntronicReads(genes, read1, read2, fragmentCount, multiMapped);
-            mCurrentGenes.addCount(UNSPLICED, 1);
-        }
+        mExpressionReadTracker.processIntronicReads(genes, read1, read2, fragmentCount, multiMapped);
+        mCurrentGenes.addCount(UNSPLICED, fragmentCount);
 
         if(mReadDataWriter != null && mConfig.writeType(WriteType.READ))
         {
