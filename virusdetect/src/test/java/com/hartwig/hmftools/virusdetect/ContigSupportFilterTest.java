@@ -6,7 +6,7 @@ import java.util.Map;
 
 import org.junit.Test;
 
-public class ContigPrefilterTest
+public class ContigSupportFilterTest
 {
     private static final int LENGTH = 1000;
 
@@ -69,6 +69,6 @@ public class ContigPrefilterTest
     private static Map<ViralContig, ContigFilterStatus> statuses(
             Map<ViralContig, Integer> coveredBases, Map<ViralContig, Double> readVotes)
     {
-        return ContigPrefilter.statuses(coveredBases, readVotes, MEAN_READ_LENGTH);
+        return ContigSupportFilter.statuses(coveredBases, readVotes, MEAN_READ_LENGTH);
     }
 }

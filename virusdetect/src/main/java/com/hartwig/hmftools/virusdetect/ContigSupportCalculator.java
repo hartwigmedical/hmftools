@@ -102,7 +102,7 @@ public class ContigSupportCalculator
         Map<ViralContig, Double> readVotes = group.stream().collect(toMap(
                 accumulator -> accumulator.Contig, accumulator -> accumulator.Votes));
 
-        Map<ViralContig, ContigFilterStatus> filterStatuses = ContigPrefilter.statuses(coveredBases, readVotes, meanReadLength);
+        Map<ViralContig, ContigFilterStatus> filterStatuses = ContigSupportFilter.statuses(coveredBases, readVotes, meanReadLength);
 
         return group.stream().map(accumulator ->
         {

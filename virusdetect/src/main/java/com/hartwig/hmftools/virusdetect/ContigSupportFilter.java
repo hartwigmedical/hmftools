@@ -8,9 +8,8 @@ import static com.hartwig.hmftools.virusdetect.VirusConstants.MIN_VOTES_PER_BASE
 
 import java.util.Map;
 
-// TODO: rename ContigSupportFilter ?
 // Determines whether a contig carries enough evidence to be considered present in the sample.
-public class ContigPrefilter
+public class ContigSupportFilter
 {
     public static Map<ViralContig, ContigFilterStatus> statuses(
             Map<ViralContig, Integer> coveredBases, Map<ViralContig, Double> readVotes, double meanReadLength)

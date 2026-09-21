@@ -10,8 +10,7 @@ public class VirusConstants
     // Output file suffixes.
     public static final String CANDIDATE_FASTA_SUFFIX = ".virus.candidates.fasta";
     public static final String ALIGNED_BAM_SUFFIX = ".virus.aligned.bam";
-    // TODO: complete;y rename this to be referred to as "contig info" everywhere. It's not just stats now.
-    public static final String CONTIG_STATS_TSV_SUFFIX = ".virus.contig_stats.tsv";
+    public static final String CONTIG_INFO_TSV_SUFFIX = ".virus.contig_info.tsv";
     public static final String PAIRWISE_MARGINS_TSV_SUFFIX = ".virus.pairwise_margins.tsv";
 
     // Genome partition size for multi-threaded candidate extraction.

@@ -7,7 +7,7 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkCreate
 import static com.hartwig.hmftools.virusdetect.VirusConstants.ALIGNED_BAM_SUFFIX;
 import static com.hartwig.hmftools.virusdetect.VirusConstants.APP_NAME;
 import static com.hartwig.hmftools.virusdetect.VirusConstants.CANDIDATE_FASTA_SUFFIX;
-import static com.hartwig.hmftools.virusdetect.VirusConstants.CONTIG_STATS_TSV_SUFFIX;
+import static com.hartwig.hmftools.virusdetect.VirusConstants.CONTIG_INFO_TSV_SUFFIX;
 import static com.hartwig.hmftools.virusdetect.VirusConstants.DECOY_CONTIGS;
 import static com.hartwig.hmftools.virusdetect.VirusConstants.MIN_SOFT_CLIP_BASES_DEFAULT;
 import static com.hartwig.hmftools.virusdetect.VirusConstants.PAIRWISE_MARGINS_TSV_SUFFIX;
@@ -79,17 +79,17 @@ public class VirusApplication
 
         ViralAlignments viralAlignments = ViralAlignments.load(alignedBamFile, mViralReference);
 
-        LOGGER.info("Computing per-contig statistics");
-        List<ContigSupport> contigStats = new ContigSupportCalculator(VOTE_CORRECT_BASE_PROBABILITY).compute(viralAlignments);
-        LOGGER.info("Per-contig statistics complete");
+        LOGGER.info("Computing per-contig support");
+        List<ContigSupport> contigSupports = new ContigSupportCalculator(VOTE_CORRECT_BASE_PROBABILITY).compute(viralAlignments);
+        LOGGER.info("Per-contig support complete");
 
         LOGGER.info("Selecting representative contig per oncology group");
         PairwiseMargins pairwiseMargins = PairwiseMargins.from(viralAlignments);
         List<OncologyGroupRepresentativeSelection> selections = RepresentativeSelector.select(
-                contigStats, pairwiseMargins, viralAlignments.readCountsByOncologyGroup());
+                contigSupports, pairwiseMargins, viralAlignments.readCountsByOncologyGroup());
         logSelections(selections);
 
-        OutputWriter.writeContigStats(outputFile(CONTIG_STATS_TSV_SUFFIX), selections);
+        OutputWriter.writeContigInfo(outputFile(CONTIG_INFO_TSV_SUFFIX), selections);
         if(mConfig.verboseOutput())
         {
             OutputWriter.writePairwiseMargins(outputFile(PAIRWISE_MARGINS_TSV_SUFFIX), pairwiseMargins, selections);
@@ -97,7 +97,7 @@ public class VirusApplication
 
         // TODO: placeholder pipeline; each step is replaced by its implementation as it lands.
         LOGGER.info("Filtering aligned BAM to representatives -> BAM (stub)");
-        LOGGER.info("Computing per-contig stats over representative BAM (stub)");
+        LOGGER.info("Computing contig info over representative BAM (stub)");
         LOGGER.info("Annotating QC and writing detected TSV (stub)");
 
         LOGGER.info("VirusDetect complete, mins({})", runTimeMinsStr(startTimeMs));

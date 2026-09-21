@@ -1,10 +1,13 @@
 package com.hartwig.hmftools.virusdetect;
 
-import java.lang.reflect.RecordComponent;
+import static java.util.Map.entry;
+import static java.util.stream.Collectors.toMap;
+
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.ToDoubleFunction;
 
 // Distribution summary over a set of integer values.
 public record SummaryStats(
@@ -18,27 +21,24 @@ public record SummaryStats(
         double max
 )
 {
-    private static final List<RecordComponent> FIELDS = List.of(SummaryStats.class.getRecordComponents());
+    // Used for writing output to reduce verbosity.
+    private static final List<Map.Entry<String, ToDoubleFunction<SummaryStats>>> FIELDS = List.of(
+            entry("mean", SummaryStats::mean),
+            entry("min", SummaryStats::min),
+            entry("p5", SummaryStats::p5),
+            entry("p25", SummaryStats::p25),
+            entry("p50", SummaryStats::p50),
+            entry("p75", SummaryStats::p75),
+            entry("p95", SummaryStats::p95),
+            entry("max", SummaryStats::max));
 
-    public static final List<String> FIELD_NAMES = FIELDS.stream().map(RecordComponent::getName).toList();
+    public static final List<String> FIELD_NAMES = FIELDS.stream().map(Map.Entry::getKey).toList();
 
     // Values by field name, in the same order.
     public Map<String, Double> fieldValues()
     {
-        // TODO: stream operation. the exception handling is completely unnecessary.
-        Map<String, Double> values = new LinkedHashMap<>();
-        for(RecordComponent field : FIELDS)
-        {
-            try
-            {
-                values.put(field.getName(), (Double) field.getAccessor().invoke(this));
-            }
-            catch(ReflectiveOperationException e)
-            {
-                throw new IllegalStateException("Cannot read summary stats field: " + field.getName(), e);
-            }
-        }
-        return values;
+        return FIELDS.stream().collect(toMap(
+                Map.Entry::getKey, field -> field.getValue().applyAsDouble(this), (first, second) -> first, LinkedHashMap::new));
     }
 
     static SummaryStats from(int[] values)
