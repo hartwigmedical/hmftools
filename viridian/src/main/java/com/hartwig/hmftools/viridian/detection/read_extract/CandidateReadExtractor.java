@@ -3,7 +3,6 @@ package com.hartwig.hmftools.viridian.detection.read_extract;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_POSITION;
 import static com.hartwig.hmftools.common.perf.PerformanceCounter.secondsSinceNow;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.executeRunnables;
 import static com.hartwig.hmftools.common.region.PartitionUtils.partitionChromosome;
@@ -28,6 +27,7 @@ import com.hartwig.hmftools.viridian.common.UserInputError;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.SAMRecord;
@@ -46,10 +46,6 @@ public class CandidateReadExtractor
     private final int mThreads;
 
     private static final Logger LOGGER = LogManager.getLogger(CandidateReadExtractor.class);
-
-    // TODO: bit dodgy. Maybe use null to indicate instead?
-    // Queued in place of a mapped region, standing for the BAM's block of unmapped reads.
-    private static final ChrBaseRegion UNMAPPED_READS = new ChrBaseRegion("unmapped_placeholder", NO_POSITION, NO_POSITION);
 
     public CandidateReadExtractor(@Nullable String refGenomeFile, CandidateReadFilter filter)
     {
@@ -71,13 +67,13 @@ public class CandidateReadExtractor
             readerFactory = readerFactory.referenceSequence(new File(mRefGenomeFile));
         }
 
-        Queue<ChrBaseRegion> regions = scanRegions(readerFactory, tumorBamFile);
-        TaskQueue<ChrBaseRegion> queue = new TaskQueue<>(regions, "regions", 0);
+        Queue<WorkerTask> tasks = scanTasks(readerFactory, tumorBamFile);
+        TaskQueue<WorkerTask> queue = new TaskQueue<>(tasks, "scan tasks", 0);
         List<Worker> workers = new ArrayList<>();
 
         try
         {
-            for(int i = 0; i < min(mThreads, regions.size()); ++i)
+            for(int i = 0; i < min(mThreads, tasks.size()); ++i)
             {
                 workers.add(new Worker(queue, readerFactory.open(new File(tumorBamFile)), FastaPart.create(outputFastaFile, i)));
             }
@@ -98,7 +94,7 @@ public class CandidateReadExtractor
         }
     }
 
-    private static Queue<ChrBaseRegion> scanRegions(SamReaderFactory readerFactory, String tumorBamFile)
+    private static Queue<WorkerTask> scanTasks(SamReaderFactory readerFactory, String tumorBamFile)
     {
         try(SamReader reader = readerFactory.open(new File(tumorBamFile)))
         {
@@ -107,14 +103,15 @@ public class CandidateReadExtractor
                 throw new UserInputError("Tumor BAM/CRAM is not indexed: " + tumorBamFile);
             }
 
-            Queue<ChrBaseRegion> regions = new ConcurrentLinkedQueue<>();
+            Queue<WorkerTask> tasks = new ConcurrentLinkedQueue<>();
             // The unmapped block is not sharded, and it can be quite large, so run it first to avoid a long tail.
-            regions.add(UNMAPPED_READS);
+            tasks.add(WorkerTask.UNMAPPED_READS);
             for(SAMSequenceRecord sequence : reader.getFileHeader().getSequenceDictionary().getSequences())
             {
-                regions.addAll(partitionChromosome(sequence, VIRAL_READ_EXTRACTION_PARTITION_SIZE));
+                partitionChromosome(sequence, VIRAL_READ_EXTRACTION_PARTITION_SIZE)
+                        .forEach(partition -> tasks.add(new WorkerTask(partition)));
             }
-            return regions;
+            return tasks;
         }
         catch(IOException e)
         {
@@ -144,17 +141,31 @@ public class CandidateReadExtractor
         return candidateCount;
     }
 
+    private record WorkerTask(
+            @Nullable ChrBaseRegion region
+    )
+    {
+        static final WorkerTask UNMAPPED_READS = new WorkerTask(null);
+
+        @NotNull
+        @Override
+        public String toString()
+        {
+            return region != null ? region.toString() : "unmapped";
+        }
+    }
+
     // One extraction thread's private BAM reader and FASTA shard, so scanning and writing run lock-free.
     private class Worker implements Runnable
     {
-        private final TaskQueue<ChrBaseRegion> mRegions;
+        private final TaskQueue<WorkerTask> mTasks;
         private final SamReader mReader;
         private final FastaPart mPart;
         private final BamSlicer mSlicer;
 
-        private Worker(TaskQueue<ChrBaseRegion> regions, SamReader reader, FastaPart part)
+        private Worker(TaskQueue<WorkerTask> tasks, SamReader reader, FastaPart part)
         {
-            mRegions = regions;
+            mTasks = tasks;
             mReader = reader;
             mPart = part;
             // Ignore duplicates, supplementaries, and secondaries. These would be dropped by our filter anyway, so may
@@ -172,7 +183,7 @@ public class CandidateReadExtractor
             {
                 try
                 {
-                    scan(mRegions.removeItem());
+                    processTask(mTasks.removeItem());
                 }
                 catch(NoSuchElementException e)
                 {
@@ -181,12 +192,13 @@ public class CandidateReadExtractor
             }
         }
 
-        private void scan(ChrBaseRegion region)
+        private void processTask(WorkerTask task)
         {
             long startTimeMs = System.currentTimeMillis();
             int startCount = mPart.readCount();
 
-            if(region == UNMAPPED_READS)
+            ChrBaseRegion region = task.region();
+            if(region == null)
             {
                 mSlicer.queryUnmapped(mReader, this::processRecord);
             }
@@ -205,8 +217,8 @@ public class CandidateReadExtractor
             }
 
             LOGGER.debug(
-                    "region({}) {} candidates in {}s",
-                    region, mPart.readCount() - startCount, format("%.1f", secondsSinceNow(startTimeMs)));
+                    "scan({}) {} candidates in {}s",
+                    task, mPart.readCount() - startCount, format("%.1f", secondsSinceNow(startTimeMs)));
         }
 
         private void processRecord(SAMRecord record)
