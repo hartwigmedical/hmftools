@@ -30,11 +30,6 @@ public record ContigSupport(
 
     public double coverageFraction()
     {
-        return coverageFraction(coveredBases, contig);
-    }
-
-    public static double coverageFraction(int coveredBases, ViralContig contig)
-    {
-        return contig.length() == 0 ? 0 : (double) coveredBases / contig.length();
+        return (double) coveredBases / contig.length();
     }
 }

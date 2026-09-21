@@ -17,8 +17,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import org.jetbrains.annotations.Nullable;
+import java.util.stream.IntStream;
 
 // Per oncology group, pick at most one representative contig.
 // First, contigs are filtered on coverage and read votes.
@@ -26,19 +25,20 @@ import org.jetbrains.annotations.Nullable;
 // decisively supported by a subset of reads. I.e. 1 contig doesn't explain the whole viral genome in the sample.
 public class RepresentativeSelector
 {
-    public List<OncologyGroupRepresentativeSelection> select(
+    public static List<OncologyGroupRepresentativeSelection> select(
             Collection<ContigSupport> contigSupport, PairwiseMargins margins, Map<OncologyGroup, Integer> groupReadCounts)
     {
         return contigSupport.stream()
                 .collect(groupingBy(support -> support.contig().oncologyGroup()))
                 .entrySet().stream()
-                .map(entry -> selectOncologyGroup(entry.getKey(), entry.getValue(), margins, groupReadCounts))
+                .map(entry -> selectOncologyGroup(
+                        entry.getKey(), entry.getValue(), margins,
+                        requireNonNull(groupReadCounts.get(entry.getKey()))))
                 .toList();
     }
 
     private static OncologyGroupRepresentativeSelection selectOncologyGroup(
-            OncologyGroup oncologyGroup, List<ContigSupport> groupContigs, PairwiseMargins margins,
-            Map<OncologyGroup, Integer> groupReadCounts)
+            OncologyGroup oncologyGroup, List<ContigSupport> groupContigs, PairwiseMargins margins, int groupReads)
     {
         List<ContigSupport> rejected = groupContigs.stream().filter(support -> !support.isCandidate()).toList();
         List<ContigSupport> candidates = groupContigs.stream()
@@ -53,7 +53,7 @@ public class RepresentativeSelector
 
         List<ViralContig> contigs = candidates.stream().map(ContigSupport::contig).toList();
         Set<ViralContig> comparable = comparableContigs(candidates);
-        Map<ViralContig, Set<ViralContig>> challenges = challenges(contigs, margins, oncologyGroup, groupReadCounts);
+        Map<ViralContig, Set<ViralContig>> challenges = challenges(contigs, margins, groupReads);
         Map<ViralContig, Set<ViralContig>> challengedBy = invertChallengesMap(challenges);
 
         // A low-abundance contig contesting an abundant one is a possible hidden strain, and blocks any verdict.
@@ -68,29 +68,54 @@ public class RepresentativeSelector
                 .filter(contig -> disjoint(challengedBy.get(contig), comparable))
                 .toList();
 
-        OncologyGroupOutcome outcome = decideOncologyGroupOutcome(candidates.size(), minorChallengers, leaders, comparable, challenges);
-        ViralContig representative = outcome.resolution() == OncologyGroupResolution.RESOLVED ? leaders.get(0) : null;
-        Set<ViralContig> leadSet = Set.copyOf(leaders);
+        boolean resolved = minorChallengers.isEmpty() && !leaders.isEmpty();
 
-        List<RepresentativeCandidate> results = candidates.stream()
-                .map(candidate -> new RepresentativeCandidate(
-                        candidate, comparable.contains(candidate.contig()), challenges.get(candidate.contig()),
-                        challengedBy.get(candidate.contig()),
-                        decideContigRole(candidate.contig(), representative, comparable, minorChallengers, leadSet)))
+        List<RepresentativeCandidate> results = IntStream.range(0, candidates.size())
+                .mapToObj(index ->
+                {
+                    ContigSupport candidate = candidates.get(index);
+                    return new RepresentativeCandidate(
+                            candidate, index + 1, comparable.contains(candidate.contig()), challenges.get(candidate.contig()),
+                            challengedBy.get(candidate.contig()),
+                            decideContigRole(candidate.contig(), comparable, minorChallengers, leaders, resolved));
+                })
                 .toList();
 
-        return new OncologyGroupRepresentativeSelection(oncologyGroup, outcome, results, rejected);
+        return new OncologyGroupRepresentativeSelection(
+                oncologyGroup, decideOncologyGroupOutcome(results, comparable, challenges), results, rejected);
+    }
+
+    private static ContigRole decideContigRole(
+            ViralContig contig, Set<ViralContig> comparable, Set<ViralContig> minorChallengers, List<ViralContig> leaders,
+            boolean resolved)
+    {
+        if(!comparable.contains(contig))
+        {
+            return minorChallengers.contains(contig) ? ContigRole.MINOR_CHALLENGER : ContigRole.MINOR;
+        }
+        else if(!leaders.contains(contig))
+        {
+            return ContigRole.SECONDARY;
+        }
+        else if(!resolved)
+        {
+            return ContigRole.CONTESTED;
+        }
+        else
+        {
+            // The best supported leader is crowned, the rest being indistinguishable from it bar the vote tie-break.
+            return contig.equals(leaders.get(0)) ? ContigRole.REPRESENTATIVE : ContigRole.REPRESENTATIVE_TWIN;
+        }
     }
 
     private static OncologyGroupOutcome decideOncologyGroupOutcome(
-            int candidateCount, Set<ViralContig> minorChallengers, List<ViralContig> leaders, Set<ViralContig> comparable,
-            Map<ViralContig, Set<ViralContig>> challenges)
+            List<RepresentativeCandidate> candidates, Set<ViralContig> comparable, Map<ViralContig, Set<ViralContig>> challenges)
     {
-        if(!minorChallengers.isEmpty())
+        if(anyHasRole(candidates, ContigRole.MINOR_CHALLENGER))
         {
             return OncologyGroupOutcome.MINOR_RIVAL;
         }
-        else if(leaders.isEmpty())
+        else if(!anyHasRole(candidates, ContigRole.REPRESENTATIVE))
         {
             if(hasMutualChallenge(comparable, challenges))
             {
@@ -101,7 +126,7 @@ public class RepresentativeSelector
                 return OncologyGroupOutcome.CYCLE;
             }
         }
-        else if(candidateCount == 1)
+        else if(candidates.size() == 1)
         {
             return OncologyGroupOutcome.ONE_CANDIDATE;
         }
@@ -111,34 +136,9 @@ public class RepresentativeSelector
         }
     }
 
-    private static ContigRole decideContigRole(
-            ViralContig contig, @Nullable ViralContig representative, Set<ViralContig> comparable,
-            Set<ViralContig> minorChallengers, Set<ViralContig> leaders)
+    private static boolean anyHasRole(List<RepresentativeCandidate> candidates, ContigRole role)
     {
-        if(contig.equals(representative))
-        {
-            return ContigRole.REPRESENTATIVE;
-        }
-        else if(!comparable.contains(contig))
-        {
-            return minorChallengers.contains(contig) ? ContigRole.MINOR_CHALLENGER : ContigRole.MINOR;
-        }
-        else if(!leaders.contains(contig))
-        {
-            return ContigRole.SECONDARY;
-        }
-        else
-        {
-            // Abundant and unchallenged by peers, but not crowned. A resolved group makes it a twin, else contested.
-            if(representative == null)
-            {
-                return ContigRole.CONTESTED;
-            }
-            else
-            {
-                return ContigRole.REPRESENTATIVE_TWIN;
-            }
-        }
+        return candidates.stream().anyMatch(candidate -> candidate.role() == role);
     }
 
     private static Set<ViralContig> comparableContigs(List<ContigSupport> candidates)
@@ -156,13 +156,8 @@ public class RepresentativeSelector
     }
 
     // Subject contig -> the opponents it challenges.
-    private static Map<ViralContig, Set<ViralContig>> challenges(
-            List<ViralContig> contigs, PairwiseMargins margins, OncologyGroup oncologyGroup,
-            Map<OncologyGroup, Integer> groupReadCounts)
+    private static Map<ViralContig, Set<ViralContig>> challenges(List<ViralContig> contigs, PairwiseMargins margins, int groupReads)
     {
-        int groupReads = requireNonNull(
-                groupReadCounts.get(oncologyGroup), "No aligned read count for oncology group: " + oncologyGroup);
-
         return contigs.stream().collect(toMap(
                 subject -> subject, subject -> contigs.stream()
                         .filter(opponent -> !opponent.equals(subject))

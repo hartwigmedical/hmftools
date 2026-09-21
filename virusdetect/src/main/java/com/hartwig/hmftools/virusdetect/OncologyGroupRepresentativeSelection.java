@@ -28,16 +28,4 @@ public record OncologyGroupRepresentativeSelection(
                 .findFirst()
                 .orElse(null);
     }
-
-    public int votesRank(ViralContig contig)
-    {
-        for(int i = 0; i < candidates.size(); ++i)
-        {
-            if(candidates.get(i).contig().equals(contig))
-            {
-                return i + 1;
-            }
-        }
-        throw new IllegalArgumentException("Contig was not a selection candidate: " + contig.name());
-    }
 }

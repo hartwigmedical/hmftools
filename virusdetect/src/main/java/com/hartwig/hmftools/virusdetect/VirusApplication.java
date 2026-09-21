@@ -11,11 +11,11 @@ import static com.hartwig.hmftools.virusdetect.VirusConstants.CONTIG_STATS_TSV_S
 import static com.hartwig.hmftools.virusdetect.VirusConstants.DECOY_CONTIGS;
 import static com.hartwig.hmftools.virusdetect.VirusConstants.MIN_SOFT_CLIP_BASES_DEFAULT;
 import static com.hartwig.hmftools.virusdetect.VirusConstants.PAIRWISE_MARGINS_TSV_SUFFIX;
+import static com.hartwig.hmftools.virusdetect.VirusConstants.VOTE_CORRECT_BASE_PROBABILITY;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
@@ -37,9 +37,9 @@ public class VirusApplication
     {
         mConfig = config;
 
-        LOGGER.info("loading viral reference model");
+        LOGGER.info("Loading viral reference model");
         mViralReference = ViralReference.load(config.viralRefFile(), config.viralRefInfoFile());
-        LOGGER.info("viral reference model loaded");
+        LOGGER.info("Viral reference model loaded");
 
         CandidateReadFilter candidateFilter = new CandidateReadFilter(MIN_SOFT_CLIP_BASES_DEFAULT, DECOY_CONTIGS);
         mCandidateExtractor = new CandidateReadExtractor(config.refGenomeFile(), candidateFilter, config.threads());
@@ -55,7 +55,7 @@ public class VirusApplication
 
         checkCreateOutputDir(mConfig.outputDir());
 
-        String candidateFastaFile = candidateFastaFile();
+        String candidateFastaFile = outputFile(CANDIDATE_FASTA_SUFFIX);
         boolean reuseExisting = mConfig.reuseCandidateFasta() && new File(candidateFastaFile).exists();
         if(reuseExisting)
         {
@@ -73,26 +73,26 @@ public class VirusApplication
         }
 
         LOGGER.info("Aligning candidate reads to viral reference");
-        String alignedBamFile = alignedBamFile();
+        String alignedBamFile = outputFile(ALIGNED_BAM_SUFFIX);
         mAligner.align(candidateFastaFile, alignedBamFile);
         LOGGER.info("Alignment complete");
 
         ViralAlignments viralAlignments = ViralAlignments.load(alignedBamFile, mViralReference);
 
         LOGGER.info("Computing per-contig statistics");
-        Map<ViralContig, ContigSupport> contigStats = new ContigSupportCalculator().compute(viralAlignments);
+        List<ContigSupport> contigStats = new ContigSupportCalculator(VOTE_CORRECT_BASE_PROBABILITY).compute(viralAlignments);
         LOGGER.info("Per-contig statistics complete");
 
         LOGGER.info("Selecting representative contig per oncology group");
         PairwiseMargins pairwiseMargins = PairwiseMargins.from(viralAlignments);
-        List<OncologyGroupRepresentativeSelection> selections = new RepresentativeSelector().select(
-                contigStats.values(), pairwiseMargins, viralAlignments.readCountsByOncologyGroup());
+        List<OncologyGroupRepresentativeSelection> selections = RepresentativeSelector.select(
+                contigStats, pairwiseMargins, viralAlignments.readCountsByOncologyGroup());
         logSelections(selections);
 
-        OutputWriter.writeContigStats(contigStatsFile(), selections);
+        OutputWriter.writeContigStats(outputFile(CONTIG_STATS_TSV_SUFFIX), selections);
         if(mConfig.verboseOutput())
         {
-            OutputWriter.writePairwiseMargins(pairwiseMarginsFile(), pairwiseMargins, selections);
+            OutputWriter.writePairwiseMargins(outputFile(PAIRWISE_MARGINS_TSV_SUFFIX), pairwiseMargins, selections);
         }
 
         // TODO: placeholder pipeline; each step is replaced by its implementation as it lands.
@@ -103,24 +103,16 @@ public class VirusApplication
         LOGGER.info("VirusDetect complete, mins({})", runTimeMinsStr(startTimeMs));
     }
 
-    private String candidateFastaFile()
+    private String outputFile(String suffix)
     {
-        return mConfig.outputDir() + mConfig.sampleId() + CANDIDATE_FASTA_SUFFIX;
-    }
-
-    private String alignedBamFile()
-    {
-        return mConfig.outputDir() + mConfig.sampleId() + ALIGNED_BAM_SUFFIX;
-    }
-
-    private String contigStatsFile()
-    {
-        return mConfig.outputDir() + mConfig.sampleId() + CONTIG_STATS_TSV_SUFFIX;
-    }
-
-    private String pairwiseMarginsFile()
-    {
-        return mConfig.outputDir() + mConfig.sampleId() + PAIRWISE_MARGINS_TSV_SUFFIX;
+        String outputId = mConfig.outputId();
+        String f = mConfig.outputDir() + mConfig.sampleId();
+        if(outputId != null)
+        {
+            f += "." + outputId;
+        }
+        f += suffix;
+        return f;
     }
 
     private static void logSelections(List<OncologyGroupRepresentativeSelection> selections)

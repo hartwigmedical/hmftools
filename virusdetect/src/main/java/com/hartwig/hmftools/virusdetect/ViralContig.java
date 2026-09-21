@@ -11,4 +11,11 @@ public record ViralContig(
         OncologyGroup oncologyGroup
 )
 {
+    public ViralContig
+    {
+        if(length < 1)
+        {
+            throw new IllegalArgumentException("Invalid contig length: " + length);
+        }
+    }
 }

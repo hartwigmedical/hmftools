@@ -176,13 +176,13 @@ public class RepresentativeSelectorTest
         List<OncologyGroupRepresentativeSelection> selections =
                 select(support(candidate("v2", 95), candidate("v1", 100)), noChallenges());
 
-        assertEquals(1, group(selections, GROUP_A).votesRank(REFERENCE.contig("v1")));
-        assertEquals(2, group(selections, GROUP_A).votesRank(REFERENCE.contig("v2")));
+        assertEquals(1, candidate(selections, GROUP_A, "v1").votesRank());
+        assertEquals(2, candidate(selections, GROUP_A, "v2").votesRank());
     }
 
     private static List<OncologyGroupRepresentativeSelection> select(List<ContigSupport> support, PairwiseMargins margins)
     {
-        return new RepresentativeSelector().select(support, margins, groupReadCounts(support));
+        return RepresentativeSelector.select(support, margins, groupReadCounts(support));
     }
 
     // Each group is given as many reads as its contigs have votes, so a contig's votes read as its share of the group.
@@ -192,6 +192,15 @@ public class RepresentativeSelectorTest
         support.forEach(contig -> readCounts.merge(
                 contig.contig().oncologyGroup(), (int) Math.round(contig.readVotes()), Integer::sum));
         return readCounts;
+    }
+
+    private static RepresentativeCandidate candidate(
+            List<OncologyGroupRepresentativeSelection> selections, OncologyGroup oncologyGroup, String contig)
+    {
+        return group(selections, oncologyGroup).candidates().stream()
+                .filter(candidate -> candidate.contig().equals(REFERENCE.contig(contig)))
+                .findFirst()
+                .orElseThrow();
     }
 
     private static OncologyGroupRepresentativeSelection group(List<OncologyGroupRepresentativeSelection> selections,

@@ -1,10 +1,11 @@
 package com.hartwig.hmftools.virusdetect;
 
+import static com.hartwig.hmftools.virusdetect.VirusConstants.VOTE_CORRECT_BASE_PROBABILITY;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
 import java.util.List;
-import java.util.Map;
 
 import org.junit.Test;
 
@@ -31,7 +32,8 @@ public class ContigSupportCalculatorTest
                 alignment("r2", "v1", 6, 5, 8, 0),
                 alignment("r3", "v2", 1, 10, 9, 0));
 
-        Map<ViralContig, ContigSupport> stats = new ContigSupportCalculator().compute(ViralAlignments.from(alignments, MEAN_READ_LENGTH));
+        List<ContigSupport> stats = new ContigSupportCalculator(VOTE_CORRECT_BASE_PROBABILITY).compute(
+                ViralAlignments.from(alignments, MEAN_READ_LENGTH));
 
         assertEquals(2, stats.size());
 
@@ -77,7 +79,7 @@ public class ContigSupportCalculatorTest
                 alignment("r2", "v2", 1, 10, 5, 5));
 
         // Injected correct-base probability 0.5, so each extra divergent base halves a contig's weight (0.5^diff).
-        Map<ViralContig, ContigSupport> stats = new ContigSupportCalculator(0.5).compute(
+        List<ContigSupport> stats = new ContigSupportCalculator(0.5).compute(
                 ViralAlignments.from(alignments, MEAN_READ_LENGTH));
 
         ContigSupport v1 = get(stats, "v1");
@@ -96,7 +98,7 @@ public class ContigSupportCalculatorTest
                 alignment("r", "v1", 1, 10, 10, 2),
                 alignment("r", "v2", 1, 10, 10, 2));
 
-        Map<ViralContig, ContigSupport> stats = new ContigSupportCalculator(0.5).compute(
+        List<ContigSupport> stats = new ContigSupportCalculator(0.5).compute(
                 ViralAlignments.from(alignments, MEAN_READ_LENGTH));
 
         assertEquals(0.5, get(stats, "v1").readVotes(), EPSILON);
@@ -114,7 +116,8 @@ public class ContigSupportCalculatorTest
                 alignment("r3", "v1", 6, 10, 9, 0),   // no clip: kept
                 clipped("r4", "v1", 10, 19, 5, 0));   // clip projects to 5, within the contig: kept
 
-        Map<ViralContig, ContigSupport> stats = new ContigSupportCalculator().compute(ViralAlignments.from(alignments, MEAN_READ_LENGTH));
+        List<ContigSupport> stats = new ContigSupportCalculator(VOTE_CORRECT_BASE_PROBABILITY).compute(
+                ViralAlignments.from(alignments, MEAN_READ_LENGTH));
 
         ContigSupport v1 = get(stats, "v1");
         assertEquals(2, v1.readCount());            // r3 and r4 kept
@@ -131,7 +134,8 @@ public class ContigSupportCalculatorTest
                 clipped("r2", "v1", 1, 10, 30, 0),
                 alignment("r3", "v2", 1, 10, 9, 0));
 
-        Map<ViralContig, ContigSupport> stats = new ContigSupportCalculator().compute(ViralAlignments.from(alignments, MEAN_READ_LENGTH));
+        List<ContigSupport> stats = new ContigSupportCalculator(VOTE_CORRECT_BASE_PROBABILITY).compute(
+                ViralAlignments.from(alignments, MEAN_READ_LENGTH));
 
         ContigSupport v1 = get(stats, "v1");
         assertEquals(0, v1.readCount());
@@ -143,9 +147,12 @@ public class ContigSupportCalculatorTest
         assertNull(v1.alignerScore());
     }
 
-    private static ContigSupport get(Map<ViralContig, ContigSupport> stats, String contig)
+    private static ContigSupport get(List<ContigSupport> stats, String contig)
     {
-        return stats.get(REFERENCE.contig(contig));
+        return stats.stream()
+                .filter(support -> support.contig().equals(REFERENCE.contig(contig)))
+                .findFirst()
+                .orElseThrow();
     }
 
     // A clean, full-length alignment covering [start, start + length - 1] with no clips.

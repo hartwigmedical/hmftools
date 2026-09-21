@@ -20,12 +20,12 @@ public record SummaryStats(
 {
     private static final List<RecordComponent> FIELDS = List.of(SummaryStats.class.getRecordComponents());
 
-    // Field names in declaration order, so a distribution's columns can be named before there is one to write.
     public static final List<String> FIELD_NAMES = FIELDS.stream().map(RecordComponent::getName).toList();
 
     // Values by field name, in the same order.
     public Map<String, Double> fieldValues()
     {
+        // TODO: stream operation. the exception handling is completely unnecessary.
         Map<String, Double> values = new LinkedHashMap<>();
         for(RecordComponent field : FIELDS)
         {
@@ -57,7 +57,7 @@ public record SummaryStats(
     {
         if(sorted.length == 0)
         {
-            throw new IllegalArgumentException("cannot summarise an empty set of values");
+            throw new IllegalArgumentException("Cannot summarise an empty set of values");
         }
 
         long sum = 0;

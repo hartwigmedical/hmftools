@@ -5,8 +5,6 @@ import static java.lang.Math.min;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toMap;
 
-import static com.hartwig.hmftools.virusdetect.VirusConstants.VOTE_CORRECT_BASE_PROBABILITY;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -22,17 +20,12 @@ public class ContigSupportCalculator
     // Held rather than read from the constant directly so tests can inject a controllable value.
     private final double mCorrectBaseProbability;
 
-    public ContigSupportCalculator()
-    {
-        this(VOTE_CORRECT_BASE_PROBABILITY);
-    }
-
-    ContigSupportCalculator(double correctBaseProbability)
+    public ContigSupportCalculator(double correctBaseProbability)
     {
         mCorrectBaseProbability = correctBaseProbability;
     }
 
-    public Map<ViralContig, ContigSupport> compute(ViralAlignments viralAlignments)
+    public List<ContigSupport> compute(ViralAlignments viralAlignments)
     {
         Map<ViralContig, ContigAccumulator> accumulators = new HashMap<>();
         viralAlignments.reads().forEach(read -> processRead(read, accumulators));
@@ -86,7 +79,7 @@ public class ContigSupportCalculator
         return Math.pow(mCorrectBaseProbability, divergence - minDivergence);
     }
 
-    private static Map<ViralContig, ContigSupport> createContigSupports(
+    private static List<ContigSupport> createContigSupports(
             Map<ViralContig, ContigAccumulator> accumulators, Map<ViralContig, Integer> originClippedReads,
             double meanReadLength)
     {
@@ -94,7 +87,7 @@ public class ContigSupportCalculator
                 .collect(groupingBy(accumulator -> accumulator.Contig.oncologyGroup()))
                 .values().stream()
                 .flatMap(group -> createGroupContigSupports(group, originClippedReads, meanReadLength).stream())
-                .collect(toMap(ContigSupport::contig, support -> support));
+                .toList();
     }
 
     private static List<ContigSupport> createGroupContigSupports(
@@ -106,19 +99,16 @@ public class ContigSupportCalculator
 
         Map<ViralContig, Integer> coveredBases = depths.entrySet().stream()
                 .collect(toMap(Map.Entry::getKey, entry -> countCoveredBases(entry.getValue())));
+        Map<ViralContig, Double> readVotes = group.stream().collect(toMap(
+                accumulator -> accumulator.Contig, accumulator -> accumulator.Votes));
 
-        boolean groupPresent = coveredBases.entrySet().stream().anyMatch(entry ->
-                ContigPrefilter.establishesGroupPresence(ContigSupport.coverageFraction(entry.getValue(), entry.getKey())));
+        Map<ViralContig, ContigFilterStatus> filterStatuses = ContigPrefilter.statuses(coveredBases, readVotes, meanReadLength);
 
         return group.stream().map(accumulator ->
         {
             ViralContig contig = accumulator.Contig;
-            ContigFilterStatus filterStatus = ContigPrefilter.status(
-                    contig, ContigSupport.coverageFraction(coveredBases.get(contig), contig), accumulator.Votes,
-                    groupPresent, meanReadLength);
-
             return createContigSupport(
-                    accumulator, filterStatus, coveredBases.get(contig), SummaryStats.from(depths.get(contig)),
+                    accumulator, filterStatuses.get(contig), coveredBases.get(contig), SummaryStats.from(depths.get(contig)),
                     originClippedReads.getOrDefault(contig, 0));
         }).toList();
     }
