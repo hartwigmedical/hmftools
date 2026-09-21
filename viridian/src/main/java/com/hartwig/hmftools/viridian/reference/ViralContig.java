@@ -33,7 +33,7 @@ public record ViralContig(
     }
 
     @Override
-    public int compareTo(@NotNull ViralContig other)
+    public int compareTo(ViralContig other)
     {
         Comparator<ViralContig> comparator =
                 comparing(ViralContig::oncologyGroup).thenComparing(ViralContig::name);

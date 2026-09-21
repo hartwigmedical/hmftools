@@ -73,4 +73,63 @@ public class ViridianConstants
 
     public static final int INTEGRATION_ALIGN_SCORE_MIN = 20;
 
+    static
+    {
+        if(!(VIRAL_READ_EXTRACTION_PARTITION_SIZE > 0 && VIRAL_READ_ALIGNMENT_BATCH_SIZE_DEFAULT > 0))
+        {
+            throw new IllegalStateException();
+        }
+        if(!(VIRAL_READ_MIN_SOFT_CLIP_BASES_DEFAULT > 0))
+        {
+            throw new IllegalStateException();
+        }
+        if(!(VIRAL_READ_MIN_ALIGNMENT_SCORE_DEFAULT >= 0))
+        {
+            throw new IllegalStateException();
+        }
+        if(!(READ_VOTE_CORRECT_BASE_PROBABILITY > 0.0 && READ_VOTE_CORRECT_BASE_PROBABILITY < 1.0))
+        {
+            throw new IllegalStateException();
+        }
+        if(!(VIRAL_CONTIG_ORIGIN_CLIP_TOLERANCE >= 0))
+        {
+            throw new IllegalStateException();
+        }
+        if(!(VIRAL_CONTIG_COVERAGE_MIN > 0.0 && VIRAL_CONTIG_COVERAGE_MIN <= 1.0))
+        {
+            throw new IllegalStateException();
+        }
+        if(!(VIRAL_CONTIG_COVERAGE_MIN_LOWER > 0.0 && VIRAL_CONTIG_COVERAGE_MIN_LOWER <= VIRAL_CONTIG_COVERAGE_MIN))
+        {
+            throw new IllegalStateException();
+        }
+        if(!(VIRAL_CONTIG_VOTES_PER_BASE_MIN > 0.0))
+        {
+            throw new IllegalStateException();
+        }
+        if(!(REPRESENTATIVE_COMPARABLE_VOTE_RATIO > 0.0 && REPRESENTATIVE_COMPARABLE_VOTE_RATIO <= 1.0))
+        {
+            throw new IllegalStateException();
+        }
+        if(!(REPRESENTATIVE_CHALLENGE_MARGIN_MIN >= 1))
+        {
+            throw new IllegalStateException();
+        }
+        if(!(REPRESENTATIVE_CHALLENGE_READS_MIN > 0.0 && REPRESENTATIVE_CHALLENGE_READS_MIN <= 1.0))
+        {
+            throw new IllegalStateException();
+        }
+        if(REPORTED_MARGINS.isEmpty())
+        {
+            throw new IllegalStateException();
+        }
+        if(!(INTEGRATION_SGL_INSERT_LENGTH_MIN > 0 && INTEGRATION_SGL_INSERT_LENGTH_MIN <= INTEGRATION_VARIANT_INSERT_LENGTH_MIN))
+        {
+            throw new IllegalStateException();
+        }
+        if(!(INTEGRATION_ALIGN_SCORE_MIN >= 0))
+        {
+            throw new IllegalStateException();
+        }
+    }
 }
