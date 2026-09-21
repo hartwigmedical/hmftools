@@ -35,6 +35,14 @@ public class ContigSupportFilterTest
         assertEquals(ContigFilterStatus.LOW_COVERAGE, statuses.get(SIBLING));
     }
 
+    // A lone contig establishes its group only by reaching the coverage floor, here 0.10 * 1000 = 100 bases.
+    @Test
+    public void testGroupPresenceAtCoverageFloor()
+    {
+        assertEquals(ContigFilterStatus.CANDIDATE, status(100, 100.0));
+        assertEquals(ContigFilterStatus.LOW_COVERAGE, status(99, 100.0));
+    }
+
     @Test
     public void testVoteDensityFloorDropsCoveredContig()
     {

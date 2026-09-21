@@ -2,6 +2,8 @@ package com.hartwig.hmftools.virusdetect;
 
 import static java.util.Collections.singleton;
 
+import static com.hartwig.hmftools.virusdetect.VirusConstants.EXTRACTION_PARTITION_SIZE;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
@@ -29,12 +31,12 @@ public class CandidateReadExtractorTest
     @Rule
     public TemporaryFolder mTempDir = new TemporaryFolder();
 
-    // Filtering, dedup, and mate-numbered single-end output exercised together (per-read fate inline below).
+    // Filtering, the duplicate-flag drop, and mate-numbered single-end output exercised together (per-read fate inline below).
     // Run single- and multi-threaded: sharding must not change which reads are candidates, only the output order.
     @Test
-    public void testWritesFilteredDedupedReadsWithMateSuffix() throws IOException
+    public void testWritesFilteredCandidateReadsWithMateSuffix() throws IOException
     {
-        SAMFileHeader header = header(SAMFileHeader.SortOrder.coordinate);
+        SAMFileHeader header = header(SAMFileHeader.SortOrder.coordinate, 10000);
         List<SAMRecord> records = List.of(
                 mapped(header, "plain", 0, "chr1", 100, "100M", "AAAAA"),             // no viral signal: dropped
                 mapped(header, "clip", 0x1 | 0x40, "chr1", 150, "20S80M", "CCCCC"),   // soft-clip candidate, first of pair
@@ -54,11 +56,30 @@ public class CandidateReadExtractorTest
         }
     }
 
+    // A read overlapping a partition boundary is returned by the slice of both partitions, but belongs to the one
+    // holding its start, so it must reach the FASTA once rather than twice.
+    @Test
+    public void testReadSpanningPartitionBoundaryWrittenOnce() throws IOException
+    {
+        SAMFileHeader header = header(SAMFileHeader.SortOrder.coordinate, 2 * EXTRACTION_PARTITION_SIZE);
+        int start = EXTRACTION_PARTITION_SIZE - 50;   // the 80 aligned bases run past the first partition's end
+        List<SAMRecord> records = List.of(mapped(header, "spanning", 0x1 | 0x40, "chr1", start, "20S80M", "CCCCC"));
+
+        String bam = writeIndexedBam(header, records);
+        String fasta = new File(mTempDir.getRoot(), "boundary.fasta").getPath();
+
+        int count = new CandidateReadExtractor(null, new CandidateReadFilter(20, singleton("chrEBV")), 2)
+                .extractToFasta(bam, fasta);
+
+        assertEquals(1, count);
+        assertEquals(Set.of(">spanning/1\nCCCCC"), fastaEntries(fasta));
+    }
+
     // Sharding the scan by region needs an index, so an unindexed BAM is rejected rather than silently handled.
     @Test
     public void testUnindexedBamRejected() throws IOException
     {
-        SAMFileHeader header = header(SAMFileHeader.SortOrder.unsorted);
+        SAMFileHeader header = header(SAMFileHeader.SortOrder.unsorted, 10000);
         String bam = writeBam(header, List.of(unmapped(header, "unmap", 0x4, "GGGGG")));
         String fasta = new File(mTempDir.getRoot(), "candidates.fasta").getPath();
 
@@ -67,11 +88,11 @@ public class CandidateReadExtractorTest
         assertThrows(UserInputError.class, () -> extractor.extractToFasta(bam, fasta));
     }
 
-    private static SAMFileHeader header(SAMFileHeader.SortOrder sortOrder)
+    private static SAMFileHeader header(SAMFileHeader.SortOrder sortOrder, int contigLength)
     {
         SAMFileHeader header = new SAMFileHeader();
         header.setSortOrder(sortOrder);
-        header.addSequence(new SAMSequenceRecord("chr1", 10000));
+        header.addSequence(new SAMSequenceRecord("chr1", contigLength));
         return header;
     }
 

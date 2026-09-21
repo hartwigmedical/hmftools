@@ -31,6 +31,9 @@ public class ViralReadAlignerTest
     @Rule
     public TemporaryFolder mTempDir = new TemporaryFolder();
 
+    // Three reads, so alignment spans two chunks.
+    private static final int CHUNK_SIZE = 2;
+
     private static final String R1_BASES = "A".repeat(100);
     private static final String R2_BASES = "C".repeat(100);
     private static final String R3_BASES = "G".repeat(100);
@@ -48,7 +51,7 @@ public class ViralReadAlignerTest
                 R2_BASES, List.of(noHit()),                    // no viral alignment: dropped
                 R3_BASES, List.of(alignment(0, 0, 0, 40, "100M"))); // low score, kept
 
-        ViralReadAligner aligner = new ViralReadAligner(new FakeAligner(alignments), header(), 2);
+        ViralReadAligner aligner = new ViralReadAligner(new FakeAligner(alignments), header(), CHUNK_SIZE);
 
         String fasta = writeFasta();
         String bam = new File(mTempDir.getRoot(), "aligned.bam").getPath();

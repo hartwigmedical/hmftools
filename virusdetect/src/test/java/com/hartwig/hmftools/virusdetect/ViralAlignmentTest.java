@@ -9,6 +9,7 @@ import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
@@ -22,7 +23,10 @@ import htsjdk.samtools.TextCigarCodec;
 public class ViralAlignmentTest
 {
     private static final int CONTIG_LENGTH = 200;
+    private static final int ALIGNMENT_LENGTH = 50;
+
     private static final ViralReference REFERENCE = reference();
+    private static final ViralContig CONTIG = REFERENCE.contig("v1");
 
     // from() pulls the tags, clips and aligned blocks out of the SAMRecord, and counts clipped bases toward divergence:
     // a 40-base soft clip plus one mismatch is a divergence of 41.
@@ -64,6 +68,40 @@ public class ViralAlignmentTest
     {
         SAMRecord record = record(30, "60M", 60, null);
         assertThrows(IllegalStateException.class, () -> ViralAlignment.from(record, REFERENCE));
+    }
+
+    // Soft clips cost nothing in the aligner score but are bases the contig fails to explain, so divergence and score
+    // can disagree. The alignment explaining more of the read wins even when the other scores higher.
+    @Test
+    public void testLowestDivergenceBeatsHighestScore()
+    {
+        ViralAlignment wholeRead = alignment(10, 6, 70);
+        ViralAlignment clipped = alignment(10, 20, 80);
+
+        assertEquals(wholeRead, best(clipped, wholeRead));
+    }
+
+    // Equal divergence can still arise from different gap structures, so the stronger alignment breaks the tie.
+    @Test
+    public void testHighestScoreBreaksDivergenceTie()
+    {
+        ViralAlignment weaker = alignment(10, 8, 60);
+        ViralAlignment stronger = alignment(10, 8, 75);
+
+        assertEquals(stronger, best(weaker, stronger));
+    }
+
+    private static ViralAlignment best(ViralAlignment... alignments)
+    {
+        return Stream.of(alignments).min(ViralAlignment.BEST_FIT_FIRST).orElseThrow();
+    }
+
+    // An unclipped alignment, so its divergence is all mismatches.
+    private static ViralAlignment alignment(int start, int divergence, int alignerScore)
+    {
+        return new ViralAlignment(
+                "r1", CONTIG, start, start + ALIGNMENT_LENGTH - 1, 0, 0, alignerScore, divergence,
+                List.of(new AlignedInterval(start, ALIGNMENT_LENGTH)));
     }
 
     private static SAMRecord record(int start, String cigar, @Nullable Integer alignerScore, @Nullable Integer editDistance)
