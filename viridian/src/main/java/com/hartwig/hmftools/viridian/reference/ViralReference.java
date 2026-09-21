@@ -1,0 +1,140 @@
+package com.hartwig.hmftools.viridian.reference;
+
+import static java.util.stream.Collectors.toMap;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+import com.hartwig.hmftools.common.utils.file.DelimFileReader;
+import com.hartwig.hmftools.viridian.common.UserInputError;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import htsjdk.samtools.SAMSequenceDictionary;
+import htsjdk.samtools.SAMSequenceRecord;
+import htsjdk.samtools.reference.IndexedFastaSequenceFile;
+
+// Set of viral contigs loaded from our curated resource.
+public class ViralReference
+{
+    private final SAMSequenceDictionary mSequenceDictionary;
+    private final Map<String, ViralContig> mContigsByName;
+
+    private static final Logger LOGGER = LogManager.getLogger(ViralReference.class);
+
+    public ViralReference(List<ViralContig> contigs, SAMSequenceDictionary sequenceDictionary)
+    {
+        mSequenceDictionary = sequenceDictionary;
+        mContigsByName = contigs.stream().collect(toMap(ViralContig::name, contig -> contig));
+    }
+
+    public ViralContig contig(String name)
+    {
+        ViralContig contig = mContigsByName.get(name);
+        if(contig == null)
+        {
+            throw new IllegalArgumentException("Unknown viral contig: " + name);
+        }
+        return contig;
+    }
+
+    // Contigs in FASTA order, matching the BWA index so an alignment's reference index resolves to a contig by position.
+    public SAMSequenceDictionary sequenceDictionary()
+    {
+        return mSequenceDictionary;
+    }
+
+    public static ViralReference load(String fastaFile, String infoTsvFile)
+    {
+        Map<String, InfoRow> info = loadInfo(infoTsvFile);
+        SAMSequenceDictionary dictionary = loadSequenceDictionary(fastaFile);
+        List<ViralContig> contigs = joinFastaAndInfo(dictionary, info);
+        LOGGER.debug("Loaded viral reference: {} contigs", contigs.size());
+        return new ViralReference(contigs, dictionary);
+    }
+
+    // Joins FASTA contigs to their info rows. Result in FASTA order.
+    static List<ViralContig> joinFastaAndInfo(SAMSequenceDictionary dictionary, Map<String, InfoRow> info)
+    {
+        Map<String, InfoRow> remainingInfo = new LinkedHashMap<>(info);
+        List<ViralContig> result = new ArrayList<>();
+        for(SAMSequenceRecord sequence : dictionary.getSequences())
+        {
+            String contig = sequence.getSequenceName();
+            InfoRow row = remainingInfo.remove(contig);
+            if(row == null)
+            {
+                throw new UserInputError(String.format("Viral reference contig has no info row: %s", contig));
+            }
+            result.add(new ViralContig(contig, sequence.getSequenceLength(), row.virusName(), row.oncologyGroup()));
+        }
+
+        if(!remainingInfo.isEmpty())
+        {
+            throw new UserInputError(String.format("Viral reference info rows have no FASTA contig: %s", remainingInfo.keySet()));
+        }
+
+        return result;
+    }
+
+    static Map<String, InfoRow> loadInfo(String infoTsvFile)
+    {
+        Map<String, InfoRow> info = new LinkedHashMap<>();
+        try(DelimFileReader reader = new DelimFileReader(infoTsvFile))
+        {
+            List<String> columns = reader.getColumnNames();
+            for(InfoColumn column : InfoColumn.values())
+            {
+                if(!columns.contains(column.name()))
+                {
+                    throw new UserInputError(String.format("Viral reference info missing column: %s", column.name()));
+                }
+            }
+
+            for(DelimFileReader.Row row : reader)
+            {
+                String contig = row.get(InfoColumn.ref_contig);
+                OncologyGroup oncologyGroup = new OncologyGroup(row.get(InfoColumn.oncology_group));
+                InfoRow previous = info.put(contig, new InfoRow(row.get(InfoColumn.virus_name), oncologyGroup));
+                if(previous != null)
+                {
+                    throw new UserInputError(String.format("Viral reference info has duplicate contig: %s", contig));
+                }
+            }
+        }
+        return info;
+    }
+
+    private static SAMSequenceDictionary loadSequenceDictionary(String fastaFile)
+    {
+        try(IndexedFastaSequenceFile fasta = new IndexedFastaSequenceFile(new File(fastaFile)))
+        {
+            SAMSequenceDictionary dictionary = fasta.getSequenceDictionary();
+            if(dictionary == null)
+            {
+                throw new UserInputError("Viral reference FASTA has no sequence dictionary (.dict): " + fastaFile);
+            }
+            return dictionary;
+        }
+        catch(IOException e)
+        {
+            throw new RuntimeException("Failed to read viral reference FASTA index", e);
+        }
+    }
+
+    private enum InfoColumn
+    {
+        ref_contig,
+        virus_name,
+        oncology_group
+    }
+
+    record InfoRow(String virusName, OncologyGroup oncologyGroup)
+    {
+    }
+}
