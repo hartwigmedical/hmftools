@@ -273,7 +273,7 @@ public class Isofox
         }
 
         // calculate a TPM for all transcripts before results are written
-        final List<GeneCollectionSummary> geneSummaryData = Lists.newArrayList();
+        List<GeneCollectionSummary> geneSummaryData = Lists.newArrayList();
         chrTasks.stream().forEach(x -> geneSummaryData.addAll(x.getGeneCollectionSummaryData()));
 
         double[] tpmFactors = calcTpmFactors(geneSummaryData);
@@ -347,7 +347,7 @@ public class Isofox
         if(!mConfig.Filters.SpecificChrRegions.hasFilters())
             return mGeneTransCache.getChrGeneDataMap();
 
-        final Map<String, List<GeneData>> chrGeneMap = Maps.newHashMap();
+        Map<String, List<GeneData>> chrGeneMap = Maps.newHashMap();
 
         if(mConfig.Filters.SpecificChrRegions.Regions.isEmpty())
         {
@@ -392,7 +392,7 @@ public class Isofox
     {
         int requiredFragCount = mConfig.FragmentLengthSamplingCount / chrGeneMap.size(); // split evenly amongst chromosomes
 
-        final List<FragmentSizeCalcs> fragSizeCalcs = Lists.newArrayList();
+        List<FragmentSizeCalcs> fragSizeCalcs = Lists.newArrayList();
 
         for(Map.Entry<String, List<GeneData>> entry : chrGeneMap.entrySet())
         {
@@ -401,7 +401,7 @@ public class Isofox
             fragSizeCalcs.add(fragSizeCalc);
         }
 
-        final List<Callable<Void>> callableList = fragSizeCalcs.stream().collect(Collectors.toList());
+        List<Callable<Void>> callableList = fragSizeCalcs.stream().collect(Collectors.toList());
         boolean validExecution = TaskExecutor.executeTasks(callableList, mConfig.Threads);
 
         if(!validExecution)
@@ -442,8 +442,8 @@ public class Isofox
     {
         ISF_LOGGER.info("basic BAM read counts");
 
-        final List<BamReadCounter> taskList = Lists.newArrayList();
-        final List<Callable<Void>> callableList = Lists.newArrayList();
+        List<BamReadCounter> taskList = Lists.newArrayList();
+        List<Callable<Void>> callableList = Lists.newArrayList();
 
         for(Map.Entry<String, List<GeneData>> entry : chrGeneMap.entrySet())
         {
