@@ -26,6 +26,24 @@ public class CandidateReadFilterTest
     private static final CandidateReadFilter FILTER = new CandidateReadFilter(20, Set.of("chrEBV"));
 
     @Test
+    public void testDuplicateReadIsNotCandidate()
+    {
+        assertFalse(FILTER.isCandidate(read(0x400, "chrEBV", "100M")));
+    }
+
+    @Test
+    public void testSecondaryAlignmentIsNotCandidate()
+    {
+        assertFalse(FILTER.isCandidate(read(0x100, "chrEBV", "100M")));
+    }
+
+    @Test
+    public void testSupplementaryAlignmentIsNotCandidate()
+    {
+        assertFalse(FILTER.isCandidate(read(0x800, "chrEBV", "100M")));
+    }
+
+    @Test
     public void testUnmappedReadIsCandidate()
     {
         assertTrue(FILTER.isCandidate(read(4, "*", "*")));
@@ -34,7 +52,6 @@ public class CandidateReadFilterTest
     @Test
     public void testReduxUnmappedReadIsNotCandidate()
     {
-        // the UM tag means redux unmapped this host read from a bad region; it is not a genuine viral read
         SAMRecord record = read(4, "*", "*");
         record.setAttribute("UM", "chr1:100");
         assertFalse(FILTER.isCandidate(record));
@@ -44,7 +61,7 @@ public class CandidateReadFilterTest
     public void testReduxUnmappedReadPlacedOnDecoyIsCandidate()
     {
         // unmapped (0x4) but placed on chrEBV by its mapped mate: the fragment touches the virus, so the redux
-        // UM exclusion must not drop it (regression: previously the unmapped branch returned before the decoy check)
+        // UM exclusion must not drop it.
         SAMRecord record = read(4, "chrEBV", "*");
         record.setAttribute("UM", "chr2:100");
         assertTrue(FILTER.isCandidate(record));
@@ -98,35 +115,35 @@ public class CandidateReadFilterTest
     @Test
     public void testClippedReadWithoutSupplementaryIsCandidate()
     {
-        // no SA tag: the clipped bases were not placed in the host, so the clip may mark a viral junction
+        // No SA tag: the clipped bases were not placed in the host, so the clip may mark a viral junction
         assertTrue(FILTER.isCandidate(read(0, "chr1", "30S70M")));
     }
 
     @Test
     public void testClippedReadWithHostSupplementaryIsNotCandidate()
     {
-        // clipped bases align elsewhere in the host (chr1), so the clip is not viral evidence
+        // Clipped bases align elsewhere in the host (chr1), so the clip is not viral evidence
         assertFalse(FILTER.isCandidate(read(0, "chr1", "30S70M", "chr1,200,+,70M30S,60,0;")));
     }
 
     @Test
     public void testClippedReadWithViralSupplementaryIsCandidate()
     {
-        // clipped bases align to the viral decoy, so the clip marks a viral junction
+        // Clipped bases align to the viral decoy, so the clip marks a viral junction
         assertTrue(FILTER.isCandidate(read(0, "chr1", "30S70M", "chrEBV,200,+,70M30S,60,0;")));
     }
 
     @Test
     public void testClippedReadWithViralAndHostSupplementaryIsNotCandidate()
     {
-        // any host-placed clipped bases disqualify the clip, even alongside a viral supplementary
+        // Any host-placed clipped bases disqualify the clip, even alongside a viral supplementary
         assertFalse(FILTER.isCandidate(read(0, "chr1", "30S70M", "chrEBV,200,+,70M30S,60,0;chr1,900,+,70M30S,60,0;")));
     }
 
     @Test
     public void testHostSupplementaryClipWithUnmappedMateIsStillCandidate()
     {
-        // the supplementary check only gates the clip rule; the unmapped-mate rule still applies (0x1|0x8|0x40 = 73)
+        // The supplementary check only gates the clip rule; the unmapped-mate rule still applies (0x1|0x8|0x40 = 73)
         assertTrue(FILTER.isCandidate(read(73, "chr1", "30S70M", "chr1,200,+,70M30S,60,0;")));
     }
 

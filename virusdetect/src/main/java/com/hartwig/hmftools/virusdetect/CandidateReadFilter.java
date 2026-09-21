@@ -26,6 +26,18 @@ public class CandidateReadFilter
 
     public boolean isCandidate(SAMRecord record)
     {
+        // Only care about primaries because only they have the read sequence.
+        // BamSlicer filters these anyway, but check here just in case.
+        if(record.isSecondaryOrSupplementary())
+        {
+            return false;
+        }
+        // REDUX duplicate fragment. Doesn't provide additional support.
+        // BamSlicer filters these anyway, but check here just in case.
+        if(record.getDuplicateReadFlag())
+        {
+            return false;
+        }
         // Mapped to a viral decoy contig, or an unmapped read placed on one by its mapped mate. Either way the fragment
         // touches a virus, so keep it. Checked before the redux-unmapped exclusion, since a redux-unmapped read sitting
         // on a decoy is still viral evidence.

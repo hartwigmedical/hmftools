@@ -41,7 +41,8 @@ public class CandidateReadExtractorTest
                 mapped(header, "plain", 0, "chr1", 100, "100M", "AAAAA"),             // no viral signal: dropped
                 mapped(header, "clip", 0x1 | 0x40, "chr1", 150, "20S80M", "CCCCC"),   // soft-clip candidate, first of pair
                 unmapped(header, "dup", 0x4 | 0x400, "TTTTT"),                        // duplicate unmapped: dropped
-                unmapped(header, "unmap", 0x1 | 0x4 | 0x80, "GGGGG"));                // unmapped candidate, second of pair
+                unmapped(header, "unmap", 0x1 | 0x4 | 0x80, "GGGGG"),                 // unmapped candidate, second of pair
+                unmapped(header, "single", 0x4, "TTTTT"));                            // unpaired candidate: no mate suffix
 
         String bam = writeIndexedBam(header, records);
 
@@ -51,8 +52,8 @@ public class CandidateReadExtractorTest
             int count = new CandidateReadExtractor(null, new CandidateReadFilter(20, singleton("chrEBV")), threads)
                     .extractToFasta(bam, fasta);
 
-            assertEquals(2, count);
-            assertEquals(Set.of(">clip/1\nCCCCC", ">unmap/2\nGGGGG"), fastaEntries(fasta));
+            assertEquals(3, count);
+            assertEquals(Set.of(">clip/1\nCCCCC", ">unmap/2\nGGGGG", ">single\nTTTTT"), fastaEntries(fasta));
         }
     }
 
@@ -73,6 +74,24 @@ public class CandidateReadExtractorTest
 
         assertEquals(1, count);
         assertEquals(Set.of(">spanning/1\nCCCCC"), fastaEntries(fasta));
+    }
+
+    // An unmapped read placed on a contig by its mapped mate sits in coordinate order, not in the unplaced block at
+    // the end of the BAM, so only the region scan can reach it. Such a read may be an integration site.
+    @Test
+    public void testPlacedUnmappedReadFoundByRegionScan() throws IOException
+    {
+        SAMFileHeader header = header(SAMFileHeader.SortOrder.coordinate, 10000);
+        List<SAMRecord> records = List.of(mapped(header, "placed", 0x1 | 0x4 | 0x40, "chr1", 500, "*", "TTTTT"));
+
+        String bam = writeIndexedBam(header, records);
+        String fasta = new File(mTempDir.getRoot(), "placed.fasta").getPath();
+
+        int count = new CandidateReadExtractor(null, new CandidateReadFilter(20, singleton("chrEBV")))
+                .extractToFasta(bam, fasta);
+
+        assertEquals(1, count);
+        assertEquals(Set.of(">placed/1\nTTTTT"), fastaEntries(fasta));
     }
 
     // Sharding the scan by region needs an index, so an unindexed BAM is rejected rather than silently handled.

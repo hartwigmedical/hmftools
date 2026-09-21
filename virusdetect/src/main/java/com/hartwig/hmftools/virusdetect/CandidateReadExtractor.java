@@ -46,8 +46,9 @@ public class CandidateReadExtractor
 
     private static final Logger LOGGER = LogManager.getLogger(CandidateReadExtractor.class);
 
+    // TODO: bit dodgy. Maybe use null to indicate instead?
     // Queued in place of a mapped region, standing for the BAM's block of unmapped reads.
-    private static final ChrBaseRegion UNMAPPED_READS = new ChrBaseRegion("unmapped", NO_POSITION, NO_POSITION);
+    private static final ChrBaseRegion UNMAPPED_READS = new ChrBaseRegion("unmapped_placeholder", NO_POSITION, NO_POSITION);
 
     public CandidateReadExtractor(@Nullable String refGenomeFile, CandidateReadFilter filter)
     {
@@ -155,7 +156,9 @@ public class CandidateReadExtractor
             mRegions = regions;
             mReader = reader;
             mPart = part;
-            mSlicer = new BamSlicer(0, true, true, true);
+            // Ignore duplicates, supplementaries, and secondaries. These would be dropped by our filter anyway, so may
+            // as well filter upfront.
+            mSlicer = new BamSlicer(0, false, false, false);
             mSlicer.setKeepUnmapped();
         }
 
@@ -184,7 +187,7 @@ public class CandidateReadExtractor
 
             if(region == UNMAPPED_READS)
             {
-                mSlicer.queryUnmapped(mReader, this::addIfCandidate);
+                mSlicer.queryUnmapped(mReader, this::processRecord);
             }
             else
             {
@@ -195,7 +198,7 @@ public class CandidateReadExtractor
                         {
                             if(record.getAlignmentStart() >= region.start())
                             {
-                                addIfCandidate(record);
+                                processRecord(record);
                             }
                         });
             }
@@ -205,9 +208,9 @@ public class CandidateReadExtractor
                     region, mPart.readCount() - startCount, format("%.1f", secondsSinceNow(startTimeMs)));
         }
 
-        private void addIfCandidate(SAMRecord record)
+        private void processRecord(SAMRecord record)
         {
-            if(!record.getDuplicateReadFlag() && !record.isSecondaryOrSupplementary() && mFilter.isCandidate(record))
+            if(mFilter.isCandidate(record))
             {
                 mPart.add(record);
             }
