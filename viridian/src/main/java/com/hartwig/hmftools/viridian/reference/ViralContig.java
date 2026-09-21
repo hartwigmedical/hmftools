@@ -32,13 +32,11 @@ public record ViralContig(
         return name;
     }
 
-    // Contig names are unique within the reference, so this orders contigs consistently with equality.
     @Override
     public int compareTo(ViralContig other)
     {
-        return BY_ONCOLOGY_GROUP_THEN_NAME.compare(this, other);
+        Comparator<ViralContig> comparator =
+                comparing(ViralContig::oncologyGroup).thenComparing(ViralContig::name)
+        return comparator.compare(this, other);
     }
-
-    private static final Comparator<ViralContig> BY_ONCOLOGY_GROUP_THEN_NAME =
-            comparing(ViralContig::oncologyGroup).thenComparing(ViralContig::name);
 }
