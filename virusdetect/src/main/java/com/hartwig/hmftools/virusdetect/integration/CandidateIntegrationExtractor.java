@@ -3,8 +3,8 @@ package com.hartwig.hmftools.virusdetect.integration;
 import static java.util.Objects.requireNonNull;
 
 import static com.hartwig.hmftools.common.sv.SvVcfTags.LINE_SITE;
-import static com.hartwig.hmftools.virusdetect.VirusConstants.MIN_PAIRED_INSERT_LENGTH;
-import static com.hartwig.hmftools.virusdetect.VirusConstants.MIN_SINGLE_INSERT_LENGTH;
+import static com.hartwig.hmftools.virusdetect.VirusConstants.INTEGRATION_SGL_INSERT_LENGTH_MIN;
+import static com.hartwig.hmftools.virusdetect.VirusConstants.INTEGRATION_VARIANT_INSERT_LENGTH_MIN;
 
 import java.util.List;
 import java.util.Map;
@@ -25,20 +25,20 @@ import htsjdk.variant.variantcontext.VariantContext;
 
 // Reads the ESVEE unfiltered VCF and keeps every SV which could be a viral integration.
 // Uses the ESVEE unfiltered VCF because the viral integrations are interesting even if ESVEE decided to filter.
-public class IntegrationCandidateExtractor
+public class CandidateIntegrationExtractor
 {
     private final String mTumorSampleId;
 
     private static final int NO_GENOTYPE_ORDINAL = -1;
 
-    private static final Logger LOGGER = LogManager.getLogger(IntegrationCandidateExtractor.class);
+    private static final Logger LOGGER = LogManager.getLogger(CandidateIntegrationExtractor.class);
 
-    public IntegrationCandidateExtractor(String tumorSampleId)
+    public CandidateIntegrationExtractor(String tumorSampleId)
     {
         mTumorSampleId = tumorSampleId;
     }
 
-    public List<IntegrationCandidate> extract(String vcfFile)
+    public List<CandidateIntegration> extract(String vcfFile)
     {
         try(VcfFileReader reader = new VcfFileReader(vcfFile))
         {
@@ -57,8 +57,8 @@ public class IntegrationCandidateExtractor
                 svFactory.addVariantContext(context);
             }
 
-            List<IntegrationCandidate> candidates = svFactory.results().stream()
-                    .map(IntegrationCandidateExtractor::toCandidate)
+            List<CandidateIntegration> candidates = svFactory.results().stream()
+                    .map(CandidateIntegrationExtractor::toCandidate)
                     .filter(Objects::nonNull)
                     .toList();
 
@@ -71,12 +71,12 @@ public class IntegrationCandidateExtractor
     }
 
     @Nullable
-    private static IntegrationCandidate toCandidate(StructuralVariant variant)
+    private static CandidateIntegration toCandidate(StructuralVariant variant)
     {
         StructuralVariantLeg endLeg = variant.end();
         String insertSequence = variant.insertSequence();
-        
-        int minInsertLength = endLeg == null ? MIN_SINGLE_INSERT_LENGTH : MIN_PAIRED_INSERT_LENGTH;
+
+        int minInsertLength = endLeg == null ? INTEGRATION_SGL_INSERT_LENGTH_MIN : INTEGRATION_VARIANT_INSERT_LENGTH_MIN;
         if(insertSequence.length() < minInsertLength)
         {
             return null;
@@ -88,7 +88,7 @@ public class IntegrationCandidateExtractor
             throw new IllegalStateException("SV has no variant context: " + variant.id());
         }
 
-        return new IntegrationCandidate(
+        return new CandidateIntegration(
                 variant.id(),
                 variant.type(),
                 requireNonNull(variant.filter()),

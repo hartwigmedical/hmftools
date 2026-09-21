@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.virusdetect;
 
-import static com.hartwig.hmftools.virusdetect.VirusConstants.VOTE_CORRECT_BASE_PROBABILITY;
+import static com.hartwig.hmftools.virusdetect.VirusConstants.READ_VOTE_CORRECT_BASE_PROBABILITY;
 
 import static org.junit.Assert.assertEquals;
 
@@ -27,7 +27,7 @@ public class ContigSupportCalculatorTest
                 alignment("r2", V1, 6, 5, 8, 0),
                 alignment("r3", V2, 1, 10, 9, 0));
 
-        List<ContigSupport> stats = new ContigSupportCalculator(VOTE_CORRECT_BASE_PROBABILITY).compute(
+        List<ContigSupport> stats = new ContigSupportCalculator(READ_VOTE_CORRECT_BASE_PROBABILITY).compute(
                 ViralAlignments.from(alignments, MEAN_READ_LENGTH));
 
         assertEquals(2, stats.size());
@@ -88,7 +88,7 @@ public class ContigSupportCalculatorTest
                 alignment("r3", V1, 6, 10, 9, 0),   // no clip: kept
                 clipped("r4", V1, 10, 19, 5, 0));   // clip projects to 5, within the contig: kept
 
-        List<ContigSupport> stats = new ContigSupportCalculator(VOTE_CORRECT_BASE_PROBABILITY).compute(
+        List<ContigSupport> stats = new ContigSupportCalculator(READ_VOTE_CORRECT_BASE_PROBABILITY).compute(
                 ViralAlignments.from(alignments, MEAN_READ_LENGTH));
 
         ContigSupport v1 = get(stats, V1);
@@ -104,7 +104,7 @@ public class ContigSupportCalculatorTest
                 clipped("r2", V1, 1, 10, 30, 0),    // Clipped over origin; dropped
                 alignment("r3", V2, 1, 10, 9, 0));  // Not clipped; kept
 
-        List<ContigSupport> stats = new ContigSupportCalculator(VOTE_CORRECT_BASE_PROBABILITY).compute(
+        List<ContigSupport> stats = new ContigSupportCalculator(READ_VOTE_CORRECT_BASE_PROBABILITY).compute(
                 ViralAlignments.from(alignments, MEAN_READ_LENGTH));
 
         ContigSupport expected = new ContigSupport(

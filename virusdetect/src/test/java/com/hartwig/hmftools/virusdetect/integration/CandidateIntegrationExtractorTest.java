@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
 
+import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.virusdetect.UserInputError;
 
@@ -18,7 +19,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-public class IntegrationCandidateExtractorTest
+public class CandidateIntegrationExtractorTest
 {
     private static final String TUMOR_ID = "TUMOR";
 
@@ -64,9 +65,9 @@ public class IntegrationCandidateExtractorTest
                 "0:30:10:0.0", "12:40:20:0.25");
 
         BreakendSupport support = new BreakendSupport(12, 60, 0.25, 0, 40);
-        IntegrationCandidate expected = new IntegrationCandidate(
+        CandidateIntegration expected = new CandidateIntegration(
                 "sgl_1", StructuralVariantType.SGL, "minQual",
-                new HostBreakend("chr1", 1000, FORWARD, support), null,
+                new HostBreakend(new BasePosition("chr1", 1000), FORWARD, support), null,
                 INSERT_20, true, new InsertRepeat("SINE", "Alu", 0.8), "chr7:100|+|50M|60");
 
         assertEquals(List.of(expected), extract(records));
@@ -81,10 +82,10 @@ public class IntegrationCandidateExtractorTest
 
         BreakendSupport startSupport = new BreakendSupport(8, 55, 0.15, 0, 45);
         BreakendSupport endSupport = new BreakendSupport(8, 57, 0.15, 0, 47);
-        IntegrationCandidate expected = new IntegrationCandidate(
+        CandidateIntegration expected = new CandidateIntegration(
                 "del_1_o", StructuralVariantType.DEL, "PASS",
-                new HostBreakend("chr1", 5000, FORWARD, startSupport),
-                new HostBreakend("chr1", 9000, REVERSE, endSupport),
+                new HostBreakend(new BasePosition("chr1", 5000), FORWARD, startSupport),
+                new HostBreakend(new BasePosition("chr1", 9000), REVERSE, endSupport),
                 INSERT_50, false, null, "");
 
         assertEquals(List.of(expected), extract(records));
@@ -134,7 +135,7 @@ public class IntegrationCandidateExtractorTest
         String records = record(
                 "chr1", 1000, "sgl_1", "A", "A" + INSERT_20 + ".", "PASS", "SVTYPE=SGL", "12:40:20:0.25", "0:30:10:0.0");
 
-        List<IntegrationCandidate> candidates = extract(header, records);
+        List<CandidateIntegration> candidates = extract(header, records);
         assertEquals(new BreakendSupport(12, 60, 0.25, 0, 40), candidates.get(0).startBreakend().support());
     }
 
@@ -167,23 +168,23 @@ public class IntegrationCandidateExtractorTest
                 normalGenotype, tumorGenotype) + "\n";
     }
 
-    private static List<String> svIds(List<IntegrationCandidate> candidates)
+    private static List<String> svIds(List<CandidateIntegration> candidates)
     {
-        return candidates.stream().map(IntegrationCandidate::svId).toList();
+        return candidates.stream().map(CandidateIntegration::svId).toList();
     }
 
-    private List<IntegrationCandidate> extract(String records)
+    private List<CandidateIntegration> extract(String records)
     {
         return extract(HEADER, records);
     }
 
-    private List<IntegrationCandidate> extract(String header, String records)
+    private List<CandidateIntegration> extract(String header, String records)
     {
         try
         {
             File vcfFile = mTempDir.newFile("esvee.unfiltered.vcf");
             Files.writeString(vcfFile.toPath(), header + records);
-            return new IntegrationCandidateExtractor(TUMOR_ID).extract(vcfFile.getAbsolutePath());
+            return new CandidateIntegrationExtractor(TUMOR_ID).extract(vcfFile.getAbsolutePath());
         }
         catch(IOException e)
         {

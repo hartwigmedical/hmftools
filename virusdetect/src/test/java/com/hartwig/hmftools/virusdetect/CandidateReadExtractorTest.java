@@ -2,7 +2,7 @@ package com.hartwig.hmftools.virusdetect;
 
 import static java.util.Collections.singleton;
 
-import static com.hartwig.hmftools.virusdetect.VirusConstants.EXTRACTION_PARTITION_SIZE;
+import static com.hartwig.hmftools.virusdetect.VirusConstants.VIRAL_READ_EXTRACTION_PARTITION_SIZE;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
@@ -60,8 +60,8 @@ public class CandidateReadExtractorTest
     public void testReadSpanningPartitionBoundaryWrittenOnce() throws IOException
     {
         // A read overlapping a boundary is sliced by both partitions, but belongs to the one holding its start.
-        SAMFileHeader header = header(SAMFileHeader.SortOrder.coordinate, 2 * EXTRACTION_PARTITION_SIZE);
-        int start = EXTRACTION_PARTITION_SIZE - 50;   // the 80 aligned bases run past the first partition's end
+        SAMFileHeader header = header(SAMFileHeader.SortOrder.coordinate, 2 * VIRAL_READ_EXTRACTION_PARTITION_SIZE);
+        int start = VIRAL_READ_EXTRACTION_PARTITION_SIZE - 50;   // the 80 aligned bases run past the first partition's end
         List<SAMRecord> records = List.of(mapped(header, "spanning", 0x1 | 0x40, "chr1", start, "20S80M", "CCCCC"));
 
         String bam = writeIndexedBam(header, records);

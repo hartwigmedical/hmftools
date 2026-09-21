@@ -16,7 +16,7 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR_
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputId;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
-import static com.hartwig.hmftools.virusdetect.VirusConstants.ALIGNMENT_BATCH_SIZE_DEFAULT;
+import static com.hartwig.hmftools.virusdetect.VirusConstants.VIRAL_READ_ALIGNMENT_BATCH_SIZE_DEFAULT;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
@@ -87,7 +87,7 @@ public record VirusConfig(
         configBuilder.addPath(BWA_LIB_PATH, false, BWA_LIB_PATH_DESC);
         configBuilder.addPath(CFG_ESVEE_UNFILTERED_VCF, false, DESC_ESVEE_UNFILTERED_VCF);
 
-        configBuilder.addInteger(CFG_ALIGNMENT_BATCH_SIZE, DESC_ALIGNMENT_BATCH_SIZE, ALIGNMENT_BATCH_SIZE_DEFAULT);
+        configBuilder.addInteger(CFG_ALIGNMENT_BATCH_SIZE, DESC_ALIGNMENT_BATCH_SIZE, VIRAL_READ_ALIGNMENT_BATCH_SIZE_DEFAULT);
         configBuilder.addFlag(CFG_REUSE_CANDIDATE_FASTA, DESC_REUSE_CANDIDATE_FASTA);
         configBuilder.addFlag(CFG_VERBOSE_OUTPUT, DESC_VERBOSE_OUTPUT);
 

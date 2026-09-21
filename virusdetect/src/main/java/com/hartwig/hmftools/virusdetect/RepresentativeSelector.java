@@ -7,9 +7,9 @@ import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
 
-import static com.hartwig.hmftools.virusdetect.VirusConstants.COMPARABLE_VOTE_RATIO;
-import static com.hartwig.hmftools.virusdetect.VirusConstants.MIN_CHALLENGE_MARGIN;
-import static com.hartwig.hmftools.virusdetect.VirusConstants.MIN_CHALLENGE_READS;
+import static com.hartwig.hmftools.virusdetect.VirusConstants.REPRESENTATIVE_CHALLENGE_MARGIN_MIN;
+import static com.hartwig.hmftools.virusdetect.VirusConstants.REPRESENTATIVE_CHALLENGE_READS_MIN;
+import static com.hartwig.hmftools.virusdetect.VirusConstants.REPRESENTATIVE_COMPARABLE_VOTE_RATIO;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -150,7 +150,7 @@ public class RepresentativeSelector
         }
 
         return candidates.stream()
-                .filter(support -> support.readVotes() >= COMPARABLE_VOTE_RATIO * topVotes)
+                .filter(support -> support.readVotes() >= REPRESENTATIVE_COMPARABLE_VOTE_RATIO * topVotes)
                 .map(ContigSupport::contig)
                 .collect(toSet());
     }
@@ -161,8 +161,9 @@ public class RepresentativeSelector
         return contigs.stream().collect(toMap(
                 subject -> subject, subject -> contigs.stream()
                         .filter(opponent -> !opponent.equals(subject))
-                        .filter(opponent -> margins.readsWinningBy(subject, opponent, MIN_CHALLENGE_MARGIN) / (double) groupReads
-                                >= MIN_CHALLENGE_READS)
+                        .filter(opponent ->
+                                margins.readsWinningBy(subject, opponent, REPRESENTATIVE_CHALLENGE_MARGIN_MIN) / (double) groupReads
+                                        >= REPRESENTATIVE_CHALLENGE_READS_MIN)
                         .collect(toSet())));
     }
 

@@ -6,7 +6,7 @@ import org.jetbrains.annotations.Nullable;
 
 // An SV which might be a viral integration into the host genome.
 // ESVEE's own annotations ride along as data; nothing in this phase acts on them.
-public record IntegrationCandidate(
+public record CandidateIntegration(
         String svId,
         StructuralVariantType type,
         String filter,
@@ -20,7 +20,7 @@ public record IntegrationCandidate(
         String insertHostAlignments
 )
 {
-    public IntegrationCandidate
+    public CandidateIntegration
     {
         if(svId.isEmpty())
         {
@@ -28,17 +28,7 @@ public record IntegrationCandidate(
         }
         if(insertSequence.isEmpty())
         {
-            throw new IllegalArgumentException("insert sequence is empty");
+            throw new IllegalArgumentException("Insert sequence is empty");
         }
-    }
-
-    public int insertLength()
-    {
-        return insertSequence.length();
-    }
-
-    public boolean isSingleBreakend()
-    {
-        return endBreakend == null;
     }
 }

@@ -2,7 +2,7 @@ package com.hartwig.hmftools.virusdetect;
 
 import static java.util.stream.Collectors.toMap;
 
-import static com.hartwig.hmftools.virusdetect.VirusConstants.MIN_CHALLENGE_MARGIN;
+import static com.hartwig.hmftools.virusdetect.VirusConstants.REPRESENTATIVE_CHALLENGE_MARGIN_MIN;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -135,7 +135,7 @@ public class RepresentativeSelectorTest
         // Plenty of winning reads, but none wins by enough bases to count.
         List<OncologyGroupRepresentativeSelection> selections = select(
                 support(candidate(V1, 100), candidate(V2, 100)),
-                margins(challenge(V1, V2, 100, MIN_CHALLENGE_MARGIN - 1)));
+                margins(challenge(V1, V2, 100, REPRESENTATIVE_CHALLENGE_MARGIN_MIN - 1)));
 
         assertEquals(ContigRole.REPRESENTATIVE_TWIN, role(selections, V2));
     }
@@ -197,7 +197,7 @@ public class RepresentativeSelectorTest
 
     private static List<ViralAlignment> challenge(ViralContig subject, ViralContig opponent, int reads)
     {
-        return challenge(subject, opponent, reads, MIN_CHALLENGE_MARGIN * 2);
+        return challenge(subject, opponent, reads, REPRESENTATIVE_CHALLENGE_MARGIN_MIN * 2);
     }
 
     // Reads the subject fits `margin` bases better than the opponent.

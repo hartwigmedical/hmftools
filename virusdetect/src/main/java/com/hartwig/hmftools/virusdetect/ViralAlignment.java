@@ -4,7 +4,7 @@ import static com.hartwig.hmftools.common.bam.CigarUtils.leftClipLength;
 import static com.hartwig.hmftools.common.bam.CigarUtils.rightClipLength;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.ALIGNMENT_SCORE_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
-import static com.hartwig.hmftools.virusdetect.VirusConstants.ORIGIN_CLIP_TOLERANCE;
+import static com.hartwig.hmftools.virusdetect.VirusConstants.VIRAL_CONTIG_ORIGIN_CLIP_TOLERANCE;
 
 import java.util.Comparator;
 import java.util.List;
@@ -78,7 +78,8 @@ public record ViralAlignment(
     public boolean clipsOverContigEnd()
     {
         int contigLength = contig.length();
-        return alignmentStart - leftClip < 1 - ORIGIN_CLIP_TOLERANCE || alignmentEnd + rightClip > contigLength + ORIGIN_CLIP_TOLERANCE;
+        return alignmentStart - leftClip < 1 - VIRAL_CONTIG_ORIGIN_CLIP_TOLERANCE
+                || alignmentEnd + rightClip > contigLength + VIRAL_CONTIG_ORIGIN_CLIP_TOLERANCE;
     }
 
     private static int requiredTag(SAMRecord record, String tag, String description)

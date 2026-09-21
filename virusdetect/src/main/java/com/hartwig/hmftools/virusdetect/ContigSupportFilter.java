@@ -2,9 +2,9 @@ package com.hartwig.hmftools.virusdetect;
 
 import static java.util.stream.Collectors.toMap;
 
-import static com.hartwig.hmftools.virusdetect.VirusConstants.MIN_COVERAGE;
-import static com.hartwig.hmftools.virusdetect.VirusConstants.MIN_COVERAGE_LOWER;
-import static com.hartwig.hmftools.virusdetect.VirusConstants.MIN_VOTES_PER_BASE;
+import static com.hartwig.hmftools.virusdetect.VirusConstants.VIRAL_CONTIG_COVERAGE_MIN;
+import static com.hartwig.hmftools.virusdetect.VirusConstants.VIRAL_CONTIG_COVERAGE_MIN_LOWER;
+import static com.hartwig.hmftools.virusdetect.VirusConstants.VIRAL_CONTIG_VOTES_PER_BASE_MIN;
 
 import java.util.Map;
 
@@ -15,7 +15,7 @@ public class ContigSupportFilter
             Map<ViralContig, Integer> coveredBases, Map<ViralContig, Double> readVotes, double meanReadLength)
     {
         boolean groupPresent = coveredBases.entrySet().stream()
-                .anyMatch(entry -> coverageFraction(entry.getKey(), entry.getValue()) >= MIN_COVERAGE);
+                .anyMatch(entry -> coverageFraction(entry.getKey(), entry.getValue()) >= VIRAL_CONTIG_COVERAGE_MIN);
 
         return coveredBases.entrySet().stream().collect(toMap(
                 Map.Entry::getKey,
@@ -27,7 +27,7 @@ public class ContigSupportFilter
     {
         // Once some contig has established the group, its siblings are kept down to a slightly lower coverage, so a
         // near-identical sibling straddling the cutoff is not harshly lost.
-        if(!groupPresent || coverageFraction(contig, coveredBases) < MIN_COVERAGE_LOWER)
+        if(!groupPresent || coverageFraction(contig, coveredBases) < VIRAL_CONTIG_COVERAGE_MIN_LOWER)
         {
             return ContigFilterStatus.LOW_COVERAGE;
         }
@@ -51,6 +51,6 @@ public class ContigSupportFilter
     // contig.
     private static double voteFloor(ViralContig contig, double meanReadLength)
     {
-        return MIN_VOTES_PER_BASE * MIN_COVERAGE * contig.length() / meanReadLength;
+        return VIRAL_CONTIG_VOTES_PER_BASE_MIN * VIRAL_CONTIG_COVERAGE_MIN * contig.length() / meanReadLength;
     }
 }

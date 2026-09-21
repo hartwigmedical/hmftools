@@ -8,18 +8,20 @@ import static com.hartwig.hmftools.virusdetect.VirusConstants.ALIGNED_BAM_SUFFIX
 import static com.hartwig.hmftools.virusdetect.VirusConstants.APP_NAME;
 import static com.hartwig.hmftools.virusdetect.VirusConstants.CANDIDATE_FASTA_SUFFIX;
 import static com.hartwig.hmftools.virusdetect.VirusConstants.CONTIG_INFO_TSV_SUFFIX;
-import static com.hartwig.hmftools.virusdetect.VirusConstants.DECOY_CONTIGS;
-import static com.hartwig.hmftools.virusdetect.VirusConstants.MIN_SOFT_CLIP_BASES_DEFAULT;
 import static com.hartwig.hmftools.virusdetect.VirusConstants.PAIRWISE_MARGINS_TSV_SUFFIX;
-import static com.hartwig.hmftools.virusdetect.VirusConstants.VOTE_CORRECT_BASE_PROBABILITY;
+import static com.hartwig.hmftools.virusdetect.VirusConstants.READ_VOTE_CORRECT_BASE_PROBABILITY;
+import static com.hartwig.hmftools.virusdetect.VirusConstants.VIRAL_HOST_CONTIGS;
+import static com.hartwig.hmftools.virusdetect.VirusConstants.VIRAL_READ_MIN_SOFT_CLIP_BASES_DEFAULT;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.virusdetect.integration.IntegrationCandidate;
-import com.hartwig.hmftools.virusdetect.integration.IntegrationCandidateExtractor;
+import com.hartwig.hmftools.virusdetect.integration.CandidateIntegration;
+import com.hartwig.hmftools.virusdetect.integration.CandidateIntegrationExtractor;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -43,7 +45,7 @@ public class VirusApplication
         mViralReference = ViralReference.load(config.viralRefFile(), config.viralRefInfoFile());
         LOGGER.info("Viral reference model loaded");
 
-        CandidateReadFilter candidateFilter = new CandidateReadFilter(MIN_SOFT_CLIP_BASES_DEFAULT, DECOY_CONTIGS);
+        CandidateReadFilter candidateFilter = new CandidateReadFilter(VIRAL_READ_MIN_SOFT_CLIP_BASES_DEFAULT, VIRAL_HOST_CONTIGS);
         mCandidateExtractor = new CandidateReadExtractor(config.refGenomeFile(), candidateFilter, config.threads());
         mAligner = ViralReadAligner.create(config, mViralReference);
     }
@@ -82,7 +84,7 @@ public class VirusApplication
         ViralAlignments viralAlignments = ViralAlignments.load(alignedBamFile, mViralReference);
 
         LOGGER.info("Computing per-contig support");
-        List<ContigSupport> contigSupports = new ContigSupportCalculator(VOTE_CORRECT_BASE_PROBABILITY).compute(viralAlignments);
+        List<ContigSupport> contigSupports = new ContigSupportCalculator(READ_VOTE_CORRECT_BASE_PROBABILITY).compute(viralAlignments);
         LOGGER.info("Per-contig support complete");
 
         LOGGER.info("Selecting representative contig per oncology group");
@@ -113,10 +115,30 @@ public class VirusApplication
         }
 
         LOGGER.info("Extracting integration candidates from ESVEE VCF: {}", esveeVcf);
-        List<IntegrationCandidate> candidates = new IntegrationCandidateExtractor(mConfig.sampleId()).extract(esveeVcf);
+        List<CandidateIntegration> candidates = new CandidateIntegrationExtractor(mConfig.sampleId()).extract(esveeVcf);
 
-        LOGGER.info("Aligning {} candidate insert sequences to the viral reference (stub)", candidates.size());
-        LOGGER.info("Annotating integrations and writing TSV (stub)");
+        LOGGER.info("Aligning {} candidate viral integration sequences to the viral reference", candidates.size());
+        Map<CandidateIntegration, ViralSequenceAlignment> alignments = alignInserts(candidates);
+        LOGGER.info("Aligned {} of {} inserted sequences to a viral contig", alignments.size(), candidates.size());
+
+        LOGGER.info("Annotating {} integrations and writing TSV (stub)", candidates.size());
+    }
+
+    // A candidate whose insert aligned nowhere is simply absent from the result, and is still reported.
+    private Map<CandidateIntegration, ViralSequenceAlignment> alignInserts(List<CandidateIntegration> candidates)
+    {
+        List<String> insertSequences = candidates.stream().map(CandidateIntegration::insertSequence).toList();
+        List<ViralSequenceAlignment> alignments = ViralSequenceAligner.create(mConfig, mViralReference).alignAll(insertSequences);
+
+        Map<CandidateIntegration, ViralSequenceAlignment> byCandidate = new LinkedHashMap<>();
+        for(int i = 0; i < candidates.size(); ++i)
+        {
+            if(alignments.get(i) != null)
+            {
+                byCandidate.put(candidates.get(i), alignments.get(i));
+            }
+        }
+        return byCandidate;
     }
 
     private String outputFile(String suffix)

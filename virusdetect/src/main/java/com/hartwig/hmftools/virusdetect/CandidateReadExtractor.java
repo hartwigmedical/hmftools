@@ -7,7 +7,7 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_POSITION;
 import static com.hartwig.hmftools.common.perf.PerformanceCounter.secondsSinceNow;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.executeRunnables;
 import static com.hartwig.hmftools.common.region.PartitionUtils.partitionChromosome;
-import static com.hartwig.hmftools.virusdetect.VirusConstants.EXTRACTION_PARTITION_SIZE;
+import static com.hartwig.hmftools.virusdetect.VirusConstants.VIRAL_READ_EXTRACTION_PARTITION_SIZE;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -111,7 +111,7 @@ public class CandidateReadExtractor
             regions.add(UNMAPPED_READS);
             for(SAMSequenceRecord sequence : reader.getFileHeader().getSequenceDictionary().getSequences())
             {
-                regions.addAll(partitionChromosome(sequence, EXTRACTION_PARTITION_SIZE));
+                regions.addAll(partitionChromosome(sequence, VIRAL_READ_EXTRACTION_PARTITION_SIZE));
             }
             return regions;
         }
