@@ -177,16 +177,16 @@ public class MappedCoords
         if(mSoftClipRegionsMatched == null && mInferredAlignmentAdded == null)
             return format("%s", alignmentsStr);
 
-        return format("%s inferred(lower=%s upper=%d) regionsMatched(lower=%d upper=%d)",
-                alignmentsStr, mInferredAlignmentAdded[SE_START], mInferredAlignmentAdded[SE_END],
-                mSoftClipRegionsMatched[SE_START], mSoftClipRegionsMatched[SE_END]);
+        return format("%s inferred(lower=%s upper=%s) regionsMatched(lower=%d upper=%d)",
+                alignmentsStr, inferredAlignmentAdded(SE_START), inferredAlignmentAdded(SE_END),
+                softClipRegionsMatched(SE_START), softClipRegionsMatched(SE_END));
     }
 
     public static MappedCoords build(final List<CigarElement> cigarElements, int posStart)
     {
         int splitCount = (int)cigarElements.stream().filter(x -> x.getOperator() == CigarOperator.N).count();
 
-        List<BaseRegion> alignments = Lists.newArrayListWithCapacity(1 * splitCount);
+        List<BaseRegion> alignments = Lists.newArrayListWithCapacity(splitCount + 1);
 
         BaseRegion currentRegion = null;
 
