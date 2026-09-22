@@ -114,9 +114,7 @@ public class Read
         mHasInterGeneSplit = false;
         mJunctionPositions = null;
 
-        parseAltLoci(record.getStringAttribute(XA_ATTRIBUTE));
         mConsensusRead = record.hasAttribute(CONSENSUS_READ_ATTRIBUTE);
-
         mAltLoci = parseAltLoci(record.getStringAttribute(XA_ATTRIBUTE));
     }
 

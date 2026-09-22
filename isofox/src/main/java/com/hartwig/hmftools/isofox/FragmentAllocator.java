@@ -382,7 +382,7 @@ public class FragmentAllocator
 
         List<Read.AltAlignment> altLoci = read1.numLoci() <= read2.numLoci() ? read1.altLoci() : read2.altLoci();
 
-        boolean isChimeric = mChimericReads.isChimeric(read1, read2, false, isMultiMapped);
+        boolean isChimeric = mChimericReads.isChimeric(read1, read2, isMultiMapped);
 
         if(mStatsOnly)
         {

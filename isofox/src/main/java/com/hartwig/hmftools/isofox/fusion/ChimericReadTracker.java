@@ -123,12 +123,12 @@ public class ChimericReadTracker
 
     public void setChimericPosDataWriter(final BufferedWriter writer) { mChimericPosDataWriter = writer; }
 
-    public boolean isChimeric(final Read read1, final Read read2, boolean isDuplicate, boolean isMultiMapped)
+    public boolean isChimeric(final Read read1, final Read read2, boolean isMultiMapped)
     {
         if(read1.isChimeric() || read2.isChimeric() || !read1.withinGeneCollection() || !read2.withinGeneCollection())
             return true;
 
-        if(!isDuplicate && !isMultiMapped && enabled() && (read1.containsSplit() || read2.containsSplit()))
+        if(!isMultiMapped && enabled() && (read1.containsSplit() || read2.containsSplit()))
         {
             return setHasMultipleKnownSpliceGenes(Lists.newArrayList(read1, read2), mKnownPairGeneIds);
         }

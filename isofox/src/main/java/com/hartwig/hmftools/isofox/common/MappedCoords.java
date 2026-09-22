@@ -177,7 +177,7 @@ public class MappedCoords
         if(mSoftClipRegionsMatched == null && mInferredAlignmentAdded == null)
             return format("%s", alignmentsStr);
 
-        return format("%s inferred(lower=%s upper=%d) regionsMatched(lower=%d upper=%d)",
+        return format("%s inferred(lower=%s upper=%s) regionsMatched(lower=%d upper=%d)",
                 alignmentsStr, mInferredAlignmentAdded[SE_START], mInferredAlignmentAdded[SE_END],
                 mSoftClipRegionsMatched[SE_START], mSoftClipRegionsMatched[SE_END]);
     }
@@ -186,7 +186,7 @@ public class MappedCoords
     {
         int splitCount = (int)cigarElements.stream().filter(x -> x.getOperator() == CigarOperator.N).count();
 
-        List<BaseRegion> alignments = Lists.newArrayListWithCapacity(1 * splitCount);
+        List<BaseRegion> alignments = Lists.newArrayListWithCapacity(1 + splitCount);
 
         BaseRegion currentRegion = null;
 
