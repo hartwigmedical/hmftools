@@ -62,7 +62,7 @@ public class CandidateIntegrationExtractor
                     .filter(Objects::nonNull)
                     .toList();
 
-            LOGGER.info(
+            LOGGER.debug(
                     "Read {} variant records, {} breakends never paired, {} integration candidates",
                     variantCount, svFactory.unmatched().size(), candidates.size());
 

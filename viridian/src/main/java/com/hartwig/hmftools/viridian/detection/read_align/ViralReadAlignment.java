@@ -31,31 +31,31 @@ public record ViralReadAlignment(
     {
         if(readName.isEmpty())
         {
-            throw new IllegalArgumentException("read name is empty");
+            throw new IllegalArgumentException("Invalid readName");
         }
         if(alignmentStart < 1)
         {
-            throw new IllegalArgumentException("invalid alignment start: " + alignmentStart);
+            throw new IllegalArgumentException("Invalid alignmentStart: " + alignmentStart);
         }
         if(alignmentEnd < alignmentStart)
         {
-            throw new IllegalArgumentException("invalid alignment span: " + alignmentStart + "-" + alignmentEnd);
+            throw new IllegalArgumentException("Invalid alignment span: " + alignmentStart + "-" + alignmentEnd);
         }
         if(leftClip < 0 || rightClip < 0)
         {
-            throw new IllegalArgumentException("invalid clips: left " + leftClip + ", right " + rightClip);
+            throw new IllegalArgumentException("Invalid clips: left " + leftClip + ", right " + rightClip);
         }
         if(alignerScore < 0)
         {
-            throw new IllegalArgumentException("invalid aligner score: " + alignerScore);
+            throw new IllegalArgumentException("Invalid alignerScore: " + alignerScore);
         }
         if(divergence < leftClip + rightClip)
         {
-            throw new IllegalArgumentException("divergence below clipped bases: " + divergence);
+            throw new IllegalArgumentException("Invalid divergence: " + divergence);
         }
         if(alignedIntervals.isEmpty())
         {
-            throw new IllegalArgumentException("no aligned intervals");
+            throw new IllegalArgumentException("Invalid alignedIntervals");
         }
     }
 

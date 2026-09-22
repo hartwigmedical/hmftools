@@ -65,9 +65,9 @@ public class ViralReadAligner
                     .map(chunk -> alignChunk(chunk, writer))
                     .reduce(ChunkResult.EMPTY, ChunkResult::add);
 
-            LOGGER.info(
-                    "aligned {} candidate reads: {} with viral alignments, {} alignments written to {}",
-                    total.totalReads(), total.alignedReads(), total.writtenAlignments(), outputBamFile);
+            LOGGER.debug(
+                    "Aligned {} candidate reads: {} with viral alignments, {} alignments written",
+                    total.totalReads(), total.alignedReads(), total.writtenAlignments());
         }
     }
 

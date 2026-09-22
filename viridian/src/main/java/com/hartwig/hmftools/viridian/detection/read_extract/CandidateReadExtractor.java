@@ -85,7 +85,7 @@ public class CandidateReadExtractor
             }
 
             int candidateCount = joinFastaParts(workers.stream().map(Worker::part).toList(), outputFastaFile);
-            LOGGER.info("Extracted {} candidate reads to {}", candidateCount, outputFastaFile);
+            LOGGER.debug("Extracted {} candidate reads", candidateCount);
             return candidateCount;
         }
         finally

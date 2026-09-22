@@ -19,7 +19,7 @@ public record HostBreakend(
     {
         if(id.isEmpty())
         {
-            throw new IllegalArgumentException("id cannot be empty");
+            throw new IllegalArgumentException("Invalid id");
         }
     }
 

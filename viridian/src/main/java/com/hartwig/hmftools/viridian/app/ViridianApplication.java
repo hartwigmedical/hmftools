@@ -56,7 +56,6 @@ public class ViridianApplication
 
         LOGGER.info("Loading viral reference data");
         mViralReference = ViralReference.load(config.viralRefFile(), config.viralRefInfoFile());
-        LOGGER.info("Viral reference data loaded");
     }
 
     public void run() throws IOException
@@ -111,7 +110,6 @@ public class ViridianApplication
         CandidateReadExtractor mCandidateExtractor = new CandidateReadExtractor(
                 mConfig.refGenomeFile(), candidateFilter, mConfig.threads());
         mCandidateExtractor.extractToFasta(mConfig.tumorBam(), candidateFastaFile);
-        LOGGER.info("Candidate read extraction complete");
     }
 
     // Align potentially viral reads to all virus genomes, so we can decide which viruses are present.
@@ -123,7 +121,6 @@ public class ViridianApplication
         ViralReadAligner viralReadAligner = ViralReadAligner.create(
                 mViralReference, mConfig.viralBwaIndexImage(), mConfig.threads(), mConfig.alignmentBatchSize());
         viralReadAligner.align(candidateReadFasta, viralReadBamFile);
-        LOGGER.info("Candidate read alignment complete");
     }
 
     // Compute support information for each virus genome and decide which genomes may be present.
@@ -131,7 +128,6 @@ public class ViridianApplication
     {
         LOGGER.info("Computing per-contig support");
         List<ContigSupport> contigSupports = new ContigSupportCalculator().compute(viralReadAlignments);
-        LOGGER.info("Per-contig support complete");
         return contigSupports;
     }
 
@@ -145,12 +141,13 @@ public class ViridianApplication
                 viralContigSupports, pairwiseMargins, viralReadAlignments.readCountsByOncologyGroup());
         logRepresentativeContigSelections(selections);
 
+        LOGGER.info("Writing contig info output");
         OutputWriter.writeContigInfo(outputFile(CONTIG_INFO_TSV_SUFFIX), selections);
         if(mConfig.verboseOutput())
         {
+            LOGGER.info("Writing pairwise margins output");
             OutputWriter.writePairwiseMargins(outputFile(PAIRWISE_MARGINS_TSV_SUFFIX), pairwiseMargins, selections);
         }
-        LOGGER.info("Selecting representative contigs complete");
     }
 
     private static void logRepresentativeContigSelections(List<OncologyGroupRepresentativeSelection> selections)
@@ -160,11 +157,11 @@ public class ViridianApplication
             ViralContig representative = selection.representative();
             if(representative != null)
             {
-                LOGGER.info("oncologyGroup({}) representative({})", selection.oncologyGroup(), representative);
+                LOGGER.debug("oncologyGroup({}) representative({})", selection.oncologyGroup(), representative);
             }
             else if(selection.resolution() == OncologyGroupResolution.UNRESOLVED)
             {
-                LOGGER.warn("oncologyGroup({}) unresolved({})", selection.oncologyGroup(), selection.outcome());
+                LOGGER.debug("oncologyGroup({}) unresolved({})", selection.oncologyGroup(), selection.outcome());
             }
         }
     }
@@ -179,19 +176,19 @@ public class ViridianApplication
             return;
         }
 
-        LOGGER.info("Extracting integration candidates from ESVEE VCF: {}", esveeVcf);
+        LOGGER.info("Extracting integration candidates from ESVEE VCF");
         List<CandidateIntegration> candidates = new CandidateIntegrationExtractor(mConfig.sampleId()).extract(esveeVcf);
 
-        LOGGER.info("Aligning {} candidate viral integration sequences to the viral reference", candidates.size());
         Map<CandidateIntegration, ViralSequenceAlignment> alignments = alignCandidateIntegrations(candidates);
-        LOGGER.info("Aligned {} of {} inserted sequences to a viral contig", alignments.size(), candidates.size());
 
+        LOGGER.info("Writing integrations output");
         OutputWriter.writeIntegrations(outputFile(INTEGRATIONS_TSV_SUFFIX), candidates, alignments);
-        LOGGER.info("Integration site calling complete");
     }
 
     private Map<CandidateIntegration, ViralSequenceAlignment> alignCandidateIntegrations(List<CandidateIntegration> candidates)
     {
+        LOGGER.info("Aligning candidate viral integration sequences to viral reference");
+
         List<String> insertSequences = candidates.stream().map(CandidateIntegration::insertSequence).toList();
         ViralSequenceAligner aligner = ViralSequenceAligner.create(
                 mViralReference, mConfig.viralBwaIndexImage(), mConfig.threads());
@@ -205,6 +202,7 @@ public class ViridianApplication
                 byCandidate.put(candidates.get(i), alignments.get(i));
             }
         }
+
         return byCandidate;
     }
 

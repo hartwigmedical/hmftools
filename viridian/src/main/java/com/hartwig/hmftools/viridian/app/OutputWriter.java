@@ -83,8 +83,6 @@ public class OutputWriter
                         row.set(ContigInfoColumn.challenged_by_ranks, formatRanks(votesRanks, candidate.challengedBy()));
                     }
                 });
-
-        LOGGER.info("wrote {} contig info rows to {}", rows.size(), file);
     }
 
     private static final String DEPTH_STATS_COLUMNS = "depth";
@@ -314,8 +312,6 @@ public class OutputWriter
                         row.set(IntegrationColumn.aligned_edit_distance, alignment.alignedEditDistance());
                     }
                 });
-
-        LOGGER.info("wrote {} integration rows to {}", candidates.size(), file);
     }
 
     private enum IntegrationColumn
