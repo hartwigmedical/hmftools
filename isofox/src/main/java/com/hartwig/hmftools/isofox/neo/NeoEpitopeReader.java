@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.SINGLE_MAP_QUALITY;
 import static com.hartwig.hmftools.isofox.common.GeneReadData.createGeneReadData;
 import static com.hartwig.hmftools.isofox.common.Read.findOverlappingRegions;
+import static com.hartwig.hmftools.isofox.common.ReadTranscriptUtils.processOverlappingRegions;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.validExonMatch;
 import static com.hartwig.hmftools.isofox.neo.NeoFragmentMatcher.checkBaseCoverage;
 import static com.hartwig.hmftools.isofox.neo.NeoFragmentMatcher.findFusionSupport;
@@ -178,7 +179,7 @@ public class NeoEpitopeReader
     {
         Read read = new Read(record);
 
-        read.processOverlappingRegions(findOverlappingRegions(mCurrentGenes.getExonRegions(), read));
+        processOverlappingRegions(read, findOverlappingRegions(mCurrentGenes.getExonRegions(), read));
         mCurrentGenes.setReadGeneCollections(read, mCurrentGenes.regionBounds());
 
         // only handle complete groups

@@ -2,7 +2,6 @@ package com.hartwig.hmftools.isofox;
 
 import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
-import static com.hartwig.hmftools.isofox.FragmentAllocator.calcFragmentLength;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.TRANSCRIPT_COUNTS;
 import static com.hartwig.hmftools.isofox.ReadCountsTest.REF_BASE_STR_1;
 import static com.hartwig.hmftools.isofox.TestUtils.ALT_SJ_COHORT_CACHE;
@@ -17,6 +16,8 @@ import static com.hartwig.hmftools.isofox.TestUtils.createReadPair;
 import static com.hartwig.hmftools.isofox.TestUtils.createReadRecord;
 import static com.hartwig.hmftools.isofox.TestUtils.createRegion;
 import static com.hartwig.hmftools.isofox.common.FragmentType.CHIMERIC;
+import static com.hartwig.hmftools.isofox.common.ReadTranscriptUtils.calcFragmentLength;
+import static com.hartwig.hmftools.isofox.common.ReadTranscriptUtils.processOverlappingRegions;
 import static com.hartwig.hmftools.isofox.common.TransMatchType.ALT;
 import static com.hartwig.hmftools.isofox.common.TransMatchType.EXONIC;
 import static com.hartwig.hmftools.isofox.common.TransMatchType.SPLICE_JUNCTION;
@@ -56,7 +57,7 @@ public class TransClassificationTest
         Read read = createReadRecord(1, "1", 90, 110, REF_BASE_STR_1, createCigar(0, 21, 0));
 
         List<RegionReadData> regions = Lists.newArrayList(region);
-        read.processOverlappingRegions(regions);
+        processOverlappingRegions(read, regions);
 
         assertEquals(UNSPLICED, read.getTranscriptClassification(trans1));
 
@@ -64,7 +65,7 @@ public class TransClassificationTest
         read = createReadRecord(1, "1", 120, 140, REF_BASE_STR_1, createCigar(0, 21, 0));
 
         regions = Lists.newArrayList(region);
-        read.processOverlappingRegions(regions);
+        processOverlappingRegions(read, regions);
 
         assertEquals(EXONIC, read.getTranscriptClassification(trans1));
 
@@ -77,7 +78,7 @@ public class TransClassificationTest
         read = createReadRecord(1, "1", 110, 200, REF_BASE_STR_1, createCigar(0, 11, 59, 21, 0));
 
         regions = Lists.newArrayList(region1, region2, region3);
-        read.processOverlappingRegions(regions);
+        processOverlappingRegions(read, regions);
 
         assertEquals(ALT, read.getTranscriptClassification(trans1));
 
@@ -91,7 +92,7 @@ public class TransClassificationTest
 
         read = createReadRecord(1, "1", 110, 200, REF_BASE_STR_1, cigar);
 
-        read.processOverlappingRegions(regions);
+        processOverlappingRegions(read, regions);
 
         assertEquals(ALT, read.getTranscriptClassification(trans1));
 
@@ -105,7 +106,7 @@ public class TransClassificationTest
 
         read = createReadRecord(1, "1", 110, 200, REF_BASE_STR_1, cigar);
 
-        read.processOverlappingRegions(regions);
+        processOverlappingRegions(read, regions);
 
         assertEquals(UNSPLICED, read.getTranscriptClassification(trans1));
 
@@ -120,7 +121,7 @@ public class TransClassificationTest
         region3 = createRegion("GEN01", trans2, 1, "1", 100, 220);
 
         regions = Lists.newArrayList(region1, region2, region3);
-        read.processOverlappingRegions(regions);
+        processOverlappingRegions(read, regions);
 
         assertEquals(SPLICE_JUNCTION, read.getTranscriptClassification(trans1));
         assertEquals(ALT, read.getTranscriptClassification(trans2));
@@ -146,7 +147,7 @@ public class TransClassificationTest
         Read read = createReadRecord(1, CHR_1, 200, 309, readBases, createCigar(1, 20, 80, 10, 0));
 
         List<RegionReadData> regions = Lists.newArrayList(region2, region3);
-        read.processOverlappingRegions(regions);
+        processOverlappingRegions(read, regions);
 
         assertEquals(SPLICE_JUNCTION, read.getTranscriptClassification(TRANS_1));
 
@@ -154,21 +155,21 @@ public class TransClassificationTest
         readBases = REF_BASE_STR_1 + "AAAAA";
         read = createReadRecord(1, CHR_1, 100, 119, readBases, createCigar(0, 20, 5));
         read.bamRecord().setInferredInsertSize(200);
-        read.processOverlappingRegions(Lists.newArrayList(region1));
+        processOverlappingRegions(read, Lists.newArrayList(region1));
 
         assertEquals(ALT, read.getTranscriptClassification(TRANS_1));
 
         readBases = "AAAAA" + REF_BASE_STR_1;
         read = createReadRecord(1, CHR_1, 300, 319, readBases, createCigar(5, 20, 0));
         read.bamRecord().setInferredInsertSize(200);
-        read.processOverlappingRegions(Lists.newArrayList(region3));
+        processOverlappingRegions(read, Lists.newArrayList(region3));
 
         assertEquals(ALT, read.getTranscriptClassification(TRANS_1));
 
         // likely adapter sequences are permitted
         read = createReadRecord(1, CHR_1, 300, 319, readBases, createCigar(5, 20, 0));
         read.bamRecord().setInferredInsertSize(20);
-        read.processOverlappingRegions(Lists.newArrayList(region3));
+        processOverlappingRegions(read, Lists.newArrayList(region3));
 
         assertEquals(EXONIC, read.getTranscriptClassification(TRANS_1));
 
@@ -176,14 +177,14 @@ public class TransClassificationTest
         readBases = REF_BASE_STR_1.substring(0, 18) + "A";
         read = createReadRecord(1, CHR_1, 300, 317, readBases, createCigar(0, 18, 1));
         read.bamRecord().setInferredInsertSize(200);
-        read.processOverlappingRegions(Lists.newArrayList(region3));
+        processOverlappingRegions(read, Lists.newArrayList(region3));
 
         assertEquals(EXONIC, read.getTranscriptClassification(TRANS_1));
 
         readBases = "AA" + REF_BASE_STR_1.substring(0, 18);
         read = createReadRecord(1, CHR_1, 102, 119, readBases, createCigar(2, 18, 0));
         read.bamRecord().setInferredInsertSize(200);
-        read.processOverlappingRegions(Lists.newArrayList(region1));
+        processOverlappingRegions(read, Lists.newArrayList(region1));
 
         assertEquals(EXONIC, read.getTranscriptClassification(TRANS_1));
 
@@ -191,7 +192,7 @@ public class TransClassificationTest
         readBases = REF_BASE_STR_1.substring(0, 17) + "AAA";
         read = createReadRecord(1, CHR_1, 300, 316, readBases, createCigar(0, 17, 3));
         read.bamRecord().setInferredInsertSize(200);
-        read.processOverlappingRegions(Lists.newArrayList(region3));
+        processOverlappingRegions(read, Lists.newArrayList(region3));
 
         assertEquals(ALT, read.getTranscriptClassification(TRANS_1));
     }

@@ -25,11 +25,10 @@ import static com.hartwig.hmftools.isofox.common.FragmentType.TOTAL;
 import static com.hartwig.hmftools.isofox.common.FragmentType.TRANS_SUPPORTING;
 import static com.hartwig.hmftools.isofox.common.FragmentType.UNSPLICED;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.FUSIONS;
-import static com.hartwig.hmftools.isofox.common.Read.MAX_SC_BASE_MATCH;
 import static com.hartwig.hmftools.isofox.common.Read.findOverlappingRegions;
-import static com.hartwig.hmftools.isofox.common.Read.getUniqueValidRegion;
-import static com.hartwig.hmftools.isofox.common.Read.markRegionBases;
-import static com.hartwig.hmftools.isofox.common.Read.validTranscriptType;
+import static com.hartwig.hmftools.isofox.common.ReadTranscriptUtils.getUniqueValidRegion;
+import static com.hartwig.hmftools.isofox.common.ReadTranscriptUtils.markRegionBases;
+import static com.hartwig.hmftools.isofox.common.ReadTranscriptUtils.validTranscriptType;
 import static com.hartwig.hmftools.isofox.common.ReadUtils.consensusDuplicateCount;
 import static com.hartwig.hmftools.isofox.common.ReadUtils.trimAdapterBases;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_INTRON;
@@ -68,6 +67,7 @@ import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.FragmentType;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
 import com.hartwig.hmftools.isofox.common.Read;
+import com.hartwig.hmftools.isofox.common.ReadTranscriptUtils;
 import com.hartwig.hmftools.isofox.common.RegionReadData;
 import com.hartwig.hmftools.isofox.common.TransExonRef;
 import com.hartwig.hmftools.isofox.common.TransMatchType;
@@ -323,7 +323,7 @@ public class FragmentAllocator
 
         if(!overlappingRegions.isEmpty())
         {
-            read.processOverlappingRegions(overlappingRegions);
+            ReadTranscriptUtils.processOverlappingRegions(read, overlappingRegions);
         }
     }
 
@@ -730,60 +730,7 @@ public class FragmentAllocator
         if(transData == null)
             return -1;
 
-        return calcFragmentLength(transData, read1, read2);
-    }
-
-    public static int calcFragmentLength(final TranscriptData transData, final Read read1, final Read read2)
-    {
-        int minReadPos = min(read1.alignmentStart(), read2.alignmentStart());
-        int maxReadPos = max(read1.alignmentEnd(), read2.alignmentEnd());
-        return calcFragmentLength(transData, minReadPos, maxReadPos);
-    }
-
-    public static int calcFragmentLength(final TranscriptData transData, final int minReadPos, final int maxReadPos)
-    {
-        // calculate fragment length within this transcript assuming it has been spliced
-        int transcriptBases = 0;
-        boolean startFound = false;
-
-        for(ExonData exon : transData.exons())
-        {
-            if(!startFound)
-            {
-                if(minReadPos < exon.Start - MAX_SC_BASE_MATCH)
-                    break;
-
-                if(minReadPos > exon.End)
-                    continue;
-
-                if(maxReadPos <= exon.End)
-                {
-                    // within same exon
-                    return maxReadPos - minReadPos + 1;
-                }
-
-                startFound = true;
-                transcriptBases = exon.End - max(exon.Start, minReadPos) + 1;
-            }
-            else
-            {
-                if(maxReadPos > exon.End)
-                {
-                    transcriptBases += exon.baseLength();
-                }
-                else if(maxReadPos < exon.Start)
-                {
-                    break;
-                }
-                else
-                {
-                    transcriptBases += maxReadPos - exon.Start + 1;
-                    break;
-                }
-            }
-        }
-
-        return transcriptBases;
+        return ReadTranscriptUtils.calcFragmentLength(transData, read1, read2);
     }
 
     private boolean reachedGeneReadLimit()

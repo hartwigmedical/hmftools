@@ -1,21 +1,18 @@
 package com.hartwig.hmftools.isofox;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.cigarFromStr;
-import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.ReadCountsTest.REF_BASE_STR_1;
 import static com.hartwig.hmftools.isofox.ReadCountsTest.REF_BASE_STR_2;
 import static com.hartwig.hmftools.isofox.TestUtils.CHR_1;
 import static com.hartwig.hmftools.isofox.TestUtils.createCigar;
 import static com.hartwig.hmftools.isofox.TestUtils.createReadRecord;
 import static com.hartwig.hmftools.isofox.TestUtils.createRegion;
-import static com.hartwig.hmftools.isofox.common.Read.markRegionBases;
 import static com.hartwig.hmftools.isofox.common.CommonUtils.deriveCommonRegions;
 import static com.hartwig.hmftools.isofox.common.CommonUtils.findStringOverlaps;
+import static com.hartwig.hmftools.isofox.common.ReadTranscriptUtils.markRegionBases;
 import static com.hartwig.hmftools.isofox.common.ReadUtils.trimAdapterBases;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import static htsjdk.samtools.CigarOperator.D;

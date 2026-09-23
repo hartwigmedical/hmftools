@@ -22,6 +22,7 @@ import static com.hartwig.hmftools.isofox.TestUtils.createIsofoxConfig;
 import static com.hartwig.hmftools.isofox.TestUtils.createMappedRead;
 import static com.hartwig.hmftools.isofox.TestUtils.createReadRecord;
 import static com.hartwig.hmftools.isofox.TestUtils.createRegion;
+import static com.hartwig.hmftools.isofox.common.ReadTranscriptUtils.processOverlappingRegions;
 import static com.hartwig.hmftools.isofox.common.TransMatchType.ALT;
 import static com.hartwig.hmftools.isofox.common.TransMatchType.SPLICE_JUNCTION;
 
@@ -457,7 +458,7 @@ public class ChimericReadTest
                 createCigar(0, 10, 99, 10, 0));
 
         List<RegionReadData> allRegions = Lists.newArrayList(region1, region2, region3, region4, region5);
-        read.processOverlappingRegions(Read.findOverlappingRegions(allRegions, read));
+        processOverlappingRegions(read, Read.findOverlappingRegions(allRegions, read));
 
         assertEquals(SPLICE_JUNCTION, read.getTranscriptClassification(trans1));
         assertEquals(SPLICE_JUNCTION, read.getTranscriptClassification(trans2));
@@ -469,7 +470,7 @@ public class ChimericReadTest
         read = createReadRecord(1, CHR_1, 191, 509, REF_BASE_STR_1,
                 createCigar(0, 10, 299, 10, 0));
 
-        read.processOverlappingRegions(Read.findOverlappingRegions(allRegions, read));
+        processOverlappingRegions(read, Read.findOverlappingRegions(allRegions, read));
         assertEquals(ALT, read.getTranscriptClassification(trans1));
 
         assertFalse(ChimericUtils.setHasMultipleKnownSpliceGenes(Lists.newArrayList(read), knownPairGeneIds));

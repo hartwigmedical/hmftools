@@ -3,6 +3,7 @@ package com.hartwig.hmftools.isofox;
 import static com.hartwig.hmftools.isofox.TestUtils.createCigar;
 import static com.hartwig.hmftools.isofox.TestUtils.createReadRecord;
 import static com.hartwig.hmftools.isofox.TestUtils.createRegion;
+import static com.hartwig.hmftools.isofox.common.ReadTranscriptUtils.processOverlappingRegions;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_BOUNDARY;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_INTRON;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.WITHIN_EXON;
@@ -164,7 +165,7 @@ public class ReadCountsTest
                 createCigar(5, 10, 0));
 
         List<RegionReadData> regions = Lists.newArrayList(region2);
-        read.processOverlappingRegions(regions);
+        processOverlappingRegions(read, regions);
 
         assertEquals(EXON_BOUNDARY, read.getRegionMatchType(region1));
         assertEquals(2, read.getMappedRegionCoords().size());
@@ -190,7 +191,7 @@ public class ReadCountsTest
         region3.addPreRegion(region4);
 
         regions = Lists.newArrayList(region1, region4);
-        read.processOverlappingRegions(regions);
+        processOverlappingRegions(read, regions);
 
         assertEquals(EXON_BOUNDARY, read.getMappedRegions().get(region1));
         assertEquals(EXON_BOUNDARY, read.getMappedRegions().get(region2));
@@ -204,7 +205,7 @@ public class ReadCountsTest
         read = createReadRecord(1, "1", 141, 152, REF_BASE_STR_1.substring(0, 15),
                 createCigar(0, 12, 3));
 
-        read.processOverlappingRegions(regions);
+        processOverlappingRegions(read, regions);
 
         assertEquals(EXON_BOUNDARY, read.getMappedRegions().get(region1));
         assertEquals(EXON_BOUNDARY, read.getMappedRegions().get(region2));
@@ -218,14 +219,14 @@ public class ReadCountsTest
         read = createReadRecord(1, "1", 132, 151,
                 REF_BASE_STR_1.substring(0, 19) + REF_BASE_STR_1.substring(10, 11), createCigar(0, 20, 0));
 
-        read.processOverlappingRegions(Lists.newArrayList(region1, region4));
+        processOverlappingRegions(read, Lists.newArrayList(region1, region4));
         assertEquals(1, read.getMappedRegionCoords().size());
         assertEquals(150, read.getMappedRegionCoords().get(0).end());
 
         read = createReadRecord(1, "1", 199, 218,
                 REF_BASE_STR_1.substring(9, 10) + REF_BASE_STR_1.substring(0, 19), createCigar(0, 20, 0));
 
-        read.processOverlappingRegions(Lists.newArrayList(region2, region3));
+        processOverlappingRegions(read, Lists.newArrayList(region2, region3));
         assertEquals(1, read.getMappedRegionCoords().size());
         assertEquals(200, read.getMappedRegionCoords().get(0).start());
     }

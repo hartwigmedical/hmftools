@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.SINGLE_MAP_QUALITY;
 import static com.hartwig.hmftools.isofox.common.Read.findOverlappingRegions;
+import static com.hartwig.hmftools.isofox.common.ReadTranscriptUtils.processOverlappingRegions;
 import static com.hartwig.hmftools.isofox.fusion.FusionDataTest.suppDataFromRead;
 
 import static htsjdk.samtools.CigarOperator.D;
@@ -382,7 +383,7 @@ public class TestUtils
     {
         Read read = createReadRecord(id, geneCollection.chromosome(), posStart, posEnd, readBases, cigar);
 
-        read.processOverlappingRegions(findOverlappingRegions(geneCollection.getExonRegions(), read));
+        processOverlappingRegions(read, findOverlappingRegions(geneCollection.getExonRegions(), read));
 
         if(read.getMappedRegions().isEmpty())
             read.addIntronicTranscriptRefs(geneCollection.getTranscripts());
