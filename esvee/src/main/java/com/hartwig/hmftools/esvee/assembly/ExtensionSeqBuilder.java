@@ -16,7 +16,7 @@ import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.basesMatch;
 import static com.hartwig.hmftools.esvee.assembly.LineUtils.findConsensusLineExtension;
 import static com.hartwig.hmftools.esvee.assembly.LineUtils.hasLineTail;
 import static com.hartwig.hmftools.esvee.assembly.SequenceBuilder.NEXT_BASE_CHECK_COUNT;
-import static com.hartwig.hmftools.esvee.assembly.SequenceBuilder.getRepeatCount;
+import static com.hartwig.hmftools.esvee.assembly.SequenceBuilder.getReadRepeatCount;
 import static com.hartwig.hmftools.esvee.assembly.SequenceCompare.permittedRepeatCount;
 import static com.hartwig.hmftools.esvee.assembly.SequenceDiffType.BASE;
 import static com.hartwig.hmftools.esvee.assembly.SequenceDiffType.DELETE;
@@ -59,7 +59,6 @@ public class ExtensionSeqBuilder
         mJunction = junction;
         mBuildForwards = mJunction.isForward();
         mReads = Lists.newArrayListWithCapacity(reads.size());
-
 
         int maxExtension = 0;
         boolean hasLineReads = false;
@@ -207,8 +206,23 @@ public class ExtensionSeqBuilder
 
         if(sufficientQualMatches(readParseState))
         {
-            // add as support
-            mReads.add(readParseState);
+            // add as support - replace if it was already a candidate extension read (ie checked previously)
+            boolean replaced = false;
+
+            for(int i = 0; i < mReads.size(); ++i)
+            {
+                ReadParseState existingRead = mReads.get(i);
+
+                if(existingRead.read() == read)
+                {
+                    mReads.set(i, readParseState);
+                    replaced = true;
+                    break;
+                }
+            }
+
+            if(!replaced)
+                mReads.add(readParseState);
         }
 
         return readParseState;
@@ -252,18 +266,17 @@ public class ExtensionSeqBuilder
             if(consensusRepeat != null)
             {
                 int prevExtBaseLength = abs(consensusRepeat.Index - extensionIndex); // was +1 but seems incorrect
-                // previousRepeatLength = abs(consensusRepeat.Index - extensionIndex) + 1;
 
                 int repeatBaseLength = consensusRepeat.repeatLength();
-                int previousExtRepeatCount = prevExtBaseLength / repeatBaseLength;
+                int prevRepeatCount = prevExtBaseLength / repeatBaseLength;
                 int repeatExtRemainder = prevExtBaseLength % repeatBaseLength;
 
                 int readRepeatCount = 0;
 
-                if(previousExtRepeatCount > 0 && repeatExtRemainder == 0)
+                if(prevRepeatCount > 0 && repeatExtRemainder == 0)
                 {
                     // get further repeat counts in the read from this point, assuming has matched until this point
-                    readRepeatCount = getRepeatCount(read, consensusRepeat.Bases, previousExtRepeatCount, mBuildForwards);
+                    readRepeatCount = getReadRepeatCount(read, consensusRepeat.Bases, prevRepeatCount, mBuildForwards, false);
                 }
 
                 int permittedRepeatDiff = permittedRepeatCount(consensusRepeat.Count);
@@ -363,18 +376,12 @@ public class ExtensionSeqBuilder
             maxValidExtensionLength = max(read.overlapBaseCount(), maxValidExtensionLength);
         }
 
-        juncThresholdState.ExtensionLengthValid |= hasExtensionLengthRead && maxValidExtensionLength > 0;
+        // this overrides previous state set prior to establishing the extension sequence
+        juncThresholdState.ExtensionLengthValid = hasExtensionLengthRead && maxValidExtensionLength > 0;
 
         juncThresholdState.SecondExtensionLengthValid |= validExtensionReadCount >= 2;
 
         juncThresholdState.MinReadsValid |= validExtensionReadCount >= juncThresholdState.MinRequiredReads;
-
-        /*
-        if(maxValidExtensionLength == 0 || !hasMinLengthSoftClipRead || validExtensionReadCount < juncThresholdState.MinRequiredReads)
-        {
-            mIsValid = false;
-        }
-        */
     }
 
     private void checkRepeatInRefBases()

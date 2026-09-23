@@ -213,7 +213,7 @@ public class ChainFinder
         mHasReplication = cluster.requiresReplication();
         mIsClusterSubset = false;
         mLinkAllocator.initialise(mClusterId);
-        mRuleSelector.initialise(mClusterId, mHasReplication);
+        mRuleSelector.initialise(mHasReplication);
     }
 
     public void initialise(SvCluster cluster, final List<SvVarData> svList, boolean requiresReplication)
@@ -227,11 +227,11 @@ public class ChainFinder
 
         mChrBreakendMap = Maps.newHashMap();
 
-        for(final Map.Entry<String, List<SvBreakend>> entry : cluster.getChrBreakendMap().entrySet())
+        for(Map.Entry<String, List<SvBreakend>> entry : cluster.getChrBreakendMap().entrySet())
         {
-            final List<SvBreakend> breakendList = Lists.newArrayList();
+            List<SvBreakend> breakendList = Lists.newArrayList();
 
-            for(final SvBreakend breakend : entry.getValue())
+            for(SvBreakend breakend : entry.getValue())
             {
                 if(svList.contains(breakend.getSV()))
                 {
@@ -260,7 +260,7 @@ public class ChainFinder
                 // only add an assembled link if it has a partner in the provided SV set, and can be replicated equally
                 for(LinkedPair link : var.getAssembledLinkedPairs(isStart(se)))
                 {
-                    final SvVarData otherVar = link.getOtherSV(var);
+                    SvVarData otherVar = link.getOtherSV(var);
 
                     if(!svList.contains(otherVar))
                         continue;
@@ -271,7 +271,7 @@ public class ChainFinder
         }
 
         mLinkAllocator.initialise(mClusterId);
-        mRuleSelector.initialise(mClusterId, mHasReplication);
+        mRuleSelector.initialise(mHasReplication);
 
         mDoubleMinuteSVs.addAll(svList);
     }
@@ -279,13 +279,13 @@ public class ChainFinder
     public void setRunValidation(boolean toggle) { mRunValidation = toggle; }
     public void setUseAllelePloidies(boolean toggle) { mUseAlleleJCNs = toggle; }
 
-    public final List<SvChain> getUniqueChains()
+    public List<SvChain> getUniqueChains()
     {
         return mUniqueChains;
     }
     public double getValidAlleleCopyNumberSegmentPerc() { return mClusterJcnLimits.getValidAlleleJcnSegmentPerc(); }
-    public final long[] calcRangeData() { return mClusterJcnLimits.calcRangeData(); }
-    public final ChainDiagnostics getDiagnostics() { return mDiagnostics; }
+    public long[] calcRangeData() { return mClusterJcnLimits.calcRangeData(); }
+    public ChainDiagnostics getDiagnostics() { return mDiagnostics; }
 
     public void formChains(boolean assembledLinksOnly)
     {
@@ -342,11 +342,11 @@ public class ChainFinder
             return;
         }
 
-        for(final SvChain newChain : mChains)
+        for(SvChain newChain : mChains)
         {
             boolean matched = false;
 
-            for(final SvChain chain : mUniqueChains)
+            for(SvChain chain : mUniqueChains)
             {
                 if(identicalChain(chain, newChain, false))
                 {
@@ -375,7 +375,7 @@ public class ChainFinder
 
         for(int i = 0; i < cluster.getChains().size(); ++i)
         {
-            final SvChain chain = cluster.getChains().get(i);
+            SvChain chain = cluster.getChains().get(i);
 
             if(LNX_LOGGER.isDebugEnabled())
             {
@@ -486,7 +486,7 @@ public class ChainFinder
 
                 ++ploidyMismatches;
 
-                final LinkedPair pair = entry.getKey();
+                LinkedPair pair = entry.getKey();
 
                 if(ChainJcnLimits.jcnMatch(pair.firstBreakend(), pair.secondBreakend()))
                 {
@@ -529,15 +529,15 @@ public class ChainFinder
         // do not chain past a zero cluster allele JCN
         // identify potential complex DUP candidates along the way
 
-        for(final Map.Entry<String, List<SvBreakend>> entry : mChrBreakendMap.entrySet())
+        for(Map.Entry<String, List<SvBreakend>> entry : mChrBreakendMap.entrySet())
         {
-            final String chromosome = entry.getKey();
-            final List<SvBreakend> breakendList = entry.getValue();
-            final List<SegmentJcn> alleleJCNs = mClusterJcnLimits.getChrAlleleJCNs().get(chromosome);
+            String chromosome = entry.getKey();
+            List<SvBreakend> breakendList = entry.getValue();
+            List<SegmentJcn> alleleJCNs = mClusterJcnLimits.getChrAlleleJCNs().get(chromosome);
 
             for(int i = 0; i < breakendList.size() -1; ++i)
             {
-                final SvBreakend lowerBreakend = breakendList.get(i);
+                SvBreakend lowerBreakend = breakendList.get(i);
 
                 if(belowJcnThreshold(lowerBreakend.getSV()))
                     continue;
@@ -550,7 +550,7 @@ public class ChainFinder
 
                 List<LinkedPair> lowerPairs = null;
 
-                final SvVarData lowerSV = lowerBreakend.getSV();
+                SvVarData lowerSV = lowerBreakend.getSV();
 
                 boolean lowerValidAP = mUseAlleleJCNs && mClusterJcnLimits.hasValidAlleleJcnData(
                         getClusterChrBreakendIndex(lowerBreakend), alleleJCNs);
@@ -561,7 +561,7 @@ public class ChainFinder
 
                 for(int j = i+1; j < breakendList.size(); ++j)
                 {
-                    final SvBreakend upperBreakend = breakendList.get(j);
+                    SvBreakend upperBreakend = breakendList.get(j);
 
                     if(belowJcnThreshold(upperBreakend.getSV()))
                         continue;
@@ -591,7 +591,7 @@ public class ChainFinder
                         continue;
 
                     // record the possible link
-                    final SvVarData upperSV = upperBreakend.getSV();
+                    SvVarData upperSV = upperBreakend.getSV();
 
                     if((lowerSV.type() == INF || upperSV.type() == INF) && distance <= 1)
                     {
@@ -680,7 +680,7 @@ public class ChainFinder
     private void checkIsComplexDupSV(SvBreakend lowerJcnBreakend, SvBreakend higherJcnBreakend)
     {
         // check if the lower JCN SV connects to both ends of another SV to replicate it
-        final SvVarData var = lowerJcnBreakend.getSV();
+        SvVarData var = lowerJcnBreakend.getSV();
 
         if(var.jcn() < 1) // maintain a minimum to avoid JCN comparison issues for lower values
             return;
@@ -694,7 +694,7 @@ public class ChainFinder
         if(mLinkAllocator.getSvConnections().get(var) == null)
             return;
 
-        final SvVarData otherSV = higherJcnBreakend.getSV();
+        SvVarData otherSV = higherJcnBreakend.getSV();
 
         if(var.jcn() > otherSV.jcn() || var.jcnMin() * 2 > otherSV.jcnMax())
             return;
@@ -705,7 +705,7 @@ public class ChainFinder
         // check whether the other breakend satisfies the same ploidy comparison criteria
         SvBreakend otherBreakend = var.getBreakend(!lowerJcnBreakend.usesStart());
 
-        final List<SvBreakend> breakendList = mChrBreakendMap.get(otherBreakend.chromosome());
+        List<SvBreakend> breakendList = mChrBreakendMap.get(otherBreakend.chromosome());
 
         boolean traverseUp = otherBreakend.orientation() == -1;
         int index = getClusterChrBreakendIndex(otherBreakend);
@@ -717,7 +717,7 @@ public class ChainFinder
             if(index < 0 || index >= breakendList.size())
                 break;
 
-            final SvBreakend breakend = breakendList.get(index);
+            SvBreakend breakend = breakendList.get(index);
 
             if(breakend == lowerJcnBreakend)
                 break;
@@ -774,8 +774,8 @@ public class ChainFinder
         // reconcileChains(mChains, true, mLinkAllocator.getNextChainId(), true);
 
         // search for a chain which can be closed if it contains all the DM SVs from one of the closed DM chains (found by DM Finder)
-        final List<SvChain> dmChains = mDoubleMinuteSVs.get(0).getCluster().getDoubleMinuteChains();
-        final List<SvChain> unmatchedDmChains = Lists.newArrayList(dmChains);
+        List<SvChain> dmChains = mDoubleMinuteSVs.get(0).getCluster().getDoubleMinuteChains();
+        List<SvChain> unmatchedDmChains = Lists.newArrayList(dmChains);
 
         for(SvChain chain : mChains)
         {
@@ -826,7 +826,7 @@ public class ChainFinder
 
     private void checkChains()
     {
-        for(final SvChain chain : mChains)
+        for(SvChain chain : mChains)
         {
             if(!checkIsValid(chain))
             {
@@ -839,13 +839,13 @@ public class ChainFinder
         // check no 2 chains have the same link reference
         for(int i = 0; i < mChains.size() - 1; ++i)
         {
-            final SvChain chain1 = mChains.get(i);
+            SvChain chain1 = mChains.get(i);
 
             for(int j = i + 1; j < mChains.size(); ++j)
             {
-                final SvChain chain2 = mChains.get(j);
+                SvChain chain2 = mChains.get(j);
 
-                for(final LinkedPair pair : chain2.getLinkedPairs())
+                for(LinkedPair pair : chain2.getLinkedPairs())
                 {
                     if(chain1.getLinkedPairs().stream().anyMatch(x -> x == pair))
                     {

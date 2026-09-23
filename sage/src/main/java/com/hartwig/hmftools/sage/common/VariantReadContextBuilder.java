@@ -72,7 +72,9 @@ public class VariantReadContextBuilder
                 byte[] extendedRefBases = refSequence.baseRange(
                         readContext.CorePositionStart - readContext.leftFlankLength(),
                         readContext.CorePositionEnd + readContext.rightFlankLength() + 1);
-                readContext.setExtendedRefBases(extendedRefBases);
+
+                if(extendedRefBases != null)
+                    readContext.setExtendedRefBases(extendedRefBases);
             }
 
             // set max ref repeat for use in MSI calcs and VCF output
@@ -116,6 +118,9 @@ public class VariantReadContextBuilder
             readCoreEnd = varIndexInRead + (variant.isInsert() ? variant.indelLength() + 1 : 1) + MIN_CORE_DISTANCE - 1;
             int refBaseLength = read.getReadBases().length - varIndexInRead + (variant.isDelete() ? variant.indelLengthAbs() : 0);
             byte[] homologyRefBases = refSequence.baseRange(variant.position(), variant.position() + refBaseLength);
+
+            if(homologyRefBases == null)
+                return null;
 
             softClipReadAdjustment = checkIndelSoftClipAdjustment(read, variant, varIndexInRead);
 
@@ -227,6 +232,9 @@ public class VariantReadContextBuilder
 
         // ref bases are the core width around the variant's position
         byte[] refBases = refSequence.baseRange(corePositionStart, corePositionEnd);
+
+        if(refBases == null) // can occur at the end of a chromosome / contig (esp MT)
+            return null;
 
         RepeatInfo maxRepeat = null;
         List<RepeatInfo> allRepeats;

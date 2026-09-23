@@ -20,17 +20,18 @@ public class AlternativeAlignment
     public final int Position;
     public final Orientation Orient;
     public final String Cigar;
-    public final int MapQual;
+    public final int NumMutations;
 
     private Integer mPositionEnd;
 
-    public AlternativeAlignment(final String chromosome, final int position, final Orientation orientation, final String cigar, final int mapQual)
+    public AlternativeAlignment(
+            final String chromosome, final int position, final Orientation orientation, final String cigar, final int numMutations)
     {
         Chromosome = chromosome;
         Position = position;
         Orient = orientation;
         Cigar = cigar;
-        MapQual = mapQual;
+        NumMutations = numMutations;
         mPositionEnd = null;
     }
 
@@ -66,9 +67,9 @@ public class AlternativeAlignment
 
         final String cigar = items[2];
 
-        int mapQual = Integer.parseInt(items[3]);
+        int numMutations = Integer.parseInt(items[3]);
 
-        return new AlternativeAlignment(chromosome, position, orientation, cigar, mapQual);
+        return new AlternativeAlignment(chromosome, position, orientation, cigar, numMutations);
     }
 
     public static List<AlternativeAlignment> fromLocationTag(final String locationTag)
@@ -93,7 +94,7 @@ public class AlternativeAlignment
 
     public String toString()
     {
-        return format("%s:%d:%d mq=%d", Chromosome, Position, Orient.asByte(), MapQual);
+        return format("%s:%d:%d nm=%d", Chromosome, Position, Orient.asByte(), NumMutations);
     }
 
     public String vcfString()
@@ -103,7 +104,7 @@ public class AlternativeAlignment
         sj.add(format("%s:%d", Chromosome, Position));
         sj.add(String.valueOf(Orient.asChar()));
         sj.add(Cigar);
-        sj.add(String.valueOf(MapQual));
+        sj.add(String.valueOf(NumMutations));
         return sj.toString();
     }
 
@@ -164,14 +165,14 @@ public class AlternativeAlignment
 
         final String cigar = values[2];
 
-        int mapQual = Integer.parseInt(values[3]);
+        int numMutations = Integer.parseInt(values[3]);
 
-        return new AlternativeAlignment(chromosome, position, orientation, cigar, mapQual);
+        return new AlternativeAlignment(chromosome, position, orientation, cigar, numMutations);
     }
 
     public boolean matches(final AlternativeAlignment other)
     {
         return Chromosome.equals(other.Chromosome) && Position == other.Position && Orient == other.Orient
-                && Cigar.equals(other.Cigar) && MapQual == other.MapQual;
+                && Cigar.equals(other.Cigar) && NumMutations == other.NumMutations;
     }
 }

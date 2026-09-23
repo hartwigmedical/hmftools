@@ -61,7 +61,7 @@ public class RunAmberTest
         ReferenceSample = null;
         TumorBamFile = null;
         ReferenceBamFile = null;
-        var TempDir = new File("/Users/timlavers/work/junk/basura"); //Files.createTempDirectory("amber").toFile();
+        var TempDir = new File("/Users/timlavers/work/junk/muell"); //Files.createTempDirectory("amber").toFile();
         OutputDir = new File(TempDir, "output");
         //noinspection ResultOfMethodCallIgnored
         OutputDir.mkdirs();
@@ -80,12 +80,11 @@ public class RunAmberTest
         // Check the segmentation file.
         String segmentsFile = PCFFile.generateBAFFilename(OutputDir.getAbsolutePath(), TumorSample);
         Map<Chromosome, List<PCFPosition>> pcfData = PCFFile.readPositions(WINDOW_SIZE, PCFSource.TUMOR_BAF, segmentsFile);
-        assertEquals(2, pcfData.keySet().size());
+        assertEquals(2, pcfData.size());
         List<PCFPosition> chr1Positions = pcfData.get(_1);
-        // The R program that does segmentation puts a couple of spurious segments
-        // at the start of each chromosome.
-        assertEquals(9, chr1Positions.size());
-        assertEquals(49001, chr1Positions.get(0).Position);
+
+        assertEquals(6, chr1Positions.size());
+        assertEquals(49554, chr1Positions.get(0).Position);
     }
 
     @Test

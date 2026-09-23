@@ -8,9 +8,11 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.DISC_FRAGS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.HOMSEQ;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.IHOMPOS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.LINE_SITE;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.PROX_JUNC_READ_RATIO;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SPLIT_FRAGS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.STRAND_BIAS;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SUPP_REMOTE_REGION_RATIO;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.THREE_PRIME_RANGE;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.TOTAL_FRAGS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.UNIQUE_FRAG_POSITIONS;
@@ -25,6 +27,7 @@ import static com.hartwig.hmftools.esvee.caller.CallerTestUtils.TEST_SAMPLE_ID;
 import static com.hartwig.hmftools.esvee.caller.CallerTestUtils.createSv;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.INV_ADJACENT_MIN_UPS;
 import static com.hartwig.hmftools.esvee.caller.SvDataCache.buildBreakendMap;
+import static com.hartwig.hmftools.esvee.caller.VariantFilters.applyWeakJunctionMinAfFilter;
 import static com.hartwig.hmftools.esvee.common.SvConstants.SEQUENCING_TYPE;
 
 import static org.junit.Assert.assertFalse;
@@ -329,7 +332,6 @@ public class FiltersTest
 
         Map<String, Object> commonAttributes = Maps.newHashMap();
 
-        commonAttributes = Maps.newHashMap();
         commonAttributes.put(THREE_PRIME_RANGE, new int[] { 3, 5});
         commonAttributes.put(ASM_INFO, "1:100:1");
 
@@ -365,6 +367,77 @@ public class FiltersTest
         mVariantFilters.applyFilters(var);
 
         assertFalse(var.filters().contains(FilterType.UNPAIRED_THREE_PRIME_RANGE));
+    }
+
+    @Test
+    public void testWeakJunctionMinAf()
+    {
+        long[] discTypeCounts = new long[DiscordantFragType.values().length];
+        discTypeCounts[0] = 100;
+        DiscordantStats discordantStats = new DiscordantStats(1_000, 1_000, discTypeCounts);
+        VariantFilters variantFilters = new VariantFilters(FILTER_CONSTANTS, FRAG_LENGTHS, discordantStats);
+
+        Map<String, Object> commonAttributes = Maps.newHashMap();
+
+        commonAttributes.put(ASM_INFO, "1:100:1");
+
+        Map<String, Object> tumorAttributes = Maps.newHashMap();
+        tumorAttributes.put(SPLIT_FRAGS, 4);
+        tumorAttributes.put(STRAND_BIAS, 0.95);
+
+        Variant var = createSv(
+                "01", CHR_1, CHR_1, 100, 150, ORIENT_FWD, ORIENT_FWD, "",
+                commonAttributes, tumorAttributes, tumorAttributes);
+
+        var.markHotspot();
+        assertFalse(applyWeakJunctionMinAfFilter(var));
+
+        // not indel-based
+        commonAttributes.put(ASM_INFO, "1:100:1:I_1:100:-1:I");
+
+        var = createSv(
+                "01", CHR_1, CHR_1, 100, 101, ORIENT_FWD, ORIENT_REV, "",
+                commonAttributes, tumorAttributes, tumorAttributes);
+
+        assertFalse(applyWeakJunctionMinAfFilter(var));
+
+        String softClipJunctions = "1:100:-1_1:200:1";
+        commonAttributes.put(ASM_INFO, softClipJunctions);
+
+        var = createSv(
+                "01", CHR_1, CHR_1, 100, 150, ORIENT_FWD, ORIENT_FWD, "",
+                commonAttributes, tumorAttributes, tumorAttributes);
+
+        assertTrue(applyWeakJunctionMinAfFilter(var));
+
+        tumorAttributes.clear();
+        tumorAttributes.put(SPLIT_FRAGS, 4);
+        tumorAttributes.put(STRAND_BIAS, 0.5);
+
+        commonAttributes.clear();
+        commonAttributes.put(STRAND_BIAS, 0.4);
+        commonAttributes.put(ASM_INFO, softClipJunctions);
+        commonAttributes.put(PROX_JUNC_READ_RATIO, 0.05);
+
+        // test out each of the junction-related conditions
+        var = createSv(
+                "01", CHR_1, CHR_1, 100, 150, ORIENT_FWD, ORIENT_FWD, "",
+                commonAttributes, tumorAttributes, tumorAttributes);
+
+        assertTrue(applyWeakJunctionMinAfFilter(var));
+
+        commonAttributes.put(PROX_JUNC_READ_RATIO, 0.15);
+        commonAttributes.put(SUPP_REMOTE_REGION_RATIO, 0.45);
+
+        var = createSv(
+                "01", CHR_1, CHR_1, 100, 150, ORIENT_FWD, ORIENT_FWD, "",
+                commonAttributes, tumorAttributes, tumorAttributes);
+
+        assertTrue(applyWeakJunctionMinAfFilter(var));
+
+        variantFilters.applyFilters(var);
+
+        assertTrue(var.filters().contains(FilterType.WEAK_JUNC_MIN_AF));
     }
 
     @Test

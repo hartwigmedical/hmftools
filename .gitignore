@@ -36,4 +36,6 @@ patient-db/patient-db-logs/*.log
 # Ignore R files
 .Rhistory
 
-/CLAUDE.md
+CLAUDE.md
+
+.claude

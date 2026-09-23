@@ -65,7 +65,7 @@ public final class EnsemblDataLoader
     public static String ensemblProteinDataFile(final RefGenomeVersion rgVersion) { return formFileName(PROTEIN_FEATURE_DATA_FILE_ID, rgVersion); }
     public static String ensemblAminoAcidDataFile(final RefGenomeVersion rgVersion) { return formFileName(TRANS_AMINO_ACIDS_FILE_ID, rgVersion); }
 
-    private static String checkOldFilename(final String filename)
+    private static String resolveFilenameWithOldIfRequired(final String filename)
     {
         if(Files.exists(Paths.get(filename)))
             return filename;
@@ -74,7 +74,7 @@ public final class EnsemblDataLoader
         if(Files.exists(Paths.get(oldFilename)))
             return oldFilename;
 
-        return filename; // keep original even if invalid
+        return filename; // keep original even if invalid so loading attempt shows expected and invalid path
     }
 
     private static String formFileName(final String fileId, final RefGenomeVersion refGenomeVersion)
@@ -91,7 +91,7 @@ public final class EnsemblDataLoader
 
         String filename = checkAddDirSeparator(dataPath) + ensemblGeneDataFile(version);
 
-        filename = checkOldFilename(filename);
+        filename = resolveFilenameWithOldIfRequired(filename);
 
         if(!Files.exists(Paths.get(filename)))
             return false;
@@ -179,7 +179,7 @@ public final class EnsemblDataLoader
     {
         String filename = checkAddDirSeparator(dataPath) + ensemblTransExonDataFile(version);
 
-        filename = checkOldFilename(filename);
+        filename = resolveFilenameWithOldIfRequired(filename);
 
         if(!Files.exists(Paths.get(filename)))
             return false;
@@ -314,7 +314,7 @@ public final class EnsemblDataLoader
     {
         String filename = checkAddDirSeparator(dataPath) + ensemblProteinDataFile(version);
 
-        filename = checkOldFilename(filename);
+        filename = resolveFilenameWithOldIfRequired(filename);
 
         if(!Files.exists(Paths.get(filename)))
             return false;
@@ -395,7 +395,7 @@ public final class EnsemblDataLoader
     {
         String filename = checkAddDirSeparator(dataPath) + ensemblSpliceDataFile(version);
 
-        filename = checkOldFilename(filename);
+        filename = resolveFilenameWithOldIfRequired(filename);
 
         if(!Files.exists(Paths.get(filename)))
             return false;
@@ -456,7 +456,7 @@ public final class EnsemblDataLoader
     {
         String filename = checkAddDirSeparator(dataPath) + ensemblAminoAcidDataFile(version);
 
-        filename = checkOldFilename(filename);
+        filename = resolveFilenameWithOldIfRequired(filename);
 
         if(!Files.exists(Paths.get(filename)))
             return false;

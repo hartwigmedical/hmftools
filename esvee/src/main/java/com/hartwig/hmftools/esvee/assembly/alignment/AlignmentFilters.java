@@ -13,7 +13,6 @@ import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ALIGNMENT_MI
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ALIGNMENT_MIN_MOD_MAP_QUAL_NO_XA;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ALIGNMENT_PROXIMATE_DISTANCE;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ALIGNMENT_RECOVERY_MAX_MD_ERRORS;
-import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.PMS2_MAX_MAP_QUAL;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.SSX2_GENE_ORIENT;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.SSX2_MAX_MAP_QUAL;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.SSX2_REGIONS_V37;
@@ -333,7 +332,7 @@ public final class AlignmentFilters
                         position += calcCigarAlignedLength(altAlignment.Cigar) - 1;
 
                     alignments.add(new AlternativeAlignment(
-                            altAlignment.Chromosome,  position, altOrientation, altAlignment.Cigar, altAlignment.MapQual));
+                            altAlignment.Chromosome,  position, altOrientation, altAlignment.Cigar, altAlignment.NumMutations));
                 }
             }
         }
@@ -436,7 +435,7 @@ public final class AlignmentFilters
 
         AlignData lowMappedAlignment = null;
 
-        List<ChrBaseRegion> ssx2Regions = alignments.get(0).refLocation().Chromosome.startsWith(CHR_PREFIX) ? SSX2_REGIONS_V38:  SSX2_REGIONS_V37;
+        List<ChrBaseRegion> ssx2Regions = alignments.get(0).refLocation().Chromosome.startsWith(CHR_PREFIX) ? SSX2_REGIONS_V38 : SSX2_REGIONS_V37;
         ChrBaseRegion ssx2Region = ssx2Regions.get(0);
 
         for(AlignData alignment : alignments)
@@ -449,7 +448,7 @@ public final class AlignmentFilters
             {
                 for(AlternativeAlignment altAlignment : alignment.rawAltAlignments())
                 {
-                    if(matchesSsx2Region(ssx2Regions, altAlignment.Chromosome, altAlignment.Position, altAlignment.Orient, altAlignment.MapQual))
+                    if(matchesSsx2Region(ssx2Regions, altAlignment.Chromosome, altAlignment.Position, altAlignment.Orient, alignment.mapQual()))
                     {
                         lowMappedAlignment = alignment;
                         break;
@@ -497,8 +496,8 @@ public final class AlignmentFilters
         then we set a selected low map qual alt alignment corresponding to the identified PMS2 alignment, with a modified MapQ of 10 (so it passes alignment filters)
         */
 
-        ChrBaseRegion pms2 = alignments.get(0).refLocation().Chromosome.startsWith(CHR_PREFIX) ? PMS2_V38:  PMS2_V37;
-        ChrBaseRegion pms2cl = alignments.get(0).refLocation().Chromosome.startsWith(CHR_PREFIX) ? PMS2CL_V38:  PMS2CL_V37;
+        ChrBaseRegion pms2 = alignments.get(0).refLocation().Chromosome.startsWith(CHR_PREFIX) ? PMS2_V38 : PMS2_V37;
+        ChrBaseRegion pms2cl = alignments.get(0).refLocation().Chromosome.startsWith(CHR_PREFIX) ? PMS2CL_V38 : PMS2CL_V37;
 
         for(AlignData alignment : alignments)
         {
@@ -516,7 +515,7 @@ public final class AlignmentFilters
                 {
                     if(matchesPms2Region(pms2, altAlignment.Chromosome, altAlignment.Position, altAlignment.positionEnd()))
                     {
-                        if(altAlignment.MapQual >= ALIGNMENT_MIN_MOD_MAP_QUAL)
+                        if(alignment.mapQual() >= ALIGNMENT_MIN_MOD_MAP_QUAL)
                         {
                             alignment.setSelectedLowMapQualAltAlignment(altAlignment);
                         }

@@ -62,7 +62,8 @@ public class GermlineMutation implements Variant
     @Override
     public String toString()
     {
-        return format("%s:%s %s>%s %s %s",
+        return format(
+                "%s:%s %s>%s %s %s",
                 mVariant.chromosome(), mVariant.position(), mVariant.ref(), mVariant.alt(), mVariant.type(), gene());
     }
 

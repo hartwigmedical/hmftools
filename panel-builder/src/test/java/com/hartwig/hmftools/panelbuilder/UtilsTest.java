@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.panelbuilder;
 
+import static com.hartwig.hmftools.panelbuilder.Utils.estimatePanelOnTargetRate;
 import static com.hartwig.hmftools.panelbuilder.Utils.getBestScoringElement;
 import static com.hartwig.hmftools.panelbuilder.Utils.outwardMovingOffsets;
 
@@ -9,10 +10,43 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
+
 import org.junit.Test;
 
 public class UtilsTest
 {
+    private static Probe probeWithQualityScore(double qualityScore)
+    {
+        SequenceDefinition definition = SequenceDefinition.singleRegion(new ChrBaseRegion("1", 1, 120));
+        TargetedRange targetedRange = TargetedRange.wholeRegion(definition.baseLength());
+        TargetMetadata metadata = new TargetMetadata(TargetMetadata.Type.CUSTOM_REGION, "");
+        return new Probe(definition, null, targetedRange, metadata, null, null, qualityScore, null);
+    }
+
+    @Test
+    public void testEstimatePanelOnTargetRatePerfect()
+    {
+        // All probes match only their on-target site.
+        assertEquals(1.0, estimatePanelOnTargetRate(List.of(probeWithQualityScore(1.0), probeWithQualityScore(1.0))), 1e-9);
+    }
+
+    @Test
+    public void testEstimatePanelOnTargetRateReadWeighted()
+    {
+        // One clean probe (1 site) and one probe binding 10 sites: 2 on-target reads out of 11 total.
+        assertEquals(2.0 / 11.0, estimatePanelOnTargetRate(List.of(probeWithQualityScore(1.0), probeWithQualityScore(0.1))), 1e-9);
+    }
+
+    @Test
+    public void testEstimatePanelOnTargetRateStaysBounded()
+    {
+        // Many low-quality probes must still yield a rate in (0, 1], not a negative value.
+        double rate = estimatePanelOnTargetRate(List.of(
+                probeWithQualityScore(0.05), probeWithQualityScore(0.1), probeWithQualityScore(0.02)));
+        assertEquals(true, rate > 0 && rate <= 1);
+    }
+
     @Test
     public void testGetBestScoringElementEmptyStream()
     {

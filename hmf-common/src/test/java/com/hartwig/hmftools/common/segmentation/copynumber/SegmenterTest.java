@@ -30,9 +30,10 @@ public class SegmenterTest extends SegmentationTestBase
 
     private void compareEvaluationMethods(double[] data, double gamma)
     {
-        Segmenter segmenter = new Segmenter(data, gamma, true);
-        double segmentCost = segmenter.segmentPenalty;
-        double leastCostByFastSearch = segmenter.leastCostSegmentation.cost(segmentCost);
+        final double segmentationPenalty = new Gamma(data, gamma, true).getSegmentPenalty();
+        Segmenter segmenter = new Segmenter(data, segmentationPenalty);
+        double segmentCost = segmenter.SegmentPenalty;
+        double leastCostByFastSearch = segmenter.LeastCostSegmentation.cost(segmentCost);
         ExhaustiveSearchSegmenter exhaustiveSearchSegmenter = new ExhaustiveSearchSegmenter(data, gamma, true);
         double leastCostByExhaustiveSearch = exhaustiveSearchSegmenter.cheapestSegmentationByExhaustiveSearch().cost(segmentCost);
         assertEquals(leastCostByFastSearch, leastCostByExhaustiveSearch, 0.001);
@@ -66,10 +67,12 @@ public class SegmenterTest extends SegmentationTestBase
     @Test
     public void setMinimumCost()
     {
-        final Segmenter segmenter = new Segmenter(d(0.3, 1.5, 1.8, 2.4), 50.0, true);
+        final double[] y = d(0.3, 1.5, 1.8, 2.4);
+        final double segmentationPenalty = new Gamma(y, 50.0, true).getSegmentPenalty();
+        final Segmenter segmenter = new Segmenter(y, segmentationPenalty);
         final PiecewiseConstantFit pcf = segmenter.pcf();
-        assertEquals(new PiecewiseConstantFit(new int[] { 1, 3 }, new int[] { 0,1 }, new double[]{0.3, 1.9}), pcf);
-        Assert.assertEquals(0.5, segmenter.segmentPenalty, 0.0001);
+        assertEquals(new PiecewiseConstantFit(new int[] { 1, 3 }, new int[] { 0, 1 }, new double[] { 0.3, 1.9 }), pcf);
+        Assert.assertEquals(0.5, segmenter.SegmentPenalty, 0.0001);
     }
 
     @Test
@@ -77,29 +80,29 @@ public class SegmenterTest extends SegmentationTestBase
     {
         assertEquals(
                 new PiecewiseConstantFit(new int[] { 1 }, new int[] { 0 }, d(1.0)),
-                new Segmenter(d(1.0), 50.0, false).pcf()
+                new Segmenter(d(1.0), 50.0).pcf()
         );
         assertEquals(
                 new PiecewiseConstantFit(new int[] { 2 }, new int[] { 0 }, d(1.0)),
-                new Segmenter(d(1.0, 1.0), 50.0, false).pcf()
+                new Segmenter(d(1.0, 1.0), 50.0).pcf()
         );
         assertEquals(
                 new PiecewiseConstantFit(new int[] { 3 }, new int[] { 0 }, d(1.0)),
-                new Segmenter(d(1.0, 1.0, 1.0), 50.0, false).pcf()
+                new Segmenter(d(1.0, 1.0, 1.0), 50.0).pcf()
         );
 
         assertEquals(
                 new PiecewiseConstantFit(new int[] { 3, 3 }, new int[] { 0, 3 }, d(2.0, 12.0)),
-                new Segmenter(d(2, 3, 1, 12, 13, 11), 50.0, false).pcf()
+                new Segmenter(d(2, 3, 1, 12, 13, 11), 50.0).pcf()
         );
 
         assertEquals(
                 new PiecewiseConstantFit(new int[] { 3, 3, 3 }, new int[] { 0, 3, 6 }, d(2.0, 12.0, 2.0)),
-                new Segmenter(d(2, 3, 1, 12, 13, 11, 2, 3, 1), 50.0, false).pcf()
+                new Segmenter(d(2, 3, 1, 12, 13, 11, 2, 3, 1), 50.0).pcf()
         );
         assertEquals(
                 new PiecewiseConstantFit(new int[] { 3, 3, 3 }, new int[] { 0, 3, 6 }, d(2.0, 12.0, 22.0)),
-                new Segmenter(d(2, 3, 1, 12, 13, 11, 22, 23, 21), 50.0, false).pcf()
+                new Segmenter(d(2, 3, 1, 12, 13, 11, 22, 23, 21), 50.0).pcf()
         );
     }
 

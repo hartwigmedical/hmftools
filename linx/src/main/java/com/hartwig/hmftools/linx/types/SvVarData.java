@@ -321,12 +321,12 @@ public class SvVarData
     public void addLinkedPair(final LinkedPair link, boolean isStart)
     {
         // add in order from shortest to longest
-        final List<LinkedPair> links = mTiLinks.get(isStart);
+        List<LinkedPair> links = mTiLinks.get(isStart);
 
         int index = 0;
         while(index < links.size())
         {
-            final LinkedPair otherPair = links.get(index);
+            LinkedPair otherPair = links.get(index);
 
             if(otherPair.matches(link))
                 return;
@@ -454,7 +454,7 @@ public class SvVarData
     public String getGeneInBreakend(boolean isStart, boolean includeId, boolean includeTransImpact)
     {
         // create a list of any genes which this breakend touches, but exclude the upstream distance used for fusions
-        final List<BreakendGeneData> genesList = getGenesList(isStart).stream()
+        List<BreakendGeneData> genesList = getGenesList(isStart).stream()
                 .filter(x -> x.breakendWithinGene(PRE_TRANSCRIPT_DISTANCE))
                 .collect(Collectors.toList());
 
@@ -581,7 +581,7 @@ public class SvVarData
         if(mSVData.insertSequenceRepeatClass().equals(SGL_CENTRO_SATELLITE))
             return true;
 
-        final String repeatType = mSVData.insertSequenceRepeatType();
+        String repeatType = mSVData.insertSequenceRepeatType();
 
         return repeatType.equals("(CATTC)n") || repeatType.equals("(GAATG)n") || repeatType.equals("HSATII") || repeatType.equals("SAR");
     }

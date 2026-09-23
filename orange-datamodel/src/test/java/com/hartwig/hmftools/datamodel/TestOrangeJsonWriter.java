@@ -317,6 +317,7 @@ public class TestOrangeJsonWriter
                         .tpmFoldChange(0.0)
                         .armCopyNumber(1.0)
                         .build()))
+                .germlineGainsDels(List.of())
                 .build();
     }
 
@@ -370,6 +371,7 @@ public class TestOrangeJsonWriter
                         .domainsLost("")
                         .build())
                 .addSomaticBreakends(somaticBreakend)
+                .germlineBreakends(List.of())
                 .build();
     }
 

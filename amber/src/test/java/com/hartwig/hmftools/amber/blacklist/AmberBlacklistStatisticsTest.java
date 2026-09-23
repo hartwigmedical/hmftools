@@ -16,10 +16,8 @@ import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.position.GenomePositionImpl;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
-@Ignore
 public class AmberBlacklistStatisticsTest
 {
     private AmberBlacklistStatistics statistics;
@@ -33,13 +31,13 @@ public class AmberBlacklistStatisticsTest
     @Test
     public void returnedPointsAreSortedByPosition()
     {
-        statistics.record(gp(_3, 2000), 0.2);
-        statistics.record(gp(_1, 2000), 0.2);
-        statistics.record(gp(_2, 2000), 0.2);
-        statistics.record(gp(_2, 1000), 0.2);
-        statistics.record(gp(_1, 1000), 0.2);
-        statistics.record(gp(_3, 1000), 0.2);
-        List<AmberBlacklistPoint> result = statistics.findSuspiciousPoints(2);
+        record(_3, 2000, 0.2, 20);
+        record(_1, 2000, 0.2, 20);
+        record(_2, 2000, 0.2, 20);
+        record(_2, 1000, 0.2, 20);
+        record(_1, 1000, 0.2, 20);
+        record(_3, 1000, 0.2, 20);
+        List<AmberBlacklistPoint> result = statistics.findSuspiciousPoints(20);
         assertEquals(6, result.size());
         checkPosition(_1, 1000, result.get(0));
         checkPosition(_1, 2000, result.get(1));
@@ -50,15 +48,15 @@ public class AmberBlacklistStatisticsTest
     }
 
     @Test
-    public void positionsThatAreNotRepresentedByAtLeastHalfOfSamplesAreNotReturned()
+    public void positionsNotRepresentedByAtLeastAFifthOfSamplesAreNotReturned()
     {
-        record(_3, 3000, 0.1, 118);
-        record(_3, 2000, 0.3, 119);
-        record(_3, 1000, 0.2, 120);
-        record(_2, 2000, 0.2, 121);
-        record(_1, 2000, 0.2, 122);
+        record(_3, 3000, 0.1, 18);
+        record(_3, 2000, 0.3, 20);
+        record(_3, 1000, 0.2, 21);
+        record(_2, 2000, 0.2, 25);
+        record(_1, 2000, 0.2, 30);
 
-        List<AmberBlacklistPoint> result = statistics.findSuspiciousPoints(240);
+        List<AmberBlacklistPoint> result = statistics.findSuspiciousPoints(100);
         assertEquals(3, result.size());
         checkPosition(_1, 2000, result.get(0));
         checkPosition(_2, 2000, result.get(1));

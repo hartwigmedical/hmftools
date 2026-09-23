@@ -3,11 +3,11 @@ package com.hartwig.hmftools.common.segmentation.copynumber;
 /**
  * Calculates a segment penalty based on an array of values.
  */
-class Gamma
+public class Gamma
 {
     private final double segmentPenalty;
 
-    Gamma(double[] y, double gamma, boolean normalise)
+    public Gamma(double[] y, double gamma, boolean normalise)
     {
         if(y.length == 0)
         {
@@ -32,7 +32,7 @@ class Gamma
         }
     }
 
-    double getSegmentPenalty()
+    public double getSegmentPenalty()
     {
         return segmentPenalty;
     }

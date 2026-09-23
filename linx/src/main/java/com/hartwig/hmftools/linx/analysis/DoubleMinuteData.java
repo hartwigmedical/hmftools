@@ -139,7 +139,7 @@ public class DoubleMinuteData
 
         buildDmRegions();
 
-        final List<LinkedPair> allLinkedPairs = Lists.newArrayList();
+        List<LinkedPair> allLinkedPairs = Lists.newArrayList();
         Chains.forEach(x -> allLinkedPairs.addAll(x.getLinkedPairs()));
 
         setChainCharacteristics(chrBreakendMap, allLinkedPairs);
@@ -167,13 +167,13 @@ public class DoubleMinuteData
 
     private void setChainCharacteristics(final Map<String,List<SvBreakend>> chrBreakendMap, final List<LinkedPair> allLinkedPairs)
     {
-        final Set<SvBreakend> observedBreakends = Sets.newHashSet();
-        final Set<SvVarData> observedSVs = Sets.newHashSet();
+        Set<SvBreakend> observedBreakends = Sets.newHashSet();
+        Set<SvVarData> observedSVs = Sets.newHashSet();
 
         for(SvChain chain : Chains)
         {
             // simple DELs don't contribute towards the closed breakend count
-            final List<SvVarData> simpleDels = chain.getSvList().stream()
+            List<SvVarData> simpleDels = chain.getSvList().stream()
                     .filter(x -> x.type() == DEL)
                     .filter(x -> x.getNearestSvRelation().equals(RELATION_TYPE_NEIGHBOUR))
                     .collect(Collectors.toList());
@@ -237,7 +237,7 @@ public class DoubleMinuteData
             final SvChain chain, final LinkedPair pair, final Map<String,List<SvBreakend>> chrBreakendMap, final List<LinkedPair> allLinkedPairs,
             final Set<SvBreakend> observedBreakends, final Set<SvVarData> observedSVs)
     {
-        final List<SvBreakend> breakendList = chrBreakendMap.get(pair.chromosome());
+        List<SvBreakend> breakendList = chrBreakendMap.get(pair.chromosome());
 
         // If 2 variants are assembled from Internal-External-Internal or External-Internal-External (ie short templated insertions),
         // exclude from the Internal-External count
@@ -245,11 +245,11 @@ public class DoubleMinuteData
         int startIndex = pair.getBreakend(SE_START).getChrPosIndex();
         int endIndex = pair.getBreakend(SE_END).getChrPosIndex();
 
-        final Set<SvBreakend> assembledBreakends = Sets.newHashSet();
+        Set<SvBreakend> assembledBreakends = Sets.newHashSet();
 
         for(int index = startIndex + 1; index < endIndex; ++index)
         {
-            final SvBreakend breakend = breakendList.get(index);
+            SvBreakend breakend = breakendList.get(index);
 
             if(SVs.contains(breakend.getSV()))
                 continue;
@@ -267,7 +267,7 @@ public class DoubleMinuteData
             if(!breakend.getSV().isSglBreakend())
             {
                 // look for breakends going from within a segment to outside all segments
-                final SvBreakend otherBreakend = breakend.getOtherBreakend();
+                SvBreakend otherBreakend = breakend.getOtherBreakend();
 
                 boolean otherBreakendInSegment = allLinkedPairs.stream()
                         .anyMatch(x -> x.chromosome().equals(otherBreakend.chromosome())
@@ -327,7 +327,7 @@ public class DoubleMinuteData
                 // ignore SGLs in a pair
                 if(svType == SGL && index < endIndex - 1)
                 {
-                    final SvBreakend nextBreakend = breakendList.get(index + 1);
+                    SvBreakend nextBreakend = breakendList.get(index + 1);
                     if(inSglPairCluster(breakend, nextBreakend))
                     {
                         observedBreakends.add(nextBreakend);
@@ -378,8 +378,8 @@ public class DoubleMinuteData
         }
         else
         {
-            final SvBreakend otherBreakend = breakend.getOtherBreakend();
-            final SvBreakend nextOtherBreakend = nextBreakend.getOtherBreakend();
+            SvBreakend otherBreakend = breakend.getOtherBreakend();
+            SvBreakend nextOtherBreakend = nextBreakend.getOtherBreakend();
 
             if(otherBreakend == null || nextOtherBreakend == null)
                 return false;
@@ -397,7 +397,7 @@ public class DoubleMinuteData
     {
         if(SVs.size() == 1)
         {
-            final SvVarData var = SVs.get(0);
+            SvVarData var = SVs.get(0);
 
             if(var.type() == DUP)
             {
@@ -409,7 +409,7 @@ public class DoubleMinuteData
 
         for(Map.Entry<String,List<SvBreakend>> entry : Cluster.getChrBreakendMap().entrySet())
         {
-            final String chromosome = entry.getKey();
+            String chromosome = entry.getKey();
 
             if(SVs.stream().noneMatch(x -> x.chromosome(true).equals(chromosome) || x.chromosome(false).equals(chromosome)))
                 continue;
@@ -492,7 +492,7 @@ public class DoubleMinuteData
 
         if(SVs.size() == 1)
         {
-            final SvVarData var = SVs.get(0);
+            SvVarData var = SVs.get(0);
             if(var.type() != DUP)
                 return false;
 
@@ -535,8 +535,8 @@ public class DoubleMinuteData
         if(abs(pair.firstBreakend().getChrPosIndex() - pair.secondBreakend().getChrPosIndex()) != 1)
             return false;
 
-        final SvBreakend first = pair.firstBreakend();
-        final SvBreakend second = pair.secondBreakend();
+        SvBreakend first = pair.firstBreakend();
+        SvBreakend second = pair.secondBreakend();
 
         int depthWindowCount1 = first.getSV().getCopyNumberData(true, first.orientation() == 1).DepthWindowCount;
         int depthWindowCount2 = second.getSV().getCopyNumberData(true, second.orientation() == 1).DepthWindowCount;
@@ -570,18 +570,18 @@ public class DoubleMinuteData
                 .sum();
 
         //  check closed chains and open chains / SVs as well
-        final List<Integer> chainIds = Lists.newArrayList(OPEN_CHAIN_ID);
+        List<Integer> chainIds = Lists.newArrayList(OPEN_CHAIN_ID);
         Chains.stream().filter(x -> x.isClosedLoop()).forEach(x -> chainIds.add(x.id()));
 
-        final List<SvVarData> nonClosedChainSVs = Lists.newArrayList(UnchainedSVs);
-        final List<SvChain> openChains = Chains.stream().filter(x -> !x.isClosedLoop()).collect(Collectors.toList());
+        List<SvVarData> nonClosedChainSVs = Lists.newArrayList(UnchainedSVs);
+        List<SvChain> openChains = Chains.stream().filter(x -> !x.isClosedLoop()).collect(Collectors.toList());
         openChains.forEach(x -> nonClosedChainSVs.addAll(x.getSvList()));
 
         long nonClosedSegmentLength = Chains.stream().filter(x -> !x.isClosedLoop()).mapToLong(x -> x.getLength(false)).sum();
 
         for(Integer chainId : chainIds)
         {
-            final SvChain chain = Chains.stream().filter(x -> x.id() == chainId).findFirst().orElse(null);
+            SvChain chain = Chains.stream().filter(x -> x.id() == chainId).findFirst().orElse(null);
 
             if(nonClosedChainSVs.isEmpty() && chainId == OPEN_CHAIN_ID)
                 continue;
@@ -618,9 +618,9 @@ public class DoubleMinuteData
 
             double maxJcn = maxChainFoldbackJcn > 0 ? maxChainFoldbackJcn : maxChainJcn;
 
-            final double[] sglInternalValues = ChainSglInternalData.get(chainId);
-            final double[] infInternalValues = ChainInfInternalData.get(chainId);
-            final double[] intExtValues = ChainIntExtData.get(chainId);
+            double[] sglInternalValues = ChainSglInternalData.get(chainId);
+            double[] infInternalValues = ChainInfInternalData.get(chainId);
+            double[] intExtValues = ChainIntExtData.get(chainId);
 
             double sglInfMaxJcn = max(
                     sglInternalValues != null ? sglInternalValues[SEG_DATA_MAX] : 0,

@@ -21,6 +21,7 @@ public final class PrepConstants
     public static final String FLD_HOTSPOT_JUNCTION = "Hotspot";
     public static final String FLD_EXTRA_INFO = "ExtraInfo"; // deprecated
     public static final String FLD_REMOTE_FRAGS = "RemoteFrags"; // currently only used for discordant junctions
+    public static final String FLD_MAX_VALID_SC = "MaxValidSoftClip";
 
     // region processing
     public static final int DEFAULT_CHR_PARTITION_SIZE = 1_000_000;

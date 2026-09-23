@@ -90,6 +90,9 @@ public class ProbeQualityProfile
     public int matchScoreThreshold() { return mMatchScoreThreshold; }
     public int matchScoreOffset() { return mMatchScoreOffset; }
 
+    // Shortest region that can be scored: a quality score requires at least one full window.
+    public int baseWindowLength() { return mBaseWindowLength; }
+
     // Compute the final quality score from the probe quality profile.
     // Returns empty optional if the profile doesn't cover the probe region.
     public OptionalDouble computeQualityScore(final ChrBaseRegion probe)

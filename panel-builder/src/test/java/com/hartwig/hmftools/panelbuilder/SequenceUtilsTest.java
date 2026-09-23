@@ -52,7 +52,7 @@ public class SequenceUtilsTest
     @Test
     public void testBuildSequenceVariant1()
     {
-        SequenceDefinition def = new SequenceDefinition(
+        SequenceDefinition def = SequenceDefinition.variant(
                 new ChrBaseRegion("1", 1, 10),
                 Orientation.REVERSE,
                 "GCGCGCGCGC",
@@ -67,7 +67,7 @@ public class SequenceUtilsTest
     @Test
     public void testBuildSequenceVariant2()
     {
-        SequenceDefinition def = new SequenceDefinition(
+        SequenceDefinition def = SequenceDefinition.variant(
                 new ChrBaseRegion("1", 1, 10),
                 Orientation.FORWARD,
                 "GCGCGCGCGC",
@@ -102,7 +102,7 @@ public class SequenceUtilsTest
     public void testBuildIndelProbeSnv()
     {
         SequenceDefinition actual = buildIndelProbe("1", 101, "A", "C", 11);
-        SequenceDefinition expected = new SequenceDefinition(
+        SequenceDefinition expected = SequenceDefinition.variant(
                 new ChrBaseRegion("1", 96, 100),
                 Orientation.FORWARD,
                 "C",
@@ -115,7 +115,7 @@ public class SequenceUtilsTest
     public void testBuildIndelProbeDel()
     {
         SequenceDefinition actual = buildIndelProbe("1", 101, "A", "", 11);
-        SequenceDefinition expected = new SequenceDefinition(
+        SequenceDefinition expected = SequenceDefinition.variant(
                 new ChrBaseRegion("1", 96, 100),
                 Orientation.FORWARD,
                 "",
@@ -128,7 +128,7 @@ public class SequenceUtilsTest
     public void testBuildIndelProbeIns()
     {
         SequenceDefinition actual = buildIndelProbe("1", 101, "A", "ATGT", 11);
-        SequenceDefinition expected = new SequenceDefinition(
+        SequenceDefinition expected = SequenceDefinition.variant(
                 new ChrBaseRegion("1", 98, 100),
                 Orientation.FORWARD,
                 "ATGT",
@@ -141,7 +141,7 @@ public class SequenceUtilsTest
     public void testBuildIndelProbeIndel()
     {
         SequenceDefinition actual = buildIndelProbe("1", 101, "A", "CG", 11);
-        SequenceDefinition expected = new SequenceDefinition(
+        SequenceDefinition expected = SequenceDefinition.variant(
                 new ChrBaseRegion("1", 97, 100),
                 Orientation.FORWARD,
                 "CG",
@@ -154,12 +154,7 @@ public class SequenceUtilsTest
     public void testBuildSglProbe()
     {
         SequenceDefinition actual = buildSglProbe("1", 101, Orientation.FORWARD, "CGT", 11);
-        SequenceDefinition expected = new SequenceDefinition(
-                new ChrBaseRegion("1", 94, 101),
-                Orientation.FORWARD,
-                "CGT",
-                null,
-                null);
+        SequenceDefinition expected = SequenceDefinition.forwardSgl(new ChrBaseRegion("1", 94, 101), "CGT");
         assertEquals(expected, actual);
     }
 
@@ -170,7 +165,7 @@ public class SequenceUtilsTest
                 "1", 101, Orientation.FORWARD,
                 "2", 201, Orientation.REVERSE,
                 "GGT", 11);
-        SequenceDefinition expected = new SequenceDefinition(
+        SequenceDefinition expected = SequenceDefinition.variant(
                 new ChrBaseRegion("1", 98, 101),
                 Orientation.FORWARD,
                 "GGT",

@@ -93,7 +93,7 @@ public class ProbeUtilsTest
     @Test
     public void testProbeTargetedRegionsStartAndEndTargetedStart()
     {
-        SequenceDefinition sequenceDefinition = new SequenceDefinition(
+        SequenceDefinition sequenceDefinition = SequenceDefinition.variant(
                 new ChrBaseRegion("1", 100, 199), Orientation.FORWARD,
                 "",
                 new ChrBaseRegion("2", 300, 399), Orientation.FORWARD);
@@ -106,7 +106,7 @@ public class ProbeUtilsTest
     @Test
     public void testProbeTargetedRegionsStartAndEndTargetedEnd()
     {
-        SequenceDefinition sequenceDefinition = new SequenceDefinition(
+        SequenceDefinition sequenceDefinition = SequenceDefinition.variant(
                 new ChrBaseRegion("1", 100, 199), Orientation.FORWARD,
                 "",
                 new ChrBaseRegion("2", 300, 399), Orientation.FORWARD);
@@ -119,7 +119,7 @@ public class ProbeUtilsTest
     @Test
     public void testProbeTargetedRegionsStartAndEndTargetedBoth()
     {
-        SequenceDefinition sequenceDefinition = new SequenceDefinition(
+        SequenceDefinition sequenceDefinition = SequenceDefinition.variant(
                 new ChrBaseRegion("1", 100, 199), Orientation.FORWARD,
                 "",
                 new ChrBaseRegion("2", 300, 399), Orientation.FORWARD);
@@ -134,10 +134,8 @@ public class ProbeUtilsTest
     @Test
     public void testProbeTargetedRegionsStartAndInsertTargetedStart()
     {
-        SequenceDefinition sequenceDefinition = new SequenceDefinition(
-                new ChrBaseRegion("1", 100, 199), Orientation.FORWARD,
-                "AAAACCCCGGGGTTTTAAAA",
-                null, null);
+        SequenceDefinition sequenceDefinition = SequenceDefinition.forwardSgl(
+                new ChrBaseRegion("1", 100, 199), "AAAACCCCGGGGTTTTAAAA");
         TargetedRange targetedRange = new TargetedRange(10, 30);
         List<ChrBaseRegion> expected = List.of(new ChrBaseRegion("1", 110, 129));
         List<ChrBaseRegion> actual = ProbeUtils.probeTargetedRegions(sequenceDefinition, targetedRange);
@@ -147,10 +145,8 @@ public class ProbeUtilsTest
     @Test
     public void testProbeTargetedRegionsStartAndInsertTargetedInsert()
     {
-        SequenceDefinition sequenceDefinition = new SequenceDefinition(
-                new ChrBaseRegion("1", 100, 199), Orientation.FORWARD,
-                "AAAACCCCGGGGTTTTAAAA",
-                null, null);
+        SequenceDefinition sequenceDefinition = SequenceDefinition.forwardSgl(
+                new ChrBaseRegion("1", 100, 199), "AAAACCCCGGGGTTTTAAAA");
         TargetedRange targetedRange = new TargetedRange(201, 210);
         List<ChrBaseRegion> expected = emptyList();
         List<ChrBaseRegion> actual = ProbeUtils.probeTargetedRegions(sequenceDefinition, targetedRange);
@@ -160,10 +156,8 @@ public class ProbeUtilsTest
     @Test
     public void testProbeTargetedRegionsInsertAndEndTargetedInsert()
     {
-        SequenceDefinition sequenceDefinition = new SequenceDefinition(
-                null, null,
-                "AAAACCCCGGGGTTTTAAAA",
-                new ChrBaseRegion("2", 300, 399), Orientation.FORWARD);
+        SequenceDefinition sequenceDefinition = SequenceDefinition.reverseSgl(
+                "AAAACCCCGGGGTTTTAAAA", new ChrBaseRegion("2", 300, 399));
         TargetedRange targetedRange = new TargetedRange(0, 16);
         List<ChrBaseRegion> expected = emptyList();
         List<ChrBaseRegion> actual = ProbeUtils.probeTargetedRegions(sequenceDefinition, targetedRange);
@@ -173,10 +167,8 @@ public class ProbeUtilsTest
     @Test
     public void testProbeTargetedRegionsInsertAndEndTargetedEnd()
     {
-        SequenceDefinition sequenceDefinition = new SequenceDefinition(
-                null, null,
-                "AAAACCCCGGGGTTTTAAAA",
-                new ChrBaseRegion("2", 300, 399), Orientation.FORWARD);
+        SequenceDefinition sequenceDefinition = SequenceDefinition.reverseSgl(
+                "AAAACCCCGGGGTTTTAAAA", new ChrBaseRegion("2", 300, 399));
         TargetedRange targetedRange = new TargetedRange(24, 54);
         List<ChrBaseRegion> expected = List.of(new ChrBaseRegion("2", 304, 333));
         List<ChrBaseRegion> actual = ProbeUtils.probeTargetedRegions(sequenceDefinition, targetedRange);
@@ -186,7 +178,7 @@ public class ProbeUtilsTest
     @Test
     public void testProbeTargetedRegionsStartInsertEndTargetedAll()
     {
-        SequenceDefinition sequenceDefinition = new SequenceDefinition(
+        SequenceDefinition sequenceDefinition = SequenceDefinition.variant(
                 new ChrBaseRegion("1", 100, 199), Orientation.FORWARD,
                 "AAAACCCCGGGGTTTTAAAA",
                 new ChrBaseRegion("2", 300, 399), Orientation.FORWARD);
@@ -201,7 +193,7 @@ public class ProbeUtilsTest
     @Test
     public void testProbeTargetedRegionsStartInsertEndTargetedEnd()
     {
-        SequenceDefinition sequenceDefinition = new SequenceDefinition(
+        SequenceDefinition sequenceDefinition = SequenceDefinition.variant(
                 new ChrBaseRegion("1", 100, 199), Orientation.FORWARD,
                 "AAAACCCCGGGGTTTTAAAA",
                 new ChrBaseRegion("2", 300, 399), Orientation.FORWARD);
@@ -212,9 +204,25 @@ public class ProbeUtilsTest
     }
 
     @Test
+    public void testProbeTargetedRegionsThreeRegions()
+    {
+        SequenceDefinition sequenceDefinition = new SequenceDefinition(List.of(
+                new RefSegment(new ChrBaseRegion("1", 100, 119), Orientation.FORWARD),
+                new RefSegment(new ChrBaseRegion("2", 200, 219), Orientation.FORWARD),
+                new RefSegment(new ChrBaseRegion("3", 300, 319), Orientation.FORWARD)));
+        TargetedRange targetedRange = new TargetedRange(10, 50);
+        List<ChrBaseRegion> expected = List.of(
+                new ChrBaseRegion("1", 110, 119),
+                new ChrBaseRegion("2", 200, 219),
+                new ChrBaseRegion("3", 300, 309));
+        List<ChrBaseRegion> actual = ProbeUtils.probeTargetedRegions(sequenceDefinition, targetedRange);
+        assertEquals(expected, actual);
+    }
+
+    @Test
     public void testProbeTargetedRegionsReverseOrientation()
     {
-        SequenceDefinition sequenceDefinition = new SequenceDefinition(
+        SequenceDefinition sequenceDefinition = SequenceDefinition.variant(
                 new ChrBaseRegion("1", 100, 199), Orientation.REVERSE,
                 "AAAACCCCGGGGTTTTAAAA",
                 new ChrBaseRegion("2", 300, 399), Orientation.REVERSE);
@@ -222,6 +230,27 @@ public class ProbeUtilsTest
         List<ChrBaseRegion> expected = List.of(
                 new ChrBaseRegion("1", 100, 179),
                 new ChrBaseRegion("2", 310, 399));
+        List<ChrBaseRegion> actual = ProbeUtils.probeTargetedRegions(sequenceDefinition, targetedRange);
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testProbeTargetedRegionsCrazyOverlapping()
+    {
+        // Genome-overlapping regions, mixed orientation, insert in the middle. The mapping is purely positional in probe-sequence space, so
+        // genome overlap between segments is irrelevant and can even produce overlapping output regions.
+        SequenceDefinition sequenceDefinition = new SequenceDefinition(List.of(
+                new RefSegment(new ChrBaseRegion("1", 100, 109), Orientation.FORWARD),   // seq [0, 10)
+                new InsertSeqSegment("ACGT"),                                            // seq [10, 14)
+                new RefSegment(new ChrBaseRegion("1", 105, 114), Orientation.REVERSE),   // seq [14, 24), overlaps region 1
+                new RefSegment(new ChrBaseRegion("2", 50, 54), Orientation.FORWARD)));   // seq [24, 29)
+        TargetedRange targetedRange = new TargetedRange(5, 27);
+        List<ChrBaseRegion> expected = List.of(
+                // One region per targeted segment; overlapping/subsumed regions are deliberately not collapsed here (the segments are
+                // distinct parts of the probe). Callers that need merged genome regions merge downstream (e.g. covered target region output).
+                new ChrBaseRegion("1", 105, 109),   // region 1, offsets [5, 10)
+                new ChrBaseRegion("1", 105, 114),   // region 2 reversed, offsets [0, 10)
+                new ChrBaseRegion("2", 50, 52));    // region 3, offsets [0, 3)
         List<ChrBaseRegion> actual = ProbeUtils.probeTargetedRegions(sequenceDefinition, targetedRange);
         assertEquals(expected, actual);
     }

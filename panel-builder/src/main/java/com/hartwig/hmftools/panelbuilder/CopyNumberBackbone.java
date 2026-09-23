@@ -44,7 +44,7 @@ import org.apache.logging.log4j.Logger;
 public class CopyNumberBackbone
 {
     private final String mHetSitesFile;
-    private final int mResolution;
+    private final CnBackboneResolution mResolution;
     private final RefGenomeVersion mRefGenomeVersion;
     private final ProbeGenerator mProbeGenerator;
     private final PanelData mPanelData;
@@ -61,7 +61,7 @@ public class CopyNumberBackbone
 
     private static final Logger LOGGER = LogManager.getLogger(CopyNumberBackbone.class);
 
-    public CopyNumberBackbone(final String hetSitesFile, int resolution, final RefGenomeVersion refGenomeVersion,
+    public CopyNumberBackbone(final String hetSitesFile, final CnBackboneResolution resolution, final RefGenomeVersion refGenomeVersion,
             final ProbeGenerator probeGenerator, PanelData panelData)
     {
         mHetSitesFile = hetSitesFile;
@@ -128,17 +128,14 @@ public class CopyNumberBackbone
 
     private Map<String, List<Partition>> createPartitions()
     {
-        LOGGER.debug("Creating copy number backbone partitions with resolution: {}b", mResolution);
-        if(mResolution < 1000)
-        {
-            throw new IllegalArgumentException("Copy number backbone resolution too small");
-        }
-
         RefGenomeCoordinates refGenomeCoordinates = refGenomeCoordinates(mRefGenomeVersion);
 
         return Arrays.stream(HumanChromosome.values()).map(chromosome ->
         {
             // Partitions spaced across the chromosome, avoiding the centromeres.
+
+            int resolution = mResolution.forChromosome(chromosome);
+            LOGGER.debug("Creating {} copy number backbone partitions with resolution: {}b", chromosome, resolution);
 
             String chrStr = mRefGenomeVersion.versionedChromosome(chromosome);
             int centromere = refGenomeCoordinates.centromeres().get(chromosome);
@@ -146,7 +143,7 @@ public class CopyNumberBackbone
             int centromereMax = centromere + CN_BACKBONE_CENTROMERE_MARGIN;
             LOGGER.debug("Excluded centromere region {}:{}-{}", chromosome, centromereMin, centromereMax);
 
-            List<Partition> chrPartitions = partitionChromosome(chrStr, mRefGenomeVersion, mResolution).stream()
+            List<Partition> chrPartitions = partitionChromosome(chrStr, mRefGenomeVersion, resolution).stream()
                     .filter(region -> !region.overlaps(chrStr, centromereMin, centromereMax))
                     .map(Partition::new)
                     .toList();

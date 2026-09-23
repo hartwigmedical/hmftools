@@ -203,7 +203,7 @@
         "plotFilename": null
       }
     ],
-    "germlineGainsDels": null,
+    "germlineGainsDels": [],
     "armCopyNumberAbberations": []
   },
   "linx": {
@@ -258,7 +258,7 @@
         "plotFilename": null
       }
     ],
-    "germlineBreakends": null
+    "germlineBreakends": []
   },
   "isofox": null,
   "lilac": {
@@ -331,7 +331,7 @@
     "BRCA2Value": 0.0,
     "hrdValue": 0.0,
     "hrStatus": "HR_PROFICIENT",
-    "hrdType": ""
+    "hrdType": "none"
   },
   "cuppa": {
     "mode": "WGS",

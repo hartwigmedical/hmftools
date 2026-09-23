@@ -307,11 +307,11 @@ public class ReadContextMatcher
 
         if(coreMatch == NO_MATCH)
         {
-            if(mIsReference && isLongInsert(mContext.variant()))
+            if(mIsReference && isLongInsert(mContext.variant()) && mContext.extendedRefBases() != null)
             {
                 int extendedRefIndexStart = mContext.variantRefIndex() + mContext.leftFlankLength() + mLowQualExclusionRead.indexOffset();
 
-                int[] refReadMatches = countRefAndReadDifferences(
+                int[] refReadMatches =  countRefAndReadDifferences(
                         readBases, mContext.ReadBases, mContext.extendedRefBases(), readVarIndex, mContext.VarIndex, extendedRefIndexStart);
 
                 if(refReadMatches[1] - refReadMatches[0] >= LONG_GERMLINE_INSERT_READ_VS_REF_DIFF)

@@ -18,9 +18,6 @@
         <module>crest</module>
         <module>cuppa</module>
         <module>esvee</module>
-        <module>fastq-tools</module>
-        <module>finding</module>
-        <module>finding-datamodel</module>
         <module>gene-utils</module>
         <module>hmf-common</module>
         <module>hmf-id-generator</module>
@@ -42,6 +39,7 @@
         <module>sage</module>
         <module>sigs</module>
         <module>sv-tools</module>
+        <module>taur</module>
         <module>teal</module>
         <module>virus-interpreter</module>
         <module>v-chord</module>
@@ -64,7 +62,7 @@
 
         <hmf-common.version>local-SNAPSHOT</hmf-common.version>
 
-        <amber.version>4.3</amber.version>
+        <amber.version>4.4</amber.version>
         <bam-tools.version>1.6.2</bam-tools.version>
         <chord.version>2.1.2</chord.version>
         <cider.version>1.2</cider.version>
@@ -73,19 +71,16 @@
         <crest.version>1.0.0</crest.version>
         <cuppa.version>2.5</cuppa.version>
         <esvee.version>2.1</esvee.version>
-        <fastq-tools.version>1.1</fastq-tools.version>
-        <finding.version>local-SNAPSHOT</finding.version>
-        <finding-datamodel.version>local-SNAPSHOT</finding-datamodel.version>
         <gene-utils.version>1.3</gene-utils.version>
         <hmf-id-generator.version>3.1</hmf-id-generator.version>
         <isofox.version>2.1</isofox.version>
-        <lilac.version>2.0</lilac.version>
-        <linx.version>2.3</linx.version>
+        <lilac.version>2.1</lilac.version>
+        <linx.version>2.4</linx.version>
         <neo.version>1.2</neo.version>
         <orange.version>5.1</orange.version>
         <orange-datamodel.version>local-SNAPSHOT</orange-datamodel.version>
         <paddle.version>1.1</paddle.version>
-        <panel-builder.version>1.1</panel-builder.version>
+        <panel-builder.version>1.2</panel-builder.version>
         <patient-db.version>3.0</patient-db.version>
         <pave.version>1.9</pave.version>
         <peach.version>2.0</peach.version>
@@ -95,6 +90,7 @@
         <sage.version>5.1</sage.version>
         <sigs.version>1.2.1</sigs.version>
         <sv-tools.version>1.0</sv-tools.version>
+        <taur.version>1.0</taur.version>
         <teal.version>1.4</teal.version>
         <virus-interpreter.version>1.7.1</virus-interpreter.version>
         <v-chord.version>1.0.1</v-chord.version>
@@ -240,11 +236,6 @@
             </dependency>
             <dependency>
                 <groupId>com.hartwig</groupId>
-                <artifactId>finding-datamodel</artifactId>
-                <version>${finding-datamodel.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.hartwig</groupId>
                 <artifactId>orange-datamodel</artifactId>
                 <version>${orange-datamodel.version}</version>
             </dependency>
@@ -384,13 +375,6 @@
                 <groupId>com.hartwig</groupId>
                 <artifactId>orange-datamodel</artifactId>
                 <version>${orange-datamodel.version}</version>
-                <type>test-jar</type>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>com.hartwig</groupId>
-                <artifactId>finding-datamodel</artifactId>
-                <version>${finding-datamodel.version}</version>
                 <type>test-jar</type>
                 <scope>test</scope>
             </dependency>
