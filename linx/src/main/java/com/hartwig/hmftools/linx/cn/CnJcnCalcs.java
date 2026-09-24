@@ -53,11 +53,11 @@ public class CnJcnCalcs
         mSvJcnCalcMap = Maps.newHashMap();
     }
 
-    public final Map<Integer, JcnCalcData> getSvJcnCalcMap() { return mSvJcnCalcMap; }
+    public Map<Integer, JcnCalcData> getSvJcnCalcMap() { return mSvJcnCalcMap; }
 
-    public final SvCNData getCNSegment(final String chromosome, int index)
+    public SvCNData getCNSegment(final String chromosome, int index)
     {
-        final List<SvCNData> cnDataList = mChrCnDataMap.get(chromosome);
+        List<SvCNData> cnDataList = mChrCnDataMap.get(chromosome);
 
         if(cnDataList == null || cnDataList.isEmpty())
             return null;
@@ -85,10 +85,10 @@ public class CnJcnCalcs
 
         for(Map.Entry<Integer, SvCNData[]> entry : mSvIdCnDataMap.entrySet())
         {
-            final int svId = entry.getKey();
-            final SvCNData[] cnDataPair = entry.getValue();
+            int svId = entry.getKey();
+            SvCNData[] cnDataPair = entry.getValue();
 
-            final SvCNData cnStartData = cnDataPair[SE_START];
+            SvCNData cnStartData = cnDataPair[SE_START];
 
             if(cnStartData == null || cnStartData.getStructuralVariantData() == null)
             {
@@ -103,20 +103,20 @@ public class CnJcnCalcs
                 svData = getSvDataById(svId);
             }
 
-            final SvCNData cnStartPrevData = getCNSegment(cnStartData.Chromosome,  cnStartData.getIndex() - 1);
+            SvCNData cnStartPrevData = getCNSegment(cnStartData.Chromosome,  cnStartData.getIndex() - 1);
 
-            final SvCNData cnEndNextData = cnDataPair[SE_END];
-            final SvCNData cnEndData = cnEndNextData != null ? getCNSegment(cnEndNextData.Chromosome, cnEndNextData.getIndex() - 1) : null;
+            SvCNData cnEndNextData = cnDataPair[SE_END];
+            SvCNData cnEndData = cnEndNextData != null ? getCNSegment(cnEndNextData.Chromosome, cnEndNextData.getIndex() - 1) : null;
 
             int tumorReadCountStart = svData.startTumorVariantFragmentCount();
 
             double maxCNStart = max(cnStartPrevData.CopyNumber, cnStartData.CopyNumber);
             double maxCNEnd = cnEndData != null && cnEndNextData != null ? max(cnEndData.CopyNumber, cnEndNextData.CopyNumber): 0;
 
-            final int[] startDepthData = { cnStartPrevData.DepthWindowCount, cnStartData.DepthWindowCount };
+            int[] startDepthData = { cnStartPrevData.DepthWindowCount, cnStartData.DepthWindowCount };
             double cnChgStart = svData.adjustedStartCopyNumberChange();
 
-            final int[] endDepthData = { cnEndData != null ? cnEndData.DepthWindowCount : 0,
+            int[] endDepthData = { cnEndData != null ? cnEndData.DepthWindowCount : 0,
                     cnEndNextData != null ? cnEndNextData.DepthWindowCount : 0 };
 
             double cnChgEnd = svData.adjustedEndCopyNumberChange();
@@ -136,7 +136,7 @@ public class CnJcnCalcs
                 }
             }
 
-            final JcnCalcData calcResults = calcAdjustedJcnValues(cnChgStart, cnChgEnd,
+            JcnCalcData calcResults = calcAdjustedJcnValues(cnChgStart, cnChgEnd,
                     tumorReadCountStart, svData.junctionCopyNumber(), maxCNStart, maxCNEnd,
                     startDepthData, cnEndData != null ? endDepthData : null);
 
@@ -278,7 +278,7 @@ public class CnJcnCalcs
 
         if(expectedVal < mReadCountProbilities.size())
         {
-            final int[] counts = mReadCountProbilities.get(expectedVal);
+            int[] counts = mReadCountProbilities.get(expectedVal);
             return useLow ? counts[0] : counts[1];
         }
 

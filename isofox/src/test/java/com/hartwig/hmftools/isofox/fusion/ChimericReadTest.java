@@ -22,6 +22,7 @@ import static com.hartwig.hmftools.isofox.TestUtils.createIsofoxConfig;
 import static com.hartwig.hmftools.isofox.TestUtils.createMappedRead;
 import static com.hartwig.hmftools.isofox.TestUtils.createReadRecord;
 import static com.hartwig.hmftools.isofox.TestUtils.createRegion;
+import static com.hartwig.hmftools.isofox.common.ReadTranscriptUtils.processOverlappingRegions;
 import static com.hartwig.hmftools.isofox.common.TransMatchType.ALT;
 import static com.hartwig.hmftools.isofox.common.TransMatchType.SPLICE_JUNCTION;
 
@@ -50,14 +51,14 @@ public class ChimericReadTest
     @Test
     public void testBasicReads()
     {
-        final EnsemblDataCache geneTransCache = createGeneDataCache();
+        EnsemblDataCache geneTransCache = createGeneDataCache();
 
         addTestGenes(geneTransCache);
         addTestTranscripts(geneTransCache);
 
         int gcId = 0;
 
-        final GeneCollection gc1 =
+        GeneCollection gc1 =
                 createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_1)));
 
         IsofoxConfig config = createIsofoxConfig();
@@ -81,7 +82,7 @@ public class ChimericReadTest
         chimericRT.postProcessChimericReads(baseDepth, fragTracker);
 
         assertEquals(1, chimericRT.fusionReadGroupMap().size());
-        assertEquals(2, chimericRT.fusionReadGroupMap().get(read1.Id).size());
+        assertEquals(2, chimericRT.fusionReadGroupMap().get(read1.id()).size());
         assertEquals(1, chimericRT.getJunctionRacGroups().junctionCount());
         assertTrue(chimericRT.getJunctionRacGroups().getJunctionGroups(ORIENT_FWD).containsKey(1100));
 
@@ -112,7 +113,7 @@ public class ChimericReadTest
     @Test
     public void testSameGeneCollection()
     {
-        final EnsemblDataCache geneTransCache = createGeneDataCache();
+        EnsemblDataCache geneTransCache = createGeneDataCache();
 
         addTestGenes(geneTransCache);
         addTestTranscripts(geneTransCache);
@@ -123,7 +124,7 @@ public class ChimericReadTest
         List<GeneData> geneDataList = Lists.newArrayList(
                 geneTransCache.getGeneDataById(GENE_ID_1), geneTransCache.getGeneDataById(GENE_ID_2));
 
-        final GeneCollection gc1 = createGeneCollection(geneTransCache, gcId++, geneDataList);
+        GeneCollection gc1 = createGeneCollection(geneTransCache, gcId++, geneDataList);
 
         IsofoxConfig config = createIsofoxConfig();
         config.Functions.add(FUSIONS);
@@ -189,7 +190,7 @@ public class ChimericReadTest
         geneDataList = Lists.newArrayList(
                 geneTransCache.getGeneDataById(GENE_ID_5), geneTransCache.getGeneDataById(GENE_ID_6));
 
-        final GeneCollection gc2 = createGeneCollection(geneTransCache, gcId++, geneDataList);
+        GeneCollection gc2 = createGeneCollection(geneTransCache, gcId++, geneDataList);
 
         read1 = createMappedRead(++readId, gc2, 10481, 10500, createCigar(0, 20, 20));
         read1.setFlag(FIRST_OF_PAIR, true);
@@ -235,15 +236,15 @@ public class ChimericReadTest
     public void testPrePosGeneReads()
     {
         // 2 gene collections, testing reads before, inside and after the genes
-        final EnsemblDataCache geneTransCache = createGeneDataCache();
+        EnsemblDataCache geneTransCache = createGeneDataCache();
 
         addTestGenes(geneTransCache);
         addTestTranscripts(geneTransCache);
 
         int gcId = 0;
 
-        final GeneCollection gc1 = createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_1)));
-        final GeneCollection gc2 = createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_2)));
+        GeneCollection gc1 = createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_1)));
+        GeneCollection gc2 = createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_2)));
 
         IsofoxConfig config = createIsofoxConfig();
         config.Functions.add(FUSIONS);
@@ -287,11 +288,11 @@ public class ChimericReadTest
 
         read1 = createMappedRead(++readId, gc1, 481, 500, createCigar(0, 20, 20));
         read1.setFlag(FIRST_OF_PAIR, true);
-        read1.setSuppAlignment("supp");
+        read1.setSuppAlignment(TEST_SUPP_DATA);
 
         read2 = createMappedRead(++readId, gc1, 2000, 2019, createCigar(20, 20, 0));
         read2.setStrand(true, false);
-        read2.setSuppAlignment("supp");
+        read2.setSuppAlignment(TEST_SUPP_DATA);
 
         // these post-gene reads will be skipped in this gene collection
         Read read3 = createMappedRead(readId, gc1, 2010, 2049, createCigar(0, 40, 0));
@@ -311,10 +312,10 @@ public class ChimericReadTest
         chimericRT.postProcessChimericReads(baseDepth, fragTracker);
 
         assertEquals(1, chimericRT.fusionReadGroupMap().size());
-        assertTrue(chimericRT.fusionReadGroupMap().containsKey(read1.Id));
-        assertFalse(chimericRT.fusionReadGroupMap().containsKey(read2.Id));
-        assertFalse(chimericRT.fusionReadGroupMap().containsKey(read4.Id));
-        assertFalse(chimericRT.fusionReadGroupMap().containsKey(read5.Id));
+        assertTrue(chimericRT.fusionReadGroupMap().containsKey(read1.id()));
+        assertFalse(chimericRT.fusionReadGroupMap().containsKey(read2.id()));
+        assertFalse(chimericRT.fusionReadGroupMap().containsKey(read4.id()));
+        assertFalse(chimericRT.fusionReadGroupMap().containsKey(read5.id()));
 
         assertEquals(1, chimericRT.getLocalChimericReads().size());
         assertTrue(chimericRT.getLocalChimericReads().get(0).contains(read5));
@@ -334,24 +335,24 @@ public class ChimericReadTest
         chimericRT.postProcessChimericReads(baseDepth, fragTracker);
 
         assertEquals(2, chimericRT.fusionReadGroupMap().size());
-        assertTrue(chimericRT.fusionReadGroupMap().containsKey(read2.Id));
-        assertTrue(chimericRT.fusionReadGroupMap().containsKey(read4.Id));
+        assertTrue(chimericRT.fusionReadGroupMap().containsKey(read2.id()));
+        assertTrue(chimericRT.fusionReadGroupMap().containsKey(read4.id()));
         assertTrue(chimericRT.getLocalChimericReads().isEmpty());
     }
 
     @Test
     public void testJunctionPositionTracking()
     {
-        final EnsemblDataCache geneTransCache = createGeneDataCache();
+        EnsemblDataCache geneTransCache = createGeneDataCache();
 
         addTestGenes(geneTransCache);
         addTestTranscripts(geneTransCache);
 
         int gcId = 0;
 
-        final GeneCollection gc1 = createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_1)));
-        final GeneCollection gc2 = createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_2)));
-        final GeneCollection gc3 = createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_3)));
+        GeneCollection gc1 = createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_1)));
+        GeneCollection gc2 = createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_2)));
+        GeneCollection gc3 = createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_3)));
 
         IsofoxConfig config = createIsofoxConfig();
         config.Functions.add(FUSIONS);
@@ -457,19 +458,19 @@ public class ChimericReadTest
                 createCigar(0, 10, 99, 10, 0));
 
         List<RegionReadData> allRegions = Lists.newArrayList(region1, region2, region3, region4, region5);
-        read.processOverlappingRegions(Read.findOverlappingRegions(allRegions, read));
+        processOverlappingRegions(read, Read.findOverlappingRegions(allRegions, read));
 
         assertEquals(SPLICE_JUNCTION, read.getTranscriptClassification(trans1));
         assertEquals(SPLICE_JUNCTION, read.getTranscriptClassification(trans2));
 
-        final List<String[]> knownPairGeneIds = Lists.newArrayList();
+        List<String[]> knownPairGeneIds = Lists.newArrayList();
         assertFalse(ChimericUtils.setHasMultipleKnownSpliceGenes(Lists.newArrayList(read), knownPairGeneIds));
 
         // now a ready which doesn't support any known junction but is still within just one gene
         read = createReadRecord(1, CHR_1, 191, 509, REF_BASE_STR_1,
                 createCigar(0, 10, 299, 10, 0));
 
-        read.processOverlappingRegions(Read.findOverlappingRegions(allRegions, read));
+        processOverlappingRegions(read, Read.findOverlappingRegions(allRegions, read));
         assertEquals(ALT, read.getTranscriptClassification(trans1));
 
         assertFalse(ChimericUtils.setHasMultipleKnownSpliceGenes(Lists.newArrayList(read), knownPairGeneIds));

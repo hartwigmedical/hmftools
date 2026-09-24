@@ -127,10 +127,10 @@ public class GermlineDisruptions
         if(cluster.getSvCount() > 1 && !cluster.isFullyChained(true))
             return;
 
-        for(final Map.Entry<String, List<SvBreakend>> entry : cluster.getChrBreakendMap().entrySet())
+        for(Map.Entry<String, List<SvBreakend>> entry : cluster.getChrBreakendMap().entrySet())
         {
-            final String chromosome = entry.getKey();
-            final List<SvBreakend> breakendList = entry.getValue();
+            String chromosome = entry.getKey();
+            List<SvBreakend> breakendList = entry.getValue();
 
             int startIndex = findStartIndex(breakendList);
             int endIndex = findEndIndex(breakendList);
@@ -138,9 +138,9 @@ public class GermlineDisruptions
             // find stand-alone DELs and clustered deletion bridges, then look within them for driver genes which have been deleted
             for(int i = startIndex; i <= endIndex - 1; ++i)
             {
-                final SvBreakend breakend = breakendList.get(i);
-                final SvVarData var = breakend.getSV();
-                final SvBreakend nextBreakend = breakendList.get(i + 1);
+                SvBreakend breakend = breakendList.get(i);
+                SvVarData var = breakend.getSV();
+                SvBreakend nextBreakend = breakendList.get(i + 1);
 
                 boolean isDB = breakend.getDBLink() != null && breakend.getDBLink() == nextBreakend.getDBLink();
 
@@ -381,8 +381,8 @@ public class GermlineDisruptions
 
             for(SvDisruptionData disruptionData : entry.getValue())
             {
-                final GeneData gene = disruptionData.Gene;
-                final TranscriptData transcript = disruptionData.Transcript;
+                GeneData gene = disruptionData.Gene;
+                TranscriptData transcript = disruptionData.Transcript;
 
                 // DELs and DUPs which straddle driver genes are not reportable
                 boolean reportable = !mDisruptions.contains(disruptionData) && isReportable(disruptionData);
@@ -535,7 +535,7 @@ public class GermlineDisruptions
         if(disruptionData.isPseudogeneDeletion())
             return false;
 
-        final SvCluster cluster = var.getCluster();
+        SvCluster cluster = var.getCluster();
 
         if(cluster.getSvCount() == 1)
         {

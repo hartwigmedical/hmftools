@@ -77,7 +77,7 @@ public class ProteinVariantParserTest extends ReversePaveTestBase
     public void returnMultipleVariantsIfCanonicalDoesNotMatchSpecification()
     {
         Set<ProteinVariant> variants = variantParser.parseGeneVariants("ZYX", "S2V");
-        // See ensembl_trans_amino_acids.csv
+        // See ensembl_trans_amino_acids.38.csv
         assertEquals(3, variants.size());
         Set<String> transcriptNames = variants.stream().map(HgvsVariant::transcriptName).collect(Collectors.toSet());
         assertTrue(transcriptNames.contains("ENST00000436448"));
@@ -89,7 +89,7 @@ public class ProteinVariantParserTest extends ReversePaveTestBase
     public void returnJustTheCanonicalTranscriptIfItMatchesTheSpecification()
     {
         Set<ProteinVariant> variants = variantParser.parseGeneVariants("ZYX", "A2V");
-        // See ensembl_trans_amino_acids.csv
+        // See ensembl_trans_amino_acids.38.csv
         assertEquals(1, variants.size());
         ProteinVariant variant = variants.iterator().next();
         assertEquals("ENST00000322764", variant.transcriptName());

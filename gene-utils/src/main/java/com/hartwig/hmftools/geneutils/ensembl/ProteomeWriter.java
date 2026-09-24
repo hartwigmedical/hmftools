@@ -4,7 +4,6 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
-import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.ENSEMBL_TRANS_AMINO_ACIDS_FILE;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.gene.TranscriptUtils.calcCodingStartPositionAdjustment;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
@@ -27,6 +26,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.codon.Codons;
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
@@ -67,7 +67,7 @@ public class ProteomeWriter
 
         mRefGenome = loadRefGenome(configBuilder.getValue(REF_GENOME));
 
-        mWriter = initialiseWriter(parseOutputDir(configBuilder));
+        mWriter = initialiseWriter(parseOutputDir(configBuilder), mRefGenomeVersion);
     }
 
     public void run()
@@ -178,11 +178,11 @@ public class ProteomeWriter
         writeData(geneData.GeneId, geneData.GeneName, transData.TransName, transData.IsCanonical, aminoAcids);
     }
 
-    private static BufferedWriter initialiseWriter(final String outputDir)
+    private static BufferedWriter initialiseWriter(final String outputDir, final RefGenomeVersion refGenomeVersion)
     {
         try
         {
-            String filename = outputDir + ENSEMBL_TRANS_AMINO_ACIDS_FILE;
+            String filename = outputDir + EnsemblDataLoader.ensemblAminoAcidDataFile(refGenomeVersion);
             BufferedWriter writer = createBufferedWriter(filename, false);
 
             writer.write(TranscriptAminoAcids.csvHeader());

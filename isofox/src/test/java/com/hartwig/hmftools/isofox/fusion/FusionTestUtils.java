@@ -28,7 +28,7 @@ public final class FusionTestUtils
     public static FusionFragment fromReads(final List<Read> reads)
     {
         setReadJunctions(reads);
-        return new FusionFragment(new FusionReadGroup(reads.get(0).Id, convertReads(reads)));
+        return new FusionFragment(new FusionReadGroup(reads.get(0).id(), convertReads(reads)));
     }
 
     public static void setReadJunctions(final List<Read> reads)
@@ -50,18 +50,18 @@ public final class FusionTestUtils
 
     public static FusionReadGroup createGroup(final Read read)
     {
-        final List<Read> reads = Lists.newArrayList(read);
+        List<Read> reads = Lists.newArrayList(read);
         setReadJunctions(reads);
         List<FusionRead> fusionReads = FusionRead.convertReads(reads);
-        return new FusionReadGroup(read.Id, fusionReads);
+        return new FusionReadGroup(read.id(), fusionReads);
     }
 
     public static FusionReadGroup createGroup(final Read read1, final Read read2)
     {
-        final List<Read> reads = Lists.newArrayList(read1, read2);
+        List<Read> reads = Lists.newArrayList(read1, read2);
         setReadJunctions(reads);
         List<FusionRead> fusionReads = FusionRead.convertReads(reads);
-        return new FusionReadGroup(read1.Id, fusionReads);
+        return new FusionReadGroup(read1.id(), fusionReads);
     }
 
     public static List<String>[] getFragmentGeneIds(final EnsemblDataCache geneTransCache, final FusionFragment fragment)

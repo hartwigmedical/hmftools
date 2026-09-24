@@ -164,13 +164,13 @@ public class CohortConfig
     {
         List<String> missingSampleIds = Lists.newArrayList();
 
-        for(final String sampleId : config.SampleData.SampleIds)
+        for(String sampleId : config.SampleData.SampleIds)
         {
             String filename = formSampleFilename(config, sampleId, dataType);
 
             final Path path = Paths.get(filename);
 
-            if (!Files.exists(path))
+            if(!Files.exists(path))
             {
                 if(config.FailOnMissingSample)
                 {

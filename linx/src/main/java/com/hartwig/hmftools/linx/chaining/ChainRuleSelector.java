@@ -50,7 +50,6 @@ public class ChainRuleSelector
 {
     private ChainLinkAllocator mLinkAllocator;
 
-    private int mClusterId;
     private boolean mHasReplication;
     private List<ChainingRule> mRulesToApply;
 
@@ -91,10 +90,9 @@ public class ChainRuleSelector
         mFoldbacksInitialised = false;
     }
 
-    public void initialise(int clusterId, boolean clusterHasReplication)
+    public void initialise(boolean clusterHasReplication)
     {
         mHasReplication = clusterHasReplication;
-        mClusterId = clusterId;
 
         mRulesToApply.clear();
 
@@ -130,7 +128,7 @@ public class ChainRuleSelector
 
         for(int i = 0; i < mRulesToApply.size(); ++i)
         {
-            final ChainingRule rule = mRulesToApply.get(i);
+            ChainingRule rule = mRulesToApply.get(i);
 
             switch (rule)
             {
@@ -191,7 +189,7 @@ public class ChainRuleSelector
 
     public static class BreakendComparator implements Comparator<SvBreakend>
     {
-        public int compare(final SvBreakend first, final SvBreakend second)
+        public int compare(final SvBreakend first, SvBreakend second)
         {
             if(first.getSV().id() == second.getSV().id())
             {
@@ -220,7 +218,7 @@ public class ChainRuleSelector
             {
                 boolean hasSingleOption = false;
 
-                for(final LinkedPair pair : proposedLink.Links)
+                for(LinkedPair pair : proposedLink.Links)
                 {
                     for(int se = SE_START; se <= SE_END; ++se)
                     {
@@ -264,15 +262,15 @@ public class ChainRuleSelector
             if(breakendPairs.size() >= 2) // disable connections to an INV for now
                 continue;
 
-            final LinkedPair newPair;
+            LinkedPair newPair;
 
             if(breakendPairs.size() == 2)
             {
                 // consider a link only to an INV as a single option
-                final LinkedPair pair1 = breakendPairs.get(0);
-                final LinkedPair pair2 = breakendPairs.get(1);
-                final SvVarData otherSv1 = pair1.getOtherSV(limitingBreakend.getSV());
-                final SvVarData otherSv2 = pair2.getOtherSV(limitingBreakend.getSV());
+                LinkedPair pair1 = breakendPairs.get(0);
+                LinkedPair pair2 = breakendPairs.get(1);
+                SvVarData otherSv1 = pair1.getOtherSV(limitingBreakend.getSV());
+                SvVarData otherSv2 = pair2.getOtherSV(limitingBreakend.getSV());
 
                 if(otherSv1 == otherSv2 && otherSv1.type() == INV)
                 {
@@ -309,8 +307,8 @@ public class ChainRuleSelector
             int index = 0;
             while(index < proposedLinks.size())
             {
-                final ProposedLinks otherLink = proposedLinks.get(index);
-                final LinkedPair otherPair = otherLink.Links.get(0);
+                ProposedLinks otherLink = proposedLinks.get(index);
+                LinkedPair otherPair = otherLink.Links.get(0);
 
                 if(!otherPair.hasLinkClash(newPair) && !otherPair.oppositeMatch(newPair))
                 {
@@ -391,10 +389,10 @@ public class ChainRuleSelector
             int index = 0;
             while(index < mFoldbackBreakendPairs.size())
             {
-                final FoldbackBreakendPair fbPair = mFoldbackBreakendPairs.get(index);
+                FoldbackBreakendPair fbPair = mFoldbackBreakendPairs.get(index);
 
-                final BreakendJcn bpStart = mLinkAllocator.getBreakendJcnData(fbPair.BreakendStart);
-                final BreakendJcn bpEnd = mLinkAllocator.getBreakendJcnData(fbPair.BreakendEnd);
+                BreakendJcn bpStart = mLinkAllocator.getBreakendJcnData(fbPair.BreakendStart);
+                BreakendJcn bpEnd = mLinkAllocator.getBreakendJcnData(fbPair.BreakendEnd);
 
                 double minUnlinkedPloidy = 0;
                 boolean chainHasSimpleFoldback = false;
@@ -434,10 +432,10 @@ public class ChainRuleSelector
         }
 
         // also include chain ends which effectively form a foldback
-        for(final SvChain chain : mChains)
+        for(SvChain chain : mChains)
         {
-            final SvBreakend chainStart = chain.getOpenBreakend(true);
-            final SvBreakend chainEnd = chain.getOpenBreakend(false);
+            SvBreakend chainStart = chain.getOpenBreakend(true);
+            SvBreakend chainEnd = chain.getOpenBreakend(false);
 
             if(chainStart == null || chainEnd == null)
                 continue;
@@ -460,10 +458,10 @@ public class ChainRuleSelector
 
                 // the foldback is invalid if it has a deletion bridge with overhang on the front-facing breakend
                 boolean startIsFront = (chainStart.position() < chainEnd.position()) == (chainStart.orientation() == 1);
-                final SvBreakend frontBreakend = startIsFront ? chainStart : chainEnd;
+                SvBreakend frontBreakend = startIsFront ? chainStart : chainEnd;
 
                 // check for a DB which either allows or invalidates this foldback
-                final DbPair dbLink = frontBreakend.getSV().getDBLink(frontBreakend.usesStart());
+                DbPair dbLink = frontBreakend.getSV().getDBLink(frontBreakend.usesStart());
 
                 if(dbLink != null && dbLink.length() > 0)
                     continue;
@@ -495,8 +493,8 @@ public class ChainRuleSelector
     {
         for(int i = 0; i < chain.getLinkedPairs().size() - 1; ++i)
         {
-            final LinkedPair pair = chain.getLinkedPairs().get(i);
-            final LinkedPair nextPair = chain.getLinkedPairs().get(i + 1);
+            LinkedPair pair = chain.getLinkedPairs().get(i);
+            LinkedPair nextPair = chain.getLinkedPairs().get(i + 1);
 
             if(pair.second() == var && nextPair.first() == var && pair.firstBreakend() == nextPair.secondBreakend())
                 return true;
@@ -531,7 +529,7 @@ public class ChainRuleSelector
         double lastFoldbackPloidy = 0;
 
         // foldbacks are cached from highest to lowest ploidy already
-        for(final FoldbackBreakendPair fbPair : mFoldbackBreakendPairs)
+        for(FoldbackBreakendPair fbPair : mFoldbackBreakendPairs)
         {
             // break if the next foldback pair has a lower ploidy than any of those which have proposed a link
             if(!newProposedLinks.isEmpty() && !copyNumbersEqual(fbPair.Ploidy, lastFoldbackPloidy))
@@ -584,7 +582,7 @@ public class ChainRuleSelector
                     continue;
 
                 // first establish the available ploidy of this breakend and whether it's chained
-                final BreakendJcn nonFbPloidyData = mLinkAllocator.getBreakendJcnData(otherBreakend);
+                BreakendJcn nonFbPloidyData = mLinkAllocator.getBreakendJcnData(otherBreakend);
                 double nonFbPloidy = nonFbPloidyData.unlinkedJcn();
 
                 // for low ploidy SVs, ploidy comparisons are imprecise, so don't allow splits
@@ -636,9 +634,9 @@ public class ChainRuleSelector
 
                     // where there is a choice to be made between which breakends are used as is usually the case of foldbacks,
                     // choose the breakend with the most unlinked ploidy, which implies its other end is already chained
-                    final ChainState fbConn = mLinkAllocator.getSvConnections().get(foldback);
+                    ChainState fbConn = mLinkAllocator.getSvConnections().get(foldback);
 
-                    final SvBreakend fbBreakend = fbConn.unlinked(foldbackStart.usesStart()) > fbConn.unlinked(foldbackEnd.usesStart())
+                    SvBreakend fbBreakend = fbConn.unlinked(foldbackStart.usesStart()) > fbConn.unlinked(foldbackEnd.usesStart())
                             ? foldbackStart : foldbackEnd;
 
                     ProposedLinks proposedLink = new ProposedLinks(LinkedPair.from(fbBreakend, otherBreakend), FOLDBACK);
@@ -668,7 +666,7 @@ public class ChainRuleSelector
                         linkScore = FOLDBACK_C_PRIORITY; // 1
                     }
 
-                    final SvChain targetChain =
+                    SvChain targetChain =
                             nonFbPloidyData.MaxJcnChain != null && nonFbPloidy == nonFbPloidyData.MaxJcnChain.jcn() ?
                             nonFbPloidyData.MaxJcnChain : null;
 
@@ -724,17 +722,17 @@ public class ChainRuleSelector
         int i = 0;
         while(i < pairs.size())
         {
-            final SvBreakend breakend = pairs.get(i).getOtherBreakend(sourceBreakend);
+            SvBreakend breakend = pairs.get(i).getOtherBreakend(sourceBreakend);
 
             boolean breakendRemoved = false;
             for(int j = i + 1; j < pairs.size(); ++j)
             {
-                final SvBreakend breakend2 = pairs.get(j).getOtherBreakend(sourceBreakend);
+                SvBreakend breakend2 = pairs.get(j).getOtherBreakend(sourceBreakend);
 
                 if(breakend.getSV() != breakend2.getSV())
                     continue;
 
-                final ChainState svConn = mLinkAllocator.getSvConnections().get(breakend.getSV());
+                ChainState svConn = mLinkAllocator.getSvConnections().get(breakend.getSV());
 
                 if(svConn == null)
                     continue;
@@ -807,19 +805,19 @@ public class ChainRuleSelector
                 continue;
             }
 
-            final LinkedPair pair1 = compDupLinks.get(0);
-            final LinkedPair pair2 = compDupLinks.get(1);
+            LinkedPair pair1 = compDupLinks.get(0);
+            LinkedPair pair2 = compDupLinks.get(1);
 
-            final SvVarData otherSv1 = pair1.getOtherSV(compDup);
-            final SvVarData otherSv2 = pair2.getOtherSV(compDup);
+            SvVarData otherSv1 = pair1.getOtherSV(compDup);
+            SvVarData otherSv2 = pair2.getOtherSV(compDup);
 
             if(otherSv1 == otherSv2)
             {
                 // a single SV duplicated by the complex DUP - check it isn't allocated yet
                 ChainState otherSvConn = mSvConnectionsMap.get(otherSv1);
 
-                final SvBreakend otherBreakend1 = otherSv1.getBreakend(true);
-                final SvBreakend otherBreakend2 = otherSv1.getBreakend(false);
+                SvBreakend otherBreakend1 = otherSv1.getBreakend(true);
+                SvBreakend otherBreakend2 = otherSv1.getBreakend(false);
 
                 if(otherSvConn == null || otherSvConn.hasConnections())
                 {
@@ -841,10 +839,10 @@ public class ChainRuleSelector
             }
             else
             {
-                final SvBreakend otherBreakend1 = pair1.hasBreakend(compDupBeStart) ?
+                SvBreakend otherBreakend1 = pair1.hasBreakend(compDupBeStart) ?
                         pair1.getOtherBreakend(compDupBeStart) : pair1.getOtherBreakend(compDupBeEnd);
 
-                final SvBreakend otherBreakend2 = pair2.hasBreakend(compDupBeStart) ?
+                SvBreakend otherBreakend2 = pair2.hasBreakend(compDupBeStart) ?
                         pair2.getOtherBreakend(compDupBeStart) : pair2.getOtherBreakend(compDupBeEnd);
 
                 // search existing chains for open chain ends match the set of possibles for the complex DUP and with twice the ploidy
@@ -924,15 +922,15 @@ public class ChainRuleSelector
                 if(breakendPloidy == 0)
                     continue;
 
-                final SvBreakend breakend = var.getBreakend(isStart);
-                final List<LinkedPair> svLinks = mSvBreakendPossibleLinks.get(breakend);
+                SvBreakend breakend = var.getBreakend(isStart);
+                List<LinkedPair> svLinks = mSvBreakendPossibleLinks.get(breakend);
 
                 if(svLinks == null)
                     continue;
 
                 ProposedLinks bestProposedLink = null;
 
-                for(final LinkedPair pair : svLinks)
+                for(LinkedPair pair : svLinks)
                 {
                     if(mLinkAllocator.hasSkippedPairs(pair))
                         continue;
@@ -1133,15 +1131,15 @@ public class ChainRuleSelector
                 if(!copyNumbersEqual(breakendPloidy, currentMaxPloidy) && breakendPloidy < currentMaxPloidy)
                     continue;
 
-                final SvBreakend breakend = var.getBreakend(isStart);
-                final List<LinkedPair> svLinks = mSvBreakendPossibleLinks.get(breakend);
+                SvBreakend breakend = var.getBreakend(isStart);
+                List<LinkedPair> svLinks = mSvBreakendPossibleLinks.get(breakend);
 
                 breakendPloidy = mLinkAllocator.getUnlinkedBreakendCount(breakend, true);
 
                 if(svLinks == null)
                     continue;
 
-                for(final LinkedPair pair : svLinks)
+                for(LinkedPair pair : svLinks)
                 {
                     if(addedLinks.contains(pair))
                         continue;
@@ -1203,16 +1201,16 @@ public class ChainRuleSelector
                     if(breakendPloidy == 0)
                         continue;
 
-                    final SvBreakend breakend = var.getBreakend(isStart);
+                    SvBreakend breakend = var.getBreakend(isStart);
 
                     breakendPloidy = mLinkAllocator.getUnlinkedBreakendCount(breakend, true);
 
-                    final List<LinkedPair> svLinks = mSvBreakendPossibleLinks.get(breakend);
+                    List<LinkedPair> svLinks = mSvBreakendPossibleLinks.get(breakend);
 
                     if(svLinks == null)
                         continue;
 
-                    for(final LinkedPair pair : svLinks)
+                    for(LinkedPair pair : svLinks)
                     {
                         if(mLinkAllocator.hasSkippedPairs(pair))
                             continue;
@@ -1234,13 +1232,13 @@ public class ChainRuleSelector
 
         List<ProposedLinks> shortestLinks = Lists.newArrayList();
 
-        for(final ProposedLinks proposedLink : proposedLinks)
+        for(ProposedLinks proposedLink : proposedLinks)
         {
             int index = 0;
             boolean addNew = true;
             while(index < shortestLinks.size())
             {
-                final ProposedLinks otherLink = shortestLinks.get(index);
+                ProposedLinks otherLink = shortestLinks.get(index);
 
                 // for proposed links with any breakend clash, just keep the shortest
                 if(hasLinkClash(proposedLink.Links, otherLink.Links))
@@ -1340,7 +1338,7 @@ public class ChainRuleSelector
 
     private static boolean anyLinkMatch(final List<LinkedPair> links1, final List<LinkedPair> links2)
     {
-        for(final LinkedPair pair : links1)
+        for(LinkedPair pair : links1)
         {
             if(links2.contains(pair))
                 return true;

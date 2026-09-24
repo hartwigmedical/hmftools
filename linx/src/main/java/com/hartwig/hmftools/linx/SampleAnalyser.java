@@ -215,7 +215,7 @@ public class SampleAnalyser implements Callable<Void>
 
         List<StructuralVariantData> svRecords = loadVariantsFromVcf(mConfig, mCurrentSampleId);
 
-        final List<SvVarData> svDataList = createSvData(svRecords, mConfig);
+        List<SvVarData> svDataList = createSvData(svRecords, mConfig);
 
         if(!mConfig.IsGermline)
             mCnDataLoader.loadSampleData(mCurrentSampleId, svRecords);
@@ -266,10 +266,10 @@ public class SampleAnalyser implements Callable<Void>
         LNX_LOGGER.info("sample({}) procesed {} SVs", sampleId, svDataList.size());
     }
 
-    public final List<SvVarData> getVariants() { return mAllVariants; }
+    public List<SvVarData> getVariants() { return mAllVariants; }
 
     public boolean inValidState() { return mIsValid; }
-    public final Map<String, List<SvBreakend>> getChrBreakendMap() { return mAnalyser.getState().getChrBreakendMap(); }
+    public Map<String, List<SvBreakend>> getChrBreakendMap() { return mAnalyser.getState().getChrBreakendMap(); }
 
     public void setSampleSVs(final List<SvVarData> variants)
     {
@@ -348,9 +348,9 @@ public class SampleAnalyser implements Callable<Void>
 
         List<SvCluster> allClusters = mAnalyser.getAllClusters();
 
-        final List<LinxSvAnnotation> linxSvData = prepareSampleData ? generateSvDataOutput() : null;
-        final List<LinxCluster> clusterData = prepareSampleData ? generateClusterOutput(allClusters) : null;
-        final List<LinxLink> linksData = prepareSampleData ? generateLinksOutput() : null;
+        List<LinxSvAnnotation> linxSvData = prepareSampleData ? generateSvDataOutput() : null;
+        List<LinxCluster> clusterData = prepareSampleData ? generateClusterOutput(allClusters) : null;
+        List<LinxLink> linksData = prepareSampleData ? generateLinksOutput() : null;
 
         if(mCohortDataWriter.writeCohortFiles())
         {
@@ -388,10 +388,10 @@ public class SampleAnalyser implements Callable<Void>
 
                 if(!mConfig.IsGermline)
                 {
-                    final String driverCatalogFile = LinxDriver.generateCatalogFilename(mConfig.OutputDataPath, mCurrentSampleId, true);
+                    String driverCatalogFile = LinxDriver.generateCatalogFilename(mConfig.OutputDataPath, mCurrentSampleId, true);
                     DriverCatalogFile.write(driverCatalogFile, driverCatalogs);
 
-                    final String driversFile = LinxDriver.generateFilename(mConfig.OutputDataPath, mCurrentSampleId);
+                    String driversFile = LinxDriver.generateFilename(mConfig.OutputDataPath, mCurrentSampleId);
                     LinxDriver.write(driversFile, linxDrivers);
                 }
             }
@@ -505,11 +505,11 @@ public class SampleAnalyser implements Callable<Void>
 
     private List<LinxSvAnnotation> generateSvDataOutput()
     {
-        final List<LinxSvAnnotation> linxSvData = Lists.newArrayList();
+        List<LinxSvAnnotation> linxSvData = Lists.newArrayList();
 
         for(SvVarData var : mAllVariants)
         {
-            final SvCluster cluster = var.getCluster();
+            SvCluster cluster = var.getCluster();
 
             if(cluster == null)
             {
@@ -517,7 +517,7 @@ public class SampleAnalyser implements Callable<Void>
                 continue;
             }
 
-            final ArmCluster armClusterStart = cluster.findArmCluster(var.getBreakend(true));
+            ArmCluster armClusterStart = cluster.findArmCluster(var.getBreakend(true));
 
             if(armClusterStart == null)
             {
@@ -525,7 +525,7 @@ public class SampleAnalyser implements Callable<Void>
                 continue;
             }
 
-            final ArmCluster armClusterEnd = !var.isSglBreakend() ? cluster.findArmCluster(var.getBreakend(false)) : null;
+            ArmCluster armClusterEnd = !var.isSglBreakend() ? cluster.findArmCluster(var.getBreakend(false)) : null;
 
             // suppress SGL-INF artificial SVs, but use their details in place of the SGL
             if(var.getLinkedSVs() != null && var.isSglBreakend())
@@ -563,11 +563,11 @@ public class SampleAnalyser implements Callable<Void>
 
     private List<LinxCluster> generateClusterOutput(final List<SvCluster> allClusters)
     {
-        final List<LinxCluster> clusterData = Lists.newArrayList();
+        List<LinxCluster> clusterData = Lists.newArrayList();
 
         for(SvCluster cluster : allClusters)
         {
-            final String superType = getClusterCategory(cluster);
+            String superType = getClusterCategory(cluster);
 
             clusterData.add(ImmutableLinxCluster.builder()
                     .clusterId(cluster.id())
@@ -584,7 +584,7 @@ public class SampleAnalyser implements Callable<Void>
 
     private List<LinxLink> generateLinksOutput()
     {
-        final List<LinxLink> linksData = Lists.newArrayList();
+        List<LinxLink> linksData = Lists.newArrayList();
 
         for(SvCluster cluster : mAnalyser.getClusters())
         {
@@ -595,12 +595,12 @@ public class SampleAnalyser implements Callable<Void>
                 int chainSvCount = chain.getSvCount();
 
                 List<LinkedPair> uniquePairs = Lists.newArrayList();
-                final List<LinkedPair> chainLinks = chain.getLinkedPairs();
+                List<LinkedPair> chainLinks = chain.getLinkedPairs();
                 boolean isDoubleMinute = chain.isDoubleMinute();
 
                 for(int chainIndex = 0; chainIndex < chainLinks.size(); ++chainIndex)
                 {
-                    final LinkedPair pair = chainLinks.get(chainIndex);
+                    LinkedPair pair = chainLinks.get(chainIndex);
 
                     if(uniquePairs.stream().anyMatch(x -> x.matches(pair)))
                         continue;

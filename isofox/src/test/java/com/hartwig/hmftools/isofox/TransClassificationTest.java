@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.isofox;
 
-import static com.hartwig.hmftools.isofox.FragmentAllocator.calcFragmentLength;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.TRANSCRIPT_COUNTS;
 import static com.hartwig.hmftools.isofox.ReadCountsTest.REF_BASE_STR_1;
 import static com.hartwig.hmftools.isofox.TestUtils.ALT_SJ_COHORT_CACHE;
@@ -11,9 +12,12 @@ import static com.hartwig.hmftools.isofox.TestUtils.TRANS_1;
 import static com.hartwig.hmftools.isofox.TestUtils.createCigar;
 import static com.hartwig.hmftools.isofox.TestUtils.createGeneReadData;
 import static com.hartwig.hmftools.isofox.TestUtils.createIsofoxConfig;
+import static com.hartwig.hmftools.isofox.TestUtils.createReadPair;
 import static com.hartwig.hmftools.isofox.TestUtils.createReadRecord;
 import static com.hartwig.hmftools.isofox.TestUtils.createRegion;
 import static com.hartwig.hmftools.isofox.common.FragmentType.CHIMERIC;
+import static com.hartwig.hmftools.isofox.common.ReadTranscriptUtils.calcFragmentLength;
+import static com.hartwig.hmftools.isofox.common.ReadTranscriptUtils.processOverlappingRegions;
 import static com.hartwig.hmftools.isofox.common.TransMatchType.ALT;
 import static com.hartwig.hmftools.isofox.common.TransMatchType.EXONIC;
 import static com.hartwig.hmftools.isofox.common.TransMatchType.SPLICE_JUNCTION;
@@ -53,7 +57,7 @@ public class TransClassificationTest
         Read read = createReadRecord(1, "1", 90, 110, REF_BASE_STR_1, createCigar(0, 21, 0));
 
         List<RegionReadData> regions = Lists.newArrayList(region);
-        read.processOverlappingRegions(regions);
+        processOverlappingRegions(read, regions);
 
         assertEquals(UNSPLICED, read.getTranscriptClassification(trans1));
 
@@ -61,7 +65,7 @@ public class TransClassificationTest
         read = createReadRecord(1, "1", 120, 140, REF_BASE_STR_1, createCigar(0, 21, 0));
 
         regions = Lists.newArrayList(region);
-        read.processOverlappingRegions(regions);
+        processOverlappingRegions(read, regions);
 
         assertEquals(EXONIC, read.getTranscriptClassification(trans1));
 
@@ -74,7 +78,7 @@ public class TransClassificationTest
         read = createReadRecord(1, "1", 110, 200, REF_BASE_STR_1, createCigar(0, 11, 59, 21, 0));
 
         regions = Lists.newArrayList(region1, region2, region3);
-        read.processOverlappingRegions(regions);
+        processOverlappingRegions(read, regions);
 
         assertEquals(ALT, read.getTranscriptClassification(trans1));
 
@@ -88,7 +92,7 @@ public class TransClassificationTest
 
         read = createReadRecord(1, "1", 110, 200, REF_BASE_STR_1, cigar);
 
-        read.processOverlappingRegions(regions);
+        processOverlappingRegions(read, regions);
 
         assertEquals(ALT, read.getTranscriptClassification(trans1));
 
@@ -102,7 +106,7 @@ public class TransClassificationTest
 
         read = createReadRecord(1, "1", 110, 200, REF_BASE_STR_1, cigar);
 
-        read.processOverlappingRegions(regions);
+        processOverlappingRegions(read, regions);
 
         assertEquals(UNSPLICED, read.getTranscriptClassification(trans1));
 
@@ -117,7 +121,7 @@ public class TransClassificationTest
         region3 = createRegion("GEN01", trans2, 1, "1", 100, 220);
 
         regions = Lists.newArrayList(region1, region2, region3);
-        read.processOverlappingRegions(regions);
+        processOverlappingRegions(read, regions);
 
         assertEquals(SPLICE_JUNCTION, read.getTranscriptClassification(trans1));
         assertEquals(ALT, read.getTranscriptClassification(trans2));
@@ -143,31 +147,54 @@ public class TransClassificationTest
         Read read = createReadRecord(1, CHR_1, 200, 309, readBases, createCigar(1, 20, 80, 10, 0));
 
         List<RegionReadData> regions = Lists.newArrayList(region2, region3);
-        read.processOverlappingRegions(regions);
+        processOverlappingRegions(read, regions);
 
         assertEquals(SPLICE_JUNCTION, read.getTranscriptClassification(TRANS_1));
 
         // any soft-clipped read which cannot be mapped is classified as ALT
         readBases = REF_BASE_STR_1 + "AAAAA";
         read = createReadRecord(1, CHR_1, 100, 119, readBases, createCigar(0, 20, 5));
-        read.setFragmentInsertSize(200);
-        read.processOverlappingRegions(Lists.newArrayList(region1));
+        read.bamRecord().setInferredInsertSize(200);
+        processOverlappingRegions(read, Lists.newArrayList(region1));
 
         assertEquals(ALT, read.getTranscriptClassification(TRANS_1));
 
         readBases = "AAAAA" + REF_BASE_STR_1;
         read = createReadRecord(1, CHR_1, 300, 319, readBases, createCigar(5, 20, 0));
-        read.setFragmentInsertSize(200);
-        read.processOverlappingRegions(Lists.newArrayList(region3));
+        read.bamRecord().setInferredInsertSize(200);
+        processOverlappingRegions(read, Lists.newArrayList(region3));
 
         assertEquals(ALT, read.getTranscriptClassification(TRANS_1));
 
         // likely adapter sequences are permitted
         read = createReadRecord(1, CHR_1, 300, 319, readBases, createCigar(5, 20, 0));
-        read.setFragmentInsertSize(20);
-        read.processOverlappingRegions(Lists.newArrayList(region3));
+        read.bamRecord().setInferredInsertSize(20);
+        processOverlappingRegions(read, Lists.newArrayList(region3));
 
         assertEquals(EXONIC, read.getTranscriptClassification(TRANS_1));
+
+        // short terminal soft clip whose bases stay within the exon is left trans-supporting, not demoted to ALT
+        readBases = REF_BASE_STR_1.substring(0, 18) + "A";
+        read = createReadRecord(1, CHR_1, 300, 317, readBases, createCigar(0, 18, 1));
+        read.bamRecord().setInferredInsertSize(200);
+        processOverlappingRegions(read, Lists.newArrayList(region3));
+
+        assertEquals(EXONIC, read.getTranscriptClassification(TRANS_1));
+
+        readBases = "AA" + REF_BASE_STR_1.substring(0, 18);
+        read = createReadRecord(1, CHR_1, 102, 119, readBases, createCigar(2, 18, 0));
+        read.bamRecord().setInferredInsertSize(200);
+        processOverlappingRegions(read, Lists.newArrayList(region1));
+
+        assertEquals(EXONIC, read.getTranscriptClassification(TRANS_1));
+
+        // clip at the realignment window length stays ALT
+        readBases = REF_BASE_STR_1.substring(0, 17) + "AAA";
+        read = createReadRecord(1, CHR_1, 300, 316, readBases, createCigar(0, 17, 3));
+        read.bamRecord().setInferredInsertSize(200);
+        processOverlappingRegions(read, Lists.newArrayList(region3));
+
+        assertEquals(ALT, read.getTranscriptClassification(TRANS_1));
     }
 
     @Test
@@ -185,35 +212,43 @@ public class TransClassificationTest
 
         // within 1st exon
         Read read1 = createReadRecord(1, CHR_1, 1010, 1029, REF_BASE_STR_1, createCigar(0, 20, 0));
-        Read read2 = createReadRecord(1, CHR_1, 1170, 1199, REF_BASE_STR_1, createCigar(0, 20, 0));
+        Read read2 = createReadRecord(1, CHR_1, 1170, 1199, REF_BASE_STR_1, createCigar(0, 30, 0));
 
         int fragLength = calcFragmentLength(transData, read1, read2);
         assertEquals(190, fragLength);
 
         // spanning 2 exons, both exonic
         read1 = createReadRecord(1, CHR_1, 1170, 1189, REF_BASE_STR_1, createCigar(0, 20, 0));
-        read2 = createReadRecord(1, CHR_1, 2010, 2019, REF_BASE_STR_1, createCigar(0, 20, 0));
+        read2 = createReadRecord(1, CHR_1, 2010, 2019, REF_BASE_STR_1, createCigar(0, 10, 0));
 
         fragLength = calcFragmentLength(transData, read1, read2);
         assertEquals(31 + 20, fragLength);
 
         // spanning 3 exons, both exonic
         read1 = createReadRecord(1, CHR_1, 1170, 1189, REF_BASE_STR_1, createCigar(0, 20, 0));
-        read2 = createReadRecord(1, CHR_1, 4510, 4519, REF_BASE_STR_1, createCigar(0, 20, 0));
+        read2 = createReadRecord(1, CHR_1, 4510, 4519, REF_BASE_STR_1, createCigar(0, 10, 0));
 
         fragLength = calcFragmentLength(transData, read1, read2);
         assertEquals(31 + 501 + 20, fragLength);
 
         // with 2 split reads
-        read1 = createReadRecord(1, CHR_1, 1191, 2009, REF_BASE_STR_1, createCigar(0, 10, 799, 10, 0));
-        read2 = createReadRecord(1, CHR_1, 2491, 4509, REF_BASE_STR_1, createCigar(0, 10, 1999, 10, 0));
+        read1 = createReadRecord(
+                1, CHR_1, 1191, 2009, REF_BASE_STR_1, createCigar(0, 10, 799, 10, 0));
+        read2 = createReadRecord(
+                1, CHR_1, 2491, 4509, REF_BASE_STR_1, createCigar(0, 10, 1999, 10, 0));
 
         fragLength = calcFragmentLength(transData, read1, read2);
         assertEquals(10 + 501 + 10, fragLength);
 
         // with 2 split reads skipping an exon
-        read1 = createReadRecord(1, CHR_1, 1191, 2009, REF_BASE_STR_1, createCigar(0, 10, 799, 10, 0));
-        read2 = createReadRecord(1, CHR_1, 4991, 5509, REF_BASE_STR_1, createCigar(0, 10, 1999, 10, 0));
+
+        // 1191-1200, 2000-2009
+        read1 = createReadRecord(
+                1, CHR_1, 1191, 2009, REF_BASE_STR_1, createCigar(0, 10, 799, 10, 0));
+
+        // 4991-5000, 5500-5509
+        read2 = createReadRecord(
+                1, CHR_1, 4991, 5509, REF_BASE_STR_1, createCigar(0, 10, 499, 10, 0));
 
         fragLength = calcFragmentLength(transData, read1, read2);
         assertEquals(10 + 501 + 501 + 10, fragLength);
@@ -226,7 +261,7 @@ public class TransClassificationTest
         IsofoxConfig config = createIsofoxConfig();
         config.Functions.clear();
         config.Functions.add(TRANSCRIPT_COUNTS);
-        FragmentAllocator bamReader = new FragmentAllocator(config, ALT_SJ_COHORT_CACHE, new ResultsWriter(config));
+        FragmentAllocator bamReader = new FragmentAllocator(config, null, ALT_SJ_COHORT_CACHE, new ResultsWriter(config));
 
         String transName1 = "TRANS01";
 
@@ -240,8 +275,8 @@ public class TransClassificationTest
         GeneReadData geneReadData = createGeneReadData(GENE_NAME_1, "1", (byte) 1, 1000, 5000);
         geneReadData.setTranscripts(Lists.newArrayList(transData1));
 
-        Read read1 = createReadRecord(1, CHR_1, 100, 200, REF_BASE_STR_1, createCigar(0, 10, 0));
-        Read read2 = createReadRecord(1, CHR_1, 1050, 1150, REF_BASE_STR_1, createCigar(0, 20, 0));
+        Read read1 = createReadRecord(1, CHR_1, 100, 200, null, createCigar(0, 101, 0));
+        Read read2 = createReadRecord(1, CHR_1, 1050, 1150, null, createCigar(0, 101, 0));
 
         List<Read> reads = Lists.newArrayList(read1, read2);
 
@@ -249,77 +284,68 @@ public class TransClassificationTest
         bamReader.processReadRecords(geneSet, reads);
 
         FragmentTypeCounts fragTypeCounts = geneSet.fragmentTypeCounts();
-        // assertEquals(1, geneCounts[typeAsInt(TOTAL)]);
         assertEquals(1, fragTypeCounts.typeCount(CHIMERIC));
 
         // exon to intronic read
-        read1 = createReadRecord(1, CHR_1, 1300, 1350, REF_BASE_STR_1, createCigar(0, 50, 0));
-        read1.setFragmentInsertSize(1100);
-        read2 = createReadRecord(1, CHR_1, 2300, 2400, REF_BASE_STR_1, createCigar(0, 100, 0));
-        read2.setFragmentInsertSize(-1100);
+        Read[] readPair = createReadPair(
+                1 , geneSet, geneSet, 1300, 1350, 2300, 2400,
+                createCigar(0, 51, 0), createCigar(0, 101, 0), ORIENT_FWD, ORIENT_REV);
 
-        reads = Lists.newArrayList(read1, read2);
+        reads = Lists.newArrayList(readPair[0], readPair[1]);
         bamReader.processReadRecords(geneSet, reads);
 
-        // assertEquals(2, geneCounts[typeAsInt(TOTAL)]);
         assertEquals(1, fragTypeCounts.typeCount(FragmentType.UNSPLICED));
 
         // fully intronic
-        read1 = createReadRecord(1, CHR_1, 2600, 2650, REF_BASE_STR_1, createCigar(0, 50, 0));
-        read1.setFragmentInsertSize(300);
-        read2 = createReadRecord(1, CHR_1, 2800, 2900, REF_BASE_STR_1, createCigar(0, 100, 0));
-        read2.setFragmentInsertSize(-300);
+        readPair = createReadPair(
+                1 , geneSet, geneSet, 2600, 2650, 2800, 2900,
+                createCigar(0, 51, 0), createCigar(0, 101, 0), ORIENT_FWD, ORIENT_REV);
 
         geneSet.clearCounts();
 
-        reads = Lists.newArrayList(read1, read2);
+        reads = Lists.newArrayList(readPair[0], readPair[1]);
         bamReader.processReadRecords(geneSet, reads);
 
-        // assertEquals(1, geneCounts[typeAsInt(TOTAL)]);
         assertEquals(1, fragTypeCounts.typeCount(FragmentType.UNSPLICED));
 
         // alternative splicing - first from reads with splits
         geneSet.clearCounts();
 
-        read1 = createReadRecord(1, CHR_1, 1050, 6100, REF_BASE_STR_1, createCigar(0, 50, 5000, 100, 0));
-        read1.setFragmentInsertSize(500);
-        read2 = createReadRecord(1, CHR_1, 3100, 3300, REF_BASE_STR_1, createCigar(0, 100, 0));
-        read2.setFragmentInsertSize(-500);
+        // 1050-1100, 6000-6100
+        readPair = createReadPair(
+                1 , geneSet, geneSet, 1050, 6100, 3100, 330,
+                createCigar(0, 51, 4899, 101, 0),
+                createCigar(0, 201, 0), ORIENT_FWD, ORIENT_REV);
 
-        reads = Lists.newArrayList(read1, read2);
+        reads = Lists.newArrayList(readPair[0], readPair[1]);
         bamReader.processReadRecords(geneSet, reads);
 
-        // assertEquals(1, geneCounts[typeAsInt(TOTAL)]);
         assertEquals(1, fragTypeCounts.typeCount(CHIMERIC));
-
-        int longInsertSize = config.MaxFragmentLength + 100;
 
         // long exon to exon read, treated as supporting
         geneSet.clearCounts();
 
-        read1 = createReadRecord(1, CHR_1, 1050, 1099, REF_BASE_STR_1, createCigar(0, 50, 0));
-        read1.setFragmentInsertSize(longInsertSize);
-        read2 = createReadRecord(1, CHR_1, 2100, 2199, REF_BASE_STR_1, createCigar(0, 100, 0));
-        read2.setFragmentInsertSize(-longInsertSize);
+        readPair = createReadPair(
+                1 , geneSet, geneSet, 1050, 1099, 2100, 2199,
+                createCigar(0, 50, 0),
+                createCigar(0, 100, 0), ORIENT_FWD, ORIENT_REV);
 
-        reads = Lists.newArrayList(read1, read2);
+        reads = Lists.newArrayList(readPair[0], readPair[1]);
         bamReader.processReadRecords(geneSet, reads);
 
-        // assertEquals(1, geneCounts[typeAsInt(TOTAL)]);
         assertEquals(1, fragTypeCounts.typeCount(FragmentType.TRANS_SUPPORTING));
 
         // alt splicing - exon to exon read skipping an exon and long, currently not detected
         geneSet.clearCounts();
 
-        read1 = createReadRecord(1, CHR_1, 1050, 1100, REF_BASE_STR_1, createCigar(0, 50, 0));
-        read1.setFragmentInsertSize(longInsertSize);
-        read2 = createReadRecord(1, CHR_1, 4550, 4650, REF_BASE_STR_1, createCigar(0, 100, 0));
-        read2.setFragmentInsertSize(-longInsertSize);
+        readPair = createReadPair(
+                1 , geneSet, geneSet, 1050, 1100, 4550, 4650,
+                createCigar(0, 51, 0),
+                createCigar(0, 101, 0), ORIENT_FWD, ORIENT_REV);
 
-        reads = Lists.newArrayList(read1, read2);
+        reads = Lists.newArrayList(readPair[0], readPair[1]);
         bamReader.processReadRecords(geneSet, reads);
 
-        // assertEquals(1, geneCounts[typeAsInt(TOTAL)]);
         assertEquals(1, fragTypeCounts.typeCount(FragmentType.ALT));
     }
 

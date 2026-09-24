@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.purple;
 
-import static com.hartwig.hmftools.common.genome.gc.GCProfileFactory.GC_PROFILE;
+import static com.hartwig.hmftools.common.driver.panel.DriverGeneRegions.findInvalidDriverGenes;
 import static com.hartwig.hmftools.common.genome.gc.GCProfileFactory.addGcProfilePath;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ArrayListMultimap;
@@ -66,7 +67,6 @@ public class ReferenceData
     public final ListMultimap<Chromosome,SimpleVariant> SomaticHotspots;
     public final ListMultimap<Chromosome, SimpleVariant> GermlineHotspots;
 
-    public final String GcProfileFilename;
     public final TargetRegionsData TargetRegions;
 
     private boolean mIsValid;
@@ -85,7 +85,6 @@ public class ReferenceData
         }
 
         final String refGenomePath = configBuilder.getValue(REF_GENOME);
-        GcProfileFilename = configBuilder.getValue(GC_PROFILE);
 
         RefGenome = RefGenomeSource.loadRefGenome(refGenomePath);
 
@@ -160,6 +159,15 @@ public class ReferenceData
         GeneTransCache = new EnsemblDataCache(configBuilder);
         loadGeneTransCache();
 
+        // validate that driver genes have matching entries in Ensembl
+        List<DriverGene> invalidDriverGenes = findInvalidDriverGenes(DriverGenes.DriverGeneList, GeneTransCache);
+        if(!invalidDriverGenes.isEmpty())
+        {
+            PPL_LOGGER.error("Invalid non-Ensembl gene names: {}",
+                    invalidDriverGenes.stream().map( x -> x.gene()).collect(Collectors.joining(";")));
+            System.exit(1);
+        }
+
         if(mIsValid && config.tumorOnlyMode())
         {
             HlaCommon.populateGeneData(GeneTransCache.getChrGeneDataMap().get(hlaChromosome(RefGenVersion)));
@@ -227,7 +235,6 @@ public class ReferenceData
 
         configBuilder.addConfigItem(SOMATIC_HOTSPOT, false, "Path to somatic hotspot VCF", "");
         configBuilder.addConfigItem(GERMLINE_HOTSPOT, false, "Path to germline hotspot VCF", "");
-        addGcProfilePath(configBuilder, false);
         configBuilder.addPath(COHORT_AMP_DEL_FREQ_FILE, false, "Path to cohort germline deletions frequency file");
         configBuilder.addPath(TARGET_REGIONS_BED, false, TARGET_REGIONS_BED_DESC);
         TargetRegionsData.registerConfig(configBuilder);
@@ -252,7 +259,6 @@ public class ReferenceData
     public ReferenceData()
     {
         mIsValid = true;
-        GcProfileFilename = null;
         RefGenome = null;
         RefGenVersion = V38;
         ChromosomeLengths = Maps.newHashMap();

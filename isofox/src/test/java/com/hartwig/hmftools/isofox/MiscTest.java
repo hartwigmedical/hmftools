@@ -13,6 +13,7 @@ import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.isofox.adjusts.FragmentSize;
 import com.hartwig.hmftools.isofox.common.BaseDepth;
 
@@ -46,18 +47,18 @@ public class MiscTest
 
         baseDepth.initialise(baseRange);
 
-        List<int[]> readCoords = Lists.newArrayList();
-        readCoords.add(new int[] {100, 200});
+        List<BaseRegion> readCoords = Lists.newArrayList();
+        readCoords.add(new BaseRegion(100, 200));
         baseDepth.processRead(readCoords);
 
         readCoords.clear();
-        readCoords.add(new int[] {100, 150});
+        readCoords.add(new BaseRegion(100, 150));
         baseDepth.processRead(readCoords);
 
         // reads out the range have no effect
         readCoords.clear();
-        readCoords.add(new int[] {50, 60});
-        readCoords.add(new int[] {250, 260});
+        readCoords.add(new BaseRegion(50, 60));
+        readCoords.add(new BaseRegion(250, 260));
         baseDepth.processRead(readCoords);
 
         assertEquals(51, baseDepth.basesWithDepth());
@@ -68,8 +69,8 @@ public class MiscTest
         assertEquals(0, baseDepth.depthAtBase(201));
 
         readCoords.clear();
-        readCoords.add(new int[] {100, 110});
-        readCoords.add(new int[] {120, 130});
+        readCoords.add(new BaseRegion(100, 110));
+        readCoords.add(new BaseRegion(120, 130));
         baseDepth.processRead(readCoords);
 
         assertEquals(3, baseDepth.depthAtBase(100));

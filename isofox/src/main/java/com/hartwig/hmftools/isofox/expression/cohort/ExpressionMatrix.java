@@ -127,7 +127,7 @@ public class ExpressionMatrix
 
             boolean buildIndexes = itemCache.isEmpty();
 
-            for(final String data : lines)
+            for(String data : lines)
             {
                 final String[] items = data.split(fileDelim, -1);
 
@@ -215,7 +215,7 @@ public class ExpressionMatrix
             if(mType == TRANSCRIPT_EXPRESSION_MATRIX)
                 writer.write(",TransName");
 
-            for(final String sampleId : mConfig.SampleData.SampleIds)
+            for(String sampleId : mConfig.SampleData.SampleIds)
             {
                 writer.write(String.format(",%s", sampleId));
             }

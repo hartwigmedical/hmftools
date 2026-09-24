@@ -6,8 +6,9 @@ import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
 import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
-import static com.hartwig.hmftools.isofox.fusion.FusionConstants.REALIGN_MAX_SOFT_CLIP_BASE_LENGTH;
-import static com.hartwig.hmftools.isofox.fusion.FusionConstants.REALIGN_MIN_SOFT_CLIP_BASE_LENGTH;
+import static com.hartwig.hmftools.isofox.fusion.FusionUtils.aboveJunctionSoftClipThreshold;
+
+import static htsjdk.samtools.CigarOperator.N;
 
 import java.util.List;
 
@@ -15,7 +16,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.isofox.common.Read;
 import com.hartwig.hmftools.isofox.common.TransExonRef;
 
-import htsjdk.samtools.CigarOperator;
+import htsjdk.samtools.CigarElement;
 
 public final class ChimericUtils
 {
@@ -34,12 +35,12 @@ public final class ChimericUtils
                 continue;
 
             if(existingChromosome.equals(""))
-                existingChromosome = read.Chromosome;
-            else if(!existingChromosome.equals(read.Chromosome))
+                existingChromosome = read.chromosome();
+            else if(!existingChromosome.equals(read.chromosome()))
                 return false;
 
-            int scLeft = read.isSoftClipped(SE_START) ? read.leftClipLength() : 0;
-            int scRight = read.isSoftClipped(SE_END) ? read.rightClipLength() : 0;
+            int scLeft = read.isSoftClippedNoRegionMatch(SE_START) ? read.leftClipLength() : 0;
+            int scRight = read.isSoftClippedNoRegionMatch(SE_END) ? read.rightClipLength() : 0;
 
             if(scLeft == 0 && scRight == 0)
                 return false;
@@ -60,38 +61,47 @@ public final class ChimericUtils
         if(!read.containsSplit())
             return null;
 
-        int maxSplitLength = read.cigarElements().stream()
-                .filter(x -> x.getOperator() == CigarOperator.N)
-                .mapToInt(x -> x.getLength()).max().orElse(0);
+        int readPosition = read.alignmentStart();
+        CigarElement maxSplitElement = null;
+        int maxSplitPosStart = 0;
 
-        List<int[]> mappedCoords = read.getMappedRegionCoords();
-        for(int i = 0; i < mappedCoords.size() - 1; ++i)
+        for(int i = 0; i < read.cigarElements().size() - 1; ++i)
         {
-            final int[] lowerCoords = mappedCoords.get(i);
-            final int[] upperCoords = mappedCoords.get(i + 1);
+            CigarElement element = read.cigarElements().get(i);
 
-            if(upperCoords[SE_START] - lowerCoords[SE_END] - 1 == maxSplitLength)
+            if(element.getOperator() == N)
             {
-                return new int[] { lowerCoords[SE_END], upperCoords[SE_START] };
+                if(maxSplitElement == null || element.getLength() > maxSplitElement.getLength())
+                {
+                    maxSplitElement = element;
+                    maxSplitPosStart = readPosition - 1; // last base of the prior aligned section
+                }
             }
+
+            if(element.getOperator().consumesReferenceBases())
+                readPosition += element.getLength();
         }
 
+        if(maxSplitElement != null)
+            return new int[] { maxSplitPosStart, maxSplitPosStart + maxSplitElement.getLength() + 1 };
+
+        // ISF_LOGGER.error("read({}) has split but cannot find split coords", read);
         return null;
     }
 
-    public static boolean hasRealignableSoftClip(final Read read, int se, boolean checkMax)
+    public static boolean hasCandidateJunctionSoftClips(final Read read, int se)
     {
-        if(!read.isSoftClipped(se))
+        if(!read.isSoftClippedNoRegionMatch(se))
             return false;
 
         int scLength = se == SE_START ? read.leftClipLength() : read.rightClipLength();
 
-        return (scLength >= REALIGN_MIN_SOFT_CLIP_BASE_LENGTH && (!checkMax || scLength <= REALIGN_MAX_SOFT_CLIP_BASE_LENGTH));
+        return aboveJunctionSoftClipThreshold(scLength);
     }
 
     public static boolean isRealignedFragmentCandidate(final Read read)
     {
-        return hasRealignableSoftClip(read, SE_START, true) || hasRealignableSoftClip(read, SE_END, true);
+        return hasCandidateJunctionSoftClips(read, SE_START) || hasCandidateJunctionSoftClips(read, SE_END);
     }
 
     public static boolean setHasMultipleKnownSpliceGenes(final List<Read> reads, final List<String[]> knownPairGeneIds)
@@ -118,10 +128,10 @@ public final class ChimericUtils
                 break;
             }
 
-            if(hasRealignableSoftClip(read, SE_START, false))
+            if(hasCandidateJunctionSoftClips(read, SE_START))
                 junctionTransRefs[SE_START].addAll(read.getJunctionMatchingTransRefs(read.getCoordsBoundary(SE_START), false));
 
-            if(hasRealignableSoftClip(read, SE_END, false))
+            if(hasCandidateJunctionSoftClips(read, SE_END))
                 junctionTransRefs[SE_END].addAll(read.getJunctionMatchingTransRefs(read.getCoordsBoundary(SE_END), true));
         }
 

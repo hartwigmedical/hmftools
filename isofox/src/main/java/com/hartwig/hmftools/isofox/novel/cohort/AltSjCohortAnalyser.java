@@ -112,7 +112,7 @@ public class AltSjCohortAnalyser
 
                 ISF_LOGGER.info("cancerType({}) loading alt-SJs for {} samples", cancerType, sampleIds.size());
 
-                for(final String sampleId : sampleIds)
+                for(String sampleId : sampleIds)
                 {
                     final Path altSJFile = filenames.stream().filter(x -> x.toString().contains(sampleId)).findFirst().orElse(null);
 

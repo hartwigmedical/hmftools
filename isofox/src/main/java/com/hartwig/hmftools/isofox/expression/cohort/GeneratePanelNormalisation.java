@@ -136,7 +136,7 @@ public class GeneratePanelNormalisation
             int geneIdIndex = fieldsMap.get(FLD_GENE_ID);
             int tpmIndex = fieldsMap.get(FLD_ADJ_TPM);
 
-            for(final String data : lines)
+            for(String data : lines)
             {
                 String[] values = data.split(fileDelim, -1);
 

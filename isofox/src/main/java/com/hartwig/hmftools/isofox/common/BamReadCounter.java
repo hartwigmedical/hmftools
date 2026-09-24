@@ -28,7 +28,6 @@ import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
-import com.hartwig.hmftools.isofox.WriteType;
 import com.hartwig.hmftools.isofox.results.ResultsWriter;
 
 import htsjdk.samtools.SAMFlag;
@@ -49,7 +48,6 @@ public class BamReadCounter implements Callable<Void>
     private int mTotalReadCount;
     private int mCurrentGeneReadCount;
     private final FragmentTypeCounts mFragmentTypeCounts;
-    private int mSecondaryReads;
     private String mChromosome;
     private final List<GeneData> mGeneDataList;
     private String mCurrentGenes;
@@ -71,7 +69,6 @@ public class BamReadCounter implements Callable<Void>
         mTotalReadCount = 0;
         mCurrentGeneReadCount = 0;
         mCurrentGenes = "";
-        mSecondaryReads = 0;
         mFragmentTypeCounts = new FragmentTypeCounts();
         mMaqQualFrequencies = new int[4];
     }
@@ -135,8 +132,8 @@ public class BamReadCounter implements Callable<Void>
             mBamSlicer.slice(mSamReader, regions, this::processBamRead);
         }
 
-        ISF_LOGGER.info("chromosome({}) processing complete: total({}) duplicates({}) chimeric({}) secondaries({}) mapQuals(0={} 1={} 2={} 3={})",
-                mChromosome, mTotalReadCount, mFragmentTypeCounts.typeCount(DUPLICATE), mFragmentTypeCounts.typeCount(CHIMERIC), mSecondaryReads,
+        ISF_LOGGER.info("chromosome({}) processing complete: total({}) duplicates({}) chimeric({}) mapQuals(0={} 1={} 2={} 3={})",
+                mChromosome, mTotalReadCount, mFragmentTypeCounts.typeCount(DUPLICATE), mFragmentTypeCounts.typeCount(CHIMERIC),
                 mMaqQualFrequencies[0], mMaqQualFrequencies[1], mMaqQualFrequencies[2], mMaqQualFrequencies[3]);
     }
 
@@ -157,9 +154,6 @@ public class BamReadCounter implements Callable<Void>
 
         if((record.getFlags() & SAMFlag.SUPPLEMENTARY_ALIGNMENT.intValue()) != 0)
             mFragmentTypeCounts.addCount(CHIMERIC);
-
-        if(record.isSecondaryAlignment())
-            ++mSecondaryReads;
 
         if(record.getMappingQuality() <= 3)
         {
@@ -184,7 +178,7 @@ public class BamReadCounter implements Callable<Void>
 
             BufferedWriter writer = createBufferedWriter(outputFileName, false);
             writer.write("GeneId,ReadId,Chromosome,PosStart,PosEnd,Cigar,Flags,InsertSize");
-            writer.write(",MateChr,MatePosStart,FirstInPair,ReadReversed,Duplicate,Secondary,Supplementary,SuppData");
+            writer.write(",MateChr,MatePosStart,FirstInPair,ReadReversed,Duplicate,Supplementary,SuppData");
             writer.newLine();
             return writer;
         }
@@ -208,7 +202,7 @@ public class BamReadCounter implements Callable<Void>
 
             writer.write(String.format(",%s,%s,%s,%s,%s,%s",
                     record.getFirstOfPairFlag(), record.getReadNegativeStrandFlag(), record.getDuplicateReadFlag(),
-                    record.getSecondOfPairFlag(), record.getSupplementaryAlignmentFlag(), suppData != null ? suppData.asDelimStr() : "N/A"));
+                    record.getSupplementaryAlignmentFlag(), suppData != null ? suppData.asDelimStr() : "N/A"));
 
             writer.newLine();
         }

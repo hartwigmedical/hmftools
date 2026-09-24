@@ -55,7 +55,7 @@ public class AmberData
             throw new ParseException("Unable to open Amber QC file: " + qcFile);
         }
 
-        PPL_LOGGER.info("reading Amber QC from {}", qcFile);
+        PPL_LOGGER.debug("reading Amber QC from {}", qcFile);
         Contamination = AmberQCFile.read(qcFile).contamination();
 
         String amberFilename = AmberBAFFile.generateAmberFilenameForReading(amberDirectory, sampleId);
@@ -64,7 +64,7 @@ public class AmberData
             throw new ParseException("Unable to open Amber BAF file: " + amberFilename);
         }
 
-        PPL_LOGGER.info("reading Amber BAFs from {}", amberFilename);
+        PPL_LOGGER.debug("reading Amber BAFs from {}", amberFilename);
         ChromosomeBafs = AmberBAFFile.read(amberFilename, !germlineOnlyMode);
 
         if(!germlineOnlyMode)
@@ -76,7 +76,7 @@ public class AmberData
                 throw new ParseException("Unable to open Amber PCF file: " + pcfFilename);
             }
 
-            PPL_LOGGER.info("reading Amber PCFs from {}", pcfFilename);
+            PPL_LOGGER.debug("reading Amber PCFs from {}", pcfFilename);
 
             TumorSegments = PCFFile.readPositions(WINDOW_SIZE, PCFSource.TUMOR_BAF, pcfFilename);
         }

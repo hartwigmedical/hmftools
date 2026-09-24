@@ -50,7 +50,6 @@ public final class RnaStatisticFile
         FragLength5th,
         FragLength50th,
         FragLength95th,
-        EnrichedGenePercent,
         MedianGCRatio,
         ForwardStrandPercent;
     }
@@ -84,7 +83,6 @@ public final class RnaStatisticFile
         sj.add(String.format("%.0f", statistics.fragmentLength5thPercent()));
         sj.add(String.format("%.0f", statistics.fragmentLength50thPercent()));
         sj.add(String.format("%.0f", statistics.fragmentLength95thPercent()));
-        sj.add(String.format("%.3f", statistics.enrichedGenePercent()));
         sj.add(String.format("%.3f", statistics.medianGCRatio()));
         sj.add(String.format("%.3f", statistics.forwardStrandPercent()));
         return sj.toString();
@@ -128,7 +126,6 @@ public final class RnaStatisticFile
                 .fragmentLength5thPercent(getDoubleValue(fieldsIndexMap, Column.FragLength5th.toString(), values))
                 .fragmentLength50thPercent(getDoubleValue(fieldsIndexMap, Column.FragLength50th.toString(), values))
                 .fragmentLength95thPercent(getDoubleValue(fieldsIndexMap, Column.FragLength95th.toString(), values))
-                .enrichedGenePercent(getDoubleValue(fieldsIndexMap, Column.EnrichedGenePercent.toString(), values))
                 .medianGCRatio(getDoubleValue(fieldsIndexMap, Column.MedianGCRatio.toString(), values))
                 .forwardStrandPercent(getDoubleValue(fieldsIndexMap, Column.ForwardStrandPercent.toString(), values))
                 .build();

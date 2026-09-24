@@ -2,6 +2,8 @@ package com.hartwig.hmftools.neo.utils;
 
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeVersion;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.from;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDir;
@@ -41,7 +43,9 @@ public class GenerateAminoAcidFrequency
         {
             mTransAminoAcidMap = Maps.newHashMap();
             String ensemblDataDir = configBuilder.getValue(ENSEMBL_DATA_DIR);
-            EnsemblDataLoader.loadTranscriptAminoAcidData(ensemblDataDir, mTransAminoAcidMap, Lists.newArrayList(), true);
+
+            EnsemblDataLoader.loadTranscriptAminoAcidData(
+                    ensemblDataDir, from(configBuilder), mTransAminoAcidMap, Lists.newArrayList(), true);
         }
         else
         {
@@ -94,6 +98,7 @@ public class GenerateAminoAcidFrequency
     {
         ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
         addEnsemblDir(configBuilder);
+        addRefGenomeVersion(configBuilder);
         configBuilder.addPath(AMINO_ACID_FREQ_FILE, true, "Output filename");
         addLoggingOptions(configBuilder);
         addOutputDir(configBuilder);

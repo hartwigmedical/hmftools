@@ -72,24 +72,24 @@ public class LinkedPair
         return newPair;
     }
 
-    public final SvVarData first() { return mFirstBreakend.getSV(); }
-    public final SvVarData second() { return mSecondBreakend.getSV(); }
+    public SvVarData first() { return mFirstBreakend.getSV(); }
+    public SvVarData second() { return mSecondBreakend.getSV(); }
 
     public boolean firstLinkOnStart() { return mFirstBreakend.usesStart(); }
     public boolean secondLinkOnStart() { return mSecondBreakend.usesStart(); }
     public boolean firstUnlinkedOnStart() { return !mFirstBreakend.usesStart(); }
     public boolean secondUnlinkedOnStart() { return !mSecondBreakend.usesStart(); }
 
-    public final SvBreakend getBreakend(int se) { return getBreakend(isStart(se)); }
+    public SvBreakend getBreakend(int se) { return getBreakend(isStart(se)); }
 
-    public final SvBreakend getBreakend(boolean isStart)
+    public SvBreakend getBreakend(boolean isStart)
     {
         // finds the earlier breakend of the 2, ie with the lower position
         // unless explicitly linked on a SGL mapping, INFs and SGLs return their only breakend (ie the first)
-        final SvBreakend beFirst = mFirstBreakend.getSV().isSglBreakend() && mFirstBreakend.usesStart() ?
+        SvBreakend beFirst = mFirstBreakend.getSV().isSglBreakend() && mFirstBreakend.usesStart() ?
                 mFirstBreakend.getSV().getBreakend(true) : mFirstBreakend;
 
-        final SvBreakend beSecond = mSecondBreakend.getSV().isSglBreakend() && mSecondBreakend.usesStart() ?
+        SvBreakend beSecond = mSecondBreakend.getSV().isSglBreakend() && mSecondBreakend.usesStart() ?
                 mSecondBreakend.getSV().getBreakend(true) : mSecondBreakend;
 
         if(isStart)
@@ -98,13 +98,13 @@ public class LinkedPair
             return beFirst.position() > beSecond.position() ? beFirst : beSecond;
     }
 
-    public final SvBreakend firstBreakend() { return mFirstBreakend; }
-    public final SvBreakend secondBreakend() { return mSecondBreakend; }
+    public SvBreakend firstBreakend() { return mFirstBreakend; }
+    public SvBreakend secondBreakend() { return mSecondBreakend; }
 
-    public final String chromosome() { return mFirstBreakend.chromosome(); }
+    public String chromosome() { return mFirstBreakend.chromosome(); }
 
-    public final int positionDistance() { return mLinkLength; }
-    public final int baseLength() { return mLinkLength + 1; }
+    public int positionDistance() { return mLinkLength; }
+    public int baseLength() { return mLinkLength + 1; }
 
     public void setIsAssembled() { mIsInferred = false; }
     public boolean isInferred() { return mIsInferred; }
@@ -129,7 +129,7 @@ public class LinkedPair
     public int getNextClusteredSvDistance() { return mNextClusteredSvDistance; }
 
     public void setLocationType(final String type) { mLocationType = type; }
-    public final String locationType() { return mLocationType; }
+    public String locationType() { return mLocationType; }
 
     public void setOverlapCount(int count) { mOverlapCount = count; }
     public int overlapCount() { return mOverlapCount; }
@@ -141,7 +141,7 @@ public class LinkedPair
     public int getTraversedSVCount() { return mTraversedSVCount; }
 
     public void setExonMatchData(final String data) { mExonMatchData = data; }
-    public final String getExonMatchData() { return mExonMatchData; }
+    public String getExonMatchData() { return mExonMatchData; }
 
     public boolean hasBreakend(final SvVarData var, boolean useStart)
     {
@@ -162,12 +162,12 @@ public class LinkedPair
 
     public void switchSVs()
     {
-        final SvBreakend tmp = mSecondBreakend;
+        SvBreakend tmp = mSecondBreakend;
         mSecondBreakend = mFirstBreakend;
         mFirstBreakend = tmp;
     }
 
-    public final String toString()
+    public String toString()
     {
         return String.format("%s %s:%d:%s & %s %s:%d:%s",
                 mFirstBreakend.getSV().id(), mFirstBreakend.chromosome(), mFirstBreakend.position(),
@@ -223,11 +223,11 @@ public class LinkedPair
         return false;
     }
 
-    public final SvVarData getOtherSV(final SvVarData var) { return mFirstBreakend.getSV() == var ? mSecondBreakend.getSV() : mFirstBreakend.getSV(); }
+    public SvVarData getOtherSV(final SvVarData var) { return mFirstBreakend.getSV() == var ? mSecondBreakend.getSV() : mFirstBreakend.getSV(); }
 
-    public final SvBreakend getOtherBreakend(final SvBreakend breakend)
+    public SvBreakend getOtherBreakend(final SvBreakend breakend)
     {
-        final SvBreakend lower = getBreakend(true);
+        SvBreakend lower = getBreakend(true);
         return breakend == lower ? getBreakend(false) : lower;
     }
 

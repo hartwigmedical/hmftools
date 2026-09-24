@@ -21,12 +21,12 @@ public class FragmentTracker
 
     public Read checkRead(final Read read)
     {
-        Read otherRead = (Read)mReadMap.remove(read.Id);
+        Read otherRead = (Read)mReadMap.remove(read.id());
 
         if(otherRead != null)
             return otherRead;
 
-        mReadMap.put(read.Id, read);
+        mReadMap.put(read.id(), read);
         return null;
     }
 

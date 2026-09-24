@@ -29,6 +29,7 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.neo.NeoEpitopeFile;
 import com.hartwig.hmftools.common.neo.NeoEpitopeType;
+import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.isofox.common.Read;
 import com.hartwig.hmftools.isofox.neo.NeoEpitopeData;
 import com.hartwig.hmftools.isofox.neo.NeoFragmentSupport;
@@ -73,7 +74,7 @@ public class NeoEpitopesTest
     public void testCoordsOverlap()
     {
 
-        int[] range1 = new int[] {10, 20};
+        BaseRegion range1 = new BaseRegion(10, 20);
         int[] range2 = new int[] {30, 40};
         assertEquals(0, calcBaseOverlap(range1, range2));
 
@@ -86,15 +87,21 @@ public class NeoEpitopesTest
         range2 = new int[] {5, 25};
         assertEquals(11, calcBaseOverlap(range1, range2));
 
-        List<int[]> coords1 = Lists.newArrayList();
-        coords1.add(new int[] {10, 20});
-        coords1.add(new int[] {30, 40});
-        coords1.add(new int[] {50, 60});
-        coords1.add(new int[] {70, 80});
-
-        assertEquals(44, calcCoordinatesOverlap(coords1, coords1));
+        List<BaseRegion> coords1 = Lists.newArrayList();
+        coords1.add(new BaseRegion(10, 20));
+        coords1.add(new BaseRegion(30, 40));
+        coords1.add(new BaseRegion(50, 60));
+        coords1.add(new BaseRegion(70, 80));
 
         List<int[]> coords2 = Lists.newArrayList();
+        coords2.add(new int[] {10, 20});
+        coords2.add(new int[] {30, 40});
+        coords2.add(new int[] {50, 60});
+        coords2.add(new int[] {70, 80});
+
+        assertEquals(44, calcCoordinatesOverlap(coords1, coords2));
+
+        coords2 = Lists.newArrayList();
         coords2.add(new int[] {0, 10});
         coords2.add(new int[] {21, 30});
         coords2.add(new int[] {41, 50});

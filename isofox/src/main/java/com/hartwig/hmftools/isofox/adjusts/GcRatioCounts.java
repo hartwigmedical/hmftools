@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.util.List;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
 
 public class GcRatioCounts
@@ -55,9 +56,9 @@ public class GcRatioCounts
     public static int calcGcCount(final String bases)
     {
         int gcCount = 0;
-        for (int i = 0; i < bases.length(); ++i)
+        for(int i = 0; i < bases.length(); ++i)
         {
-            if (isGC(bases.charAt(i)))
+            if(isGC(bases.charAt(i)))
                 ++gcCount;
         }
 
@@ -157,13 +158,13 @@ public class GcRatioCounts
     }
 
     public static double calcGcRatioFromReadRegions(
-            final RefGenomeInterface refGenome, final String chromosome, final List<int[]> readRegions)
+            final RefGenomeInterface refGenome, final String chromosome, final List<BaseRegion> readRegions)
     {
         double gcRatioTotal = 0;
         int basesTotal = 0;
-        for(final int[] region : readRegions)
+        for(BaseRegion region : readRegions)
         {
-            final String bases = refGenome.getBaseString(chromosome, region[SE_START], region[SE_END]);
+            final String bases = refGenome.getBaseString(chromosome, region.start(), region.end());
             basesTotal += bases.length();
             gcRatioTotal += calcGcRatio(bases) * bases.length();
         }

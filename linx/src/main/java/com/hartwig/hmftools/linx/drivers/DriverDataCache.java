@@ -59,9 +59,9 @@ public class DriverDataCache
         mIsMale = false;
     }
 
-    public final List<DriverCatalog> getDriverCatalog() { return mDriverCatalog; }
-    public final List<DriverGeneData> getDriverGeneDataList() { return mDriverGeneDataList; }
-    public final List<GeneCopyNumber> getGeneCopyNumberData() { return mGeneCopyNumberData; }
+    public List<DriverCatalog> getDriverCatalog() { return mDriverCatalog; }
+    public List<DriverGeneData> getDriverGeneDataList() { return mDriverGeneDataList; }
+    public List<GeneCopyNumber> getGeneCopyNumberData() { return mGeneCopyNumberData; }
 
     public String sampleId() { return mSampleId; }
     public double samplePloidy() { return mSamplePloidy; }
@@ -161,7 +161,7 @@ public class DriverDataCache
         return dgData;
     }
 
-    public final GeneCopyNumber findGeneCopyNumber(final String geneName)
+    public GeneCopyNumber findGeneCopyNumber(final String geneName)
     {
         for(GeneCopyNumber geneCN : mGeneCopyNumberData)
         {

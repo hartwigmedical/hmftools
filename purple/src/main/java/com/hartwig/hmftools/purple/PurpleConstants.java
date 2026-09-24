@@ -67,6 +67,32 @@ public class PurpleConstants
     public static double AMBIGUOUS_BAF_THRESHOLD = DEFAULT_AMBIGUOUS_BAF_THRESHOLD;
     public static final double DEFAULT_SIGNIFICANT_ANEUPLOIDY_BAF_THRESHOLD = 0.6;
 
+    // resegmentation
+    public static final double RESEG_RATIO_BUCKET_MIN = 0;
+    public static final double RESEG_RATIO_BUCKET_MAX = 3;
+    public static final double RESEG_RATIO_BUCKET_STEP = 0.01;
+    public static final int RESEG_ROLLING_AVG_WINDOW = 5;
+
+    public static final double RESEG_TROUGH_MIN_DIFF = 5;
+    public static final double RESEG_TROUGH_MIN_RATIO = 1.2;
+    public static final double RESEG_TROUGH_MIN_GAP = 0.1;
+    public static final double RESEG_MAX_SEGMENTATION_PENALTY_RATIO = 0.35;
+
+    public static final double RESEG_PEAK_MIN_RATIO = 1.25;
+    public static final double RESEG_PEAK_MIN_GAP = 0.1;
+    public static final double RESEG_PEAK_MIN_PROPORTION = 0.002;
+    public static final int RESEG_MAX_PEAKS = 5;
+
+    public static final double RESEG_GC_BIN_MIN = 0.33;
+    public static final double RESEG_GC_BIN_MAX = 0.57;
+    public static final double RESEG_GC_BIN_WIDTH = 0.02;
+    public static final double[] RESEG_GC_PERCENTILES = { 0.1, 0.3, 0.5, 0.7, 0.9 };
+    public static final double RESEG_GC_SPARSE_MIN_JUMP = 0.05;
+    public static final double RESEG_GC_SPARSE_MAX_PROPORTION = 0.01;
+
+    public static final int RESEG_MAX_SUPERSEGMENT_SIZE_FOR_BRUTE_FORCE = 10;
+    public static final int RESEG_BAF_WEIGHT_THRESHOLD = 50;
+
     // somatic fitting
     public static final double SNV_HOTSPOT_VAF_PROBABILITY = 0.01;
     public static final int SNV_HOTSPOT_MAX_SNV_COUNT = 2000;

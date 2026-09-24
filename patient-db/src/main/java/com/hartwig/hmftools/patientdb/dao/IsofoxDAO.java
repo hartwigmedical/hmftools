@@ -17,9 +17,9 @@ import com.hartwig.hmftools.common.rna.NovelSpliceJunction;
 import com.hartwig.hmftools.common.rna.RnaFusion;
 import com.hartwig.hmftools.common.rna.RnaStatistics;
 
-import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 import org.jooq.InsertValuesStep10;
+import org.jooq.InsertValuesStep14;
 import org.jooq.InsertValuesStep15;
 import org.jooq.InsertValuesStep20;
 
@@ -47,7 +47,7 @@ public class IsofoxDAO
 
         Timestamp timestamp = new Timestamp(new Date().getTime());
 
-        InsertValuesStep15 inserter = context.insertInto(RNASTATISTICS,
+        InsertValuesStep14 inserter = context.insertInto(RNASTATISTICS,
                 RNASTATISTICS.MODIFIED,
                 RNASTATISTICS.SAMPLEID,
                 RNASTATISTICS.QCSTATUS,
@@ -61,7 +61,6 @@ public class IsofoxDAO
                 RNASTATISTICS.FRAGMENTLENGTHPCT05,
                 RNASTATISTICS.FRAGMENTLENGTHPCT50,
                 RNASTATISTICS.FRAGMENTLENGTHPCT95,
-                RNASTATISTICS.ENRICHEDGENEPERCENT,
                 RNASTATISTICS.MEDIANGCRATIO);
 
         inserter.values(
@@ -78,7 +77,6 @@ public class IsofoxDAO
                 DatabaseUtil.decimal(statistics.fragmentLength5thPercent()),
                 DatabaseUtil.decimal(statistics.fragmentLength50thPercent()),
                 DatabaseUtil.decimal(statistics.fragmentLength95thPercent()),
-                DatabaseUtil.decimal(statistics.enrichedGenePercent()),
                 DatabaseUtil.decimal(statistics.medianGCRatio()));
         inserter.execute();
     }

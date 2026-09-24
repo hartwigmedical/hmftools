@@ -24,10 +24,8 @@ import java.util.stream.Collectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
-import com.hartwig.hmftools.isofox.IsofoxConfig;
 
 public class GeneCollection
 {
@@ -44,9 +42,6 @@ public class GeneCollection
     private final List<RegionReadData> mExonRegions; // set of unique exons ie with differing start and end positions
     private final List<int[]> mCommonExonicRegions; // merge any overlapping exons, to form a set of exonic regions for the gene
     private final List<TranscriptData> mTranscripts;
-
-    private List<TranscriptData> mEnrichedTranscripts;
-    private int[] mEnrichedRegion; // special regions of high read density
 
     // summary results
     private final Map<Integer,int[][]> mTranscriptReadCounts; // count of fragments support types for each transcript, and whether unique
@@ -76,9 +71,6 @@ public class GeneCollection
 
         mTranscriptReadCounts = Maps.newHashMap();
         mFragmentCounts = new FragmentTypeCounts();
-
-        mEnrichedTranscripts = null;
-        mEnrichedRegion = null;
     }
 
     public int id() { return mId; }
@@ -99,7 +91,7 @@ public class GeneCollection
 
     public int getStrand(int transId)
     {
-        final GeneReadData gene = mTransIdsGeneMap.get(transId);
+        GeneReadData gene = mTransIdsGeneMap.get(transId);
         return gene != null ? gene.Gene.Strand : 0;
     }
 
@@ -125,64 +117,9 @@ public class GeneCollection
         return geneNames.toString();
     }
 
-    public boolean containsEnrichedRegion() { return mEnrichedRegion != null; }
-    public List<TranscriptData> getEnrichedTranscripts() { return mEnrichedTranscripts; }
-    public int[] getEnrichedRegion() { return mEnrichedRegion; }
-
-    public boolean inEnrichedRegion(int posStart, int posEnd)
-    {
-        if(mEnrichedRegion == null)
-            return false;
-
-        return positionsOverlap(posStart, posEnd, mEnrichedRegion[SE_START], mEnrichedRegion[SE_END]);
-    }
-
-    public void markEnrichedAndExcludedGenes(final IsofoxConfig config, final EnsemblDataCache geneTransCache)
-    {
-        if(config.Filters.EnrichedGeneIds.isEmpty())
-            return;
-
-        for(GeneReadData geneReadData : mGenes)
-        {
-            if(config.Filters.EnrichedGeneIds.contains(geneReadData.Gene.GeneId))
-            {
-                mEnrichedTranscripts = Lists.newArrayList(geneTransCache.getTranscripts(geneReadData.Gene.GeneId));
-                mEnrichedRegion = new int[SE_PAIR];
-
-                for(TranscriptData transData : mEnrichedTranscripts)
-                {
-                    for(ExonData exonData : transData.exons())
-                    {
-                        mEnrichedRegion[SE_START] = mEnrichedRegion[SE_START] > 0
-                                ? min(mEnrichedRegion[SE_START], exonData.Start) : exonData.Start;
-
-                        mEnrichedRegion[SE_END] = max(mEnrichedRegion[SE_END], exonData.End);
-                    }
-                }
-            }
-        }
-    }
-
-    public void setEnrichedTranscripts(final List<TranscriptData> transDataList)
-    {
-        mEnrichedTranscripts = Lists.newArrayList(transDataList);
-        mEnrichedRegion = new int[SE_PAIR];
-
-        for(TranscriptData transData : mEnrichedTranscripts)
-        {
-            for(ExonData exonData : transData.exons())
-            {
-                mEnrichedRegion[SE_START] = mEnrichedRegion[SE_START] > 0
-                        ? min(mEnrichedRegion[SE_START], exonData.Start) : exonData.Start;
-
-                mEnrichedRegion[SE_END] = max(mEnrichedRegion[SE_END], exonData.End);
-            }
-        }
-    }
-
     public void setReadGeneCollections(final Read read, final int[] nonGenicBounds)
     {
-        if(positionsWithin(read.PosStart, read.PosEnd, mRegionBounds[SE_START], mRegionBounds[SE_END]))
+        if(positionsWithin(read.alignmentStart(), read.alignmentEnd(), mRegionBounds[SE_START], mRegionBounds[SE_END]))
         {
             read.setGeneCollection(SE_START, mId, true);
             read.setGeneCollection(SE_END, mId, true);
@@ -190,10 +127,9 @@ public class GeneCollection
         else
         {
             // mark any read extending beyond this gene collection's bounds in part or full
-            for (int se = SE_START; se <= SE_END; ++se)
+            for(int se = SE_START; se <= SE_END; ++se)
             {
-                if(positionWithin(
-                        read.getCoordsBoundary(se), mRegionBounds[SE_START], mRegionBounds[SE_END]))
+                if(positionWithin(read.getCoordsBoundary(se), mRegionBounds[SE_START], mRegionBounds[SE_END]))
                 {
                     read.setGeneCollection(se, mId, true);
                 }
@@ -209,9 +145,9 @@ public class GeneCollection
 
     private void buildCache()
     {
-        for(final GeneReadData gene : mGenes)
+        for(GeneReadData gene : mGenes)
         {
-            for(final TranscriptData transData : gene.getTranscripts())
+            for(TranscriptData transData : gene.getTranscripts())
             {
                 mTransIdsGeneMap.put(transData.TransId, gene);
                 mTranscripts.add(transData);
@@ -223,12 +159,12 @@ public class GeneCollection
             generateExonicRegions(gene.Gene.GeneId, mChromosome, mExonRegions, gene.getTranscripts());
 
             // cache the relevant set of exon regions back into the gene for convenience
-            for(final TranscriptData transData : gene.getTranscripts())
+            for(TranscriptData transData : gene.getTranscripts())
             {
-                for (final ExonData exon : transData.exons())
+                for(ExonData exon : transData.exons())
                 {
-                    final RegionReadData exonReadData = findExonRegion(mExonRegions, exon.Start, exon.End);
-                    if (exonReadData == null)
+                    RegionReadData exonReadData = findExonRegion(mExonRegions, exon.Start, exon.End);
+                    if(exonReadData == null)
                     {
                         ISF_LOGGER.error("genes({}) failed to create exonic regions", geneNames());
                         return;

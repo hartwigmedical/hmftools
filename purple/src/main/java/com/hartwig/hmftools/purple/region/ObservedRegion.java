@@ -141,6 +141,7 @@ public class ObservedRegion implements FittingRegion
     public void setObservedNormalRatio(double ratio) { mObservedNormalRatio = ratio; }
 
     public double unnormalisedObservedNormalRatio() { return mUnnormalisedObservedNormalRatio; }
+    public void setUnnormalisedObservedNormalRatio(double ratio) { mUnnormalisedObservedNormalRatio = ratio; }
 
     public GermlineStatus germlineStatus() { return mGermlineStatus; }
     public void setGermlineStatus(final GermlineStatus status)
@@ -221,5 +222,15 @@ public class ObservedRegion implements FittingRegion
                 segment.MinorAlleleCopyNumberDeviation, segment.MajorAlleleCopyNumberDeviation, segment.DeviationPenalty,
                 segment.EventPenalty, segment.RefNormalisedCopyNumber, segment.TumorCopyNumber, segment.TumorBAF,
                 segment.FittedTumorCopyNumber, segment.FittedBAF);
+    }
+
+    public static ObservedRegion fromOther(final ObservedRegion other)
+    {
+        return new ObservedRegion(
+                other.chromosome(), other.start(), other.end(), other.ratioSupport(), other.support(), other.bafCount(), other.observedBAF(),
+                other.depthWindowCount(), other.observedTumorRatio(), other.observedNormalRatio(), other.unnormalisedObservedNormalRatio(),
+                other.germlineStatus(), other.svCluster(), other.gcContent(), other.minStart(), other.maxStart(),
+                other.minorAlleleCopyNumberDeviation(), other.majorAlleleCopyNumberDeviation(), other.deviationPenalty(), other.eventPenalty(),
+                other.refNormalisedCopyNumber(), other.tumorCopyNumber(), other.tumorBAF(), other.fittedTumorCopyNumber(), other.fittedBAF());
     }
 }

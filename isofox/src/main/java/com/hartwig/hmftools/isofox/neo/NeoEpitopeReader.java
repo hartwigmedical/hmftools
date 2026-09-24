@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.SINGLE_MAP_QUALITY;
 import static com.hartwig.hmftools.isofox.common.GeneReadData.createGeneReadData;
 import static com.hartwig.hmftools.isofox.common.Read.findOverlappingRegions;
+import static com.hartwig.hmftools.isofox.common.ReadTranscriptUtils.processOverlappingRegions;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.validExonMatch;
 import static com.hartwig.hmftools.isofox.neo.NeoFragmentMatcher.checkBaseCoverage;
 import static com.hartwig.hmftools.isofox.neo.NeoFragmentMatcher.findFusionSupport;
@@ -116,7 +117,7 @@ public class NeoEpitopeReader
 
     public void calcFragmentSupport()
     {
-        for(final NeoEpitopeData neData : mNeoEpitopes)
+        for(NeoEpitopeData neData : mNeoEpitopes)
         {
             clearCache();
 
@@ -176,17 +177,17 @@ public class NeoEpitopeReader
 
     private void processSamRecord(final SAMRecord record)
     {
-        final Read read = Read.from(record);
+        Read read = new Read(record);
 
-        read.processOverlappingRegions(findOverlappingRegions(mCurrentGenes.getExonRegions(), read));
+        processOverlappingRegions(read, findOverlappingRegions(mCurrentGenes.getExonRegions(), read));
         mCurrentGenes.setReadGeneCollections(read, mCurrentGenes.regionBounds());
 
         // only handle complete groups
-        ChimericReadGroup readGroup = mReadGroups.get(read.Id);
+        ChimericReadGroup readGroup = mReadGroups.get(read.id());
 
         if(readGroup == null)
         {
-            mReadGroups.put(read.Id, new ChimericReadGroup(read));
+            mReadGroups.put(read.id(), new ChimericReadGroup(read));
             return;
         }
 
@@ -195,7 +196,7 @@ public class NeoEpitopeReader
         if(readGroup.isComplete())
         {
             processFragmentReads(readGroup);
-            mReadGroups.remove(read.Id);
+            mReadGroups.remove(read.id());
         }
     }
 
@@ -281,12 +282,12 @@ public class NeoEpitopeReader
 
             for(Read read : readGroup.reads())
             {
-                if(!read.Chromosome.equals(mCurrentNeoData.Chromosomes[fs]))
+                if(!read.chromosome().equals(mCurrentNeoData.Chromosomes[fs]))
                     continue;
 
                 // check that this read covers some part of the neo section
-                if(read.getMappedRegionCoords(false).stream()
-                        .noneMatch(x -> positionsOverlap(codingBaseRange[SE_START], codingBaseRange[SE_END], x[SE_START], x[SE_END])))
+                if(read.getMappedRegionCoordsWithoutInferred().stream()
+                        .noneMatch(x -> positionsOverlap(codingBaseRange[SE_START], codingBaseRange[SE_END], x.start(), x.end())))
                 {
                     continue;
                 }

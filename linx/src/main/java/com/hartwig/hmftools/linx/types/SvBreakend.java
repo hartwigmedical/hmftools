@@ -50,19 +50,19 @@ public class SvBreakend {
         mOrientation = mapping.Orientation;
     }
 
-    public final SvVarData getSV() { return mSV; }
-    public final SvCluster getCluster() { return mSV.getCluster(); }
+    public SvVarData getSV() { return mSV; }
+    public SvCluster getCluster() { return mSV.getCluster(); }
 
-    public final String chromosome() { return mChromosome; }
-    public final Arm arm() { return mArm; }
-    public final String getChrArm() { return mChrArm; }
+    public String chromosome() { return mChromosome; }
+    public Arm arm() { return mArm; }
+    public String getChrArm() { return mChrArm; }
 
-    public final int position() { return mPosition; }
-    public final byte orientation() { return mOrientation; }
+    public int position() { return mPosition; }
+    public byte orientation() { return mOrientation; }
     public boolean usesStart() { return mUsesStart; }
     public StructuralVariantType type() { return mSV.type(); }
 
-    public final SvBreakend getOtherBreakend() { return mSV.getBreakend(!mUsesStart); }
+    public SvBreakend getOtherBreakend() { return mSV.getBreakend(!mUsesStart); }
 
     public void setChrPosIndex(int index) { mChrPosIndex = index; }
     public int getChrPosIndex() { return mChrPosIndex; }
@@ -70,12 +70,12 @@ public class SvBreakend {
     public void setClusterChrPosIndex(int index) { mClusterChrPosIndex = index; }
     public int getClusterChrPosIndex() { return mClusterChrPosIndex; }
 
-    public static final String DIRECTION_CENTROMERE = "C";
-    public static final String DIRECTION_TELOMERE = "T";
+    public static String DIRECTION_CENTROMERE = "C";
+    public static String DIRECTION_TELOMERE = "T";
 
     public String direction() { return (mOrientation == 1) == (mArm == P) ? DIRECTION_TELOMERE : DIRECTION_CENTROMERE; }
 
-    public final String toString()
+    public String toString()
     {
         return String.format("%s: %s %s:%d:%d", mSV.id(), mUsesStart ? "start" :"end", mChromosome, mPosition, mOrientation);
     }
@@ -145,14 +145,14 @@ public class SvBreakend {
         return mSV.hasAssemblyLink(mUsesStart);
     }
 
-    public final DbPair getDBLink() { return mSV.getDBLink(mUsesStart); }
-    public final List<LinkedPair> getLinkedPairs() { return mSV.getLinkedPairs(mUsesStart); }
+    public DbPair getDBLink() { return mSV.getDBLink(mUsesStart); }
+    public List<LinkedPair> getLinkedPairs() { return mSV.getLinkedPairs(mUsesStart); }
 
     public boolean isFoldback()
     {
         return mSV.getFoldbackBreakend(mUsesStart) != null;
     }
-    public final SvBreakend getFoldbackBreakend() { return mSV.getFoldbackBreakend(mUsesStart); }
+    public SvBreakend getFoldbackBreakend() { return mSV.getFoldbackBreakend(mUsesStart); }
 
     public boolean inLineElement()
     {
