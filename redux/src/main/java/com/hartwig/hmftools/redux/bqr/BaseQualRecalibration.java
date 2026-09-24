@@ -73,8 +73,11 @@ public class BaseQualRecalibration
             {
                 totalBamSize += Files.size(Paths.get(bamFile));
             }
-            catch(IOException e) {}
-
+            catch(IOException e)
+            {
+                RD_LOGGER.error("unable to determine BAM file({}) size", bamFile);
+                System.exit(1);
+            }
         }
 
         return totalBamSize > BQR_WGS_BAM_SIZE_ESTIMATE;
