@@ -24,12 +24,12 @@ public class ExpressionData
 
     public final int SplicedFragments;
     public final int UnsplicedFragments;
-    public final double LowMapQualFrags;
+    public final double MultiMappedFragments;
 
     public ExpressionData(
             final String source, final String geneId, final String geneName, final String transName,
             double fittedFrags, double rawFrags, int readCount, double tpm, int effectiveLength,
-            int splicedFragments, int unsplicedFragments, double lowMapQualFrags)
+            int splicedFragments, int unsplicedFragments, double multiMappedFragments)
     {
         Source = source;
         GeneId = geneId;
@@ -38,7 +38,7 @@ public class ExpressionData
         EffectiveLength = effectiveLength;
         SplicedFragments = splicedFragments;
         UnsplicedFragments = unsplicedFragments;
-        LowMapQualFrags = lowMapQualFrags;
+        MultiMappedFragments = multiMappedFragments;
 
         mFittedFragmentCount = fittedFrags;
         mRawFragmentCount = rawFrags;

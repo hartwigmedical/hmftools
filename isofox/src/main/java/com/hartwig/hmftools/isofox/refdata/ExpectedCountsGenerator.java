@@ -2,16 +2,15 @@ package com.hartwig.hmftools.isofox.refdata;
 
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsWithin;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.isofox.FragmentAllocator.calcFragmentLength;
 import static com.hartwig.hmftools.isofox.common.FragmentMatchType.LONG;
 import static com.hartwig.hmftools.isofox.common.FragmentMatchType.SHORT;
 import static com.hartwig.hmftools.isofox.common.FragmentMatchType.SPLICED;
 import static com.hartwig.hmftools.isofox.common.FragmentMatchType.UNSPLICED;
+import static com.hartwig.hmftools.isofox.common.ReadTranscriptUtils.calcFragmentLength;
 import static com.hartwig.hmftools.isofox.expression.ExpectedRatesCommon.formTranscriptDefinitions;
 import static com.hartwig.hmftools.isofox.refdata.RefDataWriter.writeExpectedCounts;
 

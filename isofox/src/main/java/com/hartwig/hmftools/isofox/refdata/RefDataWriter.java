@@ -83,7 +83,7 @@ public class RefDataWriter
 
                 writer.write(String.format("%s,%s,%.0f", collectionId, tcData.combinedKey(), lengthCounts[0]));
 
-                for (int i = 1; i < lengthCounts.length; ++i)
+                for(int i = 1; i < lengthCounts.length; ++i)
                 {
                     writer.write(String.format(",%.0f", lengthCounts[i]));
                 }

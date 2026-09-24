@@ -72,14 +72,6 @@ public class ChrExpectedCountsTask implements Callable<Void>
 
             GeneCollection geneCollection = new GeneCollection(mCollectionId++, geneReadDataList);
 
-            for(GeneReadData geneReadData : geneReadDataList)
-            {
-                if(mConfig.EnrichedGeneIds.contains(geneReadData.Gene.GeneId))
-                {
-                    geneCollection.setEnrichedTranscripts(mGeneTransCache.getTranscripts(geneReadData.Gene.GeneId));
-                }
-            }
-
             mExpRatesGenerator.generateExpectedRates(geneCollection);
 
             ISF_LOGGER.trace("chr({}) gene({}) processed({} of {})",

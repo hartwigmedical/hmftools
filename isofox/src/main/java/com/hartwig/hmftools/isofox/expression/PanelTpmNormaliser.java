@@ -79,7 +79,7 @@ public class PanelTpmNormaliser
             int geneIdIndex = fieldsMap.get(FLD_GENE_ID);
             int adjustIndex = fieldsMap.get(FLD_TPM_ADJUST_FACTOR);
 
-            for(final String data : lines)
+            for(String data : lines)
             {
                 String[] values = data.split(fileDelim);
 

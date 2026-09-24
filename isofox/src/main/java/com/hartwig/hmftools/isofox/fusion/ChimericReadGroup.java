@@ -15,7 +15,7 @@ public class ChimericReadGroup
     {
         mReads = Lists.newArrayListWithCapacity(2);
         mReads.add(read);
-        mComplete = readGroupComplete(mReads);
+        mComplete = readGroupComplete();
     }
 
     public ChimericReadGroup(final Read read1, final Read read2)
@@ -23,10 +23,10 @@ public class ChimericReadGroup
         mReads = Lists.newArrayListWithCapacity(2);
         mReads.add(read1);
         mReads.add(read2);
-        mComplete = readGroupComplete(mReads);
+        mComplete = readGroupComplete();
     }
 
-    public final String id() { return mReads.get(0).Id; }
+    public final String id() { return mReads.get(0).id(); }
 
     public int size() { return mReads.size(); }
 
@@ -37,7 +37,7 @@ public class ChimericReadGroup
     public void addRead(final Read read)
     {
         mReads.add(read);
-        mComplete = readGroupComplete(mReads);
+        mComplete = readGroupComplete();
     }
 
     public boolean hasSuppAlignment() { return mReads.stream().anyMatch(x -> x.hasSuppAlignment()); }
@@ -47,14 +47,14 @@ public class ChimericReadGroup
         return String.format("%s reads(%d) complete(%s)", id(), mReads.size(), isComplete());
     }
 
-    public static boolean readGroupComplete(final List<Read> reads)
+    private boolean readGroupComplete()
     {
         int suppCount = 0;
         int nonSuppCount = 0;
         int expectedSuppCount = 0;
         int expectedNonSuppCount = 1;
 
-        for(Read read : reads)
+        for(Read read : mReads)
         {
             if(read.isReadPaired() && !read.isMateUnmapped())
             {

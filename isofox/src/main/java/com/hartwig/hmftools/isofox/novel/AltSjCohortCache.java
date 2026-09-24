@@ -66,7 +66,7 @@ public class AltSjCohortCache
                 String[] values = line.split(fileDelim, -1);
 
                 int sampleCount = Integer.parseInt(values[sampleCountIndex]);
-                final String asjKey = formKey(values[chrIndex], Integer.parseInt(values[posStartIndex]), Integer.parseInt(values[posEndIndex]));
+                String asjKey = formKey(values[chrIndex], Integer.parseInt(values[posStartIndex]), Integer.parseInt(values[posEndIndex]));
 
                 mCohortFrequency.put(asjKey, sampleCount);
             }

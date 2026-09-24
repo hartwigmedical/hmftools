@@ -40,7 +40,7 @@ public class TranscriptResult
     private double mRawFitAllocation;
     private double mRawTpm;
     private double mAdjustedTpm;
-    private double mLowMapQualsAllocation;
+    private double mMultiMappedAllocation;
 
     public TranscriptResult(
             final GeneCollection geneCollection, final GeneReadData geneReadData, final TranscriptData transData,
@@ -102,12 +102,13 @@ public class TranscriptResult
         mRawFitAllocation = 0;
         mRawTpm = 0;
         mAdjustedTpm = 0;
-        mLowMapQualsAllocation = 0;
+        mMultiMappedAllocation = 0;
     }
 
     public void setFitAllocation(double alloc) { mFitAllocation = alloc; }
+    public void addFitAllocation(double alloc) { mFitAllocation += alloc; }
     public void setPreGcFitAllocation(double alloc) { mRawFitAllocation = alloc; }
-    public void setLowMapQualsAllocation(double alloc) { mLowMapQualsAllocation = alloc; }
+    public void setMultiMappedAllocation(double alloc) { mMultiMappedAllocation = alloc; }
 
     public void setTPM(double raw, double adjusted)
     {
@@ -125,7 +126,7 @@ public class TranscriptResult
         long flFrequencyTotal = 0;
         long flBasesTotal = 0;
 
-        for(final FragmentSize flData : fragmentLengthData)
+        for(FragmentSize flData : fragmentLengthData)
         {
             int fragLength = flData.Length;
             int fragFrequency = flData.Frequency;
@@ -153,10 +154,10 @@ public class TranscriptResult
     {
         for(TranscriptData transData : transDataList)
         {
-            if (transData.TransName.equals(transId))
+            if(transData.TransName.equals(transId))
                 continue;
 
-            for (int i = 1; i < transData.exons().size(); ++i)
+            for(int i = 1; i < transData.exons().size(); ++i)
             {
                 if(transData.exons().get(i-1).End == exonEnd && transData.exons().get(i).Start == exonStart)
                     return false;
@@ -190,7 +191,7 @@ public class TranscriptResult
                 .add("UniqueSJFragments")
                 .add("UniqueNonSJFragments")
                 .add("DiscordantFragments")
-                .add("LowMapQualFrags")
+                .add("MultiMappedFragments")
                 .toString();
     }
 
@@ -214,7 +215,7 @@ public class TranscriptResult
                 .add(String.valueOf(UniqueSpliceJunctionFragments))
                 .add(String.valueOf(UniqueNonSJFragments))
                 .add(String.valueOf(DiscordantFragments))
-                .add(String.format("%.1f", mLowMapQualsAllocation))
+                .add(String.format("%.1f", mMultiMappedAllocation))
                 .toString();
     }
 }

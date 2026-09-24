@@ -211,7 +211,7 @@ public class PassingFusions
             return false;
         }
 
-        if(fusion.totalFragments() < requiredFragments)
+        if(fusion.supportingFragments() < requiredFragments)
         {
             fusion.setFilter(FRAGMENT_COUNT);
             return false;
