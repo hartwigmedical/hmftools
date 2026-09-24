@@ -50,8 +50,7 @@ public class RnaFindingsChapter implements ReportChapter
 
         if(QcStatusInterpretation.hasRnaFail(mIsofoxRecord))
         {
-            mReportResources.addQcFailNotice(document);
-            return;
+            document.add(new Paragraph("QC Fail").addStyle(mReportResources.tableContentStyle()));
         }
 
         addStatistics(document);

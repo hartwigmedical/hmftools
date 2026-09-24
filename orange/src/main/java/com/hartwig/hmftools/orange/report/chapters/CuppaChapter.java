@@ -46,12 +46,6 @@ public class CuppaChapter implements ReportChapter
     {
         document.add(new Paragraph(name()).addStyle(mReportResources.chapterTitleStyle()));
 
-        if(QcStatusInterpretation.hasPurpleFail(mReport.purple().fit().qc()))
-        {
-            mReportResources.addQcFailNotice(document);
-            return;
-        }
-
         if(mReport.plots().cuppaSummaryPlot() == null)
         {
             document.add(new Paragraph(ReportResources.NOT_AVAILABLE).addStyle(mReportResources.tableContentStyle()));

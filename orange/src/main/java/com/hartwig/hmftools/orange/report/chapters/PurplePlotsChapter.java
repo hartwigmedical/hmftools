@@ -48,12 +48,6 @@ public class PurplePlotsChapter implements ReportChapter
     {
         document.add(new Paragraph(name()).addStyle(mReportResources.chapterTitleStyle()));
 
-        if(QcStatusInterpretation.hasPurpleFail(mReport.purple().fit().qc()))
-        {
-            mReportResources.addQcFailNotice(document);
-            return;
-        }
-
         addPurlePlots(document);
     }
 

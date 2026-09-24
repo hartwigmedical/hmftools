@@ -67,12 +67,6 @@ public class SomaticFindingsChapter implements ReportChapter
     {
         document.add(new Paragraph(name()).addStyle(mReportResources.chapterTitleStyle()));
 
-        if(QcStatusInterpretation.hasPurpleFail(mReport.purple().fit().qc()))
-        {
-            mReportResources.addQcFailNotice(document);
-            return;
-        }
-
         addSomaticVariants(document);
 
         addSomaticAmpDels(document);

@@ -45,20 +45,7 @@ public class ImmunologyChapter implements ReportChapter
     {
         document.add(new Paragraph(name()).addStyle(mReportResources.chapterTitleStyle()));
 
-        if(QcStatusInterpretation.hasPurpleFail(mReport.purple().fit().qc()))
-        {
-            mReportResources.addQcFailNotice(document);
-            return;
-        }
-
         addHLAData(document);
-
-        /*
-        if(mReport.experimentType() == ExperimentType.WHOLE_GENOME)
-        {
-            addImmuneEscapeData(document);
-        }
-        */
     }
 
     private void addHLAData(final Document document)
@@ -81,13 +68,4 @@ public class ImmunologyChapter implements ReportChapter
             document.add(HLAAlleleTable.build(title, contentWidth(), classIIAlleles, mReportResources, mReport.hasRna()));
         }
     }
-
-    /*
-    private void addImmuneEscapeData(final Document document)
-    {
-        String title = "Genetic Immune Escape";
-        boolean isTumorFail = QcStatusInterpretation.hasPurpleFail(mReport.purple().fit().qc());
-        document.add(ImmuneEscapeTable.build(title, contentWidth(), mReport.immuneEscape(), mReportResources, isTumorFail));
-    }
-    */
 }
