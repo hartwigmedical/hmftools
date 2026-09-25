@@ -5,7 +5,17 @@
       "meta" : {
         "definition" : {
           "val" : "A carcinoma in situ that is characterized by the spread of cancer in the respiratory system and the lack of invasion of surrounding tissues.",
-          "xrefs" : [ "url:http://en.wikipedia.org/wiki/Carcinoma_in_situ" ]
+          "xrefs": [
+            "url:http://en.wikipedia.org/wiki/Carcinoma_in_situ"
+          ],
+          "meta": {
+            "basicPropertyValues": [
+              {
+                "pred": "http://purl.org/dc/elements/1.1/type",
+                "val": "http://purl.obolibrary.org/obo/ECO_0007638"
+              }
+            ]
+          }
         },
         "synonyms" : [ {
           "pred" : "hasExactSynonym",
@@ -28,7 +38,19 @@
       "id" : "http://purl.obolibrary.org/obo/DOID_8717",
       "meta" : {
         "definition" : {
-          "val" : "Decubitus ulcer is a chronic ulcer of skin where the ulcer is an ulceration of tissue deprived of adequate blood supply by prolonged pressure."
+          "val": "Decubitus ulcer is a chronic ulcer of skin where the ulcer is an ulceration of tissue deprived of adequate blood supply by prolonged pressure.",
+          "meta": {
+            "basicPropertyValues": [
+              {
+                "pred": "http://purl.org/dc/elements/1.1/type",
+                "val": "http://purl.obolibrary.org/obo/ECO_0007645"
+              },
+              {
+                "pred": "http://purl.org/dc/elements/1.1/type",
+                "val": "http://purl.obolibrary.org/obo/ECO_0007646"
+              }
+            ]
+          }
         },
         "comments" : [ "Xref MGI.\nOMIM mapping confirmed by DO. [SN]." ],
         "subsets" : [ "http://purl.obolibrary.org/obo/doid#NCIthesaurus" ],
