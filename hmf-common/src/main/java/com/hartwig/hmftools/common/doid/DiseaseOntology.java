@@ -263,6 +263,7 @@ public final class DiseaseOntology
                     .val(string(synonymObject, "val"))
                     .xrefs(optionalStringList(synonymObject, "xrefs"))
                     .synonymType(optionalString(synonymObject, "synonymType"))
+                    .meta(extractDoidMetadata(synonymObject.getAsJsonObject("meta")))
                     .build());
         }
 

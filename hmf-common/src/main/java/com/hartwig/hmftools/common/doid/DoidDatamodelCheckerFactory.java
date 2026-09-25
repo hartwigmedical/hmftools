@@ -95,6 +95,7 @@ final class DoidDatamodelCheckerFactory
         map.put("val", true);
         map.put("xrefs", false);
         map.put("synonymType", false);
+        map.put("meta", false);
         return new JsonDatamodelChecker("DoidSynonym", map);
     }
 
