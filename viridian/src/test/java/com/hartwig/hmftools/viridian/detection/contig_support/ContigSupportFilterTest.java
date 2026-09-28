@@ -1,9 +1,13 @@
 package com.hartwig.hmftools.viridian.detection.contig_support;
 
+import static java.util.stream.Collectors.toMap;
+
 import static org.junit.Assert.assertEquals;
 
 import java.util.Map;
 
+import com.hartwig.hmftools.viridian.common.SummaryStats;
+import com.hartwig.hmftools.viridian.detection.contig_stats.ContigStats;
 import com.hartwig.hmftools.viridian.reference.OncologyGroup;
 import com.hartwig.hmftools.viridian.reference.ViralContig;
 
@@ -80,6 +84,16 @@ public class ContigSupportFilterTest
     private static Map<ViralContig, ContigFilterStatus> statuses(
             Map<ViralContig, Integer> coveredBases, Map<ViralContig, Double> readVotes)
     {
-        return ContigSupportFilter.statuses(coveredBases, readVotes, MEAN_READ_LENGTH);
+        Map<ViralContig, ContigStats> stats = coveredBases.entrySet().stream()
+                .collect(toMap(Map.Entry::getKey, entry -> contigStats(entry.getKey(), entry.getValue())));
+
+        return ContigSupportFilter.statuses(stats, readVotes, MEAN_READ_LENGTH);
+    }
+
+    // Only coverage matters to the filter; the remaining stats are filler.
+    private static ContigStats contigStats(ViralContig contig, int coveredBases)
+    {
+        SummaryStats filler = SummaryStats.from(new int[] { 1 });
+        return new ContigStats(contig, 100, 0, coveredBases, filler, filler);
     }
 }

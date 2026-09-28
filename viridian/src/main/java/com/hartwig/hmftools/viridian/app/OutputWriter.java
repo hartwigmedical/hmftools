@@ -16,6 +16,7 @@ import java.util.stream.Stream;
 
 import com.hartwig.hmftools.common.utils.file.DelimFileWriter;
 import com.hartwig.hmftools.viridian.common.SummaryStats;
+import com.hartwig.hmftools.viridian.detection.contig_stats.ContigStats;
 import com.hartwig.hmftools.viridian.detection.contig_support.ContigSupport;
 import com.hartwig.hmftools.viridian.detection.selection.OncologyGroupRepresentativeSelection;
 import com.hartwig.hmftools.viridian.detection.selection.PairwiseMargins;
@@ -27,14 +28,10 @@ import com.hartwig.hmftools.viridian.integration.variant_extract.HostBreakend;
 import com.hartwig.hmftools.viridian.integration.variant_extract.InsertRepeat;
 import com.hartwig.hmftools.viridian.reference.ViralContig;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 
 public class OutputWriter
 {
-    private static final Logger LOGGER = LogManager.getLogger(OutputWriter.class);
-
     public static void writeContigInfo(String file, List<OncologyGroupRepresentativeSelection> selections)
     {
         Map<ViralContig, Integer> votesRanks = candidateVotesRanks(selections);
@@ -49,21 +46,22 @@ public class OutputWriter
                 file, CONTIG_INFO_COLUMNS, rows, (contigRow, row) ->
                 {
                     ContigSupport support = contigRow.support();
+                    ContigStats stats = support.stats();
                     ViralContig contig = support.contig();
 
                     row.set(ContigInfoColumn.contig, contig.name());
                     row.set(ContigInfoColumn.virus_name, contig.virusName());
                     row.set(ContigInfoColumn.oncology_group, contig.oncologyGroup().name());
                     row.set(ContigInfoColumn.contig_length, contig.length());
-                    row.set(ContigInfoColumn.read_count, support.readCount());
+                    row.set(ContigInfoColumn.read_count, stats.readCount());
                     row.set(ContigInfoColumn.multi_align_reads, support.multiAlignReads());
-                    row.set(ContigInfoColumn.origin_clipped_reads, support.originClippedReads());
-                    row.set(ContigInfoColumn.coverage_fraction, support.coverageFraction());
+                    row.set(ContigInfoColumn.origin_clipped_reads, stats.originClippedReads());
+                    row.set(ContigInfoColumn.coverage_fraction, stats.coverageFraction());
                     row.set(ContigInfoColumn.read_votes, support.readVotes());
 
-                    writeSummaryStats(row, DEPTH_STATS_COLUMNS, support.depth());
+                    writeSummaryStats(row, DEPTH_STATS_COLUMNS, stats.depth());
                     writeSummaryStats(row, ALIGN_PER_READ_STATS_COLUMNS, support.alignmentsPerRead());
-                    writeSummaryStats(row, ALIGNER_SCORE_STATS_COLUMNS, support.alignerScore());
+                    writeSummaryStats(row, ALIGNER_SCORE_STATS_COLUMNS, stats.alignerScore());
 
                     row.set(ContigInfoColumn.oncology_group_resolution, contigRow.selection().resolution().name());
                     row.set(ContigInfoColumn.oncology_group_outcome, contigRow.selection().outcome().name());

@@ -16,6 +16,7 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 import com.hartwig.hmftools.viridian.common.SummaryStats;
+import com.hartwig.hmftools.viridian.detection.contig_stats.ContigStats;
 import com.hartwig.hmftools.viridian.detection.contig_support.ContigFilterStatus;
 import com.hartwig.hmftools.viridian.detection.contig_support.ContigSupport;
 import com.hartwig.hmftools.viridian.detection.read_align.AlignedInterval;
@@ -291,6 +292,7 @@ public class RepresentativeContigSelectorTest
     private static ContigSupport contigSupport(ViralContig contig, ContigFilterStatus filterStatus, double votes)
     {
         SummaryStats filler = SummaryStats.from(new int[] { 1 });
-        return new ContigSupport(contig, filterStatus, 100, 0, filler, 0, LENGTH / 2, filler, filler, votes);
+        return new ContigSupport(
+                new ContigStats(contig, 100, 0, LENGTH / 2, filler, filler), filterStatus, 0, filler, votes);
     }
 }

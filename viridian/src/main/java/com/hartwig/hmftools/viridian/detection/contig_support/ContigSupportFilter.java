@@ -8,32 +8,33 @@ import static com.hartwig.hmftools.viridian.common.ViridianConstants.VIRAL_CONTI
 
 import java.util.Map;
 
+import com.hartwig.hmftools.viridian.detection.contig_stats.ContigStats;
 import com.hartwig.hmftools.viridian.reference.ViralContig;
 
 // Determines whether a contig carries enough evidence to be considered present in the sample.
 public class ContigSupportFilter
 {
     public static Map<ViralContig, ContigFilterStatus> statuses(
-            Map<ViralContig, Integer> coveredBases, Map<ViralContig, Double> readVotes, double meanReadLength)
+            Map<ViralContig, ContigStats> contigStats, Map<ViralContig, Double> readVotes, double meanReadLength)
     {
-        boolean groupPresent = coveredBases.entrySet().stream()
-                .anyMatch(entry -> coverageFraction(entry.getKey(), entry.getValue()) >= VIRAL_CONTIG_COVERAGE_MIN);
+        boolean groupPresent = contigStats.values().stream()
+                .anyMatch(stats -> stats.coverageFraction() >= VIRAL_CONTIG_COVERAGE_MIN);
 
-        return coveredBases.entrySet().stream().collect(toMap(
+        return contigStats.entrySet().stream().collect(toMap(
                 Map.Entry::getKey,
-                entry -> status(entry.getKey(), entry.getValue(), readVotes.get(entry.getKey()), groupPresent, meanReadLength)));
+                entry -> status(entry.getValue(), readVotes.getOrDefault(entry.getKey(), 0.0), groupPresent, meanReadLength)));
     }
 
     private static ContigFilterStatus status(
-            ViralContig contig, int coveredBases, double readVotes, boolean groupPresent, double meanReadLength)
+            ContigStats stats, double readVotes, boolean groupPresent, double meanReadLength)
     {
         // Once some contig has established the group, its siblings are kept down to a slightly lower coverage, so a
         // near-identical sibling straddling the cutoff is not harshly lost.
-        if(!groupPresent || coverageFraction(contig, coveredBases) < VIRAL_CONTIG_COVERAGE_MIN_LOWER)
+        if(!groupPresent || stats.coverageFraction() < VIRAL_CONTIG_COVERAGE_MIN_LOWER)
         {
             return ContigFilterStatus.LOW_COVERAGE;
         }
-        else if(readVotes < voteFloor(contig, meanReadLength))
+        else if(readVotes < voteFloor(stats.contig(), meanReadLength))
         {
             return ContigFilterStatus.LOW_VOTE_DENSITY;
         }
@@ -41,11 +42,6 @@ public class ContigSupportFilter
         {
             return ContigFilterStatus.CANDIDATE;
         }
-    }
-
-    private static double coverageFraction(ViralContig contig, int coveredBases)
-    {
-        return (double) coveredBases / contig.length();
     }
 
     // Enough votes to have covered the minimum coverage fraction of the contig at the required depth.

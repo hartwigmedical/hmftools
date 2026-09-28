@@ -7,6 +7,8 @@ import static org.junit.Assert.assertEquals;
 import java.util.List;
 
 import com.hartwig.hmftools.viridian.common.SummaryStats;
+import com.hartwig.hmftools.viridian.detection.contig_stats.ContigStats;
+import com.hartwig.hmftools.viridian.detection.contig_stats.ContigStatsCalculator;
 import com.hartwig.hmftools.viridian.detection.read_align.AlignedInterval;
 import com.hartwig.hmftools.viridian.detection.read_align.ViralReadAlignment;
 import com.hartwig.hmftools.viridian.detection.read_align.ViralReadAlignments;
@@ -34,22 +36,21 @@ public class ContigSupportCalculatorTest
                 alignment("r2", V1, 6, 5, 8, 0),
                 alignment("r3", V2, 1, 10, 9, 0));
 
-        List<ContigSupport> stats = new ContigSupportCalculator(READ_VOTE_CORRECT_BASE_PROBABILITY).compute(
-                ViralReadAlignments.from(alignments, MEAN_READ_LENGTH));
+        List<ContigSupport> stats = compute(alignments, READ_VOTE_CORRECT_BASE_PROBABILITY);
 
         assertEquals(2, stats.size());
 
         // Depth over v1's 20 bases: 1-5 from r1 only, 6-10 from both reads, 11-20 uncovered.
         int[] v1Depth = { 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
         ContigSupport expectedV1 = new ContigSupport(
-                V1, ContigFilterStatus.CANDIDATE, 2, 1, SummaryStats.from(new int[] { 2, 1 }), 0, 10,
-                SummaryStats.from(v1Depth), SummaryStats.from(new int[] { 10, 8 }), 2.0);
+                new ContigStats(V1, 2, 0, 10, SummaryStats.from(v1Depth), SummaryStats.from(new int[] { 10, 8 })),
+                ContigFilterStatus.CANDIDATE, 1, SummaryStats.from(new int[] { 2, 1 }), 2.0);
         assertEquals(expectedV1, get(stats, V1));
 
         int[] v2Depth = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
         ContigSupport expectedV2 = new ContigSupport(
-                V2, ContigFilterStatus.CANDIDATE, 1, 0, SummaryStats.from(new int[] { 1 }), 0, 10,
-                SummaryStats.from(v2Depth), SummaryStats.from(new int[] { 9 }), 1.0);
+                new ContigStats(V2, 1, 0, 10, SummaryStats.from(v2Depth), SummaryStats.from(new int[] { 9 })),
+                ContigFilterStatus.CANDIDATE, 0, SummaryStats.from(new int[] { 1 }), 1.0);
         assertEquals(expectedV2, get(stats, V2));
     }
 
@@ -63,8 +64,7 @@ public class ContigSupportCalculatorTest
                 alignment("r2", V2, 1, 10, 5, 5));  // Aligns to another contig with more divergence
 
         // Injected correct-base probability 0.5, so each extra divergent base halves a contig's weight (0.5^diff).
-        List<ContigSupport> stats = new ContigSupportCalculator(0.5).compute(
-                ViralReadAlignments.from(alignments, MEAN_READ_LENGTH));
+        List<ContigSupport> stats = compute(alignments, 0.5);
 
         // r1: v1 weight 0.5^0, v2 0.5^3; r2: v1 0.5^0, v2 0.5^5. Votes per read sum to 1, so both contigs sum to 2.
         double v1Votes = get(stats, V1).readVotes();
@@ -79,8 +79,7 @@ public class ContigSupportCalculatorTest
                 alignment("r", V1, 1, 10, 10, 2),
                 alignment("r", V2, 1, 10, 10, 2));
 
-        List<ContigSupport> stats = new ContigSupportCalculator(0.5).compute(
-                ViralReadAlignments.from(alignments, MEAN_READ_LENGTH));
+        List<ContigSupport> stats = compute(alignments, 0.5);
 
         assertEquals(0.5, get(stats, V1).readVotes(), EPSILON);
         assertEquals(0.5, get(stats, V2).readVotes(), EPSILON);
@@ -95,12 +94,11 @@ public class ContigSupportCalculatorTest
                 alignment("r3", V1, 6, 10, 9, 0),   // no clip: kept
                 clipped("r4", V1, 10, 19, 5, 0));   // clip projects to 5, within the contig: kept
 
-        List<ContigSupport> stats = new ContigSupportCalculator(READ_VOTE_CORRECT_BASE_PROBABILITY).compute(
-                ViralReadAlignments.from(alignments, MEAN_READ_LENGTH));
+        List<ContigSupport> stats = compute(alignments, READ_VOTE_CORRECT_BASE_PROBABILITY);
 
         ContigSupport v1 = get(stats, V1);
-        assertEquals(2, v1.readCount());            // r3 and r4 kept
-        assertEquals(2, v1.originClippedReads());   // r1 and r2 dropped
+        assertEquals(2, v1.stats().readCount());            // r3 and r4 kept
+        assertEquals(2, v1.stats().originClippedReads());   // r1 and r2 dropped
     }
 
     @Test
@@ -111,12 +109,18 @@ public class ContigSupportCalculatorTest
                 clipped("r2", V1, 1, 10, 30, 0),    // Clipped over origin; dropped
                 alignment("r3", V2, 1, 10, 9, 0));  // Not clipped; kept
 
-        List<ContigSupport> stats = new ContigSupportCalculator(READ_VOTE_CORRECT_BASE_PROBABILITY).compute(
-                ViralReadAlignments.from(alignments, MEAN_READ_LENGTH));
+        List<ContigSupport> stats = compute(alignments, READ_VOTE_CORRECT_BASE_PROBABILITY);
 
         ContigSupport expected = new ContigSupport(
-                V1, ContigFilterStatus.LOW_COVERAGE, 0, 0, null, 2, 0, SummaryStats.from(new int[20]), null, 0.0);
+                new ContigStats(V1, 0, 2, 0, SummaryStats.from(new int[20]), null), ContigFilterStatus.LOW_COVERAGE, 0, null, 0.0);
         assertEquals(expected, get(stats, V1));
+    }
+
+    private static List<ContigSupport> compute(List<ViralReadAlignment> alignments, double correctBaseProbability)
+    {
+        ViralReadAlignments viralAlignments = ViralReadAlignments.from(alignments, MEAN_READ_LENGTH);
+        return new ContigSupportCalculator(correctBaseProbability).compute(
+                viralAlignments, ContigStatsCalculator.calculate(viralAlignments));
     }
 
     private static ContigSupport get(List<ContigSupport> stats, ViralContig contig)

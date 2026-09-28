@@ -22,6 +22,8 @@ import java.util.Map;
 import com.hartwig.hmftools.common.bwa.BwaMemAligner;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.viridian.common.UserInputError;
+import com.hartwig.hmftools.viridian.detection.contig_stats.ContigStats;
+import com.hartwig.hmftools.viridian.detection.contig_stats.ContigStatsCalculator;
 import com.hartwig.hmftools.viridian.detection.contig_support.ContigSupport;
 import com.hartwig.hmftools.viridian.detection.contig_support.ContigSupportCalculator;
 import com.hartwig.hmftools.viridian.detection.read_align.ViralReadAligner;
@@ -127,8 +129,8 @@ public class ViridianApplication
     private List<ContigSupport> computeViralContigSupport(ViralReadAlignments viralReadAlignments)
     {
         LOGGER.info("Computing per-contig support");
-        List<ContigSupport> contigSupports = new ContigSupportCalculator().compute(viralReadAlignments);
-        return contigSupports;
+        Map<ViralContig, ContigStats> contigStats = ContigStatsCalculator.calculate(viralReadAlignments);
+        return new ContigSupportCalculator().compute(viralReadAlignments, contigStats);
     }
 
     // For each oncology group (group of virus strains at interesting taxonomy granularity), select 1 viral genome which best represents

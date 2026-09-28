@@ -1,38 +1,30 @@
 package com.hartwig.hmftools.viridian.detection.contig_support;
 
 import com.hartwig.hmftools.viridian.common.SummaryStats;
+import com.hartwig.hmftools.viridian.detection.contig_stats.ContigStats;
 import com.hartwig.hmftools.viridian.reference.ViralContig;
 
 import org.jetbrains.annotations.Nullable;
 
-// Per-contig support information from alignment.
+// Per-contig support information from aligning reads to every viral genome at once (BWA-MEM -a mode).
+// Used to determine viral presence and select the representative contig for an oncology group.
 public record ContigSupport(
-        ViralContig contig,
+        ContigStats stats,
         ContigFilterStatus filterStatus,
-        // Reads with any alignment to this contig.
-        int readCount,
-        // Reads with more than one alignment to this contig (BWA -a repeats/multi-loci).
+        // Reads with more than one alignment to this contig.
         int multiAlignReads,
-        // Alignments to this contig per read. Theoretically can be > 1. Null when no read was retained here.
+        // Alignments to this contig per read. Theoretically can be > 1. Null only when every alignment was origin clipped.
         @Nullable SummaryStats alignmentsPerRead,
-        // Reads with an alignment dropped for clipping over the contig start/end (circular-genome artifact).
-        int originClippedReads,
-        // Contig positions aligned by at least 1 alignment.
-        int coveredBases,
-        // Note uncovered bases count as depth=0.
-        SummaryStats depth,
-        // BWA alignment score distribution across those reads. Null when no read was retained here.
-        @Nullable SummaryStats alignerScore,
         // Read attribution taking into account alignment edit distance (divergence).
         double readVotes)
 {
+    public ViralContig contig()
+    {
+        return stats.contig();
+    }
+
     public boolean isCandidate()
     {
         return filterStatus == ContigFilterStatus.CANDIDATE;
-    }
-
-    public double coverageFraction()
-    {
-        return (double) coveredBases / contig.length();
     }
 }
