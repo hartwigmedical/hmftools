@@ -6,9 +6,9 @@ import java.util.List;
 import java.util.Map;
 
 import com.hartwig.hmftools.viridian.common.SummaryStats;
-import com.hartwig.hmftools.viridian.detection.read_align.AlignedInterval;
-import com.hartwig.hmftools.viridian.detection.read_align.ViralReadAlignment;
-import com.hartwig.hmftools.viridian.detection.read_align.ViralReadAlignments;
+import com.hartwig.hmftools.viridian.detection.align.AlignedInterval;
+import com.hartwig.hmftools.viridian.detection.align.ViralReadAlignment;
+import com.hartwig.hmftools.viridian.detection.align.ViralReadAlignments;
 import com.hartwig.hmftools.viridian.reference.OncologyGroup;
 import com.hartwig.hmftools.viridian.reference.ViralContig;
 
