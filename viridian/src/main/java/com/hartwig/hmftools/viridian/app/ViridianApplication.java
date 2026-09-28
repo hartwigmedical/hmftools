@@ -86,7 +86,7 @@ public class ViridianApplication
     {
         String allAlignmentsBamFile = outputFile(ALL_ALIGNMENTS_BAM_SUFFIX);
         // Alignment is pretty slow, so allow reusing the cached BAM for a rerun.
-        if(!canReuseExistingFile(mConfig.reuseAllAlignments(), allAlignmentsBamFile, "all-alignments BAM"))
+        if(!canReuseExistingFile(mConfig.reuseAlignments(), allAlignmentsBamFile, "all-alignments BAM"))
         {
             alignCandidateReadsToViralContigs(allAlignmentsBamFile);
         }
@@ -97,7 +97,7 @@ public class ViridianApplication
     {
         String candidateFastaFile = outputFile(CANDIDATES_FASTA_SUFFIX);
         // Read extraction is very slow for large samples, so allow reusing the cached FASTA for a rerun.
-        if(!canReuseExistingFile(mConfig.reuseCandidates(), candidateFastaFile, "candidate read FASTA"))
+        if(!canReuseExistingFile(mConfig.reuseCandidateReads(), candidateFastaFile, "candidate read FASTA"))
         {
             extractCandidateReads(candidateFastaFile);
         }
