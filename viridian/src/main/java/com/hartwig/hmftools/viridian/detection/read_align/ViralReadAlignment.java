@@ -14,7 +14,7 @@ import com.hartwig.hmftools.viridian.reference.ViralReference;
 
 import htsjdk.samtools.SAMRecord;
 
-// One viral alignment of a read with just the data required for our analysis.
+// One alignment of a read to a virus genome, with just the data required for our analysis, in a nice format.
 public record ViralReadAlignment(
         String readName,
         ViralContig contig,

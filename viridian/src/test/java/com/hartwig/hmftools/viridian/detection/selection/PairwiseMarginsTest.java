@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.viridian.selection;
+package com.hartwig.hmftools.viridian.detection.selection;
 
 import static org.junit.Assert.assertEquals;
 

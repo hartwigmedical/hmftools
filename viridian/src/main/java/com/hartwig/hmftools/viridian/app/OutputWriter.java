@@ -17,15 +17,15 @@ import java.util.stream.Stream;
 import com.hartwig.hmftools.common.utils.file.DelimFileWriter;
 import com.hartwig.hmftools.viridian.common.SummaryStats;
 import com.hartwig.hmftools.viridian.detection.contig_support.ContigSupport;
+import com.hartwig.hmftools.viridian.detection.selection.OncologyGroupRepresentativeSelection;
+import com.hartwig.hmftools.viridian.detection.selection.PairwiseMargins;
+import com.hartwig.hmftools.viridian.detection.selection.RepresentativeContigCandidate;
 import com.hartwig.hmftools.viridian.integration.seq_align.ViralSequenceAlignment;
 import com.hartwig.hmftools.viridian.integration.variant_extract.BreakendSupport;
 import com.hartwig.hmftools.viridian.integration.variant_extract.CandidateIntegration;
 import com.hartwig.hmftools.viridian.integration.variant_extract.HostBreakend;
 import com.hartwig.hmftools.viridian.integration.variant_extract.InsertRepeat;
 import com.hartwig.hmftools.viridian.reference.ViralContig;
-import com.hartwig.hmftools.viridian.selection.OncologyGroupRepresentativeSelection;
-import com.hartwig.hmftools.viridian.selection.PairwiseMargins;
-import com.hartwig.hmftools.viridian.selection.RepresentativeContigCandidate;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.viridian.selection;
+package com.hartwig.hmftools.viridian.detection.selection;
 
 // The specific outcome of representative contig selection for an oncology group, refining OncologyGroupResolution.
 public enum OncologyGroupOutcome
