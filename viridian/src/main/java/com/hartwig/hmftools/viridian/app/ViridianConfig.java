@@ -35,8 +35,8 @@ public record ViridianConfig(
         int threads,
         String outputDir,
         @Nullable String outputId,
-        boolean reuseReadsFasta,
-        boolean reuseReadsBam,
+        boolean reuseCandidates,
+        boolean reuseAllAlignments,
         boolean verboseOutput
 )
 {
@@ -50,12 +50,12 @@ public record ViridianConfig(
     private static final String DESC_ESVEE_UNFILTERED_VCF = "ESVEE caller unfiltered VCF";
     private static final String CFG_ALIGNMENT_BATCH_SIZE = "align_batch_size";
     private static final String DESC_ALIGNMENT_BATCH_SIZE = "Candidate reads submitted to BWA per alignment call";
-    private static final String CFG_REUSE_READS_FASTA = "reuse_reads_fasta";
-    private static final String DESC_REUSE_READS_FASTA =
+    private static final String CFG_REUSE_CANDIDATES = "reuse_candidates";
+    private static final String DESC_REUSE_CANDIDATES =
             "Dev: skip read extraction and reuse the candidate read FASTA already at the output location";
-    private static final String CFG_REUSE_READS_BAM = "reuse_reads_bam";
-    private static final String DESC_REUSE_READS_BAM =
-            "Dev: skip read extraction and alignment, and reuse the aligned read BAM already at the output location";
+    private static final String CFG_REUSE_ALL_ALIGNMENTS = "reuse_all_alignments";
+    private static final String DESC_REUSE_ALL_ALIGNMENTS =
+            "Dev: skip read extraction and alignment, and reuse the all-alignments BAM already at the output location";
     private static final String CFG_VERBOSE_OUTPUT = "verbose_output";
     private static final String DESC_VERBOSE_OUTPUT = "Output more information which may be useful for debugging";
 
@@ -75,8 +75,8 @@ public record ViridianConfig(
                 parseThreads(configBuilder),
                 parseOutputDir(configBuilder),
                 configBuilder.getValue(OUTPUT_ID),
-                configBuilder.hasFlag(CFG_REUSE_READS_FASTA),
-                configBuilder.hasFlag(CFG_REUSE_READS_BAM),
+                configBuilder.hasFlag(CFG_REUSE_CANDIDATES),
+                configBuilder.hasFlag(CFG_REUSE_ALL_ALIGNMENTS),
                 configBuilder.hasFlag(CFG_VERBOSE_OUTPUT)
         );
     }
@@ -93,8 +93,8 @@ public record ViridianConfig(
         configBuilder.addPath(CFG_ESVEE_UNFILTERED_VCF, false, DESC_ESVEE_UNFILTERED_VCF);
 
         configBuilder.addInteger(CFG_ALIGNMENT_BATCH_SIZE, DESC_ALIGNMENT_BATCH_SIZE, VIRAL_READ_ALIGNMENT_BATCH_SIZE_DEFAULT);
-        configBuilder.addFlag(CFG_REUSE_READS_FASTA, DESC_REUSE_READS_FASTA);
-        configBuilder.addFlag(CFG_REUSE_READS_BAM, DESC_REUSE_READS_BAM);
+        configBuilder.addFlag(CFG_REUSE_CANDIDATES, DESC_REUSE_CANDIDATES);
+        configBuilder.addFlag(CFG_REUSE_ALL_ALIGNMENTS, DESC_REUSE_ALL_ALIGNMENTS);
         configBuilder.addFlag(CFG_VERBOSE_OUTPUT, DESC_VERBOSE_OUTPUT);
 
         addThreadOptions(configBuilder);

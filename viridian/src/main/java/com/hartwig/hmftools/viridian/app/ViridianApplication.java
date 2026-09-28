@@ -4,9 +4,9 @@ import static java.lang.System.exit;
 
 import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkCreateOutputDir;
-import static com.hartwig.hmftools.viridian.common.ViridianConstants.ALIGNED_READ_BAM_SUFFIX;
+import static com.hartwig.hmftools.viridian.common.ViridianConstants.ALL_ALIGNMENTS_BAM_SUFFIX;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.APP_NAME;
-import static com.hartwig.hmftools.viridian.common.ViridianConstants.CANDIDATE_READ_FASTA_SUFFIX;
+import static com.hartwig.hmftools.viridian.common.ViridianConstants.CANDIDATES_FASTA_SUFFIX;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.CONTIG_INFO_TSV_SUFFIX;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.INTEGRATIONS_TSV_SUFFIX;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.PAIRWISE_MARGINS_TSV_SUFFIX;
@@ -84,20 +84,20 @@ public class ViridianApplication
 
     private ViralReadAlignments getViralReadAlignments()
     {
-        String viralReadBamFile = outputFile(ALIGNED_READ_BAM_SUFFIX);
+        String allAlignmentsBamFile = outputFile(ALL_ALIGNMENTS_BAM_SUFFIX);
         // Alignment is pretty slow, so allow reusing the cached BAM for a rerun.
-        if(!canReuseExistingFile(mConfig.reuseReadsBam(), viralReadBamFile, "aligned read BAM"))
+        if(!canReuseExistingFile(mConfig.reuseAllAlignments(), allAlignmentsBamFile, "all-alignments BAM"))
         {
-            alignCandidateReadsToViralContigs(viralReadBamFile);
+            alignCandidateReadsToViralContigs(allAlignmentsBamFile);
         }
-        return ViralReadAlignments.load(viralReadBamFile, mViralReference);
+        return ViralReadAlignments.load(allAlignmentsBamFile, mViralReference);
     }
 
     private String getCandidateReads()
     {
-        String candidateFastaFile = outputFile(CANDIDATE_READ_FASTA_SUFFIX);
+        String candidateFastaFile = outputFile(CANDIDATES_FASTA_SUFFIX);
         // Read extraction is very slow for large samples, so allow reusing the cached FASTA for a rerun.
-        if(!canReuseExistingFile(mConfig.reuseReadsFasta(), candidateFastaFile, "candidate read FASTA"))
+        if(!canReuseExistingFile(mConfig.reuseCandidates(), candidateFastaFile, "candidate read FASTA"))
         {
             extractCandidateReads(candidateFastaFile);
         }
@@ -115,14 +115,14 @@ public class ViridianApplication
     }
 
     // Align potentially viral reads to all virus genomes, so we can decide which viruses are present.
-    private void alignCandidateReadsToViralContigs(String viralReadBamFile)
+    private void alignCandidateReadsToViralContigs(String allAlignmentsBamFile)
     {
         String candidateReadFasta = getCandidateReads();
 
         LOGGER.info("Aligning candidate reads to viral genomes");
         ViralReadAligner viralReadAligner = ViralReadAligner.create(
                 mViralReference, mConfig.viralBwaIndexImage(), mConfig.threads(), mConfig.alignmentBatchSize());
-        viralReadAligner.align(candidateReadFasta, viralReadBamFile);
+        viralReadAligner.align(candidateReadFasta, allAlignmentsBamFile);
     }
 
     // Compute support information for each virus genome and decide which genomes may be present.
