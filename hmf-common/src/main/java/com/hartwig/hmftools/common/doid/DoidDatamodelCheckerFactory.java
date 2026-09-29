@@ -36,6 +36,7 @@ final class DoidDatamodelCheckerFactory
     {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("type", false);
+        map.put("propertyType", false);
         map.put("lbl", false);
         map.put("id", true);
         map.put("meta", false);
@@ -94,6 +95,7 @@ final class DoidDatamodelCheckerFactory
         map.put("val", true);
         map.put("xrefs", false);
         map.put("synonymType", false);
+        map.put("meta", false);
         return new JsonDatamodelChecker("DoidSynonym", map);
     }
 
@@ -103,6 +105,7 @@ final class DoidDatamodelCheckerFactory
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("xrefs", false);
         map.put("val", true);
+        map.put("meta", false);
         return new JsonDatamodelChecker("DoidDefinition", map);
     }
 

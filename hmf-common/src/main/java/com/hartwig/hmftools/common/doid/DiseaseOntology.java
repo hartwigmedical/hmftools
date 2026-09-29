@@ -97,6 +97,7 @@ public final class DiseaseOntology
                     .url(url)
                     .doidMetadata(extractDoidMetadata(optionalJsonObject(nodeObject, "meta")))
                     .type(optionalString(nodeObject, "type"))
+                    .propertyType(optionalString(nodeObject, "propertyType"))
                     .doidTerm(optionalString(nodeObject, "lbl"))
                     .build());
         }
@@ -262,6 +263,7 @@ public final class DiseaseOntology
                     .val(string(synonymObject, "val"))
                     .xrefs(optionalStringList(synonymObject, "xrefs"))
                     .synonymType(optionalString(synonymObject, "synonymType"))
+                    .meta(extractDoidMetadata(synonymObject.getAsJsonObject("meta")))
                     .build());
         }
 
@@ -282,6 +284,7 @@ public final class DiseaseOntology
         ImmutableDoidDefinition.Builder doidDefinitionBuilder = ImmutableDoidDefinition.builder();
         doidDefinitionBuilder.definitionVal(string(definitionObject, "val"));
         doidDefinitionBuilder.definitionXrefs(optionalStringList(definitionObject, "xrefs"));
+        doidDefinitionBuilder.meta(extractDoidMetadata(definitionObject.getAsJsonObject("meta")));
         return doidDefinitionBuilder.build();
     }
 
