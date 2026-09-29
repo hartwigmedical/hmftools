@@ -59,7 +59,7 @@ public class CandidateReadExtractor
         mThreads = threads;
     }
 
-    public int extractToFasta(String tumorBamFile, String outputFastaFile)
+    public int extract(String tumorBamFile, String outputFastaFile)
     {
         SamReaderFactory readerFactory = SamReaderFactory.makeDefault().validationStringency(ValidationStringency.SILENT);
         if(mRefGenomeFile != null)

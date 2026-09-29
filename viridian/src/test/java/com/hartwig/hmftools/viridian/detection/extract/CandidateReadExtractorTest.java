@@ -50,7 +50,7 @@ public class CandidateReadExtractorTest
         {
             String fasta = new File(mTempDir.getRoot(), "candidates." + threads + ".fasta").getPath();
             int count = new CandidateReadExtractor(null, new CandidateReadFilter(20, singleton("chrEBV")), threads)
-                    .extractToFasta(bam, fasta);
+                    .extract(bam, fasta);
 
             assertEquals(3, count);
             assertEquals(Set.of(">clip/1\nCCCCC", ">unmap/2\nGGGGG", ">single\nTTTTT"), fastaEntries(fasta));
@@ -69,7 +69,7 @@ public class CandidateReadExtractorTest
         String fasta = new File(mTempDir.getRoot(), "boundary.fasta").getPath();
 
         int count = new CandidateReadExtractor(null, new CandidateReadFilter(20, singleton("chrEBV")), 2)
-                .extractToFasta(bam, fasta);
+                .extract(bam, fasta);
 
         assertEquals(1, count);
         assertEquals(Set.of(">spanning/1\nCCCCC"), fastaEntries(fasta));
@@ -86,7 +86,7 @@ public class CandidateReadExtractorTest
         String fasta = new File(mTempDir.getRoot(), "placed.fasta").getPath();
 
         int count = new CandidateReadExtractor(null, new CandidateReadFilter(20, singleton("chrEBV")))
-                .extractToFasta(bam, fasta);
+                .extract(bam, fasta);
 
         assertEquals(1, count);
         assertEquals(Set.of(">placed/1\nTTTTT"), fastaEntries(fasta));
@@ -102,7 +102,7 @@ public class CandidateReadExtractorTest
 
         CandidateReadExtractor extractor = new CandidateReadExtractor(null, new CandidateReadFilter(20, singleton("chrEBV")));
 
-        assertThrows(UserInputError.class, () -> extractor.extractToFasta(bam, fasta));
+        assertThrows(UserInputError.class, () -> extractor.extract(bam, fasta));
     }
 
     private static SAMFileHeader header(SAMFileHeader.SortOrder sortOrder, int contigLength)

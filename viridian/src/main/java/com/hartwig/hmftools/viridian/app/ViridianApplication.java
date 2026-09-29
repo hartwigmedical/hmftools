@@ -119,7 +119,7 @@ public class ViridianApplication
         CandidateReadFilter candidateFilter = new CandidateReadFilter(VIRAL_READ_MIN_SOFT_CLIP_BASES_DEFAULT, VIRAL_REF_CONTIGS);
         CandidateReadExtractor mCandidateExtractor = new CandidateReadExtractor(
                 mConfig.refGenomeFile(), candidateFilter, mConfig.threads());
-        mCandidateExtractor.extractToFasta(mConfig.tumorBam(), candidateFastaFile);
+        mCandidateExtractor.extract(mConfig.tumorBam(), candidateFastaFile);
     }
 
     // Align potentially viral reads to all virus genomes, so we can decide which viruses are present.
