@@ -1,13 +1,9 @@
 package com.hartwig.hmftools.viridian.detection.assign;
 
-import static com.hartwig.hmftools.common.utils.file.FileDelimiters.BAM_EXTENSION;
-import static com.hartwig.hmftools.common.utils.file.FileDelimiters.BAM_INDEX_EXTENSION;
+import static com.hartwig.hmftools.viridian.common.Utils.fixBamIndexName;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -126,12 +122,13 @@ public class RepresentativeReadAssigner
                 }
             }
 
-            fixBamIndexName(outputBamFile);
         }
         catch(IOException e)
         {
             throw new RuntimeException("Failed to write representative alignment BAM", e);
         }
+
+        fixBamIndexName(outputBamFile);
 
         // Double-check that the correct alignments were written; otherwise the downstream stats will be wrong.
         if(writtenRecords != assignmentsByRead.size())
@@ -147,13 +144,5 @@ public class RepresentativeReadAssigner
                 && assigned.contig().name().equals(record.getReferenceName())
                 // Note CIGAR is needed too because occasionally there are multiple plausible alignments at the same ref position.
                 && assigned.cigar().equals(record.getCigarString());
-    }
-
-    // htsjdk names the index after the BAM's file stem, but tooling looks for it appended to the full name.
-    // So "HG002.viridian.representative.bai" is renamed to "HG002.viridian.representative.bam.bai".
-    private static void fixBamIndexName(String bamFile) throws IOException
-    {
-        Path written = Path.of(bamFile.substring(0, bamFile.length() - BAM_EXTENSION.length()) + BAM_INDEX_EXTENSION);
-        Files.move(written, Path.of(bamFile + BAM_INDEX_EXTENSION), StandardCopyOption.REPLACE_EXISTING);
     }
 }

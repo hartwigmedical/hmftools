@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.ALIGNMENT_SCORE_ATT
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.MISMATCHES_AND_DELETIONS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.utils.Streams.partitionStream;
+import static com.hartwig.hmftools.viridian.common.Utils.fixBamIndexName;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.VIRAL_READ_MIN_ALIGNMENT_SCORE_DEFAULT;
 
 import java.io.File;
@@ -57,7 +58,8 @@ public class ViralReadAligner
     public void align(String candidateFastaFile, String outputBamFile)
     {
         try(FastaSequenceFile fasta = new FastaSequenceFile(new File(candidateFastaFile), true);
-                SAMFileWriter writer = new SAMFileWriterFactory().makeBAMWriter(mHeader, false, new File(outputBamFile)))
+                SAMFileWriter writer = new SAMFileWriterFactory()
+                        .setCreateIndex(true).makeBAMWriter(mHeader, false, new File(outputBamFile)))
         {
             // Written a chunk at a time so peak heap is one chunk, not the whole sample.
             Stream<ReferenceSequence> reads = Stream.generate(fasta::nextSequence).takeWhile(Objects::nonNull);
@@ -69,6 +71,8 @@ public class ViralReadAligner
                     "Aligned {} candidate reads: {} with viral alignments, {} alignments written",
                     total.totalReads(), total.alignedReads(), total.writtenAlignments());
         }
+
+        fixBamIndexName(outputBamFile);
     }
 
     private ChunkResult alignChunk(List<ReferenceSequence> reads, SAMFileWriter writer)
@@ -140,7 +144,7 @@ public class ViralReadAligner
     {
         SAMFileHeader header = new SAMFileHeader();
         header.setSequenceDictionary(dictionary);
-        header.setSortOrder(SAMFileHeader.SortOrder.unsorted);
+        header.setSortOrder(SAMFileHeader.SortOrder.coordinate);
         return header;
     }
 

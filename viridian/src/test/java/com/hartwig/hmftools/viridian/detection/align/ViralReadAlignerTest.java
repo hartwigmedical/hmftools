@@ -56,10 +56,11 @@ public class ViralReadAlignerTest
         String bam = new File(mTempDir.getRoot(), "aligned.bam").getPath();
         aligner.align(fasta, bam);
 
+        // The BAM is coordinate sorted, so the records come back ordered by contig then position, not as written.
         List<SAMRecord> records = readBam(bam);
         assertEquals(4, records.size());
 
-        SAMRecord primary = records.get(0);
+        SAMRecord primary = records.get(1);
         assertEquals("r1", primary.getReadName());
         assertEquals("hpv16", primary.getReferenceName());
         assertEquals(10, primary.getAlignmentStart());
@@ -68,7 +69,7 @@ public class ViralReadAlignerTest
         assertFalse(primary.getReadNegativeStrandFlag());
         assertEquals(R1_BASES, primary.getReadString());
 
-        SAMRecord secondary = records.get(1);
+        SAMRecord secondary = records.get(3);
         assertEquals("r1", secondary.getReadName());
         assertEquals("hpv18", secondary.getReferenceName());
         assertEquals(5, secondary.getAlignmentStart());
@@ -83,7 +84,7 @@ public class ViralReadAlignerTest
         assertEquals(201, lowScore.getAlignmentStart());
         assertEquals(10, (int) lowScore.getIntegerAttribute("AS"));
 
-        SAMRecord r3 = records.get(3);
+        SAMRecord r3 = records.get(0);
         assertEquals("r3", r3.getReadName());
         assertEquals("hpv16", r3.getReferenceName());
         assertEquals(40, (int) r3.getIntegerAttribute("AS"));
@@ -106,7 +107,7 @@ public class ViralReadAlignerTest
                 new SAMSequenceRecord("hpv18", 5000)));
         SAMFileHeader header = new SAMFileHeader();
         header.setSequenceDictionary(dictionary);
-        header.setSortOrder(SAMFileHeader.SortOrder.unsorted);
+        header.setSortOrder(SAMFileHeader.SortOrder.coordinate);
         return header;
     }
 
