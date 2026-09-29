@@ -2,6 +2,11 @@ package com.hartwig.hmftools.isofox.novel;
 
 import static java.lang.Math.max;
 
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_ID;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_NAME;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
@@ -13,6 +18,7 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -221,11 +227,14 @@ public class RetainedIntronFinder
     {
         try
         {
-            String outputFileName = config.formOutputFile("retained_intron.csv");
+            String outputFileName = config.formOutputFile("retained_intron.tsv");
 
             BufferedWriter writer = createBufferedWriter(outputFileName, false);
-            writer.write("GeneId,GeneName,Chromosome,Strand,Position");
-            writer.write(",Type,FragCount,SplicedFragCount,TotalDepth,TranscriptInfo");
+
+            StringJoiner sj = new StringJoiner(TSV_DELIM);
+            sj.add(FLD_GENE_ID).add(FLD_GENE_NAME).add(FLD_CHROMOSOME).add("Strand").add(FLD_POSITION);
+            sj.add("Type").add("FragCount").add("SplicedFragCount").add("TotalDepth").add("TranscriptInfo");
+            writer.write(sj.toString());
             writer.newLine();
             return writer;
         }
@@ -260,16 +269,22 @@ public class RetainedIntronFinder
                     if(!gene.getTranscripts().stream().anyMatch(x -> retIntron.regions().stream().anyMatch(y -> y.hasTransId(x.TransId))))
                         continue;
 
-                    writer.write(String.format("%s,%s,%s,%d",
-                            gene.Gene.GeneId, gene.Gene.GeneName,
-                            gene.Gene.Chromosome, gene.Gene.Strand));
+                    StringJoiner sj = new StringJoiner(TSV_DELIM);
+                    sj.add(gene.Gene.GeneId);
+                    sj.add(gene.Gene.GeneName);
+                    sj.add(gene.Gene.Chromosome);
+                    sj.add(String.valueOf(gene.Gene.Strand));
+                    sj.add(String.valueOf(retIntron.position()));
+                    sj.add(String.valueOf(retIntron.type(gene.Gene.forwardStrand())));
+                    sj.add(String.valueOf(retIntron.getFragmentCount()));
+                    sj.add(String.valueOf(retIntron.getSplicedFragmentCount()));
 
                     int readDepth = max(retIntron.getDepth(), retIntron.getFragmentCount());
+                    sj.add(String.valueOf(readDepth));
 
-                    writer.write(String.format(",%d,%s,%d,%d,%d,%s",
-                            retIntron.position(), retIntron.type(gene.Gene.forwardStrand()), retIntron.getFragmentCount(),
-                            retIntron.getSplicedFragmentCount(), readDepth, retIntron.transcriptInfo()));
+                    sj.add(retIntron.transcriptInfo());
 
+                    writer.write(sj.toString());
                     writer.newLine();
                 }
             }

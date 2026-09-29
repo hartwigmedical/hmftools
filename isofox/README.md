@@ -14,17 +14,19 @@ For transcript abundance, Isofox uses a similar methodology to several previous 
 The input for Isofox is mapped paired end reads. We align with bwa-mem2 against a transcriptome-augmented reference and lift the alignments back to genomic coordinates with tars, then mark duplicates with redux; Isofox takes the resulting post-tars, post-redux BAM.
 
 
-### A note on duplicates, highly expressed genes, raw and adjusted TPM
-We recommend to mark duplicates in your pipeline. They are included in gene and transcript expression data (to avoid bias against highly expressed genes) but excluded from novel splice junction analysis.  
-
-We find that 6 genes in particular (RN7SL2, RN7SL1, RN7SL3, RN7SL4P, RN7SL5P & RN7SK) are highly expressed across our cohort and at variable rates - in extreme samples these can account for >75% of all transcripts. Isofox excludes these genes from our GC bias calculations and to determine a normalisation factor for "adjusted TPM" so that they don't dominate expression differences.  For any given sample, AdjustedTPM = rawTPM x constant with the constant determined by the normalisation (which excludes the 6 genes and also limits all other genes to 1% contribution). The adjusted TPMs no longer sum to 1M transcripts, but should be more comparable across samples.  We suggest to use the adjusted TPM for expression analysis.
-
-In addition, any junction which maps in the Poly-G region of LINC00486 is filtered from all analyses (v38: chr2:32,916,190-32,916,630; v37: 2:33,141,260-33,141,700) as they are likely the result of Poly-G sequencer artefacts.
+### A note on duplicates
+Duplicates are marked by Redux and are counted towards transcript expression.  
 
 ### A note on alignment and multi-mapping
 Reads are aligned with bwa-mem2 against a transcriptome-augmented reference and lifted back to genomic coordinates by tars, then duplicate-marked by redux. Chimeric and supplementary alignments are retained in the BAM.
 
-Isofox supports both bwa-tars and STAR alignments, selected by `-aligner` (`bwa-tars` is the default, or `star`); the flag only affects how multi-mapped fragments are handled, which is the one place the two aligners differ. Under `bwa-tars` a multi-mapped read is a single primary alignment carrying its alternate loci in the bwa `XA` tag (no secondary records; map qualities 0 to 60, with a confident single-locus read at 60), and the fragment is counted once at its primary locus and flagged multi-mapped. Under `star` the alternate mappings are separate secondary records and ambiguity is encoded in the map quality (255 unique, 3 or lower multi-mapped); a multi-mapped fragment is down-weighted by map-quality tier so its mass is shared across the loci it maps to, reproducing pre-tars behaviour. Under either aligner, multi-mapped reads are excluded from novel splice junction and chimeric analysis. The optional `MULTI_MAP_LOCI` write type emits a tsv of each multi-mapped read's primary and XA alternate loci per gene collection for auditing (bwa-tars only).
+Isofox from v2.1 onwards only supports both alignments from bwa-mem2 + Tars. 
+
+A multi-mapped read is a single primary alignment carrying its alternate loci in the bwa `XA` tag (no secondary records; map qualities 0 to 60, with a confident single-locus read at 60), and the fragment is counted once at its primary locus and flagged multi-mapped. 
+A multi-mapped fragment is down-weighted by map-quality tier so its mass is shared across the loci it maps to, reproducing pre-tars behaviour. 
+Multi-mapped reads are excluded from novel splice junction and chimeric analysis. 
+
+The optional `MULTI_MAP_LOCI` write type emits a tsv of each multi-mapped read's primary and XA alternate loci per gene collection for auditing (bwa-tars only).
 
 ## Configuration
 The functions of Isofox are controlled by the 'functions' argument:
@@ -115,7 +117,7 @@ write_read_data | Write data on each BAM read, only recommended with restricted 
 write_exon_data | Write data on transcript exon covered by a supporting fragment, only recommended with restricted genes file
 
 ### Memory Usage and Threading
-ISOFOX takes ~10 mins to process a 7GB BAM with 120M reads / 60M fragments using 10 cores, with maximum memory usage of 10GB, and ~30 mins to process a 35GB BAM with 440M reads / 200M fragments using 10 cores, with maximum memory usage of 25GB. 
+ISOFOX takes ~5 mins to process a 20GB BAM with 120M reads using 32 cores. Recommend 64GB memory.
 
 ### Example Usage
 Running all functions:
@@ -346,7 +348,7 @@ Each chimeric junction, novel splice junction and retained intron for each sampl
 
 ### Summary
 
-Generated file: sample_id.isf.summary.csv
+Generated file: sample_id.isf.summary.tsv
 
 Field | Description 
 ---|---
@@ -360,12 +362,12 @@ ReadLength | Raw read length of fragments
 FragLength5th | 5th percentile of genic intronic fragment lengths (from 1M fragments sampled with a max of 1000 per gene)
 FragLength50th | 50th percentile of genic intronic fragment lengths (from 1M fragments sampled with a max of 1000 per gene)
 FragLength95th | 95th percentile of genic intronic fragment lengths (from 1M fragments sampled with a max of 1000 per gene)
-EnrichedGenePercent | % of fragments supporting one of the following 6 genes: (RN7SL2, RN7SL1,RN7SL3,RN7SL4P,RN7SL5P & RN7SK)
 MedianGCRatio | Median GC ratio excluding the 6 highly enriched genes
+ForwardStrandPercent | Percent of fragments in the forward strand direction, ie F1R2 and not F2R1
 
 ### Gene Level Data
 
-Generated file: sample_id.isf.gene_data.csv
+Generated file: sample_id.isf.gene_data.tsv
 
 Field | Description 
 ---|---
@@ -382,7 +384,7 @@ TPM | TPM for gene excluding unspliced fragments
 
 ### Transcript Level Data
 
-Generated file: sample_id.isf.trans_data.csv
+Generated file: sample_id.isf.trans_data.tsv
 
 Field | Description 
 ---|---
@@ -406,7 +408,7 @@ UniqueNonSJFragments | Count of fragments uniquely supporting transcript but wit
 
 ### Fragment length distribution
 
-Generated file: sample_id.isf.frag_length.csv
+Generated file: sample_id.isf.frag_length.tsv
 
 Field | Description 
 ---|---
@@ -415,7 +417,7 @@ Count | Count of fragments with specified fragment length
 
 ### Alternate Splice Junctions
 
-Generated file: sample_id.isf.alt_splice_junc.csv
+Generated file: sample_id.isf.alt_splice_junc.tsv
 
 Field | Description 
 ---|---
@@ -441,7 +443,7 @@ OverlappingGenes | List of all genes which overlap the novel splice junction
 
 ### Retained Introns
 
-Generated file: sample_id.isf.retained_intron.csv
+Generated file: sample_id.isf.retained_intron.tsv
 
 Field | Description 
 ---|---
