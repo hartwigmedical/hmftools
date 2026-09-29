@@ -220,10 +220,7 @@ public class FragmentAllocator
         mBamSlicer.slice(mSamReader, geneRegion, this::processSamRecord);
 
         if(mChimericReads.enabled())
-        {
-            mChimericReads.postProcessChimericReads(mBaseDepth, mFragmentReads);
-            processChimericNovelJunctions();
-        }
+            processIncompleteReads();
 
         ISF_LOGGER.trace("genes({}) bamReadCount({}) depth(bases={} perc={} max={})",
                 mCurrentGenes.geneNames(), mGeneReadCount, mBaseDepth.basesWithDepth(),
@@ -329,7 +326,7 @@ public class FragmentAllocator
 
     private void handleSupplementaryRead(final Read read)
     {
-        if(read.isDuplicate() || read.isMateUnmapped())
+        if(read.isMateUnmapped())
             return;
 
         mBaseDepth.processRead(read.getMappedRegionCoords());
@@ -337,13 +334,7 @@ public class FragmentAllocator
         markGeneDataRegions(read);
         mChimericReads.addSupplementaryRead(read);
 
-        if(mReadDataWriter != null && mConfig.writeType(WriteType.READ))
-        {
-            List<GeneReadData> overlapGenes = mCurrentGenes.findGenesCoveringRange(
-                    read.alignmentStart(), read.alignmentEnd(), true);
-
-            writeReadData(mReadDataWriter, overlapGenes, read, CHIMERIC, 0);
-        }
+        writeChimericReadData(read);
     }
 
     private void processFragmentReads(final Read read1, final Read read2)
@@ -852,6 +843,21 @@ public class FragmentAllocator
         }
     }
 
+    private void processIncompleteReads()
+    {
+        // now slicing has completed, process unpaired primaries (supps have been handled already)
+        for(Object readObject : mFragmentReads.readMap().values())
+        {
+            Read read = (Read)readObject;
+            markGeneDataRegions(read);
+            mBaseDepth.processRead(read.getMappedRegionCoords());
+            writeChimericReadData(read);
+        }
+
+        mChimericReads.postProcessChimericReads(mBaseDepth, mFragmentReads);
+        processChimericNovelJunctions();
+    }
+
     private void processChimericNovelJunctions()
     {
         // examine chimeric reads to see if they can instead be handled as novel alternate splicing
@@ -932,6 +938,16 @@ public class FragmentAllocator
         mChimericReads.registerKnownFusionPairs(geneTransCache);
     }
 
+    private void writeChimericReadData(final Read read)
+    {
+        if(mReadDataWriter == null)
+            return;
+
+        List<GeneReadData> overlapGenes = mCurrentGenes.findGenesCoveringRange(
+                read.alignmentStart(), read.alignmentEnd(), true);
+
+        writeReadData(mReadDataWriter, overlapGenes, read, CHIMERIC, 0);
+    }
 
     @VisibleForTesting
     public void processReadRecords(final GeneCollection geneCollection, final List<Read> reads)
