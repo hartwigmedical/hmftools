@@ -102,7 +102,7 @@ public class ViralReadAlignmentTest
     private static ViralReadAlignment alignment(int start, int divergence, int alignerScore)
     {
         return new ViralReadAlignment(
-                "r1", CONTIG, start, start + ALIGNMENT_LENGTH - 1, 0, 0, alignerScore, divergence,
+                "r1", CONTIG, start, start + ALIGNMENT_LENGTH - 1, ALIGNMENT_LENGTH + "M", 0, 0, alignerScore, divergence,
                 List.of(new AlignedInterval(start, ALIGNMENT_LENGTH)));
     }
 

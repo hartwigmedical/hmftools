@@ -133,7 +133,7 @@ public class ContigSupportCalculatorTest
             int divergence)
     {
         return new ViralReadAlignment(
-                readName, contig, start, start + length - 1, 0, 0, alignerScore, divergence,
+                readName, contig, start, start + length - 1, length + "M", 0, 0, alignerScore, divergence,
                 List.of(new AlignedInterval(start, length)));
     }
 
@@ -141,7 +141,9 @@ public class ContigSupportCalculatorTest
     private static ViralReadAlignment clipped(String readName, ViralContig contig, int start, int end, int leftClip, int rightClip)
     {
         return new ViralReadAlignment(
-                readName, contig, start, end, leftClip, rightClip, 10, leftClip + rightClip,
+                readName, contig, start, end,
+                leftClip + "S" + (end - start + 1) + "M" + rightClip + "S",
+                leftClip, rightClip, 10, leftClip + rightClip,
                 List.of(new AlignedInterval(start, end - start + 1)));
     }
 }

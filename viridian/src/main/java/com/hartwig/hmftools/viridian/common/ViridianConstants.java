@@ -8,8 +8,10 @@ public class ViridianConstants
     public static final String APP_NAME = "Viridian";
 
     // Output file suffixes.
+    // TODO: should programmatically put in the app name later, not here
     public static final String CANDIDATES_FASTA_SUFFIX = ".viridian.candidates.fasta";
     public static final String ALL_ALIGNMENTS_BAM_SUFFIX = ".viridian.all.bam";
+    public static final String REPRESENTATIVE_ALIGNMENTS_BAM_SUFFIX = ".viridian.representative.bam";
     public static final String CONTIG_INFO_TSV_SUFFIX = ".viridian.contig_info.tsv";
     public static final String PAIRWISE_MARGINS_TSV_SUFFIX = ".viridian.pairwise_margins.tsv";
     public static final String INTEGRATIONS_TSV_SUFFIX = ".viridian.integrations.tsv";

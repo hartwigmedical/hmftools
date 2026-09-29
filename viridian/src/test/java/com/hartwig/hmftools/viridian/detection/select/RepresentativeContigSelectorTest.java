@@ -241,7 +241,7 @@ public class RepresentativeContigSelectorTest
     private static ViralReadAlignment alignment(String readName, ViralContig contig, int divergence)
     {
         return new ViralReadAlignment(
-                readName, contig, 1, LENGTH, 0, 0, 100, divergence, List.of(new AlignedInterval(1, LENGTH)));
+                readName, contig, 1, LENGTH, LENGTH + "M", 0, 0, 100, divergence, List.of(new AlignedInterval(1, LENGTH)));
     }
 
     private static OncologyGroupRepresentativeSelection group(List<OncologyGroupRepresentativeSelection> selections,

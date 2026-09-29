@@ -70,13 +70,13 @@ public class ViralReadAlignmentsTest
     private static ViralReadAlignment alignment(String readName, ViralContig contig)
     {
         return new ViralReadAlignment(
-                readName, contig, 1, LENGTH, 0, 0, 100, 0, List.of(new AlignedInterval(1, LENGTH)));
+                readName, contig, 1, LENGTH, LENGTH + "M", 0, 0, 100, 0, List.of(new AlignedInterval(1, LENGTH)));
     }
 
     // A right clip projecting well past the contig end.
     private static ViralReadAlignment straddler(String readName, ViralContig contig)
     {
         return new ViralReadAlignment(
-                readName, contig, 1, LENGTH, 0, 50, 100, 50, List.of(new AlignedInterval(1, LENGTH)));
+                readName, contig, 1, LENGTH, LENGTH + "M50S", 0, 50, 100, 50, List.of(new AlignedInterval(1, LENGTH)));
     }
 }

@@ -21,6 +21,7 @@ public record ViralReadAlignment(
         ViralContig contig,
         int alignmentStart,
         int alignmentEnd,
+        String cigar,
         int leftClip,
         int rightClip,
         int alignerScore,
@@ -54,6 +55,10 @@ public record ViralReadAlignment(
         {
             throw new IllegalArgumentException("Invalid divergence: " + divergence);
         }
+        if(cigar.isEmpty())
+        {
+            throw new IllegalArgumentException("Invalid cigar");
+        }
         if(alignedIntervals.isEmpty())
         {
             throw new IllegalArgumentException("Invalid alignedIntervals");
@@ -74,7 +79,8 @@ public record ViralReadAlignment(
 
         return new ViralReadAlignment(
                 record.getReadName(), reference.contig(record.getReferenceName()), record.getAlignmentStart(),
-                record.getAlignmentEnd(), leftClip, rightClip, alignerScore, editDistance + leftClip + rightClip, intervals);
+                record.getAlignmentEnd(), record.getCigarString(), leftClip, rightClip, alignerScore, editDistance + leftClip + rightClip,
+                intervals);
     }
 
     // The clipped bases project past a contig end, so the read straddles the circular genome's linearization origin:

@@ -28,7 +28,7 @@ public class AlignedReadTest
     private static ViralReadAlignment alignment(int start, int divergence, int alignerScore)
     {
         return new ViralReadAlignment(
-                "r1", V1, start, start + LENGTH - 1, 0, 0, alignerScore, divergence,
+                "r1", V1, start, start + LENGTH - 1, LENGTH + "M", 0, 0, alignerScore, divergence,
                 List.of(new AlignedInterval(start, LENGTH)));
     }
 }

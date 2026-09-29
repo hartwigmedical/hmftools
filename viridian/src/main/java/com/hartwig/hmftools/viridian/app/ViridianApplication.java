@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.viridian.app;
 
 import static java.lang.System.exit;
+import static java.util.stream.Collectors.toSet;
 
 import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkCreateOutputDir;
@@ -10,6 +11,7 @@ import static com.hartwig.hmftools.viridian.common.ViridianConstants.CANDIDATES_
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.CONTIG_INFO_TSV_SUFFIX;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.INTEGRATIONS_TSV_SUFFIX;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.PAIRWISE_MARGINS_TSV_SUFFIX;
+import static com.hartwig.hmftools.viridian.common.ViridianConstants.REPRESENTATIVE_ALIGNMENTS_BAM_SUFFIX;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.VIRAL_READ_MIN_SOFT_CLIP_BASES_DEFAULT;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.VIRAL_REF_CONTIGS;
 
@@ -18,12 +20,15 @@ import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 
 import com.hartwig.hmftools.common.bwa.BwaMemAligner;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.viridian.common.UserInputError;
 import com.hartwig.hmftools.viridian.detection.align.ViralReadAligner;
 import com.hartwig.hmftools.viridian.detection.align.ViralReadAlignments;
+import com.hartwig.hmftools.viridian.detection.assign.RepresentativeReadAssigner;
 import com.hartwig.hmftools.viridian.detection.contig_stats.ContigStats;
 import com.hartwig.hmftools.viridian.detection.contig_stats.ContigStatsCalculator;
 import com.hartwig.hmftools.viridian.detection.extract.CandidateReadExtractor;
@@ -75,7 +80,10 @@ public class ViridianApplication
 
         List<ContigSupport> viralContigSupports = computeViralContigSupport(viralReadAlignments);
 
-        selectRepresentativeViralContigs(viralReadAlignments, viralContigSupports);
+        List<OncologyGroupRepresentativeSelection> selections =
+                selectRepresentativeViralContigs(viralReadAlignments, viralContigSupports);
+
+        assignReadsToRepresentatives(viralReadAlignments, selections);
 
         callHostIntegrations();
 
@@ -135,7 +143,8 @@ public class ViridianApplication
 
     // For each oncology group (group of virus strains at interesting taxonomy granularity), select 1 viral genome which best represents
     // the virus present in the sample.
-    private void selectRepresentativeViralContigs(ViralReadAlignments viralReadAlignments, List<ContigSupport> viralContigSupports)
+    private List<OncologyGroupRepresentativeSelection> selectRepresentativeViralContigs(
+            ViralReadAlignments viralReadAlignments, List<ContigSupport> viralContigSupports)
     {
         LOGGER.info("Selecting representative contig per oncology group");
         PairwiseMargins pairwiseMargins = PairwiseMargins.from(viralReadAlignments);
@@ -150,6 +159,23 @@ public class ViridianApplication
             LOGGER.info("Writing pairwise margins output");
             OutputWriter.writePairwiseMargins(outputFile(PAIRWISE_MARGINS_TSV_SUFFIX), pairwiseMargins, selections);
         }
+
+        return selections;
+    }
+
+    // For each oncology group, assign the read alignments to only the selected representative viral genome.
+    // This is simply filtering down to each read's alignment to that genome contig (or nothing, if it didn't align there at all).
+    private void assignReadsToRepresentatives(
+            ViralReadAlignments viralReadAlignments, List<OncologyGroupRepresentativeSelection> selections)
+    {
+        LOGGER.info("Assigning reads to representative contigs");
+        Set<ViralContig> representatives = selections.stream()
+                .map(OncologyGroupRepresentativeSelection::representative)
+                .filter(Objects::nonNull)
+                .collect(toSet());
+        RepresentativeReadAssigner.assign(
+                viralReadAlignments, representatives, outputFile(ALL_ALIGNMENTS_BAM_SUFFIX),
+                outputFile(REPRESENTATIVE_ALIGNMENTS_BAM_SUFFIX));
     }
 
     private static void logRepresentativeContigSelections(List<OncologyGroupRepresentativeSelection> selections)
