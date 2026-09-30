@@ -8,10 +8,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import com.hartwig.hmftools.viridian.detection.common.ReadId;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import com.hartwig.hmftools.viridian.detection.common.ReadId;
 
 import htsjdk.samtools.SAMRecord;
 

@@ -26,6 +26,7 @@ import java.util.Set;
 import com.hartwig.hmftools.common.bwa.BwaMemAligner;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.viridian.common.UserInputError;
+import com.hartwig.hmftools.viridian.detection.align.AllAlignments;
 import com.hartwig.hmftools.viridian.detection.align.ViralReadAligner;
 import com.hartwig.hmftools.viridian.detection.align.ViralReadAlignments;
 import com.hartwig.hmftools.viridian.detection.assign.RepresentativeReadAssigner;
@@ -76,21 +77,21 @@ public class ViridianApplication
 
         BwaMemAligner.initLibrary(mConfig.bwaLibPath());
 
-        ViralReadAlignments viralReadAlignments = getViralReadAlignments();
+        AllAlignments allAlignments = getViralReadAlignments();
 
-        List<ContigSupport> viralContigSupports = computeViralContigSupport(viralReadAlignments);
+        List<ContigSupport> viralContigSupports = computeViralContigSupport(allAlignments);
 
         List<OncologyGroupRepresentativeSelection> selections =
-                selectRepresentativeViralContigs(viralReadAlignments, viralContigSupports);
+                selectRepresentativeViralContigs(allAlignments, viralContigSupports);
 
-        assignReadsToRepresentatives(viralReadAlignments, selections);
+        assignReadsToRepresentatives(allAlignments.alignments(), selections);
 
         callHostIntegrations();
 
         LOGGER.info("{} complete, mins({})", APP_NAME, runTimeMinsStr(startTimeMs));
     }
 
-    private ViralReadAlignments getViralReadAlignments()
+    private AllAlignments getViralReadAlignments()
     {
         String allAlignmentsBamFile = outputFile(ALL_ALIGNMENTS_BAM_SUFFIX);
         // Alignment is pretty slow, so allow reusing the cached BAM for a rerun.
@@ -98,7 +99,7 @@ public class ViridianApplication
         {
             alignCandidateReadsToViralContigs(allAlignmentsBamFile);
         }
-        return ViralReadAlignments.load(allAlignmentsBamFile, mViralReference);
+        return AllAlignments.load(allAlignmentsBamFile, mViralReference);
     }
 
     private String getCandidateReads()
@@ -134,22 +135,23 @@ public class ViridianApplication
     }
 
     // Compute support information for each virus genome and decide which genomes may be present.
-    private List<ContigSupport> computeViralContigSupport(ViralReadAlignments viralReadAlignments)
+    private List<ContigSupport> computeViralContigSupport(AllAlignments allAlignments)
     {
         LOGGER.info("Computing per-contig support");
-        Map<ViralContig, ContigStats> contigStats = ContigStatsCalculator.calculate(viralReadAlignments);
-        return new ContigSupportCalculator().compute(viralReadAlignments, contigStats);
+        Map<ViralContig, ContigStats> contigStats = ContigStatsCalculator.calculate(
+                allAlignments.alignments().byContig(), allAlignments.metrics().originClippedReads());
+        return new ContigSupportCalculator().compute(allAlignments, contigStats);
     }
 
     // For each oncology group (group of virus strains at interesting taxonomy granularity), select 1 viral genome which best represents
     // the virus present in the sample.
     private List<OncologyGroupRepresentativeSelection> selectRepresentativeViralContigs(
-            ViralReadAlignments viralReadAlignments, List<ContigSupport> viralContigSupports)
+            AllAlignments allAlignments, List<ContigSupport> viralContigSupports)
     {
         LOGGER.info("Selecting representative contig per oncology group");
-        PairwiseMargins pairwiseMargins = PairwiseMargins.from(viralReadAlignments);
+        PairwiseMargins pairwiseMargins = PairwiseMargins.from(allAlignments.alignments().byRead());
         List<OncologyGroupRepresentativeSelection> selections = RepresentativeContigSelector.select(
-                viralContigSupports, pairwiseMargins, viralReadAlignments.readCountsByOncologyGroup());
+                viralContigSupports, pairwiseMargins, allAlignments.metrics().readCountsByOncologyGroup());
         logRepresentativeContigSelections(selections);
 
         LOGGER.info("Writing contig info output");

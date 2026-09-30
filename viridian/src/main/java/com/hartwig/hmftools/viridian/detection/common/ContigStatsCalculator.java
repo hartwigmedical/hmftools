@@ -4,43 +4,38 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.util.stream.Collectors.toMap;
 
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import com.hartwig.hmftools.viridian.detection.align.AlignedInterval;
 import com.hartwig.hmftools.viridian.detection.align.ViralReadAlignment;
-import com.hartwig.hmftools.viridian.detection.align.ViralReadAlignments;
 import com.hartwig.hmftools.viridian.reference.ViralContig;
 
-// Statistics for every contig the reads aligned to, counting each read once per contig by its best alignment there.
+// Statistics for every contig with an alignment, counting each read once by its best alignment there.
 public class ContigStatsCalculator
 {
-    public static Map<ViralContig, ContigStats> calculate(ViralReadAlignments viralAlignments)
+    public static Map<ViralContig, ContigStats> calculate(
+            Map<ViralContig, Map<ReadId, ViralReadAlignment>> alignmentsByContig,
+            Map<ViralContig, Integer> originClippedReads)
     {
-        Map<ViralContig, Integer> originClippedReads = viralAlignments.originClippedReads();
-        Map<ViralContig, List<ViralReadAlignment>> bestAlignments = new HashMap<>();
+        // TODO: can this be a 1 statement stream operation?
+        Map<ViralContig, Collection<ViralReadAlignment>> contigAlignments = new HashMap<>();
+        alignmentsByContig.forEach((contig, readAlignments) -> contigAlignments.put(contig, readAlignments.values()));
 
         // A contig whose every alignment straddled the origin retains no read, but the drop is still worth reporting.
-        originClippedReads.keySet().forEach(contig -> bestAlignments.computeIfAbsent(contig, key -> new ArrayList<>()));
+        originClippedReads.keySet().forEach(contig -> contigAlignments.computeIfAbsent(contig, k -> List.of()));
 
-        viralAlignments.reads().forEach(read -> read.hits().forEach(
-                (contig, hit) ->
-                {
-                    List<ViralReadAlignment> contigAlignments = bestAlignments.computeIfAbsent(contig, key -> new ArrayList<>());
-                    contigAlignments.add(hit.best());
-                }));
-
-        return bestAlignments.entrySet().stream().collect(toMap(
+        return contigAlignments.entrySet().stream().collect(toMap(
                 Map.Entry::getKey,
                 entry -> createContigStats(
                         entry.getKey(), entry.getValue(), originClippedReads.getOrDefault(entry.getKey(), 0))));
     }
 
     private static ContigStats createContigStats(
-            ViralContig contig, List<ViralReadAlignment> alignments, int originClippedReads)
+            ViralContig contig, Collection<ViralReadAlignment> alignments, int originClippedReads)
     {
         int[] depth = calculateDepth(contig.length(), alignments);
         int coveredBases = (int) Arrays.stream(depth).filter(baseDepth -> baseDepth > 0).count();
@@ -53,7 +48,7 @@ public class ContigStatsCalculator
                 contig, alignments.size(), originClippedReads, coveredBases, SummaryStats.from(depth), alignerScore);
     }
 
-    private static int[] calculateDepth(int contigLength, List<ViralReadAlignment> alignments)
+    private static int[] calculateDepth(int contigLength, Collection<ViralReadAlignment> alignments)
     {
         int[] depth = new int[contigLength];
         for(ViralReadAlignment alignment : alignments)

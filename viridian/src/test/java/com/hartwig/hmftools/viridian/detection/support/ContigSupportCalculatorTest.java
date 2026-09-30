@@ -5,16 +5,17 @@ import static com.hartwig.hmftools.viridian.common.ViridianConstants.READ_VOTE_C
 import static org.junit.Assert.assertEquals;
 
 import java.util.List;
+import java.util.Map;
 
 import com.hartwig.hmftools.viridian.detection.align.AlignedInterval;
+import com.hartwig.hmftools.viridian.detection.align.AllAlignments;
 import com.hartwig.hmftools.viridian.detection.align.ViralReadAlignment;
-import com.hartwig.hmftools.viridian.detection.align.ViralReadAlignments;
 import com.hartwig.hmftools.viridian.detection.common.ContigStats;
 import com.hartwig.hmftools.viridian.detection.common.ContigStatsCalculator;
+import com.hartwig.hmftools.viridian.detection.common.ReadId;
 import com.hartwig.hmftools.viridian.detection.common.SummaryStats;
 import com.hartwig.hmftools.viridian.reference.OncologyGroup;
 import com.hartwig.hmftools.viridian.reference.ViralContig;
-import com.hartwig.hmftools.viridian.detection.common.ReadId;
 
 import org.junit.Test;
 
@@ -119,9 +120,10 @@ public class ContigSupportCalculatorTest
 
     private static List<ContigSupport> compute(List<ViralReadAlignment> alignments, double correctBaseProbability)
     {
-        ViralReadAlignments viralAlignments = ViralReadAlignments.from(alignments, MEAN_READ_LENGTH);
-        return new ContigSupportCalculator(correctBaseProbability).compute(
-                viralAlignments, ContigStatsCalculator.calculate(viralAlignments));
+        AllAlignments allAlignments = AllAlignments.from(alignments, MEAN_READ_LENGTH);
+        Map<ViralContig, ContigStats> contigStats = ContigStatsCalculator.calculate(
+                allAlignments.alignments().byContig(), allAlignments.metrics().originClippedReads());
+        return new ContigSupportCalculator(correctBaseProbability).compute(allAlignments, contigStats);
     }
 
     private static ContigSupport get(List<ContigSupport> stats, ViralContig contig)

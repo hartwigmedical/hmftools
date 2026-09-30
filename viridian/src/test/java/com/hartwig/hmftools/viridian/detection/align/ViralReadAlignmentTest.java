@@ -11,10 +11,10 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 import java.util.stream.Stream;
 
+import com.hartwig.hmftools.viridian.detection.common.ReadId;
 import com.hartwig.hmftools.viridian.reference.OncologyGroup;
 import com.hartwig.hmftools.viridian.reference.ViralContig;
 import com.hartwig.hmftools.viridian.reference.ViralReference;
-import com.hartwig.hmftools.viridian.detection.common.ReadId;
 
 import org.jetbrains.annotations.Nullable;
 import org.junit.Test;

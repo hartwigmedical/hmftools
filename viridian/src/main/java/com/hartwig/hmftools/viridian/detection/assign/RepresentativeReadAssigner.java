@@ -10,10 +10,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.hartwig.hmftools.viridian.detection.align.AlignedRead;
-import com.hartwig.hmftools.viridian.detection.common.ReadId;
 import com.hartwig.hmftools.viridian.detection.align.ViralReadAlignment;
 import com.hartwig.hmftools.viridian.detection.align.ViralReadAlignments;
+import com.hartwig.hmftools.viridian.detection.common.ReadId;
 import com.hartwig.hmftools.viridian.reference.ViralContig;
 
 import org.apache.logging.log4j.LogManager;
@@ -34,22 +33,24 @@ public class RepresentativeReadAssigner
 {
     private static final Logger LOGGER = LogManager.getLogger(RepresentativeReadAssigner.class);
 
-    public static void assign(
+    // Returns the alignment selected for each read.
+    public static Map<ReadId, ViralReadAlignment> assign(
             ViralReadAlignments viralAlignments, Set<ViralContig> representatives,
             String allAlignmentsBamFile, String outputBamFile)
     {
-        Map<ReadId, ViralReadAlignment> assignmentsByRead = assignReads(viralAlignments.reads(), representatives);
+        Map<ReadId, ViralReadAlignment> assignmentsByRead = assignReads(viralAlignments.byRead(), representatives);
 
         LOGGER.debug(
                 "Assigned {} reads, {} fit no representative",
-                assignmentsByRead.size(), viralAlignments.reads().size() - assignmentsByRead.size());
+                assignmentsByRead.size(), viralAlignments.readCount() - assignmentsByRead.size());
 
         writeAssignedAlignments(allAlignmentsBamFile, outputBamFile, assignmentsByRead);
+
+        return assignmentsByRead;
     }
 
-    // Return value map is: read -> selected alignment
-    // Absent if the read has no alignment.
-    static Map<ReadId, ViralReadAlignment> assignReads(List<AlignedRead> reads, Set<ViralContig> representatives)
+    static Map<ReadId, ViralReadAlignment> assignReads(
+            Map<ReadId, Map<ViralContig, ViralReadAlignment>> alignmentsByRead, Set<ViralContig> representatives)
     {
         // Tie-break by contig for determinism.
         // But not expecting that a read will support multiple representative contigs.
@@ -59,16 +60,16 @@ public class RepresentativeReadAssigner
         Map<ReadId, ViralReadAlignment> assignmentsByRead = new LinkedHashMap<>();
         int multiRepReads = 0;
         int multiRepTiedReads = 0;
-        for(AlignedRead read : reads)
+        for(Map.Entry<ReadId, Map<ViralContig, ViralReadAlignment>> read : alignmentsByRead.entrySet())
         {
-            List<ViralReadAlignment> candidates = read.hits().entrySet().stream()
-                    .filter(hit -> representatives.contains(hit.getKey()))
-                    .map(hit -> hit.getValue().best())
+            List<ViralReadAlignment> candidates = read.getValue().entrySet().stream()
+                    .filter(alignment -> representatives.contains(alignment.getKey()))
+                    .map(Map.Entry::getValue)
                     .sorted(alignmentComparator)
                     .toList();
             if(!candidates.isEmpty())
             {
-                assignmentsByRead.put(read.readId(), candidates.get(0));
+                assignmentsByRead.put(read.getKey(), candidates.get(0));
             }
             if(candidates.size() > 1)
             {

@@ -9,8 +9,8 @@ import java.util.NavigableMap;
 import java.util.Set;
 import java.util.TreeMap;
 
-import com.hartwig.hmftools.viridian.detection.align.AlignedRead;
-import com.hartwig.hmftools.viridian.detection.align.ViralReadAlignments;
+import com.hartwig.hmftools.viridian.detection.align.ViralReadAlignment;
+import com.hartwig.hmftools.viridian.detection.common.ReadId;
 import com.hartwig.hmftools.viridian.reference.OncologyGroup;
 import com.hartwig.hmftools.viridian.reference.ViralContig;
 
@@ -30,13 +30,12 @@ public class PairwiseMargins
         mSharedReads = sharedReads;
     }
 
-    // TODO: only needs to accept collection of AlignedRead ?
-    public static PairwiseMargins from(ViralReadAlignments viralAlignments)
+    public static PairwiseMargins from(Map<ReadId, Map<ViralContig, ViralReadAlignment>> alignmentsByRead)
     {
         Map<ContigPair, NavigableMap<Integer, Integer>> marginCounts = new HashMap<>();
         Map<ContigPair, Integer> sharedReads = new HashMap<>();
 
-        viralAlignments.reads().forEach(read -> accumulateRead(read, marginCounts, sharedReads));
+        alignmentsByRead.values().forEach(read -> accumulateRead(read, marginCounts, sharedReads));
 
         return new PairwiseMargins(marginCounts, sharedReads);
     }
@@ -70,10 +69,10 @@ public class PairwiseMargins
     // Pairs up the contigs it aligns to within each oncology group.
     // For each ordered pair, records that they share the read, and the subject's winning margin over the opponent (if any).
     private static void accumulateRead(
-            AlignedRead read,
+            Map<ViralContig, ViralReadAlignment> readAlignments,
             Map<ContigPair, NavigableMap<Integer, Integer>> marginCounts, Map<ContigPair, Integer> sharedReads)
     {
-        Map<OncologyGroup, List<ViralContig>> contigsByOncologyGroup = read.hits().keySet().stream()
+        Map<OncologyGroup, List<ViralContig>> contigsByOncologyGroup = readAlignments.keySet().stream()
                 .collect(groupingBy(ViralContig::oncologyGroup));
 
         for(List<ViralContig> oncologyGroupContigs : contigsByOncologyGroup.values())
@@ -87,10 +86,10 @@ public class PairwiseMargins
                         ContigPair pair = new ContigPair(subject, opponent);
                         sharedReads.merge(pair, 1, Integer::sum);
 
-                        int margin = read.hits().get(opponent).divergence() - read.hits().get(subject).divergence();
+                        int margin = readAlignments.get(opponent).divergence() - readAlignments.get(subject).divergence();
                         if(margin > 0)
                         {
-                            marginCounts.computeIfAbsent(pair, key -> new TreeMap<>()).merge(margin, 1, Integer::sum);
+                            marginCounts.computeIfAbsent(pair, k -> new TreeMap<>()).merge(margin, 1, Integer::sum);
                         }
                     }
                 }

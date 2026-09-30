@@ -1,114 +1,53 @@
 package com.hartwig.hmftools.viridian.detection.align;
 
-import static java.util.stream.Collectors.toMap;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import com.hartwig.hmftools.viridian.detection.common.ReadId;
-import com.hartwig.hmftools.viridian.reference.OncologyGroup;
 import com.hartwig.hmftools.viridian.reference.ViralContig;
-import com.hartwig.hmftools.viridian.reference.ViralReference;
 
-import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SamReader;
-import htsjdk.samtools.SamReaderFactory;
-import htsjdk.samtools.ValidationStringency;
-
-// All viral alignments read from the viral reference alignment BAM.
-// Each read may have multiple alignments (BWA-MEM -a mode).
-// Alignments straddling a contig's origin are excluded here to avoid circular genome linearization artifacts.
-public record ViralReadAlignments(
-        List<AlignedRead> reads,
-        double meanReadLength,
-        // Reads with an alignment dropped for clipping over their contig's start or end.
-        Map<ViralContig, Integer> originClippedReads,
-        // Distinct reads with at least one alignment to any contig of the oncology group.
-        Map<OncologyGroup, Integer> readCountsByOncologyGroup
-)
+// A set of read alignments to virus genomes.
+// For each read, stores on the best alignment to each contig.
+// (Rarely, a read can align to the same contig multiple times, but these secondary alignments are not necessary to keep).
+// TODO: could have better name, along with AllAlignments and AllAlignmentsMetrics?
+public class ViralReadAlignments
 {
-    public ViralReadAlignments
-    {
-        if(!reads.isEmpty() && meanReadLength <= 0)
-        {
-            throw new IllegalArgumentException("Invalid mean read length: " + meanReadLength);
-        }
-    }
+    private final Map<ViralContig, Map<ReadId, ViralReadAlignment>> mByContig;
+    private final Map<ReadId, Map<ViralContig, ViralReadAlignment>> mByRead;
 
-    public static ViralReadAlignments from(List<ViralReadAlignment> alignments, double meanReadLength)
+    public ViralReadAlignments(Collection<ViralReadAlignment> alignments)
     {
-        Map<ViralContig, Set<ReadId>> originClippedReadsByContig = new HashMap<>();
-        Map<OncologyGroup, Set<ReadId>> readsByOncologyGroup = new HashMap<>();
-        Map<ReadId, List<ViralReadAlignment>> alignmentsByRead = new LinkedHashMap<>();
-
+        mByContig = new HashMap<>();
+        mByRead = new LinkedHashMap<>();
         for(ViralReadAlignment alignment : alignments)
         {
-            if(alignment.clipsOverContigEnd())
+            ViralReadAlignment replaced = mByContig
+                    .computeIfAbsent(alignment.contig(), k -> new LinkedHashMap<>())
+                    .put(alignment.readId(), alignment);
+            if(replaced != null)
             {
-                Set<ReadId> contigReads = originClippedReadsByContig.computeIfAbsent(alignment.contig(), k -> new HashSet<>());
-                contigReads.add(alignment.readId());
+                throw new IllegalArgumentException("Repeat alignment of a read on contig: " + alignment.contig().name());
             }
-            else
-            {
-                List<ViralReadAlignment> readAlignments = alignmentsByRead.computeIfAbsent(alignment.readId(), k -> new ArrayList<>());
-                readAlignments.add(alignment);
-
-                Set<ReadId> oncologyGroupReads = readsByOncologyGroup.computeIfAbsent(
-                        alignment.contig().oncologyGroup(), k -> new HashSet<>());
-                oncologyGroupReads.add(alignment.readId());
-            }
+            mByRead.computeIfAbsent(alignment.readId(), k -> new HashMap<>()).put(alignment.contig(), alignment);
         }
-
-        List<AlignedRead> reads = alignmentsByRead.entrySet().stream()
-                .map(entry -> AlignedRead.from(entry.getKey(), entry.getValue()))
-                .toList();
-
-        Map<ViralContig, Integer> originClippedReadCounts = originClippedReadsByContig.entrySet().stream()
-                .collect(toMap(Map.Entry::getKey, entry -> entry.getValue().size()));
-
-        Map<OncologyGroup, Integer> oncologyGroupReadCounts = readsByOncologyGroup.entrySet().stream()
-                .collect(toMap(Map.Entry::getKey, entry -> entry.getValue().size()));
-
-        return new ViralReadAlignments(reads, meanReadLength, originClippedReadCounts, oncologyGroupReadCounts);
     }
 
-    public static ViralReadAlignments load(String bamFile, ViralReference reference)
+    // Contig -> read -> read's best alignment on contig.
+    public Map<ViralContig, Map<ReadId, ViralReadAlignment>> byContig()
     {
-        List<ViralReadAlignment> alignments = new ArrayList<>();
-        long readLengthSum = 0;
-        int readLengthCount = 0;
+        return mByContig;
+    }
 
-        try(SamReader reader = SamReaderFactory.makeDefault().validationStringency(ValidationStringency.SILENT).open(new File(bamFile)))
-        {
-            for(SAMRecord record : reader)
-            {
-                if(record.getReadUnmappedFlag())
-                {
-                    continue;
-                }
-                alignments.add(ViralReadAlignment.from(record, reference));
+    // Read -> contig -> read's best alignment on contig.
+    public Map<ReadId, Map<ViralContig, ViralReadAlignment>> byRead()
+    {
+        return mByRead;
+    }
 
-                // Only primaries are significant for measuring read length.
-                if(!record.isSecondaryAlignment() && !record.getSupplementaryAlignmentFlag() && record.getReadLength() > 0)
-                {
-                    readLengthSum += record.getReadLength();
-                    ++readLengthCount;
-                }
-            }
-        }
-        catch(IOException e)
-        {
-            throw new RuntimeException("Failed to read aligned BAM", e);
-        }
-
-        double meanReadLength = readLengthCount > 0 ? (double) readLengthSum / readLengthCount : 0.0;
-        return from(alignments, meanReadLength);
+    public int readCount()
+    {
+        return mByRead.size();
     }
 }
