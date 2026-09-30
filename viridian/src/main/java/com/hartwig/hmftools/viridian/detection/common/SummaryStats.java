@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.viridian.common;
+package com.hartwig.hmftools.viridian.detection.common;
 
 import static java.util.Map.entry;
 import static java.util.stream.Collectors.toMap;

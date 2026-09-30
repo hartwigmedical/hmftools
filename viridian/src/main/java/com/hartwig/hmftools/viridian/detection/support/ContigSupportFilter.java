@@ -8,7 +8,7 @@ import static com.hartwig.hmftools.viridian.common.ViridianConstants.VIRAL_CONTI
 
 import java.util.Map;
 
-import com.hartwig.hmftools.viridian.detection.contig_stats.ContigStats;
+import com.hartwig.hmftools.viridian.detection.common.ContigStats;
 import com.hartwig.hmftools.viridian.reference.ViralContig;
 
 // Determines whether a contig carries enough evidence to be considered present in the sample.

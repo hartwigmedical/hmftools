@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.viridian.detection.support;
 
-import com.hartwig.hmftools.viridian.common.SummaryStats;
-import com.hartwig.hmftools.viridian.detection.contig_stats.ContigStats;
+import com.hartwig.hmftools.viridian.detection.common.ContigStats;
+import com.hartwig.hmftools.viridian.detection.common.SummaryStats;
 import com.hartwig.hmftools.viridian.reference.ViralContig;
 
 import org.jetbrains.annotations.Nullable;

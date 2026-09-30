@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.viridian.common;
+package com.hartwig.hmftools.viridian.detection.common;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;

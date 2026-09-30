@@ -6,8 +6,8 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.Map;
 
-import com.hartwig.hmftools.viridian.common.SummaryStats;
-import com.hartwig.hmftools.viridian.detection.contig_stats.ContigStats;
+import com.hartwig.hmftools.viridian.detection.common.ContigStats;
+import com.hartwig.hmftools.viridian.detection.common.SummaryStats;
 import com.hartwig.hmftools.viridian.reference.OncologyGroup;
 import com.hartwig.hmftools.viridian.reference.ViralContig;
 

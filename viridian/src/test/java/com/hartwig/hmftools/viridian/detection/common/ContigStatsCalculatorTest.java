@@ -1,11 +1,10 @@
-package com.hartwig.hmftools.viridian.detection.contig_stats;
+package com.hartwig.hmftools.viridian.detection.common;
 
 import static org.junit.Assert.assertEquals;
 
 import java.util.List;
 import java.util.Map;
 
-import com.hartwig.hmftools.viridian.common.SummaryStats;
 import com.hartwig.hmftools.viridian.detection.align.AlignedInterval;
 import com.hartwig.hmftools.viridian.detection.align.ViralReadAlignment;
 import com.hartwig.hmftools.viridian.detection.align.ViralReadAlignments;

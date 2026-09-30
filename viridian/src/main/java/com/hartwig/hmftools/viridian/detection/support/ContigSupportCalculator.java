@@ -10,10 +10,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.hartwig.hmftools.viridian.common.SummaryStats;
 import com.hartwig.hmftools.viridian.detection.align.AlignedRead;
 import com.hartwig.hmftools.viridian.detection.align.ViralReadAlignments;
-import com.hartwig.hmftools.viridian.detection.contig_stats.ContigStats;
+import com.hartwig.hmftools.viridian.detection.common.ContigStats;
+import com.hartwig.hmftools.viridian.detection.common.SummaryStats;
 import com.hartwig.hmftools.viridian.reference.ViralContig;
 
 // Turns per-contig statistics into a verdict on the contig being present in the sample.

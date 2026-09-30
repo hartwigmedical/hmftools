@@ -15,8 +15,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.hartwig.hmftools.common.utils.file.DelimFileWriter;
-import com.hartwig.hmftools.viridian.common.SummaryStats;
-import com.hartwig.hmftools.viridian.detection.contig_stats.ContigStats;
+import com.hartwig.hmftools.viridian.detection.common.ContigStats;
+import com.hartwig.hmftools.viridian.detection.common.SummaryStats;
 import com.hartwig.hmftools.viridian.detection.select.OncologyGroupRepresentativeSelection;
 import com.hartwig.hmftools.viridian.detection.select.PairwiseMargins;
 import com.hartwig.hmftools.viridian.detection.select.RepresentativeContigCandidate;

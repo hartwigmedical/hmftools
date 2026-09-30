@@ -15,11 +15,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import com.hartwig.hmftools.viridian.common.SummaryStats;
 import com.hartwig.hmftools.viridian.detection.align.AlignedInterval;
 import com.hartwig.hmftools.viridian.detection.align.ViralReadAlignment;
 import com.hartwig.hmftools.viridian.detection.align.ViralReadAlignments;
-import com.hartwig.hmftools.viridian.detection.contig_stats.ContigStats;
+import com.hartwig.hmftools.viridian.detection.common.ContigStats;
+import com.hartwig.hmftools.viridian.detection.common.SummaryStats;
 import com.hartwig.hmftools.viridian.detection.support.ContigFilterStatus;
 import com.hartwig.hmftools.viridian.detection.support.ContigSupport;
 import com.hartwig.hmftools.viridian.reference.OncologyGroup;

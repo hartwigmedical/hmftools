@@ -6,12 +6,12 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.List;
 
-import com.hartwig.hmftools.viridian.common.SummaryStats;
 import com.hartwig.hmftools.viridian.detection.align.AlignedInterval;
 import com.hartwig.hmftools.viridian.detection.align.ViralReadAlignment;
 import com.hartwig.hmftools.viridian.detection.align.ViralReadAlignments;
-import com.hartwig.hmftools.viridian.detection.contig_stats.ContigStats;
-import com.hartwig.hmftools.viridian.detection.contig_stats.ContigStatsCalculator;
+import com.hartwig.hmftools.viridian.detection.common.ContigStats;
+import com.hartwig.hmftools.viridian.detection.common.ContigStatsCalculator;
+import com.hartwig.hmftools.viridian.detection.common.SummaryStats;
 import com.hartwig.hmftools.viridian.reference.OncologyGroup;
 import com.hartwig.hmftools.viridian.reference.ViralContig;
 
