@@ -475,7 +475,7 @@ public class ChimericReadTest
 
         assertFalse(ChimericUtils.setHasMultipleKnownSpliceGenes(Lists.newArrayList(read), knownPairGeneIds));
         
-        // if the genes are known then treat this as chimeroc
+        // if the genes are known then treat this as chimeric
         knownPairGeneIds.add(new String[] {GENE_ID_1, GENE_ID_2});
         assertTrue(ChimericUtils.setHasMultipleKnownSpliceGenes(Lists.newArrayList(read), knownPairGeneIds));
     }

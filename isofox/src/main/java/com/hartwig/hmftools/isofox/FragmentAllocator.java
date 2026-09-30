@@ -969,6 +969,12 @@ public class FragmentAllocator
     }
 
     @VisibleForTesting
+    public void postSliceProcessReads()
+    {
+        processIncompleteReads();
+    }
+
+    @VisibleForTesting
     public final FragmentTracker getFragmentTracker() { return mFragmentReads; }
 
 }
