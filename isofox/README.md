@@ -11,20 +11,22 @@ For transcript abundance, Isofox uses a similar methodology to several previous 
 * Avoids overfitting of 'retained intron' transcripts which may simply be intronic reads 
 * Individual or combinations of splice junctions which are unique to a transcript will be weighed strongly. Does not overfit variability of coverage within exons
 
-The input for Isofox is mapped paired end reads. We align with bwa-mem2 against a transcriptome-augmented reference and lift the alignments back to genomic coordinates with tars, then mark duplicates with redux; Isofox takes the resulting post-tars, post-redux BAM.
+Isofox takes as input a BAM of RNA reads aligned to the genome. Reads are aligned with bwa-mem2 against a transcriptome-augmented reference, lifted back to genomic coordinates by TARS (see the [TARS README](../tars/README.md)), and then duplicate-marked by redux. Isofox currently requires paired-end reads.
+
+![How TARS works](src/main/resources/readme/tars.svg)
+
+**To run Isofox on STAR-aligned BAMs, use Isofox v2.0 or earlier.**
 
 
 ### A note on duplicates, highly expressed genes, raw and adjusted TPM
 We recommend to mark duplicates in your pipeline. They are included in gene and transcript expression data (to avoid bias against highly expressed genes) but excluded from novel splice junction analysis.  
 
-We find that 6 genes in particular (RN7SL2, RN7SL1, RN7SL3, RN7SL4P, RN7SL5P & RN7SK) are highly expressed across our cohort and at variable rates - in extreme samples these can account for >75% of all transcripts. Isofox excludes these genes from our GC bias calculations and to determine a normalisation factor for "adjusted TPM" so that they don't dominate expression differences.  For any given sample, AdjustedTPM = rawTPM x constant with the constant determined by the normalisation (which excludes the 6 genes and also limits all other genes to 1% contribution). The adjusted TPMs no longer sum to 1M transcripts, but should be more comparable across samples.  We suggest to use the adjusted TPM for expression analysis.
+We find that 6 genes in particular (RN7SL2, RN7SL1, RN7SL3, RN7SL4P, RN7SL5P & RN7SK) are highly expressed across our cohort and at variable rates - in extreme samples these can account for >75% of all transcripts. TARS unmaps reads in these genes using [unmap_regions.rna.38.tsv](https://github.com/hartwigmedical/pipeline-resources/blob/master/hmftools/rna/mappability/unmap_regions.rna.38.tsv), so they don't dominate expression differences. Isofox reports both a raw and an adjusted TPM. For any given sample, adjusted TPM = raw TPM x constant, where the constant comes from a normalisation that caps any single transcript at 1% of the total. Adjusted TPMs no longer sum to 1M transcripts, but are more comparable across samples. We suggest using the adjusted TPM for expression analysis.
 
 In addition, any junction which maps in the Poly-G region of LINC00486 is filtered from all analyses (v38: chr2:32,916,190-32,916,630; v37: 2:33,141,260-33,141,700) as they are likely the result of Poly-G sequencer artefacts.
 
 ### A note on alignment and multi-mapping
-Reads are aligned with bwa-mem2 against a transcriptome-augmented reference and lifted back to genomic coordinates by tars, then duplicate-marked by redux. Chimeric and supplementary alignments are retained in the BAM.
-
-Isofox supports both bwa-tars and STAR alignments, selected by `-aligner` (`bwa-tars` is the default, or `star`); the flag only affects how multi-mapped fragments are handled, which is the one place the two aligners differ. Under `bwa-tars` a multi-mapped read is a single primary alignment carrying its alternate loci in the bwa `XA` tag (no secondary records; map qualities 0 to 60, with a confident single-locus read at 60), and the fragment is counted once at its primary locus and flagged multi-mapped. Under `star` the alternate mappings are separate secondary records and ambiguity is encoded in the map quality (255 unique, 3 or lower multi-mapped); a multi-mapped fragment is down-weighted by map-quality tier so its mass is shared across the loci it maps to, reproducing pre-tars behaviour. Under either aligner, multi-mapped reads are excluded from novel splice junction and chimeric analysis. The optional `MULTI_MAP_LOCI` write type emits a tsv of each multi-mapped read's primary and XA alternate loci per gene collection for auditing (bwa-tars only).
+Supplementary alignments are used for fusion and novel splice junction detection; secondary alignments are ignored. A multi-mapped read is a single primary alignment with its alternate loci in the bwa `XA` tag. A multi-mapped fragment is counted once at its primary locus and excluded from novel splice junction, retained intron and chimeric analysis. The optional `MULTI_MAP_LOCI` write type lists the primary and XA loci of each multi-mapped fragment.
 
 ## Configuration
 The functions of Isofox are controlled by the 'functions' argument:
@@ -64,7 +66,7 @@ excluded_regions | Drop reads in regions of high multi-mappability
 excluded_gene_id_file | Exclude genes in file, format EnsemblGeneId,GeneName
 enriched_gene_ids | List of EnsemblGeneIds separated by ';', see Enriched Genes information below
 drop_dups | Default is false. By default duplicate fragments will be counted towards transcript expression.
-write_type | Debug only, separated by ';': EXON, SPLICE_JUNC, FRAG_LENGTH, FRAG_LENGTH_BY_GENE, READ, CHIMERIC_READ, CHIMERIC_POSITION_DATA, SPLICE_SITE, TRANS_COMBO, GC_RATIO, MULTI_MAP_LOCI
+write_type | Debug only, separated by ';': EXON, SPLICE_JUNC, FRAG_LENGTH, FRAG_LENGTH_BY_GENE, READ, FUSION_FRAGMENT, CHIMERIC_POSITION_DATA, SPLICE_SITE, TRANS_COMBO, GC_RATIO, MULTI_MAP_LOCI
 
 ### Reference Files
 
@@ -88,8 +90,7 @@ frag_length_min_count | Minimum number of fragments to observe for length distri
 exp_rate_frag_lengths | Discrete buckets for fragment lengths, either with frequency specified or left as zero if to be calculated (ie with -apply_calc_frag_lengths). eg '50-0;75-0;100-0;125-0;150-0;200-0;250-0;300-0;400-0;550-0' 
 read_length | Expected RNA read length (eg 76 or 151), will be computed if not provided
 long_frag_limit | Default 550 bases, fragments longer than this without a splice junction are not considered to support a gene for the purposes of expression
-single_map_qual | Default 60, or 255 when 'star_aligner' is set. Discard reads with map quality below this.
-star_aligner | Flag, off by default. Off assumes the bwa-tars + REDUX pipeline; set it to apply STAR-aligner settings (raises the default single_map_qual to 255).
+single_map_qual | Default 60. Minimum map quality for reads used to sample fragment lengths.
 enriched_gene_ids | By default includes: ENSG00000265150;ENSG00000258486;ENSG00000202198;ENSG00000266037;ENSG00000263740;ENSG00000265735
 
 ### Optional output files:
@@ -491,3 +492,19 @@ TransDataDown | Transcript ids which contain a splice junction which includes ma
 OtherGenesUp | Other genes which match the up breakpoint
 OtherGenesDown | Other genes which match the down breakpoint
 RelatedFusions | Ids of other fusions in the same gene which may be caused by the same structural variant
+
+### Multi-mapped loci
+
+Generated file: sample_id.isf.multi_map_loci.tsv
+
+Field | Description 
+---|---
+GeneCollectionId | Gene collection id
+ReadId | Read name
+RecordType | 'PRIMARY' or 'XA' (alternate locus)
+Chromosome | Chromosome of locus
+PosStart | Start position of locus
+PosEnd | End position of locus
+Spliced | Alignment at locus is spliced (true/false)
+Genes | Gene collection genes (PRIMARY) or genes with an exon at locus (XA)
+InGeneCollection | Locus overlaps the gene collection (true/false)
