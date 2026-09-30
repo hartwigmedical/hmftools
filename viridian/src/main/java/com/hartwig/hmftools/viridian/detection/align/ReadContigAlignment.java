@@ -8,10 +8,11 @@ public record ReadContigAlignment(
         int alignmentCount
 )
 {
-    static ReadContigAlignment from(List<ViralReadAlignment> contigAlignments)
+    static ReadContigAlignment from(List<ViralReadAlignment> readContigAlignments)
     {
+        // TODO: need to assert that all the alignments are for the same read and contig? or better interface to enforce this?
         return new ReadContigAlignment(
-                contigAlignments.stream().min(ViralReadAlignment.BEST_FIT_FIRST).orElseThrow(), contigAlignments.size());
+                readContigAlignments.stream().min(ViralReadAlignment.BEST_FIT_FIRST).orElseThrow(), readContigAlignments.size());
     }
 
     public int divergence()

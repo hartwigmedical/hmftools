@@ -16,6 +16,7 @@ import htsjdk.samtools.SAMRecord;
 
 // One alignment of a read to a virus genome, with just the data required for our analysis, in a nice format.
 public record ViralReadAlignment(
+        // TODO: what if we had a small record class ReadId(name, mateSuffix) to improve visibility of the naming with suffix?
         // Contains the mate index suffix /1 or /2
         String readName,
         ViralContig contig,

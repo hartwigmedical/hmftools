@@ -30,6 +30,7 @@ public class PairwiseMargins
         mSharedReads = sharedReads;
     }
 
+    // TODO: only needs to accept collection of AlignedRead ?
     public static PairwiseMargins from(ViralReadAlignments viralAlignments)
     {
         Map<ContigPair, NavigableMap<Integer, Integer>> marginCounts = new HashMap<>();

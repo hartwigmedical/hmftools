@@ -8,9 +8,11 @@ import java.util.Map;
 
 import com.hartwig.hmftools.viridian.reference.ViralContig;
 
-// One read's viral alignments, reduced to its best alignment on each contig with alignments.
+// One read's viral alignments to all viral genomes, reduced to its best alignment on each contig with alignments.
 public record AlignedRead(
+        // TODO: includes mate suffix? If so, write a comment
         String readName,
+        // TODO: improve name. and fix other related usages of "hit"
         Map<ViralContig, ReadContigAlignment> hits
 )
 {

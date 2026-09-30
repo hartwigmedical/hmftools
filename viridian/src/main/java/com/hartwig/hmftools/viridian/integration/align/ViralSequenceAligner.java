@@ -43,6 +43,7 @@ public class ViralSequenceAligner
     }
 
     // One result per input sequence, in the same order. An entry is null where the sequence is aligned to no contig.
+    // TODO: rename "align"
     public List<ViralSequenceAlignment> alignAll(List<String> sequences)
     {
         List<byte[]> queries = sequences.stream().map(String::getBytes).toList();
