@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.viridian.common.ViridianConstants.VIRAL_CONTI
 import java.util.Comparator;
 import java.util.List;
 
+import com.hartwig.hmftools.viridian.detection.common.ReadId;
 import com.hartwig.hmftools.viridian.reference.ViralContig;
 import com.hartwig.hmftools.viridian.reference.ViralReference;
 
@@ -16,9 +17,7 @@ import htsjdk.samtools.SAMRecord;
 
 // One alignment of a read to a virus genome, with just the data required for our analysis, in a nice format.
 public record ViralReadAlignment(
-        // TODO: what if we had a small record class ReadId(name, mateSuffix) to improve visibility of the naming with suffix?
-        // Contains the mate index suffix /1 or /2
-        String readName,
+        ReadId readId,
         ViralContig contig,
         int alignmentStart,
         int alignmentEnd,
@@ -32,10 +31,6 @@ public record ViralReadAlignment(
 {
     public ViralReadAlignment
     {
-        if(readName.isEmpty())
-        {
-            throw new IllegalArgumentException("Invalid readName");
-        }
         if(alignmentStart < 1)
         {
             throw new IllegalArgumentException("Invalid alignmentStart: " + alignmentStart);
@@ -79,7 +74,7 @@ public record ViralReadAlignment(
         int alignerScore = requiredTag(record, ALIGNMENT_SCORE_ATTRIBUTE, "alignment score");
 
         return new ViralReadAlignment(
-                record.getReadName(), reference.contig(record.getReferenceName()), record.getAlignmentStart(),
+                ReadId.parse(record.getReadName()), reference.contig(record.getReferenceName()), record.getAlignmentStart(),
                 record.getAlignmentEnd(), record.getCigarString(), leftClip, rightClip, alignerScore, editDistance + leftClip + rightClip,
                 intervals);
     }

@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.hartwig.hmftools.viridian.detection.align.AlignedRead;
+import com.hartwig.hmftools.viridian.detection.common.ReadId;
 import com.hartwig.hmftools.viridian.detection.align.ViralReadAlignment;
 import com.hartwig.hmftools.viridian.detection.align.ViralReadAlignments;
 import com.hartwig.hmftools.viridian.reference.ViralContig;
@@ -37,7 +38,7 @@ public class RepresentativeReadAssigner
             ViralReadAlignments viralAlignments, Set<ViralContig> representatives,
             String allAlignmentsBamFile, String outputBamFile)
     {
-        Map<String, ViralReadAlignment> assignmentsByRead = assignReads(viralAlignments.reads(), representatives);
+        Map<ReadId, ViralReadAlignment> assignmentsByRead = assignReads(viralAlignments.reads(), representatives);
 
         LOGGER.debug(
                 "Assigned {} reads, {} fit no representative",
@@ -46,16 +47,16 @@ public class RepresentativeReadAssigner
         writeAssignedAlignments(allAlignmentsBamFile, outputBamFile, assignmentsByRead);
     }
 
-    // Return value map is: read name -> selected alignment
+    // Return value map is: read -> selected alignment
     // Absent if the read has no alignment.
-    static Map<String, ViralReadAlignment> assignReads(List<AlignedRead> reads, Set<ViralContig> representatives)
+    static Map<ReadId, ViralReadAlignment> assignReads(List<AlignedRead> reads, Set<ViralContig> representatives)
     {
         // Tie-break by contig for determinism.
         // But not expecting that a read will support multiple representative contigs.
         Comparator<ViralReadAlignment> alignmentComparator =
                 ViralReadAlignment.BEST_FIT_FIRST.thenComparing(ViralReadAlignment::contig);
 
-        Map<String, ViralReadAlignment> assignmentsByRead = new LinkedHashMap<>();
+        Map<ReadId, ViralReadAlignment> assignmentsByRead = new LinkedHashMap<>();
         int multiRepReads = 0;
         int multiRepTiedReads = 0;
         for(AlignedRead read : reads)
@@ -67,7 +68,7 @@ public class RepresentativeReadAssigner
                     .toList();
             if(!candidates.isEmpty())
             {
-                assignmentsByRead.put(read.readName(), candidates.get(0));
+                assignmentsByRead.put(read.readId(), candidates.get(0));
             }
             if(candidates.size() > 1)
             {
@@ -92,7 +93,7 @@ public class RepresentativeReadAssigner
 
     // Slice the BAM on the selected alignments.
     private static void writeAssignedAlignments(
-            String sourceBamFile, String outputBamFile, Map<String, ViralReadAlignment> assignmentsByRead)
+            String sourceBamFile, String outputBamFile, Map<ReadId, ViralReadAlignment> assignmentsByRead)
     {
         int writtenRecords = 0;
 
@@ -108,7 +109,7 @@ public class RepresentativeReadAssigner
             {
                 for(SAMRecord record : reader)
                 {
-                    ViralReadAlignment assigned = assignmentsByRead.get(record.getReadName());
+                    ViralReadAlignment assigned = assignmentsByRead.get(ReadId.parse(record.getReadName()));
                     if(assigned != null && isSameAlignment(assigned, record))
                     {
                         record.setHeaderStrict(header);

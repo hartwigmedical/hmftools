@@ -24,7 +24,7 @@ public class ContigStatsCalculatorTest
     public void testCalculateDeletionSpannedPositionsAreNotCovered()
     {
         ViralReadAlignment read = new ViralReadAlignment(
-                "r1/1", CONTIG, 1, 15, "8M2D5M", 0, 0, 40, 2,
+                ReadId.parse("r1/1"), CONTIG, 1, 15, "8M2D5M", 0, 0, 40, 2,
                 List.of(new AlignedInterval(1, 8), new AlignedInterval(11, 5)));
 
         int[] depth = { 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0 };
@@ -56,6 +56,6 @@ public class ContigStatsCalculatorTest
     private static ViralReadAlignment originClipped(String readName)
     {
         return new ViralReadAlignment(
-                readName, CONTIG, 1, 10, "30S10M", 30, 0, 20, 30, List.of(new AlignedInterval(1, 10)));
+                ReadId.parse(readName), CONTIG, 1, 10, "30S10M", 30, 0, 20, 30, List.of(new AlignedInterval(1, 10)));
     }
 }

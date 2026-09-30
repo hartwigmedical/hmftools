@@ -14,6 +14,7 @@ import java.util.stream.Stream;
 import com.hartwig.hmftools.viridian.reference.OncologyGroup;
 import com.hartwig.hmftools.viridian.reference.ViralContig;
 import com.hartwig.hmftools.viridian.reference.ViralReference;
+import com.hartwig.hmftools.viridian.detection.common.ReadId;
 
 import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
@@ -102,7 +103,7 @@ public class ViralReadAlignmentTest
     private static ViralReadAlignment alignment(int start, int divergence, int alignerScore)
     {
         return new ViralReadAlignment(
-                "r1", CONTIG, start, start + ALIGNMENT_LENGTH - 1, ALIGNMENT_LENGTH + "M", 0, 0, alignerScore, divergence,
+                ReadId.parse("r1"), CONTIG, start, start + ALIGNMENT_LENGTH - 1, ALIGNMENT_LENGTH + "M", 0, 0, alignerScore, divergence,
                 List.of(new AlignedInterval(start, ALIGNMENT_LENGTH)));
     }
 

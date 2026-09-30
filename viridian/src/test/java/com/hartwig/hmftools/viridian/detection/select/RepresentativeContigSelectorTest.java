@@ -24,6 +24,7 @@ import com.hartwig.hmftools.viridian.detection.support.ContigFilterStatus;
 import com.hartwig.hmftools.viridian.detection.support.ContigSupport;
 import com.hartwig.hmftools.viridian.reference.OncologyGroup;
 import com.hartwig.hmftools.viridian.reference.ViralContig;
+import com.hartwig.hmftools.viridian.detection.common.ReadId;
 
 import org.junit.Test;
 
@@ -241,7 +242,7 @@ public class RepresentativeContigSelectorTest
     private static ViralReadAlignment alignment(String readName, ViralContig contig, int divergence)
     {
         return new ViralReadAlignment(
-                readName, contig, 1, LENGTH, LENGTH + "M", 0, 0, 100, divergence, List.of(new AlignedInterval(1, LENGTH)));
+                ReadId.parse(readName), contig, 1, LENGTH, LENGTH + "M", 0, 0, 100, divergence, List.of(new AlignedInterval(1, LENGTH)));
     }
 
     private static OncologyGroupRepresentativeSelection group(List<OncologyGroupRepresentativeSelection> selections,

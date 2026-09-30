@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.hartwig.hmftools.viridian.detection.common.ReadId;
 import com.hartwig.hmftools.viridian.reference.OncologyGroup;
 import com.hartwig.hmftools.viridian.reference.ViralContig;
 import com.hartwig.hmftools.viridian.reference.ViralReference;
@@ -43,25 +44,25 @@ public record ViralReadAlignments(
 
     public static ViralReadAlignments from(List<ViralReadAlignment> alignments, double meanReadLength)
     {
-        Map<ViralContig, Set<String>> originClippedReadsByContig = new HashMap<>();
-        Map<OncologyGroup, Set<String>> readsByOncologyGroup = new HashMap<>();
-        Map<String, List<ViralReadAlignment>> alignmentsByRead = new LinkedHashMap<>();
+        Map<ViralContig, Set<ReadId>> originClippedReadsByContig = new HashMap<>();
+        Map<OncologyGroup, Set<ReadId>> readsByOncologyGroup = new HashMap<>();
+        Map<ReadId, List<ViralReadAlignment>> alignmentsByRead = new LinkedHashMap<>();
 
         for(ViralReadAlignment alignment : alignments)
         {
             if(alignment.clipsOverContigEnd())
             {
-                Set<String> contigReads = originClippedReadsByContig.computeIfAbsent(alignment.contig(), k -> new HashSet<>());
-                contigReads.add(alignment.readName());
+                Set<ReadId> contigReads = originClippedReadsByContig.computeIfAbsent(alignment.contig(), k -> new HashSet<>());
+                contigReads.add(alignment.readId());
             }
             else
             {
-                List<ViralReadAlignment> readAlignments = alignmentsByRead.computeIfAbsent(alignment.readName(), k -> new ArrayList<>());
+                List<ViralReadAlignment> readAlignments = alignmentsByRead.computeIfAbsent(alignment.readId(), k -> new ArrayList<>());
                 readAlignments.add(alignment);
 
-                Set<String> oncologyGroupReads = readsByOncologyGroup.computeIfAbsent(
+                Set<ReadId> oncologyGroupReads = readsByOncologyGroup.computeIfAbsent(
                         alignment.contig().oncologyGroup(), k -> new HashSet<>());
-                oncologyGroupReads.add(alignment.readName());
+                oncologyGroupReads.add(alignment.readId());
             }
         }
 

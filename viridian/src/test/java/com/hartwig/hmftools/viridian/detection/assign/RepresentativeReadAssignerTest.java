@@ -16,6 +16,7 @@ import com.hartwig.hmftools.viridian.detection.align.ViralReadAlignment;
 import com.hartwig.hmftools.viridian.detection.align.ViralReadAlignments;
 import com.hartwig.hmftools.viridian.reference.OncologyGroup;
 import com.hartwig.hmftools.viridian.reference.ViralContig;
+import com.hartwig.hmftools.viridian.detection.common.ReadId;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -47,22 +48,22 @@ public class RepresentativeReadAssignerTest
     {
         ViralReadAlignment onRepresentative = alignment("r1/1", REPRESENTATIVE, 100, 7);
         AlignedRead read = AlignedRead.from(
-                "r1/1", List.of(
+                ReadId.parse("r1/1"), List.of(
                         alignment("r1/1", TWIN, 100, 3),
                         onRepresentative,
                         alignment("r1/1", MINOR, 100, 1)));
 
-        Map<String, ViralReadAlignment> assignments =
+        Map<ReadId, ViralReadAlignment> assignments =
                 RepresentativeReadAssigner.assignReads(List.of(read), Set.of(REPRESENTATIVE, TWIN));
 
-        assertEquals(Map.of("r1/1", alignment("r1/1", TWIN, 100, 3)), assignments);
+        assertEquals(Map.of(ReadId.parse("r1/1"), alignment("r1/1", TWIN, 100, 3)), assignments);
     }
 
     // The read supports only a strain no group settled on, so it is evidence for nothing.
     @Test
     public void testAssignReadsDropsReadWithNoRepresentativeAlignment()
     {
-        AlignedRead read = AlignedRead.from("r1/1", List.of(alignment("r1/1", MINOR, 100, 1)));
+        AlignedRead read = AlignedRead.from(ReadId.parse("r1/1"), List.of(alignment("r1/1", MINOR, 100, 1)));
 
         assertTrue(RepresentativeReadAssigner.assignReads(List.of(read), Set.of(REPRESENTATIVE)).isEmpty());
     }
@@ -72,14 +73,14 @@ public class RepresentativeReadAssignerTest
     public void testAssignReadsBreaksTieByContig()
     {
         AlignedRead read = AlignedRead.from(
-                "r1/1", List.of(
+                ReadId.parse("r1/1"), List.of(
                         alignment("r1/1", TWIN, 100, 3),
                         alignment("r1/1", REPRESENTATIVE, 100, 3)));
 
-        Map<String, ViralReadAlignment> assignments =
+        Map<ReadId, ViralReadAlignment> assignments =
                 RepresentativeReadAssigner.assignReads(List.of(read), Set.of(REPRESENTATIVE, TWIN));
 
-        assertEquals(REPRESENTATIVE, assignments.get("r1/1").contig());
+        assertEquals(REPRESENTATIVE, assignments.get(ReadId.parse("r1/1")).contig());
     }
 
     // One read with two alignments to the same contig from the same base, telling apart only by their CIGAR.
@@ -88,10 +89,10 @@ public class RepresentativeReadAssignerTest
     public void testAssignCopiesTheChosenOfTwoAlignmentsSharingAStart() throws IOException
     {
         ViralReadAlignment chosen = new ViralReadAlignment(
-                "r1/1", REPRESENTATIVE, 500, 586, "53S38M21D49M8S", 53, 8, 40, 86,
+                ReadId.parse("r1/1"), REPRESENTATIVE, 500, 586, "53S38M21D49M8S", 53, 8, 40, 86,
                 List.of(new AlignedInterval(500, 38), new AlignedInterval(559, 49)));
         ViralReadAlignment other = new ViralReadAlignment(
-                "r1/1", REPRESENTATIVE, 500, 552, "95S53M", 95, 0, 42, 98,
+                ReadId.parse("r1/1"), REPRESENTATIVE, 500, 552, "95S53M", 95, 0, 42, 98,
                 List.of(new AlignedInterval(500, 53)));
 
         String sourceBam = writeBam("all.bam", List.of(other, chosen));
@@ -119,7 +120,7 @@ public class RepresentativeReadAssignerTest
             for(ViralReadAlignment alignment : alignments)
             {
                 SAMRecord record = new SAMRecord(header);
-                record.setReadName(alignment.readName());
+                record.setReadName(alignment.readId().toString());
                 record.setReferenceName(alignment.contig().name());
                 record.setAlignmentStart(alignment.alignmentStart());
                 record.setCigarString(alignment.cigar());
@@ -143,7 +144,7 @@ public class RepresentativeReadAssignerTest
     private static ViralReadAlignment alignment(String readName, ViralContig contig, int start, int divergence)
     {
         return new ViralReadAlignment(
-                readName, contig, start, start + READ_LENGTH - 1, READ_LENGTH + "M", 0, 0, READ_LENGTH - divergence, divergence,
+                ReadId.parse(readName), contig, start, start + READ_LENGTH - 1, READ_LENGTH + "M", 0, 0, READ_LENGTH - divergence, divergence,
                 List.of(new AlignedInterval(start, READ_LENGTH)));
     }
 }

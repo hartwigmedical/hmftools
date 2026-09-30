@@ -11,6 +11,8 @@ import java.nio.file.Path;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.hartwig.hmftools.viridian.detection.common.ReadId;
+
 import htsjdk.samtools.SAMRecord;
 
 // One candidate read extraction worker's private FASTA shard.
@@ -52,9 +54,7 @@ public class FastaPart
     {
         try
         {
-            // The FASTA is single-ended, so a pair's two reads must stay distinguishable.
-            String suffix = record.getReadPairedFlag() ? (record.getFirstOfPairFlag() ? "/1" : "/2") : "";
-            mWriter.write(">" + record.getReadName() + suffix);
+            mWriter.write(">" + ReadId.from(record));
             mWriter.newLine();
             mWriter.write(record.getReadString());
             mWriter.newLine();

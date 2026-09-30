@@ -9,6 +9,7 @@ import com.hartwig.hmftools.viridian.detection.align.ViralReadAlignment;
 import com.hartwig.hmftools.viridian.detection.align.ViralReadAlignments;
 import com.hartwig.hmftools.viridian.reference.OncologyGroup;
 import com.hartwig.hmftools.viridian.reference.ViralContig;
+import com.hartwig.hmftools.viridian.detection.common.ReadId;
 
 import org.junit.Test;
 
@@ -56,6 +57,6 @@ public class PairwiseMarginsTest
     private static ViralReadAlignment alignment(String readName, ViralContig contig, int divergence)
     {
         return new ViralReadAlignment(
-                readName, contig, 1, LENGTH, LENGTH + "M", 0, 0, 100, divergence, List.of(new AlignedInterval(1, LENGTH)));
+                ReadId.parse(readName), contig, 1, LENGTH, LENGTH + "M", 0, 0, 100, divergence, List.of(new AlignedInterval(1, LENGTH)));
     }
 }

@@ -6,6 +6,7 @@ import java.util.List;
 
 import com.hartwig.hmftools.viridian.reference.OncologyGroup;
 import com.hartwig.hmftools.viridian.reference.ViralContig;
+import com.hartwig.hmftools.viridian.detection.common.ReadId;
 
 import org.junit.Test;
 
@@ -18,7 +19,7 @@ public class AlignedReadTest
     @Test
     public void testFromRepeatAlignmentsCollapseToOneHit()
     {
-        AlignedRead read = AlignedRead.from("r1", List.of(alignment(100, 4, 90), alignment(500, 9, 80)));
+        AlignedRead read = AlignedRead.from(ReadId.parse("r1"), List.of(alignment(100, 4, 90), alignment(500, 9, 80)));
 
         assertEquals(1, read.hits().size());
         assertEquals(2, read.hits().get(V1).alignmentCount());
@@ -28,7 +29,7 @@ public class AlignedReadTest
     private static ViralReadAlignment alignment(int start, int divergence, int alignerScore)
     {
         return new ViralReadAlignment(
-                "r1", V1, start, start + LENGTH - 1, LENGTH + "M", 0, 0, alignerScore, divergence,
+                ReadId.parse("r1"), V1, start, start + LENGTH - 1, LENGTH + "M", 0, 0, alignerScore, divergence,
                 List.of(new AlignedInterval(start, LENGTH)));
     }
 }

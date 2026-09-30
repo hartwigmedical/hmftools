@@ -14,6 +14,7 @@ import com.hartwig.hmftools.viridian.detection.common.ContigStatsCalculator;
 import com.hartwig.hmftools.viridian.detection.common.SummaryStats;
 import com.hartwig.hmftools.viridian.reference.OncologyGroup;
 import com.hartwig.hmftools.viridian.reference.ViralContig;
+import com.hartwig.hmftools.viridian.detection.common.ReadId;
 
 import org.junit.Test;
 
@@ -133,7 +134,7 @@ public class ContigSupportCalculatorTest
             int divergence)
     {
         return new ViralReadAlignment(
-                readName, contig, start, start + length - 1, length + "M", 0, 0, alignerScore, divergence,
+                ReadId.parse(readName), contig, start, start + length - 1, length + "M", 0, 0, alignerScore, divergence,
                 List.of(new AlignedInterval(start, length)));
     }
 
@@ -141,7 +142,7 @@ public class ContigSupportCalculatorTest
     private static ViralReadAlignment clipped(String readName, ViralContig contig, int start, int end, int leftClip, int rightClip)
     {
         return new ViralReadAlignment(
-                readName, contig, start, end,
+                ReadId.parse(readName), contig, start, end,
                 leftClip + "S" + (end - start + 1) + "M" + rightClip + "S",
                 leftClip, rightClip, 10, leftClip + rightClip,
                 List.of(new AlignedInterval(start, end - start + 1)));

@@ -7,6 +7,7 @@ import java.util.Map;
 
 import com.hartwig.hmftools.viridian.reference.OncologyGroup;
 import com.hartwig.hmftools.viridian.reference.ViralContig;
+import com.hartwig.hmftools.viridian.detection.common.ReadId;
 
 import org.junit.Test;
 
@@ -70,13 +71,13 @@ public class ViralReadAlignmentsTest
     private static ViralReadAlignment alignment(String readName, ViralContig contig)
     {
         return new ViralReadAlignment(
-                readName, contig, 1, LENGTH, LENGTH + "M", 0, 0, 100, 0, List.of(new AlignedInterval(1, LENGTH)));
+                ReadId.parse(readName), contig, 1, LENGTH, LENGTH + "M", 0, 0, 100, 0, List.of(new AlignedInterval(1, LENGTH)));
     }
 
     // A right clip projecting well past the contig end.
     private static ViralReadAlignment straddler(String readName, ViralContig contig)
     {
         return new ViralReadAlignment(
-                readName, contig, 1, LENGTH, LENGTH + "M50S", 0, 50, 100, 50, List.of(new AlignedInterval(1, LENGTH)));
+                ReadId.parse(readName), contig, 1, LENGTH, LENGTH + "M50S", 0, 50, 100, 50, List.of(new AlignedInterval(1, LENGTH)));
     }
 }
