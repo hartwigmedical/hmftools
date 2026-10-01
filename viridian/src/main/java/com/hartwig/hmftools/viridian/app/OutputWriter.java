@@ -22,10 +22,11 @@ import com.hartwig.hmftools.viridian.detection.select.OncologyGroupRepresentativ
 import com.hartwig.hmftools.viridian.detection.select.PairwiseMargins;
 import com.hartwig.hmftools.viridian.detection.select.RepresentativeContigCandidate;
 import com.hartwig.hmftools.viridian.detection.support.ContigSupport;
-import com.hartwig.hmftools.viridian.integration.align.ViralSequenceAlignment;
+import com.hartwig.hmftools.viridian.integration.Integration;
+import com.hartwig.hmftools.viridian.integration.align.ViralInsertAlignment;
 import com.hartwig.hmftools.viridian.integration.extract.BreakendSupport;
-import com.hartwig.hmftools.viridian.integration.extract.CandidateIntegration;
 import com.hartwig.hmftools.viridian.integration.extract.HostBreakend;
+import com.hartwig.hmftools.viridian.integration.extract.HostVariantCandidate;
 import com.hartwig.hmftools.viridian.integration.extract.InsertRepeat;
 import com.hartwig.hmftools.viridian.reference.ViralContig;
 
@@ -306,13 +307,12 @@ public class OutputWriter
         return "reads_m" + margin;
     }
 
-    // One row per virus integration candidate.
-    public static void writeIntegrations(String file, List<CandidateIntegration> candidates,
-            Map<CandidateIntegration, ViralSequenceAlignment> viralAlignments)
+    public static void writeIntegrations(String file, List<Integration> integrations)
     {
         DelimFileWriter.write(
-                file, IntegrationColumn.values(), candidates, (candidate, row) ->
+                file, IntegrationColumn.values(), integrations, (integration, row) ->
                 {
+                    HostVariantCandidate candidate = integration.hostVariant();
                     row.set(IntegrationColumn.sv_type, candidate.type().name());
                     row.set(IntegrationColumn.filter, candidate.filter());
 
@@ -356,7 +356,7 @@ public class OutputWriter
                     row.set(IntegrationColumn.insert_seq_length, candidate.insertSequence().length());
                     row.set(IntegrationColumn.insert_sequence, candidate.insertSequence());
 
-                    ViralSequenceAlignment alignment = viralAlignments.get(candidate);
+                    ViralInsertAlignment alignment = integration.alignment();
                     if(alignment != null)
                     {
                         ViralContig contig = alignment.contig();
@@ -368,7 +368,9 @@ public class OutputWriter
                         row.set(IntegrationColumn.align_cigar, alignment.cigar().toString());
                         row.set(IntegrationColumn.aligned_length, alignment.alignedLength());
                         row.set(IntegrationColumn.aligner_score, alignment.alignerScore());
+                        row.set(IntegrationColumn.score_per_aligned_base, alignment.scorePerAlignedBase());
                         row.set(IntegrationColumn.aligned_edit_distance, alignment.alignedEditDistance());
+                        row.set(IntegrationColumn.plausible, integration.isPlausible());
                     }
                 });
     }
@@ -410,10 +412,12 @@ public class OutputWriter
         align_cigar,
         aligned_length,
         aligner_score,
-        aligned_edit_distance
+        score_per_aligned_base,
+        aligned_edit_distance,
+        plausible
     }
 
-    private static String asString(Object value)
+    private static String asString(@Nullable Object value)
     {
         return value == null ? null : value.toString();
     }

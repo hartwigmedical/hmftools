@@ -18,6 +18,7 @@ public class ViridianConstants
     public static final String INTEGRATIONS_TSV_SUFFIX = ".viridian.integrations.tsv";
 
     // Genome partition size for multi-threaded candidate extraction.
+    // This value was chosen approximately based on observed highest performance.
     public static final int VIRAL_READ_EXTRACTION_PARTITION_SIZE = 1_000_000;
 
     // Contigs in the reference genome whose mapped reads are viral candidates.
@@ -28,27 +29,28 @@ public class ViridianConstants
     // TODO: is this actually a default, or a regular constant?
     public static final int VIRAL_READ_MIN_SOFT_CLIP_BASES_DEFAULT = 30;
 
-    // Minimum BWA-MEM alignment score (-T), our only score floor. Set explicitly for visibility; matches the BWA default.
+    // Minimum alignment score for reads aligning to virus genomes.
     // TODO: is this actually a default, or a regular constant?
-    public static final int VIRAL_READ_MIN_ALIGNMENT_SCORE_DEFAULT = 30;
+    public static final int VIRAL_READ_MIN_ALIGN_SCORE_DEFAULT = 30;
 
     // Candidate reads submitted to BWA per alignment call (bounds memory usage).
     public static final int VIRAL_READ_ALIGNMENT_BATCH_SIZE_DEFAULT = 100_000;
 
-    // How softly a contested read's vote splits across strains: chance a base is right. Pessimistically low, as per-base
-    // qualities are not retained.
+    // Affects attribution of read votes between contigs.
+    // This value is pessimistic - assumes the correct base is completely unknown.
     public static final double READ_VOTE_CORRECT_BASE_PROBABILITY = 0.25;
 
     // A clip counts as hanging over a contig end (a circular-genome artifact) when its bases would extend past the
-    // boundary by more than this tolerance. Such alignments are dropped from all stats.
+    // boundary by more than this tolerance. Such alignments are dropped from all further processing.
     public static final int VIRAL_CONTIG_ORIGIN_CLIP_TOLERANCE = 4;
 
     // An oncology group is present only if one of its contigs reaches this coverage fraction.
+    // This value is very conservative. Hard to argue a lower coverage wouldn't be spurious.
     public static final double VIRAL_CONTIG_COVERAGE_MIN = 0.1;
 
     // If any contig in an oncology group passes VIRAL_CONTIG_COVERAGE_MIN, then use this as the coverage threshold instead of that.
     // Ensures that a similar sibling contig which straddles the coverage threshold isn't harshly lost.
-    public static final double VIRAL_CONTIG_COVERAGE_MIN_LOWER = 0.09;
+    public static final double VIRAL_CONTIG_COVERAGE_MIN_LOWER = VIRAL_CONTIG_COVERAGE_MIN * 0.9;
 
     // Minimum read votes per base that is required to be covered.
     // Handles cases where the contig has some alignments but those reads strongly prefer a better matching contig
@@ -56,7 +58,7 @@ public class ViridianConstants
     public static final double VIRAL_CONTIG_VOTES_PER_BASE_MIN = 1.0;
 
     // Effectively a tolerance on the read vote share to ensure that a close runner up is also considered.
-    // Otherwise you can have the top contig win by only an arbitrarily small number of read votes.
+    // Otherwise, you can have the top contig win by only an arbitrarily small number of read votes.
     public static final double REPRESENTATIVE_COMPARABLE_VOTE_RATIO = 0.9;
 
     // How many bases better does an alignment need to be to classify as diverging?
@@ -71,12 +73,16 @@ public class ViridianConstants
     // Winning margins reported per contig pair in the verbose output (for debugging and tuning only).
     public static final List<Integer> REPORTED_MARGINS = List.of(1, 2, 3, 5, 8, 10, 15, 20, 30, 40, 50);
 
-    // Thresholds for insert sequence length to identify variants which could be viral integrations.
-    // SGL length is reduced because usually SGL extension assembly is shorter.
-    public static final int INTEGRATION_SGL_INSERT_LENGTH_MIN = 20;
-    public static final int INTEGRATION_VARIANT_INSERT_LENGTH_MIN = 50;
+    // Minimum insert sequence length for an SV to be a viral integration candidate.
+    // This is a conservative value. ESVEE doesn't call events shorter than 32b anyway.
+    public static final int INTEGRATION_INSERT_LENGTH_MIN = 30;
 
-    public static final int INTEGRATION_ALIGN_SCORE_MIN = 20;
+    // Minimum alignment score for host insert sequences aligned to virus genomes.
+    // This is a conservative value, validated with observed concordance with VirusBreakend.
+    public static final int INTEGRATION_ALIGN_SCORE_MIN = 30;
+
+    // Minimum aligner score per aligned base. Used to filter out alignments which are long but poor similarity.
+    public static final double INTEGRATION_VIRAL_ALIGN_SCORE_PER_BASE_MIN = 0.7;
 
     static
     {
@@ -88,7 +94,7 @@ public class ViridianConstants
         {
             throw new IllegalStateException();
         }
-        if(!(VIRAL_READ_MIN_ALIGNMENT_SCORE_DEFAULT >= 19))
+        if(!(VIRAL_READ_MIN_ALIGN_SCORE_DEFAULT >= 19))
         {
             throw new IllegalStateException();
         }
@@ -128,11 +134,15 @@ public class ViridianConstants
         {
             throw new IllegalStateException();
         }
-        if(!(INTEGRATION_SGL_INSERT_LENGTH_MIN > 0 && INTEGRATION_SGL_INSERT_LENGTH_MIN <= INTEGRATION_VARIANT_INSERT_LENGTH_MIN))
+        if(!(INTEGRATION_ALIGN_SCORE_MIN >= 19))
         {
             throw new IllegalStateException();
         }
-        if(!(INTEGRATION_ALIGN_SCORE_MIN >= 19))
+        if(!(INTEGRATION_INSERT_LENGTH_MIN > 0 && INTEGRATION_INSERT_LENGTH_MIN <= INTEGRATION_ALIGN_SCORE_MIN))
+        {
+            throw new IllegalStateException();
+        }
+        if(!(INTEGRATION_VIRAL_ALIGN_SCORE_PER_BASE_MIN > 0.0 && INTEGRATION_VIRAL_ALIGN_SCORE_PER_BASE_MIN <= 1.0))
         {
             throw new IllegalStateException();
         }

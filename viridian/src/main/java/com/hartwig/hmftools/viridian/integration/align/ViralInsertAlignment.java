@@ -1,12 +1,16 @@
 package com.hartwig.hmftools.viridian.integration.align;
 
+import static com.hartwig.hmftools.viridian.common.ViridianConstants.INTEGRATION_ALIGN_SCORE_MIN;
+import static com.hartwig.hmftools.viridian.common.ViridianConstants.INTEGRATION_VIRAL_ALIGN_SCORE_PER_BASE_MIN;
+
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.viridian.reference.ViralContig;
 
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
 
-public record ViralSequenceAlignment(
+// Alignment of a candidate integration variant's insert sequence onto a virus genome.
+public record ViralInsertAlignment(
         ViralContig contig,
         int position,
         Orientation orientation,
@@ -18,7 +22,7 @@ public record ViralSequenceAlignment(
         int sequenceLength
 )
 {
-    public ViralSequenceAlignment
+    public ViralInsertAlignment
     {
         if(cigar.isEmpty())
         {
@@ -48,5 +52,16 @@ public record ViralSequenceAlignment(
                 .filter(element -> element.getOperator().isAlignment())
                 .mapToInt(CigarElement::getLength)
                 .sum();
+    }
+
+    public double scorePerAlignedBase()
+    {
+        int alignedLength = alignedLength();
+        return alignedLength > 0 ? (double) alignerScore / alignedLength : 0.0;
+    }
+
+    public boolean passesFilters()
+    {
+        return alignerScore >= INTEGRATION_ALIGN_SCORE_MIN && scorePerAlignedBase() >= INTEGRATION_VIRAL_ALIGN_SCORE_PER_BASE_MIN;
     }
 }

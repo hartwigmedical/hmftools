@@ -23,20 +23,20 @@ import htsjdk.samtools.SAMFlag;
 
 // Aligns candidate host integration variant sequences to the viral reference.
 // Produces the only best alignment across the entire viral reference - for data gathering purposes.
-public class ViralSequenceAligner
+public class ViralInsertAligner
 {
     private final IBwaMemAligner mAligner;
     private final ViralReference mReference;
 
-    public static ViralSequenceAligner create(ViralReference reference, String bwaIndexImage, int threads)
+    public static ViralInsertAligner create(ViralReference reference, String bwaIndexImage, int threads)
     {
         BwaMemAlignParams params = BwaMemAlignParams.DEFAULT.withMinAlignScore(INTEGRATION_ALIGN_SCORE_MIN);
         BwaMemAlignerConfig alignerConfig = new BwaMemAlignerConfig(bwaIndexImage, params, false, threads, null);
         BwaMemAligner aligner = new BwaMemAligner(alignerConfig);
-        return new ViralSequenceAligner(aligner, reference);
+        return new ViralInsertAligner(aligner, reference);
     }
 
-    ViralSequenceAligner(IBwaMemAligner aligner, ViralReference reference)
+    ViralInsertAligner(IBwaMemAligner aligner, ViralReference reference)
     {
         mAligner = aligner;
         mReference = reference;
@@ -44,7 +44,7 @@ public class ViralSequenceAligner
 
     // One result per input sequence, in the same order. An entry is null where the sequence is aligned to no contig.
     // TODO: rename "align"
-    public List<ViralSequenceAlignment> alignAll(List<String> sequences)
+    public List<ViralInsertAlignment> alignAll(List<String> sequences)
     {
         List<byte[]> queries = sequences.stream().map(String::getBytes).toList();
         List<List<BwaMemAlignment>> alignments = mAligner.alignSequences(queries);
@@ -55,16 +55,16 @@ public class ViralSequenceAligner
     }
 
     @Nullable
-    private ViralSequenceAlignment selectBestAlignment(List<BwaMemAlignment> alignments, int sequenceLength)
+    private ViralInsertAlignment selectBestAlignment(List<BwaMemAlignment> alignments, int sequenceLength)
     {
         return alignments.stream()
                 .filter(alignment -> alignment.getRefId() >= 0)
                 .min(BEST_ALIGNMENT_FIRST)
-                .map(alignment -> toViralSequenceAlignment(alignment, sequenceLength))
+                .map(alignment -> toViralInsertAlignment(alignment, sequenceLength))
                 .orElse(null);
     }
 
-    private ViralSequenceAlignment toViralSequenceAlignment(BwaMemAlignment alignment, int sequenceLength)
+    private ViralInsertAlignment toViralInsertAlignment(BwaMemAlignment alignment, int sequenceLength)
     {
         String contigName = mReference.sequenceDictionary().getSequence(alignment.getRefId()).getSequenceName();
         ViralContig viralContig = mReference.contig(contigName);
@@ -72,7 +72,7 @@ public class ViralSequenceAligner
         int position = alignment.getRefStart() + 1;
         Orientation orientation = SamRecordUtils.isFlagSet(alignment.getSamFlag(), SAMFlag.READ_REVERSE_STRAND)
                 ? Orientation.REVERSE : Orientation.FORWARD;
-        return new ViralSequenceAlignment(
+        return new ViralInsertAlignment(
                 viralContig,
                 position,
                 orientation,

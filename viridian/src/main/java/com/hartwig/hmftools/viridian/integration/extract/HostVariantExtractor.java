@@ -3,8 +3,7 @@ package com.hartwig.hmftools.viridian.integration.extract;
 import static java.util.Objects.requireNonNull;
 
 import static com.hartwig.hmftools.common.sv.SvVcfTags.LINE_SITE;
-import static com.hartwig.hmftools.viridian.common.ViridianConstants.INTEGRATION_SGL_INSERT_LENGTH_MIN;
-import static com.hartwig.hmftools.viridian.common.ViridianConstants.INTEGRATION_VARIANT_INSERT_LENGTH_MIN;
+import static com.hartwig.hmftools.viridian.common.ViridianConstants.INTEGRATION_INSERT_LENGTH_MIN;
 
 import java.util.List;
 import java.util.Map;
@@ -25,20 +24,20 @@ import htsjdk.variant.variantcontext.VariantContext;
 
 // Reads the ESVEE unfiltered VCF and keeps every SV which could be a viral integration.
 // Uses the ESVEE unfiltered VCF because the viral integrations are interesting even if ESVEE decided to filter.
-public class CandidateIntegrationExtractor
+public class HostVariantExtractor
 {
     private final String mTumorSampleId;
 
     private static final int NO_GENOTYPE_ORDINAL = -1;
 
-    private static final Logger LOGGER = LogManager.getLogger(CandidateIntegrationExtractor.class);
+    private static final Logger LOGGER = LogManager.getLogger(HostVariantExtractor.class);
 
-    public CandidateIntegrationExtractor(String tumorSampleId)
+    public HostVariantExtractor(String tumorSampleId)
     {
         mTumorSampleId = tumorSampleId;
     }
 
-    public List<CandidateIntegration> extract(String vcfFile)
+    public List<HostVariantCandidate> extract(String vcfFile)
     {
         try(VcfFileReader reader = new VcfFileReader(vcfFile))
         {
@@ -57,11 +56,12 @@ public class CandidateIntegrationExtractor
                 svFactory.addVariantContext(context);
             }
 
-            List<CandidateIntegration> candidates = svFactory.results().stream()
-                    .map(CandidateIntegrationExtractor::toCandidate)
+            List<HostVariantCandidate> candidates = svFactory.results().stream()
+                    .map(HostVariantExtractor::toCandidate)
                     .filter(Objects::nonNull)
                     .toList();
 
+            // TODO: should only warn if there are unpaired breakends. no need for any other logging
             LOGGER.debug(
                     "Read {} variant records, {} breakends never paired, {} integration candidates",
                     variantCount, svFactory.unmatched().size(), candidates.size());
@@ -71,13 +71,12 @@ public class CandidateIntegrationExtractor
     }
 
     @Nullable
-    private static CandidateIntegration toCandidate(StructuralVariant variant)
+    private static HostVariantCandidate toCandidate(StructuralVariant variant)
     {
         StructuralVariantLeg endLeg = variant.end();
         String insertSequence = variant.insertSequence();
 
-        int minInsertLength = endLeg == null ? INTEGRATION_SGL_INSERT_LENGTH_MIN : INTEGRATION_VARIANT_INSERT_LENGTH_MIN;
-        if(insertSequence.length() < minInsertLength)
+        if(insertSequence.length() < INTEGRATION_INSERT_LENGTH_MIN)
         {
             return null;
         }
@@ -88,7 +87,7 @@ public class CandidateIntegrationExtractor
             throw new IllegalStateException("SV has no variant context: " + variant.id());
         }
 
-        return new CandidateIntegration(
+        return new HostVariantCandidate(
                 variant.type(),
                 requireNonNull(variant.filter()),
                 HostBreakend.from(startContext.getID(), variant.start()),

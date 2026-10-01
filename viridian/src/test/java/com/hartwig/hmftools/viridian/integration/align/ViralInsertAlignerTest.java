@@ -21,7 +21,7 @@ import org.junit.Test;
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SAMSequenceRecord;
 
-public class ViralSequenceAlignerTest
+public class ViralInsertAlignerTest
 {
     private static final OncologyGroup HPV_16 = new OncologyGroup("HPV 16");
     private static final OncologyGroup HPV_18 = new OncologyGroup("HPV 18");
@@ -40,7 +40,7 @@ public class ViralSequenceAlignerTest
                 alignment(0, 1, 499, 45, "32M", 4));
 
         assertEquals(
-                new ViralSequenceAlignment(CONTIG_16, 1000, FORWARD, cigarFromStr("32M"), 60, 1, 32),
+                new ViralInsertAlignment(CONTIG_16, 1000, FORWARD, cigarFromStr("32M"), 60, 1, 32),
                 align(SEQUENCE, hits));
     }
 
@@ -64,7 +64,7 @@ public class ViralSequenceAlignerTest
     @Test
     public void testAlignAllReportsPartiallyAlignedSequence()
     {
-        ViralSequenceAlignment alignment = align(SEQUENCE, List.of(alignment(0, 0, 199, 40, "12S20M", 0)));
+        ViralInsertAlignment alignment = align(SEQUENCE, List.of(alignment(0, 0, 199, 40, "12S20M", 0)));
 
         assertEquals("12S20M", alignment.cigar().toString());
         assertEquals(32, alignment.sequenceLength());
@@ -74,7 +74,7 @@ public class ViralSequenceAlignerTest
     public void testAlignAllReportsReverseStrandAlignment()
     {
         assertEquals(
-                new ViralSequenceAlignment(CONTIG_18, 300, REVERSE, cigarFromStr("32M"), 55, 2, 32),
+                new ViralInsertAlignment(CONTIG_18, 300, REVERSE, cigarFromStr("32M"), 55, 2, 32),
                 align(SEQUENCE, List.of(alignment(0x10, 1, 299, 55, "32M", 2))));
     }
 
@@ -82,29 +82,29 @@ public class ViralSequenceAlignerTest
     @Test
     public void testAlignAllReturnsNullWhereNothingAligned()
     {
-        ViralSequenceAligner aligner = aligner(Map.of(
+        ViralInsertAligner aligner = aligner(Map.of(
                 OTHER_SEQUENCE, List.of(noHit()),
                 SEQUENCE, List.of(alignment(0, 0, 999, 60, "32M", 1))));
 
-        List<ViralSequenceAlignment> alignments = aligner.alignAll(List.of(OTHER_SEQUENCE, SEQUENCE));
+        List<ViralInsertAlignment> alignments = aligner.alignAll(List.of(OTHER_SEQUENCE, SEQUENCE));
 
         assertNull(alignments.get(0));
         assertEquals(CONTIG_16, alignments.get(1).contig());
     }
 
-    private static ViralSequenceAlignment align(String sequence, List<BwaMemAlignment> hits)
+    private static ViralInsertAlignment align(String sequence, List<BwaMemAlignment> hits)
     {
         return aligner(Map.of(sequence, hits)).alignAll(List.of(sequence)).get(0);
     }
 
-    private static ViralSequenceAligner aligner(Map<String, List<BwaMemAlignment>> hits)
+    private static ViralInsertAligner aligner(Map<String, List<BwaMemAlignment>> hits)
     {
         SAMSequenceDictionary dictionary = new SAMSequenceDictionary(List.of(
                 new SAMSequenceRecord(CONTIG_16.name(), CONTIG_16.length()),
                 new SAMSequenceRecord(CONTIG_18.name(), CONTIG_18.length())));
         ViralReference reference = new ViralReference(List.of(CONTIG_16, CONTIG_18), dictionary);
 
-        return new ViralSequenceAligner(new FakeAligner(hits), reference);
+        return new ViralInsertAligner(new FakeAligner(hits), reference);
     }
 
     private static BwaMemAlignment alignment(int samFlag, int refId, int refStart, int score, String cigar, int editDistance)

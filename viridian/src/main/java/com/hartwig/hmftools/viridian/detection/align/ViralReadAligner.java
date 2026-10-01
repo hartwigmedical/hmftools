@@ -5,7 +5,7 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.MISMATCHES_AND_DELE
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.utils.Streams.partitionStream;
 import static com.hartwig.hmftools.viridian.common.Utils.fixBamIndexName;
-import static com.hartwig.hmftools.viridian.common.ViridianConstants.VIRAL_READ_MIN_ALIGNMENT_SCORE_DEFAULT;
+import static com.hartwig.hmftools.viridian.common.ViridianConstants.VIRAL_READ_MIN_ALIGN_SCORE_DEFAULT;
 
 import java.io.File;
 import java.util.List;
@@ -136,7 +136,7 @@ public class ViralReadAligner
     private static BwaMemAlignerConfig buildAlignerConfig(String bwaIndexImage, int threads, int batchSize)
     {
         boolean allAlignments = true;
-        BwaMemAlignParams params = BwaMemAlignParams.DEFAULT.withMinAlignScore(VIRAL_READ_MIN_ALIGNMENT_SCORE_DEFAULT);
+        BwaMemAlignParams params = BwaMemAlignParams.DEFAULT.withMinAlignScore(VIRAL_READ_MIN_ALIGN_SCORE_DEFAULT);
         return new BwaMemAlignerConfig(bwaIndexImage, params, allAlignments, threads, batchSize);
     }
 

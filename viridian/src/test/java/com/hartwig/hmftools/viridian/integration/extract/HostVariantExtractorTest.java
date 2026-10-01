@@ -19,15 +19,14 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-public class CandidateIntegrationExtractorTest
+public class HostVariantExtractorTest
 {
     private static final String TUMOR_ID = "TUMOR";
 
-    // Inserted sequences at and either side of the two length thresholds.
-    private static final String INSERT_20 = "ACGTACGTACGTACGTACGT";
-    private static final String INSERT_19 = "ACGTACGTACGTACGTACG";
+    // Inserted sequences at and just below the single length threshold, plus a longer one.
+    private static final String INSERT_30 = "ACGTACGTACGTACGTACGTACGTACGTAC";
+    private static final String INSERT_29 = "ACGTACGTACGTACGTACGTACGTACGTA";
     private static final String INSERT_50 = "ACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTAC";
-    private static final String INSERT_49 = "ACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTA";
 
     // Tumor genotype is second here, matching the usual reference-then-tumor ordering.
     private static final String HEADER = """
@@ -61,15 +60,15 @@ public class CandidateIntegrationExtractorTest
     public void testExtractSingleBreakendWithAnnotations()
     {
         String records = record(
-                "chr1", 1000, "sgl_1", "A", "A" + INSERT_20 + ".", "minQual",
+                "chr1", 1000, "sgl_1", "A", "A" + INSERT_30 + ".", "minQual",
                 "SVTYPE=SGL;LINE;INSALN=chr7:100|+|50M|60;INSRMRC=SINE;INSRMRT=Alu;INSRMP=0.8",
                 "0:30:10:0.0", "12:40:20:0.25");
 
         BreakendSupport support = new BreakendSupport(12, 60, 0.25, 0, 40);
-        CandidateIntegration expected = new CandidateIntegration(
+        HostVariantCandidate expected = new HostVariantCandidate(
                 StructuralVariantType.SGL, "minQual",
                 new HostBreakend("sgl_1", new BasePosition("chr1", 1000), FORWARD, support), null,
-                INSERT_20, true, new InsertRepeat("SINE", "Alu", 0.8), "chr7:100|+|50M|60");
+                INSERT_30, true, new InsertRepeat("SINE", "Alu", 0.8), "chr7:100|+|50M|60");
 
         assertEquals(List.of(expected), extract(records));
     }
@@ -83,7 +82,7 @@ public class CandidateIntegrationExtractorTest
 
         BreakendSupport startSupport = new BreakendSupport(8, 55, 0.15, 0, 45);
         BreakendSupport endSupport = new BreakendSupport(8, 57, 0.15, 0, 47);
-        CandidateIntegration expected = new CandidateIntegration(
+        HostVariantCandidate expected = new HostVariantCandidate(
                 StructuralVariantType.DEL, "PASS",
                 new HostBreakend("del_1_o", new BasePosition("chr1", 5000), FORWARD, startSupport),
                 new HostBreakend("del_1_h", new BasePosition("chr1", 9000), REVERSE, endSupport),
@@ -92,16 +91,17 @@ public class CandidateIntegrationExtractorTest
         assertEquals(List.of(expected), extract(records));
     }
 
-    // Insert length is the only gate: a single breakend needs 20 bases, a paired variant 50.
+    // Insert length is the only candidate gate, and the floor is the same for every variant type: a paired variant at the
+    // floor qualifies just as a single breakend does.
     @Test
-    public void testExtractAppliesInsertLengthThresholds()
+    public void testExtractAppliesInsertLengthThreshold()
     {
         String records = record(
-                "chr1", 1000, "sgl_short", "A", "A" + INSERT_19 + ".", "PASS", "SVTYPE=SGL", "0:1:1:0.0", "1:1:1:0.1")
+                "chr1", 1000, "sgl_short", "A", "A" + INSERT_29 + ".", "PASS", "SVTYPE=SGL", "0:1:1:0.0", "1:1:1:0.1")
                 + record(
-                "chr1", 2000, "sgl_long", "A", "A" + INSERT_20 + ".", "PASS", "SVTYPE=SGL", "0:1:1:0.0", "1:1:1:0.1")
-                + pairedDeletion("del_short", INSERT_49)
-                + pairedDeletion("del_long", INSERT_50);
+                "chr1", 2000, "sgl_long", "A", "A" + INSERT_30 + ".", "PASS", "SVTYPE=SGL", "0:1:1:0.0", "1:1:1:0.1")
+                + pairedDeletion("del_short", INSERT_29)
+                + pairedDeletion("del_long", INSERT_30);
 
         assertEquals(List.of("sgl_long", "del_long_o"), breakendIds(extract(records)));
     }
@@ -111,7 +111,7 @@ public class CandidateIntegrationExtractorTest
     public void testExtractSkipsNonHumanContigs()
     {
         String records = record(
-                "chrEBV", 1000, "ebv_1", "A", "A" + INSERT_20 + ".", "PASS", "SVTYPE=SGL", "0:1:1:0.0", "1:1:1:0.1");
+                "chrEBV", 1000, "ebv_1", "A", "A" + INSERT_30 + ".", "PASS", "SVTYPE=SGL", "0:1:1:0.0", "1:1:1:0.1");
 
         assertEquals(List.of(), extract(records));
     }
@@ -134,9 +134,9 @@ public class CandidateIntegrationExtractorTest
     {
         String header = HEADER.replace("NORMAL\tTUMOR", "TUMOR\tNORMAL");
         String records = record(
-                "chr1", 1000, "sgl_1", "A", "A" + INSERT_20 + ".", "PASS", "SVTYPE=SGL", "12:40:20:0.25", "0:30:10:0.0");
+                "chr1", 1000, "sgl_1", "A", "A" + INSERT_30 + ".", "PASS", "SVTYPE=SGL", "12:40:20:0.25", "0:30:10:0.0");
 
-        List<CandidateIntegration> candidates = extract(header, records);
+        List<HostVariantCandidate> candidates = extract(header, records);
         assertEquals(new BreakendSupport(12, 60, 0.25, 0, 40), candidates.get(0).startBreakend().support());
     }
 
@@ -145,7 +145,7 @@ public class CandidateIntegrationExtractorTest
     {
         String header = HEADER.replace("NORMAL\tTUMOR", "NORMAL\tOTHER");
         String records = record(
-                "chr1", 1000, "sgl_1", "A", "A" + INSERT_20 + ".", "PASS", "SVTYPE=SGL", "0:1:1:0.0", "1:1:1:0.1");
+                "chr1", 1000, "sgl_1", "A", "A" + INSERT_30 + ".", "PASS", "SVTYPE=SGL", "0:1:1:0.0", "1:1:1:0.1");
 
         assertThrows(UserInputError.class, () -> extract(header, records));
     }
@@ -169,23 +169,23 @@ public class CandidateIntegrationExtractorTest
                 normalGenotype, tumorGenotype) + "\n";
     }
 
-    private static List<String> breakendIds(List<CandidateIntegration> candidates)
+    private static List<String> breakendIds(List<HostVariantCandidate> candidates)
     {
         return candidates.stream().map(candidate -> candidate.startBreakend().id()).toList();
     }
 
-    private List<CandidateIntegration> extract(String records)
+    private List<HostVariantCandidate> extract(String records)
     {
         return extract(HEADER, records);
     }
 
-    private List<CandidateIntegration> extract(String header, String records)
+    private List<HostVariantCandidate> extract(String header, String records)
     {
         try
         {
             File vcfFile = mTempDir.newFile("esvee.unfiltered.vcf");
             Files.writeString(vcfFile.toPath(), header + records);
-            return new CandidateIntegrationExtractor(TUMOR_ID).extract(vcfFile.getAbsolutePath());
+            return new HostVariantExtractor(TUMOR_ID).extract(vcfFile.getAbsolutePath());
         }
         catch(IOException e)
         {

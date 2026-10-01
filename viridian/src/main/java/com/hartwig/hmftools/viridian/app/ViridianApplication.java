@@ -19,7 +19,7 @@ import static com.hartwig.hmftools.viridian.common.ViridianConstants.VIRUS_DETEC
 
 import java.io.File;
 import java.io.IOException;
-import java.util.LinkedHashMap;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -44,10 +44,11 @@ import com.hartwig.hmftools.viridian.detection.select.PairwiseMargins;
 import com.hartwig.hmftools.viridian.detection.select.RepresentativeContigSelector;
 import com.hartwig.hmftools.viridian.detection.support.ContigSupport;
 import com.hartwig.hmftools.viridian.detection.support.ContigSupportCalculator;
-import com.hartwig.hmftools.viridian.integration.align.ViralSequenceAligner;
-import com.hartwig.hmftools.viridian.integration.align.ViralSequenceAlignment;
-import com.hartwig.hmftools.viridian.integration.extract.CandidateIntegration;
-import com.hartwig.hmftools.viridian.integration.extract.CandidateIntegrationExtractor;
+import com.hartwig.hmftools.viridian.integration.Integration;
+import com.hartwig.hmftools.viridian.integration.align.ViralInsertAligner;
+import com.hartwig.hmftools.viridian.integration.align.ViralInsertAlignment;
+import com.hartwig.hmftools.viridian.integration.extract.HostVariantCandidate;
+import com.hartwig.hmftools.viridian.integration.extract.HostVariantExtractor;
 import com.hartwig.hmftools.viridian.reference.OncologyGroup;
 import com.hartwig.hmftools.viridian.reference.ViralContig;
 import com.hartwig.hmftools.viridian.reference.ViralReference;
@@ -55,6 +56,8 @@ import com.hartwig.hmftools.viridian.reference.ViralReference;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+
+// TODO: reduce use of word "viral". "viral" is more general, and often "virus" is the better word if we are referring to a specific virus-related thing, e.g. "virus genome"
 
 public class ViridianApplication
 {
@@ -139,7 +142,7 @@ public class ViridianApplication
     {
         String candidateReadFasta = getCandidateReads();
 
-        LOGGER.info("Aligning candidate reads to viral genomes");
+        LOGGER.info("Aligning candidate reads to virus genomes");
         ViralReadAligner viralReadAligner = ViralReadAligner.create(
                 mViralReference, mConfig.viralBwaIndexImage(), mConfig.threads(), mConfig.alignmentBatchSize());
         viralReadAligner.align(candidateReadFasta, allAlignmentsBamFile);
@@ -225,34 +228,30 @@ public class ViridianApplication
             return;
         }
 
-        LOGGER.info("Extracting integration candidates from ESVEE VCF");
-        List<CandidateIntegration> candidates = new CandidateIntegrationExtractor(mConfig.sampleId()).extract(esveeVcf);
+        LOGGER.info("Extracting integration variant candidates from ESVEE VCF");
+        List<HostVariantCandidate> candidates = new HostVariantExtractor(mConfig.sampleId()).extract(esveeVcf);
 
-        Map<CandidateIntegration, ViralSequenceAlignment> alignments = alignCandidateIntegrations(candidates);
+        List<Integration> integrations = alignHostVariantCandidates(candidates);
 
         LOGGER.info("Writing integrations output");
-        OutputWriter.writeIntegrations(outputFile(INTEGRATIONS_TSV_SUFFIX), candidates, alignments);
+        OutputWriter.writeIntegrations(outputFile(INTEGRATIONS_TSV_SUFFIX), integrations);
     }
 
-    private Map<CandidateIntegration, ViralSequenceAlignment> alignCandidateIntegrations(List<CandidateIntegration> candidates)
+    private List<Integration> alignHostVariantCandidates(List<HostVariantCandidate> candidates)
     {
-        LOGGER.info("Aligning candidate viral integration sequences to viral reference");
+        LOGGER.info("Aligning candidate viral integration sequences to viral genomes");
 
-        List<String> insertSequences = candidates.stream().map(CandidateIntegration::insertSequence).toList();
-        ViralSequenceAligner aligner = ViralSequenceAligner.create(
+        List<String> insertSequences = candidates.stream().map(HostVariantCandidate::insertSequence).toList();
+        ViralInsertAligner aligner = ViralInsertAligner.create(
                 mViralReference, mConfig.viralBwaIndexImage(), mConfig.threads());
-        List<ViralSequenceAlignment> alignments = aligner.alignAll(insertSequences);
+        List<ViralInsertAlignment> alignments = aligner.alignAll(insertSequences);
 
-        Map<CandidateIntegration, ViralSequenceAlignment> byCandidate = new LinkedHashMap<>();
+        List<Integration> integrations = new ArrayList<>(candidates.size());
         for(int i = 0; i < candidates.size(); ++i)
         {
-            if(alignments.get(i) != null)
-            {
-                byCandidate.put(candidates.get(i), alignments.get(i));
-            }
+            integrations.add(new Integration(candidates.get(i), alignments.get(i)));
         }
-
-        return byCandidate;
+        return integrations;
     }
 
     private String outputFile(String suffix)
