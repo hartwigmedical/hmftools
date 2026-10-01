@@ -40,14 +40,14 @@ public class CandidateReadFilter
         {
             return false;
         }
-        // Mapped to a viral decoy contig, or an unmapped read placed on one by its mapped mate. Either way the fragment
+        // Mapped to a virus decoy contig, or an unmapped read placed on one by its mapped mate. Either way the fragment
         // touches a virus, so keep it. Checked before the redux-unmapped exclusion, since a redux-unmapped read sitting
         // on a decoy is still viral evidence.
         if(isViralDecoyContig(record.getReferenceName()))
         {
             return true;
         }
-        // The mate maps to a viral decoy contig, so this read anchors a host<->virus fragment (e.g. an integration junction).
+        // The mate maps to a virus decoy contig, so this read anchors a host<->virus fragment (e.g. an integration junction).
         if(mateMappedToViralDecoy(record))
         {
             return true;
@@ -82,7 +82,7 @@ public class CandidateReadFilter
         else
         {
             // We assume that if ANY supplementary is possibly host genome, then it's not viral, even if another supplementary maps to a
-            // viral contig.
+            // virus contig.
             return supplementaries.stream().allMatch(supplementary -> isViralDecoyContig(supplementary.Chromosome));
         }
     }

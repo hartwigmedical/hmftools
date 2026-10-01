@@ -19,7 +19,7 @@ import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
-// Set of viral contigs loaded from our curated resource.
+// Set of virus contigs loaded from our curated resource.
 public class VirusReference
 {
     private final SAMSequenceDictionary mSequenceDictionary;
@@ -38,7 +38,7 @@ public class VirusReference
         ViralContig contig = mContigsByName.get(name);
         if(contig == null)
         {
-            throw new IllegalArgumentException("Unknown viral contig: " + name);
+            throw new IllegalArgumentException("Unknown virus contig: " + name);
         }
         return contig;
     }
@@ -54,7 +54,7 @@ public class VirusReference
         Map<String, InfoRow> info = loadInfo(infoTsvFile);
         SAMSequenceDictionary dictionary = loadSequenceDictionary(fastaFile);
         List<ViralContig> contigs = joinFastaAndInfo(dictionary, info);
-        LOGGER.debug("Loaded viral reference: {} contigs", contigs.size());
+        LOGGER.debug("Loaded virus reference: {} contigs", contigs.size());
         return new VirusReference(contigs, dictionary);
     }
 
@@ -69,14 +69,14 @@ public class VirusReference
             InfoRow row = remainingInfo.remove(contig);
             if(row == null)
             {
-                throw new UserInputError(String.format("Viral reference contig has no info row: %s", contig));
+                throw new UserInputError(String.format("Virus reference contig has no info row: %s", contig));
             }
             result.add(new ViralContig(contig, sequence.getSequenceLength(), row.virusName(), row.oncologyGroup()));
         }
 
         if(!remainingInfo.isEmpty())
         {
-            throw new UserInputError(String.format("Viral reference info rows have no FASTA contig: %s", remainingInfo.keySet()));
+            throw new UserInputError(String.format("Virus reference info rows have no FASTA contig: %s", remainingInfo.keySet()));
         }
 
         return result;
@@ -92,7 +92,7 @@ public class VirusReference
             {
                 if(!columns.contains(column.name()))
                 {
-                    throw new UserInputError(String.format("Viral reference info missing column: %s", column.name()));
+                    throw new UserInputError(String.format("Virus reference info missing column: %s", column.name()));
                 }
             }
 
@@ -103,7 +103,7 @@ public class VirusReference
                 InfoRow previous = info.put(contig, new InfoRow(row.get(InfoColumn.virus_name), oncologyGroup));
                 if(previous != null)
                 {
-                    throw new UserInputError(String.format("Viral reference info has duplicate contig: %s", contig));
+                    throw new UserInputError(String.format("Virus reference info has duplicate contig: %s", contig));
                 }
             }
         }
@@ -117,13 +117,13 @@ public class VirusReference
             SAMSequenceDictionary dictionary = fasta.getSequenceDictionary();
             if(dictionary == null)
             {
-                throw new UserInputError("Viral reference FASTA has no sequence dictionary (.dict): " + fastaFile);
+                throw new UserInputError("Virus reference FASTA has no sequence dictionary (.dict): " + fastaFile);
             }
             return dictionary;
         }
         catch(IOException e)
         {
-            throw new RuntimeException("Failed to read viral reference FASTA index", e);
+            throw new RuntimeException("Failed to read virus reference FASTA index", e);
         }
     }
 

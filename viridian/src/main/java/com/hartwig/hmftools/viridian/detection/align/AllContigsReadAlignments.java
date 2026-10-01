@@ -22,7 +22,7 @@ import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.ValidationStringency;
 
-// Alignments of reads to (possibly multiple) viral genomes (via BWA-MEM -a mode).
+// Alignments of reads to (possibly multiple) virus genomes (via BWA-MEM -a mode).
 // Alignments straddling a contig's origin are excluded here to avoid circular genome linearization artifacts.
 public record AllContigsReadAlignments(
         ViralReadAlignmentStore store,

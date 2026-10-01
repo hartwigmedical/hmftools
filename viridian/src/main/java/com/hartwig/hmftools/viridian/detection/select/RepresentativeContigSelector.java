@@ -26,7 +26,7 @@ import com.hartwig.hmftools.viridian.reference.ViralContig;
 // Per oncology group, pick at most one representative contig.
 // First, contigs are filtered on coverage and read votes.
 // Then a "challenges" graph determines the presence of "rival" contigs - contigs with low overall support, but
-// decisively supported by a subset of reads. I.e. 1 contig doesn't explain the whole viral genome in the sample.
+// decisively supported by a subset of reads. I.e. 1 contig doesn't explain the whole virus genome in the sample.
 public class RepresentativeContigSelector
 {
     public static List<OncologyGroupRepresentativeSelection> select(

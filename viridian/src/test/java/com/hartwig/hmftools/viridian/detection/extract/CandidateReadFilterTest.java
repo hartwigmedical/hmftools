@@ -60,7 +60,7 @@ public class CandidateReadFilterTest
     @Test
     public void testIsCandidateAcceptsReduxUnmappedReadPlacedOnDecoy()
     {
-        // Placed on the viral decoy by its mapped mate, so the fragment touches the virus and the unmapped-elsewhere
+        // Placed on the virus decoy by its mapped mate, so the fragment touches the virus and the unmapped-elsewhere
         // tag must not drop it.
         SAMRecord record = read(4, "chrEBV", "*");
         record.setAttribute("UM", "chr2:100");
@@ -96,7 +96,7 @@ public class CandidateReadFilterTest
     @Test
     public void testIsCandidateAcceptsHostReadWithMateOnDecoy()
     {
-        // No significant clip, but the mate on the viral decoy anchors a host<->virus fragment.
+        // No significant clip, but the mate on the virus decoy anchors a host<->virus fragment.
         assertTrue(FILTER.isCandidate(readWithMate(0x1 | 0x40, "chr1", "100M", "chrEBV", 1000)));
     }
 

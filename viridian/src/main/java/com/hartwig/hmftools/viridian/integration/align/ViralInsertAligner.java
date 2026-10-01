@@ -21,8 +21,8 @@ import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.SAMFlag;
 
-// Aligns candidate host integration variant sequences to the viral reference.
-// Produces the only best alignment across the entire viral reference - for data gathering purposes.
+// Aligns candidate host integration variant sequences to the virus reference.
+// Produces the only best alignment across the entire virus reference - for data gathering purposes.
 public class ViralInsertAligner
 {
     private final IBwaMemAligner mAligner;

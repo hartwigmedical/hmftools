@@ -70,7 +70,7 @@ public class ViridianApplication
     {
         mConfig = config;
 
-        LOGGER.info("Loading viral reference data");
+        LOGGER.info("Loading virus reference data");
         mVirusReference = VirusReference.load(config.viralRefFile(), config.viralRefInfoFile());
     }
 
@@ -158,7 +158,7 @@ public class ViridianApplication
         return new ContigSupportCalculator().calculate(alignments, contigStats);
     }
 
-    // For each oncology group (group of virus strains at interesting taxonomy granularity), select 1 viral genome which best represents
+    // For each oncology group (group of virus strains at interesting taxonomy granularity), select 1 virus genome which best represents
     // the virus present in the sample.
     private List<OncologyGroupRepresentativeSelection> selectRepresentativeViralContigs(
             AllContigsReadAlignments alignments, List<ContigSupport> viralContigSupports)
@@ -179,7 +179,7 @@ public class ViridianApplication
         return selections;
     }
 
-    // For each oncology group, assign the read alignments to only the selected representative viral genome.
+    // For each oncology group, assign the read alignments to only the selected representative virus genome.
     // This is simply filtering down to each read's alignment to that genome contig (or nothing, if it didn't align there at all).
     private ViralReadAlignmentStore assignReadsToRepresentatives(
             ViralReadAlignmentStore alignments, List<OncologyGroupRepresentativeSelection> representativeSelections)
@@ -240,7 +240,7 @@ public class ViridianApplication
 
     private List<Integration> alignHostVariantCandidates(List<HostVariantCandidate> candidates)
     {
-        LOGGER.info("Aligning candidate viral integration sequences to viral genomes");
+        LOGGER.info("Aligning candidate viral integration sequences to virus genomes");
 
         List<String> insertSequences = candidates.stream().map(HostVariantCandidate::insertSequence).toList();
         ViralInsertAligner aligner = ViralInsertAligner.create(

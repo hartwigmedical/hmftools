@@ -31,7 +31,7 @@ import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.reference.FastaSequenceFile;
 import htsjdk.samtools.reference.ReferenceSequence;
 
-// Realigns candidate reads (a FASTA of read name + bases) to the viral reference with BWA-MEM in
+// Realigns candidate reads (a FASTA of read name + bases) to the virus reference with BWA-MEM in
 // all-hits mode, writing the alignments to a BAM.
 public class ViralReadAligner
 {
