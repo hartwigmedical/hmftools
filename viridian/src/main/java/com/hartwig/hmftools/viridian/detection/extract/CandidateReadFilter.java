@@ -4,6 +4,8 @@ import static com.hartwig.hmftools.common.bam.CigarUtils.leftSoftClipLength;
 import static com.hartwig.hmftools.common.bam.CigarUtils.rightSoftClipLength;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.UNMAP_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.mateUnmapped;
+import static com.hartwig.hmftools.viridian.common.ViridianConstants.VIRAL_READ_MIN_SOFT_CLIP_BASES;
+import static com.hartwig.hmftools.viridian.common.ViridianConstants.VIRUS_REF_CONTIGS;
 
 import java.util.List;
 import java.util.Set;
@@ -18,12 +20,15 @@ public class CandidateReadFilter
     private final int mMinSoftClipBases;
     private final Set<String> mRefVirusContigs;
 
-    // TODO: add 0-arg construct that uses constants
-
     public CandidateReadFilter(int minSoftClipBases, Set<String> refVirusContigs)
     {
         mMinSoftClipBases = minSoftClipBases;
         mRefVirusContigs = refVirusContigs;
+    }
+
+    public CandidateReadFilter()
+    {
+        this(VIRAL_READ_MIN_SOFT_CLIP_BASES, VIRUS_REF_CONTIGS);
     }
 
     public boolean isCandidate(SAMRecord record)

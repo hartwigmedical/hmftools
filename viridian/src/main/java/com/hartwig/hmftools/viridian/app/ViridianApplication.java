@@ -13,9 +13,7 @@ import static com.hartwig.hmftools.viridian.common.ViridianConstants.CONTIG_SUPP
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.INTEGRATIONS_TSV_SUFFIX;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.PAIRWISE_MARGINS_TSV_SUFFIX;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.REPRESENTATIVE_ALIGNMENTS_BAM_SUFFIX;
-import static com.hartwig.hmftools.viridian.common.ViridianConstants.VIRAL_READ_MIN_SOFT_CLIP_BASES;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.VIRUS_DETECTION_TSV_SUFFIX;
-import static com.hartwig.hmftools.viridian.common.ViridianConstants.VIRUS_REF_CONTIGS;
 
 import java.io.File;
 import java.io.IOException;
@@ -130,7 +128,7 @@ public class ViridianApplication
     private void extractCandidateReads(String candidateFastaFile)
     {
         LOGGER.info("Extracting candidate viral reads from tumor BAM");
-        CandidateReadFilter candidateFilter = new CandidateReadFilter(VIRAL_READ_MIN_SOFT_CLIP_BASES, VIRUS_REF_CONTIGS);
+        CandidateReadFilter candidateFilter = new CandidateReadFilter();
         CandidateReadExtractor mCandidateExtractor = new CandidateReadExtractor(
                 mConfig.refGenomeFile(), candidateFilter, mConfig.threads());
         mCandidateExtractor.extract(mConfig.tumorBam(), candidateFastaFile);
