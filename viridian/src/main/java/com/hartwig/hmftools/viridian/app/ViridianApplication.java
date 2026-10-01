@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.viridian.app;
 
 import static java.lang.System.exit;
+import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
 
 import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
@@ -28,10 +29,12 @@ import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.viridian.common.UserInputError;
 import com.hartwig.hmftools.viridian.detection.align.AllAlignments;
 import com.hartwig.hmftools.viridian.detection.align.ViralReadAligner;
+import com.hartwig.hmftools.viridian.detection.align.ViralReadAlignment;
 import com.hartwig.hmftools.viridian.detection.align.ViralReadAlignments;
 import com.hartwig.hmftools.viridian.detection.assign.RepresentativeReadAssigner;
 import com.hartwig.hmftools.viridian.detection.common.ContigStats;
 import com.hartwig.hmftools.viridian.detection.common.ContigStatsCalculator;
+import com.hartwig.hmftools.viridian.detection.common.ReadId;
 import com.hartwig.hmftools.viridian.detection.extract.CandidateReadExtractor;
 import com.hartwig.hmftools.viridian.detection.extract.CandidateReadFilter;
 import com.hartwig.hmftools.viridian.detection.select.OncologyGroupRepresentativeSelection;
@@ -84,7 +87,10 @@ public class ViridianApplication
         List<OncologyGroupRepresentativeSelection> selections =
                 selectRepresentativeViralContigs(allAlignments, viralContigSupports);
 
-        assignReadsToRepresentatives(allAlignments.alignments(), selections);
+        ViralReadAlignments representativeAlignments =
+                assignReadsToRepresentatives(allAlignments.alignments(), selections);
+
+        calculateRepresentativeContigStats(representativeAlignments, allAlignments.metrics().originClippedReads());
 
         callHostIntegrations();
 
@@ -167,7 +173,7 @@ public class ViridianApplication
 
     // For each oncology group, assign the read alignments to only the selected representative viral genome.
     // This is simply filtering down to each read's alignment to that genome contig (or nothing, if it didn't align there at all).
-    private void assignReadsToRepresentatives(
+    private ViralReadAlignments assignReadsToRepresentatives(
             ViralReadAlignments viralReadAlignments, List<OncologyGroupRepresentativeSelection> selections)
     {
         LOGGER.info("Assigning reads to representative contigs");
@@ -175,9 +181,25 @@ public class ViridianApplication
                 .map(OncologyGroupRepresentativeSelection::representative)
                 .filter(Objects::nonNull)
                 .collect(toSet());
-        RepresentativeReadAssigner.assign(
+        Map<ReadId, ViralReadAlignment> assignments = RepresentativeReadAssigner.assign(
                 viralReadAlignments, representatives, outputFile(ALL_ALIGNMENTS_BAM_SUFFIX),
                 outputFile(REPRESENTATIVE_ALIGNMENTS_BAM_SUFFIX));
+
+        return new ViralReadAlignments(assignments.values());
+    }
+
+    // After the representative virus genome is selected for each oncology group, measure final support statistics for the representative.
+    private Map<ViralContig, ContigStats> calculateRepresentativeContigStats(
+            ViralReadAlignments representativeAlignments, Map<ViralContig, Integer> allOriginClippedReads)
+    {
+        LOGGER.info("Computing representative contig stats");
+        // Origin clipped reads where dropped previously, but the information is useful to carry through for visualisation.
+        Map<ViralContig, Integer> originClippedReads = allOriginClippedReads.entrySet().stream()
+                .filter(entry -> representativeAlignments.byContig().containsKey(entry.getKey()))
+                .collect(toMap(Map.Entry::getKey, Map.Entry::getValue));
+        Map<ViralContig, ContigStats> contigStats =
+                ContigStatsCalculator.calculate(representativeAlignments.byContig(), originClippedReads);
+        return contigStats;
     }
 
     private static void logRepresentativeContigSelections(List<OncologyGroupRepresentativeSelection> selections)
