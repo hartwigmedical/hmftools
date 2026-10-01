@@ -26,9 +26,9 @@ public record ViridianConfig(
         String sampleId,
         String tumorBam,
         String refGenomeFile,
-        String viralRefFile,
-        String viralRefInfoFile,
-        String viralBwaIndexImage,
+        String virusRefFile,
+        String virusRefInfoFile,
+        String virusBwaIndexImage,
         @Nullable String bwaLibPath,
         @Nullable String esveeUnfilteredVcf,
         int alignmentBatchSize,
@@ -40,12 +40,12 @@ public record ViridianConfig(
         boolean verboseOutput
 )
 {
-    private static final String CFG_VIRAL_REF_FILE = "viral_ref";
-    private static final String DESC_VIRAL_REF_FILE = "Curated viral reference FASTA file";
-    private static final String CFG_VIRAL_REF_INFO_FILE = "viral_ref_info";
-    private static final String DESC_VIRAL_REF_INFO_FILE = "Viral reference info TSV (contig -> virus name + oncology group)";
-    private static final String CFG_VIRAL_BWA_INDEX_IMAGE = "viral_bwa_index_image";
-    private static final String DESC_VIRAL_BWA_INDEX_IMAGE = "Viral reference BWA-MEM index GATK image file";
+    private static final String CFG_VIRUS_REF_FILE = "viral_ref";
+    private static final String DESC_VIRUS_REF_FILE = "Curated viral reference FASTA file";
+    private static final String CFG_VIRUS_REF_INFO_FILE = "viral_ref_info";
+    private static final String DESC_VIRUS_REF_INFO_FILE = "Viral reference info TSV (contig -> virus name + oncology group)";
+    private static final String CFG_VIRUS_BWA_INDEX_IMAGE = "viral_bwa_index_image";
+    private static final String DESC_VIRUS_BWA_INDEX_IMAGE = "Viral reference BWA-MEM index GATK image file";
     private static final String CFG_ESVEE_UNFILTERED_VCF = "esvee_unfiltered_vcf";
     private static final String DESC_ESVEE_UNFILTERED_VCF = "ESVEE caller unfiltered VCF";
     private static final String CFG_ALIGNMENT_BATCH_SIZE = "align_batch_size";
@@ -61,14 +61,14 @@ public record ViridianConfig(
 
     public static ViridianConfig fromConfigBuilder(final ConfigBuilder configBuilder)
     {
-        String viralRefFile = configBuilder.getValue(CFG_VIRAL_REF_FILE);
+        String virusRefFile = configBuilder.getValue(CFG_VIRUS_REF_FILE);
         return new ViridianConfig(
                 configBuilder.getValue(SAMPLE),
                 configBuilder.getValue(TUMOR_BAM),
                 configBuilder.getValue(REF_GENOME),
-                viralRefFile,
-                configBuilder.getValue(CFG_VIRAL_REF_INFO_FILE),
-                configBuilder.getValue(CFG_VIRAL_BWA_INDEX_IMAGE, viralRefFile + ".img"),
+                virusRefFile,
+                configBuilder.getValue(CFG_VIRUS_REF_INFO_FILE),
+                configBuilder.getValue(CFG_VIRUS_BWA_INDEX_IMAGE, virusRefFile + ".img"),
                 configBuilder.getValue(BWA_LIB_PATH),
                 configBuilder.getValue(CFG_ESVEE_UNFILTERED_VCF),
                 configBuilder.getInteger(CFG_ALIGNMENT_BATCH_SIZE),
@@ -86,9 +86,9 @@ public record ViridianConfig(
         configBuilder.addConfigItem(SAMPLE, true, SAMPLE_DESC);
         configBuilder.addPath(TUMOR_BAM, true, TUMOR_BAM_DESC);
         addRefGenomeFile(configBuilder, true);
-        configBuilder.addPath(CFG_VIRAL_REF_FILE, true, DESC_VIRAL_REF_FILE);
-        configBuilder.addPath(CFG_VIRAL_REF_INFO_FILE, true, DESC_VIRAL_REF_INFO_FILE);
-        configBuilder.addPath(CFG_VIRAL_BWA_INDEX_IMAGE, false, DESC_VIRAL_BWA_INDEX_IMAGE);
+        configBuilder.addPath(CFG_VIRUS_REF_FILE, true, DESC_VIRUS_REF_FILE);
+        configBuilder.addPath(CFG_VIRUS_REF_INFO_FILE, true, DESC_VIRUS_REF_INFO_FILE);
+        configBuilder.addPath(CFG_VIRUS_BWA_INDEX_IMAGE, false, DESC_VIRUS_BWA_INDEX_IMAGE);
         configBuilder.addPath(BWA_LIB_PATH, false, BWA_LIB_PATH_DESC);
         configBuilder.addPath(CFG_ESVEE_UNFILTERED_VCF, false, DESC_ESVEE_UNFILTERED_VCF);
 

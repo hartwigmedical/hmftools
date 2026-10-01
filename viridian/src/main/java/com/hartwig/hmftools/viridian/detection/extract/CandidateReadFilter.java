@@ -16,14 +16,14 @@ import htsjdk.samtools.SAMRecord;
 public class CandidateReadFilter
 {
     private final int mMinSoftClipBases;
-    private final Set<String> mRefViralContigs;
+    private final Set<String> mRefVirusContigs;
 
     // TODO: add 0-arg construct that uses constants
 
-    public CandidateReadFilter(int minSoftClipBases, Set<String> refViralContigs)
+    public CandidateReadFilter(int minSoftClipBases, Set<String> refVirusContigs)
     {
         mMinSoftClipBases = minSoftClipBases;
-        mRefViralContigs = refViralContigs;
+        mRefVirusContigs = refVirusContigs;
     }
 
     public boolean isCandidate(SAMRecord record)
@@ -43,12 +43,12 @@ public class CandidateReadFilter
         // Mapped to a virus decoy contig, or an unmapped read placed on one by its mapped mate. Either way the fragment
         // touches a virus, so keep it. Checked before the redux-unmapped exclusion, since a redux-unmapped read sitting
         // on a decoy is still viral evidence.
-        if(isViralDecoyContig(record.getReferenceName()))
+        if(isVirusDecoyContig(record.getReferenceName()))
         {
             return true;
         }
         // The mate maps to a virus decoy contig, so this read anchors a host<->virus fragment (e.g. an integration junction).
-        if(mateMappedToViralDecoy(record))
+        if(mateMappedToVirusDecoy(record))
         {
             return true;
         }
@@ -83,17 +83,17 @@ public class CandidateReadFilter
         {
             // We assume that if ANY supplementary is possibly host genome, then it's not viral, even if another supplementary maps to a
             // virus contig.
-            return supplementaries.stream().allMatch(supplementary -> isViralDecoyContig(supplementary.Chromosome));
+            return supplementaries.stream().allMatch(supplementary -> isVirusDecoyContig(supplementary.Chromosome));
         }
     }
 
-    private boolean mateMappedToViralDecoy(SAMRecord record)
+    private boolean mateMappedToVirusDecoy(SAMRecord record)
     {
-        return record.getReadPairedFlag() && !record.getMateUnmappedFlag() && isViralDecoyContig(record.getMateReferenceName());
+        return record.getReadPairedFlag() && !record.getMateUnmappedFlag() && isVirusDecoyContig(record.getMateReferenceName());
     }
 
-    private boolean isViralDecoyContig(String contig)
+    private boolean isVirusDecoyContig(String contig)
     {
-        return mRefViralContigs.contains(contig);
+        return mRefVirusContigs.contains(contig);
     }
 }

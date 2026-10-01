@@ -14,7 +14,7 @@ import static com.hartwig.hmftools.viridian.common.ViridianConstants.INTEGRATION
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.PAIRWISE_MARGINS_TSV_SUFFIX;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.REPRESENTATIVE_ALIGNMENTS_BAM_SUFFIX;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.VIRAL_READ_MIN_SOFT_CLIP_BASES;
-import static com.hartwig.hmftools.viridian.common.ViridianConstants.VIRAL_REF_CONTIGS;
+import static com.hartwig.hmftools.viridian.common.ViridianConstants.VIRUS_REF_CONTIGS;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.VIRUS_DETECTION_TSV_SUFFIX;
 
 import java.io.File;
@@ -71,7 +71,7 @@ public class ViridianApplication
         mConfig = config;
 
         LOGGER.info("Loading virus reference data");
-        mVirusReference = VirusReference.load(config.viralRefFile(), config.viralRefInfoFile());
+        mVirusReference = VirusReference.load(config.virusRefFile(), config.virusRefInfoFile());
     }
 
     public void run() throws IOException
@@ -132,7 +132,7 @@ public class ViridianApplication
     private void extractCandidateReads(String candidateFastaFile)
     {
         LOGGER.info("Extracting candidate viral reads from tumor BAM");
-        CandidateReadFilter candidateFilter = new CandidateReadFilter(VIRAL_READ_MIN_SOFT_CLIP_BASES, VIRAL_REF_CONTIGS);
+        CandidateReadFilter candidateFilter = new CandidateReadFilter(VIRAL_READ_MIN_SOFT_CLIP_BASES, VIRUS_REF_CONTIGS);
         CandidateReadExtractor mCandidateExtractor = new CandidateReadExtractor(
                 mConfig.refGenomeFile(), candidateFilter, mConfig.threads());
         mCandidateExtractor.extract(mConfig.tumorBam(), candidateFastaFile);
@@ -145,7 +145,7 @@ public class ViridianApplication
 
         LOGGER.info("Aligning candidate reads to virus genomes");
         ViralReadAligner viralReadAligner = ViralReadAligner.create(
-                mVirusReference, mConfig.viralBwaIndexImage(), mConfig.threads(), mConfig.alignmentBatchSize());
+                mVirusReference, mConfig.virusBwaIndexImage(), mConfig.threads(), mConfig.alignmentBatchSize());
         viralReadAligner.align(candidateReadFasta, allAlignmentsBamFile);
     }
 
@@ -244,7 +244,7 @@ public class ViridianApplication
 
         List<String> insertSequences = candidates.stream().map(HostVariantCandidate::insertSequence).toList();
         ViralInsertAligner aligner = ViralInsertAligner.create(
-                mVirusReference, mConfig.viralBwaIndexImage(), mConfig.threads());
+                mVirusReference, mConfig.virusBwaIndexImage(), mConfig.threads());
         List<ViralInsertAlignment> alignments = aligner.align(insertSequences);
 
         List<Integration> integrations = new ArrayList<>(candidates.size());
