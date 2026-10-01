@@ -13,7 +13,7 @@ import static com.hartwig.hmftools.viridian.common.ViridianConstants.CONTIG_SUPP
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.INTEGRATIONS_TSV_SUFFIX;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.PAIRWISE_MARGINS_TSV_SUFFIX;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.REPRESENTATIVE_ALIGNMENTS_BAM_SUFFIX;
-import static com.hartwig.hmftools.viridian.common.ViridianConstants.VIRAL_READ_MIN_SOFT_CLIP_BASES_DEFAULT;
+import static com.hartwig.hmftools.viridian.common.ViridianConstants.VIRAL_READ_MIN_SOFT_CLIP_BASES;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.VIRAL_REF_CONTIGS;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.VIRUS_DETECTION_TSV_SUFFIX;
 
@@ -131,7 +131,7 @@ public class ViridianApplication
     private void extractCandidateReads(String candidateFastaFile)
     {
         LOGGER.info("Extracting candidate viral reads from tumor BAM");
-        CandidateReadFilter candidateFilter = new CandidateReadFilter(VIRAL_READ_MIN_SOFT_CLIP_BASES_DEFAULT, VIRAL_REF_CONTIGS);
+        CandidateReadFilter candidateFilter = new CandidateReadFilter(VIRAL_READ_MIN_SOFT_CLIP_BASES, VIRAL_REF_CONTIGS);
         CandidateReadExtractor mCandidateExtractor = new CandidateReadExtractor(
                 mConfig.refGenomeFile(), candidateFilter, mConfig.threads());
         mCandidateExtractor.extract(mConfig.tumorBam(), candidateFastaFile);
@@ -154,7 +154,7 @@ public class ViridianApplication
         LOGGER.info("Computing per-contig support");
         Map<ViralContig, ContigStats> contigStats = ContigStatsCalculator.calculate(
                 allAlignments.alignments().byContig(), allAlignments.metrics().originClippedReads());
-        return new ContigSupportCalculator().compute(allAlignments, contigStats);
+        return new ContigSupportCalculator().calculate(allAlignments, contigStats);
     }
 
     // For each oncology group (group of virus strains at interesting taxonomy granularity), select 1 viral genome which best represents
@@ -244,7 +244,7 @@ public class ViridianApplication
         List<String> insertSequences = candidates.stream().map(HostVariantCandidate::insertSequence).toList();
         ViralInsertAligner aligner = ViralInsertAligner.create(
                 mViralReference, mConfig.viralBwaIndexImage(), mConfig.threads());
-        List<ViralInsertAlignment> alignments = aligner.alignAll(insertSequences);
+        List<ViralInsertAlignment> alignments = aligner.align(insertSequences);
 
         List<Integration> integrations = new ArrayList<>(candidates.size());
         for(int i = 0; i < candidates.size(); ++i)
@@ -262,7 +262,7 @@ public class ViridianApplication
         {
             f += "." + outputId;
         }
-        f += suffix;
+        f += "." + APP_NAME.toLowerCase() + suffix;
         return f;
     }
 

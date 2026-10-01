@@ -43,8 +43,7 @@ public class ViralInsertAligner
     }
 
     // One result per input sequence, in the same order. An entry is null where the sequence is aligned to no contig.
-    // TODO: rename "align"
-    public List<ViralInsertAlignment> alignAll(List<String> sequences)
+    public List<ViralInsertAlignment> align(List<String> sequences)
     {
         List<byte[]> queries = sequences.stream().map(String::getBytes).toList();
         List<List<BwaMemAlignment>> alignments = mAligner.alignSequences(queries);

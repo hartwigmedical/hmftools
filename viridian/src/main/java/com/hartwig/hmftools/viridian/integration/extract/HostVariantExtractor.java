@@ -49,10 +49,8 @@ public class HostVariantExtractor
             StructuralVariantFactory svFactory = StructuralVariantFactory.build(new AlwaysPassFilter());
             setGenotypeOrdinals(svFactory, reader, vcfFile);
 
-            int variantCount = 0;
             for(VariantContext context : reader.iterator())
             {
-                ++variantCount;
                 svFactory.addVariantContext(context);
             }
 
@@ -61,10 +59,11 @@ public class HostVariantExtractor
                     .filter(Objects::nonNull)
                     .toList();
 
-            // TODO: should only warn if there are unpaired breakends. no need for any other logging
-            LOGGER.debug(
-                    "Read {} variant records, {} breakends never paired, {} integration candidates",
-                    variantCount, svFactory.unmatched().size(), candidates.size());
+            int unpairedBreakends = svFactory.unmatched().size();
+            if(unpairedBreakends > 0)
+            {
+                LOGGER.warn("{} breakends never paired", unpairedBreakends);
+            }
 
             return candidates;
         }

@@ -35,8 +35,7 @@ public class ContigSupportCalculator
         this(READ_VOTE_CORRECT_BASE_PROBABILITY);
     }
 
-    // TODO rename "calculate"
-    public List<ContigSupport> compute(AllAlignments allAlignments, Map<ViralContig, ContigStats> contigStats)
+    public List<ContigSupport> calculate(AllAlignments allAlignments, Map<ViralContig, ContigStats> contigStats)
     {
         Map<ViralContig, Double> readVotes = calculateReadVotes(allAlignments.alignments().byRead().values());
         AllAlignmentsMetrics metrics = allAlignments.metrics();

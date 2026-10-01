@@ -123,7 +123,7 @@ public class ContigSupportCalculatorTest
         AllAlignments allAlignments = AllAlignments.from(alignments, MEAN_READ_LENGTH);
         Map<ViralContig, ContigStats> contigStats = ContigStatsCalculator.calculate(
                 allAlignments.alignments().byContig(), allAlignments.metrics().originClippedReads());
-        return new ContigSupportCalculator(correctBaseProbability).compute(allAlignments, contigStats);
+        return new ContigSupportCalculator(correctBaseProbability).calculate(allAlignments, contigStats);
     }
 
     private static ContigSupport get(List<ContigSupport> stats, ViralContig contig)

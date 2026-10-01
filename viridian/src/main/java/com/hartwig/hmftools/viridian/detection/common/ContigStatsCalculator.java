@@ -2,13 +2,13 @@ package com.hartwig.hmftools.viridian.detection.common;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import com.hartwig.hmftools.viridian.detection.align.AlignedInterval;
 import com.hartwig.hmftools.viridian.detection.align.ViralReadAlignment;
@@ -21,17 +21,15 @@ public class ContigStatsCalculator
             Map<ViralContig, Map<ReadId, ViralReadAlignment>> alignmentsByContig,
             Map<ViralContig, Integer> originClippedReads)
     {
-        // TODO: can this be a 1 statement stream operation?
-        Map<ViralContig, Collection<ViralReadAlignment>> contigAlignments = new HashMap<>();
-        alignmentsByContig.forEach((contig, readAlignments) -> contigAlignments.put(contig, readAlignments.values()));
-
         // A contig whose every alignment straddled the origin retains no read, but the drop is still worth reporting.
-        originClippedReads.keySet().forEach(contig -> contigAlignments.computeIfAbsent(contig, k -> List.of()));
-
-        return contigAlignments.entrySet().stream().collect(toMap(
-                Map.Entry::getKey,
-                entry -> createContigStats(
-                        entry.getKey(), entry.getValue(), originClippedReads.getOrDefault(entry.getKey(), 0))));
+        return Stream.concat(alignmentsByContig.keySet().stream(), originClippedReads.keySet().stream())
+                .distinct()
+                .collect(toMap(
+                        identity(),
+                        contig -> createContigStats(
+                                contig,
+                                alignmentsByContig.getOrDefault(contig, Map.of()).values(),
+                                originClippedReads.getOrDefault(contig, 0))));
     }
 
     private static ContigStats createContigStats(

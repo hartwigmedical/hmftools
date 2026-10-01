@@ -7,15 +7,14 @@ public class ViridianConstants
 {
     public static final String APP_NAME = "Viridian";
 
-    // Output file suffixes.
-    // TODO: should programmatically put in the app name later, not here
-    public static final String CANDIDATES_FASTA_SUFFIX = ".viridian.candidates.fasta";
-    public static final String ALL_ALIGNMENTS_BAM_SUFFIX = ".viridian.all.bam";
-    public static final String REPRESENTATIVE_ALIGNMENTS_BAM_SUFFIX = ".viridian.representative.bam";
-    public static final String CONTIG_SUPPORT_TSV_SUFFIX = ".viridian.contig_support.tsv";
-    public static final String PAIRWISE_MARGINS_TSV_SUFFIX = ".viridian.pairwise_margins.tsv";
-    public static final String VIRUS_DETECTION_TSV_SUFFIX = ".viridian.virus_detection.tsv";
-    public static final String INTEGRATIONS_TSV_SUFFIX = ".viridian.integrations.tsv";
+    // Output file suffixes. The app name is inserted where these build the full file name.
+    public static final String CANDIDATES_FASTA_SUFFIX = ".candidates.fasta";
+    public static final String ALL_ALIGNMENTS_BAM_SUFFIX = ".all.bam";
+    public static final String REPRESENTATIVE_ALIGNMENTS_BAM_SUFFIX = ".representative.bam";
+    public static final String CONTIG_SUPPORT_TSV_SUFFIX = ".contig_support.tsv";
+    public static final String PAIRWISE_MARGINS_TSV_SUFFIX = ".pairwise_margins.tsv";
+    public static final String VIRUS_DETECTION_TSV_SUFFIX = ".virus_detection.tsv";
+    public static final String INTEGRATIONS_TSV_SUFFIX = ".integrations.tsv";
 
     // Genome partition size for multi-threaded candidate extraction.
     // This value was chosen approximately based on observed highest performance.
@@ -26,12 +25,10 @@ public class ViridianConstants
     public static final Set<String> VIRAL_REF_CONTIGS = Set.of("chrEBV");
 
     // Minimum soft-clip length for a host-mapped read to count as a candidate.
-    // TODO: is this actually a default, or a regular constant?
-    public static final int VIRAL_READ_MIN_SOFT_CLIP_BASES_DEFAULT = 30;
+    public static final int VIRAL_READ_MIN_SOFT_CLIP_BASES = 30;
 
     // Minimum alignment score for reads aligning to virus genomes.
-    // TODO: is this actually a default, or a regular constant?
-    public static final int VIRAL_READ_MIN_ALIGN_SCORE_DEFAULT = 30;
+    public static final int VIRAL_READ_MIN_ALIGN_SCORE = 30;
 
     // Candidate reads submitted to BWA per alignment call (bounds memory usage).
     public static final int VIRAL_READ_ALIGNMENT_BATCH_SIZE_DEFAULT = 100_000;
@@ -90,11 +87,11 @@ public class ViridianConstants
         {
             throw new IllegalStateException();
         }
-        if(!(VIRAL_READ_MIN_SOFT_CLIP_BASES_DEFAULT > 0))
+        if(!(VIRAL_READ_MIN_SOFT_CLIP_BASES > 0))
         {
             throw new IllegalStateException();
         }
-        if(!(VIRAL_READ_MIN_ALIGN_SCORE_DEFAULT >= 19))
+        if(!(VIRAL_READ_MIN_ALIGN_SCORE >= 19))
         {
             throw new IllegalStateException();
         }

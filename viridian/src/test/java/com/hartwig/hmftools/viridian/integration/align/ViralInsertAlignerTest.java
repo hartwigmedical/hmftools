@@ -86,7 +86,7 @@ public class ViralInsertAlignerTest
                 OTHER_SEQUENCE, List.of(noHit()),
                 SEQUENCE, List.of(alignment(0, 0, 999, 60, "32M", 1))));
 
-        List<ViralInsertAlignment> alignments = aligner.alignAll(List.of(OTHER_SEQUENCE, SEQUENCE));
+        List<ViralInsertAlignment> alignments = aligner.align(List.of(OTHER_SEQUENCE, SEQUENCE));
 
         assertNull(alignments.get(0));
         assertEquals(CONTIG_16, alignments.get(1).contig());
@@ -94,7 +94,7 @@ public class ViralInsertAlignerTest
 
     private static ViralInsertAlignment align(String sequence, List<BwaMemAlignment> hits)
     {
-        return aligner(Map.of(sequence, hits)).alignAll(List.of(sequence)).get(0);
+        return aligner(Map.of(sequence, hits)).align(List.of(sequence)).get(0);
     }
 
     private static ViralInsertAligner aligner(Map<String, List<BwaMemAlignment>> hits)
