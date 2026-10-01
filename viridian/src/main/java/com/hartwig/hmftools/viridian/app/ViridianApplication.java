@@ -14,8 +14,8 @@ import static com.hartwig.hmftools.viridian.common.ViridianConstants.INTEGRATION
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.PAIRWISE_MARGINS_TSV_SUFFIX;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.REPRESENTATIVE_ALIGNMENTS_BAM_SUFFIX;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.VIRAL_READ_MIN_SOFT_CLIP_BASES;
-import static com.hartwig.hmftools.viridian.common.ViridianConstants.VIRUS_REF_CONTIGS;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.VIRUS_DETECTION_TSV_SUFFIX;
+import static com.hartwig.hmftools.viridian.common.ViridianConstants.VIRUS_REF_CONTIGS;
 
 import java.io.File;
 import java.io.IOException;
@@ -56,8 +56,6 @@ import com.hartwig.hmftools.viridian.reference.VirusReference;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-
-// TODO: reduce use of word "viral". "viral" is more general, and often "virus" is the better word if we are referring to a specific virus-related thing, e.g. "virus genome"
 
 public class ViridianApplication
 {
