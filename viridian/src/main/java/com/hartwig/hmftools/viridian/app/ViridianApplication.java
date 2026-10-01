@@ -9,12 +9,13 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkCreate
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.ALL_ALIGNMENTS_BAM_SUFFIX;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.APP_NAME;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.CANDIDATES_FASTA_SUFFIX;
-import static com.hartwig.hmftools.viridian.common.ViridianConstants.CONTIG_INFO_TSV_SUFFIX;
+import static com.hartwig.hmftools.viridian.common.ViridianConstants.CONTIG_SUPPORT_TSV_SUFFIX;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.INTEGRATIONS_TSV_SUFFIX;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.PAIRWISE_MARGINS_TSV_SUFFIX;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.REPRESENTATIVE_ALIGNMENTS_BAM_SUFFIX;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.VIRAL_READ_MIN_SOFT_CLIP_BASES_DEFAULT;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.VIRAL_REF_CONTIGS;
+import static com.hartwig.hmftools.viridian.common.ViridianConstants.VIRUS_DETECTION_TSV_SUFFIX;
 
 import java.io.File;
 import java.io.IOException;
@@ -32,13 +33,13 @@ import com.hartwig.hmftools.viridian.detection.align.ViralReadAligner;
 import com.hartwig.hmftools.viridian.detection.align.ViralReadAlignment;
 import com.hartwig.hmftools.viridian.detection.align.ViralReadAlignments;
 import com.hartwig.hmftools.viridian.detection.assign.RepresentativeReadAssigner;
+import com.hartwig.hmftools.viridian.detection.assign.VirusDetection;
 import com.hartwig.hmftools.viridian.detection.common.ContigStats;
 import com.hartwig.hmftools.viridian.detection.common.ContigStatsCalculator;
 import com.hartwig.hmftools.viridian.detection.common.ReadId;
 import com.hartwig.hmftools.viridian.detection.extract.CandidateReadExtractor;
 import com.hartwig.hmftools.viridian.detection.extract.CandidateReadFilter;
 import com.hartwig.hmftools.viridian.detection.select.OncologyGroupRepresentativeSelection;
-import com.hartwig.hmftools.viridian.detection.select.OncologyGroupResolution;
 import com.hartwig.hmftools.viridian.detection.select.PairwiseMargins;
 import com.hartwig.hmftools.viridian.detection.select.RepresentativeContigSelector;
 import com.hartwig.hmftools.viridian.detection.support.ContigSupport;
@@ -47,6 +48,7 @@ import com.hartwig.hmftools.viridian.integration.align.ViralSequenceAligner;
 import com.hartwig.hmftools.viridian.integration.align.ViralSequenceAlignment;
 import com.hartwig.hmftools.viridian.integration.extract.CandidateIntegration;
 import com.hartwig.hmftools.viridian.integration.extract.CandidateIntegrationExtractor;
+import com.hartwig.hmftools.viridian.reference.OncologyGroup;
 import com.hartwig.hmftools.viridian.reference.ViralContig;
 import com.hartwig.hmftools.viridian.reference.ViralReference;
 
@@ -90,7 +92,10 @@ public class ViridianApplication
         ViralReadAlignments representativeAlignments =
                 assignReadsToRepresentatives(allAlignments.alignments(), selections);
 
-        calculateRepresentativeContigStats(representativeAlignments, allAlignments.metrics().originClippedReads());
+        Map<ViralContig, ContigStats> representativeContigStats =
+                calculateRepresentativeContigStats(representativeAlignments, allAlignments.metrics().originClippedReads());
+
+        writeVirusDetection(selections, representativeContigStats, allAlignments.metrics().readCountsByOncologyGroup());
 
         callHostIntegrations();
 
@@ -158,10 +163,9 @@ public class ViridianApplication
         PairwiseMargins pairwiseMargins = PairwiseMargins.from(allAlignments.alignments().byRead());
         List<OncologyGroupRepresentativeSelection> selections = RepresentativeContigSelector.select(
                 viralContigSupports, pairwiseMargins, allAlignments.metrics().readCountsByOncologyGroup());
-        logRepresentativeContigSelections(selections);
 
         LOGGER.info("Writing contig info output");
-        OutputWriter.writeContigInfo(outputFile(CONTIG_INFO_TSV_SUFFIX), selections);
+        OutputWriter.writeContigSupport(outputFile(CONTIG_SUPPORT_TSV_SUFFIX), selections);
         if(mConfig.verboseOutput())
         {
             LOGGER.info("Writing pairwise margins output");
@@ -202,20 +206,13 @@ public class ViridianApplication
         return contigStats;
     }
 
-    private static void logRepresentativeContigSelections(List<OncologyGroupRepresentativeSelection> selections)
+    private void writeVirusDetection(
+            List<OncologyGroupRepresentativeSelection> selections, Map<ViralContig, ContigStats> representativeContigStats,
+            Map<OncologyGroup, Integer> groupReadCounts)
     {
-        for(OncologyGroupRepresentativeSelection selection : selections)
-        {
-            ViralContig representative = selection.representative();
-            if(representative != null)
-            {
-                LOGGER.debug("oncologyGroup({}) representative({})", selection.oncologyGroup(), representative);
-            }
-            else if(selection.resolution() == OncologyGroupResolution.UNRESOLVED)
-            {
-                LOGGER.debug("oncologyGroup({}) unresolved({})", selection.oncologyGroup(), selection.outcome());
-            }
-        }
+        LOGGER.info("Writing virus detection output");
+        List<VirusDetection> detections = VirusDetection.from(selections, representativeContigStats, groupReadCounts);
+        OutputWriter.writeVirusDetection(outputFile(VIRUS_DETECTION_TSV_SUFFIX), detections);
     }
 
     // Find where a virus inserted itself into the host genome, from the SVs ESVEE called.

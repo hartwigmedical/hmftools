@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.hartwig.hmftools.common.utils.file.DelimFileWriter;
+import com.hartwig.hmftools.viridian.detection.assign.VirusDetection;
 import com.hartwig.hmftools.viridian.detection.common.ContigStats;
 import com.hartwig.hmftools.viridian.detection.common.SummaryStats;
 import com.hartwig.hmftools.viridian.detection.select.OncologyGroupRepresentativeSelection;
@@ -32,84 +33,58 @@ import org.jetbrains.annotations.Nullable;
 
 public class OutputWriter
 {
-    public static void writeContigInfo(String file, List<OncologyGroupRepresentativeSelection> selections)
+    public static void writeContigSupport(String file, List<OncologyGroupRepresentativeSelection> selections)
     {
         Map<ViralContig, Integer> votesRanks = candidateVotesRanks(selections);
-        List<ContigInfoRow> rows = selections.stream()
-                .flatMap(OutputWriter::contigInfoRows)
-                .sorted(comparing((ContigInfoRow row) -> row.support().contig().oncologyGroup())
+        List<ContigSupportRow> rows = selections.stream()
+                .flatMap(OutputWriter::contigSupportRows)
+                .sorted(comparing((ContigSupportRow row) -> row.support().contig().oncologyGroup())
                         .thenComparing(row -> row.support().readVotes(), reverseOrder())
                         .thenComparing(row -> row.support().contig()))
                 .toList();
 
         DelimFileWriter.write(
-                file, CONTIG_INFO_COLUMNS, rows, (contigRow, row) ->
+                file, CONTIG_SUPPORT_COLUMNS, rows, (contigRow, row) ->
                 {
                     ContigSupport support = contigRow.support();
                     ContigStats stats = support.stats();
                     ViralContig contig = support.contig();
 
-                    row.set(ContigInfoColumn.contig, contig.name());
-                    row.set(ContigInfoColumn.virus_name, contig.virusName());
-                    row.set(ContigInfoColumn.oncology_group, contig.oncologyGroup().name());
-                    row.set(ContigInfoColumn.contig_length, contig.length());
-                    row.set(ContigInfoColumn.read_count, stats.readCount());
-                    row.set(ContigInfoColumn.multi_align_reads, support.multiAlignReads());
-                    row.set(ContigInfoColumn.origin_clipped_reads, stats.originClippedReads());
-                    row.set(ContigInfoColumn.coverage_fraction, stats.coverageFraction());
-                    row.set(ContigInfoColumn.read_votes, support.readVotes());
+                    row.set(ContigSupportColumn.contig, contig.name());
+                    row.set(ContigSupportColumn.virus_name, contig.virusName());
+                    row.set(ContigSupportColumn.oncology_group, contig.oncologyGroup().name());
+                    row.set(ContigSupportColumn.contig_length, contig.length());
+                    row.set(ContigSupportColumn.read_count, stats.readCount());
+                    row.set(ContigSupportColumn.multi_align_reads, support.multiAlignReads());
+                    row.set(ContigSupportColumn.origin_clipped_reads, stats.originClippedReads());
+                    row.set(ContigSupportColumn.coverage_fraction, stats.coverageFraction());
+                    row.set(ContigSupportColumn.read_votes, support.readVotes());
 
                     writeSummaryStats(row, DEPTH_STATS_COLUMNS, stats.depth());
                     writeSummaryStats(row, ALIGN_PER_READ_STATS_COLUMNS, support.alignmentsPerRead());
                     writeSummaryStats(row, ALIGNER_SCORE_STATS_COLUMNS, stats.alignerScore());
 
-                    row.set(ContigInfoColumn.oncology_group_resolution, contigRow.selection().resolution().name());
-                    row.set(ContigInfoColumn.oncology_group_outcome, contigRow.selection().outcome().name());
-                    row.set(ContigInfoColumn.filter_status, support.filterStatus().name());
-                    row.setOrNull(ContigInfoColumn.vote_share_pre_filter, contigRow.preFilterVoteShare());
-                    row.setOrNull(ContigInfoColumn.vote_share_post_filter, contigRow.postFilterVoteShare());
-                    row.setOrNull(ContigInfoColumn.vote_share_ratio, contigRow.voteShareOfTop());
+                    row.set(ContigSupportColumn.oncology_group_resolution, contigRow.selection().resolution().name());
+                    row.set(ContigSupportColumn.oncology_group_outcome, contigRow.selection().outcome().name());
+                    row.set(ContigSupportColumn.filter_status, support.filterStatus().name());
+                    row.setOrNull(ContigSupportColumn.vote_share_pre_filter, contigRow.preFilterVoteShare());
+                    row.setOrNull(ContigSupportColumn.vote_share_post_filter, contigRow.postFilterVoteShare());
+                    row.setOrNull(ContigSupportColumn.vote_share_ratio, contigRow.voteShareOfTop());
 
                     // Note unset columns are written as null.
                     RepresentativeContigCandidate candidate = contigRow.candidate();
                     if(candidate != null)
                     {
-                        row.set(ContigInfoColumn.votes_rank, candidate.votesRank());
-                        row.set(ContigInfoColumn.comparable, candidate.comparable());
-                        row.set(ContigInfoColumn.role, candidate.role().name());
-                        row.set(ContigInfoColumn.challenges_ranks, formatRanks(votesRanks, candidate.challenges()));
-                        row.set(ContigInfoColumn.challenged_by_ranks, formatRanks(votesRanks, candidate.challengedBy()));
+                        row.set(ContigSupportColumn.votes_rank, candidate.votesRank());
+                        row.set(ContigSupportColumn.comparable, candidate.comparable());
+                        row.set(ContigSupportColumn.role, candidate.role().name());
+                        row.set(ContigSupportColumn.challenges_ranks, formatRanks(votesRanks, candidate.challenges()));
+                        row.set(ContigSupportColumn.challenged_by_ranks, formatRanks(votesRanks, candidate.challengedBy()));
                     }
                 });
     }
 
-    private static final String DEPTH_STATS_COLUMNS = "depth";
-    private static final String ALIGN_PER_READ_STATS_COLUMNS = "align_per_read";
-    private static final String ALIGNER_SCORE_STATS_COLUMNS = "aligner_score";
-    private static final List<String> CONTIG_INFO_COLUMNS =
-            Stream.concat(
-                            Stream.of(ContigInfoColumn.values()).map(Enum::name),
-                            Stream.of(DEPTH_STATS_COLUMNS, ALIGN_PER_READ_STATS_COLUMNS, ALIGNER_SCORE_STATS_COLUMNS)
-                                    .flatMap(group -> SummaryStats.FIELD_NAMES.stream()
-                                            .map(field -> summaryStatsColumn(group, field))))
-                    .toList();
-
-    private static void writeSummaryStats(DelimFileWriter.Row row, String group, @Nullable SummaryStats stats)
-    {
-        if(stats == null)
-        {
-            return;
-        }
-
-        stats.fieldValues().forEach((field, value) -> row.set(summaryStatsColumn(group, field), value));
-    }
-
-    private static String summaryStatsColumn(String group, String field)
-    {
-        return group + "_" + field;
-    }
-
-    private record ContigInfoRow(
+    private record ContigSupportRow(
             OncologyGroupRepresentativeSelection selection,
             ContigSupport support,
             // Null for a contig the support filter rejected, leaving the candidate columns blank.
@@ -121,36 +96,36 @@ public class OutputWriter
     {
     }
 
-    private static Stream<ContigInfoRow> contigInfoRows(OncologyGroupRepresentativeSelection selection)
+    private static Stream<ContigSupportRow> contigSupportRows(OncologyGroupRepresentativeSelection selection)
     {
         double candidateVotes = selection.candidates().stream().mapToDouble(c -> c.support().readVotes()).sum();
         double rejectedVotes = selection.rejected().stream().mapToDouble(ContigSupport::readVotes).sum();
         double topCandidateVotes = selection.candidates().stream()
                 .mapToDouble(candidate -> candidate.support().readVotes()).max().orElse(0.0);
 
-        Stream<ContigInfoRow> candidates = selection.candidates().stream()
-                .map(candidate -> row(
+        Stream<ContigSupportRow> candidates = selection.candidates().stream()
+                .map(candidate -> contigSupportRow(
                         selection, candidate.support(), candidate, candidateVotes + rejectedVotes,
                         candidateVotes, topCandidateVotes));
-        Stream<ContigInfoRow> rejected = selection.rejected().stream()
-                .map(support -> row(
+        Stream<ContigSupportRow> rejected = selection.rejected().stream()
+                .map(support -> contigSupportRow(
                         selection, support, null, candidateVotes + rejectedVotes,
                         candidateVotes, topCandidateVotes));
 
         return Stream.concat(candidates, rejected);
     }
 
-    private static ContigInfoRow row(
+    private static ContigSupportRow contigSupportRow(
             OncologyGroupRepresentativeSelection selection, ContigSupport support, @Nullable RepresentativeContigCandidate candidate,
             double allVotes, double candidateVotes, double topCandidateVotes)
     {
         double votes = support.readVotes();
-        return new ContigInfoRow(
+        return new ContigSupportRow(
                 selection, support, candidate,
                 share(votes, allVotes), share(votes, candidateVotes), share(votes, topCandidateVotes));
     }
 
-    private enum ContigInfoColumn
+    private enum ContigSupportColumn
     {
         contig,
         virus_name,
@@ -172,6 +147,92 @@ public class OutputWriter
         challenged_by_ranks,
         multi_align_reads,
         origin_clipped_reads
+    }
+
+    private static final String DEPTH_STATS_COLUMNS = "depth";
+    private static final String ALIGNER_SCORE_STATS_COLUMNS = "aligner_score";
+
+    private static final String ALIGN_PER_READ_STATS_COLUMNS = "align_per_read";
+
+    private static final List<String> CONTIG_SUPPORT_COLUMNS =
+            Stream.concat(
+                            Stream.of(ContigSupportColumn.values()).map(Enum::name),
+                            Stream.of(DEPTH_STATS_COLUMNS, ALIGN_PER_READ_STATS_COLUMNS, ALIGNER_SCORE_STATS_COLUMNS)
+                                    .flatMap(group -> SummaryStats.FIELD_NAMES.stream()
+                                            .map(field -> summaryStatsColumn(group, field))))
+                    .toList();
+
+    public static void writeVirusDetection(String file, List<VirusDetection> detections)
+    {
+        List<VirusDetection> rows = detections.stream().sorted(comparing(VirusDetection::oncologyGroup)).toList();
+
+        DelimFileWriter.write(
+                file, VIRUS_DETECTION_COLUMNS, rows, (detection, row) ->
+                {
+                    row.set(VirusDetectionColumn.oncology_group, detection.oncologyGroup().name());
+                    row.set(VirusDetectionColumn.oncology_group_resolution, detection.resolution().name());
+                    row.set(VirusDetectionColumn.oncology_group_outcome, detection.outcome().name());
+                    row.set(VirusDetectionColumn.group_read_count, detection.groupReadCount());
+                    row.set(VirusDetectionColumn.aligned_contig_count, detection.alignedContigCount());
+                    row.set(VirusDetectionColumn.candidate_count, detection.candidateCount());
+                    row.set(VirusDetectionColumn.comparable_candidate_count, detection.comparableCandidateCount());
+
+                    // Note unset columns are written as null, leaving an unmeasured group's columns blank.
+                    ContigStats stats = detection.representativeContigStats();
+                    if(stats != null)
+                    {
+                        ViralContig contig = stats.contig();
+                        row.set(VirusDetectionColumn.representative_contig, contig.name());
+                        row.set(VirusDetectionColumn.virus_name, contig.virusName());
+                        row.set(VirusDetectionColumn.contig_length, contig.length());
+                        row.set(VirusDetectionColumn.read_count, stats.readCount());
+                        row.set(VirusDetectionColumn.origin_clipped_reads, stats.originClippedReads());
+                        row.set(VirusDetectionColumn.coverage_fraction, stats.coverageFraction());
+
+                        writeSummaryStats(row, DEPTH_STATS_COLUMNS, stats.depth());
+                        writeSummaryStats(row, ALIGNER_SCORE_STATS_COLUMNS, stats.alignerScore());
+                    }
+                });
+    }
+
+    private enum VirusDetectionColumn
+    {
+        oncology_group,
+        oncology_group_resolution,
+        oncology_group_outcome,
+        group_read_count,
+        aligned_contig_count,
+        candidate_count,
+        comparable_candidate_count,
+        representative_contig,
+        virus_name,
+        contig_length,
+        coverage_fraction,
+        read_count,
+        origin_clipped_reads
+    }
+
+    private static final List<String> VIRUS_DETECTION_COLUMNS =
+            Stream.concat(
+                            Stream.of(VirusDetectionColumn.values()).map(Enum::name),
+                            Stream.of(DEPTH_STATS_COLUMNS, ALIGNER_SCORE_STATS_COLUMNS)
+                                    .flatMap(group -> SummaryStats.FIELD_NAMES.stream()
+                                            .map(field -> summaryStatsColumn(group, field))))
+                    .toList();
+
+    private static void writeSummaryStats(DelimFileWriter.Row row, String group, @Nullable SummaryStats stats)
+    {
+        if(stats == null)
+        {
+            return;
+        }
+
+        stats.fieldValues().forEach((field, value) -> row.set(summaryStatsColumn(group, field), value));
+    }
+
+    private static String summaryStatsColumn(String group, String field)
+    {
+        return group + "_" + field;
     }
 
     @Nullable

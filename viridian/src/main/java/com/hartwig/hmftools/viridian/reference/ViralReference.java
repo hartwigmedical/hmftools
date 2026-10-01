@@ -20,6 +20,7 @@ import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 // Set of viral contigs loaded from our curated resource.
+// TODO: rename `VirusReference`
 public class ViralReference
 {
     private final SAMSequenceDictionary mSequenceDictionary;
