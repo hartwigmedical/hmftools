@@ -40,12 +40,12 @@ public record ViridianConfig(
         boolean verboseOutput
 )
 {
-    private static final String CFG_VIRUS_REF_FILE = "viral_ref";
-    private static final String DESC_VIRUS_REF_FILE = "Curated viral reference FASTA file";
-    private static final String CFG_VIRUS_REF_INFO_FILE = "viral_ref_info";
-    private static final String DESC_VIRUS_REF_INFO_FILE = "Viral reference info TSV (contig -> virus name + oncology group)";
-    private static final String CFG_VIRUS_BWA_INDEX_IMAGE = "viral_bwa_index_image";
-    private static final String DESC_VIRUS_BWA_INDEX_IMAGE = "Viral reference BWA-MEM index GATK image file";
+    private static final String CFG_VIRUS_REF_FILE = "virus_ref";
+    private static final String DESC_VIRUS_REF_FILE = "Curated virus reference FASTA file";
+    private static final String CFG_VIRUS_REF_INFO_FILE = "virus_ref_info";
+    private static final String DESC_VIRUS_REF_INFO_FILE = "Virus reference info TSV (contig -> virus name + oncology group)";
+    private static final String CFG_VIRUS_BWA_INDEX_IMAGE = "virus_bwa_index_image";
+    private static final String DESC_VIRUS_BWA_INDEX_IMAGE = "Virus reference BWA-MEM index GATK image file";
     private static final String CFG_ESVEE_UNFILTERED_VCF = "esvee_unfiltered_vcf";
     private static final String DESC_ESVEE_UNFILTERED_VCF = "ESVEE caller unfiltered VCF";
     private static final String CFG_ALIGNMENT_BATCH_SIZE = "align_batch_size";
