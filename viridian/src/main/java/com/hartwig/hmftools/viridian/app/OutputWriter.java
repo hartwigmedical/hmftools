@@ -362,9 +362,9 @@ public class OutputWriter
                         ViralContig contig = alignment.contig();
                         row.set(IntegrationColumn.virus_name, contig.virusName());
                         row.set(IntegrationColumn.oncology_group, contig.oncologyGroup().name());
-                        row.set(IntegrationColumn.viral_contig, contig.name());
-                        row.set(IntegrationColumn.viral_position, alignment.position());
-                        row.set(IntegrationColumn.viral_orientation, alignment.orientation().asByte());
+                        row.set(IntegrationColumn.virus_contig, contig.name());
+                        row.set(IntegrationColumn.virus_position, alignment.position());
+                        row.set(IntegrationColumn.virus_orientation, alignment.orientation().asByte());
                         row.set(IntegrationColumn.align_cigar, alignment.cigar().toString());
                         row.set(IntegrationColumn.aligned_length, alignment.alignedLength());
                         row.set(IntegrationColumn.aligner_score, alignment.alignerScore());
@@ -406,9 +406,9 @@ public class OutputWriter
         insert_sequence,
         virus_name,
         oncology_group,
-        viral_contig,
-        viral_position,
-        viral_orientation,
+        virus_contig,
+        virus_position,
+        virus_orientation,
         align_cigar,
         aligned_length,
         aligner_score,
