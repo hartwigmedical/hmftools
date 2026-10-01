@@ -11,7 +11,7 @@ import java.util.List;
 
 import com.hartwig.hmftools.viridian.detection.common.ReadId;
 import com.hartwig.hmftools.viridian.reference.ViralContig;
-import com.hartwig.hmftools.viridian.reference.ViralReference;
+import com.hartwig.hmftools.viridian.reference.VirusReference;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -61,7 +61,7 @@ public record ViralReadAlignment(
         }
     }
 
-    public static ViralReadAlignment from(SAMRecord record, ViralReference reference)
+    public static ViralReadAlignment from(SAMRecord record, VirusReference reference)
     {
         int leftClip = leftClipLength(record.getCigar());
         int rightClip = rightClipLength(record.getCigar());

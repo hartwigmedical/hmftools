@@ -20,15 +20,14 @@ import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 // Set of viral contigs loaded from our curated resource.
-// TODO: rename `VirusReference`
-public class ViralReference
+public class VirusReference
 {
     private final SAMSequenceDictionary mSequenceDictionary;
     private final Map<String, ViralContig> mContigsByName;
 
-    private static final Logger LOGGER = LogManager.getLogger(ViralReference.class);
+    private static final Logger LOGGER = LogManager.getLogger(VirusReference.class);
 
-    public ViralReference(List<ViralContig> contigs, SAMSequenceDictionary sequenceDictionary)
+    public VirusReference(List<ViralContig> contigs, SAMSequenceDictionary sequenceDictionary)
     {
         mSequenceDictionary = sequenceDictionary;
         mContigsByName = contigs.stream().collect(toMap(ViralContig::name, contig -> contig));
@@ -50,13 +49,13 @@ public class ViralReference
         return mSequenceDictionary;
     }
 
-    public static ViralReference load(String fastaFile, String infoTsvFile)
+    public static VirusReference load(String fastaFile, String infoTsvFile)
     {
         Map<String, InfoRow> info = loadInfo(infoTsvFile);
         SAMSequenceDictionary dictionary = loadSequenceDictionary(fastaFile);
         List<ViralContig> contigs = joinFastaAndInfo(dictionary, info);
         LOGGER.debug("Loaded viral reference: {} contigs", contigs.size());
-        return new ViralReference(contigs, dictionary);
+        return new VirusReference(contigs, dictionary);
     }
 
     // Joins FASTA contigs to their info rows. Result in FASTA order.

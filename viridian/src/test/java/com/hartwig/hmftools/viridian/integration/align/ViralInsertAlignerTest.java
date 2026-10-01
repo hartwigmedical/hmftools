@@ -13,7 +13,7 @@ import java.util.Map;
 import com.hartwig.hmftools.common.bwa.IBwaMemAligner;
 import com.hartwig.hmftools.viridian.reference.OncologyGroup;
 import com.hartwig.hmftools.viridian.reference.ViralContig;
-import com.hartwig.hmftools.viridian.reference.ViralReference;
+import com.hartwig.hmftools.viridian.reference.VirusReference;
 
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
 import org.junit.Test;
@@ -102,7 +102,7 @@ public class ViralInsertAlignerTest
         SAMSequenceDictionary dictionary = new SAMSequenceDictionary(List.of(
                 new SAMSequenceRecord(CONTIG_16.name(), CONTIG_16.length()),
                 new SAMSequenceRecord(CONTIG_18.name(), CONTIG_18.length())));
-        ViralReference reference = new ViralReference(List.of(CONTIG_16, CONTIG_18), dictionary);
+        VirusReference reference = new VirusReference(List.of(CONTIG_16, CONTIG_18), dictionary);
 
         return new ViralInsertAligner(new FakeAligner(hits), reference);
     }

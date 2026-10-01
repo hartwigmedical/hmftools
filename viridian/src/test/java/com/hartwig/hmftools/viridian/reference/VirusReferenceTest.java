@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.hartwig.hmftools.viridian.common.UserInputError;
-import com.hartwig.hmftools.viridian.reference.ViralReference.InfoRow;
+import com.hartwig.hmftools.viridian.reference.VirusReference.InfoRow;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -19,7 +19,7 @@ import org.junit.rules.TemporaryFolder;
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SAMSequenceRecord;
 
-public class ViralReferenceTest
+public class VirusReferenceTest
 {
     private static final OncologyGroup GROUP_ALPHA = new OncologyGroup("Group Alpha");
     private static final OncologyGroup GROUP_BETA = new OncologyGroup("Group Beta");
@@ -47,7 +47,7 @@ public class ViralReferenceTest
     @Test
     public void testJoinFastaAndInfoJoinsContigsInFastaOrder()
     {
-        List<ViralContig> contigs = ViralReference.joinFastaAndInfo(dictionary("contigA", "contigB", "contigC"), INFO);
+        List<ViralContig> contigs = VirusReference.joinFastaAndInfo(dictionary("contigA", "contigB", "contigC"), INFO);
         assertEquals(List.of(CONTIG_A, CONTIG_B, CONTIG_C), contigs);
     }
 
@@ -56,26 +56,26 @@ public class ViralReferenceTest
     {
         Map<String, InfoRow> infoMissingC = Map.of("contigA", INFO_A, "contigB", INFO_B);
         assertThrows(
-                UserInputError.class, () -> ViralReference.joinFastaAndInfo(dictionary("contigA", "contigB", "contigC"), infoMissingC));
+                UserInputError.class, () -> VirusReference.joinFastaAndInfo(dictionary("contigA", "contigB", "contigC"), infoMissingC));
     }
 
     @Test
     public void testJoinFastaAndInfoThrowsWhenInfoRowHasNoContig()
     {
-        assertThrows(UserInputError.class, () -> ViralReference.joinFastaAndInfo(dictionary("contigA", "contigB"), INFO));
+        assertThrows(UserInputError.class, () -> VirusReference.joinFastaAndInfo(dictionary("contigA", "contigB"), INFO));
     }
 
     @Test
     public void testLoadInfoRowsByContig() throws IOException
     {
-        assertEquals(INFO, ViralReference.loadInfo(writeTsv(VALID_INFO_TSV)));
+        assertEquals(INFO, VirusReference.loadInfo(writeTsv(VALID_INFO_TSV)));
     }
 
     @Test
     public void testLoadInfoThrowsOnDuplicateContig()
     {
         String duplicate = VALID_INFO_TSV + "contigA\tVirus Alpha\tGroup Alpha\n";
-        assertThrows(UserInputError.class, () -> ViralReference.loadInfo(writeTsv(duplicate)));
+        assertThrows(UserInputError.class, () -> VirusReference.loadInfo(writeTsv(duplicate)));
     }
 
     @Test
@@ -85,7 +85,7 @@ public class ViralReferenceTest
                 ref_contig\tvirus_name
                 contigA\tVirus Alpha
                 """;
-        assertThrows(UserInputError.class, () -> ViralReference.loadInfo(writeTsv(noGroup)));
+        assertThrows(UserInputError.class, () -> VirusReference.loadInfo(writeTsv(noGroup)));
     }
 
     // Contig lengths are fixed per name so joined ViralContig values are predictable.

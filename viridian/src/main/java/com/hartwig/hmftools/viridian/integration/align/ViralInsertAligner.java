@@ -14,7 +14,7 @@ import com.hartwig.hmftools.common.bwa.BwaMemAlignerConfig;
 import com.hartwig.hmftools.common.bwa.IBwaMemAligner;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.viridian.reference.ViralContig;
-import com.hartwig.hmftools.viridian.reference.ViralReference;
+import com.hartwig.hmftools.viridian.reference.VirusReference;
 
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
 import org.jetbrains.annotations.Nullable;
@@ -26,9 +26,9 @@ import htsjdk.samtools.SAMFlag;
 public class ViralInsertAligner
 {
     private final IBwaMemAligner mAligner;
-    private final ViralReference mReference;
+    private final VirusReference mReference;
 
-    public static ViralInsertAligner create(ViralReference reference, String bwaIndexImage, int threads)
+    public static ViralInsertAligner create(VirusReference reference, String bwaIndexImage, int threads)
     {
         BwaMemAlignParams params = BwaMemAlignParams.DEFAULT.withMinAlignScore(INTEGRATION_ALIGN_SCORE_MIN);
         BwaMemAlignerConfig alignerConfig = new BwaMemAlignerConfig(bwaIndexImage, params, false, threads, null);
@@ -36,7 +36,7 @@ public class ViralInsertAligner
         return new ViralInsertAligner(aligner, reference);
     }
 
-    ViralInsertAligner(IBwaMemAligner aligner, ViralReference reference)
+    ViralInsertAligner(IBwaMemAligner aligner, VirusReference reference)
     {
         mAligner = aligner;
         mReference = reference;

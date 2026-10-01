@@ -17,7 +17,7 @@ import com.hartwig.hmftools.common.bwa.BwaMemAligner;
 import com.hartwig.hmftools.common.bwa.BwaMemAlignerConfig;
 import com.hartwig.hmftools.common.bwa.IBwaMemAligner;
 import com.hartwig.hmftools.common.codon.Nucleotides;
-import com.hartwig.hmftools.viridian.reference.ViralReference;
+import com.hartwig.hmftools.viridian.reference.VirusReference;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -41,7 +41,7 @@ public class ViralReadAligner
 
     private static final Logger LOGGER = LogManager.getLogger(ViralReadAligner.class);
 
-    public static ViralReadAligner create(ViralReference reference, String bwaIndexImage, int threads, int batchSize)
+    public static ViralReadAligner create(VirusReference reference, String bwaIndexImage, int threads, int batchSize)
     {
         IBwaMemAligner aligner = new BwaMemAligner(buildAlignerConfig(bwaIndexImage, threads, batchSize));
 

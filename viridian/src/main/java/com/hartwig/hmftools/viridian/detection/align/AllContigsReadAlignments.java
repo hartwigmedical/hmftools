@@ -15,7 +15,7 @@ import java.util.Set;
 import com.hartwig.hmftools.viridian.detection.common.ReadId;
 import com.hartwig.hmftools.viridian.reference.OncologyGroup;
 import com.hartwig.hmftools.viridian.reference.ViralContig;
-import com.hartwig.hmftools.viridian.reference.ViralReference;
+import com.hartwig.hmftools.viridian.reference.VirusReference;
 
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
@@ -75,7 +75,7 @@ public record AllContigsReadAlignments(
         return new AllContigsReadAlignments(new ViralReadAlignmentStore(retained), metrics);
     }
 
-    public static AllContigsReadAlignments load(String bamFile, ViralReference reference)
+    public static AllContigsReadAlignments load(String bamFile, VirusReference reference)
     {
         List<ViralReadAlignment> alignments = new ArrayList<>();
         long readLengthSum = 0;
