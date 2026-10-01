@@ -25,9 +25,11 @@ public class ViridianConstants
     public static final Set<String> VIRAL_REF_CONTIGS = Set.of("chrEBV");
 
     // Minimum soft-clip length for a host-mapped read to count as a candidate.
+    // TODO: is this actually a default, or a regular constant?
     public static final int VIRAL_READ_MIN_SOFT_CLIP_BASES_DEFAULT = 30;
 
     // Minimum BWA-MEM alignment score (-T), our only score floor. Set explicitly for visibility; matches the BWA default.
+    // TODO: is this actually a default, or a regular constant?
     public static final int VIRAL_READ_MIN_ALIGNMENT_SCORE_DEFAULT = 30;
 
     // Candidate reads submitted to BWA per alignment call (bounds memory usage).
@@ -86,7 +88,7 @@ public class ViridianConstants
         {
             throw new IllegalStateException();
         }
-        if(!(VIRAL_READ_MIN_ALIGNMENT_SCORE_DEFAULT >= 0))
+        if(!(VIRAL_READ_MIN_ALIGNMENT_SCORE_DEFAULT >= 19))
         {
             throw new IllegalStateException();
         }
@@ -130,7 +132,7 @@ public class ViridianConstants
         {
             throw new IllegalStateException();
         }
-        if(!(INTEGRATION_ALIGN_SCORE_MIN >= 0))
+        if(!(INTEGRATION_ALIGN_SCORE_MIN >= 19))
         {
             throw new IllegalStateException();
         }

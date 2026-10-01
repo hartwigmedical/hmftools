@@ -6,7 +6,7 @@ import java.util.Comparator;
 
 import org.jetbrains.annotations.NotNull;
 
-// TODO: maybe rename to "viral genome"? "contig" is not that descriptive. But that's a big change
+// TODO: maybe rename to "virus genome"? "contig" is not that descriptive. But that's a big change
 // A contig which is a virus genome.
 public record ViralContig(
         // Original contig name in the viral reference.
