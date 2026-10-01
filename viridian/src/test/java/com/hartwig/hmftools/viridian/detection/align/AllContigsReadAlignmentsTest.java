@@ -11,7 +11,7 @@ import com.hartwig.hmftools.viridian.reference.ViralContig;
 
 import org.junit.Test;
 
-public class AllAlignmentsTest
+public class AllContigsReadAlignmentsTest
 {
     private static final int LENGTH = 100;
 
@@ -26,17 +26,17 @@ public class AllAlignmentsTest
     public void testFromOriginStraddlersExcludedAndCounted()
     {
         // An alignment clipping over a contig end straddles the circular origin.
-        AllAlignments allAlignments = AllAlignments.from(
+        AllContigsReadAlignments allAlignments = AllContigsReadAlignments.from(
                 List.of(alignment("r1", V1), straddler("r2", V1), straddler("r3", V1)), 150.0);
 
-        assertEquals(1, allAlignments.alignments().readCount());
+        assertEquals(1, allAlignments.store().readCount());
         assertEquals(Map.of(V1, 2), allAlignments.metrics().originClippedReads());
     }
 
     @Test
     public void testFromReadCountedOncePerOncologyGroup()
     {
-        AllAlignments allAlignments = AllAlignments.from(
+        AllContigsReadAlignments allAlignments = AllContigsReadAlignments.from(
                 List.of(alignment("r1", V1), alignment("r1", V2), alignment("r2", V1)), 150.0);
 
         assertEquals(Map.of(GROUP_A, 2), allAlignments.metrics().readCountsByOncologyGroup());
@@ -45,7 +45,7 @@ public class AllAlignmentsTest
     @Test
     public void testFromReadCountedInEveryOncologyGroupItAligns()
     {
-        AllAlignments allAlignments = AllAlignments.from(List.of(alignment("r1", V1), alignment("r1", H1)), 150.0);
+        AllContigsReadAlignments allAlignments = AllContigsReadAlignments.from(List.of(alignment("r1", V1), alignment("r1", H1)), 150.0);
 
         assertEquals(Map.of(GROUP_A, 1, GROUP_H, 1), allAlignments.metrics().readCountsByOncologyGroup());
     }
@@ -54,7 +54,7 @@ public class AllAlignmentsTest
     public void testFromStraddlersDoNotCountTowardsReadCounts()
     {
         // A contig carrying only straddlers leaves its group unrepresented.
-        AllAlignments allAlignments = AllAlignments.from(List.of(alignment("r1", V1), straddler("r2", H1)), 150.0);
+        AllContigsReadAlignments allAlignments = AllContigsReadAlignments.from(List.of(alignment("r1", V1), straddler("r2", H1)), 150.0);
 
         assertEquals(Map.of(GROUP_A, 1), allAlignments.metrics().readCountsByOncologyGroup());
     }
@@ -62,7 +62,7 @@ public class AllAlignmentsTest
     @Test
     public void testFromOriginClippedCountsReadsNotAlignments()
     {
-        AllAlignments allAlignments = AllAlignments.from(
+        AllContigsReadAlignments allAlignments = AllContigsReadAlignments.from(
                 List.of(straddler("r1", V1), straddler("r1", V1), straddler("r2", V1)), 150.0);
 
         assertEquals(Map.of(V1, 2), allAlignments.metrics().originClippedReads());
@@ -73,14 +73,14 @@ public class AllAlignmentsTest
     @Test
     public void testFromRepeatAlignmentsReducedToBestAndCounted()
     {
-        AllAlignments allAlignments = AllAlignments.from(
+        AllContigsReadAlignments allAlignments = AllContigsReadAlignments.from(
                 List.of(
                         divergentAlignment("r1", V1, 4),
                         divergentAlignment("r1", V1, 9),
                         divergentAlignment("r2", V1, 1)),
                 150.0);
 
-        Map<ReadId, ViralReadAlignment> contigAlignments = allAlignments.alignments().byContig().get(V1);
+        Map<ReadId, ViralReadAlignment> contigAlignments = allAlignments.store().byContig().get(V1);
         assertEquals(2, contigAlignments.size());
         assertEquals(4, contigAlignments.get(ReadId.parse("r1")).divergence());
         assertEquals(Map.of(V1, List.of(2, 1)), allAlignments.metrics().alignmentCountsByContig());

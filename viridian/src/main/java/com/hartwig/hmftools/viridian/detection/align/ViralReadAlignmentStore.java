@@ -11,13 +11,12 @@ import com.hartwig.hmftools.viridian.reference.ViralContig;
 // A set of read alignments to virus genomes.
 // For each read, stores on the best alignment to each contig.
 // (Rarely, a read can align to the same contig multiple times, but these secondary alignments are not necessary to keep).
-// TODO: could have better name, along with AllAlignments and AllAlignmentsMetrics?
-public class ViralReadAlignments
+public class ViralReadAlignmentStore
 {
     private final Map<ViralContig, Map<ReadId, ViralReadAlignment>> mByContig;
     private final Map<ReadId, Map<ViralContig, ViralReadAlignment>> mByRead;
 
-    public ViralReadAlignments(Collection<ViralReadAlignment> alignments)
+    public ViralReadAlignmentStore(Collection<ViralReadAlignment> alignments)
     {
         mByContig = new HashMap<>();
         mByRead = new LinkedHashMap<>();

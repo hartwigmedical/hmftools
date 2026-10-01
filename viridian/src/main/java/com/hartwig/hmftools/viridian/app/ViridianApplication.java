@@ -29,10 +29,10 @@ import com.hartwig.hmftools.common.bwa.BwaMemAligner;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.viridian.common.UserInputError;
 import com.hartwig.hmftools.viridian.detection.DetectedVirus;
-import com.hartwig.hmftools.viridian.detection.align.AllAlignments;
+import com.hartwig.hmftools.viridian.detection.align.AllContigsReadAlignments;
 import com.hartwig.hmftools.viridian.detection.align.ViralReadAligner;
 import com.hartwig.hmftools.viridian.detection.align.ViralReadAlignment;
-import com.hartwig.hmftools.viridian.detection.align.ViralReadAlignments;
+import com.hartwig.hmftools.viridian.detection.align.ViralReadAlignmentStore;
 import com.hartwig.hmftools.viridian.detection.assign.RepresentativeReadAssigner;
 import com.hartwig.hmftools.viridian.detection.common.ContigStats;
 import com.hartwig.hmftools.viridian.detection.common.ContigStatsCalculator;
@@ -85,27 +85,28 @@ public class ViridianApplication
 
         BwaMemAligner.initLibrary(mConfig.bwaLibPath());
 
-        AllAlignments allAlignments = getViralReadAlignments();
+        AllContigsReadAlignments allContigsReadAlignments = getAllContigsReadAlignments();
 
-        List<ContigSupport> viralContigSupports = computeViralContigSupport(allAlignments);
+        List<ContigSupport> contigSupports = computeViralContigSupport(allContigsReadAlignments);
 
-        List<OncologyGroupRepresentativeSelection> selections =
-                selectRepresentativeViralContigs(allAlignments, viralContigSupports);
+        List<OncologyGroupRepresentativeSelection> representativeSelections =
+                selectRepresentativeViralContigs(allContigsReadAlignments, contigSupports);
 
-        ViralReadAlignments representativeAlignments =
-                assignReadsToRepresentatives(allAlignments.alignments(), selections);
+        ViralReadAlignmentStore representativeAlignments =
+                assignReadsToRepresentatives(allContigsReadAlignments.store(), representativeSelections);
 
         Map<ViralContig, ContigStats> representativeContigStats =
-                calculateRepresentativeContigStats(representativeAlignments, allAlignments.metrics().originClippedReads());
+                calculateRepresentativeContigStats(representativeAlignments, allContigsReadAlignments.metrics().originClippedReads());
 
-        writeDetectedViruses(selections, representativeContigStats, allAlignments.metrics().readCountsByOncologyGroup());
+        writeDetectedViruses(
+                representativeSelections, representativeContigStats, allContigsReadAlignments.metrics().readCountsByOncologyGroup());
 
         callHostIntegrations();
 
         LOGGER.info("{} complete, mins({})", APP_NAME, runTimeMinsStr(startTimeMs));
     }
 
-    private AllAlignments getViralReadAlignments()
+    private AllContigsReadAlignments getAllContigsReadAlignments()
     {
         String allAlignmentsBamFile = outputFile(ALL_ALIGNMENTS_BAM_SUFFIX);
         // Alignment is pretty slow, so allow reusing the cached BAM for a rerun.
@@ -113,7 +114,7 @@ public class ViridianApplication
         {
             alignCandidateReadsToViralContigs(allAlignmentsBamFile);
         }
-        return AllAlignments.load(allAlignmentsBamFile, mViralReference);
+        return AllContigsReadAlignments.load(allAlignmentsBamFile, mViralReference);
     }
 
     private String getCandidateReads()
@@ -149,23 +150,23 @@ public class ViridianApplication
     }
 
     // Compute support information for each virus genome and decide which genomes may be present.
-    private List<ContigSupport> computeViralContigSupport(AllAlignments allAlignments)
+    private List<ContigSupport> computeViralContigSupport(AllContigsReadAlignments alignments)
     {
         LOGGER.info("Computing per-contig support");
         Map<ViralContig, ContigStats> contigStats = ContigStatsCalculator.calculate(
-                allAlignments.alignments().byContig(), allAlignments.metrics().originClippedReads());
-        return new ContigSupportCalculator().calculate(allAlignments, contigStats);
+                alignments.store().byContig(), alignments.metrics().originClippedReads());
+        return new ContigSupportCalculator().calculate(alignments, contigStats);
     }
 
     // For each oncology group (group of virus strains at interesting taxonomy granularity), select 1 viral genome which best represents
     // the virus present in the sample.
     private List<OncologyGroupRepresentativeSelection> selectRepresentativeViralContigs(
-            AllAlignments allAlignments, List<ContigSupport> viralContigSupports)
+            AllContigsReadAlignments alignments, List<ContigSupport> viralContigSupports)
     {
         LOGGER.info("Selecting representative contig per oncology group");
-        PairwiseMargins pairwiseMargins = PairwiseMargins.from(allAlignments.alignments().byRead());
+        PairwiseMargins pairwiseMargins = PairwiseMargins.from(alignments.store().byRead());
         List<OncologyGroupRepresentativeSelection> selections = RepresentativeContigSelector.select(
-                viralContigSupports, pairwiseMargins, allAlignments.metrics().readCountsByOncologyGroup());
+                viralContigSupports, pairwiseMargins, alignments.metrics().readCountsByOncologyGroup());
 
         LOGGER.info("Writing contig info output");
         OutputWriter.writeContigSupport(outputFile(CONTIG_SUPPORT_TSV_SUFFIX), selections);
@@ -180,24 +181,24 @@ public class ViridianApplication
 
     // For each oncology group, assign the read alignments to only the selected representative viral genome.
     // This is simply filtering down to each read's alignment to that genome contig (or nothing, if it didn't align there at all).
-    private ViralReadAlignments assignReadsToRepresentatives(
-            ViralReadAlignments viralReadAlignments, List<OncologyGroupRepresentativeSelection> selections)
+    private ViralReadAlignmentStore assignReadsToRepresentatives(
+            ViralReadAlignmentStore alignments, List<OncologyGroupRepresentativeSelection> representativeSelections)
     {
         LOGGER.info("Assigning reads to representative contigs");
-        Set<ViralContig> representatives = selections.stream()
+        Set<ViralContig> representatives = representativeSelections.stream()
                 .map(OncologyGroupRepresentativeSelection::representative)
                 .filter(Objects::nonNull)
                 .collect(toSet());
         Map<ReadId, ViralReadAlignment> assignments = RepresentativeReadAssigner.assign(
-                viralReadAlignments, representatives, outputFile(ALL_ALIGNMENTS_BAM_SUFFIX),
+                alignments, representatives, outputFile(ALL_ALIGNMENTS_BAM_SUFFIX),
                 outputFile(REPRESENTATIVE_ALIGNMENTS_BAM_SUFFIX));
 
-        return new ViralReadAlignments(assignments.values());
+        return new ViralReadAlignmentStore(assignments.values());
     }
 
     // After the representative virus genome is selected for each oncology group, measure final support statistics for the representative.
     private Map<ViralContig, ContigStats> calculateRepresentativeContigStats(
-            ViralReadAlignments representativeAlignments, Map<ViralContig, Integer> allOriginClippedReads)
+            ViralReadAlignmentStore representativeAlignments, Map<ViralContig, Integer> allOriginClippedReads)
     {
         LOGGER.info("Computing representative contig stats");
         // Origin clipped reads where dropped previously, but the information is useful to carry through for visualisation.
@@ -211,10 +212,10 @@ public class ViridianApplication
 
     private void writeDetectedViruses(
             List<OncologyGroupRepresentativeSelection> selections, Map<ViralContig, ContigStats> representativeContigStats,
-            Map<OncologyGroup, Integer> groupReadCounts)
+            Map<OncologyGroup, Integer> oncologyGroupReadCounts)
     {
         LOGGER.info("Writing virus detection output");
-        List<DetectedVirus> detections = DetectedVirus.from(selections, representativeContigStats, groupReadCounts);
+        List<DetectedVirus> detections = DetectedVirus.from(selections, representativeContigStats, oncologyGroupReadCounts);
         OutputWriter.writeDetectedViruses(outputFile(VIRUS_DETECTION_TSV_SUFFIX), detections);
     }
 

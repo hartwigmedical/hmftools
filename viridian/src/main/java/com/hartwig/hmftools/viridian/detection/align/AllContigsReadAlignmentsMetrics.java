@@ -7,7 +7,7 @@ import com.hartwig.hmftools.viridian.reference.OncologyGroup;
 import com.hartwig.hmftools.viridian.reference.ViralContig;
 
 // Supporting information for the alignment of reads to all virus genomes.
-public record AllAlignmentsMetrics(
+public record AllContigsReadAlignmentsMetrics(
         double meanReadLength,
         // Reads with an alignment dropped for clipping over their contig's start or end.
         Map<ViralContig, Integer> originClippedReads,
@@ -17,7 +17,7 @@ public record AllAlignmentsMetrics(
         Map<ViralContig, List<Integer>> alignmentCountsByContig
 )
 {
-    public AllAlignmentsMetrics
+    public AllContigsReadAlignmentsMetrics
     {
         if(meanReadLength <= 0)
         {

@@ -11,9 +11,9 @@ import java.util.Map;
 import java.util.Set;
 
 import com.hartwig.hmftools.viridian.detection.align.AlignedInterval;
-import com.hartwig.hmftools.viridian.detection.align.AllAlignments;
+import com.hartwig.hmftools.viridian.detection.align.AllContigsReadAlignments;
 import com.hartwig.hmftools.viridian.detection.align.ViralReadAlignment;
-import com.hartwig.hmftools.viridian.detection.align.ViralReadAlignments;
+import com.hartwig.hmftools.viridian.detection.align.ViralReadAlignmentStore;
 import com.hartwig.hmftools.viridian.detection.common.ReadId;
 import com.hartwig.hmftools.viridian.reference.OncologyGroup;
 import com.hartwig.hmftools.viridian.reference.ViralContig;
@@ -46,7 +46,7 @@ public class RepresentativeReadAssignerTest
     @Test
     public void testAssignReadsPicksLeastDivergentRepresentative()
     {
-        ViralReadAlignments alignments = new ViralReadAlignments(List.of(
+        ViralReadAlignmentStore alignments = new ViralReadAlignmentStore(List.of(
                 alignment("r1/1", TWIN, 100, 3),
                 alignment("r1/1", REPRESENTATIVE, 100, 7),
                 alignment("r1/1", MINOR, 100, 1)));
@@ -61,7 +61,7 @@ public class RepresentativeReadAssignerTest
     @Test
     public void testAssignReadsDropsReadWithNoRepresentativeAlignment()
     {
-        ViralReadAlignments alignments = new ViralReadAlignments(List.of(alignment("r1/1", MINOR, 100, 1)));
+        ViralReadAlignmentStore alignments = new ViralReadAlignmentStore(List.of(alignment("r1/1", MINOR, 100, 1)));
 
         assertTrue(RepresentativeReadAssigner.assignReads(alignments.byRead(), Set.of(REPRESENTATIVE)).isEmpty());
     }
@@ -70,7 +70,7 @@ public class RepresentativeReadAssignerTest
     @Test
     public void testAssignReadsBreaksTieByContig()
     {
-        ViralReadAlignments alignments = new ViralReadAlignments(List.of(
+        ViralReadAlignmentStore alignments = new ViralReadAlignmentStore(List.of(
                 alignment("r1/1", TWIN, 100, 3),
                 alignment("r1/1", REPRESENTATIVE, 100, 3)));
 
@@ -96,7 +96,7 @@ public class RepresentativeReadAssignerTest
         String outputBam = new File(mTempDir.getRoot(), "representative.bam").getPath();
 
         RepresentativeReadAssigner.assign(
-                AllAlignments.from(List.of(other, chosen), 148).alignments(), Set.of(REPRESENTATIVE),
+                AllContigsReadAlignments.from(List.of(other, chosen), 148).store(), Set.of(REPRESENTATIVE),
                 sourceBam, outputBam);
 
         assertEquals(List.of("53S38M21D49M8S"), cigars(outputBam));

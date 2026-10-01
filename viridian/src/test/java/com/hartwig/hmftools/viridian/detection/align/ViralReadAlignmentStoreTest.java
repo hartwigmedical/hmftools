@@ -12,7 +12,7 @@ import com.hartwig.hmftools.viridian.reference.ViralContig;
 
 import org.junit.Test;
 
-public class ViralReadAlignmentsTest
+public class ViralReadAlignmentStoreTest
 {
     private static final int LENGTH = 100;
 
@@ -23,7 +23,7 @@ public class ViralReadAlignmentsTest
     @Test
     public void testIndexesHoldEveryAlignmentBothWays()
     {
-        ViralReadAlignments alignments = new ViralReadAlignments(List.of(
+        ViralReadAlignmentStore alignments = new ViralReadAlignmentStore(List.of(
                 alignment("r1", V1), alignment("r1", V2), alignment("r2", V1)));
 
         assertEquals(2, alignments.readCount());
@@ -42,7 +42,7 @@ public class ViralReadAlignmentsTest
     {
         List<ViralReadAlignment> repeated = List.of(alignment("r1", V1), alignment("r1", V1));
 
-        assertThrows(IllegalArgumentException.class, () -> new ViralReadAlignments(repeated));
+        assertThrows(IllegalArgumentException.class, () -> new ViralReadAlignmentStore(repeated));
     }
 
     private static ViralReadAlignment alignment(String readName, ViralContig contig)

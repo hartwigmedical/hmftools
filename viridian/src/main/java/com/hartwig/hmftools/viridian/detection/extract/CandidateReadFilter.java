@@ -18,6 +18,8 @@ public class CandidateReadFilter
     private final int mMinSoftClipBases;
     private final Set<String> mRefViralContigs;
 
+    // TODO: add 0-arg construct that uses constants
+
     public CandidateReadFilter(int minSoftClipBases, Set<String> refViralContigs)
     {
         mMinSoftClipBases = minSoftClipBases;

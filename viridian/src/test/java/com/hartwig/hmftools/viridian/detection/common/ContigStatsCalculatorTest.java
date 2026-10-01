@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.hartwig.hmftools.viridian.detection.align.AlignedInterval;
-import com.hartwig.hmftools.viridian.detection.align.AllAlignments;
+import com.hartwig.hmftools.viridian.detection.align.AllContigsReadAlignments;
 import com.hartwig.hmftools.viridian.detection.align.ViralReadAlignment;
 import com.hartwig.hmftools.viridian.reference.OncologyGroup;
 import com.hartwig.hmftools.viridian.reference.ViralContig;
@@ -49,9 +49,9 @@ public class ContigStatsCalculatorTest
 
     private static Map<ViralContig, ContigStats> calculate(List<ViralReadAlignment> alignments)
     {
-        AllAlignments allAlignments = AllAlignments.from(alignments, MEAN_READ_LENGTH);
+        AllContigsReadAlignments allAlignments = AllContigsReadAlignments.from(alignments, MEAN_READ_LENGTH);
         return ContigStatsCalculator.calculate(
-                allAlignments.alignments().byContig(), allAlignments.metrics().originClippedReads());
+                allAlignments.store().byContig(), allAlignments.metrics().originClippedReads());
     }
 
     // Clipped bases project past the contig start, so this alignment crosses the circular genome's origin.

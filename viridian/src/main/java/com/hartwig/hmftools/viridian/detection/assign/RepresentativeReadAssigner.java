@@ -11,7 +11,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.hartwig.hmftools.viridian.detection.align.ViralReadAlignment;
-import com.hartwig.hmftools.viridian.detection.align.ViralReadAlignments;
+import com.hartwig.hmftools.viridian.detection.align.ViralReadAlignmentStore;
 import com.hartwig.hmftools.viridian.detection.common.ReadId;
 import com.hartwig.hmftools.viridian.reference.ViralContig;
 
@@ -35,14 +35,14 @@ public class RepresentativeReadAssigner
 
     // Returns the alignment selected for each read.
     public static Map<ReadId, ViralReadAlignment> assign(
-            ViralReadAlignments viralAlignments, Set<ViralContig> representatives,
+            ViralReadAlignmentStore alignments, Set<ViralContig> representatives,
             String allAlignmentsBamFile, String outputBamFile)
     {
-        Map<ReadId, ViralReadAlignment> assignmentsByRead = assignReads(viralAlignments.byRead(), representatives);
+        Map<ReadId, ViralReadAlignment> assignmentsByRead = assignReads(alignments.byRead(), representatives);
 
         LOGGER.debug(
                 "Assigned {} reads, {} fit no representative",
-                assignmentsByRead.size(), viralAlignments.readCount() - assignmentsByRead.size());
+                assignmentsByRead.size(), alignments.readCount() - assignmentsByRead.size());
 
         writeAssignedAlignments(allAlignmentsBamFile, outputBamFile, assignmentsByRead);
 

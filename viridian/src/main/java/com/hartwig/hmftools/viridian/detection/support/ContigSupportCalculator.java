@@ -10,8 +10,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.hartwig.hmftools.viridian.detection.align.AllAlignments;
-import com.hartwig.hmftools.viridian.detection.align.AllAlignmentsMetrics;
+import com.hartwig.hmftools.viridian.detection.align.AllContigsReadAlignments;
+import com.hartwig.hmftools.viridian.detection.align.AllContigsReadAlignmentsMetrics;
 import com.hartwig.hmftools.viridian.detection.align.ViralReadAlignment;
 import com.hartwig.hmftools.viridian.detection.common.ContigStats;
 import com.hartwig.hmftools.viridian.detection.common.SummaryStats;
@@ -35,10 +35,10 @@ public class ContigSupportCalculator
         this(READ_VOTE_CORRECT_BASE_PROBABILITY);
     }
 
-    public List<ContigSupport> calculate(AllAlignments allAlignments, Map<ViralContig, ContigStats> contigStats)
+    public List<ContigSupport> calculate(AllContigsReadAlignments alignments, Map<ViralContig, ContigStats> contigStats)
     {
-        Map<ViralContig, Double> readVotes = calculateReadVotes(allAlignments.alignments().byRead().values());
-        AllAlignmentsMetrics metrics = allAlignments.metrics();
+        Map<ViralContig, Double> readVotes = calculateReadVotes(alignments.store().byRead().values());
+        AllContigsReadAlignmentsMetrics metrics = alignments.metrics();
 
         return contigStats.values().stream()
                 .collect(groupingBy(stats -> stats.contig().oncologyGroup()))

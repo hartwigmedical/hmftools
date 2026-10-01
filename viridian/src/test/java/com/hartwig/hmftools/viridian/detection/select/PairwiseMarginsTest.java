@@ -5,7 +5,7 @@ import static org.junit.Assert.assertEquals;
 import java.util.List;
 
 import com.hartwig.hmftools.viridian.detection.align.AlignedInterval;
-import com.hartwig.hmftools.viridian.detection.align.AllAlignments;
+import com.hartwig.hmftools.viridian.detection.align.AllContigsReadAlignments;
 import com.hartwig.hmftools.viridian.detection.align.ViralReadAlignment;
 import com.hartwig.hmftools.viridian.detection.common.ReadId;
 import com.hartwig.hmftools.viridian.reference.OncologyGroup;
@@ -37,7 +37,7 @@ public class PairwiseMarginsTest
                 alignment("r3", H1, 1));  // cross-group: not paired
 
         PairwiseMargins margins = PairwiseMargins.from(
-                AllAlignments.from(alignments, MEAN_READ_LENGTH).alignments().byRead());
+                AllContigsReadAlignments.from(alignments, MEAN_READ_LENGTH).store().byRead());
 
         // Both reads shared between v1 and v2, both directions
         assertEquals(2, margins.sharedReads(V1, V2));

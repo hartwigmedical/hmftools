@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.hartwig.hmftools.viridian.detection.align.AlignedInterval;
-import com.hartwig.hmftools.viridian.detection.align.AllAlignments;
+import com.hartwig.hmftools.viridian.detection.align.AllContigsReadAlignments;
 import com.hartwig.hmftools.viridian.detection.align.ViralReadAlignment;
 import com.hartwig.hmftools.viridian.detection.common.ContigStats;
 import com.hartwig.hmftools.viridian.detection.common.ContigStatsCalculator;
@@ -120,9 +120,9 @@ public class ContigSupportCalculatorTest
 
     private static List<ContigSupport> compute(List<ViralReadAlignment> alignments, double correctBaseProbability)
     {
-        AllAlignments allAlignments = AllAlignments.from(alignments, MEAN_READ_LENGTH);
+        AllContigsReadAlignments allAlignments = AllContigsReadAlignments.from(alignments, MEAN_READ_LENGTH);
         Map<ViralContig, ContigStats> contigStats = ContigStatsCalculator.calculate(
-                allAlignments.alignments().byContig(), allAlignments.metrics().originClippedReads());
+                allAlignments.store().byContig(), allAlignments.metrics().originClippedReads());
         return new ContigSupportCalculator(correctBaseProbability).calculate(allAlignments, contigStats);
     }
 
