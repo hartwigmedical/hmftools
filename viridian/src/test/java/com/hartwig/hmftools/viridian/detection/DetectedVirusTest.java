@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.viridian.detection.assign;
+package com.hartwig.hmftools.viridian.detection;
 
 import static com.hartwig.hmftools.viridian.detection.select.OncologyGroupOutcome.MUTUAL;
 import static com.hartwig.hmftools.viridian.detection.select.OncologyGroupOutcome.NO_CANDIDATES;
@@ -29,7 +29,7 @@ import com.hartwig.hmftools.viridian.reference.ViralContig;
 import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
 
-public class VirusDetectionTest
+public class DetectedVirusTest
 {
     private static final OncologyGroup GROUP_A = new OncologyGroup("Group A");
     private static final OncologyGroup GROUP_B = new OncologyGroup("Group B");
@@ -43,7 +43,7 @@ public class VirusDetectionTest
     {
         ContigStats stats = stats(V1);
 
-        List<VirusDetection> detections = VirusDetection.from(
+        List<DetectedVirus> detections = DetectedVirus.from(
                 List.of(selection(GROUP_A, ONE_CANDIDATE, V1)), Map.of(V1, stats), Map.of(GROUP_A, 500));
 
         assertEquals(1, detections.size());
@@ -57,11 +57,11 @@ public class VirusDetectionTest
     @Test
     public void testFromUnresolvedGroupIsPresentButNotMeasured()
     {
-        List<VirusDetection> detections = VirusDetection.from(
+        List<DetectedVirus> detections = DetectedVirus.from(
                 List.of(selection(GROUP_A, MUTUAL, null, List.of(V1, V2), List.of(V3))), Map.of(), Map.of(GROUP_A, 900));
 
         assertEquals(1, detections.size());
-        VirusDetection detection = detections.get(0);
+        DetectedVirus detection = detections.get(0);
         assertEquals(OncologyGroupResolution.UNRESOLVED, detection.resolution());
         assertNull(detection.representativeContigStats());
 
@@ -75,8 +75,8 @@ public class VirusDetectionTest
     @Test
     public void testFromGroupWithNoCandidatesIsAbsent()
     {
-        List<VirusDetection> detections =
-                VirusDetection.from(List.of(selection(GROUP_B, NO_CANDIDATES, null)), Map.of(), Map.of());
+        List<DetectedVirus> detections =
+                DetectedVirus.from(List.of(selection(GROUP_B, NO_CANDIDATES, null)), Map.of(), Map.of());
 
         assertTrue(detections.isEmpty());
     }
@@ -89,7 +89,7 @@ public class VirusDetectionTest
 
         assertThrows(
                 IllegalStateException.class,
-                () -> VirusDetection.from(selections, Map.of(W1, stats(W1)), Map.of(GROUP_A, 500)));
+                () -> DetectedVirus.from(selections, Map.of(W1, stats(W1)), Map.of(GROUP_A, 500)));
     }
 
     private static ContigStats stats(ViralContig contig)

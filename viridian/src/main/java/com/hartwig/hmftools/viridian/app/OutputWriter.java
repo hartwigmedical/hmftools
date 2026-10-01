@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.hartwig.hmftools.common.utils.file.DelimFileWriter;
-import com.hartwig.hmftools.viridian.detection.assign.VirusDetection;
+import com.hartwig.hmftools.viridian.detection.DetectedVirus;
 import com.hartwig.hmftools.viridian.detection.common.ContigStats;
 import com.hartwig.hmftools.viridian.detection.common.SummaryStats;
 import com.hartwig.hmftools.viridian.detection.select.OncologyGroupRepresentativeSelection;
@@ -163,32 +163,32 @@ public class OutputWriter
                                             .map(field -> summaryStatsColumn(group, field))))
                     .toList();
 
-    public static void writeVirusDetection(String file, List<VirusDetection> detections)
+    public static void writeDetectedViruses(String file, List<DetectedVirus> detections)
     {
-        List<VirusDetection> rows = detections.stream().sorted(comparing(VirusDetection::oncologyGroup)).toList();
+        List<DetectedVirus> rows = detections.stream().sorted(comparing(DetectedVirus::oncologyGroup)).toList();
 
         DelimFileWriter.write(
                 file, VIRUS_DETECTION_COLUMNS, rows, (detection, row) ->
                 {
-                    row.set(VirusDetectionColumn.oncology_group, detection.oncologyGroup().name());
-                    row.set(VirusDetectionColumn.oncology_group_resolution, detection.resolution().name());
-                    row.set(VirusDetectionColumn.oncology_group_outcome, detection.outcome().name());
-                    row.set(VirusDetectionColumn.group_read_count, detection.groupReadCount());
-                    row.set(VirusDetectionColumn.aligned_contig_count, detection.alignedContigCount());
-                    row.set(VirusDetectionColumn.candidate_count, detection.candidateCount());
-                    row.set(VirusDetectionColumn.comparable_candidate_count, detection.comparableCandidateCount());
+                    row.set(DetectedVirusColumn.oncology_group, detection.oncologyGroup().name());
+                    row.set(DetectedVirusColumn.oncology_group_resolution, detection.resolution().name());
+                    row.set(DetectedVirusColumn.oncology_group_outcome, detection.outcome().name());
+                    row.set(DetectedVirusColumn.group_read_count, detection.groupReadCount());
+                    row.set(DetectedVirusColumn.aligned_contig_count, detection.alignedContigCount());
+                    row.set(DetectedVirusColumn.candidate_count, detection.candidateCount());
+                    row.set(DetectedVirusColumn.comparable_candidate_count, detection.comparableCandidateCount());
 
                     // Note unset columns are written as null, leaving an unmeasured group's columns blank.
                     ContigStats stats = detection.representativeContigStats();
                     if(stats != null)
                     {
                         ViralContig contig = stats.contig();
-                        row.set(VirusDetectionColumn.representative_contig, contig.name());
-                        row.set(VirusDetectionColumn.virus_name, contig.virusName());
-                        row.set(VirusDetectionColumn.contig_length, contig.length());
-                        row.set(VirusDetectionColumn.read_count, stats.readCount());
-                        row.set(VirusDetectionColumn.origin_clipped_reads, stats.originClippedReads());
-                        row.set(VirusDetectionColumn.coverage_fraction, stats.coverageFraction());
+                        row.set(DetectedVirusColumn.representative_contig, contig.name());
+                        row.set(DetectedVirusColumn.virus_name, contig.virusName());
+                        row.set(DetectedVirusColumn.contig_length, contig.length());
+                        row.set(DetectedVirusColumn.read_count, stats.readCount());
+                        row.set(DetectedVirusColumn.origin_clipped_reads, stats.originClippedReads());
+                        row.set(DetectedVirusColumn.coverage_fraction, stats.coverageFraction());
 
                         writeSummaryStats(row, DEPTH_STATS_COLUMNS, stats.depth());
                         writeSummaryStats(row, ALIGNER_SCORE_STATS_COLUMNS, stats.alignerScore());
@@ -196,7 +196,7 @@ public class OutputWriter
                 });
     }
 
-    private enum VirusDetectionColumn
+    private enum DetectedVirusColumn
     {
         oncology_group,
         oncology_group_resolution,
@@ -215,7 +215,7 @@ public class OutputWriter
 
     private static final List<String> VIRUS_DETECTION_COLUMNS =
             Stream.concat(
-                            Stream.of(VirusDetectionColumn.values()).map(Enum::name),
+                            Stream.of(DetectedVirusColumn.values()).map(Enum::name),
                             Stream.of(DEPTH_STATS_COLUMNS, ALIGNER_SCORE_STATS_COLUMNS)
                                     .flatMap(group -> SummaryStats.FIELD_NAMES.stream()
                                             .map(field -> summaryStatsColumn(group, field))))

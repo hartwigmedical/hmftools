@@ -28,12 +28,12 @@ import java.util.Set;
 import com.hartwig.hmftools.common.bwa.BwaMemAligner;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.viridian.common.UserInputError;
+import com.hartwig.hmftools.viridian.detection.DetectedVirus;
 import com.hartwig.hmftools.viridian.detection.align.AllAlignments;
 import com.hartwig.hmftools.viridian.detection.align.ViralReadAligner;
 import com.hartwig.hmftools.viridian.detection.align.ViralReadAlignment;
 import com.hartwig.hmftools.viridian.detection.align.ViralReadAlignments;
 import com.hartwig.hmftools.viridian.detection.assign.RepresentativeReadAssigner;
-import com.hartwig.hmftools.viridian.detection.assign.VirusDetection;
 import com.hartwig.hmftools.viridian.detection.common.ContigStats;
 import com.hartwig.hmftools.viridian.detection.common.ContigStatsCalculator;
 import com.hartwig.hmftools.viridian.detection.common.ReadId;
@@ -98,7 +98,7 @@ public class ViridianApplication
         Map<ViralContig, ContigStats> representativeContigStats =
                 calculateRepresentativeContigStats(representativeAlignments, allAlignments.metrics().originClippedReads());
 
-        writeVirusDetection(selections, representativeContigStats, allAlignments.metrics().readCountsByOncologyGroup());
+        writeDetectedViruses(selections, representativeContigStats, allAlignments.metrics().readCountsByOncologyGroup());
 
         callHostIntegrations();
 
@@ -209,13 +209,13 @@ public class ViridianApplication
         return contigStats;
     }
 
-    private void writeVirusDetection(
+    private void writeDetectedViruses(
             List<OncologyGroupRepresentativeSelection> selections, Map<ViralContig, ContigStats> representativeContigStats,
             Map<OncologyGroup, Integer> groupReadCounts)
     {
         LOGGER.info("Writing virus detection output");
-        List<VirusDetection> detections = VirusDetection.from(selections, representativeContigStats, groupReadCounts);
-        OutputWriter.writeVirusDetection(outputFile(VIRUS_DETECTION_TSV_SUFFIX), detections);
+        List<DetectedVirus> detections = DetectedVirus.from(selections, representativeContigStats, groupReadCounts);
+        OutputWriter.writeDetectedViruses(outputFile(VIRUS_DETECTION_TSV_SUFFIX), detections);
     }
 
     // Find where a virus inserted itself into the host genome, from the SVs ESVEE called.

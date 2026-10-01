@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.viridian.detection.assign;
+package com.hartwig.hmftools.viridian.detection;
 
 import java.util.List;
 import java.util.Map;
@@ -13,8 +13,8 @@ import com.hartwig.hmftools.viridian.reference.ViralContig;
 
 import org.jetbrains.annotations.Nullable;
 
-// Holds the final detection status info for oncology groups which were determined to be present in the sample.
-public record VirusDetection(
+// Holds the final detection status info for oncology group viruses which are present in the sample.
+public record DetectedVirus(
         OncologyGroup oncologyGroup,
         OncologyGroupResolution resolution,
         OncologyGroupOutcome outcome,
@@ -30,7 +30,7 @@ public record VirusDetection(
         @Nullable ContigStats representativeContigStats
 )
 {
-    public VirusDetection
+    public DetectedVirus
     {
         if(resolution == OncologyGroupResolution.NO_CANDIDATES)
         {
@@ -42,7 +42,7 @@ public record VirusDetection(
         }
     }
 
-    public static List<VirusDetection> from(
+    public static List<DetectedVirus> from(
             List<OncologyGroupRepresentativeSelection> selections, Map<ViralContig, ContigStats> representativeStats,
             Map<OncologyGroup, Integer> groupReadCounts)
     {
@@ -52,7 +52,7 @@ public record VirusDetection(
                 .toList();
     }
 
-    private static VirusDetection from(
+    private static DetectedVirus from(
             OncologyGroupRepresentativeSelection selection, Map<ViralContig, ContigStats> representativeStats,
             Map<OncologyGroup, Integer> groupReadCounts)
     {
@@ -67,7 +67,7 @@ public record VirusDetection(
             throw new IllegalStateException("Representative was not measured: " + representative.name());
         }
 
-        return new VirusDetection(
+        return new DetectedVirus(
                 oncologyGroup, selection.resolution(), selection.outcome(),
                 groupReadCounts.getOrDefault(oncologyGroup, 0),
                 selection.candidates().size() + selection.rejected().size(),
