@@ -44,20 +44,20 @@ The category PANEL is equivalent to PURITY, DRIVER, SOMATIC_VARIANT, FUSION, DIS
 
 ### Optional configuration
 
-| Argument                                                | Description                                                                                                                                     |
-|---------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------|
-| germline_sample                                         | Germline sample ID. Defaults to tumor sample ID with "-ref" appended                                                                            |
-| output_id                                               | Outfile file suffix                                                                                                                             |
-| driver_gene_panel                                       | Used to check alternate transcript changes and to limit analysis of somatics and gene copy number comparisons                                   |
-| restrict_to_drivers                                     | Limit analysis to genes within the panel                                                                                                        |
-| write_detailed                                          | Write a file per compared category                                                                                                              |
-| somatic_unfiltered_vcf_old & somatic_unfiltered_vcf_new | VCF of unfiltered somatic variants (i.e. SAGE) for detecting filtering reason                                                                   |
-| liftover                                                | Apply liftover to relevant fields for pipeline run comparison across reference genome versions (V37/V38)                                        |
-| include_matches                                         | Also include matching entries in output file(s)                                                                                                 |
-| pipeline_format_old & pipeline_format_new               | Format for default tool directory derivation from sample directory. Default: OA_V2_3. Options: OA_V2_0, OA_V2_2, OA_V2_3, PIP5_V6_0, DB_V6_0    |
-| pipeline_format_file_old & pipeline_format_file_new     | Config file for default tool directory derivation from sample directory.                                                                        |
-| field_config_file                                       | Field config file (see [Field Config Files](#field-config-files)) used to override the default per-field `Compared`/threshold settings          |
-| strict_field_config                                     | Requires `field_config_file` to explicitly set every compared field for every category being run; Compar exits with an error if any are missing |
+| Argument                                                | Description                                                                                                                                           |
+|---------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------|
+| germline_sample                                         | Germline sample ID. Defaults to tumor sample ID with "-ref" appended                                                                                  |
+| output_id                                               | Outfile file suffix                                                                                                                                   |
+| driver_gene_panel                                       | Used to check alternate transcript changes and to limit analysis of somatics and gene copy number comparisons                                         |
+| restrict_to_drivers                                     | Limit analysis to genes within the panel                                                                                                              |
+| write_detailed                                          | Write a file per compared category                                                                                                                    |
+| somatic_unfiltered_vcf_old & somatic_unfiltered_vcf_new | VCF of unfiltered somatic variants (i.e. SAGE) for detecting filtering reason                                                                         |
+| liftover                                                | Apply liftover to relevant fields for pipeline run comparison across reference genome versions (V37/V38)                                              |
+| include_matches                                         | Also include matching entries in output file(s)                                                                                                       |
+| pipeline_format_old & pipeline_format_new               | Format for default tool directory derivation from sample directory. Default: OA_V3_0. Options: OA_V2_0, OA_V2_2, OA_V2_3, OA_V3_0, PIP5_V6_0, DB_V6_0 |
+| pipeline_format_file_old & pipeline_format_file_new     | Config file for default tool directory derivation from sample directory.                                                                              |
+| field_config_file                                       | Field config file (see [Field Config Files](#field-config-files)) used to override the default per-field `Compared`/threshold settings                |
+| strict_field_config                                     | Requires `field_config_file` to explicitly set every compared field for every category being run; Compar exits with an error if any are missing       |
 
 
 ### Sample ID Mappings
