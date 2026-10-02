@@ -21,9 +21,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.OptionalDouble;
 import java.util.Set;
 
 import com.hartwig.hmftools.common.bwa.BwaMemAligner;
+import com.hartwig.hmftools.common.metrics.BamMetricSummary;
+import com.hartwig.hmftools.common.purple.PurityContext;
+import com.hartwig.hmftools.common.purple.PurityContextFile;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.viridian.common.UserInputError;
 import com.hartwig.hmftools.viridian.detection.DetectedVirus;
@@ -50,6 +54,7 @@ import com.hartwig.hmftools.viridian.integration.extract.HostVariantExtractor;
 import com.hartwig.hmftools.viridian.reference.OncologyGroup;
 import com.hartwig.hmftools.viridian.reference.ViralContig;
 import com.hartwig.hmftools.viridian.reference.VirusReference;
+import com.hartwig.hmftools.viridian.reporting.ClonalCoverage;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -98,6 +103,8 @@ public class ViridianApplication
                 representativeSelections, representativeContigStats, allContigsReadAlignments.metrics().readCountsByOncologyGroup());
 
         callHostIntegrations();
+
+        reportViruses();
 
         LOGGER.info("{} complete, mins({})", APP_NAME, runTimeMinsStr(startTimeMs));
     }
@@ -218,15 +225,8 @@ public class ViridianApplication
     // Find where a virus inserted itself into the host genome, from the SVs ESVEE called.
     private void callHostIntegrations()
     {
-        String esveeVcf = mConfig.esveeUnfilteredVcf();
-        if(esveeVcf == null)
-        {
-            LOGGER.info("ESVEE VCF not specified; skipping integration site calling");
-            return;
-        }
-
         LOGGER.info("Extracting integration variant candidates from ESVEE VCF");
-        List<HostVariantCandidate> candidates = new HostVariantExtractor(mConfig.sampleId()).extract(esveeVcf);
+        List<HostVariantCandidate> candidates = new HostVariantExtractor(mConfig.sampleId()).extract(mConfig.esveeUnfilteredVcf());
 
         List<Integration> integrations = alignHostVariantCandidates(candidates);
 
@@ -249,6 +249,21 @@ public class ViridianApplication
             integrations.add(new Integration(candidates.get(i), alignments.get(i)));
         }
         return integrations;
+    }
+
+    // Decide which viruses are reported to the downstream pipeline.
+    private void reportViruses() throws IOException
+    {
+        LOGGER.info("Loading reporting inputs");
+        PurityContext purity = PurityContextFile.read(mConfig.purpleDir(), mConfig.sampleId());
+        BamMetricSummary tumorMetrics = BamMetricSummary.read(
+                BamMetricSummary.generateFilename(mConfig.bamMetricsTumorDir(), mConfig.sampleId()));
+
+        OptionalDouble expectedViralDepthPerCopy = ClonalCoverage.expectedViralDepthPerCopy(purity, tumorMetrics);
+        if(expectedViralDepthPerCopy.isEmpty())
+        {
+            LOGGER.warn("Purple fit unusable; cannot report based on viral load");
+        }
     }
 
     private String outputFile(String suffix)
