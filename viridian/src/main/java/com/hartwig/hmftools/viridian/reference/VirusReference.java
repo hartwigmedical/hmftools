@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.viridian.reference;
 
+import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
+import static java.util.stream.Collectors.toSet;
 
 import java.io.File;
 import java.io.IOException;
@@ -8,29 +10,28 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
-import com.hartwig.hmftools.common.utils.file.DelimFileReader;
 import com.hartwig.hmftools.viridian.common.UserInputError;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
-// Set of virus contigs loaded from our curated resource.
+// The curated resource of virus genomes, virus information, and virus reporting policy data.
 public class VirusReference
 {
     private final SAMSequenceDictionary mSequenceDictionary;
     private final Map<String, ViralContig> mContigsByName;
+    private final Map<OncologyGroup, OncologyGroupInfo> mOncologyGroupInfo;
 
-    private static final Logger LOGGER = LogManager.getLogger(VirusReference.class);
-
-    public VirusReference(List<ViralContig> contigs, SAMSequenceDictionary sequenceDictionary)
+    public VirusReference(
+            List<ViralContig> contigs, SAMSequenceDictionary sequenceDictionary,
+            Map<OncologyGroup, OncologyGroupInfo> oncologyGroupInfo)
     {
         mSequenceDictionary = sequenceDictionary;
-        mContigsByName = contigs.stream().collect(toMap(ViralContig::name, contig -> contig));
+        mContigsByName = contigs.stream().collect(toMap(ViralContig::name, identity()));
+        mOncologyGroupInfo = oncologyGroupInfo;
     }
 
     public ViralContig contig(String name)
@@ -49,24 +50,48 @@ public class VirusReference
         return mSequenceDictionary;
     }
 
-    public static VirusReference load(String fastaFile, String infoTsvFile)
+    public Set<OncologyGroup> oncologyGroups()
     {
-        Map<String, InfoRow> info = loadInfo(infoTsvFile);
+        return mContigsByName.values().stream().map(ViralContig::oncologyGroup).collect(toSet());
+    }
+
+    public OncologyGroupInfo oncologyGroupInfo(OncologyGroup group)
+    {
+        OncologyGroupInfo info = mOncologyGroupInfo.get(group);
+        if(info == null)
+        {
+            throw new IllegalArgumentException("Unknown oncology group: " + group);
+        }
+        return info;
+    }
+
+    public static VirusReference load(String fastaFile, String infoTsvFile, String oncologyGroupInfoTsvFile)
+    {
+        List<VirusInfo> info = VirusInfo.load(infoTsvFile);
         SAMSequenceDictionary dictionary = loadSequenceDictionary(fastaFile);
         List<ViralContig> contigs = joinFastaAndInfo(dictionary, info);
-        LOGGER.debug("Loaded virus reference: {} contigs", contigs.size());
-        return new VirusReference(contigs, dictionary);
+        Set<OncologyGroup> groups = contigs.stream().map(ViralContig::oncologyGroup).collect(toSet());
+        Map<OncologyGroup, OncologyGroupInfo> oncologyGroupInfo = OncologyGroupInfo.load(oncologyGroupInfoTsvFile);
+        if(!oncologyGroupInfo.keySet().equals(groups))
+        {
+            throw new UserInputError("Oncology group info groups do not match the virus reference groups");
+        }
+        return new VirusReference(contigs, dictionary, oncologyGroupInfo);
     }
 
     // Joins FASTA contigs to their info rows. Result in FASTA order.
-    static List<ViralContig> joinFastaAndInfo(SAMSequenceDictionary dictionary, Map<String, InfoRow> info)
+    static List<ViralContig> joinFastaAndInfo(SAMSequenceDictionary dictionary, List<VirusInfo> info)
     {
-        Map<String, InfoRow> remainingInfo = new LinkedHashMap<>(info);
+        Map<String, VirusInfo> remainingInfo = new LinkedHashMap<>();
+        for(VirusInfo virusInfo : info)
+        {
+            remainingInfo.put(virusInfo.contigName(), virusInfo);
+        }
         List<ViralContig> result = new ArrayList<>();
         for(SAMSequenceRecord sequence : dictionary.getSequences())
         {
             String contig = sequence.getSequenceName();
-            InfoRow row = remainingInfo.remove(contig);
+            VirusInfo row = remainingInfo.remove(contig);
             if(row == null)
             {
                 throw new UserInputError(String.format("Virus reference contig has no info row: %s", contig));
@@ -80,34 +105,6 @@ public class VirusReference
         }
 
         return result;
-    }
-
-    static Map<String, InfoRow> loadInfo(String infoTsvFile)
-    {
-        Map<String, InfoRow> info = new LinkedHashMap<>();
-        try(DelimFileReader reader = new DelimFileReader(infoTsvFile))
-        {
-            List<String> columns = reader.getColumnNames();
-            for(InfoColumn column : InfoColumn.values())
-            {
-                if(!columns.contains(column.name()))
-                {
-                    throw new UserInputError(String.format("Virus reference info missing column: %s", column.name()));
-                }
-            }
-
-            for(DelimFileReader.Row row : reader)
-            {
-                String contig = row.get(InfoColumn.ref_contig);
-                OncologyGroup oncologyGroup = new OncologyGroup(row.get(InfoColumn.oncology_group));
-                InfoRow previous = info.put(contig, new InfoRow(row.get(InfoColumn.virus_name), oncologyGroup));
-                if(previous != null)
-                {
-                    throw new UserInputError(String.format("Virus reference info has duplicate contig: %s", contig));
-                }
-            }
-        }
-        return info;
     }
 
     private static SAMSequenceDictionary loadSequenceDictionary(String fastaFile)
@@ -127,14 +124,4 @@ public class VirusReference
         }
     }
 
-    private enum InfoColumn
-    {
-        ref_contig,
-        virus_name,
-        oncology_group
-    }
-
-    record InfoRow(String virusName, OncologyGroup oncologyGroup)
-    {
-    }
 }

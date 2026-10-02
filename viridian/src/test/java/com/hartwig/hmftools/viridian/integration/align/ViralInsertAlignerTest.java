@@ -102,7 +102,7 @@ public class ViralInsertAlignerTest
         SAMSequenceDictionary dictionary = new SAMSequenceDictionary(List.of(
                 new SAMSequenceRecord(CONTIG_16.name(), CONTIG_16.length()),
                 new SAMSequenceRecord(CONTIG_18.name(), CONTIG_18.length())));
-        VirusReference reference = new VirusReference(List.of(CONTIG_16, CONTIG_18), dictionary);
+        VirusReference reference = new VirusReference(List.of(CONTIG_16, CONTIG_18), dictionary, Map.of());
 
         return new ViralInsertAligner(new FakeAligner(hits), reference);
     }

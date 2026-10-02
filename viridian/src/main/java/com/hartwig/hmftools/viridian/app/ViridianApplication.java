@@ -72,7 +72,7 @@ public class ViridianApplication
         mConfig = config;
 
         LOGGER.info("Loading virus reference data");
-        mVirusReference = VirusReference.load(config.virusRefFile(), config.virusRefInfoFile());
+        mVirusReference = VirusReference.load(config.virusRefFile(), config.virusRefInfoFile(), config.oncologyGroupInfoFile());
     }
 
     public void run() throws IOException

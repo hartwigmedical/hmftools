@@ -9,6 +9,7 @@ import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 
 import com.hartwig.hmftools.viridian.detection.common.ReadId;
@@ -133,6 +134,6 @@ public class ViralReadAlignmentTest
     {
         List<ViralContig> contigs = List.of(new ViralContig("v1", CONTIG_LENGTH, "Virus 1", new OncologyGroup("Group 1")));
         SAMSequenceDictionary dictionary = new SAMSequenceDictionary(List.of(new SAMSequenceRecord("v1", CONTIG_LENGTH)));
-        return new VirusReference(contigs, dictionary);
+        return new VirusReference(contigs, dictionary, Map.of());
     }
 }
