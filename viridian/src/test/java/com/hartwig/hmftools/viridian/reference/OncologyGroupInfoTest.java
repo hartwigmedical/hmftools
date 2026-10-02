@@ -60,9 +60,10 @@ public class OncologyGroupInfoTest
     @Test
     public void testDuplicateGroupFails()
     {
-        assertThrows(UserInputError.class, () -> load(
-                "BK polyomavirus\tnull\tnull",
-                "BK polyomavirus\tnull\tnull"));
+        assertThrows(
+                UserInputError.class, () -> load(
+                        "BK polyomavirus\tnull\tnull",
+                        "BK polyomavirus\tnull\tnull"));
     }
 
     @Test
