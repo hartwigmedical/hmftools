@@ -16,17 +16,20 @@ import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
+import htsjdk.samtools.AlignmentBlock;
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMFlag;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMTag;
+import htsjdk.samtools.util.SequenceUtil;
 
 public final class SamRecordUtils
 {
@@ -269,6 +272,54 @@ public final class SamRecordUtils
     {
         Integer numEvents = record.getIntegerAttribute(NUM_MUTATONS_ATTRIBUTE);
         return numEvents != null ? numEvents : 0;
+    }
+
+    public static boolean setNmTagIfMissing(final SAMRecord record, final RefGenomeInterface refGenome)
+    {
+        if(record.getAttribute(NUM_MUTATONS_ATTRIBUTE) instanceof Integer)
+            return false;
+
+        if(refGenome == null || record.getReadUnmappedFlag() || record.getReadBases().length == 0 || record.getCigar().isEmpty())
+            return false;
+
+        record.setAttribute(NUM_MUTATONS_ATTRIBUTE, calculateNmTag(record, refGenome));
+        return true;
+    }
+
+    public static int calculateNmTag(final SAMRecord record, final RefGenomeInterface refGenome)
+    {
+        int nm = 0;
+        byte[] readBases = record.getReadBases();
+        int refGenomePositionOffset = refGenome.oneBasedIndexing() ? 0 : -1;
+
+        for(AlignmentBlock alignmentBlock : record.getAlignmentBlocks())
+        {
+            int blockLength = alignmentBlock.getLength();
+            int refStart = alignmentBlock.getReferenceStart() + refGenomePositionOffset;
+            byte[] refBases = refGenome.getBases(record.getReferenceName(), refStart, refStart + blockLength - 1);
+            int readStartIndex = alignmentBlock.getReadStart() - 1;
+
+            if(refBases.length != blockLength)
+            {
+                throw new IllegalArgumentException(format(
+                        "invalid reference bases for read(%s) block(%s:%d len=%d): received(%d)",
+                        record.getReadName(), record.getReferenceName(), alignmentBlock.getReferenceStart(), blockLength, refBases.length));
+            }
+
+            for(int i = 0; i < blockLength; ++i)
+            {
+                if(!SequenceUtil.basesEqual(readBases[readStartIndex + i], refBases[i]))
+                    ++nm;
+            }
+        }
+
+        for(CigarElement cigarElement : record.getCigar())
+        {
+            if(cigarElement.getOperator() == CigarOperator.I || cigarElement.getOperator() == CigarOperator.D)
+                nm += cigarElement.getLength();
+        }
+
+        return nm;
     }
 
     public static String readToString(final SAMRecord read)

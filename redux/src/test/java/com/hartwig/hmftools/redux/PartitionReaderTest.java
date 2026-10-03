@@ -3,6 +3,7 @@ package com.hartwig.hmftools.redux;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CIGAR;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SupplementaryReadData.SUPP_POS_STRAND;
 import static com.hartwig.hmftools.common.bam.SupplementaryReadData.alignmentsToSamTag;
@@ -24,6 +25,7 @@ import static com.hartwig.hmftools.redux.TestUtils.setSecondInPair;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Collections;
@@ -63,6 +65,30 @@ public class PartitionReaderTest
         mWriter = new TestBamWriter(config);
 
         mPartitionReader = createPartitionRead(config, mWriter);
+    }
+
+    @Test
+    public void testMissingNmTagRestoredForCramInput()
+    {
+        ReduxConfig cramConfig = new ReduxConfig(mRefGenome, false, false, false, READ_UNMAPPER);
+        cramConfig.BamFiles.add("input.cram");
+        PartitionReader cramReader = createPartitionRead(cramConfig, new TestBamWriter(cramConfig));
+        cramReader.setupRegion(new ChrBaseRegion(CHR_1, 1, 1000));
+
+        SAMRecord cramRecord = createUnpairedRecord(CHR_1, 100, 103, false);
+        cramReader.processRead(cramRecord);
+
+        assertTrue(cramRecord.hasAttribute(NUM_MUTATONS_ATTRIBUTE));
+
+        ReduxConfig bamConfig = new ReduxConfig(mRefGenome, false, false, false, READ_UNMAPPER);
+        bamConfig.BamFiles.add("input.bam");
+        PartitionReader bamReader = createPartitionRead(bamConfig, new TestBamWriter(bamConfig));
+        bamReader.setupRegion(new ChrBaseRegion(CHR_1, 1, 1000));
+
+        SAMRecord bamRecord = createUnpairedRecord(CHR_1, 100, 103, false);
+        bamReader.processRead(bamRecord);
+
+        assertNull(bamRecord.getAttribute(NUM_MUTATONS_ATTRIBUTE));
     }
 
     @Test

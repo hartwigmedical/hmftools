@@ -296,7 +296,7 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
         List<ReadContextCounter> posPhasedCounters = mVariantPhaser != null ? Lists.newArrayList() : null;
         List<ReadContextCounter> negPhasedCounters = mVariantPhaser != null ? Lists.newArrayList() : null;
 
-        int numberOfEvents = NumberEvents.calcAdjustedNumMutations(record, mRefSequence);
+        int numberOfEvents = NumberEvents.calcAdjustedNumMutations(record, mRefGenome);
 
         for(ReadContextCounter readCounter : mSelectedReadCounters)
         {
