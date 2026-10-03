@@ -15,7 +15,6 @@ import com.google.common.collect.Lists;
 
 public final class GermlineAmpDel
 {
-    private static final String INCONSISTENT_STATUS_CHANGE_MARKER = "NA";
     public final String GeneName;
     public final String Transcript;
     public final String Chromosome;

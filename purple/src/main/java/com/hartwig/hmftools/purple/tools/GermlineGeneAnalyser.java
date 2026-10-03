@@ -2,7 +2,6 @@ package com.hartwig.hmftools.purple.tools;
 
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeVersion;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
@@ -10,60 +9,101 @@ import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addSampleIdFi
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadSampleIdsFile;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.parseThreads;
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.TreeMap;
 import java.util.concurrent.Callable;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.gene.ExonData;
-import com.hartwig.hmftools.common.gene.GeneData;
-import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
+import com.hartwig.hmftools.common.purple.GermlineAmpDel;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.purple.region.ObservedRegion;
+import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
 import com.hartwig.hmftools.common.perf.TaskExecutor;
 
 import org.jetbrains.annotations.NotNull;
 
 public class GermlineGeneAnalyser
 {
-    private final EnsemblDataCache mGeneDataCache;
+    static final String PURPLE_GERMLINE_GENE_DATA_CSV = "purple_germline_gene_data.csv";
+    static final String MIN_FREQUENCY_CFG = "min_frequency";
     private final List<String> mSampleIds;
     private final String mPurpleDataDir;
     private final int mThreads;
-
-    private final BufferedWriter mWriter;
-    private final boolean mWriteVerbose;
-
-    private static final String WRITE_VERBOSE = "write_verbose";
+    private final int mMinFrequency;
+    private final String mOutputDir;
+    private final RefGenomeVersion mRefGenomeVersion;
 
     public GermlineGeneAnalyser(final ConfigBuilder configBuilder)
     {
-        mGeneDataCache = new EnsemblDataCache(configBuilder);
-
-        mGeneDataCache.setRequiredData(true, false, false, true);
-        mGeneDataCache.load(false);
-
         mSampleIds = loadSampleIdsFile(configBuilder);
         mPurpleDataDir = configBuilder.getValue(PURPLE_DIR_CFG);
         mThreads = parseThreads(configBuilder);
+        mRefGenomeVersion = RefGenomeVersion.from(configBuilder);
 
-        mWriteVerbose = configBuilder.hasFlag(WRITE_VERBOSE);
-        mWriter = initialiseWriter(parseOutputDir(configBuilder));
+        mOutputDir = FileWriterUtils.parseOutputDir(configBuilder);
+        mMinFrequency = configBuilder.getInteger(MIN_FREQUENCY_CFG);
     }
 
-    public void run()
+    public void runAnalysis()
+    {
+        removeInvalidSampleIds();
+        PPL_LOGGER.info("running Purple germline gene analysis for {} samples", mSampleIds.size());
+
+        List<SampleGermlineGeneTask> sampleTasks = createAnalysisTasks();
+        PPL_LOGGER.info("tasks created: {}", sampleTasks.size());
+
+        final List<Callable<Void>> callableList = new ArrayList<>(sampleTasks);
+        TaskExecutor.executeTasks(callableList, mThreads);
+        PPL_LOGGER.info("files read");
+        EventCounts results = new EventCounts(new TreeMap<>());
+        sampleTasks.forEach(sampleTask -> results.mergeAdd(sampleTask.getEventCounts()));
+
+        String fileName = mOutputDir + "/" + PURPLE_GERMLINE_GENE_DATA_CSV;
+        try
+        {
+            BufferedWriter writer = createBufferedWriter(fileName, false);
+            results.writeTo(writer, mMinFrequency, mRefGenomeVersion);
+            writer.close();
+        }
+        catch(IOException e)
+        {
+            PPL_LOGGER.error("could not write output to " + fileName, e);
+        }
+        PPL_LOGGER.info("Purple germline event frequency analysis complete");
+    }
+
+    @NotNull
+    private List<SampleGermlineGeneTask> createAnalysisTasks()
+    {
+        List<SampleGermlineGeneTask> sampleTasks = Lists.newArrayList();
+        for(int i = 0; i < min(mSampleIds.size(), mThreads); ++i)
+        {
+            sampleTasks.add(new SampleGermlineGeneTask(i, mPurpleDataDir));
+        }
+
+        int taskIndex = 0;
+        for(String sampleId : mSampleIds)
+        {
+            if(taskIndex >= sampleTasks.size())
+            {
+                taskIndex = 0;
+            }
+            sampleTasks.get(taskIndex).getSampleIds().add(sampleId);
+            ++taskIndex;
+        }
+        return sampleTasks;
+    }
+
+    private void removeInvalidSampleIds()
     {
         if(mSampleIds.isEmpty())
         {
@@ -71,148 +111,41 @@ public class GermlineGeneAnalyser
             System.exit(1);
         }
 
-        PPL_LOGGER.info("running Purple germline gene analysis for {} samples", mSampleIds.size());
-
-        List<SampleGermlineGeneTask> sampleTasks = Lists.newArrayList();
-
-        if(mThreads > 1)
+        List<String> invalidSampleIds = findInvalidSampleIds();
+        if(!invalidSampleIds.isEmpty())
         {
-            for(int i = 0; i < min(mSampleIds.size(), mThreads); ++i)
-            {
-                sampleTasks.add(new SampleGermlineGeneTask(i, mWriter, mGeneDataCache, mPurpleDataDir, mWriteVerbose));
-            }
-
-            int taskIndex = 0;
-            for(String sampleId : mSampleIds)
-            {
-                if(taskIndex >= sampleTasks.size())
-                    taskIndex = 0;
-
-                sampleTasks.get(taskIndex).getSampleIds().add(sampleId);
-
-                ++taskIndex;
-            }
-
-            final List<Callable<Void>> callableList = sampleTasks.stream().collect(Collectors.toList());
-            TaskExecutor.executeTasks(callableList, mThreads);
+            PPL_LOGGER.warn("invalid sampleIds: {}", invalidSampleIds);
         }
-        else
-        {
-            SampleGermlineGeneTask sampleTask = new SampleGermlineGeneTask(0, mWriter, mGeneDataCache, mPurpleDataDir, mWriteVerbose);
-
-            sampleTask.getSampleIds().addAll(mSampleIds);
-
-            sampleTasks.add(sampleTask);
-
-            sampleTask.call();
-        }
-
-        closeBufferedWriter(mWriter);
-
-        PPL_LOGGER.info("Purple germline gene analysis complete");
+        mSampleIds.removeAll(invalidSampleIds);
     }
 
-    private BufferedWriter initialiseWriter(final String outputDir)
+    private List<String> findInvalidSampleIds()
     {
-        try
+        List<String> result = new ArrayList<>();
+        for(String sampleId : mSampleIds)
         {
-            String fileName = outputDir + "purple_germline_gene_data.csv";
-
-            // PPL_LOGGER.info("writing output file: {}", fileName);
-
-            BufferedWriter writer = createBufferedWriter(fileName, false);
-
-            writer.write("SampleId,Chromosome,RegionStart,RegionEnd,GermlineStatus,RegionBafCount,RegionDWC");
-            writer.write(",RegionObsTumorRatio,RegionObsNormalRatio,RegionRefNormalisedCN");
-
-            if(mWriteVerbose)
+            File segmentFile = new File(GermlineAmpDel.generateFilename(mPurpleDataDir, sampleId));
+            if(!segmentFile.exists())
             {
-                writer.write(",PurpleCN,PurpleDWC,GcContent,MajorAlleleCN,MinorAlleleCN");
-                writer.write(",GeneName,TransName,TransStart,TransEnd,ExonCount,ExonRankStart,ExonRankEnd");
+                result.add(sampleId);
             }
-            else
-            {
-                writer.write(",GeneNames");
-            }
-
-            writer.newLine();
-
-            return writer;
         }
-        catch(IOException e)
-        {
-            PPL_LOGGER.error("failed to initialise output file output: {}", e.toString());
-            return null;
-        }
-    }
-
-    public synchronized static void writeGeneDeletionData(
-            final BufferedWriter writer, final String sampleId, final ObservedRegion region, final String geneNames)
-    {
-        try
-        {
-            writer.write(String.format("%s,%s,%d,%d,%s,%d,%d,%.3f,%.3f,%.3f,%s",
-                    sampleId, region.chromosome(), region.start(), region.end(), region.germlineStatus(),
-                    region.bafCount(), region.depthWindowCount(), region.observedTumorRatio(), region.observedNormalRatio(),
-                    region.refNormalisedCopyNumber(), geneNames));
-
-            writer.newLine();
-        }
-        catch(IOException e)
-        {
-            PPL_LOGGER.error("failed to write germline gene deletion file output: {}", e.toString());
-        }
-    }
-
-    public synchronized static void writeGeneDeletionDetails(
-            final BufferedWriter writer, final String sampleId, final ObservedRegion region, final PurpleCopyNumber copyNumber,
-            final GeneData geneData, final TranscriptData transData, final List<ExonData> overlappedExons)
-    {
-        try
-        {
-            writer.write(String.format("%s,%s,%d,%d,%s,%d,%d,%.3f,%.3f,%.3f",
-                    sampleId, region.chromosome(), region.start(), region.end(), region.germlineStatus(),
-                    region.bafCount(), region.depthWindowCount(), region.observedTumorRatio(), region.observedNormalRatio(),
-                    region.refNormalisedCopyNumber()));
-
-            writer.write(String.format(",%.2f,%d,%.2f,%.2f,%.2f",
-                    copyNumber.averageTumorCopyNumber(), copyNumber.depthWindowCount(), copyNumber.gcContent(),
-                    copyNumber.majorAlleleCopyNumber(), copyNumber.minorAlleleCopyNumber()));
-
-            int exonRangeMin = overlappedExons.stream().mapToInt(x -> x.Rank).min().orElse(0);
-            int exonRangeMax = overlappedExons.stream().mapToInt(x -> x.Rank).max().orElse(0);
-
-            writer.write(String.format(",%s,%s,%d,%d,%d,%d,%d",
-                    geneData.GeneName, transData.TransName, transData.TransStart, transData.TransEnd,
-                    transData.exons().size(), exonRangeMin, exonRangeMax));
-
-            writer.newLine();
-        }
-        catch(IOException e)
-        {
-            PPL_LOGGER.error("failed to write germline gene overlap file output: {}", e.toString());
-        }
+        return result;
     }
 
     public static void main(@NotNull final String[] args)
     {
         ConfigBuilder configBuilder = new ConfigBuilder();
         addSampleIdFile(configBuilder, true);
-
         configBuilder.addPath(PURPLE_DIR_CFG, true, "Directory pattern for sample purple directory");
-        configBuilder.addFlag(WRITE_VERBOSE, "Write transcript and exon details for each deleted gene segment");
-        addRefGenomeVersion(configBuilder);
-
-        addEnsemblDir(configBuilder);
         addLoggingOptions(configBuilder);
+        addRefGenomeVersion(configBuilder);
         addOutputOptions(configBuilder);
         addThreadOptions(configBuilder);
-
+        configBuilder.addInteger(MIN_FREQUENCY_CFG, "lowest frequency of germline events to include in output", 4);
         configBuilder.checkAndParseCommandLine(args);
-
         setLogLevel(configBuilder);
-
         GermlineGeneAnalyser germlineGeneAnalyser = new GermlineGeneAnalyser(configBuilder);
-        germlineGeneAnalyser.run();
+        germlineGeneAnalyser.runAnalysis();
     }
 }
