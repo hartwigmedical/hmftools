@@ -1,7 +1,11 @@
 package com.hartwig.hmftools.bamtools.remapper;
 
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+
 import com.hartwig.hmftools.common.bam.SamRecordUtils;
 import com.hartwig.hmftools.common.codon.Nucleotides;
+import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.utils.Arrays;
 
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
@@ -12,6 +16,36 @@ import htsjdk.samtools.SAMRecord;
 
 public class HlaAlignmentTest extends RemapperTestBase
 {
+    @Test
+    public void createSAMRecordFromTagData()
+    {
+        String readName = "A00624:8:HHKYHDSXX:1:1446:18213:29684";
+        String nukes =
+                "GGCCAGGGTCTCACACCCTCCAGAGCATGTACGGCTGCGACGTGGGGCCGGACGGGCGCCTCCTCCGCGGGCATAACCAGTACGCCTACGACGGCAAGGATTACATCGCCCTGAACGAGGACCTGCGCTCCTGGACCGCCGCGGACACGGC";
+        String qualities =
+                "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF:FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
+        BamReadData data = new BamReadData(readName, nukes.getBytes(), qualities.getBytes());
+        BwaMemAlignment bwa = bwa("97,5,31355729,31355880,0,151,59,0,151,19,151M,151,null,5,31356297,719");
+        AltAlignment altAlignment = new AltAlignment("chrX", 12345, Orientation.FORWARD, "151M", 120);
+        HlaAlignment alignment = new HlaAlignment(bwa, altAlignment);
+
+        BwaMemAlignment bwa2 = bwa("145,5,31356297,31356448,0,151,60,1,146,108,151M,76C74,null,5,31355729,-719");
+        HlaAlignment mate = new HlaAlignment(bwa2);
+
+        SAMRecord sam = alignment.createSamRecord(samFileHeader(), data, mate);
+        assertEquals(readName, sam.getReadName());
+        assertEquals(0, sam.getInferredInsertSize());
+        Assert.assertFalse(sam.getReadNegativeStrandFlag());
+        assertArrayEquals(nukes.getBytes(), sam.getReadBases());
+        assertArrayEquals(qualities.getBytes(), sam.getBaseQualities());
+        assertEquals(22, (int) sam.getReferenceIndex());
+        assertEquals(12345, sam.getAlignmentStart());
+        assertEquals(mate.Position, sam.getMateAlignmentStart());
+        assertEquals(97, sam.getFlags());
+        assertEquals(59, sam.getMappingQuality());
+        assertEquals("151M", sam.getCigarString());
+    }
+
     @Test
     public void isUnmapped()
     {
@@ -40,17 +74,17 @@ public class HlaAlignmentTest extends RemapperTestBase
         HlaAlignment mate = new HlaAlignment(bwa2);
 
         SAMRecord sam = alignment.createSamRecord(samFileHeader(), data, mate);
-        Assert.assertEquals(readName, sam.getReadName());
-        Assert.assertEquals(719, sam.getInferredInsertSize());
+        assertEquals(readName, sam.getReadName());
+        assertEquals(719, sam.getInferredInsertSize());
         Assert.assertFalse(sam.getReadNegativeStrandFlag());
-        Assert.assertArrayEquals(nukes.getBytes(), sam.getReadBases());
-        Assert.assertArrayEquals(qualities.getBytes(), sam.getBaseQualities());
-        Assert.assertEquals(mate.getRefId(), sam.getReferenceIndex());
-        Assert.assertEquals(31355730, sam.getAlignmentStart());
-        Assert.assertEquals(mate.Position, sam.getMateAlignmentStart());
-        Assert.assertEquals(97, sam.getFlags());
-        Assert.assertEquals(60, sam.getMappingQuality());
-        Assert.assertEquals("151M", sam.getCigarString());
+        assertArrayEquals(nukes.getBytes(), sam.getReadBases());
+        assertArrayEquals(qualities.getBytes(), sam.getBaseQualities());
+        assertEquals(5, (int) sam.getReferenceIndex());
+        assertEquals(31355730, sam.getAlignmentStart());
+        assertEquals(mate.Position, sam.getMateAlignmentStart());
+        assertEquals(97, sam.getFlags());
+        assertEquals(60, sam.getMappingQuality());
+        assertEquals("151M", sam.getCigarString());
     }
 
     @Test
@@ -69,17 +103,17 @@ public class HlaAlignmentTest extends RemapperTestBase
         HlaAlignment mate = new HlaAlignment(bwa2);
 
         SAMRecord sam = alignment.createSamRecord(samFileHeader(), data, mate);
-        Assert.assertEquals(readName, sam.getReadName());
-        Assert.assertEquals(-719, sam.getInferredInsertSize());
+        assertEquals(readName, sam.getReadName());
+        assertEquals(-719, sam.getInferredInsertSize());
         Assert.assertTrue(sam.getReadNegativeStrandFlag());
-        Assert.assertArrayEquals(Nucleotides.reverseComplementBases(nukes.getBytes()), sam.getReadBases());
-        Assert.assertArrayEquals(Arrays.reverseArray(qualities.getBytes()), sam.getBaseQualities());
-        Assert.assertEquals(mate.getRefId(), sam.getReferenceIndex());
-        Assert.assertEquals(31356298, sam.getAlignmentStart());
-        Assert.assertEquals(mate.Position, sam.getMateAlignmentStart());
-        Assert.assertEquals(145, sam.getFlags());
-        Assert.assertEquals(60, sam.getMappingQuality());
-        Assert.assertEquals("151M", sam.getCigarString());
+        assertArrayEquals(Nucleotides.reverseComplementBases(nukes.getBytes()), sam.getReadBases());
+        assertArrayEquals(Arrays.reverseArray(qualities.getBytes()), sam.getBaseQualities());
+        assertEquals(mate.getRefId(), sam.getReferenceIndex());
+        assertEquals(31356298, sam.getAlignmentStart());
+        assertEquals(mate.Position, sam.getMateAlignmentStart());
+        assertEquals(145, sam.getFlags());
+        assertEquals(60, sam.getMappingQuality());
+        assertEquals("151M", sam.getCigarString());
     }
 
     @Test
@@ -97,17 +131,17 @@ public class HlaAlignmentTest extends RemapperTestBase
         HlaAlignment mate = new HlaAlignment(bwa2);
 
         SAMRecord sam = alignment.createSamRecord(samFileHeader(), data, mate);
-        Assert.assertEquals(readName, sam.getReadName());
+        assertEquals(readName, sam.getReadName());
         Assert.assertTrue(sam.getReadNegativeStrandFlag());
-        Assert.assertArrayEquals(Nucleotides.reverseComplementBases(nukes.getBytes()), sam.getReadBases());
-        Assert.assertArrayEquals(Arrays.reverseArray(qualities.getBytes()), sam.getBaseQualities());
-        Assert.assertEquals(mate.getRefId(), sam.getReferenceIndex());
-        Assert.assertEquals(mate.Position, sam.getAlignmentStart());
-        Assert.assertEquals(mate.Position, sam.getMateAlignmentStart());
-        Assert.assertEquals(181, sam.getFlags());
-        Assert.assertEquals(0, sam.getMappingQuality());
-        Assert.assertEquals("*", sam.getCigarString());
-        Assert.assertEquals(0, sam.getInferredInsertSize());
+        assertArrayEquals(Nucleotides.reverseComplementBases(nukes.getBytes()), sam.getReadBases());
+        assertArrayEquals(Arrays.reverseArray(qualities.getBytes()), sam.getBaseQualities());
+        assertEquals(mate.getRefId(), sam.getReferenceIndex());
+        assertEquals(mate.Position, sam.getAlignmentStart());
+        assertEquals(mate.Position, sam.getMateAlignmentStart());
+        assertEquals(181, sam.getFlags());
+        assertEquals(0, sam.getMappingQuality());
+        assertEquals("*", sam.getCigarString());
+        assertEquals(0, sam.getInferredInsertSize());
     }
 
     @Test
@@ -127,20 +161,20 @@ public class HlaAlignmentTest extends RemapperTestBase
         HlaAlignment mate = new HlaAlignment(bwaMate);
 
         SAMRecord sam = alignment.createSamRecord(samFileHeader(), data, mate);
-        Assert.assertEquals(readName, sam.getReadName());
+        assertEquals(readName, sam.getReadName());
         Assert.assertTrue(sam.getReadNegativeStrandFlag());
-        Assert.assertArrayEquals(Nucleotides.reverseComplementBases(nukes.getBytes()), sam.getReadBases());
-        Assert.assertArrayEquals(Arrays.reverseArray(qualities.getBytes()), sam.getBaseQualities());
-        Assert.assertEquals(bwa.getRefId(), sam.getReferenceIndex().intValue());
-        Assert.assertEquals(bwa.getRefStart() + 1, sam.getAlignmentStart()); // bwa record is 0-based
-        Assert.assertEquals(bwa.getRefStart() + 1, sam.getMateAlignmentStart()); // NOT the value (0) from the raw bwa mate alignment
-        Assert.assertEquals(121, sam.getFlags());
-        Assert.assertEquals(60, sam.getMappingQuality());
-        Assert.assertEquals("151M", sam.getCigarString());
-        Assert.assertEquals(bwa.getRefId(), sam.getMateReferenceIndex().intValue());
-        Assert.assertEquals("*", sam.getAttribute(SamRecordUtils.MATE_CIGAR_ATTRIBUTE));
-        Assert.assertEquals(0, sam.getAttribute(SamRecordUtils.MATE_QUALITY_ATTRIBUTE));
-        Assert.assertEquals(0, sam.getInferredInsertSize());
+        assertArrayEquals(Nucleotides.reverseComplementBases(nukes.getBytes()), sam.getReadBases());
+        assertArrayEquals(Arrays.reverseArray(qualities.getBytes()), sam.getBaseQualities());
+        assertEquals(bwa.getRefId(), sam.getReferenceIndex().intValue());
+        assertEquals(bwa.getRefStart() + 1, sam.getAlignmentStart()); // bwa record is 0-based
+        assertEquals(bwa.getRefStart() + 1, sam.getMateAlignmentStart()); // NOT the value (0) from the raw bwa mate alignment
+        assertEquals(121, sam.getFlags());
+        assertEquals(60, sam.getMappingQuality());
+        assertEquals("151M", sam.getCigarString());
+        assertEquals(bwa.getRefId(), sam.getMateReferenceIndex().intValue());
+        Assert.assertNull(sam.getAttribute(SamRecordUtils.MATE_CIGAR_ATTRIBUTE));
+        assertEquals(0, sam.getAttribute(SamRecordUtils.MATE_QUALITY_ATTRIBUTE));
+        assertEquals(0, sam.getInferredInsertSize());
     }
 
     @Test
