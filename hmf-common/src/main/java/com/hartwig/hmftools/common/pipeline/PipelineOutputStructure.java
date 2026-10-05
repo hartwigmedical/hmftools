@@ -2,6 +2,7 @@ package com.hartwig.hmftools.common.pipeline;
 
 public enum PipelineOutputStructure
 {
+    OA_V3_1,
     OA_V3_0,
     OA_V2_3,
     OA_V2_2,

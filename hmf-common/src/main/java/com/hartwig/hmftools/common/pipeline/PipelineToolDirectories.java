@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.common.pipeline;
 
-import static com.hartwig.hmftools.common.pipeline.PipelineOutputStructure.OA_V3_0;
+import static com.hartwig.hmftools.common.pipeline.PipelineOutputStructure.OA_V3_1;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.convertWildcardSamplePath;
 
 import java.io.IOException;
@@ -39,7 +39,7 @@ public record PipelineToolDirectories(
         String virusInterpreterDir,
         String qseeDir)
 {
-    public static final PipelineOutputStructure DEFAULT_PIPELINE_OUTPUT = OA_V3_0;
+    public static final PipelineOutputStructure DEFAULT_PIPELINE_OUTPUT = OA_V3_1;
 
     public static final String PIPELINE_FORMAT_CFG = "pipeline_format";
     public static final String PIPELINE_FORMAT_DESC =
@@ -48,6 +48,38 @@ public record PipelineToolDirectories(
                     .collect(Collectors.joining(", ")) + ". Default: " + DEFAULT_PIPELINE_OUTPUT.name();
     public static final String PIPELINE_FORMAT_FILE_CFG = "pipeline_format_file";
     public static final String PIPELINE_FORMAT_FILE_DESC = "File describing expected tool directory structure.";
+
+    public static final PipelineToolDirectories OA_V3_0_FORMAT = new PipelineToolDirectories(
+            "amber",
+            "chord",
+            "cider",
+            "cobalt",
+            "cuppa",
+            "esvee",
+            "bamtools/$",
+            "bamtools/$",
+            "isofox",
+            "lilac",
+            "linx/germline_annotations",
+            "linx/somatic_annotations",
+            "orange",
+            "pave/germline",
+            "pave/somatic",
+            "peach",
+            "purple",
+            "sage/germline",
+            "sage/somatic",
+            "sigs",
+            "",
+            "teal",
+            "bamtools/*",
+            "bamtools/*",
+            "vchord",  // not yet implemented in this version
+            "virusbreakend",
+            "virusinterpreter",
+            "qsee");
+
+    public static final PipelineToolDirectories OA_V3_1_FORMAT = OA_V3_0_FORMAT;
 
     public static final PipelineToolDirectories OA_V2_0_FORMAT = new PipelineToolDirectories(
             "amber",
@@ -111,36 +143,6 @@ public record PipelineToolDirectories(
             "qsee");
 
     public static final PipelineToolDirectories OA_V2_3_FORMAT = OA_V2_2_FORMAT;
-
-    public static final PipelineToolDirectories OA_V3_0_FORMAT = new PipelineToolDirectories(
-            "amber",
-            "chord",
-            "cider",
-            "cobalt",
-            "cuppa",
-            "esvee",
-            "bamtools/$",
-            "bamtools/$",
-            "isofox",
-            "lilac",
-            "linx/germline_annotations",
-            "linx/somatic_annotations",
-            "orange",
-            "pave/germline",
-            "pave/somatic",
-            "peach",
-            "purple",
-            "sage/germline",
-            "sage/somatic",
-            "sigs",
-            "",
-            "teal",
-            "bamtools/*",
-            "bamtools/*",
-            "vchord",  // not yet implemented in this version
-            "virusbreakend",
-            "virusinterpreter",
-            "qsee");
 
     public static final PipelineToolDirectories PIP5_V6_0_FORMAT = new PipelineToolDirectories(
             "amber",
@@ -247,10 +249,11 @@ public record PipelineToolDirectories(
     {
         return switch(outputStructure)
         {
-            case OA_V2_0 -> OA_V2_0_FORMAT;
-            case OA_V2_2 -> OA_V2_2_FORMAT;
-            case OA_V2_3 -> OA_V2_3_FORMAT;
+            case OA_V3_1 -> OA_V3_1_FORMAT;
             case OA_V3_0 -> OA_V3_0_FORMAT;
+            case OA_V2_3 -> OA_V2_3_FORMAT;
+            case OA_V2_2 -> OA_V2_2_FORMAT;
+            case OA_V2_0 -> OA_V2_0_FORMAT;
             case PIP5_V6_0 -> PIP5_V6_0_FORMAT;
             case DB_V6_0 -> DB_V6_0_FORMAT;
         };
