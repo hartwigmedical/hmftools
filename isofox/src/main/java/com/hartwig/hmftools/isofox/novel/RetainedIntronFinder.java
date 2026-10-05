@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
 import com.hartwig.hmftools.isofox.common.BaseDepth;
+import com.hartwig.hmftools.isofox.common.Fragment;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
 import com.hartwig.hmftools.isofox.common.Read;
@@ -59,12 +60,12 @@ public class RetainedIntronFinder
 
     public final List<RetainedIntron> getRetainedIntrons() { return mRetainedIntrons; }
 
-    public void evaluateFragmentReads(final Read read1, final Read read2)
+    public void evaluateFragmentReads(final Fragment fragment)
     {
         if(!mEnabled)
             return;
 
-        if(read1.isDuplicate() || read2.isDuplicate() || read1.isMultiMapped() || read2.isMultiMapped())
+        if(fragment.reads().stream().anyMatch(x -> x.isDuplicate() || x.isMultiMapped()))
             return;
 
         // reads must span an exon boundary without being exonic in another transcript
@@ -78,10 +79,8 @@ public class RetainedIntronFinder
 
         List<RetainedIntron> retIntrons = Lists.newArrayList();
 
-        for(int i = 0; i <= 1; ++i)
+        for(Read read : fragment.reads())
         {
-            Read read = (i == 0) ? read1 : read2;
-
             if(read.containsSplit())
             {
                 splicedTrans.addAll(read.getTranscriptClassifications().entrySet().stream()
@@ -112,7 +111,7 @@ public class RetainedIntronFinder
              {
                  if(retIntron1.regions().stream().anyMatch(x -> retIntron2.regions().contains(x)))
                  {
-                     ISF_LOGGER.trace("reads({}) support the same exon from exon-intron reads", read1.id());
+                     ISF_LOGGER.trace("reads({}) support the same exon from exon-intron reads", fragment.id());
                      return;
                  }
              }

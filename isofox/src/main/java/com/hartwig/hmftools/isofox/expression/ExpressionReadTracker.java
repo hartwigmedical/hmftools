@@ -6,7 +6,6 @@ import static com.hartwig.hmftools.isofox.IsofoxFunction.TRANSCRIPT_COUNTS;
 import static com.hartwig.hmftools.isofox.adjusts.GcRatioCounts.calcGcRatioFromReadRegions;
 import static com.hartwig.hmftools.isofox.common.FragmentType.MULTI_MAPPED;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.validExonMatch;
-import static com.hartwig.hmftools.isofox.common.CommonUtils.deriveCommonRegions;
 import static com.hartwig.hmftools.isofox.common.TransMatchType.SPLICE_JUNCTION;
 
 import java.util.List;
@@ -16,6 +15,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
 import com.hartwig.hmftools.isofox.adjusts.GcRatioCounts;
+import com.hartwig.hmftools.isofox.common.Fragment;
 import com.hartwig.hmftools.isofox.common.FragmentMatchType;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
@@ -89,7 +89,7 @@ public class ExpressionReadTracker
     }
 
     public void processIntronicReads(
-            final List<GeneReadData> genes, final Read read1, final Read read2, int fragmentCount, boolean multiMapped)
+            final List<GeneReadData> genes, final Fragment fragment, int fragmentCount, boolean multiMapped)
     {
         if(!mEnabled)
             return;
@@ -100,7 +100,7 @@ public class ExpressionReadTracker
         {
             CategoryCountsData catCounts = getCategoryCountsData(Lists.newArrayList(), unsplicedGeneIds);
 
-            List<BaseRegion> readRegions = deriveCommonRegions(read1.getMappedRegionCoords(), read2.getMappedRegionCoords());
+            List<BaseRegion> readRegions = fragment.mergedMappings();
             addGcCounts(catCounts, readRegions, fragmentCount, multiMapped);
         }
     }

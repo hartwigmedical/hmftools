@@ -26,11 +26,8 @@ public final class ChimericUtils
     public static boolean isInversion(final List<Read> reads)
     {
         // allow discordant fragments if not short
-        if(reads.size() == 2)
+        if(reads.size() == 2 && reads.stream().noneMatch(x -> x.isSupplementaryAlignment()))
         {
-            if(reads.stream().anyMatch(x -> x.isSupplementaryAlignment()))
-                return false;
-
             Read read1 = reads.get(0);
             Read read2 = reads.get(1);
 
@@ -44,7 +41,8 @@ public final class ChimericUtils
         }
 
         // an inversion must a) be same chromosome b) have supplementary alignment c) have same orientations around the chimeric junction
-        if(!reads.stream().anyMatch(x -> x.hasSuppAlignment()) || reads.size() != 3)
+        if(reads.stream().noneMatch(x -> x.hasSuppAlignment()) ||
+                reads.stream().filter(x -> x.isSupplementaryAlignment()).count() != 1)
             return false;
 
         byte existingOrient = 0;

@@ -116,16 +116,25 @@ public class FusionFragmentBuilder
             }
 
             // set single junction info for candidate realignable fragments
-            if(fragment.reads().size() == 2
-            && fragment.reads().stream().anyMatch(x -> hasCandidateJunctionSoftClips(x))
-            && fragment.reads().stream().noneMatch(x -> x.spansGeneCollections()))
+            if(fragment.reads().stream().anyMatch(x -> hasCandidateJunctionSoftClips(x))
+                    && fragment.reads().stream().noneMatch(x -> x.spansGeneCollections()))
             {
-                FusionRead read1 = fragment.reads().get(0);
-                FusionRead read2 = fragment.reads().get(1);
-                if(read1.GeneCollections[0] == read2.GeneCollections[1])
+                if(fragment.reads().size() == 1 && !fragment.reads().get(0).isReadPaired())
                 {
                     setSingleSoftClipJunctionData(fragment);
                     return;
+                }
+
+                if(fragment.reads().size() == 2)
+                {
+                    FusionRead read1 = fragment.reads().get(0);
+                    FusionRead read2 = fragment.reads().get(1);
+
+                    if(read1.GeneCollections[0] == read2.GeneCollections[1])
+                    {
+                        setSingleSoftClipJunctionData(fragment);
+                        return;
+                    }
                 }
             }
         }

@@ -305,7 +305,7 @@ public class FusionFinder implements Callable<Void>
                 ISF_LOGGER.info("chr({}) processed {} {} chimeric read groups", mChromosome, readGroupCount, scope);
             }
 
-            if(readGroup.reads().stream().anyMatch(x -> mConfig.Filters.skipRead(x.MateChromosome, x.MatePosStart)))
+            if(readGroup.reads().stream().anyMatch(x -> x.isReadPaired() && mConfig.Filters.skipRead(x.MateChromosome, x.MatePosStart)))
             {
                 ++mExcludedFilteredCount;
                 continue;

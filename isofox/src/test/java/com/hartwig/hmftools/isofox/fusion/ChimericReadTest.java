@@ -39,6 +39,7 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
 import com.hartwig.hmftools.isofox.common.BaseDepth;
+import com.hartwig.hmftools.isofox.common.Fragment;
 import com.hartwig.hmftools.isofox.common.FragmentTracker;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.Read;
@@ -78,7 +79,7 @@ public class ChimericReadTest
         Read read2 = createMappedRead(readId, gc1, 1081, 1100, createCigar(0, 20, 20));
         read2.setSuppAlignment(TEST_SUPP_DATA);
 
-        chimericRT.addChimericReadPair(read1, read2);
+        chimericRT.addChimericFragment(new Fragment(read1, read2));
         chimericRT.postProcessChimericReads(baseDepth, fragTracker);
 
         assertEquals(1, chimericRT.fusionReadGroupMap().size());
@@ -98,7 +99,7 @@ public class ChimericReadTest
         read1.setFlag(FIRST_OF_PAIR, true);
         read2 = createMappedRead(readId, gc1, 1066, 1100, createCigar(0, 35, 5));
 
-        chimericRT.addRealignmentCandidates(read1, read2);
+        chimericRT.addRealignmentCandidates(new Fragment(read1, read2));
 
         chimericRT.postProcessChimericReads(baseDepth, fragTracker);
 
@@ -143,7 +144,7 @@ public class ChimericReadTest
         Read read2 = createMappedRead(readId, gc1, 1500, 1519, createCigar(20, 20, 0));
         read2.setStrand(true, false);
 
-        chimericRT.addChimericReadPair(read1, read2);
+        chimericRT.addChimericFragment(new Fragment(read1, read2));
         chimericRT.postProcessChimericReads(baseDepth, fragTracker);
 
         assertTrue(chimericRT.fusionReadGroupMap().isEmpty());
@@ -160,7 +161,7 @@ public class ChimericReadTest
         //read2 = createMappedRead(readId, gc1, 10400, 10419, createCigar(20, 20, 0));
         read2.setStrand(true, false);
 
-        chimericRT.addChimericReadPair(read1, read2);
+        chimericRT.addChimericFragment(new Fragment(read1, read2));
         chimericRT.postProcessChimericReads(baseDepth, fragTracker);
 
         assertEquals(1, chimericRT.fusionReadGroupMap().size());
@@ -177,7 +178,7 @@ public class ChimericReadTest
         read2 = createMappedRead(readId, gc1, 10450, 10469, createCigar(20, 20, 0));
         read2.setStrand(true, false);
 
-        chimericRT.addChimericReadPair(read1, read2);
+        chimericRT.addChimericFragment(new Fragment(read1, read2));
         chimericRT.postProcessChimericReads(baseDepth, fragTracker);
 
         assertTrue(chimericRT.fusionReadGroupMap().isEmpty());
@@ -199,7 +200,7 @@ public class ChimericReadTest
 
         chimericRT.initialise(gc2);
 
-        chimericRT.addChimericReadPair(read1, read2);
+        chimericRT.addChimericFragment(new Fragment(read1, read2));
         chimericRT.postProcessChimericReads(baseDepth, fragTracker);
 
         assertTrue(chimericRT.fusionReadGroupMap().isEmpty());
@@ -223,7 +224,7 @@ public class ChimericReadTest
         read2.setGeneCollection(SE_START, gc2.id(), false);
         read2.setGeneCollection(SE_END, gc2.id(), false);
 
-        chimericRT.addChimericReadPair(read1, read2);
+        chimericRT.addChimericFragment(new Fragment(read1, read2));
         chimericRT.postProcessChimericReads(baseDepth, fragTracker);
 
         assertEquals(1, chimericRT.fusionReadGroupMap().size());
@@ -263,7 +264,7 @@ public class ChimericReadTest
         Read read2 = createMappedRead(readId, gc1, 2000, 2019, createCigar(20, 20, 0));
         read2.setStrand(true, false);
 
-        chimericRT.addChimericReadPair(read1, read2);
+        chimericRT.addChimericFragment(new Fragment(read1, read2));
         chimericRT.postProcessChimericReads(baseDepth, fragTracker);
 
         assertTrue(chimericRT.fusionReadGroupMap().isEmpty());
@@ -306,8 +307,8 @@ public class ChimericReadTest
 
         fragTracker.checkRead(read1);
         fragTracker.checkRead(read4);
-        chimericRT.addChimericReadPair(read2, read3);
-        chimericRT.addChimericReadPair(read5, read6);
+        chimericRT.addChimericFragment(new Fragment(read2, read3));
+        chimericRT.addChimericFragment(new Fragment(read5, read6));
 
         chimericRT.postProcessChimericReads(baseDepth, fragTracker);
 
@@ -328,7 +329,7 @@ public class ChimericReadTest
         chimericRT.initialise(gc2);
         baseDepth.initialise(gc2.regionBounds());
 
-        chimericRT.addChimericReadPair(read2, read3);
+        chimericRT.addChimericFragment(new Fragment(read2, read3));
         fragTracker.checkRead(read4);
         fragTracker.checkRead(read6);
 
@@ -373,14 +374,14 @@ public class ChimericReadTest
         Read read2 = createMappedRead(readId, gc1, 1050, 1089, createCigar(0, 40, 0));
         read2.setStrand(true, false);
 
-        chimericRT.addChimericReadPair(read1, read2);
+        chimericRT.addChimericFragment(new Fragment(read1, read2));
 
         read1 = createMappedRead(++readId, gc1, 1081, 1100, createCigar(0, 20, 3));
         read1.setFlag(FIRST_OF_PAIR, true);
         read2 = createMappedRead(readId, gc1, 1050, 1089, createCigar(0, 40, 0));
         read2.setStrand(true, false);
 
-        chimericRT.addRealignmentCandidates(read1, read2);
+        chimericRT.addRealignmentCandidates(new Fragment(read1, read2));
 
         // another one split to the 3rd gene
         read1 = createMappedRead(++readId, gc1, 1281, 20419, createCigar(0, 20, 19100, 20, 0));
@@ -389,7 +390,7 @@ public class ChimericReadTest
         read2 = createMappedRead(readId, gc1, 1050, 1089, createCigar(0, 40, 0));
         read2.setStrand(true, false);
 
-        chimericRT.addChimericReadPair(read1, read2);
+        chimericRT.addChimericFragment(new Fragment(read1, read2));
 
         chimericRT.postProcessChimericReads(baseDepth, fragTracker);
 
@@ -406,7 +407,7 @@ public class ChimericReadTest
         read2 = createMappedRead(readId, gc1, 10210, 10249, createCigar(0, 40, 0));
         read2.setStrand(true, false);
 
-        chimericRT.addRealignmentCandidates(read1, read2);
+        chimericRT.addRealignmentCandidates(new Fragment(read1, read2));
 
         chimericRT.postProcessChimericReads(baseDepth, fragTracker);
 
@@ -423,7 +424,7 @@ public class ChimericReadTest
         read2 = createMappedRead(readId, gc1, 20410, 20449, createCigar(0, 40, 0));
         read2.setStrand(true, false);
 
-        chimericRT.addRealignmentCandidates(read1, read2);
+        chimericRT.addRealignmentCandidates(new Fragment(read1, read2));
 
         chimericRT.postProcessChimericReads(baseDepth, fragTracker);
 
