@@ -216,12 +216,10 @@ public class OrangeAlgo
         if(pipelineVersion != null)
         {
             LOGGER.info("determined pipeline version to be 'v{}'", pipelineVersion);
-        }
-        else
-        {
-            LOGGER.warn("no pipeline version determined from {}", pipelineVersionFile);
+            return pipelineVersion;
         }
 
+        LOGGER.warn("no pipeline version determined from {}", pipelineVersionFile);
         return defaultPipelineVersion;
     }
 
