@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.viridian.app;
 
 import static java.lang.System.exit;
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.summingInt;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
 
@@ -23,6 +25,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.OptionalDouble;
 import java.util.Set;
+import java.util.TreeMap;
 
 import com.hartwig.hmftools.common.bwa.BwaMemAligner;
 import com.hartwig.hmftools.common.metrics.BamMetricSummary;
@@ -102,9 +105,9 @@ public class ViridianApplication
         writeDetectedViruses(
                 representativeSelections, representativeContigStats, allContigsReadAlignments.metrics().readCountsByOncologyGroup());
 
-        callHostIntegrations();
+        Map<OncologyGroup, Integer> integrationCounts = callHostIntegrations();
 
-        reportViruses();
+        reportViruses(integrationCounts);
 
         LOGGER.info("{} complete, mins({})", APP_NAME, runTimeMinsStr(startTimeMs));
     }
@@ -223,7 +226,8 @@ public class ViridianApplication
     }
 
     // Find where a virus inserted itself into the host genome, from the SVs ESVEE called.
-    private void callHostIntegrations()
+    // Returns the count of integrations per oncology group.
+    private Map<OncologyGroup, Integer> callHostIntegrations()
     {
         LOGGER.info("Extracting integration variant candidates from ESVEE VCF");
         List<HostVariantCandidate> candidates = new HostVariantExtractor(mConfig.sampleId()).extract(mConfig.esveeUnfilteredVcf());
@@ -231,7 +235,14 @@ public class ViridianApplication
         List<Integration> integrations = alignHostVariantCandidates(candidates);
 
         LOGGER.info("Writing integrations output");
+        // Note that all integrations are written for informational purposes, but only the plausibly aligned
+        // integrations are used.
         OutputWriter.writeIntegrations(outputFile(INTEGRATIONS_TSV_SUFFIX), integrations);
+
+        // Take the integrations with plausible alignments. Only the counts are needed for reporting.
+        return integrations.stream()
+                .filter(Integration::isPlausible)
+                .collect(groupingBy(i -> i.alignment().contig().oncologyGroup(), TreeMap::new, summingInt(i -> 1)));
     }
 
     private List<Integration> alignHostVariantCandidates(List<HostVariantCandidate> candidates)
@@ -252,7 +263,7 @@ public class ViridianApplication
     }
 
     // Decide which viruses are reported to the downstream pipeline.
-    private void reportViruses() throws IOException
+    private void reportViruses(Map<OncologyGroup, Integer> integrationCounts) throws IOException
     {
         LOGGER.info("Loading reporting inputs");
         PurityContext purity = PurityContextFile.read(mConfig.purpleDir(), mConfig.sampleId());
@@ -262,7 +273,7 @@ public class ViridianApplication
         OptionalDouble expectedViralDepthPerCopy = ClonalCoverage.expectedViralDepthPerCopy(purity, tumorMetrics);
         if(expectedViralDepthPerCopy.isEmpty())
         {
-            LOGGER.warn("Purple fit unusable; cannot report based on viral load");
+            LOGGER.warn("Purple fit unusable; cannot report based on viral depth");
         }
     }
 
