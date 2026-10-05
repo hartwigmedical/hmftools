@@ -47,11 +47,6 @@ public class ImmunologyChapter implements ReportChapter
     {
         document.addParagraph(name(), mReportResources.chapterTitleStyle());
         addSpaceBetweenSubsections(document);
-        if(QcStatusInterpretation.hasPurpleFail(mReport.purple().fit().qc()))
-        {
-            document.addQcFailNotice(mReportResources);
-            return;
-        }
 
         addHLAData(document);
 
