@@ -315,9 +315,18 @@ public class FusionFragmentBuilder
         {
             fragment.geneCollections()[SE_START] = fragment.geneCollections()[SE_END] = geneCollections.get(0);
 
-            // orientation could be set based on the orientations and positions of the reads.. do this when the junction data is set
-            fragment.orientations()[SE_START] = ORIENT_FWD;
-            fragment.orientations()[SE_END] = ORIENT_REV;
+            if(fragment.reads().size() == 2 && fragment.reads().get(0).Orientation == fragment.reads().get(1).Orientation)
+            {
+                fragment.setType(DISCORDANT);
+                fragment.orientations()[SE_END] = fragment.orientations()[SE_START] = fragment.reads().get(0).Orientation;
+            }
+            else
+            {
+                // orientation could be set based on the orientations and positions of the reads.. do this when the junction data is set
+                fragment.orientations()[SE_START] = ORIENT_FWD;
+                fragment.orientations()[SE_END] = ORIENT_REV;
+            }
+
             return;
         }
 

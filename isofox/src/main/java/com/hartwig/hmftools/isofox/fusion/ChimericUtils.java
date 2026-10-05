@@ -1,11 +1,14 @@
 package com.hartwig.hmftools.isofox.fusion;
 
+import static java.lang.Math.abs;
+
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
 import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
+import static com.hartwig.hmftools.isofox.fusion.FusionConstants.CHIMERIC_SHORT_INV_MIN_LENGTH;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.aboveJunctionSoftClipThreshold;
 
 import static htsjdk.samtools.CigarOperator.N;
@@ -22,6 +25,24 @@ public final class ChimericUtils
 {
     public static boolean isInversion(final List<Read> reads)
     {
+        // allow discordant fragments if not short
+        if(reads.size() == 2)
+        {
+            if(reads.stream().anyMatch(x -> x.isSupplementaryAlignment()))
+                return false;
+
+            Read read1 = reads.get(0);
+            Read read2 = reads.get(1);
+
+            if(read1.chromosome().equals(read2.chromosome()) && read1.orientation() == read2.orientation()
+            && abs(read1.alignmentStart() - read2.alignmentStart()) >= CHIMERIC_SHORT_INV_MIN_LENGTH)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
         // an inversion must a) be same chromosome b) have supplementary alignment c) have same orientations around the chimeric junction
         if(!reads.stream().anyMatch(x -> x.hasSuppAlignment()) || reads.size() != 3)
             return false;
