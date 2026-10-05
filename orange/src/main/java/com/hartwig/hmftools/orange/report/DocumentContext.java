@@ -90,19 +90,14 @@ public class DocumentContext
         return mMarginLeft;
     }
 
-    /**
-     * Create a new page with the current page size and reset cursor.
-     */
     public void newPage() throws IOException
     {
         newPage(mPageSize);
     }
 
-    /**
-     * Create a new page with the specified page size and reset cursor.
-     */
     public void newPage(final PDRectangle pageSize)
     {
+        // Create a new page with the specified page size and reset cursor.
         mPageSize = pageSize;
         mCurrentPage = new PDPage(pageSize);
         mDocument.addPage(mCurrentPage);
@@ -114,9 +109,6 @@ public class DocumentContext
         }
     }
 
-    /**
-     * Ensure we have a current page; create one if needed.
-     */
     private void ensurePage() throws IOException
     {
         if(mCurrentPage == null)
@@ -125,24 +117,22 @@ public class DocumentContext
         }
     }
 
-    /**
-     * Check if the remaining space on the current page can fit the given height.
-     */
     private boolean hasSpaceFor(float height)
     {
+        // Check if the remaining space on the current page can fit the given height.
         return mCurrentPage != null && (mCursorY - height) >= contentEndY();
     }
 
-    /**
-     * Draw a Boxable BaseTable at the current cursor position.
-     * The table is drawn and the cursor is advanced by the table height.
-     * Boxable handles multi-page overflow internally if configured.
-     */
     public void addTable(final BaseTable table) throws IOException
     {
+        // Draw a Boxable BaseTable at the current cursor position.
+        // The table is drawn and the cursor is advanced by the table height.
+        // Boxable handles multi-page overflow internally if configured.
         ensurePage();
+
         // draw() returns the final Y position after rendering
         float finalY = table.draw();
+
         // Update current page in case the table spanned multiple pages
         if(table.getCurrentPage() != mCurrentPage)
         {
@@ -155,12 +145,9 @@ public class DocumentContext
         mCursorY = finalY - 5; // small spacing after table
     }
 
-    /**
-     * Create a Boxable BaseTable ready for row/cell additions.
-     * The table starts at the current cursor Y position.
-     */
     public BaseTable createTable(float width, float[] columnWidths) throws IOException
     {
+        // Create a Boxable BaseTable ready for row/cell additions.The table starts at the current cursor Y position.
         ensurePage();
         float yStart = mCursorY;
         float yStartNewPage = contentStartY();
@@ -170,27 +157,21 @@ public class DocumentContext
         return table;
     }
 
-    /**
-     * Create a simple Boxable BaseTable with full content width.
-     */
     public BaseTable createTable() throws IOException
     {
+        // Create a simple Boxable BaseTable with full content width
         return createTable(contentWidth(), null);
     }
 
-    /**
-     * Add a paragraph of text at the current cursor position.
-     */
     public void addParagraph(final String text, final ReportResources.TextStyle style) throws IOException
     {
+        // Add a paragraph of text at the current cursor position.
         addParagraph(text, style.font(), style.fontSize(), style.color());
     }
 
-    /**
-     * Add a paragraph of text at the current cursor position.
-     */
     public void addParagraph(final String text, final PDFont font, float fontSize, final Color color) throws IOException
     {
+        // Add a paragraph of text at the current cursor position.
         ensurePage();
 
         float lineHeight = fontSize * 1.4f;
@@ -213,28 +194,20 @@ public class DocumentContext
         mCursorY -= lineHeight;
     }
 
-    /**
-     * Add the QC fail notice text (equivalent to old addQcFailNotice).
-     */
     public void addQcFailNotice(final ReportResources reportResources) throws IOException
     {
         addParagraph(ReportResources.NOT_AVAILABLE, reportResources.tableContentStyle());
     }
 
-    /**
-     * Add an image at the current cursor position, centered horizontally.
-     * The image is scaled to fit within maxWidth and maxHeight.
-     */
     public void addImage(final String imagePath, float maxWidth, float maxHeight) throws IOException
     {
+        // Add an image at the current cursor position, centered horizontally. The image is scaled to fit within maxWidth and maxHeight.
         addImage(imagePath, maxWidth, maxHeight, true);
     }
 
-    /**
-     * Add an image at the current cursor position.
-     */
     public void addImage(final String imagePath, float maxWidth, float maxHeight, boolean centerHorizontally) throws IOException
     {
+        // Add an image at the current cursor position.
         ensurePage();
 
         PDImageXObject image = PDImageXObject.createFromFile(imagePath, mDocument);
@@ -271,11 +244,9 @@ public class DocumentContext
         mCursorY = yPos - 5; // small spacing after image
     }
 
-    /**
-     * Create a Boxable BaseTable at a specific X position (for side-by-side layout).
-     */
     public BaseTable createTableAtX(float width, float xStart) throws IOException
     {
+        // Create a Boxable BaseTable at a specific X position (for side-by-side layout).
         ensurePage();
         float yStart = mCursorY;
         float yStartNewPage = contentStartY();
@@ -285,32 +256,23 @@ public class DocumentContext
         return table;
     }
 
-    /**
-     * Draw a table without advancing the cursor (for side-by-side layout).
-     * Returns the final Y of this table so the caller can track both.
-     */
     public float addTableNoAdvance(final BaseTable table) throws IOException
     {
+        // Draw a table without advancing the cursor (for side-by-side layout). Returns the final Y of this table so the caller can track both.
         ensurePage();
         float finalY = table.draw();
         mCurrentPage = table.getCurrentPage();
         return finalY;
     }
 
-    /**
-     * Manually set the cursor Y position.
-     */
     public void setCursorY(float y)
     {
         mCursorY = y;
     }
 
-    /**
-     * Draw an image at a specific X,Y position without advancing the cursor.
-     * Returns the actual drawn height (for the caller to track row heights).
-     */
     public float addImageAt(final String imagePath, float x, float y, float maxWidth, float maxHeight) throws IOException
     {
+        // Draw an image at a specific X,Y position without advancing the cursor. Returns the actual drawn height (for the caller to track row heights).
         ensurePage();
 
         PDImageXObject image = PDImageXObject.createFromFile(imagePath, mDocument);
@@ -339,11 +301,9 @@ public class DocumentContext
         return drawHeight;
     }
 
-    /**
-     * Add vertical spacing.
-     */
     public void addSpacing(float height) throws IOException
     {
+        // add vertical spacing
         ensurePage();
 
         if(!hasSpaceFor(height))
@@ -356,11 +316,9 @@ public class DocumentContext
         }
     }
 
-    /**
-     * Write footers on all pages (second pass).
-     */
     public void writeFooters() throws IOException
     {
+        // Write footers on all pages (second pass)
         if(mPageEventHandler != null)
         {
             mPageEventHandler.writeFooters(mDocument);
