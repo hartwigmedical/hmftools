@@ -44,6 +44,7 @@ public record ViridianConfig(
         @Nullable String outputId,
         boolean reuseCandidateReads,
         boolean reuseReadAlignments,
+        boolean kmerFilterEnabled,
         boolean verboseOutput
 )
 {
@@ -65,6 +66,8 @@ public record ViridianConfig(
     private static final String CFG_REUSE_READ_ALIGNMENTS = "reuse_read_alignments";
     private static final String DESC_REUSE_READ_ALIGNMENTS =
             "Dev: skip read extraction and alignment, and reuse the all-alignments BAM already at the output location";
+    private static final String CFG_KMER_FILTER = "kmer_filter";
+    private static final String DESC_KMER_FILTER = "Filter candidate viral reads with a kmer index";
     private static final String CFG_VERBOSE_OUTPUT = "verbose_output";
     private static final String DESC_VERBOSE_OUTPUT = "Output more information which may be useful for debugging";
 
@@ -89,6 +92,7 @@ public record ViridianConfig(
                 configBuilder.getValue(OUTPUT_ID),
                 configBuilder.hasFlag(CFG_REUSE_CANDIDATE_READS),
                 configBuilder.hasFlag(CFG_REUSE_READ_ALIGNMENTS),
+                configBuilder.hasFlag(CFG_KMER_FILTER),
                 configBuilder.hasFlag(CFG_VERBOSE_OUTPUT)
         );
     }
@@ -110,6 +114,7 @@ public record ViridianConfig(
         configBuilder.addInteger(CFG_ALIGNMENT_BATCH_SIZE, DESC_ALIGNMENT_BATCH_SIZE, VIRAL_READ_ALIGNMENT_BATCH_SIZE_DEFAULT);
         configBuilder.addFlag(CFG_REUSE_CANDIDATE_READS, DESC_REUSE_CANDIDATE_READS);
         configBuilder.addFlag(CFG_REUSE_READ_ALIGNMENTS, DESC_REUSE_READ_ALIGNMENTS);
+        configBuilder.addFlag(CFG_KMER_FILTER, DESC_KMER_FILTER);
         configBuilder.addFlag(CFG_VERBOSE_OUTPUT, DESC_VERBOSE_OUTPUT);
 
         addThreadOptions(configBuilder);

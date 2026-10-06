@@ -28,6 +28,14 @@ public class ViridianConstants
     // Minimum soft-clip length for a host-mapped read to count as a candidate.
     public static final int VIRAL_READ_MIN_SOFT_CLIP_BASES = 30;
 
+    // Reads must share an exact match of at least this length to a virus genome to be considered.
+    // Should match the BWA-MEM seed size.
+    public static final int VIRAL_KMER_LENGTH = 19;
+
+    public static final int VIRAL_KMER_BLOOM_BITS = 1 << 27;
+
+    public static final int VIRAL_KMER_BLOOM_HASHES = 3;
+
     // Minimum alignment score for reads aligning to virus genomes.
     public static final int VIRAL_READ_MIN_ALIGN_SCORE = 30;
 
@@ -97,6 +105,18 @@ public class ViridianConstants
             throw new IllegalStateException();
         }
         if(!(VIRAL_READ_MIN_SOFT_CLIP_BASES > 0))
+        {
+            throw new IllegalStateException();
+        }
+        if(!(VIRAL_KMER_LENGTH >= 19 && VIRAL_KMER_LENGTH <= 31))
+        {
+            throw new IllegalStateException();
+        }
+        if(!(VIRAL_KMER_BLOOM_BITS >= 64 && Integer.bitCount(VIRAL_KMER_BLOOM_BITS) == 1))
+        {
+            throw new IllegalStateException();
+        }
+        if(!(VIRAL_KMER_BLOOM_HASHES >= 1))
         {
             throw new IllegalStateException();
         }

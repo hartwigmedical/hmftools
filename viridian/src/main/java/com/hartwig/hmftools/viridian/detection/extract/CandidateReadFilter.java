@@ -12,6 +12,8 @@ import java.util.Set;
 
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 
+import org.jetbrains.annotations.Nullable;
+
 import htsjdk.samtools.SAMRecord;
 
 // Decides whether a read is a candidate for viral realignment.
@@ -19,19 +21,37 @@ public class CandidateReadFilter
 {
     private final int mMinSoftClipBases;
     private final Set<String> mRefVirusContigs;
+    @Nullable
+    private final ViralKmerIndex mKmerIndex;
 
-    public CandidateReadFilter(int minSoftClipBases, Set<String> refVirusContigs)
+    public CandidateReadFilter(int minSoftClipBases, Set<String> refVirusContigs, @Nullable ViralKmerIndex kmerIndex)
     {
         mMinSoftClipBases = minSoftClipBases;
         mRefVirusContigs = refVirusContigs;
+        mKmerIndex = kmerIndex;
     }
 
-    public CandidateReadFilter()
+    public CandidateReadFilter(int minSoftClipBases, Set<String> refVirusContigs)
     {
-        this(VIRAL_READ_MIN_SOFT_CLIP_BASES, VIRUS_REF_CONTIGS);
+        this(minSoftClipBases, refVirusContigs, null);
+    }
+
+    public CandidateReadFilter(@Nullable ViralKmerIndex kmerIndex)
+    {
+        this(VIRAL_READ_MIN_SOFT_CLIP_BASES, VIRUS_REF_CONTIGS, kmerIndex);
     }
 
     public boolean isCandidate(SAMRecord record)
+    {
+        return isStructuralCandidate(record) && hasViralKmer(record);
+    }
+
+    private boolean hasViralKmer(SAMRecord record)
+    {
+        return mKmerIndex == null || mKmerIndex.hasViralKmer(record.getReadBases());
+    }
+
+    private boolean isStructuralCandidate(SAMRecord record)
     {
         // Only care about primaries because only they have the read sequence.
         // BamSlicer filters these anyway, but check here just in case.

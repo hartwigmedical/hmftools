@@ -44,6 +44,7 @@ import com.hartwig.hmftools.viridian.detection.common.ContigStatsCalculator;
 import com.hartwig.hmftools.viridian.detection.common.ReadId;
 import com.hartwig.hmftools.viridian.detection.extract.CandidateReadExtractor;
 import com.hartwig.hmftools.viridian.detection.extract.CandidateReadFilter;
+import com.hartwig.hmftools.viridian.detection.extract.ViralKmerIndex;
 import com.hartwig.hmftools.viridian.detection.select.OncologyGroupRepresentativeSelection;
 import com.hartwig.hmftools.viridian.detection.select.PairwiseMargins;
 import com.hartwig.hmftools.viridian.detection.select.RepresentativeContigSelector;
@@ -139,8 +140,15 @@ public class ViridianApplication
     // Extract reads which may be viral into a FASTA.
     private void extractCandidateReads(String candidateFastaFile)
     {
+        ViralKmerIndex kmerIndex = null;
+        if(mConfig.kmerFilterEnabled())
+        {
+            LOGGER.info("Building virus genome k-mer index");
+            kmerIndex = ViralKmerIndex.build(mConfig.virusRefFile());
+        }
+
         LOGGER.info("Extracting candidate viral reads from tumor BAM");
-        CandidateReadFilter candidateFilter = new CandidateReadFilter();
+        CandidateReadFilter candidateFilter = new CandidateReadFilter(kmerIndex);
         CandidateReadExtractor mCandidateExtractor = new CandidateReadExtractor(
                 mConfig.refGenomeFile(), candidateFilter, mConfig.threads());
         mCandidateExtractor.extract(mConfig.tumorBam(), candidateFastaFile);
