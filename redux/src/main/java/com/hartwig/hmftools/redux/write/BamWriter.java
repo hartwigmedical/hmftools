@@ -2,13 +2,18 @@ package com.hartwig.hmftools.redux.write;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.UNSET_COUNT;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.addConsensusReadAttribute;
+import static com.hartwig.hmftools.redux.ReduxConfig.isIllumina;
 import static com.hartwig.hmftools.redux.ReduxConstants.BQR_MIN_MAP_QUAL;
 import static com.hartwig.hmftools.redux.common.FragmentStatus.DUPLICATE;
 import static com.hartwig.hmftools.redux.common.FragmentStatus.PRIMARY;
+import static com.hartwig.hmftools.redux.consensus.IlluminaRoutines.calculatePCRClusterCount;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
+import com.hartwig.hmftools.common.bam.ConsensusType;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.redux.bqr.BaseQualRecalibration;
 import com.hartwig.hmftools.redux.bqr.BqrRegionReader;
@@ -114,7 +119,26 @@ public abstract class BamWriter
         for(SAMRecord read : group.allReads())
         {
             // if the group was formed from unmapped poly-G reads then mark all reads as duplicates
-            FragmentStatus fragmentStatus = !group.polyGUnmapped() && group.isPrimaryRead(read) ? PRIMARY : DUPLICATE;
+            FragmentStatus fragmentStatus;
+
+            if(group.isPrimaryRead(read) && !group.polyGUnmapped())
+            {
+                fragmentStatus = PRIMARY;
+
+                if(!mConfig.FormConsensus)
+                {
+                    // set consensus attributes
+                    int totalReadCount = group.allReads().size();
+                    int pcrClusterCount = isIllumina() ? calculatePCRClusterCount(group) : UNSET_COUNT;
+                    int firstInPairCount = group.calculateFirstInPairCount();
+
+                    addConsensusReadAttribute(read, totalReadCount, firstInPairCount, ConsensusType.SINGLE, pcrClusterCount);
+                }
+            }
+            else
+            {
+                fragmentStatus = DUPLICATE;
+            }
 
             writeRead(read, fragmentStatus, fragCoords, group.umi());
         }

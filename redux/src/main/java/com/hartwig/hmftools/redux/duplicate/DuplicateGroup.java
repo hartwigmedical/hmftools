@@ -119,7 +119,7 @@ public class DuplicateGroup
         }
     }
 
-    private int calculateFirstInPairCount()
+    public int calculateFirstInPairCount()
     {
         // poly-G reads do not count towards the first in pair count, but collapsed UMI group reads do
         int firstInPairCount = (int)mReads.stream().filter(x -> !x.getReadPairedFlag() || x.getFirstOfPairFlag()).count();
