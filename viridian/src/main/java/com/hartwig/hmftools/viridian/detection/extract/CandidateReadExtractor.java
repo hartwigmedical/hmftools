@@ -121,7 +121,8 @@ public class CandidateReadExtractor
 
     private static int joinFastaParts(List<FastaPart> parts, String outputFastaFile)
     {
-        long startTimeMs = System.currentTimeMillis();
+        LOGGER.debug("Joining {} candidate FASTA parts", parts.size());
+
         int candidateCount = 0;
         try(OutputStream out = new BufferedOutputStream(new FileOutputStream(outputFastaFile)))
         {
@@ -137,7 +138,6 @@ public class CandidateReadExtractor
             throw new RuntimeException("Failed to join candidate FASTA parts", e);
         }
 
-        LOGGER.debug("Joined {} FASTA parts in {}s", parts.size(), format("%.1f", secondsSinceNow(startTimeMs)));
         return candidateCount;
     }
 
@@ -217,7 +217,7 @@ public class CandidateReadExtractor
             }
 
             LOGGER.debug(
-                    "scan({}) {} candidates in {}s",
+                    "extract({}) {} candidates in {}s",
                     task, mPart.readCount() - startCount, format("%.1f", secondsSinceNow(startTimeMs)));
         }
 

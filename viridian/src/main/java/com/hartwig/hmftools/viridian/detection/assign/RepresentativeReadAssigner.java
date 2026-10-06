@@ -40,10 +40,6 @@ public class RepresentativeReadAssigner
     {
         Map<ReadId, ViralReadAlignment> assignmentsByRead = assignReads(alignments.byRead(), representatives);
 
-        LOGGER.debug(
-                "Assigned {} reads, {} fit no representative",
-                assignmentsByRead.size(), alignments.readCount() - assignmentsByRead.size());
-
         writeAssignedAlignments(allAlignmentsBamFile, outputBamFile, assignmentsByRead);
 
         return assignmentsByRead;

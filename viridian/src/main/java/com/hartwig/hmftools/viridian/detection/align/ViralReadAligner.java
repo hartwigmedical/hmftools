@@ -68,8 +68,8 @@ public class ViralReadAligner
                     .reduce(ChunkResult.EMPTY, ChunkResult::add);
 
             LOGGER.debug(
-                    "Aligned {} candidate reads: {} with viral alignments, {} alignments written",
-                    total.totalReads(), total.alignedReads(), total.writtenAlignments());
+                    "Aligned {} candidate reads: {} aligned reads, {} alignments total",
+                    total.totalReads(), total.alignedReads(), total.totalAlignments());
         }
 
         fixBamIndexName(outputBamFile);
@@ -81,7 +81,7 @@ public class ViralReadAligner
         List<List<BwaMemAlignment>> alignments = mAligner.alignSequences(sequences);
 
         long alignedReads = 0;
-        long writtenAlignments = 0;
+        long totalAlignments = 0;
         for(int i = 0; i < reads.size(); ++i)
         {
             List<SAMRecord> records = toRecords(reads.get(i).getName(), sequences.get(i), alignments.get(i));
@@ -90,9 +90,9 @@ public class ViralReadAligner
             {
                 ++alignedReads;
             }
-            writtenAlignments += records.size();
+            totalAlignments += records.size();
         }
-        return new ChunkResult(reads.size(), alignedReads, writtenAlignments);
+        return new ChunkResult(reads.size(), alignedReads, totalAlignments);
     }
 
     // No app-level score filter: every alignment BWA emits is kept (BWA already applied its own minimum-score floor).
@@ -148,14 +148,14 @@ public class ViralReadAligner
         return header;
     }
 
-    private record ChunkResult(long totalReads, long alignedReads, long writtenAlignments)
+    private record ChunkResult(long totalReads, long alignedReads, long totalAlignments)
     {
         static final ChunkResult EMPTY = new ChunkResult(0, 0, 0);
 
         ChunkResult add(ChunkResult other)
         {
             return new ChunkResult(
-                    totalReads + other.totalReads, alignedReads + other.alignedReads, writtenAlignments + other.writtenAlignments);
+                    totalReads + other.totalReads, alignedReads + other.alignedReads, totalAlignments + other.totalAlignments);
         }
     }
 }
