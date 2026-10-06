@@ -329,24 +329,6 @@ public final class AlignmentSelector
         return loci;
     }
 
-    static int countDistinctLoci(final LiftedRecord liftedRecord)
-    {
-        if(!liftedRecord.hasPlacement())
-        {
-            return 1;
-        }
-
-        List<LiftedAlignment> kept = new ArrayList<>(liftedRecord.liftedAlignments().size());
-        for(LiftedAlignment alignment : liftedRecord.liftedAlignments())
-        {
-            if(!alignment.Dropped)
-            {
-                kept.add(alignment);
-            }
-        }
-        return Math.max(countDistinctLoci(kept, liftedRecord.primaryAlignment()), 1);
-    }
-
     // XS == AS blocks a MAPQ bump unless transcript evidence resolves the hidden tie.
     static int decidePrimaryMapQuality(
             final int inputMapQuality, final int numLoci, final boolean hiddenTie,

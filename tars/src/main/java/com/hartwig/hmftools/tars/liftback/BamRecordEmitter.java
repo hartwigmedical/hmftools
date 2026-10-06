@@ -28,8 +28,6 @@ import htsjdk.samtools.util.SequenceUtil;
 
 public final class BamRecordEmitter
 {
-    private static final String NUM_HITS_ATTRIBUTE = "NH";
-
     private final ContigTranslator mContigTranslator;
     private final boolean mSupplementaryMergerEnabled;
     private final RefGenomeInterface mRefGenome;
@@ -62,7 +60,6 @@ public final class BamRecordEmitter
         boolean finalPrimaryUnmapped = primaryUnmapped || willBeUnmapped(primary, primaryResult);
         boolean[] willEmit = computeWillEmit(
                 records, liftedRecords, absorbedSupplementaries, primary, finalPrimaryUnmapped);
-        int numHits = AlignmentSelector.countDistinctLoci(primaryResult);
 
         // Apply every final placement before building any SA tag, so SA entries take coordinates, cigar, strand, MAPQ and
         // refreshed NM from the records that are emitted.
@@ -100,9 +97,7 @@ public final class BamRecordEmitter
         {
             if(willEmit[i])
             {
-                writeRecord(
-                        records, liftedRecords.get(i), willEmit, i, numHits, primary,
-                        primaryUnmapped && records.get(i) == primary, matePair, consumer);
+                writeRecord(records, willEmit, i, primary, matePair, consumer);
             }
         }
     }
@@ -168,12 +163,10 @@ public final class BamRecordEmitter
     }
 
     private static void writeRecord(
-            final List<SAMRecord> records, final LiftedRecord result, final boolean[] willEmit,
-            final int recordIndex, final int numHits, final SAMRecord primary, final boolean unmapDecided,
+            final List<SAMRecord> records, final boolean[] willEmit, final int recordIndex, final SAMRecord primary,
             final LiftedMatePair matePair, final Consumer<SAMRecord> consumer)
     {
         SAMRecord record = records.get(recordIndex);
-        boolean writeNumHits = result.hasPlacement() || !unmapDecided && !record.getReadUnmappedFlag();
         if(record.getReadUnmappedFlag())
         {
             matePair.patchMateFields(record);
@@ -192,10 +185,6 @@ public final class BamRecordEmitter
 
         record.setAttribute(SUPPLEMENTARY_ATTRIBUTE, saTag);
         matePair.patchMateFields(record);
-        if(writeNumHits)
-        {
-            record.setAttribute(NUM_HITS_ATTRIBUTE, numHits);
-        }
         consumer.accept(record);
     }
 

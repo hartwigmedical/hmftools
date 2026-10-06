@@ -188,17 +188,6 @@ public class LiftBackGroupProcessorTest
     }
 
     @Test
-    public void testEmittedPrimaryTaggedWithLocusCountNh()
-    {
-        SAMRecord primary = primaryRecord(TX_CONTIG, 1, "50M");
-
-        List<SAMRecord> emitted = process(List.of(primary));
-
-        assertEquals(1, emitted.size());
-        assertEquals(Integer.valueOf(1), emitted.get(0).getIntegerAttribute("NH"));
-    }
-
-    @Test
     public void testOverCapGenomicPrimaryMapQuality0NoXaUnmapped()
     {
         // bwa emits MAPQ 0 and no XA when a read maps past the -h 75 XA cap, so this genomic primary is unmapped even though the

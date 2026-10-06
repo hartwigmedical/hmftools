@@ -125,7 +125,6 @@ public class BamRecordEmitterTest
         record.setInferredInsertSize(150);
         record.setAttribute("SA", "chrX,1,+,30M,30,0;");
         record.setAttribute("XA", "chrY,+1,50M,0;");
-        record.setAttribute("NH", 1);
         record.setAttribute("MC", "50M");
         record.setMappingQuality(60);
 
@@ -140,7 +139,6 @@ public class BamRecordEmitterTest
         assertEquals(0, record.getInferredInsertSize());
         assertNull(record.getStringAttribute("SA"));
         assertEquals("chrY,+1,50M,0;", record.getStringAttribute("XA"));
-        assertEquals(Integer.valueOf(1), record.getIntegerAttribute("NH"));
         assertNull(record.getStringAttribute("MC"));
     }
 

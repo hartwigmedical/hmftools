@@ -228,7 +228,7 @@ TARS sets the MAPQ in this order:
 
 TARS then finalises each record:
 
-- write the remaining alignments to `XA`, rebuild `SA`, update `AS`, `XS`, `NH`, `NM` and mate fields, remove `MD`
+- write the remaining alignments to `XA`, rebuild `SA`, update `AS`, `XS`, `NM` and mate fields, remove `MD`
 - drop absorbed, duplicate, unliftable, excluded, `AS < 30`, and supplementaries with no surviving `SA` partner
 - unmap unliftable, excluded, over-cap, and `AS < 30` primaries using REDUX conventions
 - skip expected `inter-transcript spacer` misses, log other lift failures

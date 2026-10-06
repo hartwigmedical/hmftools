@@ -193,8 +193,8 @@ public class LiftedAlignment
         return List.copyOf(blocks);
     }
 
-    // Same-locus test shared by the NH locus count and the XA build: the two must agree, or a read is emitted with
-    // NH=1 alongside a non-empty XA. False against a null other, so an absent primary collapses nothing.
+    // Same-locus test shared by the locus count and the XA build: the two must agree. False against a null other, so an
+    // absent primary collapses nothing.
     public boolean overlaps(final LiftedAlignment other)
     {
         if(other == null || !LiftedChromosome.equals(other.LiftedChromosome))

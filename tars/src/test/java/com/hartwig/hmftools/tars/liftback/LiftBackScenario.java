@@ -26,7 +26,7 @@ import com.hartwig.hmftools.tars.liftback.features.SupplementaryMerger;
 import htsjdk.samtools.SAMRecord;
 
 // Whole-pipeline test harness: declare the contig geometry, reference genome, annotated junctions and reads, then run() drives the
-// real LiftBackGroupProcessor.processNameGroup (placement features -> selection -> supplementary merge -> mate patch -> NH /
+// real LiftBackGroupProcessor.processNameGroup (placement features -> selection -> supplementary merge -> mate patch ->
 // unmap policy) and Result asserts the lifted placement of every emitted record.
 //
 // Usage:

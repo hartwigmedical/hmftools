@@ -3,7 +3,6 @@ package com.hartwig.hmftools.tars.liftback;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.TX_CONTIG;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.exonRegionIndex;
-import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.recordBuilder;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.threeExonContig;
 
 import static org.junit.Assert.assertEquals;
@@ -473,32 +472,6 @@ public class AlignmentSelectorTest
             String name, int input, int loci, boolean hiddenTie, boolean fromTx,
             boolean inExon, boolean randomTie, int expected)
     {
-    }
-
-    private static LiftedAlignment liftedAt(final String chrom, final int pos, final String cigar)
-    {
-        return new LiftedAlignment(chrom, pos, cigar, 0, false, true, 0);
-    }
-
-    @Test
-    public void testCountDistinctLociFromListRecountsPostExtension()
-    {
-        LiftedAlignment primary = liftedAt(CHR_1, 1000, "100M");
-        LiftedAlignment overlapping = liftedAt(CHR_1, 1050, "100M");
-        LiftedAlignment distant = liftedAt(CHR_1, 5000, "100M");
-        LiftedAlignment droppedDistant = liftedAt(CHR_1, 8000, "100M");
-        droppedDistant.Dropped = true;
-
-        assertEquals(1, countDistinctLociOf(primary));
-        assertEquals(1, countDistinctLociOf(primary, overlapping));
-        assertEquals(2, countDistinctLociOf(primary, distant));
-        assertEquals(1, countDistinctLociOf(primary, droppedDistant));
-        assertEquals(1, AlignmentSelector.countDistinctLoci(LiftedRecord.unmapped("")));
-    }
-
-    private static int countDistinctLociOf(final LiftedAlignment... alignments)
-    {
-        return AlignmentSelector.countDistinctLoci(recordBuilder().alignments(List.of(alignments)).build());
     }
 
     @Test
