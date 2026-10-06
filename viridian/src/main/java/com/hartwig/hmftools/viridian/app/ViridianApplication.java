@@ -16,6 +16,7 @@ import static com.hartwig.hmftools.viridian.common.ViridianConstants.INTEGRATION
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.PAIRWISE_MARGINS_TSV_SUFFIX;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.REPRESENTATIVE_ALIGNMENTS_BAM_SUFFIX;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.VIRUS_DETECTION_TSV_SUFFIX;
+import static com.hartwig.hmftools.viridian.common.ViridianConstants.VIRUS_REPORT_TSV_SUFFIX;
 
 import java.io.File;
 import java.io.IOException;
@@ -279,7 +280,14 @@ public class ViridianApplication
             LOGGER.warn("Purple fit unusable; cannot report based on viral depth");
         }
 
-        return VirusReporter.report(detectedViruses, integrationCounts, mVirusReference, expectedViralDepthPerCopy);
+        LOGGER.info("Calculating reporting statuses");
+        List<VirusReport> reports = VirusReporter.report(
+                detectedViruses, integrationCounts, mVirusReference::oncologyGroupInfo, expectedViralDepthPerCopy);
+
+        LOGGER.info("Writing virus report output");
+        OutputWriter.writeVirusReports(outputFile(VIRUS_REPORT_TSV_SUFFIX), reports);
+
+        return reports;
     }
 
     private String outputFile(String suffix)

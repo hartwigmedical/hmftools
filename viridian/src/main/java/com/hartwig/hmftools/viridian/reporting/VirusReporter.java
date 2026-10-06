@@ -6,16 +6,17 @@ import static java.util.stream.Collectors.toMap;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.REPORTED_COPIES_PER_CELL_MIN;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.REPORTED_INTEGRATIONS_MIN;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.hartwig.hmftools.viridian.detection.DetectedVirus;
 import com.hartwig.hmftools.viridian.detection.common.ContigStats;
 import com.hartwig.hmftools.viridian.reference.OncologyGroup;
 import com.hartwig.hmftools.viridian.reference.OncologyGroupInfo;
-import com.hartwig.hmftools.viridian.reference.VirusReference;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -25,18 +26,18 @@ public class VirusReporter
     // One report per oncology group that is present or has an integration.
     public static List<VirusReport> report(
             List<DetectedVirus> detectedViruses, Map<OncologyGroup, Integer> integrationCounts,
-            VirusReference reference, @Nullable Double expectedViralDepthPerCopy)
+            Function<OncologyGroup, OncologyGroupInfo> oncologyGroupInfo, @Nullable Double expectedViralDepthPerCopy)
     {
-        Map<OncologyGroup, DetectedVirus> presentByGroup = detectedViruses.stream()
+        Map<OncologyGroup, DetectedVirus> detectedByGroup = detectedViruses.stream()
                 .collect(toMap(DetectedVirus::oncologyGroup, identity()));
 
-        Set<OncologyGroup> groups = new HashSet<>(presentByGroup.keySet());
-        groups.addAll(integrationCounts.keySet());
+        Set<OncologyGroup> groupsToReport = Stream.concat(detectedByGroup.keySet().stream(), integrationCounts.keySet().stream())
+                .collect(Collectors.toSet());
 
-        return groups.stream()
+        return groupsToReport.stream()
                 .map(group -> reportGroup(
-                        group, presentByGroup.get(group), integrationCounts.getOrDefault(group, 0),
-                        reference.oncologyGroupInfo(group), expectedViralDepthPerCopy))
+                        group, detectedByGroup.get(group), integrationCounts.getOrDefault(group, 0),
+                        oncologyGroupInfo.apply(group), expectedViralDepthPerCopy))
                 .toList();
     }
 
@@ -51,14 +52,14 @@ public class VirusReporter
                 ? representativeStats.depth().mean() / expectedViralDepthPerCopy
                 : null;
 
-        VirusReportStatus reason = decide(info.isReportable(), integrations, copiesPerTumorCell);
+        VirusReportStatus status = decideStatus(info.isReportable(), integrations, copiesPerTumorCell);
 
         return new VirusReport(
                 group, info.reportingType(), info.driverLikelihood(), integrations,
-                detected != null, representativeStats, copiesPerTumorCell, reason);
+                detected != null, representativeStats, copiesPerTumorCell, status);
     }
 
-    static VirusReportStatus decide(boolean reportable, int integrations, @Nullable Double copiesPerTumorCell)
+    static VirusReportStatus decideStatus(boolean reportable, int integrations, @Nullable Double copiesPerTumorCell)
     {
         if(!reportable)
         {

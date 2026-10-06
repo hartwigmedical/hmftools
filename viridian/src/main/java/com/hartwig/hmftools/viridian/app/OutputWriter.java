@@ -29,6 +29,7 @@ import com.hartwig.hmftools.viridian.integration.extract.HostBreakend;
 import com.hartwig.hmftools.viridian.integration.extract.HostVariantCandidate;
 import com.hartwig.hmftools.viridian.integration.extract.InsertRepeat;
 import com.hartwig.hmftools.viridian.reference.ViralContig;
+import com.hartwig.hmftools.viridian.reporting.VirusReport;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -416,6 +417,56 @@ public class OutputWriter
         aligned_edit_distance,
         plausible
     }
+
+    public static void writeVirusReports(String file, List<VirusReport> reports)
+    {
+        List<VirusReport> rows = reports.stream()
+                .filter(report -> report.reportingType() != null)
+                .sorted(comparing(VirusReport::oncologyGroup))
+                .toList();
+
+        DelimFileWriter.write(
+                file, VIRUS_REPORT_COLUMNS, rows, (report, row) ->
+                {
+                    row.set(VirusReportColumn.oncology_group, report.oncologyGroup().name());
+                    row.set(VirusReportColumn.reporting_type, report.reportingType().toString());
+                    row.set(VirusReportColumn.driver_likelihood, report.driverLikelihood().toString());
+                    row.set(VirusReportColumn.reported, report.isReported());
+                    row.set(VirusReportColumn.reason, report.reason().name());
+                    row.set(VirusReportColumn.integrations, report.integrations());
+                    row.set(VirusReportColumn.present, report.isPresent());
+
+                    ContigStats stats = report.representativeStats();
+                    if(stats != null)
+                    {
+                        ViralContig contig = stats.contig();
+                        row.set(VirusReportColumn.representative_contig, contig.name());
+                        row.set(VirusReportColumn.virus_name, contig.virusName());
+                        row.set(VirusReportColumn.coverage_fraction, stats.coverageFraction());
+                        row.set(VirusReportColumn.mean_depth, stats.depth().mean());
+                    }
+                    row.setOrNull(VirusReportColumn.copies_per_tumor_cell, report.copiesPerTumorCell());
+                });
+    }
+
+    private enum VirusReportColumn
+    {
+        oncology_group,
+        reporting_type,
+        driver_likelihood,
+        reported,
+        reason,
+        integrations,
+        present,
+        representative_contig,
+        virus_name,
+        coverage_fraction,
+        mean_depth,
+        copies_per_tumor_cell
+    }
+
+    private static final List<String> VIRUS_REPORT_COLUMNS =
+            Stream.of(VirusReportColumn.values()).map(Enum::name).toList();
 
     private static String asString(@Nullable Object value)
     {

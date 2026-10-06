@@ -43,40 +43,40 @@ public class VirusReporterTest
     @Test
     public void testNotReportableAlwaysLosesRegardlessOfEvidence()
     {
-        assertEquals(NOT_REPORTABLE, VirusReporter.decide(!REPORTABLE, 5, 10.0));
-        assertEquals(NOT_REPORTABLE, VirusReporter.decide(!REPORTABLE, 0, null));
+        assertEquals(NOT_REPORTABLE, VirusReporter.decideStatus(!REPORTABLE, 5, 10.0));
+        assertEquals(NOT_REPORTABLE, VirusReporter.decideStatus(!REPORTABLE, 0, null));
     }
 
     @Test
     public void testIntegrationReports()
     {
-        assertEquals(REPORTED_ON_INTEGRATION, VirusReporter.decide(REPORTABLE, 1, null));
+        assertEquals(REPORTED_ON_INTEGRATION, VirusReporter.decideStatus(REPORTABLE, 1, null));
     }
 
     // Integration path is checked before copy number, so it wins even when copy number is too low.
     @Test
     public void testIntegrationTakesPrecedenceOverCopyNumber()
     {
-        assertEquals(REPORTED_ON_INTEGRATION, VirusReporter.decide(REPORTABLE, 1, 0.0));
+        assertEquals(REPORTED_ON_INTEGRATION, VirusReporter.decideStatus(REPORTABLE, 1, 0.0));
     }
 
     @Test
     public void testCopyNumberReportsAtAndAboveFloor()
     {
-        assertEquals(REPORTED_ON_COPY_NUMBER, VirusReporter.decide(REPORTABLE, 0, 0.5));
-        assertEquals(REPORTED_ON_COPY_NUMBER, VirusReporter.decide(REPORTABLE, 0, 2.0));
+        assertEquals(REPORTED_ON_COPY_NUMBER, VirusReporter.decideStatus(REPORTABLE, 0, 0.5));
+        assertEquals(REPORTED_ON_COPY_NUMBER, VirusReporter.decideStatus(REPORTABLE, 0, 2.0));
     }
 
     @Test
     public void testCopyNumberBelowFloor()
     {
-        assertEquals(COPY_NUMBER_TOO_LOW, VirusReporter.decide(REPORTABLE, 0, 0.49));
+        assertEquals(COPY_NUMBER_TOO_LOW, VirusReporter.decideStatus(REPORTABLE, 0, 0.49));
     }
 
     @Test
     public void testCopyNumberUnevaluable()
     {
-        assertEquals(COPY_NUMBER_UNEVALUABLE, VirusReporter.decide(REPORTABLE, 0, null));
+        assertEquals(COPY_NUMBER_UNEVALUABLE, VirusReporter.decideStatus(REPORTABLE, 0, null));
     }
 
     @Test
