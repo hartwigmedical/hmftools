@@ -80,7 +80,7 @@ public class ReduxConfig
     public final SequencingType Sequencing;
     public final JitterAnalyserConfig JitterConfig;
 
-    public final ValidationStringency BamStringency;
+    public static ValidationStringency BamStringency = ValidationStringency.LENIENT;
 
     public final DuplicateGroupCollapseConfig DuplicateGroupCollapse;
 

@@ -134,7 +134,10 @@ public class BamReader
         {
             File file = new File(bamFile);
             mFilename = file.getName();
-            mSamReader = SamReaderFactory.makeDefault().referenceSequence(new File(mRefGenomeFile)).open(file);
+            mSamReader = SamReaderFactory.makeDefault()
+                    .referenceSequence(new File(mRefGenomeFile))
+                    .validationStringency(ReduxConfig.BamStringency)
+                    .open(file);
 
             mSamIterator = null;
             mCurrentRecord = null;
