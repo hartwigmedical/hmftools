@@ -4,8 +4,8 @@ import static com.hartwig.hmftools.viridian.detection.select.OncologyGroupOutcom
 import static com.hartwig.hmftools.viridian.detection.select.OncologyGroupOutcome.RESOLVED_CANDIDATES;
 import static com.hartwig.hmftools.viridian.detection.select.OncologyGroupResolution.RESOLVED;
 import static com.hartwig.hmftools.viridian.detection.select.OncologyGroupResolution.UNRESOLVED;
-import static com.hartwig.hmftools.viridian.reporting.VirusReportStatus.NOT_CLONAL;
 import static com.hartwig.hmftools.viridian.reporting.VirusReportStatus.CLONALITY_UNEVALUABLE;
+import static com.hartwig.hmftools.viridian.reporting.VirusReportStatus.NOT_CLONAL;
 import static com.hartwig.hmftools.viridian.reporting.VirusReportStatus.NOT_REPORTABLE;
 import static com.hartwig.hmftools.viridian.reporting.VirusReportStatus.REPORTED_ON_CLONALITY;
 import static com.hartwig.hmftools.viridian.reporting.VirusReportStatus.REPORTED_ON_INTEGRATION;
