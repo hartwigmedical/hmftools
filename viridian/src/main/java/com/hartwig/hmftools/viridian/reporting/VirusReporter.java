@@ -65,21 +65,29 @@ public class VirusReporter
         {
             return VirusReportStatus.NOT_REPORTABLE;
         }
-        else if(integrations >= REPORTED_INTEGRATIONS_MIN)
+
+        boolean integrated = integrations >= REPORTED_INTEGRATIONS_MIN;
+        boolean clonal = copiesPerTumorCell != null && copiesPerTumorCell >= REPORTED_COPIES_PER_CELL_MIN;
+
+        if(integrated && clonal)
+        {
+            return VirusReportStatus.REPORTED_ON_INTEGRATION_AND_CLONALITY;
+        }
+        else if(integrated)
         {
             return VirusReportStatus.REPORTED_ON_INTEGRATION;
         }
+        else if(clonal)
+        {
+            return VirusReportStatus.REPORTED_ON_CLONALITY;
+        }
         else if(copiesPerTumorCell == null)
         {
-            return VirusReportStatus.COPY_NUMBER_UNEVALUABLE;
-        }
-        else if(copiesPerTumorCell >= REPORTED_COPIES_PER_CELL_MIN)
-        {
-            return VirusReportStatus.REPORTED_ON_COPY_NUMBER;
+            return VirusReportStatus.CLONALITY_UNEVALUABLE;
         }
         else
         {
-            return VirusReportStatus.COPY_NUMBER_TOO_LOW;
+            return VirusReportStatus.NOT_CLONAL;
         }
     }
 }
