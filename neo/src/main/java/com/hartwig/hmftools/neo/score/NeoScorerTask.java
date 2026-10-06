@@ -110,12 +110,11 @@ public class NeoScorerTask implements Callable<Void>
 
                 try
                 {
-                    String tpmFileSampleId = sample.RnaSampleId != null ? sample.RnaSampleId : sample.TumorId;
-                    sampleTPMs.putAll(DataLoader.loadTranscriptExpression(mConfig.IsofoxDir, tpmFileSampleId));
+                    sampleTPMs.putAll(DataLoader.loadTranscriptExpression(mConfig.IsofoxDir, sample.TumorId));
                 }
                 catch(Exception e)
                 {
-                    NE_LOGGER.error("failed to load sample({}) transcript expression", sampleId, e.toString());
+                    NE_LOGGER.error("failed to load sample({}) transcript expression: {}", sampleId, e.toString());
                     System.exit(1);
                 }
             }
