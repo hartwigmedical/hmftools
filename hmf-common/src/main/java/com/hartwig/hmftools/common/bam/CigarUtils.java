@@ -68,12 +68,22 @@ public final class CigarUtils
 
     public static int cigarBaseLength(final Cigar cigar)
     {
-        return cigar.getCigarElements().stream().filter(x -> x.getOperator().consumesReadBases()).mapToInt(x -> x.getLength()).sum();
+        return cigarBaseLength(cigar.getCigarElements());
     }
 
     public static int cigarAlignedLength(final Cigar cigar)
     {
-        return cigar.getCigarElements().stream().filter(x -> x.getOperator().consumesReferenceBases()).mapToInt(x -> x.getLength()).sum();
+        return cigarAlignedLength(cigar.getCigarElements());
+    }
+
+    public static int cigarBaseLength(final List<CigarElement> elements)
+    {
+        return elements.stream().filter(x -> x.getOperator().consumesReadBases()).mapToInt(x -> x.getLength()).sum();
+    }
+
+    public static int cigarAlignedLength(final List<CigarElement> elements)
+    {
+        return elements.stream().filter(x -> x.getOperator().consumesReferenceBases()).mapToInt(x -> x.getLength()).sum();
     }
 
     public static int calcCigarAlignedLength(final String cigarStr)
@@ -126,8 +136,7 @@ public final class CigarUtils
 
     public static int leftSoftClipLength(final Cigar cigar)
     {
-        CigarElement firstElement = cigar.getFirstCigarElement();
-        return (firstElement != null && firstElement.getOperator() == S) ? firstElement.getLength() : 0;
+        return cigar.isEmpty() ? 0 : leftSoftClipLength(cigar.getCigarElements());
     }
 
     public static int leftSoftClipLength(final List<CigarElement> elements)
@@ -135,10 +144,14 @@ public final class CigarUtils
         return elements.get(0).getOperator() == S ? elements.get(0).getLength() : 0;
     }
 
+    public static int rightSoftClipLength(final List<CigarElement> elements)
+    {
+        return elements.get(elements.size() - 1).getOperator() == S ? elements.get(elements.size() - 1).getLength() : 0;
+    }
+
     public static int rightSoftClipLength(final Cigar cigar)
     {
-        CigarElement lastElement = cigar.getLastCigarElement();
-        return (lastElement != null && lastElement.getOperator() == S) ? lastElement.getLength() : 0;
+        return cigar.isEmpty() ? 0 : rightSoftClipLength(cigar.getCigarElements());
     }
 
     public static int leftHardClipLength(final Cigar cigar)
@@ -151,6 +164,11 @@ public final class CigarUtils
     {
         CigarElement lastElement = cigar.getLastCigarElement();
         return (lastElement != null && lastElement.getOperator() == H) ? lastElement.getLength() : 0;
+    }
+
+    public static boolean hasHardClip(final List<CigarElement> elements)
+    {
+        return elements.stream().anyMatch(x -> x.getOperator() == H);
     }
 
     public static int leftClipLength(final Cigar cigar)
