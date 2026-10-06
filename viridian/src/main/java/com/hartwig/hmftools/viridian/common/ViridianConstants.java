@@ -81,6 +81,14 @@ public class ViridianConstants
     // Minimum aligner score per aligned base. Used to filter out alignments which are long but poor similarity.
     public static final double INTEGRATION_VIRAL_ALIGN_SCORE_PER_BASE_MIN = 0.7;
 
+    // Minimum plausible integrations for a virus to be reported.
+    // This value is a starting point based on VirusInterpreter reporting logic.
+    public static final int REPORTED_INTEGRATIONS_MIN = 1;
+
+    // Minimum virus genome copies per tumor cell for a virus to be reported.
+    // This value is a starting point based on VirusInterpreter reporting logic.
+    public static final double REPORTED_COPIES_PER_CELL_MIN = 0.5;
+
     static
     {
         if(!(VIRAL_READ_EXTRACTION_PARTITION_SIZE > 0 && VIRAL_READ_ALIGNMENT_BATCH_SIZE_DEFAULT > 0))
@@ -140,6 +148,14 @@ public class ViridianConstants
             throw new IllegalStateException();
         }
         if(!(INTEGRATION_VIRAL_ALIGN_SCORE_PER_BASE_MIN > 0.0 && INTEGRATION_VIRAL_ALIGN_SCORE_PER_BASE_MIN <= 1.0))
+        {
+            throw new IllegalStateException();
+        }
+        if(!(REPORTED_INTEGRATIONS_MIN >= 1))
+        {
+            throw new IllegalStateException();
+        }
+        if(!(REPORTED_COPIES_PER_CELL_MIN > 0.0))
         {
             throw new IllegalStateException();
         }

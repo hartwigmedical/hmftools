@@ -20,12 +20,11 @@ import static com.hartwig.hmftools.viridian.common.ViridianConstants.VIRUS_DETEC
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.OptionalDouble;
 import java.util.Set;
-import java.util.TreeMap;
 
 import com.hartwig.hmftools.common.bwa.BwaMemAligner;
 import com.hartwig.hmftools.common.metrics.BamMetricSummary;
@@ -58,6 +57,8 @@ import com.hartwig.hmftools.viridian.reference.OncologyGroup;
 import com.hartwig.hmftools.viridian.reference.ViralContig;
 import com.hartwig.hmftools.viridian.reference.VirusReference;
 import com.hartwig.hmftools.viridian.reporting.ClonalCoverage;
+import com.hartwig.hmftools.viridian.reporting.VirusReport;
+import com.hartwig.hmftools.viridian.reporting.VirusReporter;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -102,12 +103,12 @@ public class ViridianApplication
         Map<ViralContig, ContigStats> representativeContigStats =
                 calculateRepresentativeContigStats(representativeAlignments, allContigsReadAlignments.metrics().originClippedReads());
 
-        writeDetectedViruses(
+        List<DetectedVirus> detectedViruses = writeDetectedViruses(
                 representativeSelections, representativeContigStats, allContigsReadAlignments.metrics().readCountsByOncologyGroup());
 
         Map<OncologyGroup, Integer> integrationCounts = callHostIntegrations();
 
-        reportViruses(integrationCounts);
+        reportViruses(detectedViruses, integrationCounts);
 
         LOGGER.info("{} complete, mins({})", APP_NAME, runTimeMinsStr(startTimeMs));
     }
@@ -216,13 +217,14 @@ public class ViridianApplication
         return contigStats;
     }
 
-    private void writeDetectedViruses(
+    private List<DetectedVirus> writeDetectedViruses(
             List<OncologyGroupRepresentativeSelection> selections, Map<ViralContig, ContigStats> representativeContigStats,
             Map<OncologyGroup, Integer> oncologyGroupReadCounts)
     {
         LOGGER.info("Writing virus detection output");
         List<DetectedVirus> detections = DetectedVirus.from(selections, representativeContigStats, oncologyGroupReadCounts);
         OutputWriter.writeDetectedViruses(outputFile(VIRUS_DETECTION_TSV_SUFFIX), detections);
+        return detections;
     }
 
     // Find where a virus inserted itself into the host genome, from the SVs ESVEE called.
@@ -242,7 +244,7 @@ public class ViridianApplication
         // Take the integrations with plausible alignments. Only the counts are needed for reporting.
         return integrations.stream()
                 .filter(Integration::isPlausible)
-                .collect(groupingBy(i -> i.alignment().contig().oncologyGroup(), TreeMap::new, summingInt(i -> 1)));
+                .collect(groupingBy(i -> i.alignment().contig().oncologyGroup(), HashMap::new, summingInt(i -> 1)));
     }
 
     private List<Integration> alignHostVariantCandidates(List<HostVariantCandidate> candidates)
@@ -263,18 +265,21 @@ public class ViridianApplication
     }
 
     // Decide which viruses are reported to the downstream pipeline.
-    private void reportViruses(Map<OncologyGroup, Integer> integrationCounts) throws IOException
+    private List<VirusReport> reportViruses(List<DetectedVirus> detectedViruses, Map<OncologyGroup, Integer> integrationCounts)
+            throws IOException
     {
         LOGGER.info("Loading reporting inputs");
         PurityContext purity = PurityContextFile.read(mConfig.purpleDir(), mConfig.sampleId());
         BamMetricSummary tumorMetrics = BamMetricSummary.read(
                 BamMetricSummary.generateFilename(mConfig.bamMetricsTumorDir(), mConfig.sampleId()));
 
-        OptionalDouble expectedViralDepthPerCopy = ClonalCoverage.expectedViralDepthPerCopy(purity, tumorMetrics);
-        if(expectedViralDepthPerCopy.isEmpty())
+        Double expectedViralDepthPerCopy = ClonalCoverage.expectedViralDepthPerCopy(purity, tumorMetrics);
+        if(expectedViralDepthPerCopy == null)
         {
             LOGGER.warn("Purple fit unusable; cannot report based on viral depth");
         }
+
+        return VirusReporter.report(detectedViruses, integrationCounts, mVirusReference, expectedViralDepthPerCopy);
     }
 
     private String outputFile(String suffix)

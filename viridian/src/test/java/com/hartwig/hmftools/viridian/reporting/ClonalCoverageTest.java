@@ -1,10 +1,9 @@
 package com.hartwig.hmftools.viridian.reporting;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
-import java.util.OptionalDouble;
 import java.util.Set;
 
 import com.hartwig.hmftools.common.metrics.BamMetricSummary;
@@ -33,54 +32,54 @@ public class ClonalCoverageTest
     public void testSimpleFullPurityCase()
     {
         // rho=1, psi=2: denom = 1*2 + 2*0 = 2; depth per copy = D_host*rho/denom = 100*1/2 = 50
-        OptionalDouble depthPerCopy = ClonalCoverage.expectedViralDepthPerCopy(
+        Double depthPerCopy = ClonalCoverage.expectedViralDepthPerCopy(
                 purityContext(1.0, 2.0, FittedPurityMethod.SOMATIC, Set.of(PurpleQCStatus.PASS)),
                 bamMetrics(100.0));
 
-        assertTrue(depthPerCopy.isPresent());
-        assertEquals(50.0, depthPerCopy.getAsDouble(), EPSILON);
+        assertNotNull(depthPerCopy);
+        assertEquals(50.0, depthPerCopy, EPSILON);
     }
 
     @Test
     public void testNormalisesForSubclonalPurity()
     {
         // denom = rho*psi + 2(1-rho) = 0.5*2 + 2*0.5 = 2; depth per copy = 30*0.5/2 = 7.5
-        OptionalDouble depthPerCopy = ClonalCoverage.expectedViralDepthPerCopy(
+        Double depthPerCopy = ClonalCoverage.expectedViralDepthPerCopy(
                 purityContext(0.5, 2.0, FittedPurityMethod.SOMATIC, Set.of(PurpleQCStatus.PASS)),
                 bamMetrics(30.0));
 
-        assertTrue(depthPerCopy.isPresent());
-        assertEquals(7.5, depthPerCopy.getAsDouble(), EPSILON);
+        assertNotNull(depthPerCopy);
+        assertEquals(7.5, depthPerCopy, EPSILON);
     }
 
     @Test
     public void testComputesWhenFitOnlyWarns()
     {
-        OptionalDouble depthPerCopy = ClonalCoverage.expectedViralDepthPerCopy(
+        Double depthPerCopy = ClonalCoverage.expectedViralDepthPerCopy(
                 purityContext(0.8, 2.0, FittedPurityMethod.SOMATIC, Set.of(PurpleQCStatus.WARN_DELETED_GENES)),
                 bamMetrics(30.0));
 
-        assertTrue(depthPerCopy.isPresent());
+        assertNotNull(depthPerCopy);
     }
 
     @Test
     public void testEmptyWhenPurityFitFailed()
     {
-        OptionalDouble depthPerCopy = ClonalCoverage.expectedViralDepthPerCopy(
+        Double depthPerCopy = ClonalCoverage.expectedViralDepthPerCopy(
                 purityContext(0.5, 2.0, FittedPurityMethod.SOMATIC, Set.of(PurpleQCStatus.FAIL_CONTAMINATION)),
                 bamMetrics(30.0));
 
-        assertFalse(depthPerCopy.isPresent());
+        assertNull(depthPerCopy);
     }
 
     @Test
     public void testEmptyForNoTumorFit()
     {
-        OptionalDouble depthPerCopy = ClonalCoverage.expectedViralDepthPerCopy(
+        Double depthPerCopy = ClonalCoverage.expectedViralDepthPerCopy(
                 purityContext(0.0, 2.0, FittedPurityMethod.NO_TUMOR, Set.of(PurpleQCStatus.FAIL_NO_TUMOR)),
                 bamMetrics(30.0));
 
-        assertFalse(depthPerCopy.isPresent());
+        assertNull(depthPerCopy);
     }
 
     private static BamMetricSummary bamMetrics(double meanCoverage)
