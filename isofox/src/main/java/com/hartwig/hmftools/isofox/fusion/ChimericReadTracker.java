@@ -40,6 +40,7 @@ import com.hartwig.hmftools.common.bam.ClippedSide;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
 import com.hartwig.hmftools.isofox.common.BaseDepth;
+import com.hartwig.hmftools.isofox.common.Fragment;
 import com.hartwig.hmftools.isofox.common.FragmentTracker;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.Read;
@@ -123,14 +124,14 @@ public class ChimericReadTracker
 
     public void setChimericPosDataWriter(final BufferedWriter writer) { mChimericPosDataWriter = writer; }
 
-    public boolean isChimeric(final Read read1, final Read read2, boolean isMultiMapped)
+    public boolean isChimeric(final Fragment fragment, boolean isMultiMapped)
     {
-        if(read1.isChimeric() || read2.isChimeric() || !read1.withinGeneCollection() || !read2.withinGeneCollection())
+        if(fragment.reads().stream().anyMatch(x->x.isChimeric() || !x.withinGeneCollection()))
             return true;
 
-        if(!isMultiMapped && enabled() && (read1.containsSplit() || read2.containsSplit()))
+        if(!isMultiMapped && enabled() && fragment.containsSplit())
         {
-            return setHasMultipleKnownSpliceGenes(Lists.newArrayList(read1, read2), mKnownPairGeneIds);
+            return setHasMultipleKnownSpliceGenes(fragment.reads(), mKnownPairGeneIds);
         }
 
         return false;
@@ -206,45 +207,47 @@ public class ChimericReadTracker
         }
     }
 
-    public void addRealignmentCandidates(final Read read1, final Read read2)
+    public void addRealignmentCandidates(final Fragment fragment)
     {
-        if(read1.isDuplicate() || read2.isDuplicate())
+        if(fragment.reads().stream().anyMatch(Read::isDuplicate))
             return;
 
-        mCandidateRealignedGroups.add(new ChimericReadGroup(read1, read2));
+        mCandidateRealignedGroups.add(new ChimericReadGroup(fragment));
     }
 
-    public void addChimericReadPair(final Read read1, final Read read2)
+    public void addChimericFragment(final Fragment fragment)
     {
-        if(read1.isDuplicate() || read2.isDuplicate() || inImmuneRegion(read1) || inImmuneRegion(read2))
+        if(fragment.reads().stream().anyMatch(x -> x.isDuplicate() || inImmuneRegion(x)))
             return;
 
         // populate transcript info for intronic reads since it will be used in fusion matching
-        addIntronicTranscriptData(read1);
-        addIntronicTranscriptData(read2);
+        for(Read read : fragment.reads())
+        {
+            addIntronicTranscriptData(read);
+        }
 
         // add the pair when it's clear there aren't others with the same ID in the map
-        if(mConfig.RunValidations && mChimericReadMap.containsKey(read1.id()))
+        if(mConfig.RunValidations && mChimericReadMap.containsKey(fragment.id()))
         {
             // shouldn't occur
-            ISF_LOGGER.error("overriding chimeric read({})", read1.id());
+            ISF_LOGGER.error("overriding chimeric read({})", fragment.id());
 
-            ChimericReadGroup existingGroup = mChimericReadMap.get(read1.id());
+            ChimericReadGroup existingGroup = mChimericReadMap.get(fragment.id());
 
             for(Read read : existingGroup.reads())
             {
                 ISF_LOGGER.error("existing read: {}", read);
             }
 
-            ISF_LOGGER.error("new read: {}", read1);
-            ISF_LOGGER.error("new read: {}", read2);
-
-            existingGroup.addRead(read1);
-            existingGroup.addRead(read2);
+            for(Read read : fragment.reads())
+            {
+                ISF_LOGGER.error("new read: {}", read);
+                existingGroup.addRead(read);
+            }
         }
         else
         {
-            ChimericReadGroup readGroup = new ChimericReadGroup(read1, read2);
+            ChimericReadGroup readGroup = new ChimericReadGroup(fragment);
 
             if(mChimericPosDataWriter != null)
             {
@@ -253,7 +256,7 @@ public class ChimericReadTracker
 
             if(!mConfig.Fusions.WriteChimericOnly)
             {
-                mChimericReadMap.put(read1.id(), readGroup);
+                mChimericReadMap.put(fragment.id(), readGroup);
             }
         }
     }

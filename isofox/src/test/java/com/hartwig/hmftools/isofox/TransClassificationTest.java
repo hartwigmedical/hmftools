@@ -30,6 +30,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.isofox.common.Fragment;
 import com.hartwig.hmftools.isofox.common.FragmentType;
 import com.hartwig.hmftools.isofox.common.FragmentTypeCounts;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
@@ -214,21 +215,24 @@ public class TransClassificationTest
         Read read1 = createReadRecord(1, CHR_1, 1010, 1029, REF_BASE_STR_1, createCigar(0, 20, 0));
         Read read2 = createReadRecord(1, CHR_1, 1170, 1199, REF_BASE_STR_1, createCigar(0, 30, 0));
 
-        int fragLength = calcFragmentLength(transData, read1, read2);
+        Fragment fragment = new Fragment(read1, read2);
+        int fragLength = calcFragmentLength(transData, fragment.minAlignmentStart(), fragment.maxAlignmentEnd());
         assertEquals(190, fragLength);
 
         // spanning 2 exons, both exonic
         read1 = createReadRecord(1, CHR_1, 1170, 1189, REF_BASE_STR_1, createCigar(0, 20, 0));
         read2 = createReadRecord(1, CHR_1, 2010, 2019, REF_BASE_STR_1, createCigar(0, 10, 0));
 
-        fragLength = calcFragmentLength(transData, read1, read2);
+        fragment = new Fragment(read1, read2);
+        fragLength = calcFragmentLength(transData, fragment.minAlignmentStart(), fragment.maxAlignmentEnd());
         assertEquals(31 + 20, fragLength);
 
         // spanning 3 exons, both exonic
         read1 = createReadRecord(1, CHR_1, 1170, 1189, REF_BASE_STR_1, createCigar(0, 20, 0));
         read2 = createReadRecord(1, CHR_1, 4510, 4519, REF_BASE_STR_1, createCigar(0, 10, 0));
 
-        fragLength = calcFragmentLength(transData, read1, read2);
+        fragment = new Fragment(read1, read2);
+        fragLength = calcFragmentLength(transData, fragment.minAlignmentStart(), fragment.maxAlignmentEnd());
         assertEquals(31 + 501 + 20, fragLength);
 
         // with 2 split reads
@@ -237,7 +241,8 @@ public class TransClassificationTest
         read2 = createReadRecord(
                 1, CHR_1, 2491, 4509, REF_BASE_STR_1, createCigar(0, 10, 1999, 10, 0));
 
-        fragLength = calcFragmentLength(transData, read1, read2);
+        fragment = new Fragment(read1, read2);
+        fragLength = calcFragmentLength(transData, fragment.minAlignmentStart(), fragment.maxAlignmentEnd());
         assertEquals(10 + 501 + 10, fragLength);
 
         // with 2 split reads skipping an exon
@@ -250,7 +255,8 @@ public class TransClassificationTest
         read2 = createReadRecord(
                 1, CHR_1, 4991, 5509, REF_BASE_STR_1, createCigar(0, 10, 499, 10, 0));
 
-        fragLength = calcFragmentLength(transData, read1, read2);
+        fragment = new Fragment(read1, read2);
+        fragLength = calcFragmentLength(transData, fragment.minAlignmentStart(), fragment.maxAlignmentEnd());
         assertEquals(10 + 501 + 501 + 10, fragLength);
     }
 

@@ -15,6 +15,8 @@ public class FragmentTracker
         mReadMap = Maps.newHashMap();
     }
 
+    public Map<String,Object> readMap() { return mReadMap; }
+
     public List<Object> getValues() { return mReadMap.values().stream().collect(Collectors.toList()); }
 
     public int readsCount() { return mReadMap.size(); }
