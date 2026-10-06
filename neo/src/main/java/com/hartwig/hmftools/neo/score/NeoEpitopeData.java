@@ -100,12 +100,9 @@ public class NeoEpitopeData
             final SampleData sampleData, final Map<String,Double> sampleTPMs, final RnaExpressionMatrix transExpressionCache,
             final TpmMediansCache cohortTpmMediansCache)
     {
-        if(transExpressionCache == null && sampleTPMs.isEmpty())
-            return;
-
-        double[] sampleExpression = {0, 0};
-        double[] panCancerTpm = {0, 0};
-        double[] cancerTpm = {0, 0};
+        double[] sampleExpression = null;
+        double[] panCancerTpm = {NO_TPM_VALUE, NO_TPM_VALUE};
+        double[] cancerTpm = {NO_TPM_VALUE, NO_TPM_VALUE};
 
         for(int fs = FS_UP; fs <= FS_DOWN; ++fs)
         {
@@ -120,14 +117,19 @@ public class NeoEpitopeData
                     else
                         NE_LOGGER.warn("sample({}) missing transcript({}) TPM", sampleData.TumorId, transName);
                 }
-                else
+                else if(transExpressionCache != null)
                 {
                     transExpression = transExpressionCache.getExpression(transName, sampleData.TumorId);
                 }
 
                 // distinguish non-existent expression vs zero TPM
                 if(transExpression != INVALID_EXP)
+                {
+                    if(sampleExpression == null)
+                        sampleExpression = new double[] {0, 0};
+
                     sampleExpression[fs] += transExpression;
+                }
 
                 double[] tpmValues = cohortTpmMediansCache.getTranscriptTpm(transName, sampleData.CancerType);
 
