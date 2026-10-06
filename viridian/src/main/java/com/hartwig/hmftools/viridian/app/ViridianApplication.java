@@ -118,7 +118,7 @@ public class ViridianApplication
     {
         String allAlignmentsBamFile = outputFile(ALL_ALIGNMENTS_BAM_SUFFIX);
         // Alignment is pretty slow, so allow reusing the cached BAM for a rerun.
-        if(!canReuseExistingFile(mConfig.reuseAlignments(), allAlignmentsBamFile, "all-alignments BAM"))
+        if(!canReuseExistingFile(mConfig.reuseReadAlignments(), allAlignmentsBamFile, "all-alignments BAM"))
         {
             alignCandidateReadsToViralContigs(allAlignmentsBamFile);
         }
