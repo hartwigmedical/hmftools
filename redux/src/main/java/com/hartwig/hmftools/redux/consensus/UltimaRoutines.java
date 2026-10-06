@@ -4,6 +4,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_TYPE_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.XA_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.XS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.HALF_PHRED_SCORE_SCALING;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_T0_TAG;
@@ -30,7 +31,7 @@ import htsjdk.samtools.SAMTag;
 public final class UltimaRoutines
 {
     private static final Set<String> NON_ULTIMA_REQUIRED_ATTRIBUTES = Set.of(
-            SAMTag.AS.name(), SAMTag.RG.name(), SAMTag.NM.name(), XS_ATTRIBUTE, SUPPLEMENTARY_ATTRIBUTE);
+            SAMTag.AS.name(), SAMTag.RG.name(), SAMTag.NM.name(), XS_ATTRIBUTE, SUPPLEMENTARY_ATTRIBUTE, XA_ATTRIBUTE);
 
     private static final Set<String> ULTIMA_RAW_QUAL_ATTRIBUTES = Set.of(ULTIMA_T0_TAG, ULTIMA_TP_TAG);
 
