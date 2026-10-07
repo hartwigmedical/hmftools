@@ -3,8 +3,6 @@ package com.hartwig.hmftools.viridian.detection.support;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toMap;
 
-import static com.hartwig.hmftools.viridian.common.ViridianConstants.READ_VOTE_CORRECT_BASE_PROBABILITY;
-
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -28,11 +26,6 @@ public class ContigSupportCalculator
     public ContigSupportCalculator(double correctBaseProbability)
     {
         mCorrectBaseProbability = correctBaseProbability;
-    }
-
-    public ContigSupportCalculator()
-    {
-        this(READ_VOTE_CORRECT_BASE_PROBABILITY);
     }
 
     public List<ContigSupport> calculate(AllContigsReadAlignments alignments, Map<ViralContig, ContigStats> contigStats)

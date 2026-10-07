@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.viridian.common.ViridianConstants.CANDIDATES_
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.CONTIG_SUPPORT_TSV_SUFFIX;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.INTEGRATIONS_TSV_SUFFIX;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.PAIRWISE_MARGINS_TSV_SUFFIX;
+import static com.hartwig.hmftools.viridian.common.ViridianConstants.READ_VOTE_CORRECT_BASE_PROBABILITY;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.REPRESENTATIVE_ALIGNMENTS_BAM_SUFFIX;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.VIRAL_READ_MIN_SOFT_CLIP_BASES;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.VIRUS_DETECTION_TSV_SUFFIX;
@@ -174,7 +175,7 @@ public class ViridianApplication
         LOGGER.info("Computing per-contig support");
         Map<ViralContig, ContigStats> contigStats = ContigStatsCalculator.calculate(
                 alignments.store().byContig(), alignments.metrics().originClippedReads());
-        return new ContigSupportCalculator().calculate(alignments, contigStats);
+        return new ContigSupportCalculator(READ_VOTE_CORRECT_BASE_PROBABILITY).calculate(alignments, contigStats);
     }
 
     // For each oncology group (group of virus strains at interesting taxonomy granularity), select 1 virus genome which best represents
