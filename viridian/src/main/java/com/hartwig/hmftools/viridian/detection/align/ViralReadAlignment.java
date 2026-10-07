@@ -104,5 +104,6 @@ public record ViralReadAlignment(
     public static final Comparator<ViralReadAlignment> BEST_FIT_FIRST = Comparator
             .comparingInt(ViralReadAlignment::divergence)
             .thenComparing(ViralReadAlignment::alignerScore, Comparator.reverseOrder())
-            .thenComparingInt(ViralReadAlignment::alignmentStart);
+            .thenComparingInt(ViralReadAlignment::alignmentStart)
+            .thenComparing(ViralReadAlignment::cigar);
 }
