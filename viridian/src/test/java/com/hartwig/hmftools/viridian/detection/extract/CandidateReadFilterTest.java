@@ -208,13 +208,16 @@ public class CandidateReadFilterTest
     {
         assertTrue(FILTER.isCandidateContig("chr1"));
         assertTrue(FILTER.isCandidateContig("chrEBV"));
+        assertTrue(FILTER.isCandidateContig(NO_ALIGNMENT_REFERENCE_NAME));
     }
 
     @Test
-    public void testIsCandidateContigFullyUnmappedAndVirusSourceAcceptsOnlyVirus()
+    public void testIsCandidateContigFullyUnmappedAndVirusSourceAcceptsOnlyFullyUnmappedAndVirus()
     {
         assertFalse(FULLY_UNMAPPED_AND_VIRUS_FILTER.isCandidateContig("chr1"));
         assertTrue(FULLY_UNMAPPED_AND_VIRUS_FILTER.isCandidateContig("chrEBV"));
+        // Fully unmapped reads have this placeholder in place of a contig.
+        assertTrue(FULLY_UNMAPPED_AND_VIRUS_FILTER.isCandidateContig(NO_ALIGNMENT_REFERENCE_NAME));
     }
 
     @Test

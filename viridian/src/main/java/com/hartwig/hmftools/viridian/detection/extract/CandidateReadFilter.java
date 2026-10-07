@@ -5,6 +5,8 @@ import static com.hartwig.hmftools.common.bam.CigarUtils.rightSoftClipLength;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.UNMAPP_COORDS_DELIM;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.UNMAP_ATTRIBUTE;
 
+import static htsjdk.samtools.SAMRecord.NO_ALIGNMENT_REFERENCE_NAME;
+
 import java.util.List;
 import java.util.Set;
 
@@ -38,7 +40,8 @@ public class CandidateReadFilter
         return switch(mSource)
         {
             case ALL -> true;
-            case FULLY_UNMAPPED_AND_VIRUS -> isVirusDecoyContig(contig);
+            // Note for fully unmapped reads, the contig is a placeholder.
+            case FULLY_UNMAPPED_AND_VIRUS -> contig.equals(NO_ALIGNMENT_REFERENCE_NAME) || isVirusDecoyContig(contig);
         };
     }
 
@@ -50,6 +53,13 @@ public class CandidateReadFilter
     private boolean isStructuralCandidate(SAMRecord record)
     {
         if(!isCandidateRecordType(record))
+        {
+            return false;
+        }
+
+        // Only consider reads which will be scanned in practice.
+        // Not strictly required in practice, but it ensures this function is the definitive source of filtering logic.
+        if(!isCandidateContig(record.getReferenceName()))
         {
             return false;
         }
