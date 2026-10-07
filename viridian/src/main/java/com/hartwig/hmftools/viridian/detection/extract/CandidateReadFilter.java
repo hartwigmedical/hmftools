@@ -2,15 +2,14 @@ package com.hartwig.hmftools.viridian.detection.extract;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.leftSoftClipLength;
 import static com.hartwig.hmftools.common.bam.CigarUtils.rightSoftClipLength;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.UNMAPP_COORDS_DELIM;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.UNMAP_ATTRIBUTE;
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.mateUnmapped;
-import static com.hartwig.hmftools.viridian.common.ViridianConstants.VIRAL_READ_MIN_SOFT_CLIP_BASES;
-import static com.hartwig.hmftools.viridian.common.ViridianConstants.VIRUS_REF_CONTIGS;
 
 import java.util.List;
 import java.util.Set;
 
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
+import com.hartwig.hmftools.viridian.common.UserInputError;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -19,82 +18,135 @@ import htsjdk.samtools.SAMRecord;
 // Decides whether a read is a candidate for viral realignment.
 public class CandidateReadFilter
 {
+    private final CandidateReadSource mSource;
     private final int mMinSoftClipBases;
     private final Set<String> mRefVirusContigs;
     @Nullable
     private final ViralKmerIndex mKmerIndex;
 
-    public CandidateReadFilter(int minSoftClipBases, Set<String> refVirusContigs, @Nullable ViralKmerIndex kmerIndex)
+    public CandidateReadFilter(
+            CandidateReadSource source, int minSoftClipBases, Set<String> refVirusContigs,
+            @Nullable ViralKmerIndex kmerIndex)
     {
+        mSource = source;
         mMinSoftClipBases = minSoftClipBases;
         mRefVirusContigs = refVirusContigs;
         mKmerIndex = kmerIndex;
     }
 
-    public CandidateReadFilter(int minSoftClipBases, Set<String> refVirusContigs)
+    public boolean isCandidateContig(String contig)
     {
-        this(minSoftClipBases, refVirusContigs, null);
+        return switch(mSource)
+        {
+            case ALL -> true;
+            case FULLY_UNMAPPED_AND_VIRUS -> isVirusDecoyContig(contig);
+        };
     }
 
-    public CandidateReadFilter(@Nullable ViralKmerIndex kmerIndex)
-    {
-        this(VIRAL_READ_MIN_SOFT_CLIP_BASES, VIRUS_REF_CONTIGS, kmerIndex);
-    }
-
-    public boolean isCandidate(SAMRecord record)
+    public boolean isCandidateRecord(SAMRecord record)
     {
         return isStructuralCandidate(record) && hasViralKmer(record);
     }
 
-    private boolean hasViralKmer(SAMRecord record)
-    {
-        return mKmerIndex == null || mKmerIndex.hasViralKmer(record.getReadBases());
-    }
-
     private boolean isStructuralCandidate(SAMRecord record)
     {
-        // Only care about primaries because only they have the read sequence.
-        // BamSlicer filters these anyway, but check here just in case.
-        if(record.isSecondaryOrSupplementary())
+        if(!isCandidateRecordType(record))
         {
             return false;
         }
-        // REDUX duplicate fragment. Doesn't provide additional support.
-        // BamSlicer filters these anyway, but check here just in case.
-        if(record.getDuplicateReadFlag())
-        {
-            return false;
-        }
-        // Mapped to a virus decoy contig, or an unmapped read placed on one by its mapped mate. Either way the fragment
-        // touches a virus, so keep it. Checked before the redux-unmapped exclusion, since a redux-unmapped read sitting
-        // on a decoy is still viral evidence.
-        if(isVirusDecoyContig(record.getReferenceName()))
-        {
-            return true;
-        }
-        // The mate maps to a virus decoy contig, so this read anchors a host<->virus fragment (e.g. an integration junction).
-        if(mateMappedToVirusDecoy(record))
-        {
-            return true;
-        }
-        // Genuinely unaligned, so possibly viral. A read redux itself unmapped (UM tag) is instead host sequence
-        // from a bad region, not genuinely unaligned, so it is not a candidate on its own account.
+
+        boolean isReduxUnmappedFromHost = false;
+        // Consider evidence that the read is viral from the read itself.
         if(record.getReadUnmappedFlag())
         {
-            return !record.hasAttribute(UNMAP_ATTRIBUTE);
+            if(isReduxUnmapped(record))
+            {
+                if(isReduxUnmappedFromVirusDecoy(record))
+                {
+                    // REDUX unmapped but the original contig was virus decoy: definitely viral fragment.
+                    return true;
+                }
+                else
+                {
+                    // REDUX unmapped and the original contig was regular human genome: no direct viral evidence for the read; fall through
+                    // to mate consideration.
+                    isReduxUnmappedFromHost = true;
+                }
+            }
+            else
+            {
+                // Genuinely unaligned read: maybe viral fragment.
+                return true;
+            }
         }
-        // The unmapped mate may be viral, so take this read for integration support.
-        if(mateUnmapped(record))
+        else
         {
-            return true;
+            if(isVirusDecoyContig(record.getReferenceName()))
+            {
+                // Mapped to a virus decoy contig in the ref genome: definitely viral fragment.
+                return true;
+            }
+            else if(hasCandidateSoftClip(record))
+            {
+                // Mapped but clipped so could be a viral integration: maybe viral fragment.
+                return true;
+            }
+            else
+            {
+                // Mapped to regular human genome: no direct viral evidence for the read; fall through to mate consideration.
+            }
         }
-        // A long soft clip whose clipped bases were not placed elsewhere in the host may mark a viral junction.
-        boolean hasSignificantClip = (leftSoftClipLength(record) >= mMinSoftClipBases || rightSoftClipLength(record) >= mMinSoftClipBases);
-        if(hasSignificantClip && clippedBasesAreCandidate(record))
+
+        // Now consider evidence that the read is viral from the mate.
+        if(record.getReadPairedFlag())
         {
-            return true;
+            if(record.getMateUnmappedFlag())
+            {
+                if(isReduxUnmappedFromHost)
+                {
+                    // Annoying case: When the read was REDUX unmapped and its mate is unmapped too, the mate was almost always REDUX
+                    // unmapped as well, so it isn't viral evidence for the read.
+                    // A genuinely unaligned mate is still accepted when the mate record itself is checked.
+                    return false;
+                }
+                else
+                {
+                    // Mate genuinely unaligned: maybe viral fragment.
+                    // OR the mate is unmapped by REDUX, but there is no way to know, so have to be conservative.
+                    return true;
+                }
+            }
+            else
+            {
+                if(isVirusDecoyContig(record.getMateReferenceName()))
+                {
+                    // Mate mapped to a virus decoy contig in the ref genome: definitely viral fragment.
+                    return true;
+                }
+                else
+                {
+                    // TODO: can read mate cigar attribute to look at soft clip of mate?
+
+                    // Mapped to regular human genome: no viral evidence for the mate.
+                }
+            }
         }
+
+        // No evidence remaining: probably not viral fragment.
         return false;
+    }
+
+    private static boolean isCandidateRecordType(SAMRecord record)
+    {
+        // Only care about primaries because only they have the read sequence.
+        // And REDUX duplicate fragments don't provide additional support.
+        return !record.isSecondaryOrSupplementary() && !record.getDuplicateReadFlag();
+    }
+
+    private boolean hasCandidateSoftClip(SAMRecord record)
+    {
+        boolean hasSignificantClip = leftSoftClipLength(record) >= mMinSoftClipBases || rightSoftClipLength(record) >= mMinSoftClipBases;
+        return hasSignificantClip && clippedBasesAreCandidate(record);
     }
 
     private boolean clippedBasesAreCandidate(SAMRecord record)
@@ -112,13 +164,44 @@ public class CandidateReadFilter
         }
     }
 
-    private boolean mateMappedToVirusDecoy(SAMRecord record)
+    private static boolean isReduxUnmapped(SAMRecord record)
     {
-        return record.getReadPairedFlag() && !record.getMateUnmappedFlag() && isVirusDecoyContig(record.getMateReferenceName());
+        return record.hasAttribute(UNMAP_ATTRIBUTE);
+    }
+
+    @Nullable
+    private static String reduxUnmappedOriginalContig(SAMRecord record)
+    {
+        String unmapCoords = record.getStringAttribute(UNMAP_ATTRIBUTE);
+        if(unmapCoords == null)
+        {
+            return null;
+        }
+        int delimiterIndex = unmapCoords.lastIndexOf(UNMAPP_COORDS_DELIM);
+        if(delimiterIndex <= 0)
+        {
+            throw new UserInputError("Malformed REDUX " + UNMAP_ATTRIBUTE + " attribute: " + unmapCoords);
+        }
+        return unmapCoords.substring(0, delimiterIndex);
+    }
+
+    private boolean isReduxUnmappedFromVirusDecoy(SAMRecord record)
+    {
+        if(!isReduxUnmapped(record))
+        {
+            return false;
+        }
+        String originalContig = reduxUnmappedOriginalContig(record);
+        return originalContig != null && isVirusDecoyContig(originalContig);
     }
 
     private boolean isVirusDecoyContig(String contig)
     {
         return mRefVirusContigs.contains(contig);
+    }
+
+    private boolean hasViralKmer(SAMRecord record)
+    {
+        return mKmerIndex == null || mKmerIndex.hasViralKmer(record.getReadBases());
     }
 }

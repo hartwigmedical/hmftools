@@ -23,126 +23,177 @@ public class CandidateReadFilterTest
 
     private static final String BASES = "A".repeat(100);
 
-    private static final CandidateReadFilter FILTER = new CandidateReadFilter(20, Set.of("chrEBV"));
+    private static final CandidateReadFilter FILTER =
+            new CandidateReadFilter(CandidateReadSource.ALL, 20, Set.of("chrEBV"), null);
+
+    private static final CandidateReadFilter FULLY_UNMAPPED_AND_DECOY_FILTER =
+            new CandidateReadFilter(CandidateReadSource.FULLY_UNMAPPED_AND_VIRUS, 20, Set.of("chrEBV"), null);
 
     @Test
-    public void testIsCandidateRejectsDuplicateRead()
+    public void testIsCandidateContigAllSourceAcceptsEveryContig()
     {
-        assertFalse(FILTER.isCandidate(read(0x400, "chrEBV", "100M")));
+        assertTrue(FILTER.isCandidateContig("chr1"));
+        assertTrue(FILTER.isCandidateContig("chrEBV"));
     }
 
     @Test
-    public void testIsCandidateRejectsSecondaryAlignment()
+    public void testIsCandidateContigFullyUnmappedAndDecoySourceAcceptsOnlyDecoy()
     {
-        assertFalse(FILTER.isCandidate(read(0x100, "chrEBV", "100M")));
+        assertFalse(FULLY_UNMAPPED_AND_DECOY_FILTER.isCandidateContig("chr1"));
+        assertTrue(FULLY_UNMAPPED_AND_DECOY_FILTER.isCandidateContig("chrEBV"));
     }
 
     @Test
-    public void testIsCandidateRejectsSupplementaryAlignment()
+    public void testIsCandidateRecordFullyUnmappedAndDecoySourceRejectsHostContigCandidates()
     {
-        assertFalse(FILTER.isCandidate(read(0x800, "chrEBV", "100M")));
+        List<SAMRecord> hostContigCandidates = List.of(
+                read(0, "chr1", "30S70M"),
+                read(73, "chr1", "100M"),
+                readWithMate(0x1 | 0x40, "chr1", "100M", "chrEBV", 1000),
+                readWithMate(0x1 | 0x4 | 0x80, "chr1", "*", "chr1", 100));
+
+        for(SAMRecord record : hostContigCandidates)
+        {
+            assertTrue(FILTER.isCandidateRecord(record));
+            assertFalse(FULLY_UNMAPPED_AND_DECOY_FILTER.isCandidateRecord(record));
+        }
     }
 
     @Test
-    public void testIsCandidateAcceptsUnmappedRead()
+    public void testIsCandidateRecordFullyUnmappedAndDecoySourceAcceptsFullyUnmappedAndDecoyReads()
     {
-        assertTrue(FILTER.isCandidate(read(4, "*", "*")));
+        assertTrue(FULLY_UNMAPPED_AND_DECOY_FILTER.isCandidateRecord(read(4, "*", "*")));
+        assertTrue(FULLY_UNMAPPED_AND_DECOY_FILTER.isCandidateRecord(read(0, "chrEBV", "100M")));
     }
 
     @Test
-    public void testIsCandidateRejectsReduxUnmappedRead()
+    public void testIsCandidateRecordRejectsDuplicateRead()
+    {
+        assertFalse(FILTER.isCandidateRecord(read(0x400, "chrEBV", "100M")));
+    }
+
+    @Test
+    public void testIsCandidateRecordRejectsSecondaryAlignment()
+    {
+        assertFalse(FILTER.isCandidateRecord(read(0x100, "chrEBV", "100M")));
+    }
+
+    @Test
+    public void testIsCandidateRecordRejectsSupplementaryAlignment()
+    {
+        assertFalse(FILTER.isCandidateRecord(read(0x800, "chrEBV", "100M")));
+    }
+
+    @Test
+    public void testIsCandidateRecordAcceptsFullyUnmappedRead()
+    {
+        assertTrue(FILTER.isCandidateRecord(read(4, "*", "*")));
+    }
+
+    @Test
+    public void testIsCandidateRecordRejectsReduxUnmappedFullyUnmappedRead()
     {
         SAMRecord record = read(4, "*", "*");
         record.setAttribute("UM", "chr1:100");
-        assertFalse(FILTER.isCandidate(record));
+        assertFalse(FILTER.isCandidateRecord(record));
     }
 
     @Test
-    public void testIsCandidateAcceptsReduxUnmappedReadPlacedOnDecoy()
+    public void testIsCandidateRecordAcceptsReduxUnmappedReadWithMateOnDecoy()
     {
         // Placed on the virus decoy by its mapped mate, so the fragment touches the virus and the unmapped-elsewhere
         // tag must not drop it.
         SAMRecord record = read(4, "chrEBV", "*");
         record.setAttribute("UM", "chr2:100");
-        assertTrue(FILTER.isCandidate(record));
+        assertTrue(FILTER.isCandidateRecord(record));
     }
 
     @Test
-    public void testIsCandidateAcceptsMappedReadWithUnmappedMate()
+    public void testIsCandidateRecordRejectsReduxUnmappedReadWithMateOnHost()
+    {
+        SAMRecord record = readWithMate(0x1 | 0x4 | 0x40, "chr1", "*", "chr1", 100);
+        assertTrue(FILTER.isCandidateRecord(record));
+
+        record.setAttribute("UM", "chr1:100");
+        assertFalse(FILTER.isCandidateRecord(record));
+    }
+
+    @Test
+    public void testIsCandidateRecordAcceptsMappedReadWithUnmappedMate()
     {
         // paired (0x1) + mate unmapped (0x8) + first of pair (0x40)
-        assertTrue(FILTER.isCandidate(read(73, "chr1", "100M")));
+        assertTrue(FILTER.isCandidateRecord(read(73, "chr1", "100M")));
     }
 
     @Test
-    public void testIsCandidateAcceptsLongSoftClipEitherSide()
+    public void testIsCandidateRecordAcceptsLongSoftClipEitherSide()
     {
-        assertTrue(FILTER.isCandidate(read(0, "chr1", "20S80M")));
-        assertTrue(FILTER.isCandidate(read(0, "chr1", "80M20S")));
+        assertTrue(FILTER.isCandidateRecord(read(0, "chr1", "20S80M")));
+        assertTrue(FILTER.isCandidateRecord(read(0, "chr1", "80M20S")));
     }
 
     @Test
-    public void testIsCandidateRejectsSoftClipBelowThreshold()
+    public void testIsCandidateRecordRejectsSoftClipBelowThreshold()
     {
-        assertFalse(FILTER.isCandidate(read(0, "chr1", "19S81M")));
+        assertFalse(FILTER.isCandidateRecord(read(0, "chr1", "19S81M")));
     }
 
     @Test
-    public void testIsCandidateAcceptsDecoyMappedRead()
+    public void testIsCandidateRecordAcceptsDecoyMappedRead()
     {
-        assertTrue(FILTER.isCandidate(read(0, "chrEBV", "100M")));
+        assertTrue(FILTER.isCandidateRecord(read(0, "chrEBV", "100M")));
     }
 
     @Test
-    public void testIsCandidateAcceptsHostReadWithMateOnDecoy()
+    public void testIsCandidateRecordAcceptsHostReadWithMateOnDecoy()
     {
         // No significant clip, but the mate on the virus decoy anchors a host<->virus fragment.
-        assertTrue(FILTER.isCandidate(readWithMate(0x1 | 0x40, "chr1", "100M", "chrEBV", 1000)));
+        assertTrue(FILTER.isCandidateRecord(readWithMate(0x1 | 0x40, "chr1", "100M", "chrEBV", 1000)));
     }
 
     @Test
-    public void testIsCandidateRejectsHostReadWithMateOnHost()
+    public void testIsCandidateRecordRejectsHostReadWithMateOnHost()
     {
-        assertFalse(FILTER.isCandidate(readWithMate(0x1 | 0x40, "chr1", "100M", "chr1", 1000)));
+        assertFalse(FILTER.isCandidateRecord(readWithMate(0x1 | 0x40, "chr1", "100M", "chr1", 1000)));
     }
 
     @Test
-    public void testIsCandidateRejectsPlainMappedRead()
+    public void testIsCandidateRecordRejectsPlainMappedRead()
     {
-        assertFalse(FILTER.isCandidate(read(0, "chr1", "100M")));
+        assertFalse(FILTER.isCandidateRecord(read(0, "chr1", "100M")));
     }
 
     @Test
-    public void testIsCandidateAcceptsClippedReadWithoutSupplementary()
+    public void testIsCandidateRecordAcceptsClippedReadWithoutSupplementary()
     {
         // The clipped bases were not placed in the host, so the clip may mark a viral junction.
-        assertTrue(FILTER.isCandidate(read(0, "chr1", "30S70M")));
+        assertTrue(FILTER.isCandidateRecord(read(0, "chr1", "30S70M")));
     }
 
     @Test
-    public void testIsCandidateRejectsClippedReadWithHostSupplementary()
+    public void testIsCandidateRecordRejectsClippedReadWithHostSupplementary()
     {
         // Clipped bases align elsewhere in the host, so the clip is not viral evidence.
-        assertFalse(FILTER.isCandidate(read(0, "chr1", "30S70M", "chr1,200,+,70M30S,60,0;")));
+        assertFalse(FILTER.isCandidateRecord(read(0, "chr1", "30S70M", "chr1,200,+,70M30S,60,0;")));
     }
 
     @Test
-    public void testIsCandidateAcceptsClippedReadWithViralSupplementary()
+    public void testIsCandidateRecordAcceptsClippedReadWithViralSupplementary()
     {
-        assertTrue(FILTER.isCandidate(read(0, "chr1", "30S70M", "chrEBV,200,+,70M30S,60,0;")));
+        assertTrue(FILTER.isCandidateRecord(read(0, "chr1", "30S70M", "chrEBV,200,+,70M30S,60,0;")));
     }
 
     @Test
-    public void testIsCandidateRejectsClippedReadWithViralAndHostSupplementary()
+    public void testIsCandidateRecordRejectsClippedReadWithViralAndHostSupplementary()
     {
-        assertFalse(FILTER.isCandidate(read(0, "chr1", "30S70M", "chrEBV,200,+,70M30S,60,0;chr1,900,+,70M30S,60,0;")));
+        assertFalse(FILTER.isCandidateRecord(read(0, "chr1", "30S70M", "chrEBV,200,+,70M30S,60,0;chr1,900,+,70M30S,60,0;")));
     }
 
     @Test
-    public void testIsCandidateAcceptsHostSupplementaryClipWithUnmappedMate()
+    public void testIsCandidateRecordAcceptsHostSupplementaryClipWithUnmappedMate()
     {
         // The supplementary check only gates the clip rule; the unmapped-mate rule still applies (0x1|0x8|0x40 = 73).
-        assertTrue(FILTER.isCandidate(read(73, "chr1", "30S70M", "chr1,200,+,70M30S,60,0;")));
+        assertTrue(FILTER.isCandidateRecord(read(73, "chr1", "30S70M", "chr1,200,+,70M30S,60,0;")));
     }
 
     private static SAMRecord read(int flags, String contig, String cigar)

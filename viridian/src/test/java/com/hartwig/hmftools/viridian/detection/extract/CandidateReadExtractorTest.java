@@ -40,7 +40,7 @@ public class CandidateReadExtractorTest
                 mapped(header, "plain", 0, "chr1", 100, "100M", "AAAAA"),             // no viral signal: dropped
                 mapped(header, "clip", 0x1 | 0x40, "chr1", 150, "20S80M", "CCCCC"),   // soft-clip candidate, first of pair
                 unmapped(header, "dup", 0x4 | 0x400, "TTTTT"),                        // duplicate unmapped: dropped
-                unmapped(header, "unmap", 0x1 | 0x4 | 0x80, "GGGGG"),                 // unmapped candidate, second of pair
+                unmapped(header, "unmap", 0x1 | 0x4 | 0x8 | 0x80, "GGGGG"),           // unmapped candidate, second of pair
                 unmapped(header, "single", 0x4, "TTTTT"));                            // unpaired candidate: no mate suffix
 
         String bam = writeIndexedBam(header, records);
@@ -49,8 +49,8 @@ public class CandidateReadExtractorTest
         for(int threads : new int[] { 1, 4 })
         {
             String fasta = new File(mTempDir.getRoot(), "candidates." + threads + ".fasta").getPath();
-            int count = new CandidateReadExtractor(null, new CandidateReadFilter(20, singleton("chrEBV")), threads)
-                    .extract(bam, fasta);
+            CandidateReadFilter filter = filter(CandidateReadSource.ALL);
+            int count = new CandidateReadExtractor(null, filter, threads).extract(bam, fasta);
 
             assertEquals(3, count);
             assertEquals(Set.of(">clip/1\nCCCCC", ">unmap/2\nGGGGG", ">single\nTTTTT"), fastaEntries(fasta));
@@ -68,28 +68,50 @@ public class CandidateReadExtractorTest
         String bam = writeIndexedBam(header, records);
         String fasta = new File(mTempDir.getRoot(), "boundary.fasta").getPath();
 
-        int count = new CandidateReadExtractor(null, new CandidateReadFilter(20, singleton("chrEBV")), 2)
-                .extract(bam, fasta);
+        CandidateReadFilter filter = filter(CandidateReadSource.ALL);
+        int count = new CandidateReadExtractor(null, filter, 2).extract(bam, fasta);
 
         assertEquals(1, count);
         assertEquals(Set.of(">spanning/1\nCCCCC"), fastaEntries(fasta));
     }
 
     @Test
-    public void testExtractToFastaPlacedUnmappedReadFoundByRegionScan() throws IOException
+    public void testExtractToFastaUnmappedReadWithMappedMateFoundByRegionScan() throws IOException
     {
-        // Such a read sits in coordinate order, not the unplaced block at the end of the BAM. It may be an integration site.
+        // Such a read sits in coordinate order, not the fully unmapped block at the end of the BAM. It may be an integration site.
         SAMFileHeader header = header(SAMFileHeader.SortOrder.coordinate, 10000);
-        List<SAMRecord> records = List.of(mapped(header, "placed", 0x1 | 0x4 | 0x40, "chr1", 500, "*", "TTTTT"));
+        List<SAMRecord> records = List.of(mapped(header, "unmappedWithMappedMate", 0x1 | 0x4 | 0x40, "chr1", 500, "*", "TTTTT"));
 
         String bam = writeIndexedBam(header, records);
-        String fasta = new File(mTempDir.getRoot(), "placed.fasta").getPath();
+        String fasta = new File(mTempDir.getRoot(), "unmapped_with_mapped_mate.fasta").getPath();
 
-        int count = new CandidateReadExtractor(null, new CandidateReadFilter(20, singleton("chrEBV")))
-                .extract(bam, fasta);
+        CandidateReadFilter filter = filter(CandidateReadSource.ALL);
+        int count = new CandidateReadExtractor(null, filter, 1).extract(bam, fasta);
 
         assertEquals(1, count);
-        assertEquals(Set.of(">placed/1\nTTTTT"), fastaEntries(fasta));
+        assertEquals(Set.of(">unmappedWithMappedMate/1\nTTTTT"), fastaEntries(fasta));
+    }
+
+    @Test
+    public void testExtractToFastaFullyUnmappedAndDecoySourceSkipsHostContigs() throws IOException
+    {
+        SAMFileHeader header = header(SAMFileHeader.SortOrder.coordinate, 10000);
+        header.addSequence(new SAMSequenceRecord("chrEBV", 10000));
+        List<SAMRecord> records = List.of(
+                mapped(header, "clip", 0x1 | 0x40, "chr1", 100, "20S80M", "CCCCC"),
+                mapped(header, "mappedWithUnmappedMate", 0x1 | 0x8 | 0x40, "chr1", 200, "100M", "AAAAA"),
+                mapped(header, "unmappedWithMappedMate", 0x1 | 0x4 | 0x80, "chr1", 200, "*", "TTTTT"),
+                mapped(header, "ebv", 0x1 | 0x40, "chrEBV", 300, "100M", "GGGGG"),
+                unmapped(header, "fullyUnmapped", 0x1 | 0x4 | 0x8 | 0x80, "ACGTA"));
+
+        String bam = writeIndexedBam(header, records);
+        String fasta = new File(mTempDir.getRoot(), "fully_unmapped_and_decoy.fasta").getPath();
+
+        CandidateReadFilter filter = filter(CandidateReadSource.FULLY_UNMAPPED_AND_VIRUS);
+        int count = new CandidateReadExtractor(null, filter, 2).extract(bam, fasta);
+
+        assertEquals(2, count);
+        assertEquals(Set.of(">ebv/1\nGGGGG", ">fullyUnmapped/2\nACGTA"), fastaEntries(fasta));
     }
 
     @Test
@@ -100,9 +122,15 @@ public class CandidateReadExtractorTest
         String bam = writeBam(header, List.of(unmapped(header, "unmap", 0x4, "GGGGG")));
         String fasta = new File(mTempDir.getRoot(), "candidates.fasta").getPath();
 
-        CandidateReadExtractor extractor = new CandidateReadExtractor(null, new CandidateReadFilter(20, singleton("chrEBV")));
+        CandidateReadFilter filter = filter(CandidateReadSource.ALL);
+        CandidateReadExtractor extractor = new CandidateReadExtractor(null, filter, 1);
 
         assertThrows(UserInputError.class, () -> extractor.extract(bam, fasta));
+    }
+
+    private static CandidateReadFilter filter(CandidateReadSource source)
+    {
+        return new CandidateReadFilter(source, 20, singleton("chrEBV"), null);
     }
 
     private static SAMFileHeader header(SAMFileHeader.SortOrder sortOrder, int contigLength)

@@ -20,7 +20,6 @@ import java.util.NoSuchElementException;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import com.hartwig.hmftools.common.bam.BamSlicer;
 import com.hartwig.hmftools.common.perf.TaskQueue;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.viridian.common.UserInputError;
@@ -31,6 +30,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMRecordIterator;
 import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
@@ -46,11 +46,6 @@ public class CandidateReadExtractor
     private final int mThreads;
 
     private static final Logger LOGGER = LogManager.getLogger(CandidateReadExtractor.class);
-
-    public CandidateReadExtractor(@Nullable String refGenomeFile, CandidateReadFilter filter)
-    {
-        this(refGenomeFile, filter, 1);
-    }
 
     public CandidateReadExtractor(@Nullable String refGenomeFile, CandidateReadFilter filter, int threads)
     {
@@ -94,7 +89,7 @@ public class CandidateReadExtractor
         }
     }
 
-    private static Queue<WorkerTask> scanTasks(SamReaderFactory readerFactory, String tumorBamFile)
+    private Queue<WorkerTask> scanTasks(SamReaderFactory readerFactory, String tumorBamFile)
     {
         try(SamReader reader = readerFactory.open(new File(tumorBamFile)))
         {
@@ -104,12 +99,15 @@ public class CandidateReadExtractor
             }
 
             Queue<WorkerTask> tasks = new ConcurrentLinkedQueue<>();
-            // The unmapped block is not sharded, and it can be quite large, so run it first to avoid a long tail.
-            tasks.add(WorkerTask.UNMAPPED_READS);
+            // The fully unmapped block is not sharded, and it can be quite large, so run it first to avoid a long tail.
+            tasks.add(WorkerTask.FULLY_UNMAPPED_READS);
             for(SAMSequenceRecord sequence : reader.getFileHeader().getSequenceDictionary().getSequences())
             {
-                partitionChromosome(sequence, VIRAL_READ_EXTRACTION_PARTITION_SIZE)
-                        .forEach(partition -> tasks.add(new WorkerTask(partition)));
+                if(mFilter.isCandidateContig(sequence.getSequenceName()))
+                {
+                    partitionChromosome(sequence, VIRAL_READ_EXTRACTION_PARTITION_SIZE)
+                            .forEach(partition -> tasks.add(new WorkerTask(partition)));
+                }
             }
             return tasks;
         }
@@ -145,13 +143,13 @@ public class CandidateReadExtractor
             @Nullable ChrBaseRegion region
     )
     {
-        static final WorkerTask UNMAPPED_READS = new WorkerTask(null);
+        static final WorkerTask FULLY_UNMAPPED_READS = new WorkerTask(null);
 
         @NotNull
         @Override
         public String toString()
         {
-            return region != null ? region.toString() : "unmapped";
+            return region != null ? region.toString() : "fully unmapped";
         }
     }
 
@@ -161,17 +159,12 @@ public class CandidateReadExtractor
         private final TaskQueue<WorkerTask> mTasks;
         private final SamReader mReader;
         private final FastaPart mPart;
-        private final BamSlicer mSlicer;
 
         private Worker(TaskQueue<WorkerTask> tasks, SamReader reader, FastaPart part)
         {
             mTasks = tasks;
             mReader = reader;
             mPart = part;
-            // Ignore duplicates, supplementaries, and secondaries. These would be dropped by our filter anyway, so may
-            // as well filter upfront.
-            mSlicer = new BamSlicer(0, false, false, false);
-            mSlicer.setKeepUnmapped();
         }
 
         private FastaPart part() { return mPart; }
@@ -200,20 +193,21 @@ public class CandidateReadExtractor
             ChrBaseRegion region = task.region();
             if(region == null)
             {
-                mSlicer.queryUnmapped(mReader, this::processRecord);
+                try(SAMRecordIterator records = mReader.queryUnmapped())
+                {
+                    records.forEachRemaining(this::processRecord);
+                }
             }
             else
             {
                 // A mapped read is owned by the partition containing its start, so copies returned by an overlapping
                 // neighbour partition are ignored.
-                mSlicer.slice(
-                        mReader, region, record ->
-                        {
-                            if(record.getAlignmentStart() >= region.start())
-                            {
-                                processRecord(record);
-                            }
-                        });
+                try(SAMRecordIterator records = mReader.queryOverlapping(region.Chromosome, region.start(), region.end()))
+                {
+                    records.stream()
+                            .filter(record -> record.getAlignmentStart() >= region.start())
+                            .forEach(this::processRecord);
+                }
             }
 
             LOGGER.debug(
@@ -223,7 +217,7 @@ public class CandidateReadExtractor
 
         private void processRecord(SAMRecord record)
         {
-            if(mFilter.isCandidate(record))
+            if(mFilter.isCandidateRecord(record))
             {
                 mPart.add(record);
             }

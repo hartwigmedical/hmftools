@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.viridian.app;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.common.bwa.BwaUtils.BWA_LIB_PATH;
 import static com.hartwig.hmftools.common.bwa.BwaUtils.BWA_LIB_PATH_DESC;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
@@ -22,7 +24,12 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputId
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.VIRAL_READ_ALIGNMENT_BATCH_SIZE_DEFAULT;
 
+import java.util.Arrays;
+import java.util.stream.Collectors;
+
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.viridian.common.UserInputError;
+import com.hartwig.hmftools.viridian.detection.extract.CandidateReadSource;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -42,6 +49,7 @@ public record ViridianConfig(
         int threads,
         String outputDir,
         @Nullable String outputId,
+        CandidateReadSource candidateReadSource,
         boolean reuseCandidateReads,
         boolean reuseReadAlignments,
         boolean kmerFilterEnabled,
@@ -60,6 +68,10 @@ public record ViridianConfig(
     private static final String DESC_ONCOLOGY_GROUP_INFO_FILE = "Virus oncology group info TSV";
     private static final String CFG_ALIGNMENT_BATCH_SIZE = "align_batch_size";
     private static final String DESC_ALIGNMENT_BATCH_SIZE = "Candidate reads submitted to BWA per alignment call";
+    private static final String CFG_CANDIDATE_READ_SOURCE = "candidate_read_source";
+    private static final String CANDIDATE_READ_SOURCE_VALUES =
+            Arrays.stream(CandidateReadSource.values()).map(Enum::name).collect(Collectors.joining(", "));
+    private static final String DESC_CANDIDATE_READ_SOURCE = "Candidate read source: " + CANDIDATE_READ_SOURCE_VALUES;
     private static final String CFG_REUSE_CANDIDATE_READS = "reuse_candidate_reads";
     private static final String DESC_REUSE_CANDIDATE_READS =
             "Dev: skip read extraction and reuse the candidate read FASTA already at the output location";
@@ -90,11 +102,25 @@ public record ViridianConfig(
                 parseThreads(configBuilder),
                 parseOutputDir(configBuilder),
                 configBuilder.getValue(OUTPUT_ID),
+                parseCandidateReadSource(configBuilder.getValue(CFG_CANDIDATE_READ_SOURCE)),
                 configBuilder.hasFlag(CFG_REUSE_CANDIDATE_READS),
                 configBuilder.hasFlag(CFG_REUSE_READ_ALIGNMENTS),
                 configBuilder.hasFlag(CFG_KMER_FILTER),
                 configBuilder.hasFlag(CFG_VERBOSE_OUTPUT)
         );
+    }
+
+    private static CandidateReadSource parseCandidateReadSource(String value)
+    {
+        try
+        {
+            return CandidateReadSource.valueOf(value);
+        }
+        catch(IllegalArgumentException e)
+        {
+            throw new UserInputError(format(
+                    "Invalid %s: %s, expected one of: %s", CFG_CANDIDATE_READ_SOURCE, value, CANDIDATE_READ_SOURCE_VALUES));
+        }
     }
 
     public static void registerConfig(ConfigBuilder configBuilder)
@@ -112,6 +138,8 @@ public record ViridianConfig(
         configBuilder.addPath(CFG_ONCOLOGY_GROUP_INFO_FILE, true, DESC_ONCOLOGY_GROUP_INFO_FILE);
 
         configBuilder.addInteger(CFG_ALIGNMENT_BATCH_SIZE, DESC_ALIGNMENT_BATCH_SIZE, VIRAL_READ_ALIGNMENT_BATCH_SIZE_DEFAULT);
+        configBuilder.addConfigItem(
+                CFG_CANDIDATE_READ_SOURCE, false, DESC_CANDIDATE_READ_SOURCE, CandidateReadSource.ALL.toString());
         configBuilder.addFlag(CFG_REUSE_CANDIDATE_READS, DESC_REUSE_CANDIDATE_READS);
         configBuilder.addFlag(CFG_REUSE_READ_ALIGNMENTS, DESC_REUSE_READ_ALIGNMENTS);
         configBuilder.addFlag(CFG_KMER_FILTER, DESC_KMER_FILTER);

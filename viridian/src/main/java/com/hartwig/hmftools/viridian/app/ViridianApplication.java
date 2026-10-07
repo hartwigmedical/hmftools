@@ -15,7 +15,9 @@ import static com.hartwig.hmftools.viridian.common.ViridianConstants.CONTIG_SUPP
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.INTEGRATIONS_TSV_SUFFIX;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.PAIRWISE_MARGINS_TSV_SUFFIX;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.REPRESENTATIVE_ALIGNMENTS_BAM_SUFFIX;
+import static com.hartwig.hmftools.viridian.common.ViridianConstants.VIRAL_READ_MIN_SOFT_CLIP_BASES;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.VIRUS_DETECTION_TSV_SUFFIX;
+import static com.hartwig.hmftools.viridian.common.ViridianConstants.VIRUS_REF_CONTIGS;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.VIRUS_REPORT_TSV_SUFFIX;
 
 import java.io.File;
@@ -147,8 +149,9 @@ public class ViridianApplication
             kmerIndex = ViralKmerIndex.build(mConfig.virusRefFile());
         }
 
-        LOGGER.info("Extracting candidate viral reads from tumor BAM");
-        CandidateReadFilter candidateFilter = new CandidateReadFilter(kmerIndex);
+        LOGGER.info("Extracting candidate viral reads from tumor BAM using read source {}", mConfig.candidateReadSource());
+        CandidateReadFilter candidateFilter = new CandidateReadFilter(
+                mConfig.candidateReadSource(), VIRAL_READ_MIN_SOFT_CLIP_BASES, VIRUS_REF_CONTIGS, kmerIndex);
         CandidateReadExtractor mCandidateExtractor = new CandidateReadExtractor(
                 mConfig.refGenomeFile(), candidateFilter, mConfig.threads());
         mCandidateExtractor.extract(mConfig.tumorBam(), candidateFastaFile);
