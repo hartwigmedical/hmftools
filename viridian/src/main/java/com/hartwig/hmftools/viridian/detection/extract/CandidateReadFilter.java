@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Set;
 
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
-import com.hartwig.hmftools.viridian.common.UserInputError;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -180,7 +179,7 @@ public class CandidateReadFilter
         int delimiterIndex = unmapCoords.lastIndexOf(UNMAPP_COORDS_DELIM);
         if(delimiterIndex <= 0)
         {
-            throw new UserInputError("Malformed REDUX " + UNMAP_ATTRIBUTE + " attribute: " + unmapCoords);
+            throw new RuntimeException("Malformed REDUX " + UNMAP_ATTRIBUTE + " attribute: " + unmapCoords);
         }
         return unmapCoords.substring(0, delimiterIndex);
     }
