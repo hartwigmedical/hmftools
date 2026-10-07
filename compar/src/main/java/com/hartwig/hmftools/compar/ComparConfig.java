@@ -289,7 +289,9 @@ public class ComparConfig
         OldSampleId,
         OldReferenceId,
         NewSampleId,
-        NewReferenceId;
+        NewReferenceId,
+        OldSampleDir,
+        NewSampleDir;
     }
 
     private void loadSampleIds(final ConfigBuilder configBuilder)
@@ -330,7 +332,9 @@ public class ComparConfig
             Integer oldSampleIndex = fieldsIndexMap.get(SampleIdFileColumn.OldSampleId.toString());
             Integer oldReferenceIdIndex = fieldsIndexMap.get(SampleIdFileColumn.OldReferenceId.toString());
             Integer newSampleIdIndex = fieldsIndexMap.get(SampleIdFileColumn.NewSampleId.toString());
-            Integer newReferenceIdndex = fieldsIndexMap.get(SampleIdFileColumn.NewReferenceId.toString());
+            Integer newReferenceIndex = fieldsIndexMap.get(SampleIdFileColumn.NewReferenceId.toString());
+            Integer oldSampleDirIndex = fieldsIndexMap.get(SampleIdFileColumn.OldSampleDir.toString());
+            Integer newSampleDirIndex = fieldsIndexMap.get(SampleIdFileColumn.NewSampleDir.toString());
 
             for(String line : lines)
             {
@@ -344,9 +348,15 @@ public class ComparConfig
                 String oldSampleId = oldSampleIndex != null ? values[oldSampleIndex] : null;
                 String oldReferenceSampleId = oldReferenceIdIndex != null ? values[oldReferenceIdIndex] : null;
                 String newSampleId = newSampleIdIndex != null ? values[newSampleIdIndex] : null;
-                String newReferenceSampleId = newReferenceIdndex != null ? values[newReferenceIdndex] : null;
+                String newReferenceSampleId = newReferenceIndex != null ? values[newReferenceIndex] : null;
 
                 registerSampleIds(sampleId, referenceId, oldSampleId, oldReferenceSampleId, newSampleId, newReferenceSampleId);
+
+                if(oldSampleDirIndex != null)
+                    registerSampleSpecificSampleDir(OLD, sampleId, values[oldSampleDirIndex]);
+
+                if(newSampleDirIndex != null)
+                    registerSampleSpecificSampleDir(NEW, sampleId, values[newSampleDirIndex]);
             }
 
             CMP_LOGGER.info("loaded {} samples from file", SampleIds.size());
@@ -384,6 +394,25 @@ public class ComparConfig
 
         if(newReferenceSampleId != null)
             newSourceData.ReferenceSampleIdMapping.put(sampleId, newReferenceSampleId);
+    }
+
+    private void registerSampleSpecificSampleDir(final SourceType sourceType, final String sampleId, final String sampleDir)
+    {
+        if(sampleDir.isEmpty())
+            return;
+
+        SourceData sourceData = getSourceData(sourceType);
+
+        if(!sourceData.isPipelineSourced())
+        {
+            CMP_LOGGER.error(
+                    "sample({}) has a {} sample directory in the sample IDs file but source {} is not pipeline-sourced", sampleId,
+                    sourceType, sourceType);
+            mIsValid = false;
+            return;
+        }
+
+        sourceData.PipelinePaths.addSampleDirOverride(sourceSampleId(sourceType, sampleId), sampleDir);
     }
 
     private static String formConfigSourceStr(final String sourceType, final String sourceName)

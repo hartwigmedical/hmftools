@@ -41,6 +41,9 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.V_CHORD_DIR_
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.convertWildcardSamplePath;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 
+import java.util.Map;
+
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.pipeline.PipelineToolDirectories;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
@@ -78,13 +81,17 @@ public class PipelineSourcePaths
     private static final String GERMLINE_BAM_METRICS = "germline_bam_metrics_dir";
     private static final String SNP_GENOTYPE = "snp_genotype_dir";
 
-    public PipelineSourcePaths(
+    private final String mSampleDir;
+    private final PipelineToolDirectories mDefaultToolDirs;
+    private final Map<String,String> mSampleDirOverrides; // source sample ID to sample root directory
+
+    private PipelineSourcePaths(
             final SourceType source, final String linx, final String cobalt, final String purple, final String linxGermline,
             final String cuppa, final String lilac, final String chord, final String peach, final String virus,
             final String sageSomaticDir, final String paveSomaticDir, final String somaticUnfilteredVcf,
             final String tumorFlagstat, final String germlineFlagstat, final String tumorBamMetrics,
             final String germlineBamMetrics, final String snpGenotype, final String cider, final String teal, final String vChord,
-            final String sigs, final String isofox)
+            final String sigs, final String isofox, final String sampleDir, final PipelineToolDirectories defaultToolDirs)
     {
         Source = source;
         Linx = linx;
@@ -109,34 +116,54 @@ public class PipelineSourcePaths
         VChord = vChord;
         Sigs = sigs;
         Isofox = isofox;
+
+        mSampleDir = sampleDir;
+        mDefaultToolDirs = defaultToolDirs;
+        mSampleDirOverrides = Maps.newHashMap();
+    }
+
+    public void addSampleDirOverride(final String sampleId, final String sampleDir)
+    {
+        mSampleDirOverrides.put(sampleId, sampleDir);
     }
 
     public static PipelineSourcePaths sampleInstance(final PipelineSourcePaths fileSources, final String sampleId, final String referenceId)
     {
+        String sampleDir = checkAddDirSeparator(fileSources.mSampleDirOverrides.getOrDefault(sampleId, fileSources.mSampleDir));
+        PipelineToolDirectories defaultToolDirs = fileSources.mDefaultToolDirs;
+
         return new PipelineSourcePaths(
                 fileSources.Source,
-                convertWildcardSamplePath(fileSources.Linx, sampleId, referenceId),
-                convertWildcardSamplePath(fileSources.Cobalt, sampleId, referenceId),
-                convertWildcardSamplePath(fileSources.Purple, sampleId, referenceId),
-                convertWildcardSamplePath(fileSources.LinxGermline, sampleId, referenceId),
-                convertWildcardSamplePath(fileSources.Cuppa, sampleId, referenceId),
-                convertWildcardSamplePath(fileSources.Lilac, sampleId, referenceId),
-                convertWildcardSamplePath(fileSources.Chord, sampleId, referenceId),
-                convertWildcardSamplePath(fileSources.Peach, sampleId, referenceId),
-                convertWildcardSamplePath(fileSources.Virus, sampleId, referenceId),
-                convertWildcardSamplePath(fileSources.SageSomatic, sampleId, referenceId),
-                convertWildcardSamplePath(fileSources.PaveSomatic, sampleId, referenceId),
+                resolveSamplePath(sampleDir, defaultToolDirs.linxSomaticDir(), fileSources.Linx, sampleId, referenceId),
+                resolveSamplePath(sampleDir, defaultToolDirs.cobaltDir(), fileSources.Cobalt, sampleId, referenceId),
+                resolveSamplePath(sampleDir, defaultToolDirs.purpleDir(), fileSources.Purple, sampleId, referenceId),
+                resolveSamplePath(sampleDir, defaultToolDirs.linxGermlineDir(), fileSources.LinxGermline, sampleId, referenceId),
+                resolveSamplePath(sampleDir, defaultToolDirs.cuppaDir(), fileSources.Cuppa, sampleId, referenceId),
+                resolveSamplePath(sampleDir, defaultToolDirs.lilacDir(), fileSources.Lilac, sampleId, referenceId),
+                resolveSamplePath(sampleDir, defaultToolDirs.chordDir(), fileSources.Chord, sampleId, referenceId),
+                resolveSamplePath(sampleDir, defaultToolDirs.peachDir(), fileSources.Peach, sampleId, referenceId),
+                resolveSamplePath(sampleDir, defaultToolDirs.virusInterpreterDir(), fileSources.Virus, sampleId, referenceId),
+                resolveSamplePath(sampleDir, defaultToolDirs.sageSomaticDir(), fileSources.SageSomatic, sampleId, referenceId),
+                resolveSamplePath(sampleDir, defaultToolDirs.paveSomaticDir(), fileSources.PaveSomatic, sampleId, referenceId),
                 convertWildcardSamplePath(fileSources.SomaticUnfilteredVcf, sampleId, referenceId),
-                convertWildcardSamplePath(fileSources.TumorFlagstat, sampleId, referenceId),
-                convertWildcardSamplePath(fileSources.GermlineFlagstat, sampleId, referenceId),
-                convertWildcardSamplePath(fileSources.TumorBamMetrics, sampleId, referenceId),
-                convertWildcardSamplePath(fileSources.GermlineBamMetrics, sampleId, referenceId),
-                convertWildcardSamplePath(fileSources.SnpGenotype, sampleId, referenceId),
-                convertWildcardSamplePath(fileSources.Cider, sampleId, referenceId),
-                convertWildcardSamplePath(fileSources.Teal, sampleId, referenceId),
-                convertWildcardSamplePath(fileSources.VChord, sampleId, referenceId),
-                convertWildcardSamplePath(fileSources.Sigs, sampleId, referenceId),
-                convertWildcardSamplePath(fileSources.Isofox, sampleId, referenceId));
+                resolveSamplePath(sampleDir, defaultToolDirs.tumorFlagstatDir(), fileSources.TumorFlagstat, sampleId, referenceId),
+                resolveSamplePath(sampleDir, defaultToolDirs.germlineFlagstatDir(), fileSources.GermlineFlagstat, sampleId, referenceId),
+                resolveSamplePath(sampleDir, defaultToolDirs.tumorMetricsDir(), fileSources.TumorBamMetrics, sampleId, referenceId),
+                resolveSamplePath(sampleDir, defaultToolDirs.germlineMetricsDir(), fileSources.GermlineBamMetrics, sampleId, referenceId),
+                resolveSamplePath(sampleDir, defaultToolDirs.snpGenotypeDir(), fileSources.SnpGenotype, sampleId, referenceId),
+                resolveSamplePath(sampleDir, defaultToolDirs.ciderDir(), fileSources.Cider, sampleId, referenceId),
+                resolveSamplePath(sampleDir, defaultToolDirs.tealDir(), fileSources.Teal, sampleId, referenceId),
+                resolveSamplePath(sampleDir, defaultToolDirs.vChordDir(), fileSources.VChord, sampleId, referenceId),
+                resolveSamplePath(sampleDir, defaultToolDirs.sigsDir(), fileSources.Sigs, sampleId, referenceId),
+                resolveSamplePath(sampleDir, defaultToolDirs.isofoxDir(), fileSources.Isofox, sampleId, referenceId),
+                null, null);
+    }
+
+    private static String resolveSamplePath(
+            final String sampleDir, final String toolDefaultDir, final String configuredToolDir,
+            final String sampleId, final String referenceId)
+    {
+        return convertWildcardSamplePath(getDirectory(sampleDir, toolDefaultDir, configuredToolDir), sampleId, referenceId);
     }
 
     private static void addPathConfig(
@@ -207,43 +234,41 @@ public class PipelineSourcePaths
 
     public static PipelineSourcePaths fromConfig(final SourceType sourceType, final ConfigBuilder configBuilder)
     {
-        String sampleDir = checkAddDirSeparator(getConfigValue(configBuilder, SAMPLE_DIR, sourceType));
+        String sampleDir = getConfigValue(configBuilder, SAMPLE_DIR, sourceType);
 
         PipelineToolDirectories defaultToolDirs = resolveDefaultToolDirs(configBuilder, sourceType);
 
-        String linxDir = getDirectory(configBuilder, sampleDir, defaultToolDirs.linxSomaticDir(), LINX_DIR_CFG, sourceType);
-
-        String linxGermlineDir = getDirectory(
-                configBuilder, sampleDir, defaultToolDirs.linxGermlineDir(), LINX_GERMLINE_DIR_CFG, sourceType);
-
-        String cobaltDir = getDirectory(configBuilder, sampleDir, defaultToolDirs.cobaltDir(), COBALT_DIR_CFG, sourceType);
-        String purpleDir = getDirectory(configBuilder, sampleDir, defaultToolDirs.purpleDir(), PURPLE_DIR_CFG, sourceType);
-        String cuppaDir = getDirectory(configBuilder, sampleDir, defaultToolDirs.cuppaDir(), CUPPA_DIR_CFG, sourceType);
-        String lilacDir = getDirectory(configBuilder, sampleDir, defaultToolDirs.lilacDir(), LILAC_DIR_CFG, sourceType);
-        String chordDir = getDirectory(configBuilder, sampleDir, defaultToolDirs.chordDir(), CHORD_DIR_CFG, sourceType);
-        String peachDir = getDirectory(configBuilder, sampleDir, defaultToolDirs.peachDir(), PEACH_DIR_CFG, sourceType);
-        String virusDir = getDirectory(configBuilder, sampleDir, defaultToolDirs.virusInterpreterDir(), VIRUS_DIR_CFG, sourceType);
-
-        String sageSomaticDir = getDirectory(configBuilder, sampleDir, defaultToolDirs.sageSomaticDir(), SAGE_DIR_CFG, sourceType);
-        String paveSomaticDir = getDirectory(configBuilder, sampleDir, defaultToolDirs.paveSomaticDir(), PAVE_SOMATIC_DIR_CFG, sourceType);
-
-        String somaticUnfilteredVcf = getConfigValue(configBuilder, SOMATIC_UNFILTERED_VCF, sourceType);
-
-        String tumorFlagstat = getDirectory(configBuilder, sampleDir, defaultToolDirs.tumorFlagstatDir(), TUMOR_FLAGSTAT, sourceType);
-        String germlineFlagstat = getDirectory(configBuilder, sampleDir, defaultToolDirs.germlineFlagstatDir(), GERMLINE_FLAGSTAT, sourceType);
-        String tumorBamMetrics = getDirectory(configBuilder, sampleDir, defaultToolDirs.tumorMetricsDir(), TUMOR_BAM_METRICS, sourceType);
-        String germlineBamMetrics = getDirectory(configBuilder, sampleDir, defaultToolDirs.germlineMetricsDir(), GERMLINE_BAM_METRICS, sourceType);
-        String snpGenotype = getDirectory(configBuilder, sampleDir, defaultToolDirs.snpGenotypeDir(), SNP_GENOTYPE, sourceType);
-        String ciderDir = getDirectory(configBuilder, sampleDir, defaultToolDirs.ciderDir(), CIDER_DIR_CFG, sourceType);
-        String tealDir = getDirectory(configBuilder, sampleDir, defaultToolDirs.tealDir(), TEAL_DIR_CFG, sourceType);
-        String vChordDir = getDirectory(configBuilder, sampleDir, defaultToolDirs.vChordDir(), V_CHORD_DIR_CFG, sourceType);
-        String sigsDir = getDirectory(configBuilder, sampleDir, defaultToolDirs.sigsDir(), SIGS_DIR_CFG, sourceType);
-        String isofoxDir = getDirectory(configBuilder, sampleDir, defaultToolDirs.isofoxDir(), ISOFOX_DIR_CFG, sourceType);
-
         return new PipelineSourcePaths(
-                sourceType, linxDir, cobaltDir, purpleDir, linxGermlineDir, cuppaDir, lilacDir, chordDir, peachDir,
-                virusDir, sageSomaticDir, paveSomaticDir, somaticUnfilteredVcf, tumorFlagstat, germlineFlagstat,
-                tumorBamMetrics, germlineBamMetrics, snpGenotype, ciderDir, tealDir, vChordDir, sigsDir, isofoxDir);
+                sourceType,
+                getConfiguredToolDir(configBuilder, LINX_DIR_CFG, sourceType),
+                getConfiguredToolDir(configBuilder, COBALT_DIR_CFG, sourceType),
+                getConfiguredToolDir(configBuilder, PURPLE_DIR_CFG, sourceType),
+                getConfiguredToolDir(configBuilder, LINX_GERMLINE_DIR_CFG, sourceType),
+                getConfiguredToolDir(configBuilder, CUPPA_DIR_CFG, sourceType),
+                getConfiguredToolDir(configBuilder, LILAC_DIR_CFG, sourceType),
+                getConfiguredToolDir(configBuilder, CHORD_DIR_CFG, sourceType),
+                getConfiguredToolDir(configBuilder, PEACH_DIR_CFG, sourceType),
+                getConfiguredToolDir(configBuilder, VIRUS_DIR_CFG, sourceType),
+                getConfiguredToolDir(configBuilder, SAGE_DIR_CFG, sourceType),
+                getConfiguredToolDir(configBuilder, PAVE_SOMATIC_DIR_CFG, sourceType),
+                getConfigValue(configBuilder, SOMATIC_UNFILTERED_VCF, sourceType),
+                getConfiguredToolDir(configBuilder, TUMOR_FLAGSTAT, sourceType),
+                getConfiguredToolDir(configBuilder, GERMLINE_FLAGSTAT, sourceType),
+                getConfiguredToolDir(configBuilder, TUMOR_BAM_METRICS, sourceType),
+                getConfiguredToolDir(configBuilder, GERMLINE_BAM_METRICS, sourceType),
+                getConfiguredToolDir(configBuilder, SNP_GENOTYPE, sourceType),
+                getConfiguredToolDir(configBuilder, CIDER_DIR_CFG, sourceType),
+                getConfiguredToolDir(configBuilder, TEAL_DIR_CFG, sourceType),
+                getConfiguredToolDir(configBuilder, V_CHORD_DIR_CFG, sourceType),
+                getConfiguredToolDir(configBuilder, SIGS_DIR_CFG, sourceType),
+                getConfiguredToolDir(configBuilder, ISOFOX_DIR_CFG, sourceType),
+                sampleDir, defaultToolDirs);
+    }
+
+    private static String getConfiguredToolDir(final ConfigBuilder configBuilder, final String config, final SourceType sourceType)
+    {
+        String configStr = formSourceConfig(config, sourceType);
+        return configBuilder.hasValue(configStr) ? configBuilder.getValue(configStr) : null;
     }
 
     private static PipelineToolDirectories resolveDefaultToolDirs(final ConfigBuilder configBuilder, final SourceType sourceType)
@@ -253,19 +278,15 @@ public class PipelineSourcePaths
         return PipelineToolDirectories.resolveToolDirectories(configBuilder, pipelineFormatConfigStr, pipelineFormatFileConfigStr);
     }
 
-    private static String getDirectory(
-            final ConfigBuilder configBuilder, final String sampleDir, final String toolDefaultDir,
-            final String config, final SourceType sourceType)
+    private static String getDirectory(final String sampleDir, final String toolDefaultDir, final String configuredToolDir)
     {
         // if a tool directory is specified in config, then it overrides the default pipeline directory
         // if the root sample directory is specified, then the tool directory is relative to that, otherwise is absolute
 
-        String configStr = formSourceConfig(config, sourceType);
-
-        if(!configBuilder.hasValue(configStr) && sampleDir.isEmpty())
+        if(configuredToolDir == null && sampleDir.isEmpty())
             return "";
 
-        String toolDir = configBuilder.getValue(configStr, toolDefaultDir);
+        String toolDir = configuredToolDir != null ? configuredToolDir : toolDefaultDir;
 
         String directory = "";
 

@@ -23,15 +23,15 @@ The key configuration values to set are:
  
 ### Required configuration
 
-| Argument                          | Description                                                                                                                                          |
-|-----------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------|
-| sample                            | Tumor sample ID, OR                                                                                                                                  |
-| sample_id_file                    | File with column header SampleId and then list of sample IDs, optional Old and New sample mappings and refrence (germline) sample IDs (see examples) |
-| categories                        | 'ALL', 'PANEL', or otherwise specify a comma-separated list                                                                                          |
-| match_level                       | REPORTABLE (default) or DETAILED                                                                                                                     |
-| sample_data_old & sample_data_new | Sample root directory for pipeline output                                                                                                            |
-| TOOL_dir_old & TOOL_dir_new **    | Tool path overrides - each pipeline tool directory eg 'linx_dir_old' - relative path to 'sample_dir' if specified, otherwise absolute path           |
-| output_dir                        | Path for output file                                                                                                                                 |
+| Argument                        | Description                                                                                                                                          |
+|---------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------|
+| sample                          | Tumor sample ID, OR                                                                                                                                  |
+| sample_id_file                  | File with column header SampleId and then list of sample IDs, optional Old and New sample mappings and refrence (germline) sample IDs (see examples) |
+| categories                      | 'ALL', 'PANEL', or otherwise specify a comma-separated list                                                                                          |
+| match_level                     | REPORTABLE (default) or DETAILED                                                                                                                     |
+| sample_dir_old & sample_dir_new | Sample root directory for pipeline output                                                                                                            |
+| TOOL_dir_old & TOOL_dir_new **  | Tool path overrides - each pipeline tool directory eg 'linx_dir_old' - relative path to 'sample_dir' if specified, otherwise absolute path           |
+| output_dir                      | Path for output file                                                                                                                                 |
 
 ** set of tools are: linx, linx_germline, purple, chord, cuppa, isofox, lilac, peach, virus (i.e. virus-interpreter), sigs, snp_genotype, tumor_flagstat, germline_flagstat, tumor_bam_metrics and germline_bam_metrics.
 
@@ -72,6 +72,16 @@ The same can be done for germline sample IDs.
 sample_id_mappings.with_germline.csv
 SampleId,ReferenceId,OldSampleId,OldReferenceId,NewSampleId,NewReferenceId
 COLO829T,COLO829R,COLO829T_Old,COLO829R_Old,COLO829T_New,COLO829R_New
+```
+
+### Per-sample directories
+If the sample root directories don't follow a common pattern, they can be specified per sample in the sample ID file with the optional
+columns `OldSampleDir` and `NewSampleDir`. These override `sample_dir_old` and `sample_dir_new` respectively for that sample, while
+any tool directory overrides and the pipeline format still apply. Leave a value empty to use the default sample directory.
+```
+sample_ids_with_dirs.csv
+SampleId,OldSampleDir,NewSampleDir
+COLO829T,/path_to_sample_data/run_01/COLO829T/,/path_to_sample_data/run_02/COLO829T/
 ```
 
 ### File Sourced Data
