@@ -50,8 +50,6 @@ public record ViridianConfig(
         String outputDir,
         @Nullable String outputId,
         CandidateReadSource candidateReadSource,
-        boolean reuseCandidateReads,
-        boolean reuseReadAlignments,
         boolean kmerFilterEnabled,
         boolean verboseOutput
 )
@@ -68,17 +66,11 @@ public record ViridianConfig(
     private static final String DESC_ONCOLOGY_GROUP_INFO_FILE = "Virus oncology group info TSV";
     private static final String CFG_ALIGNMENT_BATCH_SIZE = "align_batch_size";
     private static final String DESC_ALIGNMENT_BATCH_SIZE = "Candidate reads submitted to BWA per alignment call";
-    private static final String CFG_CANDIDATE_READ_SOURCE = "candidate_read_source";
+    static final String CFG_CANDIDATE_READ_SOURCE = "candidate_read_source";
     private static final String CANDIDATE_READ_SOURCE_VALUES =
             Arrays.stream(CandidateReadSource.values()).map(Enum::name).collect(Collectors.joining(", "));
     private static final String DESC_CANDIDATE_READ_SOURCE = "Candidate read source: " + CANDIDATE_READ_SOURCE_VALUES;
-    private static final String CFG_REUSE_CANDIDATE_READS = "reuse_candidate_reads";
-    private static final String DESC_REUSE_CANDIDATE_READS =
-            "Dev: skip read extraction and reuse the candidate read FASTA already at the output location";
-    private static final String CFG_REUSE_READ_ALIGNMENTS = "reuse_read_alignments";
-    private static final String DESC_REUSE_READ_ALIGNMENTS =
-            "Dev: skip read extraction and alignment, and reuse the all-alignments BAM already at the output location";
-    private static final String CFG_KMER_FILTER = "kmer_filter";
+    static final String CFG_KMER_FILTER = "kmer_filter";
     private static final String DESC_KMER_FILTER = "Filter candidate viral reads with a kmer index";
     private static final String CFG_VERBOSE_OUTPUT = "verbose_output";
     private static final String DESC_VERBOSE_OUTPUT = "Output more information which may be useful for debugging";
@@ -103,8 +95,6 @@ public record ViridianConfig(
                 parseOutputDir(configBuilder),
                 configBuilder.getValue(OUTPUT_ID),
                 parseCandidateReadSource(configBuilder.getValue(CFG_CANDIDATE_READ_SOURCE)),
-                configBuilder.hasFlag(CFG_REUSE_CANDIDATE_READS),
-                configBuilder.hasFlag(CFG_REUSE_READ_ALIGNMENTS),
                 configBuilder.hasFlag(CFG_KMER_FILTER),
                 configBuilder.hasFlag(CFG_VERBOSE_OUTPUT)
         );
@@ -140,8 +130,6 @@ public record ViridianConfig(
         configBuilder.addInteger(CFG_ALIGNMENT_BATCH_SIZE, DESC_ALIGNMENT_BATCH_SIZE, VIRAL_READ_ALIGNMENT_BATCH_SIZE_DEFAULT);
         configBuilder.addConfigItem(
                 CFG_CANDIDATE_READ_SOURCE, false, DESC_CANDIDATE_READ_SOURCE, CandidateReadSource.ALL.toString());
-        configBuilder.addFlag(CFG_REUSE_CANDIDATE_READS, DESC_REUSE_CANDIDATE_READS);
-        configBuilder.addFlag(CFG_REUSE_READ_ALIGNMENTS, DESC_REUSE_READ_ALIGNMENTS);
         configBuilder.addFlag(CFG_KMER_FILTER, DESC_KMER_FILTER);
         configBuilder.addFlag(CFG_VERBOSE_OUTPUT, DESC_VERBOSE_OUTPUT);
 

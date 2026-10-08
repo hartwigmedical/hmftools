@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.viridian.detection.assign;
 
+import static com.hartwig.hmftools.viridian.common.Utils.fixBamIndexName;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.Comparator;
@@ -8,7 +10,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.hartwig.hmftools.viridian.common.AtomicOutput;
 import com.hartwig.hmftools.viridian.detection.align.ViralReadAlignment;
 import com.hartwig.hmftools.viridian.detection.align.ViralReadAlignmentStore;
 import com.hartwig.hmftools.viridian.detection.common.ReadId;
@@ -35,7 +36,7 @@ public class RepresentativeReadAssigner
     // Returns the alignment selected for each read.
     public static Map<ReadId, ViralReadAlignment> assign(
             ViralReadAlignmentStore alignments, Set<ViralContig> representatives,
-            String allAlignmentsBamFile, String outputBamFile) throws IOException
+            String allAlignmentsBamFile, String outputBamFile)
     {
         Map<ReadId, ViralReadAlignment> assignmentsByRead = assignReads(alignments.byRead(), representatives);
 
@@ -90,13 +91,6 @@ public class RepresentativeReadAssigner
     // Slice the BAM on the selected alignments.
     private static void writeAssignedAlignments(
             String sourceBamFile, String outputBamFile, Map<ReadId, ViralReadAlignment> assignmentsByRead)
-            throws IOException
-    {
-        AtomicOutput.writeIndexedBam(outputBamFile, bamFile -> writeAssignedRecords(sourceBamFile, bamFile, assignmentsByRead));
-    }
-
-    private static int writeAssignedRecords(
-            String sourceBamFile, String outputBamFile, Map<ReadId, ViralReadAlignment> assignmentsByRead) throws IOException
     {
         int writtenRecords = 0;
 
@@ -125,7 +119,14 @@ public class RepresentativeReadAssigner
                     }
                 }
             }
+
         }
+        catch(IOException e)
+        {
+            throw new RuntimeException("Failed to write representative alignment BAM", e);
+        }
+
+        fixBamIndexName(outputBamFile);
 
         // Double-check that the correct alignments were written; otherwise the downstream stats will be wrong.
         if(writtenRecords != assignmentsByRead.size())
@@ -133,8 +134,6 @@ public class RepresentativeReadAssigner
             throw new IllegalStateException(String.format(
                     "Wrote %d records for %d assigned reads", writtenRecords, assignmentsByRead.size()));
         }
-
-        return writtenRecords;
     }
 
     private static boolean isSameAlignment(ViralReadAlignment assigned, SAMRecord record)

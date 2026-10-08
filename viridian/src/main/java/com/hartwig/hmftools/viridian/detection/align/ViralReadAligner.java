@@ -4,10 +4,10 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.ALIGNMENT_SCORE_ATT
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.MISMATCHES_AND_DELETIONS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.utils.Streams.partitionStream;
+import static com.hartwig.hmftools.viridian.common.Utils.fixBamIndexName;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.VIRAL_READ_MIN_ALIGN_SCORE;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
@@ -17,7 +17,6 @@ import com.hartwig.hmftools.common.bwa.BwaMemAligner;
 import com.hartwig.hmftools.common.bwa.BwaMemAlignerConfig;
 import com.hartwig.hmftools.common.bwa.IBwaMemAligner;
 import com.hartwig.hmftools.common.codon.Nucleotides;
-import com.hartwig.hmftools.viridian.common.AtomicOutput;
 import com.hartwig.hmftools.viridian.reference.VirusReference;
 
 import org.apache.logging.log4j.LogManager;
@@ -56,16 +55,7 @@ public class ViralReadAligner
         mChunkSize = chunkSize;
     }
 
-    public void align(String candidateFastaFile, String outputBamFile) throws IOException
-    {
-        ChunkResult total = AtomicOutput.writeIndexedBam(outputBamFile, bamFile -> writeAlignments(candidateFastaFile, bamFile));
-
-        LOGGER.debug(
-                "Aligned {} candidate reads: {} aligned reads, {} alignments total",
-                total.totalReads(), total.alignedReads(), total.totalAlignments());
-    }
-
-    private ChunkResult writeAlignments(String candidateFastaFile, String outputBamFile)
+    public void align(String candidateFastaFile, String outputBamFile)
     {
         try(FastaSequenceFile fasta = new FastaSequenceFile(new File(candidateFastaFile), true);
                 SAMFileWriter writer = new SAMFileWriterFactory()
@@ -73,10 +63,16 @@ public class ViralReadAligner
         {
             // Written a chunk at a time so peak heap is one chunk, not the whole sample.
             Stream<ReferenceSequence> reads = Stream.generate(fasta::nextSequence).takeWhile(Objects::nonNull);
-            return partitionStream(reads, mChunkSize)
+            ChunkResult total = partitionStream(reads, mChunkSize)
                     .map(chunk -> alignChunk(chunk, writer))
                     .reduce(ChunkResult.EMPTY, ChunkResult::add);
+
+            LOGGER.debug(
+                    "Aligned {} candidate reads: {} aligned reads, {} alignments total",
+                    total.totalReads(), total.alignedReads(), total.totalAlignments());
         }
+
+        fixBamIndexName(outputBamFile);
     }
 
     private ChunkResult alignChunk(List<ReferenceSequence> reads, SAMFileWriter writer)

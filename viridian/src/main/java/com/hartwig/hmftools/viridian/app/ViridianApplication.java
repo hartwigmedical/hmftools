@@ -16,12 +16,12 @@ import static com.hartwig.hmftools.viridian.common.ViridianConstants.INTEGRATION
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.PAIRWISE_MARGINS_TSV_SUFFIX;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.READ_VOTE_CORRECT_BASE_PROBABILITY;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.REPRESENTATIVE_ALIGNMENTS_BAM_SUFFIX;
+import static com.hartwig.hmftools.viridian.common.ViridianConstants.RUN_MANIFEST_TSV_SUFFIX;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.VIRAL_READ_MIN_SOFT_CLIP_BASES;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.VIRUS_DETECTION_TSV_SUFFIX;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.VIRUS_REF_CONTIGS;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.VIRUS_REPORT_TSV_SUFFIX;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -95,7 +95,9 @@ public class ViridianApplication
 
         BwaMemAligner.initLibrary(mConfig.bwaLibPath());
 
-        AllContigsReadAlignments allContigsReadAlignments = getAllContigsReadAlignments();
+        String candidateReadFastaFile = extractCandidateReads();
+
+        AllContigsReadAlignments allContigsReadAlignments = alignCandidateReadsToViralContigs(candidateReadFastaFile);
 
         List<ContigSupport> contigSupports = computeViralContigSupport(allContigsReadAlignments);
 
@@ -115,34 +117,16 @@ public class ViridianApplication
 
         reportViruses(detectedViruses, integrationCounts);
 
+        OutputWriter.writeRunManifest(outputFile(RUN_MANIFEST_TSV_SUFFIX), mConfig);
+
         LOGGER.info("{} complete, mins({})", APP_NAME, runTimeMinsStr(startTimeMs));
     }
 
-    private AllContigsReadAlignments getAllContigsReadAlignments() throws IOException
-    {
-        String allAlignmentsBamFile = outputFile(ALL_ALIGNMENTS_BAM_SUFFIX);
-        // Alignment is pretty slow, so allow reusing the cached BAM for a rerun.
-        if(!canReuseExistingFile(mConfig.reuseReadAlignments(), allAlignmentsBamFile, "all-alignments BAM"))
-        {
-            alignCandidateReadsToViralContigs(allAlignmentsBamFile);
-        }
-        return AllContigsReadAlignments.load(allAlignmentsBamFile, mVirusReference);
-    }
-
-    private String getCandidateReads() throws IOException
+    // Extract reads which may be viral into a FASTA.
+    private String extractCandidateReads()
     {
         String candidateFastaFile = outputFile(CANDIDATES_FASTA_SUFFIX);
-        // Read extraction is very slow for large samples, so allow reusing the cached FASTA for a rerun.
-        if(!canReuseExistingFile(mConfig.reuseCandidateReads(), candidateFastaFile, "candidate read FASTA"))
-        {
-            extractCandidateReads(candidateFastaFile);
-        }
-        return candidateFastaFile;
-    }
 
-    // Extract reads which may be viral into a FASTA.
-    private void extractCandidateReads(String candidateFastaFile) throws IOException
-    {
         ViralKmerIndex kmerIndex = null;
         if(mConfig.kmerFilterEnabled())
         {
@@ -156,17 +140,19 @@ public class ViridianApplication
         CandidateReadExtractor mCandidateExtractor = new CandidateReadExtractor(
                 mConfig.refGenomeFile(), candidateFilter, mConfig.threads());
         mCandidateExtractor.extract(mConfig.tumorBam(), candidateFastaFile);
+
+        return candidateFastaFile;
     }
 
     // Align potentially viral reads to all virus genomes, so we can decide which viruses are present.
-    private void alignCandidateReadsToViralContigs(String allAlignmentsBamFile) throws IOException
+    private AllContigsReadAlignments alignCandidateReadsToViralContigs(String candidateReadFasta)
     {
-        String candidateReadFasta = getCandidateReads();
-
         LOGGER.info("Aligning candidate reads to virus genomes");
+        String allAlignmentsBamFile = outputFile(ALL_ALIGNMENTS_BAM_SUFFIX);
         ViralReadAligner viralReadAligner = ViralReadAligner.create(
                 mVirusReference, mConfig.virusBwaIndexImage(), mConfig.threads(), mConfig.alignmentBatchSize());
         viralReadAligner.align(candidateReadFasta, allAlignmentsBamFile);
+        return AllContigsReadAlignments.load(allAlignmentsBamFile, mVirusReference);
     }
 
     // Compute support information for each virus genome and decide which genomes may be present.
@@ -203,7 +189,6 @@ public class ViridianApplication
     // This is simply filtering down to each read's alignment to that genome contig (or nothing, if it didn't align there at all).
     private ViralReadAlignmentStore assignReadsToRepresentatives(
             ViralReadAlignmentStore alignments, List<OncologyGroupRepresentativeSelection> representativeSelections)
-            throws IOException
     {
         LOGGER.info("Assigning reads to representative contigs");
         Set<ViralContig> representatives = representativeSelections.stream()
@@ -313,25 +298,6 @@ public class ViridianApplication
         }
         f += "." + APP_NAME.toLowerCase() + suffix;
         return f;
-    }
-
-    // Dev/debug skip: if requested, if the file is already cached, use that rather than recomputing it.
-    private static boolean canReuseExistingFile(boolean reuseRequested, String file, String description)
-    {
-        if(!reuseRequested)
-        {
-            return false;
-        }
-        else if(new File(file).exists())
-        {
-            LOGGER.info("Reusing existing {}: {}", description, file);
-            return true;
-        }
-        else
-        {
-            LOGGER.debug("Existing {} not present, regenerating: {}", description, file);
-            return false;
-        }
     }
 
     public static void main(@NotNull String[] args)

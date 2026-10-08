@@ -16,6 +16,7 @@ public class ViridianConstants
     public static final String VIRUS_DETECTION_TSV_SUFFIX = ".virus_detection.tsv";
     public static final String INTEGRATIONS_TSV_SUFFIX = ".integrations.tsv";
     public static final String VIRUS_REPORT_TSV_SUFFIX = ".virus_report.tsv";
+    public static final String RUN_MANIFEST_TSV_SUFFIX = ".manifest.tsv";
 
     // Genome partition size for multi-threaded candidate extraction.
     // This value was chosen approximately based on observed highest performance.

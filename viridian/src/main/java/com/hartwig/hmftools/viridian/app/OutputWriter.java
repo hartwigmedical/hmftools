@@ -6,6 +6,8 @@ import static java.util.Comparator.nullsLast;
 import static java.util.Comparator.reverseOrder;
 import static java.util.stream.Collectors.toMap;
 
+import static com.hartwig.hmftools.viridian.app.ViridianConfig.CFG_CANDIDATE_READ_SOURCE;
+import static com.hartwig.hmftools.viridian.app.ViridianConfig.CFG_KMER_FILTER;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.REPORTED_MARGINS;
 
 import java.util.List;
@@ -467,6 +469,16 @@ public class OutputWriter
 
     private static final List<String> VIRUS_REPORT_COLUMNS =
             Stream.of(VirusReportColumn.values()).map(Enum::name).toList();
+
+    public static void writeRunManifest(String file, ViridianConfig config)
+    {
+        DelimFileWriter.write(
+                file, List.of(CFG_CANDIDATE_READ_SOURCE, CFG_KMER_FILTER), List.of(config), (runConfig, row) ->
+                {
+                    row.set(CFG_CANDIDATE_READ_SOURCE, runConfig.candidateReadSource().name());
+                    row.set(CFG_KMER_FILTER, runConfig.kmerFilterEnabled());
+                });
+    }
 
     private static String asString(@Nullable Object value)
     {
