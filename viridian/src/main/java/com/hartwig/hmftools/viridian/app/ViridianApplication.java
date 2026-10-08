@@ -118,7 +118,7 @@ public class ViridianApplication
         LOGGER.info("{} complete, mins({})", APP_NAME, runTimeMinsStr(startTimeMs));
     }
 
-    private AllContigsReadAlignments getAllContigsReadAlignments()
+    private AllContigsReadAlignments getAllContigsReadAlignments() throws IOException
     {
         String allAlignmentsBamFile = outputFile(ALL_ALIGNMENTS_BAM_SUFFIX);
         // Alignment is pretty slow, so allow reusing the cached BAM for a rerun.
@@ -129,7 +129,7 @@ public class ViridianApplication
         return AllContigsReadAlignments.load(allAlignmentsBamFile, mVirusReference);
     }
 
-    private String getCandidateReads()
+    private String getCandidateReads() throws IOException
     {
         String candidateFastaFile = outputFile(CANDIDATES_FASTA_SUFFIX);
         // Read extraction is very slow for large samples, so allow reusing the cached FASTA for a rerun.
@@ -141,7 +141,7 @@ public class ViridianApplication
     }
 
     // Extract reads which may be viral into a FASTA.
-    private void extractCandidateReads(String candidateFastaFile)
+    private void extractCandidateReads(String candidateFastaFile) throws IOException
     {
         ViralKmerIndex kmerIndex = null;
         if(mConfig.kmerFilterEnabled())
@@ -159,7 +159,7 @@ public class ViridianApplication
     }
 
     // Align potentially viral reads to all virus genomes, so we can decide which viruses are present.
-    private void alignCandidateReadsToViralContigs(String allAlignmentsBamFile)
+    private void alignCandidateReadsToViralContigs(String allAlignmentsBamFile) throws IOException
     {
         String candidateReadFasta = getCandidateReads();
 
@@ -203,6 +203,7 @@ public class ViridianApplication
     // This is simply filtering down to each read's alignment to that genome contig (or nothing, if it didn't align there at all).
     private ViralReadAlignmentStore assignReadsToRepresentatives(
             ViralReadAlignmentStore alignments, List<OncologyGroupRepresentativeSelection> representativeSelections)
+            throws IOException
     {
         LOGGER.info("Assigning reads to representative contigs");
         Set<ViralContig> representatives = representativeSelections.stream()
@@ -321,8 +322,7 @@ public class ViridianApplication
         {
             return false;
         }
-        // Check the length rather than only existence, as zero-length files may be left from a run that was stopped midway.
-        else if(new File(file).length() > 0)
+        else if(new File(file).exists())
         {
             LOGGER.info("Reusing existing {}: {}", description, file);
             return true;

@@ -22,6 +22,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 import com.hartwig.hmftools.common.perf.TaskQueue;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.viridian.common.AtomicOutput;
 import com.hartwig.hmftools.viridian.common.UserInputError;
 
 import org.apache.logging.log4j.LogManager;
@@ -54,7 +55,7 @@ public class CandidateReadExtractor
         mThreads = threads;
     }
 
-    public int extract(String tumorBamFile, String outputFastaFile)
+    public int extract(String tumorBamFile, String outputFastaFile) throws IOException
     {
         SamReaderFactory readerFactory = SamReaderFactory.makeDefault().validationStringency(ValidationStringency.SILENT);
         if(mRefGenomeFile != null)
@@ -117,10 +118,15 @@ public class CandidateReadExtractor
         }
     }
 
-    private static int joinFastaParts(List<FastaPart> parts, String outputFastaFile)
+    private static int joinFastaParts(List<FastaPart> parts, String outputFastaFile) throws IOException
     {
         LOGGER.debug("Joining {} candidate FASTA parts", parts.size());
 
+        return AtomicOutput.write(outputFastaFile, fastaFile -> writeJoinedFasta(parts, fastaFile));
+    }
+
+    private static int writeJoinedFasta(List<FastaPart> parts, String outputFastaFile) throws IOException
+    {
         int candidateCount = 0;
         try(OutputStream out = new BufferedOutputStream(new FileOutputStream(outputFastaFile)))
         {
@@ -131,11 +137,6 @@ public class CandidateReadExtractor
                 candidateCount += part.readCount();
             }
         }
-        catch(IOException e)
-        {
-            throw new RuntimeException("Failed to join candidate FASTA parts", e);
-        }
-
         return candidateCount;
     }
 
