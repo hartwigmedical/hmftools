@@ -5,7 +5,7 @@ import com.hartwig.hmftools.common.purple.PurityContext;
 
 import org.jetbrains.annotations.Nullable;
 
-public final class ClonalCoverage
+public final class Clonality
 {
     // Expected virus genome read depth from one virus genome copy carried in each tumor cell.
     // Divide a virus genome's mean depth by this number to get its copies per tumor cell.

@@ -24,7 +24,7 @@ import com.hartwig.hmftools.common.purple.TumorMutationalStatus;
 
 import org.junit.Test;
 
-public class ClonalCoverageTest
+public class ClonalityTest
 {
     private static final double EPSILON = 1e-9;
 
@@ -32,7 +32,7 @@ public class ClonalCoverageTest
     public void testSimpleFullPurityCase()
     {
         // rho=1, psi=2: denom = 1*2 + 2*0 = 2; depth per copy = D_host*rho/denom = 100*1/2 = 50
-        Double depthPerCopy = ClonalCoverage.expectedViralDepthPerCopy(
+        Double depthPerCopy = Clonality.expectedViralDepthPerCopy(
                 purityContext(1.0, 2.0, FittedPurityMethod.SOMATIC, Set.of(PurpleQCStatus.PASS)),
                 bamMetrics(100.0));
 
@@ -44,7 +44,7 @@ public class ClonalCoverageTest
     public void testNormalisesForSubclonalPurity()
     {
         // denom = rho*psi + 2(1-rho) = 0.5*2 + 2*0.5 = 2; depth per copy = 30*0.5/2 = 7.5
-        Double depthPerCopy = ClonalCoverage.expectedViralDepthPerCopy(
+        Double depthPerCopy = Clonality.expectedViralDepthPerCopy(
                 purityContext(0.5, 2.0, FittedPurityMethod.SOMATIC, Set.of(PurpleQCStatus.PASS)),
                 bamMetrics(30.0));
 
@@ -55,7 +55,7 @@ public class ClonalCoverageTest
     @Test
     public void testComputesWhenFitOnlyWarns()
     {
-        Double depthPerCopy = ClonalCoverage.expectedViralDepthPerCopy(
+        Double depthPerCopy = Clonality.expectedViralDepthPerCopy(
                 purityContext(0.8, 2.0, FittedPurityMethod.SOMATIC, Set.of(PurpleQCStatus.WARN_DELETED_GENES)),
                 bamMetrics(30.0));
 
@@ -65,7 +65,7 @@ public class ClonalCoverageTest
     @Test
     public void testEmptyWhenPurityFitFailed()
     {
-        Double depthPerCopy = ClonalCoverage.expectedViralDepthPerCopy(
+        Double depthPerCopy = Clonality.expectedViralDepthPerCopy(
                 purityContext(0.5, 2.0, FittedPurityMethod.SOMATIC, Set.of(PurpleQCStatus.FAIL_CONTAMINATION)),
                 bamMetrics(30.0));
 
@@ -75,18 +75,18 @@ public class ClonalCoverageTest
     @Test
     public void testEmptyForNoTumorFit()
     {
-        Double depthPerCopy = ClonalCoverage.expectedViralDepthPerCopy(
+        Double depthPerCopy = Clonality.expectedViralDepthPerCopy(
                 purityContext(0.0, 2.0, FittedPurityMethod.NO_TUMOR, Set.of(PurpleQCStatus.FAIL_NO_TUMOR)),
                 bamMetrics(30.0));
 
         assertNull(depthPerCopy);
     }
 
-    private static BamMetricSummary bamMetrics(double meanCoverage)
+    private static BamMetricSummary bamMetrics(double meanDepth)
     {
         return ImmutableBamMetricSummary.builder()
                 .from(BamMetricsTestFactory.createMinimalTestWGSMetrics())
-                .meanCoverage(meanCoverage)
+                .meanCoverage(meanDepth)
                 .build();
     }
 

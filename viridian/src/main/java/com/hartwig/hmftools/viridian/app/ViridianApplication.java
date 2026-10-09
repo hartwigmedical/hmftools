@@ -61,7 +61,7 @@ import com.hartwig.hmftools.viridian.integration.extract.HostVariantExtractor;
 import com.hartwig.hmftools.viridian.reference.OncologyGroup;
 import com.hartwig.hmftools.viridian.reference.ViralContig;
 import com.hartwig.hmftools.viridian.reference.VirusReference;
-import com.hartwig.hmftools.viridian.reporting.ClonalCoverage;
+import com.hartwig.hmftools.viridian.reporting.Clonality;
 import com.hartwig.hmftools.viridian.reporting.VirusReport;
 import com.hartwig.hmftools.viridian.reporting.VirusReporter;
 
@@ -272,7 +272,7 @@ public class ViridianApplication
         BamMetricSummary tumorMetrics = BamMetricSummary.read(
                 BamMetricSummary.generateFilename(mConfig.bamMetricsTumorDir(), mConfig.sampleId()));
 
-        Double expectedViralDepthPerCopy = ClonalCoverage.expectedViralDepthPerCopy(purity, tumorMetrics);
+        Double expectedViralDepthPerCopy = Clonality.expectedViralDepthPerCopy(purity, tumorMetrics);
         if(expectedViralDepthPerCopy == null)
         {
             LOGGER.warn("Purple fit unusable; cannot report based on viral depth");
