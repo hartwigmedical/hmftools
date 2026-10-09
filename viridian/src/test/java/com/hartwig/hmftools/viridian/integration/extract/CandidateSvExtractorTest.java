@@ -19,7 +19,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-public class CandidateHostSvExtractorTest
+public class CandidateSvExtractorTest
 {
     private static final String TUMOR_ID = "TUMOR";
 
@@ -65,7 +65,7 @@ public class CandidateHostSvExtractorTest
                 "0:30:10:0.0", "12:40:20:0.25");
 
         BreakendSupport support = new BreakendSupport(12, 60, 0.25, 0, 40);
-        CandidateHostSv expected = new CandidateHostSv(
+        CandidateSv expected = new CandidateSv(
                 StructuralVariantType.SGL, "minQual",
                 new HostBreakend("sgl_1", new BasePosition("chr1", 1000), FORWARD, support), null,
                 INSERT_30, true, new InsertRepeat("SINE", "Alu", 0.8), "chr7:100|+|50M|60");
@@ -82,7 +82,7 @@ public class CandidateHostSvExtractorTest
 
         BreakendSupport startSupport = new BreakendSupport(8, 55, 0.15, 0, 45);
         BreakendSupport endSupport = new BreakendSupport(8, 57, 0.15, 0, 47);
-        CandidateHostSv expected = new CandidateHostSv(
+        CandidateSv expected = new CandidateSv(
                 StructuralVariantType.DEL, "PASS",
                 new HostBreakend("del_1_o", new BasePosition("chr1", 5000), FORWARD, startSupport),
                 new HostBreakend("del_1_h", new BasePosition("chr1", 9000), REVERSE, endSupport),
@@ -136,7 +136,7 @@ public class CandidateHostSvExtractorTest
         String records = record(
                 "chr1", 1000, "sgl_1", "A", "A" + INSERT_30 + ".", "PASS", "SVTYPE=SGL", "12:40:20:0.25", "0:30:10:0.0");
 
-        List<CandidateHostSv> candidates = extract(header, records);
+        List<CandidateSv> candidates = extract(header, records);
         assertEquals(new BreakendSupport(12, 60, 0.25, 0, 40), candidates.get(0).startBreakend().support());
     }
 
@@ -169,23 +169,23 @@ public class CandidateHostSvExtractorTest
                 normalGenotype, tumorGenotype) + "\n";
     }
 
-    private static List<String> breakendIds(List<CandidateHostSv> candidates)
+    private static List<String> breakendIds(List<CandidateSv> candidates)
     {
         return candidates.stream().map(candidate -> candidate.startBreakend().id()).toList();
     }
 
-    private List<CandidateHostSv> extract(String records)
+    private List<CandidateSv> extract(String records)
     {
         return extract(HEADER, records);
     }
 
-    private List<CandidateHostSv> extract(String header, String records)
+    private List<CandidateSv> extract(String header, String records)
     {
         try
         {
             File vcfFile = mTempDir.newFile("esvee.unfiltered.vcf");
             Files.writeString(vcfFile.toPath(), header + records);
-            return new CandidateHostSvExtractor(TUMOR_ID).extract(vcfFile.getAbsolutePath());
+            return new CandidateSvExtractor(TUMOR_ID).extract(vcfFile.getAbsolutePath());
         }
         catch(IOException e)
         {

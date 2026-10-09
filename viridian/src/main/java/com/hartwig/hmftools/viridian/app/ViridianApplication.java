@@ -56,8 +56,8 @@ import com.hartwig.hmftools.viridian.detection.support.ContigSupportCalculator;
 import com.hartwig.hmftools.viridian.integration.IntegrationCandidate;
 import com.hartwig.hmftools.viridian.integration.align.ViralInsertAligner;
 import com.hartwig.hmftools.viridian.integration.align.ViralInsertAlignment;
-import com.hartwig.hmftools.viridian.integration.extract.CandidateHostSv;
-import com.hartwig.hmftools.viridian.integration.extract.CandidateHostSvExtractor;
+import com.hartwig.hmftools.viridian.integration.extract.CandidateSv;
+import com.hartwig.hmftools.viridian.integration.extract.CandidateSvExtractor;
 import com.hartwig.hmftools.viridian.reference.OncologyGroup;
 import com.hartwig.hmftools.viridian.reference.ViralContig;
 import com.hartwig.hmftools.viridian.reference.VirusReference;
@@ -230,28 +230,28 @@ public class ViridianApplication
     // Returns the count of integrations per oncology group.
     private Map<OncologyGroup, Integer> callHostIntegrations()
     {
-        LOGGER.info("Extracting candidate host SVs from ESVEE VCF");
-        List<CandidateHostSv> candidateSvs =
-                new CandidateHostSvExtractor(mConfig.sampleId()).extract(mConfig.esveeUnfilteredVcf());
+        LOGGER.info("Extracting integration candidate SVs from ESVEE VCF");
+        List<CandidateSv> candidateSvs =
+                new CandidateSvExtractor(mConfig.sampleId()).extract(mConfig.esveeUnfilteredVcf());
 
-        List<IntegrationCandidate> integrationCandidates = alignCandidateHostSvs(candidateSvs);
+        List<IntegrationCandidate> integrationCandidates = alignCandidateSvs(candidateSvs);
 
         LOGGER.info("Writing integration candidates output");
-        // Note that all variants which are candidate integrations are written for informational purposes.
+        // Note that all integration candidates are written for informational purposes.
         // But only the aligned candidates are the called integrations which flow through to the rest of the code.
         OutputWriter.writeIntegrationCandidates(outputFile(INTEGRATION_CANDIDATES_TSV_SUFFIX), integrationCandidates);
 
-        // Take the candidate integrations with plausible alignments. Only the counts are needed for reporting.
+        // Take the integration candidates with plausible alignments. Only the counts are needed for reporting.
         return integrationCandidates.stream()
                 .filter(IntegrationCandidate::isIntegration)
                 .collect(groupingBy(i -> i.alignment().contig().oncologyGroup(), HashMap::new, summingInt(i -> 1)));
     }
 
-    private List<IntegrationCandidate> alignCandidateHostSvs(List<CandidateHostSv> candidateSvs)
+    private List<IntegrationCandidate> alignCandidateSvs(List<CandidateSv> candidateSvs)
     {
-        LOGGER.info("Aligning candidate host SV inserts to virus genomes");
+        LOGGER.info("Aligning integration candidate insert sequences to virus genomes");
 
-        List<String> insertSequences = candidateSvs.stream().map(CandidateHostSv::insertSequence).toList();
+        List<String> insertSequences = candidateSvs.stream().map(CandidateSv::insertSequence).toList();
         ViralInsertAligner aligner = ViralInsertAligner.create(
                 mVirusReference, mConfig.virusBwaIndexImage(), mConfig.threads());
         List<ViralInsertAlignment> alignments = aligner.align(insertSequences);

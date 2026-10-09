@@ -27,7 +27,7 @@ import com.hartwig.hmftools.viridian.detection.support.ContigSupport;
 import com.hartwig.hmftools.viridian.integration.IntegrationCandidate;
 import com.hartwig.hmftools.viridian.integration.align.ViralInsertAlignment;
 import com.hartwig.hmftools.viridian.integration.extract.BreakendSupport;
-import com.hartwig.hmftools.viridian.integration.extract.CandidateHostSv;
+import com.hartwig.hmftools.viridian.integration.extract.CandidateSv;
 import com.hartwig.hmftools.viridian.integration.extract.HostBreakend;
 import com.hartwig.hmftools.viridian.integration.extract.InsertRepeat;
 import com.hartwig.hmftools.viridian.reference.ViralContig;
@@ -315,7 +315,7 @@ public class OutputWriter
         DelimFileWriter.write(
                 file, IntegrationCandidateColumn.values(), candidates, (candidate, row) ->
                 {
-                    CandidateHostSv sv = candidate.hostSv();
+                    CandidateSv sv = candidate.sv();
                     row.set(IntegrationCandidateColumn.sv_type, sv.type().name());
                     row.set(IntegrationCandidateColumn.filter, sv.filter());
 

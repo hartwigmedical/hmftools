@@ -9,7 +9,7 @@ import com.hartwig.hmftools.viridian.reference.ViralContig;
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
 
-// Alignment of a candidate integration SV's insert sequence onto a virus genome.
+// Alignment of an integration candidate SV's insert sequence onto a virus genome.
 public record ViralInsertAlignment(
         ViralContig contig,
         int position,

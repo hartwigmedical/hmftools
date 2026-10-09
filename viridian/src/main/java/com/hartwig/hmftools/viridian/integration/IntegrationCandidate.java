@@ -1,13 +1,13 @@
 package com.hartwig.hmftools.viridian.integration;
 
 import com.hartwig.hmftools.viridian.integration.align.ViralInsertAlignment;
-import com.hartwig.hmftools.viridian.integration.extract.CandidateHostSv;
+import com.hartwig.hmftools.viridian.integration.extract.CandidateSv;
 
 import org.jetbrains.annotations.Nullable;
 
 // Possible integration of a virus genome into the tumor host genome.
 public record IntegrationCandidate(
-        CandidateHostSv hostSv,
+        CandidateSv sv,
         @Nullable ViralInsertAlignment alignment
 )
 {

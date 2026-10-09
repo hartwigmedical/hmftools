@@ -24,20 +24,20 @@ import htsjdk.variant.variantcontext.VariantContext;
 
 // Reads the ESVEE unfiltered VCF and keeps every SV which could be a viral integration.
 // Uses the ESVEE unfiltered VCF because the viral integrations are interesting even if ESVEE decided to filter.
-public class CandidateHostSvExtractor
+public class CandidateSvExtractor
 {
     private final String mTumorSampleId;
 
     private static final int NO_GENOTYPE_ORDINAL = -1;
 
-    private static final Logger LOGGER = LogManager.getLogger(CandidateHostSvExtractor.class);
+    private static final Logger LOGGER = LogManager.getLogger(CandidateSvExtractor.class);
 
-    public CandidateHostSvExtractor(String tumorSampleId)
+    public CandidateSvExtractor(String tumorSampleId)
     {
         mTumorSampleId = tumorSampleId;
     }
 
-    public List<CandidateHostSv> extract(String vcfFile)
+    public List<CandidateSv> extract(String vcfFile)
     {
         try(VcfFileReader reader = new VcfFileReader(vcfFile))
         {
@@ -54,8 +54,8 @@ public class CandidateHostSvExtractor
                 svFactory.addVariantContext(context);
             }
 
-            List<CandidateHostSv> candidates = svFactory.results().stream()
-                    .map(CandidateHostSvExtractor::toCandidate)
+            List<CandidateSv> candidates = svFactory.results().stream()
+                    .map(CandidateSvExtractor::toCandidate)
                     .filter(Objects::nonNull)
                     .toList();
 
@@ -70,7 +70,7 @@ public class CandidateHostSvExtractor
     }
 
     @Nullable
-    private static CandidateHostSv toCandidate(StructuralVariant variant)
+    private static CandidateSv toCandidate(StructuralVariant variant)
     {
         StructuralVariantLeg endLeg = variant.end();
         String insertSequence = variant.insertSequence();
@@ -86,7 +86,7 @@ public class CandidateHostSvExtractor
             throw new IllegalStateException("SV has no variant context: " + variant.id());
         }
 
-        return new CandidateHostSv(
+        return new CandidateSv(
                 variant.type(),
                 requireNonNull(variant.filter()),
                 HostBreakend.from(startContext.getID(), variant.start()),

@@ -10,7 +10,7 @@ import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.viridian.integration.align.ViralInsertAlignment;
 import com.hartwig.hmftools.viridian.integration.extract.BreakendSupport;
-import com.hartwig.hmftools.viridian.integration.extract.CandidateHostSv;
+import com.hartwig.hmftools.viridian.integration.extract.CandidateSv;
 import com.hartwig.hmftools.viridian.integration.extract.HostBreakend;
 import com.hartwig.hmftools.viridian.reference.OncologyGroup;
 import com.hartwig.hmftools.viridian.reference.ViralContig;
@@ -21,7 +21,7 @@ public class IntegrationCandidateTest
 {
     private static final ViralContig CONTIG = new ViralContig("v1", 7906, "Virus v1", new OncologyGroup("Group A"));
 
-    // An insert that aligned nowhere is not an integration, however the host SV looks.
+    // An insert that aligned nowhere is not an integration, however the SV looks.
     @Test
     public void testNotIntegrationWhenInsertAlignedNowhere()
     {
@@ -46,11 +46,11 @@ public class IntegrationCandidateTest
         assertFalse(candidate.isIntegration());
     }
 
-    private static CandidateHostSv candidateSv()
+    private static CandidateSv candidateSv()
     {
         HostBreakend breakend = new HostBreakend(
                 "sgl_1", new BasePosition("chr1", 1000), FORWARD, new BreakendSupport(12, 60, 0.25, 0, 40));
-        return new CandidateHostSv(
+        return new CandidateSv(
                 StructuralVariantType.SGL, "PASS", breakend, null, "ACGTACGTACGTACGTACGTACGTACGTAC", false, null, "");
     }
 
