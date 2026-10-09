@@ -237,11 +237,11 @@ public class ViridianApplication
         List<IntegrationCandidate> integrationCandidates = alignCandidateHostSvs(candidateSvs);
 
         LOGGER.info("Writing integration candidates output");
-        // Note that all integrations are written for informational purposes, but only the plausibly aligned
-        // integrations are used.
+        // Note that all variants which are candidate integrations are written for informational purposes.
+        // But only the aligned candidates are the called integrations which flow through to the rest of the code.
         OutputWriter.writeIntegrationCandidates(outputFile(INTEGRATION_CANDIDATES_TSV_SUFFIX), integrationCandidates);
 
-        // Take the integrations with plausible alignments. Only the counts are needed for reporting.
+        // Take the candidate integrations with plausible alignments. Only the counts are needed for reporting.
         return integrationCandidates.stream()
                 .filter(IntegrationCandidate::isIntegration)
                 .collect(groupingBy(i -> i.alignment().contig().oncologyGroup(), HashMap::new, summingInt(i -> 1)));

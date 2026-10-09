@@ -91,7 +91,7 @@ public class ViridianConstants
     // Minimum aligner score per aligned base. Used to filter out alignments which are long but poor similarity.
     public static final double INTEGRATION_VIRAL_ALIGN_SCORE_PER_BASE_MIN = 0.7;
 
-    // Minimum plausible integrations for a virus to be reported.
+    // Minimum integrations for a virus to be reported.
     // This value is a starting point based on VirusInterpreter reporting logic.
     public static final int REPORTED_INTEGRATIONS_MIN = 1;
 
