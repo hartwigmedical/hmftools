@@ -14,7 +14,7 @@ public class ViridianConstants
     public static final String CONTIG_SUPPORT_TSV_SUFFIX = ".contig_support.tsv";
     public static final String PAIRWISE_MARGINS_TSV_SUFFIX = ".pairwise_margins.tsv";
     public static final String VIRUS_DETECTION_TSV_SUFFIX = ".virus_detection.tsv";
-    public static final String INTEGRATIONS_TSV_SUFFIX = ".integrations.tsv";
+    public static final String INTEGRATION_CANDIDATES_TSV_SUFFIX = ".integration_candidates.tsv";
     public static final String VIRUS_REPORT_TSV_SUFFIX = ".virus_report.tsv";
     public static final String RUN_MANIFEST_TSV_SUFFIX = ".manifest.tsv";
 

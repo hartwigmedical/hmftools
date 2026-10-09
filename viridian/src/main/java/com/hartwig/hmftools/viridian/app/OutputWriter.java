@@ -24,11 +24,11 @@ import com.hartwig.hmftools.viridian.detection.select.OncologyGroupRepresentativ
 import com.hartwig.hmftools.viridian.detection.select.PairwiseMargins;
 import com.hartwig.hmftools.viridian.detection.select.RepresentativeContigCandidate;
 import com.hartwig.hmftools.viridian.detection.support.ContigSupport;
-import com.hartwig.hmftools.viridian.integration.Integration;
+import com.hartwig.hmftools.viridian.integration.IntegrationCandidate;
 import com.hartwig.hmftools.viridian.integration.align.ViralInsertAlignment;
 import com.hartwig.hmftools.viridian.integration.extract.BreakendSupport;
+import com.hartwig.hmftools.viridian.integration.extract.CandidateHostSv;
 import com.hartwig.hmftools.viridian.integration.extract.HostBreakend;
-import com.hartwig.hmftools.viridian.integration.extract.HostVariantCandidate;
 import com.hartwig.hmftools.viridian.integration.extract.InsertRepeat;
 import com.hartwig.hmftools.viridian.reference.ViralContig;
 import com.hartwig.hmftools.viridian.reporting.VirusReport;
@@ -310,75 +310,83 @@ public class OutputWriter
         return "reads_m" + margin;
     }
 
-    public static void writeIntegrations(String file, List<Integration> integrations)
+    public static void writeIntegrationCandidates(String file, List<IntegrationCandidate> candidates)
     {
         DelimFileWriter.write(
-                file, IntegrationColumn.values(), integrations, (integration, row) ->
+                file, IntegrationCandidateColumn.values(), candidates, (candidate, row) ->
                 {
-                    HostVariantCandidate candidate = integration.hostVariant();
-                    row.set(IntegrationColumn.sv_type, candidate.type().name());
-                    row.set(IntegrationColumn.filter, candidate.filter());
+                    CandidateHostSv sv = candidate.hostSv();
+                    row.set(IntegrationCandidateColumn.sv_type, sv.type().name());
+                    row.set(IntegrationCandidateColumn.filter, sv.filter());
 
-                    HostBreakend startBreakend = candidate.startBreakend();
+                    HostBreakend startBreakend = sv.startBreakend();
                     BreakendSupport startSupport = startBreakend.support();
-                    row.set(IntegrationColumn.start_id, startBreakend.id());
-                    row.set(IntegrationColumn.start_chromosome, startBreakend.basePosition().Chromosome);
-                    row.set(IntegrationColumn.start_position, startBreakend.basePosition().Position);
-                    row.set(IntegrationColumn.start_orientation, startBreakend.orientation().asByte());
-                    row.set(IntegrationColumn.start_tumor_variant_frags, startSupport.tumorVariantFragments());
-                    row.set(IntegrationColumn.start_tumor_ref_frags, startSupport.tumorReferenceFragments());
-                    row.set(IntegrationColumn.start_tumor_af, startSupport.tumorAlleleFrequency());
-                    row.setOrNull(IntegrationColumn.start_normal_variant_frags.name(), startSupport.normalVariantFragments());
-                    row.setOrNull(IntegrationColumn.start_normal_ref_frags.name(), startSupport.normalReferenceFragments());
+                    row.set(IntegrationCandidateColumn.start_id, startBreakend.id());
+                    row.set(IntegrationCandidateColumn.start_chromosome, startBreakend.basePosition().Chromosome);
+                    row.set(IntegrationCandidateColumn.start_position, startBreakend.basePosition().Position);
+                    row.set(IntegrationCandidateColumn.start_orientation, startBreakend.orientation().asByte());
+                    row.set(IntegrationCandidateColumn.start_tumor_variant_frags, startSupport.tumorVariantFragments());
+                    row.set(IntegrationCandidateColumn.start_tumor_ref_frags, startSupport.tumorReferenceFragments());
+                    row.set(IntegrationCandidateColumn.start_tumor_af, startSupport.tumorAlleleFrequency());
+                    row.setOrNull(
+                            IntegrationCandidateColumn.start_normal_variant_frags.name(),
+                            startSupport.normalVariantFragments());
+                    row.setOrNull(
+                            IntegrationCandidateColumn.start_normal_ref_frags.name(),
+                            startSupport.normalReferenceFragments());
 
                     // Note unset columns are written as null, leaving a SGL's second breakend blank.
-                    HostBreakend endBreakend = candidate.endBreakend();
+                    HostBreakend endBreakend = sv.endBreakend();
                     if(endBreakend != null)
                     {
                         BreakendSupport endSupport = endBreakend.support();
-                        row.set(IntegrationColumn.end_id, endBreakend.id());
-                        row.set(IntegrationColumn.end_chromosome, endBreakend.basePosition().Chromosome);
-                        row.set(IntegrationColumn.end_position, endBreakend.basePosition().Position);
-                        row.set(IntegrationColumn.end_orientation, endBreakend.orientation().asByte());
-                        row.set(IntegrationColumn.end_tumor_variant_frags, endSupport.tumorVariantFragments());
-                        row.set(IntegrationColumn.end_tumor_ref_frags, endSupport.tumorReferenceFragments());
-                        row.set(IntegrationColumn.end_tumor_af, endSupport.tumorAlleleFrequency());
-                        row.setOrNull(IntegrationColumn.end_normal_variant_frags.name(), endSupport.normalVariantFragments());
-                        row.setOrNull(IntegrationColumn.end_normal_ref_frags.name(), endSupport.normalReferenceFragments());
+                        row.set(IntegrationCandidateColumn.end_id, endBreakend.id());
+                        row.set(IntegrationCandidateColumn.end_chromosome, endBreakend.basePosition().Chromosome);
+                        row.set(IntegrationCandidateColumn.end_position, endBreakend.basePosition().Position);
+                        row.set(IntegrationCandidateColumn.end_orientation, endBreakend.orientation().asByte());
+                        row.set(IntegrationCandidateColumn.end_tumor_variant_frags, endSupport.tumorVariantFragments());
+                        row.set(IntegrationCandidateColumn.end_tumor_ref_frags, endSupport.tumorReferenceFragments());
+                        row.set(IntegrationCandidateColumn.end_tumor_af, endSupport.tumorAlleleFrequency());
+                        row.setOrNull(
+                                IntegrationCandidateColumn.end_normal_variant_frags.name(),
+                                endSupport.normalVariantFragments());
+                        row.setOrNull(
+                                IntegrationCandidateColumn.end_normal_ref_frags.name(),
+                                endSupport.normalReferenceFragments());
                     }
 
-                    row.set(IntegrationColumn.line_site, candidate.lineSite());
-                    InsertRepeat insertRepeat = candidate.insertRepeat();
+                    row.set(IntegrationCandidateColumn.line_site, sv.lineSite());
+                    InsertRepeat insertRepeat = sv.insertRepeat();
                     if(insertRepeat != null)
                     {
-                        row.set(IntegrationColumn.repeat_class, insertRepeat.repeatClass());
-                        row.set(IntegrationColumn.repeat_type, insertRepeat.repeatType());
-                        row.set(IntegrationColumn.repeat_coverage, insertRepeat.coverage());
+                        row.set(IntegrationCandidateColumn.repeat_class, insertRepeat.repeatClass());
+                        row.set(IntegrationCandidateColumn.repeat_type, insertRepeat.repeatType());
+                        row.set(IntegrationCandidateColumn.repeat_coverage, insertRepeat.coverage());
                     }
-                    row.set(IntegrationColumn.insert_host_alignments, candidate.insertHostAlignments());
-                    row.set(IntegrationColumn.insert_seq_length, candidate.insertSequence().length());
-                    row.set(IntegrationColumn.insert_sequence, candidate.insertSequence());
+                    row.set(IntegrationCandidateColumn.insert_host_alignments, sv.insertHostAlignments());
+                    row.set(IntegrationCandidateColumn.insert_seq_length, sv.insertSequence().length());
+                    row.set(IntegrationCandidateColumn.insert_sequence, sv.insertSequence());
 
-                    ViralInsertAlignment alignment = integration.alignment();
+                    ViralInsertAlignment alignment = candidate.alignment();
                     if(alignment != null)
                     {
                         ViralContig contig = alignment.contig();
-                        row.set(IntegrationColumn.virus_name, contig.virusName());
-                        row.set(IntegrationColumn.oncology_group, contig.oncologyGroup().name());
-                        row.set(IntegrationColumn.virus_contig, contig.name());
-                        row.set(IntegrationColumn.virus_position, alignment.position());
-                        row.set(IntegrationColumn.virus_orientation, alignment.orientation().asByte());
-                        row.set(IntegrationColumn.align_cigar, alignment.cigar().toString());
-                        row.set(IntegrationColumn.aligned_length, alignment.alignedLength());
-                        row.set(IntegrationColumn.aligner_score, alignment.alignerScore());
-                        row.set(IntegrationColumn.score_per_aligned_base, alignment.scorePerAlignedBase());
-                        row.set(IntegrationColumn.aligned_edit_distance, alignment.alignedEditDistance());
-                        row.set(IntegrationColumn.plausible, integration.isPlausible());
+                        row.set(IntegrationCandidateColumn.virus_name, contig.virusName());
+                        row.set(IntegrationCandidateColumn.oncology_group, contig.oncologyGroup().name());
+                        row.set(IntegrationCandidateColumn.virus_contig, contig.name());
+                        row.set(IntegrationCandidateColumn.virus_position, alignment.position());
+                        row.set(IntegrationCandidateColumn.virus_orientation, alignment.orientation().asByte());
+                        row.set(IntegrationCandidateColumn.align_cigar, alignment.cigar().toString());
+                        row.set(IntegrationCandidateColumn.aligned_length, alignment.alignedLength());
+                        row.set(IntegrationCandidateColumn.aligner_score, alignment.alignerScore());
+                        row.set(IntegrationCandidateColumn.score_per_aligned_base, alignment.scorePerAlignedBase());
+                        row.set(IntegrationCandidateColumn.aligned_edit_distance, alignment.alignedEditDistance());
+                        row.set(IntegrationCandidateColumn.integration, candidate.isIntegration());
                     }
                 });
     }
 
-    private enum IntegrationColumn
+    private enum IntegrationCandidateColumn
     {
         sv_type,
         filter,
@@ -417,7 +425,7 @@ public class OutputWriter
         aligner_score,
         score_per_aligned_base,
         aligned_edit_distance,
-        plausible
+        integration
     }
 
     public static void writeVirusReports(String file, List<VirusReport> reports)

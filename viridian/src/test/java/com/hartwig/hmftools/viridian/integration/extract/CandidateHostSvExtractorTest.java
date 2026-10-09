@@ -19,7 +19,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-public class HostVariantExtractorTest
+public class CandidateHostSvExtractorTest
 {
     private static final String TUMOR_ID = "TUMOR";
 
@@ -65,7 +65,7 @@ public class HostVariantExtractorTest
                 "0:30:10:0.0", "12:40:20:0.25");
 
         BreakendSupport support = new BreakendSupport(12, 60, 0.25, 0, 40);
-        HostVariantCandidate expected = new HostVariantCandidate(
+        CandidateHostSv expected = new CandidateHostSv(
                 StructuralVariantType.SGL, "minQual",
                 new HostBreakend("sgl_1", new BasePosition("chr1", 1000), FORWARD, support), null,
                 INSERT_30, true, new InsertRepeat("SINE", "Alu", 0.8), "chr7:100|+|50M|60");
@@ -76,13 +76,13 @@ public class HostVariantExtractorTest
     // A paired variant yields one candidate carrying both host breakends, not one per breakend. It is identified by the
     // id ESVEE shares between the two records, rather than by either record's own id.
     @Test
-    public void testExtractPairedVariantAsOneCandidate()
+    public void testExtractPairedSvAsOneCandidate()
     {
         String records = pairedDeletion("del_1", INSERT_50);
 
         BreakendSupport startSupport = new BreakendSupport(8, 55, 0.15, 0, 45);
         BreakendSupport endSupport = new BreakendSupport(8, 57, 0.15, 0, 47);
-        HostVariantCandidate expected = new HostVariantCandidate(
+        CandidateHostSv expected = new CandidateHostSv(
                 StructuralVariantType.DEL, "PASS",
                 new HostBreakend("del_1_o", new BasePosition("chr1", 5000), FORWARD, startSupport),
                 new HostBreakend("del_1_h", new BasePosition("chr1", 9000), REVERSE, endSupport),
@@ -136,7 +136,7 @@ public class HostVariantExtractorTest
         String records = record(
                 "chr1", 1000, "sgl_1", "A", "A" + INSERT_30 + ".", "PASS", "SVTYPE=SGL", "12:40:20:0.25", "0:30:10:0.0");
 
-        List<HostVariantCandidate> candidates = extract(header, records);
+        List<CandidateHostSv> candidates = extract(header, records);
         assertEquals(new BreakendSupport(12, 60, 0.25, 0, 40), candidates.get(0).startBreakend().support());
     }
 
@@ -169,23 +169,23 @@ public class HostVariantExtractorTest
                 normalGenotype, tumorGenotype) + "\n";
     }
 
-    private static List<String> breakendIds(List<HostVariantCandidate> candidates)
+    private static List<String> breakendIds(List<CandidateHostSv> candidates)
     {
         return candidates.stream().map(candidate -> candidate.startBreakend().id()).toList();
     }
 
-    private List<HostVariantCandidate> extract(String records)
+    private List<CandidateHostSv> extract(String records)
     {
         return extract(HEADER, records);
     }
 
-    private List<HostVariantCandidate> extract(String header, String records)
+    private List<CandidateHostSv> extract(String header, String records)
     {
         try
         {
             File vcfFile = mTempDir.newFile("esvee.unfiltered.vcf");
             Files.writeString(vcfFile.toPath(), header + records);
-            return new HostVariantExtractor(TUMOR_ID).extract(vcfFile.getAbsolutePath());
+            return new CandidateHostSvExtractor(TUMOR_ID).extract(vcfFile.getAbsolutePath());
         }
         catch(IOException e)
         {

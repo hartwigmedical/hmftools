@@ -5,7 +5,7 @@ import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import org.jetbrains.annotations.Nullable;
 
 // An SV which might be a viral integration into the host genome.
-public record HostVariantCandidate(
+public record CandidateHostSv(
         StructuralVariantType type,
         String filter,
         HostBreakend startBreakend,
@@ -18,7 +18,7 @@ public record HostVariantCandidate(
         String insertHostAlignments
 )
 {
-    public HostVariantCandidate
+    public CandidateHostSv
     {
         if(insertSequence.isEmpty())
         {

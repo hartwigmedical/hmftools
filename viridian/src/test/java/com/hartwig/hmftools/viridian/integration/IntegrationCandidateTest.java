@@ -10,47 +10,47 @@ import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.viridian.integration.align.ViralInsertAlignment;
 import com.hartwig.hmftools.viridian.integration.extract.BreakendSupport;
+import com.hartwig.hmftools.viridian.integration.extract.CandidateHostSv;
 import com.hartwig.hmftools.viridian.integration.extract.HostBreakend;
-import com.hartwig.hmftools.viridian.integration.extract.HostVariantCandidate;
 import com.hartwig.hmftools.viridian.reference.OncologyGroup;
 import com.hartwig.hmftools.viridian.reference.ViralContig;
 
 import org.junit.Test;
 
-public class IntegrationTest
+public class IntegrationCandidateTest
 {
     private static final ViralContig CONTIG = new ViralContig("v1", 7906, "Virus v1", new OncologyGroup("Group A"));
 
-    // An insert that aligned nowhere is not an integration, however the host variant looks.
+    // An insert that aligned nowhere is not an integration, however the host SV looks.
     @Test
-    public void testNotPlausibleWhenInsertAlignedNowhere()
+    public void testNotIntegrationWhenInsertAlignedNowhere()
     {
-        Integration integration = new Integration(candidate(), null);
-        assertFalse(integration.isAligned());
-        assertFalse(integration.isPlausible());
+        IntegrationCandidate candidate = new IntegrationCandidate(candidateSv(), null);
+        assertFalse(candidate.isAligned());
+        assertFalse(candidate.isIntegration());
     }
 
     @Test
-    public void testPlausibleWhenAlignmentClearsThresholds()
+    public void testIntegrationWhenAlignmentClearsThresholds()
     {
-        Integration integration = new Integration(candidate(), alignment(40));
-        assertTrue(integration.isAligned());
-        assertTrue(integration.isPlausible());
+        IntegrationCandidate candidate = new IntegrationCandidate(candidateSv(), alignment(40));
+        assertTrue(candidate.isAligned());
+        assertTrue(candidate.isIntegration());
     }
 
     @Test
-    public void testNotPlausibleWhenAlignmentDoesNotClearThresholds()
+    public void testNotIntegrationWhenAlignmentDoesNotClearThresholds()
     {
-        Integration integration = new Integration(candidate(), alignment(20));
-        assertTrue(integration.isAligned());
-        assertFalse(integration.isPlausible());
+        IntegrationCandidate candidate = new IntegrationCandidate(candidateSv(), alignment(20));
+        assertTrue(candidate.isAligned());
+        assertFalse(candidate.isIntegration());
     }
 
-    private static HostVariantCandidate candidate()
+    private static CandidateHostSv candidateSv()
     {
         HostBreakend breakend = new HostBreakend(
                 "sgl_1", new BasePosition("chr1", 1000), FORWARD, new BreakendSupport(12, 60, 0.25, 0, 40));
-        return new HostVariantCandidate(
+        return new CandidateHostSv(
                 StructuralVariantType.SGL, "PASS", breakend, null, "ACGTACGTACGTACGTACGTACGTACGTAC", false, null, "");
     }
 
