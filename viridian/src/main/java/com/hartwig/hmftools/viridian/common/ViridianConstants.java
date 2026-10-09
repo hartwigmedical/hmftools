@@ -51,7 +51,7 @@ public class ViridianConstants
     // boundary by more than this tolerance. Such alignments are dropped from all further processing.
     public static final int VIRAL_CONTIG_ORIGIN_CLIP_TOLERANCE = 4;
 
-    // An oncology group is present only if one of its contigs reaches this coverage fraction.
+    // A contig is a candidate only if some contig in its oncology group reaches this coverage fraction.
     // This value is very conservative. Hard to argue a lower coverage wouldn't be spurious.
     public static final double VIRAL_CONTIG_COVERAGE_MIN = 0.1;
 

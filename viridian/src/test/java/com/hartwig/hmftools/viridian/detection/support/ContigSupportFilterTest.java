@@ -27,9 +27,9 @@ public class ContigSupportFilterTest
     @Test
     public void testStatusesRelaxedFloorKeepsStraddlingSibling()
     {
-        // The sibling establishes the group, so this contig is kept down to the relaxed floor of 90 bases.
-        assertEquals(ContigFilterStatus.CANDIDATE, statusWithPresentGroup(95));
-        assertEquals(ContigFilterStatus.LOW_COVERAGE, statusWithPresentGroup(89));
+        // The sibling reaches the coverage minimum, so this contig is kept down to the relaxed floor of 90 bases.
+        assertEquals(ContigFilterStatus.CANDIDATE, statusWithCoveredSibling(95));
+        assertEquals(ContigFilterStatus.LOW_COVERAGE, statusWithCoveredSibling(89));
     }
 
     @Test
@@ -61,7 +61,7 @@ public class ContigSupportFilterTest
     public void testStatusesCoverageReasonTakesPrecedence()
     {
         // Both filters fail here.
-        assertEquals(ContigFilterStatus.LOW_COVERAGE, statusWithPresentGroup(50, 0.1));
+        assertEquals(ContigFilterStatus.LOW_COVERAGE, statusWithCoveredSibling(50, 0.1));
     }
 
     private static ContigFilterStatus status(int coveredBases, double readVotes)
@@ -69,13 +69,14 @@ public class ContigSupportFilterTest
         return statuses(Map.of(CONTIG, coveredBases), Map.of(CONTIG, readVotes)).get(CONTIG);
     }
 
-    // The contig under test alongside a sibling with ample coverage and votes, so the group is present.
-    private static ContigFilterStatus statusWithPresentGroup(int coveredBases)
+    // The contig under test alongside a sibling with ample coverage and votes, so the group reaches the coverage
+    // minimum.
+    private static ContigFilterStatus statusWithCoveredSibling(int coveredBases)
     {
-        return statusWithPresentGroup(coveredBases, 100);
+        return statusWithCoveredSibling(coveredBases, 100);
     }
 
-    private static ContigFilterStatus statusWithPresentGroup(int coveredBases, double readVotes)
+    private static ContigFilterStatus statusWithCoveredSibling(int coveredBases, double readVotes)
     {
         return statuses(
                 Map.of(CONTIG, coveredBases, SIBLING, LENGTH), Map.of(CONTIG, readVotes, SIBLING, 100.0)).get(CONTIG);

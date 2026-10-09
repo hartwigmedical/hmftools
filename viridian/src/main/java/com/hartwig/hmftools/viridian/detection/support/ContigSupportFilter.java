@@ -17,20 +17,22 @@ public class ContigSupportFilter
     public static Map<ViralContig, ContigFilterStatus> statuses(
             Map<ViralContig, ContigStats> contigStats, Map<ViralContig, Double> readVotes, double meanReadLength)
     {
-        boolean groupPresent = contigStats.values().stream()
+        boolean groupReachesCoverageMin = contigStats.values().stream()
                 .anyMatch(stats -> stats.coverageFraction() >= VIRAL_CONTIG_COVERAGE_MIN);
 
         return contigStats.entrySet().stream().collect(toMap(
                 Map.Entry::getKey,
-                entry -> status(entry.getValue(), readVotes.getOrDefault(entry.getKey(), 0.0), groupPresent, meanReadLength)));
+                entry -> status(
+                        entry.getValue(), readVotes.getOrDefault(entry.getKey(), 0.0), groupReachesCoverageMin,
+                        meanReadLength)));
     }
 
     private static ContigFilterStatus status(
-            ContigStats stats, double readVotes, boolean groupPresent, double meanReadLength)
+            ContigStats stats, double readVotes, boolean groupReachesCoverageMin, double meanReadLength)
     {
-        // Once some contig has established the group, its siblings are kept down to a slightly lower coverage, so a
+        // Once some contig reaches the coverage minimum, its siblings are kept down to a slightly lower coverage, so a
         // near-identical sibling straddling the cutoff is not harshly lost.
-        if(!groupPresent || stats.coverageFraction() < VIRAL_CONTIG_COVERAGE_MIN_LOWER)
+        if(!groupReachesCoverageMin || stats.coverageFraction() < VIRAL_CONTIG_COVERAGE_MIN_LOWER)
         {
             return ContigFilterStatus.LOW_COVERAGE;
         }
