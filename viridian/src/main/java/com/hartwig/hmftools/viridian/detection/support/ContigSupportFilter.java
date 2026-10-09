@@ -11,7 +11,7 @@ import java.util.Map;
 import com.hartwig.hmftools.viridian.detection.common.ContigStats;
 import com.hartwig.hmftools.viridian.reference.ViralContig;
 
-// Determines whether a contig carries enough evidence to be considered present in the sample.
+// Determines whether a contig carries enough evidence to be a candidate virus genome.
 public class ContigSupportFilter
 {
     public static Map<ViralContig, ContigFilterStatus> statuses(

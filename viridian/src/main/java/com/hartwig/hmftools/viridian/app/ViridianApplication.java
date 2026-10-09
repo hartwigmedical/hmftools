@@ -144,7 +144,7 @@ public class ViridianApplication
         return candidateFastaFile;
     }
 
-    // Align potentially viral reads to all virus genomes, so we can decide which viruses are present.
+    // Align potentially viral reads to all virus genomes, so we can decide which viruses are detected.
     private AllContigsReadAlignments alignCandidateReadsToViralContigs(String candidateReadFasta)
     {
         LOGGER.info("Aligning candidate reads to virus genomes");
@@ -155,7 +155,7 @@ public class ViridianApplication
         return AllContigsReadAlignments.load(allAlignmentsBamFile, mVirusReference);
     }
 
-    // Compute support information for each virus genome and decide which genomes may be present.
+    // Compute support information for each virus genome and decide which genomes are candidates.
     private List<ContigSupport> computeViralContigSupport(AllContigsReadAlignments alignments)
     {
         LOGGER.info("Computing per-contig support");

@@ -7,7 +7,7 @@ import com.hartwig.hmftools.viridian.reference.ViralContig;
 import org.jetbrains.annotations.Nullable;
 
 // Per-contig support information from aligning reads to every virus genome at once (BWA-MEM -a mode).
-// Used to determine virus presence and select the representative contig for an oncology group.
+// Used to detect viruses and select the representative contig for an oncology group.
 public record ContigSupport(
         ContigStats stats,
         ContigFilterStatus filterStatus,

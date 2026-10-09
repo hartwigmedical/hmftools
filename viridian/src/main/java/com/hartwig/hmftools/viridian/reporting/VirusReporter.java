@@ -23,7 +23,7 @@ import org.jetbrains.annotations.Nullable;
 // Decides if each virus is reported for downstream analysis and Orange report.
 public class VirusReporter
 {
-    // One report per oncology group that is present or has an integration.
+    // One report per oncology group that is detected or has an integration.
     public static List<VirusReport> report(
             List<DetectedVirus> detectedViruses, Map<OncologyGroup, Integer> integrationCounts,
             Function<OncologyGroup, OncologyGroupInfo> oncologyGroupInfo, @Nullable Double expectedViralDepthPerCopy)

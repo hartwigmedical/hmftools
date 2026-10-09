@@ -100,10 +100,10 @@ public class VirusReporterTest
 
     // Representative depth 10 against per-copy depth 20 is 0.5 copies per tumor cell, which clears C.
     @Test
-    public void testPresentResolvedReportsOnClonality()
+    public void testDetectedResolvedReportsOnClonality()
     {
         VirusReport report = VirusReporter.reportGroup(GROUP, resolved(DEPTH), 0, REPORTABLE_INFO, PER_COPY);
-        assertTrue(report.isPresent());
+        assertTrue(report.isDetected());
         assertEquals(0.5, report.copiesPerTumorCell(), 1e-9);
         assertEquals(REPORTED_ON_CLONALITY, report.status());
         assertTrue(report.isReported());
@@ -111,30 +111,30 @@ public class VirusReporterTest
 
     // Clonality needs the per-copy depth, which an unusable Purple fit leaves absent.
     @Test
-    public void testPresentResolvedWithoutPurpleIsUnevaluable()
+    public void testDetectedResolvedWithoutPurpleIsUnevaluable()
     {
         VirusReport report = VirusReporter.reportGroup(GROUP, resolved(DEPTH), 0, REPORTABLE_INFO, null);
         assertNull(report.copiesPerTumorCell());
         assertEquals(CLONALITY_UNEVALUABLE, report.status());
     }
 
-    // Present but unresolved: no representative to measure, so clonality is unevaluable.
+    // Detected but unresolved: no representative to measure, so clonality is unevaluable.
     @Test
-    public void testPresentUnresolvedIsUnevaluable()
+    public void testDetectedUnresolvedIsUnevaluable()
     {
         DetectedVirus unresolved = new DetectedVirus(GROUP, UNRESOLVED, MUTUAL, 100, 2, 2, 2, null);
         VirusReport report = VirusReporter.reportGroup(GROUP, unresolved, 0, REPORTABLE_INFO, PER_COPY);
-        assertTrue(report.isPresent());
+        assertTrue(report.isDetected());
         assertNull(report.copiesPerTumorCell());
         assertEquals(CLONALITY_UNEVALUABLE, report.status());
     }
 
-    // An integration reports the virus even when it was not called present.
+    // An integration reports the virus even when it was not detected.
     @Test
-    public void testIntegratedButNotPresent()
+    public void testIntegratedButNotDetected()
     {
         VirusReport report = VirusReporter.reportGroup(GROUP, null, 1, REPORTABLE_INFO, PER_COPY);
-        assertFalse(report.isPresent());
+        assertFalse(report.isDetected());
         assertNull(report.copiesPerTumorCell());
         assertEquals(REPORTED_ON_INTEGRATION, report.status());
     }

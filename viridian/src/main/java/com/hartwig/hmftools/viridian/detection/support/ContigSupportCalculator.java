@@ -15,9 +15,9 @@ import com.hartwig.hmftools.viridian.detection.common.ContigStats;
 import com.hartwig.hmftools.viridian.detection.common.SummaryStats;
 import com.hartwig.hmftools.viridian.reference.ViralContig;
 
-// Turns per-contig statistics into a verdict on the contig being present in the sample.
+// Takes per-contig statistics and determines candidate virus genomes.
 // Computes:
-//   - Baseline presence status;
+//   - Baseline support status (is virus maybe here or is it noise?);
 //   - Read voting used for representative contig selection.
 public class ContigSupportCalculator
 {

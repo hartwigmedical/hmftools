@@ -52,7 +52,7 @@ public class DetectedVirusTest
         assertEquals(stats, detections.get(0).representativeContigStats());
     }
 
-    // The group is present either way: which of its near-identical strains leads is a separate question, and naming
+    // The group is detected either way: which of its near-identical strains leads is a separate question, and naming
     // one would override the checks that declined to pick it.
     @Test
     public void testFromUnresolvedGroupIsPresentButNotMeasured()

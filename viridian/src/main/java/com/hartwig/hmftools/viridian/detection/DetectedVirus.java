@@ -13,7 +13,7 @@ import com.hartwig.hmftools.viridian.reference.ViralContig;
 
 import org.jetbrains.annotations.Nullable;
 
-// Holds the final detection status info for oncology group viruses which are present in the sample.
+// Holds the final detection status info for each detected oncology group.
 public record DetectedVirus(
         OncologyGroup oncologyGroup,
         OncologyGroupResolution resolution,
@@ -34,7 +34,7 @@ public record DetectedVirus(
     {
         if(resolution == OncologyGroupResolution.NO_CANDIDATES)
         {
-            throw new IllegalArgumentException("Oncology group is not present: " + oncologyGroup);
+            throw new IllegalArgumentException("Oncology group is not detected: " + oncologyGroup);
         }
         if((resolution == OncologyGroupResolution.RESOLVED) == (representativeContigStats == null))
         {

@@ -436,7 +436,7 @@ public class OutputWriter
                     row.set(VirusReportColumn.reported, report.isReported());
                     row.set(VirusReportColumn.status, report.status().name());
                     row.set(VirusReportColumn.integrations, report.integrations());
-                    row.set(VirusReportColumn.present, report.isPresent());
+                    row.set(VirusReportColumn.detected, report.isDetected());
 
                     ContigStats stats = report.representativeStats();
                     if(stats != null)
@@ -459,7 +459,7 @@ public class OutputWriter
         reported,
         status,
         integrations,
-        present,
+        detected,
         representative_contig,
         virus_name,
         coverage_fraction,
