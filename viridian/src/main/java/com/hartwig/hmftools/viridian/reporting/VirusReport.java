@@ -20,7 +20,7 @@ public record VirusReport(
         @Nullable ContigStats representativeStats,
         // Null if Purple data wasn't usable.
         @Nullable Double copiesPerTumorCell,
-        VirusReportStatus reason)
+        VirusReportStatus status)
 {
     public VirusReport
     {
@@ -36,6 +36,6 @@ public record VirusReport(
 
     public boolean isReported()
     {
-        return reason.isReported();
+        return status.isReported();
     }
 }

@@ -434,7 +434,7 @@ public class OutputWriter
                     row.set(VirusReportColumn.reporting_type, report.reportingType().toString());
                     row.set(VirusReportColumn.driver_likelihood, report.driverLikelihood().toString());
                     row.set(VirusReportColumn.reported, report.isReported());
-                    row.set(VirusReportColumn.reason, report.reason().name());
+                    row.set(VirusReportColumn.status, report.status().name());
                     row.set(VirusReportColumn.integrations, report.integrations());
                     row.set(VirusReportColumn.present, report.isPresent());
 
@@ -457,7 +457,7 @@ public class OutputWriter
         reporting_type,
         driver_likelihood,
         reported,
-        reason,
+        status,
         integrations,
         present,
         representative_contig,

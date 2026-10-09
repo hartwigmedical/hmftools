@@ -105,7 +105,7 @@ public class VirusReporterTest
         VirusReport report = VirusReporter.reportGroup(GROUP, resolved(DEPTH), 0, REPORTABLE_INFO, PER_COPY);
         assertTrue(report.isPresent());
         assertEquals(0.5, report.copiesPerTumorCell(), 1e-9);
-        assertEquals(REPORTED_ON_CLONALITY, report.reason());
+        assertEquals(REPORTED_ON_CLONALITY, report.status());
         assertTrue(report.isReported());
     }
 
@@ -115,7 +115,7 @@ public class VirusReporterTest
     {
         VirusReport report = VirusReporter.reportGroup(GROUP, resolved(DEPTH), 0, REPORTABLE_INFO, null);
         assertNull(report.copiesPerTumorCell());
-        assertEquals(CLONALITY_UNEVALUABLE, report.reason());
+        assertEquals(CLONALITY_UNEVALUABLE, report.status());
     }
 
     // Present but unresolved: no representative to measure, so clonality is unevaluable.
@@ -126,7 +126,7 @@ public class VirusReporterTest
         VirusReport report = VirusReporter.reportGroup(GROUP, unresolved, 0, REPORTABLE_INFO, PER_COPY);
         assertTrue(report.isPresent());
         assertNull(report.copiesPerTumorCell());
-        assertEquals(CLONALITY_UNEVALUABLE, report.reason());
+        assertEquals(CLONALITY_UNEVALUABLE, report.status());
     }
 
     // An integration reports the virus even when it was not called present.
@@ -136,14 +136,14 @@ public class VirusReporterTest
         VirusReport report = VirusReporter.reportGroup(GROUP, null, 1, REPORTABLE_INFO, PER_COPY);
         assertFalse(report.isPresent());
         assertNull(report.copiesPerTumorCell());
-        assertEquals(REPORTED_ON_INTEGRATION, report.reason());
+        assertEquals(REPORTED_ON_INTEGRATION, report.status());
     }
 
     @Test
     public void testNotReportableIsNotReported()
     {
         VirusReport report = VirusReporter.reportGroup(GROUP, resolved(DEPTH), 5, NOT_REPORTABLE_INFO, PER_COPY);
-        assertEquals(NOT_REPORTABLE, report.reason());
+        assertEquals(NOT_REPORTABLE, report.status());
         assertFalse(report.isReported());
     }
 
