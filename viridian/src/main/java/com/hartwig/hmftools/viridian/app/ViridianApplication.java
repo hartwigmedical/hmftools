@@ -103,10 +103,7 @@ public class ViridianApplication
 
         BwaMemAligner.initLibrary(mConfig.bwaLibPath());
 
-        // TODO: bundle this into a small method?
-        checkVirusDecoyContigsInTumorBam(mConfig.tumorBam(), mConfig.refGenomeFile(), mConfig.extraVirusDecoyContigs());
-        Set<String> virusDecoyContigs = new HashSet<>(DEFAULT_VIRUS_DECOY_CONTIGS);
-        virusDecoyContigs.addAll(mConfig.extraVirusDecoyContigs());
+        Set<String> virusDecoyContigs = resolveVirusDecoyContigs();
 
         String candidateReadFastaFile = extractCandidateReads(virusDecoyContigs);
 
@@ -155,6 +152,14 @@ public class ViridianApplication
         mCandidateExtractor.extract(mConfig.tumorBam(), candidateFastaFile);
 
         return candidateFastaFile;
+    }
+
+    private Set<String> resolveVirusDecoyContigs()
+    {
+        checkVirusDecoyContigsInTumorBam(mConfig.tumorBam(), mConfig.refGenomeFile(), mConfig.extraVirusDecoyContigs());
+        Set<String> virusDecoyContigs = new HashSet<>(DEFAULT_VIRUS_DECOY_CONTIGS);
+        virusDecoyContigs.addAll(mConfig.extraVirusDecoyContigs());
+        return virusDecoyContigs;
     }
 
     static void checkVirusDecoyContigsInTumorBam(String tumorBam, @Nullable String refGenomeFile, Set<String> contigs)
