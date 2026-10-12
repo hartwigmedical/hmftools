@@ -2,6 +2,7 @@ package com.hartwig.hmftools.viridian.detection.extract;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.UNMAP_ATTRIBUTE;
+import static com.hartwig.hmftools.viridian.common.ViridianConstants.DEFAULT_VIRUS_DECOY_CONTIGS;
 import static com.hartwig.hmftools.viridian.detection.extract.CandidateReadFilterTest.MateState.MATE_MAPPED_TO_HOST;
 import static com.hartwig.hmftools.viridian.detection.extract.CandidateReadFilterTest.MateState.MATE_MAPPED_TO_VIRUS;
 import static com.hartwig.hmftools.viridian.detection.extract.CandidateReadFilterTest.MateState.MATE_UNMAPPED;
@@ -218,6 +219,25 @@ public class CandidateReadFilterTest
         assertTrue(FULLY_UNMAPPED_AND_VIRUS_FILTER.isCandidateContig("chrEBV"));
         // Fully unmapped reads have this placeholder in place of a contig.
         assertTrue(FULLY_UNMAPPED_AND_VIRUS_FILTER.isCandidateContig(NO_ALIGNMENT_REFERENCE_NAME));
+    }
+
+    @Test
+    public void testDefaultVirusDecoyContigsCoverStandardReferenceGenomes()
+    {
+        CandidateReadFilter filter = new CandidateReadFilter(
+                CandidateReadSource.FULLY_UNMAPPED_AND_VIRUS, 20, DEFAULT_VIRUS_DECOY_CONTIGS, null);
+
+        // GRCh38 analysis sets.
+        assertTrue(filter.isCandidateContig("chrEBV"));
+        // GRCh37 hs37d5 and GATK b37.
+        assertTrue(filter.isCandidateContig("NC_007605"));
+        // GDC GRCh38.d1.vd1.
+        assertTrue(filter.isCandidateContig("HPV16"));
+        assertTrue(filter.isCandidateContig("HPV-mSD2"));
+        assertTrue(filter.isCandidateContig("HBV"));
+        assertTrue(filter.isCandidateContig("MCV"));
+
+        assertFalse(filter.isCandidateContig("chr1"));
     }
 
     @Test

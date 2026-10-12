@@ -74,7 +74,7 @@ public record ViridianConfig(
     private static final String CANDIDATE_READ_SOURCE_VALUES =
             Arrays.stream(CandidateReadSource.values()).map(Enum::name).collect(Collectors.joining(", "));
     private static final String DESC_CANDIDATE_READ_SOURCE = "Candidate read source: " + CANDIDATE_READ_SOURCE_VALUES;
-    private static final String CFG_EXTRA_VIRUS_DECOY_CONTIGS = "extra_virus_decoy_contigs";
+    static final String CFG_EXTRA_VIRUS_DECOY_CONTIGS = "extra_virus_decoy_contigs";
     private static final String DESC_EXTRA_VIRUS_DECOY_CONTIGS = "Additional host reference genome contigs to treat as virus decoy contigs";
     static final String CFG_KMER_FILTER = "kmer_filter";
     private static final String DESC_KMER_FILTER = "Filter candidate viral reads with a kmer index";

@@ -8,6 +8,7 @@ import static java.util.stream.Collectors.toMap;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.viridian.app.ViridianConfig.CFG_CANDIDATE_READ_SOURCE;
+import static com.hartwig.hmftools.viridian.app.ViridianConfig.CFG_EXTRA_VIRUS_DECOY_CONTIGS;
 import static com.hartwig.hmftools.viridian.app.ViridianConfig.CFG_KMER_FILTER;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.REPORTED_MARGINS;
 
@@ -479,15 +480,13 @@ public class OutputWriter
     private static final List<String> VIRUS_REPORT_COLUMNS =
             Stream.of(VirusReportColumn.values()).map(Enum::name).toList();
 
-    private static final String VIRUS_DECOY_CONTIGS_COLUMN = "virus_decoy_contigs";
-
-    public static void writeRunManifest(String file, ViridianConfig config, Set<String> virusDecoyContigs)
+    public static void writeRunManifest(String file, ViridianConfig config)
     {
-        List<String> columns = List.of(CFG_CANDIDATE_READ_SOURCE, VIRUS_DECOY_CONTIGS_COLUMN, CFG_KMER_FILTER);
+        List<String> columns = List.of(CFG_CANDIDATE_READ_SOURCE, CFG_EXTRA_VIRUS_DECOY_CONTIGS, CFG_KMER_FILTER);
         DelimFileWriter.write(file, columns, List.of(config), (runConfig, row) ->
         {
             row.set(CFG_CANDIDATE_READ_SOURCE, runConfig.candidateReadSource().name());
-            row.set(VIRUS_DECOY_CONTIGS_COLUMN, String.join(ITEM_DELIM, virusDecoyContigs.stream().sorted().toList()));
+            row.set(CFG_EXTRA_VIRUS_DECOY_CONTIGS, String.join(ITEM_DELIM, runConfig.extraVirusDecoyContigs().stream().sorted().toList()));
             row.set(CFG_KMER_FILTER, runConfig.kmerFilterEnabled());
         });
     }

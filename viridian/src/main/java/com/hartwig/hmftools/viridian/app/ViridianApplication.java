@@ -127,7 +127,7 @@ public class ViridianApplication
 
         reportViruses(detectedViruses, integrationCounts);
 
-        OutputWriter.writeRunManifest(outputFile(RUN_MANIFEST_TSV_SUFFIX), mConfig, virusDecoyContigs);
+        OutputWriter.writeRunManifest(outputFile(RUN_MANIFEST_TSV_SUFFIX), mConfig);
 
         LOGGER.info("{} complete, mins({})", APP_NAME, runTimeMinsStr(startTimeMs));
     }

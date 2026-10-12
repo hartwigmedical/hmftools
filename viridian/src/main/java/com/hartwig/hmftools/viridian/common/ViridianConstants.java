@@ -23,7 +23,46 @@ public class ViridianConstants
     public static final int VIRAL_READ_EXTRACTION_PARTITION_SIZE = 1_000_000;
 
     // Contigs in the reference genome whose mapped reads are viral candidates.
-    public static final Set<String> DEFAULT_VIRUS_DECOY_CONTIGS = Set.of("chrEBV");
+    public static final Set<String> DEFAULT_VIRUS_DECOY_CONTIGS = Set.of(
+            // Epstein-Barr virus, in GRCh38 analysis sets.
+            "chrEBV",
+            // Epstein-Barr virus, in GRCh37 hs37d5 and GATK b37.
+            "NC_007605",
+            // The remaining contigs are from GDC GRCh38.d1.vd1.
+            // Human cytomegalovirus.
+            "CMV",
+            // Hepatitis B virus.
+            "HBV",
+            // Hepatitis C virus.
+            "HCV-1", "HCV-2",
+            // Human immunodeficiency virus.
+            "HIV-1", "HIV-2",
+            // Kaposi sarcoma-associated herpesvirus.
+            "KSHV",
+            // Human T-lymphotropic virus 1.
+            "HTLV-1",
+            // Merkel cell polyomavirus.
+            "MCV",
+            // Simian virus 40.
+            "SV40",
+            // Human papillomavirus types.
+            "HPV1", "HPV2", "HPV3", "HPV4", "HPV5", "HPV6", "HPV7", "HPV8", "HPV9", "HPV10", "HPV11", "HPV12", "HPV13", "HPV14",
+            "HPV15", "HPV16", "HPV17", "HPV18", "HPV19", "HPV20", "HPV21", "HPV22", "HPV23", "HPV24", "HPV25", "HPV26", "HPV27",
+            "HPV28", "HPV29", "HPV30", "HPV31", "HPV32", "HPV33", "HPV34", "HPV35", "HPV36", "HPV37", "HPV38", "HPV39", "HPV40",
+            "HPV41", "HPV42", "HPV43", "HPV44", "HPV45", "HPV47", "HPV48", "HPV49", "HPV50", "HPV51", "HPV52", "HPV53", "HPV54",
+            "HPV56", "HPV57", "HPV58", "HPV59", "HPV60", "HPV61", "HPV62", "HPV63", "HPV65", "HPV66", "HPV67", "HPV68", "HPV69",
+            "HPV70", "HPV71", "HPV72", "HPV73", "HPV74", "HPV75", "HPV76", "HPV77", "HPV78", "HPV80", "HPV81", "HPV82", "HPV83",
+            "HPV84", "HPV85", "HPV86", "HPV87", "HPV88", "HPV89", "HPV90", "HPV91", "HPV92", "HPV93", "HPV94", "HPV95", "HPV96",
+            "HPV97", "HPV98", "HPV99", "HPV100", "HPV101", "HPV102", "HPV103", "HPV104", "HPV105", "HPV106", "HPV107", "HPV108",
+            "HPV109", "HPV110", "HPV111", "HPV112", "HPV113", "HPV114", "HPV115", "HPV116", "HPV117", "HPV118", "HPV119",
+            "HPV120", "HPV121", "HPV122", "HPV123", "HPV124", "HPV125", "HPV126", "HPV127", "HPV128", "HPV129", "HPV130",
+            "HPV131", "HPV132", "HPV133", "HPV134", "HPV135", "HPV136", "HPV137", "HPV138", "HPV139", "HPV140", "HPV141",
+            "HPV142", "HPV143", "HPV144", "HPV145", "HPV146", "HPV147", "HPV148", "HPV149", "HPV150", "HPV151", "HPV152",
+            "HPV153", "HPV154", "HPV155", "HPV156", "HPV159", "HPV160", "HPV161", "HPV162", "HPV163", "HPV164", "HPV165",
+            "HPV166", "HPV167", "HPV168", "HPV169", "HPV170", "HPV171", "HPV172", "HPV173", "HPV174", "HPV175", "HPV178",
+            "HPV179", "HPV180", "HPV184", "HPV197", "HPV199",
+            "HPV-mCG2", "HPV-mCG3", "HPV-mCH2", "HPV-mFD1", "HPV-mFD2", "HPV-mFS1", "HPV-mFi864", "HPV-mKC5", "HPV-mKN1",
+            "HPV-mKN2", "HPV-mKN3", "HPV-mL55", "HPV-mRTRX7", "HPV-mSD2");
 
     // Minimum soft-clip length for a host-mapped read to count as a candidate.
     public static final int VIRAL_READ_MIN_SOFT_CLIP_BASES = 30;
