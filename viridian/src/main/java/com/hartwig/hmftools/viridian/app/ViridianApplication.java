@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.viridian.common.ViridianConstants.ALL_ALIGNME
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.APP_NAME;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.CANDIDATES_FASTA_SUFFIX;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.CONTIG_SUPPORT_TSV_SUFFIX;
+import static com.hartwig.hmftools.viridian.common.ViridianConstants.DEFAULT_VIRUS_DECOY_CONTIGS;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.INTEGRATION_CANDIDATES_TSV_SUFFIX;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.PAIRWISE_MARGINS_TSV_SUFFIX;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.READ_VOTE_CORRECT_BASE_PROBABILITY;
@@ -19,12 +20,13 @@ import static com.hartwig.hmftools.viridian.common.ViridianConstants.REPRESENTAT
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.RUN_MANIFEST_TSV_SUFFIX;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.VIRAL_READ_MIN_SOFT_CLIP_BASES;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.VIRUS_DETECTION_TSV_SUFFIX;
-import static com.hartwig.hmftools.viridian.common.ViridianConstants.VIRUS_REF_CONTIGS;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.VIRUS_REPORT_TSV_SUFFIX;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -68,6 +70,12 @@ import com.hartwig.hmftools.viridian.reporting.VirusReporter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import htsjdk.samtools.SAMSequenceDictionary;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.ValidationStringency;
 
 public class ViridianApplication
 {
@@ -95,7 +103,12 @@ public class ViridianApplication
 
         BwaMemAligner.initLibrary(mConfig.bwaLibPath());
 
-        String candidateReadFastaFile = extractCandidateReads();
+        // TODO: bundle this into a small method?
+        checkVirusDecoyContigsInTumorBam(mConfig.tumorBam(), mConfig.refGenomeFile(), mConfig.extraVirusDecoyContigs());
+        Set<String> virusDecoyContigs = new HashSet<>(DEFAULT_VIRUS_DECOY_CONTIGS);
+        virusDecoyContigs.addAll(mConfig.extraVirusDecoyContigs());
+
+        String candidateReadFastaFile = extractCandidateReads(virusDecoyContigs);
 
         AllContigsReadAlignments allContigsReadAlignments = alignCandidateReadsToViralContigs(candidateReadFastaFile);
 
@@ -117,13 +130,13 @@ public class ViridianApplication
 
         reportViruses(detectedViruses, integrationCounts);
 
-        OutputWriter.writeRunManifest(outputFile(RUN_MANIFEST_TSV_SUFFIX), mConfig);
+        OutputWriter.writeRunManifest(outputFile(RUN_MANIFEST_TSV_SUFFIX), mConfig, virusDecoyContigs);
 
         LOGGER.info("{} complete, mins({})", APP_NAME, runTimeMinsStr(startTimeMs));
     }
 
     // Extract reads which may be viral into a FASTA.
-    private String extractCandidateReads()
+    private String extractCandidateReads(Set<String> virusDecoyContigs)
     {
         String candidateFastaFile = outputFile(CANDIDATES_FASTA_SUFFIX);
 
@@ -136,12 +149,34 @@ public class ViridianApplication
 
         LOGGER.info("Extracting candidate viral reads from tumor BAM using read source {}", mConfig.candidateReadSource());
         CandidateReadFilter candidateFilter = new CandidateReadFilter(
-                mConfig.candidateReadSource(), VIRAL_READ_MIN_SOFT_CLIP_BASES, VIRUS_REF_CONTIGS, kmerIndex);
+                mConfig.candidateReadSource(), VIRAL_READ_MIN_SOFT_CLIP_BASES, virusDecoyContigs, kmerIndex);
         CandidateReadExtractor mCandidateExtractor = new CandidateReadExtractor(
                 mConfig.refGenomeFile(), candidateFilter, mConfig.threads());
         mCandidateExtractor.extract(mConfig.tumorBam(), candidateFastaFile);
 
         return candidateFastaFile;
+    }
+
+    static void checkVirusDecoyContigsInTumorBam(String tumorBam, @Nullable String refGenomeFile, Set<String> contigs)
+    {
+        SamReaderFactory readerFactory = SamReaderFactory.makeDefault().validationStringency(ValidationStringency.SILENT);
+        if(refGenomeFile != null)
+        {
+            readerFactory = readerFactory.referenceSequence(new File(refGenomeFile));
+        }
+        try(SamReader reader = readerFactory.open(new File(tumorBam)))
+        {
+            SAMSequenceDictionary dictionary = reader.getFileHeader().getSequenceDictionary();
+            List<String> missingContigs = contigs.stream().filter(contig -> dictionary.getSequence(contig) == null).sorted().toList();
+            if(!missingContigs.isEmpty())
+            {
+                throw new UserInputError("Virus decoy contigs not in BAM: " + String.join(", ", missingContigs));
+            }
+        }
+        catch(IOException e)
+        {
+            throw new RuntimeException("Failed to open tumor BAM", e);
+        }
     }
 
     // Align potentially viral reads to all virus genomes, so we can decide which viruses are detected.

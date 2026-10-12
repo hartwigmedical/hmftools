@@ -221,6 +221,16 @@ public class CandidateReadFilterTest
     }
 
     @Test
+    public void testIsCandidateRecordAcceptsReadOnUserGivenVirusDecoyContig()
+    {
+        // Any contig can be made a virus decoy contig, not only chrEBV.
+        CandidateReadFilter filter = new CandidateReadFilter(CandidateReadSource.ALL, 20, Set.of("chrEBV", "chr1"), null);
+
+        assertTrue(filter.isCandidateRecord(record(MAPPED_TO_HOST, UNPAIRED)));
+        assertFalse(FILTER.isCandidateRecord(record(MAPPED_TO_HOST, UNPAIRED)));
+    }
+
+    @Test
     public void testIsCandidateRecordMalformedReduxUnmapAttributeRejected()
     {
         SAMRecord record = record(REGULAR_UNMAPPED, UNPAIRED);

@@ -23,8 +23,7 @@ public class ViridianConstants
     public static final int VIRAL_READ_EXTRACTION_PARTITION_SIZE = 1_000_000;
 
     // Contigs in the reference genome whose mapped reads are viral candidates.
-    // Currently only applicable to v38 genome.
-    public static final Set<String> VIRUS_REF_CONTIGS = Set.of("chrEBV");
+    public static final Set<String> DEFAULT_VIRUS_DECOY_CONTIGS = Set.of("chrEBV");
 
     // Minimum soft-clip length for a host-mapped read to count as a candidate.
     public static final int VIRAL_READ_MIN_SOFT_CLIP_BASES = 30;

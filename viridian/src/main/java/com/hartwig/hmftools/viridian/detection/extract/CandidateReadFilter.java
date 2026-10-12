@@ -21,17 +21,17 @@ public class CandidateReadFilter
 {
     private final CandidateReadSource mSource;
     private final int mMinSoftClipBases;
-    private final Set<String> mRefVirusContigs;
+    private final Set<String> mVirusDecoyContigs;
     @Nullable
     private final ViralKmerIndex mKmerIndex;
 
     public CandidateReadFilter(
-            CandidateReadSource source, int minSoftClipBases, Set<String> refVirusContigs,
+            CandidateReadSource source, int minSoftClipBases, Set<String> virusDecoyContigs,
             @Nullable ViralKmerIndex kmerIndex)
     {
         mSource = source;
         mMinSoftClipBases = minSoftClipBases;
-        mRefVirusContigs = refVirusContigs;
+        mVirusDecoyContigs = virusDecoyContigs;
         mKmerIndex = kmerIndex;
     }
 
@@ -206,7 +206,7 @@ public class CandidateReadFilter
 
     private boolean isVirusDecoyContig(String contig)
     {
-        return mRefVirusContigs.contains(contig);
+        return mVirusDecoyContigs.contains(contig);
     }
 
     private boolean hasViralKmer(SAMRecord record)

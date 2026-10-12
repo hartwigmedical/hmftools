@@ -17,6 +17,7 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_BAM;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_BAM_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
@@ -25,6 +26,8 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutput
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.VIRAL_READ_ALIGNMENT_BATCH_SIZE_DEFAULT;
 
 import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
@@ -50,6 +53,7 @@ public record ViridianConfig(
         String outputDir,
         @Nullable String outputId,
         CandidateReadSource candidateReadSource,
+        Set<String> extraVirusDecoyContigs,
         boolean kmerFilterEnabled,
         boolean verboseOutput
 )
@@ -70,6 +74,8 @@ public record ViridianConfig(
     private static final String CANDIDATE_READ_SOURCE_VALUES =
             Arrays.stream(CandidateReadSource.values()).map(Enum::name).collect(Collectors.joining(", "));
     private static final String DESC_CANDIDATE_READ_SOURCE = "Candidate read source: " + CANDIDATE_READ_SOURCE_VALUES;
+    private static final String CFG_EXTRA_VIRUS_DECOY_CONTIGS = "extra_virus_decoy_contigs";
+    private static final String DESC_EXTRA_VIRUS_DECOY_CONTIGS = "Additional host reference genome contigs to treat as virus decoy contigs";
     static final String CFG_KMER_FILTER = "kmer_filter";
     private static final String DESC_KMER_FILTER = "Filter candidate viral reads with a kmer index";
     private static final String CFG_VERBOSE_OUTPUT = "verbose_output";
@@ -95,6 +101,7 @@ public record ViridianConfig(
                 parseOutputDir(configBuilder),
                 configBuilder.getValue(OUTPUT_ID),
                 parseCandidateReadSource(configBuilder.getValue(CFG_CANDIDATE_READ_SOURCE)),
+                parseExtraVirusDecoyContigs(configBuilder.getValue(CFG_EXTRA_VIRUS_DECOY_CONTIGS)),
                 configBuilder.hasFlag(CFG_KMER_FILTER),
                 configBuilder.hasFlag(CFG_VERBOSE_OUTPUT)
         );
@@ -111,6 +118,20 @@ public record ViridianConfig(
             throw new UserInputError(format(
                     "Invalid %s: %s, expected one of: %s", CFG_CANDIDATE_READ_SOURCE, value, CANDIDATE_READ_SOURCE_VALUES));
         }
+    }
+
+    static Set<String> parseExtraVirusDecoyContigs(@Nullable String value)
+    {
+        if(value == null)
+        {
+            return Set.of();
+        }
+        List<String> contigs = Arrays.asList(value.split(ITEM_DELIM, -1));
+        if(contigs.stream().anyMatch(String::isBlank))
+        {
+            throw new UserInputError(format("Invalid %s: %s", CFG_EXTRA_VIRUS_DECOY_CONTIGS, value));
+        }
+        return Set.copyOf(contigs);
     }
 
     public static void registerConfig(ConfigBuilder configBuilder)
@@ -130,6 +151,7 @@ public record ViridianConfig(
         configBuilder.addInteger(CFG_ALIGNMENT_BATCH_SIZE, DESC_ALIGNMENT_BATCH_SIZE, VIRAL_READ_ALIGNMENT_BATCH_SIZE_DEFAULT);
         configBuilder.addConfigItem(
                 CFG_CANDIDATE_READ_SOURCE, false, DESC_CANDIDATE_READ_SOURCE, CandidateReadSource.ALL.toString());
+        configBuilder.addConfigItem(CFG_EXTRA_VIRUS_DECOY_CONTIGS, DESC_EXTRA_VIRUS_DECOY_CONTIGS);
         configBuilder.addFlag(CFG_KMER_FILTER, DESC_KMER_FILTER);
         configBuilder.addFlag(CFG_VERBOSE_OUTPUT, DESC_VERBOSE_OUTPUT);
 
