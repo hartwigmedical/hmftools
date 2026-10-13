@@ -4,9 +4,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.segmentation.ChrArm;
 import com.hartwig.hmftools.common.segmentation.ChrArmLocator;
@@ -19,7 +21,7 @@ import org.apache.commons.math3.util.FastMath;
 
 public abstract class CobaltRatioSegmenter extends PerArmSegmenter<CobaltRatio>
 {
-    public static void writeTumorSegments(ListMultimap<Chromosome, CobaltRatio> ratios,
+    public static void writeTumorSegments(ListMultimap<HumanChromosome, CobaltRatio> ratios,
             double gamma,
             RefGenomeVersion genomeVersion,
             ExecutorService executor,
@@ -28,7 +30,7 @@ public abstract class CobaltRatioSegmenter extends PerArmSegmenter<CobaltRatio>
         writeSegments(ratios, gamma, genomeVersion, executor, outputPath, true);
     }
 
-    public static void writeReferenceSegments(ListMultimap<Chromosome, CobaltRatio> ratios,
+    public static void writeReferenceSegments(ListMultimap<HumanChromosome, CobaltRatio> ratios,
             double gamma,
             RefGenomeVersion genomeVersion,
             ExecutorService executor,
@@ -38,7 +40,7 @@ public abstract class CobaltRatioSegmenter extends PerArmSegmenter<CobaltRatio>
     }
 
     private static void writeSegments(
-            ListMultimap<Chromosome, CobaltRatio> ratios,
+            ListMultimap<HumanChromosome, CobaltRatio> ratios,
             double gamma,
             RefGenomeVersion genomeVersion,
             ExecutorService executor,
@@ -52,9 +54,14 @@ public abstract class CobaltRatioSegmenter extends PerArmSegmenter<CobaltRatio>
         SegmentsFile.write(genomeVersion, segmentsByChrArm, outputPath);
     }
 
-    CobaltRatioSegmenter(final ListMultimap<Chromosome, CobaltRatio> ratios, final ChrArmLocator chrArmLocator, final double gamma)
+    CobaltRatioSegmenter(final ListMultimap<HumanChromosome, CobaltRatio> ratios, final ChrArmLocator chrArmLocator, final double gamma)
     {
-        super(ratios, chrArmLocator, gamma);
+        super(convert(ratios), chrArmLocator, gamma);
+    }
+
+    private static ListMultimap<Chromosome,CobaltRatio> convert(final ListMultimap<HumanChromosome, CobaltRatio> ratios)
+    {
+        return ArrayListMultimap.create(ratios);
     }
 
     @Override

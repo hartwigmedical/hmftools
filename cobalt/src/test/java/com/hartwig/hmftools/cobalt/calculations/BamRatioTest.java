@@ -23,28 +23,28 @@ public class BamRatioTest
     {
         BamRatio br = new BamRatio(_1, 1001, 0.0, 0.0, true);
 
-        assertEquals(0.0, br.readDepth(), 0.0001);
+        assertEquals(0.0, br.ReadDepth, 0.0001);
         assertEquals(0.0, br.ratio(), 0.0001);
-        assertEquals(0.0, br.gcContent(), 0.0001);
+        assertEquals(0.0, br.GcContent, 0.0001);
         assertEquals(-1.0, br.getDiploidAdjustedRatio(), 0.0001);
 
         // Depth 0 readings are invariant under normalisation and enrichment.
         br.normaliseByMean(3.4);
-        assertEquals(0.0, br.readDepth(), 0.0001);
+        assertEquals(0.0, br.ReadDepth, 0.0001);
         assertEquals(0.0, br.ratio(), 0.0001);
-        assertEquals(0.0, br.gcContent(), 0.0001);
+        assertEquals(0.0, br.GcContent, 0.0001);
         assertEquals(-1.0, br.getDiploidAdjustedRatio(), 0.0001);
 
         br.normaliseForGc(45.89);
-        assertEquals(0.0, br.readDepth(), 0.0001);
+        assertEquals(0.0, br.ReadDepth, 0.0001);
         assertEquals(0.0, br.ratio(), 0.0001);
-        assertEquals(0.0, br.gcContent(), 0.0001);
+        assertEquals(0.0, br.GcContent, 0.0001);
         assertEquals(-1.0, br.getDiploidAdjustedRatio(), 0.0001);
 
         br.applyEnrichment(34.56);
-        assertEquals(0.0, br.readDepth(), 0.0001);
+        assertEquals(0.0, br.ReadDepth, 0.0001);
         assertEquals(0.0, br.ratio(), 0.0001);
-        assertEquals(0.0, br.gcContent(), 0.0001);
+        assertEquals(0.0, br.GcContent, 0.0001);
         assertEquals(-1.0, br.getDiploidAdjustedRatio(), 0.0001);
     }
 
@@ -52,19 +52,19 @@ public class BamRatioTest
     public void constructors()
     {
         BamRatio br = new BamRatio(_Y, 19_001, 123.4, 0.55);
-        assertEquals(_Y, br.mChromosome);
-        assertEquals(19_001, br.position());
+        assertEquals(_Y, br.Chromosome);
+        assertEquals(19_001, br.Position);
         assertEquals(123.4, br.ratio(), 0.001);
-        assertEquals(123.4, br.readDepth(), 0.001);
-        assertEquals(0.55, br.gcContent(), 0.001);
+        assertEquals(123.4, br.ReadDepth, 0.001);
+        assertEquals(0.55, br.GcContent, 0.001);
         assertEquals(-1.0, br.getDiploidAdjustedRatio(), 0.001);
 
         br = new BamRatio(_X, 19_001, 123.4, 12.34, 0.34);
-        assertEquals(_X, br.mChromosome);
-        assertEquals(19_001, br.position());
+        assertEquals(_X, br.Chromosome);
+        assertEquals(19_001, br.Position);
         assertEquals(12.34, br.ratio(), 0.001);
-        assertEquals(123.4, br.readDepth(), 0.001);
-        assertEquals(0.34, br.gcContent(), 0.001);
+        assertEquals(123.4, br.ReadDepth, 0.001);
+        assertEquals(0.34, br.GcContent, 0.001);
         assertEquals(-1.0, br.getDiploidAdjustedRatio(), 0.001);
     }
 
@@ -72,9 +72,9 @@ public class BamRatioTest
     public void overrideRatio()
     {
         BamRatio ratio = new BamRatio(_1, StartPosition, ReadDepth, ReadGcContent, true);
-        assertEquals(82, ratio.readDepth(), 0.001);
+        assertEquals(82, ratio.ReadDepth, 0.001);
         assertEquals(82.0, ratio.ratio(), 0.001);
-        assertEquals(0.49, ratio.gcContent(), 0.001);
+        assertEquals(0.49, ratio.GcContent, 0.001);
         ratio.overrideRatio(1.8);
         assertEquals(1.8, ratio.ratio(), 0.001);
     }
@@ -83,7 +83,7 @@ public class BamRatioTest
     public void overrideRatioSetsIncludedStatus()
     {
         BamRatio ratio = new BamRatio(_1, StartPosition, ReadDepth, ReadGcContent, false);
-        assertEquals(82, ratio.readDepth(), 0.001);
+        assertEquals(82, ratio.ReadDepth, 0.001);
         assertEquals(-1.0, ratio.ratio(), 0.001); // sanity
         ratio.overrideRatio(1.8);
         assertEquals(1.8, ratio.ratio(), 0.001);
@@ -93,7 +93,7 @@ public class BamRatioTest
     public void overrideWithNegativeRatioSetsIncludedStatus()
     {
         BamRatio ratio = new BamRatio(_1, StartPosition, ReadDepth, ReadGcContent, false);
-        assertEquals(82, ratio.readDepth(), 0.001);
+        assertEquals(82, ratio.ReadDepth, 0.001);
         assertEquals(-1.0, ratio.ratio(), 0.001);
         ratio.overrideRatio(-1.0);
         assertEquals(-1.0, ratio.ratio(), 0.001);
@@ -104,20 +104,20 @@ public class BamRatioTest
     {
         BamRatio ratio = new BamRatio(_1, StartPosition, ReadDepth, ReadGcContent, true);
         ratio.normaliseByMean(0.5);
-        assertEquals(82, ratio.readDepth(), 0.001);
+        assertEquals(82, ratio.ReadDepth, 0.001);
         assertEquals(164, ratio.ratio(), 0.001);
-        assertEquals(0.49, ratio.gcContent(), 0.001);
+        assertEquals(0.49, ratio.GcContent, 0.001);
     }
 
     @Test
     public void normalise0ByMean()
     {
         BamRatio ratio = new BamRatio(_1, StartPosition, 0.0, 0.0, true);
-        assertEquals(0.0, ratio.gcContent(), 0.001);
+        assertEquals(0.0, ratio.GcContent, 0.001);
         ratio.normaliseByMean(0.5);
-        assertEquals(0.0, ratio.readDepth(), 0.001);
+        assertEquals(0.0, ratio.ReadDepth, 0.001);
         assertEquals(0.0, ratio.ratio(), 0.001);
-        assertEquals(0.0, ratio.gcContent(), 0.001);
+        assertEquals(0.0, ratio.GcContent, 0.001);
     }
 
     @Test
@@ -125,11 +125,11 @@ public class BamRatioTest
     {
         BamRatio ratio = new BamRatio(_1, StartPosition, Double.NaN, 0.49, true);
         ratio.normaliseByMean(0.5);
-        assertEquals(_1, ratio.mChromosome);
+        assertEquals(_1, ratio.Chromosome);
         assertEquals(1001, ratio.Position);
         assertEquals(-1.0, ratio.ratio(), 0.001);
-        assertEquals(-1.0, ratio.readDepth(), 0.001);
-        assertEquals(0.49, ratio.gcContent(), 0.001);
+        assertEquals(-1.0, ratio.ReadDepth, 0.001);
+        assertEquals(0.49, ratio.GcContent, 0.001);
     }
 
     @Test
@@ -138,9 +138,9 @@ public class BamRatioTest
         BamRatio ratio = new BamRatio(_1, StartPosition, ReadDepth, ReadGcContent, true);
         assertEquals(-1.0, ratio.getDiploidAdjustedRatio(), 0.001);
         ratio.normaliseDiploidAdjustedRatio(0.5);
-        assertEquals(82, ratio.readDepth(), 0.001);
+        assertEquals(82, ratio.ReadDepth, 0.001);
         assertEquals(82.0, ratio.ratio(), 0.001);
-        assertEquals(0.49, ratio.gcContent(), 0.001);
+        assertEquals(0.49, ratio.GcContent, 0.001);
         assertEquals(-1.0, ratio.getDiploidAdjustedRatio(), 0.001);
     }
 
@@ -151,7 +151,7 @@ public class BamRatioTest
         ratio.setDiploidAdjustedRatio(1.8);
         assertEquals(1.8, ratio.getDiploidAdjustedRatio(), 0.001);
         ratio.normaliseDiploidAdjustedRatio(2.0);
-        assertEquals(82, ratio.readDepth(), 0.001);
+        assertEquals(82, ratio.ReadDepth, 0.001);
         assertEquals(0.9, ratio.getDiploidAdjustedRatio(), 0.001);
     }
 
@@ -190,22 +190,22 @@ public class BamRatioTest
     public void handleNaNDepthInConstructor()
     {
         BamRatio ratio = new BamRatio(_1, StartPosition, Double.NaN, 0.49, true);
-        assertEquals(_1, ratio.mChromosome);
+        assertEquals(_1, ratio.Chromosome);
         assertEquals(1001, ratio.Position);
         assertEquals(-1.0, ratio.ratio(), 0.001);
-        assertEquals(-1.0, ratio.readDepth(), 0.001);
-        assertEquals(0.49, ratio.gcContent(), 0.001);
+        assertEquals(-1.0, ratio.ReadDepth, 0.001);
+        assertEquals(0.49, ratio.GcContent, 0.001);
     }
 
     @Test
     public void handleNaNGcInConstructor()
     {
         BamRatio ratio = new BamRatio(_1, StartPosition, 34, Double.NaN, true);
-        assertEquals(_1, ratio.mChromosome);
+        assertEquals(_1, ratio.Chromosome);
         assertEquals(1001, ratio.Position);
         assertEquals(34, ratio.ratio(), 0.001);
-        assertEquals(34, ratio.readDepth(), 0.001);
-        assertEquals(-1.0, ratio.gcContent(), 0.001);
+        assertEquals(34, ratio.ReadDepth, 0.001);
+        assertEquals(-1.0, ratio.GcContent, 0.001);
         assertEquals(-1.0, ratio.getDiploidAdjustedRatio(), 0.001);
     }
 
@@ -213,18 +213,18 @@ public class BamRatioTest
     public void inTargetRegion()
     {
         BamRatio ratio = new BamRatio(_1, StartPosition, ReadDepth, ReadGcContent, true);
-        assertEquals(_1, ratio.mChromosome);
+        assertEquals(_1, ratio.Chromosome);
         assertEquals(1001, ratio.Position);
         assertEquals(82, ratio.ratio(), 0.001);
-        assertEquals(82, ratio.readDepth(), 0.001);
-        assertEquals(0.49, ratio.gcContent(), 0.001);
+        assertEquals(82, ratio.ReadDepth, 0.001);
+        assertEquals(0.49, ratio.GcContent, 0.001);
     }
 
     @Test
     public void outsideTargetRegion()
     {
         BamRatio ratio = new BamRatio(_1, StartPosition, ReadDepth, ReadGcContent, false);
-        assertEquals(_1, ratio.mChromosome);
+        assertEquals(_1, ratio.Chromosome);
         assertEquals(1001, ratio.Position);
         checkBlanked(ratio);
     }
@@ -234,9 +234,9 @@ public class BamRatioTest
     {
         BamRatio ratio = new BamRatio(_1, StartPosition, ReadDepth, ReadGcContent, true);
         ratio.normaliseForGc(100.0);
-        assertEquals(82, ratio.readDepth(), 0.001);
+        assertEquals(82, ratio.ReadDepth, 0.001);
         assertEquals(0.82, ratio.ratio(), 0.001);
-        assertEquals(0.49, ratio.gcContent(), 0.001);
+        assertEquals(0.49, ratio.GcContent, 0.001);
     }
 
     @Test
@@ -245,8 +245,8 @@ public class BamRatioTest
         BamRatio ratio = new BamRatio(_1, StartPosition, ReadDepth, ReadGcContent, true);
         ratio.normaliseForGc(0.0);
         checkBlanked(ratio);
-        assertEquals(82, ratio.readDepth(), 0.001);
-        assertEquals(0.49, ratio.gcContent(), 0.001);
+        assertEquals(82, ratio.ReadDepth, 0.001);
+        assertEquals(0.49, ratio.GcContent, 0.001);
     }
 
     @Test
@@ -255,8 +255,8 @@ public class BamRatioTest
         BamRatio ratio = new BamRatio(_1, StartPosition, ReadDepth, ReadGcContent, true);
         ratio.normaliseForGc(-1.0);
         checkBlanked(ratio);
-        assertEquals(82, ratio.readDepth(), 0.001);
-        assertEquals(0.49, ratio.gcContent(), 0.001);
+        assertEquals(82, ratio.ReadDepth, 0.001);
+        assertEquals(0.49, ratio.GcContent, 0.001);
     }
 
     @Test
@@ -264,9 +264,9 @@ public class BamRatioTest
     {
         BamRatio ratio = new BamRatio(_1, StartPosition, ReadDepth, ReadGcContent, true);
         ratio.applyEnrichment(0.5);
-        assertEquals(82, ratio.readDepth(), 0.001);
+        assertEquals(82, ratio.ReadDepth, 0.001);
         assertEquals(164, ratio.ratio(), 0.001);
-        assertEquals(0.49, ratio.gcContent(), 0.001);
+        assertEquals(0.49, ratio.GcContent, 0.001);
     }
 
     @Test
@@ -295,7 +295,7 @@ public class BamRatioTest
     public void position()
     {
         BamRatio ratio = new BamRatio(_1, StartPosition, ReadDepth, ReadGcContent, true);
-        assertEquals(1001, ratio.position());
+        assertEquals(1001, ratio.Position);
     }
 
     private void checkBlanked(BamRatio ratio)

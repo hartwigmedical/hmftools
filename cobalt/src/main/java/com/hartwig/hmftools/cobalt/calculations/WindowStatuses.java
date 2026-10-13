@@ -9,23 +9,24 @@ import com.google.common.collect.ListMultimap;
 import com.hartwig.hmftools.cobalt.count.DepthReading;
 import com.hartwig.hmftools.cobalt.diploid.DiploidStatus;
 import com.hartwig.hmftools.cobalt.exclusions.SuppliedExcludedRegions;
-import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.gc.GCProfile;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 class WindowStatuses
 {
-    private final ListMultimap<Chromosome, WindowStatus> mStatusesByChromosome = ArrayListMultimap.create();
-    private final ListMultimap<Chromosome, GCProfile> GcProfileData;
+    private final ListMultimap<HumanChromosome, WindowStatus> mStatusesByChromosome = ArrayListMultimap.create();
+    private final ListMultimap<HumanChromosome, GCProfile> GcProfileData;
 
-    WindowStatuses(ListMultimap<Chromosome, GCProfile> gcProfileData,
-            List<ChrBaseRegion> exclusions,
-            ListMultimap<Chromosome, DiploidStatus> diploidRegions)
+    WindowStatuses(
+            final ListMultimap<HumanChromosome, GCProfile> gcProfileData,
+            final List<ChrBaseRegion> exclusions,
+            final ListMultimap<HumanChromosome, DiploidStatus> diploidRegions)
     {
         GcProfileData = gcProfileData;
         boolean checkDiploid = !diploidRegions.isEmpty();
         SuppliedExcludedRegions excludedRegions = new SuppliedExcludedRegions(exclusions);
-        ListMultimap<Chromosome, GCProfile> toExclude = excludedRegions.findIntersections(gcProfileData);
+        ListMultimap<HumanChromosome, GCProfile> toExclude = excludedRegions.findIntersections(gcProfileData);
         gcProfileData.keySet().forEach(chromosome ->
         {
             List<DiploidStatus> diploidStatuses = diploidRegions.get(chromosome);
@@ -51,12 +52,12 @@ class WindowStatuses
         });
     }
 
-    Double referenceGcValueForWindow(final Chromosome chromosome, int position)
+    Double referenceGcValueForWindow(final HumanChromosome chromosome, int position)
     {
         return GcProfileData.get(chromosome).get(indexFor(position)).gcContent();
     }
 
-    boolean exclude(final Chromosome chromosome, final DepthReading readDepth)
+    boolean exclude(final HumanChromosome chromosome, final DepthReading readDepth)
     {
         List<WindowStatus> statusesForChromosome = mStatusesByChromosome.get(chromosome);
         WindowStatus status = statusesForChromosome.get(indexFor(readDepth.StartPosition));

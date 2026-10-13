@@ -20,23 +20,22 @@ import java.util.StringJoiner;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
-import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 public class TargetRegionEnrichment
 {
-    public final Chromosome Chromosome;
+    public final HumanChromosome Chromosome;
     public final int Position;
     public final double Enrichment;
 
-    public TargetRegionEnrichment(final Chromosome chromosome, final int position, final double enrichment)
+    public TargetRegionEnrichment(final HumanChromosome chromosome, final int position, final double enrichment)
     {
         Chromosome = chromosome;
         Position = position;
         Enrichment = enrichment;
     }
+
+    public boolean isValid() { return !Double.isNaN(Enrichment) && Enrichment > 0; }
 
     @Override
     public boolean equals(final Object o)
@@ -84,9 +83,9 @@ public class TargetRegionEnrichment
         return sj.toString();
     }
 
-    public static ListMultimap<Chromosome,TargetRegionEnrichment> loadEnrichmentFile(final String filename)
+    public static ListMultimap<HumanChromosome,TargetRegionEnrichment> loadEnrichmentFile(final String filename)
     {
-        ListMultimap<Chromosome, TargetRegionEnrichment> result = ArrayListMultimap.create();
+        ListMultimap<HumanChromosome, TargetRegionEnrichment> result = ArrayListMultimap.create();
 
         try
         {

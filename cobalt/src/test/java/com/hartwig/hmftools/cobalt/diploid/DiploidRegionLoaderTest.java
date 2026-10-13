@@ -13,7 +13,7 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.io.Files;
 import com.hartwig.hmftools.cobalt.e2e.DiploidFileSection;
 import com.hartwig.hmftools.cobalt.testutils.DiploidRegionsFileWriter;
-import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 
 import org.junit.Test;
 
@@ -33,7 +33,7 @@ public class DiploidRegionLoaderTest
 
         DiploidRegionLoader diploidRegionLoader = new DiploidRegionLoader( diploidBedFile.getAbsolutePath());
 
-        ListMultimap<Chromosome, DiploidStatus> regions = diploidRegionLoader.regions();
+        ListMultimap<HumanChromosome, DiploidStatus> regions = diploidRegionLoader.regions();
         assertEquals(19, regions.size());
         List<DiploidStatus> regions1 = regions.get(_1);
         assertEquals(6, regions1.size());
@@ -60,7 +60,7 @@ public class DiploidRegionLoaderTest
         check(regions2.get(12), _2, 12001, true);
     }
 
-    private void check(DiploidStatus status, Chromosome chromosome, int position, boolean isDiploid)
+    private void check(DiploidStatus status, HumanChromosome chromosome, int position, boolean isDiploid)
     {
         assertEquals(chromosome, status.humanChromosome());
         assertEquals(position, status.start());

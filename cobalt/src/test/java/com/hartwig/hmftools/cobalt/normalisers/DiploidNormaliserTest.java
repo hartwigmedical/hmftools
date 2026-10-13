@@ -18,7 +18,7 @@ import com.google.common.collect.ListMultimap;
 import com.hartwig.hmftools.cobalt.calculations.BamRatio;
 import com.hartwig.hmftools.cobalt.calculations.CalculationsTestBase;
 import com.hartwig.hmftools.common.cobalt.MedianRatio;
-import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.utils.Doubles;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -28,11 +28,11 @@ import org.junit.Test;
 
 public class DiploidNormaliserTest extends CalculationsTestBase
 {
-    private Chromosome CurrentChromosome;
+    private HumanChromosome CurrentChromosome;
     private int Position = 1;
     private double CurrentGC;
     private DiploidNormaliser normaliser;
-    private ListMultimap<Chromosome, BamRatio> ChromosomeToBamRatio;
+    private ListMultimap<HumanChromosome, BamRatio> ChromosomeToBamRatio;
 
     @Before
     public void setup()

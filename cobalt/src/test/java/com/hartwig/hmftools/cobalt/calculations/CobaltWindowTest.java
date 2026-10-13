@@ -68,36 +68,36 @@ public class CobaltWindowTest
         CobaltWindow window = new CobaltWindow(_1, readDepth.StartPosition, readDepth.ReadDepth, readDepth.ReadGcContent, bucket, true);
         BamRatio ratio = window.toBamRatio();
         assertEquals(readDepth.StartPosition, window.Position);
-        assertEquals(readDepth.ReadDepth, ratio.readDepth(), 0.001);
-        assertEquals(readDepth.ReadGcContent, ratio.gcContent(), 0.001);
+        assertEquals(readDepth.ReadDepth, ratio.ReadDepth, 0.001);
+        assertEquals(readDepth.ReadGcContent, ratio.GcContent, 0.001);
 
         window = new CobaltWindow(_2, readDepth2, true, true);
         ratio = window.toBamRatio();
         assertEquals(readDepth2.StartPosition, window.Position);
-        assertEquals(readDepth2.ReadDepth, ratio.readDepth(), 0.001);
+        assertEquals(readDepth2.ReadDepth, ratio.ReadDepth, 0.001);
         assertEquals(-1.0, ratio.ratio(), 0.001); // excluded
-        assertEquals(readDepth2.ReadGcContent, ratio.gcContent(), 0.001);
+        assertEquals(readDepth2.ReadGcContent, ratio.GcContent, 0.001);
 
         window = new CobaltWindow(_2, readDepth2, true, false);
         ratio = window.toBamRatio();
         assertEquals(readDepth2.StartPosition, window.Position);
-        assertEquals(readDepth2.ReadDepth, ratio.readDepth(), 0.001);
+        assertEquals(readDepth2.ReadDepth, ratio.ReadDepth, 0.001);
         assertEquals(-1.0, ratio.ratio(), 0.001);
-        assertEquals(readDepth2.ReadGcContent, ratio.gcContent(), 0.001);
+        assertEquals(readDepth2.ReadGcContent, ratio.GcContent, 0.001);
 
         window = new CobaltWindow(_2, readDepth2, false, true);
         ratio = window.toBamRatio();
         assertEquals(readDepth2.StartPosition, window.Position);
-        assertEquals(readDepth2.ReadDepth, ratio.readDepth(), 0.001);
+        assertEquals(readDepth2.ReadDepth, ratio.ReadDepth, 0.001);
         assertEquals(readDepth2.ReadDepth, ratio.ratio(), 0.001);
-        assertEquals(readDepth2.ReadGcContent, ratio.gcContent(), 0.001);
+        assertEquals(readDepth2.ReadGcContent, ratio.GcContent, 0.001);
 
         window = new CobaltWindow(_2, readDepth2, false, false);
         ratio = window.toBamRatio();
         assertEquals(readDepth2.StartPosition, window.Position);
-        assertEquals(readDepth2.ReadDepth, ratio.readDepth(), 0.001);
+        assertEquals(readDepth2.ReadDepth, ratio.ReadDepth, 0.001);
         assertEquals(-1.0, ratio.ratio(), 0.001);
-        assertEquals(readDepth2.ReadGcContent, ratio.gcContent(), 0.001);
+        assertEquals(readDepth2.ReadGcContent, ratio.GcContent, 0.001);
     }
 
     @Test

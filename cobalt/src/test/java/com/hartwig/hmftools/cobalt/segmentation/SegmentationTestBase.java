@@ -24,7 +24,7 @@ import org.junit.Before;
 
 public class SegmentationTestBase
 {
-    ListMultimap<Chromosome, CobaltRatio> ratios;
+    ListMultimap<HumanChromosome, CobaltRatio> ratios;
     ExecutorService executor;
     ChrArmLocator locator = cobaltRatio ->
     {

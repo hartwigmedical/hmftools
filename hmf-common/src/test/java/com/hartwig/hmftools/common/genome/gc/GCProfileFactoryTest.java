@@ -6,7 +6,7 @@ import java.io.IOException;
 
 import com.google.common.collect.Multimap;
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 
 import org.junit.Test;
 
@@ -17,7 +17,7 @@ public class GCProfileFactoryTest
     @Test
     public void canLoadNormalFile() throws IOException
     {
-        final Multimap<Chromosome, GCProfile> gcContent = GCProfileFactory.loadGCContent(1000, GC_PROFILE_PATH);
+        final Multimap<HumanChromosome, GCProfile> gcContent = GCProfileFactory.loadGCContent(1000, GC_PROFILE_PATH);
         assertEquals(100, gcContent.size());
     }
 }

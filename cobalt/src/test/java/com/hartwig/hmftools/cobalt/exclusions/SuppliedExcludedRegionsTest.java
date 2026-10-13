@@ -11,7 +11,6 @@ import java.util.List;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
-import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.gc.GCProfile;
 import com.hartwig.hmftools.common.genome.gc.ImmutableGCProfile;
@@ -28,7 +27,7 @@ public class SuppliedExcludedRegionsTest
         // 1: 1, 1001, ... , 19001
         // 2: 10001, 11001, ... , 19001
         // 3: 1, 1001, ... , 9001
-        ListMultimap<Chromosome, GCProfile> ratios = ArrayListMultimap.create();
+        ListMultimap<HumanChromosome, GCProfile> ratios = ArrayListMultimap.create();
         int pos = 1;
         for(int i = 0; i < 10; i++)
         {
@@ -55,7 +54,7 @@ public class SuppliedExcludedRegionsTest
         // 1: 1-1000, 1001-2000, 12_001-13_000, 13_001-14_000, 14_001-15_000
         // 2: 10_001-11_000, 11_001-12_000, 12_001-13_000
         SuppliedExcludedRegions excludedRegions = new SuppliedExcludedRegions(regions);
-        ListMultimap<Chromosome, GCProfile> filtered = excludedRegions.findIntersections(ratios);
+        ListMultimap<HumanChromosome, GCProfile> filtered = excludedRegions.findIntersections(ratios);
         assertEquals(8, filtered.size());
         List<GCProfile> filtered1 = filtered.get(_1);
         assertEquals(5, filtered1.size());

@@ -9,14 +9,13 @@ import java.util.Map;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
-import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.gc.GCProfile;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 public class SuppliedExcludedRegions
 {
-    private final Map<Chromosome, List<ChrBaseRegion>> regionsByChromosome = new HashMap<>();
+    private final Map<HumanChromosome, List<ChrBaseRegion>> regionsByChromosome = new HashMap<>();
 
     public SuppliedExcludedRegions(final List<ChrBaseRegion> regions)
     {
@@ -25,9 +24,9 @@ public class SuppliedExcludedRegions
                 regionsByChromosome.put(HumanChromosome.fromString(key), value.stream().sorted().collect(toList())));
     }
 
-    public ListMultimap<Chromosome, GCProfile> findIntersections(ListMultimap<Chromosome, GCProfile> gcData)
+    public ListMultimap<HumanChromosome, GCProfile> findIntersections(ListMultimap<HumanChromosome, GCProfile> gcData)
     {
-        ListMultimap<Chromosome, GCProfile> result = ArrayListMultimap.create();
+        ListMultimap<HumanChromosome, GCProfile> result = ArrayListMultimap.create();
         gcData.keySet().forEach(chromosome ->
         {
             List<ChrBaseRegion> filterRegions = regionsByChromosome.get(chromosome);

@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.amber.purity;
 
+import static java.lang.Math.abs;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.amber.AmberConfig.AMB_LOGGER;
@@ -22,6 +23,7 @@ public class PeakGnomadFrequenciesChecker
     {
         DescriptiveStatistics lowAStats = new DescriptiveStatistics();
         DescriptiveStatistics highAStats = new DescriptiveStatistics();
+
         for(PositionEvidence evidence : mPeak.allCapturedPoints())
         {
             double gnomadFrequency = frequencySupplier.getFrequency(evidence.Chromosome, evidence.Position);
@@ -34,19 +36,18 @@ public class PeakGnomadFrequenciesChecker
                 highAStats.addValue(gnomadFrequency);
             }
         }
-        AMB_LOGGER.trace(format("peak at: %.3f has low af gnomad mean: %.3f,  high af gnomad mean: %.3f", mPeak.vaf(), lowAStats.getMean(), highAStats.getMean()));
+
+        AMB_LOGGER.trace(format("peak(%.3f) Gnomad lowMean(%.3f) highMean(%.3f)", mPeak.vaf(), lowAStats.getMean(), highAStats.getMean()));
+
         if(lowAStats.getN() == 0 || highAStats.getN() == 0)
-        {
             return false;
-        }
-        if(Math.abs(lowAStats.getMean() - expectedMean) > GNOMAD_FREQUENCY_TOLERANCE)
-        {
+
+        if(abs(lowAStats.getMean() - expectedMean) > GNOMAD_FREQUENCY_TOLERANCE)
             return false;
-        }
-        if(Math.abs(highAStats.getMean() - expectedMean) > GNOMAD_FREQUENCY_TOLERANCE)
-        {
+
+        if(abs(highAStats.getMean() - expectedMean) > GNOMAD_FREQUENCY_TOLERANCE)
             return false;
-        }
+
         return true;
     }
 }

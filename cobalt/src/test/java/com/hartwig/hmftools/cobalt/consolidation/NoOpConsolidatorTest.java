@@ -9,7 +9,7 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.hartwig.hmftools.cobalt.calculations.BamRatio;
 import com.hartwig.hmftools.cobalt.calculations.CalculationsTestBase;
-import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 
 import org.junit.Test;
 
@@ -18,7 +18,7 @@ public class NoOpConsolidatorTest extends CalculationsTestBase
     @Test
     public void consolidateTest()
     {
-        ListMultimap<Chromosome, BamRatio> ratios = ArrayListMultimap.create();
+        ListMultimap<HumanChromosome, BamRatio> ratios = ArrayListMultimap.create();
         for(int i = 0; i < 40; i++)
         {
             int position = i * 1000 + 1;
@@ -28,7 +28,7 @@ public class NoOpConsolidatorTest extends CalculationsTestBase
             ratios.put(_2, br(_2, position, depth, gc, true));
         }
         NoOpConsolidator consolidator = new NoOpConsolidator();
-        ListMultimap<Chromosome, BamRatio> result = consolidator.consolidate(ratios);
+        ListMultimap<HumanChromosome, BamRatio> result = consolidator.consolidate(ratios);
 
         assertEquals(result, ratios);
     }
