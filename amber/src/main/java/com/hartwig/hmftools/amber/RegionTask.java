@@ -1,13 +1,21 @@
 package com.hartwig.hmftools.amber;
 
 import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static java.lang.String.format;
+
+import static com.hartwig.hmftools.common.bam.CigarUtils.cigarFromStr;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
+
+import static htsjdk.samtools.CigarOperator.S;
 
 import java.util.List;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
+import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
 
 public class RegionTask
@@ -36,8 +44,23 @@ public class RegionTask
 
     public void processRecord(final SAMRecord record)
     {
-        int alignmentStart = record.getAlignmentStart();
-        int alignmentEnd = record.getAlignmentEnd();
+        int[] fragmentBoundaries = checkFragmentBoundaries(record);
+
+        int alignmentStart, alignmentEnd;
+
+        if(fragmentBoundaries != null)
+        {
+            alignmentStart = fragmentBoundaries[0];
+            alignmentEnd = fragmentBoundaries[1];
+
+            if(alignmentStart > alignmentEnd)
+                return;
+        }
+        else
+        {
+            alignmentStart = record.getAlignmentStart();
+            alignmentEnd = record.getAlignmentEnd();
+        }
 
         int index = mCurrentIndex;
         for(; index < mPositions.size(); ++index)
@@ -73,5 +96,87 @@ public class RegionTask
     public String toString()
     {
         return format("region(%s) positions(%d) index(%d)", Region, mPositions.size(), mCurrentIndex);
+    }
+
+    @VisibleForTesting
+    public static int[] checkFragmentBoundaries(final SAMRecord record)
+    {
+        // applies to concordant overlapping reads only
+        if(!record.getReadPairedFlag() || record.getMateUnmappedFlag())
+            return null;
+
+        if(record.getReferenceIndex() != record.getMateReferenceIndex())
+            return null;
+
+        if(record.getReadNegativeStrandFlag() == record.getMateNegativeStrandFlag())
+            return null;
+
+        if(record.getAlignmentEnd() < record.getMateAlignmentStart())
+            return null;
+
+        String mateCigar = record.getStringAttribute(MATE_CIGAR_ATTRIBUTE);
+
+        if(mateCigar == null)
+            return null;
+
+        int readStart = record.getAlignmentStart();
+        int readEnd = record.getAlignmentEnd();
+
+        int mateStart = record.getMateAlignmentStart();
+
+        List<CigarElement> mateCigarElements = cigarFromStr(mateCigar).getCigarElements();
+
+        int mateEnd = mateStart + mateCigarElements.stream()
+                .filter(x -> x.getOperator().consumesReferenceBases()).mapToInt(x -> x.getLength()).sum() - 1;
+
+        if(mateEnd < readStart)
+            return null;
+
+        boolean isFirstRead;
+
+        if(readStart < mateStart)
+        {
+            isFirstRead = true;
+        }
+        else if(readStart == mateStart)
+        {
+            if(readEnd == mateEnd)
+                isFirstRead = !record.getReadNegativeStrandFlag(); // as per BAM coordinate sorting
+            else
+                isFirstRead = readEnd < mateEnd; // so as to process the shorter read first
+        }
+        else
+        {
+            isFirstRead = false;
+        }
+
+        // avoid processing the same bases from the earlier read twice
+        if(!isFirstRead)
+        {
+            readStart = max(readStart, mateEnd + 1);
+        }
+
+        // limit the 3' end of reads to the unclipped part of the mate's 5' end to ignore adapter bases
+        if(record.getReadNegativeStrandFlag())
+        {
+            int unclippedMateStart = mateStart;
+
+            if(mateCigarElements.get(0).getOperator() == S)
+                unclippedMateStart -= mateCigarElements.get(0).getLength();
+
+            readStart = max(unclippedMateStart, readStart);
+        }
+        else
+        {
+            int unclippedMateEnd = mateEnd;
+
+            int lastIndex = mateCigarElements.size() - 1;
+            if(mateCigarElements.get(lastIndex).getOperator() == S)
+                unclippedMateEnd += mateCigarElements.get(lastIndex).getLength();
+
+            readEnd = min(unclippedMateEnd, readEnd);
+        }
+
+        return new int[] { readStart, readEnd };
     }
 }
