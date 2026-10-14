@@ -2,9 +2,9 @@ package com.hartwig.hmftools.viridian.detection.support;
 
 import static java.util.stream.Collectors.toMap;
 
-import static com.hartwig.hmftools.viridian.common.ViridianConstants.VIRAL_CONTIG_COVERAGE_MIN;
-import static com.hartwig.hmftools.viridian.common.ViridianConstants.VIRAL_CONTIG_COVERAGE_MIN_LOWER;
-import static com.hartwig.hmftools.viridian.common.ViridianConstants.VIRAL_CONTIG_VOTES_PER_BASE_MIN;
+import static com.hartwig.hmftools.viridian.common.ViridianConstants.VIRUS_GENOME_COVERAGE_MIN;
+import static com.hartwig.hmftools.viridian.common.ViridianConstants.VIRUS_GENOME_COVERAGE_MIN_LOWER;
+import static com.hartwig.hmftools.viridian.common.ViridianConstants.VIRUS_GENOME_VOTES_PER_BASE_MIN;
 
 import java.util.Map;
 
@@ -18,7 +18,7 @@ public class GenomeSupportFilter
             Map<VirusGenome, GenomeStats> contigStats, Map<VirusGenome, Double> readVotes, double meanReadLength)
     {
         boolean groupReachesCoverageMin = contigStats.values().stream()
-                .anyMatch(stats -> stats.coverageFraction() >= VIRAL_CONTIG_COVERAGE_MIN);
+                .anyMatch(stats -> stats.coverageFraction() >= VIRUS_GENOME_COVERAGE_MIN);
 
         return contigStats.entrySet().stream().collect(toMap(
                 Map.Entry::getKey,
@@ -32,7 +32,7 @@ public class GenomeSupportFilter
     {
         // Once some contig reaches the coverage minimum, its siblings are kept down to a slightly lower coverage, so a
         // near-identical sibling straddling the cutoff is not harshly lost.
-        if(!groupReachesCoverageMin || stats.coverageFraction() < VIRAL_CONTIG_COVERAGE_MIN_LOWER)
+        if(!groupReachesCoverageMin || stats.coverageFraction() < VIRUS_GENOME_COVERAGE_MIN_LOWER)
         {
             return GenomeFilterStatus.LOW_COVERAGE;
         }
@@ -51,6 +51,6 @@ public class GenomeSupportFilter
     // contig.
     private static double voteFloor(VirusGenome contig, double meanReadLength)
     {
-        return VIRAL_CONTIG_VOTES_PER_BASE_MIN * VIRAL_CONTIG_COVERAGE_MIN * contig.length() / meanReadLength;
+        return VIRUS_GENOME_VOTES_PER_BASE_MIN * VIRUS_GENOME_COVERAGE_MIN * contig.length() / meanReadLength;
     }
 }

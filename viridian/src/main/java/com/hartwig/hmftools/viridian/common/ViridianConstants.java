@@ -87,20 +87,20 @@ public class ViridianConstants
 
     // A clip counts as hanging over a contig end (a circular-genome artifact) when its bases would extend past the
     // boundary by more than this tolerance. Such alignments are dropped from all further processing.
-    public static final int VIRAL_CONTIG_ORIGIN_CLIP_TOLERANCE = 4;
+    public static final int VIRUS_GENOME_ORIGIN_CLIP_TOLERANCE = 4;
 
     // A contig is a candidate only if some contig in its oncology group reaches this coverage fraction.
     // This value is very conservative. Hard to argue a lower coverage wouldn't be spurious.
-    public static final double VIRAL_CONTIG_COVERAGE_MIN = 0.1;
+    public static final double VIRUS_GENOME_COVERAGE_MIN = 0.1;
 
-    // If any contig in an oncology group passes VIRAL_CONTIG_COVERAGE_MIN, then use this as the coverage threshold instead of that.
+    // If any contig in an oncology group passes VIRUS_GENOME_COVERAGE_MIN, then use this as the coverage threshold instead of that.
     // Ensures that a similar sibling contig which straddles the coverage threshold isn't harshly lost.
-    public static final double VIRAL_CONTIG_COVERAGE_MIN_LOWER = VIRAL_CONTIG_COVERAGE_MIN * 0.9;
+    public static final double VIRUS_GENOME_COVERAGE_MIN_LOWER = VIRUS_GENOME_COVERAGE_MIN * 0.9;
 
     // Minimum read votes per base that is required to be covered.
     // Handles cases where the contig has some alignments but those reads strongly prefer a better matching contig
     // (since coverage is calculated based on ANY alignment, not necessarily a good one).
-    public static final double VIRAL_CONTIG_VOTES_PER_BASE_MIN = 1.0;
+    public static final double VIRUS_GENOME_VOTES_PER_BASE_MIN = 1.0;
 
     // Effectively a tolerance on the read vote share to ensure that a close runner up is also considered.
     // Otherwise, you can have the top contig win by only an arbitrarily small number of read votes.
@@ -167,19 +167,19 @@ public class ViridianConstants
         {
             throw new IllegalStateException();
         }
-        if(!(VIRAL_CONTIG_ORIGIN_CLIP_TOLERANCE >= 0))
+        if(!(VIRUS_GENOME_ORIGIN_CLIP_TOLERANCE >= 0))
         {
             throw new IllegalStateException();
         }
-        if(!(VIRAL_CONTIG_COVERAGE_MIN > 0.0 && VIRAL_CONTIG_COVERAGE_MIN <= 1.0))
+        if(!(VIRUS_GENOME_COVERAGE_MIN > 0.0 && VIRUS_GENOME_COVERAGE_MIN <= 1.0))
         {
             throw new IllegalStateException();
         }
-        if(!(VIRAL_CONTIG_COVERAGE_MIN_LOWER > 0.0 && VIRAL_CONTIG_COVERAGE_MIN_LOWER <= VIRAL_CONTIG_COVERAGE_MIN))
+        if(!(VIRUS_GENOME_COVERAGE_MIN_LOWER > 0.0 && VIRUS_GENOME_COVERAGE_MIN_LOWER <= VIRUS_GENOME_COVERAGE_MIN))
         {
             throw new IllegalStateException();
         }
-        if(!(VIRAL_CONTIG_VOTES_PER_BASE_MIN > 0.0))
+        if(!(VIRUS_GENOME_VOTES_PER_BASE_MIN > 0.0))
         {
             throw new IllegalStateException();
         }
