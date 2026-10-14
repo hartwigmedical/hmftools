@@ -25,7 +25,7 @@ public record ViralReadAlignment(
         int leftClip,
         int rightClip,
         int alignerScore,
-        // NM + clipped bases: how poorly the contig explains the read
+        // NM + clipped bases: how poorly the virus genome explains the read
         int divergence,
         List<AlignedInterval> alignedIntervals)
 {
@@ -79,13 +79,13 @@ public record ViralReadAlignment(
                 intervals);
     }
 
-    // The clipped bases project past a contig end, so the read straddles the circular genome's linearization origin:
-    // those bases wrap to the other end and cannot align linearly. An artifact, not real divergence.
+    // The clipped bases project past a virus genome end, so the read straddles the circular genome's linearization
+    // origin: those bases wrap to the other end and cannot align linearly. An artifact, not real divergence.
     public boolean clipsOverGenomeEnd()
     {
-        int contigLength = genome.length();
+        int genomeLength = genome.length();
         return alignmentStart - leftClip < 1 - VIRUS_GENOME_ORIGIN_CLIP_TOLERANCE
-                || alignmentEnd + rightClip > contigLength + VIRUS_GENOME_ORIGIN_CLIP_TOLERANCE;
+                || alignmentEnd + rightClip > genomeLength + VIRUS_GENOME_ORIGIN_CLIP_TOLERANCE;
     }
 
     private static int requiredTag(SAMRecord record, String tag, String description)

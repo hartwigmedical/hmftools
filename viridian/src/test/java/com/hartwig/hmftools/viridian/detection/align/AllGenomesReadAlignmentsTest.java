@@ -26,7 +26,7 @@ public class AllGenomesReadAlignmentsTest
     @Test
     public void testFromOriginStraddlersExcludedAndCounted()
     {
-        // An alignment clipping over a contig end straddles the circular origin.
+        // An alignment clipping over a virus genome end straddles the circular origin.
         AllGenomesReadAlignments allAlignments = AllGenomesReadAlignments.from(
                 List.of(alignment("r1", V1), straddler("r2", V1), straddler("r3", V1)), 150.0);
 
@@ -54,7 +54,7 @@ public class AllGenomesReadAlignmentsTest
     @Test
     public void testFromStraddlersDoNotCountTowardsReadCounts()
     {
-        // A contig carrying only straddlers leaves its group unrepresented.
+        // A virus genome carrying only straddlers leaves its group unrepresented.
         AllGenomesReadAlignments allAlignments = AllGenomesReadAlignments.from(List.of(alignment("r1", V1), straddler("r2", H1)), 150.0);
 
         assertEquals(Map.of(GROUP_A, 1), allAlignments.metrics().readCountsByOncologyGroup());
@@ -69,8 +69,8 @@ public class AllGenomesReadAlignmentsTest
         assertEquals(Map.of(V1, 2), allAlignments.metrics().originClippedReads());
     }
 
-    // The aligner reports every placement it finds, so one read can be aligned to a contig several times. Only its
-    // best alignment is kept, and how many it had is measured instead.
+    // The aligner reports every placement it finds, so one read can be aligned to a virus genome several times. Only
+    // its best alignment is kept, and how many it had is measured instead.
     @Test
     public void testFromRepeatAlignmentsReducedToBestAndCounted()
     {
@@ -81,9 +81,9 @@ public class AllGenomesReadAlignmentsTest
                         divergentAlignment("r2", V1, 1)),
                 150.0);
 
-        Map<ReadId, ViralReadAlignment> contigAlignments = allAlignments.store().byGenome().get(V1);
-        assertEquals(2, contigAlignments.size());
-        assertEquals(4, contigAlignments.get(ReadId.parse("r1")).divergence());
+        Map<ReadId, ViralReadAlignment> genomeAlignments = allAlignments.store().byGenome().get(V1);
+        assertEquals(2, genomeAlignments.size());
+        assertEquals(4, genomeAlignments.get(ReadId.parse("r1")).divergence());
         assertEquals(Map.of(V1, List.of(2, 1)), allAlignments.metrics().alignmentCountsByGenome());
     }
 
@@ -105,23 +105,23 @@ public class AllGenomesReadAlignmentsTest
         assertThrows(IllegalArgumentException.class, () -> AllGenomesReadAlignments.from(List.of(straddler("r1", V1)), null));
     }
 
-    private static ViralReadAlignment divergentAlignment(String readName, VirusGenome contig, int divergence)
+    private static ViralReadAlignment divergentAlignment(String readName, VirusGenome genome, int divergence)
     {
         return new ViralReadAlignment(
-                ReadId.parse(readName), contig, 1, LENGTH, LENGTH + "M", 0, 0, 100 - divergence, divergence,
+                ReadId.parse(readName), genome, 1, LENGTH, LENGTH + "M", 0, 0, 100 - divergence, divergence,
                 List.of(new AlignedInterval(1, LENGTH)));
     }
 
-    private static ViralReadAlignment alignment(String readName, VirusGenome contig)
+    private static ViralReadAlignment alignment(String readName, VirusGenome genome)
     {
         return new ViralReadAlignment(
-                ReadId.parse(readName), contig, 1, LENGTH, LENGTH + "M", 0, 0, 100, 0, List.of(new AlignedInterval(1, LENGTH)));
+                ReadId.parse(readName), genome, 1, LENGTH, LENGTH + "M", 0, 0, 100, 0, List.of(new AlignedInterval(1, LENGTH)));
     }
 
-    // A right clip projecting well past the contig end.
-    private static ViralReadAlignment straddler(String readName, VirusGenome contig)
+    // A right clip projecting well past the virus genome end.
+    private static ViralReadAlignment straddler(String readName, VirusGenome genome)
     {
         return new ViralReadAlignment(
-                ReadId.parse(readName), contig, 1, LENGTH, LENGTH + "M50S", 0, 50, 100, 50, List.of(new AlignedInterval(1, LENGTH)));
+                ReadId.parse(readName), genome, 1, LENGTH, LENGTH + "M50S", 0, 50, 100, 50, List.of(new AlignedInterval(1, LENGTH)));
     }
 }

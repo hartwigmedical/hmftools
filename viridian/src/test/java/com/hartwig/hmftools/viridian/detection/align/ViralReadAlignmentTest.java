@@ -28,11 +28,11 @@ import htsjdk.samtools.TextCigarCodec;
 
 public class ViralReadAlignmentTest
 {
-    private static final int CONTIG_LENGTH = 200;
+    private static final int GENOME_LENGTH = 200;
     private static final int ALIGNMENT_LENGTH = 50;
 
     private static final VirusReference REFERENCE = reference();
-    private static final VirusGenome CONTIG = REFERENCE.genome("v1");
+    private static final VirusGenome GENOME = REFERENCE.genome("v1");
 
     @Test
     public void testFromExtractsFieldsAndCountsClipsInDivergence()
@@ -52,9 +52,9 @@ public class ViralReadAlignmentTest
     }
 
     @Test
-    public void testClipsOverContigEndDetectsClipsPastEitherEnd()
+    public void testClipsOverGenomeEndDetectsClipsPastEitherEnd()
     {
-        // A clip projecting past a contig boundary straddles the circular origin.
+        // A clip projecting past a virus genome end straddles the circular origin.
         assertTrue(ViralReadAlignment.from(record(30, "40S60M", 60, 0), REFERENCE).clipsOverGenomeEnd());    // left clip projects to -10
         assertTrue(ViralReadAlignment.from(record(141, "60M40S", 60, 0), REFERENCE).clipsOverGenomeEnd());   // right clip projects to 240
         assertFalse(ViralReadAlignment.from(record(100, "40S60M", 60, 0), REFERENCE).clipsOverGenomeEnd());  // left clip projects to 60
@@ -77,8 +77,8 @@ public class ViralReadAlignmentTest
     @Test
     public void testBestFitFirstLowestDivergenceBeatsHighestScore()
     {
-        // Soft clips cost nothing in the aligner score but are bases the contig fails to explain, so divergence and
-        // score can disagree.
+        // Soft clips cost nothing in the aligner score but are bases the virus genome fails to explain, so divergence
+        // and score can disagree.
         ViralReadAlignment wholeRead = alignment(10, 6, 70);
         ViralReadAlignment clipped = alignment(10, 20, 80);
 
@@ -104,14 +104,14 @@ public class ViralReadAlignmentTest
     private static ViralReadAlignment alignment(int start, int divergence, int alignerScore)
     {
         return new ViralReadAlignment(
-                ReadId.parse("r1"), CONTIG, start, start + ALIGNMENT_LENGTH - 1, ALIGNMENT_LENGTH + "M", 0, 0, alignerScore, divergence,
+                ReadId.parse("r1"), GENOME, start, start + ALIGNMENT_LENGTH - 1, ALIGNMENT_LENGTH + "M", 0, 0, alignerScore, divergence,
                 List.of(new AlignedInterval(start, ALIGNMENT_LENGTH)));
     }
 
     private static SAMRecord record(int start, String cigar, @Nullable Integer alignerScore, @Nullable Integer editDistance)
     {
         SAMFileHeader header = new SAMFileHeader();
-        header.addSequence(new SAMSequenceRecord("v1", CONTIG_LENGTH));
+        header.addSequence(new SAMSequenceRecord("v1", GENOME_LENGTH));
 
         SAMRecord record = new SAMRecord(header);
         record.setReadName("r");
@@ -132,8 +132,8 @@ public class ViralReadAlignmentTest
 
     private static VirusReference reference()
     {
-        List<VirusGenome> contigs = List.of(new VirusGenome("v1", CONTIG_LENGTH, "Virus 1", new OncologyGroup("Group 1")));
-        SAMSequenceDictionary dictionary = new SAMSequenceDictionary(List.of(new SAMSequenceRecord("v1", CONTIG_LENGTH)));
-        return new VirusReference(contigs, dictionary, Map.of());
+        List<VirusGenome> genomes = List.of(new VirusGenome("v1", GENOME_LENGTH, "Virus 1", new OncologyGroup("Group 1")));
+        SAMSequenceDictionary dictionary = new SAMSequenceDictionary(List.of(new SAMSequenceRecord("v1", GENOME_LENGTH)));
+        return new VirusReference(genomes, dictionary, Map.of());
     }
 }

@@ -12,11 +12,11 @@ import org.jetbrains.annotations.Nullable;
 public record AllGenomesReadAlignmentsMetrics(
         // Null only when no read aligned.
         @Nullable Double meanReadLength,
-        // Reads with an alignment dropped for clipping over their contig's start or end.
+        // Reads with an alignment dropped for clipping over their virus genome's start or end.
         Map<VirusGenome, Integer> originClippedReads,
-        // Distinct reads with at least one alignment to any contig of the oncology group.
+        // Distinct reads with at least one alignment to any virus genome of the oncology group.
         Map<OncologyGroup, Integer> readCountsByOncologyGroup,
-        // Per contig and per read, how many alignments the read had on the contig.
+        // Per virus genome and per read, how many alignments the read had on the virus genome.
         Map<VirusGenome, List<Integer>> alignmentCountsByGenome
 )
 {

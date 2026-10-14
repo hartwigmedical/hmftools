@@ -35,19 +35,19 @@ public class ViralReadAlignmentStoreTest
         assertEquals(Set.of(V1), alignments.byRead().get(ReadId.parse("r2")).keySet());
     }
 
-    // Counting one read twice on a contig would inflate that contig's depth and read count, so the store refuses it
-    // rather than leaving each caller to remember.
+    // Counting one read twice on a virus genome would inflate that genome's depth and read count, so the store refuses
+    // it rather than leaving each caller to remember.
     @Test
-    public void testRepeatAlignmentOfReadOnOneContigRejected()
+    public void testRepeatAlignmentOfReadOnOneGenomeRejected()
     {
         List<ViralReadAlignment> repeated = List.of(alignment("r1", V1), alignment("r1", V1));
 
         assertThrows(IllegalArgumentException.class, () -> new ViralReadAlignmentStore(repeated));
     }
 
-    private static ViralReadAlignment alignment(String readName, VirusGenome contig)
+    private static ViralReadAlignment alignment(String readName, VirusGenome genome)
     {
         return new ViralReadAlignment(
-                ReadId.parse(readName), contig, 1, LENGTH, LENGTH + "M", 0, 0, 100, 0, List.of(new AlignedInterval(1, LENGTH)));
+                ReadId.parse(readName), genome, 1, LENGTH, LENGTH + "M", 0, 0, 100, 0, List.of(new AlignedInterval(1, LENGTH)));
     }
 }

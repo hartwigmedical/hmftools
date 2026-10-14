@@ -9,37 +9,39 @@ import com.hartwig.hmftools.viridian.detection.common.ReadId;
 import com.hartwig.hmftools.viridian.reference.VirusGenome;
 
 // A set of read alignments to virus genomes.
-// For each read, stores on the best alignment to each contig.
-// (Rarely, a read can align to the same contig multiple times, but these secondary alignments are not necessary to keep).
+// For each read, stores only the best alignment to each virus genome.
+// (Rarely, a read can align to the same virus genome multiple times, but these secondary alignments are not
+// necessary to keep).
 public class ViralReadAlignmentStore
 {
-    private final Map<VirusGenome, Map<ReadId, ViralReadAlignment>> mByContig;
+    private final Map<VirusGenome, Map<ReadId, ViralReadAlignment>> mByGenome;
     private final Map<ReadId, Map<VirusGenome, ViralReadAlignment>> mByRead;
 
     public ViralReadAlignmentStore(Collection<ViralReadAlignment> alignments)
     {
-        mByContig = new HashMap<>();
+        mByGenome = new HashMap<>();
         mByRead = new LinkedHashMap<>();
         for(ViralReadAlignment alignment : alignments)
         {
-            ViralReadAlignment replaced = mByContig
+            ViralReadAlignment replaced = mByGenome
                     .computeIfAbsent(alignment.genome(), k -> new LinkedHashMap<>())
                     .put(alignment.readId(), alignment);
             if(replaced != null)
             {
-                throw new IllegalArgumentException("Repeat alignment of a read on contig: " + alignment.genome().name());
+                throw new IllegalArgumentException(
+                        "Repeat alignment of a read on virus genome: " + alignment.genome().name());
             }
             mByRead.computeIfAbsent(alignment.readId(), k -> new HashMap<>()).put(alignment.genome(), alignment);
         }
     }
 
-    // Contig -> read -> read's best alignment on contig.
+    // Virus genome -> read -> read's best alignment on virus genome.
     public Map<VirusGenome, Map<ReadId, ViralReadAlignment>> byGenome()
     {
-        return mByContig;
+        return mByGenome;
     }
 
-    // Read -> contig -> read's best alignment on contig.
+    // Read -> virus genome -> read's best alignment on virus genome.
     public Map<ReadId, Map<VirusGenome, ViralReadAlignment>> byRead()
     {
         return mByRead;

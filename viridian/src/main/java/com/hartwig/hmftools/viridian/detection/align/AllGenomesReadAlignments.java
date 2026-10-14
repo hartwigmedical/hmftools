@@ -25,7 +25,7 @@ import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.ValidationStringency;
 
 // Alignments of reads to (possibly multiple) virus genomes (via BWA-MEM -a mode).
-// Alignments straddling a contig's origin are excluded here to avoid circular genome linearization artifacts.
+// Alignments straddling a virus genome's origin are excluded here to avoid circular genome linearization artifacts.
 public record AllGenomesReadAlignments(
         ViralReadAlignmentStore store,
         AllGenomesReadAlignmentsMetrics metrics
@@ -33,22 +33,22 @@ public record AllGenomesReadAlignments(
 {
     public static AllGenomesReadAlignments from(List<ViralReadAlignment> alignments, @Nullable Double meanReadLength)
     {
-        Map<VirusGenome, Set<ReadId>> originClippedReadsByContig = new HashMap<>();
+        Map<VirusGenome, Set<ReadId>> originClippedReadsByGenome = new HashMap<>();
         Map<OncologyGroup, Set<ReadId>> readsByOncologyGroup = new HashMap<>();
-        Map<ReadContig, List<ViralReadAlignment>> alignmentsByReadContig = new LinkedHashMap<>();
+        Map<ReadGenome, List<ViralReadAlignment>> alignmentsByReadGenome = new LinkedHashMap<>();
 
         for(ViralReadAlignment alignment : alignments)
         {
             if(alignment.clipsOverGenomeEnd())
             {
-                originClippedReadsByContig
+                originClippedReadsByGenome
                         .computeIfAbsent(alignment.genome(), k -> new HashSet<>())
                         .add(alignment.readId());
             }
             else
             {
-                alignmentsByReadContig
-                        .computeIfAbsent(new ReadContig(alignment.readId(), alignment.genome()), k -> new ArrayList<>())
+                alignmentsByReadGenome
+                        .computeIfAbsent(new ReadGenome(alignment.readId(), alignment.genome()), k -> new ArrayList<>())
                         .add(alignment);
 
                 readsByOncologyGroup
@@ -60,17 +60,17 @@ public record AllGenomesReadAlignments(
         List<ViralReadAlignment> retained = new ArrayList<>();
         Map<VirusGenome, List<Integer>> alignmentCountsByGenome = new HashMap<>();
 
-        alignmentsByReadContig.forEach((readContig, readContigAlignments) ->
+        alignmentsByReadGenome.forEach((readGenome, readGenomeAlignments) ->
         {
-            retained.add(readContigAlignments.stream().min(ViralReadAlignment.BEST_FIT_FIRST).orElseThrow());
+            retained.add(readGenomeAlignments.stream().min(ViralReadAlignment.BEST_FIT_FIRST).orElseThrow());
             alignmentCountsByGenome
-                    .computeIfAbsent(readContig.contig(), k -> new ArrayList<>())
-                    .add(readContigAlignments.size());
+                    .computeIfAbsent(readGenome.genome(), k -> new ArrayList<>())
+                    .add(readGenomeAlignments.size());
         });
 
         AllGenomesReadAlignmentsMetrics metrics = new AllGenomesReadAlignmentsMetrics(
                 meanReadLength,
-                countReads(originClippedReadsByContig),
+                countReads(originClippedReadsByGenome),
                 countReads(readsByOncologyGroup),
                 alignmentCountsByGenome);
 
@@ -115,9 +115,9 @@ public record AllGenomesReadAlignments(
         return readsByKey.entrySet().stream().collect(toMap(Map.Entry::getKey, entry -> entry.getValue().size()));
     }
 
-    private record ReadContig(
+    private record ReadGenome(
             ReadId readId,
-            VirusGenome contig
+            VirusGenome genome
     )
     {
     }
