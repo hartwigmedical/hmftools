@@ -30,7 +30,7 @@ import org.junit.Test;
 public class VirusReporterTest
 {
     private static final OncologyGroup GROUP = new OncologyGroup("HPV16");
-    private static final VirusGenome CONTIG = new VirusGenome("c1", 1000, "HPV type 16", GROUP);
+    private static final VirusGenome GENOME = new VirusGenome("c1", 1000, "HPV type 16", GROUP);
     private static final OncologyGroupInfo REPORTABLE_INFO = new OncologyGroupInfo(GROUP, VirusType.HPV, VirusLikelihoodType.HIGH);
     private static final OncologyGroupInfo NOT_REPORTABLE_INFO = new OncologyGroupInfo(GROUP, null, null);
     private static final double DEPTH = 10.0;
@@ -151,7 +151,7 @@ public class VirusReporterTest
     {
         SummaryStats depth = SummaryStats.from(new int[] { (int) meanDepth });
         SummaryStats alignerScore = SummaryStats.from(new int[] { 30 });
-        GenomeStats stats = new GenomeStats(CONTIG, 1, 0, CONTIG.length(), depth, alignerScore);
+        GenomeStats stats = new GenomeStats(GENOME, 1, 0, GENOME.length(), depth, alignerScore);
         return new DetectedVirus(GROUP, RESOLVED, RESOLVED_CANDIDATES, 100, 1, 1, 0, stats);
     }
 }

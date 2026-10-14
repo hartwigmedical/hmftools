@@ -19,7 +19,7 @@ import org.junit.Test;
 
 public class IntegrationCandidateTest
 {
-    private static final VirusGenome CONTIG = new VirusGenome("v1", 7906, "Virus v1", new OncologyGroup("Group A"));
+    private static final VirusGenome GENOME = new VirusGenome("v1", 7906, "Virus v1", new OncologyGroup("Group A"));
 
     // An insert that aligned nowhere is not an integration, however the SV looks.
     @Test
@@ -56,6 +56,6 @@ public class IntegrationCandidateTest
 
     private static ViralInsertAlignment alignment(int alignerScore)
     {
-        return new ViralInsertAlignment(CONTIG, 1500, FORWARD, cigarFromStr("50M"), alignerScore, 1, 50);
+        return new ViralInsertAlignment(GENOME, 1500, FORWARD, cigarFromStr("50M"), alignerScore, 1, 50);
     }
 }

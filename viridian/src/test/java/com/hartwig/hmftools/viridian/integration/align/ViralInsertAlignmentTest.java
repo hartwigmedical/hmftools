@@ -14,7 +14,7 @@ import org.junit.Test;
 
 public class ViralInsertAlignmentTest
 {
-    private static final VirusGenome CONTIG = new VirusGenome("v1", 7906, "Virus v1", new OncologyGroup("Group A"));
+    private static final VirusGenome GENOME = new VirusGenome("v1", 7906, "Virus v1", new OncologyGroup("Group A"));
 
     // Clipped bases are the host side of an integration junction, so they are not insert bases placed on the virus.
     @Test
@@ -23,7 +23,7 @@ public class ViralInsertAlignmentTest
         assertEquals(70, alignment("30S70M", 100).alignedLength());
     }
 
-    // Inserted query bases are not placed on the contig, and a deletion consumes no query bases at all.
+    // Inserted query bases are not placed on the genome, and a deletion consumes no query bases at all.
     @Test
     public void testAlignedLengthExcludesIndelBases()
     {
@@ -68,6 +68,6 @@ public class ViralInsertAlignmentTest
 
     private static ViralInsertAlignment alignment(String cigar, int sequenceLength, int alignerScore)
     {
-        return new ViralInsertAlignment(CONTIG, 1500, FORWARD, cigarFromStr(cigar), alignerScore, 1, sequenceLength);
+        return new ViralInsertAlignment(GENOME, 1500, FORWARD, cigarFromStr(cigar), alignerScore, 1, sequenceLength);
     }
 }
