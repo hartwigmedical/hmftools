@@ -11,8 +11,8 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkCreate
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.ALL_ALIGNMENTS_BAM_SUFFIX;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.APP_NAME;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.CANDIDATES_FASTA_SUFFIX;
-import static com.hartwig.hmftools.viridian.common.ViridianConstants.CONTIG_SUPPORT_TSV_SUFFIX;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.DEFAULT_VIRUS_DECOY_CONTIGS;
+import static com.hartwig.hmftools.viridian.common.ViridianConstants.GENOME_SUPPORT_TSV_SUFFIX;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.INTEGRATION_CANDIDATES_TSV_SUFFIX;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.PAIRWISE_MARGINS_TSV_SUFFIX;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.READ_VOTE_CORRECT_BASE_PROBABILITY;
@@ -215,7 +215,7 @@ public class ViridianApplication
                 genomeSupports, pairwiseMargins, alignments.metrics().readCountsByOncologyGroup());
 
         LOGGER.info("Writing genome support output");
-        OutputWriter.writeGenomeSupport(outputFile(CONTIG_SUPPORT_TSV_SUFFIX), selections);
+        OutputWriter.writeGenomeSupport(outputFile(GENOME_SUPPORT_TSV_SUFFIX), selections);
         if(mConfig.verboseOutput())
         {
             LOGGER.info("Writing pairwise margins output");

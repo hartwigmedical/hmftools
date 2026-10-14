@@ -11,7 +11,7 @@ public class ViridianConstants
     public static final String CANDIDATES_FASTA_SUFFIX = ".candidates.fasta";
     public static final String ALL_ALIGNMENTS_BAM_SUFFIX = ".all.bam";
     public static final String REPRESENTATIVE_ALIGNMENTS_BAM_SUFFIX = ".representative.bam";
-    public static final String CONTIG_SUPPORT_TSV_SUFFIX = ".contig_support.tsv";
+    public static final String GENOME_SUPPORT_TSV_SUFFIX = ".genome_support.tsv";
     public static final String PAIRWISE_MARGINS_TSV_SUFFIX = ".pairwise_margins.tsv";
     public static final String VIRUS_DETECTION_TSV_SUFFIX = ".virus_detection.tsv";
     public static final String INTEGRATION_CANDIDATES_TSV_SUFFIX = ".integration_candidates.tsv";
