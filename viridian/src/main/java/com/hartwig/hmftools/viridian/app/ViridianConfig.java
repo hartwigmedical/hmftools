@@ -61,7 +61,7 @@ public record ViridianConfig(
     private static final String CFG_VIRUS_REF_FILE = "virus_ref";
     private static final String DESC_VIRUS_REF_FILE = "Curated virus reference FASTA file";
     private static final String CFG_VIRUS_REF_INFO_FILE = "virus_ref_info";
-    private static final String DESC_VIRUS_REF_INFO_FILE = "Virus reference info TSV (contig -> virus name + oncology group)";
+    private static final String DESC_VIRUS_REF_INFO_FILE = "Virus reference info TSV";
     private static final String CFG_VIRUS_BWA_INDEX_IMAGE = "virus_bwa_index_image";
     private static final String DESC_VIRUS_BWA_INDEX_IMAGE = "Virus reference BWA-MEM index GATK image file";
     private static final String CFG_ESVEE_UNFILTERED_VCF = "esvee_unfiltered_vcf";

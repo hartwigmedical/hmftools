@@ -26,7 +26,7 @@ public record VirusInfo(
                 String contig = row.getString(Columns.contig_name);
                 if(!contigs.add(contig))
                 {
-                    throw new UserInputError("Duplicate contig: " + contig);
+                    throw new UserInputError("Duplicate contig_name: " + contig);
                 }
                 OncologyGroup oncologyGroup = new OncologyGroup(row.getString(Columns.oncology_group));
                 VirusInfo virusInfo = new VirusInfo(contig, row.getString(Columns.virus_name), oncologyGroup);
