@@ -6,15 +6,15 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import com.hartwig.hmftools.viridian.detection.common.ReadId;
-import com.hartwig.hmftools.viridian.reference.ViralContig;
+import com.hartwig.hmftools.viridian.reference.VirusGenome;
 
 // A set of read alignments to virus genomes.
 // For each read, stores on the best alignment to each contig.
 // (Rarely, a read can align to the same contig multiple times, but these secondary alignments are not necessary to keep).
 public class ViralReadAlignmentStore
 {
-    private final Map<ViralContig, Map<ReadId, ViralReadAlignment>> mByContig;
-    private final Map<ReadId, Map<ViralContig, ViralReadAlignment>> mByRead;
+    private final Map<VirusGenome, Map<ReadId, ViralReadAlignment>> mByContig;
+    private final Map<ReadId, Map<VirusGenome, ViralReadAlignment>> mByRead;
 
     public ViralReadAlignmentStore(Collection<ViralReadAlignment> alignments)
     {
@@ -34,13 +34,13 @@ public class ViralReadAlignmentStore
     }
 
     // Contig -> read -> read's best alignment on contig.
-    public Map<ViralContig, Map<ReadId, ViralReadAlignment>> byContig()
+    public Map<VirusGenome, Map<ReadId, ViralReadAlignment>> byContig()
     {
         return mByContig;
     }
 
     // Read -> contig -> read's best alignment on contig.
-    public Map<ReadId, Map<ViralContig, ViralReadAlignment>> byRead()
+    public Map<ReadId, Map<VirusGenome, ViralReadAlignment>> byRead()
     {
         return mByRead;
     }

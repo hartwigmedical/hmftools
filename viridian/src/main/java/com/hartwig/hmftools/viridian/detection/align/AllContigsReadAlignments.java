@@ -14,7 +14,7 @@ import java.util.Set;
 
 import com.hartwig.hmftools.viridian.detection.common.ReadId;
 import com.hartwig.hmftools.viridian.reference.OncologyGroup;
-import com.hartwig.hmftools.viridian.reference.ViralContig;
+import com.hartwig.hmftools.viridian.reference.VirusGenome;
 import com.hartwig.hmftools.viridian.reference.VirusReference;
 
 import org.jetbrains.annotations.Nullable;
@@ -33,7 +33,7 @@ public record AllContigsReadAlignments(
 {
     public static AllContigsReadAlignments from(List<ViralReadAlignment> alignments, @Nullable Double meanReadLength)
     {
-        Map<ViralContig, Set<ReadId>> originClippedReadsByContig = new HashMap<>();
+        Map<VirusGenome, Set<ReadId>> originClippedReadsByContig = new HashMap<>();
         Map<OncologyGroup, Set<ReadId>> readsByOncologyGroup = new HashMap<>();
         Map<ReadContig, List<ViralReadAlignment>> alignmentsByReadContig = new LinkedHashMap<>();
 
@@ -58,7 +58,7 @@ public record AllContigsReadAlignments(
         }
 
         List<ViralReadAlignment> retained = new ArrayList<>();
-        Map<ViralContig, List<Integer>> alignmentCountsByContig = new HashMap<>();
+        Map<VirusGenome, List<Integer>> alignmentCountsByContig = new HashMap<>();
 
         alignmentsByReadContig.forEach((readContig, readContigAlignments) ->
         {
@@ -117,7 +117,7 @@ public record AllContigsReadAlignments(
 
     private record ReadContig(
             ReadId readId,
-            ViralContig contig
+            VirusGenome contig
     )
     {
     }

@@ -24,7 +24,7 @@ import com.hartwig.hmftools.viridian.detection.common.SummaryStats;
 import com.hartwig.hmftools.viridian.detection.support.ContigFilterStatus;
 import com.hartwig.hmftools.viridian.detection.support.ContigSupport;
 import com.hartwig.hmftools.viridian.reference.OncologyGroup;
-import com.hartwig.hmftools.viridian.reference.ViralContig;
+import com.hartwig.hmftools.viridian.reference.VirusGenome;
 
 import org.junit.Test;
 
@@ -35,10 +35,10 @@ public class RepresentativeContigSelectorTest
     private static final OncologyGroup GROUP_A = new OncologyGroup("Group A");
     private static final OncologyGroup GROUP_H = new OncologyGroup("Group H");
 
-    private static final ViralContig V1 = new ViralContig("v1", LENGTH, "Virus v1", GROUP_A);
-    private static final ViralContig V2 = new ViralContig("v2", LENGTH, "Virus v2", GROUP_A);
-    private static final ViralContig V3 = new ViralContig("v3", LENGTH, "Virus v3", GROUP_A);
-    private static final ViralContig H1 = new ViralContig("h1", LENGTH, "Virus h1", GROUP_H);
+    private static final VirusGenome V1 = new VirusGenome("v1", LENGTH, "Virus v1", GROUP_A);
+    private static final VirusGenome V2 = new VirusGenome("v2", LENGTH, "Virus v2", GROUP_A);
+    private static final VirusGenome V3 = new VirusGenome("v3", LENGTH, "Virus v3", GROUP_A);
+    private static final VirusGenome H1 = new VirusGenome("h1", LENGTH, "Virus h1", GROUP_H);
 
     @Test
     public void testSelectResolvedTwins()
@@ -219,14 +219,14 @@ public class RepresentativeContigSelectorTest
         return PairwiseMargins.from(new ViralReadAlignmentStore(alignments).byRead());
     }
 
-    private static List<ViralReadAlignment> challenge(ViralContig subject, ViralContig opponent, int reads)
+    private static List<ViralReadAlignment> challenge(VirusGenome subject, VirusGenome opponent, int reads)
     {
         return challenge(subject, opponent, reads, REPRESENTATIVE_CHALLENGE_MARGIN_MIN * 2);
     }
 
     // Reads the subject fits `margin` bases better than the opponent.
     // Read names are unique per pair, so separate challenges share no read.
-    private static List<ViralReadAlignment> challenge(ViralContig subject, ViralContig opponent, int reads, int margin)
+    private static List<ViralReadAlignment> challenge(VirusGenome subject, VirusGenome opponent, int reads, int margin)
     {
         List<ViralReadAlignment> alignments = new ArrayList<>();
         for(int i = 0; i < reads; ++i)
@@ -238,7 +238,7 @@ public class RepresentativeContigSelectorTest
         return alignments;
     }
 
-    private static ViralReadAlignment alignment(String readName, ViralContig contig, int divergence)
+    private static ViralReadAlignment alignment(String readName, VirusGenome contig, int divergence)
     {
         return new ViralReadAlignment(
                 ReadId.parse(readName), contig, 1, LENGTH, LENGTH + "M", 0, 0, 100, divergence, List.of(new AlignedInterval(1, LENGTH)));
@@ -253,7 +253,7 @@ public class RepresentativeContigSelectorTest
                 .orElseThrow();
     }
 
-    private static RepresentativeContigCandidate result(List<OncologyGroupRepresentativeSelection> selections, ViralContig contig)
+    private static RepresentativeContigCandidate result(List<OncologyGroupRepresentativeSelection> selections, VirusGenome contig)
     {
         return selections.stream()
                 .flatMap(selection -> selection.candidates().stream())
@@ -262,12 +262,12 @@ public class RepresentativeContigSelectorTest
                 .orElseThrow();
     }
 
-    private static ContigRole role(List<OncologyGroupRepresentativeSelection> selections, ViralContig contig)
+    private static ContigRole role(List<OncologyGroupRepresentativeSelection> selections, VirusGenome contig)
     {
         return result(selections, contig).role();
     }
 
-    private static List<ViralContig> contigs(List<ContigSupport> support)
+    private static List<VirusGenome> contigs(List<ContigSupport> support)
     {
         return support.stream().map(ContigSupport::contig).toList();
     }
@@ -277,19 +277,19 @@ public class RepresentativeContigSelectorTest
         return List.of(support);
     }
 
-    private static ContigSupport candidate(ViralContig contig, double votes)
+    private static ContigSupport candidate(VirusGenome contig, double votes)
     {
         return contigSupport(contig, ContigFilterStatus.CANDIDATE, votes);
     }
 
-    private static ContigSupport rejected(ViralContig contig, ContigFilterStatus filterStatus)
+    private static ContigSupport rejected(VirusGenome contig, ContigFilterStatus filterStatus)
     {
         return contigSupport(contig, filterStatus, 100);
     }
 
     // Selection reads only the contig, its filter status and its read votes. The remaining fields are filler, set to
     // values consistent with a present contig so nothing reads as contradictory.
-    private static ContigSupport contigSupport(ViralContig contig, ContigFilterStatus filterStatus, double votes)
+    private static ContigSupport contigSupport(VirusGenome contig, ContigFilterStatus filterStatus, double votes)
     {
         SummaryStats filler = SummaryStats.from(new int[] { 1 });
         return new ContigSupport(

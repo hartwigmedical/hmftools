@@ -4,7 +4,7 @@ import java.util.List;
 
 import com.hartwig.hmftools.viridian.detection.support.ContigSupport;
 import com.hartwig.hmftools.viridian.reference.OncologyGroup;
-import com.hartwig.hmftools.viridian.reference.ViralContig;
+import com.hartwig.hmftools.viridian.reference.VirusGenome;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -24,7 +24,7 @@ public record OncologyGroupRepresentativeSelection(
     }
 
     @Nullable
-    public ViralContig representative()
+    public VirusGenome representative()
     {
         return candidates.stream()
                 .filter(candidate -> candidate.role() == ContigRole.REPRESENTATIVE)

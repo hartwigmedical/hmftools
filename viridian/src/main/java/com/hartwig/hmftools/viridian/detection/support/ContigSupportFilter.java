@@ -9,13 +9,13 @@ import static com.hartwig.hmftools.viridian.common.ViridianConstants.VIRAL_CONTI
 import java.util.Map;
 
 import com.hartwig.hmftools.viridian.detection.common.ContigStats;
-import com.hartwig.hmftools.viridian.reference.ViralContig;
+import com.hartwig.hmftools.viridian.reference.VirusGenome;
 
 // Determines whether a contig carries enough evidence to be a candidate virus genome.
 public class ContigSupportFilter
 {
-    public static Map<ViralContig, ContigFilterStatus> statuses(
-            Map<ViralContig, ContigStats> contigStats, Map<ViralContig, Double> readVotes, double meanReadLength)
+    public static Map<VirusGenome, ContigFilterStatus> statuses(
+            Map<VirusGenome, ContigStats> contigStats, Map<VirusGenome, Double> readVotes, double meanReadLength)
     {
         boolean groupReachesCoverageMin = contigStats.values().stream()
                 .anyMatch(stats -> stats.coverageFraction() >= VIRAL_CONTIG_COVERAGE_MIN);
@@ -49,7 +49,7 @@ public class ContigSupportFilter
     // Enough votes to have covered the minimum coverage fraction of the contig at the required depth.
     // Drops contigs which are similar to other contigs and so get coverage, but the reads decisively prefer the other
     // contig.
-    private static double voteFloor(ViralContig contig, double meanReadLength)
+    private static double voteFloor(VirusGenome contig, double meanReadLength)
     {
         return VIRAL_CONTIG_VOTES_PER_BASE_MIN * VIRAL_CONTIG_COVERAGE_MIN * contig.length() / meanReadLength;
     }

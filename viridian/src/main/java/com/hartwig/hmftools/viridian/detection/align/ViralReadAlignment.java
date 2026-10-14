@@ -10,7 +10,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import com.hartwig.hmftools.viridian.detection.common.ReadId;
-import com.hartwig.hmftools.viridian.reference.ViralContig;
+import com.hartwig.hmftools.viridian.reference.VirusGenome;
 import com.hartwig.hmftools.viridian.reference.VirusReference;
 
 import htsjdk.samtools.SAMRecord;
@@ -18,7 +18,7 @@ import htsjdk.samtools.SAMRecord;
 // One alignment of a read to a virus genome, with just the data required for our analysis, in a nice format.
 public record ViralReadAlignment(
         ReadId readId,
-        ViralContig contig,
+        VirusGenome contig,
         int alignmentStart,
         int alignmentEnd,
         String cigar,

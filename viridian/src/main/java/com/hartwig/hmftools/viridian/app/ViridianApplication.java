@@ -61,7 +61,7 @@ import com.hartwig.hmftools.viridian.integration.align.ViralInsertAlignment;
 import com.hartwig.hmftools.viridian.integration.extract.CandidateSv;
 import com.hartwig.hmftools.viridian.integration.extract.CandidateSvExtractor;
 import com.hartwig.hmftools.viridian.reference.OncologyGroup;
-import com.hartwig.hmftools.viridian.reference.ViralContig;
+import com.hartwig.hmftools.viridian.reference.VirusGenome;
 import com.hartwig.hmftools.viridian.reference.VirusReference;
 import com.hartwig.hmftools.viridian.reporting.Clonality;
 import com.hartwig.hmftools.viridian.reporting.VirusReport;
@@ -117,7 +117,7 @@ public class ViridianApplication
         ViralReadAlignmentStore representativeAlignments =
                 assignReadsToRepresentatives(allContigsReadAlignments.store(), representativeSelections);
 
-        Map<ViralContig, ContigStats> representativeContigStats =
+        Map<VirusGenome, ContigStats> representativeContigStats =
                 calculateRepresentativeContigStats(representativeAlignments, allContigsReadAlignments.metrics().originClippedReads());
 
         List<DetectedVirus> detectedViruses = writeDetectedViruses(
@@ -199,7 +199,7 @@ public class ViridianApplication
     private List<ContigSupport> computeViralContigSupport(AllContigsReadAlignments alignments)
     {
         LOGGER.info("Computing per-contig support");
-        Map<ViralContig, ContigStats> contigStats = ContigStatsCalculator.calculate(
+        Map<VirusGenome, ContigStats> contigStats = ContigStatsCalculator.calculate(
                 alignments.store().byContig(), alignments.metrics().originClippedReads());
         return new ContigSupportCalculator(READ_VOTE_CORRECT_BASE_PROBABILITY).calculate(alignments, contigStats);
     }
@@ -231,7 +231,7 @@ public class ViridianApplication
             ViralReadAlignmentStore alignments, List<OncologyGroupRepresentativeSelection> representativeSelections)
     {
         LOGGER.info("Assigning reads to representative contigs");
-        Set<ViralContig> representatives = representativeSelections.stream()
+        Set<VirusGenome> representatives = representativeSelections.stream()
                 .map(OncologyGroupRepresentativeSelection::representative)
                 .filter(Objects::nonNull)
                 .collect(toSet());
@@ -243,21 +243,21 @@ public class ViridianApplication
     }
 
     // After the representative virus genome is selected for each oncology group, measure final support statistics for the representative.
-    private Map<ViralContig, ContigStats> calculateRepresentativeContigStats(
-            ViralReadAlignmentStore representativeAlignments, Map<ViralContig, Integer> allOriginClippedReads)
+    private Map<VirusGenome, ContigStats> calculateRepresentativeContigStats(
+            ViralReadAlignmentStore representativeAlignments, Map<VirusGenome, Integer> allOriginClippedReads)
     {
         LOGGER.info("Computing representative contig stats");
         // Origin clipped reads where dropped previously, but the information is useful to carry through for visualisation.
-        Map<ViralContig, Integer> originClippedReads = allOriginClippedReads.entrySet().stream()
+        Map<VirusGenome, Integer> originClippedReads = allOriginClippedReads.entrySet().stream()
                 .filter(entry -> representativeAlignments.byContig().containsKey(entry.getKey()))
                 .collect(toMap(Map.Entry::getKey, Map.Entry::getValue));
-        Map<ViralContig, ContigStats> contigStats =
+        Map<VirusGenome, ContigStats> contigStats =
                 ContigStatsCalculator.calculate(representativeAlignments.byContig(), originClippedReads);
         return contigStats;
     }
 
     private List<DetectedVirus> writeDetectedViruses(
-            List<OncologyGroupRepresentativeSelection> selections, Map<ViralContig, ContigStats> representativeContigStats,
+            List<OncologyGroupRepresentativeSelection> selections, Map<VirusGenome, ContigStats> representativeContigStats,
             Map<OncologyGroup, Integer> oncologyGroupReadCounts)
     {
         LOGGER.info("Writing virus detection output");

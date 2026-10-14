@@ -13,7 +13,7 @@ import java.util.Set;
 import com.hartwig.hmftools.viridian.detection.align.ViralReadAlignment;
 import com.hartwig.hmftools.viridian.detection.align.ViralReadAlignmentStore;
 import com.hartwig.hmftools.viridian.detection.common.ReadId;
-import com.hartwig.hmftools.viridian.reference.ViralContig;
+import com.hartwig.hmftools.viridian.reference.VirusGenome;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -35,7 +35,7 @@ public class RepresentativeReadAssigner
 
     // Returns the alignment selected for each read.
     public static Map<ReadId, ViralReadAlignment> assign(
-            ViralReadAlignmentStore alignments, Set<ViralContig> representatives,
+            ViralReadAlignmentStore alignments, Set<VirusGenome> representatives,
             String allAlignmentsBamFile, String outputBamFile)
     {
         Map<ReadId, ViralReadAlignment> assignmentsByRead = assignReads(alignments.byRead(), representatives);
@@ -46,7 +46,7 @@ public class RepresentativeReadAssigner
     }
 
     static Map<ReadId, ViralReadAlignment> assignReads(
-            Map<ReadId, Map<ViralContig, ViralReadAlignment>> alignmentsByRead, Set<ViralContig> representatives)
+            Map<ReadId, Map<VirusGenome, ViralReadAlignment>> alignmentsByRead, Set<VirusGenome> representatives)
     {
         // Tie-break by contig for determinism.
         // But not expecting that a read will support multiple representative contigs.
@@ -56,7 +56,7 @@ public class RepresentativeReadAssigner
         Map<ReadId, ViralReadAlignment> assignmentsByRead = new LinkedHashMap<>();
         int multiRepReads = 0;
         int multiRepTiedReads = 0;
-        for(Map.Entry<ReadId, Map<ViralContig, ViralReadAlignment>> read : alignmentsByRead.entrySet())
+        for(Map.Entry<ReadId, Map<VirusGenome, ViralReadAlignment>> read : alignmentsByRead.entrySet())
         {
             List<ViralReadAlignment> candidates = read.getValue().entrySet().stream()
                     .filter(alignment -> representatives.contains(alignment.getKey()))

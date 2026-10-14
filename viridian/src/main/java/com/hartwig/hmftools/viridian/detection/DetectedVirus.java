@@ -9,7 +9,7 @@ import com.hartwig.hmftools.viridian.detection.select.OncologyGroupRepresentativ
 import com.hartwig.hmftools.viridian.detection.select.OncologyGroupResolution;
 import com.hartwig.hmftools.viridian.detection.select.RepresentativeContigCandidate;
 import com.hartwig.hmftools.viridian.reference.OncologyGroup;
-import com.hartwig.hmftools.viridian.reference.ViralContig;
+import com.hartwig.hmftools.viridian.reference.VirusGenome;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -43,7 +43,7 @@ public record DetectedVirus(
     }
 
     public static List<DetectedVirus> from(
-            List<OncologyGroupRepresentativeSelection> selections, Map<ViralContig, ContigStats> representativeStats,
+            List<OncologyGroupRepresentativeSelection> selections, Map<VirusGenome, ContigStats> representativeStats,
             Map<OncologyGroup, Integer> groupReadCounts)
     {
         return selections.stream()
@@ -53,14 +53,14 @@ public record DetectedVirus(
     }
 
     private static DetectedVirus from(
-            OncologyGroupRepresentativeSelection selection, Map<ViralContig, ContigStats> representativeStats,
+            OncologyGroupRepresentativeSelection selection, Map<VirusGenome, ContigStats> representativeStats,
             Map<OncologyGroup, Integer> groupReadCounts)
     {
         OncologyGroup oncologyGroup = selection.oncologyGroup();
         int comparableCandidates = (int) selection.candidates().stream()
                 .filter(RepresentativeContigCandidate::comparable).count();
 
-        ViralContig representative = selection.representative();
+        VirusGenome representative = selection.representative();
         ContigStats contigStats = representative != null ? representativeStats.get(representative) : null;
         if(representative != null && contigStats == null)
         {

@@ -6,18 +6,17 @@ import java.util.Comparator;
 
 import org.jetbrains.annotations.NotNull;
 
-// TODO: maybe rename to "virus genome"? "contig" is not that descriptive. But that's a big change
 // A contig which is a virus genome.
-public record ViralContig(
+public record VirusGenome(
         // Original contig name in the virus reference.
         String name,
         int length,
         // Human-readable name of the virus. Only for readability purposes.
         String virusName,
         OncologyGroup oncologyGroup
-) implements Comparable<ViralContig>
+) implements Comparable<VirusGenome>
 {
-    public ViralContig
+    public VirusGenome
     {
         if(length < 1)
         {
@@ -33,10 +32,10 @@ public record ViralContig(
     }
 
     @Override
-    public int compareTo(@NotNull ViralContig other)
+    public int compareTo(@NotNull VirusGenome other)
     {
-        Comparator<ViralContig> comparator =
-                comparing(ViralContig::oncologyGroup).thenComparing(ViralContig::name);
+        Comparator<VirusGenome> comparator =
+                comparing(VirusGenome::oncologyGroup).thenComparing(VirusGenome::name);
         return comparator.compare(this, other);
     }
 }

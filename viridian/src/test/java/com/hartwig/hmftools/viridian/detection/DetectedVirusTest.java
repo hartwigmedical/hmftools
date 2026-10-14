@@ -24,7 +24,7 @@ import com.hartwig.hmftools.viridian.detection.select.RepresentativeContigCandid
 import com.hartwig.hmftools.viridian.detection.support.ContigFilterStatus;
 import com.hartwig.hmftools.viridian.detection.support.ContigSupport;
 import com.hartwig.hmftools.viridian.reference.OncologyGroup;
-import com.hartwig.hmftools.viridian.reference.ViralContig;
+import com.hartwig.hmftools.viridian.reference.VirusGenome;
 
 import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
@@ -33,10 +33,10 @@ public class DetectedVirusTest
 {
     private static final OncologyGroup GROUP_A = new OncologyGroup("Group A");
     private static final OncologyGroup GROUP_B = new OncologyGroup("Group B");
-    private static final ViralContig V1 = new ViralContig("v1", 100, "Virus v1", GROUP_A);
-    private static final ViralContig V2 = new ViralContig("v2", 100, "Virus v2", GROUP_A);
-    private static final ViralContig V3 = new ViralContig("v3", 100, "Virus v3", GROUP_A);
-    private static final ViralContig W1 = new ViralContig("w1", 100, "Virus w1", GROUP_B);
+    private static final VirusGenome V1 = new VirusGenome("v1", 100, "Virus v1", GROUP_A);
+    private static final VirusGenome V2 = new VirusGenome("v2", 100, "Virus v2", GROUP_A);
+    private static final VirusGenome V3 = new VirusGenome("v3", 100, "Virus v3", GROUP_A);
+    private static final VirusGenome W1 = new VirusGenome("w1", 100, "Virus w1", GROUP_B);
 
     @Test
     public void testFromResolvedGroupCarriesItsRepresentativeMeasurement()
@@ -92,21 +92,21 @@ public class DetectedVirusTest
                 () -> DetectedVirus.from(selections, Map.of(W1, stats(W1)), Map.of(GROUP_A, 500)));
     }
 
-    private static ContigStats stats(ViralContig contig)
+    private static ContigStats stats(VirusGenome contig)
     {
         return new ContigStats(
                 contig, 10, 1, 80, SummaryStats.from(new int[contig.length()]), SummaryStats.from(new int[] { 100 }));
     }
 
     private static OncologyGroupRepresentativeSelection selection(
-            OncologyGroup group, OncologyGroupOutcome outcome, @Nullable ViralContig representative, ViralContig... others)
+            OncologyGroup group, OncologyGroupOutcome outcome, @Nullable VirusGenome representative, VirusGenome... others)
     {
         return selection(group, outcome, representative, List.of(others), List.of());
     }
 
     private static OncologyGroupRepresentativeSelection selection(
-            OncologyGroup group, OncologyGroupOutcome outcome, @Nullable ViralContig representative,
-            List<ViralContig> others, List<ViralContig> rejected)
+            OncologyGroup group, OncologyGroupOutcome outcome, @Nullable VirusGenome representative,
+            List<VirusGenome> others, List<VirusGenome> rejected)
     {
         List<RepresentativeContigCandidate> candidates = Stream.concat(
                         representative != null ? Stream.of(representative) : Stream.empty(), others.stream())
@@ -119,7 +119,7 @@ public class DetectedVirusTest
         return new OncologyGroupRepresentativeSelection(group, outcome, candidates, rejectedSupports);
     }
 
-    private static RepresentativeContigCandidate candidate(ViralContig contig, boolean representative)
+    private static RepresentativeContigCandidate candidate(VirusGenome contig, boolean representative)
     {
         ContigSupport support = new ContigSupport(stats(contig), ContigFilterStatus.CANDIDATE, 0, null, 1.0);
         return new RepresentativeContigCandidate(

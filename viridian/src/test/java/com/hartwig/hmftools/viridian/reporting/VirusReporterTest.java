@@ -23,14 +23,14 @@ import com.hartwig.hmftools.viridian.detection.common.ContigStats;
 import com.hartwig.hmftools.viridian.detection.common.SummaryStats;
 import com.hartwig.hmftools.viridian.reference.OncologyGroup;
 import com.hartwig.hmftools.viridian.reference.OncologyGroupInfo;
-import com.hartwig.hmftools.viridian.reference.ViralContig;
+import com.hartwig.hmftools.viridian.reference.VirusGenome;
 
 import org.junit.Test;
 
 public class VirusReporterTest
 {
     private static final OncologyGroup GROUP = new OncologyGroup("HPV16");
-    private static final ViralContig CONTIG = new ViralContig("c1", 1000, "HPV type 16", GROUP);
+    private static final VirusGenome CONTIG = new VirusGenome("c1", 1000, "HPV type 16", GROUP);
     private static final OncologyGroupInfo REPORTABLE_INFO = new OncologyGroupInfo(GROUP, VirusType.HPV, VirusLikelihoodType.HIGH);
     private static final OncologyGroupInfo NOT_REPORTABLE_INFO = new OncologyGroupInfo(GROUP, null, null);
     private static final double DEPTH = 10.0;

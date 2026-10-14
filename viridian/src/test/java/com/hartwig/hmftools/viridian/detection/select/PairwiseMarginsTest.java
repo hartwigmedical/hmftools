@@ -9,7 +9,7 @@ import com.hartwig.hmftools.viridian.detection.align.AllContigsReadAlignments;
 import com.hartwig.hmftools.viridian.detection.align.ViralReadAlignment;
 import com.hartwig.hmftools.viridian.detection.common.ReadId;
 import com.hartwig.hmftools.viridian.reference.OncologyGroup;
-import com.hartwig.hmftools.viridian.reference.ViralContig;
+import com.hartwig.hmftools.viridian.reference.VirusGenome;
 
 import org.junit.Test;
 
@@ -21,9 +21,9 @@ public class PairwiseMarginsTest
     private static final OncologyGroup GROUP_A = new OncologyGroup("Group A");
     private static final OncologyGroup GROUP_H = new OncologyGroup("Group H");
 
-    private static final ViralContig V1 = new ViralContig("v1", LENGTH, "Virus 1", GROUP_A);
-    private static final ViralContig V2 = new ViralContig("v2", LENGTH, "Virus 2", GROUP_A);
-    private static final ViralContig H1 = new ViralContig("h1", LENGTH, "Virus H", GROUP_H);
+    private static final VirusGenome V1 = new VirusGenome("v1", LENGTH, "Virus 1", GROUP_A);
+    private static final VirusGenome V2 = new VirusGenome("v2", LENGTH, "Virus 2", GROUP_A);
+    private static final VirusGenome H1 = new VirusGenome("h1", LENGTH, "Virus H", GROUP_H);
 
     @Test
     public void testFromPairsContigsWithinGroupByWinningMargin()
@@ -55,7 +55,7 @@ public class PairwiseMarginsTest
         assertEquals(0, margins.sharedReads(V1, H1));
     }
 
-    private static ViralReadAlignment alignment(String readName, ViralContig contig, int divergence)
+    private static ViralReadAlignment alignment(String readName, VirusGenome contig, int divergence)
     {
         return new ViralReadAlignment(
                 ReadId.parse(readName), contig, 1, LENGTH, LENGTH + "M", 0, 0, 100, divergence, List.of(new AlignedInterval(1, LENGTH)));

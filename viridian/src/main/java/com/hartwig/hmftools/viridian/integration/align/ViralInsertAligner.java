@@ -13,7 +13,7 @@ import com.hartwig.hmftools.common.bwa.BwaMemAligner;
 import com.hartwig.hmftools.common.bwa.BwaMemAlignerConfig;
 import com.hartwig.hmftools.common.bwa.IBwaMemAligner;
 import com.hartwig.hmftools.common.genome.region.Orientation;
-import com.hartwig.hmftools.viridian.reference.ViralContig;
+import com.hartwig.hmftools.viridian.reference.VirusGenome;
 import com.hartwig.hmftools.viridian.reference.VirusReference;
 
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
@@ -67,7 +67,7 @@ public class ViralInsertAligner
     private ViralInsertAlignment toViralInsertAlignment(BwaMemAlignment alignment, int sequenceLength)
     {
         String contigName = mReference.sequenceDictionary().getSequence(alignment.getRefId()).getSequenceName();
-        ViralContig viralContig = mReference.contig(contigName);
+        VirusGenome viralContig = mReference.contig(contigName);
         // BWA reference positions are 0-based, so convert to 1-based.
         int position = alignment.getRefStart() + 1;
         Orientation orientation = SamRecordUtils.isFlagSet(alignment.getSamFlag(), SAMFlag.READ_REVERSE_STRAND)

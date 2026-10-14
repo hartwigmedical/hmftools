@@ -14,7 +14,7 @@ import java.util.stream.Stream;
 
 import com.hartwig.hmftools.viridian.detection.common.ReadId;
 import com.hartwig.hmftools.viridian.reference.OncologyGroup;
-import com.hartwig.hmftools.viridian.reference.ViralContig;
+import com.hartwig.hmftools.viridian.reference.VirusGenome;
 import com.hartwig.hmftools.viridian.reference.VirusReference;
 
 import org.jetbrains.annotations.Nullable;
@@ -32,7 +32,7 @@ public class ViralReadAlignmentTest
     private static final int ALIGNMENT_LENGTH = 50;
 
     private static final VirusReference REFERENCE = reference();
-    private static final ViralContig CONTIG = REFERENCE.contig("v1");
+    private static final VirusGenome CONTIG = REFERENCE.contig("v1");
 
     @Test
     public void testFromExtractsFieldsAndCountsClipsInDivergence()
@@ -132,7 +132,7 @@ public class ViralReadAlignmentTest
 
     private static VirusReference reference()
     {
-        List<ViralContig> contigs = List.of(new ViralContig("v1", CONTIG_LENGTH, "Virus 1", new OncologyGroup("Group 1")));
+        List<VirusGenome> contigs = List.of(new VirusGenome("v1", CONTIG_LENGTH, "Virus 1", new OncologyGroup("Group 1")));
         SAMSequenceDictionary dictionary = new SAMSequenceDictionary(List.of(new SAMSequenceRecord("v1", CONTIG_LENGTH)));
         return new VirusReference(contigs, dictionary, Map.of());
     }

@@ -12,7 +12,7 @@ import java.util.TreeMap;
 import com.hartwig.hmftools.viridian.detection.align.ViralReadAlignment;
 import com.hartwig.hmftools.viridian.detection.common.ReadId;
 import com.hartwig.hmftools.viridian.reference.OncologyGroup;
-import com.hartwig.hmftools.viridian.reference.ViralContig;
+import com.hartwig.hmftools.viridian.reference.VirusGenome;
 
 // Per ordered within-group contig pair, how decisively the subject fits shared reads better than the opponent.
 // Quantifies the distribution of positive winning alignment margins and the read count.
@@ -30,7 +30,7 @@ public class PairwiseMargins
         mSharedReads = sharedReads;
     }
 
-    public static PairwiseMargins from(Map<ReadId, Map<ViralContig, ViralReadAlignment>> alignmentsByRead)
+    public static PairwiseMargins from(Map<ReadId, Map<VirusGenome, ViralReadAlignment>> alignmentsByRead)
     {
         Map<ContigPair, NavigableMap<Integer, Integer>> marginCounts = new HashMap<>();
         Map<ContigPair, Integer> sharedReads = new HashMap<>();
@@ -41,7 +41,7 @@ public class PairwiseMargins
     }
 
     // Reads whose best alignment fits the subject at least minMargin divergent bases better than the opponent.
-    public int readsWinningBy(ViralContig subject, ViralContig opponent, int minMargin)
+    public int readsWinningBy(VirusGenome subject, VirusGenome opponent, int minMargin)
     {
         NavigableMap<Integer, Integer> margins = mMarginCounts.get(new ContigPair(subject, opponent));
         if(margins == null)
@@ -55,7 +55,7 @@ public class PairwiseMargins
     }
 
     // Reads aligned to both contigs (regardless of which one they favour).
-    public int sharedReads(ViralContig subject, ViralContig opponent)
+    public int sharedReads(VirusGenome subject, VirusGenome opponent)
     {
         return mSharedReads.getOrDefault(new ContigPair(subject, opponent), 0);
     }
@@ -69,17 +69,17 @@ public class PairwiseMargins
     // Pairs up the contigs it aligns to within each oncology group.
     // For each ordered pair, records that they share the read, and the subject's winning margin over the opponent (if any).
     private static void accumulateRead(
-            Map<ViralContig, ViralReadAlignment> readAlignments,
+            Map<VirusGenome, ViralReadAlignment> readAlignments,
             Map<ContigPair, NavigableMap<Integer, Integer>> marginCounts, Map<ContigPair, Integer> sharedReads)
     {
-        Map<OncologyGroup, List<ViralContig>> contigsByOncologyGroup = readAlignments.keySet().stream()
-                .collect(groupingBy(ViralContig::oncologyGroup));
+        Map<OncologyGroup, List<VirusGenome>> contigsByOncologyGroup = readAlignments.keySet().stream()
+                .collect(groupingBy(VirusGenome::oncologyGroup));
 
-        for(List<ViralContig> oncologyGroupContigs : contigsByOncologyGroup.values())
+        for(List<VirusGenome> oncologyGroupContigs : contigsByOncologyGroup.values())
         {
-            for(ViralContig subject : oncologyGroupContigs)
+            for(VirusGenome subject : oncologyGroupContigs)
             {
-                for(ViralContig opponent : oncologyGroupContigs)
+                for(VirusGenome opponent : oncologyGroupContigs)
                 {
                     if(!subject.equals(opponent))
                     {
@@ -98,8 +98,8 @@ public class PairwiseMargins
     }
 
     public record ContigPair(
-            ViralContig subject,
-            ViralContig opponent
+            VirusGenome subject,
+            VirusGenome opponent
     )
     {
     }

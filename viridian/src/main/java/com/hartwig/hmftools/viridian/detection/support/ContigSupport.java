@@ -2,7 +2,7 @@ package com.hartwig.hmftools.viridian.detection.support;
 
 import com.hartwig.hmftools.viridian.detection.common.ContigStats;
 import com.hartwig.hmftools.viridian.detection.common.SummaryStats;
-import com.hartwig.hmftools.viridian.reference.ViralContig;
+import com.hartwig.hmftools.viridian.reference.VirusGenome;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -18,7 +18,7 @@ public record ContigSupport(
         // Read attribution taking into account alignment edit distance (divergence).
         double readVotes)
 {
-    public ViralContig contig()
+    public VirusGenome contig()
     {
         return stats.contig();
     }

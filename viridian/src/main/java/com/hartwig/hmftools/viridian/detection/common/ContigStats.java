@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.viridian.detection.common;
 
-import com.hartwig.hmftools.viridian.reference.ViralContig;
+import com.hartwig.hmftools.viridian.reference.VirusGenome;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -9,7 +9,7 @@ import org.jetbrains.annotations.Nullable;
 //   1. All alignments to all contigs (BWA-MEM -a mode).
 //   2. Alignments to just the best contig (after the representative contig selection).
 public record ContigStats(
-        ViralContig contig,
+        VirusGenome contig,
         // Reads with an alignment to this contig.
         int readCount,
         // Reads with an alignment dropped because it clipped over the contig start/end (circular-genome artifact).

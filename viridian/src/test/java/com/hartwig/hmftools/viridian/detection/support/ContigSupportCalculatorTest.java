@@ -15,7 +15,7 @@ import com.hartwig.hmftools.viridian.detection.common.ContigStatsCalculator;
 import com.hartwig.hmftools.viridian.detection.common.ReadId;
 import com.hartwig.hmftools.viridian.detection.common.SummaryStats;
 import com.hartwig.hmftools.viridian.reference.OncologyGroup;
-import com.hartwig.hmftools.viridian.reference.ViralContig;
+import com.hartwig.hmftools.viridian.reference.VirusGenome;
 
 import org.junit.Test;
 
@@ -26,8 +26,8 @@ public class ContigSupportCalculatorTest
     // Only the vote-density prefilter reads this; the stats themselves are unaffected.
     private static final double MEAN_READ_LENGTH = 150.0;
 
-    private static final ViralContig V1 = new ViralContig("v1", 20, "Virus 1", new OncologyGroup("Group 1"));
-    private static final ViralContig V2 = new ViralContig("v2", 10, "Virus 2", new OncologyGroup("Group 2"));
+    private static final VirusGenome V1 = new VirusGenome("v1", 20, "Virus 1", new OncologyGroup("Group 1"));
+    private static final VirusGenome V2 = new VirusGenome("v2", 10, "Virus 2", new OncologyGroup("Group 2"));
 
     @Test
     public void testComputePerContigDepthAndCoverage()
@@ -121,18 +121,18 @@ public class ContigSupportCalculatorTest
     private static List<ContigSupport> compute(List<ViralReadAlignment> alignments, double correctBaseProbability)
     {
         AllContigsReadAlignments allAlignments = AllContigsReadAlignments.from(alignments, MEAN_READ_LENGTH);
-        Map<ViralContig, ContigStats> contigStats = ContigStatsCalculator.calculate(
+        Map<VirusGenome, ContigStats> contigStats = ContigStatsCalculator.calculate(
                 allAlignments.store().byContig(), allAlignments.metrics().originClippedReads());
         return new ContigSupportCalculator(correctBaseProbability).calculate(allAlignments, contigStats);
     }
 
-    private static ContigSupport get(List<ContigSupport> stats, ViralContig contig)
+    private static ContigSupport get(List<ContigSupport> stats, VirusGenome contig)
     {
         return stats.stream().filter(support -> support.contig().equals(contig)).findFirst().orElseThrow();
     }
 
     // A clean, full-length alignment covering [start, start + length - 1] with no clips.
-    private static ViralReadAlignment alignment(String readName, ViralContig contig, int start, int length, int alignerScore,
+    private static ViralReadAlignment alignment(String readName, VirusGenome contig, int start, int length, int alignerScore,
             int divergence)
     {
         return new ViralReadAlignment(
@@ -141,7 +141,7 @@ public class ContigSupportCalculatorTest
     }
 
     // An alignment covering [start, end] with the given clip lengths hanging off each side.
-    private static ViralReadAlignment clipped(String readName, ViralContig contig, int start, int end, int leftClip, int rightClip)
+    private static ViralReadAlignment clipped(String readName, VirusGenome contig, int start, int end, int leftClip, int rightClip)
     {
         return new ViralReadAlignment(
                 ReadId.parse(readName), contig, start, end,

@@ -21,7 +21,7 @@ import java.util.stream.IntStream;
 
 import com.hartwig.hmftools.viridian.detection.support.ContigSupport;
 import com.hartwig.hmftools.viridian.reference.OncologyGroup;
-import com.hartwig.hmftools.viridian.reference.ViralContig;
+import com.hartwig.hmftools.viridian.reference.VirusGenome;
 
 // Per oncology group, pick at most one representative contig.
 // First, contigs are filtered on coverage and read votes.
@@ -58,19 +58,19 @@ public class RepresentativeContigSelector
 
         int groupReads = requireNonNull(groupReadCounts.get(oncologyGroup));
 
-        List<ViralContig> contigs = candidates.stream().map(ContigSupport::contig).toList();
-        Set<ViralContig> comparable = comparableContigs(candidates);
-        Map<ViralContig, Set<ViralContig>> challenges = challenges(contigs, margins, groupReads);
-        Map<ViralContig, Set<ViralContig>> challengedBy = invertChallengesMap(challenges);
+        List<VirusGenome> contigs = candidates.stream().map(ContigSupport::contig).toList();
+        Set<VirusGenome> comparable = comparableContigs(candidates);
+        Map<VirusGenome, Set<VirusGenome>> challenges = challenges(contigs, margins, groupReads);
+        Map<VirusGenome, Set<VirusGenome>> challengedBy = invertChallengesMap(challenges);
 
         // A low-abundance contig contesting an abundant one is a possible hidden strain, and blocks any verdict.
-        Set<ViralContig> minorChallengers = contigs.stream()
+        Set<VirusGenome> minorChallengers = contigs.stream()
                 .filter(contig -> !comparable.contains(contig))
                 .filter(contig -> !disjoint(challenges.get(contig), comparable))
                 .collect(toSet());
 
         // Comparable contigs no comparable peer challenges. In candidate order, so the first is the best supported.
-        List<ViralContig> leaders = contigs.stream()
+        List<VirusGenome> leaders = contigs.stream()
                 .filter(comparable::contains)
                 .filter(contig -> disjoint(challengedBy.get(contig), comparable))
                 .toList();
@@ -93,7 +93,7 @@ public class RepresentativeContigSelector
     }
 
     private static ContigRole decideContigRole(
-            ViralContig contig, Set<ViralContig> comparable, Set<ViralContig> minorChallengers, List<ViralContig> leaders,
+            VirusGenome contig, Set<VirusGenome> comparable, Set<VirusGenome> minorChallengers, List<VirusGenome> leaders,
             boolean resolved)
     {
         if(!comparable.contains(contig))
@@ -116,7 +116,7 @@ public class RepresentativeContigSelector
     }
 
     private static OncologyGroupOutcome decideOncologyGroupOutcome(
-            List<RepresentativeContigCandidate> candidates, Set<ViralContig> comparable, Map<ViralContig, Set<ViralContig>> challenges)
+            List<RepresentativeContigCandidate> candidates, Set<VirusGenome> comparable, Map<VirusGenome, Set<VirusGenome>> challenges)
     {
         if(anyHasRole(candidates, ContigRole.MINOR_CHALLENGER))
         {
@@ -148,7 +148,7 @@ public class RepresentativeContigSelector
         return candidates.stream().anyMatch(candidate -> candidate.role() == role);
     }
 
-    private static Set<ViralContig> comparableContigs(List<ContigSupport> candidates)
+    private static Set<VirusGenome> comparableContigs(List<ContigSupport> candidates)
     {
         double topVotes = candidates.get(0).readVotes();
         if(topVotes <= 0)
@@ -163,7 +163,7 @@ public class RepresentativeContigSelector
     }
 
     // Subject contig -> the opponents it challenges.
-    private static Map<ViralContig, Set<ViralContig>> challenges(List<ViralContig> contigs, PairwiseMargins margins, int groupReads)
+    private static Map<VirusGenome, Set<VirusGenome>> challenges(List<VirusGenome> contigs, PairwiseMargins margins, int groupReads)
     {
         return contigs.stream().collect(toMap(
                 subject -> subject, subject -> contigs.stream()
@@ -174,15 +174,15 @@ public class RepresentativeContigSelector
                         .collect(toSet())));
     }
 
-    private static Map<ViralContig, Set<ViralContig>> invertChallengesMap(Map<ViralContig, Set<ViralContig>> challenges)
+    private static Map<VirusGenome, Set<VirusGenome>> invertChallengesMap(Map<VirusGenome, Set<VirusGenome>> challenges)
     {
-        Map<ViralContig, Set<ViralContig>> challengedBy = new HashMap<>();
+        Map<VirusGenome, Set<VirusGenome>> challengedBy = new HashMap<>();
         challenges.keySet().forEach(contig -> challengedBy.put(contig, new HashSet<>()));
         challenges.forEach((subject, opponents) -> opponents.forEach(opponent -> challengedBy.get(opponent).add(subject)));
         return challengedBy;
     }
 
-    private static boolean hasMutualChallenge(Set<ViralContig> comparable, Map<ViralContig, Set<ViralContig>> challenges)
+    private static boolean hasMutualChallenge(Set<VirusGenome> comparable, Map<VirusGenome, Set<VirusGenome>> challenges)
     {
         return comparable.stream().anyMatch(subject -> challenges.get(subject).stream()
                 .filter(comparable::contains)

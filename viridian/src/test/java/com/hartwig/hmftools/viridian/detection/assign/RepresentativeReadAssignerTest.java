@@ -16,7 +16,7 @@ import com.hartwig.hmftools.viridian.detection.align.ViralReadAlignment;
 import com.hartwig.hmftools.viridian.detection.align.ViralReadAlignmentStore;
 import com.hartwig.hmftools.viridian.detection.common.ReadId;
 import com.hartwig.hmftools.viridian.reference.OncologyGroup;
-import com.hartwig.hmftools.viridian.reference.ViralContig;
+import com.hartwig.hmftools.viridian.reference.VirusGenome;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -39,9 +39,9 @@ public class RepresentativeReadAssignerTest
     private static final int READ_LENGTH = 100;
 
     private static final OncologyGroup GROUP = new OncologyGroup("Group A");
-    private static final ViralContig REPRESENTATIVE = new ViralContig("v1", 1000, "Virus v1", GROUP);
-    private static final ViralContig TWIN = new ViralContig("v2", 1000, "Virus v2", GROUP);
-    private static final ViralContig MINOR = new ViralContig("v3", 1000, "Virus v3", GROUP);
+    private static final VirusGenome REPRESENTATIVE = new VirusGenome("v1", 1000, "Virus v1", GROUP);
+    private static final VirusGenome TWIN = new VirusGenome("v2", 1000, "Virus v2", GROUP);
+    private static final VirusGenome MINOR = new VirusGenome("v3", 1000, "Virus v3", GROUP);
 
     @Test
     public void testAssignReadsPicksLeastDivergentRepresentative()
@@ -139,7 +139,7 @@ public class RepresentativeReadAssignerTest
         return cigars;
     }
 
-    private static ViralReadAlignment alignment(String readName, ViralContig contig, int start, int divergence)
+    private static ViralReadAlignment alignment(String readName, VirusGenome contig, int start, int divergence)
     {
         return new ViralReadAlignment(
                 ReadId.parse(readName), contig, start, start + READ_LENGTH - 1, READ_LENGTH + "M", 0, 0, READ_LENGTH - divergence,

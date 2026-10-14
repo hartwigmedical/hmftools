@@ -8,13 +8,13 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.hartwig.hmftools.viridian.reference.OncologyGroup;
-import com.hartwig.hmftools.viridian.reference.ViralContig;
+import com.hartwig.hmftools.viridian.reference.VirusGenome;
 
 import org.junit.Test;
 
 public class ViralInsertAlignmentTest
 {
-    private static final ViralContig CONTIG = new ViralContig("v1", 7906, "Virus v1", new OncologyGroup("Group A"));
+    private static final VirusGenome CONTIG = new VirusGenome("v1", 7906, "Virus v1", new OncologyGroup("Group A"));
 
     // Clipped bases are the host side of an integration junction, so they are not insert bases placed on the virus.
     @Test

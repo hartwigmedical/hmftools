@@ -8,7 +8,7 @@ import java.util.Set;
 
 import com.hartwig.hmftools.viridian.detection.common.ReadId;
 import com.hartwig.hmftools.viridian.reference.OncologyGroup;
-import com.hartwig.hmftools.viridian.reference.ViralContig;
+import com.hartwig.hmftools.viridian.reference.VirusGenome;
 
 import org.junit.Test;
 
@@ -17,8 +17,8 @@ public class ViralReadAlignmentStoreTest
     private static final int LENGTH = 100;
 
     private static final OncologyGroup GROUP_A = new OncologyGroup("Group A");
-    private static final ViralContig V1 = new ViralContig("v1", LENGTH, "Virus v1", GROUP_A);
-    private static final ViralContig V2 = new ViralContig("v2", LENGTH, "Virus v2", GROUP_A);
+    private static final VirusGenome V1 = new VirusGenome("v1", LENGTH, "Virus v1", GROUP_A);
+    private static final VirusGenome V2 = new VirusGenome("v2", LENGTH, "Virus v2", GROUP_A);
 
     @Test
     public void testIndexesHoldEveryAlignmentBothWays()
@@ -45,7 +45,7 @@ public class ViralReadAlignmentStoreTest
         assertThrows(IllegalArgumentException.class, () -> new ViralReadAlignmentStore(repeated));
     }
 
-    private static ViralReadAlignment alignment(String readName, ViralContig contig)
+    private static ViralReadAlignment alignment(String readName, VirusGenome contig)
     {
         return new ViralReadAlignment(
                 ReadId.parse(readName), contig, 1, LENGTH, LENGTH + "M", 0, 0, 100, 0, List.of(new AlignedInterval(1, LENGTH)));

@@ -9,7 +9,7 @@ import com.hartwig.hmftools.viridian.detection.align.AlignedInterval;
 import com.hartwig.hmftools.viridian.detection.align.AllContigsReadAlignments;
 import com.hartwig.hmftools.viridian.detection.align.ViralReadAlignment;
 import com.hartwig.hmftools.viridian.reference.OncologyGroup;
-import com.hartwig.hmftools.viridian.reference.ViralContig;
+import com.hartwig.hmftools.viridian.reference.VirusGenome;
 
 import org.junit.Test;
 
@@ -17,7 +17,7 @@ public class ContigStatsCalculatorTest
 {
     private static final double MEAN_READ_LENGTH = 150.0;
 
-    private static final ViralContig CONTIG = new ViralContig("v1", 20, "Virus 1", new OncologyGroup("Group 1"));
+    private static final VirusGenome CONTIG = new VirusGenome("v1", 20, "Virus 1", new OncologyGroup("Group 1"));
 
     // A read spanning a deletion aligns in two blocks: the skipped positions are not evidence the contig is there.
     @Test
@@ -47,7 +47,7 @@ public class ContigStatsCalculatorTest
         assertEquals(Map.of(CONTIG, expected), calculate(alignments));
     }
 
-    private static Map<ViralContig, ContigStats> calculate(List<ViralReadAlignment> alignments)
+    private static Map<VirusGenome, ContigStats> calculate(List<ViralReadAlignment> alignments)
     {
         AllContigsReadAlignments allAlignments = AllContigsReadAlignments.from(alignments, MEAN_READ_LENGTH);
         return ContigStatsCalculator.calculate(

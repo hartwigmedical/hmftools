@@ -12,14 +12,14 @@ import java.util.stream.Stream;
 
 import com.hartwig.hmftools.viridian.detection.align.AlignedInterval;
 import com.hartwig.hmftools.viridian.detection.align.ViralReadAlignment;
-import com.hartwig.hmftools.viridian.reference.ViralContig;
+import com.hartwig.hmftools.viridian.reference.VirusGenome;
 
 // Statistics for every contig with an alignment, counting each read once by its best alignment there.
 public class ContigStatsCalculator
 {
-    public static Map<ViralContig, ContigStats> calculate(
-            Map<ViralContig, Map<ReadId, ViralReadAlignment>> alignmentsByContig,
-            Map<ViralContig, Integer> originClippedReads)
+    public static Map<VirusGenome, ContigStats> calculate(
+            Map<VirusGenome, Map<ReadId, ViralReadAlignment>> alignmentsByContig,
+            Map<VirusGenome, Integer> originClippedReads)
     {
         // A contig whose every alignment straddled the origin retains no read, but the drop is still worth reporting.
         return Stream.concat(alignmentsByContig.keySet().stream(), originClippedReads.keySet().stream())
@@ -33,7 +33,7 @@ public class ContigStatsCalculator
     }
 
     private static ContigStats createContigStats(
-            ViralContig contig, Collection<ViralReadAlignment> alignments, int originClippedReads)
+            VirusGenome contig, Collection<ViralReadAlignment> alignments, int originClippedReads)
     {
         int[] depth = calculateDepth(contig.length(), alignments);
         int coveredBases = (int) Arrays.stream(depth).filter(baseDepth -> baseDepth > 0).count();

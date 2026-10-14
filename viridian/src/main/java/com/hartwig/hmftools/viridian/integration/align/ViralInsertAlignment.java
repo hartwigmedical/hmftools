@@ -4,14 +4,14 @@ import static com.hartwig.hmftools.viridian.common.ViridianConstants.INTEGRATION
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.INTEGRATION_VIRAL_ALIGN_SCORE_PER_BASE_MIN;
 
 import com.hartwig.hmftools.common.genome.region.Orientation;
-import com.hartwig.hmftools.viridian.reference.ViralContig;
+import com.hartwig.hmftools.viridian.reference.VirusGenome;
 
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
 
 // Alignment of an integration candidate SV's insert sequence onto a virus genome.
 public record ViralInsertAlignment(
-        ViralContig contig,
+        VirusGenome contig,
         int position,
         Orientation orientation,
         Cigar cigar,

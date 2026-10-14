@@ -22,21 +22,21 @@ import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 public class VirusReference
 {
     private final SAMSequenceDictionary mSequenceDictionary;
-    private final Map<String, ViralContig> mContigsByName;
+    private final Map<String, VirusGenome> mContigsByName;
     private final Map<OncologyGroup, OncologyGroupInfo> mOncologyGroupInfo;
 
     public VirusReference(
-            List<ViralContig> contigs, SAMSequenceDictionary sequenceDictionary,
+            List<VirusGenome> contigs, SAMSequenceDictionary sequenceDictionary,
             Map<OncologyGroup, OncologyGroupInfo> oncologyGroupInfo)
     {
         mSequenceDictionary = sequenceDictionary;
-        mContigsByName = contigs.stream().collect(toMap(ViralContig::name, identity()));
+        mContigsByName = contigs.stream().collect(toMap(VirusGenome::name, identity()));
         mOncologyGroupInfo = oncologyGroupInfo;
     }
 
-    public ViralContig contig(String name)
+    public VirusGenome contig(String name)
     {
-        ViralContig contig = mContigsByName.get(name);
+        VirusGenome contig = mContigsByName.get(name);
         if(contig == null)
         {
             throw new IllegalArgumentException("Unknown virus contig: " + name);
@@ -52,7 +52,7 @@ public class VirusReference
 
     public Set<OncologyGroup> oncologyGroups()
     {
-        return mContigsByName.values().stream().map(ViralContig::oncologyGroup).collect(toSet());
+        return mContigsByName.values().stream().map(VirusGenome::oncologyGroup).collect(toSet());
     }
 
     public OncologyGroupInfo oncologyGroupInfo(OncologyGroup group)
@@ -69,8 +69,8 @@ public class VirusReference
     {
         List<VirusInfo> info = VirusInfo.load(infoTsvFile);
         SAMSequenceDictionary dictionary = loadSequenceDictionary(fastaFile);
-        List<ViralContig> contigs = joinFastaAndInfo(dictionary, info);
-        Set<OncologyGroup> groups = contigs.stream().map(ViralContig::oncologyGroup).collect(toSet());
+        List<VirusGenome> contigs = joinFastaAndInfo(dictionary, info);
+        Set<OncologyGroup> groups = contigs.stream().map(VirusGenome::oncologyGroup).collect(toSet());
         Map<OncologyGroup, OncologyGroupInfo> oncologyGroupInfo = OncologyGroupInfo.load(oncologyGroupInfoTsvFile);
         if(!oncologyGroupInfo.keySet().equals(groups))
         {
@@ -80,14 +80,14 @@ public class VirusReference
     }
 
     // Joins FASTA contigs to their info rows. Result in FASTA order.
-    static List<ViralContig> joinFastaAndInfo(SAMSequenceDictionary dictionary, List<VirusInfo> info)
+    static List<VirusGenome> joinFastaAndInfo(SAMSequenceDictionary dictionary, List<VirusInfo> info)
     {
         Map<String, VirusInfo> remainingInfo = new LinkedHashMap<>();
         for(VirusInfo virusInfo : info)
         {
             remainingInfo.put(virusInfo.contigName(), virusInfo);
         }
-        List<ViralContig> result = new ArrayList<>();
+        List<VirusGenome> result = new ArrayList<>();
         for(SAMSequenceRecord sequence : dictionary.getSequences())
         {
             String contig = sequence.getSequenceName();
@@ -96,7 +96,7 @@ public class VirusReference
             {
                 throw new UserInputError(String.format("Virus reference contig has no info row: %s", contig));
             }
-            result.add(new ViralContig(contig, sequence.getSequenceLength(), row.virusName(), row.oncologyGroup()));
+            result.add(new VirusGenome(contig, sequence.getSequenceLength(), row.virusName(), row.oncologyGroup()));
         }
 
         if(!remainingInfo.isEmpty())

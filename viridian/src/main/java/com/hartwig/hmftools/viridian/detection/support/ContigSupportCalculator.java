@@ -14,7 +14,7 @@ import com.hartwig.hmftools.viridian.detection.align.AllContigsReadAlignmentsMet
 import com.hartwig.hmftools.viridian.detection.align.ViralReadAlignment;
 import com.hartwig.hmftools.viridian.detection.common.ContigStats;
 import com.hartwig.hmftools.viridian.detection.common.SummaryStats;
-import com.hartwig.hmftools.viridian.reference.ViralContig;
+import com.hartwig.hmftools.viridian.reference.VirusGenome;
 
 // Takes per-contig statistics and determines candidate virus genomes.
 // Computes:
@@ -29,9 +29,9 @@ public class ContigSupportCalculator
         mCorrectBaseProbability = correctBaseProbability;
     }
 
-    public List<ContigSupport> calculate(AllContigsReadAlignments alignments, Map<ViralContig, ContigStats> contigStats)
+    public List<ContigSupport> calculate(AllContigsReadAlignments alignments, Map<VirusGenome, ContigStats> contigStats)
     {
-        Map<ViralContig, Double> readVotes = calculateReadVotes(alignments.store().byRead().values());
+        Map<VirusGenome, Double> readVotes = calculateReadVotes(alignments.store().byRead().values());
         AllContigsReadAlignmentsMetrics metrics = alignments.metrics();
 
         return contigStats.values().stream()
@@ -46,15 +46,15 @@ public class ContigSupportCalculator
 
     // A read's vote splits across the contigs it hits by how well each explains it: every extra base a contig fails to
     // explain multiplies its share by the (pessimistic) chance a base is right, so the closest contig wins most.
-    private Map<ViralContig, Double> calculateReadVotes(Collection<Map<ViralContig, ViralReadAlignment>> reads)
+    private Map<VirusGenome, Double> calculateReadVotes(Collection<Map<VirusGenome, ViralReadAlignment>> reads)
     {
-        Map<ViralContig, Double> votes = new HashMap<>();
-        for(Map<ViralContig, ViralReadAlignment> readAlignments : reads)
+        Map<VirusGenome, Double> votes = new HashMap<>();
+        for(Map<VirusGenome, ViralReadAlignment> readAlignments : reads)
         {
             // Offsets vote weighting for numeric stability.
             int minDivergence = readAlignments.values().stream()
                     .mapToInt(ViralReadAlignment::divergence).min().orElseThrow();
-            Map<ViralContig, Double> contigWeights = readAlignments.entrySet().stream()
+            Map<VirusGenome, Double> contigWeights = readAlignments.entrySet().stream()
                     .collect(toMap(Map.Entry::getKey, entry -> voteWeight(entry.getValue().divergence(), minDivergence)));
 
             double totalWeight = contigWeights.values().stream().mapToDouble(Double::doubleValue).sum();
@@ -69,11 +69,11 @@ public class ContigSupportCalculator
     }
 
     private static List<ContigSupport> createGroupContigSupports(
-            List<ContigStats> group, Map<ViralContig, Double> readVotes, Map<ViralContig, List<Integer>> alignmentCounts,
+            List<ContigStats> group, Map<VirusGenome, Double> readVotes, Map<VirusGenome, List<Integer>> alignmentCounts,
             double meanReadLength)
     {
-        Map<ViralContig, ContigStats> groupStats = group.stream().collect(toMap(ContigStats::contig, stats -> stats));
-        Map<ViralContig, ContigFilterStatus> filterStatuses = ContigSupportFilter.statuses(groupStats, readVotes, meanReadLength);
+        Map<VirusGenome, ContigStats> groupStats = group.stream().collect(toMap(ContigStats::contig, stats -> stats));
+        Map<VirusGenome, ContigFilterStatus> filterStatuses = ContigSupportFilter.statuses(groupStats, readVotes, meanReadLength);
 
         return group.stream()
                 .map(stats -> createContigSupport(

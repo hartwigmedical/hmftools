@@ -32,7 +32,7 @@ import com.hartwig.hmftools.viridian.integration.extract.BreakendSupport;
 import com.hartwig.hmftools.viridian.integration.extract.CandidateSv;
 import com.hartwig.hmftools.viridian.integration.extract.HostBreakend;
 import com.hartwig.hmftools.viridian.integration.extract.InsertRepeat;
-import com.hartwig.hmftools.viridian.reference.ViralContig;
+import com.hartwig.hmftools.viridian.reference.VirusGenome;
 import com.hartwig.hmftools.viridian.reporting.VirusReport;
 
 import org.jetbrains.annotations.Nullable;
@@ -41,7 +41,7 @@ public class OutputWriter
 {
     public static void writeContigSupport(String file, List<OncologyGroupRepresentativeSelection> selections)
     {
-        Map<ViralContig, Integer> votesRanks = candidateVotesRanks(selections);
+        Map<VirusGenome, Integer> votesRanks = candidateVotesRanks(selections);
         List<ContigSupportRow> rows = selections.stream()
                 .flatMap(OutputWriter::contigSupportRows)
                 .sorted(comparing((ContigSupportRow row) -> row.support().contig().oncologyGroup())
@@ -54,7 +54,7 @@ public class OutputWriter
                 {
                     ContigSupport support = contigRow.support();
                     ContigStats stats = support.stats();
-                    ViralContig contig = support.contig();
+                    VirusGenome contig = support.contig();
 
                     row.set(ContigSupportColumn.contig, contig.name());
                     row.set(ContigSupportColumn.virus_name, contig.virusName());
@@ -187,7 +187,7 @@ public class OutputWriter
                     ContigStats stats = detection.representativeContigStats();
                     if(stats != null)
                     {
-                        ViralContig contig = stats.contig();
+                        VirusGenome contig = stats.contig();
                         row.set(DetectedVirusColumn.representative_contig, contig.name());
                         row.set(DetectedVirusColumn.virus_name, contig.virusName());
                         row.set(DetectedVirusColumn.contig_length, contig.length());
@@ -247,12 +247,12 @@ public class OutputWriter
         return total > 0 ? votes / total : null;
     }
 
-    private static String formatRanks(Map<ViralContig, Integer> votesRanks, Set<ViralContig> contigs)
+    private static String formatRanks(Map<VirusGenome, Integer> votesRanks, Set<VirusGenome> contigs)
     {
         return contigs.stream().map(votesRanks::get).sorted().map(String::valueOf).collect(Collectors.joining(","));
     }
 
-    private static Map<ViralContig, Integer> candidateVotesRanks(List<OncologyGroupRepresentativeSelection> selections)
+    private static Map<VirusGenome, Integer> candidateVotesRanks(List<OncologyGroupRepresentativeSelection> selections)
     {
         return selections.stream()
                 .flatMap(selection -> selection.candidates().stream())
@@ -263,7 +263,7 @@ public class OutputWriter
     // better by at least each reported margin. Includes support-filtered contigs. Verbose/debug only, for tuning.
     public static void writePairwiseMargins(String file, PairwiseMargins margins, List<OncologyGroupRepresentativeSelection> selections)
     {
-        Map<ViralContig, Integer> votesRanks = candidateVotesRanks(selections);
+        Map<VirusGenome, Integer> votesRanks = candidateVotesRanks(selections);
 
         // A pair's contigs share an oncology group, and only its candidates are ranked, so unranked contigs sort last.
         List<PairwiseMargins.ContigPair> pairs = margins.pairs().stream()
@@ -372,7 +372,7 @@ public class OutputWriter
                     ViralInsertAlignment alignment = candidate.alignment();
                     if(alignment != null)
                     {
-                        ViralContig contig = alignment.contig();
+                        VirusGenome contig = alignment.contig();
                         row.set(IntegrationCandidateColumn.virus_name, contig.virusName());
                         row.set(IntegrationCandidateColumn.oncology_group, contig.oncologyGroup().name());
                         row.set(IntegrationCandidateColumn.virus_contig, contig.name());
@@ -451,7 +451,7 @@ public class OutputWriter
                     ContigStats stats = report.representativeStats();
                     if(stats != null)
                     {
-                        ViralContig contig = stats.contig();
+                        VirusGenome contig = stats.contig();
                         row.set(VirusReportColumn.representative_contig, contig.name());
                         row.set(VirusReportColumn.virus_name, contig.virusName());
                         row.set(VirusReportColumn.coverage_fraction, stats.coverageFraction());

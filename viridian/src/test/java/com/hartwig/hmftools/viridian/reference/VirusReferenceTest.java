@@ -29,9 +29,9 @@ public class VirusReferenceTest
     private static final VirusInfo INFO_C = new VirusInfo("contigC", "Virus Beta type 2", GROUP_BETA);
     private static final List<VirusInfo> INFO = List.of(INFO_A, INFO_B, INFO_C);
 
-    private static final ViralContig CONTIG_A = new ViralContig("contigA", 100, "Virus Alpha", GROUP_ALPHA);
-    private static final ViralContig CONTIG_B = new ViralContig("contigB", 200, "Virus Beta type 1", GROUP_BETA);
-    private static final ViralContig CONTIG_C = new ViralContig("contigC", 300, "Virus Beta type 2", GROUP_BETA);
+    private static final VirusGenome CONTIG_A = new VirusGenome("contigA", 100, "Virus Alpha", GROUP_ALPHA);
+    private static final VirusGenome CONTIG_B = new VirusGenome("contigB", 200, "Virus Beta type 1", GROUP_BETA);
+    private static final VirusGenome CONTIG_C = new VirusGenome("contigC", 300, "Virus Beta type 2", GROUP_BETA);
 
     private static final String VALID_INFO_TSV = """
             ref_contig\tvirus_name\toncology_group
@@ -46,7 +46,7 @@ public class VirusReferenceTest
     @Test
     public void testJoinFastaAndInfoJoinsContigsInFastaOrder()
     {
-        List<ViralContig> contigs = VirusReference.joinFastaAndInfo(dictionary("contigA", "contigB", "contigC"), INFO);
+        List<VirusGenome> contigs = VirusReference.joinFastaAndInfo(dictionary("contigA", "contigB", "contigC"), INFO);
         assertEquals(List.of(CONTIG_A, CONTIG_B, CONTIG_C), contigs);
     }
 
@@ -87,7 +87,7 @@ public class VirusReferenceTest
         assertThrows(RuntimeException.class, () -> VirusInfo.load(writeTsv(noGroup)));
     }
 
-    // Contig lengths are fixed per name so joined ViralContig values are predictable.
+    // Contig lengths are fixed per name so joined VirusGenome values are predictable.
     private static SAMSequenceDictionary dictionary(String... contigs)
     {
         Map<String, Integer> lengths = Map.of("contigA", 100, "contigB", 200, "contigC", 300);
