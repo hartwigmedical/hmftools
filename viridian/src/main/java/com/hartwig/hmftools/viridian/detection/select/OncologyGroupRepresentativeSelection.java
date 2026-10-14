@@ -8,13 +8,13 @@ import com.hartwig.hmftools.viridian.reference.VirusGenome;
 
 import org.jetbrains.annotations.Nullable;
 
-// Representative contig selection's outcome for one oncology group.
-// Includes all the contigs which had any alignments.
+// Representative selection's outcome for one oncology group.
+// Includes all the virus genomes which had any alignments.
 public record OncologyGroupRepresentativeSelection(
         OncologyGroup oncologyGroup,
         OncologyGroupOutcome outcome,
         List<RepresentativeGenomeCandidate> candidates,
-        // List of contigs which were filtered so not candidates for representative.
+        // List of virus genomes which were filtered so not candidates for representative.
         List<GenomeSupport> rejected
 )
 {

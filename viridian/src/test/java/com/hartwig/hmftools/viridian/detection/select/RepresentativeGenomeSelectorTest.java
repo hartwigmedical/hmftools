@@ -43,7 +43,7 @@ public class RepresentativeGenomeSelectorTest
     @Test
     public void testSelectResolvedTwins()
     {
-        // Votes close enough to be comparable, and neither contig challenges the other.
+        // Votes close enough to be comparable, and neither virus genome challenges the other.
         List<OncologyGroupRepresentativeSelection> selections = select(support(candidate(V1, 100), candidate(V2, 95)), margins());
 
         assertEquals(GenomeRole.REPRESENTATIVE, role(selections, V1));
@@ -112,7 +112,7 @@ public class RepresentativeGenomeSelectorTest
     }
 
     @Test
-    public void testSelectSoleContig()
+    public void testSelectSoleGenome()
     {
         List<OncologyGroupRepresentativeSelection> selections = select(support(candidate(V1, 100)), margins());
 
@@ -151,7 +151,7 @@ public class RepresentativeGenomeSelectorTest
     }
 
     @Test
-    public void testSelectRejectedContigsExcluded()
+    public void testSelectRejectedGenomesExcluded()
     {
         List<GenomeSupport> support = support(
                 candidate(V1, 100),
@@ -161,7 +161,7 @@ public class RepresentativeGenomeSelectorTest
         List<OncologyGroupRepresentativeSelection> selections = select(support, margins());
 
         assertEquals(GenomeRole.REPRESENTATIVE, role(selections, V1));
-        assertEquals(List.of(V2), contigs(group(selections, GROUP_A).rejected()));
+        assertEquals(List.of(V2), genomes(group(selections, GROUP_A).rejected()));
         assertEquals(OncologyGroupOutcome.NO_CANDIDATES, group(selections, GROUP_H).outcome());
         assertEquals(OncologyGroupResolution.NO_CANDIDATES, group(selections, GROUP_H).resolution());
         assertNull(group(selections, GROUP_H).representative());
@@ -171,8 +171,8 @@ public class RepresentativeGenomeSelectorTest
     @Test
     public void testSelectGroupWithoutReadCount()
     {
-        // A group can hold a contig supported only by alignments dropped over the contig origin, leaving the group with
-        // no reads counted against it. Such a contig is never a candidate, so selection must not need the count.
+        // A group can hold a virus genome supported only by alignments dropped over its origin, leaving the group with
+        // no reads counted against it. Such a virus genome is never a candidate, so selection must not need the count.
         List<GenomeSupport> support = support(candidate(V1, 100), rejected(H1, GenomeFilterStatus.LOW_COVERAGE));
         Map<OncologyGroup, Integer> readCounts = Map.of(GROUP_A, 200);
 
@@ -185,7 +185,7 @@ public class RepresentativeGenomeSelectorTest
     @Test
     public void testSelectVotesRankFollowsSupport()
     {
-        // The contigs arrive out of votes order.
+        // The virus genomes arrive out of votes order.
         List<OncologyGroupRepresentativeSelection> selections = select(support(candidate(V2, 95), candidate(V1, 100)), margins());
 
         assertEquals(1, result(selections, V1).votesRank());
@@ -197,8 +197,8 @@ public class RepresentativeGenomeSelectorTest
     private static List<OncologyGroupRepresentativeSelection> select(List<GenomeSupport> support, PairwiseMargins margins)
     {
         Map<OncologyGroup, Integer> readCounts = new HashMap<>();
-        support.forEach(contig -> readCounts.merge(
-                contig.genome().oncologyGroup(), (int) Math.round(contig.readVotes()), Integer::sum));
+        support.forEach(genomeSupport -> readCounts.merge(
+                genomeSupport.genome().oncologyGroup(), (int) Math.round(genomeSupport.readVotes()), Integer::sum));
         return RepresentativeGenomeSelector.select(support, margins, readCounts);
     }
 
@@ -206,7 +206,7 @@ public class RepresentativeGenomeSelectorTest
             List<GenomeSupport> support, PairwiseMargins margins, int groupReads)
     {
         Map<OncologyGroup, Integer> readCounts = support.stream()
-                .map(contig -> contig.genome().oncologyGroup())
+                .map(genomeSupport -> genomeSupport.genome().oncologyGroup())
                 .distinct()
                 .collect(toMap(group -> group, group -> groupReads));
         return RepresentativeGenomeSelector.select(support, margins, readCounts);
@@ -238,10 +238,10 @@ public class RepresentativeGenomeSelectorTest
         return alignments;
     }
 
-    private static ViralReadAlignment alignment(String readName, VirusGenome contig, int divergence)
+    private static ViralReadAlignment alignment(String readName, VirusGenome genome, int divergence)
     {
         return new ViralReadAlignment(
-                ReadId.parse(readName), contig, 1, LENGTH, LENGTH + "M", 0, 0, 100, divergence, List.of(new AlignedInterval(1, LENGTH)));
+                ReadId.parse(readName), genome, 1, LENGTH, LENGTH + "M", 0, 0, 100, divergence, List.of(new AlignedInterval(1, LENGTH)));
     }
 
     private static OncologyGroupRepresentativeSelection group(List<OncologyGroupRepresentativeSelection> selections,
@@ -253,21 +253,21 @@ public class RepresentativeGenomeSelectorTest
                 .orElseThrow();
     }
 
-    private static RepresentativeGenomeCandidate result(List<OncologyGroupRepresentativeSelection> selections, VirusGenome contig)
+    private static RepresentativeGenomeCandidate result(List<OncologyGroupRepresentativeSelection> selections, VirusGenome genome)
     {
         return selections.stream()
                 .flatMap(selection -> selection.candidates().stream())
-                .filter(candidate -> candidate.genome().equals(contig))
+                .filter(candidate -> candidate.genome().equals(genome))
                 .findFirst()
                 .orElseThrow();
     }
 
-    private static GenomeRole role(List<OncologyGroupRepresentativeSelection> selections, VirusGenome contig)
+    private static GenomeRole role(List<OncologyGroupRepresentativeSelection> selections, VirusGenome genome)
     {
-        return result(selections, contig).role();
+        return result(selections, genome).role();
     }
 
-    private static List<VirusGenome> contigs(List<GenomeSupport> support)
+    private static List<VirusGenome> genomes(List<GenomeSupport> support)
     {
         return support.stream().map(GenomeSupport::genome).toList();
     }
@@ -277,22 +277,22 @@ public class RepresentativeGenomeSelectorTest
         return List.of(support);
     }
 
-    private static GenomeSupport candidate(VirusGenome contig, double votes)
+    private static GenomeSupport candidate(VirusGenome genome, double votes)
     {
-        return contigSupport(contig, GenomeFilterStatus.CANDIDATE, votes);
+        return genomeSupport(genome, GenomeFilterStatus.CANDIDATE, votes);
     }
 
-    private static GenomeSupport rejected(VirusGenome contig, GenomeFilterStatus filterStatus)
+    private static GenomeSupport rejected(VirusGenome genome, GenomeFilterStatus filterStatus)
     {
-        return contigSupport(contig, filterStatus, 100);
+        return genomeSupport(genome, filterStatus, 100);
     }
 
-    // Selection reads only the contig, its filter status and its read votes. The remaining fields are filler, set to
-    // values consistent with a present contig so nothing reads as contradictory.
-    private static GenomeSupport contigSupport(VirusGenome contig, GenomeFilterStatus filterStatus, double votes)
+    // Selection reads only the virus genome, its filter status and its read votes. The remaining fields are filler,
+    // set to values consistent with a present virus genome so nothing reads as contradictory.
+    private static GenomeSupport genomeSupport(VirusGenome genome, GenomeFilterStatus filterStatus, double votes)
     {
         SummaryStats filler = SummaryStats.from(new int[] { 1 });
         return new GenomeSupport(
-                new GenomeStats(contig, 100, 0, LENGTH / 2, filler, filler), filterStatus, 0, filler, votes);
+                new GenomeStats(genome, 100, 0, LENGTH / 2, filler, filler), filterStatus, 0, filler, votes);
     }
 }

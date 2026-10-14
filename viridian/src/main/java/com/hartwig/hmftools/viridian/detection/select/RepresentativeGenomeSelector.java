@@ -23,16 +23,17 @@ import com.hartwig.hmftools.viridian.detection.support.GenomeSupport;
 import com.hartwig.hmftools.viridian.reference.OncologyGroup;
 import com.hartwig.hmftools.viridian.reference.VirusGenome;
 
-// Per oncology group, pick at most one representative contig.
-// First, contigs are filtered on coverage and read votes.
-// Then a "challenges" graph determines the presence of "rival" contigs - contigs with low overall support, but
-// decisively supported by a subset of reads. I.e. 1 contig doesn't explain the whole virus genome in the sample.
+// Per oncology group, pick at most one representative virus genome.
+// First, virus genomes are filtered on coverage and read votes.
+// Then a "challenges" graph determines the presence of "rival" virus genomes - genomes with low overall support,
+// but decisively supported by a subset of reads. I.e. one genome in the reference doesn't explain the whole
+// virus genome present in the sample.
 public class RepresentativeGenomeSelector
 {
     public static List<OncologyGroupRepresentativeSelection> select(
-            Collection<GenomeSupport> contigSupport, PairwiseMargins margins, Map<OncologyGroup, Integer> groupReadCounts)
+            Collection<GenomeSupport> genomeSupport, PairwiseMargins margins, Map<OncologyGroup, Integer> groupReadCounts)
     {
-        return contigSupport.stream()
+        return genomeSupport.stream()
                 .collect(groupingBy(support -> support.genome().oncologyGroup()))
                 .entrySet().stream()
                 .map(entry -> selectOncologyGroup(entry.getKey(), entry.getValue(), margins, groupReadCounts))
@@ -40,11 +41,11 @@ public class RepresentativeGenomeSelector
     }
 
     private static OncologyGroupRepresentativeSelection selectOncologyGroup(
-            OncologyGroup oncologyGroup, List<GenomeSupport> groupContigs, PairwiseMargins margins,
+            OncologyGroup oncologyGroup, List<GenomeSupport> groupGenomes, PairwiseMargins margins,
             Map<OncologyGroup, Integer> groupReadCounts)
     {
-        List<GenomeSupport> rejected = groupContigs.stream().filter(support -> !support.isCandidate()).toList();
-        List<GenomeSupport> candidates = groupContigs.stream()
+        List<GenomeSupport> rejected = groupGenomes.stream().filter(support -> !support.isCandidate()).toList();
+        List<GenomeSupport> candidates = groupGenomes.stream()
                 .filter(GenomeSupport::isCandidate)
                 .sorted(comparingDouble(GenomeSupport::readVotes).reversed().thenComparing(GenomeSupport::genome))
                 .toList();
@@ -54,25 +55,26 @@ public class RepresentativeGenomeSelector
             return new OncologyGroupRepresentativeSelection(oncologyGroup, OncologyGroupOutcome.NO_CANDIDATES, List.of(), rejected);
         }
         // Note that only groups with enough read coverage reach here.
-        // Contigs with only origin clipped reads drop out.
+        // Virus genomes with only origin clipped reads drop out.
 
         int groupReads = requireNonNull(groupReadCounts.get(oncologyGroup));
 
-        List<VirusGenome> contigs = candidates.stream().map(GenomeSupport::genome).toList();
-        Set<VirusGenome> comparable = comparableContigs(candidates);
-        Map<VirusGenome, Set<VirusGenome>> challenges = challenges(contigs, margins, groupReads);
+        List<VirusGenome> genomes = candidates.stream().map(GenomeSupport::genome).toList();
+        Set<VirusGenome> comparable = comparableGenomes(candidates);
+        Map<VirusGenome, Set<VirusGenome>> challenges = challenges(genomes, margins, groupReads);
         Map<VirusGenome, Set<VirusGenome>> challengedBy = invertChallengesMap(challenges);
 
-        // A low-abundance contig contesting an abundant one is a possible hidden strain, and blocks any verdict.
-        Set<VirusGenome> minorChallengers = contigs.stream()
-                .filter(contig -> !comparable.contains(contig))
-                .filter(contig -> !disjoint(challenges.get(contig), comparable))
+        // A low-abundance virus genome contesting an abundant one is a possible hidden strain, and blocks any verdict.
+        Set<VirusGenome> minorChallengers = genomes.stream()
+                .filter(genome -> !comparable.contains(genome))
+                .filter(genome -> !disjoint(challenges.get(genome), comparable))
                 .collect(toSet());
 
-        // Comparable contigs no comparable peer challenges. In candidate order, so the first is the best supported.
-        List<VirusGenome> leaders = contigs.stream()
+        // Comparable virus genomes no comparable peer challenges. In candidate order, so the first is the best
+        // supported.
+        List<VirusGenome> leaders = genomes.stream()
                 .filter(comparable::contains)
-                .filter(contig -> disjoint(challengedBy.get(contig), comparable))
+                .filter(genome -> disjoint(challengedBy.get(genome), comparable))
                 .toList();
 
         boolean resolved = minorChallengers.isEmpty() && !leaders.isEmpty();
@@ -84,7 +86,7 @@ public class RepresentativeGenomeSelector
                     return new RepresentativeGenomeCandidate(
                             candidate, index + 1, comparable.contains(candidate.genome()), challenges.get(candidate.genome()),
                             challengedBy.get(candidate.genome()),
-                            decideContigRole(candidate.genome(), comparable, minorChallengers, leaders, resolved));
+                            decideGenomeRole(candidate.genome(), comparable, minorChallengers, leaders, resolved));
                 })
                 .toList();
 
@@ -92,15 +94,15 @@ public class RepresentativeGenomeSelector
                 oncologyGroup, decideOncologyGroupOutcome(results, comparable, challenges), results, rejected);
     }
 
-    private static GenomeRole decideContigRole(
-            VirusGenome contig, Set<VirusGenome> comparable, Set<VirusGenome> minorChallengers, List<VirusGenome> leaders,
+    private static GenomeRole decideGenomeRole(
+            VirusGenome genome, Set<VirusGenome> comparable, Set<VirusGenome> minorChallengers, List<VirusGenome> leaders,
             boolean resolved)
     {
-        if(!comparable.contains(contig))
+        if(!comparable.contains(genome))
         {
-            return minorChallengers.contains(contig) ? GenomeRole.MINOR_CHALLENGER : GenomeRole.MINOR;
+            return minorChallengers.contains(genome) ? GenomeRole.MINOR_CHALLENGER : GenomeRole.MINOR;
         }
-        else if(!leaders.contains(contig))
+        else if(!leaders.contains(genome))
         {
             return GenomeRole.SECONDARY;
         }
@@ -111,7 +113,7 @@ public class RepresentativeGenomeSelector
         else
         {
             // The best supported leader is crowned, the rest being indistinguishable from it bar the vote tie-break.
-            return contig.equals(leaders.get(0)) ? GenomeRole.REPRESENTATIVE : GenomeRole.REPRESENTATIVE_TWIN;
+            return genome.equals(leaders.get(0)) ? GenomeRole.REPRESENTATIVE : GenomeRole.REPRESENTATIVE_TWIN;
         }
     }
 
@@ -148,12 +150,12 @@ public class RepresentativeGenomeSelector
         return candidates.stream().anyMatch(candidate -> candidate.role() == role);
     }
 
-    private static Set<VirusGenome> comparableContigs(List<GenomeSupport> candidates)
+    private static Set<VirusGenome> comparableGenomes(List<GenomeSupport> candidates)
     {
         double topVotes = candidates.get(0).readVotes();
         if(topVotes <= 0)
         {
-            throw new IllegalStateException("Candidate contig has no read votes: " + candidates.get(0).genome());
+            throw new IllegalStateException("Candidate virus genome has no read votes: " + candidates.get(0).genome());
         }
 
         return candidates.stream()
@@ -162,11 +164,11 @@ public class RepresentativeGenomeSelector
                 .collect(toSet());
     }
 
-    // Subject contig -> the opponents it challenges.
-    private static Map<VirusGenome, Set<VirusGenome>> challenges(List<VirusGenome> contigs, PairwiseMargins margins, int groupReads)
+    // Subject virus genome -> the opponents it challenges.
+    private static Map<VirusGenome, Set<VirusGenome>> challenges(List<VirusGenome> genomes, PairwiseMargins margins, int groupReads)
     {
-        return contigs.stream().collect(toMap(
-                subject -> subject, subject -> contigs.stream()
+        return genomes.stream().collect(toMap(
+                subject -> subject, subject -> genomes.stream()
                         .filter(opponent -> !opponent.equals(subject))
                         .filter(opponent ->
                                 margins.readsWinningBy(subject, opponent, REPRESENTATIVE_CHALLENGE_MARGIN_MIN) / (double) groupReads
@@ -177,7 +179,7 @@ public class RepresentativeGenomeSelector
     private static Map<VirusGenome, Set<VirusGenome>> invertChallengesMap(Map<VirusGenome, Set<VirusGenome>> challenges)
     {
         Map<VirusGenome, Set<VirusGenome>> challengedBy = new HashMap<>();
-        challenges.keySet().forEach(contig -> challengedBy.put(contig, new HashSet<>()));
+        challenges.keySet().forEach(genome -> challengedBy.put(genome, new HashSet<>()));
         challenges.forEach((subject, opponents) -> opponents.forEach(opponent -> challengedBy.get(opponent).add(subject)));
         return challengedBy;
     }

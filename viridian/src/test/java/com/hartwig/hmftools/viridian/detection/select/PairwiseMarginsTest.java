@@ -26,7 +26,7 @@ public class PairwiseMarginsTest
     private static final VirusGenome H1 = new VirusGenome("h1", LENGTH, "Virus H", GROUP_H);
 
     @Test
-    public void testFromPairsContigsWithinGroupByWinningMargin()
+    public void testFromPairsGenomesWithinGroupByWinningMargin()
     {
         List<ViralReadAlignment> alignments = List.of(
                 alignment("r1", V1, 2),
@@ -55,9 +55,9 @@ public class PairwiseMarginsTest
         assertEquals(0, margins.sharedReads(V1, H1));
     }
 
-    private static ViralReadAlignment alignment(String readName, VirusGenome contig, int divergence)
+    private static ViralReadAlignment alignment(String readName, VirusGenome genome, int divergence)
     {
         return new ViralReadAlignment(
-                ReadId.parse(readName), contig, 1, LENGTH, LENGTH + "M", 0, 0, 100, divergence, List.of(new AlignedInterval(1, LENGTH)));
+                ReadId.parse(readName), genome, 1, LENGTH, LENGTH + "M", 0, 0, 100, divergence, List.of(new AlignedInterval(1, LENGTH)));
     }
 }

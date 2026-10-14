@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.viridian.detection.select;
 
-// Coarse outcome of representative contig selection for an oncology group.
+// Coarse outcome of representative genome selection for an oncology group.
 public enum OncologyGroupResolution
 {
     // Nothing passed the support filter, so no representative was sought.

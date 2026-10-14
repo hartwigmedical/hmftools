@@ -14,9 +14,9 @@ import com.hartwig.hmftools.viridian.detection.common.ReadId;
 import com.hartwig.hmftools.viridian.reference.OncologyGroup;
 import com.hartwig.hmftools.viridian.reference.VirusGenome;
 
-// Per ordered within-group contig pair, how decisively the subject fits shared reads better than the opponent.
+// Per ordered within-group virus genome pair, how decisively the subject fits shared reads better than the opponent.
 // Quantifies the distribution of positive winning alignment margins and the read count.
-// This is a key input to the representative contig selection scheme, used to determine if there is significant support
+// This is a key input to the representative selection scheme, used to determine if there is significant support
 // for a rival virus strain.
 public class PairwiseMargins
 {
@@ -54,7 +54,7 @@ public class PairwiseMargins
         }
     }
 
-    // Reads aligned to both contigs (regardless of which one they favour).
+    // Reads aligned to both virus genomes (regardless of which one they favour).
     public int sharedReads(VirusGenome subject, VirusGenome opponent)
     {
         return mSharedReads.getOrDefault(new GenomePair(subject, opponent), 0);
@@ -66,20 +66,20 @@ public class PairwiseMargins
     }
 
     // Considers one read at a time.
-    // Pairs up the contigs it aligns to within each oncology group.
+    // Pairs up the virus genomes it aligns to within each oncology group.
     // For each ordered pair, records that they share the read, and the subject's winning margin over the opponent (if any).
     private static void accumulateRead(
             Map<VirusGenome, ViralReadAlignment> readAlignments,
             Map<GenomePair, NavigableMap<Integer, Integer>> marginCounts, Map<GenomePair, Integer> sharedReads)
     {
-        Map<OncologyGroup, List<VirusGenome>> contigsByOncologyGroup = readAlignments.keySet().stream()
+        Map<OncologyGroup, List<VirusGenome>> genomesByOncologyGroup = readAlignments.keySet().stream()
                 .collect(groupingBy(VirusGenome::oncologyGroup));
 
-        for(List<VirusGenome> oncologyGroupContigs : contigsByOncologyGroup.values())
+        for(List<VirusGenome> oncologyGroupGenomes : genomesByOncologyGroup.values())
         {
-            for(VirusGenome subject : oncologyGroupContigs)
+            for(VirusGenome subject : oncologyGroupGenomes)
             {
-                for(VirusGenome opponent : oncologyGroupContigs)
+                for(VirusGenome opponent : oncologyGroupGenomes)
                 {
                     if(!subject.equals(opponent))
                     {
