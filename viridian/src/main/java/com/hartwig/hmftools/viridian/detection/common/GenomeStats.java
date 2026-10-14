@@ -4,17 +4,17 @@ import com.hartwig.hmftools.viridian.reference.VirusGenome;
 
 import org.jetbrains.annotations.Nullable;
 
-// Per-contig alignment statistics.
+// Per-virus-genome alignment statistics.
 // Used in two contexts:
-//   1. All alignments to all contigs (BWA-MEM -a mode).
-//   2. Alignments to just the best contig (after the representative contig selection).
+//   1. All alignments to all virus genomes (BWA-MEM -a mode).
+//   2. Alignments to just the best genome (after representative selection).
 public record GenomeStats(
         VirusGenome genome,
-        // Reads with an alignment to this contig.
+        // Reads with an alignment to this virus genome.
         int readCount,
-        // Reads with an alignment dropped because it clipped over the contig start/end (circular-genome artifact).
+        // Reads with an alignment dropped because they clipped over the virus genome start/end (circular-genome artifact).
         int originClippedReads,
-        // Contig positions aligned by at least 1 alignment.
+        // Virus genome positions aligned by at least 1 alignment.
         int coveredBases,
         // Note uncovered bases count as depth=0.
         SummaryStats depth,

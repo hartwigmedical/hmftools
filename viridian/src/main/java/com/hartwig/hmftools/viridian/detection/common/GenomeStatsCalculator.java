@@ -14,28 +14,29 @@ import com.hartwig.hmftools.viridian.detection.align.AlignedInterval;
 import com.hartwig.hmftools.viridian.detection.align.ViralReadAlignment;
 import com.hartwig.hmftools.viridian.reference.VirusGenome;
 
-// Statistics for every contig with an alignment, counting each read once by its best alignment there.
+// Statistics for every virus genome with an alignment, counting each read once by its best alignment there.
 public class GenomeStatsCalculator
 {
     public static Map<VirusGenome, GenomeStats> calculate(
-            Map<VirusGenome, Map<ReadId, ViralReadAlignment>> alignmentsByContig,
+            Map<VirusGenome, Map<ReadId, ViralReadAlignment>> alignmentsByGenome,
             Map<VirusGenome, Integer> originClippedReads)
     {
-        // A contig whose every alignment straddled the origin retains no read, but the drop is still worth reporting.
-        return Stream.concat(alignmentsByContig.keySet().stream(), originClippedReads.keySet().stream())
+        // A virus genome whose every alignment straddled the origin retains no read, but the drop is still worth
+        // reporting.
+        return Stream.concat(alignmentsByGenome.keySet().stream(), originClippedReads.keySet().stream())
                 .distinct()
                 .collect(toMap(
                         identity(),
-                        contig -> createContigStats(
-                                contig,
-                                alignmentsByContig.getOrDefault(contig, Map.of()).values(),
-                                originClippedReads.getOrDefault(contig, 0))));
+                        genome -> createGenomeStats(
+                                genome,
+                                alignmentsByGenome.getOrDefault(genome, Map.of()).values(),
+                                originClippedReads.getOrDefault(genome, 0))));
     }
 
-    private static GenomeStats createContigStats(
-            VirusGenome contig, Collection<ViralReadAlignment> alignments, int originClippedReads)
+    private static GenomeStats createGenomeStats(
+            VirusGenome genome, Collection<ViralReadAlignment> alignments, int originClippedReads)
     {
-        int[] depth = calculateDepth(contig.length(), alignments);
+        int[] depth = calculateDepth(genome.length(), alignments);
         int coveredBases = (int) Arrays.stream(depth).filter(baseDepth -> baseDepth > 0).count();
 
         // Without retained reads there is no distribution to summarise, unlike depth which is zero everywhere.
@@ -43,18 +44,18 @@ public class GenomeStatsCalculator
                 ? null : SummaryStats.from(alignments.stream().mapToInt(ViralReadAlignment::alignerScore).toArray());
 
         return new GenomeStats(
-                contig, alignments.size(), originClippedReads, coveredBases, SummaryStats.from(depth), alignerScore);
+                genome, alignments.size(), originClippedReads, coveredBases, SummaryStats.from(depth), alignerScore);
     }
 
-    private static int[] calculateDepth(int contigLength, Collection<ViralReadAlignment> alignments)
+    private static int[] calculateDepth(int genomeLength, Collection<ViralReadAlignment> alignments)
     {
-        int[] depth = new int[contigLength];
+        int[] depth = new int[genomeLength];
         for(ViralReadAlignment alignment : alignments)
         {
             for(AlignedInterval block : alignment.alignedIntervals())
             {
                 int start = max(0, block.referenceStart() - 1);   // intervals are 1-based
-                int end = min(contigLength, block.referenceStart() - 1 + block.length());
+                int end = min(genomeLength, block.referenceStart() - 1 + block.length());
                 for(int position = start; position < end; ++position)
                 {
                     ++depth[position];

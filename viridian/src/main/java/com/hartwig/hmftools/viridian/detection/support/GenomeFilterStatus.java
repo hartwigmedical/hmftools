@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.viridian.detection.support;
 
-// Filter status of a virus genome contig, derived from read support.
+// Filter status of a virus genome, derived from read support.
 public enum GenomeFilterStatus
 {
     // Cleared both filters.
@@ -8,6 +8,6 @@ public enum GenomeFilterStatus
     // Not enough coverage.
     LOW_COVERAGE,
     // Passed coverage but not enough read votes.
-    // Can occur if marginally similar to another contig, but that other contig gets much better alignments.
+    // Can occur if marginally similar to another genome, but that other genome gets much better alignments.
     LOW_VOTE_DENSITY
 }

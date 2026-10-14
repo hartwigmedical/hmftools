@@ -11,16 +11,16 @@ import java.util.Map;
 import com.hartwig.hmftools.viridian.detection.common.GenomeStats;
 import com.hartwig.hmftools.viridian.reference.VirusGenome;
 
-// Determines whether a contig carries enough evidence to be a candidate virus genome.
+// Determines whether a virus genome carries enough evidence to be a candidate virus genome.
 public class GenomeSupportFilter
 {
     public static Map<VirusGenome, GenomeFilterStatus> statuses(
-            Map<VirusGenome, GenomeStats> contigStats, Map<VirusGenome, Double> readVotes, double meanReadLength)
+            Map<VirusGenome, GenomeStats> genomeStats, Map<VirusGenome, Double> readVotes, double meanReadLength)
     {
-        boolean groupReachesCoverageMin = contigStats.values().stream()
+        boolean groupReachesCoverageMin = genomeStats.values().stream()
                 .anyMatch(stats -> stats.coverageFraction() >= VIRUS_GENOME_COVERAGE_MIN);
 
-        return contigStats.entrySet().stream().collect(toMap(
+        return genomeStats.entrySet().stream().collect(toMap(
                 Map.Entry::getKey,
                 entry -> status(
                         entry.getValue(), readVotes.getOrDefault(entry.getKey(), 0.0), groupReachesCoverageMin,
@@ -30,8 +30,8 @@ public class GenomeSupportFilter
     private static GenomeFilterStatus status(
             GenomeStats stats, double readVotes, boolean groupReachesCoverageMin, double meanReadLength)
     {
-        // Once some contig reaches the coverage minimum, its siblings are kept down to a slightly lower coverage, so a
-        // near-identical sibling straddling the cutoff is not harshly lost.
+        // Once some virus genome reaches the coverage minimum, its siblings are kept down to a slightly lower
+        // coverage, so a near-identical sibling straddling the cutoff is not harshly lost.
         if(!groupReachesCoverageMin || stats.coverageFraction() < VIRUS_GENOME_COVERAGE_MIN_LOWER)
         {
             return GenomeFilterStatus.LOW_COVERAGE;
@@ -46,11 +46,11 @@ public class GenomeSupportFilter
         }
     }
 
-    // Enough votes to have covered the minimum coverage fraction of the contig at the required depth.
-    // Drops contigs which are similar to other contigs and so get coverage, but the reads decisively prefer the other
-    // contig.
-    private static double voteFloor(VirusGenome contig, double meanReadLength)
+    // Enough votes to have covered the minimum coverage fraction of the virus genome at the required depth.
+    // Drops virus genomes which are similar to others and so get coverage, but the reads decisively prefer the
+    // other genome.
+    private static double voteFloor(VirusGenome genome, double meanReadLength)
     {
-        return VIRUS_GENOME_VOTES_PER_BASE_MIN * VIRUS_GENOME_COVERAGE_MIN * contig.length() / meanReadLength;
+        return VIRUS_GENOME_VOTES_PER_BASE_MIN * VIRUS_GENOME_COVERAGE_MIN * genome.length() / meanReadLength;
     }
 }
