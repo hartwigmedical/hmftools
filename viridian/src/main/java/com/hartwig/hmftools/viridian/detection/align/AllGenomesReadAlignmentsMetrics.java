@@ -17,12 +17,12 @@ public record AllGenomesReadAlignmentsMetrics(
         // Distinct reads with at least one alignment to any contig of the oncology group.
         Map<OncologyGroup, Integer> readCountsByOncologyGroup,
         // Per contig and per read, how many alignments the read had on the contig.
-        Map<VirusGenome, List<Integer>> alignmentCountsByContig
+        Map<VirusGenome, List<Integer>> alignmentCountsByGenome
 )
 {
     public AllGenomesReadAlignmentsMetrics
     {
-        boolean hasAlignments = !originClippedReads.isEmpty() || !alignmentCountsByContig.isEmpty();
+        boolean hasAlignments = !originClippedReads.isEmpty() || !alignmentCountsByGenome.isEmpty();
         if(hasAlignments == (meanReadLength == null))
         {
             throw new IllegalArgumentException(

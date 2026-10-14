@@ -77,7 +77,7 @@ public class RepresentativeReadAssignerTest
         Map<ReadId, ViralReadAlignment> assignments =
                 RepresentativeReadAssigner.assignReads(alignments.byRead(), Set.of(REPRESENTATIVE, TWIN));
 
-        assertEquals(REPRESENTATIVE, assignments.get(ReadId.parse("r1/1")).contig());
+        assertEquals(REPRESENTATIVE, assignments.get(ReadId.parse("r1/1")).genome());
     }
 
     // One read with two alignments to the same contig from the same base, telling apart only by their CIGAR.
@@ -119,7 +119,7 @@ public class RepresentativeReadAssignerTest
             {
                 SAMRecord record = new SAMRecord(header);
                 record.setReadName(alignment.readId().toString());
-                record.setReferenceName(alignment.contig().name());
+                record.setReferenceName(alignment.genome().name());
                 record.setAlignmentStart(alignment.alignmentStart());
                 record.setCigarString(alignment.cigar());
                 record.setReadBases(SAMRecord.NULL_SEQUENCE);

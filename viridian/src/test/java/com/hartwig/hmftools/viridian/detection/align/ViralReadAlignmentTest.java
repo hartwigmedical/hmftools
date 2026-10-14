@@ -32,14 +32,14 @@ public class ViralReadAlignmentTest
     private static final int ALIGNMENT_LENGTH = 50;
 
     private static final VirusReference REFERENCE = reference();
-    private static final VirusGenome CONTIG = REFERENCE.contig("v1");
+    private static final VirusGenome CONTIG = REFERENCE.genome("v1");
 
     @Test
     public void testFromExtractsFieldsAndCountsClipsInDivergence()
     {
         ViralReadAlignment alignment = ViralReadAlignment.from(record(30, "40S60M", 60, 1), REFERENCE);
 
-        assertEquals("v1", alignment.contig().name());
+        assertEquals("v1", alignment.genome().name());
         assertEquals(30, alignment.alignmentStart());
         assertEquals(89, alignment.alignmentEnd());
         assertEquals(40, alignment.leftClip());
@@ -55,9 +55,9 @@ public class ViralReadAlignmentTest
     public void testClipsOverContigEndDetectsClipsPastEitherEnd()
     {
         // A clip projecting past a contig boundary straddles the circular origin.
-        assertTrue(ViralReadAlignment.from(record(30, "40S60M", 60, 0), REFERENCE).clipsOverContigEnd());    // left clip projects to -10
-        assertTrue(ViralReadAlignment.from(record(141, "60M40S", 60, 0), REFERENCE).clipsOverContigEnd());   // right clip projects to 240
-        assertFalse(ViralReadAlignment.from(record(100, "40S60M", 60, 0), REFERENCE).clipsOverContigEnd());  // left clip projects to 60
+        assertTrue(ViralReadAlignment.from(record(30, "40S60M", 60, 0), REFERENCE).clipsOverGenomeEnd());    // left clip projects to -10
+        assertTrue(ViralReadAlignment.from(record(141, "60M40S", 60, 0), REFERENCE).clipsOverGenomeEnd());   // right clip projects to 240
+        assertFalse(ViralReadAlignment.from(record(100, "40S60M", 60, 0), REFERENCE).clipsOverGenomeEnd());  // left clip projects to 60
     }
 
     @Test

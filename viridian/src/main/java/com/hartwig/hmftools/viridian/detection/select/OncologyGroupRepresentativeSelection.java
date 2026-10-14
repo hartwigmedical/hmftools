@@ -28,7 +28,7 @@ public record OncologyGroupRepresentativeSelection(
     {
         return candidates.stream()
                 .filter(candidate -> candidate.role() == GenomeRole.REPRESENTATIVE)
-                .map(RepresentativeGenomeCandidate::contig)
+                .map(RepresentativeGenomeCandidate::genome)
                 .findFirst()
                 .orElse(null);
     }

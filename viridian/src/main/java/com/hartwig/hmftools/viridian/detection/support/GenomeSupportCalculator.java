@@ -35,10 +35,10 @@ public class GenomeSupportCalculator
         AllGenomesReadAlignmentsMetrics metrics = alignments.metrics();
 
         return contigStats.values().stream()
-                .collect(groupingBy(stats -> stats.contig().oncologyGroup()))
+                .collect(groupingBy(stats -> stats.genome().oncologyGroup()))
                 .values().stream()
                 .flatMap(group -> createGroupContigSupports(
-                        group, readVotes, metrics.alignmentCountsByContig(),
+                        group, readVotes, metrics.alignmentCountsByGenome(),
                         // Contig stats exist only for contigs with alignments, so the mean read length is present.
                         requireNonNull(metrics.meanReadLength())).stream())
                 .toList();
@@ -72,13 +72,13 @@ public class GenomeSupportCalculator
             List<GenomeStats> group, Map<VirusGenome, Double> readVotes, Map<VirusGenome, List<Integer>> alignmentCounts,
             double meanReadLength)
     {
-        Map<VirusGenome, GenomeStats> groupStats = group.stream().collect(toMap(GenomeStats::contig, stats -> stats));
+        Map<VirusGenome, GenomeStats> groupStats = group.stream().collect(toMap(GenomeStats::genome, stats -> stats));
         Map<VirusGenome, GenomeFilterStatus> filterStatuses = GenomeSupportFilter.statuses(groupStats, readVotes, meanReadLength);
 
         return group.stream()
                 .map(stats -> createContigSupport(
-                        stats, filterStatuses.get(stats.contig()), readVotes.getOrDefault(stats.contig(), 0.0),
-                        alignmentCounts.getOrDefault(stats.contig(), List.of())))
+                        stats, filterStatuses.get(stats.genome()), readVotes.getOrDefault(stats.genome(), 0.0),
+                        alignmentCounts.getOrDefault(stats.genome(), List.of())))
                 .toList();
     }
 

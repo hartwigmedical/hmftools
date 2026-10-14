@@ -18,7 +18,7 @@ import htsjdk.samtools.SAMRecord;
 // One alignment of a read to a virus genome, with just the data required for our analysis, in a nice format.
 public record ViralReadAlignment(
         ReadId readId,
-        VirusGenome contig,
+        VirusGenome genome,
         int alignmentStart,
         int alignmentEnd,
         String cigar,
@@ -74,16 +74,16 @@ public record ViralReadAlignment(
         int alignerScore = requiredTag(record, ALIGNMENT_SCORE_ATTRIBUTE, "alignment score");
 
         return new ViralReadAlignment(
-                ReadId.parse(record.getReadName()), reference.contig(record.getReferenceName()), record.getAlignmentStart(),
+                ReadId.parse(record.getReadName()), reference.genome(record.getReferenceName()), record.getAlignmentStart(),
                 record.getAlignmentEnd(), record.getCigarString(), leftClip, rightClip, alignerScore, editDistance + leftClip + rightClip,
                 intervals);
     }
 
     // The clipped bases project past a contig end, so the read straddles the circular genome's linearization origin:
     // those bases wrap to the other end and cannot align linearly. An artifact, not real divergence.
-    public boolean clipsOverContigEnd()
+    public boolean clipsOverGenomeEnd()
     {
-        int contigLength = contig.length();
+        int contigLength = genome.length();
         return alignmentStart - leftClip < 1 - VIRUS_GENOME_ORIGIN_CLIP_TOLERANCE
                 || alignmentEnd + rightClip > contigLength + VIRUS_GENOME_ORIGIN_CLIP_TOLERANCE;
     }

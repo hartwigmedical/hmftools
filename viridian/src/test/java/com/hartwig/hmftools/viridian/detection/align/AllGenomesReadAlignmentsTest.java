@@ -81,10 +81,10 @@ public class AllGenomesReadAlignmentsTest
                         divergentAlignment("r2", V1, 1)),
                 150.0);
 
-        Map<ReadId, ViralReadAlignment> contigAlignments = allAlignments.store().byContig().get(V1);
+        Map<ReadId, ViralReadAlignment> contigAlignments = allAlignments.store().byGenome().get(V1);
         assertEquals(2, contigAlignments.size());
         assertEquals(4, contigAlignments.get(ReadId.parse("r1")).divergence());
-        assertEquals(Map.of(V1, List.of(2, 1)), allAlignments.metrics().alignmentCountsByContig());
+        assertEquals(Map.of(V1, List.of(2, 1)), allAlignments.metrics().alignmentCountsByGenome());
     }
 
     // A sample with no viral reads has no read length to measure; this used to fail the whole run.

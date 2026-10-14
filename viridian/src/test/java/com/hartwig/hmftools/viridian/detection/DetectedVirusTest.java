@@ -49,7 +49,7 @@ public class DetectedVirusTest
         assertEquals(1, detections.size());
         assertEquals(GROUP_A, detections.get(0).oncologyGroup());
         assertEquals(OncologyGroupResolution.RESOLVED, detections.get(0).resolution());
-        assertEquals(stats, detections.get(0).representativeContigStats());
+        assertEquals(stats, detections.get(0).representativeGenomeStats());
     }
 
     // The group is detected either way: which of its near-identical strains leads is a separate question, and naming
@@ -63,11 +63,11 @@ public class DetectedVirusTest
         assertEquals(1, detections.size());
         DetectedVirus detection = detections.get(0);
         assertEquals(OncologyGroupResolution.UNRESOLVED, detection.resolution());
-        assertNull(detection.representativeContigStats());
+        assertNull(detection.representativeGenomeStats());
 
         // Nothing is measured, so these counts are all a reader has to judge the ambiguity by.
         assertEquals(900, detection.groupReadCount());
-        assertEquals(3, detection.alignedContigCount());
+        assertEquals(3, detection.alignedGenomeCount());
         assertEquals(2, detection.candidateCount());
         assertEquals(2, detection.comparableCandidateCount());
     }

@@ -21,13 +21,13 @@ public record DetectedVirus(
         // Reads aligning to any genome in the group.
         int groupReadCount,
         // Genomes in this group which had any alignments.
-        int alignedContigCount,
+        int alignedGenomeCount,
         // Genomes that passed the support filter.
         int candidateCount,
         // Genomes abundant enough to contest the lead. A measure of how ambiguous the group is.
         int comparableCandidateCount,
         // Null where no representative was resolved.
-        @Nullable GenomeStats representativeContigStats
+        @Nullable GenomeStats representativeGenomeStats
 )
 {
     public DetectedVirus
@@ -36,7 +36,7 @@ public record DetectedVirus(
         {
             throw new IllegalArgumentException("Oncology group is not detected: " + oncologyGroup);
         }
-        if((resolution == OncologyGroupResolution.RESOLVED) == (representativeContigStats == null))
+        if((resolution == OncologyGroupResolution.RESOLVED) == (representativeGenomeStats == null))
         {
             throw new IllegalArgumentException("Representative stats do not match resolution: " + resolution);
         }

@@ -36,7 +36,7 @@ public class GenomeSupportFilter
         {
             return GenomeFilterStatus.LOW_COVERAGE;
         }
-        else if(readVotes < voteFloor(stats.contig(), meanReadLength))
+        else if(readVotes < voteFloor(stats.genome(), meanReadLength))
         {
             return GenomeFilterStatus.LOW_VOTE_DENSITY;
         }

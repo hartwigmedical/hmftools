@@ -34,7 +34,7 @@ public class VirusReference
         mOncologyGroupInfo = oncologyGroupInfo;
     }
 
-    public VirusGenome contig(String name)
+    public VirusGenome genome(String name)
     {
         VirusGenome contig = mContigsByName.get(name);
         if(contig == null)

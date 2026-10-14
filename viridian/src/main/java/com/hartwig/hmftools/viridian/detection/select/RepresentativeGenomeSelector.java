@@ -33,7 +33,7 @@ public class RepresentativeGenomeSelector
             Collection<GenomeSupport> contigSupport, PairwiseMargins margins, Map<OncologyGroup, Integer> groupReadCounts)
     {
         return contigSupport.stream()
-                .collect(groupingBy(support -> support.contig().oncologyGroup()))
+                .collect(groupingBy(support -> support.genome().oncologyGroup()))
                 .entrySet().stream()
                 .map(entry -> selectOncologyGroup(entry.getKey(), entry.getValue(), margins, groupReadCounts))
                 .toList();
@@ -46,7 +46,7 @@ public class RepresentativeGenomeSelector
         List<GenomeSupport> rejected = groupContigs.stream().filter(support -> !support.isCandidate()).toList();
         List<GenomeSupport> candidates = groupContigs.stream()
                 .filter(GenomeSupport::isCandidate)
-                .sorted(comparingDouble(GenomeSupport::readVotes).reversed().thenComparing(GenomeSupport::contig))
+                .sorted(comparingDouble(GenomeSupport::readVotes).reversed().thenComparing(GenomeSupport::genome))
                 .toList();
 
         if(candidates.isEmpty())
@@ -58,7 +58,7 @@ public class RepresentativeGenomeSelector
 
         int groupReads = requireNonNull(groupReadCounts.get(oncologyGroup));
 
-        List<VirusGenome> contigs = candidates.stream().map(GenomeSupport::contig).toList();
+        List<VirusGenome> contigs = candidates.stream().map(GenomeSupport::genome).toList();
         Set<VirusGenome> comparable = comparableContigs(candidates);
         Map<VirusGenome, Set<VirusGenome>> challenges = challenges(contigs, margins, groupReads);
         Map<VirusGenome, Set<VirusGenome>> challengedBy = invertChallengesMap(challenges);
@@ -82,9 +82,9 @@ public class RepresentativeGenomeSelector
                 {
                     GenomeSupport candidate = candidates.get(index);
                     return new RepresentativeGenomeCandidate(
-                            candidate, index + 1, comparable.contains(candidate.contig()), challenges.get(candidate.contig()),
-                            challengedBy.get(candidate.contig()),
-                            decideContigRole(candidate.contig(), comparable, minorChallengers, leaders, resolved));
+                            candidate, index + 1, comparable.contains(candidate.genome()), challenges.get(candidate.genome()),
+                            challengedBy.get(candidate.genome()),
+                            decideContigRole(candidate.genome(), comparable, minorChallengers, leaders, resolved));
                 })
                 .toList();
 
@@ -153,12 +153,12 @@ public class RepresentativeGenomeSelector
         double topVotes = candidates.get(0).readVotes();
         if(topVotes <= 0)
         {
-            throw new IllegalStateException("Candidate contig has no read votes: " + candidates.get(0).contig());
+            throw new IllegalStateException("Candidate contig has no read votes: " + candidates.get(0).genome());
         }
 
         return candidates.stream()
                 .filter(support -> support.readVotes() >= REPRESENTATIVE_COMPARABLE_VOTE_RATIO * topVotes)
-                .map(GenomeSupport::contig)
+                .map(GenomeSupport::genome)
                 .collect(toSet());
     }
 

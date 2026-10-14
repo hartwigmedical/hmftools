@@ -122,13 +122,13 @@ public class GenomeSupportCalculatorTest
     {
         AllGenomesReadAlignments allAlignments = AllGenomesReadAlignments.from(alignments, MEAN_READ_LENGTH);
         Map<VirusGenome, GenomeStats> contigStats = GenomeStatsCalculator.calculate(
-                allAlignments.store().byContig(), allAlignments.metrics().originClippedReads());
+                allAlignments.store().byGenome(), allAlignments.metrics().originClippedReads());
         return new GenomeSupportCalculator(correctBaseProbability).calculate(allAlignments, contigStats);
     }
 
     private static GenomeSupport get(List<GenomeSupport> stats, VirusGenome contig)
     {
-        return stats.stream().filter(support -> support.contig().equals(contig)).findFirst().orElseThrow();
+        return stats.stream().filter(support -> support.genome().equals(contig)).findFirst().orElseThrow();
     }
 
     // A clean, full-length alignment covering [start, start + length - 1] with no clips.

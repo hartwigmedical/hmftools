@@ -56,7 +56,7 @@ public class ViralInsertAlignerTest
                 alignment(0, 0, 999, 60, "32M", 1));
 
         assertEquals(align(SEQUENCE, ascending), align(SEQUENCE, descending));
-        assertEquals(CONTIG_16, align(SEQUENCE, descending).contig());
+        assertEquals(CONTIG_16, align(SEQUENCE, descending).genome());
     }
 
     // A partly aligned sequence keeps the clip in its cigar, and its length stays that of the whole query, so how much
@@ -89,7 +89,7 @@ public class ViralInsertAlignerTest
         List<ViralInsertAlignment> alignments = aligner.align(List.of(OTHER_SEQUENCE, SEQUENCE));
 
         assertNull(alignments.get(0));
-        assertEquals(CONTIG_16, alignments.get(1).contig());
+        assertEquals(CONTIG_16, alignments.get(1).genome());
     }
 
     private static ViralInsertAlignment align(String sequence, List<BwaMemAlignment> hits)

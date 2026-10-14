@@ -39,14 +39,14 @@ import org.jetbrains.annotations.Nullable;
 
 public class OutputWriter
 {
-    public static void writeContigSupport(String file, List<OncologyGroupRepresentativeSelection> selections)
+    public static void writeGenomeSupport(String file, List<OncologyGroupRepresentativeSelection> selections)
     {
         Map<VirusGenome, Integer> votesRanks = candidateVotesRanks(selections);
         List<ContigSupportRow> rows = selections.stream()
                 .flatMap(OutputWriter::contigSupportRows)
-                .sorted(comparing((ContigSupportRow row) -> row.support().contig().oncologyGroup())
+                .sorted(comparing((ContigSupportRow row) -> row.support().genome().oncologyGroup())
                         .thenComparing(row -> row.support().readVotes(), reverseOrder())
-                        .thenComparing(row -> row.support().contig()))
+                        .thenComparing(row -> row.support().genome()))
                 .toList();
 
         DelimFileWriter.write(
@@ -54,7 +54,7 @@ public class OutputWriter
                 {
                     GenomeSupport support = contigRow.support();
                     GenomeStats stats = support.stats();
-                    VirusGenome contig = support.contig();
+                    VirusGenome contig = support.genome();
 
                     row.set(ContigSupportColumn.contig, contig.name());
                     row.set(ContigSupportColumn.virus_name, contig.virusName());
@@ -179,15 +179,15 @@ public class OutputWriter
                     row.set(DetectedVirusColumn.oncology_group_resolution, detection.resolution().name());
                     row.set(DetectedVirusColumn.oncology_group_outcome, detection.outcome().name());
                     row.set(DetectedVirusColumn.group_read_count, detection.groupReadCount());
-                    row.set(DetectedVirusColumn.aligned_contig_count, detection.alignedContigCount());
+                    row.set(DetectedVirusColumn.aligned_contig_count, detection.alignedGenomeCount());
                     row.set(DetectedVirusColumn.candidate_count, detection.candidateCount());
                     row.set(DetectedVirusColumn.comparable_candidate_count, detection.comparableCandidateCount());
 
                     // Note unset columns are written as null, leaving an unmeasured group's columns blank.
-                    GenomeStats stats = detection.representativeContigStats();
+                    GenomeStats stats = detection.representativeGenomeStats();
                     if(stats != null)
                     {
-                        VirusGenome contig = stats.contig();
+                        VirusGenome contig = stats.genome();
                         row.set(DetectedVirusColumn.representative_contig, contig.name());
                         row.set(DetectedVirusColumn.virus_name, contig.virusName());
                         row.set(DetectedVirusColumn.contig_length, contig.length());
@@ -256,7 +256,7 @@ public class OutputWriter
     {
         return selections.stream()
                 .flatMap(selection -> selection.candidates().stream())
-                .collect(toMap(RepresentativeGenomeCandidate::contig, RepresentativeGenomeCandidate::votesRank));
+                .collect(toMap(RepresentativeGenomeCandidate::genome, RepresentativeGenomeCandidate::votesRank));
     }
 
     // One row per ordered within-oncology-group contig pair: the reads they share, and how many of those fit the subject
@@ -372,7 +372,7 @@ public class OutputWriter
                     ViralInsertAlignment alignment = candidate.alignment();
                     if(alignment != null)
                     {
-                        VirusGenome contig = alignment.contig();
+                        VirusGenome contig = alignment.genome();
                         row.set(IntegrationCandidateColumn.virus_name, contig.virusName());
                         row.set(IntegrationCandidateColumn.oncology_group, contig.oncologyGroup().name());
                         row.set(IntegrationCandidateColumn.virus_contig, contig.name());
@@ -451,7 +451,7 @@ public class OutputWriter
                     GenomeStats stats = report.representativeStats();
                     if(stats != null)
                     {
-                        VirusGenome contig = stats.contig();
+                        VirusGenome contig = stats.genome();
                         row.set(VirusReportColumn.representative_contig, contig.name());
                         row.set(VirusReportColumn.virus_name, contig.virusName());
                         row.set(VirusReportColumn.coverage_fraction, stats.coverageFraction());

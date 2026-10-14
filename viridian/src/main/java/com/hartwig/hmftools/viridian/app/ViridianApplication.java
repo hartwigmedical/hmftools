@@ -117,11 +117,11 @@ public class ViridianApplication
         ViralReadAlignmentStore representativeAlignments =
                 assignReadsToRepresentatives(allContigsReadAlignments.store(), representativeSelections);
 
-        Map<VirusGenome, GenomeStats> representativeContigStats =
+        Map<VirusGenome, GenomeStats> representativeGenomeStats =
                 calculateRepresentativeContigStats(representativeAlignments, allContigsReadAlignments.metrics().originClippedReads());
 
         List<DetectedVirus> detectedViruses = writeDetectedViruses(
-                representativeSelections, representativeContigStats, allContigsReadAlignments.metrics().readCountsByOncologyGroup());
+                representativeSelections, representativeGenomeStats, allContigsReadAlignments.metrics().readCountsByOncologyGroup());
 
         Map<OncologyGroup, Integer> integrationCounts = callHostIntegrations();
 
@@ -200,7 +200,7 @@ public class ViridianApplication
     {
         LOGGER.info("Computing per-contig support");
         Map<VirusGenome, GenomeStats> contigStats = GenomeStatsCalculator.calculate(
-                alignments.store().byContig(), alignments.metrics().originClippedReads());
+                alignments.store().byGenome(), alignments.metrics().originClippedReads());
         return new GenomeSupportCalculator(READ_VOTE_CORRECT_BASE_PROBABILITY).calculate(alignments, contigStats);
     }
 
@@ -215,7 +215,7 @@ public class ViridianApplication
                 viralContigSupports, pairwiseMargins, alignments.metrics().readCountsByOncologyGroup());
 
         LOGGER.info("Writing contig info output");
-        OutputWriter.writeContigSupport(outputFile(CONTIG_SUPPORT_TSV_SUFFIX), selections);
+        OutputWriter.writeGenomeSupport(outputFile(CONTIG_SUPPORT_TSV_SUFFIX), selections);
         if(mConfig.verboseOutput())
         {
             LOGGER.info("Writing pairwise margins output");
@@ -249,19 +249,19 @@ public class ViridianApplication
         LOGGER.info("Computing representative contig stats");
         // Origin clipped reads where dropped previously, but the information is useful to carry through for visualisation.
         Map<VirusGenome, Integer> originClippedReads = allOriginClippedReads.entrySet().stream()
-                .filter(entry -> representativeAlignments.byContig().containsKey(entry.getKey()))
+                .filter(entry -> representativeAlignments.byGenome().containsKey(entry.getKey()))
                 .collect(toMap(Map.Entry::getKey, Map.Entry::getValue));
         Map<VirusGenome, GenomeStats> contigStats =
-                GenomeStatsCalculator.calculate(representativeAlignments.byContig(), originClippedReads);
+                GenomeStatsCalculator.calculate(representativeAlignments.byGenome(), originClippedReads);
         return contigStats;
     }
 
     private List<DetectedVirus> writeDetectedViruses(
-            List<OncologyGroupRepresentativeSelection> selections, Map<VirusGenome, GenomeStats> representativeContigStats,
+            List<OncologyGroupRepresentativeSelection> selections, Map<VirusGenome, GenomeStats> representativeGenomeStats,
             Map<OncologyGroup, Integer> oncologyGroupReadCounts)
     {
         LOGGER.info("Writing virus detection output");
-        List<DetectedVirus> detections = DetectedVirus.from(selections, representativeContigStats, oncologyGroupReadCounts);
+        List<DetectedVirus> detections = DetectedVirus.from(selections, representativeGenomeStats, oncologyGroupReadCounts);
         OutputWriter.writeDetectedViruses(outputFile(VIRUS_DETECTION_TSV_SUFFIX), detections);
         return detections;
     }
@@ -284,7 +284,7 @@ public class ViridianApplication
         // Take the integration candidates with plausible alignments. Only the counts are needed for reporting.
         return integrationCandidates.stream()
                 .filter(IntegrationCandidate::isIntegration)
-                .collect(groupingBy(i -> i.alignment().contig().oncologyGroup(), HashMap::new, summingInt(i -> 1)));
+                .collect(groupingBy(i -> i.alignment().genome().oncologyGroup(), HashMap::new, summingInt(i -> 1)));
     }
 
     private List<IntegrationCandidate> alignCandidateSvs(List<CandidateSv> candidateSvs)

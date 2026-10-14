@@ -18,8 +18,8 @@ public record RepresentativeGenomeCandidate(
         GenomeRole role
 )
 {
-    public VirusGenome contig()
+    public VirusGenome genome()
     {
-        return support.contig();
+        return support.genome();
     }
 }

@@ -28,8 +28,8 @@ public class ViralReadAlignmentStoreTest
 
         assertEquals(2, alignments.readCount());
 
-        assertEquals(Set.of(ReadId.parse("r1"), ReadId.parse("r2")), alignments.byContig().get(V1).keySet());
-        assertEquals(Set.of(ReadId.parse("r1")), alignments.byContig().get(V2).keySet());
+        assertEquals(Set.of(ReadId.parse("r1"), ReadId.parse("r2")), alignments.byGenome().get(V1).keySet());
+        assertEquals(Set.of(ReadId.parse("r1")), alignments.byGenome().get(V2).keySet());
 
         assertEquals(Set.of(V1, V2), alignments.byRead().get(ReadId.parse("r1")).keySet());
         assertEquals(Set.of(V1), alignments.byRead().get(ReadId.parse("r2")).keySet());

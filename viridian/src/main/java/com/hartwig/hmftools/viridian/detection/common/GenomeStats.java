@@ -9,7 +9,7 @@ import org.jetbrains.annotations.Nullable;
 //   1. All alignments to all contigs (BWA-MEM -a mode).
 //   2. Alignments to just the best contig (after the representative contig selection).
 public record GenomeStats(
-        VirusGenome contig,
+        VirusGenome genome,
         // Reads with an alignment to this contig.
         int readCount,
         // Reads with an alignment dropped because it clipped over the contig start/end (circular-genome artifact).
@@ -31,7 +31,7 @@ public record GenomeStats(
         {
             throw new IllegalArgumentException("Invalid originClippedReads: " + originClippedReads);
         }
-        if(coveredBases < 0 || coveredBases > contig.length())
+        if(coveredBases < 0 || coveredBases > genome.length())
         {
             throw new IllegalArgumentException("Invalid coveredBases: " + coveredBases);
         }
@@ -39,6 +39,6 @@ public record GenomeStats(
 
     public double coverageFraction()
     {
-        return (double) coveredBases / contig.length();
+        return (double) coveredBases / genome.length();
     }
 }

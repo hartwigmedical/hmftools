@@ -18,9 +18,9 @@ public record GenomeSupport(
         // Read attribution taking into account alignment edit distance (divergence).
         double readVotes)
 {
-    public VirusGenome contig()
+    public VirusGenome genome()
     {
-        return stats.contig();
+        return stats.genome();
     }
 
     public boolean isCandidate()

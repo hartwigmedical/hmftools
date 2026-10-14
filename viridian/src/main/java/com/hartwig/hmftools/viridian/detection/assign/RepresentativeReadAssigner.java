@@ -51,7 +51,7 @@ public class RepresentativeReadAssigner
         // Tie-break by contig for determinism.
         // But not expecting that a read will support multiple representative contigs.
         Comparator<ViralReadAlignment> alignmentComparator =
-                ViralReadAlignment.BEST_FIT_FIRST.thenComparing(ViralReadAlignment::contig);
+                ViralReadAlignment.BEST_FIT_FIRST.thenComparing(ViralReadAlignment::genome);
 
         Map<ReadId, ViralReadAlignment> assignmentsByRead = new LinkedHashMap<>();
         int multiRepReads = 0;
@@ -139,7 +139,7 @@ public class RepresentativeReadAssigner
     private static boolean isSameAlignment(ViralReadAlignment assigned, SAMRecord record)
     {
         return assigned.alignmentStart() == record.getAlignmentStart()
-                && assigned.contig().name().equals(record.getReferenceName())
+                && assigned.genome().name().equals(record.getReferenceName())
                 // Note CIGAR is needed too because occasionally there are multiple plausible alignments at the same ref position.
                 && assigned.cigar().equals(record.getCigarString());
     }

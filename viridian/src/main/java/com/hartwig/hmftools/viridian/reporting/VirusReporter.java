@@ -45,7 +45,7 @@ public class VirusReporter
             OncologyGroup group, @Nullable DetectedVirus detected, int integrations,
             OncologyGroupInfo info, @Nullable Double expectedViralDepthPerCopy)
     {
-        GenomeStats representativeStats = detected != null ? detected.representativeContigStats() : null;
+        GenomeStats representativeStats = detected != null ? detected.representativeGenomeStats() : null;
 
         // Null when it couldn't be calculated from the Purple data, in which case the virus can only be reported on integrations.
         Double copiesPerTumorCell = representativeStats != null && expectedViralDepthPerCopy != null

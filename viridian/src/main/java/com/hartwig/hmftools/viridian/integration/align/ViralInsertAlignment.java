@@ -11,7 +11,7 @@ import htsjdk.samtools.CigarElement;
 
 // Alignment of an integration candidate SV's insert sequence onto a virus genome.
 public record ViralInsertAlignment(
-        VirusGenome contig,
+        VirusGenome genome,
         int position,
         Orientation orientation,
         Cigar cigar,

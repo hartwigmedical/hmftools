@@ -23,18 +23,18 @@ public class ViralReadAlignmentStore
         for(ViralReadAlignment alignment : alignments)
         {
             ViralReadAlignment replaced = mByContig
-                    .computeIfAbsent(alignment.contig(), k -> new LinkedHashMap<>())
+                    .computeIfAbsent(alignment.genome(), k -> new LinkedHashMap<>())
                     .put(alignment.readId(), alignment);
             if(replaced != null)
             {
-                throw new IllegalArgumentException("Repeat alignment of a read on contig: " + alignment.contig().name());
+                throw new IllegalArgumentException("Repeat alignment of a read on contig: " + alignment.genome().name());
             }
-            mByRead.computeIfAbsent(alignment.readId(), k -> new HashMap<>()).put(alignment.contig(), alignment);
+            mByRead.computeIfAbsent(alignment.readId(), k -> new HashMap<>()).put(alignment.genome(), alignment);
         }
     }
 
     // Contig -> read -> read's best alignment on contig.
-    public Map<VirusGenome, Map<ReadId, ViralReadAlignment>> byContig()
+    public Map<VirusGenome, Map<ReadId, ViralReadAlignment>> byGenome()
     {
         return mByContig;
     }

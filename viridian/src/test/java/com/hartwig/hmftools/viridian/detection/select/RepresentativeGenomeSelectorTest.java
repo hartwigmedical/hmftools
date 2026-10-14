@@ -198,7 +198,7 @@ public class RepresentativeGenomeSelectorTest
     {
         Map<OncologyGroup, Integer> readCounts = new HashMap<>();
         support.forEach(contig -> readCounts.merge(
-                contig.contig().oncologyGroup(), (int) Math.round(contig.readVotes()), Integer::sum));
+                contig.genome().oncologyGroup(), (int) Math.round(contig.readVotes()), Integer::sum));
         return RepresentativeGenomeSelector.select(support, margins, readCounts);
     }
 
@@ -206,7 +206,7 @@ public class RepresentativeGenomeSelectorTest
             List<GenomeSupport> support, PairwiseMargins margins, int groupReads)
     {
         Map<OncologyGroup, Integer> readCounts = support.stream()
-                .map(contig -> contig.contig().oncologyGroup())
+                .map(contig -> contig.genome().oncologyGroup())
                 .distinct()
                 .collect(toMap(group -> group, group -> groupReads));
         return RepresentativeGenomeSelector.select(support, margins, readCounts);
@@ -257,7 +257,7 @@ public class RepresentativeGenomeSelectorTest
     {
         return selections.stream()
                 .flatMap(selection -> selection.candidates().stream())
-                .filter(candidate -> candidate.contig().equals(contig))
+                .filter(candidate -> candidate.genome().equals(contig))
                 .findFirst()
                 .orElseThrow();
     }
@@ -269,7 +269,7 @@ public class RepresentativeGenomeSelectorTest
 
     private static List<VirusGenome> contigs(List<GenomeSupport> support)
     {
-        return support.stream().map(GenomeSupport::contig).toList();
+        return support.stream().map(GenomeSupport::genome).toList();
     }
 
     private static List<GenomeSupport> support(GenomeSupport... support)

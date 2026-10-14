@@ -39,31 +39,31 @@ public record AllGenomesReadAlignments(
 
         for(ViralReadAlignment alignment : alignments)
         {
-            if(alignment.clipsOverContigEnd())
+            if(alignment.clipsOverGenomeEnd())
             {
                 originClippedReadsByContig
-                        .computeIfAbsent(alignment.contig(), k -> new HashSet<>())
+                        .computeIfAbsent(alignment.genome(), k -> new HashSet<>())
                         .add(alignment.readId());
             }
             else
             {
                 alignmentsByReadContig
-                        .computeIfAbsent(new ReadContig(alignment.readId(), alignment.contig()), k -> new ArrayList<>())
+                        .computeIfAbsent(new ReadContig(alignment.readId(), alignment.genome()), k -> new ArrayList<>())
                         .add(alignment);
 
                 readsByOncologyGroup
-                        .computeIfAbsent(alignment.contig().oncologyGroup(), k -> new HashSet<>())
+                        .computeIfAbsent(alignment.genome().oncologyGroup(), k -> new HashSet<>())
                         .add(alignment.readId());
             }
         }
 
         List<ViralReadAlignment> retained = new ArrayList<>();
-        Map<VirusGenome, List<Integer>> alignmentCountsByContig = new HashMap<>();
+        Map<VirusGenome, List<Integer>> alignmentCountsByGenome = new HashMap<>();
 
         alignmentsByReadContig.forEach((readContig, readContigAlignments) ->
         {
             retained.add(readContigAlignments.stream().min(ViralReadAlignment.BEST_FIT_FIRST).orElseThrow());
-            alignmentCountsByContig
+            alignmentCountsByGenome
                     .computeIfAbsent(readContig.contig(), k -> new ArrayList<>())
                     .add(readContigAlignments.size());
         });
@@ -72,7 +72,7 @@ public record AllGenomesReadAlignments(
                 meanReadLength,
                 countReads(originClippedReadsByContig),
                 countReads(readsByOncologyGroup),
-                alignmentCountsByContig);
+                alignmentCountsByGenome);
 
         return new AllGenomesReadAlignments(new ViralReadAlignmentStore(retained), metrics);
     }

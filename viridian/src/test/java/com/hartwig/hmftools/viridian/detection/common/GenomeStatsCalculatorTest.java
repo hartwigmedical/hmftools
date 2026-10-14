@@ -51,7 +51,7 @@ public class GenomeStatsCalculatorTest
     {
         AllGenomesReadAlignments allAlignments = AllGenomesReadAlignments.from(alignments, MEAN_READ_LENGTH);
         return GenomeStatsCalculator.calculate(
-                allAlignments.store().byContig(), allAlignments.metrics().originClippedReads());
+                allAlignments.store().byGenome(), allAlignments.metrics().originClippedReads());
     }
 
     // Clipped bases project past the contig start, so this alignment crosses the circular genome's origin.
