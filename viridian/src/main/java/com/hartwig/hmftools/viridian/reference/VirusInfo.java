@@ -23,7 +23,7 @@ public record VirusInfo(
         {
             for(DelimFileReader.Row row : reader)
             {
-                String contig = row.getString(Columns.ref_contig);
+                String contig = row.getString(Columns.contig_name);
                 if(!contigs.add(contig))
                 {
                     throw new UserInputError("Duplicate contig: " + contig);
@@ -38,7 +38,7 @@ public record VirusInfo(
 
     private enum Columns
     {
-        ref_contig,
+        contig_name,
         virus_name,
         oncology_group
     }

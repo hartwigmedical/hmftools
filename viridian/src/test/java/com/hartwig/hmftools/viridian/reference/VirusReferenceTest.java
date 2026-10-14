@@ -34,7 +34,7 @@ public class VirusReferenceTest
     private static final VirusGenome GENOME_C = new VirusGenome("contigC", 300, "Virus Beta type 2", GROUP_BETA);
 
     private static final String VALID_INFO_TSV = """
-            ref_contig\tvirus_name\toncology_group
+            contig_name\tvirus_name\toncology_group
             contigA\tVirus Alpha\tGroup Alpha
             contigB\tVirus Beta type 1\tGroup Beta
             contigC\tVirus Beta type 2\tGroup Beta
@@ -81,7 +81,7 @@ public class VirusReferenceTest
     public void testLoadInfoThrowsOnMissingColumn()
     {
         String noGroup = """
-                ref_contig\tvirus_name
+                contig_name\tvirus_name
                 contigA\tVirus Alpha
                 """;
         assertThrows(RuntimeException.class, () -> VirusInfo.load(writeTsv(noGroup)));
