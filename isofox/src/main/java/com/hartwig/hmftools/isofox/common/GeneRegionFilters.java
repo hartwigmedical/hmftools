@@ -81,7 +81,7 @@ public class GeneRegionFilters
         if(checkMateAndSupp)
         {
             // simple, non-cigar aware read end
-            if(!read.getMateUnmappedFlag())
+            if(read.getReadPairedFlag() && !read.getMateUnmappedFlag())
             {
                 int mateReadStart = read.getMateAlignmentStart();
                 if(skipRead(read.getMateReferenceName(), mateReadStart, mateReadStart, true))

@@ -116,16 +116,25 @@ public class FusionFragmentBuilder
             }
 
             // set single junction info for candidate realignable fragments
-            if(fragment.reads().size() == 2
-            && fragment.reads().stream().anyMatch(x -> hasCandidateJunctionSoftClips(x))
-            && fragment.reads().stream().noneMatch(x -> x.spansGeneCollections()))
+            if(fragment.reads().stream().anyMatch(x -> hasCandidateJunctionSoftClips(x))
+                    && fragment.reads().stream().noneMatch(x -> x.spansGeneCollections()))
             {
-                FusionRead read1 = fragment.reads().get(0);
-                FusionRead read2 = fragment.reads().get(1);
-                if(read1.GeneCollections[0] == read2.GeneCollections[1])
+                if(fragment.reads().size() == 1 && !fragment.reads().get(0).isReadPaired())
                 {
                     setSingleSoftClipJunctionData(fragment);
                     return;
+                }
+
+                if(fragment.reads().size() == 2)
+                {
+                    FusionRead read1 = fragment.reads().get(0);
+                    FusionRead read2 = fragment.reads().get(1);
+
+                    if(read1.GeneCollections[0] == read2.GeneCollections[1])
+                    {
+                        setSingleSoftClipJunctionData(fragment);
+                        return;
+                    }
                 }
             }
         }
@@ -315,9 +324,18 @@ public class FusionFragmentBuilder
         {
             fragment.geneCollections()[SE_START] = fragment.geneCollections()[SE_END] = geneCollections.get(0);
 
-            // orientation could be set based on the orientations and positions of the reads.. do this when the junction data is set
-            fragment.orientations()[SE_START] = ORIENT_FWD;
-            fragment.orientations()[SE_END] = ORIENT_REV;
+            if(fragment.reads().size() == 2 && fragment.reads().get(0).Orientation == fragment.reads().get(1).Orientation)
+            {
+                fragment.setType(DISCORDANT);
+                fragment.orientations()[SE_END] = fragment.orientations()[SE_START] = fragment.reads().get(0).Orientation;
+            }
+            else
+            {
+                // orientation could be set based on the orientations and positions of the reads.. do this when the junction data is set
+                fragment.orientations()[SE_START] = ORIENT_FWD;
+                fragment.orientations()[SE_END] = ORIENT_REV;
+            }
+
             return;
         }
 
