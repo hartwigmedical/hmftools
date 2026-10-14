@@ -81,29 +81,29 @@ public class ViridianConstants
     // Candidate reads submitted to BWA per alignment call (bounds memory usage).
     public static final int VIRAL_READ_ALIGNMENT_BATCH_SIZE_DEFAULT = 100_000;
 
-    // Affects attribution of read votes between contigs.
+    // Affects attribution of read votes between virus genomes.
     // This value is pessimistic - assumes the correct base is completely unknown.
     public static final double READ_VOTE_CORRECT_BASE_PROBABILITY = 0.25;
 
-    // A clip counts as hanging over a contig end (a circular-genome artifact) when its bases would extend past the
+    // A clip counts as hanging over a genome end (a circular-genome artifact) when its bases would extend past the
     // boundary by more than this tolerance. Such alignments are dropped from all further processing.
     public static final int VIRUS_GENOME_ORIGIN_CLIP_TOLERANCE = 4;
 
-    // A contig is a candidate only if some contig in its oncology group reaches this coverage fraction.
+    // A genome is a candidate only if some genome in its oncology group reaches this coverage fraction.
     // This value is very conservative. Hard to argue a lower coverage wouldn't be spurious.
     public static final double VIRUS_GENOME_COVERAGE_MIN = 0.1;
 
-    // If any contig in an oncology group passes VIRUS_GENOME_COVERAGE_MIN, then use this as the coverage threshold instead of that.
-    // Ensures that a similar sibling contig which straddles the coverage threshold isn't harshly lost.
+    // If any genome in an oncology group passes VIRUS_GENOME_COVERAGE_MIN, then use this as the coverage threshold instead of that.
+    // Ensures that a similar sibling genome which straddles the coverage threshold isn't harshly lost.
     public static final double VIRUS_GENOME_COVERAGE_MIN_LOWER = VIRUS_GENOME_COVERAGE_MIN * 0.9;
 
     // Minimum read votes per base that is required to be covered.
-    // Handles cases where the contig has some alignments but those reads strongly prefer a better matching contig
+    // Handles cases where the genome has some alignments but those reads strongly prefer a better matching genome
     // (since coverage is calculated based on ANY alignment, not necessarily a good one).
     public static final double VIRUS_GENOME_VOTES_PER_BASE_MIN = 1.0;
 
     // Effectively a tolerance on the read vote share to ensure that a close runner up is also considered.
-    // Otherwise, you can have the top contig win by only an arbitrarily small number of read votes.
+    // Otherwise, you can have the top genome win by only an arbitrarily small number of read votes.
     public static final double REPRESENTATIVE_COMPARABLE_VOTE_RATIO = 0.9;
 
     // How many bases better does an alignment need to be to classify as diverging?
@@ -115,7 +115,7 @@ public class ViridianConstants
     // Lower is more sensitive to rival virus strains.
     public static final double REPRESENTATIVE_CHALLENGE_READS_MIN = 0.1;
 
-    // Winning margins reported per contig pair in the verbose output (for debugging and tuning only).
+    // Winning margins reported per genome pair in the verbose output (for debugging and tuning only).
     public static final List<Integer> REPORTED_MARGINS = List.of(1, 2, 3, 5, 8, 10, 15, 20, 30, 40, 50);
 
     // Minimum insert sequence length for an SV to be a viral integration candidate.

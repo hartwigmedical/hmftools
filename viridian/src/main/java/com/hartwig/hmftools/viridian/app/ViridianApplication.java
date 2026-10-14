@@ -107,21 +107,21 @@ public class ViridianApplication
 
         String candidateReadFastaFile = extractCandidateReads(virusDecoyContigs);
 
-        AllGenomesReadAlignments allContigsReadAlignments = alignCandidateReadsToViralContigs(candidateReadFastaFile);
+        AllGenomesReadAlignments allGenomesReadAlignments = alignCandidateReadsToVirusGenomes(candidateReadFastaFile);
 
-        List<GenomeSupport> contigSupports = computeViralContigSupport(allContigsReadAlignments);
+        List<GenomeSupport> genomeSupports = computeGenomeSupport(allGenomesReadAlignments);
 
         List<OncologyGroupRepresentativeSelection> representativeSelections =
-                selectRepresentativeViralContigs(allContigsReadAlignments, contigSupports);
+                selectRepresentativeGenomes(allGenomesReadAlignments, genomeSupports);
 
         ViralReadAlignmentStore representativeAlignments =
-                assignReadsToRepresentatives(allContigsReadAlignments.store(), representativeSelections);
+                assignReadsToRepresentatives(allGenomesReadAlignments.store(), representativeSelections);
 
         Map<VirusGenome, GenomeStats> representativeGenomeStats =
-                calculateRepresentativeContigStats(representativeAlignments, allContigsReadAlignments.metrics().originClippedReads());
+                calculateRepresentativeGenomeStats(representativeAlignments, allGenomesReadAlignments.metrics().originClippedReads());
 
         List<DetectedVirus> detectedViruses = writeDetectedViruses(
-                representativeSelections, representativeGenomeStats, allContigsReadAlignments.metrics().readCountsByOncologyGroup());
+                representativeSelections, representativeGenomeStats, allGenomesReadAlignments.metrics().readCountsByOncologyGroup());
 
         Map<OncologyGroup, Integer> integrationCounts = callHostIntegrations();
 
@@ -185,7 +185,7 @@ public class ViridianApplication
     }
 
     // Align potentially viral reads to all virus genomes, so we can decide which viruses are detected.
-    private AllGenomesReadAlignments alignCandidateReadsToViralContigs(String candidateReadFasta)
+    private AllGenomesReadAlignments alignCandidateReadsToVirusGenomes(String candidateReadFasta)
     {
         LOGGER.info("Aligning candidate reads to virus genomes");
         String allAlignmentsBamFile = outputFile(ALL_ALIGNMENTS_BAM_SUFFIX);
@@ -196,25 +196,25 @@ public class ViridianApplication
     }
 
     // Compute support information for each virus genome and decide which genomes are candidates.
-    private List<GenomeSupport> computeViralContigSupport(AllGenomesReadAlignments alignments)
+    private List<GenomeSupport> computeGenomeSupport(AllGenomesReadAlignments alignments)
     {
-        LOGGER.info("Computing per-contig support");
-        Map<VirusGenome, GenomeStats> contigStats = GenomeStatsCalculator.calculate(
+        LOGGER.info("Computing per-genome support");
+        Map<VirusGenome, GenomeStats> genomeStats = GenomeStatsCalculator.calculate(
                 alignments.store().byGenome(), alignments.metrics().originClippedReads());
-        return new GenomeSupportCalculator(READ_VOTE_CORRECT_BASE_PROBABILITY).calculate(alignments, contigStats);
+        return new GenomeSupportCalculator(READ_VOTE_CORRECT_BASE_PROBABILITY).calculate(alignments, genomeStats);
     }
 
     // For each oncology group (group of virus strains at interesting taxonomy granularity), select 1 virus genome which best represents
     // the virus present in the sample.
-    private List<OncologyGroupRepresentativeSelection> selectRepresentativeViralContigs(
-            AllGenomesReadAlignments alignments, List<GenomeSupport> viralContigSupports)
+    private List<OncologyGroupRepresentativeSelection> selectRepresentativeGenomes(
+            AllGenomesReadAlignments alignments, List<GenomeSupport> genomeSupports)
     {
-        LOGGER.info("Selecting representative contig per oncology group");
+        LOGGER.info("Selecting representative genome per oncology group");
         PairwiseMargins pairwiseMargins = PairwiseMargins.from(alignments.store().byRead());
         List<OncologyGroupRepresentativeSelection> selections = RepresentativeGenomeSelector.select(
-                viralContigSupports, pairwiseMargins, alignments.metrics().readCountsByOncologyGroup());
+                genomeSupports, pairwiseMargins, alignments.metrics().readCountsByOncologyGroup());
 
-        LOGGER.info("Writing contig info output");
+        LOGGER.info("Writing genome support output");
         OutputWriter.writeGenomeSupport(outputFile(CONTIG_SUPPORT_TSV_SUFFIX), selections);
         if(mConfig.verboseOutput())
         {
@@ -226,11 +226,11 @@ public class ViridianApplication
     }
 
     // For each oncology group, assign the read alignments to only the selected representative virus genome.
-    // This is simply filtering down to each read's alignment to that genome contig (or nothing, if it didn't align there at all).
+    // This is simply filtering down to each read's alignment to that genome (or nothing, if it didn't align there at all).
     private ViralReadAlignmentStore assignReadsToRepresentatives(
             ViralReadAlignmentStore alignments, List<OncologyGroupRepresentativeSelection> representativeSelections)
     {
-        LOGGER.info("Assigning reads to representative contigs");
+        LOGGER.info("Assigning reads to representative genomes");
         Set<VirusGenome> representatives = representativeSelections.stream()
                 .map(OncologyGroupRepresentativeSelection::representative)
                 .filter(Objects::nonNull)
@@ -243,17 +243,17 @@ public class ViridianApplication
     }
 
     // After the representative virus genome is selected for each oncology group, measure final support statistics for the representative.
-    private Map<VirusGenome, GenomeStats> calculateRepresentativeContigStats(
+    private Map<VirusGenome, GenomeStats> calculateRepresentativeGenomeStats(
             ViralReadAlignmentStore representativeAlignments, Map<VirusGenome, Integer> allOriginClippedReads)
     {
-        LOGGER.info("Computing representative contig stats");
+        LOGGER.info("Computing representative genome stats");
         // Origin clipped reads where dropped previously, but the information is useful to carry through for visualisation.
         Map<VirusGenome, Integer> originClippedReads = allOriginClippedReads.entrySet().stream()
                 .filter(entry -> representativeAlignments.byGenome().containsKey(entry.getKey()))
                 .collect(toMap(Map.Entry::getKey, Map.Entry::getValue));
-        Map<VirusGenome, GenomeStats> contigStats =
+        Map<VirusGenome, GenomeStats> genomeStats =
                 GenomeStatsCalculator.calculate(representativeAlignments.byGenome(), originClippedReads);
-        return contigStats;
+        return genomeStats;
     }
 
     private List<DetectedVirus> writeDetectedViruses(
