@@ -61,8 +61,8 @@ public record DetectedVirus(
                 .filter(RepresentativeGenomeCandidate::comparable).count();
 
         VirusGenome representative = selection.representative();
-        GenomeStats contigStats = representative != null ? representativeStats.get(representative) : null;
-        if(representative != null && contigStats == null)
+        GenomeStats genomeStats = representative != null ? representativeStats.get(representative) : null;
+        if(representative != null && genomeStats == null)
         {
             throw new IllegalStateException("Representative was not measured: " + representative.name());
         }
@@ -71,6 +71,6 @@ public record DetectedVirus(
                 oncologyGroup, selection.resolution(), selection.outcome(),
                 groupReadCounts.getOrDefault(oncologyGroup, 0),
                 selection.candidates().size() + selection.rejected().size(),
-                selection.candidates().size(), comparableCandidates, contigStats);
+                selection.candidates().size(), comparableCandidates, genomeStats);
     }
 }

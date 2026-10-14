@@ -92,10 +92,10 @@ public class DetectedVirusTest
                 () -> DetectedVirus.from(selections, Map.of(W1, stats(W1)), Map.of(GROUP_A, 500)));
     }
 
-    private static GenomeStats stats(VirusGenome contig)
+    private static GenomeStats stats(VirusGenome genome)
     {
         return new GenomeStats(
-                contig, 10, 1, 80, SummaryStats.from(new int[contig.length()]), SummaryStats.from(new int[] { 100 }));
+                genome, 10, 1, 80, SummaryStats.from(new int[genome.length()]), SummaryStats.from(new int[] { 100 }));
     }
 
     private static OncologyGroupRepresentativeSelection selection(
@@ -110,18 +110,18 @@ public class DetectedVirusTest
     {
         List<RepresentativeGenomeCandidate> candidates = Stream.concat(
                         representative != null ? Stream.of(representative) : Stream.empty(), others.stream())
-                .map(contig -> candidate(contig, contig.equals(representative)))
+                .map(genome -> candidate(genome, genome.equals(representative)))
                 .toList();
         List<GenomeSupport> rejectedSupports = rejected.stream()
-                .map(contig -> new GenomeSupport(stats(contig), GenomeFilterStatus.LOW_COVERAGE, 0, null, 0.1))
+                .map(genome -> new GenomeSupport(stats(genome), GenomeFilterStatus.LOW_COVERAGE, 0, null, 0.1))
                 .toList();
 
         return new OncologyGroupRepresentativeSelection(group, outcome, candidates, rejectedSupports);
     }
 
-    private static RepresentativeGenomeCandidate candidate(VirusGenome contig, boolean representative)
+    private static RepresentativeGenomeCandidate candidate(VirusGenome genome, boolean representative)
     {
-        GenomeSupport support = new GenomeSupport(stats(contig), GenomeFilterStatus.CANDIDATE, 0, null, 1.0);
+        GenomeSupport support = new GenomeSupport(stats(genome), GenomeFilterStatus.CANDIDATE, 0, null, 1.0);
         return new RepresentativeGenomeCandidate(
                 support, 1, true, Set.of(), Set.of(),
                 representative ? GenomeRole.REPRESENTATIVE : GenomeRole.SECONDARY);

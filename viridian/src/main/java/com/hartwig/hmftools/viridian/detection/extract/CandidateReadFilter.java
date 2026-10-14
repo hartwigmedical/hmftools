@@ -168,7 +168,7 @@ public class CandidateReadFilter
         else
         {
             // We assume that if ANY supplementary is possibly host genome, then it's not viral, even if another supplementary maps to a
-            // virus contig.
+            // virus decoy contig.
             return supplementaries.stream().allMatch(supplementary -> isVirusDecoyContig(supplementary.Chromosome));
         }
     }

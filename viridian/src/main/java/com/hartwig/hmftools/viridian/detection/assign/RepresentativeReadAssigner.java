@@ -26,7 +26,7 @@ import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.ValidationStringency;
 
-// Selects each read's best alignment to the selected representative virus contig.
+// Selects each read's best alignment to the selected representative virus genome.
 // Writes those alignments to a coordinate sorted, indexed BAM.
 // Reads with no alignments to the representative are dropped.
 public class RepresentativeReadAssigner
@@ -48,8 +48,8 @@ public class RepresentativeReadAssigner
     static Map<ReadId, ViralReadAlignment> assignReads(
             Map<ReadId, Map<VirusGenome, ViralReadAlignment>> alignmentsByRead, Set<VirusGenome> representatives)
     {
-        // Tie-break by contig for determinism.
-        // But not expecting that a read will support multiple representative contigs.
+        // Tie-break by genome for determinism.
+        // But not expecting that a read will support multiple representative genomes.
         Comparator<ViralReadAlignment> alignmentComparator =
                 ViralReadAlignment.BEST_FIT_FIRST.thenComparing(ViralReadAlignment::genome);
 
@@ -78,7 +78,7 @@ public class RepresentativeReadAssigner
             }
         }
 
-        // Log the cases of 1 read supporting multiple representative contigs.
+        // Log the cases of 1 read supporting multiple representative genomes.
         // Not expecting it, but it could occur - we need more data.
         if(multiRepReads > 0)
         {

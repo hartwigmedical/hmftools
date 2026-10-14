@@ -68,7 +68,7 @@ public class RepresentativeReadAssignerTest
 
     // Equally good on both, so the choice must not depend on hit ordering.
     @Test
-    public void testAssignReadsBreaksTieByContig()
+    public void testAssignReadsBreaksTieByGenome()
     {
         ViralReadAlignmentStore alignments = new ViralReadAlignmentStore(List.of(
                 alignment("r1/1", TWIN, 100, 3),
@@ -80,7 +80,7 @@ public class RepresentativeReadAssignerTest
         assertEquals(REPRESENTATIVE, assignments.get(ReadId.parse("r1/1")).genome());
     }
 
-    // One read with two alignments to the same contig from the same base, telling apart only by their CIGAR.
+    // One read with two alignments to the same genome from the same base, telling apart only by their CIGAR.
     // The chosen one must be copied, and only it.
     @Test
     public void testAssignCopiesTheChosenOfTwoAlignmentsSharingAStart() throws IOException
@@ -139,10 +139,10 @@ public class RepresentativeReadAssignerTest
         return cigars;
     }
 
-    private static ViralReadAlignment alignment(String readName, VirusGenome contig, int start, int divergence)
+    private static ViralReadAlignment alignment(String readName, VirusGenome genome, int start, int divergence)
     {
         return new ViralReadAlignment(
-                ReadId.parse(readName), contig, start, start + READ_LENGTH - 1, READ_LENGTH + "M", 0, 0, READ_LENGTH - divergence,
+                ReadId.parse(readName), genome, start, start + READ_LENGTH - 1, READ_LENGTH + "M", 0, 0, READ_LENGTH - divergence,
                 divergence,
                 List.of(new AlignedInterval(start, READ_LENGTH)));
     }
