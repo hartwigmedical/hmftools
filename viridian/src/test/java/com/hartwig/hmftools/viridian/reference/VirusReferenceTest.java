@@ -23,15 +23,15 @@ public class VirusReferenceTest
     private static final OncologyGroup GROUP_ALPHA = new OncologyGroup("Group Alpha");
     private static final OncologyGroup GROUP_BETA = new OncologyGroup("Group Beta");
 
-    // Three contigs: contigA alone in its group, contigB and contigC sharing a group.
+    // Three virus genomes: contigA alone in its group, contigB and contigC sharing a group.
     private static final VirusInfo INFO_A = new VirusInfo("contigA", "Virus Alpha", GROUP_ALPHA);
     private static final VirusInfo INFO_B = new VirusInfo("contigB", "Virus Beta type 1", GROUP_BETA);
     private static final VirusInfo INFO_C = new VirusInfo("contigC", "Virus Beta type 2", GROUP_BETA);
     private static final List<VirusInfo> INFO = List.of(INFO_A, INFO_B, INFO_C);
 
-    private static final VirusGenome CONTIG_A = new VirusGenome("contigA", 100, "Virus Alpha", GROUP_ALPHA);
-    private static final VirusGenome CONTIG_B = new VirusGenome("contigB", 200, "Virus Beta type 1", GROUP_BETA);
-    private static final VirusGenome CONTIG_C = new VirusGenome("contigC", 300, "Virus Beta type 2", GROUP_BETA);
+    private static final VirusGenome GENOME_A = new VirusGenome("contigA", 100, "Virus Alpha", GROUP_ALPHA);
+    private static final VirusGenome GENOME_B = new VirusGenome("contigB", 200, "Virus Beta type 1", GROUP_BETA);
+    private static final VirusGenome GENOME_C = new VirusGenome("contigC", 300, "Virus Beta type 2", GROUP_BETA);
 
     private static final String VALID_INFO_TSV = """
             ref_contig\tvirus_name\toncology_group
@@ -44,10 +44,10 @@ public class VirusReferenceTest
     public TemporaryFolder mTempDir = new TemporaryFolder();
 
     @Test
-    public void testJoinFastaAndInfoJoinsContigsInFastaOrder()
+    public void testJoinFastaAndInfoJoinsGenomesInFastaOrder()
     {
-        List<VirusGenome> contigs = VirusReference.joinFastaAndInfo(dictionary("contigA", "contigB", "contigC"), INFO);
-        assertEquals(List.of(CONTIG_A, CONTIG_B, CONTIG_C), contigs);
+        List<VirusGenome> genomes = VirusReference.joinFastaAndInfo(dictionary("contigA", "contigB", "contigC"), INFO);
+        assertEquals(List.of(GENOME_A, GENOME_B, GENOME_C), genomes);
     }
 
     @Test

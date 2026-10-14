@@ -6,7 +6,7 @@ import java.util.Comparator;
 
 import org.jetbrains.annotations.NotNull;
 
-// A contig which is a virus genome.
+// A virus genome in the virus reference, with a FASTA contig.
 public record VirusGenome(
         // Original contig name in the virus reference.
         String name,
@@ -20,7 +20,7 @@ public record VirusGenome(
     {
         if(length < 1)
         {
-            throw new IllegalArgumentException("Invalid contig length: " + length);
+            throw new IllegalArgumentException("Invalid virus genome length: " + length);
         }
     }
 

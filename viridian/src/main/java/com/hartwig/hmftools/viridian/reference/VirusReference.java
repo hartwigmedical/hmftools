@@ -22,26 +22,26 @@ import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 public class VirusReference
 {
     private final SAMSequenceDictionary mSequenceDictionary;
-    private final Map<String, VirusGenome> mContigsByName;
+    private final Map<String, VirusGenome> mGenomesByName;
     private final Map<OncologyGroup, OncologyGroupInfo> mOncologyGroupInfo;
 
     public VirusReference(
-            List<VirusGenome> contigs, SAMSequenceDictionary sequenceDictionary,
+            List<VirusGenome> genomes, SAMSequenceDictionary sequenceDictionary,
             Map<OncologyGroup, OncologyGroupInfo> oncologyGroupInfo)
     {
         mSequenceDictionary = sequenceDictionary;
-        mContigsByName = contigs.stream().collect(toMap(VirusGenome::name, identity()));
+        mGenomesByName = genomes.stream().collect(toMap(VirusGenome::name, identity()));
         mOncologyGroupInfo = oncologyGroupInfo;
     }
 
     public VirusGenome genome(String name)
     {
-        VirusGenome contig = mContigsByName.get(name);
-        if(contig == null)
+        VirusGenome genome = mGenomesByName.get(name);
+        if(genome == null)
         {
-            throw new IllegalArgumentException("Unknown virus contig: " + name);
+            throw new IllegalArgumentException("Unknown virus genome: " + name);
         }
-        return contig;
+        return genome;
     }
 
     // Contigs in FASTA order, matching the BWA index so an alignment's reference index resolves to a contig by position.
@@ -52,7 +52,7 @@ public class VirusReference
 
     public Set<OncologyGroup> oncologyGroups()
     {
-        return mContigsByName.values().stream().map(VirusGenome::oncologyGroup).collect(toSet());
+        return mGenomesByName.values().stream().map(VirusGenome::oncologyGroup).collect(toSet());
     }
 
     public OncologyGroupInfo oncologyGroupInfo(OncologyGroup group)
@@ -69,14 +69,14 @@ public class VirusReference
     {
         List<VirusInfo> info = VirusInfo.load(infoTsvFile);
         SAMSequenceDictionary dictionary = loadSequenceDictionary(fastaFile);
-        List<VirusGenome> contigs = joinFastaAndInfo(dictionary, info);
-        Set<OncologyGroup> groups = contigs.stream().map(VirusGenome::oncologyGroup).collect(toSet());
+        List<VirusGenome> genomes = joinFastaAndInfo(dictionary, info);
+        Set<OncologyGroup> groups = genomes.stream().map(VirusGenome::oncologyGroup).collect(toSet());
         Map<OncologyGroup, OncologyGroupInfo> oncologyGroupInfo = OncologyGroupInfo.load(oncologyGroupInfoTsvFile);
         if(!oncologyGroupInfo.keySet().equals(groups))
         {
             throw new UserInputError("Oncology group info groups do not match the virus reference groups");
         }
-        return new VirusReference(contigs, dictionary, oncologyGroupInfo);
+        return new VirusReference(genomes, dictionary, oncologyGroupInfo);
     }
 
     // Joins FASTA contigs to their info rows. Result in FASTA order.
