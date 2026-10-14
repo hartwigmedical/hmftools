@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.viridian.detection.support;
 
 // Filter status of a virus genome contig, derived from read support.
-public enum ContigFilterStatus
+public enum GenomeFilterStatus
 {
     // Cleared both filters.
     CANDIDATE,

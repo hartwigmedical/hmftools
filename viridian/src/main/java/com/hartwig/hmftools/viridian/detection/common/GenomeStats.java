@@ -8,7 +8,7 @@ import org.jetbrains.annotations.Nullable;
 // Used in two contexts:
 //   1. All alignments to all contigs (BWA-MEM -a mode).
 //   2. Alignments to just the best contig (after the representative contig selection).
-public record ContigStats(
+public record GenomeStats(
         VirusGenome contig,
         // Reads with an alignment to this contig.
         int readCount,
@@ -21,7 +21,7 @@ public record ContigStats(
         // BWA alignment score distribution across those reads. Null only when every alignment was origin clipped.
         @Nullable SummaryStats alignerScore)
 {
-    public ContigStats
+    public GenomeStats
     {
         if(readCount < 0)
         {

@@ -11,7 +11,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.hartwig.hmftools.viridian.detection.align.AlignedInterval;
-import com.hartwig.hmftools.viridian.detection.align.AllContigsReadAlignments;
+import com.hartwig.hmftools.viridian.detection.align.AllGenomesReadAlignments;
 import com.hartwig.hmftools.viridian.detection.align.ViralReadAlignment;
 import com.hartwig.hmftools.viridian.detection.align.ViralReadAlignmentStore;
 import com.hartwig.hmftools.viridian.detection.common.ReadId;
@@ -96,7 +96,7 @@ public class RepresentativeReadAssignerTest
         String outputBam = new File(mTempDir.getRoot(), "representative.bam").getPath();
 
         RepresentativeReadAssigner.assign(
-                AllContigsReadAlignments.from(List.of(other, chosen), 148.0).store(), Set.of(REPRESENTATIVE),
+                AllGenomesReadAlignments.from(List.of(other, chosen), 148.0).store(), Set.of(REPRESENTATIVE),
                 sourceBam, outputBam);
 
         assertEquals(List.of("53S38M21D49M8S"), cigars(outputBam));

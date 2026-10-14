@@ -8,14 +8,14 @@ import static com.hartwig.hmftools.viridian.common.ViridianConstants.VIRAL_CONTI
 
 import java.util.Map;
 
-import com.hartwig.hmftools.viridian.detection.common.ContigStats;
+import com.hartwig.hmftools.viridian.detection.common.GenomeStats;
 import com.hartwig.hmftools.viridian.reference.VirusGenome;
 
 // Determines whether a contig carries enough evidence to be a candidate virus genome.
-public class ContigSupportFilter
+public class GenomeSupportFilter
 {
-    public static Map<VirusGenome, ContigFilterStatus> statuses(
-            Map<VirusGenome, ContigStats> contigStats, Map<VirusGenome, Double> readVotes, double meanReadLength)
+    public static Map<VirusGenome, GenomeFilterStatus> statuses(
+            Map<VirusGenome, GenomeStats> contigStats, Map<VirusGenome, Double> readVotes, double meanReadLength)
     {
         boolean groupReachesCoverageMin = contigStats.values().stream()
                 .anyMatch(stats -> stats.coverageFraction() >= VIRAL_CONTIG_COVERAGE_MIN);
@@ -27,22 +27,22 @@ public class ContigSupportFilter
                         meanReadLength)));
     }
 
-    private static ContigFilterStatus status(
-            ContigStats stats, double readVotes, boolean groupReachesCoverageMin, double meanReadLength)
+    private static GenomeFilterStatus status(
+            GenomeStats stats, double readVotes, boolean groupReachesCoverageMin, double meanReadLength)
     {
         // Once some contig reaches the coverage minimum, its siblings are kept down to a slightly lower coverage, so a
         // near-identical sibling straddling the cutoff is not harshly lost.
         if(!groupReachesCoverageMin || stats.coverageFraction() < VIRAL_CONTIG_COVERAGE_MIN_LOWER)
         {
-            return ContigFilterStatus.LOW_COVERAGE;
+            return GenomeFilterStatus.LOW_COVERAGE;
         }
         else if(readVotes < voteFloor(stats.contig(), meanReadLength))
         {
-            return ContigFilterStatus.LOW_VOTE_DENSITY;
+            return GenomeFilterStatus.LOW_VOTE_DENSITY;
         }
         else
         {
-            return ContigFilterStatus.CANDIDATE;
+            return GenomeFilterStatus.CANDIDATE;
         }
     }
 

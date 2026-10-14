@@ -3,11 +3,11 @@ package com.hartwig.hmftools.viridian.detection;
 import java.util.List;
 import java.util.Map;
 
-import com.hartwig.hmftools.viridian.detection.common.ContigStats;
+import com.hartwig.hmftools.viridian.detection.common.GenomeStats;
 import com.hartwig.hmftools.viridian.detection.select.OncologyGroupOutcome;
 import com.hartwig.hmftools.viridian.detection.select.OncologyGroupRepresentativeSelection;
 import com.hartwig.hmftools.viridian.detection.select.OncologyGroupResolution;
-import com.hartwig.hmftools.viridian.detection.select.RepresentativeContigCandidate;
+import com.hartwig.hmftools.viridian.detection.select.RepresentativeGenomeCandidate;
 import com.hartwig.hmftools.viridian.reference.OncologyGroup;
 import com.hartwig.hmftools.viridian.reference.VirusGenome;
 
@@ -27,7 +27,7 @@ public record DetectedVirus(
         // Genomes abundant enough to contest the lead. A measure of how ambiguous the group is.
         int comparableCandidateCount,
         // Null where no representative was resolved.
-        @Nullable ContigStats representativeContigStats
+        @Nullable GenomeStats representativeContigStats
 )
 {
     public DetectedVirus
@@ -43,7 +43,7 @@ public record DetectedVirus(
     }
 
     public static List<DetectedVirus> from(
-            List<OncologyGroupRepresentativeSelection> selections, Map<VirusGenome, ContigStats> representativeStats,
+            List<OncologyGroupRepresentativeSelection> selections, Map<VirusGenome, GenomeStats> representativeStats,
             Map<OncologyGroup, Integer> groupReadCounts)
     {
         return selections.stream()
@@ -53,15 +53,15 @@ public record DetectedVirus(
     }
 
     private static DetectedVirus from(
-            OncologyGroupRepresentativeSelection selection, Map<VirusGenome, ContigStats> representativeStats,
+            OncologyGroupRepresentativeSelection selection, Map<VirusGenome, GenomeStats> representativeStats,
             Map<OncologyGroup, Integer> groupReadCounts)
     {
         OncologyGroup oncologyGroup = selection.oncologyGroup();
         int comparableCandidates = (int) selection.candidates().stream()
-                .filter(RepresentativeContigCandidate::comparable).count();
+                .filter(RepresentativeGenomeCandidate::comparable).count();
 
         VirusGenome representative = selection.representative();
-        ContigStats contigStats = representative != null ? representativeStats.get(representative) : null;
+        GenomeStats contigStats = representative != null ? representativeStats.get(representative) : null;
         if(representative != null && contigStats == null)
         {
             throw new IllegalStateException("Representative was not measured: " + representative.name());

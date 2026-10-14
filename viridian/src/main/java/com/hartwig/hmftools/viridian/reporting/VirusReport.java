@@ -2,7 +2,7 @@ package com.hartwig.hmftools.viridian.reporting;
 
 import com.hartwig.hmftools.common.virus.VirusLikelihoodType;
 import com.hartwig.hmftools.common.virus.VirusType;
-import com.hartwig.hmftools.viridian.detection.common.ContigStats;
+import com.hartwig.hmftools.viridian.detection.common.GenomeStats;
 import com.hartwig.hmftools.viridian.reference.OncologyGroup;
 
 import org.jetbrains.annotations.Nullable;
@@ -17,7 +17,7 @@ public record VirusReport(
         int integrations,
         boolean isDetected,
         // Null unless the group is detected and resolved to a representative.
-        @Nullable ContigStats representativeStats,
+        @Nullable GenomeStats representativeStats,
         // Null if Purple data wasn't usable.
         @Nullable Double copiesPerTumorCell,
         VirusReportStatus status)

@@ -2,7 +2,7 @@ package com.hartwig.hmftools.viridian.detection.select;
 
 import java.util.List;
 
-import com.hartwig.hmftools.viridian.detection.support.ContigSupport;
+import com.hartwig.hmftools.viridian.detection.support.GenomeSupport;
 import com.hartwig.hmftools.viridian.reference.OncologyGroup;
 import com.hartwig.hmftools.viridian.reference.VirusGenome;
 
@@ -13,9 +13,9 @@ import org.jetbrains.annotations.Nullable;
 public record OncologyGroupRepresentativeSelection(
         OncologyGroup oncologyGroup,
         OncologyGroupOutcome outcome,
-        List<RepresentativeContigCandidate> candidates,
+        List<RepresentativeGenomeCandidate> candidates,
         // List of contigs which were filtered so not candidates for representative.
-        List<ContigSupport> rejected
+        List<GenomeSupport> rejected
 )
 {
     public OncologyGroupResolution resolution()
@@ -27,8 +27,8 @@ public record OncologyGroupRepresentativeSelection(
     public VirusGenome representative()
     {
         return candidates.stream()
-                .filter(candidate -> candidate.role() == ContigRole.REPRESENTATIVE)
-                .map(RepresentativeContigCandidate::contig)
+                .filter(candidate -> candidate.role() == GenomeRole.REPRESENTATIVE)
+                .map(RepresentativeGenomeCandidate::contig)
                 .findFirst()
                 .orElse(null);
     }

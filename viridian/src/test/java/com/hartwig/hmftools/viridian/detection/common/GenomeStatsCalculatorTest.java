@@ -6,14 +6,14 @@ import java.util.List;
 import java.util.Map;
 
 import com.hartwig.hmftools.viridian.detection.align.AlignedInterval;
-import com.hartwig.hmftools.viridian.detection.align.AllContigsReadAlignments;
+import com.hartwig.hmftools.viridian.detection.align.AllGenomesReadAlignments;
 import com.hartwig.hmftools.viridian.detection.align.ViralReadAlignment;
 import com.hartwig.hmftools.viridian.reference.OncologyGroup;
 import com.hartwig.hmftools.viridian.reference.VirusGenome;
 
 import org.junit.Test;
 
-public class ContigStatsCalculatorTest
+public class GenomeStatsCalculatorTest
 {
     private static final double MEAN_READ_LENGTH = 150.0;
 
@@ -28,7 +28,7 @@ public class ContigStatsCalculatorTest
                 List.of(new AlignedInterval(1, 8), new AlignedInterval(11, 5)));
 
         int[] depth = { 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0 };
-        ContigStats expected = new ContigStats(
+        GenomeStats expected = new GenomeStats(
                 CONTIG, 1, 0, 13, SummaryStats.from(depth), SummaryStats.from(new int[] { 40 }));
 
         assertEquals(Map.of(CONTIG, expected), calculate(List.of(read)));
@@ -42,15 +42,15 @@ public class ContigStatsCalculatorTest
                 originClipped("r1/1"),
                 originClipped("r2/1"));
 
-        ContigStats expected = new ContigStats(CONTIG, 0, 2, 0, SummaryStats.from(new int[20]), null);
+        GenomeStats expected = new GenomeStats(CONTIG, 0, 2, 0, SummaryStats.from(new int[20]), null);
 
         assertEquals(Map.of(CONTIG, expected), calculate(alignments));
     }
 
-    private static Map<VirusGenome, ContigStats> calculate(List<ViralReadAlignment> alignments)
+    private static Map<VirusGenome, GenomeStats> calculate(List<ViralReadAlignment> alignments)
     {
-        AllContigsReadAlignments allAlignments = AllContigsReadAlignments.from(alignments, MEAN_READ_LENGTH);
-        return ContigStatsCalculator.calculate(
+        AllGenomesReadAlignments allAlignments = AllGenomesReadAlignments.from(alignments, MEAN_READ_LENGTH);
+        return GenomeStatsCalculator.calculate(
                 allAlignments.store().byContig(), allAlignments.metrics().originClippedReads());
     }
 

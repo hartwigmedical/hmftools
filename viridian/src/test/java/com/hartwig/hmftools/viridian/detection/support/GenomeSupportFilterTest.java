@@ -6,14 +6,14 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.Map;
 
-import com.hartwig.hmftools.viridian.detection.common.ContigStats;
+import com.hartwig.hmftools.viridian.detection.common.GenomeStats;
 import com.hartwig.hmftools.viridian.detection.common.SummaryStats;
 import com.hartwig.hmftools.viridian.reference.OncologyGroup;
 import com.hartwig.hmftools.viridian.reference.VirusGenome;
 
 import org.junit.Test;
 
-public class ContigSupportFilterTest
+public class GenomeSupportFilterTest
 {
     private static final int LENGTH = 1000;
 
@@ -28,73 +28,73 @@ public class ContigSupportFilterTest
     public void testStatusesRelaxedFloorKeepsStraddlingSibling()
     {
         // The sibling reaches the coverage minimum, so this contig is kept down to the relaxed floor of 90 bases.
-        assertEquals(ContigFilterStatus.CANDIDATE, statusWithCoveredSibling(95));
-        assertEquals(ContigFilterStatus.LOW_COVERAGE, statusWithCoveredSibling(89));
+        assertEquals(GenomeFilterStatus.CANDIDATE, statusWithCoveredSibling(95));
+        assertEquals(GenomeFilterStatus.LOW_COVERAGE, statusWithCoveredSibling(89));
     }
 
     @Test
     public void testStatusesAbsentGroupRejectsEveryContig()
     {
         // No contig reaches the coverage floor, so the relaxed floor never applies.
-        Map<VirusGenome, ContigFilterStatus> statuses = statuses(Map.of(CONTIG, 95, SIBLING, 95), Map.of(CONTIG, 100.0, SIBLING, 100.0));
+        Map<VirusGenome, GenomeFilterStatus> statuses = statuses(Map.of(CONTIG, 95, SIBLING, 95), Map.of(CONTIG, 100.0, SIBLING, 100.0));
 
-        assertEquals(ContigFilterStatus.LOW_COVERAGE, statuses.get(CONTIG));
-        assertEquals(ContigFilterStatus.LOW_COVERAGE, statuses.get(SIBLING));
+        assertEquals(GenomeFilterStatus.LOW_COVERAGE, statuses.get(CONTIG));
+        assertEquals(GenomeFilterStatus.LOW_COVERAGE, statuses.get(SIBLING));
     }
 
     @Test
     public void testStatusesGroupPresenceAtCoverageFloor()
     {
         // A lone contig establishes its group only by reaching the coverage floor, here 0.10 * 1000 = 100 bases.
-        assertEquals(ContigFilterStatus.CANDIDATE, status(100, 100.0));
-        assertEquals(ContigFilterStatus.LOW_COVERAGE, status(99, 100.0));
+        assertEquals(GenomeFilterStatus.CANDIDATE, status(100, 100.0));
+        assertEquals(GenomeFilterStatus.LOW_COVERAGE, status(99, 100.0));
     }
 
     @Test
     public void testStatusesVoteDensityFloorDropsCoveredContig()
     {
-        assertEquals(ContigFilterStatus.CANDIDATE, status(500, 0.67));
-        assertEquals(ContigFilterStatus.LOW_VOTE_DENSITY, status(500, 0.66));
+        assertEquals(GenomeFilterStatus.CANDIDATE, status(500, 0.67));
+        assertEquals(GenomeFilterStatus.LOW_VOTE_DENSITY, status(500, 0.66));
     }
 
     @Test
     public void testStatusesCoverageReasonTakesPrecedence()
     {
         // Both filters fail here.
-        assertEquals(ContigFilterStatus.LOW_COVERAGE, statusWithCoveredSibling(50, 0.1));
+        assertEquals(GenomeFilterStatus.LOW_COVERAGE, statusWithCoveredSibling(50, 0.1));
     }
 
-    private static ContigFilterStatus status(int coveredBases, double readVotes)
+    private static GenomeFilterStatus status(int coveredBases, double readVotes)
     {
         return statuses(Map.of(CONTIG, coveredBases), Map.of(CONTIG, readVotes)).get(CONTIG);
     }
 
     // The contig under test alongside a sibling with ample coverage and votes, so the group reaches the coverage
     // minimum.
-    private static ContigFilterStatus statusWithCoveredSibling(int coveredBases)
+    private static GenomeFilterStatus statusWithCoveredSibling(int coveredBases)
     {
         return statusWithCoveredSibling(coveredBases, 100);
     }
 
-    private static ContigFilterStatus statusWithCoveredSibling(int coveredBases, double readVotes)
+    private static GenomeFilterStatus statusWithCoveredSibling(int coveredBases, double readVotes)
     {
         return statuses(
                 Map.of(CONTIG, coveredBases, SIBLING, LENGTH), Map.of(CONTIG, readVotes, SIBLING, 100.0)).get(CONTIG);
     }
 
-    private static Map<VirusGenome, ContigFilterStatus> statuses(
+    private static Map<VirusGenome, GenomeFilterStatus> statuses(
             Map<VirusGenome, Integer> coveredBases, Map<VirusGenome, Double> readVotes)
     {
-        Map<VirusGenome, ContigStats> stats = coveredBases.entrySet().stream()
+        Map<VirusGenome, GenomeStats> stats = coveredBases.entrySet().stream()
                 .collect(toMap(Map.Entry::getKey, entry -> contigStats(entry.getKey(), entry.getValue())));
 
-        return ContigSupportFilter.statuses(stats, readVotes, MEAN_READ_LENGTH);
+        return GenomeSupportFilter.statuses(stats, readVotes, MEAN_READ_LENGTH);
     }
 
     // Only coverage matters to the filter; the remaining stats are filler.
-    private static ContigStats contigStats(VirusGenome contig, int coveredBases)
+    private static GenomeStats contigStats(VirusGenome contig, int coveredBases)
     {
         SummaryStats filler = SummaryStats.from(new int[] { 1 });
-        return new ContigStats(contig, 100, 0, coveredBases, filler, filler);
+        return new GenomeStats(contig, 100, 0, coveredBases, filler, filler);
     }
 }

@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.viridian.detection.support;
 
-import com.hartwig.hmftools.viridian.detection.common.ContigStats;
+import com.hartwig.hmftools.viridian.detection.common.GenomeStats;
 import com.hartwig.hmftools.viridian.detection.common.SummaryStats;
 import com.hartwig.hmftools.viridian.reference.VirusGenome;
 
@@ -8,9 +8,9 @@ import org.jetbrains.annotations.Nullable;
 
 // Per-contig support information from aligning reads to every virus genome at once (BWA-MEM -a mode).
 // Used to detect viruses and select the representative contig for an oncology group.
-public record ContigSupport(
-        ContigStats stats,
-        ContigFilterStatus filterStatus,
+public record GenomeSupport(
+        GenomeStats stats,
+        GenomeFilterStatus filterStatus,
         // Reads with more than one alignment to this contig.
         int multiAlignReads,
         // Alignments to this contig per read. Theoretically can be > 1. Null only when every alignment was origin clipped.
@@ -25,6 +25,6 @@ public record ContigSupport(
 
     public boolean isCandidate()
     {
-        return filterStatus == ContigFilterStatus.CANDIDATE;
+        return filterStatus == GenomeFilterStatus.CANDIDATE;
     }
 }

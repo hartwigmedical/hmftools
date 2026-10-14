@@ -18,17 +18,17 @@ import java.util.stream.Stream;
 import com.hartwig.hmftools.viridian.detection.align.AlignedInterval;
 import com.hartwig.hmftools.viridian.detection.align.ViralReadAlignment;
 import com.hartwig.hmftools.viridian.detection.align.ViralReadAlignmentStore;
-import com.hartwig.hmftools.viridian.detection.common.ContigStats;
+import com.hartwig.hmftools.viridian.detection.common.GenomeStats;
 import com.hartwig.hmftools.viridian.detection.common.ReadId;
 import com.hartwig.hmftools.viridian.detection.common.SummaryStats;
-import com.hartwig.hmftools.viridian.detection.support.ContigFilterStatus;
-import com.hartwig.hmftools.viridian.detection.support.ContigSupport;
+import com.hartwig.hmftools.viridian.detection.support.GenomeFilterStatus;
+import com.hartwig.hmftools.viridian.detection.support.GenomeSupport;
 import com.hartwig.hmftools.viridian.reference.OncologyGroup;
 import com.hartwig.hmftools.viridian.reference.VirusGenome;
 
 import org.junit.Test;
 
-public class RepresentativeContigSelectorTest
+public class RepresentativeGenomeSelectorTest
 {
     private static final int LENGTH = 1000;
 
@@ -46,8 +46,8 @@ public class RepresentativeContigSelectorTest
         // Votes close enough to be comparable, and neither contig challenges the other.
         List<OncologyGroupRepresentativeSelection> selections = select(support(candidate(V1, 100), candidate(V2, 95)), margins());
 
-        assertEquals(ContigRole.REPRESENTATIVE, role(selections, V1));
-        assertEquals(ContigRole.REPRESENTATIVE_TWIN, role(selections, V2));
+        assertEquals(GenomeRole.REPRESENTATIVE, role(selections, V1));
+        assertEquals(GenomeRole.REPRESENTATIVE_TWIN, role(selections, V2));
         assertEquals(OncologyGroupOutcome.RESOLVED_CANDIDATES, group(selections, GROUP_A).outcome());
         assertEquals(OncologyGroupResolution.RESOLVED, group(selections, GROUP_A).resolution());
         assertEquals(V1, group(selections, GROUP_A).representative());
@@ -59,8 +59,8 @@ public class RepresentativeContigSelectorTest
         List<OncologyGroupRepresentativeSelection> selections = select(
                 support(candidate(V1, 100), candidate(V2, 95)), margins(challenge(V1, V2, 40)));
 
-        assertEquals(ContigRole.REPRESENTATIVE, role(selections, V1));
-        assertEquals(ContigRole.SECONDARY, role(selections, V2));
+        assertEquals(GenomeRole.REPRESENTATIVE, role(selections, V1));
+        assertEquals(GenomeRole.SECONDARY, role(selections, V2));
         assertEquals(OncologyGroupOutcome.RESOLVED_CANDIDATES, group(selections, GROUP_A).outcome());
         assertEquals(Set.of(V2), result(selections, V1).challenges());
         assertEquals(Set.of(V1), result(selections, V2).challengedBy());
@@ -96,8 +96,8 @@ public class RepresentativeContigSelectorTest
                 support(candidate(V1, 100), candidate(V3, 10)), margins(challenge(V3, V1, 40)));
 
         assertEquals(OncologyGroupOutcome.MINOR_RIVAL, group(selections, GROUP_A).outcome());
-        assertEquals(ContigRole.CONTESTED, role(selections, V1));
-        assertEquals(ContigRole.MINOR_CHALLENGER, role(selections, V3));
+        assertEquals(GenomeRole.CONTESTED, role(selections, V1));
+        assertEquals(GenomeRole.MINOR_CHALLENGER, role(selections, V3));
         assertNull(group(selections, GROUP_A).representative());
     }
 
@@ -106,8 +106,8 @@ public class RepresentativeContigSelectorTest
     {
         List<OncologyGroupRepresentativeSelection> selections = select(support(candidate(V1, 100), candidate(V3, 10)), margins());
 
-        assertEquals(ContigRole.REPRESENTATIVE, role(selections, V1));
-        assertEquals(ContigRole.MINOR, role(selections, V3));
+        assertEquals(GenomeRole.REPRESENTATIVE, role(selections, V1));
+        assertEquals(GenomeRole.MINOR, role(selections, V3));
         assertEquals(OncologyGroupOutcome.RESOLVED_CANDIDATES, group(selections, GROUP_A).outcome());
     }
 
@@ -116,7 +116,7 @@ public class RepresentativeContigSelectorTest
     {
         List<OncologyGroupRepresentativeSelection> selections = select(support(candidate(V1, 100)), margins());
 
-        assertEquals(ContigRole.REPRESENTATIVE, role(selections, V1));
+        assertEquals(GenomeRole.REPRESENTATIVE, role(selections, V1));
         assertEquals(OncologyGroupOutcome.ONE_CANDIDATE, group(selections, GROUP_A).outcome());
     }
 
@@ -127,7 +127,7 @@ public class RepresentativeContigSelectorTest
         List<OncologyGroupRepresentativeSelection> selections = select(
                 support(candidate(V1, 100), candidate(V2, 100)), margins(challenge(V1, V2, 20)), 200);
 
-        assertEquals(ContigRole.SECONDARY, role(selections, V2));
+        assertEquals(GenomeRole.SECONDARY, role(selections, V2));
     }
 
     @Test
@@ -136,7 +136,7 @@ public class RepresentativeContigSelectorTest
         List<OncologyGroupRepresentativeSelection> selections = select(
                 support(candidate(V1, 100), candidate(V2, 100)), margins(challenge(V1, V2, 19)), 200);
 
-        assertEquals(ContigRole.REPRESENTATIVE_TWIN, role(selections, V2));
+        assertEquals(GenomeRole.REPRESENTATIVE_TWIN, role(selections, V2));
     }
 
     @Test
@@ -147,20 +147,20 @@ public class RepresentativeContigSelectorTest
                 support(candidate(V1, 100), candidate(V2, 100)),
                 margins(challenge(V1, V2, 100, REPRESENTATIVE_CHALLENGE_MARGIN_MIN - 1)));
 
-        assertEquals(ContigRole.REPRESENTATIVE_TWIN, role(selections, V2));
+        assertEquals(GenomeRole.REPRESENTATIVE_TWIN, role(selections, V2));
     }
 
     @Test
     public void testSelectRejectedContigsExcluded()
     {
-        List<ContigSupport> support = support(
+        List<GenomeSupport> support = support(
                 candidate(V1, 100),
-                rejected(V2, ContigFilterStatus.LOW_VOTE_DENSITY),
-                rejected(H1, ContigFilterStatus.LOW_COVERAGE));
+                rejected(V2, GenomeFilterStatus.LOW_VOTE_DENSITY),
+                rejected(H1, GenomeFilterStatus.LOW_COVERAGE));
 
         List<OncologyGroupRepresentativeSelection> selections = select(support, margins());
 
-        assertEquals(ContigRole.REPRESENTATIVE, role(selections, V1));
+        assertEquals(GenomeRole.REPRESENTATIVE, role(selections, V1));
         assertEquals(List.of(V2), contigs(group(selections, GROUP_A).rejected()));
         assertEquals(OncologyGroupOutcome.NO_CANDIDATES, group(selections, GROUP_H).outcome());
         assertEquals(OncologyGroupResolution.NO_CANDIDATES, group(selections, GROUP_H).resolution());
@@ -173,12 +173,12 @@ public class RepresentativeContigSelectorTest
     {
         // A group can hold a contig supported only by alignments dropped over the contig origin, leaving the group with
         // no reads counted against it. Such a contig is never a candidate, so selection must not need the count.
-        List<ContigSupport> support = support(candidate(V1, 100), rejected(H1, ContigFilterStatus.LOW_COVERAGE));
+        List<GenomeSupport> support = support(candidate(V1, 100), rejected(H1, GenomeFilterStatus.LOW_COVERAGE));
         Map<OncologyGroup, Integer> readCounts = Map.of(GROUP_A, 200);
 
-        List<OncologyGroupRepresentativeSelection> selections = RepresentativeContigSelector.select(support, margins(), readCounts);
+        List<OncologyGroupRepresentativeSelection> selections = RepresentativeGenomeSelector.select(support, margins(), readCounts);
 
-        assertEquals(ContigRole.REPRESENTATIVE, role(selections, V1));
+        assertEquals(GenomeRole.REPRESENTATIVE, role(selections, V1));
         assertEquals(OncologyGroupOutcome.NO_CANDIDATES, group(selections, GROUP_H).outcome());
     }
 
@@ -194,22 +194,22 @@ public class RepresentativeContigSelectorTest
 
     // Group read count is derived from sum of votes, which is plausible enough.
     // Use the other overload if you need to set the read count precisely.
-    private static List<OncologyGroupRepresentativeSelection> select(List<ContigSupport> support, PairwiseMargins margins)
+    private static List<OncologyGroupRepresentativeSelection> select(List<GenomeSupport> support, PairwiseMargins margins)
     {
         Map<OncologyGroup, Integer> readCounts = new HashMap<>();
         support.forEach(contig -> readCounts.merge(
                 contig.contig().oncologyGroup(), (int) Math.round(contig.readVotes()), Integer::sum));
-        return RepresentativeContigSelector.select(support, margins, readCounts);
+        return RepresentativeGenomeSelector.select(support, margins, readCounts);
     }
 
     private static List<OncologyGroupRepresentativeSelection> select(
-            List<ContigSupport> support, PairwiseMargins margins, int groupReads)
+            List<GenomeSupport> support, PairwiseMargins margins, int groupReads)
     {
         Map<OncologyGroup, Integer> readCounts = support.stream()
                 .map(contig -> contig.contig().oncologyGroup())
                 .distinct()
                 .collect(toMap(group -> group, group -> groupReads));
-        return RepresentativeContigSelector.select(support, margins, readCounts);
+        return RepresentativeGenomeSelector.select(support, margins, readCounts);
     }
 
     @SafeVarargs
@@ -253,7 +253,7 @@ public class RepresentativeContigSelectorTest
                 .orElseThrow();
     }
 
-    private static RepresentativeContigCandidate result(List<OncologyGroupRepresentativeSelection> selections, VirusGenome contig)
+    private static RepresentativeGenomeCandidate result(List<OncologyGroupRepresentativeSelection> selections, VirusGenome contig)
     {
         return selections.stream()
                 .flatMap(selection -> selection.candidates().stream())
@@ -262,37 +262,37 @@ public class RepresentativeContigSelectorTest
                 .orElseThrow();
     }
 
-    private static ContigRole role(List<OncologyGroupRepresentativeSelection> selections, VirusGenome contig)
+    private static GenomeRole role(List<OncologyGroupRepresentativeSelection> selections, VirusGenome contig)
     {
         return result(selections, contig).role();
     }
 
-    private static List<VirusGenome> contigs(List<ContigSupport> support)
+    private static List<VirusGenome> contigs(List<GenomeSupport> support)
     {
-        return support.stream().map(ContigSupport::contig).toList();
+        return support.stream().map(GenomeSupport::contig).toList();
     }
 
-    private static List<ContigSupport> support(ContigSupport... support)
+    private static List<GenomeSupport> support(GenomeSupport... support)
     {
         return List.of(support);
     }
 
-    private static ContigSupport candidate(VirusGenome contig, double votes)
+    private static GenomeSupport candidate(VirusGenome contig, double votes)
     {
-        return contigSupport(contig, ContigFilterStatus.CANDIDATE, votes);
+        return contigSupport(contig, GenomeFilterStatus.CANDIDATE, votes);
     }
 
-    private static ContigSupport rejected(VirusGenome contig, ContigFilterStatus filterStatus)
+    private static GenomeSupport rejected(VirusGenome contig, GenomeFilterStatus filterStatus)
     {
         return contigSupport(contig, filterStatus, 100);
     }
 
     // Selection reads only the contig, its filter status and its read votes. The remaining fields are filler, set to
     // values consistent with a present contig so nothing reads as contradictory.
-    private static ContigSupport contigSupport(VirusGenome contig, ContigFilterStatus filterStatus, double votes)
+    private static GenomeSupport contigSupport(VirusGenome contig, GenomeFilterStatus filterStatus, double votes)
     {
         SummaryStats filler = SummaryStats.from(new int[] { 1 });
-        return new ContigSupport(
-                new ContigStats(contig, 100, 0, LENGTH / 2, filler, filler), filterStatus, 0, filler, votes);
+        return new GenomeSupport(
+                new GenomeStats(contig, 100, 0, LENGTH / 2, filler, filler), filterStatus, 0, filler, votes);
     }
 }

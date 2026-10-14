@@ -26,12 +26,12 @@ import htsjdk.samtools.ValidationStringency;
 
 // Alignments of reads to (possibly multiple) virus genomes (via BWA-MEM -a mode).
 // Alignments straddling a contig's origin are excluded here to avoid circular genome linearization artifacts.
-public record AllContigsReadAlignments(
+public record AllGenomesReadAlignments(
         ViralReadAlignmentStore store,
-        AllContigsReadAlignmentsMetrics metrics
+        AllGenomesReadAlignmentsMetrics metrics
 )
 {
-    public static AllContigsReadAlignments from(List<ViralReadAlignment> alignments, @Nullable Double meanReadLength)
+    public static AllGenomesReadAlignments from(List<ViralReadAlignment> alignments, @Nullable Double meanReadLength)
     {
         Map<VirusGenome, Set<ReadId>> originClippedReadsByContig = new HashMap<>();
         Map<OncologyGroup, Set<ReadId>> readsByOncologyGroup = new HashMap<>();
@@ -68,16 +68,16 @@ public record AllContigsReadAlignments(
                     .add(readContigAlignments.size());
         });
 
-        AllContigsReadAlignmentsMetrics metrics = new AllContigsReadAlignmentsMetrics(
+        AllGenomesReadAlignmentsMetrics metrics = new AllGenomesReadAlignmentsMetrics(
                 meanReadLength,
                 countReads(originClippedReadsByContig),
                 countReads(readsByOncologyGroup),
                 alignmentCountsByContig);
 
-        return new AllContigsReadAlignments(new ViralReadAlignmentStore(retained), metrics);
+        return new AllGenomesReadAlignments(new ViralReadAlignmentStore(retained), metrics);
     }
 
-    public static AllContigsReadAlignments load(String bamFile, VirusReference reference)
+    public static AllGenomesReadAlignments load(String bamFile, VirusReference reference)
     {
         List<ViralReadAlignment> alignments = new ArrayList<>();
         long readLengthSum = 0;

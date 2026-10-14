@@ -9,7 +9,7 @@ import com.hartwig.hmftools.viridian.reference.VirusGenome;
 import org.jetbrains.annotations.Nullable;
 
 // Supporting information for the alignment of reads to all virus genomes.
-public record AllContigsReadAlignmentsMetrics(
+public record AllGenomesReadAlignmentsMetrics(
         // Null only when no read aligned.
         @Nullable Double meanReadLength,
         // Reads with an alignment dropped for clipping over their contig's start or end.
@@ -20,7 +20,7 @@ public record AllContigsReadAlignmentsMetrics(
         Map<VirusGenome, List<Integer>> alignmentCountsByContig
 )
 {
-    public AllContigsReadAlignmentsMetrics
+    public AllGenomesReadAlignmentsMetrics
     {
         boolean hasAlignments = !originClippedReads.isEmpty() || !alignmentCountsByContig.isEmpty();
         if(hasAlignments == (meanReadLength == null))

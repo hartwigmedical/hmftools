@@ -2,7 +2,7 @@ package com.hartwig.hmftools.viridian.detection.select;
 
 // A candidate virus contig's standing within its oncology group after representative contig selection.
 // "Abundant" means its read vote share is near the highest for that oncology group.
-public enum ContigRole
+public enum GenomeRole
 {
     // The chosen representative: an abundant contig no abundant peer challenges, with the most read votes.
     REPRESENTATIVE,

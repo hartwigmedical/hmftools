@@ -19,7 +19,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.IntStream;
 
-import com.hartwig.hmftools.viridian.detection.support.ContigSupport;
+import com.hartwig.hmftools.viridian.detection.support.GenomeSupport;
 import com.hartwig.hmftools.viridian.reference.OncologyGroup;
 import com.hartwig.hmftools.viridian.reference.VirusGenome;
 
@@ -27,10 +27,10 @@ import com.hartwig.hmftools.viridian.reference.VirusGenome;
 // First, contigs are filtered on coverage and read votes.
 // Then a "challenges" graph determines the presence of "rival" contigs - contigs with low overall support, but
 // decisively supported by a subset of reads. I.e. 1 contig doesn't explain the whole virus genome in the sample.
-public class RepresentativeContigSelector
+public class RepresentativeGenomeSelector
 {
     public static List<OncologyGroupRepresentativeSelection> select(
-            Collection<ContigSupport> contigSupport, PairwiseMargins margins, Map<OncologyGroup, Integer> groupReadCounts)
+            Collection<GenomeSupport> contigSupport, PairwiseMargins margins, Map<OncologyGroup, Integer> groupReadCounts)
     {
         return contigSupport.stream()
                 .collect(groupingBy(support -> support.contig().oncologyGroup()))
@@ -40,13 +40,13 @@ public class RepresentativeContigSelector
     }
 
     private static OncologyGroupRepresentativeSelection selectOncologyGroup(
-            OncologyGroup oncologyGroup, List<ContigSupport> groupContigs, PairwiseMargins margins,
+            OncologyGroup oncologyGroup, List<GenomeSupport> groupContigs, PairwiseMargins margins,
             Map<OncologyGroup, Integer> groupReadCounts)
     {
-        List<ContigSupport> rejected = groupContigs.stream().filter(support -> !support.isCandidate()).toList();
-        List<ContigSupport> candidates = groupContigs.stream()
-                .filter(ContigSupport::isCandidate)
-                .sorted(comparingDouble(ContigSupport::readVotes).reversed().thenComparing(ContigSupport::contig))
+        List<GenomeSupport> rejected = groupContigs.stream().filter(support -> !support.isCandidate()).toList();
+        List<GenomeSupport> candidates = groupContigs.stream()
+                .filter(GenomeSupport::isCandidate)
+                .sorted(comparingDouble(GenomeSupport::readVotes).reversed().thenComparing(GenomeSupport::contig))
                 .toList();
 
         if(candidates.isEmpty())
@@ -58,7 +58,7 @@ public class RepresentativeContigSelector
 
         int groupReads = requireNonNull(groupReadCounts.get(oncologyGroup));
 
-        List<VirusGenome> contigs = candidates.stream().map(ContigSupport::contig).toList();
+        List<VirusGenome> contigs = candidates.stream().map(GenomeSupport::contig).toList();
         Set<VirusGenome> comparable = comparableContigs(candidates);
         Map<VirusGenome, Set<VirusGenome>> challenges = challenges(contigs, margins, groupReads);
         Map<VirusGenome, Set<VirusGenome>> challengedBy = invertChallengesMap(challenges);
@@ -77,11 +77,11 @@ public class RepresentativeContigSelector
 
         boolean resolved = minorChallengers.isEmpty() && !leaders.isEmpty();
 
-        List<RepresentativeContigCandidate> results = IntStream.range(0, candidates.size())
+        List<RepresentativeGenomeCandidate> results = IntStream.range(0, candidates.size())
                 .mapToObj(index ->
                 {
-                    ContigSupport candidate = candidates.get(index);
-                    return new RepresentativeContigCandidate(
+                    GenomeSupport candidate = candidates.get(index);
+                    return new RepresentativeGenomeCandidate(
                             candidate, index + 1, comparable.contains(candidate.contig()), challenges.get(candidate.contig()),
                             challengedBy.get(candidate.contig()),
                             decideContigRole(candidate.contig(), comparable, minorChallengers, leaders, resolved));
@@ -92,37 +92,37 @@ public class RepresentativeContigSelector
                 oncologyGroup, decideOncologyGroupOutcome(results, comparable, challenges), results, rejected);
     }
 
-    private static ContigRole decideContigRole(
+    private static GenomeRole decideContigRole(
             VirusGenome contig, Set<VirusGenome> comparable, Set<VirusGenome> minorChallengers, List<VirusGenome> leaders,
             boolean resolved)
     {
         if(!comparable.contains(contig))
         {
-            return minorChallengers.contains(contig) ? ContigRole.MINOR_CHALLENGER : ContigRole.MINOR;
+            return minorChallengers.contains(contig) ? GenomeRole.MINOR_CHALLENGER : GenomeRole.MINOR;
         }
         else if(!leaders.contains(contig))
         {
-            return ContigRole.SECONDARY;
+            return GenomeRole.SECONDARY;
         }
         else if(!resolved)
         {
-            return ContigRole.CONTESTED;
+            return GenomeRole.CONTESTED;
         }
         else
         {
             // The best supported leader is crowned, the rest being indistinguishable from it bar the vote tie-break.
-            return contig.equals(leaders.get(0)) ? ContigRole.REPRESENTATIVE : ContigRole.REPRESENTATIVE_TWIN;
+            return contig.equals(leaders.get(0)) ? GenomeRole.REPRESENTATIVE : GenomeRole.REPRESENTATIVE_TWIN;
         }
     }
 
     private static OncologyGroupOutcome decideOncologyGroupOutcome(
-            List<RepresentativeContigCandidate> candidates, Set<VirusGenome> comparable, Map<VirusGenome, Set<VirusGenome>> challenges)
+            List<RepresentativeGenomeCandidate> candidates, Set<VirusGenome> comparable, Map<VirusGenome, Set<VirusGenome>> challenges)
     {
-        if(anyHasRole(candidates, ContigRole.MINOR_CHALLENGER))
+        if(anyHasRole(candidates, GenomeRole.MINOR_CHALLENGER))
         {
             return OncologyGroupOutcome.MINOR_RIVAL;
         }
-        else if(!anyHasRole(candidates, ContigRole.REPRESENTATIVE))
+        else if(!anyHasRole(candidates, GenomeRole.REPRESENTATIVE))
         {
             if(hasMutualChallenge(comparable, challenges))
             {
@@ -143,12 +143,12 @@ public class RepresentativeContigSelector
         }
     }
 
-    private static boolean anyHasRole(List<RepresentativeContigCandidate> candidates, ContigRole role)
+    private static boolean anyHasRole(List<RepresentativeGenomeCandidate> candidates, GenomeRole role)
     {
         return candidates.stream().anyMatch(candidate -> candidate.role() == role);
     }
 
-    private static Set<VirusGenome> comparableContigs(List<ContigSupport> candidates)
+    private static Set<VirusGenome> comparableContigs(List<GenomeSupport> candidates)
     {
         double topVotes = candidates.get(0).readVotes();
         if(topVotes <= 0)
@@ -158,7 +158,7 @@ public class RepresentativeContigSelector
 
         return candidates.stream()
                 .filter(support -> support.readVotes() >= REPRESENTATIVE_COMPARABLE_VOTE_RATIO * topVotes)
-                .map(ContigSupport::contig)
+                .map(GenomeSupport::contig)
                 .collect(toSet());
     }
 

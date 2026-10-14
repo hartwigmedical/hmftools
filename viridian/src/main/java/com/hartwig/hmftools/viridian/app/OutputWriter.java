@@ -20,12 +20,12 @@ import java.util.stream.Stream;
 
 import com.hartwig.hmftools.common.utils.file.DelimFileWriter;
 import com.hartwig.hmftools.viridian.detection.DetectedVirus;
-import com.hartwig.hmftools.viridian.detection.common.ContigStats;
+import com.hartwig.hmftools.viridian.detection.common.GenomeStats;
 import com.hartwig.hmftools.viridian.detection.common.SummaryStats;
 import com.hartwig.hmftools.viridian.detection.select.OncologyGroupRepresentativeSelection;
 import com.hartwig.hmftools.viridian.detection.select.PairwiseMargins;
-import com.hartwig.hmftools.viridian.detection.select.RepresentativeContigCandidate;
-import com.hartwig.hmftools.viridian.detection.support.ContigSupport;
+import com.hartwig.hmftools.viridian.detection.select.RepresentativeGenomeCandidate;
+import com.hartwig.hmftools.viridian.detection.support.GenomeSupport;
 import com.hartwig.hmftools.viridian.integration.IntegrationCandidate;
 import com.hartwig.hmftools.viridian.integration.align.ViralInsertAlignment;
 import com.hartwig.hmftools.viridian.integration.extract.BreakendSupport;
@@ -52,8 +52,8 @@ public class OutputWriter
         DelimFileWriter.write(
                 file, CONTIG_SUPPORT_COLUMNS, rows, (contigRow, row) ->
                 {
-                    ContigSupport support = contigRow.support();
-                    ContigStats stats = support.stats();
+                    GenomeSupport support = contigRow.support();
+                    GenomeStats stats = support.stats();
                     VirusGenome contig = support.contig();
 
                     row.set(ContigSupportColumn.contig, contig.name());
@@ -78,7 +78,7 @@ public class OutputWriter
                     row.setOrNull(ContigSupportColumn.vote_share_ratio, contigRow.voteShareOfTop());
 
                     // Note unset columns are written as null.
-                    RepresentativeContigCandidate candidate = contigRow.candidate();
+                    RepresentativeGenomeCandidate candidate = contigRow.candidate();
                     if(candidate != null)
                     {
                         row.set(ContigSupportColumn.votes_rank, candidate.votesRank());
@@ -92,9 +92,9 @@ public class OutputWriter
 
     private record ContigSupportRow(
             OncologyGroupRepresentativeSelection selection,
-            ContigSupport support,
+            GenomeSupport support,
             // Null for a contig the support filter rejected, leaving the candidate columns blank.
-            @Nullable RepresentativeContigCandidate candidate,
+            @Nullable RepresentativeGenomeCandidate candidate,
             @Nullable Double preFilterVoteShare,
             @Nullable Double postFilterVoteShare,
             @Nullable Double voteShareOfTop
@@ -105,7 +105,7 @@ public class OutputWriter
     private static Stream<ContigSupportRow> contigSupportRows(OncologyGroupRepresentativeSelection selection)
     {
         double candidateVotes = selection.candidates().stream().mapToDouble(c -> c.support().readVotes()).sum();
-        double rejectedVotes = selection.rejected().stream().mapToDouble(ContigSupport::readVotes).sum();
+        double rejectedVotes = selection.rejected().stream().mapToDouble(GenomeSupport::readVotes).sum();
         double topCandidateVotes = selection.candidates().stream()
                 .mapToDouble(candidate -> candidate.support().readVotes()).max().orElse(0.0);
 
@@ -122,7 +122,7 @@ public class OutputWriter
     }
 
     private static ContigSupportRow contigSupportRow(
-            OncologyGroupRepresentativeSelection selection, ContigSupport support, @Nullable RepresentativeContigCandidate candidate,
+            OncologyGroupRepresentativeSelection selection, GenomeSupport support, @Nullable RepresentativeGenomeCandidate candidate,
             double allVotes, double candidateVotes, double topCandidateVotes)
     {
         double votes = support.readVotes();
@@ -184,7 +184,7 @@ public class OutputWriter
                     row.set(DetectedVirusColumn.comparable_candidate_count, detection.comparableCandidateCount());
 
                     // Note unset columns are written as null, leaving an unmeasured group's columns blank.
-                    ContigStats stats = detection.representativeContigStats();
+                    GenomeStats stats = detection.representativeContigStats();
                     if(stats != null)
                     {
                         VirusGenome contig = stats.contig();
@@ -256,7 +256,7 @@ public class OutputWriter
     {
         return selections.stream()
                 .flatMap(selection -> selection.candidates().stream())
-                .collect(toMap(RepresentativeContigCandidate::contig, RepresentativeContigCandidate::votesRank));
+                .collect(toMap(RepresentativeGenomeCandidate::contig, RepresentativeGenomeCandidate::votesRank));
     }
 
     // One row per ordered within-oncology-group contig pair: the reads they share, and how many of those fit the subject
@@ -266,12 +266,12 @@ public class OutputWriter
         Map<VirusGenome, Integer> votesRanks = candidateVotesRanks(selections);
 
         // A pair's contigs share an oncology group, and only its candidates are ranked, so unranked contigs sort last.
-        List<PairwiseMargins.ContigPair> pairs = margins.pairs().stream()
-                .sorted(comparing((PairwiseMargins.ContigPair pair) -> pair.subject().oncologyGroup())
+        List<PairwiseMargins.GenomePair> pairs = margins.pairs().stream()
+                .sorted(comparing((PairwiseMargins.GenomePair pair) -> pair.subject().oncologyGroup())
                         .thenComparing(pair -> votesRanks.get(pair.subject()), nullsLast(naturalOrder()))
-                        .thenComparing(PairwiseMargins.ContigPair::subject)
+                        .thenComparing(PairwiseMargins.GenomePair::subject)
                         .thenComparing(pair -> votesRanks.get(pair.opponent()), nullsLast(naturalOrder()))
-                        .thenComparing(PairwiseMargins.ContigPair::opponent))
+                        .thenComparing(PairwiseMargins.GenomePair::opponent))
                 .toList();
 
         List<String> columns = Stream.concat(
@@ -448,7 +448,7 @@ public class OutputWriter
                     row.set(VirusReportColumn.integrations, report.integrations());
                     row.set(VirusReportColumn.detected, report.isDetected());
 
-                    ContigStats stats = report.representativeStats();
+                    GenomeStats stats = report.representativeStats();
                     if(stats != null)
                     {
                         VirusGenome contig = stats.contig();

@@ -15,9 +15,9 @@ import com.hartwig.hmftools.viridian.detection.align.ViralReadAlignment;
 import com.hartwig.hmftools.viridian.reference.VirusGenome;
 
 // Statistics for every contig with an alignment, counting each read once by its best alignment there.
-public class ContigStatsCalculator
+public class GenomeStatsCalculator
 {
-    public static Map<VirusGenome, ContigStats> calculate(
+    public static Map<VirusGenome, GenomeStats> calculate(
             Map<VirusGenome, Map<ReadId, ViralReadAlignment>> alignmentsByContig,
             Map<VirusGenome, Integer> originClippedReads)
     {
@@ -32,7 +32,7 @@ public class ContigStatsCalculator
                                 originClippedReads.getOrDefault(contig, 0))));
     }
 
-    private static ContigStats createContigStats(
+    private static GenomeStats createContigStats(
             VirusGenome contig, Collection<ViralReadAlignment> alignments, int originClippedReads)
     {
         int[] depth = calculateDepth(contig.length(), alignments);
@@ -42,7 +42,7 @@ public class ContigStatsCalculator
         SummaryStats alignerScore = alignments.isEmpty()
                 ? null : SummaryStats.from(alignments.stream().mapToInt(ViralReadAlignment::alignerScore).toArray());
 
-        return new ContigStats(
+        return new GenomeStats(
                 contig, alignments.size(), originClippedReads, coveredBases, SummaryStats.from(depth), alignerScore);
     }
 

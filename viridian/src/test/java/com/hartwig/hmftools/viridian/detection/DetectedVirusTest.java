@@ -14,15 +14,15 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import com.hartwig.hmftools.viridian.detection.common.ContigStats;
+import com.hartwig.hmftools.viridian.detection.common.GenomeStats;
 import com.hartwig.hmftools.viridian.detection.common.SummaryStats;
-import com.hartwig.hmftools.viridian.detection.select.ContigRole;
+import com.hartwig.hmftools.viridian.detection.select.GenomeRole;
 import com.hartwig.hmftools.viridian.detection.select.OncologyGroupOutcome;
 import com.hartwig.hmftools.viridian.detection.select.OncologyGroupRepresentativeSelection;
 import com.hartwig.hmftools.viridian.detection.select.OncologyGroupResolution;
-import com.hartwig.hmftools.viridian.detection.select.RepresentativeContigCandidate;
-import com.hartwig.hmftools.viridian.detection.support.ContigFilterStatus;
-import com.hartwig.hmftools.viridian.detection.support.ContigSupport;
+import com.hartwig.hmftools.viridian.detection.select.RepresentativeGenomeCandidate;
+import com.hartwig.hmftools.viridian.detection.support.GenomeFilterStatus;
+import com.hartwig.hmftools.viridian.detection.support.GenomeSupport;
 import com.hartwig.hmftools.viridian.reference.OncologyGroup;
 import com.hartwig.hmftools.viridian.reference.VirusGenome;
 
@@ -41,7 +41,7 @@ public class DetectedVirusTest
     @Test
     public void testFromResolvedGroupCarriesItsRepresentativeMeasurement()
     {
-        ContigStats stats = stats(V1);
+        GenomeStats stats = stats(V1);
 
         List<DetectedVirus> detections = DetectedVirus.from(
                 List.of(selection(GROUP_A, ONE_CANDIDATE, V1)), Map.of(V1, stats), Map.of(GROUP_A, 500));
@@ -92,9 +92,9 @@ public class DetectedVirusTest
                 () -> DetectedVirus.from(selections, Map.of(W1, stats(W1)), Map.of(GROUP_A, 500)));
     }
 
-    private static ContigStats stats(VirusGenome contig)
+    private static GenomeStats stats(VirusGenome contig)
     {
-        return new ContigStats(
+        return new GenomeStats(
                 contig, 10, 1, 80, SummaryStats.from(new int[contig.length()]), SummaryStats.from(new int[] { 100 }));
     }
 
@@ -108,22 +108,22 @@ public class DetectedVirusTest
             OncologyGroup group, OncologyGroupOutcome outcome, @Nullable VirusGenome representative,
             List<VirusGenome> others, List<VirusGenome> rejected)
     {
-        List<RepresentativeContigCandidate> candidates = Stream.concat(
+        List<RepresentativeGenomeCandidate> candidates = Stream.concat(
                         representative != null ? Stream.of(representative) : Stream.empty(), others.stream())
                 .map(contig -> candidate(contig, contig.equals(representative)))
                 .toList();
-        List<ContigSupport> rejectedSupports = rejected.stream()
-                .map(contig -> new ContigSupport(stats(contig), ContigFilterStatus.LOW_COVERAGE, 0, null, 0.1))
+        List<GenomeSupport> rejectedSupports = rejected.stream()
+                .map(contig -> new GenomeSupport(stats(contig), GenomeFilterStatus.LOW_COVERAGE, 0, null, 0.1))
                 .toList();
 
         return new OncologyGroupRepresentativeSelection(group, outcome, candidates, rejectedSupports);
     }
 
-    private static RepresentativeContigCandidate candidate(VirusGenome contig, boolean representative)
+    private static RepresentativeGenomeCandidate candidate(VirusGenome contig, boolean representative)
     {
-        ContigSupport support = new ContigSupport(stats(contig), ContigFilterStatus.CANDIDATE, 0, null, 1.0);
-        return new RepresentativeContigCandidate(
+        GenomeSupport support = new GenomeSupport(stats(contig), GenomeFilterStatus.CANDIDATE, 0, null, 1.0);
+        return new RepresentativeGenomeCandidate(
                 support, 1, true, Set.of(), Set.of(),
-                representative ? ContigRole.REPRESENTATIVE : ContigRole.SECONDARY);
+                representative ? GenomeRole.REPRESENTATIVE : GenomeRole.SECONDARY);
     }
 }

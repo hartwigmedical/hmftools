@@ -12,7 +12,7 @@ import com.hartwig.hmftools.viridian.reference.VirusGenome;
 
 import org.junit.Test;
 
-public class AllContigsReadAlignmentsTest
+public class AllGenomesReadAlignmentsTest
 {
     private static final int LENGTH = 100;
 
@@ -27,7 +27,7 @@ public class AllContigsReadAlignmentsTest
     public void testFromOriginStraddlersExcludedAndCounted()
     {
         // An alignment clipping over a contig end straddles the circular origin.
-        AllContigsReadAlignments allAlignments = AllContigsReadAlignments.from(
+        AllGenomesReadAlignments allAlignments = AllGenomesReadAlignments.from(
                 List.of(alignment("r1", V1), straddler("r2", V1), straddler("r3", V1)), 150.0);
 
         assertEquals(1, allAlignments.store().readCount());
@@ -37,7 +37,7 @@ public class AllContigsReadAlignmentsTest
     @Test
     public void testFromReadCountedOncePerOncologyGroup()
     {
-        AllContigsReadAlignments allAlignments = AllContigsReadAlignments.from(
+        AllGenomesReadAlignments allAlignments = AllGenomesReadAlignments.from(
                 List.of(alignment("r1", V1), alignment("r1", V2), alignment("r2", V1)), 150.0);
 
         assertEquals(Map.of(GROUP_A, 2), allAlignments.metrics().readCountsByOncologyGroup());
@@ -46,7 +46,7 @@ public class AllContigsReadAlignmentsTest
     @Test
     public void testFromReadCountedInEveryOncologyGroupItAligns()
     {
-        AllContigsReadAlignments allAlignments = AllContigsReadAlignments.from(List.of(alignment("r1", V1), alignment("r1", H1)), 150.0);
+        AllGenomesReadAlignments allAlignments = AllGenomesReadAlignments.from(List.of(alignment("r1", V1), alignment("r1", H1)), 150.0);
 
         assertEquals(Map.of(GROUP_A, 1, GROUP_H, 1), allAlignments.metrics().readCountsByOncologyGroup());
     }
@@ -55,7 +55,7 @@ public class AllContigsReadAlignmentsTest
     public void testFromStraddlersDoNotCountTowardsReadCounts()
     {
         // A contig carrying only straddlers leaves its group unrepresented.
-        AllContigsReadAlignments allAlignments = AllContigsReadAlignments.from(List.of(alignment("r1", V1), straddler("r2", H1)), 150.0);
+        AllGenomesReadAlignments allAlignments = AllGenomesReadAlignments.from(List.of(alignment("r1", V1), straddler("r2", H1)), 150.0);
 
         assertEquals(Map.of(GROUP_A, 1), allAlignments.metrics().readCountsByOncologyGroup());
     }
@@ -63,7 +63,7 @@ public class AllContigsReadAlignmentsTest
     @Test
     public void testFromOriginClippedCountsReadsNotAlignments()
     {
-        AllContigsReadAlignments allAlignments = AllContigsReadAlignments.from(
+        AllGenomesReadAlignments allAlignments = AllGenomesReadAlignments.from(
                 List.of(straddler("r1", V1), straddler("r1", V1), straddler("r2", V1)), 150.0);
 
         assertEquals(Map.of(V1, 2), allAlignments.metrics().originClippedReads());
@@ -74,7 +74,7 @@ public class AllContigsReadAlignmentsTest
     @Test
     public void testFromRepeatAlignmentsReducedToBestAndCounted()
     {
-        AllContigsReadAlignments allAlignments = AllContigsReadAlignments.from(
+        AllGenomesReadAlignments allAlignments = AllGenomesReadAlignments.from(
                 List.of(
                         divergentAlignment("r1", V1, 4),
                         divergentAlignment("r1", V1, 9),
@@ -91,18 +91,18 @@ public class AllContigsReadAlignmentsTest
     @Test
     public void testFromNoAlignmentsHasNoMeanReadLength()
     {
-        AllContigsReadAlignments allAlignments = AllContigsReadAlignments.from(List.of(), null);
+        AllGenomesReadAlignments allAlignments = AllGenomesReadAlignments.from(List.of(), null);
 
         assertEquals(0, allAlignments.store().readCount());
-        assertEquals(new AllContigsReadAlignmentsMetrics(null, Map.of(), Map.of(), Map.of()), allAlignments.metrics());
+        assertEquals(new AllGenomesReadAlignmentsMetrics(null, Map.of(), Map.of(), Map.of()), allAlignments.metrics());
     }
 
     @Test
     public void testFromMeanReadLengthPresentExactlyWhenAligned()
     {
-        assertThrows(IllegalArgumentException.class, () -> AllContigsReadAlignments.from(List.of(), 150.0));
-        assertThrows(IllegalArgumentException.class, () -> AllContigsReadAlignments.from(List.of(alignment("r1", V1)), null));
-        assertThrows(IllegalArgumentException.class, () -> AllContigsReadAlignments.from(List.of(straddler("r1", V1)), null));
+        assertThrows(IllegalArgumentException.class, () -> AllGenomesReadAlignments.from(List.of(), 150.0));
+        assertThrows(IllegalArgumentException.class, () -> AllGenomesReadAlignments.from(List.of(alignment("r1", V1)), null));
+        assertThrows(IllegalArgumentException.class, () -> AllGenomesReadAlignments.from(List.of(straddler("r1", V1)), null));
     }
 
     private static ViralReadAlignment divergentAlignment(String readName, VirusGenome contig, int divergence)

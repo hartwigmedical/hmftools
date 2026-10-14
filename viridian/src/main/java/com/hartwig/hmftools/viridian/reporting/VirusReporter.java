@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.hartwig.hmftools.viridian.detection.DetectedVirus;
-import com.hartwig.hmftools.viridian.detection.common.ContigStats;
+import com.hartwig.hmftools.viridian.detection.common.GenomeStats;
 import com.hartwig.hmftools.viridian.reference.OncologyGroup;
 import com.hartwig.hmftools.viridian.reference.OncologyGroupInfo;
 
@@ -45,7 +45,7 @@ public class VirusReporter
             OncologyGroup group, @Nullable DetectedVirus detected, int integrations,
             OncologyGroupInfo info, @Nullable Double expectedViralDepthPerCopy)
     {
-        ContigStats representativeStats = detected != null ? detected.representativeContigStats() : null;
+        GenomeStats representativeStats = detected != null ? detected.representativeContigStats() : null;
 
         // Null when it couldn't be calculated from the Purple data, in which case the virus can only be reported on integrations.
         Double copiesPerTumorCell = representativeStats != null && expectedViralDepthPerCopy != null

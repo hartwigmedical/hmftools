@@ -19,7 +19,7 @@ import static org.junit.Assert.assertTrue;
 import com.hartwig.hmftools.common.virus.VirusLikelihoodType;
 import com.hartwig.hmftools.common.virus.VirusType;
 import com.hartwig.hmftools.viridian.detection.DetectedVirus;
-import com.hartwig.hmftools.viridian.detection.common.ContigStats;
+import com.hartwig.hmftools.viridian.detection.common.GenomeStats;
 import com.hartwig.hmftools.viridian.detection.common.SummaryStats;
 import com.hartwig.hmftools.viridian.reference.OncologyGroup;
 import com.hartwig.hmftools.viridian.reference.OncologyGroupInfo;
@@ -151,7 +151,7 @@ public class VirusReporterTest
     {
         SummaryStats depth = SummaryStats.from(new int[] { (int) meanDepth });
         SummaryStats alignerScore = SummaryStats.from(new int[] { 30 });
-        ContigStats stats = new ContigStats(CONTIG, 1, 0, CONTIG.length(), depth, alignerScore);
+        GenomeStats stats = new GenomeStats(CONTIG, 1, 0, CONTIG.length(), depth, alignerScore);
         return new DetectedVirus(GROUP, RESOLVED, RESOLVED_CANDIDATES, 100, 1, 1, 0, stats);
     }
 }
