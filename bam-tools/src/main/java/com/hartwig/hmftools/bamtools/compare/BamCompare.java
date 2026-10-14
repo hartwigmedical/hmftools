@@ -9,10 +9,12 @@ import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
@@ -51,6 +53,11 @@ public class BamCompare
 
         UnmatchedReadHandler unmatchedReadHandler = new UnmatchedReadHandler(mConfig);
 
+        final IgnoreRegionIndex ignoreRegionIndex = mConfig.IgnoreRegionFiles.isEmpty()
+                ? null : IgnoreRegionIndex.load(mConfig.IgnoreRegionFiles);
+        final Set<String> ignoredReadNames = ignoreRegionIndex != null
+                ? Collections.newSetFromMap(new ConcurrentHashMap<>()) : null;
+
         List<PartitionReader> partitionTasks = new ArrayList<>();
 
         File origBamFile = new File(mConfig.OrigBamFile);
@@ -61,7 +68,8 @@ public class BamCompare
         for(ChrBaseRegion partition : partitions)
         {
             PartitionReader partitionReader = new PartitionReader(
-                    partition.toString(), mConfig, partition, origBamFile, newBamFile, readWriter, unmatchedReadHandler);
+                    partition.toString(), mConfig, partition, origBamFile, newBamFile, readWriter, unmatchedReadHandler,
+                    ignoreRegionIndex, ignoredReadNames);
 
             partitionTasks.add(partitionReader);
         }
@@ -72,12 +80,30 @@ public class BamCompare
         if(includeFullyUnmapped)
         {
             PartitionReader partitionReader = new PartitionReader(
-                    FULLY_UNMAPPED_PARTITION, mConfig, null, origBamFile, newBamFile, readWriter, unmatchedReadHandler);
+                    FULLY_UNMAPPED_PARTITION, mConfig, null, origBamFile, newBamFile, readWriter, unmatchedReadHandler,
+                    ignoreRegionIndex, ignoredReadNames);
 
             partitionTasks.add(partitionReader);
         }
 
         BT_LOGGER.info("splitting {} partitions across {} threads", partitionTasks.size(), mConfig.Threads);
+
+        if(ignoreRegionIndex != null)
+        {
+            long scanStartMs = System.currentTimeMillis();
+            BT_LOGGER.info("ignore-region pre-pass: scanning {} partitions for readnames to drop", partitionTasks.size());
+
+            List<Callable<Void>> scanCallables = partitionTasks.stream()
+                    .map(p -> (Callable<Void>) () -> { p.scanIgnoredReadNames(); return null; })
+                    .collect(Collectors.toList());
+
+            if(!TaskExecutor.executeTasks(scanCallables, mConfig.Threads))
+                System.exit(1);
+
+            long scanSecs = (System.currentTimeMillis() - scanStartMs) / 1000;
+            BT_LOGGER.info("ignore-region pre-pass complete: {} readname(s) flagged, {} sec",
+                    ignoredReadNames.size(), scanSecs);
+        }
 
         List<Callable<Void>> callableList = partitionTasks.stream().collect(Collectors.toList());
 
@@ -104,7 +130,8 @@ public class BamCompare
                 Pair<File,File> hashBamPair = hashBamPairEntries.getValue();
 
                 partitionTasks.add(new PartitionReader(String.format("hash bam %d", hashBamPairEntries.getKey()),
-                        mConfig, null, hashBamPair.getLeft(), hashBamPair.getRight(), readWriter, null));
+                        mConfig, null, hashBamPair.getLeft(), hashBamPair.getRight(), readWriter, null,
+                        ignoreRegionIndex, ignoredReadNames));
            }
 
             callableList = partitionTasks.stream().collect(Collectors.toList());
@@ -117,8 +144,9 @@ public class BamCompare
 
         readWriter.close();
 
-        BT_LOGGER.printf(Level.INFO, "summary: reads(orig=%,d new=%,d) matched(%,d) diffs(%,d)",
-                combinedStats.OrigReadCount, combinedStats.NewReadCount, combinedStats.Matched, combinedStats.DiffCount);
+        BT_LOGGER.printf(Level.INFO, "summary: reads(orig=%,d new=%,d) matched(%,d) diffs(%,d) ignored(%,d)",
+                combinedStats.OrigReadCount, combinedStats.NewReadCount, combinedStats.Matched, combinedStats.DiffCount,
+                combinedStats.IgnoredReadRecords);
 
         BT_LOGGER.info("BamCompare complete, mins({})", runTimeMinsStr(startTimeMs));
     }
