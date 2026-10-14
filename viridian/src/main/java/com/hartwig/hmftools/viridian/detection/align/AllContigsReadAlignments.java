@@ -17,6 +17,8 @@ import com.hartwig.hmftools.viridian.reference.OncologyGroup;
 import com.hartwig.hmftools.viridian.reference.ViralContig;
 import com.hartwig.hmftools.viridian.reference.VirusReference;
 
+import org.jetbrains.annotations.Nullable;
+
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
@@ -29,7 +31,7 @@ public record AllContigsReadAlignments(
         AllContigsReadAlignmentsMetrics metrics
 )
 {
-    public static AllContigsReadAlignments from(List<ViralReadAlignment> alignments, double meanReadLength)
+    public static AllContigsReadAlignments from(List<ViralReadAlignment> alignments, @Nullable Double meanReadLength)
     {
         Map<ViralContig, Set<ReadId>> originClippedReadsByContig = new HashMap<>();
         Map<OncologyGroup, Set<ReadId>> readsByOncologyGroup = new HashMap<>();
@@ -104,7 +106,7 @@ public record AllContigsReadAlignments(
             throw new RuntimeException("Failed to read aligned BAM", e);
         }
 
-        double meanReadLength = readLengthCount > 0 ? (double) readLengthSum / readLengthCount : 0.0;
+        Double meanReadLength = readLengthCount > 0 ? (double) readLengthSum / readLengthCount : null;
         return from(alignments, meanReadLength);
     }
 

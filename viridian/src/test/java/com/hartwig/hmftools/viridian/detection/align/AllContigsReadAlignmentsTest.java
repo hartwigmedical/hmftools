@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.viridian.detection.align;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 
 import java.util.List;
 import java.util.Map;
@@ -84,6 +85,24 @@ public class AllContigsReadAlignmentsTest
         assertEquals(2, contigAlignments.size());
         assertEquals(4, contigAlignments.get(ReadId.parse("r1")).divergence());
         assertEquals(Map.of(V1, List.of(2, 1)), allAlignments.metrics().alignmentCountsByContig());
+    }
+
+    // A sample with no viral reads has no read length to measure; this used to fail the whole run.
+    @Test
+    public void testFromNoAlignmentsHasNoMeanReadLength()
+    {
+        AllContigsReadAlignments allAlignments = AllContigsReadAlignments.from(List.of(), null);
+
+        assertEquals(0, allAlignments.store().readCount());
+        assertEquals(new AllContigsReadAlignmentsMetrics(null, Map.of(), Map.of(), Map.of()), allAlignments.metrics());
+    }
+
+    @Test
+    public void testFromMeanReadLengthPresentExactlyWhenAligned()
+    {
+        assertThrows(IllegalArgumentException.class, () -> AllContigsReadAlignments.from(List.of(), 150.0));
+        assertThrows(IllegalArgumentException.class, () -> AllContigsReadAlignments.from(List.of(alignment("r1", V1)), null));
+        assertThrows(IllegalArgumentException.class, () -> AllContigsReadAlignments.from(List.of(straddler("r1", V1)), null));
     }
 
     private static ViralReadAlignment divergentAlignment(String readName, ViralContig contig, int divergence)

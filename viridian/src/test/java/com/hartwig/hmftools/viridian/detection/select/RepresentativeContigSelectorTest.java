@@ -16,8 +16,8 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 import com.hartwig.hmftools.viridian.detection.align.AlignedInterval;
-import com.hartwig.hmftools.viridian.detection.align.AllContigsReadAlignments;
 import com.hartwig.hmftools.viridian.detection.align.ViralReadAlignment;
+import com.hartwig.hmftools.viridian.detection.align.ViralReadAlignmentStore;
 import com.hartwig.hmftools.viridian.detection.common.ContigStats;
 import com.hartwig.hmftools.viridian.detection.common.ReadId;
 import com.hartwig.hmftools.viridian.detection.common.SummaryStats;
@@ -31,7 +31,6 @@ import org.junit.Test;
 public class RepresentativeContigSelectorTest
 {
     private static final int LENGTH = 1000;
-    private static final double MEAN_READ_LENGTH = 150.0;
 
     private static final OncologyGroup GROUP_A = new OncologyGroup("Group A");
     private static final OncologyGroup GROUP_H = new OncologyGroup("Group H");
@@ -217,7 +216,7 @@ public class RepresentativeContigSelectorTest
     private static PairwiseMargins margins(List<ViralReadAlignment>... challenges)
     {
         List<ViralReadAlignment> alignments = Stream.of(challenges).flatMap(List::stream).toList();
-        return PairwiseMargins.from(AllContigsReadAlignments.from(alignments, MEAN_READ_LENGTH).store().byRead());
+        return PairwiseMargins.from(new ViralReadAlignmentStore(alignments).byRead());
     }
 
     private static List<ViralReadAlignment> challenge(ViralContig subject, ViralContig opponent, int reads)

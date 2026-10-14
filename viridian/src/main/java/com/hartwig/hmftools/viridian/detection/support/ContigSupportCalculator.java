@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.viridian.detection.support;
 
+import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toMap;
 
@@ -37,7 +38,9 @@ public class ContigSupportCalculator
                 .collect(groupingBy(stats -> stats.contig().oncologyGroup()))
                 .values().stream()
                 .flatMap(group -> createGroupContigSupports(
-                        group, readVotes, metrics.alignmentCountsByContig(), metrics.meanReadLength()).stream())
+                        group, readVotes, metrics.alignmentCountsByContig(),
+                        // Contig stats exist only for contigs with alignments, so the mean read length is present.
+                        requireNonNull(metrics.meanReadLength())).stream())
                 .toList();
     }
 

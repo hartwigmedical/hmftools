@@ -96,7 +96,7 @@ public class RepresentativeReadAssignerTest
         String outputBam = new File(mTempDir.getRoot(), "representative.bam").getPath();
 
         RepresentativeReadAssigner.assign(
-                AllContigsReadAlignments.from(List.of(other, chosen), 148).store(), Set.of(REPRESENTATIVE),
+                AllContigsReadAlignments.from(List.of(other, chosen), 148.0).store(), Set.of(REPRESENTATIVE),
                 sourceBam, outputBam);
 
         assertEquals(List.of("53S38M21D49M8S"), cigars(outputBam));

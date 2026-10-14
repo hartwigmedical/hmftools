@@ -6,9 +6,12 @@ import java.util.Map;
 import com.hartwig.hmftools.viridian.reference.OncologyGroup;
 import com.hartwig.hmftools.viridian.reference.ViralContig;
 
+import org.jetbrains.annotations.Nullable;
+
 // Supporting information for the alignment of reads to all virus genomes.
 public record AllContigsReadAlignmentsMetrics(
-        double meanReadLength,
+        // Null only when no read aligned.
+        @Nullable Double meanReadLength,
         // Reads with an alignment dropped for clipping over their contig's start or end.
         Map<ViralContig, Integer> originClippedReads,
         // Distinct reads with at least one alignment to any contig of the oncology group.
@@ -19,7 +22,13 @@ public record AllContigsReadAlignmentsMetrics(
 {
     public AllContigsReadAlignmentsMetrics
     {
-        if(meanReadLength <= 0)
+        boolean hasAlignments = !originClippedReads.isEmpty() || !alignmentCountsByContig.isEmpty();
+        if(hasAlignments == (meanReadLength == null))
+        {
+            throw new IllegalArgumentException(
+                    "meanReadLength must be present when there are alignments: " + meanReadLength);
+        }
+        if(meanReadLength != null && meanReadLength <= 0)
         {
             throw new IllegalArgumentException("Invalid meanReadLength: " + meanReadLength);
         }
