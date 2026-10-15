@@ -149,6 +149,10 @@ public class PositionEvidenceTest
         assertEquals(5, state.ReadIndex);
         assertEquals(100, state.RefPosition);
 
+        state.moveToPosition(105);
+        assertEquals(10, state.ReadIndex);
+        assertEquals(105, state.RefPosition);
+
         state.moveToPosition(109);
         assertEquals(14, state.ReadIndex);
         assertEquals(109, state.RefPosition);

@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.amber;
 
+import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static htsjdk.samtools.CigarOperator.D;
@@ -81,16 +82,18 @@ public class ReadCigarState
                 continue;
             }
 
-            for(; ElementIndex < element.getLength(); ++ElementIndex)
-            {
-                if(RefPosition == position)
-                    break;
+            // eg current pos = 10, required pos = 15, posDiff = 5
+            // current element index = 2, length = 7, remaining length = 4
+            int posDifference = position - RefPosition;
+            int remainingElement = element.getLength() - ElementIndex - 1;
+            int posMove = min(posDifference, remainingElement);
 
-                ++RefPosition;
+            RefPosition += posMove;
 
-                if(element.getOperator().consumesReadBases())
-                    ++ReadIndex;
-            }
+            if(element.getOperator().consumesReadBases())
+                ReadIndex += posMove;
+
+            ElementIndex += posMove;
 
             if(ReadIndex >= BaseLength)
                 return;

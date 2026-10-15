@@ -48,10 +48,6 @@ public class RegionTask
 
         int alignmentStart, alignmentEnd;
 
-        // use cigar to move through read bases efficiently
-        ReadCigarState cigarState = new ReadCigarState(
-                record.getCigar().getCigarElements(), record.getAlignmentStart(), record.getReadBases().length);
-
         if(fragmentBoundaries != null)
         {
             alignmentStart = fragmentBoundaries[0];
@@ -59,8 +55,6 @@ public class RegionTask
 
             if(alignmentStart > alignmentEnd)
                 return;
-
-            cigarState.moveToPosition(alignmentStart);
         }
         else
         {
@@ -71,6 +65,7 @@ public class RegionTask
         int index = mCurrentIndex;
 
         String readBases = null;
+        ReadCigarState cigarState = null;
 
         for(; index < mPositions.size(); ++index)
         {
@@ -86,7 +81,13 @@ public class RegionTask
                 break;
 
             if(readBases == null)
+            {
                 readBases = record.getReadString();
+
+                // use cigar to move through read bases efficiently
+                cigarState = new ReadCigarState(
+                        record.getCigar().getCigarElements(), record.getAlignmentStart(), record.getReadBases().length);
+            }
 
             cigarState.moveToPosition(posEvidence.Position);
 
