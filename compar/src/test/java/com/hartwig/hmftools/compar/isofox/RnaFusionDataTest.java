@@ -1,19 +1,13 @@
 package com.hartwig.hmftools.compar.isofox;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
-import static junit.framework.TestCase.assertEquals;
-
 import java.util.Collections;
 import java.util.Map;
 
+import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItemTest;
 
 import org.junit.Before;
-import org.junit.Test;
 
 public class RnaFusionDataTest extends ComparableItemTest<RnaFusionData, RnaFusionComparer, TestRnaFusionDataBuilder>
 {
@@ -25,10 +19,10 @@ public class RnaFusionDataTest extends ComparableItemTest<RnaFusionData, RnaFusi
         RnaFusionData alternateValueSource = builder.createWithAlternateDefaults();
 
         fieldToAlternateValueInitializer = Map.of(
-                RnaFusionComparer.Fields.KnownType.toString(), b -> b.knownType = alternateValueSource.KnownType,
                 RnaFusionComparer.Fields.JuncTypeUp.toString(), b -> b.junctionTypeUp = alternateValueSource.JunctionTypeUp,
                 RnaFusionComparer.Fields.JuncTypeDown.toString(), b -> b.junctionTypeDown = alternateValueSource.JunctionTypeDown,
-                RnaFusionComparer.Fields.SplitFrags.toString(), b -> b.splitFragments = alternateValueSource.SplitFragments
+                RnaFusionComparer.Fields.SplitFrags.toString(), b -> b.splitFragments = alternateValueSource.SplitFragments,
+                RnaFusionComparer.Fields.Filter.toString(), b -> b.filter = alternateValueSource.Filter
         );
         nameToAlternateIndexInitializer = Map.of(
                 "FusionName", b -> b.name = alternateValueSource.Name,
@@ -49,21 +43,8 @@ public class RnaFusionDataTest extends ComparableItemTest<RnaFusionData, RnaFusi
                     b.positionDown = alternateValueSource.PositionDown;
                 }
         );
-        reportabilityFieldToFalseReportabilityInitializer = Collections.emptyMap();
+        reportabilityFieldToFalseReportabilityInitializer = Map.of(
+                RnaFusionComparer.Fields.KnownType.toString(), b -> b.knownType = KnownFusionType.NONE);
         nameToNonPassInitializer = Collections.emptyMap();
-    }
-
-    @Override
-    @Test
-    public void fullyMatchesSelfInReportableMode()
-    {
-        // Override since Isofox output is never compared in reportable mode
-    }
-
-    @Override
-    @Test
-    public void singleFieldMismatchesAreRecognizedInReportableMode()
-    {
-        // Override since Isofox output is never compared in reportable mode
     }
 }

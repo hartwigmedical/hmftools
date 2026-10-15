@@ -24,6 +24,7 @@ public class TestRnaFusionDataBuilder
     public String transcriptDown = "TRANS_01";
     public int exonUp = 2;
     public int exonDown = 4;
+    public String filter = "PASS";
     public int splitFragments = 100;
     public int realignedFrags = 50;
     public int discordantFrags = 20;
@@ -42,6 +43,7 @@ public class TestRnaFusionDataBuilder
         b.transcriptDown = "TRANS_04";
         b.exonUp = 3;
         b.exonDown = 5;
+        b.filter = "FRAGMENT_COUNT";
         b.splitFragments = 10;
         b.realignedFrags = 5;
         b.discordantFrags = 2;
@@ -68,6 +70,7 @@ public class TestRnaFusionDataBuilder
                 .exonDown(exonDown)
                 .knownType(knownType)
                 .svType(StructuralVariantType.BND)
+                .filter(filter)
                 .splitFragments(splitFragments)
                 .realignedFrags(realignedFrags)
                 .discordantFrags(discordantFrags)

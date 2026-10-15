@@ -3,6 +3,7 @@ package com.hartwig.hmftools.compar.isofox;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.rna.RnaFusionFile.formFusionName;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS_FILTER;
 
 import java.util.List;
 
@@ -24,11 +25,12 @@ public class RnaFusionData extends ComparableItem
     public final String JunctionTypeUp;
     public final String JunctionTypeDown;
     public final int SplitFragments;
+    public final String Filter;
 
     public RnaFusionData(
             final String name, final String chromosomeUp, final String chromosomeDown, final int positionUp,
             final int positionDown, final KnownFusionType knownType,
-            final String junctionTypeUp, final String junctionTypeDown, final int splitFragments)
+            final String junctionTypeUp, final String junctionTypeDown, final int splitFragments, final String filter)
     {
         Name = name;
         ChromosomeUp = chromosomeUp;
@@ -39,13 +41,15 @@ public class RnaFusionData extends ComparableItem
         JunctionTypeUp = junctionTypeUp;
         JunctionTypeDown = junctionTypeDown;
         SplitFragments = splitFragments;
+        Filter = filter;
     }
 
     public static RnaFusionData from(final RnaFusion rnaFusion, final List<FieldInfo> fields)
     {
         RnaFusionData fusionData = new RnaFusionData(
                 rnaFusion.name(), rnaFusion.chromosomeUp(), rnaFusion.chromosomeDown(), rnaFusion.positionUp(), rnaFusion.positionDown(),
-                rnaFusion.knownType(), rnaFusion.junctionTypeUp(), rnaFusion.junctionTypeDown(), rnaFusion.splitFragments());
+                rnaFusion.knownType(), rnaFusion.junctionTypeUp(), rnaFusion.junctionTypeDown(), rnaFusion.splitFragments(),
+                rnaFusion.filter());
 
         fusionData.addAllValues(fields);
         return fusionData;
@@ -57,6 +61,7 @@ public class RnaFusionData extends ComparableItem
         addStringValue(RnaFusionComparer.Fields.JuncTypeUp.toString(), JunctionTypeUp, fields);
         addStringValue(RnaFusionComparer.Fields.JuncTypeDown.toString(), JunctionTypeDown, fields);
         addIntValue(RnaFusionComparer.Fields.SplitFrags.toString(), SplitFragments, fields);
+        addStringValue(RnaFusionComparer.Fields.Filter.toString(), Filter, fields);
     }
 
     public static RnaFusionData fromTruthset(final List<TruthsetValue> truthsetValues, final List<FieldInfo> fields)
@@ -90,7 +95,8 @@ public class RnaFusionData extends ComparableItem
         }
 
         RnaFusionData fusionData = new RnaFusionData(
-                name, chromosomeUp, chromosomeDown, positionUp, positionDown, knownType, junctionTypeUp, junctionTypeDown, splitFragments);
+                name, chromosomeUp, chromosomeDown, positionUp, positionDown, knownType, junctionTypeUp, junctionTypeDown, splitFragments,
+                PASS_FILTER);
 
         fusionData.addTruthsetValues(truthsetValues, fields);
         return fusionData;
@@ -109,6 +115,8 @@ public class RnaFusionData extends ComparableItem
             else if(truthsetValue.FieldName.equals(RnaFusionComparer.Fields.JuncTypeDown.toString()))
                 addStringValue(RnaFusionComparer.Fields.JuncTypeDown.toString(), JunctionTypeDown, fields);
         }
+
+        addStringValue(RnaFusionComparer.Fields.Filter.toString(), Filter, fields);
     }
 
     @Override

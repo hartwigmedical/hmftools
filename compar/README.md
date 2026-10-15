@@ -501,16 +501,17 @@ Data key: SampleId, GeneName, Chromosome, JunctionStart, JunctionEnd
 | RegionEnd   | Exact                   |
 
 ### RNA Fusion
-Only runs in DETAILED mode.
-
 Data key: SampleId, FusionName, ChromosomeUp, PositionUp, ChromosomeDown, PositionDown
 
-| Field           | Match Type & Thresholds |
-|-----------------|-------------------------|
-| KnownFusionType | Exact                   |
-| JuncTypeUp      | Exact                   |
-| JuncTypeDown    | Exact                   |
-| SplitFrags      | Threshold [5, 5%]       |
+| Field        | Match Type & Thresholds |
+|--------------|-------------------------|
+| KnownType    | Exact                   |
+| JuncTypeUp   | Exact                   |
+| JuncTypeDown | Exact                   |
+| SplitFrags   | Threshold [5, 5%]       |
+| Filter       | Exact                   |
+
+A fusion passing in only one source is looked up in the other source's unfiltered fusions file to show why it was filtered.
 
 ### Copy Number
 Only runs in DETAILED mode.

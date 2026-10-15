@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.rna;
 
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS_FILTER;
+
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 
@@ -31,4 +33,10 @@ public abstract class RnaFusion
     public abstract int maxAnchorLengthUp();
     public abstract int maxAnchorLengthDown();
     public abstract int cohortFrequency();
+
+    @Value.Default
+    public String filter()
+    {
+        return PASS_FILTER;
+    }
 }
