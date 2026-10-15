@@ -45,15 +45,31 @@ public class ReadCigarState
         {
             CigarElement element = Elements.get(CigarIndex);
 
+            // check case for end of an aligned section
             if(ElementIndex == element.getLength() - 1)
             {
                 ElementIndex = 0;
 
+                if(element.getOperator().consumesReadBases())
+                    ++ReadIndex;
+
                 if(element.getOperator().consumesReferenceBases())
                     ++RefPosition;
 
-                if(element.getOperator().consumesReadBases())
-                    ++ReadIndex;
+                // return if the required position falls into a deleted section
+                if(CigarIndex < Elements.size() - 1)
+                {
+                    CigarElement nextElement = Elements.get(CigarIndex + 1);
+
+                    if(nextElement.getOperator() == D)
+                    {
+                        if(RefPosition == position)
+                        {
+                            ++CigarIndex;
+                            return;
+                        }
+                    }
+                }
 
                 continue;
             }

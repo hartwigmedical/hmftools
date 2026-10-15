@@ -68,7 +68,6 @@ public class RegionTask
             alignmentEnd = record.getAlignmentEnd();
         }
 
-
         int index = mCurrentIndex;
 
         String readBases = null;
@@ -96,25 +95,6 @@ public class RegionTask
 
             mEvidenceChecker.addEvidence(posEvidence, record, cigarState.ReadIndex, readBases, cigarState.isIndel());
         }
-
-        /*
-        int index = mCurrentIndex;
-        for(; index < mPositions.size(); ++index)
-        {
-            PositionEvidence posEvidence = mPositions.get(index);
-
-            if(alignmentStart > posEvidence.Position)
-            {
-                ++mCurrentIndex;
-                continue;
-            }
-
-            if(alignmentEnd < posEvidence.Position)
-                break;
-
-            mEvidenceChecker.addEvidence(posEvidence, record);
-        }
-        */
 
         if(mCurrentIndex >= mPositions.size())
             mComplete = true;

@@ -21,15 +21,23 @@ public class TumorEvidenceTest
         SAMRecord lowMapQualRead = buildSamRecord(1000, "1M1D1M", "CT", "FJ");
         lowMapQualRead.setMappingQuality(40);
 
-        final PositionEvidence baseDepth = new PositionEvidence("5", 1001, "A", "T");
+        PositionEvidence baseDepth = new PositionEvidence("5", 1001, "A", "T");
 
         PositionEvidenceChecker evidenceChecker = new PositionEvidenceChecker(50, minQuality);
 
-        evidenceChecker.addEvidence(baseDepth, lowBaseQualDel);
+        ReadCigarState state = new ReadCigarState(
+                lowBaseQualDel.getCigar().getCigarElements(), lowBaseQualDel.getAlignmentStart(), lowBaseQualDel.getReadLength());
+        state.moveToPosition(1001);
+
+        evidenceChecker.addEvidence(baseDepth, lowBaseQualDel, state.ReadIndex, lowBaseQualDel.getReadString(), state.isIndel());
         assertEquals(1, baseDepth.ReadDepth);
         assertEquals(1, baseDepth.BaseQualFiltered);
 
-        evidenceChecker.addEvidence(baseDepth, lowMapQualRead);
+        state = new ReadCigarState(
+                lowMapQualRead.getCigar().getCigarElements(), lowMapQualRead.getAlignmentStart(), lowMapQualRead.getReadLength());
+        state.moveToPosition(1001);
+
+        evidenceChecker.addEvidence(baseDepth, lowMapQualRead, state.ReadIndex, lowMapQualRead.getReadString(), state.isIndel());
         assertEquals(2, baseDepth.ReadDepth);
         assertEquals(1, baseDepth.MapQualFiltered);
     }
