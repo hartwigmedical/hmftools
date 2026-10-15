@@ -121,16 +121,6 @@ public class AmberApplication implements AutoCloseable
             return ImmutableListMultimap.copyOf(amberSitesMap);
         }
 
-        Multimap<Chromosome, GenomePositionImpl> blacklistedPoints = HashMultimap.create();
-        if(mConfig.BlacklistedSitesPath != null)
-        {
-            List<AmberBlacklistPoint> blacklistPoints = AmberBlacklistFile.readFromFile(new File(mConfig.BlacklistedSitesPath));
-            for(AmberBlacklistPoint point : blacklistPoints)
-            {
-                blacklistedPoints.put(point.chr(), new GenomePositionImpl(point));
-            }
-        }
-
         ListMultimap<Chromosome, AmberSite> targetRegionSites = ArrayListMultimap.create();
         try
         {
@@ -139,7 +129,6 @@ public class AmberApplication implements AutoCloseable
             for(Map.Entry<Chromosome, List<BaseRegion>> entry : targetRegions.entrySet())
             {
                 Chromosome chromosome = entry.getKey();
-                Collection<GenomePositionImpl> blacklistedPositions = blacklistedPoints.get(chromosome);
                 List<BaseRegion> regions = entry.getValue();
 
                 Collection<AmberSite> amberSites = amberSitesMap.get(chromosome);
@@ -149,9 +138,6 @@ public class AmberApplication implements AutoCloseable
 
                 for(AmberSite amberSite : amberSites)
                 {
-                    if(blacklistedPositions.contains(amberSite.rawPosition()))
-                        continue;
-
                     if(amberSite.position() < currentRegion.start() - TARGET_REGION_SITE_BUFFER)
                         continue;
 

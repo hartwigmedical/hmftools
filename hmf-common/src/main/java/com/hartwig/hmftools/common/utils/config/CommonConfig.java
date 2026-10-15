@@ -50,9 +50,6 @@ public final class CommonConfig
     public static final String TARGET_REGIONS_BED = "target_regions_bed";
     public static final String TARGET_REGIONS_BED_DESC = "Target regions BED file";
 
-    public static final String BLACKLISTED_SITES = "blacklisted_sites";
-    public static final String BLACKLISTED_SITES_DESC = "Blacklisted sites file";
-
     public static final String SAMPLE_DATA_DIR_CFG = "sample_data_dir";
     public static final String SAMPLE_DATA_DIR_DESC = "Path to sample pipeline files";
 

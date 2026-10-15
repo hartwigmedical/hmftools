@@ -13,8 +13,6 @@ import static com.hartwig.hmftools.common.perf.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.ILLUMINA;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.SEQUENCING_TYPE_CFG;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.ULTIMA;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.BLACKLISTED_SITES;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.BLACKLISTED_SITES_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PERF_DEBUG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PERF_DEBUG_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE;
@@ -57,7 +55,6 @@ public class AmberConfig
 
     public final String BafLociPath;
     public final String TargetRegionsBed;
-    public final String BlacklistedSitesPath;
     public final RefGenomeVersion RefGenVersion;
     public final String RefGenomeFile;
 
@@ -119,7 +116,6 @@ public class AmberConfig
 
         BafLociPath = configBuilder.getValue(LOCI_FILE);
         TargetRegionsBed = configBuilder.getValue(TARGET_REGIONS_BED);
-        BlacklistedSitesPath = configBuilder.getValue(BLACKLISTED_SITES);
 
         RefGenVersion = RefGenomeVersion.from(configBuilder);
         RefGenomeFile = configBuilder.getValue(REF_GENOME);
@@ -189,7 +185,6 @@ public class AmberConfig
 
         configBuilder.addPath(LOCI_FILE, true, "Path to BAF loci vcf file");
         configBuilder.addPath(TARGET_REGIONS_BED, false, TARGET_REGIONS_BED_DESC);
-        configBuilder.addPath(BLACKLISTED_SITES, false, BLACKLISTED_SITES_DESC);
 
         addRefGenomeVersion(configBuilder);
         configBuilder.addPath(REF_GENOME, false, REF_GENOME_CFG_DESC);
@@ -289,20 +284,6 @@ public class AmberConfig
                     AMB_LOGGER.error("Unable to locate reference bam {}", referenceBam);
                     return false;
                 }
-            }
-        }
-
-        if(BlacklistedSitesPath != null)
-        {
-            if(TargetRegionsBed == null)
-            {
-                AMB_LOGGER.error("Blacklist file provided but no target regions bed file");
-                return false;
-            }
-            if(!isTumorOnly())
-            {
-                AMB_LOGGER.error("Blacklist file only supported in tumor-only mode");
-                return false;
             }
         }
 
