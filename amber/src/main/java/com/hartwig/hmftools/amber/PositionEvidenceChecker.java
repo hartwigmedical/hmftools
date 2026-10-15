@@ -20,7 +20,16 @@ public class PositionEvidenceChecker
         mMinBaseQuality = minBaseQuality;
     }
 
+    @Deprecated
     public void addEvidence(final PositionEvidence posEvidence, final SAMRecord read)
+    {
+        int readIndex = read.getReadPositionAtReferencePosition(posEvidence.Position) - 1;
+        boolean isIndel = isIndel(posEvidence.Position, readIndex, read);
+        addEvidence(posEvidence, read, readIndex, read.getReadString(), isIndel);
+    }
+
+    public void addEvidence(
+            final PositionEvidence posEvidence, final SAMRecord read, int readIndex, final String readBases, final boolean isIndel)
     {
         int baseQuality = getBaseQuality(posEvidence.Position, read);
 
@@ -39,7 +48,7 @@ public class PositionEvidenceChecker
         }
 
         int bafPosition = posEvidence.position();
-        int readIndex = read.getReadPositionAtReferencePosition(bafPosition) - 1; // is 1-based
+        // int readIndex = read.getReadPositionAtReferencePosition(bafPosition) - 1; // is 1-based
 
         if(isUltima())
         {
@@ -59,9 +68,11 @@ public class PositionEvidenceChecker
 
         if(readIndex >= 0)
         {
-            if(!isIndel(bafPosition, readIndex + 1, read)) // to preserve existing read index behaviour
+            // if(!isIndel(bafPosition, readIndex + 1, read)) // to preserve existing read index behaviour
+            if(!isIndel)
             {
-                char baseChar = read.getReadString().charAt(readIndex);
+                // char baseChar = read.getReadString().charAt(readIndex);
+                char baseChar = readBases.charAt(readIndex);
 
                 if(posEvidence.equalsRef(baseChar))
                 {

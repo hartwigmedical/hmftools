@@ -6,13 +6,23 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.createSamRecord;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
+import static htsjdk.samtools.CigarOperator.D;
+import static htsjdk.samtools.CigarOperator.I;
+import static htsjdk.samtools.CigarOperator.M;
+import static htsjdk.samtools.CigarOperator.S;
+
+import java.util.List;
 
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 
 import org.junit.Assert;
 import org.junit.Test;
 
+import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
 
 public class PositionEvidenceTest
@@ -98,6 +108,90 @@ public class PositionEvidenceTest
         pe1.RefSupport = 80;
         pe1.ReadDepth = 110;
         assertEquals(0.2, pe1.symmetricVaf(), 0.0001);
+    }
+
+    @Test
+    public void testReadCigarState()
+    {
+        List<CigarElement> elements = List.of(new CigarElement(10, M));
+        ReadCigarState state = new ReadCigarState(elements, 100, 10);
+        assertEquals(0, state.CigarIndex);
+        assertEquals(0, state.ElementIndex);
+        assertEquals(0, state.ReadIndex);
+        assertEquals(100, state.RefPosition);
+        assertTrue(state.isValid());
+        assertFalse(state.isDelete());
+        assertFalse(state.isInsert());
+
+        state.moveToPosition(109);
+        assertEquals(0, state.CigarIndex);
+        assertEquals(9, state.ElementIndex);
+        assertEquals(9, state.ReadIndex);
+        assertEquals(109, state.RefPosition);
+        assertFalse(state.isDelete());
+        assertFalse(state.isInsert());
+
+        state.moveToPosition(110);
+        assertFalse(state.isValid());
+
+        elements = List.of(
+                new CigarElement(5, S),  // index 0-4
+                new CigarElement(10, M), // 100-109, index 5-14
+                new CigarElement(10, I), // at 109, index 15-24
+                new CigarElement(10, M), // 110-119, index 25-34
+                new CigarElement(10, D), // 120-129
+                new CigarElement(10, M), // 130-139, index 35-44
+                new CigarElement(5, S)); // index 45-49
+
+        state = new ReadCigarState(elements, 100, 50);
+        assertEquals(1, state.CigarIndex); // pass the soft-clip
+        assertEquals(0, state.ElementIndex);
+        assertEquals(5, state.ReadIndex);
+        assertEquals(100, state.RefPosition);
+
+        state.moveToPosition(109);
+        assertEquals(14, state.ReadIndex);
+        assertEquals(109, state.RefPosition);
+        assertFalse(state.isDelete());
+        assertTrue(state.isInsert());
+
+        // first base past the insert
+        state.moveToPosition(110);
+        assertEquals(25, state.ReadIndex);
+        assertEquals(110, state.RefPosition);
+        assertFalse(state.isDelete());
+        assertFalse(state.isInsert());
+
+        state.moveToPosition(119);
+        assertEquals(34, state.ReadIndex);
+        assertEquals(119, state.RefPosition);
+        assertFalse(state.isDelete());
+        assertFalse(state.isInsert());
+
+        state.moveToPosition(120);
+        assertEquals(35, state.ReadIndex);
+        assertEquals(120, state.RefPosition);
+        assertTrue(state.isDelete());
+        assertFalse(state.isInsert());
+
+        state.moveToPosition(129);
+        assertEquals(35, state.ReadIndex);
+        assertEquals(129, state.RefPosition);
+        assertTrue(state.isDelete());
+        assertFalse(state.isInsert());
+
+        state.moveToPosition(130);
+        assertEquals(35, state.ReadIndex);
+        assertEquals(130, state.RefPosition);
+        assertFalse(state.isDelete());
+        assertFalse(state.isInsert());
+
+        state.moveToPosition(139);
+        assertEquals(44, state.ReadIndex);
+        assertEquals(139, state.RefPosition);
+
+        state.moveToPosition(140);
+        assertFalse(state.isValid());
     }
 
     @Test

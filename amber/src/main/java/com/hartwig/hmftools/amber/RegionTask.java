@@ -48,6 +48,10 @@ public class RegionTask
 
         int alignmentStart, alignmentEnd;
 
+        // use cigar to move through read bases efficiently
+        ReadCigarState cigarState = new ReadCigarState(
+                record.getCigar().getCigarElements(), record.getAlignmentStart(), record.getReadBases().length);
+
         if(fragmentBoundaries != null)
         {
             alignmentStart = fragmentBoundaries[0];
@@ -55,6 +59,8 @@ public class RegionTask
 
             if(alignmentStart > alignmentEnd)
                 return;
+
+            cigarState.moveToPosition(alignmentStart);
         }
         else
         {
@@ -62,6 +68,36 @@ public class RegionTask
             alignmentEnd = record.getAlignmentEnd();
         }
 
+
+        int index = mCurrentIndex;
+
+        String readBases = null;
+
+        for(; index < mPositions.size(); ++index)
+        {
+            PositionEvidence posEvidence = mPositions.get(index);
+
+            if(alignmentStart > posEvidence.Position)
+            {
+                ++mCurrentIndex;
+                continue;
+            }
+
+            if(alignmentEnd < posEvidence.Position)
+                break;
+
+            if(readBases == null)
+                readBases = record.getReadString();
+
+            cigarState.moveToPosition(posEvidence.Position);
+
+            if(!cigarState.isValid())
+                break;
+
+            mEvidenceChecker.addEvidence(posEvidence, record, cigarState.ReadIndex, readBases, cigarState.isIndel());
+        }
+
+        /*
         int index = mCurrentIndex;
         for(; index < mPositions.size(); ++index)
         {
@@ -78,20 +114,15 @@ public class RegionTask
 
             mEvidenceChecker.addEvidence(posEvidence, record);
         }
+        */
 
         if(mCurrentIndex >= mPositions.size())
             mComplete = true;
     }
 
-    public boolean isComplete()
-    {
-        return mComplete;
-    }
+    public boolean isComplete() { return mComplete; }
 
-    public int positionCount()
-    {
-        return mPositions.size();
-    }
+    public int positionCount() { return mPositions.size(); }
 
     public String toString()
     {

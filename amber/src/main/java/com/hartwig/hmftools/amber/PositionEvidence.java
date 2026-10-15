@@ -62,10 +62,7 @@ public class PositionEvidence implements GenomePosition
         return Chromosome;
     }
 
-    public int position()
-    {
-        return Position;
-    }
+    public int position() { return Position; }
 
     public double vaf()
     {
