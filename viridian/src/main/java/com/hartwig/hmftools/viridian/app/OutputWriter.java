@@ -484,12 +484,15 @@ public class OutputWriter
     public static void writeRunManifest(String file, ViridianConfig config)
     {
         List<String> columns = List.of(CFG_CANDIDATE_READ_SOURCE, CFG_EXTRA_VIRUS_DECOY_CONTIGS, CFG_KMER_FILTER);
-        DelimFileWriter.write(file, columns, List.of(config), (runConfig, row) ->
-        {
-            row.set(CFG_CANDIDATE_READ_SOURCE, runConfig.candidateReadSource().name());
-            row.set(CFG_EXTRA_VIRUS_DECOY_CONTIGS, String.join(ITEM_DELIM, runConfig.extraVirusDecoyContigs().stream().sorted().toList()));
-            row.set(CFG_KMER_FILTER, runConfig.kmerFilterEnabled());
-        });
+        DelimFileWriter.write(
+                file, columns, List.of(config), (runConfig, row) ->
+                {
+                    row.set(CFG_CANDIDATE_READ_SOURCE, runConfig.candidateReadSource().name());
+                    row.set(
+                            CFG_EXTRA_VIRUS_DECOY_CONTIGS,
+                            String.join(ITEM_DELIM, runConfig.extraVirusDecoyContigs().stream().sorted().toList()));
+                    row.set(CFG_KMER_FILTER, runConfig.kmerFilterEnabled());
+                });
     }
 
     private static String asString(@Nullable Object value)
