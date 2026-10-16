@@ -31,8 +31,9 @@ import com.hartwig.hmftools.common.utils.Doubles;
 
 public class TumorOnlyPurityAnalysis
 {
-    public static final Range<Double> HOM_PROP_RANGE =
-            open(HOMOZYGOUS_PROPORTION_LOWER_BOUND_FOR_CONTAMINATION, HOMOZYGOUS_PROPORTION_UPPER_BOUND_FOR_CONTAMINATION);
+    public static final Range<Double> HOM_PROP_RANGE = open(
+            HOMOZYGOUS_PROPORTION_LOWER_BOUND_FOR_CONTAMINATION, HOMOZYGOUS_PROPORTION_UPPER_BOUND_FOR_CONTAMINATION);
+
     private final List<CandidatePeak> mCopyNumberPeaks = new ArrayList<>();
     private final List<CandidatePeak> mContaminationPeaks = new ArrayList<>();
 
@@ -76,9 +77,11 @@ public class TumorOnlyPurityAnalysis
 
         AMB_LOGGER.debug(format("baseline het gnomad frequency: %.3f", baselineHetGnomadFrequency));
 
-        AucCalculator<PositionEvidence, ChrArm> chrArmAucCalculator =
-                new AucCalculator<>(chrArmClassifier(config.refGenomeVersion()), hetVariants);
+        AucCalculator<PositionEvidence, ChrArm> chrArmAucCalculator = new AucCalculator<>(
+                chrArmClassifier(config.refGenomeVersion()), hetVariants);
+
         AucCalculator<PositionEvidence, CanonicalSnvType> snvTypeAucCalculator = new AucCalculator<>(snvTypeClassifier(), hetVariants);
+
         for(CandidatePeakEvaluationResult evaluationResult : new PeakSearch(filteredEvidence, config.threads()).peaks())
         {
             CandidatePeak peak = evaluationResult.candidatePeak();
@@ -88,10 +91,14 @@ public class TumorOnlyPurityAnalysis
                 AMB_LOGGER.debug(format("peak %.3f failed Gnomad frequency check", peak.vaf()));
                 continue;
             }
+
             double homozygousProportion = peak.homozygousProportion();
             double chrArmAuc = chrArmAucCalculator.calculateAuc(peak.allCapturedPoints());
             double mutationAuc = snvTypeAucCalculator.calculateAuc(peak.allCapturedPoints());
-            AMB_LOGGER.debug(format("peak %.3f, homProportion: %.3f, chrArmAUC: %.3f, mutationAUC: %.3f", peak.vaf(), homozygousProportion, chrArmAuc, mutationAuc));
+
+            AMB_LOGGER.debug(format("peak %.3f, homProportion: %.3f, chrArmAUC: %.3f, mutationAUC: %.3f",
+                    peak.vaf(), homozygousProportion, chrArmAuc, mutationAuc));
+
             if(HOM_PROP_RANGE.contains(homozygousProportion))
             {
                 if(mutationAuc > MUTATION_AUC_LOWER_BOUND_FOR_CONTAMINATION

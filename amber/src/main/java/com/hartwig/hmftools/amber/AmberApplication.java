@@ -12,6 +12,8 @@ import static com.hartwig.hmftools.amber.AmberUtils.aboveQualFilter;
 import static com.hartwig.hmftools.amber.AmberUtils.aboveTumorOnlyMinSupport;
 import static com.hartwig.hmftools.amber.AmberUtils.fromBaseDepth;
 import static com.hartwig.hmftools.amber.AmberUtils.isValid;
+import static com.hartwig.hmftools.amber.LohIdentifier.checkGenderSites;
+import static com.hartwig.hmftools.common.amber.AmberGender.determineGender;
 import static com.hartwig.hmftools.common.region.BedFileReader.loadBedFileChrMap;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
@@ -24,6 +26,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+
+import javax.annotation.Nullable;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.HashMultimap;
@@ -44,7 +48,9 @@ import com.hartwig.hmftools.common.amber.AmberSite;
 import com.hartwig.hmftools.common.amber.AmberSitesFile;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.position.GenomePositionImpl;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
+import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
@@ -269,8 +275,10 @@ public class AmberApplication implements AutoCloseable
             PositionEvidenceFile.write(rawDataFileName, rawData);
         }
 
-        PurityAnalysisConfig purityAnalysisConfig = new PurityAnalysisConfig(mConfig);
-        TumorOnlyPurityAnalysis noiseFloorAnalysis = new TumorOnlyPurityAnalysis(rawData, mChromosomeSites, purityAnalysisConfig);
+        TumorOnlyPurityAnalysis noiseFloorAnalysis = new TumorOnlyPurityAnalysis(
+                rawData.stream().filter(x -> !x.lohRecovered()).collect(toList()), // ignore recovered points
+                mChromosomeSites, new PurityAnalysisConfig(mConfig));
+
         double noiseFloor = noiseFloorAnalysis.cutoff();
 
         double contamination = noiseFloorAnalysis.contaminationPeaks().stream().map(CandidatePeak::vaf).max(Double::compare).orElse(0.0);
@@ -279,12 +287,13 @@ public class AmberApplication implements AutoCloseable
         List<TumorBAF> tumorBAFList = readDepthAndQualityFiltered
                 .stream()
                 .filter(x -> aboveNoiseFloor(x, noiseFloor))
-                // .filter(x -> isFinite(x.refFrequency()) && Doubles.greaterOrEqual(x.refFrequency(), noiseFloor))
-                // .filter(x -> isFinite(x.altFrequency()) && Doubles.greaterOrEqual(x.altFrequency(), noiseFloor))
                 .sorted().toList();
 
         List<AmberBAF> amberBAFList = tumorBAFList.stream()
                 .map(AmberUtils::fromTumorBaf).filter(x -> Double.isFinite(x.tumorBAF())).collect(toList());
+
+        // DISCUSS
+        // amberBAFList = checkGenderSites(mConfig.RefGenVersion, amberBAFList);
 
         mPersistence.persistQC(0, contamination, null);
         mPersistence.persistVersionInfo(mVersionInfo);

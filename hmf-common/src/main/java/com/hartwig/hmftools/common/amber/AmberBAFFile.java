@@ -56,7 +56,7 @@ public final class AmberBAFFile
 
     public static ListMultimap<Chromosome, AmberBAF> read(final String fileName, boolean hasTumor) throws IOException
     {
-        ListMultimap<Chromosome, AmberBAF> chrBafMap = ArrayListMultimap.create();
+        ListMultimap<Chromosome,AmberBAF> chrBafMap = ArrayListMultimap.create();
 
         try(BufferedReader reader = fileName.endsWith(".gz") ? createGzipBufferedReader(fileName) : createBufferedReader(fileName))
         {

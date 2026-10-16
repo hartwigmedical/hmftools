@@ -29,7 +29,7 @@ public class TumorEvidenceTest
                 lowBaseQualDel.getCigar().getCigarElements(), lowBaseQualDel.getAlignmentStart(), lowBaseQualDel.getReadLength());
         state.moveToPosition(1001);
 
-        evidenceChecker.addEvidence(baseDepth, lowBaseQualDel, state.ReadIndex, lowBaseQualDel.getReadString(), state.isIndel());
+        evidenceChecker.addEvidence(baseDepth, lowBaseQualDel, state.ReadIndex, state.isIndel());
         assertEquals(1, baseDepth.ReadDepth);
         assertEquals(1, baseDepth.BaseQualFiltered);
 
@@ -37,7 +37,7 @@ public class TumorEvidenceTest
                 lowMapQualRead.getCigar().getCigarElements(), lowMapQualRead.getAlignmentStart(), lowMapQualRead.getReadLength());
         state.moveToPosition(1001);
 
-        evidenceChecker.addEvidence(baseDepth, lowMapQualRead, state.ReadIndex, lowMapQualRead.getReadString(), state.isIndel());
+        evidenceChecker.addEvidence(baseDepth, lowMapQualRead, state.ReadIndex, state.isIndel());
         assertEquals(2, baseDepth.ReadDepth);
         assertEquals(1, baseDepth.MapQualFiltered);
     }

@@ -10,14 +10,20 @@ import static com.hartwig.hmftools.amber.AmberConstants.LOH_MOVING_AVG_COUNT;
 import static com.hartwig.hmftools.amber.AmberConstants.LOH_MOVING_ITEM_COUNT;
 import static com.hartwig.hmftools.amber.AmberConstants.LOH_POINT_DENSITY;
 import static com.hartwig.hmftools.amber.AmberUtils.aboveQualFilter;
+import static com.hartwig.hmftools.common.amber.AmberGender.determineGender;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Multimap;
+import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.purple.Gender;
 
 public class LohIdentifier
 {
@@ -34,6 +40,13 @@ public class LohIdentifier
     {
         for(Chromosome chromosome : chromosomeBafs.keySet())
         {
+            // DISCUSS
+            //if(chromosome == HumanChromosome._Y)
+            //    continue;
+
+            if(chromosome.isAllosome())
+                continue;
+
             List<TumorBAF> tumorBAFS = chromosomeBafs.get(chromosome);
             findChromosomeLohSegments(chromosome, tumorBAFS);
         }
@@ -154,5 +167,19 @@ public class LohIdentifier
                 lohIndexStart = lohIndexEnd = -1; // reset
             }
         }
+    }
+
+    public static List<AmberBAF> checkGenderSites(final RefGenomeVersion refGenomeVersion, final List<AmberBAF> amberBAFList)
+    {
+        ListMultimap<Chromosome, AmberBAF> chrBafMap = ArrayListMultimap.create();
+        amberBAFList.forEach(x -> chrBafMap.put(HumanChromosome.fromString(x.Chromosome), x));
+
+        Gender gender = determineGender(refGenomeVersion, chrBafMap, null);
+
+        if(gender == Gender.FEMALE)
+            return amberBAFList;
+
+        // remove the recovered sites on X
+        return amberBAFList.stream().filter(x -> !(x.Chromosome.contains("X") && x.LohRecovered)).collect(Collectors.toList());
     }
 }
