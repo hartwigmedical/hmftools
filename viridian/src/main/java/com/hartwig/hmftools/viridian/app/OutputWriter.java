@@ -317,6 +317,8 @@ public class OutputWriter
         DelimFileWriter.write(
                 file, IntegrationCandidateColumn.values(), candidates, (candidate, row) ->
                 {
+                    row.set(IntegrationCandidateColumn.is_integration, candidate.isIntegration());
+
                     CandidateSv sv = candidate.sv();
                     row.set(IntegrationCandidateColumn.sv_type, sv.type().name());
                     row.set(IntegrationCandidateColumn.filter, sv.filter());
@@ -383,13 +385,13 @@ public class OutputWriter
                         row.set(IntegrationCandidateColumn.aligner_score, alignment.alignerScore());
                         row.set(IntegrationCandidateColumn.score_per_aligned_base, alignment.scorePerAlignedBase());
                         row.set(IntegrationCandidateColumn.aligned_edit_distance, alignment.alignedEditDistance());
-                        row.set(IntegrationCandidateColumn.integration, candidate.isIntegration());
                     }
                 });
     }
 
     private enum IntegrationCandidateColumn
     {
+        is_integration,
         sv_type,
         filter,
         start_id,
@@ -426,8 +428,7 @@ public class OutputWriter
         aligned_length,
         aligner_score,
         score_per_aligned_base,
-        aligned_edit_distance,
-        integration
+        aligned_edit_distance
     }
 
     public static void writeVirusReports(String file, List<VirusReport> reports)
