@@ -53,7 +53,7 @@ public final class AmberBAFFile
         normalDepth,
         lohRecovered;
     }
-    
+
     public static ListMultimap<Chromosome, AmberBAF> read(final String fileName, boolean hasTumor) throws IOException
     {
         ListMultimap<Chromosome, AmberBAF> chrBafMap = ArrayListMultimap.create();

@@ -21,7 +21,7 @@ public class PositionEvidenceChecker
     }
 
     public void addEvidence(
-            final PositionEvidence posEvidence, final SAMRecord read, int readIndex, final String readBases, final boolean isIndel)
+            final PositionEvidence posEvidence, final SAMRecord read, int readIndex, final boolean isIndel)
     {
         int baseQuality = isIndel ? getBaseQuality(posEvidence.Position, read) : read.getBaseQualities()[readIndex];
 
@@ -59,7 +59,7 @@ public class PositionEvidenceChecker
         {
             if(!isIndel)
             {
-                char baseChar = readBases.charAt(readIndex);
+                char baseChar = (char)read.getReadBases()[readIndex];
 
                 if(posEvidence.equalsRef(baseChar))
                 {

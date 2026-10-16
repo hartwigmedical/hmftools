@@ -11,6 +11,7 @@ import static htsjdk.samtools.CigarOperator.S;
 import java.util.List;
 
 import htsjdk.samtools.CigarElement;
+import htsjdk.samtools.SAMRecord;
 
 public class ReadCigarState
 {
@@ -20,6 +21,11 @@ public class ReadCigarState
     public int RefPosition;
     public int CigarIndex; // cigar element
     public int ElementIndex; // index within cigar element
+
+    public ReadCigarState(final SAMRecord record)
+    {
+        this(record.getCigar().getCigarElements(), record.getAlignmentStart(), record.getReadBases().length);
+    }
 
     public ReadCigarState(final List<CigarElement> cigarElements, final int readStart, final int baseLength)
     {
