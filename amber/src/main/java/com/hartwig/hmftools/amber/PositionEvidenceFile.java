@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.amber;
 
+import static java.lang.String.format;
+import static java.lang.String.valueOf;
+
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
@@ -41,6 +44,14 @@ public final class PositionEvidenceFile
         StringJoiner sj = new StringJoiner(TSV_DELIM);
 
         Arrays.stream(Columns.values()).forEach(x -> sj.add(x.toString()));
+
+        if(bafs.size() > 0 && bafs.get(0).LohData != null)
+        {
+            sj.add("ValidBafHigh").add("ValidBafMed").add("ValidBafLow");
+            sj.add("ValidRateHigh").add("ValidRateMed").add("ValidRateLow");
+            sj.add("LohCandidate").add("LohRecovered");
+        }
+
         writer.write(sj.toString());
         writer.newLine();
 
@@ -48,16 +59,30 @@ public final class PositionEvidenceFile
         {
             StringJoiner rowSj = new StringJoiner(TSV_DELIM);
             rowSj.add(positionEvidence.Chromosome);
-            rowSj.add(String.valueOf(positionEvidence.Position));
+            rowSj.add(valueOf(positionEvidence.Position));
             rowSj.add(positionEvidence.Ref.name());
             rowSj.add(positionEvidence.Alt.name());
-            rowSj.add(String.valueOf(positionEvidence.ReadDepth));
-            rowSj.add(String.valueOf(positionEvidence.IndelCount));
-            rowSj.add(String.valueOf(positionEvidence.RefSupport));
-            rowSj.add(String.valueOf(positionEvidence.AltSupport));
-            rowSj.add(String.valueOf(positionEvidence.BaseQualFiltered));
-            rowSj.add(String.valueOf(positionEvidence.MapQualFiltered));
-            rowSj.add(String.valueOf(positionEvidence.SeqTechFiltered));
+            rowSj.add(valueOf(positionEvidence.ReadDepth));
+            rowSj.add(valueOf(positionEvidence.IndelCount));
+            rowSj.add(valueOf(positionEvidence.RefSupport));
+            rowSj.add(valueOf(positionEvidence.AltSupport));
+            rowSj.add(valueOf(positionEvidence.BaseQualFiltered));
+            rowSj.add(valueOf(positionEvidence.MapQualFiltered));
+            rowSj.add(valueOf(positionEvidence.SeqTechFiltered));
+
+            if(positionEvidence.LohData != null)
+            {
+                BafLohData lohData = positionEvidence.LohData;
+                rowSj.add(valueOf(lohData.ValidBafHigh));
+                rowSj.add(valueOf(lohData.ValidBafMedium));
+                rowSj.add(valueOf(lohData.ValidBafLow));
+                rowSj.add(format("%.2f", lohData.ValidRateHigh));
+                rowSj.add(format("%.2f", lohData.ValidRateMedium));
+                rowSj.add(format("%.2f", lohData.ValidRateLow));
+                rowSj.add(valueOf(lohData.LohCandidate));
+                rowSj.add(valueOf(lohData.LohRecovered));
+            }
+
             writer.write(rowSj.toString());
             writer.newLine();
         }

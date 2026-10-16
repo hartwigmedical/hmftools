@@ -59,7 +59,6 @@ public class PositionEvidenceChecker
         {
             if(!isIndel)
             {
-                // char baseChar = read.getReadString().charAt(readIndex);
                 char baseChar = readBases.charAt(readIndex);
 
                 if(posEvidence.equalsRef(baseChar))

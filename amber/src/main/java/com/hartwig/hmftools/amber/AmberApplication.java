@@ -7,7 +7,9 @@ import static java.util.stream.Collectors.toList;
 import static com.hartwig.hmftools.amber.AmberConfig.AMB_LOGGER;
 import static com.hartwig.hmftools.amber.AmberConstants.APP_NAME;
 import static com.hartwig.hmftools.amber.AmberConstants.TARGET_REGION_SITE_BUFFER;
+import static com.hartwig.hmftools.amber.AmberUtils.aboveNoiseFloor;
 import static com.hartwig.hmftools.amber.AmberUtils.aboveQualFilter;
+import static com.hartwig.hmftools.amber.AmberUtils.aboveTumorOnlyMinSupport;
 import static com.hartwig.hmftools.amber.AmberUtils.fromBaseDepth;
 import static com.hartwig.hmftools.amber.AmberUtils.isValid;
 import static com.hartwig.hmftools.common.region.BedFileReader.loadBedFileChrMap;
@@ -239,17 +241,24 @@ public class AmberApplication implements AutoCloseable
     {
         SamReaderFactory readerFactory = readerFactory(mConfig);
 
-        ListMultimap<Chromosome, PositionEvidence> allNormal = hetLociTumorOnly();
+        ListMultimap<Chromosome,PositionEvidence> allNormal = hetLociTumorOnly();
 
         // no homozygous sites
         TumorAnalysis tumor = new TumorAnalysis(mConfig, readerFactory, allNormal, ArrayListMultimap.create());
+
+        AMB_LOGGER.debug("BAM reading complete");
+
+        LohIdentifier lohIdentifier = new LohIdentifier(mConfig.RefGenVersion, mConfig.TumorMinDepth);
+
+        AMB_LOGGER.debug("finding tumor-only LOH segments");
+        lohIdentifier.findLohSegments(tumor.chrBafMap());
+        AMB_LOGGER.debug("LOH identification complete");
 
         List<TumorBAF> readDepthAndQualityFiltered = tumor.chrBafMap().values()
                 .stream()
                 .filter(x -> x.TumorEvidence.ReadDepth >= mConfig.TumorMinDepth)
                 .filter(x -> aboveQualFilter(x.TumorEvidence))
-                .filter(x -> x.TumorEvidence.RefSupport >= mConfig.TumorOnlyMinSupport)
-                .filter(x -> x.TumorEvidence.AltSupport >= mConfig.TumorOnlyMinSupport)
+                .filter(x -> aboveTumorOnlyMinSupport(x.TumorEvidence, mConfig.TumorOnlyMinSupport) || x.TumorEvidence.lohRecovered())
                 .sorted().toList();
 
         List<PositionEvidence> rawData = readDepthAndQualityFiltered.stream().map(x -> x.TumorEvidence).toList();
@@ -269,8 +278,9 @@ public class AmberApplication implements AutoCloseable
 
         List<TumorBAF> tumorBAFList = readDepthAndQualityFiltered
                 .stream()
-                .filter(x -> isFinite(x.refFrequency()) && Doubles.greaterOrEqual(x.refFrequency(), noiseFloor))
-                .filter(x -> isFinite(x.altFrequency()) && Doubles.greaterOrEqual(x.altFrequency(), noiseFloor))
+                .filter(x -> aboveNoiseFloor(x, noiseFloor))
+                // .filter(x -> isFinite(x.refFrequency()) && Doubles.greaterOrEqual(x.refFrequency(), noiseFloor))
+                // .filter(x -> isFinite(x.altFrequency()) && Doubles.greaterOrEqual(x.altFrequency(), noiseFloor))
                 .sorted().toList();
 
         List<AmberBAF> amberBAFList = tumorBAFList.stream()

@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.amber;
 
+import static java.lang.String.valueOf;
+
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.*;
 
@@ -10,6 +12,7 @@ import java.nio.file.Paths;
 import java.io.Writer;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
@@ -38,15 +41,19 @@ public final class AmberBAFFile
         return checkAddDirSeparator(basePath) + sample + AMBER_EXTENSION;
     }
 
-    private static final String CHROMOSOME = "chromosome";
-    private static final String POSITION = "position";
-    private static final String TUMOR_BAF = "tumorBAF";
-    private static final String TUMOR_MOD_BAF = "tumorModifiedBAF";
-    private static final String TUMOR_DEPTH = "tumorDepth";
-    private static final String NORM_BAF = "normalBAF";
-    private static final String NORM_MOD_BAF = "normalModifiedBAF";
-    private static final String NORM_DEPTH = "normalDepth";
-
+    private enum Column
+    {
+        chromosome,
+        position,
+        tumorBAF,
+        tumorModifiedBAF,
+        tumorDepth,
+        normalBAF,
+        normalModifiedBAF,
+        normalDepth,
+        lohRecovered;
+    }
+    
     public static ListMultimap<Chromosome, AmberBAF> read(final String fileName, boolean hasTumor) throws IOException
     {
         ListMultimap<Chromosome, AmberBAF> chrBafMap = ArrayListMultimap.create();
@@ -56,12 +63,12 @@ public final class AmberBAFFile
             String line = reader.readLine();
             Map<String, Integer> fieldsIndexMap = FileReaderUtils.createFieldsIndexMap(line, TSV_DELIM);
 
-            int chrIndex = fieldsIndexMap.get(CHROMOSOME);
-            int posIndex = fieldsIndexMap.get(POSITION);
-            int tumorBafIndex = fieldsIndexMap.get(TUMOR_BAF);
-            int tumorDepthIndex = fieldsIndexMap.get(TUMOR_DEPTH);
-            int normBafIndex = fieldsIndexMap.get(NORM_BAF);
-            int normDepthIndex = fieldsIndexMap.get(NORM_DEPTH);
+            int chrIndex = fieldsIndexMap.get(Column.chromosome.toString());
+            int posIndex = fieldsIndexMap.get(Column.position.toString());
+            int tumorBafIndex = fieldsIndexMap.get(Column.tumorBAF.toString());
+            int tumorDepthIndex = fieldsIndexMap.get(Column.tumorDepth.toString());
+            int normBafIndex = fieldsIndexMap.get(Column.normalBAF.toString());
+            int normDepthIndex = fieldsIndexMap.get(Column.normalDepth.toString());
 
             while((line = reader.readLine()) != null)
             {
@@ -103,28 +110,23 @@ public final class AmberBAFFile
 
     private static String header()
     {
-        return new StringJoiner(TSV_DELIM, "", "")
-                .add(CHROMOSOME)
-                .add(POSITION)
-                .add(TUMOR_BAF)
-                .add(TUMOR_MOD_BAF)
-                .add(TUMOR_DEPTH)
-                .add(NORM_BAF)
-                .add(NORM_MOD_BAF)
-                .add(NORM_DEPTH)
-                .toString();
+        StringJoiner sj = new StringJoiner(TSV_DELIM);
+        Arrays.stream(Column.values()).forEach(x -> sj.add(x.toString()));
+        return sj.toString();
     }
 
     private static String toString(final AmberBAF baf)
     {
-        return new StringJoiner(TSV_DELIM).add(baf.Chromosome)
-                .add(String.valueOf(baf.Position))
+        return new StringJoiner(TSV_DELIM)
+                .add(baf.Chromosome)
+                .add(valueOf(baf.Position))
                 .add(FORMAT.format(baf.tumorBAF()))
                 .add(FORMAT.format(baf.tumorModifiedBAF()))
-                .add(String.valueOf(baf.tumorDepth()))
+                .add(valueOf(baf.tumorDepth()))
                 .add(Doubles.isFinite(baf.normalBAF()) ? FORMAT.format(baf.normalBAF()) : "0")
                 .add(Doubles.isFinite(baf.normalModifiedBAF()) ? FORMAT.format(baf.normalModifiedBAF()) : "0")
-                .add(String.valueOf(baf.normalDepth()))
+                .add(valueOf(baf.normalDepth()))
+                .add(valueOf(baf.LohRecovered))
                 .toString();
     }
 }

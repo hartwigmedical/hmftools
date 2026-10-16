@@ -3,7 +3,6 @@ package com.hartwig.hmftools.common.amber;
 import static java.lang.String.format;
 
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
-import com.hartwig.hmftools.common.region.BasePosition;
 
 public class AmberBAF implements GenomePosition
 {
@@ -13,10 +12,18 @@ public class AmberBAF implements GenomePosition
     public final int TumorDepth;
     public final double NormalBAF;
     public final int NormalDepth;
+    public final boolean LohRecovered;
 
     public AmberBAF(
             final String chromosome, final int position, final double tumorBAF, final int tumorDepth, final double normalBAF,
             final int normalDepth)
+    {
+        this(chromosome, position, tumorBAF, tumorDepth, normalBAF, normalDepth, false);
+    }
+
+    public AmberBAF(
+            final String chromosome, final int position, final double tumorBAF, final int tumorDepth, final double normalBAF,
+            final int normalDepth, final boolean lohRecovered)
     {
         Chromosome = chromosome;
         Position = position;
@@ -24,6 +31,7 @@ public class AmberBAF implements GenomePosition
         TumorDepth = tumorDepth;
         NormalBAF = normalBAF;
         NormalDepth = normalDepth;
+        LohRecovered = lohRecovered;
     }
 
     @Override

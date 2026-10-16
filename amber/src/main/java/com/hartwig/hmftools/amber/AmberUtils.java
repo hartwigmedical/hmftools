@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.amber;
 
+import static java.lang.Double.isFinite;
+
 import static com.hartwig.hmftools.amber.AmberConfig.AMB_LOGGER;
 import static com.hartwig.hmftools.amber.AmberConstants.QUAL_FILTERED_THRESHOLD;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
@@ -13,6 +15,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.amber.AmberSite;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.common.utils.Doubles;
 
 public class AmberUtils
 {
@@ -55,14 +58,31 @@ public class AmberUtils
         return filteredPercent < QUAL_FILTERED_THRESHOLD;
     }
 
-    public static AmberBAF fromTumorBaf(final TumorBAF tumor)
+    public static boolean aboveTumorOnlyMinSupport(final PositionEvidence posEvidence, final int minSupport)
     {
-        int tumorAltCount = tumor.TumorEvidence.AltSupport;
-        double tumorBaf = tumorAltCount / (double) (tumorAltCount + tumor.TumorEvidence.RefSupport);
-        int normalAltCount = tumor.NormalAltSupport;
-        double normalBaf = normalAltCount / (double) (normalAltCount + tumor.NormalRefSupport);
+        return posEvidence.RefSupport >= minSupport && posEvidence.AltSupport >= minSupport;
+    }
 
-        return new AmberBAF(tumor.chromosome(), tumor.position(), tumorBaf, tumor.TumorEvidence.ReadDepth, normalBaf, tumor.NormalReadDepth);
+    public static boolean aboveNoiseFloor(final TumorBAF tumorBAF, final double noiseFloor)
+    {
+        if(tumorBAF.TumorEvidence.lohRecovered())
+            return true;
+
+        return (isFinite(tumorBAF.refFrequency()) && Doubles.greaterOrEqual(tumorBAF.refFrequency(), noiseFloor))
+            && (isFinite(tumorBAF.altFrequency()) && Doubles.greaterOrEqual(tumorBAF.altFrequency(), noiseFloor));
+    }
+
+    public static AmberBAF fromTumorBaf(final TumorBAF tumorBAF)
+    {
+        int tumorAltCount = tumorBAF.TumorEvidence.AltSupport;
+        double tumorBaf = tumorAltCount / (double) (tumorAltCount + tumorBAF.TumorEvidence.RefSupport);
+        int normalAltCount = tumorBAF.NormalAltSupport;
+        double normalBaf = normalAltCount / (double) (normalAltCount + tumorBAF.NormalRefSupport);
+        boolean lohRecovered = tumorBAF.TumorEvidence.lohRecovered();
+
+        return new AmberBAF(
+                tumorBAF.chromosome(), tumorBAF.position(), tumorBaf, tumorBAF.TumorEvidence.ReadDepth, normalBaf,
+                tumorBAF.NormalReadDepth, lohRecovered);
     }
 
     public static AmberBAF fromBaseDepth(final PositionEvidence baseDepth)

@@ -134,12 +134,76 @@ public class PositionEvidenceTest
         state.moveToPosition(110);
         assertFalse(state.isValid());
 
+        // with delete and insert
+        elements = List.of(
+                new CigarElement(5, M),  // 100-104, index 0-4
+                new CigarElement(2, D),  // 105-106 delete
+                new CigarElement(5, M),  // 107-111, index 5-9
+                new CigarElement(2, I),  // 111, index 10-11
+                new CigarElement(5, M)); // 112-116, index 12-16
+
+        state = new ReadCigarState(elements, 100, 20);
+        assertEquals(0, state.CigarIndex); // pass the soft-clip
+        assertEquals(0, state.ElementIndex);
+        assertEquals(0, state.ReadIndex);
+        assertEquals(100, state.RefPosition);
+
+        state.moveToPosition(104);
+        assertEquals(104, state.RefPosition);
+        assertEquals(0, state.CigarIndex);
+        assertEquals(4, state.ElementIndex);
+        assertEquals(4, state.ReadIndex);
+        assertFalse(state.isDelete());
+
+        state.moveToPosition(105); // within the delete
+        assertEquals(105, state.RefPosition);
+        assertEquals(1, state.CigarIndex);
+        assertEquals(0, state.ElementIndex);
+        assertEquals(4, state.ReadIndex); // stays at last aligned base
+        assertTrue(state.isDelete());
+
+        state.moveToPosition(106); // within the delete
+        assertEquals(106, state.RefPosition);
+        assertEquals(1, state.CigarIndex);
+        assertEquals(1, state.ElementIndex);
+        assertEquals(4, state.ReadIndex);
+        assertTrue(state.isDelete());
+
+        state.moveToPosition(107);
+        assertEquals(107, state.RefPosition);
+        assertEquals(2, state.CigarIndex);
+        assertEquals(0, state.ElementIndex);
+        assertEquals(5, state.ReadIndex);
+        assertFalse(state.isDelete());
+
+        state.moveToPosition(111); // followed by insert
+        assertEquals(111, state.RefPosition);
+        assertEquals(2, state.CigarIndex);
+        assertEquals(4, state.ElementIndex);
+        assertEquals(9, state.ReadIndex);
+        assertFalse(state.isDelete());
+        assertTrue(state.isInsert());
+
+        state.moveToPosition(112);
+        assertEquals(112, state.RefPosition);
+        assertEquals(4, state.CigarIndex);
+        assertEquals(0, state.ElementIndex);
+        assertEquals(12, state.ReadIndex);
+        assertFalse(state.isInsert());
+
+        state.moveToPosition(116);
+        assertEquals(116, state.RefPosition);
+        assertEquals(4, state.CigarIndex);
+        assertEquals(4, state.ElementIndex);
+        assertEquals(16, state.ReadIndex);
+
+        // more complicated example with soft-clips
         elements = List.of(
                 new CigarElement(5, S),  // index 0-4
                 new CigarElement(10, M), // 100-109, index 5-14
                 new CigarElement(10, I), // at 109, index 15-24
                 new CigarElement(10, M), // 110-119, index 25-34
-                new CigarElement(10, D), // 120-129
+                new CigarElement(10, D), // 120-129, index stays at 34
                 new CigarElement(10, M), // 130-139, index 35-44
                 new CigarElement(5, S)); // index 45-49
 
@@ -173,13 +237,13 @@ public class PositionEvidenceTest
         assertFalse(state.isInsert());
 
         state.moveToPosition(120);
-        assertEquals(35, state.ReadIndex);
+        assertEquals(34, state.ReadIndex);
         assertEquals(120, state.RefPosition);
         assertTrue(state.isDelete());
         assertFalse(state.isInsert());
 
         state.moveToPosition(129);
-        assertEquals(35, state.ReadIndex);
+        assertEquals(34, state.ReadIndex);
         assertEquals(129, state.RefPosition);
         assertTrue(state.isDelete());
         assertFalse(state.isInsert());
