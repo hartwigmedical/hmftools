@@ -9,7 +9,8 @@ import static com.hartwig.hmftools.sage.SageCommon.APP_NAME;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageConfig.isUltima;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.addGenotypeHeader;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.VERSION_META_DATA;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.SAGE_APPEND_TAG;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.SAGE_VERSION_TAG;
 
 import java.io.File;
 import java.io.IOException;
@@ -66,7 +67,7 @@ public class SageAppendApplication
 
     public SageAppendApplication(final ConfigBuilder configBuilder)
     {
-        final VersionInfo version = fromAppName(APP_NAME);
+        VersionInfo version = fromAppName(APP_NAME);
 
         SageConfig.AppendMode = true;
         mConfig = new SageAppendConfig(version.version(), configBuilder);
@@ -271,20 +272,22 @@ public class SageAppendApplication
         }
 
         addGenotypeHeader(header); // called again in case new genotype fields are added and set in this version
-        addAppendHeader(header);
+        addAppendHeader(header, mConfig.Common.Version);
 
         return true;
     }
 
-    private static void addAppendHeader(final VCFHeader header)
+    private static void addAppendHeader(final VCFHeader header, final String version)
     {
+        if(header.getMetaDataLine(SAGE_APPEND_TAG) == null)
+            header.addMetaDataLine(new VCFHeaderLine(SAGE_APPEND_TAG, version));
+
         header.addMetaDataLine(new VCFFormatHeaderLine(LPS_APPEND_INFO, 1, VCFHeaderLineType.String, LPS_APPEND_INFO_DESC));
     }
 
-
     private static Version sageVersion(@NotNull final VCFHeader header)
     {
-        VCFHeaderLine version = header.getMetaDataLine(VERSION_META_DATA);
+        VCFHeaderLine version = header.getMetaDataLine(SAGE_VERSION_TAG);
 
         if(version == null)
             return Version.parse("0");

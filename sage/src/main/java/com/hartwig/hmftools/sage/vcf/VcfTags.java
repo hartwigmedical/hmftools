@@ -2,7 +2,8 @@ package com.hartwig.hmftools.sage.vcf;
 
 public final class VcfTags
 {
-    public static final String VERSION_META_DATA = "sageVersion";
+    public static final String SAGE_VERSION_TAG = "sageVersion";
+    public static final String SAGE_APPEND_TAG = "sageAppendVersion";
 
     // v3.5 onwards
     public static final String READ_CONTEXT_INFO = "RC_INFO";

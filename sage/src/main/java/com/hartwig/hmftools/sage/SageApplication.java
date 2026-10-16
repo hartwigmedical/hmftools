@@ -47,7 +47,7 @@ public class SageApplication implements AutoCloseable
 
     private SageApplication(final ConfigBuilder configBuilder)
     {
-        final VersionInfo version = fromAppName(APP_NAME);
+        VersionInfo version = fromAppName(APP_NAME);
         mConfig = new SageCallConfig(version.version(), configBuilder);
 
         if(!mConfig.isValid())

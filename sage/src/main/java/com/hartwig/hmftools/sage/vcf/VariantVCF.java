@@ -69,7 +69,7 @@ import static com.hartwig.hmftools.sage.vcf.VcfTags.SIMPLE_ALT_COUNT;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.SIMPLE_ALT_COUNT_DESC;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.TUMOR_QUALITY_PROB;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.TUMOR_QUALITY_PROB_DESC;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.VERSION_META_DATA;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.SAGE_VERSION_TAG;
 
 import java.util.Collections;
 import java.util.List;
@@ -164,7 +164,7 @@ public class VariantVCF implements AutoCloseable
                 LOCAL_PHASE_SET, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.Integer, LOCAL_PHASE_SET_DESC));
 
         // standard fields
-        header.addMetaDataLine(new VCFHeaderLine(VERSION_META_DATA, version));
+        header.addMetaDataLine(new VCFHeaderLine(SAGE_VERSION_TAG, version));
         header.addMetaDataLine(VCFStandardHeaderLines.getFormatLine((VCFConstants.GENOTYPE_KEY)));
         header.addMetaDataLine(VCFStandardHeaderLines.getFormatLine((VCFConstants.GENOTYPE_ALLELE_DEPTHS)));
         header.addMetaDataLine(VCFStandardHeaderLines.getFormatLine((VCFConstants.DEPTH_KEY)));
