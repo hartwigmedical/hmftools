@@ -33,8 +33,10 @@ public class GenotypeFragments
     private final List<FilterReason> mFilterReasons;
     private final List<FilterReason> mDualFilterReasons;
 
-    public static final List<String> REQUIRED_GENOTYPE_FIELDS = List.of(
+    protected static final List<String> REQUIRED_GENOTYPE_FIELDS = List.of(
             READ_CONTEXT_COUNT, READ_CONTEXT_QUALITY, UMI_TYPE_COUNTS, READ_STRAND_BIAS, AVG_EDGE_DISTANCE_PERC);
+
+    protected static final String AVG_BASE_QUAL_OLD_TAG = "ABQ";
 
     public GenotypeFragments(
             final String sampleName, final int alleleCount, final int depth, final double qualTotal, final UmiTypeCounts umiCounts,

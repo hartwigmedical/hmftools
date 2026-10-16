@@ -42,6 +42,7 @@ import static com.hartwig.hmftools.wisp.variant.FilterReason.GERMLINE_AF;
 import static com.hartwig.hmftools.wisp.variant.FilterReason.NEARBY_INDEL;
 import static com.hartwig.hmftools.wisp.variant.FilterReason.REPEAT_COUNT;
 import static com.hartwig.hmftools.wisp.variant.FilterReason.SUBCLONAL;
+import static com.hartwig.hmftools.wisp.variant.GenotypeFragments.AVG_BASE_QUAL_OLD_TAG;
 import static com.hartwig.hmftools.wisp.variant.GenotypeFragments.REQUIRED_GENOTYPE_FIELDS;
 import static com.hartwig.hmftools.wisp.variant.SnvFitStatus.UNCERTAIN;
 import static com.hartwig.hmftools.wisp.variant.SomaticPurityResult.INVALID_RESULT;
@@ -148,6 +149,15 @@ public class SomaticVariants
             String requiredVcfTags = REQUIRED_GENOTYPE_FIELDS.stream().collect(Collectors.joining(";"));
             CT_LOGGER.error("patient({}) vcf({}) missing required fields({})",
                     mSample.PatientId, somaticVcf, requiredVcfTags);
+            System.exit(1);
+        }
+
+        // allow backwards for average base qual
+        if(!vcfHeader.hasFormatLine(AVG_BASE_QUAL_OLD_TAG) && !vcfHeader.hasFormatLine(AVG_RECALIBRATED_BASE_QUAL))
+        {
+            CT_LOGGER.error("patient({}) vcf({}) missing required fields({};{})",
+                    mSample.PatientId, somaticVcf, AVG_BASE_QUAL_OLD_TAG, AVG_RECALIBRATED_BASE_QUAL);
+            System.exit(1);
         }
 
         for(String sampleId : targetSampleIds)
@@ -384,7 +394,14 @@ public class SomaticVariants
             AllelicDepth refAllelicDepth = AllelicDepth.fromGenotype(refGenotype);
             double germlineAF = refAllelicDepth.alleleFrequency();
 
-            double germlineABQ = Double.parseDouble(refGenotype.getAnyAttribute(AVG_RECALIBRATED_BASE_QUAL).toString().split(CSV_DELIM)[1]);
+            // revert to previous tag if only that is present
+            String germlineABQStr = refGenotype.getExtendedAttribute(AVG_RECALIBRATED_BASE_QUAL, "").toString();
+            String germlineABQOldStr = refGenotype.getExtendedAttribute(AVG_BASE_QUAL_OLD_TAG, "").toString();
+
+            if(germlineABQStr.isEmpty() && !germlineABQOldStr.isEmpty())
+                germlineABQStr = germlineABQOldStr;
+
+            double germlineABQ = Double.parseDouble(germlineABQStr.toString().split(CSV_DELIM)[1]);
 
             if(germlineAF >= MAX_GERMLINE_AF && germlineABQ >= HIGH_GERMLINE_QUAL_THRESHOLD)
                 filters.add(GERMLINE_AF);
