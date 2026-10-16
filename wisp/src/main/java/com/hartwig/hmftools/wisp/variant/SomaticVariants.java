@@ -152,14 +152,6 @@ public class SomaticVariants
             System.exit(1);
         }
 
-        // allow backwards for average base qual
-        if(!vcfHeader.hasFormatLine(AVG_BASE_QUAL_OLD_TAG) && !vcfHeader.hasFormatLine(AVG_RECALIBRATED_BASE_QUAL))
-        {
-            CT_LOGGER.error("patient({}) vcf({}) missing required fields({};{})",
-                    mSample.PatientId, somaticVcf, AVG_BASE_QUAL_OLD_TAG, AVG_RECALIBRATED_BASE_QUAL);
-            System.exit(1);
-        }
-
         for(String sampleId : targetSampleIds)
         {
             if(!vcfHeader.getGenotypeSamples().contains(sampleId))
@@ -394,7 +386,7 @@ public class SomaticVariants
             AllelicDepth refAllelicDepth = AllelicDepth.fromGenotype(refGenotype);
             double germlineAF = refAllelicDepth.alleleFrequency();
 
-            // revert to previous tag if only that is present
+            // revert to previous tag if only that is present - this is permitted for the germline which can be run on v4.2+ of Sage
             String germlineABQStr = refGenotype.getExtendedAttribute(AVG_RECALIBRATED_BASE_QUAL, "").toString();
             String germlineABQOldStr = refGenotype.getExtendedAttribute(AVG_BASE_QUAL_OLD_TAG, "").toString();
 

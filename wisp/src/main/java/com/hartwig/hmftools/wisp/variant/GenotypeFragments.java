@@ -3,6 +3,7 @@ package com.hartwig.hmftools.wisp.variant;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_EDGE_DISTANCE_PERC;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_RECALIBRATED_BASE_QUAL;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LIST_SEPARATOR;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_COUNT;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_QUALITY;
@@ -34,7 +35,7 @@ public class GenotypeFragments
     private final List<FilterReason> mDualFilterReasons;
 
     protected static final List<String> REQUIRED_GENOTYPE_FIELDS = List.of(
-            READ_CONTEXT_COUNT, READ_CONTEXT_QUALITY, UMI_TYPE_COUNTS, READ_STRAND_BIAS, AVG_EDGE_DISTANCE_PERC);
+            READ_CONTEXT_COUNT, READ_CONTEXT_QUALITY, UMI_TYPE_COUNTS, READ_STRAND_BIAS, AVG_EDGE_DISTANCE_PERC, AVG_RECALIBRATED_BASE_QUAL);
 
     protected static final String AVG_BASE_QUAL_OLD_TAG = "ABQ";
 
