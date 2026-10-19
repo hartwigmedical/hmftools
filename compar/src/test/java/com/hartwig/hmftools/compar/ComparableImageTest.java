@@ -1,19 +1,49 @@
 package com.hartwig.hmftools.compar;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+
+import javax.imageio.ImageIO;
 
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.ComparableImage;
+import com.hartwig.hmftools.compar.cuppa.CuppaImageComparer;
+import com.hartwig.hmftools.compar.cuppa.CuppaImageData;
+
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 public class ComparableImageTest
 {
+    @Rule
+    public TemporaryFolder temp = new TemporaryFolder();
+
     private static final int TEST_IMAGE_WIDTH = 10;
     private static final int TEST_IMAGE_HEIGHT = 10;
     private static final String TEST_IMAGE_NAME = "test";
+
+    @Test
+    public void imageKeysDoNotDependOnFilename() throws IOException
+    {
+        File oldFile = temp.newFile("OLD_SAMPLE.cuppa.png");
+        File newFile = temp.newFile("NEW_SAMPLE.cuppa.png");
+        BufferedImage image = new BufferedImage(10, 10, BufferedImage.TYPE_INT_RGB);
+        ImageIO.write(image, "png", oldFile);
+        ImageIO.write(image, "png", newFile);
+        CuppaImageData oldImage = new CuppaImageData(CuppaImageComparer.IMAGE_NAME, oldFile.getPath());
+        CuppaImageData newImage = new CuppaImageData(CuppaImageComparer.IMAGE_NAME, newFile.getPath());
+
+        assertTrue(oldImage.matches(newImage));
+        assertEquals(CuppaImageComparer.IMAGE_NAME, oldImage.key());
+        assertEquals(oldImage.key(), newImage.key());
+    }
 
     private static class TestImageData extends ComparableImage
     {

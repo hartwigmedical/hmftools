@@ -42,6 +42,23 @@ public class DisruptionDataTest extends ComparableItemTest<DisruptionData, Disru
     }
 
     @Test
+    public void breakendCountChangesKeepGeneKeyAndRemainDifferences()
+    {
+        BreakendData sharedBreakend = TestBreakendDataBuilder.BUILDER.create();
+        BreakendData addedBreakend = TestBreakendDataBuilder.BUILDER.create(b -> b.position = 42000000);
+        DisruptionData oldDisruption = builder.create(b -> b.breakends = List.of(sharedBreakend));
+        DisruptionData newDisruption = builder.create(b -> b.breakends = List.of(sharedBreakend, addedBreakend));
+
+        assertTrue(oldDisruption.matches(newDisruption));
+        assertEquals(oldDisruption.GeneName, oldDisruption.key());
+        assertEquals(oldDisruption.key(), newDisruption.key());
+
+        Mismatch mismatch = oldDisruption.findMismatch(comparer, newDisruption, MatchLevel.DETAILED, false);
+        assertEquals(MismatchType.VALUE, mismatch.Type);
+        assertEquals(List.of("BreakendInfo(unmatched SV /:BND chr21:42000000:0)"), mismatch.DiffValues);
+    }
+
+    @Test
     public void unmatchedSvsAreRecognized()
     {
         BreakendData sharedBreakend1 = TestBreakendDataBuilder.BUILDER.create();

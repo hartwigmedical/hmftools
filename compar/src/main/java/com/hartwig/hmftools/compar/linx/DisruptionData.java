@@ -36,7 +36,7 @@ public class DisruptionData extends ComparableItem
     @Override
     public String key()
     {
-        return String.format("%s breakends(%d)", GeneName, Breakends.size());
+        return GeneName;
     }
 
     @Override

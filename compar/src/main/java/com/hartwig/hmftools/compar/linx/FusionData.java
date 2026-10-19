@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.compar.linx;
 
-import static java.lang.String.format;
-
 import static com.hartwig.hmftools.compar.common.CategoryType.FUSION;
 import static com.hartwig.hmftools.compar.common.field.FieldInfo.findField;
 
@@ -57,7 +55,7 @@ public class FusionData extends ComparableItem
     @Override
     public String key()
     {
-        return format("%s_%s", Fusion.name(), Fusion.reportedType());
+        return GeneMappedName;
     }
 
     @Override

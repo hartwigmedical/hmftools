@@ -1,16 +1,38 @@
 package com.hartwig.hmftools.compar.linx;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItemTest;
+import com.hartwig.hmftools.compar.common.MatchLevel;
+import com.hartwig.hmftools.compar.common.Mismatch;
+import com.hartwig.hmftools.compar.common.MismatchType;
 
 import org.junit.Before;
+import org.junit.Test;
 
 public class FusionDataTest extends ComparableItemTest<FusionData, FusionComparer, TestFusionDataBuilder>
 {
+    @Test
+    public void reportedTypeChangesKeepFusionKeyAndRemainDifferences()
+    {
+        FusionData oldFusion = builder.create();
+        FusionData newFusion = builder.create(b -> b.reportedType = "PROMISCUOUS_5");
+
+        assertTrue(oldFusion.matches(newFusion));
+        assertEquals(oldFusion.GeneMappedName, oldFusion.key());
+        assertEquals(oldFusion.key(), newFusion.key());
+
+        Mismatch mismatch = oldFusion.findMismatch(comparer, newFusion, MatchLevel.DETAILED, false);
+        assertEquals(MismatchType.VALUE, mismatch.Type);
+        assertEquals(Collections.singletonList("ReportedType(KNOWN_PAIR/PROMISCUOUS_5)"), mismatch.DiffValues);
+    }
+
     @Before
     public void setUp()
     {

@@ -41,8 +41,6 @@ public abstract class ComparableImage extends ComparableItem
         Image = image;
     }
 
-    public String getBasename(){ return new File(Path).getName(); }
-
     @Override
     public boolean matches(final ComparableItem other)
     {
@@ -51,7 +49,7 @@ public abstract class ComparableImage extends ComparableItem
     }
 
     @Override
-    public String key() { return getBasename(); }
+    public String key() { return Name; }
 
     public String dimensionString()
     {
