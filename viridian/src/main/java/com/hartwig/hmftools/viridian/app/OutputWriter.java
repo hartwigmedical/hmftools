@@ -107,7 +107,6 @@ public class OutputWriter
         read_votes,
         vote_share_pre_filter,
         vote_share_post_filter,
-        vote_share_ratio,
         multi_align_reads,
         origin_clipped_reads
     }
