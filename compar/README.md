@@ -10,8 +10,8 @@ java -jar compar.jar \
    -germline_sample SAMPLE_R \
    -categories ALL \
    -match_level REPORTABLE \
-   -sample_dir_old /path_to_sample_data/run_01/
-   -sample_dir_new /path_to_sample_data/run_02/
+   -sample_dir_old /path_to_sample_data/run_01/ \
+   -sample_dir_new /path_to_sample_data/run_02/ \
    -output_dir /output_dir/ 
 ```
 
@@ -58,6 +58,8 @@ The category PANEL is equivalent to PURITY, DRIVER, SOMATIC_VARIANT, FUSION, DIS
 | pipeline_format_file_old & pipeline_format_file_new     | Config file for default tool directory derivation from sample directory.                                                                              |
 | field_config_file                                       | Field config file (see [Field Config Files](#field-config-files)) used to override the default per-field `Compared`/threshold settings                |
 | strict_field_config                                     | Requires `field_config_file` to explicitly set every compared field for every category being run; Compar exits with an error if any are missing       |
+| source_label_old & source_label_new                     | Labels for the old and new sources, written to the combined output (see [Curation Cache](#curation-cache))                                            |
+| curation_cache                                          | Single curation TSV for the pipeline, used to acknowledge known differences (see [Curation Cache](#curation-cache))                                   |
 
 
 ### Sample ID Mappings
@@ -67,6 +69,9 @@ sample_id_mappings.csv
 SampleId,OldSampleId,NewSampleId
 COLO829T,COLO829_Old,COLO829T_New
 ```
+Keep `SampleId` the same between comparisons; it is written to the curation file and used for history lookup.
+`OldSampleId` and `NewSampleId` identify the source files, not separate cache identities. See [Curation Cache](#curation-cache).
+
 The same can be done for germline sample IDs.
 ```
 sample_id_mappings.with_germline.csv
@@ -162,6 +167,77 @@ with an error if any are missing.
 Optionally, a Compar run also writes out the field config it actually used (i.e. after applying any overrides) to a `.field_config.tsv` file in the
 output directory. This is a record of exactly what was compared for that run, and can itself be used as a `-field_config_file` input to repeat
 the comparison later with the same settings.
+
+### Curation Cache
+
+Compar reads a maintained TSV per pipeline of previously acknowledged differences and flags them in future comparisons.
+The cache file is tightly controlled; Compar never writes to it.
+
+```bash
+-source_label_old v34 -source_label_new v35
+```
+
+#### Source labels
+
+Source labels identify each OLD/NEW comparison in the curation cache and appear in previous comparison details.
+Use semicolon-separated `key=value` fields in this order: `kind`, `version`, optional `reference`, optional `config`.
+For example: `kind=pipeline;version=v34;reference=GRCh38;config=standard`. If a label does not fit this form, Compar keeps it as plain text.
+Labels must be non-blank, with no tabs or line breaks. Source labels and `-curation_cache` require `GENERIC` output.
+
+#### Curation types
+
+`CurationType` is the review label in each cache row. Allowed values are `NONE`, `IGNORE`, `MARGINAL`, `FUNCTIONAL`, `ISSUE`,
+`CONFIG` and `EXPECTED`.
+
+#### Curation status
+
+For difference rows, `MismatchType` remains `VALUE`, `OLD_ONLY` or `NEW_ONLY`. `CurationStatus` is `ACKNOWLEDGED` or `CHANGED_FROM_CACHE`.
+
+| CurationStatus | Meaning |
+|----------------|---------|
+| `ACKNOWLEDGED` | The same difference exists in the cache |
+| `CHANGED_FROM_CACHE` | The field differed before, but its values or presence changed |
+
+For later comparisons, pass the curation file as:
+
+```bash
+-curation_cache '/comparisons/pipeline_curation.tsv'
+```
+
+Example `pipeline_curation.tsv`:
+
+```tsv
+SampleId	Category	MismatchType	CurationStatus	Key	Differences	OldSource	NewSource	CurationType	CurationComment
+DEMO_001	GENE_COPY_NUMBER	VALUE		MYC	MinCopyNumber(6/8)	v34	v35	EXPECTED	Expected copy number change
+DEMO_001	GENE_COPY_NUMBER	VALUE		MYC	MinCopyNumber(8/10)	v35	v36	NONE	Recorded difference
+DEMO_002	GENE_COPY_NUMBER	VALUE		MYC	MinCopyNumber(2/5)	v35	v36	ISSUE	Investigate
+DEMO_001	RNA_FUSION	OLD_ONLY		EML4_ALK chr2:3000-chr2:4000		v35	v36	IGNORE	Previously reviewed filtering change
+DEMO_001	DRIVER	NEW_ONLY		AMP_ERBB2		v35	v36	EXPECTED	Newly reported driver
+DEMO_001	PURITY	VALUE			Purity(0.65/0.68)	v35	v36	MARGINAL	Small purity change
+DEMO_001	RNA_FUSION	INVALID_NEW				v35	v36	NONE	Missing NEW input
+```
+
+For the next comparison, use these options alongside the source directories and output directory:
+
+```bash
+-sample DEMO_001 -categories GENE_COPY_NUMBER -match_level DETAILED \
+-source_label_old v34 -source_label_new v37 \
+-curation_cache /comparisons/pipeline_curation.tsv
+```
+
+Suppose the v34 vs v37 comparison reports two MYC changes: `MinCopyNumber` 6 to 12 & `MaxCopyNumber` 10 to 12. Compar writes 1 row for each:
+
+- `Prev*` shows the latest exact cache entry, or the latest entry for that field if the values changed. An exact match takes priority;
+    within those matches, a curated entry is preferred. Keep older cache rows first.
+- A blank `CurationStatus` means no cache entry matched. Otherwise, it shows `ACKNOWLEDGED` or `CHANGED_FROM_CACHE`.
+- `FULL_MATCH` and `INVALID_*` are unchanged. Cache entries absent from the current comparison are not output.
+
+| Differences | MismatchType | CurationStatus | PrevComparison | PrevDifferences |
+|-------------|--------------|----------------|----------------|-----------------|
+| MinCopyNumber(6/12) | VALUE | CHANGED_FROM_CACHE | v34>v35 | MinCopyNumber(6/8) |
+| MaxCopyNumber(10/12) | VALUE | | | |
+
+Rerunning v34→v35 with `MinCopyNumber(6/8)` instead gives `CurationStatus=ACKNOWLEDGED`.
 
 ### Purity
 Data key: SampleId
@@ -301,7 +377,7 @@ Data key: SampleId, ClassifierName, DataType
 | Probability     | Threshold [0.1]         |
 
 ### Cuppa Image
-Data key: SampleId, Dimensions
+Data key: SampleId, logical image name (`cuppa_vis_image`)
 
 | Field      | Match Type & Thresholds                                                    |
 |------------|----------------------------------------------------------------------------|
@@ -320,7 +396,7 @@ Data key: SampleId
 | Score  | Threshold [0.1]         |
 
 ### Lilac QC
-Data key: SampleId
+Data key: SampleId, genes
 
 | Field                       | Match Type & Thresholds            |
 |-----------------------------|------------------------------------|
