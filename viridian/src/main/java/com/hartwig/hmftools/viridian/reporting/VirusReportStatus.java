@@ -10,6 +10,7 @@ public enum VirusReportStatus
     REPORTED_ON_INTEGRATION_AND_CLONALITY(true),
     // Not a reportable virus.
     NOT_REPORTABLE(false),
+    // TODO: improve this name, should say the purple failure
     // Reportable but no integrations and clonality couldn't be evaluated due to failing Purple data.
     CLONALITY_UNEVALUABLE(false),
     // Reportable but not enough virus genome present per tumor cell.

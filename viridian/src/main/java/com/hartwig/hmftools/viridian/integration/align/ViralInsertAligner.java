@@ -23,7 +23,6 @@ import htsjdk.samtools.SAMFlag;
 
 // Aligns integration candidate insert sequences to the virus reference.
 // Produces the only best alignment across the entire virus reference.
-// TODO: do we need to constrain the alignment to detected virus genomes only?
 public class ViralInsertAligner
 {
     private final IBwaMemAligner mAligner;

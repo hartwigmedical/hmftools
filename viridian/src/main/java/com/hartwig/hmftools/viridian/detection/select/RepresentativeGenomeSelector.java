@@ -20,6 +20,7 @@ public class RepresentativeGenomeSelector
                 .filter(support -> !support.isFiltered())
                 .collect(groupingBy(support -> support.genome().oncologyGroup(), minBy(MOST_VOTES_FIRST)))
                 .values().stream()
+                // TODO: implement the ambiguous genome check
                 .map(support -> new RepresentativeGenome(support.orElseThrow().genome(), RepresentativeStatus.PASS))
                 .sorted(comparing(RepresentativeGenome::oncologyGroup))
                 .toList();
