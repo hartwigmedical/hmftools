@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.viridian.common;
 
-import java.util.List;
 import java.util.Set;
 
 public class ViridianConstants
@@ -12,7 +11,6 @@ public class ViridianConstants
     public static final String ALL_ALIGNMENTS_BAM_SUFFIX = ".all.bam";
     public static final String REPRESENTATIVE_ALIGNMENTS_BAM_SUFFIX = ".representative.bam";
     public static final String GENOME_SUPPORT_TSV_SUFFIX = ".genome_support.tsv";
-    public static final String PAIRWISE_MARGINS_TSV_SUFFIX = ".pairwise_margins.tsv";
     public static final String VIRUS_DETECTION_TSV_SUFFIX = ".virus_detection.tsv";
     public static final String INTEGRATION_CANDIDATES_TSV_SUFFIX = ".integration_candidates.tsv";
     public static final String VIRUS_REPORT_TSV_SUFFIX = ".virus_report.tsv";
@@ -102,22 +100,6 @@ public class ViridianConstants
     // (since coverage is calculated based on ANY alignment, not necessarily a good one).
     public static final double VIRUS_GENOME_VOTES_PER_BASE_MIN = 1.0;
 
-    // Effectively a tolerance on the read vote share to ensure that a close runner up is also considered.
-    // Otherwise, you can have the top genome win by only an arbitrarily small number of read votes.
-    public static final double REPRESENTATIVE_COMPARABLE_VOTE_RATIO = 0.9;
-
-    // How many bases better does an alignment need to be to classify as diverging?
-    // Lower is more sensitive to rival virus strains.
-    public static final int REPRESENTATIVE_CHALLENGE_MARGIN_MIN = 5;
-
-    // What fraction of the reads aligning to an oncology group must diverge to identify a possible rival virus strain?
-    // The denominator is the distinct reads aligning anywhere in that oncology group.
-    // Lower is more sensitive to rival virus strains.
-    public static final double REPRESENTATIVE_CHALLENGE_READS_MIN = 0.1;
-
-    // Winning margins reported per genome pair in the verbose output (for debugging and tuning only).
-    public static final List<Integer> REPORTED_MARGINS = List.of(1, 2, 3, 5, 8, 10, 15, 20, 30, 40, 50);
-
     // Minimum insert sequence length for an SV to be a viral integration candidate.
     // This is a conservative value. ESVEE doesn't call events shorter than 32b anyway.
     public static final int INTEGRATION_INSERT_LENGTH_MIN = 30;
@@ -180,22 +162,6 @@ public class ViridianConstants
             throw new IllegalStateException();
         }
         if(!(VIRUS_GENOME_VOTES_PER_BASE_MIN > 0.0))
-        {
-            throw new IllegalStateException();
-        }
-        if(!(REPRESENTATIVE_COMPARABLE_VOTE_RATIO > 0.0 && REPRESENTATIVE_COMPARABLE_VOTE_RATIO <= 1.0))
-        {
-            throw new IllegalStateException();
-        }
-        if(!(REPRESENTATIVE_CHALLENGE_MARGIN_MIN >= 1))
-        {
-            throw new IllegalStateException();
-        }
-        if(!(REPRESENTATIVE_CHALLENGE_READS_MIN > 0.0 && REPRESENTATIVE_CHALLENGE_READS_MIN <= 1.0))
-        {
-            throw new IllegalStateException();
-        }
-        if(REPORTED_MARGINS.isEmpty())
         {
             throw new IllegalStateException();
         }

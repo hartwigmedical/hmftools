@@ -1,25 +1,10 @@
 package com.hartwig.hmftools.viridian.detection.select;
 
-import static java.util.stream.Collectors.toMap;
-
-import static com.hartwig.hmftools.viridian.common.ViridianConstants.REPRESENTATIVE_CHALLENGE_MARGIN_MIN;
-
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Stream;
 
-import com.hartwig.hmftools.viridian.detection.align.AlignedInterval;
-import com.hartwig.hmftools.viridian.detection.align.ViralReadAlignment;
-import com.hartwig.hmftools.viridian.detection.align.ViralReadAlignmentStore;
 import com.hartwig.hmftools.viridian.detection.common.GenomeStats;
-import com.hartwig.hmftools.viridian.detection.common.ReadId;
 import com.hartwig.hmftools.viridian.detection.common.SummaryStats;
 import com.hartwig.hmftools.viridian.detection.support.GenomeFilterStatus;
 import com.hartwig.hmftools.viridian.detection.support.GenomeSupport;
@@ -33,258 +18,49 @@ public class RepresentativeGenomeSelectorTest
     private static final int LENGTH = 1000;
 
     private static final OncologyGroup GROUP_A = new OncologyGroup("Group A");
+    private static final OncologyGroup GROUP_B = new OncologyGroup("Group B");
     private static final OncologyGroup GROUP_H = new OncologyGroup("Group H");
 
     private static final VirusGenome V1 = new VirusGenome("v1", LENGTH, "Virus v1", GROUP_A);
     private static final VirusGenome V2 = new VirusGenome("v2", LENGTH, "Virus v2", GROUP_A);
     private static final VirusGenome V3 = new VirusGenome("v3", LENGTH, "Virus v3", GROUP_A);
+    private static final VirusGenome W1 = new VirusGenome("w1", LENGTH, "Virus w1", GROUP_B);
     private static final VirusGenome H1 = new VirusGenome("h1", LENGTH, "Virus h1", GROUP_H);
 
     @Test
-    public void testSelectResolvedTwins()
+    public void testSelectTopVotesGenomePerOncologyGroup()
     {
-        // Votes close enough to be comparable, and neither virus genome challenges the other.
-        List<OncologyGroupRepresentativeSelection> selections = select(support(candidate(V1, 100), candidate(V2, 95)), margins());
+        // V3 has the most votes in group A but was filtered; group H has only a filtered genome.
+        List<GenomeSupport> genomeSupports = List.of(
+                passed(V1, 100), passed(V2, 120), filtered(V3, 500), passed(W1, 10), filtered(H1, 100));
 
-        assertEquals(GenomeRole.REPRESENTATIVE, role(selections, V1));
-        assertEquals(GenomeRole.REPRESENTATIVE_TWIN, role(selections, V2));
-        assertEquals(OncologyGroupOutcome.RESOLVED_CANDIDATES, group(selections, GROUP_A).outcome());
-        assertEquals(OncologyGroupResolution.RESOLVED, group(selections, GROUP_A).resolution());
-        assertEquals(V1, group(selections, GROUP_A).representative());
+        List<RepresentativeGenome> representatives = RepresentativeGenomeSelector.select(genomeSupports);
+
+        assertEquals(List.of(representative(V2), representative(W1)), representatives);
     }
 
     @Test
-    public void testSelectResolvedWithSecondary()
+    public void testSelectTiedVotesByGenomeName()
     {
-        List<OncologyGroupRepresentativeSelection> selections = select(
-                support(candidate(V1, 100), candidate(V2, 95)), margins(challenge(V1, V2, 40)));
+        List<RepresentativeGenome> representatives =
+                RepresentativeGenomeSelector.select(List.of(passed(V2, 100), passed(V1, 100)));
 
-        assertEquals(GenomeRole.REPRESENTATIVE, role(selections, V1));
-        assertEquals(GenomeRole.SECONDARY, role(selections, V2));
-        assertEquals(OncologyGroupOutcome.RESOLVED_CANDIDATES, group(selections, GROUP_A).outcome());
-        assertEquals(Set.of(V2), result(selections, V1).challenges());
-        assertEquals(Set.of(V1), result(selections, V2).challengedBy());
+        assertEquals(List.of(representative(V1)), representatives);
     }
 
-    @Test
-    public void testSelectUnresolvedMutual()
+    private static RepresentativeGenome representative(VirusGenome genome)
     {
-        List<OncologyGroupRepresentativeSelection> selections = select(
-                support(candidate(V1, 100), candidate(V2, 95)), margins(challenge(V1, V2, 40), challenge(V2, V1, 40)));
-
-        assertEquals(OncologyGroupOutcome.MUTUAL, group(selections, GROUP_A).outcome());
-        assertEquals(OncologyGroupResolution.UNRESOLVED, group(selections, GROUP_A).resolution());
-        assertNull(group(selections, GROUP_A).representative());
+        return new RepresentativeGenome(genome, RepresentativeStatus.PASS);
     }
 
-    @Test
-    public void testSelectUnresolvedCycle()
-    {
-        List<OncologyGroupRepresentativeSelection> selections = select(
-                support(candidate(V1, 100), candidate(V2, 98), candidate(V3, 96)),
-                margins(challenge(V1, V2, 40), challenge(V2, V3, 40), challenge(V3, V1, 40)));
-
-        assertEquals(OncologyGroupOutcome.CYCLE, group(selections, GROUP_A).outcome());
-        assertNull(group(selections, GROUP_A).representative());
-    }
-
-    @Test
-    public void testSelectUnresolvedMinorChallenger()
-    {
-        // The challenger's votes are far below the leader's, so it is not a comparable peer.
-        List<OncologyGroupRepresentativeSelection> selections = select(
-                support(candidate(V1, 100), candidate(V3, 10)), margins(challenge(V3, V1, 40)));
-
-        assertEquals(OncologyGroupOutcome.MINOR_RIVAL, group(selections, GROUP_A).outcome());
-        assertEquals(GenomeRole.CONTESTED, role(selections, V1));
-        assertEquals(GenomeRole.MINOR_CHALLENGER, role(selections, V3));
-        assertNull(group(selections, GROUP_A).representative());
-    }
-
-    @Test
-    public void testSelectResolvedWithMinorBystander()
-    {
-        List<OncologyGroupRepresentativeSelection> selections = select(support(candidate(V1, 100), candidate(V3, 10)), margins());
-
-        assertEquals(GenomeRole.REPRESENTATIVE, role(selections, V1));
-        assertEquals(GenomeRole.MINOR, role(selections, V3));
-        assertEquals(OncologyGroupOutcome.RESOLVED_CANDIDATES, group(selections, GROUP_A).outcome());
-    }
-
-    @Test
-    public void testSelectSoleGenome()
-    {
-        List<OncologyGroupRepresentativeSelection> selections = select(support(candidate(V1, 100)), margins());
-
-        assertEquals(GenomeRole.REPRESENTATIVE, role(selections, V1));
-        assertEquals(OncologyGroupOutcome.ONE_CANDIDATE, group(selections, GROUP_A).outcome());
-    }
-
-    @Test
-    public void testSelectChallengeAtThreshold()
-    {
-        // 20 of the group's 200 reads win decisively: exactly the threshold of a tenth.
-        List<OncologyGroupRepresentativeSelection> selections = select(
-                support(candidate(V1, 100), candidate(V2, 100)), margins(challenge(V1, V2, 20)), 200);
-
-        assertEquals(GenomeRole.SECONDARY, role(selections, V2));
-    }
-
-    @Test
-    public void testSelectNoChallengeBelowThreshold()
-    {
-        List<OncologyGroupRepresentativeSelection> selections = select(
-                support(candidate(V1, 100), candidate(V2, 100)), margins(challenge(V1, V2, 19)), 200);
-
-        assertEquals(GenomeRole.REPRESENTATIVE_TWIN, role(selections, V2));
-    }
-
-    @Test
-    public void testSelectNoChallengeBelowMargin()
-    {
-        // Plenty of winning reads, but none wins by enough bases to count.
-        List<OncologyGroupRepresentativeSelection> selections = select(
-                support(candidate(V1, 100), candidate(V2, 100)),
-                margins(challenge(V1, V2, 100, REPRESENTATIVE_CHALLENGE_MARGIN_MIN - 1)));
-
-        assertEquals(GenomeRole.REPRESENTATIVE_TWIN, role(selections, V2));
-    }
-
-    @Test
-    public void testSelectRejectedGenomesExcluded()
-    {
-        List<GenomeSupport> support = support(
-                candidate(V1, 100),
-                rejected(V2, GenomeFilterStatus.LOW_VOTE_DENSITY),
-                rejected(H1, GenomeFilterStatus.LOW_COVERAGE));
-
-        List<OncologyGroupRepresentativeSelection> selections = select(support, margins());
-
-        assertEquals(GenomeRole.REPRESENTATIVE, role(selections, V1));
-        assertEquals(List.of(V2), genomes(group(selections, GROUP_A).rejected()));
-        assertEquals(OncologyGroupOutcome.NO_CANDIDATES, group(selections, GROUP_H).outcome());
-        assertEquals(OncologyGroupResolution.NO_CANDIDATES, group(selections, GROUP_H).resolution());
-        assertNull(group(selections, GROUP_H).representative());
-        assertTrue(group(selections, GROUP_H).candidates().isEmpty());
-    }
-
-    @Test
-    public void testSelectGroupWithoutReadCount()
-    {
-        // A group can hold a virus genome supported only by alignments dropped over its origin, leaving the group with
-        // no reads counted against it. Such a virus genome is never a candidate, so selection must not need the count.
-        List<GenomeSupport> support = support(candidate(V1, 100), rejected(H1, GenomeFilterStatus.LOW_COVERAGE));
-        Map<OncologyGroup, Integer> readCounts = Map.of(GROUP_A, 200);
-
-        List<OncologyGroupRepresentativeSelection> selections = RepresentativeGenomeSelector.select(support, margins(), readCounts);
-
-        assertEquals(GenomeRole.REPRESENTATIVE, role(selections, V1));
-        assertEquals(OncologyGroupOutcome.NO_CANDIDATES, group(selections, GROUP_H).outcome());
-    }
-
-    @Test
-    public void testSelectVotesRankFollowsSupport()
-    {
-        // The virus genomes arrive out of votes order.
-        List<OncologyGroupRepresentativeSelection> selections = select(support(candidate(V2, 95), candidate(V1, 100)), margins());
-
-        assertEquals(1, result(selections, V1).votesRank());
-        assertEquals(2, result(selections, V2).votesRank());
-    }
-
-    // Group read count is derived from sum of votes, which is plausible enough.
-    // Use the other overload if you need to set the read count precisely.
-    private static List<OncologyGroupRepresentativeSelection> select(List<GenomeSupport> support, PairwiseMargins margins)
-    {
-        Map<OncologyGroup, Integer> readCounts = new HashMap<>();
-        support.forEach(genomeSupport -> readCounts.merge(
-                genomeSupport.genome().oncologyGroup(), (int) Math.round(genomeSupport.readVotes()), Integer::sum));
-        return RepresentativeGenomeSelector.select(support, margins, readCounts);
-    }
-
-    private static List<OncologyGroupRepresentativeSelection> select(
-            List<GenomeSupport> support, PairwiseMargins margins, int groupReads)
-    {
-        Map<OncologyGroup, Integer> readCounts = support.stream()
-                .map(genomeSupport -> genomeSupport.genome().oncologyGroup())
-                .distinct()
-                .collect(toMap(group -> group, group -> groupReads));
-        return RepresentativeGenomeSelector.select(support, margins, readCounts);
-    }
-
-    @SafeVarargs
-    private static PairwiseMargins margins(List<ViralReadAlignment>... challenges)
-    {
-        List<ViralReadAlignment> alignments = Stream.of(challenges).flatMap(List::stream).toList();
-        return PairwiseMargins.from(new ViralReadAlignmentStore(alignments).byRead());
-    }
-
-    private static List<ViralReadAlignment> challenge(VirusGenome subject, VirusGenome opponent, int reads)
-    {
-        return challenge(subject, opponent, reads, REPRESENTATIVE_CHALLENGE_MARGIN_MIN * 2);
-    }
-
-    // Reads the subject fits `margin` bases better than the opponent.
-    // Read names are unique per pair, so separate challenges share no read.
-    private static List<ViralReadAlignment> challenge(VirusGenome subject, VirusGenome opponent, int reads, int margin)
-    {
-        List<ViralReadAlignment> alignments = new ArrayList<>();
-        for(int i = 0; i < reads; ++i)
-        {
-            String readName = subject.name() + opponent.name() + i;
-            alignments.add(alignment(readName, subject, 0));
-            alignments.add(alignment(readName, opponent, margin));
-        }
-        return alignments;
-    }
-
-    private static ViralReadAlignment alignment(String readName, VirusGenome genome, int divergence)
-    {
-        return new ViralReadAlignment(
-                ReadId.parse(readName), genome, 1, LENGTH, LENGTH + "M", 0, 0, 100, divergence, List.of(new AlignedInterval(1, LENGTH)));
-    }
-
-    private static OncologyGroupRepresentativeSelection group(List<OncologyGroupRepresentativeSelection> selections,
-            OncologyGroup oncologyGroup)
-    {
-        return selections.stream()
-                .filter(selection -> selection.oncologyGroup().equals(oncologyGroup))
-                .findFirst()
-                .orElseThrow();
-    }
-
-    private static RepresentativeGenomeCandidate result(List<OncologyGroupRepresentativeSelection> selections, VirusGenome genome)
-    {
-        return selections.stream()
-                .flatMap(selection -> selection.candidates().stream())
-                .filter(candidate -> candidate.genome().equals(genome))
-                .findFirst()
-                .orElseThrow();
-    }
-
-    private static GenomeRole role(List<OncologyGroupRepresentativeSelection> selections, VirusGenome genome)
-    {
-        return result(selections, genome).role();
-    }
-
-    private static List<VirusGenome> genomes(List<GenomeSupport> support)
-    {
-        return support.stream().map(GenomeSupport::genome).toList();
-    }
-
-    private static List<GenomeSupport> support(GenomeSupport... support)
-    {
-        return List.of(support);
-    }
-
-    private static GenomeSupport candidate(VirusGenome genome, double votes)
+    private static GenomeSupport passed(VirusGenome genome, double votes)
     {
         return genomeSupport(genome, GenomeFilterStatus.PASS, votes);
     }
 
-    private static GenomeSupport rejected(VirusGenome genome, GenomeFilterStatus filterStatus)
+    private static GenomeSupport filtered(VirusGenome genome, double votes)
     {
-        return genomeSupport(genome, filterStatus, 100);
+        return genomeSupport(genome, GenomeFilterStatus.LOW_COVERAGE, votes);
     }
 
     // Selection reads only the virus genome, its filter status and its read votes. The remaining fields are filler,

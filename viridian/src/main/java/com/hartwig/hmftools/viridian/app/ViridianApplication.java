@@ -14,7 +14,6 @@ import static com.hartwig.hmftools.viridian.common.ViridianConstants.CANDIDATES_
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.DEFAULT_VIRUS_DECOY_CONTIGS;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.GENOME_SUPPORT_TSV_SUFFIX;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.INTEGRATION_CANDIDATES_TSV_SUFFIX;
-import static com.hartwig.hmftools.viridian.common.ViridianConstants.PAIRWISE_MARGINS_TSV_SUFFIX;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.READ_VOTE_CORRECT_BASE_PROBABILITY;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.REPRESENTATIVE_ALIGNMENTS_BAM_SUFFIX;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.RUN_MANIFEST_TSV_SUFFIX;
@@ -29,7 +28,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 
 import com.hartwig.hmftools.common.bwa.BwaMemAligner;
@@ -50,8 +48,7 @@ import com.hartwig.hmftools.viridian.detection.common.ReadId;
 import com.hartwig.hmftools.viridian.detection.extract.CandidateReadExtractor;
 import com.hartwig.hmftools.viridian.detection.extract.CandidateReadFilter;
 import com.hartwig.hmftools.viridian.detection.extract.ViralKmerIndex;
-import com.hartwig.hmftools.viridian.detection.select.OncologyGroupRepresentativeSelection;
-import com.hartwig.hmftools.viridian.detection.select.PairwiseMargins;
+import com.hartwig.hmftools.viridian.detection.select.RepresentativeGenome;
 import com.hartwig.hmftools.viridian.detection.select.RepresentativeGenomeSelector;
 import com.hartwig.hmftools.viridian.detection.support.GenomeSupport;
 import com.hartwig.hmftools.viridian.detection.support.GenomeSupportCalculator;
@@ -103,25 +100,7 @@ public class ViridianApplication
 
         BwaMemAligner.initLibrary(mConfig.bwaLibPath());
 
-        Set<String> virusDecoyContigs = resolveVirusDecoyContigs();
-
-        String candidateReadFastaFile = extractCandidateReads(virusDecoyContigs);
-
-        AllGenomesReadAlignments allGenomesReadAlignments = alignCandidateReadsToVirusGenomes(candidateReadFastaFile);
-
-        List<GenomeSupport> genomeSupports = computeGenomeSupport(allGenomesReadAlignments);
-
-        List<OncologyGroupRepresentativeSelection> representativeSelections =
-                selectRepresentativeGenomes(allGenomesReadAlignments, genomeSupports);
-
-        ViralReadAlignmentStore representativeAlignments =
-                assignReadsToRepresentatives(allGenomesReadAlignments.store(), representativeSelections);
-
-        Map<VirusGenome, GenomeStats> representativeGenomeStats =
-                calculateRepresentativeGenomeStats(representativeAlignments, allGenomesReadAlignments.metrics().originClippedReads());
-
-        List<DetectedVirus> detectedViruses = writeDetectedViruses(
-                representativeSelections, representativeGenomeStats, allGenomesReadAlignments.metrics().readCountsByOncologyGroup());
+        List<DetectedVirus> detectedViruses = detectViruses();
 
         Map<OncologyGroup, Integer> integrationCounts = callHostIntegrations();
 
@@ -130,6 +109,33 @@ public class ViridianApplication
         OutputWriter.writeRunManifest(outputFile(RUN_MANIFEST_TSV_SUFFIX), mConfig);
 
         LOGGER.info("{} complete, mins({})", APP_NAME, runTimeMinsStr(startTimeMs));
+    }
+
+    // Detect viruses from reads.
+    private List<DetectedVirus> detectViruses()
+    {
+        Set<String> virusDecoyContigs = resolveVirusDecoyContigs();
+
+        String candidateReadFastaFile = extractCandidateReads(virusDecoyContigs);
+
+        AllGenomesReadAlignments allGenomesReadAlignments = alignCandidateReadsToVirusGenomes(candidateReadFastaFile);
+
+        List<GenomeSupport> genomeSupports = computeGenomeSupport(allGenomesReadAlignments);
+
+        List<RepresentativeGenome> representatives = selectRepresentativeGenomes(genomeSupports);
+
+        ViralReadAlignmentStore representativeAlignments =
+                assignReadsToRepresentatives(allGenomesReadAlignments.store(), representatives);
+
+        Map<VirusGenome, GenomeStats> representativeGenomeStats =
+                calculateRepresentativeGenomeStats(representativeAlignments, allGenomesReadAlignments.metrics().originClippedReads());
+
+        List<DetectedVirus> detectedViruses = DetectedVirus.from(representatives, representativeGenomeStats);
+
+        LOGGER.info("Writing virus detection output");
+        OutputWriter.writeDetectedViruses(outputFile(VIRUS_DETECTION_TSV_SUFFIX), detectedViruses);
+
+        return detectedViruses;
     }
 
     // Extract reads which may be viral into a FASTA.
@@ -206,37 +212,27 @@ public class ViridianApplication
 
     // For each oncology group (group of virus strains at interesting taxonomy granularity), select 1 virus genome which best represents
     // the virus present in the sample.
-    private List<OncologyGroupRepresentativeSelection> selectRepresentativeGenomes(
-            AllGenomesReadAlignments alignments, List<GenomeSupport> genomeSupports)
+    private List<RepresentativeGenome> selectRepresentativeGenomes(List<GenomeSupport> genomeSupports)
     {
         LOGGER.info("Selecting representative genome per oncology group");
-        PairwiseMargins pairwiseMargins = PairwiseMargins.from(alignments.store().byRead());
-        List<OncologyGroupRepresentativeSelection> selections = RepresentativeGenomeSelector.select(
-                genomeSupports, pairwiseMargins, alignments.metrics().readCountsByOncologyGroup());
+        List<RepresentativeGenome> representatives = RepresentativeGenomeSelector.select(genomeSupports);
 
         LOGGER.info("Writing genome support output");
-        OutputWriter.writeGenomeSupport(outputFile(GENOME_SUPPORT_TSV_SUFFIX), selections);
-        if(mConfig.verboseOutput())
-        {
-            LOGGER.info("Writing pairwise margins output");
-            OutputWriter.writePairwiseMargins(outputFile(PAIRWISE_MARGINS_TSV_SUFFIX), pairwiseMargins, selections);
-        }
+        OutputWriter.writeGenomeSupport(outputFile(GENOME_SUPPORT_TSV_SUFFIX), genomeSupports, representatives);
 
-        return selections;
+        return representatives;
     }
 
     // For each oncology group, assign the read alignments to only the selected representative virus genome.
     // This is simply filtering down to each read's alignment to that genome (or nothing, if it didn't align there at all).
     private ViralReadAlignmentStore assignReadsToRepresentatives(
-            ViralReadAlignmentStore alignments, List<OncologyGroupRepresentativeSelection> representativeSelections)
+            ViralReadAlignmentStore alignments, List<RepresentativeGenome> representatives)
     {
         LOGGER.info("Assigning reads to representative genomes");
-        Set<VirusGenome> representatives = representativeSelections.stream()
-                .map(OncologyGroupRepresentativeSelection::representative)
-                .filter(Objects::nonNull)
-                .collect(toSet());
+        Set<VirusGenome> representativeGenomes =
+                representatives.stream().map(RepresentativeGenome::genome).collect(toSet());
         Map<ReadId, ViralReadAlignment> assignments = RepresentativeReadAssigner.assign(
-                alignments, representatives, outputFile(ALL_ALIGNMENTS_BAM_SUFFIX),
+                alignments, representativeGenomes, outputFile(ALL_ALIGNMENTS_BAM_SUFFIX),
                 outputFile(REPRESENTATIVE_ALIGNMENTS_BAM_SUFFIX));
 
         return new ViralReadAlignmentStore(assignments.values());
@@ -254,16 +250,6 @@ public class ViridianApplication
         Map<VirusGenome, GenomeStats> genomeStats =
                 GenomeStatsCalculator.calculate(representativeAlignments.byGenome(), originClippedReads);
         return genomeStats;
-    }
-
-    private List<DetectedVirus> writeDetectedViruses(
-            List<OncologyGroupRepresentativeSelection> selections, Map<VirusGenome, GenomeStats> representativeGenomeStats,
-            Map<OncologyGroup, Integer> oncologyGroupReadCounts)
-    {
-        LOGGER.info("Writing virus detection output");
-        List<DetectedVirus> detections = DetectedVirus.from(selections, representativeGenomeStats, oncologyGroupReadCounts);
-        OutputWriter.writeDetectedViruses(outputFile(VIRUS_DETECTION_TSV_SUFFIX), detections);
-        return detections;
     }
 
     // Find where a virus inserted itself into the host genome, from the SVs ESVEE called.

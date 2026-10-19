@@ -1,30 +1,26 @@
 package com.hartwig.hmftools.viridian.app;
 
 import static java.util.Comparator.comparing;
-import static java.util.Comparator.naturalOrder;
-import static java.util.Comparator.nullsLast;
 import static java.util.Comparator.reverseOrder;
+import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toMap;
+import static java.util.stream.Collectors.toSet;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.viridian.app.ViridianConfig.CFG_CANDIDATE_READ_SOURCE;
 import static com.hartwig.hmftools.viridian.app.ViridianConfig.CFG_EXTRA_VIRUS_DECOY_CONTIGS;
 import static com.hartwig.hmftools.viridian.app.ViridianConfig.CFG_KMER_FILTER;
-import static com.hartwig.hmftools.viridian.common.ViridianConstants.REPORTED_MARGINS;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.hartwig.hmftools.common.utils.file.DelimFileWriter;
 import com.hartwig.hmftools.viridian.detection.DetectedVirus;
 import com.hartwig.hmftools.viridian.detection.common.GenomeStats;
 import com.hartwig.hmftools.viridian.detection.common.SummaryStats;
-import com.hartwig.hmftools.viridian.detection.select.OncologyGroupRepresentativeSelection;
-import com.hartwig.hmftools.viridian.detection.select.PairwiseMargins;
-import com.hartwig.hmftools.viridian.detection.select.RepresentativeGenomeCandidate;
+import com.hartwig.hmftools.viridian.detection.select.RepresentativeGenome;
 import com.hartwig.hmftools.viridian.detection.support.GenomeSupport;
 import com.hartwig.hmftools.viridian.integration.IntegrationCandidate;
 import com.hartwig.hmftools.viridian.integration.align.ViralInsertAlignment;
@@ -32,6 +28,7 @@ import com.hartwig.hmftools.viridian.integration.extract.BreakendSupport;
 import com.hartwig.hmftools.viridian.integration.extract.CandidateSv;
 import com.hartwig.hmftools.viridian.integration.extract.HostBreakend;
 import com.hartwig.hmftools.viridian.integration.extract.InsertRepeat;
+import com.hartwig.hmftools.viridian.reference.OncologyGroup;
 import com.hartwig.hmftools.viridian.reference.VirusGenome;
 import com.hartwig.hmftools.viridian.reporting.VirusReport;
 
@@ -39,20 +36,24 @@ import org.jetbrains.annotations.Nullable;
 
 public class OutputWriter
 {
-    public static void writeGenomeSupport(String file, List<OncologyGroupRepresentativeSelection> selections)
+    public static void writeGenomeSupport(
+            String file, List<GenomeSupport> genomeSupports, List<RepresentativeGenome> representatives)
     {
-        Map<VirusGenome, Integer> votesRanks = candidateVotesRanks(selections);
-        List<GenomeSupportRow> rows = selections.stream()
-                .flatMap(OutputWriter::genomeSupportRows)
-                .sorted(comparing((GenomeSupportRow row) -> row.support().genome().oncologyGroup())
-                        .thenComparing(row -> row.support().readVotes(), reverseOrder())
-                        .thenComparing(row -> row.support().genome()))
+        Set<VirusGenome> representativeGenomes =
+                representatives.stream().map(RepresentativeGenome::genome).collect(toSet());
+        Map<OncologyGroup, GroupVotes> groupVotes = genomeSupports.stream()
+                .collect(groupingBy(support -> support.genome().oncologyGroup()))
+                .entrySet().stream()
+                .collect(toMap(Map.Entry::getKey, entry -> GroupVotes.from(entry.getValue())));
+        List<GenomeSupport> rows = genomeSupports.stream()
+                .sorted(comparing((GenomeSupport support) -> support.genome().oncologyGroup())
+                        .thenComparing(GenomeSupport::readVotes, reverseOrder())
+                        .thenComparing(GenomeSupport::genome))
                 .toList();
 
         DelimFileWriter.write(
-                file, GENOME_SUPPORT_COLUMNS, rows, (genomeRow, row) ->
+                file, GENOME_SUPPORT_COLUMNS, rows, (support, row) ->
                 {
-                    GenomeSupport support = genomeRow.support();
                     GenomeStats stats = support.stats();
                     VirusGenome genome = support.genome();
 
@@ -70,65 +71,27 @@ public class OutputWriter
                     writeSummaryStats(row, ALIGN_PER_READ_STATS_COLUMNS, support.alignmentsPerRead());
                     writeSummaryStats(row, ALIGNER_SCORE_STATS_COLUMNS, stats.alignerScore());
 
-                    row.set(GenomeSupportColumn.oncology_group_resolution, genomeRow.selection().resolution().name());
-                    row.set(GenomeSupportColumn.oncology_group_outcome, genomeRow.selection().outcome().name());
+                    GroupVotes votes = groupVotes.get(genome.oncologyGroup());
+                    double readVotes = support.readVotes();
                     row.set(GenomeSupportColumn.filter_status, support.filterStatus().name());
-                    row.setOrNull(GenomeSupportColumn.vote_share_pre_filter, genomeRow.preFilterVoteShare());
-                    row.setOrNull(GenomeSupportColumn.vote_share_post_filter, genomeRow.postFilterVoteShare());
-                    row.setOrNull(GenomeSupportColumn.vote_share_ratio, genomeRow.voteShareOfTop());
-
-                    // Note unset columns are written as null.
-                    RepresentativeGenomeCandidate candidate = genomeRow.candidate();
-                    if(candidate != null)
-                    {
-                        row.set(GenomeSupportColumn.votes_rank, candidate.votesRank());
-                        row.set(GenomeSupportColumn.comparable, candidate.comparable());
-                        row.set(GenomeSupportColumn.role, candidate.role().name());
-                        row.set(GenomeSupportColumn.challenges_ranks, formatRanks(votesRanks, candidate.challenges()));
-                        row.set(GenomeSupportColumn.challenged_by_ranks, formatRanks(votesRanks, candidate.challengedBy()));
-                    }
+                    row.setOrNull(GenomeSupportColumn.vote_share_pre_filter, share(readVotes, votes.all()));
+                    row.setOrNull(GenomeSupportColumn.vote_share_post_filter, share(readVotes, votes.candidates()));
+                    row.set(GenomeSupportColumn.is_representative, representativeGenomes.contains(genome));
                 });
     }
 
-    private record GenomeSupportRow(
-            OncologyGroupRepresentativeSelection selection,
-            GenomeSupport support,
-            // Null for a genome the support filter rejected, leaving the candidate columns blank.
-            @Nullable RepresentativeGenomeCandidate candidate,
-            @Nullable Double preFilterVoteShare,
-            @Nullable Double postFilterVoteShare,
-            @Nullable Double voteShareOfTop
+    private record GroupVotes(
+            double all,
+            double candidates
     )
     {
-    }
-
-    private static Stream<GenomeSupportRow> genomeSupportRows(OncologyGroupRepresentativeSelection selection)
-    {
-        double candidateVotes = selection.candidates().stream().mapToDouble(c -> c.support().readVotes()).sum();
-        double rejectedVotes = selection.rejected().stream().mapToDouble(GenomeSupport::readVotes).sum();
-        double topCandidateVotes = selection.candidates().stream()
-                .mapToDouble(candidate -> candidate.support().readVotes()).max().orElse(0.0);
-
-        Stream<GenomeSupportRow> candidates = selection.candidates().stream()
-                .map(candidate -> genomeSupportRow(
-                        selection, candidate.support(), candidate, candidateVotes + rejectedVotes,
-                        candidateVotes, topCandidateVotes));
-        Stream<GenomeSupportRow> rejected = selection.rejected().stream()
-                .map(support -> genomeSupportRow(
-                        selection, support, null, candidateVotes + rejectedVotes,
-                        candidateVotes, topCandidateVotes));
-
-        return Stream.concat(candidates, rejected);
-    }
-
-    private static GenomeSupportRow genomeSupportRow(
-            OncologyGroupRepresentativeSelection selection, GenomeSupport support, @Nullable RepresentativeGenomeCandidate candidate,
-            double allVotes, double candidateVotes, double topCandidateVotes)
-    {
-        double votes = support.readVotes();
-        return new GenomeSupportRow(
-                selection, support, candidate,
-                share(votes, allVotes), share(votes, candidateVotes), share(votes, topCandidateVotes));
+        static GroupVotes from(List<GenomeSupport> groupGenomes)
+        {
+            double all = groupGenomes.stream().mapToDouble(GenomeSupport::readVotes).sum();
+            double candidates = groupGenomes.stream()
+                    .filter(support -> !support.isFiltered()).mapToDouble(GenomeSupport::readVotes).sum();
+            return new GroupVotes(all, candidates);
+        }
     }
 
     private enum GenomeSupportColumn
@@ -136,21 +99,15 @@ public class OutputWriter
         genome,
         virus_name,
         oncology_group,
-        oncology_group_resolution,
-        oncology_group_outcome,
-        role,
+        is_representative,
         filter_status,
         genome_length,
         coverage_fraction,
         read_count,
         read_votes,
-        votes_rank,
         vote_share_pre_filter,
         vote_share_post_filter,
         vote_share_ratio,
-        comparable,
-        challenges_ranks,
-        challenged_by_ranks,
         multi_align_reads,
         origin_clipped_reads
     }
@@ -176,46 +133,32 @@ public class OutputWriter
                 file, VIRUS_DETECTION_COLUMNS, rows, (detection, row) ->
                 {
                     row.set(DetectedVirusColumn.oncology_group, detection.oncologyGroup().name());
-                    row.set(DetectedVirusColumn.oncology_group_resolution, detection.resolution().name());
-                    row.set(DetectedVirusColumn.oncology_group_outcome, detection.outcome().name());
-                    row.set(DetectedVirusColumn.group_read_count, detection.groupReadCount());
-                    row.set(DetectedVirusColumn.aligned_genome_count, detection.alignedGenomeCount());
-                    row.set(DetectedVirusColumn.candidate_count, detection.candidateCount());
-                    row.set(DetectedVirusColumn.comparable_candidate_count, detection.comparableCandidateCount());
+                    row.set(DetectedVirusColumn.status, detection.representativeStatus().name());
 
-                    // Note unset columns are written as null, leaving an unmeasured group's columns blank.
-                    GenomeStats stats = detection.representativeGenomeStats();
-                    if(stats != null)
-                    {
-                        VirusGenome genome = stats.genome();
-                        row.set(DetectedVirusColumn.representative_genome, genome.name());
-                        row.set(DetectedVirusColumn.virus_name, genome.virusName());
-                        row.set(DetectedVirusColumn.genome_length, genome.length());
-                        row.set(DetectedVirusColumn.read_count, stats.readCount());
-                        row.set(DetectedVirusColumn.origin_clipped_reads, stats.originClippedReads());
-                        row.set(DetectedVirusColumn.coverage_fraction, stats.coverageFraction());
+                    GenomeStats stats = detection.representativeStats();
+                    VirusGenome genome = stats.genome();
+                    row.set(DetectedVirusColumn.genome_name, genome.name());
+                    row.set(DetectedVirusColumn.virus_name, genome.virusName());
+                    row.set(DetectedVirusColumn.genome_length, genome.length());
+                    row.set(DetectedVirusColumn.read_count, stats.readCount());
+                    row.set(DetectedVirusColumn.origin_clipped_reads, stats.originClippedReads());
+                    row.set(DetectedVirusColumn.coverage_fraction, stats.coverageFraction());
 
-                        writeSummaryStats(row, DEPTH_STATS_COLUMNS, stats.depth());
-                        writeSummaryStats(row, ALIGNER_SCORE_STATS_COLUMNS, stats.alignerScore());
-                    }
+                    writeSummaryStats(row, DEPTH_STATS_COLUMNS, stats.depth());
+                    writeSummaryStats(row, ALIGNER_SCORE_STATS_COLUMNS, stats.alignerScore());
                 });
     }
 
     private enum DetectedVirusColumn
     {
         oncology_group,
-        oncology_group_resolution,
-        oncology_group_outcome,
-        group_read_count,
-        aligned_genome_count,
-        candidate_count,
-        comparable_candidate_count,
-        representative_genome,
         virus_name,
+        genome_name,
         genome_length,
         coverage_fraction,
         read_count,
-        origin_clipped_reads
+        origin_clipped_reads,
+        status,
     }
 
     private static final List<String> VIRUS_DETECTION_COLUMNS =
@@ -245,71 +188,6 @@ public class OutputWriter
     private static Double share(double votes, double total)
     {
         return total > 0 ? votes / total : null;
-    }
-
-    private static String formatRanks(Map<VirusGenome, Integer> votesRanks, Set<VirusGenome> genomes)
-    {
-        return genomes.stream().map(votesRanks::get).sorted().map(String::valueOf).collect(Collectors.joining(","));
-    }
-
-    private static Map<VirusGenome, Integer> candidateVotesRanks(List<OncologyGroupRepresentativeSelection> selections)
-    {
-        return selections.stream()
-                .flatMap(selection -> selection.candidates().stream())
-                .collect(toMap(RepresentativeGenomeCandidate::genome, RepresentativeGenomeCandidate::votesRank));
-    }
-
-    // One row per ordered within-oncology-group genome pair: the reads they share, and how many of those fit the subject
-    // better by at least each reported margin. Includes support-filtered genomes. Verbose/debug only, for tuning.
-    public static void writePairwiseMargins(String file, PairwiseMargins margins, List<OncologyGroupRepresentativeSelection> selections)
-    {
-        Map<VirusGenome, Integer> votesRanks = candidateVotesRanks(selections);
-
-        // A pair's genomes share an oncology group, and only its candidates are ranked, so unranked genomes sort last.
-        List<PairwiseMargins.GenomePair> pairs = margins.pairs().stream()
-                .sorted(comparing((PairwiseMargins.GenomePair pair) -> pair.subject().oncologyGroup())
-                        .thenComparing(pair -> votesRanks.get(pair.subject()), nullsLast(naturalOrder()))
-                        .thenComparing(PairwiseMargins.GenomePair::subject)
-                        .thenComparing(pair -> votesRanks.get(pair.opponent()), nullsLast(naturalOrder()))
-                        .thenComparing(PairwiseMargins.GenomePair::opponent))
-                .toList();
-
-        List<String> columns = Stream.concat(
-                        Stream.of(PairwiseMarginsColumn.values()).map(Enum::name),
-                        MARGIN_COLUMNS.stream())
-                .toList();
-
-        DelimFileWriter.write(
-                file, columns, pairs, (pair, row) ->
-                {
-                    row.set(PairwiseMarginsColumn.oncology_group, pair.subject().oncologyGroup().name());
-                    row.set(PairwiseMarginsColumn.subject_genome, pair.subject().name());
-                    row.setOrNull(PairwiseMarginsColumn.subject_rank, asString(votesRanks.get(pair.subject())));
-                    row.set(PairwiseMarginsColumn.opponent_genome, pair.opponent().name());
-                    row.setOrNull(PairwiseMarginsColumn.opponent_rank, asString(votesRanks.get(pair.opponent())));
-                    row.set(PairwiseMarginsColumn.shared_reads, margins.sharedReads(pair.subject(), pair.opponent()));
-                    for(int margin : REPORTED_MARGINS)
-                    {
-                        row.set(marginColumn(margin), margins.readsWinningBy(pair.subject(), pair.opponent(), margin));
-                    }
-                });
-    }
-
-    private enum PairwiseMarginsColumn
-    {
-        oncology_group,
-        subject_genome,
-        subject_rank,
-        opponent_genome,
-        opponent_rank,
-        shared_reads
-    }
-
-    private static final List<String> MARGIN_COLUMNS = REPORTED_MARGINS.stream().map(OutputWriter::marginColumn).toList();
-
-    private static String marginColumn(int margin)
-    {
-        return "reads_m" + margin;
     }
 
     public static void writeIntegrationCandidates(String file, List<IntegrationCandidate> candidates)
@@ -449,10 +327,12 @@ public class OutputWriter
                     row.set(VirusReportColumn.integrations, report.integrations());
                     row.set(VirusReportColumn.detected, report.isDetected());
 
-                    GenomeStats stats = report.representativeStats();
-                    if(stats != null)
+                    DetectedVirus detection = report.detection();
+                    if(detection != null)
                     {
+                        GenomeStats stats = detection.representativeStats();
                         VirusGenome genome = stats.genome();
+                        row.set(VirusReportColumn.representative_status, detection.representativeStatus().name());
                         row.set(VirusReportColumn.representative_genome, genome.name());
                         row.set(VirusReportColumn.virus_name, genome.virusName());
                         row.set(VirusReportColumn.coverage_fraction, stats.coverageFraction());
@@ -471,6 +351,7 @@ public class OutputWriter
         status,
         integrations,
         detected,
+        representative_status,
         representative_genome,
         virus_name,
         coverage_fraction,
@@ -493,10 +374,5 @@ public class OutputWriter
                             String.join(ITEM_DELIM, runConfig.extraVirusDecoyContigs().stream().sorted().toList()));
                     row.set(CFG_KMER_FILTER, runConfig.kmerFilterEnabled());
                 });
-    }
-
-    private static String asString(@Nullable Object value)
-    {
-        return value == null ? null : value.toString();
     }
 }

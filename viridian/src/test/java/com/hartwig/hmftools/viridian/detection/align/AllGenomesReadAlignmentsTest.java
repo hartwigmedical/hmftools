@@ -17,11 +17,8 @@ public class AllGenomesReadAlignmentsTest
     private static final int LENGTH = 100;
 
     private static final OncologyGroup GROUP_A = new OncologyGroup("Group A");
-    private static final OncologyGroup GROUP_H = new OncologyGroup("Group H");
 
     private static final VirusGenome V1 = new VirusGenome("v1", LENGTH, "Virus v1", GROUP_A);
-    private static final VirusGenome V2 = new VirusGenome("v2", LENGTH, "Virus v2", GROUP_A);
-    private static final VirusGenome H1 = new VirusGenome("h1", LENGTH, "Virus h1", GROUP_H);
 
     @Test
     public void testFromOriginStraddlersExcludedAndCounted()
@@ -32,32 +29,6 @@ public class AllGenomesReadAlignmentsTest
 
         assertEquals(1, allAlignments.store().readCount());
         assertEquals(Map.of(V1, 2), allAlignments.metrics().originClippedReads());
-    }
-
-    @Test
-    public void testFromReadCountedOncePerOncologyGroup()
-    {
-        AllGenomesReadAlignments allAlignments = AllGenomesReadAlignments.from(
-                List.of(alignment("r1", V1), alignment("r1", V2), alignment("r2", V1)), 150.0);
-
-        assertEquals(Map.of(GROUP_A, 2), allAlignments.metrics().readCountsByOncologyGroup());
-    }
-
-    @Test
-    public void testFromReadCountedInEveryOncologyGroupItAligns()
-    {
-        AllGenomesReadAlignments allAlignments = AllGenomesReadAlignments.from(List.of(alignment("r1", V1), alignment("r1", H1)), 150.0);
-
-        assertEquals(Map.of(GROUP_A, 1, GROUP_H, 1), allAlignments.metrics().readCountsByOncologyGroup());
-    }
-
-    @Test
-    public void testFromStraddlersDoNotCountTowardsReadCounts()
-    {
-        // A virus genome carrying only straddlers leaves its group unrepresented.
-        AllGenomesReadAlignments allAlignments = AllGenomesReadAlignments.from(List.of(alignment("r1", V1), straddler("r2", H1)), 150.0);
-
-        assertEquals(Map.of(GROUP_A, 1), allAlignments.metrics().readCountsByOncologyGroup());
     }
 
     @Test
@@ -94,7 +65,7 @@ public class AllGenomesReadAlignmentsTest
         AllGenomesReadAlignments allAlignments = AllGenomesReadAlignments.from(List.of(), null);
 
         assertEquals(0, allAlignments.store().readCount());
-        assertEquals(new AllGenomesReadAlignmentsMetrics(null, Map.of(), Map.of(), Map.of()), allAlignments.metrics());
+        assertEquals(new AllGenomesReadAlignmentsMetrics(null, Map.of(), Map.of()), allAlignments.metrics());
     }
 
     @Test

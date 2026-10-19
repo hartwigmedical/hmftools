@@ -54,8 +54,7 @@ public record ViridianConfig(
         @Nullable String outputId,
         CandidateReadSource candidateReadSource,
         Set<String> extraVirusDecoyContigs,
-        boolean kmerFilterEnabled,
-        boolean verboseOutput
+        boolean kmerFilterEnabled
 )
 {
     private static final String CFG_VIRUS_REF_FILE = "virus_ref";
@@ -78,8 +77,6 @@ public record ViridianConfig(
     private static final String DESC_EXTRA_VIRUS_DECOY_CONTIGS = "Additional host reference genome contigs to treat as virus decoy contigs";
     static final String CFG_KMER_FILTER = "kmer_filter";
     private static final String DESC_KMER_FILTER = "Filter candidate viral reads with a kmer index";
-    private static final String CFG_VERBOSE_OUTPUT = "verbose_output";
-    private static final String DESC_VERBOSE_OUTPUT = "Output more information which may be useful for debugging";
 
     public static ViridianConfig fromConfigBuilder(final ConfigBuilder configBuilder)
     {
@@ -102,8 +99,7 @@ public record ViridianConfig(
                 configBuilder.getValue(OUTPUT_ID),
                 parseCandidateReadSource(configBuilder.getValue(CFG_CANDIDATE_READ_SOURCE)),
                 parseExtraVirusDecoyContigs(configBuilder.getValue(CFG_EXTRA_VIRUS_DECOY_CONTIGS)),
-                configBuilder.hasFlag(CFG_KMER_FILTER),
-                configBuilder.hasFlag(CFG_VERBOSE_OUTPUT)
+                configBuilder.hasFlag(CFG_KMER_FILTER)
         );
     }
 
@@ -153,7 +149,6 @@ public record ViridianConfig(
                 CFG_CANDIDATE_READ_SOURCE, false, DESC_CANDIDATE_READ_SOURCE, CandidateReadSource.ALL.toString());
         configBuilder.addConfigItem(CFG_EXTRA_VIRUS_DECOY_CONTIGS, DESC_EXTRA_VIRUS_DECOY_CONTIGS);
         configBuilder.addFlag(CFG_KMER_FILTER, DESC_KMER_FILTER);
-        configBuilder.addFlag(CFG_VERBOSE_OUTPUT, DESC_VERBOSE_OUTPUT);
 
         addThreadOptions(configBuilder);
         configBuilder.addConfigItem(OUTPUT_DIR, true, OUTPUT_DIR_DESC);

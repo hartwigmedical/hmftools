@@ -14,7 +14,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.hartwig.hmftools.viridian.detection.DetectedVirus;
-import com.hartwig.hmftools.viridian.detection.common.GenomeStats;
 import com.hartwig.hmftools.viridian.reference.OncologyGroup;
 import com.hartwig.hmftools.viridian.reference.OncologyGroupInfo;
 
@@ -45,18 +44,16 @@ public class VirusReporter
             OncologyGroup group, @Nullable DetectedVirus detected, int integrations,
             OncologyGroupInfo info, @Nullable Double expectedViralDepthPerCopy)
     {
-        GenomeStats representativeStats = detected != null ? detected.representativeGenomeStats() : null;
-
-        // Null when it couldn't be calculated from the Purple data, in which case the virus can only be reported on integrations.
-        Double copiesPerTumorCell = representativeStats != null && expectedViralDepthPerCopy != null
-                ? representativeStats.depth().mean() / expectedViralDepthPerCopy
+        // Null when there is no representative genome, or Purple data unusable, in which case the virus can only be reported on integrations.
+        Double copiesPerTumorCell = detected != null && expectedViralDepthPerCopy != null
+                ? detected.representativeStats().depth().mean() / expectedViralDepthPerCopy
                 : null;
 
         VirusReportStatus status = decideStatus(info.isReportable(), integrations, copiesPerTumorCell);
 
         return new VirusReport(
-                group, info.reportingType(), info.driverLikelihood(), integrations,
-                detected != null, representativeStats, copiesPerTumorCell, status);
+                group, info.reportingType(), info.driverLikelihood(), integrations, detected, copiesPerTumorCell,
+                status);
     }
 
     static VirusReportStatus decideStatus(boolean reportable, int integrations, @Nullable Double copiesPerTumorCell)

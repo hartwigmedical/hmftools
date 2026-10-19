@@ -1,9 +1,5 @@
 package com.hartwig.hmftools.viridian.reporting;
 
-import static com.hartwig.hmftools.viridian.detection.select.OncologyGroupOutcome.MUTUAL;
-import static com.hartwig.hmftools.viridian.detection.select.OncologyGroupOutcome.RESOLVED_CANDIDATES;
-import static com.hartwig.hmftools.viridian.detection.select.OncologyGroupResolution.RESOLVED;
-import static com.hartwig.hmftools.viridian.detection.select.OncologyGroupResolution.UNRESOLVED;
 import static com.hartwig.hmftools.viridian.reporting.VirusReportStatus.CLONALITY_UNEVALUABLE;
 import static com.hartwig.hmftools.viridian.reporting.VirusReportStatus.NOT_CLONAL;
 import static com.hartwig.hmftools.viridian.reporting.VirusReportStatus.NOT_REPORTABLE;
@@ -21,6 +17,7 @@ import com.hartwig.hmftools.common.virus.VirusType;
 import com.hartwig.hmftools.viridian.detection.DetectedVirus;
 import com.hartwig.hmftools.viridian.detection.common.GenomeStats;
 import com.hartwig.hmftools.viridian.detection.common.SummaryStats;
+import com.hartwig.hmftools.viridian.detection.select.RepresentativeStatus;
 import com.hartwig.hmftools.viridian.reference.OncologyGroup;
 import com.hartwig.hmftools.viridian.reference.OncologyGroupInfo;
 import com.hartwig.hmftools.viridian.reference.VirusGenome;
@@ -100,9 +97,9 @@ public class VirusReporterTest
 
     // Representative depth 10 against per-copy depth 20 is 0.5 copies per tumor cell, which clears C.
     @Test
-    public void testDetectedResolvedReportsOnClonality()
+    public void testDetectedReportsOnClonality()
     {
-        VirusReport report = VirusReporter.reportGroup(GROUP, resolved(DEPTH), 0, REPORTABLE_INFO, PER_COPY);
+        VirusReport report = VirusReporter.reportGroup(GROUP, detected(DEPTH), 0, REPORTABLE_INFO, PER_COPY);
         assertTrue(report.isDetected());
         assertEquals(0.5, report.copiesPerTumorCell(), 1e-9);
         assertEquals(REPORTED_ON_CLONALITY, report.status());
@@ -111,20 +108,9 @@ public class VirusReporterTest
 
     // Clonality needs the per-copy depth, which an unusable Purple fit leaves absent.
     @Test
-    public void testDetectedResolvedWithoutPurpleIsUnevaluable()
+    public void testDetectedWithoutPurpleIsUnevaluable()
     {
-        VirusReport report = VirusReporter.reportGroup(GROUP, resolved(DEPTH), 0, REPORTABLE_INFO, null);
-        assertNull(report.copiesPerTumorCell());
-        assertEquals(CLONALITY_UNEVALUABLE, report.status());
-    }
-
-    // Detected but unresolved: no representative to measure, so clonality is unevaluable.
-    @Test
-    public void testDetectedUnresolvedIsUnevaluable()
-    {
-        DetectedVirus unresolved = new DetectedVirus(GROUP, UNRESOLVED, MUTUAL, 100, 2, 2, 2, null);
-        VirusReport report = VirusReporter.reportGroup(GROUP, unresolved, 0, REPORTABLE_INFO, PER_COPY);
-        assertTrue(report.isDetected());
+        VirusReport report = VirusReporter.reportGroup(GROUP, detected(DEPTH), 0, REPORTABLE_INFO, null);
         assertNull(report.copiesPerTumorCell());
         assertEquals(CLONALITY_UNEVALUABLE, report.status());
     }
@@ -142,16 +128,16 @@ public class VirusReporterTest
     @Test
     public void testNotReportableIsNotReported()
     {
-        VirusReport report = VirusReporter.reportGroup(GROUP, resolved(DEPTH), 5, NOT_REPORTABLE_INFO, PER_COPY);
+        VirusReport report = VirusReporter.reportGroup(GROUP, detected(DEPTH), 5, NOT_REPORTABLE_INFO, PER_COPY);
         assertEquals(NOT_REPORTABLE, report.status());
         assertFalse(report.isReported());
     }
 
-    private static DetectedVirus resolved(double meanDepth)
+    private static DetectedVirus detected(double meanDepth)
     {
         SummaryStats depth = SummaryStats.from(new int[] { (int) meanDepth });
         SummaryStats alignerScore = SummaryStats.from(new int[] { 30 });
         GenomeStats stats = new GenomeStats(GENOME, 1, 0, GENOME.length(), depth, alignerScore);
-        return new DetectedVirus(GROUP, RESOLVED, RESOLVED_CANDIDATES, 100, 1, 1, 0, stats);
+        return new DetectedVirus(stats, RepresentativeStatus.PASS);
     }
 }

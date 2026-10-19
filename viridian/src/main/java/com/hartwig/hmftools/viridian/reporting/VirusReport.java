@@ -2,7 +2,7 @@ package com.hartwig.hmftools.viridian.reporting;
 
 import com.hartwig.hmftools.common.virus.VirusLikelihoodType;
 import com.hartwig.hmftools.common.virus.VirusType;
-import com.hartwig.hmftools.viridian.detection.common.GenomeStats;
+import com.hartwig.hmftools.viridian.detection.DetectedVirus;
 import com.hartwig.hmftools.viridian.reference.OncologyGroup;
 
 import org.jetbrains.annotations.Nullable;
@@ -15,23 +15,22 @@ public record VirusReport(
         @Nullable VirusType reportingType,
         @Nullable VirusLikelihoodType driverLikelihood,
         int integrations,
-        boolean isDetected,
-        // Null unless the group is detected and resolved to a representative.
-        @Nullable GenomeStats representativeStats,
+        @Nullable DetectedVirus detection,
         // Null if Purple data wasn't usable.
         @Nullable Double copiesPerTumorCell,
         VirusReportStatus status)
 {
     public VirusReport
     {
-        if(representativeStats != null && !isDetected)
+        if(copiesPerTumorCell != null && detection == null)
         {
-            throw new IllegalArgumentException("Resolved group must be detected: " + oncologyGroup);
+            throw new IllegalArgumentException("Copies per tumor cell needs a detection: " + oncologyGroup);
         }
-        if(copiesPerTumorCell != null && representativeStats == null)
-        {
-            throw new IllegalArgumentException("Copies per tumor cell needs a representative: " + oncologyGroup);
-        }
+    }
+
+    public boolean isDetected()
+    {
+        return detection != null;
     }
 
     public boolean isReported()

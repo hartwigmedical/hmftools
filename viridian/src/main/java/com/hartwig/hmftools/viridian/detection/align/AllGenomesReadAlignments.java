@@ -13,7 +13,6 @@ import java.util.Map;
 import java.util.Set;
 
 import com.hartwig.hmftools.viridian.detection.common.ReadId;
-import com.hartwig.hmftools.viridian.reference.OncologyGroup;
 import com.hartwig.hmftools.viridian.reference.VirusGenome;
 import com.hartwig.hmftools.viridian.reference.VirusReference;
 
@@ -34,7 +33,6 @@ public record AllGenomesReadAlignments(
     public static AllGenomesReadAlignments from(List<ViralReadAlignment> alignments, @Nullable Double meanReadLength)
     {
         Map<VirusGenome, Set<ReadId>> originClippedReadsByGenome = new HashMap<>();
-        Map<OncologyGroup, Set<ReadId>> readsByOncologyGroup = new HashMap<>();
         Map<ReadGenome, List<ViralReadAlignment>> alignmentsByReadGenome = new LinkedHashMap<>();
 
         for(ViralReadAlignment alignment : alignments)
@@ -50,10 +48,6 @@ public record AllGenomesReadAlignments(
                 alignmentsByReadGenome
                         .computeIfAbsent(new ReadGenome(alignment.readId(), alignment.genome()), k -> new ArrayList<>())
                         .add(alignment);
-
-                readsByOncologyGroup
-                        .computeIfAbsent(alignment.genome().oncologyGroup(), k -> new HashSet<>())
-                        .add(alignment.readId());
             }
         }
 
@@ -68,11 +62,11 @@ public record AllGenomesReadAlignments(
                     .add(readGenomeAlignments.size());
         });
 
-        AllGenomesReadAlignmentsMetrics metrics = new AllGenomesReadAlignmentsMetrics(
-                meanReadLength,
-                countReads(originClippedReadsByGenome),
-                countReads(readsByOncologyGroup),
-                alignmentCountsByGenome);
+        Map<VirusGenome, Integer> originClippedReads = originClippedReadsByGenome.entrySet().stream()
+                .collect(toMap(Map.Entry::getKey, entry -> entry.getValue().size()));
+
+        AllGenomesReadAlignmentsMetrics metrics =
+                new AllGenomesReadAlignmentsMetrics(meanReadLength, originClippedReads, alignmentCountsByGenome);
 
         return new AllGenomesReadAlignments(new ViralReadAlignmentStore(retained), metrics);
     }
@@ -108,11 +102,6 @@ public record AllGenomesReadAlignments(
 
         Double meanReadLength = readLengthCount > 0 ? (double) readLengthSum / readLengthCount : null;
         return from(alignments, meanReadLength);
-    }
-
-    private static <K> Map<K, Integer> countReads(Map<K, Set<ReadId>> readsByKey)
-    {
-        return readsByKey.entrySet().stream().collect(toMap(Map.Entry::getKey, entry -> entry.getValue().size()));
     }
 
     private record ReadGenome(

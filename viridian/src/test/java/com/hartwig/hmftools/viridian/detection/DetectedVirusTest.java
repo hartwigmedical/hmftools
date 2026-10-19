@@ -1,32 +1,17 @@
 package com.hartwig.hmftools.viridian.detection;
 
-import static com.hartwig.hmftools.viridian.detection.select.OncologyGroupOutcome.MUTUAL;
-import static com.hartwig.hmftools.viridian.detection.select.OncologyGroupOutcome.NO_CANDIDATES;
-import static com.hartwig.hmftools.viridian.detection.select.OncologyGroupOutcome.ONE_CANDIDATE;
-
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.stream.Stream;
 
 import com.hartwig.hmftools.viridian.detection.common.GenomeStats;
 import com.hartwig.hmftools.viridian.detection.common.SummaryStats;
-import com.hartwig.hmftools.viridian.detection.select.GenomeRole;
-import com.hartwig.hmftools.viridian.detection.select.OncologyGroupOutcome;
-import com.hartwig.hmftools.viridian.detection.select.OncologyGroupRepresentativeSelection;
-import com.hartwig.hmftools.viridian.detection.select.OncologyGroupResolution;
-import com.hartwig.hmftools.viridian.detection.select.RepresentativeGenomeCandidate;
-import com.hartwig.hmftools.viridian.detection.support.GenomeFilterStatus;
-import com.hartwig.hmftools.viridian.detection.support.GenomeSupport;
+import com.hartwig.hmftools.viridian.detection.select.RepresentativeGenome;
+import com.hartwig.hmftools.viridian.detection.select.RepresentativeStatus;
 import com.hartwig.hmftools.viridian.reference.OncologyGroup;
 import com.hartwig.hmftools.viridian.reference.VirusGenome;
 
-import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
 
 public class DetectedVirusTest
@@ -34,96 +19,39 @@ public class DetectedVirusTest
     private static final OncologyGroup GROUP_A = new OncologyGroup("Group A");
     private static final OncologyGroup GROUP_B = new OncologyGroup("Group B");
     private static final VirusGenome V1 = new VirusGenome("v1", 100, "Virus v1", GROUP_A);
-    private static final VirusGenome V2 = new VirusGenome("v2", 100, "Virus v2", GROUP_A);
-    private static final VirusGenome V3 = new VirusGenome("v3", 100, "Virus v3", GROUP_A);
     private static final VirusGenome W1 = new VirusGenome("w1", 100, "Virus w1", GROUP_B);
 
     @Test
-    public void testFromResolvedGroupCarriesItsRepresentativeMeasurement()
+    public void testFromPairsMeasurementWithStatus()
     {
         GenomeStats stats = stats(V1);
 
-        List<DetectedVirus> detections = DetectedVirus.from(
-                List.of(selection(GROUP_A, ONE_CANDIDATE, V1)), Map.of(V1, stats), Map.of(GROUP_A, 500));
+        List<DetectedVirus> detections = DetectedVirus.from(List.of(representative(V1)), Map.of(V1, stats));
 
-        assertEquals(1, detections.size());
-        assertEquals(GROUP_A, detections.get(0).oncologyGroup());
-        assertEquals(OncologyGroupResolution.RESOLVED, detections.get(0).resolution());
-        assertEquals(stats, detections.get(0).representativeGenomeStats());
+        assertEquals(List.of(new DetectedVirus(stats, RepresentativeStatus.PASS)), detections);
     }
 
-    // The group is detected either way: which of its near-identical strains leads is a separate question, and naming
-    // one would override the checks that declined to pick it.
+    // Read assignment gave every read of V1 to another virus's representative, so V1 has no measurement and its oncology
+    // group is not detected.
     @Test
-    public void testFromUnresolvedGroupIsPresentButNotMeasured()
+    public void testFromRepresentativeWithoutReadsNotDetected()
     {
-        List<DetectedVirus> detections = DetectedVirus.from(
-                List.of(selection(GROUP_A, MUTUAL, null, List.of(V1, V2), List.of(V3))), Map.of(), Map.of(GROUP_A, 900));
+        GenomeStats w1Stats = stats(W1);
 
-        assertEquals(1, detections.size());
-        DetectedVirus detection = detections.get(0);
-        assertEquals(OncologyGroupResolution.UNRESOLVED, detection.resolution());
-        assertNull(detection.representativeGenomeStats());
-
-        // Nothing is measured, so these counts are all a reader has to judge the ambiguity by.
-        assertEquals(900, detection.groupReadCount());
-        assertEquals(3, detection.alignedGenomeCount());
-        assertEquals(2, detection.candidateCount());
-        assertEquals(2, detection.comparableCandidateCount());
-    }
-
-    @Test
-    public void testFromGroupWithNoCandidatesIsAbsent()
-    {
         List<DetectedVirus> detections =
-                DetectedVirus.from(List.of(selection(GROUP_B, NO_CANDIDATES, null)), Map.of(), Map.of());
+                DetectedVirus.from(List.of(representative(V1), representative(W1)), Map.of(W1, w1Stats));
 
-        assertTrue(detections.isEmpty());
+        assertEquals(List.of(new DetectedVirus(w1Stats, RepresentativeStatus.PASS)), detections);
     }
 
-    // A representative with no measurement means the stages disagree about what was assigned.
-    @Test
-    public void testFromRepresentativeMissingItsMeasurementRejected()
+    private static RepresentativeGenome representative(VirusGenome genome)
     {
-        List<OncologyGroupRepresentativeSelection> selections = List.of(selection(GROUP_A, ONE_CANDIDATE, V1));
-
-        assertThrows(
-                IllegalStateException.class,
-                () -> DetectedVirus.from(selections, Map.of(W1, stats(W1)), Map.of(GROUP_A, 500)));
+        return new RepresentativeGenome(genome, RepresentativeStatus.PASS);
     }
 
     private static GenomeStats stats(VirusGenome genome)
     {
         return new GenomeStats(
                 genome, 10, 1, 80, SummaryStats.from(new int[genome.length()]), SummaryStats.from(new int[] { 100 }));
-    }
-
-    private static OncologyGroupRepresentativeSelection selection(
-            OncologyGroup group, OncologyGroupOutcome outcome, @Nullable VirusGenome representative, VirusGenome... others)
-    {
-        return selection(group, outcome, representative, List.of(others), List.of());
-    }
-
-    private static OncologyGroupRepresentativeSelection selection(
-            OncologyGroup group, OncologyGroupOutcome outcome, @Nullable VirusGenome representative,
-            List<VirusGenome> others, List<VirusGenome> rejected)
-    {
-        List<RepresentativeGenomeCandidate> candidates = Stream.concat(
-                        representative != null ? Stream.of(representative) : Stream.empty(), others.stream())
-                .map(genome -> candidate(genome, genome.equals(representative)))
-                .toList();
-        List<GenomeSupport> rejectedSupports = rejected.stream()
-                .map(genome -> new GenomeSupport(stats(genome), GenomeFilterStatus.LOW_COVERAGE, 0, null, 0.1))
-                .toList();
-
-        return new OncologyGroupRepresentativeSelection(group, outcome, candidates, rejectedSupports);
-    }
-
-    private static RepresentativeGenomeCandidate candidate(VirusGenome genome, boolean representative)
-    {
-        GenomeSupport support = new GenomeSupport(stats(genome), GenomeFilterStatus.PASS, 0, null, 1.0);
-        return new RepresentativeGenomeCandidate(
-                support, 1, true, Set.of(), Set.of(),
-                representative ? GenomeRole.REPRESENTATIVE : GenomeRole.SECONDARY);
     }
 }
