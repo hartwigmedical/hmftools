@@ -44,9 +44,9 @@ public class RepresentativeGenomeSelector
             OncologyGroup oncologyGroup, List<GenomeSupport> groupGenomes, PairwiseMargins margins,
             Map<OncologyGroup, Integer> groupReadCounts)
     {
-        List<GenomeSupport> rejected = groupGenomes.stream().filter(support -> !support.isCandidate()).toList();
+        List<GenomeSupport> rejected = groupGenomes.stream().filter(GenomeSupport::isFiltered).toList();
         List<GenomeSupport> candidates = groupGenomes.stream()
-                .filter(GenomeSupport::isCandidate)
+                .filter(support -> !support.isFiltered())
                 .sorted(comparingDouble(GenomeSupport::readVotes).reversed().thenComparing(GenomeSupport::genome))
                 .toList();
 

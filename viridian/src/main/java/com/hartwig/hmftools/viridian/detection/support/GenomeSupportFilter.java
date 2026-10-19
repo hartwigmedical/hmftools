@@ -11,7 +11,8 @@ import java.util.Map;
 import com.hartwig.hmftools.viridian.detection.common.GenomeStats;
 import com.hartwig.hmftools.viridian.reference.VirusGenome;
 
-// Determines whether a virus genome carries enough evidence to be a candidate virus genome.
+// Determines whether a virus genome has enough support to be a candidate for detection.
+// These filters provide a floor on virus detection sensitivity. Genomes filtered here are obviously marginal.
 public class GenomeSupportFilter
 {
     public static Map<VirusGenome, GenomeFilterStatus> statuses(
@@ -42,7 +43,7 @@ public class GenomeSupportFilter
         }
         else
         {
-            return GenomeFilterStatus.CANDIDATE;
+            return GenomeFilterStatus.PASS;
         }
     }
 

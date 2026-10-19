@@ -28,7 +28,7 @@ public class GenomeSupportFilterTest
     public void testStatusesRelaxedFloorKeepsStraddlingSibling()
     {
         // The sibling reaches the coverage minimum, so this virus genome is kept down to the relaxed floor of 90 bases.
-        assertEquals(GenomeFilterStatus.CANDIDATE, statusWithCoveredSibling(95));
+        assertEquals(GenomeFilterStatus.PASS, statusWithCoveredSibling(95));
         assertEquals(GenomeFilterStatus.LOW_COVERAGE, statusWithCoveredSibling(89));
     }
 
@@ -46,14 +46,14 @@ public class GenomeSupportFilterTest
     public void testStatusesGroupPresenceAtCoverageFloor()
     {
         // A lone virus genome establishes its group only by reaching the coverage floor, here 0.10 * 1000 = 100 bases.
-        assertEquals(GenomeFilterStatus.CANDIDATE, status(100, 100.0));
+        assertEquals(GenomeFilterStatus.PASS, status(100, 100.0));
         assertEquals(GenomeFilterStatus.LOW_COVERAGE, status(99, 100.0));
     }
 
     @Test
     public void testStatusesVoteDensityFloorDropsCoveredGenome()
     {
-        assertEquals(GenomeFilterStatus.CANDIDATE, status(500, 0.67));
+        assertEquals(GenomeFilterStatus.PASS, status(500, 0.67));
         assertEquals(GenomeFilterStatus.LOW_VOTE_DENSITY, status(500, 0.66));
     }
 

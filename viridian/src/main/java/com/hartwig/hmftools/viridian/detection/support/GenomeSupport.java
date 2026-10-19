@@ -24,8 +24,8 @@ public record GenomeSupport(
         return stats.genome();
     }
 
-    public boolean isCandidate()
+    public boolean isFiltered()
     {
-        return filterStatus == GenomeFilterStatus.CANDIDATE;
+        return filterStatus != GenomeFilterStatus.PASS;
     }
 }

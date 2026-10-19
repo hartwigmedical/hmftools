@@ -16,8 +16,7 @@ import com.hartwig.hmftools.viridian.detection.common.GenomeStats;
 import com.hartwig.hmftools.viridian.detection.common.SummaryStats;
 import com.hartwig.hmftools.viridian.reference.VirusGenome;
 
-// Takes per-virus-genome statistics and determines candidate virus genomes.
-// Computes:
+// Computes for each virus genome:
 //   - Baseline support status (is virus maybe here or is it noise?);
 //   - Read voting used for representative selection.
 public class GenomeSupportCalculator

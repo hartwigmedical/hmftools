@@ -46,13 +46,13 @@ public class GenomeSupportCalculatorTest
         int[] v1Depth = { 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
         GenomeSupport expectedV1 = new GenomeSupport(
                 new GenomeStats(V1, 2, 0, 10, SummaryStats.from(v1Depth), SummaryStats.from(new int[] { 10, 8 })),
-                GenomeFilterStatus.CANDIDATE, 1, SummaryStats.from(new int[] { 2, 1 }), 2.0);
+                GenomeFilterStatus.PASS, 1, SummaryStats.from(new int[] { 2, 1 }), 2.0);
         assertEquals(expectedV1, get(stats, V1));
 
         int[] v2Depth = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
         GenomeSupport expectedV2 = new GenomeSupport(
                 new GenomeStats(V2, 1, 0, 10, SummaryStats.from(v2Depth), SummaryStats.from(new int[] { 9 })),
-                GenomeFilterStatus.CANDIDATE, 0, SummaryStats.from(new int[] { 1 }), 1.0);
+                GenomeFilterStatus.PASS, 0, SummaryStats.from(new int[] { 1 }), 1.0);
         assertEquals(expectedV2, get(stats, V2));
     }
 

@@ -121,7 +121,7 @@ public class DetectedVirusTest
 
     private static RepresentativeGenomeCandidate candidate(VirusGenome genome, boolean representative)
     {
-        GenomeSupport support = new GenomeSupport(stats(genome), GenomeFilterStatus.CANDIDATE, 0, null, 1.0);
+        GenomeSupport support = new GenomeSupport(stats(genome), GenomeFilterStatus.PASS, 0, null, 1.0);
         return new RepresentativeGenomeCandidate(
                 support, 1, true, Set.of(), Set.of(),
                 representative ? GenomeRole.REPRESENTATIVE : GenomeRole.SECONDARY);

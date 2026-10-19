@@ -1,10 +1,10 @@
 package com.hartwig.hmftools.viridian.detection.support;
 
-// Filter status of a virus genome, derived from read support.
+// For a virus genome: is it possibly in the sample, or is it noise?
 public enum GenomeFilterStatus
 {
     // Cleared both filters.
-    CANDIDATE,
+    PASS,
     // Not enough coverage.
     LOW_COVERAGE,
     // Passed coverage but not enough read votes.

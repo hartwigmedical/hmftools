@@ -279,7 +279,7 @@ public class RepresentativeGenomeSelectorTest
 
     private static GenomeSupport candidate(VirusGenome genome, double votes)
     {
-        return genomeSupport(genome, GenomeFilterStatus.CANDIDATE, votes);
+        return genomeSupport(genome, GenomeFilterStatus.PASS, votes);
     }
 
     private static GenomeSupport rejected(VirusGenome genome, GenomeFilterStatus filterStatus)
