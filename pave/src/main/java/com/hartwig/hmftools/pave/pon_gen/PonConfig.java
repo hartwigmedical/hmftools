@@ -4,14 +4,16 @@ import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsem
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION_CFG_DESC;
 import static com.hartwig.hmftools.common.region.SpecificRegions.addSpecificChromosomesRegionsConfig;
-import static com.hartwig.hmftools.common.region.SpecificRegions.loadSpecificRegions;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addSampleIdFile;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadSampleIdsFile;
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
+import static com.hartwig.hmftools.common.variant.VariantHotspotFile.GERMLINE_HOTSPOT_FILE;
+import static com.hartwig.hmftools.common.variant.VariantHotspotFile.GERMLINE_HOTSPOT_FILE_DESC;
+import static com.hartwig.hmftools.common.variant.VariantHotspotFile.SOMATIC_HOTSPOT_FILE;
+import static com.hartwig.hmftools.common.variant.VariantHotspotFile.SOMATIC_HOTSPOT_FILE_DESC;
 import static com.hartwig.hmftools.common.variant.pon.PonCache.PON_FILE;
+import static com.hartwig.hmftools.common.variant.pon.PonCache.PON_FILE_DESC;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
@@ -47,8 +49,6 @@ public class PonConfig
 
     public static final String WRITE_DETAILED = "write_detailed";
     public static final String MANUAL_ENTRIES = "manual_entries";
-    public static final String SOMATIC_HOTSPOT = "somatic_hotspots";
-    public static final String GERMLINE_HOTSPOT = "germline_hotspots";
 
     // constants
     private static final int DEFAULT_MIN_SAMPLES = 3;
@@ -97,12 +97,12 @@ public class PonConfig
 
         configBuilder.addFlag(WRITE_DETAILED, "Write final PON without annotations");
 
-        configBuilder.addPath(PON_FILE, false, "PON entries");
+        configBuilder.addPath(PON_FILE, false, PON_FILE_DESC);
         ClinvarAnnotation.addConfig(configBuilder);
         addEnsemblDir(configBuilder, false);
 
-        configBuilder.addPath(SOMATIC_HOTSPOT, false, "Somatic hotspot file");
-        configBuilder.addPath(GERMLINE_HOTSPOT, false, "Germline hotspot file");
+        configBuilder.addPath(SOMATIC_HOTSPOT_FILE, false, SOMATIC_HOTSPOT_FILE_DESC);
+        configBuilder.addPath(GERMLINE_HOTSPOT_FILE, false, GERMLINE_HOTSPOT_FILE_DESC);
 
         addThreadOptions(configBuilder);
         addSpecificChromosomesRegionsConfig(configBuilder);

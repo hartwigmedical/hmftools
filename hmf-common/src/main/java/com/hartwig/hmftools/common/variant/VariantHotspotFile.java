@@ -13,6 +13,12 @@ import htsjdk.variant.variantcontext.VariantContext;
 
 public final class VariantHotspotFile
 {
+    public static final String SOMATIC_HOTSPOT_FILE = "somatic_hotspots";
+    public static final String SOMATIC_HOTSPOT_FILE_DESC = "Somatic hotspot VCF";
+
+    public static final String GERMLINE_HOTSPOT_FILE = "germline_hotspots";
+    public static final String GERMLINE_HOTSPOT_FILE_DESC = "Germline hotspot VCF";
+
     public static ListMultimap<Chromosome,SimpleVariant> loadHotspotVcf(final String fileName) throws IOException
     {
         ListMultimap<Chromosome,SimpleVariant> result = ArrayListMultimap.create();

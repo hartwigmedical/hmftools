@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.pave.pon_gen;
 
+import static com.hartwig.hmftools.common.variant.VariantHotspotFile.GERMLINE_HOTSPOT_FILE;
+import static com.hartwig.hmftools.common.variant.VariantHotspotFile.SOMATIC_HOTSPOT_FILE;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
-import static com.hartwig.hmftools.pave.pon_gen.PonConfig.GERMLINE_HOTSPOT;
-import static com.hartwig.hmftools.pave.pon_gen.PonConfig.SOMATIC_HOTSPOT;
 
 import java.util.List;
 
@@ -26,9 +26,9 @@ public class HotspotCache
 
         try
         {
-            if(configBuilder.hasValue(SOMATIC_HOTSPOT))
+            if(configBuilder.hasValue(SOMATIC_HOTSPOT_FILE))
             {
-                String hotspotFile = configBuilder.getValue(SOMATIC_HOTSPOT);
+                String hotspotFile = configBuilder.getValue(SOMATIC_HOTSPOT_FILE);
                 mSomaticHotspotMap.putAll(VariantHotspotFile.loadHotspotVcf(hotspotFile));
             }
         }
@@ -40,9 +40,9 @@ public class HotspotCache
 
         try
         {
-            if(configBuilder.hasValue(GERMLINE_HOTSPOT))
+            if(configBuilder.hasValue(GERMLINE_HOTSPOT_FILE))
             {
-                String hotspotFile = configBuilder.getValue(GERMLINE_HOTSPOT);
+                String hotspotFile = configBuilder.getValue(GERMLINE_HOTSPOT_FILE);
                 mGermlineHotspotMap.putAll(VariantHotspotFile.loadHotspotVcf(hotspotFile));
             }
         }
