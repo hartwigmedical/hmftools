@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.tars.common.TarsConstants.MIN_IMPLIED_INTRON_
 
 import static org.junit.Assert.assertEquals;
 
+import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -23,7 +24,10 @@ import com.hartwig.hmftools.tars.common.ContigEntry;
 import com.hartwig.hmftools.tars.liftback.features.SupplementaryConfig;
 
 import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMFileWriter;
+import htsjdk.samtools.SAMFileWriterFactory;
 import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMSequenceRecord;
 
 // Shared fixtures for the liftback suite: the three-exon transcript contig, SAMRecord builders, an in-memory reference
 // genome and factories for LiftedAlignment + LiftedRecord.
@@ -42,6 +46,30 @@ public final class TarsTestFixtures
         return new SupplementaryConfig(
                 MIN_IMPLIED_INTRON_LENGTH, MAX_IMPLIED_INTRON_LENGTH,
                 MAX_SUPP_MERGES, false, MAX_SUPP_READ_OVERLAP);
+    }
+
+    public static SAMFileHeader nameGroupedHeader(final SAMSequenceRecord... sequences)
+    {
+        SAMFileHeader header = new SAMFileHeader();
+        header.setSortOrder(SAMFileHeader.SortOrder.unsorted);
+        for(SAMSequenceRecord sequence : sequences)
+        {
+            header.addSequence(sequence);
+        }
+        return header;
+    }
+
+    public static void writeBam(final File bam, final SAMFileHeader header, final List<SAMRecord> records)
+    {
+        try(SAMFileWriter writer = new SAMFileWriterFactory().makeBAMWriter(header, true, bam))
+        {
+            for(SAMRecord record : records)
+            {
+                SAMRecord copy = record.deepCopy();
+                copy.setHeader(header);
+                writer.addAlignment(copy);
+            }
+        }
     }
 
     // exon spans on chr1: 100-199, 300-399, 500-549; introns 200-299, 400-499; contig length 250.
@@ -236,9 +264,11 @@ public final class TarsTestFixtures
         public RefGenomeInterface asRefGenome()
         {
             MockRefGenome refGenome = new MockRefGenome(true);
+            refGenome.ChromosomeLengths.clear();
             for(Map.Entry<String, byte[]> entry : mBases.entrySet())
             {
                 refGenome.RefGenomeMap.put(entry.getKey(), new String(entry.getValue(), StandardCharsets.US_ASCII));
+                refGenome.ChromosomeLengths.put(entry.getKey(), entry.getValue().length);
             }
             return refGenome;
         }

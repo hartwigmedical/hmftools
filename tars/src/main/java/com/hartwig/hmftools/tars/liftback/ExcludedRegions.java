@@ -18,7 +18,9 @@ public final class ExcludedRegions
     {
         mRegionsByChromosome = regionsByChromosome;
         for(List<BaseRegion> regions : mRegionsByChromosome.values())
+        {
             regions.sort(Comparator.comparingInt(BaseRegion::start));
+        }
     }
 
     public static ExcludedRegions load(final String filename)
@@ -36,7 +38,9 @@ public final class ExcludedRegions
     {
         List<BaseRegion> regions = mRegionsByChromosome.get(chromosome);
         if(regions == null)
+        {
             return false;
+        }
 
         // last region starting at or before posEnd; the start<=posEnd guard covers the "all regions after" case.
         BaseRegion region = regions.get(BaseRegion.binarySearch(posEnd, regions));

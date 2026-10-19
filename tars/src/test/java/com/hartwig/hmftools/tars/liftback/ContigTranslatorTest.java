@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.tars.liftback;
 
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
+import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.TX_CONTIG;
+import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.threeExonContig;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -254,7 +256,7 @@ public class ContigTranslatorTest
         ContigTranslator translator = new ContigTranslator(List.of(threeExonContig()));
 
         List<LiftedAlignment> alignments = translator.liftXaAlignments(
-                "ensG_T_tx,+51,50M,1;ensG_T_tx,+51,50M,1;ensG_T_tx,-201,30M,2;bad;unknown_tx,+1,10M,0;");
+                TX_CONTIG + ",+51,50M,1;" + TX_CONTIG + ",+51,50M,1;" + TX_CONTIG + ",-201,30M,2;bad;unknown_tx,+1,10M,0;");
 
         assertEquals(2, alignments.size());
         assertEquals(150, alignments.get(0).LiftedPos);
@@ -341,13 +343,6 @@ public class ContigTranslatorTest
     private static String mergeDeletions(final String cigarString)
     {
         return new Cigar(ContigTranslator.mergeDeletionsIntoSplice(cigar(cigarString).getCigarElements())).toString();
-    }
-
-    private static ContigEntry threeExonContig()
-    {
-        return new ContigEntry(
-                "ensG_T_tx", 1, 250, "G", "GENE", "T", CHR_1, 1,
-                List.of(new BaseRegion(100, 199), new BaseRegion(300, 399), new BaseRegion(500, 549)));
     }
 
     private static Cigar cigar(final String cigarString)

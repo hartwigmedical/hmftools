@@ -88,8 +88,8 @@ public class SupplementaryMergerTest
         assertTrue(result.merged());
         assertEquals("94M79N57M", result.mergedCigar());
         assertEquals(primStart, result.mergedStart());
-        assertEquals(1, result.droppedSupplementaryIndices().size());
-        assertEquals(Integer.valueOf(0), result.droppedSupplementaryIndices().get(0));
+        assertEquals(1, result.absorbedSupplementaryIndices().size());
+        assertEquals(Integer.valueOf(0), result.absorbedSupplementaryIndices().get(0));
         assertEquals(1, result.introducedIntrons().size());
         assertEquals(annotatedIntron, result.introducedIntrons().get(0));
         assertEquals(1, result.chainDepth());
@@ -187,9 +187,9 @@ public class SupplementaryMergerTest
         assertEquals("50M950N60M940N41M", result.mergedCigar());
         assertEquals(primStart, result.mergedStart());
         assertEquals(2, result.chainDepth());
-        assertEquals(2, result.droppedSupplementaryIndices().size());
-        assertTrue(result.droppedSupplementaryIndices().contains(0));
-        assertTrue(result.droppedSupplementaryIndices().contains(1));
+        assertEquals(2, result.absorbedSupplementaryIndices().size());
+        assertTrue(result.absorbedSupplementaryIndices().contains(0));
+        assertTrue(result.absorbedSupplementaryIndices().contains(1));
 
         assertEquals(2, result.introducedIntrons().size());
         assertEquals(new ChrBaseRegion(CHR1, 1050, 1999), result.introducedIntrons().get(0));
@@ -428,7 +428,7 @@ public class SupplementaryMergerTest
 
         assertTrue(result.merged());
         assertEquals("94M405N57M", result.mergedCigar());
-        assertEquals(List.of(0), result.droppedSupplementaryIndices());
+        assertEquals(List.of(0), result.absorbedSupplementaryIndices());
     }
 
     @Test
@@ -458,7 +458,7 @@ public class SupplementaryMergerTest
         assertTrue(result.merged());
         assertEquals("5S90M409N56M", result.mergedCigar());
         assertEquals(1, result.chainDepth());
-        assertEquals(List.of(0), result.droppedSupplementaryIndices());
+        assertEquals(List.of(0), result.absorbedSupplementaryIndices());
     }
 
     @Test
@@ -498,7 +498,7 @@ public class SupplementaryMergerTest
 
         assertTrue(result.merged());
         assertEquals(2, result.chainDepth());
-        assertEquals(2, result.droppedSupplementaryIndices().size());
+        assertEquals(2, result.absorbedSupplementaryIndices().size());
     }
 
     @Test

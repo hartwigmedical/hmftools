@@ -14,10 +14,6 @@ import htsjdk.samtools.SAMRecord;
 // first, so an entry cannot drift from the record that is emitted.
 public final class SaTagRewriter
 {
-    private SaTagRewriter()
-    {
-    }
-
     // Admission check only: a supplementary with no liftable SA partner is orphaned. The emitted SA is rebuilt from the
     // final name group, not from these pre-lift coordinates.
     static boolean hasLiftableAlignment(final String saTag, final ContigTranslator translator)

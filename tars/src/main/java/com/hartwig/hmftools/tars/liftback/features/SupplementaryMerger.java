@@ -45,18 +45,11 @@ public class SupplementaryMerger
     }
 
     public record Result(
-            boolean merged, String mergedCigar, int mergedStart, List<Integer> droppedSupplementaryIndices,
+            boolean merged, String mergedCigar, int mergedStart, List<Integer> absorbedSupplementaryIndices,
             List<ChrBaseRegion> introducedIntrons, int chainDepth, int spliceStrand, RejectReason rejectReason)
     {
-        private static final Result NO_MERGE_NO_OP = new Result(
-                false, null, -1, Collections.emptyList(), Collections.emptyList(), 0, 0, RejectReason.NO_TERMINAL_SOFTCLIP);
-
         public static Result noMerge(final RejectReason reason)
         {
-            if(reason == RejectReason.NO_TERMINAL_SOFTCLIP)
-            {
-                return NO_MERGE_NO_OP;
-            }
             return new Result(false, null, -1, Collections.emptyList(), Collections.emptyList(), 0, 0, reason);
         }
     }
@@ -80,7 +73,6 @@ public class SupplementaryMerger
     private static final int NO_JUNCTION_POSITION = -1;
 
     private final SpliceJunctions mSpliceJunctions;
-    private final EnsemblAnnotationIndex mEnsemblAnnotationIndex;
     private final SupplementaryConfig mConfig;
 
     public SupplementaryMerger(final Set<ChrBaseRegion> annotatedJunctions, final SupplementaryConfig config)
@@ -94,9 +86,9 @@ public class SupplementaryMerger
             final EnsemblAnnotationIndex annotationIndex, final RefGenomeInterface refGenome,
             final SupplementaryConfig config)
     {
-        mEnsemblAnnotationIndex = annotationIndex != null
+        EnsemblAnnotationIndex ensemblAnnotationIndex = annotationIndex != null
                 ? annotationIndex : EnsemblAnnotationIndex.fromJunctions(new HashSet<>());
-        mSpliceJunctions = new SpliceJunctions(mEnsemblAnnotationIndex, refGenome);
+        mSpliceJunctions = new SpliceJunctions(ensemblAnnotationIndex, refGenome);
         mConfig = config;
     }
 
@@ -120,7 +112,7 @@ public class SupplementaryMerger
 
         int primaryStart = placement.primaryStart();
         List<RecordAlignment> remaining = new ArrayList<>(placement.supplementaries());
-        List<Integer> dropped = new ArrayList<>();
+        List<Integer> absorbed = new ArrayList<>();
         List<ChrBaseRegion> introns = new ArrayList<>();
         RejectReason lastReject = null;
         int chainDepth = 0;
@@ -157,7 +149,7 @@ public class SupplementaryMerger
 
             primaryStart = merge.mergedStart();
             primaryCigar = merge.mergedCigar();
-            dropped.add(merge.mergedSupplementary().recordIndex());
+            absorbed.add(merge.mergedSupplementary().recordIndex());
             introns.add(merge.introducedIntron());
             if(merge.spliceStrand() != 0)
             {
@@ -183,7 +175,7 @@ public class SupplementaryMerger
 
         return new Result(
                 true, CigarUtils.cigarElementsToStr(primaryCigar), primaryStart,
-                dropped, introns, chainDepth, spliceStrand, null);
+                absorbed, introns, chainDepth, spliceStrand, null);
     }
 
     private MergeOutcome pickBestSupplementary(
@@ -420,13 +412,13 @@ public class SupplementaryMerger
             if(tier == SpliceJunctions.Tier.NONE)
                 continue;
 
-            int cmp = tier.compareTo(bestTier);
-            if(cmp > 0)
+            int tierComparison = tier.compareTo(bestTier);
+            if(tierComparison > 0)
             {
                 bestTier = tier;
                 bestPositions.clear();
             }
-            if(cmp >= 0)
+            if(tierComparison >= 0)
             {
                 bestPositions.add(readPosition);
             }
@@ -597,7 +589,9 @@ public class SupplementaryMerger
         return new ClampedSupp(start, trimmed);
     }
 
-    private record ClampedSupp(int start, List<CigarElement> cigar) { }
+    private record ClampedSupp(int start, List<CigarElement> cigar)
+    {
+    }
 
     private record Side(
             int start, List<CigarElement> cigar,

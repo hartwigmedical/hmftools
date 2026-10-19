@@ -12,10 +12,6 @@ import htsjdk.samtools.CigarOperator;
 
 public final class TarsCigarUtils
 {
-    private TarsCigarUtils()
-    {
-    }
-
     public static Cigar normalize(final Cigar cigar)
     {
         return new Cigar(normalize(cigar.getCigarElements()));

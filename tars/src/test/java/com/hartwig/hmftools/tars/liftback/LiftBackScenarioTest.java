@@ -10,6 +10,8 @@ import static com.hartwig.hmftools.tars.liftback.LiftBackScenario.supp;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.TX_CONTIG;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.threeExonContig;
 
+import static org.junit.Assert.assertEquals;
+
 import com.hartwig.hmftools.tars.liftback.TarsTestFixtures.TestGenome;
 
 import org.junit.Test;
@@ -17,6 +19,23 @@ import org.junit.Test;
 // Full-pipeline scenarios from placement construction through BAM emission.
 public class LiftBackScenarioTest
 {
+    @Test
+    public void testScenarioCanBeRunRepeatedlyWithoutChangingInputsOrEarlierResults()
+    {
+        LiftBackScenario.ReadSpec read = primary("repeat", TX_CONTIG, 51, "100M").bases("A".repeat(100));
+        LiftBackScenario scenario = scenario().read(read);
+
+        LiftBackScenario.Result first = scenario.run();
+        LiftBackScenario.Result second = scenario.run();
+
+        assertEquals(TX_CONTIG, read.Record.getReferenceName());
+        assertEquals(51, read.Record.getAlignmentStart());
+        assertEquals("100M", read.Record.getCigarString());
+        assertEquals(first.record("repeat", PRIMARY).getSAMString(), second.record("repeat", PRIMARY).getSAMString());
+        first.assertLifted("repeat", PRIMARY, CHR_1, 150, "50M100N50M").assertEmittedCount(1);
+        second.assertLifted("repeat", PRIMARY, CHR_1, 150, "50M100N50M").assertEmittedCount(1);
+    }
+
     private static TestGenome scenarioGenome()
     {
         return new TestGenome().with(CHR_1, 2000, 'A')
@@ -71,7 +90,10 @@ public class LiftBackScenarioTest
                 .read(supp("frag8", TX_CONTIG, 197, "50M").sa(TX_CONTIG + ",51,+,100M,60,0;"))
                 .read(mate("frag8", CHR_1, 600, "50M"))
                 .run()
-                .assertSaGenomic("frag8", PRIMARY, CHR_1)
+                .assertTag("frag8", PRIMARY, "SA", CHR_1 + ",396,+,4M100N46M,60,0;")
+                .assertTag("frag8", SUPPLEMENTARY, "SA", CHR_1 + ",150,+,50M100N50M,60,0;")
+                .assertSuppCount("frag8", 1)
+                .assertEmittedCount(3)
                 .assertLifted("frag8", SUPPLEMENTARY, CHR_1, 396, "4M100N46M")
                 .assertMate("frag8", PRIMARY, CHR_1, 600)
                 .assertMate("frag8", SUPPLEMENTARY, CHR_1, 600);

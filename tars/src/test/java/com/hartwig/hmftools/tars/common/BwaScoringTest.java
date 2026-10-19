@@ -4,6 +4,12 @@ import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.bases;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertNull;
+
+import java.util.Map;
+
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 
 import com.hartwig.hmftools.tars.liftback.TarsTestFixtures.TestGenome;
 
@@ -11,6 +17,20 @@ import org.junit.Test;
 
 public class BwaScoringTest
 {
+    @Test
+    public void testReferenceWindowsUseOneBasedInclusiveCoordinatesAndFixtureLengths()
+    {
+        RefGenomeInterface reference = new TestGenome().with(CHR_1, bases("ACGTTGCA")).asRefGenome();
+
+        assertEquals(8, reference.getChromosomeLength(CHR_1));
+        assertEquals(Map.of(CHR_1, 8), reference.chromosomeLengths());
+        assertArrayEquals(bases("ACG"), BwaScoring.refWindow(reference, CHR_1, 1, 3));
+        assertArrayEquals(bases("GCA"), BwaScoring.refWindow(reference, CHR_1, 6, 8));
+        assertNull(BwaScoring.refWindow(reference, CHR_1, 0, 3));
+        assertNull(BwaScoring.refWindow(reference, CHR_1, 7, 9));
+        assertNull(BwaScoring.refWindow(reference, CHR_1, 4, 3));
+    }
+
     @Test
     public void testScoresShortOverhangsLikeBwaMem()
     {

@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.tars.liftback.features;
 
-import java.util.Arrays;
-
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.tars.liftback.LiftedAlignment;
 
@@ -41,15 +39,8 @@ final class ReadBases
 
         if(mReverse == null)
         {
-            mReverse = reverseComplement(mForward);
+            mReverse = Nucleotides.reverseComplementBases(mForward);
         }
         return mReverse;
-    }
-
-    private static byte[] reverseComplement(final byte[] bases)
-    {
-        byte[] reversed = Arrays.copyOf(bases, bases.length);
-        Nucleotides.reverseComplementBasesInPlace(reversed, 0, reversed.length);
-        return reversed;
     }
 }

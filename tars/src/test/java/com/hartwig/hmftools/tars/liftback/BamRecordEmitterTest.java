@@ -3,6 +3,7 @@ package com.hartwig.hmftools.tars.liftback;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.TX_CONTIG;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.assertLifted;
+import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.mappedRecord;
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.threeExonContig;
 
 import static org.junit.Assert.assertEquals;
@@ -21,16 +22,9 @@ public class BamRecordEmitterTest
 {
     private static final String XA_TAG = "XA";
 
-    // The shared fixture sets pair flags, which these emitter tests must not carry.
     private static SAMRecord newRecord(final String contig, final int pos, final String cigar)
     {
-        SAMRecord record = new SAMRecord(new SAMFileHeader());
-        record.setReadName("read");
-        record.setReferenceName(contig);
-        record.setAlignmentStart(pos);
-        record.setCigarString(cigar);
-        record.setMappingQuality(60);
-        return record;
+        return mappedRecord("read", contig, pos, cigar);
     }
 
     @Test

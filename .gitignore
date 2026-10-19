@@ -39,3 +39,5 @@ patient-db/patient-db-logs/*.log
 CLAUDE.md
 
 .claude
+
+.archify

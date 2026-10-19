@@ -36,12 +36,6 @@ public class LiftedMatePair
         return firstOfPair ? mSecondInPair : mFirstInPair;
     }
 
-    // the caller's own side, used to mirror primary coords onto a supplementary whose own lift failed
-    public LiftedRecord ownPrimary(final boolean firstOfPair)
-    {
-        return firstOfPair ? mFirstInPair : mSecondInPair;
-    }
-
     public void unmapRead(final SAMRecord record)
     {
         LiftedRecord mate = record.getReadPairedFlag() ? mateOf(firstInPair(record)) : null;

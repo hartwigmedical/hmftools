@@ -2,11 +2,23 @@ package com.hartwig.hmftools.tars.liftback;
 
 import static com.hartwig.hmftools.tars.common.TarsConstants.TARS_LOGGER;
 
+import static htsjdk.samtools.util.BlockCompressedStreamConstants.BGZF_ID1;
+import static htsjdk.samtools.util.BlockCompressedStreamConstants.BGZF_ID2;
+import static htsjdk.samtools.util.BlockCompressedStreamConstants.BGZF_LEN;
+import static htsjdk.samtools.util.BlockCompressedStreamConstants.BLOCK_HEADER_LENGTH;
+import static htsjdk.samtools.util.BlockCompressedStreamConstants.GZIP_CM_DEFLATE;
+import static htsjdk.samtools.util.BlockCompressedStreamConstants.GZIP_FLG;
+import static htsjdk.samtools.util.BlockCompressedStreamConstants.GZIP_ID1;
+import static htsjdk.samtools.util.BlockCompressedStreamConstants.GZIP_ID2;
+import static htsjdk.samtools.util.BlockCompressedStreamConstants.GZIP_XLEN;
+
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.io.UncheckedIOException;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -156,12 +168,16 @@ public class ShardedChunkProducer extends Thread
 
     static final long EOF = Long.MAX_VALUE;
 
-    // BGZF block-header magic: gzip magic (1f 8b), deflate method (08), FEXTRA flag (04)
-    private static final byte[] BGZF_MAGIC = { 0x1f, (byte) 0x8b, 0x08, 0x04 };
-    private static final int SCAN_BUFFER = 64 * 1024;
+    private static final int BLOCK_SCAN_LENGTH = 64 * 1024;
+    private static final int RECORD_SCAN_LENGTH = 4 * 64 * 1024;
+    private static final int VALIDATED_RECORD_COUNT = 4;
 
     // [startVptr, endVptr); endVptr == EOF means read to the end of the file.
-    record ShardRange(long startVptr, long endVptr)
+    record ShardRange(long startVptr, long endVptr, String endReadName)
+    {
+    }
+
+    private record GroupBoundary(long vptr, String readName)
     {
     }
 
@@ -171,42 +187,180 @@ public class ShardedChunkProducer extends Thread
         long firstRecordVptr = headerEndVptr(bam, header);
         if(shardCount <= 1)
         {
-            return List.of(new ShardRange(firstRecordVptr, EOF));
+            return List.of(new ShardRange(firstRecordVptr, EOF, null));
         }
 
         long compressedLength = bam.length();
-        List<Long> splits = new ArrayList<>();
-        splits.add(firstRecordVptr);
-
+        List<GroupBoundary> boundaries = new ArrayList<>();
         long lastBlockOffset = firstRecordVptr >>> 16;
         for(int k = 1; k < shardCount; ++k)
         {
             long targetOffset = compressedLength * k / shardCount;
             if(targetOffset <= lastBlockOffset)
-                continue; // shards collapsing onto the same block: fewer, larger shards is fine
+            {
+                continue;
+            }
 
             long blockStart = findBlockStart(bam, targetOffset);
             if(blockStart < 0)
-                break; // no further block boundary: the remaining file is one shard
-
-            long splitVptr = firstGroupBoundaryVptr(bam, header, blockStart << 16);
-            if(splitVptr == EOF)
-                break; // no group boundary before EOF: the rest is one shard, and EOF as a shard start would seek to Long.MAX_VALUE
-
-            if(splitVptr > splits.get(splits.size() - 1))
             {
-                splits.add(splitVptr);
-                lastBlockOffset = splitVptr >>> 16;
+                break;
             }
+
+            GroupBoundary boundary = firstGroupBoundary(bam, header, blockStart);
+            if(boundary == null)
+            {
+                break;
+            }
+
+            boundaries.add(boundary);
+            lastBlockOffset = boundary.vptr() >>> 16;
         }
 
         List<ShardRange> ranges = new ArrayList<>();
-        for(int i = 0; i < splits.size(); ++i)
+        long startVptr = firstRecordVptr;
+        for(GroupBoundary boundary : boundaries)
         {
-            long end = i + 1 < splits.size() ? splits.get(i + 1) : EOF;
-            ranges.add(new ShardRange(splits.get(i), end));
+            ranges.add(new ShardRange(startVptr, boundary.vptr(), boundary.readName()));
+            startVptr = boundary.vptr();
         }
+        ranges.add(new ShardRange(startVptr, EOF, null));
         return ranges;
+    }
+
+    private static long findBlockStart(final File bam, final long targetOffset) throws IOException
+    {
+        try(RandomAccessFile file = new RandomAccessFile(bam, "r"))
+        {
+            byte[] buffer = new byte[BLOCK_SCAN_LENGTH];
+            long offset = targetOffset;
+            while(offset <= file.length() - BLOCK_HEADER_LENGTH)
+            {
+                file.seek(offset);
+                int read = file.read(buffer);
+                for(int i = 0; i + BLOCK_HEADER_LENGTH <= read; ++i)
+                {
+                    if(isBlockHeader(buffer, i))
+                    {
+                        return offset + i;
+                    }
+                }
+
+                offset += read - BLOCK_HEADER_LENGTH + 1;
+            }
+        }
+        return -1;
+    }
+
+    private static boolean isBlockHeader(final byte[] buffer, final int offset)
+    {
+        return buffer[offset] == GZIP_ID1 && (buffer[offset + 1] & 0xFF) == GZIP_ID2
+                && buffer[offset + 2] == GZIP_CM_DEFLATE && buffer[offset + 3] == GZIP_FLG
+                && buffer[offset + 10] == GZIP_XLEN && buffer[offset + 11] == 0
+                && buffer[offset + 12] == BGZF_ID1 && buffer[offset + 13] == BGZF_ID2
+                && buffer[offset + 14] == BGZF_LEN && buffer[offset + 15] == 0;
+    }
+
+    private static GroupBoundary firstGroupBoundary(final File bam, final SAMFileHeader header, final long blockStart)
+            throws IOException
+    {
+        try(BlockCompressedInputStream stream = new BlockCompressedInputStream(bam))
+        {
+            stream.seek(blockStart << 16);
+            byte[] window = stream.readNBytes(RECORD_SCAN_LENGTH);
+            int recordOffset = firstRecordOffset(
+                    window, window.length < RECORD_SCAN_LENGTH, header.getSequenceDictionary().size());
+            if(recordOffset < 0)
+            {
+                return null;
+            }
+
+            stream.seek(blockStart << 16);
+            stream.skipNBytes(recordOffset);
+            BAMRecordCodec codec = new BAMRecordCodec(header);
+            codec.setInputStream(stream);
+
+            String firstName = null;
+            long recordVptr = stream.getFilePointer();
+            SAMRecord record;
+            while((record = codec.decode()) != null)
+            {
+                if(firstName == null)
+                {
+                    firstName = record.getReadName();
+                }
+                else if(!record.getReadName().equals(firstName))
+                {
+                    return new GroupBoundary(recordVptr, record.getReadName());
+                }
+
+                recordVptr = stream.getFilePointer();
+            }
+            return null;
+        }
+    }
+
+    private static int firstRecordOffset(final byte[] window, final boolean endOfFile, final int referenceCount)
+    {
+        ByteBuffer buffer = ByteBuffer.wrap(window).order(ByteOrder.LITTLE_ENDIAN);
+        for(int offset = 0; offset < window.length; ++offset)
+        {
+            if(startsRecordChain(buffer, offset, endOfFile, referenceCount))
+            {
+                return offset;
+            }
+        }
+        return -1;
+    }
+
+    private static boolean startsRecordChain(
+            final ByteBuffer buffer, final int offset, final boolean endOfFile, final int referenceCount)
+    {
+        int recordStart = offset;
+        for(int i = 0; i < VALIDATED_RECORD_COUNT; ++i)
+        {
+            if(recordStart == buffer.limit())
+            {
+                return endOfFile && i > 0;
+            }
+
+            recordStart = recordEnd(buffer, recordStart, referenceCount);
+            if(recordStart < 0)
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static int recordEnd(final ByteBuffer buffer, final int offset, final int referenceCount)
+    {
+        int nameStart = offset + 36;
+        if(nameStart > buffer.limit())
+        {
+            return -1;
+        }
+
+        int blockSize = buffer.getInt(offset);
+        int referenceIndex = buffer.getInt(offset + 4);
+        int readNameLength = buffer.get(offset + 12) & 0xFF;
+        int mateReferenceIndex = buffer.getInt(offset + 24);
+        long recordEnd = offset + 4L + blockSize;
+        if(referenceIndex < -1 || referenceIndex >= referenceCount || mateReferenceIndex < -1 || mateReferenceIndex >= referenceCount
+                || readNameLength < 2 || blockSize < 32 + readNameLength || recordEnd > buffer.limit())
+        {
+            return -1;
+        }
+
+        int nameEnd = nameStart + readNameLength - 1;
+        for(int i = nameStart; i < nameEnd; ++i)
+        {
+            if(buffer.get(i) < '!' || buffer.get(i) > '~')
+            {
+                return -1;
+            }
+        }
+        return buffer.get(nameEnd) == 0 ? (int) recordEnd : -1;
     }
 
     private static long headerEndVptr(final File bam, final SAMFileHeader header) throws IOException
@@ -228,73 +382,15 @@ public class ShardedChunkProducer extends Thread
         }
     }
 
-    private static long findBlockStart(final File bam, final long targetOffset) throws IOException
-    {
-        try(RandomAccessFile raf = new RandomAccessFile(bam, "r"))
-        {
-            long length = raf.length();
-            byte[] buffer = new byte[SCAN_BUFFER];
-            long offset = targetOffset;
-
-            while(offset < length - 18)
-            {
-                raf.seek(offset);
-                int read = raf.read(buffer);
-                if(read <= 0)
-                {
-                    return -1;
-                }
-
-                for(int i = 0; i + 18 <= read; ++i)
-                {
-                    if(buffer[i] == BGZF_MAGIC[0] && buffer[i + 1] == BGZF_MAGIC[1]
-                            && buffer[i + 2] == BGZF_MAGIC[2] && buffer[i + 3] == BGZF_MAGIC[3]
-                            && buffer[i + 12] == 0x42 && buffer[i + 13] == 0x43) // 'BC' subfield id
-                        return offset + i;
-                }
-
-                offset += read - 17; // overlap so a header straddling the buffer edge is not missed
-            }
-        }
-        return -1;
-    }
-
-    private static long firstGroupBoundaryVptr(final File bam, final SAMFileHeader header, final long blockVptr)
-            throws IOException
-    {
-        try(BlockCompressedInputStream stream = new BlockCompressedInputStream(bam))
-        {
-            stream.seek(blockVptr);
-            BAMRecordCodec codec = new BAMRecordCodec(header);
-            codec.setInputStream(stream);
-
-            String firstName = null;
-            long recordVptr = stream.getFilePointer();
-            SAMRecord record;
-            while((record = codec.decode()) != null)
-            {
-                if(firstName == null)
-                {
-                    firstName = record.getReadName();
-                }
-                else if(!record.getReadName().equals(firstName))
-                {
-                    return recordVptr;
-                }
-
-                recordVptr = stream.getFilePointer();
-            }
-            return EOF;
-        }
-    }
-
     // Both range ends are read-name boundaries, so stopping once the next record reaches endVptr keeps fragments whole.
     static final class ShardRecordIterator implements Iterator<SAMRecord>, Closeable
     {
         private final BlockCompressedInputStream mStream;
         private final BAMRecordCodec mCodec;
         private final long mEndVptr;
+        private final String mEndReadName;
         private final long mStartOffset;
+        private String mLastReadName;
         private SAMRecord mNext;
 
         ShardRecordIterator(final File bam, final SAMFileHeader header, final ShardRange range)
@@ -312,6 +408,7 @@ public class ShardedChunkProducer extends Thread
             mCodec = new BAMRecordCodec(header);
             mCodec.setInputStream(mStream);
             mEndVptr = range.endVptr();
+            mEndReadName = range.endReadName();
             mStartOffset = range.startVptr() >>> 16;
             mNext = readNext();
         }
@@ -323,12 +420,24 @@ public class ShardedChunkProducer extends Thread
 
         private SAMRecord readNext()
         {
-            if(mEndVptr != EOF && mStream.getFilePointer() >= mEndVptr)
+            long filePointer = mStream.getFilePointer();
+            if(mEndVptr != EOF && filePointer >= mEndVptr)
             {
+                if(filePointer != mEndVptr || mEndReadName.equals(mLastReadName))
+                {
+                    throw new IllegalStateException(String.format(
+                            "shard end(%d) is not a read-name boundary: reached(%d) lastRead(%s) nextRead(%s)",
+                            mEndVptr, filePointer, mLastReadName, mEndReadName));
+                }
                 return null;
             }
 
-            return mCodec.decode();
+            SAMRecord record = mCodec.decode();
+            if(record != null)
+            {
+                mLastReadName = record.getReadName();
+            }
+            return record;
         }
 
         @Override

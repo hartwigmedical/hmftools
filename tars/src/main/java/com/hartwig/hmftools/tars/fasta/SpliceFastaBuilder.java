@@ -19,6 +19,7 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.tars.common.ContigEntry;
 import com.hartwig.hmftools.tars.common.ContigSidecar;
+import com.hartwig.hmftools.tars.fasta.TranscriptContigBuilder.TranscriptContigResult;
 
 // builds one contig sequence per chromosome (trans1 + N-spacer + trans2 + ...) plus a sidecar file for liftback
 public class SpliceFastaBuilder
@@ -70,7 +71,7 @@ public class SpliceFastaBuilder
             for(Map.Entry<String, List<GeneData>> chrEntry : chrGeneMap.entrySet())
             {
                 String chromosome = chrEntry.getKey();
-                List<TranscriptContigBuilder.TranscriptContigResult> chromosomeTranscripts = new ArrayList<>();
+                List<TranscriptContigResult> chromosomeTranscripts = new ArrayList<>();
 
                 for(GeneData gene : chrEntry.getValue())
                 {
@@ -96,9 +97,7 @@ public class SpliceFastaBuilder
                             continue;
                         }
 
-                        TranscriptContigBuilder.TranscriptContigResult result = builder.build(gene, transcript);
-                        if(result == null)
-                            continue;
+                        TranscriptContigResult result = builder.build(gene, transcript);
 
                         // an all-N sequence cannot be aligned to, so no contig; keep its exons as annotation only
                         if(result.sequence().chars().allMatch(c -> c == 'N' || c == 'n'))
@@ -143,13 +142,13 @@ public class SpliceFastaBuilder
     }
 
     static String packChromosomeContig(
-            final String altContig, final List<TranscriptContigBuilder.TranscriptContigResult> transcripts,
+            final String altContig, final List<TranscriptContigResult> transcripts,
             final List<ContigEntry> entries, final int spacerLength)
     {
         String spacer = "N".repeat(spacerLength);
         StringBuilder sequence = new StringBuilder();
 
-        for(TranscriptContigBuilder.TranscriptContigResult transcript : transcripts)
+        for(TranscriptContigResult transcript : transcripts)
         {
             if(sequence.length() > 0)
             {

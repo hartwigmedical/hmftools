@@ -28,7 +28,7 @@ public final class TarsConstants
     // overhangs longer than this are trusted without scoring
     public static final int MIN_OVERHANG_LENGTH = 12;
 
-    public static final int CONFIDENT_MAPQ = 60;
+    public static final int CONFIDENT_MAP_QUALITY = 60;
 
     // bwa's default -T floor: after lift-back a primary under it is unmapped, a supplementary only -T 19 kept is dropped
     public static final int PRIMARY_AS_UNMAP_THRESHOLD = 30;

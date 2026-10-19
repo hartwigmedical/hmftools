@@ -16,7 +16,7 @@ import org.junit.Test;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMRecord;
 
-// Pair-side lookups (mateOf the opposite side, ownPrimary the same side) and the mate-field patch they feed.
+// Pair-side lookups (mateOf the opposite side) and the mate-field patch they feed.
 public class LiftedMatePairTest
 {
     private static LiftedRecord info(final int alignmentStart)
@@ -49,27 +49,12 @@ public class LiftedMatePairTest
     }
 
     @Test
-    public void testOwnPrimaryReturnsRecordersOwnSideInfo()
-    {
-        LiftedRecord firstInfo = info(100);
-        LiftedRecord secondInfo = info(300);
-        LiftedMatePair pair = new LiftedMatePair();
-        pair.recordPrimary(true, firstInfo);
-        pair.recordPrimary(false, secondInfo);
-
-        assertSame(firstInfo, pair.ownPrimary(true));
-        assertSame(secondInfo, pair.ownPrimary(false));
-    }
-
-    @Test
     public void testNullBeforeAnythingRecorded()
     {
         LiftedMatePair pair = new LiftedMatePair();
 
         assertNull(pair.mateOf(true));
         assertNull(pair.mateOf(false));
-        assertNull(pair.ownPrimary(true));
-        assertNull(pair.ownPrimary(false));
     }
 
     @Test
@@ -80,7 +65,7 @@ public class LiftedMatePairTest
         pair.recordPrimary(true, firstInfo);
 
         assertNull(pair.mateOf(true));
-        assertSame(firstInfo, pair.ownPrimary(true));
+        assertSame(firstInfo, pair.mateOf(false));
     }
 
     @Test

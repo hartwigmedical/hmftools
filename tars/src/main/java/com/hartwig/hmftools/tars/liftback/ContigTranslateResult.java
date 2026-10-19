@@ -21,10 +21,14 @@ public record ContigTranslateResult(
         for(CigarElement element : genomicCigar.getCigarElements())
         {
             if(element.getOperator() == CigarOperator.N)
+            {
                 introns.add(new BaseRegion(pos, pos + element.getLength() - 1));
+            }
 
             if(element.getOperator().consumesReferenceBases())
+            {
                 pos += element.getLength();
+            }
         }
         return introns;
     }

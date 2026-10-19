@@ -2,7 +2,7 @@ package com.hartwig.hmftools.tars.liftback;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.ALIGNMENT_SCORE_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.XS_ATTRIBUTE;
-import static com.hartwig.hmftools.tars.common.TarsConstants.CONFIDENT_MAPQ;
+import static com.hartwig.hmftools.tars.common.TarsConstants.CONFIDENT_MAP_QUALITY;
 import static com.hartwig.hmftools.tars.common.TarsConstants.LOCAL_SV_MAX_LENGTH;
 import static com.hartwig.hmftools.tars.common.TarsConstants.PRIMARY_AS_UNMAP_THRESHOLD;
 import static com.hartwig.hmftools.tars.common.TarsConstants.TARS_LOGGER;
@@ -29,12 +29,7 @@ import htsjdk.samtools.SAMRecord;
 public final class AlignmentSelector
 {
     private static final long LOCAL_PAIR_MAX_SEPARATION = 1000;
-    private static final int LOCAL = 0;
-    private static final int DELETION = 1;
-    private static final int DUPLICATION = 2;
-    private static final int INVERSION = 3;
-    private static final int OTHER = 4;
-    private static final PairPriority FALLBACK_PRIORITY = new PairPriority(OTHER, Long.MAX_VALUE);
+    private static final PairPriority FALLBACK_PRIORITY = new PairPriority(PairCategory.OTHER, Long.MAX_VALUE);
 
     private final AlignmentLifter mAlignmentLifter;
 
@@ -124,7 +119,7 @@ public final class AlignmentSelector
 
         dropUnselectedMerges(allAlignments, effectivePrimary);
         List<LiftedAlignment> keptAlignments = collectKeptAlignments(allAlignments);
-        traceCandidates(record, keptAlignments, effectivePrimary);
+        tracePlacements(record, keptAlignments, effectivePrimary);
 
         int numLoci = keptAlignments.size() == 1 ? 1 : countDistinctLoci(keptAlignments, effectivePrimary);
 
@@ -141,7 +136,7 @@ public final class AlignmentSelector
             updatedMapQuality = Math.max(updatedMapQuality, effectivePrimary.MergedSupplementaryMapQuality);
             if(numLoci == 1)
             {
-                updatedMapQuality = CONFIDENT_MAPQ;
+                updatedMapQuality = CONFIDENT_MAP_QUALITY;
             }
             note = appendNote(note, "supplementary-resolved");
         }
@@ -184,7 +179,7 @@ public final class AlignmentSelector
         return kept;
     }
 
-    private static void traceCandidates(
+    private static void tracePlacements(
             final SAMRecord record, final List<LiftedAlignment> alignments, final LiftedAlignment selected)
     {
         if(!TARS_LOGGER.isTraceEnabled() || alignments.size() < 2)
@@ -195,7 +190,7 @@ public final class AlignmentSelector
         for(LiftedAlignment alignment : alignments)
         {
             TARS_LOGGER.trace(
-                    "candidate {}: mapQuality={} {}:{} {} score={} fromTx={} chosen={}",
+                    "placement {}: mapQuality={} {}:{} {} score={} fromTx={} chosen={}",
                     record.getReadName(), record.getMappingQuality(),
                     alignment.LiftedChromosome, alignment.LiftedPos, alignment.LiftedCigar,
                     alignment.GenomicScore, alignment.FromTxContig, alignment == selected);
@@ -235,11 +230,6 @@ public final class AlignmentSelector
 
     private static int alignedBaseCount(final String cigar)
     {
-        if(cigar == null)
-        {
-            return 0;
-        }
-
         int alignedBases = 0;
         for(CigarElement element : CigarUtils.cigarFromStr(cigar).getCigarElements())
         {
@@ -286,7 +276,7 @@ public final class AlignmentSelector
     {
         if(alignment.hasPlacement() && alignment.updatedMapQuality() == 0 && alignment.xaTag() == null)
         {
-            return alignment.withMapQuality(CONFIDENT_MAPQ);
+            return alignment.withMapQuality(CONFIDENT_MAP_QUALITY);
         }
         return alignment;
     }
@@ -337,7 +327,7 @@ public final class AlignmentSelector
         boolean confident = inputMapQuality == 0 && !randomTie && numLoci == 1
                 && (!hiddenTie || primaryFromTxContig || primaryInAnnotatedExon);
 
-        return confident ? CONFIDENT_MAPQ : inputMapQuality;
+        return confident ? CONFIDENT_MAP_QUALITY : inputMapQuality;
     }
 
     static int readSeed(final String readName)
@@ -409,9 +399,9 @@ public final class AlignmentSelector
 
     static PairSelection selectPair(
             final List<LiftedAlignment> firstAlignments, final boolean firstConcordant,
-            final LiftedAlignment firstSelf, final boolean firstBwaHasPriority, final boolean firstMapqZero,
+            final LiftedAlignment firstSelf, final boolean firstBwaHasPriority, final boolean firstMapQualityZero,
             final List<LiftedAlignment> secondAlignments, final boolean secondConcordant,
-            final LiftedAlignment secondSelf, final boolean secondBwaHasPriority, final boolean secondMapqZero,
+            final LiftedAlignment secondSelf, final boolean secondBwaHasPriority, final boolean secondMapQualityZero,
             final int seed)
     {
         Selection independentFirst = select(
@@ -421,9 +411,9 @@ public final class AlignmentSelector
 
         Optional<PairChoice> selection = selectMateAlignments(
                 new MateAlignments(
-                        firstAlignments, independentFirst.alignment(), firstMapqZero && !firstConcordant),
+                        firstAlignments, independentFirst.alignment(), firstMapQualityZero && !firstConcordant),
                 new MateAlignments(
-                        secondAlignments, independentSecond.alignment(), secondMapqZero && !secondConcordant),
+                        secondAlignments, independentSecond.alignment(), secondMapQualityZero && !secondConcordant),
                 seed);
         if(selection.isEmpty())
         {
@@ -441,9 +431,9 @@ public final class AlignmentSelector
         List<AlignmentPair> bestPairs = new ArrayList<>();
         PairPriority bestPriority = null;
 
-        for(LiftedAlignment firstAlignment : mateCandidates(first))
+        for(LiftedAlignment firstAlignment : matePlacements(first))
         {
-            for(LiftedAlignment secondAlignment : mateCandidates(second))
+            for(LiftedAlignment secondAlignment : matePlacements(second))
             {
                 PairPriority priority = matePairPriority(firstAlignment, secondAlignment);
                 AlignmentPair pair = new AlignmentPair(firstAlignment, secondAlignment);
@@ -472,38 +462,37 @@ public final class AlignmentSelector
         return Optional.of(new PairChoice(winner.first(), winner.second(), note));
     }
 
-    private static List<LiftedAlignment> mateCandidates(final MateAlignments mate)
+    private static List<LiftedAlignment> matePlacements(final MateAlignments mate)
     {
         if(!mate.selectable())
         {
             return List.of(mate.selected());
         }
 
-        List<LiftedAlignment> candidates = new ArrayList<>();
+        List<LiftedAlignment> placements = new ArrayList<>();
         Set<AlignmentKey> seen = new HashSet<>();
         for(LiftedAlignment alignment : mate.alignments())
         {
-            if(!alignment.Dropped
-                    && (alignment.GenomicScore == Integer.MIN_VALUE
-                            || alignment.GenomicScore >= PRIMARY_AS_UNMAP_THRESHOLD)
-                    && seen.add(alignment.key()))
+            boolean passesScoreFloor = alignment.GenomicScore == Integer.MIN_VALUE
+                    || alignment.GenomicScore >= PRIMARY_AS_UNMAP_THRESHOLD;
+            if(!alignment.Dropped && passesScoreFloor && seen.add(alignment.key()))
             {
-                candidates.add(alignment);
+                placements.add(alignment);
             }
         }
-        if(!candidates.isEmpty())
+        if(!placements.isEmpty())
         {
-            return candidates;
+            return placements;
         }
 
         for(LiftedAlignment alignment : mate.alignments())
         {
             if(!alignment.Dropped && seen.add(alignment.key()))
             {
-                candidates.add(alignment);
+                placements.add(alignment);
             }
         }
-        return candidates;
+        return placements;
     }
 
     private static List<AlignmentPair> topScoringPairs(final List<AlignmentPair> pairs)
@@ -558,7 +547,7 @@ public final class AlignmentSelector
         if(first.LiftedChromosome.equals(second.LiftedChromosome)
                 && separation <= LOCAL_PAIR_MAX_SEPARATION)
         {
-            return new PairPriority(LOCAL, separation);
+            return new PairPriority(PairCategory.LOCAL, separation);
         }
 
         return pairPriority(
@@ -576,7 +565,9 @@ public final class AlignmentSelector
         }
     }
 
-    private record PairChoice(LiftedAlignment first, LiftedAlignment second, String note) { }
+    private record PairChoice(LiftedAlignment first, LiftedAlignment second, String note)
+    {
+    }
 
     private record AlignmentPair(LiftedAlignment first, LiftedAlignment second)
     {
@@ -616,8 +607,8 @@ public final class AlignmentSelector
             }
             else if(current.mapQuality() == 0
                     && compareSupplementaryAlignments(
-                            primaryChromosome, primaryForwardStrand, primaryStart, primaryCigar,
-                            readBases, candidate, current) < 0)
+                    primaryChromosome, primaryForwardStrand, primaryStart, primaryCigar,
+                    readBases, candidate, current) < 0)
             {
                 selected.put(candidate.recordIndex(), candidate);
             }
@@ -642,9 +633,8 @@ public final class AlignmentSelector
             return priorityComparison;
         }
 
-        int candidateOrder = 31 * Arrays.hashCode(readBases) + supplementaryHash(candidate);
-        int currentOrder = 31 * Arrays.hashCode(readBases) + supplementaryHash(current);
-        return Integer.compareUnsigned(candidateOrder, currentOrder);
+        int readHash = 31 * Arrays.hashCode(readBases);
+        return Integer.compareUnsigned(readHash + supplementaryHash(candidate), readHash + supplementaryHash(current));
     }
 
     private static int supplementaryHash(final RecordAlignment supplementary)
@@ -736,26 +726,35 @@ public final class AlignmentSelector
         }
         if(firstOrientation == secondOrientation)
         {
-            return new PairPriority(INVERSION, separation);
+            return new PairPriority(PairCategory.INVERSION, separation);
         }
 
         long breakendLength = Math.abs((long) firstPosition - secondPosition);
         if(breakendLength == 0)
         {
-            return new PairPriority(DUPLICATION, separation);
+            return new PairPriority(PairCategory.DUPLICATION, separation);
         }
 
         boolean firstIsLower = firstPosition < secondPosition;
-        int category = firstIsLower == firstOrientation.isForward() ? DELETION : DUPLICATION;
+        PairCategory category = firstIsLower == firstOrientation.isForward() ? PairCategory.DELETION : PairCategory.DUPLICATION;
         return new PairPriority(category, separation);
     }
 
-    private record PairPriority(int category, long length) implements Comparable<PairPriority>
+    private enum PairCategory
+    {
+        LOCAL,
+        DELETION,
+        DUPLICATION,
+        INVERSION,
+        OTHER
+    }
+
+    private record PairPriority(PairCategory category, long length) implements Comparable<PairPriority>
     {
         @Override
         public int compareTo(final PairPriority other)
         {
-            int categoryComparison = Integer.compare(category, other.category);
+            int categoryComparison = category.compareTo(other.category);
             return categoryComparison != 0 ? categoryComparison : Long.compare(length, other.length);
         }
     }
@@ -781,14 +780,7 @@ public final class AlignmentSelector
     private static Selection pickByScore(
             final List<LiftedAlignment> alignments, final LiftedAlignment self, final int seed, final LiftedRecord mate)
     {
-        List<LiftedAlignment> placements = new ArrayList<>();
-        for(LiftedAlignment alignment : alignments)
-        {
-            if(!alignment.Dropped)
-            {
-                placements.add(alignment);
-            }
-        }
+        List<LiftedAlignment> placements = collectKeptAlignments(alignments);
         if(placements.size() < 2)
         {
             return keepBwaPrimary(alignments, self);
@@ -924,15 +916,10 @@ public final class AlignmentSelector
         {
             if(!mateAlignment.Dropped)
             {
-                closestDistance = Math.min(closestDistance, mateDistance(alignment, mateAlignment));
+                closestDistance = Math.min(closestDistance, alignment.alignedBlockDistance(mateAlignment));
             }
         }
         return closestDistance;
-    }
-
-    private static int mateDistance(final LiftedAlignment alignment, final LiftedAlignment mate)
-    {
-        return alignment.alignedBlockDistance(mate);
     }
 
     private static LiftedAlignment preferJunctionOverSoftClip(final List<LiftedAlignment> top)
@@ -946,7 +933,7 @@ public final class AlignmentSelector
             for(LiftedAlignment clipped : top)
             {
                 if(clipped != junction
-                        && clipped.locusKey().equals(junction.locusKey())
+                        && clipped.key().locus().equals(junction.key().locus())
                         && clipped.cigarHasSoftClip()
                         && !clipped.cigarHasN())
                 {

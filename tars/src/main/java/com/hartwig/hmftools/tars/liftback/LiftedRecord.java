@@ -89,16 +89,6 @@ public record LiftedRecord(
         return primaryAlignment().TranscriptStrand;
     }
 
-    public LiftedRecord withRevisedPrimary(
-            final int newPos, final String newCigar, final int newUpdatedMapQuality, final String note)
-    {
-        List<LiftedAlignment> revised = new ArrayList<>(liftedAlignments);
-        revised.set(primaryIndex, primaryAlignment().withLiftedCigar(newPos, newCigar));
-
-        return new LiftedRecord(
-                newUpdatedMapQuality, numLoci, appendNote(notes, note), primaryIndex, revised);
-    }
-
     public LiftedRecord withLiftedAlignments(final List<LiftedAlignment> alignments)
     {
         return new LiftedRecord(updatedMapQuality, numLoci, notes, primaryIndex, alignments);
@@ -139,15 +129,6 @@ public record LiftedRecord(
         }
 
         return altEntries.isEmpty() ? null : String.join("", altEntries);
-    }
-
-    private static String appendNote(final String existing, final String note)
-    {
-        if(existing == null || existing.isEmpty())
-        {
-            return note;
-        }
-        return existing + ";" + note;
     }
 
 }

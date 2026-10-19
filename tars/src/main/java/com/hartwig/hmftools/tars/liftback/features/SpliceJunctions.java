@@ -1,11 +1,12 @@
 package com.hartwig.hmftools.tars.liftback.features;
 
+import static com.hartwig.hmftools.tars.common.BwaScoring.refWindow;
+
 import java.nio.charset.StandardCharsets;
 
 import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.tars.common.BwaScoring;
 import com.hartwig.hmftools.tars.liftback.EnsemblAnnotationIndex;
 
 import htsjdk.samtools.CigarElement;
@@ -42,10 +43,8 @@ public class SpliceJunctions
         {
             return Tier.NONE;
         }
-        byte[] donor = refBases(
-                candidateIntron.Chromosome, candidateIntron.start(), candidateIntron.start() + 1);
-        byte[] acceptor = refBases(
-                candidateIntron.Chromosome, candidateIntron.end() - 1, candidateIntron.end());
+        byte[] donor = refWindow(mRefGenome, candidateIntron.Chromosome, candidateIntron.start(), candidateIntron.start() + 1);
+        byte[] acceptor = refWindow(mRefGenome, candidateIntron.Chromosome, candidateIntron.end() - 1, candidateIntron.end());
         return motifTier(donor, acceptor);
     }
 
@@ -57,8 +56,8 @@ public class SpliceJunctions
             return annotatedStrand;
         }
 
-        byte[] donor = refBases(intron.Chromosome, intron.start(), intron.start() + 1);
-        byte[] acceptor = refBases(intron.Chromosome, intron.end() - 1, intron.end());
+        byte[] donor = refWindow(mRefGenome, intron.Chromosome, intron.start(), intron.start() + 1);
+        byte[] acceptor = refWindow(mRefGenome, intron.Chromosome, intron.end() - 1, intron.end());
         return motifStrand(donor, acceptor);
     }
 
@@ -142,10 +141,5 @@ public class SpliceJunctions
     private static String upperCase(final byte[] bases)
     {
         return new String(bases, StandardCharsets.US_ASCII).toUpperCase();
-    }
-
-    private byte[] refBases(final String chromosome, final int posStart, final int posEnd)
-    {
-        return BwaScoring.refWindow(mRefGenome, chromosome, posStart, posEnd);
     }
 }

@@ -29,18 +29,18 @@ public class TranscriptContigBuilder
         List<BaseRegion> spans = sortedExonSpans(transcript);
 
         StringBuilder sequence = new StringBuilder();
-        int prevEnd = -1;
+        int previousEnd = -1;
         for(BaseRegion span : spans)
         {
-            if(span.start() <= prevEnd)
+            if(span.start() <= previousEnd)
             {
                 throw new IllegalStateException(String.format(
                         "overlapping exons in transcript %s gene %s: exon [%d,%d] overlaps prior exon ending at %d",
-                        transcript.TransName, gene.GeneId, span.start(), span.end(), prevEnd));
+                        transcript.TransName, gene.GeneId, span.start(), span.end(), previousEnd));
             }
 
             sequence.append(mRefGenome.getBaseString(gene.Chromosome, span.start(), span.end()));
-            prevEnd = span.end();
+            previousEnd = span.end();
         }
 
         return new TranscriptContigResult(

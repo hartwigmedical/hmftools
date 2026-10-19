@@ -91,7 +91,7 @@ public final class ContigTranslator
             return lifted;
         }
 
-        Set<String> seenKeys = new HashSet<>();
+        Set<AlignmentKey> seenKeys = new HashSet<>();
         for(String entry : xaTag.split(";"))
         {
             if(entry.isEmpty())
@@ -123,19 +123,13 @@ public final class ContigTranslator
 
             LiftedAlignment alignment = liftAlignment(
                     fields[0], Math.abs(signedPosition), fields[2], numMismatches, signedPosition >= 0);
-            if(alignment != null && seenKeys.add(liftedKey(alignment)))
+            if(alignment != null && seenKeys.add(alignment.key()))
             {
                 lifted.add(alignment);
             }
         }
 
         return lifted;
-    }
-
-    private static String liftedKey(final LiftedAlignment alignment)
-    {
-        return alignment.LiftedChromosome + ":" + alignment.LiftedPos + ":" + alignment.LiftedCigar
-                + ":" + (alignment.ForwardStrand ? '+' : '-');
     }
 
     // Segment owning altPos, or null when the contig is unknown. A spacer or leading-overhang position resolves to the

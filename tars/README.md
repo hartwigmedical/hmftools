@@ -232,3 +232,23 @@ TARS then finalises each record:
 - drop absorbed, duplicate, unliftable, excluded, `AS < 30`, and supplementaries with no surviving `SA` partner
 - unmap unliftable, excluded, over-cap, and `AS < 30` primaries using REDUX conventions
 - skip expected `inter-transcript spacer` misses, log other lift failures
+
+## Tests
+
+Run the JUnit 4 suite with the current shared-library sources and Maven build caching disabled:
+
+```bash
+mvn test -pl tars -am -Dmaven.build.cache.enabled=false \
+    -Dtest='com.hartwig.hmftools.tars.**.*Test' -Dsurefire.failIfNoSpecifiedTests=false
+```
+
+Use `TarsTestFixtures` for synthetic records, transcript geometry, reference genomes, and BAM writing.
+`TestGenome` uses 1-based inclusive coordinates and reports the lengths of its synthetic chromosomes.
+Use `LiftBackScenario` for name-group behavior; each run copies the declared records and applies the worker's output guard.
+Role-based assertions require a unique emitted record and tag assertions compare complete values.
+
+`LiftBackPipelineTest` runs the real producer and workers with a temporary indexed reference and BAM input, validates the
+written BAM records, and compares outputs across worker counts. `ShardedChunkProducerTest` checks complete record preservation
+across BGZF boundaries, oversized name groups, multiple inputs, bounded queues, and end-of-stream signaling.
+The mixed-input pipeline regression compares every record and all liftback counters across repeated runs with 1, 2, and 4
+workers, including read-seeded XA ties, splice lifting, supplementary merges, and low-score unmapping.

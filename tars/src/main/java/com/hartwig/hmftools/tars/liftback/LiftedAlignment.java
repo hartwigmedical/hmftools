@@ -35,21 +35,21 @@ public class LiftedAlignment
     public int GenomicScore = Integer.MIN_VALUE;
 
     public LiftedAlignment(
-            final String liftedChrom, final int liftedPos, final String liftedCigar, final int numMismatches,
+            final String liftedChromosome, final int liftedPos, final String liftedCigar, final int numMismatches,
             final boolean fromTxContig, final boolean forwardStrand, final int transcriptStrand)
     {
         this(
-                liftedChrom, liftedPos, liftedCigar, numMismatches, fromTxContig, forwardStrand, transcriptStrand,
+                liftedChromosome, liftedPos, liftedCigar, numMismatches, fromTxContig, forwardStrand, transcriptStrand,
                 Collections.emptyList(), Collections.emptyList(), -1);
     }
 
     private LiftedAlignment(
-            final String liftedChrom, final int liftedPos, final String liftedCigar, final int numMismatches,
+            final String liftedChromosome, final int liftedPos, final String liftedCigar, final int numMismatches,
             final boolean fromTxContig, final boolean forwardStrand, final int transcriptStrand,
             final List<Integer> mergedSupplementaryIndices, final List<ChrBaseRegion> mergedSupplementaryIntrons,
             final int mergedSupplementaryMapQuality)
     {
-        LiftedChromosome = liftedChrom;
+        LiftedChromosome = liftedChromosome;
         LiftedPos = liftedPos;
         LiftedCigar = liftedCigar;
         NumMismatches = numMismatches;
@@ -79,11 +79,10 @@ public class LiftedAlignment
             final int spliceStrand)
     {
         int mergedTranscriptStrand = TranscriptStrand != 0 ? TranscriptStrand : spliceStrand;
-        LiftedAlignment revised = new LiftedAlignment(
+        return new LiftedAlignment(
                 LiftedChromosome, liftedPos, liftedCigar, NumMismatches,
                 FromTxContig, ForwardStrand, mergedTranscriptStrand,
                 mergedSupplementaryIndices, mergedSupplementaryIntrons, mergedSupplementaryMapQuality);
-        return revised;
     }
 
     public LiftedAlignment withTranscriptStrand(final int transcriptStrand)
@@ -107,11 +106,6 @@ public class LiftedAlignment
     {
         return LiftedChromosome + ',' + (ForwardStrand ? '+' : '-') + LiftedPos + ','
                 + LiftedCigar + ',' + NumMismatches + ';';
-    }
-
-    public String locusKey()
-    {
-        return LiftedChromosome + ":" + LiftedPos;
     }
 
     public AlignmentKey key()
@@ -206,11 +200,11 @@ public class LiftedAlignment
 
     public boolean cigarHasN()
     {
-        return LiftedCigar != null && LiftedCigar.indexOf('N') >= 0;
+        return LiftedCigar.indexOf('N') >= 0;
     }
 
     public boolean cigarHasSoftClip()
     {
-        return LiftedCigar != null && LiftedCigar.indexOf('S') >= 0;
+        return LiftedCigar.indexOf('S') >= 0;
     }
 }

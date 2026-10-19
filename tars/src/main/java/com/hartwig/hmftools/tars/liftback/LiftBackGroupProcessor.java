@@ -57,8 +57,10 @@ public class LiftBackGroupProcessor
             (firstInPair(record) ? firstOfPair : secondOfPair).add(record);
         }
 
-        LiftedRecord firstAlignments = liftPrimaryAlignments(firstOfPair);
-        LiftedRecord secondAlignments = liftPrimaryAlignments(secondOfPair);
+        LiftedRecord firstAlignments = firstOfPair.isEmpty()
+                ? null : mAlignmentSelector.liftPrimaryAlignments(firstOfPair.get(0), mOverhangGate);
+        LiftedRecord secondAlignments = secondOfPair.isEmpty()
+                ? null : mAlignmentSelector.liftPrimaryAlignments(secondOfPair.get(0), mOverhangGate);
         LiftedMatePair matePair = new LiftedMatePair();
 
         PreparedRead firstPrepared = prepareRead(firstOfPair, List.of(), firstAlignments);
@@ -75,22 +77,16 @@ public class LiftBackGroupProcessor
                 chosenPlacement(firstDecision.primaryResult(), firstAlignments));
         recordPrimary(secondOfPair, secondDecision, matePair);
 
-        emit(firstOfPair, firstDecision, matePair, consumer);
-        emit(secondOfPair, secondDecision, matePair, consumer);
-    }
-
-    private LiftedRecord liftPrimaryAlignments(final List<SAMRecord> records)
-    {
-        if(records.isEmpty() || records.get(0).getReadUnmappedFlag())
-        {
-            return null;
-        }
-        return mAlignmentSelector.liftPrimaryAlignments(records.get(0), mOverhangGate);
+        mEmitter.emit(
+                firstOfPair, firstDecision.liftedRecords(), firstDecision.absorbedSupplementaries(),
+                firstDecision.primaryUnmapped(), matePair, consumer);
+        mEmitter.emit(
+                secondOfPair, secondDecision.liftedRecords(), secondDecision.absorbedSupplementaries(),
+                secondDecision.primaryUnmapped(), matePair, consumer);
     }
 
     private PreparedRead prepareRead(
-            final List<SAMRecord> records, final List<ChrBaseRegion> mateHintIntrons,
-            final LiftedRecord preLiftedPrimaryAlignments)
+            final List<SAMRecord> records, final List<ChrBaseRegion> mateHintIntrons, final LiftedRecord liftedPrimary)
     {
         if(records.isEmpty())
         {
@@ -106,8 +102,7 @@ public class LiftBackGroupProcessor
         }
 
         List<LiftedRecord> resolved = new ArrayList<>(Collections.nCopies(records.size(), null));
-        LiftedRecord primaryAlignments = preLiftedPrimaryAlignments != null
-                ? preLiftedPrimaryAlignments : mAlignmentSelector.liftPrimaryAlignments(primary, mOverhangGate);
+        LiftedRecord primaryAlignments = liftedPrimary;
         boolean hasSupplementaries = records.size() > 1;
 
         if(hasSupplementaries)
@@ -189,8 +184,7 @@ public class LiftBackGroupProcessor
         {
             return;
         }
-        if(mAlignmentScorer != null
-                && AlignmentSelector.usesGenomicScore(alignments.liftedAlignments(), primary.getMappingQuality()))
+        if(AlignmentSelector.usesGenomicScore(alignments.liftedAlignments(), primary.getMappingQuality()))
         {
             mAlignmentScorer.scorePlacements(alignments.liftedAlignments(), primary);
         }
@@ -212,19 +206,16 @@ public class LiftBackGroupProcessor
                 return finalAlignment.GenomicScore;
             }
 
-            if(lifted.primaryIndex() != 0 || GenomicAlignmentScorer.requiresRescore(primary, finalAlignment))
+            if(GenomicAlignmentScorer.requiresRescore(primary, lifted))
             {
-                if(mAlignmentScorer != null)
+                int score = mAlignmentScorer.scoreRecord(finalAlignment, primary);
+                if(score == Integer.MIN_VALUE)
                 {
-                    int score = mAlignmentScorer.scoreRecord(finalAlignment, primary);
-                    if(score != Integer.MIN_VALUE)
-                    {
-                        finalAlignment.GenomicScore = score;
-                        return score;
-                    }
+                    return null;
                 }
 
-                return null;
+                finalAlignment.GenomicScore = score;
+                return score;
             }
         }
 
@@ -245,7 +236,8 @@ public class LiftBackGroupProcessor
         if(BamRecordEmitter.exceedsMappingCap(primary, result))
         {
             ++mStats.UnmappedOverCap;
-            TARS_LOGGER.trace("over-cap unmap {}:{}: inputMapQuality=0, no XA",
+            TARS_LOGGER.trace(
+                    "over-cap unmap {}:{}: inputMapQuality=0, no XA",
                     primary.getReferenceName(), primary.getAlignmentStart());
             return new UnmapDecision(LiftedRecord.unmapped("over_cap_unmapped"), true);
         }
@@ -262,19 +254,10 @@ public class LiftBackGroupProcessor
         return new UnmapDecision(result, false);
     }
 
-    private void emit(
-            final List<SAMRecord> records, final ReadDecision decision,
-            final LiftedMatePair matePair, final Consumer<SAMRecord> consumer)
-    {
-        mEmitter.emit(
-                records, decision.liftedRecords(), decision.absorbedSupplementaries(),
-                decision.primaryUnmapped(), matePair, consumer);
-    }
-
     private static void recordPrimary(
             final List<SAMRecord> records, final ReadDecision decision, final LiftedMatePair pair)
     {
-        if(!records.isEmpty() && decision.primaryResult() != null)
+        if(!records.isEmpty())
         {
             pair.recordPrimary(firstInPair(records.get(0)), decision.primaryResult());
         }

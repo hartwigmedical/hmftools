@@ -9,6 +9,7 @@ import java.util.List;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.tars.common.BwaScoring;
 import com.hartwig.hmftools.tars.liftback.LiftedAlignment;
+import com.hartwig.hmftools.tars.liftback.LiftedRecord;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
@@ -45,29 +46,20 @@ public class GenomicAlignmentScorer
 
         for(LiftedAlignment alignment : alignments)
         {
-            if(alignment.Dropped || alignment.LiftedCigar == null)
+            if(alignment.Dropped)
             {
                 continue;
             }
 
-            score(alignment, readBases.forAlignment(alignment));
+            alignment.GenomicScore = BwaScoring.genomicScore(
+                    mRefGenome, alignment.LiftedChromosome, alignment.LiftedPos, alignment.LiftedCigar,
+                    readBases.forAlignment(alignment));
         }
-    }
-
-    public void score(final LiftedAlignment alignment, final byte[] readBases)
-    {
-        if(alignment == null || alignment.Dropped || alignment.LiftedCigar == null)
-        {
-            return;
-        }
-
-        alignment.GenomicScore = BwaScoring.genomicScore(
-                mRefGenome, alignment.LiftedChromosome, alignment.LiftedPos, alignment.LiftedCigar, readBases);
     }
 
     public int scoreRecord(final LiftedAlignment alignment, final SAMRecord record)
     {
-        if(!enabled() || alignment == null || alignment.Dropped || alignment.LiftedCigar == null)
+        if(!enabled() || alignment.Dropped)
         {
             return Integer.MIN_VALUE;
         }
@@ -103,5 +95,10 @@ public class GenomicAlignmentScorer
         }
 
         return !mergeAdjacentSameOp(liftedOps).equals(mergeAdjacentSameOp(inputOps));
+    }
+
+    public static boolean requiresRescore(final SAMRecord record, final LiftedRecord lifted)
+    {
+        return lifted.primaryIndex() != 0 || requiresRescore(record, lifted.primaryAlignment());
     }
 }

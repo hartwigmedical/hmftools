@@ -6,9 +6,9 @@ import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.supplementaryC
 import static com.hartwig.hmftools.tars.liftback.TarsTestFixtures.supplementaryRecord;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -125,7 +125,10 @@ public final class LiftBackScenario
         List<SAMRecord> emitted = new ArrayList<>();
         for(List<SAMRecord> group : groupByReadName())
         {
-            processor.processNameGroup(group, emitted::add);
+            processor.processNameGroup(group, record -> {
+                LiftBackWorker.sanitizeForOutput(record);
+                emitted.add(record);
+            });
         }
         return new Result(emitted);
     }
@@ -144,7 +147,7 @@ public final class LiftBackScenario
                 groups.add(new ArrayList<>());
                 index = groups.size() - 1;
             }
-            groups.get(index).add(spec.Record);
+            groups.get(index).add(spec.Record.deepCopy());
         }
         return groups;
     }
@@ -223,6 +226,7 @@ public final class LiftBackScenario
 
         public SAMRecord record(final String readName, final ReadRole role)
         {
+            SAMRecord match = null;
             for(SAMRecord record : mEmitted)
             {
                 if(!record.getReadName().equals(readName))
@@ -231,10 +235,11 @@ public final class LiftBackScenario
                 }
                 if(matchesRole(record, role))
                 {
-                    return record;
+                    assertNull("multiple emitted records for " + readName + "/" + role, match);
+                    match = record;
                 }
             }
-            return null;
+            return match;
         }
 
         private static boolean matchesRole(final SAMRecord record, final ReadRole role)
@@ -244,7 +249,7 @@ public final class LiftBackScenario
                 case PRIMARY -> !record.getSupplementaryAlignmentFlag()
                         && (!record.getReadPairedFlag() || record.getFirstOfPairFlag());
                 case MATE -> !record.getSupplementaryAlignmentFlag()
-                        && record.getReadPairedFlag() && !record.getFirstOfPairFlag();
+                        && record.getReadPairedFlag() && record.getSecondOfPairFlag();
                 case SUPPLEMENTARY -> record.getSupplementaryAlignmentFlag();
             };
         }
@@ -253,6 +258,7 @@ public final class LiftBackScenario
         {
             SAMRecord record = record(readName, role);
             assertNotNull("no emitted record for " + readName + "/" + role, record);
+            assertFalse(readName + "/" + role + " should be mapped", record.getReadUnmappedFlag());
             assertEquals(readName + "/" + role + " chrom", chrom, record.getReferenceName());
             assertEquals(readName + "/" + role + " pos", pos, record.getAlignmentStart());
             assertEquals(readName + "/" + role + " cigar", cigar, record.getCigarString());
@@ -317,15 +323,11 @@ public final class LiftBackScenario
             return this;
         }
 
-        // SA must be present, start at the given chromosome, and carry no _tx contig name.
-        public Result assertSaGenomic(final String readName, final ReadRole role, final String chrom)
+        public Result assertTag(final String readName, final ReadRole role, final String tag, final Object expected)
         {
             SAMRecord record = record(readName, role);
             assertNotNull("no emitted record for " + readName + "/" + role, record);
-            String sa = record.getStringAttribute("SA");
-            assertNotNull(readName + "/" + role + " SA should be present", sa);
-            assertTrue(readName + "/" + role + " SA should start at " + chrom + ": " + sa, sa.startsWith(chrom + ","));
-            assertTrue(readName + "/" + role + " SA should not reference a _tx contig: " + sa, !sa.contains("_tx"));
+            assertEquals(readName + "/" + role + " " + tag, expected, record.getAttribute(tag));
             return this;
         }
 

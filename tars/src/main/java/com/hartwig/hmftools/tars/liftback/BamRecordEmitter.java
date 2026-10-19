@@ -106,60 +106,51 @@ public final class BamRecordEmitter
             final List<SAMRecord> records, final List<LiftedRecord> liftedRecords,
             final Set<Integer> absorbedSupplementaries, final SAMRecord primary, final boolean primaryUnmapped)
     {
-        Set<AlignmentKey> emittedSupplementaries = null;
+        Set<AlignmentKey> emittedSupplementaries = new HashSet<>();
         boolean[] willEmit = new boolean[records.size()];
         for(int i = 0; i < records.size(); ++i)
         {
-            SAMRecord record = records.get(i);
-            LiftedRecord result = liftedRecords.get(i);
-            boolean drop = absorbedSupplementaries.contains(i);
-            if(!drop && record.getSupplementaryAlignmentFlag() && primaryUnmapped)
+            if(absorbedSupplementaries.contains(i))
             {
-                drop = true;
+                continue;
             }
-            if(!drop && record.getSupplementaryAlignmentFlag()
-                    && (result == null || !result.hasPlacement()))
-            {
-                drop = true;
-            }
-            if(!drop && record != primary && record.getSupplementaryAlignmentFlag())
-            {
-                if(emittedSupplementaries == null)
-                {
-                    emittedSupplementaries = new HashSet<>();
-                }
 
-                if(!emittedSupplementaries.add(dedupKey(result)))
-                {
-                    drop = true;
-                }
-            }
-            if(!drop && mSupplementaryMergerEnabled && record.getSupplementaryAlignmentFlag()
-                    && !record.getReadUnmappedFlag())
-            {
-                Integer alignmentScore = record.getIntegerAttribute(ALIGNMENT_SCORE_ATTRIBUTE);
-                if(result.primaryAlignment().GenomicScore != Integer.MIN_VALUE)
-                {
-                    alignmentScore = result.primaryAlignment().GenomicScore;
-                }
-                if(alignmentScore != null && alignmentScore < SUPP_AS_DROP_THRESHOLD)
-                {
-                    drop = true;
-                }
-            }
-            if(!drop && record.getSupplementaryAlignmentFlag() && excludes(result))
-            {
-                drop = true;
-            }
-            if(!drop && record.getSupplementaryAlignmentFlag()
-                    && !SaTagRewriter.hasLiftableAlignment(
-                            record.getStringAttribute(SUPPLEMENTARY_ATTRIBUTE), mContigTranslator))
-            {
-                drop = true;
-            }
-            willEmit[i] = !drop;
+            SAMRecord record = records.get(i);
+            willEmit[i] = !record.getSupplementaryAlignmentFlag()
+                    || keepSupplementary(record, liftedRecords.get(i), primary, primaryUnmapped, emittedSupplementaries);
         }
         return willEmit;
+    }
+
+    private boolean keepSupplementary(
+            final SAMRecord record, final LiftedRecord result, final SAMRecord primary, final boolean primaryUnmapped,
+            final Set<AlignmentKey> emittedSupplementaries)
+    {
+        if(primaryUnmapped || result == null || !result.hasPlacement())
+        {
+            return false;
+        }
+
+        if(record != primary && !emittedSupplementaries.add(result.primaryAlignment().key()))
+        {
+            return false;
+        }
+
+        if(mSupplementaryMergerEnabled && !record.getReadUnmappedFlag())
+        {
+            Integer alignmentScore = record.getIntegerAttribute(ALIGNMENT_SCORE_ATTRIBUTE);
+            if(result.primaryAlignment().GenomicScore != Integer.MIN_VALUE)
+            {
+                alignmentScore = result.primaryAlignment().GenomicScore;
+            }
+            if(alignmentScore != null && alignmentScore < SUPP_AS_DROP_THRESHOLD)
+            {
+                return false;
+            }
+        }
+
+        return !excludes(result)
+                && SaTagRewriter.hasLiftableAlignment(record.getStringAttribute(SUPPLEMENTARY_ATTRIBUTE), mContigTranslator);
     }
 
     private static void writeRecord(
@@ -208,16 +199,14 @@ public final class BamRecordEmitter
 
         LiftedAlignment finalAlignment = result.primaryAlignment();
         boolean clearStaleAlignmentScore = finalAlignment.GenomicScore == Integer.MIN_VALUE
-                && (result.primaryIndex() != 0 || GenomicAlignmentScorer.requiresRescore(record, finalAlignment));
+                && GenomicAlignmentScorer.requiresRescore(record, result);
         Cigar liftedCigar = TarsCigarUtils.normalize(TextCigarCodec.decode(result.finalCigar()));
         if(result.negativeStrand() != record.getReadNegativeStrandFlag())
         {
             byte[] bases = record.getReadBases();
             if(bases != null && bases.length > 0)
             {
-                byte[] flipped = bases.clone();
-                Nucleotides.reverseComplementBasesInPlace(flipped, 0, flipped.length);
-                record.setReadBases(flipped);
+                record.setReadBases(Nucleotides.reverseComplementBases(bases));
             }
             byte[] qualities = record.getBaseQualities();
             if(qualities != null && qualities.length > 0)
@@ -267,20 +256,13 @@ public final class BamRecordEmitter
     {
         return mExcludedRegions != null && result.hasPlacement()
                 && mExcludedRegions.excludes(
-                        result.finalChromosome(), result.finalPos(), result.primaryAlignment().alignedEnd());
-    }
-
-    private static AlignmentKey dedupKey(final LiftedRecord result)
-    {
-        return result.hasPlacement()
-                ? result.primaryAlignment().key()
-                : new AlignmentKey("*", 0, "*", true);
+                result.finalChromosome(), result.finalPos(), result.primaryAlignment().alignedEnd());
     }
 
     private void refreshNmDropMd(final SAMRecord record)
     {
         record.setAttribute(MISMATCHES_AND_DELETIONS_ATTRIBUTE, null);
-        if(record.getReadUnmappedFlag() || mRefGenome == null)
+        if(mRefGenome == null)
         {
             record.setAttribute(NUM_MUTATONS_ATTRIBUTE, null);
             return;

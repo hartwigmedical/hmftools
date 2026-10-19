@@ -2,6 +2,7 @@ package com.hartwig.hmftools.tars.liftback.features;
 
 import static com.hartwig.hmftools.common.utils.Arrays.reverseArray;
 import static com.hartwig.hmftools.tars.common.BwaScoring.maxScoringPrefix;
+import static com.hartwig.hmftools.tars.common.BwaScoring.refWindow;
 import static com.hartwig.hmftools.tars.common.BwaScoring.score;
 import static com.hartwig.hmftools.tars.common.TarsConstants.MIN_OVERHANG_LENGTH;
 import static com.hartwig.hmftools.tars.common.TarsConstants.MIN_OVERHANG_SCORE;
@@ -12,7 +13,6 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
-import com.hartwig.hmftools.tars.common.BwaScoring;
 import com.hartwig.hmftools.tars.common.TarsCigarUtils;
 import com.hartwig.hmftools.tars.liftback.LiftedAlignment;
 
@@ -27,11 +27,6 @@ public class OverhangGate
     public OverhangGate(final RefGenomeInterface refGenome)
     {
         mRefGenome = refGenome;
-    }
-
-    private byte[] refBases(final String chromosome, final int posStart, final int posEnd)
-    {
-        return BwaScoring.refWindow(mRefGenome, chromosome, posStart, posEnd);
     }
 
     public boolean enabled()
@@ -57,16 +52,7 @@ public class OverhangGate
         for(int i = 0; i < alignments.size(); ++i)
         {
             LiftedAlignment alignment = alignments.get(i);
-            if(alignment.LiftedCigar == null)
-            {
-                continue;
-            }
-
             Outcome outcome = gate(alignment, readBases.forAlignment(alignment));
-            if(outcome == null)
-            {
-                continue;
-            }
 
             if(alignment != self && outcome.dropped())
             {
@@ -81,39 +67,19 @@ public class OverhangGate
         }
     }
 
-    private record Result(int pos, String cigar, boolean dropped)
-    {
-    }
-
     public record Outcome(LiftedAlignment alignment, boolean dropped)
     {
     }
 
     public Outcome gate(final LiftedAlignment alignment, final byte[] readBases)
     {
-        if(alignment == null || alignment.LiftedCigar == null)
+        if(mRefGenome == null || readBases == null || readBases.length == 0)
         {
-            return null;
+            return new Outcome(alignment, false);
         }
 
-        Result collapsed = collapseJunctions(
-                alignment.LiftedChromosome, alignment.LiftedPos, alignment.LiftedCigar, readBases);
-        if(collapsed.pos() == alignment.LiftedPos && collapsed.cigar().equals(alignment.LiftedCigar))
-        {
-            return new Outcome(alignment, collapsed.dropped());
-        }
-        return new Outcome(alignment.withLiftedCigar(collapsed.pos(), collapsed.cigar()), collapsed.dropped());
-    }
-
-    private Result collapseJunctions(final String chromosome, final int alignmentStart, final String cigar, final byte[] readBases)
-    {
-        if(mRefGenome == null || chromosome == null || cigar == null || readBases == null || readBases.length == 0)
-        {
-            return new Result(alignmentStart, cigar, false);
-        }
-
-        int pos = alignmentStart;
-        String working = cigar;
+        int pos = alignment.LiftedPos;
+        String working = alignment.LiftedCigar;
 
         for(int side = 0; side <= 1; ++side)
         {
@@ -121,7 +87,9 @@ public class OverhangGate
 
             while(working.indexOf('N') >= 0)
             {
-                CollapseResult collapse = tryCollapse(leading, chromosome, pos, working, readBases);
+                CollapseResult collapse = leading
+                        ? tryCollapseLeading(alignment.LiftedChromosome, pos, working, readBases)
+                        : tryCollapseTrailing(alignment.LiftedChromosome, pos, working, readBases);
                 if(!collapse.collapsed())
                 {
                     break;
@@ -131,16 +99,12 @@ public class OverhangGate
             }
         }
 
-        boolean dropped = cigar.indexOf('N') >= 0 && working.indexOf('N') < 0;
-        return new Result(pos, working, dropped);
-    }
-
-    private CollapseResult tryCollapse(
-            final boolean leading, final String chromosome, final int alignmentStart, final String cigar, final byte[] readBases)
-    {
-        return leading
-                ? tryCollapseLeading(chromosome, alignmentStart, cigar, readBases)
-                : tryCollapseTrailing(chromosome, alignmentStart, cigar, readBases);
+        boolean dropped = alignment.cigarHasN() && working.indexOf('N') < 0;
+        if(pos == alignment.LiftedPos && working.equals(alignment.LiftedCigar))
+        {
+            return new Outcome(alignment, dropped);
+        }
+        return new Outcome(alignment.withLiftedCigar(pos, working), dropped);
     }
 
     private record Overhang(
@@ -203,7 +167,7 @@ public class OverhangGate
 
         int window = overhang.window();
         int nearEnd = alignmentStart + CigarUtils.cigarAlignedLength(elements.subList(0, overhang.intronIndex())) - 1;
-        byte[] windowRef = refBases(chromosome, nearEnd + 1, nearEnd + window);
+        byte[] windowRef = refWindow(mRefGenome, chromosome, nearEnd + 1, nearEnd + window);
         if(windowRef == null)
         {
             return CollapseResult.unchanged();
@@ -211,8 +175,9 @@ public class OverhangGate
 
         int windowStart = readBases.length - window;
         byte[] anchorRead = Arrays.copyOfRange(readBases, windowStart, windowStart + overhang.anchorLength());
-        byte[] anchorRef = refBases(
-                chromosome, nearEnd + overhang.intronLength() + 1, nearEnd + overhang.intronLength() + overhang.anchorLength());
+        byte[] anchorRef = refWindow(
+                mRefGenome, chromosome, nearEnd + overhang.intronLength() + 1,
+                nearEnd + overhang.intronLength() + overhang.anchorLength());
         int overhangScore = anchorRef != null ? score(anchorRead, anchorRef) : Integer.MIN_VALUE;
         if(keepJunction(overhangScore, anchorRead, windowRef, overhang.softclipLength()))
         {
@@ -243,7 +208,7 @@ public class OverhangGate
 
         int window = overhang.window();
         int nearStart = alignmentStart + overhang.anchorLength() + overhang.intronLength();
-        byte[] windowRef = refBases(chromosome, nearStart - window, nearStart - 1);
+        byte[] windowRef = refWindow(mRefGenome, chromosome, nearStart - window, nearStart - 1);
         if(windowRef == null)
         {
             return CollapseResult.unchanged();
@@ -251,7 +216,7 @@ public class OverhangGate
 
         byte[] anchorRead = Arrays.copyOfRange(
                 readBases, overhang.softclipLength(), overhang.softclipLength() + overhang.anchorLength());
-        byte[] anchorRef = refBases(chromosome, alignmentStart, alignmentStart + overhang.anchorLength() - 1);
+        byte[] anchorRef = refWindow(mRefGenome, chromosome, alignmentStart, alignmentStart + overhang.anchorLength() - 1);
         int overhangScore = anchorRef != null ? score(anchorRead, anchorRef) : Integer.MIN_VALUE;
         if(keepJunction(overhangScore, anchorRead, windowRef, overhang.softclipLength()))
         {

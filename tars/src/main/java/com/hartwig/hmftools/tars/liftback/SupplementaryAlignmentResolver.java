@@ -58,7 +58,7 @@ final class SupplementaryAlignmentResolver
 
         for(LiftedAlignment alignment : primaryAlignments.liftedAlignments())
         {
-            if(alignment.Dropped || alignment.LiftedCigar == null)
+            if(alignment.Dropped)
             {
                 continue;
             }
@@ -76,16 +76,16 @@ final class SupplementaryAlignmentResolver
             ++mStats.SupplementaryMergeSuccessfulCandidates;
 
             int supplementaryMapQuality = 0;
-            for(Integer recordIndex : result.droppedSupplementaryIndices())
+            for(Integer recordIndex : result.absorbedSupplementaryIndices())
             {
                 supplementaryMapQuality = Math.max(
                         supplementaryMapQuality, records.get(recordIndex).getMappingQuality());
             }
 
             LiftedAlignment merged = alignment.withSupplementaryMerge(
-                    result.mergedStart(), result.mergedCigar(), result.droppedSupplementaryIndices(),
+                    result.mergedStart(), result.mergedCigar(), result.absorbedSupplementaryIndices(),
                     result.introducedIntrons(), supplementaryMapQuality, result.spliceStrand());
-            if(seen.add(new SupportedAlignmentKey(merged.key(), result.droppedSupplementaryIndices())))
+            if(seen.add(new SupportedAlignmentKey(merged.key(), result.absorbedSupplementaryIndices())))
             {
                 expanded.add(merged);
             }
@@ -178,9 +178,7 @@ final class SupplementaryAlignmentResolver
             }
 
             LiftedRecord selectedRecord = lifted.withPrimaryIndex(alignmentIndex);
-            int score = mAlignmentScorer != null
-                    ? mAlignmentScorer.scoreRecord(selectedRecord.primaryAlignment(), records.get(recordIndex))
-                    : Integer.MIN_VALUE;
+            int score = mAlignmentScorer.scoreRecord(selectedRecord.primaryAlignment(), records.get(recordIndex));
             if(score != Integer.MIN_VALUE)
             {
                 selectedRecord.primaryAlignment().GenomicScore = score;
@@ -213,7 +211,7 @@ final class SupplementaryAlignmentResolver
             for(int alignmentIndex = 0; alignmentIndex < lifted.liftedAlignments().size(); ++alignmentIndex)
             {
                 LiftedAlignment alignment = lifted.liftedAlignments().get(alignmentIndex);
-                if(alignment.Dropped || alignment.LiftedCigar == null)
+                if(alignment.Dropped)
                 {
                     continue;
                 }

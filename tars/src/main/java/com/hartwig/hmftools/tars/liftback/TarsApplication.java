@@ -10,7 +10,6 @@ import static com.hartwig.hmftools.tars.common.TarsConstants.APP_NAME;
 import static com.hartwig.hmftools.tars.common.TarsConstants.TARS_LOGGER;
 
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -30,11 +29,11 @@ import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.tars.common.ContigEntry;
 import com.hartwig.hmftools.tars.common.ContigSidecar;
 import com.hartwig.hmftools.tars.liftback.features.SupplementaryMerger.RejectReason;
+
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SAMSequenceRecord;
-import htsjdk.samtools.SamReaderFactory;
 
 public class TarsApplication
 {
@@ -55,7 +54,7 @@ public class TarsApplication
         long startTimeMs = System.currentTimeMillis();
 
         List<ContigEntry> contigEntries = ContigSidecar.read(mConfig.ContigSidecarFile);
-        SAMFileHeader inputHeader = readInputHeader();
+        SAMFileHeader inputHeader = BamMerger.buildCombinedHeader(mConfig.InputBams, mConfig.RefGenomeFile);
 
         LiftBackResources resources = buildResources(contigEntries, inputHeader);
         SAMFileHeader outputHeader = buildOutputHeader(inputHeader);
@@ -111,7 +110,7 @@ public class TarsApplication
 
         for(int i = 0; i < workerCount; ++i)
         {
-            String shardBam = formShardBamPath(i);
+            String shardBam = mConfig.formBamFilename("shard_" + i);
             shardBams.add(shardBam);
 
             LiftBackWorker worker = new LiftBackWorker(chunkQueue, resources, outputHeader, shardBam);
@@ -169,11 +168,6 @@ public class TarsApplication
                 missing.size(), mConfig.ContigSidecarFile,
                 missing.stream().limit(5).collect(Collectors.joining(",")));
         System.exit(1);
-    }
-
-    private SAMFileHeader readInputHeader()
-    {
-        return BamMerger.buildCombinedHeader(mConfig.InputBams, mConfig.RefGenomeFile);
     }
 
     // strip the _tx alt contigs from @SQ so the lifted BAM carries a pure genomic dictionary
@@ -321,11 +315,6 @@ public class TarsApplication
         }
 
         return true;
-    }
-
-    private String formShardBamPath(final int index)
-    {
-        return mConfig.filePrefix() + ".shard_" + index + ".bam";
     }
 
     private void cleanupIntermediates(final String unsortedBam, final List<String> shardBams)

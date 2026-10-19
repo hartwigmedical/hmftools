@@ -15,8 +15,6 @@ import htsjdk.samtools.CigarElement;
 
 public final class BwaScoring
 {
-    private BwaScoring() { }
-
     // Null unless the whole window is present, so nothing is scored against truncated bases: past a contig end
     // RefGenomeSource lets htsjdk throw while MockRefGenome returns empty.
     public static byte[] refWindow(
@@ -71,7 +69,7 @@ public final class BwaScoring
             final RefGenomeInterface refGenome, final String chromosome, final int alignmentStart, final String cigarStr,
             final byte[] readBases)
     {
-        if(refGenome == null || readBases == null || cigarStr == null)
+        if(refGenome == null)
         {
             return Integer.MIN_VALUE;
         }
