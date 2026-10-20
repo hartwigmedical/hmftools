@@ -40,6 +40,7 @@ import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.SBX_YC_TAG;
 import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.RAW_SIMPLEX_QUAL;
 import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.getDuplexIndelIndices;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
+import static com.hartwig.hmftools.redux.ReduxConfig.SbxFailInvalidYcTag;
 import static com.hartwig.hmftools.redux.ReduxConstants.SBX_CONSENSUS_BASE_THRESHOLD;
 import static com.hartwig.hmftools.redux.consensus.BaseBuilder.INVALID_POSITION;
 import static com.hartwig.hmftools.redux.consensus.ReadValidReason.checkIsValidRead;
@@ -125,7 +126,6 @@ public final class SbxRoutines
         if(record.getReadUnmappedFlag())
             return;
 
-        // String chromosome = record.getReferenceName();
         String ycTagStr = record.getStringAttribute(SBX_YC_TAG);
         if(ycTagStr == null)
         {
@@ -144,8 +144,16 @@ public final class SbxRoutines
 
         if(duplexIndelIndices == null)
         {
-            RD_LOGGER.error("invalid SBX ycTag({}) in read: {}", ycTagStr, readToString(record));
-            System.exit(1);
+            if(SbxFailInvalidYcTag)
+            {
+                RD_LOGGER.error("invalid SBX ycTag({}) in read: {}", ycTagStr, readToString(record));
+                System.exit(1);
+            }
+            else
+            {
+                RD_LOGGER.warn("invalid SBX ycTag({}) in read: {}", ycTagStr, readToString(record));
+                return;
+            }
         }
 
         // not expecting to see hard-clips but remove any if present

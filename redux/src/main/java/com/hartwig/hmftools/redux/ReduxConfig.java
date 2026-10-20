@@ -81,6 +81,7 @@ public class ReduxConfig
 
     // global for convenience
     public static SequencingType SEQUENCING_TYPE = ILLUMINA;
+    public static boolean SbxFailInvalidYcTag = false;
 
     public static ValidationStringency BamStringency = ValidationStringency.SILENT;
 
@@ -166,6 +167,8 @@ public class ReduxConfig
     private static final String PARALLEL_CONCATENATION = "parallel_concat";
     private static final String PROCESS_ONLY_READ_IDS = "process_read_only";
 
+    private static final String SBX_FAIL_ON_YCTAG_ERROR = "sbx_fail_yctag_error";
+
     public ReduxConfig(final ConfigBuilder configBuilder)
     {
         mIsValid = true;
@@ -184,6 +187,9 @@ public class ReduxConfig
         RefGenome = new CachedRefGenome(loadRefGenome(RefGenomeFile));
 
         SEQUENCING_TYPE = SequencingType.valueOf(configBuilder.getValue(SEQUENCING_TYPE_CFG));
+
+        if(configBuilder.hasFlag(SBX_FAIL_ON_YCTAG_ERROR))
+            SbxFailInvalidYcTag = true;
 
         OutputBam = configBuilder.getValue(OUTPUT_BAM);
 
@@ -383,6 +389,7 @@ public class ReduxConfig
         configBuilder.addConfigItem(OUTPUT_BAM, false, "Output BAM filename");
         addRefGenomeConfig(configBuilder, true);
         SequencingType.registerConfig(configBuilder);
+        configBuilder.addFlag(SBX_FAIL_ON_YCTAG_ERROR, "Exit with error on invalid SBX ycTag");
         configBuilder.addInteger(READ_LENGTH, "Read length, otherwise will sample from BAM", 0);
 
         BqrConfig.registerConfig(configBuilder);
