@@ -185,6 +185,8 @@ public class AmberApplication implements AutoCloseable
     {
         GermlineAnalysis germline = new GermlineAnalysis(mConfig, readerFactory(mConfig), mChromosomeSites);
 
+        AMB_LOGGER.debug("BAM reading complete");
+
         List<AmberBAF> amberBAFList = Lists.newArrayList();
 
         for(PositionEvidence baseDepth : germline.getHeterozygousLoci().values())
@@ -214,6 +216,8 @@ public class AmberApplication implements AutoCloseable
         GermlineAnalysis germline = new GermlineAnalysis(mConfig, readerFactory, mChromosomeSites);
 
         TumorAnalysis tumor = new TumorAnalysis(mConfig, readerFactory, germline.getHeterozygousLoci(), germline.getHomozygousLoci());
+
+        AMB_LOGGER.debug("BAM reading complete");
 
         List<TumorBAF> tumorBAFList = tumor.chrBafMap().values().stream()
                 .filter(x -> x.TumorEvidence.ReadDepth >= mConfig.TumorMinDepth)
@@ -256,7 +260,6 @@ public class AmberApplication implements AutoCloseable
 
         LohIdentifier lohIdentifier = new LohIdentifier(mConfig.RefGenVersion, mConfig.TumorMinDepth);
 
-        AMB_LOGGER.debug("finding tumor-only LOH segments");
         lohIdentifier.findLohSegments(tumor.chrBafMap());
         AMB_LOGGER.debug("LOH identification complete");
 
@@ -292,8 +295,7 @@ public class AmberApplication implements AutoCloseable
         List<AmberBAF> amberBAFList = tumorBAFList.stream()
                 .map(AmberUtils::fromTumorBaf).filter(x -> Double.isFinite(x.tumorBAF())).collect(toList());
 
-        // DISCUSS
-        // amberBAFList = checkGenderSites(mConfig.RefGenVersion, amberBAFList);
+        // amberBAFList = checkGenderSites(mConfig.RefGenVersion, amberBAFList); // no need to check chr-X is not handled by LOH identifier
 
         mPersistence.persistQC(0, contamination, null);
         mPersistence.persistVersionInfo(mVersionInfo);

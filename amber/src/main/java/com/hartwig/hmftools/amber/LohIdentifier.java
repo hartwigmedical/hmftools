@@ -40,10 +40,7 @@ public class LohIdentifier
     {
         for(Chromosome chromosome : chromosomeBafs.keySet())
         {
-            // DISCUSS
-            //if(chromosome == HumanChromosome._Y)
-            //    continue;
-
+            // Both X and Y are excluded for now. Chr X is considered difficult to assess without certainty of gender.
             if(chromosome.isAllosome())
                 continue;
 
