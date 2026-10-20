@@ -64,8 +64,8 @@ public class SbxBamUtils
     public static List<Integer> getDuplexIndelIndices(String ycTagStr)
     {
         // supported format:
-        // 0+100+0, or 10+100I100+0 -> simplex length + duplex section is '100', OR
-        // +100I100+0 -> no simplex length, duplex section is '100I100'
+        // 0+100+0, or 10+100I100+0 -> simplex length (0, then 10) + duplex section (100, then 100I100), OR
+        // +100I100+0 -> no simplex length, duplex section (100I100)
         List<Integer> duplexIndels = null;
 
         int lastDelim = ycTagStr.lastIndexOf(SBX_YC_TAG_DELIM_LIT);
