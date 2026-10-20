@@ -332,11 +332,11 @@ public class OutputWriter
                     {
                         GenomeStats stats = profile.representativeStats();
                         VirusGenome genome = stats.genome();
-                        row.set(VirusReportColumn.representative_status, profile.representativeStatus().name());
-                        row.set(VirusReportColumn.representative_genome, genome.name());
-                        row.set(VirusReportColumn.virus_name, genome.virusName());
-                        row.set(VirusReportColumn.coverage_fraction, stats.coverageFraction());
-                        row.set(VirusReportColumn.mean_depth, stats.depth().mean());
+                        row.set(VirusReportColumn.profile_status, profile.representativeStatus().name());
+                        row.set(VirusReportColumn.profile_genome, genome.name());
+                        row.set(VirusReportColumn.profile_virus_name, genome.virusName());
+                        row.set(VirusReportColumn.profile_coverage, stats.coverageFraction());
+                        row.set(VirusReportColumn.profile_depth_mean, stats.depth().mean());
                     }
                     row.setOrNull(VirusReportColumn.copies_per_tumor_cell, report.copiesPerTumorCell());
                 });
@@ -353,11 +353,11 @@ public class OutputWriter
         clonality_status,
         copies_per_tumor_cell,
         profiled,
-        representative_status,
-        representative_genome,
-        virus_name,
-        coverage_fraction,
-        mean_depth,
+        profile_status,
+        profile_genome,
+        profile_virus_name,
+        profile_coverage,
+        profile_depth_mean,
     }
 
     private static final List<String> VIRUS_REPORT_COLUMNS =
