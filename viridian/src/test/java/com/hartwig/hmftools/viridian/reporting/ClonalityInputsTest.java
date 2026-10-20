@@ -1,8 +1,7 @@
 package com.hartwig.hmftools.viridian.reporting;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThrows;
 
 import java.util.Set;
 
@@ -24,62 +23,83 @@ import com.hartwig.hmftools.common.purple.TumorMutationalStatus;
 
 import org.junit.Test;
 
-public class ClonalityTest
+public class ClonalityInputsTest
 {
-    private static final double EPSILON = 1e-9;
-
     @Test
     public void testSimpleFullPurityCase()
     {
         // rho=1, psi=2: denom = 1*2 + 2*0 = 2; depth per copy = D_host*rho/denom = 100*1/2 = 50
-        Double depthPerCopy = Clonality.expectedViralDepthPerCopy(
-                purityContext(1.0, 2.0, FittedPurityMethod.SOMATIC, Set.of(PurpleQCStatus.PASS)),
-                bamMetrics(100.0));
-
-        assertNotNull(depthPerCopy);
-        assertEquals(50.0, depthPerCopy, EPSILON);
+        assertEquals(
+                new ClonalityInputs(50.0, null),
+                clonalityInputs(1.0, FittedPurityMethod.SOMATIC, 100.0, PurpleQCStatus.PASS));
     }
 
     @Test
     public void testNormalisesForSubclonalPurity()
     {
         // denom = rho*psi + 2(1-rho) = 0.5*2 + 2*0.5 = 2; depth per copy = 30*0.5/2 = 7.5
-        Double depthPerCopy = Clonality.expectedViralDepthPerCopy(
-                purityContext(0.5, 2.0, FittedPurityMethod.SOMATIC, Set.of(PurpleQCStatus.PASS)),
-                bamMetrics(30.0));
-
-        assertNotNull(depthPerCopy);
-        assertEquals(7.5, depthPerCopy, EPSILON);
+        assertEquals(
+                new ClonalityInputs(7.5, null),
+                clonalityInputs(0.5, FittedPurityMethod.SOMATIC, 30.0, PurpleQCStatus.PASS));
     }
 
     @Test
     public void testComputesWhenFitOnlyWarns()
     {
-        Double depthPerCopy = Clonality.expectedViralDepthPerCopy(
-                purityContext(0.8, 2.0, FittedPurityMethod.SOMATIC, Set.of(PurpleQCStatus.WARN_DELETED_GENES)),
-                bamMetrics(30.0));
+        assertEquals(
+                new ClonalityInputs(15.0, null),
+                clonalityInputs(1.0, FittedPurityMethod.SOMATIC, 30.0, PurpleQCStatus.WARN_DELETED_GENES));
+    }
 
-        assertNotNull(depthPerCopy);
+    // Only no tumor and contamination block the calculation; other Purple failures are allowed.
+    @Test
+    public void testComputesWhenTumorInNormalFails()
+    {
+        assertEquals(
+                new ClonalityInputs(15.0, null),
+                clonalityInputs(1.0, FittedPurityMethod.SOMATIC, 30.0, PurpleQCStatus.FAIL_TINC));
     }
 
     @Test
-    public void testEmptyWhenPurityFitFailed()
+    public void testContaminationFailure()
     {
-        Double depthPerCopy = Clonality.expectedViralDepthPerCopy(
-                purityContext(0.5, 2.0, FittedPurityMethod.SOMATIC, Set.of(PurpleQCStatus.FAIL_CONTAMINATION)),
-                bamMetrics(30.0));
-
-        assertNull(depthPerCopy);
+        assertEquals(
+                new ClonalityInputs(null, PurpleQCStatus.FAIL_CONTAMINATION),
+                clonalityInputs(0.5, FittedPurityMethod.SOMATIC, 30.0, PurpleQCStatus.FAIL_CONTAMINATION));
     }
 
     @Test
-    public void testEmptyForNoTumorFit()
+    public void testNoTumorFailure()
     {
-        Double depthPerCopy = Clonality.expectedViralDepthPerCopy(
-                purityContext(0.0, 2.0, FittedPurityMethod.NO_TUMOR, Set.of(PurpleQCStatus.FAIL_NO_TUMOR)),
-                bamMetrics(30.0));
+        assertEquals(
+                new ClonalityInputs(null, PurpleQCStatus.FAIL_NO_TUMOR),
+                clonalityInputs(0.08, FittedPurityMethod.NO_TUMOR, 30.0, PurpleQCStatus.FAIL_NO_TUMOR));
+    }
 
-        assertNull(depthPerCopy);
+    // With no tumor, copies per tumor cell is meaningless whatever the contamination.
+    @Test
+    public void testNoTumorWinsOverContamination()
+    {
+        assertEquals(
+                new ClonalityInputs(null, PurpleQCStatus.FAIL_NO_TUMOR),
+                clonalityInputs(
+                        0.08, FittedPurityMethod.NO_TUMOR, 30.0,
+                        PurpleQCStatus.FAIL_NO_TUMOR, PurpleQCStatus.FAIL_CONTAMINATION));
+    }
+
+    // Exactly one of the depth per copy and a clonality-blocking Purple failure.
+    @Test
+    public void testRejectsInvalidCombinations()
+    {
+        assertThrows(IllegalArgumentException.class, () -> new ClonalityInputs(null, null));
+        assertThrows(IllegalArgumentException.class, () -> new ClonalityInputs(15.0, PurpleQCStatus.FAIL_NO_TUMOR));
+        assertThrows(IllegalArgumentException.class, () -> new ClonalityInputs(null, PurpleQCStatus.FAIL_TINC));
+    }
+
+    private static ClonalityInputs clonalityInputs(
+            double purity, FittedPurityMethod method, double hostMeanDepth, PurpleQCStatus... qcStatus)
+    {
+        return ClonalityInputs.from(purityContext(purity, 2.0, method, Set.of(qcStatus)), bamMetrics(hostMeanDepth));
     }
 
     private static BamMetricSummary bamMetrics(double meanDepth)

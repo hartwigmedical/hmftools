@@ -310,20 +310,21 @@ public class OutputWriter
 
     public static void writeVirusReports(String file, List<VirusReport> reports)
     {
-        List<VirusReport> rows = reports.stream()
-                .filter(report -> report.reportingType() != null)
-                .sorted(comparing(VirusReport::oncologyGroup))
-                .toList();
+        List<VirusReport> rows = reports.stream().sorted(comparing(VirusReport::oncologyGroup)).toList();
 
         DelimFileWriter.write(
                 file, VIRUS_REPORT_COLUMNS, rows, (report, row) ->
                 {
                     row.set(VirusReportColumn.oncology_group, report.oncologyGroup().name());
-                    row.set(VirusReportColumn.reporting_type, report.reportingType().toString());
-                    row.set(VirusReportColumn.driver_likelihood, report.driverLikelihood().toString());
+                    row.setOrNull(
+                            VirusReportColumn.reporting_type, report.reportingType() != null ? report.reportingType().toString() : null);
+                    row.setOrNull(
+                            VirusReportColumn.driver_likelihood,
+                            report.driverLikelihood() != null ? report.driverLikelihood().toString() : null);
                     row.set(VirusReportColumn.reported, report.isReported());
-                    row.set(VirusReportColumn.status, report.status().name());
                     row.set(VirusReportColumn.integrations, report.integrations());
+                    row.set(VirusReportColumn.meets_integration_min, report.meetsIntegrationMin());
+                    row.set(VirusReportColumn.clonality_status, report.clonalityStatus().name());
                     row.set(VirusReportColumn.profiled, report.isProfiled());
 
                     VirusProfile profile = report.profile();
@@ -344,18 +345,19 @@ public class OutputWriter
     private enum VirusReportColumn
     {
         oncology_group,
+        reported,
         reporting_type,
         driver_likelihood,
-        reported,
-        status,
+        meets_integration_min,
         integrations,
+        clonality_status,
+        copies_per_tumor_cell,
         profiled,
         representative_status,
         representative_genome,
         virus_name,
         coverage_fraction,
         mean_depth,
-        copies_per_tumor_cell
     }
 
     private static final List<String> VIRUS_REPORT_COLUMNS =

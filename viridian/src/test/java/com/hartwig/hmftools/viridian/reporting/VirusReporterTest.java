@@ -1,16 +1,14 @@
 package com.hartwig.hmftools.viridian.reporting;
 
-import static com.hartwig.hmftools.viridian.reporting.VirusReportStatus.CLONALITY_UNEVALUABLE;
-import static com.hartwig.hmftools.viridian.reporting.VirusReportStatus.NOT_CLONAL;
-import static com.hartwig.hmftools.viridian.reporting.VirusReportStatus.NOT_REPORTABLE;
-import static com.hartwig.hmftools.viridian.reporting.VirusReportStatus.REPORTED_ON_CLONALITY;
-import static com.hartwig.hmftools.viridian.reporting.VirusReportStatus.REPORTED_ON_INTEGRATION;
-import static com.hartwig.hmftools.viridian.reporting.VirusReportStatus.REPORTED_ON_INTEGRATION_AND_CLONALITY;
+import static com.hartwig.hmftools.common.purple.PurpleQCStatus.FAIL_CONTAMINATION;
+import static com.hartwig.hmftools.common.purple.PurpleQCStatus.FAIL_NO_TUMOR;
+import static com.hartwig.hmftools.viridian.reporting.ClonalityStatus.CLONAL;
+import static com.hartwig.hmftools.viridian.reporting.ClonalityStatus.NOT_CLONAL;
+import static com.hartwig.hmftools.viridian.reporting.ClonalityStatus.NOT_PROFILED;
+import static com.hartwig.hmftools.viridian.reporting.ClonalityStatus.PURPLE_FAIL_CONTAMINATION;
+import static com.hartwig.hmftools.viridian.reporting.ClonalityStatus.PURPLE_FAIL_NO_TUMOR;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 
 import com.hartwig.hmftools.common.virus.VirusLikelihoodType;
 import com.hartwig.hmftools.common.virus.VirusType;
@@ -22,120 +20,95 @@ import com.hartwig.hmftools.viridian.reference.OncologyGroup;
 import com.hartwig.hmftools.viridian.reference.OncologyGroupInfo;
 import com.hartwig.hmftools.viridian.reference.VirusGenome;
 
+import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
 
 public class VirusReporterTest
 {
     private static final OncologyGroup GROUP = new OncologyGroup("HPV16");
     private static final VirusGenome GENOME = new VirusGenome("c1", 1000, "HPV type 16", GROUP);
-    private static final OncologyGroupInfo REPORTABLE_INFO = new OncologyGroupInfo(GROUP, VirusType.HPV, VirusLikelihoodType.HIGH);
+    private static final OncologyGroupInfo REPORTABLE_INFO =
+            new OncologyGroupInfo(GROUP, VirusType.HPV, VirusLikelihoodType.HIGH);
     private static final OncologyGroupInfo NOT_REPORTABLE_INFO = new OncologyGroupInfo(GROUP, null, null);
-    private static final double DEPTH = 10.0;
-    private static final Double PER_COPY = 20.0;
 
-    private static final boolean REPORTABLE = true;
+    private static final ClonalityInputs PURPLE_FIT = new ClonalityInputs(20.0, null);
+    private static final ClonalityInputs NO_TUMOR = new ClonalityInputs(null, FAIL_NO_TUMOR);
+    private static final ClonalityInputs CONTAMINATION = new ClonalityInputs(null, FAIL_CONTAMINATION);
 
-    // The whole decision table. Thresholds are I=1 integration, C=0.5 copies per tumor cell. A null
-    // copies-per-cell means clonality could not be evaluated.
+    private static final boolean MEETS_INTEGRATION_MIN = true;
+    private static final boolean REPORTED = true;
+
+    // Thresholds are 1 integration and 0.5 copies per tumor cell. Copies per tumor cell is the representative's mean
+    // depth over the expected depth per copy, here 20.
 
     @Test
-    public void testNotReportableAlwaysLosesRegardlessOfEvidence()
+    public void testReportedOnClonalityAtFloor()
     {
-        assertEquals(NOT_REPORTABLE, VirusReporter.decideStatus(!REPORTABLE, 5, 10.0));
-        assertEquals(NOT_REPORTABLE, VirusReporter.decideStatus(!REPORTABLE, 0, null));
+        VirusProfile profile = profile(10);
+        assertEquals(
+                reportableReport(0, !MEETS_INTEGRATION_MIN, profile, 0.5, CLONAL, REPORTED),
+                VirusReporter.reportGroup(GROUP, profile, 0, REPORTABLE_INFO, PURPLE_FIT));
     }
 
     @Test
-    public void testIntegrationReports()
+    public void testNotClonalBelowFloor()
     {
-        assertEquals(REPORTED_ON_INTEGRATION, VirusReporter.decideStatus(REPORTABLE, 1, null));
+        VirusProfile profile = profile(9);
+        assertEquals(
+                reportableReport(0, !MEETS_INTEGRATION_MIN, profile, 0.45, NOT_CLONAL, !REPORTED),
+                VirusReporter.reportGroup(GROUP, profile, 0, REPORTABLE_INFO, PURPLE_FIT));
     }
 
     @Test
-    public void testIntegrationWithoutClonalLoad()
+    public void testPurpleFailureNamesClonalityStatus()
     {
-        assertEquals(REPORTED_ON_INTEGRATION, VirusReporter.decideStatus(REPORTABLE, 1, 0.0));
+        VirusProfile profile = profile(10);
+        assertEquals(
+                reportableReport(0, !MEETS_INTEGRATION_MIN, profile, null, PURPLE_FAIL_NO_TUMOR, !REPORTED),
+                VirusReporter.reportGroup(GROUP, profile, 0, REPORTABLE_INFO, NO_TUMOR));
+        assertEquals(
+                reportableReport(0, !MEETS_INTEGRATION_MIN, profile, null, PURPLE_FAIL_CONTAMINATION, !REPORTED),
+                VirusReporter.reportGroup(GROUP, profile, 0, REPORTABLE_INFO, CONTAMINATION));
     }
 
     @Test
-    public void testIntegrationAndClonalityReportsAsBoth()
+    public void testReportedOnIntegrationAloneWhenNotProfiled()
     {
-        assertEquals(REPORTED_ON_INTEGRATION_AND_CLONALITY, VirusReporter.decideStatus(REPORTABLE, 1, 0.5));
+        assertEquals(
+                reportableReport(1, MEETS_INTEGRATION_MIN, null, null, NOT_PROFILED, REPORTED),
+                VirusReporter.reportGroup(GROUP, null, 1, REPORTABLE_INFO, PURPLE_FIT));
+    }
+
+    // Not being found in the reads explains the missing copies per tumor cell, whatever Purple's QC.
+    @Test
+    public void testNotProfiledOverridesPurpleFailure()
+    {
+        assertEquals(
+                reportableReport(1, MEETS_INTEGRATION_MIN, null, null, NOT_PROFILED, REPORTED),
+                VirusReporter.reportGroup(GROUP, null, 1, REPORTABLE_INFO, NO_TUMOR));
     }
 
     @Test
-    public void testClonalityReportsAtAndAboveFloor()
+    public void testNotReportableNeverReportedDespiteEvidence()
     {
-        assertEquals(REPORTED_ON_CLONALITY, VirusReporter.decideStatus(REPORTABLE, 0, 0.5));
-        assertEquals(REPORTED_ON_CLONALITY, VirusReporter.decideStatus(REPORTABLE, 0, 2.0));
+        VirusProfile profile = profile(10);
+        VirusReport expected = new VirusReport(
+                GROUP, null, null, 5, MEETS_INTEGRATION_MIN, profile, 0.5, CLONAL, !REPORTED);
+        assertEquals(expected, VirusReporter.reportGroup(GROUP, profile, 5, NOT_REPORTABLE_INFO, PURPLE_FIT));
     }
 
-    @Test
-    public void testClonalityBelowFloor()
+    private static VirusReport reportableReport(
+            int integrations, boolean meetsIntegrationMin, @Nullable VirusProfile profile,
+            @Nullable Double copiesPerTumorCell, ClonalityStatus clonalityStatus, boolean isReported)
     {
-        assertEquals(NOT_CLONAL, VirusReporter.decideStatus(REPORTABLE, 0, 0.49));
+        return new VirusReport(
+                GROUP, VirusType.HPV, VirusLikelihoodType.HIGH, integrations, meetsIntegrationMin, profile,
+                copiesPerTumorCell, clonalityStatus, isReported);
     }
 
-    @Test
-    public void testClonalityUnevaluable()
+    private static VirusProfile profile(int meanDepth)
     {
-        assertEquals(CLONALITY_UNEVALUABLE, VirusReporter.decideStatus(REPORTABLE, 0, null));
-    }
-
-    @Test
-    public void testReportedFlags()
-    {
-        assertTrue(REPORTED_ON_INTEGRATION.isReported());
-        assertTrue(REPORTED_ON_CLONALITY.isReported());
-        assertTrue(REPORTED_ON_INTEGRATION_AND_CLONALITY.isReported());
-        assertFalse(NOT_REPORTABLE.isReported());
-        assertFalse(NOT_CLONAL.isReported());
-        assertFalse(CLONALITY_UNEVALUABLE.isReported());
-    }
-
-    // Assembling one group's report from its profile, integration count, policy and the per-copy depth.
-
-    // Representative depth 10 against per-copy depth 20 is 0.5 copies per tumor cell, which clears C.
-    @Test
-    public void testProfiledReportsOnClonality()
-    {
-        VirusReport report = VirusReporter.reportGroup(GROUP, profile(DEPTH), 0, REPORTABLE_INFO, PER_COPY);
-        assertTrue(report.isProfiled());
-        assertEquals(0.5, report.copiesPerTumorCell(), 1e-9);
-        assertEquals(REPORTED_ON_CLONALITY, report.status());
-        assertTrue(report.isReported());
-    }
-
-    // Clonality needs the per-copy depth, which an unusable Purple fit leaves absent.
-    @Test
-    public void testProfiledWithoutPurpleIsUnevaluable()
-    {
-        VirusReport report = VirusReporter.reportGroup(GROUP, profile(DEPTH), 0, REPORTABLE_INFO, null);
-        assertNull(report.copiesPerTumorCell());
-        assertEquals(CLONALITY_UNEVALUABLE, report.status());
-    }
-
-    // An integration reports the virus even when it was not found in the reads.
-    @Test
-    public void testIntegratedButNotProfiled()
-    {
-        VirusReport report = VirusReporter.reportGroup(GROUP, null, 1, REPORTABLE_INFO, PER_COPY);
-        assertFalse(report.isProfiled());
-        assertNull(report.copiesPerTumorCell());
-        assertEquals(REPORTED_ON_INTEGRATION, report.status());
-    }
-
-    @Test
-    public void testNotReportableIsNotReported()
-    {
-        VirusReport report = VirusReporter.reportGroup(GROUP, profile(DEPTH), 5, NOT_REPORTABLE_INFO, PER_COPY);
-        assertEquals(NOT_REPORTABLE, report.status());
-        assertFalse(report.isReported());
-    }
-
-    private static VirusProfile profile(double meanDepth)
-    {
-        SummaryStats depth = SummaryStats.from(new int[] { (int) meanDepth });
+        SummaryStats depth = SummaryStats.from(new int[] { meanDepth });
         SummaryStats alignerScore = SummaryStats.from(new int[] { 30 });
         GenomeStats stats = new GenomeStats(GENOME, 1, 0, GENOME.length(), depth, alignerScore);
         return new VirusProfile(stats, RepresentativeStatus.PASS);

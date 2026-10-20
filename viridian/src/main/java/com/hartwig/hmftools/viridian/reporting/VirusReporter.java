@@ -25,7 +25,7 @@ public class VirusReporter
     // One report per oncology group that is profiled or has an integration.
     public static List<VirusReport> report(
             List<VirusProfile> profiles, Map<OncologyGroup, Integer> integrationCounts,
-            Function<OncologyGroup, OncologyGroupInfo> oncologyGroupInfo, @Nullable Double expectedViralDepthPerCopy)
+            Function<OncologyGroup, OncologyGroupInfo> oncologyGroupInfo, ClonalityInputs clonalityInputs)
     {
         Map<OncologyGroup, VirusProfile> profileByGroup = profiles.stream()
                 .collect(toMap(VirusProfile::oncologyGroup, identity()));
@@ -36,55 +36,43 @@ public class VirusReporter
         return groupsToReport.stream()
                 .map(group -> reportGroup(
                         group, profileByGroup.get(group), integrationCounts.getOrDefault(group, 0),
-                        oncologyGroupInfo.apply(group), expectedViralDepthPerCopy))
+                        oncologyGroupInfo.apply(group), clonalityInputs))
                 .toList();
     }
 
     static VirusReport reportGroup(
-            OncologyGroup group, @Nullable VirusProfile profile, int integrations,
-            OncologyGroupInfo info, @Nullable Double expectedViralDepthPerCopy)
+            OncologyGroup group, @Nullable VirusProfile profile, int integrations, OncologyGroupInfo info,
+            ClonalityInputs clonalityInputs)
     {
-        // Null when there is no representative genome, or Purple data unusable, in which case the virus can only be reported on integrations.
-        Double copiesPerTumorCell = profile != null && expectedViralDepthPerCopy != null
-                ? profile.representativeStats().depth().mean() / expectedViralDepthPerCopy
-                : null;
-
-        VirusReportStatus status = decideStatus(info.isReportable(), integrations, copiesPerTumorCell);
-
-        return new VirusReport(
-                group, info.reportingType(), info.driverLikelihood(), integrations, profile, copiesPerTumorCell,
-                status);
-    }
-
-    static VirusReportStatus decideStatus(boolean reportable, int integrations, @Nullable Double copiesPerTumorCell)
-    {
-        if(!reportable)
+        Double copiesPerTumorCell = null;
+        ClonalityStatus clonalityStatus;
+        if(profile == null)
         {
-            return VirusReportStatus.NOT_REPORTABLE;
+            clonalityStatus = ClonalityStatus.NOT_PROFILED;
         }
-
-        boolean integrated = integrations >= REPORTED_INTEGRATIONS_MIN;
-        boolean clonal = copiesPerTumorCell != null && copiesPerTumorCell >= REPORTED_COPIES_PER_CELL_MIN;
-
-        if(integrated && clonal)
+        else if(clonalityInputs.purpleFailure() == null)
         {
-            return VirusReportStatus.REPORTED_ON_INTEGRATION_AND_CLONALITY;
-        }
-        else if(integrated)
-        {
-            return VirusReportStatus.REPORTED_ON_INTEGRATION;
-        }
-        else if(clonal)
-        {
-            return VirusReportStatus.REPORTED_ON_CLONALITY;
-        }
-        else if(copiesPerTumorCell == null)
-        {
-            return VirusReportStatus.CLONALITY_UNEVALUABLE;
+            copiesPerTumorCell =
+                    profile.representativeStats().depth().mean() / clonalityInputs.expectedViralDepthPerCopy();
+            clonalityStatus = copiesPerTumorCell >= REPORTED_COPIES_PER_CELL_MIN
+                    ? ClonalityStatus.CLONAL : ClonalityStatus.NOT_CLONAL;
         }
         else
         {
-            return VirusReportStatus.NOT_CLONAL;
+            clonalityStatus = switch(clonalityInputs.purpleFailure())
+            {
+                case FAIL_NO_TUMOR -> ClonalityStatus.PURPLE_FAIL_NO_TUMOR;
+                case FAIL_CONTAMINATION -> ClonalityStatus.PURPLE_FAIL_CONTAMINATION;
+                default -> throw new IllegalStateException(
+                        "Not a clonality-blocking Purple failure: " + clonalityInputs.purpleFailure());
+            };
         }
+
+        boolean meetsIntegrationMin = integrations >= REPORTED_INTEGRATIONS_MIN;
+        boolean isReported = info.isReportable() && (meetsIntegrationMin || clonalityStatus == ClonalityStatus.CLONAL);
+
+        return new VirusReport(
+                group, info.reportingType(), info.driverLikelihood(), integrations, meetsIntegrationMin, profile,
+                copiesPerTumorCell, clonalityStatus, isReported);
     }
 }

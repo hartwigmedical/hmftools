@@ -60,7 +60,7 @@ import com.hartwig.hmftools.viridian.profiling.support.GenomeSupportCalculator;
 import com.hartwig.hmftools.viridian.reference.OncologyGroup;
 import com.hartwig.hmftools.viridian.reference.VirusGenome;
 import com.hartwig.hmftools.viridian.reference.VirusReference;
-import com.hartwig.hmftools.viridian.reporting.Clonality;
+import com.hartwig.hmftools.viridian.reporting.ClonalityInputs;
 import com.hartwig.hmftools.viridian.reporting.VirusReport;
 import com.hartwig.hmftools.viridian.reporting.VirusReporter;
 
@@ -290,7 +290,7 @@ public class ViridianApplication
     }
 
     // Decide which viruses are reported to the downstream pipeline.
-    private List<VirusReport> reportViruses(List<VirusProfile> profiles, Map<OncologyGroup, Integer> integrationCounts)
+    private void reportViruses(List<VirusProfile> profiles, Map<OncologyGroup, Integer> integrationCounts)
             throws IOException
     {
         LOGGER.info("Loading reporting inputs");
@@ -298,20 +298,18 @@ public class ViridianApplication
         BamMetricSummary tumorMetrics = BamMetricSummary.read(
                 BamMetricSummary.generateFilename(mConfig.bamMetricsTumorDir(), mConfig.sampleId()));
 
-        Double expectedViralDepthPerCopy = Clonality.expectedViralDepthPerCopy(purity, tumorMetrics);
-        if(expectedViralDepthPerCopy == null)
+        ClonalityInputs clonalityInputs = ClonalityInputs.from(purity, tumorMetrics);
+        if(clonalityInputs.purpleFailure() != null)
         {
             LOGGER.warn("Purple fit unusable; cannot report based on viral depth");
         }
 
         LOGGER.info("Calculating reporting statuses");
         List<VirusReport> reports = VirusReporter.report(
-                profiles, integrationCounts, mVirusReference::oncologyGroupInfo, expectedViralDepthPerCopy);
+                profiles, integrationCounts, mVirusReference::oncologyGroupInfo, clonalityInputs);
 
         LOGGER.info("Writing virus report output");
         OutputWriter.writeVirusReports(outputFile(VIRUS_REPORT_TSV_SUFFIX), reports);
-
-        return reports;
     }
 
     private String outputFile(String suffix)

@@ -15,10 +15,12 @@ public record VirusReport(
         @Nullable VirusType reportingType,
         @Nullable VirusLikelihoodType driverLikelihood,
         int integrations,
+        boolean meetsIntegrationMin,
         @Nullable VirusProfile profile,
-        // Null if Purple data wasn't usable.
+        // Null if not profiled or Purple data wasn't usable.
         @Nullable Double copiesPerTumorCell,
-        VirusReportStatus status)
+        ClonalityStatus clonalityStatus,
+        boolean isReported)
 {
     public VirusReport
     {
@@ -31,10 +33,5 @@ public record VirusReport(
     public boolean isProfiled()
     {
         return profile != null;
-    }
-
-    public boolean isReported()
-    {
-        return status.isReported();
     }
 }
