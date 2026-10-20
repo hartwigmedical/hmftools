@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.viridian.profiling.extract;
 
+import static java.util.stream.Collectors.toSet;
+
 import static com.hartwig.hmftools.common.bam.CigarUtils.leftSoftClipLength;
 import static com.hartwig.hmftools.common.bam.CigarUtils.rightSoftClipLength;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.UNMAPP_COORDS_DELIM;
@@ -22,6 +24,8 @@ public class CandidateReadFilter
     private final CandidateReadSource mSource;
     private final int mMinSoftClipBases;
     private final Set<String> mVirusDecoyContigs;
+    // Virus decoy contigs with ":" removed, to match REDUX UM tag.
+    private final Set<String> mReduxTagVirusDecoyContigs;
     @Nullable
     private final ViralKmerIndex mKmerIndex;
 
@@ -32,6 +36,9 @@ public class CandidateReadFilter
         mSource = source;
         mMinSoftClipBases = minSoftClipBases;
         mVirusDecoyContigs = virusDecoyContigs;
+        mReduxTagVirusDecoyContigs = virusDecoyContigs.stream()
+                .map(contig -> contig.replace(UNMAPP_COORDS_DELIM, ""))
+                .collect(toSet());
         mKmerIndex = kmerIndex;
     }
 
@@ -201,7 +208,7 @@ public class CandidateReadFilter
             return false;
         }
         String originalContig = reduxUnmappedOriginalContig(record);
-        return originalContig != null && isVirusDecoyContig(originalContig);
+        return originalContig != null && mReduxTagVirusDecoyContigs.contains(originalContig);
     }
 
     private boolean isVirusDecoyContig(String contig)

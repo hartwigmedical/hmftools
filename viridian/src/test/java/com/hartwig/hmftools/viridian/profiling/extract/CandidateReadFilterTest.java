@@ -250,6 +250,19 @@ public class CandidateReadFilterTest
         assertFalse(FILTER.isCandidateRecord(record(MAPPED_TO_HOST, UNPAIRED)));
     }
 
+    // REDUX strips colons from the contig name it records, so the read must still match a colon-named virus decoy
+    // contig.
+    @Test
+    public void testIsCandidateRecordAcceptsReduxUnmappedFromColonNamedVirusDecoyContig()
+    {
+        CandidateReadFilter filter =
+                new CandidateReadFilter(CandidateReadSource.ALL, 20, Set.of("HPV16:NC_001526"), null);
+        SAMRecord record = record(REGULAR_UNMAPPED, UNPAIRED);
+        record.setAttribute(UNMAP_ATTRIBUTE, "HPV16NC_001526:500");
+
+        assertTrue(filter.isCandidateRecord(record));
+    }
+
     @Test
     public void testIsCandidateRecordMalformedReduxUnmapAttributeRejected()
     {
