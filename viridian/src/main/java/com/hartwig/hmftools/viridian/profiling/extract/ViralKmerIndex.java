@@ -7,7 +7,6 @@ import static com.hartwig.hmftools.viridian.common.ViridianConstants.VIRAL_KMER_
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.List;
 
 import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
@@ -26,7 +25,6 @@ public class ViralKmerIndex
     private final int mTopBaseShift;
     private final long[] mBloomWords;
     private final long mBloomBitMask;
-    private long mKmerCount;
 
     private ViralKmerIndex(int kmerLength, int bloomBits)
     {
@@ -36,8 +34,6 @@ public class ViralKmerIndex
         mBloomWords = new long[bloomBits >>> 6];
         mBloomBitMask = bloomBits - 1L;
     }
-
-    public long kmerCount() { return mKmerCount; }
 
     public boolean hasViralKmer(byte[] bases)
     {
@@ -68,13 +64,6 @@ public class ViralKmerIndex
         {
             throw new RuntimeException("Failed to read virus reference FASTA for k-mer index", e);
         }
-    }
-
-    static ViralKmerIndex fromSequences(List<byte[]> sequences)
-    {
-        ViralKmerIndex index = new ViralKmerIndex(VIRAL_KMER_LENGTH, VIRAL_KMER_BLOOM_BITS);
-        sequences.forEach(index::addSequence);
-        return index;
     }
 
     private void addSequence(byte[] bases)
@@ -145,7 +134,6 @@ public class ViralKmerIndex
             hash = mix(hash);
             setBit(hash & mBloomBitMask);
         }
-        ++mKmerCount;
     }
 
     private boolean bitIsSet(long bit)

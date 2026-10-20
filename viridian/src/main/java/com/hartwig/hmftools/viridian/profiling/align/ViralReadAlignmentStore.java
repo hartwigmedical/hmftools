@@ -46,9 +46,4 @@ public class ViralReadAlignmentStore
     {
         return mByRead;
     }
-
-    public int readCount()
-    {
-        return mByRead.size();
-    }
 }

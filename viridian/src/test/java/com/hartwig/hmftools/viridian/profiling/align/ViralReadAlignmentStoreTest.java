@@ -26,7 +26,7 @@ public class ViralReadAlignmentStoreTest
         ViralReadAlignmentStore alignments = new ViralReadAlignmentStore(List.of(
                 alignment("r1", V1), alignment("r1", V2), alignment("r2", V1)));
 
-        assertEquals(2, alignments.readCount());
+        assertEquals(Set.of(ReadId.parse("r1"), ReadId.parse("r2")), alignments.byRead().keySet());
 
         assertEquals(Set.of(ReadId.parse("r1"), ReadId.parse("r2")), alignments.byGenome().get(V1).keySet());
         assertEquals(Set.of(ReadId.parse("r1")), alignments.byGenome().get(V2).keySet());

@@ -54,7 +54,7 @@ public class CandidateReadExtractor
         mThreads = threads;
     }
 
-    public int extract(String tumorBamFile, String outputFastaFile)
+    public void extract(String tumorBamFile, String outputFastaFile)
     {
         SamReaderFactory readerFactory = SamReaderFactory.makeDefault().validationStringency(ValidationStringency.SILENT);
         if(mRefGenomeFile != null)
@@ -81,7 +81,6 @@ public class CandidateReadExtractor
 
             int candidateCount = joinFastaParts(workers.stream().map(Worker::part).toList(), outputFastaFile);
             LOGGER.debug("Extracted {} candidate reads", candidateCount);
-            return candidateCount;
         }
         finally
         {

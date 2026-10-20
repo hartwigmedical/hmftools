@@ -50,11 +50,6 @@ public class VirusReference
         return mSequenceDictionary;
     }
 
-    public Set<OncologyGroup> oncologyGroups()
-    {
-        return mGenomesByName.values().stream().map(VirusGenome::oncologyGroup).collect(toSet());
-    }
-
     public OncologyGroupInfo oncologyGroupInfo(OncologyGroup group)
     {
         OncologyGroupInfo info = mOncologyGroupInfo.get(group);

@@ -11,11 +11,6 @@ public record IntegrationCandidate(
         @Nullable ViralInsertAlignment alignment
 )
 {
-    public boolean isAligned()
-    {
-        return alignment != null;
-    }
-
     public boolean isIntegration()
     {
         return alignment != null && alignment.passesFilters();

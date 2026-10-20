@@ -10,9 +10,9 @@ import static org.junit.Assert.assertThrows;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
 import com.hartwig.hmftools.viridian.common.UserInputError;
@@ -50,10 +50,9 @@ public class CandidateReadExtractorTest
         {
             String fasta = new File(mTempDir.getRoot(), "candidates." + threads + ".fasta").getPath();
             CandidateReadFilter filter = filter(CandidateReadSource.ALL);
-            int count = new CandidateReadExtractor(null, filter, threads).extract(bam, fasta);
+            new CandidateReadExtractor(null, filter, threads).extract(bam, fasta);
 
-            assertEquals(3, count);
-            assertEquals(Set.of(">clip/1\nCCCCC", ">unmap/2\nGGGGG", ">single\nTTTTT"), fastaEntries(fasta));
+            assertEquals(List.of(">clip/1\nCCCCC", ">single\nTTTTT", ">unmap/2\nGGGGG"), fastaEntries(fasta));
         }
     }
 
@@ -69,10 +68,9 @@ public class CandidateReadExtractorTest
         String fasta = new File(mTempDir.getRoot(), "boundary.fasta").getPath();
 
         CandidateReadFilter filter = filter(CandidateReadSource.ALL);
-        int count = new CandidateReadExtractor(null, filter, 2).extract(bam, fasta);
+        new CandidateReadExtractor(null, filter, 2).extract(bam, fasta);
 
-        assertEquals(1, count);
-        assertEquals(Set.of(">spanning/1\nCCCCC"), fastaEntries(fasta));
+        assertEquals(List.of(">spanning/1\nCCCCC"), fastaEntries(fasta));
     }
 
     @Test
@@ -86,10 +84,9 @@ public class CandidateReadExtractorTest
         String fasta = new File(mTempDir.getRoot(), "unmapped_with_mapped_mate.fasta").getPath();
 
         CandidateReadFilter filter = filter(CandidateReadSource.ALL);
-        int count = new CandidateReadExtractor(null, filter, 1).extract(bam, fasta);
+        new CandidateReadExtractor(null, filter, 1).extract(bam, fasta);
 
-        assertEquals(1, count);
-        assertEquals(Set.of(">unmappedWithMappedMate/1\nTTTTT"), fastaEntries(fasta));
+        assertEquals(List.of(">unmappedWithMappedMate/1\nTTTTT"), fastaEntries(fasta));
     }
 
     @Test
@@ -108,10 +105,9 @@ public class CandidateReadExtractorTest
         String fasta = new File(mTempDir.getRoot(), "fully_unmapped_and_decoy.fasta").getPath();
 
         CandidateReadFilter filter = filter(CandidateReadSource.FULLY_UNMAPPED_AND_VIRUS);
-        int count = new CandidateReadExtractor(null, filter, 2).extract(bam, fasta);
+        new CandidateReadExtractor(null, filter, 2).extract(bam, fasta);
 
-        assertEquals(2, count);
-        assertEquals(Set.of(">ebv/1\nGGGGG", ">fullyUnmapped/2\nACGTA"), fastaEntries(fasta));
+        assertEquals(List.of(">ebv/1\nGGGGG", ">fullyUnmapped/2\nACGTA"), fastaEntries(fasta));
     }
 
     @Test
@@ -186,14 +182,15 @@ public class CandidateReadExtractorTest
         return bam.getPath();
     }
 
-    private static Set<String> fastaEntries(String fasta) throws IOException
+    private static List<String> fastaEntries(String fasta) throws IOException
     {
         List<String> lines = Files.readAllLines(new File(fasta).toPath());
-        Set<String> entries = new HashSet<>();
+        List<String> entries = new ArrayList<>();
         for(int i = 0; i < lines.size(); i += 2)
         {
             entries.add(lines.get(i) + "\n" + lines.get(i + 1));
         }
+        Collections.sort(entries);
         return entries;
     }
 }

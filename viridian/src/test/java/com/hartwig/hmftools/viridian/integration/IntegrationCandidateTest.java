@@ -26,7 +26,6 @@ public class IntegrationCandidateTest
     public void testNotIntegrationWhenInsertAlignedNowhere()
     {
         IntegrationCandidate candidate = new IntegrationCandidate(candidateSv(), null);
-        assertFalse(candidate.isAligned());
         assertFalse(candidate.isIntegration());
     }
 
@@ -34,7 +33,6 @@ public class IntegrationCandidateTest
     public void testIntegrationWhenAlignmentClearsThresholds()
     {
         IntegrationCandidate candidate = new IntegrationCandidate(candidateSv(), alignment(40));
-        assertTrue(candidate.isAligned());
         assertTrue(candidate.isIntegration());
     }
 
@@ -42,7 +40,6 @@ public class IntegrationCandidateTest
     public void testNotIntegrationWhenAlignmentDoesNotClearThresholds()
     {
         IntegrationCandidate candidate = new IntegrationCandidate(candidateSv(), alignment(20));
-        assertTrue(candidate.isAligned());
         assertFalse(candidate.isIntegration());
     }
 

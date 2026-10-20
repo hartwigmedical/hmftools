@@ -5,6 +5,7 @@ import static org.junit.Assert.assertThrows;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.hartwig.hmftools.viridian.profiling.common.ReadId;
 import com.hartwig.hmftools.viridian.reference.OncologyGroup;
@@ -27,7 +28,7 @@ public class AllGenomesReadAlignmentsTest
         AllGenomesReadAlignments allAlignments = AllGenomesReadAlignments.from(
                 List.of(alignment("r1", V1), straddler("r2", V1), straddler("r3", V1)), 150.0);
 
-        assertEquals(1, allAlignments.store().readCount());
+        assertEquals(Set.of(ReadId.parse("r1")), allAlignments.store().byRead().keySet());
         assertEquals(Map.of(V1, 2), allAlignments.metrics().originClippedReads());
     }
 
@@ -64,7 +65,7 @@ public class AllGenomesReadAlignmentsTest
     {
         AllGenomesReadAlignments allAlignments = AllGenomesReadAlignments.from(List.of(), null);
 
-        assertEquals(0, allAlignments.store().readCount());
+        assertEquals(Map.of(), allAlignments.store().byRead());
         assertEquals(new AllGenomesReadAlignmentsMetrics(null, Map.of(), Map.of()), allAlignments.metrics());
     }
 
