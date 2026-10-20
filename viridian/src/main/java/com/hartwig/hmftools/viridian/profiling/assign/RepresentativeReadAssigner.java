@@ -26,7 +26,7 @@ import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.ValidationStringency;
 
-// Selects each read's best alignment to the selected representative virus genome.
+// Selects each read's best alignment across the representative virus genomes.
 // Writes those alignments to a coordinate sorted, indexed BAM.
 // Reads with no alignments to the representative are dropped.
 public class RepresentativeReadAssigner

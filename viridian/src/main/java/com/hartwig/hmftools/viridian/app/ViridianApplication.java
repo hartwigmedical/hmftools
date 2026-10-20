@@ -36,6 +36,11 @@ import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.purple.PurityContextFile;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.viridian.common.UserInputError;
+import com.hartwig.hmftools.viridian.integration.IntegrationCandidate;
+import com.hartwig.hmftools.viridian.integration.align.ViralInsertAligner;
+import com.hartwig.hmftools.viridian.integration.align.ViralInsertAlignment;
+import com.hartwig.hmftools.viridian.integration.extract.CandidateSv;
+import com.hartwig.hmftools.viridian.integration.extract.CandidateSvExtractor;
 import com.hartwig.hmftools.viridian.profiling.VirusProfile;
 import com.hartwig.hmftools.viridian.profiling.align.AllGenomesReadAlignments;
 import com.hartwig.hmftools.viridian.profiling.align.ViralReadAligner;
@@ -52,11 +57,6 @@ import com.hartwig.hmftools.viridian.profiling.select.RepresentativeGenome;
 import com.hartwig.hmftools.viridian.profiling.select.RepresentativeGenomeSelector;
 import com.hartwig.hmftools.viridian.profiling.support.GenomeSupport;
 import com.hartwig.hmftools.viridian.profiling.support.GenomeSupportCalculator;
-import com.hartwig.hmftools.viridian.integration.IntegrationCandidate;
-import com.hartwig.hmftools.viridian.integration.align.ViralInsertAligner;
-import com.hartwig.hmftools.viridian.integration.align.ViralInsertAlignment;
-import com.hartwig.hmftools.viridian.integration.extract.CandidateSv;
-import com.hartwig.hmftools.viridian.integration.extract.CandidateSvExtractor;
 import com.hartwig.hmftools.viridian.reference.OncologyGroup;
 import com.hartwig.hmftools.viridian.reference.VirusGenome;
 import com.hartwig.hmftools.viridian.reference.VirusReference;
@@ -153,9 +153,9 @@ public class ViridianApplication
         LOGGER.info("Extracting candidate viral reads from tumor BAM using read source {}", mConfig.candidateReadSource());
         CandidateReadFilter candidateFilter = new CandidateReadFilter(
                 mConfig.candidateReadSource(), VIRAL_READ_MIN_SOFT_CLIP_BASES, virusDecoyContigs, kmerIndex);
-        CandidateReadExtractor mCandidateExtractor = new CandidateReadExtractor(
+        CandidateReadExtractor candidateExtractor = new CandidateReadExtractor(
                 mConfig.refGenomeFile(), candidateFilter, mConfig.threads());
-        mCandidateExtractor.extract(mConfig.tumorBam(), candidateFastaFile);
+        candidateExtractor.extract(mConfig.tumorBam(), candidateFastaFile);
 
         return candidateFastaFile;
     }
@@ -223,8 +223,7 @@ public class ViridianApplication
         return representatives;
     }
 
-    // For each oncology group, assign the read alignments to only the selected representative virus genome.
-    // This is simply filtering down to each read's alignment to that genome (or nothing, if it didn't align there at all).
+    // Assign each read to the representative virus genome it fits best.
     private ViralReadAlignmentStore assignReadsToRepresentatives(
             ViralReadAlignmentStore alignments, List<RepresentativeGenome> representatives)
     {
@@ -243,7 +242,7 @@ public class ViridianApplication
             ViralReadAlignmentStore representativeAlignments, Map<VirusGenome, Integer> allOriginClippedReads)
     {
         LOGGER.info("Computing representative genome stats");
-        // Origin clipped reads where dropped previously, but the information is useful to carry through for visualisation.
+        // Origin clipped reads were dropped previously, but the information is useful to carry through for visualisation.
         Map<VirusGenome, Integer> originClippedReads = allOriginClippedReads.entrySet().stream()
                 .filter(entry -> representativeAlignments.byGenome().containsKey(entry.getKey()))
                 .collect(toMap(Map.Entry::getKey, Map.Entry::getValue));
