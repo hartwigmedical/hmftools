@@ -18,7 +18,7 @@ import static com.hartwig.hmftools.viridian.common.ViridianConstants.READ_VOTE_C
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.REPRESENTATIVE_ALIGNMENTS_BAM_SUFFIX;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.RUN_MANIFEST_TSV_SUFFIX;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.VIRAL_READ_MIN_SOFT_CLIP_BASES;
-import static com.hartwig.hmftools.viridian.common.ViridianConstants.VIRUS_DETECTION_TSV_SUFFIX;
+import static com.hartwig.hmftools.viridian.common.ViridianConstants.VIRUS_PROFILE_TSV_SUFFIX;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.VIRUS_REPORT_TSV_SUFFIX;
 
 import java.io.File;
@@ -36,22 +36,22 @@ import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.purple.PurityContextFile;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.viridian.common.UserInputError;
-import com.hartwig.hmftools.viridian.detection.DetectedVirus;
-import com.hartwig.hmftools.viridian.detection.align.AllGenomesReadAlignments;
-import com.hartwig.hmftools.viridian.detection.align.ViralReadAligner;
-import com.hartwig.hmftools.viridian.detection.align.ViralReadAlignment;
-import com.hartwig.hmftools.viridian.detection.align.ViralReadAlignmentStore;
-import com.hartwig.hmftools.viridian.detection.assign.RepresentativeReadAssigner;
-import com.hartwig.hmftools.viridian.detection.common.GenomeStats;
-import com.hartwig.hmftools.viridian.detection.common.GenomeStatsCalculator;
-import com.hartwig.hmftools.viridian.detection.common.ReadId;
-import com.hartwig.hmftools.viridian.detection.extract.CandidateReadExtractor;
-import com.hartwig.hmftools.viridian.detection.extract.CandidateReadFilter;
-import com.hartwig.hmftools.viridian.detection.extract.ViralKmerIndex;
-import com.hartwig.hmftools.viridian.detection.select.RepresentativeGenome;
-import com.hartwig.hmftools.viridian.detection.select.RepresentativeGenomeSelector;
-import com.hartwig.hmftools.viridian.detection.support.GenomeSupport;
-import com.hartwig.hmftools.viridian.detection.support.GenomeSupportCalculator;
+import com.hartwig.hmftools.viridian.profiling.VirusProfile;
+import com.hartwig.hmftools.viridian.profiling.align.AllGenomesReadAlignments;
+import com.hartwig.hmftools.viridian.profiling.align.ViralReadAligner;
+import com.hartwig.hmftools.viridian.profiling.align.ViralReadAlignment;
+import com.hartwig.hmftools.viridian.profiling.align.ViralReadAlignmentStore;
+import com.hartwig.hmftools.viridian.profiling.assign.RepresentativeReadAssigner;
+import com.hartwig.hmftools.viridian.profiling.common.GenomeStats;
+import com.hartwig.hmftools.viridian.profiling.common.GenomeStatsCalculator;
+import com.hartwig.hmftools.viridian.profiling.common.ReadId;
+import com.hartwig.hmftools.viridian.profiling.extract.CandidateReadExtractor;
+import com.hartwig.hmftools.viridian.profiling.extract.CandidateReadFilter;
+import com.hartwig.hmftools.viridian.profiling.extract.ViralKmerIndex;
+import com.hartwig.hmftools.viridian.profiling.select.RepresentativeGenome;
+import com.hartwig.hmftools.viridian.profiling.select.RepresentativeGenomeSelector;
+import com.hartwig.hmftools.viridian.profiling.support.GenomeSupport;
+import com.hartwig.hmftools.viridian.profiling.support.GenomeSupportCalculator;
 import com.hartwig.hmftools.viridian.integration.IntegrationCandidate;
 import com.hartwig.hmftools.viridian.integration.align.ViralInsertAligner;
 import com.hartwig.hmftools.viridian.integration.align.ViralInsertAlignment;
@@ -100,19 +100,19 @@ public class ViridianApplication
 
         BwaMemAligner.initLibrary(mConfig.bwaLibPath());
 
-        List<DetectedVirus> detectedViruses = detectViruses();
+        List<VirusProfile> profiles = profileViruses();
 
         Map<OncologyGroup, Integer> integrationCounts = callHostIntegrations();
 
-        reportViruses(detectedViruses, integrationCounts);
+        reportViruses(profiles, integrationCounts);
 
         OutputWriter.writeRunManifest(outputFile(RUN_MANIFEST_TSV_SUFFIX), mConfig);
 
         LOGGER.info("{} complete, mins({})", APP_NAME, runTimeMinsStr(startTimeMs));
     }
 
-    // Detect viruses from reads.
-    private List<DetectedVirus> detectViruses()
+    // Find which viruses are present from the reads.
+    private List<VirusProfile> profileViruses()
     {
         Set<String> virusDecoyContigs = resolveVirusDecoyContigs();
 
@@ -130,12 +130,12 @@ public class ViridianApplication
         Map<VirusGenome, GenomeStats> representativeGenomeStats =
                 calculateRepresentativeGenomeStats(representativeAlignments, allGenomesReadAlignments.metrics().originClippedReads());
 
-        List<DetectedVirus> detectedViruses = DetectedVirus.from(representatives, representativeGenomeStats);
+        List<VirusProfile> profiles = VirusProfile.from(representatives, representativeGenomeStats);
 
-        LOGGER.info("Writing virus detection output");
-        OutputWriter.writeDetectedViruses(outputFile(VIRUS_DETECTION_TSV_SUFFIX), detectedViruses);
+        LOGGER.info("Writing virus profile output");
+        OutputWriter.writeVirusProfiles(outputFile(VIRUS_PROFILE_TSV_SUFFIX), profiles);
 
-        return detectedViruses;
+        return profiles;
     }
 
     // Extract reads which may be viral into a FASTA.
@@ -190,7 +190,7 @@ public class ViridianApplication
         }
     }
 
-    // Align potentially viral reads to all virus genomes, so we can decide which viruses are detected.
+    // Align potentially viral reads to all virus genomes, so we can decide which viruses are present.
     private AllGenomesReadAlignments alignCandidateReadsToVirusGenomes(String candidateReadFasta)
     {
         LOGGER.info("Aligning candidate reads to virus genomes");
@@ -291,7 +291,7 @@ public class ViridianApplication
     }
 
     // Decide which viruses are reported to the downstream pipeline.
-    private List<VirusReport> reportViruses(List<DetectedVirus> detectedViruses, Map<OncologyGroup, Integer> integrationCounts)
+    private List<VirusReport> reportViruses(List<VirusProfile> profiles, Map<OncologyGroup, Integer> integrationCounts)
             throws IOException
     {
         LOGGER.info("Loading reporting inputs");
@@ -307,7 +307,7 @@ public class ViridianApplication
 
         LOGGER.info("Calculating reporting statuses");
         List<VirusReport> reports = VirusReporter.report(
-                detectedViruses, integrationCounts, mVirusReference::oncologyGroupInfo, expectedViralDepthPerCopy);
+                profiles, integrationCounts, mVirusReference::oncologyGroupInfo, expectedViralDepthPerCopy);
 
         LOGGER.info("Writing virus report output");
         OutputWriter.writeVirusReports(outputFile(VIRUS_REPORT_TSV_SUFFIX), reports);

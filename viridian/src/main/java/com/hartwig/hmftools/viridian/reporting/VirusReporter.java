@@ -13,7 +13,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.hartwig.hmftools.viridian.detection.DetectedVirus;
+import com.hartwig.hmftools.viridian.profiling.VirusProfile;
 import com.hartwig.hmftools.viridian.reference.OncologyGroup;
 import com.hartwig.hmftools.viridian.reference.OncologyGroupInfo;
 
@@ -22,37 +22,37 @@ import org.jetbrains.annotations.Nullable;
 // Decides if each virus is reported for downstream analysis and Orange report.
 public class VirusReporter
 {
-    // One report per oncology group that is detected or has an integration.
+    // One report per oncology group that is profiled or has an integration.
     public static List<VirusReport> report(
-            List<DetectedVirus> detectedViruses, Map<OncologyGroup, Integer> integrationCounts,
+            List<VirusProfile> profiles, Map<OncologyGroup, Integer> integrationCounts,
             Function<OncologyGroup, OncologyGroupInfo> oncologyGroupInfo, @Nullable Double expectedViralDepthPerCopy)
     {
-        Map<OncologyGroup, DetectedVirus> detectedByGroup = detectedViruses.stream()
-                .collect(toMap(DetectedVirus::oncologyGroup, identity()));
+        Map<OncologyGroup, VirusProfile> profileByGroup = profiles.stream()
+                .collect(toMap(VirusProfile::oncologyGroup, identity()));
 
-        Set<OncologyGroup> groupsToReport = Stream.concat(detectedByGroup.keySet().stream(), integrationCounts.keySet().stream())
+        Set<OncologyGroup> groupsToReport = Stream.concat(profileByGroup.keySet().stream(), integrationCounts.keySet().stream())
                 .collect(Collectors.toSet());
 
         return groupsToReport.stream()
                 .map(group -> reportGroup(
-                        group, detectedByGroup.get(group), integrationCounts.getOrDefault(group, 0),
+                        group, profileByGroup.get(group), integrationCounts.getOrDefault(group, 0),
                         oncologyGroupInfo.apply(group), expectedViralDepthPerCopy))
                 .toList();
     }
 
     static VirusReport reportGroup(
-            OncologyGroup group, @Nullable DetectedVirus detected, int integrations,
+            OncologyGroup group, @Nullable VirusProfile profile, int integrations,
             OncologyGroupInfo info, @Nullable Double expectedViralDepthPerCopy)
     {
         // Null when there is no representative genome, or Purple data unusable, in which case the virus can only be reported on integrations.
-        Double copiesPerTumorCell = detected != null && expectedViralDepthPerCopy != null
-                ? detected.representativeStats().depth().mean() / expectedViralDepthPerCopy
+        Double copiesPerTumorCell = profile != null && expectedViralDepthPerCopy != null
+                ? profile.representativeStats().depth().mean() / expectedViralDepthPerCopy
                 : null;
 
         VirusReportStatus status = decideStatus(info.isReportable(), integrations, copiesPerTumorCell);
 
         return new VirusReport(
-                group, info.reportingType(), info.driverLikelihood(), integrations, detected, copiesPerTumorCell,
+                group, info.reportingType(), info.driverLikelihood(), integrations, profile, copiesPerTumorCell,
                 status);
     }
 

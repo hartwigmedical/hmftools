@@ -17,11 +17,11 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 import com.hartwig.hmftools.common.utils.file.DelimFileWriter;
-import com.hartwig.hmftools.viridian.detection.DetectedVirus;
-import com.hartwig.hmftools.viridian.detection.common.GenomeStats;
-import com.hartwig.hmftools.viridian.detection.common.SummaryStats;
-import com.hartwig.hmftools.viridian.detection.select.RepresentativeGenome;
-import com.hartwig.hmftools.viridian.detection.support.GenomeSupport;
+import com.hartwig.hmftools.viridian.profiling.VirusProfile;
+import com.hartwig.hmftools.viridian.profiling.common.GenomeStats;
+import com.hartwig.hmftools.viridian.profiling.common.SummaryStats;
+import com.hartwig.hmftools.viridian.profiling.select.RepresentativeGenome;
+import com.hartwig.hmftools.viridian.profiling.support.GenomeSupport;
 import com.hartwig.hmftools.viridian.integration.IntegrationCandidate;
 import com.hartwig.hmftools.viridian.integration.align.ViralInsertAlignment;
 import com.hartwig.hmftools.viridian.integration.extract.BreakendSupport;
@@ -124,31 +124,31 @@ public class OutputWriter
                                             .map(field -> summaryStatsColumn(group, field))))
                     .toList();
 
-    public static void writeDetectedViruses(String file, List<DetectedVirus> detections)
+    public static void writeVirusProfiles(String file, List<VirusProfile> profiles)
     {
-        List<DetectedVirus> rows = detections.stream().sorted(comparing(DetectedVirus::oncologyGroup)).toList();
+        List<VirusProfile> rows = profiles.stream().sorted(comparing(VirusProfile::oncologyGroup)).toList();
 
         DelimFileWriter.write(
-                file, VIRUS_DETECTION_COLUMNS, rows, (detection, row) ->
+                file, VIRUS_PROFILE_COLUMNS, rows, (profile, row) ->
                 {
-                    row.set(DetectedVirusColumn.oncology_group, detection.oncologyGroup().name());
-                    row.set(DetectedVirusColumn.status, detection.representativeStatus().name());
+                    row.set(VirusProfileColumn.oncology_group, profile.oncologyGroup().name());
+                    row.set(VirusProfileColumn.status, profile.representativeStatus().name());
 
-                    GenomeStats stats = detection.representativeStats();
+                    GenomeStats stats = profile.representativeStats();
                     VirusGenome genome = stats.genome();
-                    row.set(DetectedVirusColumn.genome_name, genome.name());
-                    row.set(DetectedVirusColumn.virus_name, genome.virusName());
-                    row.set(DetectedVirusColumn.genome_length, genome.length());
-                    row.set(DetectedVirusColumn.read_count, stats.readCount());
-                    row.set(DetectedVirusColumn.origin_clipped_reads, stats.originClippedReads());
-                    row.set(DetectedVirusColumn.coverage_fraction, stats.coverageFraction());
+                    row.set(VirusProfileColumn.genome_name, genome.name());
+                    row.set(VirusProfileColumn.virus_name, genome.virusName());
+                    row.set(VirusProfileColumn.genome_length, genome.length());
+                    row.set(VirusProfileColumn.read_count, stats.readCount());
+                    row.set(VirusProfileColumn.origin_clipped_reads, stats.originClippedReads());
+                    row.set(VirusProfileColumn.coverage_fraction, stats.coverageFraction());
 
                     writeSummaryStats(row, DEPTH_STATS_COLUMNS, stats.depth());
                     writeSummaryStats(row, ALIGNER_SCORE_STATS_COLUMNS, stats.alignerScore());
                 });
     }
 
-    private enum DetectedVirusColumn
+    private enum VirusProfileColumn
     {
         oncology_group,
         virus_name,
@@ -160,9 +160,9 @@ public class OutputWriter
         status,
     }
 
-    private static final List<String> VIRUS_DETECTION_COLUMNS =
+    private static final List<String> VIRUS_PROFILE_COLUMNS =
             Stream.concat(
-                            Stream.of(DetectedVirusColumn.values()).map(Enum::name),
+                            Stream.of(VirusProfileColumn.values()).map(Enum::name),
                             Stream.of(DEPTH_STATS_COLUMNS, ALIGNER_SCORE_STATS_COLUMNS)
                                     .flatMap(group -> SummaryStats.FIELD_NAMES.stream()
                                             .map(field -> summaryStatsColumn(group, field))))
@@ -324,14 +324,14 @@ public class OutputWriter
                     row.set(VirusReportColumn.reported, report.isReported());
                     row.set(VirusReportColumn.status, report.status().name());
                     row.set(VirusReportColumn.integrations, report.integrations());
-                    row.set(VirusReportColumn.detected, report.isDetected());
+                    row.set(VirusReportColumn.profiled, report.isProfiled());
 
-                    DetectedVirus detection = report.detection();
-                    if(detection != null)
+                    VirusProfile profile = report.profile();
+                    if(profile != null)
                     {
-                        GenomeStats stats = detection.representativeStats();
+                        GenomeStats stats = profile.representativeStats();
                         VirusGenome genome = stats.genome();
-                        row.set(VirusReportColumn.representative_status, detection.representativeStatus().name());
+                        row.set(VirusReportColumn.representative_status, profile.representativeStatus().name());
                         row.set(VirusReportColumn.representative_genome, genome.name());
                         row.set(VirusReportColumn.virus_name, genome.virusName());
                         row.set(VirusReportColumn.coverage_fraction, stats.coverageFraction());
@@ -349,7 +349,7 @@ public class OutputWriter
         reported,
         status,
         integrations,
-        detected,
+        profiled,
         representative_status,
         representative_genome,
         virus_name,

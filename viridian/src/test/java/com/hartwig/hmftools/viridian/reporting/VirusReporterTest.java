@@ -14,10 +14,10 @@ import static org.junit.Assert.assertTrue;
 
 import com.hartwig.hmftools.common.virus.VirusLikelihoodType;
 import com.hartwig.hmftools.common.virus.VirusType;
-import com.hartwig.hmftools.viridian.detection.DetectedVirus;
-import com.hartwig.hmftools.viridian.detection.common.GenomeStats;
-import com.hartwig.hmftools.viridian.detection.common.SummaryStats;
-import com.hartwig.hmftools.viridian.detection.select.RepresentativeStatus;
+import com.hartwig.hmftools.viridian.profiling.VirusProfile;
+import com.hartwig.hmftools.viridian.profiling.common.GenomeStats;
+import com.hartwig.hmftools.viridian.profiling.common.SummaryStats;
+import com.hartwig.hmftools.viridian.profiling.select.RepresentativeStatus;
 import com.hartwig.hmftools.viridian.reference.OncologyGroup;
 import com.hartwig.hmftools.viridian.reference.OncologyGroupInfo;
 import com.hartwig.hmftools.viridian.reference.VirusGenome;
@@ -93,14 +93,14 @@ public class VirusReporterTest
         assertFalse(CLONALITY_UNEVALUABLE.isReported());
     }
 
-    // Assembling one group's report from detection, integration count, policy and the per-copy depth.
+    // Assembling one group's report from its profile, integration count, policy and the per-copy depth.
 
     // Representative depth 10 against per-copy depth 20 is 0.5 copies per tumor cell, which clears C.
     @Test
-    public void testDetectedReportsOnClonality()
+    public void testProfiledReportsOnClonality()
     {
-        VirusReport report = VirusReporter.reportGroup(GROUP, detected(DEPTH), 0, REPORTABLE_INFO, PER_COPY);
-        assertTrue(report.isDetected());
+        VirusReport report = VirusReporter.reportGroup(GROUP, profile(DEPTH), 0, REPORTABLE_INFO, PER_COPY);
+        assertTrue(report.isProfiled());
         assertEquals(0.5, report.copiesPerTumorCell(), 1e-9);
         assertEquals(REPORTED_ON_CLONALITY, report.status());
         assertTrue(report.isReported());
@@ -108,19 +108,19 @@ public class VirusReporterTest
 
     // Clonality needs the per-copy depth, which an unusable Purple fit leaves absent.
     @Test
-    public void testDetectedWithoutPurpleIsUnevaluable()
+    public void testProfiledWithoutPurpleIsUnevaluable()
     {
-        VirusReport report = VirusReporter.reportGroup(GROUP, detected(DEPTH), 0, REPORTABLE_INFO, null);
+        VirusReport report = VirusReporter.reportGroup(GROUP, profile(DEPTH), 0, REPORTABLE_INFO, null);
         assertNull(report.copiesPerTumorCell());
         assertEquals(CLONALITY_UNEVALUABLE, report.status());
     }
 
-    // An integration reports the virus even when it was not detected.
+    // An integration reports the virus even when it was not found in the reads.
     @Test
-    public void testIntegratedButNotDetected()
+    public void testIntegratedButNotProfiled()
     {
         VirusReport report = VirusReporter.reportGroup(GROUP, null, 1, REPORTABLE_INFO, PER_COPY);
-        assertFalse(report.isDetected());
+        assertFalse(report.isProfiled());
         assertNull(report.copiesPerTumorCell());
         assertEquals(REPORTED_ON_INTEGRATION, report.status());
     }
@@ -128,16 +128,16 @@ public class VirusReporterTest
     @Test
     public void testNotReportableIsNotReported()
     {
-        VirusReport report = VirusReporter.reportGroup(GROUP, detected(DEPTH), 5, NOT_REPORTABLE_INFO, PER_COPY);
+        VirusReport report = VirusReporter.reportGroup(GROUP, profile(DEPTH), 5, NOT_REPORTABLE_INFO, PER_COPY);
         assertEquals(NOT_REPORTABLE, report.status());
         assertFalse(report.isReported());
     }
 
-    private static DetectedVirus detected(double meanDepth)
+    private static VirusProfile profile(double meanDepth)
     {
         SummaryStats depth = SummaryStats.from(new int[] { (int) meanDepth });
         SummaryStats alignerScore = SummaryStats.from(new int[] { 30 });
         GenomeStats stats = new GenomeStats(GENOME, 1, 0, GENOME.length(), depth, alignerScore);
-        return new DetectedVirus(stats, RepresentativeStatus.PASS);
+        return new VirusProfile(stats, RepresentativeStatus.PASS);
     }
 }

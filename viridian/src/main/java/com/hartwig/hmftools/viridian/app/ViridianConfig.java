@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.viridian.common.UserInputError;
-import com.hartwig.hmftools.viridian.detection.extract.CandidateReadSource;
+import com.hartwig.hmftools.viridian.profiling.extract.CandidateReadSource;
 
 import org.jetbrains.annotations.Nullable;
 
