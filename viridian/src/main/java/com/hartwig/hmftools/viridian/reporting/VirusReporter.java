@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.viridian.reporting;
 
+import static java.util.Objects.requireNonNull;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 
@@ -52,10 +53,8 @@ public class VirusReporter
         }
         else if(clonalityInputs.purpleFailure() == null)
         {
-            copiesPerTumorCell =
-                    profile.representativeStats().depth().mean() / clonalityInputs.expectedViralDepthPerCopy();
-            clonalityStatus = copiesPerTumorCell >= REPORTED_COPIES_PER_CELL_MIN
-                    ? ClonalityStatus.CLONAL : ClonalityStatus.NOT_CLONAL;
+            copiesPerTumorCell = profile.representativeStats().depth().mean() / requireNonNull(clonalityInputs.expectedViralDepthPerCopy());
+            clonalityStatus = copiesPerTumorCell >= REPORTED_COPIES_PER_CELL_MIN ? ClonalityStatus.CLONAL : ClonalityStatus.NOT_CLONAL;
         }
         else
         {
@@ -68,11 +67,11 @@ public class VirusReporter
             };
         }
 
-        boolean meetsIntegrationMin = integrations >= REPORTED_INTEGRATIONS_MIN;
-        boolean isReported = info.isReportable() && (meetsIntegrationMin || clonalityStatus == ClonalityStatus.CLONAL);
+        boolean hasMinIntegrations = integrations >= REPORTED_INTEGRATIONS_MIN;
+        boolean isReported = info.isReportable() && (hasMinIntegrations || clonalityStatus == ClonalityStatus.CLONAL);
 
         return new VirusReport(
-                group, info.reportingType(), info.driverLikelihood(), integrations, meetsIntegrationMin, profile,
+                group, info.reportingType(), info.driverLikelihood(), integrations, hasMinIntegrations, profile,
                 copiesPerTumorCell, clonalityStatus, isReported);
     }
 }

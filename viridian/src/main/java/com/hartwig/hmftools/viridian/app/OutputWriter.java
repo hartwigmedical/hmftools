@@ -61,10 +61,10 @@ public class OutputWriter
                     row.set(GenomeSupportColumn.virus_name, genome.virusName());
                     row.set(GenomeSupportColumn.oncology_group, genome.oncologyGroup().name());
                     row.set(GenomeSupportColumn.genome_length, genome.length());
-                    row.set(GenomeSupportColumn.read_count, stats.readCount());
+                    row.set(GenomeSupportColumn.aligned_reads, stats.readCount());
                     row.set(GenomeSupportColumn.multi_align_reads, support.multiAlignReads());
                     row.set(GenomeSupportColumn.origin_clipped_reads, stats.originClippedReads());
-                    row.set(GenomeSupportColumn.coverage_fraction, stats.coverageFraction());
+                    row.set(GenomeSupportColumn.coverage, stats.coverageFraction());
                     row.set(GenomeSupportColumn.read_votes, support.readVotes());
 
                     writeSummaryStats(row, DEPTH_STATS_COLUMNS, stats.depth());
@@ -102,8 +102,8 @@ public class OutputWriter
         is_representative,
         filter_status,
         genome_length,
-        coverage_fraction,
-        read_count,
+        coverage,
+        aligned_reads,
         read_votes,
         vote_share_pre_filter,
         vote_share_post_filter,
@@ -132,16 +132,16 @@ public class OutputWriter
                 file, VIRUS_PROFILE_COLUMNS, rows, (profile, row) ->
                 {
                     row.set(VirusProfileColumn.oncology_group, profile.oncologyGroup().name());
-                    row.set(VirusProfileColumn.status, profile.representativeStatus().name());
+                    row.set(VirusProfileColumn.representative_status, profile.representativeStatus().name());
 
                     GenomeStats stats = profile.representativeStats();
                     VirusGenome genome = stats.genome();
                     row.set(VirusProfileColumn.genome_name, genome.name());
                     row.set(VirusProfileColumn.virus_name, genome.virusName());
                     row.set(VirusProfileColumn.genome_length, genome.length());
-                    row.set(VirusProfileColumn.read_count, stats.readCount());
+                    row.set(VirusProfileColumn.aligned_reads, stats.readCount());
                     row.set(VirusProfileColumn.origin_clipped_reads, stats.originClippedReads());
-                    row.set(VirusProfileColumn.coverage_fraction, stats.coverageFraction());
+                    row.set(VirusProfileColumn.coverage, stats.coverageFraction());
 
                     writeSummaryStats(row, DEPTH_STATS_COLUMNS, stats.depth());
                     writeSummaryStats(row, ALIGNER_SCORE_STATS_COLUMNS, stats.alignerScore());
@@ -151,13 +151,13 @@ public class OutputWriter
     private enum VirusProfileColumn
     {
         oncology_group,
+        representative_status,
         virus_name,
         genome_name,
         genome_length,
-        coverage_fraction,
-        read_count,
+        coverage,
+        aligned_reads,
         origin_clipped_reads,
-        status,
     }
 
     private static final List<String> VIRUS_PROFILE_COLUMNS =
@@ -323,7 +323,7 @@ public class OutputWriter
                             report.driverLikelihood() != null ? report.driverLikelihood().toString() : null);
                     row.set(VirusReportColumn.reported, report.isReported());
                     row.set(VirusReportColumn.integrations, report.integrations());
-                    row.set(VirusReportColumn.meets_integration_min, report.meetsIntegrationMin());
+                    row.set(VirusReportColumn.has_min_integrations, report.hasMinIntegrations());
                     row.set(VirusReportColumn.clonality_status, report.clonalityStatus().name());
                     row.set(VirusReportColumn.profiled, report.isProfiled());
 
@@ -332,7 +332,7 @@ public class OutputWriter
                     {
                         GenomeStats stats = profile.representativeStats();
                         VirusGenome genome = stats.genome();
-                        row.set(VirusReportColumn.profile_status, profile.representativeStatus().name());
+                        row.set(VirusReportColumn.profile_representative_status, profile.representativeStatus().name());
                         row.set(VirusReportColumn.profile_genome, genome.name());
                         row.set(VirusReportColumn.profile_virus_name, genome.virusName());
                         row.set(VirusReportColumn.profile_coverage, stats.coverageFraction());
@@ -348,12 +348,12 @@ public class OutputWriter
         reported,
         reporting_type,
         driver_likelihood,
-        meets_integration_min,
+        has_min_integrations,
         integrations,
         clonality_status,
         copies_per_tumor_cell,
         profiled,
-        profile_status,
+        profile_representative_status,
         profile_genome,
         profile_virus_name,
         profile_coverage,

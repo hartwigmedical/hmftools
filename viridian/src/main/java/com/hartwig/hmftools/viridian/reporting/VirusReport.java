@@ -7,7 +7,7 @@ import com.hartwig.hmftools.viridian.reference.OncologyGroup;
 
 import org.jetbrains.annotations.Nullable;
 
-// The reporting verdict for one oncology group plus supporting data.
+// The reporting verdict for one oncology group, plus supporting data.
 // Produced for every oncology group that is present in the reads or has integrations.
 public record VirusReport(
         OncologyGroup oncologyGroup,
@@ -15,7 +15,7 @@ public record VirusReport(
         @Nullable VirusType reportingType,
         @Nullable VirusLikelihoodType driverLikelihood,
         int integrations,
-        boolean meetsIntegrationMin,
+        boolean hasMinIntegrations,
         @Nullable VirusProfile profile,
         // Null if not profiled or Purple data wasn't usable.
         @Nullable Double copiesPerTumorCell,
