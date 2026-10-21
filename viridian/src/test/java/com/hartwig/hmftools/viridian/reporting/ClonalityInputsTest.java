@@ -25,10 +25,12 @@ import org.junit.Test;
 
 public class ClonalityInputsTest
 {
+    // Depth per copy = depth * purity / (purity * ploidy + 2 * (1 - purity)).
+
     @Test
     public void testSimpleFullPurityCase()
     {
-        // rho=1, psi=2: denom = 1*2 + 2*0 = 2; depth per copy = D_host*rho/denom = 100*1/2 = 50
+        // Purity 1, ploidy 2: 100 * 1 / (1 * 2 + 2 * 0) = 50
         assertEquals(
                 new ClonalityInputs(50.0, null),
                 clonalityInputs(1.0, FittedPurityMethod.SOMATIC, 100.0, PurpleQCStatus.PASS));
@@ -37,10 +39,20 @@ public class ClonalityInputsTest
     @Test
     public void testNormalisesForSubclonalPurity()
     {
-        // denom = rho*psi + 2(1-rho) = 0.5*2 + 2*0.5 = 2; depth per copy = 30*0.5/2 = 7.5
+        // Purity 0.5, ploidy 2: 30 * 0.5 / (0.5 * 2 + 2 * 0.5) = 7.5
         assertEquals(
                 new ClonalityInputs(7.5, null),
                 clonalityInputs(0.5, FittedPurityMethod.SOMATIC, 30.0, PurpleQCStatus.PASS));
+    }
+
+    // At ploidy 2 the normal and tumor cells carry the same copies, which hides a formula that ignores the normal cells.
+    @Test
+    public void testNormalisesForNonDiploidTumor()
+    {
+        // Purity 0.5, ploidy 3: 30 * 0.5 / (0.5 * 3 + 2 * 0.5) = 6, where depth * purity / ploidy would give 5
+        assertEquals(
+                new ClonalityInputs(6.0, null),
+                clonalityInputs(0.5, 3.0, FittedPurityMethod.SOMATIC, 30.0, PurpleQCStatus.PASS));
     }
 
     @Test
@@ -99,7 +111,13 @@ public class ClonalityInputsTest
     private static ClonalityInputs clonalityInputs(
             double purity, FittedPurityMethod method, double hostMeanDepth, PurpleQCStatus... qcStatus)
     {
-        return ClonalityInputs.from(purityContext(purity, 2.0, method, Set.of(qcStatus)), bamMetrics(hostMeanDepth));
+        return clonalityInputs(purity, 2.0, method, hostMeanDepth, qcStatus);
+    }
+
+    private static ClonalityInputs clonalityInputs(
+            double purity, double ploidy, FittedPurityMethod method, double hostMeanDepth, PurpleQCStatus... qcStatus)
+    {
+        return ClonalityInputs.from(purityContext(purity, ploidy, method, Set.of(qcStatus)), bamMetrics(hostMeanDepth));
     }
 
     private static BamMetricSummary bamMetrics(double meanDepth)
