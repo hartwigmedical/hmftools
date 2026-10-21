@@ -72,7 +72,7 @@ public final class SamRecordTestUtils
 
         SAMRecord record = recordBuilder.addFrag(
                 readId, chrIndex, readStart, isReversed, false,
-                cigar, readBases, DEFAULT_BASE_QUAL, false);
+                cigar, readBases, DEFAULT_MAP_QUAL, false);
 
         record.setReadBases(readBases.getBytes());
 

@@ -47,6 +47,7 @@ public class RegionTask
         int[] fragmentBoundaries = checkFragmentBoundaries(record);
 
         int alignmentStart, alignmentEnd;
+        int readAlignmentStart = record.getAlignmentStart();
 
         if(fragmentBoundaries != null)
         {
@@ -58,7 +59,7 @@ public class RegionTask
         }
         else
         {
-            alignmentStart = record.getAlignmentStart();
+            alignmentStart = readAlignmentStart;
             alignmentEnd = record.getAlignmentEnd();
         }
 
@@ -70,11 +71,14 @@ public class RegionTask
         {
             PositionEvidence posEvidence = mPositions.get(index);
 
-            if(alignmentStart > posEvidence.Position)
+            if(readAlignmentStart > posEvidence.Position) // permanently move past these positions based on BAM alignment
             {
                 ++mCurrentIndex;
                 continue;
             }
+
+            if(alignmentStart > posEvidence.Position) // this fragment's upper read may not process this position, but other reads could
+                continue;
 
             if(alignmentEnd < posEvidence.Position)
                 break;
