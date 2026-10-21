@@ -271,7 +271,7 @@ public class RnaFusionComparerTest
     {
         ComparConfig config = new ComparConfig();
         config.Sources.set(truthsetSource == SourceType.OLD ? 0 : 1,
-                SourceData.fromTruthsetSource(truthsetSource, new TruthsetCache()));
+                SourceData.fromTruthsetSource(truthsetSource, new TruthsetCache(), null));
         return new RnaFusionComparer(config, Collections.emptyMap());
     }
 

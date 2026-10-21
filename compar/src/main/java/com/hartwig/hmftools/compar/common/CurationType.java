@@ -8,6 +8,5 @@ public enum CurationType
     FUNCTIONAL,
     ISSUE,
     CONFIG,
-    EXPECTED,
-    INVALID;
+    EXPECTED;
 }

@@ -16,14 +16,18 @@ public class SourceData
     @Nullable
     public final TruthsetCache Truthset;
 
+    @Nullable
+    public final String Label;
+
     public final Map<String,String> SampleIdMapping; // maps from the common tumor SampleId to the tumor Sample Id for this source
     public final Map<String,String> ReferenceSampleIdMapping; // as above for the reference Id
 
-    public SourceData(final SourceType type, final PipelineSourcePaths pipelinePaths, final TruthsetCache truthset)
+    public SourceData(final SourceType type, final PipelineSourcePaths pipelinePaths, final TruthsetCache truthset, final String label)
     {
         Type = type;
         PipelinePaths = pipelinePaths;
         Truthset = truthset;
+        Label = label;
 
         SampleIdMapping = Maps.newHashMap();
         ReferenceSampleIdMapping = Maps.newHashMap();
@@ -32,14 +36,14 @@ public class SourceData
     public boolean isPipelineSourced() { return PipelinePaths != null; }
     public boolean isTruthsetSourced() { return Truthset != null; }
 
-    public static SourceData fromPipelineSource(final SourceType type, PipelineSourcePaths pipelinePaths)
+    public static SourceData fromPipelineSource(final SourceType type, PipelineSourcePaths pipelinePaths, final String label)
     {
-        return new SourceData(type, pipelinePaths, null);
+        return new SourceData(type, pipelinePaths, null, label);
     }
 
-    public static SourceData fromTruthsetSource(final SourceType type, final TruthsetCache truthset)
+    public static SourceData fromTruthsetSource(final SourceType type, final TruthsetCache truthset, final String label)
     {
-        return new SourceData(type, null, truthset);
+        return new SourceData(type, null, truthset, label);
     }
 
     public String configName() { return Type.toString().toLowerCase(); }

@@ -4,48 +4,45 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
-import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
-import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
-import static com.hartwig.hmftools.compar.common.CurationType.EXPECTED;
-import static com.hartwig.hmftools.compar.common.CurationType.INVALID;
-import static com.hartwig.hmftools.compar.common.CurationType.NONE;
 import static com.hartwig.hmftools.compar.common.ComparConstants.FLD_CATEGORY;
 import static com.hartwig.hmftools.compar.common.ComparConstants.FLD_ITEM_KEY;
 import static com.hartwig.hmftools.compar.common.ComparConstants.FLD_SAMPLE_ID;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.StringJoiner;
-import java.util.stream.Collectors;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.hartwig.hmftools.compar.common.CategoryType;
-import com.hartwig.hmftools.compar.common.CurationInfo;
-import com.hartwig.hmftools.compar.common.CurationType;
+import com.hartwig.hmftools.compar.common.CurationCache.Entry;
 import com.hartwig.hmftools.compar.common.FieldDisplayInfo;
 import com.hartwig.hmftools.compar.common.Mismatch;
-import com.hartwig.hmftools.compar.common.KnownMismatch;
-import com.hartwig.hmftools.compar.common.MismatchType;
-
-import org.jetbrains.annotations.Nullable;
 
 public class MismatchFile
 {
-    private static final String FLD_MISMATCH_TYPE = "MismatchType";
+    public static final String FLD_MISMATCH_TYPE = "MismatchType";
+    public static final String FLD_CURATION_STATUS = "CurationStatus";
     private static final String FLD_OLD_VALUES = "OldValues";
     private static final String FLD_NEW_VALUES = "NewValues";
-    private static final String FLD_DIFFERENCES = "Differences";
-    private static final String FLD_CURATION_COMMENT = "CurationComment";
-    private static final String FLD_CURATION_TYPE = "CurationType";
+    public static final String FLD_DIFFERENCES = "Differences";
+    public static final String FLD_OLD_SOURCE = "OldSource";
+    public static final String FLD_NEW_SOURCE = "NewSource";
+    public static final String FLD_CURATION_TYPE = "CurationType";
+    public static final String FLD_VERDICT = "Verdict";
+    public static final String FLD_CURATION_COMMENT = "CurationComment";
+    public static final String FLD_CURATED_BY = "CuratedBy";
+    public static final String FLD_CURATED_DATE = "CuratedDate";
+
+    private static final String FLD_PREV_COMPARISON = "PrevComparison";
+    private static final String FLD_PREV_MISMATCH_TYPE = "PrevMismatchType";
+    private static final String FLD_PREV_DIFFERENCES = "PrevDifferences";
+    private static final String FLD_PREV_CURATION_TYPE = "PrevCurationType";
+    private static final String FLD_PREV_VERDICT = "PrevVerdict";
+    private static final String FLD_PREV_CURATION_COMMENT = "PrevCurationComment";
+    private static final String FLD_PREV_CURATED_BY = "PrevCuratedBy";
+    private static final String FLD_PREV_CURATED_DATE = "PrevCuratedDate";
+
+    private static final String SOURCE_PAIR_DELIM = ">";
 
     // differences is list of the form: field(oldValue/newValue)
-    public static String commonHeader(boolean includeSampleId, boolean includeCatagory)
+    public static String commonHeader(boolean includeSampleId, boolean includeCatagory, boolean includeCurationStatus)
     {
         StringJoiner sj = new StringJoiner(TSV_DELIM);
 
@@ -55,29 +52,35 @@ public class MismatchFile
         if(includeCatagory)
             sj.add(FLD_CATEGORY);
 
-        sj.add(FLD_MISMATCH_TYPE).add(FLD_ITEM_KEY).add(FLD_DIFFERENCES);
+        sj.add(FLD_MISMATCH_TYPE);
+
+        if(includeCurationStatus)
+            sj.add(FLD_CURATION_STATUS);
+
+        sj.add(FLD_ITEM_KEY).add(FLD_DIFFERENCES);
         return sj.toString();
     }
 
-    public static String header(boolean includeSampleId, boolean includeCuration, boolean includeComment)
+    public static String header(boolean includeSampleId, boolean includeSourceLabels, boolean includeHistory)
     {
         StringJoiner sj = new StringJoiner(TSV_DELIM);
-        sj.add(commonHeader(includeSampleId, true));
+        sj.add(commonHeader(includeSampleId, true, includeSourceLabels || includeHistory));
         sj.add(FLD_OLD_VALUES);
         sj.add(FLD_NEW_VALUES);
 
-        if(includeCuration)
-        {
-            sj.add(FLD_CURATION_TYPE);
+        if(includeSourceLabels)
+            sj.add(FLD_OLD_SOURCE).add(FLD_NEW_SOURCE);
 
-            if(includeComment)
-                sj.add(FLD_CURATION_COMMENT);
+        if(includeHistory)
+        {
+            sj.add(FLD_PREV_COMPARISON).add(FLD_PREV_MISMATCH_TYPE).add(FLD_PREV_DIFFERENCES).add(FLD_PREV_CURATION_TYPE);
+            sj.add(FLD_PREV_VERDICT).add(FLD_PREV_CURATION_COMMENT).add(FLD_PREV_CURATED_BY).add(FLD_PREV_CURATED_DATE);
         }
 
         return sj.toString();
     }
 
-    public static String commonTsv(boolean writeCategory, final Mismatch mismatch)
+    public static String commonTsv(boolean writeCategory, final Mismatch mismatch, final String curationStatus)
     {
         StringJoiner sj = new StringJoiner(TSV_DELIM);
 
@@ -91,6 +94,9 @@ public class MismatchFile
 
         sj.add(mismatch.Type.toString());
 
+        if(curationStatus != null)
+            sj.add(curationStatus);
+
         if(mismatch.OldItem != null)
             sj.add(mismatch.OldItem.key());
         else
@@ -99,11 +105,12 @@ public class MismatchFile
         return sj.toString();
     }
 
-    public static String toTsv(final Mismatch mismatch, boolean writeFieldValues, final List<FieldDisplayInfo> fieldDisplayValues)
+    public static String toTsv(
+            final Mismatch mismatch, boolean writeFieldValues, final List<FieldDisplayInfo> fieldDisplayValues, final String curationStatus)
     {
         StringJoiner sj = new StringJoiner(TSV_DELIM);
 
-        sj.add(commonTsv(!writeFieldValues, mismatch));
+        sj.add(commonTsv(!writeFieldValues, mismatch, curationStatus));
 
         sj.add(String.join(ITEM_DELIM, mismatch.DiffValues));
 
@@ -124,6 +131,16 @@ public class MismatchFile
         return sj.toString();
     }
 
+    public static String historyTsv(final Entry previous)
+    {
+        if(previous == null)
+            return TSV_DELIM.repeat(7);
+
+        return String.join(TSV_DELIM, previous.oldSource() + SOURCE_PAIR_DELIM + previous.newSource(), previous.type().toString(),
+                previous.differences(), previous.curation().toString(), previous.verdict().toString(), previous.comment(),
+                previous.curatedBy(), previous.curatedDate());
+    }
+
     private static String itemValues(final ComparableItem item, final List<FieldDisplayInfo> fieldDisplayValues, boolean useOld)
     {
         if(item == null)
@@ -140,104 +157,5 @@ public class MismatchFile
         }
 
         return displaySj.toString();
-    }
-
-    public static Map<String,List<KnownMismatch>> loadSampleCurations(final String filename, @Nullable final String configSampleId)
-    {
-        Map<String,List<KnownMismatch>> sampleMismatches = Maps.newHashMap();
-
-        try
-        {
-            List<String> lines = Files.readAllLines(Paths.get(filename));
-            Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), TSV_DELIM);
-            lines.remove(0);
-
-            Integer sampleIndex = fieldsIndexMap.get(FLD_SAMPLE_ID);
-
-            int categoryIndex = fieldsIndexMap.get(FLD_CATEGORY);
-            int mismatchTypeIndex = fieldsIndexMap.get(FLD_MISMATCH_TYPE);
-            int keyIndex = fieldsIndexMap.get(FLD_ITEM_KEY);
-            int differencesIndex = fieldsIndexMap.get(FLD_DIFFERENCES);
-            Integer curationIndex = fieldsIndexMap.get(FLD_CURATION_TYPE);
-            Integer commentIndex = fieldsIndexMap.get(FLD_CURATION_COMMENT);
-
-            List<KnownMismatch> mismatches = null;
-            String currentSampleId = "";
-
-            if(sampleIndex == null && configSampleId != null)
-            {
-                currentSampleId = configSampleId;
-                mismatches = Lists.newArrayList();
-                sampleMismatches.put(currentSampleId, mismatches);
-            }
-
-            for(final String line : lines)
-            {
-                String[] values = line.split(TSV_DELIM, -1);
-
-                if(sampleIndex != null)
-                {
-                    String sampleId = values[sampleIndex];
-
-                    if(!sampleId.equals(currentSampleId))
-                    {
-                        currentSampleId = sampleId;
-                        mismatches = sampleMismatches.get(sampleId);
-
-                        if(mismatches == null)
-                        {
-                            mismatches = Lists.newArrayList();
-                            sampleMismatches.put(sampleId, mismatches);
-                        }
-                    }
-                }
-
-                CategoryType categoryType = CategoryType.valueOf(values[categoryIndex]);
-                MismatchType mismatchType = MismatchType.valueOf(values[mismatchTypeIndex]);
-                String itemKey = values[keyIndex];
-
-                String diffsStr = values[differencesIndex];
-
-                CurationType curationType = NONE;
-                String curationComment = "";
-
-                if(curationIndex != null)
-                {
-                    try
-                    {
-                        if(curationIndex < values.length)
-                            curationType = CurationType.valueOf(values[curationIndex]);
-
-                        if(commentIndex != null && commentIndex < values.length)
-                            curationComment = values[commentIndex];
-                    }
-                    catch(Exception e)
-                    {
-                        curationType = INVALID; // use has configured an invalid enum/type
-                    }
-                }
-                else
-                {
-                    curationType = EXPECTED; // loading a prior unedited mismatch file
-                }
-
-                List<String> differences = !diffsStr.isEmpty() ?
-                        Arrays.stream(diffsStr.split(ITEM_DELIM, -1)).collect(Collectors.toList()) : Collections.emptyList();
-
-                CurationInfo curationInfo = new CurationInfo(curationType, curationComment);
-
-                mismatches.add(new KnownMismatch(categoryType, mismatchType, itemKey, differences, curationInfo));
-            }
-
-            CMP_LOGGER.info("loaded {} mismatches file({})", mismatches.size(), filename);
-        }
-        catch(IOException e)
-        {
-            CMP_LOGGER.error("failed to load mismatch file({}): {}", filename, e.toString());
-            System.exit(1);
-        }
-
-        return sampleMismatches;
-
     }
 }

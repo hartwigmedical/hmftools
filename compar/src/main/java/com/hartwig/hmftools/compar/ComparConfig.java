@@ -30,6 +30,7 @@ import static com.hartwig.hmftools.compar.common.CategoryType.PANEL_CATEGORIES;
 import static com.hartwig.hmftools.compar.common.CategoryType.PURPLE_CATEGORIES;
 import static com.hartwig.hmftools.compar.common.CategoryType.purpleCategories;
 import static com.hartwig.hmftools.compar.common.CategoryType.linxCategories;
+import static com.hartwig.hmftools.compar.common.CurationCache.isValidSourceLabel;
 import static com.hartwig.hmftools.compar.common.PipelineSourcePaths.fromConfig;
 import static com.hartwig.hmftools.compar.common.PipelineSourcePaths.registerConfig;
 import static com.hartwig.hmftools.compar.common.MatchLevel.REPORTABLE;
@@ -85,7 +86,7 @@ public class ComparConfig
 
     public final String OutputDir;
     public final String OutputId;
-    public final String KnownMismatchFile;
+    public final String CurationCacheFile;
 
     public final List<WriteType> WriteTypes;
     public final boolean IncludeMatches;
@@ -105,7 +106,8 @@ public class ComparConfig
     public static final String WRITE_DETAILED_FILES = "write_detailed";
     public static final String INCLUDE_MATCHES = "include_matches";
     public static final String RESTRICT_TO_DRIVERS = "restrict_to_drivers";
-    public static final String KNOWN_MISMATCH_FILE = "known_mismatches";
+    public static final String CURATION_CACHE = "curation_cache";
+    public static final String SOURCE_LABEL = "source_label";
     public static final String IGNORE_GENES = "ignore_genes";
     public static final String REQUIRES_LIFTOVER = "liftover";
     public static final String FIELD_CONFIG_FILE = "field_config_file";
@@ -157,7 +159,7 @@ public class ComparConfig
 
         OutputDir = parseOutputDir(configBuilder);
         OutputId = configBuilder.getValue(OUTPUT_ID);
-        KnownMismatchFile = configBuilder.getValue(KNOWN_MISMATCH_FILE);
+        CurationCacheFile = configBuilder.getValue(CURATION_CACHE);
 
         WriteTypes = Lists.newArrayList();
 
@@ -183,6 +185,9 @@ public class ComparConfig
             CMP_LOGGER.error("missing file source old and new config");
             mIsValid = false;
         }
+
+        if(!checkCurationConfig())
+            mIsValid = false;
 
         SampleIds = Lists.newArrayList();
         SampleToReferenceIds = Maps.newHashMap();
@@ -424,18 +429,39 @@ public class ComparConfig
     {
         for(SourceType sourceType : SourceType.values())
         {
+            String label = configBuilder.getValue(formConfigSourceStr(SOURCE_LABEL, sourceType.configStr()));
             String truthsetConfig = formConfigSourceStr(TRUTHSET_FILES, sourceType.configStr());
             if(configBuilder.hasValue(truthsetConfig))
             {
                 TruthsetCache truthsetCache = new TruthsetCache();
                 truthsetCache.loadFiles(configBuilder.getValue(truthsetConfig));
-                Sources.add(SourceData.fromTruthsetSource(sourceType, truthsetCache));
+                Sources.add(SourceData.fromTruthsetSource(sourceType, truthsetCache, label));
             }
             else
             {
                 PipelineSourcePaths pipelinePaths = fromConfig(sourceType, configBuilder);
-                Sources.add(SourceData.fromPipelineSource(sourceType, pipelinePaths));
+                Sources.add(SourceData.fromPipelineSource(sourceType, pipelinePaths, label));
             }
+        }
+
+        return true;
+    }
+
+    private boolean checkCurationConfig()
+    {
+        String oldLabel = getSourceData(OLD).Label;
+        String newLabel = getSourceData(NEW).Label;
+
+        if((oldLabel != null || newLabel != null) && (!isValidSourceLabel(oldLabel) || !isValidSourceLabel(newLabel)))
+        {
+            CMP_LOGGER.error("source labels must both be set, non-blank and without tabs or line breaks");
+            return false;
+        }
+
+        if((oldLabel != null || CurationCacheFile != null) && !WriteTypes.contains(WriteType.GENERIC))
+        {
+            CMP_LOGGER.error("source labels and curation cache require {} output", WriteType.GENERIC);
+            return false;
         }
 
         return true;
@@ -464,11 +490,14 @@ public class ComparConfig
         configBuilder.addConfigItem(
                 formConfigSourceStr(TRUTHSET_FILES, NEW_SOURCE_CFG), false, "Truthset file(s) new");
 
+        configBuilder.addConfigItem(formConfigSourceStr(SOURCE_LABEL, OLD_SOURCE_CFG), false, "Source label old");
+        configBuilder.addConfigItem(formConfigSourceStr(SOURCE_LABEL, NEW_SOURCE_CFG), false, "Source label new");
+
         registerConfig(configBuilder);
 
         configBuilder.addConfigItem(WRITE_TYPES, enumValueSelectionAsStr(WriteType.values(), "Write types"));
         configBuilder.addFlag(WRITE_DETAILED_FILES, "Write per-type details files");
-        configBuilder.addConfigItem(KNOWN_MISMATCH_FILE, "File with sample curations or expected mismatches");
+        configBuilder.addConfigItem(CURATION_CACHE, "Curation cache TSV file for this pipeline");
         configBuilder.addFlag(INCLUDE_MATCHES, "Also write matches to output file(s)");
         configBuilder.addFlag(RESTRICT_TO_DRIVERS, "Restrict any comparison involving genes to driver gene panel");
         configBuilder.addFlag(REQUIRES_LIFTOVER, "Lift over 'old' positions from v37 to v 38");
@@ -487,8 +516,8 @@ public class ComparConfig
         SampleIds = Lists.newArrayList();
         SampleToReferenceIds = Maps.newHashMap();
         Sources = Lists.newArrayList();
-        Sources.add(new SourceData(OLD, null, null));
-        Sources.add(new SourceData(NEW, null, null));
+        Sources.add(new SourceData(OLD, null, null, null));
+        Sources.add(new SourceData(NEW, null, null, null));
 
         Categories = Sets.newHashSet();
         MatchingLevel = REPORTABLE;
@@ -504,7 +533,7 @@ public class ComparConfig
         RestrictToDrivers = false;
         LiftoverCache = new GenomeLiftoverCache();
         RequiresLiftover = false;
-        KnownMismatchFile = null;
+        CurationCacheFile = null;
         StrictFieldConfig = false;
         FieldCheckOverridesFile = null;
     }

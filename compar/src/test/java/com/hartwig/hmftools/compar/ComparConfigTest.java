@@ -2,7 +2,9 @@ package com.hartwig.hmftools.compar;
 
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FILE;
+import static com.hartwig.hmftools.compar.ComparConfig.SOURCE_LABEL;
 import static com.hartwig.hmftools.compar.ComparConfig.TRUTHSET_FILES;
+import static com.hartwig.hmftools.compar.ComparConfig.WRITE_DETAILED_FILES;
 import static com.hartwig.hmftools.compar.common.ComparConstants.FLD_CATEGORY;
 import static com.hartwig.hmftools.compar.common.ComparConstants.FLD_ITEM_KEY;
 import static com.hartwig.hmftools.compar.common.SourceType.NEW;
@@ -104,6 +106,33 @@ public class ComparConfigTest
         ComparConfig config = new ComparConfig(configBuilder);
 
         assertFalse(config.isValid());
+    }
+
+    @Test
+    public void testSourceLabelConfig()
+    {
+        assertTrue(createLabelConfig("pipeline a", "pipeline b", false).isValid());
+        assertFalse(createLabelConfig("pipeline a", null, false).isValid());
+        assertFalse(createLabelConfig(" ", "pipeline b", false).isValid());
+        assertFalse(createLabelConfig("pipeline a", "pipeline b", true).isValid());
+    }
+
+    private static ComparConfig createLabelConfig(final String oldLabel, final String newLabel, boolean writeDetailedOnly)
+    {
+        ConfigBuilder configBuilder = new ConfigBuilder();
+        ComparConfig.addConfig(configBuilder);
+
+        configBuilder.setValue("sample", "TEST");
+        configBuilder.setValue("sample_dir_old", "/default_old");
+        configBuilder.setValue("sample_dir_new", "/default_new");
+        configBuilder.setValue(SOURCE_LABEL + "_old", oldLabel);
+
+        if(newLabel != null)
+            configBuilder.setValue(SOURCE_LABEL + "_new", newLabel);
+
+        configBuilder.setValue(WRITE_DETAILED_FILES, writeDetailedOnly);
+
+        return new ComparConfig(configBuilder);
     }
 
     private ComparConfig createConfig(final List<String> sampleIdLines) throws IOException
