@@ -84,7 +84,7 @@ public class ViridianConstants
     public static final double READ_VOTE_CORRECT_BASE_PROBABILITY = 0.25;
 
     // A clip counts as hanging over a genome end (a circular-genome artifact) when its bases would extend past the
-    // boundary by more than this tolerance. Such alignments are dropped from all further processing.
+    // boundary by more than this tolerance. Such alignments are dropped from all further processing, for simplicity.
     public static final int VIRUS_GENOME_ORIGIN_CLIP_TOLERANCE = 4;
 
     // A genome is a candidate only if some genome in its oncology group reaches this coverage fraction.
@@ -101,22 +101,24 @@ public class ViridianConstants
     public static final double VIRUS_GENOME_VOTES_PER_BASE_MIN = 1.0;
 
     // Minimum insert sequence length for an SV to be a viral integration candidate.
-    // This is a conservative value. ESVEE doesn't call events shorter than 32b anyway.
+    // This is a conservative value, validated via concordance testing against VirusBreakend.
+    // ESVEE doesn't call events shorter than 32b anyway.
     public static final int INTEGRATION_INSERT_LENGTH_MIN = 30;
 
     // Minimum alignment score for host insert sequences aligned to virus genomes.
-    // This is a conservative value, validated with observed concordance with VirusBreakend.
+    // This is a conservative value, validated via concordance testing against VirusBreakend.
     public static final int INTEGRATION_ALIGN_SCORE_MIN = 30;
 
     // Minimum aligner score per aligned base. Used to filter out alignments which are long but poor similarity.
+    // This value is a pretty permissive lower bound, validated via concordance testing against VirusBreakend.
     public static final double INTEGRATION_VIRAL_ALIGN_SCORE_PER_BASE_MIN = 0.7;
 
     // Minimum integrations for a virus to be reported.
-    // This value is a starting point based on VirusInterpreter reporting logic.
+    // This value is matched to VirusInterpreter reporting logic.
     public static final int REPORTED_INTEGRATIONS_MIN = 1;
 
     // Minimum virus genome copies per tumor cell for a virus to be reported.
-    // This value is a starting point based on VirusInterpreter reporting logic.
+    // This value is a starting point based on concordance testing with VirusInterpreter.
     public static final double REPORTED_COPIES_PER_CELL_MIN = 0.5;
 
     static

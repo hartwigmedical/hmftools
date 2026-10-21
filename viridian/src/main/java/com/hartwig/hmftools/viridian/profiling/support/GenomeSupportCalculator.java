@@ -17,7 +17,7 @@ import com.hartwig.hmftools.viridian.profiling.common.SummaryStats;
 import com.hartwig.hmftools.viridian.reference.VirusGenome;
 
 // Computes for each virus genome:
-//   - Baseline support status (is virus maybe here or is it noise?);
+//   - Baseline support status (is virus maybe here or is it spurious?);
 //   - Read voting used for representative selection.
 public class GenomeSupportCalculator
 {

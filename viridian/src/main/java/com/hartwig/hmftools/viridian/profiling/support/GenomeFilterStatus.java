@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.viridian.profiling.support;
 
-// For a virus genome: is it possibly in the sample, or is it noise?
+// For a virus genome: is it possibly in the sample, or is it spurious?
 public enum GenomeFilterStatus
 {
     // Cleared both filters.
