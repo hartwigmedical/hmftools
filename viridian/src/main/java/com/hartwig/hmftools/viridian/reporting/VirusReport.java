@@ -13,7 +13,7 @@ public record VirusReport(
         OncologyGroup oncologyGroup,
         // Null if not a reportable virus.
         @Nullable VirusType reportingType,
-        @Nullable VirusLikelihoodType driverLikelihood,
+        VirusLikelihoodType driverLikelihood,
         int integrations,
         boolean hasMinIntegrations,
         @Nullable VirusProfile profile,

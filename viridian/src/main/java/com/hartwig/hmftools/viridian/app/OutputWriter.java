@@ -318,9 +318,7 @@ public class OutputWriter
                     row.set(VirusReportColumn.oncology_group, report.oncologyGroup().name());
                     row.setOrNull(
                             VirusReportColumn.reporting_type, report.reportingType() != null ? report.reportingType().toString() : null);
-                    row.setOrNull(
-                            VirusReportColumn.driver_likelihood,
-                            report.driverLikelihood() != null ? report.driverLikelihood().toString() : null);
+                    row.set(VirusReportColumn.driver_likelihood, report.driverLikelihood().toString());
                     row.set(VirusReportColumn.reported, report.isReported());
                     row.set(VirusReportColumn.integrations, report.integrations());
                     row.set(VirusReportColumn.has_min_integrations, report.hasMinIntegrations());

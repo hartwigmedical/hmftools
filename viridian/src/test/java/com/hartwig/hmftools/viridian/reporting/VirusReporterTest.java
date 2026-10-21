@@ -93,7 +93,7 @@ public class VirusReporterTest
     {
         VirusProfile profile = profile(10);
         VirusReport expected = new VirusReport(
-                GROUP, null, null, 5, MEETS_INTEGRATION_MIN, profile, 0.5, CLONAL, !REPORTED);
+                GROUP, null, VirusLikelihoodType.UNKNOWN, 5, MEETS_INTEGRATION_MIN, profile, 0.5, CLONAL, !REPORTED);
         assertEquals(expected, VirusReporter.reportGroup(GROUP, profile, 5, NOT_REPORTABLE_INFO, PURPLE_FIT));
     }
 
@@ -101,8 +101,9 @@ public class VirusReporterTest
             int integrations, boolean meetsIntegrationMin, @Nullable VirusProfile profile,
             @Nullable Double copiesPerTumorCell, ClonalityStatus clonalityStatus, boolean isReported)
     {
+        VirusLikelihoodType driverLikelihood = isReported ? VirusLikelihoodType.HIGH : VirusLikelihoodType.UNKNOWN;
         return new VirusReport(
-                GROUP, VirusType.HPV, VirusLikelihoodType.HIGH, integrations, meetsIntegrationMin, profile,
+                GROUP, VirusType.HPV, driverLikelihood, integrations, meetsIntegrationMin, profile,
                 copiesPerTumorCell, clonalityStatus, isReported);
     }
 
