@@ -4,7 +4,6 @@ import static java.lang.System.exit;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.summingInt;
 import static java.util.stream.Collectors.toMap;
-import static java.util.stream.Collectors.toSet;
 
 import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkCreateOutputDir;
@@ -53,7 +52,6 @@ import com.hartwig.hmftools.viridian.profiling.common.ReadId;
 import com.hartwig.hmftools.viridian.profiling.extract.CandidateReadExtractor;
 import com.hartwig.hmftools.viridian.profiling.extract.CandidateReadFilter;
 import com.hartwig.hmftools.viridian.profiling.extract.ViralKmerIndex;
-import com.hartwig.hmftools.viridian.profiling.select.RepresentativeGenome;
 import com.hartwig.hmftools.viridian.profiling.select.RepresentativeGenomeSelector;
 import com.hartwig.hmftools.viridian.profiling.support.GenomeSupport;
 import com.hartwig.hmftools.viridian.profiling.support.GenomeSupportCalculator;
@@ -122,7 +120,7 @@ public class ViridianApplication
 
         List<GenomeSupport> genomeSupports = computeGenomeSupport(allGenomesReadAlignments);
 
-        List<RepresentativeGenome> representatives = selectRepresentativeGenomes(genomeSupports);
+        List<VirusGenome> representatives = selectRepresentativeGenomes(genomeSupports);
 
         ViralReadAlignmentStore representativeAlignments =
                 assignReadsToRepresentatives(allGenomesReadAlignments.store(), representatives);
@@ -212,10 +210,10 @@ public class ViridianApplication
 
     // For each oncology group (group of virus strains at interesting taxonomy granularity), select 1 virus genome which best represents
     // the virus present in the sample.
-    private List<RepresentativeGenome> selectRepresentativeGenomes(List<GenomeSupport> genomeSupports)
+    private List<VirusGenome> selectRepresentativeGenomes(List<GenomeSupport> genomeSupports)
     {
         LOGGER.info("Selecting representative genome per oncology group");
-        List<RepresentativeGenome> representatives = RepresentativeGenomeSelector.select(genomeSupports);
+        List<VirusGenome> representatives = RepresentativeGenomeSelector.select(genomeSupports);
 
         LOGGER.info("Writing genome support output");
         OutputWriter.writeGenomeSupport(outputFile(GENOME_SUPPORT_TSV_SUFFIX), genomeSupports, representatives);
@@ -225,13 +223,11 @@ public class ViridianApplication
 
     // Assign each read to the representative virus genome it fits best.
     private ViralReadAlignmentStore assignReadsToRepresentatives(
-            ViralReadAlignmentStore alignments, List<RepresentativeGenome> representatives)
+            ViralReadAlignmentStore alignments, List<VirusGenome> representatives)
     {
         LOGGER.info("Assigning reads to representative genomes");
-        Set<VirusGenome> representativeGenomes =
-                representatives.stream().map(RepresentativeGenome::genome).collect(toSet());
         Map<ReadId, ViralReadAlignment> assignments = RepresentativeReadAssigner.assign(
-                alignments, representativeGenomes, outputFile(ALL_ALIGNMENTS_BAM_SUFFIX),
+                alignments, Set.copyOf(representatives), outputFile(ALL_ALIGNMENTS_BAM_SUFFIX),
                 outputFile(REPRESENTATIVE_ALIGNMENTS_BAM_SUFFIX));
 
         return new ViralReadAlignmentStore(assignments.values());

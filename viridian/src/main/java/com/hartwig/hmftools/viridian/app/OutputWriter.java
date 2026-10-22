@@ -4,7 +4,6 @@ import static java.util.Comparator.comparing;
 import static java.util.Comparator.reverseOrder;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toMap;
-import static java.util.stream.Collectors.toSet;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.viridian.app.ViridianConfig.CFG_CANDIDATE_READ_SOURCE;
@@ -26,7 +25,6 @@ import com.hartwig.hmftools.viridian.integration.extract.InsertRepeat;
 import com.hartwig.hmftools.viridian.profiling.VirusProfile;
 import com.hartwig.hmftools.viridian.profiling.common.GenomeStats;
 import com.hartwig.hmftools.viridian.profiling.common.SummaryStats;
-import com.hartwig.hmftools.viridian.profiling.select.RepresentativeGenome;
 import com.hartwig.hmftools.viridian.profiling.support.GenomeSupport;
 import com.hartwig.hmftools.viridian.reference.OncologyGroup;
 import com.hartwig.hmftools.viridian.reference.VirusGenome;
@@ -37,10 +35,9 @@ import org.jetbrains.annotations.Nullable;
 public class OutputWriter
 {
     public static void writeGenomeSupport(
-            String file, List<GenomeSupport> genomeSupports, List<RepresentativeGenome> representatives)
+            String file, List<GenomeSupport> genomeSupports, List<VirusGenome> representatives)
     {
-        Set<VirusGenome> representativeGenomes =
-                representatives.stream().map(RepresentativeGenome::genome).collect(toSet());
+        Set<VirusGenome> representativeGenomes = Set.copyOf(representatives);
         Map<OncologyGroup, GroupVotes> groupVotes = genomeSupports.stream()
                 .collect(groupingBy(support -> support.genome().oncologyGroup()))
                 .entrySet().stream()
@@ -132,7 +129,6 @@ public class OutputWriter
                 file, VIRUS_PROFILE_COLUMNS, rows, (profile, row) ->
                 {
                     row.set(VirusProfileColumn.oncology_group, profile.oncologyGroup().name());
-                    row.set(VirusProfileColumn.representative_status, profile.representativeStatus().name());
 
                     GenomeStats stats = profile.representativeStats();
                     VirusGenome genome = stats.genome();
@@ -151,7 +147,6 @@ public class OutputWriter
     private enum VirusProfileColumn
     {
         oncology_group,
-        representative_status,
         virus_name,
         genome_name,
         genome_length,
@@ -330,7 +325,6 @@ public class OutputWriter
                     {
                         GenomeStats stats = profile.representativeStats();
                         VirusGenome genome = stats.genome();
-                        row.set(VirusReportColumn.profile_representative_status, profile.representativeStatus().name());
                         row.set(VirusReportColumn.profile_genome, genome.name());
                         row.set(VirusReportColumn.profile_virus_name, genome.virusName());
                         row.set(VirusReportColumn.profile_coverage, stats.coverageFraction());
@@ -351,7 +345,6 @@ public class OutputWriter
         clonality_status,
         copies_per_tumor_cell,
         profiled,
-        profile_representative_status,
         profile_genome,
         profile_virus_name,
         profile_coverage,

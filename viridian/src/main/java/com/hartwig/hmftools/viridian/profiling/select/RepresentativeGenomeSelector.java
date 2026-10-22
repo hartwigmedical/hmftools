@@ -10,19 +10,19 @@ import java.util.Comparator;
 import java.util.List;
 
 import com.hartwig.hmftools.viridian.profiling.support.GenomeSupport;
+import com.hartwig.hmftools.viridian.reference.VirusGenome;
 
 // Picks one representative virus genome from each oncology group for downstream calculations.
 public class RepresentativeGenomeSelector
 {
-    public static List<RepresentativeGenome> select(Collection<GenomeSupport> genomeSupports)
+    public static List<VirusGenome> select(Collection<GenomeSupport> genomeSupports)
     {
         return genomeSupports.stream()
                 .filter(support -> !support.isFiltered())
                 .collect(groupingBy(support -> support.genome().oncologyGroup(), minBy(MOST_VOTES_FIRST)))
                 .values().stream()
-                // TODO: implement the ambiguous genome check
-                .map(support -> new RepresentativeGenome(support.orElseThrow().genome(), RepresentativeStatus.PASS))
-                .sorted(comparing(RepresentativeGenome::oncologyGroup))
+                .map(support -> support.orElseThrow().genome())
+                .sorted(comparing(VirusGenome::oncologyGroup))
                 .toList();
     }
 

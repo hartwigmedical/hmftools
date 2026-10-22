@@ -34,23 +34,18 @@ public class RepresentativeGenomeSelectorTest
         List<GenomeSupport> genomeSupports = List.of(
                 passed(V1, 100), passed(V2, 120), filtered(V3, 500), passed(W1, 10), filtered(H1, 100));
 
-        List<RepresentativeGenome> representatives = RepresentativeGenomeSelector.select(genomeSupports);
+        List<VirusGenome> representatives = RepresentativeGenomeSelector.select(genomeSupports);
 
-        assertEquals(List.of(representative(V2), representative(W1)), representatives);
+        assertEquals(List.of(V2, W1), representatives);
     }
 
     @Test
     public void testSelectTiedVotesByGenomeName()
     {
-        List<RepresentativeGenome> representatives =
+        List<VirusGenome> representatives =
                 RepresentativeGenomeSelector.select(List.of(passed(V2, 100), passed(V1, 100)));
 
-        assertEquals(List.of(representative(V1)), representatives);
-    }
-
-    private static RepresentativeGenome representative(VirusGenome genome)
-    {
-        return new RepresentativeGenome(genome, RepresentativeStatus.PASS);
+        assertEquals(List.of(V1), representatives);
     }
 
     private static GenomeSupport passed(VirusGenome genome, double votes)
