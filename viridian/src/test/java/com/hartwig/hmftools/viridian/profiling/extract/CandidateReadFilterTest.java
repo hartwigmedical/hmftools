@@ -46,8 +46,8 @@ public class CandidateReadFilterTest
     private static final CandidateReadFilter FILTER =
             new CandidateReadFilter(CandidateReadSource.ALL, 20, Set.of("chrEBV"), null);
 
-    private static final CandidateReadFilter FULLY_UNMAPPED_AND_VIRUS_FILTER =
-            new CandidateReadFilter(CandidateReadSource.FULLY_UNMAPPED_AND_VIRUS, 20, Set.of("chrEBV"), null);
+    private static final CandidateReadFilter FULLY_UNMAPPED_AND_DECOY_FILTER =
+            new CandidateReadFilter(CandidateReadSource.FULLY_UNMAPPED_AND_DECOY, 20, Set.of("chrEBV"), null);
 
     private static final boolean ACCEPT = true;
     private static final boolean REJECT = false;
@@ -94,7 +94,7 @@ public class CandidateReadFilterTest
         }
     }
 
-    record ReadMateExpectation(ReadState read, MateState mate, boolean isCandidateForAll, boolean isCandidateForFullyUnmappedAndVirus)
+    record ReadMateExpectation(ReadState read, MateState mate, boolean isCandidateForAll, boolean isCandidateForFullyUnmappedAndDecoy)
     {
     }
 
@@ -213,19 +213,19 @@ public class CandidateReadFilterTest
     }
 
     @Test
-    public void testIsCandidateContigFullyUnmappedAndVirusSourceAcceptsOnlyFullyUnmappedAndVirus()
+    public void testIsCandidateContigFullyUnmappedAndDecoySourceAcceptsOnlyFullyUnmappedAndDecoy()
     {
-        assertFalse(FULLY_UNMAPPED_AND_VIRUS_FILTER.isCandidateContig("chr1"));
-        assertTrue(FULLY_UNMAPPED_AND_VIRUS_FILTER.isCandidateContig("chrEBV"));
+        assertFalse(FULLY_UNMAPPED_AND_DECOY_FILTER.isCandidateContig("chr1"));
+        assertTrue(FULLY_UNMAPPED_AND_DECOY_FILTER.isCandidateContig("chrEBV"));
         // Fully unmapped reads have this placeholder in place of a contig.
-        assertTrue(FULLY_UNMAPPED_AND_VIRUS_FILTER.isCandidateContig(NO_ALIGNMENT_REFERENCE_NAME));
+        assertTrue(FULLY_UNMAPPED_AND_DECOY_FILTER.isCandidateContig(NO_ALIGNMENT_REFERENCE_NAME));
     }
 
     @Test
     public void testDefaultVirusDecoyContigsCoverStandardReferenceGenomes()
     {
         CandidateReadFilter filter = new CandidateReadFilter(
-                CandidateReadSource.FULLY_UNMAPPED_AND_VIRUS, 20, DEFAULT_VIRUS_DECOY_CONTIGS, null);
+                CandidateReadSource.FULLY_UNMAPPED_AND_DECOY, 20, DEFAULT_VIRUS_DECOY_CONTIGS, null);
 
         // GRCh38 analysis sets.
         assertTrue(filter.isCandidateContig("chrEBV"));
@@ -303,7 +303,7 @@ public class CandidateReadFilterTest
     {
         SAMRecord record = record(read, mate);
         return new ReadMateExpectation(
-                read, mate, FILTER.isCandidateRecord(record), FULLY_UNMAPPED_AND_VIRUS_FILTER.isCandidateRecord(record));
+                read, mate, FILTER.isCandidateRecord(record), FULLY_UNMAPPED_AND_DECOY_FILTER.isCandidateRecord(record));
     }
 
     private static boolean isCandidateClippedHostRead(ClipExpectation expectation)

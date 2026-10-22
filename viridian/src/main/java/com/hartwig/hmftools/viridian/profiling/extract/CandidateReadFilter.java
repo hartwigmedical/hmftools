@@ -48,7 +48,7 @@ public class CandidateReadFilter
         {
             case ALL -> true;
             // Note for fully unmapped reads, the contig is a placeholder.
-            case FULLY_UNMAPPED_AND_VIRUS -> contig.equals(NO_ALIGNMENT_REFERENCE_NAME) || isVirusDecoyContig(contig);
+            case FULLY_UNMAPPED_AND_DECOY -> contig.equals(NO_ALIGNMENT_REFERENCE_NAME) || isVirusDecoyContig(contig);
         };
     }
 

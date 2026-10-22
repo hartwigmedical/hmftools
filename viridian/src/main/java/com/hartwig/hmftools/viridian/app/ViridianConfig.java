@@ -146,7 +146,7 @@ public record ViridianConfig(
 
         configBuilder.addInteger(CFG_ALIGNMENT_BATCH_SIZE, DESC_ALIGNMENT_BATCH_SIZE, VIRAL_READ_ALIGNMENT_BATCH_SIZE_DEFAULT);
         configBuilder.addConfigItem(
-                CFG_CANDIDATE_READ_SOURCE, false, DESC_CANDIDATE_READ_SOURCE, CandidateReadSource.FULLY_UNMAPPED_AND_VIRUS.toString());
+                CFG_CANDIDATE_READ_SOURCE, false, DESC_CANDIDATE_READ_SOURCE, CandidateReadSource.FULLY_UNMAPPED_AND_DECOY.toString());
         configBuilder.addConfigItem(CFG_EXTRA_VIRUS_DECOY_CONTIGS, DESC_EXTRA_VIRUS_DECOY_CONTIGS);
         configBuilder.addFlag(CFG_KMER_FILTER, DESC_KMER_FILTER);
 

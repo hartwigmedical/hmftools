@@ -8,5 +8,5 @@ public enum CandidateReadSource
     ALL,
     // Fully unmapped and virus decoy contig.
     // Misses reads which may be viral integrations (i.e. split host-virus), but much faster because it avoids scanning all the contigs.
-    FULLY_UNMAPPED_AND_VIRUS
+    FULLY_UNMAPPED_AND_DECOY
 }

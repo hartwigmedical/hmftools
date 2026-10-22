@@ -104,7 +104,7 @@ public class CandidateReadExtractorTest
         String bam = writeIndexedBam(header, records);
         String fasta = new File(mTempDir.getRoot(), "fully_unmapped_and_decoy.fasta").getPath();
 
-        CandidateReadFilter filter = filter(CandidateReadSource.FULLY_UNMAPPED_AND_VIRUS);
+        CandidateReadFilter filter = filter(CandidateReadSource.FULLY_UNMAPPED_AND_DECOY);
         new CandidateReadExtractor(null, filter, 2).extract(bam, fasta);
 
         assertEquals(List.of(">ebv/1\nGGGGG", ">fullyUnmapped/2\nACGTA"), fastaEntries(fasta));
