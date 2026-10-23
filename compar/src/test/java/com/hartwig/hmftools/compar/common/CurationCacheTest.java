@@ -210,6 +210,20 @@ public class CurationCacheTest
         assertEquals("2026-10-20T03:15:42Z", previous.curatedDate());
     }
 
+    @Test
+    public void bothCorrectVerdictIsLoaded() throws IOException
+    {
+        File cacheFile = writeCacheFile(
+                "cache.tsv", List.of(
+                        List.of(
+                                SAMPLE_ID, FUSION, "OLD_ONLY", FUSION_ITEM.key(), "", LABEL_A, LABEL_B, "NONE", "preference", "BOTH_CORRECT",
+                                "2026-10-23")));
+        CurationCache cache = new CurationCache(cacheFile.getAbsolutePath());
+
+        Mismatch oldOnly = new Mismatch(FUSION_ITEM, null, MismatchType.OLD_ONLY, Collections.emptyList());
+        assertEquals(Verdict.BOTH_CORRECT, cache.match(SAMPLE_ID, oldOnly).get(0).previous().verdict());
+    }
+
     private File writeCacheFile(final String filename, final List<List<String>> rows) throws IOException
     {
         List<String> lines = Lists.newArrayList(MismatchFile.header(true, true, false) + TSV_DELIM + CURATION_HEADER);
