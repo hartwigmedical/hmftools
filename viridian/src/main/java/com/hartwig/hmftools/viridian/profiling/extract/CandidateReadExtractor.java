@@ -158,6 +158,7 @@ public class CandidateReadExtractor
         private final TaskQueue<WorkerTask> mTasks;
         private final SamReader mReader;
         private final FastaPart mPart;
+        private long mRecordCount;
 
         private Worker(TaskQueue<WorkerTask> tasks, SamReader reader, FastaPart part)
         {
@@ -187,6 +188,7 @@ public class CandidateReadExtractor
         private void processTask(WorkerTask task)
         {
             long startTimeMs = System.currentTimeMillis();
+            long startRecordCount = mRecordCount;
             int startCount = mPart.readCount();
 
             ChrBaseRegion region = task.region();
@@ -210,12 +212,13 @@ public class CandidateReadExtractor
             }
 
             LOGGER.debug(
-                    "extract({}) {} candidates in {}s",
-                    task, mPart.readCount() - startCount, format("%.1f", secondsSinceNow(startTimeMs)));
+                    "extract({}) {} records, {} candidate reads in {}s",
+                    task, mRecordCount - startRecordCount, mPart.readCount() - startCount, format("%.1f", secondsSinceNow(startTimeMs)));
         }
 
         private void processRecord(SAMRecord record)
         {
+            ++mRecordCount;
             if(mFilter.isCandidateRecord(record))
             {
                 mPart.add(record);
