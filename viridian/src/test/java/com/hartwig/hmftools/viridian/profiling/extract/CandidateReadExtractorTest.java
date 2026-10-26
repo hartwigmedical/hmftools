@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.viridian.profiling.extract;
 
+import static java.lang.String.format;
 import static java.util.Collections.singleton;
 
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.VIRAL_READ_EXTRACTION_PARTITION_SIZE;
@@ -8,7 +9,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -17,15 +20,23 @@ import java.util.List;
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
 import com.hartwig.hmftools.viridian.common.UserInputError;
 
+import org.jetbrains.annotations.Nullable;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
+import htsjdk.samtools.CRAMCRAIIndexer;
+import htsjdk.samtools.CRAMFileWriter;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMFileWriterFactory;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMSequenceRecord;
+import htsjdk.samtools.cram.ref.ReferenceSource;
+import htsjdk.samtools.cram.structure.CRAMEncodingStrategy;
+import htsjdk.samtools.seekablestream.SeekableFileStream;
+import htsjdk.samtools.seekablestream.SeekableStream;
+import htsjdk.samtools.util.FileExtensions;
 
 public class CandidateReadExtractorTest
 {
@@ -124,6 +135,96 @@ public class CandidateReadExtractorTest
         assertThrows(UserInputError.class, () -> extractor.extract(bam, fasta));
     }
 
+    @Test
+    public void testExtractToFastaCramUnmappedPartitionsWriteEachReadOnce() throws IOException
+    {
+        SAMFileHeader header = header(SAMFileHeader.SortOrder.coordinate, 10000);
+        File reference = writeReference(header);
+        File cram = writeCram(header, cramRecords(header), reference, 1, null);
+        writeCrai(cram);
+
+        assertCramCandidates(cram, reference, CRAM_CANDIDATES);
+    }
+
+    @Test
+    public void testExtractToFastaCramMultiSliceContainersReadWhole() throws IOException
+    {
+        // Up to two slices per container. The writer gives the mixed slice its own container: [clip, u1], [u2, u3 | u4, u5] and
+        // [u6, u7]. With 4 threads each container is its own partition, and the second slice of the middle one must still be read.
+        SAMFileHeader header = header(SAMFileHeader.SortOrder.coordinate, 10000);
+        List<SAMRecord> records = new ArrayList<>(cramRecords(header));
+        records.add(unmapped(header, "u6", 0x4, "ACGTA"));
+        records.add(unmapped(header, "u7", 0x4, "ACGTA"));
+        File reference = writeReference(header);
+        File cram = writeCram(header, records, reference, 2, null);
+        writeCrai(cram);
+
+        List<String> expected = new ArrayList<>(CRAM_CANDIDATES);
+        expected.addAll(List.of(">u6\nACGTA", ">u7\nACGTA"));
+        assertCramCandidates(cram, reference, expected);
+    }
+
+    @Test
+    public void testExtractToFastaCramUnmappedReadOnlyInMixedContainer() throws IOException
+    {
+        // [clip, u1] is the only container, so no container holds unmapped reads alone.
+        SAMFileHeader header = header(SAMFileHeader.SortOrder.coordinate, 10000);
+        List<SAMRecord> records = List.of(
+                mapped(header, "clip", 0x1 | 0x40, "chr1", 100, "20S80M", "C".repeat(100)),
+                unmapped(header, "u1", 0x4, "ACGTA"));
+        File reference = writeReference(header);
+        File cram = writeCram(header, records, reference, 1, null);
+        writeCrai(cram);
+
+        assertCramCandidates(cram, reference, List.of(">clip/1\n" + "C".repeat(100), ">u1\nACGTA"));
+    }
+
+    @Test
+    public void testExtractToFastaCramWithBaiIndexRejected() throws IOException
+    {
+        // Only a CRAI lists the unmapped containers, so a CRAM must have one.
+        SAMFileHeader header = header(SAMFileHeader.SortOrder.coordinate, 10000);
+        File reference = writeReference(header);
+        File bai = new File(mTempDir.getRoot(), "reads.cram" + FileExtensions.BAI_INDEX);
+        File cram = writeCram(header, cramRecords(header), reference, 1, bai);
+        String fasta = new File(mTempDir.getRoot(), "candidates.fasta").getPath();
+
+        CandidateReadFilter filter = filter(CandidateReadSource.ALL);
+        CandidateReadExtractor extractor = new CandidateReadExtractor(reference.getPath(), filter, 1);
+
+        assertThrows(UserInputError.class, () -> extractor.extract(cram.getPath(), fasta));
+    }
+
+    // Two reads per container: [clip, u1] share a container, then [u2, u3] and [u4, u5].
+    // With 4 threads each container is its own unmapped partition. The mapped read sharing the first container must
+    // still come only from its region.
+    private static List<SAMRecord> cramRecords(SAMFileHeader header)
+    {
+        return List.of(
+                mapped(header, "clip", 0x1 | 0x40, "chr1", 100, "20S80M", "C".repeat(100)),
+                unmapped(header, "u1", 0x4, "ACGTA"),
+                unmapped(header, "u2", 0x4, "ACGTA"),
+                unmapped(header, "u3", 0x4, "ACGTA"),
+                unmapped(header, "u4", 0x4, "ACGTA"),
+                unmapped(header, "u5", 0x4, "ACGTA"));
+    }
+
+    private static final List<String> CRAM_CANDIDATES = List.of(
+            ">clip/1\n" + "C".repeat(100), ">u1\nACGTA", ">u2\nACGTA", ">u3\nACGTA", ">u4\nACGTA", ">u5\nACGTA");
+
+    // Each candidate read must appear exactly once, whether the unmapped containers are one partition or several.
+    private void assertCramCandidates(File cram, File reference, List<String> expected) throws IOException
+    {
+        for(int threads : new int[] { 1, 4 })
+        {
+            String fasta = new File(mTempDir.getRoot(), "cram_candidates." + threads + ".fasta").getPath();
+            CandidateReadFilter filter = filter(CandidateReadSource.ALL);
+            new CandidateReadExtractor(reference.getPath(), filter, threads).extract(cram.getPath(), fasta);
+
+            assertEquals(expected, fastaEntries(fasta));
+        }
+    }
+
     private static CandidateReadFilter filter(CandidateReadSource source)
     {
         return new CandidateReadFilter(source, 20, singleton("chrEBV"), null);
@@ -180,6 +281,51 @@ public class CandidateReadExtractorTest
             records.forEach(writer::addAlignment);
         }
         return bam.getPath();
+    }
+
+    private File writeReference(SAMFileHeader header) throws IOException
+    {
+        SAMSequenceRecord contig = header.getSequence(0);
+        File fasta = new File(mTempDir.getRoot(), "ref.fasta");
+        String nameLine = ">" + contig.getSequenceName() + "\n";
+        Files.writeString(fasta.toPath(), nameLine + "A".repeat(contig.getSequenceLength()) + "\n");
+        Files.writeString(
+                new File(fasta.getPath() + FileExtensions.FASTA_INDEX).toPath(),
+                format(
+                        "%s\t%d\t%d\t%d\t%d\n",
+                        contig.getSequenceName(), contig.getSequenceLength(), nameLine.length(),
+                        contig.getSequenceLength(), contig.getSequenceLength() + 1));
+        return fasta;
+    }
+
+    // Two reads per slice, and a mixed-reference slice where fewer than two reads remain for a contig.
+    private File writeCram(
+            SAMFileHeader header, List<SAMRecord> records, File reference, int slicesPerContainer, @Nullable File baiFile)
+            throws IOException
+    {
+        File cram = new File(mTempDir.getRoot(), "reads.cram");
+        CRAMEncodingStrategy encoding = new CRAMEncodingStrategy()
+                .setMinimumSingleReferenceSliceSize(2)
+                .setReadsPerSlice(2)
+                .setSlicesPerContainer(slicesPerContainer);
+        try(OutputStream cramStream = new FileOutputStream(cram);
+                OutputStream baiStream = baiFile != null ? new FileOutputStream(baiFile) : null)
+        {
+            CRAMFileWriter writer = new CRAMFileWriter(
+                    encoding, cramStream, baiStream, true, new ReferenceSource(reference), header, cram.getName());
+            records.forEach(writer::addAlignment);
+            writer.close();
+        }
+        return cram;
+    }
+
+    private static void writeCrai(File cram) throws IOException
+    {
+        try(SeekableStream cramStream = new SeekableFileStream(cram);
+                OutputStream craiStream = new FileOutputStream(cram.getPath() + FileExtensions.CRAM_INDEX))
+        {
+            CRAMCRAIIndexer.writeIndex(cramStream, craiStream);
+        }
     }
 
     private static List<String> fastaEntries(String fasta) throws IOException
