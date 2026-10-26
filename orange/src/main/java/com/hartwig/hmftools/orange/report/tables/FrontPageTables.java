@@ -415,8 +415,6 @@ public class FrontPageTables
 
     public static Table buildGenomeWideFeatures(final OrangeRecord report, float width, final ReportResources reportResources)
     {
-        boolean includeGermline = !report.tumorOnlyMode();
-
         Cells cells = new Cells(reportResources);
 
         float labelWidth = (float)(1.9);
@@ -427,7 +425,7 @@ public class FrontPageTables
         addCellEntry(table, cells, "Tumor mutations per Mb:", tmbString(report.purple()));
         addCellEntry(table, cells, "Tumor mutational load:", tmlString(report.purple()));
 
-        if(includeGermline) // will change once we solve HRD for targeted mode
+        if(report.chord() != null) // currently not available in targeted mode
         {
             addCellEntry(table, cells, "HR deficiency score:", hrDeficiencyString(report.chord()));
         }
