@@ -177,8 +177,9 @@ the global median read depth.
 - **Discordant fragment frequency**: Discordant fragment type refers to the orientation/spacing of the paired end reads, and does not 
 necessary represent a structural variant.
 
-- **Genes with potential missed variants**: Likelihood that a variant is missed within the respective gene. Only genes (up to 20) with 
-missed variant likelihood >1% are shown.
+- **Genes with potential missed variants**: Likelihood that a variant is missed within the respective gene, adjusted for tumor purity 
+(see [BamTools gene panel coverage](https://github.com/hartwigmedical/hmftools/tree/master/bam-tools)). Only genes 
+(up to 20) with missed variant likelihood >1% are shown.
 
 - **Base quality recalibration (BQR)**: Adjusting base quality of SNVs to account for sequencer-specific base quality biases. 
   - `+`: base quality boosted (original quality underestimated). `-`: base quality reduced (original quality overestimated)

@@ -18,13 +18,16 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.StringJoiner;
+import java.util.stream.IntStream;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 public final class GeneDepthFile
 {
-    public static final String FLD_MV_LIKELIHOOD = "MissedVariantLikelihood";
+    private static final String FLD_DEPTH_RANGE_PREFIX = "DR_";
 
     public static String generateGeneCoverageFilename(final String basePath, final String sample)
     {
@@ -36,9 +39,9 @@ public final class GeneDepthFile
         return checkAddDirSeparator(basePath) + sample + BAM_METRICS_FILE_ID + ".exon_coverage.tsv";
     }
 
-    public static void write(final String filename, final List<GeneDepth> depths, final List<Integer> depthBuckets) throws IOException
+    public static void write(final String filename, final List<GeneDepth> depths) throws IOException
     {
-        Files.write(new File(filename).toPath(), toLines(depths, depthBuckets));
+        Files.write(new File(filename).toPath(), toLines(depths));
     }
 
     public static class GeneDepthComparator implements Comparator<GeneDepth>
@@ -62,8 +65,13 @@ public final class GeneDepthFile
         int geneIndex = fieldsIndexMap.get(FLD_GENE_NAME);
         int posStartIndex = fieldsIndexMap.get(FLD_POS_START);
         int posEndIndex = fieldsIndexMap.get(FLD_POS_END);
-        int mvlIndex = fieldsIndexMap.get(FLD_MV_LIKELIHOOD);
-        int depthStartIndex = mvlIndex + 1;
+        String[] columns = header.split(TSV_DELIM, -1);
+        int depthStartIndex = IntStream.range(0, columns.length)
+                .filter(i -> columns[i].startsWith(FLD_DEPTH_RANGE_PREFIX))
+                .findFirst()
+                .orElse(-1);
+
+        List<DepthRange> depthRanges = parseDepthRanges(columns, depthStartIndex);
 
         List<GeneDepth> geneDepths = Lists.newArrayList();
 
@@ -71,19 +79,21 @@ public final class GeneDepthFile
         {
             String[] values = line.split(TSV_DELIM, -1);
 
-            int depthColumns = values.length - depthStartIndex;
+            Map<DepthRange,Integer> depthCounts = Maps.newLinkedHashMap();
 
-            int[] depthCounts = new int[depthColumns];
-
-            for(int i = 0; i < depthColumns; ++i)
+            for(int i = 0; i < depthRanges.size(); ++i)
             {
                 int colIndex = depthStartIndex + i;
-                depthCounts[i] = Integer.parseInt(values[colIndex]);
+                depthCounts.put(depthRanges.get(i), Integer.parseInt(values[colIndex]));
             }
 
             GeneDepth geneDepth = new GeneDepth(
-                    values[geneIndex], values[chrIndex], Integer.parseInt(values[posStartIndex]), Integer.parseInt(values[posEndIndex]),
-                    Double.parseDouble(values[mvlIndex]), depthCounts);
+                    values[geneIndex],
+                    values[chrIndex],
+                    Integer.parseInt(values[posStartIndex]),
+                    Integer.parseInt(values[posEndIndex]),
+                    depthCounts
+            );
 
             geneDepths.add(geneDepth);
         }
@@ -91,13 +101,31 @@ public final class GeneDepthFile
         return geneDepths;
     }
 
-    private static List<String> toLines(final List<GeneDepth> depths, final List<Integer> depthBuckets)
+    private static List<DepthRange> parseDepthRanges(final String[] columns, final int depthStartIndex)
+    {
+        List<DepthRange> depthRanges = Lists.newArrayList();
+
+        for(int i = depthStartIndex; i < columns.length; ++i)
+        {
+            String depthRange = columns[i].substring(FLD_DEPTH_RANGE_PREFIX.length());
+            String[] depthBounds = depthRange.split("_");
+
+            int lowerDepth = Integer.parseInt(depthBounds[0]);
+            int upperDepth = Integer.parseInt(depthBounds[depthBounds.length - 1]);
+
+            depthRanges.add(new DepthRange(lowerDepth, upperDepth));
+        }
+
+        return depthRanges;
+    }
+
+    private static List<String> toLines(final List<GeneDepth> depths)
     {
         if(!depths.isEmpty())
         {
             Collections.sort(depths, new GeneDepthComparator());
             final List<String> lines = Lists.newArrayList();
-            lines.add(geneCoverageHeader(depthBuckets));
+            lines.add(geneCoverageHeader(depths.get(0).DepthCounts.keySet()));
             depths.stream().map(GeneDepthFile::toString).forEach(lines::add);
             return lines;
         }
@@ -105,7 +133,7 @@ public final class GeneDepthFile
         return Collections.emptyList();
     }
 
-    private static String geneCoverageHeader(final List<Integer> depthBuckets)
+    private static String geneCoverageHeader(final Set<DepthRange> depthRanges)
     {
         StringJoiner joiner = new StringJoiner(TSV_DELIM);
 
@@ -113,25 +141,18 @@ public final class GeneDepthFile
         joiner.add(FLD_CHROMOSOME);
         joiner.add(FLD_POS_START);
         joiner.add(FLD_POS_END);
-        joiner.add(FLD_MV_LIKELIHOOD);
 
-        for(int bucket = 0; bucket < depthBuckets.size() - 1; ++bucket)
+        for(DepthRange depthRange : depthRanges)
         {
-            int depth = depthBuckets.get(bucket);
-            int depthNext = depthBuckets.get(bucket + 1);
-
-            if(depthNext == depth + 1)
+            if(depthRange.lower() == depthRange.upper())
             {
-                joiner.add(format("DR_%d", depth));
+                joiner.add(format("%s%d", FLD_DEPTH_RANGE_PREFIX, depthRange.lower()));
             }
             else
             {
-                joiner.add(format("DR_%d_%d", depth, depthNext - 1));
+                joiner.add(format("%s%d_%d", FLD_DEPTH_RANGE_PREFIX, depthRange.lower(), depthRange.upper()));
             }
         }
-
-        int maxDepth = depthBuckets.get(depthBuckets.size() - 1);
-        joiner.add(format("DR_%d", maxDepth));
 
         return joiner.toString();
     }
@@ -168,11 +189,10 @@ public final class GeneDepthFile
         joiner.add(depth.Chromosome);
         joiner.add(String.valueOf(depth.PosStart));
         joiner.add(String.valueOf(depth.PosEnd));
-        joiner.add(format("%.4f", depth.MissedVariantLikelihood));
 
-        for(int i : depth.DepthCounts)
+        for(int count : depth.DepthCounts.values())
         {
-            joiner.add(String.valueOf(i));
+            joiner.add(String.valueOf(count));
         }
 
         return joiner.toString();

@@ -14,7 +14,7 @@ Captures and writes the follow metrics for a BAM file:
 - overall statistics for types of reads and coverage
 - fragment length distribution
 - general coverage distribution
-- gene coverage and median exon depths (if driver_gene_panel and driver_gene_panel set)
+- gene coverage and median exon depths (if driver_gene_panel and ensembl_data_dir set)
 - flag stats - frequency by read flag type
 - partition read stats per 1M (default) bucket
 - targeted panel coverage if configured
@@ -57,30 +57,22 @@ driver_gene_panel | Path to driver gene panel, required for gene coverage
 ensembl_data_dir | Path to Ensembl data cache, required for gene coverage
 
 ### Gene Panel Coverage
-To provide confidence that there is sufficient depth in the gene panel a count of depth of each base in the gene panel is calculated and written to file for each tumor sample.  Note that only reads with MapQ > 10 are included in the coverage calculations.
+To provide confidence that there is sufficient depth in the gene panel, the depth of each exon base in the gene panel is calculated and written to file for each sample. Note that only reads with MapQ >= 10 are included in the coverage calculations.
 
-The file shows the number of bases with 0 to 30 reads and then buckets reads in intervals of 10 up to 100+.
+Each `DR_*` column holds the number of the gene's exon bases in a depth range, e.g. `DR_60_69` for depths 60 to 69.
 
-For a sample with approximately 30x depth this may appear as: 
-
-```
-gene	0	1	2	...	27	28	29	30-39	40-49	50-59	60-69	70-79	80-89	90-99	100+
-BRCA1	0	0	0	...	23	54	116	1854	2834	875	5	0	0	0	0
-ERBB2	0	0	0	...	106	154	203	2315	832	83	0	0	0	0	0
-TP53	0	0	0	...	31	41	59	636	192	35	0	0	0	0	0
-```
-
-While a 100x depth sample might appear something more like:
+For example:
 
 ```
-gene	0	1	2	...	27	28	29	30-39	40-49	50-59	60-69	70-79	80-89	90-99	100+
-BRCA1	0	0	0	...	0	0	0	0	0	0	0	8	390	1700	3672
-ERBB2	0	0	0	...	0	0	0	0	0	18	257	590	1311	1111	611
-TP53	0	0	0	...	0	0	0	0	0	0	0	90	423	343	376
+GeneName  Chromosome  PosStart  PosEnd    DR_0  DR_1  ...  DR_60_69  DR_70_79  ...  DR_10000
+PTEN      chr10       87864470  87965472  162   0     ...  424       451       ...  0
 ```
 
-A 'missed variant likelihood' is calculated using poisson as the mean probability of not finding at least 3 reads coverage for an allele given the depth distribution over the whole gene.
-
+A 'missed variant likelihood' is calculated by [Qsee](https://github.com/hartwigmedical/hmftools/tree/master/qsee) using Poisson as the mean probability of not finding at least 3 reads coverage for an allele given the depth distribution over the whole gene:
+- The Poisson mean for each depth range is `purity * depth / alleles`
+- `depth` is the range's midpoint and `alleles` is 1 for haploid chromosomes (chrX and chrY in males) and 2 otherwise
+- Tumor samples use the PURPLE purity, while reference samples use a purity of 1
+- Sex is taken from the PURPLE output of the tumor sample
 
 ## RegionSlicer
 Slice a BAM across 1 or more regions, and gather any remote mate and supplementary reads linked to those regions
