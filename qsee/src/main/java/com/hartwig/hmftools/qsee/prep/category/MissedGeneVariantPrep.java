@@ -82,8 +82,7 @@ public class MissedGeneVariantPrep implements CategoryPrep
         return reportableGenes;
     }
 
-    @VisibleForTesting
-    static double calcMissedVariantLikelihood(Map<DepthRange,Integer> depthCounts, double purity)
+    private static double calcMissedVariantLikelihood(Map<DepthRange,Integer> depthCounts, double purity)
     {
         int totalBaseCount = depthCounts.values().stream().mapToInt(Integer::intValue).sum();
         double totalLikelihood = 0;
