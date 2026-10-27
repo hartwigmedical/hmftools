@@ -22,8 +22,6 @@ public class MissedGeneVariantPrepTest
     private static final String GENE_AR = "AR";
     private static final String GENE_BRCA1 = "BRCA1";
 
-    private static final double DUMMY_MISSED_VARIANT_LIKELIHOOD = 0.0;
-
     private static final List<DriverGene> DRIVER_GENES = createDriverCatalog();
     private static final List<GeneDepth> GENE_DEPTHS = createGeneDepths();
 
@@ -31,7 +29,7 @@ public class MissedGeneVariantPrepTest
     public void canGetGermlineReportableGenes()
     {
         List<String> reportableGenes = MissedGeneVariantPrep.getReportableGenes(DRIVER_GENES, SampleType.NORMAL);
-        List<Feature> actualFeatures = MissedGeneVariantPrep.getMissedVariantLikelihoods(GENE_DEPTHS, reportableGenes);
+        List<Feature> actualFeatures = MissedGeneVariantPrep.getMissedVariantLikelihoods(GENE_DEPTHS, reportableGenes, 1);
 
         List<Feature> expectedFeatures = List.of(
                 createExpectedFeature(GENE_BRCA1)
@@ -50,7 +48,7 @@ public class MissedGeneVariantPrepTest
     public void canGetSomaticReportableGenes()
     {
         List<String> reportableGenes = MissedGeneVariantPrep.getReportableGenes(DRIVER_GENES, SampleType.TUMOR);
-        List<Feature> actualFeatures = MissedGeneVariantPrep.getMissedVariantLikelihoods(GENE_DEPTHS, reportableGenes);
+        List<Feature> actualFeatures = MissedGeneVariantPrep.getMissedVariantLikelihoods(GENE_DEPTHS, reportableGenes, 1);
 
         List<Feature> expectedFeatures = List.of(
                 createExpectedFeature(GENE_AR),
@@ -128,7 +126,6 @@ public class MissedGeneVariantPrepTest
                 "chrX",
                 67545147,
                 67723841,
-                DUMMY_MISSED_VARIANT_LIKELIHOOD,
                 Map.of()
         );
 
@@ -137,7 +134,6 @@ public class MissedGeneVariantPrepTest
                 "chr17",
                 43045678,
                 43124096,
-                DUMMY_MISSED_VARIANT_LIKELIHOOD,
                 Map.of()
         );
 
