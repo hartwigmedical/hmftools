@@ -33,8 +33,6 @@ public class SbxBamUtils
     private static final String SBX_YC_TAG_DELIM = "\\+";
     private static final String SBX_YC_TAG_DELIM_LIT = "+";
 
-    private static final String SBX_YC_TAG_DELIM_LIT_OLD = "-";
-
     public static final int SBX_MAX_DUPLICATE_DISTANCE = 2;
 
     public static boolean isHighBaseQual(final byte qual)
@@ -71,9 +69,7 @@ public class SbxBamUtils
         // +100I100+0 -> no simplex length, duplex section (100I100)
         List<Integer> duplexIndels = null;
 
-        String tagDelim = ycTagStr.contains(SBX_YC_TAG_DELIM_LIT) ? SBX_YC_TAG_DELIM_LIT : SBX_YC_TAG_DELIM_LIT_OLD;
-
-        int lastDelim = ycTagStr.lastIndexOf(tagDelim);
+        int lastDelim = ycTagStr.lastIndexOf(SBX_YC_TAG_DELIM_LIT);
 
         if(lastDelim <= 0)
             return null;
@@ -83,10 +79,9 @@ public class SbxBamUtils
         int simplexHeadLength = 0;
         String duplexRegion = "";
 
-        if(!ycTagStr.startsWith(tagDelim))
+        if(!ycTagStr.startsWith(SBX_YC_TAG_DELIM_LIT))
         {
-            String tagSplitDelim = tagDelim.equals(SBX_YC_TAG_DELIM_LIT) ? SBX_YC_TAG_DELIM : SBX_YC_TAG_DELIM_LIT_OLD;
-            String[] ycTagComponents = ycTagStr.split(tagSplitDelim);
+            String[] ycTagComponents = ycTagStr.split(SBX_YC_TAG_DELIM);
 
             simplexHeadLength = Integer.parseInt(ycTagComponents[0]);
 

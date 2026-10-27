@@ -39,7 +39,7 @@ public class SbxBamUtilsTest
         assertEquals(1, duplexIndelIndices.size());
         assertTrue(duplexIndelIndices.contains(41));
 
-        ycTagStr = "50--0";
+        ycTagStr = "50++0"; // with latest changes, not a legitimate scenario for simplex only, but leave it in for now
 
         duplexIndelIndices = getDuplexIndelIndices(ycTagStr);
 
