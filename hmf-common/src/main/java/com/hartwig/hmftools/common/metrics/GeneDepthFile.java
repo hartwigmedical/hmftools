@@ -88,8 +88,12 @@ public final class GeneDepthFile
             }
 
             GeneDepth geneDepth = new GeneDepth(
-                    values[geneIndex], values[chrIndex], Integer.parseInt(values[posStartIndex]), Integer.parseInt(values[posEndIndex]),
-                    Double.NaN, depthCounts);
+                    values[geneIndex],
+                    values[chrIndex],
+                    Integer.parseInt(values[posStartIndex]),
+                    Integer.parseInt(values[posEndIndex]),
+                    depthCounts
+            );
 
             geneDepths.add(geneDepth);
         }

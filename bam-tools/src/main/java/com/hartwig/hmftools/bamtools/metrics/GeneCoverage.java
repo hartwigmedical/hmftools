@@ -14,7 +14,6 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBuffe
 
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -33,8 +32,6 @@ import com.hartwig.hmftools.common.metrics.DepthRange;
 import com.hartwig.hmftools.common.metrics.GeneDepth;
 import com.hartwig.hmftools.common.metrics.GeneDepthFile;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-
-import org.apache.commons.math3.distribution.PoissonDistribution;
 
 public class GeneCoverage
 {
@@ -190,7 +187,7 @@ public class GeneCoverage
 
                 GeneDepth geneDepth = new GeneDepth(
                         geneName, exonCoverageList.get(0).Chromosome, minPosition, maxPosition,
-                        missedVariantLikelihood(baseCounts), depthCounts);
+                        depthCounts);
 
                 geneDepths.add(geneDepth);
             }
@@ -271,23 +268,6 @@ public class GeneCoverage
         return geneDepth;
     }
 
-    public static int depth(int bucket)
-    {
-        if(bucket >= DEPTH_BUCKETS.size())
-            return MAX_DEPTH_BUCKET;
-
-        if(bucket == DEPTH_BUCKETS.size() - 1)
-            return DEPTH_BUCKETS.get(DEPTH_BUCKETS.size() - 1);
-
-        int depth = DEPTH_BUCKETS.get(bucket);
-        int depthNext = DEPTH_BUCKETS.get(bucket + 1);
-
-        if(depthNext == depth + 1)
-            return depth;
-
-        return (depth + depthNext) / 2;
-    }
-
     public static int bucket(int depth)
     {
         for(int i = 0; i < DEPTH_BUCKETS.size(); ++i)
@@ -300,36 +280,4 @@ public class GeneCoverage
 
         return DEPTH_BUCKETS.size() - 1;
     }
-
-    public static double missedVariantLikelihood(int[] baseCoverage)
-    {
-        int totalCoverage = Arrays.stream(baseCoverage).sum();
-        double totalLikelihood = 0;
-
-        for(int i = 0; i < baseCoverage.length; i++)
-        {
-            int depth = depth(i);
-            int coverage = baseCoverage[i];
-
-            if(coverage > 0)
-            {
-                final double proportion = 1d * coverage / totalCoverage;
-                final double likelihoodOfMissing;
-                if(depth == 0)
-                {
-                    likelihoodOfMissing = 1;
-                }
-                else
-                {
-                    final PoissonDistribution distribution = new PoissonDistribution(depth / 2d);
-                    likelihoodOfMissing = distribution.cumulativeProbability(2);
-                }
-
-                totalLikelihood += proportion * likelihoodOfMissing;
-            }
-        }
-
-        return totalLikelihood;
-    }
-
 }
