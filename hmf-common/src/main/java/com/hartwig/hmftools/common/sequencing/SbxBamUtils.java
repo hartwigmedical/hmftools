@@ -32,6 +32,7 @@ public class SbxBamUtils
 
     private static final String SBX_YC_TAG_DELIM = "\\+";
     private static final String SBX_YC_TAG_DELIM_LIT = "+";
+    private static final String SBX_YC_TAG_INVALID_DELIM = "-";
 
     public static final int SBX_MAX_DUPLICATE_DISTANCE = 2;
 
@@ -65,21 +66,29 @@ public class SbxBamUtils
     public static List<Integer> getDuplexIndelIndices(String ycTagStr)
     {
         // supported format:
-        // 0+100+0, or 10+100I100+0 -> simplex length (0, then 10) + duplex section (100, then 100I100), OR
+        // 0+100+0, or 10+100I100+0, or no outer zeros -> simplex length (0, then 10) + duplex section (100, then 100I100), OR
         // +100I100+0 -> no simplex length, duplex section (100I100)
-        List<Integer> duplexIndels = null;
+        // 100++ -> all simplex
+        //
+        // unsupported: anything else, including with a '-' delimiter
 
-        int lastDelim = ycTagStr.lastIndexOf(SBX_YC_TAG_DELIM_LIT);
-
-        if(lastDelim <= 0)
+        if(ycTagStr.contains(SBX_YC_TAG_INVALID_DELIM))
             return null;
 
-        ycTagStr = ycTagStr.substring(0, lastDelim);
+        List<Integer> duplexIndels = null;
+
+        int firstIndex = ycTagStr.indexOf(SBX_YC_TAG_DELIM_LIT);
+        int lastIndex = ycTagStr.lastIndexOf(SBX_YC_TAG_DELIM_LIT);
+
+        if(firstIndex < 0 || lastIndex == firstIndex)
+            return null;
+
+        ycTagStr = ycTagStr.substring(0, lastIndex);
 
         int simplexHeadLength = 0;
         String duplexRegion = "";
 
-        if(!ycTagStr.startsWith(SBX_YC_TAG_DELIM_LIT))
+        if(firstIndex > 0)
         {
             String[] ycTagComponents = ycTagStr.split(SBX_YC_TAG_DELIM);
 

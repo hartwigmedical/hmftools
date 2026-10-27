@@ -3,6 +3,7 @@ package com.hartwig.hmftools.common.sequencing;
 import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.getDuplexIndelIndices;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
@@ -39,6 +40,14 @@ public class SbxBamUtilsTest
         assertEquals(1, duplexIndelIndices.size());
         assertTrue(duplexIndelIndices.contains(41));
 
+        // no leading or trailing zeros
+        ycTagStr = "+10A10I20+";
+
+        duplexIndelIndices = getDuplexIndelIndices(ycTagStr);
+
+        assertEquals(1, duplexIndelIndices.size());
+        assertTrue(duplexIndelIndices.contains(21));
+
         ycTagStr = "50++0"; // with latest changes, not a legitimate scenario for simplex only, but leave it in for now
 
         duplexIndelIndices = getDuplexIndelIndices(ycTagStr);
@@ -50,5 +59,18 @@ public class SbxBamUtilsTest
         duplexIndelIndices = getDuplexIndelIndices(ycTagStr);
 
         assertTrue(duplexIndelIndices.isEmpty());
+
+        // invalid formats
+        ycTagStr = "200--0";
+
+        duplexIndelIndices = getDuplexIndelIndices(ycTagStr);
+
+        assertNull(duplexIndelIndices);
+
+        ycTagStr = "30-200+";
+
+        duplexIndelIndices = getDuplexIndelIndices(ycTagStr);
+
+        assertNull(duplexIndelIndices);
     }
 }
