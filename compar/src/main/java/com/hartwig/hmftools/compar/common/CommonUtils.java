@@ -65,20 +65,8 @@ public class CommonUtils
                 if(expectedValues == null || expectedValues.isEmpty())
                     continue;
 
-                // validate expected fields against the comparer
-                List<FieldInfo> fields = comparer.fieldsList();
-
-                for(ExpectedValue expectedValue : expectedValues)
-                {
-                    if(expectedValue.FieldName.equals(FLD_STATUS))
-                        continue;
-
-                    if(fields.stream().noneMatch(x -> x.Name.equals(expectedValue.FieldName)))
-                    {
-                        CMP_LOGGER.error("category({}) invalid expected entry({})", comparer.category(), expectedValue);
-                        return false;
-                    }
-                }
+                if(!hasValidExpectedFields(comparer, expectedValues))
+                    return false;
 
                 // group by items keys
                 Map<String, List<ExpectedValue>> expectedValuesByKey = expectedValues.stream().collect(Collectors.groupingBy(x -> x.Key));
@@ -117,6 +105,25 @@ public class CommonUtils
         }
 
         return false;
+    }
+
+    public static boolean hasValidExpectedFields(final ItemComparer comparer, final List<ExpectedValue> expectedValues)
+    {
+        List<FieldInfo> fields = comparer.fieldsList();
+
+        for(ExpectedValue expectedValue : expectedValues)
+        {
+            if(expectedValue.FieldName.equals(FLD_STATUS))
+                continue;
+
+            if(fields.stream().noneMatch(x -> x.Name.equals(expectedValue.FieldName)))
+            {
+                CMP_LOGGER.error("category({}) invalid expected entry({})", comparer.category(), expectedValue);
+                return false;
+            }
+        }
+
+        return true;
     }
 
     public static void compareItems(

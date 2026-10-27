@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser
 import static com.hartwig.hmftools.compar.common.CategoryType.SOMATIC_VARIANT;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.CommonUtils.countsAsCalled;
+import static com.hartwig.hmftools.compar.common.CommonUtils.hasValidExpectedFields;
 import static com.hartwig.hmftools.compar.FieldCheckCache.getOrMakeFieldCheck;
 import static com.hartwig.hmftools.compar.common.MismatchType.INVALID_BOTH;
 import static com.hartwig.hmftools.compar.common.MismatchType.INVALID_NEW;
@@ -330,17 +331,8 @@ public class SomaticVariantComparer extends ItemComparer
             if(expectedValues == null || expectedValues.isEmpty())
                 return Collections.emptyList();
 
-            // validate expected fields against the comparer
-            List<FieldInfo> fields = fieldsList();
-
-            for(ExpectedValue expectedValue : expectedValues)
-            {
-                if(fields.stream().noneMatch(x -> x.Name.equals(expectedValue.FieldName)))
-                {
-                    CMP_LOGGER.error("category({}) invalid expected entry({})", category(), expectedValue);
-                    return null;
-                }
-            }
+            if(!hasValidExpectedFields(this, expectedValues))
+                return null;
 
             // group by keys
             Map<String, List<ExpectedValue>> expectedValuesByKey = expectedValues.stream()
