@@ -3,7 +3,6 @@ package com.hartwig.hmftools.common.sequencing;
 import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.getDuplexIndelIndices;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
@@ -39,5 +38,17 @@ public class SbxBamUtilsTest
 
         assertEquals(1, duplexIndelIndices.size());
         assertTrue(duplexIndelIndices.contains(41));
+
+        ycTagStr = "50--0";
+
+        duplexIndelIndices = getDuplexIndelIndices(ycTagStr);
+
+        assertTrue(duplexIndelIndices.isEmpty());
+
+        ycTagStr = "200++";
+
+        duplexIndelIndices = getDuplexIndelIndices(ycTagStr);
+
+        assertTrue(duplexIndelIndices.isEmpty());
     }
 }
