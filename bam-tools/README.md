@@ -68,8 +68,11 @@ GeneName  Chromosome  PosStart  PosEnd    DR_0  DR_1  ...  DR_60_69  DR_70_79  .
 PTEN      chr10       87864470  87965472  162   0     ...  424       451       ...  0
 ```
 
-A 'missed variant likelihood' is calculated by [Qsee](https://github.com/hartwigmedical/hmftools/tree/master/qsee) using Poisson as the mean probability of not finding at least 3 reads coverage for an allele given the depth distribution over the whole gene. The Poisson mean for each depth range is `purity * depth / 2`, where `depth` is the range's midpoint. Tumor samples use the PURPLE purity, while reference samples use a purity of 1.
-
+A 'missed variant likelihood' is calculated by [Qsee](https://github.com/hartwigmedical/hmftools/tree/master/qsee) using Poisson as the mean probability of not finding at least 3 reads coverage for an allele given the depth distribution over the whole gene:
+- The Poisson mean for each depth range is `purity * depth / alleles`
+- `depth` is the range's midpoint and `alleles` is 1 for haploid chromosomes (chrX and chrY in males) and 2 otherwise
+- Tumor samples use the PURPLE purity, while reference samples use a purity of 1
+- Sex is taken from the PURPLE output of the tumor sample
 
 ## RegionSlicer
 Slice a BAM across 1 or more regions, and gather any remote mate and supplementary reads linked to those regions

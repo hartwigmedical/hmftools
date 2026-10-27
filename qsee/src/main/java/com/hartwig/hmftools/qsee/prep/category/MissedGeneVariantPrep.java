@@ -7,9 +7,11 @@ import java.util.Map;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.driver.panel.DriverGene;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.metrics.DepthRange;
 import com.hartwig.hmftools.common.metrics.GeneDepth;
 import com.hartwig.hmftools.common.metrics.GeneDepthFile;
+import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.purple.PurplePurity;
 import com.hartwig.hmftools.qsee.common.SampleType;
 import com.hartwig.hmftools.qsee.feature.Feature;
@@ -32,7 +34,6 @@ public class MissedGeneVariantPrep implements CategoryPrep
     private static final String FIELD_GENE = "Gene";
 
     private static final int MIN_VARIANT_ALLELE_DEPTH = 3;
-    private static final double N_DIPLOID_ALLELES = 2;
     private static final double REF_SAMPLE_PURITY = 1;  // Assume no contamination from other samples
 
     public MissedGeneVariantPrep(QseePrepConfig config)
@@ -50,16 +51,11 @@ public class MissedGeneVariantPrep implements CategoryPrep
         return GeneDepthFile.read(filePath);
     }
 
-    private double loadPurity(String sampleId, SampleType sampleType) throws IOException
+    private PurplePurity loadPurplePurity(String sampleId) throws IOException
     {
-        if(sampleType != SampleType.TUMOR)
-            return REF_SAMPLE_PURITY;
-
         String baseDir = mConfig.getPurpleDir(sampleId);
         String purityFile = PurplePurity.generateFilename(baseDir, sampleId);
-        PurplePurity purplePurity = PurplePurity.read(purityFile);
-
-        return purplePurity.Purity;
+        return PurplePurity.read(purityFile);
     }
 
     @VisibleForTesting
@@ -82,8 +78,11 @@ public class MissedGeneVariantPrep implements CategoryPrep
         return reportableGenes;
     }
 
-    private static double calcMissedVariantLikelihood(Map<DepthRange,Integer> depthCounts, double purity)
+    private static double calcMissedVariantLikelihood(GeneDepth geneDepth, double purity, Gender gender)
     {
+        int alleleCount = HumanChromosome.fromString(geneDepth.Chromosome).isDiploid(gender) ? 2 : 1;
+
+        Map<DepthRange,Integer> depthCounts = geneDepth.DepthCounts;
         int totalBaseCount = depthCounts.values().stream().mapToInt(Integer::intValue).sum();
         double totalLikelihood = 0;
 
@@ -94,7 +93,7 @@ public class MissedGeneVariantPrep implements CategoryPrep
             if(baseCount == 0)
                 continue;
 
-            double meanAlleleDepth = (purity * depthRange.midpoint()) / N_DIPLOID_ALLELES;
+            double meanAlleleDepth = (purity * depthRange.midpoint()) / alleleCount;
 
             double likelihoodOfMissing;
             if(meanAlleleDepth > 0)
@@ -115,7 +114,7 @@ public class MissedGeneVariantPrep implements CategoryPrep
     }
 
     @VisibleForTesting
-    static List<Feature> getMissedVariantLikelihoods(List<GeneDepth> geneDepths, List<String> reportableGenes, double purity)
+    static List<Feature> getMissedVariantLikelihoods(List<GeneDepth> geneDepths, List<String> reportableGenes, double purity, Gender gender)
     {
         List<GeneDepth> selectedGeneDepths = geneDepths.stream().filter(x -> reportableGenes.contains(x.Gene)).toList();
 
@@ -125,7 +124,7 @@ public class MissedGeneVariantPrep implements CategoryPrep
             String featureName = MultiFieldStringBuilder.formSingleField(FIELD_GENE, geneDepth.Gene);
             FeatureKey key = new FeatureKey(featureName, FeatureType.MISSED_VARIANT_LIKELIHOOD, SOURCE_TOOL);
 
-            double missedVariantLikelihood = calcMissedVariantLikelihood(geneDepth.DepthCounts, purity);
+            double missedVariantLikelihood = calcMissedVariantLikelihood(geneDepth, purity, gender);
 
             Feature feature = new Feature(key, missedVariantLikelihood);
             features.add(feature);
@@ -140,9 +139,24 @@ public class MissedGeneVariantPrep implements CategoryPrep
         List<GeneDepth> geneCoverage = loadGeneCoverage(sampleId, sampleType);
         List<String> reportableGenes = getReportableGenes(mConfig.DriverGenes, sampleType);
 
-        double purity = loadPurity(sampleId, sampleType);
+        double purity;
+        Gender gender;
 
-        List<Feature> features = getMissedVariantLikelihoods(geneCoverage, reportableGenes, purity);
+        if(sampleType == SampleType.TUMOR)
+        {
+            PurplePurity purplePurity = loadPurplePurity(sampleId);
+            purity = purplePurity.Purity;
+            gender = purplePurity.Sex;
+        }
+        else
+        {
+            purity = REF_SAMPLE_PURITY;
+            // Reference samples don't have Purple output - use that of the paired tumor sample to get gender
+            String tumorId = mConfig.TumorIds.get(mConfig.ReferenceIds.indexOf(sampleId));
+            gender = loadPurplePurity(tumorId).Sex;
+        }
+
+        List<Feature> features = getMissedVariantLikelihoods(geneCoverage, reportableGenes, purity, gender);
         return features;
     }
 }

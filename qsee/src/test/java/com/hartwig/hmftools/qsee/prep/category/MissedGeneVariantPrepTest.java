@@ -11,6 +11,7 @@ import com.hartwig.hmftools.common.driver.panel.DriverGeneGermlineReporting;
 import com.hartwig.hmftools.common.driver.panel.ImmutableDriverGene;
 import com.hartwig.hmftools.common.metrics.DepthRange;
 import com.hartwig.hmftools.common.metrics.GeneDepth;
+import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.qsee.common.SampleType;
 import com.hartwig.hmftools.qsee.feature.Feature;
 import com.hartwig.hmftools.qsee.feature.FeatureType;
@@ -21,7 +22,9 @@ import org.junit.Test;
 public class MissedGeneVariantPrepTest
 {
     private static final String GERMLINE_GENE = "GERMLINE_GENE";
+    private static final String GERMLINE_CHR_X_GENE = "GERMLINE_CHR_X_GENE";
     private static final String SOMATIC_GENE = "SOMATIC_GENE";
+    private static final String SOMATIC_CHR_X_GENE = "SOMATIC_CHR_X_GENE";
     private static final String SOMATIC_NO_COVERAGE_GENE = "SOMATIC_NO_COVERAGE_GENE";
 
     private static final Map<DepthRange,Integer> MIXED_DEPTH_COUNTS = Map.of(
@@ -37,13 +40,17 @@ public class MissedGeneVariantPrepTest
 
     private static final List<DriverGene> DRIVER_GENES = List.of(
             createDriverGene(GERMLINE_GENE, false, true),
+            createDriverGene(GERMLINE_CHR_X_GENE, false, true),
             createDriverGene(SOMATIC_GENE, true, false),
+            createDriverGene(SOMATIC_CHR_X_GENE, true, false),
             createDriverGene(SOMATIC_NO_COVERAGE_GENE, true, false)
     );
 
     private static final List<GeneDepth> GENE_DEPTHS = List.of(
             new GeneDepth(GERMLINE_GENE, "1", 100, 200, MIXED_DEPTH_COUNTS),
+            new GeneDepth(GERMLINE_CHR_X_GENE, "X", 100, 200, MIXED_DEPTH_COUNTS),
             new GeneDepth(SOMATIC_GENE, "1", 300, 400, MIXED_DEPTH_COUNTS),
+            new GeneDepth(SOMATIC_CHR_X_GENE, "X", 300, 400, MIXED_DEPTH_COUNTS),
             new GeneDepth(SOMATIC_NO_COVERAGE_GENE, "1", 500, 600, NO_COVERAGE_DEPTH_COUNTS)
     );
 
@@ -51,10 +58,11 @@ public class MissedGeneVariantPrepTest
     public void canGetGermlineMissedVariantLikelihoods()
     {
         List<String> reportableGenes = MissedGeneVariantPrep.getReportableGenes(DRIVER_GENES, SampleType.NORMAL);
-        List<Feature> actualFeatures = MissedGeneVariantPrep.getMissedVariantLikelihoods(GENE_DEPTHS, reportableGenes, 1);
+        List<Feature> actualFeatures = MissedGeneVariantPrep.getMissedVariantLikelihoods(GENE_DEPTHS, reportableGenes, 1, Gender.FEMALE);
 
         List<Feature> expectedFeatures = List.of(
-                createExpectedFeature(GERMLINE_GENE, 0.002302649)
+                createExpectedFeature(GERMLINE_GENE, 0.002302649),
+                createExpectedFeature(GERMLINE_CHR_X_GENE, 0.002302649) // Diploid chrX in females
         );
 
         assertFeaturesEqual(expectedFeatures, actualFeatures);
@@ -64,10 +72,11 @@ public class MissedGeneVariantPrepTest
     public void canGetSomaticMissedVariantLikelihoods()
     {
         List<String> reportableGenes = MissedGeneVariantPrep.getReportableGenes(DRIVER_GENES, SampleType.TUMOR);
-        List<Feature> actualFeatures = MissedGeneVariantPrep.getMissedVariantLikelihoods(GENE_DEPTHS, reportableGenes, 0.5);
+        List<Feature> actualFeatures = MissedGeneVariantPrep.getMissedVariantLikelihoods(GENE_DEPTHS, reportableGenes, 0.5, Gender.MALE);
 
         List<Feature> expectedFeatures = List.of(
                 createExpectedFeature(SOMATIC_GENE, 0.040958012),
+                createExpectedFeature(SOMATIC_CHR_X_GENE, 0.002302649), // Haploid chrX in males doubles depth per allele
                 createExpectedFeature(SOMATIC_NO_COVERAGE_GENE, 1)
         );
 
