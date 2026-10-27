@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.amber.purity;
 
+import static java.lang.Math.min;
+import static java.lang.Math.sqrt;
 import static java.lang.String.format;
 
 import static com.google.common.collect.Range.open;
@@ -12,6 +14,7 @@ import static com.hartwig.hmftools.amber.AmberConstants.HOMOZYGOUS_PROPORTION_LO
 import static com.hartwig.hmftools.amber.AmberConstants.HOMOZYGOUS_PROPORTION_UPPER_BOUND_FOR_CONTAMINATION;
 import static com.hartwig.hmftools.amber.AmberConstants.MIN_CUTOFF;
 import static com.hartwig.hmftools.amber.AmberConstants.MUTATION_AUC_LOWER_BOUND_FOR_CONTAMINATION;
+import static com.hartwig.hmftools.amber.AmberConstants.MUTATION_AUC_LOWER_BOUND_FOR_CONTAMINATION_PEAK_FACTOR;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -96,21 +99,25 @@ public class TumorOnlyPurityAnalysis
             double chrArmAuc = chrArmAucCalculator.calculateAuc(peak.allCapturedPoints());
             double mutationAuc = snvTypeAucCalculator.calculateAuc(peak.allCapturedPoints());
 
+            int peakPoints = peak.numberOfCapturedEvidencePoints();
+            double chrArmLowerBound = CHR_ARM_LOWER_BOUND_FOR_CONTAMINATION * sqrt(min(peakPoints / MUTATION_AUC_LOWER_BOUND_FOR_CONTAMINATION_PEAK_FACTOR, 1.0));
+
             AMB_LOGGER.debug(format("peak %.3f, homProportion: %.3f, chrArmAUC: %.3f, mutationAUC: %.3f",
                     peak.vaf(), homozygousProportion, chrArmAuc, mutationAuc));
 
             if(HOM_PROP_RANGE.contains(homozygousProportion))
             {
                 if(mutationAuc > MUTATION_AUC_LOWER_BOUND_FOR_CONTAMINATION
-                        && chrArmAuc > CHR_ARM_LOWER_BOUND_FOR_CONTAMINATION)
+                && chrArmAuc > chrArmLowerBound)
                 {
                     AMB_LOGGER.debug(format("peak %.3f is a contamination peak", peak.vaf()));
                     mContaminationPeaks.add(peak);
                     continue;
                 }
             }
+
             if(chrArmAuc < CHR_ARM_AUC_UPPER_BOUND_FOR_COPY_NUMBER_EVENTS
-                    || mutationAuc > MUTATION_AUC_LOWER_BOUND_FOR_CONTAMINATION && chrArmAuc < CHR_ARM_LOWER_BOUND_FOR_CONTAMINATION)
+            || mutationAuc > MUTATION_AUC_LOWER_BOUND_FOR_CONTAMINATION && chrArmAuc < chrArmLowerBound)
             {
                 AMB_LOGGER.debug(format("peak %.3f is a copy number peak", peak.vaf()));
                 mCopyNumberPeaks.add(peak);
@@ -141,7 +148,7 @@ public class TumorOnlyPurityAnalysis
         {
             return MIN_CUTOFF;
         }
-        return Math.min(MIN_CUTOFF, minCopyNumberPeak / 3.0);
+        return min(MIN_CUTOFF, minCopyNumberPeak / 3.0);
     }
 
     public List<CandidatePeak> contaminationPeaks()

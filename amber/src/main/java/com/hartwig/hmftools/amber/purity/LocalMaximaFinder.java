@@ -27,9 +27,14 @@ public class LocalMaximaFinder<T extends Score>
         {
             return maxima;
         }
+
         Direction previousDirection = null;
         Direction currentDirection = null;
         T previousScore = null;
+
+        double firstNonZeroScore = 0;
+        int nonZeroScoreCount = 0;
+
         for(T score : mScores)
         {
             if(previousScore != null)
@@ -46,18 +51,37 @@ public class LocalMaximaFinder<T extends Score>
                 {
                     currentDirection = Direction.FLAT;
                 }
+
                 if(previousDirection == Direction.UP || previousDirection == Direction.FLAT)
                 {
                     if(currentDirection == Direction.DOWN)
                     {
-                        maxima.add(previousScore);
+                        // avoid creating a peak close to another at the start
+                        if(nonZeroScoreCount <= 3)
+                        {
+                            if(previousScore.score() >= firstNonZeroScore * 1.25)
+                                maxima.add(previousScore);
+                        }
+                        else
+                        {
+                            maxima.add(previousScore);
+                        }
                     }
                 }
+            }
+
+            if(score.score() > 0)
+            {
+                ++nonZeroScoreCount;
+
+                if(firstNonZeroScore == 0)
+                    firstNonZeroScore = score.score();
             }
 
             previousDirection = currentDirection;
             previousScore = score;
         }
+
         maxima.remove(firstNonZero);
         return maxima;
     }

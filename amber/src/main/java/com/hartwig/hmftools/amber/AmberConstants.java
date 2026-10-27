@@ -48,12 +48,14 @@ public class AmberConstants
     public static final double PEAK_SEARCH_STEP_RATIO = 1.05;
     public static final double PEAK_SEARCH_INITIAL_STEP = 0.001;
     public static final double PEAK_SEARCH_OVERSHOOT = 0.0001;
+
     public static final double HET_VAF_LOWER_BOUND = 0.35;
     public static final double HET_VAF_UPPER_BOUND = 0.65;
     public static final double MIN_CUTOFF = 0.04;
     public static final double HOMOZYGOUS_PROPORTION_LOWER_BOUND_FOR_CONTAMINATION = 0.25;
     public static final double HOMOZYGOUS_PROPORTION_UPPER_BOUND_FOR_CONTAMINATION = 0.75;
     public static final double MUTATION_AUC_LOWER_BOUND_FOR_CONTAMINATION = 0.825;
+    public static final double MUTATION_AUC_LOWER_BOUND_FOR_CONTAMINATION_PEAK_FACTOR = 75;
     public static final double CHR_ARM_LOWER_BOUND_FOR_CONTAMINATION = 0.5;
     public static final double CHR_ARM_AUC_UPPER_BOUND_FOR_COPY_NUMBER_EVENTS = 0.1;
 
