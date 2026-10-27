@@ -36,11 +36,11 @@ import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.CommonUtils;
+import com.hartwig.hmftools.compar.common.ExpectedValue;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.PipelineSourcePaths;
 import com.hartwig.hmftools.compar.common.SourceType;
-import com.hartwig.hmftools.compar.common.TruthsetValue;
 import com.hartwig.hmftools.compar.common.field.FieldCheck;
 import com.hartwig.hmftools.compar.common.field.FieldInfo;
 
@@ -178,13 +178,13 @@ public class RnaFusionComparer extends ItemComparer
     }
 
     @Override
-    public List<ComparableItem> loadFromTruthset(final Map<String,List<TruthsetValue>> valuesByKey)
+    public List<ComparableItem> loadFromExpected(final Map<String,List<ExpectedValue>> valuesByKey)
     {
         List<ComparableItem> comparableItems = Lists.newArrayList();
 
-        for(List<TruthsetValue> truthsetValues : valuesByKey.values())
+        for(List<ExpectedValue> expectedValues : valuesByKey.values())
         {
-            comparableItems.add(RnaFusionData.fromTruthset(truthsetValues, mFields));
+            comparableItems.add(RnaFusionData.fromExpected(expectedValues, mFields));
         }
 
         return comparableItems;
@@ -193,14 +193,14 @@ public class RnaFusionComparer extends ItemComparer
     @Override
     public void compareItems(
             final List<Mismatch> mismatches, final MatchLevel matchLevel, final boolean includeMatches,
-            final boolean includesTruthset, final List<ComparableItem> oldItems, final List<ComparableItem> newItems)
+            final boolean includesExpected, final List<ComparableItem> oldItems, final List<ComparableItem> newItems)
     {
-        boolean oldTruthsetSourced = mConfig.isTruthsetSourced(SourceType.OLD);
-        boolean newTruthsetSourced = mConfig.isTruthsetSourced(SourceType.NEW);
+        boolean oldExpectedSourced = mConfig.isExpectedSourced(SourceType.OLD);
+        boolean newExpectedSourced = mConfig.isExpectedSourced(SourceType.NEW);
 
-        if(!oldTruthsetSourced && !newTruthsetSourced)
+        if(!oldExpectedSourced && !newExpectedSourced)
         {
-            CommonUtils.compareItems(this, mismatches, matchLevel, includeMatches, includesTruthset, oldItems, newItems);
+            CommonUtils.compareItems(this, mismatches, matchLevel, includeMatches, includesExpected, oldItems, newItems);
             checkUnfilteredFusions(mismatches);
             return;
         }
@@ -226,7 +226,7 @@ public class RnaFusionComparer extends ItemComparer
             StringJoiner newFusionStr = new StringJoiner(ITEM_DELIM);
 
             // match on name, then on coordinates
-            // for truthset entries, if there is at least one match on coordinates then report other differences as value differences
+            // for expected entries, if there is at least one match on coordinates then report other differences as value differences
             for(RnaFusionData oldFusion : oldFusions)
             {
                 RnaFusionData newFusion = newFusions.stream().filter(x -> x.isMatched(oldFusion)).findFirst().orElse(null);
@@ -237,7 +237,7 @@ public class RnaFusionComparer extends ItemComparer
                 }
                 else
                 {
-                    Mismatch mismatch = oldFusion.findMismatch(this, newFusion, matchLevel, includeMatches, includesTruthset);
+                    Mismatch mismatch = oldFusion.findMismatch(this, newFusion, matchLevel, includeMatches, includesExpected);
 
                     if(mismatch != null)
                         mismatches.add(mismatch);
@@ -265,8 +265,8 @@ public class RnaFusionComparer extends ItemComparer
         }
 
         // and add unmatched fusions
-        addUnmatchedFusions(fusionsByNameOld, matchedByName, mismatches, matchLevel, false, oldTruthsetSourced);
-        addUnmatchedFusions(fusionsByNameNew, matchedByName, mismatches, matchLevel, true, newTruthsetSourced);
+        addUnmatchedFusions(fusionsByNameOld, matchedByName, mismatches, matchLevel, false, oldExpectedSourced);
+        addUnmatchedFusions(fusionsByNameNew, matchedByName, mismatches, matchLevel, true, newExpectedSourced);
 
         checkUnfilteredFusions(mismatches);
     }
@@ -309,7 +309,7 @@ public class RnaFusionComparer extends ItemComparer
 
     private static void addUnmatchedFusions(
             final Map<String,List<RnaFusionData>> fusionsByName, final Set<String> matchedByName,
-            final List<Mismatch> mismatches, final MatchLevel matchLevel, boolean isNew, boolean truthsetSourced)
+            final List<Mismatch> mismatches, final MatchLevel matchLevel, boolean isNew, boolean expectedSourced)
     {
         for(Map.Entry<String,List<RnaFusionData>> entry : fusionsByName.entrySet())
         {
@@ -320,7 +320,7 @@ public class RnaFusionComparer extends ItemComparer
 
             for(RnaFusionData fusion : entry.getValue())
             {
-                if(matchLevel == REPORTABLE && !fusion.reportable() && !truthsetSourced)
+                if(matchLevel == REPORTABLE && !fusion.reportable() && !expectedSourced)
                     continue;
 
                 Mismatch mismatch = isNew ?

@@ -8,11 +8,11 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.CommonUtils;
+import com.hartwig.hmftools.compar.common.ExpectedValue;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.PipelineSourcePaths;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.SourceType;
-import com.hartwig.hmftools.compar.common.TruthsetValue;
 import com.hartwig.hmftools.compar.common.field.FieldInfo;
 
 public abstract class ItemComparer
@@ -38,16 +38,16 @@ public abstract class ItemComparer
         return Collections.emptyList();
     }
 
-    public List<ComparableItem> loadFromTruthset(final Map<String,List<TruthsetValue>> valuesByKey)
+    public List<ComparableItem> loadFromExpected(final Map<String,List<ExpectedValue>> valuesByKey)
     {
         return Collections.emptyList();
     }
 
     public void compareItems(
             final List<Mismatch> mismatches, final MatchLevel matchLevel, final boolean includeMatches,
-            final boolean includesTruthset, final List<ComparableItem> oldItems, final List<ComparableItem> newItems)
+            final boolean includesExpected, final List<ComparableItem> oldItems, final List<ComparableItem> newItems)
     {
-        CommonUtils.compareItems(this, mismatches, matchLevel, includeMatches, includesTruthset,oldItems, newItems);
+        CommonUtils.compareItems(this, mismatches, matchLevel, includeMatches, includesExpected,oldItems, newItems);
     }
 
     public List<FieldInfo> fieldsList() { return mFields; }

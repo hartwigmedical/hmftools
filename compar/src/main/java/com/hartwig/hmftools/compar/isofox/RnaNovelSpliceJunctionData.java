@@ -9,7 +9,7 @@ import com.hartwig.hmftools.common.rna.AltSpliceJunctionType;
 import com.hartwig.hmftools.common.rna.NovelSpliceJunction;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.common.CategoryType;
-import com.hartwig.hmftools.compar.common.TruthsetValue;
+import com.hartwig.hmftools.compar.common.ExpectedValue;
 import com.hartwig.hmftools.compar.common.field.FieldInfo;
 
 public class RnaNovelSpliceJunctionData extends ComparableItem
@@ -59,9 +59,9 @@ public class RnaNovelSpliceJunctionData extends ComparableItem
         addStringValue(RnaNovelSpliceJunctionComparer.Fields.RegionEnd.toString(), RegionTypeEnd.toString(), fields);
     }
 
-    public static RnaNovelSpliceJunctionData fromTruthset(final List<TruthsetValue> truthsetValues, final List<FieldInfo> fields)
+    public static RnaNovelSpliceJunctionData fromExpected(final List<ExpectedValue> expectedValues, final List<FieldInfo> fields)
     {
-        String key = truthsetValues.get(0).Key;
+        String key = expectedValues.get(0).Key;
         String[] keyParts = key.split(":", 4);
 
         String gene = keyParts[0];
@@ -74,37 +74,37 @@ public class RnaNovelSpliceJunctionData extends ComparableItem
         AltSpliceJunctionContext junctionTypeDown = AltSpliceJunctionContext.UNKNOWN;
         int fragmentCount = 0;
 
-        for(TruthsetValue truthsetValue : truthsetValues)
+        for(ExpectedValue expectedValue : expectedValues)
         {
-            if(truthsetValue.FieldName.equals(RnaNovelSpliceJunctionComparer.Fields.Type.toString()))
-                type = AltSpliceJunctionType.valueOf(truthsetValue.Value);
-            else if(truthsetValue.FieldName.equals(RnaNovelSpliceJunctionComparer.Fields.FragmentCount.toString()))
-                fragmentCount = Integer.parseInt(truthsetValue.Value);
-            else if(truthsetValue.FieldName.equals(RnaNovelSpliceJunctionComparer.Fields.RegionStart.toString()))
-                junctionTypeUp = AltSpliceJunctionContext.valueOf(truthsetValue.Value);
-            else if(truthsetValue.FieldName.equals(RnaNovelSpliceJunctionComparer.Fields.RegionEnd.toString()))
-                junctionTypeDown = AltSpliceJunctionContext.valueOf(truthsetValue.Value);
+            if(expectedValue.FieldName.equals(RnaNovelSpliceJunctionComparer.Fields.Type.toString()))
+                type = AltSpliceJunctionType.valueOf(expectedValue.Value);
+            else if(expectedValue.FieldName.equals(RnaNovelSpliceJunctionComparer.Fields.FragmentCount.toString()))
+                fragmentCount = Integer.parseInt(expectedValue.Value);
+            else if(expectedValue.FieldName.equals(RnaNovelSpliceJunctionComparer.Fields.RegionStart.toString()))
+                junctionTypeUp = AltSpliceJunctionContext.valueOf(expectedValue.Value);
+            else if(expectedValue.FieldName.equals(RnaNovelSpliceJunctionComparer.Fields.RegionEnd.toString()))
+                junctionTypeDown = AltSpliceJunctionContext.valueOf(expectedValue.Value);
         }
 
         RnaNovelSpliceJunctionData junction = new RnaNovelSpliceJunctionData(
                 gene, chromosome, positionUp, positionDown, type,
                 junctionTypeUp, junctionTypeDown, fragmentCount);
 
-        junction.addTruthsetValues(truthsetValues, fields);
+        junction.addExpectedValues(expectedValues, fields);
         return junction;
     }
 
-    private void addTruthsetValues(List<TruthsetValue> truthsetValues, final List<FieldInfo> fields)
+    private void addExpectedValues(List<ExpectedValue> expectedValues, final List<FieldInfo> fields)
     {
-        for(TruthsetValue truthsetValue : truthsetValues)
+        for(ExpectedValue expectedValue : expectedValues)
         {
-            if(truthsetValue.FieldName.equals(RnaNovelSpliceJunctionComparer.Fields.Type.toString()))
+            if(expectedValue.FieldName.equals(RnaNovelSpliceJunctionComparer.Fields.Type.toString()))
                 addStringValue(RnaNovelSpliceJunctionComparer.Fields.Type.toString(), Type.toString(), fields);
-            else if(truthsetValue.FieldName.equals(RnaNovelSpliceJunctionComparer.Fields.FragmentCount.toString()))
+            else if(expectedValue.FieldName.equals(RnaNovelSpliceJunctionComparer.Fields.FragmentCount.toString()))
                 addIntValue(RnaNovelSpliceJunctionComparer.Fields.FragmentCount.toString(), FragmentCount, fields);
-            else if(truthsetValue.FieldName.equals(RnaNovelSpliceJunctionComparer.Fields.RegionStart.toString()))
+            else if(expectedValue.FieldName.equals(RnaNovelSpliceJunctionComparer.Fields.RegionStart.toString()))
                 addStringValue(RnaNovelSpliceJunctionComparer.Fields.RegionStart.toString(), RegionTypeStart.toString(), fields);
-            else if(truthsetValue.FieldName.equals(RnaNovelSpliceJunctionComparer.Fields.RegionEnd.toString()))
+            else if(expectedValue.FieldName.equals(RnaNovelSpliceJunctionComparer.Fields.RegionEnd.toString()))
                 addStringValue(RnaNovelSpliceJunctionComparer.Fields.RegionEnd.toString(), RegionTypeEnd.toString(), fields);
         }
     }

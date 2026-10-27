@@ -16,9 +16,9 @@ import com.hartwig.hmftools.common.purple.PurityContextFile;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
+import com.hartwig.hmftools.compar.common.ExpectedValue;
 import com.hartwig.hmftools.compar.common.PipelineSourcePaths;
 import com.hartwig.hmftools.compar.ItemComparer;
-import com.hartwig.hmftools.compar.common.TruthsetValue;
 import com.hartwig.hmftools.compar.common.field.FieldCheck;
 import com.hartwig.hmftools.compar.common.field.FieldInfo;
 
@@ -158,7 +158,7 @@ public class PurityComparer extends ItemComparer
         return comparableItems;
     }
 
-    public List<ComparableItem> loadFromTruthset(final Map<String,List<TruthsetValue>> valuesByKey)
+    public List<ComparableItem> loadFromExpected(final Map<String,List<ExpectedValue>> valuesByKey)
     {
         List<ComparableItem> comparableItems = Lists.newArrayList();
 

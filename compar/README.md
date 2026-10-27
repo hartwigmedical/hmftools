@@ -19,7 +19,7 @@ java -jar compar.jar \
 The key configuration values to set are:
 - the sample(s) to compare
 - the categories to compare - each of these will map to specific pipeline output files
-- the source of data - pipeline output files, or truthset files in place of either the old or new source
+- the source of data - pipeline output files, or expected findings files in place of either the old or new source
  
 ### Required configuration
 

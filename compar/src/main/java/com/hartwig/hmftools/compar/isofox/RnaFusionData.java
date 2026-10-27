@@ -11,7 +11,7 @@ import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.rna.RnaFusion;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.common.CategoryType;
-import com.hartwig.hmftools.compar.common.TruthsetValue;
+import com.hartwig.hmftools.compar.common.ExpectedValue;
 import com.hartwig.hmftools.compar.common.field.FieldInfo;
 
 public class RnaFusionData extends ComparableItem
@@ -64,9 +64,9 @@ public class RnaFusionData extends ComparableItem
         addStringValue(RnaFusionComparer.Fields.Filter.toString(), Filter, fields);
     }
 
-    public static RnaFusionData fromTruthset(final List<TruthsetValue> truthsetValues, final List<FieldInfo> fields)
+    public static RnaFusionData fromExpected(final List<ExpectedValue> expectedValues, final List<FieldInfo> fields)
     {
-        String key = truthsetValues.get(0).Key;
+        String key = expectedValues.get(0).Key;
         String[] keyParts = key.split(":", 6);
 
         String geneUp = keyParts[0];
@@ -82,37 +82,37 @@ public class RnaFusionData extends ComparableItem
         String junctionTypeDown = "";
         int splitFragments = 0;
 
-        for(TruthsetValue truthsetValue : truthsetValues)
+        for(ExpectedValue expectedValue : expectedValues)
         {
-            if(truthsetValue.FieldName.equals(RnaFusionComparer.Fields.KnownType.toString()))
-                knownType = KnownFusionType.valueOf(truthsetValue.Value);
-            else if(truthsetValue.FieldName.equals(RnaFusionComparer.Fields.SplitFrags.toString()))
-                splitFragments = Integer.parseInt(truthsetValue.Value);
-            else if(truthsetValue.FieldName.equals(RnaFusionComparer.Fields.JuncTypeUp.toString()))
-                junctionTypeUp = truthsetValue.Value;
-            else if(truthsetValue.FieldName.equals(RnaFusionComparer.Fields.JuncTypeDown.toString()))
-                junctionTypeDown = truthsetValue.Value;
+            if(expectedValue.FieldName.equals(RnaFusionComparer.Fields.KnownType.toString()))
+                knownType = KnownFusionType.valueOf(expectedValue.Value);
+            else if(expectedValue.FieldName.equals(RnaFusionComparer.Fields.SplitFrags.toString()))
+                splitFragments = Integer.parseInt(expectedValue.Value);
+            else if(expectedValue.FieldName.equals(RnaFusionComparer.Fields.JuncTypeUp.toString()))
+                junctionTypeUp = expectedValue.Value;
+            else if(expectedValue.FieldName.equals(RnaFusionComparer.Fields.JuncTypeDown.toString()))
+                junctionTypeDown = expectedValue.Value;
         }
 
         RnaFusionData fusionData = new RnaFusionData(
                 name, chromosomeUp, chromosomeDown, positionUp, positionDown, knownType, junctionTypeUp, junctionTypeDown, splitFragments,
                 PASS_FILTER);
 
-        fusionData.addTruthsetValues(truthsetValues, fields);
+        fusionData.addExpectedValues(expectedValues, fields);
         return fusionData;
     }
 
-    private void addTruthsetValues(List<TruthsetValue> truthsetValues, final List<FieldInfo> fields)
+    private void addExpectedValues(List<ExpectedValue> expectedValues, final List<FieldInfo> fields)
     {
-        for(TruthsetValue truthsetValue : truthsetValues)
+        for(ExpectedValue expectedValue : expectedValues)
         {
-            if(truthsetValue.FieldName.equals(RnaFusionComparer.Fields.KnownType.toString()))
+            if(expectedValue.FieldName.equals(RnaFusionComparer.Fields.KnownType.toString()))
                 addStringValue(RnaFusionComparer.Fields.KnownType.toString(), KnownType.toString(), fields);
-            else if(truthsetValue.FieldName.equals(RnaFusionComparer.Fields.SplitFrags.toString()))
+            else if(expectedValue.FieldName.equals(RnaFusionComparer.Fields.SplitFrags.toString()))
                 addIntValue(RnaFusionComparer.Fields.SplitFrags.toString(), SplitFragments, fields);
-            else if(truthsetValue.FieldName.equals(RnaFusionComparer.Fields.JuncTypeUp.toString()))
+            else if(expectedValue.FieldName.equals(RnaFusionComparer.Fields.JuncTypeUp.toString()))
                 addStringValue(RnaFusionComparer.Fields.JuncTypeUp.toString(), JunctionTypeUp, fields);
-            else if(truthsetValue.FieldName.equals(RnaFusionComparer.Fields.JuncTypeDown.toString()))
+            else if(expectedValue.FieldName.equals(RnaFusionComparer.Fields.JuncTypeDown.toString()))
                 addStringValue(RnaFusionComparer.Fields.JuncTypeDown.toString(), JunctionTypeDown, fields);
         }
 

@@ -152,7 +152,7 @@ public class MismatchFile
         {
             String value = useOld ? fieldInfo.oldValue() : fieldInfo.newValue();
 
-            if(value != null) // supress values not present (ie in the truthset)
+            if(value != null) // supress values not present (ie in the expected file)
                 displaySj.add(format("%s=%s", fieldInfo.name(), value));
         }
 

@@ -14,7 +14,7 @@ public class SourceData
     public final PipelineSourcePaths PipelinePaths;
 
     @Nullable
-    public final TruthsetCache Truthset;
+    public final ExpectedCache Expected;
 
     @Nullable
     public final String Label;
@@ -22,11 +22,11 @@ public class SourceData
     public final Map<String,String> SampleIdMapping; // maps from the common tumor SampleId to the tumor Sample Id for this source
     public final Map<String,String> ReferenceSampleIdMapping; // as above for the reference Id
 
-    public SourceData(final SourceType type, final PipelineSourcePaths pipelinePaths, final TruthsetCache truthset, final String label)
+    public SourceData(final SourceType type, final PipelineSourcePaths pipelinePaths, final ExpectedCache expected, final String label)
     {
         Type = type;
         PipelinePaths = pipelinePaths;
-        Truthset = truthset;
+        Expected = expected;
         Label = label;
 
         SampleIdMapping = Maps.newHashMap();
@@ -34,16 +34,16 @@ public class SourceData
     }
 
     public boolean isPipelineSourced() { return PipelinePaths != null; }
-    public boolean isTruthsetSourced() { return Truthset != null; }
+    public boolean isExpectedSourced() { return Expected != null; }
 
     public static SourceData fromPipelineSource(final SourceType type, PipelineSourcePaths pipelinePaths, final String label)
     {
         return new SourceData(type, pipelinePaths, null, label);
     }
 
-    public static SourceData fromTruthsetSource(final SourceType type, final TruthsetCache truthset, final String label)
+    public static SourceData fromExpectedSource(final SourceType type, final ExpectedCache expected, final String label)
     {
-        return new SourceData(type, null, truthset, label);
+        return new SourceData(type, null, expected, label);
     }
 
     public String configName() { return Type.toString().toLowerCase(); }

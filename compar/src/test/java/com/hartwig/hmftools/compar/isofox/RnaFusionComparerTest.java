@@ -27,14 +27,14 @@ import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
+import com.hartwig.hmftools.compar.common.ExpectedCache;
+import com.hartwig.hmftools.compar.common.ExpectedValue;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.MismatchType;
 import com.hartwig.hmftools.compar.common.PipelineSourcePaths;
 import com.hartwig.hmftools.compar.common.SourceData;
 import com.hartwig.hmftools.compar.common.SourceType;
-import com.hartwig.hmftools.compar.common.TruthsetCache;
-import com.hartwig.hmftools.compar.common.TruthsetValue;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -143,49 +143,49 @@ public class RnaFusionComparerTest
     }
 
     @Test
-    public void truthsetFusionsArePassingInBothDirections() throws IOException
+    public void expectedFusionsArePassingInBothDirections() throws IOException
     {
         String matchedKey = "TMPRSS2:ERG:21:1000:21:2000";
         String filteredKey = "EML4:ALK:2:3000:2:4000";
 
-        for(SourceType truthsetSource : SourceType.values())
+        for(SourceType expectedSource : SourceType.values())
         {
-            comparer = createTruthsetComparer(truthsetSource);
-            File dir = truthsetSource == SourceType.OLD ? newDir : oldDir;
+            comparer = createExpectedComparer(expectedSource);
+            File dir = expectedSource == SourceType.OLD ? newDir : oldDir;
             writePassFusions(dir, List.of(TMPRSS2_ERG));
             writeUnfilteredFusions(dir, Map.of(
                     TMPRSS2_ERG, PASS_FILTER,
                     ImmutableRnaFusion.builder().from(EML4_ALK).splitFragments(2).build(), "FRAGMENT_COUNT"));
 
-            List<ComparableItem> truthsetItems = comparer.loadFromTruthset(Map.of(
-                    matchedKey, List.of(new TruthsetValue(matchedKey, "SplitFrags", "100", false)),
-                    filteredKey, List.of(new TruthsetValue(filteredKey, "SplitFrags", "10", false))));
-            Mismatch mismatch = singleMismatch(compareTruthset(truthsetSource, truthsetItems, MatchLevel.REPORTABLE));
+            List<ComparableItem> expectedItems = comparer.loadFromExpected(Map.of(
+                    matchedKey, List.of(new ExpectedValue(matchedKey, "SplitFrags", "100", false)),
+                    filteredKey, List.of(new ExpectedValue(filteredKey, "SplitFrags", "10", false))));
+            Mismatch mismatch = singleMismatch(compareExpected(expectedSource, expectedItems, MatchLevel.REPORTABLE));
 
-            if(truthsetSource == SourceType.OLD)
+            if(expectedSource == SourceType.OLD)
                 assertMismatch(mismatch, MismatchType.OLD_ONLY, "SplitFrags(10/2)", "Filter(PASS/FRAGMENT_COUNT)");
             else
                 assertMismatch(mismatch, MismatchType.NEW_ONLY, "SplitFrags(2/10)", "Filter(FRAGMENT_COUNT/PASS)");
 
-            truthsetItems = comparer.loadFromTruthset(Map.of(
-                    filteredKey, List.of(new TruthsetValue(filteredKey, "Filter", "FRAGMENT_COUNT", false))));
+            expectedItems = comparer.loadFromExpected(Map.of(
+                    filteredKey, List.of(new ExpectedValue(filteredKey, "Filter", "FRAGMENT_COUNT", false))));
             writePassFusions(dir, List.of(EML4_ALK));
 
-            assertEquals(0, compareTruthset(truthsetSource, truthsetItems, MatchLevel.REPORTABLE).size());
+            assertEquals(0, compareExpected(expectedSource, expectedItems, MatchLevel.REPORTABLE).size());
         }
     }
 
     @Test
-    public void groupedTruthsetFusionsIncludeUnfilteredContextInBothDirections() throws IOException
+    public void groupedExpectedFusionsIncludeUnfilteredContextInBothDirections() throws IOException
     {
-        for(SourceType truthsetSource : SourceType.values())
+        for(SourceType expectedSource : SourceType.values())
         {
-            comparer = createTruthsetComparer(truthsetSource);
+            comparer = createExpectedComparer(expectedSource);
             String key = "EML4:ALK:2:3000:2:4000";
-            List<ComparableItem> truthsetItems = comparer.loadFromTruthset(Map.of(
-                    key, List.of(new TruthsetValue(key, "SplitFrags", "10", false))));
+            List<ComparableItem> expectedItems = comparer.loadFromExpected(Map.of(
+                    key, List.of(new ExpectedValue(key, "SplitFrags", "10", false))));
 
-            File dir = truthsetSource == SourceType.OLD ? newDir : oldDir;
+            File dir = expectedSource == SourceType.OLD ? newDir : oldDir;
             writePassFusions(dir, List.of(ImmutableRnaFusion.builder().from(EML4_ALK).positionUp(3001).build()));
             writeUnfilteredFusions(dir, Map.of(
                     ImmutableRnaFusion.builder().from(EML4_ALK).splitFragments(2).build(), "FRAGMENT_COUNT"));
@@ -195,15 +195,15 @@ public class RnaFusionComparerTest
                 if(!hasUnfilteredFile)
                     Files.delete(Paths.get(RnaFusionFile.generateUnfilteredFilename(dir.getAbsolutePath(), SAMPLE_ID)));
 
-                List<Mismatch> mismatches = compareTruthset(truthsetSource, truthsetItems, MatchLevel.DETAILED);
+                List<Mismatch> mismatches = compareExpected(expectedSource, expectedItems, MatchLevel.DETAILED);
 
-                String truthsetInfo = "coords(3000-4000 frags=10)";
+                String expectedInfo = "coords(3000-4000 frags=10)";
                 if(hasUnfilteredFile)
-                    truthsetInfo += " unfiltered(coords(3000-4000 frags=2) filter=FRAGMENT_COUNT)";
+                    expectedInfo += " unfiltered(coords(3000-4000 frags=2) filter=FRAGMENT_COUNT)";
                 String fileInfo = "coords(3001-4000 frags=10)";
                 assertMismatch(singleMismatch(mismatches), MismatchType.VALUE,
-                        "fusions(" + (truthsetSource == SourceType.OLD ?
-                                truthsetInfo + "/" + fileInfo : fileInfo + "/" + truthsetInfo) + ")");
+                        "fusions(" + (expectedSource == SourceType.OLD ?
+                                expectedInfo + "/" + fileInfo : fileInfo + "/" + expectedInfo) + ")");
             }
         }
     }
@@ -267,29 +267,29 @@ public class RnaFusionComparerTest
         assertEquals(liftedFusion.positionDown(), counterpart.PositionDown);
     }
 
-    private static RnaFusionComparer createTruthsetComparer(final SourceType truthsetSource)
+    private static RnaFusionComparer createExpectedComparer(final SourceType expectedSource)
     {
         ComparConfig config = new ComparConfig();
-        config.Sources.set(truthsetSource == SourceType.OLD ? 0 : 1,
-                SourceData.fromTruthsetSource(truthsetSource, new TruthsetCache(), null));
+        config.Sources.set(expectedSource == SourceType.OLD ? 0 : 1,
+                SourceData.fromExpectedSource(expectedSource, new ExpectedCache(), null));
         return new RnaFusionComparer(config, Collections.emptyMap());
     }
 
-    private List<Mismatch> compareTruthset(
-            final SourceType truthsetSource, final List<ComparableItem> truthsetItems, final MatchLevel matchLevel)
+    private List<Mismatch> compareExpected(
+            final SourceType expectedSource, final List<ComparableItem> expectedItems, final MatchLevel matchLevel)
     {
-        boolean truthsetIsOld = truthsetSource == SourceType.OLD;
+        boolean expectedIsOld = expectedSource == SourceType.OLD;
         List<ComparableItem> fileItems = comparer.loadFromFile(SAMPLE_ID, null,
-                truthsetIsOld ? isofoxPaths(SourceType.NEW, newDir) : isofoxPaths(SourceType.OLD, oldDir));
-        return compare(truthsetIsOld ? truthsetItems : fileItems, truthsetIsOld ? fileItems : truthsetItems, matchLevel, true);
+                expectedIsOld ? isofoxPaths(SourceType.NEW, newDir) : isofoxPaths(SourceType.OLD, oldDir));
+        return compare(expectedIsOld ? expectedItems : fileItems, expectedIsOld ? fileItems : expectedItems, matchLevel, true);
     }
 
     private List<Mismatch> compare(
             final List<ComparableItem> oldItems, final List<ComparableItem> newItems, final MatchLevel matchLevel,
-            boolean includesTruthset)
+            boolean includesExpected)
     {
         List<Mismatch> mismatches = Lists.newArrayList();
-        comparer.compareItems(mismatches, matchLevel, false, includesTruthset, oldItems, newItems);
+        comparer.compareItems(mismatches, matchLevel, false, includesExpected, oldItems, newItems);
         return mismatches;
     }
 

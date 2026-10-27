@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.common.TruthsetValue;
+import com.hartwig.hmftools.compar.common.ExpectedValue;
 import com.hartwig.hmftools.compar.common.field.FieldInfo;
 
 public class PurityData extends ComparableItem
@@ -56,11 +56,11 @@ public class PurityData extends ComparableItem
         Purity = purityContext;
     }
 
-    public PurityData(final List<TruthsetValue> truthsetValues, final List<FieldInfo> fields)
+    public PurityData(final List<ExpectedValue> expectedValues, final List<FieldInfo> fields)
     {
-        for(TruthsetValue truthsetValue : truthsetValues)
+        for(ExpectedValue expectedValue : expectedValues)
         {
-            String fieldName = truthsetValue.FieldName;
+            String fieldName = expectedValue.FieldName;
             PurityComparer.Fields field = PurityComparer.Fields.valueOf(fieldName);
 
             switch(field)
@@ -71,14 +71,14 @@ public class PurityData extends ComparableItem
                 case TmbPerMb:
                 case MsIndelsPerMb:
                 case TincLevel:
-                    addDoubleValue(field.toString(), Double.valueOf(truthsetValue.Value), fields);
+                    addDoubleValue(field.toString(), Double.valueOf(expectedValue.Value), fields);
                     break;
 
                 case Tml:
                 case CopyNumberSegments:
                 case UnsupportedCopyNumberSegments:
                 case SvTmb:
-                    addIntValue(field.toString(), Integer.valueOf(truthsetValue.Value), fields);
+                    addIntValue(field.toString(), Integer.valueOf(expectedValue.Value), fields);
                     break;
 
                 case QcStatus:
@@ -88,11 +88,11 @@ public class PurityData extends ComparableItem
                 case MsStatus:
                 case TmbStatus:
                 case TmlStatus:
-                    addStringValue(field.toString(), truthsetValue.Value, fields);
+                    addStringValue(field.toString(), expectedValue.Value, fields);
                     break;
 
                 default:
-                    CMP_LOGGER.error("unknown purity field: {}", truthsetValue);
+                    CMP_LOGGER.error("unknown purity field: {}", expectedValue);
             }
         }
 

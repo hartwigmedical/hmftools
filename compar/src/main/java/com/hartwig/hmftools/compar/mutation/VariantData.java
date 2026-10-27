@@ -230,7 +230,7 @@ public class VariantData extends ComparableItem
         fields.add(new FieldInfo(FLD_FILTER, getOrMakeFieldCheck(fieldCheckMap, FLD_FILTER), null));
     }
 
-    protected static SimpleVariant fromTruthsetKey(final String key)
+    protected static SimpleVariant fromExpectedKey(final String key)
     {
         try
         {
@@ -246,7 +246,7 @@ public class VariantData extends ComparableItem
 
     protected static String checkConvertAminoAcids(final String hgvsProtein)
     {
-        // a convenience for truthset variants using single-letter amino acids
+        // a convenience for expected variants using single-letter amino acids
         StringBuilder sb = new StringBuilder();
 
         for(int i = 0; i < hgvsProtein.length(); ++i)

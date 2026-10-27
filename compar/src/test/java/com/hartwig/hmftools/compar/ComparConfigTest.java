@@ -3,7 +3,7 @@ package com.hartwig.hmftools.compar;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FILE;
 import static com.hartwig.hmftools.compar.ComparConfig.SOURCE_LABEL;
-import static com.hartwig.hmftools.compar.ComparConfig.TRUTHSET_FILES;
+import static com.hartwig.hmftools.compar.ComparConfig.EXPECTED_FINDINGS_FILES;
 import static com.hartwig.hmftools.compar.ComparConfig.WRITE_DETAILED_FILES;
 import static com.hartwig.hmftools.compar.common.ComparConstants.FLD_CATEGORY;
 import static com.hartwig.hmftools.compar.common.ComparConstants.FLD_ITEM_KEY;
@@ -92,16 +92,16 @@ public class ComparConfigTest
     }
 
     @Test
-    public void testSampleDirForTruthsetSourceIsInvalid() throws IOException
+    public void testSampleDirForExpectedSourceIsInvalid() throws IOException
     {
-        File truthsetFile = TempDir.newFile("truthset.tsv");
-        Files.write(truthsetFile.toPath(), List.of(FLD_CATEGORY + "\t" + FLD_ITEM_KEY));
+        File expectedFile = TempDir.newFile("expected.tsv");
+        Files.write(expectedFile.toPath(), List.of(FLD_CATEGORY + "\t" + FLD_ITEM_KEY));
 
         ConfigBuilder configBuilder = createConfigBuilder(List.of(
                 "SampleId,OldSampleDir",
                 "SAMPLE_1,/run_a/SAMPLE_1/"));
 
-        configBuilder.setValue(TRUTHSET_FILES + "_old", truthsetFile.getAbsolutePath());
+        configBuilder.setValue(EXPECTED_FINDINGS_FILES + "_old", expectedFile.getAbsolutePath());
 
         ComparConfig config = new ComparConfig(configBuilder);
 

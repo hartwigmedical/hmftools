@@ -40,11 +40,11 @@ public abstract class ComparableItem
 
     public Mismatch findMismatch(
             final ItemComparer comparer, final ComparableItem other, final MatchLevel matchLevel, final boolean includeMatches,
-            final boolean includesTruthset)
+            final boolean includesExpected)
     {
         List<String> diffs = findDiffs(comparer, this, other);
 
-        return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches, includesTruthset);
+        return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches, includesExpected);
     }
 
     public Map<String,FieldValue> fieldValues() { return mValues; }

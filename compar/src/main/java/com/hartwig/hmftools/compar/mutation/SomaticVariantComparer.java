@@ -42,6 +42,7 @@ import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
+import com.hartwig.hmftools.compar.common.ExpectedValue;
 import com.hartwig.hmftools.compar.common.PipelineSourcePaths;
 import com.hartwig.hmftools.compar.common.InvalidDataItem;
 import com.hartwig.hmftools.compar.ItemComparer;
@@ -49,7 +50,6 @@ import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.SourceData;
 import com.hartwig.hmftools.compar.common.SourceType;
-import com.hartwig.hmftools.compar.common.TruthsetValue;
 import com.hartwig.hmftools.compar.common.field.FieldCheck;
 import com.hartwig.hmftools.compar.common.field.FieldInfo;
 
@@ -129,8 +129,8 @@ public class SomaticVariantComparer extends ItemComparer
         String oldSourceSampleId = mConfig.sourceSampleId(OLD, sampleId);
         String newSourceSampleId = mConfig.sourceSampleId(NEW, sampleId);
 
-        boolean oldTruthsetSourced = mConfig.isTruthsetSourced(SourceType.OLD);
-        boolean newTruthsetSourced = mConfig.isTruthsetSourced(SourceType.NEW);
+        boolean oldExpectedSourced = mConfig.isExpectedSourced(SourceType.OLD);
+        boolean newExpectedSourced = mConfig.isExpectedSourced(SourceType.NEW);
 
         Map<String,List<SomaticVariantData>> oldVariantsMap = buildVariantMap(oldVariants);
         Map<String,List<SomaticVariantData>> newVariantsMap = buildVariantMap(newVariants);
@@ -198,12 +198,12 @@ public class SomaticVariantComparer extends ItemComparer
                 {
                     chromosomeOldVariants.remove(index1);
 
-                    if((includeMismatchWithVariant(oldVariant, matchLevel) || oldTruthsetSourced)
-                    || (includeMismatchWithVariant(matchedVariant, matchLevel) || newTruthsetSourced))
+                    if((includeMismatchWithVariant(oldVariant, matchLevel) || oldExpectedSourced)
+                    || (includeMismatchWithVariant(matchedVariant, matchLevel) || newExpectedSourced))
                     {
                         Mismatch mismatch = oldVariant.findMismatch(
                                 this, matchedVariant, matchLevel, mConfig.IncludeMatches,
-                                oldTruthsetSourced || newTruthsetSourced);
+                                oldExpectedSourced || newExpectedSourced);
 
                         if(mismatch != null)
                             mismatches.add(mismatch);
@@ -220,7 +220,7 @@ public class SomaticVariantComparer extends ItemComparer
 
             for(SomaticVariantData newVariant : chromosomeNewVariants)
             {
-                if(!newTruthsetSourced && !includeMismatchWithVariant(newVariant, matchLevel))
+                if(!newExpectedSourced && !includeMismatchWithVariant(newVariant, matchLevel))
                     continue;
 
                 SomaticVariantData unfilteredVariant = findUnfilteredVariant(newVariant, OLD, oldSourceSampleId);
@@ -228,7 +228,7 @@ public class SomaticVariantComparer extends ItemComparer
                 if(unfilteredVariant != null)
                 {
                     mismatches.add(unfilteredVariant.findMismatch(
-                            this, newVariant, matchLevel, mConfig.IncludeMatches, newTruthsetSourced));
+                            this, newVariant, matchLevel, mConfig.IncludeMatches, newExpectedSourced));
                 }
                 else
                 {
@@ -325,30 +325,30 @@ public class SomaticVariantComparer extends ItemComparer
         }
         else
         {
-            List<TruthsetValue> truthsetValues = sourceData.Truthset.sampleTruthsetEntries(sampleId, category());
+            List<ExpectedValue> expectedValues = sourceData.Expected.sampleExpectedEntries(sampleId, category());
 
-            if(truthsetValues == null || truthsetValues.isEmpty())
+            if(expectedValues == null || expectedValues.isEmpty())
                 return Collections.emptyList();
 
-            // validate truthset fields against the comparer
+            // validate expected fields against the comparer
             List<FieldInfo> fields = fieldsList();
 
-            for(TruthsetValue truthsetValue : truthsetValues)
+            for(ExpectedValue expectedValue : expectedValues)
             {
-                if(fields.stream().noneMatch(x -> x.Name.equals(truthsetValue.FieldName)))
+                if(fields.stream().noneMatch(x -> x.Name.equals(expectedValue.FieldName)))
                 {
-                    CMP_LOGGER.error("category({}) invalid truthset entry({})", category(), truthsetValue);
+                    CMP_LOGGER.error("category({}) invalid expected entry({})", category(), expectedValue);
                     return null;
                 }
             }
 
             // group by keys
-            Map<String, List<TruthsetValue>> truthsetValuesByKey = truthsetValues.stream()
+            Map<String, List<ExpectedValue>> expectedValuesByKey = expectedValues.stream()
                     .collect(Collectors.groupingBy(x -> x.Key));
 
-            for(Map.Entry<String,List<TruthsetValue>> entry : truthsetValuesByKey.entrySet())
+            for(Map.Entry<String,List<ExpectedValue>> entry : expectedValuesByKey.entrySet())
             {
-                SomaticVariantData variant = SomaticVariantData.fromTruthset(entry.getValue(), mFields);
+                SomaticVariantData variant = SomaticVariantData.fromExpected(entry.getValue(), mFields);
 
                 if(variant == null)
                     return null;

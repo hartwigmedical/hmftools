@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.genome.refgenome.GenomeLiftoverCache.U
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
+import static com.hartwig.hmftools.compar.common.ExpectedCache.FLD_STATUS;
 import static com.hartwig.hmftools.compar.common.MatchLevel.REPORTABLE;
 import static com.hartwig.hmftools.compar.common.MismatchType.FULL_MATCH;
 import static com.hartwig.hmftools.compar.common.MismatchType.INVALID_BOTH;
@@ -13,7 +14,6 @@ import static com.hartwig.hmftools.compar.common.MismatchType.INVALID_OLD;
 import static com.hartwig.hmftools.compar.common.MismatchType.NEW_ONLY;
 import static com.hartwig.hmftools.compar.common.MismatchType.OLD_ONLY;
 import static com.hartwig.hmftools.compar.common.MismatchType.VALUE;
-import static com.hartwig.hmftools.compar.common.TruthsetCache.FLD_STATUS;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -42,7 +42,7 @@ public class CommonUtils
         MatchLevel matchLevel = config.MatchingLevel;
 
         Map<SourceType,List<ComparableItem>> sourceItems = Maps.newHashMap();
-        boolean includesTruthset = false;
+        boolean includesExpected = false;
 
         for(SourceData source : config.Sources)
         {
@@ -57,33 +57,33 @@ public class CommonUtils
             }
             else
             {
-                includesTruthset = true;
+                includesExpected = true;
                 sourceItems.put(source.Type, Collections.emptyList()); // by default nothing found, but not the same as invalid
 
-                List<TruthsetValue> truthsetValues = source.Truthset.sampleTruthsetEntries(sampleId, comparer.category());
+                List<ExpectedValue> expectedValues = source.Expected.sampleExpectedEntries(sampleId, comparer.category());
 
-                if(truthsetValues == null || truthsetValues.isEmpty())
+                if(expectedValues == null || expectedValues.isEmpty())
                     continue;
 
-                // validate truthset fields against the comparer
+                // validate expected fields against the comparer
                 List<FieldInfo> fields = comparer.fieldsList();
 
-                for(TruthsetValue truthsetValue : truthsetValues)
+                for(ExpectedValue expectedValue : expectedValues)
                 {
-                    if(truthsetValue.FieldName.equals(FLD_STATUS))
+                    if(expectedValue.FieldName.equals(FLD_STATUS))
                         continue;
 
-                    if(fields.stream().noneMatch(x -> x.Name.equals(truthsetValue.FieldName)))
+                    if(fields.stream().noneMatch(x -> x.Name.equals(expectedValue.FieldName)))
                     {
-                        CMP_LOGGER.error("category({}) invalid truthset entry({})", comparer.category(), truthsetValue);
+                        CMP_LOGGER.error("category({}) invalid expected entry({})", comparer.category(), expectedValue);
                         return false;
                     }
                 }
 
                 // group by items keys
-                Map<String, List<TruthsetValue>> truthsetValuesByKey = truthsetValues.stream().collect(Collectors.groupingBy(x -> x.Key));
+                Map<String, List<ExpectedValue>> expectedValuesByKey = expectedValues.stream().collect(Collectors.groupingBy(x -> x.Key));
 
-                items = comparer.loadFromTruthset(truthsetValuesByKey);
+                items = comparer.loadFromExpected(expectedValuesByKey);
             }
 
             if(items != null)
@@ -95,7 +95,7 @@ public class CommonUtils
         if(sourceItems.containsKey(SourceType.OLD) && sourceItems.containsKey(SourceType.NEW))
         {
             comparer.compareItems(
-                    mismatches, matchLevel, config.IncludeMatches, includesTruthset,
+                    mismatches, matchLevel, config.IncludeMatches, includesExpected,
                     sourceItems.get(SourceType.OLD), sourceItems.get(SourceType.NEW));
 
             return true;
@@ -121,10 +121,10 @@ public class CommonUtils
 
     public static void compareItems(
             final ItemComparer comparer, final List<Mismatch> mismatches, final MatchLevel matchLevel, final boolean includeMatches,
-            final boolean includesTruthset, final List<ComparableItem> oldItems, final List<ComparableItem> newItems)
+            final boolean includesExpected, final List<ComparableItem> oldItems, final List<ComparableItem> newItems)
     {
-        boolean oldTruthsetSourced = comparer.config().isTruthsetSourced(SourceType.OLD);
-        boolean newTruthsetSourced = comparer.config().isTruthsetSourced(SourceType.NEW);
+        boolean oldExpectedSourced = comparer.config().isExpectedSourced(SourceType.OLD);
+        boolean newExpectedSourced = comparer.config().isExpectedSourced(SourceType.NEW);
 
         int index1 = 0;
         while(index1 < oldItems.size())
@@ -157,12 +157,12 @@ public class CommonUtils
                     }
                     else
                     {
-                        checkMismatch = oldTruthsetSourced || newTruthsetSourced;
+                        checkMismatch = oldExpectedSourced || newExpectedSourced;
                     }
 
                     if(checkMismatch)
                     {
-                        Mismatch mismatch = item1.findMismatch(comparer, item2, matchLevel, includeMatches, includesTruthset);
+                        Mismatch mismatch = item1.findMismatch(comparer, item2, matchLevel, includeMatches, includesExpected);
 
                         if(mismatch != null)
                         {
@@ -264,10 +264,10 @@ public class CommonUtils
 
     public static Mismatch createMismatchFromDiffs(
             final ComparableItem oldItem, final ComparableItem newItem, final List<String> diffs,
-            final MatchLevel matchLevel, final boolean includeMatches, final boolean includesTruthset)
+            final MatchLevel matchLevel, final boolean includeMatches, final boolean includesExpected)
     {
-        boolean oldCountsAsCalled = countsAsCalled(oldItem, matchLevel) || includesTruthset;
-        boolean newCountsAsCalled = countsAsCalled(newItem, matchLevel) || includesTruthset;
+        boolean oldCountsAsCalled = countsAsCalled(oldItem, matchLevel) || includesExpected;
+        boolean newCountsAsCalled = countsAsCalled(newItem, matchLevel) || includesExpected;
 
         if(!oldCountsAsCalled && !newCountsAsCalled)
         {

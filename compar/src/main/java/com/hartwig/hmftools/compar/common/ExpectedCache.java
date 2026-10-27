@@ -19,9 +19,9 @@ import java.util.Set;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
-public class TruthsetCache
+public class ExpectedCache
 {
-    private final Map<String,Map<CategoryType,List<TruthsetValue>>> mSampleDataMap;
+    private final Map<String,Map<CategoryType,List<ExpectedValue>>> mSampleDataMap;
 
     public static final String FLD_STATUS = "Status";
 
@@ -37,24 +37,24 @@ public class TruthsetCache
 
     // expected format: SampleId (if has multiple),Category,Key,Status (optional),FieldValues or columns per field value
 
-    public TruthsetCache()
+    public ExpectedCache()
     {
         mSampleDataMap = Maps.newHashMap();
     }
 
-    public void loadFiles(final String truthsetFilesConfigStr)
+    public void loadFiles(final String expectedFilesConfigStr)
     {
-        String[] truthsetFiles = truthsetFilesConfigStr.split(ITEM_DELIM);
+        String[] expectedFiles = expectedFilesConfigStr.split(ITEM_DELIM);
 
-        for(String truthsetFile : truthsetFiles)
+        for(String expectedFile : expectedFiles)
         {
-            loadTruthsetFile(truthsetFile);
+            loadExpectedFile(expectedFile);
         }
     }
 
-    public List<TruthsetValue> sampleTruthsetEntries(final String sampleId, final CategoryType category)
+    public List<ExpectedValue> sampleExpectedEntries(final String sampleId, final CategoryType category)
     {
-        Map<CategoryType, List<TruthsetValue>> categoryMap;
+        Map<CategoryType, List<ExpectedValue>> categoryMap;
         if(mSampleDataMap.size() == 1 && mSampleDataMap.containsKey(NO_SAMPLE_ID))
         {
             categoryMap = mSampleDataMap.get(NO_SAMPLE_ID);
@@ -68,7 +68,7 @@ public class TruthsetCache
 
     private static final Set<String> FIXED_FIELDS = Set.of(FLD_CATEGORY, FLD_SAMPLE_ID, FLD_STATUS, FLD_ITEM_KEY, FLD_FIELD_VALUES);
 
-    private void loadTruthsetFile(final String filename)
+    private void loadExpectedFile(final String filename)
     {
         try
         {
@@ -92,7 +92,7 @@ public class TruthsetCache
                 {
                     String sampleId = sampleIndex != null ? values[sampleIndex] : NO_SAMPLE_ID;
 
-                    Map<CategoryType, List<TruthsetValue>> categoryItemMap = mSampleDataMap.get(sampleId);
+                    Map<CategoryType, List<ExpectedValue>> categoryItemMap = mSampleDataMap.get(sampleId);
 
                     if(categoryItemMap == null)
                     {
@@ -103,12 +103,12 @@ public class TruthsetCache
                     CategoryType categoryType = CategoryType.valueOf(values[categoryIndex]);
                     String itemKey = values[keyIndex];
 
-                    List<TruthsetValue> truthsetValues = categoryItemMap.get(categoryType);
+                    List<ExpectedValue> expectedValues = categoryItemMap.get(categoryType);
 
-                    if(truthsetValues == null)
+                    if(expectedValues == null)
                     {
-                        truthsetValues = Lists.newArrayList();
-                        categoryItemMap.put(categoryType, truthsetValues);
+                        expectedValues = Lists.newArrayList();
+                        categoryItemMap.put(categoryType, expectedValues);
                     }
 
                     boolean requireAbsent = statusIndex != null && values[statusIndex].equalsIgnoreCase(VALUE_ABSENT);
@@ -123,7 +123,7 @@ public class TruthsetCache
                             String field = svItem[0];
                             String value = svItem[1];
 
-                            truthsetValues.add(new TruthsetValue(itemKey, field, value, requireAbsent));
+                            expectedValues.add(new ExpectedValue(itemKey, field, value, requireAbsent));
                         }
                     }
                     else
@@ -144,25 +144,25 @@ public class TruthsetCache
                                 continue;
 
                             hasFields = true;
-                            truthsetValues.add(new TruthsetValue(itemKey, fieldName, value, requireAbsent));
+                            expectedValues.add(new ExpectedValue(itemKey, fieldName, value, requireAbsent));
                         }
 
                         if(!hasFields)
-                            truthsetValues.add(new TruthsetValue(itemKey, FLD_STATUS, "", requireAbsent));
+                            expectedValues.add(new ExpectedValue(itemKey, FLD_STATUS, "", requireAbsent));
                     }
                 }
                 catch(Exception e)
                 {
-                    CMP_LOGGER.error("invalid truthset entry({}}) in file({})", line, filename);
+                    CMP_LOGGER.error("invalid expected entry({}}) in file({})", line, filename);
                     System.exit(1);
                 }
             }
 
-            CMP_LOGGER.info("loaded {} truthset entries from file({})", lines.size(), filename);
+            CMP_LOGGER.info("loaded {} expected entries from file({})", lines.size(), filename);
         }
         catch(IOException e)
         {
-            CMP_LOGGER.error("failed to load truthset file({}): {}", filename, e.toString());
+            CMP_LOGGER.error("failed to load expected file({}): {}", filename, e.toString());
             System.exit(1);
         }
     }

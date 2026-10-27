@@ -2,14 +2,14 @@ package com.hartwig.hmftools.compar.common;
 
 import static java.lang.String.format;
 
-public class TruthsetValue
+public class ExpectedValue
 {
     public final String Key;
     public final String FieldName;
     public final String Value;
     public final boolean RequireAbsent;
 
-    public TruthsetValue(final String key, final String fieldName, final String value, final boolean requireAbsent)
+    public ExpectedValue(final String key, final String fieldName, final String value, final boolean requireAbsent)
     {
         Key = key;
         FieldName = fieldName;

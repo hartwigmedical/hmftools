@@ -25,8 +25,8 @@ import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser;
 import com.hartwig.hmftools.compar.ComparConfig;
+import com.hartwig.hmftools.compar.common.ExpectedValue;
 import com.hartwig.hmftools.compar.common.SourceType;
-import com.hartwig.hmftools.compar.common.TruthsetValue;
 import com.hartwig.hmftools.compar.common.field.FieldInfo;
 
 import htsjdk.variant.variantcontext.VariantContext;
@@ -127,9 +127,9 @@ public class SomaticVariantData extends VariantData
         }
     }
 
-    public static SomaticVariantData fromTruthset(final List<TruthsetValue> truthsetValues, final List<FieldInfo> fields)
+    public static SomaticVariantData fromExpected(final List<ExpectedValue> expectedValues, final List<FieldInfo> fields)
     {
-        SimpleVariant simpleVariant = fromTruthsetKey(truthsetValues.get(0).Key);
+        SimpleVariant simpleVariant = fromExpectedKey(expectedValues.get(0).Key);
 
         if(simpleVariant == null)
             return null;
@@ -160,26 +160,26 @@ public class SomaticVariantData extends VariantData
         boolean hasLPS = false;
         double subclonalLikelihood= 0;
 
-        for(TruthsetValue truthsetValue : truthsetValues)
+        for(ExpectedValue expectedValue : expectedValues)
         {
-            if(truthsetValue.FieldName.equals(FLD_REPORTED))
-                reported = Boolean.parseBoolean(truthsetValue.Value);
-            else if(truthsetValue.FieldName.equals(FLD_GENE))
-                gene = truthsetValue.Value;
-            else if(truthsetValue.FieldName.equals(FLD_AF))
-                alleleFrequency = Double.parseDouble(truthsetValue.Value);
-            else if(truthsetValue.FieldName.equals(FLD_VARIANT_COPY_NUMBER))
-                variantCopyNumber = Double.parseDouble(truthsetValue.Value);
-            else if(truthsetValue.FieldName.equals(FLD_CANON_EFFECT))
-                canonicalEffect = truthsetValue.Value;
-            else if(truthsetValue.FieldName.equals(FLD_HGVS_CODING))
-                canonicalHgvsCodingImpact = truthsetValue.Value;
-            else if(truthsetValue.FieldName.equals(FLD_HGVS_PROTEIN))
-                canonicalHgvsProteinImpact = truthsetValue.Value;
-            else if(truthsetValue.FieldName.equals(FLD_TUMOR_TOTAL_READ_COUNT))
-                tumorTotalReadCount = Integer.parseInt(truthsetValue.Value);
-            else if(truthsetValue.FieldName.equals(FLD_TUMOR_SUPPORTING_READ_COUNT))
-                tumorSupportingReadCount = Integer.parseInt(truthsetValue.Value);
+            if(expectedValue.FieldName.equals(FLD_REPORTED))
+                reported = Boolean.parseBoolean(expectedValue.Value);
+            else if(expectedValue.FieldName.equals(FLD_GENE))
+                gene = expectedValue.Value;
+            else if(expectedValue.FieldName.equals(FLD_AF))
+                alleleFrequency = Double.parseDouble(expectedValue.Value);
+            else if(expectedValue.FieldName.equals(FLD_VARIANT_COPY_NUMBER))
+                variantCopyNumber = Double.parseDouble(expectedValue.Value);
+            else if(expectedValue.FieldName.equals(FLD_CANON_EFFECT))
+                canonicalEffect = expectedValue.Value;
+            else if(expectedValue.FieldName.equals(FLD_HGVS_CODING))
+                canonicalHgvsCodingImpact = expectedValue.Value;
+            else if(expectedValue.FieldName.equals(FLD_HGVS_PROTEIN))
+                canonicalHgvsProteinImpact = expectedValue.Value;
+            else if(expectedValue.FieldName.equals(FLD_TUMOR_TOTAL_READ_COUNT))
+                tumorTotalReadCount = Integer.parseInt(expectedValue.Value);
+            else if(expectedValue.FieldName.equals(FLD_TUMOR_SUPPORTING_READ_COUNT))
+                tumorSupportingReadCount = Integer.parseInt(expectedValue.Value);
         }
 
         if(!canonicalHgvsProteinImpact.isEmpty())
@@ -191,33 +191,33 @@ public class SomaticVariantData extends VariantData
                 qual, filters, variantCopyNumber, alleleFrequency, tumorSupportingReadCount, tumorTotalReadCount,
                 false, biallelic, biallelicProb, hasLPS, subclonalLikelihood);
 
-        variant.addTruthsetValues(truthsetValues, fields);
+        variant.addExpectedValues(expectedValues, fields);
 
         return variant;
     }
 
-    private void addTruthsetValues(List<TruthsetValue> truthsetValues, final List<FieldInfo> fields)
+    private void addExpectedValues(List<ExpectedValue> expectedValues, final List<FieldInfo> fields)
     {
         // now add fields
-        for(TruthsetValue truthsetValue : truthsetValues)
+        for(ExpectedValue expectedValue : expectedValues)
         {
-            if(truthsetValue.FieldName.equals(FLD_REPORTED))
+            if(expectedValue.FieldName.equals(FLD_REPORTED))
                 addBoolValue(FLD_REPORTED, Reported, fields);
-            else if(truthsetValue.FieldName.equals(FLD_GENE))
+            else if(expectedValue.FieldName.equals(FLD_GENE))
                 addStringValue(FLD_GENE, Gene, fields);
-            else if(truthsetValue.FieldName.equals(FLD_AF))
+            else if(expectedValue.FieldName.equals(FLD_AF))
                 addDoubleValue(FLD_AF, AlleleFrequency, fields);
-            else if(truthsetValue.FieldName.equals(FLD_VARIANT_COPY_NUMBER))
+            else if(expectedValue.FieldName.equals(FLD_VARIANT_COPY_NUMBER))
                 addDoubleValue(FLD_VARIANT_COPY_NUMBER, VariantCopyNumber, fields);
-            else if(truthsetValue.FieldName.equals(FLD_CANON_EFFECT))
+            else if(expectedValue.FieldName.equals(FLD_CANON_EFFECT))
                 addStringValue(FLD_CANON_EFFECT, CanonicalEffect, fields);
-            else if(truthsetValue.FieldName.equals(FLD_HGVS_CODING))
+            else if(expectedValue.FieldName.equals(FLD_HGVS_CODING))
                 addStringValue(FLD_HGVS_CODING, CanonicalHgvsCodingImpact, fields);
-            else if(truthsetValue.FieldName.equals(FLD_HGVS_PROTEIN))
+            else if(expectedValue.FieldName.equals(FLD_HGVS_PROTEIN))
                 addStringValue(FLD_HGVS_PROTEIN, CanonicalHgvsProteinImpact, fields);
-            else if(truthsetValue.FieldName.equals(FLD_TUMOR_TOTAL_READ_COUNT))
+            else if(expectedValue.FieldName.equals(FLD_TUMOR_TOTAL_READ_COUNT))
                 addIntValue(FLD_TUMOR_TOTAL_READ_COUNT, TumorTotalReadCount, fields);
-            else if(truthsetValue.FieldName.equals(FLD_TUMOR_SUPPORTING_READ_COUNT))
+            else if(expectedValue.FieldName.equals(FLD_TUMOR_SUPPORTING_READ_COUNT))
                 addIntValue(FLD_TUMOR_SUPPORTING_READ_COUNT, TumorSupportingReadCount, fields);
         }
     }

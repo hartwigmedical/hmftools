@@ -54,11 +54,11 @@ import com.hartwig.hmftools.common.driver.panel.DriverGeneFile;
 import com.hartwig.hmftools.common.genome.refgenome.GenomeLiftoverCache;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.compar.common.CategoryType;
+import com.hartwig.hmftools.compar.common.ExpectedCache;
 import com.hartwig.hmftools.compar.common.PipelineSourcePaths;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.SourceData;
 import com.hartwig.hmftools.compar.common.SourceType;
-import com.hartwig.hmftools.compar.common.TruthsetCache;
 import com.hartwig.hmftools.compar.common.WriteType;
 
 import org.apache.logging.log4j.LogManager;
@@ -113,7 +113,7 @@ public class ComparConfig
     public static final String FIELD_CONFIG_FILE = "field_config_file";
     public static final String STRICT_FIELD_CONFIG = "strict_field_config";
 
-    public static final String TRUTHSET_FILES = "truthset_files";
+    public static final String EXPECTED_FINDINGS_FILES = "expected_findings_files";
 
     public static final String OLD_SOURCE_CFG = OLD.configStr();
     public static final String NEW_SOURCE_CFG = NEW.configStr();
@@ -253,7 +253,7 @@ public class ComparConfig
     }
 
     public boolean isPipelineSourced(final SourceType sourceType) { return getSourceData(sourceType).isPipelineSourced(); }
-    public boolean isTruthsetSourced(final SourceType sourceType) { return getSourceData(sourceType).isTruthsetSourced(); }
+    public boolean isExpectedSourced(final SourceType sourceType) { return getSourceData(sourceType).isExpectedSourced(); }
 
     public String sourceSampleId(final SourceType sourceType, final String sampleId)
     {
@@ -430,12 +430,12 @@ public class ComparConfig
         for(SourceType sourceType : SourceType.values())
         {
             String label = configBuilder.getValue(formConfigSourceStr(SOURCE_LABEL, sourceType.configStr()));
-            String truthsetConfig = formConfigSourceStr(TRUTHSET_FILES, sourceType.configStr());
-            if(configBuilder.hasValue(truthsetConfig))
+            String expectedConfig = formConfigSourceStr(EXPECTED_FINDINGS_FILES, sourceType.configStr());
+            if(configBuilder.hasValue(expectedConfig))
             {
-                TruthsetCache truthsetCache = new TruthsetCache();
-                truthsetCache.loadFiles(configBuilder.getValue(truthsetConfig));
-                Sources.add(SourceData.fromTruthsetSource(sourceType, truthsetCache, label));
+                ExpectedCache expectedCache = new ExpectedCache();
+                expectedCache.loadFiles(configBuilder.getValue(expectedConfig));
+                Sources.add(SourceData.fromExpectedSource(sourceType, expectedCache, label));
             }
             else
             {
@@ -485,10 +485,10 @@ public class ComparConfig
         configBuilder.addConfigItem(THRESHOLDS, "In form: Field,AbsoluteDiff,PercentDiff, separated by ';'");
 
         configBuilder.addConfigItem(
-                formConfigSourceStr(TRUTHSET_FILES, OLD_SOURCE_CFG), false, "Truthset file(s) old");
+                formConfigSourceStr(EXPECTED_FINDINGS_FILES, OLD_SOURCE_CFG), false, "Expected findings file(s) old");
 
         configBuilder.addConfigItem(
-                formConfigSourceStr(TRUTHSET_FILES, NEW_SOURCE_CFG), false, "Truthset file(s) new");
+                formConfigSourceStr(EXPECTED_FINDINGS_FILES, NEW_SOURCE_CFG), false, "Expected findings file(s) new");
 
         configBuilder.addConfigItem(formConfigSourceStr(SOURCE_LABEL, OLD_SOURCE_CFG), false, "Source label old");
         configBuilder.addConfigItem(formConfigSourceStr(SOURCE_LABEL, NEW_SOURCE_CFG), false, "Source label new");
