@@ -28,6 +28,8 @@ public class SampleIdsLoader
 
     private static final String SAMPLE_ID_DELIM = ",";
 
+    private static final String SUPPORTED_SAMPLE_MODES_MSG = "Only tumor-only and tumor-normal sample modes are supported";
+
     public SampleIdsLoader fromConfig(ConfigBuilder configBuilder)
     {
         if(!configBuilder.hasValue(SAMPLE_ID_FILE) && !configBuilder.hasValue(TUMOR) && !configBuilder.hasValue(REFERENCE))
@@ -47,8 +49,11 @@ public class SampleIdsLoader
     }
 
     @VisibleForTesting
-    SampleIdsLoader fromStrings(String tumorIdsString, @Nullable String referenceIdsString)
+    SampleIdsLoader fromStrings(@Nullable String tumorIdsString, @Nullable String referenceIdsString)
     {
+        if(tumorIdsString == null)
+            throw new IllegalStateException("Tumor sample IDs must be provided. " + SUPPORTED_SAMPLE_MODES_MSG);
+
         mTumorIds.addAll(List.of(tumorIdsString.split(SAMPLE_ID_DELIM)));
 
         if(referenceIdsString != null)
@@ -82,6 +87,9 @@ public class SampleIdsLoader
         Integer referenceIdIndex = fieldsIndexMap.get(COL_REFERENCE_ID);
         lines.remove(0);
 
+        if(tumorIdIndex == null)
+            throw new IllegalStateException("Sample IDs file must contain column " + COL_TUMOR_ID + ". " + SUPPORTED_SAMPLE_MODES_MSG);
+
         if(lines.isEmpty())
         {
             QC_LOGGER.error("No sample IDs found in sample IDs file");
@@ -93,15 +101,19 @@ public class SampleIdsLoader
             String[] values = line.split(TSV_DELIM, -1);
 
             String tumorId = values[tumorIdIndex];
+            String referenceId = referenceIdIndex != null ? values[referenceIdIndex] : "";
+
+            if(tumorId.isEmpty() && !referenceId.isEmpty())
+            {
+                throw new IllegalStateException(String.format("Reference sample(%s) has no tumor sample ID. %s",
+                        referenceId, SUPPORTED_SAMPLE_MODES_MSG));
+            }
+
             if(!tumorId.isEmpty())
                 mTumorIds.add(tumorId);
 
-            if(referenceIdIndex != null)
-            {
-                String referenceId = values[referenceIdIndex];
-                if(!referenceId.isEmpty())
-                    mReferenceIds.add(referenceId);
-            }
+            if(!referenceId.isEmpty())
+                mReferenceIds.add(referenceId);
         }
 
         checkMatchingSampleCounts();
