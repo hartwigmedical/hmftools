@@ -3,6 +3,7 @@ package com.hartwig.hmftools.qsee.prep.category;
 import static org.junit.Assert.assertEquals;
 
 import java.util.List;
+import java.util.Map;
 
 import com.hartwig.hmftools.common.driver.DriverCategory;
 import com.hartwig.hmftools.common.driver.panel.DriverGene;
@@ -128,7 +129,7 @@ public class MissedGeneVariantPrepTest
                 67545147,
                 67723841,
                 DUMMY_MISSED_VARIANT_LIKELIHOOD,
-                new int[]{ }
+                Map.of()
         );
 
         GeneDepth geneBRCA1 = new GeneDepth(
@@ -137,7 +138,7 @@ public class MissedGeneVariantPrepTest
                 43045678,
                 43124096,
                 DUMMY_MISSED_VARIANT_LIKELIHOOD,
-                new int[]{ }
+                Map.of()
         );
 
         return List.of(geneAR, geneBRCA1);

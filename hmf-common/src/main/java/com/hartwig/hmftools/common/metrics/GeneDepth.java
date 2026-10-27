@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.metrics;
 
+import java.util.Map;
+
 public class GeneDepth
 {
     public final String Gene;
@@ -7,11 +9,11 @@ public class GeneDepth
     public final int PosStart;
     public final int PosEnd;
     public final double MissedVariantLikelihood;
-    public final int[] DepthCounts;
+    public final Map<DepthRange,Integer> DepthCounts;
 
     public GeneDepth(
             final String gene, final String chromosome, final int posStart, final int posEnd,
-            final double missedVariantLikelihood, final int[] depthCounts)
+            final double missedVariantLikelihood, final Map<DepthRange,Integer> depthCounts)
     {
         Gene = gene;
         Chromosome = chromosome;

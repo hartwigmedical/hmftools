@@ -29,6 +29,7 @@ import com.hartwig.hmftools.common.driver.panel.DriverGeneRegions;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.common.metrics.DepthRange;
 import com.hartwig.hmftools.common.metrics.GeneDepth;
 import com.hartwig.hmftools.common.metrics.GeneDepthFile;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
@@ -40,6 +41,7 @@ public class GeneCoverage
     private final Map<String,List<ExonCoverage>> mChrGeneRegionsMap;
 
     private static final List<Integer> DEPTH_BUCKETS = Lists.newArrayList();
+    private static final List<DepthRange> DEPTH_RANGES = Lists.newArrayList();
     public static final int MAX_DEPTH_BUCKET = 10000;
     protected static final int GENE_COVERAGE_MIN_MAP_QUALITY = 10;
     private final int[] EXON_DEPTH_THRESHOLDS = { 10, 20, 30, 60, 100, 250 };
@@ -175,19 +177,25 @@ public class GeneCoverage
                 String geneName = entry.getKey();
                 List<ExonCoverage> exonCoverageList = entry.getValue();
 
-                int[] depthCounts = baseCoverageSummary(exonCoverageList);
+                int[] baseCounts = baseCoverageSummary(exonCoverageList);
+
+                Map<DepthRange,Integer> depthCounts = Maps.newLinkedHashMap();
+                for(int i = 0; i < baseCounts.length; ++i)
+                {
+                    depthCounts.put(DEPTH_RANGES.get(i), baseCounts[i]);
+                }
 
                 int minPosition = exonCoverageList.stream().mapToInt(x -> x.start()).min().orElse(0);
                 int maxPosition = exonCoverageList.stream().mapToInt(x -> x.end()).max().orElse(0);
 
                 GeneDepth geneDepth = new GeneDepth(
                         geneName, exonCoverageList.get(0).Chromosome, minPosition, maxPosition,
-                        missedVariantLikelihood(depthCounts), depthCounts);
+                        missedVariantLikelihood(baseCounts), depthCounts);
 
                 geneDepths.add(geneDepth);
             }
 
-            GeneDepthFile.write(geneFilename, geneDepths, DEPTH_BUCKETS);
+            GeneDepthFile.write(geneFilename, geneDepths);
         }
         catch(IOException e)
         {
@@ -236,6 +244,16 @@ public class GeneCoverage
         {
             DEPTH_BUCKETS.add(depthBucket);
         }
+
+        for(int bucket = 0; bucket < DEPTH_BUCKETS.size() - 1; ++bucket)
+        {
+            int depth = DEPTH_BUCKETS.get(bucket);
+            int depthNext = DEPTH_BUCKETS.get(bucket + 1);
+            DEPTH_RANGES.add(new DepthRange(depth, depthNext - 1));
+        }
+
+        int maxDepth = DEPTH_BUCKETS.get(DEPTH_BUCKETS.size() - 1);
+        DEPTH_RANGES.add(new DepthRange(maxDepth, maxDepth));
     }
 
     private static int[] baseCoverageSummary(final List<ExonCoverage> exons)
