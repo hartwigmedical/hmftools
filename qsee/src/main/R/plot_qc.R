@@ -727,12 +727,12 @@ PLOTS[[FEATURE_TYPE$MS_INDEL_ERROR_RATES]] <- local({
       return(plot_missing_data(plot_labels))
    }
    
-   plot_data$RefNumUnits <- as.numeric(plot_data$RefNumUnits)
+   plot_data$RefNumUnits <- as.numeric(as.character(plot_data$RefNumUnits))
 
    plot_pairwise_comparison(plot_data, x = "RefNumUnits", plot_type = PAIRWISE_PLOT_TYPE$POINT_RANGE) +
       facet_grid("ConsensusType ~ RepeatUnitType") +
       scale_x_continuous(breaks = scales::breaks_width(3)) +
-      expand_limits(x = c(3, 12)) +
+      expand_limits(x = c(4, 15)) +
       scale_y_continuous(limits = c(0, NA), sec.axis = dup_axis(name = "Consensus read type")) +
       plot_labels +
       theme(panel.grid.major = THEME_PANEL_GRID_MAJOR) +
@@ -753,12 +753,12 @@ PLOTS[[FEATURE_TYPE$MS_INDEL_ERROR_BIAS]] <- local({
       return(plot_missing_data(plot_labels))
    }
    
-   plot_data$RefNumUnits <- as.numeric(plot_data$RefNumUnits)
+   plot_data$RefNumUnits <- as.numeric(as.character(plot_data$RefNumUnits))
    
    plot_pairwise_comparison(plot_data, x = "RefNumUnits", plot_type = PAIRWISE_PLOT_TYPE$POINT_RANGE, hlines = 0) +
       facet_grid("ConsensusType ~ RepeatUnitType") +
       scale_x_continuous(breaks = scales::breaks_width(3)) +
-      expand_limits(x = c(3, 12)) +
+      expand_limits(x = c(4, 15)) +
       scale_y_continuous(
          labels = function(x){ ifelse(x > 0, paste0("+",x), x) },
          sec.axis = dup_axis(name = "Consensus read type")
