@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.sigs.fitter;
 
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeVersion;
 import static com.hartwig.hmftools.common.sigs.DataUtils.round;
 import static com.hartwig.hmftools.common.sigs.DataUtils.sizeToStr;
 import static com.hartwig.hmftools.common.sigs.SigResiduals.SIG_MISALLOCATED;
@@ -9,31 +8,18 @@ import static com.hartwig.hmftools.common.sigs.SigUtils.calculateFittedCounts;
 import static com.hartwig.hmftools.common.utils.VectorUtils.vectorMultiply;
 import static com.hartwig.hmftools.common.utils.MatrixFile.loadMatrixDataFile;
 import static com.hartwig.hmftools.common.utils.VectorUtils.sumVector;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FILE;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FILE_DESC;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadSampleIdsFile;
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.sigs.common.CommonUtils.APP_NAME;
-import static com.hartwig.hmftools.sigs.common.CommonUtils.SAMPLE_COUNTS_FILE;
-import static com.hartwig.hmftools.sigs.common.CommonUtils.SIGNATURES_FILE;
 import static com.hartwig.hmftools.sigs.common.CommonUtils.SIG_LOGGER;
 import static com.hartwig.hmftools.sigs.common.CommonUtils.formOutputFilename;
 import static com.hartwig.hmftools.sigs.common.CommonUtils.loadSampleMatrixCounts;
-import static com.hartwig.hmftools.sigs.loaders.PositionFreqBuilder.POSITION_BUCKET_SIZE;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.sigs.ImmutableSignatureAllocation;
 import com.hartwig.hmftools.common.sigs.SigResiduals;
 import com.hartwig.hmftools.common.sigs.SignatureAllocation;
@@ -46,82 +32,42 @@ import com.hartwig.hmftools.sigs.loaders.PositionFreqBuilder;
 import com.hartwig.hmftools.common.sigs.PositionFrequencies;
 import com.hartwig.hmftools.sigs.loaders.SigSnvLoader;
 
-import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
 public class SignatureFitter
 {
-    private final RefGenomeVersion mRefGenomeVersion;
-    private final List<String> mSampleIdList;
-    private final String mSnvCountsFile;
-    private final String mSignaturesFile;
-    private final String mOutputDir;
-    private final String mOutputId;
-
+    private final SigsConfig mConfig;
+    private final VariantFilters mFilters;
     private Matrix mSampleCountsMatrix;
     private final List<String> mSignatureNames;
     private Matrix mSignatures;
 
-    private final int mPositionBucketSize;
     private final boolean mFitToTotal;
-    private final boolean mWritePosFreqCoords;
 
-    private final String mVcfFile;
     private final SigSnvLoader mSnvLoader;
     private BufferedWriter mFitWriter;
 
-    private final double mMinFit;
-    private final double mMinFitPerc;
-
-    private static final double DEFAULT_MIN_ALLOCATION = 0.01;
-    private static final double DEFAULT_MIN_ALLOCATION_PERC = 0.0005;
     private static final int ALLOC_ROUND = 3;
     private static final int PERC_ROUND = 5;
 
-    private static final String SOMATIC_VCF_FILE = "somatic_vcf_file";
-    private static final String MIN_ALLOC = "min_alloc";
-    private static final String MIN_ALLOC_PERC = "min_alloc_perc";
-    private static final String FIT_TO_TOTAL = "fit_to_total";
-    private static final String WRITE_POS_COORDS = "write_pos_freq_coords";
-
     public SignatureFitter(final ConfigBuilder configBuilder)
     {
-        mSnvCountsFile = configBuilder.getValue(SAMPLE_COUNTS_FILE);
-        mSignaturesFile = configBuilder.getValue(SIGNATURES_FILE);
-        mVcfFile = configBuilder.getValue(SOMATIC_VCF_FILE);
+        mConfig = new SigsConfig(configBuilder);
 
-        mSampleIdList = Lists.newArrayList();
-
-        if(configBuilder.hasValue(SAMPLE))
-        {
-            mSampleIdList.add(configBuilder.getValue(SAMPLE));
-        }
-        else if(configBuilder.hasValue(SAMPLE_ID_FILE))
-        {
-            mSampleIdList.addAll(loadSampleIdsFile(configBuilder));
-        }
-
+        mFilters = new VariantFilters(configBuilder);
+        
         mSignatureNames = Lists.newArrayList();
 
         mSampleCountsMatrix = null;
         mSignatures = null;
 
-        mRefGenomeVersion = RefGenomeVersion.from(configBuilder);
-
-        mOutputDir = parseOutputDir(configBuilder);
-        mOutputId = configBuilder.getValue(OUTPUT_ID);
         mFitWriter = null;
-        mFitToTotal = true; // configBuilder.hasFlag(FIT_TO_TOTAL);
-        mWritePosFreqCoords = configBuilder.hasFlag(WRITE_POS_COORDS);
+        mFitToTotal = true;
 
-        mPositionBucketSize = configBuilder.getInteger(POSITION_BUCKET_SIZE);
-        mMinFit = configBuilder.getDecimal(MIN_ALLOC);
-        mMinFitPerc = configBuilder.getDecimal(MIN_ALLOC_PERC);
+        mSnvLoader = new SigSnvLoader(mFilters);
 
-        mSnvLoader = new SigSnvLoader(null);
-
-        if(mPositionBucketSize > 0)
-            mSnvLoader.initialisePositionFrequencies(null, Lists.newArrayList(mPositionBucketSize));
+        if(mConfig.PositionBucketSize > 0)
+            mSnvLoader.initialisePositionFrequencies(null, Lists.newArrayList(mConfig.PositionBucketSize));
     }
 
     public void run()
@@ -140,31 +86,31 @@ public class SignatureFitter
     
     private boolean initialise()
     {
-        if(mSampleIdList.isEmpty())
+        if(mConfig.SampleIdList.isEmpty())
         {
             SIG_LOGGER.error("no sample ID(s) configured");
             return false;
         }
 
-        if(mVcfFile == null && mSnvCountsFile == null)
+        if(mConfig.VcfFile == null && mConfig.SnvCountsFile == null)
         {
             SIG_LOGGER.error("no sample VCF or sample count file configured");
             return false;
         }
 
-        if(mSignaturesFile == null)
+        if(mConfig.SignaturesFile == null)
         {
             SIG_LOGGER.info("using default SNV Cosmic signatures");
             mSignatures = SnvSigUtils.loadSnvSignatures(mSignatureNames);
         }
         else
         {
-            mSignatures = loadMatrixDataFile(mSignaturesFile, mSignatureNames, false);
+            mSignatures = loadMatrixDataFile(mConfig.SignaturesFile, mSignatureNames, false);
         }
 
-        if(mSnvCountsFile != null)
+        if(mConfig.SnvCountsFile != null)
         {
-            mSampleCountsMatrix = loadSampleMatrixCounts(mSnvCountsFile, mSampleIdList);
+            mSampleCountsMatrix = loadSampleMatrixCounts(mConfig.SnvCountsFile, mConfig.SampleIdList);
         }
 
         initialiseOutputFiles();
@@ -173,10 +119,10 @@ public class SignatureFitter
 
     private void performFit()
     {
-        int sampleCount = mSampleIdList.size();
+        int sampleCount = mConfig.SampleIdList.size();
         int sigCount = mSignatures.Cols;
 
-        final Matrix sampleContribs = new Matrix(sigCount, sampleCount);
+        Matrix sampleContribs = new Matrix(sigCount, sampleCount);
 
         SIG_LOGGER.info("fitting sample({}) with {} signatures", sampleCount, sigCount);
 
@@ -184,8 +130,8 @@ public class SignatureFitter
 
         for(int i = 0; i < sampleCount; ++i)
         {
-            final String sampleId = mSampleIdList.get(i);
-            final double[] sampleCounts = getSampleCounts(sampleId, i);
+            String sampleId = mConfig.SampleIdList.get(i);
+            double[] sampleCounts = getSampleCounts(sampleId, i);
 
             double sampleTotal = sumVector(sampleCounts);
 
@@ -219,20 +165,21 @@ public class SignatureFitter
 
         mSnvLoader.setSampleIds(Lists.newArrayList(sampleId));
 
-        mSnvLoader.loadData(mVcfFile, false);
+        mSnvLoader.loadData(mConfig.VcfFile, false);
 
-        if(mSampleIdList.size() == 1)
+        if(mConfig.SampleIdList.size() == 1)
         {
-            final String filename = formOutputFilename(mOutputDir, mOutputId, sampleId + ".sig.snv_counts");
+            final String filename = formOutputFilename(mConfig.OutputDir, mConfig.OutputId, sampleId + ".sig.snv_counts");
 
             mSnvLoader.writeSampleCounts(filename);
 
-            if(mPositionBucketSize > 0)
+            if(mConfig.PositionBucketSize > 0)
             {
-                PositionFreqBuilder posFreqBuilder = new PositionFreqBuilder(mRefGenomeVersion, mOutputDir, mOutputId, mPositionBucketSize);
+                PositionFreqBuilder posFreqBuilder = new PositionFreqBuilder(
+                        mConfig.RefGenVersion, mConfig.OutputDir, mConfig.OutputId, mConfig.PositionBucketSize);
 
                 final PositionFrequencies samplePosFrequencies = mSnvLoader.getPositionFrequencies().get(0);
-                posFreqBuilder.writeSampleCounts(sampleId, samplePosFrequencies.getChrPosBucketFrequencies(), mWritePosFreqCoords);
+                posFreqBuilder.writeSampleCounts(sampleId, samplePosFrequencies.getChrPosBucketFrequencies(), mConfig.WritePosFreqCoords);
             }
         }
 
@@ -241,7 +188,7 @@ public class SignatureFitter
 
     private void processSampleResults(final String sampleId, final double[] sampleCounts, double sampleTotal, final double[] sigAllocs)
     {
-        final List<SignatureAllocation> sigAllocations = Lists.newArrayList();
+        List<SignatureAllocation> sigAllocations = Lists.newArrayList();
 
         double allocTotal = 0;
 
@@ -259,10 +206,10 @@ public class SignatureFitter
             allocTotal += sigAlloc;
 
             // avoid storing tiny or zero sig allocations
-            if(sigAlloc < mMinFit || allocPerc < mMinFitPerc)
+            if(sigAlloc < mConfig.MinFit || allocPerc < mConfig.MinFitPerc)
                 continue;
 
-            final String sigName = mSignatureNames.get(s);
+            String sigName = mSignatureNames.get(s);
 
             sigAllocations.add(ImmutableSignatureAllocation.builder()
                     .signature(sigName)
@@ -272,8 +219,8 @@ public class SignatureFitter
         }
 
         // also report residuals
-        final double[] fittedCounts = calculateFittedCounts(mSignatures, sigAllocs);
-        final SigResiduals residuals = calcResiduals(sampleCounts, fittedCounts, sampleTotal);
+        double[] fittedCounts = calculateFittedCounts(mSignatures, sigAllocs);
+        SigResiduals residuals = calcResiduals(sampleCounts, fittedCounts, sampleTotal);
         double residualsUnalloc = residuals.Total - residuals.Excess;
 
         SIG_LOGGER.debug(String.format("sample(%s) alloc(%s perc=%.3f of total=%s) residuals(%.3f total=%s excess=%s)",
@@ -296,10 +243,10 @@ public class SignatureFitter
 
     private void initialiseOutputFiles()
     {
-        if(mSampleIdList.size() <= 1)
+        if(mConfig.SampleIdList.size() <= 1)
             return;
 
-        final String filename = formOutputFilename(mOutputDir, mOutputId, "sig_snv_fit");
+        final String filename = formOutputFilename(mConfig.OutputDir, mConfig.OutputId, "sig_snv_fit");
 
         try
         {
@@ -316,18 +263,18 @@ public class SignatureFitter
 
     private void writeSigAllocations(final String sampleId, final List<SignatureAllocation> sigAllocations)
     {
-        boolean isSingleSample = mSampleIdList.size() == 1;
+        boolean isSingleSample = mConfig.SampleIdList.size() == 1;
 
         try
         {
             if(isSingleSample)
             {
-                final String fileId = mOutputId != null ? sampleId + "." + mOutputId : sampleId;
-                SignatureAllocationFile.write(SignatureAllocationFile.generateFilename(mOutputDir, fileId), sigAllocations);
+                String fileId = mConfig.OutputId != null ? sampleId + "." + mConfig.OutputId : sampleId;
+                SignatureAllocationFile.write(SignatureAllocationFile.generateFilename(mConfig.OutputDir, fileId), sigAllocations);
             }
             else
             {
-                for(final SignatureAllocation sigAlloc : sigAllocations)
+                for(SignatureAllocation sigAlloc : sigAllocations)
                 {
                     mFitWriter.write(String.format("%s,%s,%g,%g",
                             sampleId, sigAlloc.signature(), sigAlloc.allocation(), sigAlloc.percent()));
@@ -342,28 +289,12 @@ public class SignatureFitter
         }
     }
 
-    public static void main(@NotNull final String[] args) throws ParseException
+    public static void main(@NotNull final String[] args)
     {
         ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
 
-        configBuilder.addConfigItem(SAMPLE, false, SAMPLE_DESC);
-        configBuilder.addPath(SAMPLE_ID_FILE, false, SAMPLE_ID_FILE_DESC);
-
-        // either a VCF for a single sample or a sample matrix file
-        configBuilder.addPath(SOMATIC_VCF_FILE, false, "Somatic variant VCF file");
-        configBuilder.addPath(SAMPLE_COUNTS_FILE, false, "Path to the main input file");
-
-        configBuilder.addPath(SIGNATURES_FILE, false, "Signature definitions");
-        addRefGenomeVersion(configBuilder);
-
-        addOutputOptions(configBuilder);
-        addLoggingOptions(configBuilder);
-
-        configBuilder.addInteger(POSITION_BUCKET_SIZE, "Position bucket size", 0);
-
-        configBuilder.addDecimal(MIN_ALLOC_PERC, "Min signature allocation as percentage", DEFAULT_MIN_ALLOCATION_PERC);
-        configBuilder.addDecimal(MIN_ALLOC, "Min signature allocation", DEFAULT_MIN_ALLOCATION);
-        configBuilder.addFlag(WRITE_POS_COORDS, "Include coordinates with pos-frequency counts");
+        SigsConfig.registerConfig(configBuilder);
+        VariantFilters.registerConfig(configBuilder);
 
         configBuilder.checkAndParseCommandLine(args);
 
