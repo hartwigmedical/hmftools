@@ -87,7 +87,7 @@ public class RegionTask
         mFragmentLengths = fragmentLengths;
         mCandidateWriter = candidateWriter;
 
-        mCandidateState = new CandidateStage(config, hotspots, panelRegions, highConfidenceRegions, samSlicerFactory);
+        mCandidateState = new CandidateStage(config, refGenome, hotspots, panelRegions, highConfidenceRegions, samSlicerFactory);
 
         mVariantPhaser = new CandidateVariantPhaser(phaseSetCounter, mConfig.Common.LogLpsData);
 

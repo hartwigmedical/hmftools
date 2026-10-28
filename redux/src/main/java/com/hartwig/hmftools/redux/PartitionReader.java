@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_READ_ATTR
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.UNMAP_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.setNmTagIfMissing;
 import static com.hartwig.hmftools.common.perf.PerformanceCounter.secondsSinceNow;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 import static com.hartwig.hmftools.redux.ReduxConfig.SEQUENCING_TYPE;
@@ -26,6 +27,8 @@ import static com.hartwig.hmftools.redux.duplicate.ReadCache.DEFAULT_POP_DISTANC
 
 import static org.apache.logging.log4j.Level.DEBUG;
 import static org.apache.logging.log4j.Level.TRACE;
+
+import static htsjdk.samtools.util.FileExtensions.CRAM;
 
 import java.util.Collections;
 import java.util.List;
@@ -64,6 +67,7 @@ public class PartitionReader
     private final ReadUnmapper mReadUnmapper;
     private final DuplicateGroupBuilder mDuplicateGroupBuilder;
     private final ConsensusReads mConsensusReads;
+    private final boolean mRecomputeMissingNm;
 
     // state for current partition
     private BamWriter mBamWriter;
@@ -110,6 +114,7 @@ public class PartitionReader
         mDuplicateGroupBuilder = new DuplicateGroupBuilder(config);
         mStats = mDuplicateGroupBuilder.statistics();
         mConsensusReads = new ConsensusReads(config.RefGenome, SEQUENCING_TYPE, mStats.ConsensusStats);
+        mRecomputeMissingNm = config.BamFiles.stream().anyMatch(x -> x.endsWith(CRAM));
 
         mCurrentRegion = null;
         mUnmapRegionState = null;
@@ -216,6 +221,10 @@ public class PartitionReader
 
         if(!mCurrentRegion.containsPosition(readStart)) // to avoid processing reads from the prior region again
             return;
+
+        // CRAM can omit NM because it is derivable from the reference, but HTSJDK does not restore it when decoding.
+        if(mRecomputeMissingNm)
+            setNmTagIfMissing(read, mConfig.RefGenome);
 
         ++mProcessedReads;
 

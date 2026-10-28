@@ -26,6 +26,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.bam.CigarHandler;
 import com.hartwig.hmftools.common.codon.Nucleotides;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.Arrays;
 import com.hartwig.hmftools.sage.common.RefSequence;
@@ -42,6 +43,7 @@ public class RefContextConsumer
     private final SageConfig mConfig;
     private final ChrBaseRegion mBounds;
     private final RefSequence mRefSequence;
+    private final RefGenomeInterface mRefGenome;
     private final RefContextCache mRefContextCache;
     private final VariantReadContextBuilder mReadContextBuilder;
     private final Set<Integer> mHotspotPositions;
@@ -56,11 +58,12 @@ public class RefContextConsumer
     private static final String N_BASE = String.valueOf(Nucleotides.DNA_N_BASE);
 
     public RefContextConsumer(
-            final SageConfig config, final ChrBaseRegion regionBounds, final RefSequence refSequence, final RefContextCache refContextCache,
-            final List<SimpleVariant> regionHotspots)
+            final SageConfig config, final ChrBaseRegion regionBounds, final RefSequence refSequence, final RefGenomeInterface refGenome,
+            final RefContextCache refContextCache, final List<SimpleVariant> regionHotspots)
     {
         mBounds = regionBounds;
         mRefSequence = refSequence;
+        mRefGenome = refGenome;
         mRefContextCache = refContextCache;
         mReadContextBuilder = new VariantReadContextBuilder(DEFAULT_FLANK_LENGTH);
         mConfig = config;
@@ -248,7 +251,7 @@ public class RefContextConsumer
 
         if(!record.getSupplementaryAlignmentFlag())
         {
-            readInfo.NumberOfEvents = calcAdjustedNumMutations(record, mRefSequence);
+            readInfo.NumberOfEvents = calcAdjustedNumMutations(record, mRefGenome);
         }
 
         return readInfo;
