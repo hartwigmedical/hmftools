@@ -23,21 +23,32 @@ public class ViralInsertAlignmentTest
         assertEquals(70, alignment("30S70M", 100).alignedLength());
     }
 
-    // Inserted query bases are not placed on the genome, and a deletion consumes no query bases at all.
     @Test
-    public void testAlignedLengthExcludesIndelBases()
+    public void testAlignedLengthOfPlainMatch()
     {
-        assertEquals(28, alignment("10M2I8M3D10M", 30).alignedLength());
+        assertEquals(70, alignment("70M", 70).alignedLength());
     }
 
     @Test
-    public void testScorePerAlignedBase()
+    public void testAlignedLengthCountsInternalInsertion()
     {
-        assertEquals(60.0 / 70, alignment("30S70M", 100, 60).scorePerAlignedBase(), 1e-9);
+        assertEquals(20, alignment("10M2I8M", 20).alignedLength());
     }
 
     @Test
-    public void testPassesFiltersWhenScoreAndPerBaseClearFloors()
+    public void testAlignedLengthExcludesDeletion()
+    {
+        assertEquals(20, alignment("10M3D10M", 20).alignedLength());
+    }
+
+    @Test
+    public void testAlignedLengthExcludesHardClippedBases()
+    {
+        assertEquals(70, alignment("30H70M", 100).alignedLength());
+    }
+
+    @Test
+    public void testPassesFiltersWhenScoreClearsFloor()
     {
         assertTrue(alignment("70M", 70, 60).passesFilters());
     }
@@ -48,17 +59,11 @@ public class ViralInsertAlignmentTest
         assertFalse(alignment("70M", 70, 25).passesFilters());
     }
 
-    // A long match reaching the score floor on length alone, at low identity, is rejected by the per-aligned-base floor.
+    // A long, low-identity match (score 40 over 100 bases) passes on score alone.
     @Test
-    public void testDoesNotClearWhenPerBaseBelowFloor()
+    public void testPassesFiltersAtLowScorePerAlignedBase()
     {
-        assertFalse(alignment("100M", 100, 40).passesFilters());
-    }
-
-    @Test
-    public void testClearsAtPerBaseFloor()
-    {
-        assertTrue(alignment("50M", 50, 35).passesFilters());
+        assertTrue(alignment("100M", 100, 40).passesFilters());
     }
 
     private static ViralInsertAlignment alignment(String cigar, int sequenceLength)

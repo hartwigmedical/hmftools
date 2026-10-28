@@ -109,10 +109,6 @@ public class ViridianConstants
     // This is a conservative value, validated via concordance testing against VirusBreakend.
     public static final int INTEGRATION_ALIGN_SCORE_MIN = 30;
 
-    // Minimum aligner score per aligned base. Used to filter out alignments which are long but poor similarity.
-    // This value is a pretty permissive lower bound, validated via concordance testing against VirusBreakend.
-    public static final double INTEGRATION_VIRAL_ALIGN_SCORE_PER_BASE_MIN = 0.7;
-
     // Minimum integrations for a virus to be reported.
     // This value is matched to VirusInterpreter reporting logic.
     public static final int REPORTED_INTEGRATIONS_MIN = 1;
@@ -172,10 +168,6 @@ public class ViridianConstants
             throw new IllegalStateException();
         }
         if(!(INTEGRATION_INSERT_LENGTH_MIN > 0 && INTEGRATION_INSERT_LENGTH_MIN <= INTEGRATION_ALIGN_SCORE_MIN))
-        {
-            throw new IllegalStateException();
-        }
-        if(!(INTEGRATION_VIRAL_ALIGN_SCORE_PER_BASE_MIN > 0.0 && INTEGRATION_VIRAL_ALIGN_SCORE_PER_BASE_MIN <= 1.0))
         {
             throw new IllegalStateException();
         }

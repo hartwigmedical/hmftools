@@ -255,7 +255,6 @@ public class OutputWriter
                         row.set(IntegrationCandidateColumn.align_cigar, alignment.cigar().toString());
                         row.set(IntegrationCandidateColumn.aligned_length, alignment.alignedLength());
                         row.set(IntegrationCandidateColumn.aligner_score, alignment.alignerScore());
-                        row.set(IntegrationCandidateColumn.score_per_aligned_base, alignment.scorePerAlignedBase());
                         row.set(IntegrationCandidateColumn.aligned_edit_distance, alignment.alignedEditDistance());
                     }
                 });
@@ -299,7 +298,6 @@ public class OutputWriter
         align_cigar,
         aligned_length,
         aligner_score,
-        score_per_aligned_base,
         aligned_edit_distance
     }
 
