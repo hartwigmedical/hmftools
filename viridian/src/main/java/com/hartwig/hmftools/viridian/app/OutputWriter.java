@@ -311,7 +311,6 @@ public class OutputWriter
                     row.set(VirusReportColumn.oncology_group, report.oncologyGroup().name());
                     row.setOrNull(
                             VirusReportColumn.reporting_type, report.reportingType() != null ? report.reportingType().toString() : null);
-                    row.set(VirusReportColumn.driver_likelihood, report.driverLikelihood().toString());
                     row.set(VirusReportColumn.reported, report.isReported());
                     row.set(VirusReportColumn.integrations, report.integrations());
                     row.set(VirusReportColumn.has_min_integrations, report.hasMinIntegrations());
@@ -337,7 +336,6 @@ public class OutputWriter
         oncology_group,
         reported,
         reporting_type,
-        driver_likelihood,
         has_min_integrations,
         integrations,
         clonality_status,

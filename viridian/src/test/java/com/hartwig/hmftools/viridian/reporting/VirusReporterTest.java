@@ -10,7 +10,6 @@ import static com.hartwig.hmftools.viridian.reporting.ClonalityStatus.PURPLE_FAI
 
 import static org.junit.Assert.assertEquals;
 
-import com.hartwig.hmftools.common.virus.VirusLikelihoodType;
 import com.hartwig.hmftools.common.virus.VirusType;
 import com.hartwig.hmftools.viridian.profiling.VirusProfile;
 import com.hartwig.hmftools.viridian.profiling.common.GenomeStats;
@@ -26,9 +25,8 @@ public class VirusReporterTest
 {
     private static final OncologyGroup GROUP = new OncologyGroup("HPV16");
     private static final VirusGenome GENOME = new VirusGenome("c1", 1000, "HPV type 16", GROUP);
-    private static final OncologyGroupInfo REPORTABLE_INFO =
-            new OncologyGroupInfo(GROUP, VirusType.HPV, VirusLikelihoodType.HIGH);
-    private static final OncologyGroupInfo NOT_REPORTABLE_INFO = new OncologyGroupInfo(GROUP, null, null);
+    private static final OncologyGroupInfo REPORTABLE_INFO = new OncologyGroupInfo(GROUP, VirusType.HPV);
+    private static final OncologyGroupInfo NOT_REPORTABLE_INFO = new OncologyGroupInfo(GROUP, null);
 
     private static final ClonalityInputs PURPLE_FIT = new ClonalityInputs(20.0, null);
     private static final ClonalityInputs NO_TUMOR = new ClonalityInputs(null, FAIL_NO_TUMOR);
@@ -92,7 +90,7 @@ public class VirusReporterTest
     {
         VirusProfile profile = profile(10);
         VirusReport expected = new VirusReport(
-                GROUP, null, VirusLikelihoodType.UNKNOWN, 5, MEETS_INTEGRATION_MIN, profile, 0.5, CLONAL, !REPORTED);
+                GROUP, null, 5, MEETS_INTEGRATION_MIN, profile, 0.5, CLONAL, !REPORTED);
         assertEquals(expected, VirusReporter.reportGroup(GROUP, profile, 5, NOT_REPORTABLE_INFO, PURPLE_FIT));
     }
 
@@ -100,9 +98,8 @@ public class VirusReporterTest
             int integrations, boolean meetsIntegrationMin, @Nullable VirusProfile profile,
             @Nullable Double copiesPerTumorCell, ClonalityStatus clonalityStatus, boolean isReported)
     {
-        VirusLikelihoodType driverLikelihood = isReported ? VirusLikelihoodType.HIGH : VirusLikelihoodType.UNKNOWN;
         return new VirusReport(
-                GROUP, VirusType.HPV, driverLikelihood, integrations, meetsIntegrationMin, profile,
+                GROUP, VirusType.HPV, integrations, meetsIntegrationMin, profile,
                 copiesPerTumorCell, clonalityStatus, isReported);
     }
 

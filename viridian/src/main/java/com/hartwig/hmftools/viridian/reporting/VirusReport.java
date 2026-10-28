@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.viridian.reporting;
 
-import com.hartwig.hmftools.common.virus.VirusLikelihoodType;
 import com.hartwig.hmftools.common.virus.VirusType;
 import com.hartwig.hmftools.viridian.profiling.VirusProfile;
 import com.hartwig.hmftools.viridian.reference.OncologyGroup;
@@ -13,7 +12,6 @@ public record VirusReport(
         OncologyGroup oncologyGroup,
         // Null if not a reportable virus.
         @Nullable VirusType reportingType,
-        VirusLikelihoodType driverLikelihood,
         int integrations,
         boolean hasMinIntegrations,
         @Nullable VirusProfile profile,

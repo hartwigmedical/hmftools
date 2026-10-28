@@ -14,7 +14,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.hartwig.hmftools.common.virus.VirusLikelihoodType;
 import com.hartwig.hmftools.viridian.profiling.VirusProfile;
 import com.hartwig.hmftools.viridian.reference.OncologyGroup;
 import com.hartwig.hmftools.viridian.reference.OncologyGroupInfo;
@@ -70,13 +69,9 @@ public class VirusReporter
 
         boolean hasMinIntegrations = integrations >= REPORTED_INTEGRATIONS_MIN;
         boolean isReported = info.isReportable() && (hasMinIntegrations || clonalityStatus == ClonalityStatus.CLONAL);
-        // TODO: copies VirusInterpreter behaviour for now. Review what driver likelihood should claim. Changing it needs
-        // downstream changes.
-        VirusLikelihoodType driverLikelihood =
-                isReported ? requireNonNull(info.driverLikelihood()) : VirusLikelihoodType.UNKNOWN;
 
         return new VirusReport(
-                group, info.reportingType(), driverLikelihood, integrations, hasMinIntegrations, profile,
+                group, info.reportingType(), integrations, hasMinIntegrations, profile,
                 copiesPerTumorCell, clonalityStatus, isReported);
     }
 }
