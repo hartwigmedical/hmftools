@@ -8,7 +8,6 @@ import static com.hartwig.hmftools.compar.common.ExpectedCache.FLD_STATUS;
 import static com.hartwig.hmftools.compar.common.MatchLevel.REPORTABLE;
 import static com.hartwig.hmftools.compar.common.MismatchType.FULL_MATCH;
 import static com.hartwig.hmftools.compar.common.MismatchType.INVALID_BOTH;
-import static com.hartwig.hmftools.compar.common.MismatchType.INVALID_ERROR;
 import static com.hartwig.hmftools.compar.common.MismatchType.INVALID_NEW;
 import static com.hartwig.hmftools.compar.common.MismatchType.INVALID_OLD;
 import static com.hartwig.hmftools.compar.common.MismatchType.NEW_ONLY;
@@ -152,20 +151,8 @@ public class CommonUtils
                     matched = true;
 
                     // skip checking for diffs if the items are not reportable
-                    boolean checkMismatch;
-
-                    if(matchLevel != REPORTABLE)
-                    {
-                        checkMismatch = true;
-                    }
-                    else if(item1.reportable() || item2.reportable())
-                    {
-                        checkMismatch = true;
-                    }
-                    else
-                    {
-                        checkMismatch = oldExpectedSourced || newExpectedSourced;
-                    }
+                    boolean checkMismatch = matchLevel != REPORTABLE || item1.reportable() || item2.reportable()
+                            || oldExpectedSourced || newExpectedSourced;
 
                     if(checkMismatch)
                     {
@@ -276,54 +263,25 @@ public class CommonUtils
         boolean oldCountsAsCalled = countsAsCalled(oldItem, matchLevel) || includesExpected;
         boolean newCountsAsCalled = countsAsCalled(newItem, matchLevel) || includesExpected;
 
+        // ignore unimportant differences
         if(!oldCountsAsCalled && !newCountsAsCalled)
-        {
-            // ignore unimportant differences
             return null;
-        }
-        else if(oldCountsAsCalled && newCountsAsCalled && diffs.isEmpty() && !includeMatches)
-        {
-            // ignore perfect matches when not including matches
-            return null;
-        }
-        else
-        {
-            MismatchType mismatchType;
-            if(oldCountsAsCalled && !newCountsAsCalled)
-            {
-                mismatchType = OLD_ONLY;
-            }
-            else if(!oldCountsAsCalled && newCountsAsCalled)
-            {
-                mismatchType = NEW_ONLY;
-            }
-            else if(oldCountsAsCalled && newCountsAsCalled && !diffs.isEmpty())
-            {
-                mismatchType = VALUE;
-            }
-            else if(oldCountsAsCalled && newCountsAsCalled && includeMatches)
-            {
-                mismatchType = FULL_MATCH;
-            }
-            else
-            {
-                // should be impossible due to earlier filters
-                mismatchType = INVALID_ERROR;
-            }
 
-            return new Mismatch(oldItem, newItem, mismatchType, diffs);
-        }
+        if(!newCountsAsCalled)
+            return new Mismatch(oldItem, newItem, OLD_ONLY, diffs);
+
+        if(!oldCountsAsCalled)
+            return new Mismatch(oldItem, newItem, NEW_ONLY, diffs);
+
+        if(!diffs.isEmpty())
+            return new Mismatch(oldItem, newItem, VALUE, diffs);
+
+        // ignore perfect matches when not including matches
+        return includeMatches ? new Mismatch(oldItem, newItem, FULL_MATCH, diffs) : null;
     }
 
     public static boolean countsAsCalled(final ComparableItem item, final MatchLevel matchLevel)
     {
-        if(matchLevel == REPORTABLE)
-        {
-            return item.reportable();
-        }
-        else
-        {
-            return item.isPass();
-        }
+        return matchLevel == REPORTABLE ? item.reportable() : item.isPass();
     }
 }
