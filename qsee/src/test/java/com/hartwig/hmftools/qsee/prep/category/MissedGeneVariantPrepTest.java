@@ -61,8 +61,8 @@ public class MissedGeneVariantPrepTest
         List<Feature> actualFeatures = MissedGeneVariantPrep.getMissedVariantLikelihoods(GENE_DEPTHS, reportableGenes, 1, Gender.FEMALE);
 
         List<Feature> expectedFeatures = List.of(
-                createExpectedFeature(GERMLINE_GENE, 0.002302649),
-                createExpectedFeature(GERMLINE_CHR_X_GENE, 0.002302649) // Diploid chrX in females
+                createExpectedFeature(GERMLINE_GENE, 0.000389385),
+                createExpectedFeature(GERMLINE_CHR_X_GENE, 0.000389385) // Diploid chrX in females
         );
 
         assertFeaturesEqual(expectedFeatures, actualFeatures);
@@ -75,8 +75,8 @@ public class MissedGeneVariantPrepTest
         List<Feature> actualFeatures = MissedGeneVariantPrep.getMissedVariantLikelihoods(GENE_DEPTHS, reportableGenes, 0.5, Gender.MALE);
 
         List<Feature> expectedFeatures = List.of(
-                createExpectedFeature(SOMATIC_GENE, 0.040958012),
-                createExpectedFeature(SOMATIC_CHR_X_GENE, 0.002302649), // Haploid chrX in males doubles depth per allele
+                createExpectedFeature(SOMATIC_GENE, 0.032975381),
+                createExpectedFeature(SOMATIC_CHR_X_GENE, 0.000389385), // Haploid chrX in males doubles depth per allele
                 createExpectedFeature(SOMATIC_NO_COVERAGE_GENE, 1)
         );
 

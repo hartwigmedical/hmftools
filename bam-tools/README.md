@@ -68,8 +68,8 @@ GeneName  Chromosome  PosStart  PosEnd    DR_0  DR_1  ...  DR_60_69  DR_70_79  .
 PTEN      chr10       87864470  87965472  162   0     ...  424       451       ...  0
 ```
 
-A 'missed variant likelihood' is calculated by [Qsee](https://github.com/hartwigmedical/hmftools/tree/master/qsee) using Poisson as the mean probability of not finding at least 3 reads coverage for an allele given the depth distribution over the whole gene:
-- The Poisson mean for each depth range is `purity * depth / alleles`
+A 'missed variant likelihood' is calculated by [Qsee](https://github.com/hartwigmedical/hmftools/tree/master/qsee) using a binomial distribution as the mean probability of not finding at least 3 reads coverage for an allele given the depth distribution over the whole gene:
+- For each depth range, the binomial distribution has `n = depth` trials and success probability `p = purity / alleles` (i.e. a mean allele depth of `purity * depth / alleles`)
 - `depth` is the range's midpoint and `alleles` is 1 for haploid chromosomes (chrX and chrY in males) and 2 otherwise
 - Tumor samples use the PURPLE purity, while reference samples use a purity of 1
 - Sex is taken from the PURPLE output of the tumor sample
