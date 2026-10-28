@@ -60,6 +60,14 @@ public class SbxBamUtilsTest
 
         assertTrue(duplexIndelIndices.isEmpty());
 
+        // non-zero 3' overhang
+        ycTagStr = "+10A10I20+20";
+
+        duplexIndelIndices = getDuplexIndelIndices(ycTagStr);
+
+        assertEquals(1, duplexIndelIndices.size());
+        assertTrue(duplexIndelIndices.contains(21));
+
         // invalid formats
         ycTagStr = "200--0";
 
@@ -68,6 +76,12 @@ public class SbxBamUtilsTest
         assertNull(duplexIndelIndices);
 
         ycTagStr = "30-200+";
+
+        duplexIndelIndices = getDuplexIndelIndices(ycTagStr);
+
+        assertNull(duplexIndelIndices);
+
+        ycTagStr = "30+200-";
 
         duplexIndelIndices = getDuplexIndelIndices(ycTagStr);
 
