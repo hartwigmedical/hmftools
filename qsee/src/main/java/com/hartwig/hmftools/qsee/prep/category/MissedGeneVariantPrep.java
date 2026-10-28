@@ -22,7 +22,7 @@ import com.hartwig.hmftools.qsee.feature.SourceTool;
 import com.hartwig.hmftools.qsee.prep.CategoryPrep;
 import com.hartwig.hmftools.qsee.prep.QseePrepConfig;
 
-import org.apache.commons.math3.distribution.PoissonDistribution;
+import org.apache.commons.math3.distribution.BinomialDistribution;
 import org.jetbrains.annotations.NotNull;
 
 public class MissedGeneVariantPrep implements CategoryPrep
@@ -93,12 +93,13 @@ public class MissedGeneVariantPrep implements CategoryPrep
             if(baseCount == 0)
                 continue;
 
-            double meanAlleleDepth = (purity * depthRange.midpoint()) / alleleCount;
+            int depth = depthRange.midpoint();
+            double meanAlleleDepth = (purity * depth) / alleleCount;
 
             double likelihoodOfMissing;
             if(meanAlleleDepth > 0)
             {
-                PoissonDistribution distribution = new PoissonDistribution(meanAlleleDepth);
+                BinomialDistribution distribution = new BinomialDistribution(depth, meanAlleleDepth / depth);
                 likelihoodOfMissing = distribution.cumulativeProbability(MIN_VARIANT_ALLELE_DEPTH - 1);
             }
             else
