@@ -84,7 +84,7 @@ public class MissedGeneVariantPrep implements CategoryPrep
 
         Map<DepthRange,Integer> depthCounts = geneDepth.DepthCounts;
         int totalBaseCount = depthCounts.values().stream().mapToInt(Integer::intValue).sum();
-        double totalLikelihood = 0;
+        double missedVariantLikelihood = 0;
 
         for(DepthRange depthRange : depthCounts.keySet())
         {
@@ -93,25 +93,31 @@ public class MissedGeneVariantPrep implements CategoryPrep
             if(baseCount == 0)
                 continue;
 
-            int depth = depthRange.midpoint();
-            double meanAlleleDepth = (purity * depth) / alleleCount;
+            // Assume there is 1 mutation on 1 allele at a particular position.
+            // With 0.5 purity and 2 alleles (diploid), the prior probability of observing the mutation (i.e. on a read) is:
+            //   0.5 purity * 1/2 alleles = 0.25
+            double probMutationPerAllele = (double) 1 / alleleCount;
+            double probMutationObserved =  probMutationPerAllele * purity;
 
-            double likelihoodOfMissing;
-            if(meanAlleleDepth > 0)
+            int numReads = depthRange.midpoint();
+
+            double probMutationNotObserved;
+            if(numReads > 0 && probMutationObserved > 0)
             {
-                BinomialDistribution distribution = new BinomialDistribution(depth, meanAlleleDepth / depth);
-                likelihoodOfMissing = distribution.cumulativeProbability(MIN_VARIANT_ALLELE_DEPTH - 1);
+                BinomialDistribution distribution = new BinomialDistribution(numReads, probMutationObserved);
+                probMutationNotObserved = distribution.cumulativeProbability(MIN_VARIANT_ALLELE_DEPTH - 1);
             }
             else
             {
-                likelihoodOfMissing = 1;
+                probMutationNotObserved = 1;
             }
 
             double baseProportion = (double) baseCount / totalBaseCount;
-            totalLikelihood += baseProportion * likelihoodOfMissing;
+            missedVariantLikelihood += baseProportion * probMutationNotObserved;
         }
 
-        return totalLikelihood;
+        // 'Likelihood' is a misnomer (should be 'probability'), but will leave as is because renaming is non-trivial
+        return missedVariantLikelihood;
     }
 
     @VisibleForTesting
