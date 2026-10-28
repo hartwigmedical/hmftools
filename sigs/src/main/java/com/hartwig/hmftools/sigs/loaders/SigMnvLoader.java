@@ -1,11 +1,8 @@
 package com.hartwig.hmftools.sigs.loaders;
 
 import static com.hartwig.hmftools.common.codon.Nucleotides.swapDnaBase;
-import static com.hartwig.hmftools.sigs.common.CommonUtils.getNewFile;
-import static com.hartwig.hmftools.sigs.loaders.SigSnvLoader.getBucketNameByIndex;
+import static com.hartwig.hmftools.sigs.common.CommonUtils.SIG_LOGGER;
 
-import java.io.BufferedWriter;
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -13,15 +10,12 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.SmallVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
-import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.common.utils.Matrix;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import com.hartwig.hmftools.sigs.fitter.VariantFilters;
 
 public class SigMnvLoader
 {
-    private final DataLoaderConfig mConfig;
+    private final VariantFilters mFilters;
 
     private final Map<String,Integer> mBucketStringToIndex;
     private Matrix mSampleBucketCounts;
@@ -29,11 +23,9 @@ public class SigMnvLoader
     private static final String MNV_3_BASES = "3Bases";
     private static final String MNV_4P_BASES = "4+Bases";
 
-    private static final Logger LOGGER = LogManager.getLogger(SigMnvLoader.class);
-
-    public SigMnvLoader(final DataLoaderConfig config)
+    public SigMnvLoader(final VariantFilters filters)
     {
-        mConfig = config;
+        mFilters = filters;
 
         mBucketStringToIndex = Maps.newHashMap();
         buildBucketMap();
@@ -81,57 +73,6 @@ public class SigMnvLoader
         }
     }
 
-    public void loadData(DatabaseAccess dbAccess)
-    {
-        mSampleBucketCounts = new Matrix(mBucketStringToIndex.size(), mConfig.SampleIds.size());
-
-        LOGGER.info("retrieving MNV data for {} samples", mConfig.SampleIds.size());
-
-        for(int sampleIndex = 0; sampleIndex < mConfig.SampleIds.size(); ++sampleIndex)
-        {
-            String sampleId = mConfig.SampleIds.get(sampleIndex);
-            final List<SmallVariant> variants = dbAccess.readSomaticVariants(sampleId, VariantType.MNP);
-
-            LOGGER.info("sample({}:{}) processing {} variants", sampleIndex, sampleId, variants.size());
-
-            processSampleVariants(sampleId, variants, sampleIndex);
-        }
-
-        try
-        {
-            BufferedWriter writer = getNewFile(mConfig.OutputDir, mConfig.OutputFileId + "_sample_counts.csv");
-
-            writer.write("BucketName");
-
-            for(int i = 0; i < mConfig.SampleIds.size(); ++i)
-            {
-                writer.write(String.format(",%s", mConfig.SampleIds.get(i)));
-            }
-
-            writer.newLine();
-
-            double[][] scData = mSampleBucketCounts.getData();
-
-            for(int i = 0; i < mSampleBucketCounts.Rows; ++i)
-            {
-                writer.write(getBucketNameByIndex(mBucketStringToIndex, i));
-
-                for(int j = 0; j < mSampleBucketCounts.Cols; ++j) {
-
-                    writer.write(String.format(",%.0f", scData[i][j]));
-                }
-
-                writer.newLine();
-            }
-
-            writer.close();
-        }
-        catch (final IOException e)
-        {
-            LOGGER.error("error writing to outputFile: {}", e.toString());
-        }
-    }
-
     private void processSampleVariants(final String sampleId, List<SmallVariant> variants, int sampleIndex)
     {
         double[][] sampleCounts = mSampleBucketCounts.getData();
@@ -147,7 +88,7 @@ public class SigMnvLoader
                 continue;
 
             // check filters
-            if(!mConfig.Filters.passesFilters(variant))
+            if(!mFilters.passesFilters(variant))
                 continue;
 
             final String bucketName = mutationType(variant);
@@ -156,7 +97,7 @@ public class SigMnvLoader
 
             if(bucketIndex == null)
             {
-                LOGGER.error("sample({}) invalid bucketName({}) from ref({}) to alt({})",
+                SIG_LOGGER.error("sample({}) invalid bucketName({}) from ref({}) to alt({})",
                         sampleId, bucketName, variant.ref(), variant.alt());
 
                 return;

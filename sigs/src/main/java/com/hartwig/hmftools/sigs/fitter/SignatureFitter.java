@@ -26,7 +26,6 @@ import static com.hartwig.hmftools.sigs.common.CommonUtils.SIGNATURES_FILE;
 import static com.hartwig.hmftools.sigs.common.CommonUtils.SIG_LOGGER;
 import static com.hartwig.hmftools.sigs.common.CommonUtils.formOutputFilename;
 import static com.hartwig.hmftools.sigs.common.CommonUtils.loadSampleMatrixCounts;
-import static com.hartwig.hmftools.sigs.loaders.PositionFreqBuilder.MAX_SAMPLE_COUNT;
 import static com.hartwig.hmftools.sigs.loaders.PositionFreqBuilder.POSITION_BUCKET_SIZE;
 
 import java.io.BufferedWriter;
@@ -50,7 +49,7 @@ import com.hartwig.hmftools.sigs.loaders.SigSnvLoader;
 import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
-public class SampleFitter
+public class SignatureFitter
 {
     private final RefGenomeVersion mRefGenomeVersion;
     private final List<String> mSampleIdList;
@@ -85,7 +84,7 @@ public class SampleFitter
     private static final String FIT_TO_TOTAL = "fit_to_total";
     private static final String WRITE_POS_COORDS = "write_pos_freq_coords";
 
-    public SampleFitter(final ConfigBuilder configBuilder)
+    public SignatureFitter(final ConfigBuilder configBuilder)
     {
         mSnvCountsFile = configBuilder.getValue(SAMPLE_COUNTS_FILE);
         mSignaturesFile = configBuilder.getValue(SIGNATURES_FILE);
@@ -220,7 +219,7 @@ public class SampleFitter
 
         mSnvLoader.setSampleIds(Lists.newArrayList(sampleId));
 
-        mSnvLoader.loadData(null, mVcfFile, false);
+        mSnvLoader.loadData(mVcfFile, false);
 
         if(mSampleIdList.size() == 1)
         {
@@ -368,7 +367,7 @@ public class SampleFitter
 
         configBuilder.checkAndParseCommandLine(args);
 
-        SampleFitter sampleFitter = new SampleFitter(configBuilder);
-        sampleFitter.run();
+        SignatureFitter signatureFitter = new SignatureFitter(configBuilder);
+        signatureFitter.run();
     }
 }

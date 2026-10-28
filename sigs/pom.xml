@@ -19,11 +19,6 @@
             <artifactId>hmf-common</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.hartwig</groupId>
-            <artifactId>patient-db</artifactId>
-        </dependency>
-
-        <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <scope>test</scope>
@@ -46,7 +41,7 @@
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <mainClass>com.hartwig.hmftools.sigs.fitter.SampleFitter</mainClass>
+                            <mainClass>com.hartwig.hmftools.sigs.fitter.SignatureFitter</mainClass>
                             <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                             <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
                         </manifest>

@@ -17,10 +17,9 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.sigs.PositionFrequencies;
 import com.hartwig.hmftools.common.variant.SmallVariant;
 import com.hartwig.hmftools.common.variant.SmallVariantFactory;
-import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
-import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.common.utils.Matrix;
+import com.hartwig.hmftools.sigs.fitter.VariantFilters;
 
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.filter.CompoundFilter;
@@ -71,7 +70,7 @@ public class SigSnvLoader
 
     public Matrix getSampleBucketCounts() { return mSampleBucketCounts; }
 
-    public void loadData(final DatabaseAccess dbAccess, final String vcfFile, boolean writePosFreqData)
+    public void loadData(final String vcfFile, boolean writePosFreqData)
     {
         mSampleBucketCounts = new Matrix(SNV_BUCKET_COUNT, mSampleIds.size());
 
@@ -84,8 +83,7 @@ public class SigSnvLoader
         {
             String sampleId = mSampleIds.get(sampleIndex);
 
-            final List<SmallVariant> variants = vcfFile != null ?
-                    loadSomaticVariants(vcfFile, sampleId) : dbAccess.readSomaticVariants(sampleId, VariantType.SNP);
+            List<SmallVariant> variants = loadSomaticVariants(vcfFile, sampleId);
 
             SIG_LOGGER.info("sample({}) processing {} variants", sampleId, variants.size());
 
@@ -225,5 +223,4 @@ public class SigSnvLoader
 
         return String.format("MissingBucket_%d", index);
     }
-
 }

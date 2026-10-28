@@ -1,8 +1,7 @@
-package com.hartwig.hmftools.sigs.loaders;
+package com.hartwig.hmftools.sigs.fitter;
 
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.variant.SmallVariant;
-
-import org.apache.commons.cli.CommandLine;
 
 public class VariantFilters
 {
@@ -16,19 +15,19 @@ public class VariantFilters
     public static final String PLOIDY_MAX = "ploidy_max";
     public static final String PLOIDY_MIN = "ploidy_min";
 
-    public VariantFilters(final CommandLine cmd)
+    public VariantFilters(final ConfigBuilder configBuilder)
     {
-        SubclonalLikelihoodMin = initialiseDoubleValue(cmd, SUBCLONAL_MIN);
-        SubclonalLikelihoodMax = initialiseDoubleValue(cmd, SUBCLONAL_MAX);
+        SubclonalLikelihoodMin = initialiseDoubleValue(configBuilder, SUBCLONAL_MIN);
+        SubclonalLikelihoodMax = initialiseDoubleValue(configBuilder, SUBCLONAL_MAX);
 
-        PloidyMin = initialiseDoubleValue(cmd, PLOIDY_MIN);
-        PloidyMax = initialiseDoubleValue(cmd, PLOIDY_MAX);
+        PloidyMin = initialiseDoubleValue(configBuilder, PLOIDY_MIN);
+        PloidyMax = initialiseDoubleValue(configBuilder, PLOIDY_MAX);
     }
 
-    private static Double initialiseDoubleValue(final CommandLine cmd, final String config)
+    private static Double initialiseDoubleValue(final ConfigBuilder configBuilder, final String configStr)
     {
-        if(cmd.hasOption(config))
-            return Double.parseDouble(cmd.getOptionValue(config, "0"));
+        if(configBuilder.hasValue(configStr))
+            return configBuilder.getDecimal(configStr);
         else
             return null;
     }
@@ -50,4 +49,11 @@ public class VariantFilters
         return true;
     }
 
+    public static void registerConfig(final ConfigBuilder configBuilder)
+    {
+        configBuilder.addDecimal(SUBCLONAL_MIN,"Subclonal minimum", 0);
+        configBuilder.addDecimal(SUBCLONAL_MAX,"Subclonal minimum", 1.0);
+        configBuilder.addDecimal(PLOIDY_MIN,"Ploidy minimum", 0);
+        configBuilder.addDecimal(PLOIDY_MAX,"Ploidy minimum", 1.0);
+    }
 }
