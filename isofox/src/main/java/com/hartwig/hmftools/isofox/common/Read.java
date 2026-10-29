@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.XA_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.firstInPair;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.inferredInsertSize;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.mateNegativeStrand;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.mateUnmapped;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
@@ -149,10 +150,10 @@ public class Read
     public boolean isReadReversed() { return mRecord.getReadNegativeStrandFlag(); }
     public boolean isFirstOfPair() { return firstInPair(mRecord); }
     public boolean isDuplicate() { return mRecord.getDuplicateReadFlag(); }
-    public boolean isTranslocation() { return !chromosome().equals(mateChromosome()); }
+    public boolean isTranslocation() { return isReadPaired() && !chromosome().equals(mateChromosome()); }
     public boolean isMateNegStrand() { return mateNegativeStrand(mRecord); }
-    public boolean isMateUnmapped() { return mRecord.getMateUnmappedFlag(); }
-    public boolean isInversion() { return isReadReversed() == isMateNegStrand(); }
+    public boolean isMateUnmapped() { return mateUnmapped(mRecord); }
+    public boolean isInversion() { return isReadPaired() && isReadReversed() == isMateNegStrand(); }
     public boolean isSupplementaryAlignment() { return mRecord.getSupplementaryAlignmentFlag(); }
 
     public SupplementaryReadData supplementaryData() { return mSupplementaryData; }

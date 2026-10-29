@@ -53,7 +53,7 @@ public class FusionReadGroup
     {
         for(FusionRead read : mReads)
         {
-            if(!read.MateChromosome.equals(chromosome))
+            if(read.isReadPaired() && !read.MateChromosome.equals(chromosome))
                 return read.MateChromosome;
 
             if(read.SuppData != null)

@@ -1,19 +1,19 @@
 package com.hartwig.hmftools.isofox.adjusts;
 
-import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
 
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.inferredInsertSizeAbs;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.mateNegativeStrand;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
-import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.isofox.ChromosomeTaskExecutor.findNextOverlappingGenes;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.SINGLE_MAP_QUALITY;
@@ -30,7 +30,6 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.perf.PerformanceCounter;
-import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
 import com.hartwig.hmftools.isofox.WriteType;
@@ -259,10 +258,13 @@ public class FragmentSizeCalcs implements Callable<Void>
 
         mMaxReadLength = max(mMaxReadLength, read.getReadLength());
 
-        final SAMRecord otherRead = (SAMRecord) mFragmentTracker.checkRead(read.getReadName(), read);
+        if(read.getReadPairedFlag())
+        {
+            final SAMRecord otherRead = (SAMRecord) mFragmentTracker.checkRead(read.getReadName(), read);
 
-        if(otherRead == null)
-            return;
+            if(otherRead == null)
+                return;
+        }
 
         addFragmentLength(read, mFragmentLengths);
 
@@ -274,16 +276,24 @@ public class FragmentSizeCalcs implements Callable<Void>
 
     private boolean isCandidateRecord(final SAMRecord record)
     {
-        int fragmentLength = abs(record.getInferredInsertSize());
+        int fragmentLength = inferredInsertSizeAbs(record);
         if(fragmentLength > MAX_FRAGMENT_LENGTH)
             return false;
 
         // ignore translocations and inversions
-        if(!record.getMateReferenceName().equals(record.getReferenceName()) || mateNegativeStrand(record) == record.getReadNegativeStrandFlag())
+        if(record.getReadPairedFlag()
+                && (!record.getMateReferenceName().equals(record.getReferenceName()) ||
+                    mateNegativeStrand(record) == record.getReadNegativeStrandFlag()))
+        {
             return false;
+        }
 
         // ignore split and soft-clipped reads above the read length
         if(record.getCigar().containsOperator(CigarOperator.N) || !record.getCigar().containsOperator(CigarOperator.M))
+            return false;
+
+        // unpaired reads must be fully aligned
+        if(!record.getReadPairedFlag() && record.getCigar().containsOperator(CigarOperator.S))
             return false;
 
         int readLength = max(mMaxReadLength, mConfig.ReadLength);
@@ -296,8 +306,7 @@ public class FragmentSizeCalcs implements Callable<Void>
         }
 
         // both reads must fall in the current gene
-        int otherStartPos = record.getMateAlignmentStart();
-        if(!positionWithin(otherStartPos, mCurrentGenesRange[SE_START], mCurrentGenesRange[SE_END]))
+        if(record.getReadPairedFlag() && !positionWithin(record.getMateAlignmentStart(), mCurrentGenesRange[SE_START], mCurrentGenesRange[SE_END]))
             return false;
 
         // reads cannot cover any part of an exon
@@ -315,7 +324,7 @@ public class FragmentSizeCalcs implements Callable<Void>
 
     private void addFragmentLength(final SAMRecord record, final List<FragmentSize> fragmentLengths)
     {
-        int fragmentLength = getLengthBucket(abs(record.getInferredInsertSize()));
+        int fragmentLength = getLengthBucket(inferredInsertSizeAbs(record));
 
         if(fragmentLength == 0)
             return;
