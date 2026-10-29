@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.sigs.fitter;
 
 import static com.hartwig.hmftools.common.variant.PaveVcfTags.GNOMAD_FREQ;
-import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_AF;
 import static com.hartwig.hmftools.sigs.fitter.SigsConfig.TUMOR_ONLY_AF_THRESHOLD;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -72,7 +71,7 @@ public class VariantFilters
                 return false;
 
             // AF < 5%
-            double af = variant.VariantContext.getAttributeAsDouble(PURPLE_AF, 0);
+            double af = variant.Variant.allelicDepth().alleleFrequency();;
             if(af < TUMOR_ONLY_AF_THRESHOLD)
                 return false;
         }

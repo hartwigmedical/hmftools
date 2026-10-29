@@ -34,7 +34,7 @@ public class SignaturesTest
     public void testVariantFilters()
     {
         SimpleVariant simpleVariant = new SimpleVariant(CHR_1, 100, "A", "T");
-        VariantContext variantContext = buildVariantContext(simpleVariant);
+        VariantContext variantContext = buildVariantContext(simpleVariant, 4, 100);
 
         SmallVariantFactory variantFactory = SmallVariantFactory.passOnlyInstance();
 
@@ -43,12 +43,11 @@ public class SignaturesTest
 
         VariantFilters filters = new VariantFilters(null, null, null, null, true);
 
-        variantContext.getCommonInfo().putAttribute(PURPLE_AF, 0.04);
-
         assertFalse(filters.passesFilters(variant));
 
-        variantContext.getCommonInfo().removeAttribute(PURPLE_AF);
-        variantContext.getCommonInfo().putAttribute(PURPLE_AF, 0.1);
+        variantContext = buildVariantContext(simpleVariant, 10, 100);
+        smallVariant = variantFactory.createVariant(TEST_SAMPLE_ID, variantContext).get();
+        variant = new SigVariant(smallVariant, variantContext);
 
         assertTrue(filters.passesFilters(variant));
 
@@ -78,11 +77,11 @@ public class SignaturesTest
 
     private static final String TEST_SAMPLE_ID = "Sample_001";
 
-    private static VariantContext buildVariantContext(final SimpleVariant variant)
+    private static VariantContext buildVariantContext(final SimpleVariant variant, int altCount, int depth)
     {
         GenotypeBuilder genotypeBuilder = new GenotypeBuilder(TEST_SAMPLE_ID);
-        genotypeBuilder.AD(new int[] { 10, 10 });
-        genotypeBuilder.DP(100);
+        genotypeBuilder.AD(new int[] { 0, altCount });
+        genotypeBuilder.DP(depth);
         genotypeBuilder.alleles(Lists.newArrayList(Allele.NO_CALL, Allele.NO_CALL));
         Genotype genotype = genotypeBuilder.make();
 
