@@ -11,6 +11,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.SmallVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.utils.Matrix;
+import com.hartwig.hmftools.sigs.fitter.SigVariant;
 import com.hartwig.hmftools.sigs.fitter.VariantFilters;
 
 public class SigMnvLoader
@@ -73,16 +74,16 @@ public class SigMnvLoader
         }
     }
 
-    private void processSampleVariants(final String sampleId, List<SmallVariant> variants, int sampleIndex)
+    private void processSampleVariants(final String sampleId, List<SigVariant> variants, int sampleIndex)
     {
         double[][] sampleCounts = mSampleBucketCounts.getData();
 
-        for(final SmallVariant variant : variants)
+        for(SigVariant variant : variants)
         {
-            if(variant.isFiltered() || variant.type() != VariantType.MNP)
+            if(variant.Variant.isFiltered() || variant.Variant.type() != VariantType.MNP)
                 continue;
 
-            String rawContext = variant.trinucleotideContext();
+            String rawContext = variant.Variant.trinucleotideContext();
 
             if(rawContext.contains("N"))
                 continue;
@@ -91,14 +92,14 @@ public class SigMnvLoader
             if(!mFilters.passesFilters(variant))
                 continue;
 
-            final String bucketName = mutationType(variant);
+            String bucketName = mutationType(variant.Variant);
 
             Integer bucketIndex = mBucketStringToIndex.get(bucketName);
 
             if(bucketIndex == null)
             {
                 SIG_LOGGER.error("sample({}) invalid bucketName({}) from ref({}) to alt({})",
-                        sampleId, bucketName, variant.ref(), variant.alt());
+                        sampleId, bucketName, variant.Variant.ref(), variant.Variant.alt());
 
                 return;
             }
@@ -113,8 +114,6 @@ public class SigMnvLoader
         {
             return String.format("%c%c>%c%c",
                     swapDnaBase(ref.charAt(1)), swapDnaBase(ref.charAt(0)), swapDnaBase(alt.charAt(1)), swapDnaBase(alt.charAt(0)));
-
-            // paste(baseConvert(substr(ref,2,2)), baseConvert(substr(ref,1,1)), '>', baseConvert(substr(alt,2,2)), baseConvert(substr(alt,1,1)), sep='')
         }
 
         if(ref.equals("AT") || ref.equals("TA") || ref.equals("CG") || ref.equals("GC"))

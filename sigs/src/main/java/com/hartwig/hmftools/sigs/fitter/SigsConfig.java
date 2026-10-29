@@ -38,10 +38,12 @@ public class SigsConfig
     private static final double DEFAULT_MIN_ALLOCATION = 0.01;
     private static final double DEFAULT_MIN_ALLOCATION_PERC = 0.0005;
 
-    public static final String SOMATIC_VCF_FILE = "somatic_vcf_file";
-    public static final String MIN_ALLOC = "min_alloc";
-    public static final String MIN_ALLOC_PERC = "min_alloc_perc";
-    public static final String WRITE_POS_COORDS = "write_pos_freq_coords";
+    protected static final double TUMOR_ONLY_AF_THRESHOLD = 0.05;
+
+    private static final String SOMATIC_VCF_FILE = "somatic_vcf_file";
+    private static final String MIN_ALLOC = "min_alloc";
+    private static final String MIN_ALLOC_PERC = "min_alloc_perc";
+    private static final String WRITE_POS_COORDS = "write_pos_freq_coords";
 
     public SigsConfig(final ConfigBuilder configBuilder)
     {

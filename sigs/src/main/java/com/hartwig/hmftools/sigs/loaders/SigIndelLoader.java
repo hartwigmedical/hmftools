@@ -11,6 +11,7 @@ import java.util.Map;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.SmallVariant;
 import com.hartwig.hmftools.common.utils.Matrix;
+import com.hartwig.hmftools.sigs.fitter.SigVariant;
 import com.hartwig.hmftools.sigs.fitter.VariantFilters;
 
 public class SigIndelLoader
@@ -48,26 +49,26 @@ public class SigIndelLoader
         }
     }
 
-    private void processSampleVariants(final String sampleId, List<SmallVariant> variants, int sampleIndex)
+    private void processSampleVariants(final String sampleId, List<SigVariant> variants, int sampleIndex)
     {
         double[][] sampleCounts = mSampleBucketCounts.getData();
 
-        for(final SmallVariant variant : variants)
+        for(SigVariant variant : variants)
         {
-            if(variant.isFiltered())
+            if(variant.Variant.isFiltered())
                 continue;
 
             // check filters
             if(!mFilters.passesFilters(variant))
                 continue;
 
-            final String bucketName = convertToBucket(variant);
+            final String bucketName = convertToBucket(variant.Variant);
             Integer bucketIndex = mBucketStringToIndex.get(bucketName);
 
             if(bucketIndex == null)
             {
                 SIG_LOGGER.error("sample({}) invalid bucketName({}) from ref({}) alt({})",
-                        sampleId, bucketName, variant.ref(), variant.alt());
+                        sampleId, bucketName, variant.Variant.ref(), variant.Variant.alt());
 
                 return;
             }
