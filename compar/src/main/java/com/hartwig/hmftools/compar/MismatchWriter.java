@@ -88,7 +88,7 @@ public class MismatchWriter
 
                 BufferedWriter writer = createBufferedWriter(detailedFile, false);
 
-                writer.write(MismatchFile.commonHeader(mConfig.multiSample(), false, mCurationCache != null));
+                writer.write(MismatchFile.commonHeader(false, mCurationCache != null));
 
                 List<String> compareFields = comparer.displayFieldNames();
 
@@ -109,8 +109,7 @@ public class MismatchWriter
 
                 boolean writeSourceLabels = mOldSourceLabel != null;
 
-                mCombinedWriter.write(MismatchFile.header(
-                        mConfig.multiSample() || writeSourceLabels, writeSourceLabels, mCurationCache != null));
+                mCombinedWriter.write(MismatchFile.header(writeSourceLabels, mCurationCache != null));
                 mCombinedWriter.newLine();
             }
         }
@@ -197,9 +196,7 @@ public class MismatchWriter
         if(mCombinedWriter != null)
         {
             StringJoiner sj = new StringJoiner(TSV_DELIM);
-
-            if(sampleId != null && (mConfig.multiSample() || mOldSourceLabel != null))
-                sj.add(sampleId);
+            sj.add(sampleId);
 
             String curationStatus = mOldSourceLabel != null || mCurationCache != null ? statusStr : null;
             sj.add(MismatchFile.toTsv(mismatch, false, fieldDisplayValues, curationStatus));
@@ -216,8 +213,7 @@ public class MismatchWriter
 
         if(categoryWriter != null)
         {
-            if(sampleId != null && mConfig.multiSample())
-                categoryWriter.write(String.format("%s\t", sampleId));
+            categoryWriter.write(String.format("%s\t", sampleId));
 
             String curationStatus = mCurationCache != null ? statusStr : null;
             categoryWriter.write(MismatchFile.toTsv(mismatch, true, fieldDisplayValues, curationStatus));

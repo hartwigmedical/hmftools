@@ -270,12 +270,7 @@ public class ComparConfig
 
     public String formOutputFilePrefix()
     {
-        String filePrefix = OutputDir;
-
-        if(singleSample())
-            filePrefix += SampleIds.get(0) + ".cmp";
-        else
-            filePrefix += "compar_cohort";
+        String filePrefix = OutputDir + "compar_cohort";
 
         if(OutputId != null)
             filePrefix += "." + OutputId;
@@ -284,7 +279,6 @@ public class ComparConfig
     }
 
     public boolean isValid() { return mIsValid; }
-    public boolean singleSample() { return SampleIds.size() == 1; }
     public boolean multiSample() { return SampleIds.size() > 1; }
 
     private enum SampleIdFileColumn

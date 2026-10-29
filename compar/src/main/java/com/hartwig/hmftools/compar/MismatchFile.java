@@ -42,12 +42,11 @@ public class MismatchFile
     private static final String SOURCE_PAIR_DELIM = ">";
 
     // differences is list of the form: field(oldValue/newValue)
-    public static String commonHeader(boolean includeSampleId, boolean includeCatagory, boolean includeCurationStatus)
+    public static String commonHeader(boolean includeCatagory, boolean includeCurationStatus)
     {
         StringJoiner sj = new StringJoiner(TSV_DELIM);
 
-        if(includeSampleId)
-            sj.add(FLD_SAMPLE_ID.toString());
+        sj.add(FLD_SAMPLE_ID);
 
         if(includeCatagory)
             sj.add(FLD_CATEGORY);
@@ -61,10 +60,10 @@ public class MismatchFile
         return sj.toString();
     }
 
-    public static String header(boolean includeSampleId, boolean includeSourceLabels, boolean includeHistory)
+    public static String header(boolean includeSourceLabels, boolean includeHistory)
     {
         StringJoiner sj = new StringJoiner(TSV_DELIM);
-        sj.add(commonHeader(includeSampleId, true, includeSourceLabels || includeHistory));
+        sj.add(commonHeader(true, includeSourceLabels || includeHistory));
         sj.add(FLD_OLD_VALUES);
         sj.add(FLD_NEW_VALUES);
 

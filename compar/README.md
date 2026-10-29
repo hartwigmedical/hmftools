@@ -135,6 +135,11 @@ The `pipeline_format_old` and/or `pipeline_format_new` arguments can be set to a
 Alternatively, this format can be set in a config file such as [this](../hmf-common/src/test/resources/pipeline/completeToolDirectoryConfig.tsv) or [this](../hmf-common/src/test/resources/pipeline/partialToolDirectoryConfig.tsv)
 by using the `pipeline_format_file_old` and/or `pipeline_format_file_new` arguments.
 
+### Output Files
+Output files are named the same for one sample or many: `compar_cohort.tsv` for all categories, or one `compar_cohort.<category>.tsv`
+per category with `write_detailed`. When set, `output_id` follows `compar_cohort`, e.g.
+`compar_cohort.compar-2026-10-01T10-35-26.somatic_variant.tsv`. Every row starts with its `SampleId`.
+
 
 ## Data Categories, Fields and Thresholds
 Each data type that is compared is described below. 

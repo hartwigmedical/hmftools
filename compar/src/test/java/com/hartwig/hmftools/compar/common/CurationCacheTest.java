@@ -226,7 +226,7 @@ public class CurationCacheTest
 
     private File writeCacheFile(final String filename, final List<List<String>> rows) throws IOException
     {
-        List<String> lines = Lists.newArrayList(MismatchFile.header(true, true, false) + TSV_DELIM + CURATION_HEADER);
+        List<String> lines = Lists.newArrayList(MismatchFile.header(true, false) + TSV_DELIM + CURATION_HEADER);
 
         for(List<String> row : rows)
         {

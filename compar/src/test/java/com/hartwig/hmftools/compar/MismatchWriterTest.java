@@ -61,7 +61,7 @@ public class MismatchWriterTest
     {
         List<String> lines = writeOutput(createConfig(temp.newFolder(), null, null, null), List.of(FUSION_OLD_ONLY));
 
-        assertEquals("Category\tMismatchType\tKey\tDifferences\tOldValues\tNewValues", lines.get(0));
+        assertEquals("SampleId\tCategory\tMismatchType\tKey\tDifferences\tOldValues\tNewValues", lines.get(0));
         assertEquals(2, lines.size());
     }
 
@@ -164,6 +164,7 @@ public class MismatchWriterTest
         List<String> detailed = Files.readAllLines(Paths.get(config.formOutputFilePrefix() + ".rna_fusion.tsv"));
 
         List<String> header = Arrays.asList(lines.get(0).split(TSV_DELIM, -1));
+        List<String> detailedHeader = Arrays.asList(detailed.get(0).split(TSV_DELIM, -1));
         assertEquals(4, lines.size());
         assertEquals(4, detailed.size());
         assertEquals(List.of("VALUE", "VALUE", "VALUE"),
@@ -171,7 +172,7 @@ public class MismatchWriterTest
         assertEquals(List.of("ACKNOWLEDGED", "CHANGED_FROM_CACHE", ""),
                 lines.subList(1, 4).stream().map(x -> x.split(TSV_DELIM, -1)[header.indexOf("CurationStatus")]).toList());
         assertEquals(List.of("ACKNOWLEDGED", "CHANGED_FROM_CACHE", ""),
-                detailed.subList(1, 4).stream().map(x -> x.split(TSV_DELIM, -1)[1]).toList());
+                detailed.subList(1, 4).stream().map(x -> x.split(TSV_DELIM, -1)[detailedHeader.indexOf("CurationStatus")]).toList());
         assertEquals(List.of("SplitFrags(10/2)", "Filter(PASS/B)", "KnownType(A/B)"),
                 lines.subList(1, 4).stream().map(x -> x.split(TSV_DELIM, -1)[header.indexOf("Differences")]).toList());
         assertEquals(List.of(LABEL_A + ">" + LABEL_B, "VALUE", "SplitFrags(10/2)", "NONE", "NONE", "reviewed", REVIEWER, CURATED_DATE),
@@ -188,16 +189,19 @@ public class MismatchWriterTest
                 List.of("SplitFrags(10/2)", "Filter(PASS/B)"));
         List<String> lines = writeOutput(createConfig(temp.newFolder(), null, null, null), List.of(mismatch));
 
+        List<String> header = Arrays.asList(lines.get(0).split(TSV_DELIM, -1));
+        List<String> row = Arrays.asList(lines.get(1).split(TSV_DELIM, -1));
         assertEquals(2, lines.size());
-        assertEquals("VALUE", lines.get(1).split(TSV_DELIM, -1)[1]);
-        assertEquals("SplitFrags(10/2);Filter(PASS/B)", lines.get(1).split(TSV_DELIM, -1)[3]);
-        assertFalse(lines.get(0).contains("CurationStatus"));
+        assertEquals(SAMPLE_ID, row.get(header.indexOf("SampleId")));
+        assertEquals("VALUE", row.get(header.indexOf("MismatchType")));
+        assertEquals("SplitFrags(10/2);Filter(PASS/B)", row.get(header.indexOf("Differences")));
+        assertFalse(header.contains("CurationStatus"));
     }
 
     @Test
     public void outputMatchingCacheFileIsRejected() throws IOException
     {
-        String filePrefix = SAMPLE_ID + ".cmp";
+        String filePrefix = "compar_cohort";
 
         for(String outputFile : List.of(filePrefix + ".tsv", filePrefix + ".rna_fusion.tsv", FieldConfigFile.generateFileName(filePrefix)))
         {
@@ -275,7 +279,7 @@ public class MismatchWriterTest
 
     private File writeCacheFile(final String filename, final List<List<String>> rows) throws IOException
     {
-        List<String> lines = Lists.newArrayList(MismatchFile.header(true, true, false) + TSV_DELIM + CURATION_HEADER);
+        List<String> lines = Lists.newArrayList(MismatchFile.header(true, false) + TSV_DELIM + CURATION_HEADER);
 
         for(List<String> row : rows)
         {
