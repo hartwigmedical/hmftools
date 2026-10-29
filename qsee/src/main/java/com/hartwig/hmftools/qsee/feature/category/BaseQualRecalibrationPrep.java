@@ -1,8 +1,5 @@
 package com.hartwig.hmftools.qsee.feature.category;
 
-import static com.hartwig.hmftools.common.codon.Nucleotides.reverseComplementBases;
-import static com.hartwig.hmftools.common.codon.Nucleotides.swapDnaBase;
-
 import java.nio.file.NoSuchFileException;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -12,7 +9,6 @@ import java.util.Map;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.redux.BqrFile;
-import com.hartwig.hmftools.common.redux.BqrKey;
 import com.hartwig.hmftools.common.redux.BqrRecord;
 
 import com.hartwig.hmftools.qsee.QseeConfig;
@@ -25,6 +21,7 @@ import com.hartwig.hmftools.qsee.feature.FeatureType;
 import com.hartwig.hmftools.qsee.feature.SourceTool;
 import com.hartwig.hmftools.qsee.feature.category.bqr.BaseQualBin;
 import com.hartwig.hmftools.qsee.feature.category.bqr.BaseQualBinner;
+import com.hartwig.hmftools.qsee.feature.category.bqr.StandardBqrRecord;
 
 import org.apache.commons.math3.stat.descriptive.moment.Mean;
 
@@ -60,50 +57,21 @@ public class BaseQualRecalibrationPrep implements CategoryPrep
     public SourceTool sourceTool() { return SOURCE_TOOL; }
     public PrepCategory category() { return PrepCategory.BASE_QUAL_RECALIBRATION; }
     
-    @VisibleForTesting
-    static BqrRecord standardiseBases(BqrRecord bqrRecord)
-    {
-        BqrKey key = bqrRecord.Key;
-
-        byte refBase = key.Ref;
-        byte altBase = key.Alt;
-
-        byte standardRefBase = refBase;
-        byte standardAltBase = altBase;
-
-        if(refBase == 'G' || refBase == 'A')
-        {
-            standardRefBase = swapDnaBase(refBase);
-            standardAltBase = swapDnaBase(altBase);
-        }
-
-        byte[] standardTrinucleotideContext = (refBase == standardRefBase)
-                ? key.TrinucleotideContext
-                : reverseComplementBases(key.TrinucleotideContext);
-
-        BqrKey standardisedKey = new BqrKey(standardRefBase, standardAltBase, standardTrinucleotideContext,
-                bqrRecord.Key.Quality, bqrRecord.Key.ReadType);
-
-        return new BqrRecord(standardisedKey, bqrRecord.Count, bqrRecord.RecalibratedQuality);
-    }
-
-    private static String formMutationString(BqrKey key) { return String.format("%c>%c", key.Ref, key.Alt); }
-
-    private List<BqrRecord> loadSnvBqrRecords(String sampleId, SampleType sampleType)
+    private List<StandardBqrRecord> loadSnvBqrRecords(String sampleId, SampleType sampleType)
     {
         String baseDir = mConfig.getReduxDir(sampleId, sampleType);
         String filePath = BqrFile.generateFilename(baseDir, sampleId);
 
         List<BqrRecord> records = BqrFile.read(filePath);
         List<BqrRecord> recordsFiltered = records.stream().filter(x -> x.Key.Ref != x.Key.Alt).toList();
-        List<BqrRecord> recordsStandardised = recordsFiltered.stream().map(BaseQualRecalibrationPrep::standardiseBases).toList();
+        List<StandardBqrRecord> recordsStandardised = recordsFiltered.stream().map(StandardBqrRecord::from).toList();
 
-        Comparator<BqrRecord> comparator = Comparator.comparing((BqrRecord x) -> x.Key.ReadType)
-                .thenComparing(x -> x.Key.Ref)
-                .thenComparing(x -> x.Key.Alt)
-                .thenComparing(x -> new String(x.Key.TrinucleotideContext));
+        Comparator<StandardBqrRecord> comparator = Comparator.comparing((StandardBqrRecord x) -> x.ReadType())
+                .thenComparing(x -> x.StandardContext().Ref())
+                .thenComparing(x -> x.StandardContext().Alt())
+                .thenComparing(x -> x.StandardContext().TrinucleotideContext());
 
-        List<BqrRecord> recordsSorted = recordsStandardised.stream().sorted(comparator).toList();
+        List<StandardBqrRecord> recordsSorted = recordsStandardised.stream().sorted(comparator).toList();
 
         return recordsSorted;
     }
@@ -119,19 +87,19 @@ public class BaseQualRecalibrationPrep implements CategoryPrep
     }
 
     @VisibleForTesting
-    static List<Feature> aggregateChangeInQualPerTrinucContext(List<BqrRecord> bqrRecords, BaseQualBinner baseQualBinner)
+    static List<Feature> aggregateChangeInQualPerTrinucContext(List<StandardBqrRecord> bqrRecords, BaseQualBinner baseQualBinner)
     {
         byte hiQualThreshold = baseQualBinner.binRanges().get(BaseQualBin.HIGH).lowerBound();
-        bqrRecords = bqrRecords.stream().filter(x -> x.Key.Quality >= hiQualThreshold).toList();
+        bqrRecords = bqrRecords.stream().filter(x -> x.OriginalQuality() >= hiQualThreshold).toList();
 
-        Map<FeatureKey, List<BqrRecord>> bqrRecordGroups = new LinkedHashMap<>();
-        for(BqrRecord bqrRecord : bqrRecords)
+        Map<FeatureKey, List<StandardBqrRecord>> bqrRecordGroups = new LinkedHashMap<>();
+        for(StandardBqrRecord bqrRecord : bqrRecords)
         {
             String featureName = formGroupingKey(
-                    bqrRecord.Key.ReadType.toString(),
-                    formMutationString(bqrRecord.Key),
-                    new String(bqrRecord.Key.TrinucleotideContext),
-                    baseQualBinner.binRangeStringFrom(bqrRecord.Key.Quality)
+                    bqrRecord.ReadType().toString(),
+                    bqrRecord.StandardContext().mutationString(),
+                    bqrRecord.StandardContext().TrinucleotideContext(),
+                    baseQualBinner.binRangeStringFrom(bqrRecord.OriginalQuality())
             );
 
             FeatureKey key = new FeatureKey(featureName, FeatureType.BQR_PER_SNV96_CONTEXT, SOURCE_TOOL);
@@ -145,18 +113,16 @@ public class BaseQualRecalibrationPrep implements CategoryPrep
     }
 
     @VisibleForTesting
-    static List<Feature> aggregateChangeInQualPerOriginalQual(List<BqrRecord> bqrRecords, BaseQualBinner baseQualBinner)
+    static List<Feature> aggregateChangeInQualPerOriginalQual(List<StandardBqrRecord> bqrRecords, BaseQualBinner baseQualBinner)
     {
-        Map<FeatureKey, List<BqrRecord>> bqrRecordGroups = new LinkedHashMap<>();
-        for(BqrRecord bqrRecord : bqrRecords)
+        Map<FeatureKey, List<StandardBqrRecord>> bqrRecordGroups = new LinkedHashMap<>();
+        for(StandardBqrRecord bqrRecord : bqrRecords)
         {
-
-
             String featureName = formGroupingKey(
-                    bqrRecord.Key.ReadType.toString(),
-                    formMutationString(bqrRecord.Key),
+                    bqrRecord.ReadType().toString(),
+                    bqrRecord.StandardContext().mutationString(),
                     ANY,
-                    baseQualBinner.binRangeStringFrom(bqrRecord.Key.Quality)
+                    baseQualBinner.binRangeStringFrom(bqrRecord.OriginalQuality())
             );
 
             FeatureKey key = new FeatureKey(featureName, FeatureType.BQR_PER_ORIG_QUAL, SOURCE_TOOL);
@@ -169,16 +135,16 @@ public class BaseQualRecalibrationPrep implements CategoryPrep
         return features;
     }
 
-    private static List<Feature> calcWeightedMeanChangeInQualPerGroup(Map<FeatureKey, List<BqrRecord>> bqrRecordGroups)
+    private static List<Feature> calcWeightedMeanChangeInQualPerGroup(Map<FeatureKey, List<StandardBqrRecord>> bqrRecordGroups)
     {
         List<Feature> features = new ArrayList<>();
 
         for(FeatureKey groupKey : bqrRecordGroups.keySet())
         {
-            List<BqrRecord> bqrRecordsInGroup = bqrRecordGroups.get(groupKey);
+            List<StandardBqrRecord> bqrRecordsInGroup = bqrRecordGroups.get(groupKey);
 
-            double[] changeInQualPerRecord = bqrRecordsInGroup.stream().mapToDouble(x -> x.RecalibratedQuality - x.Key.Quality).toArray();
-            double[] variantCountPerRecord = bqrRecordsInGroup.stream().mapToDouble(x -> x.Count + PSEUDOCOUNT).toArray();
+            double[] changeInQualPerRecord = bqrRecordsInGroup.stream().mapToDouble(x -> x.RecalibratedQuality() - x.OriginalQuality()).toArray();
+            double[] variantCountPerRecord = bqrRecordsInGroup.stream().mapToDouble(x -> x.Count() + PSEUDOCOUNT).toArray();
 
             double weightedMeanChangeInQual = new Mean().evaluate(changeInQualPerRecord, variantCountPerRecord);
 
@@ -192,7 +158,7 @@ public class BaseQualRecalibrationPrep implements CategoryPrep
     @Override
     public List<Feature> extractSampleData(String sampleId, SampleType sampleType) throws NoSuchFileException
     {
-        List<BqrRecord> bqrRecords = loadSnvBqrRecords(sampleId, sampleType);
+        List<StandardBqrRecord> bqrRecords = loadSnvBqrRecords(sampleId, sampleType);
 
         List<Feature> features = new ArrayList<>();
         features.addAll(aggregateChangeInQualPerOriginalQual(bqrRecords, mBaseQualBinner));

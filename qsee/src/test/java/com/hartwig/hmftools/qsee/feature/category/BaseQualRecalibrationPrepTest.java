@@ -16,12 +16,13 @@ import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.qsee.feature.Feature;
 import com.hartwig.hmftools.qsee.feature.category.bqr.BaseQualBin;
 import com.hartwig.hmftools.qsee.feature.category.bqr.BaseQualBinner;
+import com.hartwig.hmftools.qsee.feature.category.bqr.StandardBqrRecord;
 
 import org.junit.Test;
 
 public class BaseQualRecalibrationPrepTest
 {
-    private static final List<BqrRecord> BQR_RECORDS = List.of(
+    private static final List<StandardBqrRecord> BQR_RECORDS = List.of(
             // C>G_CCC
             createBqrRecord(ConsensusType.DUAL, 'C', 'G', "CCC", 90, (byte) 11, 13.0),
             createBqrRecord(ConsensusType.DUAL, 'C', 'G', "CCC", 90, (byte) 17, 19.0),
@@ -40,26 +41,6 @@ public class BaseQualRecalibrationPrepTest
             createBqrRecord(ConsensusType.NONE, 'G', 'T', "TGT", 10, (byte) 37, 36.5),
             createBqrRecord(ConsensusType.NONE, 'G', 'T', "TGT", 10, (byte) 42, 41.5)
     );
-
-    @Test
-    public void canStandardiseBases()
-    {
-        // Already standard bases: no need to reverse complement
-        BqrRecord record1 = createBqrRecord(ConsensusType.NONE, 'C', 'A', "ACC",
-                0, 0, 0);
-
-        assertEquals('C', record1.Key.Ref);
-        assertEquals('A', record1.Key.Alt);
-        assertEquals("ACC", new String(record1.Key.TrinucleotideContext));
-
-        // Not standard bases: should be reverse complemented
-        BqrRecord record2 = createBqrRecord(ConsensusType.NONE, 'G', 'T', "GGA",
-                0, 0, 0);
-
-        assertEquals('C', record2.Key.Ref);
-        assertEquals('A', record2.Key.Alt);
-        assertEquals("TCC", new String(record2.Key.TrinucleotideContext));
-    }
 
     @Test
     public void canGetBaseQualBinRangesForIllumina()
@@ -113,13 +94,10 @@ public class BaseQualRecalibrationPrepTest
         assertEquals(2.295, actualFeature.value(), 0.001);
     }
 
-    private static BqrRecord createBqrRecord(ConsensusType readType, char refBase, char altBase, String trinucContext,
+    private static StandardBqrRecord createBqrRecord(ConsensusType readType, char refBase, char altBase, String trinucContext,
             int count, int originalQual, double recalibratedQual)
     {
         BqrKey key = new BqrKey((byte) refBase, (byte) altBase, trinucContext.getBytes(), (byte) originalQual, readType);
-        BqrRecord record = new BqrRecord(key, count, recalibratedQual);
-        record = BaseQualRecalibrationPrep.standardiseBases(record);
-
-        return record;
+        return StandardBqrRecord.from(new BqrRecord(key, count, recalibratedQual));
     }
 }
