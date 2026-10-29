@@ -94,7 +94,7 @@ public final class ThresholdRegistry
         setThresholdHandledElsewhere(TUMOR, SUMMARY_TABLE, PURITY.name(), WARN, LESS_THAN, PurpleQCStatus.MIN_PURITY);
         setThresholdHandledElsewhere(TUMOR, SUMMARY_TABLE, DELETED_GENES.name(), WARN, GREATER_THAN, PurpleQCStatus.MAX_DELETED_GENES);
         setThresholdHandledElsewhere(TUMOR, SUMMARY_TABLE, UNSUPPORTED_CN_SEGMENTS.name(), WARN, GREATER_THAN, PurpleQCStatus.MAX_UNSUPPORTED_SEGMENTS);
-        setThresholdHandledElsewhere(TUMOR, SUMMARY_TABLE, CONTAMINATION.name(), FAIL, GREATER_THAN, PurpleQCStatus.MAX_CONTAMINATION);
+        setThresholdHandledElsewhere(TUMOR, SUMMARY_TABLE, CONTAMINATION.name(), FAIL, GREATER_THAN, PurpleQCStatus.CONTAMINATION_FAIL_LEVEL);
         setThresholdHandledElsewhere(TUMOR, SUMMARY_TABLE, TINC.name(), WARN, GREATER_THAN, PurpleQCStatus.TINC_WARN_LEVEL);
         setThresholdHandledElsewhere(TUMOR, SUMMARY_TABLE, TINC.name(), FAIL, GREATER_THAN_OR_EQUAL, PurpleQCStatus.TINC_FAIL_LEVEL);
 
