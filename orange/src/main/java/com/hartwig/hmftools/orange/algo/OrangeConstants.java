@@ -20,5 +20,8 @@ public final class OrangeConstants
 
     public static final int ALT_SJ_MIN_FRAGMENTS = 50;
 
+    public static final double SIG_MIN_PERCENT = 0.01;
+    public static final double SIG_MIN_PERCENT_TUMOR_ONLY = 0.08;
+
     public static boolean isCandidateLikelihood(final double likelihood) { return likelihood <= DRIVER_LIKELIHOOD_LOW_THRESHOLD; }
 }

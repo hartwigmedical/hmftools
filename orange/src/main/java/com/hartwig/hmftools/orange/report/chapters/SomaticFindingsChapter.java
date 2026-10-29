@@ -167,7 +167,8 @@ public class SomaticFindingsChapter implements ReportChapter
         {
             String signatureTitle = "Signature Allocations";
             String title = signatureTitle + " (" + sigAllocations.size() + ")";
-            document.addTable(SignatureAllocationTable.build(document, title, contentWidth(), sigAllocations, mReportResources));
+            boolean tumorOnly = mConfig != null && !mConfig.hasReference();
+            document.addTable(SignatureAllocationTable.build(tumorOnly, sigAllocations, document, title, contentWidth(), mReportResources));
         }
     }
 

@@ -370,9 +370,6 @@ public class OrangeAlgo
     @Nullable
     private static List<SignatureAllocation> loadSigAllocations(final OrangeConfig config) throws IOException
     {
-        if(!config.hasReference() || config.RunType == ExperimentType.TARGETED)
-            return null;
-
         if(config.SigsDir == null || !Files.exists(Paths.get(config.SigsDir)))
         {
             LOGGER.debug("skipping Signature loading as no input has been provided");

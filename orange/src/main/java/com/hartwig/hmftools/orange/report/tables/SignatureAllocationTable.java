@@ -3,6 +3,8 @@ package com.hartwig.hmftools.orange.report.tables;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
+import static com.hartwig.hmftools.orange.algo.OrangeConstants.SIG_MIN_PERCENT;
+import static com.hartwig.hmftools.orange.algo.OrangeConstants.SIG_MIN_PERCENT_TUMOR_ONLY;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatPercentage;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.addEntry;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.stringArray;
@@ -32,8 +34,9 @@ public final class SignatureAllocationTable
 {
     static final String MISALLOC_SIGNATURE = "MISALLOC";
 
-    public static BaseTable build(final DocumentContext docCtx,
-            final String title, float width, final List<SignatureAllocation> signatureAllocations, final ReportResources reportResources)
+    public static BaseTable build(
+            final boolean tumorOnly, final List<SignatureAllocation> signatureAllocations,
+            final DocumentContext docCtx, final String title, float width, final ReportResources reportResources)
             throws IOException
     {
         if(signatureAllocations.isEmpty())
@@ -55,10 +58,12 @@ public final class SignatureAllocationTable
         BaseTable table = createStandardTable(docCtx, title, width, intToFloatArray(widths), stringArray(headers), reportResources);
         float[] pcts = toPercentages(intToFloatArray(widths));
 
+        double minSigPercent = tumorOnly ? SIG_MIN_PERCENT_TUMOR_ONLY : SIG_MIN_PERCENT;
+
         for(SignatureAllocation signatureAllocation : sort(signatureAllocations))
         {
             List<String> rowValues = Lists.newArrayList();
-            if(signatureAllocation.percent() < 0.01)
+            if(signatureAllocation.percent() < minSigPercent)
             {
                 continue;
             }
