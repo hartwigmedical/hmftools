@@ -3,8 +3,8 @@ package com.hartwig.hmftools.orange.report.tables;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
+import static com.hartwig.hmftools.orange.algo.OrangeConstants.SIG_MIN_ALLOCATION;
 import static com.hartwig.hmftools.orange.algo.OrangeConstants.SIG_MIN_PERCENT;
-import static com.hartwig.hmftools.orange.algo.OrangeConstants.SIG_MIN_PERCENT_TUMOR_ONLY;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatPercentage;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.addEntry;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.stringArray;
@@ -35,8 +35,8 @@ public final class SignatureAllocationTable
     static final String MISALLOC_SIGNATURE = "MISALLOC";
 
     public static BaseTable build(
-            final boolean tumorOnly, final List<SignatureAllocation> signatureAllocations,
-            final DocumentContext docCtx, final String title, float width, final ReportResources reportResources)
+            final DocumentContext docCtx, final List<SignatureAllocation> signatureAllocations, final String title, float width,
+            final ReportResources reportResources)
             throws IOException
     {
         if(signatureAllocations.isEmpty())
@@ -58,20 +58,17 @@ public final class SignatureAllocationTable
         BaseTable table = createStandardTable(docCtx, title, width, intToFloatArray(widths), stringArray(headers), reportResources);
         float[] pcts = toPercentages(intToFloatArray(widths));
 
-        double minSigPercent = tumorOnly ? SIG_MIN_PERCENT_TUMOR_ONLY : SIG_MIN_PERCENT;
-
-        for(SignatureAllocation signatureAllocation : sort(signatureAllocations))
+        for(SignatureAllocation sigAllocation : sort(signatureAllocations))
         {
             List<String> rowValues = Lists.newArrayList();
-            if(signatureAllocation.percent() < minSigPercent)
-            {
-                continue;
-            }
 
-            rowValues.add(signatureAllocation.signature());
-            rowValues.add(signatureAllocation.etiology());
-            rowValues.add(format("%.0f", signatureAllocation.allocation()));
-            rowValues.add(formatPercentage(signatureAllocation.percent()));
+            if(sigAllocation.percent() < SIG_MIN_PERCENT || sigAllocation.allocation() < SIG_MIN_ALLOCATION)
+                continue;
+
+            rowValues.add(sigAllocation.signature());
+            rowValues.add(sigAllocation.etiology());
+            rowValues.add(format("%.0f", sigAllocation.allocation()));
+            rowValues.add(formatPercentage(sigAllocation.percent()));
             rowValues.add(Strings.EMPTY);
             cells.addRow(table, pcts, rowValues);
         }
