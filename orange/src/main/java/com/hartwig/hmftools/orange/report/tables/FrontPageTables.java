@@ -4,6 +4,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.peach.PeachUtil.UNKNOWN_ALLELE_STRING;
 import static com.hartwig.hmftools.common.peach.PeachUtil.convertToZygosityString;
+import static com.hartwig.hmftools.orange.algo.QcStatusInterpretation.isFailNoTumor;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.VALUE_NO;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.VALUE_YES;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.addEntry;
@@ -213,7 +214,7 @@ public class FrontPageTables
 
     private static void addQCWarningInCaseOfFail(final PurpleQC qc, final BaseTable table, final Cells cells)
     {
-        boolean isFailNoTumor = QcStatusInterpretation.isFailNoTumor(qc);
+        boolean isFailNoTumor = isFailNoTumor(qc);
         boolean isContaminated = QcStatusInterpretation.hasTumorContaminated(qc);
 
         if(isFailNoTumor || isContaminated)
@@ -241,6 +242,9 @@ public class FrontPageTables
 
     private static String purityString(final PurpleFit purpleFit)
     {
+        if(isFailNoTumor(purpleFit.qc()))
+            return "NA";
+
         return format("%s (%s-%s)",
                 formatPercentage(purpleFit.purity()), formatPercentage(purpleFit.minPurity()), formatPercentage(purpleFit.maxPurity()));
     }
