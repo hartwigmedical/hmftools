@@ -69,7 +69,6 @@ public class AmberConstants
     public static final double LOH_REF_ALT_THRESHOLD_LOW = 0.80;
 
     public static final int LOH_MIN_LENGTH = 20_000_000;
-    public static final int LOH_CENTROMERE_LENGTH = 2_000_000;
     public static final int LOH_POINT_DENSITY = 5; // ie using every 5th point
 
     public static final double VALID_BAF_RATE_HIGH = 0.15;

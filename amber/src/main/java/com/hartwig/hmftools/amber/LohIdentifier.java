@@ -4,36 +4,46 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.amber.AmberConfig.AMB_LOGGER;
-import static com.hartwig.hmftools.amber.AmberConstants.LOH_CENTROMERE_LENGTH;
 import static com.hartwig.hmftools.amber.AmberConstants.LOH_MIN_LENGTH;
 import static com.hartwig.hmftools.amber.AmberConstants.LOH_MOVING_AVG_COUNT;
 import static com.hartwig.hmftools.amber.AmberConstants.LOH_MOVING_ITEM_COUNT;
 import static com.hartwig.hmftools.amber.AmberConstants.LOH_POINT_DENSITY;
 import static com.hartwig.hmftools.amber.AmberUtils.aboveQualFilter;
 import static com.hartwig.hmftools.common.amber.AmberGender.determineGender;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates.centromereGaps;
+import static com.hartwig.hmftools.common.immune.ImmuneRegions.getHlaRegions;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
-import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.purple.Gender;
+import com.hartwig.hmftools.common.region.BaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 public class LohIdentifier
 {
     private final RefGenomeCoordinates mGenomeCoordinates;
     private final int mTumorMinDepth;
 
+    private final List<ChrBaseRegion> mHlaRegions;
+    private final Map<HumanChromosome,List<BaseRegion>> mGentromereGaps;
+
     public LohIdentifier(final RefGenomeVersion refGenVersion, final int tumorMinDepth)
     {
         mGenomeCoordinates = RefGenomeCoordinates.refGenomeCoordinates(refGenVersion);
+        mHlaRegions = getHlaRegions(refGenVersion);
         mTumorMinDepth = tumorMinDepth;
+
+        mGentromereGaps = centromereGaps(refGenVersion);
     }
 
     public void findLohSegments(final ListMultimap<Chromosome, TumorBAF> chromosomeBafs)
@@ -49,11 +59,24 @@ public class LohIdentifier
         }
     }
 
+    private boolean isValidSite(final PositionEvidence positionEvidence)
+    {
+        if(positionEvidence.ReadDepth < mTumorMinDepth)
+            return false;
+
+        if(!aboveQualFilter(positionEvidence))
+            return false;
+
+        if(mHlaRegions.stream().anyMatch(x -> x.containsPosition(positionEvidence.Chromosome, positionEvidence.Position)))
+            return false;
+
+        return true;
+    }
+
     private void findChromosomeLohSegments(final Chromosome chromosome, final List<TumorBAF> bafs)
     {
         List<PositionEvidence> positionEvidences = bafs.stream()
-                .filter(x -> x.TumorEvidence.ReadDepth >= mTumorMinDepth)
-                .filter(x -> aboveQualFilter(x.TumorEvidence))
+                .filter(x -> isValidSite(x.TumorEvidence))
                 .map(x -> x.TumorEvidence).collect(Collectors.toList());
 
         for(PositionEvidence posEvidence : positionEvidences)
@@ -103,7 +126,7 @@ public class LohIdentifier
         }
 
         // find continuous regions of LOH
-        int centromere = mGenomeCoordinates.Centromeres.get(chromosome);
+        List<BaseRegion> centromereRegions = mGentromereGaps.get(chromosome);
 
         int lohIndexStart = -1;
         int lohIndexEnd = -1;
@@ -130,9 +153,14 @@ public class LohIdentifier
 
                 int lohLength = lohBafEnd.position() - lohBafStart.position();
 
-                if(centromere > lohBafStart.position() && centromere < lohBafEnd.position())
+                if(centromereRegions != null)
                 {
-                    lohLength -= LOH_CENTROMERE_LENGTH;
+                    List<BaseRegion> overlappingCentromericRegions = centromereRegions.stream()
+                                    .filter(x -> positionsOverlap(x.start(), x.end(), lohBafStart.position(), lohBafEnd.position()))
+                                    .collect(Collectors.toList());
+
+                    int centromereLength = overlappingCentromericRegions.stream().mapToInt(x -> x.baseLength()).sum();
+                    lohLength -= centromereLength;
                 }
 
                 if(lohLength >= LOH_MIN_LENGTH)
