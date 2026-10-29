@@ -40,6 +40,9 @@ public class BaseQualRecalibrationPrep implements CategoryPrep
     private static final String FIELD_STANDARD_TRINUC_CONTEXT = "StandardTrinucContext";
     private static final String FIELD_ORIGINAL_QUAL_BIN = "OriginalQualBin";
 
+    // Field value used when records are not grouped by that field
+    private static final String ANY = "ANY";
+
     /*
     Add a pseudocount to 'count' to avoid divide by zero errors when calculating weighted mean of change in qual.
 
@@ -105,6 +108,16 @@ public class BaseQualRecalibrationPrep implements CategoryPrep
         return recordsSorted;
     }
 
+    private static String formGroupingKey(String readType, String standardMutation, String trinucContext, String originalQualBin)
+    {
+        return MultiFieldStringBuilder.formMultiField(
+                FIELD_READ_TYPE, readType,
+                FIELD_STANDARD_MUTATION, standardMutation,
+                FIELD_STANDARD_TRINUC_CONTEXT, trinucContext,
+                FIELD_ORIGINAL_QUAL_BIN, originalQualBin
+        );
+    }
+
     @VisibleForTesting
     static List<Feature> aggregateChangeInQualPerTrinucContext(List<BqrRecord> bqrRecords, BaseQualBinner baseQualBinner)
     {
@@ -114,11 +127,11 @@ public class BaseQualRecalibrationPrep implements CategoryPrep
         Map<FeatureKey, List<BqrRecord>> bqrRecordGroups = new LinkedHashMap<>();
         for(BqrRecord bqrRecord : bqrRecords)
         {
-            String featureName = MultiFieldStringBuilder.formMultiField(
-                    FIELD_READ_TYPE, bqrRecord.Key.ReadType.toString(),
-                    FIELD_STANDARD_MUTATION, formMutationString(bqrRecord.Key),
-                    FIELD_STANDARD_TRINUC_CONTEXT, new String(bqrRecord.Key.TrinucleotideContext),
-                    FIELD_ORIGINAL_QUAL_BIN, baseQualBinner.binRangeStringFrom(bqrRecord.Key.Quality)
+            String featureName = formGroupingKey(
+                    bqrRecord.Key.ReadType.toString(),
+                    formMutationString(bqrRecord.Key),
+                    new String(bqrRecord.Key.TrinucleotideContext),
+                    baseQualBinner.binRangeStringFrom(bqrRecord.Key.Quality)
             );
 
             FeatureKey key = new FeatureKey(featureName, FeatureType.BQR_PER_SNV96_CONTEXT, SOURCE_TOOL);
@@ -137,10 +150,13 @@ public class BaseQualRecalibrationPrep implements CategoryPrep
         Map<FeatureKey, List<BqrRecord>> bqrRecordGroups = new LinkedHashMap<>();
         for(BqrRecord bqrRecord : bqrRecords)
         {
-            String featureName = MultiFieldStringBuilder.formMultiField(
-                    FIELD_READ_TYPE, bqrRecord.Key.ReadType.toString(),
-                    FIELD_STANDARD_MUTATION, formMutationString(bqrRecord.Key),
-                    FIELD_ORIGINAL_QUAL_BIN, baseQualBinner.binRangeStringFrom(bqrRecord.Key.Quality)
+
+
+            String featureName = formGroupingKey(
+                    bqrRecord.Key.ReadType.toString(),
+                    formMutationString(bqrRecord.Key),
+                    ANY,
+                    baseQualBinner.binRangeStringFrom(bqrRecord.Key.Quality)
             );
 
             FeatureKey key = new FeatureKey(featureName, FeatureType.BQR_PER_ORIG_QUAL, SOURCE_TOOL);

@@ -30,8 +30,8 @@ public class FeatureKeyTest
                 new FeatureKey("ConsensusType:NONE;RepeatUnitType:C/G repeat;RefNumUnits:4", FeatureType.MS_INDEL_ERROR_RATES, SourceTool.REDUX),
                 new FeatureKey("ConsensusType:NONE;RepeatUnitType:A/T repeat;RefNumUnits:4", FeatureType.MS_INDEL_ERROR_RATES, SourceTool.REDUX),
 
-                new FeatureKey("ReadType:NONE;StandardMutation:C>A;OriginalQualBin:HIGH (30+)", FeatureType.BQR_PER_ORIG_QUAL, SourceTool.REDUX),
-                new FeatureKey("ReadType:NONE;StandardMutation:C>A;OriginalQualBin:LOW (0-29)", FeatureType.BQR_PER_ORIG_QUAL, SourceTool.REDUX)
+                new FeatureKey("ReadType:NONE;StandardMutation:C>A;StandardTrinucContext:ANY;OriginalQualBin:HIGH (30+)", FeatureType.BQR_PER_ORIG_QUAL, SourceTool.REDUX),
+                new FeatureKey("ReadType:NONE;StandardMutation:C>A;StandardTrinucContext:ANY;OriginalQualBin:LOW (0-29)", FeatureType.BQR_PER_ORIG_QUAL, SourceTool.REDUX)
         );
 
         List<String> actualNameOrder = testKeys.stream().sorted().map(FeatureKey::name).toList();
@@ -49,8 +49,8 @@ public class FeatureKeyTest
                 "ReadCount:10",
                 "ReadCount:>=100",
 
-                "ReadType:NONE;StandardMutation:C>A;OriginalQualBin:LOW (0-29)",
-                "ReadType:NONE;StandardMutation:C>A;OriginalQualBin:HIGH (30+)",
+                "ReadType:NONE;StandardMutation:C>A;StandardTrinucContext:ANY;OriginalQualBin:LOW (0-29)",
+                "ReadType:NONE;StandardMutation:C>A;StandardTrinucContext:ANY;OriginalQualBin:HIGH (30+)",
 
                 "ConsensusType:NONE;RepeatUnitType:A/T repeat;RefNumUnits:4",
                 "ConsensusType:NONE;RepeatUnitType:C/G repeat;RefNumUnits:4",
