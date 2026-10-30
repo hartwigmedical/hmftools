@@ -85,10 +85,14 @@ public class TumorOnlyPurityAnalysis
 
         AucCalculator<PositionEvidence, CanonicalSnvType> snvTypeAucCalculator = new AucCalculator<>(snvTypeClassifier(), hetVariants);
 
-        for(CandidatePeakEvaluationResult evaluationResult : new PeakSearch(filteredEvidence, config.threads()).peaks())
+        PeakSearch peakSearch = new PeakSearch(filteredEvidence, config.threads());
+        List<CandidatePeakResult> candidatePeaks = peakSearch.peaks();
+
+        for(CandidatePeakResult evaluationResult : candidatePeaks)
         {
             CandidatePeak peak = evaluationResult.candidatePeak();
             PeakGnomadFrequenciesChecker gnomadChecker = new PeakGnomadFrequenciesChecker(peak);
+
             if(!gnomadChecker.checkGnomadFrequencies(frequencySupplier, baselineHetGnomadFrequency))
             {
                 AMB_LOGGER.debug(format("peak %.3f failed Gnomad frequency check", peak.vaf()));
@@ -100,6 +104,7 @@ public class TumorOnlyPurityAnalysis
             double mutationAuc = snvTypeAucCalculator.calculateAuc(peak.allCapturedPoints());
 
             int peakPoints = peak.numberOfCapturedEvidencePoints();
+
             double chrArmLowerBound = CHR_ARM_LOWER_BOUND_FOR_CONTAMINATION * sqrt(min(peakPoints / MUTATION_AUC_LOWER_BOUND_FOR_CONTAMINATION_PEAK_FACTOR, 1.0));
 
             AMB_LOGGER.debug(format("peak %.3f, homProportion: %.3f, chrArmAUC: %.3f, mutationAUC: %.3f",

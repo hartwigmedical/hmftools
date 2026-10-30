@@ -23,27 +23,27 @@ public class LocalMaximaFinderTest
     @Test
     public void increasingTest()
     {
-        addScore("A", 1.0);
-        addScore("B", 2.0);
-        addScore("C", 3.0);
+        addScore("0", 1.0);
+        addScore("1", 2.0);
+        addScore("2", 3.0);
         assertTrue(getMaxima().isEmpty());
     }
 
     @Test
     public void decreasingTest()
     {
-        addScore("A", 10.0);
-        addScore("B", 5.0);
-        addScore("C", 3.0);
+        addScore("0", 10.0);
+        addScore("1", 5.0);
+        addScore("2", 3.0);
         assertTrue(getMaxima().isEmpty());
     }
 
     @Test
     public void constantTest()
     {
-        addScore("A", 10.0);
-        addScore("B", 10.0);
-        addScore("C", 10.0);
+        addScore("0", 10.0);
+        addScore("1", 10.0);
+        addScore("2", 10.0);
         assertTrue(getMaxima().isEmpty());
     }
 
@@ -63,30 +63,30 @@ public class LocalMaximaFinderTest
     @Test
     public void plateauTest()
     {
-        addScore("A", 1.0);
-        addScore("B", 10.0);
-        addScore("C", 10.0);
-        addScore("D", 5.0);
-        assertEquals(List.of(mInputs.get(2)), getMaxima());
+        addScore("0", 1.0);
+        addScore("1", 10.0);
+        addScore("2", 10.0);
+        addScore("3", 5.0);
+        assertEquals(List.of(mInputs.get(1)), getMaxima());
     }
 
     @Test
     public void valleyTest()
     {
-        addScore("A", 100.0);
-        addScore("B", 10.0);
-        addScore("C", 10.0);
-        addScore("D", 50.0);
+        addScore("0", 100.0);
+        addScore("1", 10.0);
+        addScore("2", 10.0);
+        addScore("3", 50.0);
         assertTrue(getMaxima().isEmpty());
     }
 
     @Test
     public void skipInitialZeroesTest()
     {
-        addScore("A", 0.000);
-        addScore("B", 0.000);
-        addScore("C", 0.001);
-        addScore("D", 0.000);
+        addScore("0", 0.000);
+        addScore("1", 0.000);
+        addScore("2", 0.001);
+        addScore("3", 0.000);
         List<DummyScore> maxima = getMaxima();
         assertEquals(0, maxima.size());
     }
@@ -94,11 +94,11 @@ public class LocalMaximaFinderTest
     @Test
     public void skipInitialZeroes2Test()
     {
-        addScore("A", 0.000);
-        addScore("B", 0.000);
-        addScore("C", 0.002);
-        addScore("D", 0.001);
-        addScore("E", 0.000);
+        addScore("0", 0.000);
+        addScore("1", 0.000);
+        addScore("2", 0.002);
+        addScore("3", 0.001);
+        addScore("4", 0.000);
         List<DummyScore> maxima = getMaxima();
         assertEquals(0, maxima.size());
     }
@@ -106,11 +106,11 @@ public class LocalMaximaFinderTest
     @Test
     public void skipInitialZeroes3Test()
     {
-        addScore("A", 0.000);
-        addScore("B", 0.000);
-        addScore("C", 0.001);
-        addScore("D", 0.002);
-        addScore("E", 0.000);
+        addScore("0", 0.000);
+        addScore("1", 0.000);
+        addScore("2", 0.001);
+        addScore("3", 0.002);
+        addScore("4", 0.000);
         List<DummyScore> maxima = getMaxima();
         assertEquals(1, maxima.size());
         assertEquals(maxima.get(0), mInputs.get(3));
@@ -119,24 +119,25 @@ public class LocalMaximaFinderTest
     @Test
     public void typicalCaseTest()
     {
-        addScore("A", 100.0);
-        addScore("B", 50);
-        addScore("C", 20);
-        addScore("D", 18);
-        addScore("E", 19);
-        addScore("F", 20);
-        addScore("G", 25);
-        addScore("H", 30); // *
-        addScore("I", 29);
-        addScore("J", 25);
-        addScore("K", 22);
-        addScore("L", 18);
-        addScore("M", 20);
-        addScore("N", 25);
-        addScore("O", 30); // *
-        addScore("P", 28);
-        addScore("Q", 25);
-        addScore("R", 30); // ? TODO
+        addScore("0", 100.0);
+        addScore("1", 50);
+        addScore("2", 20);
+        addScore("3", 18);
+        addScore("4", 19);
+        addScore("5", 20);
+        addScore("6", 25);
+        addScore("7", 30); // peak
+        addScore("8", 29);
+        addScore("9", 25);
+        addScore("10", 21);
+        addScore("11", 22.1); // false peak, will be removed
+        addScore("12", 22.0); // trough
+        addScore("13", 25);
+        addScore("14", 30); // peak
+        addScore("15", 28);
+        addScore("16", 25);
+        addScore("17", 30);
+
         List<DummyScore> maxima = getMaxima();
         assertEquals(2, maxima.size());
         assertEquals(maxima.get(0), mInputs.get(7));
@@ -152,45 +153,46 @@ public class LocalMaximaFinderTest
     {
         mInputs.add(new DummyScore(score, label));
     }
-}
 
-class DummyScore implements Score
-{
-    private final double mScore;
-    private final String Label;
-
-    DummyScore(final double mScore, final String label)
+    private class DummyScore implements Score
     {
-        this.mScore = mScore;
-        Label = label;
-    }
+        private final double mScore;
+        private final String mLabel;
 
-    @Override
-    public double score()
-    {
-        return mScore;
-    }
-
-    @Override
-    public boolean equals(final Object o)
-    {
-        if(o == null || getClass() != o.getClass())
+        DummyScore(final double score, final String label)
         {
-            return false;
+            mScore = score;
+            mLabel = label;
         }
-        final DummyScore that = (DummyScore) o;
-        return Double.compare(mScore, that.mScore) == 0 && Objects.equals(Label, that.Label);
-    }
 
-    @Override
-    public int hashCode()
-    {
-        return Objects.hash(mScore, Label);
-    }
+        @Override
+        public double score()
+        {
+            return mScore;
+        }
 
-    @Override
-    public String toString()
-    {
-        return Label;
+        @Override
+        public boolean equals(final Object o)
+        {
+            if(o == null || getClass() != o.getClass())
+            {
+                return false;
+            }
+            final DummyScore that = (DummyScore) o;
+            return Double.compare(mScore, that.mScore) == 0 && Objects.equals(mLabel, that.mLabel);
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return Objects.hash(mScore, mLabel);
+        }
+
+        @Override
+        public String toString()
+        {
+            return mLabel;
+        }
     }
 }
+

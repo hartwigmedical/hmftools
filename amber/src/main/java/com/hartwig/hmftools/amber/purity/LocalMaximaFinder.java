@@ -12,6 +12,10 @@ public class LocalMaximaFinder<T extends Score>
         FLAT
     }
 
+    private static int FIRST_PEAK_ITEM_COUNT = 3;
+    private static double FIRST_PEAK_MIN_RATIO = 1.25;
+    private static double PEAK_VS_TROUGH_MIN_RATIO = 0.03;
+
     private final List<T> mScores;
 
     public LocalMaximaFinder(final List<T> scores)
@@ -33,6 +37,7 @@ public class LocalMaximaFinder<T extends Score>
         T previousScore = null;
 
         double firstNonZeroScore = 0;
+        double lastTroughScore = -1;
         int nonZeroScoreCount = 0;
 
         for(T score : mScores)
@@ -52,21 +57,46 @@ public class LocalMaximaFinder<T extends Score>
                     currentDirection = Direction.FLAT;
                 }
 
-                if(previousDirection == Direction.UP || previousDirection == Direction.FLAT)
+                if(currentDirection == Direction.DOWN)
                 {
-                    if(currentDirection == Direction.DOWN)
+                    // down after peak
+                    boolean addPeak = false;
+
+                    if(previousDirection == Direction.UP)
                     {
                         // avoid creating a peak close to another at the start
-                        if(nonZeroScoreCount <= 3)
+                        if(nonZeroScoreCount <= FIRST_PEAK_ITEM_COUNT)
                         {
-                            if(previousScore.score() >= firstNonZeroScore * 1.25)
-                                maxima.add(previousScore);
+                            if(previousScore.score() >= firstNonZeroScore * FIRST_PEAK_MIN_RATIO)
+                                addPeak = true;
                         }
                         else
                         {
-                            maxima.add(previousScore);
+                            addPeak = true;
                         }
                     }
+
+                    if(addPeak)
+                    {
+                        if(lastTroughScore > 0 && !maxima.isEmpty())
+                        {
+                            int lastIndex = maxima.size() - 1;
+                            double lastPeak = maxima.get(lastIndex).score();
+
+                            double peakToTroughRatio = (lastPeak - lastTroughScore) / lastTroughScore;
+
+                            if(peakToTroughRatio < PEAK_VS_TROUGH_MIN_RATIO)
+                                maxima.remove(lastIndex);
+                        }
+
+                        maxima.add(previousScore);
+
+                        lastTroughScore = -1;
+                    }
+                }
+                else if(previousDirection == Direction.DOWN && (currentDirection == Direction.UP || currentDirection == Direction.FLAT))
+                {
+                    lastTroughScore = previousScore.score();
                 }
             }
 
@@ -78,8 +108,11 @@ public class LocalMaximaFinder<T extends Score>
                     firstNonZeroScore = score.score();
             }
 
-            previousDirection = currentDirection;
-            previousScore = score;
+            if(currentDirection != Direction.FLAT)
+            {
+                previousDirection = currentDirection;
+                previousScore = score;
+            }
         }
 
         maxima.remove(firstNonZero);

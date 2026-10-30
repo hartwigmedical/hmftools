@@ -55,8 +55,8 @@ public class AmberConstants
     public static final double HOMOZYGOUS_PROPORTION_LOWER_BOUND_FOR_CONTAMINATION = 0.25;
     public static final double HOMOZYGOUS_PROPORTION_UPPER_BOUND_FOR_CONTAMINATION = 0.75;
     public static final double MUTATION_AUC_LOWER_BOUND_FOR_CONTAMINATION = 0.825;
-    public static final double MUTATION_AUC_LOWER_BOUND_FOR_CONTAMINATION_PEAK_FACTOR = 75;
-    public static final double CHR_ARM_LOWER_BOUND_FOR_CONTAMINATION = 0.5;
+    public static final double MUTATION_AUC_LOWER_BOUND_FOR_CONTAMINATION_PEAK_FACTOR = 100;
+    public static final double CHR_ARM_LOWER_BOUND_FOR_CONTAMINATION = 0.4;
     public static final double CHR_ARM_AUC_UPPER_BOUND_FOR_COPY_NUMBER_EVENTS = 0.1;
 
     // LOH analysis

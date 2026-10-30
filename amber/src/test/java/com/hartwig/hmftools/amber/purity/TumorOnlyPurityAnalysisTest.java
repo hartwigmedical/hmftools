@@ -75,7 +75,9 @@ public class TumorOnlyPurityAnalysisTest extends PurityTestBase
     {
         createBaselineReadings();
         final double vaf = 0.21;
-        createCopyNumberEventPoints(vaf);
+        createCopyNumberEventPoints(vaf - 0.01, 20);
+        createCopyNumberEventPoints(vaf, 40);
+        createCopyNumberEventPoints(vaf + 0.01, 20);
         createAnalysis();
         assertEquals(AmberConstants.MIN_CUTOFF, Analysis.cutoff(), 0.001);
         assertEquals(0, Analysis.contaminationPeaks().size());
@@ -88,8 +90,10 @@ public class TumorOnlyPurityAnalysisTest extends PurityTestBase
     {
         createBaselineReadings();
         final double vaf = 0.1;
-        // Add a 20 point copy number peak on 1P.
-        createCopyNumberEventPoints(vaf);
+
+        createCopyNumberEventPoints(vaf - 0.01, 20);
+        createCopyNumberEventPoints(vaf, 40);
+        createCopyNumberEventPoints(vaf + 0.01, 20);
         createAnalysis();
         assertEquals(vaf / 3, Analysis.cutoff(), 0.01);
         assertEquals(0, Analysis.contaminationPeaks().size());
@@ -97,13 +101,13 @@ public class TumorOnlyPurityAnalysisTest extends PurityTestBase
         CandidatePeak peak0 = Analysis.copyNumberPeaks().get(0);
         assertEquals(1.0, peak0.homozygousProportion(), 0.01);
         assertEquals(vaf, peak0.vaf(), 0.01);
-        assertEquals(20, peak0.homozygousEvidencePoints().size());
+        assertEquals(40, peak0.homozygousEvidencePoints().size());
         assertEquals(0, peak0.heterozygousEvidencePoints().size());
         CandidatePeak peak1 = Analysis.copyNumberPeaks().get(1);
         assertEquals(vaf * 2.0, peak1.vaf(), 0.1);
         assertEquals(0.0, peak1.homozygousProportion(), 0.01);
         assertEquals(0, peak1.homozygousEvidencePoints().size());
-        assertEquals(20, peak1.heterozygousEvidencePoints().size());
+        assertEquals(40, peak1.heterozygousEvidencePoints().size());
     }
 
     @Test
@@ -115,12 +119,12 @@ public class TumorOnlyPurityAnalysisTest extends PurityTestBase
         assertEquals(1, Analysis.contaminationPeaks().size());
     }
 
-    private void createCopyNumberEventPoints(final double vaf)
+    private void createCopyNumberEventPoints(final double vaf, final int numPoints)
     {
-        // Add a 20 point copy number peak on 1P.
+        // Add a copy number peak on 1P
         int position = startPosition(new ChrArm(HumanChromosome._1, Arm.P)) + 50; // offset so as not to interfere with baseline points
         boolean low = false;
-        for(int i = 0; i < 20; i++)
+        for(int i = 0; i < numPoints; i++)
         {
             addPeakPoint(HumanChromosome._1, position, BASELINE_DEPTH, vaf, 0.5, low);
             position += BASELINE_DEPTH;
