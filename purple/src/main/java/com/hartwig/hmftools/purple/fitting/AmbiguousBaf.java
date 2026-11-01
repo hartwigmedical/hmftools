@@ -93,7 +93,8 @@ public class AmbiguousBaf
                             averageTumorDepth, ambiguousBaf, strongSupportPeak.observedBAF.level(), observedBAF.level(),
                             depthBasedBaf));
 
-                    return ambiguousBaf;
+                    // take the higher of the depth-based method and the peak method
+                    return max(ambiguousBaf, depthBasedBaf);
                 }
             }
         }

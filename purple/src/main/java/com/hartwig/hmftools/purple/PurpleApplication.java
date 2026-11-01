@@ -287,7 +287,6 @@ public class PurpleApplication
         }
 
         double ambiguousBaf = AmbiguousBaf.findAmbiguousBaf(observedRegions, amberData.AverageTumorDepth);
-        // double ambiguousBaf = AmbiguousBaf.depthBasedBAF(amberData.AverageTumorDepth, STANDARD_BAF_TARGET_PERC);
 
         List<GeneCopyNumber> geneCopyNumbers = Lists.newArrayList();
         List<PurpleCopyNumber> copyNumbers = Lists.newArrayList();

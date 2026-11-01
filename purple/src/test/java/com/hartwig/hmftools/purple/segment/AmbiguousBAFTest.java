@@ -88,6 +88,13 @@ public class AmbiguousBAFTest
         ambiguousBaf = AmbiguousBaf.findAmbiguousBaf(observedRegions, averageTumorDepth);
 
         assertEquals(0.55, ambiguousBaf, EPSILON);
+
+        // revert to using average depth
+        depthBasedBaf = AmbiguousBaf.depthBasedBAF(40);
+
+        ambiguousBaf = AmbiguousBaf.findAmbiguousBaf(observedRegions, 40);
+
+        assertEquals(depthBasedBaf, ambiguousBaf, EPSILON);
     }
 
     private static void buildRegionsAroundPeak(final List<ObservedRegion> observedRegions, final ObservedRegion region, int bafCountDiff)
