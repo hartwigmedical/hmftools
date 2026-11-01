@@ -46,7 +46,6 @@ public class FittingConfig
     public final double PloidyPenaltyMajorAlleleSubOneAdditional;
     public final double PloidyPenaltyMinDeviation;
 
-    public final double SignificantAneuploidyBafThreshold = DEFAULT_SIGNIFICANT_ANEUPLOIDY_BAF_THRESHOLD;
     public final double DeviationPenaltyGcMinAdjust;
     public final double GcRatioExponent;
 

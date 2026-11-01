@@ -2,6 +2,7 @@ package com.hartwig.hmftools.purple.fitting;
 
 import static com.hartwig.hmftools.common.cobalt.CobaltTestUtils.male;
 import static com.hartwig.hmftools.common.purple.GermlineStatus.DIPLOID;
+import static com.hartwig.hmftools.purple.fitting.AmbiguousBaf.depthBasedBAF;
 
 import static org.junit.Assert.assertEquals;
 
@@ -40,7 +41,8 @@ public class FittedPurityFactoryTest extends FittingTestBase
         super.setup();
         executorService = Executors.newFixedThreadPool(1);
         mCobaltChromosomes = male();
-        mRegionFitCalculator = new RegionFitCalculator(mCobaltChromosomes, mConfig.Fitting, 10);
+        double ambiguousBaf = depthBasedBAF(10); // TODO: adjust these unit tests to call into new routine
+        mRegionFitCalculator = new RegionFitCalculator(mCobaltChromosomes, mConfig.Fitting, ambiguousBaf);
         regions.clear();
         regionStart = 1000;
     }
