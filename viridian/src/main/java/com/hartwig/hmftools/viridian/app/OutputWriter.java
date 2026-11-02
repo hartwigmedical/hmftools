@@ -3,6 +3,7 @@ package com.hartwig.hmftools.viridian.app;
 import static java.util.Comparator.comparing;
 import static java.util.Comparator.reverseOrder;
 import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.summingDouble;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
@@ -301,10 +302,12 @@ public class OutputWriter
                     {
                         GenomeStats stats = profile.representativeStats();
                         VirusGenome genome = stats.genome();
-                        row.set(VirusReportColumn.profile_genome, genome.name());
-                        row.set(VirusReportColumn.profile_virus_name, genome.virusName());
-                        row.set(VirusReportColumn.profile_coverage, stats.coverageFraction());
-                        row.set(VirusReportColumn.profile_depth_mean, stats.depth().mean());
+                        row.set(VirusReportColumn.representative_genome, genome.virusName());
+                        row.set(VirusReportColumn.representative_coverage, stats.coverageFraction());
+                        row.set(VirusReportColumn.representative_depth_mean, stats.depth().mean());
+                        row.set(
+                                VirusReportColumn.secondary_genomes,
+                                profile.secondaryGenomes().stream().map(VirusGenome::virusName).collect(joining(ITEM_DELIM)));
                     }
                     row.setOrNull(VirusReportColumn.copies_per_tumor_cell, report.copiesPerTumorCell());
                 });
@@ -320,10 +323,10 @@ public class OutputWriter
         clonality_status,
         copies_per_tumor_cell,
         profiled,
-        profile_genome,
-        profile_virus_name,
-        profile_coverage,
-        profile_depth_mean,
+        representative_genome,
+        representative_coverage,
+        representative_depth_mean,
+        secondary_genomes,
     }
 
     private static final List<String> VIRUS_REPORT_COLUMNS =

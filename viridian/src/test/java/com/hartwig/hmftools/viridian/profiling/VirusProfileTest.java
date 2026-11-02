@@ -7,6 +7,7 @@ import java.util.Map;
 
 import com.hartwig.hmftools.viridian.profiling.common.GenomeStats;
 import com.hartwig.hmftools.viridian.profiling.common.SummaryStats;
+import com.hartwig.hmftools.viridian.profiling.select.RepresentativeSelection;
 import com.hartwig.hmftools.viridian.reference.OncologyGroup;
 import com.hartwig.hmftools.viridian.reference.VirusGenome;
 
@@ -17,6 +18,7 @@ public class VirusProfileTest
     private static final OncologyGroup GROUP_A = new OncologyGroup("Group A");
     private static final OncologyGroup GROUP_B = new OncologyGroup("Group B");
     private static final VirusGenome V1 = new VirusGenome("v1", 100, "Virus v1", GROUP_A);
+    private static final VirusGenome V2 = new VirusGenome("v2", 100, "Virus v2", GROUP_A);
     private static final VirusGenome W1 = new VirusGenome("w1", 100, "Virus w1", GROUP_B);
 
     @Test
@@ -24,9 +26,9 @@ public class VirusProfileTest
     {
         GenomeStats stats = stats(V1);
 
-        List<VirusProfile> profiles = VirusProfile.from(List.of(V1), Map.of(V1, stats));
+        List<VirusProfile> profiles = VirusProfile.from(List.of(new RepresentativeSelection(V1, List.of(V2))), Map.of(V1, stats));
 
-        assertEquals(List.of(new VirusProfile(stats)), profiles);
+        assertEquals(List.of(new VirusProfile(stats, List.of(V2))), profiles);
     }
 
     // Read assignment gave every read of V1 to another virus's representative, so V1 has no measurement and its oncology
@@ -36,9 +38,10 @@ public class VirusProfileTest
     {
         GenomeStats w1Stats = stats(W1);
 
-        List<VirusProfile> profiles = VirusProfile.from(List.of(V1, W1), Map.of(W1, w1Stats));
+        List<VirusProfile> profiles = VirusProfile.from(
+                List.of(new RepresentativeSelection(V1, List.of()), new RepresentativeSelection(W1, List.of())), Map.of(W1, w1Stats));
 
-        assertEquals(List.of(new VirusProfile(w1Stats)), profiles);
+        assertEquals(List.of(new VirusProfile(w1Stats, List.of())), profiles);
     }
 
     private static GenomeStats stats(VirusGenome genome)

@@ -10,6 +10,8 @@ import static com.hartwig.hmftools.viridian.reporting.ClonalityStatus.PURPLE_FAI
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.List;
+
 import com.hartwig.hmftools.common.virus.VirusType;
 import com.hartwig.hmftools.viridian.profiling.VirusProfile;
 import com.hartwig.hmftools.viridian.profiling.common.GenomeStats;
@@ -108,6 +110,6 @@ public class VirusReporterTest
         SummaryStats depth = SummaryStats.from(new int[] { meanDepth });
         SummaryStats alignerScore = SummaryStats.from(new int[] { 30 });
         GenomeStats stats = new GenomeStats(GENOME, 1, 0, GENOME.length(), depth, alignerScore);
-        return new VirusProfile(stats);
+        return new VirusProfile(stats, List.of());
     }
 }

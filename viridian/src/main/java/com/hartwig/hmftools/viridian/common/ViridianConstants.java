@@ -83,6 +83,10 @@ public class ViridianConstants
     // This value is pessimistic - assumes the correct base is completely unknown.
     public static final double READ_VOTE_CORRECT_BASE_PROBABILITY = 0.25;
 
+    // For each oncology group, how many viruses other than the representative to show in the output.
+    // This is mainly interesting for HPV, where occasionally there is ambiguous evidence for a few types.
+    public static final int SECONDARY_GENOME_COUNT = 2;
+
     // A clip counts as hanging over a genome end (a circular-genome artifact) when its bases would extend past the
     // boundary by more than this tolerance. Such alignments are dropped from all further processing, for simplicity.
     public static final int VIRUS_GENOME_ORIGIN_CLIP_TOLERANCE = 4;
@@ -131,6 +135,10 @@ public class ViridianConstants
             throw new IllegalStateException();
         }
         if(!(READ_VOTE_CORRECT_BASE_PROBABILITY > 0.0 && READ_VOTE_CORRECT_BASE_PROBABILITY < 1.0))
+        {
+            throw new IllegalStateException();
+        }
+        if(!(SECONDARY_GENOME_COUNT >= 0))
         {
             throw new IllegalStateException();
         }

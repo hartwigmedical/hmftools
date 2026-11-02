@@ -53,6 +53,7 @@ import com.hartwig.hmftools.viridian.profiling.extract.CandidateReadExtractor;
 import com.hartwig.hmftools.viridian.profiling.extract.CandidateReadFilter;
 import com.hartwig.hmftools.viridian.profiling.extract.ViralKmerIndex;
 import com.hartwig.hmftools.viridian.profiling.select.RepresentativeGenomeSelector;
+import com.hartwig.hmftools.viridian.profiling.select.RepresentativeSelection;
 import com.hartwig.hmftools.viridian.profiling.support.GenomeSupport;
 import com.hartwig.hmftools.viridian.profiling.support.GenomeSupportCalculator;
 import com.hartwig.hmftools.viridian.reference.OncologyGroup;
@@ -120,7 +121,7 @@ public class ViridianApplication
 
         List<GenomeSupport> genomeSupports = computeGenomeSupport(allGenomesReadAlignments);
 
-        List<VirusGenome> representatives = selectRepresentativeGenomes(genomeSupports);
+        List<RepresentativeSelection> representatives = selectRepresentativeGenomes(genomeSupports);
 
         ViralReadAlignmentStore representativeAlignments =
                 assignReadsToRepresentatives(allGenomesReadAlignments.store(), representatives);
@@ -210,24 +211,26 @@ public class ViridianApplication
 
     // For each oncology group (group of virus strains at interesting taxonomy granularity), select 1 virus genome which best represents
     // the virus present in the sample, to use for coverage/depth calculations.
-    private List<VirusGenome> selectRepresentativeGenomes(List<GenomeSupport> genomeSupports)
+    private List<RepresentativeSelection> selectRepresentativeGenomes(List<GenomeSupport> genomeSupports)
     {
         LOGGER.info("Selecting representative genome per oncology group");
-        List<VirusGenome> representatives = RepresentativeGenomeSelector.select(genomeSupports);
+        List<RepresentativeSelection> selections = RepresentativeGenomeSelector.select(genomeSupports);
+        List<VirusGenome> representatives = selections.stream().map(RepresentativeSelection::representativeGenome).toList();
 
         LOGGER.info("Writing genome support output");
         OutputWriter.writeGenomeSupport(outputFile(GENOME_SUPPORT_TSV_SUFFIX), genomeSupports, representatives);
 
-        return representatives;
+        return selections;
     }
 
     // Assign each read to the representative virus genome it fits best.
     private ViralReadAlignmentStore assignReadsToRepresentatives(
-            ViralReadAlignmentStore alignments, List<VirusGenome> representatives)
+            ViralReadAlignmentStore alignments, List<RepresentativeSelection> representatives)
     {
         LOGGER.info("Assigning reads to representative genomes");
+        List<VirusGenome> genomes = representatives.stream().map(RepresentativeSelection::representativeGenome).toList();
         Map<ReadId, ViralReadAlignment> assignments = RepresentativeReadAssigner.assign(
-                alignments, Set.copyOf(representatives), outputFile(ALL_ALIGNMENTS_BAM_SUFFIX),
+                alignments, Set.copyOf(genomes), outputFile(ALL_ALIGNMENTS_BAM_SUFFIX),
                 outputFile(REPRESENTATIVE_ALIGNMENTS_BAM_SUFFIX));
 
         return new ViralReadAlignmentStore(assignments.values());

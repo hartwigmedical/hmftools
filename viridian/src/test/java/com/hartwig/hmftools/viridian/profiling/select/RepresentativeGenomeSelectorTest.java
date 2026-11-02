@@ -23,18 +23,22 @@ public class RepresentativeGenomeSelectorTest
     private static final VirusGenome V1 = new VirusGenome("v1", LENGTH, "Virus v1", GROUP_A);
     private static final VirusGenome V2 = new VirusGenome("v2", LENGTH, "Virus v2", GROUP_A);
     private static final VirusGenome V3 = new VirusGenome("v3", LENGTH, "Virus v3", GROUP_A);
+    private static final VirusGenome V4 = new VirusGenome("v4", LENGTH, "Virus v4", GROUP_A);
     private static final VirusGenome W1 = new VirusGenome("w1", LENGTH, "Virus w1", GROUP_B);
     private static final VirusGenome H1 = new VirusGenome("h1", LENGTH, "Virus h1", GROUP_H);
 
     @Test
-    public void testSelectTopVotesGenomePerOncologyGroup()
+    public void testSelectRanksGenomesPerOncologyGroup()
     {
-        // W1 has few votes, but any read makes its group present.
-        List<GenomeSupport> genomeSupports = List.of(withReads(V1, 100), withReads(V2, 120), withReads(V3, 5), withReads(W1, 1));
+        // V3 ranks 4th in group A, below the secondary genome count. W1 has few votes, but any read makes its group present.
+        List<GenomeSupport> genomeSupports = List.of(
+                withReads(V1, 100), withReads(V2, 120), withReads(V3, 5), withReads(V4, 50), withReads(W1, 1));
 
-        List<VirusGenome> representatives = RepresentativeGenomeSelector.select(genomeSupports);
+        List<RepresentativeSelection> selections = RepresentativeGenomeSelector.select(genomeSupports);
 
-        assertEquals(List.of(V2, W1), representatives);
+        assertEquals(
+                List.of(new RepresentativeSelection(V2, List.of(V1, V4)), new RepresentativeSelection(W1, List.of())),
+                selections);
     }
 
     @Test
@@ -44,18 +48,18 @@ public class RepresentativeGenomeSelectorTest
         SummaryStats noDepth = SummaryStats.from(new int[LENGTH]);
         GenomeSupport noReads = new GenomeSupport(new GenomeStats(H1, 0, 2, 0, noDepth, null), 0, null, 0.0);
 
-        List<VirusGenome> representatives = RepresentativeGenomeSelector.select(List.of(withReads(W1, 10), noReads));
+        List<RepresentativeSelection> selections = RepresentativeGenomeSelector.select(List.of(withReads(W1, 10), noReads));
 
-        assertEquals(List.of(W1), representatives);
+        assertEquals(List.of(new RepresentativeSelection(W1, List.of())), selections);
     }
 
     @Test
     public void testSelectTiedVotesByGenomeName()
     {
-        List<VirusGenome> representatives =
+        List<RepresentativeSelection> selections =
                 RepresentativeGenomeSelector.select(List.of(withReads(V2, 100), withReads(V1, 100)));
 
-        assertEquals(List.of(V1), representatives);
+        assertEquals(List.of(new RepresentativeSelection(V1, List.of(V2))), selections);
     }
 
     // Selection reads only the virus genome, its read count and its read votes. The remaining fields are filler,
