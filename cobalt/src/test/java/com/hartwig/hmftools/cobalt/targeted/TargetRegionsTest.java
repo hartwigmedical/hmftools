@@ -113,6 +113,6 @@ public class TargetRegionsTest
 
     private TargetRegionEnrichment tre(HumanChromosome chromosome, int position, double enrichment)
     {
-        return new TargetRegionEnrichment(chromosome, position, enrichment);
+        return new TargetRegionEnrichment(chromosome, position, enrichment, "");
     }
 }
