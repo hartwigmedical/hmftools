@@ -36,8 +36,6 @@ public class TargetRegionEnrichment
         PanelLabel = label;
     }
 
-    public boolean isValid() { return !Double.isNaN(Enrichment) && Enrichment > 0; }
-
     @Override
     public boolean equals(final Object o)
     {

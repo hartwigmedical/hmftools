@@ -2,6 +2,7 @@ package com.hartwig.hmftools.cobalt.norm;
 
 import static com.hartwig.hmftools.cobalt.norm.DataLoader.addTargetRegions;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -10,11 +11,16 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
+import static com.hartwig.hmftools.cobalt.norm.NormConstants.FILTER_CHECK_PERCENTILE_RATIO_THRESHOLD;
+import static com.hartwig.hmftools.cobalt.norm.NormConstants.FILTER_MEDIAN_MAX_RATIO;
 import static com.hartwig.hmftools.cobalt.norm.Normaliser.calcSampleAdjustedRatios;
+import static com.hartwig.hmftools.cobalt.norm.Normaliser.filterRegion;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
@@ -80,6 +86,62 @@ public class NormalisationFileTest
         assertEquals(35, normCalcData.SampleMedianReadDepth, 0.1);
         assertEquals(4, normCalcData.GcBucketMedians.size());
     }
+
+    @Test
+    public void testRegionFiltering()
+    {
+        RegionData regionData = new RegionData(1000);
+        List<Double> enrichmentValues = Lists.newArrayList();
+
+        addEnrichmentRatios(enrichmentValues, 30, 1.0, 0.05);
+
+        assertFalse(filterRegion(CHR_1, regionData, enrichmentValues));
+
+        enrichmentValues.clear();
+        addEnrichmentRatios(enrichmentValues, 20, 1.0, 0.05);
+
+        for(int i = 0; i < 10; ++i)
+        {
+            enrichmentValues.add(FILTER_CHECK_PERCENTILE_RATIO_THRESHOLD - 0.01);
+        }
+
+        Collections.sort(enrichmentValues);
+
+        assertTrue(filterRegion(CHR_1, regionData, enrichmentValues));
+
+        // too few samples after filtering
+        List<Double> nonFilteredEnrichmentValues = Lists.newArrayList();
+        addEnrichmentRatios(nonFilteredEnrichmentValues, 8, 1.0, 0.05);
+
+        for(int i = 0; i < 5; ++i)
+        {
+            nonFilteredEnrichmentValues.add(0.0);
+            nonFilteredEnrichmentValues.add(1.0 * (FILTER_MEDIAN_MAX_RATIO + 0.01));
+        }
+
+        Collections.sort(nonFilteredEnrichmentValues);
+
+        assertFalse(filterRegion(CHR_1, regionData, nonFilteredEnrichmentValues));
+
+        // lower standard deviation to no longer filter region
+        nonFilteredEnrichmentValues = Lists.newArrayList(enrichmentValues);
+        addEnrichmentRatios(nonFilteredEnrichmentValues, 10, 1.0, 0.01);
+
+        Collections.sort(nonFilteredEnrichmentValues);
+
+        assertFalse(filterRegion(CHR_1, regionData, nonFilteredEnrichmentValues));
+    }
+
+    private static void addEnrichmentRatios(final List<Double> enrichmentValues, int count, double median, double step)
+    {
+        int halfCount = count / 2;
+        for(int i = -halfCount; i < halfCount; ++i)
+        {
+            double enrichment = median + (i * step);
+            enrichmentValues.add(enrichment);
+        }
+    }
+
 
     @SuppressWarnings("SameParameterValue")
     private static RegionData createRegion(int position, int gcBucket, double mappability, int readCount, double gcRatioPanel)
