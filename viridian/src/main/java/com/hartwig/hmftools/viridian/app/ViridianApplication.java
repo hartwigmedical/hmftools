@@ -199,7 +199,7 @@ public class ViridianApplication
         return AllGenomesReadAlignments.load(allAlignmentsBamFile, mVirusReference);
     }
 
-    // Compute support information for each virus genome and decide which genomes are candidates.
+    // Compute read support information for each virus genome.
     private List<GenomeSupport> computeGenomeSupport(AllGenomesReadAlignments alignments)
     {
         LOGGER.info("Computing per-genome support");
@@ -209,7 +209,7 @@ public class ViridianApplication
     }
 
     // For each oncology group (group of virus strains at interesting taxonomy granularity), select 1 virus genome which best represents
-    // the virus present in the sample.
+    // the virus present in the sample, to use for coverage/depth calculations.
     private List<VirusGenome> selectRepresentativeGenomes(List<GenomeSupport> genomeSupports)
     {
         LOGGER.info("Selecting representative genome per oncology group");

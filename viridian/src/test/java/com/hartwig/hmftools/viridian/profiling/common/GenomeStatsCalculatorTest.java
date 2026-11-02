@@ -15,8 +15,6 @@ import org.junit.Test;
 
 public class GenomeStatsCalculatorTest
 {
-    private static final double MEAN_READ_LENGTH = 150.0;
-
     private static final VirusGenome GENOME = new VirusGenome("v1", 20, "Virus 1", new OncologyGroup("Group 1"));
 
     // A read spanning a deletion aligns in two blocks: the skipped positions are not evidence the virus genome is
@@ -50,7 +48,7 @@ public class GenomeStatsCalculatorTest
 
     private static Map<VirusGenome, GenomeStats> calculate(List<ViralReadAlignment> alignments)
     {
-        AllGenomesReadAlignments allAlignments = AllGenomesReadAlignments.from(alignments, MEAN_READ_LENGTH);
+        AllGenomesReadAlignments allAlignments = AllGenomesReadAlignments.from(alignments);
         return GenomeStatsCalculator.calculate(
                 allAlignments.store().byGenome(), allAlignments.metrics().originClippedReads());
     }

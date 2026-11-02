@@ -3,7 +3,7 @@ package com.hartwig.hmftools.viridian.app;
 import static java.util.Comparator.comparing;
 import static java.util.Comparator.reverseOrder;
 import static java.util.stream.Collectors.groupingBy;
-import static java.util.stream.Collectors.toMap;
+import static java.util.stream.Collectors.summingDouble;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.viridian.app.ViridianConfig.CFG_CANDIDATE_READ_SOURCE;
@@ -38,10 +38,8 @@ public class OutputWriter
             String file, List<GenomeSupport> genomeSupports, List<VirusGenome> representatives)
     {
         Set<VirusGenome> representativeGenomes = Set.copyOf(representatives);
-        Map<OncologyGroup, GroupVotes> groupVotes = genomeSupports.stream()
-                .collect(groupingBy(support -> support.genome().oncologyGroup()))
-                .entrySet().stream()
-                .collect(toMap(Map.Entry::getKey, entry -> GroupVotes.from(entry.getValue())));
+        Map<OncologyGroup, Double> groupVotes = genomeSupports.stream()
+                .collect(groupingBy(support -> support.genome().oncologyGroup(), summingDouble(GenomeSupport::readVotes)));
         List<GenomeSupport> rows = genomeSupports.stream()
                 .sorted(comparing((GenomeSupport support) -> support.genome().oncologyGroup())
                         .thenComparing(GenomeSupport::readVotes, reverseOrder())
@@ -68,27 +66,10 @@ public class OutputWriter
                     writeSummaryStats(row, ALIGN_PER_READ_STATS_COLUMNS, support.alignmentsPerRead());
                     writeSummaryStats(row, ALIGNER_SCORE_STATS_COLUMNS, stats.alignerScore());
 
-                    GroupVotes votes = groupVotes.get(genome.oncologyGroup());
-                    double readVotes = support.readVotes();
-                    row.set(GenomeSupportColumn.filter_status, support.filterStatus().name());
-                    row.setOrNull(GenomeSupportColumn.vote_share_pre_filter, share(readVotes, votes.all()));
-                    row.setOrNull(GenomeSupportColumn.vote_share_post_filter, share(readVotes, votes.candidates()));
+                    row.setOrNull(
+                            GenomeSupportColumn.vote_share, share(support.readVotes(), groupVotes.get(genome.oncologyGroup())));
                     row.set(GenomeSupportColumn.is_representative, representativeGenomes.contains(genome));
                 });
-    }
-
-    private record GroupVotes(
-            double all,
-            double candidates
-    )
-    {
-        static GroupVotes from(List<GenomeSupport> groupGenomes)
-        {
-            double all = groupGenomes.stream().mapToDouble(GenomeSupport::readVotes).sum();
-            double candidates = groupGenomes.stream()
-                    .filter(support -> !support.isFiltered()).mapToDouble(GenomeSupport::readVotes).sum();
-            return new GroupVotes(all, candidates);
-        }
     }
 
     private enum GenomeSupportColumn
@@ -97,13 +78,11 @@ public class OutputWriter
         virus_name,
         oncology_group,
         is_representative,
-        filter_status,
         genome_length,
         coverage,
         aligned_reads,
         read_votes,
-        vote_share_pre_filter,
-        vote_share_post_filter,
+        vote_share,
         multi_align_reads,
         origin_clipped_reads
     }

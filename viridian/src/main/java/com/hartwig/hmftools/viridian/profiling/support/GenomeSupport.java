@@ -10,7 +10,6 @@ import org.jetbrains.annotations.Nullable;
 // Used to find which viruses are present in reads and to select the representative for an oncology group.
 public record GenomeSupport(
         GenomeStats stats,
-        GenomeFilterStatus filterStatus,
         // Reads with more than one alignment to this virus genome.
         int multiAlignReads,
         // Alignments to this virus genome per read. Theoretically can be > 1. Null only when every alignment was
@@ -22,10 +21,5 @@ public record GenomeSupport(
     public VirusGenome genome()
     {
         return stats.genome();
-    }
-
-    public boolean isFiltered()
-    {
-        return filterStatus != GenomeFilterStatus.PASS;
     }
 }

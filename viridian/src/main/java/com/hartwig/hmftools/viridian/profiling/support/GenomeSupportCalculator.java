@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.viridian.profiling.support;
 
-import static java.util.Objects.requireNonNull;
-import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toMap;
 
 import java.util.Collection;
@@ -10,15 +8,12 @@ import java.util.List;
 import java.util.Map;
 
 import com.hartwig.hmftools.viridian.profiling.align.AllGenomesReadAlignments;
-import com.hartwig.hmftools.viridian.profiling.align.AllGenomesReadAlignmentsMetrics;
 import com.hartwig.hmftools.viridian.profiling.align.ViralReadAlignment;
 import com.hartwig.hmftools.viridian.profiling.common.GenomeStats;
 import com.hartwig.hmftools.viridian.profiling.common.SummaryStats;
 import com.hartwig.hmftools.viridian.reference.VirusGenome;
 
-// Computes for each virus genome:
-//   - Baseline support status (is virus maybe here or is it spurious?);
-//   - Read voting used for representative selection.
+// Assembles per-genome read support information and computes read voting used for representative selection.
 public class GenomeSupportCalculator
 {
     private final double mCorrectBaseProbability;
@@ -31,15 +26,12 @@ public class GenomeSupportCalculator
     public List<GenomeSupport> calculate(AllGenomesReadAlignments alignments, Map<VirusGenome, GenomeStats> genomeStats)
     {
         Map<VirusGenome, Double> readVotes = calculateReadVotes(alignments.store().byRead().values());
-        AllGenomesReadAlignmentsMetrics metrics = alignments.metrics();
+        Map<VirusGenome, List<Integer>> alignmentCounts = alignments.metrics().alignmentCountsByGenome();
 
         return genomeStats.values().stream()
-                .collect(groupingBy(stats -> stats.genome().oncologyGroup()))
-                .values().stream()
-                .flatMap(group -> createGroupGenomeSupports(
-                        group, readVotes, metrics.alignmentCountsByGenome(),
-                        // Stats exist only for virus genomes with alignments, so the mean read length is present.
-                        requireNonNull(metrics.meanReadLength())).stream())
+                .map(stats -> createGenomeSupport(
+                        stats, readVotes.getOrDefault(stats.genome(), 0.0),
+                        alignmentCounts.getOrDefault(stats.genome(), List.of())))
                 .toList();
     }
 
@@ -68,28 +60,13 @@ public class GenomeSupportCalculator
         return Math.pow(mCorrectBaseProbability, divergence - minDivergence);
     }
 
-    private static List<GenomeSupport> createGroupGenomeSupports(
-            List<GenomeStats> group, Map<VirusGenome, Double> readVotes, Map<VirusGenome, List<Integer>> alignmentCounts,
-            double meanReadLength)
-    {
-        Map<VirusGenome, GenomeStats> groupStats = group.stream().collect(toMap(GenomeStats::genome, stats -> stats));
-        Map<VirusGenome, GenomeFilterStatus> filterStatuses = GenomeSupportFilter.statuses(groupStats, readVotes, meanReadLength);
-
-        return group.stream()
-                .map(stats -> createGenomeSupport(
-                        stats, filterStatuses.get(stats.genome()), readVotes.getOrDefault(stats.genome(), 0.0),
-                        alignmentCounts.getOrDefault(stats.genome(), List.of())))
-                .toList();
-    }
-
-    private static GenomeSupport createGenomeSupport(
-            GenomeStats stats, GenomeFilterStatus filterStatus, double readVotes, List<Integer> alignmentCounts)
+    private static GenomeSupport createGenomeSupport(GenomeStats stats, double readVotes, List<Integer> alignmentCounts)
     {
         int multiAlignReads = (int) alignmentCounts.stream().filter(count -> count > 1).count();
 
         // Without retained reads there is no distribution to summarise.
         SummaryStats alignmentsPerRead = alignmentCounts.isEmpty() ? null : SummaryStats.from(alignmentCounts);
 
-        return new GenomeSupport(stats, filterStatus, multiAlignReads, alignmentsPerRead, readVotes);
+        return new GenomeSupport(stats, multiAlignReads, alignmentsPerRead, readVotes);
     }
 }

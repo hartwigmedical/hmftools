@@ -87,19 +87,6 @@ public class ViridianConstants
     // boundary by more than this tolerance. Such alignments are dropped from all further processing, for simplicity.
     public static final int VIRUS_GENOME_ORIGIN_CLIP_TOLERANCE = 4;
 
-    // A genome is a candidate only if some genome in its oncology group reaches this coverage fraction.
-    // This value is very conservative. Hard to argue a lower coverage wouldn't be spurious.
-    public static final double VIRUS_GENOME_COVERAGE_MIN = 0.1;
-
-    // If any genome in an oncology group passes VIRUS_GENOME_COVERAGE_MIN, then use this as the coverage threshold instead of that.
-    // Ensures that a similar sibling genome which straddles the coverage threshold isn't harshly lost.
-    public static final double VIRUS_GENOME_COVERAGE_MIN_LOWER = VIRUS_GENOME_COVERAGE_MIN * 0.9;
-
-    // Minimum read votes per base that is required to be covered.
-    // Handles cases where the genome has some alignments but those reads strongly prefer a better matching genome
-    // (since coverage is calculated based on ANY alignment, not necessarily a good one).
-    public static final double VIRUS_GENOME_VOTES_PER_BASE_MIN = 1.0;
-
     // Minimum insert sequence length for an SV to be a viral integration candidate.
     // This is a conservative value, validated via concordance testing against VirusBreakend.
     // ESVEE doesn't call events shorter than 32b anyway.
@@ -148,18 +135,6 @@ public class ViridianConstants
             throw new IllegalStateException();
         }
         if(!(VIRUS_GENOME_ORIGIN_CLIP_TOLERANCE >= 0))
-        {
-            throw new IllegalStateException();
-        }
-        if(!(VIRUS_GENOME_COVERAGE_MIN > 0.0 && VIRUS_GENOME_COVERAGE_MIN <= 1.0))
-        {
-            throw new IllegalStateException();
-        }
-        if(!(VIRUS_GENOME_COVERAGE_MIN_LOWER > 0.0 && VIRUS_GENOME_COVERAGE_MIN_LOWER <= VIRUS_GENOME_COVERAGE_MIN))
-        {
-            throw new IllegalStateException();
-        }
-        if(!(VIRUS_GENOME_VOTES_PER_BASE_MIN > 0.0))
         {
             throw new IllegalStateException();
         }

@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.viridian.profiling.align;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThrows;
 
 import java.util.List;
 import java.util.Map;
@@ -26,7 +25,7 @@ public class AllGenomesReadAlignmentsTest
     {
         // An alignment clipping over a virus genome end straddles the circular origin.
         AllGenomesReadAlignments allAlignments = AllGenomesReadAlignments.from(
-                List.of(alignment("r1", V1), straddler("r2", V1), straddler("r3", V1)), 150.0);
+                List.of(alignment("r1", V1), straddler("r2", V1), straddler("r3", V1)));
 
         assertEquals(Set.of(ReadId.parse("r1")), allAlignments.store().byRead().keySet());
         assertEquals(Map.of(V1, 2), allAlignments.metrics().originClippedReads());
@@ -36,7 +35,7 @@ public class AllGenomesReadAlignmentsTest
     public void testFromOriginClippedCountsReadsNotAlignments()
     {
         AllGenomesReadAlignments allAlignments = AllGenomesReadAlignments.from(
-                List.of(straddler("r1", V1), straddler("r1", V1), straddler("r2", V1)), 150.0);
+                List.of(straddler("r1", V1), straddler("r1", V1), straddler("r2", V1)));
 
         assertEquals(Map.of(V1, 2), allAlignments.metrics().originClippedReads());
     }
@@ -50,31 +49,12 @@ public class AllGenomesReadAlignmentsTest
                 List.of(
                         divergentAlignment("r1", V1, 4),
                         divergentAlignment("r1", V1, 9),
-                        divergentAlignment("r2", V1, 1)),
-                150.0);
+                        divergentAlignment("r2", V1, 1)));
 
         Map<ReadId, ViralReadAlignment> genomeAlignments = allAlignments.store().byGenome().get(V1);
         assertEquals(2, genomeAlignments.size());
         assertEquals(4, genomeAlignments.get(ReadId.parse("r1")).divergence());
         assertEquals(Map.of(V1, List.of(2, 1)), allAlignments.metrics().alignmentCountsByGenome());
-    }
-
-    // A sample with no viral reads has no read length to measure; this used to fail the whole run.
-    @Test
-    public void testFromNoAlignmentsHasNoMeanReadLength()
-    {
-        AllGenomesReadAlignments allAlignments = AllGenomesReadAlignments.from(List.of(), null);
-
-        assertEquals(Map.of(), allAlignments.store().byRead());
-        assertEquals(new AllGenomesReadAlignmentsMetrics(null, Map.of(), Map.of()), allAlignments.metrics());
-    }
-
-    @Test
-    public void testFromMeanReadLengthPresentExactlyWhenAligned()
-    {
-        assertThrows(IllegalArgumentException.class, () -> AllGenomesReadAlignments.from(List.of(), 150.0));
-        assertThrows(IllegalArgumentException.class, () -> AllGenomesReadAlignments.from(List.of(alignment("r1", V1)), null));
-        assertThrows(IllegalArgumentException.class, () -> AllGenomesReadAlignments.from(List.of(straddler("r1", V1)), null));
     }
 
     private static ViralReadAlignment divergentAlignment(String readName, VirusGenome genome, int divergence)

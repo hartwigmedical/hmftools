@@ -6,7 +6,6 @@ import java.util.List;
 
 import com.hartwig.hmftools.viridian.profiling.common.GenomeStats;
 import com.hartwig.hmftools.viridian.profiling.common.SummaryStats;
-import com.hartwig.hmftools.viridian.profiling.support.GenomeFilterStatus;
 import com.hartwig.hmftools.viridian.profiling.support.GenomeSupport;
 import com.hartwig.hmftools.viridian.reference.OncologyGroup;
 import com.hartwig.hmftools.viridian.reference.VirusGenome;
@@ -30,9 +29,8 @@ public class RepresentativeGenomeSelectorTest
     @Test
     public void testSelectTopVotesGenomePerOncologyGroup()
     {
-        // V3 has the most votes in group A but was filtered; group H has only a filtered genome.
-        List<GenomeSupport> genomeSupports = List.of(
-                passed(V1, 100), passed(V2, 120), filtered(V3, 500), passed(W1, 10), filtered(H1, 100));
+        // W1 has few votes, but any read makes its group present.
+        List<GenomeSupport> genomeSupports = List.of(withReads(V1, 100), withReads(V2, 120), withReads(V3, 5), withReads(W1, 1));
 
         List<VirusGenome> representatives = RepresentativeGenomeSelector.select(genomeSupports);
 
@@ -40,30 +38,31 @@ public class RepresentativeGenomeSelectorTest
     }
 
     @Test
+    public void testSelectSkipsGenomeWithNoReads()
+    {
+        // H1's only reads clipped over its origin and were dropped.
+        SummaryStats noDepth = SummaryStats.from(new int[LENGTH]);
+        GenomeSupport noReads = new GenomeSupport(new GenomeStats(H1, 0, 2, 0, noDepth, null), 0, null, 0.0);
+
+        List<VirusGenome> representatives = RepresentativeGenomeSelector.select(List.of(withReads(W1, 10), noReads));
+
+        assertEquals(List.of(W1), representatives);
+    }
+
+    @Test
     public void testSelectTiedVotesByGenomeName()
     {
         List<VirusGenome> representatives =
-                RepresentativeGenomeSelector.select(List.of(passed(V2, 100), passed(V1, 100)));
+                RepresentativeGenomeSelector.select(List.of(withReads(V2, 100), withReads(V1, 100)));
 
         assertEquals(List.of(V1), representatives);
     }
 
-    private static GenomeSupport passed(VirusGenome genome, double votes)
-    {
-        return genomeSupport(genome, GenomeFilterStatus.PASS, votes);
-    }
-
-    private static GenomeSupport filtered(VirusGenome genome, double votes)
-    {
-        return genomeSupport(genome, GenomeFilterStatus.LOW_COVERAGE, votes);
-    }
-
-    // Selection reads only the virus genome, its filter status and its read votes. The remaining fields are filler,
+    // Selection reads only the virus genome, its read count and its read votes. The remaining fields are filler,
     // set to values consistent with a present virus genome so nothing reads as contradictory.
-    private static GenomeSupport genomeSupport(VirusGenome genome, GenomeFilterStatus filterStatus, double votes)
+    private static GenomeSupport withReads(VirusGenome genome, double votes)
     {
         SummaryStats filler = SummaryStats.from(new int[] { 1 });
-        return new GenomeSupport(
-                new GenomeStats(genome, 100, 0, LENGTH / 2, filler, filler), filterStatus, 0, filler, votes);
+        return new GenomeSupport(new GenomeStats(genome, 100, 0, LENGTH / 2, filler, filler), 0, filler, votes);
     }
 }

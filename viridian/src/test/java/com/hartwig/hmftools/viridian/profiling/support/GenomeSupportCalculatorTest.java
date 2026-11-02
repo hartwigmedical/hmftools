@@ -23,9 +23,6 @@ public class GenomeSupportCalculatorTest
 {
     private static final double EPSILON = 1e-9;
 
-    // Only the vote-density prefilter reads this; the stats themselves are unaffected.
-    private static final double MEAN_READ_LENGTH = 150.0;
-
     private static final VirusGenome V1 = new VirusGenome("v1", 20, "Virus 1", new OncologyGroup("Group 1"));
     private static final VirusGenome V2 = new VirusGenome("v2", 10, "Virus 2", new OncologyGroup("Group 2"));
 
@@ -46,13 +43,13 @@ public class GenomeSupportCalculatorTest
         int[] v1Depth = { 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
         GenomeSupport expectedV1 = new GenomeSupport(
                 new GenomeStats(V1, 2, 0, 10, SummaryStats.from(v1Depth), SummaryStats.from(new int[] { 10, 8 })),
-                GenomeFilterStatus.PASS, 1, SummaryStats.from(new int[] { 2, 1 }), 2.0);
+                1, SummaryStats.from(new int[] { 2, 1 }), 2.0);
         assertEquals(expectedV1, get(stats, V1));
 
         int[] v2Depth = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
         GenomeSupport expectedV2 = new GenomeSupport(
                 new GenomeStats(V2, 1, 0, 10, SummaryStats.from(v2Depth), SummaryStats.from(new int[] { 9 })),
-                GenomeFilterStatus.PASS, 0, SummaryStats.from(new int[] { 1 }), 1.0);
+                0, SummaryStats.from(new int[] { 1 }), 1.0);
         assertEquals(expectedV2, get(stats, V2));
     }
 
@@ -116,13 +113,13 @@ public class GenomeSupportCalculatorTest
         List<GenomeSupport> stats = compute(alignments, READ_VOTE_CORRECT_BASE_PROBABILITY);
 
         GenomeSupport expected = new GenomeSupport(
-                new GenomeStats(V1, 0, 2, 0, SummaryStats.from(new int[20]), null), GenomeFilterStatus.LOW_COVERAGE, 0, null, 0.0);
+                new GenomeStats(V1, 0, 2, 0, SummaryStats.from(new int[20]), null), 0, null, 0.0);
         assertEquals(expected, get(stats, V1));
     }
 
     private static List<GenomeSupport> compute(List<ViralReadAlignment> alignments, double correctBaseProbability)
     {
-        AllGenomesReadAlignments allAlignments = AllGenomesReadAlignments.from(alignments, MEAN_READ_LENGTH);
+        AllGenomesReadAlignments allAlignments = AllGenomesReadAlignments.from(alignments);
         Map<VirusGenome, GenomeStats> genomeStats = GenomeStatsCalculator.calculate(
                 allAlignments.store().byGenome(), allAlignments.metrics().originClippedReads());
         return new GenomeSupportCalculator(correctBaseProbability).calculate(allAlignments, genomeStats);
