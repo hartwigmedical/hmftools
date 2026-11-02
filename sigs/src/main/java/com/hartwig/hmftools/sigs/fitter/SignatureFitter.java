@@ -218,10 +218,12 @@ public class SignatureFitter
                     .build());
         }
 
-        // also report residuals
+        // also report residuals - these are the differences between fitted and actual counts per bucket
         double[] fittedCounts = calculateFittedCounts(mSignatures, sigAllocs);
         SigResiduals residuals = calcResiduals(sampleCounts, fittedCounts, sampleTotal);
-        double residualsUnalloc = residuals.Total - residuals.Excess;
+
+        // misallocated count use the excess or under-allocation since they are symmetrical
+        double misallocatedCount = residuals.Total - residuals.Excess;
 
         SIG_LOGGER.debug(String.format("sample(%s) alloc(%s perc=%.3f of total=%s) residuals(%.3f total=%s excess=%s)",
                 sampleId, sizeToStr(allocTotal), allocTotal/sampleTotal, sizeToStr(sampleTotal),
@@ -229,8 +231,8 @@ public class SignatureFitter
 
         sigAllocations.add(ImmutableSignatureAllocation.builder()
                 .signature(SIG_MISALLOCATED)
-                .allocation(round(residualsUnalloc,ALLOC_ROUND))
-                .percent(round(residualsUnalloc/sampleTotal, PERC_ROUND))
+                .allocation(round(misallocatedCount, ALLOC_ROUND))
+                .percent(round(misallocatedCount/sampleTotal, PERC_ROUND))
                 .build());
 
         writeSampleSigResults(sampleId, sigAllocations);
