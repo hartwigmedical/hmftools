@@ -20,6 +20,7 @@ import com.hartwig.hmftools.viridian.profiling.VirusProfile;
 import com.hartwig.hmftools.viridian.reference.VirusGenome;
 import com.hartwig.hmftools.viridian.reference.VirusGroup;
 import com.hartwig.hmftools.viridian.reference.VirusGroupInfo;
+import com.hartwig.hmftools.viridian.reference.VirusName;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -77,14 +78,14 @@ public class VirusReporter
         boolean isReported = info.isReportable()
                 && (integrations >= REPORTED_INTEGRATIONS_MIN || clonalityStatus == ClonalityStatus.CLONAL);
 
-        List<String> integratedVirusNames = integratedGenomes.stream().map(VirusGenome::virusName).toList();
-        String virusName = profile != null
+        List<VirusName> integratedVirusNames = integratedGenomes.stream().map(VirusGenome::virusName).toList();
+        VirusName virusName = profile != null
                 ? profile.representativeStats().genome().virusName()
                 // The most common virus name from the integrations.
                 : integratedVirusNames.stream()
                         .collect(groupingBy(identity(), counting()))
                         .entrySet().stream()
-                        .min(Map.Entry.<String, Long>comparingByValue().reversed().thenComparing(Map.Entry.comparingByKey()))
+                        .min(Map.Entry.<VirusName, Long>comparingByValue().reversed().thenComparing(Map.Entry.comparingByKey()))
                         .orElseThrow()
                         .getKey();
         ReportQcStatus qcStatus = integratedVirusNames.stream().allMatch(virusName::equals)

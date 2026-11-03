@@ -13,6 +13,7 @@ import java.util.Map;
 import com.hartwig.hmftools.common.bwa.IBwaMemAligner;
 import com.hartwig.hmftools.viridian.reference.VirusGenome;
 import com.hartwig.hmftools.viridian.reference.VirusGroup;
+import com.hartwig.hmftools.viridian.reference.VirusName;
 import com.hartwig.hmftools.viridian.reference.VirusReference;
 
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
@@ -25,8 +26,8 @@ public class ViralInsertAlignerTest
 {
     private static final VirusGroup HPV_16 = new VirusGroup("HPV 16");
     private static final VirusGroup HPV_18 = new VirusGroup("HPV 18");
-    private static final VirusGenome GENOME_16 = new VirusGenome("hpv16", 7906, "Human papillomavirus 16", HPV_16);
-    private static final VirusGenome GENOME_18 = new VirusGenome("hpv18", 7857, "Human papillomavirus 18", HPV_18);
+    private static final VirusGenome GENOME_16 = new VirusGenome("hpv16", 7906, new VirusName("Human papillomavirus 16"), HPV_16);
+    private static final VirusGenome GENOME_18 = new VirusGenome("hpv18", 7857, new VirusName("Human papillomavirus 18"), HPV_18);
 
     private static final String SEQUENCE = "ACGTACGTACGTACGTACGTACGTACGTACGT";
     private static final String OTHER_SEQUENCE = "TTGCATTGCATTGCATTGCATTGCATTGCATT";

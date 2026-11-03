@@ -13,7 +13,7 @@ public record VirusGenome(
         int length,
         // Human-readable, normalised name of the virus.
         // Multiple genomes may have the same value.
-        String virusName,
+        VirusName virusName,
         VirusGroup virusGroup
 ) implements Comparable<VirusGenome>
 {

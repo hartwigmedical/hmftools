@@ -17,6 +17,7 @@ import com.hartwig.hmftools.viridian.profiling.align.ViralReadAlignmentStore;
 import com.hartwig.hmftools.viridian.profiling.common.ReadId;
 import com.hartwig.hmftools.viridian.reference.VirusGenome;
 import com.hartwig.hmftools.viridian.reference.VirusGroup;
+import com.hartwig.hmftools.viridian.reference.VirusName;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -39,9 +40,9 @@ public class RepresentativeReadAssignerTest
     private static final int READ_LENGTH = 100;
 
     private static final VirusGroup GROUP = new VirusGroup("Group A");
-    private static final VirusGenome REPRESENTATIVE = new VirusGenome("v1", 1000, "Virus v1", GROUP);
-    private static final VirusGenome TWIN = new VirusGenome("v2", 1000, "Virus v2", GROUP);
-    private static final VirusGenome MINOR = new VirusGenome("v3", 1000, "Virus v3", GROUP);
+    private static final VirusGenome REPRESENTATIVE = new VirusGenome("v1", 1000, new VirusName("Virus v1"), GROUP);
+    private static final VirusGenome TWIN = new VirusGenome("v2", 1000, new VirusName("Virus v2"), GROUP);
+    private static final VirusGenome MINOR = new VirusGenome("v3", 1000, new VirusName("Virus v3"), GROUP);
 
     @Test
     public void testAssignReadsPicksLeastDivergentRepresentative()

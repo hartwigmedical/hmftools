@@ -21,14 +21,15 @@ import com.hartwig.hmftools.viridian.profiling.common.SummaryStats;
 import com.hartwig.hmftools.viridian.reference.VirusGenome;
 import com.hartwig.hmftools.viridian.reference.VirusGroup;
 import com.hartwig.hmftools.viridian.reference.VirusGroupInfo;
+import com.hartwig.hmftools.viridian.reference.VirusName;
 
 import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
 
 public class VirusReporterTest
 {
-    private static final String HPV16 = "HPV type 16";
-    private static final String HPV18 = "HPV type 18";
+    private static final VirusName HPV16 = new VirusName("HPV type 16");
+    private static final VirusName HPV18 = new VirusName("HPV type 18");
 
     private static final VirusGroup GROUP = new VirusGroup("HPV");
     private static final VirusGenome GENOME = new VirusGenome("c1", 1000, HPV16, GROUP);
@@ -139,7 +140,7 @@ public class VirusReporterTest
     }
 
     private static VirusReport reportableReport(
-            String virusName, ReportQcStatus qcStatus, int integrations, @Nullable VirusProfile profile,
+            VirusName virusName, ReportQcStatus qcStatus, int integrations, @Nullable VirusProfile profile,
             @Nullable Double copiesPerTumorCell, ClonalityStatus clonalityStatus, boolean isReported)
     {
         return new VirusReport(

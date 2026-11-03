@@ -11,7 +11,7 @@ import com.hartwig.hmftools.viridian.common.UserInputError;
 // Per-virus-genome reference data.
 public record VirusInfo(
         String contigName,
-        String virusName,
+        VirusName virusName,
         VirusGroup virusGroup
 )
 {
@@ -29,7 +29,7 @@ public record VirusInfo(
                     throw new UserInputError("Duplicate contig_name: " + contig);
                 }
                 VirusGroup virusGroup = new VirusGroup(row.getString(Columns.virus_group));
-                VirusInfo virusInfo = new VirusInfo(contig, row.getString(Columns.virus_name), virusGroup);
+                VirusInfo virusInfo = new VirusInfo(contig, new VirusName(row.getString(Columns.virus_name)), virusGroup);
                 result.add(virusInfo);
             }
         }

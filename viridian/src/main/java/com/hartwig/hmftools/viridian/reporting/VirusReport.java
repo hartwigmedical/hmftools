@@ -3,6 +3,7 @@ package com.hartwig.hmftools.viridian.reporting;
 import com.hartwig.hmftools.common.virus.VirusType;
 import com.hartwig.hmftools.viridian.profiling.VirusProfile;
 import com.hartwig.hmftools.viridian.reference.VirusGroup;
+import com.hartwig.hmftools.viridian.reference.VirusName;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -10,7 +11,7 @@ import org.jetbrains.annotations.Nullable;
 // Produced for every virus group that is present in the reads or has integrations.
 public record VirusReport(
         VirusGroup virusGroup,
-        String virusName,
+        VirusName virusName,
         ReportQcStatus qcStatus,
         // Null if not a reportable virus.
         @Nullable VirusType reportingType,

@@ -10,6 +10,7 @@ import com.hartwig.hmftools.viridian.profiling.common.SummaryStats;
 import com.hartwig.hmftools.viridian.profiling.select.RepresentativeSelection;
 import com.hartwig.hmftools.viridian.reference.VirusGenome;
 import com.hartwig.hmftools.viridian.reference.VirusGroup;
+import com.hartwig.hmftools.viridian.reference.VirusName;
 
 import org.junit.Test;
 
@@ -17,9 +18,9 @@ public class VirusProfileTest
 {
     private static final VirusGroup GROUP_A = new VirusGroup("Group A");
     private static final VirusGroup GROUP_B = new VirusGroup("Group B");
-    private static final VirusGenome V1 = new VirusGenome("v1", 100, "Virus v1", GROUP_A);
-    private static final VirusGenome V2 = new VirusGenome("v2", 100, "Virus v2", GROUP_A);
-    private static final VirusGenome W1 = new VirusGenome("w1", 100, "Virus w1", GROUP_B);
+    private static final VirusGenome V1 = new VirusGenome("v1", 100, new VirusName("Virus v1"), GROUP_A);
+    private static final VirusGenome V2 = new VirusGenome("v2", 100, new VirusName("Virus v2"), GROUP_A);
+    private static final VirusGenome W1 = new VirusGenome("w1", 100, new VirusName("Virus w1"), GROUP_B);
 
     @Test
     public void testFromProfilesRepresentativeMeasurement()

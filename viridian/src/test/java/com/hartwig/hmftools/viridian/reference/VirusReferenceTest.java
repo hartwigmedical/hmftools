@@ -24,14 +24,14 @@ public class VirusReferenceTest
     private static final VirusGroup GROUP_BETA = new VirusGroup("Group Beta");
 
     // Three virus genomes: contigA alone in its group, contigB and contigC sharing a group.
-    private static final VirusInfo INFO_A = new VirusInfo("contigA", "Virus Alpha", GROUP_ALPHA);
-    private static final VirusInfo INFO_B = new VirusInfo("contigB", "Virus Beta type 1", GROUP_BETA);
-    private static final VirusInfo INFO_C = new VirusInfo("contigC", "Virus Beta type 2", GROUP_BETA);
+    private static final VirusInfo INFO_A = new VirusInfo("contigA", new VirusName("Virus Alpha"), GROUP_ALPHA);
+    private static final VirusInfo INFO_B = new VirusInfo("contigB", new VirusName("Virus Beta type 1"), GROUP_BETA);
+    private static final VirusInfo INFO_C = new VirusInfo("contigC", new VirusName("Virus Beta type 2"), GROUP_BETA);
     private static final List<VirusInfo> INFO = List.of(INFO_A, INFO_B, INFO_C);
 
-    private static final VirusGenome GENOME_A = new VirusGenome("contigA", 100, "Virus Alpha", GROUP_ALPHA);
-    private static final VirusGenome GENOME_B = new VirusGenome("contigB", 200, "Virus Beta type 1", GROUP_BETA);
-    private static final VirusGenome GENOME_C = new VirusGenome("contigC", 300, "Virus Beta type 2", GROUP_BETA);
+    private static final VirusGenome GENOME_A = new VirusGenome("contigA", 100, new VirusName("Virus Alpha"), GROUP_ALPHA);
+    private static final VirusGenome GENOME_B = new VirusGenome("contigB", 200, new VirusName("Virus Beta type 1"), GROUP_BETA);
+    private static final VirusGenome GENOME_C = new VirusGenome("contigC", 300, new VirusName("Virus Beta type 2"), GROUP_BETA);
 
     private static final String VALID_INFO_TSV = """
             contig_name\tvirus_name\tvirus_group

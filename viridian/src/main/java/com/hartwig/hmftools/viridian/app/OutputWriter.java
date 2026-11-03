@@ -55,7 +55,7 @@ public class OutputWriter
                     VirusGenome genome = support.genome();
 
                     row.set(GenomeSupportColumn.genome, genome.contigName());
-                    row.set(GenomeSupportColumn.virus_name, genome.virusName());
+                    row.set(GenomeSupportColumn.virus_name, genome.virusName().value());
                     row.set(GenomeSupportColumn.virus_group, genome.virusGroup().name());
                     row.set(GenomeSupportColumn.genome_length, genome.length());
                     row.set(GenomeSupportColumn.aligned_reads, stats.readCount());
@@ -114,7 +114,7 @@ public class OutputWriter
                     GenomeStats stats = profile.representativeStats();
                     VirusGenome genome = stats.genome();
                     row.set(VirusProfileColumn.genome_name, genome.contigName());
-                    row.set(VirusProfileColumn.virus_name, genome.virusName());
+                    row.set(VirusProfileColumn.virus_name, genome.virusName().value());
                     row.set(VirusProfileColumn.genome_length, genome.length());
                     row.set(VirusProfileColumn.aligned_reads, stats.readCount());
                     row.set(VirusProfileColumn.origin_clipped_reads, stats.originClippedReads());
@@ -122,7 +122,9 @@ public class OutputWriter
 
                     List<VirusGenome> secondaries = profile.secondaryGenomes();
                     row.setOrNull(VirusProfileColumn.secondary_genome_names, joinOrNull(secondaries, VirusGenome::contigName));
-                    row.setOrNull(VirusProfileColumn.secondary_virus_names, joinOrNull(secondaries, VirusGenome::virusName));
+                    row.setOrNull(
+                            VirusProfileColumn.secondary_virus_names,
+                            joinOrNull(secondaries, secondary -> secondary.virusName().value()));
 
                     writeSummaryStats(row, DEPTH_STATS_COLUMNS, stats.depth());
                     writeSummaryStats(row, ALIGNER_SCORE_STATS_COLUMNS, stats.alignerScore());
@@ -240,7 +242,7 @@ public class OutputWriter
                     if(alignment != null)
                     {
                         VirusGenome genome = alignment.genome();
-                        row.set(IntegrationCandidateColumn.virus_name, genome.virusName());
+                        row.set(IntegrationCandidateColumn.virus_name, genome.virusName().value());
                         row.set(IntegrationCandidateColumn.virus_group, genome.virusGroup().name());
                         row.set(IntegrationCandidateColumn.virus_contig, genome.contigName());
                         row.set(IntegrationCandidateColumn.virus_position, alignment.position());
@@ -304,7 +306,7 @@ public class OutputWriter
                     VirusProfile profile = report.profile();
                     GenomeStats stats = profile != null ? profile.representativeStats() : null;
 
-                    row.set(VirusReportColumn.name, report.virusName());
+                    row.set(VirusReportColumn.name, report.virusName().value());
                     row.set(VirusReportColumn.qcStatus, report.qcStatus().name());
                     row.set(VirusReportColumn.integrations, report.integrations());
                     row.setOrNull(
