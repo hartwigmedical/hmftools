@@ -60,6 +60,7 @@ public class AmberConstants
     public static final double CHR_ARM_AUC_UPPER_BOUND_FOR_COPY_NUMBER_EVENTS = 0.1;
 
     // LOH analysis
+    public static final double LOH_QUAL_FILTERED_THRESHOLD = 0.075;
     public static final int LOH_REF_ALT_MIN_COUNT = 2;
     public static final int LOH_MOVING_AVG_COUNT = 50;
     public static final int LOH_MOVING_ITEM_COUNT = LOH_MOVING_AVG_COUNT * 2 + 1;

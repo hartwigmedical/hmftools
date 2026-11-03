@@ -50,12 +50,17 @@ public class AmberUtils
 
     public static boolean aboveQualFilter(final PositionEvidence posEvidence)
     {
+        return aboveQualFilter(posEvidence, QUAL_FILTERED_THRESHOLD);
+    }
+
+    public static boolean aboveQualFilter(final PositionEvidence posEvidence, double qualFilterThreshold)
+    {
         if(posEvidence.ReadDepth == 0)
             return false;
 
         int filteredCount = posEvidence.BaseQualFiltered + posEvidence.MapQualFiltered + posEvidence.SeqTechFiltered;
         double filteredPercent = filteredCount / (double)posEvidence.ReadDepth;
-        return filteredPercent < QUAL_FILTERED_THRESHOLD;
+        return filteredPercent < qualFilterThreshold;
     }
 
     public static boolean aboveTumorOnlyMinSupport(final PositionEvidence posEvidence, final int minSupport)

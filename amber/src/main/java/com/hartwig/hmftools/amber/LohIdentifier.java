@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.amber.AmberConstants.LOH_MIN_LENGTH;
 import static com.hartwig.hmftools.amber.AmberConstants.LOH_MOVING_AVG_COUNT;
 import static com.hartwig.hmftools.amber.AmberConstants.LOH_MOVING_ITEM_COUNT;
 import static com.hartwig.hmftools.amber.AmberConstants.LOH_POINT_DENSITY;
+import static com.hartwig.hmftools.amber.AmberConstants.LOH_QUAL_FILTERED_THRESHOLD;
 import static com.hartwig.hmftools.amber.AmberUtils.aboveQualFilter;
 import static com.hartwig.hmftools.common.amber.AmberGender.determineGender;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates.centromereGaps;
@@ -23,7 +24,6 @@ import com.google.common.collect.ListMultimap;
 import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.region.BaseRegion;
@@ -31,19 +31,17 @@ import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 public class LohIdentifier
 {
-    private final RefGenomeCoordinates mGenomeCoordinates;
     private final int mTumorMinDepth;
 
     private final List<ChrBaseRegion> mHlaRegions;
-    private final Map<HumanChromosome,List<BaseRegion>> mGentromereGaps;
+    private final Map<HumanChromosome,List<BaseRegion>> mCentromereGaps;
 
     public LohIdentifier(final RefGenomeVersion refGenVersion, final int tumorMinDepth)
     {
-        mGenomeCoordinates = RefGenomeCoordinates.refGenomeCoordinates(refGenVersion);
         mHlaRegions = getHlaRegions(refGenVersion);
         mTumorMinDepth = tumorMinDepth;
 
-        mGentromereGaps = centromereGaps(refGenVersion);
+        mCentromereGaps = centromereGaps(refGenVersion);
     }
 
     public void findLohSegments(final ListMultimap<Chromosome, TumorBAF> chromosomeBafs)
@@ -64,7 +62,7 @@ public class LohIdentifier
         if(positionEvidence.ReadDepth < mTumorMinDepth)
             return false;
 
-        if(!aboveQualFilter(positionEvidence))
+        if(!aboveQualFilter(positionEvidence, LOH_QUAL_FILTERED_THRESHOLD))
             return false;
 
         if(mHlaRegions.stream().anyMatch(x -> x.containsPosition(positionEvidence.Chromosome, positionEvidence.Position)))
@@ -126,7 +124,7 @@ public class LohIdentifier
         }
 
         // find continuous regions of LOH
-        List<BaseRegion> centromereRegions = mGentromereGaps.get(chromosome);
+        List<BaseRegion> centromereRegions = mCentromereGaps.get(chromosome);
 
         int lohIndexStart = -1;
         int lohIndexEnd = -1;
