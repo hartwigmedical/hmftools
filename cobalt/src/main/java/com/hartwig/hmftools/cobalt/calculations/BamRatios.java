@@ -7,13 +7,13 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ListMultimap;
 import com.hartwig.hmftools.cobalt.consolidation.ResultsConsolidator;
 import com.hartwig.hmftools.cobalt.normalisers.ResultsNormaliser;
-import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 
 class BamRatios
 {
-    ListMultimap<Chromosome, BamRatio> Ratios;
+    ListMultimap<HumanChromosome, BamRatio> Ratios;
 
-    BamRatios(ListMultimap<Chromosome, BamRatio> ratios)
+    BamRatios(ListMultimap<HumanChromosome, BamRatio> ratios)
     {
         Ratios = ratios;
     }
@@ -31,7 +31,7 @@ class BamRatios
         {
             return;
         }
-        ListMultimap<Chromosome, BamRatio> consolidatedRatios = consolidator.consolidate(Ratios);
+        ListMultimap<HumanChromosome, BamRatio> consolidatedRatios = consolidator.consolidate(Ratios);
         Preconditions.checkState(Ratios.size() >= consolidatedRatios.size());
         Preconditions.checkState(Ratios.keySet().equals(consolidatedRatios.keySet()));
         if(consolidatedRatios.size() == Ratios.size())

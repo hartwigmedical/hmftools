@@ -110,8 +110,8 @@ java -Xmx16G -jar amber.jar \
    -tumor COLO829T -tumor_bam /run_dir/COLO829T.bam \ 
    -output_dir /run_dir/amber/ \
    -threads 16 \
-   -loci /path/to/GermlineHetPon.37.vcf.gz \
-   -ref_genome_version 38
+   -loci /path/to/AmberGermlineSites.37.tsv.gz \
+   -ref_genome_version 37
 ```
 
 ## Germline Only Mode

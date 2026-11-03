@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.cobalt.targeted;
+package com.hartwig.hmftools.cobalt.utils;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
@@ -26,7 +26,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.cobalt.norm.GcProfileCache;

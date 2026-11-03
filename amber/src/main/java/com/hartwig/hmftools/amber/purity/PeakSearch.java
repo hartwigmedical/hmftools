@@ -46,7 +46,7 @@ public class PeakSearch
 
         for(CandidatePeakResult peak : mPeaks)
         {
-            AMB_LOGGER.debug(format("actual peak at %.3f with score: %.3f ", peak.candidatePeak().vaf(), peak.score()));
+            AMB_LOGGER.debug(format("actual peak(%.3f) with score(%.3f)", peak.candidatePeak().vaf(), peak.score()));
         }
     }
 
