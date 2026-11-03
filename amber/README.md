@@ -3,15 +3,12 @@
 Amber is designed to generate a tumor BAF file for use in PURPLE from a provided VCF of likely heterozygous SNP sites.
 
 When using paired reference/tumor data, Amber is also able to:
-
 - detect evidence of contamination in the tumor from homozygous sites in the reference
 - facilitate sample matching / patient deduplication by recording SNPs in the germline
 - identify long regions of homozygosity and consanguinity
 
 All resource files for this tool and the WiGiTs pipeline are available for download via
 the [HMF Resource page](../pipeline/README_RESOURCES.md).
-
-Amber requires Java 17+ to be installed.
 
 ## Paired Normal/Tumor Mode
 
@@ -58,14 +55,14 @@ Amber supports both BAM and CRAM file formats.
 ### Example Usage
 
 ```
-java -Xmx16G -jar amber.jar \
+java -jar amber.jar \
     -reference SAMPLE_ID_R \
     -reference_bam /sample_data/SAMPLE_ID_R.bam \ 
     -tumor SAMPLE_ID \
     -tumor_bam /sample_data/SAMPLE_ID.bam \ 
     -output_dir /sample_data/ \
     -threads 10 \
-    -loci /path/to/GermlineHetPon.37.vcf.gz 
+    -loci /path/to/AmberGermlineSites.37.tsv.gz 
 ```
 
 ## Tumor Only Mode
@@ -152,6 +149,15 @@ germline.
 
 A piecewise constant fit (segmentation) of the BAF ratios is found by least squares regression
 and written as a `.pcf` file. This uses a built-in implementation of the Bioconductor copynumber package.
+
+### LOH determination
+
+Determine likely LOH from runs of BAF points near 0% or 100%, and use this to recover a number of BAF points that would otherwise be filtered.
+- only applies to chromosomes 1-22 and excludes HLA regions
+- ignores sites filtered for other reasons (eg base or map qual)
+- per-chromosome look for stretches of sites where the rolling average of points indicates LOH (based on ref and alt VAFs being > 0.96, 0.9 and 0.8 in increasing levels)
+- mark regions as LOH if they extend for 20MB or more
+- every 5th point in these regions are recovered from standard alt filters
 
 ### Contamination
 
