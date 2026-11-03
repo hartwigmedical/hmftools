@@ -169,10 +169,13 @@ public class PurpleConstants
     // copy number smoothing
     public static final double MIN_OBSERVED_BAF_CHANGE = 0.03;
     public static final double MAX_DEVIATION_ADJUSTMENT = 0.20;
-    public static final double MIN_ABSOLUTE_COPY_NUMBER_TOLERANCE = 0.3;
-    public static final double MIN_RELATIVE_COPY_NUMBER_TOLERANCE = 0.12;
-    public static final double MIN_ABSOLUTE_COPY_NUMBER_ADDITION = 1;
-    public static final double MIN_RELATIVE_COPY_NUMBER_ADDITION = 0.8;
+    public static final double MIN_ABS_CN_TOLERANCE = 0.3;
+    public static final double MIN_REL_CN_TOLERANCE = 0.12;
+    public static final double MIN_ABS_CN_ADDITION = 1;
+    public static final double MIN_REL_CN_ADDITION = 0.8;
+
+    public static final double MIN_ABS_CN_ADDITION_TARGETED = 0.5;
+    public static final double MIN_REL_CN_ADDITION_TARGETED = 0.4;
 
     public static final ChrBaseRegion CDKN2A_DELETION_REGION = new ChrBaseRegion("9", 9000000, 12000000);
 

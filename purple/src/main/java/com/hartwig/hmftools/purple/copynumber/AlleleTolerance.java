@@ -1,11 +1,13 @@
 package com.hartwig.hmftools.purple.copynumber;
 
 import static com.hartwig.hmftools.purple.PurpleConstants.MAX_DEVIATION_ADJUSTMENT;
-import static com.hartwig.hmftools.purple.PurpleConstants.MIN_ABSOLUTE_COPY_NUMBER_ADDITION;
-import static com.hartwig.hmftools.purple.PurpleConstants.MIN_ABSOLUTE_COPY_NUMBER_TOLERANCE;
+import static com.hartwig.hmftools.purple.PurpleConstants.MIN_ABS_CN_ADDITION;
+import static com.hartwig.hmftools.purple.PurpleConstants.MIN_ABS_CN_ADDITION_TARGETED;
+import static com.hartwig.hmftools.purple.PurpleConstants.MIN_ABS_CN_TOLERANCE;
 import static com.hartwig.hmftools.purple.PurpleConstants.MIN_OBSERVED_BAF_CHANGE;
-import static com.hartwig.hmftools.purple.PurpleConstants.MIN_RELATIVE_COPY_NUMBER_ADDITION;
-import static com.hartwig.hmftools.purple.PurpleConstants.MIN_RELATIVE_COPY_NUMBER_TOLERANCE;
+import static com.hartwig.hmftools.purple.PurpleConstants.MIN_REL_CN_ADDITION;
+import static com.hartwig.hmftools.purple.PurpleConstants.MIN_REL_CN_ADDITION_TARGETED;
+import static com.hartwig.hmftools.purple.PurpleConstants.MIN_REL_CN_TOLERANCE;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.purple.fitting.PurityAdjuster;
@@ -16,12 +18,13 @@ import org.jetbrains.annotations.NotNull;
 
 public class AlleleTolerance
 {
-    @NotNull
     private final PurityAdjuster mPurityAdjuster;
+    private final boolean mIsTargetedPanel;
 
-    public AlleleTolerance(@NotNull final PurityAdjuster purityAdjuster)
+    public AlleleTolerance(final PurityAdjuster purityAdjuster, boolean isTargetedPanel)
     {
         mPurityAdjuster = purityAdjuster;
+        mIsTargetedPanel = isTargetedPanel;
     }
 
     public boolean inTolerance(final ObservedRegion first, final ObservedRegion second)
@@ -35,18 +38,21 @@ public class AlleleTolerance
 
             double maxCopyNumber = Math.max(first.tumorCopyNumber(), second.tumorCopyNumber());
             double maxMinorAllelePloidyDeviation =
-                    purityAdjustment * tolerance(MIN_ABSOLUTE_COPY_NUMBER_TOLERANCE, 0.5 * maxCopyNumber, minBafCount);
+                    purityAdjustment * tolerance(MIN_ABS_CN_TOLERANCE, 0.5 * maxCopyNumber, minBafCount);
             double minorAllelePloidyDeviation = Math.abs(first.minorAlleleCopyNumber() - second.minorAlleleCopyNumber());
-            if(Doubles.greaterThan(minorAllelePloidyDeviation, maxMinorAllelePloidyDeviation) && Doubles.greaterThan(observedBafDeviation,
-                    MIN_OBSERVED_BAF_CHANGE))
+
+            if(Doubles.greaterThan(minorAllelePloidyDeviation, maxMinorAllelePloidyDeviation)
+            && Doubles.greaterThan(observedBafDeviation, MIN_OBSERVED_BAF_CHANGE))
             {
                 return false;
             }
         }
 
         int minWindowDepthCount = Math.min(first.depthWindowCount(), second.depthWindowCount());
-        double absTolerance = purityAdjustment * tolerance(MIN_ABSOLUTE_COPY_NUMBER_TOLERANCE, MIN_ABSOLUTE_COPY_NUMBER_ADDITION, minWindowDepthCount);
-        double relTolerance = purityAdjustment * tolerance(MIN_RELATIVE_COPY_NUMBER_TOLERANCE, MIN_RELATIVE_COPY_NUMBER_ADDITION, minWindowDepthCount);
+        double minAbsCnAddition = mIsTargetedPanel ? MIN_ABS_CN_ADDITION_TARGETED : MIN_ABS_CN_ADDITION;
+        double minRelCnAddition = mIsTargetedPanel ? MIN_REL_CN_ADDITION_TARGETED : MIN_REL_CN_ADDITION;
+        double absTolerance = purityAdjustment * tolerance(MIN_ABS_CN_TOLERANCE, minAbsCnAddition, minWindowDepthCount);
+        double relTolerance = purityAdjustment * tolerance(MIN_REL_CN_TOLERANCE, minRelCnAddition, minWindowDepthCount);
 
         boolean copyNumberInTolerance =
                 inAbsoluteTolerance(absTolerance, first.tumorCopyNumber(), second.tumorCopyNumber()) || inRelativeTolerance(relTolerance,
