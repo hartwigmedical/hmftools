@@ -10,7 +10,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.stream.Stream;
 
-import com.hartwig.hmftools.viridian.profiling.align.AlignedInterval;
+import com.hartwig.hmftools.viridian.profiling.align.MatchedInterval;
 import com.hartwig.hmftools.viridian.profiling.align.ViralReadAlignment;
 import com.hartwig.hmftools.viridian.reference.VirusGenome;
 
@@ -52,7 +52,7 @@ public class GenomeStatsCalculator
         int[] depth = new int[genomeLength];
         for(ViralReadAlignment alignment : alignments)
         {
-            for(AlignedInterval block : alignment.alignedIntervals())
+            for(MatchedInterval block : alignment.matchedIntervals())
             {
                 int start = max(0, block.referenceStart() - 1);   // intervals are 1-based
                 int end = min(genomeLength, block.referenceStart() - 1 + block.length());

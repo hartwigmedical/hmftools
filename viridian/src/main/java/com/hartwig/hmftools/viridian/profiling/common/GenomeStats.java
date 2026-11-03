@@ -14,7 +14,7 @@ public record GenomeStats(
         int readCount,
         // Reads with an alignment dropped because they clipped over the virus genome start/end (circular-genome artifact).
         int originClippedReads,
-        // Virus genome positions aligned by at least 1 alignment.
+        // Virus genome positions aligned and matched by at least 1 alignment.
         int coveredBases,
         // Note uncovered bases count as depth=0.
         SummaryStats depth,

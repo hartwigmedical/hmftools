@@ -7,7 +7,7 @@ import static org.junit.Assert.assertEquals;
 import java.util.List;
 import java.util.Map;
 
-import com.hartwig.hmftools.viridian.profiling.align.AlignedInterval;
+import com.hartwig.hmftools.viridian.profiling.align.MatchedInterval;
 import com.hartwig.hmftools.viridian.profiling.align.AllGenomesReadAlignments;
 import com.hartwig.hmftools.viridian.profiling.align.ViralReadAlignment;
 import com.hartwig.hmftools.viridian.profiling.common.GenomeStats;
@@ -136,7 +136,7 @@ public class GenomeSupportCalculatorTest
     {
         return new ViralReadAlignment(
                 ReadId.parse(readName), genome, start, start + length - 1, length + "M", 0, 0, alignerScore, divergence,
-                List.of(new AlignedInterval(start, length)));
+                List.of(new MatchedInterval(start, length)));
     }
 
     // An alignment covering [start, end] with the given clip lengths hanging off each side.
@@ -146,6 +146,6 @@ public class GenomeSupportCalculatorTest
                 ReadId.parse(readName), genome, start, end,
                 leftClip + "S" + (end - start + 1) + "M" + rightClip + "S",
                 leftClip, rightClip, 10, leftClip + rightClip,
-                List.of(new AlignedInterval(start, end - start + 1)));
+                List.of(new MatchedInterval(start, end - start + 1)));
     }
 }

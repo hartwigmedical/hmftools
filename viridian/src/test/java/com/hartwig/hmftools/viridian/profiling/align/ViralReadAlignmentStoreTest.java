@@ -48,6 +48,6 @@ public class ViralReadAlignmentStoreTest
     private static ViralReadAlignment alignment(String readName, VirusGenome genome)
     {
         return new ViralReadAlignment(
-                ReadId.parse(readName), genome, 1, LENGTH, LENGTH + "M", 0, 0, 100, 0, List.of(new AlignedInterval(1, LENGTH)));
+                ReadId.parse(readName), genome, 1, LENGTH, LENGTH + "M", 0, 0, 100, 0, List.of(new MatchedInterval(1, LENGTH)));
     }
 }

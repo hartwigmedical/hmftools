@@ -61,19 +61,19 @@ public class AllGenomesReadAlignmentsTest
     {
         return new ViralReadAlignment(
                 ReadId.parse(readName), genome, 1, LENGTH, LENGTH + "M", 0, 0, 100 - divergence, divergence,
-                List.of(new AlignedInterval(1, LENGTH)));
+                List.of(new MatchedInterval(1, LENGTH)));
     }
 
     private static ViralReadAlignment alignment(String readName, VirusGenome genome)
     {
         return new ViralReadAlignment(
-                ReadId.parse(readName), genome, 1, LENGTH, LENGTH + "M", 0, 0, 100, 0, List.of(new AlignedInterval(1, LENGTH)));
+                ReadId.parse(readName), genome, 1, LENGTH, LENGTH + "M", 0, 0, 100, 0, List.of(new MatchedInterval(1, LENGTH)));
     }
 
     // A right clip projecting well past the virus genome end.
     private static ViralReadAlignment straddler(String readName, VirusGenome genome)
     {
         return new ViralReadAlignment(
-                ReadId.parse(readName), genome, 1, LENGTH, LENGTH + "M50S", 0, 50, 100, 50, List.of(new AlignedInterval(1, LENGTH)));
+                ReadId.parse(readName), genome, 1, LENGTH, LENGTH + "M50S", 0, 50, 100, 50, List.of(new MatchedInterval(1, LENGTH)));
     }
 }

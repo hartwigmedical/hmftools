@@ -5,7 +5,7 @@ import static org.junit.Assert.assertEquals;
 import java.util.List;
 import java.util.Map;
 
-import com.hartwig.hmftools.viridian.profiling.align.AlignedInterval;
+import com.hartwig.hmftools.viridian.profiling.align.MatchedInterval;
 import com.hartwig.hmftools.viridian.profiling.align.AllGenomesReadAlignments;
 import com.hartwig.hmftools.viridian.profiling.align.ViralReadAlignment;
 import com.hartwig.hmftools.viridian.reference.OncologyGroup;
@@ -24,7 +24,7 @@ public class GenomeStatsCalculatorTest
     {
         ViralReadAlignment read = new ViralReadAlignment(
                 ReadId.parse("r1/1"), GENOME, 1, 15, "8M2D5M", 0, 0, 40, 2,
-                List.of(new AlignedInterval(1, 8), new AlignedInterval(11, 5)));
+                List.of(new MatchedInterval(1, 8), new MatchedInterval(11, 5)));
 
         int[] depth = { 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0 };
         GenomeStats expected = new GenomeStats(
@@ -57,6 +57,6 @@ public class GenomeStatsCalculatorTest
     private static ViralReadAlignment originClipped(String readName)
     {
         return new ViralReadAlignment(
-                ReadId.parse(readName), GENOME, 1, 10, "30S10M", 30, 0, 20, 30, List.of(new AlignedInterval(1, 10)));
+                ReadId.parse(readName), GENOME, 1, 10, "30S10M", 30, 0, 20, 30, List.of(new MatchedInterval(1, 10)));
     }
 }

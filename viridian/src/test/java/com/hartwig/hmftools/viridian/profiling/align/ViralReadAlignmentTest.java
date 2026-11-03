@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.viridian.profiling.align;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.ALIGNMENT_SCORE_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.MISMATCHES_AND_DELETIONS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
 
 import static org.junit.Assert.assertEquals;
@@ -37,7 +38,7 @@ public class ViralReadAlignmentTest
     @Test
     public void testFromExtractsFieldsAndCountsClipsInDivergence()
     {
-        ViralReadAlignment alignment = ViralReadAlignment.from(record(30, "40S60M", 60, 1), REFERENCE);
+        ViralReadAlignment alignment = ViralReadAlignment.from(record(30, "40S60M", 60, 1, "30A29"), REFERENCE);
 
         assertEquals("v1", alignment.genome().name());
         assertEquals(30, alignment.alignmentStart());
@@ -46,31 +47,53 @@ public class ViralReadAlignmentTest
         assertEquals(0, alignment.rightClip());
         assertEquals(60, alignment.alignerScore());
         assertEquals(41, alignment.divergence());   // NM 1 + 40 clipped bases
-        assertEquals(1, alignment.alignedIntervals().size());
-        assertEquals(30, alignment.alignedIntervals().get(0).referenceStart());
-        assertEquals(60, alignment.alignedIntervals().get(0).length());
+    }
+
+    @Test
+    public void testFromMatchedIntervalsExcludeMismatchesDeletionsAndClips()
+    {
+        // Reference 30-49 aligned with a mismatch at 34, deletion at 50-51, reference 52-61 aligned with a mismatch at 55.
+        SAMRecord record = record(30, "5H3S20M2D10M4S", 60, 4, "4G15^AC3T6");
+
+        List<MatchedInterval> expected = List.of(
+                new MatchedInterval(30, 4), new MatchedInterval(35, 15), new MatchedInterval(52, 3), new MatchedInterval(56, 6));
+        assertEquals(expected, ViralReadAlignment.from(record, REFERENCE).matchedIntervals());
+    }
+
+    @Test
+    public void testFromThrowsWhenMdMismatchOutsideCigarAlignedBases()
+    {
+        SAMRecord record = record(30, "20M2D10M", 60, 3, "20^AC10G");
+        assertThrows(IllegalStateException.class, () -> ViralReadAlignment.from(record, REFERENCE));
     }
 
     @Test
     public void testClipsOverGenomeEndDetectsClipsPastEitherEnd()
     {
         // A clip projecting past a virus genome end straddles the circular origin.
-        assertTrue(ViralReadAlignment.from(record(30, "40S60M", 60, 0), REFERENCE).clipsOverGenomeEnd());    // left clip projects to -10
-        assertTrue(ViralReadAlignment.from(record(141, "60M40S", 60, 0), REFERENCE).clipsOverGenomeEnd());   // right clip projects to 240
-        assertFalse(ViralReadAlignment.from(record(100, "40S60M", 60, 0), REFERENCE).clipsOverGenomeEnd());  // left clip projects to 60
+        assertTrue(ViralReadAlignment.from(record(30, "40S60M", 60, 0, "60"), REFERENCE).clipsOverGenomeEnd());    // left clip projects to -10
+        assertTrue(ViralReadAlignment.from(record(141, "60M40S", 60, 0, "60"), REFERENCE).clipsOverGenomeEnd());   // right clip projects to 240
+        assertFalse(ViralReadAlignment.from(record(100, "40S60M", 60, 0, "60"), REFERENCE).clipsOverGenomeEnd());  // left clip projects to 60
     }
 
     @Test
     public void testFromThrowsWhenAlignmentScoreMissing()
     {
-        SAMRecord record = record(30, "60M", null, 0);
+        SAMRecord record = record(30, "60M", null, 0, "60");
         assertThrows(IllegalStateException.class, () -> ViralReadAlignment.from(record, REFERENCE));
     }
 
     @Test
     public void testFromThrowsWhenEditDistanceMissing()
     {
-        SAMRecord record = record(30, "60M", 60, null);
+        SAMRecord record = record(30, "60M", 60, null, "60");
+        assertThrows(IllegalStateException.class, () -> ViralReadAlignment.from(record, REFERENCE));
+    }
+
+    @Test
+    public void testFromThrowsWhenMismatchesAndDeletionsMissing()
+    {
+        SAMRecord record = record(30, "60M", 60, 0, null);
         assertThrows(IllegalStateException.class, () -> ViralReadAlignment.from(record, REFERENCE));
     }
 
@@ -105,10 +128,12 @@ public class ViralReadAlignmentTest
     {
         return new ViralReadAlignment(
                 ReadId.parse("r1"), GENOME, start, start + ALIGNMENT_LENGTH - 1, ALIGNMENT_LENGTH + "M", 0, 0, alignerScore, divergence,
-                List.of(new AlignedInterval(start, ALIGNMENT_LENGTH)));
+                List.of(new MatchedInterval(start, ALIGNMENT_LENGTH)));
     }
 
-    private static SAMRecord record(int start, String cigar, @Nullable Integer alignerScore, @Nullable Integer editDistance)
+    private static SAMRecord record(
+            int start, String cigar, @Nullable Integer alignerScore, @Nullable Integer editDistance,
+            @Nullable String mismatchesAndDeletions)
     {
         SAMFileHeader header = new SAMFileHeader();
         header.addSequence(new SAMSequenceRecord("v1", GENOME_LENGTH));
@@ -126,6 +151,10 @@ public class ViralReadAlignmentTest
         if(editDistance != null)
         {
             record.setAttribute(NUM_MUTATONS_ATTRIBUTE, editDistance.intValue());
+        }
+        if(mismatchesAndDeletions != null)
+        {
+            record.setAttribute(MISMATCHES_AND_DELETIONS_ATTRIBUTE, mismatchesAndDeletions);
         }
         return record;
     }

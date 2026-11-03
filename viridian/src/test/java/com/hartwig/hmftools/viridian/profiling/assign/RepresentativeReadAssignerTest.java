@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.hartwig.hmftools.viridian.profiling.align.AlignedInterval;
+import com.hartwig.hmftools.viridian.profiling.align.MatchedInterval;
 import com.hartwig.hmftools.viridian.profiling.align.AllGenomesReadAlignments;
 import com.hartwig.hmftools.viridian.profiling.align.ViralReadAlignment;
 import com.hartwig.hmftools.viridian.profiling.align.ViralReadAlignmentStore;
@@ -87,10 +87,10 @@ public class RepresentativeReadAssignerTest
     {
         ViralReadAlignment chosen = new ViralReadAlignment(
                 ReadId.parse("r1/1"), REPRESENTATIVE, 500, 586, "53S38M21D49M8S", 53, 8, 40, 86,
-                List.of(new AlignedInterval(500, 38), new AlignedInterval(559, 49)));
+                List.of(new MatchedInterval(500, 38), new MatchedInterval(559, 49)));
         ViralReadAlignment other = new ViralReadAlignment(
                 ReadId.parse("r1/1"), REPRESENTATIVE, 500, 552, "95S53M", 95, 0, 42, 98,
-                List.of(new AlignedInterval(500, 53)));
+                List.of(new MatchedInterval(500, 53)));
 
         String sourceBam = writeBam("all.bam", List.of(other, chosen));
         String outputBam = new File(mTempDir.getRoot(), "representative.bam").getPath();
@@ -144,6 +144,6 @@ public class RepresentativeReadAssignerTest
         return new ViralReadAlignment(
                 ReadId.parse(readName), genome, start, start + READ_LENGTH - 1, READ_LENGTH + "M", 0, 0, READ_LENGTH - divergence,
                 divergence,
-                List.of(new AlignedInterval(start, READ_LENGTH)));
+                List.of(new MatchedInterval(start, READ_LENGTH)));
     }
 }
