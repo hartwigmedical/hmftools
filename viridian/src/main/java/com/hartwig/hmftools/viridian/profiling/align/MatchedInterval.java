@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.viridian.profiling.align;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.MISMATCHES_AND_DELETIONS_ATTRIBUTE;
-import static com.hartwig.hmftools.viridian.common.Utils.parseMdTagMismatchPositions;
 import static com.hartwig.hmftools.viridian.common.Utils.getRequiredSamTag;
+import static com.hartwig.hmftools.viridian.common.Utils.parseMdTagMismatchPositions;
 
 import java.util.ArrayList;
 import java.util.List;

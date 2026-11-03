@@ -71,9 +71,12 @@ public class ViralReadAlignmentTest
     public void testClipsOverGenomeEndDetectsClipsPastEitherEnd()
     {
         // A clip projecting past a virus genome end straddles the circular origin.
-        assertTrue(ViralReadAlignment.from(record(30, "40S60M", 60, 0, "60"), REFERENCE).clipsOverGenomeEnd());    // left clip projects to -10
-        assertTrue(ViralReadAlignment.from(record(141, "60M40S", 60, 0, "60"), REFERENCE).clipsOverGenomeEnd());   // right clip projects to 240
-        assertFalse(ViralReadAlignment.from(record(100, "40S60M", 60, 0, "60"), REFERENCE).clipsOverGenomeEnd());  // left clip projects to 60
+        assertTrue(
+                ViralReadAlignment.from(record(30, "40S60M", 60, 0, "60"), REFERENCE).clipsOverGenomeEnd());    // left clip projects to -10
+        assertTrue(ViralReadAlignment.from(record(141, "60M40S", 60, 0, "60"), REFERENCE)
+                .clipsOverGenomeEnd());   // right clip projects to 240
+        assertFalse(
+                ViralReadAlignment.from(record(100, "40S60M", 60, 0, "60"), REFERENCE).clipsOverGenomeEnd());  // left clip projects to 60
     }
 
     @Test
