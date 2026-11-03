@@ -74,6 +74,10 @@ public class AmbiguousBaf
 
         List<Integer> peakIndices = PeakTroughFinder.findLocalPeakOrTroughIndices(observedBAFs, true);
 
+        // check for a peak at the first value
+        if(observedBAFs.get(0).value() > observedBAFs.get(1).value())
+            peakIndices.add(0, 0);
+
         PeakCandidate strongSupportPeak = findClosestStronglySupportedPeak(observedBAFs, peakIndices);
 
         if(strongSupportPeak != null)
@@ -145,6 +149,9 @@ public class AmbiguousBaf
                 }
             }
 
+            if(peakIndex == 0)
+                lowerEdge = observedBAF.level();
+
             if(lowerEdge != null && upperEdge != null)
                 peakCandidates.add(new PeakCandidate(peakIndex, observedBAF, lowerEdge, upperEdge));
         }
@@ -187,7 +194,7 @@ public class AmbiguousBaf
                 PeakCandidate candidate = peakCandidates.get(index);
                 PeakCandidate nextCandidate = peakCandidates.get(index + 1);
 
-                if(candidate.observedBAF.level() < nextCandidate.lowerEdge)
+                if(candidate.observedBAF.level() < nextCandidate.lowerEdge && candidate.upperEdge < nextCandidate.observedBAF.level())
                 {
                     ++index;
                     continue;

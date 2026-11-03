@@ -55,7 +55,7 @@ public class AmbiguousBAFTest
         double ambiguousBaf = AmbiguousBaf.findAmbiguousBaf(observedRegions, averageTumorDepth);
         double depthBasedBaf = AmbiguousBaf.depthBasedBAF(averageTumorDepth);
 
-        assertEquals(0.5375, ambiguousBaf, EPSILON);
+        assertEquals(0.5475, ambiguousBaf, EPSILON);
 
         // no valid points, revert to standard BAF
         observedRegions = List.of(
@@ -77,17 +77,17 @@ public class AmbiguousBAFTest
                 createBafObservedRegion(0.575, validTumorRatio, bafCount),
                 createBafObservedRegion(0.58, validTumorRatio, bafCount));
 
-        ObservedRegion firstPeakRegion = createBafObservedRegion(0.53, validTumorRatio, bafCount * 4);
-        buildRegionsAroundPeak(observedRegions, firstPeakRegion, 10);
+        ObservedRegion firstPeakRegion = createBafObservedRegion(0.53, validTumorRatio, bafCount * 5);
+        buildRegionsAroundPeak(observedRegions, firstPeakRegion, 20);
 
-        ObservedRegion secondPeakRegion = createBafObservedRegion(0.55, validTumorRatio, bafCount * 5);
-        buildRegionsAroundPeak(observedRegions, secondPeakRegion, 10);
+        ObservedRegion secondPeakRegion = createBafObservedRegion(0.56, validTumorRatio, bafCount * 5);
+        buildRegionsAroundPeak(observedRegions, secondPeakRegion, 20);
 
         Collections.sort(observedRegions, Comparator.comparing(x -> x.observedBAF()));
 
         ambiguousBaf = AmbiguousBaf.findAmbiguousBaf(observedRegions, averageTumorDepth);
 
-        assertEquals(0.545, ambiguousBaf, EPSILON);
+        assertEquals(0.535, ambiguousBaf, EPSILON);
 
         // revert to using average depth
         depthBasedBaf = AmbiguousBaf.depthBasedBAF(40);
@@ -95,6 +95,26 @@ public class AmbiguousBAFTest
         ambiguousBaf = AmbiguousBaf.findAmbiguousBaf(observedRegions, 40);
 
         assertEquals(depthBasedBaf, ambiguousBaf, EPSILON);
+
+        // with a peak at the start
+        firstPeakRegion = createBafObservedRegion(0.515, validTumorRatio, bafCount * 5);
+
+        secondPeakRegion = createBafObservedRegion(0.56, validTumorRatio, bafCount * 5);
+
+        observedRegions = Lists.newArrayList(
+                firstPeakRegion,
+                createBafObservedRegion(0.54, validTumorRatio, bafCount),
+                createBafObservedRegion(0.545, validTumorRatio, bafCount),
+                secondPeakRegion,
+                createBafObservedRegion(0.57, validTumorRatio, bafCount));
+
+        buildRegionsAroundPeak(observedRegions, firstPeakRegion, 20);
+        buildRegionsAroundPeak(observedRegions, secondPeakRegion, 20);
+        Collections.sort(observedRegions, Comparator.comparing(x -> x.observedBAF()));
+
+        ambiguousBaf = AmbiguousBaf.findAmbiguousBaf(observedRegions, 400); // set high to avoid acting as the minimum
+
+        assertEquals(0.525, ambiguousBaf, EPSILON);
     }
 
     private static void buildRegionsAroundPeak(final List<ObservedRegion> observedRegions, final ObservedRegion region, int bafCountDiff)
