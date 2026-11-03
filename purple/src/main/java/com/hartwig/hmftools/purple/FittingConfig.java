@@ -7,7 +7,6 @@ import static com.hartwig.hmftools.common.utils.config.ConfigBuilder.getConfigIn
 import static com.hartwig.hmftools.common.utils.config.ConfigItemType.DECIMAL;
 import static com.hartwig.hmftools.common.utils.config.ConfigItemType.INTEGER;
 import static com.hartwig.hmftools.purple.PurpleConstants.DEFAULT_AMBIGUOUS_BAF_THRESHOLD;
-import static com.hartwig.hmftools.purple.PurpleConstants.DEFAULT_SIGNIFICANT_ANEUPLOIDY_BAF_THRESHOLD;
 import static com.hartwig.hmftools.purple.PurpleConstants.MAX_PLOIDY_DEFAULT;
 import static com.hartwig.hmftools.purple.PurpleConstants.MAX_PURITY_DEFAULT;
 import static com.hartwig.hmftools.purple.PurpleConstants.MIN_DIPLOID_TUMOR_RATIO_COUNT_AT_CENTROMERE_DEFAULT;

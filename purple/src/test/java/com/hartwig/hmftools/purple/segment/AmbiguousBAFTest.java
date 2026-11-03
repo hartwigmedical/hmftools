@@ -51,11 +51,11 @@ public class AmbiguousBAFTest
                 createBafObservedRegion(0.57, validTumorRatio, bafCount),
                 createBafObservedRegion(0.58, validTumorRatio, bafCount));
 
-        int averageTumorDepth = 100;
+        int averageTumorDepth = 150;
         double ambiguousBaf = AmbiguousBaf.findAmbiguousBaf(observedRegions, averageTumorDepth);
         double depthBasedBaf = AmbiguousBaf.depthBasedBAF(averageTumorDepth);
 
-        assertEquals(0.548, ambiguousBaf, EPSILON);
+        assertEquals(0.5375, ambiguousBaf, EPSILON);
 
         // no valid points, revert to standard BAF
         observedRegions = List.of(
@@ -87,7 +87,7 @@ public class AmbiguousBAFTest
 
         ambiguousBaf = AmbiguousBaf.findAmbiguousBaf(observedRegions, averageTumorDepth);
 
-        assertEquals(0.55, ambiguousBaf, EPSILON);
+        assertEquals(0.545, ambiguousBaf, EPSILON);
 
         // revert to using average depth
         depthBasedBaf = AmbiguousBaf.depthBasedBAF(40);

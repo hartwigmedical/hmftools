@@ -140,10 +140,6 @@ public class AmbiguousBaf
 
                         break;
                     }
-                    else if(nextBAF.value() >= observedBAF.value())
-                    {
-                        break;
-                    }
 
                     index += searchUp ? 1 : -1;
                 }
@@ -191,7 +187,7 @@ public class AmbiguousBaf
                 PeakCandidate candidate = peakCandidates.get(index);
                 PeakCandidate nextCandidate = peakCandidates.get(index + 1);
 
-                if(candidate.upperEdge < nextCandidate.lowerEdge)
+                if(candidate.observedBAF.level() < nextCandidate.lowerEdge)
                 {
                     ++index;
                     continue;

@@ -92,7 +92,6 @@ public class PurpleConstants
     public static final double BAF_PNT_5 = 0.5;
     public static final double DEFAULT_AMBIGUOUS_BAF_THRESHOLD = 0.525;
     public static double AMBIGUOUS_BAF_THRESHOLD = DEFAULT_AMBIGUOUS_BAF_THRESHOLD;
-    public static final double DEFAULT_SIGNIFICANT_ANEUPLOIDY_BAF_THRESHOLD = 0.6;
     public static final double AMBIGUOUS_BAF_MIN = 0.525;
     public static final double AMBIGUOUS_BAF_MAX = 0.57;
     public static final double AMBIGUOUS_BAF_OBSERVED_RATIO_MAX = RESEG_RATIO_BUCKET_MAX;
