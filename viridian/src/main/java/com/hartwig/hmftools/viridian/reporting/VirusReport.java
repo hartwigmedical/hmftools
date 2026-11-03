@@ -2,14 +2,14 @@ package com.hartwig.hmftools.viridian.reporting;
 
 import com.hartwig.hmftools.common.virus.VirusType;
 import com.hartwig.hmftools.viridian.profiling.VirusProfile;
-import com.hartwig.hmftools.viridian.reference.OncologyGroup;
+import com.hartwig.hmftools.viridian.reference.VirusGroup;
 
 import org.jetbrains.annotations.Nullable;
 
-// The reporting verdict for one oncology group, plus supporting data.
-// Produced for every oncology group that is present in the reads or has integrations.
+// The reporting verdict for one virus group, plus supporting data.
+// Produced for every virus group that is present in the reads or has integrations.
 public record VirusReport(
-        OncologyGroup oncologyGroup,
+        VirusGroup virusGroup,
         // Null if not a reportable virus.
         @Nullable VirusType reportingType,
         int integrations,
@@ -24,7 +24,7 @@ public record VirusReport(
     {
         if(copiesPerTumorCell != null && profile == null)
         {
-            throw new IllegalArgumentException("Copies per tumor cell needs a profile: " + oncologyGroup);
+            throw new IllegalArgumentException("Copies per tumor cell needs a profile: " + virusGroup);
         }
     }
 

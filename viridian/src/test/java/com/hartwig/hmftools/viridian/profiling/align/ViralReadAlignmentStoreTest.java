@@ -7,8 +7,8 @@ import java.util.List;
 import java.util.Set;
 
 import com.hartwig.hmftools.viridian.profiling.common.ReadId;
-import com.hartwig.hmftools.viridian.reference.OncologyGroup;
 import com.hartwig.hmftools.viridian.reference.VirusGenome;
+import com.hartwig.hmftools.viridian.reference.VirusGroup;
 
 import org.junit.Test;
 
@@ -16,7 +16,7 @@ public class ViralReadAlignmentStoreTest
 {
     private static final int LENGTH = 100;
 
-    private static final OncologyGroup GROUP_A = new OncologyGroup("Group A");
+    private static final VirusGroup GROUP_A = new VirusGroup("Group A");
     private static final VirusGenome V1 = new VirusGenome("v1", LENGTH, "Virus v1", GROUP_A);
     private static final VirusGenome V2 = new VirusGenome("v2", LENGTH, "Virus v2", GROUP_A);
 

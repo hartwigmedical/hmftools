@@ -56,8 +56,8 @@ import com.hartwig.hmftools.viridian.profiling.select.RepresentativeGenomeSelect
 import com.hartwig.hmftools.viridian.profiling.select.RepresentativeSelection;
 import com.hartwig.hmftools.viridian.profiling.support.GenomeSupport;
 import com.hartwig.hmftools.viridian.profiling.support.GenomeSupportCalculator;
-import com.hartwig.hmftools.viridian.reference.OncologyGroup;
 import com.hartwig.hmftools.viridian.reference.VirusGenome;
+import com.hartwig.hmftools.viridian.reference.VirusGroup;
 import com.hartwig.hmftools.viridian.reference.VirusReference;
 import com.hartwig.hmftools.viridian.reporting.ClonalityInputs;
 import com.hartwig.hmftools.viridian.reporting.VirusReport;
@@ -85,7 +85,7 @@ public class ViridianApplication
         mConfig = config;
 
         LOGGER.info("Loading virus reference data");
-        mVirusReference = VirusReference.load(config.virusRefFile(), config.virusRefInfoFile(), config.oncologyGroupInfoFile());
+        mVirusReference = VirusReference.load(config.virusRefFile(), config.virusRefInfoFile(), config.virusGroupInfoFile());
     }
 
     public void run() throws IOException
@@ -101,7 +101,7 @@ public class ViridianApplication
 
         List<VirusProfile> profiles = profileViruses();
 
-        Map<OncologyGroup, Integer> integrationCounts = callHostIntegrations();
+        Map<VirusGroup, Integer> integrationCounts = callHostIntegrations();
 
         reportViruses(profiles, integrationCounts);
 
@@ -209,11 +209,11 @@ public class ViridianApplication
         return new GenomeSupportCalculator(READ_VOTE_CORRECT_BASE_PROBABILITY).calculate(alignments, genomeStats);
     }
 
-    // For each oncology group (group of virus strains at interesting taxonomy granularity), select 1 virus genome which best represents
+    // For each virus group (group of virus strains at interesting taxonomy granularity), select 1 virus genome which best represents
     // the virus present in the sample, to use for coverage/depth calculations.
     private List<RepresentativeSelection> selectRepresentativeGenomes(List<GenomeSupport> genomeSupports)
     {
-        LOGGER.info("Selecting representative genome per oncology group");
+        LOGGER.info("Selecting representative genome per virus group");
         List<RepresentativeSelection> selections = RepresentativeGenomeSelector.select(genomeSupports);
         List<VirusGenome> representatives = selections.stream().map(RepresentativeSelection::representativeGenome).toList();
 
@@ -236,7 +236,7 @@ public class ViridianApplication
         return new ViralReadAlignmentStore(assignments.values());
     }
 
-    // After the representative virus genome is selected for each oncology group, measure final support statistics for the representative.
+    // After the representative virus genome is selected for each virus group, measure final support statistics for the representative.
     private Map<VirusGenome, GenomeStats> calculateRepresentativeGenomeStats(
             ViralReadAlignmentStore representativeAlignments, Map<VirusGenome, Integer> allOriginClippedReads)
     {
@@ -251,8 +251,8 @@ public class ViridianApplication
     }
 
     // Find where a virus inserted itself into the host genome, from the SVs ESVEE called.
-    // Returns the count of integrations per oncology group.
-    private Map<OncologyGroup, Integer> callHostIntegrations()
+    // Returns the count of integrations per virus group.
+    private Map<VirusGroup, Integer> callHostIntegrations()
     {
         LOGGER.info("Extracting integration candidate SVs from ESVEE VCF");
         List<CandidateSv> candidateSvs =
@@ -268,7 +268,7 @@ public class ViridianApplication
         // Take the integration candidates with plausible alignments. Only the counts are needed for reporting.
         return integrationCandidates.stream()
                 .filter(IntegrationCandidate::isIntegration)
-                .collect(groupingBy(i -> i.alignment().genome().oncologyGroup(), HashMap::new, summingInt(i -> 1)));
+                .collect(groupingBy(i -> i.alignment().genome().virusGroup(), HashMap::new, summingInt(i -> 1)));
     }
 
     private List<IntegrationCandidate> alignCandidateSvs(List<CandidateSv> candidateSvs)
@@ -289,7 +289,7 @@ public class ViridianApplication
     }
 
     // Decide which viruses are reported to the downstream pipeline.
-    private void reportViruses(List<VirusProfile> profiles, Map<OncologyGroup, Integer> integrationCounts)
+    private void reportViruses(List<VirusProfile> profiles, Map<VirusGroup, Integer> integrationCounts)
             throws IOException
     {
         LOGGER.info("Loading reporting inputs");
@@ -305,7 +305,7 @@ public class ViridianApplication
 
         LOGGER.info("Calculating reporting statuses");
         List<VirusReport> reports = VirusReporter.report(
-                profiles, integrationCounts, mVirusReference::oncologyGroupInfo, clonalityInputs);
+                profiles, integrationCounts, mVirusReference::virusGroupInfo, clonalityInputs);
 
         LOGGER.info("Writing virus report output");
         OutputWriter.writeVirusReports(outputFile(VIRUS_REPORT_TSV_SUFFIX), reports);

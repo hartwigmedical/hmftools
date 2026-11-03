@@ -2,12 +2,12 @@ package com.hartwig.hmftools.viridian.reference;
 
 import org.jetbrains.annotations.NotNull;
 
-// A group of viruses at the level of taxonomy granularity which matters for oncology.
-public record OncologyGroup(
+// A group of viruses that sets the granularity of virus calling.
+public record VirusGroup(
         String name
-) implements Comparable<OncologyGroup>
+) implements Comparable<VirusGroup>
 {
-    public OncologyGroup
+    public VirusGroup
     {
         if(name.isEmpty())
         {
@@ -23,7 +23,7 @@ public record OncologyGroup(
     }
 
     @Override
-    public int compareTo(OncologyGroup other)
+    public int compareTo(VirusGroup other)
     {
         return name.compareTo(other.name);
     }

@@ -14,7 +14,7 @@ public record VirusGenome(
         // Human-readable, normalised name of the virus.
         // Multiple genomes may have the same value.
         String virusName,
-        OncologyGroup oncologyGroup
+        VirusGroup virusGroup
 ) implements Comparable<VirusGenome>
 {
     public VirusGenome
@@ -36,7 +36,7 @@ public record VirusGenome(
     public int compareTo(@NotNull VirusGenome other)
     {
         Comparator<VirusGenome> comparator =
-                comparing(VirusGenome::oncologyGroup).thenComparing(VirusGenome::contigName);
+                comparing(VirusGenome::virusGroup).thenComparing(VirusGenome::contigName);
         return comparator.compare(this, other);
     }
 }

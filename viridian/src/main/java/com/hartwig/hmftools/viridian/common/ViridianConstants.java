@@ -83,7 +83,7 @@ public class ViridianConstants
     // This value is pessimistic - assumes the correct base is completely unknown.
     public static final double READ_VOTE_CORRECT_BASE_PROBABILITY = 0.25;
 
-    // For each oncology group, how many viruses other than the representative to show in the output.
+    // For each virus group, how many viruses other than the representative to show in the output.
     // This is mainly interesting for HPV, where occasionally there is ambiguous evidence for a few types.
     public static final int SECONDARY_GENOME_COUNT = 2;
 

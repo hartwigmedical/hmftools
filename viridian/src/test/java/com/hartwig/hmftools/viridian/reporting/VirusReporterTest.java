@@ -16,19 +16,19 @@ import com.hartwig.hmftools.common.virus.VirusType;
 import com.hartwig.hmftools.viridian.profiling.VirusProfile;
 import com.hartwig.hmftools.viridian.profiling.common.GenomeStats;
 import com.hartwig.hmftools.viridian.profiling.common.SummaryStats;
-import com.hartwig.hmftools.viridian.reference.OncologyGroup;
-import com.hartwig.hmftools.viridian.reference.OncologyGroupInfo;
 import com.hartwig.hmftools.viridian.reference.VirusGenome;
+import com.hartwig.hmftools.viridian.reference.VirusGroup;
+import com.hartwig.hmftools.viridian.reference.VirusGroupInfo;
 
 import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
 
 public class VirusReporterTest
 {
-    private static final OncologyGroup GROUP = new OncologyGroup("HPV16");
+    private static final VirusGroup GROUP = new VirusGroup("HPV16");
     private static final VirusGenome GENOME = new VirusGenome("c1", 1000, "HPV type 16", GROUP);
-    private static final OncologyGroupInfo REPORTABLE_INFO = new OncologyGroupInfo(GROUP, VirusType.HPV);
-    private static final OncologyGroupInfo NOT_REPORTABLE_INFO = new OncologyGroupInfo(GROUP, null);
+    private static final VirusGroupInfo REPORTABLE_INFO = new VirusGroupInfo(GROUP, VirusType.HPV);
+    private static final VirusGroupInfo NOT_REPORTABLE_INFO = new VirusGroupInfo(GROUP, null);
 
     private static final ClonalityInputs PURPLE_FIT = new ClonalityInputs(20.0, null);
     private static final ClonalityInputs NO_TUMOR = new ClonalityInputs(null, FAIL_NO_TUMOR);

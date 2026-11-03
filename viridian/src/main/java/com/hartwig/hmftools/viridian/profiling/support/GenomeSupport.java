@@ -7,7 +7,7 @@ import com.hartwig.hmftools.viridian.reference.VirusGenome;
 import org.jetbrains.annotations.Nullable;
 
 // Per-virus-genome support information from aligning reads to every virus genome at once (BWA-MEM -a mode).
-// Used to find which viruses are present in reads and to select the representative for an oncology group.
+// Used to find which viruses are present in reads and to select the representative for a virus group.
 public record GenomeSupport(
         GenomeStats stats,
         // Reads with more than one alignment to this virus genome.

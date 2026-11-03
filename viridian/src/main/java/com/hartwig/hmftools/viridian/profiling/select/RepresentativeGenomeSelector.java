@@ -13,7 +13,7 @@ import java.util.List;
 import com.hartwig.hmftools.viridian.profiling.support.GenomeSupport;
 import com.hartwig.hmftools.viridian.reference.VirusGenome;
 
-// Picks one representative virus genome from each oncology group for downstream calculations.
+// Picks one representative virus genome from each virus group for downstream calculations.
 // Based on observed data, significant novel virus strain and multiple virus occurrence is rare/nonexistent, so this
 // selection step is a safe simplification to allow computing coverage/depth without de novo genome assembly.
 public class RepresentativeGenomeSelector
@@ -22,10 +22,10 @@ public class RepresentativeGenomeSelector
     {
         return genomeSupports.stream()
                 .filter(support -> support.stats().readCount() > 0)
-                .collect(groupingBy(support -> support.genome().oncologyGroup()))
+                .collect(groupingBy(support -> support.genome().virusGroup()))
                 .values().stream()
                 .map(RepresentativeGenomeSelector::selectGroup)
-                .sorted(comparing(selection -> selection.representativeGenome().oncologyGroup()))
+                .sorted(comparing(selection -> selection.representativeGenome().virusGroup()))
                 .toList();
     }
 

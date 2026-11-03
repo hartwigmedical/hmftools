@@ -7,8 +7,8 @@ import java.util.List;
 import com.hartwig.hmftools.viridian.profiling.common.GenomeStats;
 import com.hartwig.hmftools.viridian.profiling.common.SummaryStats;
 import com.hartwig.hmftools.viridian.profiling.support.GenomeSupport;
-import com.hartwig.hmftools.viridian.reference.OncologyGroup;
 import com.hartwig.hmftools.viridian.reference.VirusGenome;
+import com.hartwig.hmftools.viridian.reference.VirusGroup;
 
 import org.junit.Test;
 
@@ -16,9 +16,9 @@ public class RepresentativeGenomeSelectorTest
 {
     private static final int LENGTH = 1000;
 
-    private static final OncologyGroup GROUP_A = new OncologyGroup("Group A");
-    private static final OncologyGroup GROUP_B = new OncologyGroup("Group B");
-    private static final OncologyGroup GROUP_H = new OncologyGroup("Group H");
+    private static final VirusGroup GROUP_A = new VirusGroup("Group A");
+    private static final VirusGroup GROUP_B = new VirusGroup("Group B");
+    private static final VirusGroup GROUP_H = new VirusGroup("Group H");
 
     private static final VirusGenome V1 = new VirusGenome("v1", LENGTH, "Virus v1", GROUP_A);
     private static final VirusGenome V2 = new VirusGenome("v2", LENGTH, "Virus v2", GROUP_A);
@@ -28,7 +28,7 @@ public class RepresentativeGenomeSelectorTest
     private static final VirusGenome H1 = new VirusGenome("h1", LENGTH, "Virus h1", GROUP_H);
 
     @Test
-    public void testSelectRanksGenomesPerOncologyGroup()
+    public void testSelectRanksGenomesPerVirusGroup()
     {
         // V3 ranks 4th in group A, below the secondary genome count. W1 has few votes, but any read makes its group present.
         List<GenomeSupport> genomeSupports = List.of(

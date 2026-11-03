@@ -15,34 +15,34 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.hartwig.hmftools.viridian.profiling.VirusProfile;
-import com.hartwig.hmftools.viridian.reference.OncologyGroup;
-import com.hartwig.hmftools.viridian.reference.OncologyGroupInfo;
+import com.hartwig.hmftools.viridian.reference.VirusGroup;
+import com.hartwig.hmftools.viridian.reference.VirusGroupInfo;
 
 import org.jetbrains.annotations.Nullable;
 
 // Decides if each virus is reported for downstream analysis and Orange report.
 public class VirusReporter
 {
-    // One report per oncology group that is profiled or has an integration.
+    // One report per virus group that is profiled or has an integration.
     public static List<VirusReport> report(
-            List<VirusProfile> profiles, Map<OncologyGroup, Integer> integrationCounts,
-            Function<OncologyGroup, OncologyGroupInfo> oncologyGroupInfo, ClonalityInputs clonalityInputs)
+            List<VirusProfile> profiles, Map<VirusGroup, Integer> integrationCounts,
+            Function<VirusGroup, VirusGroupInfo> virusGroupInfo, ClonalityInputs clonalityInputs)
     {
-        Map<OncologyGroup, VirusProfile> profileByGroup = profiles.stream()
-                .collect(toMap(VirusProfile::oncologyGroup, identity()));
+        Map<VirusGroup, VirusProfile> profileByGroup = profiles.stream()
+                .collect(toMap(VirusProfile::virusGroup, identity()));
 
-        Set<OncologyGroup> groupsToReport = Stream.concat(profileByGroup.keySet().stream(), integrationCounts.keySet().stream())
+        Set<VirusGroup> groupsToReport = Stream.concat(profileByGroup.keySet().stream(), integrationCounts.keySet().stream())
                 .collect(Collectors.toSet());
 
         return groupsToReport.stream()
                 .map(group -> reportGroup(
                         group, profileByGroup.get(group), integrationCounts.getOrDefault(group, 0),
-                        oncologyGroupInfo.apply(group), clonalityInputs))
+                        virusGroupInfo.apply(group), clonalityInputs))
                 .toList();
     }
 
     static VirusReport reportGroup(
-            OncologyGroup group, @Nullable VirusProfile profile, int integrations, OncologyGroupInfo info,
+            VirusGroup group, @Nullable VirusProfile profile, int integrations, VirusGroupInfo info,
             ClonalityInputs clonalityInputs)
     {
         Double copiesPerTumorCell = null;

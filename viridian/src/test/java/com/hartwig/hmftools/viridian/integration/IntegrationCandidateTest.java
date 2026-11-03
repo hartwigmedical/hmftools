@@ -12,14 +12,14 @@ import com.hartwig.hmftools.viridian.integration.align.ViralInsertAlignment;
 import com.hartwig.hmftools.viridian.integration.extract.BreakendSupport;
 import com.hartwig.hmftools.viridian.integration.extract.CandidateSv;
 import com.hartwig.hmftools.viridian.integration.extract.HostBreakend;
-import com.hartwig.hmftools.viridian.reference.OncologyGroup;
 import com.hartwig.hmftools.viridian.reference.VirusGenome;
+import com.hartwig.hmftools.viridian.reference.VirusGroup;
 
 import org.junit.Test;
 
 public class IntegrationCandidateTest
 {
-    private static final VirusGenome GENOME = new VirusGenome("v1", 7906, "Virus v1", new OncologyGroup("Group A"));
+    private static final VirusGenome GENOME = new VirusGenome("v1", 7906, "Virus v1", new VirusGroup("Group A"));
 
     // An insert that aligned nowhere is not an integration, however the SV looks.
     @Test

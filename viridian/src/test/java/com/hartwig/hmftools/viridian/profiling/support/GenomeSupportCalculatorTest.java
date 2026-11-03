@@ -14,8 +14,8 @@ import com.hartwig.hmftools.viridian.profiling.common.GenomeStats;
 import com.hartwig.hmftools.viridian.profiling.common.GenomeStatsCalculator;
 import com.hartwig.hmftools.viridian.profiling.common.ReadId;
 import com.hartwig.hmftools.viridian.profiling.common.SummaryStats;
-import com.hartwig.hmftools.viridian.reference.OncologyGroup;
 import com.hartwig.hmftools.viridian.reference.VirusGenome;
+import com.hartwig.hmftools.viridian.reference.VirusGroup;
 
 import org.junit.Test;
 
@@ -23,8 +23,8 @@ public class GenomeSupportCalculatorTest
 {
     private static final double EPSILON = 1e-9;
 
-    private static final VirusGenome V1 = new VirusGenome("v1", 20, "Virus 1", new OncologyGroup("Group 1"));
-    private static final VirusGenome V2 = new VirusGenome("v2", 10, "Virus 2", new OncologyGroup("Group 2"));
+    private static final VirusGenome V1 = new VirusGenome("v1", 20, "Virus 1", new VirusGroup("Group 1"));
+    private static final VirusGenome V2 = new VirusGenome("v2", 10, "Virus 2", new VirusGroup("Group 2"));
 
     @Test
     public void testComputePerGenomeDepthAndCoverage()

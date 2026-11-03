@@ -20,8 +20,8 @@ import htsjdk.samtools.SAMSequenceRecord;
 
 public class VirusReferenceTest
 {
-    private static final OncologyGroup GROUP_ALPHA = new OncologyGroup("Group Alpha");
-    private static final OncologyGroup GROUP_BETA = new OncologyGroup("Group Beta");
+    private static final VirusGroup GROUP_ALPHA = new VirusGroup("Group Alpha");
+    private static final VirusGroup GROUP_BETA = new VirusGroup("Group Beta");
 
     // Three virus genomes: contigA alone in its group, contigB and contigC sharing a group.
     private static final VirusInfo INFO_A = new VirusInfo("contigA", "Virus Alpha", GROUP_ALPHA);
@@ -34,7 +34,7 @@ public class VirusReferenceTest
     private static final VirusGenome GENOME_C = new VirusGenome("contigC", 300, "Virus Beta type 2", GROUP_BETA);
 
     private static final String VALID_INFO_TSV = """
-            contig_name\tvirus_name\toncology_group
+            contig_name\tvirus_name\tvirus_group
             contigA\tVirus Alpha\tGroup Alpha
             contigB\tVirus Beta type 1\tGroup Beta
             contigC\tVirus Beta type 2\tGroup Beta

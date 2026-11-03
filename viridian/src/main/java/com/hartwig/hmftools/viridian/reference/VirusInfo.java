@@ -12,7 +12,7 @@ import com.hartwig.hmftools.viridian.common.UserInputError;
 public record VirusInfo(
         String contigName,
         String virusName,
-        OncologyGroup oncologyGroup
+        VirusGroup virusGroup
 )
 {
     public static List<VirusInfo> load(String tsvFile)
@@ -28,8 +28,8 @@ public record VirusInfo(
                 {
                     throw new UserInputError("Duplicate contig_name: " + contig);
                 }
-                OncologyGroup oncologyGroup = new OncologyGroup(row.getString(Columns.oncology_group));
-                VirusInfo virusInfo = new VirusInfo(contig, row.getString(Columns.virus_name), oncologyGroup);
+                VirusGroup virusGroup = new VirusGroup(row.getString(Columns.virus_group));
+                VirusInfo virusInfo = new VirusInfo(contig, row.getString(Columns.virus_name), virusGroup);
                 result.add(virusInfo);
             }
         }
@@ -40,6 +40,6 @@ public record VirusInfo(
     {
         contig_name,
         virus_name,
-        oncology_group
+        virus_group
     }
 }

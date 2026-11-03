@@ -23,15 +23,15 @@ public class VirusReference
 {
     private final SAMSequenceDictionary mSequenceDictionary;
     private final Map<String, VirusGenome> mGenomesByContigName;
-    private final Map<OncologyGroup, OncologyGroupInfo> mOncologyGroupInfo;
+    private final Map<VirusGroup, VirusGroupInfo> mVirusGroupInfo;
 
     public VirusReference(
             List<VirusGenome> genomes, SAMSequenceDictionary sequenceDictionary,
-            Map<OncologyGroup, OncologyGroupInfo> oncologyGroupInfo)
+            Map<VirusGroup, VirusGroupInfo> virusGroupInfo)
     {
         mSequenceDictionary = sequenceDictionary;
         mGenomesByContigName = genomes.stream().collect(toMap(VirusGenome::contigName, identity()));
-        mOncologyGroupInfo = oncologyGroupInfo;
+        mVirusGroupInfo = virusGroupInfo;
     }
 
     public VirusGenome genome(String contigName)
@@ -50,28 +50,28 @@ public class VirusReference
         return mSequenceDictionary;
     }
 
-    public OncologyGroupInfo oncologyGroupInfo(OncologyGroup group)
+    public VirusGroupInfo virusGroupInfo(VirusGroup group)
     {
-        OncologyGroupInfo info = mOncologyGroupInfo.get(group);
+        VirusGroupInfo info = mVirusGroupInfo.get(group);
         if(info == null)
         {
-            throw new IllegalArgumentException("Unknown oncology group: " + group);
+            throw new IllegalArgumentException("Unknown virus group: " + group);
         }
         return info;
     }
 
-    public static VirusReference load(String fastaFile, String infoTsvFile, String oncologyGroupInfoTsvFile)
+    public static VirusReference load(String fastaFile, String infoTsvFile, String virusGroupInfoTsvFile)
     {
         List<VirusInfo> info = VirusInfo.load(infoTsvFile);
         SAMSequenceDictionary dictionary = loadSequenceDictionary(fastaFile);
         List<VirusGenome> genomes = joinFastaAndInfo(dictionary, info);
-        Set<OncologyGroup> groups = genomes.stream().map(VirusGenome::oncologyGroup).collect(toSet());
-        Map<OncologyGroup, OncologyGroupInfo> oncologyGroupInfo = OncologyGroupInfo.load(oncologyGroupInfoTsvFile);
-        if(!oncologyGroupInfo.keySet().equals(groups))
+        Set<VirusGroup> groups = genomes.stream().map(VirusGenome::virusGroup).collect(toSet());
+        Map<VirusGroup, VirusGroupInfo> virusGroupInfo = VirusGroupInfo.load(virusGroupInfoTsvFile);
+        if(!virusGroupInfo.keySet().equals(groups))
         {
-            throw new UserInputError("Oncology group info groups do not match the virus reference groups");
+            throw new UserInputError("Virus group info groups do not match the virus reference groups");
         }
-        return new VirusReference(genomes, dictionary, oncologyGroupInfo);
+        return new VirusReference(genomes, dictionary, virusGroupInfo);
     }
 
     // Joins FASTA contigs to their info rows. Result in FASTA order.
@@ -91,7 +91,7 @@ public class VirusReference
             {
                 throw new UserInputError(String.format("Virus reference contig has no info row: %s", contig));
             }
-            result.add(new VirusGenome(contig, sequence.getSequenceLength(), row.virusName(), row.oncologyGroup()));
+            result.add(new VirusGenome(contig, sequence.getSequenceLength(), row.virusName(), row.virusGroup()));
         }
 
         if(!remainingInfo.isEmpty())

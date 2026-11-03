@@ -27,8 +27,8 @@ import com.hartwig.hmftools.viridian.profiling.VirusProfile;
 import com.hartwig.hmftools.viridian.profiling.common.GenomeStats;
 import com.hartwig.hmftools.viridian.profiling.common.SummaryStats;
 import com.hartwig.hmftools.viridian.profiling.support.GenomeSupport;
-import com.hartwig.hmftools.viridian.reference.OncologyGroup;
 import com.hartwig.hmftools.viridian.reference.VirusGenome;
+import com.hartwig.hmftools.viridian.reference.VirusGroup;
 import com.hartwig.hmftools.viridian.reporting.VirusReport;
 
 import org.jetbrains.annotations.Nullable;
@@ -39,10 +39,10 @@ public class OutputWriter
             String file, List<GenomeSupport> genomeSupports, List<VirusGenome> representatives)
     {
         Set<VirusGenome> representativeGenomes = Set.copyOf(representatives);
-        Map<OncologyGroup, Double> groupVotes = genomeSupports.stream()
-                .collect(groupingBy(support -> support.genome().oncologyGroup(), summingDouble(GenomeSupport::readVotes)));
+        Map<VirusGroup, Double> groupVotes = genomeSupports.stream()
+                .collect(groupingBy(support -> support.genome().virusGroup(), summingDouble(GenomeSupport::readVotes)));
         List<GenomeSupport> rows = genomeSupports.stream()
-                .sorted(comparing((GenomeSupport support) -> support.genome().oncologyGroup())
+                .sorted(comparing((GenomeSupport support) -> support.genome().virusGroup())
                         .thenComparing(GenomeSupport::readVotes, reverseOrder())
                         .thenComparing(GenomeSupport::genome))
                 .toList();
@@ -55,7 +55,7 @@ public class OutputWriter
 
                     row.set(GenomeSupportColumn.genome, genome.contigName());
                     row.set(GenomeSupportColumn.virus_name, genome.virusName());
-                    row.set(GenomeSupportColumn.oncology_group, genome.oncologyGroup().name());
+                    row.set(GenomeSupportColumn.virus_group, genome.virusGroup().name());
                     row.set(GenomeSupportColumn.genome_length, genome.length());
                     row.set(GenomeSupportColumn.aligned_reads, stats.readCount());
                     row.set(GenomeSupportColumn.multi_align_reads, support.multiAlignReads());
@@ -68,7 +68,7 @@ public class OutputWriter
                     writeSummaryStats(row, ALIGNER_SCORE_STATS_COLUMNS, stats.alignerScore());
 
                     row.setOrNull(
-                            GenomeSupportColumn.vote_share, share(support.readVotes(), groupVotes.get(genome.oncologyGroup())));
+                            GenomeSupportColumn.vote_share, share(support.readVotes(), groupVotes.get(genome.virusGroup())));
                     row.set(GenomeSupportColumn.is_representative, representativeGenomes.contains(genome));
                 });
     }
@@ -77,7 +77,7 @@ public class OutputWriter
     {
         genome,
         virus_name,
-        oncology_group,
+        virus_group,
         is_representative,
         genome_length,
         coverage,
@@ -103,12 +103,12 @@ public class OutputWriter
 
     public static void writeVirusProfiles(String file, List<VirusProfile> profiles)
     {
-        List<VirusProfile> rows = profiles.stream().sorted(comparing(VirusProfile::oncologyGroup)).toList();
+        List<VirusProfile> rows = profiles.stream().sorted(comparing(VirusProfile::virusGroup)).toList();
 
         DelimFileWriter.write(
                 file, VIRUS_PROFILE_COLUMNS, rows, (profile, row) ->
                 {
-                    row.set(VirusProfileColumn.oncology_group, profile.oncologyGroup().name());
+                    row.set(VirusProfileColumn.virus_group, profile.virusGroup().name());
 
                     GenomeStats stats = profile.representativeStats();
                     VirusGenome genome = stats.genome();
@@ -126,7 +126,7 @@ public class OutputWriter
 
     private enum VirusProfileColumn
     {
-        oncology_group,
+        virus_group,
         virus_name,
         genome_name,
         genome_length,
@@ -228,7 +228,7 @@ public class OutputWriter
                     {
                         VirusGenome genome = alignment.genome();
                         row.set(IntegrationCandidateColumn.virus_name, genome.virusName());
-                        row.set(IntegrationCandidateColumn.oncology_group, genome.oncologyGroup().name());
+                        row.set(IntegrationCandidateColumn.virus_group, genome.virusGroup().name());
                         row.set(IntegrationCandidateColumn.virus_contig, genome.contigName());
                         row.set(IntegrationCandidateColumn.virus_position, alignment.position());
                         row.set(IntegrationCandidateColumn.virus_orientation, alignment.orientation().asByte());
@@ -271,7 +271,7 @@ public class OutputWriter
         insert_seq_length,
         insert_sequence,
         virus_name,
-        oncology_group,
+        virus_group,
         virus_contig,
         virus_position,
         virus_orientation,
@@ -283,12 +283,12 @@ public class OutputWriter
 
     public static void writeVirusReports(String file, List<VirusReport> reports)
     {
-        List<VirusReport> rows = reports.stream().sorted(comparing(VirusReport::oncologyGroup)).toList();
+        List<VirusReport> rows = reports.stream().sorted(comparing(VirusReport::virusGroup)).toList();
 
         DelimFileWriter.write(
                 file, VIRUS_REPORT_COLUMNS, rows, (report, row) ->
                 {
-                    row.set(VirusReportColumn.oncology_group, report.oncologyGroup().name());
+                    row.set(VirusReportColumn.virus_group, report.virusGroup().name());
                     row.setOrNull(
                             VirusReportColumn.reporting_type, report.reportingType() != null ? report.reportingType().toString() : null);
                     row.set(VirusReportColumn.reported, report.isReported());
@@ -315,7 +315,7 @@ public class OutputWriter
 
     private enum VirusReportColumn
     {
-        oncology_group,
+        virus_group,
         reported,
         reporting_type,
         has_min_integrations,
