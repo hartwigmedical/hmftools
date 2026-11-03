@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.viridian.app;
 
 import static java.lang.System.exit;
+import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toMap;
 
 import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
@@ -31,6 +32,7 @@ import com.hartwig.hmftools.common.metrics.BamMetricSummary;
 import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.purple.PurityContextFile;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.common.utils.config.VersionInfo;
 import com.hartwig.hmftools.viridian.common.UserInputError;
 import com.hartwig.hmftools.viridian.integration.IntegrationCandidate;
 import com.hartwig.hmftools.viridian.integration.align.ViralInsertAligner;
@@ -92,6 +94,7 @@ public class ViridianApplication
         long startTimeMs = System.currentTimeMillis();
 
         checkCreateOutputDir(mConfig.outputDir());
+        VersionInfo.fromAppName(APP_NAME).write(mConfig.outputDir());
 
         BwaMemAligner.initLibrary(mConfig.bwaLibPath());
 
@@ -264,7 +267,7 @@ public class ViridianApplication
         // Take the integration candidates with plausible alignments.
         return integrationCandidates.stream()
                 .filter(IntegrationCandidate::isIntegration)
-                .map(candidate -> candidate.alignment().genome())
+                .map(candidate -> requireNonNull(candidate.alignment()).genome())
                 .toList();
     }
 
