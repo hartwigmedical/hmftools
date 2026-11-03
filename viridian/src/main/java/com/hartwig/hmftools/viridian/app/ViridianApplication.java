@@ -1,8 +1,6 @@
 package com.hartwig.hmftools.viridian.app;
 
 import static java.lang.System.exit;
-import static java.util.stream.Collectors.groupingBy;
-import static java.util.stream.Collectors.summingInt;
 import static java.util.stream.Collectors.toMap;
 
 import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
@@ -23,7 +21,6 @@ import static com.hartwig.hmftools.viridian.common.ViridianConstants.VIRUS_REPOR
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -57,7 +54,6 @@ import com.hartwig.hmftools.viridian.profiling.select.RepresentativeSelection;
 import com.hartwig.hmftools.viridian.profiling.support.GenomeSupport;
 import com.hartwig.hmftools.viridian.profiling.support.GenomeSupportCalculator;
 import com.hartwig.hmftools.viridian.reference.VirusGenome;
-import com.hartwig.hmftools.viridian.reference.VirusGroup;
 import com.hartwig.hmftools.viridian.reference.VirusReference;
 import com.hartwig.hmftools.viridian.reporting.ClonalityInputs;
 import com.hartwig.hmftools.viridian.reporting.VirusReport;
@@ -101,9 +97,9 @@ public class ViridianApplication
 
         List<VirusProfile> profiles = profileViruses();
 
-        Map<VirusGroup, Integer> integrationCounts = callHostIntegrations();
+        List<VirusGenome> integratedGenomes = callHostIntegrations();
 
-        reportViruses(profiles, integrationCounts);
+        reportViruses(profiles, integratedGenomes);
 
         OutputWriter.writeRunManifest(outputFile(RUN_MANIFEST_TSV_SUFFIX), mConfig);
 
@@ -251,8 +247,8 @@ public class ViridianApplication
     }
 
     // Find where a virus inserted itself into the host genome, from the SVs ESVEE called.
-    // Returns the count of integrations per virus group.
-    private Map<VirusGroup, Integer> callHostIntegrations()
+    // Returns the virus genome each integration's insert aligned to.
+    private List<VirusGenome> callHostIntegrations()
     {
         LOGGER.info("Extracting integration candidate SVs from ESVEE VCF");
         List<CandidateSv> candidateSvs =
@@ -265,10 +261,11 @@ public class ViridianApplication
         // But only the aligned candidates are the called integrations which flow through to the rest of the code.
         OutputWriter.writeIntegrationCandidates(outputFile(INTEGRATION_CANDIDATES_TSV_SUFFIX), integrationCandidates);
 
-        // Take the integration candidates with plausible alignments. Only the counts are needed for reporting.
+        // Take the integration candidates with plausible alignments.
         return integrationCandidates.stream()
                 .filter(IntegrationCandidate::isIntegration)
-                .collect(groupingBy(i -> i.alignment().genome().virusGroup(), HashMap::new, summingInt(i -> 1)));
+                .map(candidate -> candidate.alignment().genome())
+                .toList();
     }
 
     private List<IntegrationCandidate> alignCandidateSvs(List<CandidateSv> candidateSvs)
@@ -289,7 +286,7 @@ public class ViridianApplication
     }
 
     // Decide which viruses are reported to the downstream pipeline.
-    private void reportViruses(List<VirusProfile> profiles, Map<VirusGroup, Integer> integrationCounts)
+    private void reportViruses(List<VirusProfile> profiles, List<VirusGenome> integratedGenomes)
             throws IOException
     {
         LOGGER.info("Loading reporting inputs");
@@ -305,10 +302,11 @@ public class ViridianApplication
 
         LOGGER.info("Calculating reporting statuses");
         List<VirusReport> reports = VirusReporter.report(
-                profiles, integrationCounts, mVirusReference::virusGroupInfo, clonalityInputs);
+                profiles, integratedGenomes, mVirusReference::virusGroupInfo, clonalityInputs);
 
         LOGGER.info("Writing virus report output");
-        OutputWriter.writeVirusReports(outputFile(VIRUS_REPORT_TSV_SUFFIX), reports);
+        OutputWriter.writeVirusReports(
+                outputFile(VIRUS_REPORT_TSV_SUFFIX), reports, clonalityInputs.expectedViralDepthPerCopy());
     }
 
     private String outputFile(String suffix)

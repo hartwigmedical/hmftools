@@ -10,26 +10,15 @@ import org.jetbrains.annotations.Nullable;
 // Produced for every virus group that is present in the reads or has integrations.
 public record VirusReport(
         VirusGroup virusGroup,
+        String virusName,
+        ReportQcStatus qcStatus,
         // Null if not a reportable virus.
         @Nullable VirusType reportingType,
         int integrations,
-        boolean hasMinIntegrations,
         @Nullable VirusProfile profile,
-        // Null if not profiled or Purple data wasn't usable.
+        // Null if Purple data wasn't usable.
         @Nullable Double copiesPerTumorCell,
         ClonalityStatus clonalityStatus,
         boolean isReported)
 {
-    public VirusReport
-    {
-        if(copiesPerTumorCell != null && profile == null)
-        {
-            throw new IllegalArgumentException("Copies per tumor cell needs a profile: " + virusGroup);
-        }
-    }
-
-    public boolean isProfiled()
-    {
-        return profile != null;
-    }
 }

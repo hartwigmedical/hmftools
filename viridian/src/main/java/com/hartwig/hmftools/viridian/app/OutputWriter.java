@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.viridian.app.ViridianConfig.CFG_KMER_FILTER;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import com.hartwig.hmftools.common.utils.file.DelimFileWriter;
@@ -119,6 +120,10 @@ public class OutputWriter
                     row.set(VirusProfileColumn.origin_clipped_reads, stats.originClippedReads());
                     row.set(VirusProfileColumn.coverage, stats.coverageFraction());
 
+                    List<VirusGenome> secondaries = profile.secondaryGenomes();
+                    row.setOrNull(VirusProfileColumn.secondary_genome_names, joinOrNull(secondaries, VirusGenome::contigName));
+                    row.setOrNull(VirusProfileColumn.secondary_virus_names, joinOrNull(secondaries, VirusGenome::virusName));
+
                     writeSummaryStats(row, DEPTH_STATS_COLUMNS, stats.depth());
                     writeSummaryStats(row, ALIGNER_SCORE_STATS_COLUMNS, stats.alignerScore());
                 });
@@ -133,6 +138,8 @@ public class OutputWriter
         coverage,
         aligned_reads,
         origin_clipped_reads,
+        secondary_genome_names,
+        secondary_virus_names,
     }
 
     private static final List<String> VIRUS_PROFILE_COLUMNS =
@@ -162,6 +169,12 @@ public class OutputWriter
     private static Double share(double votes, double total)
     {
         return total > 0 ? votes / total : null;
+    }
+
+    @Nullable
+    private static String joinOrNull(List<VirusGenome> genomes, Function<VirusGenome, String> field)
+    {
+        return genomes.isEmpty() ? null : genomes.stream().map(field).collect(joining(ITEM_DELIM));
     }
 
     public static void writeIntegrationCandidates(String file, List<IntegrationCandidate> candidates)
@@ -281,52 +294,44 @@ public class OutputWriter
         aligned_edit_distance
     }
 
-    public static void writeVirusReports(String file, List<VirusReport> reports)
+    public static void writeVirusReports(String file, List<VirusReport> reports, @Nullable Double expectedViralDepthPerCopy)
     {
         List<VirusReport> rows = reports.stream().sorted(comparing(VirusReport::virusGroup)).toList();
 
         DelimFileWriter.write(
                 file, VIRUS_REPORT_COLUMNS, rows, (report, row) ->
                 {
-                    row.set(VirusReportColumn.virus_group, report.virusGroup().name());
-                    row.setOrNull(
-                            VirusReportColumn.reporting_type, report.reportingType() != null ? report.reportingType().toString() : null);
-                    row.set(VirusReportColumn.reported, report.isReported());
-                    row.set(VirusReportColumn.integrations, report.integrations());
-                    row.set(VirusReportColumn.has_min_integrations, report.hasMinIntegrations());
-                    row.set(VirusReportColumn.clonality_status, report.clonalityStatus().name());
-                    row.set(VirusReportColumn.profiled, report.isProfiled());
-
                     VirusProfile profile = report.profile();
-                    if(profile != null)
-                    {
-                        GenomeStats stats = profile.representativeStats();
-                        VirusGenome genome = stats.genome();
-                        row.set(VirusReportColumn.representative_genome, genome.virusName());
-                        row.set(VirusReportColumn.representative_coverage, stats.coverageFraction());
-                        row.set(VirusReportColumn.representative_depth_mean, stats.depth().mean());
-                        row.set(
-                                VirusReportColumn.secondary_genomes,
-                                profile.secondaryGenomes().stream().map(VirusGenome::virusName).collect(joining(ITEM_DELIM)));
-                    }
+                    GenomeStats stats = profile != null ? profile.representativeStats() : null;
+
+                    row.set(VirusReportColumn.name, report.virusName());
+                    row.set(VirusReportColumn.qcStatus, report.qcStatus().name());
+                    row.set(VirusReportColumn.integrations, report.integrations());
+                    row.setOrNull(
+                            VirusReportColumn.interpretation, report.reportingType() != null ? report.reportingType().toString() : null);
+                    row.set(VirusReportColumn.percentageCovered, stats != null ? 100 * stats.coverageFraction() : 0);
+                    row.set(VirusReportColumn.meanCoverage, stats != null ? stats.depth().mean() : 0);
+                    row.setOrNull(VirusReportColumn.expectedClonalCoverage, expectedViralDepthPerCopy);
+                    row.set(VirusReportColumn.reported, report.isReported());
+                    row.set(VirusReportColumn.clonality_status, report.clonalityStatus().name());
                     row.setOrNull(VirusReportColumn.copies_per_tumor_cell, report.copiesPerTumorCell());
+                    row.set(VirusReportColumn.virus_group, report.virusGroup().name());
                 });
     }
 
     private enum VirusReportColumn
     {
-        virus_group,
-        reported,
-        reporting_type,
-        has_min_integrations,
+        name,
+        qcStatus,
         integrations,
+        interpretation,
+        percentageCovered,
+        meanCoverage,
+        expectedClonalCoverage,
+        reported,
         clonality_status,
         copies_per_tumor_cell,
-        profiled,
-        representative_genome,
-        representative_coverage,
-        representative_depth_mean,
-        secondary_genomes,
+        virus_group,
     }
 
     private static final List<String> VIRUS_REPORT_COLUMNS =
