@@ -29,7 +29,7 @@ public class ViralReadAlignmentStore
             if(replaced != null)
             {
                 throw new IllegalArgumentException(
-                        "Repeat alignment of a read on virus genome: " + alignment.genome().name());
+                        "Repeat alignment of a read on virus genome: " + alignment.genome().contigName());
             }
             mByRead.computeIfAbsent(alignment.readId(), k -> new HashMap<>()).put(alignment.genome(), alignment);
         }

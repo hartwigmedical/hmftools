@@ -8,10 +8,11 @@ import org.jetbrains.annotations.NotNull;
 
 // A virus genome in the virus reference, with a FASTA contig.
 public record VirusGenome(
-        // Original contig name in the virus reference.
-        String name,
+        // Contig name in the FASTA and matching the original virus database.
+        String contigName,
         int length,
-        // Human-readable name of the virus. Only for readability purposes.
+        // Human-readable, normalised name of the virus.
+        // Multiple genomes may have the same value.
         String virusName,
         OncologyGroup oncologyGroup
 ) implements Comparable<VirusGenome>
@@ -28,14 +29,14 @@ public record VirusGenome(
     @Override
     public String toString()
     {
-        return name;
+        return contigName;
     }
 
     @Override
     public int compareTo(@NotNull VirusGenome other)
     {
         Comparator<VirusGenome> comparator =
-                comparing(VirusGenome::oncologyGroup).thenComparing(VirusGenome::name);
+                comparing(VirusGenome::oncologyGroup).thenComparing(VirusGenome::contigName);
         return comparator.compare(this, other);
     }
 }

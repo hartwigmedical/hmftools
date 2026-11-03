@@ -53,7 +53,7 @@ public class OutputWriter
                     GenomeStats stats = support.stats();
                     VirusGenome genome = support.genome();
 
-                    row.set(GenomeSupportColumn.genome, genome.name());
+                    row.set(GenomeSupportColumn.genome, genome.contigName());
                     row.set(GenomeSupportColumn.virus_name, genome.virusName());
                     row.set(GenomeSupportColumn.oncology_group, genome.oncologyGroup().name());
                     row.set(GenomeSupportColumn.genome_length, genome.length());
@@ -112,7 +112,7 @@ public class OutputWriter
 
                     GenomeStats stats = profile.representativeStats();
                     VirusGenome genome = stats.genome();
-                    row.set(VirusProfileColumn.genome_name, genome.name());
+                    row.set(VirusProfileColumn.genome_name, genome.contigName());
                     row.set(VirusProfileColumn.virus_name, genome.virusName());
                     row.set(VirusProfileColumn.genome_length, genome.length());
                     row.set(VirusProfileColumn.aligned_reads, stats.readCount());
@@ -229,7 +229,7 @@ public class OutputWriter
                         VirusGenome genome = alignment.genome();
                         row.set(IntegrationCandidateColumn.virus_name, genome.virusName());
                         row.set(IntegrationCandidateColumn.oncology_group, genome.oncologyGroup().name());
-                        row.set(IntegrationCandidateColumn.virus_contig, genome.name());
+                        row.set(IntegrationCandidateColumn.virus_contig, genome.contigName());
                         row.set(IntegrationCandidateColumn.virus_position, alignment.position());
                         row.set(IntegrationCandidateColumn.virus_orientation, alignment.orientation().asByte());
                         row.set(IntegrationCandidateColumn.align_cigar, alignment.cigar().toString());

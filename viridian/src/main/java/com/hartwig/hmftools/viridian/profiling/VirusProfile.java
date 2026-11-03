@@ -39,7 +39,7 @@ public record VirusProfile(
             {
                 LOGGER.warn(
                         "Representative genome {} assigned no reads; dropping oncology group {}",
-                        representative.name(), representative.oncologyGroup());
+                        representative.contigName(), representative.oncologyGroup());
             }
             else
             {

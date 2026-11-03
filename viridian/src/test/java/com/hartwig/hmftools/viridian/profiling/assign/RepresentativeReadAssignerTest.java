@@ -107,9 +107,9 @@ public class RepresentativeReadAssignerTest
     {
         SAMFileHeader header = new SAMFileHeader();
         header.setSequenceDictionary(new SAMSequenceDictionary(List.of(
-                new SAMSequenceRecord(REPRESENTATIVE.name(), REPRESENTATIVE.length()),
-                new SAMSequenceRecord(TWIN.name(), TWIN.length()),
-                new SAMSequenceRecord(MINOR.name(), MINOR.length()))));
+                new SAMSequenceRecord(REPRESENTATIVE.contigName(), REPRESENTATIVE.length()),
+                new SAMSequenceRecord(TWIN.contigName(), TWIN.length()),
+                new SAMSequenceRecord(MINOR.contigName(), MINOR.length()))));
         header.setSortOrder(SAMFileHeader.SortOrder.unsorted);
 
         File bam = new File(mTempDir.getRoot(), name);
@@ -119,7 +119,7 @@ public class RepresentativeReadAssignerTest
             {
                 SAMRecord record = new SAMRecord(header);
                 record.setReadName(alignment.readId().toString());
-                record.setReferenceName(alignment.genome().name());
+                record.setReferenceName(alignment.genome().contigName());
                 record.setAlignmentStart(alignment.alignmentStart());
                 record.setCigarString(alignment.cigar());
                 record.setReadBases(SAMRecord.NULL_SEQUENCE);

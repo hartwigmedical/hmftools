@@ -139,7 +139,7 @@ public class RepresentativeReadAssigner
     private static boolean isSameAlignment(ViralReadAlignment assigned, SAMRecord record)
     {
         return assigned.alignmentStart() == record.getAlignmentStart()
-                && assigned.genome().name().equals(record.getReferenceName())
+                && assigned.genome().contigName().equals(record.getReferenceName())
                 // Note CIGAR is needed too because occasionally there are multiple plausible alignments at the same ref position.
                 && assigned.cigar().equals(record.getCigarString());
     }

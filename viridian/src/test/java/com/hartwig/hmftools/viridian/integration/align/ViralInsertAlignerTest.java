@@ -100,8 +100,8 @@ public class ViralInsertAlignerTest
     private static ViralInsertAligner aligner(Map<String, List<BwaMemAlignment>> hits)
     {
         SAMSequenceDictionary dictionary = new SAMSequenceDictionary(List.of(
-                new SAMSequenceRecord(GENOME_16.name(), GENOME_16.length()),
-                new SAMSequenceRecord(GENOME_18.name(), GENOME_18.length())));
+                new SAMSequenceRecord(GENOME_16.contigName(), GENOME_16.length()),
+                new SAMSequenceRecord(GENOME_18.contigName(), GENOME_18.length())));
         VirusReference reference = new VirusReference(List.of(GENOME_16, GENOME_18), dictionary, Map.of());
 
         return new ViralInsertAligner(new FakeAligner(hits), reference);

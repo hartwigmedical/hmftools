@@ -22,7 +22,7 @@ import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 public class VirusReference
 {
     private final SAMSequenceDictionary mSequenceDictionary;
-    private final Map<String, VirusGenome> mGenomesByName;
+    private final Map<String, VirusGenome> mGenomesByContigName;
     private final Map<OncologyGroup, OncologyGroupInfo> mOncologyGroupInfo;
 
     public VirusReference(
@@ -30,16 +30,16 @@ public class VirusReference
             Map<OncologyGroup, OncologyGroupInfo> oncologyGroupInfo)
     {
         mSequenceDictionary = sequenceDictionary;
-        mGenomesByName = genomes.stream().collect(toMap(VirusGenome::name, identity()));
+        mGenomesByContigName = genomes.stream().collect(toMap(VirusGenome::contigName, identity()));
         mOncologyGroupInfo = oncologyGroupInfo;
     }
 
-    public VirusGenome genome(String name)
+    public VirusGenome genome(String contigName)
     {
-        VirusGenome genome = mGenomesByName.get(name);
+        VirusGenome genome = mGenomesByContigName.get(contigName);
         if(genome == null)
         {
-            throw new IllegalArgumentException("Unknown virus genome: " + name);
+            throw new IllegalArgumentException("Unknown virus genome: " + contigName);
         }
         return genome;
     }

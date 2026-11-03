@@ -40,7 +40,7 @@ public class ViralReadAlignmentTest
     {
         ViralReadAlignment alignment = ViralReadAlignment.from(record(30, "40S60M", 60, 1, "30A29"), REFERENCE);
 
-        assertEquals("v1", alignment.genome().name());
+        assertEquals("v1", alignment.genome().contigName());
         assertEquals(30, alignment.alignmentStart());
         assertEquals(89, alignment.alignmentEnd());
         assertEquals(40, alignment.leftClip());
