@@ -54,6 +54,8 @@ public class TargetRegions implements CobaltScope
         }
         else
         {
+            CB_LOGGER.info("loading normalisation for {} panels: {}", panelLabels.size(), panelLabels);
+
             // use the label to split the enrichment data
             for(String panelLabel : panelLabels)
             {
