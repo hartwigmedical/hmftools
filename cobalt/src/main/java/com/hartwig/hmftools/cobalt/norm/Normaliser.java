@@ -82,6 +82,7 @@ public class Normaliser
 
                 if(!useRegion(regionData, sampleRegionData))
                 {
+                    sampleRegionData.markInvalid();
                     continue;
                 }
 
@@ -132,11 +133,11 @@ public class Normaliser
 
                 if(gcBucketMedian == null || gcBucketMedian == 0)
                 {
+                    sampleRegionData.markInvalid();
                     continue;
                 }
 
                 double adjustedRatio = sampleMedianNormalisation * sampleRegionData.ReadDepth / gcBucketMedian;
-
                 sampleRegionData.setAdjustedGcRatio(adjustedRatio);
             }
         }
@@ -150,14 +151,10 @@ public class Normaliser
     public static boolean useRegion(final RegionData regionData, final SampleRegionData sampleRegionData)
     {
         if(regionData.mappability() < MAPPABILITY_THRESHOLD)
-        {
             return false;
-        }
 
         if(sampleRegionData.ReadDepth < 0)
-        {
             return false;
-        }
 
         return sampleRegionData.PanelGcBucket >= GC_BUCKET_MIN && sampleRegionData.PanelGcBucket <= GC_BUCKET_MAX;
     }
@@ -176,6 +173,9 @@ public class Normaliser
 
                 for(SampleRegionData sampleRegionData : regionData.getSamples())
                 {
+                    if(!sampleRegionData.isValid())
+                        continue;
+
                     if(sampleRegionData.WgsGcRatio < 0)
                     {
                         // -1.0 is used to mark Y regions in female samples and may also arise from masked windows in WGS data
@@ -183,7 +183,6 @@ public class Normaliser
                     }
 
                     double relativeEnrichment = sampleRegionData.adjustedGcRatio() / sampleRegionData.WgsGcRatio;
-
                     sampleRelativeEnrichments.add(relativeEnrichment);
                 }
 
@@ -269,6 +268,9 @@ public class Normaliser
     @VisibleForTesting
     public static boolean filterRegion(final String chromosome, final RegionData regionData, final List<Double> sampleEnrichments)
     {
+        if(sampleEnrichments.isEmpty())
+            return true;
+
         if(HumanChromosome.fromString(chromosome).isAllosome())
             return false;
 
@@ -326,7 +328,7 @@ public class Normaliser
         if(scaledStdDev <= FILTER_CHECK_PERCENTILE_STD_DEV_THRESHOLD)
             return false;
 
-        CB_LOGGER.debug(format("region(%s:%d) filtered: count(%d/%d) median(%.3f filtMed=%.3f 20th=%.3f) scaledSD(%.3f)",
+        CB_LOGGER.debug(format("region(%s:%d) noise filtered: count(%d/%d) median(%.3f filtMed=%.3f 20th=%.3f) scaledSD(%.3f)",
                 chromosome, regionData.Position, filteredCount, totalSamples, median, filteredMedian, percentile20, scaledStdDev));
 
         return true;
