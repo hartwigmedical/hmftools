@@ -8,7 +8,7 @@ import static com.hartwig.hmftools.orange.report.ReportResources.NOT_AVAILABLE;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.VALUE_HET;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.VALUE_HOM;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatFoldChangeField;
-import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatPercentileField;
+import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatPercentage;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatSingleDigitDecimal;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.formatTpmField;
 import static com.hartwig.hmftools.orange.report.tables.TableCommon.COL_DRIVER;
@@ -108,7 +108,7 @@ public final class GainDeletionTable
                 if(gainDel.tpm() != null)
                 {
                     rowCells.add(cells.createContent(formatTpmField(gainDel.tpm())));
-                    rowCells.add(cells.createContent(formatPercentileField(gainDel.tpmPercentile())));
+                    rowCells.add(cells.createContent(formatPercentage(gainDel.tpmPercentile())));
                     rowCells.add(cells.createContent(formatFoldChangeField(gainDel.tpmFoldChange())));
                 }
                 else
