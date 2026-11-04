@@ -30,7 +30,7 @@ public class WispConstants
     public static final double MAX_GERMLINE_AF = 0.01;
     public static final int HIGH_GERMLINE_QUAL_THRESHOLD = 30;
 
-    public static final int MIN_QUAL_PER_AD = 18;
+    public static final int MIN_QUAL_PER_AD = 21;
     public static final int MIN_QUAL_PER_AD_DUAL_ULTIMA = 34;
     public static final byte MIN_DUAL_QUAL_FILTER_THRESHOLD = 50;
     public static final double BQR_MIN_ERROR_RATE = 1e-5;

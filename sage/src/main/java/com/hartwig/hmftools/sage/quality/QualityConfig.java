@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.sage.quality;
 
-import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_BASE_QUAL_FIXED_PENALTY;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_HIGHLY_POLYMORPHIC_GENES_MAX_QUALITY;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_JITTER_MIN_REPEAT_COUNT;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MAP_QUAL_FIXED_PENALTY;
@@ -9,13 +8,11 @@ import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MAP_QUAL_READ_EVEN
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MQ_RATIO_FACTOR;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.SageConstants;
 
 public class QualityConfig
 {
     public final int JitterMinRepeatCount;
-    public final int BaseQualityFixedPenalty;
     public final int FixedMapQualPenalty;
     public final double ReadMapQualEventsPenalty;
     public final int ImproperPairPenalty;
@@ -33,7 +30,6 @@ public class QualityConfig
     public QualityConfig(final ConfigBuilder configBuilder)
     {
         JitterMinRepeatCount = configBuilder.getInteger(JITTER_MIN_REPEAT_COUNT);
-        BaseQualityFixedPenalty = DEFAULT_BASE_QUAL_FIXED_PENALTY;
         ReadMapQualEventsPenalty = configBuilder.getDecimal(MAP_QUAL_READ_EVENTS_PENALTY);
         ImproperPairPenalty = configBuilder.getInteger(MAP_QUAL_IMPROPER_PAIR_PENALTY);
 
@@ -48,7 +44,6 @@ public class QualityConfig
     public QualityConfig()
     {
         JitterMinRepeatCount = DEFAULT_JITTER_MIN_REPEAT_COUNT;
-        BaseQualityFixedPenalty = DEFAULT_BASE_QUAL_FIXED_PENALTY;
         FixedMapQualPenalty = DEFAULT_MAP_QUAL_FIXED_PENALTY;
         ReadMapQualEventsPenalty = DEFAULT_MAP_QUAL_READ_EVENTS_PENALTY;
         ImproperPairPenalty = DEFAULT_MAP_QUAL_IMPROPER_PAIR_PENALTY;

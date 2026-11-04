@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.sage.ReferenceData.isHighlyPolymorphic;
 import static com.hartwig.hmftools.sage.SageConfig.isSbx;
 import static com.hartwig.hmftools.sage.SageConfig.isUltima;
 import static com.hartwig.hmftools.sage.SageConfig.isIllumina;
+import static com.hartwig.hmftools.sage.SageConstants.BASE_QUAL_FIXED_PENALTY_MAX;
 import static com.hartwig.hmftools.sage.SageConstants.DOUBLE_JITTER_MIN_REPEAT_CHANGE;
 import static com.hartwig.hmftools.sage.SageConstants.HIGHLY_POLYMORPHIC_GENES_ALT_MAP_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.sage.SageConstants.HOTSPOT_MIN_TUMOR_ALT_SUPPORT_SKIP_QUAL;
@@ -56,13 +57,11 @@ import static com.hartwig.hmftools.sage.SageConstants.VAF_PROBABILITY_THRESHOLD_
 import static com.hartwig.hmftools.sage.SageConstants.STRAND_BIAS_NON_ALT_MIN_DEPTH;
 import static com.hartwig.hmftools.sage.SageConstants.MAP_QUAL_FACTOR_FIXED_PENALTY;
 import static com.hartwig.hmftools.sage.SageConstants.HIGHLY_POLYMORPHIC_GENES_MAX_QUALITY;
-import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_BASE_QUAL_FIXED_PENALTY;
 import static com.hartwig.hmftools.sage.SageConstants.GERMLINE_HET_MIN_EXPECTED_VAF;
 import static com.hartwig.hmftools.sage.SageConstants.GERMLINE_HET_MIN_SAMPLING_PROB;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_DOUBLE_JITTER_REPEAT_COUNT;
 import static com.hartwig.hmftools.sage.filter.SoftFilterConfig.getTieredSoftFilterConfig;
 import static com.hartwig.hmftools.sage.seqtech.SbxUtils.MQF_NM_1_THRESHOLD_DEDUCTION;
-import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.GERMLINE_VAF_INDEL_REPEAT_MIN_THRESHOLD_FACTOR;
 import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.belowExpectedHpQuals;
 import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.belowExpectedT0Quals;
 
@@ -325,7 +324,7 @@ public class VariantFilters
         int qualPerRead = (int)round(altNonMediumFinalBaseQualityTotal / strongNonMediumSupport);
 
         if(boostNovelIndel(tier, primaryTumor))
-            qualPerRead += DEFAULT_BASE_QUAL_FIXED_PENALTY;  // should boost by the actual config base qual penalty
+            qualPerRead += BASE_QUAL_FIXED_PENALTY_MAX;  // should boost by the actual config base qual penalty
 
         int minQualForTqp = primaryTumor.qualCache().isMsiSampleAndVariant() ? MIN_TQP_QUAL_MSI_VARIANT : MIN_TQP_QUAL;
 
@@ -468,12 +467,10 @@ public class VariantFilters
         double altBaseQualAvg = primaryTumor.averageAltRecalibratedBaseQuality();
 
         if(boostNovelIndel(primaryTumor.tier(), primaryTumor))
-            altBaseQualAvg += DEFAULT_BASE_QUAL_FIXED_PENALTY;
+            altBaseQualAvg += BASE_QUAL_FIXED_PENALTY_MAX;
 
-        // SupportCount * min(AvgBQ[ALT] / AvgBQ[DP], 1)
         int adjustedAltSupportCount = supportCount * (int)round(min(altBaseQualAvg / baseQualAvg, 1));
 
-        // p-score is the alternative=’upper’ pvalue for a binomtest with n=DP, k=adj_alt_supp, p=10^(-AvgBQ[DP] / 10)
         double probability = pow(10, -baseQualAvg/10);
 
         BinomialDistribution distribution = new BinomialDistribution(depth, probability);

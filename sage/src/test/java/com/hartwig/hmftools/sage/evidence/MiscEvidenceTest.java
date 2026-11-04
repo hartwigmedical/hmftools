@@ -40,9 +40,11 @@ import com.hartwig.hmftools.sage.common.ReadMatchInfo;
 import com.hartwig.hmftools.sage.common.RegionTaskTester;
 import com.hartwig.hmftools.sage.common.SageVariant;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
+import com.hartwig.hmftools.sage.common.TestUtils;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
 import com.hartwig.hmftools.sage.common.VariantReadContextBuilder;
 import com.hartwig.hmftools.sage.pipeline.RegionTask;
+import com.hartwig.hmftools.sage.quality.QualityScores;
 
 import org.junit.Test;
 
@@ -91,6 +93,39 @@ public class MiscEvidenceTest
         readCounter.processRead(altRead, 1, null);
 
         assertEquals(1, readCounter.readCounts().PartialCore);
+    }
+
+    @Test
+    public void testBaseQualPenality()
+    {
+        int refPosStart = 100;
+        int varPosition = 120;
+        int varReadIndex = varPosition - refPosStart;
+        String refBases = REF_BASES_200.substring(refPosStart, refPosStart + 40);
+        String readBases = refBases.substring(0, 20) + "G" + refBases.substring(21);
+        SAMRecord read = createSamRecord(READ_ID_GENERATOR.nextId(), CHR_1, refPosStart, readBases, "40M");
+        VariantReadContextBuilder builder = new VariantReadContextBuilder(DEFAULT_FLANK_LENGTH);
+
+        SimpleVariant variant = createSimpleVariant(varPosition, "T", "G");
+        VariantReadContext readContext = builder.createContext(variant, read, varReadIndex, REF_SEQUENCE_200);
+
+        ReadContextCounter readCounter = new ReadContextCounter(
+                0, readContext, LOW_CONFIDENCE,
+                DEFAULT_MAX_READ_DEPTH, 1, TEST_CONFIG, QUALITY_CALCULATOR, TEST_SAMPLE, true);
+
+        QualityScores qualityScores = QUALITY_CALCULATOR.calculateQualityScores(readCounter, varReadIndex, read, 0);
+        assertEquals(25, qualityScores.FinalBaseQuality, 0.1);
+
+        // again but with lower read qual
+        read.getBaseQualities()[varReadIndex] = 30;
+
+        qualityScores = QUALITY_CALCULATOR.calculateQualityScores(readCounter, varReadIndex, read, 0);
+        assertEquals(21, qualityScores.FinalBaseQuality, 0.1);
+
+        read.getBaseQualities()[varReadIndex] = 20;
+
+        qualityScores = QUALITY_CALCULATOR.calculateQualityScores(readCounter, varReadIndex, read, 0);
+        assertEquals(14, qualityScores.FinalBaseQuality, 0.1);
     }
 
     @Test

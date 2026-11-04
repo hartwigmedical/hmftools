@@ -12,6 +12,10 @@ import static com.hartwig.hmftools.sage.SageCommon.isImproperPair;
 import static com.hartwig.hmftools.sage.SageConfig.SEQUENCING_TYPE;
 import static com.hartwig.hmftools.sage.SageConfig.isSbx;
 import static com.hartwig.hmftools.sage.SageConfig.isUltima;
+import static com.hartwig.hmftools.sage.SageConstants.BASE_QUAL_FIXED_PENALTY_LOWER_THRESHOLD;
+import static com.hartwig.hmftools.sage.SageConstants.BASE_QUAL_FIXED_PENALTY_MAX;
+import static com.hartwig.hmftools.sage.SageConstants.BASE_QUAL_FIXED_PENALTY_RANGE;
+import static com.hartwig.hmftools.sage.SageConstants.BASE_QUAL_FIXED_PENALTY_UPPER_THRESHOLD;
 import static com.hartwig.hmftools.sage.SageConstants.HIGHLY_POLYMORPHIC_GENES_MAX_QUALITY;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_MAP_QUALITY;
 import static com.hartwig.hmftools.sage.SageConstants.READ_EDGE_PENALTY_0;
@@ -23,7 +27,6 @@ import com.hartwig.hmftools.common.redux.BaseQualAdjustment;
 import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.sequencing.SbxBamUtils;
 import com.hartwig.hmftools.sage.SageConfig;
-import com.hartwig.hmftools.sage.common.ReadContextMatcher;
 import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
 import com.hartwig.hmftools.sage.evidence.JitterMatch;
@@ -119,7 +122,20 @@ public class QualityCalculator
         double penalisedBaseQuality = recalibratedBaseQuality;
 
         if(!readContextCounter.useMsiErrorRate())
-            penalisedBaseQuality -= mConfig.BaseQualityFixedPenalty;
+        {
+            // reduce the penalty for lower quals down to a minimum
+            if(recalibratedBaseQuality >= BASE_QUAL_FIXED_PENALTY_UPPER_THRESHOLD)
+            {
+                penalisedBaseQuality -= BASE_QUAL_FIXED_PENALTY_MAX;
+            }
+            else
+            {
+                double minPenalty = BASE_QUAL_FIXED_PENALTY_MAX * 0.5;
+                double qualAboveThreshold = max(recalibratedBaseQuality - BASE_QUAL_FIXED_PENALTY_LOWER_THRESHOLD, 0);
+                double penalty = minPenalty + qualAboveThreshold / BASE_QUAL_FIXED_PENALTY_RANGE * minPenalty;
+                penalisedBaseQuality -= penalty;
+            }
+        }
 
         int readEdgePenalty = readEdgeDistancePenalty(readContextCounter, readVarIndex, record);
         penalisedBaseQuality -= readEdgePenalty;
