@@ -54,7 +54,7 @@ public class OutputWriter
                     GenomeStats stats = support.stats();
                     VirusGenome genome = support.genome();
 
-                    row.set(GenomeSupportColumn.genome, genome.contigName());
+                    row.set(GenomeSupportColumn.contig, genome.contigName());
                     row.set(GenomeSupportColumn.virus_name, genome.virusName().value());
                     row.set(GenomeSupportColumn.virus_group, genome.virusGroup().name());
                     row.set(GenomeSupportColumn.genome_length, genome.length());
@@ -76,7 +76,7 @@ public class OutputWriter
 
     private enum GenomeSupportColumn
     {
-        genome,
+        contig,
         virus_name,
         virus_group,
         is_representative,
@@ -113,7 +113,7 @@ public class OutputWriter
 
                     GenomeStats stats = profile.representativeStats();
                     VirusGenome genome = stats.genome();
-                    row.set(VirusProfileColumn.genome_name, genome.contigName());
+                    row.set(VirusProfileColumn.contig, genome.contigName());
                     row.set(VirusProfileColumn.virus_name, genome.virusName().value());
                     row.set(VirusProfileColumn.genome_length, genome.length());
                     row.set(VirusProfileColumn.aligned_reads, stats.readCount());
@@ -121,7 +121,7 @@ public class OutputWriter
                     row.set(VirusProfileColumn.coverage, stats.coverageFraction());
 
                     List<VirusGenome> secondaries = profile.secondaryGenomes();
-                    row.setOrNull(VirusProfileColumn.secondary_genome_names, joinOrNull(secondaries, VirusGenome::contigName));
+                    row.setOrNull(VirusProfileColumn.secondary_contigs, joinOrNull(secondaries, VirusGenome::contigName));
                     row.setOrNull(
                             VirusProfileColumn.secondary_virus_names,
                             joinOrNull(secondaries, secondary -> secondary.virusName().value()));
@@ -135,12 +135,12 @@ public class OutputWriter
     {
         virus_group,
         virus_name,
-        genome_name,
+        contig,
         genome_length,
         coverage,
         aligned_reads,
         origin_clipped_reads,
-        secondary_genome_names,
+        secondary_contigs,
         secondary_virus_names,
     }
 
