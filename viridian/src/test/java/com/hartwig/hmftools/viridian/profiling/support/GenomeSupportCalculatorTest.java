@@ -88,7 +88,7 @@ public class GenomeSupportCalculatorTest
     }
 
     @Test
-    public void testComputeExplainedReadsCountsTiedReadForEachGenome()
+    public void testComputeTopMatchReadsCountsTiedReadForEachGenome()
     {
         VirusGenome v1b = new VirusGenome("v1b", 20, new Virus("Virus 1B", V1.virusGroup()));
         List<ViralReadAlignment> alignments = List.of(
@@ -104,10 +104,10 @@ public class GenomeSupportCalculatorTest
 
         List<GenomeSupport> stats = compute(alignments, READ_VOTE_CORRECT_BASE_PROBABILITY);
 
-        // v1 explains r1, r2 and r4. v1b explains r1 and r3. v2 explains r4 and r5.
-        assertEquals(3, get(stats, V1).explainedReads());
-        assertEquals(2, get(stats, v1b).explainedReads());
-        assertEquals(2, get(stats, V2).explainedReads());
+        // v1 is the top match for r1, r2 and r4. v1b for r1 and r3. v2 for r4 and r5.
+        assertEquals(3, get(stats, V1).topMatchReads());
+        assertEquals(2, get(stats, v1b).topMatchReads());
+        assertEquals(2, get(stats, V2).topMatchReads());
     }
 
     @Test

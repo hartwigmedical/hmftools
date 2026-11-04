@@ -21,7 +21,7 @@ public record GenomeSupport(
         double readVotes,
         // Reads whose best alignment, among all genomes, is to this genome.
         // A read counts towards multiple genomes if its alignments are tied.
-        int explainedReads)
+        int topMatchReads)
 {
     public VirusGenome genome()
     {

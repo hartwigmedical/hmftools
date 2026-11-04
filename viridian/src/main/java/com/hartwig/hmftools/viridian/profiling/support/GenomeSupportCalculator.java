@@ -27,18 +27,18 @@ public class GenomeSupportCalculator
     {
         Collection<Map<VirusGenome, ViralReadAlignment>> reads = alignments.store().byRead().values();
         Map<VirusGenome, Double> readVotes = calculateReadVotes(reads);
-        Map<VirusGenome, Integer> explainedReads = calculateExplainedReads(reads);
+        Map<VirusGenome, Integer> topMatchReads = calculateTopMatchReads(reads);
         Map<VirusGenome, List<Integer>> alignmentCounts = alignments.metrics().alignmentCountsByGenome();
 
         return genomeStats.values().stream()
                 .map(stats -> createGenomeSupport(
                         stats, readVotes.getOrDefault(stats.genome(), 0.0),
-                        explainedReads.getOrDefault(stats.genome(), 0),
+                        topMatchReads.getOrDefault(stats.genome(), 0),
                         alignmentCounts.getOrDefault(stats.genome(), List.of())))
                 .toList();
     }
 
-    // Read voting:
+    // "Read votes":
     // Each read gives total 1 vote, split between its aligned genomes according to edit distance.
     // As edit distance to the genome increases, the vote to that genome decreases (distributed to the other aligned genomes).
     // Example:
@@ -66,13 +66,14 @@ public class GenomeSupportCalculator
         return Math.pow(mCorrectBaseProbability, divergence - minDivergence);
     }
 
-    // Explained reads:
+    // "Top match reads":
     // For each genome, counts the reads whose overall best alignment is to that genome.
     // A read with tied best alignments counts for each tied genome, so unlike read votes, the count does not dilute
     // with many similar genomes.
-    private static Map<VirusGenome, Integer> calculateExplainedReads(Collection<Map<VirusGenome, ViralReadAlignment>> reads)
+    private static Map<VirusGenome, Integer> calculateTopMatchReads(
+            Collection<Map<VirusGenome, ViralReadAlignment>> reads)
     {
-        Map<VirusGenome, Integer> explainedReads = new HashMap<>();
+        Map<VirusGenome, Integer> topMatchReads = new HashMap<>();
         for(Map<VirusGenome, ViralReadAlignment> readAlignments : reads)
         {
             // Find the lowest divergence, i.e. best alignment.
@@ -81,19 +82,19 @@ public class GenomeSupportCalculator
             // Get all the genomes which align equally well as the best.
             readAlignments.entrySet().stream()
                     .filter(entry -> entry.getValue().divergence() == minDivergence)
-                    .forEach(entry -> explainedReads.merge(entry.getKey(), 1, Integer::sum));
+                    .forEach(entry -> topMatchReads.merge(entry.getKey(), 1, Integer::sum));
         }
-        return explainedReads;
+        return topMatchReads;
     }
 
     private static GenomeSupport createGenomeSupport(
-            GenomeStats stats, double readVotes, int explainedReads, List<Integer> alignmentCounts)
+            GenomeStats stats, double readVotes, int topMatchReads, List<Integer> alignmentCounts)
     {
         int multiAlignReads = (int) alignmentCounts.stream().filter(count -> count > 1).count();
 
         // Without retained reads there is no distribution to summarise.
         SummaryStats alignmentsPerRead = alignmentCounts.isEmpty() ? null : SummaryStats.from(alignmentCounts);
 
-        return new GenomeSupport(stats, multiAlignReads, alignmentsPerRead, readVotes, explainedReads);
+        return new GenomeSupport(stats, multiAlignReads, alignmentsPerRead, readVotes, topMatchReads);
     }
 }
