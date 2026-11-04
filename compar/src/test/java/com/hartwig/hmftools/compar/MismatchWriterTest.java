@@ -41,7 +41,7 @@ public class MismatchWriterTest
 
     private static final String REVIEWER = "reviewer a";
     private static final String CURATED_DATE = "2026-10-20";
-    private static final String CURATION_HEADER = "CurationType\tVerdict\tCurationComment\tCuratedBy\tCuratedDate";
+    private static final String CURATION_HEADER = "Severity\tVerdict\tCurationComment\tCuratedBy\tCuratedDate";
 
     private static final RnaFusionData FUSION_ITEM = TestRnaFusionDataBuilder.BUILDER.create();
     private static final RnaFusionData OTHER_FUSION_ITEM = TestRnaFusionDataBuilder.BUILDER.createWithAlternateDefaults();
@@ -51,7 +51,7 @@ public class MismatchWriterTest
             OTHER_FUSION_ITEM, null, MismatchType.OLD_ONLY, Collections.emptyList());
 
     private static final List<String> PREV_HEADER = List.of(
-            "PrevComparison", "PrevMismatchType", "PrevDifferences", "PrevCurationType", "PrevVerdict", "PrevCurationComment",
+            "PrevComparison", "PrevMismatchType", "PrevDifferences", "PrevSeverity", "PrevVerdict", "PrevCurationComment",
             "PrevCuratedBy", "PrevCuratedDate");
 
     private static final List<String> NO_HISTORY = Collections.nCopies(PREV_HEADER.size(), "");
@@ -86,7 +86,7 @@ public class MismatchWriterTest
     public void historyPrefersLatestCuratedRowForTheChangedField() throws IOException
     {
         File cacheFile = writeCacheFile("curation.tsv", List.of(
-                List.of("VALUE", FUSION_ITEM.key(), "SplitFrags(10/3)", LABEL_A, LABEL_B, "EXPECTED", "known", "NEW_CORRECT"),
+                List.of("VALUE", FUSION_ITEM.key(), "SplitFrags(10/3)", LABEL_A, LABEL_B, "LOW", "known", "NEW_CORRECT"),
                 List.of("VALUE", FUSION_ITEM.key(), "SplitFrags(10/2)", LABEL_B, LABEL_C, "NONE", ""),
                 List.of("VALUE", FUSION_ITEM.key(), "Filter(PASS/FRAGMENT_COUNT)", LABEL_B, LABEL_C, "NONE", "")));
 
@@ -98,7 +98,7 @@ public class MismatchWriterTest
         assertEquals(PREV_HEADER, header.subList(header.size() - PREV_HEADER.size(), header.size()));
 
         assertEquals(
-                List.of(LABEL_A + ">" + LABEL_B, "VALUE", "SplitFrags(10/3)", "EXPECTED", "NEW_CORRECT", "known", REVIEWER, CURATED_DATE),
+                List.of(LABEL_A + ">" + LABEL_B, "VALUE", "SplitFrags(10/3)", "LOW", "NEW_CORRECT", "known", REVIEWER, CURATED_DATE),
                 history(lines.get(1)));
 
         assertEquals(NO_HISTORY, history(lines.get(2)));
@@ -110,13 +110,13 @@ public class MismatchWriterTest
         List<String> firstRunLines = writeOutput(createConfig(temp.newFolder(), LABEL_A, LABEL_B, null), List.of(FUSION_OLD_ONLY));
 
         File cacheFile = temp.newFile("001_reviewed.tsv");
-        String reviewedRow = review(firstRunLines.get(0), firstRunLines.get(1), "EXPECTED", "known");
+        String reviewedRow = review(firstRunLines.get(0), firstRunLines.get(1), "LOW", "known");
         Files.write(cacheFile.toPath(), List.of(firstRunLines.get(0) + TSV_DELIM + CURATION_HEADER, reviewedRow));
 
         List<String> lines = writeOutput(
                 createConfig(temp.newFolder(), LABEL_B, LABEL_C, cacheFile.getAbsolutePath()), List.of(FUSION_OLD_ONLY));
 
-        assertEquals(List.of(LABEL_A + ">" + LABEL_B, "OLD_ONLY", "", "EXPECTED", "NONE", "known", REVIEWER, CURATED_DATE),
+        assertEquals(List.of(LABEL_A + ">" + LABEL_B, "OLD_ONLY", "", "LOW", "NONE", "known", REVIEWER, CURATED_DATE),
                 history(lines.get(1)));
     }
 
@@ -206,7 +206,7 @@ public class MismatchWriterTest
         for(String outputFile : List.of(filePrefix + ".tsv", filePrefix + ".rna_fusion.tsv", FieldConfigFile.generateFileName(filePrefix)))
         {
             File cacheFile = writeCacheFile(outputFile, List.of(
-                    List.of("OLD_ONLY", FUSION_ITEM.key(), "", LABEL_A, LABEL_B, "EXPECTED", "reviewed")));
+                    List.of("OLD_ONLY", FUSION_ITEM.key(), "", LABEL_A, LABEL_B, "LOW", "reviewed")));
 
             List<String> reviewedLines = Files.readAllLines(cacheFile.toPath());
 
@@ -228,11 +228,11 @@ public class MismatchWriterTest
         return row.subList(row.size() - PREV_HEADER.size(), row.size());
     }
 
-    private static String review(final String header, final String line, final String curationType, final String comment)
+    private static String review(final String header, final String line, final String severity, final String comment)
     {
         int newSourceIndex = Arrays.asList(header.split(TSV_DELIM, -1)).indexOf("NewSource");
         List<String> values = Lists.newArrayList(Arrays.asList(line.split(TSV_DELIM, -1)).subList(0, newSourceIndex + 1));
-        values.addAll(List.of(curationType, "NONE", comment, REVIEWER, CURATED_DATE));
+        values.addAll(List.of(severity, "NONE", comment, REVIEWER, CURATED_DATE));
         return String.join(TSV_DELIM, values);
     }
 

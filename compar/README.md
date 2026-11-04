@@ -189,10 +189,10 @@ Use semicolon-separated `key=value` fields in this order: `kind`, `version`, opt
 For example: `kind=pipeline;version=v34;reference=GRCh38;config=standard`. If a label does not fit this form, Compar keeps it as plain text.
 Labels must be non-blank, with no tabs or line breaks. Source labels and `-curation_cache` require `GENERIC` output.
 
-#### Curation types
+#### Severity
 
-`CurationType` is the review label in each cache row. Allowed values are `NONE`, `IGNORE`, `MARGINAL`, `FUNCTIONAL`, `ISSUE`,
-`CONFIG` and `EXPECTED`.
+`Severity` is the review label in each cache row. Allowed values are `NONE`, `CRITICAL`, `MEDIUM` and `LOW`. Any other value,
+including a blank cell, stops the run.
 
 #### Curation status
 
@@ -212,13 +212,13 @@ For later comparisons, pass the curation file as:
 Example `pipeline_curation.tsv`:
 
 ```tsv
-SampleId	Category	MismatchType	CurationStatus	Key	Differences	OldSource	NewSource	CurationType	CurationComment
-DEMO_001	GENE_COPY_NUMBER	VALUE		MYC	MinCopyNumber(6/8)	v34	v35	EXPECTED	Expected copy number change
+SampleId	Category	MismatchType	CurationStatus	Key	Differences	OldSource	NewSource	Severity	CurationComment
+DEMO_001	GENE_COPY_NUMBER	VALUE		MYC	MinCopyNumber(6/8)	v34	v35	LOW	Expected copy number change
 DEMO_001	GENE_COPY_NUMBER	VALUE		MYC	MinCopyNumber(8/10)	v35	v36	NONE	Recorded difference
-DEMO_002	GENE_COPY_NUMBER	VALUE		MYC	MinCopyNumber(2/5)	v35	v36	ISSUE	Investigate
-DEMO_001	RNA_FUSION	OLD_ONLY		EML4_ALK chr2:3000-chr2:4000		v35	v36	IGNORE	Previously reviewed filtering change
-DEMO_001	DRIVER	NEW_ONLY		AMP_ERBB2		v35	v36	EXPECTED	Newly reported driver
-DEMO_001	PURITY	VALUE			Purity(0.65/0.68)	v35	v36	MARGINAL	Small purity change
+DEMO_002	GENE_COPY_NUMBER	VALUE		MYC	MinCopyNumber(2/5)	v35	v36	CRITICAL	Investigate
+DEMO_001	RNA_FUSION	OLD_ONLY		EML4_ALK chr2:3000-chr2:4000		v35	v36	LOW	Previously reviewed filtering change
+DEMO_001	DRIVER	NEW_ONLY		AMP_ERBB2		v35	v36	MEDIUM	Newly reported driver
+DEMO_001	PURITY	VALUE			Purity(0.65/0.68)	v35	v36	LOW	Small purity change
 DEMO_001	RNA_FUSION	INVALID_NEW				v35	v36	NONE	Missing NEW input
 ```
 

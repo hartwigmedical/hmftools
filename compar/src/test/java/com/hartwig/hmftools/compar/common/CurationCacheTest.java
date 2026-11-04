@@ -41,7 +41,7 @@ public class CurationCacheTest
 
     private static final String REVIEWER = "reviewer a";
     private static final String CURATED_DATE = "2026-10-20";
-    private static final String CURATION_HEADER = "CurationType\tVerdict\tCurationComment\tCuratedBy\tCuratedDate";
+    private static final String CURATION_HEADER = "Severity\tVerdict\tCurationComment\tCuratedBy\tCuratedDate";
 
     private static final RnaFusionData FUSION_ITEM = TestRnaFusionDataBuilder.BUILDER.create();
     private static final RnaFusionData OTHER_FUSION_ITEM = TestRnaFusionDataBuilder.BUILDER.createWithAlternateDefaults();
@@ -64,9 +64,9 @@ public class CurationCacheTest
     {
         File cacheFile = writeCacheFile(
                 "cache.tsv", List.of(
-                        List.of(SAMPLE_ID, FUSION, "OLD_ONLY", FUSION_ITEM.key(), "", LABEL_A, LABEL_B, "EXPECTED", "known"),
+                        List.of(SAMPLE_ID, FUSION, "OLD_ONLY", FUSION_ITEM.key(), "", LABEL_A, LABEL_B, "LOW", "known"),
                         List.of(SAMPLE_ID, FUSION, "FULL_MATCH", OTHER_FUSION_ITEM.key(), "", LABEL_A, LABEL_B, "NONE", ""),
-                        List.of(OTHER_SAMPLE_ID, FUSION, "VALUE", FUSION_ITEM.key(), "SplitFrags(10/2)", LABEL_A, LABEL_B, "", ""),
+                        List.of(OTHER_SAMPLE_ID, FUSION, "VALUE", FUSION_ITEM.key(), "SplitFrags(10/2)", LABEL_A, LABEL_B, "NONE", ""),
                         List.of(SAMPLE_ID, FUSION, "NEW_ONLY", OTHER_FUSION_ITEM.key(), "", LABEL_B, LABEL_C, "NONE", ""),
                         List.of(SAMPLE_ID, FUSION, "INVALID_NEW", "", "", LABEL_B, LABEL_C, "NONE", "")));
 
@@ -76,7 +76,7 @@ public class CurationCacheTest
                 SAMPLE_ID, new Mismatch(FUSION_ITEM, OTHER_FUSION_ITEM, MismatchType.VALUE, Collections.emptyList()));
 
         assertEquals(2, history.size());
-        assertEquals(CurationType.EXPECTED, history.get(0).curation());
+        assertEquals(Severity.LOW, history.get(0).severity());
         assertEquals("known", history.get(0).comment());
         assertEquals(LABEL_B, history.get(1).oldSource());
 
@@ -84,7 +84,7 @@ public class CurationCacheTest
                 OTHER_SAMPLE_ID, new Mismatch(FUSION_ITEM, null, MismatchType.OLD_ONLY, Collections.emptyList()));
 
         assertEquals(1, otherSampleHistory.size());
-        assertEquals(CurationType.NONE, otherSampleHistory.get(0).curation());
+        assertEquals(Severity.NONE, otherSampleHistory.get(0).severity());
     }
 
     @Test
@@ -113,7 +113,7 @@ public class CurationCacheTest
                         List.of(
                                 SAMPLE_ID, FUSION, "VALUE", FUSION_ITEM.key(), "SplitFrags(10/2);Filter(A;B/PASS);" + fusionsDifference,
                                 LABEL_A, LABEL_B, "NONE", "present in cache"),
-                        List.of(SAMPLE_ID, FUSION, "VALUE", FUSION_ITEM.key(), "SplitFrags(20/2)", LABEL_B, LABEL_C, "ISSUE", "later")));
+                        List.of(SAMPLE_ID, FUSION, "VALUE", FUSION_ITEM.key(), "SplitFrags(20/2)", LABEL_B, LABEL_C, "CRITICAL", "later")));
         CurationCache cache = new CurationCache(cacheFile.getAbsolutePath());
         Mismatch mismatch = new Mismatch(
                 FUSION_ITEM, FUSION_ITEM, MismatchType.VALUE,
@@ -177,7 +177,7 @@ public class CurationCacheTest
     {
         File cacheFile = writeCacheFile(
                 "cache.tsv", List.of(
-                        List.of(SAMPLE_ID, FUSION, "OLD_ONLY", FUSION_ITEM.key(), "", LABEL_A, LABEL_B, "EXPECTED", "known"),
+                        List.of(SAMPLE_ID, FUSION, "OLD_ONLY", FUSION_ITEM.key(), "", LABEL_A, LABEL_B, "LOW", "known"),
                         List.of(SAMPLE_ID, FUSION, "OLD_ONLY", FUSION_ITEM.key(), "", LABEL_B, LABEL_C, "NONE", "")));
         CurationCache cache = new CurationCache(cacheFile.getAbsolutePath());
 

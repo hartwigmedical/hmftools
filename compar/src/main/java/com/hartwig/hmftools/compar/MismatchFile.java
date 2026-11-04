@@ -24,7 +24,7 @@ public class MismatchFile
     public static final String FLD_DIFFERENCES = "Differences";
     public static final String FLD_OLD_SOURCE = "OldSource";
     public static final String FLD_NEW_SOURCE = "NewSource";
-    public static final String FLD_CURATION_TYPE = "CurationType";
+    public static final String FLD_SEVERITY = "Severity";
     public static final String FLD_VERDICT = "Verdict";
     public static final String FLD_CURATION_COMMENT = "CurationComment";
     public static final String FLD_CURATED_BY = "CuratedBy";
@@ -33,7 +33,7 @@ public class MismatchFile
     private static final String FLD_PREV_COMPARISON = "PrevComparison";
     private static final String FLD_PREV_MISMATCH_TYPE = "PrevMismatchType";
     private static final String FLD_PREV_DIFFERENCES = "PrevDifferences";
-    private static final String FLD_PREV_CURATION_TYPE = "PrevCurationType";
+    private static final String FLD_PREV_SEVERITY = "PrevSeverity";
     private static final String FLD_PREV_VERDICT = "PrevVerdict";
     private static final String FLD_PREV_CURATION_COMMENT = "PrevCurationComment";
     private static final String FLD_PREV_CURATED_BY = "PrevCuratedBy";
@@ -72,7 +72,7 @@ public class MismatchFile
 
         if(includeHistory)
         {
-            sj.add(FLD_PREV_COMPARISON).add(FLD_PREV_MISMATCH_TYPE).add(FLD_PREV_DIFFERENCES).add(FLD_PREV_CURATION_TYPE);
+            sj.add(FLD_PREV_COMPARISON).add(FLD_PREV_MISMATCH_TYPE).add(FLD_PREV_DIFFERENCES).add(FLD_PREV_SEVERITY);
             sj.add(FLD_PREV_VERDICT).add(FLD_PREV_CURATION_COMMENT).add(FLD_PREV_CURATED_BY).add(FLD_PREV_CURATED_DATE);
         }
 
@@ -136,7 +136,7 @@ public class MismatchFile
             return TSV_DELIM.repeat(7);
 
         return String.join(TSV_DELIM, previous.oldSource() + SOURCE_PAIR_DELIM + previous.newSource(), previous.type().toString(),
-                previous.differences(), previous.curation().toString(), previous.verdict().toString(), previous.comment(),
+                previous.differences(), previous.severity().toString(), previous.verdict().toString(), previous.comment(),
                 previous.curatedBy(), previous.curatedDate());
     }
 

@@ -7,11 +7,11 @@ import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.MismatchFile.FLD_CURATED_BY;
 import static com.hartwig.hmftools.compar.MismatchFile.FLD_CURATED_DATE;
 import static com.hartwig.hmftools.compar.MismatchFile.FLD_CURATION_COMMENT;
-import static com.hartwig.hmftools.compar.MismatchFile.FLD_CURATION_TYPE;
 import static com.hartwig.hmftools.compar.MismatchFile.FLD_DIFFERENCES;
 import static com.hartwig.hmftools.compar.MismatchFile.FLD_MISMATCH_TYPE;
 import static com.hartwig.hmftools.compar.MismatchFile.FLD_NEW_SOURCE;
 import static com.hartwig.hmftools.compar.MismatchFile.FLD_OLD_SOURCE;
+import static com.hartwig.hmftools.compar.MismatchFile.FLD_SEVERITY;
 import static com.hartwig.hmftools.compar.MismatchFile.FLD_VERDICT;
 import static com.hartwig.hmftools.compar.common.ComparConstants.FLD_CATEGORY;
 import static com.hartwig.hmftools.compar.common.ComparConstants.FLD_ITEM_KEY;
@@ -48,7 +48,7 @@ public class CurationCache
 
     private static final List<String> REQUIRED_FIELDS = List.of(
             FLD_SAMPLE_ID, FLD_CATEGORY, FLD_MISMATCH_TYPE, FLD_ITEM_KEY, FLD_DIFFERENCES, FLD_OLD_SOURCE, FLD_NEW_SOURCE,
-            FLD_CURATION_TYPE, FLD_VERDICT, FLD_CURATION_COMMENT, FLD_CURATED_BY, FLD_CURATED_DATE);
+            FLD_SEVERITY, FLD_VERDICT, FLD_CURATION_COMMENT, FLD_CURATED_BY, FLD_CURATED_DATE);
 
     public CurationCache(final String filename)
     {
@@ -82,7 +82,7 @@ public class CurationCache
     }
 
     public record Entry(
-            MismatchType type, String differences, CurationType curation, Verdict verdict, String comment, String curatedBy,
+            MismatchType type, String differences, Severity severity, Verdict verdict, String comment, String curatedBy,
             String curatedDate, String oldSource, String newSource, int loadIndex)
     {
     }
@@ -115,7 +115,7 @@ public class CurationCache
                     difference.isEmpty() ? Collections.emptyList() : List.of(difference));
             List<Entry> matchingHistory = !exactHistory.isEmpty() ? exactHistory : fieldHistory;
             List<Entry> curatedHistory = matchingHistory.stream()
-                    .filter(x -> x.curation() != CurationType.NONE || x.verdict() != Verdict.NONE).toList();
+                    .filter(x -> x.severity() != Severity.NONE || x.verdict() != Verdict.NONE).toList();
             List<Entry> previousHistory = !curatedHistory.isEmpty() ? curatedHistory : matchingHistory;
             Entry previous = previousHistory.isEmpty() ? null : previousHistory.get(previousHistory.size() - 1);
             matches.add(new Match(result, previous, status));
@@ -202,7 +202,7 @@ public class CurationCache
             int differencesIndex = fieldsIndexMap.get(FLD_DIFFERENCES);
             int oldSourceIndex = fieldsIndexMap.get(FLD_OLD_SOURCE);
             int newSourceIndex = fieldsIndexMap.get(FLD_NEW_SOURCE);
-            int curationTypeIndex = fieldsIndexMap.get(FLD_CURATION_TYPE);
+            int severityIndex = fieldsIndexMap.get(FLD_SEVERITY);
             int verdictIndex = fieldsIndexMap.get(FLD_VERDICT);
             int curationCommentIndex = fieldsIndexMap.get(FLD_CURATION_COMMENT);
             int curatedByIndex = fieldsIndexMap.get(FLD_CURATED_BY);
@@ -230,8 +230,7 @@ public class CurationCache
                     if(!isValidSourceLabel(oldSource) || !isValidSourceLabel(newSource))
                         throw new IllegalArgumentException("source labels must be nonblank single-line values without tabs");
 
-                    String curationTypeStr = values[curationTypeIndex];
-                    CurationType curationType = curationTypeStr.isEmpty() ? CurationType.NONE : CurationType.valueOf(curationTypeStr);
+                    Severity severity = Severity.valueOf(values[severityIndex]);
                     String verdictStr = values[verdictIndex];
                     Verdict verdict = verdictStr.isEmpty() ? Verdict.NONE : Verdict.valueOf(verdictStr);
                     String curatedBy = values[curatedByIndex];
@@ -250,7 +249,7 @@ public class CurationCache
                     for(String difference : differences)
                     {
                         Entry entry = new Entry(
-                                mismatchType, difference, curationType, verdict, values[curationCommentIndex], curatedBy, curatedDate,
+                                mismatchType, difference, severity, verdict, values[curationCommentIndex], curatedBy, curatedDate,
                                 oldSource, newSource, mLoadCount++);
 
                         mSampleMismatches.computeIfAbsent(sampleId, x -> Maps.newHashMap())
