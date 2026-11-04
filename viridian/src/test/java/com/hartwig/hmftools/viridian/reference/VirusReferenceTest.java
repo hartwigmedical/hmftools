@@ -25,16 +25,18 @@ public class VirusReferenceTest
 
     // Three virus genomes: contigA alone in its group, contigB and contigC sharing a group.
     private static final VirusGenomeInfo INFO_A =
-            new VirusGenomeInfo("contigA", new VirusName("Virus Alpha"), GROUP_ALPHA);
+            new VirusGenomeInfo("contigA", new Virus("Virus Alpha", GROUP_ALPHA));
     private static final VirusGenomeInfo INFO_B =
-            new VirusGenomeInfo("contigB", new VirusName("Virus Beta type 1"), GROUP_BETA);
+            new VirusGenomeInfo("contigB", new Virus("Virus Beta type 1", GROUP_BETA));
     private static final VirusGenomeInfo INFO_C =
-            new VirusGenomeInfo("contigC", new VirusName("Virus Beta type 2"), GROUP_BETA);
+            new VirusGenomeInfo("contigC", new Virus("Virus Beta type 2", GROUP_BETA));
     private static final List<VirusGenomeInfo> INFO = List.of(INFO_A, INFO_B, INFO_C);
 
-    private static final VirusGenome GENOME_A = new VirusGenome("contigA", 100, new VirusName("Virus Alpha"), GROUP_ALPHA);
-    private static final VirusGenome GENOME_B = new VirusGenome("contigB", 200, new VirusName("Virus Beta type 1"), GROUP_BETA);
-    private static final VirusGenome GENOME_C = new VirusGenome("contigC", 300, new VirusName("Virus Beta type 2"), GROUP_BETA);
+    private static final VirusGenome GENOME_A = new VirusGenome("contigA", 100, new Virus("Virus Alpha", GROUP_ALPHA));
+    private static final VirusGenome GENOME_B =
+            new VirusGenome("contigB", 200, new Virus("Virus Beta type 1", GROUP_BETA));
+    private static final VirusGenome GENOME_C =
+            new VirusGenome("contigC", 300, new Virus("Virus Beta type 2", GROUP_BETA));
 
     private static final String VALID_INFO_TSV = """
             contig_name\tvirus_name\tvirus_group
@@ -78,6 +80,13 @@ public class VirusReferenceTest
     {
         String duplicate = VALID_INFO_TSV + "contigA\tVirus Alpha\tGroup Alpha\n";
         assertThrows(UserInputError.class, () -> VirusGenomeInfo.load(writeTsv(duplicate)));
+    }
+
+    @Test
+    public void testLoadInfoThrowsWhenVirusIsInTwoGroups()
+    {
+        String virusInTwoGroups = VALID_INFO_TSV + "contigD\tVirus Alpha\tGroup Beta\n";
+        assertThrows(UserInputError.class, () -> VirusGenomeInfo.load(writeTsv(virusInTwoGroups)));
     }
 
     @Test

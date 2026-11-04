@@ -7,9 +7,9 @@ import java.util.Map;
 import java.util.Set;
 
 import com.hartwig.hmftools.viridian.profiling.common.ReadId;
+import com.hartwig.hmftools.viridian.reference.Virus;
 import com.hartwig.hmftools.viridian.reference.VirusGenome;
 import com.hartwig.hmftools.viridian.reference.VirusGroup;
-import com.hartwig.hmftools.viridian.reference.VirusName;
 
 import org.junit.Test;
 
@@ -19,7 +19,7 @@ public class AllGenomesReadAlignmentsTest
 
     private static final VirusGroup GROUP_A = new VirusGroup("Group A");
 
-    private static final VirusGenome V1 = new VirusGenome("v1", LENGTH, new VirusName("Virus v1"), GROUP_A);
+    private static final VirusGenome V1 = new VirusGenome("v1", LENGTH, new Virus("Virus v1", GROUP_A));
 
     @Test
     public void testFromOriginStraddlersExcludedAndCounted()

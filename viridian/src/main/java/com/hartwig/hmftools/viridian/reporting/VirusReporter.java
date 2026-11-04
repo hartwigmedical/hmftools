@@ -17,10 +17,10 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.hartwig.hmftools.viridian.profiling.VirusProfile;
+import com.hartwig.hmftools.viridian.reference.Virus;
 import com.hartwig.hmftools.viridian.reference.VirusGenome;
 import com.hartwig.hmftools.viridian.reference.VirusGroup;
 import com.hartwig.hmftools.viridian.reference.VirusGroupInfo;
-import com.hartwig.hmftools.viridian.reference.VirusName;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -42,13 +42,13 @@ public class VirusReporter
 
         return groupsToReport.stream()
                 .map(group -> reportGroup(
-                        group, profileByGroup.get(group), integratedGenomesByGroup.getOrDefault(group, List.of()),
+                        profileByGroup.get(group), integratedGenomesByGroup.getOrDefault(group, List.of()),
                         virusGroupInfo.apply(group), clonalityInputs))
                 .toList();
     }
 
     static VirusReport reportGroup(
-            VirusGroup group, @Nullable VirusProfile profile, List<VirusGenome> integratedGenomes, VirusGroupInfo info,
+            @Nullable VirusProfile profile, List<VirusGenome> integratedGenomes, VirusGroupInfo info,
             ClonalityInputs clonalityInputs)
     {
         Double copiesPerTumorCell = null;
@@ -78,22 +78,23 @@ public class VirusReporter
         boolean isReported = info.isReportable()
                 && (integrations >= REPORTED_INTEGRATIONS_MIN || clonalityStatus == ClonalityStatus.CLONAL);
 
-        List<VirusName> integratedVirusNames = integratedGenomes.stream().map(VirusGenome::virusName).toList();
-        VirusName virusName = profile != null
-                ? profile.representativeStats().genome().virusName()
-                // The most common virus name from the integrations.
-                : integratedVirusNames.stream()
+        List<Virus> integratedViruses = integratedGenomes.stream().map(VirusGenome::virus).toList();
+        Virus virus = profile != null
+                ? profile.representativeStats().genome().virus()
+                // The most common virus from the integrations.
+                : integratedViruses.stream()
                         .collect(groupingBy(identity(), counting()))
                         .entrySet().stream()
-                        .min(Map.Entry.<VirusName, Long>comparingByValue().reversed().thenComparing(Map.Entry.comparingByKey()))
+                        .min(Map.Entry.<Virus, Long>comparingByValue().reversed()
+                                .thenComparing(Map.Entry.comparingByKey()))
                         .orElseThrow()
                         .getKey();
-        ReportQcStatus qcStatus = integratedVirusNames.stream().allMatch(virusName::equals)
+        ReportQcStatus qcStatus = integratedViruses.stream().allMatch(virus::equals)
                 ? ReportQcStatus.NO_ABNORMALITIES
                 : ReportQcStatus.AMBIGUOUS_VIRUS;
 
         return new VirusReport(
-                group, virusName, qcStatus, info.reportingType(), integrations, profile, copiesPerTumorCell,
+                virus, qcStatus, info.reportingType(), integrations, profile, copiesPerTumorCell,
                 clonalityStatus, isReported);
     }
 }

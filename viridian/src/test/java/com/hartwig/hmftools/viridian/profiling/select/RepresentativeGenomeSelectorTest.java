@@ -7,9 +7,9 @@ import java.util.List;
 import com.hartwig.hmftools.viridian.profiling.common.GenomeStats;
 import com.hartwig.hmftools.viridian.profiling.common.SummaryStats;
 import com.hartwig.hmftools.viridian.profiling.support.GenomeSupport;
+import com.hartwig.hmftools.viridian.reference.Virus;
 import com.hartwig.hmftools.viridian.reference.VirusGenome;
 import com.hartwig.hmftools.viridian.reference.VirusGroup;
-import com.hartwig.hmftools.viridian.reference.VirusName;
 
 import org.junit.Test;
 
@@ -21,12 +21,12 @@ public class RepresentativeGenomeSelectorTest
     private static final VirusGroup GROUP_B = new VirusGroup("Group B");
     private static final VirusGroup GROUP_H = new VirusGroup("Group H");
 
-    private static final VirusGenome V1 = new VirusGenome("v1", LENGTH, new VirusName("Virus v1"), GROUP_A);
-    private static final VirusGenome V2 = new VirusGenome("v2", LENGTH, new VirusName("Virus v2"), GROUP_A);
-    private static final VirusGenome V3 = new VirusGenome("v3", LENGTH, new VirusName("Virus v3"), GROUP_A);
-    private static final VirusGenome V4 = new VirusGenome("v4", LENGTH, new VirusName("Virus v4"), GROUP_A);
-    private static final VirusGenome W1 = new VirusGenome("w1", LENGTH, new VirusName("Virus w1"), GROUP_B);
-    private static final VirusGenome H1 = new VirusGenome("h1", LENGTH, new VirusName("Virus h1"), GROUP_H);
+    private static final VirusGenome V1 = new VirusGenome("v1", LENGTH, new Virus("Virus v1", GROUP_A));
+    private static final VirusGenome V2 = new VirusGenome("v2", LENGTH, new Virus("Virus v2", GROUP_A));
+    private static final VirusGenome V3 = new VirusGenome("v3", LENGTH, new Virus("Virus v3", GROUP_A));
+    private static final VirusGenome V4 = new VirusGenome("v4", LENGTH, new Virus("Virus v4", GROUP_A));
+    private static final VirusGenome W1 = new VirusGenome("w1", LENGTH, new Virus("Virus w1", GROUP_B));
+    private static final VirusGenome H1 = new VirusGenome("h1", LENGTH, new Virus("Virus h1", GROUP_H));
 
     @Test
     public void testSelectRanksGenomesPerVirusGroup()

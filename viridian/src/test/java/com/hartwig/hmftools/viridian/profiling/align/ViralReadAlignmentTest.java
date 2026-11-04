@@ -14,9 +14,9 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 import com.hartwig.hmftools.viridian.profiling.common.ReadId;
+import com.hartwig.hmftools.viridian.reference.Virus;
 import com.hartwig.hmftools.viridian.reference.VirusGenome;
 import com.hartwig.hmftools.viridian.reference.VirusGroup;
-import com.hartwig.hmftools.viridian.reference.VirusName;
 import com.hartwig.hmftools.viridian.reference.VirusReference;
 
 import org.jetbrains.annotations.Nullable;
@@ -165,7 +165,8 @@ public class ViralReadAlignmentTest
 
     private static VirusReference reference()
     {
-        List<VirusGenome> genomes = List.of(new VirusGenome("v1", GENOME_LENGTH, new VirusName("Virus 1"), new VirusGroup("Group 1")));
+        List<VirusGenome> genomes = List.of(
+                new VirusGenome("v1", GENOME_LENGTH, new Virus("Virus 1", new VirusGroup("Group 1"))));
         SAMSequenceDictionary dictionary = new SAMSequenceDictionary(List.of(new SAMSequenceRecord("v1", GENOME_LENGTH)));
         return new VirusReference(genomes, dictionary, Map.of());
     }

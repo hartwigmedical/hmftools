@@ -92,7 +92,7 @@ public class VirusReference
             {
                 throw new UserInputError(String.format("Virus reference contig has no info row: %s", contig));
             }
-            result.add(new VirusGenome(contig, sequence.getSequenceLength(), row.virusName(), row.virusGroup()));
+            result.add(new VirusGenome(contig, sequence.getSequenceLength(), row.virus()));
         }
 
         if(!remainingInfo.isEmpty())

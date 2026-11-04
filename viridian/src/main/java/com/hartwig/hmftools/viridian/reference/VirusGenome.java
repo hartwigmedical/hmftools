@@ -11,10 +11,7 @@ public record VirusGenome(
         // Contig name in the FASTA and matching the original virus database.
         String contigName,
         int length,
-        // Human-readable, normalised name of the virus.
-        // Multiple genomes may have the same value.
-        VirusName virusName,
-        VirusGroup virusGroup
+        Virus virus
 ) implements Comparable<VirusGenome>
 {
     public VirusGenome
@@ -23,6 +20,11 @@ public record VirusGenome(
         {
             throw new IllegalArgumentException("Invalid virus genome length: " + length);
         }
+    }
+
+    public VirusGroup virusGroup()
+    {
+        return virus.group();
     }
 
     @NotNull

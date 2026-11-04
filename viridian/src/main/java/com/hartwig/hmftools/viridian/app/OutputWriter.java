@@ -55,7 +55,7 @@ public class OutputWriter
                     VirusGenome genome = support.genome();
 
                     row.set(GenomeSupportColumn.contig, genome.contigName());
-                    row.set(GenomeSupportColumn.virus_name, genome.virusName().value());
+                    row.set(GenomeSupportColumn.virus_name, genome.virus().name());
                     row.set(GenomeSupportColumn.virus_group, genome.virusGroup().name());
                     row.set(GenomeSupportColumn.genome_length, genome.length());
                     row.set(GenomeSupportColumn.aligned_reads, stats.readCount());
@@ -114,7 +114,7 @@ public class OutputWriter
                     GenomeStats stats = profile.representativeStats();
                     VirusGenome genome = stats.genome();
                     row.set(VirusProfileColumn.contig, genome.contigName());
-                    row.set(VirusProfileColumn.virus_name, genome.virusName().value());
+                    row.set(VirusProfileColumn.virus_name, genome.virus().name());
                     row.set(VirusProfileColumn.genome_length, genome.length());
                     row.set(VirusProfileColumn.aligned_reads, stats.readCount());
                     row.set(VirusProfileColumn.origin_clipped_reads, stats.originClippedReads());
@@ -124,7 +124,7 @@ public class OutputWriter
                     row.setOrNull(VirusProfileColumn.secondary_contigs, joinOrNull(secondaries, VirusGenome::contigName));
                     row.setOrNull(
                             VirusProfileColumn.secondary_virus_names,
-                            joinOrNull(secondaries, secondary -> secondary.virusName().value()));
+                            joinOrNull(secondaries, secondary -> secondary.virus().name()));
 
                     writeSummaryStats(row, DEPTH_STATS_COLUMNS, stats.depth());
                     writeSummaryStats(row, ALIGNER_SCORE_STATS_COLUMNS, stats.alignerScore());
@@ -242,7 +242,7 @@ public class OutputWriter
                     if(alignment != null)
                     {
                         VirusGenome genome = alignment.genome();
-                        row.set(IntegrationCandidateColumn.virus_name, genome.virusName().value());
+                        row.set(IntegrationCandidateColumn.virus_name, genome.virus().name());
                         row.set(IntegrationCandidateColumn.virus_group, genome.virusGroup().name());
                         row.set(IntegrationCandidateColumn.virus_contig, genome.contigName());
                         row.set(IntegrationCandidateColumn.virus_position, alignment.position());
@@ -298,7 +298,7 @@ public class OutputWriter
 
     public static void writeVirusReports(String file, List<VirusReport> reports, @Nullable Double expectedViralDepthPerCopy)
     {
-        List<VirusReport> rows = reports.stream().sorted(comparing(VirusReport::virusGroup)).toList();
+        List<VirusReport> rows = reports.stream().sorted(comparing(report -> report.virus().group())).toList();
 
         DelimFileWriter.write(
                 file, VIRUS_REPORT_COLUMNS, rows, (report, row) ->
@@ -306,7 +306,7 @@ public class OutputWriter
                     VirusProfile profile = report.profile();
                     GenomeStats stats = profile != null ? profile.representativeStats() : null;
 
-                    row.set(VirusReportColumn.name, report.virusName().value());
+                    row.set(VirusReportColumn.name, report.virus().name());
                     row.set(VirusReportColumn.qcStatus, report.qcStatus().name());
                     row.set(VirusReportColumn.integrations, report.integrations());
                     row.setOrNull(
@@ -317,7 +317,7 @@ public class OutputWriter
                     row.set(VirusReportColumn.reported, report.isReported());
                     row.set(VirusReportColumn.clonality_status, report.clonalityStatus().name());
                     row.setOrNull(VirusReportColumn.copies_per_tumor_cell, report.copiesPerTumorCell());
-                    row.set(VirusReportColumn.virus_group, report.virusGroup().name());
+                    row.set(VirusReportColumn.virus_group, report.virus().group().name());
                 });
     }
 

@@ -8,15 +8,16 @@ import java.util.Map;
 import com.hartwig.hmftools.viridian.profiling.align.AllGenomesReadAlignments;
 import com.hartwig.hmftools.viridian.profiling.align.MatchedInterval;
 import com.hartwig.hmftools.viridian.profiling.align.ViralReadAlignment;
+import com.hartwig.hmftools.viridian.reference.Virus;
 import com.hartwig.hmftools.viridian.reference.VirusGenome;
 import com.hartwig.hmftools.viridian.reference.VirusGroup;
-import com.hartwig.hmftools.viridian.reference.VirusName;
 
 import org.junit.Test;
 
 public class GenomeStatsCalculatorTest
 {
-    private static final VirusGenome GENOME = new VirusGenome("v1", 20, new VirusName("Virus 1"), new VirusGroup("Group 1"));
+    private static final VirusGenome GENOME =
+            new VirusGenome("v1", 20, new Virus("Virus 1", new VirusGroup("Group 1")));
 
     // A read spanning a deletion aligns in two blocks: the skipped positions are not evidence the virus genome is
     // there.
