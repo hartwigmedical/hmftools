@@ -24,10 +24,13 @@ public class VirusReferenceTest
     private static final VirusGroup GROUP_BETA = new VirusGroup("Group Beta");
 
     // Three virus genomes: contigA alone in its group, contigB and contigC sharing a group.
-    private static final VirusInfo INFO_A = new VirusInfo("contigA", new VirusName("Virus Alpha"), GROUP_ALPHA);
-    private static final VirusInfo INFO_B = new VirusInfo("contigB", new VirusName("Virus Beta type 1"), GROUP_BETA);
-    private static final VirusInfo INFO_C = new VirusInfo("contigC", new VirusName("Virus Beta type 2"), GROUP_BETA);
-    private static final List<VirusInfo> INFO = List.of(INFO_A, INFO_B, INFO_C);
+    private static final VirusGenomeInfo INFO_A =
+            new VirusGenomeInfo("contigA", new VirusName("Virus Alpha"), GROUP_ALPHA);
+    private static final VirusGenomeInfo INFO_B =
+            new VirusGenomeInfo("contigB", new VirusName("Virus Beta type 1"), GROUP_BETA);
+    private static final VirusGenomeInfo INFO_C =
+            new VirusGenomeInfo("contigC", new VirusName("Virus Beta type 2"), GROUP_BETA);
+    private static final List<VirusGenomeInfo> INFO = List.of(INFO_A, INFO_B, INFO_C);
 
     private static final VirusGenome GENOME_A = new VirusGenome("contigA", 100, new VirusName("Virus Alpha"), GROUP_ALPHA);
     private static final VirusGenome GENOME_B = new VirusGenome("contigB", 200, new VirusName("Virus Beta type 1"), GROUP_BETA);
@@ -53,7 +56,7 @@ public class VirusReferenceTest
     @Test
     public void testJoinFastaAndInfoThrowsWhenContigHasNoInfoRow()
     {
-        List<VirusInfo> infoMissingC = List.of(INFO_A, INFO_B);
+        List<VirusGenomeInfo> infoMissingC = List.of(INFO_A, INFO_B);
         assertThrows(
                 UserInputError.class, () -> VirusReference.joinFastaAndInfo(dictionary("contigA", "contigB", "contigC"), infoMissingC));
     }
@@ -67,14 +70,14 @@ public class VirusReferenceTest
     @Test
     public void testLoadInfoRowsByContig() throws IOException
     {
-        assertEquals(INFO, VirusInfo.load(writeTsv(VALID_INFO_TSV)));
+        assertEquals(INFO, VirusGenomeInfo.load(writeTsv(VALID_INFO_TSV)));
     }
 
     @Test
     public void testLoadInfoThrowsOnDuplicateContig()
     {
         String duplicate = VALID_INFO_TSV + "contigA\tVirus Alpha\tGroup Alpha\n";
-        assertThrows(UserInputError.class, () -> VirusInfo.load(writeTsv(duplicate)));
+        assertThrows(UserInputError.class, () -> VirusGenomeInfo.load(writeTsv(duplicate)));
     }
 
     @Test
@@ -84,7 +87,7 @@ public class VirusReferenceTest
                 contig_name\tvirus_name
                 contigA\tVirus Alpha
                 """;
-        assertThrows(RuntimeException.class, () -> VirusInfo.load(writeTsv(noGroup)));
+        assertThrows(RuntimeException.class, () -> VirusGenomeInfo.load(writeTsv(noGroup)));
     }
 
     // Contig lengths are fixed per name so joined VirusGenome values are predictable.

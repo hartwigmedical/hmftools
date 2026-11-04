@@ -60,25 +60,26 @@ public class VirusReference
         return info;
     }
 
-    public static VirusReference load(String fastaFile, String infoTsvFile, String virusGroupInfoTsvFile)
+    public static VirusReference load(String virusGenomesFasta, String virusGenomesTsv, String virusGroupsTsv)
     {
-        List<VirusInfo> info = VirusInfo.load(infoTsvFile);
-        SAMSequenceDictionary dictionary = loadSequenceDictionary(fastaFile);
+        List<VirusGenomeInfo> info = VirusGenomeInfo.load(virusGenomesTsv);
+        SAMSequenceDictionary dictionary = loadSequenceDictionary(virusGenomesFasta);
         List<VirusGenome> genomes = joinFastaAndInfo(dictionary, info);
         Set<VirusGroup> groups = genomes.stream().map(VirusGenome::virusGroup).collect(toSet());
-        Map<VirusGroup, VirusGroupInfo> virusGroupInfo = VirusGroupInfo.load(virusGroupInfoTsvFile);
+        Map<VirusGroup, VirusGroupInfo> virusGroupInfo = VirusGroupInfo.load(virusGroupsTsv);
         if(!virusGroupInfo.keySet().equals(groups))
         {
-            throw new UserInputError("Virus group info groups do not match the virus reference groups");
+            throw new UserInputError(
+                    "Virus groups in the virus groups TSV do not match those in the virus genomes TSV");
         }
         return new VirusReference(genomes, dictionary, virusGroupInfo);
     }
 
     // Joins FASTA contigs to their info rows. Result in FASTA order.
-    static List<VirusGenome> joinFastaAndInfo(SAMSequenceDictionary dictionary, List<VirusInfo> info)
+    static List<VirusGenome> joinFastaAndInfo(SAMSequenceDictionary dictionary, List<VirusGenomeInfo> info)
     {
-        Map<String, VirusInfo> remainingInfo = new LinkedHashMap<>();
-        for(VirusInfo virusInfo : info)
+        Map<String, VirusGenomeInfo> remainingInfo = new LinkedHashMap<>();
+        for(VirusGenomeInfo virusInfo : info)
         {
             remainingInfo.put(virusInfo.contigName(), virusInfo);
         }
@@ -86,7 +87,7 @@ public class VirusReference
         for(SAMSequenceRecord sequence : dictionary.getSequences())
         {
             String contig = sequence.getSequenceName();
-            VirusInfo row = remainingInfo.remove(contig);
+            VirusGenomeInfo row = remainingInfo.remove(contig);
             if(row == null)
             {
                 throw new UserInputError(String.format("Virus reference contig has no info row: %s", contig));

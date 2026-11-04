@@ -83,7 +83,8 @@ public class ViridianApplication
         mConfig = config;
 
         LOGGER.info("Loading virus reference data");
-        mVirusReference = VirusReference.load(config.virusRefFile(), config.virusRefInfoFile(), config.virusGroupInfoFile());
+        mVirusReference = VirusReference.load(
+                config.virusGenomesFasta(), config.virusGenomesTsv(), config.virusGroupsTsv());
     }
 
     public void run() throws IOException
@@ -145,7 +146,7 @@ public class ViridianApplication
         if(mConfig.kmerFilterEnabled())
         {
             LOGGER.info("Building virus genome k-mer index");
-            kmerIndex = ViralKmerIndex.build(mConfig.virusRefFile());
+            kmerIndex = ViralKmerIndex.build(mConfig.virusGenomesFasta());
         }
 
         LOGGER.info("Extracting candidate viral reads from tumor BAM using read source {}", mConfig.candidateReadSource());

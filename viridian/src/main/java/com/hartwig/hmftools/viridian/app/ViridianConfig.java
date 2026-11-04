@@ -40,10 +40,10 @@ public record ViridianConfig(
         String sampleId,
         String tumorBam,
         String refGenomeFile,
-        String virusRefFile,
-        String virusRefInfoFile,
+        String virusGenomesFasta,
+        String virusGenomesTsv,
         String virusBwaIndexImage,
-        String virusGroupInfoFile,
+        String virusGroupsTsv,
         @Nullable String bwaLibPath,
         String esveeUnfilteredVcf,
         String purpleDir,
@@ -57,16 +57,16 @@ public record ViridianConfig(
         boolean kmerFilterEnabled
 )
 {
-    private static final String CFG_VIRUS_REF_FILE = "virus_ref";
-    private static final String DESC_VIRUS_REF_FILE = "Curated virus reference FASTA file";
-    private static final String CFG_VIRUS_REF_INFO_FILE = "virus_ref_info";
-    private static final String DESC_VIRUS_REF_INFO_FILE = "Virus reference info TSV";
+    private static final String CFG_VIRUS_GENOMES_FASTA = "virus_genomes_fasta";
+    private static final String DESC_VIRUS_GENOMES_FASTA = "Virus genomes FASTA";
+    private static final String CFG_VIRUS_GENOMES_TSV = "virus_genomes_tsv";
+    private static final String DESC_VIRUS_GENOMES_TSV = "Virus genomes TSV";
     private static final String CFG_VIRUS_BWA_INDEX_IMAGE = "virus_bwa_index_image";
     private static final String DESC_VIRUS_BWA_INDEX_IMAGE = "Virus reference BWA-MEM index GATK image file";
     private static final String CFG_ESVEE_UNFILTERED_VCF = "esvee_unfiltered_vcf";
     private static final String DESC_ESVEE_UNFILTERED_VCF = "ESVEE caller unfiltered VCF";
-    private static final String CFG_VIRUS_GROUP_INFO_FILE = "virus_group_info";
-    private static final String DESC_VIRUS_GROUP_INFO_FILE = "Virus group info TSV";
+    private static final String CFG_VIRUS_GROUPS_TSV = "virus_groups_tsv";
+    private static final String DESC_VIRUS_GROUPS_TSV = "Virus groups TSV";
     private static final String CFG_ALIGNMENT_BATCH_SIZE = "align_batch_size";
     private static final String DESC_ALIGNMENT_BATCH_SIZE = "Candidate reads submitted to BWA per alignment call";
     static final String CFG_CANDIDATE_READ_SOURCE = "candidate_read_source";
@@ -80,15 +80,15 @@ public record ViridianConfig(
 
     public static ViridianConfig fromConfigBuilder(final ConfigBuilder configBuilder)
     {
-        String virusRefFile = configBuilder.getValue(CFG_VIRUS_REF_FILE);
+        String virusGenomesFasta = configBuilder.getValue(CFG_VIRUS_GENOMES_FASTA);
         return new ViridianConfig(
                 configBuilder.getValue(SAMPLE),
                 configBuilder.getValue(TUMOR_BAM),
                 configBuilder.getValue(REF_GENOME),
-                virusRefFile,
-                configBuilder.getValue(CFG_VIRUS_REF_INFO_FILE),
-                configBuilder.getValue(CFG_VIRUS_BWA_INDEX_IMAGE, virusRefFile + ".img"),
-                configBuilder.getValue(CFG_VIRUS_GROUP_INFO_FILE),
+                virusGenomesFasta,
+                configBuilder.getValue(CFG_VIRUS_GENOMES_TSV),
+                configBuilder.getValue(CFG_VIRUS_BWA_INDEX_IMAGE, virusGenomesFasta + ".img"),
+                configBuilder.getValue(CFG_VIRUS_GROUPS_TSV),
                 configBuilder.getValue(BWA_LIB_PATH),
                 configBuilder.getValue(CFG_ESVEE_UNFILTERED_VCF),
                 configBuilder.getValue(PURPLE_DIR_CFG),
@@ -135,14 +135,14 @@ public record ViridianConfig(
         configBuilder.addConfigItem(SAMPLE, true, SAMPLE_DESC);
         configBuilder.addPath(TUMOR_BAM, true, TUMOR_BAM_DESC);
         addRefGenomeFile(configBuilder, true);
-        configBuilder.addPath(CFG_VIRUS_REF_FILE, true, DESC_VIRUS_REF_FILE);
-        configBuilder.addPath(CFG_VIRUS_REF_INFO_FILE, true, DESC_VIRUS_REF_INFO_FILE);
+        configBuilder.addPath(CFG_VIRUS_GENOMES_FASTA, true, DESC_VIRUS_GENOMES_FASTA);
+        configBuilder.addPath(CFG_VIRUS_GENOMES_TSV, true, DESC_VIRUS_GENOMES_TSV);
         configBuilder.addPath(CFG_VIRUS_BWA_INDEX_IMAGE, false, DESC_VIRUS_BWA_INDEX_IMAGE);
         configBuilder.addPath(BWA_LIB_PATH, false, BWA_LIB_PATH_DESC);
         configBuilder.addPath(CFG_ESVEE_UNFILTERED_VCF, true, DESC_ESVEE_UNFILTERED_VCF);
         configBuilder.addPath(PURPLE_DIR_CFG, true, PURPLE_DIR_DESC);
         configBuilder.addPath(BAM_METRICS_TUMOR_DIR_CFG, true, BAM_METRICS_TUMOR_DIR_DESC);
-        configBuilder.addPath(CFG_VIRUS_GROUP_INFO_FILE, true, DESC_VIRUS_GROUP_INFO_FILE);
+        configBuilder.addPath(CFG_VIRUS_GROUPS_TSV, true, DESC_VIRUS_GROUPS_TSV);
 
         configBuilder.addInteger(CFG_ALIGNMENT_BATCH_SIZE, DESC_ALIGNMENT_BATCH_SIZE, VIRAL_READ_ALIGNMENT_BATCH_SIZE_DEFAULT);
         configBuilder.addConfigItem(

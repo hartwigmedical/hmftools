@@ -76,7 +76,7 @@ public class VirusGroupInfoTest
 
     private static Path writeFile(String header, String... rows) throws IOException
     {
-        Path file = Files.createTempFile("virus_group_info", ".tsv");
+        Path file = Files.createTempFile("virus_groups", ".tsv");
         file.toFile().deleteOnExit();
         StringBuilder content = new StringBuilder(header).append('\n');
         Arrays.stream(rows).forEach(row -> content.append(row).append('\n'));

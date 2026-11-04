@@ -9,15 +9,15 @@ import com.hartwig.hmftools.common.utils.file.DelimFileReader;
 import com.hartwig.hmftools.viridian.common.UserInputError;
 
 // Per-virus-genome reference data.
-public record VirusInfo(
+public record VirusGenomeInfo(
         String contigName,
         VirusName virusName,
         VirusGroup virusGroup
 )
 {
-    public static List<VirusInfo> load(String tsvFile)
+    public static List<VirusGenomeInfo> load(String tsvFile)
     {
-        List<VirusInfo> result = new ArrayList<>();
+        List<VirusGenomeInfo> result = new ArrayList<>();
         Set<String> contigs = new HashSet<>();
         try(DelimFileReader reader = new DelimFileReader(tsvFile))
         {
@@ -29,7 +29,8 @@ public record VirusInfo(
                     throw new UserInputError("Duplicate contig_name: " + contig);
                 }
                 VirusGroup virusGroup = new VirusGroup(row.getString(Columns.virus_group));
-                VirusInfo virusInfo = new VirusInfo(contig, new VirusName(row.getString(Columns.virus_name)), virusGroup);
+                VirusName virusName = new VirusName(row.getString(Columns.virus_name));
+                VirusGenomeInfo virusInfo = new VirusGenomeInfo(contig, virusName, virusGroup);
                 result.add(virusInfo);
             }
         }
