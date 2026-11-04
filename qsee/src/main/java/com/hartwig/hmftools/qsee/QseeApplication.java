@@ -28,7 +28,7 @@ public class QseeApplication
         qseePlot.run();
     }
 
-    public static void main(String[] args){
+    public static void main(String[] args) {
         ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
         QseePrepConfig.registerConfig(configBuilder);
         QseePlotConfig.registerConfig(configBuilder);
