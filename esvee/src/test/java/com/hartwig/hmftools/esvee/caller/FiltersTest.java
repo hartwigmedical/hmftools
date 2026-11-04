@@ -24,6 +24,7 @@ import static com.hartwig.hmftools.esvee.assembly.AssemblyTestUtils.setIlluminaS
 import static com.hartwig.hmftools.esvee.caller.CallerApplication.isGermline;
 import static com.hartwig.hmftools.esvee.caller.CallerTestUtils.TEST_REF_ID;
 import static com.hartwig.hmftools.esvee.caller.CallerTestUtils.TEST_SAMPLE_ID;
+import static com.hartwig.hmftools.esvee.caller.CallerTestUtils.createSgl;
 import static com.hartwig.hmftools.esvee.caller.CallerTestUtils.createSv;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.INV_ADJACENT_MIN_UPS;
 import static com.hartwig.hmftools.esvee.caller.SvDataCache.buildBreakendMap;
@@ -113,9 +114,7 @@ public class FiltersTest
         // again for a SGL
         tumorAttributes.put(REF_DEPTH, 100);
 
-        var = createSv(
-                "01", CHR_1, null, 100, 0, ORIENT_FWD, ORIENT_REV, "",
-                null, referenceAttributes, tumorAttributes);
+        var = createSgl("01", CHR_1, 100, ORIENT_FWD, "", null, referenceAttributes, tumorAttributes);
 
         mVariantFilters.applyFilters(var);
 
@@ -124,9 +123,8 @@ public class FiltersTest
         Map<String,Object> commonAttributes = Maps.newHashMap();
         commonAttributes.put(LINE_SITE, true);
 
-        var = createSv(
-                "01", CHR_1, null, 100, 0, ORIENT_FWD, ORIENT_REV, "",
-                commonAttributes, referenceAttributes, tumorAttributes);
+        var = createSgl(
+                "01", CHR_1,100, ORIENT_FWD, "", commonAttributes, referenceAttributes, tumorAttributes);
 
         mVariantFilters.applyFilters(var);
 
@@ -172,9 +170,8 @@ public class FiltersTest
         commonAttributes.put(AVG_FRAG_LENGTH, 300);
         commonAttributes.put(TOTAL_FRAGS, 50);
 
-        var = createSv(
-                "01", CHR_1, null, 100, 0, ORIENT_FWD, ORIENT_REV, "",
-                commonAttributes, null, null);
+        var = createSgl(
+                "01", CHR_1, 100, ORIENT_FWD, "", commonAttributes, null, null);
 
         mVariantFilters.applyFilters(var);
 

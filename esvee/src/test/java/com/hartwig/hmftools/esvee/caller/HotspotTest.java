@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.INSALN;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
+import static com.hartwig.hmftools.esvee.caller.CallerTestUtils.createSgl;
 import static com.hartwig.hmftools.esvee.caller.CallerTestUtils.createSv;
 
 import static org.junit.Assert.assertFalse;
@@ -48,9 +49,8 @@ public class HotspotTest
         // SGLs
         Map<String,Object> commonAttributes = Maps.newHashMap();
 
-        var = createSv(
-                vcfId, CHR_1, null, 1050, 0, ORIENT_FWD, ORIENT_REV, "",
-                commonAttributes, Collections.emptyMap(), Collections.emptyMap());
+        var = createSgl(
+                vcfId, CHR_1, 1050, ORIENT_FWD, "", commonAttributes, Collections.emptyMap(), Collections.emptyMap());
 
         assertFalse(hotspotCache.isHotspotVariant(var));
 
@@ -58,9 +58,18 @@ public class HotspotTest
 
         commonAttributes.put(INSALN, altAlignment.vcfString());
 
-        var = createSv(
-                vcfId, CHR_1, null, 1050, 0, ORIENT_FWD, ORIENT_REV, "",
-                commonAttributes, Collections.emptyMap(), Collections.emptyMap());
+        var = createSgl(
+                vcfId, CHR_1, 1050, ORIENT_FWD, "", commonAttributes, Collections.emptyMap(), Collections.emptyMap());
+
+        assertTrue(hotspotCache.isHotspotVariant(var));
+
+        // reversed
+        altAlignment = new AlternativeAlignment(CHR_1, 1500, Orientation.FORWARD, "100M", 0);
+
+        commonAttributes.put(INSALN, altAlignment.vcfString());
+
+        var = createSgl(
+                vcfId, CHR_2, 25000, ORIENT_REV, "", commonAttributes, Collections.emptyMap(), Collections.emptyMap());
 
         assertTrue(hotspotCache.isHotspotVariant(var));
     }

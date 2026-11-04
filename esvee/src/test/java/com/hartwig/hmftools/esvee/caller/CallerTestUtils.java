@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SPLIT_FRAGS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.TOTAL_FRAGS;
 import static com.hartwig.hmftools.common.sv.VariantAltInsertCoords.formPairedAltString;
+import static com.hartwig.hmftools.common.sv.VariantAltInsertCoords.formSingleAltString;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.QUAL;
 
 import java.util.Collections;
@@ -55,7 +56,6 @@ public class CallerTestUtils
         String ref = "A";
 
         String altStart = formPairedAltString(ref, insSeq, chrEnd, posEnd, orientStart, orientEnd);
-        String altEnd = formPairedAltString(ref, insSeq, chrStart, posStart, orientEnd, orientStart);
 
         String vcfIdStart = vcfId + "_start";
         String vcfIdEnd = vcfId + "_end";
@@ -65,16 +65,31 @@ public class CallerTestUtils
 
         GenotypeIds genotypeIds = createGenotypeIds();
 
-        if(chrEnd == null)
-        {
-            StructuralVariant sv = SV_FACTOR.createSingleBreakend(contextStart);
-            return new Variant(sv, genotypeIds);
-        }
+        String altEnd = formPairedAltString(ref, insSeq, chrStart, posStart, orientEnd, orientStart);
 
         VariantContext contextEnd = createContext(
                 vcfIdEnd, chrEnd, posEnd, ref, altEnd, vcfIdStart, attributes, refAttributes, tumorAttributes);
 
         StructuralVariant sv = SV_FACTOR.createSV(contextStart, contextEnd);
+        return new Variant(sv, genotypeIds);
+    }
+
+    public static Variant createSgl(
+            final String vcfId, final String chromosome, int position, byte orientation, final String insSeq,
+            final Map<String,Object> attributes, final Map<String,Object> refAttributes, final Map<String,Object> tumorAttributes)
+    {
+        String ref = "A";
+
+        String altStr = formSingleAltString(ref, insSeq, orientation);
+
+        String vcfIdStart = vcfId + "_start";
+
+        VariantContext contextStart = createContext(
+                vcfIdStart, chromosome, position, ref, altStr, "", attributes, refAttributes, tumorAttributes);
+
+        GenotypeIds genotypeIds = createGenotypeIds();
+
+        StructuralVariant sv = SV_FACTOR.createSingleBreakend(contextStart);
         return new Variant(sv, genotypeIds);
     }
 

@@ -78,8 +78,11 @@ public class HotspotCache
         {
             for(KnownHotspot region : regions)
             {
-                if(region.matches(chrStart, altAlignment.Chromosome, posStart, altAlignment.Position, orientStart, altAlignment.Orient))
+                if(region.matches(chrStart, altAlignment.Chromosome, posStart, altAlignment.Position, orientStart, altAlignment.Orient)
+                || region.matches(altAlignment.Chromosome, chrStart, altAlignment.Position, posStart, altAlignment.Orient, orientStart))
+                {
                     return true;
+                }
             }
         }
 
@@ -130,30 +133,7 @@ public class HotspotCache
 
                 KnownHotspot knownHotspot = new KnownHotspot(regionStart, orientStart, regionEnd, orientEnd, geneInfo);
 
-                // add to both chromosome lists
-                List<KnownHotspot> svRegions = mHotspotRegions.get(chrStart);
-
-                if(svRegions == null)
-                {
-                    svRegions = Lists.newArrayList();
-                    mHotspotRegions.put(chrStart, svRegions);
-                }
-
-                svRegions.add(knownHotspot);
-
-                if(!chrStart.equals(chrEnd))
-                {
-                    svRegions = mHotspotRegions.get(chrEnd);
-
-                    if(svRegions == null)
-                    {
-                        svRegions = Lists.newArrayList();
-                        mHotspotRegions.put(chrEnd, svRegions);
-                    }
-
-                    svRegions.add(knownHotspot);
-                }
-
+                addHotspot(knownHotspot);
                 ++itemCount;
 
                 line = fileReader.readLine();
@@ -181,6 +161,17 @@ public class HotspotCache
         {
             hotspots = Lists.newArrayList();
             mHotspotRegions.put(hotspot.RegionStart.Chromosome, hotspots);
+        }
+
+        hotspots.add(hotspot);
+
+        // add to both chromosome lists
+        hotspots = mHotspotRegions.get(hotspot.RegionEnd.Chromosome);
+
+        if(hotspots == null)
+        {
+            hotspots = Lists.newArrayList();
+            mHotspotRegions.put(hotspot.RegionEnd.Chromosome, hotspots);
         }
 
         hotspots.add(hotspot);
