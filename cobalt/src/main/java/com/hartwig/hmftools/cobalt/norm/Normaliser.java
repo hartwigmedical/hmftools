@@ -78,9 +78,12 @@ public class Normaliser
 
             for(RegionData regionData : regions)
             {
+                if(regionData.mappability() < MAPPABILITY_THRESHOLD)
+                    continue;
+
                 SampleRegionData sampleRegionData = regionData.getSampleData(sampleIndex);
 
-                if(!useRegion(regionData, sampleRegionData))
+                if(!useSampleRegionData(sampleRegionData))
                 {
                     sampleRegionData.markInvalid();
                     continue;
@@ -148,11 +151,8 @@ public class Normaliser
         return HumanChromosome.fromString(chromosome).isAutosome();
     }
 
-    public static boolean useRegion(final RegionData regionData, final SampleRegionData sampleRegionData)
+    public static boolean useSampleRegionData(final SampleRegionData sampleRegionData)
     {
-        if(regionData.mappability() < MAPPABILITY_THRESHOLD)
-            return false;
-
         if(sampleRegionData.ReadDepth < 0)
             return false;
 
@@ -312,7 +312,7 @@ public class Normaliser
         double filteredMean = filteredTotal / filteredCount;
 
         // Region has filtered median ratio over our MIN_ENRICHMENT_RATIO of 0.1
-        if(filteredMedian < 0.1 * MIN_ENRICHMENT_RATIO)
+        if(filteredMedian < MIN_ENRICHMENT_RATIO)
             return false;
 
         double varianceTotal = 0;
