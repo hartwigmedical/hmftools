@@ -13,7 +13,7 @@ import com.hartwig.hmftools.viridian.profiling.common.GenomeStats;
 import com.hartwig.hmftools.viridian.profiling.common.SummaryStats;
 import com.hartwig.hmftools.viridian.reference.VirusGenome;
 
-// Assembles per-genome read support information and computes read voting used for representative selection.
+// Assembles per-genome read support information, particularly read attribution counts used for representative selection.
 public class GenomeSupportCalculator
 {
     private final double mCorrectBaseProbability;
@@ -25,19 +25,25 @@ public class GenomeSupportCalculator
 
     public List<GenomeSupport> calculate(AllGenomesReadAlignments alignments, Map<VirusGenome, GenomeStats> genomeStats)
     {
-        Map<VirusGenome, Double> readVotes = calculateReadVotes(alignments.store().byRead().values());
+        Collection<Map<VirusGenome, ViralReadAlignment>> reads = alignments.store().byRead().values();
+        Map<VirusGenome, Double> readVotes = calculateReadVotes(reads);
+        Map<VirusGenome, Integer> explainedReads = calculateExplainedReads(reads);
         Map<VirusGenome, List<Integer>> alignmentCounts = alignments.metrics().alignmentCountsByGenome();
 
         return genomeStats.values().stream()
                 .map(stats -> createGenomeSupport(
                         stats, readVotes.getOrDefault(stats.genome(), 0.0),
+                        explainedReads.getOrDefault(stats.genome(), 0),
                         alignmentCounts.getOrDefault(stats.genome(), List.of())))
                 .toList();
     }
 
-    // A read's vote splits across the virus genomes it hits by how well each explains it: every extra base a genome
-    // fails to explain multiplies its share by the (pessimistic) chance a base is right, so the closest genome wins
-    // most.
+    // Read voting:
+    // Each read gives total 1 vote, split between its aligned genomes according to edit distance.
+    // As edit distance to the genome increases, the vote to that genome decreases (distributed to the other aligned genomes).
+    // Example:
+    //   If a read aligned to 2 genomes, one perfectly and one with a mismatch, then the votes would be 0.8 and 0.2.
+    // Downside is that with many similar genomes, the vote counts are diluted, so all genomes appear to be equally good.
     private Map<VirusGenome, Double> calculateReadVotes(Collection<Map<VirusGenome, ViralReadAlignment>> reads)
     {
         Map<VirusGenome, Double> votes = new HashMap<>();
@@ -60,13 +66,34 @@ public class GenomeSupportCalculator
         return Math.pow(mCorrectBaseProbability, divergence - minDivergence);
     }
 
-    private static GenomeSupport createGenomeSupport(GenomeStats stats, double readVotes, List<Integer> alignmentCounts)
+    // Explained reads:
+    // For each genome, counts the reads whose overall best alignment is to that genome.
+    // A read with tied best alignments counts for each tied genome, so unlike read votes, the count does not dilute
+    // with many similar genomes.
+    private static Map<VirusGenome, Integer> calculateExplainedReads(Collection<Map<VirusGenome, ViralReadAlignment>> reads)
+    {
+        Map<VirusGenome, Integer> explainedReads = new HashMap<>();
+        for(Map<VirusGenome, ViralReadAlignment> readAlignments : reads)
+        {
+            // Find the lowest divergence, i.e. best alignment.
+            int minDivergence = readAlignments.values().stream()
+                    .mapToInt(ViralReadAlignment::divergence).min().orElseThrow();
+            // Get all the genomes which align equally well as the best.
+            readAlignments.entrySet().stream()
+                    .filter(entry -> entry.getValue().divergence() == minDivergence)
+                    .forEach(entry -> explainedReads.merge(entry.getKey(), 1, Integer::sum));
+        }
+        return explainedReads;
+    }
+
+    private static GenomeSupport createGenomeSupport(
+            GenomeStats stats, double readVotes, int explainedReads, List<Integer> alignmentCounts)
     {
         int multiAlignReads = (int) alignmentCounts.stream().filter(count -> count > 1).count();
 
         // Without retained reads there is no distribution to summarise.
         SummaryStats alignmentsPerRead = alignmentCounts.isEmpty() ? null : SummaryStats.from(alignmentCounts);
 
-        return new GenomeSupport(stats, multiAlignReads, alignmentsPerRead, readVotes);
+        return new GenomeSupport(stats, multiAlignReads, alignmentsPerRead, readVotes, explainedReads);
     }
 }

@@ -44,13 +44,13 @@ public class GenomeSupportCalculatorTest
         int[] v1Depth = { 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
         GenomeSupport expectedV1 = new GenomeSupport(
                 new GenomeStats(V1, 2, 0, 10, SummaryStats.from(v1Depth), SummaryStats.from(new int[] { 10, 8 })),
-                1, SummaryStats.from(new int[] { 2, 1 }), 2.0);
+                1, SummaryStats.from(new int[] { 2, 1 }), 2.0, 2);
         assertEquals(expectedV1, get(stats, V1));
 
         int[] v2Depth = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
         GenomeSupport expectedV2 = new GenomeSupport(
                 new GenomeStats(V2, 1, 0, 10, SummaryStats.from(v2Depth), SummaryStats.from(new int[] { 9 })),
-                0, SummaryStats.from(new int[] { 1 }), 1.0);
+                0, SummaryStats.from(new int[] { 1 }), 1.0, 1);
         assertEquals(expectedV2, get(stats, V2));
     }
 
@@ -88,6 +88,29 @@ public class GenomeSupportCalculatorTest
     }
 
     @Test
+    public void testComputeExplainedReadsCountsTiedReadForEachGenome()
+    {
+        VirusGenome v1b = new VirusGenome("v1b", 20, new Virus("Virus 1B", V1.virusGroup()));
+        List<ViralReadAlignment> alignments = List.of(
+                alignment("r1", V1, 1, 10, 10, 0),
+                alignment("r1", v1b, 1, 10, 10, 0),    // Tied, so counts for both
+                alignment("r2", V1, 1, 10, 10, 0),
+                alignment("r2", v1b, 1, 10, 8, 2),     // v1 fits better
+                alignment("r3", v1b, 1, 10, 10, 0),    // Only on v1b
+                alignment("r4", V1, 1, 10, 9, 1),
+                alignment("r4", V2, 1, 10, 9, 1),      // Tied across virus groups, so counts for both
+                alignment("r5", V1, 1, 10, 7, 3),
+                alignment("r5", V2, 1, 10, 10, 0));    // v2 fits better
+
+        List<GenomeSupport> stats = compute(alignments, READ_VOTE_CORRECT_BASE_PROBABILITY);
+
+        // v1 explains r1, r2 and r4. v1b explains r1 and r3. v2 explains r4 and r5.
+        assertEquals(3, get(stats, V1).explainedReads());
+        assertEquals(2, get(stats, v1b).explainedReads());
+        assertEquals(2, get(stats, V2).explainedReads());
+    }
+
+    @Test
     public void testComputeDropsAlignmentsClippingOverGenomeEnds()
     {
         List<ViralReadAlignment> alignments = List.of(
@@ -114,7 +137,7 @@ public class GenomeSupportCalculatorTest
         List<GenomeSupport> stats = compute(alignments, READ_VOTE_CORRECT_BASE_PROBABILITY);
 
         GenomeSupport expected = new GenomeSupport(
-                new GenomeStats(V1, 0, 2, 0, SummaryStats.from(new int[20]), null), 0, null, 0.0);
+                new GenomeStats(V1, 0, 2, 0, SummaryStats.from(new int[20]), null), 0, null, 0.0, 0);
         assertEquals(expected, get(stats, V1));
     }
 

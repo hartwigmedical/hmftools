@@ -71,6 +71,7 @@ public class OutputWriter
                     row.setOrNull(
                             GenomeSupportColumn.vote_fraction,
                             fraction(support.readVotes(), groupVotes.get(genome.virusGroup())));
+                    row.set(GenomeSupportColumn.explained_reads, support.explainedReads());
                     row.set(GenomeSupportColumn.is_representative, representativeGenomes.contains(genome));
                 });
     }
@@ -86,6 +87,7 @@ public class OutputWriter
         aligned_reads,
         read_votes,
         vote_fraction,
+        explained_reads,
         multi_align_reads,
         origin_clipped_reads
     }

@@ -47,7 +47,7 @@ public class RepresentativeGenomeSelectorTest
     {
         // H1's only reads clipped over its origin and were dropped.
         SummaryStats noDepth = SummaryStats.from(new int[LENGTH]);
-        GenomeSupport noReads = new GenomeSupport(new GenomeStats(H1, 0, 2, 0, noDepth, null), 0, null, 0.0);
+        GenomeSupport noReads = new GenomeSupport(new GenomeStats(H1, 0, 2, 0, noDepth, null), 0, null, 0.0, 0);
 
         List<RepresentativeSelection> selections = RepresentativeGenomeSelector.select(List.of(withReads(W1, 10), noReads));
 
@@ -68,6 +68,6 @@ public class RepresentativeGenomeSelectorTest
     private static GenomeSupport withReads(VirusGenome genome, double votes)
     {
         SummaryStats filler = SummaryStats.from(new int[] { 1 });
-        return new GenomeSupport(new GenomeStats(genome, 100, 0, LENGTH / 2, filler, filler), 0, filler, votes);
+        return new GenomeSupport(new GenomeStats(genome, 100, 0, LENGTH / 2, filler, filler), 0, filler, votes, 1);
     }
 }

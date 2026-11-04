@@ -15,8 +15,13 @@ public record GenomeSupport(
         // Alignments to this virus genome per read. Theoretically can be > 1. Null only when every alignment was
         // origin clipped.
         @Nullable SummaryStats alignmentsPerRead,
-        // Read attribution taking into account alignment edit distance (divergence).
-        double readVotes)
+        // Read attribution taking into account alignment edit distance.
+        // Each read gives total 1 vote, spread across its aligned genomes by edit distance.
+        // A genome with many votes has many aligned reads.
+        double readVotes,
+        // Reads whose best alignment, among all genomes, is to this genome.
+        // A read counts towards multiple genomes if its alignments are tied.
+        int explainedReads)
 {
     public VirusGenome genome()
     {
