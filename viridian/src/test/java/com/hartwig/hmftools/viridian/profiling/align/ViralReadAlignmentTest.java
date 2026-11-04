@@ -124,7 +124,7 @@ public class ViralReadAlignmentTest
 
     private static ViralReadAlignment best(ViralReadAlignment... alignments)
     {
-        return Stream.of(alignments).min(ViralReadAlignment.BEST_FIT_FIRST).orElseThrow();
+        return Stream.of(alignments).min(ViralReadAlignment.BEST_FIRST_TOTAL_ORDER).orElseThrow();
     }
 
     // An unclipped alignment, so its divergence is all mismatches.

@@ -54,7 +54,7 @@ public record AllGenomesReadAlignments(
 
         alignmentsByReadGenome.forEach((readGenome, readGenomeAlignments) ->
         {
-            retained.add(readGenomeAlignments.stream().min(ViralReadAlignment.BEST_FIT_FIRST).orElseThrow());
+            retained.add(readGenomeAlignments.stream().min(ViralReadAlignment.BEST_FIRST_TOTAL_ORDER).orElseThrow());
             alignmentCountsByGenome
                     .computeIfAbsent(readGenome.genome(), k -> new ArrayList<>())
                     .add(readGenomeAlignments.size());

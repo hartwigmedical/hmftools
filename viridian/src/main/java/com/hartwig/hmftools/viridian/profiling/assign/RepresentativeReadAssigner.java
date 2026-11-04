@@ -51,7 +51,7 @@ public class RepresentativeReadAssigner
         // Tie-break by genome for determinism.
         // But not expecting that a read will support multiple representative genomes.
         Comparator<ViralReadAlignment> alignmentComparator =
-                ViralReadAlignment.BEST_FIT_FIRST.thenComparing(ViralReadAlignment::genome);
+                ViralReadAlignment.BEST_FIRST_TOTAL_ORDER.thenComparing(ViralReadAlignment::genome);
 
         Map<ReadId, ViralReadAlignment> assignmentsByRead = new LinkedHashMap<>();
         int multiRepReads = 0;
@@ -70,7 +70,7 @@ public class RepresentativeReadAssigner
             if(candidates.size() > 1)
             {
                 ++multiRepReads;
-                if(ViralReadAlignment.BEST_FIT_FIRST.compare(candidates.get(0), candidates.get(1)) == 0)
+                if(ViralReadAlignment.BEST_FIRST_TOTAL_ORDER.compare(candidates.get(0), candidates.get(1)) == 0)
                 {
                     // Not only does this read support two representatives, but they are indistinguishable.
                     ++multiRepTiedReads;

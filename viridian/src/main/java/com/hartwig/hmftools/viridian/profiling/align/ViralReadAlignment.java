@@ -87,7 +87,7 @@ public record ViralReadAlignment(
 
     // Sort primarily by divergence because we are mostly interested in per-base difference.
     // Aligner score is not the best fit.
-    public static final Comparator<ViralReadAlignment> BEST_FIT_FIRST = Comparator
+    public static final Comparator<ViralReadAlignment> BEST_FIRST_TOTAL_ORDER = Comparator
             .comparingInt(ViralReadAlignment::divergence)
             .thenComparing(ViralReadAlignment::alignerScore, Comparator.reverseOrder())
             .thenComparingInt(ViralReadAlignment::alignmentStart)
