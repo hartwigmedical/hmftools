@@ -69,7 +69,8 @@ public class OutputWriter
                     writeSummaryStats(row, ALIGNER_SCORE_STATS_COLUMNS, stats.alignerScore());
 
                     row.setOrNull(
-                            GenomeSupportColumn.vote_share, share(support.readVotes(), groupVotes.get(genome.virusGroup())));
+                            GenomeSupportColumn.vote_fraction,
+                            fraction(support.readVotes(), groupVotes.get(genome.virusGroup())));
                     row.set(GenomeSupportColumn.is_representative, representativeGenomes.contains(genome));
                 });
     }
@@ -84,7 +85,7 @@ public class OutputWriter
         coverage,
         aligned_reads,
         read_votes,
-        vote_share,
+        vote_fraction,
         multi_align_reads,
         origin_clipped_reads
     }
@@ -168,7 +169,7 @@ public class OutputWriter
     }
 
     @Nullable
-    private static Double share(double votes, double total)
+    private static Double fraction(double votes, double total)
     {
         return total > 0 ? votes / total : null;
     }
