@@ -252,6 +252,9 @@ public class SomaticPurityEstimator
 
         double rawBqrErrorRate = BqrAdjustment.calcErrorRate(filteredBqrData);
 
+        // the BQR look-up covers all alts, whereas each variant below calculates a CN-adjusted rate just for its alt
+        rawBqrErrorRate /= 3;
+
         FragmentTotals fragmentTotals = new FragmentTotals();
 
         double depthPerCnWeightedErrorRate = 0;
