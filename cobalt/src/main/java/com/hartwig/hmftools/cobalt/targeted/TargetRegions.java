@@ -7,9 +7,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.cobalt.calculations.BamRatio;
 import com.hartwig.hmftools.cobalt.normalisers.NoOpReadDepthStatisticsNormaliser;
 import com.hartwig.hmftools.cobalt.normalisers.ReadDepthStatisticsNormaliser;
@@ -31,14 +35,51 @@ public class TargetRegions implements CobaltScope
         mChrEnrichments = new HashMap<>();
     }
 
-    public void loadNormalisationFile(final String filename, final RefGenomeVersion refGenomeVersion)
+    public static List<TargetRegions> loadNormalisationFile(final String filename, final RefGenomeVersion refGenomeVersion)
     {
         RefGenomeCoordinates refGenomeCoordinates = RefGenomeCoordinates.refGenomeCoordinates(refGenomeVersion);
-        ListMultimap<HumanChromosome, TargetRegionEnrichment> chrEnrichmentMap = TargetRegionEnrichment.loadEnrichmentFile(filename);
-        addEnrichmentData(chrEnrichmentMap, refGenomeCoordinates.Lengths);
+
+        Set<String> panelLabels = Sets.newHashSet();
+
+        ListMultimap<HumanChromosome, TargetRegionEnrichment> chrEnrichmentMap = TargetRegionEnrichment.loadEnrichmentFile(
+                filename, panelLabels);
+
+        List<TargetRegions> targetRegionsList = Lists.newArrayList();
+
+        if(panelLabels.size() < 2)
+        {
+            TargetRegions targetRegions = new TargetRegions();
+            targetRegions.addNormalisationMap(chrEnrichmentMap, refGenomeCoordinates.Lengths);
+            targetRegionsList.add(targetRegions);
+        }
+        else
+        {
+            CB_LOGGER.info("loading normalisation for {} panels: {}", panelLabels.size(), panelLabels);
+
+            // use the label to split the enrichment data
+            for(String panelLabel : panelLabels)
+            {
+                TargetRegions targetRegions = new TargetRegions();
+                targetRegionsList.add(targetRegions);
+
+                ListMultimap<HumanChromosome, TargetRegionEnrichment> panelEnrichmentMap = ArrayListMultimap.create();
+
+                for(TargetRegionEnrichment regionEnrichment : chrEnrichmentMap.values())
+                {
+                    if(regionEnrichment.PanelLabel.equals(panelLabel))
+                    {
+                        panelEnrichmentMap.put(regionEnrichment.Chromosome, regionEnrichment);
+                    }
+                }
+
+                targetRegions.addNormalisationMap(panelEnrichmentMap, refGenomeCoordinates.Lengths);
+            }
+        }
+
+        return targetRegionsList;
     }
 
-    private void addEnrichmentData(
+    protected void addEnrichmentData(
             final ListMultimap<HumanChromosome, TargetRegionEnrichment> chrEnrichmentMap, final Map<Chromosome,Integer> chrLengths)
     {
         for(HumanChromosome chromosome : chrEnrichmentMap.keySet())

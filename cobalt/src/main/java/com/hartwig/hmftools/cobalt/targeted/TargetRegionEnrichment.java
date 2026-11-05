@@ -1,11 +1,9 @@
 package com.hartwig.hmftools.cobalt.targeted;
 
+import static java.lang.Double.NaN;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.cobalt.CobaltConfig.CB_LOGGER;
-import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
-import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POS_END;
-import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POS_START;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 
@@ -16,6 +14,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.StringJoiner;
 
 import com.google.common.collect.ArrayListMultimap;
@@ -27,15 +26,15 @@ public class TargetRegionEnrichment
     public final HumanChromosome Chromosome;
     public final int Position;
     public final double Enrichment;
+    public final String PanelLabel;
 
-    public TargetRegionEnrichment(final HumanChromosome chromosome, final int position, final double enrichment)
+    public TargetRegionEnrichment(final HumanChromosome chromosome, final int position, final double enrichment, final String label)
     {
         Chromosome = chromosome;
         Position = position;
         Enrichment = enrichment;
+        PanelLabel = label;
     }
-
-    public boolean isValid() { return !Double.isNaN(Enrichment) && Enrichment > 0; }
 
     @Override
     public boolean equals(final Object o)
@@ -67,6 +66,8 @@ public class TargetRegionEnrichment
         RelativeEnrichment;
     }
 
+    private static final String PANEL_LABEL = "PanelLabel";
+
     public static String header()
     {
         StringJoiner sj = new StringJoiner(TSV_DELIM);
@@ -83,7 +84,8 @@ public class TargetRegionEnrichment
         return sj.toString();
     }
 
-    public static ListMultimap<HumanChromosome,TargetRegionEnrichment> loadEnrichmentFile(final String filename)
+    public static ListMultimap<HumanChromosome,TargetRegionEnrichment> loadEnrichmentFile(
+            final String filename, final Set<String> panelLabels)
     {
         ListMultimap<HumanChromosome, TargetRegionEnrichment> result = ArrayListMultimap.create();
 
@@ -98,6 +100,7 @@ public class TargetRegionEnrichment
             int chrIndex = fieldsIndexMap.getOrDefault(Columns.Chromosome.toString(), 0);
             int posIndex = fieldsIndexMap.getOrDefault(Columns.Position.toString(), 1);
             int enrichmentIndex = fieldsIndexMap.getOrDefault(Columns.RelativeEnrichment.toString(), 2);
+            Integer panelLabelIndex = fieldsIndexMap.get(PANEL_LABEL);
 
             for(String line : lines)
             {
@@ -105,8 +108,15 @@ public class TargetRegionEnrichment
 
                 HumanChromosome chromosome = HumanChromosome.fromString(values[chrIndex]);
 
-                result.put(chromosome, new TargetRegionEnrichment(
-                        chromosome, Integer.parseInt(values[posIndex]), Double.parseDouble(values[enrichmentIndex])));
+                int position = Integer.parseInt(values[posIndex]);
+
+                double enrichment = values[enrichmentIndex].equals("NA") ? NaN : Double.parseDouble(values[enrichmentIndex]);
+                String panelLabel = panelLabelIndex != null ? values[panelLabelIndex] : "";
+
+                if(panelLabelIndex != null)
+                    panelLabels.add(panelLabel);
+
+                result.put(chromosome, new TargetRegionEnrichment(chromosome, position, enrichment, panelLabel));
             }
 
             CB_LOGGER.info("loaded {} target-panel norm regions from file({})", result.size(), filename);
