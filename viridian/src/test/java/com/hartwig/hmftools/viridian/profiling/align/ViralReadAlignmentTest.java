@@ -39,7 +39,7 @@ public class ViralReadAlignmentTest
     @Test
     public void testFromExtractsFieldsAndCountsClipsInDivergence()
     {
-        ViralReadAlignment alignment = ViralReadAlignment.from(record(30, "40S60M", 60, 1, "30A29"), REFERENCE);
+        ViralReadAlignment alignment = fromRecord(record(30, "40S60M", 60, 1, "30A29"));
 
         assertEquals("v1", alignment.genome().contigName());
         assertEquals(30, alignment.alignmentStart());
@@ -58,14 +58,14 @@ public class ViralReadAlignmentTest
 
         List<MatchedInterval> expected = List.of(
                 new MatchedInterval(30, 4), new MatchedInterval(35, 15), new MatchedInterval(52, 3), new MatchedInterval(56, 6));
-        assertEquals(expected, ViralReadAlignment.from(record, REFERENCE).matchedIntervals());
+        assertEquals(expected, fromRecord(record).matchedIntervals());
     }
 
     @Test
     public void testFromThrowsWhenMdMismatchOutsideCigarAlignedBases()
     {
         SAMRecord record = record(30, "20M2D10M", 60, 3, "20^AC10G");
-        assertThrows(IllegalStateException.class, () -> ViralReadAlignment.from(record, REFERENCE));
+        assertThrows(IllegalArgumentException.class, () -> fromRecord(record));
     }
 
     @Test
@@ -73,32 +73,32 @@ public class ViralReadAlignmentTest
     {
         // A clip projecting past a virus genome end straddles the circular origin.
         assertTrue(
-                ViralReadAlignment.from(record(30, "40S60M", 60, 0, "60"), REFERENCE).clipsOverGenomeEnd());    // left clip projects to -10
-        assertTrue(ViralReadAlignment.from(record(141, "60M40S", 60, 0, "60"), REFERENCE)
+                fromRecord(record(30, "40S60M", 60, 0, "60")).clipsOverGenomeEnd());    // left clip projects to -10
+        assertTrue(fromRecord(record(141, "60M40S", 60, 0, "60"))
                 .clipsOverGenomeEnd());   // right clip projects to 240
         assertFalse(
-                ViralReadAlignment.from(record(100, "40S60M", 60, 0, "60"), REFERENCE).clipsOverGenomeEnd());  // left clip projects to 60
+                fromRecord(record(100, "40S60M", 60, 0, "60")).clipsOverGenomeEnd());  // left clip projects to 60
     }
 
     @Test
     public void testFromThrowsWhenAlignmentScoreMissing()
     {
         SAMRecord record = record(30, "60M", null, 0, "60");
-        assertThrows(IllegalStateException.class, () -> ViralReadAlignment.from(record, REFERENCE));
+        assertThrows(IllegalStateException.class, () -> fromRecord(record));
     }
 
     @Test
     public void testFromThrowsWhenEditDistanceMissing()
     {
         SAMRecord record = record(30, "60M", 60, null, "60");
-        assertThrows(IllegalStateException.class, () -> ViralReadAlignment.from(record, REFERENCE));
+        assertThrows(IllegalStateException.class, () -> fromRecord(record));
     }
 
     @Test
     public void testFromThrowsWhenMismatchesAndDeletionsMissing()
     {
         SAMRecord record = record(30, "60M", 60, 0, null);
-        assertThrows(IllegalStateException.class, () -> ViralReadAlignment.from(record, REFERENCE));
+        assertThrows(IllegalStateException.class, () -> fromRecord(record));
     }
 
     @Test
@@ -122,6 +122,11 @@ public class ViralReadAlignmentTest
         assertEquals(stronger, best(weaker, stronger));
     }
 
+    private static ViralReadAlignment fromRecord(SAMRecord record)
+    {
+        return new AllGenomesReadAlignments.AlignmentDecoder(REFERENCE).decode(record);
+    }
+
     private static ViralReadAlignment best(ViralReadAlignment... alignments)
     {
         return Stream.of(alignments).min(ViralReadAlignment.BEST_FIRST_TOTAL_ORDER).orElseThrow();
@@ -131,8 +136,8 @@ public class ViralReadAlignmentTest
     private static ViralReadAlignment alignment(int start, int divergence, int alignerScore)
     {
         return new ViralReadAlignment(
-                ReadId.parse("r1"), GENOME, start, start + ALIGNMENT_LENGTH - 1, ALIGNMENT_LENGTH + "M", 0, 0, alignerScore, divergence,
-                List.of(new MatchedInterval(start, ALIGNMENT_LENGTH)));
+                ReadId.parse("r1"), GENOME, start, TextCigarCodec.decode(ALIGNMENT_LENGTH + "M"),
+                alignerScore, divergence, new int[0]);
     }
 
     private static SAMRecord record(

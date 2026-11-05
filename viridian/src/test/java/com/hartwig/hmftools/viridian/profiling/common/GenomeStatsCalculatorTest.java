@@ -6,13 +6,14 @@ import java.util.List;
 import java.util.Map;
 
 import com.hartwig.hmftools.viridian.profiling.align.AllGenomesReadAlignments;
-import com.hartwig.hmftools.viridian.profiling.align.MatchedInterval;
 import com.hartwig.hmftools.viridian.profiling.align.ViralReadAlignment;
 import com.hartwig.hmftools.viridian.reference.Virus;
 import com.hartwig.hmftools.viridian.reference.VirusGenome;
 import com.hartwig.hmftools.viridian.reference.VirusGroup;
 
 import org.junit.Test;
+
+import htsjdk.samtools.TextCigarCodec;
 
 public class GenomeStatsCalculatorTest
 {
@@ -25,8 +26,7 @@ public class GenomeStatsCalculatorTest
     public void testCalculateDeletionSpannedPositionsAreNotCovered()
     {
         ViralReadAlignment read = new ViralReadAlignment(
-                ReadId.parse("r1/1"), GENOME, 1, 15, "8M2D5M", 0, 0, 40, 2,
-                List.of(new MatchedInterval(1, 8), new MatchedInterval(11, 5)));
+                ReadId.parse("r1/1"), GENOME, 1, TextCigarCodec.decode("8M2D5M"), 40, 2, new int[0]);
 
         int[] depth = { 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0 };
         GenomeStats expected = new GenomeStats(
@@ -50,7 +50,7 @@ public class GenomeStatsCalculatorTest
 
     private static Map<VirusGenome, GenomeStats> calculate(List<ViralReadAlignment> alignments)
     {
-        AllGenomesReadAlignments allAlignments = AllGenomesReadAlignments.from(alignments);
+        AllGenomesReadAlignments allAlignments = AllGenomesReadAlignments.from(alignments.stream());
         return GenomeStatsCalculator.calculate(
                 allAlignments.store().byGenome(), allAlignments.metrics().originClippedReads());
     }
@@ -59,6 +59,6 @@ public class GenomeStatsCalculatorTest
     private static ViralReadAlignment originClipped(String readName)
     {
         return new ViralReadAlignment(
-                ReadId.parse(readName), GENOME, 1, 10, "30S10M", 30, 0, 20, 30, List.of(new MatchedInterval(1, 10)));
+                ReadId.parse(readName), GENOME, 1, TextCigarCodec.decode("30S10M"), 20, 30, new int[0]);
     }
 }

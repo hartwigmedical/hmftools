@@ -9,9 +9,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import com.hartwig.hmftools.viridian.profiling.align.AllGenomesReadAlignments;
-import com.hartwig.hmftools.viridian.profiling.align.MatchedInterval;
 import com.hartwig.hmftools.viridian.profiling.align.ViralReadAlignment;
 import com.hartwig.hmftools.viridian.profiling.align.ViralReadAlignmentStore;
 import com.hartwig.hmftools.viridian.profiling.common.ReadId;
@@ -31,6 +31,7 @@ import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.TextCigarCodec;
 
 public class RepresentativeReadAssignerTest
 {
@@ -87,17 +88,15 @@ public class RepresentativeReadAssignerTest
     public void testAssignCopiesTheChosenOfTwoAlignmentsSharingAStart() throws IOException
     {
         ViralReadAlignment chosen = new ViralReadAlignment(
-                ReadId.parse("r1/1"), REPRESENTATIVE, 500, 586, "53S38M21D49M8S", 53, 8, 40, 86,
-                List.of(new MatchedInterval(500, 38), new MatchedInterval(559, 49)));
+                ReadId.parse("r1/1"), REPRESENTATIVE, 500, TextCigarCodec.decode("53S38M21D49M8S"), 40, 86, new int[0]);
         ViralReadAlignment other = new ViralReadAlignment(
-                ReadId.parse("r1/1"), REPRESENTATIVE, 500, 552, "95S53M", 95, 0, 42, 98,
-                List.of(new MatchedInterval(500, 53)));
+                ReadId.parse("r1/1"), REPRESENTATIVE, 500, TextCigarCodec.decode("95S53M"), 42, 98, new int[0]);
 
         String sourceBam = writeBam("all.bam", List.of(other, chosen));
         String outputBam = new File(mTempDir.getRoot(), "representative.bam").getPath();
 
         RepresentativeReadAssigner.assign(
-                AllGenomesReadAlignments.from(List.of(other, chosen)).store(), Set.of(REPRESENTATIVE),
+                AllGenomesReadAlignments.from(Stream.of(other, chosen)).store(), Set.of(REPRESENTATIVE),
                 sourceBam, outputBam);
 
         assertEquals(List.of("53S38M21D49M8S"), cigars(outputBam));
@@ -122,7 +121,7 @@ public class RepresentativeReadAssignerTest
                 record.setReadName(alignment.readId().toString());
                 record.setReferenceName(alignment.genome().contigName());
                 record.setAlignmentStart(alignment.alignmentStart());
-                record.setCigarString(alignment.cigar());
+                record.setCigar(alignment.cigar());
                 record.setReadBases(SAMRecord.NULL_SEQUENCE);
                 writer.addAlignment(record);
             }
@@ -143,8 +142,7 @@ public class RepresentativeReadAssignerTest
     private static ViralReadAlignment alignment(String readName, VirusGenome genome, int start, int divergence)
     {
         return new ViralReadAlignment(
-                ReadId.parse(readName), genome, start, start + READ_LENGTH - 1, READ_LENGTH + "M", 0, 0, READ_LENGTH - divergence,
-                divergence,
-                List.of(new MatchedInterval(start, READ_LENGTH)));
+                ReadId.parse(readName), genome, start, TextCigarCodec.decode(READ_LENGTH + "M"),
+                READ_LENGTH - divergence, divergence, new int[0]);
     }
 }

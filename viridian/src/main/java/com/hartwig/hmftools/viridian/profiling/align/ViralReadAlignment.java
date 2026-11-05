@@ -2,33 +2,29 @@ package com.hartwig.hmftools.viridian.profiling.align;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.leftClipLength;
 import static com.hartwig.hmftools.common.bam.CigarUtils.rightClipLength;
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.ALIGNMENT_SCORE_ATTRIBUTE;
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
-import static com.hartwig.hmftools.viridian.common.Utils.getRequiredSamTag;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.VIRUS_GENOME_ORIGIN_CLIP_TOLERANCE;
 
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 
 import com.hartwig.hmftools.viridian.profiling.common.ReadId;
 import com.hartwig.hmftools.viridian.reference.VirusGenome;
-import com.hartwig.hmftools.viridian.reference.VirusReference;
 
-import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.Cigar;
 
 // One alignment of a read to a virus genome, with just the data required for our analysis, in a nice format.
+// This class is quite optimised for memory, otherwise it can explode since we keep multiple alignments per read.
 public record ViralReadAlignment(
         ReadId readId,
         VirusGenome genome,
         int alignmentStart,
-        int alignmentEnd,
-        String cigar,
-        int leftClip,
-        int rightClip,
+        Cigar cigar,
         int alignerScore,
         // NM + clipped bases: how poorly the virus genome explains the read
         int divergence,
-        List<MatchedInterval> matchedIntervals)
+        int[] mismatchPositions)
 {
     public ViralReadAlignment
     {
@@ -36,44 +32,42 @@ public record ViralReadAlignment(
         {
             throw new IllegalArgumentException("Invalid alignmentStart: " + alignmentStart);
         }
-        if(alignmentEnd < alignmentStart)
+        if(cigar.isEmpty())
         {
-            throw new IllegalArgumentException("Invalid alignment span: " + alignmentStart + "-" + alignmentEnd);
-        }
-        if(leftClip < 0 || rightClip < 0)
-        {
-            throw new IllegalArgumentException("Invalid clips: left " + leftClip + ", right " + rightClip);
+            throw new IllegalArgumentException("Invalid cigar");
         }
         if(alignerScore < 0)
         {
             throw new IllegalArgumentException("Invalid alignerScore: " + alignerScore);
         }
-        if(divergence < leftClip + rightClip)
+        if(divergence < leftClipLength(cigar) + rightClipLength(cigar))
         {
             throw new IllegalArgumentException("Invalid divergence: " + divergence);
         }
-        if(cigar.isEmpty())
-        {
-            throw new IllegalArgumentException("Invalid cigar");
-        }
-        if(matchedIntervals.isEmpty())
+        if(MatchedInterval.from(alignmentStart, cigar, mismatchPositions).isEmpty())
         {
             throw new IllegalArgumentException("Invalid matchedIntervals");
         }
     }
 
-    public static ViralReadAlignment from(SAMRecord record, VirusReference reference)
+    public int alignmentEnd()
     {
-        int leftClip = leftClipLength(record.getCigar());
-        int rightClip = rightClipLength(record.getCigar());
+        return alignmentStart + cigar.getReferenceLength() - 1;
+    }
 
-        int editDistance = getRequiredSamTag(record, NUM_MUTATONS_ATTRIBUTE, SAMRecord::getIntegerAttribute);
-        int alignerScore = getRequiredSamTag(record, ALIGNMENT_SCORE_ATTRIBUTE, SAMRecord::getIntegerAttribute);
+    public int leftClip()
+    {
+        return leftClipLength(cigar);
+    }
 
-        return new ViralReadAlignment(
-                ReadId.parse(record.getReadName()), reference.genome(record.getReferenceName()), record.getAlignmentStart(),
-                record.getAlignmentEnd(), record.getCigarString(), leftClip, rightClip, alignerScore, editDistance + leftClip + rightClip,
-                MatchedInterval.fromSamRecord(record));
+    public int rightClip()
+    {
+        return rightClipLength(cigar);
+    }
+
+    public List<MatchedInterval> matchedIntervals()
+    {
+        return MatchedInterval.from(alignmentStart, cigar, mismatchPositions);
     }
 
     // The clipped bases project past a virus genome end, so the read straddles the circular genome's linearization
@@ -81,8 +75,28 @@ public record ViralReadAlignment(
     public boolean clipsOverGenomeEnd()
     {
         int genomeLength = genome.length();
-        return alignmentStart - leftClip < 1 - VIRUS_GENOME_ORIGIN_CLIP_TOLERANCE
-                || alignmentEnd + rightClip > genomeLength + VIRUS_GENOME_ORIGIN_CLIP_TOLERANCE;
+        return alignmentStart - leftClip() < 1 - VIRUS_GENOME_ORIGIN_CLIP_TOLERANCE
+                || alignmentEnd() + rightClip() > genomeLength + VIRUS_GENOME_ORIGIN_CLIP_TOLERANCE;
+    }
+
+    @Override
+    public boolean equals(Object other)
+    {
+        return other instanceof ViralReadAlignment that
+                && alignmentStart == that.alignmentStart
+                && alignerScore == that.alignerScore
+                && divergence == that.divergence
+                && readId.equals(that.readId)
+                && genome.equals(that.genome)
+                && cigar.equals(that.cigar)
+                && Arrays.equals(mismatchPositions, that.mismatchPositions);
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return 31 * Objects.hash(readId, genome, alignmentStart, cigar, alignerScore, divergence)
+                + Arrays.hashCode(mismatchPositions);
     }
 
     // Sort primarily by divergence because we are mostly interested in per-base difference.
@@ -91,5 +105,5 @@ public record ViralReadAlignment(
             .comparingInt(ViralReadAlignment::divergence)
             .thenComparing(ViralReadAlignment::alignerScore, Comparator.reverseOrder())
             .thenComparingInt(ViralReadAlignment::alignmentStart)
-            .thenComparing(ViralReadAlignment::cigar);
+            .thenComparing(alignment -> alignment.cigar().toString());
 }

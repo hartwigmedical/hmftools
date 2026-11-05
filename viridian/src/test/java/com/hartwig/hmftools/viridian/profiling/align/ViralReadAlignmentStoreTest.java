@@ -13,6 +13,8 @@ import com.hartwig.hmftools.viridian.reference.VirusGroup;
 
 import org.junit.Test;
 
+import htsjdk.samtools.TextCigarCodec;
+
 public class ViralReadAlignmentStoreTest
 {
     private static final int LENGTH = 100;
@@ -49,6 +51,6 @@ public class ViralReadAlignmentStoreTest
     private static ViralReadAlignment alignment(String readName, VirusGenome genome)
     {
         return new ViralReadAlignment(
-                ReadId.parse(readName), genome, 1, LENGTH, LENGTH + "M", 0, 0, 100, 0, List.of(new MatchedInterval(1, LENGTH)));
+                ReadId.parse(readName), genome, 1, TextCigarCodec.decode(LENGTH + "M"), 100, 0, new int[0]);
     }
 }

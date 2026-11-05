@@ -141,6 +141,6 @@ public class RepresentativeReadAssigner
         return assigned.alignmentStart() == record.getAlignmentStart()
                 && assigned.genome().contigName().equals(record.getReferenceName())
                 // Note CIGAR is needed too because occasionally there are multiple plausible alignments at the same ref position.
-                && assigned.cigar().equals(record.getCigarString());
+                && assigned.cigar().equals(record.getCigar());
     }
 }

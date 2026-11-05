@@ -1,14 +1,12 @@
 package com.hartwig.hmftools.viridian.profiling.align;
 
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.MISMATCHES_AND_DELETIONS_ATTRIBUTE;
-import static com.hartwig.hmftools.viridian.common.Utils.getRequiredSamTag;
-import static com.hartwig.hmftools.viridian.common.Utils.parseMdTagMismatchPositions;
-
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
-import htsjdk.samtools.AlignmentBlock;
-import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.Cigar;
+import htsjdk.samtools.CigarElement;
+import htsjdk.samtools.CigarOperator;
 
 // A contiguous run of reference bases matched in an alignment.
 public record MatchedInterval(
@@ -29,45 +27,52 @@ public record MatchedInterval(
         }
     }
 
-    public static List<MatchedInterval> fromSamRecord(SAMRecord record)
+    public static List<MatchedInterval> from(int alignmentStart, Cigar cigar, int[] mismatchPositions)
     {
-        String mdTag = getRequiredSamTag(record, MISMATCHES_AND_DELETIONS_ATTRIBUTE, SAMRecord::getStringAttribute);
-        List<Integer> mismatchPositions = parseMdTagMismatchPositions(record.getAlignmentStart(), mdTag);
-
-        List<MatchedInterval> intervals = new ArrayList<>();
+        List<MatchedInterval> intervals = new ArrayList<>(cigar.numCigarElements() + mismatchPositions.length);
+        int blockStart = alignmentStart;
         int nextMismatch = 0;
-        for(AlignmentBlock block : record.getAlignmentBlocks())
+        for(CigarElement element : cigar.getCigarElements())
         {
-            int start = block.getReferenceStart();
-            int end = start + block.getLength();
-            for(; nextMismatch < mismatchPositions.size() && mismatchPositions.get(nextMismatch) < end; ++nextMismatch)
+            CigarOperator operator = element.getOperator();
+            if(operator.consumesReadBases() && operator.consumesReferenceBases())
             {
-                int mismatch = mismatchPositions.get(nextMismatch);
-                if(mismatch < start)
+                int start = blockStart;
+                int end = blockStart + element.getLength();
+                for(; nextMismatch < mismatchPositions.length && mismatchPositions[nextMismatch] < end; ++nextMismatch)
                 {
-                    throw inconsistentMdTag(record);
+                    int mismatch = mismatchPositions[nextMismatch];
+                    if(mismatch < start)
+                    {
+                        throw inconsistentMismatches(cigar, mismatchPositions);
+                    }
+                    if(mismatch > start)
+                    {
+                        intervals.add(new MatchedInterval(start, mismatch - start));
+                    }
+                    start = mismatch + 1;
                 }
-                if(mismatch > start)
+                if(end > start)
                 {
-                    intervals.add(new MatchedInterval(start, mismatch - start));
+                    intervals.add(new MatchedInterval(start, end - start));
                 }
-                start = mismatch + 1;
             }
-            if(end > start)
+            if(operator.consumesReferenceBases())
             {
-                intervals.add(new MatchedInterval(start, end - start));
+                blockStart += element.getLength();
             }
         }
-        if(nextMismatch < mismatchPositions.size())
+        if(nextMismatch < mismatchPositions.length)
         {
-            throw inconsistentMdTag(record);
+            throw inconsistentMismatches(cigar, mismatchPositions);
         }
         return intervals;
     }
 
-    private static IllegalStateException inconsistentMdTag(SAMRecord record)
+    private static IllegalArgumentException inconsistentMismatches(Cigar cigar, int[] mismatchPositions)
     {
-        return new IllegalStateException(
-                String.format("aligned read MD tag disagrees with its CIGAR on contig: %s", record.getReferenceName()));
+        return new IllegalArgumentException(String.format(
+                "Mismatch positions %s outside the aligned bases of CIGAR %s",
+                Arrays.toString(mismatchPositions), cigar));
     }
 }

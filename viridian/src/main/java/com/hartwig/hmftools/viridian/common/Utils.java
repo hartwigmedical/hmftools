@@ -7,8 +7,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Arrays;
 import java.util.function.BiFunction;
 
 import htsjdk.samtools.SAMRecord;
@@ -26,9 +25,13 @@ public class Utils
         return value;
     }
 
-    public static List<Integer> parseMdTagMismatchPositions(int alignmentStart, String mdTag)
+    // Cached value to save memory on empty arrays which are common.
+    private static final int[] NO_POSITIONS = new int[0];
+
+    public static int[] parseMdTagMismatchPositions(int alignmentStart, String mdTag)
     {
-        List<Integer> positions = new ArrayList<>();
+        int[] positions = new int[mdTag.length()];
+        int positionCount = 0;
         int position = alignmentStart;
         int matchedBases = 0;
         boolean inDeletion = false;
@@ -52,7 +55,7 @@ public class Utils
             {
                 if(!inDeletion)
                 {
-                    positions.add(position);
+                    positions[positionCount++] = position;
                 }
                 ++position;
             }
@@ -61,7 +64,7 @@ public class Utils
                 throw new IllegalArgumentException("Invalid MD tag: " + mdTag);
             }
         }
-        return positions;
+        return positionCount == 0 ? NO_POSITIONS : Arrays.copyOf(positions, positionCount);
     }
 
     // htsjdk names the index after the BAM's file stem, but tooling looks for it appended to the full name.

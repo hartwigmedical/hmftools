@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.hartwig.hmftools.viridian.profiling.align.AllGenomesReadAlignments;
-import com.hartwig.hmftools.viridian.profiling.align.MatchedInterval;
 import com.hartwig.hmftools.viridian.profiling.align.ViralReadAlignment;
 import com.hartwig.hmftools.viridian.profiling.common.GenomeStats;
 import com.hartwig.hmftools.viridian.profiling.common.GenomeStatsCalculator;
@@ -19,6 +18,9 @@ import com.hartwig.hmftools.viridian.reference.VirusGenome;
 import com.hartwig.hmftools.viridian.reference.VirusGroup;
 
 import org.junit.Test;
+
+import htsjdk.samtools.Cigar;
+import htsjdk.samtools.TextCigarCodec;
 
 public class GenomeSupportCalculatorTest
 {
@@ -143,7 +145,7 @@ public class GenomeSupportCalculatorTest
 
     private static List<GenomeSupport> compute(List<ViralReadAlignment> alignments, double correctBaseProbability)
     {
-        AllGenomesReadAlignments allAlignments = AllGenomesReadAlignments.from(alignments);
+        AllGenomesReadAlignments allAlignments = AllGenomesReadAlignments.from(alignments.stream());
         Map<VirusGenome, GenomeStats> genomeStats = GenomeStatsCalculator.calculate(
                 allAlignments.store().byGenome(), allAlignments.metrics().originClippedReads());
         return new GenomeSupportCalculator(correctBaseProbability).calculate(allAlignments, genomeStats);
@@ -159,17 +161,14 @@ public class GenomeSupportCalculatorTest
             int divergence)
     {
         return new ViralReadAlignment(
-                ReadId.parse(readName), genome, start, start + length - 1, length + "M", 0, 0, alignerScore, divergence,
-                List.of(new MatchedInterval(start, length)));
+                ReadId.parse(readName), genome, start, TextCigarCodec.decode(length + "M"),
+                alignerScore, divergence, new int[0]);
     }
 
     // An alignment covering [start, end] with the given clip lengths hanging off each side.
     private static ViralReadAlignment clipped(String readName, VirusGenome genome, int start, int end, int leftClip, int rightClip)
     {
-        return new ViralReadAlignment(
-                ReadId.parse(readName), genome, start, end,
-                leftClip + "S" + (end - start + 1) + "M" + rightClip + "S",
-                leftClip, rightClip, 10, leftClip + rightClip,
-                List.of(new MatchedInterval(start, end - start + 1)));
+        Cigar cigar = TextCigarCodec.decode(leftClip + "S" + (end - start + 1) + "M" + rightClip + "S");
+        return new ViralReadAlignment(ReadId.parse(readName), genome, start, cigar, 10, leftClip + rightClip, new int[0]);
     }
 }
