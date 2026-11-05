@@ -1,9 +1,7 @@
 # Sigs
 Fits sample SNV counts to trinucleotide signature definitions.
 
-## Configuration
-
-To install, download the latest compiled jar file from the [download links](#version-history-and-download-links). 
+Misallocated counts, being those where the fitted counts per SNV bucket do not match the actual counts, are reported against a signature name of 'MISALLOC'.
 
 ### Resource Files
 Sigs requires a signature definition file, for example the COSMIC 30 SNV signatures. 
@@ -44,8 +42,3 @@ java -jar sigs.jar \
    -somatic_vcf_file /sample_data/COLO829T.purple.somatic.vcf.gz \
    -output_dir /output_dir/ \
 ```
-
-# Version History and Download Links
-- [1.2](https://github.com/hartwigmedical/hmftools/releases/tag/sigs-v1.2)
-- [1.1](https://github.com/hartwigmedical/hmftools/releases/tag/sigs-v1.1)
-- [1.0](https://github.com/hartwigmedical/hmftools/releases/tag/sigs-v1.0)
