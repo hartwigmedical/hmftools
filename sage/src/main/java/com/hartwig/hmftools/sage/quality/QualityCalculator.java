@@ -121,7 +121,7 @@ public class QualityCalculator
 
         double penalisedBaseQuality = recalibratedBaseQuality;
 
-        if(!readContextCounter.useMsiErrorRate())
+        if(!readContextCounter.isIndel())
         {
             // reduce the penalty for lower quals down to a minimum
             if(recalibratedBaseQuality >= BASE_QUAL_FIXED_PENALTY_UPPER_THRESHOLD)
