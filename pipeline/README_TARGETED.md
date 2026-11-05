@@ -246,6 +246,7 @@ with the following steps:
 - Calculate a median read count from all samples per GC ratio bucket
 - Normalise each sample's tumor read counts per region by GC ratio bucket
 - Filter regions that are highly volatile with a significant dropout rate in the cohort, i.e. if all of the following apply:
+  - chromosome is allosome
   - 20th percentile of cohort GC-normalised read ratios < 0.2
   - At least min(10, 50% of cohort size) samples have a valid GC-normalised read ratio below 3
   - The median GC-normalised read ratio for samples satisfying the above condition >= 0.1
