@@ -28,7 +28,8 @@ public class WispConstants
     public static final double MIN_AVG_EDGE_DISTANCE = 0.06;
     public static final double MIN_AVG_EDGE_DISTANCE_DUAL_ULTIMA = 0.1;
     public static final double MAX_GERMLINE_AF = 0.01;
-    public static final int HIGH_GERMLINE_QUAL_THRESHOLD = 30;
+    public static final double MAX_GERMLINE_AF_MAX = 0.05;
+    public static final int HIGH_GERMLINE_QUAL_THRESHOLD = 25;
 
     public static final int MIN_QUAL_PER_AD = 21;
     public static final int MIN_QUAL_PER_AD_DUAL_ULTIMA = 34;

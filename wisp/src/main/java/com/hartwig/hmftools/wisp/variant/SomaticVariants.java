@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.common.variant.SageVcfTags.NEARBY_INDEL_FLAG;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_COUNT;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_QUALITY;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNTS;
+import static com.hartwig.hmftools.wisp.WispConstants.MAX_GERMLINE_AF_MAX;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.CT_LOGGER;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.DEFAULT_PROBE_LENGTH;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.generateMutationSequence;
@@ -395,8 +396,10 @@ public class SomaticVariants
 
             double germlineABQ = Double.parseDouble(germlineABQStr.toString().split(CSV_DELIM)[1]);
 
-            if(germlineAF >= MAX_GERMLINE_AF && germlineABQ >= HIGH_GERMLINE_QUAL_THRESHOLD)
+            if((germlineAF >= MAX_GERMLINE_AF && germlineABQ >= HIGH_GERMLINE_QUAL_THRESHOLD) || germlineAF >= MAX_GERMLINE_AF_MAX)
+            {
                 filters.add(GERMLINE_AF);
+            }
         }
 
         if(variant.context().getCommonInfo().hasAttribute(NEARBY_INDEL_FLAG))
