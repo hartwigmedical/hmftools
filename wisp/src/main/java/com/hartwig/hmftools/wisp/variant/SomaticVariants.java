@@ -9,7 +9,6 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.filenamePart;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.SUBCLONAL_LIKELIHOOD_FLAG;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_RECALIBRATED_BASE_QUAL;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.LIST_SEPARATOR;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.NEARBY_INDEL_FLAG;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_COUNT;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_QUALITY;
@@ -45,6 +44,7 @@ import static com.hartwig.hmftools.wisp.variant.FilterReason.REPEAT_COUNT;
 import static com.hartwig.hmftools.wisp.variant.FilterReason.SUBCLONAL;
 import static com.hartwig.hmftools.wisp.variant.GenotypeFragments.AVG_BASE_QUAL_OLD_TAG;
 import static com.hartwig.hmftools.wisp.variant.GenotypeFragments.REQUIRED_GENOTYPE_FIELDS;
+import static com.hartwig.hmftools.wisp.variant.GenotypeFragments.parseReadArrayAttribute;
 import static com.hartwig.hmftools.wisp.variant.SnvFitStatus.UNCERTAIN;
 import static com.hartwig.hmftools.wisp.variant.SomaticPurityResult.INVALID_RESULT;
 
@@ -60,7 +60,6 @@ import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.PaveVcfTags;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
-import com.hartwig.hmftools.common.variant.VariantReadSupport;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
@@ -216,9 +215,6 @@ public class SomaticVariants
 
     private static final double NO_GC_RATIO = -1;
 
-    private static final List<Integer> READ_COUNT_AD_TYPES = Lists.newArrayList(
-            VariantReadSupport.FULL.ordinal(), VariantReadSupport.PARTIAL_CORE.ordinal(), VariantReadSupport.REALIGNED.ordinal());
-
     private void processVariant(final List<String> targetSampleIds, final VariantContext variantContext)
     {
         VariantContextDecorator variant = new VariantContextDecorator(variantContext);
@@ -265,23 +261,8 @@ public class SomaticVariants
             if(umiTypeCounts != UmiTypeCounts.NO_UMI_COUNTS && umiTypeCounts.isZeroed() && genotype.getSampleName().equals(mSample.TumorId))
                 umiTypeCounts = UmiTypeCounts.NO_UMI_COUNTS;
 
-            int qualTotal = 0;
-            int alleleCount = 0;
-
-            if(genotype.getAD()[1] > 0)
-            {
-                String[] qualCounts = genotype.getExtendedAttribute(READ_CONTEXT_QUALITY, 0).toString()
-                        .split(LIST_SEPARATOR, -1);
-
-                String[] readCounts = genotype.getExtendedAttribute(READ_CONTEXT_COUNT, 0).toString()
-                        .split(LIST_SEPARATOR, -1);
-
-                for(Integer rcType : READ_COUNT_AD_TYPES)
-                {
-                    alleleCount += Integer.parseInt(readCounts[rcType]);
-                    qualTotal += Integer.parseInt(qualCounts[rcType]);
-                }
-            }
+            int qualTotal = parseReadArrayAttribute(genotype, READ_CONTEXT_QUALITY);
+            int alleleCount = parseReadArrayAttribute(genotype, READ_CONTEXT_COUNT);
 
             if(umiTypeCounts != UmiTypeCounts.NO_UMI_COUNTS)
             {
@@ -318,6 +299,7 @@ public class SomaticVariants
 
         double sampleTotalAD = 0; // this value will be normalised by copy number
 
+        // compile a set of filtered variants, and compute a total AD just for these
         for(SomaticVariant variant : mVariants)
         {
             GenotypeFragments sampleFragData = variant.findGenotypeData(sampleId);
@@ -328,7 +310,6 @@ public class SomaticVariants
 
             checkSampleDataFilters(variant, sampleFragData);
 
-            // only include unfiltered variants which satisfy the min avg qual check in the sample
             if(variant.isFiltered() || sampleFragData.isFiltered())
                 continue;
 
@@ -350,6 +331,7 @@ public class SomaticVariants
             {
                 SomaticPurityResult newPurityResult = mEstimator.calculatePurity(
                         sampleId, filteredVariants, mVariants.size(), outlierVariants, false);
+
                 if(newPurityResult.mrdDetected())
                 {
                     CT_LOGGER.warn("sample({}) recovered MRD detection using high copy number variants, status({})",

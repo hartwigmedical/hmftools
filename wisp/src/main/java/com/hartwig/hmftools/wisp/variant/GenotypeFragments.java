@@ -14,6 +14,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.SageVcfTags;
+import com.hartwig.hmftools.common.variant.VariantReadSupport;
 
 import htsjdk.variant.variantcontext.Genotype;
 
@@ -104,5 +105,25 @@ public class GenotypeFragments
     public String toString()
     {
         return format("%d/%d umi(total=%d allele=%d)", AlleleCount, Depth, UmiCounts.totalCount(), UmiCounts.alleleCount());
+    }
+
+    private static final List<Integer> READ_COUNT_AD_TYPES = Lists.newArrayList(
+            VariantReadSupport.FULL.ordinal(), VariantReadSupport.PARTIAL_CORE.ordinal(), VariantReadSupport.REALIGNED.ordinal());
+
+    public static int parseReadArrayAttribute(final Genotype genotype, final String vcfTag)
+    {
+        int attributeTotal = 0;
+
+        if(genotype.getAD()[1] > 0)
+        {
+            String[] countsStr = genotype.getExtendedAttribute(vcfTag, 0).toString().split(LIST_SEPARATOR, -1);
+
+            for(Integer rcType : READ_COUNT_AD_TYPES)
+            {
+                attributeTotal += Integer.parseInt(countsStr[rcType]);
+            }
+        }
+
+        return attributeTotal;
     }
 }
