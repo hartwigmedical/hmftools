@@ -24,6 +24,8 @@ public class PositionEvidence implements GenomePosition
     public int MapQualFiltered;
     public int SeqTechFiltered;
 
+    public BafLohData LohData;
+
     public PositionEvidence(final String chromosome, final int position, final String ref, final String alt)
     {
         Chromosome = chromosome;
@@ -38,6 +40,7 @@ public class PositionEvidence implements GenomePosition
         BaseQualFiltered = 0;
         MapQualFiltered = 0;
         SeqTechFiltered = 0;
+        LohData = null;
     }
 
     public static PositionEvidence copy(final PositionEvidence other)
@@ -62,10 +65,7 @@ public class PositionEvidence implements GenomePosition
         return Chromosome;
     }
 
-    public int position()
-    {
-        return Position;
-    }
+    public int position() { return Position; }
 
     public double vaf()
     {
@@ -140,4 +140,12 @@ public class PositionEvidence implements GenomePosition
     {
         return new VafReading(Chromosome, Position, ReadDepth, RefSupport, AltSupport);
     }
+
+    public void setLohData()
+    {
+        LohData = new BafLohData();
+        LohData.setBafStatus(RefSupport, AltSupport);
+    }
+
+    public boolean lohRecovered() { return LohData != null && LohData.LohRecovered; }
 }

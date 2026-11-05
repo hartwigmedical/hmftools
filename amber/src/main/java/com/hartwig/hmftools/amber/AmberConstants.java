@@ -17,7 +17,6 @@ public class AmberConstants
     public static final double DEFAULT_MIN_HET_AF_PERCENTAGE = 0.4;
     public static final double DEFAULT_MAX_HET_AF_PERCENTAGE = 0.65;
 
-    //
     public static final int CONTAMINATON_MIN_NORMAL_READ_DEPTH = 7;
     public static final int CONTAMINATON_THREE_PLUS_READS_MIN = 10;
     public static final double CONTAMINATON_THREE_PLUS_READS_SITE_PERC = 0.03;
@@ -49,12 +48,31 @@ public class AmberConstants
     public static final double PEAK_SEARCH_STEP_RATIO = 1.05;
     public static final double PEAK_SEARCH_INITIAL_STEP = 0.001;
     public static final double PEAK_SEARCH_OVERSHOOT = 0.0001;
+
     public static final double HET_VAF_LOWER_BOUND = 0.35;
     public static final double HET_VAF_UPPER_BOUND = 0.65;
     public static final double MIN_CUTOFF = 0.04;
     public static final double HOMOZYGOUS_PROPORTION_LOWER_BOUND_FOR_CONTAMINATION = 0.25;
     public static final double HOMOZYGOUS_PROPORTION_UPPER_BOUND_FOR_CONTAMINATION = 0.75;
     public static final double MUTATION_AUC_LOWER_BOUND_FOR_CONTAMINATION = 0.825;
-    public static final double CHR_ARM_LOWER_BOUND_FOR_CONTAMINATION = 0.5;
+    public static final double MUTATION_AUC_LOWER_BOUND_FOR_CONTAMINATION_PEAK_FACTOR = 100;
+    public static final double CHR_ARM_LOWER_BOUND_FOR_CONTAMINATION = 0.4;
     public static final double CHR_ARM_AUC_UPPER_BOUND_FOR_COPY_NUMBER_EVENTS = 0.1;
+
+    // LOH analysis
+    public static final double LOH_QUAL_FILTERED_THRESHOLD = 0.075;
+    public static final int LOH_REF_ALT_MIN_COUNT = 2;
+    public static final int LOH_MOVING_AVG_COUNT = 50;
+    public static final int LOH_MOVING_ITEM_COUNT = LOH_MOVING_AVG_COUNT * 2 + 1;
+
+    public static final double LOH_REF_ALT_THRESHOLD_HIGH = 0.96;
+    public static final double LOH_REF_ALT_THRESHOLD_MED = 0.90;
+    public static final double LOH_REF_ALT_THRESHOLD_LOW = 0.80;
+
+    public static final int LOH_MIN_LENGTH = 20_000_000;
+    public static final int LOH_POINT_DENSITY = 5; // ie using every 5th point
+
+    public static final double VALID_BAF_RATE_HIGH = 0.15;
+    public static final double VALID_BAF_RATE_MED = 0.04;
+    public static final double VALID_BAF_RATE_LOW = 0;
 }

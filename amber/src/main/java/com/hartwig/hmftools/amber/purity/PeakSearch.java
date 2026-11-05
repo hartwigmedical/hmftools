@@ -15,12 +15,13 @@ import org.apache.commons.lang3.tuple.Pair;
 
 public class PeakSearch
 {
-    private final List<CandidatePeakEvaluationResult> mPeaks;
+    private final List<CandidatePeakResult> mPeaks;
 
     public PeakSearch(final List<PositionEvidence> evidence, final int threads)
     {
         List<Pair<Double, Double>> searchValues = new SearchGrid().searchValuesAndSteps();
         List<CandidatePeakEvaluation> evaluations = new ArrayList<>();
+
         for(Pair<Double, Double> pair : searchValues)
         {
             CandidatePeak level = new CandidatePeak(pair.getLeft(), pair.getRight());
@@ -37,19 +38,19 @@ public class PeakSearch
             AMB_LOGGER.error("peak search interrupted", e);
         }
 
-        List<CandidatePeakEvaluationResult> results = evaluations.stream()
+        List<CandidatePeakResult> results = evaluations.stream()
                 .map(CandidatePeakEvaluation::result)
                 .toList();
 
         mPeaks = new LocalMaximaFinder<>(results).maxima();
 
-        for(CandidatePeakEvaluationResult peak : mPeaks)
+        for(CandidatePeakResult peak : mPeaks)
         {
             AMB_LOGGER.debug(format("actual peak(%.3f) with score(%.3f)", peak.candidatePeak().vaf(), peak.score()));
         }
     }
 
-    public List<CandidatePeakEvaluationResult> peaks()
+    public List<CandidatePeakResult> peaks()
     {
         return mPeaks;
     }

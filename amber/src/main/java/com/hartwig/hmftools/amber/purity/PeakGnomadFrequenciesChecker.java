@@ -37,7 +37,8 @@ public class PeakGnomadFrequenciesChecker
             }
         }
 
-        AMB_LOGGER.trace(format("peak(%.3f) Gnomad lowMean(%.3f) highMean(%.3f)", mPeak.vaf(), lowAStats.getMean(), highAStats.getMean()));
+        AMB_LOGGER.trace(format("peak(%.3f) Gnomad mean(high=%.3f low=%.3f)",
+                mPeak.vaf(), lowAStats.getMean(), highAStats.getMean()));
 
         if(lowAStats.getN() == 0 || highAStats.getN() == 0)
             return false;
