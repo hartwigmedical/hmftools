@@ -166,15 +166,17 @@ public class HotspotCache
         hotspots.add(hotspot);
 
         // add to both chromosome lists
-        hotspots = mHotspotRegions.get(hotspot.RegionEnd.Chromosome);
-
-        if(hotspots == null)
+        if(!hotspot.RegionStart.Chromosome.equals(hotspot.RegionEnd.Chromosome))
         {
-            hotspots = Lists.newArrayList();
-            mHotspotRegions.put(hotspot.RegionEnd.Chromosome, hotspots);
+            hotspots = mHotspotRegions.get(hotspot.RegionEnd.Chromosome);
+
+            if(hotspots == null)
+            {
+                hotspots = Lists.newArrayList();
+                mHotspotRegions.put(hotspot.RegionEnd.Chromosome, hotspots);
+            }
+
+            hotspots.add(hotspot);
         }
-
-        hotspots.add(hotspot);
     }
-
 }
