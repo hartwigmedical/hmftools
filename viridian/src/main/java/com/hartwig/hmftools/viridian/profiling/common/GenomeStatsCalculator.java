@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.viridian.profiling.common;
 
-import static java.lang.Math.max;
-import static java.lang.Math.min;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 
@@ -54,8 +52,8 @@ public class GenomeStatsCalculator
         {
             for(MatchedInterval block : alignment.matchedIntervals())
             {
-                int start = max(0, block.referenceStart() - 1);   // intervals are 1-based
-                int end = min(genomeLength, block.referenceStart() - 1 + block.length());
+                int start = block.referenceStart() - 1;   // intervals are 1-based
+                int end = start + block.length();
                 for(int position = start; position < end; ++position)
                 {
                     ++depth[position];

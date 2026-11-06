@@ -44,9 +44,11 @@ public record ViralReadAlignment(
         {
             throw new IllegalArgumentException("Invalid divergence: " + divergence);
         }
-        if(MatchedInterval.from(alignmentStart, cigar, mismatchPositions).isEmpty())
+        int alignmentEnd = alignmentStart + cigar.getReferenceLength() - 1;
+        if(alignmentEnd > genome.length())
         {
-            throw new IllegalArgumentException("Invalid matchedIntervals");
+            throw new IllegalArgumentException(String.format(
+                    "Alignment end %d past virus genome %s length %d", alignmentEnd, genome.contigName(), genome.length()));
         }
     }
 

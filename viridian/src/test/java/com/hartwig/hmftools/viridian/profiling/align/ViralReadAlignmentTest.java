@@ -62,9 +62,16 @@ public class ViralReadAlignmentTest
     }
 
     @Test
-    public void testFromThrowsWhenMdMismatchOutsideCigarAlignedBases()
+    public void testMatchedIntervalsThrowsWhenMdMismatchOutsideCigarAlignedBases()
     {
-        SAMRecord record = record(30, "20M2D10M", 60, 3, "20^AC10G");
+        ViralReadAlignment alignment = fromRecord(record(30, "20M2D10M", 60, 3, "20^AC10G"));
+        assertThrows(IllegalArgumentException.class, alignment::matchedIntervals);
+    }
+
+    @Test
+    public void testFromThrowsWhenAlignmentEndsPastGenomeEnd()
+    {
+        SAMRecord record = record(180, "30M", 60, 0, "30");   // ends at 209 on a 200 base genome
         assertThrows(IllegalArgumentException.class, () -> fromRecord(record));
     }
 
