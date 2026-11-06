@@ -35,10 +35,11 @@ public record VirusGenome(
     }
 
     @Override
-    public int compareTo(@NotNull VirusGenome other)
+    public int compareTo(VirusGenome other)
     {
-        Comparator<VirusGenome> comparator =
-                comparing(VirusGenome::virusGroup).thenComparing(VirusGenome::contigName);
-        return comparator.compare(this, other);
+        return COMPARATOR.compare(this, other);
     }
+
+    private static final Comparator<VirusGenome> COMPARATOR =
+            comparing(VirusGenome::virusGroup).thenComparing(VirusGenome::contigName);
 }

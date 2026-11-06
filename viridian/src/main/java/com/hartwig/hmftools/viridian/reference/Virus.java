@@ -32,7 +32,8 @@ public record Virus(
     @Override
     public int compareTo(Virus other)
     {
-        Comparator<Virus> comparator = comparing(Virus::group).thenComparing(Virus::name);
-        return comparator.compare(this, other);
+        return COMPARATOR.compare(this, other);
     }
+
+    private static final Comparator<Virus> COMPARATOR = comparing(Virus::group).thenComparing(Virus::name);
 }
