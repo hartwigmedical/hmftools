@@ -56,6 +56,18 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
         cache: maven
+      # Version 0.10.0 pinned
+    - name: Set up Pixi
+      if: github.event_name != 'pull_request' || steps.changes.outputs.code == 'true'
+      uses: prefix-dev/setup-pixi@a09b6247153796b190642a2b53fac4241043cf6f
+      with:
+        pixi-version: v0.73.0
+        manifest-path: containers/pixi.toml
+        run-install: false
+        cache: false
+    - name: Verify Pixi lockfile
+      if: github.event_name != 'pull_request' || steps.changes.outputs.code == 'true'
+      run: pixi lock --check --manifest-path containers/pixi.toml
     - name: Build with Maven
       if: github.event_name != 'pull_request' || steps.changes.outputs.code == 'true'
       run: mvn -B package --file pom.xml
