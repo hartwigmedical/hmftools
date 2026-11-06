@@ -9,6 +9,7 @@ import static java.util.stream.Collectors.toMap;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.REPORTED_COPIES_PER_CELL_MIN;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.REPORTED_INTEGRATIONS_MIN;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -51,50 +52,63 @@ public class VirusReporter
             @Nullable VirusProfile profile, List<VirusGenome> integratedGenomes, VirusGroupInfo info,
             ClonalityInputs clonalityInputs)
     {
-        Double copiesPerTumorCell = null;
-        ClonalityStatus clonalityStatus;
-        if(profile == null)
-        {
-            copiesPerTumorCell = clonalityInputs.purpleFailure() == null ? 0.0 : null;
-            clonalityStatus = ClonalityStatus.NOT_PROFILED;
-        }
-        else if(clonalityInputs.purpleFailure() == null)
-        {
-            copiesPerTumorCell = profile.representativeStats().depth().mean() / requireNonNull(clonalityInputs.expectedViralDepthPerCopy());
-            clonalityStatus = copiesPerTumorCell >= REPORTED_COPIES_PER_CELL_MIN ? ClonalityStatus.CLONAL : ClonalityStatus.NOT_CLONAL;
-        }
-        else
-        {
-            clonalityStatus = switch(clonalityInputs.purpleFailure())
-            {
-                case FAIL_NO_TUMOR -> ClonalityStatus.PURPLE_FAIL_NO_TUMOR;
-                case FAIL_CONTAMINATION -> ClonalityStatus.PURPLE_FAIL_CONTAMINATION;
-                default -> throw new IllegalStateException(
-                        "Not a clonality-blocking Purple failure: " + clonalityInputs.purpleFailure());
-            };
-        }
+        Clonality clonality = assessClonality(profile, clonalityInputs);
 
         int integrations = integratedGenomes.size();
         boolean isReported = info.isReportable()
-                && (integrations >= REPORTED_INTEGRATIONS_MIN || clonalityStatus == ClonalityStatus.CLONAL);
+                && (integrations >= REPORTED_INTEGRATIONS_MIN || clonality.status() == ClonalityStatus.CLONAL);
 
         List<Virus> integratedViruses = integratedGenomes.stream().map(VirusGenome::virus).toList();
-        Virus virus = profile != null
-                ? profile.representativeStats().genome().virus()
-                // The most common virus from the integrations.
-                : integratedViruses.stream()
-                        .collect(groupingBy(identity(), counting()))
-                        .entrySet().stream()
-                        .min(Map.Entry.<Virus, Long>comparingByValue().reversed()
-                                .thenComparing(Map.Entry.comparingByKey()))
-                        .orElseThrow()
-                        .getKey();
+        // Within the virus group, want to report the specific virus too.
+        // Usually read profiling and integrations detect the same virus, so show that.
+        // In rare cases where they don't agree, prefer the profiling and show a warning.
+        Virus virus = profile != null ? profile.representativeStats().genome().virus() : mostCommonVirus(integratedViruses);
         ReportQcStatus qcStatus = integratedViruses.stream().allMatch(virus::equals)
                 ? ReportQcStatus.NO_ABNORMALITIES
                 : ReportQcStatus.AMBIGUOUS_VIRUS;
 
         return new VirusReport(
-                virus, qcStatus, info.reportingType(), integrations, profile, copiesPerTumorCell,
-                clonalityStatus, isReported);
+                virus, qcStatus, info.reportingType(), integrations, profile, clonality.copiesPerTumorCell(),
+                clonality.status(), isReported);
+    }
+
+    private record Clonality(
+            @Nullable Double copiesPerTumorCell,
+            ClonalityStatus status
+    )
+    {
+    }
+
+    private static Clonality assessClonality(@Nullable VirusProfile profile, ClonalityInputs inputs)
+    {
+        if(profile == null)
+        {
+            return new Clonality(inputs.purpleFailure() == null ? 0.0 : null, ClonalityStatus.NOT_PROFILED);
+        }
+        else if(inputs.purpleFailure() == null)
+        {
+            double copiesPerTumorCell = profile.representativeStats().depth().mean() / requireNonNull(inputs.expectedViralDepthPerCopy());
+            ClonalityStatus status = copiesPerTumorCell >= REPORTED_COPIES_PER_CELL_MIN ? ClonalityStatus.CLONAL : ClonalityStatus.NOT_CLONAL;
+            return new Clonality(copiesPerTumorCell, status);
+        }
+        else
+        {
+            ClonalityStatus status = switch(inputs.purpleFailure())
+            {
+                case FAIL_NO_TUMOR -> ClonalityStatus.PURPLE_FAIL_NO_TUMOR;
+                case FAIL_CONTAMINATION -> ClonalityStatus.PURPLE_FAIL_CONTAMINATION;
+                default -> throw new IllegalStateException(
+                        "Not a clonality-blocking Purple failure: " + inputs.purpleFailure());
+            };
+            return new Clonality(null, status);
+        }
+    }
+
+    private static Virus mostCommonVirus(List<Virus> viruses)
+    {
+        Map<Virus, Long> counts = viruses.stream().collect(groupingBy(identity(), counting()));
+        Comparator<Map.Entry<Virus, Long>> mostCommonFirst =
+                Map.Entry.<Virus, Long>comparingByValue().reversed().thenComparing(Map.Entry.comparingByKey());
+        return counts.entrySet().stream().min(mostCommonFirst).orElseThrow().getKey();
     }
 }
