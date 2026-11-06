@@ -6,8 +6,6 @@ import static java.util.stream.Collectors.toSet;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -78,29 +76,28 @@ public class VirusReference
     // Joins FASTA contigs to their info rows. Result in FASTA order.
     static List<VirusGenome> joinFastaAndInfo(SAMSequenceDictionary dictionary, List<VirusGenomeInfo> info)
     {
-        Map<String, VirusGenomeInfo> remainingInfo = new LinkedHashMap<>();
-        for(VirusGenomeInfo virusInfo : info)
+        Map<String, Virus> virusesByContigName = info.stream()
+                .collect(toMap(VirusGenomeInfo::contigName, VirusGenomeInfo::virus));
+        Set<String> fastaContigs = dictionary.getSequences().stream()
+                .map(SAMSequenceRecord::getSequenceName)
+                .collect(toSet());
+
+        List<String> contigsWithoutInfo = fastaContigs.stream()
+                .filter(contig -> !virusesByContigName.containsKey(contig)).sorted().toList();
+        List<String> infoWithoutContig = virusesByContigName.keySet().stream()
+                .filter(contig -> !fastaContigs.contains(contig)).sorted().toList();
+        if(!contigsWithoutInfo.isEmpty() || !infoWithoutContig.isEmpty())
         {
-            remainingInfo.put(virusInfo.contigName(), virusInfo);
-        }
-        List<VirusGenome> result = new ArrayList<>();
-        for(SAMSequenceRecord sequence : dictionary.getSequences())
-        {
-            String contig = sequence.getSequenceName();
-            VirusGenomeInfo row = remainingInfo.remove(contig);
-            if(row == null)
-            {
-                throw new UserInputError(String.format("Virus reference contig has no info row: %s", contig));
-            }
-            result.add(new VirusGenome(contig, sequence.getSequenceLength(), row.virus()));
+            throw new UserInputError(String.format(
+                    "Virus reference FASTA contigs and info rows differ. Contigs without info row: %s. Info rows without contig: %s",
+                    contigsWithoutInfo, infoWithoutContig));
         }
 
-        if(!remainingInfo.isEmpty())
-        {
-            throw new UserInputError(String.format("Virus reference info rows have no FASTA contig: %s", remainingInfo.keySet()));
-        }
-
-        return result;
+        return dictionary.getSequences().stream()
+                .map(sequence -> new VirusGenome(
+                        sequence.getSequenceName(), sequence.getSequenceLength(),
+                        virusesByContigName.get(sequence.getSequenceName())))
+                .toList();
     }
 
     private static SAMSequenceDictionary loadSequenceDictionary(String fastaFile)
