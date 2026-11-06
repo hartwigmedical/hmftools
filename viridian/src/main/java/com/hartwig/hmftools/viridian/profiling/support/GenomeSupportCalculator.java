@@ -10,6 +10,7 @@ import java.util.Map;
 import com.hartwig.hmftools.viridian.profiling.align.AllGenomesReadAlignments;
 import com.hartwig.hmftools.viridian.profiling.align.ViralReadAlignment;
 import com.hartwig.hmftools.viridian.profiling.common.GenomeStats;
+import com.hartwig.hmftools.viridian.profiling.common.GenomeStatsCalculator;
 import com.hartwig.hmftools.viridian.profiling.common.SummaryStats;
 import com.hartwig.hmftools.viridian.reference.VirusGenome;
 
@@ -23,12 +24,14 @@ public class GenomeSupportCalculator
         mCorrectBaseProbability = correctBaseProbability;
     }
 
-    public List<GenomeSupport> calculate(AllGenomesReadAlignments alignments, Map<VirusGenome, GenomeStats> genomeStats)
+    public List<GenomeSupport> calculate(AllGenomesReadAlignments alignments)
     {
+        Map<VirusGenome, GenomeStats> genomeStats = GenomeStatsCalculator.calculate(
+                alignments.genomes(), alignments.store().byGenome(), alignments.originClippedReads());
         Collection<Map<VirusGenome, ViralReadAlignment>> reads = alignments.store().byRead().values();
         Map<VirusGenome, Double> readVotes = calculateReadVotes(reads);
         Map<VirusGenome, Integer> topMatchReads = calculateTopMatchReads(reads);
-        Map<VirusGenome, List<Integer>> alignmentCounts = alignments.metrics().alignmentCountsByGenome();
+        Map<VirusGenome, List<Integer>> alignmentCounts = alignments.alignmentCountsByGenome();
 
         return genomeStats.values().stream()
                 .map(stats -> createGenomeSupport(

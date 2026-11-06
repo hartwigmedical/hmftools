@@ -32,7 +32,7 @@ public class AllGenomesReadAlignmentsTest
                 Stream.of(alignment("r1", V1), straddler("r2", V1), straddler("r3", V1)));
 
         assertEquals(Set.of(ReadId.parse("r1")), allAlignments.store().byRead().keySet());
-        assertEquals(Map.of(V1, 2), allAlignments.metrics().originClippedReads());
+        assertEquals(Map.of(V1, 2), allAlignments.originClippedReads());
     }
 
     @Test
@@ -41,7 +41,7 @@ public class AllGenomesReadAlignmentsTest
         AllGenomesReadAlignments allAlignments = AllGenomesReadAlignments.from(
                 Stream.of(straddler("r1", V1), straddler("r1", V1), straddler("r2", V1)));
 
-        assertEquals(Map.of(V1, 2), allAlignments.metrics().originClippedReads());
+        assertEquals(Map.of(V1, 2), allAlignments.originClippedReads());
     }
 
     // The aligner reports every placement it finds, so one read can be aligned to a virus genome several times. Only
@@ -58,7 +58,7 @@ public class AllGenomesReadAlignmentsTest
         Map<ReadId, ViralReadAlignment> genomeAlignments = allAlignments.store().byGenome().get(V1);
         assertEquals(2, genomeAlignments.size());
         assertEquals(4, genomeAlignments.get(ReadId.parse("r1")).divergence());
-        assertEquals(Map.of(V1, List.of(2, 1)), allAlignments.metrics().alignmentCountsByGenome());
+        assertEquals(Map.of(V1, List.of(2, 1)), allAlignments.alignmentCountsByGenome());
     }
 
     @Test

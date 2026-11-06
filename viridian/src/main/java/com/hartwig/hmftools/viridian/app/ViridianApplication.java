@@ -2,7 +2,6 @@ package com.hartwig.hmftools.viridian.app;
 
 import static java.lang.System.exit;
 import static java.util.Objects.requireNonNull;
-import static java.util.stream.Collectors.toMap;
 
 import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkCreateOutputDir;
@@ -127,7 +126,7 @@ public class ViridianApplication
                 assignReadsToRepresentatives(allGenomesReadAlignments.store(), representatives);
 
         Map<VirusGenome, GenomeStats> representativeGenomeStats =
-                calculateRepresentativeGenomeStats(representativeAlignments, allGenomesReadAlignments.metrics().originClippedReads());
+                calculateRepresentativeGenomeStats(representativeAlignments, allGenomesReadAlignments.originClippedReads());
 
         List<VirusProfile> profiles = VirusProfile.from(representatives, representativeGenomeStats);
 
@@ -204,9 +203,7 @@ public class ViridianApplication
     private List<GenomeSupport> computeGenomeSupport(AllGenomesReadAlignments alignments)
     {
         LOGGER.info("Computing per-genome support");
-        Map<VirusGenome, GenomeStats> genomeStats = GenomeStatsCalculator.calculate(
-                alignments.store().byGenome(), alignments.metrics().originClippedReads());
-        return new GenomeSupportCalculator(READ_VOTE_CORRECT_BASE_PROBABILITY).calculate(alignments, genomeStats);
+        return new GenomeSupportCalculator(READ_VOTE_CORRECT_BASE_PROBABILITY).calculate(alignments);
     }
 
     // For each virus group (group of virus strains at interesting taxonomy granularity), select 1 virus genome which best represents
@@ -238,16 +235,12 @@ public class ViridianApplication
 
     // After the representative virus genome is selected for each virus group, measure final support statistics for the representative.
     private Map<VirusGenome, GenomeStats> calculateRepresentativeGenomeStats(
-            ViralReadAlignmentStore representativeAlignments, Map<VirusGenome, Integer> allOriginClippedReads)
+            ViralReadAlignmentStore representativeAlignments, Map<VirusGenome, Integer> originClippedReads)
     {
         LOGGER.info("Computing representative genome stats");
+        Map<VirusGenome, Map<ReadId, ViralReadAlignment>> alignmentsByGenome = representativeAlignments.byGenome();
         // Origin clipped reads were dropped previously, but the information is useful to carry through for visualisation.
-        Map<VirusGenome, Integer> originClippedReads = allOriginClippedReads.entrySet().stream()
-                .filter(entry -> representativeAlignments.byGenome().containsKey(entry.getKey()))
-                .collect(toMap(Map.Entry::getKey, Map.Entry::getValue));
-        Map<VirusGenome, GenomeStats> genomeStats =
-                GenomeStatsCalculator.calculate(representativeAlignments.byGenome(), originClippedReads);
-        return genomeStats;
+        return GenomeStatsCalculator.calculate(alignmentsByGenome.keySet(), alignmentsByGenome, originClippedReads);
     }
 
     // Find where a virus inserted itself into the host genome, from the SVs ESVEE called.

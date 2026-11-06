@@ -9,7 +9,7 @@ import com.hartwig.hmftools.viridian.profiling.common.ReadId;
 import com.hartwig.hmftools.viridian.reference.VirusGenome;
 
 // A set of read alignments to virus genomes.
-// For each read, stores only the best alignment to each virus genome.
+// For each read, stores only one alignment (the best) to each virus genome.
 // (Rarely, a read can align to the same virus genome multiple times, but these secondary alignments are not
 // necessary to keep).
 public class ViralReadAlignmentStore

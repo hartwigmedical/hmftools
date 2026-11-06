@@ -6,7 +6,7 @@ import static java.util.stream.Collectors.toMap;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
-import java.util.stream.Stream;
+import java.util.Set;
 
 import com.hartwig.hmftools.viridian.profiling.align.MatchedInterval;
 import com.hartwig.hmftools.viridian.profiling.align.ViralReadAlignment;
@@ -16,13 +16,10 @@ import com.hartwig.hmftools.viridian.reference.VirusGenome;
 public class GenomeStatsCalculator
 {
     public static Map<VirusGenome, GenomeStats> calculate(
-            Map<VirusGenome, Map<ReadId, ViralReadAlignment>> alignmentsByGenome,
+            Set<VirusGenome> genomes, Map<VirusGenome, Map<ReadId, ViralReadAlignment>> alignmentsByGenome,
             Map<VirusGenome, Integer> originClippedReads)
     {
-        // A virus genome whose every alignment straddled the origin retains no read, but the drop is still worth
-        // reporting.
-        return Stream.concat(alignmentsByGenome.keySet().stream(), originClippedReads.keySet().stream())
-                .distinct()
+        return genomes.stream()
                 .collect(toMap(
                         identity(),
                         genome -> createGenomeStats(

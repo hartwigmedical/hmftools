@@ -52,7 +52,7 @@ public class GenomeStatsCalculatorTest
     {
         AllGenomesReadAlignments allAlignments = AllGenomesReadAlignments.from(alignments.stream());
         return GenomeStatsCalculator.calculate(
-                allAlignments.store().byGenome(), allAlignments.metrics().originClippedReads());
+                allAlignments.genomes(), allAlignments.store().byGenome(), allAlignments.originClippedReads());
     }
 
     // Clipped bases project past the virus genome start, so this alignment crosses the circular genome's origin.

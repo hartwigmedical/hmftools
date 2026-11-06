@@ -36,9 +36,20 @@ import htsjdk.samtools.ValidationStringency;
 // Alignments straddling a virus genome's origin are excluded here to avoid circular genome linearization artifacts.
 public record AllGenomesReadAlignments(
         ViralReadAlignmentStore store,
-        AllGenomesReadAlignmentsMetrics metrics
+        // Reads with an alignment dropped for clipping over the virus genome's start or end.
+        Map<VirusGenome, Integer> originClippedReads,
+        // Per virus genome and per read, how many alignments the read had on that genome.
+        Map<VirusGenome, List<Integer>> alignmentCountsByGenome
 )
 {
+    // Includes virus genomes whose every alignment straddled the origin, since that drop is still worth showing.
+    public Set<VirusGenome> genomes()
+    {
+        Set<VirusGenome> genomes = new HashSet<>(store.byGenome().keySet());
+        genomes.addAll(originClippedReads.keySet());
+        return genomes;
+    }
+
     public static AllGenomesReadAlignments from(Stream<ViralReadAlignment> alignments)
     {
         Map<VirusGenome, Set<ReadId>> originClippedReadsByGenome = new HashMap<>();
@@ -77,10 +88,7 @@ public record AllGenomesReadAlignments(
         Map<VirusGenome, Integer> originClippedReads = originClippedReadsByGenome.entrySet().stream()
                 .collect(toMap(Map.Entry::getKey, entry -> entry.getValue().size()));
 
-        AllGenomesReadAlignmentsMetrics metrics =
-                new AllGenomesReadAlignmentsMetrics(originClippedReads, alignmentCountsByGenome);
-
-        return new AllGenomesReadAlignments(new ViralReadAlignmentStore(retained), metrics);
+        return new AllGenomesReadAlignments(new ViralReadAlignmentStore(retained), originClippedReads, alignmentCountsByGenome);
     }
 
     public static AllGenomesReadAlignments load(String bamFile, VirusReference reference)

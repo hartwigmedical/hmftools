@@ -5,12 +5,10 @@ import static com.hartwig.hmftools.viridian.common.ViridianConstants.READ_VOTE_C
 import static org.junit.Assert.assertEquals;
 
 import java.util.List;
-import java.util.Map;
 
 import com.hartwig.hmftools.viridian.profiling.align.AllGenomesReadAlignments;
 import com.hartwig.hmftools.viridian.profiling.align.ViralReadAlignment;
 import com.hartwig.hmftools.viridian.profiling.common.GenomeStats;
-import com.hartwig.hmftools.viridian.profiling.common.GenomeStatsCalculator;
 import com.hartwig.hmftools.viridian.profiling.common.ReadId;
 import com.hartwig.hmftools.viridian.profiling.common.SummaryStats;
 import com.hartwig.hmftools.viridian.reference.Virus;
@@ -146,9 +144,7 @@ public class GenomeSupportCalculatorTest
     private static List<GenomeSupport> compute(List<ViralReadAlignment> alignments, double correctBaseProbability)
     {
         AllGenomesReadAlignments allAlignments = AllGenomesReadAlignments.from(alignments.stream());
-        Map<VirusGenome, GenomeStats> genomeStats = GenomeStatsCalculator.calculate(
-                allAlignments.store().byGenome(), allAlignments.metrics().originClippedReads());
-        return new GenomeSupportCalculator(correctBaseProbability).calculate(allAlignments, genomeStats);
+        return new GenomeSupportCalculator(correctBaseProbability).calculate(allAlignments);
     }
 
     private static GenomeSupport get(List<GenomeSupport> stats, VirusGenome genome)
