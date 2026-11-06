@@ -88,7 +88,8 @@ public class VirusReporter
         else if(inputs.purpleFailure() == null)
         {
             double copiesPerTumorCell = profile.representativeStats().depth().mean() / requireNonNull(inputs.expectedViralDepthPerCopy());
-            ClonalityStatus status = copiesPerTumorCell >= REPORTED_COPIES_PER_CELL_MIN ? ClonalityStatus.CLONAL : ClonalityStatus.NOT_CLONAL;
+            ClonalityStatus status =
+                    copiesPerTumorCell >= REPORTED_COPIES_PER_CELL_MIN ? ClonalityStatus.CLONAL : ClonalityStatus.NOT_CLONAL;
             return new Clonality(copiesPerTumorCell, status);
         }
         else
