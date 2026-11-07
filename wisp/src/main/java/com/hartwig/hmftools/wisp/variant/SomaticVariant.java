@@ -31,8 +31,9 @@ public class SomaticVariant
     public final String CanonicalGeneName;
     public final String CanonicalCodingEffect;
 
-    public final List<GenotypeFragments> Samples;
-
+    private GenotypeFragments mTumorFragmentData;
+    private GenotypeFragments mReferenceFragmentData;
+    private final List<GenotypeFragments> mSamples;
     private List<FilterReason> mFilterReasons;
 
     private double mSequenceGcRatio;
@@ -60,7 +61,10 @@ public class SomaticVariant
         CanonicalGeneName = variantImpact.GeneName;
         CanonicalCodingEffect = variantImpact.CanonicalCodingEffect.toString();
 
-        Samples = Lists.newArrayList();
+        mTumorFragmentData = null;
+        mReferenceFragmentData = null;
+
+        mSamples = Lists.newArrayList();
         mFilterReasons = filterReasons;
         mSequenceGcRatio = 0;
         mIsProbeVariant = false;
@@ -74,10 +78,18 @@ public class SomaticVariant
     public boolean isProbeVariant() { return mIsProbeVariant; }
     public void markProbeVariant() { mIsProbeVariant = true; }
 
-    public GenotypeFragments findGenotypeData(final String sampleId)
+    public GenotypeFragments findSampleFragmentData(final String sampleId)
     {
-        return Samples.stream().filter(x -> x.SampleName.equals(sampleId)).findFirst().orElse(null);
+        return mSamples.stream().filter(x -> x.SampleName.equals(sampleId)).findFirst().orElse(null);
     }
+
+    public void addSampleFragmentData(final GenotypeFragments fragmentData) { mSamples.add(fragmentData); }
+
+    public GenotypeFragments tumorFragmentData() { return mTumorFragmentData; }
+    public void setTumorFragmentData(final GenotypeFragments fragmentData) { mTumorFragmentData = fragmentData; }
+
+    public GenotypeFragments referenceFragmentData() { return mReferenceFragmentData; }
+    public void setReferenceFragmentData(final GenotypeFragments fragmentData) { mReferenceFragmentData = fragmentData; }
 
     public void setSequenceGcRatio(double ratio) { mSequenceGcRatio = ratio; }
     public double sequenceGcRatio() { return mSequenceGcRatio; }

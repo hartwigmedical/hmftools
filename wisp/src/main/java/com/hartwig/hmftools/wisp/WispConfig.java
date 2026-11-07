@@ -12,10 +12,16 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.AMBER_DIR_CF
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.AMBER_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.COBALT_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.COBALT_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.PATIENT;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.PATIENT_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FILE;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.convertWildcardSamplePath;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
@@ -44,6 +50,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
@@ -89,9 +96,6 @@ public class WispConfig
 
     public static SequencingType SEQUENCING_TYPE = ILLUMINA;
 
-    private static final String PATIENT_ID = "patient_id";
-    private static final String TUMOR_ID = "tumor_id";
-    private static final String REFERENCE_ID = "reference_id";
     private static final String AMBER_EXTRA_TUMOR_ID = "amber_extra_tumor_id";
     private static final String SAMPLES = "samples";
     private static final String PURITY_METHODS = "purity_methods";
@@ -281,9 +285,9 @@ public class WispConfig
         else
         {
             Samples.add(new SampleData(
-                    configBuilder.getValue(PATIENT_ID),
-                    configBuilder.getValue(TUMOR_ID),
-                    configBuilder.getValue(REFERENCE_ID),
+                    configBuilder.getValue(PATIENT),
+                    configBuilder.getValue(TUMOR),
+                    configBuilder.getValue(REFERENCE),
                     sampleIdsFromStr(configBuilder.getValue(SAMPLES)),
                     "", GcRatioMin > 0,
                     configBuilder.getValue(AMBER_EXTRA_TUMOR_ID)));
@@ -323,9 +327,9 @@ public class WispConfig
     public static void addConfig(final ConfigBuilder configBuilder)
     {
         configBuilder.addConfigItem(SAMPLE_ID_FILE, false, "Patient and sample data file: PatientId,TumorId,ReferenceId,SampleIds");
-        configBuilder.addConfigItem(PATIENT_ID, false, "Patient ID");
-        configBuilder.addConfigItem(TUMOR_ID, false, "Original tumor ID");
-        configBuilder.addConfigItem(REFERENCE_ID, false, "Original reference ID");
+        configBuilder.addConfigItem(PATIENT, false, PATIENT_DESC);
+        configBuilder.addConfigItem(TUMOR, false, TUMOR_DESC);
+        configBuilder.addConfigItem(REFERENCE, false, REFERENCE_DESC);
         configBuilder.addConfigItem(AMBER_EXTRA_TUMOR_ID, false, "Secondary Amber tumor ID");
         configBuilder.addConfigItem(SAMPLES, false, "List of sample IDs separated by ','");
 
@@ -374,5 +378,47 @@ public class WispConfig
 
         addOutputOptions(configBuilder);
         addThreadOptions(configBuilder);
+    }
+
+    @VisibleForTesting
+    public WispConfig(final RefGenomeInterface refGenome)
+    {
+        SampleDataDir = null;
+        GcRatioMin = 0;
+
+        Samples = Lists.newArrayList();
+        PurityMethods = Lists.newArrayList();
+        SomaticVcf = null;
+        SomaticDir = null;
+        PurpleDir = null;
+        AmberDir = null;
+        CobaltDir = null;
+        BqrDir = null;
+        FragmentLengthDir = null;
+        OutputDir = null;
+        OutputId = "";
+
+        SEQUENCING_TYPE = ILLUMINA;
+
+        PlotDir = null;
+
+        ProbeVariants = new ProbeVariantCache(null);
+
+        RefGenome = refGenome;
+
+        NoiseReadsPerMillion = DEFAULT_NOISE_READS_PER_MILLION;
+        NoiseReadsPerMillionDualStrand = DEFAULT_NOISE_READS_PER_MILLION_DUAL_STRAND;
+
+        BqrQualThreshold = DEFAULT_BQR_MIN_QUAL;
+        SkipBqr = false;
+        SkipSubclonalFilter = false;
+        ApplyRefVariantFilters = false;
+        AllowMissingSamples = false;
+        DisableDualFragments = false;
+
+        WriteTypes = Sets.newHashSet();
+        WriteAllSummaryMethods = false;
+        Threads = 0;
+        ExcludedSomatics = Collections.emptyList();
     }
 }

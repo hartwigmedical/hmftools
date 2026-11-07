@@ -21,11 +21,6 @@ import static com.hartwig.hmftools.wisp.WispConfig.isUltima;
 import static com.hartwig.hmftools.wisp.WispConstants.MIN_AVG_EDGE_DISTANCE;
 import static com.hartwig.hmftools.wisp.WispConstants.MIN_AVG_EDGE_DISTANCE_DUAL_ULTIMA;
 import static com.hartwig.hmftools.wisp.WispConstants.MIN_DUAL_QUAL_FILTER_THRESHOLD;
-import static com.hartwig.hmftools.wisp.WispConstants.OUTLIER_MIN_ALLELE_FRAGS;
-import static com.hartwig.hmftools.wisp.WispConstants.OUTLIER_MIN_ALLELE_FRAGS_WITH_DUAL;
-import static com.hartwig.hmftools.wisp.WispConstants.OUTLIER_MIN_AVG_VAF_MULTIPLE;
-import static com.hartwig.hmftools.wisp.WispConstants.OUTLIER_MIN_SAMPLE_PERC;
-import static com.hartwig.hmftools.wisp.WispConstants.OUTLIER_MIN_SAMPLE_RETEST_PERC;
 import static com.hartwig.hmftools.wisp.WispConstants.MAX_SUBCLONAL_LIKELIHOOD;
 import static com.hartwig.hmftools.wisp.WispConstants.SUBCLONAL_VCN_THRESHOLD;
 import static com.hartwig.hmftools.wisp.WispConstants.HIGH_GERMLINE_QUAL_THRESHOLD;
@@ -45,6 +40,8 @@ import static com.hartwig.hmftools.wisp.variant.FilterReason.SUBCLONAL;
 import static com.hartwig.hmftools.wisp.variant.GenotypeFragments.AVG_BASE_QUAL_OLD_TAG;
 import static com.hartwig.hmftools.wisp.variant.GenotypeFragments.REQUIRED_GENOTYPE_FIELDS;
 import static com.hartwig.hmftools.wisp.variant.GenotypeFragments.parseReadArrayAttribute;
+import static com.hartwig.hmftools.wisp.variant.MosaicRoutines.assessMosaics;
+import static com.hartwig.hmftools.wisp.variant.MosaicRoutines.onlyMosaicFilters;
 import static com.hartwig.hmftools.wisp.variant.SnvFitStatus.UNCERTAIN;
 import static com.hartwig.hmftools.wisp.variant.SomaticPurityResult.INVALID_RESULT;
 
@@ -131,6 +128,10 @@ public class SomaticVariants
         CT_LOGGER.debug("loading somatic variant VCF: {}", somaticVcf);
 
         List<String> targetSampleIds = Lists.newArrayList(mSample.TumorId);
+
+        if(mSample.hasReference())
+            targetSampleIds.add(mSample.ReferenceId);
+
         mSample.SampleIds.forEach(x -> targetSampleIds.add(x));
 
         VcfFileReader vcfFileReader = new VcfFileReader(somaticVcf);
@@ -215,7 +216,7 @@ public class SomaticVariants
 
     private static final double NO_GC_RATIO = -1;
 
-    private void processVariant(final List<String> targetSampleIds, final VariantContext variantContext)
+    protected void processVariant(final List<String> targetSampleIds, final VariantContext variantContext)
     {
         VariantContextDecorator variant = new VariantContextDecorator(variantContext);
 
@@ -284,31 +285,49 @@ public class SomaticVariants
                 umiTypeCounts = new UmiTypeCounts(depth, 0, 0, alleleCount, 0, 0);
             }
 
-            somaticVariant.Samples.add(new GenotypeFragments(
-                    genotype.getSampleName(), alleleCount, depth, qualTotal, umiTypeCounts, genotype));
+            GenotypeFragments genotypeFragments = new GenotypeFragments(
+                    genotype.getSampleName(), alleleCount, depth, qualTotal, umiTypeCounts, genotype);
+
+            if(genotype.getSampleName().equals(mSample.TumorId))
+            {
+                somaticVariant.setTumorFragmentData(genotypeFragments);
+            }
+            else if(genotype.getSampleName().equals(mSample.ReferenceId))
+            {
+                somaticVariant.setReferenceFragmentData(genotypeFragments);
+            }
+            else
+            {
+                somaticVariant.addSampleFragmentData(genotypeFragments);
+            }
         }
     }
 
     public SomaticPurityResult processSample(final String sampleId)
     {
         // BQR values are used both in filters and purity calcs
-        if(!mConfig.SkipBqr)
+        if(!mConfig.SkipBqr && mConfig.OutputDir != null)
             mBqrAdjustment.loadBqrData(sampleId);
 
         List<SomaticVariant> filteredVariants = Lists.newArrayList();
 
         double sampleTotalAD = 0; // this value will be normalised by copy number
+        double sampleTotalAF = 0; // this value will be normalised by copy number
+        int mosaicEligibleVariantCount = 0;
 
         // compile a set of filtered variants, and compute a total AD just for these
         for(SomaticVariant variant : mVariants)
         {
-            GenotypeFragments sampleFragData = variant.findGenotypeData(sampleId);
-            GenotypeFragments tumorFragData = variant.findGenotypeData(mSample.TumorId);
+            GenotypeFragments sampleFragData = variant.findSampleFragmentData(sampleId);
+            GenotypeFragments tumorFragData = variant.tumorFragmentData();
 
             if(sampleFragData == null || tumorFragData == null)
                 continue;
 
             checkSampleDataFilters(variant, sampleFragData);
+
+            if(onlyMosaicFilters(variant, sampleFragData))
+                ++mosaicEligibleVariantCount;
 
             if(variant.isFiltered() || sampleFragData.isFiltered())
                 continue;
@@ -316,37 +335,45 @@ public class SomaticVariants
             filteredVariants.add(variant);
 
             sampleTotalAD += sampleFragData.AlleleCount / variant.variantCnFloored();
+
+            sampleTotalAF += sampleFragData.vaf();
         }
 
         SomaticPurityResult purityResult = INVALID_RESULT;
 
         if(!filteredVariants.isEmpty())
         {
-            // check for CHIP variants and remove them from variants used for purity estimates
-            List<SomaticVariant> outlierVariants = findOutlierVariants(sampleId, filteredVariants, sampleTotalAD);
+            // check for outlier / CHIP variants and remove them from variants used for purity estimates
+            List<SomaticVariant> outlierVariants = MosaicRoutines.findOutlierVariants(sampleId, filteredVariants, sampleTotalAD);
 
-            purityResult = mEstimator.calculatePurity(sampleId, filteredVariants, mVariants.size(), outlierVariants, true);
+            MosaicData mosaicData = assessMosaics(
+                    sampleId, filteredVariants, outlierVariants.size(), mosaicEligibleVariantCount, sampleTotalAD, sampleTotalAF);
 
-            if(purityResult.status() == UNCERTAIN || !purityResult.mrdDetected())
+            purityResult = mEstimator.calculatePurity(sampleId, filteredVariants, mVariants.size(), mosaicData, true);
+
+            if(purityResult.Status == UNCERTAIN || !purityResult.mrdDetected())
             {
                 SomaticPurityResult newPurityResult = mEstimator.calculatePurity(
-                        sampleId, filteredVariants, mVariants.size(), outlierVariants, false);
+                        sampleId, filteredVariants, mVariants.size(), mosaicData, false);
 
                 if(newPurityResult.mrdDetected())
                 {
                     CT_LOGGER.warn("sample({}) recovered MRD detection using high copy number variants, status({})",
-                            sampleId, purityResult.status());
+                            sampleId, purityResult.Status);
                     purityResult = newPurityResult;
                 }
             }
+
+            String outlierInfo = MosaicRoutines.formOutlierVariantsInfo(sampleId, outlierVariants, purityResult.PurityCalcs.ErrorRate);
+            purityResult.setOutlierVariantInfo(outlierInfo);
         }
 
         if(mConfig.writeType(WriteType.SOMATIC_DATA))
         {
             for(SomaticVariant variant : mVariants)
             {
-                GenotypeFragments sampleFragData = variant.findGenotypeData(sampleId);
-                GenotypeFragments tumorFragData = variant.findGenotypeData(mSample.TumorId);
+                GenotypeFragments sampleFragData = variant.findSampleFragmentData(sampleId);
+                GenotypeFragments tumorFragData = variant.tumorFragmentData();
 
                 if(sampleFragData != null && tumorFragData != null)
                 {
@@ -457,77 +484,5 @@ public class SomaticVariants
         }
     }
 
-    private List<SomaticVariant> findOutlierVariants(
-            final String sampleId, final List<SomaticVariant> filteredVariants, double initialSampleTotalAD)
-    {
-        // check for CHIP or similar outlier variants and remove them from variants used for purity estimates
-        // recompute the total sample AD if any outlier variants are found and repeat
-        double sampleTotalAD = initialSampleTotalAD;
-
-        // first compute an average VAF to test outliers against
-        double vafTotal = 0;
-
-        for(SomaticVariant variant : filteredVariants)
-        {
-            GenotypeFragments sampleFragData = variant.findGenotypeData(sampleId);
-
-            vafTotal += sampleFragData.vaf();
-        }
-
-        double averageVaf = vafTotal / (double)filteredVariants.size();
-
-        List<SomaticVariant> allOutlierVariants = Lists.newArrayList();
-        List<SomaticVariant> outlierVariants = Lists.newArrayList();
-        double minSamplePerc = OUTLIER_MIN_SAMPLE_PERC;
-
-        while(true)
-        {
-            for(SomaticVariant variant : filteredVariants)
-            {
-                GenotypeFragments sampleFragData = variant.findGenotypeData(sampleId);
-
-                boolean sufficientFrags = sampleFragData.AlleleCount >= OUTLIER_MIN_ALLELE_FRAGS
-                        || (sampleFragData.AlleleCount >= OUTLIER_MIN_ALLELE_FRAGS_WITH_DUAL && sampleFragData.UmiCounts.AlleleDual >= 1);
-
-                if(!sufficientFrags)
-                    continue;
-
-                if(sampleFragData.vaf() < OUTLIER_MIN_AVG_VAF_MULTIPLE * averageVaf)
-                    continue;
-
-                if((sampleFragData.AlleleCount / variant.variantCnFloored()) / sampleTotalAD > minSamplePerc)
-                {
-                    sampleFragData.markOutlier();
-                    outlierVariants.add(variant);
-                }
-            }
-
-            if(outlierVariants.isEmpty())
-                break;
-
-            allOutlierVariants.addAll(outlierVariants);
-
-            for(SomaticVariant variant : outlierVariants)
-            {
-                CT_LOGGER.debug(format("sample(%s) outlier variant(%s) normalised ad(%.1f) vs sampleTotal(%.1f)",
-                        sampleId, variant, variant.findGenotypeData(sampleId).AlleleCount / variant.variantCnFloored(), sampleTotalAD));
-
-                filteredVariants.remove(variant);
-            }
-
-            outlierVariants.clear();
-
-            // increase threshold and recompute sample allele total less the identified CHIP variants
-            minSamplePerc = OUTLIER_MIN_SAMPLE_RETEST_PERC;
-
-            sampleTotalAD = 0;
-            for(SomaticVariant variant : filteredVariants)
-            {
-                GenotypeFragments sampleFragData = variant.findGenotypeData(sampleId);
-                sampleTotalAD += sampleFragData.AlleleCount / max(variant.VariantCopyNumber, 1);
-            }
-        }
-
-        return allOutlierVariants;
-    }
+    public BqrAdjustment bqrAdjustment() { return mBqrAdjustment; }
 }

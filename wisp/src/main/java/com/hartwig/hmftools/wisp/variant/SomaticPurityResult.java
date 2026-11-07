@@ -19,30 +19,30 @@ import com.hartwig.hmftools.wisp.ResultsWriter;
 public class SomaticPurityResult
 {
     public final int TotalVariants;
-    public final String OutlierVariantInfo;
     public final FragmentTotals FragTotals; // used in purity fit - passes filters and either avg qual > threshold or has no allele fragments
     public final UmiTypeCounts UmiCounts;
     public final PurityCalcData PurityCalcs;
     public final boolean CapMaxTumorCopyNumber;
+    public final SnvFitStatus Status;
 
-    private SnvFitStatus mStatus;
+    private String mOutlierVariantInfo;
 
     public static final SomaticPurityResult INVALID_RESULT = new SomaticPurityResult(
-            SnvFitStatus.INVALID, false, 0, "",
-            new FragmentTotals(), UmiTypeCounts.NO_UMI_COUNTS, new PurityCalcData());
+            SnvFitStatus.INVALID, false, 0, new FragmentTotals(),
+            UmiTypeCounts.NO_UMI_COUNTS, new PurityCalcData());
 
     public SomaticPurityResult(
-            final SnvFitStatus status, boolean capMaxTumorCopyNumber, int totalVariants, final String outlierVariantInfo,
-            final FragmentTotals fragmentTotals, final UmiTypeCounts umiTypeCounts, final PurityCalcData purityCalcData)
+            final SnvFitStatus status, boolean capMaxTumorCopyNumber, int totalVariants, final FragmentTotals fragmentTotals,
+            final UmiTypeCounts umiTypeCounts, final PurityCalcData purityCalcData)
     {
         TotalVariants = totalVariants;
-        OutlierVariantInfo = outlierVariantInfo;
         FragTotals = fragmentTotals;
         UmiCounts = umiTypeCounts;
         PurityCalcs = purityCalcData;
         CapMaxTumorCopyNumber = capMaxTumorCopyNumber;
+        Status = status;
 
-        mStatus = status;
+        mOutlierVariantInfo = "";
     }
 
     private DetectionResult formatDetectionResult()
@@ -53,13 +53,13 @@ public class SomaticPurityResult
         return PurityCalcs.Probability < LOW_PROBABILITY ? TRUE : FALSE;
     }
 
-    public SnvFitStatus status() { return mStatus; }
-    public void setStatus(final SnvFitStatus status) { mStatus = status; }
-
     public boolean mrdDetected()
     {
         return PurityCalcs.PurityEstimate > PurityCalcs.LodPurityEstimate || PurityCalcs.DualProbability < LOW_PROBABILITY;
     }
+
+    public void setOutlierVariantInfo(final String outlierVariantInfo) { mOutlierVariantInfo = outlierVariantInfo; }
+    public String outlierVariantInfo() { return mOutlierVariantInfo; }
 
     public static String header()
     {
@@ -101,7 +101,7 @@ public class SomaticPurityResult
     {
         StringJoiner sj = new StringJoiner(TSV_DELIM);
         sj.add(formatDetectionResult().toString());
-        sj.add(String.valueOf(mStatus));
+        sj.add(String.valueOf(Status));
         sj.add(format("%d", TotalVariants));
         sj.add(format("%d", FragTotals.variantCount()));
         sj.add(formatPurityValue(PurityCalcs.PurityEstimate));
@@ -127,7 +127,7 @@ public class SomaticPurityResult
         sj.add(format("%.1f", FragTotals.weightedVariantCopyNumber()));
         sj.add(format("%.1f", FragTotals.weightedCopyNumber()));
 
-        sj.add(OutlierVariantInfo);
+        sj.add(mOutlierVariantInfo);
         sj.add(Boolean.toString(CapMaxTumorCopyNumber));
 
         sj.add(format("%4.3e", PurityCalcs.ErrorRate));

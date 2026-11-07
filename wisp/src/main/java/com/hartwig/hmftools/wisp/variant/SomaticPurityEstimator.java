@@ -8,7 +8,6 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.phredQualToProbability;
 import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.probabilityToPhredQual;
 import static com.hartwig.hmftools.common.stats.PoissonCalcs.calcPoissonNoiseValue;
-import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.CT_LOGGER;
 import static com.hartwig.hmftools.wisp.WispConstants.HIGH_PROBABILITY;
 import static com.hartwig.hmftools.wisp.WispConstants.INDEL_ERROR_RATE;
@@ -28,7 +27,6 @@ import static com.hartwig.hmftools.wisp.variant.SomaticPurityResult.INVALID_RESU
 
 import java.util.Collections;
 import java.util.List;
-import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.bam.ConsensusType;
@@ -56,21 +54,19 @@ public class SomaticPurityEstimator
 
     public SomaticPurityResult calculatePurity(
             final String sampleId, final List<SomaticVariant> variants, final int totalVariantCount,
-            final List<SomaticVariant> outlierVariants, boolean capMaxTumorCopyNumber)
+            final MosaicData mosaicData, boolean capMaxTumorCopyNumber)
     {
         FragmentTotals fragmentTotals = new FragmentTotals();
         FragmentTotals dualFragmentTotals = new FragmentTotals();
 
-        int sampleDualDP = 0;
-        int sampleDualAD = 0;
         boolean uncertain = false;
 
         UmiTypeCounts umiTypeCounts = new UmiTypeCounts();
 
         for(SomaticVariant variant : variants)
         {
-            GenotypeFragments sampleFragData = variant.findGenotypeData(sampleId);
-            GenotypeFragments tumorFragData = variant.findGenotypeData(mSample.TumorId);
+            GenotypeFragments tumorFragData = variant.tumorFragmentData();
+            GenotypeFragments sampleFragData = variant.findSampleFragmentData(sampleId);
 
             fragmentTotals.addVariantData(
                     variant.CopyNumber, variant.VariantCopyNumber, tumorFragData.AlleleCount, sampleFragData.AlleleCount,
@@ -83,13 +79,14 @@ public class SomaticPurityEstimator
                 dualFragmentTotals.addVariantData(
                         variant.CopyNumber, variant.VariantCopyNumber, tumorFragData.AlleleCount, sampleFragData.UmiCounts.AlleleDual,
                         tumorFragData.Depth, sampleFragData.UmiCounts.TotalDual, capMaxTumorCopyNumber);
-
-                sampleDualDP += sampleFragData.UmiCounts.TotalDual;
-                sampleDualAD += sampleFragData.UmiCounts.AlleleDual;
             }
 
             umiTypeCounts.add(sampleFragData.UmiCounts, includeDual);
         }
+
+        int uncappedVariantCount = fragmentTotals.variantCount();
+        int sampleDualDP = dualFragmentTotals.sampleDepthTotal();
+        int sampleDualAD = dualFragmentTotals.sampleAdTotal();
 
         if(fragmentTotals.sampleDepthTotal() == 0)
             return INVALID_RESULT;
@@ -104,15 +101,16 @@ public class SomaticPurityEstimator
         // firstly estimate raw purity without consideration of clonal peaks
         double noiseRate;
 
-        // calculate a limit-of-detection (LOD), being the number of fragments that would return a 99% confidence of a tumor presence
         if(!mConfig.SkipBqr)
         {
             if(!mBqrAdjustment.hasValidData())
                 return INVALID_RESULT;
 
+            // check each qual threshold and keep the purity result with the lowest LOD
             for(int threshold : SNV_QUAL_THRESHOLDS)
             {
-                FragmentTotals bqrThresholdFragTotals = calculateThresholdValues(sampleId, purityCalcData, variants, threshold, capMaxTumorCopyNumber);
+                FragmentTotals bqrThresholdFragTotals = calculateThresholdValues(
+                        sampleId, purityCalcData, variants, threshold, capMaxTumorCopyNumber);
 
                 if(bqrThresholdFragTotals != null)
                     fragmentTotals = bqrThresholdFragTotals;
@@ -164,6 +162,7 @@ public class SomaticPurityEstimator
         purityCalcData.PurityRangeHigh = cappedPurity(estimatedPurity(
                 sampleAdjVafHigh, noiseRate, fragmentTotals), purityCalcData.RawPurityEstimate);
 
+        // check specific models - low count and VAF peak if applicable
         ClonalityModel model = null;
 
         if(!uncertain && VafPeakModel.canUseModel(fragmentTotals, purityCalcData))
@@ -196,29 +195,10 @@ public class SomaticPurityEstimator
         // CT_LOGGER.info(format("patient(%s) sample(%s) sampleTotalFrags(%d) noise(%.1f) LOD(%.6f)",
         //        mSample.PatientId, sampleId, sampleDepthTotal, allFragsNoise, lodFragsResult.EstimatedPurity));
 
-        StringJoiner sjOutlier = new StringJoiner(ITEM_DELIM);
-
-        for(SomaticVariant outlier : outlierVariants)
-        {
-            GenotypeFragments sampleFragData = outlier.findGenotypeData(sampleId);
-            GenotypeFragments tumorFragData = outlier.findGenotypeData(mSample.TumorId);
-
-            FragmentTotals variantFragTotals = new FragmentTotals();
-
-            variantFragTotals.addVariantData(
-                    outlier.CopyNumber, outlier.VariantCopyNumber, tumorFragData.AlleleCount, sampleFragData.AlleleCount,
-                    tumorFragData.Depth, sampleFragData.Depth, false);
-
-            double impliedTF = estimatedPurity(variantFragTotals.rawSampleVaf(), noiseRate, variantFragTotals);
-
-            sjOutlier.add(format("%s %d/%d %.2f %s",
-                    outlier, sampleFragData.AlleleCount, sampleFragData.Depth, sampleFragData.vaf(), formatPurityValue(impliedTF)));
-        }
-
         SnvFitStatus status = uncertain ? SnvFitStatus.UNCERTAIN : SnvFitStatus.OK;
 
         return new SomaticPurityResult(
-                status, capMaxTumorCopyNumber, totalVariantCount, sjOutlier.toString(), fragmentTotals, umiTypeCounts, purityCalcData);
+                status, capMaxTumorCopyNumber, totalVariantCount, fragmentTotals, umiTypeCounts, purityCalcData);
     }
 
     private double getBqrErrorRate(final SomaticVariant variant, final GenotypeFragments sampleFragData)
@@ -245,6 +225,7 @@ public class SomaticPurityEstimator
             final String sampleId, final PurityCalcData purityCalcData, final List<SomaticVariant> variants, int qualThreshold,
             boolean capMaxTumorCopyNumber)
     {
+        // test each variant for the given BQR qual threshold to see if it produces a lower LOD vs previously tested levels
         List<BqrContextData> filteredBqrData = mBqrAdjustment.getThresholdBqrData(qualThreshold);
 
         if(filteredBqrData.isEmpty())
@@ -262,7 +243,7 @@ public class SomaticPurityEstimator
 
         for(SomaticVariant variant : variants)
         {
-            GenotypeFragments sampleFragData = variant.findGenotypeData(sampleId);
+            GenotypeFragments sampleFragData = variant.findSampleFragmentData(sampleId);
 
             double varBqrErrorRate = 0;
 
@@ -284,7 +265,7 @@ public class SomaticPurityEstimator
 
             sampleDepthPerCnTotal += sampleFragData.Depth / max(variant.CopyNumber, 1);
 
-            GenotypeFragments tumorFragData = variant.findGenotypeData(mSample.TumorId);
+            GenotypeFragments tumorFragData = variant.tumorFragmentData();
 
             fragmentTotals.addVariantData(
                     variant.CopyNumber, variant.VariantCopyNumber, tumorFragData.AlleleCount, sampleFragData.AlleleCount,

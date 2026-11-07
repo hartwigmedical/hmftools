@@ -47,7 +47,7 @@ public class LowCountModel extends ClonalityModel
             if(variant.VariantCopyNumber > vcnThreshold)
                 continue;
 
-            GenotypeFragments sampleFragData = variant.findGenotypeData(sampleId);
+            GenotypeFragments sampleFragData = variant.findSampleFragmentData(sampleId);
 
             if(sampleFragData.Depth > sampleDpThreshold)
                 continue;
@@ -64,7 +64,7 @@ public class LowCountModel extends ClonalityModel
 
         for(SomaticVariant variant : variants)
         {
-            GenotypeFragments sampleFragData = variant.findGenotypeData(sampleId);
+            GenotypeFragments sampleFragData = variant.findSampleFragmentData(sampleId);
 
             if(sampleFragData.AlleleCount >= 2)
                 ++twoPlusFragVariantCount;
@@ -139,7 +139,7 @@ public class LowCountModel extends ClonalityModel
 
         for(SomaticVariant variant : mVariants)
         {
-            GenotypeFragments sampleFragData = variant.findGenotypeData(sampleId);
+            GenotypeFragments sampleFragData = variant.findSampleFragmentData(sampleId);
 
             if(useVariant(variant, sampleFragData) && sampleFragData.Depth > 1)
             {
@@ -176,7 +176,7 @@ public class LowCountModel extends ClonalityModel
 
             for(SomaticVariant variant : filteredVariants)
             {
-                GenotypeFragments sampleFragData = variant.findGenotypeData(sampleId);
+                GenotypeFragments sampleFragData = variant.findSampleFragmentData(sampleId);
 
                 BinomialDistribution binomial = new BinomialDistribution(sampleFragData.Depth, simulatedVaf);
 

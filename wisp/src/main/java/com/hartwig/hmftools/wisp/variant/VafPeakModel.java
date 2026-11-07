@@ -106,7 +106,7 @@ public class VafPeakModel extends ClonalityModel
 
         for(SomaticVariant variant : mVariants)
         {
-            GenotypeFragments sampleFragData = variant.findGenotypeData(sampleId);
+            GenotypeFragments sampleFragData = variant.findSampleFragmentData(sampleId);
 
             if(sampleFragData == null)
                 continue;

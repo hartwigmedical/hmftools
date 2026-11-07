@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -87,8 +88,8 @@ public class BqrAdjustment
 
     public static double calcErrorRate(final List<BqrContextData> bqrContextData)
     {
-        int depthTotal = 0;
-        int fragmentTotal = 0;
+        long depthTotal = 0;
+        long fragmentTotal = 0;
 
         Set<String> processedTriNucContext = Sets.newHashSet();
 
@@ -123,7 +124,7 @@ public class BqrAdjustment
 
         if(mConfig.BqrDir != null)
             bqrFileDir = mConfig.BqrDir;
-        else if(!mConfig.SomaticVcf.isEmpty())
+        else if(mConfig.SomaticVcf != null && !mConfig.SomaticVcf.isEmpty())
             bqrFileDir = pathFromFile(mConfig.getSomaticVcf(sampleId));
         else
             bqrFileDir = mConfig.SomaticDir;
@@ -195,7 +196,8 @@ public class BqrAdjustment
         return getOrCreate(new String(trinucleotideContext), String.valueOf((char)alt), consensusType);
     }
 
-    private BqrContextData getOrCreate(final String trinucleotideContext, final String alt, final ConsensusType consensusType)
+    @VisibleForTesting
+    protected BqrContextData getOrCreate(final String trinucleotideContext, final String alt, final ConsensusType consensusType)
     {
         List<BqrContextData> bqrContextData = mBqrContextData.get(consensusType);
 

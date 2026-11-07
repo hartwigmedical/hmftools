@@ -80,6 +80,9 @@ public class ResultsWriter
 
     private BufferedWriter initialiseWriter()
     {
+        if(mConfig.OutputDir == null)
+            return null;
+
         try
         {
             String fileName = mConfig.formFilename(FileType.SUMMARY);
