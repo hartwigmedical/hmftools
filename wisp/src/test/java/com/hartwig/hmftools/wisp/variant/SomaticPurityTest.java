@@ -5,6 +5,8 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_BASES;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_CN;
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_VARIANT_CN;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_EDGE_DISTANCE_PERC;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_RECALIBRATED_BASE_QUAL;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_COUNT;
@@ -14,6 +16,7 @@ import static com.hartwig.hmftools.common.variant.SageVcfTags.TRINUCLEOTIDE_CONT
 import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNTS;
 import static com.hartwig.hmftools.wisp.purity.WispTestUtils.TEST_CONFIG;
 import static com.hartwig.hmftools.wisp.purity.WispTestUtils.TEST_REFERENCE_ID;
+import static com.hartwig.hmftools.wisp.purity.WispTestUtils.TEST_RESULTS_WRITER;
 import static com.hartwig.hmftools.wisp.purity.WispTestUtils.TEST_SAMPLE;
 import static com.hartwig.hmftools.wisp.purity.WispTestUtils.TEST_SAMPLE_ID;
 import static com.hartwig.hmftools.wisp.purity.WispTestUtils.TEST_TUMOR_ID;
@@ -51,15 +54,13 @@ import htsjdk.variant.variantcontext.VariantContextBuilder;
 public class SomaticPurityTest
 {
     private final BqrAdjustment mBbqrAdjustment;
-    private final ResultsWriter mResultsWriter;
     private final SomaticPurityEstimator mPurityEstimator;
 
     public SomaticPurityTest()
     {
         mBbqrAdjustment = new BqrAdjustment(TEST_CONFIG);
-        mResultsWriter = new ResultsWriter(TEST_CONFIG);
 
-        mPurityEstimator = new SomaticPurityEstimator(TEST_CONFIG, mResultsWriter, TEST_SAMPLE, mBbqrAdjustment);
+        mPurityEstimator = new SomaticPurityEstimator(TEST_CONFIG, TEST_RESULTS_WRITER, TEST_SAMPLE, mBbqrAdjustment);
 
         addBqrData(mBbqrAdjustment, "C", 100_000, 10, 0);
     }
@@ -67,7 +68,7 @@ public class SomaticPurityTest
     @Test
     public void tesSomaticVariantsBasic()
     {
-        SomaticVariants somaticVariants = new SomaticVariants(TEST_CONFIG, mResultsWriter, TEST_SAMPLE);
+        SomaticVariants somaticVariants = new SomaticVariants(TEST_CONFIG, TEST_RESULTS_WRITER, TEST_SAMPLE);
 
         String alt = "C";
         addBqrData(somaticVariants.bqrAdjustment(), alt, 100_000, 10, 0);
@@ -105,9 +106,9 @@ public class SomaticPurityTest
 
     }
 
-    private static final int DEFAULT_REF_DEPTH = 30;
-    private static final int DEFAULT_TUMOR_DEPTH = 100;
-    private static final int DEFAULT_BASE_QUAL = 37;
+    protected static final int DEFAULT_REF_DEPTH = 30;
+    protected static final int DEFAULT_TUMOR_DEPTH = 100;
+    protected static final int DEFAULT_BASE_QUAL = 37;
 
     private static void addReadCountAttributes(
             final Map<String,Object> attributes, int alleleFrags, int depth, int dualFrags, int dualDepth)
@@ -122,13 +123,48 @@ public class SomaticPurityTest
         attributes.put(UMI_TYPE_COUNTS, format("%d,0,%d,%d,0,%d", depth - dualDepth, dualDepth, alleleFrags - dualFrags, dualFrags));
     }
 
-    private static String formTriNucContext(final String alt)
+    protected static String formTriNucContext(final String alt)
     {
         return "A" + alt + "T";
     }
 
-    private VariantContext createVariantContext(
+    protected static VariantContext createVariantContext(
             final String ref, final String alt, int tumorDp, int tumorAd, int sampleDp, int sampleAd)
+    {
+        return createVariantContext(
+                ref, alt, DEFAULT_REF_DEPTH, 0, tumorDp, tumorAd, sampleDp, sampleAd,
+                0, 0, 2.0, 2.0);
+    }
+
+    protected static VariantContext createVariantContext(
+            final String ref, final String alt, int refDp, int refAd, int tumorDp, int tumorAd,
+            int sampleDp, int sampleAd, int sampleDualDp, int sampleDualAd,
+            double copyNumber, double variantCopyNumber)
+    {
+        Map<String,Object> commonAttributes = Maps.newHashMap();
+        Map<String,Object> refAttributes = Maps.newHashMap();
+        Map<String,Object> tumorAttributes = Maps.newHashMap();
+        Map<String,Object> sampleAttributes = Maps.newHashMap();
+
+        refAttributes.put(AVG_RECALIBRATED_BASE_QUAL, "0,0" );
+
+        commonAttributes.put(TRINUCLEOTIDE_CONTEXT, formTriNucContext(alt));
+        commonAttributes.put(PURPLE_CN, copyNumber);
+        commonAttributes.put(PURPLE_VARIANT_CN, variantCopyNumber);
+
+        sampleAttributes.put(AVG_EDGE_DISTANCE_PERC, "75,75");
+        sampleAttributes.put(READ_STRAND_BIAS, "0.5,0.5");
+
+        return createVariantContext(
+                ref, alt, refDp, refAd, tumorDp, tumorAd, sampleDp, sampleAd, sampleDualDp, sampleDualAd,
+                commonAttributes, refAttributes, tumorAttributes, sampleAttributes);
+    }
+
+    protected static VariantContext createVariantContext(
+            final String ref, final String alt, int refDp, int refAd, int tumorDp, int tumorAd,
+            int sampleDp, int sampleAd, int sampleDualDp, int sampleDualAd,
+            final Map<String,Object> commonAttributes, final Map<String,Object> refAttributes,
+            final Map<String,Object> tumorAttributes, final Map<String,Object> sampleAttributes)
     {
         VariantContextBuilder builder = new VariantContextBuilder();
 
@@ -136,18 +172,14 @@ public class SomaticPurityTest
         alleles.add(Allele.create(ref, true));
         alleles.add(Allele.create(alt, false));
 
-        Map<String,Object> commonAttributes = Maps.newHashMap();
-        Map<String,Object> refAttributes = Maps.newHashMap();
-        Map<String,Object> tumorAttributes = Maps.newHashMap();
-        Map<String,Object> sampleAttributes = Maps.newHashMap();
+        refAd = min(refAd, refDp);
+        int refRefCount = refDp - refAd;
 
-        commonAttributes.put(TRINUCLEOTIDE_CONTEXT, formTriNucContext(alt));
-
-        refAttributes.put(AVG_RECALIBRATED_BASE_QUAL, "0,0" );
+        addReadCountAttributes(refAttributes, refAd, refDp, 0, 0);
 
         Genotype gtNormal = new GenotypeBuilder().attributes(refAttributes).name(TEST_REFERENCE_ID)
-                .DP(DEFAULT_REF_DEPTH)
-                .AD(new int[] { DEFAULT_REF_DEPTH, 0 })
+                .DP(refDp)
+                .AD(new int[] { refRefCount, refAd })
                 .noPL().GQ(-1).make();
 
         tumorAd = min(tumorAd, tumorDp);
@@ -163,10 +195,7 @@ public class SomaticPurityTest
         sampleAd = min(sampleAd, sampleDp);
         int sampleRefCount = sampleDp - sampleAd;
 
-        addReadCountAttributes(sampleAttributes, sampleAd, sampleDp, 0, 0);
-
-        sampleAttributes.put(AVG_EDGE_DISTANCE_PERC, "75,75");
-        sampleAttributes.put(READ_STRAND_BIAS, "0.5,0.5");
+        addReadCountAttributes(sampleAttributes, sampleAd, sampleDp, sampleDualAd, sampleDualDp);
 
         Genotype gtSample = new GenotypeBuilder().attributes(sampleAttributes).name(TEST_SAMPLE_ID)
                 .DP(-1)
@@ -195,7 +224,7 @@ public class SomaticPurityTest
         return variantContext;
     }
 
-    private SomaticVariant createSomaticVariant(
+    protected SomaticVariant createSomaticVariant(
             final String ref, final String alt, int tumorDp, int tumorAd, int sampleDp, int sampleAd)
     {
         VariantContext variantContext = createVariantContext(ref, alt, tumorDp, tumorAd, sampleDp, sampleAd);
@@ -207,7 +236,7 @@ public class SomaticPurityTest
         return new SomaticVariant(decorator, 0, filters, false);
     }
 
-    private static void addBqrData(final BqrAdjustment bqrAdjustment, final String alt, int totalCount, int altCount, int altDualCount)
+    protected static void addBqrData(final BqrAdjustment bqrAdjustment, final String alt, int totalCount, int altCount, int altDualCount)
     {
         for(char base : DNA_BASES)
         {

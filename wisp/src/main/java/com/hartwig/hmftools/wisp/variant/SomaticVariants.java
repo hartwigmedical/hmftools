@@ -311,8 +311,9 @@ public class SomaticVariants
 
         List<SomaticVariant> filteredVariants = Lists.newArrayList();
 
-        double sampleTotalAD = 0; // this value will be normalised by copy number
-        double sampleTotalAF = 0; // this value will be normalised by copy number
+        double sampleTotalAD = 0; // these values will be normalised by copy number
+        double sampleTotalAF = 0;
+
         int mosaicEligibleVariantCount = 0;
 
         // compile a set of filtered variants, and compute a total AD just for these

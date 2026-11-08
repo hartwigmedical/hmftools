@@ -27,8 +27,8 @@ public final class MosaicRoutines
 {
     public static boolean onlyMosaicFilters(final SomaticVariant variant, final GenotypeFragments sampleFragData)
     {
-        return variant.filterReasons().stream().allMatch(x -> FilterReason.isMosiacType(x))
-            && sampleFragData.filterReasons().stream().allMatch(x -> FilterReason.isMosiacType(x));
+        return variant.filterReasons().stream().allMatch(x -> isMosiacType(x))
+            && sampleFragData.filterReasons().stream().allMatch(x -> isMosiacType(x));
     }
 
     public static List<SomaticVariant> findOutlierVariants(
@@ -66,7 +66,8 @@ public final class MosaicRoutines
                 if(!sufficientFrags)
                     continue;
 
-                if(sampleFragData.vaf() < OUTLIER_MIN_AVG_VAF_MULTIPLE * averageVaf)
+                double vaf = sampleFragData.vaf();
+                if(vaf < OUTLIER_MIN_AVG_VAF_MULTIPLE * averageVaf)
                     continue;
 
                 if((sampleFragData.AlleleCount / variant.variantCnFloored()) / sampleTotalAD > minSamplePerc)
@@ -129,6 +130,24 @@ public final class MosaicRoutines
         return sjOutlier.toString();
     }
 
+    public static boolean isMosiacType(final FilterReason filterReason)
+    {
+        switch(filterReason)
+        {
+            case NO_PASS:
+            case MAPPABILITY:
+            case REPEAT_COUNT:
+            case LOW_CONFIDENCE:
+            case GC_RATIO:
+            case OUTLIER:
+            case DUAL_ERROR_RATE:
+                return true;
+
+            default:
+                return false;
+        }
+    }
+
     public static MosaicData assessMosaics(
             final String sampleId, final List<SomaticVariant> filteredVariants, int outlierVariantCount,
             int mosaicEligibleVariantCount, double sampleTotalAD, double sampleAfTotal)
@@ -164,13 +183,13 @@ public final class MosaicRoutines
                 // ceiling(CNFloored * minOutlierSamplePerc  * (sampleTotalAD - sampleAD / CNFloored) / (1 - minOutlierSamplePerc))
                 double cn = variant.variantCnFloored();
 
-                int minOutlierFragsAD = (int)ceil(cn * minOutlierSamplePerc * (sampleTotalAD - sampleAd / cn) / (1 - minOutlierSamplePerc));
+                double minOutlierFragsAD = ceil(cn * minOutlierSamplePerc * (sampleTotalAD - sampleAd / cn) / (1 - minOutlierSamplePerc));
 
-                int minOutlierFragsAF = (int)ceil(OUTLIER_MIN_AVG_VAF_MULTIPLE * sampleDp * (sampleAfTotal - vaf) / outlierVariantCount);
+                double minOutlierFragsAF = ceil(OUTLIER_MIN_AVG_VAF_MULTIPLE * sampleDp * (sampleAfTotal - vaf) / outlierVariantCount);
 
                 // Then, starting at minFragsToOutlier = max(adMinFrags, afMinFrags), keep testing increasing minFrags until
                 // minFragsToOutlier >= 4 || (minFragsToOutlier >= 2 && round(minFragsToOutlier * siteDualRatio) >= 1), and return that
-                minFragsAsOutlier = max(minOutlierFragsAD, minOutlierFragsAF);
+                minFragsAsOutlier = (int)max(minOutlierFragsAD, minOutlierFragsAF);
 
                 while(minFragsAsOutlier < 4 && !(minFragsAsOutlier >= 2 && round(minFragsAsOutlier * dualDepthRatio) >= 1))
                 {

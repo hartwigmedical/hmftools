@@ -252,7 +252,7 @@ public class WispConfig
     public static boolean isUltima() { return SEQUENCING_TYPE == ULTIMA; }
 
     public boolean writeType(final WriteType writeType) { return WriteTypes.contains(writeType); }
-    public boolean hasSyntheticTumor() { return PurpleDir == null || PurpleDir.isEmpty(); }
+    public boolean hasSyntheticTumor() { return (PurpleDir == null || PurpleDir.isEmpty()) && OutputDir != null; }
     public boolean multiplePatients() { return Samples.size() > 1; }
     public boolean multipleSamples() { return multiplePatients() || Samples.stream().mapToInt(x -> x.SampleIds.size()).sum() > 1; }
 
