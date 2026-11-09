@@ -84,12 +84,31 @@ public class QualityCalculator
 
         double recalibratedBaseQuality = seqTechBaseQuality;
 
+        double baseQualPenalty = 0;
+
+        if(!readContextCounter.isIndel())
+        {
+            // reduce the penalty for lower quals down to a minimum
+            if(recalibratedBaseQuality >= BASE_QUAL_FIXED_PENALTY_UPPER_THRESHOLD)
+            {
+                baseQualPenalty = BASE_QUAL_FIXED_PENALTY_MAX;
+            }
+            else
+            {
+                double minPenalty = BASE_QUAL_FIXED_PENALTY_MAX * 0.5;
+                double qualAboveThreshold = max(recalibratedBaseQuality - BASE_QUAL_FIXED_PENALTY_LOWER_THRESHOLD, 0);
+                baseQualPenalty = minPenalty + qualAboveThreshold / BASE_QUAL_FIXED_PENALTY_RANGE * minPenalty;
+            }
+        }
+
         if(isUltima())
         {
             if(readContextCounter.isSnv())
             {
                 double bqrQual = readContextCounter.qualCache().getQual(
                         UltimaUtils.maxRawQual(), SamRecordUtils.extractConsensusType(record), 0, !record.getReadNegativeStrandFlag());
+
+                // bqrQual -= baseQualPenalty;
 
                 recalibratedBaseQuality = min(seqTechBaseQuality, bqrQual);
             }
@@ -99,6 +118,8 @@ public class QualityCalculator
             if(!readContextCounter.isIndel() && readContextCounter.artefactContext() == null)
             {
                 recalibratedBaseQuality = recalibratedBaseQuality(readContextCounter, readVarIndex, record);
+                // recalibratedBaseQuality -= baseQualPenalty;
+
                 int varLength = readContextCounter.variant().ref().length();
 
                 if(isSbx())
@@ -121,21 +142,9 @@ public class QualityCalculator
 
         double penalisedBaseQuality = recalibratedBaseQuality;
 
-        if(!readContextCounter.isIndel())
-        {
-            // reduce the penalty for lower quals down to a minimum
-            if(recalibratedBaseQuality >= BASE_QUAL_FIXED_PENALTY_UPPER_THRESHOLD)
-            {
-                penalisedBaseQuality -= BASE_QUAL_FIXED_PENALTY_MAX;
-            }
-            else
-            {
-                double minPenalty = BASE_QUAL_FIXED_PENALTY_MAX * 0.5;
-                double qualAboveThreshold = max(recalibratedBaseQuality - BASE_QUAL_FIXED_PENALTY_LOWER_THRESHOLD, 0);
-                double penalty = minPenalty + qualAboveThreshold / BASE_QUAL_FIXED_PENALTY_RANGE * minPenalty;
-                penalisedBaseQuality -= penalty;
-            }
-        }
+        // TEMP: to preserve behaviour
+        if(!readContextCounter.useMsiErrorRate())
+            penalisedBaseQuality -= baseQualPenalty;
 
         int readEdgePenalty = readEdgeDistancePenalty(readContextCounter, readVarIndex, record);
         penalisedBaseQuality -= readEdgePenalty;
