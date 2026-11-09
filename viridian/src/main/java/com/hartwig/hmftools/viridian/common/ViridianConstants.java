@@ -33,8 +33,6 @@ public class ViridianConstants
             "HBV",
             // Hepatitis C virus.
             "HCV-1", "HCV-2",
-            // Human immunodeficiency virus.
-            "HIV-1", "HIV-2",
             // Kaposi sarcoma-associated herpesvirus.
             "KSHV",
             // Human T-lymphotropic virus 1.
