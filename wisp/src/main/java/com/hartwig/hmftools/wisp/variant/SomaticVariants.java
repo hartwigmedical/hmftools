@@ -75,7 +75,6 @@ public class SomaticVariants
 
     private final SampleData mSample;
     private final List<SomaticVariant> mVariants;
-    private final List<SimpleVariant> mProbeVariants;
     private final SomaticPurityEstimator mEstimator;
     private final BqrAdjustment mBqrAdjustment;
     private final BufferedWriter mSomaticWriter;
@@ -93,8 +92,6 @@ public class SomaticVariants
         mFragmentLengths = new SampleFragmentLengths(config, resultsWriter, sampleData);
 
         mVariants = Lists.newArrayList();
-
-        mProbeVariants = mConfig.ProbeVariants.getSampleVariants(mSample.TumorId);
     }
 
     public boolean loadVariants()
@@ -190,21 +187,8 @@ public class SomaticVariants
             }
         }
 
-        int matchedProbeCount = 0;
-        if(mProbeVariants != null)
-        {
-            for(SomaticVariant variant : mVariants)
-            {
-                if(mProbeVariants.stream().anyMatch(x -> variant.matches(x)))
-                {
-                    ++matchedProbeCount;
-                    variant.markProbeVariant();
-                }
-            }
-        }
-
-        CT_LOGGER.info("processed {} somatic variants from VCF({}), filtered({}) probeMatched({})",
-                variantCount, filenamePart(somaticVcf), filteredCount, matchedProbeCount);
+        CT_LOGGER.info("processed {} somatic variants from VCF({}), filtered({}))",
+                variantCount, filenamePart(somaticVcf), filteredCount);
 
         if(mConfig.writeType(FRAG_LENGTHS))
             mFragmentLengths.processSample(somaticVcf, mVariants);

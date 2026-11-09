@@ -57,7 +57,6 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
-import com.hartwig.hmftools.wisp.variant.ProbeVariantCache;
 
 public class WispConfig
 {
@@ -75,8 +74,6 @@ public class WispConfig
     public final String CobaltDir;
     public final String FragmentLengthDir;
     public final List<SimpleVariant> ExcludedSomatics;
-
-    public final ProbeVariantCache ProbeVariants;
 
     public final String OutputDir;
     public final String PlotDir;
@@ -112,7 +109,6 @@ public class WispConfig
     private static final String GC_RATIO_MIN = "gc_ratio_min";
     private static final String WRITE_TYPES = "write_types";
     private static final String WRITE_ALL_SUMMARY_METHODS = "write_all_summary_methods";
-    private static final String PROBE_VARIANTS_FILE = "probe_variants_file";
     private static final String BQR_QUAL_THRESHOLD = "bqr_qual_threshold";
     private static final String SKIP_SUBCLONAL_FILTER = "skip_subclonal_filter";
     private static final String APPLY_REF_VARIANT_FILTERS = "apply_ref_variant_filters";
@@ -176,8 +172,6 @@ public class WispConfig
         PlotDir = checkAddDirSeparator(configBuilder.getValue(PLOT_DIR, OutputDir));
 
         CT_LOGGER.debug("writing results to outputDir({}) and plots({})", OutputDir, PlotDir);
-
-        ProbeVariants = new ProbeVariantCache(configBuilder.getValue(PROBE_VARIANTS_FILE));
 
         RefGenome = configBuilder.hasValue(REF_GENOME) ? loadRefGenome(configBuilder.getValue(REF_GENOME)) : null;
 
@@ -373,7 +367,6 @@ public class WispConfig
                         + Arrays.stream(WriteType.values()).map(x -> x.toString()).collect(Collectors.joining(",")));
 
         configBuilder.addPath(REF_GENOME, true, REF_GENOME_CFG_DESC);
-        configBuilder.addPath(PROBE_VARIANTS_FILE, false, "File defining the probe variants");
         configBuilder.addPath(EXCLUDED_SOMATICS_FILE, false, "File with somatic variants to ignore");
 
         configBuilder.addDecimal(
@@ -424,8 +417,6 @@ public class WispConfig
         SEQUENCING_TYPE = ILLUMINA;
 
         PlotDir = null;
-
-        ProbeVariants = new ProbeVariantCache(null);
 
         RefGenome = refGenome;
 

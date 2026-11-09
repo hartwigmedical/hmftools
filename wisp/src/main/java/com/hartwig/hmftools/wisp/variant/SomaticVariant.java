@@ -37,7 +37,6 @@ public class SomaticVariant
     private List<FilterReason> mFilterReasons;
 
     private double mSequenceGcRatio;
-    private boolean mIsProbeVariant;
 
     public SomaticVariant(
             final VariantContextDecorator variantDecorator, final double subclonalPerc, final List<FilterReason> filterReasons,
@@ -67,16 +66,12 @@ public class SomaticVariant
         mSamples = Lists.newArrayList();
         mFilterReasons = filterReasons;
         mSequenceGcRatio = 0;
-        mIsProbeVariant = false;
     }
 
     public void addFilterReason(final FilterReason filterReason) { mFilterReasons.add(filterReason); }
     public List<FilterReason> filterReasons() { return mFilterReasons; }
 
     public boolean isFiltered() { return !mFilterReasons.isEmpty(); }
-
-    public boolean isProbeVariant() { return mIsProbeVariant; }
-    public void markProbeVariant() { mIsProbeVariant = true; }
 
     public GenotypeFragments findSampleFragmentData(final String sampleId)
     {

@@ -45,7 +45,7 @@ public final class SomaticWriter
 
             addCommonHeaderFields(sj, config);
 
-            sj.add(FLD_CHROMOSOME).add(FLD_POSITION).add(FLD_REF).add(FLD_ALT).add("IsProbe");
+            sj.add(FLD_CHROMOSOME).add(FLD_POSITION).add(FLD_REF).add(FLD_ALT);
             sj.add("Filter").add("Tier").add("Type").add("TNC");
             sj.add("Mappability").add("SubclonalPerc").add("RepeatCount");
             sj.add("Gene").add("CodingEffect").add("Hotspot").add("Reported");
@@ -83,7 +83,6 @@ public final class SomaticWriter
             addCommonFields(sj, config, sampleData, sampleId);
 
             sj.add(variant.Chromosome).add(valueOf(variant.Position)).add(variant.Ref).add(variant.Alt);
-            sj.add(valueOf(variant.isProbeVariant()));
 
             List<FilterReason> filterReasons = Lists.newArrayList(variant.filterReasons());
             filterReasons.addAll(sampleFragData.filterReasons());
