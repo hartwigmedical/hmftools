@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.compar.common.CurationCache.isValidSourceLabe
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
@@ -60,7 +61,7 @@ public class CurationCacheTest
     }
 
     @Test
-    public void entriesArePerSampleInFileOrderAndPairedKeysMerge() throws IOException
+    public void latestEntryWinsAcrossPairedKeysPerSample() throws IOException
     {
         File cacheFile = writeCacheFile(
                 "cache.tsv", List.of(
@@ -72,19 +73,16 @@ public class CurationCacheTest
 
         CurationCache cache = new CurationCache(cacheFile.getAbsolutePath());
 
-        List<Entry> history = cache.findMismatches(
-                SAMPLE_ID, new Mismatch(FUSION_ITEM, OTHER_FUSION_ITEM, MismatchType.VALUE, Collections.emptyList()));
+        Entry latest = cache.match(
+                SAMPLE_ID, new Mismatch(FUSION_ITEM, OTHER_FUSION_ITEM, MismatchType.VALUE, Collections.emptyList())).previous();
 
-        assertEquals(2, history.size());
-        assertEquals(Severity.LOW, history.get(0).severity());
-        assertEquals("known", history.get(0).comment());
-        assertEquals(LABEL_B, history.get(1).oldSource());
+        assertEquals(MismatchType.NEW_ONLY, latest.type());
+        assertEquals(LABEL_B, latest.oldSource());
 
-        List<Entry> otherSampleHistory = cache.findMismatches(
-                OTHER_SAMPLE_ID, new Mismatch(FUSION_ITEM, null, MismatchType.OLD_ONLY, Collections.emptyList()));
+        Entry otherSampleLatest = cache.match(
+                OTHER_SAMPLE_ID, new Mismatch(FUSION_ITEM, null, MismatchType.OLD_ONLY, Collections.emptyList())).previous();
 
-        assertEquals(1, otherSampleHistory.size());
-        assertEquals(Severity.NONE, otherSampleHistory.get(0).severity());
+        assertEquals(MismatchType.VALUE, otherSampleLatest.type());
     }
 
     @Test
@@ -105,37 +103,25 @@ public class CurationCacheTest
     }
 
     @Test
-    public void differencesAreAcknowledgedChangedOrNewPerField() throws IOException
+    public void rowIsAcknowledgedOnlyWhenAllDifferencesMatch() throws IOException
     {
-        String fusionsDifference = "fusions(/coords(1-2 frags=1);coords(3-4 frags=1))";
+        String differences = "SplitFrags(10/2);Filter(A;B/PASS);fusions(/coords(1-2 frags=1);coords(3-4 frags=1))";
         File cacheFile = writeCacheFile(
                 "cache.tsv", List.of(
-                        List.of(
-                                SAMPLE_ID, FUSION, "VALUE", FUSION_ITEM.key(), "SplitFrags(10/2);Filter(A;B/PASS);" + fusionsDifference,
-                                LABEL_A, LABEL_B, "NONE", "present in cache"),
-                        List.of(SAMPLE_ID, FUSION, "VALUE", FUSION_ITEM.key(), "SplitFrags(20/2)", LABEL_B, LABEL_C, "CRITICAL", "later")));
+                        List.of(SAMPLE_ID, FUSION, "VALUE", FUSION_ITEM.key(), differences, LABEL_A, LABEL_B, "NONE", "present in cache")));
         CurationCache cache = new CurationCache(cacheFile.getAbsolutePath());
-        Mismatch mismatch = new Mismatch(
+
+        Mismatch sameDifferences = new Mismatch(
                 FUSION_ITEM, FUSION_ITEM, MismatchType.VALUE,
-                List.of("SplitFrags(10/2)", "Filter(A;B/NEW)", "KnownType(A/B)", fusionsDifference));
+                List.of("SplitFrags(10/2)", "Filter(A;B/PASS)", "fusions(/coords(1-2 frags=1);coords(3-4 frags=1))"));
+        assertEquals(CurationStatus.ACKNOWLEDGED, cache.match(SAMPLE_ID, sameDifferences).status());
 
-        List<CurationCache.Match> matches = cache.match(SAMPLE_ID, mismatch);
-
-        assertEquals(
-                Lists.newArrayList(CurationStatus.ACKNOWLEDGED, CurationStatus.CHANGED_FROM_CACHE, null, CurationStatus.ACKNOWLEDGED),
-                matches.stream().map(CurationCache.Match::status).toList());
-        assertEquals(
-                List.of(MismatchType.VALUE, MismatchType.VALUE, MismatchType.VALUE, MismatchType.VALUE),
-                matches.stream().map(x -> x.mismatch().Type).toList());
-        assertEquals(List.of("SplitFrags(10/2)"), matches.get(0).mismatch().DiffValues);
-        assertEquals("SplitFrags(10/2)", matches.get(0).previous().differences());
-        assertEquals(LABEL_A, matches.get(0).previous().oldSource());
-        assertEquals("Filter(A;B/PASS)", matches.get(1).previous().differences());
-        assertEquals(fusionsDifference, matches.get(3).previous().differences());
+        Mismatch fewerDifferences = new Mismatch(FUSION_ITEM, FUSION_ITEM, MismatchType.VALUE, List.of("SplitFrags(10/2)"));
+        assertEquals(CurationStatus.CHANGED_FROM_CACHE, cache.match(SAMPLE_ID, fewerDifferences).status());
     }
 
     @Test
-    public void sampleLevelCacheDoesNotAcknowledgeOtherFieldsOrSamples() throws IOException
+    public void extraDifferenceOrOtherSampleIsNotAcknowledged() throws IOException
     {
         File cacheFile = writeCacheFile(
                 "purity.tsv", List.of(
@@ -144,85 +130,72 @@ public class CurationCacheTest
         PurityData purity = TestPurityDataBuilder.BUILDER.create();
         Mismatch mismatch = new Mismatch(purity, purity, MismatchType.VALUE, List.of("Purity(0.6/0.8)", "Ploidy(2/3)"));
 
-        List<CurationCache.Match> matches = cache.match(SAMPLE_ID, mismatch);
-
-        assertEquals(CurationStatus.ACKNOWLEDGED, matches.get(0).status());
-        assertEquals(null, matches.get(1).status());
-        assertEquals(null, cache.match(OTHER_SAMPLE_ID, mismatch).get(0).status());
+        assertEquals(CurationStatus.CHANGED_FROM_CACHE, cache.match(SAMPLE_ID, mismatch).status());
+        assertNull(cache.match(OTHER_SAMPLE_ID, mismatch).status());
     }
 
     @Test
-    public void presenceDirectionAndInvalidOrFullMatchesArePreserved() throws IOException
+    public void presenceDirectionCountsAndEveryTypeIsMatched() throws IOException
     {
         File cacheFile = writeCacheFile(
                 "cache.tsv", List.of(
-                        List.of(SAMPLE_ID, FUSION, "OLD_ONLY", FUSION_ITEM.key(), "", LABEL_A, LABEL_B, "NONE", "")));
+                        List.of(SAMPLE_ID, FUSION, "OLD_ONLY", FUSION_ITEM.key(), "", LABEL_A, LABEL_B, "NONE", ""),
+                        List.of(SAMPLE_ID, FUSION, "INVALID_NEW", "", "", LABEL_A, LABEL_B, "NONE", "")));
         CurationCache cache = new CurationCache(cacheFile.getAbsolutePath());
 
         Mismatch oldOnly = new Mismatch(FUSION_ITEM, null, MismatchType.OLD_ONLY, Collections.emptyList());
         Mismatch newOnly = new Mismatch(null, FUSION_ITEM, MismatchType.NEW_ONLY, Collections.emptyList());
         Mismatch otherItem = new Mismatch(null, OTHER_FUSION_ITEM, MismatchType.NEW_ONLY, Collections.emptyList());
         Mismatch fullMatch = new Mismatch(FUSION_ITEM, FUSION_ITEM, MismatchType.FULL_MATCH, Collections.emptyList());
-        Mismatch invalid = new Mismatch(FUSION_ITEM, null, MismatchType.INVALID_NEW, Collections.emptyList());
+        Mismatch invalid = new Mismatch(
+                new InvalidDataItem(CategoryType.RNA_FUSION), null, MismatchType.INVALID_NEW, Collections.emptyList());
 
-        assertEquals(CurationStatus.ACKNOWLEDGED, cache.match(SAMPLE_ID, oldOnly).get(0).status());
-        assertEquals(CurationStatus.CHANGED_FROM_CACHE, cache.match(SAMPLE_ID, newOnly).get(0).status());
-        assertEquals(null, cache.match(SAMPLE_ID, otherItem).get(0).status());
-        assertEquals(MismatchType.FULL_MATCH, cache.match(SAMPLE_ID, fullMatch).get(0).mismatch().Type);
-        assertEquals(MismatchType.INVALID_NEW, cache.match(SAMPLE_ID, invalid).get(0).mismatch().Type);
+        assertEquals(CurationStatus.ACKNOWLEDGED, cache.match(SAMPLE_ID, oldOnly).status());
+        assertEquals(CurationStatus.CHANGED_FROM_CACHE, cache.match(SAMPLE_ID, newOnly).status());
+        assertNull(cache.match(SAMPLE_ID, otherItem).status());
+        assertEquals(CurationStatus.CHANGED_FROM_CACHE, cache.match(SAMPLE_ID, fullMatch).status());
+        assertEquals(MismatchType.OLD_ONLY, cache.match(SAMPLE_ID, fullMatch).previous().type());
+        assertEquals(CurationStatus.ACKNOWLEDGED, cache.match(SAMPLE_ID, invalid).status());
     }
 
     @Test
-    public void previousPrefersLatestCuratedEntry() throws IOException
+    public void statusAndPreviousComeFromLatestEntry() throws IOException
     {
         File cacheFile = writeCacheFile(
                 "cache.tsv", List.of(
-                        List.of(SAMPLE_ID, FUSION, "OLD_ONLY", FUSION_ITEM.key(), "", LABEL_A, LABEL_B, "LOW", "known"),
-                        List.of(SAMPLE_ID, FUSION, "OLD_ONLY", FUSION_ITEM.key(), "", LABEL_B, LABEL_C, "NONE", "")));
+                        List.of(SAMPLE_ID, FUSION, "VALUE", FUSION_ITEM.key(), "SplitFrags(10/2)", LABEL_A, LABEL_B, "LOW", "known"),
+                        List.of(SAMPLE_ID, FUSION, "VALUE", FUSION_ITEM.key(), "SplitFrags(10/5)", LABEL_B, LABEL_C, "NONE", "")));
         CurationCache cache = new CurationCache(cacheFile.getAbsolutePath());
 
-        Mismatch oldOnly = new Mismatch(FUSION_ITEM, null, MismatchType.OLD_ONLY, Collections.emptyList());
-        CurationCache.Match match = cache.match(SAMPLE_ID, oldOnly).get(0);
+        CurationCache.Match earlierDifference = cache.match(
+                SAMPLE_ID, new Mismatch(FUSION_ITEM, FUSION_ITEM, MismatchType.VALUE, List.of("SplitFrags(10/2)")));
+        assertEquals(CurationStatus.CHANGED_FROM_CACHE, earlierDifference.status());
+        assertEquals(LABEL_B, earlierDifference.previous().oldSource());
 
-        assertEquals(MismatchType.OLD_ONLY, match.mismatch().Type);
-        assertEquals(CurationStatus.ACKNOWLEDGED, match.status());
-        assertEquals(LABEL_A, match.previous().oldSource());
-        assertEquals("known", match.previous().comment());
+        CurationCache.Match latestDifference = cache.match(
+                SAMPLE_ID, new Mismatch(FUSION_ITEM, FUSION_ITEM, MismatchType.VALUE, List.of("SplitFrags(10/5)")));
+        assertEquals(CurationStatus.ACKNOWLEDGED, latestDifference.status());
+        assertEquals(LABEL_B, latestDifference.previous().oldSource());
     }
 
     @Test
-    public void verdictCountsAsCuratedAndStampsAreLoaded() throws IOException
+    public void curationColumnsAreLoaded() throws IOException
     {
         File cacheFile = writeCacheFile(
                 "cache.tsv", List.of(
                         List.of(
                                 SAMPLE_ID, FUSION, "OLD_ONLY", FUSION_ITEM.key(), "", LABEL_A, LABEL_B, "NONE", "regression", "OLD_CORRECT",
-                                "2026-10-20T03:15:42Z", "BATCH_INFERRED"),
-                        List.of(SAMPLE_ID, FUSION, "OLD_ONLY", FUSION_ITEM.key(), "", LABEL_B, LABEL_C, "NONE", "")));
+                                "2026-10-20T03:15:42Z", "BATCH_INFERRED")));
         CurationCache cache = new CurationCache(cacheFile.getAbsolutePath());
 
         Mismatch oldOnly = new Mismatch(FUSION_ITEM, null, MismatchType.OLD_ONLY, Collections.emptyList());
-        CurationCache.Entry previous = cache.match(SAMPLE_ID, oldOnly).get(0).previous();
+        Entry previous = cache.match(SAMPLE_ID, oldOnly).previous();
 
         assertEquals(CurationType.BATCH_INFERRED, previous.curationType());
         assertEquals(Verdict.OLD_CORRECT, previous.verdict());
         assertEquals(LABEL_A, previous.oldSource());
         assertEquals(REVIEWER, previous.curatedBy());
         assertEquals("2026-10-20T03:15:42Z", previous.curatedDate());
-    }
-
-    @Test
-    public void bothCorrectVerdictIsLoaded() throws IOException
-    {
-        File cacheFile = writeCacheFile(
-                "cache.tsv", List.of(
-                        List.of(
-                                SAMPLE_ID, FUSION, "OLD_ONLY", FUSION_ITEM.key(), "", LABEL_A, LABEL_B, "NONE", "preference", "BOTH_CORRECT",
-                                "2026-10-23")));
-        CurationCache cache = new CurationCache(cacheFile.getAbsolutePath());
-
-        Mismatch oldOnly = new Mismatch(FUSION_ITEM, null, MismatchType.OLD_ONLY, Collections.emptyList());
-        assertEquals(Verdict.BOTH_CORRECT, cache.match(SAMPLE_ID, oldOnly).get(0).previous().verdict());
     }
 
     private File writeCacheFile(final String filename, final List<List<String>> rows) throws IOException

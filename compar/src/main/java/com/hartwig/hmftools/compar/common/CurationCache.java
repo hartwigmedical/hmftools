@@ -17,11 +17,6 @@ import static com.hartwig.hmftools.compar.MismatchFile.FLD_VERDICT;
 import static com.hartwig.hmftools.compar.common.ComparConstants.FLD_CATEGORY;
 import static com.hartwig.hmftools.compar.common.ComparConstants.FLD_ITEM_KEY;
 import static com.hartwig.hmftools.compar.common.ComparConstants.FLD_SAMPLE_ID;
-import static com.hartwig.hmftools.compar.common.MismatchType.FULL_MATCH;
-import static com.hartwig.hmftools.compar.common.MismatchType.INVALID_BOTH;
-import static com.hartwig.hmftools.compar.common.MismatchType.INVALID_ERROR;
-import static com.hartwig.hmftools.compar.common.MismatchType.INVALID_NEW;
-import static com.hartwig.hmftools.compar.common.MismatchType.INVALID_OLD;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -33,19 +28,16 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.Objects;
+import java.util.stream.Stream;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 
 public class CurationCache
 {
-    private final Map<String, Map<CategoryType, Map<String, List<Entry>>>> mSampleMismatches;
+    private final Map<String, Map<CategoryType, Map<String, Entry>>> mLatestEntries;
     private final Path mFilePath;
     private int mLoadCount;
-
-    private static final Set<MismatchType> INVALID_TYPES = Set.of(INVALID_OLD, INVALID_NEW, INVALID_BOTH, INVALID_ERROR);
 
     private static final List<String> REQUIRED_FIELDS = List.of(
             FLD_SAMPLE_ID, FLD_CATEGORY, FLD_MISMATCH_TYPE, FLD_ITEM_KEY, FLD_DIFFERENCES, FLD_OLD_SOURCE, FLD_NEW_SOURCE,
@@ -53,7 +45,7 @@ public class CurationCache
 
     public CurationCache(final String filename)
     {
-        mSampleMismatches = Maps.newHashMap();
+        mLatestEntries = Maps.newHashMap();
         mFilePath = Paths.get(filename);
         mLoadCount = 0;
         loadFile(filename);
@@ -88,92 +80,28 @@ public class CurationCache
     {
     }
 
-    public record Match(Mismatch mismatch, Entry previous, CurationStatus status)
+    public record Match(Entry previous, CurationStatus status)
     {
     }
 
-    public List<Match> match(final String sampleId, final Mismatch mismatch)
+    public Match match(final String sampleId, final Mismatch mismatch)
     {
-        if(mismatch.Type == FULL_MATCH || INVALID_TYPES.contains(mismatch.Type))
-            return List.of(new Match(mismatch, null, null));
-
-        List<Entry> entries = findMismatches(sampleId, mismatch);
-        List<Match> matches = Lists.newArrayList();
-        List<String> differences = mismatch.DiffValues.isEmpty() ? List.of("") : mismatch.DiffValues;
-
-        for(String difference : differences)
-        {
-            String field = differenceField(difference);
-            List<Entry> fieldHistory = entries.stream()
-                    .filter(x -> differenceField(x.differences()).equals(field)).toList();
-            List<Entry> exactHistory = fieldHistory.stream()
-                    .filter(x -> x.type() == mismatch.Type && x.differences().equals(difference)).toList();
-
-            CurationStatus status = !exactHistory.isEmpty() ? CurationStatus.ACKNOWLEDGED :
-                    !fieldHistory.isEmpty() ? CurationStatus.CHANGED_FROM_CACHE : null;
-            Mismatch result = new Mismatch(
-                    mismatch.OldItem, mismatch.NewItem, mismatch.Type,
-                    difference.isEmpty() ? Collections.emptyList() : List.of(difference));
-            List<Entry> matchingHistory = !exactHistory.isEmpty() ? exactHistory : fieldHistory;
-            List<Entry> curatedHistory = matchingHistory.stream()
-                    .filter(x -> x.severity() != Severity.NONE || x.verdict() != Verdict.NONE).toList();
-            List<Entry> previousHistory = !curatedHistory.isEmpty() ? curatedHistory : matchingHistory;
-            Entry previous = previousHistory.isEmpty() ? null : previousHistory.get(previousHistory.size() - 1);
-            matches.add(new Match(result, previous, status));
-        }
-
-        return matches;
-    }
-
-    private static String differenceField(final String difference)
-    {
-        int valueStart = difference.indexOf('(');
-        return valueStart >= 0 ? difference.substring(0, valueStart) : difference;
-    }
-
-    private static List<String> splitDifferences(final String differences)
-    {
-        List<String> items = Lists.newArrayList();
-        int depth = 0;
-        int itemStart = 0;
-
-        for(int index = 0; index < differences.length(); ++index)
-        {
-            char character = differences.charAt(index);
-
-            if(character == '(')
-                ++depth;
-            else if(character == ')')
-                --depth;
-            else if(depth == 0 && differences.startsWith(ITEM_DELIM, index))
-            {
-                items.add(differences.substring(itemStart, index));
-                itemStart = index + ITEM_DELIM.length();
-            }
-        }
-
-        items.add(differences.substring(itemStart));
-        return items;
-    }
-
-    public List<Entry> findMismatches(final String sampleId, final Mismatch mismatch)
-    {
-        Map<String, List<Entry>> keyMismatches = mSampleMismatches.getOrDefault(sampleId, Collections.emptyMap())
+        Map<String, Entry> keyEntries = mLatestEntries.getOrDefault(sampleId, Collections.emptyMap())
                 .getOrDefault(mismatch.nonNullItem().category(), Collections.emptyMap());
 
-        Set<String> keys = Sets.newLinkedHashSet();
+        Entry latest = Stream.of(mismatch.OldItem, mismatch.NewItem)
+                .filter(Objects::nonNull)
+                .map(x -> keyEntries.get(x.key()))
+                .filter(Objects::nonNull)
+                .max(Comparator.comparingInt(Entry::loadIndex)).orElse(null);
 
-        if(mismatch.OldItem != null)
-            keys.add(mismatch.OldItem.key());
+        if(latest == null)
+            return new Match(null, null);
 
-        if(mismatch.NewItem != null)
-            keys.add(mismatch.NewItem.key());
+        String differences = String.join(ITEM_DELIM, mismatch.DiffValues);
+        boolean acknowledged = latest.type() == mismatch.Type && latest.differences().equals(differences);
 
-        List<Entry> entries = Lists.newArrayList();
-        keys.forEach(x -> entries.addAll(keyMismatches.getOrDefault(x, Collections.emptyList())));
-        entries.sort(Comparator.comparingInt(Entry::loadIndex));
-
-        return entries;
+        return new Match(latest, acknowledged ? CurationStatus.ACKNOWLEDGED : CurationStatus.CHANGED_FROM_CACHE);
     }
 
     private void loadFile(final String filename)
@@ -217,10 +145,6 @@ public class CurationCache
                 try
                 {
                     MismatchType mismatchType = MismatchType.valueOf(values[mismatchTypeIndex]);
-
-                    if(mismatchType == FULL_MATCH || INVALID_TYPES.contains(mismatchType))
-                        continue;
-
                     String sampleId = values[sampleIndex];
                     CategoryType category = CategoryType.valueOf(values[categoryIndex]);
                     String oldSource = values[oldSourceIndex];
@@ -247,19 +171,13 @@ public class CurationCache
                     else
                         LocalDate.parse(curatedDate);
 
-                    List<String> differences = splitDifferences(values[differencesIndex]);
+                    Entry entry = new Entry(
+                            mismatchType, values[differencesIndex], curationType, severity, verdict, values[curationCommentIndex],
+                            curatedBy, curatedDate, oldSource, newSource, mLoadCount++);
 
-                    for(String difference : differences)
-                    {
-                        Entry entry = new Entry(
-                                mismatchType, difference, curationType, severity, verdict, values[curationCommentIndex], curatedBy,
-                                curatedDate, oldSource, newSource, mLoadCount++);
-
-                        mSampleMismatches.computeIfAbsent(sampleId, x -> Maps.newHashMap())
-                                .computeIfAbsent(category, x -> Maps.newHashMap())
-                                .computeIfAbsent(values[keyIndex], x -> Lists.newArrayList())
-                                .add(entry);
-                    }
+                    mLatestEntries.computeIfAbsent(sampleId, x -> Maps.newHashMap())
+                            .computeIfAbsent(category, x -> Maps.newHashMap())
+                            .put(values[keyIndex], entry);
                 }
                 catch(Exception e)
                 {

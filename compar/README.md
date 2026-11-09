@@ -189,6 +189,14 @@ Use semicolon-separated `key=value` fields in this order: `kind`, `version`, opt
 For example: `kind=pipeline;version=v34;reference=GRCh38;config=standard`. If a label does not fit this form, Compar keeps it as plain text.
 Labels must be non-blank, with no tabs or line breaks. Source labels and `-curation_cache` require `GENERIC` output.
 
+#### Cache columns
+
+A cache row is a row of the combined output, copied up to `NewSource`, followed by the curation columns. Compar needs these columns:
+`SampleId`, `Category`, `MismatchType`, `Key`, `Differences`, `OldSource`, `NewSource`, `CurationType`, `Severity`, `Verdict`,
+`CurationComment`, `CuratedBy` and `CuratedDate`. A missing column stops the run. `CurationStatus`, `OldValues` and `NewValues` may be
+present and are ignored. `CurationComment` is free text and may be blank. A cache row applies to output rows with the same `SampleId`,
+`Category` and `Key`.
+
 #### Severity
 
 `Severity` is the review label in each cache row. Allowed values are `NONE`, `CRITICAL`, `MEDIUM` and `LOW`. Any other value,
@@ -198,14 +206,25 @@ including a blank cell, stops the run.
 
 `CurationType` says how a cache row was made: `MANUAL` or `BATCH_INFERRED`. Any other value, including a blank cell, stops the run.
 
+#### Verdict
+
+`Verdict` is the reviewer's call on which side is right: `NEW_CORRECT`, `OLD_CORRECT`, `BOTH_CORRECT`, `MIXED`, `UNCLEAR` or `NONE`.
+A blank cell means `NONE`. Any other value stops the run.
+
+#### CuratedBy and CuratedDate
+
+`CuratedBy` and `CuratedDate` record who last changed the cache row and when. Both are required on every row. `CuratedDate` is an ISO
+date (`2026-10-20`) or an ISO timestamp (`2026-10-20T03:15:42Z`). A blank or malformed value stops the run.
+
 #### Curation status
 
-For difference rows, `MismatchType` remains `VALUE`, `OLD_ONLY` or `NEW_ONLY`. `CurationStatus` is `ACKNOWLEDGED` or `CHANGED_FROM_CACHE`.
+Every output row is looked up in the cache, whatever its `MismatchType`, and keeps that `MismatchType`. `CurationStatus` is
+`ACKNOWLEDGED` or `CHANGED_FROM_CACHE`.
 
 | CurationStatus | Meaning |
 |----------------|---------|
-| `ACKNOWLEDGED` | The same difference exists in the cache |
-| `CHANGED_FROM_CACHE` | The field differed before, but its values or presence changed |
+| `ACKNOWLEDGED` | The latest cache row for the item has the same `MismatchType` and `Differences` |
+| `CHANGED_FROM_CACHE` | The latest cache row for the item has a different `MismatchType` or `Differences` |
 
 For later comparisons, pass the curation file as:
 
@@ -216,14 +235,14 @@ For later comparisons, pass the curation file as:
 Example `pipeline_curation.tsv`:
 
 ```tsv
-SampleId	Category	MismatchType	CurationStatus	Key	Differences	OldSource	NewSource	CurationType	Severity	CurationComment
-DEMO_001	GENE_COPY_NUMBER	VALUE		MYC	MinCopyNumber(6/8)	v34	v35	MANUAL	LOW	Expected copy number change
-DEMO_001	GENE_COPY_NUMBER	VALUE		MYC	MinCopyNumber(8/10)	v35	v36	BATCH_INFERRED	NONE	Recorded difference
-DEMO_002	GENE_COPY_NUMBER	VALUE		MYC	MinCopyNumber(2/5)	v35	v36	MANUAL	CRITICAL	Investigate
-DEMO_001	RNA_FUSION	OLD_ONLY		EML4_ALK chr2:3000-chr2:4000		v35	v36	MANUAL	LOW	Previously reviewed filtering change
-DEMO_001	DRIVER	NEW_ONLY		AMP_ERBB2		v35	v36	MANUAL	MEDIUM	Newly reported driver
-DEMO_001	PURITY	VALUE			Purity(0.65/0.68)	v35	v36	MANUAL	LOW	Small purity change
-DEMO_001	RNA_FUSION	INVALID_NEW				v35	v36	MANUAL	NONE	Missing NEW input
+SampleId	Category	MismatchType	CurationStatus	Key	Differences	OldSource	NewSource	CurationType	Severity	Verdict	CurationComment	CuratedBy	CuratedDate
+DEMO_001	GENE_COPY_NUMBER	VALUE		MYC	MinCopyNumber(6/8)	v34	v35	MANUAL	LOW	NEW_CORRECT	Expected copy number change	reviewer_a	2026-10-20
+DEMO_001	GENE_COPY_NUMBER	VALUE		MYC	MinCopyNumber(8/10)	v35	v36	BATCH_INFERRED	NONE		Recorded difference	reviewer_a	2026-10-21T09:30:00Z
+DEMO_002	GENE_COPY_NUMBER	VALUE		MYC	MinCopyNumber(2/5)	v35	v36	MANUAL	CRITICAL	UNCLEAR	Investigate	reviewer_b	2026-10-21
+DEMO_001	RNA_FUSION	OLD_ONLY		EML4_ALK chr2:3000-chr2:4000		v35	v36	MANUAL	LOW	OLD_CORRECT	Previously reviewed filtering change	reviewer_a	2026-10-21
+DEMO_001	DRIVER	NEW_ONLY		AMP_ERBB2		v35	v36	MANUAL	MEDIUM	NEW_CORRECT	Newly reported driver	reviewer_b	2026-10-21
+DEMO_001	PURITY	VALUE			Purity(0.65/0.68)	v35	v36	MANUAL	LOW	BOTH_CORRECT	Small purity change	reviewer_a	2026-10-21
+DEMO_001	RNA_FUSION	INVALID_NEW				v35	v36	MANUAL	NONE		Missing NEW input	reviewer_a	2026-10-21
 ```
 
 For the next comparison, use these options alongside the source directories and output directory:
@@ -234,19 +253,22 @@ For the next comparison, use these options alongside the source directories and 
 -curation_cache /comparisons/pipeline_curation.tsv
 ```
 
-Suppose the v34 vs v37 comparison reports two MYC changes: `MinCopyNumber` 6 to 12 & `MaxCopyNumber` 10 to 12. Compar writes 1 row for each:
+Suppose the v34 vs v37 comparison reports two MYC changes: `MinCopyNumber` 6 to 12 & `MaxCopyNumber` 10 to 12. Compar writes both in 1 row:
 
-- `Prev*` shows the latest exact cache entry, or the latest entry for that field if the values changed. An exact match takes priority;
-    within those matches, a curated entry is preferred. Keep older cache rows first.
-- A blank `CurationStatus` means no cache entry matched. Otherwise, it shows `ACKNOWLEDGED` or `CHANGED_FROM_CACHE`.
-- `FULL_MATCH` and `INVALID_*` are unchanged. Cache entries absent from the current comparison are not output.
+- `Prev*` shows the latest cache row for the item, and `CurationStatus` compares the run's row with that same row. Keep older cache
+    rows first.
+- A blank `CurationStatus` means the cache has no row for the item. Otherwise, it shows `ACKNOWLEDGED` or `CHANGED_FROM_CACHE`.
+- Cache entries absent from the current comparison are not output.
+
+The `Prev*` columns are `PrevComparison` (the cache row's `OldSource>NewSource`), `PrevMismatchType`, `PrevDifferences`,
+`PrevCurationType`, `PrevSeverity`, `PrevVerdict`, `PrevCurationComment`, `PrevCuratedBy` and `PrevCuratedDate`.
 
 | Differences | MismatchType | CurationStatus | PrevComparison | PrevDifferences |
 |-------------|--------------|----------------|----------------|-----------------|
-| MinCopyNumber(6/12) | VALUE | CHANGED_FROM_CACHE | v34>v35 | MinCopyNumber(6/8) |
-| MaxCopyNumber(10/12) | VALUE | | | |
+| MinCopyNumber(6/12);MaxCopyNumber(10/12) | VALUE | CHANGED_FROM_CACHE | v35>v36 | MinCopyNumber(8/10) |
 
-Rerunning v34→v35 with `MinCopyNumber(6/8)` instead gives `CurationStatus=ACKNOWLEDGED`.
+A MYC row with only `MinCopyNumber(8/10)` gives `CurationStatus=ACKNOWLEDGED`. `MinCopyNumber(6/8)` gives `CHANGED_FROM_CACHE`, because
+only the latest cache row counts.
 
 ### Purity
 Data key: SampleId

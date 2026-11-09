@@ -66,7 +66,7 @@ public class MismatchWriterTest
     }
 
     @Test
-    public void sourceLabelsWriteArchiveColumns() throws IOException
+    public void sourceLabelsAddStatusAndSourceColumns() throws IOException
     {
         List<String> lines = writeOutput(createConfig(temp.newFolder(), LABEL_A, LABEL_B, null), List.of(FUSION_OLD_ONLY));
 
@@ -83,7 +83,7 @@ public class MismatchWriterTest
     }
 
     @Test
-    public void historyPrefersLatestCuratedRowForTheChangedField() throws IOException
+    public void historyShowsLatestRowForTheItem() throws IOException
     {
         File cacheFile = writeCacheFile("curation.tsv", List.of(
                 List.of("VALUE", FUSION_ITEM.key(), "SplitFrags(10/3)", LABEL_A, LABEL_B, "LOW", "known", "NEW_CORRECT"),
@@ -99,7 +99,7 @@ public class MismatchWriterTest
 
         assertEquals(
                 List.of(
-                        LABEL_A + ">" + LABEL_B, "VALUE", "SplitFrags(10/3)", "MANUAL", "LOW", "NEW_CORRECT", "known", REVIEWER,
+                        LABEL_B + ">" + LABEL_C, "VALUE", "Filter(PASS/FRAGMENT_COUNT)", "MANUAL", "NONE", "NONE", "", REVIEWER,
                         CURATED_DATE),
                 history(lines.get(1)));
 
@@ -124,15 +124,15 @@ public class MismatchWriterTest
     }
 
     @Test
-    public void rowsFromCacheRunsAppendToFirstArchive() throws IOException
+    public void appendedCacheRowAcknowledgesRepeatedDifference() throws IOException
     {
         Mismatch firstMismatch = new Mismatch(FUSION_ITEM, FUSION_ITEM, MismatchType.VALUE, List.of("SplitFrags(10/2)"));
         Mismatch secondMismatch = new Mismatch(FUSION_ITEM, FUSION_ITEM, MismatchType.VALUE, List.of("SplitFrags(10/3)"));
 
-        List<String> archived = writeOutput(createConfig(temp.newFolder(), LABEL_A, LABEL_B, null), List.of(firstMismatch));
+        List<String> firstRun = writeOutput(createConfig(temp.newFolder(), LABEL_A, LABEL_B, null), List.of(firstMismatch));
         File cacheFile = temp.newFile("pipeline_curation.tsv");
-        String reviewedRow = review(archived.get(0), archived.get(1), "NONE", "");
-        Files.write(cacheFile.toPath(), List.of(archived.get(0) + TSV_DELIM + CURATION_HEADER, reviewedRow));
+        String reviewedRow = review(firstRun.get(0), firstRun.get(1), "NONE", "");
+        Files.write(cacheFile.toPath(), List.of(firstRun.get(0) + TSV_DELIM + CURATION_HEADER, reviewedRow));
 
         List<String> changed = writeOutput(
                 createConfig(temp.newFolder(), LABEL_B, LABEL_C, cacheFile.getAbsolutePath()), List.of(secondMismatch));
@@ -155,7 +155,7 @@ public class MismatchWriterTest
     }
 
     @Test
-    public void mixedDifferencesWriteSeparateRowsInBothOutputFormats() throws IOException
+    public void mixedDifferencesStayOnOneRowInBothOutputFormats() throws IOException
     {
         File cacheFile = writeCacheFile("mixed.tsv", List.of(
                 List.of("VALUE", FUSION_ITEM.key(), "SplitFrags(10/2);Filter(PASS/A)", LABEL_A, LABEL_B, "NONE", "reviewed")));
@@ -169,23 +169,17 @@ public class MismatchWriterTest
 
         List<String> header = Arrays.asList(lines.get(0).split(TSV_DELIM, -1));
         List<String> detailedHeader = Arrays.asList(detailed.get(0).split(TSV_DELIM, -1));
-        assertEquals(4, lines.size());
-        assertEquals(4, detailed.size());
-        assertEquals(List.of("VALUE", "VALUE", "VALUE"),
-                lines.subList(1, 4).stream().map(x -> x.split(TSV_DELIM, -1)[header.indexOf("MismatchType")]).toList());
-        assertEquals(List.of("ACKNOWLEDGED", "CHANGED_FROM_CACHE", ""),
-                lines.subList(1, 4).stream().map(x -> x.split(TSV_DELIM, -1)[header.indexOf("CurationStatus")]).toList());
-        assertEquals(List.of("ACKNOWLEDGED", "CHANGED_FROM_CACHE", ""),
-                detailed.subList(1, 4).stream().map(x -> x.split(TSV_DELIM, -1)[detailedHeader.indexOf("CurationStatus")]).toList());
-        assertEquals(List.of("SplitFrags(10/2)", "Filter(PASS/B)", "KnownType(A/B)"),
-                lines.subList(1, 4).stream().map(x -> x.split(TSV_DELIM, -1)[header.indexOf("Differences")]).toList());
+        List<String> row = Arrays.asList(lines.get(1).split(TSV_DELIM, -1));
+        assertEquals(2, lines.size());
+        assertEquals(2, detailed.size());
+        assertEquals("CHANGED_FROM_CACHE", row.get(header.indexOf("CurationStatus")));
+        assertEquals("CHANGED_FROM_CACHE", detailed.get(1).split(TSV_DELIM, -1)[detailedHeader.indexOf("CurationStatus")]);
+        assertEquals("SplitFrags(10/2);Filter(PASS/B);KnownType(A/B)", row.get(header.indexOf("Differences")));
         assertEquals(
-                List.of(LABEL_A + ">" + LABEL_B, "VALUE", "SplitFrags(10/2)", "MANUAL", "NONE", "NONE", "reviewed", REVIEWER, CURATED_DATE),
+                List.of(
+                        LABEL_A + ">" + LABEL_B, "VALUE", "SplitFrags(10/2);Filter(PASS/A)", "MANUAL", "NONE", "NONE", "reviewed",
+                        REVIEWER, CURATED_DATE),
                 history(lines.get(1)));
-        assertEquals(
-                List.of(LABEL_A + ">" + LABEL_B, "VALUE", "Filter(PASS/A)", "MANUAL", "NONE", "NONE", "reviewed", REVIEWER, CURATED_DATE),
-                history(lines.get(2)));
-        assertEquals(NO_HISTORY, history(lines.get(3)));
     }
 
     @Test

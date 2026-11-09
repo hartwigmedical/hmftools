@@ -148,13 +148,10 @@ public class MismatchWriter
             {
                 List<FieldDisplayInfo> fieldDisplayValues = extractDisplayData(comparer, mismatch);
 
-                List<CurationCache.Match> matches = mCurationCache != null ?
-                        mCurationCache.match(sampleId, mismatch) : List.of(new CurationCache.Match(mismatch, null, null));
+                CurationCache.Match match = mCurationCache != null ?
+                        mCurationCache.match(sampleId, mismatch) : new CurationCache.Match(null, null);
 
-                for(CurationCache.Match match : matches)
-                {
-                    writeMismatch(sampleId, match, fieldDisplayValues, categoryWriter);
-                }
+                writeMismatch(sampleId, mismatch, match, fieldDisplayValues, categoryWriter);
             }
         }
         catch(IOException e)
@@ -187,10 +184,9 @@ public class MismatchWriter
     }
 
     private void writeMismatch(
-            final String sampleId, final CurationCache.Match match, final List<FieldDisplayInfo> fieldDisplayValues,
-            final BufferedWriter categoryWriter) throws IOException
+            final String sampleId, final Mismatch mismatch, final CurationCache.Match match,
+            final List<FieldDisplayInfo> fieldDisplayValues, final BufferedWriter categoryWriter) throws IOException
     {
-        Mismatch mismatch = match.mismatch();
         String statusStr = match.status() != null ? match.status().toString() : "";
 
         if(mCombinedWriter != null)
