@@ -3,7 +3,7 @@ package com.hartwig.hmftools.viridian.profiling.extract;
 // Determines which subsets of reads are considered for extraction from the tumor BAM.
 public enum CandidateReadSource
 {
-    // Full unmapped, virus decoy contig, half-mapped, and clipped.
+    // Fully unmapped, virus decoy contig, half-mapped, and clipped.
     // Identifies most viral reads but is slow because it has to scan all contigs.
     ALL,
     // Fully unmapped and virus decoy contig.
