@@ -2,6 +2,7 @@
 package com.hartwig.hmftools.compar.mutation;
 
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import static junit.framework.TestCase.assertEquals;
@@ -9,6 +10,7 @@ import static junit.framework.TestCase.assertEquals;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.compar.ComparConfig;
@@ -242,5 +244,63 @@ public class SomaticVariantComparerTest
         assertTrue(victim.identifyMismatches("TEST", mismatches, List.of(expectedRow), List.of(), MatchLevel.REPORTABLE));
 
         assertEquals(List.of(MismatchType.OLD_ONLY), mismatches.stream().map(x -> x.Type).toList());
+    }
+
+    @Test
+    public void filteredCallForExpectedVariantIsOldOnly()
+    {
+        ComparConfig config = new ComparConfig();
+        config.Sources.set(0, SourceData.fromExpectedSource(SourceType.OLD, new ExpectedCache(), null));
+        SomaticVariantComparer victim = new SomaticVariantComparer(config, Collections.emptyMap());
+
+        SomaticVariantData expectedRow = SomaticVariantData.fromExpected(
+                List.of(new ExpectedValue("7:140453136:A:T", "AF", "0.45", false)), victim.fieldsList());
+
+        SomaticVariantData ponCall = TestSomaticVariantDataBuilder.BUILDER.create(b ->
+        {
+            b.reported = false;
+            b.filters = Set.of("PON");
+        });
+
+        for(MatchLevel matchLevel : List.of(MatchLevel.REPORTABLE, MatchLevel.DETAILED))
+        {
+            List<Mismatch> mismatches = new ArrayList<>();
+            assertTrue(victim.identifyMismatches("TEST", mismatches, List.of(expectedRow), List.of(ponCall), matchLevel));
+
+            assertEquals(List.of(MismatchType.OLD_ONLY), mismatches.stream().map(x -> x.Type).toList());
+            assertEquals(List.of("Filter(PASS/PON)"), mismatches.get(0).DiffValues);
+        }
+    }
+
+    @Test
+    public void unfilteredVcfRecordForExpectedVariantIsOldOnly()
+    {
+        ComparConfig config = new ComparConfig();
+        config.Sources.set(0, SourceData.fromExpectedSource(SourceType.OLD, new ExpectedCache(), null));
+
+        SomaticVariantData sageRecord = TestSomaticVariantDataBuilder.BUILDER.create(b ->
+        {
+            b.reported = false;
+            b.isFromUnfilteredVcf = true;
+        });
+
+        SomaticVariantComparer victim = new SomaticVariantComparer(config, Collections.emptyMap())
+        {
+            @Override
+            protected SomaticVariantData findUnfilteredVariant(
+                    final SomaticVariantData testVariant, final SourceType sourceType, final String sourceSampleId)
+            {
+                return sageRecord;
+            }
+        };
+
+        SomaticVariantData expectedRow = SomaticVariantData.fromExpected(
+                List.of(new ExpectedValue("7:140453136:A:T", "AF", "0.45", false)), victim.fieldsList());
+
+        List<Mismatch> mismatches = new ArrayList<>();
+        assertTrue(victim.identifyMismatches("TEST", mismatches, List.of(expectedRow), List.of(), MatchLevel.DETAILED));
+
+        assertEquals(List.of(MismatchType.OLD_ONLY), mismatches.stream().map(x -> x.Type).toList());
+        assertSame(sageRecord, mismatches.get(0).NewItem);
     }
 }

@@ -220,6 +220,8 @@ public class SomaticVariantData extends VariantData
             else if(expectedValue.FieldName.equals(FLD_TUMOR_SUPPORTING_READ_COUNT))
                 addIntValue(FLD_TUMOR_SUPPORTING_READ_COUNT, TumorSupportingReadCount, fields);
         }
+
+        addStringValue(FLD_FILTER, filtersStr(), fields);
     }
 
     public String toString() { return format("%s gene(%s:%s)", key(), Gene, CanonicalCodingEffect); }

@@ -265,8 +265,8 @@ public class CommonUtils
             final ComparableItem oldItem, final ComparableItem newItem, final List<String> diffs,
             final MatchLevel matchLevel, final boolean includeMatches, final boolean includesExpected)
     {
-        boolean oldCountsAsCalled = countsAsCalled(oldItem, matchLevel) || includesExpected;
-        boolean newCountsAsCalled = countsAsCalled(newItem, matchLevel) || includesExpected;
+        boolean oldCountsAsCalled = includesExpected ? oldItem.isPass() : countsAsCalled(oldItem, matchLevel);
+        boolean newCountsAsCalled = includesExpected ? newItem.isPass() : countsAsCalled(newItem, matchLevel);
 
         // ignore unimportant differences
         if(!oldCountsAsCalled && !newCountsAsCalled)
