@@ -132,6 +132,9 @@ public class PurityComparer extends ItemComparer
     public CategoryType category() { return PURITY; }
 
     @Override
+    public boolean isMultiItem() { return false; }
+
+    @Override
     public List<String> displayFieldNames()
     {
         return Arrays.stream(Fields.values()).map(x -> x.toString()).collect(Collectors.toList());

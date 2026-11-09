@@ -50,6 +50,12 @@ public class FlagstatComparer extends ItemComparer
     }
 
     @Override
+    public boolean isMultiItem()
+    {
+        return false;
+    }
+
+    @Override
     public List<String> displayFieldNames()
     {
         return Arrays.stream(Fields.values()).map(x -> x.toString()).collect(Collectors.toList());

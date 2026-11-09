@@ -125,6 +125,12 @@ public class RnaSummaryComparer extends ItemComparer
     }
 
     @Override
+    public boolean isMultiItem()
+    {
+        return false;
+    }
+
+    @Override
     public List<String> displayFieldNames()
     {
         return Arrays.stream(RnaSummaryComparer.Fields.values()).map(x -> x.toString()).collect(Collectors.toList());

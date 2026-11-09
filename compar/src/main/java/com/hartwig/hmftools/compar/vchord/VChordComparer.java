@@ -54,6 +54,9 @@ public class VChordComparer extends ItemComparer
     public CategoryType category() { return V_CHORD; }
 
     @Override
+    public boolean isMultiItem() { return false; }
+
+    @Override
     public List<String> displayFieldNames()
     {
         return Arrays.stream(Fields.values()).map(x -> x.toString()).collect(Collectors.toList());

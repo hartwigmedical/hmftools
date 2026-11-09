@@ -59,6 +59,8 @@ public abstract class ItemComparer
 
     public boolean hasReportable() { return true; }
 
+    public boolean isMultiItem() { return true; }
+
     public ComparConfig config() { return mConfig; }
 
 }

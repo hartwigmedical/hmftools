@@ -62,7 +62,12 @@ public class CommonUtils
                 List<ExpectedValue> expectedValues = source.Expected.sampleExpectedEntries(sampleId, comparer.category());
 
                 if(expectedValues == null || expectedValues.isEmpty())
+                {
+                    if(!comparer.isMultiItem())
+                        return true;
+
                     continue;
+                }
 
                 if(!hasValidExpectedFields(comparer, expectedValues))
                     return false;

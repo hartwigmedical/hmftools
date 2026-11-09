@@ -28,6 +28,9 @@ public class CuppaImageComparer extends ImageComparer
     public CategoryType category() { return CUPPA_IMAGE; }
 
     @Override
+    public boolean isMultiItem() { return false; }
+
+    @Override
     public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final PipelineSourcePaths fileSources)
     {
         final List<ComparableItem> comparableItems = new ArrayList<>();

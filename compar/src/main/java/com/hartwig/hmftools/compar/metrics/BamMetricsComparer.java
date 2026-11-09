@@ -68,6 +68,12 @@ public class BamMetricsComparer extends ItemComparer
         return mCategory;
     }
 
+    @Override
+    public boolean isMultiItem()
+    {
+        return false;
+    }
+
     protected static String coverageString(final int coverage) { return format("Percentage%dX", coverage); }
 
     @Override
