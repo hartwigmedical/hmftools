@@ -37,7 +37,9 @@ public class GeneCopyNumberComparer extends ItemComparer
         MaxCopyNumber,
         DriverType,
         MinRegionStart,
-        MinRegionEnd;
+        MinRegionEnd,
+        TranscriptId,
+        IsCanonical;
     }
 
     public GeneCopyNumberComparer(final ComparConfig config, final Map<String, FieldCheck> fieldCheckMap)
@@ -59,6 +61,8 @@ public class GeneCopyNumberComparer extends ItemComparer
 
         mFields.add(FieldInfo.displayOnly(Fields.MinRegionStart.toString(), null));
         mFields.add(FieldInfo.displayOnly(Fields.MinRegionEnd.toString(), null));
+        mFields.add(FieldInfo.displayOnly(Fields.TranscriptId.toString(), null));
+        mFields.add(FieldInfo.displayOnly(Fields.IsCanonical.toString(), null));
     }
 
     @Override

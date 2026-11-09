@@ -30,6 +30,8 @@ public class GeneCopyNumberData extends ComparableItem
 
         addIntValue(GeneCopyNumberComparer.Fields.MinRegionStart.toString(), copyNumber.MinRegionStart, fields);
         addIntValue(GeneCopyNumberComparer.Fields.MinRegionEnd.toString(), copyNumber.MinRegionEnd, fields);
+        addStringValue(GeneCopyNumberComparer.Fields.TranscriptId.toString(), copyNumber.TransName, fields);
+        addBoolValue(GeneCopyNumberComparer.Fields.IsCanonical.toString(), copyNumber.IsCanonical, fields);
     }
 
     private GeneCopyNumberData(final GeneCopyNumber copyNumber)

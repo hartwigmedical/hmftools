@@ -19,6 +19,8 @@ public class TestGeneCopyNumberDataBuilder
     public double maxCopyNumber = 2;
     public DriverType driverType = DriverType.AMP;
     public ReportedStatus reportedStatus = ReportedStatus.REPORTED;
+    public String transcriptId = Strings.EMPTY;
+    public boolean isCanonical = true;
 
     private static final Consumer<TestGeneCopyNumberDataBuilder> ALTERNATE_INITIALIZER = b ->
     {
@@ -37,7 +39,7 @@ public class TestGeneCopyNumberDataBuilder
 
     private GeneCopyNumberData build()
     {
-        GeneCopyNumber geneCopyNumber = new GeneCopyNumber("", 0, 0, gene, Strings.EMPTY, true,
+        GeneCopyNumber geneCopyNumber = new GeneCopyNumber("", 0, 0, gene, transcriptId, isCanonical,
                     Strings.EMPTY, maxCopyNumber , minCopyNumber, 0, 1, 1,
                     0, 0, 0, 1.0,
                     SegmentSupport.BND, SegmentSupport.BND, CopyNumberMethod.UNKNOWN, minCopyNumber / 2);
