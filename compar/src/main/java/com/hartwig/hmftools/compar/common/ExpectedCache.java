@@ -4,6 +4,8 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
+import static com.hartwig.hmftools.compar.common.CategoryType.RNA_FUSION;
+import static com.hartwig.hmftools.compar.common.CategoryType.SOMATIC_VARIANT;
 import static com.hartwig.hmftools.compar.common.ComparConstants.FLD_CATEGORY;
 import static com.hartwig.hmftools.compar.common.ComparConstants.FLD_ITEM_KEY;
 import static com.hartwig.hmftools.compar.common.ComparConstants.FLD_SAMPLE_ID;
@@ -16,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -54,6 +57,16 @@ public class ExpectedCache
 
     public List<ExpectedValue> sampleExpectedEntries(final String sampleId, final CategoryType category)
     {
+        return sampleEntries(sampleId, category).stream().filter(x -> !x.RequireAbsent).toList();
+    }
+
+    public List<ExpectedValue> sampleAbsentEntries(final String sampleId, final CategoryType category)
+    {
+        return sampleEntries(sampleId, category).stream().filter(x -> x.RequireAbsent).toList();
+    }
+
+    private List<ExpectedValue> sampleEntries(final String sampleId, final CategoryType category)
+    {
         Map<CategoryType, List<ExpectedValue>> categoryMap;
         if(mSampleDataMap.size() == 1 && mSampleDataMap.containsKey(NO_SAMPLE_ID))
         {
@@ -63,7 +76,7 @@ public class ExpectedCache
         {
             categoryMap = mSampleDataMap.get(sampleId);
         }
-        return categoryMap != null ? categoryMap.get(category) : Collections.emptyList();
+        return categoryMap != null ? categoryMap.getOrDefault(category, Collections.emptyList()) : Collections.emptyList();
     }
 
     private static final Set<String> FIXED_FIELDS = Set.of(FLD_CATEGORY, FLD_SAMPLE_ID, FLD_STATUS, FLD_ITEM_KEY, FLD_FIELD_VALUES);
@@ -113,6 +126,9 @@ public class ExpectedCache
 
                     boolean requireAbsent = statusIndex != null && values[statusIndex].equalsIgnoreCase(VALUE_ABSENT);
 
+                    if(statusIndex != null)
+                        checkStatus(categoryType, values[statusIndex], itemKey);
+
                     if(fieldValueIndex != null && values[fieldValueIndex].isEmpty())
                     {
                         expectedValues.add(new ExpectedValue(itemKey, FLD_STATUS, "", requireAbsent));
@@ -157,7 +173,7 @@ public class ExpectedCache
                 }
                 catch(Exception e)
                 {
-                    CMP_LOGGER.error("invalid expected entry({}}) in file({})", line, filename);
+                    CMP_LOGGER.error("invalid expected entry({}) in file({}): {}", line, filename, e.toString());
                     System.exit(1);
                 }
             }
@@ -169,5 +185,23 @@ public class ExpectedCache
             CMP_LOGGER.error("failed to load expected file({}): {}", filename, e.toString());
             System.exit(1);
         }
+    }
+
+    @VisibleForTesting
+    static void checkStatus(final CategoryType categoryType, final String status, final String itemKey)
+    {
+        boolean requireAbsent = status.equalsIgnoreCase(VALUE_ABSENT);
+
+        if(!requireAbsent && !status.isEmpty() && !status.equalsIgnoreCase(VALUE_PRESENT))
+            throw new IllegalArgumentException("Status must be Present, Absent or blank");
+
+        if(requireAbsent && categoryType != SOMATIC_VARIANT && categoryType != RNA_FUSION)
+            throw new IllegalArgumentException("Absent is only supported for SOMATIC_VARIANT and RNA_FUSION");
+
+        if(requireAbsent && itemKey.isEmpty())
+            throw new IllegalArgumentException("Absent needs a key");
+
+        if(requireAbsent && itemKey.split(":").length > 2)
+            throw new IllegalArgumentException("Absent key can't have coordinates");
     }
 }

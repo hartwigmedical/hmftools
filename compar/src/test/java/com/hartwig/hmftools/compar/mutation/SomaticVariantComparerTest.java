@@ -1,12 +1,20 @@
 
 package com.hartwig.hmftools.compar.mutation;
 
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.compar.common.CommonUtils.compareAbsentEntries;
+import static com.hartwig.hmftools.compar.mutation.VariantData.FLD_GENE;
+
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import static junit.framework.TestCase.assertEquals;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -22,10 +30,15 @@ import com.hartwig.hmftools.compar.common.MismatchType;
 import com.hartwig.hmftools.compar.common.SourceData;
 import com.hartwig.hmftools.compar.common.SourceType;
 
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 public class SomaticVariantComparerTest
 {
+    @Rule
+    public TemporaryFolder TempDir = new TemporaryFolder();
+
     @Test
     public void emptyComparison()
     {
@@ -231,6 +244,81 @@ public class SomaticVariantComparerTest
     }
 
     @Test
+    public void absentGeneCountsPassCalls() throws IOException
+    {
+        SomaticVariantData brafCall = TestSomaticVariantDataBuilder.BUILDER.create(b ->
+        {
+            b.reported = false;
+            b.canonicalCodingEffect = "NONE";
+        });
+
+        SomaticVariantData filteredBrafCall = TestSomaticVariantDataBuilder.BUILDER.create(b ->
+        {
+            b.reported = false;
+            b.filters = Set.of("LOW_VAF");
+        });
+
+        SomaticVariantData krasCall = TestSomaticVariantDataBuilder.BUILDER.create(b ->
+        {
+            b.chromosome = "12";
+            b.gene = "KRAS";
+        });
+
+        List<Mismatch> mismatches = compareWithAbsent(
+                "BRAF", List.of(), List.of(brafCall, filteredBrafCall, krasCall), MatchLevel.DETAILED);
+
+        assertEquals(List.of(MismatchType.ABSENT_FOUND, MismatchType.NEW_ONLY), mismatches.stream().map(x -> x.Type).toList());
+        assertSame(brafCall, mismatches.get(0).NewItem);
+        assertEquals("BRAF", mismatches.get(0).OldItem.fieldValues().get(FLD_GENE).displayValue());
+        assertSame(krasCall, mismatches.get(1).NewItem);
+    }
+
+    @Test
+    public void absentGeneAtReportableOnlyCountsReportedCalls() throws IOException
+    {
+        SomaticVariantData unreportedCall = TestSomaticVariantDataBuilder.BUILDER.create(b -> b.reported = false);
+        SomaticVariantData reportedCall = TestSomaticVariantDataBuilder.BUILDER.create(b -> b.position = 140453140);
+
+        List<Mismatch> mismatches = compareWithAbsent("BRAF", List.of(), List.of(unreportedCall, reportedCall), MatchLevel.REPORTABLE);
+
+        assertEquals(List.of(MismatchType.ABSENT_FOUND), mismatches.stream().map(x -> x.Type).toList());
+        assertSame(reportedCall, mismatches.get(0).NewItem);
+    }
+
+    @Test
+    public void absentGeneWithoutCountedCallIsConfirmed() throws IOException
+    {
+        SomaticVariantData unreportedBrafCall = TestSomaticVariantDataBuilder.BUILDER.create(b -> b.reported = false);
+
+        SomaticVariantData krasCall = TestSomaticVariantDataBuilder.BUILDER.create(b ->
+        {
+            b.chromosome = "12";
+            b.gene = "KRAS";
+        });
+
+        List<Mismatch> mismatches = compareWithAbsent(
+                "BRAF", List.of(), List.of(unreportedBrafCall, krasCall), MatchLevel.REPORTABLE);
+
+        assertEquals(List.of(MismatchType.NEW_ONLY, MismatchType.ABSENT_CONFIRMED), mismatches.stream().map(x -> x.Type).toList());
+        assertSame(krasCall, mismatches.get(0).NewItem);
+        assertEquals("BRAF", mismatches.get(1).OldItem.key());
+        assertNull(mismatches.get(1).NewItem);
+    }
+
+    @Test
+    public void listedVariantTakesPriorityOverAbsentGene() throws IOException
+    {
+        SomaticVariantData listedCall = TestSomaticVariantDataBuilder.BUILDER.create();
+        SomaticVariantData unlistedCall = TestSomaticVariantDataBuilder.BUILDER.create(b -> b.position = 140453140);
+
+        List<SomaticVariantData> oldVariants = List.of(TestSomaticVariantDataBuilder.BUILDER.create());
+        List<Mismatch> mismatches = compareWithAbsent("BRAF", oldVariants, List.of(listedCall, unlistedCall), MatchLevel.REPORTABLE);
+
+        assertEquals(List.of(MismatchType.ABSENT_FOUND), mismatches.stream().map(x -> x.Type).toList());
+        assertSame(unlistedCall, mismatches.get(0).NewItem);
+    }
+
+    @Test
     public void expectedVariantWithoutCallIsOldOnlyAtReportable()
     {
         ComparConfig config = new ComparConfig();
@@ -302,5 +390,29 @@ public class SomaticVariantComparerTest
 
         assertEquals(List.of(MismatchType.OLD_ONLY), mismatches.stream().map(x -> x.Type).toList());
         assertSame(sageRecord, mismatches.get(0).NewItem);
+    }
+
+    private List<Mismatch> compareWithAbsent(
+            final String absentKey, final List<SomaticVariantData> oldVariants, final List<SomaticVariantData> newVariants,
+            final MatchLevel matchLevel) throws IOException
+    {
+        File expectedFile = TempDir.newFile();
+        Files.write(
+                expectedFile.toPath(), List.of(
+                        String.join(TSV_DELIM, "Category", "Key", "Status", "FieldValues"),
+                        String.join(TSV_DELIM, "SOMATIC_VARIANT", absentKey, "Absent", "")));
+
+        ExpectedCache expectedCache = new ExpectedCache();
+        expectedCache.loadFiles(expectedFile.getAbsolutePath());
+
+        ComparConfig config = new ComparConfig();
+        config.Sources.set(0, SourceData.fromExpectedSource(SourceType.OLD, expectedCache, null));
+
+        SomaticVariantComparer victim = new SomaticVariantComparer(config, Collections.emptyMap());
+        List<Mismatch> mismatches = new ArrayList<>();
+        assertTrue(victim.identifyMismatches("TEST", mismatches, oldVariants, newVariants, matchLevel));
+
+        compareAbsentEntries(victim, "TEST", mismatches);
+        return mismatches;
     }
 }

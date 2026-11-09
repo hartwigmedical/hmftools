@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.compar.ComparConfig.EXPECTED_FINDINGS_FILES;
 import static com.hartwig.hmftools.compar.ComparConfig.WRITE_DETAILED_FILES;
 import static com.hartwig.hmftools.compar.common.ComparConstants.FLD_CATEGORY;
 import static com.hartwig.hmftools.compar.common.ComparConstants.FLD_ITEM_KEY;
+import static com.hartwig.hmftools.compar.common.ExpectedCache.FLD_STATUS;
 import static com.hartwig.hmftools.compar.common.SourceType.NEW;
 import static com.hartwig.hmftools.compar.common.SourceType.OLD;
 
@@ -116,6 +117,24 @@ public class ComparConfigTest
 
         assertTrue(configBuilder.isRegistered(EXPECTED_FINDINGS_FILES + "_old"));
         assertFalse(configBuilder.isRegistered(EXPECTED_FINDINGS_FILES + "_new"));
+    }
+
+    @Test
+    public void testAbsentEntriesLoadInOldSource() throws IOException
+    {
+        File expectedFile = TempDir.newFile("expected_absent.tsv");
+        Files.write(
+                expectedFile.toPath(), List.of(
+                        String.join("\t", FLD_CATEGORY, FLD_ITEM_KEY, FLD_STATUS),
+                        String.join("\t", "SOMATIC_VARIANT", "BRAF", "Absent")));
+
+        ConfigBuilder configBuilder = new ConfigBuilder();
+        ComparConfig.addConfig(configBuilder);
+        configBuilder.setValue("sample", "TEST");
+        configBuilder.setValue("sample_dir_new", "/default");
+        configBuilder.setValue(EXPECTED_FINDINGS_FILES + "_old", expectedFile.getAbsolutePath());
+
+        assertTrue(new ComparConfig(configBuilder).isValid());
     }
 
     @Test

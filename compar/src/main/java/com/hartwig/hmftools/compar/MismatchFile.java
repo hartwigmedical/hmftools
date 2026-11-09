@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.compar.common.ComparConstants.FLD_CATEGORY;
 import static com.hartwig.hmftools.compar.common.ComparConstants.FLD_ITEM_KEY;
 import static com.hartwig.hmftools.compar.common.ComparConstants.FLD_SAMPLE_ID;
+import static com.hartwig.hmftools.compar.common.MismatchType.ABSENT_FOUND;
 
 import java.util.List;
 import java.util.StringJoiner;
@@ -99,7 +100,7 @@ public class MismatchFile
         if(curationStatus != null)
             sj.add(curationStatus);
 
-        if(mismatch.OldItem != null)
+        if(mismatch.OldItem != null && mismatch.Type != ABSENT_FOUND)
             sj.add(mismatch.OldItem.key());
         else
             sj.add(mismatch.NewItem.key());

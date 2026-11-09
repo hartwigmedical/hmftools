@@ -6,6 +6,8 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.ExpectedCache.FLD_STATUS;
 import static com.hartwig.hmftools.compar.common.MatchLevel.REPORTABLE;
+import static com.hartwig.hmftools.compar.common.MismatchType.ABSENT_CONFIRMED;
+import static com.hartwig.hmftools.compar.common.MismatchType.ABSENT_FOUND;
 import static com.hartwig.hmftools.compar.common.MismatchType.FULL_MATCH;
 import static com.hartwig.hmftools.compar.common.MismatchType.INVALID_BOTH;
 import static com.hartwig.hmftools.compar.common.MismatchType.INVALID_NEW;
@@ -19,6 +21,7 @@ import java.nio.file.Files;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -90,6 +93,8 @@ public class CommonUtils
                     mismatches, matchLevel, config.IncludeMatches, includesExpected,
                     sourceItems.get(SourceType.OLD), sourceItems.get(SourceType.NEW));
 
+            compareAbsentEntries(comparer, sampleId, mismatches);
+
             return true;
         }
 
@@ -128,6 +133,34 @@ public class CommonUtils
         }
 
         return true;
+    }
+
+    public static void compareAbsentEntries(final ItemComparer comparer, final String sampleId, final List<Mismatch> mismatches)
+    {
+        ExpectedCache expected = comparer.config().getSourceData(SourceType.OLD).Expected;
+
+        if(expected == null)
+            return;
+
+        Map<String, List<ExpectedValue>> absentValuesByKey = expected.sampleAbsentEntries(sampleId, comparer.category()).stream()
+                .collect(Collectors.groupingBy(x -> x.Key, TreeMap::new, Collectors.toList()));
+
+        List<ComparableItem> absentItems = comparer.loadFromExpected(absentValuesByKey);
+
+        for(ComparableItem absentItem : absentItems)
+        {
+            absentItem.fieldValues().clear();
+
+            if(mismatches.stream().noneMatch(x -> x.Type == NEW_ONLY && absentItem.matches(x.NewItem)))
+                mismatches.add(new Mismatch(absentItem, null, ABSENT_CONFIRMED, Collections.emptyList()));
+        }
+
+        mismatches.replaceAll(x ->
+        {
+            ComparableItem absentItem = x.Type != NEW_ONLY ? null
+                    : absentItems.stream().filter(item -> item.matches(x.NewItem)).findFirst().orElse(null);
+            return absentItem != null ? new Mismatch(absentItem, x.NewItem, ABSENT_FOUND, Collections.emptyList()) : x;
+        });
     }
 
     public static void compareItems(

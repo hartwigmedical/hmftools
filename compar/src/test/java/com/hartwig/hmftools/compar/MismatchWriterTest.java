@@ -199,6 +199,18 @@ public class MismatchWriterTest
     }
 
     @Test
+    public void absentFoundRowIsKeyedByTheCall() throws IOException
+    {
+        Mismatch mismatch = new Mismatch(OTHER_FUSION_ITEM, FUSION_ITEM, MismatchType.ABSENT_FOUND, Collections.emptyList());
+        List<String> lines = writeOutput(createConfig(temp.newFolder(), null, null, null), List.of(mismatch));
+
+        List<String> header = Arrays.asList(lines.get(0).split(TSV_DELIM, -1));
+        List<String> row = Arrays.asList(lines.get(1).split(TSV_DELIM, -1));
+        assertEquals(FUSION_ITEM.key(), row.get(header.indexOf("Key")));
+        assertFalse(row.get(header.indexOf("OldValues")).isEmpty());
+    }
+
+    @Test
     public void outputMatchingCacheFileIsRejected() throws IOException
     {
         String filePrefix = "compar_cohort";

@@ -1,11 +1,14 @@
 package com.hartwig.hmftools.compar.mutation;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.common.sage.SageCommon.PAVE_SOMATIC_VCF_ID;
 import static com.hartwig.hmftools.common.sage.SageCommon.SAGE_FILE_ID;
 import static com.hartwig.hmftools.common.sage.SageCommon.SAGE_SOMATIC_VCF_ID;
 import static com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser.fromVariantContext;
 import static com.hartwig.hmftools.compar.common.CategoryType.SOMATIC_VARIANT;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
+import static com.hartwig.hmftools.compar.common.CommonUtils.compareAbsentEntries;
 import static com.hartwig.hmftools.compar.common.CommonUtils.countsAsCalled;
 import static com.hartwig.hmftools.compar.common.CommonUtils.hasValidExpectedFields;
 import static com.hartwig.hmftools.compar.FieldCheckCache.getOrMakeFieldCheck;
@@ -102,7 +105,12 @@ public class SomaticVariantComparer extends ItemComparer
         List<SomaticVariantData> oldVariants = loadVariants(sampleId, OLD);
         List<SomaticVariantData> newVariants = loadVariants(sampleId, NEW);
 
-        return identifyMismatches(sampleId, mismatches, oldVariants, newVariants, matchLevel);
+        boolean status = identifyMismatches(sampleId, mismatches, oldVariants, newVariants, matchLevel);
+
+        if(status)
+            compareAbsentEntries(this, sampleId, mismatches);
+
+        return status;
     }
 
     public boolean identifyMismatches(
@@ -350,6 +358,25 @@ public class SomaticVariantComparer extends ItemComparer
         }
 
         return variants;
+    }
+
+    @Override
+    public List<ComparableItem> loadFromExpected(final Map<String, List<ExpectedValue>> valuesByKey)
+    {
+        List<ComparableItem> items = Lists.newArrayList();
+
+        for(Map.Entry<String, List<ExpectedValue>> entry : valuesByKey.entrySet())
+        {
+            ComparableItem item = entry.getKey().contains(":")
+                    ? SomaticVariantData.fromExpected(entry.getValue(), mFields) : new AbsentGeneItem(entry.getKey(), mFields);
+
+            if(item == null)
+                throw new IllegalArgumentException(format("invalid somatic variant expected key(%s)", entry.getKey()));
+
+            items.add(item);
+        }
+
+        return items;
     }
 
     @Override

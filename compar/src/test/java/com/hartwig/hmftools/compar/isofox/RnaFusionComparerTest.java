@@ -3,6 +3,7 @@ package com.hartwig.hmftools.compar.isofox;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.ISOFOX_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS_FILTER;
+import static com.hartwig.hmftools.compar.common.CommonUtils.compareAbsentEntries;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -288,6 +289,22 @@ public class RnaFusionComparerTest
     }
 
     @Test
+    public void absentGenePairCountsEachPassingBreakend() throws IOException
+    {
+        RnaFusion otherBreakend = ImmutableRnaFusion.builder().from(TMPRSS2_ERG).positionUp(1500).build();
+        writePassFusions(newDir, List.of(TMPRSS2_ERG, otherBreakend, EML4_ALK));
+
+        List<Mismatch> mismatches = compareWithAbsent("TMPRSS2:ERG", MatchLevel.DETAILED);
+
+        assertEquals(3, mismatches.size());
+        mismatches.stream().filter(x -> x.Type != MismatchType.NEW_ONLY)
+                .forEach(x -> assertMismatch(x, MismatchType.ABSENT_FOUND));
+
+        Mismatch otherFusion = singleMismatch(mismatches.stream().filter(x -> x.Type == MismatchType.NEW_ONLY).toList());
+        assertEquals("EML4_ALK", ((RnaFusionData) otherFusion.NewItem).Name);
+    }
+
+    @Test
     public void unavailableUnfilteredFileClearsPreviousContext() throws IOException
     {
         writePassFusions(oldDir, List.of(EML4_ALK));
@@ -361,6 +378,30 @@ public class RnaFusionComparerTest
         List<ComparableItem> fileItems = comparer.loadFromFile(SAMPLE_ID, null,
                 expectedIsOld ? isofoxPaths(SourceType.NEW, newDir) : isofoxPaths(SourceType.OLD, oldDir));
         return compare(expectedIsOld ? expectedItems : fileItems, expectedIsOld ? fileItems : expectedItems, matchLevel, true);
+    }
+
+    private List<Mismatch> compareWithAbsent(final String absentKey, final MatchLevel matchLevel) throws IOException
+    {
+        File expectedFile = temp.newFile();
+        Files.write(
+                expectedFile.toPath(), List.of(
+                        String.join(TSV_DELIM, "Category", "Key", "Status", "FieldValues"),
+                        String.join(TSV_DELIM, "RNA_FUSION", absentKey, "Absent", "")));
+
+        ExpectedCache expectedCache = new ExpectedCache();
+        expectedCache.loadFiles(expectedFile.getAbsolutePath());
+
+        ComparConfig config = new ComparConfig();
+        config.Sources.set(0, SourceData.fromExpectedSource(SourceType.OLD, expectedCache, null));
+        comparer = new RnaFusionComparer(config, Collections.emptyMap());
+
+        List<Mismatch> mismatches = Lists.newArrayList();
+        comparer.compareItems(
+                mismatches, matchLevel, true, true, Collections.emptyList(),
+                comparer.loadFromFile(SAMPLE_ID, null, isofoxPaths(SourceType.NEW, newDir)));
+
+        compareAbsentEntries(comparer, SAMPLE_ID, mismatches);
+        return mismatches;
     }
 
     private List<Mismatch> compare(
