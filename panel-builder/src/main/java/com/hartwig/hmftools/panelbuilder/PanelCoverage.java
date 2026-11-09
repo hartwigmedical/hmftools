@@ -3,7 +3,7 @@ package com.hartwig.hmftools.panelbuilder;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.VARIANT_NOVEL_SEQUENCE_BASES_MIN;
 import static com.hartwig.hmftools.panelbuilder.ProbeUtils.probeTargetedRegions;
 import static com.hartwig.hmftools.panelbuilder.RegionUtils.isFullyOverlappedBy;
-import static com.hartwig.hmftools.panelbuilder.SequenceUtils.sequenceIndelSize;
+import static com.hartwig.hmftools.panelbuilder.SequenceUtils.isSequenceSimilarToRef;
 
 import java.util.stream.Stream;
 
@@ -48,7 +48,7 @@ public interface PanelCoverage
         // Only do the coverage check for variants where the probe is similar to the ref genome.
         // If the probe is similar (e.g. SNV) then that region could be captured by probing the ref genome sequence,
         // so the variant probe is not needed.
-        // If the probe is dissimilar (e.g. large INDEL or SV) then we need the variant probe to capture the variant.
-        return sequenceIndelSize(sequenceDefinition).orElse(Integer.MAX_VALUE) < VARIANT_NOVEL_SEQUENCE_BASES_MIN;
+        // If the probe is dissimilar (e.g. large INDEL, SV, spliced exons) then we need the variant probe to capture the variant.
+        return isSequenceSimilarToRef(sequenceDefinition, VARIANT_NOVEL_SEQUENCE_BASES_MIN - 1);
     }
 }

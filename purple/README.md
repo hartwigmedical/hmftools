@@ -22,18 +22,19 @@ see [here](https://github.com/hartwigmedical/hmftools/blob/master/pipeline/READM
 * [Germline Only Mode](#germline-only)
 * [Algorithm](#algorithm)
     + [1. Sex](#1-sex-determination)
-    + [2. Segmentation](#2-segmentation)
-    + [3. Chimerism](#3-chimerism)
-    + [4. Sample Purity and Ploidy](#4-sample-purity-and-ploidy)
-    + [5. Copy Number Smoothing](#5-copy-number-smoothing)
-    + [6. Inferring copy number for regions without read depth information](#6-inferring-copy-number-for-regions-without-read-depth-information)
-    + [7. Allele specific copy number inferring](#7-allele-specific-copy-number-inferring)
-    + [8. Infer missing SV breakends](#8-Infer-missing-SV-breakends)
-    + [9. Identify germline gene_deletions](#9-identify-germline-gene-deletions)
-    + [10. Determine a QC Status for the tumor](#10-determine-a-qc-status-for-the-tumor)
-    + [11. Somatic enrichment](#11-somatic-enrichment)
-    + [12. Germline enrichment](#12-germline-enrichment)
-    + [13. Driver Identification](#13-driver-identification)
+    + [2. Tumor in Normal contamination recovery](#2-tumor-in-normal-contamination-recovery)
+    + [3. Segmentation](#3-segmentation)
+    + [4. Chimerism](#4-chimerism)
+    + [5. Sample Purity and Ploidy](#5-sample-purity-and-ploidy)
+    + [6. Copy Number Smoothing](#6-copy-number-smoothing)
+    + [7. Inferring copy number for regions without read depth information](#7-inferring-copy-number-for-regions-without-read-depth-information)
+    + [8. Allele specific copy number inferring](#8-allele-specific-copy-number-inferring)
+    + [9. Infer missing SV breakends](#9-Infer-missing-SV-breakends)
+    + [10. Identify germline gene_deletions](#10-identify-germline-gene-deletions)
+    + [11. Determine a QC Status for the tumor](#11-determine-a-qc-status-for-the-tumor)
+    + [12. Somatic enrichment](#12-somatic-enrichment)
+    + [13. Germline enrichment](#13-germline-enrichment)
+    + [14. Driver Identification](#14-driver-identification)
 * [Output](#output)
     + [Files](#files)
     + [VCF](#VCF)
@@ -351,7 +352,15 @@ In the absence of the Y chromosome the sample is female.
 Finally, we compare the AMBER and COBALT sexes. If they are inconsistent we use the COBALT sex and flag the sample
 has having failed sex validation.
 
-### 2. Segmentation
+### 2. Tumor in Normal contamination recovery
+
+Based on the Tumor in Normal contamination level detected by Sage, we see whether any structural variants called as germline in Esvee should
+instead be classified as somatic. If a non-zero TINC level was found, calculate `recoveryTINC = tumorAF * (2 * sageTINC + 0.02)` for each germline variant.
+For a hotspot variant, `recoveryTINC` is doubled. Reduce the observed germline AF by `recoveryTINC`, and make the corresponding reduction to germline AD
+as well (i.e. reduce by `germlineDP * recoveryTINC`).  If the adjusted germline AF and AD values would cause the variant to be called as somatic according 
+to Esvee's classification rules, we move the variant from the germline VCF to the somatic VCF.
+
+### 3. Segmentation
 
 We segment the genome into regions of uniform copy number by combining segments generated from the COBALT read ratios for
 both tumor and reference sample, the BAF points from AMBER, and passing structural variant breakpoints derived from ESVEE
@@ -380,11 +389,11 @@ However, if a continuous region of >5MB has diploidNormalisedRatio / rawRatio < 
 instead. Regions within 2MB of a centromere and in the IG and TCR regions are further masked. The purity fitting and smoothing steps below
 use only the DIPLOID germline segments.
 
-### 3. Chimerism
+### 4. Chimerism
 
 Purple checks for the contamination level reported by amber if it exceeds warning level, the SOMATIC fit method is always used since amber data is deemed unreliable.
 
-### 4. Sample Purity and Ploidy
+### 5. Sample Purity and Ploidy
 
 To estimate purity and sample ploidy, we use a model which considers a matrix of all possible sample purities and ploidies and scores each
 possible combination on a segment by segment basis, based on a set of principles which aim to choose the most parsimonious solution for the
@@ -576,7 +585,7 @@ In this case, we infer a plausible purity using the following approach:
 - If no region exists, then the fit is not adjusted
 - Otherwise the target purity is 2 * regionBAF - 1. We set the fit to the candidate with the closest purity and diploid ploidy
 
-### 5. Copy Number Smoothing
+### 6. Copy Number Smoothing
 
 Since the initial segmentation algorithm is highly sensitive, and there is a significant amount of noise in the read depth in whole genome
 sequencing, many adjacent segments will have a similar copy number and BAF profile and are unlikely to represent a real somatic copy number
@@ -616,7 +625,7 @@ to occur, the non-diploid region must:
 
 Consecutive non-diploid regions un-interrupted by a structural variant will be merged together.
 
-### 6. Inferring copy number for regions without read depth information
+### 7. Inferring copy number for regions without read depth information
 
 Where clusters of SVs exist which are closer together than our read depth ratio window resolution of 1,000 bases, the segments in between
 will not have any copy number information associated with them. We use the junction copy number of the structural variants to resolve this.
@@ -633,7 +642,7 @@ We repeat this process iteratively and infer the copy number of all regions with
 When the entire short arm of a chromosome is lacking copy number information (and always on chromosome 13,14,15,21, or 22), the copy number
 of the long arm is extended to the short arm.
 
-### 7. Allele specific copy number inferring
+### 8. Allele specific copy number inferring
 
 Once copy number region smoothing and inference is complete, it is possible there will be regions without BAF points which will result in a
 unknown allele specific copy number, since BAF coverage of the genome is limited and many copy number regions can be very small.
@@ -676,7 +685,7 @@ number to hold constant:
 
 At this stage we have determined a copy number and minor allele copy number for every base in the genome
 
-### 8. Infer missing SV breakends
+### 9. Infer missing SV breakends
 
 Where there is a copy number a single ended breakend will be inferred (with type = 'INF') at that position. There are two situations where
 Purple will attempt to infer a breakend. The first is when a copy number segment is unsupported by an existing structural variant. The
@@ -686,7 +695,7 @@ number change (ie. the junction copy number - copy number change) is greater tha
 unbalanced structural variant must also have a min depth window count of 5 in the copy number segments immediately before and after the SV
 breakpoint.
 
-### 9. Identify germline gene amplifications and deletions
+### 10. Identify germline gene amplifications and deletions
 
 Purple searches for candidate germline gene amplifications and deletions based on the combined tumor normal raw segmented copy number
 files.  
@@ -705,7 +714,7 @@ Amplifications and deletions are filtered with the following criteria:
 | highNormalRatio     | a deleted segment must have an `observedNormalCopyNumberRatio` < 0.65 (ie equivalent to germline copyNumber < 1.3)                   |
 | cohortFrequency     | the affected segment is observed in > 3 samples in our cohort                                                                        |
 
-### 10. Determine a QC Status for the tumor
+### 11. Determine a QC Status for the tumor
 
 Purple will set a FAIL QC status in 3 cases:
 
@@ -725,7 +734,7 @@ Purple may also report a warning if one of the following conditions is met:
 
 If no warning or fail criteria is met, Purple will set qcStatus = PASS
 
-### 11. Somatic Enrichment
+### 12. Somatic Enrichment
 
 If a somatic VCF is supplied to Purple each variant is enriched with the following fields:
 
@@ -797,7 +806,7 @@ LOW: abs(somatic_vaf_distance) - abs(germline_vaf_dist) > 0.08
 MED: all other 
 ```
 
-### 12. Germline Enrichment
+### 13. Germline Enrichment
 
 If a germline VCF is supplied to Purple each variant is enriched with the following fields:
 
@@ -846,7 +855,7 @@ gene reporting options:
 - `WILDTYPE_LOST` - report only if the wildtype is predicted to be lost in the tumor for this gene either via LOH or a somatic 2nd hit
 - `VARIANT_NOT_LOST` - report only if the variant is predicted to be NOT lost in the tumor for this gene:
 
-### 13. Driver Identification
+### 14. Driver Identification
 
 Purple builds a catalog of drivers based on a configured gene panel. Purple automatically assigns a driver likelihood of 1 to all
 significant amplifications (minimum exonic copy number > 3 * sample ploidy) and deletions (minimum exonic copy number < 0.5) that are

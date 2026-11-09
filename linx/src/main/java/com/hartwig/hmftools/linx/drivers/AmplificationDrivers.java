@@ -54,7 +54,7 @@ public class AmplificationDrivers
     private void checkChromosomeAmplification(final DriverGeneData dgData)
     {
         // check for an arm or whole chromosome amplified above the sample ploidy
-        final TelomereCentromereCnData tcData = mDataCache.CopyNumberData.getChrTeleCentroData().get(dgData.GeneInfo.Chromosome);
+        TelomereCentromereCnData tcData = mDataCache.CopyNumberData.getChrTeleCentroData().get(dgData.GeneInfo.Chromosome);
 
         if(tcData == null)
             return;
@@ -166,7 +166,7 @@ public class AmplificationDrivers
 
         double startCopyNumber = startBreakend.getCopyNumber(traverseUp);
 
-        final SvCluster targetCluster = startBreakend.getCluster();
+        SvCluster targetCluster = startBreakend.getCluster();
 
         boolean inSegment = true;
         double segmentStartCopyNumber = startCopyNumber;
@@ -191,7 +191,7 @@ public class AmplificationDrivers
             if((traverseUp && breakend.position() > transStart) || (!traverseUp && breakend.position() < transEnd))
                 break;
 
-            final SvCluster cluster = breakend.getCluster();
+            SvCluster cluster = breakend.getCluster();
 
             if(cluster != targetCluster)
             {
@@ -207,7 +207,7 @@ public class AmplificationDrivers
                     {
                         // take the end copy number from the centromere
                         int prevIndex = index + (traverseUp ? -1 : 1);
-                        final SvBreakend prevBreakend = breakendList.get(prevIndex);
+                        SvBreakend prevBreakend = breakendList.get(prevIndex);
                         endCopyNumber = prevBreakend.getCopyNumber(!traverseUp);
                     }
 
@@ -324,7 +324,7 @@ public class AmplificationDrivers
                 if((traverseUp && breakend.position() > transEnd) || (!traverseUp && breakend.position() < transStart))
                     break;
 
-                final SvCluster cluster = breakend.getCluster();
+                SvCluster cluster = breakend.getCluster();
 
                 if(cluster.hasLinkingLineElements() || processedClusters.contains(cluster))
                     continue;
@@ -374,8 +374,8 @@ public class AmplificationDrivers
 
         for(Map.Entry<SvCluster,DriverAmpData> entry : clusterAmpData.entrySet())
         {
-            final SvCluster cluster = entry.getKey();
-            final DriverAmpData ampData = entry.getValue();
+            SvCluster cluster = entry.getKey();
+            DriverAmpData ampData = entry.getValue();
 
             // take any at least 20% of the largest contributing cluster
             if(ampData.NetCNChange / maxCnChange < MIN_AMP_PERCENT_VS_MAX)

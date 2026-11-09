@@ -39,7 +39,8 @@ public class ProbeTest
         probe = probe.withEvaluationResult(evaluationResult);
         assertEquals(evaluationResult, probe.evaluationResult());
 
-        assertEquals(new Probe(DEFINITION, SEQUENCE, TARGETED_RANGE, METADATA, EVAL_CRITERIA, evaluationResult, qualityScore, gcContent), probe);
+        assertEquals(
+                new Probe(DEFINITION, SEQUENCE, TARGETED_RANGE, METADATA, EVAL_CRITERIA, evaluationResult, qualityScore, gcContent), probe);
     }
 
     @Test

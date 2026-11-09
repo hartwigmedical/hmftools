@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.sage.common;
 
-import static java.lang.Math.E;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
@@ -61,14 +60,6 @@ public class RefSequence
             return null;
 
         return Arrays.subsetArray(Bases, indexStart, indexEnd);
-    }
-
-    public String indexBases(int start, int end)
-    {
-        if(start < 0 || end >= Bases.length || start > end)
-            return null;
-
-        return new String(Bases, start, end - start + 1);
     }
 
     public String positionBases(int posStart, int posEnd)

@@ -77,6 +77,7 @@ public class AssemblyApplication
     private final AssemblyConfig mConfig;
     private final ResultsWriter mResultsWriter;
 
+    private DiscordantStats mDiscordantStats;
     private final Map<String,List<Junction>> mChrJunctionsMap;
     private final Map<String,List<JunctionGroup>> mJunctionGroupMap;
 
@@ -84,6 +85,8 @@ public class AssemblyApplication
 
     @Nullable
     private final SagaMatcherFactory mSagaMatcherFactory;
+
+    public static double SampleDiscordantRate = 0; // global property for accessibility
 
     private final List<PerformanceCounter> mPerfCounters;
 
@@ -96,6 +99,7 @@ public class AssemblyApplication
     {
         mConfig = new AssemblyConfig(configBuilder, asSubRoutine);
 
+        mDiscordantStats = null;
         mChrJunctionsMap = Maps.newHashMap();
         mJunctionGroupMap = new TreeMap<>();
         mBamReaders = Lists.newArrayList();
@@ -115,6 +119,7 @@ public class AssemblyApplication
                 mConfig.OutputDir, mConfig.OutputId != null ? format(" outputId(%s)", mConfig.OutputId) : "");
 
         loadFragmentLengthBounds();
+        loadDiscordantData();
 
         if(!loadJunctionFiles())
         {
@@ -178,9 +183,16 @@ public class AssemblyApplication
         SV_LOGGER.info("Esvee assembly complete, mins({})", runTimeMinsStr(startTimeMs));
     }
 
+    private void loadDiscordantData()
+    {
+        String discStatsFilename = formDiscordantStatsFilename(mConfig.PrepDir, mConfig.sampleId(), mConfig.OutputId);
+        mDiscordantStats = loadDiscordantStats(discStatsFilename);
+
+        SampleDiscordantRate = mDiscordantStats.discordantRate();
+    }
+
     private boolean loadJunctionFiles()
     {
-        // TODO? match these to SAGA
         if(!mConfig.SpecificJunctions.isEmpty())
         {
             for(Junction junction : mConfig.SpecificJunctions)
@@ -204,30 +216,23 @@ public class AssemblyApplication
             System.exit(1);
         }
 
-        String discStatsFilename = formDiscordantStatsFilename(mConfig.PrepDir, mConfig.sampleId(), mConfig.OutputId);
-        DiscordantStats discordantStats = loadDiscordantStats(discStatsFilename);
-
         int minJunctionFrags = MIN_JUNCTION_SUPPORT;
         int minHotspotFrags = MIN_HOTSPOT_JUNCTION_SUPPORT;
         int minDiscordantFrags = DISCORDANT_GROUP_MIN_FRAGMENTS_SHORT;
 
-        double discordantRate = discordantStats.discordantRate();
-
-        if(discordantRate >= mConfig.DiscordantRateIncrement)
+        if(SampleDiscordantRate >= mConfig.DiscordantRateIncrement)
         {
-            minJunctionFrags += (int)floor(discordantRate / mConfig.DiscordantRateIncrement) * DISC_RATE_JUNC_INCREMENT;
-            minHotspotFrags += (int)floor(discordantRate / mConfig.DiscordantRateIncrement) * DISC_RATE_JUNC_INCREMENT;
-            minDiscordantFrags += (int)floor(discordantRate / mConfig.DiscordantRateIncrement) * DISC_RATE_DISC_ONLY_INCREMENT;
+            int discordantRateFactor = (int)floor(SampleDiscordantRate / mConfig.DiscordantRateIncrement);
+            minJunctionFrags += discordantRateFactor * DISC_RATE_JUNC_INCREMENT;
+            minHotspotFrags += discordantRateFactor * DISC_RATE_JUNC_INCREMENT;
+            minDiscordantFrags += discordantRateFactor * DISC_RATE_DISC_ONLY_INCREMENT;
 
             SV_LOGGER.info("raised min fragments(hotspot={} junction={} disc-only={}) for discordantRate({})",
-                    minHotspotFrags, minJunctionFrags, minDiscordantFrags, format("%.3f", discordantRate));
+                    minHotspotFrags, minJunctionFrags, minDiscordantFrags, format("%.3f", SampleDiscordantRate));
         }
 
         mChrJunctionsMap.putAll(Junction.loadJunctions(
                 mConfig.JunctionFile, mConfig.SpecificChrRegions, minJunctionFrags, minHotspotFrags, minDiscordantFrags));
-
-        // if(AssemblyConfig.DevDebug && !validateJunctionMap(mChrJunctionsMap))
-        //    System.exit(1);
 
         return true;
     }

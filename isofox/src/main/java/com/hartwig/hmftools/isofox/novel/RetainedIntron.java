@@ -36,7 +36,7 @@ public class RetainedIntron
 
         for(RegionReadData region : mRegions)
         {
-            for (final TransExonRef transRef : region.getTransExonRefs())
+            for(TransExonRef transRef : region.getTransExonRefs())
             {
                 trancriptInfo.add(format("%s-%s", transRef.TransName, transRef.ExonRank));
             }

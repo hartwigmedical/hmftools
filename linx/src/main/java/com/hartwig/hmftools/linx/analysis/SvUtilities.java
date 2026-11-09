@@ -52,10 +52,10 @@ public final class SvUtilities {
 
     public static int getChromosomalArmLength(final String chromosome, final Arm arm)
     {
-        final RefGenomeCoordinates refGenome = refGenomeLengths();
-        final HumanChromosome chr = HumanChromosome.fromString(chromosome);
+        RefGenomeCoordinates refGenome = refGenomeLengths();
+        HumanChromosome chr = HumanChromosome.fromString(chromosome);
 
-        final Integer centromerePos = refGenome.centromeres().get(chr);
+        Integer centromerePos = refGenome.centromeres().get(chr);
 
         if(centromerePos == null)
             return 0;
@@ -93,7 +93,7 @@ public final class SvUtilities {
             int index = 0;
             for(; index < breakendList.size(); ++index)
             {
-                final SvBreakend otherBreakend = breakendList.get(index);
+                SvBreakend otherBreakend = breakendList.get(index);
 
                 if(position < otherBreakend.position())
                     break;

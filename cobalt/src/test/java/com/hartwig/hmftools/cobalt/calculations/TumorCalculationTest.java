@@ -27,7 +27,7 @@ public class TumorCalculationTest
         ResultsNormaliser theLast = mock(ResultsNormaliser.class);
         CobaltScope scope = mock(CobaltScope.class);
         when(scope.finalNormaliser()).thenReturn(theLast);
-        Calculation = new TumorCalculation(mock(WindowStatuses.class), scope, V38);
+        Calculation = new TumorCalculation(mock(WindowStatuses.class), scope);
         assertEquals(theLast, Calculation.createFinalNormaliser());
     }
 
@@ -40,7 +40,7 @@ public class TumorCalculationTest
         CobaltScope scope = mock(CobaltScope.class);
         when(scope.medianByMeanNormaliser()).thenReturn(readDepthStatisticsNormaliser);
         when(scope.resultsConsolidator(4.0)).thenReturn(consolidator);
-        Calculation = new TumorCalculation(mock(WindowStatuses.class), scope, V38);
+        Calculation = new TumorCalculation(mock(WindowStatuses.class), scope);
         assertEquals(consolidator, Calculation.consolidator());
         // Subsequent calls should return the same instance.
         assertSame(consolidator, Calculation.consolidator());
@@ -52,14 +52,14 @@ public class TumorCalculationTest
         ReadDepthStatisticsNormaliser theMeanOne = mock(ReadDepthStatisticsNormaliser.class);
         CobaltScope scope = mock(CobaltScope.class);
         when(scope.medianByMeanNormaliser()).thenReturn(theMeanOne);
-        Calculation = new TumorCalculation(mock(WindowStatuses.class), scope, V38);
+        Calculation = new TumorCalculation(mock(WindowStatuses.class), scope);
         assertEquals(theMeanOne, Calculation.createReadDepthsNormaliser());
     }
 
     @Test
     public void createMegaBaseScaleNormaliser()
     {
-        Calculation = new TumorCalculation(mock(WindowStatuses.class), mock(CobaltScope.class), V38);
-        Assert.assertTrue(Calculation.createMegaBaseScaleNormaliser(V38) instanceof DoNothingNormaliser);
+        Calculation = new TumorCalculation(mock(WindowStatuses.class), mock(CobaltScope.class));
+        Assert.assertTrue(Calculation.megaBaseScaleNormaliser() instanceof DoNothingNormaliser);
     }
 }

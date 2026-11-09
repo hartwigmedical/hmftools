@@ -1,16 +1,14 @@
 package com.hartwig.hmftools.panelbuilder;
 
-import static java.lang.Math.ceil;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
-import static java.lang.Math.round;
 import static java.util.Collections.emptyList;
 
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.PROBE_LENGTH;
-import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.PROBE_OVERLAP_EXTENSION_BALANCE;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.PROBE_SHIFT_MAX;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.REGION_UNCOVERED_MAX;
 import static com.hartwig.hmftools.panelbuilder.ProbeSelector.selectBestProbe;
+import static com.hartwig.hmftools.panelbuilder.ProbeTiling.calculateProbeTiling;
 import static com.hartwig.hmftools.panelbuilder.ProbeUtils.maxProbeEndOverlapping;
 import static com.hartwig.hmftools.panelbuilder.ProbeUtils.maxProbeEndWithoutGap;
 import static com.hartwig.hmftools.panelbuilder.ProbeUtils.minProbeStartOverlapping;
@@ -19,19 +17,22 @@ import static com.hartwig.hmftools.panelbuilder.ProbeUtils.probeRegionCenteredAt
 import static com.hartwig.hmftools.panelbuilder.ProbeUtils.probeRegionEndingAt;
 import static com.hartwig.hmftools.panelbuilder.ProbeUtils.probeRegionStartingAt;
 import static com.hartwig.hmftools.panelbuilder.RegionUtils.regionCentre;
-import static com.hartwig.hmftools.panelbuilder.RegionUtils.regionCentreFloat;
 import static com.hartwig.hmftools.panelbuilder.RegionUtils.regionCentreStartOffset;
 import static com.hartwig.hmftools.panelbuilder.RegionUtils.regionIntersection;
 import static com.hartwig.hmftools.panelbuilder.RegionUtils.regionNegatedIntersection;
 import static com.hartwig.hmftools.panelbuilder.Utils.outwardMovingOffsets;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.function.Consumer;
+import java.util.function.IntPredicate;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -73,18 +74,25 @@ public class ProbeGenerator
         return new ProbeGenerator(refGenome.chromosomeLengths(), probeEvaluator, candidateCallback);
     }
 
-    // Object to encapsulate batch generation of probes.
-    // Generating in batches is more efficient because of computing the probe quality model (alignment).
+    // Batches probe generation so the expensive path - scoring a novel (non-reference-contiguous) sequence via BWA alignment - can align many
+    // candidates in one call, where BWA parallelises across queries (~7x speedup). Only spec types that produce novel sequences are pooled:
+    // variant/SV probes span a breakend so are pooled across all specs; RNA exon ranges cross splice junctions so are pooled per exon (which
+    // already saturates the aligner). Reference-contiguous probes are profile-scored with nothing to parallelise, so they run one at a time.
     public class Batch
     {
         private final List<ProbeGenerationSpec> mGenericSpecs = new ArrayList<>();
         private final List<ProbeGenerationSpec.SingleProbe> mSingleProbeSpecs = new ArrayList<>();
+        private final List<ProbeGenerationSpec.CoverExonRange> mExonRangeSpecs = new ArrayList<>();
 
         public void add(final ProbeGenerationSpec spec)
         {
             if(spec instanceof ProbeGenerationSpec.SingleProbe singleProbeSpec)
             {
                 mSingleProbeSpecs.add(singleProbeSpec);
+            }
+            else if(spec instanceof ProbeGenerationSpec.CoverExonRange exonRangeSpec)
+            {
+                mExonRangeSpecs.add(exonRangeSpec);
             }
             else
             {
@@ -100,14 +108,14 @@ public class ProbeGenerator
         public ProbeGenerationResult generate(PanelBuffer resultBuffer)
         {
             ProbeGenerationResult result = generateGenericSpecs(resultBuffer, resultBuffer)
-                    .add(generateSingleProbeSpecs(resultBuffer, resultBuffer));
+                    .add(generateSingleProbeSpecs(resultBuffer, resultBuffer))
+                    .add(generateExonRangeSpecs(mExonRangeSpecs, resultBuffer));
             clear();
             return result;
         }
 
         private ProbeGenerationResult generateGenericSpecs(final PanelCoverage coverage, PanelStore resultStore)
         {
-            // TODO: batch probe evaluation
             return mGenericSpecs.stream().map(spec ->
                     {
                         ProbeGenerationResult result = generateGenericSpec(spec, coverage);
@@ -126,6 +134,7 @@ public class ProbeGenerator
         {
             mGenericSpecs.clear();
             mSingleProbeSpecs.clear();
+            mExonRangeSpecs.clear();
         }
     }
 
@@ -171,8 +180,9 @@ public class ProbeGenerator
     {
         List<ChrBaseRegion> subregions;
         // Split the region into uncovered subregions to avoid overlap with regions already covered by probes.
-        subregions = regionNegatedIntersection(region.baseRegion(), coverage.coveredRegions(region.chromosome())
-                .map(ChrBaseRegion::baseRegion))
+        subregions = regionNegatedIntersection(
+                region.baseRegion(), coverage.coveredRegions(region.chromosome())
+                        .map(ChrBaseRegion::baseRegion))
                 .stream()
                 .map(baseRegion -> ChrBaseRegion.from(region.chromosome(), baseRegion))
                 .toList();
@@ -181,8 +191,12 @@ public class ProbeGenerator
             subregions.forEach(subregion -> LOGGER.debug("Split region into uncovered subregion: {}", subregion));
         }
 
+        // Identity (whole-chromosome) mapping with no pinned edges, so this reproduces the plain genome-space tiling exactly.
+        RegionMapping mapping = RegionMapping.wholeChromosome(region.chromosome(), mChromosomeLengths.get(region.chromosome()));
+        IntPredicate noPinning = position -> false;
         ProbeGenerationResult result = subregions.stream()
-                .map(subregion -> coverUncoveredRegion(subregion, metadata, evalCriteria, localSelect))
+                .map(subregion -> coverMappedRange(
+                        mapping, subregion.start() - 1, subregion.end(), metadata, evalCriteria, localSelect, noPinning))
                 .reduce(new ProbeGenerationResult(), ProbeGenerationResult::add);
 
         // Add in the candidate target region that's not added by coverSubregion().
@@ -190,76 +204,6 @@ public class ProbeGenerator
         result = result.add(new ProbeGenerationResult(emptyList(), List.of(candidateTargetRegion), emptyList()));
 
         return result;
-    }
-
-    private ProbeGenerationResult coverUncoveredRegion(final ChrBaseRegion uncoveredRegion, final TargetMetadata metadata,
-            final ProbeEvaluator.Criteria evalCriteria, final ProbeSelector.Strategy localSelect)
-    {
-        // Methodology:
-        //   1. Generate all possible probes and check which are acceptable.
-        //   2. Based on acceptable probes, generate regions in which acceptable probes can be tiled.
-        //   3. Within each acceptable region, tile probes according to the ideal tiling algorithm.
-        //   4. For each probe, try shifting it left and right slightly and pick the local best probe.
-
-        String chromosome = uncoveredRegion.chromosome();
-
-        Stream<Probe> allPlausibleProbes = evaluateProbes(
-                allOverlappingProbes(uncoveredRegion, metadata), evalCriteria)
-                .filter(Probe::accepted);
-
-        // These are the subregions in which probes can be placed.
-        // Probes are guaranteed to be rejected if they overlap subregions between the acceptable subregions.
-        List<BaseRegion> acceptableSubregions = new ArrayList<>();
-        // Map from start position to probe.
-        Map<Integer, Probe> acceptableProbes = new HashMap<>();
-        // This requires sorted by position, but it's already in that order.
-        allPlausibleProbes.forEachOrdered(probe ->
-        {
-            BaseRegion probeRegion = probe.definition().singleRegion().baseRegion();
-            BaseRegion prev = acceptableSubregions.isEmpty() ? null : acceptableSubregions.get(acceptableSubregions.size() - 1);
-            if(prev != null && probeRegion.start() <= prev.end() + 1)
-            {
-                if(probeRegion.end() > prev.end())
-                {
-                    // Don't mutate in place because we borrowed the object from the probe.
-                    acceptableSubregions.set(acceptableSubregions.size() - 1, new BaseRegion(prev.start(), probeRegion.end()));
-                }
-            }
-            else
-            {
-                acceptableSubregions.add(probeRegion);
-            }
-            acceptableProbes.put(probeRegion.start(), probe);
-        });
-
-        if(acceptableSubregions.size() > 1)
-        {
-            acceptableSubregions.forEach(subregion ->
-                    LOGGER.trace("Split region into acceptable subregion: {}", ChrBaseRegion.from(uncoveredRegion.chromosome(), subregion)));
-        }
-
-        List<Probe> probes = new ArrayList<>();
-        List<BaseRegion> permittedUncoveredRegions = new ArrayList<>();
-        acceptableSubregions.forEach(acceptableSubregion ->
-        {
-            CoverAcceptableSubregionResult result =
-                    coverAcceptableSubregion(acceptableSubregion, uncoveredRegion.baseRegion(), acceptableProbes, localSelect);
-            probes.addAll(result.probes());
-            permittedUncoveredRegions.addAll(result.permittedUncoveredRegions);
-        });
-
-        // Compute rejected regions based on what has been covered by the probes. Also, don't mark regions rejected where the tiling
-        // algorithm found it was optimal to not cover with probes (this occurs on the edges; we allow some edge bases to be uncovered, but
-        // they will likely still be captured during sequencing).
-        Stream<BaseRegion> probeRegions = probes.stream().map(probe -> probe.definition().singleRegion().baseRegion());
-        Stream<BaseRegion> unrejectedRegions = Stream.concat(probeRegions, permittedUncoveredRegions.stream());
-        List<RejectedFeature> rejectedFeatures = regionNegatedIntersection(uncoveredRegion.baseRegion(), unrejectedRegions).stream()
-                .map(uncovered -> RejectedFeature.fromRegion(ChrBaseRegion.from(chromosome, uncovered), metadata))
-                .toList();
-
-        // Candidate target is not added here because it would be added multiple times if there are multiple calls to this function for one
-        // target region. Candidate target must be added by the caller.
-        return new ProbeGenerationResult(probes, emptyList(), rejectedFeatures);
     }
 
     private record CoverAcceptableSubregionResult(
@@ -270,45 +214,164 @@ public class ProbeGenerator
     {
     }
 
-    private static CoverAcceptableSubregionResult coverAcceptableSubregion(final BaseRegion acceptableSubregion,
-            final BaseRegion targetRegion, final Map<Integer, Probe> acceptableProbes, final ProbeSelector.Strategy localSelect)
+    // Generates exon-aware (RNA) probes for a batch of exon-range specs, combining the results. Tiling edges are pinned flush to exon
+    // boundaries for splice-junction coverage; a window near an edge becomes a spliced multi-region probe.
+    private ProbeGenerationResult generateExonRangeSpecs(final List<ProbeGenerationSpec.CoverExonRange> specs, final PanelStore resultStore)
     {
-        // Bound the subregion to the target region to prevent producing too many probes (our bounds for generating candidates
-        // earlier were the least strict possible).
-        // calculateOptimalProbeTiling() will produce probes extending past the target region if that's allowed and optimal.
-        BaseRegion tilingTarget = regionIntersection(acceptableSubregion, targetRegion).orElseThrow();
+        ProbeGenerationResult total = new ProbeGenerationResult();
+        for(ProbeGenerationSpec.CoverExonRange spec : specs)
+        {
+            ProbeGenerationResult result = coverMappedRange(
+                    spec.mapping(), spec.rangeStart(), spec.rangeEnd(), spec.metadata(), spec.evalCriteria(), spec.localSelectStrategy(),
+                    spec.mapping()::isRegionBoundary);
+            // The coverage step does not add the candidate target region; add the exon region here.
+            ChrBaseRegion exonRegion = spec.mapping().toGenomeRegions(spec.rangeStart(), spec.rangeEnd()).get(0);
+            result = result.add(
+                    new ProbeGenerationResult(emptyList(), List.of(new TargetRegion(exonRegion, spec.metadata())), emptyList()));
+            resultStore.addResult(result);
+            total = total.add(result);
+        }
+        return total;
+    }
 
-        // The acceptable subregions are maximal because we checked all probes which overlap the target region.
-        // Thus, the subregion is bounded on both sides by unacceptable regions or completely off-target regions, and probes
-        // cannot be placed outside it.
+    // Covers a probe-space target range [rangeStart, rangeEnd) using the region mapping (identity for DNA, ordered exons for RNA). Candidate
+    // windows map back to genome regions - one for DNA, possibly spliced for RNA. Probe-space positions are wrapped as 1-indexed regions so
+    // the shared region maths apply. The caller adds candidate target regions, not this method.
+    private ProbeGenerationResult coverMappedRange(final RegionMapping mapping, int rangeStart, int rangeEnd, final TargetMetadata metadata,
+            final ProbeEvaluator.Criteria evalCriteria, final ProbeSelector.Strategy localSelect, final IntPredicate pinBoundary)
+    {
+        int minStart = max(0, rangeStart - PROBE_LENGTH + 1);
+        int maxStart = min(mapping.length() - PROBE_LENGTH, rangeEnd - 1);
+        BaseRegion targetRegion = spaceRegion(rangeStart, rangeEnd);
+        // TODO? When the whole mapping is shorter than a probe, no window fits and the target gets no coverage - the short-exon padding limit.
+        //  Probes are fixed length throughout, so a fix means a pipeline-wide change (e.g. shorter probes). Accepted for now; only tiny
+        //  non-coding RNAs are this short, and the uncovered target is reported in the rejection output.
+
+        // Accepted candidate windows indexed by probe-space start (as a 1-indexed coordinate), merged into maximal acceptable sub-ranges.
+        Map<Integer, Probe> acceptableProbes = new HashMap<>();
+
+        // Pass 1: cheap within-exon (single-region) candidates only. The expensive spliced candidates are deferred to pass 2 and built only
+        // where these leave the target uncovered. For the DNA identity mapping every candidate is single-region, so pass 2 is inert.
+        List<Probe> singleRegionCandidates = IntStream.rangeClosed(minStart, maxStart)
+                .mapToObj(start -> probeAtStart(mapping, start, rangeStart, rangeEnd, metadata))
+                .filter(probe -> probe.definition().regions().size() == 1)
+                .toList();
+        evaluateProbes(singleRegionCandidates.stream(), evalCriteria)
+                .filter(Probe::accepted)
+                .forEachOrdered(probe -> acceptableProbes.put(spaceWindow(probeSpaceStart(mapping, probe)).start(), probe));
+
+        // Pass 2: spliced candidates only where no acceptable single-region probe covers the target (short exons, or sub-ranges abutting a
+        // junction). Bounded to the junction neighbourhood, so it is empty for a covered exon interior.
+        List<BaseRegion> uncoveredBySingleRegion = regionNegatedIntersection(
+                targetRegion, acceptableProbes.values().stream().map(probe -> spaceWindow(probeSpaceStart(mapping, probe))));
+        if(!uncoveredBySingleRegion.isEmpty())
+        {
+            SortedSet<Integer> splicedStarts = allSplicedStartsOverlapping(uncoveredBySingleRegion, minStart, maxStart);
+
+            // Short-exon fast path: with no single-region candidate the exon is covered by one centred padded probe placeable only near the
+            // centred position, so evaluate just that neighbourhood, falling back to the full sweep only if nothing lands there. Exact.
+            SortedSet<Integer> toEvaluate = splicedStarts;
+            List<Integer> centreStarts = List.of();
+            if(singleRegionCandidates.isEmpty())
+            {
+                BaseRegion tilingBounds = new BaseRegion(minStart + 1, maxStart + PROBE_LENGTH);
+                List<Integer> tiling = calculateProbeTiling(targetRegion, tilingBounds, false, false);
+                if(!tiling.isEmpty())
+                {
+                    centreStarts = tiling.stream().map(probeStart -> probeStart - 1).toList();
+                    SortedSet<Integer> nearCentre = new TreeSet<>();
+                    for(int centreStart : centreStarts)
+                    {
+                        for(int start = max(minStart, centreStart - PROBE_SHIFT_MAX);
+                                start <= min(maxStart, centreStart + PROBE_SHIFT_MAX); ++start)
+                        {
+                            nearCentre.add(start);
+                        }
+                    }
+                    toEvaluate = nearCentre;
+                }
+            }
+
+            evaluateSplicedInto(mapping, toEvaluate, rangeStart, rangeEnd, metadata, evalCriteria, acceptableProbes);
+
+            // If the fast path placed no probe at a centred position, the real placement may shift; evaluate the rest to stay exact.
+            boolean centredPlaced = centreStarts.stream().anyMatch(start -> acceptableProbes.containsKey(start + 1));
+            if(!centreStarts.isEmpty() && !centredPlaced)
+            {
+                splicedStarts.removeAll(toEvaluate);
+                evaluateSplicedInto(mapping, splicedStarts, rangeStart, rangeEnd, metadata, evalCriteria, acceptableProbes);
+            }
+        }
+
+        // Merge all accepted candidate windows (ascending) into maximal acceptable sub-ranges.
+        List<BaseRegion> acceptableSubregions = new ArrayList<>();
+        acceptableProbes.keySet().stream().sorted().forEach(windowStart ->
+        {
+            BaseRegion window = new BaseRegion(windowStart, windowStart + PROBE_LENGTH - 1);
+            BaseRegion prev = acceptableSubregions.isEmpty() ? null : acceptableSubregions.get(acceptableSubregions.size() - 1);
+            if(prev != null && window.start() <= prev.end() + 1)
+            {
+                if(window.end() > prev.end())
+                {
+                    acceptableSubregions.set(acceptableSubregions.size() - 1, new BaseRegion(prev.start(), window.end()));
+                }
+            }
+            else
+            {
+                acceptableSubregions.add(window);
+            }
+        });
+
+        List<Probe> probes = new ArrayList<>();
+        List<BaseRegion> permittedUncoveredRegions = new ArrayList<>();
+        for(BaseRegion acceptableSubregion : acceptableSubregions)
+        {
+            CoverAcceptableSubregionResult result =
+                    coverAcceptableMappedSubrange(mapping, acceptableSubregion, targetRegion, acceptableProbes, localSelect, pinBoundary);
+            probes.addAll(result.probes());
+            permittedUncoveredRegions.addAll(result.permittedUncoveredRegions());
+        }
+
+        Stream<BaseRegion> probeWindows = probes.stream().map(probe -> spaceWindow(probeSpaceStart(mapping, probe)));
+        Stream<BaseRegion> unrejectedRegions = Stream.concat(probeWindows, permittedUncoveredRegions.stream());
+        List<RejectedFeature> rejectedFeatures = regionNegatedIntersection(targetRegion, unrejectedRegions).stream()
+                .flatMap(uncovered -> mapping.toGenomeRegions(uncovered.start() - 1, uncovered.end()).stream())
+                .map(region -> RejectedFeature.fromRegion(region, metadata))
+                .toList();
+
+        return new ProbeGenerationResult(probes, emptyList(), rejectedFeatures);
+    }
+
+    // Tiles and shifts probes over an acceptable sub-range. A tiling edge coinciding with an exon boundary is pinned flush; otherwise the
+    // usual shift constraints apply (probes may extend past the target). Pinning never triggers for the DNA identity mapping.
+    private CoverAcceptableSubregionResult coverAcceptableMappedSubrange(final RegionMapping mapping, final BaseRegion acceptableSubregion,
+            final BaseRegion targetRegion, final Map<Integer, Probe> acceptableProbes, final ProbeSelector.Strategy localSelect,
+            final IntPredicate pinBoundary)
+    {
+        BaseRegion tilingTarget = regionIntersection(acceptableSubregion, targetRegion).orElseThrow();
         BaseRegion probeBounds = acceptableSubregion;
 
-        List<BaseRegion> tiling = calculateOptimalProbeTiling(tilingTarget, probeBounds).stream()
+        // Pinning the outermost probes flush to boundaries is only meaningful with multiple probes; a range fitting a single probe is centred
+        // instead. Inert for DNA.
+        boolean singleProbe = tilingTarget.baseLength() <= PROBE_LENGTH + REGION_UNCOVERED_MAX;
+        boolean pinStart = !singleProbe && pinBoundary.test(tilingTarget.start() - 1);
+        boolean pinEnd = !singleProbe && pinBoundary.test(tilingTarget.end());
+
+        List<BaseRegion> tiling = calculateProbeTiling(tilingTarget, probeBounds, pinStart, pinEnd).stream()
                 .map(ProbeUtils::probeRegionStartingAt)
                 .toList();
 
-        // For each probe, if there is space around the probe within the tiling, try shifting the probe around to find the best.
         List<Probe> finalProbes = new ArrayList<>();
+        List<Integer> finalStarts = new ArrayList<>();
         boolean[] couldPlaceProbe = new boolean[tiling.size()];
         for(int i = 0; i < tiling.size(); ++i)
         {
             BaseRegion originalProbe = tiling.get(i);
-            BaseRegion prevProbe = finalProbes.isEmpty()
-                    ? null
-                    : finalProbes.get(finalProbes.size() - 1).definition().singleRegion().baseRegion();
-            // We don't know exactly what the next probe will be but allow at least its original tiled position to be valid.
+            BaseRegion prevProbe = finalStarts.isEmpty() ? null : probeRegionStartingAt(finalStarts.get(finalStarts.size() - 1));
             BaseRegion nextProbe = i + 1 < tiling.size() ? tiling.get(i + 1) : null;
 
-            // Shift must ensure:
-            //  - Can't extend outside the hard bounds;
-            //  - Can't reduce coverage of the target region;
-            //  - Can't shift further than a configured amount.
-
-            // Apply hard bounds and min coverage constraints.
             int minStart = max(probeBounds.start(), minProbeStartOverlapping(targetRegion));
             int maxEnd = min(probeBounds.end(), maxProbeEndOverlapping(targetRegion));
-
-            // If the probe is adjacent to a probe, don't shift it such that it creates a gap.
             if(prevProbe != null)
             {
                 maxEnd = min(maxEnd, maxProbeEndWithoutGap(prevProbe));
@@ -318,22 +381,15 @@ public class ProbeGenerator
                 minStart = max(minStart, minProbeStartWithoutGap(nextProbe));
             }
 
-            // If the probe is on the edge, don't shift it such that it reduces the target coverage.
             if(i == 0)
             {
                 if(originalProbe.start() < targetRegion.start())
                 {
-                    // First probe, extending before the target region:
-                    //   - Can't shift left at all
-                    //   - Can't shift right past the target start
                     minStart = originalProbe.start();
                     maxEnd = min(maxEnd, probeRegionStartingAt(targetRegion.start()).end());
                 }
                 else
                 {
-                    // First probe, starting after the target start:
-                    //   - Can't shift left before the target start
-                    //   - Can't shift right at all
                     minStart = max(minStart, targetRegion.start());
                     maxEnd = originalProbe.end();
                 }
@@ -342,35 +398,35 @@ public class ProbeGenerator
             {
                 if(originalProbe.end() > targetRegion.end())
                 {
-                    // Last probe, extending after the target region:
-                    //   - Can't shift left before target end
-                    //   - Can't shift right at all
                     minStart = max(minStart, probeRegionEndingAt(targetRegion.end()).start());
                     maxEnd = originalProbe.end();
                 }
                 else
                 {
-                    // Last probe, ending before the target end:
-                    //   - Can't shift left at all
-                    //   - Can't shift right past target end
                     minStart = originalProbe.start();
                     maxEnd = min(maxEnd, targetRegion.end());
                 }
             }
 
-            // Max shift amount constraint.
-            minStart = max(minStart, originalProbe.start() - PROBE_SHIFT_MAX);
-            maxEnd = min(maxEnd, originalProbe.end() + PROBE_SHIFT_MAX);
+            // A pinned outer edge is fixed flush to the boundary (no shift).
+            boolean pinnedEdge = (i == 0 && pinStart) || (i == tiling.size() - 1 && pinEnd);
+            if(pinnedEdge)
+            {
+                minStart = originalProbe.start();
+                maxEnd = originalProbe.end();
+            }
+            else
+            {
+                minStart = max(minStart, originalProbe.start() - PROBE_SHIFT_MAX);
+                maxEnd = min(maxEnd, originalProbe.end() + PROBE_SHIFT_MAX);
+            }
 
             int maxStart = probeRegionEndingAt(maxEnd).start();
-
-            // In case our additional checks here fail, just use the original tiling position as we have no better alternative.
             if(minStart > maxStart)
             {
                 minStart = maxStart = originalProbe.start();
             }
 
-            // Iterate in an outward moving pattern so in the case of a tie, prefer probes closer to the original tiling position.
             int minOffset = minStart - originalProbe.start();
             int maxOffset = maxStart - originalProbe.start();
             Stream<Probe> candidates = outwardMovingOffsets(minOffset, maxOffset)
@@ -378,15 +434,18 @@ public class ProbeGenerator
                     .mapToObj(acceptableProbes::get)
                     .filter(Objects::nonNull);
             Optional<Probe> bestProbe = selectBestProbe(candidates, localSelect);
-            bestProbe.ifPresent(finalProbes::add);
+            if(bestProbe.isPresent())
+            {
+                finalProbes.add(bestProbe.get());
+                finalStarts.add(spaceWindow(probeSpaceStart(mapping, bestProbe.get())).start());
+            }
             couldPlaceProbe[i] = bestProbe.isPresent();
         }
 
-        // If the tiling found it optimal to exclude the edges, don't want to mark them as rejected, so we pass them back to the caller.
         List<BaseRegion> permittedUncoveredRegions = new ArrayList<>();
         if(!tiling.isEmpty() && couldPlaceProbe[0])
         {
-            int tilingStart = finalProbes.get(0).definition().singleRegion().start();
+            int tilingStart = finalStarts.get(0);
             if(tilingStart > acceptableSubregion.start())
             {
                 permittedUncoveredRegions.add(new BaseRegion(acceptableSubregion.start(), tilingStart));
@@ -394,7 +453,7 @@ public class ProbeGenerator
         }
         if(!tiling.isEmpty() && couldPlaceProbe[tiling.size() - 1])
         {
-            int tilingEnd = finalProbes.get(finalProbes.size() - 1).definition().singleRegion().end();
+            int tilingEnd = finalStarts.get(finalStarts.size() - 1) + PROBE_LENGTH - 1;
             if(tilingEnd < acceptableSubregion.end())
             {
                 permittedUncoveredRegions.add(new BaseRegion(tilingEnd, acceptableSubregion.end()));
@@ -404,100 +463,61 @@ public class ProbeGenerator
         return new CoverAcceptableSubregionResult(finalProbes, permittedUncoveredRegions);
     }
 
-    // Calculates the best probe tiling of a region.
-    // Objectives:
-    //   - Cover most of the region, with possibly a few bases on the edge uncovered;
-    //   - Centre the tiling on the region;
-    //   - Equally spaced probes;
-    //   - Probes cannot extend outside `probeBounds`.
-    // Returns the start positions of the probes.
-    private static List<Integer> calculateOptimalProbeTiling(final BaseRegion region, final BaseRegion probeBounds)
+    // Builds the candidate probe whose probe-length window starts at the given probe-space position, mapping the window to genome regions (a
+    // single region within one exon, or spliced across exon boundaries).
+    private static Probe probeAtStart(final RegionMapping mapping, int start, int rangeStart, int rangeEnd, final TargetMetadata metadata)
     {
-        if(!region.hasValidPositions() || !probeBounds.hasValidPositions())
+        List<ChrBaseRegion> regions = mapping.toGenomeRegions(start, start + PROBE_LENGTH);
+        SequenceDefinition definition = SequenceDefinition.spliced(regions);
+        TargetedRange targetedRange = new TargetedRange(max(0, rangeStart - start), min(PROBE_LENGTH, rangeEnd - start));
+        return new Probe(definition, targetedRange, metadata);
+    }
+
+    // Probe-space starts whose probe-length window overlaps any of the given (1-indexed) ranges, within the mapping start bounds.
+    private static SortedSet<Integer> allSplicedStartsOverlapping(final List<BaseRegion> ranges, int minStart, int maxStart)
+    {
+        SortedSet<Integer> starts = new TreeSet<>();
+        for(BaseRegion range : ranges)
         {
-            throw new IllegalArgumentException("Invalid region");
-        }
-        if(!probeBounds.containsRegion(region))
-        {
-            // Probably a bug in the caller.
-            throw new IllegalArgumentException("probeBounds forbids all possible tilings");
-        }
-
-        int maxProbeOffTarget = PROBE_LENGTH - 1;
-        // Hard bounds on the region in which probes can be placed.
-        BaseRegion tilingBounds = new BaseRegion(
-                max(probeBounds.start(), region.start() - maxProbeOffTarget),
-                min(probeBounds.end(), region.end() + maxProbeOffTarget));
-
-        double centre = regionCentreFloat(region);
-
-        // Lower bound is number of probes which completely cover the region, possibly excluding the max allowed uncovered bases.
-        int minProbes = (int) ceil(max(1.0, region.baseLength() - REGION_UNCOVERED_MAX) / PROBE_LENGTH);
-
-        // Upper bound is maximally overlapped and maximally extending outside the target region.
-        int maxProbeOverlap = PROBE_LENGTH - 1;
-        // maxProbes * PROBE_LENGTH - (maxProbes-1) * maxProbeOverlap <= regionSize + startExtend + endExtend
-        int maxProbes = (tilingBounds.baseLength() - maxProbeOverlap) / (PROBE_LENGTH - maxProbeOverlap);
-
-        if(minProbes > maxProbes)
-        {
-            // No tiling is possible given the constraints.
-            return emptyList();
-        }
-
-        // The optimal number of probes is always the minimum possible, since we guaranteed the minimum acceptably covers the region,
-        // and adding more probes will only increase overlap or extension for no gain.
-        int probeCount = minProbes;
-        // How many probe bases "left over" from covering the region?
-        int extra = probeCount * PROBE_LENGTH - region.baseLength();
-
-        if(probeCount <= 0)
-        {
-            // Can't even place a single probe with the given constraints.
-            return emptyList();
-        }
-
-        // Calculate the start of the tiling and the space between each probe start position.
-        // Then just tile the probes regularly from those parameters (since the constraints were checked earlier).
-        double tilingStart;
-        double probeStartSpacing;
-        if(extra == 0)
-        {
-            // Perfect tiling.
-            tilingStart = region.start();
-            probeStartSpacing = PROBE_LENGTH;
-        }
-        else
-        {
-            // General case.
-
-            // If extra is negative (i.e. some bases uncovered) then reduce the desired tiling region.
-            // If extra is positive (i.e. some overlap) then distribute that between overlap and extension based on the constant.
-            double tilingSpace = min(
-                    region.baseLength() + min(0, extra) + max(0, extra * PROBE_OVERLAP_EXTENSION_BALANCE),
-                    tilingBounds.baseLength());
-            probeStartSpacing = probeCount <= 1
-                    ? 0.0
-                    : max(
-                            (tilingSpace - PROBE_LENGTH) / (probeCount - 1.0),
-                            PROBE_LENGTH - maxProbeOverlap);
-            double tilingLength = (probeCount - 1) * probeStartSpacing + PROBE_LENGTH;
-            tilingStart = centre - tilingLength / 2;
-
-            // Adjust the tiling alignment to adhere to the hard bounds.
-            tilingStart = max(tilingStart, tilingBounds.start());
-            double end = tilingStart + tilingLength - 1;
-            if(end > tilingBounds.end())
+            int lo = max(minStart, range.start() - PROBE_LENGTH);
+            int hi = min(maxStart, range.end() - 1);
+            for(int start = lo; start <= hi; ++start)
             {
-                tilingStart -= end - tilingBounds.end();
+                starts.add(start);
             }
         }
+        return starts;
+    }
 
-        double tilingStartCopy = tilingStart;
-        List<Integer> probes = IntStream.range(0, probeCount)
-                .map(i -> (int) round(tilingStartCopy + i * probeStartSpacing))
-                .boxed().toList();
-        return probes;
+    // Evaluates the spliced (multi-region) candidate at each given probe-space start and adds the accepted ones to the acceptable-probes map
+    // (keyed by 1-indexed window start). Single-region starts are ignored (handled by pass 1).
+    private void evaluateSplicedInto(final RegionMapping mapping, final Collection<Integer> starts, int rangeStart, int rangeEnd,
+            final TargetMetadata metadata, final ProbeEvaluator.Criteria evalCriteria, final Map<Integer, Probe> acceptableProbes)
+    {
+        Stream<Probe> candidates = starts.stream()
+                .map(start -> probeAtStart(mapping, start, rangeStart, rangeEnd, metadata))
+                .filter(probe -> probe.definition().regions().size() > 1);
+        evaluateProbes(candidates, evalCriteria)
+                .filter(Probe::accepted)
+                .forEachOrdered(probe -> acceptableProbes.put(spaceWindow(probeSpaceStart(mapping, probe)).start(), probe));
+    }
+
+    private static int probeSpaceStart(final RegionMapping mapping, final Probe probe)
+    {
+        ChrBaseRegion first = probe.definition().regions().get(0);
+        return mapping.toProbeSpacePosition(first.chromosome(), first.start()).orElseThrow();
+    }
+
+    // A probe-length window at the given probe-space start, as a 1-indexed BaseRegion.
+    private static BaseRegion spaceWindow(int spaceStart)
+    {
+        return new BaseRegion(spaceStart + 1, spaceStart + PROBE_LENGTH);
+    }
+
+    // A probe-space range [spaceStart, spaceEnd) as a 1-indexed inclusive BaseRegion.
+    private static BaseRegion spaceRegion(int spaceStart, int spaceEnd)
+    {
+        return new BaseRegion(spaceStart + 1, spaceEnd);
     }
 
     // Generates all probes overlapping a region, in order from left to right.

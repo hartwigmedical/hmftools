@@ -141,8 +141,8 @@ public class SvChain {
         mOpenBreakends[SE_END] = getLastSV().getBreakend(lastLinkOpenOnStart());
     }
 
-    public final SvBreakend getOpenBreakend(int seIndex) { return mOpenBreakends[seIndex]; }
-    public final SvBreakend getOpenBreakend(boolean isStart)
+    public SvBreakend getOpenBreakend(int seIndex) { return mOpenBreakends[seIndex]; }
+    public SvBreakend getOpenBreakend(boolean isStart)
     {
         return getOpenBreakend(seIndex(isStart));
     }
@@ -166,7 +166,7 @@ public class SvChain {
             return false;
 
         // check for the same SV exposed in opposite ends in the 2 linked pairs
-        final SvVarData chainSv = toStart ? getFirstSV() : getLastSV();
+        SvVarData chainSv = toStart ? getFirstSV() : getLastSV();
         boolean chainOpenSide = toStart ? firstLinkOpenOnStart() : lastLinkOpenOnStart();
 
         if(pair.first() == chainSv && pair.firstUnlinkedOnStart() != chainOpenSide)
@@ -179,8 +179,8 @@ public class SvChain {
 
     public boolean linkWouldCloseChain(final LinkedPair pair)
     {
-        final SvBreakend chainStart = getOpenBreakend(true);
-        final SvBreakend chainEnd = getOpenBreakend(false);
+        SvBreakend chainStart = getOpenBreakend(true);
+        SvBreakend chainEnd = getOpenBreakend(false);
 
         if(pair.firstBreakend() == chainStart && pair.secondBreakend() == chainEnd)
             return true;
@@ -195,8 +195,8 @@ public class SvChain {
         if(mSvList.size() == 1 && mSvList.get(0).type() == DUP)
             return true;
 
-        final SvBreakend chainStart = getOpenBreakend(true);
-        final SvBreakend chainEnd = getOpenBreakend(false);
+        SvBreakend chainStart = getOpenBreakend(true);
+        SvBreakend chainEnd = getOpenBreakend(false);
 
         if(chainStart != null && !chainStart.getSV().isSglBreakend() && chainEnd != null && !chainEnd.getSV().isSglBreakend())
         {
@@ -226,8 +226,8 @@ public class SvChain {
 
     public void closeChain(final String reason, int linkIndex)
     {
-        final SvBreakend chainStart = getOpenBreakend(true);
-        final SvBreakend chainEnd = getOpenBreakend(false);
+        SvBreakend chainStart = getOpenBreakend(true);
+        SvBreakend chainEnd = getOpenBreakend(false);
 
         if(!chainStart.chromosome().equals(chainEnd.chromosome()))
         {
@@ -289,7 +289,7 @@ public class SvChain {
 
     public void copyFrom(final SvChain otherChain)
     {
-        for(final LinkedPair pair : otherChain.getLinkedPairs())
+        for(LinkedPair pair : otherChain.getLinkedPairs())
         {
             addLink(pair, false);
         }
@@ -305,7 +305,7 @@ public class SvChain {
         // check for duplicate breakends
         for(int i = 0; i < chain.getLinkCount() - 1; ++i)
         {
-            final LinkedPair pair = chain.getLinkedPairs().get(i);
+            LinkedPair pair = chain.getLinkedPairs().get(i);
 
             if(pair.first() == pair.second() && !pair.isDupLink())
                 return false;
@@ -313,7 +313,7 @@ public class SvChain {
             if(!chain.getSvList().contains(pair.first()) || !chain.getSvList().contains(pair.second()))
                 return false;
 
-            final LinkedPair nextPair = chain.getLinkedPairs().get(i+1);
+            LinkedPair nextPair = chain.getLinkedPairs().get(i+1);
 
             if(pair.second() != nextPair.first())
                 return false;
@@ -334,7 +334,7 @@ public class SvChain {
 
         for(int i = 0; i < mLinkedPairs.size(); ++i)
         {
-            final LinkedPair pair = mLinkedPairs.get(i);
+            LinkedPair pair = mLinkedPairs.get(i);
 
             LNX_LOGGER.debug("chain({}) {}: pair({}) {} length({}) index({})",
                     mId, i, pair.toString(), pair.getLinkReason(), pair.baseLength(), pair.getLinkIndex());
@@ -348,8 +348,8 @@ public class SvChain {
 
         if(closeEnds)
         {
-            final SvBreakend chainStart = getOpenBreakend(true);
-            final SvBreakend chainEnd = getOpenBreakend(false);
+            SvBreakend chainStart = getOpenBreakend(true);
+            SvBreakend chainEnd = getOpenBreakend(false);
 
             if(chainEnd != null && chainStart != null)
             {
@@ -380,13 +380,13 @@ public class SvChain {
         return -1;
     }
 
-    public final String getSvIndices(final SvVarData var)
+    public String getSvIndices(final SvVarData var)
     {
         String varIndices = "";
 
         for(int index = 0; index < mLinkedPairs.size(); ++index)
         {
-            final LinkedPair pair = mLinkedPairs.get(index);
+            LinkedPair pair = mLinkedPairs.get(index);
 
             String linkInfo = "";
 
@@ -422,7 +422,7 @@ public class SvChain {
     public boolean hasMatchingSVs(final SvChain other)
     {
         // return true if the 'other' chain's SVs are all in this chain (and it can have more)
-        for(final SvVarData var : other.getSvList())
+        for(SvVarData var : other.getSvList())
         {
             if(!mSvList.stream().anyMatch(x -> x == var))
                 return false;
@@ -436,7 +436,7 @@ public class SvChain {
         if(other.getLinkCount() != mLinkedPairs.size())
             return false;
 
-        for(final LinkedPair pair : mLinkedPairs)
+        for(LinkedPair pair : mLinkedPairs)
         {
             if(!other.getLinkedPairs().stream().anyMatch(x -> x.matches(pair)))
                 return false;

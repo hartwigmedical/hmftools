@@ -2,6 +2,7 @@ package com.hartwig.hmftools.esvee.prep;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.min;
+import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.ALIGNMENT_SCORE_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.XS_ATTRIBUTE;
@@ -21,6 +22,8 @@ import static com.hartwig.hmftools.esvee.prep.types.FragmentData.unclippedPositi
 import static com.hartwig.hmftools.esvee.prep.types.ReadGroupStatus.DUPLICATE;
 
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -375,28 +378,43 @@ public final class JunctionUtils
         return baseMatchPerc >= MIN_EXACT_BASE_PERC;
     }
 
-    public static boolean hasWellAnchoredRead(final JunctionData junctionData, final ReadFilterConfig filterConfig)
+    public static Integer findWellAnchoredReadSoftClipLength(final JunctionData junctionData, final ReadFilterConfig filterConfig)
     {
-        Collection<PrepRead> junctionReads = junctionData.readTypeReads().get(ReadType.JUNCTION);
+        List<PrepRead> junctionReads = junctionData.readTypeReads().get(ReadType.JUNCTION);
 
-        if(junctionReads.stream().anyMatch(x -> x.hasLineTail()))
-            return true;
+        // sort by SC length so as to find the longest valid length first
+        if(junctionData.isForward())
+            Collections.sort(junctionReads, Comparator.comparingInt(x -> -x.rightClipLength()));
+        else
+            Collections.sort(junctionReads, Comparator.comparingInt(x -> -x.leftClipLength()));
 
         for(PrepRead read : junctionReads)
         {
-            double adjustedAlignScore = calcRepeatTrimmedAlignmentScore(read, MIN_CALC_ALIGNMENT_SCORE, true);
+            boolean isValidRead = false;
 
-            if(adjustedAlignScore < 0)
-                continue;
+            if(read.hasLineTail())
+            {
+                isValidRead = true;
+            }
+            else
+            {
+                double adjustedAlignScore = calcRepeatTrimmedAlignmentScore(read, MIN_CALC_ALIGNMENT_SCORE, true);
 
-            if(adjustedAlignScore >= MIN_CALC_ALIGNMENT_SCORE)
-                return true;
+                if(adjustedAlignScore < 0)
+                    continue;
 
-            if(adjustedAlignScore >= MIN_CALC_ALIGNMENT_LOWER_SCORE && aboveAlignedScoreDifference(read, filterConfig.MinAlignmentBases))
-                return true;
+                isValidRead = adjustedAlignScore >= MIN_CALC_ALIGNMENT_SCORE
+                        || (adjustedAlignScore >= MIN_CALC_ALIGNMENT_LOWER_SCORE
+                        && aboveAlignedScoreDifference(read, filterConfig.MinAlignmentBases));
+            }
+
+            if(isValidRead)
+            {
+                return junctionData.isForward() ? read.rightClipLength() : read.leftClipLength();
+            }
         }
 
-        return false;
+        return null;
     }
 
     private static boolean aboveAlignedScoreDifference(final PrepRead read, int minAlignScore)

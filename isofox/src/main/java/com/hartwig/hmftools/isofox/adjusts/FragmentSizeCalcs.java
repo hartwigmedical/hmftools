@@ -145,12 +145,11 @@ public class FragmentSizeCalcs implements Callable<Void>
         int currentGeneIndex = 0;
         int nextLogCount = 100;
 
+        boolean hasSpecificRegions = mConfig.Filters.SpecificChrRegions.hasFilters();
+
         while(currentGeneIndex < mGeneDataList.size())
         {
             currentGeneIndex = findNextOverlappingGenes(mGeneDataList, currentGeneIndex, overlappingGenes);
-
-            if(overlappingGenes.stream().anyMatch(x -> mConfig.Filters.EnrichedGeneIds.contains(x.GeneId)))
-                continue;
 
             mCurrentTransDataList.clear();
 
@@ -168,7 +167,7 @@ public class FragmentSizeCalcs implements Callable<Void>
                 mCurrentTransDataList.addAll(mGeneTransCache.getTranscripts(geneData.GeneId));
             }
 
-            if(mCurrentTransDataList.isEmpty() || mCurrentTransDataList.size() > MAX_GENE_TRANS)
+            if(!hasSpecificRegions && (mCurrentTransDataList.isEmpty() || mCurrentTransDataList.size() > MAX_GENE_TRANS))
                 continue;
 
             int geneLength = mCurrentGenesRange[SE_END] - mCurrentGenesRange[SE_START];
@@ -177,11 +176,6 @@ public class FragmentSizeCalcs implements Callable<Void>
                 continue;
 
             ChrBaseRegion sliceRegion = new ChrBaseRegion(mChromosome, mCurrentGenesRange);
-
-            List<BaseRegion> excludedRegions = mConfig.Filters.findExcludedRegions(sliceRegion);
-
-            if(!excludedRegions.isEmpty())
-                continue;
 
             if(currentGeneIndex >= nextLogCount)
             {
@@ -194,7 +188,6 @@ public class FragmentSizeCalcs implements Callable<Void>
 
             mCurrentFragmentCount = 0;
             mCurrentGenes = overlappingGenes.get(0).GeneName;
-
 
             ISF_LOGGER.trace("chromosome({}) gene({} index={}) fragCount({}) nextRegion({})",
                     mChromosome, mCurrentGenes, currentGeneIndex, mProcessedFragments, sliceRegion);
@@ -311,7 +304,7 @@ public class FragmentSizeCalcs implements Callable<Void>
         int posStart = record.getStart();
         int posEnd = record.getEnd();
 
-        for(final TranscriptData transData : mCurrentTransDataList)
+        for(TranscriptData transData : mCurrentTransDataList)
         {
             if(transData.exons().stream().anyMatch(x -> positionsOverlap(posStart, posEnd, x.Start, x.End)))
                 return false;
@@ -394,7 +387,7 @@ public class FragmentSizeCalcs implements Callable<Void>
 
             int lengthCount = 0;
 
-            for(final FragmentSize fragLengthCount : fragmentLengths)
+            for(FragmentSize fragLengthCount : fragmentLengths)
             {
                 if(fragLengthCount.Length >= currentRangeMin && fragLengthCount.Length <= currentRangeMax)
                 {
@@ -418,7 +411,7 @@ public class FragmentSizeCalcs implements Callable<Void>
             int currentTotal = 0;
             int prevLength = 0;
 
-            for(final FragmentSize fragLengthCount : fragmentLengths)
+            for(FragmentSize fragLengthCount : fragmentLengths)
             {
                 double nextPercTotal = (currentTotal + fragLengthCount.Frequency) / totalFragments;
 
@@ -533,7 +526,7 @@ public class FragmentSizeCalcs implements Callable<Void>
             writer.write("FragmentLength,Count");
             writer.newLine();
 
-            for(final FragmentSize fragLengthData : fragmentLengths)
+            for(FragmentSize fragLengthData : fragmentLengths)
             {
                 writer.write(String.format("%d,%d", fragLengthData.Length, fragLengthData.Frequency));
                 writer.newLine();

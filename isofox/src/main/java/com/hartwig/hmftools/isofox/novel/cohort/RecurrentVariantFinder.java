@@ -65,7 +65,7 @@ public class RecurrentVariantFinder
 
             String line = fileReader.readLine();
 
-            if (line == null)
+            if(line == null)
                 return;
 
             // mysql: [Warning] Using a password on the command line interface can be insecure.
@@ -125,7 +125,7 @@ public class RecurrentVariantFinder
 
                 if(chrPosVariants.isEmpty() || !(chrPosVariants.get(0).matchesLocation(chromosome, position)))
                 {
-                    for(final SpliceVariant variant : chrPosVariants)
+                    for(SpliceVariant variant : chrPosVariants)
                     {
                         if(variant.SampleIds.size() > 1)
                         {
@@ -163,7 +163,7 @@ public class RecurrentVariantFinder
                 }
             }
 
-            for(final SpliceVariant variant : chrPosVariants)
+            for(SpliceVariant variant : chrPosVariants)
             {
                 if(variant.SampleIds.size() > 1)
                 {

@@ -137,7 +137,7 @@ public class PairResolution
             clusterChains.clear();
             existingChainModified = true;
 
-            final List<LinkedPair> pairs = chain.getLinkedPairs();
+            List<LinkedPair> pairs = chain.getLinkedPairs();
 
             if(pairs.size() > 1)
             {
@@ -183,8 +183,8 @@ public class PairResolution
             if(cluster.getSvCount() != 2)
                 return;
 
-            final SvVarData var1 = cluster.getSV(0);
-            final SvVarData var2 = cluster.getSV(1);
+            SvVarData var1 = cluster.getSV(0);
+            SvVarData var2 = cluster.getSV(1);
 
             startBe1 = var1.getBreakend(true);
             endBe1 = var1.getBreakend(false);
@@ -256,8 +256,8 @@ public class PairResolution
 
         SvChain chain = cluster.getChains().get(0);
 
-        final SvBreakend chainStart = chain.getOpenBreakend(true);
-        final SvBreakend chainEnd = chain.getOpenBreakend(false);
+        SvBreakend chainStart = chain.getOpenBreakend(true);
+        SvBreakend chainEnd = chain.getOpenBreakend(false);
 
         if(!chainStart.chromosome().equals(chainEnd.chromosome()) || chainStart.arm() != chainEnd.arm())
             return;
@@ -349,7 +349,7 @@ public class PairResolution
             // check for a synthetic BND with a long TI
             if(longestTiPair != null && cluster.getChains().size() == 1 && cluster.getUnlinkedSVs().isEmpty())
             {
-                final SvChain chain = cluster.getChains().get(0);
+                SvChain chain = cluster.getChains().get(0);
 
                 if(!chain.getOpenBreakend(SE_START).getChrArm().equals(chain.getOpenBreakend(SE_END).getChrArm()))
                 {
@@ -410,8 +410,8 @@ public class PairResolution
             }
             else
             {
-                final SvBreakend nonLongTiBe1 = longestTiPair.hasBreakend(startBe1) ? endBe1 : startBe1;
-                final SvBreakend nonLongTiBe2 = longestTiPair.hasBreakend(startBe2) ? endBe2 : startBe2;
+                SvBreakend nonLongTiBe1 = longestTiPair.hasBreakend(startBe1) ? endBe1 : startBe1;
+                SvBreakend nonLongTiBe2 = longestTiPair.hasBreakend(startBe2) ? endBe2 : startBe2;
                 long breakendDistance = abs(nonLongTiBe1.position() - nonLongTiBe2.position());
 
                 if(resolvedType == DEL_TI || resolvedType == RECIP_TRANS_DEL_DUP)
@@ -436,7 +436,7 @@ public class PairResolution
             LNX_LOGGER.debug("cluster({}) splitting existing chain into {} for resolvedType({})",
                     cluster.id(), rearrangedChains.size(), cluster.getResolvedType());
 
-            final SvChain existingChain = cluster.getChains().get(0);
+            SvChain existingChain = cluster.getChains().get(0);
             cluster.dissolveLinksAndChains();
 
             for(SvChain newChain : rearrangedChains)
@@ -603,8 +603,8 @@ public class PairResolution
 
         // test DEL and DUP lengths vs thresholds to determine whether the cluster is protected
         long longestTiLength = cluster.getChains().get(0).getLinkedPairs().stream().mapToLong(LinkedPair::positionDistance).max().getAsLong();
-        final SvBreakend chainStart = cluster.getChains().get(0).getOpenBreakend(true);
-        final SvBreakend chainEnd = cluster.getChains().get(0).getOpenBreakend(false);
+        SvBreakend chainStart = cluster.getChains().get(0).getOpenBreakend(true);
+        SvBreakend chainEnd = cluster.getChains().get(0).getOpenBreakend(false);
         long nonTiDistance = abs(chainStart.position() - chainEnd.position());
 
         if(resolvedType == RECIP_INV_DUPS || resolvedType == DUP_TI)
@@ -651,17 +651,17 @@ public class PairResolution
             final SvBreakend be1, final SvBreakend be2, final Map<String,List<SvBreakend>> chrBreakendMap)
     {
         // look between these breakends for any non-simple, non-contained SV
-        final List<SvBreakend> breakendList = chrBreakendMap.get(be1.chromosome());
+        List<SvBreakend> breakendList = chrBreakendMap.get(be1.chromosome());
 
-        final SvBreakend lowerBe = be1.position() < be2.position() ? be1 : be2;
-        final SvBreakend upperBe = lowerBe == be1 ? be2 : be1;
+        SvBreakend lowerBe = be1.position() < be2.position() ? be1 : be2;
+        SvBreakend upperBe = lowerBe == be1 ? be2 : be1;
 
         int startIndex = lowerBe.getChrPosIndex();
         int endIndex = upperBe.getChrPosIndex();
 
         for(int i = startIndex + 1; i < endIndex; ++i)
         {
-            final SvVarData var = breakendList.get(i).getSV();
+            SvVarData var = breakendList.get(i).getSV();
 
             if(var == be1.getSV() || var == be2.getSV() || var.getCluster() == be1.getSV().getCluster())
                 continue;

@@ -66,7 +66,7 @@ public class TranscriptExpression
 
         if(totalFrequencyFrags > 0)
         {
-            for(final FragmentSize fragFrequency : mConfig.FragmentSizeData)
+            for(FragmentSize fragFrequency : mConfig.FragmentSizeData)
             {
                 mFragmentFrequencyRates.add(fragFrequency.Frequency / totalFrequencyFrags);
             }
@@ -162,9 +162,9 @@ public class TranscriptExpression
     private static final int ADJUSTED_TPM = 1;
     private static final double TPM_MILLION = 1000000;
 
-    public static double[] calcTpmFactors(final List<GeneCollectionSummary> geneSummaryData, final List<String> enrichedGeneIds)
+    public static double[] calcTpmFactors(final List<GeneCollectionSummary> geneSummaryData)
     {
-        // exclude enriched genes and cap the contribution of any one gene to 1%
+        // cap the contribution of any one gene to 1%
         double[] results = {0, 0};
 
         List<Double> fragsPerKbSet = Lists.newArrayListWithExpectedSize(200000);
@@ -173,16 +173,13 @@ public class TranscriptExpression
         double fragsPerKbTotal = 0;
         double rawFragsPerKbTotal = 0;
 
-        for(final GeneCollectionSummary summaryData : geneSummaryData)
+        for(GeneCollectionSummary summaryData : geneSummaryData)
         {
-            for(final TranscriptResult transResult : summaryData.TranscriptResults)
+            for(TranscriptResult transResult : summaryData.TranscriptResults)
             {
                 double fragsPerKb = transResult.fragmentsPerKb();
 
                 rawFragsPerKbTotal += fragsPerKb;
-
-                if(enrichedGeneIds.contains(transResult.Trans.GeneId))
-                    continue;
 
                 if(fragsPerKb < 0.5)
                 {
@@ -230,7 +227,7 @@ public class TranscriptExpression
                 if(abs(maxGeneContribPerc - MAX_GENE_PERC_CONTRIBUTION) < 0.001)
                     break;
 
-                if (maxGeneContribPerc > MAX_GENE_PERC_CONTRIBUTION)
+                if(maxGeneContribPerc > MAX_GENE_PERC_CONTRIBUTION)
                 {
                     maxFragsPerKbTotal = fragsPerKbTotal;
                     nextFragsPerKbTotal = max(fragsPerKbTotal * 0.5, minFragsPerKbTotal);
@@ -278,7 +275,7 @@ public class TranscriptExpression
 
             for(GeneResult geneResult : geneSummary.GeneResults)
             {
-                final double[] geneTpm = geneTPMs.get(geneResult.Gene.GeneId);
+                double[] geneTpm = geneTPMs.get(geneResult.Gene.GeneId);
                 geneResult.setTPM(geneTpm[RAW_TPM], geneTpm[ADJUSTED_TPM]);
             }
         }
@@ -355,7 +352,7 @@ public class TranscriptExpression
     {
         mCurrentExpRatesData = null;
 
-        final List<CategoryCountsData> geneSetCountsData = mCache.getGeneExpectedRatesData(chrId, geneIds);
+        List<CategoryCountsData> geneSetCountsData = mCache.getGeneExpectedRatesData(chrId, geneIds);
 
         if(geneSetCountsData == null)
         {
@@ -383,7 +380,7 @@ public class TranscriptExpression
 
         for(CategoryCountsData tcData : geneSummaryData.TransCategoryCounts)
         {
-            final String categoryKey = tcData.combinedKey();
+            String categoryKey = tcData.combinedKey();
             double fragmentCount = tcData.fragmentCount();
 
             if(fragmentCount > 0)
@@ -427,7 +424,7 @@ public class TranscriptExpression
 
         try
         {
-            final String outputFileName = config.formOutputFile("category_counts.csv");
+            String outputFileName = config.formOutputFile("category_counts.csv");
 
             BufferedWriter writer = createBufferedWriter(outputFileName, false);
             writer.write("GenesId,Category,Count,FitCount");
@@ -458,22 +455,22 @@ public class TranscriptExpression
     {
         try
         {
-            final GcRatioCounts tmp = new GcRatioCounts();
+            GcRatioCounts tmp = new GcRatioCounts();
 
             for(int i = 0; i < categories.size(); ++i)
             {
                 double count = counts[i];
-                final String category = categories.get(i);
+                String category = categories.get(i);
 
                 writer.write(format("%s,%s,%.0f,%.1f",
                         genesId, category, count, fittedCounts[i]));
 
                 if(writeGcData)
                 {
-                    final CategoryCountsData catCounts = categoryCountsData.stream()
+                    CategoryCountsData catCounts = categoryCountsData.stream()
                             .filter(x -> x.combinedKey().equals(category)).findFirst().orElse(null);
 
-                    final double[] gcCounts = catCounts != null ? catCounts.fragmentCountsByGcRatio() : tmp.getCounts();
+                    double[] gcCounts = catCounts != null ? catCounts.fragmentCountsByGcRatio() : tmp.getCounts();
 
                     for(int j = 0; j < gcCounts.length; ++j)
                     {

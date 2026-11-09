@@ -42,12 +42,16 @@ public abstract class PerArmSegmenter<T extends GenomePosition>
                 }
             });
         });
-        ArmToRatios.keySet().stream().sorted().forEach(chrArm -> mDataByArm.put(chrArm, buildSegmentationData(ArmToRatios.get(chrArm))));
+        // Always use the same (arbitrary) order to assemble per-arm readings into
+        // a longer list. Different choices of order make little or no difference
+        // to reported events.
+        final List<ChrArm> armsSorted = ArmToRatios.keySet().stream().sorted().toList();
+        armsSorted.forEach(chrArm -> mDataByArm.put(chrArm, buildSegmentationData(ArmToRatios.get(chrArm))));
         int totalCount = mDataByArm.values().stream().mapToInt(DataForSegmentation::count).sum();
         int position = 0;
 
         double[] allRatios = new double[totalCount];
-        for(ChrArm chrArm : mDataByArm.keySet())
+        for(ChrArm chrArm : armsSorted)
         {
             DataForSegmentation data = mDataByArm.get(chrArm);
             System.arraycopy(data.valuesForSegmentation(), 0, allRatios, position, data.count());

@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.isofox.fusion;
 
+import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome.lowerChromosome;
@@ -14,8 +15,8 @@ import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.MATCHED_JUNC
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.REALIGN_CANDIDATE;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.findSplitReadJunction;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formLocation;
-import static com.hartwig.hmftools.isofox.fusion.FusionUtils.hasRealignableSoftClip;
-import static com.hartwig.hmftools.isofox.fusion.FusionUtils.isRealignedFragmentCandidate;
+import static com.hartwig.hmftools.isofox.fusion.FusionUtils.aboveJunctionSoftClipThreshold;
+import static com.hartwig.hmftools.isofox.fusion.FusionUtils.hasCandidateJunctionSoftClips;
 
 import java.util.List;
 import java.util.Map;
@@ -116,7 +117,7 @@ public class FusionFragmentBuilder
 
             // set single junction info for candidate realignable fragments
             if(fragment.reads().size() == 2
-            && fragment.reads().stream().anyMatch(x -> isRealignedFragmentCandidate(x))
+            && fragment.reads().stream().anyMatch(x -> hasCandidateJunctionSoftClips(x))
             && fragment.reads().stream().noneMatch(x -> x.spansGeneCollections()))
             {
                 FusionRead read1 = fragment.reads().get(0);
@@ -142,9 +143,27 @@ public class FusionFragmentBuilder
 
         int posIndex = 0;
 
+        // handle the scenario where both primaries have supplementaries, in which case use the longer for the split junction
+        boolean longestSoftClipFirstInPair = false;
+        int longestSoftClip = 0;
+
         for(FusionRead read : fragment.reads())
         {
-            if(!read.HasSuppAlignment)
+            if(!read.isSupplementaryAlignment() && read.HasSuppAlignment)
+            {
+                int maxSoftClip = max(read.SoftClipLengths[SE_START], read.SoftClipLengths[SE_END]);
+
+                if(maxSoftClip > longestSoftClip)
+                {
+                    longestSoftClip = maxSoftClip;
+                    longestSoftClipFirstInPair = read.isFirstOfPair();
+                }
+            }
+        }
+
+        for(FusionRead read : fragment.reads())
+        {
+            if(!read.HasSuppAlignment || read.isFirstOfPair() != longestSoftClipFirstInPair)
                 continue;
 
             chromosomes[posIndex] = read.Chromosome;
@@ -194,7 +213,7 @@ public class FusionFragmentBuilder
     private static void setSplitReadJunctionData(final FusionFragment fragment, final FusionRead splitRead)
     {
         // set the junction data around the spanning N-split
-        final int[] splitJunction = findSplitReadJunction(splitRead);
+        int[] splitJunction = findSplitReadJunction(splitRead);
 
         if(splitJunction != null)
         {
@@ -221,7 +240,7 @@ public class FusionFragmentBuilder
         {
             for(int se = SE_START; se <= SE_END; ++se)
             {
-                if(!hasRealignableSoftClip(read, se, true))
+                if(!aboveJunctionSoftClipThreshold(read, se))
                     continue;
 
                 if(read.SoftClipLengths[se] > maxScLength)
@@ -248,15 +267,15 @@ public class FusionFragmentBuilder
     private static void setNonJunctionData(final FusionFragment fragment)
     {
         // set gene collections from the reads without any knowledge of which junctions they may support
-        final List<String> chrGeneCollections = Lists.newArrayListWithCapacity(2);
-        final List<String> chromosomes = Lists.newArrayListWithCapacity(2);
-        final Map<String,Integer> positions = Maps.newHashMapWithExpectedSize(2);
-        final List<Integer> geneCollections = Lists.newArrayListWithCapacity(2);
-        final Map<String,FusionRead> reads = Maps.newHashMapWithExpectedSize(2);
+        List<String> chrGeneCollections = Lists.newArrayListWithCapacity(2);
+        List<String> chromosomes = Lists.newArrayListWithCapacity(2);
+        Map<String,Integer> positions = Maps.newHashMapWithExpectedSize(2);
+        List<Integer> geneCollections = Lists.newArrayListWithCapacity(2);
+        Map<String,FusionRead> reads = Maps.newHashMapWithExpectedSize(2);
 
-        final Map<String,List<FusionRead>> readGroups = Maps.newHashMapWithExpectedSize(2);
+        Map<String,List<FusionRead>> readGroups = Maps.newHashMapWithExpectedSize(2);
 
-        for(final FusionRead read : fragment.reads())
+        for(FusionRead read : fragment.reads())
         {
             for(int se = SE_START; se <= SE_END; ++se)
             {
@@ -264,7 +283,7 @@ public class FusionFragmentBuilder
                 if(!read.spansGeneCollections() && se == SE_END)
                     continue;
 
-                final String chrGeneId = formLocation(read.Chromosome, read.GeneCollections[se], true); // genic status ignored for group determination
+                String chrGeneId = formLocation(read.Chromosome, read.GeneCollections[se], true); // genic status ignored for group determination
 
                 List<FusionRead> readGroup = readGroups.get(chrGeneId);
 
@@ -313,7 +332,7 @@ public class FusionFragmentBuilder
         for(int se = SE_START; se <= SE_END; ++se)
         {
             int index = se == SE_START ? lowerIndex : switchIndex(lowerIndex);
-            final String chrGeneId = chrGeneCollections.get(index);
+            String chrGeneId = chrGeneCollections.get(index);
 
             fragment.geneCollections()[se] = geneCollections.get(index);
             fragment.orientations()[se] = reads.get(chrGeneId).Orientation;
@@ -331,7 +350,7 @@ public class FusionFragmentBuilder
         for(int se = SE_START; se <= SE_END; ++se)
         {
             int index = se == SE_START ? lowerIndex : switchIndex(lowerIndex);
-            final String chrGeneId = chrGeneCollections.get(index);
+            String chrGeneId = chrGeneCollections.get(index);
             FusionRead read = reads.get(chrGeneId);
 
             int requiredScSide = switchIndex(se);

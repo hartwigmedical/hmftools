@@ -41,9 +41,7 @@ public class BamReadCounter
     private final ReadDepthAccumulator mReadDepthAccumulator;
 
     public BamReadCounter(
-            final int windowSize, final CobaltConfig config,
-            final ExecutorService executorService,
-            final String bamPath) throws IOException
+            final int windowSize, final CobaltConfig config, ExecutorService executorService, final String bamPath) throws IOException
     {
         mConfig = config;
         mBamPath = bamPath;
@@ -156,14 +154,13 @@ public class BamReadCounter
             for(final SAMSequenceRecord samSequenceRecord : dictionary.getSequences())
             {
                 String sequenceName = samSequenceRecord.getSequenceName();
+
                 if(!HumanChromosome.contains(sequenceName))
-                {
                     continue;
-                }
+
                 if(mConfig.SpecificChrRegions.hasFilters() && mConfig.SpecificChrRegions.excludeChromosome(sequenceName))
-                {
                     continue;
-                }
+
                 mChromosomes.add(new ChromosomeData(sequenceName, samSequenceRecord.getSequenceLength()));
             }
         }

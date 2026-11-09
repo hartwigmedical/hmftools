@@ -21,6 +21,7 @@ import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.ReadCountsTest.REF_BASE_STR_1;
 import static com.hartwig.hmftools.isofox.ReadCountsTest.REF_BASE_STR_2;
+import static com.hartwig.hmftools.isofox.common.ReadTranscriptUtils.processOverlappingRegions;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -33,6 +34,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.isofox.adjusts.FragmentSize;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
@@ -48,6 +50,8 @@ import org.junit.Test;
 
 public class NovelJunctionsTest
 {
+    private static final String REF_BASES = REF_BASE_STR_1.repeat(50);
+
     @Test
     public void testAltSpliceJunctionTypes()
     {
@@ -57,6 +61,9 @@ public class NovelJunctionsTest
 
         String chromosome = CHR_1;
         String geneId = GENE_ID_1;
+
+        MockRefGenome refGenome = (MockRefGenome)config.RefGenome;
+        refGenome.RefGenomeMap.put(chromosome, REF_BASES); // for homology tests
 
         GeneData geneData = new GeneData(geneId, geneId, chromosome, (byte) 1, 100, 1500, "");
 
@@ -105,7 +112,7 @@ public class NovelJunctionsTest
 
         gene.setTranscripts(transcripts);
 
-        AltSpliceJunctionFinder asjFinder = new AltSpliceJunctionFinder(createIsofoxConfig(), ALT_SJ_COHORT_CACHE, null, null);
+        AltSpliceJunctionFinder asjFinder = new AltSpliceJunctionFinder(config, ALT_SJ_COHORT_CACHE, null, null);
         GeneCollection genes = new GeneCollection(0, Lists.newArrayList(gene));
         asjFinder.setGeneData(genes);
 
@@ -130,7 +137,7 @@ public class NovelJunctionsTest
 
         List<RegionReadData> overlappingRegions = gene.findOverlappingRegions(read);
 
-        read.processOverlappingRegions(overlappingRegions);
+        processOverlappingRegions(read, overlappingRegions);
         AltSpliceJunction altSJ = asjFinder.createFromRead(read, transIds);
 
         assertEquals(NOVEL_3_PRIME, altSJ.type());
@@ -150,7 +157,7 @@ public class NovelJunctionsTest
 
         overlappingRegions = gene.findOverlappingRegions(read);
 
-        read.processOverlappingRegions(overlappingRegions);
+        processOverlappingRegions(read, overlappingRegions);
         altSJ = asjFinder.createFromRead(read, transIds);
         altSJ.setGeneData(gene.Gene.GeneId, gene.Gene.GeneName);
 
@@ -162,7 +169,7 @@ public class NovelJunctionsTest
         read = createReadRecord(1, chromosome, 361, 409, REF_BASE_STR_1, createCigar(0, 10, 29, 10, 0));
 
         overlappingRegions = gene.findOverlappingRegions(read);
-        read.processOverlappingRegions(overlappingRegions);
+        processOverlappingRegions(read, overlappingRegions);
         altSJ = asjFinder.createFromRead(read, transIds);
         altSJ.setGeneData(gene.Gene.GeneId, gene.Gene.GeneName);
 
@@ -172,7 +179,7 @@ public class NovelJunctionsTest
         read = createReadRecord(1, chromosome, 721, 779, REF_BASE_STR_1, createCigar(0, 10, 39, 10, 0));
 
         overlappingRegions = gene.findOverlappingRegions(read);
-        read.processOverlappingRegions(overlappingRegions);
+        processOverlappingRegions(read, overlappingRegions);
 
         assertTrue(overlappingRegions.isEmpty());
         altSJ = asjFinder.createFromRead(read, transIds);
@@ -186,7 +193,7 @@ public class NovelJunctionsTest
         read = createReadRecord(1, chromosome, 291, 809, REF_BASE_STR_1, createCigar(0, 10, 499, 10, 0));
 
         overlappingRegions = gene.findOverlappingRegions(read);
-        read.processOverlappingRegions(overlappingRegions);
+        processOverlappingRegions(read, overlappingRegions);
         altSJ = asjFinder.createFromRead(read, transIds);
         altSJ.setGeneData(gene.Gene.GeneId, gene.Gene.GeneName);
 
@@ -198,7 +205,7 @@ public class NovelJunctionsTest
         read = createReadRecord(1, chromosome, 841, 959, REF_BASE_STR_1, createCigar(0, 10, 99, 10, 0));
 
         overlappingRegions = gene.findOverlappingRegions(read);
-        read.processOverlappingRegions(overlappingRegions);
+        processOverlappingRegions(read, overlappingRegions);
         altSJ = asjFinder.createFromRead(read, transIds);
         altSJ.setGeneData(gene.Gene.GeneId, gene.Gene.GeneName);
 
@@ -210,8 +217,8 @@ public class NovelJunctionsTest
         Read read1 = createReadRecord(1, chromosome, 991, 1209, REF_BASE_STR_1, createCigar(0, 10, 199, 10, 0));
         Read read2 = createReadRecord(1, chromosome, 1291, 1409, REF_BASE_STR_1, createCigar(0, 10, 99, 10, 0));
 
-        read1.processOverlappingRegions(gene.findOverlappingRegions(read1));
-        read2.processOverlappingRegions(gene.findOverlappingRegions(read2));
+        processOverlappingRegions(read1, gene.findOverlappingRegions(read1));
+        processOverlappingRegions(read2, gene.findOverlappingRegions(read2));
 
         transIds = Lists.newArrayList(transId1);
         AltSpliceJunction firstAltSJ = asjFinder.createFromRead(read1, transIds);
@@ -226,7 +233,7 @@ public class NovelJunctionsTest
         read = createReadRecord(1, chromosome, 291, 609, REF_BASE_STR_1, createCigar(0, 10, 299, 10, 0));
 
         overlappingRegions = gene.findOverlappingRegions(read);
-        read.processOverlappingRegions(overlappingRegions);
+        processOverlappingRegions(read, overlappingRegions);
         transIds = read.getTranscriptClassifications().keySet().stream().collect(Collectors.toList());
 
         altSJ = asjFinder.createFromRead(read, transIds);
@@ -245,8 +252,9 @@ public class NovelJunctionsTest
         // circular exon looking like a DP
         Read[] readPair = createSupplementaryReadPair(1, genes, genes, 400, 419, 481, 500,
                 createCigar(5, 20, 0), createCigar(0, 20, 5), true);
-        readPair[0].processOverlappingRegions(gene.findOverlappingRegions(readPair[0]));
-        readPair[1].processOverlappingRegions(gene.findOverlappingRegions(readPair[1]));
+
+        processOverlappingRegions(readPair[0], gene.findOverlappingRegions(readPair[0]));
+        processOverlappingRegions(readPair[1], gene.findOverlappingRegions(readPair[1]));
 
         transIds = Lists.newArrayList(transId1);
         AltSpliceJunction circularAltSJ = asjFinder.createFromReads(readPair[0], readPair[1], transIds);
@@ -318,8 +326,8 @@ public class NovelJunctionsTest
         Read read1 = createReadRecord(1, chromosome, 291, 310, REF_BASE_STR_1, createCigar(0, 20, 0));
         Read read2 = createReadRecord(1, chromosome, 340, 360, REF_BASE_STR_1, createCigar(0, 20, 0));
 
-        read1.processOverlappingRegions(gene.findOverlappingRegions(read1));
-        read1.processOverlappingRegions(gene.findOverlappingRegions(read2));
+        processOverlappingRegions(read1, gene.findOverlappingRegions(read1));
+        processOverlappingRegions(read2, gene.findOverlappingRegions(read2));
 
         riFinder.evaluateFragmentReads(read1, read2);
 
@@ -329,8 +337,8 @@ public class NovelJunctionsTest
         read1 = createReadRecord(1, chromosome, 281, 320, REF_BASE_STR_2, createCigar(0, 40, 0));
         read2 = createReadRecord(1, chromosome, 340, 360, REF_BASE_STR_1, createCigar(0, 20, 0));
 
-        read1.processOverlappingRegions(gene.findOverlappingRegions(read1));
-        read1.processOverlappingRegions(gene.findOverlappingRegions(read2));
+        processOverlappingRegions(read1, gene.findOverlappingRegions(read1));
+        processOverlappingRegions(read2, gene.findOverlappingRegions(read2));
 
         riFinder.evaluateFragmentReads(read1, read2);
 
@@ -344,8 +352,8 @@ public class NovelJunctionsTest
         read1 = createReadRecord(1, chromosome, 391, 430, REF_BASE_STR_2, createCigar(0, 40, 0));
         read2 = createReadRecord(1, chromosome, 440, 460, REF_BASE_STR_1, createCigar(0, 20, 0));
 
-        read1.processOverlappingRegions(gene.findOverlappingRegions(read1));
-        read1.processOverlappingRegions(gene.findOverlappingRegions(read2));
+        processOverlappingRegions(read1, gene.findOverlappingRegions(read1));
+        processOverlappingRegions(read2, gene.findOverlappingRegions(read2));
 
         riFinder.evaluateFragmentReads(read1, read2);
 
@@ -361,8 +369,8 @@ public class NovelJunctionsTest
         read1 = createReadRecord(1, chromosome, 391, 430, REF_BASE_STR_2, createCigar(0, 40, 0));
         read2 = createReadRecord(1, chromosome, 491, 609, REF_BASE_STR_1, createCigar(0, 10, 99, 10, 0));
 
-        read1.processOverlappingRegions(gene.findOverlappingRegions(read1));
-        read2.processOverlappingRegions(gene.findOverlappingRegions(read2));
+        processOverlappingRegions(read1, gene.findOverlappingRegions(read1));
+        processOverlappingRegions(read2, gene.findOverlappingRegions(read2));
 
         riFinder.evaluateFragmentReads(read1, read2);
 
@@ -380,8 +388,8 @@ public class NovelJunctionsTest
         read1 = createReadRecord(1, chromosome, 91, 110, REF_BASE_STR_1, createCigar(0, 20, 0));
         read2 = createReadRecord(1, chromosome, 121, 140, REF_BASE_STR_1, createCigar(0, 20, 0));
 
-        read1.processOverlappingRegions(gene.findOverlappingRegions(read1));
-        read2.processOverlappingRegions(gene.findOverlappingRegions(read2));
+        processOverlappingRegions(read1, gene.findOverlappingRegions(read1));
+        processOverlappingRegions(read2, gene.findOverlappingRegions(read2));
 
         riFinder.evaluateFragmentReads(read1, read2);
 
@@ -390,8 +398,8 @@ public class NovelJunctionsTest
         read1 = createReadRecord(1, chromosome, 1491, 1510, REF_BASE_STR_1, createCigar(0, 20, 0));
         read2 = createReadRecord(1, chromosome, 1551, 1570, REF_BASE_STR_1, createCigar(0, 20, 0));
 
-        read1.processOverlappingRegions(gene.findOverlappingRegions(read1));
-        read2.processOverlappingRegions(gene.findOverlappingRegions(read2));
+        processOverlappingRegions(read1, gene.findOverlappingRegions(read1));
+        processOverlappingRegions(read2, gene.findOverlappingRegions(read2));
 
         riFinder.evaluateFragmentReads(read1, read2);
 
@@ -403,8 +411,8 @@ public class NovelJunctionsTest
         read1 = createReadRecord(1, chromosome, 391, 410, REF_BASE_STR_1, createCigar(0, 20, 0));
         read2 = createReadRecord(1, chromosome, 491, 510, REF_BASE_STR_1, createCigar(0, 20, 0));
 
-        read1.processOverlappingRegions(gene.findOverlappingRegions(read1));
-        read2.processOverlappingRegions(gene.findOverlappingRegions(read2));
+        processOverlappingRegions(read1, gene.findOverlappingRegions(read1));
+        processOverlappingRegions(read2, gene.findOverlappingRegions(read2));
 
         riFinder.evaluateFragmentReads(read1, read2);
 
@@ -415,8 +423,8 @@ public class NovelJunctionsTest
         read1 = createReadRecord(1, chromosome, 491, 510, REF_BASE_STR_1, createCigar(0, 20, 0));
         read2 = createReadRecord(1, chromosome, 591, 610, REF_BASE_STR_1, createCigar(0, 20, 0));
 
-        read1.processOverlappingRegions(gene.findOverlappingRegions(read1));
-            read2.processOverlappingRegions(gene.findOverlappingRegions(read2));
+        processOverlappingRegions(read1, gene.findOverlappingRegions(read1));
+        processOverlappingRegions(read2, gene.findOverlappingRegions(read2));
 
         riFinder.evaluateFragmentReads(read1, read2);
 

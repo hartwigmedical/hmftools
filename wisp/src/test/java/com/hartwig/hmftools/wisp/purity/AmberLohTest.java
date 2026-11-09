@@ -2,7 +2,7 @@ package com.hartwig.hmftools.wisp.purity;
 
 import static org.junit.Assert.assertEquals;
 
-import com.hartwig.hmftools.wisp.purity.loh.LodCalcs;
+import com.hartwig.hmftools.wisp.loh.LodCalcs;
 
 import org.junit.Test;
 

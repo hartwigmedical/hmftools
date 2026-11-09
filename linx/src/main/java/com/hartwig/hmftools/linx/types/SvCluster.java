@@ -136,10 +136,10 @@ public class SvCluster
 
     public int getSvCount() { return mSVs.size(); }
 
-    public final String getDesc() { return mDesc; }
+    public String getDesc() { return mDesc; }
 
-    public final List<SvVarData> getSVs() { return mSVs; }
-    public final SvVarData getSV(int index) { return index < mSVs.size() ? mSVs.get(index) : null; }
+    public List<SvVarData> getSVs() { return mSVs; }
+    public SvVarData getSV(int index) { return index < mSVs.size() ? mSVs.get(index) : null; }
 
     public void addVariant(final SvVarData var)
     {
@@ -220,7 +220,7 @@ public class SvCluster
             mLohEvents.add(lohEvent);
     }
 
-    public final List<LohEvent> getLohEvents() { return mLohEvents; }
+    public List<LohEvent> getLohEvents() { return mLohEvents; }
 
     public List<SvChain> getChains() { return mChains; }
 
@@ -263,8 +263,8 @@ public class SvCluster
 
     public List<SvVarData> getUnlinkedSVs() { return mUnchainedSVs; }
 
-    public final List<LinkedPair> getLinkedPairs() { return mLinkedPairs; }
-    public final List<LinkedPair> getAssemblyLinkedPairs() { return mAssemblyLinkedPairs; }
+    public List<LinkedPair> getLinkedPairs() { return mLinkedPairs; }
+    public List<LinkedPair> getAssemblyLinkedPairs() { return mAssemblyLinkedPairs; }
     public void setAssemblyLinkedPairs(final List<LinkedPair> pairs)
     {
         mAssemblyLinkedPairs.clear();
@@ -354,7 +354,7 @@ public class SvCluster
         }
     }
 
-    public final String getClusteringReasons() { return mClusteringReasons; }
+    public String getClusteringReasons() { return mClusteringReasons; }
     public boolean hasClusterReason(ClusteringReason reason) { return mClusteringReasons.contains(reason.toString()); }
 
     public boolean isConsistent()
@@ -379,7 +379,7 @@ public class SvCluster
     }
 
     public boolean isResolved() { return mIsResolved; }
-    public final ResolvedType getResolvedType() { return mResolvedType; }
+    public ResolvedType getResolvedType() { return mResolvedType; }
 
     public boolean isSyntheticType()
     {
@@ -460,7 +460,7 @@ public class SvCluster
 
     public int getArmCount() { return mArmGroups.size(); }
 
-    public final String getClusterTypesAsString()
+    public String getClusterTypesAsString()
     {
         if(mSVs.size() == 1)
         {
@@ -477,9 +477,9 @@ public class SvCluster
 
     public int getTypeCount(StructuralVariantType type) { return mTypeCounts[typeAsInt(type)]; }
 
-    public final List<SvVarData> getLongDelDups() { return mLongDelDups; }
-    public final List<SvVarData> getFoldbacks() { return mFoldbacks; }
-    public final List<SvVarData> getInversions() { return mInversions; }
+    public List<SvVarData> getLongDelDups() { return mLongDelDups; }
+    public List<SvVarData> getFoldbacks() { return mFoldbacks; }
+    public List<SvVarData> getInversions() { return mInversions; }
 
     public void registerFoldback(final SvVarData var)
     {
@@ -505,8 +505,8 @@ public class SvCluster
             mLongDelDups.add(var);
     }
 
-    public final List<SvVarData> getDoubleMinuteSVs() { return mDoubleMinuteSVs; }
-    public final List<SvChain> getDoubleMinuteChains() { return mDoubleMinuteChains; }
+    public List<SvVarData> getDoubleMinuteSVs() { return mDoubleMinuteSVs; }
+    public List<SvChain> getDoubleMinuteChains() { return mDoubleMinuteChains; }
 
     public void setDoubleMinuteData(final List<SvVarData> svList, final List<SvChain> chains)
     {
@@ -531,7 +531,7 @@ public class SvCluster
 
     public boolean hasLinkingLineElements() { return mHasLinkingLineElements; }
 
-    public final List<SvVarData> getUnlinkedRemoteSVs() { return mUnlinkedRemoteSVs; }
+    public List<SvVarData> getUnlinkedRemoteSVs() { return mUnlinkedRemoteSVs; }
 
     public void setArmLinks()
     {
@@ -701,7 +701,7 @@ public class SvCluster
 
             for(int i = 0; i < breakendList.size(); ++i)
             {
-                final SvBreakend breakend = breakendList.get(i);
+                SvBreakend breakend = breakendList.get(i);
                 breakend.setClusterChrPosIndex(i);
             }
         }
@@ -726,7 +726,7 @@ public class SvCluster
         }
     }
 
-    public final SvChain findChain(final SvVarData var)
+    public SvChain findChain(final SvVarData var)
     {
         for(SvChain chain : mChains)
         {
@@ -737,12 +737,12 @@ public class SvCluster
         return null;
     }
 
-    public final List<SvChain> findChains(final SvVarData var)
+    public List<SvChain> findChains(final SvVarData var)
     {
         return mChains.stream().filter(x -> x.hasSV(var)).collect(Collectors.toList());
     }
 
-    public final SvChain findSameChainForSVs(SvVarData var1, SvVarData var2)
+    public SvChain findSameChainForSVs(SvVarData var1, SvVarData var2)
     {
         List<SvChain> chains1 = findChains(var1);
         List<SvChain> chains2 = findChains(var2);
@@ -761,7 +761,7 @@ public class SvCluster
 
     public int getChainId(final SvVarData var)
     {
-        final SvChain chain = findChain(var);
+        SvChain chain = findChain(var);
 
         if(chain != null)
             return chain.id();
@@ -769,7 +769,7 @@ public class SvCluster
         // otherwise set an id based on index in the unchained variants list
         for(int i = 0; i < mUnchainedSVs.size(); ++i)
         {
-            final SvVarData unchainedSv = mUnchainedSVs.get(i);
+            SvVarData unchainedSv = mUnchainedSVs.get(i);
 
             if(unchainedSv == var)
                 return mChains.size() + i + 1;
@@ -778,7 +778,7 @@ public class SvCluster
         return var.id();
     }
 
-    public final List<ArmCluster> getArmClusters() { return mArmClusters; }
+    public List<ArmCluster> getArmClusters() { return mArmClusters; }
     public ArmCluster findArmCluster(final SvBreakend breakend) { return ArmCluster.findArmCluster(this, breakend); }
 
     public ClusterMetrics getMetrics() { return mMetrics; }
@@ -790,9 +790,9 @@ public class SvCluster
         return chainMetrics;
     }
 
-    public final List<String> getAnnotationList() { return mAnnotationList; }
+    public List<String> getAnnotationList() { return mAnnotationList; }
 
-    public final void addAnnotation(final String annotation)
+    public void addAnnotation(final String annotation)
     {
         if(mAnnotationList.contains(annotation))
             return;

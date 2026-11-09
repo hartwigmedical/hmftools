@@ -252,7 +252,17 @@ public class Variant
                 int position = Integer.parseInt(items[1]);
                 Orientation orientation = Orientation.fromByteStr(items[2]);
 
-                mOriginalJunctions.add(new Junction(chromosome, position, orientation));
+                boolean indelBased = false;
+                boolean discordant = false;
+
+                if(items.length >= 4)
+                {
+                    indelBased = items[3].equals(Junction.INDEL_TYPE);
+                    discordant = items[3].equals(Junction.DISCORDANT_TYPE);
+                }
+
+                mOriginalJunctions.add(new Junction(
+                        chromosome, position, orientation, discordant, indelBased, false, 0, null));
             }
         }
 

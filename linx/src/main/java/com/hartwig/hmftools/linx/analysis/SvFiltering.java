@@ -67,7 +67,7 @@ public class SvFiltering
 
         for(Map.Entry<String, List<SvBreakend>> entry : mState.getChrBreakendMap().entrySet())
         {
-            final String chromosome = entry.getKey();
+            String chromosome = entry.getKey();
             List<SvBreakend> breakendList = entry.getValue();
 
             int breakendCount = breakendList.size();
@@ -82,8 +82,8 @@ public class SvFiltering
 
             for(int i = 0; i < breakendCount; ++i)
             {
-                final SvBreakend breakend = breakendList.get(i);
-                final SvVarData var = breakend.getSV();
+                SvBreakend breakend = breakendList.get(i);
+                SvVarData var = breakend.getSV();
 
                 // filter out merged SGL-INF pairs
                 if(var.isSglBreakend() && var.getLinkedSVs() != null)
@@ -166,18 +166,18 @@ public class SvFiltering
         // now remove filtered breakends
         for(Map.Entry<String,Set<SvBreakend>> entry : breakendRemovalMap.entrySet())
         {
-            final Set<SvBreakend> removalList = entry.getValue();
+            Set<SvBreakend> removalList = entry.getValue();
 
             if(removalList.isEmpty())
                 continue;
 
-            final List<SvBreakend> breakendList = mState.getChrBreakendMap().get(entry.getKey());
+            List<SvBreakend> breakendList = mState.getChrBreakendMap().get(entry.getKey());
             removalList.stream().forEach(x -> breakendList.remove(x));
 
             // and reset indices after excluding breakends
             for(int i = 0; i < breakendList.size(); ++i)
             {
-                final SvBreakend breakend = breakendList.get(i);
+                SvBreakend breakend = breakendList.get(i);
                 breakend.setChrPosIndex(i);
             }
         }
@@ -220,8 +220,8 @@ public class SvFiltering
             if(se == SE_END && var.isSglBreakend())
                 continue;
 
-            final SvBreakend breakend = var.getBreakend(se);
-            final List<SvBreakend> breakendList = mState.getChrBreakendMap().get(breakend.chromosome());
+            SvBreakend breakend = var.getBreakend(se);
+            List<SvBreakend> breakendList = mState.getChrBreakendMap().get(breakend.chromosome());
 
             int i = breakend.getChrPosIndex();
 
@@ -240,7 +240,7 @@ public class SvFiltering
 
     private boolean isLowVafInversion(final SvBreakend breakend, final SvBreakend nextBreakend)
     {
-        final SvVarData var = breakend.getSV();
+        SvVarData var = breakend.getSV();
 
         if(nextBreakend.getSV() != var || nextBreakend.position() - breakend.position() > SHORT_INV_DISTANCE)
             return false;
@@ -260,9 +260,9 @@ public class SvFiltering
 
             if(breakend.position() >= posLimitDown && breakend.position() <= posLimitUp)
             {
-                final SvBreakend otherBreakend = breakend.getOtherBreakend();
+                SvBreakend otherBreakend = breakend.getOtherBreakend();
 
-                final SvBreakend nextBreakend2 = mNonSglDuplicateBreakends.get(otherBreakend);
+                SvBreakend nextBreakend2 = mNonSglDuplicateBreakends.get(otherBreakend);
 
                 if(nextBreakend2 == null)
                 {
@@ -272,7 +272,7 @@ public class SvFiltering
 
                 if(haveLinkedAssemblies(nextBreakend.getSV(), nextBreakend2.getSV(), !nextBreakend.usesStart(), !nextBreakend2.usesStart()))
                 {
-                    final SvVarData var = breakend.getSV();
+                    SvVarData var = breakend.getSV();
 
                     LNX_LOGGER.trace("SV({}) has duplicate breakends with assembled breakends({} & {})",
                             var.id(), nextBreakend, nextBreakend2);

@@ -8,8 +8,6 @@ import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 public class FusionConfig
 {
-    public final boolean WriteChimericReads;
-    public final boolean WriteChimericFragments;
     public final boolean PerformanceStats;
     public final String CohortFile;
     public final boolean CacheFragments;
@@ -20,8 +18,6 @@ public class FusionConfig
 
     public final KnownFusionCache KnownFusions;
 
-    private static final String WRITE_CHIMERIC_READS = "write_chimeric_reads";
-    private static final String WRITE_CHIMERIC_FRAGS = "write_chimeric_frags";
     private static final String MIN_FRAGS_HARD_FILTER = "fusion_min_frags_filter";
     private static final String SKIP_NON_GENIC_FUSIONS = "fusion_skip_non_genic";
     private static final String WRITE_CHIMERIC_ONLY = "fusion_write_chimeric_only";
@@ -31,8 +27,6 @@ public class FusionConfig
 
     public FusionConfig(final ConfigBuilder configBuilder)
     {
-        WriteChimericReads = configBuilder.hasFlag(WRITE_CHIMERIC_READS);
-        WriteChimericFragments = configBuilder.hasFlag(WRITE_CHIMERIC_FRAGS);
         RunPerfChecks = configBuilder.hasFlag(RUN_FUSION_PERF);
         SkipNonGenic = configBuilder.hasFlag(SKIP_NON_GENIC_FUSIONS);
         WriteChimericOnly = configBuilder.hasFlag(WRITE_CHIMERIC_ONLY);
@@ -42,16 +36,13 @@ public class FusionConfig
 
         KnownFusions = new KnownFusionCache();
         KnownFusions.loadFromFile(configBuilder);
-
-        CacheFragments = WriteChimericFragments || WriteChimericReads;
+        CacheFragments = false;
 
         PerformanceStats = true;
     }
 
     public FusionConfig()
     {
-        WriteChimericReads = false;
-        WriteChimericFragments = false;
         CacheFragments = true;
         KnownFusions = new KnownFusionCache();
         SkipNonGenic = false;
@@ -64,8 +55,6 @@ public class FusionConfig
 
     public static void registerConfig(final ConfigBuilder configBuilder)
     {
-        configBuilder.addFlag(WRITE_CHIMERIC_READS, "Write chimeric read data");
-        configBuilder.addFlag(WRITE_CHIMERIC_FRAGS, "Write chimeric fragment data");
         configBuilder.addFlag(SKIP_NON_GENIC_FUSIONS, "Skip non-genic fusion fragments");
         configBuilder.addFlag(WRITE_CHIMERIC_ONLY, "Write chimeric reads but no other fusion processing");
         addKnownFusionFileOption(configBuilder);

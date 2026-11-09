@@ -21,18 +21,17 @@ public class DiploidNormaliser implements ResultsNormaliser
     private final Map<Chromosome, DiploidRatioNormaliser> chromosomeToNormaliser = new HashMap<>();
     private List<MedianRatio> mMedianRatios;
 
-    public DiploidNormaliser(final int rollingMedianMaxDistance, final int rollingMedianMinCoverage,
-            final RefGenomeVersion mRefGenomeVersion)
+    public DiploidNormaliser(final int rollingMedianMaxDistance, final int rollingMedianMinCoverage, final RefGenomeVersion refGenVersion)
     {
-        this.mRollingMedianMaxDistance = rollingMedianMaxDistance;
-        this.mRollingMedianMinCoverage = rollingMedianMinCoverage;
-        this.mRefGenomeVersion = mRefGenomeVersion;
+        mRollingMedianMaxDistance = rollingMedianMaxDistance;
+        mRollingMedianMinCoverage = rollingMedianMinCoverage;
+        mRefGenomeVersion = refGenVersion;
     }
 
     @Override
     public void recordValue(final BamRatio bamRatio)
     {
-        DiploidRatioNormaliser normaliserForChromosome = chromosomeToNormaliser.computeIfAbsent(bamRatio.mChromosome,
+        DiploidRatioNormaliser normaliserForChromosome = chromosomeToNormaliser.computeIfAbsent(bamRatio.Chromosome,
                 k -> new DiploidRatioNormaliser(mRollingMedianMaxDistance, mRollingMedianMinCoverage));
         normaliserForChromosome.recordRatio(bamRatio);
     }
@@ -66,13 +65,13 @@ public class DiploidNormaliser implements ResultsNormaliser
     @Override
     public void normalise(BamRatio bamRatio)
     {
-        if(bamRatio.mChromosome.equals(HumanChromosome._Y))
+        if(bamRatio.Chromosome.equals(HumanChromosome._Y))
         {
             bamRatio.setDiploidAdjustedRatio(bamRatio.ratio());
         }
         else
         {
-            double normalised = chromosomeToNormaliser.get(bamRatio.mChromosome).normalise(bamRatio);
+            double normalised = chromosomeToNormaliser.get(bamRatio.Chromosome).normalise(bamRatio);
             bamRatio.setDiploidAdjustedRatio(normalised);
         }
     }

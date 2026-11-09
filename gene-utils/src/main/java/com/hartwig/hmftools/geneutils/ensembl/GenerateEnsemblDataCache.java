@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.geneutils.ensembl;
 
-import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.ENSEMBL_TRANS_SPLICE_DATA_FILE;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.DEFAULT_PRE_GENE_PROMOTOR_DISTANCE;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
@@ -21,6 +20,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
@@ -63,19 +63,20 @@ public class GenerateEnsemblDataCache
         geneTransCache.load(false);
 
         createTranscriptPreGenePositionData(
-                geneTransCache.getChrGeneDataMap(), geneTransCache.getTranscriptDataMap(), DEFAULT_PRE_GENE_PROMOTOR_DISTANCE, outputDir);
+                geneTransCache.getChrGeneDataMap(), geneTransCache.getTranscriptDataMap(),
+                DEFAULT_PRE_GENE_PROMOTOR_DISTANCE, refGenomeVersion, outputDir);
 
         GU_LOGGER.info("Ensembl data cache complete");
     }
 
     private static void createTranscriptPreGenePositionData(
             final Map<String, List<GeneData>> chrGeneDataMap, final Map<String, List<TranscriptData>> transcriptDataMap,
-            int preGenePromotorDistance, final String outputDir)
+            int preGenePromotorDistance, final RefGenomeVersion refGenomeVersion, final String outputDir)
     {
         // generate a cache file of the nearest upstream splice acceptor from another gene for each transcript
         try
         {
-            String outputFile = outputDir + ENSEMBL_TRANS_SPLICE_DATA_FILE;
+            String outputFile = outputDir + EnsemblDataLoader.ensemblSpliceDataFile(refGenomeVersion);
 
             BufferedWriter writer = createBufferedWriter(outputFile, false);
 
@@ -85,13 +86,13 @@ public class GenerateEnsemblDataCache
             // for each gene, collect up any gene which overlaps it or is within the specified distance upstream from it
             for(Map.Entry<String, List<GeneData>> entry : chrGeneDataMap.entrySet())
             {
-                final String chromosome = entry.getKey();
+                String chromosome = entry.getKey();
 
                 GU_LOGGER.debug("calculating pre-gene positions for chromosome({})", chromosome);
 
-                final List<GeneData> geneList = entry.getValue();
+                List<GeneData> geneList = entry.getValue();
 
-                for(final GeneData gene : geneList)
+                for(GeneData gene : geneList)
                 {
                     List<String> proximateGenes = Lists.newArrayList();
 
@@ -109,7 +110,7 @@ public class GenerateEnsemblDataCache
                         geneRangeEnd = gene.GeneEnd + preGenePromotorDistance;
                     }
 
-                    for(final GeneData otherGene : geneList)
+                    for(GeneData otherGene : geneList)
                     {
                         if(otherGene.Strand != gene.Strand)
                             continue;
@@ -127,12 +128,12 @@ public class GenerateEnsemblDataCache
                         continue;
 
                     // now set the preceding splice acceptor position for each transcript in this gene
-                    final List<TranscriptData> transDataList = transcriptDataMap.get(gene.GeneId);
+                    List<TranscriptData> transDataList = transcriptDataMap.get(gene.GeneId);
 
                     if(transDataList == null || transDataList.isEmpty())
                         continue;
 
-                    for(final TranscriptData transData : transDataList)
+                    for(TranscriptData transData : transDataList)
                     {
                         long transStartPos = gene.Strand == POS_STRAND ? transData.TransStart : transData.TransEnd;
 
@@ -167,14 +168,14 @@ public class GenerateEnsemblDataCache
     {
         long closestPosition = -1;
 
-        for(final String geneId : proximateGenes)
+        for(String geneId : proximateGenes)
         {
-            final List<TranscriptData> transDataList = transDataMap.get(geneId);
+            List<TranscriptData> transDataList = transDataMap.get(geneId);
 
             if(transDataList == null)
                 continue;
 
-            for(final TranscriptData transData : transDataList)
+            for(TranscriptData transData : transDataList)
             {
                 if(transId == transData.TransId)
                     continue;

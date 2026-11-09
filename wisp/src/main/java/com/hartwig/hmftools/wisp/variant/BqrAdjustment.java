@@ -1,0 +1,219 @@
+package com.hartwig.hmftools.wisp.variant;
+
+import static java.lang.Math.max;
+
+import static com.hartwig.hmftools.common.bam.ConsensusType.DUAL;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.pathFromFile;
+import static com.hartwig.hmftools.wisp.common.CommonUtils.CT_LOGGER;
+import static com.hartwig.hmftools.wisp.WispConstants.BQR_MIN_ERROR_RATE;
+import static com.hartwig.hmftools.wisp.WispConstants.BQR_MIN_ERROR_RATE_DUAL;
+
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.bam.ConsensusType;
+import com.hartwig.hmftools.common.redux.BqrFile;
+import com.hartwig.hmftools.common.redux.BqrKey;
+import com.hartwig.hmftools.common.redux.BqrRecord;
+import com.hartwig.hmftools.wisp.WispConfig;
+
+public class BqrAdjustment
+{
+    private final WispConfig mConfig;
+
+    private final Map<ConsensusType,List<BqrContextData>> mBqrContextData;
+    private boolean mHasDualEntries;
+
+    public BqrAdjustment(final WispConfig config)
+    {
+        mConfig = config;
+        mBqrContextData = Maps.newHashMap();
+        mHasDualEntries = false;
+    }
+
+    private static final byte NO_KEY_VALUE = 1;
+
+    public boolean hasValidData() { return !mBqrContextData.isEmpty(); }
+
+    public List<BqrContextData> getThresholdBqrData(final int qualThreshold)
+    {
+        List<BqrContextData> bqrContextData = mBqrContextData.get(ConsensusType.NONE);
+
+        if(bqrContextData == null)
+            return Collections.emptyList();
+
+        return qualThreshold <= 0 ?
+                bqrContextData : bqrContextData.stream().filter(x -> x.calculatedQual() >= qualThreshold).collect(Collectors.toList());
+    }
+
+    public boolean hasDualEntries() { return mHasDualEntries; }
+
+    public boolean hasErrorRate(final String triNucContext, final String alt, final ConsensusType consensusType)
+    {
+        List<BqrContextData> bqrContextData = mBqrContextData.get(consensusType);
+
+        if(bqrContextData == null)
+            return false;
+
+        return bqrContextData.stream().anyMatch(x -> x.TrinucleotideContext.equals(triNucContext) && x.Alt.equals(alt));
+    }
+
+    public double calcErrorRate(final String triNucContext, final String alt, final ConsensusType consensusType)
+    {
+        List<BqrContextData> bqrContextData = mBqrContextData.get(consensusType);
+
+        BqrContextData bqrData = bqrContextData.stream()
+                .filter(x -> x.TrinucleotideContext.equals(triNucContext) && x.Alt.equals(alt)).findFirst().orElse(null);
+
+        if(bqrData == null)
+        {
+            // for type NONE, this should not occur since Redux ensures all contexts are written
+            // for DUAL, this condition should have been checked earlier
+            CT_LOGGER.error("missing BQR data: tnc({}) alt({}) consensusType({})", triNucContext, alt, consensusType);
+            System.exit(1);
+        }
+
+        double maxErrorRate = consensusType == DUAL ? BQR_MIN_ERROR_RATE_DUAL : BQR_MIN_ERROR_RATE;
+        return max(bqrData.errorRate(), maxErrorRate);
+    }
+
+    public static double calcErrorRate(final List<BqrContextData> bqrContextData)
+    {
+        int depthTotal = 0;
+        int fragmentTotal = 0;
+
+        Set<String> processedTriNucContext = Sets.newHashSet();
+
+        for(BqrContextData bqrData : bqrContextData)
+        {
+            if(bqrData.TotalCount == 0)
+                continue;
+
+            fragmentTotal += bqrData.AltCount;
+
+            if(!processedTriNucContext.contains(bqrData.TrinucleotideContext))
+            {
+                processedTriNucContext.add(bqrData.TrinucleotideContext);
+                depthTotal += bqrData.TotalCount;
+            }
+        }
+
+        return depthTotal > 0 ? Math.max(fragmentTotal, BqrContextData.ZERO_ALT_COUNT_FLOOR) / (double)depthTotal : 0;
+    }
+
+    public static boolean hasVariantContext(
+            final List<BqrContextData> bqrContextData, final String trinucleotideContext, final String alt)
+    {
+        return bqrContextData.stream().anyMatch(x -> x.Alt.equals(alt) && x.TrinucleotideContext.equals(trinucleotideContext));
+    }
+
+    public void loadBqrData(final String sampleId)
+    {
+        mBqrContextData.clear();
+
+        String bqrFileDir;
+
+        if(mConfig.BqrDir != null)
+            bqrFileDir = mConfig.BqrDir;
+        else if(!mConfig.SomaticVcf.isEmpty())
+            bqrFileDir = pathFromFile(mConfig.getSomaticVcf(sampleId));
+        else
+            bqrFileDir = mConfig.SomaticDir;
+
+        String bqrFilename = BqrFile.generateFilename(bqrFileDir, sampleId);
+
+        if(!Files.exists(Paths.get(bqrFilename)))
+        {
+            CT_LOGGER.warn("sample({}) missing BQR file: {}", sampleId, bqrFilename);
+            System.exit(1);
+        }
+
+        List<BqrRecord> allCounts = BqrFile.read(bqrFilename);
+
+        Map<BqrKey,Integer> summaryCounts = Maps.newHashMap();
+
+        for(BqrRecord bqrRecord : allCounts)
+        {
+            BqrKey key = bqrRecord.Key;
+
+            mHasDualEntries |= bqrRecord.Key.ReadType == DUAL;
+
+            if(bqrRecord.Key.Quality < mConfig.BqrQualThreshold)
+                continue;
+
+            // merge none and single
+            ConsensusType consensusType = bqrRecord.Key.ReadType == DUAL ? DUAL : ConsensusType.NONE;
+
+            BqrKey noAltKey = new BqrKey(key.Ref, NO_KEY_VALUE, key.TrinucleotideContext, key.Quality, consensusType);
+
+            int count = summaryCounts.getOrDefault(noAltKey, 0);
+            summaryCounts.put(noAltKey, count + bqrRecord.Count);
+
+            if(key.Ref != key.Alt)
+            {
+                BqrContextData bqrContextData = getOrCreate(key.TrinucleotideContext, key.Alt, consensusType);
+                bqrContextData.AltCount += bqrRecord.Count;
+            }
+        }
+
+        for(Map.Entry<ConsensusType,List<BqrContextData>> ctEntry : mBqrContextData.entrySet())
+        {
+            for(BqrContextData bqrContextData : ctEntry.getValue())
+            {
+                for(Map.Entry<BqrKey,Integer> entry : summaryCounts.entrySet())
+                {
+                    BqrKey key = entry.getKey();
+
+                    if(key.ReadType == ctEntry.getKey()
+                    && new String(key.TrinucleotideContext).equals(bqrContextData.TrinucleotideContext))
+                    {
+                        bqrContextData.TotalCount += entry.getValue();
+                    }
+                }
+            }
+        }
+
+        for(Map.Entry<ConsensusType,List<BqrContextData>> entry : mBqrContextData.entrySet())
+        {
+            for(BqrContextData bqrContextData : entry.getValue())
+            {
+                CT_LOGGER.trace("sample({}) consensus({}) simple BQR summary: {}", sampleId, entry.getKey(), bqrContextData);
+            }
+        }
+    }
+
+    private BqrContextData getOrCreate(final byte[] trinucleotideContext, final byte alt, final ConsensusType consensusType)
+    {
+        return getOrCreate(new String(trinucleotideContext), String.valueOf((char)alt), consensusType);
+    }
+
+    private BqrContextData getOrCreate(final String trinucleotideContext, final String alt, final ConsensusType consensusType)
+    {
+        List<BqrContextData> bqrContextData = mBqrContextData.get(consensusType);
+
+        if(bqrContextData == null)
+        {
+            bqrContextData = Lists.newArrayList();
+            mBqrContextData.put(consensusType, bqrContextData);
+        }
+
+        BqrContextData bqrErrorRate = bqrContextData.stream()
+                .filter(x -> x.Alt.equals(alt) && x.TrinucleotideContext.equals(trinucleotideContext))
+                .findFirst().orElse(null);
+
+        if(bqrErrorRate != null)
+            return bqrErrorRate;
+
+        bqrErrorRate = new BqrContextData(trinucleotideContext, alt);
+        bqrContextData.add(bqrErrorRate);
+        return bqrErrorRate;
+    }
+}

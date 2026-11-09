@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.cobalt.norm.NormConstants.MIN_ENRICHMENT_RATI
 import static com.hartwig.hmftools.cobalt.norm.Normaliser.calcRelativeEnrichment;
 import static com.hartwig.hmftools.cobalt.norm.Normaliser.calcSampleAdjustedRatios;
 import static com.hartwig.hmftools.common.genome.gc.GCBucket.calcGcBucket;
+import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.convertWildcardSamplePath;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 
@@ -54,6 +55,8 @@ public class NormalisationFileBuilder
 
     public void run()
     {
+        long startTimeMs = System.currentTimeMillis();
+
         CB_LOGGER.info("running Cobalt normalisation file generation from {} samples", mConfig.SampleIds.size());
 
         // load reference data
@@ -80,7 +83,7 @@ public class NormalisationFileBuilder
             writeDetailedFile(mChrRegionData, mConfig.SampleIds, mConfig.DetailedFile);
         }
 
-        CB_LOGGER.info("Cobalt normalisation file generation complete");
+        CB_LOGGER.info("Cobalt normalisation file generation complete, mins({})", runTimeMinsStr(startTimeMs));
     }
 
     private Map<String, Gender> determineAmberGenders()

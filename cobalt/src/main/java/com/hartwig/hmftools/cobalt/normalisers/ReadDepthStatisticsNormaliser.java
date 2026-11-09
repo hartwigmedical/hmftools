@@ -38,22 +38,22 @@ public class ReadDepthStatisticsNormaliser implements ResultsNormaliser
     {
         Preconditions.checkState(Ratio < 0.0);
 
-        if(!bamRatio.mChromosome.isAutosome())
+        if(!bamRatio.Chromosome.isAutosome())
         {
             return;
         }
-        if(bamRatio.gcContent() < DEFAULT_GC_RATIO_MIN)
+        if(bamRatio.GcContent < DEFAULT_GC_RATIO_MIN)
         {
             return;
         }
-        if(bamRatio.gcContent() > DEFAULT_GC_RATIO_MAX)
+        if(bamRatio.GcContent > DEFAULT_GC_RATIO_MAX)
         {
             return;
         }
         double ratio = bamRatio.ratio();
         if(ratio > 0.0)
         {
-            descriptiveStatistics.addValue(bamRatio.readDepth());
+            descriptiveStatistics.addValue(bamRatio.ReadDepth);
         }
     }
 

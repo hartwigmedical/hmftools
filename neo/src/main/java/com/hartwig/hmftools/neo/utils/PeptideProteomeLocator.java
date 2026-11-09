@@ -35,6 +35,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader;
 import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.perf.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.neo.bind.BindCommon;
@@ -64,7 +65,8 @@ public class PeptideProteomeLocator
         mPeptides = loadDelimitedIdFile(configBuilder.getValue(PEPTIDE_FILE), FLD_PEPTIDE, CSV_DELIM);
 
         mTransAminoAcidMap = Maps.newHashMap();
-        EnsemblDataLoader.loadTranscriptAminoAcidData(configBuilder.getValue(ENSEMBL_DATA_DIR), mTransAminoAcidMap, Lists.newArrayList(), false);
+        EnsemblDataLoader.loadTranscriptAminoAcidData(
+                configBuilder.getValue(ENSEMBL_DATA_DIR), RefGenomeVersion.V37, mTransAminoAcidMap, Lists.newArrayList(), false);
 
         mTranscriptExpression = new TranscriptExpression(configBuilder.getValue(IMMUNE_EXPRESSION_FILE));
 
