@@ -31,6 +31,8 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.QSEE_DIR_CFG
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.QSEE_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.RNA_SAMPLE;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.RNA_SAMPLE_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAGE_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAGE_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAGE_GERMLINE_DIR_CFG;
@@ -132,8 +134,6 @@ public class OrangeConfig
     // Files containing the actual genomic results for this sample.
     private static final String PIPELINE_VERSION_FILE = "pipeline_version_file";
 
-    private static String RNA_SAMPLE_ID = "rna_sample_id";
-
     // Some additional optional params and flags
     private static final String ADD_DISCLAIMER = "add_disclaimer";
 
@@ -227,8 +227,7 @@ public class OrangeConfig
         VirusDir = pathResolver.resolveOptionalToolDirectory(VIRUS_DIR_CFG, defaultToolDirectories.virusInterpreterDir());
 
         // RNA data can be in the appended Sage VCF and/or from Isofox
-
-        RnaSampleId = configBuilder.getValue(RNA_SAMPLE_ID);
+        RnaSampleId = configBuilder.getValue(RNA_SAMPLE);
 
         String isofoxDir = null;
 
@@ -333,7 +332,7 @@ public class OrangeConfig
 
         configBuilder.addConfigItem(DISPLAY_SAMPLE_ID, false, "Sample ID for display instead of Tumor ID for demo purposes");
         configBuilder.addConfigItem(PANEL_NAME, false, "Panel name if known");
-        configBuilder.addConfigItem(RNA_SAMPLE_ID, false, "(Optional) The RNA sample of the tumor sample for which ORANGE will run");
+        configBuilder.addConfigItem(RNA_SAMPLE, false, RNA_SAMPLE_DESC);
         configBuilder.addPath(ISOFOX_DIR_CFG, false, ISOFOX_DIR_DESC);
 
         configBuilder.addFlag(ADD_DISCLAIMER, "Prints a disclaimer on each page");

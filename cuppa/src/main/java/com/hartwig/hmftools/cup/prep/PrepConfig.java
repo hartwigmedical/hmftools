@@ -10,7 +10,7 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.LINX_DIR_CFG
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LINX_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_DESC;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.RNA_SAMPLE_ID;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.RNA_SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_DESC;
@@ -121,7 +121,7 @@ public class PrepConfig
     public static void registerConfig(final ConfigBuilder configBuilder)
     {
         configBuilder.addConfigItem(SAMPLE, false, SAMPLE_DESC);
-        configBuilder.addConfigItem(RNA_SAMPLE_ID, false, RNA_SAMPLE_ID_DESC);
+        configBuilder.addConfigItem(RNA_SAMPLE, false, RNA_SAMPLE_ID_DESC);
         configBuilder.addPath(SAMPLE_ID_FILE, false, SAMPLE_ID_FILE_DESC);
 
         configBuilder.addPath(SAMPLE_DATA_DIR_CFG, false, SAMPLE_DATA_DIR_DESC);

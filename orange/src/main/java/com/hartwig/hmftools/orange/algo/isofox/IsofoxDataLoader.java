@@ -22,23 +22,23 @@ public final class IsofoxDataLoader
 {
     private static final Logger LOGGER = LogManager.getLogger(IsofoxDataLoader.class);
 
-    public static IsofoxData load(final String tumorSampleId, final String isofoxDir) throws IOException
+    public static IsofoxData load(final String rnaSampleId, final String isofoxDir) throws IOException
     {
-        String summaryFile = PathUtil.mandatoryPath(RnaStatisticFile.generateFilename(isofoxDir, tumorSampleId));
+        String summaryFile = PathUtil.mandatoryPath(RnaStatisticFile.generateFilename(isofoxDir, rnaSampleId));
         List<String> summaryLines = Files.readAllLines(Paths.get(summaryFile));
         RnaStatistics summary = RnaStatisticFile.fromLines(summaryLines);
 
         LOGGER.debug((" loaded summary from " + summaryFile));
 
-        String isofoxGeneFile = PathUtil.mandatoryPath(GeneExpressionFile.generateFilename(isofoxDir, tumorSampleId));
+        String isofoxGeneFile = PathUtil.mandatoryPath(GeneExpressionFile.generateFilename(isofoxDir, rnaSampleId));
         List<GeneExpression> geneExpressions = GeneExpressionFile.read(isofoxGeneFile);
         LOGGER.debug(" loaded {} gene expressions from {}", geneExpressions.size(), isofoxGeneFile);
 
-        String fusionFile = PathUtil.mandatoryPath(RnaFusionFile.generateFilename(isofoxDir, tumorSampleId));
+        String fusionFile = PathUtil.mandatoryPath(RnaFusionFile.generateFilename(isofoxDir, rnaSampleId));
         List<RnaFusion> fusions = RnaFusionFile.read(fusionFile);
         LOGGER.debug(" loaded {} fusions from {}", fusions.size(), fusionFile);
 
-        String altSpliceJunctionFile = PathUtil.mandatoryPath(NovelSpliceJunctionFile.generateFilename(isofoxDir, tumorSampleId));
+        String altSpliceJunctionFile = PathUtil.mandatoryPath(NovelSpliceJunctionFile.generateFilename(isofoxDir, rnaSampleId));
         List<NovelSpliceJunction> novelSpliceJunctions = NovelSpliceJunctionFile.read(altSpliceJunctionFile);
         LOGGER.debug(" loaded {} novel splice junctions from {}", novelSpliceJunctions.size(), altSpliceJunctionFile);
 
@@ -48,5 +48,19 @@ public final class IsofoxDataLoader
                 .fusions(fusions)
                 .novelSpliceJunctions(novelSpliceJunctions)
                 .build();
+    }
+
+    public static String checkRnaVsTumorId(final String rnaSampleId, final String tumorSampleId, final String isofoxDir)
+    {
+        String statisticsFile = RnaStatisticFile.generateFilename(isofoxDir, rnaSampleId);
+
+        if(Files.exists(Paths.get(statisticsFile)))
+            return rnaSampleId;
+
+        // load using tumor ID if used for backwards compatibility
+        if(Files.exists(Paths.get(RnaStatisticFile.generateFilename(isofoxDir, tumorSampleId))))
+            return tumorSampleId;
+
+        return null;
     }
 }

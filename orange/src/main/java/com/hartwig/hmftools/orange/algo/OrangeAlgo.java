@@ -3,6 +3,7 @@ package com.hartwig.hmftools.orange.algo;
 import static com.hartwig.hmftools.common.pipeline.MiscToolFiles.generateQseeVisPlot;
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.DEFAULT_PIPELINE_OUTPUT;
 import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
+import static com.hartwig.hmftools.orange.algo.isofox.IsofoxDataLoader.checkRnaVsTumorId;
 import static com.hartwig.hmftools.orange.algo.purple.PurpleDataLoader.addPurplePlots;
 
 import java.io.File;
@@ -281,7 +282,15 @@ public class OrangeAlgo
             return null;
         }
 
-        return IsofoxDataLoader.load(config.TumorId, config.IsofoxDir);
+        String rnaSampleId = checkRnaVsTumorId(config.RnaSampleId, config.TumorId, config.IsofoxDir);
+
+        if(rnaSampleId == null)
+        {
+            LOGGER.warn(" invalid RNA sample ID");
+            return null;
+        }
+
+        return IsofoxDataLoader.load(rnaSampleId, config.IsofoxDir);
     }
 
     @Nullable

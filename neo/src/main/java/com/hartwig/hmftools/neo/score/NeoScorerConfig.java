@@ -2,7 +2,7 @@ package com.hartwig.hmftools.neo.score;
 
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.NEO_FILE_ID;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.RNA_SAMPLE_DESC;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.RNA_SAMPLE_ID;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.RNA_SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
@@ -81,7 +81,7 @@ public class NeoScorerConfig
         IsofoxDir = checkAddDirSeparator(configBuilder.getValue(ISOFOX_DIR_CFG, sampleDataDir));
         RnaSomaticVcf = configBuilder.getValue(RNA_SOMATIC_VCF, sampleDataDir);
         OutputDir = configBuilder.hasValue(OUTPUT_DIR) ? parseOutputDir(configBuilder) : sampleDataDir;
-        RnaSampleId = configBuilder.getValue(RNA_SAMPLE_ID);
+        RnaSampleId = configBuilder.getValue(RNA_SAMPLE);
 
         LikelihoodThreshold = configBuilder.getDecimal(LIKELIHOOD_THRESHOLD);
         SimilarityThreshold = configBuilder.getDecimal(SIMILARITY_THRESHOLD);
@@ -131,7 +131,7 @@ public class NeoScorerConfig
         configBuilder.addPath(PURPLE_DIR_CFG, false, PURPLE_DIR_DESC);
         configBuilder.addPath(LILAC_DIR_CFG, false, LILAC_DIR_DESC);
         configBuilder.addPath(RNA_SOMATIC_VCF, false, "Directory for Purple somatic variant RNA-appended files");
-        configBuilder.addConfigItem(RNA_SAMPLE_ID, RNA_SAMPLE_DESC + " in Sage-appended VCF");
+        configBuilder.addConfigItem(RNA_SAMPLE, RNA_SAMPLE_DESC + " in Sage-appended VCF");
         configBuilder.addPath(ISOFOX_DIR_CFG, false, "Directory for Isofox files (Transcript expresion, Neoepitope coverage)");
         configBuilder.addPath(COHORT_TPM_MEDIANS_FILE, false, COHORT_TPM_MEDIANS_FILE_DESC);
 

@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.cup.prep;
 
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.RNA_SAMPLE_ID;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.RNA_SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FILE;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
@@ -29,9 +29,9 @@ public class SampleIdsLoader
 
     public SampleIdsLoader loadFromConfig(ConfigBuilder configBuilder)
     {
-        if(!configBuilder.hasValue(SAMPLE_ID_FILE) && !configBuilder.hasValue(SAMPLE) && !configBuilder.hasValue(RNA_SAMPLE_ID))
+        if(!configBuilder.hasValue(SAMPLE_ID_FILE) && !configBuilder.hasValue(SAMPLE) && !configBuilder.hasValue(RNA_SAMPLE))
         {
-            CUP_LOGGER.error("Sample ID(s) must be provided to 1) -{} or to 2) -{} and/or -{}", SAMPLE_ID_FILE, SAMPLE, RNA_SAMPLE_ID);
+            CUP_LOGGER.error("Sample ID(s) must be provided to 1) -{} or to 2) -{} and/or -{}", SAMPLE_ID_FILE, SAMPLE, RNA_SAMPLE);
             System.exit(1);
         }
 
@@ -41,7 +41,7 @@ public class SampleIdsLoader
         }
         else
         {
-            return loadFromStrings(configBuilder.getValue(SAMPLE), configBuilder.getValue(RNA_SAMPLE_ID));
+            return loadFromStrings(configBuilder.getValue(SAMPLE), configBuilder.getValue(RNA_SAMPLE));
         }
     }
 
