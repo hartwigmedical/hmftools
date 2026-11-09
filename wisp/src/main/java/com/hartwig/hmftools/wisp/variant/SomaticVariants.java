@@ -36,6 +36,7 @@ import static com.hartwig.hmftools.wisp.variant.FilterReason.SUBCLONAL;
 import static com.hartwig.hmftools.wisp.variant.GenotypeFragments.AVG_BASE_QUAL_OLD_TAG;
 import static com.hartwig.hmftools.wisp.variant.GenotypeFragments.REQUIRED_GENOTYPE_FIELDS;
 import static com.hartwig.hmftools.wisp.variant.GenotypeFragments.buildFragments;
+import static com.hartwig.hmftools.wisp.variant.MosaicData.INVALID_DATA;
 import static com.hartwig.hmftools.wisp.variant.MosaicRoutines.assessMosaics;
 import static com.hartwig.hmftools.wisp.variant.MosaicRoutines.onlyMosaicFilters;
 import static com.hartwig.hmftools.wisp.variant.SnvFitStatus.UNCERTAIN;
@@ -314,8 +315,9 @@ public class SomaticVariants
             // check for outlier / CHIP variants and remove them from variants used for purity estimates
             List<SomaticVariant> outlierVariants = MosaicRoutines.findOutlierVariants(sampleId, filteredVariants, sampleTotalAD);
 
-            MosaicData mosaicData = assessMosaics(
-                    sampleId, filteredVariants, outlierVariants.size(), mosaicEligibleVariantCount, sampleTotalAD, sampleTotalAF);
+            MosaicData mosaicData = WispConfig.RunMosaicLogic ?
+                    assessMosaics(sampleId, filteredVariants, outlierVariants.size(), mosaicEligibleVariantCount, sampleTotalAD, sampleTotalAF)
+                    : INVALID_DATA;
 
             purityResult = mEstimator.calculatePurity(sampleId, filteredVariants, mVariants.size(), mosaicData, true);
 

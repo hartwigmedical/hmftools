@@ -19,6 +19,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.VariantTier;
+import com.hartwig.hmftools.wisp.WispConfig;
 
 import org.junit.Test;
 
@@ -190,13 +191,15 @@ public class MosaicVariantTest
                 ref, alt, 30, 0, tumorDp, tumorAd, 2000, 1, sampleDualDp,
                 0, copyNumber, copyNumber);
 
+        WispConfig.RunMosaicLogic = true;
+        
         somaticVariants.processVariant(sampleIds, varContext15);
 
         SomaticPurityResult purityResult = somaticVariants.processSample(TEST_SAMPLE_ID);
 
-        //  assertEquals(10, purityResult.TotalVariants);
+        assertEquals(0.0472, purityResult.PurityCalcs.ErrorRate, 0.0001);
 
-
+        WispConfig.RunMosaicLogic = false;
 
     }
 }

@@ -94,6 +94,8 @@ public class WispConfig
     public final boolean DisableDualFragments;
     public final int Threads;
 
+    public static boolean RunMosaicLogic = false;
+
     public static SequencingType SEQUENCING_TYPE = ILLUMINA;
 
     private static final String AMBER_EXTRA_TUMOR_ID = "amber_extra_tumor_id";
