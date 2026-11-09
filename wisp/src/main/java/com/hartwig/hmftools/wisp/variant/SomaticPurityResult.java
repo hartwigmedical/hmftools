@@ -26,6 +26,8 @@ public class SomaticPurityResult
     public final SnvFitStatus Status;
 
     private String mOutlierVariantInfo;
+    private double mMosaicFragments;
+    private double mMosaicDualFragments;
 
     public static final SomaticPurityResult INVALID_RESULT = new SomaticPurityResult(
             SnvFitStatus.INVALID, false, 0, new FragmentTotals(),
@@ -43,6 +45,8 @@ public class SomaticPurityResult
         Status = status;
 
         mOutlierVariantInfo = "";
+        mMosaicFragments = 0;
+        mMosaicDualFragments = 0;
     }
 
     private DetectionResult formatDetectionResult()
@@ -60,6 +64,15 @@ public class SomaticPurityResult
 
     public void setOutlierVariantInfo(final String outlierVariantInfo) { mOutlierVariantInfo = outlierVariantInfo; }
     public String outlierVariantInfo() { return mOutlierVariantInfo; }
+
+    public void setMosaicFragments(double fragments, double dualFragments)
+    {
+        mMosaicFragments = fragments;
+        mMosaicDualFragments = dualFragments;
+    }
+
+    public double mosaicFragments() { return mMosaicFragments; }
+    public double mosaicDualFragments() { return mMosaicDualFragments; }
 
     public static String header()
     {
@@ -94,6 +107,8 @@ public class SomaticPurityResult
         sj.add("RawBqrErrorRate");
         sj.add("BqrThreshold");
         sj.add("BqrExtraInfo");
+        sj.add("MosaicFragments");
+        sj.add("MosaicDualFragments");
         return sj.toString();
     }
 
@@ -133,6 +148,8 @@ public class SomaticPurityResult
         sj.add(format("%4.3e", PurityCalcs.ErrorRate));
         sj.add(format("%4.3e", PurityCalcs.RawBqrErrorRate));
         sj.add(format("%d", PurityCalcs.BqrQualThreshold));
+        sj.add(format("%.1f", mMosaicFragments));
+        sj.add(format("%.1f", mMosaicDualFragments));
 
         String bqrDataStr = PurityCalcs.BqrExtraInfo.stream().collect(Collectors.joining(";"));
         sj.add(bqrDataStr);

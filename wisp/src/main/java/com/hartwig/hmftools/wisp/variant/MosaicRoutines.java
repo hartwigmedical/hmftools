@@ -172,7 +172,7 @@ public final class MosaicRoutines
             GenotypeFragments referenceFragData = variant.referenceFragmentData();
             int referenceDp = referenceFragData.Depth;
 
-            double dualDepthRatio = sampleFragData.UmiCounts.TotalDual / sampleFragData.Depth;
+            double dualDepthRatio = sampleFragData.UmiCounts.TotalDual / (double)sampleFragData.Depth;
             double vaf = sampleFragData.vaf();
             int sampleAd = sampleFragData.AlleleCount;
             int sampleDp = sampleFragData.Depth;

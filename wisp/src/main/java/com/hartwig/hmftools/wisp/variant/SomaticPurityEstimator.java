@@ -101,7 +101,7 @@ public class SomaticPurityEstimator
         // firstly estimate raw purity without consideration of clonal peaks
         double noiseRate;
 
-        double mosaicFragmentContribution = mosaicData.TotalFragmentContribution / mosaicData.EligibleVariantCount;
+        double mosaicFragmentContribution = mosaicData.fragmentsPerEligibleVariant();
 
         if(!mConfig.SkipBqr)
         {
@@ -112,7 +112,7 @@ public class SomaticPurityEstimator
             for(int threshold : SNV_QUAL_THRESHOLDS)
             {
                 FragmentTotals bqrThresholdFragTotals = calculateThresholdValues(
-                        sampleId, purityCalcData, variants, threshold, capMaxTumorCopyNumber, mosaicData.TotalFragmentContribution);
+                        sampleId, purityCalcData, variants, threshold, capMaxTumorCopyNumber, mosaicFragmentContribution);
 
                 if(bqrThresholdFragTotals != null)
                     fragmentTotals = bqrThresholdFragTotals;
@@ -189,13 +189,12 @@ public class SomaticPurityEstimator
         }
 
         // report final probability as min of Dual and Normal Prob
-        double mosaicDualFragmentContribution = mosaicData.TotalDualFragmentContribution / mosaicData.EligibleVariantCount;
+        double mosaicDualFragmentContribution = mosaicData.dualFragmentsPerEligibleVariant();
         double filteredDualMosaicFragmentContribution = mosaicDualFragmentContribution * uncappedVariantCount / variants.size();
         double mosaicDualErrorRate = dualFragmentTotals.sampleDepthTotal() > 0 ?
                 filteredDualMosaicFragmentContribution / dualFragmentTotals.sampleDepthTotal() : 0;
 
         double dualNoiseRate = mConfig.noiseRate(true) + mosaicDualErrorRate;
-        double tmp = mosaicData.TotalDualFragmentContribution * uncappedVariantCount / variants.size();
         double expectedDualNoiseFragments = dualNoiseRate * sampleDualDP;
         purityCalcData.DualProbability = estimatedProbability(sampleDualAD, expectedDualNoiseFragments);
         purityCalcData.DualLodPurityEstimate = calcLimitOfDetection(dualFragmentTotals, dualNoiseRate);
@@ -285,6 +284,7 @@ public class SomaticPurityEstimator
 
         double bqrErrorRate = depthPerCnWeightedErrorRate / sampleDepthPerCnTotal;
 
+        // TODO: explain this adjustment
         double mosaicErrorRate = mosaicFragmentContribution * fragmentTotals.variantCount() / variants.size() / fragmentTotals.sampleDepthTotal();
 
         double errorRate = bqrErrorRate + mosaicErrorRate;

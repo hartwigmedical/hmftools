@@ -152,7 +152,7 @@ public class MosaicVariantTest
 
         VariantContext varContext9 = createVariantContext(
                 ref, alt, 30, 0, tumorDp, tumorAd, 1500, 1, sampleDualDp,
-                0, copyNumber, copyNumber);
+                1, copyNumber, copyNumber);
 
         somaticVariants.processVariant(sampleIds, varContext9);
 
@@ -171,13 +171,13 @@ public class MosaicVariantTest
 
         VariantContext varContext12 = createVariantContext(
                 ref, alt, 30, 0, tumorDp, tumorAd, 2000, 1, sampleDualDp,
-                0, copyNumber, copyNumber);
+                1, copyNumber, copyNumber);
 
         somaticVariants.processVariant(sampleIds, varContext12);
 
         VariantContext varContext13 = createVariantContext(
                 ref, alt, 30, 0, tumorDp, tumorAd, 2000, 2, sampleDualDp,
-                0, 15, 15);
+                1, 15, 15);
 
         somaticVariants.processVariant(sampleIds, varContext13);
 
@@ -192,12 +192,14 @@ public class MosaicVariantTest
                 0, copyNumber, copyNumber);
 
         WispConfig.RunMosaicLogic = true;
-        
+
         somaticVariants.processVariant(sampleIds, varContext15);
 
         SomaticPurityResult purityResult = somaticVariants.processSample(TEST_SAMPLE_ID);
 
-        assertEquals(0.0472, purityResult.PurityCalcs.ErrorRate, 0.0001);
+        assertEquals(0.00396, purityResult.PurityCalcs.ErrorRate, 0.0001);
+        assertEquals(56, purityResult.mosaicFragments(), 1);
+        assertEquals(12, purityResult.mosaicDualFragments(), 1);
 
         WispConfig.RunMosaicLogic = false;
 

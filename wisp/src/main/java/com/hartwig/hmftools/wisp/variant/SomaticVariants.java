@@ -282,7 +282,7 @@ public class SomaticVariants
         double sampleTotalAD = 0; // these values will be normalised by copy number
         double sampleTotalAF = 0;
 
-        int mosaicEligibleVariantCount = 0;
+        int mosaicEligibleVariants = 0;
 
         // compile a set of filtered variants, and compute a total AD just for these
         for(SomaticVariant variant : mVariants)
@@ -296,7 +296,7 @@ public class SomaticVariants
             checkSampleDataFilters(variant, sampleFragData);
 
             if(onlyMosaicFilters(variant, sampleFragData))
-                ++mosaicEligibleVariantCount;
+                ++mosaicEligibleVariants;
 
             if(variant.isFiltered() || sampleFragData.isFiltered())
                 continue;
@@ -316,7 +316,7 @@ public class SomaticVariants
             List<SomaticVariant> outlierVariants = MosaicRoutines.findOutlierVariants(sampleId, filteredVariants, sampleTotalAD);
 
             MosaicData mosaicData = WispConfig.RunMosaicLogic ?
-                    assessMosaics(sampleId, filteredVariants, outlierVariants.size(), mosaicEligibleVariantCount, sampleTotalAD, sampleTotalAF)
+                    assessMosaics(sampleId, filteredVariants, outlierVariants.size(), mosaicEligibleVariants, sampleTotalAD, sampleTotalAF)
                     : INVALID_DATA;
 
             purityResult = mEstimator.calculatePurity(sampleId, filteredVariants, mVariants.size(), mosaicData, true);
@@ -336,6 +336,7 @@ public class SomaticVariants
 
             String outlierInfo = MosaicRoutines.formOutlierVariantsInfo(sampleId, outlierVariants, purityResult.PurityCalcs.ErrorRate);
             purityResult.setOutlierVariantInfo(outlierInfo);
+            purityResult.setMosaicFragments(mosaicData.fragmentsPerEligibleVariant(), mosaicData.dualFragmentsPerEligibleVariant());
         }
 
         if(mConfig.writeType(WriteType.SOMATIC_DATA))

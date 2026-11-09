@@ -120,6 +120,13 @@ public class WispConfig
     private static final String DISABLE_DUAL_FRAGS = "disable_dual_frags";
     private static final String EXCLUDED_SOMATICS_FILE = "excluded_somatics";
 
+    private static final String RUN_MOSAICS = "run_mosaics";
+
+    // support for old config names until next version
+    private static final String PATIENT_ID_OLD_CFG = "patient_id";
+    private static final String TUMOR_ID_OLD_CFG = "tumor_id";
+    private static final String REFERENCE_ID_OLD_CFG = "reference_id";
+
     public WispConfig(final ConfigBuilder configBuilder)
     {
         SampleDataDir = checkAddDirSeparator(configBuilder.getValue(SAMPLE_DATA_DIR_CFG));
@@ -183,6 +190,8 @@ public class WispConfig
         ApplyRefVariantFilters = configBuilder.hasFlag(APPLY_REF_VARIANT_FILTERS);
         AllowMissingSamples = configBuilder.hasFlag(ALLOW_MISSING_SAMPLES);
         DisableDualFragments = configBuilder.hasFlag(DISABLE_DUAL_FRAGS);
+
+        RunMosaicLogic = configBuilder.hasFlag(RUN_MOSAICS);
 
         WriteTypes = Sets.newHashSet();
 
@@ -286,10 +295,12 @@ public class WispConfig
         }
         else
         {
+            String patientId = configBuilder.getValue(PATIENT, configBuilder.getValue(PATIENT_ID_OLD_CFG));
+            String referenceId = configBuilder.getValue(REFERENCE, configBuilder.getValue(REFERENCE_ID_OLD_CFG));
+            String tumorId = configBuilder.getValue(TUMOR, configBuilder.getValue(TUMOR_ID_OLD_CFG));
+
             Samples.add(new SampleData(
-                    configBuilder.getValue(PATIENT),
-                    configBuilder.getValue(TUMOR),
-                    configBuilder.getValue(REFERENCE),
+                    patientId, tumorId, referenceId,
                     sampleIdsFromStr(configBuilder.getValue(SAMPLES)),
                     "", GcRatioMin > 0,
                     configBuilder.getValue(AMBER_EXTRA_TUMOR_ID)));
@@ -332,6 +343,11 @@ public class WispConfig
         configBuilder.addConfigItem(PATIENT, false, PATIENT_DESC);
         configBuilder.addConfigItem(TUMOR, false, TUMOR_DESC);
         configBuilder.addConfigItem(REFERENCE, false, REFERENCE_DESC);
+
+        configBuilder.addConfigItem(PATIENT_ID_OLD_CFG, false, "Patient ID, use 'patient' instead");
+        configBuilder.addConfigItem(TUMOR_ID_OLD_CFG, false, "Original tumor ID, use 'tumor' instead");
+        configBuilder.addConfigItem(REFERENCE_ID_OLD_CFG, false, "Original reference ID, use 'reference' instead");
+
         configBuilder.addConfigItem(AMBER_EXTRA_TUMOR_ID, false, "Secondary Amber tumor ID");
         configBuilder.addConfigItem(SAMPLES, false, "List of sample IDs separated by ','");
 

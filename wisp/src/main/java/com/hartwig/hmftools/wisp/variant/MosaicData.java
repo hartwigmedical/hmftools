@@ -14,4 +14,14 @@ public class MosaicData
         TotalFragmentContribution = totalFragmentContribution;
         TotalDualFragmentContribution = totalDualFragmentContribution;
     }
+
+    public double fragmentsPerEligibleVariant()
+    {
+        return EligibleVariantCount > 0 ? TotalFragmentContribution / EligibleVariantCount : 0;
+    }
+
+    public double dualFragmentsPerEligibleVariant()
+    {
+        return EligibleVariantCount > 0 ? TotalDualFragmentContribution / EligibleVariantCount : 0;
+    }
 }

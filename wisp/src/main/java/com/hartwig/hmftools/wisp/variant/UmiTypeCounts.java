@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.wisp.variant;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.common.variant.SageVcfTags.CONSENSUS_TAG_TYPE_COUNT;
 
 public class UmiTypeCounts
@@ -68,5 +70,11 @@ public class UmiTypeCounts
     public boolean isZeroed()
     {
         return TotalNone == 0 && TotalSingle == 0 && TotalDual == 0 && AlleleNone == 0 && AlleleSingle == 0 && AlleleDual == 0;
+    }
+
+    public String toString()
+    {
+        return format("total(n=%d s=%d d=%d) allele(n=%d s=%d d=%d)",
+                TotalNone, TotalSingle, TotalDual, AlleleNone, AlleleSingle, AlleleDual);
     }
 }
