@@ -216,7 +216,7 @@ public class SomaticVariantComparer extends ItemComparer
                 }
             }
 
-            chromosomeOldVariants.stream().filter(x -> includeMismatchWithVariant(x, matchLevel))
+            chromosomeOldVariants.stream().filter(x -> oldExpectedSourced || includeMismatchWithVariant(x, matchLevel))
                     .forEach(x -> mismatches.add(new Mismatch(x, null, OLD_ONLY, emptyDiffs)));
 
             for(SomaticVariantData newVariant : chromosomeNewVariants)

@@ -12,9 +12,13 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.compar.ComparConfig;
+import com.hartwig.hmftools.compar.common.ExpectedCache;
+import com.hartwig.hmftools.compar.common.ExpectedValue;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.MismatchType;
+import com.hartwig.hmftools.compar.common.SourceData;
+import com.hartwig.hmftools.compar.common.SourceType;
 
 import org.junit.Test;
 
@@ -222,5 +226,21 @@ public class SomaticVariantComparerTest
         assertFalse(victim.identifyMismatches(sampleId, mismatches, refVariants, null, matchLevel));
         assertEquals(1, mismatches.stream().filter(x -> x.Type == MismatchType.INVALID_NEW).count());
         assertEquals(1, mismatches.size());
+    }
+
+    @Test
+    public void expectedVariantWithoutCallIsOldOnlyAtReportable()
+    {
+        ComparConfig config = new ComparConfig();
+        config.Sources.set(0, SourceData.fromExpectedSource(SourceType.OLD, new ExpectedCache(), null));
+        SomaticVariantComparer victim = new SomaticVariantComparer(config, Collections.emptyMap());
+
+        SomaticVariantData expectedRow = SomaticVariantData.fromExpected(
+                List.of(new ExpectedValue("7:140453136:A:T", "AF", "0.45", false)), victim.fieldsList());
+
+        List<Mismatch> mismatches = new ArrayList<>();
+        assertTrue(victim.identifyMismatches("TEST", mismatches, List.of(expectedRow), List.of(), MatchLevel.REPORTABLE));
+
+        assertEquals(List.of(MismatchType.OLD_ONLY), mismatches.stream().map(x -> x.Type).toList());
     }
 }

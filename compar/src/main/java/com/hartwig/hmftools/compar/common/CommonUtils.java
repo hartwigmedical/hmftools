@@ -190,10 +190,10 @@ public class CommonUtils
 
         List<String> emptyDiffs = Lists.newArrayList();
 
-        oldItems.stream().filter(x -> matchLevel != REPORTABLE || x.reportable())
+        oldItems.stream().filter(x -> matchLevel != REPORTABLE || x.reportable() || oldExpectedSourced)
                 .forEach(x -> mismatches.add(new Mismatch(x, null, OLD_ONLY, emptyDiffs)));
 
-        newItems.stream().filter(x -> matchLevel != REPORTABLE || x.reportable())
+        newItems.stream().filter(x -> matchLevel != REPORTABLE || x.reportable() || newExpectedSourced)
                 .forEach(x -> mismatches.add(new Mismatch(null, x, NEW_ONLY, emptyDiffs)));
     }
 
