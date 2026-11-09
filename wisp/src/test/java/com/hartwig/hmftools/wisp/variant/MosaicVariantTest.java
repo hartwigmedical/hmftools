@@ -6,11 +6,18 @@ import static com.hartwig.hmftools.wisp.purity.WispTestUtils.TEST_RESULTS_WRITER
 import static com.hartwig.hmftools.wisp.purity.WispTestUtils.TEST_SAMPLE;
 import static com.hartwig.hmftools.wisp.purity.WispTestUtils.TEST_SAMPLE_ID;
 import static com.hartwig.hmftools.wisp.purity.WispTestUtils.TEST_TUMOR_ID;
+import static com.hartwig.hmftools.wisp.variant.MosaicRoutines.findOutlierVariants;
 import static com.hartwig.hmftools.wisp.variant.SomaticVariantUtils.addBqrData;
+import static com.hartwig.hmftools.wisp.variant.SomaticVariantUtils.createSomaticVariant;
 import static com.hartwig.hmftools.wisp.variant.SomaticVariantUtils.createVariantContext;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.VariantTier;
 
 import org.junit.Test;
@@ -19,6 +26,58 @@ import htsjdk.variant.variantcontext.VariantContext;
 
 public class MosaicVariantTest
 {
+    @Test
+    public void testOutlierVariants()
+    {
+        String ref = "A";
+        String alt = "C";
+
+        // add the non-outlier variants
+        List<SomaticVariant> filteredVariants = Lists.newArrayList();
+
+        int tumorDp = 100;
+        int tumorAd = 50;
+
+        for(int i = 0; i < 5; ++i)
+        {
+            filteredVariants.add(createSomaticVariant(ref, alt, tumorDp, tumorAd, 1000, 1));
+        }
+
+        for(int i = 0; i < 100; ++i)
+        {
+            filteredVariants.add(createSomaticVariant(ref, alt, tumorDp, tumorAd, 1000, 0));
+        }
+
+        SomaticVariant var1 = createSomaticVariant(ref, alt, tumorDp, tumorAd, 1000, 450);
+
+        filteredVariants.add(var1);
+
+        int totalSampleAd = filteredVariants.stream().mapToInt(x -> x.findSampleFragmentData(TEST_SAMPLE_ID).AlleleCount).sum();
+
+        List<SomaticVariant> outliers = findOutlierVariants(TEST_SAMPLE_ID, filteredVariants, totalSampleAd);
+        assertEquals(1, outliers.size());
+        assertEquals(105, filteredVariants.size());
+        assertTrue(outliers.contains(var1));
+
+        // test again with a second outlier requiring use of the lower threshold
+        filteredVariants.add(var1);
+
+        SomaticVariant var2 = createSomaticVariant(ref, alt, tumorDp, tumorAd, 1000, 180);
+
+        filteredVariants.add(var2);
+
+        totalSampleAd = filteredVariants.stream().mapToInt(x -> x.findSampleFragmentData(TEST_SAMPLE_ID).AlleleCount).sum();
+
+        outliers = findOutlierVariants(TEST_SAMPLE_ID, filteredVariants, totalSampleAd);
+        assertEquals(2, outliers.size());
+        assertEquals(105, filteredVariants.size());
+
+        assertTrue(outliers.contains(var1));
+        assertTrue(outliers.contains(var2));
+        assertFalse(filteredVariants.contains(var1));
+        assertFalse(filteredVariants.contains(var2));
+    }
+
     @Test
     public void testMosaicVariants()
     {

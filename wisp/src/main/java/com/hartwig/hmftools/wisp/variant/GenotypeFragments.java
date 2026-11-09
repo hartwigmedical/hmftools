@@ -110,6 +110,42 @@ public class GenotypeFragments
     private static final List<Integer> READ_COUNT_AD_TYPES = Lists.newArrayList(
             VariantReadSupport.FULL.ordinal(), VariantReadSupport.PARTIAL_CORE.ordinal(), VariantReadSupport.REALIGNED.ordinal());
 
+    public static GenotypeFragments buildFragments(final Genotype genotype, boolean disableDualFragments, boolean checkZeroedUmis)
+    {
+        int depth = genotype.getDP();
+        UmiTypeCounts umiTypeCounts = UmiTypeCounts.fromAttribute(genotype.getExtendedAttribute(UMI_TYPE_COUNTS, null));
+
+        // check for zero-filled defaults in the tumor from an older VCF - is this still required if Sage must be v4.x or higher?
+        if(umiTypeCounts != UmiTypeCounts.NO_UMI_COUNTS && umiTypeCounts.isZeroed() && checkZeroedUmis)
+            umiTypeCounts = UmiTypeCounts.NO_UMI_COUNTS;
+
+        int qualTotal = parseReadArrayAttribute(genotype, READ_CONTEXT_QUALITY);
+        int alleleCount = parseReadArrayAttribute(genotype, READ_CONTEXT_COUNT);
+
+        if(umiTypeCounts != UmiTypeCounts.NO_UMI_COUNTS)
+        {
+            // override basic AD and DP if UMI counts are set
+            depth = umiTypeCounts.totalCount();
+            alleleCount = umiTypeCounts.alleleCount();
+
+            if(disableDualFragments) // convert to single (ie fragments withi duplicate evidence)
+            {
+                umiTypeCounts.AlleleSingle += umiTypeCounts.AlleleDual;
+                umiTypeCounts.AlleleDual = 0;
+
+                umiTypeCounts.TotalSingle += umiTypeCounts.TotalDual;
+                umiTypeCounts.TotalDual = 0;
+            }
+        }
+        else
+        {
+            umiTypeCounts = new UmiTypeCounts(depth, 0, 0, alleleCount, 0, 0);
+        }
+
+        return new GenotypeFragments(
+                genotype.getSampleName(), alleleCount, depth, qualTotal, umiTypeCounts, genotype);
+    }
+
     public static int parseReadArrayAttribute(final Genotype genotype, final String vcfTag)
     {
         int attributeTotal = 0;

@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.wisp.variant;
 
 import static java.lang.Math.max;
-import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.genome.gc.GcCalcs.calcGcPercent;
 import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.probabilityToPhredQual;
@@ -10,9 +9,6 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.filenamePar
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.SUBCLONAL_LIKELIHOOD_FLAG;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_RECALIBRATED_BASE_QUAL;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.NEARBY_INDEL_FLAG;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_COUNT;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_QUALITY;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNTS;
 import static com.hartwig.hmftools.wisp.WispConstants.MAX_GERMLINE_AF_MAX;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.CT_LOGGER;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.DEFAULT_PROBE_LENGTH;
@@ -39,7 +35,7 @@ import static com.hartwig.hmftools.wisp.variant.FilterReason.REPEAT_COUNT;
 import static com.hartwig.hmftools.wisp.variant.FilterReason.SUBCLONAL;
 import static com.hartwig.hmftools.wisp.variant.GenotypeFragments.AVG_BASE_QUAL_OLD_TAG;
 import static com.hartwig.hmftools.wisp.variant.GenotypeFragments.REQUIRED_GENOTYPE_FIELDS;
-import static com.hartwig.hmftools.wisp.variant.GenotypeFragments.parseReadArrayAttribute;
+import static com.hartwig.hmftools.wisp.variant.GenotypeFragments.buildFragments;
 import static com.hartwig.hmftools.wisp.variant.MosaicRoutines.assessMosaics;
 import static com.hartwig.hmftools.wisp.variant.MosaicRoutines.onlyMosaicFilters;
 import static com.hartwig.hmftools.wisp.variant.SnvFitStatus.UNCERTAIN;
@@ -256,38 +252,8 @@ public class SomaticVariants
             if(genotype == null || genotype.getExtendedAttributes().isEmpty())
                 continue;
 
-            int depth = genotype.getDP();
-            UmiTypeCounts umiTypeCounts = UmiTypeCounts.fromAttribute(genotype.getExtendedAttribute(UMI_TYPE_COUNTS, null));
-
-            // check for zero-filled defaults in the tumor from an older VCF
-            if(umiTypeCounts != UmiTypeCounts.NO_UMI_COUNTS && umiTypeCounts.isZeroed() && genotype.getSampleName().equals(mSample.TumorId))
-                umiTypeCounts = UmiTypeCounts.NO_UMI_COUNTS;
-
-            int qualTotal = parseReadArrayAttribute(genotype, READ_CONTEXT_QUALITY);
-            int alleleCount = parseReadArrayAttribute(genotype, READ_CONTEXT_COUNT);
-
-            if(umiTypeCounts != UmiTypeCounts.NO_UMI_COUNTS)
-            {
-                // override basic AD and DP if UMI counts are set
-                depth = umiTypeCounts.totalCount();
-                alleleCount = umiTypeCounts.alleleCount();
-
-                if(mConfig.DisableDualFragments) // convert to single (ie fragments withi duplicate evidence)
-                {
-                    umiTypeCounts.AlleleSingle += umiTypeCounts.AlleleDual;
-                    umiTypeCounts.AlleleDual = 0;
-
-                    umiTypeCounts.TotalSingle += umiTypeCounts.TotalDual;
-                    umiTypeCounts.TotalDual = 0;
-                }
-            }
-            else
-            {
-                umiTypeCounts = new UmiTypeCounts(depth, 0, 0, alleleCount, 0, 0);
-            }
-
-            GenotypeFragments genotypeFragments = new GenotypeFragments(
-                    genotype.getSampleName(), alleleCount, depth, qualTotal, umiTypeCounts, genotype);
+            GenotypeFragments genotypeFragments = buildFragments(
+                    genotype, mConfig.DisableDualFragments, genotype.getSampleName().equals(mSample.TumorId));
 
             if(genotype.getSampleName().equals(mSample.TumorId))
             {

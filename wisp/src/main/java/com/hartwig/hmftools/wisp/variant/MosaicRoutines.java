@@ -70,7 +70,8 @@ public final class MosaicRoutines
                 if(vaf < OUTLIER_MIN_AVG_VAF_MULTIPLE * averageVaf)
                     continue;
 
-                if((sampleFragData.AlleleCount / variant.variantCnFloored()) / sampleTotalAD > minSamplePerc)
+                double afVsTotal = sampleFragData.AlleleCount / variant.variantCnFloored() / sampleTotalAD;
+                if(afVsTotal > minSamplePerc)
                 {
                     sampleFragData.markOutlier();
                     outlierVariants.add(variant);

@@ -133,8 +133,6 @@ public class SomaticPurityTest
     public void testSampleFilters()
     {
         Map<String,Object> commonAttributes = Maps.newHashMap();
-        Map<String,Object> refAttributes = Maps.newHashMap();
-        Map<String,Object> tumorAttributes = Maps.newHashMap();
         Map<String,Object> sampleAttributes = Maps.newHashMap();
 
         String ref = "A";
@@ -200,7 +198,7 @@ public class SomaticPurityTest
         for(int i = 0; i < 10; ++i)
         {
             VariantContext variantContext = createVariantContext(
-                    "A", "C", DEFAULT_TUMOR_DEPTH, 50, 200, 100);
+                    "A", alt, DEFAULT_TUMOR_DEPTH, 50, 200, 100);
 
             somaticVariants.processVariant(sampleIds, variantContext);
         }

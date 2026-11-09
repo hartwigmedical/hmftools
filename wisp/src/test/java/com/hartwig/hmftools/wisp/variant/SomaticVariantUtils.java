@@ -17,6 +17,7 @@ import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNTS;
 import static com.hartwig.hmftools.wisp.purity.WispTestUtils.TEST_REFERENCE_ID;
 import static com.hartwig.hmftools.wisp.purity.WispTestUtils.TEST_SAMPLE_ID;
 import static com.hartwig.hmftools.wisp.purity.WispTestUtils.TEST_TUMOR_ID;
+import static com.hartwig.hmftools.wisp.variant.GenotypeFragments.buildFragments;
 
 import java.util.List;
 import java.util.Map;
@@ -162,7 +163,23 @@ public final class SomaticVariantUtils
 
         List<FilterReason> filters = Lists.newArrayList();
 
-        return new SomaticVariant(decorator, 0, filters, false);
+        SomaticVariant variant = new SomaticVariant(decorator, 0, filters, false);
+
+        GenotypeFragments refFragments = buildFragments(variantContext.getGenotype(0));
+        variant.setReferenceFragmentData(refFragments);
+
+        GenotypeFragments tumorFragments = buildFragments(variantContext.getGenotype(1));
+        variant.setTumorFragmentData(tumorFragments);
+
+        GenotypeFragments sampleFragments = buildFragments(variantContext.getGenotype(2));
+        variant.addSampleFragmentData(sampleFragments);
+
+        return variant;
+    }
+
+    protected static GenotypeFragments buildFragments(final Genotype genotype)
+    {
+        return GenotypeFragments.buildFragments(genotype, false, false);
     }
 
     protected static void addBqrData(final BqrAdjustment bqrAdjustment, final String alt, int totalCount, int altCount, int altDualCount)
