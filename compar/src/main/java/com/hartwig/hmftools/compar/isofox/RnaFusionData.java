@@ -5,6 +5,7 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.rna.RnaFusionFile.formFusionName;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS_FILTER;
 
+import java.util.Collections;
 import java.util.List;
 
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
@@ -26,6 +27,7 @@ public class RnaFusionData extends ComparableItem
     public final String JunctionTypeDown;
     public final int SplitFragments;
     public final String Filter;
+    public final boolean HasCoordinates;
 
     public RnaFusionData(
             final String name, final String chromosomeUp, final String chromosomeDown, final int positionUp,
@@ -42,6 +44,7 @@ public class RnaFusionData extends ComparableItem
         JunctionTypeDown = junctionTypeDown;
         SplitFragments = splitFragments;
         Filter = filter;
+        HasCoordinates = !chromosomeUp.isEmpty();
     }
 
     public static RnaFusionData from(final RnaFusion rnaFusion, final List<FieldInfo> fields)
@@ -69,9 +72,20 @@ public class RnaFusionData extends ComparableItem
         String key = expectedValues.get(0).Key;
         String[] keyParts = key.split(":", 6);
 
+        if(keyParts.length != 2 && keyParts.length != 6)
+            throw new IllegalArgumentException(format("invalid RNA fusion expected key(%s)", key));
+
         String geneUp = keyParts[0];
         String geneDown = keyParts[1];
         String name = formFusionName(geneUp, geneDown);
+
+        if(keyParts.length == 2)
+        {
+            RnaFusionData fusionData = new RnaFusionData(name, "", "", 0, 0, KnownFusionType.NONE, "", "", 0, PASS_FILTER);
+            fusionData.addExpectedValues(Collections.emptyList(), fields);
+            return fusionData;
+        }
+
         String chromosomeUp = keyParts[2];
         int positionUp = Integer.parseInt(keyParts[3]);
         String chromosomeDown = keyParts[4];
@@ -99,6 +113,7 @@ public class RnaFusionData extends ComparableItem
                 PASS_FILTER);
 
         fusionData.addExpectedValues(expectedValues, fields);
+
         return fusionData;
     }
 
@@ -128,6 +143,9 @@ public class RnaFusionData extends ComparableItem
     @Override
     public String key()
     {
+        if(!HasCoordinates)
+            return Name;
+
         return format("%s %s:%d-%s:%d", Name, ChromosomeUp, PositionUp, ChromosomeDown, PositionDown);
     }
 
@@ -148,6 +166,9 @@ public class RnaFusionData extends ComparableItem
     {
         if(!otherData.Name.equals(Name))
             return false;
+
+        if(!HasCoordinates || !otherData.HasCoordinates)
+            return true;
 
         if(!otherData.ChromosomeUp.equals(ChromosomeUp))
             return false;

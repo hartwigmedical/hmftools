@@ -113,7 +113,11 @@ public class ExpectedCache
 
                     boolean requireAbsent = statusIndex != null && values[statusIndex].equalsIgnoreCase(VALUE_ABSENT);
 
-                    if(fieldValueIndex != null)
+                    if(fieldValueIndex != null && values[fieldValueIndex].isEmpty())
+                    {
+                        expectedValues.add(new ExpectedValue(itemKey, FLD_STATUS, "", requireAbsent));
+                    }
+                    else if(fieldValueIndex != null)
                     {
                         String[] fieldValueItems = values[fieldValueIndex].split(FIELD_VALUE_DELIM, -1);
 

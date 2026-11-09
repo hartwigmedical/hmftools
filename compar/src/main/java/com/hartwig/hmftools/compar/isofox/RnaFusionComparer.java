@@ -187,6 +187,15 @@ public class RnaFusionComparer extends ItemComparer
             comparableItems.add(RnaFusionData.fromExpected(expectedValues, mFields));
         }
 
+        for(List<RnaFusionData> fusions : fusionsByName(comparableItems).values())
+        {
+            if(fusions.size() > 1 && fusions.stream().anyMatch(x -> !x.HasCoordinates))
+            {
+                throw new IllegalArgumentException(
+                        format("RNA fusion(%s) has both gene pair and coordinate expected keys", fusions.get(0).Name));
+            }
+        }
+
         return comparableItems;
     }
 
@@ -221,6 +230,18 @@ public class RnaFusionComparer extends ItemComparer
                 continue;
 
             matchedByName.add(fusionName);
+
+            RnaFusionData oldTopFusion = oldFusions.get(0);
+
+            if(!oldTopFusion.HasCoordinates)
+            {
+                Mismatch mismatch = oldTopFusion.findMismatch(this, newFusions.get(0), matchLevel, includeMatches, includesExpected);
+
+                if(mismatch != null)
+                    mismatches.add(mismatch);
+
+                continue;
+            }
 
             StringJoiner oldFusionStr = new StringJoiner(ITEM_DELIM);
             StringJoiner newFusionStr = new StringJoiner(ITEM_DELIM);

@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS_FILTER;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThrows;
 
 import java.io.File;
 import java.io.IOException;
@@ -27,6 +28,7 @@ import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
+import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.ExpectedCache;
 import com.hartwig.hmftools.compar.common.ExpectedValue;
 import com.hartwig.hmftools.compar.common.MatchLevel;
@@ -206,6 +208,83 @@ public class RnaFusionComparerTest
                                 expectedInfo + "/" + fileInfo : fileInfo + "/" + expectedInfo) + ")");
             }
         }
+    }
+
+    @Test
+    public void genePairKeyMatchesAnyPassingFusion() throws IOException
+    {
+        String key = "EML4:ALK";
+        RnaFusion topFusion = ImmutableRnaFusion.builder().from(EML4_ALK).positionUp(3500).splitFragments(30).build();
+        writePassFusions(newDir, List.of(EML4_ALK, topFusion));
+
+        comparer = createExpectedComparer(SourceType.OLD);
+        List<ComparableItem> expectedItems = comparer.loadFromExpected(Map.of(
+                key, List.of(new ExpectedValue(key, "KnownType", "NONE", false), new ExpectedValue(key, "SplitFrags", "100", false))));
+
+        List<Mismatch> mismatches = Lists.newArrayList();
+        comparer.compareItems(
+                mismatches, MatchLevel.DETAILED, true, true, expectedItems,
+                comparer.loadFromFile(SAMPLE_ID, null, isofoxPaths(SourceType.NEW, newDir)));
+
+        Mismatch mismatch = singleMismatch(mismatches);
+        assertMismatch(mismatch, MismatchType.FULL_MATCH);
+        assertEquals(topFusion.splitFragments(), ((RnaFusionData) mismatch.NewItem).SplitFragments);
+    }
+
+    @Test
+    public void genePairKeyWithoutPassingFusionShowsUnfilteredFilter() throws IOException
+    {
+        String key = "EML4:ALK";
+        writePassFusions(newDir, Collections.emptyList());
+        writeUnfilteredFusions(
+                newDir, Map.of(
+                        ImmutableRnaFusion.builder().from(EML4_ALK).splitFragments(2).build(), "FRAGMENT_COUNT",
+                        ImmutableRnaFusion.builder().from(EML4_ALK).positionUp(3500).splitFragments(5).build(), "ALLELE_FREQUENCY"));
+
+        comparer = createExpectedComparer(SourceType.OLD);
+        List<ComparableItem> expectedItems = comparer.loadFromExpected(
+                Map.of(key, List.of(new ExpectedValue(key, "SplitFrags", "10", false))));
+        Mismatch mismatch = singleMismatch(compareExpected(SourceType.OLD, expectedItems, MatchLevel.REPORTABLE));
+
+        assertMismatch(mismatch, MismatchType.OLD_ONLY, "Filter(PASS/ALLELE_FREQUENCY)");
+    }
+
+    @Test
+    public void invalidFusionExpectedKeysAreRejected()
+    {
+        for(String key : List.of("EML4", "EML4:ALK:2:3000"))
+        {
+            Map<String, List<ExpectedValue>> valuesByKey = Map.of(key, List.of(new ExpectedValue(key, "SplitFrags", "10", false)));
+            assertThrows(IllegalArgumentException.class, () -> comparer.loadFromExpected(valuesByKey));
+        }
+
+        String genePairKey = "EML4:ALK";
+        String coordinateKey = "EML4:ALK:2:3000:2:4000";
+        Map<String, List<ExpectedValue>> mixedKeys = Map.of(
+                genePairKey, List.of(new ExpectedValue(genePairKey, "SplitFrags", "10", false)),
+                coordinateKey, List.of(new ExpectedValue(coordinateKey, "SplitFrags", "10", false)));
+        assertThrows(IllegalArgumentException.class, () -> comparer.loadFromExpected(mixedKeys));
+    }
+
+    @Test
+    public void genePairExpectedRowNeedsNoFieldValues() throws IOException
+    {
+        File expectedFile = temp.newFile("expected.tsv");
+        Files.write(
+                expectedFile.toPath(), List.of(
+                        String.join(TSV_DELIM, "Category", "Key", "FieldValues"),
+                        String.join(TSV_DELIM, "RNA_FUSION", "EML4:ALK", "")));
+
+        ExpectedCache expectedCache = new ExpectedCache();
+        expectedCache.loadFiles(expectedFile.getAbsolutePath());
+        List<ExpectedValue> expectedValues = expectedCache.sampleExpectedEntries(SAMPLE_ID, CategoryType.RNA_FUSION);
+
+        comparer = createExpectedComparer(SourceType.OLD);
+        List<ComparableItem> expectedItems = comparer.loadFromExpected(
+                expectedValues.stream().collect(Collectors.groupingBy(x -> x.Key)));
+        writePassFusions(newDir, List.of(EML4_ALK));
+
+        assertEquals(0, compareExpected(SourceType.OLD, expectedItems, MatchLevel.REPORTABLE).size());
     }
 
     @Test
