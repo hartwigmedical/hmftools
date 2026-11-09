@@ -332,6 +332,7 @@ public class OutputWriter
         interpretation,
         percentageCovered,
         meanCoverage,
+        // TODO: remove this because it's not the same "clonal" definition as reporting actually uses?
         expectedClonalCoverage,
         reported,
         clonality_status,
