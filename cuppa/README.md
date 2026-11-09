@@ -76,7 +76,7 @@ assuming the input files are all located in the same directory:
 /sample/data/dir/SAMPLE_ID.linx.clusters.tsv
 /sample/data/dir/SAMPLE_ID.linx.driver.catalog.tsv
 /sample/data/dir/SAMPLE_ID.linx.fusion.tsv
-/sample/data/dir/SAMPLE_ID.virus.annotated.tsv
+/sample/data/dir/SAMPLE_ID.viridian.report.tsv
 /sample/data/dir/SAMPLE_ID_RNA.isf.alt_splice_junc.csv
 /sample/data/dir/SAMPLE_ID_RNA.isf.gene_data.csv
 ```
@@ -108,7 +108,7 @@ java -cp cuppa.jar com.hartwig.hmftools.cup.prep.CuppaDataPrep \
   -ref_genome_version V37 \
   -purple_dir "/data/datasets/*/purple/" \
   -linx_dir "/data/datasets/*/linx/" \
-  -virus_dir "/data/datasets/*/virus_interpreter/" \
+  -virus_dir "/data/datasets/*/viridian/" \
   -isofox_dir "/data/rna/*/" \
   -output_dir /path/to/output/dir/ \
   -ref_alt_sj_sites /path/to/alt_sj.selected_loci.tsv.gz \
@@ -133,7 +133,7 @@ assuming the input directory structure looks like this:
 /data/datasets/SAMPLE_1/linx/SAMPLE_1.linx.clusters.tsv
 /data/datasets/SAMPLE_1/linx/SAMPLE_1.linx.driver.catalog.tsv
 /data/datasets/SAMPLE_1/linx/SAMPLE_1.linx.fusion.tsv
-/data/datasets/SAMPLE_1/virus_interpreter/SAMPLE_1.virus.annotated.tsv
+/data/datasets/SAMPLE_1/viridian/SAMPLE_1.viridian.report.tsv
 
 /data/rna/SAMPLE_1/SAMPLE_1.isf.alt_splice_junc.csv
 /data/rna/SAMPLE_1/SAMPLE_1.isf.gene_data.csv
@@ -182,7 +182,7 @@ Below is a description of the input files for `CuppaDataPrep`:
 | DNA      | LINX              | <SAMPLE_ID>.linx.clusters.tsv       | Structural variant clusters                      |
 | DNA      | LINX              | <SAMPLE_ID>.linx.driver.catalog.tsv | Driver mutations                                 |
 | DNA      | LINX              | <SAMPLE_ID>.linx.fusion.tsv         | Gene fusions                                     |
-| DNA      | Virus Interpreter | <SAMPLE_ID>.virus.annotated.tsv     | Viral sequence insertions                        |
+| DNA      | Viridian          | <SAMPLE_ID>.viridian.report.tsv     | Viral sequence insertions                        |
 | RNA      | ISOFOX            | <SAMPLE_ID>.gene_data.csv           | Gene expression data                             |
 | RNA      | ISOFOX            | <SAMPLE_ID>.alt_splice_junc.csv     | Alternative splice junction counts               |
 
@@ -197,7 +197,7 @@ Below are all arguments that can be passed to `CuppaDataPrep`. Superscript numbe
 | `-sample_data_dir`    |                                       | [Required <sup>2</sup>] Directory containing all input files                                                                                                                       |
 | `-purple_dir`         | "/data/datasets/*/purple/"            | [Required <sup>2</sup>] Directory containing the PURPLE files                                                                                                                      |
 | `-linx_dir`           | "/data/datasets/*/linx/"              | [Required <sup>2</sup>] Directory containing the LINX files                                                                                                                        |
-| `-virus_dir`          | "/data/datasets/*/virus_interpreter/" | [Required <sup>2</sup>] Directory containing the VirusInterpreter files                                                                                                            |
+| `-virus_dir`          | "/data/datasets/*/viridian/"          | [Required <sup>2</sup>] Directory containing the Viridian files                                                                                                                    |
 | `-isofox_dir`         | "/data/rna/*/"                        | [Required <sup>2</sup>] Directory containing the ISOFOX files                                                                                                                      |
 | `-ref_alt_sj_sites`   | alt_sj.selected_loci.tsv.gz           | [Required <sup>3</sup>] TSV file containing the required alternative splice junctions. Required columns: GeneId, Chromosome, PosStart, PosEnd                                      |
 | `-categories`         | DNA                                   | [Required] One of: ALL, DNA, RNA; or one/many of: SNV, SV, DRIVER, SAMPLE_TRAIT, GENE_EXP, ALT_SJ                                                                                  |

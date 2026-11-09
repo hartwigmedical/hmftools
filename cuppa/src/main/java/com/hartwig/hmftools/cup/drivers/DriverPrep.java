@@ -7,8 +7,6 @@ import static com.hartwig.hmftools.common.cuppa.CuppaCommon.INDEL_SLC34A2;
 import static com.hartwig.hmftools.cup.prep.CategoryType.DRIVER;
 import static com.hartwig.hmftools.common.variant.VariantType.INDEL;
 import static com.hartwig.hmftools.common.purple.MicrosatelliteStatus.MSS;
-import static com.hartwig.hmftools.common.virusinterpreter.VirusLikelihoodType.HIGH;
-import static com.hartwig.hmftools.common.virusinterpreter.VirusLikelihoodType.UNKNOWN;
 import static com.hartwig.hmftools.cup.common.CupConstants.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.prep.DataSource.DNA;
 
@@ -28,8 +26,8 @@ import com.hartwig.hmftools.common.driver.DriverType;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.linx.FusionLikelihoodType;
 import com.hartwig.hmftools.common.linx.LinxFusion;
-import com.hartwig.hmftools.common.virusinterpreter.AnnotatedVirus;
-import com.hartwig.hmftools.common.virusinterpreter.AnnotatedVirusFile;
+import com.hartwig.hmftools.common.viridian.VirusReport;
+import com.hartwig.hmftools.common.viridian.VirusReportFile;
 import com.hartwig.hmftools.cup.prep.CategoryPrep;
 import com.hartwig.hmftools.cup.prep.DataItem;
 import com.hartwig.hmftools.cup.prep.ItemType;
@@ -190,27 +188,18 @@ public class DriverPrep implements CategoryPrep
         }
     }
 
-    public void getVirusAnnotations(String sampleId) throws IOException
+    public void getReportedViruses(String sampleId)
     {
-        String viralAnnotationFilename = mConfig.viralAnnotationFile(sampleId);
-        final List<AnnotatedVirus> virusAnnotations = new ArrayList<>();
+        final List<VirusReport> virusReports = VirusReportFile.read(mConfig.virusReportFile(sampleId));
 
-        AnnotatedVirusFile.read(viralAnnotationFilename).stream().filter(AnnotatedVirus::reported).forEach(virusAnnotations::add);
-
-        if(virusAnnotations.size() == 0)
-            return;
-
-        for(AnnotatedVirus annotatedVirus : virusAnnotations)
+        for(VirusReport virusReport : virusReports)
         {
-            if(!annotatedVirus.reported())
+            if(!virusReport.isReported())
                 continue;
 
-            // `virusDriverLikelihoodType() == UNKNOWN` does not mean that the likelihood is unknown, but that the virus is not a known
-            // carcinogenic virus (i.e. annotatedVirus.reported()==false)
-            double likelihood = (annotatedVirus.virusDriverLikelihoodType() == HIGH || annotatedVirus.virusDriverLikelihoodType() == UNKNOWN) ? 1 : 0.5;
-            String virusName = ViralInsertionType.fromVirusName(annotatedVirus.name()).toString();
+            String virusName = ViralInsertionType.fromVirusName(virusReport.virusName()).toString();
 
-            DataItem dataItem = new DataItem(DNA, ItemType.VIRUS, virusName, likelihood, FLOAT_FORMAT_LIKELIHOOD);
+            DataItem dataItem = new DataItem(DNA, ItemType.VIRUS, virusName, DRIVER_PRESENT_LIKELIHOOD, FLOAT_FORMAT_LIKELIHOOD);
             addDataItem(dataItem);
         }
     }
@@ -222,7 +211,7 @@ public class DriverPrep implements CategoryPrep
             getDriverMutationsFromCatalog(sampleId);
             getIndelDrivers(sampleId);
             getFusions(sampleId);
-            getVirusAnnotations(sampleId);
+            getReportedViruses(sampleId);
         }
         catch(Exception e)
         {
