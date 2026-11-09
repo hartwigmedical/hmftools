@@ -89,9 +89,10 @@ public class Utils
 
     public static double estimatePanelOnTargetRate(final List<Probe> probes)
     {
+        // Each probe binds 1 on-target site plus some off-target sites. Assuming each site captures comparable reads, the panel on-target
+        // rate is the read-weighted fraction landing on target: (on-target sites) / (total sites) across all probes.
         double offTargetSum = probes.stream().mapToDouble(p -> qualityScoreToOffTargets(requireNonNull(p.qualityScore()))).sum();
-        double offTargetRate = offTargetSum / probes.size();
-        return 1 - offTargetRate;
+        return probes.size() / (probes.size() + offTargetSum);
     }
 
     private static double qualityScoreToOffTargets(double qualityScore)

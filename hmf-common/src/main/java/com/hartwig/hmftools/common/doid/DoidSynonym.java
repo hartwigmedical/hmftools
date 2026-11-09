@@ -23,5 +23,8 @@ public abstract class DoidSynonym
 
     @Nullable
     public abstract String synonymType();
+
+    @Nullable
+    public abstract DoidMetadata meta();
 }
 

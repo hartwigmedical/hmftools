@@ -11,7 +11,23 @@
                 "url:http://cancergenome.nih.gov/cancersselected/melanoma",
                 "url:http://en.wikipedia.org/wiki/Melanoma",
                 "url:http://www.cancer.gov/dictionary?CdrID=45135"
-              ]
+              ],
+              "meta": {
+                "basicPropertyValues": [
+                  {
+                    "pred": "http://purl.org/dc/elements/1.1/type",
+                    "val": "http://purl.obolibrary.org/obo/ECO_0007637"
+                  },
+                  {
+                    "pred": "http://purl.org/dc/elements/1.1/type",
+                    "val": "http://purl.obolibrary.org/obo/ECO_0007638"
+                  },
+                  {
+                    "pred": "http://purl.org/dc/elements/1.1/type",
+                    "val": "http://purl.obolibrary.org/obo/ECO_0007641"
+                  }
+                ]
+              }
             }
           },
           "type": "CLASS",
@@ -26,7 +42,19 @@
                 "url:http://cancergenome.nih.gov/cancersselected/melanoma",
                 "url:http://en.wikipedia.org/wiki/Melanoma",
                 "url:http://www.cancer.gov/dictionary?CdrID=45135"
-              ]
+              ],
+              "meta": {
+                "basicPropertyValues": [
+                  {
+                    "pred": "http://purl.org/dc/elements/1.1/type",
+                    "val": "http://purl.obolibrary.org/obo/ECO_0007636"
+                  },
+                  {
+                    "pred": "http://www.w3.org/2000/01/rdf-schema#comment",
+                    "val": "sn:IEDB"
+                  }
+                ]
+              }
             }
           },
           "type": "CLASS",

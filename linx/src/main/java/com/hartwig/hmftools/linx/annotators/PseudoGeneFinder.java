@@ -45,32 +45,32 @@ public class PseudoGeneFinder
             Map<LinkedPair,List<PseudoGeneMatch>> pairMatchesMap = Maps.newHashMap();
             List<BreakendGeneData> matchedGenes = Lists.newArrayList();
 
-            for(final LinkedPair pair : cluster.getLinkedPairs())
+            for(LinkedPair pair : cluster.getLinkedPairs())
             {
                 if(pair.baseLength() > SHORT_TI_LENGTH * 8)
                     continue;
 
-                final SvBreakend lower = pair.getBreakend(true);
-                final SvBreakend upper = pair.getBreakend(false);
+                SvBreakend lower = pair.getBreakend(true);
+                SvBreakend upper = pair.getBreakend(false);
 
                 // for any TI falling within the same gene, check for an exon boundary match
                 if(lower.getSV().getGenesList(lower.usesStart()).isEmpty() || upper.getSV().getGenesList(upper.usesStart()).isEmpty())
                     continue;
 
-                final String lowerHomology = lower.usesStart() ?
+                String lowerHomology = lower.usesStart() ?
                         lower.getSV().getSvData().startHomologySequence() : lower.getSV().getSvData().endHomologySequence();
 
-                final String upperHomology = lower.usesStart() ?
+                String upperHomology = lower.usesStart() ?
                         upper.getSV().getSvData().startHomologySequence() : upper.getSV().getSvData().endHomologySequence();
 
-                for(final BreakendGeneData gene1 : lower.getSV().getGenesList(lower.usesStart()))
+                for(BreakendGeneData gene1 : lower.getSV().getGenesList(lower.usesStart()))
                 {
-                    for(final BreakendGeneData gene2 : upper.getSV().getGenesList(upper.usesStart()))
+                    for(BreakendGeneData gene2 : upper.getSV().getGenesList(upper.usesStart()))
                     {
                         if(!gene1.geneName().equals(gene2.geneName()))
                             continue;
 
-                        final List<PseudoGeneMatch> pseudoMatches = findPseudoGeneExonMatches(
+                        List<PseudoGeneMatch> pseudoMatches = findPseudoGeneExonMatches(
                                 gene1, lower.position(), upper.position(), lowerHomology.length(), upperHomology.length());
 
                         if(!pseudoMatches.isEmpty())
@@ -89,10 +89,10 @@ public class PseudoGeneFinder
             if(!pairMatchesMap.isEmpty())
             {
                 // select the most common transcript and report it for visualisation
-                for(final BreakendGeneData gene : matchedGenes)
+                for(BreakendGeneData gene : matchedGenes)
                 {
                     // find the most frequent transcript
-                    final PseudoGeneMatch maxTrans = findMostCommonTranscript(gene.geneName(), pairMatchesMap);
+                    PseudoGeneMatch maxTrans = findMostCommonTranscript(gene.geneName(), pairMatchesMap);
 
                     if(maxTrans != null)
                     {
@@ -108,12 +108,12 @@ public class PseudoGeneFinder
                         VisGeneData geneData = new VisGeneData(cluster.id(), gene.geneId(), gene.geneName(),
                                 maxTrans.TransName, maxTrans.TransId, gene.chromosome(), PSEUDOGENE);
 
-                        final int selectedTransId = maxTrans.TransId;
+                        int selectedTransId = maxTrans.TransId;
 
                         // cache this info against the link so it can be recorded in output files and the DB
-                        for(final LinkedPair pair : matchedPairs)
+                        for(LinkedPair pair : matchedPairs)
                         {
-                            final PseudoGeneMatch pseudoMatch = pairMatchesMap.get(pair).stream()
+                            PseudoGeneMatch pseudoMatch = pairMatchesMap.get(pair).stream()
                                     .filter(x -> x.TransId == selectedTransId).findFirst().orElse(null);
 
                             if(pseudoMatch != null)
@@ -133,12 +133,12 @@ public class PseudoGeneFinder
                             }
                         }
 
-                        final TranscriptData transData = mGeneDataCache.getTranscriptData(geneData.GeneId, geneData.TransName);
+                        TranscriptData transData = mGeneDataCache.getTranscriptData(geneData.GeneId, geneData.TransName);
 
                         if(transData == null || transData.exons().isEmpty())
                             continue;
 
-                        for(final ExonData exonData : transData.exons())
+                        for(ExonData exonData : transData.exons())
                         {
                             boolean hasPosOffsets = geneData.ExonPositionOffsets.containsKey(exonData.Rank);
 
@@ -190,13 +190,13 @@ public class PseudoGeneFinder
 
         List<TranscriptData> transDataList = mGeneDataCache.getTranscripts(gene.geneId());
 
-        for(final TranscriptData transData : transDataList)
+        for(TranscriptData transData : transDataList)
         {
             int exonCount = transData.exons().size();
 
             for(int i = 0; i < exonCount; ++i)
             {
-                final ExonData exonData = transData.exons().get(i);
+                ExonData exonData = transData.exons().get(i);
 
                 boolean startWithinHomology = abs(exonData.Start - posStart) <= startHomologyLength;
                 boolean endWithinHomology = abs(exonData.End - posEnd) <= endHomologyLength;
@@ -245,11 +245,11 @@ public class PseudoGeneFinder
     {
         for(Map.Entry<LinkedPair, List<PseudoGeneMatch>> entry : pairMatchesMap.entrySet())
         {
-            final LinkedPair pair = entry.getKey();
+            LinkedPair pair = entry.getKey();
 
             if(pair.hasBreakend(breakend))
             {
-                final PseudoGeneMatch pseudoMatch = pairMatchesMap.get(pair).stream()
+                PseudoGeneMatch pseudoMatch = pairMatchesMap.get(pair).stream()
                         .filter(x -> x.TransId == selectedTransId).findFirst().orElse(null);
 
                 if(pseudoMatch != null)
@@ -270,11 +270,11 @@ public class PseudoGeneFinder
     {
         for(Map.Entry<LinkedPair, List<PseudoGeneMatch>> entry : pairMatchesMap.entrySet())
         {
-            final LinkedPair pair = entry.getKey();
+            LinkedPair pair = entry.getKey();
 
             if(pair.hasBreakend(breakend))
             {
-                final PseudoGeneMatch pseudoMatch = pairMatchesMap.get(pair).stream()
+                PseudoGeneMatch pseudoMatch = pairMatchesMap.get(pair).stream()
                         .filter(x -> x.TransId == selectedTransId).findFirst().orElse(null);
 
                 return pseudoMatch;
@@ -286,7 +286,7 @@ public class PseudoGeneFinder
 
     private boolean isRelevantMatch(final LinkedPair pair, final Map<LinkedPair,List<PseudoGeneMatch>> pairMatchesMap, int selectedTransId)
     {
-        final PseudoGeneMatch pseudoMatch = pairMatchesMap.get(pair).stream()
+        PseudoGeneMatch pseudoMatch = pairMatchesMap.get(pair).stream()
                 .filter(x -> x.TransId == selectedTransId).findFirst().orElse(null);
 
         if(pseudoMatch == null)
@@ -297,8 +297,8 @@ public class PseudoGeneFinder
 
         for(int se = SE_START; se <= SE_END; ++se)
         {
-            final SvBreakend breakend = pair.getBreakend(se);
-            final SvBreakend otherBreakend = breakend.getOtherBreakend();
+            SvBreakend breakend = pair.getBreakend(se);
+            SvBreakend otherBreakend = breakend.getOtherBreakend();
 
             if(otherBreakend == null)
                 continue;
@@ -347,8 +347,8 @@ public class PseudoGeneFinder
         if(var.isSglBreakend())
             return false;
 
-        final List<BreakendGeneData> genesStart = var.getGenesList(true);
-        final List<BreakendGeneData> genesEnd = var.getGenesList(true);
+        List<BreakendGeneData> genesStart = var.getGenesList(true);
+        List<BreakendGeneData> genesEnd = var.getGenesList(true);
 
         if(genesStart.isEmpty() || genesEnd.isEmpty())
             return false;
@@ -359,14 +359,14 @@ public class PseudoGeneFinder
         int startHomologyLength = var.getSvData().startHomologySequence().length();
         int endHomologyLength = var.getSvData().endHomologySequence().length();
 
-        for(final BreakendGeneData gene : genesStart)
+        for(BreakendGeneData gene : genesStart)
         {
             if(!genesEnd.stream().anyMatch(x -> x.geneName().equals(gene.geneName())))
                 continue;
 
             List<TranscriptData> transDataList = mGeneDataCache.getTranscripts(gene.geneId());
 
-            for(final TranscriptData transData : transDataList)
+            for(TranscriptData transData : transDataList)
             {
                 if(!transData.exons().stream().anyMatch(x ->
                         abs(x.Start - posStart) <= startHomologyLength || abs(x.End - posStart) <= startHomologyLength))

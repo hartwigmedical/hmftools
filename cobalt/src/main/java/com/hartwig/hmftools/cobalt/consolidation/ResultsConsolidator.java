@@ -8,7 +8,7 @@ import com.google.common.collect.Comparators;
 import com.google.common.collect.ListMultimap;
 import com.hartwig.hmftools.cobalt.CobaltConstants;
 import com.hartwig.hmftools.cobalt.calculations.BamRatio;
-import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 
 import org.apache.commons.lang3.Validate;
 
@@ -110,7 +110,7 @@ public interface ResultsConsolidator
         return buckets;
     }
 
-    default ListMultimap<Chromosome, BamRatio> consolidate(ListMultimap<Chromosome, BamRatio> ratios)
+    default ListMultimap<HumanChromosome, BamRatio> consolidate(ListMultimap<HumanChromosome, BamRatio> ratios)
     {
         return ratios;
     }

@@ -405,17 +405,23 @@ public class EnsemblDataCache
         if(!delayTranscriptLoading)
         {
             if(!EnsemblDataLoader.loadTranscriptData(
-                    mDataPath, mTranscriptByGeneIdMap, mRestrictedGeneIdList, mRequireExons, mCanonicalTranscriptsOnly,
+                    mDataPath, mRefGenomeVersion, mTranscriptByGeneIdMap, mRestrictedGeneIdList, mRequireExons, mCanonicalTranscriptsOnly,
                     mRequireNonEnsemblTranscripts, Collections.emptyList()))
             {
                 return false;
             }
 
-            if(mRequireProteinDomains && !loadTranscriptProteinData(mDataPath, mEnsemblProteinDataMap, Sets.newHashSet()))
-                return false;
+            if(mRequireProteinDomains)
+            {
+                if(!loadTranscriptProteinData(mDataPath, mRefGenomeVersion, mEnsemblProteinDataMap, Sets.newHashSet()))
+                    return false;
+            }
 
-            if(mRequireSplicePositions && !loadTranscriptSpliceAcceptorData(mDataPath, mTransSpliceAcceptorPosDataMap, Sets.newHashSet()))
-                return false;
+            if(mRequireSplicePositions)
+            {
+                if(!loadTranscriptSpliceAcceptorData(mDataPath, mRefGenomeVersion, mTransSpliceAcceptorPosDataMap, Sets.newHashSet()))
+                    return false;
+            }
         }
 
         return true;
@@ -429,7 +435,7 @@ public class EnsemblDataCache
     public boolean loadTranscriptData(final List<String> restrictedGeneIds, final List<String> nonCanonicalTrans)
     {
         if(!EnsemblDataLoader.loadTranscriptData(
-                mDataPath, mTranscriptByGeneIdMap, restrictedGeneIds, mRequireExons, mCanonicalTranscriptsOnly,
+                mDataPath, mRefGenomeVersion, mTranscriptByGeneIdMap, restrictedGeneIds, mRequireExons, mCanonicalTranscriptsOnly,
                 mRequireNonEnsemblTranscripts, nonCanonicalTrans))
         {
             return false;
@@ -442,10 +448,10 @@ public class EnsemblDataCache
             transDataList.forEach(x -> uniqueTransIds.add(x.TransId));
         }
 
-        if(mRequireProteinDomains && !loadTranscriptProteinData(mDataPath, mEnsemblProteinDataMap, uniqueTransIds))
+        if(mRequireProteinDomains && !loadTranscriptProteinData(mDataPath, mRefGenomeVersion, mEnsemblProteinDataMap, uniqueTransIds))
             return false;
 
-        if(mRequireSplicePositions && !loadTranscriptSpliceAcceptorData(mDataPath, mTransSpliceAcceptorPosDataMap, uniqueTransIds))
+        if(mRequireSplicePositions && !loadTranscriptSpliceAcceptorData(mDataPath, mRefGenomeVersion, mTransSpliceAcceptorPosDataMap, uniqueTransIds))
             return false;
 
         return true;

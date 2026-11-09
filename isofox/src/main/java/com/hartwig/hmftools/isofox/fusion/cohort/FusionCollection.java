@@ -126,11 +126,11 @@ public class FusionCollection
 
             for(Map<Integer, List<FusionCohortData>> chrPairLists : mFusions.values())
             {
-                for (List<FusionCohortData> fusionLists : chrPairLists.values())
+                for(List<FusionCohortData> fusionLists : chrPairLists.values())
                 {
-                    for (FusionCohortData fusion : fusionLists)
+                    for(FusionCohortData fusion : fusionLists)
                     {
-                        if (fusion.sampleCount() < mConfig.Fusions.MinSampleThreshold)
+                        if(fusion.sampleCount() < mConfig.Fusions.MinSampleThreshold)
                             continue;
 
                         ++cohortFusionCount;

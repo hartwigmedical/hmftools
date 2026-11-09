@@ -3,7 +3,6 @@ package com.hartwig.hmftools.compar.isofox;
 import static com.hartwig.hmftools.compar.isofox.IsofoxSummaryData.FLD_ALT_FRAG_PERC;
 import static com.hartwig.hmftools.compar.isofox.IsofoxSummaryData.FLD_CHIMERIC_FRAG_PERC;
 import static com.hartwig.hmftools.compar.isofox.IsofoxSummaryData.FLD_DUPLICATE_FRAGS;
-import static com.hartwig.hmftools.compar.isofox.IsofoxSummaryData.FLD_ENRICHED_GENE_PERC;
 import static com.hartwig.hmftools.compar.isofox.IsofoxSummaryData.FLD_FORWARD_STRAND_PERC;
 import static com.hartwig.hmftools.compar.isofox.IsofoxSummaryData.FLD_FRAG_LENGTH_50TH;
 import static com.hartwig.hmftools.compar.isofox.IsofoxSummaryData.FLD_FRAG_LENGTH_5TH;
@@ -45,7 +44,6 @@ public class IsofoxSummaryDataTest extends ComparableItemTest<IsofoxSummaryData,
                 Map.entry(FLD_FRAG_LENGTH_5TH, b -> b.fragmentLength5thPercent = alternateValueSource.RnaStatistics().fragmentLength5thPercent()),
                 Map.entry(FLD_FRAG_LENGTH_50TH, b -> b.fragmentLength50thPercent = alternateValueSource.RnaStatistics().fragmentLength50thPercent()),
                 Map.entry(FLD_FRAG_LENGTH_95TH, b -> b.fragmentLength95thPercent = alternateValueSource.RnaStatistics().fragmentLength95thPercent()),
-                Map.entry(FLD_ENRICHED_GENE_PERC, b -> b.enrichedGenePercent = alternateValueSource.RnaStatistics().enrichedGenePercent()),
                 Map.entry(FLD_MEDIAN_GC_RATIO, b -> b.medianGCRatio = alternateValueSource.RnaStatistics().medianGCRatio()),
                 Map.entry(FLD_FORWARD_STRAND_PERC, b -> b.forwardStrandPercent = alternateValueSource.RnaStatistics().forwardStrandPercent())
         );

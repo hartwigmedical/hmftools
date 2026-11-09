@@ -36,6 +36,13 @@ public class SampleIdsLoaderTest
         loader.fromStrings("TUMOR001,TUMOR002", "REF001");
     }
 
+    @Test(expected = IllegalStateException.class)
+    public void cannotLoadFromStringsWithReferenceOnly()
+    {
+        SampleIdsLoader loader = new SampleIdsLoader();
+        loader.fromStrings(null, "REF001,REF002");
+    }
+
     @Test
     public void canLoadFromLinesWithMatchingCounts()
     {
@@ -73,6 +80,18 @@ public class SampleIdsLoaderTest
         lines.add("TumorId\tReferenceId");
         lines.add("TUMOR001\tREF001");
         lines.add("TUMOR002\t");
+
+        SampleIdsLoader loader = new SampleIdsLoader();
+        loader.fromLines(lines);
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void cannotLoadFromLinesWithReferenceOnly()
+    {
+        List<String> lines = new ArrayList<>();
+        lines.add("TumorId\tReferenceId");
+        lines.add("TUMOR001\t");
+        lines.add("\tREF002");
 
         SampleIdsLoader loader = new SampleIdsLoader();
         loader.fromLines(lines);

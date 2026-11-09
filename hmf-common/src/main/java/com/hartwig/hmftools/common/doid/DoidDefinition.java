@@ -16,4 +16,7 @@ public abstract class DoidDefinition
 
     @Nullable
     public abstract List<String> definitionXrefs();
+
+    @Nullable
+    public abstract DoidMetadata meta();
 }

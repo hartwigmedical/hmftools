@@ -39,6 +39,7 @@ Resource files specific to PanelBuilder are [available here](https://console.clo
 | genes_rna             | Path                         | (none)                      | Path to TSV file containing desired RNA gene features. If not specified, RNA gene probes are not produced.                               |
 | cn_backbone           | Flag                         | (none)                      | If specified, include copy number backbone probes in the panel.                                                                          |
 | cn_backbone_res_kb    | Integer                      | 1000                        | Approximate spacing between copy number backbone probes, in kb.                                                                          |
+| cn_backbone_res_kb_chromosomes | Comma-separated list of `chr:kb` | (none)          | Per-chromosome overrides of the copy number backbone spacing, e.g. `7:500,Y:2000`. Chromosomes not listed use `cn_backbone_res_kb`.      |
 | het_sites             | Path                         | (none)                      | Path to heterozygous SNP sites TSV file for copy number backbone. May be GZIP'd.                                                         |
 | cdr3                  | Flag                         | (none)                      | If specified, include CDR3 regions in the panel.                                                                                         |
 | sample                | String                       | (none)                      | ID of sample for sample variant probes. If not specified, sample variant probes are not produced.                                        |
@@ -192,11 +193,15 @@ The methodology for the Y chromosome is similar, except:
 
 The strict QS and GC criteria aim to eliminate bias from amplification and hybridisation efficiency, yielding more accurate copy number determination.
 
+The partition spacing defaults to `cn_backbone_res_kb` for all chromosomes. It can be overridden per chromosome with `cn_backbone_res_kb_chromosomes` (minimum 1kb).
+Note that non-uniform probe density across the genome may bias downstream copy number and purity estimation, which assume roughly even genome-wide sampling.
+
 ### CDR3 Regions
 
-A fixed set of probes aimed at capturing all VDJ rearrangements in IG and TCR regions.
-These probes are included if you specify the `cdr3` argument.
-
+A fixed set of probes aimed at capturing all VDJ rearrangements in IG and TCR regions. These probes are included if you specify the `cdr3` argument.
+```
+NOTE - In the case of IG somatic hypermutation some CDR3 rearrangements may fail to enrich properly if the mutation rate is too high (~10% or higher)
+```
 Methodology:
 
 1. Consider all V and J IG/TCR genes.
@@ -207,7 +212,7 @@ Probe evaluation criteria:
 
 - `QS>=0.01`.
 
-The QS threshold is low because many of the V/J regions are similar. We have manually determined that this probe set is acceptable.
+The QS threshold is low because many of the V/J regions are similar. We have manually determined that this probe set is acceptable.  
 
 The list of IG/TCR genes is an embedded resource curated by Hartwig.
 

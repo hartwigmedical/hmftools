@@ -11,18 +11,18 @@ import java.util.List;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
-import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 
 import org.junit.Test;
 
 public class ResultsCollatorTest extends CalculationsTestBase
 {
-    final ListMultimap<Chromosome, BamRatio> tumorResults = ArrayListMultimap.create();
-    final ListMultimap<Chromosome, BamRatio> referenceResults = ArrayListMultimap.create();
+    final ListMultimap<HumanChromosome, BamRatio> tumorResults = ArrayListMultimap.create();
+    final ListMultimap<HumanChromosome, BamRatio> referenceResults = ArrayListMultimap.create();
 
     public ResultsCollatorTest()
     {
-        Chromosome chromosome = _1;
+        HumanChromosome chromosome = _1;
         int positon = 1;
         tumorResults.put(chromosome, br(chromosome, positon, -1.0, -1.0));
         referenceResults.put(chromosome, br(chromosome, positon, -1.0, -1.0, -1.0));
@@ -67,7 +67,7 @@ public class ResultsCollatorTest extends CalculationsTestBase
     public void collateTest()
     {
         ResultsCollator collator = new ResultsCollator(V38);
-        ListMultimap<Chromosome, CobaltRatio> collated = collator.collateResults(tumorResults, referenceResults);
+        ListMultimap<HumanChromosome, CobaltRatio> collated = collator.collateResults(tumorResults, referenceResults);
         assertEquals(2, collated.asMap().size());
         List<CobaltRatio> ratios1 = collated.get(_1);
         assertEquals(7, ratios1.size());
@@ -91,7 +91,7 @@ public class ResultsCollatorTest extends CalculationsTestBase
     public void referenceOnlyTest()
     {
         ResultsCollator collator = new ResultsCollator(V38);
-        ListMultimap<Chromosome, CobaltRatio> collated = collator.collateResults(ArrayListMultimap.create(), referenceResults);
+        ListMultimap<HumanChromosome, CobaltRatio> collated = collator.collateResults(ArrayListMultimap.create(), referenceResults);
         assertEquals(2, collated.asMap().size());
         List<CobaltRatio> ratios1 = collated.get(_1);
         assertEquals(7, ratios1.size());
@@ -115,7 +115,7 @@ public class ResultsCollatorTest extends CalculationsTestBase
     public void tumorOnlyTest()
     {
         ResultsCollator collator = new ResultsCollator(V38);
-        ListMultimap<Chromosome, CobaltRatio> collated = collator.collateResults(tumorResults, ArrayListMultimap.create());
+        ListMultimap<HumanChromosome, CobaltRatio> collated = collator.collateResults(tumorResults, ArrayListMultimap.create());
         assertEquals(2, collated.asMap().size());
         List<CobaltRatio> ratios1 = collated.get(_1);
         assertEquals(7, ratios1.size());
@@ -135,7 +135,7 @@ public class ResultsCollatorTest extends CalculationsTestBase
         checkRatio(ratios2.get(4), _2, 4001, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, 0.40);
     }
 
-    private void checkRatio(CobaltRatio ratio, Chromosome chromosome, int position,
+    private void checkRatio(CobaltRatio ratio, HumanChromosome chromosome, int position,
             double referenceReadDepth,
             double tumorReadDepth,
             double referenceGcRatio,
@@ -155,7 +155,7 @@ public class ResultsCollatorTest extends CalculationsTestBase
         assertEquals(tumorGcContent, ratio.tumorGcContent(), 0.0001);
     }
 
-    private BamRatio br(Chromosome chromosome, int pos, double depth, double gc)
+    private BamRatio br(HumanChromosome chromosome, int pos, double depth, double gc)
     {
         BamRatio result = br(chromosome, pos, depth, gc, true);
         if(depth > 0)
@@ -165,7 +165,7 @@ public class ResultsCollatorTest extends CalculationsTestBase
         return result;
     }
 
-    private BamRatio br(Chromosome chromosome, int pos, double depth, double gc, double diploidAdjustedRatio)
+    private BamRatio br(HumanChromosome chromosome, int pos, double depth, double gc, double diploidAdjustedRatio)
     {
         BamRatio result = br(chromosome, pos, depth, gc);
         result.setDiploidAdjustedRatio(diploidAdjustedRatio);

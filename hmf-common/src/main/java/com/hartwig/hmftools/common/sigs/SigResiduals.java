@@ -7,8 +7,6 @@ public class SigResiduals
     public double Excess;
 
     public static final String SIG_MISALLOCATED = "MISALLOC";
-    public static final String SIG_UNALLOCATED = "UNALLOC";
-    public static final String SIG_EXCESS = "EXCESS";
 
     public SigResiduals(final double total, final double percent, final double excess)
     {

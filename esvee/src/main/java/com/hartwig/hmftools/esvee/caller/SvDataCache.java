@@ -68,11 +68,9 @@ public class SvDataCache
             StructuralVariant sv = mSvFactory.createSingleBreakend(variantContext);
             Variant variant = new Variant(sv, genotypeIds);
 
-            if(mTargetRegions.hasTargetRegions() && !mTargetRegions.inTargetRegions(variantContext.getContig(), variantContext.getStart()))
+            if(mTargetRegions.hasTargetRegions() && !sglWithinTargetedRegion(variant))
             {
                 variant.addFilter(FilterType.OFF_TARGET);
-                // ++mHardFilteredCount;
-                // return;
             }
 
             addSvData(variant);
@@ -111,6 +109,11 @@ public class SvDataCache
     {
         return mTargetRegions.inTargetRegions(sv.chromosome(true), sv.position(true), PANEL_INCLUSION_BUFFER)
             || mTargetRegions.inTargetRegions(sv.chromosome(false), sv.position(false), PANEL_INCLUSION_BUFFER);
+    }
+
+    private boolean sglWithinTargetedRegion(final Variant sgl)
+    {
+        return mTargetRegions.inTargetRegions(sgl.chromosomeStart(), sgl.posStart(), PANEL_INCLUSION_BUFFER);
     }
 
     private StructuralVariant popLastSv()

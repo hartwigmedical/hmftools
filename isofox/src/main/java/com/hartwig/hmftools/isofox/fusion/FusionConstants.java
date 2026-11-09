@@ -3,11 +3,9 @@ package com.hartwig.hmftools.isofox.fusion;
 public class FusionConstants
 {
     public static final int REALIGN_MIN_SOFT_CLIP_BASE_LENGTH = 3;
-    public static final int REALIGN_MAX_SOFT_CLIP_BASE_LENGTH = 10;
+    public static final int SOFT_CLIP_JUNC_BUFFER = 3; // max that a realigned fragment's position can overhang the fusion junction
 
     public static final int JUNCTION_BASE_LENGTH = 10; // bases to record from the ref genome around the fusion junction
-
-    public static final int SOFT_CLIP_JUNC_BUFFER = 3; // max that a realigned fragment's position can overhang the fusion junction
 
     public static final int DEFAULT_HARD_FILTER_MIN_FRAGS = 2;
 
@@ -15,4 +13,6 @@ public class FusionConstants
 
     public static final int FILTER_COHORT_LIMIT_KNOWN = 5;
     public static final int FILTER_COHORT_LIMIT_NOT_KNOWN = 2;
+
+    public static final int FILTER_MIN_MAP_QUAL = 10;
 }

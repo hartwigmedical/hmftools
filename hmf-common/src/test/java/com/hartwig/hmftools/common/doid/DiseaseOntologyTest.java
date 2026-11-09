@@ -63,6 +63,10 @@ public class DiseaseOntologyTest
                 + "system and the lack of invasion of surrounding tissues.", doidDefinition1.definitionVal());
         assertEquals(Lists.newArrayList("url:http://en.wikipedia.org/wiki/Carcinoma_in_situ"), doidDefinition1.definitionXrefs());
 
+        DoidBasicPropertyValue doidBasicPropertyValueDef1 = doidDefinition1.meta().basicPropertyValues().get(0);
+        assertEquals("http://purl.org/dc/elements/1.1/type", doidBasicPropertyValueDef1.pred());
+        assertEquals("http://purl.obolibrary.org/obo/ECO_0007638", doidBasicPropertyValueDef1.val());
+
         DoidSynonym doidSynonym1 = doidNode1.doidMetadata().synonyms().get(0);
         assertEquals("hasExactSynonym", doidSynonym1.pred());
         assertEquals("carcinoma in situ of respiratory tract (disorder)", doidSynonym1.val());
@@ -77,7 +81,7 @@ public class DiseaseOntologyTest
         assertEquals("disease_ontology", doidBasicPropertyValue2.val());
 
         assertTrue(doidNode1.doidMetadata().deprecated());
-        assertEquals(Lists.newArrayList(), doidNode1.doidMetadata().comments());
+        assertNull(doidNode1.doidMetadata().comments());
 
         DoidNode doidNode2 = doidNodes.get(1);
         assertEquals("8717", doidNode2.doid());
@@ -88,8 +92,15 @@ public class DiseaseOntologyTest
         DoidDefinition doidDefinition2 = doidNode2.doidMetadata().doidDefinition();
         assertEquals("Decubitus ulcer is a chronic ulcer of skin where the ulcer is an ulceration of "
                 + "tissue deprived of adequate blood supply by prolonged pressure.", doidDefinition2.definitionVal());
-        assertEquals(Lists.newArrayList(),
-                doidDefinition2.definitionXrefs());
+        assertNull(doidDefinition2.definitionXrefs());
+
+        DoidBasicPropertyValue doidBasicPropertyValueDef4 = doidDefinition2.meta().basicPropertyValues().get(0);
+        assertEquals("http://purl.org/dc/elements/1.1/type", doidBasicPropertyValueDef4.pred());
+        assertEquals("http://purl.obolibrary.org/obo/ECO_0007645", doidBasicPropertyValueDef4.val());
+
+        DoidBasicPropertyValue doidBasicPropertyValueDef5 = doidDefinition2.meta().basicPropertyValues().get(1);
+        assertEquals("http://purl.org/dc/elements/1.1/type", doidBasicPropertyValueDef5.pred());
+        assertEquals("http://purl.obolibrary.org/obo/ECO_0007646", doidBasicPropertyValueDef5.val());
 
         List<String> subset2 = doidNode2.doidMetadata().subsets();
         assertEquals(Lists.newArrayList("http://purl.obolibrary.org/obo/doid#NCIthesaurus"), subset2);

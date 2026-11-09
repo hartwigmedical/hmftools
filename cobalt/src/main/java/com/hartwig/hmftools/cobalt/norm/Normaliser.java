@@ -3,11 +3,26 @@ package com.hartwig.hmftools.cobalt.norm;
 import static java.lang.Math.floor;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.lang.Math.pow;
+import static java.lang.Math.round;
+import static java.lang.Math.sqrt;
+import static java.lang.String.format;
 
+import static com.hartwig.hmftools.cobalt.CobaltConfig.CB_LOGGER;
 import static com.hartwig.hmftools.cobalt.CobaltConstants.GC_BUCKET_MAX;
 import static com.hartwig.hmftools.cobalt.CobaltConstants.GC_BUCKET_MIN;
+import static com.hartwig.hmftools.cobalt.norm.NormConstants.FILTER_CHECK_PERCENTILE;
+import static com.hartwig.hmftools.cobalt.norm.NormConstants.FILTER_CHECK_PERCENTILE_RATIO_THRESHOLD;
+import static com.hartwig.hmftools.cobalt.norm.NormConstants.FILTER_CHECK_PERCENTILE_STD_DEV_THRESHOLD;
+import static com.hartwig.hmftools.cobalt.norm.NormConstants.FILTER_COHORT_MIN;
+import static com.hartwig.hmftools.cobalt.norm.NormConstants.FILTER_COHORT_MIN_PERCENT;
+import static com.hartwig.hmftools.cobalt.norm.NormConstants.FILTER_MEDIAN_MAX_RATIO;
 import static com.hartwig.hmftools.cobalt.norm.NormConstants.MAPPABILITY_THRESHOLD;
+import static com.hartwig.hmftools.cobalt.norm.NormConstants.MAX_WGS_ADJUST_RATIO;
+import static com.hartwig.hmftools.cobalt.norm.NormConstants.MEDIAN_PERCENTILE;
 import static com.hartwig.hmftools.cobalt.norm.NormConstants.MIN_ADJACENT_ENRICHMENT_RATIO;
+import static com.hartwig.hmftools.cobalt.norm.NormConstants.MIN_ENRICHMENT_RATIO;
+import static com.hartwig.hmftools.cobalt.norm.NormConstants.WGS_PERCENTILE_DAMPEN;
 import static com.hartwig.hmftools.common.utils.Doubles.median;
 
 import java.util.ArrayList;
@@ -16,6 +31,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 
@@ -30,9 +46,6 @@ public class Normaliser
         - apply a min relative enrichment threshold
     */
 
-    private static final double MAX_WGS_ADJUST_RATIO = 0.3; // vs the median
-    private static final double MEDIAN_PERCENTILE = 0.5;
-    private static final double WGS_PERCENTILE_DAMPEN = 0.2;
 
     public static void calcSampleAdjustedRatios(final List<String> samples, final Map<String, List<RegionData>> chrRegionData)
     {
@@ -65,10 +78,14 @@ public class Normaliser
 
             for(RegionData regionData : regions)
             {
+                if(regionData.mappability() < MAPPABILITY_THRESHOLD)
+                    continue;
+
                 SampleRegionData sampleRegionData = regionData.getSampleData(sampleIndex);
 
-                if(!useRegion(regionData, sampleRegionData))
+                if(!useSampleRegionData(sampleRegionData))
                 {
+                    sampleRegionData.markInvalid();
                     continue;
                 }
 
@@ -119,11 +136,11 @@ public class Normaliser
 
                 if(gcBucketMedian == null || gcBucketMedian == 0)
                 {
+                    sampleRegionData.markInvalid();
                     continue;
                 }
 
                 double adjustedRatio = sampleMedianNormalisation * sampleRegionData.ReadDepth / gcBucketMedian;
-
                 sampleRegionData.setAdjustedGcRatio(adjustedRatio);
             }
         }
@@ -134,17 +151,10 @@ public class Normaliser
         return HumanChromosome.fromString(chromosome).isAutosome();
     }
 
-    public static boolean useRegion(final RegionData regionData, final SampleRegionData sampleRegionData)
+    public static boolean useSampleRegionData(final SampleRegionData sampleRegionData)
     {
-        if(regionData.mappability() < MAPPABILITY_THRESHOLD)
-        {
-            return false;
-        }
-
         if(sampleRegionData.ReadDepth < 0)
-        {
             return false;
-        }
 
         return sampleRegionData.PanelGcBucket >= GC_BUCKET_MIN && sampleRegionData.PanelGcBucket <= GC_BUCKET_MAX;
     }
@@ -163,6 +173,9 @@ public class Normaliser
 
                 for(SampleRegionData sampleRegionData : regionData.getSamples())
                 {
+                    if(!sampleRegionData.isValid())
+                        continue;
+
                     if(sampleRegionData.WgsGcRatio < 0)
                     {
                         // -1.0 is used to mark Y regions in female samples and may also arise from masked windows in WGS data
@@ -170,8 +183,15 @@ public class Normaliser
                     }
 
                     double relativeEnrichment = sampleRegionData.adjustedGcRatio() / sampleRegionData.WgsGcRatio;
-
                     sampleRelativeEnrichments.add(relativeEnrichment);
+                }
+
+                Collections.sort(sampleRelativeEnrichments);
+
+                if(filterRegion(chromosome, regionData, sampleRelativeEnrichments))
+                {
+                    regionData.markInvalid();
+                    continue;
                 }
 
                 double percentileEnrichment = findPercentileEnrichment(sampleRelativeEnrichments, chromosome, regionData, wgsPercentiles);
@@ -199,7 +219,7 @@ public class Normaliser
 
                     if(adjacentRatio < MIN_ADJACENT_ENRICHMENT_RATIO)
                     {
-                        regionData.setRelativeEnrichment(0); // zero being a sentinel for invalid when written to file
+                        regionData.markInvalid();
                         continue;
                     }
                 }
@@ -210,7 +230,7 @@ public class Normaliser
 
                     if(adjacentRatio < MIN_ADJACENT_ENRICHMENT_RATIO)
                     {
-                        regionData.setRelativeEnrichment(0); // zero being a sentinel for invalid when written to file
+                        regionData.markInvalid();
                     }
                 }
             }
@@ -218,16 +238,14 @@ public class Normaliser
     }
 
     private static double findPercentileEnrichment(
-            final List<Double> sampleRelativeEnrichments, final String chromosome, final RegionData regionData,
+            final List<Double> sampleEnrichments, final String chromosome, final RegionData regionData,
             final WgsCopyNumberPercentiles wgsPercentiles)
     {
         // use a percentile derived from the WGS cohort instead of the median, which can be especially important for regions and
         // genes which are typically amplified or deleted
         double specificPercentile = wgsPercentiles.getRegionPercentile(chromosome, regionData.Position);
 
-        Collections.sort(sampleRelativeEnrichments);
-
-        double median = median(sampleRelativeEnrichments);
+        double median = median(sampleEnrichments);
 
         if(specificPercentile == MEDIAN_PERCENTILE)
             return median;
@@ -235,8 +253,8 @@ public class Normaliser
         // dampen the percentile towards the median, eg 0.25*(1-DF)+0.5*(DF) = 0.3
         double dampenedPercentile = specificPercentile * (1 - WGS_PERCENTILE_DAMPEN) + MEDIAN_PERCENTILE * WGS_PERCENTILE_DAMPEN;
 
-        int targetIndex = (int)floor(dampenedPercentile * sampleRelativeEnrichments.size());
-        double percentileEnrichment = sampleRelativeEnrichments.get(targetIndex);
+        int targetIndex = (int)floor(dampenedPercentile * sampleEnrichments.size());
+        double percentileEnrichment = sampleEnrichments.get(targetIndex);
 
         if(median == percentileEnrichment)
             return median;
@@ -245,5 +263,74 @@ public class Normaliser
         cappedEnrichment = max(cappedEnrichment, median * (1 - MAX_WGS_ADJUST_RATIO));
 
         return cappedEnrichment;
+    }
+
+    @VisibleForTesting
+    public static boolean filterRegion(final String chromosome, final RegionData regionData, final List<Double> sampleEnrichments)
+    {
+        if(sampleEnrichments.isEmpty())
+            return true;
+
+        if(HumanChromosome.fromString(chromosome).isAllosome())
+            return false;
+
+        int targetIndex = (int)floor(FILTER_CHECK_PERCENTILE * sampleEnrichments.size());
+        double percentile20 = sampleEnrichments.get(targetIndex);
+
+        // 20th percentile ratio < 0.2
+        if(percentile20 >= FILTER_CHECK_PERCENTILE_RATIO_THRESHOLD)
+            return false;
+
+        double median = median(sampleEnrichments);
+
+        List<Double> filteredEnrichments = Lists.newArrayListWithCapacity(sampleEnrichments.size());
+
+        double filteredTotal = 0;
+        for(double enrichment : sampleEnrichments)
+        {
+            if(enrichment > 0 && enrichment <= FILTER_MEDIAN_MAX_RATIO * median)
+            {
+                filteredTotal += enrichment;
+                filteredEnrichments.add(enrichment);
+            }
+        }
+
+        int filteredCount = filteredEnrichments.size();
+
+        if(filteredCount == 0)
+            return false;
+
+        // Number of samples contributing to the filtered median ratio / standard deviation is at least min(10, 50% of cohort samples)
+        int totalSamples = sampleEnrichments.size();
+
+        int requiredSamples = min(FILTER_COHORT_MIN, (int)round(FILTER_COHORT_MIN_PERCENT * totalSamples));
+
+        if(filteredCount < requiredSamples)
+            return false;
+
+        double filteredMedian = median(filteredEnrichments);
+        double filteredMean = filteredTotal / filteredCount;
+
+        // Region has filtered median ratio over our MIN_ENRICHMENT_RATIO of 0.1
+        if(filteredMedian < MIN_ENRICHMENT_RATIO)
+            return false;
+
+        double varianceTotal = 0;
+        for(double enrichment : filteredEnrichments)
+        {
+            varianceTotal += pow(enrichment - filteredMean, 2);
+        }
+
+        double stdDev = sqrt(varianceTotal / filteredCount);
+        double scaledStdDev = stdDev / min(filteredMedian, 1);
+
+        // Scaled standard deviation > 0.5
+        if(scaledStdDev <= FILTER_CHECK_PERCENTILE_STD_DEV_THRESHOLD)
+            return false;
+
+        CB_LOGGER.debug(format("region(%s:%d) noise filtered: count(%d/%d) median(%.3f filtMed=%.3f 20th=%.3f) scaledSD(%.3f)",
+                chromosome, regionData.Position, filteredCount, totalSamples, median, filteredMedian, percentile20, scaledStdDev));
+
+        return true;
     }
 }

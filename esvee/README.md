@@ -491,7 +491,7 @@ lineSource<sup>13</sup> | Any     | Chr/Pos, ASMINFO                            
 
 <sup>7. For SGL BE, the inserted sequence length must also meet these requirements </sup>
 
-<sup>8. Only for fully + strand variants with ins sequence containing contains GCCGTATCATTAAAAA or GTAGATCTCGGTGGTC OR fully - strand variants with ins sequence containing TTTTTAATGATACGGC or GACCACCGAGATCTAC </sup>
+<sup>8. Only for fully + strand variants with ins sequence containing GCCGTATCATTAAAAA or GTAGATCTCGGTGGTC OR fully - strand variants with ins sequence containing TTTTTAATGATACGGC or GACCACCGAGATCTAC </sup>
 
 <sup>9. Variants with neither breakend within 1kb of an on-target region in targeted panel mode are filtered </sup>
 

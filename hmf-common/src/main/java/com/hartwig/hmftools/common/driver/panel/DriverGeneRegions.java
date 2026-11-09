@@ -23,6 +23,11 @@ import com.hartwig.hmftools.common.region.BaseRegion;
 
 public final class DriverGeneRegions
 {
+    public static List<DriverGene> findInvalidDriverGenes(final List<DriverGene> driverGenes, final EnsemblDataCache ensemblDataCache)
+    {
+        return driverGenes.stream().filter(x -> ensemblDataCache.getGeneDataByName(x.gene()) == null).collect(Collectors.toList());
+    }
+
     public static Map<String,List<GeneRegion>> buildDriverGeneRegions(
             final EnsemblDataCache ensemblDataCache, final List<String> driverGenes)
     {

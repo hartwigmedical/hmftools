@@ -12,6 +12,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
+import com.hartwig.hmftools.isofox.WriteType;
 
 public class FusionTaskManager
 {
@@ -136,55 +137,9 @@ public class FusionTaskManager
                 mRacFragmentCache.totalGroupCount(), totalHardFiltered, mHardFilteredCache.hardFilteredCount());
 
         // write any unassigned RAC fragments
-        if(mConfig.Fusions.WriteChimericReads || mConfig.Fusions.WriteChimericFragments)
+        if(mConfig.WriteTypes.contains(WriteType.FUSION_FRAGMENT))
             mFusionWriter.writeUnfusedFragments(mRacFragmentCache.getUnassignedFragments());
 
-        if(mConfig.RunPerfChecks)
-        {
-            List<FusionReadGroup> incompleteGroups = Lists.newArrayList();
-
-            for(Map.Entry<String,Map<String, FusionReadGroup>> chrEntry : mIncompleteReadGroups.entrySet())
-            {
-                String chromosome = chrEntry.getKey();
-
-                if(mConfig.Filters.excludeChromosome(chromosome))
-                    continue;
-
-                Map<String, FusionReadGroup> rgMap = chrEntry.getValue();
-                for(FusionReadGroup readGroup : rgMap.values())
-                {
-                    if(!mConfig.Filters.SpecificChrRegions.Chromosomes.isEmpty())
-                    {
-                        if(readGroup.Reads.stream().anyMatch(x -> mConfig.Filters.SpecificChrRegions.excludeChromosome(x.MateChromosome)))
-                            continue;
-                    }
-
-                    if(!skipMissingReads(readGroup.Reads))
-                    {
-                        incompleteGroups.add(readGroup);
-                    }
-                }
-            }
-
-            mFusionWriter.writeIncompleteGroupReads(incompleteGroups);
-        }
-
         mFusionWriter.close();
-    }
-
-    private boolean skipMissingReads(final List<FusionRead> reads)
-    {
-        for(final FusionRead read : reads)
-        {
-            if(read.HasSuppAlignment)
-            {
-                if(mConfig.Filters.skipRead(read.SuppData.Chromosome, read.SuppData.Position))
-                    return true;
-
-                ISF_LOGGER.debug("read({}) missing supp({})", read, read.SuppData);
-            }
-        }
-
-        return false;
     }
 }

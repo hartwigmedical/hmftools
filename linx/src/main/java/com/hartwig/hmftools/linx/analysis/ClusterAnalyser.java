@@ -117,8 +117,8 @@ public class ClusterAnalyser {
     }
 
     // access for unit testing
-    public final ChainFinder getChainFinder() { return mChainFinder; }
-    public final DoubleMinuteFinder getDoubleMinuteFinder() { return mDmFinder; }
+    public ChainFinder getChainFinder() { return mChainFinder; }
+    public DoubleMinuteFinder getDoubleMinuteFinder() { return mDmFinder; }
 
     public void setRunValidationChecks(boolean toggle) { mRunValidationChecks = toggle; }
 
@@ -133,9 +133,9 @@ public class ClusterAnalyser {
         mChainFinder.setSampleId(sampleId);
     }
 
-    public final List<SvCluster> getClusters() { return mClusters; }
+    public List<SvCluster> getClusters() { return mClusters; }
 
-    public final List<SvCluster> getAllClusters()
+    public List<SvCluster> getAllClusters()
     {
         if(mArtifactClusters.isEmpty())
             return mClusters;
@@ -227,7 +227,7 @@ public class ClusterAnalyser {
         // final clean-up and analysis
 
         // take note of DM clusters so they can be rechecked after any final cluster merging
-        final List<Integer> dmClusterIds = mClusters.stream().filter(x -> x.hasAnnotation(CLUSTER_ANNOT_DM))
+        List<Integer> dmClusterIds = mClusters.stream().filter(x -> x.hasAnnotation(CLUSTER_ANNOT_DM))
                 .map(x -> Integer.valueOf(x.id())).collect(Collectors.toList());
 
         // re-check foldbacks amongst newly formed chains and then DM status
@@ -393,7 +393,7 @@ public class ClusterAnalyser {
         // break apart any clusters of simple SVs which aren't likely or required to be chained
         List<SvCluster> simpleGroups = mClusters.stream().filter(x -> x.getResolvedType() == SIMPLE_GRP).collect(Collectors.toList());
 
-        final List<SvVarData> discardSVs = Lists.newArrayList();
+        List<SvVarData> discardSVs = Lists.newArrayList();
 
         for(SvCluster cluster : simpleGroups)
         {
@@ -438,7 +438,7 @@ public class ClusterAnalyser {
         if(!assembledLinksOnly)
             mChainFinder.getDiagnostics().diagnoseChains();
 
-        final long[] rangeData = mChainFinder.calcRangeData();
+        long[] rangeData = mChainFinder.calcRangeData();
 
         if(rangeData != null)
         {

@@ -56,6 +56,8 @@ public class PanelBuilderConstants
 
     // Copy number backbone constants.
     public static final int CN_BACKBONE_RESOLUTION_KB_DEFAULT = 1_000;
+    // Smallest allowed partition spacing. Below this a partition can't fit a probe with edge margin.
+    public static final int CN_BACKBONE_RESOLUTION_MIN = 1_000;
     // Region excluded, per side of the centromere.
     public static final int CN_BACKBONE_CENTROMERE_MARGIN = 3_000_000;
     // Aiming to pick heterozygous sites which are common in the population.

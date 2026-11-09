@@ -6,7 +6,6 @@ import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.isofox.IsofoxSummaryData.FLD_ALT_FRAG_PERC;
 import static com.hartwig.hmftools.compar.isofox.IsofoxSummaryData.FLD_CHIMERIC_FRAG_PERC;
 import static com.hartwig.hmftools.compar.isofox.IsofoxSummaryData.FLD_DUPLICATE_FRAGS;
-import static com.hartwig.hmftools.compar.isofox.IsofoxSummaryData.FLD_ENRICHED_GENE_PERC;
 import static com.hartwig.hmftools.compar.isofox.IsofoxSummaryData.FLD_FORWARD_STRAND_PERC;
 import static com.hartwig.hmftools.compar.isofox.IsofoxSummaryData.FLD_FRAG_LENGTH_50TH;
 import static com.hartwig.hmftools.compar.isofox.IsofoxSummaryData.FLD_FRAG_LENGTH_5TH;
@@ -71,7 +70,6 @@ public record IsofoxSummaryComparer(ComparConfig mConfig) implements ItemCompare
         thresholds.addFieldThreshold(FLD_FRAG_LENGTH_5TH, -1, 0.05);
         thresholds.addFieldThreshold(FLD_FRAG_LENGTH_50TH, -1, 0.05);
         thresholds.addFieldThreshold(FLD_FRAG_LENGTH_95TH, -1, 0.05);
-        thresholds.addFieldThreshold(FLD_ENRICHED_GENE_PERC, 0.01, -1);
         thresholds.addFieldThreshold(FLD_MEDIAN_GC_RATIO, 0.01, -1);
         thresholds.addFieldThreshold(FLD_FORWARD_STRAND_PERC, 0.01, -1);
     }
@@ -81,8 +79,7 @@ public record IsofoxSummaryComparer(ComparConfig mConfig) implements ItemCompare
     {
         return List.of(
                 FLD_QC_STATUS, FLD_TOTAL_FRAGS, FLD_DUPLICATE_FRAGS, FLD_SPLICED_FRAG_PERC, FLD_UNSPLICED_FRAG_PERC, FLD_ALT_FRAG_PERC,
-                FLD_CHIMERIC_FRAG_PERC, FLD_READ_LENGTH, FLD_FRAG_LENGTH_5TH, FLD_FRAG_LENGTH_50TH, FLD_FRAG_LENGTH_95TH,
-                FLD_ENRICHED_GENE_PERC
+                FLD_CHIMERIC_FRAG_PERC, FLD_READ_LENGTH, FLD_FRAG_LENGTH_5TH, FLD_FRAG_LENGTH_50TH, FLD_FRAG_LENGTH_95TH
         );
     }
 

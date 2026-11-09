@@ -76,10 +76,10 @@ public class ProposedLinks
         mShortestDistance = Links.stream().mapToInt(x -> x.positionDistance()).min().getAsInt();
     }
 
-    public final SvChain targetChain() { return mChainTarget; }
-    public final SvChain foldbackChain() { return mFoldbackChain; }
+    public SvChain targetChain() { return mChainTarget; }
+    public SvChain foldbackChain() { return mFoldbackChain; }
 
-    public final ChainingRule getSplittingRule()
+    public ChainingRule getSplittingRule()
     {
         if(mRules.contains(FOLDBACK_SPLIT))
             return FOLDBACK_SPLIT;
@@ -87,7 +87,7 @@ public class ProposedLinks
             return COMP_DUP_SPLIT;
     }
 
-    public final boolean multiConnection() { return Links.size() > 1; }
+    public boolean multiConnection() { return Links.size() > 1; }
 
     public double jcn() { return mJcn; }
 
@@ -101,7 +101,7 @@ public class ProposedLinks
         // this may change whether a link is exhausted
         for(Map.Entry<SvBreakend,Double> entry : mBreakendJcn.entrySet())
         {
-            final SvBreakend breakend = entry.getKey();
+            SvBreakend breakend = entry.getKey();
             double beJcn = entry.getValue();
             mExhaustBreakend.put(breakend, Doubles.equal(beJcn, mJcn));
         }
@@ -213,7 +213,7 @@ public class ProposedLinks
         mExhaustBreakend.put(breakend, matched);
     }
 
-    public final String jcnMatchType() { return mJcnMatchType; }
+    public String jcnMatchType() { return mJcnMatchType; }
     public boolean linkJcnMatch() { return mJcnMatchType != PM_NONE; }
 
     public void addRule(ChainingRule rule)

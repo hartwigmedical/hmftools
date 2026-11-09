@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.isofox;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.common.test.GeneTestUtils.addGeneData;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.addTransExonData;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.createEnsemblGeneData;
@@ -11,11 +13,14 @@ import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.SINGLE_MAP_QUALITY;
 import static com.hartwig.hmftools.isofox.common.Read.findOverlappingRegions;
+import static com.hartwig.hmftools.isofox.common.ReadTranscriptUtils.processOverlappingRegions;
+import static com.hartwig.hmftools.isofox.fusion.FusionDataTest.suppDataFromRead;
 
 import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.N;
 import static htsjdk.samtools.SAMFlag.FIRST_OF_PAIR;
 import static htsjdk.samtools.SAMFlag.SECOND_OF_PAIR;
+import static htsjdk.samtools.SAMFlag.SUPPLEMENTARY_ALIGNMENT;
 
 import java.util.List;
 
@@ -25,6 +30,7 @@ import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.common.test.SamRecordTestUtils;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
 import com.hartwig.hmftools.isofox.common.Read;
@@ -42,6 +48,7 @@ import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMFlag;
+import htsjdk.samtools.SAMRecord;
 
 public class TestUtils
 {
@@ -270,22 +277,48 @@ public class TestUtils
     }
 
     public static Read createReadRecord(
-            final int id, final String chromosome, int posStart, int posEnd, final String readBases, final Cigar cigar,
+            final int id, final String chromosome, int posStart, int posEnd, final String specificReadBases, final Cigar cigar,
             int flags, final String mateChr, int mateStartPos)
     {
-        Cigar readCigar = cigar != null ? cigar : createCigar(0, (int) (posEnd - posStart + 1), 0);
+        int readAlignmentSpan = posEnd - posStart + 1;
 
-        Read read = new Read(String.valueOf(id), chromosome, posStart, posEnd, readBases, readCigar,
-                0, flags, mateChr, mateStartPos);
+        String cigarStr = cigar != null ? cigar.toString() : format("%dM", readAlignmentSpan);
+        // Cigar readCigar = cigar != null ? cigar : createCigar(0, (int) (posEnd - posStart + 1), 0);
 
-        read.setFlag(SAMFlag.PROPER_PAIR, true);
-        read.setFlag(SAMFlag.READ_PAIRED, true);
-        read.setStrand(false, true);
-        read.setMapQuality(SINGLE_MAP_QUALITY);
-        return read;
+        String readBases = specificReadBases;
+
+        if(readBases == null)
+        {
+            int readBaseLength = 0;
+
+            if(cigar != null)
+            {
+                readBaseLength = cigar.getCigarElements().stream()
+                        .filter(x -> x.getOperator().consumesReadBases()).mapToInt(x -> x.getLength()).sum();
+            }
+            else
+            {
+                readBaseLength = readAlignmentSpan;
+            }
+
+            readBases = generateRandomBases(readBaseLength);
+
+        }
+
+        SAMRecord record = SamRecordTestUtils.createSamRecord(
+                String.valueOf(id), chromosome, posStart, readBases, cigarStr, mateChr, mateStartPos,
+                false, false, null);
+
+        record.setFlags(flags);
+        record.setMappingQuality(SINGLE_MAP_QUALITY);
+        record.setProperPairFlag(true);
+        record.setReadPairedFlag(true);
+
+        return new Read(record);
     }
 
-    public static Read[] createSupplementaryReadPair(final int id, final GeneCollection gc1, final GeneCollection gc2,
+    public static Read[] createSupplementaryReadPair(
+            final int id, final GeneCollection gc1, final GeneCollection gc2,
             int posStart1, int posEnd1, int posStart2, int posEnd2, final Cigar cigar1, final Cigar cigar2, boolean firstInPair)
     {
         int readBaseLength = cigar1.getCigarElements().stream()
@@ -297,25 +330,18 @@ public class TestUtils
         Read read1 = createMappedRead(id, gc1, posStart1, posEnd1, cigar1, readBases);
         Read read2 = createMappedRead(id, gc2, posStart2, posEnd2, cigar2, readBases);
         read1.setFlag(FIRST_OF_PAIR, firstInPair);
-        read2.setFlag(SECOND_OF_PAIR, !firstInPair);
+        read2.setFlag(FIRST_OF_PAIR, firstInPair);
+        read2.setFlag(SUPPLEMENTARY_ALIGNMENT, true);
 
         // note: strand is not currently set correctly
-        SupplementaryReadData suppData1 = new SupplementaryReadData(
-                read2.Chromosome, read2.PosStart, '+', read2.cigarStr(), 255);
-
-        read1.setSuppAlignment(suppData1.asDelimStr());
-        // read1.setSuppAlignment(String.format("%s;%d;%s", read2.Chromosome, read2.PosStart, read2.Cigar.toString()));
-
-        SupplementaryReadData suppData2 = new SupplementaryReadData(
-                read1.Chromosome, read1.PosStart, '+', read1.cigarStr(), 255);
-
-        read2.setSuppAlignment(suppData2.asDelimStr());
-        // read2.setSuppAlignment(String.format("%s;%d;%s", read1.Chromosome, read1.PosStart, read1.Cigar.toString()));
+        read1.setSuppAlignment(suppDataFromRead(read2).asSamTag());
+        read2.setSuppAlignment(suppDataFromRead(read1).asSamTag());
 
         return new Read[] { read1, read2 };
     }
 
-    public static Read[] createReadPair(final int id, final GeneCollection gc1, final GeneCollection gc2,
+    public static Read[] createReadPair(
+            final int id, final GeneCollection gc1, final GeneCollection gc2,
             int posStart1, int posEnd1, int posStart2, int posEnd2, final Cigar cigar1, final Cigar cigar2, byte orient1, byte orient2)
     {
         int readBaseLength = cigar1.getCigarElements().stream()
@@ -335,6 +361,12 @@ public class TestUtils
         return new Read[] { read1, read2 };
     }
 
+    public static void setReadFirstSecondInPair(final Read read, boolean isFirst)
+    {
+        read.setFlag(FIRST_OF_PAIR, isFirst);
+        read.setFlag(SECOND_OF_PAIR, !isFirst);
+    }
+
     public static Read createMappedRead(final int id, final GeneCollection geneCollection, int posStart, int posEnd, final Cigar cigar)
     {
         int readBaseLength = cigar.getCigarElements().stream()
@@ -351,7 +383,7 @@ public class TestUtils
     {
         Read read = createReadRecord(id, geneCollection.chromosome(), posStart, posEnd, readBases, cigar);
 
-        read.processOverlappingRegions(findOverlappingRegions(geneCollection.getExonRegions(), read));
+        processOverlappingRegions(read, findOverlappingRegions(geneCollection.getExonRegions(), read));
 
         if(read.getMappedRegions().isEmpty())
             read.addIntronicTranscriptRefs(geneCollection.getTranscripts());
@@ -425,8 +457,6 @@ public class TestUtils
     public static FusionFinder createFusionFinder(
             final IsofoxConfig config, final EnsemblDataCache geneTransCache, final RacFragmentCache racFragmentCache)
     {
-        config.Filters.buildGeneRegions(geneTransCache);
-
         return new FusionFinder(
                 "FF", config, geneTransCache, racFragmentCache,
                 new PassingFusions(config.Fusions.KnownFusions, null), new FusionWriter(config));
@@ -448,7 +478,7 @@ public class TestUtils
     public static void addRacReadGroup(
             final RacFragmentCache racFragmentCache, final ChimericReadGroup readGroup, byte juncOrient, int juncPosition)
     {
-        String chromosome = readGroup.reads().get(0).Chromosome;
+        String chromosome = readGroup.reads().get(0).chromosome();
         int gcId = readGroup.reads().get(0).getGeneCollectons()[SE_START];
 
         JunctionRacFragments juncRacFragments = racFragmentCache.getRacFragments(chromosome, gcId);

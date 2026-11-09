@@ -120,7 +120,7 @@ public class VariantFilters
         if(!var.isSgl())
             applyExistingFilters(var.breakendEnd());
 
-        if(mFilterConstants.FilterSGLs && var.isSgl())
+        if(mFilterConstants.FilterSGLs && var.isSgl() && !var.isHotspot())
             var.addFilter(SGL);
 
         if(belowMinAf(var))

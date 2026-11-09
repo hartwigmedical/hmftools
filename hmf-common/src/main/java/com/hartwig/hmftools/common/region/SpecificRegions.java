@@ -74,7 +74,10 @@ public class SpecificRegions
 
     public boolean includePosition(final String chromosome, final int position)
     {
-        return Regions.isEmpty() || Regions.stream().anyMatch(x -> x.containsPosition(chromosome, position));
+        if(Regions.isEmpty())
+            return Chromosomes.contains(chromosome);
+        else
+            return Regions.stream().anyMatch(x -> x.containsPosition(chromosome, position));
     }
 
     public boolean excludePosition(final String chromosome, final int position) { return !includePosition(chromosome, position); }

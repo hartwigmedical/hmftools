@@ -146,7 +146,7 @@ public class AltSjWriter
                 {
                     final String geneId = geneEntry.getKey();
 
-                    for (AltSjCohortData altSjData : geneEntry.getValue())
+                    for(AltSjCohortData altSjData : geneEntry.getValue())
                     {
                         final AltSpliceJuncData altSJ = altSjData.AltSJ;
 
