@@ -29,6 +29,7 @@ public class ExpectedCache
     public static final String FLD_STATUS = "Status";
 
     private static final String FLD_FIELD_VALUES = "FieldValues";
+    private static final String FLD_REMARK = "Remark";
 
     private static final String FIELD_VALUE_DELIM = ";";
     private static final String FIELD_VALUE_ITEM_DELIM = "=";
@@ -38,7 +39,8 @@ public class ExpectedCache
     private static final String VALUE_ABSENT = "Absent";
     private static final String NO_SAMPLE_ID = "";
 
-    // expected format: SampleId (if has multiple),Category,Key,Status (optional),FieldValues or columns per field value
+    // expected format: SampleId (optional),Category,Key,Status (optional),Remark (optional),FieldValues or columns per field value
+    // if no row has a SampleId, rows apply to every sample, otherwise only to their own sample
 
     public ExpectedCache()
     {
@@ -79,7 +81,8 @@ public class ExpectedCache
         return categoryMap != null ? categoryMap.getOrDefault(category, Collections.emptyList()) : Collections.emptyList();
     }
 
-    private static final Set<String> FIXED_FIELDS = Set.of(FLD_CATEGORY, FLD_SAMPLE_ID, FLD_STATUS, FLD_ITEM_KEY, FLD_FIELD_VALUES);
+    private static final Set<String> FIXED_FIELDS = Set.of(
+            FLD_CATEGORY, FLD_SAMPLE_ID, FLD_STATUS, FLD_ITEM_KEY, FLD_FIELD_VALUES, FLD_REMARK);
 
     private void loadExpectedFile(final String filename)
     {

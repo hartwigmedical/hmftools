@@ -62,4 +62,31 @@ public class ExpectedCacheTest
         assertTrue(expectedCache.sampleAbsentEntries("TEST", RNA_FUSION).isEmpty());
     }
 
+    @Test
+    public void remarkColumnIsIgnored() throws IOException
+    {
+        File columnsFile = TempDir.newFile();
+        Files.write(
+                columnsFile.toPath(), List.of(
+                        String.join(TSV_DELIM, "Category", "Key", "Status", "AF", "Remark"),
+                        String.join(TSV_DELIM, "SOMATIC_VARIANT", "7:140453136:A:T", "Present", "0.3", "confirmed by ddPCR")));
+
+        File fieldValuesFile = TempDir.newFile();
+        Files.write(
+                fieldValuesFile.toPath(), List.of(
+                        String.join(TSV_DELIM, "Category", "Key", "Status", "FieldValues", "Remark"),
+                        String.join(TSV_DELIM, "SOMATIC_VARIANT", "7:140453136:A:T", "Present", "AF=0.3", "confirmed by ddPCR")));
+
+        for(File expectedFile : List.of(columnsFile, fieldValuesFile))
+        {
+            ExpectedCache expectedCache = new ExpectedCache();
+            expectedCache.loadFiles(expectedFile.getAbsolutePath());
+
+            List<ExpectedValue> values = expectedCache.sampleExpectedEntries("TEST", SOMATIC_VARIANT);
+
+            assertEquals(1, values.size());
+            assertEquals("AF", values.get(0).FieldName);
+            assertEquals("0.3", values.get(0).Value);
+        }
+    }
 }
