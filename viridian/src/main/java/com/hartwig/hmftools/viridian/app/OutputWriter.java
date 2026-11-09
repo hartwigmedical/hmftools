@@ -30,7 +30,6 @@ import com.hartwig.hmftools.viridian.profiling.common.SummaryStats;
 import com.hartwig.hmftools.viridian.profiling.support.GenomeSupport;
 import com.hartwig.hmftools.viridian.reference.VirusGenome;
 import com.hartwig.hmftools.viridian.reference.VirusGroup;
-import com.hartwig.hmftools.viridian.reporting.VirusReport;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -298,47 +297,6 @@ public class OutputWriter
         aligner_score,
         aligned_edit_distance
     }
-
-    public static void writeVirusReports(String file, List<VirusReport> reports)
-    {
-        List<VirusReport> rows = reports.stream().sorted(comparing(report -> report.virus().group())).toList();
-
-        DelimFileWriter.write(
-                file, VIRUS_REPORT_COLUMNS, rows, (report, row) ->
-                {
-                    VirusProfile profile = report.profile();
-                    GenomeStats stats = profile != null ? profile.representativeStats() : null;
-
-                    row.set(VirusReportColumn.name, report.virus().name());
-                    row.set(VirusReportColumn.qcStatus, report.qcStatus().name());
-                    row.set(VirusReportColumn.integrations, report.integrations());
-                    row.setOrNull(
-                            VirusReportColumn.interpretation, report.reportingType() != null ? report.reportingType().toString() : null);
-                    row.set(VirusReportColumn.percentageCovered, stats != null ? 100 * stats.coverageFraction() : 0);
-                    row.set(VirusReportColumn.meanCoverage, stats != null ? stats.depth().mean() : 0);
-                    row.set(VirusReportColumn.reported, report.isReported());
-                    row.set(VirusReportColumn.clonality_status, report.clonalityStatus().name());
-                    row.setOrNull(VirusReportColumn.copies_per_tumor_cell, report.copiesPerTumorCell());
-                    row.set(VirusReportColumn.virus_group, report.virus().group().name());
-                });
-    }
-
-    private enum VirusReportColumn
-    {
-        name,
-        qcStatus,
-        integrations,
-        interpretation,
-        percentageCovered,
-        meanCoverage,
-        reported,
-        clonality_status,
-        copies_per_tumor_cell,
-        virus_group,
-    }
-
-    private static final List<String> VIRUS_REPORT_COLUMNS =
-            Stream.of(VirusReportColumn.values()).map(Enum::name).toList();
 
     public static void writeRunManifest(String file, ViridianConfig config)
     {

@@ -2,18 +2,21 @@ package com.hartwig.hmftools.viridian.reporting;
 
 import static com.hartwig.hmftools.common.purple.PurpleQCStatus.FAIL_CONTAMINATION;
 import static com.hartwig.hmftools.common.purple.PurpleQCStatus.FAIL_NO_TUMOR;
-import static com.hartwig.hmftools.viridian.reporting.ClonalityStatus.CLONAL;
-import static com.hartwig.hmftools.viridian.reporting.ClonalityStatus.NOT_CLONAL;
-import static com.hartwig.hmftools.viridian.reporting.ClonalityStatus.NOT_PROFILED;
-import static com.hartwig.hmftools.viridian.reporting.ClonalityStatus.PURPLE_FAIL_CONTAMINATION;
-import static com.hartwig.hmftools.viridian.reporting.ClonalityStatus.PURPLE_FAIL_NO_TUMOR;
-import static com.hartwig.hmftools.viridian.reporting.ReportQcStatus.AMBIGUOUS_VIRUS;
-import static com.hartwig.hmftools.viridian.reporting.ReportQcStatus.NO_ABNORMALITIES;
+import static com.hartwig.hmftools.common.virus.ClonalityStatus.CLONAL;
+import static com.hartwig.hmftools.common.virus.ClonalityStatus.NOT_CLONAL;
+import static com.hartwig.hmftools.common.virus.ClonalityStatus.NOT_PROFILED;
+import static com.hartwig.hmftools.common.virus.ClonalityStatus.PURPLE_FAIL_CONTAMINATION;
+import static com.hartwig.hmftools.common.virus.ClonalityStatus.PURPLE_FAIL_NO_TUMOR;
+import static com.hartwig.hmftools.common.virus.ReportQcStatus.AMBIGUOUS_VIRUS;
+import static com.hartwig.hmftools.common.virus.ReportQcStatus.NO_ABNORMALITIES;
 
 import static org.junit.Assert.assertEquals;
 
 import java.util.List;
 
+import com.hartwig.hmftools.common.virus.ClonalityStatus;
+import com.hartwig.hmftools.common.virus.ReportQcStatus;
+import com.hartwig.hmftools.common.virus.VirusReport;
 import com.hartwig.hmftools.common.virus.VirusType;
 import com.hartwig.hmftools.viridian.profiling.VirusProfile;
 import com.hartwig.hmftools.viridian.profiling.common.GenomeStats;
@@ -51,7 +54,7 @@ public class VirusReporterTest
     {
         VirusProfile profile = profile(10);
         assertEquals(
-                reportableReport(HPV16, NO_ABNORMALITIES, 0, profile, 0.5, CLONAL, REPORTED),
+                reportableReport(HPV16, NO_ABNORMALITIES, 0, 100.0, 10.0, 0.5, CLONAL, REPORTED),
                 VirusReporter.reportGroup(profile, List.of(), REPORTABLE_INFO, PURPLE_FIT));
     }
 
@@ -60,7 +63,7 @@ public class VirusReporterTest
     {
         VirusProfile profile = profile(9);
         assertEquals(
-                reportableReport(HPV16, NO_ABNORMALITIES, 0, profile, 0.45, NOT_CLONAL, !REPORTED),
+                reportableReport(HPV16, NO_ABNORMALITIES, 0, 100.0, 9.0, 0.45, NOT_CLONAL, !REPORTED),
                 VirusReporter.reportGroup(profile, List.of(), REPORTABLE_INFO, PURPLE_FIT));
     }
 
@@ -69,10 +72,10 @@ public class VirusReporterTest
     {
         VirusProfile profile = profile(10);
         assertEquals(
-                reportableReport(HPV16, NO_ABNORMALITIES, 0, profile, null, PURPLE_FAIL_NO_TUMOR, !REPORTED),
+                reportableReport(HPV16, NO_ABNORMALITIES, 0, 100.0, 10.0, null, PURPLE_FAIL_NO_TUMOR, !REPORTED),
                 VirusReporter.reportGroup(profile, List.of(), REPORTABLE_INFO, NO_TUMOR));
         assertEquals(
-                reportableReport(HPV16, NO_ABNORMALITIES, 0, profile, null, PURPLE_FAIL_CONTAMINATION, !REPORTED),
+                reportableReport(HPV16, NO_ABNORMALITIES, 0, 100.0, 10.0, null, PURPLE_FAIL_CONTAMINATION, !REPORTED),
                 VirusReporter.reportGroup(profile, List.of(), REPORTABLE_INFO, CONTAMINATION));
     }
 
@@ -80,7 +83,7 @@ public class VirusReporterTest
     public void testReportedOnIntegrationAloneWhenNotProfiled()
     {
         assertEquals(
-                reportableReport(HPV16, NO_ABNORMALITIES, 1, null, 0.0, NOT_PROFILED, REPORTED),
+                reportableReport(HPV16, NO_ABNORMALITIES, 1, 0.0, 0.0, 0.0, NOT_PROFILED, REPORTED),
                 VirusReporter.reportGroup(null, List.of(GENOME), REPORTABLE_INFO, PURPLE_FIT));
     }
 
@@ -89,7 +92,7 @@ public class VirusReporterTest
     public void testNotProfiledOverridesPurpleFailure()
     {
         assertEquals(
-                reportableReport(HPV16, NO_ABNORMALITIES, 1, null, null, NOT_PROFILED, REPORTED),
+                reportableReport(HPV16, NO_ABNORMALITIES, 1, 0.0, 0.0, null, NOT_PROFILED, REPORTED),
                 VirusReporter.reportGroup(null, List.of(GENOME), REPORTABLE_INFO, NO_TUMOR));
     }
 
@@ -98,7 +101,8 @@ public class VirusReporterTest
     {
         VirusProfile profile = profile(10);
         List<VirusGenome> integratedGenomes = List.of(GENOME, GENOME, GENOME, GENOME, GENOME);
-        VirusReport expected = new VirusReport(HPV16, NO_ABNORMALITIES, null, 5, profile, 0.5, CLONAL, !REPORTED);
+        VirusReport expected = new VirusReport(
+                HPV16.name(), GROUP.name(), NO_ABNORMALITIES, null, 5, 100.0, 10.0, 0.5, CLONAL, !REPORTED);
         assertEquals(expected, VirusReporter.reportGroup(profile, integratedGenomes, NOT_REPORTABLE_INFO, PURPLE_FIT));
     }
 
@@ -108,7 +112,7 @@ public class VirusReporterTest
     {
         VirusProfile profile = profile(10);
         assertEquals(
-                reportableReport(HPV16, NO_ABNORMALITIES, 1, profile, 0.5, CLONAL, REPORTED),
+                reportableReport(HPV16, NO_ABNORMALITIES, 1, 100.0, 10.0, 0.5, CLONAL, REPORTED),
                 VirusReporter.reportGroup(profile, List.of(OTHER_HPV16_GENOME), REPORTABLE_INFO, PURPLE_FIT));
     }
 
@@ -117,7 +121,7 @@ public class VirusReporterTest
     {
         VirusProfile profile = profile(10);
         assertEquals(
-                reportableReport(HPV16, AMBIGUOUS_VIRUS, 2, profile, 0.5, CLONAL, REPORTED),
+                reportableReport(HPV16, AMBIGUOUS_VIRUS, 2, 100.0, 10.0, 0.5, CLONAL, REPORTED),
                 VirusReporter.reportGroup(profile, List.of(HPV18_GENOME, HPV18_GENOME), REPORTABLE_INFO, PURPLE_FIT));
     }
 
@@ -125,7 +129,7 @@ public class VirusReporterTest
     public void testMostFrequentIntegrationVirusNameWhenNotProfiled()
     {
         assertEquals(
-                reportableReport(HPV18, AMBIGUOUS_VIRUS, 3, null, 0.0, NOT_PROFILED, REPORTED),
+                reportableReport(HPV18, AMBIGUOUS_VIRUS, 3, 0.0, 0.0, 0.0, NOT_PROFILED, REPORTED),
                 VirusReporter.reportGroup(null, List.of(HPV18_GENOME, GENOME, HPV18_GENOME), REPORTABLE_INFO, PURPLE_FIT));
     }
 
@@ -133,17 +137,17 @@ public class VirusReporterTest
     public void testTiedIntegrationVirusNamesPickAlphabeticallyFirst()
     {
         assertEquals(
-                reportableReport(HPV16, AMBIGUOUS_VIRUS, 2, null, 0.0, NOT_PROFILED, REPORTED),
+                reportableReport(HPV16, AMBIGUOUS_VIRUS, 2, 0.0, 0.0, 0.0, NOT_PROFILED, REPORTED),
                 VirusReporter.reportGroup(null, List.of(HPV18_GENOME, GENOME), REPORTABLE_INFO, PURPLE_FIT));
     }
 
     private static VirusReport reportableReport(
-            Virus virus, ReportQcStatus qcStatus, int integrations, @Nullable VirusProfile profile,
+            Virus virus, ReportQcStatus qcStatus, int integrations, double coveragePercentage, double meanDepth,
             @Nullable Double copiesPerTumorCell, ClonalityStatus clonalityStatus, boolean isReported)
     {
         return new VirusReport(
-                virus, qcStatus, VirusType.HPV, integrations, profile, copiesPerTumorCell, clonalityStatus,
-                isReported);
+                virus.name(), virus.group().name(), qcStatus, VirusType.HPV, integrations, coveragePercentage, meanDepth,
+                copiesPerTumorCell, clonalityStatus, isReported);
     }
 
     private static VirusProfile profile(int meanDepth)

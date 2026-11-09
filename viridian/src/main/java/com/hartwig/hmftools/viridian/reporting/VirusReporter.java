@@ -17,7 +17,11 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.hartwig.hmftools.common.virus.ClonalityStatus;
+import com.hartwig.hmftools.common.virus.ReportQcStatus;
+import com.hartwig.hmftools.common.virus.VirusReport;
 import com.hartwig.hmftools.viridian.profiling.VirusProfile;
+import com.hartwig.hmftools.viridian.profiling.common.GenomeStats;
 import com.hartwig.hmftools.viridian.reference.Virus;
 import com.hartwig.hmftools.viridian.reference.VirusGenome;
 import com.hartwig.hmftools.viridian.reference.VirusGroup;
@@ -42,6 +46,7 @@ public class VirusReporter
                 .collect(Collectors.toSet());
 
         return groupsToReport.stream()
+                .sorted()
                 .map(group -> reportGroup(
                         profileByGroup.get(group), integratedGenomesByGroup.getOrDefault(group, List.of()),
                         virusGroupInfo.apply(group), clonalityInputs))
@@ -67,9 +72,11 @@ public class VirusReporter
                 ? ReportQcStatus.NO_ABNORMALITIES
                 : ReportQcStatus.AMBIGUOUS_VIRUS;
 
+        GenomeStats stats = profile != null ? profile.representativeStats() : null;
         return new VirusReport(
-                virus, qcStatus, info.reportingType(), integrations, profile, clonality.copiesPerTumorCell(),
-                clonality.status(), isReported);
+                virus.name(), virus.group().name(), qcStatus, info.reportingType(), integrations,
+                stats != null ? 100 * stats.coverageFraction() : 0, stats != null ? stats.depth().mean() : 0,
+                clonality.copiesPerTumorCell(), clonality.status(), isReported);
     }
 
     private record Clonality(

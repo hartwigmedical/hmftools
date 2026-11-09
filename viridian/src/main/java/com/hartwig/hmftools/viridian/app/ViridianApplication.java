@@ -32,6 +32,8 @@ import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.purple.PurityContextFile;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.VersionInfo;
+import com.hartwig.hmftools.common.virus.VirusReport;
+import com.hartwig.hmftools.common.virus.VirusReportFile;
 import com.hartwig.hmftools.viridian.common.UserInputError;
 import com.hartwig.hmftools.viridian.integration.IntegrationCandidate;
 import com.hartwig.hmftools.viridian.integration.align.ViralInsertAligner;
@@ -57,7 +59,6 @@ import com.hartwig.hmftools.viridian.profiling.support.GenomeSupportCalculator;
 import com.hartwig.hmftools.viridian.reference.VirusGenome;
 import com.hartwig.hmftools.viridian.reference.VirusReference;
 import com.hartwig.hmftools.viridian.reporting.ClonalityInputs;
-import com.hartwig.hmftools.viridian.reporting.VirusReport;
 import com.hartwig.hmftools.viridian.reporting.VirusReporter;
 
 import org.apache.logging.log4j.LogManager;
@@ -302,7 +303,7 @@ public class ViridianApplication
                 profiles, integratedGenomes, mVirusReference::virusGroupInfo, clonalityInputs);
 
         LOGGER.info("Writing virus report output");
-        OutputWriter.writeVirusReports(outputFile(REPORT_TSV_SUFFIX), reports);
+        VirusReportFile.write(outputFile(REPORT_TSV_SUFFIX), reports);
     }
 
     private String outputFile(String suffix)

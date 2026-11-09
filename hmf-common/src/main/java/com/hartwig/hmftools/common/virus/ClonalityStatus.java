@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.viridian.reporting;
+package com.hartwig.hmftools.common.virus;
 
 // The status of the virus clonality check for reporting, which can fail due to Purple failure.
 public enum ClonalityStatus

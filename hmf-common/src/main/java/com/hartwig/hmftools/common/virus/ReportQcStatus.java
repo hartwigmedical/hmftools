@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.viridian.reporting;
+package com.hartwig.hmftools.common.virus;
 
 public enum ReportQcStatus
 {
