@@ -145,8 +145,6 @@ public class BqrAdjustment
         {
             BqrKey key = bqrRecord.Key;
 
-            mHasDualEntries |= bqrRecord.Key.ReadType == DUAL;
-
             if(bqrRecord.Key.Quality < mConfig.BqrQualThreshold)
                 continue;
 
@@ -206,6 +204,8 @@ public class BqrAdjustment
             bqrContextData = Lists.newArrayList();
             mBqrContextData.put(consensusType, bqrContextData);
         }
+
+        mHasDualEntries |= consensusType == DUAL;
 
         BqrContextData bqrErrorRate = bqrContextData.stream()
                 .filter(x -> x.Alt.equals(alt) && x.TrinucleotideContext.equals(trinucleotideContext))

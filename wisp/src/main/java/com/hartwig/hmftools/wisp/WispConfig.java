@@ -383,8 +383,13 @@ public class WispConfig
     @VisibleForTesting
     public WispConfig(final RefGenomeInterface refGenome)
     {
+        this(refGenome, 0);
+    }
+
+    @VisibleForTesting
+    public WispConfig(final RefGenomeInterface refGenome, double gcRatioMin)
+    {
         SampleDataDir = null;
-        GcRatioMin = 0;
 
         Samples = Lists.newArrayList();
         PurityMethods = Lists.newArrayList();
@@ -409,6 +414,7 @@ public class WispConfig
         NoiseReadsPerMillion = DEFAULT_NOISE_READS_PER_MILLION;
         NoiseReadsPerMillionDualStrand = DEFAULT_NOISE_READS_PER_MILLION_DUAL_STRAND;
 
+        GcRatioMin = gcRatioMin;
         BqrQualThreshold = DEFAULT_BQR_MIN_QUAL;
         SkipBqr = false;
         SkipSubclonalFilter = false;

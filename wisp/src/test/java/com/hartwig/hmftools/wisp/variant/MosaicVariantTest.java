@@ -1,18 +1,13 @@
 package com.hartwig.hmftools.wisp.variant;
 
-import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_CN;
-import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_VARIANT_CN;
 import static com.hartwig.hmftools.wisp.purity.WispTestUtils.TEST_CONFIG;
 import static com.hartwig.hmftools.wisp.purity.WispTestUtils.TEST_REFERENCE_ID;
 import static com.hartwig.hmftools.wisp.purity.WispTestUtils.TEST_RESULTS_WRITER;
 import static com.hartwig.hmftools.wisp.purity.WispTestUtils.TEST_SAMPLE;
 import static com.hartwig.hmftools.wisp.purity.WispTestUtils.TEST_SAMPLE_ID;
 import static com.hartwig.hmftools.wisp.purity.WispTestUtils.TEST_TUMOR_ID;
-import static com.hartwig.hmftools.wisp.variant.SomaticPurityTest.DEFAULT_TUMOR_DEPTH;
-import static com.hartwig.hmftools.wisp.variant.SomaticPurityTest.addBqrData;
-import static com.hartwig.hmftools.wisp.variant.SomaticPurityTest.createVariantContext;
-
-import static org.junit.Assert.assertEquals;
+import static com.hartwig.hmftools.wisp.variant.SomaticVariantUtils.addBqrData;
+import static com.hartwig.hmftools.wisp.variant.SomaticVariantUtils.createVariantContext;
 
 import java.util.List;
 
@@ -140,7 +135,7 @@ public class MosaicVariantTest
 
         SomaticPurityResult purityResult = somaticVariants.processSample(TEST_SAMPLE_ID);
 
-        // assertEquals(10, purityResult.TotalVariants);
+        //  assertEquals(10, purityResult.TotalVariants);
 
 
 
