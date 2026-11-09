@@ -46,7 +46,7 @@ import com.hartwig.hmftools.common.perf.TaskExecutor;
 import com.hartwig.hmftools.common.rna.NovelSpliceJunctionFile;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
-import com.hartwig.hmftools.common.virusinterpreter.AnnotatedVirusFile;
+import com.hartwig.hmftools.common.viridian.VirusReportFile;
 import com.hartwig.hmftools.cup.somatics.SomaticVariant;
 
 public class PrepConfig
@@ -163,7 +163,7 @@ public class PrepConfig
     public String linxDriverCatalogFile(final String sampleId) { return LinxDriver.generateCatalogFilename(getLinxDataDir(sampleId), sampleId, true); }
     public String linxClusterFile(final String sampleId) { return LinxCluster.generateFilename(getLinxDataDir(sampleId), sampleId, false); }
     public String linxFusionFile(final String sampleId) { return LinxFusion.generateFilename(getLinxDataDir(sampleId), sampleId); }
-    public String viralAnnotationFile(final String sampleId) { return AnnotatedVirusFile.generateFileName(getVirusDataDir(sampleId), sampleId); }
+    public String virusReportFile(final String sampleId) { return VirusReportFile.generateFilename(getVirusDataDir(sampleId), sampleId); }
     public String geneExpressionFile(final String sampleId) { return GeneExpressionFile.generateFilename(getIsofoxDataDir(sampleId), sampleId); }
 
     public String altSpliceJunctionFile(final String sampleId)
