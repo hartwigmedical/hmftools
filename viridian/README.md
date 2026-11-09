@@ -65,8 +65,8 @@ Viruses not curated in Viridian's reference cannot be detected by the applicatio
 Viruses are grouped in a manner most useful for oncology, rather than focusing on the taxonomic classification, which allows simpler implementation.  
 Viridian structures viruses like so:
 
-- "Virus group". Broad group of viruses significant for reporting, e.g. HPV. Viridian can only call one virus per group.
-- "Virus". Virus subtype within a group, which is useful to identify in some groups. E.g. HPV type 16.
+- "Virus group". Group of viruses at the main granularity significant for reporting, e.g. HPV. Viridian calls at most one virus per group.
+- "Virus". Virus subtype within a group, which is useful to identify within some groups. E.g. HPV type 16.
 - "Virus genome". Specific base sequence observed in a particular virus. Each virus may have many genomes.
 
 Viridian calls at most one virus per virus group, via selection of the virus genome most similar to what is in the tumor sample.
@@ -108,8 +108,8 @@ In addition, these types of fragments/reads are excluded:
 
 `candidate_read_source` parameter selects which subset of read types are considered, mostly for performance reasons:
 
-- `FULLY_UNMAPPED_AND_DECOY`: Reads which are fully unmapped and reads aligned to virus decoy contigs. These types can be extracted without scanning the entire tumor BAM, which may be slow.
-- `ALL`: All the read types listed above. Much slower.
+- `ALL`: All the read types listed above. Slow on a large BAM.
+- `FULLY_UNMAPPED_AND_DECOY`: Reads which are fully unmapped and reads aligned to virus decoy contigs. These types can be extracted without scanning the entire tumor BAM, which is much faster.
 
 `FULLY_UNMAPPED_AND_DECOY` is the recommended configuration because it allows efficient read extraction which avoids reading the entire BAM.
 The theoretical downside is missing the integration site fragments; however, we have not observed this to be problematic during our validation.
@@ -123,7 +123,7 @@ The performance benefit of the k-mer filter may differ between samples, dependin
 
 #### 3. Read alignment
 
-Candidate viral reads are aligned to virus genomes using BWA-MEM, with mostly default parameters and a minimum aligner score of 30.
+Candidate viral reads are aligned to virus genomes using BWA-MEM [[3]](#references), with mostly default parameters and a minimum aligner score of 30.
 
 BWA-MEM runs in `-a` mode, which produces all possible alignments for each sequence.
 Multiple alignment allows intelligent selection of a single genome which best represents the sample virus overall (described in the next section).
@@ -137,20 +137,17 @@ The simplest fix to make the alignment data more comparable is to drop the affec
 
 Within each virus group, each read "votes" for virus genomes depending on the alignment quality, and then the most voted genome is selected as the "representative genome".
 
-Each read gives a total of one vote, which is split between virus genomes according to the divergence of the read sequence from the genome.
-Divergence is the edit distance plus the clipped bases.
-As divergence from the genome increases, the vote to that genome decreases (distributed to the other aligned genomes).
-Each extra base of divergence makes the genome's weight four times smaller.
+Each read gives a total of one vote, which is split between virus genomes according to the edit distance of the read sequence from the genome.
+As edit distance increases, the vote to that genome decreases (distributed to the other aligned genomes).
+Each extra base different multiplies the genome's weight by 1/4.
 Example: if a read aligned to two genomes, one perfectly and one with a mismatch, then the votes would be 0.8 and 0.2.
 
 This voting methodology is important because genomes of the same virus group are often highly similar (upwards of 95%), such that choosing the best genome in isolation per-read may understate the virus group's overall support.
 The effects of genome selection and sequencing errors would be amplified.
-With voting, the genome with highest overall similarity is more likely to be chosen.
+With voting, the genome with the highest overall similarity is more likely to be chosen.
 
 Note that tools like VirusBreakend try to construct a consensus virus genome, which Viridian intentionally does not do.
 Validation demonstrated that the Viridian read voting approach maintains high reporting concordance with VirusBreakend while reducing conceptual complexity and improving performance.
-
-The two genomes with the next most votes are written to the profile output as secondary genomes, for information only.
 
 #### 5. Read assignment
 
@@ -159,9 +156,9 @@ The representative genome's depth and coverage are then measured from its assign
 
 ### Integration Calling
 
-Viridian ingests insertion-like structural variants from ESVEE and aligns them to detect virus genome integrations.
+Viridian ingests insertion-like structural variants from ESVEE and aligns them to virus genomes to detect viral integrations.
 
-Candidate variants are all those with insert sequence >= 30b, which captures novel insertions otherwise unattributed to the human genome.
+Candidate variants are all those with insert sequence >= 30b, which captures novel insertions unattributed to the human genome.
 In practice, most viral integrations are SGL variants, since ESVEE is not able to resolve the viral part of the sequence.
 
 Reuse of ESVEE variants demonstrated high overall reporting concordance with VirusBreakend, while reducing integration calls revealed to be tenuous by ESVEE's methodology.
@@ -214,11 +211,11 @@ Main output:
 | qcStatus               | String  | `NO_ABNORMALITIES` / `AMBIGUOUS_VIRUS`                                                          |
 | integrations           | Integer | Count of viral integrations.                                                                    |
 | interpretation         | String  | Reporting type used by hmftools downstream.                                                     |
-| percentageCovered      | Number  | Percentage of virus genome bases aligned in reads, 0-100.                                       |
-| meanCoverage           | Number  | Average depth of virus genome.                                                                  |
+| percentageCovered      | Number  | Percentage of representative virus genome bases aligned in reads, 0-100.                        |
+| meanCoverage           | Number  | Average depth of representative virus genome.                                                   |
 | reported               | Boolean | True if significant virus presence.                                                             |
 | clonality_status       | String  | `CLONAL` / `NOT_CLONAL` / `NOT_PROFILED` / `PURPLE_FAIL_NO_TUMOR` / `PURPLE_FAIL_CONTAMINATION` |
-| copies_per_tumor_cell  | Number  | Average number of copies of the virus genome in each tumor cell.                                |
+| copies_per_tumor_cell  | Number  | Average number of copies of the representative virus genome in each tumor cell.                 |
 | virus_group            | String  | The virus group of this call.                                                                   |
 
 Informational/visualisation/debugging outputs:
@@ -247,3 +244,4 @@ Informational/visualisation/debugging outputs:
 
 1. VirusBreakend. <https://pubmed.ncbi.nlm.nih.gov/33973999>
 2. Virus Interpreter. <https://github.com/hartwigmedical/hmftools/tree/virus-interpreter-v1.7.2/virus-interpreter>
+3. BWA-MEM. <https://arxiv.org/abs/1303.3997>
