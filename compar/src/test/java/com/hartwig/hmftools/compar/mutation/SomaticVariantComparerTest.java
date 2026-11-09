@@ -319,6 +319,63 @@ public class SomaticVariantComparerTest
     }
 
     @Test
+    public void proteinKeyMatchesGeneAndProteinChange()
+    {
+        SomaticVariantComparer victim = new SomaticVariantComparer(new ComparConfig(), Collections.emptyMap());
+
+        SomaticVariantData brafRow = SomaticVariantData.fromExpected(
+                List.of(new ExpectedValue("BRAF:p.V600E", "AF", "0.10", false)), victim.fieldsList());
+
+        SomaticVariantData egfrRow = SomaticVariantData.fromExpected(
+                List.of(new ExpectedValue("EGFR:p.L858R", "AF", "0.10", false)), victim.fieldsList());
+
+        SomaticVariantData v600kCall = TestSomaticVariantDataBuilder.BUILDER.create(b ->
+        {
+            b.alt = "C";
+            b.canonicalHgvsProteinImpact = "p.Val600Lys";
+        });
+
+        SomaticVariantData v600eCall = TestSomaticVariantDataBuilder.BUILDER.create();
+
+        List<Mismatch> mismatches = new ArrayList<>();
+        assertTrue(victim.identifyMismatches(
+                "TEST", mismatches, List.of(brafRow, egfrRow), List.of(v600kCall, v600eCall), MatchLevel.REPORTABLE));
+
+        assertEquals(
+                List.of(MismatchType.VALUE, MismatchType.OLD_ONLY, MismatchType.NEW_ONLY), mismatches.stream().map(x -> x.Type).toList());
+        assertEquals("BRAF p.Val600Glu", mismatches.get(0).OldItem.key());
+        assertSame(v600eCall, mismatches.get(0).NewItem);
+        assertEquals(List.of("AF(0.10/0.45)"), mismatches.get(0).DiffValues);
+        assertEquals("EGFR p.Leu858Arg", mismatches.get(1).OldItem.key());
+        assertSame(v600kCall, mismatches.get(2).NewItem);
+    }
+
+    @Test
+    public void codingKeyIsInvalid()
+    {
+        SomaticVariantComparer victim = new SomaticVariantComparer(new ComparConfig(), Collections.emptyMap());
+        assertNull(SomaticVariantData.fromExpected(List.of(new ExpectedValue("BRAF:c.1799T>A", "AF", "0.10", false)), victim.fieldsList()));
+    }
+
+    @Test
+    public void absentProteinKeyCountsOnlyThatChange() throws IOException
+    {
+        SomaticVariantData v600eCall = TestSomaticVariantDataBuilder.BUILDER.create();
+
+        SomaticVariantData v600kCall = TestSomaticVariantDataBuilder.BUILDER.create(b ->
+        {
+            b.alt = "C";
+            b.canonicalHgvsProteinImpact = "p.Val600Lys";
+        });
+
+        List<Mismatch> mismatches = compareWithAbsent("BRAF:p.V600E", List.of(), List.of(v600eCall, v600kCall), MatchLevel.DETAILED);
+
+        assertEquals(List.of(MismatchType.ABSENT_FOUND, MismatchType.NEW_ONLY), mismatches.stream().map(x -> x.Type).toList());
+        assertSame(v600eCall, mismatches.get(0).NewItem);
+        assertSame(v600kCall, mismatches.get(1).NewItem);
+    }
+
+    @Test
     public void expectedVariantWithoutCallIsOldOnlyAtReportable()
     {
         ComparConfig config = new ComparConfig();

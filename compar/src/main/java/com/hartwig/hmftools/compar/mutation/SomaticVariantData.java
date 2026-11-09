@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_VARIANT_C
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.codon.HgvsCommon.HGVS_PROTEIN_ID;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_BIALLELIC_FLAG;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.SUBCLONAL_LIKELIHOOD_FLAG;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
@@ -25,6 +26,7 @@ import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser;
 import com.hartwig.hmftools.compar.ComparConfig;
+import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.common.ExpectedValue;
 import com.hartwig.hmftools.compar.common.SourceType;
 import com.hartwig.hmftools.compar.common.field.FieldInfo;
@@ -129,25 +131,28 @@ public class SomaticVariantData extends VariantData
 
     public static SomaticVariantData fromExpected(final List<ExpectedValue> expectedValues, final List<FieldInfo> fields)
     {
-        SimpleVariant simpleVariant = fromExpectedKey(expectedValues.get(0).Key);
+        String key = expectedValues.get(0).Key;
+        String[] keyParts = key.split(":");
+        boolean isProteinKey = keyParts.length == 2 && keyParts[1].startsWith(HGVS_PROTEIN_ID);
+        SimpleVariant simpleVariant = isProteinKey ? null : fromExpectedKey(key);
 
-        if(simpleVariant == null)
+        if(!isProteinKey && simpleVariant == null)
             return null;
 
-        String chromosome = simpleVariant.Chromosome;
-        int position = simpleVariant.Position;
-        String ref = simpleVariant.Ref;
-        String alt = simpleVariant.Alt;
-        VariantType type = simpleVariant.Type;
+        String chromosome = isProteinKey ? "" : simpleVariant.Chromosome;
+        int position = isProteinKey ? 0 : simpleVariant.Position;
+        String ref = isProteinKey ? "" : simpleVariant.Ref;
+        String alt = isProteinKey ? "" : simpleVariant.Alt;
+        VariantType type = isProteinKey ? VariantType.UNDEFINED : simpleVariant.Type;
 
-        String gene = "";
+        String gene = isProteinKey ? keyParts[0] : "";
         boolean reported = false;
         HotspotType hotspotStatus = HotspotType.NON_HOTSPOT;
         VariantTier tier = VariantTier.LOW_CONFIDENCE;
         String canonicalEffect = "";
         String canonicalCodingEffect = "";
         String canonicalHgvsCodingImpact = "";
-        String canonicalHgvsProteinImpact = "";
+        String canonicalHgvsProteinImpact = isProteinKey ? keyParts[1] : "";
         String otherReportedEffects = "";
         int qual = 0;
         Set<String> filters = Sets.newHashSet();
@@ -222,6 +227,19 @@ public class SomaticVariantData extends VariantData
         }
 
         addStringValue(FLD_FILTER, filtersStr(), fields);
+    }
+
+    @Override
+    public String key() { return Chromosome.isEmpty() ? format("%s %s", Gene, CanonicalHgvsProteinImpact) : super.key(); }
+
+    @Override
+    public boolean matches(final ComparableItem other)
+    {
+        if(!Chromosome.isEmpty())
+            return super.matches(other);
+
+        VariantData otherVar = (VariantData) other;
+        return Gene.equals(otherVar.Gene) && CanonicalHgvsProteinImpact.equals(otherVar.CanonicalHgvsProteinImpact);
     }
 
     public String toString() { return format("%s gene(%s:%s)", key(), Gene, CanonicalCodingEffect); }

@@ -141,8 +141,12 @@ public class SomaticVariantComparer extends ItemComparer
         boolean oldExpectedSourced = mConfig.isExpectedSourced(SourceType.OLD);
         boolean newExpectedSourced = mConfig.isExpectedSourced(SourceType.NEW);
 
-        Map<String,List<SomaticVariantData>> oldVariantsMap = buildVariantMap(oldVariants);
-        Map<String,List<SomaticVariantData>> newVariantsMap = buildVariantMap(newVariants);
+        List<SomaticVariantData> proteinVariants = oldVariants.stream().filter(x -> x.Chromosome.isEmpty()).toList();
+        List<SomaticVariantData> oldGenomicVariants = oldVariants.stream().filter(x -> !x.Chromosome.isEmpty()).toList();
+        List<SomaticVariantData> unmatchedNewVariants = matchProteinVariants(proteinVariants, newVariants, matchLevel, mismatches);
+
+        Map<String, List<SomaticVariantData>> oldVariantsMap = buildVariantMap(oldGenomicVariants);
+        Map<String, List<SomaticVariantData>> newVariantsMap = buildVariantMap(unmatchedNewVariants);
         List<SomaticVariantData> emptyVariants = List.of();
 
         for(HumanChromosome chromosome : HumanChromosome.values())
@@ -247,6 +251,34 @@ public class SomaticVariantComparer extends ItemComparer
         }
 
         return true;
+    }
+
+    private List<SomaticVariantData> matchProteinVariants(
+            final List<SomaticVariantData> proteinVariants, final List<SomaticVariantData> newVariants, final MatchLevel matchLevel,
+            final List<Mismatch> mismatches)
+    {
+        List<SomaticVariantData> unmatchedNewVariants = Lists.newArrayList(newVariants);
+
+        for(SomaticVariantData proteinVariant : proteinVariants)
+        {
+            SomaticVariantData matchedVariant = unmatchedNewVariants.stream()
+                    .filter(x -> proteinVariant.matches(x)).findFirst().orElse(null);
+
+            if(matchedVariant == null)
+            {
+                mismatches.add(new Mismatch(proteinVariant, null, OLD_ONLY, List.of()));
+                continue;
+            }
+
+            unmatchedNewVariants.remove(matchedVariant);
+
+            Mismatch mismatch = proteinVariant.findMismatch(this, matchedVariant, matchLevel, mConfig.IncludeMatches, true);
+
+            if(mismatch != null)
+                mismatches.add(mismatch);
+        }
+
+        return unmatchedNewVariants;
     }
 
     protected SomaticVariantData findUnfilteredVariant(
