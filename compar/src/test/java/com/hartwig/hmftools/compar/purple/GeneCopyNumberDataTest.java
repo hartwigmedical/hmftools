@@ -7,7 +7,6 @@ import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItemTest;
 
 import org.junit.Before;
-import org.junit.Test;
 
 public class GeneCopyNumberDataTest extends ComparableItemTest<GeneCopyNumberData, GeneCopyNumberComparer, TestGeneCopyNumberDataBuilder>
 {
@@ -20,24 +19,11 @@ public class GeneCopyNumberDataTest extends ComparableItemTest<GeneCopyNumberDat
 
         fieldToAlternateValueInitializer = Map.of(
                 GeneCopyNumberComparer.Fields.MinCopyNumber.toString(), b -> b.minCopyNumber = alternateValueSource.CopyNumber.minCopyNumber(),
-                GeneCopyNumberComparer.Fields.MaxCopyNumber.toString(), b -> b.maxCopyNumber = alternateValueSource.CopyNumber.maxCopyNumber()
+                GeneCopyNumberComparer.Fields.MaxCopyNumber.toString(), b -> b.maxCopyNumber = alternateValueSource.CopyNumber.maxCopyNumber(),
+                GeneCopyNumberComparer.Fields.DriverType.toString(), b -> b.driverType = alternateValueSource.CopyNumber.driverType()
         );
         nameToAlternateIndexInitializer = Map.of("Gene", b -> b.gene = alternateValueSource.CopyNumber.geneName());
         reportabilityFieldToFalseReportabilityInitializer = Collections.emptyMap();
         nameToNonPassInitializer = Collections.emptyMap();
-    }
-
-    @Override
-    @Test
-    public void fullyMatchesSelfInReportableMode()
-    {
-        // Override since copy numbers are never compared in reportable mode
-    }
-
-    @Override
-    @Test
-    public void singleFieldMismatchesAreRecognizedInReportableMode()
-    {
-        // Override since copy numbers are never compared in reportable mode
     }
 }

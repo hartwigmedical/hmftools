@@ -17,10 +17,15 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.GeneCopyNumberFile;
 import com.hartwig.hmftools.compar.common.CategoryType;
+import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
+import com.hartwig.hmftools.compar.common.ExpectedValue;
+import com.hartwig.hmftools.compar.common.MatchLevel;
+import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.PipelineSourcePaths;
 import com.hartwig.hmftools.compar.ItemComparer;
+import com.hartwig.hmftools.compar.common.SourceType;
 import com.hartwig.hmftools.compar.common.field.FieldCheck;
 import com.hartwig.hmftools.compar.common.field.FieldInfo;
 
@@ -30,6 +35,7 @@ public class GeneCopyNumberComparer extends ItemComparer
     {
         MinCopyNumber,
         MaxCopyNumber,
+        DriverType,
         MinRegionStart,
         MinRegionEnd;
     }
@@ -48,15 +54,15 @@ public class GeneCopyNumberComparer extends ItemComparer
                 getOrMakeFieldCheck(fieldCheckMap, Fields.MaxCopyNumber.toString(), COPY_NUMBER_ABS_THRESHOLD, COPY_NUMBER_PERC_THRESHOLD),
                 "%.2f"));
 
+        mFields.add(new FieldInfo(
+                Fields.DriverType.toString(), getOrMakeFieldCheck(fieldCheckMap, Fields.DriverType.toString()), null));
+
         mFields.add(FieldInfo.displayOnly(Fields.MinRegionStart.toString(), null));
         mFields.add(FieldInfo.displayOnly(Fields.MinRegionEnd.toString(), null));
     }
 
     @Override
     public CategoryType category() { return GENE_COPY_NUMBER; }
-
-    @Override
-    public boolean hasReportable() { return false; }
 
     @Override
     public List<String> displayFieldNames()
@@ -90,5 +96,29 @@ public class GeneCopyNumberComparer extends ItemComparer
         }
 
         return items;
+    }
+
+    @Override
+    public List<ComparableItem> loadFromExpected(final Map<String, List<ExpectedValue>> valuesByKey)
+    {
+        List<ComparableItem> items = Lists.newArrayList();
+
+        for(List<ExpectedValue> expectedValues : valuesByKey.values())
+        {
+            items.add(GeneCopyNumberData.fromExpected(expectedValues, mFields));
+        }
+
+        return items;
+    }
+
+    @Override
+    public void compareItems(
+            final List<Mismatch> mismatches, final MatchLevel matchLevel, final boolean includeMatches,
+            final boolean includesExpected, final List<ComparableItem> oldItems, final List<ComparableItem> newItems)
+    {
+        if(mConfig.isExpectedSourced(SourceType.OLD))
+            newItems.removeIf(x -> oldItems.stream().noneMatch(y -> y.matches(x)));
+
+        CommonUtils.compareItems(this, mismatches, matchLevel, includeMatches, includesExpected, oldItems, newItems);
     }
 }

@@ -22,6 +22,9 @@ DRIVER	MinCopyNumber	true	0.5	15.0%
 DRIVER	MaxCopyNumber	true	0.5	15.0%
 DRIVER	Chromosome	true	none	none
 DRIVER	ChromosomeBand	true	none	none
+GENE_COPY_NUMBER	MinCopyNumber	true	0.5	15.0%
+GENE_COPY_NUMBER	MaxCopyNumber	true	0.5	15.0%
+GENE_COPY_NUMBER	DriverType	true	none	none
 SOMATIC_VARIANT	Reported	true	none	none
 SOMATIC_VARIANT	Hotspot	true	none	none
 SOMATIC_VARIANT	Tier	true	none	none
