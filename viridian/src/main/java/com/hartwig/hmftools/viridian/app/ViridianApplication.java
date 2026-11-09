@@ -11,12 +11,12 @@ import static com.hartwig.hmftools.viridian.common.ViridianConstants.CANDIDATES_
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.DEFAULT_VIRUS_DECOY_CONTIGS;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.GENOME_SUPPORT_TSV_SUFFIX;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.INTEGRATION_CANDIDATES_TSV_SUFFIX;
+import static com.hartwig.hmftools.viridian.common.ViridianConstants.PROFILE_TSV_SUFFIX;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.READ_VOTE_CORRECT_BASE_PROBABILITY;
+import static com.hartwig.hmftools.viridian.common.ViridianConstants.REPORT_TSV_SUFFIX;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.REPRESENTATIVE_ALIGNMENTS_BAM_SUFFIX;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.RUN_MANIFEST_TSV_SUFFIX;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.VIRAL_READ_MIN_SOFT_CLIP_BASES;
-import static com.hartwig.hmftools.viridian.common.ViridianConstants.VIRUS_PROFILE_TSV_SUFFIX;
-import static com.hartwig.hmftools.viridian.common.ViridianConstants.VIRUS_REPORT_TSV_SUFFIX;
 
 import java.io.File;
 import java.io.IOException;
@@ -131,7 +131,7 @@ public class ViridianApplication
         List<VirusProfile> profiles = VirusProfile.from(representatives, representativeGenomeStats);
 
         LOGGER.info("Writing virus profile output");
-        OutputWriter.writeVirusProfiles(outputFile(VIRUS_PROFILE_TSV_SUFFIX), profiles);
+        OutputWriter.writeVirusProfiles(outputFile(PROFILE_TSV_SUFFIX), profiles);
 
         return profiles;
     }
@@ -303,7 +303,7 @@ public class ViridianApplication
 
         LOGGER.info("Writing virus report output");
         OutputWriter.writeVirusReports(
-                outputFile(VIRUS_REPORT_TSV_SUFFIX), reports, clonalityInputs.expectedViralDepthPerCopy());
+                outputFile(REPORT_TSV_SUFFIX), reports, clonalityInputs.expectedViralDepthPerCopy());
     }
 
     private String outputFile(String suffix)
