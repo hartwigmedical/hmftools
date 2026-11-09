@@ -109,6 +109,16 @@ public class ComparConfigTest
     }
 
     @Test
+    public void testExpectedFilesOnlyForOldSource()
+    {
+        ConfigBuilder configBuilder = new ConfigBuilder();
+        ComparConfig.addConfig(configBuilder);
+
+        assertTrue(configBuilder.isRegistered(EXPECTED_FINDINGS_FILES + "_old"));
+        assertFalse(configBuilder.isRegistered(EXPECTED_FINDINGS_FILES + "_new"));
+    }
+
+    @Test
     public void testSourceLabelConfig()
     {
         assertTrue(createLabelConfig("pipeline a", "pipeline b", false).isValid());

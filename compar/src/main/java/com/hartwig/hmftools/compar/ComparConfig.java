@@ -425,7 +425,7 @@ public class ComparConfig
         {
             String label = configBuilder.getValue(formConfigSourceStr(SOURCE_LABEL, sourceType.configStr()));
             String expectedConfig = formConfigSourceStr(EXPECTED_FINDINGS_FILES, sourceType.configStr());
-            if(configBuilder.hasValue(expectedConfig))
+            if(sourceType == OLD && configBuilder.hasValue(expectedConfig))
             {
                 ExpectedCache expectedCache = new ExpectedCache();
                 expectedCache.loadFiles(configBuilder.getValue(expectedConfig));
@@ -480,9 +480,6 @@ public class ComparConfig
 
         configBuilder.addConfigItem(
                 formConfigSourceStr(EXPECTED_FINDINGS_FILES, OLD_SOURCE_CFG), false, "Expected findings file(s) old");
-
-        configBuilder.addConfigItem(
-                formConfigSourceStr(EXPECTED_FINDINGS_FILES, NEW_SOURCE_CFG), false, "Expected findings file(s) new");
 
         configBuilder.addConfigItem(formConfigSourceStr(SOURCE_LABEL, OLD_SOURCE_CFG), false, "Source label old");
         configBuilder.addConfigItem(formConfigSourceStr(SOURCE_LABEL, NEW_SOURCE_CFG), false, "Source label new");
