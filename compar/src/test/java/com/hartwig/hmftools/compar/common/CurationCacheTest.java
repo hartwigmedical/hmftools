@@ -41,7 +41,7 @@ public class CurationCacheTest
 
     private static final String REVIEWER = "reviewer a";
     private static final String CURATED_DATE = "2026-10-20";
-    private static final String CURATION_HEADER = "Severity\tVerdict\tCurationComment\tCuratedBy\tCuratedDate";
+    private static final String CURATION_HEADER = "CurationType\tSeverity\tVerdict\tCurationComment\tCuratedBy\tCuratedDate";
 
     private static final RnaFusionData FUSION_ITEM = TestRnaFusionDataBuilder.BUILDER.create();
     private static final RnaFusionData OTHER_FUSION_ITEM = TestRnaFusionDataBuilder.BUILDER.createWithAlternateDefaults();
@@ -197,13 +197,14 @@ public class CurationCacheTest
                 "cache.tsv", List.of(
                         List.of(
                                 SAMPLE_ID, FUSION, "OLD_ONLY", FUSION_ITEM.key(), "", LABEL_A, LABEL_B, "NONE", "regression", "OLD_CORRECT",
-                                "2026-10-20T03:15:42Z"),
+                                "2026-10-20T03:15:42Z", "BATCH_INFERRED"),
                         List.of(SAMPLE_ID, FUSION, "OLD_ONLY", FUSION_ITEM.key(), "", LABEL_B, LABEL_C, "NONE", "")));
         CurationCache cache = new CurationCache(cacheFile.getAbsolutePath());
 
         Mismatch oldOnly = new Mismatch(FUSION_ITEM, null, MismatchType.OLD_ONLY, Collections.emptyList());
         CurationCache.Entry previous = cache.match(SAMPLE_ID, oldOnly).get(0).previous();
 
+        assertEquals(CurationType.BATCH_INFERRED, previous.curationType());
         assertEquals(Verdict.OLD_CORRECT, previous.verdict());
         assertEquals(LABEL_A, previous.oldSource());
         assertEquals(REVIEWER, previous.curatedBy());
@@ -232,8 +233,8 @@ public class CurationCacheTest
         {
             lines.add(String.join(
                     TSV_DELIM, row.get(0), row.get(1), row.get(2), "", row.get(3), row.get(4), "", "", row.get(5),
-                    row.get(6), row.get(7), row.size() > 9 ? row.get(9) : "", row.get(8), REVIEWER,
-                    row.size() > 10 ? row.get(10) : CURATED_DATE));
+                    row.get(6), row.size() > 11 ? row.get(11) : "MANUAL", row.get(7), row.size() > 9 ? row.get(9) : "", row.get(8),
+                    REVIEWER, row.size() > 10 ? row.get(10) : CURATED_DATE));
         }
 
         File file = temp.newFile(filename);

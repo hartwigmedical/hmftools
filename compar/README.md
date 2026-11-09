@@ -194,6 +194,10 @@ Labels must be non-blank, with no tabs or line breaks. Source labels and `-curat
 `Severity` is the review label in each cache row. Allowed values are `NONE`, `CRITICAL`, `MEDIUM` and `LOW`. Any other value,
 including a blank cell, stops the run.
 
+#### Curation type
+
+`CurationType` says how a cache row was made: `MANUAL` or `BATCH_INFERRED`. Any other value, including a blank cell, stops the run.
+
 #### Curation status
 
 For difference rows, `MismatchType` remains `VALUE`, `OLD_ONLY` or `NEW_ONLY`. `CurationStatus` is `ACKNOWLEDGED` or `CHANGED_FROM_CACHE`.
@@ -212,14 +216,14 @@ For later comparisons, pass the curation file as:
 Example `pipeline_curation.tsv`:
 
 ```tsv
-SampleId	Category	MismatchType	CurationStatus	Key	Differences	OldSource	NewSource	Severity	CurationComment
-DEMO_001	GENE_COPY_NUMBER	VALUE		MYC	MinCopyNumber(6/8)	v34	v35	LOW	Expected copy number change
-DEMO_001	GENE_COPY_NUMBER	VALUE		MYC	MinCopyNumber(8/10)	v35	v36	NONE	Recorded difference
-DEMO_002	GENE_COPY_NUMBER	VALUE		MYC	MinCopyNumber(2/5)	v35	v36	CRITICAL	Investigate
-DEMO_001	RNA_FUSION	OLD_ONLY		EML4_ALK chr2:3000-chr2:4000		v35	v36	LOW	Previously reviewed filtering change
-DEMO_001	DRIVER	NEW_ONLY		AMP_ERBB2		v35	v36	MEDIUM	Newly reported driver
-DEMO_001	PURITY	VALUE			Purity(0.65/0.68)	v35	v36	LOW	Small purity change
-DEMO_001	RNA_FUSION	INVALID_NEW				v35	v36	NONE	Missing NEW input
+SampleId	Category	MismatchType	CurationStatus	Key	Differences	OldSource	NewSource	CurationType	Severity	CurationComment
+DEMO_001	GENE_COPY_NUMBER	VALUE		MYC	MinCopyNumber(6/8)	v34	v35	MANUAL	LOW	Expected copy number change
+DEMO_001	GENE_COPY_NUMBER	VALUE		MYC	MinCopyNumber(8/10)	v35	v36	BATCH_INFERRED	NONE	Recorded difference
+DEMO_002	GENE_COPY_NUMBER	VALUE		MYC	MinCopyNumber(2/5)	v35	v36	MANUAL	CRITICAL	Investigate
+DEMO_001	RNA_FUSION	OLD_ONLY		EML4_ALK chr2:3000-chr2:4000		v35	v36	MANUAL	LOW	Previously reviewed filtering change
+DEMO_001	DRIVER	NEW_ONLY		AMP_ERBB2		v35	v36	MANUAL	MEDIUM	Newly reported driver
+DEMO_001	PURITY	VALUE			Purity(0.65/0.68)	v35	v36	MANUAL	LOW	Small purity change
+DEMO_001	RNA_FUSION	INVALID_NEW				v35	v36	MANUAL	NONE	Missing NEW input
 ```
 
 For the next comparison, use these options alongside the source directories and output directory:
