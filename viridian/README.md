@@ -216,7 +216,6 @@ Main output:
 | interpretation         | String  | Reporting type used by hmftools downstream.                                                     |
 | percentageCovered      | Number  | Percentage of virus genome bases aligned in reads, 0-100.                                       |
 | meanCoverage           | Number  | Average depth of virus genome.                                                                  |
-| expectedClonalCoverage | Number  | Virus genome depth if each tumor cell had exactly 1 virus genome copy.                          |
 | reported               | Boolean | True if significant virus presence.                                                             |
 | clonality_status       | String  | `CLONAL` / `NOT_CLONAL` / `NOT_PROFILED` / `PURPLE_FAIL_NO_TUMOR` / `PURPLE_FAIL_CONTAMINATION` |
 | copies_per_tumor_cell  | Number  | Average number of copies of the virus genome in each tumor cell.                                |

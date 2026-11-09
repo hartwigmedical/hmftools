@@ -299,7 +299,7 @@ public class OutputWriter
         aligned_edit_distance
     }
 
-    public static void writeVirusReports(String file, List<VirusReport> reports, @Nullable Double expectedViralDepthPerCopy)
+    public static void writeVirusReports(String file, List<VirusReport> reports)
     {
         List<VirusReport> rows = reports.stream().sorted(comparing(report -> report.virus().group())).toList();
 
@@ -316,7 +316,6 @@ public class OutputWriter
                             VirusReportColumn.interpretation, report.reportingType() != null ? report.reportingType().toString() : null);
                     row.set(VirusReportColumn.percentageCovered, stats != null ? 100 * stats.coverageFraction() : 0);
                     row.set(VirusReportColumn.meanCoverage, stats != null ? stats.depth().mean() : 0);
-                    row.setOrNull(VirusReportColumn.expectedClonalCoverage, expectedViralDepthPerCopy);
                     row.set(VirusReportColumn.reported, report.isReported());
                     row.set(VirusReportColumn.clonality_status, report.clonalityStatus().name());
                     row.setOrNull(VirusReportColumn.copies_per_tumor_cell, report.copiesPerTumorCell());
@@ -332,8 +331,6 @@ public class OutputWriter
         interpretation,
         percentageCovered,
         meanCoverage,
-        // TODO: remove this because it's not the same "clonal" definition as reporting actually uses?
-        expectedClonalCoverage,
         reported,
         clonality_status,
         copies_per_tumor_cell,

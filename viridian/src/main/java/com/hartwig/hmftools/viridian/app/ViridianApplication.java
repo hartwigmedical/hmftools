@@ -302,8 +302,7 @@ public class ViridianApplication
                 profiles, integratedGenomes, mVirusReference::virusGroupInfo, clonalityInputs);
 
         LOGGER.info("Writing virus report output");
-        OutputWriter.writeVirusReports(
-                outputFile(REPORT_TSV_SUFFIX), reports, clonalityInputs.expectedViralDepthPerCopy());
+        OutputWriter.writeVirusReports(outputFile(REPORT_TSV_SUFFIX), reports);
     }
 
     private String outputFile(String suffix)
