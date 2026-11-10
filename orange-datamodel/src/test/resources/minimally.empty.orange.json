@@ -45,7 +45,7 @@
     "fusions": [],
     "somaticBreakends": []
   },
-  "virusInterpreter": {
+  "viridian": {
     "allViruses": [],
     "reportableViruses": []
   },

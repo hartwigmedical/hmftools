@@ -36,8 +36,8 @@ import com.hartwig.hmftools.common.peach.PeachGenotypeFile;
 import com.hartwig.hmftools.common.pipeline.PipelineVersionFile;
 import com.hartwig.hmftools.common.sigs.SignatureAllocation;
 import com.hartwig.hmftools.common.sigs.SignatureAllocationFile;
-import com.hartwig.hmftools.common.virusinterpreter.VirusInterpreterData;
-import com.hartwig.hmftools.common.virusinterpreter.VirusInterpreterDataLoader;
+import com.hartwig.hmftools.common.viridian.VirusReport;
+import com.hartwig.hmftools.common.viridian.VirusReportFile;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
 import com.hartwig.hmftools.datamodel.immuno.ImmuneEscapeRecord;
 import com.hartwig.hmftools.datamodel.isofox.IsofoxRecord;
@@ -59,7 +59,7 @@ import com.hartwig.hmftools.orange.algo.purple.PurpleData;
 import com.hartwig.hmftools.orange.algo.purple.PurpleDataLoader;
 import com.hartwig.hmftools.orange.algo.purple.PurpleInterpreter;
 import com.hartwig.hmftools.orange.algo.sigs.SigsInterpreter;
-import com.hartwig.hmftools.orange.algo.virus.VirusInterpreter;
+import com.hartwig.hmftools.orange.algo.viridian.ViridianInterpreter;
 import com.hartwig.hmftools.orange.conversion.ConversionUtil;
 import com.hartwig.hmftools.orange.conversion.OrangeConversion;
 
@@ -98,7 +98,7 @@ public class OrangeAlgo
         LinxData linxData = loadLinxData(config);
         ChordData chord = loadChordAnalysis(config);
         LilacRecord lilac = loadLilacData(config);
-        VirusInterpreterData virusInterpreter = loadVirusInterpreterData(config);
+        List<VirusReport> virusReports = loadVirusReports(config);
         CuppaData cuppa = loadCuppaData(config);
         List<PeachGenotype> peach = loadPeachData(config);
         List<SignatureAllocation> sigAllocations = loadSigAllocations(config);
@@ -138,7 +138,7 @@ public class OrangeAlgo
                 .isofox(isofox)
                 .lilac(lilac)
                 .immuneEscape(immuneEscape)
-                .virusInterpreter(virusInterpreter != null ? VirusInterpreter.interpret(virusInterpreter) : null)
+                .viridian(virusReports != null ? ViridianInterpreter.interpret(virusReports) : null)
                 .chord(chord != null ? OrangeConversion.convert(chord) : null)
                 .cuppa(cuppa)
                 .peach(ConversionUtil.mapToIterable(peach, OrangeConversion::convert))
@@ -301,7 +301,7 @@ public class OrangeAlgo
     }
 
     @Nullable
-    private static VirusInterpreterData loadVirusInterpreterData(final OrangeConfig config) throws IOException
+    private static List<VirusReport> loadVirusReports(final OrangeConfig config)
     {
         if(config.VirusDir == null || !Files.exists(Paths.get(config.VirusDir)))
         {
@@ -309,7 +309,7 @@ public class OrangeAlgo
             return null;
         }
 
-        return VirusInterpreterDataLoader.load(config.VirusDir, config.TumorId);
+        return VirusReportFile.read(VirusReportFile.generateFilename(config.VirusDir, config.TumorId));
     }
 
     @Nullable

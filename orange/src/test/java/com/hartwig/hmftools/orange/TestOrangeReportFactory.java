@@ -14,7 +14,6 @@ import com.hartwig.hmftools.common.metrics.FlagstatTestFactory;
 import com.hartwig.hmftools.common.metrics.BamMetricsTestFactory;
 import com.hartwig.hmftools.common.peach.PeachTestFactory;
 import com.hartwig.hmftools.common.pipeline.PipelineToolDirectories;
-import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.datamodel.hla.ImmutableLilacAllele;
 import com.hartwig.hmftools.datamodel.hla.ImmutableLilacRecord;
 import com.hartwig.hmftools.datamodel.hla.LilacAllele;
@@ -43,11 +42,13 @@ import com.hartwig.hmftools.datamodel.orange.OrangeSample;
 import com.hartwig.hmftools.datamodel.peach.PeachGenotype;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleRecord;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
-import com.hartwig.hmftools.datamodel.virus.ImmutableVirusInterpreterData;
-import com.hartwig.hmftools.datamodel.virus.VirusBreakendQCStatus;
-import com.hartwig.hmftools.datamodel.virus.VirusInterpretation;
-import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
-import com.hartwig.hmftools.datamodel.virus.VirusInterpreterEntry;
+import com.hartwig.hmftools.datamodel.viridian.ClonalityStatus;
+import com.hartwig.hmftools.datamodel.viridian.ImmutableViridianRecord;
+import com.hartwig.hmftools.datamodel.viridian.ImmutableVirusReport;
+import com.hartwig.hmftools.datamodel.viridian.ReportQcStatus;
+import com.hartwig.hmftools.datamodel.viridian.ViridianRecord;
+import com.hartwig.hmftools.datamodel.viridian.VirusInterpretation;
+import com.hartwig.hmftools.datamodel.viridian.VirusReport;
 import com.hartwig.hmftools.orange.algo.cuppa.TestCuppaFactory;
 import com.hartwig.hmftools.orange.algo.immuno.TestImmuneEscapeFactory;
 import com.hartwig.hmftools.orange.algo.isofox.OrangeIsofoxTestFactory;
@@ -79,7 +80,7 @@ public final class TestOrangeReportFactory
                 .linx(TestLinxRecordFactory.createMinimalTestLinxData())
                 .lilac(ImmutableLilacRecord.builder().build())
                 .immuneEscape(TestImmuneEscapeFactory.builder().build())
-                .virusInterpreter(ImmutableVirusInterpreterData.builder().build())
+                .viridian(ImmutableViridianRecord.builder().build())
                 .chord(OrangeConversion.convert(ChordTestFactory.createMinimalTestChordAnalysis()))
                 .cuppa(TestCuppaFactory.createMinimalCuppaData())
                 .plots(createMinimalOrangePlots());
@@ -102,7 +103,7 @@ public final class TestOrangeReportFactory
                 .isofox(createTestIsofoxData())
                 .lilac(createTestLilacData())
                 .immuneEscape(createTestImmuneEscapeRecord())
-                .virusInterpreter(createTestVirusInterpreterData())
+                .viridian(createTestViridianRecord())
                 .peach(createTestPeachData())
                 .build();
     }
@@ -299,23 +300,24 @@ public final class TestOrangeReportFactory
     }
 
     @NotNull
-    private static VirusInterpreterData createTestVirusInterpreterData()
+    private static ViridianRecord createTestViridianRecord()
     {
-        List<VirusInterpreterEntry> reportableViruses = Lists.newArrayList();
+        List<VirusReport> reportableViruses = Lists.newArrayList();
 
-        reportableViruses.add(com.hartwig.hmftools.datamodel.virus.ImmutableVirusInterpreterEntry.builder()
+        reportableViruses.add(ImmutableVirusReport.builder()
                 .name("virus A")
-                .qcStatus(VirusBreakendQCStatus.NO_ABNORMALITIES)
+                .virusGroup("virus group A")
+                .qcStatus(ReportQcStatus.NO_ABNORMALITIES)
                 .integrations(3)
                 .interpretation(VirusInterpretation.HPV)
                 .percentageCovered(87D)
                 .meanCoverage(42D)
-                .expectedClonalCoverage(3D)
                 .reported(true)
-                .driverInterpretation(DriverInterpretation.UNKNOWN)
+                .clonalityStatus(ClonalityStatus.CLONAL)
+                .copiesPerTumorCell(14D)
                 .build());
 
-        return ImmutableVirusInterpreterData.builder().reportableViruses(reportableViruses).build();
+        return ImmutableViridianRecord.builder().reportableViruses(reportableViruses).build();
     }
 
     @NotNull

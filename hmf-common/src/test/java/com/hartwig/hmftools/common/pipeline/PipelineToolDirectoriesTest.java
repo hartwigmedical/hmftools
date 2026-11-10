@@ -194,6 +194,7 @@ public class PipelineToolDirectoriesTest
         assertEquals(expected.tealDir(), victim.tealDir());
         assertEquals(expected.tumorFlagstatDir(), victim.tumorFlagstatDir());
         assertEquals(expected.tumorMetricsDir(), victim.tumorMetricsDir());
+        assertEquals(expected.viridianDir(), victim.viridianDir());
         assertEquals(expected.virusBreakendDir(), victim.virusBreakendDir());
         assertEquals(expected.virusInterpreterDir(), victim.virusInterpreterDir());
         assertEquals(expected.qseeDir(), victim.qseeDir());
