@@ -85,8 +85,6 @@ public class QualityCalculator
         double recalibratedBaseQuality = seqTechBaseQuality;
         Double penalisedBaseQuality = null;
 
-        double baseQualPenalty = 0;
-
         if(isUltima())
         {
             if(readContextCounter.isSnv())

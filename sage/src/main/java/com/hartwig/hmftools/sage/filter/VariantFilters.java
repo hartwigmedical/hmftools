@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.sage.ReferenceData.isHighlyPolymorphic;
 import static com.hartwig.hmftools.sage.SageConfig.isSbx;
 import static com.hartwig.hmftools.sage.SageConfig.isUltima;
 import static com.hartwig.hmftools.sage.SageConfig.isIllumina;
+import static com.hartwig.hmftools.sage.SageConstants.BASE_QUAL_FIXED_PENALTY_MAX;
 import static com.hartwig.hmftools.sage.SageConstants.DOUBLE_JITTER_MIN_REPEAT_CHANGE;
 import static com.hartwig.hmftools.sage.SageConstants.HIGHLY_POLYMORPHIC_GENES_ALT_MAP_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.sage.SageConstants.HOTSPOT_MIN_TUMOR_ALT_SUPPORT_SKIP_QUAL;
@@ -322,6 +323,9 @@ public class VariantFilters
 
         int qualPerRead = (int)round(altNonMediumFinalBaseQualityTotal / strongNonMediumSupport);
 
+        if(boostNovelIndel(tier, primaryTumor))
+            qualPerRead += BASE_QUAL_FIXED_PENALTY_MAX;
+
         int minQualForTqp = primaryTumor.qualCache().isMsiSampleAndVariant() ? MIN_TQP_QUAL_MSI_VARIANT : MIN_TQP_QUAL;
 
         byte qualPerReadFloored = (byte)max(qualPerRead, minQualForTqp);
@@ -461,6 +465,9 @@ public class VariantFilters
         int supportCount = primaryTumor.strongAltSupport();
 
         double altBaseQualAvg = primaryTumor.averageAltRecalibratedBaseQuality();
+
+        if(boostNovelIndel(primaryTumor.tier(), primaryTumor))
+            altBaseQualAvg += BASE_QUAL_FIXED_PENALTY_MAX;
 
         int adjustedAltSupportCount = supportCount * (int)round(min(altBaseQualAvg / baseQualAvg, 1));
 
