@@ -29,7 +29,7 @@ public final class TestOrangeConfigFactory
     public static final String LINX_PLOT_DIRECTORY = RUN_DIRECTORY + "/linx/plot";
     public static final String ISOFOX_DIR = RUN_DIRECTORY + "/isofox/";
     public static final String LILAC_DIR = RUN_DIRECTORY + "/lilac/";
-    public static final String VIRUS_DIR = RUN_DIRECTORY + "/virusinterprtr/";
+    public static final String VIRUS_DIR = RUN_DIRECTORY + "/viridian/";
     public static final String CHORD_DIR = RUN_DIRECTORY + "/chord/";
     public static final String CUPPA_DIR = RUN_DIRECTORY + "/cuppa/";
     public static final String PEACH_DIR = RUN_DIRECTORY + "/peach/";
