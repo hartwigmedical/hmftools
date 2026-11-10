@@ -10,7 +10,7 @@ import static org.junit.Assert.assertNull;
 import java.util.List;
 import java.util.Map;
 
-import com.hartwig.hmftools.common.bwa.IBwaMemAligner;
+import com.hartwig.hmftools.common.bwa.MockBwaMemAligner;
 import com.hartwig.hmftools.viridian.reference.Virus;
 import com.hartwig.hmftools.viridian.reference.VirusGenome;
 import com.hartwig.hmftools.viridian.reference.VirusGroup;
@@ -96,7 +96,7 @@ public class ViralInsertAlignerTest
                 new SAMSequenceRecord(GENOME_18.contigName(), GENOME_18.length())));
         VirusReference reference = new VirusReference(List.of(GENOME_16, GENOME_18), dictionary, Map.of());
 
-        return new ViralInsertAligner(new FakeAligner(hits), reference);
+        return new ViralInsertAligner(MockBwaMemAligner.forQueries(hits), reference);
     }
 
     private static BwaMemAlignment alignment(int samFlag, int refId, int refStart, int score, String cigar, int editDistance)
@@ -108,14 +108,5 @@ public class ViralInsertAlignerTest
     private static BwaMemAlignment noHit()
     {
         return new BwaMemAlignment(0x4, -1, -1, -1, 0, 0, 0, 0, 0, 0, "*", null, null, -1, -1, 0);
-    }
-
-    private record FakeAligner(Map<String, List<BwaMemAlignment>> hitsBySequence) implements IBwaMemAligner
-    {
-        @Override
-        public List<List<BwaMemAlignment>> alignSequences(List<byte[]> sequences)
-        {
-            return sequences.stream().map(sequence -> hitsBySequence.get(new String(sequence))).toList();
-        }
     }
 }

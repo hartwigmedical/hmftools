@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import com.hartwig.hmftools.common.bwa.IBwaMemAligner;
+import com.hartwig.hmftools.common.bwa.MockBwaMemAligner;
 
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
 import org.junit.Rule;
@@ -50,7 +50,7 @@ public class ViralReadAlignerTest
                 R2_BASES, List.of(noHit()),                    // no viral alignment: dropped
                 R3_BASES, List.of(alignment(0, 0, 0, 40, "100M"))); // low score, kept
 
-        ViralReadAligner aligner = new ViralReadAligner(new FakeAligner(alignments), header(), CHUNK_SIZE);
+        ViralReadAligner aligner = new ViralReadAligner(MockBwaMemAligner.forQueries(alignments), header(), CHUNK_SIZE);
 
         String fasta = writeFasta();
         String bam = new File(mTempDir.getRoot(), "aligned.bam").getPath();
@@ -134,21 +134,5 @@ public class ViralReadAlignerTest
             throw new RuntimeException(e);
         }
         return records;
-    }
-
-    private static class FakeAligner implements IBwaMemAligner
-    {
-        private final Map<String, List<BwaMemAlignment>> mBySequence;
-
-        FakeAligner(Map<String, List<BwaMemAlignment>> bySequence)
-        {
-            mBySequence = bySequence;
-        }
-
-        @Override
-        public List<List<BwaMemAlignment>> alignSequences(List<byte[]> sequences)
-        {
-            return sequences.stream().map(sequence -> mBySequence.get(new String(sequence))).toList();
-        }
     }
 }
