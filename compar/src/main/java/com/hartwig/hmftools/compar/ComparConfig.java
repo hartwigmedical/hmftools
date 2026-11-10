@@ -270,7 +270,7 @@ public class ComparConfig
 
     public String formOutputFilePrefix()
     {
-        String filePrefix = OutputDir + "compar_cohort";
+        String filePrefix = OutputDir + "compar";
 
         if(OutputId != null)
             filePrefix += "." + OutputId;

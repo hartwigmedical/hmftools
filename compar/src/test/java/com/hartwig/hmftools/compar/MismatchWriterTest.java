@@ -213,7 +213,7 @@ public class MismatchWriterTest
     @Test
     public void outputMatchingCacheFileIsRejected() throws IOException
     {
-        String filePrefix = "compar_cohort";
+        String filePrefix = "compar";
 
         for(String outputFile : List.of(filePrefix + ".tsv", filePrefix + ".rna_fusion.tsv", FieldConfigFile.generateFileName(filePrefix)))
         {
