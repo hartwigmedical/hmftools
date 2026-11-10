@@ -95,7 +95,7 @@ public record AllGenomesReadAlignments(
     {
         AlignmentDecoder decoder = new AlignmentDecoder(reference);
 
-        try(SamReader reader = SamReaderFactory.makeDefault().validationStringency(ValidationStringency.SILENT).open(new File(bamFile));
+        try(SamReader reader = SamReaderFactory.makeDefault().validationStringency(ValidationStringency.STRICT).open(new File(bamFile));
                 SAMRecordIterator records = reader.iterator())
         {
             return from(records.stream().filter(record -> !record.getReadUnmappedFlag()).map(decoder::decode));

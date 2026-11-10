@@ -95,7 +95,7 @@ public class RepresentativeReadAssigner
         int writtenRecords = 0;
 
         try(SamReader reader = SamReaderFactory.makeDefault()
-                .validationStringency(ValidationStringency.SILENT).open(new File(sourceBamFile)))
+                .validationStringency(ValidationStringency.STRICT).open(new File(sourceBamFile)))
         {
             SAMFileHeader header = reader.getFileHeader().clone();
             header.setSortOrder(SAMFileHeader.SortOrder.coordinate);
