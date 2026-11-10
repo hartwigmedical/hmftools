@@ -45,7 +45,7 @@ public class ViralReadAlignerTest
 
     private static final String R1_BASES = "A".repeat(100);
     private static final String R2_BASES = "C".repeat(100);
-    private static final String R3_BASES = "G".repeat(100);
+    private static final String R3_BASES = "A".repeat(50) + "C".repeat(50);
 
     @Test
     public void testAlignWritesEveryViralAlignmentWithContigAndScore() throws IOException
@@ -59,7 +59,9 @@ public class ViralReadAlignerTest
                         alignment(reverseSecondary, HPV18_REF_ID, 4, 60, "10H90M"),
                         alignment(secondary, HPV16_REF_ID, 200, 10, "100M")),
                 R2_BASES, List.of(noHit()),
-                R3_BASES, List.of(alignment(0, HPV16_REF_ID, 0, 40, "100M")));
+                R3_BASES, List.of(
+                        alignment(0, HPV16_REF_ID, 0, 40, "100M"),
+                        alignment(reverseSecondary, HPV18_REF_ID, 49, 40, "100M")));
 
         ViralReadAligner aligner = new ViralReadAligner(MockBwaMemAligner.forQueries(alignments), header(), CHUNK_SIZE);
 
@@ -67,12 +69,14 @@ public class ViralReadAlignerTest
         String bam = new File(mTempDir.getRoot(), "aligned.bam").getPath();
         aligner.align(fasta, bam);
 
-        // Coordinate sorted, so ordered by contig then position. A hard-clipped alignment omits its bases.
+        // Coordinate sorted, so ordered by contig then position. A hard-clipped alignment omits its bases. A reverse
+        // strand alignment holds the reverse complement of the read's bases.
         List<WrittenRecord> expected = List.of(
                 new WrittenRecord("r3", 0, "hpv16", 1, "100M", R3_BASES, 40, 0, "100"),
                 new WrittenRecord("r1", 0, "hpv16", 10, "100M", R1_BASES, 80, 0, "100"),
                 new WrittenRecord("r1", secondary, "hpv16", 201, "100M", R1_BASES, 10, 0, "100"),
-                new WrittenRecord("r1", reverseSecondary, "hpv18", 5, "10H90M", "*", 60, 0, "90"));
+                new WrittenRecord("r1", reverseSecondary, "hpv18", 5, "10H90M", "*", 60, 0, "90"),
+                new WrittenRecord("r3", reverseSecondary, "hpv18", 50, "100M", "G".repeat(50) + "T".repeat(50), 40, 0, "100"));
         assertEquals(expected, readBam(bam));
     }
 
@@ -119,7 +123,7 @@ public class ViralReadAlignerTest
     private static List<WrittenRecord> readBam(String bam) throws IOException
     {
         List<WrittenRecord> records = new ArrayList<>();
-        try(SamReader reader = SamReaderFactory.makeDefault().validationStringency(ValidationStringency.SILENT).open(new File(bam)))
+        try(SamReader reader = SamReaderFactory.makeDefault().validationStringency(ValidationStringency.STRICT).open(new File(bam)))
         {
             for(SAMRecord record : reader)
             {

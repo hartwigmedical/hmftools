@@ -73,14 +73,19 @@ public class RepresentativeReadAssignerTest
     @Test
     public void testAssignReadsBreaksTieByGenome()
     {
-        ViralReadAlignmentStore alignments = new ViralReadAlignmentStore(List.of(
-                alignment("r1/1", TWIN, 100, 3),
-                alignment("r1/1", REPRESENTATIVE, 100, 3)));
+        ViralReadAlignment onTwin = alignment("r1/1", TWIN, 100, 3);
+        ViralReadAlignment onRepresentative = alignment("r1/1", REPRESENTATIVE, 100, 3);
 
+        assertEquals(REPRESENTATIVE, assignedGenome(List.of(onTwin, onRepresentative)));
+        assertEquals(REPRESENTATIVE, assignedGenome(List.of(onRepresentative, onTwin)));
+    }
+
+    private static VirusGenome assignedGenome(List<ViralReadAlignment> alignments)
+    {
+        ViralReadAlignmentStore store = new ViralReadAlignmentStore(alignments);
         Map<ReadId, ViralReadAlignment> assignments =
-                RepresentativeReadAssigner.assignReads(alignments.byRead(), Set.of(REPRESENTATIVE, TWIN));
-
-        assertEquals(REPRESENTATIVE, assignments.get(ReadId.parse("r1/1")).genome());
+                RepresentativeReadAssigner.assignReads(store.byRead(), Set.of(REPRESENTATIVE, TWIN));
+        return assignments.get(ReadId.parse("r1/1")).genome();
     }
 
     // One read with two alignments to the same genome from the same base, telling apart only by their CIGAR.

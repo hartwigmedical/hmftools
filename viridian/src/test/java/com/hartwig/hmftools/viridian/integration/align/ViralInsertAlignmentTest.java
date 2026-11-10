@@ -2,6 +2,7 @@ package com.hartwig.hmftools.viridian.integration.align;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.cigarFromStr;
 import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
+import static com.hartwig.hmftools.viridian.common.ViridianConstants.INTEGRATION_ALIGN_SCORE_MIN;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -31,13 +32,13 @@ public class ViralInsertAlignmentTest
     @Test
     public void testPassesFiltersWhenScoreClearsFloor()
     {
-        assertTrue(alignment("70M", 70, 60).passesFilters());
+        assertTrue(alignment("70M", 70, INTEGRATION_ALIGN_SCORE_MIN).passesFilters());
     }
 
     @Test
     public void testDoesNotClearWhenScoreBelowFloor()
     {
-        assertFalse(alignment("70M", 70, 25).passesFilters());
+        assertFalse(alignment("70M", 70, INTEGRATION_ALIGN_SCORE_MIN - 1).passesFilters());
     }
 
     private static ViralInsertAlignment alignment(String cigar, int sequenceLength)

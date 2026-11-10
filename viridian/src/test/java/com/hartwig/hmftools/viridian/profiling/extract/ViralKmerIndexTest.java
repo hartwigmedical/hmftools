@@ -43,9 +43,11 @@ public class ViralKmerIndexTest
     }
 
     @Test
-    public void testLowercaseReadMatchesUppercaseReference() throws IOException
+    public void testSoftMaskedReferenceMatchesUppercaseRead() throws IOException
     {
-        assertTrue(index(REFERENCE).hasViralKmer(REFERENCE_WINDOW.toLowerCase().getBytes()));
+        // A soft-masked virus reference is lowercase in places. Missing those k-mers would drop viral reads.
+
+        assertTrue(index(REFERENCE.toLowerCase()).hasViralKmer(REFERENCE_WINDOW.getBytes()));
     }
 
     @Test

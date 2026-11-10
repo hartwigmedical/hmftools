@@ -54,7 +54,7 @@ public class VirusGroupInfoTest
     @Test
     public void testUnknownReportingTypeFails()
     {
-        assertThrows(RuntimeException.class, () -> load("BK polyomavirus\tWART"));
+        assertThrows(IllegalStateException.class, () -> load("BK polyomavirus\tWART"));
     }
 
     private Map<VirusGroup, VirusGroupInfo> load(String... rows) throws IOException

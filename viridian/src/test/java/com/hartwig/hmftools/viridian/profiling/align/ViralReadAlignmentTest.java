@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.viridian.profiling.align;
 
 import static com.hartwig.hmftools.viridian.ViridianTestUtils.readAlignment;
+import static com.hartwig.hmftools.viridian.common.ViridianConstants.VIRUS_GENOME_ORIGIN_CLIP_TOLERANCE;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -54,11 +55,14 @@ public class ViralReadAlignmentTest
     @Test
     public void testClipsOverGenomeEndDetectsClipsPastEitherEnd()
     {
-        // A clip projecting past a virus genome end straddles the circular origin.
+        // A clip projecting past a virus genome end straddles the circular origin. Up to the tolerance is allowed.
+        // The 200 base genome is aligned at 11-60 with a left clip, and at 151-200 with a right clip.
 
-        assertTrue(readAlignment("r1", GENOME, 30, "40S60M", 60, 40).clipsOverGenomeEnd());
-        assertTrue(readAlignment("r1", GENOME, 141, "60M40S", 60, 40).clipsOverGenomeEnd());
-        assertFalse(readAlignment("r1", GENOME, 100, "40S60M", 60, 40).clipsOverGenomeEnd());
+        int tolerance = VIRUS_GENOME_ORIGIN_CLIP_TOLERANCE;
+        assertFalse(leftClipped(10 + tolerance).clipsOverGenomeEnd());
+        assertTrue(leftClipped(11 + tolerance).clipsOverGenomeEnd());
+        assertFalse(rightClipped(tolerance).clipsOverGenomeEnd());
+        assertTrue(rightClipped(tolerance + 1).clipsOverGenomeEnd());
     }
 
     @Test
@@ -82,6 +86,16 @@ public class ViralReadAlignmentTest
         ViralReadAlignment stronger = readAlignment("r1", GENOME, 10, "50M", 75, 8);
 
         assertEquals(stronger, best(weaker, stronger));
+    }
+
+    private static ViralReadAlignment leftClipped(int clipLength)
+    {
+        return readAlignment("r1", GENOME, 11, clipLength + "S50M", 50, clipLength);
+    }
+
+    private static ViralReadAlignment rightClipped(int clipLength)
+    {
+        return readAlignment("r1", GENOME, 151, "50M" + clipLength + "S", 50, clipLength);
     }
 
     private static ViralReadAlignment best(ViralReadAlignment... alignments)

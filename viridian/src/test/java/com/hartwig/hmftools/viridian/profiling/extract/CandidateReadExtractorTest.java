@@ -10,13 +10,19 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
 
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
 import com.hartwig.hmftools.viridian.common.UserInputError;
@@ -34,6 +40,7 @@ import htsjdk.samtools.SAMFileWriterFactory;
 import htsjdk.samtools.SAMFlag;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMSequenceRecord;
+import htsjdk.samtools.cram.CRAIEntry;
 import htsjdk.samtools.cram.ref.ReferenceSource;
 import htsjdk.samtools.cram.structure.CRAMEncodingStrategy;
 import htsjdk.samtools.seekablestream.SeekableFileStream;
@@ -154,6 +161,7 @@ public class CandidateReadExtractorTest
         File cram = writeCram(header, cramRecords(header), reference, 1, null);
         writeCrai(cram);
 
+        assertEquals(List.of(1, 1, 1), slicesPerContainer(cram));
         assertCramCandidates(cram, reference, CRAM_CANDIDATES);
     }
 
@@ -171,6 +179,7 @@ public class CandidateReadExtractorTest
         File cram = writeCram(header, records, reference, 2, null);
         writeCrai(cram);
 
+        assertEquals(List.of(1, 2, 1), slicesPerContainer(cram));
         List<String> expected = new ArrayList<>(CRAM_CANDIDATES);
         expected.addAll(List.of(">u6\nACGTA", ">u7\nACGTA"));
         assertCramCandidates(cram, reference, expected);
@@ -188,6 +197,7 @@ public class CandidateReadExtractorTest
         File cram = writeCram(header, records, reference, 1, null);
         writeCrai(cram);
 
+        assertEquals(List.of(1), slicesPerContainer(cram));
         assertCramCandidates(cram, reference, List.of(">clip/1\n" + "C".repeat(100), ">u1\nACGTA"));
     }
 
@@ -344,6 +354,21 @@ public class CandidateReadExtractorTest
                 OutputStream craiStream = new FileOutputStream(cram.getPath() + FileExtensions.CRAM_INDEX))
         {
             CRAMCRAIIndexer.writeIndex(cramStream, craiStream);
+        }
+    }
+
+    // Checks the container layout a test relies on, since the CRAM writer decides it.
+    private static List<Integer> slicesPerContainer(File cram) throws IOException
+    {
+        try(InputStream craiStream = new FileInputStream(cram.getPath() + FileExtensions.CRAM_INDEX))
+        {
+            Map<Long, Set<Integer>> slicesByContainer = new TreeMap<>();
+            for(CRAIEntry entry : CRAMCRAIIndexer.readIndex(craiStream).getCRAIEntries())
+            {
+                slicesByContainer.computeIfAbsent(entry.getContainerStartByteOffset(), k -> new HashSet<>())
+                        .add(entry.getSliceByteOffsetFromCompressionHeaderStart());
+            }
+            return slicesByContainer.values().stream().map(Set::size).toList();
         }
     }
 

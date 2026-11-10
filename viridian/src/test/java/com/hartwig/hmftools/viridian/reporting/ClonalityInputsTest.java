@@ -33,7 +33,7 @@ public class ClonalityInputsTest
         // Purity 1, ploidy 2: 100 * 1 / (1 * 2 + 2 * 0) = 50
         assertEquals(
                 new ClonalityInputs(50.0, null),
-                clonalityInputs(1.0, FittedPurityMethod.SOMATIC, 100.0, PurpleQCStatus.PASS));
+                clonalityInputs(1.0, 100.0, PurpleQCStatus.PASS));
     }
 
     @Test
@@ -42,7 +42,7 @@ public class ClonalityInputsTest
         // Purity 0.5, ploidy 2: 30 * 0.5 / (0.5 * 2 + 2 * 0.5) = 7.5
         assertEquals(
                 new ClonalityInputs(7.5, null),
-                clonalityInputs(0.5, FittedPurityMethod.SOMATIC, 30.0, PurpleQCStatus.PASS));
+                clonalityInputs(0.5, 30.0, PurpleQCStatus.PASS));
     }
 
     // At ploidy 2 the normal and tumor cells carry the same copies, which hides a formula that ignores the normal cells.
@@ -52,7 +52,7 @@ public class ClonalityInputsTest
         // Purity 0.5, ploidy 3: 30 * 0.5 / (0.5 * 3 + 2 * 0.5) = 6, where depth * purity / ploidy would give 5
         assertEquals(
                 new ClonalityInputs(6.0, null),
-                clonalityInputs(0.5, 3.0, FittedPurityMethod.SOMATIC, 30.0, PurpleQCStatus.PASS));
+                clonalityInputs(0.5, 3.0, 30.0, PurpleQCStatus.PASS));
     }
 
     @Test
@@ -62,8 +62,7 @@ public class ClonalityInputsTest
 
         assertEquals(
                 new ClonalityInputs(15.0, null),
-                clonalityInputs(
-                        1.0, FittedPurityMethod.SOMATIC, 30.0, PurpleQCStatus.WARN_DELETED_GENES, PurpleQCStatus.FAIL_TINC));
+                clonalityInputs(1.0, 30.0, PurpleQCStatus.WARN_DELETED_GENES, PurpleQCStatus.FAIL_TINC));
     }
 
     @Test
@@ -71,7 +70,7 @@ public class ClonalityInputsTest
     {
         assertEquals(
                 new ClonalityInputs(null, PurpleQCStatus.FAIL_CONTAMINATION),
-                clonalityInputs(0.5, FittedPurityMethod.SOMATIC, 30.0, PurpleQCStatus.FAIL_CONTAMINATION));
+                clonalityInputs(0.5, 30.0, PurpleQCStatus.FAIL_CONTAMINATION));
     }
 
     @Test
@@ -79,7 +78,7 @@ public class ClonalityInputsTest
     {
         assertEquals(
                 new ClonalityInputs(null, PurpleQCStatus.FAIL_NO_TUMOR),
-                clonalityInputs(0.08, FittedPurityMethod.NO_TUMOR, 30.0, PurpleQCStatus.FAIL_NO_TUMOR));
+                clonalityInputs(0.08, 30.0, PurpleQCStatus.FAIL_NO_TUMOR));
     }
 
     // Exactly one of the depth per copy and a clonality-blocking Purple failure.
@@ -91,16 +90,15 @@ public class ClonalityInputsTest
         assertThrows(IllegalArgumentException.class, () -> new ClonalityInputs(null, PurpleQCStatus.FAIL_TINC));
     }
 
-    private static ClonalityInputs clonalityInputs(
-            double purity, FittedPurityMethod method, double hostMeanDepth, PurpleQCStatus... qcStatus)
+    private static ClonalityInputs clonalityInputs(double purity, double hostMeanDepth, PurpleQCStatus... qcStatus)
     {
-        return clonalityInputs(purity, 2.0, method, hostMeanDepth, qcStatus);
+        return clonalityInputs(purity, 2.0, hostMeanDepth, qcStatus);
     }
 
     private static ClonalityInputs clonalityInputs(
-            double purity, double ploidy, FittedPurityMethod method, double hostMeanDepth, PurpleQCStatus... qcStatus)
+            double purity, double ploidy, double hostMeanDepth, PurpleQCStatus... qcStatus)
     {
-        return ClonalityInputs.from(purityContext(purity, ploidy, method, Set.of(qcStatus)), bamMetrics(hostMeanDepth));
+        return ClonalityInputs.from(purityContext(purity, ploidy, Set.of(qcStatus)), bamMetrics(hostMeanDepth));
     }
 
     private static BamMetricSummary bamMetrics(double meanDepth)
@@ -111,9 +109,10 @@ public class ClonalityInputsTest
                 .build();
     }
 
-    private static PurityContext purityContext(
-            double purity, double ploidy, FittedPurityMethod method, Set<PurpleQCStatus> qcStatus)
+    // ClonalityInputs reads only the QC status, but the fit method is kept consistent with it.
+    private static PurityContext purityContext(double purity, double ploidy, Set<PurpleQCStatus> qcStatus)
     {
+        FittedPurityMethod method = qcStatus.contains(PurpleQCStatus.FAIL_NO_TUMOR) ? FittedPurityMethod.NO_TUMOR : FittedPurityMethod.SOMATIC;
         FittedPurity bestFit = new FittedPurity(purity, -1, ploidy, -1, -1, -1);
         PurpleQC qc = ImmutablePurpleQC.builder()
                 .status(qcStatus)
