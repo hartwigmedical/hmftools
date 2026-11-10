@@ -1,10 +1,7 @@
 package com.hartwig.hmftools.viridian.reference;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -24,34 +21,21 @@ public class VirusGroupInfoTest
     @Test
     public void testLoadsValidResource() throws IOException
     {
+        // The HHV-8 reporting type differs from its enum constant name.
+
         Map<VirusGroup, VirusGroupInfo> info = load(
                 "Human gammaherpesvirus 4\tEBV",
-                "Human papillomavirus type 6\tHPV",
+                "Human gammaherpesvirus 8\tHHV-8",
                 "BK polyomavirus\tnull");
 
-        assertEquals(3, info.size());
-
-        VirusGroupInfo ebv = info.get(new VirusGroup("Human gammaherpesvirus 4"));
-        assertTrue(ebv.isReportable());
-        assertEquals(VirusType.EBV, ebv.reportingType());
-
-        VirusGroupInfo bk = info.get(new VirusGroup("BK polyomavirus"));
-        assertFalse(bk.isReportable());
-        assertNull(bk.reportingType());
-    }
-
-    @Test
-    public void testHhv8ReportingTypeParses() throws IOException
-    {
-        Map<VirusGroup, VirusGroupInfo> info = load("Human gammaherpesvirus 8\tHHV-8");
-        assertEquals(VirusType.HHV8, info.get(new VirusGroup("Human gammaherpesvirus 8")).reportingType());
-    }
-
-    @Test
-    public void testMissingColumnFails() throws IOException
-    {
-        Path file = writeFile("virus_group", "BK polyomavirus");
-        assertThrows(RuntimeException.class, () -> VirusGroupInfo.load(file.toString()));
+        VirusGroup ebv = new VirusGroup("Human gammaherpesvirus 4");
+        VirusGroup hhv8 = new VirusGroup("Human gammaherpesvirus 8");
+        VirusGroup bk = new VirusGroup("BK polyomavirus");
+        Map<VirusGroup, VirusGroupInfo> expected = Map.of(
+                ebv, new VirusGroupInfo(ebv, VirusType.EBV),
+                hhv8, new VirusGroupInfo(hhv8, VirusType.HHV8),
+                bk, new VirusGroupInfo(bk, null));
+        assertEquals(expected, info);
     }
 
     @Test

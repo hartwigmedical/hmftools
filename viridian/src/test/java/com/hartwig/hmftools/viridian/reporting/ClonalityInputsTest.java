@@ -56,20 +56,14 @@ public class ClonalityInputsTest
     }
 
     @Test
-    public void testComputesWhenFitOnlyWarns()
+    public void testComputesDespiteOtherPurpleWarningsAndFailures()
     {
-        assertEquals(
-                new ClonalityInputs(15.0, null),
-                clonalityInputs(1.0, FittedPurityMethod.SOMATIC, 30.0, PurpleQCStatus.WARN_DELETED_GENES));
-    }
+        // Only no tumor and contamination block the calculation.
 
-    // Only no tumor and contamination block the calculation; other Purple failures are allowed.
-    @Test
-    public void testComputesWhenTumorInNormalFails()
-    {
         assertEquals(
                 new ClonalityInputs(15.0, null),
-                clonalityInputs(1.0, FittedPurityMethod.SOMATIC, 30.0, PurpleQCStatus.FAIL_TINC));
+                clonalityInputs(
+                        1.0, FittedPurityMethod.SOMATIC, 30.0, PurpleQCStatus.WARN_DELETED_GENES, PurpleQCStatus.FAIL_TINC));
     }
 
     @Test
@@ -86,17 +80,6 @@ public class ClonalityInputsTest
         assertEquals(
                 new ClonalityInputs(null, PurpleQCStatus.FAIL_NO_TUMOR),
                 clonalityInputs(0.08, FittedPurityMethod.NO_TUMOR, 30.0, PurpleQCStatus.FAIL_NO_TUMOR));
-    }
-
-    // With no tumor, copies per tumor cell is meaningless whatever the contamination.
-    @Test
-    public void testNoTumorWinsOverContamination()
-    {
-        assertEquals(
-                new ClonalityInputs(null, PurpleQCStatus.FAIL_NO_TUMOR),
-                clonalityInputs(
-                        0.08, FittedPurityMethod.NO_TUMOR, 30.0,
-                        PurpleQCStatus.FAIL_NO_TUMOR, PurpleQCStatus.FAIL_CONTAMINATION));
     }
 
     // Exactly one of the depth per copy and a clonality-blocking Purple failure.

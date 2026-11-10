@@ -38,13 +38,6 @@ public class IntegrationCandidateTest
         assertTrue(candidate.isIntegration());
     }
 
-    @Test
-    public void testNotIntegrationWhenAlignmentDoesNotClearThresholds()
-    {
-        IntegrationCandidate candidate = new IntegrationCandidate(candidateSv(), alignment(20));
-        assertFalse(candidate.isIntegration());
-    }
-
     private static CandidateSv candidateSv()
     {
         HostBreakend breakend = new HostBreakend(

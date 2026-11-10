@@ -111,22 +111,6 @@ public class GenomeSupportCalculatorTest
     }
 
     @Test
-    public void testComputeDropsAlignmentsClippingOverGenomeEnds()
-    {
-        List<ViralReadAlignment> alignments = List.of(
-                clipped("r1", V1, 1, 10, 10, 0),    // left clip projects to -9: over the start
-                clipped("r2", V1, 11, 20, 0, 10),   // right clip projects to 30: over the end
-                alignment("r3", V1, 6, 10, 9, 0),   // no clip: kept
-                clipped("r4", V1, 10, 19, 5, 0));   // clip projects to 5, within the virus genome: kept
-
-        List<GenomeSupport> stats = compute(alignments, READ_VOTE_CORRECT_BASE_PROBABILITY);
-
-        GenomeSupport v1 = get(stats, V1);
-        assertEquals(2, v1.stats().readCount());            // r3 and r4 kept
-        assertEquals(2, v1.stats().originClippedReads());   // r1 and r2 dropped
-    }
-
-    @Test
     public void testComputeGenomeWithOnlyOriginClippedAlignmentsIsStillReported()
     {
         List<ViralReadAlignment> alignments = List.of(

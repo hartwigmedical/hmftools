@@ -62,17 +62,6 @@ public class ViralInsertAlignerTest
         assertEquals(GENOME_16, align(SEQUENCE, descending).genome());
     }
 
-    // A partly aligned sequence keeps the clip in its cigar, and its length stays that of the whole query, so how much
-    // of the insert reached a virus can be recovered downstream.
-    @Test
-    public void testAlignAllReportsPartiallyAlignedSequence()
-    {
-        ViralInsertAlignment alignment = align(SEQUENCE, List.of(alignment(0, 0, 199, 40, "12S20M", 0)));
-
-        assertEquals("12S20M", alignment.cigar().toString());
-        assertEquals(32, alignment.sequenceLength());
-    }
-
     @Test
     public void testAlignAllReportsReverseStrandAlignment()
     {

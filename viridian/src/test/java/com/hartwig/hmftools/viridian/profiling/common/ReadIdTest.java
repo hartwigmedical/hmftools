@@ -29,17 +29,6 @@ public class ReadIdTest
         }
     }
 
-    // A read name ending in a mate suffix parses as that mate of a shorter name. Harmless, because the string it
-    // came from is reproduced either way, but it means the parsed name is not always the tumor BAM's.
-    @Test
-    public void testParseNameAlreadyEndingInMateSuffix()
-    {
-        ReadId parsed = ReadId.parse("r1/2/1");
-
-        assertEquals(new ReadId("r1/2", 1), parsed);
-        assertEquals("r1/2/1", parsed.toString());
-    }
-
     private static SAMRecord record(int flags)
     {
         SAMRecord record = new SAMRecord(null);

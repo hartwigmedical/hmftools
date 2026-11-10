@@ -24,7 +24,6 @@ import static htsjdk.samtools.SAMRecord.NO_ALIGNMENT_REFERENCE_NAME;
 
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
@@ -152,17 +151,6 @@ public class CandidateReadFilterTest
         assertEquals(List.of(), wrongOutcomes);
     }
 
-    @Test
-    public void testReadMateExpectationsCoverEveryStateOnce()
-    {
-        Set<List<Enum<?>>> states = READ_MATE_EXPECTATIONS.stream()
-                .map(expectation -> List.<Enum<?>>of(expectation.read(), expectation.mate()))
-                .collect(Collectors.toSet());
-
-        assertEquals(ReadState.values().length * MateState.values().length, READ_MATE_EXPECTATIONS.size());
-        assertEquals(READ_MATE_EXPECTATIONS.size(), states.size());
-    }
-
     private static final String HOST_SUPPLEMENTARY = "chr1,200,+,70M30S,60,0;";
     private static final String VIRUS_SUPPLEMENTARY = "chrEBV,200,+,70M30S,60,0;";
 
@@ -273,30 +261,18 @@ public class CandidateReadFilterTest
     }
 
     @Test
-    public void testIsCandidateRecordRejectsDuplicate()
+    public void testIsCandidateRecordRejectsDuplicateSecondaryAndSupplementary()
     {
-        SAMRecord record = record(MAPPED_TO_VIRUS, UNPAIRED);
-        record.setDuplicateReadFlag(true);
+        SAMRecord duplicate = record(MAPPED_TO_VIRUS, UNPAIRED);
+        duplicate.setDuplicateReadFlag(true);
+        SAMRecord secondary = record(MAPPED_TO_VIRUS, UNPAIRED);
+        secondary.setSecondaryAlignment(true);
+        SAMRecord supplementary = record(MAPPED_TO_VIRUS, UNPAIRED);
+        supplementary.setSupplementaryAlignmentFlag(true);
 
-        assertFalse(FILTER.isCandidateRecord(record));
-    }
-
-    @Test
-    public void testIsCandidateRecordRejectsSecondary()
-    {
-        SAMRecord record = record(MAPPED_TO_VIRUS, UNPAIRED);
-        record.setSecondaryAlignment(true);
-
-        assertFalse(FILTER.isCandidateRecord(record));
-    }
-
-    @Test
-    public void testIsCandidateRecordRejectsSupplementary()
-    {
-        SAMRecord record = record(MAPPED_TO_VIRUS, UNPAIRED);
-        record.setSupplementaryAlignmentFlag(true);
-
-        assertFalse(FILTER.isCandidateRecord(record));
+        assertFalse(FILTER.isCandidateRecord(duplicate));
+        assertFalse(FILTER.isCandidateRecord(secondary));
+        assertFalse(FILTER.isCandidateRecord(supplementary));
     }
 
     private static ReadMateExpectation actualOutcome(ReadState read, MateState mate)

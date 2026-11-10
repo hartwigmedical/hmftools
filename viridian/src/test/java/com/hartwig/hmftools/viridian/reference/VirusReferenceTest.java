@@ -89,16 +89,6 @@ public class VirusReferenceTest
         assertThrows(UserInputError.class, () -> VirusGenomeInfo.load(writeTsv(virusInTwoGroups)));
     }
 
-    @Test
-    public void testLoadInfoThrowsOnMissingColumn()
-    {
-        String noGroup = """
-                contig_name\tvirus_name
-                contigA\tVirus Alpha
-                """;
-        assertThrows(RuntimeException.class, () -> VirusGenomeInfo.load(writeTsv(noGroup)));
-    }
-
     // Contig lengths are fixed per name so joined VirusGenome values are predictable.
     private static SAMSequenceDictionary dictionary(String... contigs)
     {

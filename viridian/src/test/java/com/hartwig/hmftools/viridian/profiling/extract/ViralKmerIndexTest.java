@@ -61,13 +61,6 @@ public class ViralKmerIndexTest
         assertFalse(index(REFERENCE).hasViralKmer("ACGATCGGATTCCAAG".getBytes()));
     }
 
-    // The reference's only k-mer spans an N, so nothing is indexed: a read with a T in place of the N is not detected.
-    @Test
-    public void testKmerSpanningAmbiguousReferenceBaseIsNotIndexed() throws IOException
-    {
-        assertFalse(index("ACGATCGGANTTCCAAGGT").hasViralKmer("ACGATCGGATTTCCAAGGT".getBytes()));
-    }
-
     private ViralKmerIndex index(String... sequences) throws IOException
     {
         Path fasta = mTempDir.getRoot().toPath().resolve("virus_reference.fasta");

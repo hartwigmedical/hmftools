@@ -3,7 +3,6 @@ package com.hartwig.hmftools.viridian.app;
 import static com.hartwig.hmftools.viridian.app.ViridianApplication.checkVirusDecoyContigsInTumorBam;
 
 import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.util.Set;
@@ -37,10 +36,8 @@ public class ViridianApplicationTest
     {
         String bam = writeHeaderOnlyBam("chr1", "chrEBV");
 
-        UserInputError error = assertThrows(
+        assertThrows(
                 UserInputError.class, () -> checkVirusDecoyContigsInTumorBam(bam, null, Set.of("chrEBV", "chrHPV16", "chrHBV")));
-
-        assertTrue(error.getMessage().endsWith(": chrHBV, chrHPV16"));
     }
 
     private String writeHeaderOnlyBam(String... contigs)

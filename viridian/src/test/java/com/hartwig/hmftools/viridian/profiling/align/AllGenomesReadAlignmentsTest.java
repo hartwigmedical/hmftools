@@ -44,30 +44,24 @@ public class AllGenomesReadAlignmentsTest
         assertEquals(Map.of(V1, 2), allAlignments.originClippedReads());
     }
 
-    // The aligner reports every placement it finds, so one read can be aligned to a virus genome several times. Only
-    // its best alignment is kept, and how many it had is measured instead.
     @Test
     public void testFromRepeatAlignmentsReducedToBestAndCounted()
     {
+        // The aligner reports every placement it finds, so one read can be aligned to a virus genome several times. Only
+        // its best alignment is kept, wherever it comes in the input, and how many it had is measured instead.
+
         AllGenomesReadAlignments allAlignments = AllGenomesReadAlignments.from(
                 Stream.of(
-                        divergentAlignment("r1", V1, 4),
                         divergentAlignment("r1", V1, 9),
+                        divergentAlignment("r1", V1, 4),
+                        divergentAlignment("r1", V1, 7),
                         divergentAlignment("r2", V1, 1)));
 
-        Map<ReadId, ViralReadAlignment> genomeAlignments = allAlignments.store().byGenome().get(V1);
-        assertEquals(2, genomeAlignments.size());
-        assertEquals(4, genomeAlignments.get(ReadId.parse("r1")).divergence());
-        assertEquals(Map.of(V1, List.of(2, 1)), allAlignments.alignmentCountsByGenome());
-    }
-
-    @Test
-    public void testFromRepeatAlignmentsKeepBestArrivingLater()
-    {
-        AllGenomesReadAlignments allAlignments = AllGenomesReadAlignments.from(
-                Stream.of(divergentAlignment("r1", V1, 9), divergentAlignment("r1", V1, 4)));
-
-        assertEquals(4, allAlignments.store().byGenome().get(V1).get(ReadId.parse("r1")).divergence());
+        Map<ReadId, ViralReadAlignment> expected = Map.of(
+                ReadId.parse("r1"), divergentAlignment("r1", V1, 4),
+                ReadId.parse("r2"), divergentAlignment("r2", V1, 1));
+        assertEquals(expected, allAlignments.store().byGenome().get(V1));
+        assertEquals(Map.of(V1, List.of(3, 1)), allAlignments.alignmentCountsByGenome());
     }
 
     private static ViralReadAlignment divergentAlignment(String readName, VirusGenome genome, int divergence)

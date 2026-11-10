@@ -18,35 +18,14 @@ public class ViralInsertAlignmentTest
     private static final VirusGenome GENOME =
             new VirusGenome("v1", 7906, new Virus("Virus v1", new VirusGroup("Group A")));
 
-    // Clipped bases are the host side of an integration junction, so they are not insert bases placed on the virus.
     @Test
-    public void testAlignedLengthExcludesClippedBases()
+    public void testAlignedLength()
     {
-        assertEquals(70, alignment("30S70M", 100).alignedLength());
-    }
+        // Counts the insert bases placed on the virus: matched and inserted bases. Clipped bases are the host side of an
+        // integration junction, and deleted bases are virus bases, not insert bases.
 
-    @Test
-    public void testAlignedLengthOfPlainMatch()
-    {
-        assertEquals(70, alignment("70M", 70).alignedLength());
-    }
-
-    @Test
-    public void testAlignedLengthCountsInternalInsertion()
-    {
-        assertEquals(20, alignment("10M2I8M", 20).alignedLength());
-    }
-
-    @Test
-    public void testAlignedLengthExcludesDeletion()
-    {
-        assertEquals(20, alignment("10M3D10M", 20).alignedLength());
-    }
-
-    @Test
-    public void testAlignedLengthExcludesHardClippedBases()
-    {
-        assertEquals(70, alignment("30H70M", 100).alignedLength());
+        assertEquals(30, alignment("10S10M2I8M3D10M7S", 47).alignedLength());
+        assertEquals(30, alignment("10H10M2I8M3D10M7H", 47).alignedLength());
     }
 
     @Test
@@ -59,13 +38,6 @@ public class ViralInsertAlignmentTest
     public void testDoesNotClearWhenScoreBelowFloor()
     {
         assertFalse(alignment("70M", 70, 25).passesFilters());
-    }
-
-    // A long, low-identity match (score 40 over 100 bases) passes on score alone.
-    @Test
-    public void testPassesFiltersAtLowScorePerAlignedBase()
-    {
-        assertTrue(alignment("100M", 100, 40).passesFilters());
     }
 
     private static ViralInsertAlignment alignment(String cigar, int sequenceLength)

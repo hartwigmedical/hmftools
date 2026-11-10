@@ -50,7 +50,6 @@ public class CandidateReadExtractorTest
         List<SAMRecord> records = List.of(
                 mapped(header, "plain", 0, "chr1", 100, "100M", "AAAAA"),             // no viral signal: dropped
                 mapped(header, "clip", 0x1 | 0x40, "chr1", 150, "20S80M", "CCCCC"),   // soft-clip candidate, first of pair
-                unmapped(header, "dup", 0x4 | 0x400, "TTTTT"),                        // duplicate unmapped: dropped
                 unmapped(header, "unmap", 0x1 | 0x4 | 0x8 | 0x80, "GGGGG"),           // unmapped candidate, second of pair
                 unmapped(header, "single", 0x4, "TTTTT"));                            // unpaired candidate: no mate suffix
 

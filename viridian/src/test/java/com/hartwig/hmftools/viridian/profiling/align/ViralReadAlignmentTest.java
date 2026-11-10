@@ -88,24 +88,11 @@ public class ViralReadAlignmentTest
     }
 
     @Test
-    public void testFromThrowsWhenAlignmentScoreMissing()
+    public void testFromThrowsWhenRequiredTagMissing()
     {
-        SAMRecord record = record(30, "60M", null, 0, "60");
-        assertThrows(IllegalStateException.class, () -> fromRecord(record));
-    }
-
-    @Test
-    public void testFromThrowsWhenEditDistanceMissing()
-    {
-        SAMRecord record = record(30, "60M", 60, null, "60");
-        assertThrows(IllegalStateException.class, () -> fromRecord(record));
-    }
-
-    @Test
-    public void testFromThrowsWhenMismatchesAndDeletionsMissing()
-    {
-        SAMRecord record = record(30, "60M", 60, 0, null);
-        assertThrows(IllegalStateException.class, () -> fromRecord(record));
+        assertThrows(IllegalStateException.class, () -> fromRecord(record(30, "60M", null, 0, "60")));
+        assertThrows(IllegalStateException.class, () -> fromRecord(record(30, "60M", 60, null, "60")));
+        assertThrows(IllegalStateException.class, () -> fromRecord(record(30, "60M", 60, 0, null)));
     }
 
     @Test

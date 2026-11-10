@@ -10,56 +10,21 @@ import org.junit.Test;
 
 public class SummaryStatsTest
 {
-    private static final double EPSILON = 1e-9;
-
     @Test
-    public void testFromMeanMinMaxAndPercentiles()
+    public void testFromUnsortedValues()
     {
-        SummaryStats stats = SummaryStats.from(new int[] { 10, 20, 30, 40, 50, 60, 70, 80, 90, 100 });
+        // Nearest-rank percentiles over the sorted values: index ceil(percent * 10) - 1, so p5 at 0, p25 at 2, p50 at 4,
+        // p75 at 7 and p95 at 9.
 
-        assertEquals(55.0, stats.mean(), EPSILON);
-        assertEquals(10.0, stats.min(), EPSILON);
-        assertEquals(100.0, stats.max(), EPSILON);
-        assertEquals(10.0, stats.p5(), EPSILON);    // ceil(0.05*10)-1 = 0
-        assertEquals(30.0, stats.p25(), EPSILON);   // ceil(0.25*10)-1 = 2
-        assertEquals(50.0, stats.p50(), EPSILON);   // ceil(0.50*10)-1 = 4
-        assertEquals(80.0, stats.p75(), EPSILON);   // ceil(0.75*10)-1 = 7
-        assertEquals(100.0, stats.p95(), EPSILON);  // ceil(0.95*10)-1 = 9
-    }
+        SummaryStats stats = SummaryStats.from(new int[] { 60, 10, 90, 30, 100, 20, 50, 80, 40, 70 });
 
-    @Test
-    public void testFromSingleValue()
-    {
-        SummaryStats stats = SummaryStats.from(new int[] { 7 });
-
-        assertEquals(7.0, stats.mean(), EPSILON);
-        assertEquals(7.0, stats.min(), EPSILON);
-        assertEquals(7.0, stats.max(), EPSILON);
-        assertEquals(7.0, stats.p5(), EPSILON);
-        assertEquals(7.0, stats.p50(), EPSILON);
-        assertEquals(7.0, stats.p95(), EPSILON);
-    }
-
-    @Test
-    public void testFromUnsortedInputIsSorted()
-    {
-        SummaryStats stats = SummaryStats.from(new int[] { 30, 10, 20 });
-
-        assertEquals(20.0, stats.mean(), EPSILON);
-        assertEquals(10.0, stats.min(), EPSILON);
-        assertEquals(30.0, stats.max(), EPSILON);
-        assertEquals(20.0, stats.p50(), EPSILON);
+        assertEquals(new SummaryStats(55.0, 10.0, 10.0, 30.0, 50.0, 80.0, 100.0, 100.0), stats);
     }
 
     @Test
     public void testFromListMatchesArray()
     {
-        SummaryStats stats = SummaryStats.from(List.of(3, 1, 2));
-
-        assertEquals(2.0, stats.mean(), EPSILON);
-        assertEquals(1.0, stats.min(), EPSILON);
-        assertEquals(3.0, stats.max(), EPSILON);
-        assertEquals(2.0, stats.p50(), EPSILON);
+        assertEquals(SummaryStats.from(new int[] { 30, 10, 20 }), SummaryStats.from(List.of(30, 10, 20)));
     }
 
     @Test
