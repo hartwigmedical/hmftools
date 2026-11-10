@@ -25,7 +25,7 @@ public class ViralReadAlignmentTest
     private static final VirusGenome GENOME = new VirusGenome("v1", 200, new Virus("Virus 1", new VirusGroup("Group 1")));
 
     @Test
-    public void testMatchedIntervalsExcludeMismatchesDeletionsAndClips()
+    public void testMatchedIntervals()
     {
         // Reference 30-49 aligned with a mismatch at 34, deletion at 50-51, reference 52-61 aligned with a mismatch at 55.
 
@@ -38,7 +38,7 @@ public class ViralReadAlignmentTest
     }
 
     @Test
-    public void testMatchedIntervalsThrowsWhenMismatchOutsideAlignedBases()
+    public void testMatchedIntervalsMismatchOutsideAlignment()
     {
         ViralReadAlignment alignment = new ViralReadAlignment(
                 ReadId.parse("r1"), GENOME, 30, TextCigarCodec.decode("20M2D10M"), 60, 3, new int[] { 62 });
@@ -47,13 +47,13 @@ public class ViralReadAlignmentTest
     }
 
     @Test
-    public void testConstructorThrowsWhenAlignmentEndsPastGenomeEnd()
+    public void testConstructorPastGenomeEnd()
     {
         assertThrows(IllegalArgumentException.class, () -> readAlignment("r1", GENOME, 180, "30M", 60, 0));
     }
 
     @Test
-    public void testClipsOverGenomeEndDetectsClipsPastEitherEnd()
+    public void testClipsOverGenomeEnd()
     {
         // A clip projecting past a virus genome end straddles the circular origin. Up to the tolerance is allowed.
         // The 200 base genome is aligned at 11-60 with a left clip, and at 151-200 with a right clip.
@@ -66,7 +66,7 @@ public class ViralReadAlignmentTest
     }
 
     @Test
-    public void testBestFirstTotalOrderLowestDivergenceBeatsHighestScore()
+    public void testBestFirstTotalOrderDivergence()
     {
         // Soft clips cost nothing in the aligner score but are bases the virus genome fails to explain, so divergence
         // and score can disagree.
@@ -78,7 +78,7 @@ public class ViralReadAlignmentTest
     }
 
     @Test
-    public void testBestFirstTotalOrderHighestScoreBreaksDivergenceTie()
+    public void testBestFirstTotalOrderDivergenceTie()
     {
         // Equal divergence can still arise from different gap structures.
 

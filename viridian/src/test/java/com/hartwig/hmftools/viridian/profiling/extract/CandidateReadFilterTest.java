@@ -142,7 +142,7 @@ public class CandidateReadFilterTest
     }
 
     @Test
-    public void testIsCandidateRecordForEveryReadAndMateState()
+    public void testIsCandidateRecordReadAndMateStates()
     {
         List<ReadMateExpectation> actual = READ_MATE_EXPECTATIONS.stream()
                 .map(expectation -> actualOutcome(expectation.read(), expectation.mate()))
@@ -183,7 +183,7 @@ public class CandidateReadFilterTest
     );
 
     @Test
-    public void testIsCandidateRecordForEverySoftClip()
+    public void testIsCandidateRecordSoftClips()
     {
         List<ClipExpectation> actual = CLIP_EXPECTATIONS.stream()
                 .map(expectation -> actualOutcome(expectation.cigar(), expectation.supplementaryAlignments()))
@@ -193,7 +193,7 @@ public class CandidateReadFilterTest
     }
 
     @Test
-    public void testIsCandidateContigAllSourceAcceptsEveryContig()
+    public void testIsCandidateContigAllSource()
     {
         assertTrue(FILTER.isCandidateContig("chr1"));
         assertTrue(FILTER.isCandidateContig("chrEBV"));
@@ -201,7 +201,7 @@ public class CandidateReadFilterTest
     }
 
     @Test
-    public void testIsCandidateContigFullyUnmappedAndDecoySourceAcceptsOnlyFullyUnmappedAndDecoy()
+    public void testIsCandidateContigFullyUnmappedAndDecoySource()
     {
         assertFalse(FULLY_UNMAPPED_AND_DECOY_FILTER.isCandidateContig("chr1"));
         assertTrue(FULLY_UNMAPPED_AND_DECOY_FILTER.isCandidateContig("chrEBV"));
@@ -210,7 +210,7 @@ public class CandidateReadFilterTest
     }
 
     @Test
-    public void testIsCandidateContigCoversDefaultVirusDecoyContigs()
+    public void testIsCandidateContigDefaultVirusDecoyContigs()
     {
         CandidateReadFilter filter = filter(CandidateReadSource.FULLY_UNMAPPED_AND_DECOY, DEFAULT_VIRUS_DECOY_CONTIGS);
 
@@ -228,7 +228,7 @@ public class CandidateReadFilterTest
     }
 
     @Test
-    public void testIsCandidateRecordAcceptsReadOnUserGivenVirusDecoyContig()
+    public void testIsCandidateRecordExtraVirusDecoyContig()
     {
         // Any contig can be made a virus decoy contig, not only chrEBV.
 
@@ -239,7 +239,7 @@ public class CandidateReadFilterTest
     }
 
     @Test
-    public void testIsCandidateRecordAcceptsReduxUnmappedFromColonNamedVirusDecoyContig()
+    public void testIsCandidateRecordReduxUnmapColonContig()
     {
         // REDUX strips colons from the contig name it records, so the read must still match a colon-named virus decoy
         // contig.
@@ -252,7 +252,7 @@ public class CandidateReadFilterTest
     }
 
     @Test
-    public void testIsCandidateRecordMalformedReduxUnmapAttributeRejected()
+    public void testIsCandidateRecordMalformedReduxUnmap()
     {
         SAMRecord record = record(REGULAR_UNMAPPED, UNPAIRED);
         record.setAttribute(UNMAP_ATTRIBUTE, "chr1");
@@ -261,7 +261,7 @@ public class CandidateReadFilterTest
     }
 
     @Test
-    public void testIsCandidateRecordRejectsDuplicateSecondaryAndSupplementary()
+    public void testIsCandidateRecordDuplicateSecondaryAndSupplementary()
     {
         SAMRecord duplicate = record(MAPPED_TO_VIRUS, UNPAIRED);
         duplicate.setDuplicateReadFlag(true);

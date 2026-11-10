@@ -48,7 +48,7 @@ public class ViralReadAlignerTest
     private static final String R3_BASES = "A".repeat(50) + "C".repeat(50);
 
     @Test
-    public void testAlignWritesEveryViralAlignmentWithContigAndScore() throws IOException
+    public void testAlign() throws IOException
     {
         // The aligner's own minimum-score floor sits upstream, so low-scoring alignments must still be written here.
 

@@ -29,7 +29,7 @@ public class RepresentativeGenomeSelectorTest
     private static final VirusGenome H1 = new VirusGenome("h1", LENGTH, new Virus("Virus h1", GROUP_H));
 
     @Test
-    public void testSelectRanksGenomesPerVirusGroup()
+    public void testSelect()
     {
         // V3 ranks 4th in group A, below the secondary genome count. W1 has few votes, but any read makes its group present.
 
@@ -44,7 +44,7 @@ public class RepresentativeGenomeSelectorTest
     }
 
     @Test
-    public void testSelectSkipsGenomeWithNoReads()
+    public void testSelectGenomeWithoutReads()
     {
         // H1's only reads clipped over its origin and were dropped.
 
@@ -57,7 +57,7 @@ public class RepresentativeGenomeSelectorTest
     }
 
     @Test
-    public void testSelectTiedVotesByGenomeName()
+    public void testSelectTiedVotes()
     {
         List<RepresentativeSelection> selections =
                 RepresentativeGenomeSelector.select(List.of(withReads(V2, 100), withReads(V1, 100)));

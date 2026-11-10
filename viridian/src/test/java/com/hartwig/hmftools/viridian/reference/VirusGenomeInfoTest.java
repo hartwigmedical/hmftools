@@ -40,14 +40,14 @@ public class VirusGenomeInfoTest
     }
 
     @Test
-    public void testLoadThrowsOnDuplicateContig()
+    public void testLoadDuplicateContig()
     {
         String duplicate = VALID_INFO_TSV + "contigA\tVirus Alpha\tGroup Alpha\n";
         assertThrows(UserInputError.class, () -> VirusGenomeInfo.load(writeTsv(duplicate)));
     }
 
     @Test
-    public void testLoadThrowsWhenVirusIsInTwoGroups()
+    public void testLoadVirusInTwoGroups()
     {
         String virusInTwoGroups = VALID_INFO_TSV + "contigD\tVirus Alpha\tGroup Beta\n";
         assertThrows(UserInputError.class, () -> VirusGenomeInfo.load(writeTsv(virusInTwoGroups)));

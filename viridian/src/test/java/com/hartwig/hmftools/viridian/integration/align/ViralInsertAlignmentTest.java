@@ -30,13 +30,13 @@ public class ViralInsertAlignmentTest
     }
 
     @Test
-    public void testPassesFiltersWhenScoreClearsFloor()
+    public void testPassesFiltersScoreAtFloor()
     {
         assertTrue(alignment("70M", 70, INTEGRATION_ALIGN_SCORE_MIN).passesFilters());
     }
 
     @Test
-    public void testPassesFiltersFailsWhenScoreBelowFloor()
+    public void testPassesFiltersScoreBelowFloor()
     {
         assertFalse(alignment("70M", 70, INTEGRATION_ALIGN_SCORE_MIN - 1).passesFilters());
     }

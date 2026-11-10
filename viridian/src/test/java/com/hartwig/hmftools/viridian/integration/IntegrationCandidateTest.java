@@ -24,14 +24,14 @@ public class IntegrationCandidateTest
             new VirusGenome("v1", 7906, new Virus("Virus v1", new VirusGroup("Group A")));
 
     @Test
-    public void testIsIntegrationFalseWhenInsertAlignedNowhere()
+    public void testIsIntegrationNoAlignment()
     {
         IntegrationCandidate candidate = new IntegrationCandidate(candidateSv(), null);
         assertFalse(candidate.isIntegration());
     }
 
     @Test
-    public void testIsIntegrationWhenAlignmentClearsThresholds()
+    public void testIsIntegration()
     {
         IntegrationCandidate candidate = new IntegrationCandidate(candidateSv(), alignment(40));
         assertTrue(candidate.isIntegration());

@@ -34,7 +34,7 @@ public class AllGenomesReadAlignmentsTest
     private static final VirusGenome V1 = new VirusGenome("v1", LENGTH, new Virus("Virus v1", new VirusGroup("Group A")));
 
     @Test
-    public void testFromOriginClippedExcludedAndCounted()
+    public void testFromOriginClipped()
     {
         AllGenomesReadAlignments allAlignments = AllGenomesReadAlignments.from(
                 Stream.of(divergentAlignment("r1", 0), originClipped("r2"), originClipped("r3")));
@@ -44,7 +44,7 @@ public class AllGenomesReadAlignmentsTest
     }
 
     @Test
-    public void testFromOriginClippedCountsReadsNotAlignments()
+    public void testFromOriginClippedReadCount()
     {
         AllGenomesReadAlignments allAlignments = AllGenomesReadAlignments.from(
                 Stream.of(originClipped("r1"), originClipped("r1"), originClipped("r2")));
@@ -53,7 +53,7 @@ public class AllGenomesReadAlignmentsTest
     }
 
     @Test
-    public void testFromRepeatAlignmentsReducedToBestAndCounted()
+    public void testFromRepeatAlignments()
     {
         // The aligner reports every placement it finds, so one read can be aligned to a virus genome several times. Only
         // its best alignment is kept, wherever it comes in the input, and how many it had is measured instead.
@@ -73,7 +73,7 @@ public class AllGenomesReadAlignmentsTest
     }
 
     @Test
-    public void testDecodeCountsClipsInDivergence()
+    public void testDecodeDivergence()
     {
         // Divergence is NM 1 plus 40 clipped bases. The MD tag puts the mismatch 30 bases after the start.
 
@@ -84,7 +84,7 @@ public class AllGenomesReadAlignmentsTest
     }
 
     @Test
-    public void testDecodeThrowsWhenRequiredTagMissing()
+    public void testDecodeMissingTag()
     {
         assertThrows(IllegalStateException.class, () -> decode(record(30, "60M", null, 0, "60")));
         assertThrows(IllegalStateException.class, () -> decode(record(30, "60M", 60, null, "60")));

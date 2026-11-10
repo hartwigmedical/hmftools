@@ -14,20 +14,20 @@ import org.junit.Test;
 public class ViridianConfigTest
 {
     @Test
-    public void testParseExtraVirusDecoyContigsUnsetIsEmpty()
+    public void testParseExtraVirusDecoyContigsUnset()
     {
         assertEquals(Set.of(), parseExtraVirusDecoyContigs(null));
     }
 
     @Test
-    public void testParseExtraVirusDecoyContigsSplitsOnSemicolon()
+    public void testParseExtraVirusDecoyContigs()
     {
         assertEquals(Set.of("chrHPV16"), parseExtraVirusDecoyContigs("chrHPV16"));
         assertEquals(Set.of("chrHPV16", "chrHBV"), parseExtraVirusDecoyContigs("chrHPV16;chrHBV"));
     }
 
     @Test
-    public void testParseExtraVirusDecoyContigsBlankContigRejected()
+    public void testParseExtraVirusDecoyContigsBlankContig()
     {
         assertThrows(UserInputError.class, () -> parseExtraVirusDecoyContigs(""));
         assertThrows(UserInputError.class, () -> parseExtraVirusDecoyContigs("chrHPV16;;chrHBV"));

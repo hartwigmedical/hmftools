@@ -23,7 +23,7 @@ public class VirusProfileTest
     private static final VirusGenome W1 = new VirusGenome("w1", 100, new Virus("Virus w1", GROUP_B));
 
     @Test
-    public void testFromProfilesRepresentativeMeasurement()
+    public void testFrom()
     {
         GenomeStats stats = stats(V1);
 
@@ -33,7 +33,7 @@ public class VirusProfileTest
     }
 
     @Test
-    public void testFromRepresentativeWithoutReadsNotProfiled()
+    public void testFromRepresentativeWithoutReads()
     {
         // Read assignment gave every read of V1 to another virus's representative, so V1 has no measurement and its virus
         // group is dropped.

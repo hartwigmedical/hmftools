@@ -50,7 +50,7 @@ public class VirusReporterTest
     // depth over the expected depth per copy, here 20.
 
     @Test
-    public void testReportGroupReportedOnClonalityAtFloor()
+    public void testReportGroupClonalityAtFloor()
     {
         VirusProfile profile = profile(10);
         assertEquals(
@@ -59,7 +59,7 @@ public class VirusReporterTest
     }
 
     @Test
-    public void testReportGroupNotClonalBelowFloor()
+    public void testReportGroupClonalityBelowFloor()
     {
         VirusProfile profile = profile(9);
         assertEquals(
@@ -68,7 +68,7 @@ public class VirusReporterTest
     }
 
     @Test
-    public void testReportGroupPurpleFailureNamesClonalityStatus()
+    public void testReportGroupPurpleFailure()
     {
         VirusProfile profile = profile(10);
         assertEquals(
@@ -80,7 +80,7 @@ public class VirusReporterTest
     }
 
     @Test
-    public void testReportGroupReportedOnIntegrationAloneWhenNotProfiled()
+    public void testReportGroupNotProfiled()
     {
         assertEquals(
                 reportableReport(HPV16, NO_ABNORMALITIES, 1, 0.0, 0.0, 0.0, NOT_PROFILED, REPORTED),
@@ -88,7 +88,7 @@ public class VirusReporterTest
     }
 
     @Test
-    public void testReportGroupNotProfiledOverridesPurpleFailure()
+    public void testReportGroupNotProfiledPurpleFailure()
     {
         // Not being found in the reads explains the missing copies per tumor cell, whatever Purple's QC.
 
@@ -98,7 +98,7 @@ public class VirusReporterTest
     }
 
     @Test
-    public void testReportGroupNotReportableNeverReportedDespiteEvidence()
+    public void testReportGroupNotReportable()
     {
         VirusProfile profile = profile(10);
         List<VirusGenome> integratedGenomes = List.of(GENOME, GENOME, GENOME, GENOME, GENOME);
@@ -108,7 +108,7 @@ public class VirusReporterTest
     }
 
     @Test
-    public void testReportGroupIntegrationOnOtherGenomeWithSameVirusNameIsNotAmbiguous()
+    public void testReportGroupIntegrationOnOtherGenome()
     {
         // Integration inserts often land on an arbitrary genome among near-identical strains, so only the virus name counts.
 
@@ -119,7 +119,7 @@ public class VirusReporterTest
     }
 
     @Test
-    public void testReportGroupRepresentativeVirusNameWinsOverDisagreeingIntegrations()
+    public void testReportGroupDisagreeingIntegrations()
     {
         VirusProfile profile = profile(10);
         assertEquals(
@@ -128,7 +128,7 @@ public class VirusReporterTest
     }
 
     @Test
-    public void testReportGroupMostFrequentIntegrationVirusNameWhenNotProfiled()
+    public void testReportGroupNotProfiledVirusName()
     {
         assertEquals(
                 reportableReport(HPV18, AMBIGUOUS_VIRUS, 3, 0.0, 0.0, 0.0, NOT_PROFILED, REPORTED),
@@ -136,7 +136,7 @@ public class VirusReporterTest
     }
 
     @Test
-    public void testReportGroupTiedIntegrationVirusNamesPickAlphabeticallyFirst()
+    public void testReportGroupNotProfiledVirusNameTie()
     {
         assertEquals(
                 reportableReport(HPV16, AMBIGUOUS_VIRUS, 2, 0.0, 0.0, 0.0, NOT_PROFILED, REPORTED),

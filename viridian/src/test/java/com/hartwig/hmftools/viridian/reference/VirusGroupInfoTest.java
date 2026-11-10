@@ -43,7 +43,7 @@ public class VirusGroupInfoTest
     }
 
     @Test
-    public void testLoadThrowsOnDuplicateGroup()
+    public void testLoadDuplicateGroup()
     {
         assertThrows(
                 UserInputError.class, () -> load(
@@ -52,7 +52,7 @@ public class VirusGroupInfoTest
     }
 
     @Test
-    public void testLoadThrowsOnUnknownReportingType()
+    public void testLoadUnknownReportingType()
     {
         assertThrows(IllegalStateException.class, () -> load("BK polyomavirus\tWART"));
     }

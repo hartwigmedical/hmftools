@@ -57,7 +57,7 @@ public class CandidateSvExtractorTest
     public TemporaryFolder mTempDir = new TemporaryFolder();
 
     @Test
-    public void testExtractSingleBreakendWithAnnotations()
+    public void testExtractSingleBreakend()
     {
         // A single breakend carrying every annotation the phase records but never acts on.
 
@@ -76,7 +76,7 @@ public class CandidateSvExtractorTest
     }
 
     @Test
-    public void testExtractPairedSvAsOneCandidate()
+    public void testExtractPairedSv()
     {
         // A paired variant yields one candidate carrying both host breakends, not one per breakend. It is identified by the
         // id ESVEE shares between the two records, rather than by either record's own id.
@@ -95,7 +95,7 @@ public class CandidateSvExtractorTest
     }
 
     @Test
-    public void testExtractAppliesInsertLengthThreshold()
+    public void testExtractInsertLength()
     {
         // Insert length is the only candidate gate, and the floor is the same for every variant type: a paired variant at the
         // floor qualifies just as a single breakend does.
@@ -109,7 +109,7 @@ public class CandidateSvExtractorTest
     }
 
     @Test
-    public void testExtractSkipsNonHumanContigs()
+    public void testExtractNonHumanContigs()
     {
         // Viral sequence never becomes a breakend coordinate, so a non-human contig is host-irrelevant and skipped.
 
@@ -119,7 +119,7 @@ public class CandidateSvExtractorTest
     }
 
     @Test
-    public void testExtractSkipsBreakendWithoutMate()
+    public void testExtractBreakendWithoutMate()
     {
         String records = record(
                 "chr1", 5000, "orphan_o", "A", "A" + LONG_INSERT + "[chr1:9000[", "PASS",
@@ -129,7 +129,7 @@ public class CandidateSvExtractorTest
     }
 
     @Test
-    public void testExtractResolvesTumorGenotypeByName()
+    public void testExtractTumorGenotype()
     {
         // Fragment counts must follow the named tumor sample, not a genotype ordinal, so the columns are ordered
         // tumor-then-reference here to catch an ordinal assumption.
@@ -143,7 +143,7 @@ public class CandidateSvExtractorTest
     }
 
     @Test
-    public void testExtractFailsWhenTumorSampleAbsent()
+    public void testExtractMissingTumorSample()
     {
         String header = HEADER.replace("NORMAL\tTUMOR", "NORMAL\tOTHER");
         String records = singleBreakend("chr1", 1000, "sgl_1", INSERT_AT_MIN_LENGTH);

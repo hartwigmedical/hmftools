@@ -37,7 +37,7 @@ public class ViralInsertAlignerTest
     private static final String OTHER_SEQUENCE = "TTGCATTGCATTGCATTGCATTGCATTGCATT";
 
     @Test
-    public void testAlignTakesHighestScoringAlignment()
+    public void testAlignHighestScore()
     {
         List<BwaMemAlignment> hits = List.of(
                 forwardAlignment(GENOME_16_REF_ID, 999, 60, 1),
@@ -49,7 +49,7 @@ public class ViralInsertAlignerTest
     }
 
     @Test
-    public void testAlignBreaksScoreTiesDeterministically()
+    public void testAlignScoreTie()
     {
         // Near-identical genomes give a sequence equal scores, so the choice must not depend on the order BWA returns them.
 
@@ -65,7 +65,7 @@ public class ViralInsertAlignerTest
     }
 
     @Test
-    public void testAlignReportsReverseStrandAlignment()
+    public void testAlignReverseStrand()
     {
         BwaMemAlignment reverse = alignment(samFlags(SAMFlag.READ_REVERSE_STRAND), GENOME_18_REF_ID, 299, 55, 2);
 
@@ -75,7 +75,7 @@ public class ViralInsertAlignerTest
     }
 
     @Test
-    public void testAlignReturnsNullWhereNothingAligned()
+    public void testAlignNoAlignment()
     {
         // The results stay aligned with the input order.
 

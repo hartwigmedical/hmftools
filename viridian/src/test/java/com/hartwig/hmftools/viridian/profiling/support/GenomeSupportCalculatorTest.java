@@ -25,7 +25,7 @@ public class GenomeSupportCalculatorTest
     private static final VirusGenome V2 = new VirusGenome("v2", 10, new Virus("Virus 2", new VirusGroup("Group 2")));
 
     @Test
-    public void testCalculatePerGenomeDepthAndCoverage()
+    public void testCalculateDepthAndCoverage()
     {
         List<ViralReadAlignment> alignments = List.of(
                 readAlignment("r1", V1, 1, "10M", 10, 0),
@@ -52,7 +52,7 @@ public class GenomeSupportCalculatorTest
     }
 
     @Test
-    public void testCalculateVotesAttributeVirusStrainSupport()
+    public void testCalculateVotes()
     {
         List<ViralReadAlignment> alignments = List.of(
                 readAlignment("r1", V1, 1, "10M", 10, 1),
@@ -72,7 +72,7 @@ public class GenomeSupportCalculatorTest
     }
 
     @Test
-    public void testCalculateTiedReadSplitsVoteEvenly()
+    public void testCalculateTiedReadVotes()
     {
         List<ViralReadAlignment> alignments = List.of(
                 readAlignment("r", V1, 1, "10M", 10, 2),
@@ -85,7 +85,7 @@ public class GenomeSupportCalculatorTest
     }
 
     @Test
-    public void testCalculateTopMatchReadsCountsTiedReadForEachGenome()
+    public void testCalculateTiedReadTopMatches()
     {
         VirusGenome v1b = new VirusGenome("v1b", 20, new Virus("Virus 1B", V1.virusGroup()));
         List<ViralReadAlignment> alignments = List.of(
@@ -108,7 +108,7 @@ public class GenomeSupportCalculatorTest
     }
 
     @Test
-    public void testCalculateGenomeWithOnlyOriginClippedAlignmentsIsStillReported()
+    public void testCalculateOnlyOriginClipped()
     {
         List<ViralReadAlignment> alignments = List.of(
                 readAlignment("r1", V1, 1, "30S10M", 10, 30),    // Clipped over origin; dropped

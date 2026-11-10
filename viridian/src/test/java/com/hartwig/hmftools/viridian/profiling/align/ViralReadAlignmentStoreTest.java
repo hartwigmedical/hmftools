@@ -25,7 +25,7 @@ public class ViralReadAlignmentStoreTest
     private static final ReadId R2 = ReadId.parse("r2");
 
     @Test
-    public void testByReadAndByGenomeHoldEveryAlignment()
+    public void testByReadAndByGenome()
     {
         ViralReadAlignment r1OnV1 = alignment("r1", V1);
         ViralReadAlignment r1OnV2 = alignment("r1", V2);
@@ -38,7 +38,7 @@ public class ViralReadAlignmentStoreTest
     }
 
     @Test
-    public void testConstructorRejectsRepeatAlignmentOfReadOnOneGenome()
+    public void testConstructorRepeatAlignment()
     {
         // Counting one read twice on a virus genome would inflate that genome's depth and read count, so the store refuses
         // it rather than leaving each caller to remember.

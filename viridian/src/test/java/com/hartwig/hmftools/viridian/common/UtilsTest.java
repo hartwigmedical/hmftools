@@ -10,7 +10,7 @@ import org.junit.Test;
 public class UtilsTest
 {
     @Test
-    public void testParseMdTagMismatchPositionsSkipsMatchesAndDeletions()
+    public void testParseMdTagMismatchPositions()
     {
         // Mismatch at 100, matches 101-102, mismatch at 103, matches 104-115, deletion 116-117,
         // mismatch at 118 straight after the deletion, matches 119-122.
@@ -19,7 +19,7 @@ public class UtilsTest
     }
 
     @Test
-    public void testParseMdTagMismatchPositionsThrowsOnInvalidCharacter()
+    public void testParseMdTagMismatchPositionsInvalidCharacter()
     {
         assertThrows(IllegalArgumentException.class, () -> parseMdTagMismatchPositions(100, "10*5"));
     }

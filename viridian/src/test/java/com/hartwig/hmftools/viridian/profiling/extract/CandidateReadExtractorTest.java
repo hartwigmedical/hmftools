@@ -61,7 +61,7 @@ public class CandidateReadExtractorTest
     private static final int MATE_UNMAPPED = samFlags(SAMFlag.MATE_UNMAPPED);
 
     @Test
-    public void testExtractWritesFilteredCandidateReadsWithMateSuffix() throws IOException
+    public void testExtract() throws IOException
     {
         SAMFileHeader header = header(SAMFileHeader.SortOrder.coordinate, 10000);
         List<SAMRecord> records = List.of(
@@ -84,7 +84,7 @@ public class CandidateReadExtractorTest
     }
 
     @Test
-    public void testExtractReadSpanningPartitionBoundaryWrittenOnce() throws IOException
+    public void testExtractPartitionBoundary() throws IOException
     {
         // A read overlapping a boundary is sliced by both partitions, but belongs to the one holding its start.
 
@@ -102,7 +102,7 @@ public class CandidateReadExtractorTest
     }
 
     @Test
-    public void testExtractUnmappedReadWithMappedMateFoundByRegionScan() throws IOException
+    public void testExtractUnmappedReadWithMappedMate() throws IOException
     {
         // Such a read sits in coordinate order, not the fully unmapped block at the end of the BAM. It may be an
         // integration site.
@@ -121,7 +121,7 @@ public class CandidateReadExtractorTest
     }
 
     @Test
-    public void testExtractFullyUnmappedAndDecoySourceSkipsHostContigs() throws IOException
+    public void testExtractFullyUnmappedAndDecoySource() throws IOException
     {
         SAMFileHeader header = header(SAMFileHeader.SortOrder.coordinate, 10000);
         header.addSequence(new SAMSequenceRecord("chrEBV", 10000));
@@ -142,7 +142,7 @@ public class CandidateReadExtractorTest
     }
 
     @Test
-    public void testExtractUnindexedBamRejected() throws IOException
+    public void testExtractUnindexedBam() throws IOException
     {
         // Sharding the scan by region needs an index.
 
@@ -157,7 +157,7 @@ public class CandidateReadExtractorTest
     }
 
     @Test
-    public void testExtractCramUnmappedPartitionsWriteEachReadOnce() throws IOException
+    public void testExtractCramUnmappedPartitions() throws IOException
     {
         SAMFileHeader header = header(SAMFileHeader.SortOrder.coordinate, 10000);
         File reference = writeReference(header);
@@ -169,7 +169,7 @@ public class CandidateReadExtractorTest
     }
 
     @Test
-    public void testExtractCramMultiSliceContainersReadWhole() throws IOException
+    public void testExtractCramMultiSliceContainers() throws IOException
     {
         // Up to two slices per container. The writer gives the mixed slice its own container: [clip, u1],
         // [u2, u3 | u4, u5] and [u6, u7]. With 4 threads each container is its own partition, and the second slice of the
@@ -190,7 +190,7 @@ public class CandidateReadExtractorTest
     }
 
     @Test
-    public void testExtractCramUnmappedReadOnlyInMixedContainer() throws IOException
+    public void testExtractCramMixedContainer() throws IOException
     {
         // [clip, u1] is the only container, so no container holds unmapped reads alone.
 
@@ -207,7 +207,7 @@ public class CandidateReadExtractorTest
     }
 
     @Test
-    public void testExtractCramWithBaiIndexRejected() throws IOException
+    public void testExtractCramBaiIndex() throws IOException
     {
         // Only a CRAI lists the unmapped containers, so a CRAM must have one.
 

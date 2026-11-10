@@ -47,7 +47,7 @@ public class RepresentativeReadAssignerTest
     private static final VirusGenome MINOR = new VirusGenome("v3", 1000, new Virus("Virus v3", GROUP));
 
     @Test
-    public void testAssignReadsPicksLeastDivergentRepresentative()
+    public void testAssignReads()
     {
         ViralReadAlignmentStore alignments = new ViralReadAlignmentStore(List.of(
                 alignment("r1/1", TWIN, 100, 3),
@@ -61,7 +61,7 @@ public class RepresentativeReadAssignerTest
     }
 
     @Test
-    public void testAssignReadsDropsReadWithNoRepresentativeAlignment()
+    public void testAssignReadsNoRepresentativeAlignment()
     {
         // The read supports only a strain no group settled on, so it is evidence for nothing.
 
@@ -71,7 +71,7 @@ public class RepresentativeReadAssignerTest
     }
 
     @Test
-    public void testAssignReadsBreaksTieByGenome()
+    public void testAssignReadsTie()
     {
         // Equally good on both, so the choice must not depend on hit ordering.
 
@@ -83,7 +83,7 @@ public class RepresentativeReadAssignerTest
     }
 
     @Test
-    public void testAssignCopiesTheChosenOfTwoAlignmentsSharingAStart() throws IOException
+    public void testAssignSharedStart() throws IOException
     {
         // One read with two alignments to the same genome from the same base, telling apart only by their CIGAR.
         // The chosen one must be copied, and only it.

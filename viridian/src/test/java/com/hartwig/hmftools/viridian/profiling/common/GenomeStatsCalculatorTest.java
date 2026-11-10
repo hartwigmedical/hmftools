@@ -21,7 +21,7 @@ public class GenomeStatsCalculatorTest
             new VirusGenome("v1", 20, new Virus("Virus 1", new VirusGroup("Group 1")));
 
     @Test
-    public void testCalculateDeletionSpannedPositionsAreNotCovered()
+    public void testCalculateDeletions()
     {
         // A read spanning a deletion aligns in two blocks: the skipped positions are not evidence the virus genome is
         // there.
@@ -36,7 +36,7 @@ public class GenomeStatsCalculatorTest
     }
 
     @Test
-    public void testCalculateGenomeWithOnlyOriginClippedAlignments()
+    public void testCalculateOnlyOriginClipped()
     {
         // Every alignment to this virus genome was dropped for straddling the origin, so only that loss is left to report.
 

@@ -32,14 +32,14 @@ public class VirusReferenceTest
     private static final VirusGenome GENOME_C = new VirusGenome("contigC", 300, INFO_C.virus());
 
     @Test
-    public void testJoinFastaAndInfoJoinsGenomesInFastaOrder()
+    public void testJoinFastaAndInfo()
     {
         List<VirusGenome> genomes = VirusReference.joinFastaAndInfo(dictionary(GENOME_A, GENOME_B, GENOME_C), INFO);
         assertEquals(List.of(GENOME_A, GENOME_B, GENOME_C), genomes);
     }
 
     @Test
-    public void testJoinFastaAndInfoThrowsWhenContigHasNoInfoRow()
+    public void testJoinFastaAndInfoMissingInfoRow()
     {
         SAMSequenceDictionary dictionary = dictionary(GENOME_A, GENOME_B, GENOME_C);
         List<VirusGenomeInfo> infoMissingC = List.of(INFO_A, INFO_B);
@@ -48,7 +48,7 @@ public class VirusReferenceTest
     }
 
     @Test
-    public void testJoinFastaAndInfoThrowsWhenInfoRowHasNoContig()
+    public void testJoinFastaAndInfoMissingContig()
     {
         SAMSequenceDictionary dictionaryMissingC = dictionary(GENOME_A, GENOME_B);
 

@@ -23,7 +23,7 @@ public class ViridianApplicationTest
     public TemporaryFolder mTempDir = new TemporaryFolder();
 
     @Test
-    public void testCheckVirusDecoyContigsInTumorBamAcceptsContigsInHeader()
+    public void testCheckVirusDecoyContigsInTumorBam()
     {
         String bam = writeHeaderOnlyBam("chr1", "chrEBV", "chrHPV16");
 
@@ -32,7 +32,7 @@ public class ViridianApplicationTest
     }
 
     @Test
-    public void testCheckVirusDecoyContigsInTumorBamRejectsMissingContigs()
+    public void testCheckVirusDecoyContigsInTumorBamMissingContigs()
     {
         String bam = writeHeaderOnlyBam("chr1", "chrEBV");
 

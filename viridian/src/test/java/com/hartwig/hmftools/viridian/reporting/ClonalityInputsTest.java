@@ -38,7 +38,7 @@ public class ClonalityInputsTest
     }
 
     @Test
-    public void testFromNormalisesForSubclonalPurity()
+    public void testFromSubclonalPurity()
     {
         // Purity 0.5, ploidy 2: 30 * 0.5 / (0.5 * 2 + 2 * 0.5) = 7.5
 
@@ -48,7 +48,7 @@ public class ClonalityInputsTest
     }
 
     @Test
-    public void testFromNormalisesForNonDiploidTumor()
+    public void testFromNonDiploidTumor()
     {
         // At ploidy 2 the normal and tumor cells carry the same copies, which hides a formula that ignores the normal cells.
         // Purity 0.5, ploidy 3: 30 * 0.5 / (0.5 * 3 + 2 * 0.5) = 6, where depth * purity / ploidy would give 5
@@ -59,7 +59,7 @@ public class ClonalityInputsTest
     }
 
     @Test
-    public void testFromComputesDespiteOtherPurpleWarningsAndFailures()
+    public void testFromOtherPurpleQcStatuses()
     {
         // Only no tumor and contamination block the calculation.
 
@@ -85,7 +85,7 @@ public class ClonalityInputsTest
     }
 
     @Test
-    public void testConstructorRejectsInvalidCombinations()
+    public void testConstructorInvalidCombinations()
     {
         // Exactly one of the depth per copy and a clonality-blocking Purple failure.
 

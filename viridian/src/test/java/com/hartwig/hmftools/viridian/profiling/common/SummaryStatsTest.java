@@ -11,7 +11,7 @@ import org.junit.Test;
 public class SummaryStatsTest
 {
     @Test
-    public void testFromUnsortedValues()
+    public void testFrom()
     {
         // Nearest-rank percentiles over the sorted values: index ceil(percent * 10) - 1, so p5 at 0, p25 at 2, p50 at 4,
         // p75 at 7 and p95 at 9.
@@ -22,13 +22,13 @@ public class SummaryStatsTest
     }
 
     @Test
-    public void testFromListMatchesArray()
+    public void testFromList()
     {
         assertEquals(SummaryStats.from(new int[] { 30, 10, 20 }), SummaryStats.from(List.of(30, 10, 20)));
     }
 
     @Test
-    public void testFromDoesNotMutateInput()
+    public void testFromInputMutation()
     {
         int[] input = { 30, 10, 20 };
         SummaryStats.from(input);
@@ -36,7 +36,7 @@ public class SummaryStatsTest
     }
 
     @Test
-    public void testFromThrowsOnEmpty()
+    public void testFromEmpty()
     {
         assertThrows(IllegalArgumentException.class, () -> SummaryStats.from(new int[0]));
     }

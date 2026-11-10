@@ -12,7 +12,7 @@ import htsjdk.samtools.SAMRecord;
 public class ReadIdTest
 {
     @Test
-    public void testFromTakesMateFromPairFlags()
+    public void testFromMate()
     {
         assertEquals(new ReadId("r1", 1), ReadId.from(record(samFlags(SAMFlag.READ_PAIRED, SAMFlag.FIRST_OF_PAIR))));
         assertEquals(new ReadId("r1", 2), ReadId.from(record(samFlags(SAMFlag.READ_PAIRED, SAMFlag.SECOND_OF_PAIR))));
@@ -20,7 +20,7 @@ public class ReadIdTest
     }
 
     @Test
-    public void testParseRoundTripsToString()
+    public void testParseRoundTrip()
     {
         assertEquals("r1/1", new ReadId("r1", 1).toString());
         assertEquals("r1/2", new ReadId("r1", 2).toString());
