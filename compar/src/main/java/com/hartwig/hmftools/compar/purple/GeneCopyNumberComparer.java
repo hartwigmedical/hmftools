@@ -109,7 +109,9 @@ public class GeneCopyNumberComparer extends ItemComparer
 
         for(List<ExpectedValue> expectedValues : valuesByKey.values())
         {
-            items.add(GeneCopyNumberData.fromExpected(expectedValues, mFields));
+            GeneCopyNumberData geneCopyNumber = GeneCopyNumberData.fromExpected(expectedValues, mFields);
+            geneCopyNumber.setRemark(ExpectedValue.remark(expectedValues));
+            items.add(geneCopyNumber);
         }
 
         return items;

@@ -385,6 +385,7 @@ public class SomaticVariantComparer extends ItemComparer
                 if(variant == null)
                     return null;
 
+                variant.setRemark(ExpectedValue.remark(entry.getValue()));
                 variants.add(variant);
             }
         }
@@ -405,6 +406,7 @@ public class SomaticVariantComparer extends ItemComparer
             if(item == null)
                 throw new IllegalArgumentException(format("invalid somatic variant expected key(%s)", entry.getKey()));
 
+            item.setRemark(ExpectedValue.remark(entry.getValue()));
             items.add(item);
         }
 

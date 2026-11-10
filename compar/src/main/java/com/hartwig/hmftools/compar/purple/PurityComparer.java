@@ -166,7 +166,12 @@ public class PurityComparer extends ItemComparer
         List<ComparableItem> comparableItems = Lists.newArrayList();
 
         if(valuesByKey.size() == 1)
-            comparableItems.add(new PurityData(valuesByKey.get(PURITY.toString()), mFields));
+        {
+            List<ExpectedValue> expectedValues = valuesByKey.get(PURITY.toString());
+            PurityData purity = new PurityData(expectedValues, mFields);
+            purity.setRemark(ExpectedValue.remark(expectedValues));
+            comparableItems.add(purity);
+        }
 
         return comparableItems;
     }

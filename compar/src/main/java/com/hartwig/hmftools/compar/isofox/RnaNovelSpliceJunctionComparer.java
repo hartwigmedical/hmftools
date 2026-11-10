@@ -124,6 +124,7 @@ public class RnaNovelSpliceJunctionComparer extends ItemComparer
         for(List<ExpectedValue> expectedValues : valuesByKey.values())
         {
             RnaNovelSpliceJunctionData junction = RnaNovelSpliceJunctionData.fromExpected(expectedValues, mFields);
+            junction.setRemark(ExpectedValue.remark(expectedValues));
             comparableItems.add(junction);
         }
 

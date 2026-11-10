@@ -63,7 +63,7 @@ public class ExpectedCacheTest
     }
 
     @Test
-    public void remarkColumnIsIgnored() throws IOException
+    public void remarkIsKeptAsNotesNotAsField() throws IOException
     {
         File columnsFile = TempDir.newFile();
         Files.write(
@@ -87,6 +87,7 @@ public class ExpectedCacheTest
             assertEquals(1, values.size());
             assertEquals("AF", values.get(0).FieldName);
             assertEquals("0.3", values.get(0).Value);
+            assertEquals("confirmed by ddPCR", values.get(0).Remark);
         }
     }
 }

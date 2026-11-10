@@ -29,7 +29,7 @@ public class ExpectedCache
     public static final String FLD_STATUS = "Status";
 
     private static final String FLD_FIELD_VALUES = "FieldValues";
-    private static final String FLD_REMARK = "Remark";
+    public static final String FLD_REMARK = "Remark";
 
     private static final String FIELD_VALUE_DELIM = ";";
     private static final String FIELD_VALUE_ITEM_DELIM = "=";
@@ -99,6 +99,7 @@ public class ExpectedCache
 
             Integer statusIndex = fieldsIndexMap.get(FLD_STATUS);
             Integer fieldValueIndex = fieldsIndexMap.get(FLD_FIELD_VALUES);
+            Integer remarkIndex = fieldsIndexMap.get(FLD_REMARK);
 
             for(final String line : lines)
             {
@@ -128,13 +129,14 @@ public class ExpectedCache
                     }
 
                     boolean requireAbsent = statusIndex != null && values[statusIndex].equalsIgnoreCase(VALUE_ABSENT);
+                    String remark = remarkIndex != null ? values[remarkIndex] : "";
 
                     if(statusIndex != null)
                         checkStatus(categoryType, values[statusIndex], itemKey);
 
                     if(fieldValueIndex != null && values[fieldValueIndex].isEmpty())
                     {
-                        expectedValues.add(new ExpectedValue(itemKey, FLD_STATUS, "", requireAbsent));
+                        expectedValues.add(new ExpectedValue(itemKey, FLD_STATUS, "", requireAbsent, remark));
                     }
                     else if(fieldValueIndex != null)
                     {
@@ -146,7 +148,7 @@ public class ExpectedCache
                             String field = svItem[0];
                             String value = svItem[1];
 
-                            expectedValues.add(new ExpectedValue(itemKey, field, value, requireAbsent));
+                            expectedValues.add(new ExpectedValue(itemKey, field, value, requireAbsent, remark));
                         }
                     }
                     else
@@ -167,11 +169,11 @@ public class ExpectedCache
                                 continue;
 
                             hasFields = true;
-                            expectedValues.add(new ExpectedValue(itemKey, fieldName, value, requireAbsent));
+                            expectedValues.add(new ExpectedValue(itemKey, fieldName, value, requireAbsent, remark));
                         }
 
                         if(!hasFields)
-                            expectedValues.add(new ExpectedValue(itemKey, FLD_STATUS, "", requireAbsent));
+                            expectedValues.add(new ExpectedValue(itemKey, FLD_STATUS, "", requireAbsent, remark));
                     }
                 }
                 catch(Exception e)

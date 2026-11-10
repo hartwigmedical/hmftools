@@ -184,7 +184,9 @@ public class RnaFusionComparer extends ItemComparer
 
         for(List<ExpectedValue> expectedValues : valuesByKey.values())
         {
-            comparableItems.add(RnaFusionData.fromExpected(expectedValues, mFields));
+            RnaFusionData fusion = RnaFusionData.fromExpected(expectedValues, mFields);
+            fusion.setRemark(ExpectedValue.remark(expectedValues));
+            comparableItems.add(fusion);
         }
 
         for(List<RnaFusionData> fusions : fusionsByName(comparableItems).values())

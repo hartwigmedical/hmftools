@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.compar.common.ComparConstants.FLD_CATEGORY;
 import static com.hartwig.hmftools.compar.common.ComparConstants.FLD_ITEM_KEY;
 import static com.hartwig.hmftools.compar.common.ComparConstants.FLD_SAMPLE_ID;
+import static com.hartwig.hmftools.compar.common.ExpectedCache.FLD_REMARK;
 import static com.hartwig.hmftools.compar.common.MismatchType.ABSENT_FOUND;
 
 import java.util.List;
@@ -63,12 +64,15 @@ public class MismatchFile
         return sj.toString();
     }
 
-    public static String header(boolean includeSourceLabels, boolean includeHistory)
+    public static String header(boolean includeRemark, boolean includeSourceLabels, boolean includeHistory)
     {
         StringJoiner sj = new StringJoiner(TSV_DELIM);
         sj.add(commonHeader(true, includeSourceLabels || includeHistory));
         sj.add(FLD_OLD_VALUES);
         sj.add(FLD_NEW_VALUES);
+
+        if(includeRemark)
+            sj.add(FLD_REMARK);
 
         if(includeSourceLabels)
             sj.add(FLD_OLD_SOURCE).add(FLD_NEW_SOURCE);

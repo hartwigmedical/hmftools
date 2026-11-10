@@ -23,10 +23,12 @@ import com.hartwig.hmftools.compar.common.field.StringFieldValue;
 public abstract class ComparableItem
 {
     protected final Map<String,FieldValue> mValues;
+    private String mRemark;
 
     public ComparableItem()
     {
         mValues = Maps.newHashMap();
+        mRemark = "";
     }
 
     public abstract CategoryType category();
@@ -35,6 +37,10 @@ public abstract class ComparableItem
     public String geneName() { return ""; }
     public boolean reportable() { return true; }
     public boolean isPass() { return true; }
+
+    // the Remark of the expected findings rows an item was loaded from
+    public String remark() { return mRemark; }
+    public void setRemark(final String remark) { mRemark = remark; }
 
     public abstract boolean matches(final ComparableItem other);
 

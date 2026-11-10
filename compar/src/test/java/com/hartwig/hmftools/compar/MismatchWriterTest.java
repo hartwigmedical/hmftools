@@ -211,6 +211,30 @@ public class MismatchWriterTest
     }
 
     @Test
+    public void expectedFindingsRunWritesTheRowRemark() throws IOException
+    {
+        File expectedFile = temp.newFile("expected_findings.tsv");
+        Files.write(expectedFile.toPath(), List.of(
+                String.join(TSV_DELIM, "Category", "Key", "Status", "FieldValues", "Remark"),
+                String.join(TSV_DELIM, "RNA_FUSION", "EML4:ALK", "Present", "", "validated by RT-PCR")));
+
+        ConfigBuilder configBuilder = createConfigBuilder(temp.newFolder(), null, null, null);
+        configBuilder.setValue(ComparConfig.EXPECTED_FINDINGS_FILES + "_old", expectedFile.getAbsolutePath());
+
+        RnaFusionData expectedFusion = TestRnaFusionDataBuilder.BUILDER.create();
+        expectedFusion.setRemark("validated by RT-PCR");
+
+        List<String> lines = writeOutput(new ComparConfig(configBuilder), List.of(
+                new Mismatch(expectedFusion, null, MismatchType.OLD_ONLY, Collections.emptyList()),
+                new Mismatch(null, OTHER_FUSION_ITEM, MismatchType.NEW_ONLY, Collections.emptyList())));
+
+        List<String> header = Arrays.asList(lines.get(0).split(TSV_DELIM, -1));
+        assertEquals(header.indexOf("NewValues") + 1, header.indexOf("Remark"));
+        assertEquals("validated by RT-PCR", lines.get(1).split(TSV_DELIM, -1)[header.indexOf("Remark")]);
+        assertEquals("", lines.get(2).split(TSV_DELIM, -1)[header.indexOf("Remark")]);
+    }
+
+    @Test
     public void outputMatchingCacheFileIsRejected() throws IOException
     {
         String filePrefix = "compar";
@@ -251,6 +275,12 @@ public class MismatchWriterTest
     private static ComparConfig createConfig(
             final File outputDir, final String oldLabel, final String newLabel, final String cacheFilePath)
     {
+        return new ComparConfig(createConfigBuilder(outputDir, oldLabel, newLabel, cacheFilePath));
+    }
+
+    private static ConfigBuilder createConfigBuilder(
+            final File outputDir, final String oldLabel, final String newLabel, final String cacheFilePath)
+    {
         ConfigBuilder configBuilder = new ConfigBuilder();
         ComparConfig.addConfig(configBuilder);
         configBuilder.setValue("sample", SAMPLE_ID);
@@ -269,7 +299,7 @@ public class MismatchWriterTest
         if(cacheFilePath != null)
             configBuilder.setValue(ComparConfig.CURATION_CACHE, cacheFilePath);
 
-        return new ComparConfig(configBuilder);
+        return configBuilder;
     }
 
     private List<String> writeOutput(final ComparConfig config, final List<Mismatch> mismatches) throws IOException
@@ -291,7 +321,7 @@ public class MismatchWriterTest
 
     private File writeCacheFile(final String filename, final List<List<String>> rows) throws IOException
     {
-        List<String> lines = Lists.newArrayList(MismatchFile.header(true, false) + TSV_DELIM + CURATION_HEADER);
+        List<String> lines = Lists.newArrayList(MismatchFile.header(false, true, false) + TSV_DELIM + CURATION_HEADER);
 
         for(List<String> row : rows)
         {

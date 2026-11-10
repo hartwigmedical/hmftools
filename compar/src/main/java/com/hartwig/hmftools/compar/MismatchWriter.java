@@ -32,6 +32,7 @@ public class MismatchWriter
     private final String mOldSourceLabel;
     private final String mNewSourceLabel;
     private final CurationCache mCurationCache;
+    private final boolean mWriteRemark;
 
     public MismatchWriter(final ComparConfig config)
     {
@@ -43,6 +44,7 @@ public class MismatchWriter
         mNewSourceLabel = config.getSourceData(SourceType.NEW).Label;
 
         mCurationCache = config.CurationCacheFile != null ? new CurationCache(config.CurationCacheFile) : null;
+        mWriteRemark = config.getSourceData(SourceType.OLD).isExpectedSourced(); // expected findings are read as OLD only
     }
 
     public boolean initialiseOutputFiles(final FieldCheckCache fieldCheckCache)
@@ -109,7 +111,7 @@ public class MismatchWriter
 
                 boolean writeSourceLabels = mOldSourceLabel != null;
 
-                mCombinedWriter.write(MismatchFile.header(writeSourceLabels, mCurationCache != null));
+                mCombinedWriter.write(MismatchFile.header(mWriteRemark, writeSourceLabels, mCurationCache != null));
                 mCombinedWriter.newLine();
             }
         }
@@ -196,6 +198,9 @@ public class MismatchWriter
 
             String curationStatus = mOldSourceLabel != null || mCurationCache != null ? statusStr : null;
             sj.add(MismatchFile.toTsv(mismatch, false, fieldDisplayValues, curationStatus));
+
+            if(mWriteRemark)
+                sj.add(mismatch.OldItem != null ? mismatch.OldItem.remark() : "");
 
             if(mOldSourceLabel != null)
                 sj.add(mOldSourceLabel).add(mNewSourceLabel);

@@ -18,10 +18,13 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.compar.ComparConfig;
+import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.common.ExpectedCache;
 import com.hartwig.hmftools.compar.common.ExpectedValue;
 import com.hartwig.hmftools.compar.common.MatchLevel;
@@ -348,6 +351,24 @@ public class SomaticVariantComparerTest
         assertEquals(List.of("AF(0.10/0.45)"), mismatches.get(0).DiffValues);
         assertEquals("EGFR p.Leu858Arg", mismatches.get(1).OldItem.key());
         assertSame(v600kCall, mismatches.get(2).NewItem);
+    }
+
+    @Test
+    public void expectedItemsCarryTheirRowRemarks()
+    {
+        SomaticVariantComparer victim = new SomaticVariantComparer(new ComparConfig(), Collections.emptyMap());
+
+        Map<String,List<ExpectedValue>> valuesByKey = new TreeMap<>(Map.of(
+                "7:140453136:A:T", List.of(
+                        new ExpectedValue("7:140453136:A:T", "AF", "0.45", false, "confirmed by ddPCR"),
+                        new ExpectedValue("7:140453136:A:T", "Reported", "true", false, "confirmed by ddPCR"),
+                        new ExpectedValue("7:140453136:A:T", "Gene", "BRAF", false, "second assay")),
+                "EGFR:p.L858R", List.of(new ExpectedValue("EGFR:p.L858R", "AF", "0.10", false)),
+                "KRAS", List.of(new ExpectedValue("KRAS", "Status", "", true, "wild type by panel"))));
+
+        List<String> remarks = victim.loadFromExpected(valuesByKey).stream().map(ComparableItem::remark).toList();
+
+        assertEquals(List.of("confirmed by ddPCR;second assay", "", "wild type by panel"), remarks);
     }
 
     @Test
