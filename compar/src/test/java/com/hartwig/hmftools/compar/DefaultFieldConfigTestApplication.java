@@ -63,7 +63,7 @@ public class DefaultFieldConfigTestApplication
         String outputDir = OUTPUT_DIR + "/" + matchLevel.toString().toLowerCase();
         new File(outputDir).mkdirs();
 
-        String filePrefix = outputDir + "/compar_cohort";
+        String filePrefix = outputDir + "/example";
         String filename = FieldConfigFile.generateFileName(filePrefix);
 
         FieldCheckCache fieldConfig = new FieldCheckCache(); // initialiseFieldConfig(config);

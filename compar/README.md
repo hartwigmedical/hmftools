@@ -151,8 +151,8 @@ Differences in field values are considered one of the following ways
 
 ### Field Config Files
 The `Compared` setting and default thresholds for every field are defined per category in code, and are exported for reference to:
-- [compar_cohort.field_config.tsv](src/main/resources/field_config/reportable/compar_cohort.field_config.tsv) for the default `-match_level REPORTABLE`
-- [compar_cohort.field_config.tsv](src/main/resources/field_config/detailed/compar_cohort.field_config.tsv) for `-match_level DETAILED`, which also includes the extra categories and fields that are only compared in detailed mode
+- [example.field_config.tsv](src/main/resources/field_config/reportable/example.field_config.tsv) for the default `-match_level REPORTABLE`
+- [example.field_config.tsv](src/main/resources/field_config/detailed/example.field_config.tsv) for `-match_level DETAILED`, which also includes the extra categories and fields that are only compared in detailed mode
 
 Each file lists one row per field, for every category that is run at that match level:
 
