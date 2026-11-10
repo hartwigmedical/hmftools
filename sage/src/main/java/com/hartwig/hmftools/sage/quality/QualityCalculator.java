@@ -83,23 +83,9 @@ public class QualityCalculator
             return QualityScores.INVALID_QUAL_SCORES;
 
         double recalibratedBaseQuality = seqTechBaseQuality;
+        Double penalisedBaseQuality = null;
 
         double baseQualPenalty = 0;
-
-        if(!readContextCounter.isIndel())
-        {
-            // reduce the penalty for lower quals down to a minimum
-            if(recalibratedBaseQuality >= BASE_QUAL_FIXED_PENALTY_UPPER_THRESHOLD)
-            {
-                baseQualPenalty = BASE_QUAL_FIXED_PENALTY_MAX;
-            }
-            else
-            {
-                double minPenalty = BASE_QUAL_FIXED_PENALTY_MAX * 0.5;
-                double qualAboveThreshold = max(recalibratedBaseQuality - BASE_QUAL_FIXED_PENALTY_LOWER_THRESHOLD, 0);
-                baseQualPenalty = minPenalty + qualAboveThreshold / BASE_QUAL_FIXED_PENALTY_RANGE * minPenalty;
-            }
-        }
 
         if(isUltima())
         {
@@ -108,9 +94,8 @@ public class QualityCalculator
                 double bqrQual = readContextCounter.qualCache().getQual(
                         UltimaUtils.maxRawQual(), SamRecordUtils.extractConsensusType(record), 0, !record.getReadNegativeStrandFlag());
 
-                // bqrQual -= baseQualPenalty;
-
                 recalibratedBaseQuality = min(seqTechBaseQuality, bqrQual);
+                penalisedBaseQuality = min(seqTechBaseQuality - BASE_QUAL_FIXED_PENALTY_MAX, bqrQual - getBaseQualPenalty(bqrQual));
             }
         }
         else
@@ -118,7 +103,7 @@ public class QualityCalculator
             if(!readContextCounter.isIndel() && readContextCounter.artefactContext() == null)
             {
                 recalibratedBaseQuality = recalibratedBaseQuality(readContextCounter, readVarIndex, record);
-                // recalibratedBaseQuality -= baseQualPenalty;
+                penalisedBaseQuality = recalibratedBaseQuality - getBaseQualPenalty(recalibratedBaseQuality);
 
                 int varLength = readContextCounter.variant().ref().length();
 
@@ -129,9 +114,16 @@ public class QualityCalculator
                     {
                         // don't boost recalibrated qual of SBX artefacts
                         recalibratedBaseQuality = min(recalibratedBaseQuality, seqTechBaseQuality);
+                        penalisedBaseQuality = min(penalisedBaseQuality, seqTechBaseQuality - BASE_QUAL_FIXED_PENALTY_MAX);
                     }
                 }
             }
+        }
+
+        if(penalisedBaseQuality == null && !readContextCounter.useMsiErrorRate())
+        {
+            // as a default apply the full fixed penalty (either a Ultima model or novel indel qual, not a BQR qual)
+            penalisedBaseQuality = recalibratedBaseQuality - BASE_QUAL_FIXED_PENALTY_MAX;
         }
 
         int mapQuality = record.getMappingQuality();
@@ -139,12 +131,6 @@ public class QualityCalculator
 
         int penalisedMapQuality = calcMapQuality(
                 mConfig, readContextCounter.variant(), mapQuality, record.getReadBases().length, numberOfEvents, isImproperPair);
-
-        double penalisedBaseQuality = recalibratedBaseQuality;
-
-        // TEMP: to preserve behaviour
-        if(!readContextCounter.useMsiErrorRate())
-            penalisedBaseQuality -= baseQualPenalty;
 
         int readEdgePenalty = readEdgeDistancePenalty(readContextCounter, readVarIndex, record);
         penalisedBaseQuality -= readEdgePenalty;
@@ -156,6 +142,21 @@ public class QualityCalculator
         return new QualityScores(
                 seqTechBaseQuality, recalibratedBaseQuality, max(0, penalisedMapQuality), max(0.0, penalisedBaseQuality), combinedQuality,
                 isMediumQual);
+    }
+
+    private static double getBaseQualPenalty(double recalibratedBaseQuality)
+    {
+        // reduce the penalty for lower quals down to a minimum
+        if(recalibratedBaseQuality >= BASE_QUAL_FIXED_PENALTY_UPPER_THRESHOLD)
+        {
+            return BASE_QUAL_FIXED_PENALTY_MAX;
+        }
+        else
+        {
+            double minPenalty = BASE_QUAL_FIXED_PENALTY_MAX * 0.5;
+            double qualAboveThreshold = max(recalibratedBaseQuality - BASE_QUAL_FIXED_PENALTY_LOWER_THRESHOLD, 0);
+            return minPenalty + qualAboveThreshold / BASE_QUAL_FIXED_PENALTY_RANGE * minPenalty;
+        }
     }
 
     private static int calcMapQuality(
