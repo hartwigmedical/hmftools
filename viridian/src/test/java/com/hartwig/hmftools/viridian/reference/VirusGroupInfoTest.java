@@ -23,7 +23,7 @@ public class VirusGroupInfoTest
     public TemporaryFolder mTempDir = new TemporaryFolder();
 
     @Test
-    public void testLoadsValidResource() throws IOException
+    public void testLoad() throws IOException
     {
         // The HHV-8 reporting type differs from its enum constant name.
 
@@ -43,7 +43,7 @@ public class VirusGroupInfoTest
     }
 
     @Test
-    public void testDuplicateGroupFails()
+    public void testLoadThrowsOnDuplicateGroup()
     {
         assertThrows(
                 UserInputError.class, () -> load(
@@ -52,7 +52,7 @@ public class VirusGroupInfoTest
     }
 
     @Test
-    public void testUnknownReportingTypeFails()
+    public void testLoadThrowsOnUnknownReportingType()
     {
         assertThrows(IllegalStateException.class, () -> load("BK polyomavirus\tWART"));
     }

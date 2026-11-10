@@ -50,7 +50,7 @@ public class VirusReporterTest
     // depth over the expected depth per copy, here 20.
 
     @Test
-    public void testReportedOnClonalityAtFloor()
+    public void testReportGroupReportedOnClonalityAtFloor()
     {
         VirusProfile profile = profile(10);
         assertEquals(
@@ -59,7 +59,7 @@ public class VirusReporterTest
     }
 
     @Test
-    public void testNotClonalBelowFloor()
+    public void testReportGroupNotClonalBelowFloor()
     {
         VirusProfile profile = profile(9);
         assertEquals(
@@ -68,7 +68,7 @@ public class VirusReporterTest
     }
 
     @Test
-    public void testPurpleFailureNamesClonalityStatus()
+    public void testReportGroupPurpleFailureNamesClonalityStatus()
     {
         VirusProfile profile = profile(10);
         assertEquals(
@@ -80,24 +80,25 @@ public class VirusReporterTest
     }
 
     @Test
-    public void testReportedOnIntegrationAloneWhenNotProfiled()
+    public void testReportGroupReportedOnIntegrationAloneWhenNotProfiled()
     {
         assertEquals(
                 reportableReport(HPV16, NO_ABNORMALITIES, 1, 0.0, 0.0, 0.0, NOT_PROFILED, REPORTED),
                 VirusReporter.reportGroup(null, List.of(GENOME), REPORTABLE_INFO, PURPLE_FIT));
     }
 
-    // Not being found in the reads explains the missing copies per tumor cell, whatever Purple's QC.
     @Test
-    public void testNotProfiledOverridesPurpleFailure()
+    public void testReportGroupNotProfiledOverridesPurpleFailure()
     {
+        // Not being found in the reads explains the missing copies per tumor cell, whatever Purple's QC.
+
         assertEquals(
                 reportableReport(HPV16, NO_ABNORMALITIES, 1, 0.0, 0.0, null, NOT_PROFILED, REPORTED),
                 VirusReporter.reportGroup(null, List.of(GENOME), REPORTABLE_INFO, NO_TUMOR));
     }
 
     @Test
-    public void testNotReportableNeverReportedDespiteEvidence()
+    public void testReportGroupNotReportableNeverReportedDespiteEvidence()
     {
         VirusProfile profile = profile(10);
         List<VirusGenome> integratedGenomes = List.of(GENOME, GENOME, GENOME, GENOME, GENOME);
@@ -106,10 +107,11 @@ public class VirusReporterTest
         assertEquals(expected, VirusReporter.reportGroup(profile, integratedGenomes, NOT_REPORTABLE_INFO, PURPLE_FIT));
     }
 
-    // Integration inserts often land on an arbitrary genome among near-identical strains, so only the virus name counts.
     @Test
-    public void testIntegrationOnOtherGenomeWithSameVirusNameIsNotAmbiguous()
+    public void testReportGroupIntegrationOnOtherGenomeWithSameVirusNameIsNotAmbiguous()
     {
+        // Integration inserts often land on an arbitrary genome among near-identical strains, so only the virus name counts.
+
         VirusProfile profile = profile(10);
         assertEquals(
                 reportableReport(HPV16, NO_ABNORMALITIES, 1, 100.0, 10.0, 0.5, CLONAL, REPORTED),
@@ -117,7 +119,7 @@ public class VirusReporterTest
     }
 
     @Test
-    public void testRepresentativeVirusNameWinsOverDisagreeingIntegrations()
+    public void testReportGroupRepresentativeVirusNameWinsOverDisagreeingIntegrations()
     {
         VirusProfile profile = profile(10);
         assertEquals(
@@ -126,7 +128,7 @@ public class VirusReporterTest
     }
 
     @Test
-    public void testMostFrequentIntegrationVirusNameWhenNotProfiled()
+    public void testReportGroupMostFrequentIntegrationVirusNameWhenNotProfiled()
     {
         assertEquals(
                 reportableReport(HPV18, AMBIGUOUS_VIRUS, 3, 0.0, 0.0, 0.0, NOT_PROFILED, REPORTED),
@@ -134,7 +136,7 @@ public class VirusReporterTest
     }
 
     @Test
-    public void testTiedIntegrationVirusNamesPickAlphabeticallyFirst()
+    public void testReportGroupTiedIntegrationVirusNamesPickAlphabeticallyFirst()
     {
         assertEquals(
                 reportableReport(HPV16, AMBIGUOUS_VIRUS, 2, 0.0, 0.0, 0.0, NOT_PROFILED, REPORTED),

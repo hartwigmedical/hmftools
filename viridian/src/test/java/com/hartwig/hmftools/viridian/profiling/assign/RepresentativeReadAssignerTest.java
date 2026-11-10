@@ -60,19 +60,21 @@ public class RepresentativeReadAssignerTest
         assertEquals(Map.of(ReadId.parse("r1/1"), alignment("r1/1", TWIN, 100, 3)), assignments);
     }
 
-    // The read supports only a strain no group settled on, so it is evidence for nothing.
     @Test
     public void testAssignReadsDropsReadWithNoRepresentativeAlignment()
     {
+        // The read supports only a strain no group settled on, so it is evidence for nothing.
+
         ViralReadAlignmentStore alignments = new ViralReadAlignmentStore(List.of(alignment("r1/1", MINOR, 100, 1)));
 
         assertTrue(RepresentativeReadAssigner.assignReads(alignments.byRead(), Set.of(REPRESENTATIVE)).isEmpty());
     }
 
-    // Equally good on both, so the choice must not depend on hit ordering.
     @Test
     public void testAssignReadsBreaksTieByGenome()
     {
+        // Equally good on both, so the choice must not depend on hit ordering.
+
         ViralReadAlignment onTwin = alignment("r1/1", TWIN, 100, 3);
         ViralReadAlignment onRepresentative = alignment("r1/1", REPRESENTATIVE, 100, 3);
 
@@ -80,19 +82,12 @@ public class RepresentativeReadAssignerTest
         assertEquals(REPRESENTATIVE, assignedGenome(List.of(onRepresentative, onTwin)));
     }
 
-    private static VirusGenome assignedGenome(List<ViralReadAlignment> alignments)
-    {
-        ViralReadAlignmentStore store = new ViralReadAlignmentStore(alignments);
-        Map<ReadId, ViralReadAlignment> assignments =
-                RepresentativeReadAssigner.assignReads(store.byRead(), Set.of(REPRESENTATIVE, TWIN));
-        return assignments.get(ReadId.parse("r1/1")).genome();
-    }
-
-    // One read with two alignments to the same genome from the same base, telling apart only by their CIGAR.
-    // The chosen one must be copied, and only it.
     @Test
     public void testAssignCopiesTheChosenOfTwoAlignmentsSharingAStart() throws IOException
     {
+        // One read with two alignments to the same genome from the same base, telling apart only by their CIGAR.
+        // The chosen one must be copied, and only it.
+
         ViralReadAlignment chosen = readAlignment("r1/1", REPRESENTATIVE, 500, "53S38M21D49M8S", 40, 86);
         ViralReadAlignment other = readAlignment("r1/1", REPRESENTATIVE, 500, "95S53M", 42, 98);
 
@@ -104,6 +99,14 @@ public class RepresentativeReadAssignerTest
                 sourceBam, outputBam);
 
         assertEquals(List.of("53S38M21D49M8S"), cigars(outputBam));
+    }
+
+    private static VirusGenome assignedGenome(List<ViralReadAlignment> alignments)
+    {
+        ViralReadAlignmentStore store = new ViralReadAlignmentStore(alignments);
+        Map<ReadId, ViralReadAlignment> assignments =
+                RepresentativeReadAssigner.assignReads(store.byRead(), Set.of(REPRESENTATIVE, TWIN));
+        return assignments.get(ReadId.parse("r1/1")).genome();
     }
 
     // The source BAM only needs the fields the copy is matched on, plus enough shape to be a valid record.

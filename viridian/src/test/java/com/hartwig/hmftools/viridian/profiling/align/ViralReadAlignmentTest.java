@@ -25,7 +25,7 @@ public class ViralReadAlignmentTest
     private static final VirusGenome GENOME = new VirusGenome("v1", 200, new Virus("Virus 1", new VirusGroup("Group 1")));
 
     @Test
-    public void testFromMatchedIntervalsExcludeMismatchesDeletionsAndClips()
+    public void testMatchedIntervalsExcludeMismatchesDeletionsAndClips()
     {
         // Reference 30-49 aligned with a mismatch at 34, deletion at 50-51, reference 52-61 aligned with a mismatch at 55.
 
@@ -38,7 +38,7 @@ public class ViralReadAlignmentTest
     }
 
     @Test
-    public void testMatchedIntervalsThrowsWhenMdMismatchOutsideCigarAlignedBases()
+    public void testMatchedIntervalsThrowsWhenMismatchOutsideAlignedBases()
     {
         ViralReadAlignment alignment = new ViralReadAlignment(
                 ReadId.parse("r1"), GENOME, 30, TextCigarCodec.decode("20M2D10M"), 60, 3, new int[] { 62 });
@@ -47,7 +47,7 @@ public class ViralReadAlignmentTest
     }
 
     @Test
-    public void testFromThrowsWhenAlignmentEndsPastGenomeEnd()
+    public void testConstructorThrowsWhenAlignmentEndsPastGenomeEnd()
     {
         assertThrows(IllegalArgumentException.class, () -> readAlignment("r1", GENOME, 180, "30M", 60, 0));
     }
@@ -66,7 +66,7 @@ public class ViralReadAlignmentTest
     }
 
     @Test
-    public void testBestFitFirstLowestDivergenceBeatsHighestScore()
+    public void testBestFirstTotalOrderLowestDivergenceBeatsHighestScore()
     {
         // Soft clips cost nothing in the aligner score but are bases the virus genome fails to explain, so divergence
         // and score can disagree.
@@ -78,7 +78,7 @@ public class ViralReadAlignmentTest
     }
 
     @Test
-    public void testBestFitFirstHighestScoreBreaksDivergenceTie()
+    public void testBestFirstTotalOrderHighestScoreBreaksDivergenceTie()
     {
         // Equal divergence can still arise from different gap structures.
 

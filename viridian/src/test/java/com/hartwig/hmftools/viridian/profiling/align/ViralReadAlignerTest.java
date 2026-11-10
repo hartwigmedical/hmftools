@@ -51,6 +51,7 @@ public class ViralReadAlignerTest
     public void testAlignWritesEveryViralAlignmentWithContigAndScore() throws IOException
     {
         // The aligner's own minimum-score floor sits upstream, so low-scoring alignments must still be written here.
+
         int secondary = samFlags(SAMFlag.SECONDARY_ALIGNMENT);
         int reverseSecondary = samFlags(SAMFlag.SECONDARY_ALIGNMENT, SAMFlag.READ_REVERSE_STRAND);
         Map<String, List<BwaMemAlignment>> alignments = Map.of(

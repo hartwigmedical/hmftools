@@ -37,9 +37,8 @@ public class ViralInsertAlignerTest
     private static final String OTHER_SEQUENCE = "TTGCATTGCATTGCATTGCATTGCATTGCATT";
 
     @Test
-    public void testAlignAllTakesHighestScoringAlignment()
+    public void testAlignTakesHighestScoringAlignment()
     {
-        // The same sequence hits both genomes; only the better-scoring hit is kept.
         List<BwaMemAlignment> hits = List.of(
                 forwardAlignment(GENOME_16_REF_ID, 999, 60, 1),
                 forwardAlignment(GENOME_18_REF_ID, 499, 45, 4));
@@ -49,10 +48,11 @@ public class ViralInsertAlignerTest
                 align(SEQUENCE, hits));
     }
 
-    // Near-identical genomes give a sequence equal scores, so the choice must not depend on the order BWA returns them.
     @Test
-    public void testAlignAllBreaksScoreTiesDeterministically()
+    public void testAlignBreaksScoreTiesDeterministically()
     {
+        // Near-identical genomes give a sequence equal scores, so the choice must not depend on the order BWA returns them.
+
         List<BwaMemAlignment> ascending = List.of(
                 forwardAlignment(GENOME_16_REF_ID, 999, 60, 1),
                 forwardAlignment(GENOME_18_REF_ID, 499, 60, 1));
@@ -65,7 +65,7 @@ public class ViralInsertAlignerTest
     }
 
     @Test
-    public void testAlignAllReportsReverseStrandAlignment()
+    public void testAlignReportsReverseStrandAlignment()
     {
         BwaMemAlignment reverse = alignment(samFlags(SAMFlag.READ_REVERSE_STRAND), GENOME_18_REF_ID, 299, 55, 2);
 
@@ -74,10 +74,11 @@ public class ViralInsertAlignerTest
                 align(SEQUENCE, List.of(reverse)));
     }
 
-    // A sequence matching no genome yields no alignment, and the results stay aligned with the input order.
     @Test
-    public void testAlignAllReturnsNullWhereNothingAligned()
+    public void testAlignReturnsNullWhereNothingAligned()
     {
+        // The results stay aligned with the input order.
+
         ViralInsertAligner aligner = aligner(Map.of(
                 OTHER_SEQUENCE, List.of(noHit()),
                 SEQUENCE, List.of(forwardAlignment(GENOME_16_REF_ID, 999, 60, 1))));

@@ -210,7 +210,7 @@ public class CandidateReadFilterTest
     }
 
     @Test
-    public void testDefaultVirusDecoyContigsCoverStandardReferenceGenomes()
+    public void testIsCandidateContigCoversDefaultVirusDecoyContigs()
     {
         CandidateReadFilter filter = filter(CandidateReadSource.FULLY_UNMAPPED_AND_DECOY, DEFAULT_VIRUS_DECOY_CONTIGS);
 
@@ -231,17 +231,19 @@ public class CandidateReadFilterTest
     public void testIsCandidateRecordAcceptsReadOnUserGivenVirusDecoyContig()
     {
         // Any contig can be made a virus decoy contig, not only chrEBV.
+
         CandidateReadFilter filter = filter(CandidateReadSource.ALL, Set.of("chrEBV", "chr1"));
 
         assertTrue(filter.isCandidateRecord(record(MAPPED_TO_HOST, UNPAIRED)));
         assertFalse(FILTER.isCandidateRecord(record(MAPPED_TO_HOST, UNPAIRED)));
     }
 
-    // REDUX strips colons from the contig name it records, so the read must still match a colon-named virus decoy
-    // contig.
     @Test
     public void testIsCandidateRecordAcceptsReduxUnmappedFromColonNamedVirusDecoyContig()
     {
+        // REDUX strips colons from the contig name it records, so the read must still match a colon-named virus decoy
+        // contig.
+
         CandidateReadFilter filter = filter(CandidateReadSource.ALL, Set.of("HPV16:NC_001526"));
         SAMRecord record = record(REGULAR_UNMAPPED, UNPAIRED);
         record.setAttribute(UNMAP_ATTRIBUTE, "HPV16NC_001526:500");

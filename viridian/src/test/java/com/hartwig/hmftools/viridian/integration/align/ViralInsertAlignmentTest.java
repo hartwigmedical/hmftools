@@ -36,7 +36,7 @@ public class ViralInsertAlignmentTest
     }
 
     @Test
-    public void testDoesNotClearWhenScoreBelowFloor()
+    public void testPassesFiltersFailsWhenScoreBelowFloor()
     {
         assertFalse(alignment("70M", 70, INTEGRATION_ALIGN_SCORE_MIN - 1).passesFilters());
     }

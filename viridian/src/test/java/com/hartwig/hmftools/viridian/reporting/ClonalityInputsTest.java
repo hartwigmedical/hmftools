@@ -28,35 +28,38 @@ public class ClonalityInputsTest
     // Depth per copy = depth * purity / (purity * ploidy + 2 * (1 - purity)).
 
     @Test
-    public void testSimpleFullPurityCase()
+    public void testFromFullPurity()
     {
         // Purity 1, ploidy 2: 100 * 1 / (1 * 2 + 2 * 0) = 50
+
         assertEquals(
                 new ClonalityInputs(50.0, null),
                 clonalityInputs(1.0, 100.0, PurpleQCStatus.PASS));
     }
 
     @Test
-    public void testNormalisesForSubclonalPurity()
+    public void testFromNormalisesForSubclonalPurity()
     {
         // Purity 0.5, ploidy 2: 30 * 0.5 / (0.5 * 2 + 2 * 0.5) = 7.5
+
         assertEquals(
                 new ClonalityInputs(7.5, null),
                 clonalityInputs(0.5, 30.0, PurpleQCStatus.PASS));
     }
 
-    // At ploidy 2 the normal and tumor cells carry the same copies, which hides a formula that ignores the normal cells.
     @Test
-    public void testNormalisesForNonDiploidTumor()
+    public void testFromNormalisesForNonDiploidTumor()
     {
+        // At ploidy 2 the normal and tumor cells carry the same copies, which hides a formula that ignores the normal cells.
         // Purity 0.5, ploidy 3: 30 * 0.5 / (0.5 * 3 + 2 * 0.5) = 6, where depth * purity / ploidy would give 5
+
         assertEquals(
                 new ClonalityInputs(6.0, null),
                 clonalityInputs(0.5, 3.0, 30.0, PurpleQCStatus.PASS));
     }
 
     @Test
-    public void testComputesDespiteOtherPurpleWarningsAndFailures()
+    public void testFromComputesDespiteOtherPurpleWarningsAndFailures()
     {
         // Only no tumor and contamination block the calculation.
 
@@ -66,7 +69,7 @@ public class ClonalityInputsTest
     }
 
     @Test
-    public void testContaminationFailure()
+    public void testFromContaminationFailure()
     {
         assertEquals(
                 new ClonalityInputs(null, PurpleQCStatus.FAIL_CONTAMINATION),
@@ -74,17 +77,18 @@ public class ClonalityInputsTest
     }
 
     @Test
-    public void testNoTumorFailure()
+    public void testFromNoTumorFailure()
     {
         assertEquals(
                 new ClonalityInputs(null, PurpleQCStatus.FAIL_NO_TUMOR),
                 clonalityInputs(0.08, 30.0, PurpleQCStatus.FAIL_NO_TUMOR));
     }
 
-    // Exactly one of the depth per copy and a clonality-blocking Purple failure.
     @Test
-    public void testRejectsInvalidCombinations()
+    public void testConstructorRejectsInvalidCombinations()
     {
+        // Exactly one of the depth per copy and a clonality-blocking Purple failure.
+
         assertThrows(IllegalArgumentException.class, () -> new ClonalityInputs(null, null));
         assertThrows(IllegalArgumentException.class, () -> new ClonalityInputs(15.0, PurpleQCStatus.FAIL_NO_TUMOR));
         assertThrows(IllegalArgumentException.class, () -> new ClonalityInputs(null, PurpleQCStatus.FAIL_TINC));

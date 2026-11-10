@@ -56,10 +56,11 @@ public class CandidateSvExtractorTest
     @Rule
     public TemporaryFolder mTempDir = new TemporaryFolder();
 
-    // A single breakend carrying every annotation the phase records but never acts on.
     @Test
     public void testExtractSingleBreakendWithAnnotations()
     {
+        // A single breakend carrying every annotation the phase records but never acts on.
+
         String records = record(
                 "chr1", 1000, "sgl_1", "A", "A" + INSERT_AT_MIN_LENGTH + ".", "minQual",
                 "SVTYPE=SGL;LINE;INSALN=chr7:100|+|50M|60;INSRMRC=SINE;INSRMRT=Alu;INSRMP=0.8",
@@ -74,11 +75,12 @@ public class CandidateSvExtractorTest
         assertEquals(List.of(expected), extract(records));
     }
 
-    // A paired variant yields one candidate carrying both host breakends, not one per breakend. It is identified by the
-    // id ESVEE shares between the two records, rather than by either record's own id.
     @Test
     public void testExtractPairedSvAsOneCandidate()
     {
+        // A paired variant yields one candidate carrying both host breakends, not one per breakend. It is identified by the
+        // id ESVEE shares between the two records, rather than by either record's own id.
+
         String records = pairedDeletion("del_1", LONG_INSERT);
 
         BreakendSupport startSupport = new BreakendSupport(8, 55, 0.15, 0, 45);
@@ -92,11 +94,12 @@ public class CandidateSvExtractorTest
         assertEquals(List.of(expected), extract(records));
     }
 
-    // Insert length is the only candidate gate, and the floor is the same for every variant type: a paired variant at the
-    // floor qualifies just as a single breakend does.
     @Test
     public void testExtractAppliesInsertLengthThreshold()
     {
+        // Insert length is the only candidate gate, and the floor is the same for every variant type: a paired variant at the
+        // floor qualifies just as a single breakend does.
+
         String records = singleBreakend("chr1", 1000, "sgl_short", INSERT_BELOW_MIN_LENGTH)
                 + singleBreakend("chr1", 2000, "sgl_long", INSERT_AT_MIN_LENGTH)
                 + pairedDeletion("del_short", INSERT_BELOW_MIN_LENGTH)
@@ -105,16 +108,16 @@ public class CandidateSvExtractorTest
         assertEquals(List.of("sgl_long", "del_long_o"), breakendIds(extract(records)));
     }
 
-    // Viral sequence never becomes a breakend coordinate, so a non-human contig is host-irrelevant and skipped.
     @Test
     public void testExtractSkipsNonHumanContigs()
     {
+        // Viral sequence never becomes a breakend coordinate, so a non-human contig is host-irrelevant and skipped.
+
         String records = singleBreakend("chrEBV", 1000, "ebv_1", INSERT_AT_MIN_LENGTH);
 
         assertEquals(List.of(), extract(records));
     }
 
-    // A paired breakend whose mate never arrives is incomplete, so it cannot become a candidate.
     @Test
     public void testExtractSkipsBreakendWithoutMate()
     {
@@ -125,11 +128,12 @@ public class CandidateSvExtractorTest
         assertEquals(List.of(), extract(records));
     }
 
-    // Fragment counts must follow the named tumor sample, not a genotype ordinal, so the columns are ordered
-    // tumor-then-reference here to catch an ordinal assumption.
     @Test
     public void testExtractResolvesTumorGenotypeByName()
     {
+        // Fragment counts must follow the named tumor sample, not a genotype ordinal, so the columns are ordered
+        // tumor-then-reference here to catch an ordinal assumption.
+
         String header = HEADER.replace("NORMAL\tTUMOR", "TUMOR\tNORMAL");
         String records = record(
                 "chr1", 1000, "sgl_1", "A", "A" + INSERT_AT_MIN_LENGTH + ".", "PASS", "SVTYPE=SGL", "12:40:20:0.25", "0:30:10:0.0");

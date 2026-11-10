@@ -32,11 +32,12 @@ public class VirusProfileTest
         assertEquals(List.of(new VirusProfile(stats, List.of(V2))), profiles);
     }
 
-    // Read assignment gave every read of V1 to another virus's representative, so V1 has no measurement and its virus
-    // group is dropped.
     @Test
     public void testFromRepresentativeWithoutReadsNotProfiled()
     {
+        // Read assignment gave every read of V1 to another virus's representative, so V1 has no measurement and its virus
+        // group is dropped.
+
         GenomeStats w1Stats = stats(W1);
 
         List<VirusProfile> profiles = VirusProfile.from(

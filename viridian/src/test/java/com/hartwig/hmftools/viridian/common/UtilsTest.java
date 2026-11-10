@@ -14,6 +14,7 @@ public class UtilsTest
     {
         // Mismatch at 100, matches 101-102, mismatch at 103, matches 104-115, deletion 116-117,
         // mismatch at 118 straight after the deletion, matches 119-122.
+
         assertArrayEquals(new int[] { 100, 103, 118 }, parseMdTagMismatchPositions(100, "0A2T12^GC0C4"));
     }
 

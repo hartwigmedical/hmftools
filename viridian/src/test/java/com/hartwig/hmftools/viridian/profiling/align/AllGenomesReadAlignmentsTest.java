@@ -34,7 +34,7 @@ public class AllGenomesReadAlignmentsTest
     private static final VirusGenome V1 = new VirusGenome("v1", LENGTH, new Virus("Virus v1", new VirusGroup("Group A")));
 
     @Test
-    public void testFromOriginStraddlersExcludedAndCounted()
+    public void testFromOriginClippedExcludedAndCounted()
     {
         AllGenomesReadAlignments allAlignments = AllGenomesReadAlignments.from(
                 Stream.of(divergentAlignment("r1", 0), originClipped("r2"), originClipped("r3")));

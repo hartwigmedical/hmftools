@@ -23,16 +23,15 @@ public class IntegrationCandidateTest
     private static final VirusGenome GENOME =
             new VirusGenome("v1", 7906, new Virus("Virus v1", new VirusGroup("Group A")));
 
-    // An insert that aligned nowhere is not an integration, however the SV looks.
     @Test
-    public void testNotIntegrationWhenInsertAlignedNowhere()
+    public void testIsIntegrationFalseWhenInsertAlignedNowhere()
     {
         IntegrationCandidate candidate = new IntegrationCandidate(candidateSv(), null);
         assertFalse(candidate.isIntegration());
     }
 
     @Test
-    public void testIntegrationWhenAlignmentClearsThresholds()
+    public void testIsIntegrationWhenAlignmentClearsThresholds()
     {
         IntegrationCandidate candidate = new IntegrationCandidate(candidateSv(), alignment(40));
         assertTrue(candidate.isIntegration());

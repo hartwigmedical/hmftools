@@ -32,6 +32,7 @@ public class RepresentativeGenomeSelectorTest
     public void testSelectRanksGenomesPerVirusGroup()
     {
         // V3 ranks 4th in group A, below the secondary genome count. W1 has few votes, but any read makes its group present.
+
         List<GenomeSupport> genomeSupports = List.of(
                 withReads(V1, 100), withReads(V2, 120), withReads(V3, 5), withReads(V4, 50), withReads(W1, 1));
 
@@ -46,6 +47,7 @@ public class RepresentativeGenomeSelectorTest
     public void testSelectSkipsGenomeWithNoReads()
     {
         // H1's only reads clipped over its origin and were dropped.
+
         SummaryStats noDepth = SummaryStats.from(new int[LENGTH]);
         GenomeSupport noReads = new GenomeSupport(new GenomeStats(H1, 0, 2, 0, noDepth, null), 0, null, 0.0, 0);
 

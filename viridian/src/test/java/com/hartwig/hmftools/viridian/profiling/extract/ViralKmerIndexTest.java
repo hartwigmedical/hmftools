@@ -31,19 +31,19 @@ public class ViralKmerIndexTest
     public TemporaryFolder mTempDir = new TemporaryFolder();
 
     @Test
-    public void testReadSharingReferenceSubsequenceIsDetected() throws IOException
+    public void testHasViralKmerForReadSharingReferenceSubsequence() throws IOException
     {
         assertTrue(index(REFERENCE).hasViralKmer(REFERENCE_WINDOW.getBytes()));
     }
 
     @Test
-    public void testUnrelatedReadIsRejected() throws IOException
+    public void testHasViralKmerRejectsUnrelatedRead() throws IOException
     {
         assertFalse(index(REFERENCE).hasViralKmer("TTTTGGGGCCCCAAAATTTTGGGG".getBytes()));
     }
 
     @Test
-    public void testSoftMaskedReferenceMatchesUppercaseRead() throws IOException
+    public void testHasViralKmerOnSoftMaskedReference() throws IOException
     {
         // A soft-masked virus reference is lowercase in places. Missing those k-mers would drop viral reads.
 
@@ -51,14 +51,14 @@ public class ViralKmerIndexTest
     }
 
     @Test
-    public void testReverseComplementReadIsDetected() throws IOException
+    public void testHasViralKmerForReverseComplementRead() throws IOException
     {
         String reverseComplement = Nucleotides.reverseComplementBases(REFERENCE_WINDOW);
         assertTrue(index(REFERENCE).hasViralKmer(reverseComplement.getBytes()));
     }
 
     @Test
-    public void testReadShorterThanKmerLengthIsRejected() throws IOException
+    public void testHasViralKmerRejectsReadShorterThanKmer() throws IOException
     {
         assertFalse(index(REFERENCE).hasViralKmer("ACGATCGGATTCCAAG".getBytes()));
     }

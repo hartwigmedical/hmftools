@@ -25,7 +25,7 @@ public class ViralReadAlignmentStoreTest
     private static final ReadId R2 = ReadId.parse("r2");
 
     @Test
-    public void testIndexesHoldEveryAlignmentBothWays()
+    public void testByReadAndByGenomeHoldEveryAlignment()
     {
         ViralReadAlignment r1OnV1 = alignment("r1", V1);
         ViralReadAlignment r1OnV2 = alignment("r1", V2);
@@ -37,11 +37,12 @@ public class ViralReadAlignmentStoreTest
         assertEquals(Map.of(V1, Map.of(R1, r1OnV1, R2, r2OnV1), V2, Map.of(R1, r1OnV2)), alignments.byGenome());
     }
 
-    // Counting one read twice on a virus genome would inflate that genome's depth and read count, so the store refuses
-    // it rather than leaving each caller to remember.
     @Test
-    public void testRepeatAlignmentOfReadOnOneGenomeRejected()
+    public void testConstructorRejectsRepeatAlignmentOfReadOnOneGenome()
     {
+        // Counting one read twice on a virus genome would inflate that genome's depth and read count, so the store refuses
+        // it rather than leaving each caller to remember.
+
         List<ViralReadAlignment> repeated = List.of(alignment("r1", V1), alignment("r1", V1));
 
         assertThrows(IllegalArgumentException.class, () -> new ViralReadAlignmentStore(repeated));

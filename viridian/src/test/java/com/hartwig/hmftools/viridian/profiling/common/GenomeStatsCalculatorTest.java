@@ -20,11 +20,12 @@ public class GenomeStatsCalculatorTest
     private static final VirusGenome GENOME =
             new VirusGenome("v1", 20, new Virus("Virus 1", new VirusGroup("Group 1")));
 
-    // A read spanning a deletion aligns in two blocks: the skipped positions are not evidence the virus genome is
-    // there.
     @Test
     public void testCalculateDeletionSpannedPositionsAreNotCovered()
     {
+        // A read spanning a deletion aligns in two blocks: the skipped positions are not evidence the virus genome is
+        // there.
+
         ViralReadAlignment read = readAlignment("r1/1", GENOME, 1, "8M2D5M", 40, 2);
 
         int[] depth = { 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0 };
@@ -34,10 +35,11 @@ public class GenomeStatsCalculatorTest
         assertEquals(Map.of(GENOME, expected), calculate(List.of(read)));
     }
 
-    // Every alignment to this virus genome was dropped for straddling the origin, so only that loss is left to report.
     @Test
     public void testCalculateGenomeWithOnlyOriginClippedAlignments()
     {
+        // Every alignment to this virus genome was dropped for straddling the origin, so only that loss is left to report.
+
         List<ViralReadAlignment> alignments = List.of(
                 originClipped("r1/1"),
                 originClipped("r2/1"));
