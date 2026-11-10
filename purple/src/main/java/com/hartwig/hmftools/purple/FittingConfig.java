@@ -7,7 +7,6 @@ import static com.hartwig.hmftools.common.utils.config.ConfigBuilder.getConfigIn
 import static com.hartwig.hmftools.common.utils.config.ConfigItemType.DECIMAL;
 import static com.hartwig.hmftools.common.utils.config.ConfigItemType.INTEGER;
 import static com.hartwig.hmftools.purple.PurpleConstants.DEFAULT_AMBIGUOUS_BAF_THRESHOLD;
-import static com.hartwig.hmftools.purple.PurpleConstants.DEFAULT_SIGNIFICANT_ANEUPLOIDY_BAF_THRESHOLD;
 import static com.hartwig.hmftools.purple.PurpleConstants.MAX_PLOIDY_DEFAULT;
 import static com.hartwig.hmftools.purple.PurpleConstants.MAX_PURITY_DEFAULT;
 import static com.hartwig.hmftools.purple.PurpleConstants.MIN_DIPLOID_TUMOR_RATIO_COUNT_AT_CENTROMERE_DEFAULT;
@@ -46,7 +45,6 @@ public class FittingConfig
     public final double PloidyPenaltyMajorAlleleSubOneAdditional;
     public final double PloidyPenaltyMinDeviation;
 
-    public final double SignificantAneuploidyBafThreshold = DEFAULT_SIGNIFICANT_ANEUPLOIDY_BAF_THRESHOLD;
     public final double DeviationPenaltyGcMinAdjust;
     public final double GcRatioExponent;
 
@@ -57,10 +55,8 @@ public class FittingConfig
     public static final String MAX_PLOIDY = "max_ploidy";
     private static final String MIN_DIPLOID_TUMOR_RATIO_COUNT = "min_diploid_tumor_ratio_count";
     private static final String MIN_DIPLOID_TUMOR_RATIO_COUNT_AT_CENTROMERE = "min_diploid_tumor_ratio_count_centromere";
-
     private static final String DEVIATION_PENALTY_GC_MIN_ADJUST = "deviation_penalty_gc_min_adjust";
     private static final String GC_RATIO_EXPONENT = "gc_ratio_exponent";
-
     private static final String AMBIGUOUS_BAF_LIMIT = "ambiguous_baf_limit";
 
     // fitting scores

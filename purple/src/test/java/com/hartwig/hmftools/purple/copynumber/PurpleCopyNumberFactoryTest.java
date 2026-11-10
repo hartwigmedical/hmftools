@@ -46,7 +46,8 @@ public class PurpleCopyNumberFactoryTest
         ratios.add(new MedianRatio(chr2.toString(), 0.5, 50));
         cobaltChromosomes = new CobaltChromosomes(ratios);
         purityAdjuster = new PurityAdjuster(1.0, 1.0, cobaltChromosomes);
-        factory = new PurpleCopyNumberFactory(1, 1, 100, 1.0, purityAdjuster, cobaltChromosomes);
+        factory = new PurpleCopyNumberFactory(
+                1, 1, false, 100, 1.0, purityAdjuster, cobaltChromosomes);
 
         copyNumbers = Lists.newArrayList();
         observedRegions = Lists.newArrayList();

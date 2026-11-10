@@ -2,6 +2,8 @@ package com.hartwig.hmftools.common.purple;
 
 import static com.hartwig.hmftools.common.purple.PurpleQCStatus.MAX_DELETED_GENES;
 import static com.hartwig.hmftools.common.purple.PurpleQCStatus.PASS;
+import static com.hartwig.hmftools.common.purple.PurpleQCStatus.WARN_CONTAMINATION;
+import static com.hartwig.hmftools.common.purple.PurpleQCStatus.WARN_TINC;
 
 import static org.junit.Assert.assertTrue;
 
@@ -46,8 +48,17 @@ public class PurpleQCTest
     @Test
     public void testContamination()
     {
-        assertStatus(builder().contamination(PurpleQCStatus.MAX_CONTAMINATION), PASS);
-        assertStatus(builder().contamination(PurpleQCStatus.MAX_CONTAMINATION + 0.01), PurpleQCStatus.FAIL_CONTAMINATION);
+        assertStatus(builder().contamination(PurpleQCStatus.CONTAMINATION_WARN_LEVEL - 0.001), PASS);
+        assertStatus(builder().contamination(PurpleQCStatus.CONTAMINATION_FAIL_LEVEL - 0.001), WARN_CONTAMINATION);
+        assertStatus(builder().contamination(PurpleQCStatus.CONTAMINATION_FAIL_LEVEL + 0.001), PurpleQCStatus.FAIL_CONTAMINATION);
+    }
+
+    @Test
+    public void testTincLevels()
+    {
+        assertStatus(builder().tincLevel(PurpleQCStatus.TINC_WARN_LEVEL - 0.001), PASS);
+        assertStatus(builder().tincLevel(PurpleQCStatus.TINC_FAIL_LEVEL - 0.001), WARN_TINC);
+        assertStatus(builder().tincLevel(PurpleQCStatus.TINC_FAIL_LEVEL + 0.001), PurpleQCStatus.FAIL_TINC);
     }
 
     @Test
@@ -77,7 +88,7 @@ public class PurpleQCTest
     {
         ImmutablePurpleQC.Builder victim = builder()
                 .purity(PurpleQCStatus.MIN_PURITY - 0.01)
-                .contamination(PurpleQCStatus.MAX_CONTAMINATION + 0.01);
+                .contamination(PurpleQCStatus.CONTAMINATION_FAIL_LEVEL + 0.01);
 
         Set<PurpleQCStatus> requiredStatusSet = Sets.newHashSet(PurpleQCStatus.WARN_LOW_PURITY);
         requiredStatusSet.add(PurpleQCStatus.FAIL_CONTAMINATION);
@@ -96,7 +107,8 @@ public class PurpleQCTest
 
         Set<PurpleQCStatus> statusSet = PurpleQCStatus.calcStatus(
                 PurpleQCStatus.genderPass(qc.amberGender(), qc.cobaltGender(), qc.germlineAberrations()),
-                qc.unsupportedCopyNumberSegments(), qc.deletedGenes(), qc.purity(), qc.method(), qc.contamination(), MAX_DELETED_GENES, 0);
+                qc.unsupportedCopyNumberSegments(), qc.deletedGenes(), qc.purity(), qc.method(), qc.contamination(), MAX_DELETED_GENES,
+                qc.tincLevel());
 
         assertTrue(statusSet.size() == requiredStatusSet.size());
 

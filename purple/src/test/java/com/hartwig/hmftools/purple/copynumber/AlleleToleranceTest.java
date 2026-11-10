@@ -20,7 +20,7 @@ public class AlleleToleranceTest
     @Before
     public void setup()
     {
-        victim = new AlleleTolerance(buildPurityAdjuster(Gender.FEMALE, 1, 1));
+        victim = new AlleleTolerance(buildPurityAdjuster(Gender.FEMALE, 1, 1), false);
     }
 
     @Test
