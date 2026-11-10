@@ -120,10 +120,15 @@ public class QualityCalculator
             }
         }
 
-        if(penalisedBaseQuality == null && !readContextCounter.useMsiErrorRate())
+        if(penalisedBaseQuality == null)
         {
-            // as a default apply the full fixed penalty (either a Ultima model or novel indel qual, not a BQR qual)
-            penalisedBaseQuality = recalibratedBaseQuality - BASE_QUAL_FIXED_PENALTY_MAX;
+            penalisedBaseQuality = recalibratedBaseQuality;
+
+            if(readContextCounter.useMsiErrorRate())
+            {
+                // as a default apply the full fixed penalty, this being either a Ultima model or novel indel qual, not a BQR qual
+                penalisedBaseQuality -= BASE_QUAL_FIXED_PENALTY_MAX;
+            }
         }
 
         int mapQuality = record.getMappingQuality();
