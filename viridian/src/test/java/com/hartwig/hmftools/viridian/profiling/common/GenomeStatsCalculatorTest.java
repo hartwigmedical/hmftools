@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.viridian.profiling.common;
 
+import static com.hartwig.hmftools.viridian.ViridianTestUtils.readAlignment;
+
 import static org.junit.Assert.assertEquals;
 
 import java.util.List;
@@ -13,8 +15,6 @@ import com.hartwig.hmftools.viridian.reference.VirusGroup;
 
 import org.junit.Test;
 
-import htsjdk.samtools.TextCigarCodec;
-
 public class GenomeStatsCalculatorTest
 {
     private static final VirusGenome GENOME =
@@ -25,8 +25,7 @@ public class GenomeStatsCalculatorTest
     @Test
     public void testCalculateDeletionSpannedPositionsAreNotCovered()
     {
-        ViralReadAlignment read = new ViralReadAlignment(
-                ReadId.parse("r1/1"), GENOME, 1, TextCigarCodec.decode("8M2D5M"), 40, 2, new int[0]);
+        ViralReadAlignment read = readAlignment("r1/1", GENOME, 1, "8M2D5M", 40, 2);
 
         int[] depth = { 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0 };
         GenomeStats expected = new GenomeStats(
@@ -58,7 +57,6 @@ public class GenomeStatsCalculatorTest
     // Clipped bases project past the virus genome start, so this alignment crosses the circular genome's origin.
     private static ViralReadAlignment originClipped(String readName)
     {
-        return new ViralReadAlignment(
-                ReadId.parse(readName), GENOME, 1, TextCigarCodec.decode("30S10M"), 20, 30, new int[0]);
+        return readAlignment(readName, GENOME, 1, "30S10M", 20, 30);
     }
 }

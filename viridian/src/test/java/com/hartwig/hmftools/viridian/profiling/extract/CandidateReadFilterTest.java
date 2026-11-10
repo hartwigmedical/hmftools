@@ -42,11 +42,12 @@ public class CandidateReadFilterTest
     private static final String BASES = "A".repeat(100);
     private static final int POSITION = 100;
 
-    private static final CandidateReadFilter FILTER =
-            new CandidateReadFilter(CandidateReadSource.ALL, 20, Set.of("chrEBV"), null);
+    private static final int MIN_SOFT_CLIP_BASES = 20;
+
+    private static final CandidateReadFilter FILTER = filter(CandidateReadSource.ALL, Set.of("chrEBV"));
 
     private static final CandidateReadFilter FULLY_UNMAPPED_AND_DECOY_FILTER =
-            new CandidateReadFilter(CandidateReadSource.FULLY_UNMAPPED_AND_DECOY, 20, Set.of("chrEBV"), null);
+            filter(CandidateReadSource.FULLY_UNMAPPED_AND_DECOY, Set.of("chrEBV"));
 
     private static final boolean ACCEPT = true;
     private static final boolean REJECT = false;
@@ -143,12 +144,11 @@ public class CandidateReadFilterTest
     @Test
     public void testIsCandidateRecordForEveryReadAndMateState()
     {
-        List<ReadMateExpectation> wrongOutcomes = READ_MATE_EXPECTATIONS.stream()
+        List<ReadMateExpectation> actual = READ_MATE_EXPECTATIONS.stream()
                 .map(expectation -> actualOutcome(expectation.read(), expectation.mate()))
-                .filter(actual -> !READ_MATE_EXPECTATIONS.contains(actual))
                 .toList();
 
-        assertEquals(List.of(), wrongOutcomes);
+        assertEquals(READ_MATE_EXPECTATIONS, actual);
     }
 
     private static final String HOST_SUPPLEMENTARY = "chr1,200,+,70M30S,60,0;";
@@ -185,11 +185,11 @@ public class CandidateReadFilterTest
     @Test
     public void testIsCandidateRecordForEverySoftClip()
     {
-        List<ClipExpectation> wrongOutcomes = CLIP_EXPECTATIONS.stream()
-                .filter(expectation -> isCandidateClippedHostRead(expectation) != expectation.isCandidate())
+        List<ClipExpectation> actual = CLIP_EXPECTATIONS.stream()
+                .map(expectation -> actualOutcome(expectation.cigar(), expectation.supplementaryAlignments()))
                 .toList();
 
-        assertEquals(List.of(), wrongOutcomes);
+        assertEquals(CLIP_EXPECTATIONS, actual);
     }
 
     @Test
@@ -212,8 +212,7 @@ public class CandidateReadFilterTest
     @Test
     public void testDefaultVirusDecoyContigsCoverStandardReferenceGenomes()
     {
-        CandidateReadFilter filter = new CandidateReadFilter(
-                CandidateReadSource.FULLY_UNMAPPED_AND_DECOY, 20, DEFAULT_VIRUS_DECOY_CONTIGS, null);
+        CandidateReadFilter filter = filter(CandidateReadSource.FULLY_UNMAPPED_AND_DECOY, DEFAULT_VIRUS_DECOY_CONTIGS);
 
         // GRCh38 analysis sets.
         assertTrue(filter.isCandidateContig("chrEBV"));
@@ -232,7 +231,7 @@ public class CandidateReadFilterTest
     public void testIsCandidateRecordAcceptsReadOnUserGivenVirusDecoyContig()
     {
         // Any contig can be made a virus decoy contig, not only chrEBV.
-        CandidateReadFilter filter = new CandidateReadFilter(CandidateReadSource.ALL, 20, Set.of("chrEBV", "chr1"), null);
+        CandidateReadFilter filter = filter(CandidateReadSource.ALL, Set.of("chrEBV", "chr1"));
 
         assertTrue(filter.isCandidateRecord(record(MAPPED_TO_HOST, UNPAIRED)));
         assertFalse(FILTER.isCandidateRecord(record(MAPPED_TO_HOST, UNPAIRED)));
@@ -243,8 +242,7 @@ public class CandidateReadFilterTest
     @Test
     public void testIsCandidateRecordAcceptsReduxUnmappedFromColonNamedVirusDecoyContig()
     {
-        CandidateReadFilter filter =
-                new CandidateReadFilter(CandidateReadSource.ALL, 20, Set.of("HPV16:NC_001526"), null);
+        CandidateReadFilter filter = filter(CandidateReadSource.ALL, Set.of("HPV16:NC_001526"));
         SAMRecord record = record(REGULAR_UNMAPPED, UNPAIRED);
         record.setAttribute(UNMAP_ATTRIBUTE, "HPV16NC_001526:500");
 
@@ -282,15 +280,20 @@ public class CandidateReadFilterTest
                 read, mate, FILTER.isCandidateRecord(record), FULLY_UNMAPPED_AND_DECOY_FILTER.isCandidateRecord(record));
     }
 
-    private static boolean isCandidateClippedHostRead(ClipExpectation expectation)
+    private static ClipExpectation actualOutcome(String cigar, @Nullable String supplementaryAlignments)
     {
         SAMRecord record = record(MAPPED_TO_HOST, UNPAIRED);
-        record.setCigarString(expectation.cigar());
-        if(expectation.supplementaryAlignments() != null)
+        record.setCigarString(cigar);
+        if(supplementaryAlignments != null)
         {
-            record.setAttribute(SUPPLEMENTARY_ATTRIBUTE, expectation.supplementaryAlignments());
+            record.setAttribute(SUPPLEMENTARY_ATTRIBUTE, supplementaryAlignments);
         }
-        return FILTER.isCandidateRecord(record);
+        return new ClipExpectation(cigar, supplementaryAlignments, FILTER.isCandidateRecord(record));
+    }
+
+    private static CandidateReadFilter filter(CandidateReadSource source, Set<String> virusDecoyContigs)
+    {
+        return new CandidateReadFilter(source, MIN_SOFT_CLIP_BASES, virusDecoyContigs, null);
     }
 
     // Follows SAM placement: an unmapped read with a mapped mate takes its mate's position, and a mapped read records its

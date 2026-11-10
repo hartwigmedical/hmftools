@@ -6,8 +6,8 @@ import static org.junit.Assert.assertThrows;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 import com.hartwig.hmftools.viridian.common.UserInputError;
 
@@ -32,11 +32,9 @@ public class VirusReferenceTest
             new VirusGenomeInfo("contigC", new Virus("Virus Beta type 2", GROUP_BETA));
     private static final List<VirusGenomeInfo> INFO = List.of(INFO_A, INFO_B, INFO_C);
 
-    private static final VirusGenome GENOME_A = new VirusGenome("contigA", 100, new Virus("Virus Alpha", GROUP_ALPHA));
-    private static final VirusGenome GENOME_B =
-            new VirusGenome("contigB", 200, new Virus("Virus Beta type 1", GROUP_BETA));
-    private static final VirusGenome GENOME_C =
-            new VirusGenome("contigC", 300, new Virus("Virus Beta type 2", GROUP_BETA));
+    private static final VirusGenome GENOME_A = new VirusGenome("contigA", 100, INFO_A.virus());
+    private static final VirusGenome GENOME_B = new VirusGenome("contigB", 200, INFO_B.virus());
+    private static final VirusGenome GENOME_C = new VirusGenome("contigC", 300, INFO_C.virus());
 
     private static final String VALID_INFO_TSV = """
             contig_name\tvirus_name\tvirus_group
@@ -51,22 +49,25 @@ public class VirusReferenceTest
     @Test
     public void testJoinFastaAndInfoJoinsGenomesInFastaOrder()
     {
-        List<VirusGenome> genomes = VirusReference.joinFastaAndInfo(dictionary("contigA", "contigB", "contigC"), INFO);
+        List<VirusGenome> genomes = VirusReference.joinFastaAndInfo(dictionary(GENOME_A, GENOME_B, GENOME_C), INFO);
         assertEquals(List.of(GENOME_A, GENOME_B, GENOME_C), genomes);
     }
 
     @Test
     public void testJoinFastaAndInfoThrowsWhenContigHasNoInfoRow()
     {
+        SAMSequenceDictionary dictionary = dictionary(GENOME_A, GENOME_B, GENOME_C);
         List<VirusGenomeInfo> infoMissingC = List.of(INFO_A, INFO_B);
-        assertThrows(
-                UserInputError.class, () -> VirusReference.joinFastaAndInfo(dictionary("contigA", "contigB", "contigC"), infoMissingC));
+
+        assertThrows(UserInputError.class, () -> VirusReference.joinFastaAndInfo(dictionary, infoMissingC));
     }
 
     @Test
     public void testJoinFastaAndInfoThrowsWhenInfoRowHasNoContig()
     {
-        assertThrows(UserInputError.class, () -> VirusReference.joinFastaAndInfo(dictionary("contigA", "contigB"), INFO));
+        SAMSequenceDictionary dictionaryMissingC = dictionary(GENOME_A, GENOME_B);
+
+        assertThrows(UserInputError.class, () -> VirusReference.joinFastaAndInfo(dictionaryMissingC, INFO));
     }
 
     @Test
@@ -89,16 +90,11 @@ public class VirusReferenceTest
         assertThrows(UserInputError.class, () -> VirusGenomeInfo.load(writeTsv(virusInTwoGroups)));
     }
 
-    // Contig lengths are fixed per name so joined VirusGenome values are predictable.
-    private static SAMSequenceDictionary dictionary(String... contigs)
+    private static SAMSequenceDictionary dictionary(VirusGenome... genomes)
     {
-        Map<String, Integer> lengths = Map.of("contigA", 100, "contigB", 200, "contigC", 300);
-        SAMSequenceDictionary dictionary = new SAMSequenceDictionary();
-        for(String contig : contigs)
-        {
-            dictionary.addSequence(new SAMSequenceRecord(contig, lengths.get(contig)));
-        }
-        return dictionary;
+        return new SAMSequenceDictionary(Arrays.stream(genomes)
+                .map(genome -> new SAMSequenceRecord(genome.contigName(), genome.length()))
+                .toList());
     }
 
     private String writeTsv(String content) throws IOException

@@ -3,6 +3,9 @@ package com.hartwig.hmftools.viridian.integration.align;
 import static com.hartwig.hmftools.common.bam.CigarUtils.cigarFromStr;
 import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
+import static com.hartwig.hmftools.viridian.ViridianTestUtils.noHit;
+import static com.hartwig.hmftools.viridian.ViridianTestUtils.samFlags;
+import static com.hartwig.hmftools.viridian.ViridianTestUtils.virusReference;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -14,22 +17,21 @@ import com.hartwig.hmftools.common.bwa.MockBwaMemAligner;
 import com.hartwig.hmftools.viridian.reference.Virus;
 import com.hartwig.hmftools.viridian.reference.VirusGenome;
 import com.hartwig.hmftools.viridian.reference.VirusGroup;
-import com.hartwig.hmftools.viridian.reference.VirusReference;
 
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
 import org.junit.Test;
 
-import htsjdk.samtools.SAMSequenceDictionary;
-import htsjdk.samtools.SAMSequenceRecord;
+import htsjdk.samtools.SAMFlag;
 
 public class ViralInsertAlignerTest
 {
-    private static final VirusGroup HPV_16 = new VirusGroup("HPV 16");
-    private static final VirusGroup HPV_18 = new VirusGroup("HPV 18");
     private static final VirusGenome GENOME_16 =
-            new VirusGenome("hpv16", 7906, new Virus("Human papillomavirus 16", HPV_16));
+            new VirusGenome("hpv16", 7906, new Virus("Human papillomavirus 16", new VirusGroup("HPV 16")));
     private static final VirusGenome GENOME_18 =
-            new VirusGenome("hpv18", 7857, new Virus("Human papillomavirus 18", HPV_18));
+            new VirusGenome("hpv18", 7857, new Virus("Human papillomavirus 18", new VirusGroup("HPV 18")));
+
+    private static final int GENOME_16_REF_ID = 0;
+    private static final int GENOME_18_REF_ID = 1;
 
     private static final String SEQUENCE = "ACGTACGTACGTACGTACGTACGTACGTACGT";
     private static final String OTHER_SEQUENCE = "TTGCATTGCATTGCATTGCATTGCATTGCATT";
@@ -39,8 +41,8 @@ public class ViralInsertAlignerTest
     {
         // The same sequence hits both genomes; only the better-scoring hit is kept.
         List<BwaMemAlignment> hits = List.of(
-                alignment(0, 0, 999, 60, "32M", 1),
-                alignment(0, 1, 499, 45, "32M", 4));
+                forwardAlignment(GENOME_16_REF_ID, 999, 60, 1),
+                forwardAlignment(GENOME_18_REF_ID, 499, 45, 4));
 
         assertEquals(
                 new ViralInsertAlignment(GENOME_16, 1000, FORWARD, cigarFromStr("32M"), 60, 1, 32),
@@ -52,11 +54,11 @@ public class ViralInsertAlignerTest
     public void testAlignAllBreaksScoreTiesDeterministically()
     {
         List<BwaMemAlignment> ascending = List.of(
-                alignment(0, 0, 999, 60, "32M", 1),
-                alignment(0, 1, 499, 60, "32M", 1));
+                forwardAlignment(GENOME_16_REF_ID, 999, 60, 1),
+                forwardAlignment(GENOME_18_REF_ID, 499, 60, 1));
         List<BwaMemAlignment> descending = List.of(
-                alignment(0, 1, 499, 60, "32M", 1),
-                alignment(0, 0, 999, 60, "32M", 1));
+                forwardAlignment(GENOME_18_REF_ID, 499, 60, 1),
+                forwardAlignment(GENOME_16_REF_ID, 999, 60, 1));
 
         assertEquals(align(SEQUENCE, ascending), align(SEQUENCE, descending));
         assertEquals(GENOME_16, align(SEQUENCE, descending).genome());
@@ -65,9 +67,11 @@ public class ViralInsertAlignerTest
     @Test
     public void testAlignAllReportsReverseStrandAlignment()
     {
+        BwaMemAlignment reverse = alignment(samFlags(SAMFlag.READ_REVERSE_STRAND), GENOME_18_REF_ID, 299, 55, 2);
+
         assertEquals(
                 new ViralInsertAlignment(GENOME_18, 300, REVERSE, cigarFromStr("32M"), 55, 2, 32),
-                align(SEQUENCE, List.of(alignment(0x10, 1, 299, 55, "32M", 2))));
+                align(SEQUENCE, List.of(reverse)));
     }
 
     // A sequence matching no genome yields no alignment, and the results stay aligned with the input order.
@@ -76,7 +80,7 @@ public class ViralInsertAlignerTest
     {
         ViralInsertAligner aligner = aligner(Map.of(
                 OTHER_SEQUENCE, List.of(noHit()),
-                SEQUENCE, List.of(alignment(0, 0, 999, 60, "32M", 1))));
+                SEQUENCE, List.of(forwardAlignment(GENOME_16_REF_ID, 999, 60, 1))));
 
         List<ViralInsertAlignment> alignments = aligner.align(List.of(OTHER_SEQUENCE, SEQUENCE));
 
@@ -91,22 +95,18 @@ public class ViralInsertAlignerTest
 
     private static ViralInsertAligner aligner(Map<String, List<BwaMemAlignment>> hits)
     {
-        SAMSequenceDictionary dictionary = new SAMSequenceDictionary(List.of(
-                new SAMSequenceRecord(GENOME_16.contigName(), GENOME_16.length()),
-                new SAMSequenceRecord(GENOME_18.contigName(), GENOME_18.length())));
-        VirusReference reference = new VirusReference(List.of(GENOME_16, GENOME_18), dictionary, Map.of());
-
-        return new ViralInsertAligner(MockBwaMemAligner.forQueries(hits), reference);
+        return new ViralInsertAligner(MockBwaMemAligner.forQueries(hits), virusReference(GENOME_16, GENOME_18));
     }
 
-    private static BwaMemAlignment alignment(int samFlag, int refId, int refStart, int score, String cigar, int editDistance)
+    private static BwaMemAlignment forwardAlignment(int refId, int refStart, int score, int editDistance)
+    {
+        return alignment(0, refId, refStart, score, editDistance);
+    }
+
+    // A whole-sequence 32M alignment. BWA reference positions are 0-based.
+    private static BwaMemAlignment alignment(int samFlag, int refId, int refStart, int score, int editDistance)
     {
         return new BwaMemAlignment(
-                samFlag, refId, refStart, refStart + 32, 0, 32, 60, editDistance, score, 0, cigar, null, null, -1, -1, 0);
-    }
-
-    private static BwaMemAlignment noHit()
-    {
-        return new BwaMemAlignment(0x4, -1, -1, -1, 0, 0, 0, 0, 0, 0, "*", null, null, -1, -1, 0);
+                samFlag, refId, refStart, refStart + 32, 0, 32, 60, editDistance, score, 0, "32M", null, null, -1, -1, 0);
     }
 }

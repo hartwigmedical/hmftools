@@ -1,8 +1,12 @@
 package com.hartwig.hmftools.viridian.profiling.align;
 
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.ALIGNMENT_SCORE_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.MISMATCHES_AND_DELETIONS_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
+import static com.hartwig.hmftools.viridian.ViridianTestUtils.noHit;
+import static com.hartwig.hmftools.viridian.ViridianTestUtils.samFlags;
+
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
@@ -19,11 +23,13 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMFlag;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.TextCigarCodec;
 import htsjdk.samtools.ValidationStringency;
 
 public class ViralReadAlignerTest
@@ -34,6 +40,9 @@ public class ViralReadAlignerTest
     // Three reads, so alignment spans two chunks.
     private static final int CHUNK_SIZE = 2;
 
+    private static final int HPV16_REF_ID = 0;
+    private static final int HPV18_REF_ID = 1;
+
     private static final String R1_BASES = "A".repeat(100);
     private static final String R2_BASES = "C".repeat(100);
     private static final String R3_BASES = "G".repeat(100);
@@ -42,13 +51,15 @@ public class ViralReadAlignerTest
     public void testAlignWritesEveryViralAlignmentWithContigAndScore() throws IOException
     {
         // The aligner's own minimum-score floor sits upstream, so low-scoring alignments must still be written here.
+        int secondary = samFlags(SAMFlag.SECONDARY_ALIGNMENT);
+        int reverseSecondary = samFlags(SAMFlag.SECONDARY_ALIGNMENT, SAMFlag.READ_REVERSE_STRAND);
         Map<String, List<BwaMemAlignment>> alignments = Map.of(
                 R1_BASES, List.of(
-                        alignment(0, 0, 9, 80, "100M"),        // forward primary on hpv16, pos 10
-                        alignment(0x110, 1, 4, 60, "10H90M"),  // reverse secondary on hpv18, pos 5
-                        alignment(0x100, 0, 200, 10, "100M")), // low score, kept: no app-level score filter
-                R2_BASES, List.of(noHit()),                    // no viral alignment: dropped
-                R3_BASES, List.of(alignment(0, 0, 0, 40, "100M"))); // low score, kept
+                        alignment(0, HPV16_REF_ID, 9, 80, "100M"),
+                        alignment(reverseSecondary, HPV18_REF_ID, 4, 60, "10H90M"),
+                        alignment(secondary, HPV16_REF_ID, 200, 10, "100M")),
+                R2_BASES, List.of(noHit()),
+                R3_BASES, List.of(alignment(0, HPV16_REF_ID, 0, 40, "100M")));
 
         ViralReadAligner aligner = new ViralReadAligner(MockBwaMemAligner.forQueries(alignments), header(), CHUNK_SIZE);
 
@@ -56,48 +67,34 @@ public class ViralReadAlignerTest
         String bam = new File(mTempDir.getRoot(), "aligned.bam").getPath();
         aligner.align(fasta, bam);
 
-        // The BAM is coordinate sorted, so the records come back ordered by contig then position, not as written.
-        List<SAMRecord> records = readBam(bam);
-        assertEquals(4, records.size());
-
-        SAMRecord primary = records.get(1);
-        assertEquals("r1", primary.getReadName());
-        assertEquals("hpv16", primary.getReferenceName());
-        assertEquals(10, primary.getAlignmentStart());
-        assertEquals("100M", primary.getCigarString());
-        assertEquals(80, (int) primary.getIntegerAttribute("AS"));
-        assertFalse(primary.getReadNegativeStrandFlag());
-        assertEquals(R1_BASES, primary.getReadString());
-
-        SAMRecord secondary = records.get(3);
-        assertEquals("r1", secondary.getReadName());
-        assertEquals("hpv18", secondary.getReferenceName());
-        assertEquals(5, secondary.getAlignmentStart());
-        assertEquals("10H90M", secondary.getCigarString());
-        assertEquals(60, (int) secondary.getIntegerAttribute("AS"));
-        assertTrue(secondary.getReadNegativeStrandFlag());
-        assertEquals("*", secondary.getReadString());
-
-        SAMRecord lowScore = records.get(2);
-        assertEquals("r1", lowScore.getReadName());
-        assertEquals("hpv16", lowScore.getReferenceName());
-        assertEquals(201, lowScore.getAlignmentStart());
-        assertEquals(10, (int) lowScore.getIntegerAttribute("AS"));
-
-        SAMRecord r3 = records.get(0);
-        assertEquals("r3", r3.getReadName());
-        assertEquals("hpv16", r3.getReferenceName());
-        assertEquals(40, (int) r3.getIntegerAttribute("AS"));
+        // Coordinate sorted, so ordered by contig then position. A hard-clipped alignment omits its bases.
+        List<WrittenRecord> expected = List.of(
+                new WrittenRecord("r3", 0, "hpv16", 1, "100M", R3_BASES, 40, 0, "100"),
+                new WrittenRecord("r1", 0, "hpv16", 10, "100M", R1_BASES, 80, 0, "100"),
+                new WrittenRecord("r1", secondary, "hpv16", 201, "100M", R1_BASES, 10, 0, "100"),
+                new WrittenRecord("r1", reverseSecondary, "hpv18", 5, "10H90M", "*", 60, 0, "90"));
+        assertEquals(expected, readBam(bam));
     }
 
+    private record WrittenRecord(
+            String readName, int flags, String contig, int alignmentStart, String cigar, String bases, int alignerScore,
+            int editDistance, String mismatchesAndDeletions)
+    {
+        static WrittenRecord from(SAMRecord record)
+        {
+            return new WrittenRecord(
+                    record.getReadName(), record.getFlags(), record.getReferenceName(), record.getAlignmentStart(),
+                    record.getCigarString(), record.getReadString(), record.getIntegerAttribute(ALIGNMENT_SCORE_ATTRIBUTE),
+                    record.getIntegerAttribute(NUM_MUTATONS_ATTRIBUTE), record.getStringAttribute(MISMATCHES_AND_DELETIONS_ATTRIBUTE));
+        }
+    }
+
+    // BWA reference positions are 0-based. Every alignment has no edits, so NM is 0 and MD is the aligned length.
     private static BwaMemAlignment alignment(int samFlag, int refId, int refStart, int score, String cigar)
     {
-        return new BwaMemAlignment(samFlag, refId, refStart, refStart + 100, 0, 100, 60, 0, score, 0, cigar, "100", null, -1, -1, 0);
-    }
-
-    private static BwaMemAlignment noHit()
-    {
-        return new BwaMemAlignment(0x4, -1, -1, -1, 0, 0, 0, 0, 0, 0, "*", null, null, -1, -1, 0);
+        String mdTag = String.valueOf(TextCigarCodec.decode(cigar).getReferenceLength());
+        return new BwaMemAlignment(
+                samFlag, refId, refStart, refStart + 100, 0, 100, 60, 0, score, 0, cigar, mdTag, null, -1, -1, 0);
     }
 
     private static SAMFileHeader header()
@@ -119,19 +116,15 @@ public class ViralReadAlignerTest
         return fasta.getPath();
     }
 
-    private static List<SAMRecord> readBam(String bam)
+    private static List<WrittenRecord> readBam(String bam) throws IOException
     {
-        List<SAMRecord> records = new ArrayList<>();
+        List<WrittenRecord> records = new ArrayList<>();
         try(SamReader reader = SamReaderFactory.makeDefault().validationStringency(ValidationStringency.SILENT).open(new File(bam)))
         {
             for(SAMRecord record : reader)
             {
-                records.add(record);
+                records.add(WrittenRecord.from(record));
             }
-        }
-        catch(IOException e)
-        {
-            throw new RuntimeException(e);
         }
         return records;
     }

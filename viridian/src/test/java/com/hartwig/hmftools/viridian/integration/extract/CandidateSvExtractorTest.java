@@ -2,6 +2,7 @@ package com.hartwig.hmftools.viridian.integration.extract;
 
 import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
+import static com.hartwig.hmftools.viridian.common.ViridianConstants.INTEGRATION_INSERT_LENGTH_MIN;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
@@ -24,9 +25,9 @@ public class CandidateSvExtractorTest
     private static final String TUMOR_ID = "TUMOR";
 
     // Inserted sequences at and just below the single length threshold, plus a longer one.
-    private static final String INSERT_30 = "ACGTACGTACGTACGTACGTACGTACGTAC";
-    private static final String INSERT_29 = "ACGTACGTACGTACGTACGTACGTACGTA";
-    private static final String INSERT_50 = "ACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTAC";
+    private static final String INSERT_AT_MIN_LENGTH = "ACGT".repeat(20).substring(0, INTEGRATION_INSERT_LENGTH_MIN);
+    private static final String INSERT_BELOW_MIN_LENGTH = INSERT_AT_MIN_LENGTH.substring(1);
+    private static final String LONG_INSERT = "ACGT".repeat(15);
 
     // Tumor genotype is second here, matching the usual reference-then-tumor ordering.
     private static final String HEADER = """
@@ -60,7 +61,7 @@ public class CandidateSvExtractorTest
     public void testExtractSingleBreakendWithAnnotations()
     {
         String records = record(
-                "chr1", 1000, "sgl_1", "A", "A" + INSERT_30 + ".", "minQual",
+                "chr1", 1000, "sgl_1", "A", "A" + INSERT_AT_MIN_LENGTH + ".", "minQual",
                 "SVTYPE=SGL;LINE;INSALN=chr7:100|+|50M|60;INSRMRC=SINE;INSRMRT=Alu;INSRMP=0.8",
                 "0:30:10:0.0", "12:40:20:0.25");
 
@@ -68,7 +69,7 @@ public class CandidateSvExtractorTest
         CandidateSv expected = new CandidateSv(
                 StructuralVariantType.SGL, "minQual",
                 new HostBreakend("sgl_1", new BasePosition("chr1", 1000), FORWARD, support), null,
-                INSERT_30, true, new InsertRepeat("SINE", "Alu", 0.8), "chr7:100|+|50M|60");
+                INSERT_AT_MIN_LENGTH, true, new InsertRepeat("SINE", "Alu", 0.8), "chr7:100|+|50M|60");
 
         assertEquals(List.of(expected), extract(records));
     }
@@ -78,7 +79,7 @@ public class CandidateSvExtractorTest
     @Test
     public void testExtractPairedSvAsOneCandidate()
     {
-        String records = pairedDeletion("del_1", INSERT_50);
+        String records = pairedDeletion("del_1", LONG_INSERT);
 
         BreakendSupport startSupport = new BreakendSupport(8, 55, 0.15, 0, 45);
         BreakendSupport endSupport = new BreakendSupport(8, 57, 0.15, 0, 47);
@@ -86,7 +87,7 @@ public class CandidateSvExtractorTest
                 StructuralVariantType.DEL, "PASS",
                 new HostBreakend("del_1_o", new BasePosition("chr1", 5000), FORWARD, startSupport),
                 new HostBreakend("del_1_h", new BasePosition("chr1", 9000), REVERSE, endSupport),
-                INSERT_50, false, null, "");
+                LONG_INSERT, false, null, "");
 
         assertEquals(List.of(expected), extract(records));
     }
@@ -96,12 +97,10 @@ public class CandidateSvExtractorTest
     @Test
     public void testExtractAppliesInsertLengthThreshold()
     {
-        String records = record(
-                "chr1", 1000, "sgl_short", "A", "A" + INSERT_29 + ".", "PASS", "SVTYPE=SGL", "0:1:1:0.0", "1:1:1:0.1")
-                + record(
-                "chr1", 2000, "sgl_long", "A", "A" + INSERT_30 + ".", "PASS", "SVTYPE=SGL", "0:1:1:0.0", "1:1:1:0.1")
-                + pairedDeletion("del_short", INSERT_29)
-                + pairedDeletion("del_long", INSERT_30);
+        String records = singleBreakend("chr1", 1000, "sgl_short", INSERT_BELOW_MIN_LENGTH)
+                + singleBreakend("chr1", 2000, "sgl_long", INSERT_AT_MIN_LENGTH)
+                + pairedDeletion("del_short", INSERT_BELOW_MIN_LENGTH)
+                + pairedDeletion("del_long", INSERT_AT_MIN_LENGTH);
 
         assertEquals(List.of("sgl_long", "del_long_o"), breakendIds(extract(records)));
     }
@@ -110,8 +109,7 @@ public class CandidateSvExtractorTest
     @Test
     public void testExtractSkipsNonHumanContigs()
     {
-        String records = record(
-                "chrEBV", 1000, "ebv_1", "A", "A" + INSERT_30 + ".", "PASS", "SVTYPE=SGL", "0:1:1:0.0", "1:1:1:0.1");
+        String records = singleBreakend("chrEBV", 1000, "ebv_1", INSERT_AT_MIN_LENGTH);
 
         assertEquals(List.of(), extract(records));
     }
@@ -121,7 +119,7 @@ public class CandidateSvExtractorTest
     public void testExtractSkipsBreakendWithoutMate()
     {
         String records = record(
-                "chr1", 5000, "orphan_o", "A", "A" + INSERT_50 + "[chr1:9000[", "PASS",
+                "chr1", 5000, "orphan_o", "A", "A" + LONG_INSERT + "[chr1:9000[", "PASS",
                 "SVTYPE=DEL;MATEID=never_arrives", "0:1:1:0.0", "1:1:1:0.1");
 
         assertEquals(List.of(), extract(records));
@@ -134,7 +132,7 @@ public class CandidateSvExtractorTest
     {
         String header = HEADER.replace("NORMAL\tTUMOR", "TUMOR\tNORMAL");
         String records = record(
-                "chr1", 1000, "sgl_1", "A", "A" + INSERT_30 + ".", "PASS", "SVTYPE=SGL", "12:40:20:0.25", "0:30:10:0.0");
+                "chr1", 1000, "sgl_1", "A", "A" + INSERT_AT_MIN_LENGTH + ".", "PASS", "SVTYPE=SGL", "12:40:20:0.25", "0:30:10:0.0");
 
         List<CandidateSv> candidates = extract(header, records);
         assertEquals(new BreakendSupport(12, 60, 0.25, 0, 40), candidates.get(0).startBreakend().support());
@@ -144,10 +142,15 @@ public class CandidateSvExtractorTest
     public void testExtractFailsWhenTumorSampleAbsent()
     {
         String header = HEADER.replace("NORMAL\tTUMOR", "NORMAL\tOTHER");
-        String records = record(
-                "chr1", 1000, "sgl_1", "A", "A" + INSERT_30 + ".", "PASS", "SVTYPE=SGL", "0:1:1:0.0", "1:1:1:0.1");
+        String records = singleBreakend("chr1", 1000, "sgl_1", INSERT_AT_MIN_LENGTH);
 
         assertThrows(UserInputError.class, () -> extract(header, records));
+    }
+
+    private static String singleBreakend(String chromosome, int position, String id, String insertSequence)
+    {
+        return record(
+                chromosome, position, id, "A", "A" + insertSequence + ".", "PASS", "SVTYPE=SGL", "0:1:1:0.0", "1:1:1:0.1");
     }
 
     private static String pairedDeletion(String id, String insertSequence)

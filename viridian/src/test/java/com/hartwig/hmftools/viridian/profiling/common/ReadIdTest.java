@@ -1,9 +1,12 @@
 package com.hartwig.hmftools.viridian.profiling.common;
 
+import static com.hartwig.hmftools.viridian.ViridianTestUtils.samFlags;
+
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
+import htsjdk.samtools.SAMFlag;
 import htsjdk.samtools.SAMRecord;
 
 public class ReadIdTest
@@ -11,9 +14,9 @@ public class ReadIdTest
     @Test
     public void testFromRecordTakesMateFromPairFlags()
     {
-        assertEquals(new ReadId("r1", 1), ReadId.from(record(0x1 | 0x40)));
-        assertEquals(new ReadId("r1", 2), ReadId.from(record(0x1 | 0x80)));
-        assertEquals(new ReadId("r1", 0), ReadId.from(record(0)));
+        assertEquals(new ReadId("r1", 1), ReadId.from(record(samFlags(SAMFlag.READ_PAIRED, SAMFlag.FIRST_OF_PAIR))));
+        assertEquals(new ReadId("r1", 2), ReadId.from(record(samFlags(SAMFlag.READ_PAIRED, SAMFlag.SECOND_OF_PAIR))));
+        assertEquals(new ReadId("r1", 0), ReadId.from(record(samFlags())));
     }
 
     @Test

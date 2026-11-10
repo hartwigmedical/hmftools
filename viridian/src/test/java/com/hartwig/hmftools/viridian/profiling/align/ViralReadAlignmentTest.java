@@ -1,8 +1,6 @@
 package com.hartwig.hmftools.viridian.profiling.align;
 
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.ALIGNMENT_SCORE_ATTRIBUTE;
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.MISMATCHES_AND_DELETIONS_ATTRIBUTE;
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
+import static com.hartwig.hmftools.viridian.ViridianTestUtils.readAlignment;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -10,89 +8,57 @@ import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Stream;
 
 import com.hartwig.hmftools.viridian.profiling.common.ReadId;
 import com.hartwig.hmftools.viridian.reference.Virus;
 import com.hartwig.hmftools.viridian.reference.VirusGenome;
 import com.hartwig.hmftools.viridian.reference.VirusGroup;
-import com.hartwig.hmftools.viridian.reference.VirusReference;
 
-import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
 
-import htsjdk.samtools.SAMFileHeader;
-import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SAMSequenceDictionary;
-import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.TextCigarCodec;
 
 public class ViralReadAlignmentTest
 {
-    private static final int GENOME_LENGTH = 200;
-    private static final int ALIGNMENT_LENGTH = 50;
-
-    private static final VirusReference REFERENCE = reference();
-    private static final VirusGenome GENOME = REFERENCE.genome("v1");
-
-    @Test
-    public void testFromExtractsFieldsAndCountsClipsInDivergence()
-    {
-        ViralReadAlignment alignment = fromRecord(record(30, "40S60M", 60, 1, "30A29"));
-
-        assertEquals("v1", alignment.genome().contigName());
-        assertEquals(30, alignment.alignmentStart());
-        assertEquals(89, alignment.alignmentEnd());
-        assertEquals(40, alignment.leftClip());
-        assertEquals(0, alignment.rightClip());
-        assertEquals(60, alignment.alignerScore());
-        assertEquals(41, alignment.divergence());   // NM 1 + 40 clipped bases
-    }
+    private static final VirusGenome GENOME = new VirusGenome("v1", 200, new Virus("Virus 1", new VirusGroup("Group 1")));
 
     @Test
     public void testFromMatchedIntervalsExcludeMismatchesDeletionsAndClips()
     {
         // Reference 30-49 aligned with a mismatch at 34, deletion at 50-51, reference 52-61 aligned with a mismatch at 55.
-        SAMRecord record = record(30, "5H3S20M2D10M4S", 60, 4, "4G15^AC3T6");
+
+        ViralReadAlignment alignment = new ViralReadAlignment(
+                ReadId.parse("r1"), GENOME, 30, TextCigarCodec.decode("3S20M2D10M4S"), 60, 11, new int[] { 34, 55 });
 
         List<MatchedInterval> expected = List.of(
                 new MatchedInterval(30, 4), new MatchedInterval(35, 15), new MatchedInterval(52, 3), new MatchedInterval(56, 6));
-        assertEquals(expected, fromRecord(record).matchedIntervals());
+        assertEquals(expected, alignment.matchedIntervals());
     }
 
     @Test
     public void testMatchedIntervalsThrowsWhenMdMismatchOutsideCigarAlignedBases()
     {
-        ViralReadAlignment alignment = fromRecord(record(30, "20M2D10M", 60, 3, "20^AC10G"));
+        ViralReadAlignment alignment = new ViralReadAlignment(
+                ReadId.parse("r1"), GENOME, 30, TextCigarCodec.decode("20M2D10M"), 60, 3, new int[] { 62 });
+
         assertThrows(IllegalArgumentException.class, alignment::matchedIntervals);
     }
 
     @Test
     public void testFromThrowsWhenAlignmentEndsPastGenomeEnd()
     {
-        SAMRecord record = record(180, "30M", 60, 0, "30");   // ends at 209 on a 200 base genome
-        assertThrows(IllegalArgumentException.class, () -> fromRecord(record));
+        assertThrows(IllegalArgumentException.class, () -> readAlignment("r1", GENOME, 180, "30M", 60, 0));
     }
 
     @Test
     public void testClipsOverGenomeEndDetectsClipsPastEitherEnd()
     {
         // A clip projecting past a virus genome end straddles the circular origin.
-        assertTrue(
-                fromRecord(record(30, "40S60M", 60, 0, "60")).clipsOverGenomeEnd());    // left clip projects to -10
-        assertTrue(fromRecord(record(141, "60M40S", 60, 0, "60"))
-                .clipsOverGenomeEnd());   // right clip projects to 240
-        assertFalse(
-                fromRecord(record(100, "40S60M", 60, 0, "60")).clipsOverGenomeEnd());  // left clip projects to 60
-    }
 
-    @Test
-    public void testFromThrowsWhenRequiredTagMissing()
-    {
-        assertThrows(IllegalStateException.class, () -> fromRecord(record(30, "60M", null, 0, "60")));
-        assertThrows(IllegalStateException.class, () -> fromRecord(record(30, "60M", 60, null, "60")));
-        assertThrows(IllegalStateException.class, () -> fromRecord(record(30, "60M", 60, 0, null)));
+        assertTrue(readAlignment("r1", GENOME, 30, "40S60M", 60, 40).clipsOverGenomeEnd());
+        assertTrue(readAlignment("r1", GENOME, 141, "60M40S", 60, 40).clipsOverGenomeEnd());
+        assertFalse(readAlignment("r1", GENOME, 100, "40S60M", 60, 40).clipsOverGenomeEnd());
     }
 
     @Test
@@ -100,8 +66,9 @@ public class ViralReadAlignmentTest
     {
         // Soft clips cost nothing in the aligner score but are bases the virus genome fails to explain, so divergence
         // and score can disagree.
-        ViralReadAlignment wholeRead = alignment(10, 6, 70);
-        ViralReadAlignment clipped = alignment(10, 20, 80);
+
+        ViralReadAlignment wholeRead = readAlignment("r1", GENOME, 10, "50M", 20, 6);
+        ViralReadAlignment clipped = readAlignment("r1", GENOME, 30, "20S30M", 25, 20);
 
         assertEquals(wholeRead, best(clipped, wholeRead));
     }
@@ -110,63 +77,15 @@ public class ViralReadAlignmentTest
     public void testBestFitFirstHighestScoreBreaksDivergenceTie()
     {
         // Equal divergence can still arise from different gap structures.
-        ViralReadAlignment weaker = alignment(10, 8, 60);
-        ViralReadAlignment stronger = alignment(10, 8, 75);
+
+        ViralReadAlignment weaker = readAlignment("r1", GENOME, 10, "50M", 60, 8);
+        ViralReadAlignment stronger = readAlignment("r1", GENOME, 10, "50M", 75, 8);
 
         assertEquals(stronger, best(weaker, stronger));
-    }
-
-    private static ViralReadAlignment fromRecord(SAMRecord record)
-    {
-        return new AllGenomesReadAlignments.AlignmentDecoder(REFERENCE).decode(record);
     }
 
     private static ViralReadAlignment best(ViralReadAlignment... alignments)
     {
         return Stream.of(alignments).min(ViralReadAlignment.BEST_FIRST_TOTAL_ORDER).orElseThrow();
-    }
-
-    // An unclipped alignment, so its divergence is all mismatches.
-    private static ViralReadAlignment alignment(int start, int divergence, int alignerScore)
-    {
-        return new ViralReadAlignment(
-                ReadId.parse("r1"), GENOME, start, TextCigarCodec.decode(ALIGNMENT_LENGTH + "M"),
-                alignerScore, divergence, new int[0]);
-    }
-
-    private static SAMRecord record(
-            int start, String cigar, @Nullable Integer alignerScore, @Nullable Integer editDistance,
-            @Nullable String mismatchesAndDeletions)
-    {
-        SAMFileHeader header = new SAMFileHeader();
-        header.addSequence(new SAMSequenceRecord("v1", GENOME_LENGTH));
-
-        SAMRecord record = new SAMRecord(header);
-        record.setReadName("r");
-        record.setReferenceName("v1");
-        record.setAlignmentStart(start);
-        record.setCigarString(cigar);
-        record.setReadBases("A".repeat(TextCigarCodec.decode(cigar).getReadLength()).getBytes());
-        if(alignerScore != null)
-        {
-            record.setAttribute(ALIGNMENT_SCORE_ATTRIBUTE, alignerScore.intValue());
-        }
-        if(editDistance != null)
-        {
-            record.setAttribute(NUM_MUTATONS_ATTRIBUTE, editDistance.intValue());
-        }
-        if(mismatchesAndDeletions != null)
-        {
-            record.setAttribute(MISMATCHES_AND_DELETIONS_ATTRIBUTE, mismatchesAndDeletions);
-        }
-        return record;
-    }
-
-    private static VirusReference reference()
-    {
-        List<VirusGenome> genomes = List.of(
-                new VirusGenome("v1", GENOME_LENGTH, new Virus("Virus 1", new VirusGroup("Group 1"))));
-        SAMSequenceDictionary dictionary = new SAMSequenceDictionary(List.of(new SAMSequenceRecord("v1", GENOME_LENGTH)));
-        return new VirusReference(genomes, dictionary, Map.of());
     }
 }

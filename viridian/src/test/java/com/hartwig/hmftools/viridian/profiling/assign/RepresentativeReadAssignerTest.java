@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.viridian.profiling.assign;
 
+import static com.hartwig.hmftools.viridian.ViridianTestUtils.readAlignment;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -31,7 +33,6 @@ import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
-import htsjdk.samtools.TextCigarCodec;
 
 public class RepresentativeReadAssignerTest
 {
@@ -87,10 +88,8 @@ public class RepresentativeReadAssignerTest
     @Test
     public void testAssignCopiesTheChosenOfTwoAlignmentsSharingAStart() throws IOException
     {
-        ViralReadAlignment chosen = new ViralReadAlignment(
-                ReadId.parse("r1/1"), REPRESENTATIVE, 500, TextCigarCodec.decode("53S38M21D49M8S"), 40, 86, new int[0]);
-        ViralReadAlignment other = new ViralReadAlignment(
-                ReadId.parse("r1/1"), REPRESENTATIVE, 500, TextCigarCodec.decode("95S53M"), 42, 98, new int[0]);
+        ViralReadAlignment chosen = readAlignment("r1/1", REPRESENTATIVE, 500, "53S38M21D49M8S", 40, 86);
+        ViralReadAlignment other = readAlignment("r1/1", REPRESENTATIVE, 500, "95S53M", 42, 98);
 
         String sourceBam = writeBam("all.bam", List.of(other, chosen));
         String outputBam = new File(mTempDir.getRoot(), "representative.bam").getPath();
@@ -141,8 +140,6 @@ public class RepresentativeReadAssignerTest
 
     private static ViralReadAlignment alignment(String readName, VirusGenome genome, int start, int divergence)
     {
-        return new ViralReadAlignment(
-                ReadId.parse(readName), genome, start, TextCigarCodec.decode(READ_LENGTH + "M"),
-                READ_LENGTH - divergence, divergence, new int[0]);
+        return readAlignment(readName, genome, start, READ_LENGTH + "M", READ_LENGTH - divergence, divergence);
     }
 }

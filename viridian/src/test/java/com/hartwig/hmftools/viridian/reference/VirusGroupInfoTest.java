@@ -3,20 +3,24 @@ package com.hartwig.hmftools.viridian.reference;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.Map;
 
 import com.hartwig.hmftools.common.virus.VirusType;
 import com.hartwig.hmftools.viridian.common.UserInputError;
 
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 public class VirusGroupInfoTest
 {
     private static final String HEADER = "virus_group\treporting_type";
+
+    @Rule
+    public TemporaryFolder mTempDir = new TemporaryFolder();
 
     @Test
     public void testLoadsValidResource() throws IOException
@@ -53,18 +57,10 @@ public class VirusGroupInfoTest
         assertThrows(RuntimeException.class, () -> load("BK polyomavirus\tWART"));
     }
 
-    private static Map<VirusGroup, VirusGroupInfo> load(String... rows) throws IOException
+    private Map<VirusGroup, VirusGroupInfo> load(String... rows) throws IOException
     {
-        return VirusGroupInfo.load(writeFile(HEADER, rows).toString());
-    }
-
-    private static Path writeFile(String header, String... rows) throws IOException
-    {
-        Path file = Files.createTempFile("virus_groups", ".tsv");
-        file.toFile().deleteOnExit();
-        StringBuilder content = new StringBuilder(header).append('\n');
-        Arrays.stream(rows).forEach(row -> content.append(row).append('\n'));
-        Files.writeString(file, content.toString());
-        return file;
+        File file = mTempDir.newFile("virus_groups.tsv");
+        Files.writeString(file.toPath(), HEADER + "\n" + String.join("\n", rows) + "\n");
+        return VirusGroupInfo.load(file.getPath());
     }
 }

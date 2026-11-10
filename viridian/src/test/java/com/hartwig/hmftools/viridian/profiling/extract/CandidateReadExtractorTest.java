@@ -3,6 +3,7 @@ package com.hartwig.hmftools.viridian.profiling.extract;
 import static java.lang.String.format;
 import static java.util.Collections.singleton;
 
+import static com.hartwig.hmftools.viridian.ViridianTestUtils.samFlags;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.VIRAL_READ_EXTRACTION_PARTITION_SIZE;
 
 import static org.junit.Assert.assertEquals;
@@ -30,6 +31,7 @@ import htsjdk.samtools.CRAMFileWriter;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMFileWriterFactory;
+import htsjdk.samtools.SAMFlag;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.cram.ref.ReferenceSource;
@@ -43,15 +45,23 @@ public class CandidateReadExtractorTest
     @Rule
     public TemporaryFolder mTempDir = new TemporaryFolder();
 
+    private static final int MIN_SOFT_CLIP_BASES = 20;
+
+    private static final int UNPAIRED = 0;
+    private static final int FIRST_OF_PAIR = samFlags(SAMFlag.READ_PAIRED, SAMFlag.FIRST_OF_PAIR);
+    private static final int SECOND_OF_PAIR = samFlags(SAMFlag.READ_PAIRED, SAMFlag.SECOND_OF_PAIR);
+    private static final int UNMAPPED = samFlags(SAMFlag.READ_UNMAPPED);
+    private static final int MATE_UNMAPPED = samFlags(SAMFlag.MATE_UNMAPPED);
+
     @Test
     public void testExtractToFastaWritesFilteredCandidateReadsWithMateSuffix() throws IOException
     {
         SAMFileHeader header = header(SAMFileHeader.SortOrder.coordinate, 10000);
         List<SAMRecord> records = List.of(
-                mapped(header, "plain", 0, "chr1", 100, "100M", "AAAAA"),             // no viral signal: dropped
-                mapped(header, "clip", 0x1 | 0x40, "chr1", 150, "20S80M", "CCCCC"),   // soft-clip candidate, first of pair
-                unmapped(header, "unmap", 0x1 | 0x4 | 0x8 | 0x80, "GGGGG"),           // unmapped candidate, second of pair
-                unmapped(header, "single", 0x4, "TTTTT"));                            // unpaired candidate: no mate suffix
+                placed(header, "plain", UNPAIRED, "chr1", 100, "100M", "AAAAA"),        // no viral signal: dropped
+                placed(header, "clip", FIRST_OF_PAIR, "chr1", 150, "20S80M", "CCCCC"),  // soft-clip candidate
+                fullyUnmapped(header, "unmap", SECOND_OF_PAIR, "GGGGG"),
+                fullyUnmapped(header, "single", UNPAIRED, "TTTTT"));                    // no mate suffix
 
         String bam = writeIndexedBam(header, records);
 
@@ -72,7 +82,7 @@ public class CandidateReadExtractorTest
         // A read overlapping a boundary is sliced by both partitions, but belongs to the one holding its start.
         SAMFileHeader header = header(SAMFileHeader.SortOrder.coordinate, 2 * VIRAL_READ_EXTRACTION_PARTITION_SIZE);
         int start = VIRAL_READ_EXTRACTION_PARTITION_SIZE - 50;   // the 80 aligned bases run past the first partition's end
-        List<SAMRecord> records = List.of(mapped(header, "spanning", 0x1 | 0x40, "chr1", start, "20S80M", "CCCCC"));
+        List<SAMRecord> records = List.of(placed(header, "spanning", FIRST_OF_PAIR, "chr1", start, "20S80M", "CCCCC"));
 
         String bam = writeIndexedBam(header, records);
         String fasta = new File(mTempDir.getRoot(), "boundary.fasta").getPath();
@@ -86,9 +96,11 @@ public class CandidateReadExtractorTest
     @Test
     public void testExtractToFastaUnmappedReadWithMappedMateFoundByRegionScan() throws IOException
     {
-        // Such a read sits in coordinate order, not the fully unmapped block at the end of the BAM. It may be an integration site.
+        // Such a read sits in coordinate order, not the fully unmapped block at the end of the BAM. It may be an
+        // integration site.
         SAMFileHeader header = header(SAMFileHeader.SortOrder.coordinate, 10000);
-        List<SAMRecord> records = List.of(mapped(header, "unmappedWithMappedMate", 0x1 | 0x4 | 0x40, "chr1", 500, "*", "TTTTT"));
+        List<SAMRecord> records = List.of(
+                placed(header, "unmappedWithMappedMate", FIRST_OF_PAIR | UNMAPPED, "chr1", 500, "*", "TTTTT"));
 
         String bam = writeIndexedBam(header, records);
         String fasta = new File(mTempDir.getRoot(), "unmapped_with_mapped_mate.fasta").getPath();
@@ -105,11 +117,11 @@ public class CandidateReadExtractorTest
         SAMFileHeader header = header(SAMFileHeader.SortOrder.coordinate, 10000);
         header.addSequence(new SAMSequenceRecord("chrEBV", 10000));
         List<SAMRecord> records = List.of(
-                mapped(header, "clip", 0x1 | 0x40, "chr1", 100, "20S80M", "CCCCC"),
-                mapped(header, "mappedWithUnmappedMate", 0x1 | 0x8 | 0x40, "chr1", 200, "100M", "AAAAA"),
-                mapped(header, "unmappedWithMappedMate", 0x1 | 0x4 | 0x80, "chr1", 200, "*", "TTTTT"),
-                mapped(header, "ebv", 0x1 | 0x40, "chrEBV", 300, "100M", "GGGGG"),
-                unmapped(header, "fullyUnmapped", 0x1 | 0x4 | 0x8 | 0x80, "ACGTA"));
+                placed(header, "clip", FIRST_OF_PAIR, "chr1", 100, "20S80M", "CCCCC"),
+                placed(header, "mappedWithUnmappedMate", FIRST_OF_PAIR | MATE_UNMAPPED, "chr1", 200, "100M", "AAAAA"),
+                placed(header, "unmappedWithMappedMate", SECOND_OF_PAIR | UNMAPPED, "chr1", 200, "*", "TTTTT"),
+                placed(header, "ebv", FIRST_OF_PAIR, "chrEBV", 300, "100M", "GGGGG"),
+                fullyUnmapped(header, "fullyUnmapped", SECOND_OF_PAIR, "ACGTA"));
 
         String bam = writeIndexedBam(header, records);
         String fasta = new File(mTempDir.getRoot(), "fully_unmapped_and_decoy.fasta").getPath();
@@ -125,7 +137,7 @@ public class CandidateReadExtractorTest
     {
         // Sharding the scan by region needs an index.
         SAMFileHeader header = header(SAMFileHeader.SortOrder.unsorted, 10000);
-        String bam = writeBam(header, List.of(unmapped(header, "unmap", 0x4, "GGGGG")));
+        String bam = writeBam(header, List.of(fullyUnmapped(header, "unmap", UNPAIRED, "GGGGG")));
         String fasta = new File(mTempDir.getRoot(), "candidates.fasta").getPath();
 
         CandidateReadFilter filter = filter(CandidateReadSource.ALL);
@@ -148,12 +160,13 @@ public class CandidateReadExtractorTest
     @Test
     public void testExtractToFastaCramMultiSliceContainersReadWhole() throws IOException
     {
-        // Up to two slices per container. The writer gives the mixed slice its own container: [clip, u1], [u2, u3 | u4, u5] and
-        // [u6, u7]. With 4 threads each container is its own partition, and the second slice of the middle one must still be read.
+        // Up to two slices per container. The writer gives the mixed slice its own container: [clip, u1],
+        // [u2, u3 | u4, u5] and [u6, u7]. With 4 threads each container is its own partition, and the second slice of the
+        // middle one must still be read.
         SAMFileHeader header = header(SAMFileHeader.SortOrder.coordinate, 10000);
         List<SAMRecord> records = new ArrayList<>(cramRecords(header));
-        records.add(unmapped(header, "u6", 0x4, "ACGTA"));
-        records.add(unmapped(header, "u7", 0x4, "ACGTA"));
+        records.add(fullyUnmapped(header, "u6", UNPAIRED, "ACGTA"));
+        records.add(fullyUnmapped(header, "u7", UNPAIRED, "ACGTA"));
         File reference = writeReference(header);
         File cram = writeCram(header, records, reference, 2, null);
         writeCrai(cram);
@@ -169,8 +182,8 @@ public class CandidateReadExtractorTest
         // [clip, u1] is the only container, so no container holds unmapped reads alone.
         SAMFileHeader header = header(SAMFileHeader.SortOrder.coordinate, 10000);
         List<SAMRecord> records = List.of(
-                mapped(header, "clip", 0x1 | 0x40, "chr1", 100, "20S80M", "C".repeat(100)),
-                unmapped(header, "u1", 0x4, "ACGTA"));
+                placed(header, "clip", FIRST_OF_PAIR, "chr1", 100, "20S80M", "C".repeat(100)),
+                fullyUnmapped(header, "u1", UNPAIRED, "ACGTA"));
         File reference = writeReference(header);
         File cram = writeCram(header, records, reference, 1, null);
         writeCrai(cram);
@@ -200,12 +213,12 @@ public class CandidateReadExtractorTest
     private static List<SAMRecord> cramRecords(SAMFileHeader header)
     {
         return List.of(
-                mapped(header, "clip", 0x1 | 0x40, "chr1", 100, "20S80M", "C".repeat(100)),
-                unmapped(header, "u1", 0x4, "ACGTA"),
-                unmapped(header, "u2", 0x4, "ACGTA"),
-                unmapped(header, "u3", 0x4, "ACGTA"),
-                unmapped(header, "u4", 0x4, "ACGTA"),
-                unmapped(header, "u5", 0x4, "ACGTA"));
+                placed(header, "clip", FIRST_OF_PAIR, "chr1", 100, "20S80M", "C".repeat(100)),
+                fullyUnmapped(header, "u1", UNPAIRED, "ACGTA"),
+                fullyUnmapped(header, "u2", UNPAIRED, "ACGTA"),
+                fullyUnmapped(header, "u3", UNPAIRED, "ACGTA"),
+                fullyUnmapped(header, "u4", UNPAIRED, "ACGTA"),
+                fullyUnmapped(header, "u5", UNPAIRED, "ACGTA"));
     }
 
     private static final List<String> CRAM_CANDIDATES = List.of(
@@ -226,7 +239,7 @@ public class CandidateReadExtractorTest
 
     private static CandidateReadFilter filter(CandidateReadSource source)
     {
-        return new CandidateReadFilter(source, 20, singleton("chrEBV"), null);
+        return new CandidateReadFilter(source, MIN_SOFT_CLIP_BASES, singleton("chrEBV"), null);
     }
 
     private static SAMFileHeader header(SAMFileHeader.SortOrder sortOrder, int contigLength)
@@ -237,22 +250,29 @@ public class CandidateReadExtractorTest
         return header;
     }
 
-    private static SAMRecord mapped(SAMFileHeader header, String name, int flags, String contig, int start, String cigar, String bases)
+    // A read with a position: mapped, or unmapped and placed at its mapped mate.
+    private static SAMRecord placed(
+            SAMFileHeader header, String name, int flags, String contig, int start, String cigar, String bases)
     {
-        SAMRecord record = baseRecord(header, name, flags, bases);
+        SAMRecord record = record(header, name, flags, bases);
         record.setReferenceName(contig);
         record.setAlignmentStart(start);
         record.setCigarString(cigar);
-        record.setMappingQuality(60);
+        if(!record.getReadUnmappedFlag())
+        {
+            record.setMappingQuality(60);
+        }
         return record;
     }
 
-    private static SAMRecord unmapped(SAMFileHeader header, String name, int flags, String bases)
+    // Unmapped, and unpaired or with an unmapped mate, so it sits in the unmapped block at the end of the file.
+    private static SAMRecord fullyUnmapped(SAMFileHeader header, String name, int pairFlags, String bases)
     {
-        return baseRecord(header, name, flags, bases);
+        int mateFlags = pairFlags == UNPAIRED ? 0 : MATE_UNMAPPED;
+        return record(header, name, pairFlags | UNMAPPED | mateFlags, bases);
     }
 
-    private static SAMRecord baseRecord(SAMFileHeader header, String name, int flags, String bases)
+    private static SAMRecord record(SAMFileHeader header, String name, int flags, String bases)
     {
         SAMRecord record = new SAMRecord(header);
         record.setReadName(name);

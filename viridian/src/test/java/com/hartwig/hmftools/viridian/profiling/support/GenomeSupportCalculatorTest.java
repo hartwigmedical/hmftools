@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.viridian.profiling.support;
 
+import static com.hartwig.hmftools.viridian.ViridianTestUtils.readAlignment;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.READ_VOTE_CORRECT_BASE_PROBABILITY;
 
 import static org.junit.Assert.assertEquals;
@@ -9,16 +10,12 @@ import java.util.List;
 import com.hartwig.hmftools.viridian.profiling.align.AllGenomesReadAlignments;
 import com.hartwig.hmftools.viridian.profiling.align.ViralReadAlignment;
 import com.hartwig.hmftools.viridian.profiling.common.GenomeStats;
-import com.hartwig.hmftools.viridian.profiling.common.ReadId;
 import com.hartwig.hmftools.viridian.profiling.common.SummaryStats;
 import com.hartwig.hmftools.viridian.reference.Virus;
 import com.hartwig.hmftools.viridian.reference.VirusGenome;
 import com.hartwig.hmftools.viridian.reference.VirusGroup;
 
 import org.junit.Test;
-
-import htsjdk.samtools.Cigar;
-import htsjdk.samtools.TextCigarCodec;
 
 public class GenomeSupportCalculatorTest
 {
@@ -31,60 +28,60 @@ public class GenomeSupportCalculatorTest
     public void testComputePerGenomeDepthAndCoverage()
     {
         List<ViralReadAlignment> alignments = List.of(
-                alignment("r1", V1, 1, 10, 10, 0),
-                alignment("r1", V1, 1, 10, 5, 0),   // second, lower-scoring alignment of r1 on v1
-                alignment("r2", V1, 6, 5, 8, 0),
-                alignment("r3", V2, 1, 10, 9, 0));
+                readAlignment("r1", V1, 1, "10M", 10, 0),
+                readAlignment("r1", V1, 1, "10M", 5, 0),   // second, lower-scoring alignment of r1 on v1
+                readAlignment("r2", V1, 6, "5M", 8, 0),
+                readAlignment("r3", V2, 1, "10M", 9, 0));
 
-        List<GenomeSupport> stats = compute(alignments, READ_VOTE_CORRECT_BASE_PROBABILITY);
+        List<GenomeSupport> supports = calculate(alignments, READ_VOTE_CORRECT_BASE_PROBABILITY);
 
-        assertEquals(2, stats.size());
+        assertEquals(2, supports.size());
 
         // Depth over v1's 20 bases: 1-5 from r1 only, 6-10 from both reads, 11-20 uncovered.
         int[] v1Depth = { 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
         GenomeSupport expectedV1 = new GenomeSupport(
                 new GenomeStats(V1, 2, 0, 10, SummaryStats.from(v1Depth), SummaryStats.from(new int[] { 10, 8 })),
                 1, SummaryStats.from(new int[] { 2, 1 }), 2.0, 2);
-        assertEquals(expectedV1, get(stats, V1));
+        assertEquals(expectedV1, supportOf(supports, V1));
 
         int[] v2Depth = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
         GenomeSupport expectedV2 = new GenomeSupport(
                 new GenomeStats(V2, 1, 0, 10, SummaryStats.from(v2Depth), SummaryStats.from(new int[] { 9 })),
                 0, SummaryStats.from(new int[] { 1 }), 1.0, 1);
-        assertEquals(expectedV2, get(stats, V2));
+        assertEquals(expectedV2, supportOf(supports, V2));
     }
 
     @Test
     public void testComputeVotesAttributeVirusStrainSupport()
     {
         List<ViralReadAlignment> alignments = List.of(
-                alignment("r1", V1, 1, 10, 10, 1),
-                alignment("r1", V2, 1, 10, 6, 4),   // Aligns to another virus genome with more divergence
-                alignment("r2", V1, 1, 10, 10, 0),
-                alignment("r2", V2, 1, 10, 5, 5));  // Aligns to another virus genome with more divergence
+                readAlignment("r1", V1, 1, "10M", 10, 1),
+                readAlignment("r1", V2, 1, "10M", 6, 4),   // Aligns to another virus genome with more divergence
+                readAlignment("r2", V1, 1, "10M", 10, 0),
+                readAlignment("r2", V2, 1, "10M", 5, 5));  // Aligns to another virus genome with more divergence
 
         // Injected correct-base probability 0.5, so each extra divergent base halves a virus genome's weight
         // (0.5^diff).
-        List<GenomeSupport> stats = compute(alignments, 0.5);
+        List<GenomeSupport> supports = calculate(alignments, 0.5);
 
         // r1: v1 weight 0.5^0, v2 0.5^3; r2: v1 0.5^0, v2 0.5^5. Votes per read sum to 1, so both virus genomes sum
         // to 2.
-        double v1Votes = get(stats, V1).readVotes();
+        double v1Votes = supportOf(supports, V1).readVotes();
         assertEquals(1.0 / (1 + Math.pow(0.5, 3)) + 1.0 / (1 + Math.pow(0.5, 5)), v1Votes, EPSILON);
-        assertEquals(2.0 - v1Votes, get(stats, V2).readVotes(), EPSILON);
+        assertEquals(2.0 - v1Votes, supportOf(supports, V2).readVotes(), EPSILON);
     }
 
     @Test
     public void testComputeTiedReadSplitsVoteEvenly()
     {
         List<ViralReadAlignment> alignments = List.of(
-                alignment("r", V1, 1, 10, 10, 2),
-                alignment("r", V2, 1, 10, 10, 2));
+                readAlignment("r", V1, 1, "10M", 10, 2),
+                readAlignment("r", V2, 1, "10M", 10, 2));
 
-        List<GenomeSupport> stats = compute(alignments, 0.5);
+        List<GenomeSupport> supports = calculate(alignments, 0.5);
 
-        assertEquals(0.5, get(stats, V1).readVotes(), EPSILON);
-        assertEquals(0.5, get(stats, V2).readVotes(), EPSILON);
+        assertEquals(0.5, supportOf(supports, V1).readVotes(), EPSILON);
+        assertEquals(0.5, supportOf(supports, V2).readVotes(), EPSILON);
     }
 
     @Test
@@ -92,63 +89,47 @@ public class GenomeSupportCalculatorTest
     {
         VirusGenome v1b = new VirusGenome("v1b", 20, new Virus("Virus 1B", V1.virusGroup()));
         List<ViralReadAlignment> alignments = List.of(
-                alignment("r1", V1, 1, 10, 10, 0),
-                alignment("r1", v1b, 1, 10, 10, 0),    // Tied, so counts for both
-                alignment("r2", V1, 1, 10, 10, 0),
-                alignment("r2", v1b, 1, 10, 8, 2),     // v1 fits better
-                alignment("r3", v1b, 1, 10, 10, 0),    // Only on v1b
-                alignment("r4", V1, 1, 10, 9, 1),
-                alignment("r4", V2, 1, 10, 9, 1),      // Tied across virus groups, so counts for both
-                alignment("r5", V1, 1, 10, 7, 3),
-                alignment("r5", V2, 1, 10, 10, 0));    // v2 fits better
+                readAlignment("r1", V1, 1, "10M", 10, 0),
+                readAlignment("r1", v1b, 1, "10M", 10, 0),    // Tied, so counts for both
+                readAlignment("r2", V1, 1, "10M", 10, 0),
+                readAlignment("r2", v1b, 1, "10M", 8, 2),     // v1 fits better
+                readAlignment("r3", v1b, 1, "10M", 10, 0),    // Only on v1b
+                readAlignment("r4", V1, 1, "10M", 9, 1),
+                readAlignment("r4", V2, 1, "10M", 9, 1),      // Tied across virus groups, so counts for both
+                readAlignment("r5", V1, 1, "10M", 7, 3),
+                readAlignment("r5", V2, 1, "10M", 10, 0));    // v2 fits better
 
-        List<GenomeSupport> stats = compute(alignments, READ_VOTE_CORRECT_BASE_PROBABILITY);
+        List<GenomeSupport> supports = calculate(alignments, READ_VOTE_CORRECT_BASE_PROBABILITY);
 
         // v1 is the top match for r1, r2 and r4. v1b for r1 and r3. v2 for r4 and r5.
-        assertEquals(3, get(stats, V1).topMatchReads());
-        assertEquals(2, get(stats, v1b).topMatchReads());
-        assertEquals(2, get(stats, V2).topMatchReads());
+        assertEquals(3, supportOf(supports, V1).topMatchReads());
+        assertEquals(2, supportOf(supports, v1b).topMatchReads());
+        assertEquals(2, supportOf(supports, V2).topMatchReads());
     }
 
     @Test
     public void testComputeGenomeWithOnlyOriginClippedAlignmentsIsStillReported()
     {
         List<ViralReadAlignment> alignments = List.of(
-                clipped("r1", V1, 1, 10, 30, 0),    // Clipped over origin; dropped
-                clipped("r2", V1, 1, 10, 30, 0),    // Clipped over origin; dropped
-                alignment("r3", V2, 1, 10, 9, 0));  // Not clipped; kept
+                readAlignment("r1", V1, 1, "30S10M", 10, 30),    // Clipped over origin; dropped
+                readAlignment("r2", V1, 1, "30S10M", 10, 30),    // Clipped over origin; dropped
+                readAlignment("r3", V2, 1, "10M", 9, 0));        // Not clipped; kept
 
-        List<GenomeSupport> stats = compute(alignments, READ_VOTE_CORRECT_BASE_PROBABILITY);
+        List<GenomeSupport> supports = calculate(alignments, READ_VOTE_CORRECT_BASE_PROBABILITY);
 
         GenomeSupport expected = new GenomeSupport(
                 new GenomeStats(V1, 0, 2, 0, SummaryStats.from(new int[20]), null), 0, null, 0.0, 0);
-        assertEquals(expected, get(stats, V1));
+        assertEquals(expected, supportOf(supports, V1));
     }
 
-    private static List<GenomeSupport> compute(List<ViralReadAlignment> alignments, double correctBaseProbability)
+    private static List<GenomeSupport> calculate(List<ViralReadAlignment> alignments, double correctBaseProbability)
     {
         AllGenomesReadAlignments allAlignments = AllGenomesReadAlignments.from(alignments.stream());
         return new GenomeSupportCalculator(correctBaseProbability).calculate(allAlignments);
     }
 
-    private static GenomeSupport get(List<GenomeSupport> stats, VirusGenome genome)
+    private static GenomeSupport supportOf(List<GenomeSupport> supports, VirusGenome genome)
     {
-        return stats.stream().filter(support -> support.genome().equals(genome)).findFirst().orElseThrow();
-    }
-
-    // A clean, full-length alignment covering [start, start + length - 1] with no clips.
-    private static ViralReadAlignment alignment(String readName, VirusGenome genome, int start, int length, int alignerScore,
-            int divergence)
-    {
-        return new ViralReadAlignment(
-                ReadId.parse(readName), genome, start, TextCigarCodec.decode(length + "M"),
-                alignerScore, divergence, new int[0]);
-    }
-
-    // An alignment covering [start, end] with the given clip lengths hanging off each side.
-    private static ViralReadAlignment clipped(String readName, VirusGenome genome, int start, int end, int leftClip, int rightClip)
-    {
-        Cigar cigar = TextCigarCodec.decode(leftClip + "S" + (end - start + 1) + "M" + rightClip + "S");
-        return new ViralReadAlignment(ReadId.parse(readName), genome, start, cigar, 10, leftClip + rightClip, new int[0]);
+        return supports.stream().filter(support -> support.genome().equals(genome)).findFirst().orElseThrow();
     }
 }
