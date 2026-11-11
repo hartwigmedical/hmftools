@@ -269,6 +269,7 @@ public class StructuralVariantFactory
                 .type(context.hasAttribute(INFERRED) ? StructuralVariantType.INF : StructuralVariantType.SGL)
                 .filter(filters(context, null))
                 .startContext(context)
+                .startLinkedBy(parseAssemblyLinks(context))
                 .build();
     }
 
