@@ -3,6 +3,8 @@ package com.hartwig.hmftools.compar.isofox;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.inferFileDelimiter;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS_FILTER;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.FieldCheckCache.getOrMakeFieldCheck;
@@ -12,6 +14,8 @@ import static com.hartwig.hmftools.compar.common.MismatchType.OLD_ONLY;
 import static com.hartwig.hmftools.compar.common.MismatchType.VALUE;
 import static com.hartwig.hmftools.compar.isofox.RnaGeneDataComparer.checkOldIsofoxFilename;
 
+import java.io.BufferedReader;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -129,11 +133,19 @@ public class RnaFusionComparer extends ItemComparer
             return;
 
         List<RnaFusion> fusions;
-        try
+        try(BufferedReader reader = Files.newBufferedReader(Paths.get(filename)))
         {
+            String header = reader.readLine();
+
+            if(header != null && !createFieldsIndexMap(header, inferFileDelimiter(filename)).containsKey(Fields.Filter.toString()))
+            {
+                CMP_LOGGER.warn("sample({}) unfiltered fusions file has no Filter column, needs Isofox 1.8+, lookup skipped", sampleId);
+                return;
+            }
+
             fusions = RnaFusionFile.read(filename);
         }
-        catch(RuntimeException e)
+        catch(IOException | RuntimeException e)
         {
             CMP_LOGGER.warn("sample({}) failed to parse Isofox unfiltered fusion data ({})", sampleId, e.getClass().getSimpleName());
             return;
