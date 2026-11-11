@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.linx.chaining;
 
+import static java.lang.Math.abs;
+
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.isStart;
@@ -521,7 +523,7 @@ public class ChainFinder
         return index != null ? index : -1;
     }
 
-    private void determinePossibleLinks()
+        private void determinePossibleLinks()
     {
         // form a map of each breakend to its set of all other breakends which can form a valid TI
         // need to exclude breakends which are already assigned to an assembled TI unless replication permits additional instances of it
@@ -728,7 +730,8 @@ public class ChainFinder
             if(breakend.orientation() == otherBreakend.orientation())
                 break;
 
-            if(Math.abs(breakend.position() - otherBreakend.position()) < getMinTemplatedInsertionLength(breakend, otherBreakend))
+            int breakendsDistance = abs(breakend.position() - otherBreakend.position()) + 1;
+            if(breakendsDistance < getMinTemplatedInsertionLength(breakend, otherBreakend)) // cannot form a link
                 continue;
 
             SvVarData otherSV2 = breakend.getSV();
