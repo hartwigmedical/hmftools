@@ -122,7 +122,7 @@ public class QualityCalculator
         {
             penalisedBaseQuality = recalibratedBaseQuality;
 
-            if(readContextCounter.useMsiErrorRate())
+            if(!readContextCounter.useMsiErrorRate())
             {
                 // as a default apply the full fixed penalty, this being either a Ultima model or novel indel qual, not a BQR qual
                 penalisedBaseQuality -= BASE_QUAL_FIXED_PENALTY_MAX;
