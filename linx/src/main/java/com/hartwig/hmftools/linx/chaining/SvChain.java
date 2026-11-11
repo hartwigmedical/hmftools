@@ -209,8 +209,8 @@ public class SvChain {
                 int minTILength = getMinTemplatedInsertionLength(chainStart, chainEnd);
 
                 return isPossibleLink(
-                        chainStart.chromosome(), chainStart.position(), chainStart.orientation(),
-                        chainEnd.chromosome(), chainEnd.position(), chainEnd.orientation(), minTILength);
+                        chainStart.chromosome(), chainStart.position(), chainStart.orientAsByte(),
+                        chainEnd.chromosome(), chainEnd.position(), chainEnd.orientAsByte(), minTILength);
             }
         }
 

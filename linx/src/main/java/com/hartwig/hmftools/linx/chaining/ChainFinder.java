@@ -544,7 +544,7 @@ public class ChainFinder
                 if(belowJcnThreshold(lowerBreakend.getSV()))
                     continue;
 
-                if(lowerBreakend.orientation() != -1)
+                if(!lowerBreakend.reverseOrient())
                     continue;
 
                 if(alreadyLinkedBreakend(lowerBreakend))
@@ -577,7 +577,7 @@ public class ChainFinder
                         }
                     }
 
-                    if(upperBreakend.orientation() != 1)
+                    if(!upperBreakend.forwardOrient())
                         continue;
 
                     if(upperBreakend.getSV() == lowerBreakend.getSV())
@@ -709,7 +709,7 @@ public class ChainFinder
 
         List<SvBreakend> breakendList = mChrBreakendMap.get(otherBreakend.chromosome());
 
-        boolean traverseUp = otherBreakend.orientation() == -1;
+        boolean traverseUp = otherBreakend.reverseOrient();
         int index = getClusterChrBreakendIndex(otherBreakend);
 
         while(true)

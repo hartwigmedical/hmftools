@@ -61,7 +61,7 @@ public class FoldbackFinder
                     nextBreakend = breakendList.get(j);
 
                     // first skip over any breakends in a DB with the initial breakend
-                    if(j == i + 1 && breakend.orientation() == -1 && nextBreakend.orientation() == 1
+                    if(j == i + 1 && breakend.reverseOrient() && nextBreakend.orientation().isForward()
                     && breakendsCannotLink(breakend, nextBreakend))
                     {
                         ++j;
@@ -83,7 +83,7 @@ public class FoldbackFinder
                     }
 
                     // check again for an overlapping DB at the outer (potential) foldback breakend
-                    if(breakend.orientation() == 1 && nextBreakend.orientation() == -1 && j < breakendList.size() - 1)
+                    if(breakend.forwardOrient() && nextBreakend.reverseOrient() && j < breakendList.size() - 1)
                     {
                         SvBreakend nextNextBreakend = breakendList.get(j + 1);
 
@@ -97,8 +97,8 @@ public class FoldbackFinder
                     // now check for opposite orientation for the potential foldback
                     if(nextBreakend.orientation() == breakend.orientation() && !nextBreakend.isAssembledLink())
                     {
-                        beFront = breakend.orientation() == 1 ? breakend : nextBreakend;
-                        beBack = breakend.orientation() == 1 ? nextBreakend : breakend;
+                        beFront = breakend.forwardOrient() ? breakend : nextBreakend;
+                        beBack = breakend.forwardOrient() ? nextBreakend : breakend;
                     }
 
                     break;

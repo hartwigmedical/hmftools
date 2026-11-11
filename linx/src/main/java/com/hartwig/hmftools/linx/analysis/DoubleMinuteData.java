@@ -422,7 +422,7 @@ public class DoubleMinuteData
                 if(!SVs.contains(breakend.getSV()))
                     continue;
 
-                if(breakend.orientation() == ORIENT_REV)
+                if(breakend.reverseOrient())
                 {
                     if(currentRegion != null)
                         continue;
@@ -538,8 +538,8 @@ public class DoubleMinuteData
         SvBreakend first = pair.firstBreakend();
         SvBreakend second = pair.secondBreakend();
 
-        int depthWindowCount1 = first.getSV().getCopyNumberData(true, first.orientation() == 1).DepthWindowCount;
-        int depthWindowCount2 = second.getSV().getCopyNumberData(true, second.orientation() == 1).DepthWindowCount;
+        int depthWindowCount1 = first.getSV().getCopyNumberData(true, first.forwardOrient()).DepthWindowCount;
+        int depthWindowCount2 = second.getSV().getCopyNumberData(true, second.forwardOrient()).DepthWindowCount;
 
         return min(depthWindowCount1, depthWindowCount2) < MIN_SEGMENT_DEPTH_WINDOW_COUNT;
     }
@@ -557,7 +557,7 @@ public class DoubleMinuteData
 
     protected static double getMajorAlleleJcnRatio(final SvBreakend breakend)
     {
-        return breakend.jcn() / max(breakend.majorAlleleJcn(breakend.orientation() == ORIENT_REV), 0.01);
+        return breakend.jcn() / max(breakend.majorAlleleJcn(breakend.reverseOrient()), 0.01);
     }
 
     private boolean setValidChains()

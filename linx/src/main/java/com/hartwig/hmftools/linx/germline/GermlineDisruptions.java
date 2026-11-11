@@ -145,7 +145,7 @@ public class GermlineDisruptions
                 boolean isDB = breakend.getDBLink() != null && breakend.getDBLink() == nextBreakend.getDBLink();
 
                 boolean isSimpleDel = !isDB && var.type() == DEL
-                        && breakend.orientation() == 1 && nextBreakend.getSV() == var;
+                        && breakend.forwardOrient() && nextBreakend.getSV() == var;
 
                 if(!isDB && !isSimpleDel)
                     return;
@@ -200,7 +200,7 @@ public class GermlineDisruptions
             if(!mapping.Chromosome.equals(breakendStart.chromosome()))
                 continue;
 
-            if(mapping.Orientation == breakendStart.orientation())
+            if(mapping.Orientation == breakendStart.orientAsByte())
                 continue;
 
             int posStart = 0;
@@ -217,7 +217,7 @@ public class GermlineDisruptions
             {
                 posStart = breakendStart.position();
                 posEnd = mapping.Position;
-                impliedType = breakendStart.orientation() == ORIENT_FWD ? DEL : DUP;
+                impliedType = breakendStart.forwardOrient() ? DEL : DUP;
             }
 
             if(abs(mapping.Position - breakendStart.position()) > MAX_SGL_MAPPED_LENGTH)

@@ -147,7 +147,7 @@ public class LinxTester
 
     public void addLohEvent(final SvBreakend breakend1, final SvBreakend breakend2)
     {
-        if(breakend1.orientation() != 1 || breakend2.orientation() != -1 || !breakend1.chromosome().equals(breakend2.chromosome()))
+        if(breakend1.reverseOrient() || breakend2.forwardOrient() || !breakend1.chromosome().equals(breakend2.chromosome()))
             return;
 
         LohEvent lohEvent = new LohEvent(breakend1.chromosome(), breakend1.position(), breakend2.position(),

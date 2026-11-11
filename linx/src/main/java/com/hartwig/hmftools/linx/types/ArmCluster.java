@@ -248,7 +248,7 @@ public class ArmCluster
                 ++foldbackCount;
             }
 
-            if(breakend.orientation() == -1)
+            if(breakend.reverseOrient())
             {
                 LinkedPair tiPair = breakend.getSV().getLinkedPair(breakend.usesStart());
 
@@ -308,13 +308,13 @@ public class ArmCluster
             SvBreakend be1 = unlinkedBreakends.get(i);
             SvBreakend be2 = unlinkedBreakends.get(i+1);
 
-            if(be1.orientation() == 1 && be2.orientation() == -1)
+            if(be1.forwardOrient() && be2.reverseOrient())
             {
                 ++dsbCount;
             }
             else
             {
-                if(be1.orientation() == -1 && be2.orientation() == 1 && breakendsCannotLink(be1, be2))
+                if(be1.reverseOrient() && be2.forwardOrient() && breakendsCannotLink(be1, be2))
                 {
                     ++dsbCount;
                 }

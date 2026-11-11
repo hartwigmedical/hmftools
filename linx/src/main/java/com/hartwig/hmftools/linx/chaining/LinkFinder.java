@@ -51,7 +51,7 @@ public class LinkFinder
             {
                 SvBreakend lowerBreakend = breakendList.get(i);
 
-                if(lowerBreakend.orientation() != -1)
+                if(!lowerBreakend.reverseOrient())
                     continue;
 
                 SvVarData lowerSV = lowerBreakend.getSV();
@@ -63,7 +63,7 @@ public class LinkFinder
                 {
                     SvBreakend upperBreakend = breakendList.get(j);
 
-                    if(upperBreakend.orientation() != 1)
+                    if(!upperBreakend.forwardOrient())
                         continue;
 
                     SvVarData upperSV = upperBreakend.getSV();
@@ -278,7 +278,7 @@ public class LinkFinder
                 if(var1 == var2)
                     continue;
 
-                if(breakend.orientation() == nextBreakend.orientation())
+                if(breakend.orientAsByte() == nextBreakend.orientAsByte())
                     continue;
 
                 if(breakend.arm() != nextBreakend.arm())
@@ -287,7 +287,7 @@ public class LinkFinder
                 long breakendBaseDistance = nextBreakend.position() - breakend.position() + 1;
                 int minTiLength = getMinTemplatedInsertionLength(breakend, nextBreakend);
 
-                if(breakend.orientation() == 1 && nextBreakend.orientation() == -1)
+                if(breakend.forwardOrient() && nextBreakend.reverseOrient())
                 {
                     // skip if the next breakend is a short overlapping DB
                     if(i < breakendList.size() - 2)

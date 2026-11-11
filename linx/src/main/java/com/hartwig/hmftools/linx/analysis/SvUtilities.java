@@ -102,9 +102,9 @@ public final class SvUtilities {
                 // ensure the inferred is placed such that it faces its partner breakend
                 if(position == otherBreakend.position() && breakend.orientation() != otherBreakend.orientation())
                 {
-                    if(var.isInferredSgl() && breakend.orientation() == -1)
+                    if(var.isInferredSgl() && breakend.reverseOrient())
                         break;
-                    else if(otherBreakend.getSV().isInferredSgl() &&  otherBreakend.orientation() == 1)
+                    else if(otherBreakend.getSV().isInferredSgl() &&  otherBreakend.orientation().isForward())
                         break;
                 }
             }
@@ -245,7 +245,7 @@ public final class SvUtilities {
 
     public static int calcConsistency(final SvBreakend breakend)
     {
-        return (breakend.arm() == P ? 1 : -1) * breakend.orientation();
+        return (breakend.arm() == P ? 1 : -1) * breakend.orientAsByte();
     }
 
     public static final double MAX_COPY_NUM_DIFF = 0.5;
