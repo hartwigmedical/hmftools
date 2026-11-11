@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.viridian.app;
 
 import static java.lang.System.exit;
-import static java.util.Objects.requireNonNull;
 
 import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkCreateOutputDir;
@@ -34,7 +33,7 @@ import com.hartwig.hmftools.common.utils.config.VersionInfo;
 import com.hartwig.hmftools.common.virus.VirusReport;
 import com.hartwig.hmftools.common.virus.VirusReportFile;
 import com.hartwig.hmftools.viridian.common.UserInputError;
-import com.hartwig.hmftools.viridian.integration.IntegrationCandidate;
+import com.hartwig.hmftools.viridian.integration.Integration;
 import com.hartwig.hmftools.viridian.integration.align.ViralInsertAligner;
 import com.hartwig.hmftools.viridian.integration.align.ViralInsertAlignment;
 import com.hartwig.hmftools.viridian.integration.extract.CandidateSv;
@@ -251,19 +250,15 @@ public class ViridianApplication
         List<CandidateSv> candidateSvs =
                 new CandidateSvExtractor(mConfig.sampleId()).extract(mConfig.esveeUnfilteredVcf());
 
-        List<IntegrationCandidate> integrations = alignCandidateSvs(candidateSvs).stream()
-                .filter(IntegrationCandidate::isIntegration)
-                .toList();
+        List<Integration> integrations = alignInsertsToVirusGenomes(candidateSvs);
 
         LOGGER.info("Writing integrations output");
         OutputWriter.writeIntegrations(outputFile(INTEGRATIONS_TSV_SUFFIX), integrations);
 
-        return integrations.stream()
-                .map(integration -> requireNonNull(integration.alignment()).genome())
-                .toList();
+        return integrations.stream().map(integration -> integration.alignment().genome()).toList();
     }
 
-    private List<IntegrationCandidate> alignCandidateSvs(List<CandidateSv> candidateSvs)
+    private List<Integration> alignInsertsToVirusGenomes(List<CandidateSv> candidateSvs)
     {
         LOGGER.info("Aligning integration candidate insert sequences to virus genomes");
 
@@ -272,12 +267,16 @@ public class ViridianApplication
                 mVirusReference, mConfig.virusBwaIndexImage(), mConfig.threads());
         List<ViralInsertAlignment> alignments = aligner.align(insertSequences);
 
-        List<IntegrationCandidate> integrationCandidates = new ArrayList<>(candidateSvs.size());
+        List<Integration> integrations = new ArrayList<>();
         for(int i = 0; i < candidateSvs.size(); ++i)
         {
-            integrationCandidates.add(new IntegrationCandidate(candidateSvs.get(i), alignments.get(i)));
+            ViralInsertAlignment alignment = alignments.get(i);
+            if(alignment != null)
+            {
+                integrations.add(new Integration(candidateSvs.get(i), alignment));
+            }
         }
-        return integrationCandidates;
+        return integrations;
     }
 
     // Decide which viruses are reported to the downstream pipeline.

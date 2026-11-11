@@ -5,8 +5,7 @@ import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.INTEGRATION_ALIGN_SCORE_MIN;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertThrows;
 
 import com.hartwig.hmftools.viridian.reference.Virus;
 import com.hartwig.hmftools.viridian.reference.VirusGenome;
@@ -30,15 +29,12 @@ public class ViralInsertAlignmentTest
     }
 
     @Test
-    public void testPassesFiltersScoreAtFloor()
+    public void testConstructAlignerScoreMin()
     {
-        assertTrue(alignment("70M", 70, INTEGRATION_ALIGN_SCORE_MIN).passesFilters());
-    }
-
-    @Test
-    public void testPassesFiltersScoreBelowFloor()
-    {
-        assertFalse(alignment("70M", 70, INTEGRATION_ALIGN_SCORE_MIN - 1).passesFilters());
+        assertEquals(INTEGRATION_ALIGN_SCORE_MIN, alignment("70M", 70, INTEGRATION_ALIGN_SCORE_MIN).alignerScore());
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> alignment("70M", 70, INTEGRATION_ALIGN_SCORE_MIN - 1));
     }
 
     private static ViralInsertAlignment alignment(String cigar, int sequenceLength)

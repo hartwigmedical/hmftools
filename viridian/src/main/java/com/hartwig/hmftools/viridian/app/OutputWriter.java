@@ -2,7 +2,6 @@ package com.hartwig.hmftools.viridian.app;
 
 import static java.util.Comparator.comparing;
 import static java.util.Comparator.reverseOrder;
-import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.summingDouble;
@@ -19,7 +18,7 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 import com.hartwig.hmftools.common.utils.file.DelimFileWriter;
-import com.hartwig.hmftools.viridian.integration.IntegrationCandidate;
+import com.hartwig.hmftools.viridian.integration.Integration;
 import com.hartwig.hmftools.viridian.integration.align.ViralInsertAlignment;
 import com.hartwig.hmftools.viridian.integration.extract.BreakendSupport;
 import com.hartwig.hmftools.viridian.integration.extract.CandidateSv;
@@ -182,7 +181,7 @@ public class OutputWriter
         return genomes.isEmpty() ? null : genomes.stream().map(field).collect(joining(ITEM_DELIM));
     }
 
-    public static void writeIntegrations(String file, List<IntegrationCandidate> integrations)
+    public static void writeIntegrations(String file, List<Integration> integrations)
     {
         DelimFileWriter.write(
                 file, IntegrationColumn.values(), integrations, (integration, row) ->
@@ -239,7 +238,7 @@ public class OutputWriter
                     row.set(IntegrationColumn.insert_seq_length, sv.insertSequence().length());
                     row.set(IntegrationColumn.insert_sequence, sv.insertSequence());
 
-                    ViralInsertAlignment alignment = requireNonNull(integration.alignment());
+                    ViralInsertAlignment alignment = integration.alignment();
                     VirusGenome genome = alignment.genome();
                     row.set(IntegrationColumn.virus_name, genome.virus().name());
                     row.set(IntegrationColumn.virus_group, genome.virusGroup().name());

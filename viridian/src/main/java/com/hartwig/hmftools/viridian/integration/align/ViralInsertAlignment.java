@@ -32,9 +32,9 @@ public record ViralInsertAlignment(
         {
             throw new IllegalArgumentException("Invalid position: " + position);
         }
-        if(alignerScore < 0)
+        if(alignerScore < INTEGRATION_ALIGN_SCORE_MIN)
         {
-            throw new IllegalArgumentException("Invalid alignerScore: " + alignerScore);
+            throw new IllegalArgumentException("alignerScore below integration minimum: " + alignerScore);
         }
         if(alignedEditDistance < 0)
         {
@@ -49,11 +49,5 @@ public record ViralInsertAlignment(
     public int alignedLength()
     {
         return sequenceLength - leftClipLength(cigar) - rightClipLength(cigar);
-    }
-
-    public boolean passesFilters()
-    {
-        // Redundant because BWA-MEM already filtered on score, but do it again for completeness and safety.
-        return alignerScore >= INTEGRATION_ALIGN_SCORE_MIN;
     }
 }
