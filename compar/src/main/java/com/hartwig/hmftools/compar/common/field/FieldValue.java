@@ -23,11 +23,6 @@ public abstract class FieldValue
 
     public void addDiffInfo(final FieldValue oldValue, final FieldValue newValue, final List<String> diffs)
     {
-        addDiffDisplayInfo(oldValue, newValue, diffs);
-    }
-
-    public static void addDiffDisplayInfo(final FieldValue oldValue, final FieldValue newValue, final List<String> diffs)
-    {
         diffs.add(format("%s(%s/%s)", oldValue.name(), oldValue.displayValue(), newValue.displayValue()));
     }
 }

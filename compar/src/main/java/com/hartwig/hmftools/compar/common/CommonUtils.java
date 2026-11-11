@@ -157,9 +157,9 @@ public class CommonUtils
 
         mismatches.replaceAll(x ->
         {
-            ComparableItem absentItem = x.Type != NEW_ONLY ? null
-                    : absentItems.stream().filter(item -> item.matches(x.NewItem)).findFirst().orElse(null);
-            return absentItem != null ? new Mismatch(absentItem, x.NewItem, ABSENT_FOUND, Collections.emptyList()) : x;
+            ComparableItem absentItem = x.Type == NEW_ONLY
+                    ? absentItems.stream().filter(item -> item.matches(x.NewItem)).findFirst().orElse(null) : null;
+            return absentItem == null ? x : new Mismatch(absentItem, x.NewItem, ABSENT_FOUND, Collections.emptyList());
         });
     }
 
@@ -168,7 +168,6 @@ public class CommonUtils
             final boolean includesExpected, final List<ComparableItem> oldItems, final List<ComparableItem> newItems)
     {
         boolean oldExpectedSourced = comparer.config().isExpectedSourced(SourceType.OLD);
-        boolean newExpectedSourced = comparer.config().isExpectedSourced(SourceType.NEW);
 
         int index1 = 0;
         while(index1 < oldItems.size())
@@ -190,7 +189,7 @@ public class CommonUtils
 
                     // skip checking for diffs if the items are not reportable
                     boolean checkMismatch = matchLevel != REPORTABLE || item1.reportable() || item2.reportable()
-                            || oldExpectedSourced || newExpectedSourced;
+                            || oldExpectedSourced;
 
                     if(checkMismatch)
                     {
@@ -226,7 +225,7 @@ public class CommonUtils
         oldItems.stream().filter(x -> matchLevel != REPORTABLE || x.reportable() || oldExpectedSourced)
                 .forEach(x -> mismatches.add(new Mismatch(x, null, OLD_ONLY, emptyDiffs)));
 
-        newItems.stream().filter(x -> matchLevel != REPORTABLE || x.reportable() || newExpectedSourced)
+        newItems.stream().filter(x -> matchLevel != REPORTABLE || x.reportable())
                 .forEach(x -> mismatches.add(new Mismatch(null, x, NEW_ONLY, emptyDiffs)));
     }
 

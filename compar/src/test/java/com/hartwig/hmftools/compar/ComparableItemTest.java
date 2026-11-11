@@ -72,7 +72,6 @@ public abstract class ComparableItemTest<I extends ComparableItem, C extends Ite
         final ComparableItem newVictim = builder.createWithAlternateDefaults();
 
         MatchLevel matchLevel = MatchLevel.DETAILED;
-        final FieldCheckCache fieldConfig = createDefaultThresholds(matchLevel);
         final Set<String> expectedFieldNames = getAllValueFieldNames();
         if(nameToAlternateIndexInitializer.isEmpty())
         {
@@ -125,11 +124,9 @@ public abstract class ComparableItemTest<I extends ComparableItem, C extends Ite
             I reportableVictim = builder.create();
             I nonReportableVictim = builder.create(entry.getValue());
 
-            FieldCheckCache detailedFieldConfig = createDefaultThresholds(MatchLevel.DETAILED);
             assertSingleFieldMismatch(comparer, field, reportableVictim, nonReportableVictim, MatchLevel.DETAILED, MismatchType.VALUE);
             assertSingleFieldMismatch(comparer, field, nonReportableVictim, reportableVictim, MatchLevel.DETAILED, MismatchType.VALUE);
 
-            FieldCheckCache reportableFieldConfig = createDefaultThresholds(MatchLevel.REPORTABLE);
             assertSingleFieldMismatch(comparer, field, reportableVictim, nonReportableVictim, MatchLevel.REPORTABLE, MismatchType.OLD_ONLY);
             assertSingleFieldMismatch(comparer, field, nonReportableVictim, reportableVictim, MatchLevel.REPORTABLE, MismatchType.NEW_ONLY);
         }
@@ -144,7 +141,6 @@ public abstract class ComparableItemTest<I extends ComparableItem, C extends Ite
         assertTrue(refVictim.matches(newVictim));
 
         MatchLevel matchLevel = MatchLevel.DETAILED;
-        FieldCheckCache fieldConfig = createDefaultThresholds(matchLevel);
         Mismatch mismatch = refVictim.findMismatch(comparer, newVictim, matchLevel, false);
 
         assertEquals(MismatchType.VALUE, mismatch.Type);
@@ -188,7 +184,6 @@ public abstract class ComparableItemTest<I extends ComparableItem, C extends Ite
             I newVictim = builder.createWithAlternateDefaults(initializer);
 
             MatchLevel matchLevel = MatchLevel.DETAILED;
-            FieldCheckCache fieldConfig = createDefaultThresholds(matchLevel);
             assertNull("Test non-PASS due to " + name + " is ignored when not including matches",
                     refVictim.findMismatch(comparer, newVictim, matchLevel, false));
             assertNull("Test non-PASS due to " + name + " is ignored when including matches",
@@ -207,7 +202,6 @@ public abstract class ComparableItemTest<I extends ComparableItem, C extends Ite
             I nonPassVictim = builder.createWithAlternateDefaults(initializer);
 
             MatchLevel matchLevel = MatchLevel.DETAILED;
-            FieldCheckCache fieldConfig = createDefaultThresholds(matchLevel);
             assertEquals("Test non-PASS due to " + name + " can cause REF_ONLY when not including matches",
                     MismatchType.OLD_ONLY, passVictim.findMismatch(comparer, nonPassVictim, matchLevel, false).Type);
             assertEquals("Test non-PASS due to " + name + " can cause REF_ONLY when including matches",
@@ -222,8 +216,6 @@ public abstract class ComparableItemTest<I extends ComparableItem, C extends Ite
 
     private void assertFullyMatchesSelf(final MatchLevel matchLevel)
     {
-        FieldCheckCache fieldConfig = createDefaultThresholds(matchLevel);
-
         I victim = builder.create();
 
         assertTrue(victim.matches(victim));
@@ -260,16 +252,9 @@ public abstract class ComparableItemTest<I extends ComparableItem, C extends Ite
             String field = entry.getKey();
             I refVictim = builder.create();
             I newVictim = builder.create(entry.getValue());
-            FieldCheckCache fieldConfig = createDefaultThresholds(matchLevel);
 
             assertSingleFieldMismatch(comparer, field, refVictim, newVictim, matchLevel, MismatchType.VALUE);
         }
-    }
-
-    protected FieldCheckCache createDefaultThresholds(MatchLevel matchLevel)
-    {
-        FieldCheckCache fieldConfig = new FieldCheckCache();
-        return fieldConfig;
     }
 
     private Set<String> getAllValueFieldNames()

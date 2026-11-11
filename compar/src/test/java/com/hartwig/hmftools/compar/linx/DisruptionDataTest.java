@@ -13,7 +13,6 @@ import java.util.function.Consumer;
 
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItemTest;
-import com.hartwig.hmftools.compar.FieldCheckCache;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.MismatchType;
@@ -76,7 +75,6 @@ public class DisruptionDataTest extends ComparableItemTest<DisruptionData, Disru
         assertTrue(refVictim.matches(newVictim));
 
         MatchLevel matchLevel = MatchLevel.DETAILED;
-        FieldCheckCache fieldConfig = createDefaultThresholds(matchLevel);
         Mismatch mismatch = refVictim.findMismatch(comparer, newVictim, matchLevel, false);
 
         assertEquals(MismatchType.VALUE, mismatch.Type);
@@ -134,7 +132,6 @@ public class DisruptionDataTest extends ComparableItemTest<DisruptionData, Disru
         assertTrue(refVictim.matches(newVictim));
 
         MatchLevel matchLevel = MatchLevel.DETAILED;
-        FieldCheckCache fieldConfig = createDefaultThresholds(matchLevel);
         Mismatch mismatch = refVictim.findMismatch(comparer, newVictim, matchLevel, false);
 
         assertEquals(MismatchType.VALUE, mismatch.Type);
@@ -155,7 +152,6 @@ public class DisruptionDataTest extends ComparableItemTest<DisruptionData, Disru
         assertTrue(reportableVictim.matches(nonReportableVictim));
 
         MatchLevel matchLevel = MatchLevel.REPORTABLE;
-        FieldCheckCache fieldConfig = createDefaultThresholds(matchLevel);
         Mismatch mismatch = reportableVictim.findMismatch(comparer, nonReportableVictim, matchLevel, false);
 
         assertEquals(MismatchType.OLD_ONLY, mismatch.Type);
@@ -183,7 +179,6 @@ public class DisruptionDataTest extends ComparableItemTest<DisruptionData, Disru
         assertTrue("Test difference in " + field, refVictim.matches(newVictim));
 
         MatchLevel matchLevel = MatchLevel.DETAILED;
-        FieldCheckCache fieldConfig = createDefaultThresholds(matchLevel);
         Mismatch mismatch = refVictim.findMismatch(comparer, newVictim, matchLevel, false);
 
         assertEquals("Test difference in " + field, MismatchType.VALUE, mismatch.Type);

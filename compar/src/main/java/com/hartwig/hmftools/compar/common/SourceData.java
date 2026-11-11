@@ -46,7 +46,5 @@ public class SourceData
         return new SourceData(type, null, expected, label);
     }
 
-    public String configName() { return Type.toString().toLowerCase(); }
-
     public String toString() { return Type.toString(); }
 }

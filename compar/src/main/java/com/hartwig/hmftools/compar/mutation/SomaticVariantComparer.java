@@ -133,7 +133,6 @@ public class SomaticVariantComparer extends ItemComparer
         String newSourceSampleId = mConfig.sourceSampleId(NEW, sampleId);
 
         boolean oldExpectedSourced = mConfig.isExpectedSourced(SourceType.OLD);
-        boolean newExpectedSourced = mConfig.isExpectedSourced(SourceType.NEW);
 
         List<SomaticVariantData> proteinVariants = oldVariants.stream().filter(x -> x.Chromosome.isEmpty()).toList();
         List<SomaticVariantData> oldGenomicVariants = oldVariants.stream().filter(x -> !x.Chromosome.isEmpty()).toList();
@@ -206,11 +205,11 @@ public class SomaticVariantComparer extends ItemComparer
                     chromosomeOldVariants.remove(index1);
 
                     if((includeMismatchWithVariant(oldVariant, matchLevel) || oldExpectedSourced)
-                    || (includeMismatchWithVariant(matchedVariant, matchLevel) || newExpectedSourced))
+                    || includeMismatchWithVariant(matchedVariant, matchLevel))
                     {
                         Mismatch mismatch = oldVariant.findMismatch(
                                 this, matchedVariant, matchLevel, mConfig.IncludeMatches,
-                                oldExpectedSourced || newExpectedSourced);
+                                oldExpectedSourced);
 
                         if(mismatch != null)
                             mismatches.add(mismatch);
@@ -227,7 +226,7 @@ public class SomaticVariantComparer extends ItemComparer
 
             for(SomaticVariantData newVariant : chromosomeNewVariants)
             {
-                if(!newExpectedSourced && !includeMismatchWithVariant(newVariant, matchLevel))
+                if(!includeMismatchWithVariant(newVariant, matchLevel))
                     continue;
 
                 SomaticVariantData unfilteredVariant = findUnfilteredVariant(newVariant, OLD, oldSourceSampleId);
@@ -235,7 +234,7 @@ public class SomaticVariantComparer extends ItemComparer
                 if(unfilteredVariant != null)
                 {
                     mismatches.add(unfilteredVariant.findMismatch(
-                            this, newVariant, matchLevel, mConfig.IncludeMatches, newExpectedSourced));
+                            this, newVariant, matchLevel, mConfig.IncludeMatches, false));
                 }
                 else
                 {

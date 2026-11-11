@@ -206,10 +206,7 @@ public class RnaFusionComparer extends ItemComparer
             final List<Mismatch> mismatches, final MatchLevel matchLevel, final boolean includeMatches,
             final boolean includesExpected, final List<ComparableItem> oldItems, final List<ComparableItem> newItems)
     {
-        boolean oldExpectedSourced = mConfig.isExpectedSourced(SourceType.OLD);
-        boolean newExpectedSourced = mConfig.isExpectedSourced(SourceType.NEW);
-
-        if(!oldExpectedSourced && !newExpectedSourced)
+        if(!mConfig.isExpectedSourced(SourceType.OLD))
         {
             CommonUtils.compareItems(this, mismatches, matchLevel, includeMatches, includesExpected, oldItems, newItems);
             checkUnfilteredFusions(mismatches);
@@ -288,8 +285,8 @@ public class RnaFusionComparer extends ItemComparer
         }
 
         // and add unmatched fusions
-        addUnmatchedFusions(fusionsByNameOld, matchedByName, mismatches, matchLevel, false, oldExpectedSourced);
-        addUnmatchedFusions(fusionsByNameNew, matchedByName, mismatches, matchLevel, true, newExpectedSourced);
+        addUnmatchedFusions(fusionsByNameOld, matchedByName, mismatches, matchLevel, false);
+        addUnmatchedFusions(fusionsByNameNew, matchedByName, mismatches, matchLevel, true);
 
         checkUnfilteredFusions(mismatches);
     }
@@ -332,7 +329,7 @@ public class RnaFusionComparer extends ItemComparer
 
     private static void addUnmatchedFusions(
             final Map<String,List<RnaFusionData>> fusionsByName, final Set<String> matchedByName,
-            final List<Mismatch> mismatches, final MatchLevel matchLevel, boolean isNew, boolean expectedSourced)
+            final List<Mismatch> mismatches, final MatchLevel matchLevel, boolean isNew)
     {
         for(Map.Entry<String,List<RnaFusionData>> entry : fusionsByName.entrySet())
         {
@@ -343,7 +340,7 @@ public class RnaFusionComparer extends ItemComparer
 
             for(RnaFusionData fusion : entry.getValue())
             {
-                if(matchLevel == REPORTABLE && !fusion.reportable() && !expectedSourced)
+                if(isNew && matchLevel == REPORTABLE && !fusion.reportable())
                     continue;
 
                 Mismatch mismatch = isNew ?

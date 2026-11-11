@@ -146,68 +146,55 @@ public class RnaFusionComparerTest
     }
 
     @Test
-    public void expectedFusionsArePassingInBothDirections() throws IOException
+    public void expectedFusionsArePassing() throws IOException
     {
         String matchedKey = "TMPRSS2:ERG:21:1000:21:2000";
         String filteredKey = "EML4:ALK:2:3000:2:4000";
 
-        for(SourceType expectedSource : SourceType.values())
-        {
-            comparer = createExpectedComparer(expectedSource);
-            File dir = expectedSource == SourceType.OLD ? newDir : oldDir;
-            writePassFusions(dir, List.of(TMPRSS2_ERG));
-            writeUnfilteredFusions(dir, Map.of(
-                    TMPRSS2_ERG, PASS_FILTER,
-                    ImmutableRnaFusion.builder().from(EML4_ALK).splitFragments(2).build(), "FRAGMENT_COUNT"));
+        comparer = createExpectedComparer();
+        writePassFusions(newDir, List.of(TMPRSS2_ERG));
+        writeUnfilteredFusions(newDir, Map.of(
+                TMPRSS2_ERG, PASS_FILTER,
+                ImmutableRnaFusion.builder().from(EML4_ALK).splitFragments(2).build(), "FRAGMENT_COUNT"));
 
-            List<ComparableItem> expectedItems = comparer.loadFromExpected(Map.of(
-                    matchedKey, List.of(new ExpectedValue(matchedKey, "SplitFrags", "100", false)),
-                    filteredKey, List.of(new ExpectedValue(filteredKey, "SplitFrags", "10", false))));
-            Mismatch mismatch = singleMismatch(compareExpected(expectedSource, expectedItems, MatchLevel.REPORTABLE));
+        List<ComparableItem> expectedItems = comparer.loadFromExpected(Map.of(
+                matchedKey, List.of(new ExpectedValue(matchedKey, "SplitFrags", "100", false)),
+                filteredKey, List.of(new ExpectedValue(filteredKey, "SplitFrags", "10", false))));
+        Mismatch mismatch = singleMismatch(compareExpected(expectedItems, MatchLevel.REPORTABLE));
 
-            if(expectedSource == SourceType.OLD)
-                assertMismatch(mismatch, MismatchType.OLD_ONLY, "SplitFrags(10/2)", "Filter(PASS/FRAGMENT_COUNT)");
-            else
-                assertMismatch(mismatch, MismatchType.NEW_ONLY, "SplitFrags(2/10)", "Filter(FRAGMENT_COUNT/PASS)");
+        assertMismatch(mismatch, MismatchType.OLD_ONLY, "SplitFrags(10/2)", "Filter(PASS/FRAGMENT_COUNT)");
 
-            expectedItems = comparer.loadFromExpected(Map.of(
-                    filteredKey, List.of(new ExpectedValue(filteredKey, "Filter", "FRAGMENT_COUNT", false))));
-            writePassFusions(dir, List.of(EML4_ALK));
+        expectedItems = comparer.loadFromExpected(Map.of(
+                filteredKey, List.of(new ExpectedValue(filteredKey, "Filter", "FRAGMENT_COUNT", false))));
+        writePassFusions(newDir, List.of(EML4_ALK));
 
-            assertEquals(0, compareExpected(expectedSource, expectedItems, MatchLevel.REPORTABLE).size());
-        }
+        assertEquals(0, compareExpected(expectedItems, MatchLevel.REPORTABLE).size());
     }
 
     @Test
-    public void groupedExpectedFusionsIncludeUnfilteredContextInBothDirections() throws IOException
+    public void groupedExpectedFusionsIncludeUnfilteredContext() throws IOException
     {
-        for(SourceType expectedSource : SourceType.values())
+        comparer = createExpectedComparer();
+        String key = "EML4:ALK:2:3000:2:4000";
+        List<ComparableItem> expectedItems = comparer.loadFromExpected(Map.of(
+                key, List.of(new ExpectedValue(key, "SplitFrags", "10", false))));
+
+        writePassFusions(newDir, List.of(ImmutableRnaFusion.builder().from(EML4_ALK).positionUp(3001).build()));
+        writeUnfilteredFusions(newDir, Map.of(
+                ImmutableRnaFusion.builder().from(EML4_ALK).splitFragments(2).build(), "FRAGMENT_COUNT"));
+
+        for(boolean hasUnfilteredFile : List.of(true, false))
         {
-            comparer = createExpectedComparer(expectedSource);
-            String key = "EML4:ALK:2:3000:2:4000";
-            List<ComparableItem> expectedItems = comparer.loadFromExpected(Map.of(
-                    key, List.of(new ExpectedValue(key, "SplitFrags", "10", false))));
+            if(!hasUnfilteredFile)
+                Files.delete(Paths.get(RnaFusionFile.generateUnfilteredFilename(newDir.getAbsolutePath(), SAMPLE_ID)));
 
-            File dir = expectedSource == SourceType.OLD ? newDir : oldDir;
-            writePassFusions(dir, List.of(ImmutableRnaFusion.builder().from(EML4_ALK).positionUp(3001).build()));
-            writeUnfilteredFusions(dir, Map.of(
-                    ImmutableRnaFusion.builder().from(EML4_ALK).splitFragments(2).build(), "FRAGMENT_COUNT"));
+            List<Mismatch> mismatches = compareExpected(expectedItems, MatchLevel.DETAILED);
 
-            for(boolean hasUnfilteredFile : List.of(true, false))
-            {
-                if(!hasUnfilteredFile)
-                    Files.delete(Paths.get(RnaFusionFile.generateUnfilteredFilename(dir.getAbsolutePath(), SAMPLE_ID)));
-
-                List<Mismatch> mismatches = compareExpected(expectedSource, expectedItems, MatchLevel.DETAILED);
-
-                String expectedInfo = "coords(3000-4000 frags=10)";
-                if(hasUnfilteredFile)
-                    expectedInfo += " unfiltered(coords(3000-4000 frags=2) filter=FRAGMENT_COUNT)";
-                String fileInfo = "coords(3001-4000 frags=10)";
-                assertMismatch(singleMismatch(mismatches), MismatchType.VALUE,
-                        "fusions(" + (expectedSource == SourceType.OLD ?
-                                expectedInfo + "/" + fileInfo : fileInfo + "/" + expectedInfo) + ")");
-            }
+            String expectedInfo = "coords(3000-4000 frags=10)";
+            if(hasUnfilteredFile)
+                expectedInfo += " unfiltered(coords(3000-4000 frags=2) filter=FRAGMENT_COUNT)";
+            String fileInfo = "coords(3001-4000 frags=10)";
+            assertMismatch(singleMismatch(mismatches), MismatchType.VALUE, "fusions(" + expectedInfo + "/" + fileInfo + ")");
         }
     }
 
@@ -218,7 +205,7 @@ public class RnaFusionComparerTest
         RnaFusion topFusion = ImmutableRnaFusion.builder().from(EML4_ALK).positionUp(3500).splitFragments(30).build();
         writePassFusions(newDir, List.of(EML4_ALK, topFusion));
 
-        comparer = createExpectedComparer(SourceType.OLD);
+        comparer = createExpectedComparer();
         List<ComparableItem> expectedItems = comparer.loadFromExpected(Map.of(
                 key, List.of(new ExpectedValue(key, "KnownType", "NONE", false), new ExpectedValue(key, "SplitFrags", "100", false))));
 
@@ -242,10 +229,10 @@ public class RnaFusionComparerTest
                         ImmutableRnaFusion.builder().from(EML4_ALK).splitFragments(2).build(), "FRAGMENT_COUNT",
                         ImmutableRnaFusion.builder().from(EML4_ALK).positionUp(3500).splitFragments(5).build(), "ALLELE_FREQUENCY"));
 
-        comparer = createExpectedComparer(SourceType.OLD);
+        comparer = createExpectedComparer();
         List<ComparableItem> expectedItems = comparer.loadFromExpected(
                 Map.of(key, List.of(new ExpectedValue(key, "SplitFrags", "10", false))));
-        Mismatch mismatch = singleMismatch(compareExpected(SourceType.OLD, expectedItems, MatchLevel.REPORTABLE));
+        Mismatch mismatch = singleMismatch(compareExpected(expectedItems, MatchLevel.REPORTABLE));
 
         assertMismatch(mismatch, MismatchType.OLD_ONLY, "Filter(PASS/ALLELE_FREQUENCY)");
     }
@@ -280,12 +267,12 @@ public class RnaFusionComparerTest
         expectedCache.loadFiles(expectedFile.getAbsolutePath());
         List<ExpectedValue> expectedValues = expectedCache.sampleExpectedEntries(SAMPLE_ID, CategoryType.RNA_FUSION);
 
-        comparer = createExpectedComparer(SourceType.OLD);
+        comparer = createExpectedComparer();
         List<ComparableItem> expectedItems = comparer.loadFromExpected(
                 expectedValues.stream().collect(Collectors.groupingBy(x -> x.Key)));
         writePassFusions(newDir, List.of(EML4_ALK));
 
-        assertEquals(0, compareExpected(SourceType.OLD, expectedItems, MatchLevel.REPORTABLE).size());
+        assertEquals(0, compareExpected(expectedItems, MatchLevel.REPORTABLE).size());
     }
 
     @Test
@@ -363,21 +350,17 @@ public class RnaFusionComparerTest
         assertEquals(liftedFusion.positionDown(), counterpart.PositionDown);
     }
 
-    private static RnaFusionComparer createExpectedComparer(final SourceType expectedSource)
+    private static RnaFusionComparer createExpectedComparer()
     {
         ComparConfig config = new ComparConfig();
-        config.Sources.set(expectedSource == SourceType.OLD ? 0 : 1,
-                SourceData.fromExpectedSource(expectedSource, new ExpectedCache(), null));
+        config.Sources.set(0, SourceData.fromExpectedSource(SourceType.OLD, new ExpectedCache(), null));
         return new RnaFusionComparer(config, Collections.emptyMap());
     }
 
-    private List<Mismatch> compareExpected(
-            final SourceType expectedSource, final List<ComparableItem> expectedItems, final MatchLevel matchLevel)
+    private List<Mismatch> compareExpected(final List<ComparableItem> expectedItems, final MatchLevel matchLevel)
     {
-        boolean expectedIsOld = expectedSource == SourceType.OLD;
-        List<ComparableItem> fileItems = comparer.loadFromFile(SAMPLE_ID, null,
-                expectedIsOld ? isofoxPaths(SourceType.NEW, newDir) : isofoxPaths(SourceType.OLD, oldDir));
-        return compare(expectedIsOld ? expectedItems : fileItems, expectedIsOld ? fileItems : expectedItems, matchLevel, true);
+        List<ComparableItem> fileItems = comparer.loadFromFile(SAMPLE_ID, null, isofoxPaths(SourceType.NEW, newDir));
+        return compare(expectedItems, fileItems, matchLevel, true);
     }
 
     private List<Mismatch> compareWithAbsent(final String absentKey, final MatchLevel matchLevel) throws IOException
