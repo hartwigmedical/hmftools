@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.compar.FieldConfigFile.FLD_ABSOLUTE_THRESHOLD
 import static com.hartwig.hmftools.compar.FieldConfigFile.FLD_COMPARED;
 import static com.hartwig.hmftools.compar.FieldConfigFile.FLD_FIELD;
 import static com.hartwig.hmftools.compar.FieldConfigFile.FLD_PERCENT_THRESHOLD;
+import static com.hartwig.hmftools.compar.FieldConfigFile.NONE_SETTING;
 import static com.hartwig.hmftools.compar.common.ComparConstants.FLD_CATEGORY;
 
 import java.io.File;
@@ -150,8 +151,11 @@ public class FieldCheckCache
 
     private static Double parseThreshold(final String value)
     {
-        if(value.isEmpty() || value.equals(NOT_ASSESSED_NA))
+        if(value.isEmpty() || value.equals(NOT_ASSESSED_NA) || value.equals(NONE_SETTING))
             return null;
+
+        if(value.endsWith("%"))
+            return Double.parseDouble(value.substring(0, value.length() - 1)) / 100;
 
         return Double.parseDouble(value);
     }
