@@ -10,7 +10,7 @@ import static com.hartwig.hmftools.viridian.common.ViridianConstants.APP_NAME;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.CANDIDATES_FASTA_SUFFIX;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.DEFAULT_VIRUS_DECOY_CONTIGS;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.GENOME_SUPPORT_TSV_SUFFIX;
-import static com.hartwig.hmftools.viridian.common.ViridianConstants.INTEGRATION_CANDIDATES_TSV_SUFFIX;
+import static com.hartwig.hmftools.viridian.common.ViridianConstants.INTEGRATIONS_TSV_SUFFIX;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.PROFILE_TSV_SUFFIX;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.READ_VOTE_CORRECT_BASE_PROBABILITY;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.REPRESENTATIVE_ALIGNMENTS_BAM_SUFFIX;
@@ -251,17 +251,15 @@ public class ViridianApplication
         List<CandidateSv> candidateSvs =
                 new CandidateSvExtractor(mConfig.sampleId()).extract(mConfig.esveeUnfilteredVcf());
 
-        List<IntegrationCandidate> integrationCandidates = alignCandidateSvs(candidateSvs);
-
-        LOGGER.info("Writing integration candidates output");
-        // Note that all integration candidates are written for informational purposes.
-        // But only the aligned candidates are the called integrations which flow through to the rest of the code.
-        OutputWriter.writeIntegrationCandidates(outputFile(INTEGRATION_CANDIDATES_TSV_SUFFIX), integrationCandidates);
-
-        // Take the integration candidates with plausible alignments.
-        return integrationCandidates.stream()
+        List<IntegrationCandidate> integrations = alignCandidateSvs(candidateSvs).stream()
                 .filter(IntegrationCandidate::isIntegration)
-                .map(candidate -> requireNonNull(candidate.alignment()).genome())
+                .toList();
+
+        LOGGER.info("Writing integrations output");
+        OutputWriter.writeIntegrations(outputFile(INTEGRATIONS_TSV_SUFFIX), integrations);
+
+        return integrations.stream()
+                .map(integration -> requireNonNull(integration.alignment()).genome())
                 .toList();
     }
 

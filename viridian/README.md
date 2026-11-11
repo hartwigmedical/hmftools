@@ -222,15 +222,15 @@ Main output:
 
 Informational/visualisation/debugging outputs:
 
-| File                       | Description                                                                                                          |
-|----------------------------|----------------------------------------------------------------------------------------------------------------------|
-| candidates.fasta           | Candidate viral read sequences.                                                                                      |
-| all.bam                    | Alignments of candidate viral reads to all virus genomes (BWA-MEM `-a` mode).                                        |
-| representative.bam         | Alignments of candidate viral reads to their best representative virus genome only.                                  |
-| genome_support.tsv         | Per-virus-genome support information from read alignment. One row per virus genome with any alignments.              |
-| profile.tsv                | Result of the read profiling, mainly the representative genome info. One row per virus group with any aligned reads. |
-| integration_candidates.tsv | Candidate integration structural variants with virus genome alignment info.                                          |
-| manifest.tsv               | Application configuration manifest.                                                                                  |
+| File               | Description                                                                                                          |
+|--------------------|----------------------------------------------------------------------------------------------------------------------|
+| candidates.fasta   | Candidate viral read sequences.                                                                                      |
+| all.bam            | Alignments of candidate viral reads to all virus genomes (BWA-MEM `-a` mode).                                        |
+| representative.bam | Alignments of candidate viral reads to their best representative virus genome only.                                  |
+| genome_support.tsv | Per-virus-genome support information from read alignment. One row per virus genome with any alignments.              |
+| profile.tsv        | Result of the read profiling, mainly the representative genome info. One row per virus group with any aligned reads. |
+| integrations.tsv   | Viral integrations, as structural variants with virus genome alignment info.                                         |
+| manifest.tsv       | Application configuration manifest.                                                                                  |
 
 ## Known Issues
 

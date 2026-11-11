@@ -12,7 +12,7 @@ public class ViridianConstants
     public static final String REPRESENTATIVE_ALIGNMENTS_BAM_SUFFIX = ".representative.bam";
     public static final String GENOME_SUPPORT_TSV_SUFFIX = ".genome_support.tsv";
     public static final String PROFILE_TSV_SUFFIX = ".profile.tsv";
-    public static final String INTEGRATION_CANDIDATES_TSV_SUFFIX = ".integration_candidates.tsv";
+    public static final String INTEGRATIONS_TSV_SUFFIX = ".integrations.tsv";
     public static final String RUN_MANIFEST_TSV_SUFFIX = ".manifest.tsv";
 
     // Genome partition size for multi-threaded candidate extraction.
