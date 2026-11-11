@@ -305,7 +305,7 @@ public class SomaticVariantComparer extends ItemComparer
 
     private boolean includeMismatchWithVariant(final SomaticVariantData variant, final MatchLevel matchLevel)
     {
-        return countsAsCalled(variant, matchLevel);
+        return countsAsCalled(variant, matchLevel, false);
     }
 
     private Map<String,List<SomaticVariantData>> buildVariantMap(final List<SomaticVariantData> variants)

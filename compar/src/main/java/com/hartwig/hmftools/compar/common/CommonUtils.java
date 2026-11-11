@@ -295,8 +295,8 @@ public class CommonUtils
             final ComparableItem oldItem, final ComparableItem newItem, final List<String> diffs,
             final MatchLevel matchLevel, final boolean includeMatches, final boolean includesExpected)
     {
-        boolean oldCountsAsCalled = includesExpected ? oldItem.isPass() : countsAsCalled(oldItem, matchLevel);
-        boolean newCountsAsCalled = includesExpected ? newItem.isPass() : countsAsCalled(newItem, matchLevel);
+        boolean oldCountsAsCalled = countsAsCalled(oldItem, matchLevel, includesExpected);
+        boolean newCountsAsCalled = countsAsCalled(newItem, matchLevel, includesExpected);
 
         // ignore unimportant differences
         if(!oldCountsAsCalled && !newCountsAsCalled)
@@ -315,8 +315,8 @@ public class CommonUtils
         return includeMatches ? new Mismatch(oldItem, newItem, FULL_MATCH, diffs) : null;
     }
 
-    public static boolean countsAsCalled(final ComparableItem item, final MatchLevel matchLevel)
+    public static boolean countsAsCalled(final ComparableItem item, final MatchLevel matchLevel, final boolean includesExpected)
     {
-        return matchLevel == REPORTABLE ? item.reportable() : item.isPass();
+        return matchLevel == REPORTABLE && !includesExpected ? item.reportable() : item.isPass();
     }
 }
