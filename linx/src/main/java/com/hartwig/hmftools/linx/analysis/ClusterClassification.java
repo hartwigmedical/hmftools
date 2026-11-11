@@ -393,7 +393,7 @@ public class ClusterClassification
         {
             // a DUP if breakends are further than the anchor distance away, else an INS
             int minTiLength = getMinTemplatedInsertionLength(breakend1, breakend2);
-            if(length >= minTiLength)
+            if(length + 1 >= minTiLength)
                 resolvedType = SGL_PAIR_DUP;
             else
                 resolvedType = SGL_PAIR_INS;

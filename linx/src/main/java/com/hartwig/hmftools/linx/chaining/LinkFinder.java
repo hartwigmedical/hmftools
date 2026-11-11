@@ -227,7 +227,25 @@ public class LinkFinder
         if(orient1 == orient2)
             return false;
 
-        return (pos1 <= pos2 - minDistance && orient1 == ORIENT_REV) || (pos1 >= pos2 + minDistance && orient1 == ORIENT_FWD);
+        // evaluated in base length terms, not positional distance
+        // eg pos1 = 10, pos2 = 20 and minDistance is 11, then the link is permitted since there are 11 bases forming the possible link
+
+        int positionBaseDistance = abs(pos1 - pos2) + 1;
+
+        if(positionBaseDistance < minDistance)
+            return false;
+
+        return (pos1 < pos2 && orient1 == ORIENT_REV) || (pos1 > pos2 && orient1 == ORIENT_FWD);
+        // return (pos1 <= pos2 - minDistance && orient1 == ORIENT_REV) || (pos1 >= pos2 + minDistance && orient1 == ORIENT_FWD);
+    }
+
+    public static boolean breakendsCannotLink(final SvBreakend breakend1, final SvBreakend breakend2)
+    {
+        // if the anchor distance of either breakend exceeds their base distance, then they are not phased
+        // note that in most cases, an assembled link will have been identified by Esvee for breakends without any reasonable anchor distance
+        int breakendBaseDistance = abs(breakend1.position() - breakend2.position()) + 1;
+        int minTiLength = getMinTemplatedInsertionLength(breakend1, breakend2);
+        return minTiLength > breakendBaseDistance;
     }
 
     public static int getMinTemplatedInsertionLength(final SvBreakend breakend1, final SvBreakend breakend2)
@@ -266,7 +284,7 @@ public class LinkFinder
                 if(breakend.arm() != nextBreakend.arm())
                     continue;
 
-                long distance = nextBreakend.position() - breakend.position();
+                long breakendBaseDistance = nextBreakend.position() - breakend.position() + 1;
                 int minTiLength = getMinTemplatedInsertionLength(breakend, nextBreakend);
 
                 if(breakend.orientation() == 1 && nextBreakend.orientation() == -1)
@@ -275,20 +293,23 @@ public class LinkFinder
                     if(i < breakendList.size() - 2)
                     {
                         SvBreakend nextNextBreakend = breakendList.get(i + 2);
-                        int nextDistance = nextNextBreakend.position() - nextBreakend.position();
+                        int nextBaseDistance = nextNextBreakend.position() - nextBreakend.position() + 1;
                         int nextMinTiLength = getMinTemplatedInsertionLength(nextBreakend, nextNextBreakend);
 
                         boolean oppositeOrientations = nextBreakend.orientation() != nextNextBreakend.orientation();
 
-                        if(oppositeOrientations && nextDistance < distance && (nextDistance < nextMinTiLength || nextMinTiLength == 0))
+                        if(oppositeOrientations && nextBaseDistance < breakendBaseDistance
+                        && (nextBaseDistance < nextMinTiLength || nextMinTiLength == 0))
+                        {
                             continue;
+                        }
                     }
 
                     // breakends face away as per a normal DB
                     DbPair dbPair = new DbPair(breakend, nextBreakend);
                     markDeletionBridge(dbPair);
                 }
-                else if(distance < minTiLength || minTiLength == 0) // factoring in INFs at the same base
+                else if(breakendBaseDistance < minTiLength || minTiLength == 0) // factoring in INFs at the same base
                 {
                     // facing breakends with a distance less than the anchor distances are in fact a DB with overlap
                     if(haveLinkedAssemblies(var1, var2, breakend.usesStart(), nextBreakend.usesStart()))

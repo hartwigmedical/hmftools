@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.linx.chaining.ChainUtils.CHAIN_ASSEMBLY_LINK_
 import static com.hartwig.hmftools.linx.chaining.ChainUtils.CHAIN_LENGTH;
 import static com.hartwig.hmftools.linx.chaining.ChainUtils.CHAIN_LINK_COUNT;
 import static com.hartwig.hmftools.linx.chaining.ChainUtils.breakendsAreChained;
+import static com.hartwig.hmftools.linx.chaining.LinkFinder.breakendsCannotLink;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.getMinTemplatedInsertionLength;
 import static com.hartwig.hmftools.linx.types.LinxConstants.MAX_FOLDBACK_CHAIN_LENGTH;
 
@@ -61,7 +62,7 @@ public class FoldbackFinder
 
                     // first skip over any breakends in a DB with the initial breakend
                     if(j == i + 1 && breakend.orientation() == -1 && nextBreakend.orientation() == 1
-                    && nextBreakend.position() - breakend.position() < getMinTemplatedInsertionLength(nextBreakend, breakend))
+                    && breakendsCannotLink(breakend, nextBreakend))
                     {
                         ++j;
                         continue;
