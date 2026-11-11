@@ -559,7 +559,7 @@ public class ChainFinder
 
                 int skippedNonAssembledIndex = -1; // the first index of a non-assembled breakend after the current one
 
-                for(int j = i+1; j < breakendList.size(); ++j)
+                for(int j = i + 1; j < breakendList.size(); ++j)
                 {
                     SvBreakend upperBreakend = breakendList.get(j);
 
@@ -584,7 +584,7 @@ public class ChainFinder
                     if(alreadyLinkedBreakend(upperBreakend))
                         continue;
 
-                    long distance = upperBreakend.position() - lowerBreakend.position();
+                    long distance = upperBreakend.position() - lowerBreakend.position() + 1;
                     int minTiLength = getMinTemplatedInsertionLength(lowerBreakend, upperBreakend);
 
                     if(distance < minTiLength)

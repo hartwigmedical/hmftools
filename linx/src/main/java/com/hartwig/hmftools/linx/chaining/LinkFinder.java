@@ -47,7 +47,7 @@ public class LinkFinder
             if(breakendList.size() == 1)
                 continue;
 
-            for(int i = 0; i < breakendList.size() -1; ++i)
+            for(int i = 0; i < breakendList.size() - 1; ++i)
             {
                 SvBreakend lowerBreakend = breakendList.get(i);
 
@@ -56,10 +56,10 @@ public class LinkFinder
 
                 SvVarData lowerSV = lowerBreakend.getSV();
 
-                if(lowerSV.type() == INS || lowerSV.isSglBreakend())
+                if(lowerSV.type() == INS)
                     continue;
 
-                for(int j = i+1; j < breakendList.size(); ++j)
+                for(int j = i + 1; j < breakendList.size(); ++j)
                 {
                     SvBreakend upperBreakend = breakendList.get(j);
 
@@ -71,7 +71,7 @@ public class LinkFinder
                     if(upperBreakend.getSV() == lowerBreakend.getSV())
                         continue;
 
-                    if(upperSV.type() == INS || upperSV.isSglBreakend())
+                    if(upperSV.type() == INS)
                         continue;
 
                     boolean v1Start = lowerBreakend.usesStart();
@@ -213,7 +213,8 @@ public class LinkFinder
                 .anyMatch(x -> v2Start ? x.equals(var2.getSvData().vcfIdStart()) : x.equals(var2.getSvData().vcfIdEnd()));
     }
 
-    public static boolean isPossibleLink(final String chr1, int pos1, byte orient1, final String chr2, int pos2, byte orient2, int minDistance)
+    public static boolean isPossibleLink(
+            final String chr1, int pos1, byte orient1, final String chr2, int pos2, byte orient2, int minDistance)
     {
         if(!chr1.equals(chr2))
             return false;
@@ -229,7 +230,7 @@ public class LinkFinder
         return (pos1 <= pos2 - minDistance && orient1 == ORIENT_REV) || (pos1 >= pos2 + minDistance && orient1 == ORIENT_FWD);
     }
 
-    public static int getMinTemplatedInsertionLength(SvBreakend breakend1, SvBreakend breakend2)
+    public static int getMinTemplatedInsertionLength(final SvBreakend breakend1, final SvBreakend breakend2)
     {
         if(breakend1.type() == INF || breakend2.type() == INF)
         {

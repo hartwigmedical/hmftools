@@ -148,15 +148,6 @@ public final class SvFileLoader
         return svDataItems;
     }
 
-    private static double extractPurpleArrayValue(final VariantContext context, final String vcfTag)
-    {
-        if(context == null)
-            return 0;
-
-        List<Double> array = context.getAttributeAsDoubleList(vcfTag, 0);
-        return array != null && !array.isEmpty() ? array.get(0) : 0;
-    }
-
     public static StructuralVariantData convertGermlineSvData(final StructuralVariant var, int svId)
     {
         final VariantContext contextStart = var.startContext();
