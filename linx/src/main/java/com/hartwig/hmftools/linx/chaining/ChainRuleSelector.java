@@ -459,8 +459,8 @@ public class ChainRuleSelector
                     continue;
 
                 // the foldback is invalid if it has a deletion bridge with overhang on the front-facing breakend
-                boolean startIsFront = (chainStart.position() < chainEnd.position()) == (chainStart.orientation() == 1);
-                final SvBreakend frontBreakend = startIsFront ? chainStart : chainEnd;
+                boolean startIsFront = (chainStart.position() < chainEnd.position()) == (chainStart.forwardOrient());
+                SvBreakend frontBreakend = startIsFront ? chainStart : chainEnd;
 
                 // check for a DB which either allows or invalidates this foldback
                 final DbPair dbLink = frontBreakend.getSV().getDBLink(frontBreakend.usesStart());

@@ -308,7 +308,7 @@ public class RnaFusionAnnotator
 
         if(requireHigherBreakendPos)
         {
-            if(breakend.orientation() != ORIENT_FWD)
+            if(breakend.reverseOrient())
                 return false;
 
             // factor in any uncertainty around the precise breakend, eg from homology
@@ -316,7 +316,7 @@ public class RnaFusionAnnotator
         }
         else
         {
-            if(breakend.orientation() != ORIENT_REV)
+            if(breakend.forwardOrient())
                 return false;
 
             return (position - offsetMargin <= rnaPosition);

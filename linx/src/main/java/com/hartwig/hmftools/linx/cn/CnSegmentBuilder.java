@@ -71,7 +71,7 @@ public class CnSegmentBuilder
             chrCnDataMap.put(chromosome, cnDataList);
 
             // work out the net copy number from all SVs going out to P-arm telomere for the correct starting copy number
-            double netSvJcn = max(breakendList.stream().mapToDouble(x -> x.jcn() * x.orientation()).sum(), 0);
+            double netSvJcn = max(breakendList.stream().mapToDouble(x -> x.jcn() * x.orientAsByte()).sum(), 0);
 
             double currentCopyNumber = mOtherAlleleJcn + mUndisruptedAlleleJcn + netSvJcn;
 
@@ -85,7 +85,7 @@ public class CnSegmentBuilder
                 SvVarData var = breakend.getSV();
                 double jcn = var.jcn();
 
-                double jcnChange = -jcn * breakend.orientation();
+                double jcnChange = -jcn * breakend.orientAsByte();
 
                 SvCNData cnData = null;
 
@@ -226,7 +226,7 @@ public class CnSegmentBuilder
                 cnDataPair[breakend.usesStart() ? SE_START : SE_END] = cnData;
 
                 // set copy number data back into the SV
-                double beCopyNumber = breakend.orientation() == 1 ? currentCopyNumber + jcn : currentCopyNumber;
+                double beCopyNumber = breakend.forwardOrient() ? currentCopyNumber + jcn : currentCopyNumber;
                 breakend.getSV().setCopyNumberData(breakend.usesStart(), beCopyNumber, jcn);
             }
         }

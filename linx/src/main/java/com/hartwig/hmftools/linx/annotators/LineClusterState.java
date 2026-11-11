@@ -164,14 +164,14 @@ public class LineClusterState
         */
         boolean flipOrientation = flipExpectedSequence(breakend);
         boolean eitherEnd = !breakend.getSV().isSglBreakend();
-        return hasLinePolyAorTMotif(breakend.getSV().getSvData().insertSequence(), breakend.orientation(), !flipOrientation, eitherEnd);
+        return hasLinePolyAorTMotif(breakend.getSV().getSvData().insertSequence(), breakend.orientAsByte(), !flipOrientation, eitherEnd);
     }
 
     public static boolean hasLineInsertMotif(final SvBreakend breakend)
     {
         boolean flipOrientation = flipExpectedSequence(breakend);
         boolean eitherEnd = !breakend.getSV().isSglBreakend();
-        return hasLinePolyAorTMotif(breakend.getSV().getSvData().insertSequence(), breakend.orientation(), flipOrientation, eitherEnd);
+        return hasLinePolyAorTMotif(breakend.getSV().getSvData().insertSequence(), breakend.orientAsByte(), flipOrientation, eitherEnd);
     }
 
     private static boolean flipExpectedSequence(final SvBreakend breakend)

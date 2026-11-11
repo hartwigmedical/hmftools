@@ -254,7 +254,7 @@ public class ClusterAnnotations
                 continue;
 
             traversedInfo = appendStr(traversedInfo,
-                    String.format("%d %.2f", breakend.orientation(), breakend.getSV().copyNumberChange(breakend.usesStart())),
+                    String.format("%d %.2f", breakend.orientAsByte(), breakend.getSV().copyNumberChange(breakend.usesStart())),
                     ';');
         }
 
@@ -735,7 +735,7 @@ public class ClusterAnnotations
 
             if(!inSegment)
             {
-                if(breakend.orientation() == 1)
+                if(breakend.orientation().isForward())
                 {
                     if(prevPosition > 0)
                     {
@@ -757,7 +757,7 @@ public class ClusterAnnotations
             {
                 int segmentLength = breakend.position() - prevPosition;
 
-                if(breakend.orientation() == -1)
+                if(breakend.orientation().isReverse())
                 {
                     // another breakend increasing CN - record segment CN up to this point
                     if(prevCN > chainEndsCN && !copyNumbersEqual(prevCN, chainEndsCN))

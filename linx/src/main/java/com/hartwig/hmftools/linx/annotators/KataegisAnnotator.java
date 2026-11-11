@@ -75,7 +75,7 @@ public class KataegisAnnotator
         {
             if(breakend.position() < katData.PosStart)
             {
-                if(breakend.orientation() == 1)
+                if(breakend.orientation().isForward())
                     continue;
 
                 if(katData.PosStart - breakend.position() > PROXIMITY_THRESHOLD)
@@ -95,7 +95,7 @@ public class KataegisAnnotator
                 if(distance > PROXIMITY_THRESHOLD)
                     break;
 
-                if(breakend.orientation() == -1)
+                if(breakend.orientation().isReverse())
                     continue;
 
                 if(closestBreakend == null || shortestDistance > distance)

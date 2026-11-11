@@ -65,11 +65,11 @@ public class ChainMetrics
 
         if(startEndSameArm)
         {
-            if(lowerBreakend.orientation() == 1 && upperBreakend.orientation() == -1)
+            if(lowerBreakend.forwardOrient() && upperBreakend.reverseOrient())
             {
                 ++metrics.ChainEndsAway;
             }
-            else if(lowerBreakend.orientation() == -1 && upperBreakend.orientation() == 1)
+            else if(lowerBreakend.reverseOrient() && upperBreakend.forwardOrient())
             {
                 ++metrics.ChainEndsFace;
             }
