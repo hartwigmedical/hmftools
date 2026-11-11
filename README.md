@@ -43,6 +43,7 @@ Below are descriptions and download links for each tool used in the pipeline.
 | [Redux](./redux/README.md)                     | Duplicate marking, consensus reads, UMIs and read unmapping            | [2.0](https://github.com/hartwigmedical/hmftools/releases/tag/redux-v2.0)         |
 | [Sage](./sage/README.md)                       | Point mutation variant calling and filtering                           | [5.0](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v5.0)          |
 | [Teal](./teal/README.md)                       | Measures telomere content and estimates telomeric length               | [1.4](https://github.com/hartwigmedical/hmftools/releases/tag/teal-v1.4)          |
+| [Viridian](./viridian/README.md)               | Oncovirus presence and integration calling                             | [1.0](https://github.com/hartwigmedical/hmftools/releases/tag/viridian-v1.0)      |
 | [Wisp](./wisp/README.md)                       | Measures purity in longitudinal samples                                | [1.3](https://github.com/hartwigmedical/hmftools/releases/tag/wisp-v1.3)          |
 
 The following external tools are also used in the pipeline:

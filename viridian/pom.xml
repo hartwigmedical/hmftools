@@ -11,7 +11,7 @@
     <artifactId>viridian</artifactId>
     <packaging>jar</packaging>
     <version>${viridian.version}</version>
-    <name>HMF Tools - Virus Detect</name>
+    <name>HMF Tools - Viridian</name>
 
     <dependencies>
         <dependency>
