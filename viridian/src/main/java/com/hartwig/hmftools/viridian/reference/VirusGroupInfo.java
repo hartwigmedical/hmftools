@@ -27,8 +27,8 @@ public record VirusGroupInfo(
         {
             for(DelimFileReader.Row row : reader)
             {
-                VirusGroup group = new VirusGroup(row.getString(Columns.virus_group));
-                String reportingTypeValue = row.getStringOrNull(Columns.reporting_type);
+                VirusGroup group = new VirusGroup(row.getString(Column.virus_group));
+                String reportingTypeValue = row.getStringOrNull(Column.reporting_type);
                 VirusType reportingType = reportingTypeValue == null ? null : VirusType.fromVirusName(reportingTypeValue);
                 VirusGroupInfo virusGroupInfo = new VirusGroupInfo(group, reportingType);
                 VirusGroupInfo previous = result.put(group, virusGroupInfo);
@@ -41,7 +41,7 @@ public record VirusGroupInfo(
         return result;
     }
 
-    private enum Columns
+    private enum Column
     {
         virus_group,
         reporting_type

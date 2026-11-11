@@ -25,13 +25,13 @@ public record VirusGenomeInfo(
         {
             for(DelimFileReader.Row row : reader)
             {
-                String contig = row.getString(Columns.contig_name);
+                String contig = row.getString(Column.contig_name);
                 if(!contigs.add(contig))
                 {
                     throw new UserInputError("Duplicate contig_name: " + contig);
                 }
-                VirusGroup virusGroup = new VirusGroup(row.getString(Columns.virus_group));
-                Virus virus = new Virus(row.getString(Columns.virus_name), virusGroup);
+                VirusGroup virusGroup = new VirusGroup(row.getString(Column.virus_group));
+                Virus virus = new Virus(row.getString(Column.virus_name), virusGroup);
                 Virus existing = virusesByName.putIfAbsent(virus.name(), virus);
                 if(existing != null && !existing.equals(virus))
                 {
@@ -43,7 +43,7 @@ public record VirusGenomeInfo(
         return result;
     }
 
-    private enum Columns
+    private enum Column
     {
         contig_name,
         virus_name,

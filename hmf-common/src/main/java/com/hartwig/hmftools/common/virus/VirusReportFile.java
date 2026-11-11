@@ -34,18 +34,18 @@ public final class VirusReportFile
         {
             return reader.stream().map(row ->
             {
-                String reportingType = row.getStringOrNull(Columns.interpretation);
+                String reportingType = row.getStringOrNull(Column.interpretation);
                 return new VirusReport(
-                        row.get(Columns.name),
-                        row.get(Columns.virus_group),
-                        ReportQcStatus.valueOf(row.get(Columns.qcStatus)),
+                        row.get(Column.name),
+                        row.get(Column.virus_group),
+                        ReportQcStatus.valueOf(row.get(Column.qcStatus)),
                         reportingType != null ? VirusType.fromVirusName(reportingType) : null,
-                        row.getInt(Columns.integrations),
-                        row.getDouble(Columns.percentageCovered),
-                        row.getDouble(Columns.meanCoverage),
-                        row.getDoubleOrNull(Columns.copies_per_tumor_cell),
-                        ClonalityStatus.valueOf(row.get(Columns.clonality_status)),
-                        row.getBoolean(Columns.reported));
+                        row.getInt(Column.integrations),
+                        row.getDouble(Column.percentageCovered),
+                        row.getDouble(Column.meanCoverage),
+                        row.getDoubleOrNull(Column.copies_per_tumor_cell),
+                        ClonalityStatus.valueOf(row.get(Column.clonality_status)),
+                        row.getBoolean(Column.reported));
             }).toList();
         }
     }
@@ -53,22 +53,22 @@ public final class VirusReportFile
     public static void write(String filename, List<VirusReport> reports)
     {
         DelimFileWriter.write(
-                filename, Columns.values(), reports, (report, row) ->
+                filename, Column.values(), reports, (report, row) ->
                 {
-                    row.set(Columns.name, report.virusName());
-                    row.set(Columns.qcStatus, report.qcStatus().name());
-                    row.set(Columns.integrations, report.integrations());
-                    row.setOrNull(Columns.interpretation, report.reportingType() != null ? report.reportingType().toString() : null);
-                    row.set(Columns.percentageCovered, report.coveragePercentage());
-                    row.set(Columns.meanCoverage, report.meanDepth());
-                    row.set(Columns.reported, report.isReported());
-                    row.set(Columns.clonality_status, report.clonalityStatus().name());
-                    row.setOrNull(Columns.copies_per_tumor_cell, report.copiesPerTumorCell());
-                    row.set(Columns.virus_group, report.virusGroup());
+                    row.set(Column.name, report.virusName());
+                    row.set(Column.qcStatus, report.qcStatus().name());
+                    row.set(Column.integrations, report.integrations());
+                    row.setOrNull(Column.interpretation, report.reportingType() != null ? report.reportingType().toString() : null);
+                    row.set(Column.percentageCovered, report.coveragePercentage());
+                    row.set(Column.meanCoverage, report.meanDepth());
+                    row.set(Column.reported, report.isReported());
+                    row.set(Column.clonality_status, report.clonalityStatus().name());
+                    row.setOrNull(Column.copies_per_tumor_cell, report.copiesPerTumorCell());
+                    row.set(Column.virus_group, report.virusGroup());
                 });
     }
 
-    private enum Columns
+    private enum Column
     {
         name,
         qcStatus,
