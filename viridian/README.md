@@ -197,6 +197,8 @@ If the two paths indicate different viruses in the virus group, this is noted in
 
 ## Output
 
+Output files are named `{sample}[.{output_id}].viridian.{file}`, where `{file}` is a name from the tables below.
+
 Main output:
 
 | File       | Description                                                                  |

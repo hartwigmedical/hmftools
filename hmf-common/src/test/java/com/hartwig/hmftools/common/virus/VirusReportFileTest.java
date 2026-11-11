@@ -27,4 +27,11 @@ public class VirusReportFileTest
 
         assertEquals(reports, VirusReportFile.read(file.getAbsolutePath()));
     }
+
+    @Test
+    public void testGenerateFilenameOutputId()
+    {
+        assertEquals("/out/S1.viridian.report.tsv", VirusReportFile.generateFilename("/out", "S1"));
+        assertEquals("/out/S1.run1.viridian.report.tsv", VirusReportFile.generateFilename("/out", "S1", "run1"));
+    }
 }

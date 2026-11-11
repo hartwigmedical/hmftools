@@ -7,13 +7,25 @@ import java.util.List;
 import com.hartwig.hmftools.common.utils.file.DelimFileReader;
 import com.hartwig.hmftools.common.utils.file.DelimFileWriter;
 
+import org.jetbrains.annotations.Nullable;
+
 public final class VirusReportFile
 {
     private static final String FILE_EXTENSION = ".viridian.report.tsv";
 
     public static String generateFilename(String basePath, String sampleId)
     {
-        return checkAddDirSeparator(basePath) + sampleId + FILE_EXTENSION;
+        return generateFilename(basePath, sampleId, null);
+    }
+
+    public static String generateFilename(String basePath, String sampleId, @Nullable String outputId)
+    {
+        String filename = checkAddDirSeparator(basePath) + sampleId;
+        if(outputId != null)
+        {
+            filename += "." + outputId;
+        }
+        return filename + FILE_EXTENSION;
     }
 
     public static List<VirusReport> read(String filename)

@@ -13,7 +13,6 @@ import static com.hartwig.hmftools.viridian.common.ViridianConstants.GENOME_SUPP
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.INTEGRATION_CANDIDATES_TSV_SUFFIX;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.PROFILE_TSV_SUFFIX;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.READ_VOTE_CORRECT_BASE_PROBABILITY;
-import static com.hartwig.hmftools.viridian.common.ViridianConstants.REPORT_TSV_SUFFIX;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.REPRESENTATIVE_ALIGNMENTS_BAM_SUFFIX;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.RUN_MANIFEST_TSV_SUFFIX;
 import static com.hartwig.hmftools.viridian.common.ViridianConstants.VIRAL_READ_MIN_SOFT_CLIP_BASES;
@@ -303,7 +302,8 @@ public class ViridianApplication
                 profiles, integratedGenomes, mVirusReference::virusGroupInfo, clonalityInputs);
 
         LOGGER.info("Writing virus report output");
-        VirusReportFile.write(outputFile(REPORT_TSV_SUFFIX), reports);
+        VirusReportFile.write(
+                VirusReportFile.generateFilename(mConfig.outputDir(), mConfig.sampleId(), mConfig.outputId()), reports);
     }
 
     private String outputFile(String suffix)
