@@ -12,7 +12,7 @@ import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import org.jetbrains.annotations.Nullable;
 
 public record ClonalityInputs(
-        // Expected virus genome read depth from one virus genome copy carried in each tumor cell.
+        // Expected virus genome fragment depth from one virus genome copy carried in each tumor cell.
         // Divide a virus genome's mean depth by this number to get its copies per tumor cell.
         @Nullable Double expectedViralDepthPerCopy,
         // FAIL_NO_TUMOR or FAIL_CONTAMINATION, passed through to the output for visibility.
