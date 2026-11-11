@@ -195,8 +195,7 @@ public class SomaticPurityEstimator
                 filteredDualMosaicFragmentContribution / dualFragmentTotals.sampleDepthTotal() : 0;
 
         double dualNoiseRate = mConfig.noiseRate(true) + mosaicDualErrorRate;
-        double expectedDualNoiseFragments = dualNoiseRate * sampleDualDP;
-        purityCalcData.DualProbability = estimatedProbability(sampleDualAD, expectedDualNoiseFragments);
+        purityCalcData.DualProbability = estimatedProbability(dualFragmentTotals, dualNoiseRate);
         purityCalcData.DualLodPurityEstimate = calcLimitOfDetection(dualFragmentTotals, dualNoiseRate);
 
         // CT_LOGGER.info(format("patient(%s) sample(%s) sampleTotalFrags(%d) noise(%.1f) LOD(%.6f)",

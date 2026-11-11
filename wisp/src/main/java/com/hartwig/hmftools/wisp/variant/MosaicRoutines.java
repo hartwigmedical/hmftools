@@ -154,7 +154,7 @@ public final class MosaicRoutines
             int mosaicEligibleVariantCount, double sampleTotalAD, double sampleAfTotal)
     {
         int preOutlierFilteredCount = filteredVariants.size() + outlierVariantCount;
-        boolean checkOutlierFrags = preOutlierFilteredCount >= OUTLIER_MIN_AVG_VAF_MULTIPLE;
+        boolean checkOutlierFrags = preOutlierFilteredCount > OUTLIER_MIN_AVG_VAF_MULTIPLE;
 
         // start at the lower percentage as in outlier identification
         double minOutlierSamplePerc = outlierVariantCount == 0 ? OUTLIER_MIN_SAMPLE_PERC : OUTLIER_MIN_SAMPLE_RETEST_PERC;
@@ -186,13 +186,15 @@ public final class MosaicRoutines
 
                 double minOutlierFragsAD = ceil(cn * minOutlierSamplePerc * (sampleTotalAD - sampleAd / cn) / (1 - minOutlierSamplePerc));
 
-                double minOutlierFragsAF = ceil(OUTLIER_MIN_AVG_VAF_MULTIPLE * sampleDp * (sampleAfTotal - vaf) / outlierVariantCount);
+                double minOutlierFragsAF = ceil(OUTLIER_MIN_AVG_VAF_MULTIPLE * sampleDp * (sampleAfTotal - vaf) /
+                        (preOutlierFilteredCount - OUTLIER_MIN_AVG_VAF_MULTIPLE));
 
                 // Then, starting at minFragsToOutlier = max(adMinFrags, afMinFrags), keep testing increasing minFrags until
                 // minFragsToOutlier >= 4 || (minFragsToOutlier >= 2 && round(minFragsToOutlier * siteDualRatio) >= 1), and return that
                 minFragsAsOutlier = (int)max(minOutlierFragsAD, minOutlierFragsAF);
 
-                while(minFragsAsOutlier < 4 && !(minFragsAsOutlier >= 2 && round(minFragsAsOutlier * dualDepthRatio) >= 1))
+                while(minFragsAsOutlier < OUTLIER_MIN_ALLELE_FRAGS
+                && !(minFragsAsOutlier >= OUTLIER_MIN_ALLELE_FRAGS_WITH_DUAL && round(minFragsAsOutlier * dualDepthRatio) >= 1))
                 {
                     ++minFragsAsOutlier;
                 }

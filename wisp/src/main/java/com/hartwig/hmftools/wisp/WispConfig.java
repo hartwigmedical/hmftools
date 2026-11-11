@@ -384,6 +384,8 @@ public class WispConfig
 
         configBuilder.addDecimal(GC_RATIO_MIN,"GC ratio minimum permitted, recommend 0.4 for panel samples", 0);
 
+        configBuilder.addFlag(RUN_MOSAICS, "Run Mosaic logic");
+
         configBuilder.addFlag(WRITE_ALL_SUMMARY_METHODS, "Write empty summary data for non-configured purity methods");
         configBuilder.addFlag(SKIP_BQR, "Skip BQR adjustment for somatic variants");
 

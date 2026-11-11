@@ -148,11 +148,11 @@ public class SomaticPurityResult
         sj.add(format("%4.3e", PurityCalcs.ErrorRate));
         sj.add(format("%4.3e", PurityCalcs.RawBqrErrorRate));
         sj.add(format("%d", PurityCalcs.BqrQualThreshold));
-        sj.add(format("%.1f", mMosaicFragments));
-        sj.add(format("%.1f", mMosaicDualFragments));
-
         String bqrDataStr = PurityCalcs.BqrExtraInfo.stream().collect(Collectors.joining(";"));
         sj.add(bqrDataStr);
+
+        sj.add(format("%.1f", mMosaicFragments));
+        sj.add(format("%.1f", mMosaicDualFragments));
 
         return sj.toString();
     }
