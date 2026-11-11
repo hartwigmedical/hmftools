@@ -1,10 +1,12 @@
 package com.hartwig.hmftools.viridian.profiling.common;
 
 import static java.util.function.Function.identity;
+import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toMap;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -44,16 +46,32 @@ public class GenomeStatsCalculator
 
     private static int[] calculateDepth(int genomeLength, Collection<ViralReadAlignment> alignments)
     {
+        // Depth counts fragments, not reads, for the case where reads overlap on a short fragment.
+
+        Collection<List<ViralReadAlignment>> fragments = alignments.stream()
+                .collect(groupingBy(alignment -> alignment.readId().name()))
+                .values();
+
         int[] depth = new int[genomeLength];
-        for(ViralReadAlignment alignment : alignments)
+        int[] lastCountedFragment = new int[genomeLength];
+        int fragmentIndex = 0;
+        for(List<ViralReadAlignment> fragment : fragments)
         {
-            for(MatchedInterval block : alignment.matchedIntervals())
+            ++fragmentIndex;
+            for(ViralReadAlignment alignment : fragment)
             {
-                int start = block.referenceStart() - 1;   // intervals are 1-based
-                int end = start + block.length();
-                for(int position = start; position < end; ++position)
+                for(MatchedInterval block : alignment.matchedIntervals())
                 {
-                    ++depth[position];
+                    int start = block.referenceStart() - 1;   // intervals are 1-based
+                    int end = start + block.length();
+                    for(int position = start; position < end; ++position)
+                    {
+                        if(lastCountedFragment[position] != fragmentIndex)
+                        {
+                            lastCountedFragment[position] = fragmentIndex;
+                            ++depth[position];
+                        }
+                    }
                 }
             }
         }

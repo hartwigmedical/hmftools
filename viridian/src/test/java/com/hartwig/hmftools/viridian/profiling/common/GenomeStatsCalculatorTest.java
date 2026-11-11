@@ -36,6 +36,24 @@ public class GenomeStatsCalculatorTest
     }
 
     @Test
+    public void testCalculateMateOverlap()
+    {
+        // Mates r1/1 and r1/2 overlap at 6-10. They are one fragment, so those bases count once.
+        // r2/1 is another fragment over the same bases, so it still adds depth.
+
+        List<ViralReadAlignment> alignments = List.of(
+                readAlignment("r1/1", GENOME, 1, "10M", 40, 0),
+                readAlignment("r1/2", GENOME, 6, "10M", 40, 0),
+                readAlignment("r2/1", GENOME, 6, "10M", 40, 0));
+
+        int[] depth = { 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0 };
+        GenomeStats expected = new GenomeStats(
+                GENOME, 3, 0, 15, SummaryStats.from(depth), SummaryStats.from(new int[] { 40, 40, 40 }));
+
+        assertEquals(Map.of(GENOME, expected), calculate(alignments));
+    }
+
+    @Test
     public void testCalculateOnlyOriginClipped()
     {
         // Every alignment to this virus genome was dropped for straddling the origin, so only that loss is left to report.
