@@ -233,8 +233,10 @@ Informational/visualisation/debugging outputs:
 ## Known Issues
 
 - Alignments clipping over the endpoints of the virus genome are excluded, reducing support statistics.
+- Alignments to virus genomes are not filtered on alignment score, MAPQ, or anything like that.
 - Viral integrations on contigs which are not primary chromosomes are not detected since they are intentionally not called by ESVEE.
 - Viral integrations with two fragments support where the second fragment soft clip is too short, will not be called, despite evidence that the fragment sequence is viral.
+- Structural variants are not filtered on ESVEE VCF filter (perhaps important for variants marked `PON`).
 - Observed possibility that if multiple viral integrations occur at the same location, ESVEE may only call one.
 - Observed possibility that sometimes ESVEE doesn't call a viral integration junction supported by only two fragments.
 - REDUX doesn't mark duplicate fragments where the mates align to different homologous regions in `chrEBV`.
