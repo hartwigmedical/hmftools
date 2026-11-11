@@ -110,7 +110,7 @@ public class StructuralVariantFactory
 
     public static boolean isSingleBreakend(final VariantContext context)
     {
-        final byte[] altBases = context.getAlternateAllele(0).getDisplayBases();
+        byte[] altBases = context.getAlternateAllele(0).getDisplayBases();
         return isSingleBreakend(altBases);
     }
 
@@ -121,14 +121,14 @@ public class StructuralVariantFactory
 
     public static byte parseSingleOrientation(final VariantContext context)
     {
-        final String alt = context.getAlternateAllele(0).getDisplayString();
+        String alt = context.getAlternateAllele(0).getDisplayString();
         return alt.startsWith(SINGLE_BREAKEND_STR) ? ORIENT_REV : ORIENT_FWD;
     }
 
     public static byte parseSvOrientation(final VariantContext context)
     {
-        final String alt = context.getAlternateAllele(0).getDisplayString();
-        final Matcher match = BREAKEND_REGEX.matcher(alt);
+        String alt = context.getAlternateAllele(0).getDisplayString();
+        Matcher match = BREAKEND_REGEX.matcher(alt);
 
         if(!match.matches())
             return (byte)0;
@@ -165,8 +165,8 @@ public class StructuralVariantFactory
 
     public StructuralVariant createSV(final VariantContext contextStart, final VariantContext contextEnd)
     {
-        final String alt = contextStart.getAlternateAllele(0).getDisplayString();
-        final Matcher match = BREAKEND_REGEX.matcher(alt);
+        String alt = contextStart.getAlternateAllele(0).getDisplayString();
+        Matcher match = BREAKEND_REGEX.matcher(alt);
         if(!match.matches())
         {
             throw new IllegalArgumentException(String.format("ALT %s is not in breakend notation", alt));
@@ -250,16 +250,16 @@ public class StructuralVariantFactory
 
     public StructuralVariant createSingleBreakend(final VariantContext context)
     {
-        final String alt = context.getAlternateAllele(0).getDisplayString();
+        String alt = context.getAlternateAllele(0).getDisplayString();
 
         // local orientation determined by the positioning of the anchoring bases
-        final byte orientation = alt.startsWith(".") ? ORIENT_REV : ORIENT_FWD;
-        final int refLength = context.getReference().length();
+        byte orientation = alt.startsWith(".") ? ORIENT_REV : ORIENT_FWD;
+        int refLength = context.getReference().length();
 
-        final String insertedSequence = orientation == -1 ?
+        String insertedSequence = orientation == -1 ?
                 alt.substring(1, alt.length() - refLength) : alt.substring(refLength, alt.length() - 1);
 
-        final StructuralVariantLeg startLeg = setLegCommon(context, false, orientation)
+        StructuralVariantLeg startLeg = setLegCommon(context, false, orientation)
                 .homology("")
                 .build();
 
@@ -298,7 +298,7 @@ public class StructuralVariantFactory
         return builder;
     }
 
-    private ImmutableStructuralVariantLegImpl.Builder setLegCommon(final VariantContext context, boolean ignoreRefpair, byte orientation)
+    private ImmutableStructuralVariantLegImpl.Builder setLegCommon(VariantContext context, boolean ignoreRefpair, byte orientation)
     {
         ImmutableStructuralVariantLegImpl.Builder builder = ImmutableStructuralVariantLegImpl.builder();
         builder.chromosome(context.getContig());
@@ -309,7 +309,7 @@ public class StructuralVariantFactory
         int ciRight = 0;
         if(context.hasAttribute(CIPOS))
         {
-            final List<Integer> cipos = context.getAttributeAsIntList(CIPOS, 0);
+            List<Integer> cipos = context.getAttributeAsIntList(CIPOS, 0);
             if(cipos.size() == 2)
             {
                 ciLeft = cipos.get(0);
@@ -328,7 +328,7 @@ public class StructuralVariantFactory
         builder.inexactHomologyOffsetEnd(0);
         if(context.hasAttribute(IHOMPOS))
         {
-            final List<Integer> ihompos = context.getAttributeAsIntList(IHOMPOS, 0);
+            List<Integer> ihompos = context.getAttributeAsIntList(IHOMPOS, 0);
             if(ihompos.size() == 2)
             {
                 builder.inexactHomologyOffsetStart(ihompos.get(0));
@@ -380,7 +380,7 @@ public class StructuralVariantFactory
 
     private static String filters(final VariantContext context, @Nullable VariantContext pairedContext)
     {
-        final Set<String> filters = new HashSet<>(context.getFilters());
+        Set<String> filters = new HashSet<>(context.getFilters());
         if(pairedContext != null)
         {
             filters.addAll(pairedContext.getFilters());
