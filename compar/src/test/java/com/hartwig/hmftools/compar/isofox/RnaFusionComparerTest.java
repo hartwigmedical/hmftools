@@ -9,6 +9,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
@@ -286,6 +287,7 @@ public class RnaFusionComparerTest
         assertEquals(3, mismatches.size());
         mismatches.stream().filter(x -> x.Type != MismatchType.NEW_ONLY)
                 .forEach(x -> assertMismatch(x, MismatchType.ABSENT_FOUND));
+        mismatches.stream().filter(x -> x.Type == MismatchType.ABSENT_FOUND).forEach(x -> assertTrue(x.OldItem.fieldValues().isEmpty()));
 
         Mismatch otherFusion = singleMismatch(mismatches.stream().filter(x -> x.Type == MismatchType.NEW_ONLY).toList());
         assertEquals("EML4_ALK", ((RnaFusionData) otherFusion.NewItem).Name);

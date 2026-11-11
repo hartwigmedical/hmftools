@@ -196,7 +196,8 @@ public class SomaticVariantData extends VariantData
                 qual, filters, variantCopyNumber, alleleFrequency, tumorSupportingReadCount, tumorTotalReadCount,
                 false, biallelic, biallelicProb, hasLPS, subclonalLikelihood);
 
-        variant.addExpectedValues(expectedValues, fields);
+        if(!expectedValues.get(0).RequireAbsent)
+            variant.addExpectedValues(expectedValues, fields);
 
         return variant;
     }

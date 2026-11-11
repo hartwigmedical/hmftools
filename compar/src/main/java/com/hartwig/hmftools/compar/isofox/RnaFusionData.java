@@ -82,7 +82,10 @@ public class RnaFusionData extends ComparableItem
         if(keyParts.length == 2)
         {
             RnaFusionData fusionData = new RnaFusionData(name, "", "", 0, 0, KnownFusionType.NONE, "", "", 0, PASS_FILTER);
-            fusionData.addExpectedValues(Collections.emptyList(), fields);
+
+            if(!expectedValues.get(0).RequireAbsent)
+                fusionData.addExpectedValues(Collections.emptyList(), fields);
+
             return fusionData;
         }
 

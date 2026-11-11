@@ -149,8 +149,6 @@ public class CommonUtils
 
         for(ComparableItem absentItem : absentItems)
         {
-            absentItem.fieldValues().clear();
-
             if(mismatches.stream().noneMatch(x -> x.Type == NEW_ONLY && absentItem.matches(x.NewItem)))
                 mismatches.add(new Mismatch(absentItem, null, ABSENT_CONFIRMED, Collections.emptyList()));
         }

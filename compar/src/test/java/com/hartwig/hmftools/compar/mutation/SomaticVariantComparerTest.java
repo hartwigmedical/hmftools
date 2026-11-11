@@ -393,6 +393,7 @@ public class SomaticVariantComparerTest
 
         assertEquals(List.of(MismatchType.ABSENT_FOUND, MismatchType.NEW_ONLY), mismatches.stream().map(x -> x.Type).toList());
         assertSame(v600eCall, mismatches.get(0).NewItem);
+        assertTrue(mismatches.get(0).OldItem.fieldValues().isEmpty());
         assertSame(v600kCall, mismatches.get(1).NewItem);
     }
 
