@@ -76,24 +76,6 @@ public class RnaFusionComparerTest
     }
 
     @Test
-    public void passingFileDeterminesPassStatus() throws IOException
-    {
-        for(SourceType source : SourceType.values())
-        {
-            File dir = source == SourceType.OLD ? oldDir : newDir;
-            Files.write(Paths.get(RnaFusionFile.generateFilename(dir.getAbsolutePath(), SAMPLE_ID)), List.of(
-                    RnaFusionFile.header() + TSV_DELIM + "Filter",
-                    RnaFusionFile.write(EML4_ALK) + TSV_DELIM + "FRAGMENT_COUNT"));
-            List<ComparableItem> items = comparer.loadFromFile(SAMPLE_ID, null, isofoxPaths(source, dir));
-
-            assertEquals(1, items.size());
-            RnaFusionData fusion = (RnaFusionData)items.get(0);
-            assertEquals(PASS_FILTER, fusion.Filter);
-            assertEquals(PASS_FILTER, fusion.fieldValues().get("Filter").displayValue());
-        }
-    }
-
-    @Test
     public void oneSidedFusionsFoundInUnfilteredFile() throws IOException
     {
         writePassFusions(oldDir, List.of(TMPRSS2_ERG, EML4_ALK, UNKNOWN_FUSION));

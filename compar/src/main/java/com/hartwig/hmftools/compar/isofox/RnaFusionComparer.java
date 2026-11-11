@@ -112,8 +112,7 @@ public class RnaFusionComparer extends ItemComparer
 
         for(RnaFusion fusion : fusions)
         {
-            RnaFusion passingFusion = ImmutableRnaFusion.builder().from(fusion).filter(PASS_FILTER).build();
-            comparableItems.add(convertFusion(passingFusion, fileSources.Source));
+            comparableItems.add(convertFusion(fusion, fileSources.Source));
         }
 
         return comparableItems;
