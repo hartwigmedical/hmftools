@@ -80,5 +80,4 @@ public class VirusComparer extends ItemComparer
         }
         return comparableItems;
     }
-
 }

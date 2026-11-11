@@ -87,5 +87,4 @@ public abstract class ComparableItem
         List<String> diffs = findDiffs(comparer, this, other);
         return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches, false);
     }
-
 }

@@ -150,7 +150,6 @@ public class PurityComparer extends ItemComparer
         {
             PurityContext purityContext = PurityContextFile.read(fileSources.Purple, sampleId);
             comparableItems.add(new PurityData(purityContext, mFields));
-
         }
         catch(IOException e)
         {

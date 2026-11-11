@@ -3,7 +3,6 @@ package com.hartwig.hmftools.compar.isofox;
 import java.util.Collections;
 import java.util.function.Consumer;
 
-import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.rna.AltSpliceJunctionContext;
 import com.hartwig.hmftools.common.rna.AltSpliceJunctionType;
 import com.hartwig.hmftools.common.rna.ImmutableNovelSpliceJunction;

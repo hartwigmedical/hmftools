@@ -130,5 +130,4 @@ public class RnaNovelSpliceJunctionComparer extends ItemComparer
 
         return comparableItems;
     }
-
 }

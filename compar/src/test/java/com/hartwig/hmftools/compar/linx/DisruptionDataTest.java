@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.compar.linx;
 
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import static junit.framework.TestCase.assertEquals;

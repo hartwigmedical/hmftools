@@ -106,7 +106,6 @@ public class DisruptionComparer extends ItemComparer
             CMP_LOGGER.debug("sample({}) loaded {} SVs {} breakends",sampleId, mSvDataList.size(), mBreakends.size());
 
             return buildBreakends(fileSources.Source);
-
         }
         catch(IOException | TribbleException e)
         {

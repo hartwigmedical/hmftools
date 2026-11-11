@@ -133,5 +133,4 @@ public class FieldValueTest
 
         assertTrue(fieldValue1.hasDifference(fieldValue2));
     }
-
 }

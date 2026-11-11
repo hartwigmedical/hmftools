@@ -115,5 +115,4 @@ public class SnpGenotypeComparer extends ItemComparer
 
         return items;
     }
-
 }

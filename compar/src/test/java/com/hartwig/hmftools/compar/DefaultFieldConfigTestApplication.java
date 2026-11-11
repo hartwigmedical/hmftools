@@ -6,7 +6,6 @@ import static com.hartwig.hmftools.compar.ComparConfig.MATCH_LEVEL;
 import static com.hartwig.hmftools.compar.common.CategoryType.ALL_CATEGORIES;
 
 import java.io.File;
-import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.List;
 

@@ -22,8 +22,6 @@ import com.hartwig.hmftools.compar.common.PipelineSourcePaths;
 import com.hartwig.hmftools.compar.common.field.FieldCheck;
 import com.hartwig.hmftools.compar.common.field.FieldInfo;
 
-import org.jetbrains.annotations.NotNull;
-
 public class RnaGeneDataComparer extends ItemComparer
 {
     protected enum Fields

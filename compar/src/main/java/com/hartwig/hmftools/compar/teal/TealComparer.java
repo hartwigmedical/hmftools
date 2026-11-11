@@ -45,7 +45,6 @@ public class TealComparer extends ItemComparer
         return List.of(Fields.TelomereLength.toString());
     }
 
-
     @Override
     public List<ComparableItem> loadFromFile(final String sampleId, final String germlineSampleId, final PipelineSourcePaths fileSources)
     {

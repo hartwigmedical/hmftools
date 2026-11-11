@@ -1,12 +1,9 @@
 package com.hartwig.hmftools.compar.lilac;
 
-import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.compar.common.CategoryType.LILAC_QC;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.common.hla.LilacAllele;
 import com.hartwig.hmftools.common.hla.LilacQcData;
 import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.ComparableItem;

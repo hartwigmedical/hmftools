@@ -3,12 +3,10 @@ package com.hartwig.hmftools.compar.purple;
 import java.util.Collections;
 import java.util.Map;
 
-import com.hartwig.hmftools.common.purple.ReportedStatus;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItemTest;
 
 import org.junit.Before;
-import org.junit.Test;
 
 public class GermlineAmpDelDataTest
         extends ComparableItemTest<GermlineAmpDelData, GermlineAmpDelComparer, TestGermlineAmpDelDataBuilder>

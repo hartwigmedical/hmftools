@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.compar.common.field;
 
-import static java.lang.Math.abs;
-import static java.lang.Math.max;
 import static java.lang.String.format;
 
 public class LongFieldValue extends FieldValue

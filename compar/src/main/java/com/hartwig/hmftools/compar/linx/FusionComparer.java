@@ -130,7 +130,6 @@ public class FusionComparer extends ItemComparer
         List<LinxBreakend> breakends = mDisruptionComparer != null ?
                 mDisruptionComparer.breakends().get(sourceType) : Collections.emptyList();
 
-
         List<StructuralVariantData> svDataList = mDisruptionComparer != null ?
                 mDisruptionComparer.svDataList().get(sourceType) : Collections.emptyList();
 

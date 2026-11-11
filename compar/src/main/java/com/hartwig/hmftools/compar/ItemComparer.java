@@ -12,7 +12,6 @@ import com.hartwig.hmftools.compar.common.ExpectedValue;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.PipelineSourcePaths;
 import com.hartwig.hmftools.compar.common.Mismatch;
-import com.hartwig.hmftools.compar.common.SourceType;
 import com.hartwig.hmftools.compar.common.field.FieldInfo;
 
 public abstract class ItemComparer
@@ -62,5 +61,4 @@ public abstract class ItemComparer
     public boolean isMultiItem() { return true; }
 
     public ComparConfig config() { return mConfig; }
-
 }
