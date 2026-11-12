@@ -5,12 +5,12 @@ import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.config.VersionInfo.fromAppName;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LPS_APPEND_INFO;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LPS_APPEND_INFO_DESC;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.SAGE_APPEND_TAG;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.SAGE_VERSION_TAG;
 import static com.hartwig.hmftools.sage.SageCommon.APP_NAME;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageConfig.isUltima;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.addGenotypeHeader;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.SAGE_APPEND_TAG;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.SAGE_VERSION_TAG;
 
 import java.io.File;
 import java.io.IOException;
@@ -42,8 +42,6 @@ import com.hartwig.hmftools.sage.pipeline.ChromosomePartition;
 import com.hartwig.hmftools.sage.quality.MsiJitterCalcs;
 import com.hartwig.hmftools.sage.seqtech.UltimaUtils;
 import com.hartwig.hmftools.sage.vcf.VariantVCF;
-
-import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SAMSequenceRecord;
@@ -285,7 +283,7 @@ public class SageAppendApplication
         header.addMetaDataLine(new VCFFormatHeaderLine(LPS_APPEND_INFO, 1, VCFHeaderLineType.String, LPS_APPEND_INFO_DESC));
     }
 
-    private static Version sageVersion(@NotNull final VCFHeader header)
+    private static Version sageVersion(final VCFHeader header)
     {
         VCFHeaderLine version = header.getMetaDataLine(SAGE_VERSION_TAG);
 

@@ -10,6 +10,8 @@ import static com.hartwig.hmftools.common.variant.PurpleVcfTags.SUBCLONAL_LIKELI
 import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_RECALIBRATED_BASE_QUAL;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.NEARBY_INDEL_FLAG;
 import static com.hartwig.hmftools.wisp.WispConstants.MAX_GERMLINE_AF_MAX;
+import static com.hartwig.hmftools.wisp.WispConstants.MIN_QUAL_PER_AD;
+import static com.hartwig.hmftools.wisp.WispConstants.MIN_QUAL_PER_AD_SAGE_V5;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.CT_LOGGER;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.DEFAULT_PROBE_LENGTH;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.generateMutationSequence;
@@ -53,7 +55,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.bam.ConsensusType;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.PaveVcfTags;
-import com.hartwig.hmftools.common.variant.SimpleVariant;
+import com.hartwig.hmftools.common.variant.SageVcfTags;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
@@ -67,6 +69,7 @@ import com.hartwig.hmftools.wisp.WispConstants;
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFHeader;
+import htsjdk.variant.vcf.VCFHeaderLine;
 
 public class SomaticVariants
 {
@@ -80,6 +83,8 @@ public class SomaticVariants
     private final BufferedWriter mSomaticWriter;
     private final SampleFragmentLengths mFragmentLengths;
 
+    private int mSageQualPerAdThreshold;
+
     public SomaticVariants(final WispConfig config, final ResultsWriter resultsWriter, final SampleData sampleData)
     {
         mConfig = config;
@@ -92,6 +97,8 @@ public class SomaticVariants
         mFragmentLengths = new SampleFragmentLengths(config, resultsWriter, sampleData);
 
         mVariants = Lists.newArrayList();
+
+        mSageQualPerAdThreshold = MIN_QUAL_PER_AD;
     }
 
     public boolean loadVariants()
@@ -146,6 +153,13 @@ public class SomaticVariants
             CT_LOGGER.error("patient({}) vcf({}) missing required fields({})",
                     mSample.PatientId, somaticVcf, requiredVcfTags);
             System.exit(1);
+        }
+
+        VCFHeaderLine version = vcfHeader.getMetaDataLine(SageVcfTags.SAGE_APPEND_TAG);
+
+        if(version == null || !version.getValue().startsWith("5.1"))
+        {
+            mSageQualPerAdThreshold = MIN_QUAL_PER_AD_SAGE_V5;
         }
 
         for(String sampleId : targetSampleIds)
@@ -237,8 +251,10 @@ public class SomaticVariants
             if(genotype == null || genotype.getExtendedAttributes().isEmpty())
                 continue;
 
-            GenotypeFragments genotypeFragments = buildFragments(
-                    genotype, mConfig.DisableDualFragments, genotype.getSampleName().equals(mSample.TumorId));
+            boolean checkZeroedUmis = genotype.getSampleName().equals(mSample.TumorId)
+                    || genotype.getSampleName().equals(mSample.ReferenceId);
+
+            GenotypeFragments genotypeFragments = buildFragments(genotype, mConfig.DisableDualFragments, checkZeroedUmis);
 
             if(genotype.getSampleName().equals(mSample.TumorId))
             {
@@ -320,7 +336,6 @@ public class SomaticVariants
 
             String outlierInfo = MosaicRoutines.formOutlierVariantsInfo(sampleId, outlierVariants, purityResult.PurityCalcs.ErrorRate);
             purityResult.setOutlierVariantInfo(outlierInfo);
-            purityResult.setMosaicFragments(mosaicData.fragmentsPerEligibleVariant(), mosaicData.dualFragmentsPerEligibleVariant());
         }
 
         if(mConfig.writeType(WriteType.SOMATIC_DATA))
@@ -406,7 +421,7 @@ public class SomaticVariants
     {
         if(sampleFragData.AlleleCount > 0)
         {
-            if(sampleFragData.qualPerAlleleFragment() <= WispConstants.MIN_QUAL_PER_AD)
+            if(sampleFragData.qualPerAlleleFragment() <= mSageQualPerAdThreshold)
                 sampleFragData.addFilterReason(LOW_QUAL_PER_AD);
 
             if(isUltima() && sampleFragData.qualPerAlleleFragment() <= WispConstants.MIN_QUAL_PER_AD_DUAL_ULTIMA)
