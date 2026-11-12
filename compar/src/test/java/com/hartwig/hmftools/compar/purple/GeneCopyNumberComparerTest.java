@@ -12,6 +12,7 @@ import java.nio.file.Files;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -90,5 +91,55 @@ public class GeneCopyNumberComparerTest
         assertEquals(MismatchType.VALUE, mismatchesByGene.get("PTEN").Type);
         assertTrue(mismatchesByGene.get("PTEN").DiffValues.get(0).startsWith("DriverType("));
         assertEquals(MismatchType.OLD_ONLY, mismatchesByGene.get("MYC").Type);
+    }
+
+    @Test
+    public void transcriptKeyIsComparedWithThatTranscriptOnly()
+    {
+        ComparConfig config = new ComparConfig();
+        config.Sources.set(0, SourceData.fromExpectedSource(SourceType.OLD, new ExpectedCache(), null));
+        GeneCopyNumberComparer comparer = new GeneCopyNumberComparer(config, Collections.emptyMap());
+
+        List<ComparableItem> geneExpected = comparer.loadFromExpected(Map.of("CDKN2A", List.of(
+                new ExpectedValue("CDKN2A", "MinCopyNumber", "1", false))));
+
+        List<Mismatch> mismatches = Lists.newArrayList();
+        comparer.compareItems(mismatches, MatchLevel.DETAILED, true, true, geneExpected, cdkn2aCopyNumbers());
+
+        assertEquals(2, mismatches.size());
+        assertEquals(MismatchType.VALUE, mismatches.get(0).Type);
+        assertEquals(MismatchType.NEW_ONLY, mismatches.get(1).Type);
+
+        List<ComparableItem> transcriptExpected = comparer.loadFromExpected(new TreeMap<>(Map.of(
+                "CDKN2A:ENST00000498124", List.of(new ExpectedValue("CDKN2A:ENST00000498124", "MinCopyNumber", "1", false)),
+                "CDKN2A:ENST00000579755", List.of(new ExpectedValue("CDKN2A:ENST00000579755", "MinCopyNumber", "0", false)))));
+
+        mismatches.clear();
+        comparer.compareItems(mismatches, MatchLevel.DETAILED, true, true, transcriptExpected, cdkn2aCopyNumbers());
+
+        Map<String, Mismatch> mismatchesByKey = mismatches.stream()
+                .collect(Collectors.toMap(x -> x.nonNullItem().key(), x -> x));
+
+        assertEquals(2, mismatchesByKey.size());
+        assertEquals(MismatchType.FULL_MATCH, mismatchesByKey.get("CDKN2A ENST00000498124").Type);
+        assertEquals(MismatchType.FULL_MATCH, mismatchesByKey.get("CDKN2A ENST00000579755").Type);
+    }
+
+    private static List<ComparableItem> cdkn2aCopyNumbers()
+    {
+        return Lists.newArrayList(
+                TestGeneCopyNumberDataBuilder.BUILDER.create(b ->
+                {
+                    b.gene = "CDKN2A";
+                    b.minCopyNumber = 0;
+                    b.transcriptId = "ENST00000579755";
+                    b.isCanonical = false;
+                }),
+                TestGeneCopyNumberDataBuilder.BUILDER.create(b ->
+                {
+                    b.gene = "CDKN2A";
+                    b.minCopyNumber = 1;
+                    b.transcriptId = "ENST00000498124";
+                }));
     }
 }

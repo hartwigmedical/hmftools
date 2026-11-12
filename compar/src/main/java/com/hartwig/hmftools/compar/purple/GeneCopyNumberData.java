@@ -19,10 +19,12 @@ import com.hartwig.hmftools.compar.common.field.FieldInfo;
 public class GeneCopyNumberData extends ComparableItem
 {
     public final GeneCopyNumber CopyNumber;
+    private final String mExpectedTranscriptId;
 
     public GeneCopyNumberData(final GeneCopyNumber copyNumber, final List<FieldInfo> fields)
     {
         CopyNumber = copyNumber;
+        mExpectedTranscriptId = "";
 
         addDoubleValue(GeneCopyNumberComparer.Fields.MinCopyNumber.toString(), copyNumber.MinCopyNumber, fields);
         addDoubleValue(GeneCopyNumberComparer.Fields.MaxCopyNumber.toString(), copyNumber.MaxCopyNumber, fields);
@@ -34,14 +36,17 @@ public class GeneCopyNumberData extends ComparableItem
         addBoolValue(GeneCopyNumberComparer.Fields.IsCanonical.toString(), copyNumber.IsCanonical, fields);
     }
 
-    private GeneCopyNumberData(final GeneCopyNumber copyNumber)
+    private GeneCopyNumberData(final GeneCopyNumber copyNumber, final String expectedTranscriptId)
     {
         CopyNumber = copyNumber;
+        mExpectedTranscriptId = expectedTranscriptId;
     }
 
     public static GeneCopyNumberData fromExpected(final List<ExpectedValue> expectedValues, final List<FieldInfo> fields)
     {
-        String geneName = expectedValues.get(0).Key;
+        String[] keyParts = expectedValues.get(0).Key.split(":", 2);
+        String geneName = keyParts[0];
+        String transcriptId = keyParts.length == 2 ? keyParts[1] : "";
         double minCopyNumber = 0;
         double maxCopyNumber = 0;
         DriverType driverType = DriverType.UNKNOWN;
@@ -62,7 +67,7 @@ public class GeneCopyNumberData extends ComparableItem
 
         copyNumber.setDriverType(driverType);
 
-        GeneCopyNumberData geneCopyNumber = new GeneCopyNumberData(copyNumber);
+        GeneCopyNumberData geneCopyNumber = new GeneCopyNumberData(copyNumber, transcriptId);
         geneCopyNumber.addExpectedValues(expectedValues, fields);
         return geneCopyNumber;
     }
@@ -87,7 +92,10 @@ public class GeneCopyNumberData extends ComparableItem
     @Override
     public String key()
     {
-        return format("%s", CopyNumber.geneName());
+        if(mExpectedTranscriptId.isEmpty())
+            return format("%s", CopyNumber.geneName());
+
+        return format("%s %s", CopyNumber.geneName(), mExpectedTranscriptId);
     }
 
     @Override
@@ -103,6 +111,9 @@ public class GeneCopyNumberData extends ComparableItem
     {
         final GeneCopyNumberData otherCn = (GeneCopyNumberData)other;
 
-        return CopyNumber.geneName().equals(otherCn.CopyNumber.geneName());
+        if(!CopyNumber.geneName().equals(otherCn.CopyNumber.geneName()))
+            return false;
+
+        return mExpectedTranscriptId.isEmpty() || mExpectedTranscriptId.equals(otherCn.CopyNumber.TransName);
     }
 }
