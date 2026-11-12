@@ -133,7 +133,7 @@ public class SpecialFusions
     {
         Orientation requiredOrientation = knownFusionData.geneStrand();
 
-        if(requiredOrientation != null && breakend.orientation() != requiredOrientation.asByte())
+        if(requiredOrientation != null && breakend.orientation() != requiredOrientation)
             return null;
 
         if(!knownFusionData.withinGeneRegion(breakend.chromosome(), breakend.position()))

@@ -281,14 +281,14 @@ public class ComplexClustering
                     // check for 2 different foldbacks with at least one facing in
                     boolean isFoldbackPair = lowerBreakend.isFoldback() && upperBreakend.isFoldback()
                             && lowerBreakend.getFoldbackBreakend() != upperBreakend
-                            && !(lowerBreakend.orientation() == 1 && upperBreakend.orientation() == -1);
+                            && !(lowerBreakend.forwardOrient() && upperBreakend.reverseOrient());
 
                     if(!isFoldbackPair)
                     {
                         if(lowerBreakend.orientation() == upperBreakend.orientation())
                         {
                             // exclude this pair if the front breakend is a DB
-                            SvBreakend frontBE = lowerBreakend.orientation() == 1 ? lowerBreakend : upperBreakend;
+                            SvBreakend frontBE = lowerBreakend.forwardOrient() ? lowerBreakend : upperBreakend;
 
                             if(frontBE.getDBLink() != null && frontBE.getDBLink().length() < 0)
                                 continue;
@@ -301,7 +301,7 @@ public class ComplexClustering
                                 continue;
 
                             // include this pair if the back breakend is consecutive but masked by a DB
-                            SvBreakend backBE = lowerBreakend.orientation() == -1 ? lowerBreakend : upperBreakend;
+                            SvBreakend backBE = lowerBreakend.reverseOrient() ? lowerBreakend : upperBreakend;
 
                             if(backBE.getDBLink() != null && backBE.getDBLink().length() < 0)
                             {
@@ -427,7 +427,7 @@ public class ComplexClustering
                     SvBreakend boundaryBreakend = traverseUp ? breakendList.get(breakendList.size() - 1) : breakendList.get(0);
 
                     // breakend needs to face out
-                    if(traverseUp == (boundaryBreakend.orientation() == 1))
+                    if(traverseUp == (boundaryBreakend.forwardOrient()))
                         continue;
 
                     // walk up from here to the next unresolved breakend

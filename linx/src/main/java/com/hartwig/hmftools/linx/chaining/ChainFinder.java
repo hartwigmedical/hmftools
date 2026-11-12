@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.linx.chaining;
 
+import static java.lang.Math.abs;
+
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.isStart;
@@ -521,7 +523,7 @@ public class ChainFinder
         return index != null ? index : -1;
     }
 
-    private void determinePossibleLinks()
+        private void determinePossibleLinks()
     {
         // form a map of each breakend to its set of all other breakends which can form a valid TI
         // need to exclude breakends which are already assigned to an assembled TI unless replication permits additional instances of it
@@ -542,7 +544,7 @@ public class ChainFinder
                 if(belowJcnThreshold(lowerBreakend.getSV()))
                     continue;
 
-                if(lowerBreakend.orientation() != -1)
+                if(!lowerBreakend.reverseOrient())
                     continue;
 
                 if(alreadyLinkedBreakend(lowerBreakend))
@@ -559,7 +561,7 @@ public class ChainFinder
 
                 int skippedNonAssembledIndex = -1; // the first index of a non-assembled breakend after the current one
 
-                for(int j = i+1; j < breakendList.size(); ++j)
+                for(int j = i + 1; j < breakendList.size(); ++j)
                 {
                     SvBreakend upperBreakend = breakendList.get(j);
 
@@ -575,7 +577,7 @@ public class ChainFinder
                         }
                     }
 
-                    if(upperBreakend.orientation() != 1)
+                    if(!upperBreakend.forwardOrient())
                         continue;
 
                     if(upperBreakend.getSV() == lowerBreakend.getSV())
@@ -584,7 +586,7 @@ public class ChainFinder
                     if(alreadyLinkedBreakend(upperBreakend))
                         continue;
 
-                    long distance = upperBreakend.position() - lowerBreakend.position();
+                    long distance = upperBreakend.position() - lowerBreakend.position() + 1;
                     int minTiLength = getMinTemplatedInsertionLength(lowerBreakend, upperBreakend);
 
                     if(distance < minTiLength)
@@ -707,7 +709,7 @@ public class ChainFinder
 
         List<SvBreakend> breakendList = mChrBreakendMap.get(otherBreakend.chromosome());
 
-        boolean traverseUp = otherBreakend.orientation() == -1;
+        boolean traverseUp = otherBreakend.reverseOrient();
         int index = getClusterChrBreakendIndex(otherBreakend);
 
         while(true)
@@ -728,7 +730,8 @@ public class ChainFinder
             if(breakend.orientation() == otherBreakend.orientation())
                 break;
 
-            if(Math.abs(breakend.position() - otherBreakend.position()) < getMinTemplatedInsertionLength(breakend, otherBreakend))
+            int breakendsDistance = abs(breakend.position() - otherBreakend.position()) + 1;
+            if(breakendsDistance < getMinTemplatedInsertionLength(breakend, otherBreakend)) // cannot form a link
                 continue;
 
             SvVarData otherSV2 = breakend.getSV();
