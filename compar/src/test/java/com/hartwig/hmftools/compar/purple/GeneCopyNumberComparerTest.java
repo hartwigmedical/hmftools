@@ -81,7 +81,7 @@ public class GeneCopyNumberComparerTest
         comparer.compareItems(mismatches, MatchLevel.REPORTABLE, true, true, expectedItems, newItems);
 
         Map<String, Mismatch> mismatchesByGene = mismatches.stream()
-                .collect(Collectors.toMap(x -> x.OldItem != null ? x.OldItem.key() : x.NewItem.key(), x -> x));
+                .collect(Collectors.toMap(x -> x.nonNullItem().key(), x -> x));
 
         assertEquals(4, mismatchesByGene.size());
         assertEquals(MismatchType.FULL_MATCH, mismatchesByGene.get("ERBB2").Type);

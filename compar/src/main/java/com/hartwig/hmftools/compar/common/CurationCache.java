@@ -25,11 +25,8 @@ import java.nio.file.Paths;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-import java.util.stream.Stream;
 
 import com.google.common.collect.Maps;
 
@@ -89,11 +86,13 @@ public class CurationCache
         Map<String, Entry> keyEntries = mLatestEntries.getOrDefault(sampleId, Collections.emptyMap())
                 .getOrDefault(mismatch.nonNullItem().category(), Collections.emptyMap());
 
-        Entry latest = Stream.of(mismatch.OldItem, mismatch.NewItem)
-                .filter(Objects::nonNull)
-                .map(x -> keyEntries.get(x.key()))
-                .filter(Objects::nonNull)
-                .max(Comparator.comparingInt(Entry::loadIndex)).orElse(null);
+        Entry oldEntry = mismatch.OldItem != null ? keyEntries.get(mismatch.OldItem.key()) : null;
+        Entry newEntry = mismatch.NewItem != null ? keyEntries.get(mismatch.NewItem.key()) : null;
+
+        Entry latest = oldEntry;
+
+        if(newEntry != null && (oldEntry == null || newEntry.loadIndex() > oldEntry.loadIndex()))
+            latest = newEntry;
 
         if(latest == null)
             return new Match(null, null);

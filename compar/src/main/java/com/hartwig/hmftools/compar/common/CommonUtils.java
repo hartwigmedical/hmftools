@@ -153,12 +153,22 @@ public class CommonUtils
                 mismatches.add(new Mismatch(absentItem, null, ABSENT_CONFIRMED, Collections.emptyList()));
         }
 
-        mismatches.replaceAll(x ->
+        for(int i = 0; i < mismatches.size(); ++i)
         {
-            ComparableItem absentItem = x.Type == NEW_ONLY
-                    ? absentItems.stream().filter(item -> item.matches(x.NewItem)).findFirst().orElse(null) : null;
-            return absentItem == null ? x : new Mismatch(absentItem, x.NewItem, ABSENT_FOUND, Collections.emptyList());
-        });
+            Mismatch mismatch = mismatches.get(i);
+
+            if(mismatch.Type != NEW_ONLY)
+                continue;
+
+            for(ComparableItem absentItem : absentItems)
+            {
+                if(absentItem.matches(mismatch.NewItem))
+                {
+                    mismatches.set(i, new Mismatch(absentItem, mismatch.NewItem, ABSENT_FOUND, Collections.emptyList()));
+                    break;
+                }
+            }
+        }
     }
 
     public static void compareItems(

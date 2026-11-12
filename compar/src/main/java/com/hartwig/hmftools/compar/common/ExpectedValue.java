@@ -5,7 +5,8 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 
 import java.util.List;
-import java.util.stream.Collectors;
+
+import com.google.common.collect.Lists;
 
 public class ExpectedValue
 {
@@ -33,7 +34,15 @@ public class ExpectedValue
     // the remarks of an item's expected rows, in file order and without repeats
     public static String remark(final List<ExpectedValue> expectedValues)
     {
-        return expectedValues.stream().map(x -> x.Remark).filter(x -> !x.isEmpty()).distinct().collect(Collectors.joining(ITEM_DELIM));
+        List<String> remarks = Lists.newArrayList();
+
+        for(ExpectedValue expectedValue : expectedValues)
+        {
+            if(!expectedValue.Remark.isEmpty() && !remarks.contains(expectedValue.Remark))
+                remarks.add(expectedValue.Remark);
+        }
+
+        return String.join(ITEM_DELIM, remarks);
     }
 
     public String toString() { return format("%s: %s=%s %s", Key, FieldName, Value, RequireAbsent ? "absent" : ""); }
