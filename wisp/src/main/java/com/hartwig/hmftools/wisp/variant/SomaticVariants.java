@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.common.variant.SageVcfTags.NEARBY_INDEL_FLAG;
 import static com.hartwig.hmftools.wisp.WispConstants.MAX_GERMLINE_AF_MAX;
 import static com.hartwig.hmftools.wisp.WispConstants.MIN_QUAL_PER_AD;
 import static com.hartwig.hmftools.wisp.WispConstants.MIN_QUAL_PER_AD_SAGE_V5;
+import static com.hartwig.hmftools.wisp.WispConstants.SAGE_APPEND_CURRENT_VERSION;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.CT_LOGGER;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.DEFAULT_PROBE_LENGTH;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.generateMutationSequence;
@@ -157,7 +158,7 @@ public class SomaticVariants
 
         VCFHeaderLine version = vcfHeader.getMetaDataLine(SageVcfTags.SAGE_APPEND_TAG);
 
-        if(version == null || !version.getValue().startsWith("5.1"))
+        if(version == null || !version.getValue().startsWith(SAGE_APPEND_CURRENT_VERSION))
         {
             mSageQualPerAdThreshold = MIN_QUAL_PER_AD_SAGE_V5;
         }

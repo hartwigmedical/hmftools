@@ -135,14 +135,6 @@ public class SomaticPurityEstimator
                     purityCalcData.RawBqrErrorRate = thresholdEvaluation.rawBqrErrorRate;
                     purityCalcData.RawPurityEstimate = thresholdEvaluation.rawPurityEstimate;
                 }
-
-                /*
-                FragmentTotals bqrThresholdFragTotals = calculateThresholdValues(
-                        sampleId, purityCalcData, variants, threshold, capMaxTumorCopyNumber, mosaicFragmentContribution);
-
-                if(bqrThresholdFragTotals != null)
-                    fragmentTotals = bqrThresholdFragTotals;
-                */
             }
 
             noiseRate = purityCalcData.ErrorRate;
@@ -217,7 +209,9 @@ public class SomaticPurityEstimator
 
         // report final probability as min of Dual and Normal Prob
         double mosaicDualFragmentContribution = mosaicData.dualFragmentsPerEligibleVariant();
-        double filteredDualMosaicFragmentContribution = mosaicDualFragmentContribution * uncappedVariantCount / variants.size();
+        double mosaicDualSampleAdjustment = uncappedVariantCount / (double)variants.size();
+
+        double filteredDualMosaicFragmentContribution = mosaicDualFragmentContribution * mosaicDualSampleAdjustment;
         double mosaicDualErrorRate = dualFragmentTotals.sampleDepthTotal() > 0 ?
                 filteredDualMosaicFragmentContribution / dualFragmentTotals.sampleDepthTotal() : 0;
 
@@ -236,8 +230,7 @@ public class SomaticPurityEstimator
         double mosaicSampleAdjustment = fragmentTotals.variantCount() / (double)variants.size();
 
         purityResult.setMosaicFragments(
-                mosaicData.fragmentsPerEligibleVariant() * mosaicSampleAdjustment,
-                mosaicData.dualFragmentsPerEligibleVariant());
+                mosaicData.fragmentsPerEligibleVariant() * mosaicSampleAdjustment, filteredDualMosaicFragmentContribution);
 
         return purityResult;
     }
@@ -324,43 +317,26 @@ public class SomaticPurityEstimator
 
         double errorRate = bqrErrorRate + mosaicErrorRate;
 
-        double probability = estimatedProbability(fragmentTotals, errorRate);
 
-        // select the BQR threshold level with the lowest LOD purity estimate, and for this use only the BQR error rate
-        // however in the results, return all data to populate the full purity results
-
+        // calculate a LOD purity estimate, and for this use only the BQR error rate
         double lodPurityEstimateBqrOnly = calcLimitOfDetection(fragmentTotals, bqrErrorRate);
+        double probabilityBqrOnly = estimatedProbability(fragmentTotals, bqrErrorRate);
+
+        // however for the results which will be reported, use the combined error rate
         double lodPurityEstimate = calcLimitOfDetection(fragmentTotals, errorRate);
+        double probability = estimatedProbability(fragmentTotals, errorRate);
 
         double rawPurityEstimate = estimatedPurity(fragmentTotals.rawSampleVaf(), errorRate, fragmentTotals);
 
         String bqrExtraInfo = format(
                 "BqrThreshold(%d variants=%d AD=%d DP=%d prob=%s lod=%s)",
                 qualThreshold, fragmentTotals.variantCount(), fragmentTotals.sampleAdTotal(), fragmentTotals.sampleDepthTotal(),
-                formatProbabilityValue(probability), formatPurityValue(lodPurityEstimate));
+                formatProbabilityValue(probabilityBqrOnly), formatPurityValue(lodPurityEstimateBqrOnly));
 
         /*
         CT_LOGGER.debug(format("patient(%s) sample(%s) errorRatePM(%.1f) variants(%d) frags(dp=%d ad=%d)  probability(%.6f) LOD(%.6f)",
                 mSample.PatientId, sampleId, errorRate * 1_000_000, fragmentTotals.variantCount(),
                 fragmentTotals.sampleDepthTotal(), fragmentTotals.sampleAdTotal(), probability, lodPurityEstimate));
-        */
-
-        /*
-        purityCalcData.BqrExtraInfo.add(format(
-                "BqrThreshold(%d variants=%d AD=%d DP=%d prob=%s lod=%s)",
-                qualThreshold, fragmentTotals.variantCount(), fragmentTotals.sampleAdTotal(), fragmentTotals.sampleDepthTotal(),
-                formatProbabilityValue(probability), formatPurityValue(lodPurityEstimate)));
-
-        if(purityCalcData.LodPurityEstimate == PurityCalcData.CALC_NO_SET || lodPurityEstimate < purityCalcData.LodPurityEstimate)
-        {
-            purityCalcData.LodPurityEstimate = lodPurityEstimate;
-            purityCalcData.Probability = probability;
-            purityCalcData.BqrQualThreshold = qualThreshold;
-            purityCalcData.ErrorRate = errorRate;
-            purityCalcData.RawBqrErrorRate = rawBqrErrorRate;
-            purityCalcData.RawPurityEstimate = estimatedPurity(fragmentTotals.rawSampleVaf(), errorRate, fragmentTotals);
-            return fragmentTotals;
-        }
         */
 
         return new ThresholdEvaluation(
